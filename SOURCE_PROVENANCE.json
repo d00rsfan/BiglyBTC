@@ -1,8 +1,9 @@
 {
   "repository": "https://github.com/d00rsfan/BiglyBTC",
-  "local_review_commit": "87e5afbda4f65456a27a1651aa46803993ab7ca4",
+  "local_review_commit": "6b2c2d831cb3bedf4887f5f1493a29c97f264f85",
   "original_biglybt_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
   "sdk_commit": null,
+  "core_commit": null,
   "ci_enabled": false,
   "scope": "sdk development source foundation only; no binary/catalogue release or full application/plugin parity claim",
   "files_sha256": {
@@ -20,8 +21,25 @@
     "plugin-sdk/tests/store_test.py": "41ce00e21834d40fef4565f0065ca8953cf9491687726145e3dc4ea2556149f8",
     "plugin-sdk/tools/plugin_store.py": "a9a4ae4ad0ce89f4c8c9d91fda226d0413e32d834046f3b0b7c0c838cf1ed78a",
     "LICENSE": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73",
-    "README.md": "49cadfedf6745f0d95c3235f6113e753fbde524e245ea24ae059be591adabc42",
-    "CMakeLists.txt": "52b17cb50380a3457d61efd4740658b865578495ae3cf22e83bc0ab89368ea38",
+    "core/BiglyBTCCoreConfig.cmake.in": "cd41ff91c094f97798b9ce8e1988a4a805d0ddd90c99c8feb45223b033e1c087",
+    "core/CMakeLists.txt": "bd0e3c00533497d4ad524bb4ff82adf26e1f353a24a6f7b5c5ff53cf94a64d09",
+    "core/COPYING": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73",
+    "core/NOTICE.md": "134ce136c10d24a9fe87da3e3502cf03f8e641578f699b84a68b6b6f3907cf63",
+    "core/include/biglybtc/bencode.hpp": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+    "core/include/biglybtc/executor.hpp": "d2afcc590573e64bce376aadc42051198353e4c79c5f69f8a2452ab5a7d3d8bc",
+    "core/include/biglybtc/file_policy.hpp": "0d199f329d775783d9f4195ba6e14ff660b410ce4bfc555c4c55b4eaa43bff46",
+    "core/include/biglybtc/library.hpp": "8ad4e7f5346300fdc03c6318d629b6185874d35109511ca445609639b7168875",
+    "core/include/biglybtc/state_cache.hpp": "036be2d5a02e1cab9be638496e7b066ef13619a22443ea508a3d583f8f5dcd15",
+    "core/include/biglybtc/torrent_layout.hpp": "59accc489872b0f69444da51cdd2a79aeaa0510deeaf1a01434aab2b8699a775",
+    "core/src/bencode.cpp": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08",
+    "core/src/executor.cpp": "bd3adadaec6e4f48c0ffbb8ffc77e2c67c15296302105a73e984f58e4e8d7613",
+    "core/src/file_policy.cpp": "a50ae3dfcb3d75d9c3220db803823bf91a7f4daaf40ee54f7c325bda7d6a764a",
+    "core/src/library.cpp": "3ba21404a77e0e3c9e23cbf267be130609598ed6646693df7c4f656306895348",
+    "core/src/state_cache.cpp": "b73688291e949eb592b0e12281e79bf19dc1000a4f5b9d80f6a06a63238e4fc2",
+    "core/src/torrent_layout.cpp": "58e6961c5136d1a5f9adf860748a9b3e645fe0ff05ccb50836f339a636ce072d",
+    "core/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "README.md": "ccbaaa4060d7887c3447f2aaa6509047bfe7c0a204c97cb8fd4dff9980886217",
+    "CMakeLists.txt": "009e619cac5bbdf7b315352669899426d40f67133de1efdd525045e45bfd4995",
     "ci/plugin-sdk.yml": "e3000fd72c283348e7e1846e7b64b61898e39e3800e4646ffefcef0d26b0e183"
   }
 }
