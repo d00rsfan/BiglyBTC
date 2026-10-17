@@ -1,0 +1,55 @@
+cmake_minimum_required(VERSION 3.25)
+project(BiglyBTCPluginSDK VERSION 0.1.0 LANGUAGES C CXX)
+include(GNUInstallDirs)
+include(CMakePackageConfigHelpers)
+add_library(biglybtc_plugin_api INTERFACE)
+add_library(BiglyBTC::PluginAPI ALIAS biglybtc_plugin_api)
+set_target_properties(biglybtc_plugin_api PROPERTIES EXPORT_NAME PluginAPI)
+target_include_directories(biglybtc_plugin_api INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  add_library(biglybtc_plugin_host STATIC src/host.cpp)
+  add_library(BiglyBTC::PluginHost ALIAS biglybtc_plugin_host)
+  set_target_properties(biglybtc_plugin_host PROPERTIES EXPORT_NAME PluginHost)
+  target_link_libraries(biglybtc_plugin_host PUBLIC BiglyBTC::PluginAPI PRIVATE ${CMAKE_DL_LIBS})
+  target_compile_features(biglybtc_plugin_host PUBLIC cxx_std_23)
+  target_compile_options(biglybtc_plugin_host PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  install(TARGETS biglybtc_plugin_host EXPORT BiglyBTCPluginSDKTargets)
+endif()
+install(TARGETS biglybtc_plugin_api EXPORT BiglyBTCPluginSDKTargets)
+install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(EXPORT BiglyBTCPluginSDKTargets NAMESPACE BiglyBTC::
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/BiglyBTCPluginSDK)
+file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/BiglyBTCPluginSDKConfig.cmake"
+  "include(\"\${CMAKE_CURRENT_LIST_DIR}/BiglyBTCPluginSDKTargets.cmake\")\n")
+write_basic_package_version_file("${CMAKE_CURRENT_BINARY_DIR}/BiglyBTCPluginSDKConfigVersion.cmake"
+  VERSION ${PROJECT_VERSION} COMPATIBILITY ExactVersion)
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/BiglyBTCPluginSDKConfig.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/BiglyBTCPluginSDKConfigVersion.cmake"
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/BiglyBTCPluginSDK)
+option(BIGLYBTC_SDK_TESTS "Build isolated SDK contract tests" ON)
+if(BIGLYBTC_SDK_TESTS)
+  enable_testing()
+  add_executable(biglybtc-abi-c tests/abi.c)
+  target_link_libraries(biglybtc-abi-c PRIVATE BiglyBTC::PluginAPI)
+  set_property(TARGET biglybtc-abi-c PROPERTY C_STANDARD 11)
+  target_compile_options(biglybtc-abi-c PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME plugin-c-abi COMMAND biglybtc-abi-c)
+  if(TARGET biglybtc_plugin_host)
+    foreach(mode RANGE 0 6)
+      add_library(sdk-fixture-${mode} MODULE tests/module.c)
+      target_link_libraries(sdk-fixture-${mode} PRIVATE BiglyBTC::PluginAPI)
+      target_compile_definitions(sdk-fixture-${mode} PRIVATE BT_TEST_MODE=${mode})
+      target_compile_options(sdk-fixture-${mode} PRIVATE -Wall -Wextra -Wpedantic -Werror)
+      set_target_properties(sdk-fixture-${mode} PROPERTIES C_VISIBILITY_PRESET hidden)
+    endforeach()
+    add_executable(biglybtc-plugin-host-tests tests/host.cpp)
+    target_link_libraries(biglybtc-plugin-host-tests PRIVATE BiglyBTC::PluginHost)
+    target_compile_options(biglybtc-plugin-host-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME plugin-module-lifecycle COMMAND biglybtc-plugin-host-tests
+      "$<TARGET_FILE:sdk-fixture-0>" "$<TARGET_FILE:sdk-fixture-1>" "$<TARGET_FILE:sdk-fixture-2>"
+      "$<TARGET_FILE:sdk-fixture-3>" "$<TARGET_FILE:sdk-fixture-4>" "$<TARGET_FILE:sdk-fixture-5>"
+      "$<TARGET_FILE:sdk-fixture-6>")
+  endif()
+endif()

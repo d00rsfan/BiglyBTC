@@ -1,0 +1,27 @@
+{
+  "repository": "https://github.com/d00rsfan/BiglyBTC",
+  "local_review_commit": "87e5afbda4f65456a27a1651aa46803993ab7ca4",
+  "original_biglybt_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sdk_commit": null,
+  "ci_enabled": false,
+  "scope": "sdk development source foundation only; no binary/catalogue release or full application/plugin parity claim",
+  "files_sha256": {
+    "plugin-sdk/.gitignore": "862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793",
+    "plugin-sdk/CMakeLists.txt": "33616c6a6f7f5757015f30adc9ad15f1163e70f8283d8103dc4e3d982819b426",
+    "plugin-sdk/LICENSE": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73",
+    "plugin-sdk/README.md": "373b1ba28bc2342d4a871ae069ccdecc4860f68e14567656d52814021ddf3e56",
+    "plugin-sdk/include/biglybtc/plugin.h": "119da17cfe1147e786d19bc84401a7e2f9a6d71ee256f6a6307efe8ba0d7b552",
+    "plugin-sdk/include/biglybtc/plugin_host.hpp": "f4fc41a44b1b9f10106fb66b7efecb517d66c0a9e7b5ab8e1579236d7daace99",
+    "plugin-sdk/include/biglybtc/scheduler.h": "54675a9fffa63923111c037cf5b4711d548a614e4e0760edb1c3bf990f97fc46",
+    "plugin-sdk/src/host.cpp": "ee5c7a9904c70edaf9dac47223cbd31ab8ee6d25683643d2486a97ab9289d0e3",
+    "plugin-sdk/tests/abi.c": "54aa3646f34b0f076d8af9bbc70113450d6b16daf743c942ed84bbd206e50885",
+    "plugin-sdk/tests/host.cpp": "9bdfdbcdd7f85fe0822e1ddedd6e2ab6c3b2e7afa13bb5cd8d9c06edd3f84a10",
+    "plugin-sdk/tests/module.c": "87ce79175d258b27cb019a337666593c9b69b278a3ef7952700d371c17e2d25b",
+    "plugin-sdk/tests/store_test.py": "41ce00e21834d40fef4565f0065ca8953cf9491687726145e3dc4ea2556149f8",
+    "plugin-sdk/tools/plugin_store.py": "a9a4ae4ad0ce89f4c8c9d91fda226d0413e32d834046f3b0b7c0c838cf1ed78a",
+    "LICENSE": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73",
+    "README.md": "49cadfedf6745f0d95c3235f6113e753fbde524e245ea24ae059be591adabc42",
+    "CMakeLists.txt": "52b17cb50380a3457d61efd4740658b865578495ae3cf22e83bc0ab89368ea38",
+    "ci/plugin-sdk.yml": "e3000fd72c283348e7e1846e7b64b61898e39e3800e4646ffefcef0d26b0e183"
+  }
+}

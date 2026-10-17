@@ -1,0 +1,21 @@
+name: Native plugin SDK contract
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  sdk:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build and exercise C ABI and module lifecycle
+        run: |
+          cmake -S . -B "$RUNNER_TEMP/biglybtc-sdk" -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_COMPILER=gcc-14 -DCMAKE_CXX_COMPILER=g++-14
+          nice -n 5 cmake --build "$RUNNER_TEMP/biglybtc-sdk" -j2
+          ctest --test-dir "$RUNNER_TEMP/biglybtc-sdk" --output-on-failure
