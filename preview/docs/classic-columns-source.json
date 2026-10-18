@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "scope": "Source contract for session-only visibility/reset of existing preview columns; not full original column editor or saved settings parity",
+  "upstream_repository": "https://github.com/BiglySoftware/BiglyBT",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_files": {
+    "uis/src/com/biglybt/ui/swt/views/table/utils/TableColumnCreator.java": {
+      "git_blob": "b7011d0601c1c94e716f5ff9aab19ed93c33c7ae",
+      "sha256": "e0ce2a57077d76685b1e71d2cb7a831c7cc79fa1e5f93f7979536146ac80053a"
+    },
+    "uis/src/com/biglybt/ui/swt/views/table/impl/TableViewSWT_Common.java": {
+      "git_blob": "6e5a9325952bf649c7f077ae96deb09d4e4e530c",
+      "sha256": "e7ff336a03bd721d598e4f9dd0965c214daf3e96f035858d3a08fd2f7ae6b186"
+    }
+  },
+  "original_behavior": [
+    "Incomplete default includes both download and upload rates",
+    "Complete default includes upload rate and uploaded bytes",
+    "Header context actions include column visibility/reset/editor; tables have independent saved settings"
+  ],
+  "implemented_scope": [
+    "Independent incomplete/complete menus over nine existing logical model columns",
+    "Right-click header or use View submenus; all-hidden recovery remains available",
+    "Reset restores construction order, widths and preview defaults without modifying model, sorting or selection"
+  ],
+  "limitations": [
+    "Session-only; original table settings import/persistence not implemented",
+    "No unsupported or plugin columns",
+    "Fixed construction-time schema; dynamic column insertion and runtime language changes not qualified",
+    "No full editor/confirmation parity or real compositor/accessibility claim"
+  ]
+}

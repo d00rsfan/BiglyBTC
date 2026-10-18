@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "scope": "First classic My Torrents naming and View/Ctrl+1 activation; other service-backed navigation unfinished",
+  "repository": "https://github.com/d00rsfan/BiglyBTC",
+  "native_commit": "9abef333ab0a4178bc68e098a038d04514a37ddc",
+  "upstream_repository": "https://github.com/BiglySoftware/BiglyBT",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_contract": "preview/docs/classic-navigation-source.json",
+  "local": {
+    "unit_passed": 24,
+    "unit_failed": 0,
+    "navigation_qt_rows_passed": 13,
+    "preview_smoke_qt_rows_passed": 3,
+    "backend": "offscreen"
+  },
+  "hosted": {
+    "desktop_run": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39110452616",
+    "desktop_result": "success",
+    "unit_passed": 24,
+    "unit_failed": 0,
+    "smoke_passed": true,
+    "sdk_run": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39110452580",
+    "sdk_result": "success"
+  },
+  "files_at_native_commit_sha256": {
+    "preview/README.md": "8fa3bfcfbfd6e5fc3ad1ec94c359d5fe39abac95a613d8cc4d08ae394626079c",
+    "preview/docs/classic-navigation-source.json": "2b6f5096985c0b7d3228ac88fcdf7ca0365a560ea4a899a669fe0c69d2f5de32",
+    "preview/migration/tools/stage_preview.py": "196add1bb19577bb66dd2f509ceac591dee2bf3f867d09c1cc98a35d0f84a734",
+    "preview/native/packaging/preview_smoke.cpp": "e2dff751571349a92d018efd531691bd4b3f5b414d4e025e98077658ed7b493b",
+    "preview/native/tests/CMakeLists.txt": "0ad84d359a798e0ca55afaf3620c9d006cba54a84acbc1c0de6e32b673c41e30",
+    "preview/native/tests/classic_tests.cpp": "c3eef2b974ccbaae25dcc21c0f7fabf87b362e38b4889cadb8f642c8139706f5",
+    "preview/native/tests/navigation_tests.cpp": "ad58dcf0cfd41d0753a48dc836fb38eef707f138ddef2cf92cd77385b7b6b9ae",
+    "preview/native/ui/library_window.cpp": "09818278c498559638f68a28299325fb8dcc852e3b16b6668959c0b4c1ed4990",
+    "preview/native/ui/library_window.hpp": "ae07f775e509e827c9205babbb07fa581d0f0405844669fa8e3966640ac3d40b"
+  },
+  "limitations": [
+    "No full classic/service parity",
+    "My Tracker/My Shares/other missing services remain unavailable",
+    "No new compositor shortcut or accessibility qualification",
+    "No original-profile/performance qualification",
+    "No binary release"
+  ]
+}

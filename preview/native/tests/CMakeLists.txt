@@ -173,6 +173,13 @@ if(BIGLYBTC_DESKTOP)
   add_test(NAME classic-view-navigation COMMAND biglybtc-navigation-tests)
   set_tests_properties(classic-view-navigation PROPERTIES TIMEOUT 120
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "ui;unit;classic;navigation")
+  add_executable(biglybtc-column-tests column_tests.cpp)
+  set_target_properties(biglybtc-column-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-column-tests PRIVATE biglybtc_ui Qt6::Test)
+  target_compile_options(biglybtc-column-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME classic-table-columns COMMAND biglybtc-column-tests)
+  set_tests_properties(classic-table-columns PROPERTIES TIMEOUT 120
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "ui;unit;classic;columns")
   add_test(NAME classic-library-layout COMMAND biglybtc-classic-tests)
   set_tests_properties(classic-library-layout PROPERTIES TIMEOUT 120
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "ui;unit;classic")

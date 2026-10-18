@@ -18,7 +18,11 @@ My Torrents tab, incomplete/complete tables, name filtering and shared General/F
 details. **View > My Torrents (Ctrl+1)** returns to the existing torrent screen
 from anywhere in the window, preserving the filter and selection. My Tracker
 and My Shares are listed with their original Ctrl+2/3 shortcuts but remain
-unavailable until their hosting/sharing services are implemented. Other
+unavailable until their hosting/sharing services are implemented. Each torrent
+pane has its own column chooser: right-click the header, or use **View >
+Incomplete Columns / Complete Columns**. Reset Columns restores the preview
+defaults. These choices are currently kept for the window session; original
+saved-column settings compatibility remains unfinished. Other
 unavailable actions remain disabled. See the milestone verification
 record and Actions run for the checks performed on the actual revision.
 

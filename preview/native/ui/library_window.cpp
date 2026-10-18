@@ -1,5 +1,6 @@
 #include "library_window.hpp"
 #include "classic_filter.hpp"
+#include "classic_columns.hpp"
 
 #include <QAction>
 #include <QCloseEvent>
@@ -93,6 +94,8 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     layout->addWidget(table);
     splitter_->addWidget(panel);
   }
+  auto* incompleteColumns = new ClassicColumns(*incompleteTable_, false);
+  auto* completeColumns = new ClassicColumns(*completeTable_, true);
   splitter_->setStretchFactor(0, 3);
   splitter_->setStretchFactor(1, 7);
   splitter_->setSizes({300, 700});
@@ -231,6 +234,9 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   unavailable(view, tr("Client Stats"), QStringLiteral("client-statistics"), QStyle::SP_FileDialogDetailedView);
   unavailable(view, tr("Remote Pairing…"), QStringLiteral("remote-pairing"), QStyle::SP_DriveNetIcon);
   unavailable(view, tr("Subscriptions"), QStringLiteral("subscriptions"), QStyle::SP_FileDialogListView);
+  view->addSeparator();
+  view->addMenu(incompleteColumns->menu());
+  view->addMenu(completeColumns->menu());
   view->addSeparator();
   refresh_ = view->addAction(style()->standardIcon(QStyle::SP_BrowserReload), tr("&Refresh"));
   refresh_->setObjectName(QStringLiteral("classic-refresh"));
