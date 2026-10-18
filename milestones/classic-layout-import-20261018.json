@@ -1,0 +1,102 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "scope": "Conservative read-only classic saved-header import; local-edit precedence; explicit reload",
+  "upstream_repository": "https://github.com/BiglySoftware/BiglyBT",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_parent": "eefbd205ca0940ad4868ee07989b2d42be1a99dc",
+  "source_sha256": {
+    "preview/README.md": "89a87391c64cd71836fcdb71095f8af2b8baaf4f9015fb9207f2dd9722aca6c5",
+    "preview/docs/classic-column-layout-import-contract.json": "4c1ecf7add947b94d0d2ea524e4c38dd151e0424814c891dea168080fa41e321",
+    "preview/native/app/main_desktop.cpp": "d8db8971b2c87b49966de371d7b7385c742cf09c0dca605011b100f86d562b30",
+    "preview/native/app/session_bridge.hpp": "5044106852db60f4b4d10873576acfa24b2107dba7f3c422976ecbdf9a5a4209",
+    "preview/native/app/session_bridge.cpp": "07daab4bffaf61e83fa603eaabf7bc048c3f8aa3ec123e84ed64f8b5a2fce00e",
+    "preview/native/packaging/preview.py": "f8139d7369839a08589ecb6e5edea0627030673a1e968c02b172bbee38cd400f",
+    "preview/native/packaging/preview_smoke.cpp": "daf1ee802998f3d87e9eb961dacdcfd5b3b54fce8051b331f4cddc6945df94cb",
+    "preview/native/ui/CMakeLists.txt": "4cb2c67c9e809d99332d2e4361f806bf7da8138e7b2ed3b8b1972bcfc34382da",
+    "preview/native/ui/classic_columns.hpp": "03617c8ead50014fb24dfff7fce871f2f14cc88e135b93c509cc0e84c3e73fe7",
+    "preview/native/ui/classic_columns.cpp": "91ca50a44a162032f3ea090d328228bc96d1d6e1716294150d72bc3090be5c53",
+    "preview/native/ui/library_window.hpp": "dee0185015986a8073d53698e330ca70588ed019223713794cb45dd17401a985",
+    "preview/native/ui/library_window.cpp": "ed2d59cf03b15b7a93521ade53cf148442ca5a6b15bbeb3394fc7c0d1cdf3e66",
+    "preview/native/ui/column_layout_presentation.hpp": "447fed4086b0551601d324f42dd5de39eda2eb51ee476ab63343a6d02238cf83",
+    "preview/native/tests/CMakeLists.txt": "0deb5c8d043d396e70952477a3c526b1be64640bcc0e7b80a44f82d86b6d2cf4",
+    "preview/native/tests/classic_layout_import_tests.cpp": "6d9976445b849ba36539835068d828fe647de6b05658b73224e47f6766c6a5b6",
+    "preview/native/tests/classic_layout_bridge_tests.cpp": "e12946c979fdf1b491b5e7c2bb0baa2ffb7d9d22a0fc04057d72cefd3647788c"
+  },
+  "native_units_passed": 38,
+  "native_units_skipped": 0,
+  "new_qt_ui_rows_passed": 30,
+  "new_qt_worker_rows_passed": 16,
+  "sanitized_qt_ui_rows_passed": 30,
+  "sanitized_qt_worker_rows_passed": 16,
+  "sanitizers": "GCC16 Debug ASan/UBSan;detect_leaks=1;halt_on_error=1",
+  "actual_smoke_scales": [
+    1,
+    1.5,
+    2
+  ],
+  "actual_smoke_qt_rows_per_scale": 3,
+  "captures_per_scale": 4,
+  "classic_captures_visually_reviewed": [
+    1,
+    1.5,
+    2
+  ],
+  "manual_compositor_credit": false,
+  "normal_profile_access": false,
+  "processes_signaled": false,
+  "java_runtime_layout_equality_credit": 0,
+  "config_writer_credit": 0,
+  "history": [
+    "Independent static review found local-variable shadow before execution; only loop-local rename fixed it",
+    "Independent review found public predicate reset/delete reentry; QPointer/revision checks added on both sides before UI execution",
+    "Root and independent review found unaccepted dispatch latch; exact active identity cleanup plus regression added before UI execution",
+    "First sanitizer build command asked unavailable packaging smoke target; preserved rejection and corrected target list without changing configuration/tests",
+    "All final required local executions pass; original draft/review history preserved"
+  ],
+  "limitations": [
+    "Read-only native header correspondence only; registered defaults/plugin columns/legacy config and writers remain open",
+    "Name stays responsive; admitted widths remain subject to Qt minimum",
+    "Current singleton sort uses existing native comparator; no Java comparator equivalence",
+    "Synchronous newer edit/request aborts remaining operations; already applied changes have no transaction rollback"
+  ],
+  "native_repository": "https://github.com/d00rsfan/BiglyBTC",
+  "native_commit": "2b09f1ec75271fe6cf59e47f895087e041beff10",
+  "pushed": true,
+  "dist": {
+    "source_commit": "2b09f1ec75271fe6cf59e47f895087e041beff10",
+    "dist": "/home/yurii/Java/BiglyBTC/dist",
+    "rollback": "/home/yurii/Java/BiglyBTC/build/classic-layout-import-20261018/previous-dist",
+    "files_verified": 103,
+    "runtime_files_byte_identical": 82,
+    "previous_manifest_sha256": "058e8843ea3468838daa00c28034f5da9c6c9cd56553f0e1193a7dfd62526644",
+    "manifest_sha256": "5d80e3a9e488e933ebd7dd14a0bdfb0e1f74edf5e7e91f455c94d58249d4eff6",
+    "changed_paths": [
+      "README.txt",
+      "usr/bin/BiglyBTC-preview",
+      "usr/lib/biglybtc/bin/BiglyBTC",
+      "usr/lib/biglybtc/bin/BiglyBTC-headless"
+    ],
+    "processes_signaled": false,
+    "system_installation": false,
+    "no_existing_files_removed": true
+  },
+  "hosted_desktop": {
+    "run": 39124443099,
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39124443099",
+    "status": "success",
+    "commit": "2b09f1ec75271fe6cf59e47f895087e041beff10",
+    "native_units_passed": 38,
+    "skipped": 0,
+    "new_qt_ui_rows_passed": 30,
+    "new_qt_worker_rows_passed": 16,
+    "actual_smoke_qt_rows": 3,
+    "captures": 4
+  },
+  "hosted_sdk": {
+    "run": 39124443064,
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39124443064",
+    "status": "success"
+  },
+  "milestone_tag": "milestone-classic-layout-import-20261018"
+}
