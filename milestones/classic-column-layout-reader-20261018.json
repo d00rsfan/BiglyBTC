@@ -1,0 +1,118 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "upstream_repository": "https://github.com/BiglySoftware/BiglyBT",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_repository": "https://github.com/d00rsfan/BiglyBTC",
+  "scope": "Owned classic saved layout requested facts and optional held-profile reader",
+  "components": [
+    {
+      "scope": "Pure owned classic saved table-layout requested facts; no UI application or profile adapter",
+      "native_commit": "5bf0a30160c52c51d8efce279cac758948adfff2",
+      "native_parent": "0e96f6a5d8f6922791ab0655dc93b13e163366af",
+      "source_sha256": {
+        "preview/README.md": "5e84ed3eac5cd09d13181cdae58f70cc04cdf04ccb020e02823744a37d325180",
+        "preview/docs/classic-column-layout-contract.json": "5ec2455489938064e9e18eccb386f1bb0363bac920f97a0eebf2ca8ebcc9ad47",
+        "preview/docs/classic-column-persistence-source.json": "474b6bc5bfca4a2798b89024075267acc20128f3e1784e6efff38434b3216b64",
+        "preview/native/core/CMakeLists.txt": "f21a9aeb5bed1706378d59ba650270724b9c8b89fcc593d1f6ada406ea29d834",
+        "preview/native/core/include/biglybtc/column_layout.hpp": "1d4d1c06efd71ef2ab026364eb15f434d4b8647d15f8ae31852052f63a996d39",
+        "preview/native/core/src/column_layout.cpp": "b55620a54cbdc243c8eccade512b19905d1efe819a4efb0db39bb435a325dd25",
+        "preview/native/tests/CMakeLists.txt": "d0b218975fd739655163764c489216e0382ea8b8a8d33a7f884e739ad08bc7df",
+        "preview/native/tests/column_layout_tests.cpp": "d3755633442de66243bf2904e4610be6c146d3258f04559dcfb9fa60fda63a44"
+      },
+      "local_focused_lanes": {
+        "gcc16-release": {
+          "cases": 112,
+          "assertions": 1628
+        },
+        "clang24-release": {
+          "cases": 112,
+          "assertions": 1628
+        },
+        "gcc16-debug-asan-ubsan": {
+          "cases": 112,
+          "assertions": 1628,
+          "detect_leaks": true,
+          "halt_on_error": true
+        }
+      },
+      "full_native_units_passed": 35,
+      "skipped": 0,
+      "hosted_desktop": {
+        "run": 39122349333,
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39122349333",
+        "status": "success",
+        "commit": "5bf0a30160c52c51d8efce279cac758948adfff2",
+        "native_units_passed": 35,
+        "skipped": 0,
+        "new_cases": 112,
+        "new_assertions": 1628,
+        "actual_smoke_qt_rows": 3,
+        "captures": 4
+      },
+      "hosted_sdk": {
+        "run": 39122349381,
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39122349381",
+        "status": "success"
+      }
+    },
+    {
+      "scope": "Read-only fixed tables.config held-profile reader; no UI/startup/writer",
+      "native_commit": "51ce95d150fa352ef81ef18c6f318c7ef23642b4",
+      "native_parent": "5bf0a30160c52c51d8efce279cac758948adfff2",
+      "source_sha256": {
+        "preview/README.md": "71cf568d550aed03d21bf41a534dd6fbc8a51724aa8a101ae742d56c7b895cb9",
+        "preview/docs/classic-column-layout-reader-contract.json": "8af99355dc97f165b6d7fab7d2b806f0243f98f46aaaf2155237c2f3cf8183b7",
+        "preview/native/adapters/CMakeLists.txt": "b32ab9f7254ca70a33c644dfa5461e2697565055058d286fc4c8a496a629252e",
+        "preview/native/adapters/column_layout_view.hpp": "eee7b06a10d3b8ebddbecad07c50344b09953d0273bfc0b0129692cc23cb96ea",
+        "preview/native/adapters/column_layout_view.cpp": "d4bc7a9008acd645de68a80c2ecfa8bed2e18deb1272e4c802c0e5e70396288e",
+        "preview/native/tests/CMakeLists.txt": "68a36880791f1bc14ff418252f66466d5bc2bd42f9cc49e5d7b6d75e8bbdbd8e",
+        "preview/native/tests/column_layout_view_tests.cpp": "e283f5dacacf20725d249add26424e7bb0d7885b512a6224167b869dcfc232df"
+      },
+      "local_focused_lanes": {
+        "gcc16-release": {
+          "cases": 53,
+          "assertions": 6894
+        },
+        "clang24-release": {
+          "cases": 53,
+          "assertions": 6894
+        },
+        "gcc16-debug-asan-ubsan": {
+          "cases": 53,
+          "assertions": 6894
+        }
+      },
+      "full_native_units_passed": 36,
+      "skipped": 0,
+      "hosted_desktop": {
+        "run": 39122570716,
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39122570716",
+        "status": "success",
+        "commit": "51ce95d150fa352ef81ef18c6f318c7ef23642b4",
+        "native_units_passed": 36,
+        "skipped": 0,
+        "new_cases": 53,
+        "new_assertions": 6894,
+        "actual_smoke_qt_rows": 3,
+        "captures": 4
+      },
+      "hosted_sdk": {
+        "run": 39122570686,
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39122570686",
+        "status": "success"
+      }
+    }
+  ],
+  "normal_profile_access": false,
+  "processes_signaled": false,
+  "java_runtime_equality_credit": 0,
+  "ui_layout_application_credit": 0,
+  "dist_source_unchanged": "03e31e5ce260e1327e63cca63d22d8d5984ceae9",
+  "limitations": [
+    "No registered column defaults/legacy global config/migrations/reset-service emulation",
+    "No effective Java layout/sort equality or config writer/roundtrip qualification",
+    "Desktop layout application is subsequent work"
+  ],
+  "milestone_tag": "milestone-classic-layout-reader-20261018"
+}
