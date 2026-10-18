@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "scope": "Three optional explicitly saved-selected classic columns from current cache; no pane/live progress equivalence",
+  "upstream_repository": "https://github.com/BiglySoftware/BiglyBT",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_repository": "https://github.com/d00rsfan/BiglyBTC",
+  "native_parent": "9e890be4c6096934ab27c786ef37f3f706d67f94",
+  "native_commit": "03e31e5ce260e1327e63cca63d22d8d5984ceae9",
+  "pushed": true,
+  "native_units_passed": 34,
+  "native_units_skipped": 0,
+  "new_qt_rows_passed": 26,
+  "sanitized_new_qt_rows_passed": 26,
+  "sanitized_checks_passed": 1,
+  "sanitizers": "GCC16 Debug ASan/UBSan;detect_leaks=1;halt_on_error=1",
+  "three_view_plus_chooser_smoke_scales_passed": [
+    1,
+    1.5,
+    2
+  ],
+  "actual_smoke_qt_rows_per_scale": 3,
+  "captures_per_scale": 4,
+  "new_column_captures_visually_reviewed": true,
+  "manual_compositor_credit": false,
+  "java_manager_runtime_equality_credit": 0,
+  "normal_profile_access": false,
+  "processes_signaled": false,
+  "source_sha256": {
+    "preview/README.md": "9b29a7610380bbfd118eee679c435757cfd8d325f9e95af184067f390498a21c",
+    "preview/docs/saved-selected-columns-contract.json": "16b24d94c95e904a658724de595ba9f91b0e661260bcd3bbbc5f8fbb87821408",
+    "preview/native/app/session_bridge.cpp": "f43bcf4cb34ea8df76cf3b36bc92e7dbe25b57ec1cd0fa7792a11153454bb2fe",
+    "preview/native/packaging/preview.py": "2ab2acb1c8a6ec1084543775dec05dd05b4381004f449896b0316bbf946fba07",
+    "preview/native/packaging/preview_smoke.cpp": "4a8721574a78951f1c7c6a1e5bdffecf80a2026993d9680e1e40df3b6b5ec50c",
+    "preview/native/tests/CMakeLists.txt": "5c34e75da06b6fc44a60b1f866503046ee10e323e41716b37adba5bb1874e4de",
+    "preview/native/tests/classic_tests.cpp": "e605e09457de43ba2e0480c2efac4f3a6be27c3b1fcfa20f0b96f8853535a2ef",
+    "preview/native/tests/column_tests.cpp": "3691133ec5e3bf5f42bfea10b666c6b3509b38b8acd3147242e82fe7bdaea256",
+    "preview/native/tests/saved_position_tests.cpp": "2df13ee935a944ff68d09396a056b4c4c10749359278699a87bc041fa10e8f2f",
+    "preview/native/tests/saved_selected_tests.cpp": "b4e6d088048fa75c23ff16f39ad476ebbbe6de84d9262ea5aecf6c3f66e05749",
+    "preview/native/ui/library_model.hpp": "8abca399af00b5c2c96e760c85b6c1078e69274be8b68c6dc8de7ac877772d98",
+    "preview/native/ui/library_model.cpp": "c934ccdf09240b30330545e08b2dd0499d5688092321a18e0686e849100769cf",
+    "preview/native/ui/library_window.cpp": "da04f71c92300d239ff3203166cba8af252fdcc552f28bf21742839d4f087add"
+  },
+  "limitations": [
+    "Original metadata-download suppression, full Size/Done formats/locale/sort and live values are separate",
+    "No completion-pane/assumedComplete, disk manager or file recovery qualification",
+    "Column choices remain session-only; original table config compatibility pending"
+  ],
+  "dist": {
+    "source_commit": "03e31e5ce260e1327e63cca63d22d8d5984ceae9",
+    "dist": "/home/yurii/Java/BiglyBTC/dist",
+    "rollback": "/home/yurii/Java/BiglyBTC/build/saved-selected-20261018/previous-dist",
+    "files_verified": 103,
+    "runtime_files_byte_identical": 82,
+    "previous_manifest_sha256": "dd884201fc5761f1733ec59ea248f9b5e52bb8623cb0c173150dd119fae1642b",
+    "manifest_sha256": "058e8843ea3468838daa00c28034f5da9c6c9cd56553f0e1193a7dfd62526644",
+    "processes_signaled": false,
+    "system_installation": false,
+    "no_existing_files_removed": true
+  },
+  "hosted_desktop": {
+    "run": 39119435708,
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39119435708",
+    "status": "success",
+    "native_units_passed": 34,
+    "native_units_skipped": 0,
+    "new_qt_rows_passed": 26,
+    "actual_preview_smoke_qt_rows": 3,
+    "all_four_captures": true
+  },
+  "hosted_sdk": {
+    "run": 39119435750,
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39119435750",
+    "status": "success"
+  },
+  "milestone_tag": "milestone-classic-saved-selected-20261018"
+}
