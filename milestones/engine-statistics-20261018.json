@@ -1,0 +1,312 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "scope": "One measured experimental engine session per operation in classic Statistics > Transfers > Current",
+  "original_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_source_commit": "5fc34b588713112b126f3cebdfc891020301a281",
+  "native_parent": "e9eef6cbf633207ae4b44691147e5ece4f5b03be",
+  "source_sha256": {
+    ".github/workflows/native-preview.yml": "76131d7a1f2c081fb87b7448535ab622de8001858f6d855971f124d6688b6b3e",
+    "preview/README.md": "1bca5b879ed43114104b08b9a03f7a1a72ba72df29dc47577778e45316b0f9a0",
+    "preview/docs/engine-statistics-contract.json": "c5b6d7b90698e874450330d7332da3be4519348fbe3d2c165e930e4a267a441c",
+    "preview/native/app/main_desktop.cpp": "b409ed2b0a75212247fa84b9e98c5ee527d32d845050098797751d44a660f139",
+    "preview/native/app/session_bridge.cpp": "5858d71a4f3b1494d54250cf52edb116271f6fa84956a6f3d48fea22b909eea0",
+    "preview/native/app/session_bridge.hpp": "2dd37ae64b3fcc8569f52b8668784289bf3cf2b660a74e24fa172933075c9cf1",
+    "preview/native/core/CMakeLists.txt": "1031b6cb06f444f4f4da4d0388ef139f9e631c64f5d6e13708c34cda89d21761",
+    "preview/native/core/include/biglybtc/engine_statistics.hpp": "f5946fd72b06312dd4772bbfb7f4c84ebbfcff53971b737e8ba7cda4902678f9",
+    "preview/native/core/src/engine_statistics.cpp": "77f4214794a6eb942f6732614dac55905d72ea91433c3b7158cc8095f78dd90d",
+    "preview/native/engine/CMakeLists.txt": "4445b14869f3e5be1bb4b67e09c23f82c4d1c4fcfae95a9b05e779dc2d6e34f5",
+    "preview/native/engine/engine_statistics_sampler.cpp": "8185293d7e20a7de009d431fcd6d4f4fbded469118e201f3d94bbaf420a44604",
+    "preview/native/engine/engine_statistics_sampler.hpp": "689355ba82df086033944edb37f2a6a877d7471bd2e2f73dadc6124b7f094089",
+    "preview/native/engine/local_session.cpp": "4d7d7fd631cb48d712585f02e29d5541a3883d39a3d6f54b6234ba3bab93b132",
+    "preview/native/engine/local_session.hpp": "68b9c9f4baccc8e7ee9c4c33b4534855fdf75082003bd591ca84aca6d9643270",
+    "preview/native/engine/local_support.hpp": "a553d4f4c0c82bd2606be258619daaef33c578884c8e59f5916b8a34c4bedc16",
+    "preview/native/engine/multifile_session.cpp": "d300d6c23c90d73c4c0c610e310a0827d3a19403ec6bbc2785e9ebaaff92044f",
+    "preview/native/packaging/preview_smoke.cpp": "fa6d14ed3da3dbed2efb9250d742598f89ed13e5092199078ecfa552c7b7f0d0",
+    "preview/native/tests/CMakeLists.txt": "d27fbc54084c2e2f61cc9ba8a536276f73df44b92f9dbe3614b631bf206b3ca2",
+    "preview/native/tests/engine_statistics_integration_tests.cpp": "51ea4c4e6634738342638080977a38b5ab1ffc232093c1c1098af70d4c84e060",
+    "preview/native/tests/engine_statistics_tests.cpp": "1f6d1400d0120a4c659df1b974a08bd54f5ea61c875818a9d5a86feb0ff9a1e7",
+    "preview/native/tests/owned_engine_fixture.hpp": "799b00c13c45dfd9f8edc0e3e89deff616eb872497a67ced52935aca53330cfa",
+    "preview/native/tests/statistics_page_tests.cpp": "1e793ae37ee7b8042f7940e54c358bb58373651bc60ec7deb5e23de76e55900e",
+    "preview/native/ui/CMakeLists.txt": "8ef85ec9326de4cf73cad9732920b88ed80321f20832bca9042c04d2a50c46a9",
+    "preview/native/ui/engine_statistics_presentation.hpp": "2b1270182e459b2b93aa3376f80b8bcb52500b51486dca0e93820684479db67d",
+    "preview/native/ui/library_window.cpp": "d4a4d5b0e1d459b64fcd3e7c231cf6d6e9f1d59e6397bdb5fcfdc1f6450c3e00",
+    "preview/native/ui/library_window.hpp": "ef543fb88d905c6967baa820f4a9d89f666b059bbf6e4cd0b9391b74a926f6e7",
+    "preview/native/ui/statistics_page.cpp": "f65d150e73265426a7020b89a7793f387b8f5b978808d9d1f3d8757b3e512a02",
+    "preview/native/ui/statistics_page.hpp": "c43190406354f1f24708a1e5407525c6879a1c6680a15d5b1bf3e71fe72daf2e"
+  },
+  "source_files_verified": 28,
+  "unit_suites_passed": {
+    "gcc": 50,
+    "clang": 3,
+    "sanitized": 9
+  },
+  "exact_test_sets": {
+    "gcc": [
+      "bounded-core-formats",
+      "bounded-executor",
+      "bounded-plugin-attributes",
+      "bounded-rating-data",
+      "bounded-rating-local-policy",
+      "cached-state-metadata",
+      "classic-close-tab-lifecycle",
+      "classic-column-layout-profile-reader",
+      "classic-column-layout-projection",
+      "classic-library-layout",
+      "classic-preferences-codec",
+      "classic-preferences-header-roundtrip",
+      "classic-preferences-profile-first-save",
+      "classic-preferences-profile-save",
+      "classic-preferences-window-worker-restart",
+      "classic-saved-layout-import",
+      "classic-saved-layout-worker",
+      "classic-saved-queue-position",
+      "classic-saved-selected-statistics",
+      "classic-table-columns",
+      "classic-view-navigation",
+      "compatible-config-first-create",
+      "compressed-state-envelope",
+      "desktop-files-model",
+      "desktop-model-and-lifecycle",
+      "executor-owner-finalizer",
+      "executor-startup-rollback",
+      "original-file-priorities",
+      "original-mldht-routing-cache",
+      "original-plugin-attributes",
+      "original-plugin-settings",
+      "original-rating-data",
+      "original-rating-local-policy",
+      "original-rpc-profile-snapshot",
+      "original-torrent-geometry",
+      "owned-engine-statistics-arithmetic",
+      "owned-engine-statistics-window-worker",
+      "owned-peer-readiness",
+      "pure-saved-dnd-aggregates",
+      "readonly-saved-service-views",
+      "saved-hosting-sharing-projection",
+      "saved-library-inventory",
+      "saved-service-page-models",
+      "saved-services-bridge-lifecycle",
+      "saved-services-view-navigation",
+      "saved-statistics-profile-reader",
+      "saved-statistics-projection",
+      "statistics-page-behavior",
+      "statistics-window-worker",
+      "structured-document-edits"
+    ],
+    "clang": [
+      "owned-engine-statistics-arithmetic",
+      "owned-engine-statistics-window-worker",
+      "statistics-page-behavior"
+    ],
+    "sanitized": [
+      "classic-close-tab-lifecycle",
+      "classic-preferences-window-worker-restart",
+      "classic-saved-layout-worker",
+      "owned-engine-statistics-arithmetic",
+      "owned-engine-statistics-window-worker",
+      "saved-services-bridge-lifecycle",
+      "saved-services-view-navigation",
+      "statistics-page-behavior",
+      "statistics-window-worker"
+    ]
+  },
+  "skipped": 0,
+  "arithmetic_cases": 22,
+  "arithmetic_assertions": 3719,
+  "independent_rational_vectors": 512,
+  "statistics_page_qt_rows": 92,
+  "owned_engine_window_worker_qt_rows": 12,
+  "sanitizer_options": {
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1"
+  },
+  "actual_smoke_scales": [
+    1,
+    1.5,
+    2
+  ],
+  "offline_smoke_qt_rows_per_scale": 6,
+  "actual_engine_qt_rows_per_scale": 4,
+  "captures_per_scale": 8,
+  "measured_transfer_tests": [
+    "single and multifile actual counters/rates",
+    "fresh completed-file recheck operation",
+    "cancel unfinished partial-seed transfer",
+    "destroy Bridge with unfinished owned transfer",
+    "absent and throwing observers preserve successful transfers"
+  ],
+  "saved_statistics_bytes_unchanged": true,
+  "generated_payload_device_inode_and_success_bytes_preserved": true,
+  "manual_compositor_credit": false,
+  "hosted": {
+    "desktop": {
+      "conclusion": "success",
+      "databaseId": 39144813366,
+      "headSha": "5fc34b588713112b126f3cebdfc891020301a281",
+      "jobs": [
+        {
+          "completedAt": "2026-10-18T16:29:09Z",
+          "conclusion": "success",
+          "databaseId": 117726395238,
+          "name": "preview",
+          "startedAt": "2026-10-18T16:24:01Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-10-18T16:24:02Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-10-18T16:24:02Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:24:03Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "number": 2,
+              "startedAt": "2026-10-18T16:24:02Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:24:47Z",
+              "conclusion": "success",
+              "name": "Install pinned compiler, libtorrent and Qt 6.12.0 SDK",
+              "number": 3,
+              "startedAt": "2026-10-18T16:24:03Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:28:20Z",
+              "conclusion": "success",
+              "name": "Configure and build the desktop preview",
+              "number": 4,
+              "startedAt": "2026-10-18T16:24:47Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:29:04Z",
+              "conclusion": "success",
+              "name": "Run offline unit tests",
+              "number": 5,
+              "startedAt": "2026-10-18T16:28:20Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:29:06Z",
+              "conclusion": "success",
+              "name": "Run actual offline preview smoke and capture classic view",
+              "number": 6,
+              "startedAt": "2026-10-18T16:29:04Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:29:06Z",
+              "conclusion": "success",
+              "name": "Preserve test, screenshot and dependency evidence",
+              "number": 7,
+              "startedAt": "2026-10-18T16:29:06Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:29:07Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "number": 14,
+              "startedAt": "2026-10-18T16:29:06Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:29:07Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 15,
+              "startedAt": "2026-10-18T16:29:07Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39144813366/job/117726395238"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39144813366",
+      "workflowName": "Native desktop preview unit and smoke tests"
+    },
+    "sdk": {
+      "conclusion": "success",
+      "databaseId": 39144813345,
+      "headSha": "5fc34b588713112b126f3cebdfc891020301a281",
+      "jobs": [
+        {
+          "completedAt": "2026-10-18T16:24:12Z",
+          "conclusion": "success",
+          "databaseId": 117726394952,
+          "name": "sdk",
+          "startedAt": "2026-10-18T16:24:00Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-10-18T16:24:02Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-10-18T16:24:01Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:24:03Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "number": 2,
+              "startedAt": "2026-10-18T16:24:02Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:24:09Z",
+              "conclusion": "success",
+              "name": "Build and exercise C ABI and module lifecycle",
+              "number": 3,
+              "startedAt": "2026-10-18T16:24:03Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:24:09Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "number": 6,
+              "startedAt": "2026-10-18T16:24:09Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:24:09Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 7,
+              "startedAt": "2026-10-18T16:24:09Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39144813345/job/117726394952"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39144813345",
+      "workflowName": "Native plugin SDK contract"
+    }
+  },
+  "dist_files_verified": 103,
+  "private_runtime_files_unchanged": 82,
+  "installed_rpath_replay_full_byte_equality": true,
+  "dist_manifest_sha256": "32aa4be0b058974b6141ee2f7f911e7077a0f17fa1d252f81eab2178a065af01",
+  "dist_rollback_retained": true,
+  "original_profile_access": false,
+  "original_processes_signaled": false,
+  "limitations": [
+    "One temporary engine operation; no application-wide totals or Java ten-second smoothing equality",
+    "Ended counters are last observed, not exhaustive final teardown accounting",
+    "IP/tracker/DHT/global history and remaining Statistics services unfinished",
+    "No statistics writes, reset/mark, global or lifetime accumulation",
+    "Persistent owner, full client/plugins, seamless switching and performance qualification remain unfinished"
+  ]
+}
