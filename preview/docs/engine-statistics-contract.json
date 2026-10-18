@@ -1,0 +1,264 @@
+{
+  "schema": 1,
+  "original_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_source": {
+    "core/src/com/biglybt/core/global/GlobalManagerStats.java": {
+      "sha256": "e93c2aff9071ea0be53e61c2c78ff9534b23a1bd647a7a94b6a32f1bbb801558",
+      "git_blob": "5edcc5dc9827f0f3a4cfc2787b0087a87d1029c2"
+    },
+    "core/src/com/biglybt/core/global/impl/GlobalManagerStatsImpl.java": {
+      "sha256": "124c0cf19f7c99dc5a72b9d9f4bc99a0da942f0c3a7c2dc37cd1acd12e86c7c3",
+      "git_blob": "a247b2ee87abdc97c8e1b980ada9be3e6c85e31f"
+    },
+    "core/src/com/biglybt/core/stats/transfer/GeneralStats.java": {
+      "sha256": "4c4cd0df178265c76ba4da78b3ca79f23d4f3bf2a2b663fe67f3647a1735bd8b",
+      "git_blob": "4a4573d3bf6f7639a76c4cc12fe9567f491a2e38"
+    },
+    "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java": {
+      "sha256": "14a6ecbee076ac3fa991db8d618af9faab83e1b6b4ea52e1f71eb2b2d7ea240f",
+      "git_blob": "ac2a37822729b721aed9367b77d88450b826ec45"
+    },
+    "core/src/com/biglybt/core/util/Average.java": {
+      "sha256": "490fc2ac31e6b740a9c4afe370f6efb73b8d5209e63d48e39d5a715cb7e02e75",
+      "git_blob": "9ba2b07dbd0cf53adc04d416e66b8aace8b0afe3"
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java": {
+      "sha256": "caf9b2db52ea7fc48248131f75d59466157a6578045c32bb9db0c3a4b763b648",
+      "git_blob": "b02e0bbb331bdf6c517387ba999284af7fb53cf2"
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/ActivityView.java": {
+      "sha256": "5ed9705c122842319eea84339a783a498cc03fc338d9637ff4772887fd73fcd2",
+      "git_blob": "805df9f17c887034129858a27517ed488a79e215"
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java": {
+      "sha256": "0c2b304c022013d0797732049c51deb23a7af976f74b0d47f22156d8da097103",
+      "git_blob": "0cfe7a202d8ff27da9500435ea9bd659a1de6ba5"
+    }
+  },
+  "libtorrent": {
+    "version": "2.0.12",
+    "recorded_source_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+    "archive": {
+      "url": "https://archive.ubuntu.com/ubuntu/pool/universe/libt/libtorrent-rasterbar/libtorrent-rasterbar_2.0.12.orig.tar.xz",
+      "sha256": "fa0168f5c2b510105ce4e215f5863c80597112b99fc4f30514de2a6ea84da1b5"
+    },
+    "generated_version_header_revision": "078a3e722",
+    "identity_note": "The recorded full source identity is retained separately from the generated version-header marker. Each listed source file was byte-checked against the exact release archive; installed header bytes matched those members. No identity is inferred from a short version marker.",
+    "source": {
+      "include/libtorrent/version.hpp": {
+        "sha256": "78facdac8e2d843d1c7aaf3ea39c3f6fd9c8af8c00934a4ec14f928b0c5a0c81",
+        "bytes": 2687
+      },
+      "include/libtorrent/session_stats.hpp": {
+        "sha256": "50f24276b7ba33ecbd09613a168a2d1646ad5b8fe580fd4e91f3636c7d767ef1",
+        "bytes": 3114
+      },
+      "include/libtorrent/performance_counters.hpp": {
+        "sha256": "41a1b2f2678ad605ee0022c298bece06095be6a991457b026545eac9f9005af2",
+        "bytes": 13638
+      },
+      "include/libtorrent/session_handle.hpp": {
+        "sha256": "66055aa158d65f70972a2a19927d4cf7bc7e3ef223a69e3b825353a270757798",
+        "bytes": 48691
+      },
+      "include/libtorrent/alert_types.hpp": {
+        "sha256": "15ce77c102b456465db6c119d15bbb6b74792ba684aa386669b3d6d748442897",
+        "bytes": 111193
+      },
+      "include/libtorrent/alert.hpp": {
+        "sha256": "57b7b46958f52f9882ad230e921441f46e40fac8a659173d6d2da1a4c32a222d",
+        "bytes": 13244
+      },
+      "include/libtorrent/time.hpp": {
+        "sha256": "a21e3756ecc26f662ccf7889234d971dd9490cff60c6ff5bdade2ec2f9972749",
+        "bytes": 3301
+      },
+      "include/libtorrent/torrent_status.hpp": {
+        "sha256": "8d536cd124ed6b4b124db781fc75a6bf6e645db9622f05e4e24f6dd98ec33db4",
+        "bytes": 25265
+      },
+      "include/libtorrent/stat.hpp": {
+        "sha256": "1458d8cc96f226f862e197568d4ea5850402b9f8e19e1fdafb45f9eb4279019b",
+        "bytes": 8201
+      },
+      "src/session_stats.cpp": {
+        "sha256": "cd71bfbcdf53304921700d1989c5fea8575b5ebc630c061ae309eae71cd3f937",
+        "bytes": 22814
+      },
+      "src/session_handle.cpp": {
+        "sha256": "4982bbac9aa578949623ee62781b124900b75c95ca99d5fb1adc410ef728b74e",
+        "bytes": 37529
+      },
+      "src/session_impl.cpp": {
+        "sha256": "e33778939a03634f7ca588752f924afcdf790ac48ddd2a127af71e00f34d1c65",
+        "bytes": 224090
+      },
+      "src/alert.cpp": {
+        "sha256": "750ccc0d3a62ffd6e2dbce1d9930556bc9613ec3b10a40825bb28bc863179773",
+        "bytes": 89515
+      },
+      "src/performance_counters.cpp": {
+        "sha256": "867f5ccd8f8ddf121fb202027bb612f7c9e7b07a01395d1ce9e2cbebdb7a65b3",
+        "bytes": 5487
+      },
+      "src/stat.cpp": {
+        "sha256": "7dc9b2b214396ef3e400907031df69b166e00d4639ce940a00712f1573d5d642",
+        "bytes": 1890
+      },
+      "src/torrent.cpp": {
+        "sha256": "d0b8d64c54583cb9287d20aaf5ea5bc2e85cbf0caa5d5c9df42f40c77187d185",
+        "bytes": 364420
+      },
+      "src/tracker_manager.cpp": {
+        "sha256": "8c8ebd4a76603cc6a9eca4d17177078092a4cf7d7532e5e53fa2bb36f9ad235c",
+        "bytes": 15133
+      },
+      "src/kademlia/dht_tracker.cpp": {
+        "sha256": "d3711a78e50dbbfd37fb0a501fbe13e9f7ef2b7b5fba6735095ff05aa2225bcc",
+        "bytes": 22721
+      },
+      "docs/manual.rst": {
+        "sha256": "941b5b482ed4ad7ad7e89619931999626e87d895af06f8635be8fe02a0cd4a09",
+        "bytes": 64512
+      }
+    },
+    "matched_development_headers": {
+      "include/libtorrent/version.hpp": {
+        "sha256": "78facdac8e2d843d1c7aaf3ea39c3f6fd9c8af8c00934a4ec14f928b0c5a0c81",
+        "matches_pinned_release_source": true
+      },
+      "include/libtorrent/session_stats.hpp": {
+        "sha256": "50f24276b7ba33ecbd09613a168a2d1646ad5b8fe580fd4e91f3636c7d767ef1",
+        "matches_pinned_release_source": true
+      },
+      "include/libtorrent/performance_counters.hpp": {
+        "sha256": "41a1b2f2678ad605ee0022c298bece06095be6a991457b026545eac9f9005af2",
+        "matches_pinned_release_source": true
+      },
+      "include/libtorrent/session_handle.hpp": {
+        "sha256": "66055aa158d65f70972a2a19927d4cf7bc7e3ef223a69e3b825353a270757798",
+        "matches_pinned_release_source": true
+      },
+      "include/libtorrent/alert_types.hpp": {
+        "sha256": "15ce77c102b456465db6c119d15bbb6b74792ba684aa386669b3d6d748442897",
+        "matches_pinned_release_source": true
+      },
+      "include/libtorrent/alert.hpp": {
+        "sha256": "57b7b46958f52f9882ad230e921441f46e40fac8a659173d6d2da1a4c32a222d",
+        "matches_pinned_release_source": true
+      },
+      "include/libtorrent/time.hpp": {
+        "sha256": "a21e3756ecc26f662ccf7889234d971dd9490cff60c6ff5bdade2ec2f9972749",
+        "matches_pinned_release_source": true
+      },
+      "include/libtorrent/torrent_status.hpp": {
+        "sha256": "8d536cd124ed6b4b124db781fc75a6bf6e645db9622f05e4e24f6dd98ec33db4",
+        "matches_pinned_release_source": true
+      },
+      "include/libtorrent/stat.hpp": {
+        "sha256": "1458d8cc96f226f862e197568d4ea5850402b9f8e19e1fdafb45f9eb4279019b",
+        "matches_pinned_release_source": true
+      }
+    }
+  },
+  "scope": {
+    "implemented_domain": "One experimental owned libtorrent session per continuation operation; peer-transfer payload plus protocol only.",
+    "original_context": "Original GlobalManagerStats spans its manager lifetime, with separate data/protocol counters and10-second rate averages. GeneralStats saved lifetime/mark/session uptime are different services. This milestone does not substitute one operation for those application-wide domains.",
+    "placement": "Statistics > Transfers > Current, explicitly identified owned transfer engine section. Existing Activity remains a separately labelled per-transfer payload series.",
+    "no_implicit_start": "Opening or refreshing Statistics does not create an engine or start a transfer. Observations come only from an already authorized experimental continuation.",
+    "network_policy_unchanged": true
+  },
+  "metrics": {
+    "lookup": "Resolve the four exact names through session_stats_metrics at runtime. Require counter type, distinct nonnegative indices and bounds in the actual session_stats_alert counters span. Do not hardcode version-dependent offsets.",
+    "cumulative_fields": {
+      "received": {
+        "metric": "net.recv_bytes",
+        "unit": "bytes",
+        "domain": "Peer payload plus protocol received by this engine session"
+      },
+      "sent": {
+        "metric": "net.sent_bytes",
+        "unit": "bytes",
+        "domain": "Peer payload plus protocol sent by this engine session"
+      },
+      "payloadReceived": {
+        "metric": "net.recv_payload_bytes",
+        "unit": "bytes",
+        "domain": "Payload received by this engine session"
+      },
+      "payloadSent": {
+        "metric": "net.sent_payload_bytes",
+        "unit": "bytes",
+        "domain": "Payload sent by this engine session"
+      }
+    },
+    "derived_protocol": {
+      "received": "received-payloadReceived",
+      "sent": "sent-payloadSent",
+      "admission": "All raw counters nonnegative, combined>=payload. Checked differences, never inferred from raw rate subtraction."
+    },
+    "separate_excluded_domains": [
+      "IP/TCP/UDP overhead estimates",
+      "Tracker traffic",
+      "DHT traffic",
+      "Other processes or independent sessions",
+      "Saved lifetime/per-download/client totals"
+    ],
+    "avoid_double_count": "Combined counters already include payload. Never add payload again or combine the separate excluded domains into these totals.",
+    "not_torrent_status_totals": "Torrent status cumulative counters can reset at pause/resume. The sampler uses actual session cumulative counters, not sums of resettable torrent counters or integrals of sampled rates."
+  },
+  "accumulator": {
+    "ownership": "A fresh primitive-owned accumulator for each actual engine owner; copies have independent state and results borrow no alert memory.",
+    "counter_admission": "All4 raw totals and both derived protocol totals must be monotone within one accumulator.",
+    "time_admission": "Caller-supplied steady observation nanoseconds are nonnegative and strictly increase after first acceptance.",
+    "rejection_order": [
+      "InvalidCounters",
+      "InvalidTime",
+      "CounterRegression"
+    ],
+    "rejected_sample_mutation": false,
+    "first_observation": "Known cumulative totals, elapsedNanoseconds0, rates unavailable. Initial totals need not be zero; no prior rate is invented.",
+    "elapsed": "Nanoseconds since FIRST accepted observation, not engine construction, application uptime, wall time or saved mark time.",
+    "interval_rates": "Exact floor(deltaBytes*1000000000/deltaNanoseconds) for received,sent,payloadReceived,payloadSent,protocolReceived,protocolSent; use the last accepted interval, not total elapsed.",
+    "integer_policy": "Overflow-safe integer arithmetic with no floating approximation, signed overflow, saturation, unchecked wide product or compiler-specific integer extension.",
+    "unrepresentable_rate": "If any of6 exact rates exceeds signed64, the whole rate group is unavailable. Accept the valid totals/time as the next baseline; never replace the rate withzero or reject those facts as a reset.",
+    "snapshot_validation": "Raw counters and elapsed are nonnegative, combined>=payload. Present rates require positive elapsed; each direction has nonnegative components with payload+protocol<=combined and difference0..1 from independent floors. Validation uses safe differences instead of overflowing sums. Structural validation is not proof of provenance."
+  },
+  "sampling": {
+    "clock": "Native std::chrono::steady_clock observations; supported Linux clock representation is compile-time checked as signed integral nanoseconds fitting int64.",
+    "alert_clock_not_used": "Libtorrent2.0.12 alert timestamp uses high_resolution_clock, not a guaranteed steady clock. It is not used for native interval arithmetic.",
+    "ordinary_minimum_post_interval_nanoseconds": 200000000,
+    "explicit_stage_request": "Initial/final-stage requests may bypass ordinary cadence. Multiple force requests while outstanding coalesce into one next post.",
+    "maximum_outstanding_requests": 1,
+    "alert_consumer": "The same existing popped alert batch feeds the sampler in all3 single-file and all3 multifile waits; no second pop consumer or changed transfer/error predicate.",
+    "borrowed_lifetime": "Copy only the four primitives before the next alert pop. No alert pointer or counters span crosses into a queued GUI callback.",
+    "absent_callback": "No metric query, clock read, statistics post or alert scan.",
+    "optional_error": "Metric, bounds, clock, counter-discontinuity, post or observer exception disables this sampler without throwing into the transfer. Callback target remains owned until ordinary owner-thread destruction.",
+    "lost_response": "A dropped-session-stats notification or unexpected response disables optional sampling. A lost response without a reported drop can remain outstanding; no retry flood or fabricated replacement measurement.",
+    "no_extra_final_wait": "A stage request may be answered during the existing flush wait. Completion never waits for a statistics alert and adds no new deadline, sleep or final-total guarantee.",
+    "observer_precondition": "Observation callbacks remain bounded owner-thread callbacks. Exception isolation is not a guarantee against arbitrary blocking/destructive caller code."
+  },
+  "publication_and_cache": {
+    "identity": "Immutable nonzero profile session, per-operation identity, increasing sequence and original library target. Window admits a new Preparing only against a current target; same-hash later runs remain distinct owners.",
+    "states": {
+      "Preparing": "Run intent only; no observed engine-counter evidence.",
+      "Observed": "Actual accepted session counter observation.",
+      "Ended": "Owner operation resolved successfully or unsuccessfully; retain last actual observation if available, otherwise explicitly unavailable."
+    },
+    "delivery": "Observed packets can coalesce to the newest owned sample; Preparing/Ended lifecycle boundaries are separately queued. Stale session/operation/sequence/target and post-terminal same-operation packets are rejected.",
+    "terminal_time": "No synthetic zero or new rate observation after owner destruction. Last observed values need not include every byte of teardown traffic. They remain labelled last observed after completion/cancellation/failure.",
+    "close_reopen": "Window retains at most the latest owned operation packet independently of the page; close/reopen can display that actual cached sample. A new operation or profile discards earlier facts rather than stitching/resetting counters into a false lifetime total.",
+    "saved_values": "Engine telemetry never writes BiglyBT.statistics, changes saved mark baselines or reinterprets per-download saved counters as engine/application totals.",
+    "UI_rates": "Transfers displays measured combined receive/send interval rates; the typed snapshot also owns payload/protocol rate components. No first-rate zero is inferred.",
+    "hidden_view": "Cache owned updates while hidden/minimized; render only when the relevant page/subtab is visible. No extra idle sampler or animation timer."
+  },
+  "unfinished": [
+    "Persistent all-application engine owner/session totals",
+    "Original GlobalManagerStats ten-second smoothing, LAN/non-LAN and global rate equivalence",
+    "Original lifetime/mark accumulation or statistics writes",
+    "Protocol/IP/tracker/DHT byte-domain equivalence across clients",
+    "Persistent global long-term history and other StatsView services",
+    "Full Java/native switching, storage/client parity and performance qualification"
+  ],
+  "qualification_note": "Source pins and this contract define the bounded behavior. Actual builds/tests, immutable implementation commit and release provenance are separate evidence; this document alone grants no runtime/equality or performance credit."
+}

@@ -48,6 +48,21 @@ void show(ui::StatisticsPage& page) { page.resize(1000, 800); page.show(); QCore
 ui::Telemetry payload(qint64 down = 100, qint64 up = 50, quint64 generation = 1, const QString& hash = QStringLiteral("HASH-A")) {
   return {{hash, generation}, 2048, down, up, QStringLiteral("Downloading")};
 }
+std::shared_ptr<ui::EngineStatisticsPacket> enginePreparing(quint64 operation = 1) {
+  auto value = std::make_shared<ui::EngineStatisticsPacket>(); value->session = 1; value->operation = operation; value->sequence = 1;
+  value->target = {QStringLiteral("ENGINE-HASH"), 3}; value->name = QStringLiteral("Engine transfer"); return value;
+}
+std::shared_ptr<ui::EngineStatisticsPacket> engineObserved() {
+  auto value = enginePreparing(); value->sequence = 2; value->state = ui::EngineStatisticsState::Observed;
+  value->sample = core::EngineStatistics{{1000, 700, 800, 500}, 2000000000LL, core::EngineRates{100, 80, 70, 50, 30, 30}};
+  return value;
+}
+void showEngine(ui::StatisticsPage& page) {
+  page.tabs().setCurrentIndex(1);
+  auto* inner = page.findChild<QTabWidget*>(QStringLiteral("statistics-transfer-tabs"));
+  if (!inner) { throw std::runtime_error("Missing statistics Current/History tabs"); }
+  inner->setCurrentIndex(0); show(page);
+}
 class Hook final : public QObject {
 public:
   bool armed = true;
@@ -282,6 +297,257 @@ private slots:
     auto page = std::make_unique<ui::StatisticsPage>(); QPointer guard(page.get());
     QObject::connect(page.get(), &ui::StatisticsPage::refreshRequested, qApp, [&] { page.reset(); }, Qt::DirectConnection);
     page->findChild<QPushButton*>(QStringLiteral("statistics-refresh"))->click(); QVERIFY(guard.isNull());
+  }
+  void engineGroupIsCompactUntilAnActualObservation() {
+    ui::StatisticsPage page; page.beginRequest(1, 1); showEngine(page);
+    auto* group = page.findChild<QWidget*>(QStringLiteral("statistics-engine-session")); QVERIFY(group);
+    auto* counters = page.findChild<QWidget*>(QStringLiteral("statistics-engine-counters")); QVERIFY(counters);
+    QVERIFY(group->isVisible()); QVERIFY(counters->isHidden());
+    QVERIFY(field(page, "statistics-engine-status")->text().contains(QStringLiteral("Unavailable")));
+    QVERIFY(field(page, "statistics-engine-target")->isHidden());
+    QCOMPARE(page.sampleCount(), std::size_t{0});
+    auto preparing = enginePreparing(); page.setEngineStatistics(preparing);
+    QVERIFY(counters->isHidden()); QVERIFY(field(page, "statistics-engine-status")->text().contains(QStringLiteral("Preparing")));
+    QVERIFY(field(page, "statistics-engine-scope")->text().contains(QStringLiteral("One experimental transfer engine only")));
+    QVERIFY(field(page, "statistics-engine-scope")->text().contains(QStringLiteral("not an exhaustive final accounting")));
+    QCOMPARE(field(page, "statistics-saved-downloaded")->text(), QStringLiteral("Unavailable"));
+  }
+  void enginePacketGateRejectsMalformed_data() {
+    QTest::addColumn<int>("kind");
+    const std::array<const char*, 26> names{"null", "zero-expected-session", "zero-session", "wrong-session", "zero-operation", "zero-sequence",
+        "zero-target-generation", "empty-target", "oversized-target", "oversized-name", "unknown-state", "preparing-wrong-sequence",
+        "preparing-with-sample", "preparing-success", "observed-sequence-one", "observed-without-sample", "observed-success",
+        "negative-counter", "payload-exceeds-total", "negative-elapsed", "negative-rate", "inconsistent-rate", "rate-at-zero-elapsed",
+        "ended-sequence-one", "ended-invalid-sample", "overflowing-rate-components"};
+    for (std::size_t i = 0; i < names.size(); ++i) { QTest::newRow(names[i]) << static_cast<int>(i); }
+  }
+  void enginePacketGateRejectsMalformed() {
+    QFETCH(int, kind); auto value = engineObserved(); quint64 expectedSession = 1;
+    if (kind == 1) { expectedSession = 0; } if (kind == 2) { value->session = 0; }
+    if (kind == 3) { value->session = 2; } if (kind == 4) { value->operation = 0; } if (kind == 5) { value->sequence = 0; }
+    if (kind == 6) { value->target.generation = 0; } if (kind == 7) { value->target.hash.clear(); }
+    if (kind == 8) { value->target.hash = QString(257, QLatin1Char('A')); } if (kind == 9) { value->name = QString(8193, QLatin1Char('x')); }
+    if (kind == 10) { value->state = static_cast<ui::EngineStatisticsState>(99); }
+    if (kind == 11) { value->state = ui::EngineStatisticsState::Preparing; value->sample.reset(); }
+    if (kind == 12) { value->state = ui::EngineStatisticsState::Preparing; value->sequence = 1; }
+    if (kind == 13) { value = enginePreparing(); value->successful = true; }
+    if (kind == 14) { value->sequence = 1; } if (kind == 15) { value->sample.reset(); } if (kind == 16) { value->successful = true; }
+    if (kind == 17) { value->sample->counters.received = -1; } if (kind == 18) { value->sample->counters.payloadSent = 701; }
+    if (kind == 19) { value->sample->elapsedNanoseconds = -1; } if (kind == 20) { value->sample->rates->sent = -1; }
+    if (kind == 21) { value->sample->rates->protocolReceived = 31; } if (kind == 22) { value->sample->elapsedNanoseconds = 0; }
+    if (kind == 23) { value->state = ui::EngineStatisticsState::Ended; value->sequence = 1; }
+    if (kind == 24) { value->state = ui::EngineStatisticsState::Ended; value->sample->counters.sent = -1; }
+    if (kind == 25) {
+      value->sample->rates->received = std::numeric_limits<std::int64_t>::max();
+      value->sample->rates->payloadReceived = std::numeric_limits<std::int64_t>::max();
+      value->sample->rates->protocolReceived = std::numeric_limits<std::int64_t>::max();
+    }
+    ui::EngineStatisticsPresentation incoming = kind == 0 ? ui::EngineStatisticsPresentation{} : value;
+    QVERIFY(!ui::acceptEngineStatistics({}, incoming, expectedSession));
+    ui::StatisticsPage page;
+    if (kind != 1) { page.beginRequest(1, 1); } // Case1 keeps the real Page session uninitialised.
+    showEngine(page); page.setEngineStatistics(incoming);
+    QVERIFY(page.findChild<QWidget*>(QStringLiteral("statistics-engine-counters"))->isHidden());
+  }
+  void engineOrderingRejectsStaleAndRegressedPackets_data() {
+    QTest::addColumn<int>("kind");
+    const std::array<const char*, 15> names{"older-operation", "duplicate-sequence", "older-sequence", "changed-hash", "changed-generation",
+        "received-regression", "sent-regression", "payload-receive-regression", "payload-send-regression", "protocol-receive-regression",
+        "protocol-send-regression", "backward-elapsed", "equal-observation-elapsed", "after-terminal", "current-other-session"};
+    for (std::size_t i = 0; i < names.size(); ++i) { QTest::newRow(names[i]) << static_cast<int>(i); }
+  }
+  void engineOrderingRejectsStaleAndRegressedPackets() {
+    QFETCH(int, kind); auto previous = engineObserved(); previous->operation = 5;
+    auto incoming = std::make_shared<ui::EngineStatisticsPacket>(*previous);
+    incoming->sequence = 3; incoming->sample->elapsedNanoseconds = 3000000000LL;
+    incoming->sample->counters = {1100, 800, 900, 600};
+    if (kind == 0) { incoming->operation = 4; } if (kind == 1) { incoming->sequence = 2; } if (kind == 2) { incoming->sequence = 1; }
+    if (kind == 3) { incoming->target.hash = QStringLiteral("OTHER"); } if (kind == 4) { ++incoming->target.generation; }
+    if (kind == 5) { incoming->sample->counters.received = 999; incoming->sample->counters.payloadReceived = 800; }
+    if (kind == 6) { incoming->sample->counters.sent = 699; incoming->sample->counters.payloadSent = 500; }
+    if (kind == 7) { incoming->sample->counters.payloadReceived = 799; } if (kind == 8) { incoming->sample->counters.payloadSent = 499; }
+    if (kind == 9) { incoming->sample->counters.payloadReceived = 950; } if (kind == 10) { incoming->sample->counters.payloadSent = 650; }
+    if (kind == 11) { incoming->sample->elapsedNanoseconds = 1999999999LL; }
+    if (kind == 12) { incoming->sample->elapsedNanoseconds = previous->sample->elapsedNanoseconds; }
+    if (kind == 13) { previous->state = ui::EngineStatisticsState::Ended; } if (kind == 14) { previous->session = 2; }
+    QVERIFY(!ui::acceptEngineStatistics(previous, incoming, 1));
+    QCOMPARE(previous->sample->counters.received, std::int64_t{1000});
+  }
+  void engineMeasuredCountersAndCombinedIntervalRatesStaySeparate() {
+    ui::StatisticsPage page; page.beginRequest(1, 1); page.setPresentation(packet()); showEngine(page);
+    page.setEngineStatistics(enginePreparing()); auto observation = engineObserved(); page.setEngineStatistics(observation);
+    QVERIFY(page.findChild<QWidget*>(QStringLiteral("statistics-engine-counters"))->isVisible());
+    const std::array<const char*, 6> ids{"received", "sent", "payload-received", "payload-sent", "protocol-received", "protocol-sent"};
+    const std::array<qint64, 6> totals{1000, 700, 800, 500, 200, 200};
+    for (std::size_t i = 0; i < ids.size(); ++i) {
+      auto* value = field(page, (QByteArray("statistics-engine-") + ids[i]).constData());
+      QCOMPARE(value->text(), QStringLiteral("%1 bytes").arg(totals[i]));
+      QCOMPARE(value->toolTip(), QStringLiteral("%1 measured bytes in this engine operation").arg(totals[i]));
+      QCOMPARE(value->textFormat(), Qt::PlainText);
+    }
+    QCOMPARE(field(page, "statistics-engine-receive-rate")->text(), QStringLiteral("100 bytes/s"));
+    QCOMPARE(field(page, "statistics-engine-send-rate")->text(), QStringLiteral("80 bytes/s"));
+    QCOMPARE(field(page, "statistics-engine-status")->toolTip(), QStringLiteral("Last actual observation: 2000000000 nanoseconds since the first accepted observation"));
+    QCOMPARE(field(page, "statistics-saved-downloaded")->text(), QStringLiteral("1024 bytes"));
+    QCOMPARE(page.sampleCount(), std::size_t{0}); // Engine packets never add Activity samples.
+    QCOMPARE(field(page, "statistics-payload-download-rate")->text(), QStringLiteral("Unavailable"));
+    QCOMPARE(field(page, "statistics-current-unavailable")->text(), QStringLiteral("Current global rates and this-session totals: unavailable"));
+  }
+  void engineFirstCounterSampleDoesNotInventRateButMeasuredZeroIsShown() {
+    ui::StatisticsPage page; page.beginRequest(1, 1); showEngine(page);
+    auto first = engineObserved(); first->sample->elapsedNanoseconds = 0; first->sample->rates.reset(); page.setEngineStatistics(first);
+    QCOMPARE(field(page, "statistics-engine-received")->text(), QStringLiteral("1000 bytes"));
+    QCOMPARE(field(page, "statistics-engine-receive-rate")->text(), QStringLiteral("Unavailable"));
+    QVERIFY(field(page, "statistics-engine-receive-rate")->toolTip().contains(QStringLiteral("no rate is inferred")));
+    auto interval = std::make_shared<ui::EngineStatisticsPacket>(*first); interval->sequence = 3;
+    interval->sample->elapsedNanoseconds = 1000000000; interval->sample->rates = core::EngineRates{}; page.setEngineStatistics(interval);
+    QCOMPARE(field(page, "statistics-engine-receive-rate")->text(), QStringLiteral("0 bytes/s"));
+    QCOMPARE(field(page, "statistics-engine-send-rate")->text(), QStringLiteral("0 bytes/s"));
+  }
+  void engineTerminalRetainsMeasuredFactsAndRefusesLateSameRun() {
+    ui::StatisticsPage page; page.beginRequest(1, 1); showEngine(page); auto observed = engineObserved(); page.setEngineStatistics(observed);
+    auto ended = std::make_shared<ui::EngineStatisticsPacket>(*observed); ended->sequence = 3;
+    ended->state = ui::EngineStatisticsState::Ended; ended->successful = true; ended->sample.reset(); page.setEngineStatistics(ended);
+    QCOMPARE(field(page, "statistics-engine-received")->text(), QStringLiteral("1000 bytes"));
+    QVERIFY(field(page, "statistics-engine-status")->text().contains(QStringLiteral("Ended successfully; last observed")));
+    QCOMPARE(field(page, "statistics-engine-receive-rate")->text(), QStringLiteral("100 bytes/s"));
+    auto late = std::make_shared<ui::EngineStatisticsPacket>(*observed); late->sequence = 4;
+    late->sample->counters = {2000, 1400, 1600, 1000}; late->sample->elapsedNanoseconds = 4000000000LL; page.setEngineStatistics(late);
+    QCOMPARE(field(page, "statistics-engine-received")->text(), QStringLiteral("1000 bytes"));
+    page.setEngineStatistics(ended); QCOMPARE(field(page, "statistics-engine-received")->text(), QStringLiteral("1000 bytes"));
+    auto next = enginePreparing(2); page.setEngineStatistics(next);
+    QVERIFY(page.findChild<QWidget*>(QStringLiteral("statistics-engine-counters"))->isHidden());
+    QVERIFY(field(page, "statistics-engine-status")->text().contains(QStringLiteral("Preparing")));
+  }
+  void engineHigherOperationTerminalNeverInheritsPreviousRunCounters() {
+    ui::StatisticsPage page; page.beginRequest(1, 1); showEngine(page); page.setEngineStatistics(engineObserved());
+    QCOMPARE(field(page, "statistics-engine-received")->text(), QStringLiteral("1000 bytes"));
+    auto unseenRun = enginePreparing(2); unseenRun->sequence = 2; unseenRun->state = ui::EngineStatisticsState::Ended;
+    page.setEngineStatistics(unseenRun); // No Preparing packet was delivered for this newer run.
+    QVERIFY(page.findChild<QWidget*>(QStringLiteral("statistics-engine-counters"))->isHidden());
+    QCOMPARE(field(page, "statistics-engine-status")->text(), QStringLiteral("Ended; no engine counters were observed"));
+    QCOMPARE(field(page, "statistics-engine-received")->text(), QStringLiteral("Unavailable"));
+    QCOMPARE(field(page, "statistics-engine-receive-rate")->text(), QStringLiteral("Unavailable"));
+    QVERIFY(field(page, "statistics-engine-target")->toolTip().endsWith(QStringLiteral("engine operation 2")));
+  }
+  void engineEqualTimeTerminalMustRepeatTheExactObservation_data() {
+    QTest::addColumn<bool>("changeRates");
+    QTest::newRow("changed-counters") << false;
+    QTest::newRow("changed-rates") << true;
+  }
+  void engineEqualTimeTerminalMustRepeatTheExactObservation() {
+    QFETCH(bool, changeRates); auto current = engineObserved();
+    auto terminal = std::make_shared<ui::EngineStatisticsPacket>(*current);
+    terminal->state = ui::EngineStatisticsState::Ended; terminal->sequence = 3;
+    if (changeRates) { terminal->sample->rates = core::EngineRates{101, 80, 71, 50, 30, 30}; }
+    else { terminal->sample->counters = {1100, 800, 900, 600}; }
+    QVERIFY(core::validEngineStatistics(*terminal->sample));
+    QVERIFY(!ui::acceptEngineStatistics(current, terminal, 1));
+    ui::StatisticsPage page; page.beginRequest(1, 1); showEngine(page); page.setEngineStatistics(current); page.setEngineStatistics(terminal);
+    QCOMPARE(field(page, "statistics-engine-received")->text(), QStringLiteral("1000 bytes"));
+    QCOMPARE(field(page, "statistics-engine-receive-rate")->text(), QStringLiteral("100 bytes/s"));
+    QVERIFY(!field(page, "statistics-engine-status")->text().contains(QStringLiteral("Ended")));
+    terminal->sample->elapsedNanoseconds = 3000000000LL; // A genuinely later coalesced observation is admissible.
+    QVERIFY(ui::acceptEngineStatistics(current, terminal, 1)); page.setEngineStatistics(terminal);
+    QVERIFY(field(page, "statistics-engine-status")->text().contains(QStringLiteral("Ended")));
+  }
+  void engineTerminalMayRepeatLastSampleOrHaveNoObservation() {
+    auto observed = engineObserved(); auto ended = std::make_shared<ui::EngineStatisticsPacket>(*observed);
+    ended->state = ui::EngineStatisticsState::Ended; ended->sequence = 3;
+    QVERIFY(ui::acceptEngineStatistics(observed, ended, 1));
+    ui::StatisticsPage page; page.beginRequest(1, 1); showEngine(page); page.setEngineStatistics(observed); page.setEngineStatistics(ended);
+    QCOMPARE(field(page, "statistics-engine-received")->text(), QStringLiteral("1000 bytes"));
+    auto noObservation = enginePreparing(2); noObservation->state = ui::EngineStatisticsState::Ended; noObservation->sequence = 2;
+    page.setEngineStatistics(noObservation);
+    QVERIFY(page.findChild<QWidget*>(QStringLiteral("statistics-engine-counters"))->isHidden());
+    QCOMPARE(field(page, "statistics-engine-status")->text(), QStringLiteral("Ended; no engine counters were observed"));
+  }
+  void engineSavedRefreshKeepsFactsAndNewProfileClearsThem() {
+    ui::StatisticsPage page; page.beginRequest(1, 1); showEngine(page); page.setEngineStatistics(engineObserved());
+    page.beginRequest(1, 2); page.setFailed(1, 2, QStringLiteral("saved totals unavailable"));
+    QCOMPARE(field(page, "statistics-engine-received")->text(), QStringLiteral("1000 bytes"));
+    page.beginRequest(2, 1); QVERIFY(page.findChild<QWidget*>(QStringLiteral("statistics-engine-counters"))->isHidden());
+    QVERIFY(field(page, "statistics-engine-status")->text().contains(QStringLiteral("Unavailable")));
+    page.setEngineStatistics(engineObserved()); QVERIFY(page.findChild<QWidget*>(QStringLiteral("statistics-engine-counters"))->isHidden());
+    auto current = engineObserved(); current->session = 2; page.setEngineStatistics(current);
+    QCOMPARE(field(page, "statistics-engine-received")->text(), QStringLiteral("1000 bytes"));
+  }
+  void engineActualCachedObservationOrTerminalCanRestoreReopenedPage() {
+    auto cached = engineObserved();
+    { ui::StatisticsPage closed; closed.beginRequest(1, 1); closed.setEngineStatistics(cached); }
+    ui::StatisticsPage reopened; reopened.beginRequest(1, 8); showEngine(reopened); reopened.setEngineStatistics(cached);
+    QCOMPARE(field(reopened, "statistics-engine-received")->text(), QStringLiteral("1000 bytes"));
+    auto terminalCache = std::make_shared<ui::EngineStatisticsPacket>(*cached); terminalCache->sequence = 3;
+    terminalCache->state = ui::EngineStatisticsState::Ended;
+    ui::StatisticsPage reopenedEnded; reopenedEnded.beginRequest(1, 9); showEngine(reopenedEnded); reopenedEnded.setEngineStatistics(terminalCache);
+    QCOMPARE(field(reopenedEnded, "statistics-engine-received")->text(), QStringLiteral("1000 bytes"));
+    QVERIFY(field(reopenedEnded, "statistics-engine-status")->text().contains(QStringLiteral("last observed")));
+  }
+  void engineHiddenMinimizedAndOtherTabsDeferOnlyRendering() {
+    ui::StatisticsPage page; page.beginRequest(1, 1); showEngine(page); page.hide(); QCoreApplication::processEvents();
+    auto observed = engineObserved(); page.setEngineStatistics(observed);
+    QCOMPARE(field(page, "statistics-engine-received")->text(), QStringLiteral("Unavailable"));
+    showEngine(page); QCOMPARE(field(page, "statistics-engine-received")->text(), QStringLiteral("1000 bytes"));
+    page.showMinimized(); QCoreApplication::processEvents(); QVERIFY(page.isMinimized());
+    auto later = std::make_shared<ui::EngineStatisticsPacket>(*observed); later->sequence = 3;
+    later->sample->counters = {1100, 800, 900, 600}; later->sample->elapsedNanoseconds = 3000000000LL; page.setEngineStatistics(later);
+    QCOMPARE(field(page, "statistics-engine-received")->text(), QStringLiteral("1000 bytes"));
+    page.showNormal(); QCoreApplication::processEvents(); QTRY_COMPARE(field(page, "statistics-engine-received")->text(), QStringLiteral("1100 bytes"));
+    page.tabs().setCurrentIndex(0); auto newest = std::make_shared<ui::EngineStatisticsPacket>(*later); newest->sequence = 4;
+    newest->sample->counters = {1200, 900, 1000, 700}; newest->sample->elapsedNanoseconds = 4000000000LL; page.setEngineStatistics(newest);
+    QCOMPARE(field(page, "statistics-engine-received")->text(), QStringLiteral("1100 bytes"));
+    page.tabs().setCurrentIndex(1); QCOMPARE(field(page, "statistics-engine-received")->text(), QStringLiteral("1200 bytes"));
+    auto* inner = page.findChild<QTabWidget*>(QStringLiteral("statistics-transfer-tabs")); QVERIFY(inner); inner->setCurrentIndex(1);
+    auto ended = std::make_shared<ui::EngineStatisticsPacket>(*newest); ended->sequence = 5; ended->state = ui::EngineStatisticsState::Ended;
+    page.setEngineStatistics(ended); QVERIFY(!field(page, "statistics-engine-status")->text().contains(QStringLiteral("Ended")));
+    inner->setCurrentIndex(0); QVERIFY(field(page, "statistics-engine-status")->text().contains(QStringLiteral("Ended")));
+  }
+  void engineRenderReentryCannotOverwriteNewOperation() {
+    ui::StatisticsPage page; page.beginRequest(1, 1); showEngine(page); Hook hook;
+    hook.callback = [&] { page.setEngineStatistics(enginePreparing(2)); };
+    field(page, "statistics-engine-target")->installEventFilter(&hook); page.setEngineStatistics(engineObserved());
+    QVERIFY(!hook.armed); QVERIFY(field(page, "statistics-engine-status")->text().contains(QStringLiteral("Preparing")));
+    QVERIFY(page.findChild<QWidget*>(QStringLiteral("statistics-engine-counters"))->isHidden());
+    auto next = engineObserved(); next->operation = 2; next->sample->counters = {50, 30, 20, 10}; page.setEngineStatistics(next);
+    QCOMPARE(field(page, "statistics-engine-received")->text(), QStringLiteral("50 bytes"));
+  }
+  void engineRenderReentryCannotOverwriteNewProfile() {
+    ui::StatisticsPage page; page.beginRequest(1, 1); showEngine(page); Hook hook;
+    hook.callback = [&] { page.beginRequest(2, 1); };
+    field(page, "statistics-engine-received")->installEventFilter(&hook); page.setEngineStatistics(engineObserved());
+    QVERIFY(!hook.armed); QCOMPARE(page.session(), quint64{2}); QVERIFY(page.loading());
+    QVERIFY(page.findChild<QWidget*>(QStringLiteral("statistics-engine-counters"))->isHidden());
+    QVERIFY(field(page, "statistics-engine-status")->text().contains(QStringLiteral("Unavailable")));
+  }
+  void engineRenderDeletionIsGuarded() {
+    auto page = std::make_unique<ui::StatisticsPage>(); page->beginRequest(1, 1); showEngine(*page); QPointer guard(page.get()); Hook hook; hook.consume = true;
+    hook.callback = [&] { page.reset(); }; field(*page, "statistics-engine-status")->installEventFilter(&hook);
+    page->setEngineStatistics(engineObserved()); QVERIFY(!hook.armed); QVERIFY(guard.isNull());
+  }
+  void engineNamesArePlainTextAndIntegerExtremesStayExact() {
+    ui::StatisticsPage page; page.beginRequest(1, 1); showEngine(page); auto observed = engineObserved();
+    const auto maximum = std::numeric_limits<std::int64_t>::max();
+    observed->name = QStringLiteral("<b>literal transfer</b>"); observed->sample->counters = {maximum, maximum, maximum - 1, maximum - 2};
+    observed->sample->elapsedNanoseconds = maximum; observed->sample->rates.reset(); page.setEngineStatistics(observed);
+    QCOMPARE(field(page, "statistics-engine-received")->text(), QStringLiteral("9223372036854775807 bytes"));
+    QCOMPARE(field(page, "statistics-engine-protocol-received")->text(), QStringLiteral("1 bytes"));
+    QCOMPARE(field(page, "statistics-engine-protocol-sent")->text(), QStringLiteral("2 bytes"));
+    QCOMPARE(field(page, "statistics-engine-target")->text(), QStringLiteral("Transfer: <b>literal transfer</b>"));
+    QCOMPARE(field(page, "statistics-engine-target")->textFormat(), Qt::PlainText);
+    QCOMPARE(field(page, "statistics-engine-status")->toolTip(), QStringLiteral("Last actual observation: 9223372036854775807 nanoseconds since the first accepted observation"));
+    auto bounded = enginePreparing(2); bounded->name = QString(8192, QLatin1Char('x')); bounded->target.hash = QString(256, QLatin1Char('A'));
+    page.setEngineStatistics(bounded); QVERIFY(field(page, "statistics-engine-target")->text().endsWith(bounded->name));
+    QVERIFY(field(page, "statistics-engine-target")->toolTip().startsWith(bounded->target.hash));
+    QVERIFY(page.findChild<QWidget*>(QStringLiteral("statistics-engine-counters"))->isHidden());
+  }
+  void engineCounterPacketsNeverChangeExistingActivityTargetOrSamples() {
+    ui::StatisticsPage page; page.beginRequest(1, 1); show(page); page.recordPayload(payload(), QStringLiteral("Activity target"));
+    const auto identity = field(page, "statistics-transfer-name")->toolTip();
+    page.tabs().setCurrentIndex(1); page.setEngineStatistics(engineObserved());
+    QCOMPARE(page.sampleCount(), std::size_t{1}); page.tabs().setCurrentIndex(0);
+    QCOMPARE(field(page, "statistics-transfer-name")->text(), QStringLiteral("Transfer: Activity target"));
+    QCOMPARE(field(page, "statistics-transfer-name")->toolTip(), identity);
+    QCOMPARE(field(page, "statistics-payload-download-rate")->text(), QStringLiteral("100 bytes/s"));
   }
 };
 QTEST_MAIN(StatisticsPageTests)

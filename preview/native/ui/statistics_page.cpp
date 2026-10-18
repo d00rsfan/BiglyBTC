@@ -126,10 +126,32 @@ StatisticsPage::StatisticsPage(QWidget* parent) : QWidget(parent), tabs_(new QTa
   tabs_->addTab(activity_, tr("Activity"));
   auto* transfers = new QWidget(tabs_); transfers->setObjectName(QStringLiteral("statistics-transfers"));
   auto* transferLayout = new QVBoxLayout(transfers);
-  auto* transferTabs = new QTabWidget(transfers); transferTabs->setObjectName(QStringLiteral("statistics-transfer-tabs"));
+  auto* transferTabs = new QTabWidget(transfers); transferTabs_ = transferTabs; transferTabs->setObjectName(QStringLiteral("statistics-transfer-tabs"));
   auto* current = new QScrollArea(transferTabs); current->setWidgetResizable(true); current->setObjectName(QStringLiteral("statistics-transfers-current"));
   auto* contents = new QWidget(current); auto* currentLayout = new QVBoxLayout(contents);
   currentLayout->addWidget(label(tr("Current global rates and this-session totals: unavailable"), QStringLiteral("statistics-current-unavailable"), contents));
+  auto* engine = new QGroupBox(tr("Transfer engine session"), contents);
+  engine->setObjectName(QStringLiteral("statistics-engine-session"));
+  auto* engineLayout = new QVBoxLayout(engine);
+  engineStatus_ = label(tr("Unavailable: no owned transfer engine has been observed"), QStringLiteral("statistics-engine-status"), engine);
+  engineTarget_ = label({}, QStringLiteral("statistics-engine-target"), engine);
+  engineTarget_->hide();
+  engineLayout->addWidget(engineStatus_); engineLayout->addWidget(engineTarget_);
+  engineDetails_ = new QWidget(engine); engineDetails_->setObjectName(QStringLiteral("statistics-engine-counters"));
+  auto* engineForm = new QFormLayout(engineDetails_);
+  const std::array<const char*, 8> engineIds{"received", "sent", "payload-received", "payload-sent",
+      "protocol-received", "protocol-sent", "receive-rate", "send-rate"};
+  const std::array<QString, 8> engineTitles{tr("Received (payload + protocol):"), tr("Sent (payload + protocol):"),
+      tr("Payload received:"), tr("Payload sent:"), tr("Protocol received:"), tr("Protocol sent:"),
+      tr("Combined receive rate:"), tr("Combined send rate:")};
+  for (std::size_t i = 0; i < engineValues_.size(); ++i) {
+    engineValues_[i] = label(unavailable(), QStringLiteral("statistics-engine-") + QString::fromLatin1(engineIds[i]), engineDetails_);
+    engineForm->addRow(engineTitles[i], engineValues_[i]);
+  }
+  engineDetails_->hide(); engineLayout->addWidget(engineDetails_);
+  engineLayout->addWidget(label(tr("One experimental transfer engine only. Peer payload + protocol traffic; IP, tracker and DHT totals are not included. These measurements are separate from application lifetime, global totals, saved totals and history. Ended counters are the last observation, not an exhaustive final accounting."),
+      QStringLiteral("statistics-engine-scope"), engine));
+  currentLayout->addWidget(engine);
   auto* totals = new QGroupBox(tr("Last-saved overall totals"), contents); auto* totalsForm = new QFormLayout(totals);
   const std::array<const char*, 13> ids{"downloaded", "uploaded", "uptime", "mark-time", "mark-downloaded", "mark-uploaded", "mark-uptime",
       "dht-downloaded", "dht-uploaded", "protocol-uploaded", "data-uploaded", "protocol-downloaded", "data-downloaded"};
@@ -160,7 +182,10 @@ StatisticsPage::StatisticsPage(QWidget* parent) : QWidget(parent), tabs_(new QTa
   auto* refresh = new QPushButton(tr("Refresh saved totals"), this); refresh->setObjectName(QStringLiteral("statistics-refresh"));
   connect(refresh, &QPushButton::clicked, this, &StatisticsPage::refreshRequested);
   auto* layout = new QVBoxLayout(this); layout->addWidget(status_); layout->addWidget(provenance_); layout->addWidget(tabs_, 1); layout->addWidget(refresh);
-  connect(tabs_, &QTabWidget::currentChanged, this, [this](int) { refreshActivity(); });
+  connect(tabs_, &QTabWidget::currentChanged, this, [this](int) {
+    QPointer<StatisticsPage> guard(this); refreshActivity(); if (guard) { guard->refreshEngine(); }
+  });
+  connect(transferTabs_, &QTabWidget::currentChanged, this, [this](int) { refreshEngine(); });
 }
 QTabWidget& StatisticsPage::tabs() { return *tabs_; }
 std::size_t StatisticsPage::sampleCount() const { return plot_->count(); }
@@ -189,11 +214,11 @@ bool StatisticsPage::writeFacts(const Facts& facts) {
 }
 void StatisticsPage::beginRequest(quint64 session, quint64 request) {
   if (session == 0 || request == 0 || session < session_ || (session == session_ && request <= request_)) { return; }
-  if (session_ != 0 && session != session_) { clearActivity(); }
+  if (session_ != 0 && session != session_) { clearActivity(); engine_.reset(); engineDirty_ = true; }
   session_ = session; request_ = request; state_.reset(); loading_ = true;
   const auto facts = emptyFacts(tr("Loading last-saved statistics…"), tr("Source: unavailable; save time unknown"));
   if (!writeFacts(facts)) { return; }
-  refreshActivity();
+  QPointer<StatisticsPage> guard(this); refreshActivity(); if (guard) { guard->refreshEngine(); }
 }
 void StatisticsPage::setFailed(quint64 session, quint64 request, const QString& message) {
   if (!accepts(session, request)) { return; }
@@ -246,6 +271,77 @@ void StatisticsPage::setPresentation(StatisticsPresentation packet) {
   loading_ = false; state_ = StatisticsReadState::Ready;
   (void)writeFacts(facts);
 }
+void StatisticsPage::setEngineStatistics(EngineStatisticsPresentation packet) {
+  if (!acceptEngineStatistics(engine_, packet, session_)) { return; }
+  // A terminal notification need not contain a fresh alert. Preserve the actual
+  // last observation in the owned immutable cache for a later page reopen.
+  if (packet->state == EngineStatisticsState::Ended && !packet->sample && engine_ && engine_->sample
+      && packet->session == engine_->session && packet->operation == engine_->operation && packet->target == engine_->target) {
+    auto retained = std::make_shared<EngineStatisticsPacket>(*packet);
+    retained->sample = engine_->sample; packet = std::move(retained);
+  }
+  engine_ = std::move(packet); engineDirty_ = true; refreshEngine();
+}
+void StatisticsPage::refreshEngine() {
+  if (!engineDirty_ || !isVisible() || tabs_->currentIndex() != 1 || transferTabs_->currentIndex() != 0
+      || window()->isMinimized()) { return; }
+  QPointer<StatisticsPage> guard(this);
+  const auto packet = engine_; const auto session = session_;
+  const auto current = [&] {
+    return guard && guard->engine_ == packet && guard->session_ == session && guard->isVisible()
+        && guard->tabs_->currentIndex() == 1 && guard->transferTabs_->currentIndex() == 0
+        && !guard->window()->isMinimized();
+  };
+  const auto sample = packet ? packet->sample : std::nullopt;
+  QString status = tr("Unavailable: no owned transfer engine has been observed");
+  if (packet) {
+    switch (packet->state) {
+      case EngineStatisticsState::Preparing: status = tr("Preparing; no engine counters observed yet"); break;
+      case EngineStatisticsState::Observed: status = tr("Measured transfer engine session"); break;
+      case EngineStatisticsState::Ended:
+        status = sample ? (packet->successful ? tr("Ended successfully; last observed counters") : tr("Ended; last observed counters"))
+                        : tr("Ended; no engine counters were observed"); break;
+    }
+  }
+  const auto target = packet ? tr("Transfer: %1").arg(packet->name.isEmpty() ? tr("(unnamed transfer)") : packet->name) : QString{};
+  const auto identity = packet ? tr("%1; generation %2; engine operation %3").arg(packet->target.hash).arg(packet->target.generation).arg(packet->operation) : QString{};
+  std::array<Fact, 10> facts{};
+  facts[0] = {engineStatus_, std::move(status), sample ? tr("Last actual observation: %1 nanoseconds since the first accepted observation").arg(sample->elapsedNanoseconds) : QString{}};
+  facts[1] = {engineTarget_, target, identity};
+  for (std::size_t i = 0; i < engineValues_.size(); ++i) {
+    facts[2 + i] = {engineValues_[i], unavailable(), tr("No measured value is available")};
+  }
+  if (sample) {
+    const auto& counters = sample->counters;
+    const std::array<std::int64_t, 6> values{counters.received, counters.sent, counters.payloadReceived, counters.payloadSent,
+        counters.received - counters.payloadReceived, counters.sent - counters.payloadSent};
+    for (std::size_t i = 0; i < values.size(); ++i) {
+      facts[2 + i].text = tr("%1 bytes").arg(values[i]);
+      facts[2 + i].tip = QString::number(values[i]) + tr(" measured bytes in this engine operation");
+    }
+    if (sample->rates) {
+      facts[8].text = tr("%1 bytes/s").arg(sample->rates->received);
+      facts[9].text = tr("%1 bytes/s").arg(sample->rates->sent);
+      facts[8].tip = tr("%1 measured combined receive bytes per second").arg(sample->rates->received);
+      facts[9].tip = tr("%1 measured combined send bytes per second").arg(sample->rates->sent);
+    } else {
+      facts[8].tip = tr("Requires an actual engine interval; no rate is inferred"); facts[9].tip = facts[8].tip;
+    }
+  }
+  engineDirty_ = false;
+  if (!sample) { engineDetails_->hide(); if (!current()) { if (guard) { guard->engineDirty_ = true; } return; } }
+  for (const auto& fact : facts) {
+    if (!current() || !fact.label) { if (guard) { guard->engineDirty_ = true; } return; }
+    fact.label->setText(fact.text);
+    if (!current() || !fact.label) { if (guard) { guard->engineDirty_ = true; } return; }
+    fact.label->setToolTip(fact.tip);
+    if (!current()) { if (guard) { guard->engineDirty_ = true; } return; }
+  }
+  engineTarget_->setVisible(static_cast<bool>(packet));
+  if (!current()) { if (guard) { guard->engineDirty_ = true; } return; }
+  engineDetails_->setVisible(static_cast<bool>(sample));
+  if (!current() && guard) { guard->engineDirty_ = true; }
+}
 void StatisticsPage::clearActivity() {
   plot_->clear(); target_.reset(); displayName_.clear(); clock_.invalidate(); activityDirty_ = true;
 }
@@ -290,12 +386,14 @@ void StatisticsPage::showEvent(QShowEvent* event) {
     if (observedWindow_) { observedWindow_->removeEventFilter(this); }
     observedWindow_ = window(); observedWindow_->installEventFilter(this);
   }
-  refreshActivity();
+  QPointer<StatisticsPage> guard(this); refreshActivity(); if (guard) { guard->refreshEngine(); }
 }
 bool StatisticsPage::eventFilter(QObject* object, QEvent* event) {
   if (object == observedWindow_ && (event->type() == QEvent::WindowStateChange || event->type() == QEvent::Show)) {
     QPointer<StatisticsPage> guard(this);
-    QMetaObject::invokeMethod(this, [guard] { if (guard) { guard->refreshActivity(); } }, Qt::QueuedConnection);
+    QMetaObject::invokeMethod(this, [guard] {
+      if (guard) { guard->refreshActivity(); } if (guard) { guard->refreshEngine(); }
+    }, Qt::QueuedConnection);
   }
   return QWidget::eventFilter(object, event);
 }

@@ -90,6 +90,7 @@ struct SessionBridge::Host {
   storage::ProfileLease lease;
   const quint64 columnLayoutSession;
   quint64 revision = 0;
+  quint64 engineOperation = 0;
   std::map<std::string, Known> known;
   std::set<std::string> currentHashes;
   ui::Presentation lastSnapshot{};
@@ -161,6 +162,7 @@ SessionBridge::SessionBridge(QObject* parent) : QObject(parent) {
   qRegisterMetaType<ui::Details>();
   qRegisterMetaType<ui::SavedServicesPresentation>();
   qRegisterMetaType<ui::StatisticsPresentation>();
+  qRegisterMetaType<ui::EngineStatisticsPresentation>();
   qRegisterMetaType<ui::ColumnLayoutsPresentation>();
   qRegisterMetaType<ui::ColumnLayoutSaveSubmission>();
   qRegisterMetaType<ui::ColumnLayoutSavePresentation>();
@@ -499,10 +501,55 @@ void SessionBridge::progress(ui::Telemetry update) {
     if (update) { emit progressReady(*update); }
   }, Qt::QueuedConnection);
 }
+void SessionBridge::engineStatistics(ui::EngineStatisticsPresentation packet) {
+  if (packet->state != ui::EngineStatisticsState::Observed) {
+    // Lifecycle boundaries are never coalesced with measurements.
+    QMetaObject::invokeMethod(this, [this, packet = std::move(packet)] {
+      if (packet->session == publishedColumnLayoutSession_) { emit engineStatisticsReady(packet); }
+    }, Qt::QueuedConnection);
+    return;
+  }
+  {
+    const std::lock_guard lock(progressMutex_);
+    latestEngineStatistics_ = std::move(packet);
+    if (engineDeliveryQueued_) { return; }
+    engineDeliveryQueued_ = true;
+  }
+  QMetaObject::invokeMethod(this, [this] {
+    std::optional<ui::EngineStatisticsPresentation> packet;
+    {
+      const std::lock_guard lock(progressMutex_);
+      packet.swap(latestEngineStatistics_);
+      engineDeliveryQueued_ = false;
+    }
+    if (packet && (*packet)->session == publishedColumnLayoutSession_) { emit engineStatisticsReady(*packet); }
+  }, Qt::QueuedConnection);
+}
 bool SessionBridge::continueDownload(ui::Target target) {
   return dispatch([this, target = std::move(target)](std::stop_token stop) {
     if (!host_) { throw Failure{{storage::ErrorCode::Missing, "No profile is open"}}; }
     host_->accepts(target);
+    if (host_->engineOperation == std::numeric_limits<quint64>::max()) {
+      throw Failure{{storage::ErrorCode::Unsupported, "Engine operation identities are exhausted"}};
+    }
+    // The accepted snapshot also names downloads without a torrent-cache entry.
+    // Reuse that owned label; do not read torrent files just for telemetry.
+    QString name;
+    if (host_->lastSnapshot) {
+      for (const auto& row : host_->lastSnapshot->items) {
+        if (row.hash == target.hash) { name = row.name; break; }
+      }
+    }
+    ui::EngineStatisticsPacket packet{.session = host_->columnLayoutSession,
+        .operation = ++host_->engineOperation, .sequence = 1, .target = target,
+        .name = std::move(name)};
+    engineStatistics(std::make_shared<const ui::EngineStatisticsPacket>(packet));
+    const auto ended = [&](bool successful) {
+      ++packet.sequence;
+      packet.state = ui::EngineStatisticsState::Ended;
+      packet.successful = successful;
+      engineStatistics(std::make_shared<const ui::EngineStatisticsPacket>(packet));
+    };
     auto options = engine::LocalOptions{.profile = host_->profile, .hash = identity(target),
         .peerPort = host_->peerPort, .stop = stop};
     options.progress = [this, target](const engine::LocalProgress& value) {
@@ -510,7 +557,17 @@ bool SessionBridge::continueDownload(ui::Target target) {
           : value.phase == engine::LocalProgress::Phase::Downloading ? tr("Downloading") : tr("Finishing");
       progress({target, value.completedBytes, value.downloadRate, value.uploadRate, state});
     };
-    const auto report = take(engine::continueLocal(host_->lease, options));
+    options.statistics = [&](const core::EngineStatistics& value) {
+      ++packet.sequence;
+      packet.state = ui::EngineStatisticsState::Observed;
+      packet.sample = value;
+      engineStatistics(std::make_shared<const ui::EngineStatisticsPacket>(packet));
+    };
+    const auto report = [&] {
+      try { return take(engine::continueLocal(host_->lease, options)); }
+      catch (...) { ended(false); throw; }
+    }();
+    ended(true);
     auto& known = host_->known[target.hash.toStdString()];
     known.bytes = report.bytes;
     if (known.name.isEmpty()) { known.name = text(report.payload.filename().string()); }

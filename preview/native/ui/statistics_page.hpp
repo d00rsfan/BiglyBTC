@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine_statistics_presentation.hpp"
 #include "library_model.hpp"
 #include "statistics_presentation.hpp"
 
@@ -28,6 +29,7 @@ public:
   void beginRequest(quint64 session, quint64 request);
   void setPresentation(StatisticsPresentation);
   void setFailed(quint64 session, quint64 request, const QString& message);
+  void setEngineStatistics(EngineStatisticsPresentation);
   // Caller first admits generation+hash through LibraryModel. The page also
   // rejects invalid identity/negative payload telemetry and resets on target change.
   void recordPayload(const Telemetry&, const QString& displayName);
@@ -51,6 +53,7 @@ private:
   bool accepts(quint64 session, quint64 request) const;
   void clearActivity();
   void refreshActivity();
+  void refreshEngine();
   QTabWidget* tabs_;
   QWidget* activity_;
   ActivityPlot* plot_;
@@ -60,6 +63,13 @@ private:
   QLabel* observations_;
   QLabel* status_;
   QLabel* provenance_;
+  QTabWidget* transferTabs_ = nullptr;
+  QWidget* engineDetails_ = nullptr;
+  QLabel* engineStatus_ = nullptr;
+  QLabel* engineTarget_ = nullptr;
+  std::array<QLabel*, 8> engineValues_{};
+  EngineStatisticsPresentation engine_{};
+  bool engineDirty_ = true;
   std::array<QLabel*, 13> raw_{};
   std::array<QLabel*, 3> since_{};
   QPointer<QWidget> observedWindow_;

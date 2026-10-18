@@ -5,6 +5,7 @@
 #include "saved_services_presentation.hpp"
 #include "column_layout_presentation.hpp"
 #include "statistics_presentation.hpp"
+#include "engine_statistics_presentation.hpp"
 
 #include <QMainWindow>
 #include <QPointer>
@@ -49,6 +50,7 @@ public:
   void setSavedServices(SavedServicesPresentation);
   StatisticsPage* statisticsPage() const;
   void setStatistics(StatisticsPresentation);
+  void setEngineStatistics(EngineStatisticsPresentation);
   void beginColumnLayoutSession(quint64 session);
   void setColumnLayouts(ColumnLayoutsPresentation);
   void setColumnLayoutSaved(ColumnLayoutSavePresentation);
@@ -126,6 +128,7 @@ private:
   };
   QPointer<ClassicColumns> incompleteColumns_;
   QPointer<ClassicColumns> completeColumns_;
+  EngineStatisticsPresentation latestEngineStatistics_;
   quint64 columnSession_ = 0;
   quint64 columnRequest_ = 0;
   std::optional<ColumnRequest> activeColumnRequest_;

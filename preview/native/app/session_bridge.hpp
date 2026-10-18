@@ -5,6 +5,7 @@
 #include "library_model.hpp"
 #include "saved_services_presentation.hpp"
 #include "statistics_presentation.hpp"
+#include "engine_statistics_presentation.hpp"
 
 #include <QObject>
 
@@ -37,6 +38,7 @@ signals:
   void detailsReady(biglybtc::ui::Details);
   void savedServicesReady(biglybtc::ui::SavedServicesPresentation);
   void statisticsReady(biglybtc::ui::StatisticsPresentation);
+  void engineStatisticsReady(biglybtc::ui::EngineStatisticsPresentation);
   void columnLayoutSessionReady(quint64 session);
   void columnLayoutsReady(biglybtc::ui::ColumnLayoutsPresentation);
   void columnLayoutSaved(biglybtc::ui::ColumnLayoutSavePresentation);
@@ -48,6 +50,7 @@ private:
   void ready(ui::Presentation snapshot, QString message = {});
   void failed(QString message);
   void progress(ui::Telemetry update);
+  void engineStatistics(ui::EngineStatisticsPresentation);
   std::unique_ptr<Host> host_;
   std::optional<core::Ticket> current_;
   std::shared_ptr<std::atomic_bool> completionPosted_;
@@ -55,6 +58,8 @@ private:
   std::mutex progressMutex_;
   std::optional<ui::Telemetry> latestProgress_;
   bool deliveryQueued_ = false;
+  std::optional<ui::EngineStatisticsPresentation> latestEngineStatistics_;
+  bool engineDeliveryQueued_ = false;
   bool busy_ = false;
   // GUI-thread publication only; worker commands capture the requested identity.
   quint64 publishedColumnLayoutSession_ = 0;

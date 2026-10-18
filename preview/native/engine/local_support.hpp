@@ -1,6 +1,7 @@
 #pragma once
 
 #include "local_session.hpp"
+#include "engine_statistics_sampler.hpp"
 #include "file_io.hpp"
 
 #include <libtorrent/alert.hpp>
@@ -40,7 +41,8 @@ SavedPolicy readPolicy(const Node& entry, std::size_t files);
 void sync(int descriptor);
 libtorrent::settings_pack settings();
 void errors(const std::vector<libtorrent::alert*>& pending);
-template<typename Predicate> void wait(libtorrent::session& session, const LocalOptions& options, Predicate ready) {
+template<typename Predicate> void wait(libtorrent::session& session, const LocalOptions& options, Predicate ready,
+    SessionStatisticsSampler* statistics = nullptr) {
   using namespace std::chrono_literals;
   const auto deadline = std::chrono::steady_clock::now() + options.timeout;
   while (std::chrono::steady_clock::now() < deadline) {
@@ -48,6 +50,7 @@ template<typename Predicate> void wait(libtorrent::session& session, const Local
     std::vector<libtorrent::alert*> pending;
     session.pop_alerts(&pending);
     errors(pending);
+    if (statistics) { statistics->poll(pending); }
     if (ready(pending)) { return; }
     std::this_thread::sleep_for(20ms);
   }

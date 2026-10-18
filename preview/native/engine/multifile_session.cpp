@@ -255,6 +255,7 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
   LocalReport report{0, 0, layout.bytes, save / *saved.saveFile};
   {
     lt::session session(settings());
+    SessionStatisticsSampler statistics(session, options);
     lt::add_torrent_params params;
     params.download_limit = policy.downloadLimit;
     params.upload_limit = policy.uploadLimit;
@@ -294,7 +295,7 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
       const auto status = handle.status();
       publish(status, LocalProgress::Phase::Checking);
       return status.state != lt::torrent_status::checking_files && status.state != lt::torrent_status::checking_resume_data;
-    });
+    }, &statistics);
     report.reusedPieces = handle.status().num_pieces;
     observe(options, LocalStage::Checked);
     require(!options.stop.stop_requested(), "Local session cancelled", ErrorCode::Cancelled);
@@ -303,14 +304,15 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
       const auto status = handle.status();
       publish(status, LocalProgress::Phase::Downloading);
       return status.is_seeding;
-    });
+    }, &statistics);
     report.received = handle.status().total_payload_download;
     publish(handle.status(), LocalProgress::Phase::Flushing, true);
+    statistics.request(); // A fresh observation may arrive during the existing flush wait.
     handle.pause();
     handle.save_resume_data(lt::torrent_handle::flush_disk_cache);
     wait(session, options, [](const auto& pending) {
       return std::ranges::any_of(pending, [](auto* value) { return lt::alert_cast<lt::save_resume_data_alert>(value) != nullptr; });
-    });
+    }, &statistics);
   }
   for (auto& slot : slots) {
     if (slot.padding) { continue; }

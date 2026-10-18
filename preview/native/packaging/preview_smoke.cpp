@@ -35,6 +35,7 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
   QObject::connect(&bridge, &app::SessionBridge::detailsReady, &window, &ui::LibraryWindow::setDetails);
   QObject::connect(&bridge, &app::SessionBridge::savedServicesReady, &window, &ui::LibraryWindow::setSavedServices);
   QObject::connect(&bridge, &app::SessionBridge::statisticsReady, &window, &ui::LibraryWindow::setStatistics);
+  QObject::connect(&bridge, &app::SessionBridge::engineStatisticsReady, &window, &ui::LibraryWindow::setEngineStatistics);
   QObject::connect(&bridge, &app::SessionBridge::columnLayoutSessionReady, &window, &ui::LibraryWindow::beginColumnLayoutSession);
   QObject::connect(&bridge, &app::SessionBridge::columnLayoutsReady, &window, &ui::LibraryWindow::setColumnLayouts);
   QObject::connect(&bridge, &app::SessionBridge::columnLayoutSaved, &window, &ui::LibraryWindow::setColumnLayoutSaved);

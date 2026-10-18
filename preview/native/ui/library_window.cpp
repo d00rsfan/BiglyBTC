@@ -419,7 +419,12 @@ void LibraryWindow::showStatistics() {
   mainTabs_->setCurrentWidget(page.data());
   if (!guard || !page || statisticsPage_ != page) { return; }
   page->tabs().setFocus(Qt::ShortcutFocusReason);
-  if (guard && page && statisticsPage_ == page && fresh) { refreshStatistics(); }
+  if (guard && page && statisticsPage_ == page && fresh) {
+    refreshStatistics();
+    if (guard && page && statisticsPage_ == page && latestEngineStatistics_) {
+      page->setEngineStatistics(latestEngineStatistics_);
+    }
+  }
 }
 void LibraryWindow::refreshStatistics() {
   if (closing_ || !statisticsPage_ || columnSession_ == 0) { return; }
@@ -472,6 +477,22 @@ void LibraryWindow::setStatistics(StatisticsPresentation packet) {
     request.page->setPresentation(std::move(packet));
   }
   if (guard) { queueOptionalViews(); }
+}
+void LibraryWindow::setEngineStatistics(EngineStatisticsPresentation packet) {
+  if (closing_ || !acceptEngineStatistics(latestEngineStatistics_, packet, columnSession_)) { return; }
+  const bool fresh = !latestEngineStatistics_ || packet->operation > latestEngineStatistics_->operation;
+  if (fresh && (packet->state != EngineStatisticsState::Preparing || !model_->accepts(packet->target))) { return; }
+  if (packet->state == EngineStatisticsState::Ended && !packet->sample
+      && latestEngineStatistics_ && latestEngineStatistics_->sample
+      && latestEngineStatistics_->session == packet->session
+      && latestEngineStatistics_->operation == packet->operation
+      && latestEngineStatistics_->target == packet->target) {
+    auto retained = std::make_shared<EngineStatisticsPacket>(*packet);
+    retained->sample = latestEngineStatistics_->sample;
+    packet = std::move(retained);
+  }
+  latestEngineStatistics_ = packet;
+  if (statisticsPage_) { statisticsPage_->setEngineStatistics(std::move(packet)); }
 }
 void LibraryWindow::queueOptionalViews() {
   queueSavedServices();
@@ -562,6 +583,7 @@ void LibraryWindow::setSavedServices(SavedServicesPresentation packet) {
 void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   columnSession_ = session;
+  latestEngineStatistics_.reset();
   activeStatisticsRequest_.reset();
   pendingStatisticsRequest_.reset();
   columnSaveAvailable_ = false;

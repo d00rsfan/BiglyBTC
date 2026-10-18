@@ -47,6 +47,7 @@ int main(int argc, char** argv) {
     QObject::connect(&bridge, &Bridge::detailsReady, &window, &Window::setDetails);
     QObject::connect(&bridge, &Bridge::savedServicesReady, &window, &Window::setSavedServices);
     QObject::connect(&bridge, &Bridge::statisticsReady, &window, &Window::setStatistics);
+    QObject::connect(&bridge, &Bridge::engineStatisticsReady, &window, &Window::setEngineStatistics);
     QObject::connect(&bridge, &Bridge::columnLayoutSessionReady, &window, &Window::beginColumnLayoutSession);
     QObject::connect(&bridge, &Bridge::columnLayoutsReady, &window, &Window::setColumnLayouts);
     QObject::connect(&bridge, &Bridge::columnLayoutSaved, &window, &Window::setColumnLayoutSaved);

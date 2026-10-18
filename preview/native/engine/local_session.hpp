@@ -1,6 +1,7 @@
 #pragma once
 
 #include "biglybtc/library.hpp"
+#include "biglybtc/engine_statistics.hpp"
 #include "profile.hpp"
 
 #include <chrono>
@@ -26,6 +27,8 @@ struct LocalOptions {
   std::stop_token stop{};
   void (*observer)(LocalStage) = nullptr;
   std::function<void(const LocalProgress&)> progress{};
+  // Optional per-owned-engine observations, separate from saved/client totals.
+  std::function<void(const core::EngineStatistics&)> statistics{};
 };
 struct LocalReport {
   int reusedPieces;

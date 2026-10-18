@@ -137,10 +137,28 @@ uses the existing profile lease and reports primary/backup/saving provenance.
 Absent or invalid values stay unavailable. Combined counters are not added to
 their splits or DHT again. Mark time is an epoch-millisecond label, not a save
 timestamp. Refresh saved totals/F5 does not refresh the torrent library or write
-statistics. This-session counters, global history and the other original
-Statistics subviews remain unfinished. The generated launcher sample includes
+statistics. Application-wide session counters, global history and the other
+original Statistics subviews remain unfinished. The generated launcher sample includes
 original-format saved statistics; offline Activity stays empty. See the
 [Statistics contract](docs/classic-statistics-contract.json).
 
 No performance improvement or full migration completion is claimed by this source
 milestone.
+
+Transfers > Current also shows measured counters for the **latest owned engine
+operation** when an experimental transfer runs. It reports combined peer bytes,
+payload and derived protocol bytes in each direction, plus interval receive/send
+rates. The first observation has no rate. Each operation starts fresh; ended or
+cancelled operations retain their last observation, which is not an exhaustive
+shutdown accounting. Opening/reopening Statistics restores the latest operation's
+facts, and a different profile clears them. The ordinary generated sample has no
+active engine, so these fields remain unavailable there.
+
+These measurements belong to one temporary engine session, not the original
+application-wide session. IP overhead, tracker and DHT traffic are excluded.
+Intervals use monotonic observation times and exact checked integer arithmetic;
+they do not reproduce Java's ten-second smoothing. Sampling is optional and cannot
+change transfer success. Saved overall totals are read independently and are never
+written or incremented with these operation counters. See the [engine statistics
+contract](docs/engine-statistics-contract.json). Global Activity/history and a
+persistent all-application engine remain unfinished.
