@@ -115,7 +115,8 @@ struct SessionBridge::Host {
       result->items.push_back({.key = text(key), .hash = text(hash), .name = name, .state = state,
           .bytes = size, .completed = saved.completedBytes && *saved.completedBytes >= 0 ? saved.completedBytes : std::nullopt,
           .received = saved.downloaded, .sent = saved.uploaded,
-          .canContinue = peerPort != 0 && unique && saved.persistent && !stopped && !paused});
+          .canContinue = peerPort != 0 && unique && saved.persistent && !stopped && !paused,
+          .savedPosition = saved.position});
     }
     lastSnapshot = result;
     return result;

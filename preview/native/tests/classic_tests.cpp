@@ -107,7 +107,8 @@ private slots:
     QCOMPARE(window.detailTabs().currentIndex(), 0);
     const QStringList headers{QStringLiteral("Name"), QStringLiteral("State"), QStringLiteral("Size (bytes)"),
         QStringLiteral("Progress"), QStringLiteral("Down (B/s)"), QStringLiteral("Up (B/s)"),
-        QStringLiteral("Received (bytes)"), QStringLiteral("Sent (bytes)"), QStringLiteral("Hash")};
+        QStringLiteral("Received (bytes)"), QStringLiteral("Sent (bytes)"), QStringLiteral("Hash"),
+        QStringLiteral("Saved queue position")};
     QCOMPARE(window.model().columnCount(), headers.size());
     for (int column = 0; column < headers.size(); ++column) {
       QCOMPARE(window.model().headerData(column, Qt::Horizontal, Qt::DisplayRole).toString(), headers[column]);

@@ -39,6 +39,7 @@ struct LibraryItem {
   std::optional<qint64> received{};
   std::optional<qint64> sent{};
   bool canContinue = false;
+  std::optional<qint64> savedPosition{};
 };
 struct LibraryPresentation {
   quint64 revision = 0;
@@ -62,7 +63,7 @@ struct Details {
 class LibraryModel final : public QAbstractTableModel {
   Q_OBJECT
 public:
-  static constexpr int Columns = 9;
+  static constexpr int Columns = 10;
   static constexpr int KeyRole = Qt::UserRole + 1;
   static constexpr int CompletionRole = Qt::UserRole + 2;
   static constexpr std::size_t MaximumRows = 100000;

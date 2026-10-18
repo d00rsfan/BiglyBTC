@@ -35,6 +35,7 @@ QVariant LibraryModel::data(const QModelIndex& index, int role) const {
     case 6: return number(row.item.received, role);
     case 7: return number(row.item.sent, role);
     case 8: return row.item.hash;
+    case 9: return number(row.item.savedPosition, role);
     default: return {};
   }
 }
@@ -42,7 +43,7 @@ QVariant LibraryModel::data(const QModelIndex& index, int role) const {
 QVariant LibraryModel::headerData(int section, Qt::Orientation orientation, int role) const {
   if (orientation != Qt::Horizontal || role != Qt::DisplayRole || section < 0 || section >= Columns) { return {}; }
   const QStringList names{tr("Name"), tr("State"), tr("Size (bytes)"), tr("Progress"),
-      tr("Down (B/s)"), tr("Up (B/s)"), tr("Received (bytes)"), tr("Sent (bytes)"), tr("Hash")};
+      tr("Down (B/s)"), tr("Up (B/s)"), tr("Received (bytes)"), tr("Sent (bytes)"), tr("Hash"), tr("Saved queue position")};
   return names[section];
 }
 

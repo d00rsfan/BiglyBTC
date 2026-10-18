@@ -91,6 +91,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     table->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
     table->setColumnWidth(1, 100);
     table->setColumnWidth(3, 85);
+    table->setColumnWidth(9, 180);
     table->setColumnHidden(table == completeTable_ ? 4 : 5, true);
     table->setColumnHidden(8, true);
     table->installEventFilter(this);

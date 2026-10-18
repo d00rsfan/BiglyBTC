@@ -96,9 +96,14 @@ private slots:
     QVERIFY(!window.continueAction().isEnabled());
     QCOMPARE(window.incompleteTable().model()->rowCount(), 3);
     QCOMPARE(window.completeTable().model()->rowCount(), 1);
+    QCOMPARE(window.model().columnCount(), 10);
+    QCOMPARE(window.model().headerData(9, Qt::Horizontal, Qt::DisplayRole).toString(), QStringLiteral("Saved queue position"));
+    QVERIFY(!window.incompleteTable().isColumnHidden(9));
+    QVERIFY(!window.completeTable().isColumnHidden(9));
 
     for (int row = 0; row < 4; ++row) {
       const auto at = static_cast<std::size_t>(row);
+      QCOMPARE(window.model().data(window.model().index(row, 9), Qt::UserRole).toLongLong(), qint64{row + 1});
       const qint64 total = (row + 1) * qint64{32768};
       QCOMPARE(window.model().data(window.model().index(row, 0), Qt::DisplayRole).toString(), names[at]);
       QCOMPARE(window.model().data(window.model().index(row, 1), Qt::DisplayRole).toString(), expectedStates[at]);

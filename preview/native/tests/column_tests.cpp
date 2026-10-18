@@ -139,7 +139,7 @@ private slots:
     QVERIFY(columns->menu());
     QCOMPARE(columns->menu()->objectName(), prefix(complete) + QStringLiteral("-menu"));
     QCOMPARE(table.horizontalHeader()->contextMenuPolicy(), Qt::CustomContextMenu);
-    QCOMPARE(table.model()->columnCount(), 9);
+    QCOMPARE(table.model()->columnCount(), 10);
     for (int logical = 0; logical < table.model()->columnCount(); ++logical) {
       auto* action = columnAction(table, complete, logical);
       QVERIFY(action);
@@ -257,18 +257,18 @@ private slots:
     Tables fixture(true);
     auto& table = fixture.incomplete;
     auto* header = table.horizontalHeader();
-    const int originalOrder[]{0, 6, 1, 2, 3, 4, 5, 7, 8};
-    for (int visual = 0; visual < 9; ++visual) { QCOMPARE(header->logicalIndex(visual), originalOrder[visual]); }
+    const int originalOrder[]{0, 6, 1, 2, 3, 4, 5, 7, 8, 9};
+    for (int visual = 0; visual < ui::LibraryModel::Columns; ++visual) { QCOMPARE(header->logicalIndex(visual), originalOrder[visual]); }
     table.sortByColumn(2, Qt::DescendingOrder);
-    for (int logical = 0; logical < 9; ++logical) { header->resizeSection(logical, 240 + logical * 7); }
+    for (int logical = 0; logical < ui::LibraryModel::Columns; ++logical) { header->resizeSection(logical, 240 + logical * 7); }
     header->moveSection(0, 8);
     table.setColumnHidden(1, true);
     table.setColumnHidden(8, false);
     auto* reset = resetAction(table, false);
     QVERIFY(reset);
     reset->trigger();
-    for (int visual = 0; visual < 9; ++visual) { QCOMPARE(header->logicalIndex(visual), originalOrder[visual]); }
-    for (int logical = 0; logical < 9; ++logical) {
+    for (int visual = 0; visual < ui::LibraryModel::Columns; ++visual) { QCOMPARE(header->logicalIndex(visual), originalOrder[visual]); }
+    for (int logical = 0; logical < ui::LibraryModel::Columns; ++logical) {
       QCOMPARE(table.isColumnHidden(logical), logical == 8);
       const bool hidden = table.isColumnHidden(logical);
       if (hidden) { table.showColumn(logical); }
@@ -322,13 +322,13 @@ private slots:
     const auto target = fixture.model.targetAt(0).value();
     auto* tableModel = table.model();
     QSignalSpy resets(&fixture.model, &QAbstractItemModel::modelReset);
-    for (int logical = 0; logical < 9; ++logical) {
+    for (int logical = 0; logical < ui::LibraryModel::Columns; ++logical) {
       auto* action = columnAction(table, false, logical);
       QVERIFY(action);
       if (action->isChecked()) { action->trigger(); }
       QVERIFY(table.isColumnHidden(logical));
     }
-    QCOMPARE(table.horizontalHeader()->hiddenSectionCount(), 9);
+    QCOMPARE(table.horizontalHeader()->hiddenSectionCount(), ui::LibraryModel::Columns);
     table.setFocus();
     QTRY_VERIFY(table.hasFocus());
     auto* menu = fixture.incompleteColumns->menu();
@@ -414,7 +414,7 @@ private slots:
     QVERIFY(!window.incompleteTable().isColumnHidden(5));
     QVERIFY(window.completeTable().isColumnHidden(4));
     QVERIFY(!window.completeTable().isColumnHidden(5));
-    for (int logical = 0; logical < 9; ++logical) { window.incompleteTable().hideColumn(logical); }
+    for (int logical = 0; logical < ui::LibraryModel::Columns; ++logical) { window.incompleteTable().hideColumn(logical); }
     auto* reset = resetAction(window.incompleteTable(), false);
     QVERIFY(reset);
     reset->trigger();

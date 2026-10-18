@@ -1,0 +1,458 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "state": "Source contract for bounded read-only saved-position column; no live Rank or DND parity credit",
+  "upstream_repository": "https://github.com/BiglySoftware/BiglyBT",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "upstream_sources": {
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/RankItem.java": {
+      "git_blob": "97973dd56b8b7272c3c7c22f65c92c01dd59497d",
+      "committed_sha256": "618c621c5980dac6a01364c6bf793d18c51f13346ab8cb44acac8c91b1cd142b",
+      "observed_working_sha256": "618c621c5980dac6a01364c6bf793d18c51f13346ab8cb44acac8c91b1cd142b",
+      "working_tree_matches_commit": true
+    },
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/SizeItem.java": {
+      "git_blob": "d13727e725af6b65af4f3a72f3758ac39c64c82c",
+      "committed_sha256": "799ccd6d2457b69094ad64829387420e38777a23d67c6f3ae06adee2c87a4136",
+      "observed_working_sha256": "799ccd6d2457b69094ad64829387420e38777a23d67c6f3ae06adee2c87a4136",
+      "working_tree_matches_commit": true
+    },
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/RemainingItem.java": {
+      "git_blob": "3e49fd9ff265c879bfc9fa6b18726ceb3d5a49c0",
+      "committed_sha256": "c85e3a3d0ac983b63e29d45631c945696ef6e923018e61c9ab11019a59caf232",
+      "observed_working_sha256": "c85e3a3d0ac983b63e29d45631c945696ef6e923018e61c9ab11019a59caf232",
+      "working_tree_matches_commit": true
+    },
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DoneItem.java": {
+      "git_blob": "6289897f59d4b4c09406f7ce000a844bee6b3c13",
+      "committed_sha256": "5844b06d3c9bf42447e8835bdb18af7417a55e71aa3ddecc3b3769c45e23f0f4",
+      "observed_working_sha256": "5844b06d3c9bf42447e8835bdb18af7417a55e71aa3ddecc3b3769c45e23f0f4",
+      "working_tree_matches_commit": true
+    },
+    "uis/src/com/biglybt/ui/swt/views/table/utils/TableColumnCreator.java": {
+      "git_blob": "b7011d0601c1c94e716f5ff9aab19ed93c33c7ae",
+      "committed_sha256": "e0ce2a57077d76685b1e71d2cb7a831c7cc79fa1e5f93f7979536146ac80053a",
+      "observed_working_sha256": "e0ce2a57077d76685b1e71d2cb7a831c7cc79fa1e5f93f7979536146ac80053a",
+      "working_tree_matches_commit": true
+    },
+    "uis/src/com/biglybt/ui/swt/views/MyTorrentsView.java": {
+      "git_blob": "34a79c82aed9153f63b499aba136bb6628316cbc",
+      "committed_sha256": "5d019924be50987d683aa82a2000a42cce3297156036ddd5ab8fa65f8eef88fd",
+      "observed_working_sha256": "5d019924be50987d683aa82a2000a42cce3297156036ddd5ab8fa65f8eef88fd",
+      "working_tree_matches_commit": true
+    },
+    "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java": {
+      "git_blob": "f992aecdc28168d656c322512434ff1cbaf95c02",
+      "committed_sha256": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39",
+      "observed_working_sha256": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39",
+      "working_tree_matches_commit": true
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java": {
+      "git_blob": "99617ee6753153c8af1598fc17cf28ed7631319b",
+      "committed_sha256": "a88937664cb90354be6600448a63684b6a7b5c9e7906a9425b9f5a4758afbeda",
+      "observed_working_sha256": "a88937664cb90354be6600448a63684b6a7b5c9e7906a9425b9f5a4758afbeda",
+      "working_tree_matches_commit": true
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java": {
+      "git_blob": "73350c54c291c03b2fafe54b5f7618d31fabab8e",
+      "committed_sha256": "3b2eb44625911187e3058b7363b96b7ee813a9bf8051de54fada0f1ccc3243c7",
+      "observed_working_sha256": "3b2eb44625911187e3058b7363b96b7ee813a9bf8051de54fada0f1ccc3243c7",
+      "working_tree_matches_commit": true
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerController.java": {
+      "git_blob": "e575894d6a17d3dcbdd0af857e08445025b24f49",
+      "committed_sha256": "b22ccde4addada902b8bac14c2177e7496b9329304c534d6ed2fdde9dbdc8860",
+      "observed_working_sha256": "b22ccde4addada902b8bac14c2177e7496b9329304c534d6ed2fdde9dbdc8860",
+      "working_tree_matches_commit": true
+    },
+    "core/src/com/biglybt/core/download/DownloadManagerState.java": {
+      "git_blob": "0257df6b197c2e3ac1e0baa11083c6078d197445",
+      "committed_sha256": "9bd11377c6abe2f4cf1e0cb10cc42032917679216fccb12fbb43a239a13a2867",
+      "observed_working_sha256": "9bd11377c6abe2f4cf1e0cb10cc42032917679216fccb12fbb43a239a13a2867",
+      "working_tree_matches_commit": true
+    },
+    "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java": {
+      "git_blob": "0612105280e1489fc628d155bd12c7606ac0e0c3",
+      "committed_sha256": "6755b950c548c5a7d153b9aef2c1024c7c5c79d5880fd858f3bac4261adcdf8c",
+      "observed_working_sha256": "6755b950c548c5a7d153b9aef2c1024c7c5c79d5880fd858f3bac4261adcdf8c",
+      "working_tree_matches_commit": true
+    }
+  },
+  "native_baseline_repository": "https://github.com/d00rsfan/BiglyBTC",
+  "native_baseline_commit": "0b70eb6b0565f2a1debf2e7cd321e9bcb17b31b6",
+  "native_baseline_sources": {
+    "preview/native/core/include/biglybtc/library.hpp": {
+      "git_blob": "9eae63582317528f8b2b046c5275ccb7e442c2f3",
+      "committed_sha256": "8ad4e7f5346300fdc03c6318d629b6185874d35109511ca445609639b7168875",
+      "observed_working_sha256": "8ad4e7f5346300fdc03c6318d629b6185874d35109511ca445609639b7168875",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/core/src/library.cpp": {
+      "git_blob": "3465fff582d5c17c4a3f37760710260c644c7a50",
+      "committed_sha256": "3ba21404a77e0e3c9e23cbf267be130609598ed6646693df7c4f656306895348",
+      "observed_working_sha256": "3ba21404a77e0e3c9e23cbf267be130609598ed6646693df7c4f656306895348",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/adapters/library_view.hpp": {
+      "git_blob": "68edbc945c5047491a8e3dc4a24db29246bc6304",
+      "committed_sha256": "43877d12f340bdd43cb1df1b98eddf6b39c89b7ec51d63de3b572ba9d4b5a82e",
+      "observed_working_sha256": "43877d12f340bdd43cb1df1b98eddf6b39c89b7ec51d63de3b572ba9d4b5a82e",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/adapters/library_view.cpp": {
+      "git_blob": "a245ebeedbc659214a33da1d33801a3435dde5be",
+      "committed_sha256": "a9aa1e0f6ccde4a7b4990f2340da1dd3472d372441b1389805e5d16ef1b229d4",
+      "observed_working_sha256": "a9aa1e0f6ccde4a7b4990f2340da1dd3472d372441b1389805e5d16ef1b229d4",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/core/include/biglybtc/state_cache.hpp": {
+      "git_blob": "18f78efab7c906e81f562ec6202513b49c387046",
+      "committed_sha256": "036be2d5a02e1cab9be638496e7b066ef13619a22443ea508a3d583f8f5dcd15",
+      "observed_working_sha256": "036be2d5a02e1cab9be638496e7b066ef13619a22443ea508a3d583f8f5dcd15",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/core/src/state_cache.cpp": {
+      "git_blob": "38271e50a7ea8500879f75a5293b97e307df727a",
+      "committed_sha256": "b73688291e949eb592b0e12281e79bf19dc1000a4f5b9d80f6a06a63238e4fc2",
+      "observed_working_sha256": "b73688291e949eb592b0e12281e79bf19dc1000a4f5b9d80f6a06a63238e4fc2",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/core/include/biglybtc/file_policy.hpp": {
+      "git_blob": "89c7adcc3bc137400a7b237916d1281692bdef4b",
+      "committed_sha256": "0d199f329d775783d9f4195ba6e14ff660b410ce4bfc555c4c55b4eaa43bff46",
+      "observed_working_sha256": "0d199f329d775783d9f4195ba6e14ff660b410ce4bfc555c4c55b4eaa43bff46",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/core/src/file_policy.cpp": {
+      "git_blob": "21450534293976d730a19a2301b899410be508e7",
+      "committed_sha256": "a50ae3dfcb3d75d9c3220db803823bf91a7f4daaf40ee54f7c325bda7d6a764a",
+      "observed_working_sha256": "a50ae3dfcb3d75d9c3220db803823bf91a7f4daaf40ee54f7c325bda7d6a764a",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/core/include/biglybtc/torrent_layout.hpp": {
+      "git_blob": "12af9e19b96ed883085116061ef75c4215b84821",
+      "committed_sha256": "59accc489872b0f69444da51cdd2a79aeaa0510deeaf1a01434aab2b8699a775",
+      "observed_working_sha256": "59accc489872b0f69444da51cdd2a79aeaa0510deeaf1a01434aab2b8699a775",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/core/src/torrent_layout.cpp": {
+      "git_blob": "68aa4737d65a640a872f91a82e4f9b9f78b2ce0c",
+      "committed_sha256": "58e6961c5136d1a5f9adf860748a9b3e645fe0ff05ccb50836f339a636ce072d",
+      "observed_working_sha256": "58e6961c5136d1a5f9adf860748a9b3e645fe0ff05ccb50836f339a636ce072d",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/engine/local_session.hpp": {
+      "git_blob": "b9cda8f74f4a83f71c7415ddf704ca5a7b06912a",
+      "committed_sha256": "3ac5e56321e5202a27cc542c0d8ca9daa6a8354d7a2c1b6293b7e3fdda3caa4b",
+      "observed_working_sha256": "3ac5e56321e5202a27cc542c0d8ca9daa6a8354d7a2c1b6293b7e3fdda3caa4b",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/engine/local_session.cpp": {
+      "git_blob": "e9b39b56690c8156d985358cc5da7a0e9830bbf1",
+      "committed_sha256": "5a74426229f890480d7cb062d0a11aaaf74c51ced5d1ed713b758f0a9f5eef9d",
+      "observed_working_sha256": "5a74426229f890480d7cb062d0a11aaaf74c51ced5d1ed713b758f0a9f5eef9d",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/engine/multifile_session.cpp": {
+      "git_blob": "c13dcb4ec30df2017d1225267261e09d43ab20b9",
+      "committed_sha256": "ab09eb93faf057e69068f5467e535d753b68887be0a82d7970532a11331bf57a",
+      "observed_working_sha256": "ab09eb93faf057e69068f5467e535d753b68887be0a82d7970532a11331bf57a",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/app/session_bridge.cpp": {
+      "git_blob": "25ce27aa861d59bed01c4fd6aba6a7c88b860a60",
+      "committed_sha256": "2725b95365db8e11366864475edc322d4bc47c9ceadaa481ff3ffc20b6a501ec",
+      "observed_working_sha256": "2725b95365db8e11366864475edc322d4bc47c9ceadaa481ff3ffc20b6a501ec",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/ui/library_model.hpp": {
+      "git_blob": "36714eb1fda6af2cb6e49be6e1f2fefe0c01b260",
+      "committed_sha256": "2b1a5590eb2091d058f30d75a440ef57bf7da37b2ee8b2b295ddc5d8971d20ef",
+      "observed_working_sha256": "2b1a5590eb2091d058f30d75a440ef57bf7da37b2ee8b2b295ddc5d8971d20ef",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/ui/library_model.cpp": {
+      "git_blob": "5be4a8f2173572a0a7a94440a3b79ad3d8770326",
+      "committed_sha256": "969cf42a17663ce27225a54cfbdded4033cffb66a6c0f0c55afd4bffb3a9a56a",
+      "observed_working_sha256": "969cf42a17663ce27225a54cfbdded4033cffb66a6c0f0c55afd4bffb3a9a56a",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/ui/classic_filter.hpp": {
+      "git_blob": "ca6270d8a42d31408b2d06b2d0d584b9d49a67cc",
+      "committed_sha256": "be3b774a0f50a7075154d936cab10fc922772ca95a7436ae93e55a00d9c02634",
+      "observed_working_sha256": "be3b774a0f50a7075154d936cab10fc922772ca95a7436ae93e55a00d9c02634",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/ui/classic_filter.cpp": {
+      "git_blob": "6bf562c659c6f7c80033bbbae284f9667eb7cc55",
+      "committed_sha256": "2186674f85e4bf6eeb6eeb1b2c568c3b4f060eac4a443d04130144dab3d50003",
+      "observed_working_sha256": "2186674f85e4bf6eeb6eeb1b2c568c3b4f060eac4a443d04130144dab3d50003",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/ui/classic_columns.hpp": {
+      "git_blob": "bff2e2c7772eb0ba0bafca0db3cf3dd112e00876",
+      "committed_sha256": "18e90f2c4ede7a5d8e04eb95b1fa566d8b92f07d9010b37dbd017776b080937d",
+      "observed_working_sha256": "18e90f2c4ede7a5d8e04eb95b1fa566d8b92f07d9010b37dbd017776b080937d",
+      "working_tree_matches_commit": true
+    },
+    "preview/native/ui/classic_columns.cpp": {
+      "git_blob": "330b0988b0b6efb247a67dbb9579dc3261bbb5f1",
+      "committed_sha256": "7eff7d0eae0c38261cd8a0f36bf7cc31f87b97f03d5a57815b75f3d9c91c868b",
+      "observed_working_sha256": "7eff7d0eae0c38261cd8a0f36bf7cc31f87b97f03d5a57815b75f3d9c91c868b",
+      "working_tree_matches_commit": true
+    }
+  },
+  "source_findings": [
+    {
+      "id": "Q1",
+      "source": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/RankItem.java",
+      "methods": [
+        "refresh(TableCell)"
+      ],
+      "facts": [
+        "Displays DownloadManager.getPosition(), not a direct downloads.config lookup.",
+        "Adds 0x1000000 to complete-row sort values using getAssumedComplete(); display text stays the manager position.",
+        "Original mixed-view offset and complete icon depend on original assumed-complete semantics, not the native full-byte classifier."
+      ]
+    },
+    {
+      "id": "Q2",
+      "source": "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java",
+      "anchors": [
+        "load path: position Long around1706; Long.intValue() around1753; default placement around1806",
+        "exportDownloadManager: internal_export position around3503",
+        "fixUpDownloadManagerPositions() around3858"
+      ],
+      "facts": [
+        "The internal snapshot saves current manager position as a Long; external exports can omit position.",
+        "Startup narrows the saved Long to signed int; position -1 is assigned a group-tail position.",
+        "fixUpDownloadManagerPositions sorts current managers and renumbers complete/incomplete groups independently from1.",
+        "A raw saved signed64 value therefore does not establish the position the Java client would show after opening."
+      ]
+    },
+    {
+      "id": "Q3",
+      "source": "uis/src/com/biglybt/ui/swt/views/table/utils/TableColumnCreator.java",
+      "methods": [
+        "createIncompleteDM(String)",
+        "createCompleteDM(String)"
+      ],
+      "facts": [
+        "Rank is in both default column sets and is the default ascending sort when no saved table settings exist.",
+        "The current preview deliberately has different available columns and scoped sorting; adding a saved column is not original table-state restoration."
+      ]
+    },
+    {
+      "id": "S1",
+      "source": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/SizeItem.java",
+      "methods": [
+        "refresh(TableCell)",
+        "cellHover(TableCell)"
+      ],
+      "facts": [
+        "Manager size is getSizeExcludingDND(); optional second line is getRemainingExcludingDND().",
+        "Metadata-download rows have an unknown/blank special case.",
+        "Sort includes selected size, remaining and second-line presentation; tooltip can separately describe full-size skipped bytes."
+      ]
+    },
+    {
+      "id": "S2",
+      "source": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/RemainingItem.java",
+      "methods": [
+        "refresh(TableCell)",
+        "getRemaining(TableCell)"
+      ],
+      "facts": [
+        "Manager remaining is getRemainingExcludingDND(), not full size minus raw saved completedbytes.",
+        "Metadata-download manager/file rows return unknown -1."
+      ]
+    },
+    {
+      "id": "S3",
+      "source": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DoneItem.java",
+      "methods": [
+        "refresh(TableCell)"
+      ],
+      "facts": [
+        "Manager percent is getPercentDoneExcludingDND() in thousandths.",
+        "Per-file percent uses actual file.getDownloaded() and file length, with a zero-length special case."
+      ]
+    },
+    {
+      "id": "S4",
+      "source": "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java",
+      "methods": [
+        "getCompleted()",
+        "getDownloadCompleted(boolean)",
+        "getDownloadCompletedBytes()",
+        "getSkippedFileSetSize()",
+        "getRemainingExcludingDND()",
+        "getSizeExcludingDND()",
+        "getPercentDoneExcludingDND()"
+      ],
+      "facts": [
+        "Full completed bytes, transient checking/allocation percent, and DND-aware Done are different metrics.",
+        "Fallback selected size = fullSize - skippedFileSetSize.",
+        "Fallback selected remaining = max(0, fullRemaining - (skippedFileSetSize - skippedButDownloaded)); Java long arithmetic applies.",
+        "A negative skipped-size cache can trigger file-info iteration and setSkippedFileStats writes; a read-only projection must not invoke this recovery path.",
+        "DiskManager delegation excludes INITIALIZING/ALLOCATING and uses live disk-manager values in other states.",
+        "Stats selectedSize==0 gives1000; selectedSize<0 gives0. Otherwise percent uses float32 division and truncation, clamps negative to0, and changes1000 to999 if remaining>0."
+      ]
+    },
+    {
+      "id": "S5",
+      "source": "core/src/com/biglybt/core/download/DownloadManagerState.java",
+      "constants": {
+        "AT_SKIPPED_FILESET_SIZE": "skipfss, default -1",
+        "AT_SKIPPED_BUT_DOWNLOADED": "skipbdl",
+        "PARAM_DND_FLAGS": "dndflags"
+      },
+      "facts": [
+        "Saved skipped-byte and cached DND-completion metadata exist, but are not currently projected by the native typed data layer.",
+        "Missing or invalid cached data cannot be silently interpreted as verified zero skipped bytes."
+      ]
+    },
+    {
+      "id": "S6",
+      "source": "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java",
+      "methods": [
+        "fixupSkippedCalculation()",
+        "getRemainingExcludingDND()",
+        "getSizeExcludingDND()",
+        "getPercentDoneExcludingDND()"
+      ],
+      "facts": [
+        "Skipped totals use file lengths AND actual downloaded bytes in skipped files, under the file/piece lock.",
+        "The disk-manager calculation can write restored skipped stats through the manager.",
+        "Its own selected-size<=0 percent special case differs from the Stats selected-size==0 wrapper; a future projection must select and document its source branch."
+      ]
+    },
+    {
+      "id": "S7",
+      "source": "core/src/com/biglybt/core/download/impl/DownloadManagerController.java",
+      "methods": [
+        "calculateCompleteness(DiskManagerFileInfo[])",
+        "isDownloadComplete(boolean)"
+      ],
+      "facts": [
+        "Completeness uses cached has-DND/completed-excluding-DND flags and, for a READY disk manager, appropriate remaining bytes.",
+        "calculateCompleteness can inspect real per-file downloaded lengths and writes cached dndflags.",
+        "With no DND it uses stats full remaining; with DND and no READY disk manager it uses cached completion if DND is excluded.",
+        "MyTorrentsView.isOurDownloadManager passes its DND-always-incomplete setting; original pane membership is not simply full completedbytes>=full size."
+      ]
+    }
+  ],
+  "native_findings": [
+    {
+      "id": "N1",
+      "sources": [
+        "preview/native/core/include/biglybtc/library.hpp",
+        "preview/native/core/src/library.cpp",
+        "preview/native/adapters/library_view.hpp"
+      ],
+      "facts": [
+        "SavedDownload.position is already optional<int64_t> and readLibrary preserves the raw integer; absent is nullopt and invalid type is an issue.",
+        "The owned saved entry travels in LibraryItem.saved through the adapter; no parser, metadata read, cache reconstruction or filesystem lookup is needed for the proposed column."
+      ]
+    },
+    {
+      "id": "N2",
+      "sources": [
+        "preview/native/app/session_bridge.cpp",
+        "preview/native/ui/library_model.hpp",
+        "preview/native/ui/library_model.cpp"
+      ],
+      "facts": [
+        "Host::query copies full size, saved completedbytes and transfer totals, but currently omits saved position.",
+        "LibraryModel has nine logical columns0..8 and no position field; its numeric helper already distinguishes null from zero.",
+        "Existing identity/revision/byHash rules preserve rows and reject stale telemetry/details. Position should be an owned snapshot field, not hash-derived rank.",
+        "Details and telemetry change name/full geometry/completed bytes but provide no saved-position authority."
+      ]
+    },
+    {
+      "id": "N3",
+      "sources": [
+        "preview/native/core/include/biglybtc/state_cache.hpp",
+        "preview/native/engine/local_session.hpp",
+        "preview/native/engine/local_session.cpp",
+        "preview/native/core/src/file_policy.cpp"
+      ],
+      "facts": [
+        "CachedTorrent.bytes is full metadata/cache size, not selected size.",
+        "TorrentFileDetails exposes length/priority/skipped/padding but no per-file downloaded bytes.",
+        "originalFilePolicy projects saved skip and priority; it cannot supply downloaded bytes. Linear priority conversion explicitly rejects skipped files.",
+        "Current typed structures do not include proven skipped-but-downloaded counters or a coherent DND completion snapshot."
+      ]
+    },
+    {
+      "id": "N4",
+      "sources": [
+        "preview/native/ui/library_model.cpp",
+        "preview/native/ui/classic_filter.cpp",
+        "preview/native/engine/multifile_session.cpp"
+      ],
+      "facts": [
+        "Current Progress is double full completed/full size clamped0..100, and pane membership uses known nonnegative full completed>=full size.",
+        "The scoped multifile telemetry starts from total_done and adds verified virtual padding before clamping to full layout size; it does not establish selected-file completion.",
+        "Changing these to DND semantics would require a separate source-backed data contract, not a new arithmetic column over existing fields."
+      ]
+    },
+    {
+      "id": "N5",
+      "sources": [
+        "preview/native/ui/classic_columns.cpp"
+      ],
+      "facts": [
+        "The header controller enumerates model columns dynamically and captures per-pane initial order/width/visibility.",
+        "Its special logical indices4/5/8 should retain their meanings; append a new logical index instead of renumbering existing columns."
+      ]
+    }
+  ],
+  "proposed_task": {
+    "title": "Expose saved queue position in the read-only torrent library",
+    "behavior": "Show an optional numeric Saved queue position from the existing saved snapshot in each classic pane; missing displays an em dash. No synthesized rank.",
+    "data_path": [
+      "Copy core::SavedDownload.position in Host::query into a new optional<qint64> LibraryItem.savedPosition at the end of the UI DTO.",
+      "Append logical column9, leaving existing columns0..8 and roles unchanged. Use numeric Qt::UserRole sorting and plain DisplayRole text.",
+      "Retain the full signed64 source value, including zero/negative/extreme values; the label explicitly identifies the saved raw position rather than reconstructed Java int/live rank.",
+      "Telemetry/details leave it unchanged; an authoritative new library snapshot supplies the new value, including an absent value. Do not carry forward an older saved position when the new snapshot omits it."
+    ],
+    "presentation_choices_for_coordinator": [
+      "Propose visible in both panes, moved visually to the left using QHeaderView without changing logical indices.",
+      "Retain the current preview initial sort until a separate reviewed decision changes it; clicking the new header provides numeric sorting.",
+      "Column chooser/reset should include the appended column using the established per-pane defaults; no shared-profile table-setting writes."
+    ],
+    "excluded": [
+      "Live scheduler rank, reconstructed startup order, Java manager renumbering, assumed-complete sort offset and activity icons.",
+      "Queue move/top/up/down/bottom operations, profile writes, extra metadata/disk scans, network, and any scheduler ownership claim.",
+      "DND-aware selected-size/remaining/percent, altered pane classification, and original-column or Java runtime equality claims."
+    ],
+    "suggested_tests": [
+      "Raw missing/zero/-1/negative and INT64_MIN/MAX position projection; numeric2 vs10 sorting and equal positions.",
+      "Duplicate/absent hash rows keep source-key identity, stale revisions remain rejected, reorder/reset preserves current target safety.",
+      "Telemetry/details do not invent or alter saved position; new snapshots can clear a previously present position.",
+      "Column chooser, reset, pane-independent order/visibility and existing rate/hash defaults remain correct.",
+      "Generated saved-library preview renders the column without adding profile reads or writes; auxiliary page navigation cannot operate a hidden torrent selection."
+    ],
+    "implementation_gate": "Parent chooses scope and assigns files after current saved-service milestone; this audit authorizes no production edit."
+  },
+  "dnd_prerequisites_open": [
+    "Specify coherent owned provenance for full geometry, full completed bytes, skipped total, and skipped-but-downloaded bytes from the same saved state/policy. A boolean skipped flag and full completedbytes are insufficient.",
+    "If using skipfss/skipbdl caches, define missing/negative/stale/invalid values as unknown or diagnostics under an explicit native policy; never emulate the original recovery scan or writes.",
+    "Bind file count/index/length/offset/padding and saved priorities to the same torrent identity/generation; handle skipped-file downloaded spill and mixed boundary pieces without estimates.",
+    "Distinguish metadata-only, allocating/checking, disk-manager READY, cached DND flags and assumed completion. Do not silently replace existing full-byte Progress or completion-pane classification.",
+    "For a claimed pure formula match, freeze the chosen branch and Java signed64 arithmetic, float32/truncation, zero-size behavior and999 residual rule with independent source observations before native equality.",
+    "Keep optional selectedSize/selectedRemaining/selectedPercent separate from full bytes. Unknown is explicit; no fabricated zero, complete state, or disk-health assertion.",
+    "Treat original composite Size sorting/second-line formatting and DND-always-incomplete pane setting as separate UI compatibility work."
+  ],
+  "policy": {
+    "logical_column": 9,
+    "display_label": "Saved queue position",
+    "representation": "Raw optional signed64 from downloads.config; absent is not zero",
+    "default_visible_in_both_panes": true,
+    "existing_sort_preserved": true,
+    "read_only": true,
+    "live_rank_parity": false,
+    "dnd_completion_parity": false
+  }
+}

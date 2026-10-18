@@ -24,7 +24,10 @@ and reopen; My Torrents stays available. Each torrent
 pane has its own column chooser: right-click the header, or use **View >
 Incomplete Columns / Complete Columns**. Reset Columns restores the preview
 defaults. These choices are currently kept for the window session; original
-saved-column settings compatibility remains unfinished. Other
+saved-column settings compatibility remains unfinished. The **Saved queue
+position** column shows the raw recorded position when present. It does not
+represent an active native scheduler; unknown values stay blank (—). See its
+[source contract](docs/saved-queue-position-source.json). Other
 unavailable actions remain disabled. See the milestone verification
 record and Actions run for the checks performed on the actual revision.
 
