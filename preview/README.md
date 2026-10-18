@@ -162,3 +162,18 @@ change transfer success. Saved overall totals are read independently and are nev
 written or incremented with these operation counters. See the [engine statistics
 contract](docs/engine-statistics-contract.json). Global Activity/history and a
 persistent all-application engine remain unfinished.
+
+**Activity > Engine traffic** plots actual combined, payload and protocol rates for
+receive and send from the latest experimental engine operation. The original
+Payload view stays first and remains separate. Up to600 known-rate observations
+are retained by the Window while Statistics is closed and replayed on reopening.
+Plots use the engine's steady elapsed observation times. Skipped observations and
+unavailable-rate intervals break the lines; a first unavailable rate is never
+shown as zero. Ending an operation retains its last observed history, and a new
+operation/profile starts fresh. Refresh saved totals preserves these observations.
+Hidden/minimized graphs cache owned data without painting or starting timers.
+
+This is temporary per-operation history; global application traffic, Java rate
+smoothing, persistent history and the remaining original Statistics services are
+unfinished. The offline launcher generates no engine samples. See the
+[engine Activity contract](docs/engine-activity-contract.json).

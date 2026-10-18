@@ -64,6 +64,8 @@ jobs:
           export QT_QPA_PLATFORM_PLUGIN_PATH="$BIGLYBTC_QT_PREFIX/plugins/platforms"
           mkdir -m 700 "$EVIDENCE_DIR/engine-captures"
           export BIGLYBTC_ENGINE_CAPTURE_DIRECTORY="$EVIDENCE_DIR/engine-captures"
+          mkdir -m 700 "$EVIDENCE_DIR/activity-captures"
+          export BIGLYBTC_ENGINE_ACTIVITY_CAPTURE_DIRECTORY="$EVIDENCE_DIR/activity-captures"
           /usr/bin/ctest --test-dir "$BUILD_DIR" -L unit --no-tests=error \
             --output-on-failure --output-junit "$EVIDENCE_DIR/unit-tests.xml" \
             2>&1 | tee "$EVIDENCE_DIR/unit-tests.log"

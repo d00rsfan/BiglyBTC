@@ -1,5 +1,8 @@
 #include "statistics_page.hpp"
 
+#include "engine_activity_history.hpp"
+#include "engine_activity_view.hpp"
+
 #include <QDateTime>
 #include <QEvent>
 #include <QFormLayout>
@@ -123,7 +126,12 @@ StatisticsPage::StatisticsPage(QWidget* parent) : QWidget(parent), tabs_(new QTa
   activityLayout->addLayout(rates); activityLayout->addWidget(observations_); activityLayout->addWidget(plot_, 1);
   activityLayout->addWidget(label(tr("Per-transfer payload only. Global data + protocol rates and historical samples are unavailable. Lines connect actual observations; no samples are inferred between them."),
       QStringLiteral("statistics-activity-scope"), activity_));
-  tabs_->addTab(activity_, tr("Activity"));
+  auto* activitySection = new QWidget(tabs_); activitySection->setObjectName(QStringLiteral("statistics-activity-section"));
+  auto* activitySectionLayout = new QVBoxLayout(activitySection);
+  activityViews_ = new QTabWidget(activitySection); activityViews_->setObjectName(QStringLiteral("statistics-activity-views"));
+  activityViews_->addTab(activity_, tr("Payload"));
+  engineActivity_ = new EngineActivityView(activityViews_); activityViews_->addTab(engineActivity_, tr("Engine traffic"));
+  activitySectionLayout->addWidget(activityViews_); tabs_->addTab(activitySection, tr("Activity"));
   auto* transfers = new QWidget(tabs_); transfers->setObjectName(QStringLiteral("statistics-transfers"));
   auto* transferLayout = new QVBoxLayout(transfers);
   auto* transferTabs = new QTabWidget(transfers); transferTabs_ = transferTabs; transferTabs->setObjectName(QStringLiteral("statistics-transfer-tabs"));
@@ -186,6 +194,7 @@ StatisticsPage::StatisticsPage(QWidget* parent) : QWidget(parent), tabs_(new QTa
     QPointer<StatisticsPage> guard(this); refreshActivity(); if (guard) { guard->refreshEngine(); }
   });
   connect(transferTabs_, &QTabWidget::currentChanged, this, [this](int) { refreshEngine(); });
+  connect(activityViews_, &QTabWidget::currentChanged, this, [this](int) { refreshActivity(); });
 }
 QTabWidget& StatisticsPage::tabs() { return *tabs_; }
 std::size_t StatisticsPage::sampleCount() const { return plot_->count(); }
@@ -214,8 +223,14 @@ bool StatisticsPage::writeFacts(const Facts& facts) {
 }
 void StatisticsPage::beginRequest(quint64 session, quint64 request) {
   if (session == 0 || request == 0 || session < session_ || (session == session_ && request <= request_)) { return; }
-  if (session_ != 0 && session != session_) { clearActivity(); engine_.reset(); engineDirty_ = true; }
+  const bool newEngineSession = session != session_;
+  if (session_ != 0 && newEngineSession) { clearActivity(); engine_.reset(); engineDirty_ = true; }
   session_ = session; request_ = request; state_.reset(); loading_ = true;
+  QPointer<StatisticsPage> lifetime(this);
+  if (newEngineSession) {
+    engineActivity_->clear();
+    if (!lifetime || lifetime->session_ != session || lifetime->request_ != request) { return; }
+  }
   const auto facts = emptyFacts(tr("Loading last-saved statistics…"), tr("Source: unavailable; save time unknown"));
   if (!writeFacts(facts)) { return; }
   QPointer<StatisticsPage> guard(this); refreshActivity(); if (guard) { guard->refreshEngine(); }
@@ -282,6 +297,16 @@ void StatisticsPage::setEngineStatistics(EngineStatisticsPresentation packet) {
   }
   engine_ = std::move(packet); engineDirty_ = true; refreshEngine();
 }
+void StatisticsPage::setEngineActivity(EngineActivityPresentation frame) {
+  if (!frame || !frame->latest()) { return; }
+  const auto latest = frame->latest();
+  QPointer<StatisticsPage> guard(this); setEngineStatistics(latest);
+  // Admission and all synchronous render reentry complete before the graph is
+  // allowed to consume the exact same immutable binding.
+  if (!guard || guard->engine_ != latest) { return; }
+  guard->engineActivity_->setPresentation(std::move(frame));
+}
+EngineActivityPresentation StatisticsPage::engineActivitySnapshot() const { return engineActivity_->presentation(); }
 void StatisticsPage::refreshEngine() {
   if (!engineDirty_ || !isVisible() || tabs_->currentIndex() != 1 || transferTabs_->currentIndex() != 0
       || window()->isMinimized()) { return; }
@@ -357,13 +382,14 @@ void StatisticsPage::recordPayload(const Telemetry& value, const QString& displa
   refreshActivity();
 }
 void StatisticsPage::refreshActivity() {
-  if (!activityDirty_ || !isVisible() || !activity_->isVisible() || window()->isMinimized()) { return; }
+  if (!activityDirty_ || !isVisible() || !activity_->isVisible() || activityViews_->currentIndex() != 0 || window()->isMinimized()) { return; }
   QPointer<StatisticsPage> guard(this); QPointer<ActivityPlot> plot = plot_;
   const std::optional<Target> target = target_; const auto count = plot->count();
   const auto revision = activityRevision_, session = session_;
   const auto current = [&] {
     return guard && plot && guard->activityRevision_ == revision && guard->session_ == session
-        && guard->target_ == target && guard->isVisible() && guard->activity_->isVisible() && !guard->window()->isMinimized();
+        && guard->target_ == target && guard->isVisible() && guard->activity_->isVisible()
+        && guard->activityViews_->currentIndex() == 0 && !guard->window()->isMinimized();
   };
   const auto latest = count ? std::optional<ActivityPlot::Sample>{plot->at(count - 1)} : std::nullopt;
   const std::array<Fact, 4> facts{{{transfer_, target ? tr("Transfer: %1").arg(displayName_.isEmpty() ? tr("(unnamed transfer)") : displayName_) : tr("No observed transfer"),
@@ -386,11 +412,18 @@ void StatisticsPage::showEvent(QShowEvent* event) {
     if (observedWindow_) { observedWindow_->removeEventFilter(this); }
     observedWindow_ = window(); observedWindow_->installEventFilter(this);
   }
-  QPointer<StatisticsPage> guard(this); refreshActivity(); if (guard) { guard->refreshEngine(); }
+  QPointer<StatisticsPage> guard(this);
+  plot_->setUpdatesEnabled(!window()->isMinimized());
+  if (!guard) { return; }
+  refreshActivity(); if (guard) { guard->refreshEngine(); }
 }
 bool StatisticsPage::eventFilter(QObject* object, QEvent* event) {
   if (object == observedWindow_ && (event->type() == QEvent::WindowStateChange || event->type() == QEvent::Show)) {
     QPointer<StatisticsPage> guard(this);
+    // Nested tab layouts can have deferred backing-store paints when minimized.
+    // Suspend the actual QWidget update path, not merely work inside paintEvent.
+    plot_->setUpdatesEnabled(!window()->isMinimized());
+    if (!guard) { return false; }
     QMetaObject::invokeMethod(this, [guard] {
       if (guard) { guard->refreshActivity(); } if (guard) { guard->refreshEngine(); }
     }, Qt::QueuedConnection);

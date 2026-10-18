@@ -23,6 +23,7 @@ namespace biglybtc::ui {
 
 class ClassicColumns;
 class StatisticsPage;
+class EngineActivityHistory;
 
 class LibraryWindow final : public QMainWindow {
   Q_OBJECT
@@ -129,6 +130,7 @@ private:
   QPointer<ClassicColumns> incompleteColumns_;
   QPointer<ClassicColumns> completeColumns_;
   EngineStatisticsPresentation latestEngineStatistics_;
+  std::shared_ptr<EngineActivityHistory> engineActivity_;
   quint64 columnSession_ = 0;
   quint64 columnRequest_ = 0;
   std::optional<ColumnRequest> activeColumnRequest_;

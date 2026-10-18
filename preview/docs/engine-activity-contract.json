@@ -1,0 +1,124 @@
+{
+  "schema": 1,
+  "milestone": "P04-17",
+  "component": "Activity > Engine traffic",
+  "status": "Source and behavior contract; actual qualification is recorded separately",
+  "baseline": {
+    "original_repository": "https://github.com/BiglySoftware/BiglyBT.git",
+    "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "native_source_commit": "5fc34b588713112b126f3cebdfc891020301a281",
+    "native_metadata_commit": "30569e2631427003a4a92e7edee3572a3b34e740",
+    "original_graphs": [
+      "uis/src/com/biglybt/ui/swt/views/stats/ActivityView.java",
+      "uis/src/com/biglybt/ui/swt/components/graphics/SpeedGraphic.java",
+      "uis/src/com/biglybt/ui/swt/components/graphics/MultiPlotGraphic.java"
+    ]
+  },
+  "navigation": {
+    "statistics_shortcut": "Ctrl+5",
+    "top_tabs": [
+      "Activity",
+      "Transfers"
+    ],
+    "activity_subtabs": [
+      "Payload",
+      "Engine traffic"
+    ],
+    "default_activity_subtab": "Payload",
+    "preserved": "Existing scoped payload Activity collection/rendering remains separate and first. Transfers saved totals and P04-16 counters remain separate."
+  },
+  "data_authority": {
+    "source": "Existing immutable P04-16 EngineStatistics packets from an actual owned libtorrent2.0.12 operation",
+    "identity": [
+      "profile session",
+      "engine operation",
+      "packet sequence",
+      "torrent target"
+    ],
+    "rate_unit": "bytes per second",
+    "time_unit": "elapsed steady nanoseconds since first accepted engine observation",
+    "rate_algorithm": "Use six existing exact floor rates; never derive new rates from GUI time, cumulative totals, payload telemetry or saved totals.",
+    "protocol_rounding": "Plot provided protocolReceived/protocolSent fields; subtraction of separately floored combined/payload rates is not the protocol rate.",
+    "excluded": [
+      "application/global totals",
+      "IP overhead",
+      "tracker",
+      "DHT",
+      "saved lifetime totals",
+      "persistent history",
+      "cross-operation accumulation",
+      "original Java ten-second/eleven-entry smoothing equality"
+    ]
+  },
+  "series": {
+    "receive": [
+      "received",
+      "payloadReceived",
+      "protocolReceived"
+    ],
+    "send": [
+      "sent",
+      "payloadSent",
+      "protocolSent"
+    ],
+    "labels": [
+      "Combined",
+      "Payload",
+      "Protocol"
+    ],
+    "styles": {
+      "Combined": "blue solid",
+      "Payload": "green dashed",
+      "Protocol": "orange dotted"
+    },
+    "accounting": "Combined already includes payload+protocol; three series are not added again."
+  },
+  "retention": {
+    "maximum_rate_points": 600,
+    "owner": "Window-owned bounded history, independent of the Page lifetime",
+    "unknown_rate_observation": "Updates latest packet/gap state without adding a rate point. Previous actual points remain available.",
+    "same_operation_reopen": "Reopening the Page restores the retained points and latest truthful state.",
+    "new_identity": "Accepted new operation or profile clears prior history. Wrong/stale identity never mutates current history.",
+    "disk_persistence": false
+  },
+  "connectivity": {
+    "ordinary_segment": "Connect only adjacent retained known-rate Observed points whose source packet sequences are consecutive in the same operation and whose elapsed time increases.",
+    "first_or_unknown_rate": "No point and no invented zero; next known point begins a new segment.",
+    "known_zero_rate": "A real measured zero is retained/plotted.",
+    "skipped_sequence": "A coalesced or otherwise skipped sequence breaks connectivity; it does not imply zero, constant traffic or missing reconstructed samples.",
+    "terminal_equal_or_omitted_sample": "Same operation repeated last sample adds no point; terminal state remains visible.",
+    "terminal_newer_actual_sample": "At most one actual newer-time rate point, always standalone, never connected to preceding observation.",
+    "after_terminal": "No extrapolated tail, synthetic completion point or later same-operation revival."
+  },
+  "rendering": {
+    "x_axis": "Actual elapsed-time differences; no index-as-seconds or inserted timestamps.",
+    "y_axis": "Nonnegative measured rate values; drawing-coordinate scaling is not a new data observation.",
+    "isolated_point": "Visible as a point, including zero or standalone terminal point.",
+    "latest_unknown": "Latest six rate labels say unavailable when latest rates are absent, even while older graph points remain.",
+    "no_background_animation": "No graph sampling/render timer or added threads; hidden/minimized views defer painting without manufacturing observations.",
+    "scope_notice": "One experimental transfer-engine operation; last observed traffic, not global/lifetime history or exhaustive final totals."
+  },
+  "lifecycle": {
+    "sampling_changes": false,
+    "new_alert_consumer": false,
+    "new_network_or_profile_io": false,
+    "normal_profile_access": false,
+    "original_client_activation": false,
+    "page_close": "Closes only the view; does not cancel transfer, reset the operation or discard Window history.",
+    "saved_refresh": "Does not reset engine history or request an engine sample.",
+    "read_only": true
+  },
+  "qualification": {
+    "new_graph_execution_status": "See published milestone evidence for executed source hashes and results",
+    "required": [
+      "Bounded600 ring/eviction and owned snapshot tests",
+      "Identity, sequence/rate gaps, known-zero, terminal dedup and standalone-point tests",
+      "Actual Qt Page/View lifetime/reentry/hidden/reopen and default-tab tests",
+      "Generated owned real single/multifile loopback graph observations and retained capture checks",
+      "Root local/compiler/leak-enabled sanitizer/three-scale and hosted receipts on exact implementation source"
+    ],
+    "java_runtime_equality_credit": 0,
+    "global_session_parity_credit": 0,
+    "persistent_history_credit": 0
+  }
+}

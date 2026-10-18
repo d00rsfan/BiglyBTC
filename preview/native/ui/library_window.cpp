@@ -2,6 +2,7 @@
 #include "classic_filter.hpp"
 #include "classic_columns.hpp"
 #include "statistics_page.hpp"
+#include "engine_activity_history.hpp"
 
 #include <QAction>
 #include <QCloseEvent>
@@ -421,8 +422,8 @@ void LibraryWindow::showStatistics() {
   page->tabs().setFocus(Qt::ShortcutFocusReason);
   if (guard && page && statisticsPage_ == page && fresh) {
     refreshStatistics();
-    if (guard && page && statisticsPage_ == page && latestEngineStatistics_) {
-      page->setEngineStatistics(latestEngineStatistics_);
+    if (guard && page && statisticsPage_ == page && engineActivity_) {
+      page->setEngineActivity(engineActivity_->snapshot());
     }
   }
 }
@@ -491,8 +492,12 @@ void LibraryWindow::setEngineStatistics(EngineStatisticsPresentation packet) {
     retained->sample = latestEngineStatistics_->sample;
     packet = std::move(retained);
   }
+  // Collect on the GUI owner independently of the optional page. The bounded
+  // snapshot owns its points; painting never reads mutable Window state.
+  if (!engineActivity_) { engineActivity_ = std::make_shared<EngineActivityHistory>(); }
+  if (!engineActivity_->observe(packet, columnSession_)) { return; }
   latestEngineStatistics_ = packet;
-  if (statisticsPage_) { statisticsPage_->setEngineStatistics(std::move(packet)); }
+  if (statisticsPage_) { statisticsPage_->setEngineActivity(engineActivity_->snapshot()); }
 }
 void LibraryWindow::queueOptionalViews() {
   queueSavedServices();
@@ -584,6 +589,7 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   columnSession_ = session;
   latestEngineStatistics_.reset();
+  engineActivity_.reset();
   activeStatisticsRequest_.reset();
   pendingStatisticsRequest_.reset();
   columnSaveAvailable_ = false;

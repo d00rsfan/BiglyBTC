@@ -1,5 +1,6 @@
 #pragma once
 
+#include "engine_activity_presentation.hpp"
 #include "engine_statistics_presentation.hpp"
 #include "library_model.hpp"
 #include "statistics_presentation.hpp"
@@ -18,6 +19,8 @@ class QTabWidget;
 
 namespace biglybtc::ui {
 
+class EngineActivityView;
+
 // GUI-thread only; completions are accepted once for the current nonzero pair.
 // This read-only page neither performs IO nor starts transfers/sampling timers.
 // Supplied packets and snapshots must remain immutable for their shared lifetime.
@@ -30,6 +33,8 @@ public:
   void setPresentation(StatisticsPresentation);
   void setFailed(quint64 session, quint64 request, const QString& message);
   void setEngineStatistics(EngineStatisticsPresentation);
+  void setEngineActivity(EngineActivityPresentation);
+  EngineActivityPresentation engineActivitySnapshot() const;
   // Caller first admits generation+hash through LibraryModel. The page also
   // rejects invalid identity/negative payload telemetry and resets on target change.
   void recordPayload(const Telemetry&, const QString& displayName);
@@ -56,6 +61,8 @@ private:
   void refreshEngine();
   QTabWidget* tabs_;
   QWidget* activity_;
+  QTabWidget* activityViews_ = nullptr;
+  EngineActivityView* engineActivity_ = nullptr;
   ActivityPlot* plot_;
   QLabel* transfer_;
   QLabel* downloadRate_;
