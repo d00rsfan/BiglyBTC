@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "classification": "hand-constructed synthetic original-format INPUTS; not runtime oracle outputs",
+  "source_equality_credit": 0,
+  "java_or_manager_execution": false,
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "audit_sha256": "fdd2fb2218af99cabbb654386f554ff1c1d0faacb6ccbb4e4873d3ee23c30f0d",
+  "original_source_files": {
+    "core/src/com/biglybt/core/tracker/host/impl/TRHostConfigImpl.java": {
+      "sha256": "a650b94c61c5085bc549d805222ed49d12e5338ccbf6b2148393c5a4a9198e2e",
+      "git_blob": "cb802ff98ee3d05b4cbd61eefa5bb51bf64e0e2a"
+    },
+    "core/src/com/biglybt/core/tracker/host/impl/TRHostImpl.java": {
+      "sha256": "a0a5655dec49d88f0a4cb242d025c6ba95f67bdc14dde29902751f250d35e415",
+      "git_blob": "9adc5c02df37da712e689d55ef6b742051a2e1f2"
+    },
+    "core/src/com/biglybt/core/tracker/host/TRHostTorrent.java": {
+      "sha256": "1babd8a5f4e296f6d8e0db03dfe3899d6bcba15d5cc02b0dd95f234e58d9dd3e",
+      "git_blob": "d0c6eee002a85b74452b1f2601af48806258cfc2"
+    },
+    "core/src/com/biglybt/pifimpl/local/sharing/ShareConfigImpl.java": {
+      "sha256": "d2e5e1668cfa3a7b55413e4106bc31e553e6125035f59601b22a925398793902",
+      "git_blob": "fc131527bf7cd1ffbd9ee0d860d0846cbaacfd9f"
+    },
+    "core/src/com/biglybt/pifimpl/local/sharing/ShareManagerImpl.java": {
+      "sha256": "da32c93c8c403b0c9ace4a026edb1dd751916d39584029229f91c258074afc7e",
+      "git_blob": "1b30821055342a75277835ed312445b5f73da8ad"
+    },
+    "core/src/com/biglybt/pifimpl/local/sharing/ShareResourceImpl.java": {
+      "sha256": "ed4b39f64affa388cea4c63976c6bd375c1f675a29558ebaf614eabe1b6fa1aa",
+      "git_blob": "e4cf80b8dcf9dda410d546785fb1cfe874458297"
+    },
+    "core/src/com/biglybt/pifimpl/local/sharing/ShareResourceFileOrDirImpl.java": {
+      "sha256": "d0e258a9b23003b191382d9374e0642d079dad772c41d76a1fdb7c534a2a7e34",
+      "git_blob": "c79e5e7bac4ad6584465e94feaff9f32cdd062ec"
+    },
+    "core/src/com/biglybt/pifimpl/local/sharing/ShareResourceDirContentsImpl.java": {
+      "sha256": "72053b0edd513aa668415b40de5e0e55889ca091c517f16052bbf94a509b50c6",
+      "git_blob": "b577063aa5f2df4bf497a80f724cf19f2222eff8"
+    },
+    "core/src/com/biglybt/pifimpl/local/sharing/ShareItemImpl.java": {
+      "sha256": "09c551db5b498a8139d7901cc50eb6aaa2dac9df050e08541e60532841cd2688",
+      "git_blob": "d81f10bd94ee1cc2a9723f3b589d8b0aeb86c65f"
+    },
+    "core/src/com/biglybt/pifimpl/local/sharing/ShareResourceFileImpl.java": {
+      "sha256": "9f5f051c6bde465bbea1eb2c6b2174d4bb42532120bceed0f72bb3d80267ac47",
+      "git_blob": "29f39de5344c9afb1682342216c3d183e25ea3c5"
+    },
+    "core/src/com/biglybt/pifimpl/local/sharing/ShareResourceDirImpl.java": {
+      "sha256": "8de22bb5d5846ea5aa40feb542ccc83559dcbb1cc57a348174826172e394471b",
+      "git_blob": "d8069f06c31eee0f0b69ca06d000eefeb3f36e8b"
+    },
+    "core/src/com/biglybt/pif/sharing/ShareResource.java": {
+      "sha256": "ac184ba41f4707c1e1a42529dc0213dae6146b454e9a20e891531a1eff55c758",
+      "git_blob": "c1ff7e5ee5521eec85824a49102b478ef2cff821"
+    },
+    "core/src/com/biglybt/pif/sharing/ShareManager.java": {
+      "sha256": "4920859cca2a22202bfb2b481cb362dd16e7fa33878cde7552c907993fcd20a9",
+      "git_blob": "9ad918c74bec34b369750cf83bd2a595aef6b699"
+    },
+    "core/src/com/biglybt/pif/torrent/TorrentAttribute.java": {
+      "sha256": "840fe8a7de47c47008922bbf70dc051136c62a7fbd247f5b62b0ae4a9117a0bb",
+      "git_blob": "af626b2850161a84e7ece40979bed5f552a794f0"
+    },
+    "core/src/com/biglybt/core/util/Constants.java": {
+      "sha256": "d030f8eb323021ed4ca8d8d2d644d028abc3799295e16bce2785b276cdb420ea",
+      "git_blob": "4ddd1e96dc735f8fda4c723629f4ba9924423a8a"
+    },
+    "core/src/com/biglybt/core/util/FileUtil.java": {
+      "sha256": "6565fa6aa08efd7ef64d339db28040d909765b0808050c7b70ae9a09e8cb4ba2",
+      "git_blob": "e96c2282bb45c0a32f31450f25b8bc3d65b5739b"
+    },
+    "uis/src/com/biglybt/ui/swt/views/MyTrackerView.java": {
+      "sha256": "99df8b284878b79340418b1bf4e26c15d8695ccec29c531b5b11fa36ba13b49f",
+      "git_blob": "f2744258d02271f7261c4412c3f69a0a89113009"
+    },
+    "uis/src/com/biglybt/ui/swt/views/MySharesView.java": {
+      "sha256": "c031a5102a421bbe592f24f2f8d7eb36efda39abb38a10d7e02010bb4ccff9ca",
+      "git_blob": "168739108dd08aa271440931c040038b2a6883c7"
+    },
+    "uis/src/com/biglybt/ui/swt/views/tableitems/myshares/NameItem.java": {
+      "sha256": "b8b168885617021a2b7c700fc2698f8643fab6ce379d23ec77508e403ed75030",
+      "git_blob": "12da4b362ba0b7e89e407ef96e717e583e655f79"
+    },
+    "uis/src/com/biglybt/ui/swt/views/tableitems/myshares/DateItem.java": {
+      "sha256": "9e4d94f58b069b80bd59d5ed136e06f1aac2492998ac4f851800b1a89bef2538",
+      "git_blob": "c094c47daf0fcb5016bb9cb335203b70d7976d3d"
+    },
+    "uis/src/com/biglybt/ui/swt/views/tableitems/myshares/TagsItem.java": {
+      "sha256": "ce455335a4a478d92914f1e8d0f9346bf347b1d45aadeb14d38c7ed852cb19cb",
+      "git_blob": "8c3ce5914feffd762874fb52eaedc7e9d04e9fff"
+    },
+    "uis/src/com/biglybt/ui/swt/views/tableitems/myshares/CategoryItem.java": {
+      "sha256": "0d0b17aad50eb5474578341087a1813ab143399614abb73c0312d9cb3bbddabf",
+      "git_blob": "745c059344d2b4ab2fae2ed89386e73fb31a18f6"
+    },
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytracker/StatusItem.java": {
+      "sha256": "f061ffc15b289f98000d0be1bb82eba5a7a77d62b262480e7a05e150a14d640c",
+      "git_blob": "25b5c914ced6bcf7f4b609d37e41b9e30975d06b"
+    }
+  },
+  "api_context_sha256": "c7ed179ad9d6f3b278e04b47b2889d5ab36db035ff37f4619efae909ad730b75",
+  "files_sha256": {
+    "README.md": "3d71203cba4cb10a40127600a83736344f65b0500ab65a8f9333d7110a13d510",
+    "missing-lists.benc": "2d680fdaa82c73c103eac6403fadda429d15ae225608ed99d7d0b6d200322ada",
+    "sharing-empty.benc": "2ccf63e900b3d164416e0c627e2a44426773d153da631d1b70e72d2978f737bd",
+    "sharing-malformed-rows.benc": "2632c63085cd1951eb01cb49653aa6c4a4c7ee836827a960a47a0e1dfcca49a0",
+    "sharing-mixed.benc": "e9bff237fc685d0624ef469c3f516e8e8042d976cce76c6b4853b4ccbf81e22a",
+    "tracker-empty.benc": "b2fa8200b1a4198e6e08243c0a7c88aa93df3586137941cb2065f7db5348a70e",
+    "tracker-malformed-rows.benc": "65605344d620e11526bbf9ae7acc1491f80ea8b57eccf8fdd0a2cd4d194baf89",
+    "tracker-mixed.benc": "9463772aca050c8eee9db6fb0ac820638db1da2ce9ed52edeca4e027e6251b82"
+  },
+  "input_record_counts": {
+    "tracker-mixed.benc": 5,
+    "sharing-mixed.benc": 6,
+    "tracker-malformed-rows.benc": 4,
+    "sharing-malformed-rows.benc": 5
+  },
+  "safety": "All paths/cache references/personal bytes are inert synthetic public data; do not resolve or execute."
+}

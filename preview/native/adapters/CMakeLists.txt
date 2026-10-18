@@ -32,3 +32,8 @@ add_library(biglybtc_rpc_profile STATIC rpc_profile.cpp)
 target_include_directories(biglybtc_rpc_profile PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(biglybtc_rpc_profile PUBLIC biglybtc_profile biglybtc_plugin_attributes biglybtc_plugin_settings)
 target_compile_options(biglybtc_rpc_profile PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+add_library(biglybtc_saved_service_view STATIC saved_service_view.cpp)
+target_include_directories(biglybtc_saved_service_view PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(biglybtc_saved_service_view PUBLIC biglybtc_profile)
+target_compile_options(biglybtc_saved_service_view PRIVATE -Wall -Wextra -Wpedantic -Werror)

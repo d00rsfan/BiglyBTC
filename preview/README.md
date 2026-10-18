@@ -65,5 +65,13 @@ To stage a folder from a build configured with `BIGLYBTC_DEB=ON` and
 on one line. Enabling the install layout does not build a `.deb`; no CPack or
 system installation is needed. The ordinary libtorrent runtime is extracted
 alongside the private Qt files for a user-local preview.
+The bounded core now also projects original-format `tracker.config` and
+`sharing.config` documents, with separate read-only adapters over a held profile
+lease. It preserves unknown raw data, reports missing/invalid/recovery sources,
+and never initializes hosting/sharing services or follows saved paths. These
+primitives are tested with synthetic public inputs; service-page integration is
+still in progress. See [source and policy contract](docs/saved-hosting-sharing-source.json)
+and `migration/fixtures/saved-services/README.md` within this preview tree.
+
 No performance improvement or full migration completion is claimed by this source
 milestone.
