@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "scope": "Optional read-only held-profile classic layout snapshot; no application startup/UI/writer integration",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_core_commit": "5bf0a30160c52c51d8efce279cac758948adfff2",
+  "source_sha256": {
+    "preview/native/adapters/column_layout_view.hpp": "eee7b06a10d3b8ebddbecad07c50344b09953d0273bfc0b0129692cc23cb96ea",
+    "preview/native/adapters/column_layout_view.cpp": "d4bc7a9008acd645de68a80c2ecfa8bed2e18deb1272e4c802c0e5e70396288e",
+    "preview/native/tests/column_layout_view_tests.cpp": "e283f5dacacf20725d249add26424e7bb0d7885b512a6224167b869dcfc232df"
+  },
+  "files": [
+    "tables.config",
+    "tables.config.bak",
+    "tables.config.saving"
+  ],
+  "precedence": {
+    "valid_primary": "Primary; unused recovery candidates untouched",
+    "absent_primary": "Saving, then Backup",
+    "malformed_primary": "Backup, then Saving"
+  },
+  "missing": "Only after each of the three fixed candidate names was observed absent; present malformed recovery is InvalidFormat",
+  "limits": "Fixed ordinary core Limits:4MiB input/string,100000 nodes,root-zero depth64; default pure projection caps; no caller-configurable quotas",
+  "ownership": "Borrow valid unmoved lease synchronously; return independent owned raw/projection snapshot and Primary/Backup/Saving provenance; no retained descriptor",
+  "errors": "Reader errors forwarded; projection Limit->Unsupported,Memory->Io,Root/EditedDocument->InvalidFormat; observed stop->Cancelled and discards snapshot",
+  "cancellation": "Before lease access; after whole ConfigFile load; before/after absence reads; after pure projection and before publication. Blocking reads are not interrupted.",
+  "writes": false,
+  "global_config_read": false,
+  "java_runtime_equality_credit": 0,
+  "limitations": [
+    "Separate candidate reads are not an atomic filesystem snapshot",
+    "No recovery writes,registered column defaults,migrations,global-sort resolution,Qt column application or settings persistence",
+    "Limits bound data structures and input; no allocator/RSS/noexcept guarantee"
+  ]
+}

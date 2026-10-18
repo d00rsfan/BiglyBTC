@@ -96,9 +96,13 @@ claim. See the [column contract](docs/saved-selected-columns-contract.json),
 The core also reads original classic `tables.config` documents into an owned
 raw snapshot and typed requested column facts. It preserves unknown plugin
 columns and extra settings, distinguishes exact layouts from user defaults,
-and retains original ordered sort IDs without applying them. The desktop does
-not import these layouts yet; its chooser remains session-only. See the
-[layout contract](docs/classic-column-layout-contract.json) and
+and retains original ordered sort IDs without applying them. A separate optional
+profile reader loads only `tables.config` and its recovery candidates under a
+held lease, without rewriting files. It reports recovery provenance and supports
+cancellation between reader calls. The desktop does not import these layouts
+yet; its chooser remains session-only. See the
+[layout contract](docs/classic-column-layout-contract.json),
+[profile reader contract](docs/classic-column-layout-reader-contract.json) and
 [pinned source audit](docs/classic-column-persistence-source.json).
 
 No performance improvement or full migration completion is claimed by this source

@@ -1,7 +1,7 @@
 if(NOT CMAKE_SYSTEM_NAME STREQUAL "Linux")
   message(FATAL_ERROR "Profile locking adapter is currently qualified for Linux development only; Windows/macOS remain pending")
 endif()
-add_library(biglybtc_profile STATIC profile.cpp file_io.cpp torrent_state.cpp library_view.cpp)
+add_library(biglybtc_profile STATIC profile.cpp file_io.cpp torrent_state.cpp library_view.cpp column_layout_view.cpp)
 target_include_directories(biglybtc_profile PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(biglybtc_profile PUBLIC BiglyBTC::Core)
 target_compile_options(biglybtc_profile PRIVATE -Wall -Wextra -Wpedantic -Werror)
