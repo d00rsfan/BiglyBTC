@@ -175,7 +175,6 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   layout->addWidget(content);
   mainTabs_->addTab(library, tr("My Torrents"));
   mainTabs_->setTabsClosable(true);
-  hideTorrentsCloseButton();
   setCentralWidget(mainTabs_);
   connect(filter_, &QLineEdit::textChanged, this, [this](const QString& value) {
     const auto hashes = selectedHashes();
@@ -233,6 +232,12 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   connect(about, &QAction::triggered, this, [this] {
     QMessageBox::about(this, tr("About BiglyBTC"), tr("BiglyBTC\nClassic desktop preview\n\nLibrary and file details use generated sample data.\nThe full client is under development."));
   });
+  file->addSeparator();
+  closeTab_ = file->addAction(tr("Close &Tab"));
+  closeTab_->setObjectName(QStringLiteral("classic-close-tab"));
+  closeTab_->setShortcut(QKeySequence(QStringLiteral("Ctrl+W")));
+  closeTab_->setShortcutContext(Qt::WindowShortcut);
+  connect(closeTab_, &QAction::triggered, this, [this] { closePage(mainTabs_->currentIndex()); });
   file->addSeparator();
   auto* quit = file->addAction(tr("&Quit"));
   quit->setShortcut(QKeySequence::Quit);
@@ -326,10 +331,11 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   connect(model_, &QAbstractItemModel::dataChanged, this, [this] {
     if (!updating_) { updateActions(); updateGeneral(); updateCounts(); }
   });
-  connect(mainTabs_, &QTabWidget::tabCloseRequested, this, &LibraryWindow::closeAuxiliaryPage);
+  connect(mainTabs_, &QTabWidget::tabCloseRequested, this, &LibraryWindow::closePage);
   connect(mainTabs_, &QTabWidget::currentChanged, this, [this] {
+    QPointer<LibraryWindow> guard(this);
     updateActions();
-    if (mainTabs_->currentWidget() == torrentsPage_) { selectionChanged(); }
+    if (guard && mainTabs_->currentWidget() == torrentsPage_) { selectionChanged(); }
   });
   updateActions();
   updateGeneral();
@@ -340,6 +346,10 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
 void LibraryWindow::showMyTorrents() {
   if (closing_) { return; }
   QPointer<LibraryWindow> guard(this);
+  if (mainTabs_->indexOf(torrentsPage_) < 0) {
+    mainTabs_->insertTab(0, torrentsPage_, tr("My Torrents"));
+    if (!guard) { return; }
+  }
   mainTabs_->setCurrentWidget(torrentsPage_);
   if (!guard) { return; }
   activeTable_->setFocus(Qt::ShortcutFocusReason);
@@ -353,7 +363,6 @@ void LibraryWindow::showMyTracker() {
     hostingPage_ = new SavedHostingPage(mainTabs_);
     mainTabs_->addTab(hostingPage_.data(), tr("My Tracker"));
     if (!guard) { return; }
-    hideTorrentsCloseButton();
   }
   mainTabs_->setCurrentWidget(hostingPage_.data());
   if (!guard) { return; }
@@ -368,33 +377,30 @@ void LibraryWindow::showMyShares() {
     sharesPage_ = new SavedSharesPage(mainTabs_);
     mainTabs_->addTab(sharesPage_.data(), tr("My Shares"));
     if (!guard) { return; }
-    hideTorrentsCloseButton();
   }
   mainTabs_->setCurrentWidget(sharesPage_.data());
   if (!guard) { return; }
   sharesPage_->table().setFocus(Qt::ShortcutFocusReason);
   if (guard && fresh) { refreshSavedServices(); }
 }
-void LibraryWindow::hideTorrentsCloseButton() {
-  const int index = mainTabs_->indexOf(torrentsPage_);
-  if (index < 0) { return; }
-  mainTabs_->tabBar()->setTabButton(index, QTabBar::LeftSide, nullptr);
-  mainTabs_->tabBar()->setTabButton(index, QTabBar::RightSide, nullptr);
-}
-void LibraryWindow::closeAuxiliaryPage(int index) {
+void LibraryWindow::closePage(int index) {
+  if (closing_) { return; }
   QPointer<QWidget> page(mainTabs_->widget(index));
-  if (!page || page == torrentsPage_) { return; }
-  if (page == hostingPage_.data()) { hostingPage_.clear(); }
-  else if (page == sharesPage_.data()) { sharesPage_.clear(); }
-  else { return; }
+  if (!page) { return; }
+  const bool retainedLibrary = page == torrentsPage_;
+  if (!retainedLibrary) {
+    if (page == hostingPage_.data()) { hostingPage_.clear(); }
+    else if (page == sharesPage_.data()) { sharesPage_.clear(); }
+    else { return; }
+  }
   QPointer<LibraryWindow> guard(this);
   mainTabs_->removeTab(index);
   if (!guard) { return; }
-  if (page) { page->deleteLater(); }
+  // Keep the library widgets and selection owned for View > My Torrents.
+  if (!retainedLibrary && page) { page->deleteLater(); }
   if (pendingSavedRequest_ && !hasLoadingServices(*pendingSavedRequest_)) { pendingSavedRequest_.reset(); }
-  hideTorrentsCloseButton();
   updateActions();
-  queueSavedServices();
+  if (guard) { queueSavedServices(); }
 }
 bool LibraryWindow::onSavedServicePage() const {
   const auto* current = mainTabs_->currentWidget();
@@ -536,6 +542,7 @@ void LibraryWindow::updateActions() {
   refresh_->setEnabled(!closing_ && (onSavedServicePage() || (!busy_ && mainTabs_->currentWidget() == torrentsPage_)));
   files_->setEnabled(!busy_ && !closing_ && target.has_value());
   padding_->setEnabled(!closing_ && mainTabs_->currentWidget() == torrentsPage_);
+  closeTab_->setEnabled(!closing_ && (mainTabs_->currentWidget() == torrentsPage_ || onSavedServicePage()));
 }
 void LibraryWindow::selectionChanged() {
   if (updating_) { return; }
@@ -638,7 +645,9 @@ void LibraryWindow::setBusy(bool value) {
 void LibraryWindow::closeEvent(QCloseEvent* event) {
   closing_ = true;
   pendingSavedRequest_.reset();
+  QPointer<LibraryWindow> guard(this);
   updateActions();
+  if (!guard) { return; }
   if (busy_) {
     setMessage(tr("Finishing current operation…"));
     event->ignore();

@@ -63,8 +63,7 @@ private:
   void showMyTorrents();
   void showMyTracker();
   void showMyShares();
-  void closeAuxiliaryPage(int index);
-  void hideTorrentsCloseButton();
+  void closePage(int index);
   bool onSavedServicePage() const;
   bool hasLoadingServices(quint64 request) const;
   void refreshSavedServices();
@@ -104,6 +103,7 @@ private:
   FileModel* filesModel_;
   QSortFilterProxyModel* filesProxy_;
   QTableView* filesTable_;
+  QAction* closeTab_;
   QAction* continue_;
   QAction* cancel_;
   QAction* refresh_;

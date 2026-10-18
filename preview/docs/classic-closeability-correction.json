@@ -1,0 +1,221 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "state": "corrective_source_addendum",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "correction": "Original classic az2 My Torrents is a closeable MAIN TabbedMDI entry. The false argument in setupSidebarClassic is overridden. The earlier noncloseable-original inference was incomplete and is superseded here.",
+  "source_files": {
+    "uis/src/com/biglybt/ui/swt/Utils.java": {
+      "sha256": "5a3546c6dc999474d49a502dbd1ede6d43a641048c86c41f965c8a30ebe1e1fe",
+      "git_blob": "8658ebe82d21b01d390230d1215397c87cdf95d2",
+      "working_matches_upstream": true
+    },
+    "uis/src/com/biglybt/ui/swt/shells/main/MainWindowImpl.java": {
+      "sha256": "1f5595903e6f06a2022bbea3b65d88194321d93f76222cedbdd72589604825ac",
+      "git_blob": "d47b3765a93011dd96e73c58c9d8e342bd20e068",
+      "working_matches_upstream": true
+    },
+    "uis/src/com/biglybt/ui/swt/shells/main/MainMDISetup.java": {
+      "sha256": "cecfce4f796772a5997913f711c27bd27fcd0895397d18fe3658262de66e5938",
+      "git_blob": "a34502ff825448fa7db14cf27e560519d37f31f4",
+      "working_matches_upstream": true
+    },
+    "uis/src/com/biglybt/ui/swt/shells/main/UIFunctionsImpl.java": {
+      "sha256": "d8a9c158f6e03db3c9451ff47d3d4e2737854cde4b3a7bf97fb75461dac7c428",
+      "git_blob": "43d586c4a2f840a3f5d2f758d39c9ce1fed25a72",
+      "working_matches_upstream": true
+    },
+    "uis/src/com/biglybt/ui/swt/mainwindow/MainMenuV2.java": {
+      "sha256": "e7045fd861fc5eb62a26033fb48c39af42c4d8071dcc67d68bd39d142678d6b1",
+      "git_blob": "cdf1fd41311e98762ac58a168d7c09c3894304d0",
+      "working_matches_upstream": true
+    },
+    "uis/src/com/biglybt/ui/swt/mainwindow/MenuFactory.java": {
+      "sha256": "178e65a1154cc19d67b3fd3c4be5c84cfe666a616e527d1aed0db39112a6f1b4",
+      "git_blob": "fe6baf3bb1da72362773aedced66ff48084c4d4e",
+      "working_matches_upstream": true
+    },
+    "uis/src/com/biglybt/ui/swt/mainwindow/IMenuConstants.java": {
+      "sha256": "b8638f6316da62e74476a13376f09f79ece8fa013eeec7b172207e853dde2e8f",
+      "git_blob": "f586712de95578ed1f4dfc6dbee99aeff6b5219e",
+      "working_matches_upstream": true
+    },
+    "uis/src/com/biglybt/ui/swt/KeyBindings.java": {
+      "sha256": "bb17a964a742d89ac6a78ae6c9bd1a7fa9e853a6ea613b21606d0a87aff8ba4d",
+      "git_blob": "cd7af1dcc0b4f39c716df662117a44e8aebb1c85",
+      "working_matches_upstream": true
+    },
+    "uis/src/com/biglybt/ui/swt/mdi/TabbedMDI.java": {
+      "sha256": "8a69fc161b6946b1f3821afdecc4c36c9dbac91430b8c315573a7d4330b6e481",
+      "git_blob": "2d956e729ab8ec07021e9340ef68da08688ca323",
+      "working_matches_upstream": true
+    },
+    "uis/src/com/biglybt/ui/swt/mdi/TabbedEntry.java": {
+      "sha256": "8b1167b2ab5344f321702c10107385a53476351599bd14b2f7d4fea0c1d3eaf4",
+      "git_blob": "a4911e0db4e0b919f3ab577d0f30825a6f57ba80",
+      "working_matches_upstream": true
+    },
+    "uis/src/com/biglybt/ui/swt/mdi/BaseMDI.java": {
+      "sha256": "6d4e0eb41359cb8d2d704dbcb70b50d3df1008832239509df3b69501af94ae0f",
+      "git_blob": "c1d36a2db9f1691e9840bcce94dbf3f1f26a3877",
+      "working_matches_upstream": true
+    },
+    "uis/src/com/biglybt/ui/swt/mdi/BaseMdiEntry.java": {
+      "sha256": "6a29494ba106e9f599e3335d31be503f53921277c2e4fdb61907645476e386af",
+      "git_blob": "1261ac3de89ba38a9fdf71f72db54403fed5e905",
+      "working_matches_upstream": true
+    },
+    "uis/src/com/biglybt/ui/swt/views/skin/SB_Transfers.java": {
+      "sha256": "7871a709028ced6d7d1839efa8d0ffbe86af677b5c30a47379315b298439f636",
+      "git_blob": "e5df33efd78d4da39418431f7818fa7f0e0af666",
+      "working_matches_upstream": true
+    },
+    "uis/src/com/biglybt/ui/swt/views/skin/SBC_LibraryView.java": {
+      "sha256": "e7972dfbc77423bef425a725410186aff564cc1842c084476de31002d5013b97",
+      "git_blob": "f3d79f8af4bbe288ac1126565a6af33bf948a66b",
+      "working_matches_upstream": true
+    },
+    "uis/src/com/biglybt/ui/swt/views/MyTorrentsSuperView.java": {
+      "sha256": "24af1c9a8235eeeca9c1944a86214c2782ac4391d78533613e813fb379d4144a",
+      "git_blob": "7ff1acc7ffbc39db58c09422b63bb6c533b12881",
+      "working_matches_upstream": true
+    },
+    "uis/src/com/biglybt/ui/swt/views/skin/sidebar/SideBar.java": {
+      "sha256": "3a4a1c48afa6e74ab4a0f2ea11058b7b95a325c9f96a7e0da3ef22cc4dfd8e04",
+      "git_blob": "3deef33ad2bd92e9fa31e9ee18890ffe4e298084",
+      "working_matches_upstream": true
+    },
+    "uis/src/com/biglybt/ui/swt/views/skin/sidebar/SideBarEntrySWT.java": {
+      "sha256": "83f96786466b12a6f921c808562a394f4d235a223df14323b10ff7bbf16c9b9b",
+      "git_blob": "33323a822e5d4b25efe7468090f6d1ee19533832",
+      "working_matches_upstream": true
+    },
+    "uis/src/com/biglybt/ui/swt/views/table/impl/TableViewSWT_TabsCommon.java": {
+      "sha256": "f5374dc36b9dd431078d4c51fe7f9a565e6387f7705010d91459a9732f698d1d",
+      "git_blob": "00b840fc406373a3f7991bd53933be3caaa0e8d0",
+      "working_matches_upstream": true
+    },
+    "core/src/com/biglybt/internat/MessagesBundle.properties": {
+      "sha256": "a73301400676c4295396be3e4e033e68e8b912a547e2c5a32425253809ba83c0",
+      "git_blob": "6b9be9a72dcb4c5618239927c5629449533ce9df",
+      "working_matches_upstream": true
+    },
+    "uis/src/com/biglybt/ui/skin/skin3_sbc_library.properties": {
+      "sha256": "e54e7a273ddc076f2679971272e1610882a30917ff77dea0633570d4f16c1250",
+      "git_blob": "3453e8a2c7c69eeb8f80c168af61fbc9bee3f3f4",
+      "working_matches_upstream": true
+    }
+  },
+  "prior_reports_preserved_sha256": {
+    "source-contract.json": "2b6f5096985c0b7d3228ac88fcdf7ca0365a560ea4a899a669fe0c69d2f5de32",
+    "native-navigation-review.json": "b0a7527a66e79c1daeb6d13d72f3c34d0648ee2674cc3887e5e8b5e23e8b623a",
+    "saved-services-window-review.json": "8ad89d86e01754270c6d337d0397afd16e418ed87b8c781ad56f11a774068c8a"
+  },
+  "cause_of_prior_error": "The original audit stopped at the factory closeable=false argument and did not carry virtual dispatch through TabbedEntry.setCloseable/isCloseable for isMainMDI=true. The argument itself was recorded correctly, but the resulting permanence conclusion was wrong.",
+  "exact_classic_path": [
+    {
+      "source": "MainWindowImpl.initMDI",
+      "lines": "1653-1659",
+      "fact": "Utils.isAZ2UI selects new TabbedMDI(), not SideBar; builds this exact MDI and passes it into MainMDISetup.setupSideBar."
+    },
+    {
+      "source": "TabbedMDI() no-argument constructor",
+      "lines": "119-128",
+      "fact": "Sets isMainMDI=true and destroyEntriesOnDeactivate=false; main tabs use tabsauto.config. Retaining a view when merely deactivated is different from refusing explicit close."
+    },
+    {
+      "source": "MainMDISetup.setupSideBar/setupSidebarClassic",
+      "lines": "143-150,1685-1715",
+      "fact": "Registers SIDEBAR_SECTION_LIBRARY/My Torrents via skinref library with closeable=false, then shows it. SB_Transfers is constructed with vuze_ui=false."
+    },
+    {
+      "source": "TabbedMDI.createEntryFromSkinRef",
+      "lines": "1109-1142",
+      "fact": "Constructs TabbedEntry(this,skin,id), sets skin/title/datasource and calls the virtual entry.setCloseable(closeable)."
+    },
+    {
+      "source": "TabbedEntry.setCloseable/isCloseable",
+      "lines": "267-287",
+      "fact": "setCloseable forces its input to true whenever getMDI().isMainMDI. isCloseable separately returns mainMDI || super.isCloseable. The false factory argument therefore cannot make classic main My Torrents noncloseable."
+    },
+    {
+      "source": "TabbedEntry.setSwtItem",
+      "lines": "324-339",
+      "fact": "The actual SWT tab show-close flag uses effective isCloseable(), so the override also reaches the tab control."
+    }
+  ],
+  "distinct_paths": [
+    {
+      "kind": "Modern UI sidebar Library",
+      "source": "MainWindowImpl.initMDI1656; SB_Transfers410-414,3248-3255; SideBar.createEntryFromSkinRef and BaseMdiEntry",
+      "fact": "The non-az2 path uses SideBar and modern library creator with closeable=false. It is not a main TabbedEntry and cannot justify classic permanence. SideBarEntrySWT does not provide the main-TabbedEntry override."
+    },
+    {
+      "kind": "Embedded torrent/detail subviews",
+      "source": "TabbedMDI(Class,... )146-153; TableViewSWT_TabsCommon208-212",
+      "fact": "Parameterized constructor explicitly sets isMainMDI=false. Embedded tabs can honor their configured false value; they are not the classic top-level My Torrents tab."
+    },
+    {
+      "kind": "Classic Library content versus MDI wrapper",
+      "source": "skin3_sbc_library.properties3-6; SBC_LibraryView/MyTorrentsSuperView",
+      "fact": "library skin creates SBC_LibraryView/content. Content/table implementation does not change the effective main TabbedEntry closeability. No permanent-My-Torrents close veto was found in the classic factory or these content classes."
+    }
+  ],
+  "file_close_tab_and_reopen": [
+    {
+      "source": "UIFunctionsImpl.createMainMenu663-666; MainMenuV2.createFileMenu164-168",
+      "fact": "Classic menu uses MainMenuV2 and includes MenuFactory.addCloseTabMenuItem."
+    },
+    {
+      "source": "IMenuConstants.MENU_ID_CLOSE_TAB; MessagesBundle.properties14-19; KeyBindings Meta mapping",
+      "fact": "File Close Tab uses MainWindow.menu.file.closetab with Meta+W: Ctrl+W on Linux. Close Window is a distinct Meta+Shift+W action. This is view/tab closure, not torrent removal or application/profile/worker shutdown."
+    },
+    {
+      "source": "MenuFactory.addCloseTabMenuItem500-531; TabbedMDI.getMenuEntry1907-1912",
+      "fact": "Menu targets the selected main entry, enables it when effective isCloseable(), and calls mdi.closeEntry(entry,true). Thus a selected classic My Torrents entry is eligible."
+    },
+    {
+      "source": "BaseMDI.closeEntry202-211; BaseMdiEntry.canClose222-239",
+      "fact": "Generic MdiCloseListener vetoes are honored. This addendum establishes effective closeability and built-in close path; it does not promise arbitrary plugin/listener instances can never veto. No special permanent My Torrents veto was found in the inspected classic construction/content path."
+    },
+    {
+      "source": "BaseMDI.closeEntryByID219-246; BaseMdiEntry.destroyEntry286-311",
+      "fact": "Closes/removes the MDI entry and autoopen record and destroys its view. It does not remove the registered creation factory or remove torrents. No unconditional default-home reopening is present in this close path; separate startup autoopen fallback timers are not a permanence rule."
+    },
+    {
+      "source": "TabbedMDI.getPrevious1032-1069/showEntry1073-1086/closeEntryByID1197-1215",
+      "fact": "Normal user close can activate a previous live entry using bounded64 selection history. It has no My Torrents-specific noncloseable exception; if no previous entry remains, this helper returns null."
+    },
+    {
+      "source": "MenuFactory.addMyTorrentsMenuItem755-765; BaseMDI.showEntryByID587-588/loadAndGetEntryByID773-813",
+      "fact": "View My Torrents/Ctrl+1 reuses the open entry or recreates the missing entry from the still-registered factory and activates it."
+    }
+  ],
+  "impact_on_existing_native_evidence": [
+    "source-contract.json: close_policy recording the literal false argument remains a true call-site fact but is insufficient; mdi_lifecycle statement Main library is noncloseable is superseded.",
+    "native-navigation-review.json: observations of the then-native permanent page remain historical implementation facts; retaining permanence as an original-compatibility requirement is superseded.",
+    "saved-services-window-review.json: guarded native tab-close/hidden-button observations remain valid for that source version. They establish a preview adaptation, not exact original classic close policy.",
+    "Do not rewrite old reviews/tests or infer their recorded runtime outcomes were fabricated. Update future policy/tests under a new explicit close/reopen slice."
+  ],
+  "next_native_contract_guidance": [
+    "Ultimate classic behavior should allow File Close Tab/Ctrl+W and tab close for My Torrents as well as auxiliary main tabs, subject to actual close eligibility/lifecycle rules.",
+    "Closing a tab must not stop/remove downloads, tear down profile ownership or quit the application; reopening via View/Ctrl+1 must restore a safe single page and reject stale result targeting.",
+    "A bounded native implementation may retain detached library widgets/model to preserve safe selection, provided tab removal/reopen behavior is correct and retained backing is explicitly a native adaptation, not claimed exact Java destruction equivalence.",
+    "Cover last-tab/empty-main-area behavior, close/reopen during pending file details, and keyboard/menu/tab-X consistency with generated fixtures before claiming parity. Keep whole-window cancellation/lease shutdown separate.",
+    "Existing Escape cancellation policy must not be silently replaced by the original main TabbedMDI Escape/Ctrl+F4 shortcuts; reconcile that independently."
+  ],
+  "validation": {
+    "performed": [
+      "Independent source trace of classic actual MDI construction, effective virtual closeability, menu target, generic veto, removal and reopen paths",
+      "Compared all20 selected working source bytes with original committed Git blobs and recorded hashes",
+      "Coordinated independently matching trace with codec"
+    ],
+    "not_performed": [
+      "No production/test/docs-plan mutations beyond this additive evidence",
+      "No Java/GUI/native/helper/build/process/network execution",
+      "No live profile/client/ports inspected"
+    ],
+    "source_runtime_equality_credit": 0
+  },
+  "changed_files": "Only this corrective addendum; all listed prior reports and upstream source bytes remain unchanged."
+}

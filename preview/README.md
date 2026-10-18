@@ -8,6 +8,8 @@ The repository root continues to build its existing plugin SDK by default.
 Later development is recorded in Git history and the repository's `milestones/`
 records. [Classic navigation source contract](docs/classic-navigation-source.json)
 pins the original menu, naming and shortcut behavior.
+Read its [closeability correction](docs/classic-closeability-correction.json):
+classic main TabbedEntry overrides the factory closeable flag.
 
 The application is under development. Its default preview launcher creates four
 synthetic torrents and saved hosting/sharing examples in a fresh private `/tmp/biglybtc-preview-*` profile and passes
@@ -19,8 +21,8 @@ details. **View > My Torrents (Ctrl+1)** returns to the existing torrent screen
 from anywhere in the window, preserving the filter and selection. **My Tracker
 (Ctrl+2)** and **My Shares (Ctrl+3)** now open read-only saved-data tabs. They
 show original-format saved configuration and recovery-source provenance without
-starting services, scanning shares or opening saved paths. Auxiliary tabs close
-and reopen; My Torrents stays available. Each torrent
+starting services, scanning shares or opening saved paths. All three views can close and reopen with **File > Close Tab (Ctrl+W)** and
+the View shortcuts. Closing My Torrents retains its screen state for Ctrl+1. Each torrent
 pane has its own column chooser: right-click the header, or use **View >
 Incomplete Columns / Complete Columns**. Reset Columns restores the preview
 defaults. These choices are currently kept for the window session; original

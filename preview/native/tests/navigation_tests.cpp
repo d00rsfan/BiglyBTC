@@ -99,8 +99,11 @@ private slots:
     QCOMPARE(window.mainTabs().tabText(window.mainTabs().indexOf(page)), QStringLiteral("My Torrents"));
     QVERIFY(window.mainTabs().tabsClosable());
     const auto pageIndex = window.mainTabs().indexOf(page);
-    QVERIFY(!window.mainTabs().tabBar()->tabButton(pageIndex, QTabBar::LeftSide));
-    QVERIFY(!window.mainTabs().tabBar()->tabButton(pageIndex, QTabBar::RightSide));
+    QVERIFY(window.mainTabs().tabBar()->tabButton(pageIndex, QTabBar::LeftSide)
+        || window.mainTabs().tabBar()->tabButton(pageIndex, QTabBar::RightSide));
+    auto* closeTab = window.findChild<QAction*>(QStringLiteral("classic-close-tab"));
+    QVERIFY(closeTab && closeTab->isEnabled());
+    QCOMPARE(closeTab->shortcut(), QKeySequence(QStringLiteral("Ctrl+W")));
     for (int number = 2; number <= 3; ++number) {
       auto* unavailable = window.findChild<QAction*>(number == 2 ? QStringLiteral("classic-my-tracker") : QStringLiteral("classic-my-shares"));
       QVERIFY(unavailable);

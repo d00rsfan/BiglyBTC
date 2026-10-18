@@ -216,6 +216,33 @@ private slots:
     QVERIFY(window.filesAction().isEnabled());
     QVERIFY(!window.continueAction().isEnabled());
     QVERIFY(window.filesModel().target()->hash == selected->hash);
+    auto* mainPage = window.mainTabs().currentWidget();
+    const auto savedCount = saved.count();
+    QTest::keyClick(&window.table(), Qt::Key_W, Qt::ControlModifier);
+    QTRY_COMPARE(window.mainTabs().indexOf(mainPage), -1);
+    QCOMPARE(window.mainTabs().count(), 2);
+    QVERIFY(!window.filesAction().isEnabled());
+    QTest::keyClick(window.mainTabs().currentWidget(), Qt::Key_1, Qt::ControlModifier);
+    QTRY_COMPARE(window.mainTabs().currentWidget(), mainPage);
+    QVERIFY(window.filesModel().target()->hash == selected->hash);
+    auto* closeTab = window.findChild<QAction*>(QStringLiteral("classic-close-tab"));
+    QVERIFY(closeTab);
+    for (int remaining = 3; remaining > 0; --remaining) {
+      QVERIFY(closeTab->isEnabled());
+      closeTab->trigger();
+      QCOMPARE(window.mainTabs().count(), remaining - 1);
+    }
+    QVERIFY(!closeTab->isEnabled());
+    QVERIFY(!window.filesAction().isEnabled());
+    QVERIFY(!window.continueAction().isEnabled());
+    myTorrents->trigger();
+    QCOMPARE(window.mainTabs().currentWidget(), mainPage);
+    QCOMPARE(window.mainTabs().count(), 1);
+    QCOMPARE(window.model().rowCount(), 4);
+    QCOMPARE(snapshots.count(), libraryCount);
+    QCOMPARE(details.count(), detailCount);
+    QCOMPARE(saved.count(), savedCount);
+    QVERIFY(!bridge.busy());
     QVERIFY(window.close());
     QVERIFY(!window.isVisible());
     for (auto it = original.cbegin(); it != original.cend(); ++it) { QCOMPARE(bytes(it.key()), it.value()); }

@@ -242,11 +242,15 @@ private slots:
     QCOMPARE(window.findChildren<QWidget*>(QStringLiteral("saved-hosting-page")).size(), 1);
     QCOMPARE(window.findChildren<QWidget*>(QStringLiteral("saved-shares-page")).size(), 1);
     QVERIFY(closeTab(window, mainPage));
-    QCOMPARE(window.mainTabs().indexOf(mainPage) >= 0, true);
+    QCOMPARE(window.mainTabs().indexOf(mainPage), -1);
+    QCOMPARE(window.mainTabs().count(), 2);
+    torrentAction->trigger();
+    QCOMPARE(window.mainTabs().currentWidget(), mainPage);
     QCOMPARE(window.mainTabs().count(), 3);
-    for (auto side : {QTabBar::LeftSide, QTabBar::RightSide}) {
-      QVERIFY(!window.mainTabs().tabBar()->tabButton(window.mainTabs().indexOf(mainPage), side));
-    }
+    QCOMPARE(window.findChildren<QWidget*>(QStringLiteral("classic-my-torrents-page")).size(), 1);
+    const auto mainIndex = window.mainTabs().indexOf(mainPage);
+    QVERIFY(window.mainTabs().tabBar()->tabButton(mainIndex, QTabBar::LeftSide)
+        || window.mainTabs().tabBar()->tabButton(mainIndex, QTabBar::RightSide));
   }
 
   void auxiliaryPageCannotActOnHiddenTorrent_data() {

@@ -1,0 +1,392 @@
+{
+  "schema": 1,
+  "status": "source audit and proposed task only; no production edit or execution",
+  "observed_at_utc": "2026-10-18T09:26:18.840096+00:00",
+  "upstream": {
+    "repository": "https://github.com/BiglySoftware/BiglyBT",
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "sources": {
+      "uis/src/com/biglybt/ui/swt/mainwindow/MenuFactory.java": {
+        "git_blob": "fe6baf3bb1da72362773aedced66ff48084c4d4e",
+        "committed_sha256": "178e65a1154cc19d67b3fd3c4be5c84cfe666a616e527d1aed0db39112a6f1b4",
+        "observed_working_sha256": "178e65a1154cc19d67b3fd3c4be5c84cfe666a616e527d1aed0db39112a6f1b4",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/mainwindow/MainMenuV2.java": {
+        "git_blob": "cdf1fd41311e98762ac58a168d7c09c3894304d0",
+        "committed_sha256": "e7045fd861fc5eb62a26033fb48c39af42c4d8071dcc67d68bd39d142678d6b1",
+        "observed_working_sha256": "e7045fd861fc5eb62a26033fb48c39af42c4d8071dcc67d68bd39d142678d6b1",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/mainwindow/IMenuConstants.java": {
+        "git_blob": "f586712de95578ed1f4dfc6dbee99aeff6b5219e",
+        "committed_sha256": "b8638f6316da62e74476a13376f09f79ece8fa013eeec7b172207e853dde2e8f",
+        "observed_working_sha256": "b8638f6316da62e74476a13376f09f79ece8fa013eeec7b172207e853dde2e8f",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/shells/main/MainMenuV3.java": {
+        "git_blob": "375b174dac8169581e577d497467d3b3b06bacae",
+        "committed_sha256": "16e5195da0afdc5ac46555eb0dbbc8606172c1cc11acdd368f42149e2feb5127",
+        "observed_working_sha256": "16e5195da0afdc5ac46555eb0dbbc8606172c1cc11acdd368f42149e2feb5127",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/shells/main/MainWindowImpl.java": {
+        "git_blob": "d47b3765a93011dd96e73c58c9d8e342bd20e068",
+        "committed_sha256": "1f5595903e6f06a2022bbea3b65d88194321d93f76222cedbdd72589604825ac",
+        "observed_working_sha256": "1f5595903e6f06a2022bbea3b65d88194321d93f76222cedbdd72589604825ac",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/shells/main/MainMDISetup.java": {
+        "git_blob": "a34502ff825448fa7db14cf27e560519d37f31f4",
+        "committed_sha256": "cecfce4f796772a5997913f711c27bd27fcd0895397d18fe3658262de66e5938",
+        "observed_working_sha256": "cecfce4f796772a5997913f711c27bd27fcd0895397d18fe3658262de66e5938",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/shells/main/UIFunctionsImpl.java": {
+        "git_blob": "43d586c4a2f840a3f5d2f758d39c9ce1fed25a72",
+        "committed_sha256": "d8a9c158f6e03db3c9451ff47d3d4e2737854cde4b3a7bf97fb75461dac7c428",
+        "observed_working_sha256": "d8a9c158f6e03db3c9451ff47d3d4e2737854cde4b3a7bf97fb75461dac7c428",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/KeyBindings.java": {
+        "git_blob": "cd7af1dcc0b4f39c716df662117a44e8aebb1c85",
+        "committed_sha256": "bb17a964a742d89ac6a78ae6c9bd1a7fa9e853a6ea613b21606d0a87aff8ba4d",
+        "observed_working_sha256": "bb17a964a742d89ac6a78ae6c9bd1a7fa9e853a6ea613b21606d0a87aff8ba4d",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/mdi/TabbedMDI.java": {
+        "git_blob": "2d956e729ab8ec07021e9340ef68da08688ca323",
+        "committed_sha256": "8a69fc161b6946b1f3821afdecc4c36c9dbac91430b8c315573a7d4330b6e481",
+        "observed_working_sha256": "8a69fc161b6946b1f3821afdecc4c36c9dbac91430b8c315573a7d4330b6e481",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/mdi/TabbedEntry.java": {
+        "git_blob": "a4911e0db4e0b919f3ab577d0f30825a6f57ba80",
+        "committed_sha256": "8b1167b2ab5344f321702c10107385a53476351599bd14b2f7d4fea0c1d3eaf4",
+        "observed_working_sha256": "8b1167b2ab5344f321702c10107385a53476351599bd14b2f7d4fea0c1d3eaf4",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/mdi/BaseMDI.java": {
+        "git_blob": "c1d36a2db9f1691e9840bcce94dbf3f1f26a3877",
+        "committed_sha256": "6d4e0eb41359cb8d2d704dbcb70b50d3df1008832239509df3b69501af94ae0f",
+        "observed_working_sha256": "6d4e0eb41359cb8d2d704dbcb70b50d3df1008832239509df3b69501af94ae0f",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/mdi/BaseMdiEntry.java": {
+        "git_blob": "1261ac3de89ba38a9fdf71f72db54403fed5e905",
+        "committed_sha256": "6a29494ba106e9f599e3335d31be503f53921277c2e4fdb61907645476e386af",
+        "observed_working_sha256": "6a29494ba106e9f599e3335d31be503f53921277c2e4fdb61907645476e386af",
+        "working_matches_commit": true
+      },
+      "core/src/com/biglybt/internat/MessagesBundle.properties": {
+        "git_blob": "6b9be9a72dcb4c5618239927c5629449533ce9df",
+        "committed_sha256": "a73301400676c4295396be3e4e033e68e8b912a547e2c5a32425253809ba83c0",
+        "observed_working_sha256": "a73301400676c4295396be3e4e033e68e8b912a547e2c5a32425253809ba83c0",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/skin/SB_Transfers.java": {
+        "git_blob": "e5df33efd78d4da39418431f7818fa7f0e0af666",
+        "committed_sha256": "7871a709028ced6d7d1839efa8d0ffbe86af677b5c30a47379315b298439f636",
+        "observed_working_sha256": "7871a709028ced6d7d1839efa8d0ffbe86af677b5c30a47379315b298439f636",
+        "working_matches_commit": true
+      }
+    }
+  },
+  "native": {
+    "repository": "https://github.com/d00rsfan/BiglyBTC",
+    "historical_commit": "2c309fe11dcecd4606bd848c9f780fd062391767",
+    "observed_head": "ec56329fdfab1a45a8eafd7bacc97c163d5815c2",
+    "sources": {
+      "preview/native/ui/library_window.hpp": {
+        "git_blob": "b360486bfe0bd79fcfbb178e9ac1d439928147ea",
+        "committed_sha256": "6f9c106f6eadaa7e643685296fd9e37a30ca6de22ba06619ec9442f8174b2132",
+        "observed_working_sha256": "6f9c106f6eadaa7e643685296fd9e37a30ca6de22ba06619ec9442f8174b2132",
+        "working_matches_commit": true
+      },
+      "preview/native/ui/library_window.cpp": {
+        "git_blob": "3ab1155528daedd5c253aa79ea056babf94511c2",
+        "committed_sha256": "3ecf2019500495f93592382b3a7801be580d6b556dd977cf49ff261a83e6ad7e",
+        "observed_working_sha256": "0e73ac7632cbfc1f3bc375c6993423d4e5cddbfbe7b5a2997f149e12f9f01b1d",
+        "working_matches_commit": false
+      },
+      "preview/native/ui/library_model.hpp": {
+        "git_blob": "36714eb1fda6af2cb6e49be6e1f2fefe0c01b260",
+        "committed_sha256": "2b1a5590eb2091d058f30d75a440ef57bf7da37b2ee8b2b295ddc5d8971d20ef",
+        "observed_working_sha256": "5fbc9384b339e109fee7718d917219cbb33fa7c153d142df2db33aa5c89cb24c",
+        "working_matches_commit": false
+      },
+      "preview/native/ui/library_model.cpp": {
+        "git_blob": "5be4a8f2173572a0a7a94440a3b79ad3d8770326",
+        "committed_sha256": "969cf42a17663ce27225a54cfbdded4033cffb66a6c0f0c55afd4bffb3a9a56a",
+        "observed_working_sha256": "f55e2840877c9df938944e9c88904e9b11f62f3d00e8a843d2370f8a1afc1d2e",
+        "working_matches_commit": false
+      },
+      "preview/native/app/session_bridge.hpp": {
+        "git_blob": "bd50cefdc7c5adc35a3aef4ee7973c70a1540020",
+        "committed_sha256": "f9d29fa411136f2373dd8a1c94b8ce99808ab7561b361bcd3b99ffdbc782164d",
+        "observed_working_sha256": "f9d29fa411136f2373dd8a1c94b8ce99808ab7561b361bcd3b99ffdbc782164d",
+        "working_matches_commit": true
+      },
+      "preview/native/app/session_bridge.cpp": {
+        "git_blob": "25ce27aa861d59bed01c4fd6aba6a7c88b860a60",
+        "committed_sha256": "2725b95365db8e11366864475edc322d4bc47c9ceadaa481ff3ffc20b6a501ec",
+        "observed_working_sha256": "0fe02643a7e93cd91073d2f5d688507b534aaa17f12e4f7c4f630b045a3e029a",
+        "working_matches_commit": false
+      },
+      "preview/native/app/main_desktop.cpp": {
+        "git_blob": "705b17892de3647c6a6590efb3f51efda1c8b3e9",
+        "committed_sha256": "d93704d217a383e889b98a34cffd97ead5698f4f2d745f99b457633f16799c48",
+        "observed_working_sha256": "d93704d217a383e889b98a34cffd97ead5698f4f2d745f99b457633f16799c48",
+        "working_matches_commit": true
+      },
+      "preview/native/ui/saved_service_pages.hpp": {
+        "git_blob": "1697819500fb22281ce142d324a5866ff5875c38",
+        "committed_sha256": "62facde85e509699e5c444ec7a069cc02a1f6b866acffabda47c57dc861970ee",
+        "observed_working_sha256": "62facde85e509699e5c444ec7a069cc02a1f6b866acffabda47c57dc861970ee",
+        "working_matches_commit": true
+      },
+      "preview/native/ui/saved_service_pages.cpp": {
+        "git_blob": "ffbf12f378b6899efd8353b8b6b70b49a69ea13d",
+        "committed_sha256": "d2d02acf87bd1b8d13cd119b629461b2b2bb141ac3f0eb583b175781a1bcb6c9",
+        "observed_working_sha256": "d2d02acf87bd1b8d13cd119b629461b2b2bb141ac3f0eb583b175781a1bcb6c9",
+        "working_matches_commit": true
+      },
+      "preview/native/ui/saved_services_presentation.hpp": {
+        "git_blob": "bc42a8617044bc417d3fd7b5e86f3cec3f469071",
+        "committed_sha256": "f0d4a11acab04211e52d78dbfe0155c3955306bb614b3290521d72140330d530",
+        "observed_working_sha256": "f0d4a11acab04211e52d78dbfe0155c3955306bb614b3290521d72140330d530",
+        "working_matches_commit": true
+      }
+    },
+    "explicit_working_delta": {
+      "scope": "The four authorized saved-queue-position source differences relative to historical baseline; they are already committed in observed HEAD ec56329fdfab1a45a8eafd7bacc97c163d5815c2. Historical baseline hashes remain unchanged.",
+      "after_sha256": {
+        "preview/native/ui/library_model.hpp": "5fbc9384b339e109fee7718d917219cbb33fa7c153d142df2db33aa5c89cb24c",
+        "preview/native/ui/library_model.cpp": "f55e2840877c9df938944e9c88904e9b11f62f3d00e8a843d2370f8a1afc1d2e",
+        "preview/native/app/session_bridge.cpp": "0fe02643a7e93cd91073d2f5d688507b534aaa17f12e4f7c4f630b045a3e029a",
+        "preview/native/ui/library_window.cpp": "0e73ac7632cbfc1f3bc375c6993423d4e5cddbfbe7b5a2997f149e12f9f01b1d"
+      },
+      "static_record": "build/navigation-20261018/saved-position-source/source-check.json",
+      "static_record_sha256": "c14d3165faf1b6bb61bccce5a131c183b24f61c34567347bfa7bd534a0026c4b",
+      "close_navigation_relevance": "Window change is only logical9 initial width; model/bridge edits only saved-position projection. Existing close/page/generation/cancel behavior remains byte-identical."
+    }
+  },
+  "original_menu_contract": [
+    {
+      "item": "Close Tab",
+      "id": "MainWindow.menu.file.closetab",
+      "default_english_label": "Close &Tab",
+      "default_binding": "Meta+W",
+      "linux_default": "Ctrl+W",
+      "scope": "Classic MainMenuV2 File menu",
+      "handler": "MenuFactory.addCloseTabMenuItem(Menu)",
+      "enabled": "On menu shown: MDI exists, getMenuEntry(false) is nonnull and isCloseable(); otherwise disabled.",
+      "trigger": "Re-queries MDI/current entry and closeability, then mdi.closeEntry(currentEntry,true).",
+      "effect": "Closes the selected MDI entry subject to canClose listener veto. Does not call shell.close(), dispose(false), stop downloads or delete torrent data."
+    },
+    {
+      "item": "Close View",
+      "id": "MainWindow.menu.file.closeview",
+      "default_english_label": "Close &View",
+      "default_binding": "Meta+W",
+      "linux_default": "Ctrl+W",
+      "scope": "Modern MainMenuV3 File/Window menu",
+      "handler": "MenuFactory.addCloseCurrentViewMenuItem(Menu)",
+      "enabled": "Show handler checks current UI mode, living widgets, and current closeable MDI entry.",
+      "trigger": "Same getMenuEntry(false)/isCloseable/mdi.closeEntry(entry,true) target as Close Tab.",
+      "effect": "Alternative modern menu label; not a second classic Ctrl+W action to register simultaneously."
+    },
+    {
+      "item": "Close Window",
+      "id": "MainWindow.menu.file.closewindow",
+      "default_english_label": "Close &Window",
+      "default_binding": "Meta+Shift+W",
+      "linux_default": "Ctrl+Shift+W",
+      "handler": "MenuFactory.addCloseWindowMenuItem(Menu)",
+      "enabled": "No current-entry closeability gate in this factory handler.",
+      "trigger": "Utils.getActiveShell(); if nonnull and not disposed, shell.close().",
+      "effect": "Distinct active-shell close request, subject to that shell lifecycle. This audit does not claim native tray/minimize/termination equivalence."
+    },
+    {
+      "item": "Exit",
+      "id": "MainWindow.menu.file.exit",
+      "default_english_label": "E&xit",
+      "default_binding": "Alt+F4",
+      "handler": "MenuFactory.addExitMenuItem(Menu)",
+      "enabled": "Accelerator is installed only when system tray is disabled OR Close To Tray is disabled.",
+      "trigger": "UIFunctionsManagerSWT.getUIFunctionsSWT().dispose(false).",
+      "effect": "Separate application disposal path; Close Tab never falls through to Exit."
+    },
+    {
+      "item": "Close All Details",
+      "id": "MainWindow.menu.closealldetails",
+      "default_english_label": "Close &All Details",
+      "default_binding": null,
+      "handler": "MenuFactory.addCloseDetailsMenuItem(Menu)",
+      "enabled": "hasDetailViews() on menu show.",
+      "trigger": "UIFunctionsImpl.closeAllDetails loops MDI entries whose ID starts with DMDetails_ and closes those entries.",
+      "effect": "Not equivalent to closing the native embedded General or Files detail tab; omit until actual comparable detail views exist."
+    }
+  ],
+  "binding_scope": {
+    "authority": "MessagesBundle.properties and KeyBindings.SPECIAL_KEYS/SPECIAL_VALUES/setAccelerator",
+    "meta": "Maps Meta and Cmd to SWT.MOD1; class documentation defines non-OSX display/control behavior as Ctrl.",
+    "locale": "These are default English/Linux bindings. KeyBindings allows locale/platform overrides; this audit does not prescribe all translated shortcuts.",
+    "other_source_keys": "TabbedMDI main key filter also closes selected entry on Escape or exact Ctrl+F4, and selects tabs on F6/Ctrl+Tab. Native Escape currently cancels busy work: do not add these keys under the Ctrl+W slice."
+  },
+  "exact_classic_entry_chain": [
+    {
+      "source": "uis/src/com/biglybt/ui/swt/shells/main/MainWindowImpl.java",
+      "method": "initMDI()",
+      "line": 1653,
+      "fact": "Utils.isAZ2UI() constructs new TabbedMDI(); nonclassic constructs SideBar. Then buildMDI and MainMDISetup.setupSideBar use that instance."
+    },
+    {
+      "source": "uis/src/com/biglybt/ui/swt/mdi/TabbedMDI.java",
+      "method": "TabbedMDI()",
+      "line": 119,
+      "fact": "No-arg main constructor sets isMainMDI=true and destroyEntriesOnDeactivate=false. The separate parameterized embedded-subview constructor sets isMainMDI=false."
+    },
+    {
+      "source": "uis/src/com/biglybt/ui/swt/shells/main/MainMDISetup.java",
+      "method": "setupSideBar(MultipleDocumentInterfaceSWT)",
+      "line": 143,
+      "fact": "Utils.isAZ2UI() selects setupSidebarClassic(mdi), using the same main MDI instance."
+    },
+    {
+      "source": "uis/src/com/biglybt/ui/swt/shells/main/MainMDISetup.java",
+      "method": "setupSidebarClassic(MultipleDocumentInterfaceSWT)",
+      "line": 1685,
+      "fact": "Registers SIDEBAR_SECTION_LIBRARY with classic MyTorrents title and createEntryFromSkinRef(...,closeable=false,...); this argument alone does not establish effective closeability."
+    },
+    {
+      "source": "uis/src/com/biglybt/ui/swt/views/skin/SB_Transfers.java",
+      "method": "SB_Transfers(MultipleDocumentInterfaceSWT, boolean)",
+      "line": 410,
+      "fact": "setupSidebarClassic constructs SB_Transfers(mdi,false); its modern libraryCreator registration is inside if(vuze_ui), so it does not replace the classic Library factory."
+    },
+    {
+      "source": "uis/src/com/biglybt/ui/swt/mdi/TabbedMDI.java",
+      "method": "createEntryFromSkinRef(String,String,String,ViewTitleInfo,Object,boolean,String)",
+      "line": 1110,
+      "fact": "Creates new TabbedEntry(this,skin,id), then invokes entry.setCloseable(closeable). It is virtual dispatch to TabbedEntry."
+    },
+    {
+      "source": "uis/src/com/biglybt/ui/swt/mdi/TabbedEntry.java",
+      "methods": [
+        "setCloseable(boolean)",
+        "isCloseable()"
+      ],
+      "line": 268,
+      "fact": "setCloseable overrides the argument to true for main MDI; isCloseable returns getMDI().isMainMDI || super.isCloseable(). Therefore the classic main MyTorrents entry is closeable despite the setup false argument."
+    },
+    {
+      "source": "uis/src/com/biglybt/ui/swt/mdi/TabbedMDI.java",
+      "method": "getMenuEntry(boolean)",
+      "line": 1909,
+      "fact": "Returns getSelectedEntry(); Ctrl+W targets current main MDI tab, not an arbitrary focused child widget or hidden old torrent selection."
+    },
+    {
+      "source": "uis/src/com/biglybt/ui/swt/mdi/BaseMDI.java",
+      "methods": [
+        "closeEntry(MdiEntry,boolean)",
+        "closeEntryByID(String,boolean)"
+      ],
+      "line": 202,
+      "fact": "closeEntry first asks BaseMdiEntry.canClose(userInitiated). A veto can prevent closing; default empty listener set permits it. Closing removes the entry and calls closeView, not application disposal."
+    },
+    {
+      "source": "uis/src/com/biglybt/ui/swt/mdi/TabbedMDI.java",
+      "method": "closeEntryByID(String,boolean)",
+      "line": 1197,
+      "fact": "Captures previous selection before delegating close; user-initiated close can show that previous entry. Exact previous-history behavior is richer than QTabWidget adjacent fallback."
+    }
+  ],
+  "historical_audit_correction": {
+    "preserved_path": "migration/evidence/20261018-navigation/source-contract.json",
+    "sha256": "2b6f5096985c0b7d3228ac88fcdf7ca0365a560ea4a899a669fe0c69d2f5de32",
+    "original_claims": [
+      {
+        "json_path": [
+          "primary_entries",
+          0,
+          "close_policy"
+        ],
+        "text": "setupSidebarClassic creates library entry with closeable=false"
+      },
+      {
+        "json_path": [
+          "mdi_navigation_contract",
+          2
+        ],
+        "text": "Main library is noncloseable. My Tracker and My Shares can close, release view subscriptions and reopen once by stable ID. User-initiated close selects a previous entry; this is navigation, never torrent removal or owner shutdown."
+      }
+    ],
+    "correction": "The original setup argument closeable=false is accurate, but the inference that the classic main library is noncloseable is false because TabbedEntry overrides it for main MDI. Preserve the historical audit and use this complete dispatch chain for subsequent scope decisions.",
+    "limits": "A plugin-registered canClose listener can still veto a particular user close; no runtime listener set or Java UI was exercised.",
+    "default_veto_check": "No MyTorrents-specific canClose veto was found in the selected classic factory path; generic external close listeners remain authoritative. The independent oracle source audit confirmed the same main-MDI override and modern/embedded distinction before implementation authorization."
+  },
+  "native_current_gaps": [
+    "File currently has Quit using QKeySequence::Quit and QWidget::close; no Close Tab/Ctrl+W or distinct Close Window/Ctrl+Shift+W action.",
+    "All main tabs use QTabWidget close requests, but closeAuxiliaryPage rejects torrentsPage_, and hideTorrentsCloseButton removes its close buttons. This is an implementation gap from classic source behavior, not an accepted permanent compatibility policy.",
+    "showMyTorrents currently only selects an already-inserted page; supporting a closed retained page needs an indexOf check and reinsertion.",
+    "Closing aux pages already clears matching QPointer, removes tab, deleteLater, and retires pending ID only if no live matching Loading page remains. Active worker ownership is left intact.",
+    "actionTarget, requestDetails and main Refresh already require currentWidget()==torrentsPage_; a detached retained torrent widget can keep its selection/model without exposing hidden transfer actions.",
+    "closeEvent alone sets closing_, discards pending work and emits cancelRequested while busy, with deferred whole-window close on busyfalse. A tab-close shortcut must not use that path.",
+    "Current saved-services active/latest-pending generations and window-global request counter must remain unchanged when tab close/reopen is added."
+  ],
+  "preferred_task_proposal": {
+    "title": "Add classic Close Tab and retained My Torrents close/reopen",
+    "reason": "The full original main-MDI override chain supports closing My Torrents; a retained widget can implement that user-visible behavior without introducing backend destruction or reconstructing saved state.",
+    "actions": [
+      "Add one File > Close Tab QAction (proposed stable ID classic-close-tab), explicit Ctrl+W WindowShortcut, targeting only the current known main tab.",
+      "Enable when not closing and currentWidget is one of the three known live pages, including My Torrents. Re-check identity/state in the trigger handler; never close the whole window or fall through when no page is current.",
+      "Optionally add distinct File > Close Window (classic-close-window), Ctrl+Shift+W, routed to the existing QWidget::close/closeEvent deferred-busy lifecycle; retain Quit independently. No tray or exact application-disposal parity claim."
+    ],
+    "retained_torrents_lifecycle": [
+      "For My Torrents close, remove the tab only: do not delete/reparent/recreate torrentsPage_, LibraryModel, selection models, detail models, filters or activeTable_. Retain existing owned widgets until Window destruction.",
+      "Expose its normal close button instead of unconditionally hiding it, so menu/shortcut/button share the same current-view close routing.",
+      "showMyTorrents must reinsert torrentsPage_ if indexOf<0, then select/focus the retained active table. Ctrl+1 and Ctrl+F remain recovery paths from auxiliary/zero-tab states; no duplicate tab or extra library refresh.",
+      "Allow zero visible tabs as an honest empty main-view state while View navigation remains available; do not interpret last-tab close as quit, stop or cancellation.",
+      "After closing My Torrents, hidden selection cannot authorize Continue/Files/details/refresh. Owned telemetry/snapshots may update retained data but cannot reinsert/focus it automatically."
+    ],
+    "aux_and_busy_lifecycle": [
+      "For Tracker/Shares, reuse the existing QPointer-clear/removeTab/deleteLater path and existing monotonic-generation reopen behavior; do not retain obsolete service widgets or fabricate empty results.",
+      "Closing a tab is allowed during ordinary busy work because it does not cancel or own that work. Preserve activeSavedRequest_ until actual packet/busyfalse and preserve a pending generation if another live Loading page still needs it.",
+      "Reopening a service page still assigns a fresh window-global generation; late active response cannot populate the new page. Closing one of two service pages must not discard the other live page request.",
+      "Once whole-window closing_ is set, disable and guard new close/reopen/refresh commands. Keep existing cancel/deferred-close and signal lifetime guards.",
+      "Guard any direct-signal/currentChanged deletion boundary with QPointer before later object access; detach/deleteLater only after identity-safe routing."
+    ],
+    "compatibility_limits": [
+      "Retained-widget lifetime is an explicit bounded native policy; Java MDI entry destroy/recreate, auto-open persistence, arbitrary plugin canClose vetoes and exact previous-selection history are not implemented by this slice.",
+      "Ctrl+F4/Escape/F6/Ctrl+Tab behavior, localized shortcut overrides, pop-out windows, Close All Details and tray/Exit semantics remain open work; do not hijack the existing Escape cancellation command.",
+      "A smaller aux-only Ctrl+W first step is possible, but leaves My Torrents closeability explicitly OPEN, not source-compatible or permanently exempt."
+    ],
+    "tests_to_author_after_approval": [
+      "Exact File action labels/IDs/shortcuts and enablement on each page and zero-tab state; Ctrl+W from filter, Files and service table closes the current main view only.",
+      "My Torrents close does not destroy its widget/model/selection/filter/column order or emit cancel/refresh; Ctrl+1/Ctrl+F reopens exactly one retained page.",
+      "Close all visible tabs leaves Window open; hidden selected torrent cannot emit Continue/Files/details until main page is restored.",
+      "Close loading aux during active request, close/reopen with old-active/new-pending IDs, preserve other live Loading page, late response and no-packet busyfalse cannot overwrite newer state.",
+      "Closing a tab during an unrelated transfer does not cancel it; Close Window while busy follows the existing cancellation/drain gate rather than immediate teardown.",
+      "Direct signal/currentChanged receiver deletion, queued service response after page closure and repeated close commands remain safe."
+    ],
+    "approval_gate": "Source proposal only. Coordinator chooses exact staged scope and file ownership before production/test authoring.",
+    "coordinator_scope_decision": "Coordinator approved the preferred all-three-page Close Tab plus retained MyTorrents close/reopen behavior after complete classic dispatch/veto trace. Only Window hpp/cpp production authoring is assigned. No Close Window action is assigned in this slice."
+  },
+  "validation_scope": {
+    "original_files": 14,
+    "native_files": 10,
+    "performed": [
+      "Read exact committed original/main-MDI sources and selected native committed/working files.",
+      "Computed full commit/blob/SHA256 identities and recorded saved-position working delta.",
+      "Inspected virtual dispatch, close listeners, shortcut factories and existing worker/page generation gates."
+    ],
+    "execution_credit": 0,
+    "not_performed": [
+      "No production or test edit.",
+      "No Java/UI/GUI/client/profile/network operation.",
+      "No build/test/process or source oracle execution."
+    ],
+    "questions": "No user question. Task staging and the retained-widget policy await coordinator review."
+  }
+}

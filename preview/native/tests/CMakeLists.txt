@@ -207,6 +207,13 @@ if(BIGLYBTC_DESKTOP)
   add_test(NAME saved-services-view-navigation COMMAND biglybtc-saved-services-navigation-tests)
   set_tests_properties(saved-services-view-navigation PROPERTIES TIMEOUT 120
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "ui;unit;classic;navigation;saved-services")
+  add_executable(biglybtc-classic-close-tab-tests classic_close_tab_tests.cpp)
+  set_target_properties(biglybtc-classic-close-tab-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-classic-close-tab-tests PRIVATE biglybtc_ui Qt6::Test)
+  target_compile_options(biglybtc-classic-close-tab-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME classic-close-tab-lifecycle COMMAND biglybtc-classic-close-tab-tests)
+  set_tests_properties(classic-close-tab-lifecycle PROPERTIES TIMEOUT 120
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "ui;unit;classic;navigation")
   add_executable(biglybtc-column-tests column_tests.cpp)
   set_target_properties(biglybtc-column-tests PROPERTIES AUTOMOC ON)
   target_link_libraries(biglybtc-column-tests PRIVATE biglybtc_ui Qt6::Test)

@@ -4,6 +4,7 @@
 
 #include <QAbstractItemView>
 #include <QByteArray>
+#include <QFontMetrics>
 #include <QHeaderView>
 #include <QLabel>
 #include <QSortFilterProxyModel>
@@ -11,6 +12,7 @@
 #include <QTableView>
 #include <QVBoxLayout>
 
+#include <algorithm>
 #include <new>
 #include <unordered_set>
 #include <utility>
@@ -114,6 +116,14 @@ QString sourceName(SavedPageSource source) {
     case SavedPageSource::Saving: return QObject::tr("Saving (.saving)");
   }
   return unknown();
+}
+// One-time preview defaults, never a scan of saved rows or a refresh policy.
+// Leave every section interactive and let wide tables scroll horizontally.
+void initialColumnWidth(QTableView& table, int column, const QString& sample = {}) {
+  const auto title = table.model()->headerData(column, Qt::Horizontal, Qt::DisplayRole).toString();
+  const int headerWidth = table.horizontalHeader()->fontMetrics().horizontalAdvance(title) + 32;
+  const int sampleWidth = table.fontMetrics().horizontalAdvance(sample) + 24;
+  table.setColumnWidth(column, std::clamp(std::max(headerWidth, sampleWidth), 72, 320));
 }
 QLabel* label(QString value, QWidget* parent, const QString& id) {
   auto* result = new QLabel(std::move(value), parent);
@@ -251,7 +261,9 @@ void SavedServicePage::installModel(QAbstractItemModel* model) {
   table_->setModel(proxy_);
   table_->setSortingEnabled(true);
   table_->sortByColumn(0, Qt::AscendingOrder);
-  table_->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
+  table_->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+  for (int column = 0; column < model->columnCount(); ++column) { initialColumnWidth(*table_, column); }
+  table_->setColumnWidth(0, 360);
 }
 QTableView& SavedServicePage::table() { return *table_; }
 QString SavedServicePage::statusText() const { return status_->text(); }
@@ -297,7 +309,10 @@ void SavedServicePage::ready(SavedPageSource source, bool listPresent, std::size
 SavedHostingPage::SavedHostingPage(QWidget* parent)
     : SavedServicePage(QStringLiteral("saved-hosting-page"), tr("My Tracker"),
           tr("Saved tracker.config data only. This page does not start or control a tracker service."), parent),
-      model_(new SavedHostingModel(this)) { installModel(model_); }
+      model_(new SavedHostingModel(this)) {
+  installModel(model_);
+  initialColumnWidth(table(), 1, tr("Statistics backup"));
+}
 void SavedHostingPage::clearSnapshot() { model_->clear(); }
 bool SavedHostingPage::setReady(quint64 generation, std::shared_ptr<const core::SavedHosting> snapshot,
     SavedPageSource source) {
@@ -312,7 +327,11 @@ bool SavedHostingPage::setReady(quint64 generation, std::shared_ptr<const core::
 SavedSharesPage::SavedSharesPage(QWidget* parent)
     : SavedServicePage(QStringLiteral("saved-shares-page"), tr("My Shares"),
           tr("Saved sharing.config data only. This page does not scan paths, open cached torrents or publish shares."), parent),
-      model_(new SavedSharesModel(this)) { installModel(model_); }
+      model_(new SavedSharesModel(this)) {
+  installModel(model_);
+  table().setColumnWidth(0, 520);
+  initialColumnWidth(table(), 1, tr("Directory contents"));
+}
 void SavedSharesPage::clearSnapshot() { model_->clear(); }
 bool SavedSharesPage::setReady(quint64 generation, std::shared_ptr<const core::SavedShares> snapshot,
     SavedPageSource source) {
