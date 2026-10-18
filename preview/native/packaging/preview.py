@@ -100,6 +100,19 @@ def prepare(root):
         {"type": 3, "file": str(payload / "Synthetic shared directory"), "recursive": 1,
          "props": {"persistent": "false", "tags": "101,102"}},
     ]}))
+    # Original-format saved classic headers; data is generated, never imported.
+    # Complete pane deliberately exercises the user-default fallback. Name keeps
+    # the preview's responsive Stretch width; the stored width is left unapplied.
+    def classic_table(state_width):
+        return {"Column.name": [1, 0, 420, 0, 1],
+                "Column.status": [1, 1, state_width, 0, 1],
+                "Column.example-plugin": [1, 2, 200, 0, 1, {"opaque": b"\x00\xff"}],
+                "SortColumns": ["name"], "preview.opaque": b"\x00\xff"}
+    (profile / "tables.config").write_bytes(encode({
+        "Table.MyTorrents": classic_table(124),
+        "TableDefault.MySeeders": classic_table(132),
+        "Table.UnknownPlugin": {"opaque": [b"\x00\xff", 7]},
+    }))
     return profile
 
 

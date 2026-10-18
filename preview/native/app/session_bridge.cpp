@@ -1,6 +1,7 @@
 #include "session_bridge.hpp"
 
 #include "library_view.hpp"
+#include "column_layout_view.hpp"
 #include "biglybtc/saved_dnd.hpp"
 #include "local_session.hpp"
 #include "saved_service_view.hpp"
@@ -9,6 +10,7 @@
 #include <QPointer>
 #include <QTimer>
 
+#include <limits>
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -16,6 +18,16 @@
 namespace biglybtc::app {
 namespace {
 struct Failure { storage::Error error; };
+quint64 reserveColumnLayoutSession() {
+  static std::atomic<quint64> last{0};
+  auto previous = last.load(std::memory_order_relaxed);
+  for (;;) {
+    if (previous == std::numeric_limits<quint64>::max()) {
+      throw Failure{{storage::ErrorCode::Unsupported, "Column layout session identities are exhausted"}};
+    }
+    if (last.compare_exchange_weak(previous, previous + 1, std::memory_order_relaxed)) { return previous + 1; }
+  }
+}
 template<typename T> T take(std::expected<T, storage::Error> value) {
   if (!value) { throw Failure{value.error()}; }
   return std::move(*value);
@@ -29,6 +41,14 @@ std::optional<ui::SavedPageSource> savedSource(storage::RecoverySource source) {
     case storage::RecoverySource::Primary: return ui::SavedPageSource::Primary;
     case storage::RecoverySource::Backup: return ui::SavedPageSource::Backup;
     case storage::RecoverySource::Saving: return ui::SavedPageSource::Saving;
+  }
+  return std::nullopt;
+}
+std::optional<ui::ColumnLayoutReadSource> columnLayoutSource(storage::RecoverySource source) {
+  switch (source) {
+    case storage::RecoverySource::Primary: return ui::ColumnLayoutReadSource::Primary;
+    case storage::RecoverySource::Backup: return ui::ColumnLayoutReadSource::Backup;
+    case storage::RecoverySource::Saving: return ui::ColumnLayoutReadSource::Saving;
   }
   return std::nullopt;
 }
@@ -67,6 +87,7 @@ struct SessionBridge::Host {
   std::filesystem::path profile;
   unsigned short peerPort;
   storage::ProfileLease lease;
+  const quint64 columnLayoutSession;
   quint64 revision = 0;
   std::map<std::string, Known> known;
   std::set<std::string> currentHashes;
@@ -134,6 +155,7 @@ SessionBridge::SessionBridge(QObject* parent) : QObject(parent) {
   qRegisterMetaType<ui::Telemetry>();
   qRegisterMetaType<ui::Details>();
   qRegisterMetaType<ui::SavedServicesPresentation>();
+  qRegisterMetaType<ui::ColumnLayoutsPresentation>();
   completionMonitor_ = new QTimer(this);
   completionMonitor_->setInterval(20);
   connect(completionMonitor_, &QTimer::timeout, this, [this] {
@@ -158,8 +180,16 @@ SessionBridge::~SessionBridge() {
   worker_.requestShutdown();
 }
 void SessionBridge::ready(ui::Presentation snapshot, QString message) {
-  QMetaObject::invokeMethod(this, [this, snapshot = std::move(snapshot), message = std::move(message)] {
+  // host_ is worker-owned. Publish its immutable identity by value on the GUI.
+  const auto session = host_ ? host_->columnLayoutSession : quint64{0};
+  QMetaObject::invokeMethod(this, [this, snapshot = std::move(snapshot), message = std::move(message), session] {
     QPointer<SessionBridge> guard(this);
+    if (session != 0 && publishedColumnLayoutSession_ == 0) {
+      publishedColumnLayoutSession_ = session;
+      // The initial optional read is queued by the UI; direct reentry remains busy.
+      emit columnLayoutSessionReady(session);
+      if (!guard) { return; }
+    }
     completionMonitor_->stop();
     busy_ = false;
     emit busyChanged(false);
@@ -179,16 +209,19 @@ void SessionBridge::failed(QString message) {
     emit messageReady(message);
   }, Qt::QueuedConnection);
 }
-bool SessionBridge::dispatch(std::move_only_function<void(std::stop_token)> operation) {
+bool SessionBridge::dispatch(std::move_only_function<void(std::stop_token)> operation, bool recoverLibrarySnapshot) {
   if (busy_) { return false; }
   busy_ = true;
   auto posted = std::make_shared<std::atomic_bool>(false);
-  auto submitted = worker_.submit([this, posted, operation = std::move(operation)](std::stop_token stop) mutable -> core::WorkResult {
+  auto submitted = worker_.submit([this, posted, operation = std::move(operation), recoverLibrarySnapshot](std::stop_token stop) mutable -> core::WorkResult {
     try { checkpoint(stop); operation(stop); posted->store(true); return {}; }
     catch (const Failure& failure) {
       const bool cancelled = failure.error.code == storage::ErrorCode::Cancelled || stop.stop_requested();
       const auto message = cancelled ? tr("Cancelled") : text(failure.error.message);
-      if (cancelled && host_ && host_->lastSnapshot) {
+      if (!recoverLibrarySnapshot) {
+        // Optional configuration reads must not refresh or revise the library.
+        failed(message);
+      } else if (cancelled && host_ && host_->lastSnapshot) {
         auto snapshot = std::make_shared<ui::LibraryPresentation>(*host_->lastSnapshot);
         snapshot->revision = ++host_->revision;
         host_->lastSnapshot = snapshot;
@@ -223,8 +256,9 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
   return dispatch([this, profile = std::move(profile), ownedPeerPort](std::stop_token stop) {
     if (host_) { throw Failure{{storage::ErrorCode::Conflict, "A profile is already open"}}; }
     auto lease = take(storage::ProfileLease::acquire(profile));
+    const auto session = reserveColumnLayoutSession();
     host_ = std::make_unique<Host>(Host{.profile = profile, .peerPort = ownedPeerPort, .lease = std::move(lease),
-        .known = {}, .currentHashes = {}});
+        .columnLayoutSession = session, .known = {}, .currentHashes = {}});
     ready(host_->query(stop));
   });
 }
@@ -264,6 +298,49 @@ bool SessionBridge::savedServices(quint64 request) {
       emit busyChanged(false);
     }, Qt::QueuedConnection);
   });
+}
+bool SessionBridge::columnLayouts(quint64 session, quint64 request) {
+  if (session == 0 || request == 0 || session != publishedColumnLayoutSession_) { return false; }
+  return dispatch([this, session, request](std::stop_token stop) {
+    if (!host_ || host_->columnLayoutSession != session) {
+      throw Failure{{storage::ErrorCode::Conflict, "This column layout session is no longer active"}};
+    }
+    auto packet = std::make_shared<ui::ColumnLayoutsPacket>();
+    packet->session = session;
+    packet->request = request;
+    checkpoint(stop);
+    auto view = storage::readColumnLayoutsView(host_->lease, stop);
+    checkpoint(stop);
+    if (!view) {
+      if (view.error().code == storage::ErrorCode::Cancelled) { throw Failure{std::move(view.error())}; }
+      packet->failure = text(view.error().message);
+    } else if (view->missing()) {
+      packet->state = ui::ColumnLayoutReadState::Missing;
+    } else if (!view->recoverySource || !(packet->source = columnLayoutSource(*view->recoverySource))) {
+      packet->failure = tr("Saved column layout source is unavailable");
+    } else {
+      packet->snapshot = std::make_shared<const core::ColumnLayouts>(std::move(*view->snapshot));
+      packet->state = ui::ColumnLayoutReadState::Ready;
+    }
+    checkpoint(stop);
+    ui::ColumnLayoutsPresentation presentation = std::move(packet);
+    QMetaObject::invokeMethod(this, [this, presentation = std::move(presentation), stop] {
+      QPointer<SessionBridge> guard(this);
+      if (stop.stop_requested() || presentation->session != publishedColumnLayoutSession_) {
+        completionMonitor_->stop();
+        busy_ = false;
+        emit busyChanged(false);
+        if (guard && stop.stop_requested()) { emit messageReady(tr("Cancelled")); }
+        return;
+      }
+      // Hold busy through direct result slots, including cancellation/deletion.
+      emit columnLayoutsReady(presentation);
+      if (!guard) { return; }
+      completionMonitor_->stop();
+      busy_ = false;
+      emit busyChanged(false);
+    }, Qt::QueuedConnection);
+  }, false);
 }
 bool SessionBridge::details(ui::Target target) {
   return dispatch([this, target = std::move(target)](std::stop_token stop) {

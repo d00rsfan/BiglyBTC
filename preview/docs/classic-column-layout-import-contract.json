@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_parent": "eefbd205ca0940ad4868ee07989b2d42be1a99dc",
+  "scope": "Read-only preview classic header import with declared native admission policy",
+  "trigger": "One initial read after session opens; explicit View > Reload Saved Column Layout; ordinary Refresh does not import headers",
+  "mapping": {
+    "name": 0,
+    "status": 1,
+    "downspeed": 4,
+    "upspeed": 5,
+    "up": 7,
+    "torrenthash": 8
+  },
+  "excluded": "All other original IDs,including size/remaining/done/down/#; no label/case/plugin/private saved-value aliases",
+  "visibility": "Only explicit validated requested facts; missing/malformed facts leave session state unchanged",
+  "width": "Signed-low32 requested width16..8192; Qt minimum still applies; responsive Stretch Name width deliberately unapplied",
+  "order": "Unique nonnegative positions among matched IDs, compacted ahead of unchanged native sections in their current relative order; duplicates reject only ordering facet",
+  "sort": "Only current SortColumns singleton exact whitelisted ID with explicit known direction; existing native UserRole comparator, not Java comparator equivalence",
+  "session_precedence": "Unique nonzero profile session and monotonic request identity; initial applies only to untouched panes; explicit reload captures local revisions; later per-pane edits/Reset win",
+  "lifecycle": "Separate coalesced worker request, bounded owned packet, cancellation on queued delivery, busy-held result signal and deletion guards; retained off-tab widgets are not reopened or focused by result",
+  "reset": "Original preview construction defaults remain reset baseline; no save/reload/default migration",
+  "writes": false,
+  "original_profile_used": false,
+  "limitations": [
+    "No registered column defaults, plugin column widgets, legacy global-sort resolution, row-height/color/tooltip/title/icon application or config writer",
+    "No full Java effective-layout/row-sort or seamless switching qualification",
+    "A synchronous newer request/edit can abort remaining apply; already-applied header changes are not transactionally rolled back"
+  ]
+}

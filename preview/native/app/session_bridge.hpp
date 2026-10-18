@@ -1,6 +1,7 @@
 #pragma once
 
 #include "biglybtc/executor.hpp"
+#include "column_layout_presentation.hpp"
 #include "library_model.hpp"
 #include "saved_services_presentation.hpp"
 
@@ -22,6 +23,7 @@ public:
   bool open(std::filesystem::path profile, unsigned short ownedPeerPort);
   bool refresh();
   bool savedServices(quint64 request);
+  bool columnLayouts(quint64 session, quint64 request);
   bool details(ui::Target target);
   bool continueDownload(ui::Target target);
   void cancel();
@@ -31,11 +33,13 @@ signals:
   void progressReady(biglybtc::ui::Telemetry);
   void detailsReady(biglybtc::ui::Details);
   void savedServicesReady(biglybtc::ui::SavedServicesPresentation);
+  void columnLayoutSessionReady(quint64 session);
+  void columnLayoutsReady(biglybtc::ui::ColumnLayoutsPresentation);
   void busyChanged(bool);
   void messageReady(QString);
 private:
   struct Host;
-  bool dispatch(std::move_only_function<void(std::stop_token)> operation);
+  bool dispatch(std::move_only_function<void(std::stop_token)> operation, bool recoverLibrarySnapshot = true);
   void ready(ui::Presentation snapshot, QString message = {});
   void failed(QString message);
   void progress(ui::Telemetry update);
@@ -47,6 +51,8 @@ private:
   std::optional<ui::Telemetry> latestProgress_;
   bool deliveryQueued_ = false;
   bool busy_ = false;
+  // GUI-thread publication only; worker commands capture the requested identity.
+  quint64 publishedColumnLayoutSession_ = 0;
   // Destroy/join this worker before host/lease, tickets, mutex or QObject context.
   core::Executor worker_{8};
 };

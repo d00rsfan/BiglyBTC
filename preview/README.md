@@ -99,8 +99,14 @@ columns and extra settings, distinguishes exact layouts from user defaults,
 and retains original ordered sort IDs without applying them. A separate optional
 profile reader loads only `tables.config` and its recovery candidates under a
 held lease, without rewriting files. It reports recovery provenance and supports
-cancellation between reader calls. The desktop does not import these layouts
-yet; its chooser remains session-only. See the
+cancellation between reader calls. The desktop imports a reviewed subset once
+when a profile opens. View > Reload Saved Column Layout explicitly imports it
+again; ordinary Refresh preserves your session choices. Changes made after a
+read request win independently for each pane, and Reset restores the preview's
+construction defaults. The chooser remains session-only; no settings are written.
+Name keeps its responsive width. This maps layout IDs, without claiming Java's
+registered defaults, plugin columns, full settings or row-sort equivalence. See the
+[UI import policy](docs/classic-column-layout-import-contract.json),
 [layout contract](docs/classic-column-layout-contract.json),
 [profile reader contract](docs/classic-column-layout-reader-contract.json) and
 [pinned source audit](docs/classic-column-persistence-source.json).

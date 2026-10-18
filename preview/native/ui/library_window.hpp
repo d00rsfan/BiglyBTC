@@ -3,6 +3,7 @@
 #include "library_model.hpp"
 #include "file_model.hpp"
 #include "saved_services_presentation.hpp"
+#include "column_layout_presentation.hpp"
 
 #include <QMainWindow>
 #include <QPointer>
@@ -17,6 +18,8 @@ class QSplitter;
 class QEvent;
 
 namespace biglybtc::ui {
+
+class ClassicColumns;
 
 class LibraryWindow final : public QMainWindow {
   Q_OBJECT
@@ -42,12 +45,15 @@ public:
   SavedHostingPage* hostingPage() const { return hostingPage_.data(); }
   SavedSharesPage* sharesPage() const { return sharesPage_.data(); }
   void setSavedServices(SavedServicesPresentation);
+  void beginColumnLayoutSession(quint64 session);
+  void setColumnLayouts(ColumnLayoutsPresentation);
   void setBusy(bool);
   void setMessage(const QString&);
   void setOfflinePreview(bool);
 signals:
   void refreshRequested();
   void savedServicesRequested(quint64 request);
+  void columnLayoutsRequested(quint64 session, quint64 request);
   void continueRequested(biglybtc::ui::Target);
   void detailsRequested(biglybtc::ui::Target);
   void cancelRequested();
@@ -69,6 +75,8 @@ private:
   void refreshSavedServices();
   void queueSavedServices();
   void failSavedServices(quint64 request, const QString& message);
+  void refreshColumnLayouts(bool initial = false);
+  void queueColumnLayouts();
   void updateGeneral();
   void updateCounts();
   void updateActions();
@@ -87,6 +95,19 @@ private:
   std::optional<quint64> activeSavedRequest_;
   std::optional<quint64> pendingSavedRequest_;
   bool savedDispatchQueued_ = false;
+  struct ColumnRequest {
+    quint64 session = 0;
+    quint64 request = 0;
+    std::optional<quint64> incompleteRevision;
+    std::optional<quint64> completeRevision;
+  };
+  QPointer<ClassicColumns> incompleteColumns_;
+  QPointer<ClassicColumns> completeColumns_;
+  quint64 columnSession_ = 0;
+  quint64 columnRequest_ = 0;
+  std::optional<ColumnRequest> activeColumnRequest_;
+  std::optional<ColumnRequest> pendingColumnRequest_;
+  bool columnDispatchQueued_ = false;
   QTabWidget* detailTabs_;
   QLineEdit* filter_;
   QSplitter* splitter_;
@@ -104,6 +125,7 @@ private:
   QSortFilterProxyModel* filesProxy_;
   QTableView* filesTable_;
   QAction* closeTab_;
+  QAction* reloadColumns_;
   QAction* continue_;
   QAction* cancel_;
   QAction* refresh_;

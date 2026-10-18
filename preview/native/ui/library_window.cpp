@@ -26,6 +26,7 @@
 #include <QToolBar>
 #include <QVBoxLayout>
 
+#include <functional>
 #include <limits>
 
 namespace biglybtc::ui {
@@ -115,8 +116,8 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     layout->addWidget(table);
     splitter_->addWidget(panel);
   }
-  auto* incompleteColumns = new ClassicColumns(*incompleteTable_, false);
-  auto* completeColumns = new ClassicColumns(*completeTable_, true);
+  incompleteColumns_ = new ClassicColumns(*incompleteTable_, false);
+  completeColumns_ = new ClassicColumns(*completeTable_, true);
   splitter_->setStretchFactor(0, 3);
   splitter_->setStretchFactor(1, 7);
   splitter_->setSizes({300, 700});
@@ -270,8 +271,11 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   unavailable(view, tr("Remote Pairing…"), QStringLiteral("remote-pairing"), QStyle::SP_DriveNetIcon);
   unavailable(view, tr("Subscriptions"), QStringLiteral("subscriptions"), QStyle::SP_FileDialogListView);
   view->addSeparator();
-  view->addMenu(incompleteColumns->menu());
-  view->addMenu(completeColumns->menu());
+  view->addMenu(incompleteColumns_->menu());
+  view->addMenu(completeColumns_->menu());
+  reloadColumns_ = view->addAction(tr("Reload saved column layout"));
+  reloadColumns_->setObjectName(QStringLiteral("classic-reload-column-layout"));
+  connect(reloadColumns_, &QAction::triggered, this, [this] { refreshColumnLayouts(); });
   view->addSeparator();
   refresh_ = view->addAction(style()->standardIcon(QStyle::SP_BrowserReload), tr("&Refresh"));
   refresh_->setObjectName(QStringLiteral("classic-refresh"));
@@ -430,11 +434,11 @@ void LibraryWindow::refreshSavedServices() {
   queueSavedServices();
 }
 void LibraryWindow::queueSavedServices() {
-  if (savedDispatchQueued_ || closing_ || busy_ || activeSavedRequest_ || !pendingSavedRequest_) { return; }
+  if (savedDispatchQueued_ || closing_ || busy_ || activeSavedRequest_ || activeColumnRequest_ || !pendingSavedRequest_) { return; }
   savedDispatchQueued_ = true;
   QTimer::singleShot(0, this, [this] {
     savedDispatchQueued_ = false;
-    if (closing_ || busy_ || activeSavedRequest_ || !pendingSavedRequest_) { return; }
+    if (closing_ || busy_ || activeSavedRequest_ || activeColumnRequest_ || !pendingSavedRequest_) { return; }
     const auto request = *pendingSavedRequest_;
     pendingSavedRequest_.reset();
     if (!hasLoadingServices(request)) { return; }
@@ -458,6 +462,126 @@ void LibraryWindow::setSavedServices(SavedServicesPresentation packet) {
   if (sharesPage_) { applySavedResult(*sharesPage_, packet->request, packet->sharing); }
   if (!guard) { return; }
   queueSavedServices();
+  queueColumnLayouts();
+}
+
+void LibraryWindow::beginColumnLayoutSession(quint64 session) {
+  if (closing_ || session == 0 || session <= columnSession_) { return; }
+  columnSession_ = session;
+  activeColumnRequest_.reset();
+  pendingColumnRequest_.reset();
+  refreshColumnLayouts(true);
+}
+void LibraryWindow::refreshColumnLayouts(bool initial) {
+  if (closing_ || columnSession_ == 0) { return; }
+  if (columnRequest_ == std::numeric_limits<quint64>::max()) {
+    setMessage(tr("Column-layout request counter exhausted"));
+    updateActions();
+    return;
+  }
+  ColumnRequest request;
+  request.session = columnSession_;
+  request.request = ++columnRequest_;
+  if (incompleteColumns_) {
+    const auto revision = incompleteColumns_->editRevision();
+    if (revision && (!initial || *revision == 0)) { request.incompleteRevision = revision; }
+  }
+  if (completeColumns_) {
+    const auto revision = completeColumns_->editRevision();
+    if (revision && (!initial || *revision == 0)) { request.completeRevision = revision; }
+  }
+  pendingColumnRequest_ = request;
+  queueColumnLayouts();
+  updateActions();
+}
+void LibraryWindow::queueColumnLayouts() {
+  if (columnDispatchQueued_ || closing_ || busy_ || activeSavedRequest_
+      || activeColumnRequest_ || !pendingColumnRequest_) { return; }
+  columnDispatchQueued_ = true;
+  QTimer::singleShot(0, this, [this] {
+    columnDispatchQueued_ = false;
+    if (closing_ || busy_ || activeSavedRequest_ || activeColumnRequest_ || !pendingColumnRequest_) { return; }
+    const auto request = *pendingColumnRequest_;
+    pendingColumnRequest_.reset();
+    if (request.session != columnSession_ || request.request != columnRequest_) { return; }
+    activeColumnRequest_ = request; // Bound before any direct signal/reentry.
+    QPointer<LibraryWindow> guard(this);
+    emit columnLayoutsRequested(request.session, request.request);
+    if (!guard) { return; }
+    // Accepted Bridge commands publish busy=true synchronously. A rejected or
+    // unconnected request must not latch the slot or consume a newer request.
+    if (!busy_ && activeColumnRequest_ && activeColumnRequest_->session == request.session
+        && activeColumnRequest_->request == request.request) {
+      activeColumnRequest_.reset();
+      setMessage(tr("Saved column-layout request was not accepted"));
+      if (!guard) { return; }
+      queueSavedServices();
+      queueColumnLayouts();
+    }
+  });
+}
+void LibraryWindow::setColumnLayouts(ColumnLayoutsPresentation packet) {
+  if (!packet || !activeColumnRequest_ || packet->session != activeColumnRequest_->session
+      || packet->request != activeColumnRequest_->request) { return; }
+  const auto request = *activeColumnRequest_;
+  activeColumnRequest_.reset();
+  if (closing_) { return; }
+  if (packet->session != columnSession_ || packet->request != columnRequest_) {
+    queueSavedServices();
+    queueColumnLayouts();
+    return;
+  }
+  QPointer<LibraryWindow> guard(this);
+  if (packet->state == ColumnLayoutReadState::Ready) {
+    QString source;
+    if (packet->source) {
+      switch (*packet->source) {
+        case ColumnLayoutReadSource::Primary: source = tr("primary"); break;
+        case ColumnLayoutReadSource::Backup: source = tr("backup"); break;
+        case ColumnLayoutReadSource::Saving: source = tr("saving"); break;
+      }
+    }
+    if (source.isEmpty() || !packet->snapshot || !packet->snapshot->source) {
+      setMessage(tr("Saved column-layout result is incomplete"));
+    } else {
+      const auto current = [&] {
+        return guard && !guard->closing_ && guard->columnSession_ == request.session
+            && guard->columnRequest_ == request.request;
+      };
+      const bool previous = updating_;
+      updating_ = true; // Header/proxy changes must not request hidden details.
+      bool applied = false;
+      if (incompleteColumns_ && request.incompleteRevision) {
+        applied = incompleteColumns_->applyLayout(packet->snapshot->incomplete, *request.incompleteRevision, std::cref(current));
+      }
+      if (!guard) { return; }
+      if (!current()) {
+        updating_ = previous;
+        queueSavedServices();
+        queueColumnLayouts();
+        return;
+      }
+      if (completeColumns_ && request.completeRevision) {
+        applied = completeColumns_->applyLayout(packet->snapshot->complete, *request.completeRevision, std::cref(current)) || applied;
+      }
+      if (!guard) { return; }
+      updating_ = previous;
+      if (!current()) {
+        queueSavedServices();
+        queueColumnLayouts();
+        return;
+      }
+      setMessage(applied ? tr("Saved column layout applied (%1); Name width stays automatic").arg(source)
+                         : tr("Saved column layout read (%1); current columns kept").arg(source));
+    }
+  } else if (packet->state == ColumnLayoutReadState::Missing) {
+    setMessage(tr("No saved column layout found"));
+  } else if (packet->state == ColumnLayoutReadState::Failed) {
+    setMessage(packet->failure.isEmpty() ? tr("Saved column layout could not be read") : packet->failure);
+  } else { setMessage(tr("Saved column-layout result is incomplete")); }
+  if (!guard) { return; }
+  queueSavedServices();
+  queueColumnLayouts();
 }
 
 void LibraryWindow::setOfflinePreview(bool offline) {
@@ -547,6 +671,7 @@ void LibraryWindow::updateActions() {
   files_->setEnabled(!busy_ && !closing_ && target.has_value());
   padding_->setEnabled(!closing_ && mainTabs_->currentWidget() == torrentsPage_);
   closeTab_->setEnabled(!closing_ && (mainTabs_->currentWidget() == torrentsPage_ || onSavedServicePage()));
+  reloadColumns_->setEnabled(!closing_ && columnSession_ != 0 && columnRequest_ != std::numeric_limits<quint64>::max());
 }
 void LibraryWindow::selectionChanged() {
   if (updating_) { return; }
@@ -625,22 +750,32 @@ void LibraryWindow::setDetails(const Details& details) {
 }
 void LibraryWindow::setMessage(const QString& message) { message_->setText(message.left(8192)); }
 void LibraryWindow::setBusy(bool value) {
+  QPointer<LibraryWindow> guard(this);
   busy_ = value;
   updateActions();
-  if (busy_) { return; }
-  QPointer<LibraryWindow> guard(this);
+  if (!guard || busy_) { return; }
   if (activeSavedRequest_) {
     const auto request = *activeSavedRequest_;
     activeSavedRequest_.reset();
     failSavedServices(request, tr("Saved configuration request did not complete"));
     if (!guard) { return; }
   }
+  if (activeColumnRequest_) {
+    const auto request = *activeColumnRequest_;
+    activeColumnRequest_.reset();
+    if (!closing_ && request.session == columnSession_ && request.request == columnRequest_) {
+      setMessage(tr("Saved column-layout request did not complete"));
+      if (!guard) { return; }
+    }
+  }
   if (closing_) {
     pendingSavedRequest_.reset();
+    pendingColumnRequest_.reset();
     QTimer::singleShot(0, this, &QWidget::close);
     return;
   }
   queueSavedServices();
+  queueColumnLayouts();
   if (mainTabs_->currentWidget() == torrentsPage_
       && (detailTabs_->currentIndex() == 1 || (selected() && !model_->hasDetails(*selected())))) {
     QTimer::singleShot(0, this, [this] { requestDetails(); });
@@ -649,6 +784,7 @@ void LibraryWindow::setBusy(bool value) {
 void LibraryWindow::closeEvent(QCloseEvent* event) {
   closing_ = true;
   pendingSavedRequest_.reset();
+  pendingColumnRequest_.reset();
   QPointer<LibraryWindow> guard(this);
   updateActions();
   if (!guard) { return; }
@@ -659,6 +795,7 @@ void LibraryWindow::closeEvent(QCloseEvent* event) {
     return;
   }
   activeSavedRequest_.reset();
+  activeColumnRequest_.reset();
   QMainWindow::closeEvent(event);
 }
 void LibraryWindow::popup(QTableView* table, const QPoint& point) {

@@ -6,6 +6,7 @@
 #include <QDir>
 #include <QFile>
 #include <QFileInfo>
+#include <QHeaderView>
 #include <QMap>
 #include <QItemSelectionModel>
 #include <QSignalSpy>
@@ -29,12 +30,15 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
   QObject::connect(&bridge, &app::SessionBridge::progressReady, &window, &ui::LibraryWindow::setTelemetry);
   QObject::connect(&bridge, &app::SessionBridge::detailsReady, &window, &ui::LibraryWindow::setDetails);
   QObject::connect(&bridge, &app::SessionBridge::savedServicesReady, &window, &ui::LibraryWindow::setSavedServices);
+  QObject::connect(&bridge, &app::SessionBridge::columnLayoutSessionReady, &window, &ui::LibraryWindow::beginColumnLayoutSession);
+  QObject::connect(&bridge, &app::SessionBridge::columnLayoutsReady, &window, &ui::LibraryWindow::setColumnLayouts);
   QObject::connect(&bridge, &app::SessionBridge::busyChanged, &window, &ui::LibraryWindow::setBusy);
   QObject::connect(&bridge, &app::SessionBridge::messageReady, &window, &ui::LibraryWindow::setMessage);
   QObject::connect(&window, &ui::LibraryWindow::refreshRequested, &bridge, &app::SessionBridge::refresh);
   QObject::connect(&window, &ui::LibraryWindow::continueRequested, &bridge, &app::SessionBridge::continueDownload);
   QObject::connect(&window, &ui::LibraryWindow::detailsRequested, &bridge, &app::SessionBridge::details);
   QObject::connect(&window, &ui::LibraryWindow::savedServicesRequested, &bridge, &app::SessionBridge::savedServices);
+  QObject::connect(&window, &ui::LibraryWindow::columnLayoutsRequested, &bridge, &app::SessionBridge::columnLayouts);
   QObject::connect(&window, &ui::LibraryWindow::cancelRequested, &bridge, &app::SessionBridge::cancel);
 }
 } // namespace
@@ -59,6 +63,7 @@ private slots:
     original.insert(profile + QStringLiteral("/downloads.config"), {});
     original.insert(profile + QStringLiteral("/tracker.config"), {});
     original.insert(profile + QStringLiteral("/sharing.config"), {});
+    original.insert(profile + QStringLiteral("/tables.config"), {});
     original.insert(profile + QStringLiteral("/active/cache.dat"), {});
     const QDir active(profile + QStringLiteral("/active"));
     const auto states = active.entryList({QStringLiteral("*.dat")}, QDir::Files);
@@ -85,9 +90,13 @@ private slots:
     wire(window, bridge);
     QSignalSpy snapshots(&bridge, &app::SessionBridge::snapshotReady);
     QSignalSpy details(&bridge, &app::SessionBridge::detailsReady);
+    QSignalSpy layouts(&bridge, &app::SessionBridge::columnLayoutsReady);
     QVERIFY(bridge.open(std::filesystem::path(profile.toStdString()), 0));
     window.show();
-    QTRY_VERIFY_WITH_TIMEOUT(snapshots.count() == 1 && !bridge.busy(), 30000);
+    QTRY_VERIFY_WITH_TIMEOUT(snapshots.count() == 1 && layouts.count() == 1 && !bridge.busy(), 30000);
+    QCOMPARE(window.incompleteTable().columnWidth(1), 124);
+    QCOMPARE(window.completeTable().columnWidth(1), 132);
+    QCOMPARE(window.incompleteTable().horizontalHeader()->sectionResizeMode(0), QHeaderView::Stretch);
     QCOMPARE(window.model().rowCount(), 4);
     QCOMPARE(window.mainTabs().tabText(0), QStringLiteral("My Torrents"));
     auto* myTorrents = window.findChild<QAction*>(QStringLiteral("classic-my-torrents"));
@@ -171,6 +180,19 @@ private slots:
     QTRY_VERIFY_WITH_TIMEOUT(snapshots.count() == 2 && details.count() == 5 && !bridge.busy(), 30000);
     QCOMPARE(window.model().rowCount(), 4);
     QCOMPARE(window.filesModel().target()->hash, selected->hash);
+    // Ordinary refresh leaves session choices alone; explicit Reload restores
+    // the saved headers without changing the current selected/detail target.
+    auto* reloadLayout = window.findChild<QAction*>(QStringLiteral("classic-reload-column-layout"));
+    QVERIFY(reloadLayout && reloadLayout->isEnabled());
+    const auto beforeReloadTarget = window.filesModel().target();
+    window.incompleteTable().setColumnWidth(1, 211);
+    reloadLayout->trigger();
+    QTRY_VERIFY_WITH_TIMEOUT(layouts.count() == 2 && !bridge.busy(), 30000);
+    QCOMPARE(window.incompleteTable().columnWidth(1), 124);
+    QCOMPARE(window.completeTable().columnWidth(1), 132);
+    QVERIFY(window.filesModel().target() == beforeReloadTarget);
+    QCOMPARE(snapshots.count(), 2);
+    QCOMPARE(details.count(), 5);
     QVERIFY(window.filesModel().target()->generation > selected->generation);
     QVERIFY(!window.continueAction().isEnabled());
     const auto capture = qEnvironmentVariable("BIGLYBTC_PREVIEW_CAPTURE");
