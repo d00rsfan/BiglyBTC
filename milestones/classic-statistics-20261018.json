@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "scope": "First bounded classic Statistics view, saved overall facts and actual scoped payload observations; full global/session/history/StatsView unfinished",
+  "original_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_source_commit": "be9ad3d5f409947445b6c253b17430a9df0f6655",
+  "native_parent": "8127336eada41e5795d6fdadaa42eea0ff555ec1",
+  "source_sha256": {
+    ".github/workflows/native-preview.yml": "4ee65f126e5f6fd00c52e3f5c4ee23b793c7f753353ea33bc5c0bfdec20d7dc4",
+    "preview/README.md": "c0691180eb1c4b88a932966be64f4b2fac0fdef9a149c997400448dce8e33c2e",
+    "preview/docs/classic-statistics-contract.json": "d1dd2859cc0d9c0de2528a2b845c5ba8a3bec153a51e40bdcb342a97f1e6be84",
+    "preview/native/adapters/CMakeLists.txt": "66bdf7920e59627442486abaa03ddbd6c0b756911da4fc949ab79c9ccf82eb1f",
+    "preview/native/adapters/statistics_view.cpp": "76f55675813481121b523e461d960ad315125151581ed66932bd0bfb3dc897a1",
+    "preview/native/adapters/statistics_view.hpp": "bfe21dc7989e315945fd51b35721904bcf9d52186a50007a9d6c09c322d4e125",
+    "preview/native/app/main_desktop.cpp": "99d1dc531eb020c619a5c0b73805828dbe3e1326457e926591aa5973c2ab88ca",
+    "preview/native/app/session_bridge.cpp": "4bbdb23e54096d170bb38189960044647fe702ca791ac331b256a4972ee314b4",
+    "preview/native/app/session_bridge.hpp": "9c53a5a49420ff11037ac72496a5c7c9d83982dc10261fa510123e04a1a65175",
+    "preview/native/core/CMakeLists.txt": "008c58da8ee2340e084c4a6dbba0c1af5f33d644075ae78438579b38852a984e",
+    "preview/native/core/include/biglybtc/saved_statistics.hpp": "c3e1c4adee063466bae0034571b42c9a4c291c72687eebbc2dc2c33a2cd529c3",
+    "preview/native/core/src/saved_statistics.cpp": "e6f4db1e06a993dbce1739a52f053dc9b0e201a89d1ba440100dfd081e355cd3",
+    "preview/native/packaging/preview.py": "78e6d1e95e9c946601da9432943b6894898638a1835516d8ca9116dbb99d9c00",
+    "preview/native/packaging/preview_smoke.cpp": "cc433e748d32439bf58711094e3b96c102aa1ea903dff9b0718ae67b9185f8ff",
+    "preview/native/tests/CMakeLists.txt": "75ec4b4caf6b1d13030166689307c08770adc79081fca351e3de2a9fc71c526e",
+    "preview/native/tests/classic_close_tab_tests.cpp": "1d8acd1323781c782622ebebc499019f3c1e363887dd301e6efec4f066569181",
+    "preview/native/tests/saved_services_navigation_tests.cpp": "18a404ae06467b516cfa1a9cca2e0e31a346c42e2959622f6b83fca60797f039",
+    "preview/native/tests/saved_statistics_tests.cpp": "e2b577560e1fff2f3ccd9b1b3f793047645a5118ac437974cec3d00d83392176",
+    "preview/native/tests/statistics_integration_tests.cpp": "c9fb28db4fb2d4ad33945b74e0137144bea626f7b28d79c477943b3678c5bc33",
+    "preview/native/tests/statistics_page_tests.cpp": "40038f43099b12f141b7c937179d7914a135a55ca82123e581547b34f22385f9",
+    "preview/native/tests/statistics_view_tests.cpp": "3ac8f4f139fc0fdc1d5e606566af779556e5f31aae97205376bb15cb81de1e16",
+    "preview/native/ui/CMakeLists.txt": "d63de5bc15b4e4ee8a2dd80f84e8020cb803af5a0e5121cc357f46d14bf01aab",
+    "preview/native/ui/library_window.cpp": "bd5d55056e1fbb3ee5228284c7f4dc7d3ff06ce2ab7abf292991a31819404909",
+    "preview/native/ui/library_window.hpp": "6a1b36fddee2dc88330157c3521f0c07f1c5cf5b8d3b0c9a173d4a74f8dd7279",
+    "preview/native/ui/statistics_page.cpp": "2eb00a7088a75f6a159ec3a9da68487db4199138180f38bc306c11c67d78f6cb",
+    "preview/native/ui/statistics_page.hpp": "49ccac1562b9c1d0fb2aef4ba46bed1b9b16094682a133041f43b483b74c0e04",
+    "preview/native/ui/statistics_presentation.hpp": "57d027756285b3619187b4fe907cab8ce9624205043eef49e3dcb78ae0c09ef8"
+  },
+  "source_files_verified": 27,
+  "unit_suites_passed": {
+    "gcc": 48,
+    "clang": 2,
+    "sanitized": 9
+  },
+  "skipped": 0,
+  "statistics_projection_cases": 25,
+  "statistics_projection_assertions": 387,
+  "statistics_reader_cases": 61,
+  "statistics_reader_assertions": 11427,
+  "statistics_page_qt_rows": 35,
+  "statistics_window_worker_qt_rows": 20,
+  "sanitizer_options": {
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1"
+  },
+  "actual_smoke_scales": [
+    1,
+    1.5,
+    2
+  ],
+  "actual_smoke_qt_rows_per_scale": 6,
+  "captures_per_scale": 6,
+  "manual_compositor_credit": false,
+  "hosted": {
+    "desktop": {
+      "conclusion": "success",
+      "databaseId": 39140391574,
+      "headSha": "be9ad3d5f409947445b6c253b17430a9df0f6655",
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39140391574"
+    },
+    "sdk": {
+      "conclusion": "success",
+      "databaseId": 39140391247,
+      "headSha": "be9ad3d5f409947445b6c253b17430a9df0f6655",
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39140391247"
+    }
+  },
+  "dist_files_verified": 103,
+  "private_runtime_files_unchanged": 82,
+  "installed_rpath_replay_full_byte_equality": true,
+  "dist_manifest_sha256": "2c292cc1e22590b159f9dd4dc573bd79a5de7a2f944f72119ee3722b6c8334c7",
+  "dist_rollback_retained": true,
+  "original_profile_access": false,
+  "original_processes_signaled": false,
+  "limitations": [
+    "Original global data+protocol rates and this-session totals unavailable",
+    "History and other original StatsView subviews unfinished",
+    "No statistics write/mark/reset or historical samples inferred from totals",
+    "Global history ownership, actual engine/session/plugins and seamless Java/native switching unfinished",
+    "No comparative performance or real-compositor acceptance claimed"
+  ]
+}
