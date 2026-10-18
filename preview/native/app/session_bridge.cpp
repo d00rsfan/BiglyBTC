@@ -2,8 +2,10 @@
 
 #include "library_view.hpp"
 #include "local_session.hpp"
+#include "saved_service_view.hpp"
 
 #include <QMetaObject>
+#include <QPointer>
 #include <QTimer>
 
 #include <map>
@@ -21,6 +23,34 @@ void checkpoint(std::stop_token stop) {
   if (stop.stop_requested()) { throw Failure{{storage::ErrorCode::Cancelled, "Cancelled"}}; }
 }
 QString text(std::string_view value) { return QString::fromUtf8(value.data(), static_cast<qsizetype>(std::min(value.size(), std::size_t{8192}))); }
+std::optional<ui::SavedPageSource> savedSource(storage::RecoverySource source) {
+  switch (source) {
+    case storage::RecoverySource::Primary: return ui::SavedPageSource::Primary;
+    case storage::RecoverySource::Backup: return ui::SavedPageSource::Backup;
+    case storage::RecoverySource::Saving: return ui::SavedPageSource::Saving;
+  }
+  return std::nullopt;
+}
+template<typename Snapshot, typename View>
+ui::SavedServiceResult<Snapshot> savedResult(std::expected<View, storage::Error> view) {
+  ui::SavedServiceResult<Snapshot> result;
+  if (!view) {
+    if (view.error().code == storage::ErrorCode::Cancelled) { throw Failure{std::move(view.error())}; }
+    result.failure = text(view.error().message);
+    return result;
+  }
+  if (view->missing()) {
+    result.state = ui::SavedPageState::Missing;
+    return result;
+  }
+  if (!view->recoverySource || !(result.source = savedSource(*view->recoverySource))) {
+    result.failure = SessionBridge::tr("Saved configuration source is unavailable");
+    return result;
+  }
+  result.snapshot = std::make_shared<const Snapshot>(std::move(*view->snapshot));
+  result.state = ui::SavedPageState::Ready;
+  return result;
+}
 core::TorrentHash identity(const ui::Target& target) {
   const auto hex = target.hash.toLatin1();
   const auto bytes = QByteArray::fromHex(hex);
@@ -97,6 +127,7 @@ SessionBridge::SessionBridge(QObject* parent) : QObject(parent) {
   qRegisterMetaType<ui::Presentation>();
   qRegisterMetaType<ui::Telemetry>();
   qRegisterMetaType<ui::Details>();
+  qRegisterMetaType<ui::SavedServicesPresentation>();
   completionMonitor_ = new QTimer(this);
   completionMonitor_->setInterval(20);
   connect(completionMonitor_, &QTimer::timeout, this, [this] {
@@ -107,8 +138,10 @@ SessionBridge::SessionBridge(QObject* parent) : QObject(parent) {
     // Executor can cancel a queued operation before its wrapper runs. Such a
     // future must also release the GUI's busy state and deferred window close.
     if (!result && !completionPosted_->load()) {
+      QPointer<SessionBridge> guard(this);
       busy_ = false;
       emit busyChanged(false);
+      if (!guard) { return; }
       emit messageReady(result.error() == core::WorkError::Cancelled ? tr("Cancelled") : tr("Session command failed"));
     }
   });
@@ -120,18 +153,23 @@ SessionBridge::~SessionBridge() {
 }
 void SessionBridge::ready(ui::Presentation snapshot, QString message) {
   QMetaObject::invokeMethod(this, [this, snapshot = std::move(snapshot), message = std::move(message)] {
+    QPointer<SessionBridge> guard(this);
     completionMonitor_->stop();
     busy_ = false;
     emit busyChanged(false);
+    if (!guard) { return; }
     emit snapshotReady(snapshot);
+    if (!guard) { return; }
     if (!message.isEmpty()) { emit messageReady(message); }
   }, Qt::QueuedConnection);
 }
 void SessionBridge::failed(QString message) {
   QMetaObject::invokeMethod(this, [this, message = std::move(message)] {
+    QPointer<SessionBridge> guard(this);
     completionMonitor_->stop();
     busy_ = false;
     emit busyChanged(false);
+    if (!guard) { return; }
     emit messageReady(message);
   }, Qt::QueuedConnection);
 }
@@ -162,8 +200,10 @@ bool SessionBridge::dispatch(std::move_only_function<void(std::stop_token)> oper
     }
   });
   if (!submitted) {
+    QPointer<SessionBridge> guard(this);
     busy_ = false;
     emit busyChanged(false);
+    if (!guard) { return false; }
     emit messageReady(tr("The session command queue is unavailable"));
     return false;
   }
@@ -188,6 +228,37 @@ bool SessionBridge::refresh() {
     ready(host_->query(stop));
   });
 }
+bool SessionBridge::savedServices(quint64 request) {
+  if (request == 0) { return false; }
+  return dispatch([this, request](std::stop_token stop) {
+    if (!host_) { throw Failure{{storage::ErrorCode::Missing, "No profile is open"}}; }
+    auto packet = std::make_shared<ui::SavedServicesPacket>();
+    packet->request = request;
+    checkpoint(stop);
+    packet->hosting = savedResult<core::SavedHosting>(storage::readSavedHostingView(host_->lease, stop));
+    checkpoint(stop);
+    packet->sharing = savedResult<core::SavedShares>(storage::readSavedSharesView(host_->lease, stop));
+    checkpoint(stop);
+    ui::SavedServicesPresentation presentation = std::move(packet);
+    QMetaObject::invokeMethod(this, [this, presentation = std::move(presentation), stop] {
+      QPointer<SessionBridge> guard(this);
+      if (stop.stop_requested()) {
+        completionMonitor_->stop();
+        busy_ = false;
+        emit busyChanged(false);
+        if (guard) { emit messageReady(tr("Cancelled")); }
+        return;
+      }
+      // Keep busy while delivering the packet: a direct result slot must not
+      // replace current_ or dispatch another command during this completion.
+      emit savedServicesReady(presentation);
+      if (!guard) { return; }
+      completionMonitor_->stop();
+      busy_ = false;
+      emit busyChanged(false);
+    }, Qt::QueuedConnection);
+  });
+}
 bool SessionBridge::details(ui::Target target) {
   return dispatch([this, target = std::move(target)](std::stop_token stop) {
     if (!host_) { throw Failure{{storage::ErrorCode::Missing, "No profile is open"}}; }
@@ -206,9 +277,11 @@ bool SessionBridge::details(ui::Target target) {
       files->items.push_back({file.index, text(file.path), file.bytes, file.priority, file.skipped, file.padding});
     }
     QMetaObject::invokeMethod(this, [this, result = ui::Details{target, name, value.bytes, std::move(files)}] {
+      QPointer<SessionBridge> guard(this);
       completionMonitor_->stop();
       busy_ = false;
       emit busyChanged(false);
+      if (!guard) { return; }
       emit detailsReady(result);
     }, Qt::QueuedConnection);
   });

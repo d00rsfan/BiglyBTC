@@ -67,6 +67,25 @@ def prepare(root):
             paused.append({"hash": identity, "force": 0, "owner": 1})
     (profile / "downloads.config").write_bytes(encode({"downloads": downloads, "pause_data": paused}))
     (active / "cache.dat").write_bytes(gzip.compress(encode({"state": cache}), mtime=0))
+    # Saved service settings are synthetic display data. The preview never starts
+    # a tracker, scans a share, resolves a cache path or creates payload files.
+    (profile / "tracker.config").write_bytes(encode({"torrents": [
+        {"hash": cache[0]["hash"], "status": 1, "persistent": 1, "passive": 0,
+         "dateadded": 1700000000000, "torrent_file": str(active / "synthetic-host.torrent"),
+         "stats": {"completed": 3, "announces": 12, "uploaded": 65536,
+                   "downloaded": 32768, "scrapes": 4}},
+        {"hash": hashlib.sha1(b"synthetic saved statistics").digest(),
+         "persistent": 0, "passive": 0, "backup_time": 1700000000000,
+         "stats": {"completed": 1, "announces": 5, "uploaded": 16384, "downloaded": 8192}},
+    ]}))
+    (profile / "sharing.config").write_bytes(encode({"resources": [
+        {"type": 1, "file": str(payload / "Synthetic shared file.txt"),
+         "ihash": hashlib.sha1(b"synthetic file fingerprint").digest(),
+         "ifile": "synthetic-file-cache.torrent", "attributes": {"Category": "Preview"},
+         "props": {"persistent": "true"}},
+        {"type": 3, "file": str(payload / "Synthetic shared directory"), "recursive": 1,
+         "props": {"persistent": "false", "tags": "101,102"}},
+    ]}))
     return profile
 
 

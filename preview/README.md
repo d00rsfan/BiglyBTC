@@ -10,15 +10,17 @@ records. [Classic navigation source contract](docs/classic-navigation-source.jso
 pins the original menu, naming and shortcut behavior.
 
 The application is under development. Its default preview launcher creates four
-synthetic torrents in a fresh private `/tmp/biglybtc-preview-*` profile and passes
+synthetic torrents and saved hosting/sharing examples in a fresh private `/tmp/biglybtc-preview-*` profile and passes
 port0, which disables transfers. It never opens the user's `~/.biglybt` profile.
 Original-profile switching, full networking/session/plugin behavior and complete
 UI parity remain unfinished. This milestone adds the first classic shell: a
 My Torrents tab, incomplete/complete tables, name filtering and shared General/Files
 details. **View > My Torrents (Ctrl+1)** returns to the existing torrent screen
-from anywhere in the window, preserving the filter and selection. My Tracker
-and My Shares are listed with their original Ctrl+2/3 shortcuts but remain
-unavailable until their hosting/sharing services are implemented. Each torrent
+from anywhere in the window, preserving the filter and selection. **My Tracker
+(Ctrl+2)** and **My Shares (Ctrl+3)** now open read-only saved-data tabs. They
+show original-format saved configuration and recovery-source provenance without
+starting services, scanning shares or opening saved paths. Auxiliary tabs close
+and reopen; My Torrents stays available. Each torrent
 pane has its own column chooser: right-click the header, or use **View >
 Incomplete Columns / Complete Columns**. Reset Columns restores the preview
 defaults. These choices are currently kept for the window session; original
@@ -69,8 +71,8 @@ The bounded core now also projects original-format `tracker.config` and
 `sharing.config` documents, with separate read-only adapters over a held profile
 lease. It preserves unknown raw data, reports missing/invalid/recovery sources,
 and never initializes hosting/sharing services or follows saved paths. These
-primitives are tested with synthetic public inputs; service-page integration is
-still in progress. See [source and policy contract](docs/saved-hosting-sharing-source.json)
+primitives and their tab/worker integration are tested with synthetic public
+inputs. Full hosting/sharing services remain unfinished. See [source and policy contract](docs/saved-hosting-sharing-source.json)
 and `migration/fixtures/saved-services/README.md` within this preview tree.
 
 No performance improvement or full migration completion is claimed by this source

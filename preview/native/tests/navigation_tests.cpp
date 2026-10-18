@@ -97,11 +97,14 @@ private slots:
     QCOMPARE(view->actions().first(), action);
     QCOMPARE(window.mainTabs().currentWidget(), page);
     QCOMPARE(window.mainTabs().tabText(window.mainTabs().indexOf(page)), QStringLiteral("My Torrents"));
-    QVERIFY(!window.mainTabs().tabsClosable());
+    QVERIFY(window.mainTabs().tabsClosable());
+    const auto pageIndex = window.mainTabs().indexOf(page);
+    QVERIFY(!window.mainTabs().tabBar()->tabButton(pageIndex, QTabBar::LeftSide));
+    QVERIFY(!window.mainTabs().tabBar()->tabButton(pageIndex, QTabBar::RightSide));
     for (int number = 2; number <= 3; ++number) {
       auto* unavailable = window.findChild<QAction*>(number == 2 ? QStringLiteral("classic-my-tracker") : QStringLiteral("classic-my-shares"));
       QVERIFY(unavailable);
-      QVERIFY(!unavailable->isEnabled());
+      QVERIFY(unavailable->isEnabled());
       QCOMPARE(unavailable->shortcut(), QKeySequence(QStringLiteral("Ctrl+%1").arg(number)));
     }
   }
@@ -345,8 +348,11 @@ private slots:
     QCOMPARE(window.mainTabs().currentWidget(), torrentsPage(window));
     QVERIFY(!window.continueAction().isEnabled());
     QCOMPARE(window.cancelAction().isEnabled(), busy);
-    const QStringList unavailable{QStringLiteral("classic-my-tracker"), QStringLiteral("classic-my-shares"),
-        QStringLiteral("classic-open"), QStringLiteral("classic-search"), QStringLiteral("classic-start-stop"), QStringLiteral("classic-remove")};
+    for (const auto& name : {QStringLiteral("classic-my-tracker"), QStringLiteral("classic-my-shares")}) {
+      auto* savedView = window.findChild<QAction*>(name);
+      QVERIFY(savedView && savedView->isEnabled());
+    }
+    const QStringList unavailable{QStringLiteral("classic-open"), QStringLiteral("classic-search"), QStringLiteral("classic-start-stop"), QStringLiteral("classic-remove")};
     for (const auto& name : unavailable) {
       auto* unsupported = window.findChild<QAction*>(name);
       QVERIFY2(unsupported, qPrintable(name));

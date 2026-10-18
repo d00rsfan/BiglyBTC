@@ -45,11 +45,13 @@ int main(int argc, char** argv) {
     QObject::connect(&bridge, &Bridge::snapshotReady, &window, &Window::setPresentation);
     QObject::connect(&bridge, &Bridge::progressReady, &window, &Window::setTelemetry);
     QObject::connect(&bridge, &Bridge::detailsReady, &window, &Window::setDetails);
+    QObject::connect(&bridge, &Bridge::savedServicesReady, &window, &Window::setSavedServices);
     QObject::connect(&bridge, &Bridge::busyChanged, &window, &Window::setBusy);
     QObject::connect(&bridge, &Bridge::messageReady, &window, &Window::setMessage);
     QObject::connect(&window, &Window::refreshRequested, &bridge, &Bridge::refresh);
     QObject::connect(&window, &Window::continueRequested, &bridge, &Bridge::continueDownload);
     QObject::connect(&window, &Window::detailsRequested, &bridge, &Bridge::details);
+    QObject::connect(&window, &Window::savedServicesRequested, &bridge, &Bridge::savedServices);
     QObject::connect(&window, &Window::cancelRequested, &bridge, &Bridge::cancel);
     bridge.open(profile, static_cast<unsigned short>(port));
     window.show();

@@ -28,11 +28,13 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
   QObject::connect(&bridge, &app::SessionBridge::snapshotReady, &window, &ui::LibraryWindow::setPresentation);
   QObject::connect(&bridge, &app::SessionBridge::progressReady, &window, &ui::LibraryWindow::setTelemetry);
   QObject::connect(&bridge, &app::SessionBridge::detailsReady, &window, &ui::LibraryWindow::setDetails);
+  QObject::connect(&bridge, &app::SessionBridge::savedServicesReady, &window, &ui::LibraryWindow::setSavedServices);
   QObject::connect(&bridge, &app::SessionBridge::busyChanged, &window, &ui::LibraryWindow::setBusy);
   QObject::connect(&bridge, &app::SessionBridge::messageReady, &window, &ui::LibraryWindow::setMessage);
   QObject::connect(&window, &ui::LibraryWindow::refreshRequested, &bridge, &app::SessionBridge::refresh);
   QObject::connect(&window, &ui::LibraryWindow::continueRequested, &bridge, &app::SessionBridge::continueDownload);
   QObject::connect(&window, &ui::LibraryWindow::detailsRequested, &bridge, &app::SessionBridge::details);
+  QObject::connect(&window, &ui::LibraryWindow::savedServicesRequested, &bridge, &app::SessionBridge::savedServices);
   QObject::connect(&window, &ui::LibraryWindow::cancelRequested, &bridge, &app::SessionBridge::cancel);
 }
 } // namespace
@@ -55,6 +57,8 @@ private slots:
 
     QMap<QString, QByteArray> original;
     original.insert(profile + QStringLiteral("/downloads.config"), {});
+    original.insert(profile + QStringLiteral("/tracker.config"), {});
+    original.insert(profile + QStringLiteral("/sharing.config"), {});
     original.insert(profile + QStringLiteral("/active/cache.dat"), {});
     const QDir active(profile + QStringLiteral("/active"));
     const auto states = active.entryList({QStringLiteral("*.dat")}, QDir::Files);
@@ -76,6 +80,7 @@ private slots:
     constexpr std::array<int, 4> fileCounts{1, 2, 2, 1};
 
     ui::LibraryWindow window;
+    window.setOfflinePreview(true);
     app::SessionBridge bridge;
     wire(window, bridge);
     QSignalSpy snapshots(&bridge, &app::SessionBridge::snapshotReady);
@@ -147,6 +152,65 @@ private slots:
       QVERIFY(!image.exists());
       QVERIFY(window.grab().save(capture));
     }
+    QSignalSpy saved(&bridge, &app::SessionBridge::savedServicesReady);
+    const auto detailCount = details.count();
+    const auto libraryCount = snapshots.count();
+    window.activateWindow();
+    QTRY_VERIFY(window.isActiveWindow());
+    window.filesTable().setFocus();
+    QTRY_VERIFY(window.filesTable().hasFocus());
+    QTest::keyClick(&window.filesTable(), Qt::Key_2, Qt::ControlModifier);
+    QTRY_VERIFY_WITH_TIMEOUT(window.hostingPage() && window.hostingPage()->state() == ui::SavedPageState::Ready
+        && !bridge.busy() && saved.count() == 1, 30000);
+    auto* hosting = window.hostingPage();
+    QCOMPARE(window.mainTabs().currentWidget(), hosting);
+    QCOMPARE(hosting->model().rowCount(), 2);
+    QCOMPARE(hosting->model().data(hosting->model().index(0, 1)).toString(), QStringLiteral("Persistent host"));
+    QCOMPARE(hosting->model().data(hosting->model().index(0, 2)).toString(), QStringLiteral("Stopped"));
+    QCOMPARE(hosting->model().data(hosting->model().index(1, 1)).toString(), QStringLiteral("Statistics backup"));
+    QCOMPARE(hosting->provenanceText(), QStringLiteral("Source: Primary"));
+    QVERIFY(!window.filesAction().isEnabled());
+    QVERIFY(!window.continueAction().isEnabled());
+    if (!capture.isEmpty()) {
+      const auto path = root.filePath(QStringLiteral("my-tracker-preview.png"));
+      QVERIFY(!QFileInfo::exists(path));
+      QVERIFY(window.grab().save(path));
+    }
+    QTest::keyClick(&hosting->table(), Qt::Key_3, Qt::ControlModifier);
+    QTRY_VERIFY_WITH_TIMEOUT(window.sharesPage() && window.sharesPage()->state() == ui::SavedPageState::Ready
+        && hosting->state() == ui::SavedPageState::Ready && !bridge.busy() && saved.count() == 2, 30000);
+    auto* shares = window.sharesPage();
+    QCOMPARE(window.mainTabs().currentWidget(), shares);
+    QCOMPARE(window.mainTabs().count(), 3);
+    QCOMPARE(shares->model().rowCount(), 2);
+    QCOMPARE(shares->model().data(shares->model().index(0, 0)).toString(), payload.filePath(QStringLiteral("Synthetic shared file.txt")));
+    QCOMPARE(shares->model().data(shares->model().index(0, 1)).toString(), QStringLiteral("File"));
+    QCOMPARE(shares->model().data(shares->model().index(0, 2)).toString(), QStringLiteral("Preview"));
+    QCOMPARE(shares->model().data(shares->model().index(0, 3), Qt::UserRole).toBool(), true);
+    QCOMPARE(shares->model().data(shares->model().index(1, 1)).toString(), QStringLiteral("Directory contents"));
+    QCOMPARE(shares->model().data(shares->model().index(1, 4), Qt::UserRole).toBool(), true);
+    QCOMPARE(shares->model().data(shares->model().index(1, 5)).toString(), QStringLiteral("101,102"));
+    QCOMPARE(shares->provenanceText(), QStringLiteral("Source: Primary"));
+    if (!capture.isEmpty()) {
+      const auto path = root.filePath(QStringLiteral("my-shares-preview.png"));
+      QVERIFY(!QFileInfo::exists(path));
+      QVERIFY(window.grab().save(path));
+    }
+    shares->table().setFocus();
+    QTRY_VERIFY(shares->table().hasFocus());
+    QTest::keyClick(&shares->table(), Qt::Key_I, Qt::ControlModifier);
+    QTest::keyClick(&shares->table(), Qt::Key_R, Qt::ControlModifier);
+    QTest::keyClick(&shares->table(), Qt::Key_F5);
+    QTRY_VERIFY_WITH_TIMEOUT(saved.count() == 3 && shares->state() == ui::SavedPageState::Ready
+        && hosting->state() == ui::SavedPageState::Ready && !bridge.busy(), 30000);
+    QCOMPARE(details.count(), detailCount);
+    QCOMPARE(snapshots.count(), libraryCount);
+    QCOMPARE(window.model().rowCount(), 4);
+    QTest::keyClick(&shares->table(), Qt::Key_1, Qt::ControlModifier);
+    QTRY_COMPARE(window.mainTabs().currentWidget(), window.findChild<QWidget*>(QStringLiteral("classic-my-torrents-page")));
+    QVERIFY(window.filesAction().isEnabled());
+    QVERIFY(!window.continueAction().isEnabled());
+    QVERIFY(window.filesModel().target()->hash == selected->hash);
     QVERIFY(window.close());
     QVERIFY(!window.isVisible());
     for (auto it = original.cbegin(); it != original.cend(); ++it) { QCOMPARE(bytes(it.key()), it.value()); }

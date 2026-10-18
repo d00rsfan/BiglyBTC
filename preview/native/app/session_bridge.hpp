@@ -2,6 +2,7 @@
 
 #include "biglybtc/executor.hpp"
 #include "library_model.hpp"
+#include "saved_services_presentation.hpp"
 
 #include <QObject>
 
@@ -20,6 +21,7 @@ public:
   ~SessionBridge() override;
   bool open(std::filesystem::path profile, unsigned short ownedPeerPort);
   bool refresh();
+  bool savedServices(quint64 request);
   bool details(ui::Target target);
   bool continueDownload(ui::Target target);
   void cancel();
@@ -28,6 +30,7 @@ signals:
   void snapshotReady(biglybtc::ui::Presentation);
   void progressReady(biglybtc::ui::Telemetry);
   void detailsReady(biglybtc::ui::Details);
+  void savedServicesReady(biglybtc::ui::SavedServicesPresentation);
   void busyChanged(bool);
   void messageReady(QString);
 private:

@@ -20,10 +20,13 @@
 #include <QStatusBar>
 #include <QStyle>
 #include <QTableView>
+#include <QTabBar>
 #include <QTabWidget>
 #include <QTimer>
 #include <QToolBar>
 #include <QVBoxLayout>
+
+#include <limits>
 
 namespace biglybtc::ui {
 namespace {
@@ -36,6 +39,19 @@ QLabel* field(QWidget* parent) {
   value->setTextInteractionFlags(Qt::TextSelectableByMouse | Qt::TextSelectableByKeyboard);
   value->setWordWrap(true);
   return value;
+}
+template<typename Page, typename Result>
+void applySavedResult(Page& page, quint64 request, const Result& result) {
+  if (page.generation() != request || page.state() != SavedPageState::Loading) { return; }
+  switch (result.state) {
+    case SavedPageState::Ready:
+      if (result.source && result.snapshot) { page.setReady(request, result.snapshot, *result.source); }
+      else { page.setFailed(request, QObject::tr("Saved configuration result is incomplete")); }
+      break;
+    case SavedPageState::Missing: page.setMissing(request); break;
+    case SavedPageState::Failed: page.setFailed(request, result.failure); break;
+    default: page.setFailed(request, QObject::tr("Saved configuration result has an invalid state")); break;
+  }
 }
 }
 
@@ -157,6 +173,8 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   content->setSizes({540, 200});
   layout->addWidget(content);
   mainTabs_->addTab(library, tr("My Torrents"));
+  mainTabs_->setTabsClosable(true);
+  hideTorrentsCloseButton();
   setCentralWidget(mainTabs_);
   connect(filter_, &QLineEdit::textChanged, this, [this](const QString& value) {
     const auto hashes = selectedHashes();
@@ -165,8 +183,9 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     static_cast<ClassicFilter*>(completeTable_->model())->setQuery(value);
     restoreSelection(hashes);
     updating_ = false;
+    QPointer<LibraryWindow> guard(this);
     selectionChanged();
-    updateCounts();
+    if (guard) { updateCounts(); }
   });
   message_->setTextFormat(Qt::PlainText);
   message_->setAccessibleName(tr("Client status"));
@@ -222,10 +241,16 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   myTorrents->setShortcut(QKeySequence(QStringLiteral("Ctrl+1")));
   myTorrents->setShortcutContext(Qt::WindowShortcut);
   connect(myTorrents, &QAction::triggered, this, &LibraryWindow::showMyTorrents);
-  auto* myTracker = unavailable(view, tr("My &Tracker"), QStringLiteral("my-tracker"), QStyle::SP_DriveNetIcon);
+  auto* myTracker = view->addAction(tr("My &Tracker"));
+  myTracker->setObjectName(QStringLiteral("classic-my-tracker"));
   myTracker->setShortcut(QKeySequence(QStringLiteral("Ctrl+2")));
-  auto* myShares = unavailable(view, tr("My &Shares"), QStringLiteral("my-shares"), QStyle::SP_DirIcon);
+  myTracker->setShortcutContext(Qt::WindowShortcut);
+  connect(myTracker, &QAction::triggered, this, &LibraryWindow::showMyTracker);
+  auto* myShares = view->addAction(tr("My &Shares"));
+  myShares->setObjectName(QStringLiteral("classic-my-shares"));
   myShares->setShortcut(QKeySequence(QStringLiteral("Ctrl+3")));
+  myShares->setShortcutContext(Qt::WindowShortcut);
+  connect(myShares, &QAction::triggered, this, &LibraryWindow::showMyShares);
   auto* toolbarVisibility = toolbar->toggleViewAction();
   toolbarVisibility->setText(tr("Toolbar"));
   toolbarVisibility->setObjectName(QStringLiteral("classic-show-toolbar"));
@@ -242,6 +267,9 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   refresh_->setObjectName(QStringLiteral("classic-refresh"));
   refresh_->setShortcut(QKeySequence(Qt::Key_F5));
   connect(refresh_, &QAction::triggered, this, [this] {
+    if (closing_) { return; }
+    if (onSavedServicePage()) { refreshSavedServices(); return; }
+    if (mainTabs_->currentWidget() != torrentsPage_ || busy_) { return; }
     suppressAutomaticDetails_ = false;
     detailsRequestedFor_.reset();
     emit refreshRequested();
@@ -253,7 +281,14 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   });
   auto* focusFilter = view->addAction(tr("Filter torrents"));
   focusFilter->setShortcut(QKeySequence::Find);
-  connect(focusFilter, &QAction::triggered, filter_, [this] { filter_->setFocus(); filter_->selectAll(); });
+  connect(focusFilter, &QAction::triggered, this, [this] {
+    if (closing_) { return; }
+    QPointer<LibraryWindow> guard(this);
+    showMyTorrents();
+    if (!guard) { return; }
+    filter_->setFocus();
+    if (guard) { filter_->selectAll(); }
+  });
   torrent->addSeparator();
   continue_ = torrent->addAction(tr("&Continue"));
   continue_->setObjectName(QStringLiteral("classic-continue"));
@@ -275,8 +310,9 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     const bool showing = detailTabs_->currentIndex() == 1;
     suppressAutomaticDetails_ = false;
     if (!showing) { detailsRequestedFor_.reset(); }
+    QPointer<LibraryWindow> guard(this);
     detailTabs_->setCurrentIndex(1);
-    requestDetails(showing);
+    if (guard) { requestDetails(showing); }
   });
   connect(continue_, &QAction::triggered, this, [this] {
     const auto target = actionTarget();
@@ -289,6 +325,11 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   connect(model_, &QAbstractItemModel::dataChanged, this, [this] {
     if (!updating_) { updateActions(); updateGeneral(); updateCounts(); }
   });
+  connect(mainTabs_, &QTabWidget::tabCloseRequested, this, &LibraryWindow::closeAuxiliaryPage);
+  connect(mainTabs_, &QTabWidget::currentChanged, this, [this] {
+    updateActions();
+    if (mainTabs_->currentWidget() == torrentsPage_) { selectionChanged(); }
+  });
   updateActions();
   updateGeneral();
   updateCounts();
@@ -297,8 +338,115 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
 
 void LibraryWindow::showMyTorrents() {
   if (closing_) { return; }
+  QPointer<LibraryWindow> guard(this);
   mainTabs_->setCurrentWidget(torrentsPage_);
+  if (!guard) { return; }
   activeTable_->setFocus(Qt::ShortcutFocusReason);
+  if (guard) { selectionChanged(); }
+}
+void LibraryWindow::showMyTracker() {
+  if (closing_) { return; }
+  QPointer<LibraryWindow> guard(this);
+  const bool fresh = !hostingPage_;
+  if (fresh) {
+    hostingPage_ = new SavedHostingPage(mainTabs_);
+    mainTabs_->addTab(hostingPage_.data(), tr("My Tracker"));
+    if (!guard) { return; }
+    hideTorrentsCloseButton();
+  }
+  mainTabs_->setCurrentWidget(hostingPage_.data());
+  if (!guard) { return; }
+  hostingPage_->table().setFocus(Qt::ShortcutFocusReason);
+  if (guard && fresh) { refreshSavedServices(); }
+}
+void LibraryWindow::showMyShares() {
+  if (closing_) { return; }
+  QPointer<LibraryWindow> guard(this);
+  const bool fresh = !sharesPage_;
+  if (fresh) {
+    sharesPage_ = new SavedSharesPage(mainTabs_);
+    mainTabs_->addTab(sharesPage_.data(), tr("My Shares"));
+    if (!guard) { return; }
+    hideTorrentsCloseButton();
+  }
+  mainTabs_->setCurrentWidget(sharesPage_.data());
+  if (!guard) { return; }
+  sharesPage_->table().setFocus(Qt::ShortcutFocusReason);
+  if (guard && fresh) { refreshSavedServices(); }
+}
+void LibraryWindow::hideTorrentsCloseButton() {
+  const int index = mainTabs_->indexOf(torrentsPage_);
+  if (index < 0) { return; }
+  mainTabs_->tabBar()->setTabButton(index, QTabBar::LeftSide, nullptr);
+  mainTabs_->tabBar()->setTabButton(index, QTabBar::RightSide, nullptr);
+}
+void LibraryWindow::closeAuxiliaryPage(int index) {
+  QPointer<QWidget> page(mainTabs_->widget(index));
+  if (!page || page == torrentsPage_) { return; }
+  if (page == hostingPage_.data()) { hostingPage_.clear(); }
+  else if (page == sharesPage_.data()) { sharesPage_.clear(); }
+  else { return; }
+  QPointer<LibraryWindow> guard(this);
+  mainTabs_->removeTab(index);
+  if (!guard) { return; }
+  if (page) { page->deleteLater(); }
+  if (pendingSavedRequest_ && !hasLoadingServices(*pendingSavedRequest_)) { pendingSavedRequest_.reset(); }
+  hideTorrentsCloseButton();
+  updateActions();
+  queueSavedServices();
+}
+bool LibraryWindow::onSavedServicePage() const {
+  const auto* current = mainTabs_->currentWidget();
+  return (hostingPage_ && current == hostingPage_.data()) || (sharesPage_ && current == sharesPage_.data());
+}
+bool LibraryWindow::hasLoadingServices(quint64 request) const {
+  return (hostingPage_ && hostingPage_->generation() == request && hostingPage_->state() == SavedPageState::Loading)
+      || (sharesPage_ && sharesPage_->generation() == request && sharesPage_->state() == SavedPageState::Loading);
+}
+void LibraryWindow::refreshSavedServices() {
+  if (closing_ || (!hostingPage_ && !sharesPage_)) { return; }
+  if (savedRequest_ == std::numeric_limits<quint64>::max()) {
+    setMessage(tr("Saved-view request counter exhausted"));
+    return;
+  }
+  const auto request = ++savedRequest_;
+  QPointer<LibraryWindow> guard(this);
+  if (hostingPage_) { hostingPage_->beginRequest(request); }
+  if (!guard || savedRequest_ != request) { return; }
+  if (sharesPage_) { sharesPage_->beginRequest(request); }
+  if (!guard || savedRequest_ != request) { return; }
+  pendingSavedRequest_ = request;
+  queueSavedServices();
+}
+void LibraryWindow::queueSavedServices() {
+  if (savedDispatchQueued_ || closing_ || busy_ || activeSavedRequest_ || !pendingSavedRequest_) { return; }
+  savedDispatchQueued_ = true;
+  QTimer::singleShot(0, this, [this] {
+    savedDispatchQueued_ = false;
+    if (closing_ || busy_ || activeSavedRequest_ || !pendingSavedRequest_) { return; }
+    const auto request = *pendingSavedRequest_;
+    pendingSavedRequest_.reset();
+    if (!hasLoadingServices(request)) { return; }
+    activeSavedRequest_ = request;
+    emit savedServicesRequested(request);
+  });
+}
+void LibraryWindow::failSavedServices(quint64 request, const QString& message) {
+  QPointer<LibraryWindow> guard(this);
+  if (hostingPage_) { hostingPage_->setFailed(request, message); }
+  if (!guard) { return; }
+  if (sharesPage_) { sharesPage_->setFailed(request, message); }
+}
+void LibraryWindow::setSavedServices(SavedServicesPresentation packet) {
+  if (!packet || !activeSavedRequest_ || packet->request != *activeSavedRequest_) { return; }
+  activeSavedRequest_.reset();
+  if (closing_) { return; }
+  QPointer<LibraryWindow> guard(this);
+  if (hostingPage_) { applySavedResult(*hostingPage_, packet->request, packet->hosting); }
+  if (!guard) { return; }
+  if (sharesPage_) { applySavedResult(*sharesPage_, packet->request, packet->sharing); }
+  if (!guard) { return; }
+  queueSavedServices();
 }
 
 void LibraryWindow::setOfflinePreview(bool offline) {
@@ -327,6 +475,7 @@ std::optional<Target> LibraryWindow::selected() const {
   return source.isValid() ? model_->targetAt(source.row()) : std::nullopt;
 }
 std::optional<Target> LibraryWindow::actionTarget() const {
+  if (mainTabs_->currentWidget() != torrentsPage_) { return std::nullopt; }
   const auto target = selected();
   return contextOpen_ && target != contextTarget_ ? std::nullopt : target;
 }
@@ -383,8 +532,9 @@ void LibraryWindow::updateActions() {
   const auto target = actionTarget();
   continue_->setEnabled(!busy_ && !closing_ && target && model_->canContinue(*target));
   cancel_->setEnabled(busy_ && !closing_);
-  refresh_->setEnabled(!busy_ && !closing_);
+  refresh_->setEnabled(!closing_ && (onSavedServicePage() || (!busy_ && mainTabs_->currentWidget() == torrentsPage_)));
   files_->setEnabled(!busy_ && !closing_ && target.has_value());
+  padding_->setEnabled(!closing_ && mainTabs_->currentWidget() == torrentsPage_);
 }
 void LibraryWindow::selectionChanged() {
   if (updating_) { return; }
@@ -402,7 +552,7 @@ void LibraryWindow::selectionChanged() {
   if (target && (detailTabs_->currentIndex() == 1 || !model_->hasDetails(*target))) { requestDetails(); }
 }
 void LibraryWindow::requestDetails(bool force) {
-  if (busy_ || closing_ || (suppressAutomaticDetails_ && !force)) { return; }
+  if (mainTabs_->currentWidget() != torrentsPage_ || busy_ || closing_ || (suppressAutomaticDetails_ && !force)) { return; }
   const auto target = selected();
   if (!target || (!force && detailsRequestedFor_ == target)) { return; }
   detailsRequestedFor_ = target;
@@ -420,8 +570,9 @@ void LibraryWindow::setPresentation(const Presentation& snapshot) {
   if (!applied) { return; }
   if (hashes.size() == 1 && selected() && hashes.front() == selected()->hash && fileIndex) { restoreFileIndex_ = fileIndex; }
   setMessage(model_->rowCount() == 1 ? tr("1 torrent") : tr("%1 torrents").arg(model_->rowCount()));
+  QPointer<LibraryWindow> guard(this);
   selectionChanged();
-  updateCounts();
+  if (guard) { updateCounts(); }
 }
 void LibraryWindow::setTelemetry(const Telemetry& update) {
   const auto hashes = selectedHashes();
@@ -429,7 +580,12 @@ void LibraryWindow::setTelemetry(const Telemetry& update) {
   const bool applied = model_->apply(update);
   if (applied) { restoreSelection(hashes); }
   updating_ = false;
-  if (applied) { setMessage(update.state); selectionChanged(); updateCounts(); }
+  if (applied) {
+    setMessage(update.state);
+    QPointer<LibraryWindow> guard(this);
+    selectionChanged();
+    if (guard) { updateCounts(); }
+  }
 }
 void LibraryWindow::setDetails(const Details& details) {
   const auto hashes = selectedHashes();
@@ -438,7 +594,9 @@ void LibraryWindow::setDetails(const Details& details) {
   if (applied) { restoreSelection(hashes); }
   updating_ = false;
   if (!applied) { return; }
+  QPointer<LibraryWindow> guard(this);
   selectionChanged();
+  if (!guard) { return; }
   const auto target = selected();
   if (target && *target == details.target && details.files) {
     const auto index = filesTable_->currentIndex();
@@ -457,20 +615,36 @@ void LibraryWindow::setMessage(const QString& message) { message_->setText(messa
 void LibraryWindow::setBusy(bool value) {
   busy_ = value;
   updateActions();
-  if (!busy_ && closing_) { QTimer::singleShot(0, this, &QWidget::close); }
-  else if (!busy_ && (detailTabs_->currentIndex() == 1 || (selected() && !model_->hasDetails(*selected())))) {
+  if (busy_) { return; }
+  QPointer<LibraryWindow> guard(this);
+  if (activeSavedRequest_) {
+    const auto request = *activeSavedRequest_;
+    activeSavedRequest_.reset();
+    failSavedServices(request, tr("Saved configuration request did not complete"));
+    if (!guard) { return; }
+  }
+  if (closing_) {
+    pendingSavedRequest_.reset();
+    QTimer::singleShot(0, this, &QWidget::close);
+    return;
+  }
+  queueSavedServices();
+  if (mainTabs_->currentWidget() == torrentsPage_
+      && (detailTabs_->currentIndex() == 1 || (selected() && !model_->hasDetails(*selected())))) {
     QTimer::singleShot(0, this, [this] { requestDetails(); });
   }
 }
 void LibraryWindow::closeEvent(QCloseEvent* event) {
+  closing_ = true;
+  pendingSavedRequest_.reset();
+  updateActions();
   if (busy_) {
-    closing_ = true;
-    updateActions();
     setMessage(tr("Finishing current operation…"));
-    emit cancelRequested();
     event->ignore();
+    emit cancelRequested();
     return;
   }
+  activeSavedRequest_.reset();
   QMainWindow::closeEvent(event);
 }
 void LibraryWindow::popup(QTableView* table, const QPoint& point) {
@@ -478,21 +652,25 @@ void LibraryWindow::popup(QTableView* table, const QPoint& point) {
   const auto index = table->indexAt(point);
   if (!index.isValid()) { table->selectionModel()->clear(); }
   if (index.isValid() && !table->selectionModel()->isSelected(index)) { table->setCurrentIndex(index); }
+  QPointer<LibraryWindow> guard(this);
   selectionChanged();
+  if (!guard) { return; }
   contextTarget_ = selected();
   contextOpen_ = true;
   updateActions();
-  QMenu menu(this);
-  menu.addAction(findChild<QAction*>(QStringLiteral("classic-launch")));
-  menu.addAction(findChild<QAction*>(QStringLiteral("classic-start-stop")));
-  menu.addAction(findChild<QAction*>(QStringLiteral("classic-remove")));
-  menu.addSeparator();
-  menu.addAction(continue_);
-  menu.addAction(cancel_);
-  menu.addAction(files_);
-  menu.addSeparator();
-  menu.addAction(refresh_);
-  menu.exec(table->viewport()->mapToGlobal(point));
+  QPointer<QMenu> menu(new QMenu(this));
+  menu->addAction(findChild<QAction*>(QStringLiteral("classic-launch")));
+  menu->addAction(findChild<QAction*>(QStringLiteral("classic-start-stop")));
+  menu->addAction(findChild<QAction*>(QStringLiteral("classic-remove")));
+  menu->addSeparator();
+  menu->addAction(continue_);
+  menu->addAction(cancel_);
+  menu->addAction(files_);
+  menu->addSeparator();
+  menu->addAction(refresh_);
+  menu->exec(table->viewport()->mapToGlobal(point));
+  if (!guard) { return; }
+  if (menu) { menu->deleteLater(); }
   contextOpen_ = false;
   contextTarget_.reset();
   updateActions();

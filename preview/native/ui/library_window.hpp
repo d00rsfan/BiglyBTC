@@ -2,8 +2,10 @@
 
 #include "library_model.hpp"
 #include "file_model.hpp"
+#include "saved_services_presentation.hpp"
 
 #include <QMainWindow>
+#include <QPointer>
 
 class QAction;
 class QLabel;
@@ -37,11 +39,15 @@ public:
   void setPresentation(const Presentation&);
   void setTelemetry(const Telemetry&);
   void setDetails(const Details&);
+  SavedHostingPage* hostingPage() const { return hostingPage_.data(); }
+  SavedSharesPage* sharesPage() const { return sharesPage_.data(); }
+  void setSavedServices(SavedServicesPresentation);
   void setBusy(bool);
   void setMessage(const QString&);
   void setOfflinePreview(bool);
 signals:
   void refreshRequested();
+  void savedServicesRequested(quint64 request);
   void continueRequested(biglybtc::ui::Target);
   void detailsRequested(biglybtc::ui::Target);
   void cancelRequested();
@@ -55,6 +61,15 @@ private:
   void restoreSelection(const QStringList&, bool initial = false);
   void activate(QTableView*);
   void showMyTorrents();
+  void showMyTracker();
+  void showMyShares();
+  void closeAuxiliaryPage(int index);
+  void hideTorrentsCloseButton();
+  bool onSavedServicePage() const;
+  bool hasLoadingServices(quint64 request) const;
+  void refreshSavedServices();
+  void queueSavedServices();
+  void failSavedServices(quint64 request, const QString& message);
   void updateGeneral();
   void updateCounts();
   void updateActions();
@@ -67,6 +82,12 @@ private:
   QTableView* activeTable_;
   QTabWidget* mainTabs_;
   QWidget* torrentsPage_;
+  QPointer<SavedHostingPage> hostingPage_;
+  QPointer<SavedSharesPage> sharesPage_;
+  quint64 savedRequest_ = 0;
+  std::optional<quint64> activeSavedRequest_;
+  std::optional<quint64> pendingSavedRequest_;
+  bool savedDispatchQueued_ = false;
   QTabWidget* detailTabs_;
   QLineEdit* filter_;
   QSplitter* splitter_;
