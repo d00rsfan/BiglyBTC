@@ -3,9 +3,18 @@
 Experimental C++23/Qt migration of BiglyBT with the goal of reusing original
 configuration, torrent/resume and incomplete download files without conversion.
 The complete native application is still under development; this repository
-currently publishes the independently buildable native **plugin SDK foundation**
-and optional bounded **C++23 core library**.
-It is not a replacement client release.
+publishes the independently buildable native **plugin SDK foundation**,
+optional bounded **C++23 core library**, and the first **classic desktop preview**
+in [preview/](preview).
+Full client behavior and seamless original-profile switching remain under development.
+
+The classic preview has separate incomplete/complete tables, a name filter and
+shared General/Files details. Its default launcher uses generated sample data
+with transfers disabled. See [build instructions](preview/README.md),
+[verified milestone](milestones/classic-preview-20261018.json) and
+[hosted desktop checks](https://github.com/d00rsfan/BiglyBTC/actions/workflows/native-preview.yml).
+The existing root SDK build remains the default; build the desktop from
+`preview/native`. Keep local build outputs under `build/desktop`.
 
 The source application and its running profile are kept separate from development
 tests. Native plugin repositories retain their original runtime IDs. Native

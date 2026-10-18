@@ -38,7 +38,7 @@
     "core/src/state_cache.cpp": "b73688291e949eb592b0e12281e79bf19dc1000a4f5b9d80f6a06a63238e4fc2",
     "core/src/torrent_layout.cpp": "58e6961c5136d1a5f9adf860748a9b3e645fe0ff05ccb50836f339a636ce072d",
     "core/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
-    "README.md": "a77860e1d445279c55854017fd3d1ea85b2083d4109acd161afb3c1b2e516362",
+    "README.md": "d084086853e3cebc01d8138e42b111698656a304564c0da3e80b841014ab1c21",
     "CMakeLists.txt": "009e619cac5bbdf7b315352669899426d40f67133de1efdd525045e45bfd4995",
     ".github/workflows/plugin-sdk.yml": "e3000fd72c283348e7e1846e7b64b61898e39e3800e4646ffefcef0d26b0e183"
   },
@@ -50,5 +50,13 @@
     "runner": "GitHub-hosted ubuntu-24.04",
     "mode": "push, pull_request, workflow_dispatch",
     "note": "Workflow registered; this manifest does not assert a successful remote run."
-  }
+  },
+  "documentation_updates": [
+    {
+      "scope": "Document the separately exported classic desktop preview; SDK/core source is unchanged",
+      "preview_source_commit": "b4f6c11a9298a3c4a250af5d40e9dc8b13efa715",
+      "readme_before_sha256": "a77860e1d445279c55854017fd3d1ea85b2083d4109acd161afb3c1b2e516362",
+      "readme_after_sha256": "d084086853e3cebc01d8138e42b111698656a304564c0da3e80b841014ab1c21"
+    }
+  ]
 }

@@ -1,0 +1,45 @@
+{
+  "milestone": "First classic desktop preview",
+  "date": "2026-10-18",
+  "source_commit": "b4f6c11a9298a3c4a250af5d40e9dc8b13efa715",
+  "original_java_reference_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "private_implementation_commit": "6cf866049af6b1258a4e365a3b39daf06dfdcaca",
+  "source_provenance": "PREVIEW_PROVENANCE.json",
+  "qualified_scope": [
+    "Classic Library tab with split incomplete/complete tables",
+    "Literal case-insensitive name filter",
+    "Shared General/Files details and focused-table identity routing",
+    "Single-target actions disabled for hidden/stale/multiple selections",
+    "Offline generated-sample launch; unsupported actions disabled"
+  ],
+  "local_checks": {
+    "fresh_independent_sibling_build": true,
+    "native_unit_ctests_passed": 23,
+    "classic_qt_rows_including_init_cleanup_passed": 25,
+    "preview_smoke_passed": true,
+    "offscreen_scale_factors": [
+      1,
+      1.5,
+      2
+    ],
+    "actual_wayland_launch": true,
+    "inet_sockets_at_observation": 0
+  },
+  "hosted_checks": {
+    "platform": "ubuntu-26.04 amd64",
+    "desktop_run": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39108187421",
+    "desktop_result": "success",
+    "native_unit_ctests_passed": 23,
+    "offline_smoke_result": "success",
+    "sdk_run": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39108187428",
+    "sdk_result": "success"
+  },
+  "runtime": "C++23, qualified GCC16/libstdc++16 and Qt6.12.0; libtorrent2.0.12",
+  "remaining": [
+    "Complete classic actions/settings/column preferences and DND-aware completion",
+    "Complete client/plugins and original-profile switching",
+    "Manual desktop/accessibility walkthrough",
+    "Equivalent-workload performance qualification"
+  ],
+  "binary_release": false
+}
