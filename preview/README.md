@@ -110,9 +110,10 @@ original-layout fallback. **View > Save current column layout** writes both pane
 It preserves original Java table/plugin records and checks the primary file against
 the last successful layout read before saving. Edits made during a save stay local
 and unsaved. There is no automatic save on resize, Reset or window close.
-Name keeps its responsive width. Missing files, recovery-derived loads, unknown
-private versions and changed baselines must be resolved before this first writer
-can save. Java’s Reset All Tables command erases the private map; ordinary pinned Java
+Name keeps its responsive width. If all three `tables.config` candidates are
+absent, explicit Save creates the first layout with a no-overwrite publication.
+Recovery-derived loads, unknown private versions and changed baselines require
+resolution before saving. Java’s Reset All Tables command erases the private map; ordinary pinned Java
 map saves retain it semantically. See the [native preference contract](docs/classic-preferences-contract.json).
 The default sample launcher still creates a fresh temporary profile on every launch. This maps layout IDs, without claiming Java's
 registered defaults, plugin columns, full settings or row-sort equivalence. See the

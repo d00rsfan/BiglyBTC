@@ -145,4 +145,37 @@ std::expected<std::shared_ptr<const core::Document>, Error> saveClassicPreferenc
   }
 }
 
+
+std::expected<std::shared_ptr<const core::Document>, Error> createClassicPreferencesView(
+    const ProfileLease& lease, const core::ClassicPreferences& preferences,
+    std::stop_token stop, void (*observer)(SaveStage)) {
+  try {
+    if (stop.stop_requested()) { return std::unexpected(Error{ErrorCode::Cancelled, "Native classic column preference creation cancelled"}); }
+    if (!lease.valid()) {
+      return std::unexpected(Error{ErrorCode::UnsafePath, "Held profile lease required to create native classic column preferences"});
+    }
+    const auto valid = core::validateClassicPreferences(preferences);
+    if (!valid) { return std::unexpected(preferenceError(valid.error())); }
+    auto empty = core::Document::parse("de", core::Limits{});
+    if (!empty) {
+      return std::unexpected(Error{ErrorCode::InvalidFormat, "Unable to prepare empty column-layout configuration"});
+    }
+    const auto edited = core::writeClassicPreferences(*empty, preferences);
+    if (!edited) { return std::unexpected(preferenceError(edited.error())); }
+    auto pristine = core::Document::parse(empty->serialize(), core::Limits{});
+    if (!pristine) {
+      return std::unexpected(Error{ErrorCode::InvalidFormat, "New column-layout configuration exceeds ordinary limits"});
+    }
+    auto baseline = std::make_shared<const core::Document>(std::move(*pristine));
+    if (stop.stop_requested()) { return std::unexpected(Error{ErrorCode::Cancelled, "Native classic column preference creation cancelled"}); }
+    auto created = ConfigFile::createMissing(
+        lease, "tables.config", baseline->originalBytes(), core::Limits{}, observer);
+    if (!created) { return std::unexpected(std::move(created.error())); }
+    // No fallible successful-result preparation or cancellation after publication.
+    return baseline;
+  } catch (const std::bad_alloc&) {
+    return std::unexpected(Error{ErrorCode::Io, "Insufficient memory while creating native classic column preferences"});
+  }
+}
+
 } // namespace biglybtc::storage

@@ -1,10 +1,15 @@
 #include "profile.hpp"
 #include "file_io.hpp"
 
+#include <array>
 #include <cerrno>
 #include <cctype>
+#include <cstdio>
 #include <fcntl.h>
+#include <linux/fs.h>
+#include <new>
 #include <sys/stat.h>
+#include <type_traits>
 #include <unistd.h>
 
 #include <utility>
@@ -122,6 +127,110 @@ std::expected<ConfigFile, Error> ConfigFile::load(const ProfileLease& lease, std
     }
   }
   return error(missing ? ErrorCode::Missing : ErrorCode::InvalidFormat, "No complete compatible configuration could be read");
+}
+
+std::expected<ConfigFile, Error> ConfigFile::createMissing(const ProfileLease& lease,
+    std::string filename, std::string_view encoded, core::Limits limits, void (*observer)(SaveStage)) {
+  try {
+    if (!lease.valid() || !validName(filename)) {
+      return error(ErrorCode::UnsafePath, "Held profile lease and safe configuration filename required");
+    }
+    const int handle = lease.directoryHandle();
+    struct stat directory{};
+    if (::fstat(handle, &directory) != 0 || !S_ISDIR(directory.st_mode)) {
+      return error(ErrorCode::UnsafePath, "Unable to identify held profile directory safely");
+    }
+    if (encoded.size() > limits.inputBytes) {
+      return error(ErrorCode::InvalidFormat, "New configuration exceeds the selected input limit");
+    }
+    auto parsed = core::Document::parse(std::string(encoded), limits);
+    if (!parsed || parsed->root().type != core::Node::Type::Dictionary) {
+      return error(ErrorCode::InvalidFormat, "New configuration must be a complete bounded dictionary");
+    }
+    const auto saving = filename + ".saving";
+    const auto backup = filename + ".bak";
+    // Allocate every successful-return field before even creating .saving.
+    std::expected<ConfigFile, Error> prepared = ConfigFile(std::move(filename), std::move(*parsed),
+        RecoverySource::Primary, std::nullopt, false, directory.st_dev, directory.st_ino, limits);
+    static_assert(std::is_nothrow_move_constructible_v<decltype(prepared)>);
+    const auto absent = [&](const std::string& name) -> std::expected<void, Error> {
+      struct stat current{};
+      if (::fstatat(handle, name.c_str(), &current, AT_SYMLINK_NOFOLLOW) == 0) {
+        return error(ErrorCode::Conflict, "First creation requires absent primary, backup and saving pathnames");
+      }
+      if (errno != ENOENT) { return error(ErrorCode::Io, "Unable to confirm configuration pathname absence"); }
+      return {};
+    };
+    for (const auto* name : std::array<const std::string*, 3>{&prepared->filename_, &backup, &saving}) {
+      const auto checked = absent(*name);
+      if (!checked) { return std::unexpected(checked.error()); }
+    }
+    auto file = detail::writeExclusiveOwned(handle, saving, prepared->document_.originalBytes(), 0600);
+    if (!file) { return std::unexpected(std::move(file.error())); }
+    struct stat created{};
+    if (::fstat(file->get(), &created) != 0) {
+      return error(ErrorCode::Io, "Unable to identify created saving file; saving pathname retained");
+    }
+    if (!S_ISREG(created.st_mode) || created.st_uid != ::geteuid() || created.st_nlink != 1) {
+      return error(ErrorCode::Conflict, "Created saving file ownership changed; pathnames retained");
+    }
+    // open(...,0600) is filtered by process umask. Normalize only this actual
+    // owned descriptor and synchronize metadata if an unusually strict umask
+    // removed requested owner bits; never chmod a subsequently opened pathname.
+    if ((created.st_mode & 07777) != 0600) {
+      if (::fchmod(file->get(), 0600) != 0 || ::fsync(file->get()) != 0 || ::fstat(file->get(), &created) != 0) {
+        return error(ErrorCode::Io, "Unable to synchronize private saving mode; saving pathname retained");
+      }
+    }
+    const auto owned = [&]() -> std::expected<void, Error> {
+      struct stat opened{}, named{};
+      if (::fstat(file->get(), &opened) != 0) {
+        return error(ErrorCode::Io, "Unable to verify created saving descriptor; pathnames retained");
+      }
+      if (::fstatat(handle, saving.c_str(), &named, AT_SYMLINK_NOFOLLOW) != 0) {
+        return error(errno == ENOENT ? ErrorCode::Conflict : ErrorCode::Io,
+            "Saving pathname changed before publication; pathnames retained");
+      }
+      const auto same = [&](const struct stat& info) {
+        return S_ISREG(info.st_mode) && info.st_dev == created.st_dev && info.st_ino == created.st_ino
+            && info.st_uid == created.st_uid && info.st_uid == ::geteuid() && info.st_nlink == 1
+            && (info.st_mode & 07777) == 0600 && info.st_size == created.st_size
+            && info.st_mtim.tv_sec == created.st_mtim.tv_sec && info.st_mtim.tv_nsec == created.st_mtim.tv_nsec
+            && info.st_ctim.tv_sec == created.st_ctim.tv_sec && info.st_ctim.tv_nsec == created.st_ctim.tv_nsec;
+      };
+      if (!same(opened) || !same(named)) {
+        return error(ErrorCode::Conflict, "Created saving file changed before publication; pathnames retained");
+      }
+      return {};
+    };
+    auto identity = owned();
+    if (!identity) { return std::unexpected(identity.error()); }
+    if (observer) { observer(SaveStage::TemporarySynced); }
+    struct stat currentDirectory{};
+    if (!lease.valid() || lease.directoryHandle() != handle || ::fstat(handle, &currentDirectory) != 0
+        || !S_ISDIR(currentDirectory.st_mode) || currentDirectory.st_dev != directory.st_dev
+        || currentDirectory.st_ino != directory.st_ino) {
+      return error(ErrorCode::UnsafePath, "Held profile directory changed before publication; saving pathname retained");
+    }
+    for (const auto* name : std::array<const std::string*, 2>{&prepared->filename_, &backup}) {
+      const auto checked = absent(*name);
+      if (!checked) { return std::unexpected(checked.error()); }
+    }
+    identity = owned();
+    if (!identity) { return std::unexpected(identity.error()); }
+    if (::renameat2(handle, saving.c_str(), handle, prepared->filename_.c_str(), RENAME_NOREPLACE) != 0) {
+      const auto code = errno == EEXIST || errno == ENOTEMPTY ? ErrorCode::Conflict
+          : errno == ENOSYS || errno == EINVAL || errno == EOPNOTSUPP ? ErrorCode::Unsupported : ErrorCode::Io;
+      return error(code, "First configuration publication failed without replacement; saving pathname retained");
+    }
+    if (observer) { observer(SaveStage::PrimaryRenamed); }
+    if (::fsync(handle) != 0) {
+      return error(ErrorCode::Io, "Directory synchronization failed; first configuration publication already occurred");
+    }
+    return prepared; // No successful-path allocation after either publication.
+  } catch (const std::bad_alloc&) {
+    return error(ErrorCode::Io, "Insufficient memory during first creation; saving or primary may remain if publication began");
+  }
 }
 
 std::expected<void, Error> ConfigFile::save(const ProfileLease& lease, void (*observer)(SaveStage)) {

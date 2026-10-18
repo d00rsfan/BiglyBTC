@@ -94,6 +94,8 @@ struct SessionBridge::Host {
   ui::Presentation lastSnapshot{};
   std::shared_ptr<const core::Document> columnBaseline{};
   std::optional<storage::RecoverySource> columnBaselineSource{};
+  bool columnBaselineMissing = false;
+  std::stop_token columnBaselineReadStop{};
 
   void accepts(const ui::Target& target) const {
     if (target.generation != revision || !currentHashes.contains(target.hash.toStdString())) {
@@ -315,12 +317,15 @@ bool SessionBridge::columnLayouts(quint64 session, quint64 request) {
     checkpoint(stop);
     host_->columnBaseline.reset();
     host_->columnBaselineSource.reset();
+    host_->columnBaselineMissing = false;
+    host_->columnBaselineReadStop = stop;
     auto view = storage::readColumnLayoutsView(host_->lease, stop);
     checkpoint(stop);
     if (!view) {
       if (view.error().code == storage::ErrorCode::Cancelled) { throw Failure{std::move(view.error())}; }
       packet->failure = text(view.error().message);
     } else if (view->missing()) {
+      host_->columnBaselineMissing = true;
       packet->state = ui::ColumnLayoutReadState::Missing;
     } else if (!view->recoverySource || !(packet->source = columnLayoutSource(*view->recoverySource))) {
       packet->failure = tr("Saved column layout source is unavailable");
@@ -364,20 +369,25 @@ bool SessionBridge::saveColumnLayout(ui::ColumnLayoutSaveSubmission submission) 
     packet->session = session;
     packet->request = request;
     checkpoint(stop);
-    if (!host_ || host_->columnLayoutSession != session || !host_->columnBaseline
-        || !host_->columnBaselineSource) {
+    if (!host_ || host_->columnLayoutSession != session || host_->columnBaselineReadStop.stop_requested()
+        || (!host_->columnBaselineMissing && (!host_->columnBaseline || !host_->columnBaselineSource))) {
       packet->failure = tr("Reload the saved column layout before saving");
     } else {
-      const auto result = storage::saveClassicPreferencesView(host_->lease,
-          *host_->columnBaseline, *host_->columnBaselineSource, *preferences, stop);
+      const auto result = host_->columnBaselineMissing
+          ? storage::createClassicPreferencesView(host_->lease, *preferences, stop)
+          : storage::saveClassicPreferencesView(host_->lease,
+              *host_->columnBaseline, *host_->columnBaselineSource, *preferences, stop);
       // No cancellation checkpoint here: save may already have replaced primary.
       if (result) {
         host_->columnBaseline = *result;
         host_->columnBaselineSource = storage::RecoverySource::Primary;
+        host_->columnBaselineMissing = false;
+        host_->columnBaselineReadStop = {};
         packet->saved = true;
       } else {
         host_->columnBaseline.reset();
         host_->columnBaselineSource.reset();
+        host_->columnBaselineMissing = false;
         packet->failure = text(result.error().message);
       }
     }

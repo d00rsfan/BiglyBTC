@@ -50,4 +50,18 @@ std::expected<std::shared_ptr<const core::Document>, Error> saveClassicPreferenc
     RecoverySource baselineSource, const core::ClassicPreferences& preferences,
     std::stop_token stop = {}, void (*observer)(SaveStage) = nullptr);
 
+
+// Explicit first native preference save, only when tables.config and both fixed
+// recovery candidates are absent. Start from an empty original dictionary and
+// prepare the complete owned pristine success baseline before publication.
+// ConfigFile::createMissing performs the no-overwrite transaction under the
+// borrowed held lease. It never promotes recovery or replaces an existing leaf.
+// Stop is checked before synchronous creation only; once creation starts its
+// actual outcome wins over later stop. Post-publication errors can mean the
+// primary already exists. No stronger race, inode-CAS or durability guarantee
+// than ConfigFile::createMissing is added, and no lease is acquired or consumed.
+std::expected<std::shared_ptr<const core::Document>, Error> createClassicPreferencesView(
+    const ProfileLease& lease, const core::ClassicPreferences& preferences,
+    std::stop_token stop = {}, void (*observer)(SaveStage) = nullptr);
+
 } // namespace biglybtc::storage

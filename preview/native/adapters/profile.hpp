@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <optional>
 #include <string>
+#include <string_view>
 
 namespace biglybtc::storage {
 
@@ -43,6 +44,20 @@ class ConfigFile final {
 public:
   static std::expected<ConfigFile, Error> load(const ProfileLease& lease,
       std::string filename, core::Limits limits = compatibleConfigLimits());
+  // First publication only: all three fixed candidate pathnames must be absent.
+  // Existing regular/symlink/directory/other entries are Conflict, never followed,
+  // opened, repaired or removed. Validate/allocate the full returned Primary
+  // snapshot before creating .saving, then exclusively write/fsync owned data.
+  // Observer order is TemporarySynced, PrimaryRenamed (no BackupRenamed).
+  // Hold the actual created fd and compare its identity/metadata with .saving
+  // before Linux RENAME_NOREPLACE; a new primary can never be overwritten.
+  // New mode is0600, no backup is invented; returned object supports normal save.
+  // No cancellation inside this synchronous transaction. Errors may retain an
+  // owned .saving or report an already published Primary after sync failure.
+  // Path checks/rename are not a transaction against noncooperating swaps.
+  static std::expected<ConfigFile, Error> createMissing(const ProfileLease& lease,
+      std::string filename, std::string_view encoded,
+      core::Limits limits = compatibleConfigLimits(), void (*observer)(SaveStage) = nullptr);
   core::Document& document() { return document_; }
   const core::Document& document() const { return document_; }
   RecoverySource recoverySource() const { return source_; }

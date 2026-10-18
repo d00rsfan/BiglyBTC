@@ -241,6 +241,128 @@ private slots:
     QCOMPARE(qvariant_cast<ui::ColumnLayoutsPresentation>(layouts.at(0).at(0))->state, ui::ColumnLayoutReadState::Failed);
     QVERIFY(!action(w, "classic-save-column-layout")->isEnabled()); QCOMPARE(read(p.tables()), raw);
   }
+  void missingConfigurationFirstSaveAndSecondSaveSurviveRestart() {
+    Profile p; QVERIFY(QFile::remove(p.tables())); std::string first, second;
+    {
+      ui::LibraryWindow w; app::SessionBridge bridge; wire(w, bridge); show(w);
+      QSignalSpy layouts(&bridge, &app::SessionBridge::columnLayoutsReady), writes(&bridge, &app::SessionBridge::columnLayoutSaved);
+      QSignalSpy snapshots(&bridge, &app::SessionBridge::snapshotReady);
+      QVERIFY(bridge.open(p.native(), 0));
+      QTRY_VERIFY_WITH_TIMEOUT(layouts.count() == 1 && !bridge.busy(), 30000);
+      QCOMPARE(qvariant_cast<ui::ColumnLayoutsPresentation>(layouts.at(0).at(0))->state, ui::ColumnLayoutReadState::Missing);
+      QVERIFY(!QFile::exists(p.tables())); QVERIFY(!QFile::exists(p.tables() + QStringLiteral(".bak")));
+      auto* save = action(w, "classic-save-column-layout"); QVERIFY(save && save->isEnabled());
+      w.incompleteTable().setColumnWidth(1, 328); w.completeTable().setColumnWidth(7, 276);
+      w.filter().setText(QStringLiteral("retained first save filter"));
+      save->trigger(); QVERIFY(bridge.busy()); w.incompleteTable().setColumnWidth(1, 401);
+      QTRY_VERIFY_WITH_TIMEOUT(writes.count() == 1 && !bridge.busy(), 30000);
+      QVERIFY(qvariant_cast<ui::ColumnLayoutSavePresentation>(writes.at(0).at(0))->saved);
+      first = read(p.tables()); auto doc = core::Document::parse(first); QVERIFY(doc);
+      QCOMPARE(doc->root().children.size(), std::size_t{2});
+      auto prefs = core::readClassicPreferences(*doc); QVERIFY(prefs && prefs->has_value());
+      QCOMPARE((**prefs).incomplete.columns[1].width, std::optional<int>{328});
+      QCOMPARE(w.incompleteTable().columnWidth(1), 401);
+      QCOMPARE(w.filter().text(), QStringLiteral("retained first save filter"));
+      QVERIFY(!QFile::exists(p.tables() + QStringLiteral(".bak")));
+      QVERIFY(!QFile::exists(p.tables() + QStringLiteral(".saving")));
+      QCOMPARE(snapshots.count(), 1); QCOMPARE(layouts.count(), 1);
+      QVERIFY(save->isEnabled()); save->trigger();
+      QTRY_VERIFY_WITH_TIMEOUT(writes.count() == 2 && !bridge.busy(), 30000);
+      QVERIFY(qvariant_cast<ui::ColumnLayoutSavePresentation>(writes.at(1).at(0))->saved);
+      second = read(p.tables()); QVERIFY(second != first);
+      QCOMPARE(read(p.tables() + QStringLiteral(".bak")), first);
+    }
+    {
+      ui::LibraryWindow w; app::SessionBridge bridge; wire(w, bridge); show(w);
+      QSignalSpy layouts(&bridge, &app::SessionBridge::columnLayoutsReady);
+      QVERIFY(bridge.open(p.native(), 0)); QTRY_VERIFY_WITH_TIMEOUT(layouts.count() == 1 && !bridge.busy(), 30000);
+      QCOMPARE(w.incompleteTable().columnWidth(1), 401); QCOMPARE(w.completeTable().columnWidth(7), 276);
+      QCOMPARE(read(p.tables()), second); QVERIFY(action(w, "classic-save-column-layout")->isEnabled());
+    }
+  }
+  void candidateAppearingAfterMissingReadRequiresReload_data() {
+    QTest::addColumn<QString>("suffix");
+    QTest::newRow("primary") << QString{};
+    QTest::newRow("backup") << QStringLiteral(".bak");
+    QTest::newRow("saving") << QStringLiteral(".saving");
+  }
+  void candidateAppearingAfterMissingReadRequiresReload() {
+    QFETCH(QString, suffix);
+    Profile p; QVERIFY(QFile::remove(p.tables()));
+    ui::LibraryWindow w; app::SessionBridge bridge; wire(w, bridge); show(w);
+    QSignalSpy layouts(&bridge, &app::SessionBridge::columnLayoutsReady), writes(&bridge, &app::SessionBridge::columnLayoutSaved);
+    QSignalSpy captures(&w, &ui::LibraryWindow::columnLayoutSaveRequested);
+    QVERIFY(bridge.open(p.native(), 0)); QTRY_VERIFY_WITH_TIMEOUT(layouts.count() == 1 && !bridge.busy(), 30000);
+    auto* save = action(w, "classic-save-column-layout"); QVERIFY(save->isEnabled());
+    const auto candidate = p.tables() + suffix; const std::string foreign = "d7:foreigni83ee"; write(candidate, foreign);
+    save->trigger(); QTRY_VERIFY_WITH_TIMEOUT(writes.count() == 1 && !bridge.busy(), 30000);
+    QVERIFY(!qvariant_cast<ui::ColumnLayoutSavePresentation>(writes.at(0).at(0))->saved);
+    QCOMPARE(read(candidate), foreign); QVERIFY(!save->isEnabled());
+    QVERIFY(QFile::remove(candidate)); QVERIFY(!QFile::exists(p.tables()));
+    // A direct caller cannot reuse Missing admission after any failed creation.
+    auto request = std::make_shared<ui::ColumnLayoutSaveRequest>(*qvariant_cast<ui::ColumnLayoutSaveSubmission>(captures.at(0).at(0)));
+    ++request->request; QVERIFY(bridge.saveColumnLayout(request));
+    QTRY_VERIFY_WITH_TIMEOUT(writes.count() == 2 && !bridge.busy(), 30000);
+    QVERIFY(!qvariant_cast<ui::ColumnLayoutSavePresentation>(writes.at(1).at(0))->saved);
+    QVERIFY(!QFile::exists(p.tables()));
+    action(w, "classic-reload-column-layout")->trigger();
+    QTRY_VERIFY_WITH_TIMEOUT(layouts.count() == 2 && !bridge.busy(), 30000);
+    QVERIFY(save->isEnabled()); save->trigger();
+    QTRY_VERIFY_WITH_TIMEOUT(writes.count() == 3 && !bridge.busy(), 30000);
+    QVERIFY(qvariant_cast<ui::ColumnLayoutSavePresentation>(writes.at(2).at(0))->saved);
+  }
+  void recoveryAndMalformedRecoveryNeverAdmitFirstSave_data() {
+    QTest::addColumn<QString>("suffix"); QTest::addColumn<QByteArray>("raw"); QTest::addColumn<bool>("failed");
+    QTest::newRow("backup") << QStringLiteral(".bak") << QByteArray("de") << false;
+    QTest::newRow("saving") << QStringLiteral(".saving") << QByteArray("de") << false;
+    QTest::newRow("malformed-backup") << QStringLiteral(".bak") << QByteArray("invalid") << true;
+  }
+  void recoveryAndMalformedRecoveryNeverAdmitFirstSave() {
+    QFETCH(QString, suffix); QFETCH(QByteArray, raw); QFETCH(bool, failed);
+    Profile p; QVERIFY(QFile::remove(p.tables())); write(p.tables() + suffix, raw.toStdString());
+    ui::LibraryWindow w; app::SessionBridge bridge; wire(w, bridge); show(w);
+    QSignalSpy layouts(&bridge, &app::SessionBridge::columnLayoutsReady), snapshots(&bridge, &app::SessionBridge::snapshotReady);
+    QVERIFY(bridge.open(p.native(), 0)); QTRY_VERIFY_WITH_TIMEOUT(layouts.count() == 1 && !bridge.busy(), 30000);
+    const auto packet = qvariant_cast<ui::ColumnLayoutsPresentation>(layouts.at(0).at(0)); QVERIFY(packet);
+    QCOMPARE(packet->state, failed ? ui::ColumnLayoutReadState::Failed : ui::ColumnLayoutReadState::Ready);
+    QVERIFY(!action(w, "classic-save-column-layout")->isEnabled());
+    QVERIFY(!QFile::exists(p.tables())); QCOMPARE(read(p.tables() + suffix), raw.toStdString()); QCOMPARE(snapshots.count(), 1);
+  }
+  void missingReadCancellationCannotAuthorizeDirectCreation() {
+    Profile p; QVERIFY(QFile::remove(p.tables())); app::SessionBridge bridge;
+    QSignalSpy sessions(&bridge, &app::SessionBridge::columnLayoutSessionReady), reads(&bridge, &app::SessionBridge::columnLayoutsReady);
+    QSignalSpy writes(&bridge, &app::SessionBridge::columnLayoutSaved);
+    QVERIFY(bridge.open(p.native(), 0)); QTRY_VERIFY_WITH_TIMEOUT(sessions.count() == 1 && !bridge.busy(), 30000);
+    ui::LibraryWindow capture; show(capture); QVERIFY(fakeRead(capture));
+    QSignalSpy captured(&capture, &ui::LibraryWindow::columnLayoutSaveRequested);
+    action(capture, "classic-save-column-layout")->trigger(); QCOMPARE(captured.count(), 1);
+    auto request = std::make_shared<ui::ColumnLayoutSaveRequest>(*qvariant_cast<ui::ColumnLayoutSaveSubmission>(captured.at(0).at(0)));
+    request->session = sessions.at(0).at(0).toULongLong(); request->request = 1;
+    QVERIFY(bridge.saveColumnLayout(request)); QTRY_VERIFY_WITH_TIMEOUT(writes.count() == 1 && !bridge.busy(), 30000);
+    QVERIFY(!qvariant_cast<ui::ColumnLayoutSavePresentation>(writes.at(0).at(0))->saved); QVERIFY(!QFile::exists(p.tables()));
+    const auto connection = QObject::connect(&bridge, &app::SessionBridge::columnLayoutsReady, &bridge,
+        [&](ui::ColumnLayoutsPresentation result) { QVERIFY(result && result->state == ui::ColumnLayoutReadState::Missing); bridge.cancel(); });
+    QVERIFY(bridge.columnLayouts(request->session, 7)); QTRY_VERIFY_WITH_TIMEOUT(reads.count() == 1 && !bridge.busy(), 30000);
+    ++request->request; QVERIFY(bridge.saveColumnLayout(request)); QTRY_VERIFY_WITH_TIMEOUT(writes.count() == 2 && !bridge.busy(), 30000);
+    QVERIFY(!qvariant_cast<ui::ColumnLayoutSavePresentation>(writes.at(1).at(0))->saved); QVERIFY(!QFile::exists(p.tables()));
+    QObject::disconnect(connection);
+    QVERIFY(bridge.columnLayouts(request->session, 8)); QTRY_VERIFY_WITH_TIMEOUT(reads.count() == 2 && !bridge.busy(), 30000);
+    ++request->request; QVERIFY(bridge.saveColumnLayout(request)); QTRY_VERIFY_WITH_TIMEOUT(writes.count() == 3 && !bridge.busy(), 30000);
+    QVERIFY(qvariant_cast<ui::ColumnLayoutSavePresentation>(writes.at(2).at(0))->saved);
+  }
+  void contradictoryMissingPacketDoesNotAdmitSave() {
+    ui::LibraryWindow w; show(w);
+    QSignalSpy requests(&w, &ui::LibraryWindow::columnLayoutsRequested);
+    QObject::connect(&w, &ui::LibraryWindow::columnLayoutsRequested, &w, [&w](quint64, quint64) { w.setBusy(true); });
+    w.beginColumnLayoutSession(73); QTRY_COMPARE(requests.count(), 1);
+    auto bad = std::make_shared<ui::ColumnLayoutsPacket>(*originalPacket(73, requests.at(0).at(1).toULongLong()));
+    bad->state = ui::ColumnLayoutReadState::Missing; w.setColumnLayouts(bad); w.setBusy(false);
+    QVERIFY(!action(w, "classic-save-column-layout")->isEnabled());
+    action(w, "classic-reload-column-layout")->trigger(); QTRY_COMPARE(requests.count(), 2);
+    auto missing = std::make_shared<ui::ColumnLayoutsPacket>(); missing->session = 73;
+    missing->request = requests.at(1).at(1).toULongLong(); missing->state = ui::ColumnLayoutReadState::Missing;
+    w.setColumnLayouts(missing); w.setBusy(false); QVERIFY(action(w, "classic-save-column-layout")->isEnabled());
+  }
   void rejectedSaveDoesNotLatchAndCaptureIsImmutable() {
     ui::LibraryWindow w; show(w); QVERIFY(fakeRead(w));
     QSignalSpy saves(&w, &ui::LibraryWindow::columnLayoutSaveRequested);

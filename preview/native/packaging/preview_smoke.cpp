@@ -367,6 +367,39 @@ private slots:
     }
     QVERIFY(QDir(root.filePath(QStringLiteral("payload"))).entryList(QDir::AllEntries | QDir::NoDotAndDotDot).isEmpty());
   }
+  void explicitFirstSaveCreatesOnlyAfterMissingReadAndRestarts() {
+    const auto sample = qEnvironmentVariable("BIGLYBTC_PREVIEW_PROFILE");
+    const QDir root(QFileInfo(sample).absolutePath());
+    QCOMPARE(QFileInfo(root.absolutePath()).absolutePath(), QStringLiteral("/tmp"));
+    QVERIFY(root.dirName().startsWith(QStringLiteral("biglybtc-preview-")));
+    const auto path = root.filePath(QStringLiteral("first-save-profile"));
+    QVERIFY(!QFileInfo::exists(path)); QVERIFY(root.mkdir(QStringLiteral("first-save-profile")));
+    QFile downloads(path + QStringLiteral("/downloads.config")); QVERIFY(downloads.open(QIODevice::WriteOnly | QIODevice::NewOnly));
+    QCOMPARE(downloads.write("d9:downloadslee"), qint64{15}); downloads.close();
+    const auto tables = path + QStringLiteral("/tables.config"); QByteArray first;
+    {
+      ui::LibraryWindow window; app::SessionBridge bridge; wire(window, bridge); window.show();
+      QSignalSpy reads(&bridge, &app::SessionBridge::columnLayoutsReady), writes(&bridge, &app::SessionBridge::columnLayoutSaved);
+      QVERIFY(bridge.open(path.toStdString(), 0)); QTRY_VERIFY_WITH_TIMEOUT(reads.count() == 1 && !bridge.busy(), 30000);
+      QCOMPARE(qvariant_cast<ui::ColumnLayoutsPresentation>(reads.at(0).at(0))->state, ui::ColumnLayoutReadState::Missing);
+      QVERIFY(!QFileInfo::exists(tables)); QVERIFY(!QFileInfo::exists(tables + QStringLiteral(".bak")));
+      auto* save = window.findChild<QAction*>(QStringLiteral("classic-save-column-layout")); QVERIFY(save && save->isEnabled());
+      window.incompleteTable().setColumnWidth(1, 312); window.completeTable().setColumnWidth(7, 245);
+      save->trigger(); QTRY_VERIFY_WITH_TIMEOUT(writes.count() == 1 && !bridge.busy(), 30000);
+      QVERIFY(qvariant_cast<ui::ColumnLayoutSavePresentation>(writes.at(0).at(0))->saved);
+      first = bytes(tables); QVERIFY(!first.isEmpty());
+      QVERIFY(!QFileInfo::exists(tables + QStringLiteral(".bak"))); QVERIFY(!QFileInfo::exists(tables + QStringLiteral(".saving")));
+      QVERIFY(window.close());
+    }
+    {
+      ui::LibraryWindow window; app::SessionBridge bridge; wire(window, bridge); window.show();
+      QSignalSpy reads(&bridge, &app::SessionBridge::columnLayoutsReady);
+      QVERIFY(bridge.open(path.toStdString(), 0)); QTRY_VERIFY_WITH_TIMEOUT(reads.count() == 1 && !bridge.busy(), 30000);
+      QCOMPARE(window.incompleteTable().columnWidth(1), 312); QCOMPARE(window.completeTable().columnWidth(7), 245);
+      QCOMPARE(window.model().rowCount(), 0); QCOMPARE(bytes(tables), first); QVERIFY(window.close());
+    }
+  }
+
 };
 
 QTEST_MAIN(PreviewSmoke)

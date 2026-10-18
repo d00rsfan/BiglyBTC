@@ -589,7 +589,11 @@ void LibraryWindow::setColumnLayouts(ColumnLayoutsPresentation packet) {
                          : tr("Saved column layout read (%1); current columns kept").arg(source));
     }
   } else if (packet->state == ColumnLayoutReadState::Missing) {
-    setMessage(tr("No saved column layout found"));
+    // Only a complete absence result can admit first creation. A malformed
+    // or recovery result must not be treated as an empty configuration.
+    columnSaveAvailable_ = !packet->source && !packet->snapshot && !packet->nativePreferences && packet->failure.isEmpty();
+    setMessage(columnSaveAvailable_ ? tr("No saved column layout found; Save creates one")
+                                   : tr("Saved column-layout result is incomplete"));
   } else if (packet->state == ColumnLayoutReadState::Failed) {
     setMessage(packet->failure.isEmpty() ? tr("Saved column layout could not be read") : packet->failure);
   } else { setMessage(tr("Saved column-layout result is incomplete")); }
