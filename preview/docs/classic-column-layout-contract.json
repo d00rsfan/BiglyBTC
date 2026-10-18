@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "scope": "Pure owned classic tables.config requested facts; no adapter/UI/writer/effective layout",
+  "upstream_repository": "https://github.com/BiglySoftware/BiglyBT",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_parent": "0e96f6a5d8f6922791ab0655dc93b13e163366af",
+  "source_audit_sha256": "474b6bc5bfca4a2798b89024075267acc20128f3e1784e6efff38434b3216b64",
+  "header_sha256": "1d4d1c06efd71ef2ab026364eb15f434d4b8647d15f8ae31852052f63a996d39",
+  "implementation_sha256": "b55620a54cbdc243c8eccade512b19905d1efe819a4efb0db39bb435a325dd25",
+  "tables": [
+    "Table.MyTorrents",
+    "Table.MySeeders"
+  ],
+  "fallbacks": [
+    "TableDefault.MyTorrents",
+    "TableDefault.MySeeders"
+  ],
+  "precedence": "Only absent exact key may select default; present empty/wrong-type exact blocks default",
+  "columns": "Column. suffixes retained byte-for-byte in source dictionary order; unknown plugin fields/tails/userdata retained once in complete immutable owned raw source",
+  "slots": [
+    "visibility",
+    "position",
+    "width",
+    "automaticTooltip",
+    "sortOrder",
+    "userData",
+    "alignment",
+    "foregroundRGB",
+    "backgroundRGB",
+    "iconEnabled"
+  ],
+  "numbers": "Raw signed64 and defined signed-low32 Java Number.intValue facts; requested values only, no geometry/range/default normalization",
+  "booleans": "Visibility/tooltip low32==1; icon low32!=0; known false remains distinct from absent/wrong type",
+  "direction": "Known only for stored low32>=0:1 ascending,other nonnegative descending; negative inherits unresolved runtime state",
+  "sorts": "A current SortColumns list wins even empty or containing malformed/duplicate members; absent/wrong-type permits legacy SortColumn bytes; otherwise global fallback remains unresolved without reading it",
+  "text": "All byte-string IDs keep Present+owned bytes and UTF8/NUL facts; current invalidUTF8 issues Encoding; legacy invalidUTF8 has unknown JVM default decoding and no Encoding issue",
+  "ownership": "Iterative bounded caller preflight; fresh bounded parse; exact safe raw-span identity checks before payload access; no caller alias survives",
+  "limits": {
+    "inputBytes": 4194304,
+    "stringBytes": 4194304,
+    "nodes": 100000,
+    "depthRoot0": 64,
+    "columnsPerSelectedTable": 1024,
+    "sortIdsPerSelectedTable": 32,
+    "projectedIdBytes": 256,
+    "issues": 4096,
+    "only_reductions": true,
+    "failure_instead_of_truncation": true
+  },
+  "limitations": [
+    "Existing duplicate dictionary-key parser rejection",
+    "No registered-column properties, callback/partial-effect behavior, defaults, migrations or reset service",
+    "No Qt/private preview column aliases or sorting/width application",
+    "No biglybt.config read or original global-sort nullguard repair/emulation",
+    "No Java runtime/effective-layout equality credit"
+  ]
+}

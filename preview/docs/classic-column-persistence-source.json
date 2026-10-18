@@ -1,0 +1,1282 @@
+{
+  "schema": 1,
+  "status": "FROZEN SOURCE/DESIGN ONLY; no importer, config write, Java/native runtime or comparison",
+  "observed_at_utc": "2026-10-18T10:28:48.571394+00:00",
+  "upstream": {
+    "repository": "https://github.com/BiglySoftware/BiglyBT",
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "sources": {
+      "core/src/com/biglybt/core/config/impl/ConfigurationManager.java": {
+        "git_blob": "811e21d1f34fe1c5e2a8daf7616e7e3eb22e2e0f",
+        "committed_sha256": "2627f71f0dd69b2cee577331ad6ce05fd230d47df816b592d07236c9b759bc82",
+        "observed_working_sha256": "2627f71f0dd69b2cee577331ad6ce05fd230d47df816b592d07236c9b759bc82",
+        "working_matches_commit": true
+      },
+      "core/src/com/biglybt/core/util/FileUtil.java": {
+        "git_blob": "e96c2282bb45c0a32f31450f25b8bc3d65b5739b",
+        "committed_sha256": "6565fa6aa08efd7ef64d339db28040d909765b0808050c7b70ae9a09e8cb4ba2",
+        "observed_working_sha256": "6565fa6aa08efd7ef64d339db28040d909765b0808050c7b70ae9a09e8cb4ba2",
+        "working_matches_commit": true
+      },
+      "core/src/com/biglybt/pif/ui/tables/TableColumn.java": {
+        "git_blob": "56541169bd892e070ba9b0650c0a148919694e0c",
+        "committed_sha256": "e907852123e7a43121dd794d3419fb6c90e583e9bbe356ea7956a96b535be734",
+        "observed_working_sha256": "e907852123e7a43121dd794d3419fb6c90e583e9bbe356ea7956a96b535be734",
+        "working_matches_commit": true
+      },
+      "core/src/com/biglybt/pif/ui/tables/TableManager.java": {
+        "git_blob": "1a89e494b4c10e54c44822435dc7dc6ad237b836",
+        "committed_sha256": "c5f7c045f3bb0e9cee42a8270ce023893d98d716fd35058bf00037855b36f9e8",
+        "observed_working_sha256": "c5f7c045f3bb0e9cee42a8270ce023893d98d716fd35058bf00037855b36f9e8",
+        "working_matches_commit": true
+      },
+      "core/src/com/biglybt/ui/common/table/impl/CoreTableColumn.java": {
+        "git_blob": "1a1edb8664eecf7d0ae17dabdda342edebb43b24",
+        "committed_sha256": "d60558501605835c7ea0023cbc4c4a1cf968f5e89d40a21e0796194c584b6104",
+        "observed_working_sha256": "d60558501605835c7ea0023cbc4c4a1cf968f5e89d40a21e0796194c584b6104",
+        "working_matches_commit": true
+      },
+      "core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java": {
+        "git_blob": "334d9d58c85fd19c79a4da5365453396587dc3a6",
+        "committed_sha256": "f68a5a85867ce73bdeea6c8b3fae2a6cad0f504daea894747abfedfd5ad565ac",
+        "observed_working_sha256": "f68a5a85867ce73bdeea6c8b3fae2a6cad0f504daea894747abfedfd5ad565ac",
+        "working_matches_commit": true
+      },
+      "core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java": {
+        "git_blob": "d3fdf4efb8fc48319911cc350000c54874dd2dd6",
+        "committed_sha256": "5d0b80ab7137e2d8740376da363593e077b6859ef7ee8daca0c90c8ef64d2aa9",
+        "observed_working_sha256": "5d0b80ab7137e2d8740376da363593e077b6859ef7ee8daca0c90c8ef64d2aa9",
+        "working_matches_commit": true
+      },
+      "core/src/com/biglybt/ui/common/table/impl/TableViewImpl.java": {
+        "git_blob": "38c09ee6e32d1f44579567107a61fd85dabee834",
+        "committed_sha256": "62cc55430c2378e8f893df25576f19ae07db068c13c802646be65ab2c7b73960",
+        "observed_working_sha256": "62cc55430c2378e8f893df25576f19ae07db068c13c802646be65ab2c7b73960",
+        "working_matches_commit": true
+      },
+      "core/src/com/biglybt/util/MapUtils.java": {
+        "git_blob": "e66807b10d806508a5afed0574ef72182b078be0",
+        "committed_sha256": "78531933cb0e466d78d273dd44dbd8c400f2255ad1e7d824fb2f52bb3912a991",
+        "observed_working_sha256": "78531933cb0e466d78d273dd44dbd8c400f2255ad1e7d824fb2f52bb3912a991",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/MyTorrentsSuperView.java": {
+        "git_blob": "7ff1acc7ffbc39db58c09422b63bb6c533b12881",
+        "committed_sha256": "24af1c9a8235eeeca9c1944a86214c2782ac4391d78533613e813fb379d4144a",
+        "observed_working_sha256": "24af1c9a8235eeeca9c1944a86214c2782ac4391d78533613e813fb379d4144a",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/MyTorrentsView.java": {
+        "git_blob": "34a79c82aed9153f63b499aba136bb6628316cbc",
+        "committed_sha256": "5d019924be50987d683aa82a2000a42cce3297156036ddd5ab8fa65f8eef88fd",
+        "observed_working_sha256": "5d019924be50987d683aa82a2000a42cce3297156036ddd5ab8fa65f8eef88fd",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/columnsetup/TableColumnSetupWindow.java": {
+        "git_blob": "25c613f2347fd13461f6e752de318ff72dffabcf",
+        "committed_sha256": "2c040d15afd00b20cbf2be7a00d866dd319f6efddcb15fc955641b8835086370",
+        "observed_working_sha256": "2c040d15afd00b20cbf2be7a00d866dd319f6efddcb15fc955641b8835086370",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/skin/SB_Transfers.java": {
+        "git_blob": "e5df33efd78d4da39418431f7818fa7f0e0af666",
+        "committed_sha256": "7871a709028ced6d7d1839efa8d0ffbe86af677b5c30a47379315b298439f636",
+        "observed_working_sha256": "7871a709028ced6d7d1839efa8d0ffbe86af677b5c30a47379315b298439f636",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/table/impl/TableViewSWT_Common.java": {
+        "git_blob": "6e5a9325952bf649c7f077ae96deb09d4e4e530c",
+        "committed_sha256": "e7ff336a03bd721d598e4f9dd0965c214daf3e96f035858d3a08fd2f7ae6b186",
+        "observed_working_sha256": "e7ff336a03bd721d598e4f9dd0965c214daf3e96f035858d3a08fd2f7ae6b186",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/table/painted/TableHeaderPainted.java": {
+        "git_blob": "d083c2d2bdfca92091591760bc21c1c28d192dfe",
+        "committed_sha256": "7ac135f00c5f8b2119319b400cf9efebccc3a74336ca2b1db152f338a30c91ff",
+        "observed_working_sha256": "7ac135f00c5f8b2119319b400cf9efebccc3a74336ca2b1db152f338a30c91ff",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/table/painted/TableViewPainted.java": {
+        "git_blob": "0477f1f16c1aea5737416189330f56c06b18b538",
+        "committed_sha256": "2f8dbc0ddb3cba5dbb12d312c64724cfbc3315d74155ca1452d4be059f9da275",
+        "observed_working_sha256": "2f8dbc0ddb3cba5dbb12d312c64724cfbc3315d74155ca1452d4be059f9da275",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/table/utils/TableColumnCreator.java": {
+        "git_blob": "b7011d0601c1c94e716f5ff9aab19ed93c33c7ae",
+        "committed_sha256": "e0ce2a57077d76685b1e71d2cb7a831c7cc79fa1e5f93f7979536146ac80053a",
+        "observed_working_sha256": "e0ce2a57077d76685b1e71d2cb7a831c7cc79fa1e5f93f7979536146ac80053a",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DoneItem.java": {
+        "git_blob": "6289897f59d4b4c09406f7ce000a844bee6b3c13",
+        "committed_sha256": "5844b06d3c9bf42447e8835bdb18af7417a55e71aa3ddecc3b3769c45e23f0f4",
+        "observed_working_sha256": "5844b06d3c9bf42447e8835bdb18af7417a55e71aa3ddecc3b3769c45e23f0f4",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DownItem.java": {
+        "git_blob": "42bda763abed86dc3de15a18f225231742c55c93",
+        "committed_sha256": "dcfc8904f44d695327ab75e17b6de82331cf5702ed9624516b2f6131fdc1bd9b",
+        "observed_working_sha256": "dcfc8904f44d695327ab75e17b6de82331cf5702ed9624516b2f6131fdc1bd9b",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DownSpeedItem.java": {
+        "git_blob": "efd21537522b12dea6245ba72fc16c4e5470621a",
+        "committed_sha256": "36e0e8ec776464905f4bde5ebf889f04f29016fbbbd12361ba2caaba1226dec2",
+        "observed_working_sha256": "36e0e8ec776464905f4bde5ebf889f04f29016fbbbd12361ba2caaba1226dec2",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/NameItem.java": {
+        "git_blob": "d60f35e7c4e84dddbd0df4817c9949574210973f",
+        "committed_sha256": "093bcc658b79ffa2013243878ee697e409efc8f351515549fd9c9b548353d9dd",
+        "observed_working_sha256": "093bcc658b79ffa2013243878ee697e409efc8f351515549fd9c9b548353d9dd",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/RankItem.java": {
+        "git_blob": "97973dd56b8b7272c3c7c22f65c92c01dd59497d",
+        "committed_sha256": "618c621c5980dac6a01364c6bf793d18c51f13346ab8cb44acac8c91b1cd142b",
+        "observed_working_sha256": "618c621c5980dac6a01364c6bf793d18c51f13346ab8cb44acac8c91b1cd142b",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/RemainingItem.java": {
+        "git_blob": "3e49fd9ff265c879bfc9fa6b18726ceb3d5a49c0",
+        "committed_sha256": "c85e3a3d0ac983b63e29d45631c945696ef6e923018e61c9ab11019a59caf232",
+        "observed_working_sha256": "c85e3a3d0ac983b63e29d45631c945696ef6e923018e61c9ab11019a59caf232",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/SizeItem.java": {
+        "git_blob": "d13727e725af6b65af4f3a72f3758ac39c64c82c",
+        "committed_sha256": "799ccd6d2457b69094ad64829387420e38777a23d67c6f3ae06adee2c87a4136",
+        "observed_working_sha256": "799ccd6d2457b69094ad64829387420e38777a23d67c6f3ae06adee2c87a4136",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/StatusItem.java": {
+        "git_blob": "be6b843b714403027c897e299f2bf816b3876c9d",
+        "committed_sha256": "0f74cb1db1597c52d873370d7037eca9919f41bb605a45303b755a57353de6ea",
+        "observed_working_sha256": "0f74cb1db1597c52d873370d7037eca9919f41bb605a45303b755a57353de6ea",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/TorrentHashItem.java": {
+        "git_blob": "581248b4adbfc1484fd0b935ccdd75ebca683cf3",
+        "committed_sha256": "3710fce21ad229424087eb9e9effd61dd912831049c4f7925bc2998e408d8d1a",
+        "observed_working_sha256": "3710fce21ad229424087eb9e9effd61dd912831049c4f7925bc2998e408d8d1a",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/UpItem.java": {
+        "git_blob": "aa02591ba8349344e1d459ae1e32d97c2955d5e8",
+        "committed_sha256": "d32af2abfb333efdee334ea263b1b08d6f40364071b81e65dee039657dbf90a2",
+        "observed_working_sha256": "d32af2abfb333efdee334ea263b1b08d6f40364071b81e65dee039657dbf90a2",
+        "working_matches_commit": true
+      },
+      "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/UpSpeedItem.java": {
+        "git_blob": "15e2271087c9e1f6b56d1daae8c6079e83d1c19c",
+        "committed_sha256": "de112301ab5d09a54259955444e7e9b2aa9887f8ca21bb7ca593fcd959da19da",
+        "observed_working_sha256": "de112301ab5d09a54259955444e7e9b2aa9887f8ca21bb7ca593fcd959da19da",
+        "working_matches_commit": true
+      }
+    },
+    "complete_method_definitions": [
+      {
+        "id": "TableColumnManager.constructor",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java",
+        "signature": "private TableColumnManager()",
+        "start_line": 154,
+        "end_line": 177,
+        "complete_definition_sha256": "71d76171363d430210b2d14d0cece6ea058bc444678aa1675d4e714d6c74c4f2",
+        "complete_body_sha256": "50ceca9387208f5f9af6e466b70afdbc66b9d8b386c7ba7548ba4bdf7656ebd9",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java#L154"
+      },
+      {
+        "id": "TableColumnManager.orderComparator.compare",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java",
+        "signature": "public int compare(TableColumn col0, TableColumn col1)",
+        "start_line": 106,
+        "end_line": 138,
+        "complete_definition_sha256": "fa874754f8a0d1377cd1d8cdf43f5ef7cabf7f78bd20bcdd7a9a1b4fbe22edc3",
+        "complete_body_sha256": "3048ba4beea25a6625af3ee51a03181ac22b10ae7ff2501d0fd75e4ea3e59847",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java#L106"
+      },
+      {
+        "id": "TableColumnManager.ensureIntegrity",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java",
+        "signature": "public void ensureIntegrity(Class dataSourceType, String sTableID)",
+        "start_line": 525,
+        "end_line": 550,
+        "complete_definition_sha256": "491a04d64a2e82e114154bdea6fc955f3f5e17f71e45a76ba9858dc21b0b360d",
+        "complete_body_sha256": "7b01671776deeb46a93cc650126daa4e16f015d8de171d5f070519134aac31ee",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java#L525"
+      },
+      {
+        "id": "TableColumnManager.getDefaultSortColumnNames",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java",
+        "signature": "public String[] getDefaultSortColumnNames(String tableID)",
+        "start_line": 552,
+        "end_line": 577,
+        "complete_definition_sha256": "6c12ef0c8e840549b2c4c3813aa5cc4ef322749ec747ea433b6663bf394122ea",
+        "complete_body_sha256": "34be767c1f9463f2f66533a10407f9874215a527c43ca3b8a703ac29959c4543",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java#L552"
+      },
+      {
+        "id": "TableColumnManager.setDefaultSortColumnName",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java",
+        "signature": "public void setDefaultSortColumnName(String tableID, String... columnNames)",
+        "start_line": 579,
+        "end_line": 589,
+        "complete_definition_sha256": "00d6ef8812523a99d3bfb62aeddf896065cf64c47fac1ff97dea85cf1053d6bd",
+        "complete_body_sha256": "9fa5e4b4e23e73a4cab339c81f467eb316014e0997ac2cd9e2b1fe3ecb9cbb45",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java#L579"
+      },
+      {
+        "id": "TableColumnManager.setSortColumnNames",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java",
+        "signature": "protected void setSortColumnNames(String tableID, String... columnNames)",
+        "start_line": 591,
+        "end_line": 610,
+        "complete_definition_sha256": "bb65895d51e63e3eda8c33c734408052fe14c6e0c5ad1da01ba6a3c988e0f17f",
+        "complete_body_sha256": "bc944b0950692119c05de0b4b255bdcc194c7a1c82542b3901365b1acde42911",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java#L591"
+      },
+      {
+        "id": "TableColumnManager.saveTableConfigs",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java",
+        "signature": "private void saveTableConfigs()",
+        "start_line": 612,
+        "end_line": 617,
+        "complete_definition_sha256": "bbf2a67c4c4e8fd299d2d819f85695b2038ae3628934905a09b0f4b13b48a6f9",
+        "complete_body_sha256": "e009cec6891787eff4b458c1d23db41f0935550817c96ca7f855dc3743bf4a66",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java#L612"
+      },
+      {
+        "id": "TableColumnManager.saveTableColumns",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java",
+        "signature": "public void saveTableColumns(Class forDataSourceType, String sTableID)",
+        "start_line": 619,
+        "end_line": 633,
+        "complete_definition_sha256": "65264ee6281703058e4086d83a06ea037b7781afb0e27093167250dc6e353490",
+        "complete_body_sha256": "7b409b1531d7cfc7e82d33fdbe10ae4c7ac0a639a644f5afa548ca543cbe3a53",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java#L619"
+      },
+      {
+        "id": "TableColumnManager.loadTableColumnSettings",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java",
+        "signature": "public boolean loadTableColumnSettings(Class forDataSourceType, String sTableID)",
+        "start_line": 635,
+        "end_line": 664,
+        "complete_definition_sha256": "e04ffb5fe357d71431a1adb765898567ef73e4e3e0e5670aa592d91f5337e563",
+        "complete_body_sha256": "4c86e8baf326591b89d41a84c986dd223be8371a2e1f6ba1c80eb234caf7cd4c",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java#L635"
+      },
+      {
+        "id": "TableColumnManager.getTablesConfigMap",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java",
+        "signature": "private Map getTablesConfigMap()",
+        "start_line": 692,
+        "end_line": 738,
+        "complete_definition_sha256": "a932a05fc6a10b96e11491b4a95ba835671b338de35a9a38830e810498315ece",
+        "complete_body_sha256": "b9eb8356e77a14833379a4835ccf5ffc1f9d7fe23a29837dc753232e831bd0c2",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java#L692"
+      },
+      {
+        "id": "TableColumnManager.getTableConfigMap",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java",
+        "signature": "public Map getTableConfigMap(String sTableID)",
+        "start_line": 740,
+        "end_line": 772,
+        "complete_definition_sha256": "4fdc3355ef0d275efd778ba37531bb58adb526eb1c5a9defb3d5331561557d7d",
+        "complete_body_sha256": "e30f3b504714f18e19c339e87964277eebd563c732bc626fb9077ef2b04915c1",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java#L740"
+      },
+      {
+        "id": "TableColumnManager.getBaseViewID",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java",
+        "signature": "public static String getBaseViewID( String id )",
+        "start_line": 794,
+        "end_line": 808,
+        "complete_definition_sha256": "e6a69467407d618b230240794b35cc0eefce0056f5f40e07101dd68dd1f5a42a",
+        "complete_body_sha256": "fd9cb827ee2a59136de8f866f442c83d8e96a1ccc1ff336f708e39e45da0208e",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java#L794"
+      },
+      {
+        "id": "TableColumnManager.getTableConfigDefaultMap",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java",
+        "signature": "private Map getTableConfigDefaultMap( String sTableID)",
+        "start_line": 810,
+        "end_line": 822,
+        "complete_definition_sha256": "b27f0bae962ceb44585ded2c98172482ea85535150833f260a9b20a70bbcfe27",
+        "complete_body_sha256": "4e1a8df7a702329505fb13cb3e4a09f54a1891efefda8044d50859d22ec8e85b",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java#L810"
+      },
+      {
+        "id": "TableColumnManager.setTableConfigDefaultMap",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java",
+        "signature": "private void setTableConfigDefaultMap( String sTableID, Map mapTableConfigDefault )",
+        "start_line": 824,
+        "end_line": 841,
+        "complete_definition_sha256": "a237a65458419a865c040feabe64e24f9a4141fc99a53aa7fd983ab8a3106123",
+        "complete_body_sha256": "107c41424a4f91c574f6d0ca92190147d73a2512352a42224b5c59255f01fd73",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java#L824"
+      },
+      {
+        "id": "TableColumnManager.resetColumns",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java",
+        "signature": "public void resetColumns( Class dataSourceType, String tableID)",
+        "start_line": 998,
+        "end_line": 1037,
+        "complete_definition_sha256": "6262228eef2f4f3216cfb80f2e838d2b2745b50b55d5c58ebe6d6b2f4914e179",
+        "complete_body_sha256": "5647ec0ad111a07cb6f4762b417cac5e375158f9f755998150fb5674290c813c",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java#L998"
+      },
+      {
+        "id": "TableColumnImpl.loadSettings",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java",
+        "signature": "public final void loadSettings(Map mapSettings)",
+        "start_line": 1236,
+        "end_line": 1343,
+        "complete_definition_sha256": "0ec59465159ccb36eb4d40482b6de31a8e61b9d6036f3da1effb4f0fe4bd9479",
+        "complete_body_sha256": "ab7942f0c766d7667cdb20ce2806bd14db4aef53ab347015fc7493fe08252d2c",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java#L1236"
+      },
+      {
+        "id": "TableColumnImpl.saveSettings",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java",
+        "signature": "public final void saveSettings(Map mapSettings)",
+        "start_line": 1363,
+        "end_line": 1404,
+        "complete_definition_sha256": "da3055051c12a0db3845b163813adbed3653e87ca76b3c32cb6d32bf91bc7b2a",
+        "complete_body_sha256": "4e9a010ad893157af4db34da23a1801c318854eb870c0e84632817f76e76f5c8",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java#L1363"
+      },
+      {
+        "id": "TableColumnImpl.setWidthPX",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java",
+        "signature": "public void setWidthPX(int width)",
+        "start_line": 292,
+        "end_line": 329,
+        "complete_definition_sha256": "c1a0235342da7a23736d8f2df4332f657fa3b2d3e58330d21868f7b6a35855db",
+        "complete_body_sha256": "d5df38c1240eea7ee272ff0f562e5d190851ec83b430c1981b9088beeb38142e",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java#L292"
+      },
+      {
+        "id": "TableColumnImpl.setPositionNoShift",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java",
+        "signature": "public void setPositionNoShift(int position)",
+        "start_line": 1156,
+        "end_line": 1167,
+        "complete_definition_sha256": "8340a1925378a35c43ff35765b1b765c327e0c5254f8d9bf5418cd4578066352",
+        "complete_body_sha256": "ea60341fcbb34c8957a9b55e32068463ff66d44f7949335f5fa2dbec1d6c85c6",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java#L1156"
+      },
+      {
+        "id": "TableColumnImpl.setVisible",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java",
+        "signature": "public void setVisible(boolean visible)",
+        "start_line": 1817,
+        "end_line": 1838,
+        "complete_definition_sha256": "5253946978cc8039bf1a0cb701a1307f0c3dc13a77aa0a5541f24d28f0611d62",
+        "complete_body_sha256": "e9a6f21c74fdf89acfdb829839d5fd9d0cbf098492eed49a6c6eb2439d6caa87",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java#L1817"
+      },
+      {
+        "id": "TableColumnImpl.setSortAscending",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java",
+        "signature": "public void setSortAscending(boolean bAscending)",
+        "start_line": 1730,
+        "end_line": 1738,
+        "complete_definition_sha256": "c361c35935c90253596d1a4ee0c33f9e2970c88639c705ad052929122353d7a8",
+        "complete_body_sha256": "bb5ccfe61f270a4d5b1aa573778a960513349f985ef86e40136c32e5c7d05551",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java#L1730"
+      },
+      {
+        "id": "TableColumnImpl.setDefaultSortAscending",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java",
+        "signature": "public void setDefaultSortAscending(boolean bAscending )",
+        "start_line": 1749,
+        "end_line": 1754,
+        "complete_definition_sha256": "2c43138a1cac26e7341bd105c2b965285f0146eed1da96547046edf7d7f61caa",
+        "complete_body_sha256": "f2cda95c4117f866989e60317b9bdd9bbf1866e67d8f0bd9cbd54953da5f7ab3",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java#L1749"
+      },
+      {
+        "id": "TableColumnImpl.getNameOverride",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java",
+        "signature": "public String getNameOverride()",
+        "start_line": 255,
+        "end_line": 258,
+        "complete_definition_sha256": "607731bc82c816c0f8b8fa6e1192eb664e2fdf4399e25a0fc1ba926aa8d237bf",
+        "complete_body_sha256": "6b7710ef0c393aa875304d2a4f9be73deac3b10e2ee8ec575562f66c9f9d3a0f",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java#L255"
+      },
+      {
+        "id": "TableColumnImpl.setNameOverride",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java",
+        "signature": "public void setNameOverride(String name )",
+        "start_line": 261,
+        "end_line": 264,
+        "complete_definition_sha256": "006d697379efb496bdaf8d4fae72b57358e0fa4e4c94feeb4159cff57a27fbf8",
+        "complete_body_sha256": "d0d352e6e44ad1ba306e16cf144f36ff01f77a1a14c59a4f0cbecd75fb38d93f",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java#L261"
+      },
+      {
+        "id": "TableColumnCreator.createIncompleteDM",
+        "path": "uis/src/com/biglybt/ui/swt/views/table/utils/TableColumnCreator.java",
+        "signature": "public static TableColumnCore[] createIncompleteDM(String tableID)",
+        "start_line": 49,
+        "end_line": 90,
+        "complete_definition_sha256": "262ca10397f886f0b4153c6028dcadd98dc4569a47bd160d410d0cd6623ea1e9",
+        "complete_body_sha256": "d76725cbec0e0b6b887e446f7e143c53d48a1433b3b3374e665788b15a0ad08a",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/table/utils/TableColumnCreator.java#L49"
+      },
+      {
+        "id": "TableColumnCreator.createCompleteDM",
+        "path": "uis/src/com/biglybt/ui/swt/views/table/utils/TableColumnCreator.java",
+        "signature": "public static TableColumnCore[] createCompleteDM(String tableID)",
+        "start_line": 92,
+        "end_line": 132,
+        "complete_definition_sha256": "cfb3bed132a6f2cc11cd5fb05af90c39aa8afb354375626d932ebec0c54697dd",
+        "complete_body_sha256": "cde44879fd0e41ef0b9bd3308902798665e7ef3bb240dd728386f929fd06a4f7",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/table/utils/TableColumnCreator.java#L92"
+      },
+      {
+        "id": "TableColumnCreator.areNoneVisible",
+        "path": "uis/src/com/biglybt/ui/swt/views/table/utils/TableColumnCreator.java",
+        "signature": "private static boolean areNoneVisible(Map mapTCs)",
+        "start_line": 180,
+        "end_line": 190,
+        "complete_definition_sha256": "1302c1bce26688f8ddebdb96ebee0fc9a4ab8613789bdbb7fae256f96ec017b5",
+        "complete_body_sha256": "00f41be132b894c8ac322da2058bec8f0413fc66369c69bb22036b443e0ee9e9",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/table/utils/TableColumnCreator.java#L180"
+      },
+      {
+        "id": "TableColumnCreator.setVisibility",
+        "path": "uis/src/com/biglybt/ui/swt/views/table/utils/TableColumnCreator.java",
+        "signature": "private static void setVisibility(Map mapTCs, String[] defaultVisibleOrder)",
+        "start_line": 192,
+        "end_line": 210,
+        "complete_definition_sha256": "7f6c1ded9755e4e93efea94ef283e8f608efaf5a67bd930beed291f131fb94ef",
+        "complete_body_sha256": "61e39dea40007fb6685a8553033fb0e2607aa56feb128929492a2774ef2fcad6",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/table/utils/TableColumnCreator.java#L192"
+      },
+      {
+        "id": "MyTorrentsSuperView.initializeWithCore",
+        "path": "uis/src/com/biglybt/ui/swt/views/MyTorrentsSuperView.java",
+        "signature": "private void initializeWithCore(Core core, Composite parent, Object dataSource )",
+        "start_line": 338,
+        "end_line": 462,
+        "complete_definition_sha256": "a2ac32673f29404691c7872ad4600bdbb9b124e14324f46bccffd8470987bf3c",
+        "complete_body_sha256": "8c5b935450b6c7cbd683582d4c9095d0a6850a5c77024493f9ca791c568d4459",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/MyTorrentsSuperView.java#L338"
+      },
+      {
+        "id": "MyTorrentsSuperView.getIncompleteColumns",
+        "path": "uis/src/com/biglybt/ui/swt/views/MyTorrentsSuperView.java",
+        "signature": "protected TableColumnCore[] getIncompleteColumns()",
+        "start_line": 647,
+        "end_line": 649,
+        "complete_definition_sha256": "71803764dcdaa4a8cc88f0194e18de7c05a6ff30408b84c53d47c1e22e1ce5b7",
+        "complete_body_sha256": "63f5f6321ace5a0fe43c4ba18269a7b6f9b7c64307c6c641c4a4c85933e7641b",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/MyTorrentsSuperView.java#L647"
+      },
+      {
+        "id": "MyTorrentsSuperView.getCompleteColumns",
+        "path": "uis/src/com/biglybt/ui/swt/views/MyTorrentsSuperView.java",
+        "signature": "protected TableColumnCore[] getCompleteColumns()",
+        "start_line": 656,
+        "end_line": 658,
+        "complete_definition_sha256": "28abb340e31484b895bb2f50936665df5f4215352b7e32f3344fb3f95968b723",
+        "complete_body_sha256": "31a49772e00bb2cb497fe72416ae2ca08992ea2477b430307610bb1e4d264181",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/MyTorrentsSuperView.java#L656"
+      },
+      {
+        "id": "MyTorrentsView.createTableView",
+        "path": "uis/src/com/biglybt/ui/swt/views/MyTorrentsView.java",
+        "signature": "protected TableViewSWT<DownloadManager> createTableView( Class<?> forDataSourceType, String tableID, TableColumnCore[] basicItems )",
+        "start_line": 3818,
+        "end_line": 3841,
+        "complete_definition_sha256": "adaedeba2eea7ee6a063e442474c8cac457be101c7a02e663ad8384271f2d304",
+        "complete_body_sha256": "562c8df8a9cbd2ac5f42a47580ab595674eac41d6ef2c137d31f2b45ec9fb10f",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/MyTorrentsView.java#L3818"
+      },
+      {
+        "id": "SB_Transfers.getTableSubID",
+        "path": "uis/src/com/biglybt/ui/swt/views/skin/SB_Transfers.java",
+        "signature": "private static String getTableSubID( Object ds )",
+        "start_line": 2874,
+        "end_line": 2896,
+        "complete_definition_sha256": "c348291997eb52379087097f47dd6cdf72c96e72130975e7e6ddfb197525f724",
+        "complete_body_sha256": "a3d55ce4ce7b94c156c258735d756cee2bc12a0d3a4bc41f4b54dd09314d7f32",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/skin/SB_Transfers.java#L2874"
+      },
+      {
+        "id": "SB_Transfers.getTableIdFromDataSource",
+        "path": "uis/src/com/biglybt/ui/swt/views/skin/SB_Transfers.java",
+        "signature": "public static String getTableIdFromDataSource( String baseTableID, Object dataSource)",
+        "start_line": 2951,
+        "end_line": 2971,
+        "complete_definition_sha256": "cd3b49fc9e4083b90a7fc71403be7d15e6294ac958470ad519a7e1f94f1a7254",
+        "complete_body_sha256": "1ee5c78a107d1f120360afa39d4318122f8b43a418c9a5e3938833b3b0f70d29",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/skin/SB_Transfers.java#L2951"
+      },
+      {
+        "id": "TableViewPainted.initialize",
+        "path": "uis/src/com/biglybt/ui/swt/views/table/painted/TableViewPainted.java",
+        "signature": "public void initialize(UISWTView parentView, Composite parent)",
+        "start_line": 1708,
+        "end_line": 1990,
+        "complete_definition_sha256": "dfc9b94e90eccb23edd87b1f5cb82b61d5fc72f6c4edf599e329180912738780",
+        "complete_body_sha256": "908489fc5d8bc2e5a3f42b85f19461ca65fc480f4bbc5fc4b03ec39475583c4c",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/table/painted/TableViewPainted.java#L1708"
+      },
+      {
+        "id": "TableViewPainted.sortOrderChanged",
+        "path": "uis/src/com/biglybt/ui/swt/views/table/painted/TableViewPainted.java",
+        "signature": "public void sortOrderChanged()",
+        "start_line": 1528,
+        "end_line": 1548,
+        "complete_definition_sha256": "d866652c78add2ee9ea4e74644f69550a28c4e3cd26f78cb56c6f4a39c3a0403",
+        "complete_body_sha256": "62139f7946808eda35e2a3dcf46d48bfa7c52da0df751ae5148af71d289f74fc",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/table/painted/TableViewPainted.java#L1528"
+      },
+      {
+        "id": "TableViewPainted.setRowHeight",
+        "path": "uis/src/com/biglybt/ui/swt/views/table/painted/TableViewPainted.java",
+        "signature": "public void setRowHeight(int newHeight)",
+        "start_line": 2479,
+        "end_line": 2508,
+        "complete_definition_sha256": "2538933bc9c93c15be6c45b034da169b85a546b960d712c999c4af47db05770d",
+        "complete_body_sha256": "6c99be779727fa17c983bba9fa4d4f28ef58b31dde75e588b9cc6cfcb4ebae60",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/table/painted/TableViewPainted.java#L2479"
+      },
+      {
+        "id": "TableHeaderPainted.MouseListeners.handleEvent",
+        "path": "uis/src/com/biglybt/ui/swt/views/table/painted/TableHeaderPainted.java",
+        "signature": "public void handleEvent(Event e)",
+        "start_line": 473,
+        "end_line": 626,
+        "complete_definition_sha256": "1da5534ac0feb3ca29e45fe9dd1db528bddc9725d34e6ffc80f516d79570609f",
+        "complete_body_sha256": "715a3e7262a6a597f59074e6c87327f34d9fec8f4f86bc4661cf0afc1e670619",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/table/painted/TableHeaderPainted.java#L473"
+      },
+      {
+        "id": "TableHeaderPainted.drop",
+        "path": "uis/src/com/biglybt/ui/swt/views/table/painted/TableHeaderPainted.java",
+        "signature": "public void drop(final DropTargetEvent event)",
+        "start_line": 639,
+        "end_line": 702,
+        "complete_definition_sha256": "6477997f1abea6ce2292e048892dde44903541419c235c978be3a8c6537c35ad",
+        "complete_body_sha256": "47523078018ff70ab742a723837281d9c81de698598e12716d3f46c3820d7db9",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/table/painted/TableHeaderPainted.java#L639"
+      },
+      {
+        "id": "TableViewImpl.setSortColumns.private",
+        "path": "core/src/com/biglybt/ui/common/table/impl/TableViewImpl.java",
+        "signature": "private boolean setSortColumns( TableColumnCore[] newSortColumns, boolean allowOrderChange, Map<TableColumnCore,Boolean> originalAscMap, boolean doHistory )",
+        "start_line": 2627,
+        "end_line": 2723,
+        "complete_definition_sha256": "74de434634785b100f3478157a02d12d23c19525ec659cea44b5e3b21802da50",
+        "complete_body_sha256": "c7e477981c233f6ae7c9fae33400dbfd960ab429b144a0060695cda935bd17b7",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/ui/common/table/impl/TableViewImpl.java#L2627"
+      },
+      {
+        "id": "TableViewSWT_Common.fillColumnMenu",
+        "path": "uis/src/com/biglybt/ui/swt/views/table/impl/TableViewSWT_Common.java",
+        "signature": "public void fillColumnMenu(final Menu menu, final TableColumnCore column, boolean isBlankArea)",
+        "start_line": 1120,
+        "end_line": 1444,
+        "complete_definition_sha256": "eba7b004e82db507c173954603ebc910a19bfeaa295d37369841890860f1a4f0",
+        "complete_body_sha256": "53edf476ac88f095198c06ebceacf260db0bda4e657fe386e04f81486b8b0e0c",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/table/impl/TableViewSWT_Common.java#L1120"
+      },
+      {
+        "id": "TableColumnSetupWindow.apply",
+        "path": "uis/src/com/biglybt/ui/swt/views/columnsetup/TableColumnSetupWindow.java",
+        "signature": "protected void apply()",
+        "start_line": 1467,
+        "end_line": 1486,
+        "complete_definition_sha256": "13f18c491f06502ba37ff9b2b50b69d2aee551a34ba503e3143c28b18d731a6d",
+        "complete_body_sha256": "a71ee20b7568fdff0eb83c2e0183cfa3e12e5bc34dccbf67321ba37c074c97da",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/columnsetup/TableColumnSetupWindow.java#L1467"
+      },
+      {
+        "id": "FileUtil.readResilientConfigFile",
+        "path": "core/src/com/biglybt/core/util/FileUtil.java",
+        "signature": "public static Map readResilientConfigFile( String file_name )",
+        "start_line": 1222,
+        "end_line": 1231,
+        "complete_definition_sha256": "1e3c250ef106f3aeb8105bd2c25645a580b7e5a09b8059e819571ffc350f69d3",
+        "complete_body_sha256": "c92069317c1265493d93c7542dc4ecfc2beb6afe5e8d89288a7332352021eb01",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/core/util/FileUtil.java#L1222"
+      },
+      {
+        "id": "FileUtil.writeResilientConfigFile",
+        "path": "core/src/com/biglybt/core/util/FileUtil.java",
+        "signature": "public static void writeResilientConfigFile( String file_name, Map data )",
+        "start_line": 902,
+        "end_line": 912,
+        "complete_definition_sha256": "e088d9cf06dbdddcaef6ca2c59848b2539cfdfb3a5917e6722aff2f97307f46b",
+        "complete_body_sha256": "a4571b5c59dc2b9a483e0af92211ea53b4cf0b770a615ea71ca2e64d853a380a",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/core/util/FileUtil.java#L902"
+      },
+      {
+        "id": "FileUtil.readResilientFile.outer",
+        "path": "core/src/com/biglybt/core/util/FileUtil.java",
+        "signature": "public static Map readResilientFile( File parent_dir, String file_name, boolean use_backup, boolean intern_keys )",
+        "start_line": 1292,
+        "end_line": 1340,
+        "complete_definition_sha256": "5edce8018b6539a64a2c2ca8dccc6d2f577d4055b0c7355ebd36a3c5231518d2",
+        "complete_body_sha256": "df6eee919e754aa4ab367c213c9918aef2a70f2b3bf713569bfcf7d6d68154b4",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/core/util/FileUtil.java#L1292"
+      },
+      {
+        "id": "FileUtil.readResilientFileSupport",
+        "path": "core/src/com/biglybt/core/util/FileUtil.java",
+        "signature": "private static Map readResilientFileSupport( File parent_dir, String file_name, boolean attempt_recovery, boolean intern_keys )",
+        "start_line": 1344,
+        "end_line": 1393,
+        "complete_definition_sha256": "bd3403b445863cf4da739593030e44150d5fc4b5a1815e42b496b18f00619ea1",
+        "complete_body_sha256": "a2c32106d59aca0b9f65140e11647cbb5c44675e44cba5eb95cad0e061dadbd9",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/core/util/FileUtil.java#L1344"
+      },
+      {
+        "id": "FileUtil.readResilientFile.inner",
+        "path": "core/src/com/biglybt/core/util/FileUtil.java",
+        "signature": "private static Map readResilientFile( String original_file_name, File parent_dir, String file_name, int fail_count, boolean recovery_mode, boolean skip_key_intern)",
+        "start_line": 1395,
+        "end_line": 1568,
+        "complete_definition_sha256": "62b6962dd5329c93cf3face86e858a456e99c3c059013a5a2ba85cc14240f233",
+        "complete_body_sha256": "d07e29d92f93bcceb157ba870247214ccd6169b4d2d6524930ed9b98bce4a1b2",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/core/util/FileUtil.java#L1395"
+      },
+      {
+        "id": "MapUtils.getString",
+        "path": "core/src/com/biglybt/util/MapUtils.java",
+        "signature": "public static String getString( Object obj )",
+        "start_line": 136,
+        "end_line": 151,
+        "complete_definition_sha256": "4b464ea1355b78f04ee3320f48549e552429d4918708fa5ab460abc329a080a1",
+        "complete_body_sha256": "362f633d955bf6e9affb30cf1950e9c2557fbc1fae9094a6e29232f8168761ef",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/util/MapUtils.java#L136"
+      },
+      {
+        "id": "MapUtils.getMapList",
+        "path": "core/src/com/biglybt/util/MapUtils.java",
+        "signature": "public static List getMapList(Map map, String key, List def)",
+        "start_line": 248,
+        "end_line": 262,
+        "complete_definition_sha256": "07874ebea7780554c02cf563003b0fc7bbf378bcb6558f5a50b59f13be12c456",
+        "complete_body_sha256": "ec96e72f7fb3432c525030a6bfb7ee10b0efffb44bc8fffb98d2cb1bcb834917",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/core/src/com/biglybt/util/MapUtils.java#L248"
+      },
+      {
+        "id": "NameItem.refresh",
+        "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/NameItem.java",
+        "signature": "public void refresh(TableCell cell, boolean sortOnlyRefresh)",
+        "start_line": 148,
+        "end_line": 181,
+        "complete_definition_sha256": "134e25330fc32df2cf6c455d9d47b097d4363aec59f86d04c4ccdab147915197",
+        "complete_body_sha256": "c7dc9bc9cbf14a8e5beb9213d19de26aa2b312c91d4fb417ecf2f25580bfbb65",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/NameItem.java#L148"
+      },
+      {
+        "id": "StatusItem.refresh",
+        "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/StatusItem.java",
+        "signature": "public void refresh( TableCell cell )",
+        "start_line": 133,
+        "end_line": 467,
+        "complete_definition_sha256": "577aec659040d76b35d6c559df29852276c7aae0dc4a75f67da0ded96bfecc5b",
+        "complete_body_sha256": "546bd5c7ab06604a7aab2e0a6d459628fe5fd3f4882ef38bf319d5cb9ddcfab3",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/StatusItem.java#L133"
+      },
+      {
+        "id": "SizeItem.refresh",
+        "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/SizeItem.java",
+        "signature": "public void refresh(TableCell cell)",
+        "start_line": 72,
+        "end_line": 129,
+        "complete_definition_sha256": "77f9f45c34f602627851e2ef858baeec221b252296418eb5ca77c3537cb4a44b",
+        "complete_body_sha256": "d72d399be41f586969012c820ff2d26194d57ba8e51cfd8221e8ce7d66190efa",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/SizeItem.java#L72"
+      },
+      {
+        "id": "DoneItem.refresh",
+        "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DoneItem.java",
+        "signature": "public void refresh(TableCell cell)",
+        "start_line": 67,
+        "end_line": 89,
+        "complete_definition_sha256": "733c870dda08030b9ad3b58f045f2cca1e3c86eeec9b08cb08ca676e4d0fa064",
+        "complete_body_sha256": "c7ead2baf29d91aedba91dbfd3b7041a2151845f2a00821507a1ddc6e7ccb11c",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DoneItem.java#L67"
+      },
+      {
+        "id": "RemainingItem.refresh",
+        "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/RemainingItem.java",
+        "signature": "public void refresh(TableCell cell)",
+        "start_line": 65,
+        "end_line": 73,
+        "complete_definition_sha256": "6e3a04cafc59385cccfdd30f7ed29abb3004573655e293bf294e36485e2a190c",
+        "complete_body_sha256": "6f95257f1b1731dc4536eecc3ce1f0584bbcc6384d428a0edf9da2c6ce4bfc7f",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/RemainingItem.java#L65"
+      },
+      {
+        "id": "DownSpeedItem.refresh",
+        "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DownSpeedItem.java",
+        "signature": "public void refresh(TableCell cell)",
+        "start_line": 154,
+        "end_line": 224,
+        "complete_definition_sha256": "149081b31c5e04c2871e2d5065244a7f00da1009e1a84759c8d0d9e6c2cd75a2",
+        "complete_body_sha256": "c5308ffba56c7eb6f4e82bb70056e6ac12987f214756f22ce0392b4ea00c610a",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DownSpeedItem.java#L154"
+      },
+      {
+        "id": "UpSpeedItem.refresh",
+        "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/UpSpeedItem.java",
+        "signature": "public void refresh(TableCell cell)",
+        "start_line": 150,
+        "end_line": 198,
+        "complete_definition_sha256": "5e0cc994729aa39af4087de18bdd15b0eb0acf3820a6e456abbd76b3ce737d23",
+        "complete_body_sha256": "83ae784b9336b6e1a66c3994d9505987cc2dc966a91bd4e96ebe77196500c92e",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/UpSpeedItem.java#L150"
+      },
+      {
+        "id": "DownItem.refresh",
+        "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DownItem.java",
+        "signature": "public void refresh(TableCell cell)",
+        "start_line": 149,
+        "end_line": 163,
+        "complete_definition_sha256": "7ae364c9a26e61c0ded91bd482d989493a4a17d9b68326f85d0683130aedabe6",
+        "complete_body_sha256": "f2c7a18d63df0b1252b6003f29cb7cfe0dd344fdc735be9f311b231d262b04f7",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DownItem.java#L149"
+      },
+      {
+        "id": "UpItem.refresh",
+        "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/UpItem.java",
+        "signature": "public void refresh(TableCell cell)",
+        "start_line": 149,
+        "end_line": 158,
+        "complete_definition_sha256": "d20651f02c235bb0f9088e15b60d5f6992e42bb21b000a2628991a408a1dadd4",
+        "complete_body_sha256": "65b9fd1cfe5369d8cc4be3640dc0a3243325e10111d3573d4f81d5824af08c1b",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/UpItem.java#L149"
+      },
+      {
+        "id": "RankItem.refresh",
+        "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/RankItem.java",
+        "signature": "public void refresh(TableCell cell)",
+        "start_line": 434,
+        "end_line": 465,
+        "complete_definition_sha256": "0c387febf347dde4c08bc59a454efe369332bcf0bdeb33a8fc381ac78311c4ec",
+        "complete_body_sha256": "5bb7eeec5364323a995bf46f6bdb63bad7f6ef04e85e969c245699e22e52c1e8",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/RankItem.java#L434"
+      },
+      {
+        "id": "TorrentHashItem.refresh",
+        "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/TorrentHashItem.java",
+        "signature": "public void refresh( TableCell cell)",
+        "start_line": 65,
+        "end_line": 87,
+        "complete_definition_sha256": "085d8e940f029e185ccf81bcf5d00fec5d2aadb3dd8d30ec725e8955bb071ec6",
+        "complete_body_sha256": "eb6243d03c7f6f1debdf06261f2dca8ddf7be31e65a2a655172ea03d81d06623",
+        "source_url": "https://github.com/BiglySoftware/BiglyBT/blob/cb8c6cb9bb97916cbc7e80338a017200ffc3e71f/uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/TorrentHashItem.java#L65"
+      }
+    ]
+  },
+  "native": {
+    "repository": "https://github.com/d00rsfan/BiglyBTC",
+    "observed_head": "9e890be4c6096934ab27c786ef37f3f706d67f94",
+    "sources": {
+      "preview/native/ui/classic_columns.hpp": {
+        "git_blob": "bff2e2c7772eb0ba0bafca0db3cf3dd112e00876",
+        "committed_sha256": "18e90f2c4ede7a5d8e04eb95b1fa566d8b92f07d9010b37dbd017776b080937d",
+        "observed_working_sha256": "18e90f2c4ede7a5d8e04eb95b1fa566d8b92f07d9010b37dbd017776b080937d",
+        "working_matches_commit": true
+      },
+      "preview/native/ui/classic_columns.cpp": {
+        "git_blob": "330b0988b0b6efb247a67dbb9579dc3261bbb5f1",
+        "committed_sha256": "7eff7d0eae0c38261cd8a0f36bf7cc31f87b97f03d5a57815b75f3d9c91c868b",
+        "observed_working_sha256": "7eff7d0eae0c38261cd8a0f36bf7cc31f87b97f03d5a57815b75f3d9c91c868b",
+        "working_matches_commit": true
+      },
+      "preview/native/ui/classic_filter.cpp": {
+        "git_blob": "6bf562c659c6f7c80033bbbae284f9667eb7cc55",
+        "committed_sha256": "2186674f85e4bf6eeb6eeb1b2c568c3b4f060eac4a443d04130144dab3d50003",
+        "observed_working_sha256": "2186674f85e4bf6eeb6eeb1b2c568c3b4f060eac4a443d04130144dab3d50003",
+        "working_matches_commit": true
+      },
+      "preview/native/ui/library_model.hpp": {
+        "git_blob": "316ea58390169abe27b25b7d0048a210d8f01d0f",
+        "committed_sha256": "5fbc9384b339e109fee7718d917219cbb33fa7c153d142df2db33aa5c89cb24c",
+        "observed_working_sha256": "8abca399af00b5c2c96e760c85b6c1078e69274be8b68c6dc8de7ac877772d98",
+        "working_matches_commit": false
+      },
+      "preview/native/ui/library_model.cpp": {
+        "git_blob": "1dbb6bf28e89ec2f72f1177559cf5624596e46cb",
+        "committed_sha256": "f55e2840877c9df938944e9c88904e9b11f62f3d00e8a843d2370f8a1afc1d2e",
+        "observed_working_sha256": "c934ccdf09240b30330545e08b2dd0499d5688092321a18e0686e849100769cf",
+        "working_matches_commit": false
+      },
+      "preview/native/ui/library_window.hpp": {
+        "git_blob": "be697cbb256daf66f38cd26cf667e423839e4aa3",
+        "committed_sha256": "8f64bcb083935e8064ef6ea9b0952ef1201c7d2102835bc26c9c36a3d52e3151",
+        "observed_working_sha256": "8f64bcb083935e8064ef6ea9b0952ef1201c7d2102835bc26c9c36a3d52e3151",
+        "working_matches_commit": true
+      },
+      "preview/native/ui/library_window.cpp": {
+        "git_blob": "0f974894bff3fcdf05aa35b7805869d3edcd83ef",
+        "committed_sha256": "5d9ac47ea40b9d6ce2bb32739daecb977daad817fa07d2e22fe7d1b13ebe76a6",
+        "observed_working_sha256": "da04f71c92300d239ff3203166cba8af252fdcc552f28bf21742839d4f087add",
+        "working_matches_commit": false
+      },
+      "preview/native/adapters/profile.hpp": {
+        "git_blob": "7594d248eddb981d1463b89df1d49839651dafd7",
+        "committed_sha256": "e91ff37048e02b87a4d6f97d774fe3e33b491febd0b2ec55d3dedbbf20dd60ff",
+        "observed_working_sha256": "e91ff37048e02b87a4d6f97d774fe3e33b491febd0b2ec55d3dedbbf20dd60ff",
+        "working_matches_commit": true
+      },
+      "preview/native/adapters/profile.cpp": {
+        "git_blob": "7104c1aceac28fe57f70d06930d44733d96ee551",
+        "committed_sha256": "f31f99cf73484c0c4fb058a6fc9e3937ecd74412f5ae794c775c0a7e8c4b91ee",
+        "observed_working_sha256": "f31f99cf73484c0c4fb058a6fc9e3937ecd74412f5ae794c775c0a7e8c4b91ee",
+        "working_matches_commit": true
+      },
+      "preview/native/adapters/file_io.hpp": {
+        "git_blob": "d3c5943ff61707c9c3c24a4ad912ded4f90da293",
+        "committed_sha256": "41b14236290a65b52f75d56f076857a1ffd037f9bd823f1f9afef98c82a9cd37",
+        "observed_working_sha256": "41b14236290a65b52f75d56f076857a1ffd037f9bd823f1f9afef98c82a9cd37",
+        "working_matches_commit": true
+      },
+      "preview/native/adapters/file_io.cpp": {
+        "git_blob": "37c74a5d4cfef571335468776c2a112974643e90",
+        "committed_sha256": "c55df3bfa6531534819a798351a5320365e1081d774f466fe4342bffa54793b9",
+        "observed_working_sha256": "c55df3bfa6531534819a798351a5320365e1081d774f466fe4342bffa54793b9",
+        "working_matches_commit": true
+      },
+      "preview/native/adapters/library_view.hpp": {
+        "git_blob": "68edbc945c5047491a8e3dc4a24db29246bc6304",
+        "committed_sha256": "43877d12f340bdd43cb1df1b98eddf6b39c89b7ec51d63de3b572ba9d4b5a82e",
+        "observed_working_sha256": "43877d12f340bdd43cb1df1b98eddf6b39c89b7ec51d63de3b572ba9d4b5a82e",
+        "working_matches_commit": true
+      },
+      "preview/native/adapters/library_view.cpp": {
+        "git_blob": "a245ebeedbc659214a33da1d33801a3435dde5be",
+        "committed_sha256": "a9aa1e0f6ccde4a7b4990f2340da1dd3472d372441b1389805e5d16ef1b229d4",
+        "observed_working_sha256": "a9aa1e0f6ccde4a7b4990f2340da1dd3472d372441b1389805e5d16ef1b229d4",
+        "working_matches_commit": true
+      },
+      "preview/native/adapters/saved_service_view.cpp": {
+        "git_blob": "9d78d1ded84e67180c9f586493ca06c783e1c5d6",
+        "committed_sha256": "4cedc6fcf9bc89628e66d633cbea70249e9e71d151a85d184fdf3ad4cadbb887",
+        "observed_working_sha256": "4cedc6fcf9bc89628e66d633cbea70249e9e71d151a85d184fdf3ad4cadbb887",
+        "working_matches_commit": true
+      },
+      "preview/native/app/session_bridge.hpp": {
+        "git_blob": "bd50cefdc7c5adc35a3aef4ee7973c70a1540020",
+        "committed_sha256": "f9d29fa411136f2373dd8a1c94b8ce99808ab7561b361bcd3b99ffdbc782164d",
+        "observed_working_sha256": "f9d29fa411136f2373dd8a1c94b8ce99808ab7561b361bcd3b99ffdbc782164d",
+        "working_matches_commit": true
+      },
+      "preview/native/app/session_bridge.cpp": {
+        "git_blob": "d67a543b8fa82cf1520f65b356f3dc8642502d07",
+        "committed_sha256": "0fe02643a7e93cd91073d2f5d688507b534aaa17f12e4f7c4f630b045a3e029a",
+        "observed_working_sha256": "f43bcf4cb34ea8df76cf3b36bc92e7dbe25b57ec1cd0fa7792a11153454bb2fe",
+        "working_matches_commit": false
+      },
+      "preview/native/core/include/biglybtc/bencode.hpp": {
+        "git_blob": "88e48d0acfe97437d0c094acbd8fceaaa1d32a86",
+        "committed_sha256": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+        "observed_working_sha256": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+        "working_matches_commit": true
+      },
+      "preview/native/core/src/bencode.cpp": {
+        "git_blob": "2c77566816f6f0293fce8637901f259852a392f6",
+        "committed_sha256": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08",
+        "observed_working_sha256": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08",
+        "working_matches_commit": true
+      }
+    },
+    "scope": "Working hashes are authoritative for this audit. Committed hashes preserve the observed public baseline; differences are disclosed WIP.",
+    "observed_complete_definitions": [
+      {
+        "id": "ClassicColumns.constructor",
+        "path": "preview/native/ui/classic_columns.cpp",
+        "source": "observed working tree; file SHA pinned above",
+        "signature": "ClassicColumns::ClassicColumns(QTableView& table, bool completed) : QObject(&table), table_(&table), menu_(new QMenu(completed ? tr(\"Complete Columns\") : tr(\"Incomplete Columns\"), &table))",
+        "start_line": 15,
+        "end_line": 61,
+        "complete_definition_sha256": "c2257623d700ee442cc7f0cfadc5b2c8fa5ad502f7284de2d1ef85fdf13c7d89",
+        "complete_body_sha256": "29be78ac6c4e9fe23e2d5433e6114e7d9a5e90f38ad4f9449c2af995323536c1"
+      },
+      {
+        "id": "ClassicColumns.destructor",
+        "path": "preview/native/ui/classic_columns.cpp",
+        "source": "observed working tree; file SHA pinned above",
+        "signature": "ClassicColumns::~ClassicColumns()",
+        "start_line": 63,
+        "end_line": 63,
+        "complete_definition_sha256": "72d46ace4697e4574a0fedc07b9c2a0ead607f7adbc4beb948d59d1025d77278",
+        "complete_body_sha256": "c60c0f29d2fb4f09a005f91ee56d2988c68401a341bbea1d8afaed0d17a42659"
+      },
+      {
+        "id": "ClassicColumns.reset",
+        "path": "preview/native/ui/classic_columns.cpp",
+        "source": "observed working tree; file SHA pinned above",
+        "signature": "void ClassicColumns::reset()",
+        "start_line": 79,
+        "end_line": 94,
+        "complete_definition_sha256": "74d299529e4b14c764f8ae9d875c9d90340eea40257ea5649ffe2707d25713c2",
+        "complete_body_sha256": "20a6baa76d208ccbe1bed3d2b79bd1975bab3d52c99f0de9e66729682eec056d"
+      },
+      {
+        "id": "ClassicColumns.refreshActions",
+        "path": "preview/native/ui/classic_columns.cpp",
+        "source": "observed working tree; file SHA pinned above",
+        "signature": "void ClassicColumns::refreshActions()",
+        "start_line": 66,
+        "end_line": 77,
+        "complete_definition_sha256": "b68d067a3269e1c5a2bb300b34dabd33e4be8724f198dba7a4a925e58be324ed",
+        "complete_body_sha256": "cc24e12011902e078aa4bdc198d10be5e0327d8e5df945a629d162f51f9f7e2d"
+      },
+      {
+        "id": "storage.readLibrarySource",
+        "path": "preview/native/adapters/library_view.cpp",
+        "source": "observed working tree; file SHA pinned above",
+        "signature": "std::expected<LibrarySourceSnapshot, Error> readLibrarySource(const ProfileLease& lease)",
+        "start_line": 10,
+        "end_line": 50,
+        "complete_definition_sha256": "b4644c4eeefabb47da41ec90bb501e258bb98d78bfc6ac792ce28005c5cc2020",
+        "complete_body_sha256": "005d0752af85835e25e3f57adcffad1da995cdeb96f574c5d46aad05259f3ef2"
+      },
+      {
+        "id": "ConfigFile.load",
+        "path": "preview/native/adapters/profile.cpp",
+        "source": "observed working tree; file SHA pinned above",
+        "signature": "std::expected<ConfigFile, Error> ConfigFile::load(const ProfileLease& lease, std::string filename, core::Limits limits)",
+        "start_line": 88,
+        "end_line": 125,
+        "complete_definition_sha256": "6e8e3accdfbce1bd2ec63b3e829904b180626cc8e99db71de2fb6b246081a0b4",
+        "complete_body_sha256": "413935c130d093874eb495384d7e8ba61d9b96a69fb96d431c14fd77181ef2b2"
+      },
+      {
+        "id": "saved_services.readView",
+        "path": "preview/native/adapters/saved_service_view.cpp",
+        "source": "observed working tree; file SHA pinned above",
+        "signature": "std::expected<View, Error> readView(const ProfileLease& lease, const char* filename, std::stop_token stop, Project project)",
+        "start_line": 47,
+        "end_line": 76,
+        "complete_definition_sha256": "c55d6fbf05c68a42e6700b516c8b2be8321b323e3788456672549e3c16350564",
+        "complete_body_sha256": "32c3b83bd2e85b841793a8f59d3e75b3eb06db29dd8f0f25b3035994162131b4"
+      },
+      {
+        "id": "SessionBridge.Host.query",
+        "path": "preview/native/app/session_bridge.cpp",
+        "source": "observed working tree; file SHA pinned above",
+        "signature": "ui::Presentation query(std::stop_token stop)",
+        "start_line": 80,
+        "end_line": 128,
+        "complete_definition_sha256": "7e350d149acfdc4c5c18aea33f2802c2e979aea001bb9ca1537487a427fedceb",
+        "complete_body_sha256": "daee1ec622c196e219691bb203fe4c4d120b73e93f21f022c74f16637552d544"
+      }
+    ]
+  },
+  "context_sha256": {
+    "migration/evidence/20261018-navigation/next-library-columns-audit.json": "a6253890e826161bf1d880c772355ef0804a626b476a95d5ec5090380beb1d5e",
+    "migration/evidence/20261018-navigation/classic-close-tab-contract.json": "aa558d5335e13a6ef3dd143d0627a2f6b6bdfc03d38570c8af51d4479120eb6e",
+    "migration/evidence/20261018-navigation/saved-dnd-math-review.json": "9a51ed571449487a651d0a80169943df593fba628beca178b712282ea8cc433f",
+    "migration/evidence/20261018-navigation/saved-dnd-library-integration-proposal.md": "f405ab0733038a7c9555c5a589acfa2a3d33fda31c23d82f2c3ae3551c01dbad",
+    "migration/evidence/20261018-navigation/saved-dnd-library-integration-pins.json": "1ccd7ab4bd78c08872d2d8548a452ac669b762ebbf17889ac4134e2536aabeeb"
+  },
+  "storage": {
+    "current_filename": "tables.config",
+    "profile_relative": true,
+    "encoding": "resilient bencoded Map, not Qt header bytes",
+    "legacy_global_filename": "biglybt.config",
+    "legacy_filename_authority": "ConfigurationManager.CONFIG_FILENAME",
+    "current_table_keys": {
+      "incomplete": "Table.MyTorrents",
+      "complete": "Table.MySeeders"
+    },
+    "default_keys": {
+      "incomplete": "TableDefault.MyTorrents",
+      "complete": "TableDefault.MySeeders"
+    },
+    "resolution": "An existing exact Table.<id> map wins even if empty; only absence/null permits cloned TableDefault.<baseID>. BaseID strips after LAST ::. Wrong map type is not source-valid absence.",
+    "subtable_ids": "Library.EnableSepColConfig enables <base>::Tag_<UID> for manual/state tags, or <base>::TagGroup_<Base32 UTF8 group>. They are distinct from base, .big and .small tables.",
+    "other_table_keys": [
+      "SortColumns",
+      "SortColumn",
+      "RowHeight",
+      "last.reset"
+    ],
+    "column_key": "Column.<stable source column ID>; never label, translation or Qt logical/visual index",
+    "opaque_retention": "Whole immutable Document and original bytes retain unknown tables/plugin columns, malformed fields, userData, list tails and non-UTF8 bytes; no rewriting.",
+    "parser_compatibility_limit": "Existing native Document parser rejects duplicate dictionary keys (duplicate_key); repeated list items/sort IDs and distinct unknown keys are retained. Do not claim preservation of an originally duplicate dictionary that cannot be admitted by the frozen parser."
+  },
+  "column_array_actual_format": [
+    {
+      "index": 0,
+      "field": "visible",
+      "read": "Number.intValue()==1; other numeric values false"
+    },
+    {
+      "index": 1,
+      "field": "position",
+      "read": "Number.intValue(); setPositionNoShift; -1 invisible after ensureIntegrity, -2 POSITION_LAST"
+    },
+    {
+      "index": 2,
+      "field": "width",
+      "read": "Number.intValue(); setWidthPX; negative/below positive min ignored, above positive max clamped; per-column defaults/min/max apply"
+    },
+    {
+      "index": 3,
+      "field": "auto_tooltip",
+      "read": "Number.intValue()==1"
+    },
+    {
+      "index": 4,
+      "field": "sort_order",
+      "read": "int>=0:1 ascending, other nonnegative descending; int<0 leaves initialized current direction; missing/wrong type sets bDefaultSortAscending"
+    },
+    {
+      "index": 5,
+      "field": "user_data",
+      "read": "Map copied/merged, including opaque plugin fields and tablecolumn.nameoverride"
+    },
+    {
+      "index": 6,
+      "field": "alignment",
+      "read": "Number.intValue(); -1 emitted for default"
+    },
+    {
+      "index": 7,
+      "field": "foreground_RGB",
+      "read": "List size3 of Number.intValue; bad members may throw after preceding fields change"
+    },
+    {
+      "index": 8,
+      "field": "background_RGB",
+      "read": "List size3 of Number.intValue; bad members may throw after preceding fields change"
+    },
+    {
+      "index": 9,
+      "field": "icon_reference_enabled",
+      "read": "Number.intValue()!=0"
+    }
+  ],
+  "format_correction": "loadSettings comment lists width before position. Executable load/save bodies prove position index1 and width index2.",
+  "numeric_policy": "Bencoded signed64 read via Number.intValue means signed low32; implement defined bit conversion in native. Visual bounds are separate native admission; no malformed Java partial-effect credit.",
+  "save_and_lifecycle": {
+    "shape": "saveSettings replaces each registered Column.<id> with exactly10 items; source does not retain that registered list tail. Existing table map/unregistered entries stay.",
+    "triggers": [
+      "header resize mouse-up and drag-drop saveTableColumns",
+      "setup Apply saves; Default clones TableDefault",
+      "core stopping saves dirty registered columns and tables.config",
+      "getTablesConfigMap timer saves dirty cache after idle interval"
+    ],
+    "forbidden_reader_calls": "Original manager constructor registers core listener; getTablesConfigMap installs timer; load/default/sort access can migrate/remove keys. Never instantiate these as reader.",
+    "recovery_side_effects": "FileUtil can copy corrupt input to .bad*, partially recover and rewrite primary from backup. Native read-only reader must not call original recovery."
+  },
+  "ordering": {
+    "source": "Comparator maps negative positions to 0xFFFF+position, subtracts int positions; ties prefer runtime default ID list then column name, except POSITION_LAST ties. ensureIntegrity reindexes all except -1 and hides -1. Zero admitted positions can trigger Reset/write.",
+    "dependency": "Runtime registered plugin columns/default list and hooks affect ordering; raw unknown columns do not authorize fake registry recreation.",
+    "proposed_admission": "Use accepted unique nonnegative positions for relative order of corresponding native columns; compact gaps and append unmatched native columns in construction order. Negative/duplicate/extreme wrapped positions get diagnostics/fallback. Native bounded admission is not full Java normalization."
+  },
+  "sort": {
+    "current": "Ordered SortColumns list, IDs from UTF8 MapUtils.getString (wrong member yields null). Empty list triggers painted default sort (# for MyTorrentsView).",
+    "legacy_table": "If no valid SortColumns list, SortColumn accepts String or byte[] decoded with JVM default charset.",
+    "legacy_global": "Then <tableID>.sortColumn in biglybt.config; getter removes old .sortColumn AND .sortAsc. It does not read .sortAsc here. Never remove either in read-only reader.",
+    "direction": "Column list[4] carries per-column direction. config.style.table.defaultSortOrder also affects constructor/user-sort changes. Negative direction is not known ascending.",
+    "multiple": "Original supports multiple ordered IDs and per-column directions. Unknown ID lookup can substitute registry tableColumns[0], which has no safe stable native identity.",
+    "comparison": "Table.sort.intuitive and source-specific typed comparators differ from Qt; imported settings alone prove no row-sort parity.",
+    "native_policy_proposed": "Preserve full sort list; apply only known single ID with known direction. Unsupported/multiple/unknown primary retains existing native sort plus diagnostic; do not promote later known ID."
+  },
+  "defaults_migrations": {
+    "runtime_defaults": "TableColumnCreator sets incomplete/complete ID order including optional plugin IDs. Missing Column.* or none visible among registered columns invokes visibility defaults and # ascending.",
+    "user_defaults": "Absent exact table can use cloned TableDefault.<base>; Reset uses user defaults when present. Empty exact map is not absent.",
+    "legacy_fields": "Missing/wrong list position/width/autoTooltip read Table.<tableID>.<columnID>.position/.width/.auto_tooltip from biglybt.config. saveSettings removes all3 if old width exists.",
+    "version": "last.reset migration is implemented but mapResetTable_Version has NO active entries and RERESET=false in pinned commit. Preserve metadata; invent no migration threshold.",
+    "native_gap": "ClassicColumns Reset currently means construction snapshot, not Java/user default. Name header Stretch overrides saved fixed width unless later GUI application chooses Interactive.",
+    "incomplete_default_expressions": [
+      "HealthItem.COLUMN_ID",
+      "RankItem.COLUMN_ID",
+      "NameItem.COLUMN_ID",
+      "TorrentStream",
+      "azsubs.ui.column.subs",
+      "azbuddy.ui.column.msgpending",
+      "RatingColumn",
+      "Info",
+      "CommentIconItem.COLUMN_ID",
+      "SizeItem.COLUMN_ID",
+      "DownItem.COLUMN_ID",
+      "DoneItem.COLUMN_ID",
+      "StatusItem.COLUMN_ID",
+      "SeedsItem.COLUMN_ID",
+      "PeersItem.COLUMN_ID",
+      "DownSpeedItem.COLUMN_ID",
+      "UpSpeedItem.COLUMN_ID",
+      "ETAItem.COLUMN_ID",
+      "ShareRatioItem.COLUMN_ID",
+      "TrackerStatusItem.COLUMN_ID"
+    ],
+    "complete_default_expressions": [
+      "HealthItem.COLUMN_ID",
+      "RankItem.COLUMN_ID",
+      "SeedingRank",
+      "NameItem.COLUMN_ID",
+      "azsubs.ui.column.subs",
+      "azbuddy.ui.column.msgpending",
+      "RatingColumn",
+      "Info",
+      "RateIt",
+      "CommentIconItem.COLUMN_ID",
+      "SizeItem.COLUMN_ID",
+      "StatusItem.COLUMN_ID",
+      "SeedsItem.COLUMN_ID",
+      "PeersItem.COLUMN_ID",
+      "UpSpeedItem.COLUMN_ID",
+      "ShareRatioItem.COLUMN_ID",
+      "UpItem.COLUMN_ID",
+      "TrackerStatusItem.COLUMN_ID"
+    ],
+    "default_expression_note": "Expressions ending .COLUMN_ID name exact source constants, not literal serialized IDs; the complete creator bodies are pinned. Native admission never recreates absent plugin registrations from these arrays."
+  },
+  "native_column_correspondence": [
+    {
+      "logical": 0,
+      "native": "Name",
+      "original": "name",
+      "proposal": "candidate layout-only correspondence; fallback/comparator parity open"
+    },
+    {
+      "logical": 1,
+      "native": "State",
+      "original": "status",
+      "proposal": "candidate layout-only correspondence; native states narrower"
+    },
+    {
+      "logical": 2,
+      "native": "Size (bytes)",
+      "original": null,
+      "related_original": "size",
+      "proposal": "not alias: full geometry versus DND/live original"
+    },
+    {
+      "logical": 3,
+      "native": "Progress",
+      "original": null,
+      "related_original": "done",
+      "proposal": "not alias: full progress versus selected/live original"
+    },
+    {
+      "logical": 4,
+      "native": "Down (B/s)",
+      "original": "downspeed",
+      "proposal": "candidate layout-only; source disabled -1/icon/plugin live stats differ"
+    },
+    {
+      "logical": 5,
+      "native": "Up (B/s)",
+      "original": "upspeed",
+      "proposal": "candidate layout-only; source disabled -1/icon/plugin live stats differ"
+    },
+    {
+      "logical": 6,
+      "native": "Received (bytes)",
+      "original": null,
+      "related_original": "down",
+      "proposal": "not alias: native raw total versus original good-data-received"
+    },
+    {
+      "logical": 7,
+      "native": "Sent (bytes)",
+      "original": "up",
+      "proposal": "candidate layout-only total-data-sent; formatting/live coverage differ"
+    },
+    {
+      "logical": 8,
+      "native": "Hash",
+      "original": "torrenthash",
+      "proposal": "candidate layout-only; original suppresses pure v2, native supports20/32bytes"
+    },
+    {
+      "logical": 9,
+      "native": "Saved queue position",
+      "original": null,
+      "related_original": "#",
+      "proposal": "private ID; saved signed64 is not manager RankItem current int"
+    },
+    {
+      "logical": 10,
+      "native": "Saved selected size (bytes)",
+      "original": null,
+      "related_original": "size",
+      "proposal": "private ID; saved aggregate is not original live/metadata-sensitive column"
+    },
+    {
+      "logical": 11,
+      "native": "Saved selected remaining (bytes)",
+      "original": null,
+      "related_original": "remaining",
+      "proposal": "private ID; saved aggregate is not original live column"
+    },
+    {
+      "logical": 12,
+      "native": "Saved selected Done",
+      "original": null,
+      "related_original": "done",
+      "proposal": "private ID; saved aggregate is not original live column"
+    }
+  ],
+  "first_stage_design": {
+    "pure_api": "Proposed core::readClassicColumnLayouts(owned original Document, lower-only limits) -> expected<SavedClassicLayouts,fixed error>. Result owns shared_ptr<const Document>, table/default provenance, raw IDs/fields, optional signed-low32 facts and bounded issues; reject edited raw/projection mismatch.",
+    "adapter": "Separate storage::readClassicColumnLayoutsView(const ProfileLease&,stop_token) reads fixed tables.config through ConfigFile::load(core::Limits{}). Missing distinct loaded/RecoverySource; verify 3 exact candidates absent after inherited Missing ambiguity. No save, reacquire, original recovery or arbitrary paths.",
+    "legacy_scope": "First stage reports legacy-global fallback-needed; does not implicitly read large biglybt.config. A later caller-supplied bounded global Document can resolve keys with independent provenance; source declared filename and aliases stay exact.",
+    "limits_native_proposal": {
+      "input_bytes": 4194304,
+      "nodes": 100000,
+      "depth": 64,
+      "selected_tables": 2,
+      "columns_per_selected_table": 1024,
+      "sort_ids_per_table": 32,
+      "column_id_bytes": 256,
+      "issues": 4096,
+      "visual_width_min": 16,
+      "visual_width_max": 8192
+    },
+    "bounds": "Only lower limits. Checked aggregate/count budgets before copying fields. Opaque data charged once to document, no duplicated plugin subtrees. Invalid/limit errors distinct; no silent truncation.",
+    "readLibrarySource_impact": "Do not add unconditional table I/O/failures to shared host/plugin library reader. New optional read once/open or explicit layout reload on existing Host worker and lease; no per-torrent reads or every-refresh reload.",
+    "ownership": "Immutable owned packet crosses GUI boundary; borrowed views remain backed. Separate files are not transactional. Existing Target/revision/close guards remain; no path chasing/profile reacquire/payload reads.",
+    "application_later": "Whitelisted stable IDs only, preserve logical0..12/model/selection. Validate before GUI mutation; use per-profile/request and local-layout generations so late results cannot overwrite user edits. Detached MyTorrents retains its table state.",
+    "private_ID_proposal": [
+      "biglybtc.saved.queue.position",
+      "biglybtc.saved.selected.size",
+      "biglybtc.saved.selected.remaining",
+      "biglybtc.saved.selected.done"
+    ],
+    "write_scope": "No ID/config writes now. Full raw-preserving writer/conflict protocol and original multisort/default/plugin semantics remain open."
+  },
+  "tests_proposed": [
+    "Hand-encoded incomplete/complete separation, modern/scoped/plugin tables opaque; exact-map absent versus empty and malformed; TableDefault fallback provenance.",
+    "Position index1/width index2; signed-low32 edges; literal1 visibility; short/wrong lists; invalid RGB; plugin userData/nameoverride and extra tails retained.",
+    "Unique/missing/duplicate/negative positions and unknown-plugin-only layouts have explicit partial fallback; never erase source bytes.",
+    "Known single sort/direction, negative unspecified, multiple/empty/unknown-primary/legacy SortColumn and global fallback-needed; preserve ordering and raw invalid bytes.",
+    "Lower byte/node/depth/count/ID/issues/width caps, ownership after moves/copies, edited Document rejection; no changed original parser policy.",
+    "Generated-profile lease adapter tests: primary/backup/saving, absent versus malformed backup/saving, unsafe symlink/oversized/cancel; raw bytes/inodes unchanged.",
+    "Later GUI: per-pane defaults/order/width, logical IDs not labels, selection/Target remains; reset policy explicit, close/reattach same widget, stale/local-edit replies ignored.",
+    "Original source-only oracle if parity is later claimed: freeze selected exact bodies/inert providers before native comparison; no manager construction."
+  ],
+  "coordinator_questions": [
+    "Choose projection-only first milestone versus also applying a small layout-only whitelist.",
+    "Approve candidate corresponding IDs and explicit nonaliases; layout correspondence does not promise value/sort parity.",
+    "Choose single-sort fallback and imported Name width Stretch/Interactive policy.",
+    "Choose Reset Columns preview defaults versus admitted initial layout; Java user-default Reset remains separately open.",
+    "Confirm private namespace before future writing; no config writer in first stage."
+  ],
+  "validation": {
+    "source_reads": "Committed Git blobs; static text/hash and lexical complete-definition extraction only; no source evaluation/helper imports.",
+    "source_files": 28,
+    "complete_definitions": 60,
+    "native_files": 18,
+    "execution_credit": 0,
+    "profile_access": false,
+    "production_changes": false,
+    "native_complete_definitions": 8
+  }
+}

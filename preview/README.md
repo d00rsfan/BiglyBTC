@@ -93,5 +93,13 @@ claim. See the [column contract](docs/saved-selected-columns-contract.json),
 [source contract](docs/saved-dnd-progress-contract.json) and
 [math/default review](docs/saved-dnd-math-review.json).
 
+The core also reads original classic `tables.config` documents into an owned
+raw snapshot and typed requested column facts. It preserves unknown plugin
+columns and extra settings, distinguishes exact layouts from user defaults,
+and retains original ordered sort IDs without applying them. The desktop does
+not import these layouts yet; its chooser remains session-only. See the
+[layout contract](docs/classic-column-layout-contract.json) and
+[pinned source audit](docs/classic-column-persistence-source.json).
+
 No performance improvement or full migration completion is claimed by this source
 milestone.
