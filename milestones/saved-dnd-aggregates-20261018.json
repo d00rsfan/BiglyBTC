@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "scope": "Fixed saved DND facts, pure selected-metrics projection and non-poisoning cache child parsing; no UI wiring",
+  "upstream_repository": "https://github.com/BiglySoftware/BiglyBT",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_repository": "https://github.com/d00rsfan/BiglyBTC",
+  "native_parent": "efdf27688594ceecd6d27f8bc2c6e7c0e4c5ce4c",
+  "native_commit": "aaa7a1f4a84b66c0edc3d900c701e38a81fcfd2b",
+  "pushed": true,
+  "native_units_passed": 33,
+  "native_units_skipped": 0,
+  "dnd_cases_per_lane": 61,
+  "dnd_assertions_per_lane": 464,
+  "compiler_lanes": [
+    "GCC16 Release",
+    "Clang24 Release",
+    "GCC16 Debug ASan/UBSan;detect_leaks=1;halt_on_error=1"
+  ],
+  "secondary_tests_per_lane": 2,
+  "java_runtime_equality_credit": 0,
+  "normal_profile_access": false,
+  "processes_signaled": false,
+  "dist_changed": false,
+  "source_sha256": {
+    "preview/README.md": "11f7d0eb6cc456a4db3db1e96ffcee736d0191bc96c46b52abf748d5b9332fb7",
+    "preview/docs/saved-dnd-math-review.json": "9a51ed571449487a651d0a80169943df593fba628beca178b712282ea8cc433f",
+    "preview/docs/saved-dnd-progress-contract.json": "806127bade54705fd5b70a77c8d99f6f4e3b3a968ad1ea3a74d464fdf210cc5a",
+    "preview/native/core/CMakeLists.txt": "2f4eb435eacef4a7b9b8d4702c0cde8d56d5d1b490c875892319f59bfcb1d6fd",
+    "preview/native/core/include/biglybtc/saved_dnd.hpp": "776d08b0497c41d69883b70aef5df45c959a44c5918400d1d2756eb44afd4699",
+    "preview/native/core/src/saved_dnd.cpp": "c4e1d0f03be63697bcb95c4dd3d457b449005bc3768f795bcb255d03817288e7",
+    "preview/native/core/include/biglybtc/state_cache.hpp": "f097b34cb04613a7ff368df90e74d1ac3467338a3f9226b1accd1ea52e98eef9",
+    "preview/native/core/src/state_cache.cpp": "4c9bf61302b1381ea03aceabdf45436c0498de10e4ad77f42c7ffd1aeb7a4926",
+    "preview/native/tests/CMakeLists.txt": "72e8e1a08c7749753ac37e2ffa96302e5cc2247015aa28c6c8f9a165069ff870",
+    "preview/native/tests/saved_dnd_tests.cpp": "74c42fce39cc823a597e77b9f0d55b3f03f9f8f0436895b425703380a1a937f5"
+  },
+  "limitations": [
+    "Strict invalid/cross-counter admission differs deliberately from original stale/malformed-data recovery/clamps",
+    "Exact-source-body probing follows this narrow native checkpoint and remains separate from full runtime qualification",
+    "No original disk manager, payload, completion-pane policy or UI parity credit",
+    "No new performance or compositor qualification"
+  ],
+  "hosted_desktop": {
+    "run": 39118014131,
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39118014131",
+    "status": "success",
+    "native_units_passed": 33,
+    "native_units_skipped": 0,
+    "dnd_cases": 61,
+    "dnd_assertions": 464,
+    "actual_preview_smoke_qt_rows": 3,
+    "all_three_view_captures": true
+  },
+  "hosted_sdk": {
+    "run": 39118014174,
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39118014174",
+    "status": "success"
+  }
+}
