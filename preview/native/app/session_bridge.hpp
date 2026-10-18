@@ -5,6 +5,7 @@
 #include "library_model.hpp"
 #include "saved_services_presentation.hpp"
 #include "statistics_presentation.hpp"
+#include "history_presentation.hpp"
 #include "engine_statistics_presentation.hpp"
 
 #include <QObject>
@@ -26,6 +27,7 @@ public:
   bool refresh();
   bool savedServices(quint64 request);
   bool statistics(quint64 session, quint64 request);
+  bool history(quint64 session, quint64 request, core::HistoryDate date);
   bool columnLayouts(quint64 session, quint64 request);
   bool saveColumnLayout(ui::ColumnLayoutSaveSubmission);
   bool details(ui::Target target);
@@ -38,6 +40,7 @@ signals:
   void detailsReady(biglybtc::ui::Details);
   void savedServicesReady(biglybtc::ui::SavedServicesPresentation);
   void statisticsReady(biglybtc::ui::StatisticsPresentation);
+  void historyReady(biglybtc::ui::HistoryPresentation);
   void engineStatisticsReady(biglybtc::ui::EngineStatisticsPresentation);
   void columnLayoutSessionReady(quint64 session);
   void columnLayoutsReady(biglybtc::ui::ColumnLayoutsPresentation);

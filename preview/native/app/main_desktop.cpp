@@ -47,6 +47,7 @@ int main(int argc, char** argv) {
     QObject::connect(&bridge, &Bridge::detailsReady, &window, &Window::setDetails);
     QObject::connect(&bridge, &Bridge::savedServicesReady, &window, &Window::setSavedServices);
     QObject::connect(&bridge, &Bridge::statisticsReady, &window, &Window::setStatistics);
+    QObject::connect(&bridge, &Bridge::historyReady, &window, &Window::setHistory);
     QObject::connect(&bridge, &Bridge::engineStatisticsReady, &window, &Window::setEngineStatistics);
     QObject::connect(&bridge, &Bridge::columnLayoutSessionReady, &window, &Window::beginColumnLayoutSession);
     QObject::connect(&bridge, &Bridge::columnLayoutsReady, &window, &Window::setColumnLayouts);
@@ -58,6 +59,7 @@ int main(int argc, char** argv) {
     QObject::connect(&window, &Window::detailsRequested, &bridge, &Bridge::details);
     QObject::connect(&window, &Window::savedServicesRequested, &bridge, &Bridge::savedServices);
     QObject::connect(&window, &Window::statisticsRequested, &bridge, &Bridge::statistics);
+    QObject::connect(&window, &Window::historyRequested, &bridge, &Bridge::history);
     QObject::connect(&window, &Window::columnLayoutsRequested, &bridge, &Bridge::columnLayouts);
     QObject::connect(&window, &Window::columnLayoutSaveRequested, &bridge, &Bridge::saveColumnLayout);
     QObject::connect(&window, &Window::cancelRequested, &bridge, &Bridge::cancel);

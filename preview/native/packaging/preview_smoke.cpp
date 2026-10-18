@@ -5,6 +5,7 @@
 #include <QAction>
 #include <QApplication>
 #include <QDir>
+#include <QDateEdit>
 #include <QFile>
 #include <QFileInfo>
 #include <QHeaderView>
@@ -35,6 +36,7 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
   QObject::connect(&bridge, &app::SessionBridge::detailsReady, &window, &ui::LibraryWindow::setDetails);
   QObject::connect(&bridge, &app::SessionBridge::savedServicesReady, &window, &ui::LibraryWindow::setSavedServices);
   QObject::connect(&bridge, &app::SessionBridge::statisticsReady, &window, &ui::LibraryWindow::setStatistics);
+  QObject::connect(&bridge, &app::SessionBridge::historyReady, &window, &ui::LibraryWindow::setHistory);
   QObject::connect(&bridge, &app::SessionBridge::engineStatisticsReady, &window, &ui::LibraryWindow::setEngineStatistics);
   QObject::connect(&bridge, &app::SessionBridge::columnLayoutSessionReady, &window, &ui::LibraryWindow::beginColumnLayoutSession);
   QObject::connect(&bridge, &app::SessionBridge::columnLayoutsReady, &window, &ui::LibraryWindow::setColumnLayouts);
@@ -46,6 +48,7 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
   QObject::connect(&window, &ui::LibraryWindow::detailsRequested, &bridge, &app::SessionBridge::details);
   QObject::connect(&window, &ui::LibraryWindow::savedServicesRequested, &bridge, &app::SessionBridge::savedServices);
   QObject::connect(&window, &ui::LibraryWindow::statisticsRequested, &bridge, &app::SessionBridge::statistics);
+  QObject::connect(&window, &ui::LibraryWindow::historyRequested, &bridge, &app::SessionBridge::history);
   QObject::connect(&window, &ui::LibraryWindow::columnLayoutsRequested, &bridge, &app::SessionBridge::columnLayouts);
   QObject::connect(&window, &ui::LibraryWindow::columnLayoutSaveRequested, &bridge, &app::SessionBridge::saveColumnLayout);
   QObject::connect(&window, &ui::LibraryWindow::cancelRequested, &bridge, &app::SessionBridge::cancel);
@@ -484,7 +487,46 @@ private slots:
     QVERIFY(window.close());
   }
 
+  void generatedSavedHistoryDayAndMissingDayRemainReadOnly() {
+    const auto profile = qEnvironmentVariable("BIGLYBTC_PREVIEW_PROFILE");
+    const QDir root(QFileInfo(profile).absolutePath());
+    QCOMPARE(QFileInfo(root.absolutePath()).absolutePath(), QStringLiteral("/tmp"));
+    QVERIFY(root.dirName().startsWith(QStringLiteral("biglybtc-preview-")));
+    const auto file = profile + QStringLiteral("/stats/2024/01/02.dat");
+    const auto before = bytes(file); QVERIFY(!before.isEmpty());
+    const auto saved = bytes(profile + QStringLiteral("/BiglyBT.statistics"));
+    ui::LibraryWindow window; app::SessionBridge bridge; wire(window, bridge);
+    window.setOfflinePreview(true); window.resize(1280, 900); window.show(); window.activateWindow();
+    QSignalSpy layouts(&bridge, &app::SessionBridge::columnLayoutsReady), reads(&bridge, &app::SessionBridge::historyReady);
+    QSignalSpy totals(&bridge, &app::SessionBridge::statisticsReady), snapshots(&bridge, &app::SessionBridge::snapshotReady);
+    QVERIFY(bridge.open(profile.toStdString(), 0)); QTRY_VERIFY_WITH_TIMEOUT(layouts.count() == 1 && !bridge.busy(), 30000);
+    auto* statistics = window.findChild<QAction*>(QStringLiteral("classic-statistics")); QVERIFY(statistics); statistics->trigger();
+    QTRY_VERIFY_WITH_TIMEOUT(totals.count() == 1 && !bridge.busy(), 30000); QCOMPARE(reads.count(), 0);
+    auto* page = window.statisticsPage(); QVERIFY(page);
+    auto* editor = page->findChild<QDateEdit*>(QStringLiteral("saved-history-date")); QVERIFY(editor); editor->setDate(QDate(2024, 1, 2));
+    page->tabs().setCurrentIndex(1); auto* sections = page->findChild<QTabWidget*>(QStringLiteral("statistics-transfer-tabs")); QVERIFY(sections); sections->setCurrentIndex(1);
+    QTRY_VERIFY_WITH_TIMEOUT(page->historyPresentation() && !bridge.busy(), 30000);
+    const auto frame = page->historyPresentation(); QCOMPARE(frame->state, ui::HistoryReadState::Ready); QVERIFY(frame->snapshot);
+    QCOMPARE(frame->snapshot->observations, std::size_t{9});
+    QCOMPARE((*frame->snapshot->totals)[3], std::int64_t{17301504});
+    auto* table = page->findChild<QTableView*>(QStringLiteral("saved-history-hours")); QVERIFY(table);
+    QCOMPARE(table->model()->rowCount(), 24); QCOMPARE(table->model()->columnCount(), 7);
+    QCOMPARE(table->model()->data(table->model()->index(2, 4)).toString(), QStringLiteral("0 bytes"));
+    QCOMPARE(table->model()->data(table->model()->index(3, 4)).toString(), QStringLiteral("—"));
+    const auto capture = qEnvironmentVariable("BIGLYBTC_PREVIEW_CAPTURE");
+    if (!capture.isEmpty()) {
+      const auto path = root.filePath(QStringLiteral("statistics-history-preview.png")); QVERIFY(!QFileInfo::exists(path)); QVERIFY(window.grab().save(path));
+    }
+    editor->setDate(QDate(2024, 1, 4));
+    QTRY_VERIFY_WITH_TIMEOUT(page->historyPresentation() && page->historyPresentation()->date == (core::HistoryDate{2024, 1, 4}) && !bridge.busy(), 30000);
+    QCOMPARE(page->historyPresentation()->state, ui::HistoryReadState::Missing); QVERIFY(!page->historyPresentation()->snapshot);
+    if (!capture.isEmpty()) {
+      const auto path = root.filePath(QStringLiteral("statistics-history-missing-preview.png")); QVERIFY(!QFileInfo::exists(path)); QVERIFY(window.grab().save(path));
+    }
+    QCOMPARE(bytes(file), before); QCOMPARE(bytes(profile + QStringLiteral("/BiglyBT.statistics")), saved);
+    QVERIFY(!QFileInfo::exists(file + QStringLiteral(".bak"))); QVERIFY(!QFileInfo::exists(file + QStringLiteral(".saving")));
+    QCOMPARE(totals.count(), 1); QCOMPARE(snapshots.count(), 1);
+  }
 };
-
 QTEST_MAIN(PreviewSmoke)
 #include "preview_smoke.moc"

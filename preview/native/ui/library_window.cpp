@@ -292,7 +292,11 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   refresh_->setShortcut(QKeySequence(Qt::Key_F5));
   connect(refresh_, &QAction::triggered, this, [this] {
     if (closing_) { return; }
-    if (onStatisticsPage()) { refreshStatistics(); return; }
+    if (onStatisticsPage()) {
+      if (statisticsPage_->historySelected()) { refreshHistory(statisticsPage_->selectedHistoryDate()); }
+      else { refreshStatistics(); }
+      return;
+    }
     if (onSavedServicePage()) { refreshSavedServices(); return; }
     if (mainTabs_->currentWidget() != torrentsPage_ || busy_) { return; }
     suppressAutomaticDetails_ = false;
@@ -413,6 +417,10 @@ void LibraryWindow::showStatistics() {
   if (fresh) {
     statisticsPage_ = new StatisticsPage(mainTabs_);
     connect(statisticsPage_.data(), &StatisticsPage::refreshRequested, this, &LibraryWindow::refreshStatistics);
+    connect(statisticsPage_.data(), &StatisticsPage::historyRequested, this, &LibraryWindow::refreshHistory);
+    const QPointer<StatisticsPage> page = statisticsPage_;
+    page->resetHistorySession(columnSession_);
+    if (!guard || !page || statisticsPage_ != page) { return; }
     mainTabs_->addTab(statisticsPage_.data(), tr("Statistics"));
     if (!guard) { return; }
   }
@@ -441,34 +449,64 @@ void LibraryWindow::refreshStatistics() {
   pendingStatisticsRequest_ = request;
   queueStatistics();
 }
+void LibraryWindow::refreshHistory(core::HistoryDate date) {
+  if (closing_ || !statisticsPage_ || columnSession_ == 0 || !core::validHistoryDate(date)) { return; }
+  if (historyRequest_ == std::numeric_limits<quint64>::max()) {
+    setMessage(tr("History request counter exhausted"));
+    return;
+  }
+  const StatisticsRequest request{columnSession_, ++historyRequest_, statisticsPage_, date};
+  QPointer<LibraryWindow> guard(this);
+  request.page->beginHistoryRequest(request.session, request.request, date);
+  if (!guard || !request.page || statisticsPage_ != request.page
+      || historyRequest_ != request.request || columnSession_ != request.session) { return; }
+  pendingHistoryRequest_ = request;
+  queueStatistics();
+}
 void LibraryWindow::queueStatistics() {
   if (statisticsDispatchQueued_ || closing_ || busy_ || activeSavedRequest_
-      || activeColumnRequest_ || activeColumnSave_ || activeStatisticsRequest_ || !pendingStatisticsRequest_) { return; }
+      || activeColumnRequest_ || activeColumnSave_ || activeStatisticsRequest_
+      || (!pendingStatisticsRequest_ && !pendingHistoryRequest_)) { return; }
   statisticsDispatchQueued_ = true;
   QTimer::singleShot(0, this, [this] {
     statisticsDispatchQueued_ = false;
     if (closing_ || busy_ || activeSavedRequest_ || activeColumnRequest_ || activeColumnSave_
-        || activeStatisticsRequest_ || !pendingStatisticsRequest_) { return; }
-    const auto request = *pendingStatisticsRequest_;
-    pendingStatisticsRequest_.reset();
+        || activeStatisticsRequest_ || (!pendingStatisticsRequest_ && !pendingHistoryRequest_)) { return; }
+    // Saved totals and History keep independent pending reads, sharing one active
+    // optional worker slot. A new date coalesces only pending History requests.
+    const bool history = !pendingStatisticsRequest_;
+    const auto request = history ? *pendingHistoryRequest_ : *pendingStatisticsRequest_;
+    if (history) { pendingHistoryRequest_.reset(); }
+    else { pendingStatisticsRequest_.reset(); }
     if (!request.page || request.page != statisticsPage_ || request.session != columnSession_
-        || request.request != statisticsRequest_) { return; }
+        || request.request != (history ? historyRequest_ : statisticsRequest_)) {
+      queueOptionalViews();
+      return;
+    }
     activeStatisticsRequest_ = request;
     QPointer<LibraryWindow> guard(this);
-    emit statisticsRequested(request.session, request.request);
+    if (request.historyDate) { emit historyRequested(request.session, request.request, *request.historyDate); }
+    else { emit statisticsRequested(request.session, request.request); }
     if (!guard) { return; }
     if (!busy_ && activeStatisticsRequest_ && activeStatisticsRequest_->session == request.session
-        && activeStatisticsRequest_->request == request.request) {
+        && activeStatisticsRequest_->request == request.request
+        && activeStatisticsRequest_->page == request.page
+        && activeStatisticsRequest_->historyDate == request.historyDate) {
       activeStatisticsRequest_.reset();
       if (request.page && request.page == statisticsPage_) {
-        request.page->setFailed(request.session, request.request, tr("Statistics request was not accepted"));
+        if (request.historyDate) {
+          request.page->setHistoryFailed(request.session, request.request, *request.historyDate, tr("History request was not accepted"));
+        } else {
+          request.page->setFailed(request.session, request.request, tr("Statistics request was not accepted"));
+        }
       }
       if (guard) { queueOptionalViews(); }
     }
   });
 }
 void LibraryWindow::setStatistics(StatisticsPresentation packet) {
-  if (!packet || !activeStatisticsRequest_ || packet->session != activeStatisticsRequest_->session
+  if (!packet || !activeStatisticsRequest_ || activeStatisticsRequest_->historyDate
+      || packet->session != activeStatisticsRequest_->session
       || packet->request != activeStatisticsRequest_->request) { return; }
   const auto request = *activeStatisticsRequest_;
   activeStatisticsRequest_.reset();
@@ -476,6 +514,20 @@ void LibraryWindow::setStatistics(StatisticsPresentation packet) {
   QPointer<LibraryWindow> guard(this);
   if (request.page && request.page == statisticsPage_ && packet->session == columnSession_) {
     request.page->setPresentation(std::move(packet));
+  }
+  if (guard) { queueOptionalViews(); }
+}
+void LibraryWindow::setHistory(HistoryPresentation packet) {
+  if (!packet || !activeStatisticsRequest_ || !activeStatisticsRequest_->historyDate
+      || packet->session != activeStatisticsRequest_->session
+      || packet->request != activeStatisticsRequest_->request
+      || packet->date != *activeStatisticsRequest_->historyDate) { return; }
+  const auto request = *activeStatisticsRequest_;
+  activeStatisticsRequest_.reset();
+  if (closing_) { return; }
+  QPointer<LibraryWindow> guard(this);
+  if (request.page && request.page == statisticsPage_ && packet->session == columnSession_) {
+    request.page->setHistory(std::move(packet));
   }
   if (guard) { queueOptionalViews(); }
 }
@@ -512,7 +564,7 @@ void LibraryWindow::closePage(int index) {
   if (!retainedLibrary) {
     if (page == hostingPage_.data()) { hostingPage_.clear(); }
     else if (page == sharesPage_.data()) { sharesPage_.clear(); }
-    else if (page == statisticsPage_.data()) { statisticsPage_.clear(); pendingStatisticsRequest_.reset(); }
+    else if (page == statisticsPage_.data()) { statisticsPage_.clear(); pendingStatisticsRequest_.reset(); pendingHistoryRequest_.reset(); }
     else { return; }
   }
   QPointer<LibraryWindow> guard(this);
@@ -587,17 +639,28 @@ void LibraryWindow::setSavedServices(SavedServicesPresentation packet) {
 
 void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
+  QPointer<LibraryWindow> guard(this);
   columnSession_ = session;
   latestEngineStatistics_.reset();
   engineActivity_.reset();
   activeStatisticsRequest_.reset();
   pendingStatisticsRequest_.reset();
+  pendingHistoryRequest_.reset();
   columnSaveAvailable_ = false;
   activeColumnSave_.reset();
   activeColumnRequest_.reset();
   pendingColumnRequest_.reset();
   refreshColumnLayouts(true);
-  if (statisticsPage_) { refreshStatistics(); }
+  if (!guard) { return; }
+  const QPointer<StatisticsPage> page = statisticsPage_;
+  if (page) {
+    page->resetHistorySession(session);
+    if (!guard || !page || statisticsPage_ != page || columnSession_ != session) { return; }
+    refreshStatistics();
+    if (guard && page && statisticsPage_ == page && columnSession_ == session && page->historySelected()) {
+      refreshHistory(page->selectedHistoryDate());
+    }
+  }
 }
 void LibraryWindow::refreshColumnLayouts(bool initial) {
   if (closing_ || columnSession_ == 0) { return; }
@@ -958,7 +1021,11 @@ void LibraryWindow::setBusy(bool value) {
     const auto request = *activeStatisticsRequest_;
     activeStatisticsRequest_.reset();
     if (!closing_ && request.page && request.page == statisticsPage_) {
-      request.page->setFailed(request.session, request.request, tr("Statistics request did not complete"));
+      if (request.historyDate) {
+        request.page->setHistoryFailed(request.session, request.request, *request.historyDate, tr("History request did not complete"));
+      } else {
+        request.page->setFailed(request.session, request.request, tr("Statistics request did not complete"));
+      }
       if (!guard) { return; }
     }
   }
@@ -988,6 +1055,7 @@ void LibraryWindow::setBusy(bool value) {
     pendingSavedRequest_.reset();
     pendingColumnRequest_.reset();
     pendingStatisticsRequest_.reset();
+    pendingHistoryRequest_.reset();
     QTimer::singleShot(0, this, &QWidget::close);
     return;
   }
@@ -1002,6 +1070,7 @@ void LibraryWindow::closeEvent(QCloseEvent* event) {
   pendingSavedRequest_.reset();
   pendingColumnRequest_.reset();
   pendingStatisticsRequest_.reset();
+  pendingHistoryRequest_.reset();
   QPointer<LibraryWindow> guard(this);
   updateActions();
   if (!guard) { return; }

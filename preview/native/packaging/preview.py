@@ -2,6 +2,7 @@
 """Open the offline BiglyBTC preview using fresh generated data only."""
 
 import argparse
+import datetime
 import gzip
 import hashlib
 import os
@@ -123,6 +124,21 @@ def prepare(root):
         "p_uploaded": 1048576, "d_uploaded": 2146435072,
         "p_downloaded": 2097152, "d_downloaded": 5366611968},
         "preview.opaque": b"\x00\xff"}))
+    # Generated original-format saved UTC daily records. These are sample saved
+    # observations, independent of the empty live Activity/engine graphs.
+    for date in {datetime.date(2024, 1, 2), datetime.datetime.now(datetime.timezone.utc).date()}:
+        start = int(datetime.datetime.combine(date, datetime.time(), datetime.timezone.utc).timestamp()) // 60
+        records = []
+        for hour, factor in [(1, 1), (6, 3), (12, 2), (18, 5)]:
+            anchor = start + hour * 60
+            records += [f"s,1,{anchor},100000,200000,300000,400000,500000,600000",
+                        f"{factor*1024},{factor*65536},{factor*2048},{factor*1048576},{factor*128},{factor*256}",
+                        f"e,1,{anchor+2},{factor*512},{factor*32768},{factor*1024},{factor*524288},{factor*64},{factor*128}"]
+        # An observed zero hour is different from the untouched unknown hours.
+        records += [f"s,1,{start+120},0,0,0,0,0,0", "0,0,0,0,0,0"]
+        target = profile / "stats" / f"{date.year:04d}" / f"{date.month:02d}" / f"{date.day:02d}.dat"
+        target.parent.mkdir(parents=True, mode=0o700, exist_ok=True)
+        target.write_text("\n".join(records) + "\n", encoding="ascii")
     return profile
 
 

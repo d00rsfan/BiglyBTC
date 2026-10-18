@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "milestone": "P04-18",
+  "scope": "Read-only saved UTC daily transfer-history browser; original file totals plus bounded native presentation",
+  "original_repository": "https://github.com/BiglySoftware/BiglyBT.git",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_parent": "9d6023fca3b322dfbe5d92d1666b7f2120cd7752",
+  "source": {
+    "reader": "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsBase.java",
+    "reader_git_blob": "5f3aed69cf85d10d927bc8fe8e8677e2b8ea567f",
+    "reader_sha256": "1f9e0967309777ad4c19be9ee123351c9a21755337a0d48fa52dd3752de5ca7f",
+    "writer": "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsImpl.java",
+    "ui": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java"
+  },
+  "format": {
+    "file": "stats/YYYY/MM/DD.dat",
+    "timezone": "UTC",
+    "counter_order": [
+      "protocol_upload",
+      "payload_upload",
+      "protocol_download",
+      "payload_download",
+      "dht_upload",
+      "dht_download"
+    ],
+    "record_forms": {
+      "start": "s,1,epoch_minute,six signed int64 baselines",
+      "end": "e,1,epoch_minute,six signed int64 adjustments",
+      "delta": "six signed int64 adjustments"
+    },
+    "line_endings": [
+      "LF",
+      "CRLF",
+      "complete EOF line"
+    ],
+    "blank_lines": "Permitted empty lines. Known fields are not whitespace-trimmed.",
+    "integers": "ASCII signed decimal int64, including explicit plus sign; checked additions and minute-to-millisecond multiplication.",
+    "start": "Sets reconstructed minute anchor; parsed absolute baselines never count as usage. Nonpositive anchor is inactive until a positive start.",
+    "delta_and_end": "While positive-anchored, advances one reconstructed minute and adds six fields when within selected UTC day/hour. End stored timestamp does not replace reconstructed minute or clear anchor.",
+    "duplicates": "Multiple starts and duplicate/overlapping reconstructed minutes add, not overwrite.",
+    "rollover": "A pending prior-file spill may reconstruct into the next UTC date; validated then excluded from the selected day."
+  },
+  "native_policy": {
+    "date_range": "Gregorian1970..9999",
+    "maximum_bytes": 1048576,
+    "maximum_records": 8192,
+    "maximum_line_bytes": 512,
+    "strict_validation": "Every complete record validated, including inactive/outside-day records. Malformed, unsupported version, range, overflow, limit or cancellation rejects whole read; no partial plausible totals.",
+    "presence": "Empty/header-only/missing observations have unknown totals/hour cells; an actual zero adjustment creates a known zero observation. Signed adjustments remain signed.",
+    "clock": "Pure supplied-date parser has no current-time clamp. Java corpus dates are wholly before the supplied oracle clock; future/current-future-minute semantics are not Java equality-qualified."
+  },
+  "storage": {
+    "authority": "Existing held profile lease and fixed relative stats/year/month/day path only.",
+    "reads": "No-follow regular bounded file reads; no directory scan, lease reacquisition, payload path chase, cache recovery or creation.",
+    "writes": false,
+    "cache_dat": false,
+    "live_writer_or_global_engine": false
+  },
+  "presentation": {
+    "location": "Statistics > Transfers > History",
+    "view": "One selected UTC day, observed payload daily summary and24 hourly rows for all six original signed byte counters.",
+    "unknown": "Em dash; zero only when an actual observation is present.",
+    "navigation": "Explicit date change/Refresh and lazy first History activation; no timer.",
+    "ownership": "Owned immutable session/request/date-bound packets; stale replies and new-profile facts rejected/cleared, hidden/minimized view defers painting/model/labels.",
+    "separate": "Current saved totals, payload Activity and measured engine traffic remain independent.",
+    "original_ui_difference": "Original History offers dynamic hour/day/week/month/year/all-time spans and pixel-scaled payload graphs using long-term service/cache paths. Those services and graph equivalence are not ported here."
+  },
+  "java_oracle": {
+    "authority": "Complete unchanged committed LongTermStatsBase.java compiled with actual LongTermStats/Listener interfaces; minimal explicit inert providers and six-entry owned-directory subclass. No copied reader algorithm.",
+    "runtime": "OpenJDK17.0.20+8-1-26.04-Ubuntu; javac --release8",
+    "query": "getTotalUsageInPeriod(Date,Date, timestamp -> true)",
+    "cache": "Nonnull RecordAccepter disables all original cache paths.",
+    "fixtures": 17,
+    "queries": 425,
+    "component_totals": 2550,
+    "expected_tsv_sha256": "72ef5198898fef0a1fa7ea5221751b1d6ddbde674ce0be83e75f38586a096bbc",
+    "fixture_manifest_sha256": "26126241ca9f86bdbe9052cb06600ebde7775f4b2f185d195ce2f5983f200da3",
+    "file_identity_and_bytes_unchanged": true,
+    "native_comparison": "Qualification must compare actual native results separately; source oracle collection alone is not a native pass.",
+    "zero_credit": [
+      "Native missing/presence/observation/outside-day facts",
+      "Strict malformed/version/range/overflow/limit/cancel policies",
+      "Whole original owner/cache/writer/UI/global/performance behavior",
+      "Future/current-future-minute clock clamp"
+    ]
+  },
+  "limitations": [
+    "No history writer, mark/reset, new measurement service or persistent global ownership.",
+    "No ordinary Core/GlobalManager/DHT/plugin/config/profile activation or original running-client access.",
+    "Fixed UTC daily browser is a deliberate bounded native policy, not complete original History/UI/runtime parity."
+  ]
+}

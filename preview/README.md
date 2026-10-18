@@ -177,3 +177,19 @@ This is temporary per-operation history; global application traffic, Java rate
 smoothing, persistent history and the remaining original Statistics services are
 unfinished. The offline launcher generates no engine samples. See the
 [engine Activity contract](docs/engine-activity-contract.json).
+
+Statistics > Transfers > History now browses one saved UTC day. Select a date or
+use Previous day / Next day, then Refresh history (or F5 while History is selected)
+to reread it. The table shows all 24 UTC hours with separate payload, protocol and
+DHT upload/download bytes. An em dash means no saved observation; an observed zero
+is displayed as 0 bytes. Signed adjustments remain signed. The daily payload
+summary is separate from saved lifetime totals and live engine graphs.
+
+History reads original stats/YYYY/MM/DD.dat v1 records under the held profile,
+without modifying records or caches. It loads only when selected and uses the
+existing worker queue. Changing profiles clears old results; closing/reopening
+Statistics rereads the selected/default day. The offline launcher includes
+explicitly generated saved history for previewing this screen. Original rolling
+history graphs, live history recording and persistent global ownership remain
+unfinished. Format, bounds and the independent Java reader fixtures are documented
+in docs/saved-history-contract.json and native/tests/fixtures/saved-history/.

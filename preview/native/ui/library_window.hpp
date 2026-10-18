@@ -5,6 +5,7 @@
 #include "saved_services_presentation.hpp"
 #include "column_layout_presentation.hpp"
 #include "statistics_presentation.hpp"
+#include "history_presentation.hpp"
 #include "engine_statistics_presentation.hpp"
 
 #include <QMainWindow>
@@ -51,6 +52,7 @@ public:
   void setSavedServices(SavedServicesPresentation);
   StatisticsPage* statisticsPage() const;
   void setStatistics(StatisticsPresentation);
+  void setHistory(HistoryPresentation);
   void setEngineStatistics(EngineStatisticsPresentation);
   void beginColumnLayoutSession(quint64 session);
   void setColumnLayouts(ColumnLayoutsPresentation);
@@ -62,6 +64,7 @@ signals:
   void refreshRequested();
   void savedServicesRequested(quint64 request);
   void statisticsRequested(quint64 session, quint64 request);
+  void historyRequested(quint64 session, quint64 request, biglybtc::core::HistoryDate date);
   void columnLayoutsRequested(quint64 session, quint64 request);
   void columnLayoutSaveRequested(biglybtc::ui::ColumnLayoutSaveSubmission);
   void continueRequested(biglybtc::ui::Target);
@@ -82,6 +85,7 @@ private:
   void showStatistics();
   bool onStatisticsPage() const;
   void refreshStatistics();
+  void refreshHistory(core::HistoryDate);
   void queueStatistics();
   void queueOptionalViews();
   void closePage(int index);
@@ -112,8 +116,11 @@ private:
     quint64 session = 0;
     quint64 request = 0;
     QPointer<StatisticsPage> page;
+    std::optional<core::HistoryDate> historyDate{};
   };
   quint64 statisticsRequest_ = 0;
+  quint64 historyRequest_ = 0;
+  std::optional<StatisticsRequest> pendingHistoryRequest_;
   std::optional<StatisticsRequest> activeStatisticsRequest_;
   std::optional<StatisticsRequest> pendingStatisticsRequest_;
   bool statisticsDispatchQueued_ = false;

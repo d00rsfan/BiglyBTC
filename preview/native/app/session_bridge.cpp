@@ -6,6 +6,7 @@
 #include "local_session.hpp"
 #include "saved_service_view.hpp"
 #include "statistics_view.hpp"
+#include "../adapters/history_view.hpp"
 
 #include <QMetaObject>
 #include <QPointer>
@@ -162,6 +163,8 @@ SessionBridge::SessionBridge(QObject* parent) : QObject(parent) {
   qRegisterMetaType<ui::Details>();
   qRegisterMetaType<ui::SavedServicesPresentation>();
   qRegisterMetaType<ui::StatisticsPresentation>();
+  qRegisterMetaType<core::HistoryDate>();
+  qRegisterMetaType<ui::HistoryPresentation>();
   qRegisterMetaType<ui::EngineStatisticsPresentation>();
   qRegisterMetaType<ui::ColumnLayoutsPresentation>();
   qRegisterMetaType<ui::ColumnLayoutSaveSubmission>();
@@ -358,6 +361,43 @@ bool SessionBridge::statistics(quint64 session, quint64 request) {
       emit busyChanged(false);
     }, Qt::QueuedConnection);
   }, false); // Optional statistics failures never query/revise the library.
+}
+bool SessionBridge::history(quint64 session, quint64 request, core::HistoryDate date) {
+  if (session == 0 || request == 0 || session != publishedColumnLayoutSession_
+      || !core::validHistoryDate(date)) { return false; }
+  return dispatch([this, session, request, date](std::stop_token stop) {
+    if (!host_ || host_->columnLayoutSession != session) {
+      throw Failure{{storage::ErrorCode::Conflict, "This history session is no longer active"}};
+    }
+    auto packet = std::make_shared<ui::HistoryPacket>();
+    packet->session = session; packet->request = request; packet->date = date;
+    checkpoint(stop);
+    auto view = storage::readSavedHistoryDayView(host_->lease, date, stop);
+    checkpoint(stop);
+    if (!view) {
+      if (view.error().code == storage::ErrorCode::Cancelled) { throw Failure{std::move(view.error())}; }
+      packet->failure = text(view.error().message);
+    } else if (view->missing()) {
+      packet->state = ui::HistoryReadState::Missing;
+    } else {
+      packet->snapshot = std::make_shared<const core::SavedHistoryDay>(std::move(*view->snapshot));
+      packet->state = ui::HistoryReadState::Ready;
+    }
+    checkpoint(stop);
+    ui::HistoryPresentation presentation = std::move(packet);
+    QMetaObject::invokeMethod(this, [this, presentation = std::move(presentation), stop] {
+      QPointer<SessionBridge> guard(this);
+      if (stop.stop_requested() || presentation->session != publishedColumnLayoutSession_) {
+        completionMonitor_->stop(); busy_ = false; emit busyChanged(false);
+        if (guard && stop.stop_requested()) { emit messageReady(tr("Cancelled")); }
+        return;
+      }
+      // Retain the shared command slot through all direct result callbacks.
+      emit historyReady(presentation);
+      if (!guard) { return; }
+      completionMonitor_->stop(); busy_ = false; emit busyChanged(false);
+    }, Qt::QueuedConnection);
+  }, false); // A read-only history failure cannot revise the saved library.
 }
 bool SessionBridge::columnLayouts(quint64 session, quint64 request) {
   if (session == 0 || request == 0 || session != publishedColumnLayoutSession_) { return false; }

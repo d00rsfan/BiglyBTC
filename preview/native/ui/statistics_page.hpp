@@ -2,6 +2,7 @@
 
 #include "engine_activity_presentation.hpp"
 #include "engine_statistics_presentation.hpp"
+#include "history_presentation.hpp"
 #include "library_model.hpp"
 #include "statistics_presentation.hpp"
 
@@ -20,6 +21,7 @@ class QTabWidget;
 namespace biglybtc::ui {
 
 class EngineActivityView;
+class HistoryView;
 
 // GUI-thread only; completions are accepted once for the current nonzero pair.
 // This read-only page neither performs IO nor starts transfers/sampling timers.
@@ -35,6 +37,13 @@ public:
   void setEngineStatistics(EngineStatisticsPresentation);
   void setEngineActivity(EngineActivityPresentation);
   EngineActivityPresentation engineActivitySnapshot() const;
+  void beginHistoryRequest(quint64 session, quint64 request, core::HistoryDate);
+  void setHistory(HistoryPresentation);
+  void setHistoryFailed(quint64 session, quint64 request, core::HistoryDate, const QString&);
+  void resetHistorySession(quint64 session);
+  core::HistoryDate selectedHistoryDate() const;
+  HistoryPresentation historyPresentation() const;
+  bool historySelected() const;
   // Caller first admits generation+hash through LibraryModel. The page also
   // rejects invalid identity/negative payload telemetry and resets on target change.
   void recordPayload(const Telemetry&, const QString& displayName);
@@ -46,6 +55,7 @@ public:
   quint64 request() const { return request_; }
 signals:
   void refreshRequested();
+  void historyRequested(biglybtc::core::HistoryDate);
 protected:
   void showEvent(QShowEvent*) override;
   bool eventFilter(QObject*, QEvent*) override;
@@ -71,6 +81,7 @@ private:
   QLabel* status_;
   QLabel* provenance_;
   QTabWidget* transferTabs_ = nullptr;
+  HistoryView* history_ = nullptr;
   QWidget* engineDetails_ = nullptr;
   QLabel* engineStatus_ = nullptr;
   QLabel* engineTarget_ = nullptr;
