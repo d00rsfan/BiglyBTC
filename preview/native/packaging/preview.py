@@ -113,6 +113,16 @@ def prepare(root):
         "TableDefault.MySeeders": classic_table(132),
         "Table.UnknownPlugin": {"opaque": [b"\x00\xff", 7]},
     }))
+    # Generated last-saved original overall statistics; no live client is read.
+    # Combined totals already include their data/protocol splits. DHT is separate.
+    (profile / "BiglyBT.statistics").write_bytes(encode({"all": {
+        "downloaded": 5368709120, "uploaded": 2147483648, "uptime": 270061,
+        "mark_time": 1729987200000, "mark_downloaded": 1073741824,
+        "mark_uploaded": 536870912, "mark_uptime": 86400,
+        "dht_down": 8388608, "dht_up": 4194304,
+        "p_uploaded": 1048576, "d_uploaded": 2146435072,
+        "p_downloaded": 2097152, "d_downloaded": 5366611968},
+        "preview.opaque": b"\x00\xff"}))
     return profile
 
 

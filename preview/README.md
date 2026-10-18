@@ -122,5 +122,25 @@ registered defaults, plugin columns, full settings or row-sort equivalence. See 
 [profile reader contract](docs/classic-column-layout-reader-contract.json) and
 [pinned source audit](docs/classic-column-persistence-source.json).
 
+**Tools > Statistics (Ctrl+5)** opens one reusable, closeable Statistics tab.
+New pages start on Activity; Ctrl+1 restores My Torrents with its selection,
+filter, columns and details. Activity shows at most600 actual observations of
+the latest transfer's payload download/upload rates, with an explicit transfer
+name and actual arrival times. It starts empty and resets for another transfer.
+Hidden views collect bounded observations without a sampling timer or painting.
+Global data-plus-protocol rates remain unavailable.
+
+Transfers > Current shows last-saved overall totals, uptime, separate data,
+protocol and DHT counters, mark baselines and derived since-mark values from the
+original default `BiglyBT.statistics` filename. Its fixed-leaf read-only adapter
+uses the existing profile lease and reports primary/backup/saving provenance.
+Absent or invalid values stay unavailable. Combined counters are not added to
+their splits or DHT again. Mark time is an epoch-millisecond label, not a save
+timestamp. Refresh saved totals/F5 does not refresh the torrent library or write
+statistics. This-session counters, global history and the other original
+Statistics subviews remain unfinished. The generated launcher sample includes
+original-format saved statistics; offline Activity stays empty. See the
+[Statistics contract](docs/classic-statistics-contract.json).
+
 No performance improvement or full migration completion is claimed by this source
 milestone.

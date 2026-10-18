@@ -88,6 +88,8 @@ jobs:
           cp -- "$preview_root/my-tracker-preview.png" "$EVIDENCE_DIR/my-tracker-preview.png"
           cp -- "$preview_root/my-shares-preview.png" "$EVIDENCE_DIR/my-shares-preview.png"
           cp -- "$preview_root/saved-selected-preview.png" "$EVIDENCE_DIR/saved-selected-preview.png"
+          cp -- "$preview_root/statistics-activity-preview.png" "$EVIDENCE_DIR/statistics-activity-preview.png"
+          cp -- "$preview_root/statistics-transfers-preview.png" "$EVIDENCE_DIR/statistics-transfers-preview.png"
       - name: Preserve test, screenshot and dependency evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

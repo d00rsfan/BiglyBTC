@@ -4,6 +4,7 @@
 #include "file_model.hpp"
 #include "saved_services_presentation.hpp"
 #include "column_layout_presentation.hpp"
+#include "statistics_presentation.hpp"
 
 #include <QMainWindow>
 #include <QPointer>
@@ -20,6 +21,7 @@ class QEvent;
 namespace biglybtc::ui {
 
 class ClassicColumns;
+class StatisticsPage;
 
 class LibraryWindow final : public QMainWindow {
   Q_OBJECT
@@ -45,6 +47,8 @@ public:
   SavedHostingPage* hostingPage() const { return hostingPage_.data(); }
   SavedSharesPage* sharesPage() const { return sharesPage_.data(); }
   void setSavedServices(SavedServicesPresentation);
+  StatisticsPage* statisticsPage() const;
+  void setStatistics(StatisticsPresentation);
   void beginColumnLayoutSession(quint64 session);
   void setColumnLayouts(ColumnLayoutsPresentation);
   void setColumnLayoutSaved(ColumnLayoutSavePresentation);
@@ -54,6 +58,7 @@ public:
 signals:
   void refreshRequested();
   void savedServicesRequested(quint64 request);
+  void statisticsRequested(quint64 session, quint64 request);
   void columnLayoutsRequested(quint64 session, quint64 request);
   void columnLayoutSaveRequested(biglybtc::ui::ColumnLayoutSaveSubmission);
   void continueRequested(biglybtc::ui::Target);
@@ -71,6 +76,11 @@ private:
   void showMyTorrents();
   void showMyTracker();
   void showMyShares();
+  void showStatistics();
+  bool onStatisticsPage() const;
+  void refreshStatistics();
+  void queueStatistics();
+  void queueOptionalViews();
   void closePage(int index);
   bool onSavedServicePage() const;
   bool hasLoadingServices(quint64 request) const;
@@ -94,6 +104,16 @@ private:
   QWidget* torrentsPage_;
   QPointer<SavedHostingPage> hostingPage_;
   QPointer<SavedSharesPage> sharesPage_;
+  QPointer<StatisticsPage> statisticsPage_;
+  struct StatisticsRequest {
+    quint64 session = 0;
+    quint64 request = 0;
+    QPointer<StatisticsPage> page;
+  };
+  quint64 statisticsRequest_ = 0;
+  std::optional<StatisticsRequest> activeStatisticsRequest_;
+  std::optional<StatisticsRequest> pendingStatisticsRequest_;
+  bool statisticsDispatchQueued_ = false;
   quint64 savedRequest_ = 0;
   std::optional<quint64> activeSavedRequest_;
   std::optional<quint64> pendingSavedRequest_;

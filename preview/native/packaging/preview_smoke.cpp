@@ -1,5 +1,6 @@
 #include "library_window.hpp"
 #include "session_bridge.hpp"
+#include "statistics_page.hpp"
 
 #include <QAction>
 #include <QApplication>
@@ -8,6 +9,9 @@
 #include <QFileInfo>
 #include <QHeaderView>
 #include <QMap>
+#include <QLabel>
+#include <QLineEdit>
+#include <QPointer>
 #include <QItemSelectionModel>
 #include <QSignalSpy>
 #include <QSortFilterProxyModel>
@@ -30,6 +34,7 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
   QObject::connect(&bridge, &app::SessionBridge::progressReady, &window, &ui::LibraryWindow::setTelemetry);
   QObject::connect(&bridge, &app::SessionBridge::detailsReady, &window, &ui::LibraryWindow::setDetails);
   QObject::connect(&bridge, &app::SessionBridge::savedServicesReady, &window, &ui::LibraryWindow::setSavedServices);
+  QObject::connect(&bridge, &app::SessionBridge::statisticsReady, &window, &ui::LibraryWindow::setStatistics);
   QObject::connect(&bridge, &app::SessionBridge::columnLayoutSessionReady, &window, &ui::LibraryWindow::beginColumnLayoutSession);
   QObject::connect(&bridge, &app::SessionBridge::columnLayoutsReady, &window, &ui::LibraryWindow::setColumnLayouts);
   QObject::connect(&bridge, &app::SessionBridge::columnLayoutSaved, &window, &ui::LibraryWindow::setColumnLayoutSaved);
@@ -39,6 +44,7 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
   QObject::connect(&window, &ui::LibraryWindow::continueRequested, &bridge, &app::SessionBridge::continueDownload);
   QObject::connect(&window, &ui::LibraryWindow::detailsRequested, &bridge, &app::SessionBridge::details);
   QObject::connect(&window, &ui::LibraryWindow::savedServicesRequested, &bridge, &app::SessionBridge::savedServices);
+  QObject::connect(&window, &ui::LibraryWindow::statisticsRequested, &bridge, &app::SessionBridge::statistics);
   QObject::connect(&window, &ui::LibraryWindow::columnLayoutsRequested, &bridge, &app::SessionBridge::columnLayouts);
   QObject::connect(&window, &ui::LibraryWindow::columnLayoutSaveRequested, &bridge, &app::SessionBridge::saveColumnLayout);
   QObject::connect(&window, &ui::LibraryWindow::cancelRequested, &bridge, &app::SessionBridge::cancel);
@@ -66,6 +72,7 @@ private slots:
     original.insert(profile + QStringLiteral("/tracker.config"), {});
     original.insert(profile + QStringLiteral("/sharing.config"), {});
     original.insert(profile + QStringLiteral("/tables.config"), {});
+    original.insert(profile + QStringLiteral("/BiglyBT.statistics"), {});
     original.insert(profile + QStringLiteral("/active/cache.dat"), {});
     const QDir active(profile + QStringLiteral("/active"));
     const auto states = active.entryList({QStringLiteral("*.dat")}, QDir::Files);
@@ -398,6 +405,82 @@ private slots:
       QCOMPARE(window.incompleteTable().columnWidth(1), 312); QCOMPARE(window.completeTable().columnWidth(7), 245);
       QCOMPARE(window.model().rowCount(), 0); QCOMPARE(bytes(tables), first); QVERIFY(window.close());
     }
+  }
+
+  void statisticsShortcutSavedTotalsAndCloseReopen() {
+    const auto profile = qEnvironmentVariable("BIGLYBTC_PREVIEW_PROFILE");
+    const QDir root(QFileInfo(profile).absolutePath());
+    QCOMPARE(QFileInfo(root.absolutePath()).absolutePath(), QStringLiteral("/tmp"));
+    QVERIFY(root.dirName().startsWith(QStringLiteral("biglybtc-preview-")));
+    const auto path = profile + QStringLiteral("/BiglyBT.statistics");
+    const auto saved = bytes(path); QVERIFY(!saved.isEmpty());
+    const auto tables = bytes(profile + QStringLiteral("/tables.config"));
+    ui::LibraryWindow window; app::SessionBridge bridge; wire(window, bridge);
+    window.setOfflinePreview(true); window.resize(1280, 800); window.show(); window.activateWindow();
+    QSignalSpy snapshots(&bridge, &app::SessionBridge::snapshotReady), layouts(&bridge, &app::SessionBridge::columnLayoutsReady);
+    QSignalSpy reads(&bridge, &app::SessionBridge::statisticsReady), details(&bridge, &app::SessionBridge::detailsReady);
+    QSignalSpy cancels(&window, &ui::LibraryWindow::cancelRequested);
+    QVERIFY(bridge.open(profile.toStdString(), 0));
+    QTRY_VERIFY_WITH_TIMEOUT(layouts.count() == 1 && !bridge.busy(), 30000);
+    window.filter().setText(QStringLiteral("Paused"));
+    auto& table = window.incompleteTable();
+    QCOMPARE(table.model()->rowCount(), 1);
+    table.setFocus(); table.selectionModel()->setCurrentIndex(table.model()->index(0, 0),
+        QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+    QTRY_VERIFY_WITH_TIMEOUT(window.filesModel().target() && !bridge.busy(), 30000);
+    const auto target = window.filesModel().target();
+    const auto detailCount = details.count();
+    table.setColumnWidth(1, 247);
+    window.filter().setFocus(); QTRY_VERIFY(window.filter().hasFocus());
+    QTest::keyClick(&window.filter(), Qt::Key_5, Qt::ControlModifier);
+    QTRY_VERIFY_WITH_TIMEOUT(window.statisticsPage() && window.statisticsPage()->readState() == ui::StatisticsReadState::Ready
+        && reads.count() == 1 && !bridge.busy(), 30000);
+    auto* page = window.statisticsPage();
+    QCOMPARE(window.mainTabs().currentWidget(), page); QCOMPARE(page->tabs().currentIndex(), 0);
+    QCOMPARE(page->tabs().tabText(0), QStringLiteral("Activity"));
+    QCOMPARE(page->sampleCount(), std::size_t{0});
+    auto* down = page->findChild<QLabel*>(QStringLiteral("statistics-payload-download-rate"));
+    auto* up = page->findChild<QLabel*>(QStringLiteral("statistics-payload-upload-rate"));
+    QVERIFY(down && up); QCOMPARE(down->text(), QStringLiteral("Unavailable")); QCOMPARE(up->text(), QStringLiteral("Unavailable"));
+    auto* total = page->findChild<QLabel*>(QStringLiteral("statistics-saved-downloaded"));
+    auto* since = page->findChild<QLabel*>(QStringLiteral("statistics-since-mark-downloaded"));
+    auto* source = page->findChild<QLabel*>(QStringLiteral("statistics-source"));
+    QVERIFY(total && since && source);
+    QCOMPARE(total->text(), QStringLiteral("5368709120 bytes")); QCOMPARE(total->toolTip(), QStringLiteral("5368709120 bytes"));
+    QCOMPARE(since->text(), QStringLiteral("4294967296 bytes"));
+    QVERIFY(source->text().contains(QStringLiteral("BiglyBT.statistics")));
+    QVERIFY(source->text().contains(QStringLiteral("primary")));
+    const auto capture = qEnvironmentVariable("BIGLYBTC_PREVIEW_CAPTURE");
+    if (!capture.isEmpty()) {
+      const auto activity = root.filePath(QStringLiteral("statistics-activity-preview.png"));
+      QVERIFY(!QFileInfo::exists(activity)); QCoreApplication::processEvents(); QVERIFY(window.grab().save(activity));
+    }
+    page->tabs().setCurrentIndex(1); QCoreApplication::processEvents();
+    auto* transferTabs = page->findChild<QTabWidget*>(QStringLiteral("statistics-transfer-tabs"));
+    QVERIFY(transferTabs); QCOMPARE(transferTabs->currentIndex(), 0);
+    if (!capture.isEmpty()) {
+      const auto transfers = root.filePath(QStringLiteral("statistics-transfers-preview.png"));
+      QVERIFY(!QFileInfo::exists(transfers)); QVERIFY(window.grab().save(transfers));
+    }
+    QTest::keyClick(&page->tabs(), Qt::Key_1, Qt::ControlModifier);
+    QCOMPARE(window.mainTabs().currentWidget()->objectName(), QStringLiteral("classic-my-torrents-page"));
+    QCOMPARE(window.filter().text(), QStringLiteral("Paused")); QCOMPARE(table.columnWidth(1), 247);
+    QVERIFY(window.filesModel().target() == target);
+    QTest::keyClick(&window.filter(), Qt::Key_5, Qt::ControlModifier);
+    QCOMPARE(window.statisticsPage(), page); QCOMPARE(page->tabs().currentIndex(), 1); QCOMPARE(reads.count(), 1);
+    QPointer<ui::StatisticsPage> old(page);
+    QTest::keyClick(&page->tabs(), Qt::Key_W, Qt::ControlModifier); QVERIFY(!window.statisticsPage());
+    QCOMPARE(cancels.count(), 0);
+    QTest::keyClick(&window.filter(), Qt::Key_5, Qt::ControlModifier);
+    QTRY_VERIFY_WITH_TIMEOUT(window.statisticsPage() && window.statisticsPage()->readState() == ui::StatisticsReadState::Ready
+        && reads.count() == 2 && !bridge.busy(), 30000);
+    QCOMPARE(window.statisticsPage()->tabs().currentIndex(), 0); QTRY_VERIFY(old.isNull());
+    QCOMPARE(window.statisticsPage()->sampleCount(), std::size_t{0});
+    QCOMPARE(snapshots.count(), 1); QCOMPARE(details.count(), detailCount); QCOMPARE(bytes(path), saved);
+    QCOMPARE(bytes(profile + QStringLiteral("/tables.config")), tables);
+    QVERIFY(!QFileInfo::exists(path + QStringLiteral(".bak"))); QVERIFY(!QFileInfo::exists(path + QStringLiteral(".saving")));
+    QVERIFY(QDir(root.filePath(QStringLiteral("payload"))).entryList(QDir::AllEntries | QDir::NoDotAndDotDot).isEmpty());
+    QVERIFY(window.close());
   }
 
 };

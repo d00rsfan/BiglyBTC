@@ -1,6 +1,7 @@
 #include "library_window.hpp"
 #include "classic_filter.hpp"
 #include "classic_columns.hpp"
+#include "statistics_page.hpp"
 
 #include <QAction>
 #include <QCloseEvent>
@@ -230,6 +231,11 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   toolbar->addAction(unavailable(torrent, tr("Delete"), QStringLiteral("remove"), QStyle::SP_TrashIcon));
   unavailable(transfers, tr("Start All"), QStringLiteral("start-all"), QStyle::SP_MediaPlay);
   unavailable(transfers, tr("Stop All"), QStringLiteral("stop-all"), QStyle::SP_MediaStop);
+  auto* statistics = tools->addAction(style()->standardIcon(QStyle::SP_FileDialogDetailedView), tr("&Statistics"));
+  statistics->setObjectName(QStringLiteral("classic-statistics"));
+  statistics->setShortcut(QKeySequence(QStringLiteral("Ctrl+5")));
+  statistics->setShortcutContext(Qt::WindowShortcut);
+  connect(statistics, &QAction::triggered, this, &LibraryWindow::showStatistics);
   unavailable(tools, tr("Options…"), QStringLiteral("options"), QStyle::SP_FileDialogDetailedView);
   unavailable(plugins, tr("Plugin management…"), QStringLiteral("plugins"), QStyle::SP_FileDialogDetailedView);
   unavailable(community, tr("Forums"), QStringLiteral("forums"), QStyle::SP_DialogHelpButton);
@@ -285,6 +291,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   refresh_->setShortcut(QKeySequence(Qt::Key_F5));
   connect(refresh_, &QAction::triggered, this, [this] {
     if (closing_) { return; }
+    if (onStatisticsPage()) { refreshStatistics(); return; }
     if (onSavedServicePage()) { refreshSavedServices(); return; }
     if (mainTabs_->currentWidget() != torrentsPage_ || busy_) { return; }
     suppressAutomaticDetails_ = false;
@@ -394,6 +401,83 @@ void LibraryWindow::showMyShares() {
   sharesPage_->table().setFocus(Qt::ShortcutFocusReason);
   if (guard && fresh) { refreshSavedServices(); }
 }
+StatisticsPage* LibraryWindow::statisticsPage() const { return statisticsPage_.data(); }
+bool LibraryWindow::onStatisticsPage() const {
+  return statisticsPage_ && mainTabs_->currentWidget() == statisticsPage_.data();
+}
+void LibraryWindow::showStatistics() {
+  if (closing_) { return; }
+  QPointer<LibraryWindow> guard(this);
+  const bool fresh = !statisticsPage_;
+  if (fresh) {
+    statisticsPage_ = new StatisticsPage(mainTabs_);
+    connect(statisticsPage_.data(), &StatisticsPage::refreshRequested, this, &LibraryWindow::refreshStatistics);
+    mainTabs_->addTab(statisticsPage_.data(), tr("Statistics"));
+    if (!guard) { return; }
+  }
+  const QPointer<StatisticsPage> page = statisticsPage_;
+  mainTabs_->setCurrentWidget(page.data());
+  if (!guard || !page || statisticsPage_ != page) { return; }
+  page->tabs().setFocus(Qt::ShortcutFocusReason);
+  if (guard && page && statisticsPage_ == page && fresh) { refreshStatistics(); }
+}
+void LibraryWindow::refreshStatistics() {
+  if (closing_ || !statisticsPage_ || columnSession_ == 0) { return; }
+  if (statisticsRequest_ == std::numeric_limits<quint64>::max()) {
+    setMessage(tr("Statistics request counter exhausted"));
+    return;
+  }
+  const StatisticsRequest request{columnSession_, ++statisticsRequest_, statisticsPage_};
+  QPointer<LibraryWindow> guard(this);
+  request.page->beginRequest(request.session, request.request);
+  if (!guard || !request.page || statisticsPage_ != request.page
+      || statisticsRequest_ != request.request || columnSession_ != request.session) { return; }
+  pendingStatisticsRequest_ = request;
+  queueStatistics();
+}
+void LibraryWindow::queueStatistics() {
+  if (statisticsDispatchQueued_ || closing_ || busy_ || activeSavedRequest_
+      || activeColumnRequest_ || activeColumnSave_ || activeStatisticsRequest_ || !pendingStatisticsRequest_) { return; }
+  statisticsDispatchQueued_ = true;
+  QTimer::singleShot(0, this, [this] {
+    statisticsDispatchQueued_ = false;
+    if (closing_ || busy_ || activeSavedRequest_ || activeColumnRequest_ || activeColumnSave_
+        || activeStatisticsRequest_ || !pendingStatisticsRequest_) { return; }
+    const auto request = *pendingStatisticsRequest_;
+    pendingStatisticsRequest_.reset();
+    if (!request.page || request.page != statisticsPage_ || request.session != columnSession_
+        || request.request != statisticsRequest_) { return; }
+    activeStatisticsRequest_ = request;
+    QPointer<LibraryWindow> guard(this);
+    emit statisticsRequested(request.session, request.request);
+    if (!guard) { return; }
+    if (!busy_ && activeStatisticsRequest_ && activeStatisticsRequest_->session == request.session
+        && activeStatisticsRequest_->request == request.request) {
+      activeStatisticsRequest_.reset();
+      if (request.page && request.page == statisticsPage_) {
+        request.page->setFailed(request.session, request.request, tr("Statistics request was not accepted"));
+      }
+      if (guard) { queueOptionalViews(); }
+    }
+  });
+}
+void LibraryWindow::setStatistics(StatisticsPresentation packet) {
+  if (!packet || !activeStatisticsRequest_ || packet->session != activeStatisticsRequest_->session
+      || packet->request != activeStatisticsRequest_->request) { return; }
+  const auto request = *activeStatisticsRequest_;
+  activeStatisticsRequest_.reset();
+  if (closing_) { return; }
+  QPointer<LibraryWindow> guard(this);
+  if (request.page && request.page == statisticsPage_ && packet->session == columnSession_) {
+    request.page->setPresentation(std::move(packet));
+  }
+  if (guard) { queueOptionalViews(); }
+}
+void LibraryWindow::queueOptionalViews() {
+  queueSavedServices();
+  queueColumnLayouts();
+  queueStatistics();
+}
 void LibraryWindow::closePage(int index) {
   if (closing_) { return; }
   QPointer<QWidget> page(mainTabs_->widget(index));
@@ -402,6 +486,7 @@ void LibraryWindow::closePage(int index) {
   if (!retainedLibrary) {
     if (page == hostingPage_.data()) { hostingPage_.clear(); }
     else if (page == sharesPage_.data()) { sharesPage_.clear(); }
+    else if (page == statisticsPage_.data()) { statisticsPage_.clear(); pendingStatisticsRequest_.reset(); }
     else { return; }
   }
   QPointer<LibraryWindow> guard(this);
@@ -411,7 +496,7 @@ void LibraryWindow::closePage(int index) {
   if (!retainedLibrary && page) { page->deleteLater(); }
   if (pendingSavedRequest_ && !hasLoadingServices(*pendingSavedRequest_)) { pendingSavedRequest_.reset(); }
   updateActions();
-  if (guard) { queueSavedServices(); }
+  if (guard) { queueOptionalViews(); }
 }
 bool LibraryWindow::onSavedServicePage() const {
   const auto* current = mainTabs_->currentWidget();
@@ -437,16 +522,23 @@ void LibraryWindow::refreshSavedServices() {
   queueSavedServices();
 }
 void LibraryWindow::queueSavedServices() {
-  if (savedDispatchQueued_ || closing_ || busy_ || activeSavedRequest_ || activeColumnRequest_ || activeColumnSave_ || !pendingSavedRequest_) { return; }
+  if (savedDispatchQueued_ || closing_ || busy_ || activeSavedRequest_ || activeColumnRequest_ || activeColumnSave_ || activeStatisticsRequest_ || !pendingSavedRequest_) { return; }
   savedDispatchQueued_ = true;
   QTimer::singleShot(0, this, [this] {
     savedDispatchQueued_ = false;
-    if (closing_ || busy_ || activeSavedRequest_ || activeColumnRequest_ || activeColumnSave_ || !pendingSavedRequest_) { return; }
+    if (closing_ || busy_ || activeSavedRequest_ || activeColumnRequest_ || activeColumnSave_ || activeStatisticsRequest_ || !pendingSavedRequest_) { return; }
     const auto request = *pendingSavedRequest_;
     pendingSavedRequest_.reset();
     if (!hasLoadingServices(request)) { return; }
     activeSavedRequest_ = request;
+    QPointer<LibraryWindow> guard(this);
     emit savedServicesRequested(request);
+    if (!guard) { return; }
+    if (!busy_ && activeSavedRequest_ == request) {
+      activeSavedRequest_.reset();
+      failSavedServices(request, tr("Saved configuration request was not accepted"));
+      if (guard) { queueOptionalViews(); }
+    }
   });
 }
 void LibraryWindow::failSavedServices(quint64 request, const QString& message) {
@@ -464,18 +556,20 @@ void LibraryWindow::setSavedServices(SavedServicesPresentation packet) {
   if (!guard) { return; }
   if (sharesPage_) { applySavedResult(*sharesPage_, packet->request, packet->sharing); }
   if (!guard) { return; }
-  queueSavedServices();
-  queueColumnLayouts();
+  queueOptionalViews();
 }
 
 void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   columnSession_ = session;
+  activeStatisticsRequest_.reset();
+  pendingStatisticsRequest_.reset();
   columnSaveAvailable_ = false;
   activeColumnSave_.reset();
   activeColumnRequest_.reset();
   pendingColumnRequest_.reset();
   refreshColumnLayouts(true);
+  if (statisticsPage_) { refreshStatistics(); }
 }
 void LibraryWindow::refreshColumnLayouts(bool initial) {
   if (closing_ || columnSession_ == 0) { return; }
@@ -502,11 +596,11 @@ void LibraryWindow::refreshColumnLayouts(bool initial) {
 }
 void LibraryWindow::queueColumnLayouts() {
   if (columnDispatchQueued_ || closing_ || busy_ || activeSavedRequest_
-      || activeColumnRequest_ || activeColumnSave_ || !pendingColumnRequest_) { return; }
+      || activeColumnRequest_ || activeColumnSave_ || activeStatisticsRequest_ || !pendingColumnRequest_) { return; }
   columnDispatchQueued_ = true;
   QTimer::singleShot(0, this, [this] {
     columnDispatchQueued_ = false;
-    if (closing_ || busy_ || activeSavedRequest_ || activeColumnRequest_ || activeColumnSave_ || !pendingColumnRequest_) { return; }
+    if (closing_ || busy_ || activeSavedRequest_ || activeColumnRequest_ || activeColumnSave_ || activeStatisticsRequest_ || !pendingColumnRequest_) { return; }
     const auto request = *pendingColumnRequest_;
     pendingColumnRequest_.reset();
     if (request.session != columnSession_ || request.request != columnRequest_) { return; }
@@ -521,8 +615,7 @@ void LibraryWindow::queueColumnLayouts() {
       activeColumnRequest_.reset();
       setMessage(tr("Saved column-layout request was not accepted"));
       if (!guard) { return; }
-      queueSavedServices();
-      queueColumnLayouts();
+      queueOptionalViews();
     }
   });
 }
@@ -533,8 +626,7 @@ void LibraryWindow::setColumnLayouts(ColumnLayoutsPresentation packet) {
   activeColumnRequest_.reset();
   if (closing_) { return; }
   if (packet->session != columnSession_ || packet->request != columnRequest_) {
-    queueSavedServices();
-    queueColumnLayouts();
+    queueOptionalViews();
     return;
   }
   QPointer<LibraryWindow> guard(this);
@@ -569,8 +661,7 @@ void LibraryWindow::setColumnLayouts(ColumnLayoutsPresentation packet) {
       if (!guard) { return; }
       if (!current()) {
         updating_ = previous;
-        queueSavedServices();
-        queueColumnLayouts();
+        queueOptionalViews();
         return;
       }
       if (completeColumns_ && request.completeRevision) {
@@ -581,8 +672,7 @@ void LibraryWindow::setColumnLayouts(ColumnLayoutsPresentation packet) {
       if (!guard) { return; }
       updating_ = previous;
       if (!current()) {
-        queueSavedServices();
-        queueColumnLayouts();
+        queueOptionalViews();
         return;
       }
       setMessage(applied ? tr("Saved column layout applied (%1); Name width stays automatic").arg(source)
@@ -598,13 +688,12 @@ void LibraryWindow::setColumnLayouts(ColumnLayoutsPresentation packet) {
     setMessage(packet->failure.isEmpty() ? tr("Saved column layout could not be read") : packet->failure);
   } else { setMessage(tr("Saved column-layout result is incomplete")); }
   if (!guard) { return; }
-  queueSavedServices();
-  queueColumnLayouts();
+  queueOptionalViews();
 }
 
 void LibraryWindow::saveColumnLayout() {
   if (closing_ || busy_ || !columnSaveAvailable_ || columnSession_ == 0
-      || activeColumnRequest_ || pendingColumnRequest_ || activeColumnSave_
+      || activeColumnRequest_ || pendingColumnRequest_ || activeColumnSave_ || activeStatisticsRequest_
       || columnSaveRequest_ == std::numeric_limits<quint64>::max()
       || !incompleteColumns_ || !completeColumns_) { return; }
   const auto incompleteRevision = incompleteColumns_->editRevision();
@@ -634,7 +723,7 @@ void LibraryWindow::saveColumnLayout() {
     activeColumnSave_.reset();
     setMessage(tr("Column-layout save was not accepted"));
   }
-  if (guard) { queueSavedServices(); queueColumnLayouts(); updateActions(); }
+  if (guard) { queueOptionalViews(); updateActions(); }
 }
 void LibraryWindow::setColumnLayoutSaved(ColumnLayoutSavePresentation packet) {
   if (!packet || !activeColumnSave_ || packet->session != activeColumnSave_->session
@@ -653,7 +742,7 @@ void LibraryWindow::setColumnLayoutSaved(ColumnLayoutSavePresentation packet) {
   } else {
     setMessage(packet->failure.isEmpty() ? tr("Column layout was not saved; reload before retrying") : packet->failure);
   }
-  if (guard) { queueSavedServices(); queueColumnLayouts(); updateActions(); }
+  if (guard) { queueOptionalViews(); updateActions(); }
 }
 
 void LibraryWindow::setOfflinePreview(bool offline) {
@@ -739,12 +828,12 @@ void LibraryWindow::updateActions() {
   const auto target = actionTarget();
   continue_->setEnabled(!busy_ && !closing_ && target && model_->canContinue(*target));
   cancel_->setEnabled(busy_ && !closing_);
-  refresh_->setEnabled(!closing_ && (onSavedServicePage() || (!busy_ && mainTabs_->currentWidget() == torrentsPage_)));
+  refresh_->setEnabled(!closing_ && (onSavedServicePage() || onStatisticsPage() || (!busy_ && mainTabs_->currentWidget() == torrentsPage_)));
   files_->setEnabled(!busy_ && !closing_ && target.has_value());
   padding_->setEnabled(!closing_ && mainTabs_->currentWidget() == torrentsPage_);
-  closeTab_->setEnabled(!closing_ && (mainTabs_->currentWidget() == torrentsPage_ || onSavedServicePage()));
+  closeTab_->setEnabled(!closing_ && (mainTabs_->currentWidget() == torrentsPage_ || onSavedServicePage() || onStatisticsPage()));
   saveColumns_->setEnabled(!closing_ && !busy_ && columnSaveAvailable_ && columnSession_ != 0
-      && !activeColumnRequest_ && !pendingColumnRequest_ && !activeColumnSave_
+      && !activeColumnRequest_ && !pendingColumnRequest_ && !activeColumnSave_ && !activeStatisticsRequest_
       && columnSaveRequest_ != std::numeric_limits<quint64>::max());
   reloadColumns_->setEnabled(!closing_ && columnSession_ != 0 && columnRequest_ != std::numeric_limits<quint64>::max());
 }
@@ -787,14 +876,22 @@ void LibraryWindow::setPresentation(const Presentation& snapshot) {
   if (guard) { updateCounts(); }
 }
 void LibraryWindow::setTelemetry(const Telemetry& update) {
+  QPointer<LibraryWindow> guard(this);
   const auto hashes = selectedHashes();
   updating_ = true;
   const bool applied = model_->apply(update);
+  if (!guard) { return; }
   if (applied) { restoreSelection(hashes); }
+  if (!guard) { return; }
   updating_ = false;
   if (applied) {
+    if (statisticsPage_ && model_->accepts(update.target)) {
+      const auto row = model_->rowFor(update.target.hash);
+      statisticsPage_->recordPayload(update, model_->data(model_->index(row, 0), Qt::DisplayRole).toString());
+      if (!guard) { return; }
+    }
     setMessage(update.state);
-    QPointer<LibraryWindow> guard(this);
+    if (!guard) { return; }
     selectionChanged();
     if (guard) { updateCounts(); }
   }
@@ -829,6 +926,14 @@ void LibraryWindow::setBusy(bool value) {
   busy_ = value;
   updateActions();
   if (!guard || busy_) { return; }
+  if (activeStatisticsRequest_) {
+    const auto request = *activeStatisticsRequest_;
+    activeStatisticsRequest_.reset();
+    if (!closing_ && request.page && request.page == statisticsPage_) {
+      request.page->setFailed(request.session, request.request, tr("Statistics request did not complete"));
+      if (!guard) { return; }
+    }
+  }
   if (activeSavedRequest_) {
     const auto request = *activeSavedRequest_;
     activeSavedRequest_.reset();
@@ -854,11 +959,11 @@ void LibraryWindow::setBusy(bool value) {
   if (closing_) {
     pendingSavedRequest_.reset();
     pendingColumnRequest_.reset();
+    pendingStatisticsRequest_.reset();
     QTimer::singleShot(0, this, &QWidget::close);
     return;
   }
-  queueSavedServices();
-  queueColumnLayouts();
+  queueOptionalViews();
   if (mainTabs_->currentWidget() == torrentsPage_
       && (detailTabs_->currentIndex() == 1 || (selected() && !model_->hasDetails(*selected())))) {
     QTimer::singleShot(0, this, [this] { requestDetails(); });
@@ -868,6 +973,7 @@ void LibraryWindow::closeEvent(QCloseEvent* event) {
   closing_ = true;
   pendingSavedRequest_.reset();
   pendingColumnRequest_.reset();
+  pendingStatisticsRequest_.reset();
   QPointer<LibraryWindow> guard(this);
   updateActions();
   if (!guard) { return; }
@@ -880,6 +986,7 @@ void LibraryWindow::closeEvent(QCloseEvent* event) {
   activeSavedRequest_.reset();
   activeColumnRequest_.reset();
   activeColumnSave_.reset();
+  activeStatisticsRequest_.reset();
   QMainWindow::closeEvent(event);
 }
 void LibraryWindow::popup(QTableView* table, const QPoint& point) {

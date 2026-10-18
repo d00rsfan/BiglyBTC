@@ -5,6 +5,7 @@
 #include "biglybtc/saved_dnd.hpp"
 #include "local_session.hpp"
 #include "saved_service_view.hpp"
+#include "statistics_view.hpp"
 
 #include <QMetaObject>
 #include <QPointer>
@@ -159,6 +160,7 @@ SessionBridge::SessionBridge(QObject* parent) : QObject(parent) {
   qRegisterMetaType<ui::Telemetry>();
   qRegisterMetaType<ui::Details>();
   qRegisterMetaType<ui::SavedServicesPresentation>();
+  qRegisterMetaType<ui::StatisticsPresentation>();
   qRegisterMetaType<ui::ColumnLayoutsPresentation>();
   qRegisterMetaType<ui::ColumnLayoutSaveSubmission>();
   qRegisterMetaType<ui::ColumnLayoutSavePresentation>();
@@ -304,6 +306,56 @@ bool SessionBridge::savedServices(quint64 request) {
       emit busyChanged(false);
     }, Qt::QueuedConnection);
   });
+}
+bool SessionBridge::statistics(quint64 session, quint64 request) {
+  if (session == 0 || request == 0 || session != publishedColumnLayoutSession_) { return false; }
+  return dispatch([this, session, request](std::stop_token stop) {
+    if (!host_ || host_->columnLayoutSession != session) {
+      throw Failure{{storage::ErrorCode::Conflict, "This statistics session is no longer active"}};
+    }
+    auto packet = std::make_shared<ui::StatisticsPacket>();
+    packet->session = session;
+    packet->request = request;
+    checkpoint(stop);
+    auto view = storage::readSavedStatisticsView(host_->lease, stop);
+    checkpoint(stop);
+    if (!view) {
+      if (view.error().code == storage::ErrorCode::Cancelled) { throw Failure{std::move(view.error())}; }
+      packet->failure = text(view.error().message);
+    } else if (view->missing()) {
+      packet->state = ui::StatisticsReadState::Missing;
+    } else if (!view->recoverySource) {
+      packet->failure = tr("Saved statistics source is unavailable");
+    } else {
+      switch (*view->recoverySource) {
+        case storage::RecoverySource::Primary: packet->source = ui::StatisticsReadSource::Primary; break;
+        case storage::RecoverySource::Backup: packet->source = ui::StatisticsReadSource::Backup; break;
+        case storage::RecoverySource::Saving: packet->source = ui::StatisticsReadSource::Saving; break;
+      }
+      if (packet->source) {
+        packet->snapshot = std::make_shared<const core::SavedStatistics>(std::move(*view->snapshot));
+        packet->state = ui::StatisticsReadState::Ready;
+      }
+    }
+    checkpoint(stop);
+    ui::StatisticsPresentation presentation = std::move(packet);
+    QMetaObject::invokeMethod(this, [this, presentation = std::move(presentation), stop] {
+      QPointer<SessionBridge> guard(this);
+      if (stop.stop_requested() || presentation->session != publishedColumnLayoutSession_) {
+        completionMonitor_->stop();
+        busy_ = false;
+        emit busyChanged(false);
+        if (guard && stop.stop_requested()) { emit messageReady(tr("Cancelled")); }
+        return;
+      }
+      // Keep the shared command slot busy through direct result callbacks.
+      emit statisticsReady(presentation);
+      if (!guard) { return; }
+      completionMonitor_->stop();
+      busy_ = false;
+      emit busyChanged(false);
+    }, Qt::QueuedConnection);
+  }, false); // Optional statistics failures never query/revise the library.
 }
 bool SessionBridge::columnLayouts(quint64 session, quint64 request) {
   if (session == 0 || request == 0 || session != publishedColumnLayoutSession_) { return false; }

@@ -1,0 +1,245 @@
+{
+  "schema": 1,
+  "original_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_source": {
+    "uis/src/com/biglybt/ui/swt/mainwindow/MainMenuV2.java": {
+      "git_blob": "cdf1fd41311e98762ac58a168d7c09c3894304d0",
+      "sha256": "e7045fd861fc5eb62a26033fb48c39af42c4d8071dcc67d68bd39d142678d6b1",
+      "bytes": 10632
+    },
+    "uis/src/com/biglybt/ui/swt/shells/main/MainMenuV3.java": {
+      "git_blob": "375b174dac8169581e577d497467d3b3b06bacae",
+      "sha256": "16e5195da0afdc5ac46555eb0dbbc8606172c1cc11acdd368f42149e2feb5127",
+      "bytes": 24078
+    },
+    "uis/src/com/biglybt/ui/swt/mainwindow/MenuFactory.java": {
+      "git_blob": "fe6baf3bb1da72362773aedced66ff48084c4d4e",
+      "sha256": "178e65a1154cc19d67b3fd3c4be5c84cfe666a616e527d1aed0db39112a6f1b4",
+      "bytes": 92087
+    },
+    "uis/src/com/biglybt/ui/swt/mainwindow/IMenuConstants.java": {
+      "git_blob": "f586712de95578ed1f4dfc6dbee99aeff6b5219e",
+      "sha256": "b8638f6316da62e74476a13376f09f79ece8fa013eeec7b172207e853dde2e8f",
+      "bytes": 9036
+    },
+    "uis/src/com/biglybt/ui/swt/KeyBindings.java": {
+      "git_blob": "cd7af1dcc0b4f39c716df662117a44e8aebb1c85",
+      "sha256": "bb17a964a742d89ac6a78ae6c9bd1a7fa9e853a6ea613b21606d0a87aff8ba4d",
+      "bytes": 17920
+    },
+    "uis/src/com/biglybt/ui/swt/shells/main/MainMDISetup.java": {
+      "git_blob": "a34502ff825448fa7db14cf27e560519d37f31f4",
+      "sha256": "cecfce4f796772a5997913f711c27bd27fcd0895397d18fe3658262de66e5938",
+      "bytes": 55348
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java": {
+      "git_blob": "b02e0bbb331bdf6c517387ba999284af7fb53cf2",
+      "sha256": "caf9b2db52ea7fc48248131f75d59466157a6578045c32bb9db0c3a4b763b648",
+      "bytes": 8385
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/ActivityView.java": {
+      "git_blob": "805df9f17c887034129858a27517ed488a79e215",
+      "sha256": "5ed9705c122842319eea84339a783a498cc03fc338d9637ff4772887fd73fcd2",
+      "bytes": 7143
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java": {
+      "git_blob": "0cfe7a202d8ff27da9500435ea9bd659a1de6ba5",
+      "sha256": "0c2b304c022013d0797732049c51deb23a7af976f74b0d47f22156d8da097103",
+      "bytes": 76096
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/CacheView.java": {
+      "git_blob": "d23fdf1e9a0334098bfbb7132c5b21261fea1573",
+      "sha256": "dcdb8d7ecb9aab01998bb331c56614dd382b89028f9c0d677f77707aa8e875e5",
+      "bytes": 20739
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/TrackerActivityView.java": {
+      "git_blob": "88b74b7c237f59124d80e67eb7f826d678c6d090",
+      "sha256": "82e1f741ad2daee3fe98cd0208bcbec5a01a862789eb38667fbc0df9e8b231a3",
+      "bytes": 16879
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/TagStatsView.java": {
+      "git_blob": "55062ba959707735ecac6ad66466813c0a1d9d87",
+      "sha256": "d55137ef360c54ab076e23566b75e40ef27bebd9d6a451e763ae3e8f80a14408",
+      "bytes": 12952
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/XferStatsView.java": {
+      "git_blob": "d75332825445612a754e18fffe2d31f8bccd6254",
+      "sha256": "1f45adf82caa2ddfecfc584c96106a098385399433793f1527b831a991f8d0bf",
+      "bytes": 4816
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/CountersView.java": {
+      "git_blob": "ad4a21d8ff48e3ef39321ba7ccfa0fed272fc698",
+      "sha256": "ed9f8012d173d440dc355128629ba6c7840ce60c16d5da4f386a16b9a5ac0cbb",
+      "bytes": 5339
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/DHTView.java": {
+      "git_blob": "f2af473f79be652f64de229b5fd0c9ad8d638aa9",
+      "sha256": "d33842d7e04b05085760475771082f7cf86689085366292455592b361a2c22bb",
+      "bytes": 30405
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/DHTOpsView.java": {
+      "git_blob": "3a01d48eb12883a96c94985e14caa6e7d004dfa2",
+      "sha256": "e681f2a700af900a5674e5f48b10a330306463673a049e1eb42e5e7837965b2c",
+      "bytes": 5136
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/VivaldiView.java": {
+      "git_blob": "bb8cb8a1b949cbb823c219a771c6d9873a66720e",
+      "sha256": "7fa88c534fb4944ce11f8b2c6e886849799f82f473c22eeda29059603e96377e",
+      "bytes": 5563
+    },
+    "uis/src/com/biglybt/ui/swt/views/ViewManagerSWT.java": {
+      "git_blob": "0f4930d02385e3b0f4bcbe5bf571d0fc45819e37",
+      "sha256": "00e245a51450df63ad9982543913f7cdea3c2f6a56c24fa0fd92b19463edf7ca",
+      "bytes": 12654
+    },
+    "uis/src/com/biglybt/ui/swt/pifimpl/UISWTViewBuilderCore.java": {
+      "git_blob": "fa8732e07b0f7701d0c1f789d393f31fa23b8462",
+      "sha256": "21652002919624dc19457382b67b57905c604b1dded28e4aae6dbb5a47db262c",
+      "bytes": 11458
+    },
+    "uis/src/com/biglybt/ui/swt/pif/UISWTInstance.java": {
+      "git_blob": "ef32c5e7657445ff2e9af3b8e7ecc0eb496797fd",
+      "sha256": "0f8cfa59af09c42903b038d04cc5e014d6ca51cfb3eb56ec16252ff560f96ac6",
+      "bytes": 13492
+    },
+    "uis/src/com/biglybt/ui/swt/mdi/TabbedMDI.java": {
+      "git_blob": "2d956e729ab8ec07021e9340ef68da08688ca323",
+      "sha256": "8a69fc161b6946b1f3821afdecc4c36c9dbac91430b8c315573a7d4330b6e481",
+      "bytes": 52813
+    },
+    "uis/src/com/biglybt/ui/swt/mdi/TabbedEntry.java": {
+      "git_blob": "a4911e0db4e0b919f3ab577d0f30825a6f57ba80",
+      "sha256": "8b1167b2ab5344f321702c10107385a53476351599bd14b2f7d4fea0c1d3eaf4",
+      "bytes": 15222
+    },
+    "uis/src/com/biglybt/ui/swt/mdi/BaseMDI.java": {
+      "git_blob": "c1d36a2db9f1691e9840bcce94dbf3f1f26a3877",
+      "sha256": "6d4e0eb41359cb8d2d704dbcb70b50d3df1008832239509df3b69501af94ae0f",
+      "bytes": 36063
+    },
+    "core/src/com/biglybt/core/global/impl/GlobalManagerStatsImpl.java": {
+      "git_blob": "a247b2ee87abdc97c8e1b980ada9be3e6c85e31f",
+      "sha256": "124c0cf19f7c99dc5a72b9d9f4bc99a0da942f0c3a7c2dc37cd1acd12e86c7c3",
+      "bytes": 37548
+    },
+    "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java": {
+      "git_blob": "f992aecdc28168d656c322512434ff1cbaf95c02",
+      "sha256": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39",
+      "bytes": 144403
+    },
+    "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java": {
+      "git_blob": "ac2a37822729b721aed9367b77d88450b826ec45",
+      "sha256": "14a6ecbee076ac3fa991db8d618af9faab83e1b6b4ea52e1f71eb2b2d7ea240f",
+      "bytes": 15312
+    },
+    "core/src/com/biglybt/core/util/DisplayFormatters.java": {
+      "git_blob": "a6b5fed59b21876db0a75a733c53ec2794742c3d",
+      "sha256": "9c39600a8c46d455c91cbfa4f4eb826c2b7af2fd56a43c5ea61f04811a3192f7",
+      "bytes": 49013
+    },
+    "core/src/com/biglybt/core/util/Constants.java": {
+      "git_blob": "4ddd1e96dc735f8fda4c723629f4ba9924423a8a",
+      "sha256": "d030f8eb323021ed4ca8d8d2d644d028abc3799295e16bce2785b276cdb420ea",
+      "bytes": 19072
+    },
+    "core/src/com/biglybt/internat/MessagesBundle.properties": {
+      "git_blob": "6b9be9a72dcb4c5618239927c5629449533ce9df",
+      "sha256": "a73301400676c4295396be3e4e033e68e8b912a547e2c5a32425253809ba83c0",
+      "bytes": 316206
+    },
+    "uis/src/com/biglybt/ui/swt/MenuBuildUtils.java": {
+      "git_blob": "58b254ec8501fb196bf0fdeacbe30f51dd928eee",
+      "sha256": "2e51dee1653263f55cc56a848b0c1bfebe9b79bcbc21cb2029de46a21c37fb0c",
+      "bytes": 47088
+    },
+    "uis/src/com/biglybt/ui/swt/mainwindow/MainStatusBar.java": {
+      "git_blob": "9a437c0a2606dac5959a88637b6b892d4a7de629",
+      "sha256": "0da589dfc3acf8b443f0d89ed211b8b0df99265af0437f73ecb9c08af42b0c7b",
+      "bytes": 65282
+    },
+    "core/src/com/biglybt/core/util/FileUtil.java": {
+      "git_blob": "e96c2282bb45c0a32f31450f25b8bc3d65b5739b",
+      "sha256": "6565fa6aa08efd7ef64d339db28040d909765b0808050c7b70ae9a09e8cb4ba2",
+      "bytes": 106930
+    },
+    "core/src/com/biglybt/core/stats/transfer/StatsFactory.java": {
+      "git_blob": "c748f467cae4144ca856db54e16dd09a331f4a82",
+      "sha256": "91959571782238cd27fb1832a11fc0f0b48c02ce10bc1e04e0de5022ceb4ec7f",
+      "bytes": 2318
+    },
+    "core/src/com/biglybt/core/stats/transfer/GeneralStats.java": {
+      "git_blob": "4a4573d3bf6f7639a76c4cc12fe9567f491a2e38",
+      "sha256": "4c4cd0df178265c76ba4da78b3ca79f23d4f3bf2a2b663fe67f3647a1735bd8b",
+      "bytes": 2166
+    },
+    "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java": {
+      "git_blob": "72d5cccf803da692911b9a0e56777262138d6e00",
+      "sha256": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194",
+      "bytes": 45598
+    }
+  },
+  "scope": "First bounded classic Statistics view; full StatsView/global-history/client parity unfinished",
+  "navigation": {
+    "menu": "Tools > Statistics",
+    "shortcut": "Ctrl+5",
+    "return_to_library": "Ctrl+1",
+    "close": "Ctrl+W",
+    "fresh_default": "Activity",
+    "reuse_existing": true,
+    "close_reopen": "New page, new read; old results excluded"
+  },
+  "saved_file": {
+    "basename": "BiglyBT.statistics",
+    "candidates": [
+      "BiglyBT.statistics",
+      "BiglyBT.statistics.bak",
+      "BiglyBT.statistics.saving"
+    ],
+    "readonly": true,
+    "writer_allowlist_unchanged": true,
+    "limits": {
+      "input_bytes": 4194304,
+      "nodes": 100000,
+      "depth": 64
+    },
+    "fields": {
+      "downloaded": "signed64 bytes, global data+protocol",
+      "uploaded": "signed64 bytes, global data+protocol",
+      "uptime": "signed64 seconds",
+      "mark_time": "signed64 epoch milliseconds; never save time",
+      "mark_downloaded": "signed64 bytes",
+      "mark_uploaded": "signed64 bytes",
+      "mark_uptime": "signed64 seconds",
+      "dht_down": "signed64 bytes, separate",
+      "dht_up": "signed64 bytes, separate",
+      "p_uploaded": "signed64 bytes",
+      "d_uploaded": "signed64 bytes",
+      "p_downloaded": "signed64 bytes",
+      "d_downloaded": "signed64 bytes"
+    },
+    "missing_or_wrong_type": "Unavailable with raw provenance; never inferred zero",
+    "negative": "Raw fact retained, displayed unavailable",
+    "since_mark": "Only known nonnegative operands; total-min(total,baseline); no document mutation",
+    "save_timestamp": "Unknown",
+    "recovery": "Complete primary dictionary wins; absent primary tries saving then backup, malformed primary tries backup then saving; wrong all type and unsafe/read/oversize errors fail optional read"
+  },
+  "activity": {
+    "scope": "Most recently observed transfer payload only; not global/session counters",
+    "maximum_observations": 600,
+    "times": "Actual monotonic arrival times",
+    "no_samples": "Empty plot, unavailable rates",
+    "different_target": "Clear bounded series",
+    "sampling_timer": false,
+    "hidden_minimized_painting": false,
+    "saved_history_import": false
+  },
+  "unfinished": [
+    "Original global data+protocol rates",
+    "This-session counters",
+    "Persistent global long-term history",
+    "Original Cache/Tracker/DHT/Vivaldi/Tag/Country/Counters subviews",
+    "Mark/reset writing",
+    "Full Java/native switching and performance qualification"
+  ],
+  "live_original_profile_access": false
+}
