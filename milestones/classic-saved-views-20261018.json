@@ -1,0 +1,66 @@
+{
+  "scope": "Classic saved-data navigation/worker integration only; full hosting/sharing services and profile/performance parity remain open",
+  "upstream_repository": "https://github.com/BiglySoftware/BiglyBT",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_repository": "https://github.com/d00rsfan/BiglyBTC",
+  "native_commit": "0b70eb6b0565f2a1debf2e7cd321e9bcb17b31b6",
+  "pushed": true,
+  "unit_checks_passed": 30,
+  "unit_checks_failed": 0,
+  "bridge_qt_rows_passed": 17,
+  "navigation_qt_rows_passed": 19,
+  "page_qt_rows_passed": 20,
+  "bridge_and_navigation_sanitized_checks_passed": 2,
+  "sanitizers": "GCC16 Debug ASan/UBSan,detect_leaks=1,halt_on_error=1",
+  "preview_smoke_scales_passed": [
+    1,
+    1.5,
+    2
+  ],
+  "preview_smoke_qt_rows_per_scale": 3,
+  "all_views_captured": true,
+  "manual_compositor_credit": false,
+  "java_runtime_equality_credit": 0,
+  "original_profile_access": false,
+  "processes_signaled": false,
+  "source_sha256": {
+    ".github/workflows/native-preview.yml": "3b561b57f4d1bc3315ae574439df8f157bcb988f49ed90422536e876d95548f3",
+    "milestones/saved-services-models-20261018.json": "dca6eafc19bfa4d3d863fbabd59f8b8bfc422384bdd78f9e90e285f1014c3128",
+    "preview/README.md": "a0975e43095af4caa8cb8c9a09b0606ef06eedfd90778296a65c1d1e3dafabdf",
+    "preview/migration/tools/stage_preview.py": "3e8796f39d6d19da1111a0bfc91ea909cb2cb2a689ce09094a8e9760709eacd1",
+    "preview/native/app/CMakeLists.txt": "cb78012dbd26ea33292c590e576ac569ee43ce9d3d716c5fabc14cd4b0850d6b",
+    "preview/native/app/main_desktop.cpp": "d93704d217a383e889b98a34cffd97ead5698f4f2d745f99b457633f16799c48",
+    "preview/native/app/session_bridge.cpp": "2725b95365db8e11366864475edc322d4bc47c9ceadaa481ff3ffc20b6a501ec",
+    "preview/native/app/session_bridge.hpp": "f9d29fa411136f2373dd8a1c94b8ce99808ab7561b361bcd3b99ffdbc782164d",
+    "preview/native/packaging/preview.py": "532d30d0855dcb25ca28b51dd752efc38bf4fc08e7599b7dd85ffb9875a70a1f",
+    "preview/native/packaging/preview_smoke.cpp": "6be30f8e98d33daa878967fa2324b7ebb8fe8ac33aae5a16eeb3ebcb418184f7",
+    "preview/native/tests/CMakeLists.txt": "dc962e4cae1ac51ae8189d71553e1c09435e9e10f0debaf7141c268dcd9f2217",
+    "preview/native/tests/desktop_tests.cpp": "e572bd2fe7ddade895cfaedbacc22e53e0c8ce0ef94d64b934b4b0c9c69412ab",
+    "preview/native/tests/navigation_tests.cpp": "11d767a4a827b11831ec71c9e09ead384b1a3e5934a6acf52baebc5f8a8be654",
+    "preview/native/tests/saved_services_bridge_tests.cpp": "2b36d29dec0ecb58d5dfde0b5435587212b60eeb1ccf216f54105cfc02dc0992",
+    "preview/native/tests/saved_services_navigation_tests.cpp": "771f0a9536613ef9ea153d724441a58a3591699f23c8d91bb571fb28948613be",
+    "preview/native/ui/library_window.cpp": "3ecf2019500495f93592382b3a7801be580d6b556dd977cf49ff261a83e6ad7e",
+    "preview/native/ui/library_window.hpp": "6f9c106f6eadaa7e643685296fd9e37a30ca6de22ba06619ec9442f8174b2132",
+    "preview/native/ui/saved_services_presentation.hpp": "f0d4a11acab04211e52d78dbfe0155c3955306bb614b3290521d72140330d530"
+  },
+  "hosted_desktop": {
+    "run": 39114203091,
+    "status": "success",
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39114203091",
+    "native_units_passed": 30,
+    "all_three_view_captures": true
+  },
+  "hosted_sdk": {
+    "run": 39114203106,
+    "status": "success",
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39114203106"
+  },
+  "schema": 1,
+  "date": "2026-10-18",
+  "milestone_tag": "milestone-classic-saved-views-20261018",
+  "limitations": [
+    "Read-only saved settings; no running tracker/sharing service",
+    "Native caps/malformed policy differ from full Java service restoration",
+    "Full classic/client compatibility, original-profile switching and measured performance remain open"
+  ]
+}
