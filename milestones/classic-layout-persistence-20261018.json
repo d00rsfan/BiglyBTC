@@ -1,0 +1,138 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "scope": "Explicit native-only classic column preferences on generated profiles",
+  "upstream_repository": "https://github.com/BiglySoftware/BiglyBT",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_repository": "https://github.com/d00rsfan/BiglyBTC.git",
+  "source_commit": "ba03f2c6a080f856c0d8808b2b4239846dd27733",
+  "source_parent": "ba28f998f3709cbfc692b74c30b634b576ffef20",
+  "source_sha256": {
+    "preview/README.md": "1d7637dc154e9dd848c484febd29421d2ea2d2b8618fee0f688e70da8ea3ef04",
+    "preview/native/adapters/column_layout_view.cpp": "a774163aa5a62d25100d8ba7bf4e11d4704119743e604fa48a7db49b1bd322b4",
+    "preview/native/adapters/column_layout_view.hpp": "887b251c8da97b2f18d7eeea3b7295eedc2f543057e9d8c33b4cdcc6e403a575",
+    "preview/native/app/main_desktop.cpp": "99e571542ef5544ff47335ef422b8f73c6ffa53190787366e112bb02accc498b",
+    "preview/native/app/session_bridge.cpp": "674112f9f4cc97cd9d2b69bc5af5617d20d82a8d337614649ff05d0779a9d11e",
+    "preview/native/app/session_bridge.hpp": "b33167ca52aef52eb16cf3e38587e9bcb10721e1d0be866c09a02312fcfc2c8d",
+    "preview/native/core/CMakeLists.txt": "b3957a51295489e92f051d592648bde299205ba6608fb2db98fbddfc2e6db997",
+    "preview/native/packaging/preview_smoke.cpp": "18801cce095b5cec212bf3e662cdf8ea10d7065ab7158be0392681619a6f0c52",
+    "preview/native/tests/CMakeLists.txt": "76418e4608f5e6510cbebd92bae41e21e71bd912d06b5c6545902fb61080cb03",
+    "preview/native/ui/classic_columns.cpp": "df19731a01e224ac84b0e18246f8031e882ffcf428a8fecdd1627e559450f1fc",
+    "preview/native/ui/classic_columns.hpp": "95ab8d362015a3c98c2b7aec1bc79b0a7e59c8cbed6808c159529a538485942b",
+    "preview/native/ui/column_layout_presentation.hpp": "7dd6edd9a8584525e3dab2dab9ed1fe44727e2d0600e356d06a7e1cc5286aa81",
+    "preview/native/ui/library_window.cpp": "87731ce2a653144ce9696b5e4aeeeba481241ffff87a0e34533ff8250be2b9c1",
+    "preview/native/ui/library_window.hpp": "ea8ba25020774136ccf8e6edfcc306fffb54f8f399b26a536a8e36278c397ecf",
+    "preview/docs/classic-preferences-contract.json": "61ee36140a42bf1f17300490ff15fd08831f7355295c205042e4e6fe0dcfaca3",
+    "preview/native/core/include/biglybtc/classic_preferences.hpp": "8bbdc3b3de6bdc2f0ddecc92079d3bd4edea8d1a93ad0b1ada7b325b51780565",
+    "preview/native/core/src/classic_preferences.cpp": "394c7f79fdfbce6d733615da29e8aaea668b55a7c470b2428d4a22185c38f5f9",
+    "preview/native/tests/classic_preferences_columns_tests.cpp": "b58c72adec4a0be3ad90048c49becd69d2af16c66c7108b7f67b78b9088e9af5",
+    "preview/native/tests/classic_preferences_integration_tests.cpp": "f5554ab768dc2aa4bec155ebc69eb63966342ea4e573cdd0533350c4120309a7",
+    "preview/native/tests/classic_preferences_tests.cpp": "a9eed9c8d301c67928862b0f5e59a7ed7b86a7a82e11ec4c3884ce32fae37298",
+    "preview/native/tests/classic_preferences_view_tests.cpp": "dcac23ed08c46d47a2e4ef981696d55760868e25f2ec202147c7ce34a8981ae9"
+  },
+  "config_namespace": "BiglyBTC.ClassicColumns.v1",
+  "format_contract": "preview/docs/classic-preferences-contract.json",
+  "native_units_passed": 42,
+  "skipped": 0,
+  "clang_codec_cases": 27,
+  "clang_codec_assertions": 331,
+  "clang_storage_cases": 43,
+  "clang_storage_assertions": 5823,
+  "new_qt_header_rows": 27,
+  "new_qt_window_worker_rows": 12,
+  "sanitized_suites_passed": 7,
+  "sanitizers": "GCC16 Debug ASan/UBSan with detect_leaks=1:halt_on_error=1,UBSAN halt_on_error=1",
+  "actual_smoke_scales": [
+    1,
+    1.5,
+    2
+  ],
+  "actual_smoke_qt_rows_per_scale": 4,
+  "captures_per_scale": 4,
+  "classic_captures_visually_reviewed": [
+    1,
+    1.5,
+    2
+  ],
+  "hosted_verification": {
+    "schema": 1,
+    "source_commit": "ba03f2c6a080f856c0d8808b2b4239846dd27733",
+    "runs": [
+      {
+        "id": 39130607531,
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39130607531",
+        "conclusion": "success"
+      },
+      {
+        "id": 39130607432,
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39130607432",
+        "conclusion": "success"
+      }
+    ],
+    "native_units_passed": 42,
+    "skipped": 0,
+    "codec_cases": 27,
+    "storage_cases": 43,
+    "new_qt_header_rows": 27,
+    "new_qt_window_worker_rows": 12,
+    "actual_smoke_rows": 4,
+    "captures_retained": 4,
+    "artifact_files_hashed": 25,
+    "artifact_file_manifest_sha256": "13bd0ad4ffc69052f3ef7b52f0492a75dea6eee8441f1496969da7ca89253b97",
+    "full_client_migration_credit": false
+  },
+  "java_codec_only": {
+    "source_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+    "map_variants_passed": 3,
+    "key_interning_enabled": false,
+    "manager_runtime_credit": 0
+  },
+  "portable_preview": {
+    "schema": 1,
+    "source_commit": "ba03f2c6a080f856c0d8808b2b4239846dd27733",
+    "dist": "/home/yurii/Java/BiglyBTC/dist",
+    "rollback": "/home/yurii/Java/BiglyBTC/build/classic-layout-persistence-20261018/previous-dist",
+    "files_verified": 103,
+    "runtime_files_byte_identical": 82,
+    "previous_manifest_sha256": "5d80e3a9e488e933ebd7dd14a0bdfb0e1f74edf5e7e91f455c94d58249d4eff6",
+    "manifest_sha256": "9734a1c32ea740e6a94e22a6c2f21b1adf4d757ee62a3af4601e3ef17704cc12",
+    "system_installation": false,
+    "processes_signaled": false,
+    "installed_rpath_equivalence": {
+      "build_sha256": "1d887c8de263cdf72efd30c4ea6c7fa9b4cb988f56c43d0396715936f62f65d6",
+      "installed_sha256": "814db70ec50d93010c62a38d1e5374e384033092f82ef1aeb5e599bb8bca1a8e",
+      "replayed_install_sha256": "814db70ec50d93010c62a38d1e5374e384033092f82ef1aeb5e599bb8bca1a8e",
+      "old_runpath": "/opt/Qt/6.12.0/gcc_64/lib:/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/lib/x86_64-linux-gnu:",
+      "new_runpath": "$ORIGIN/../qt/lib",
+      "cmake_install_script_sha256": "7d481d255b0e1fdd912a88504e8780549460588b7ca7957579c2416a997790c2",
+      "complete_bytes_match_after_exact_rpath_change": true
+    }
+  },
+  "system_installation": false,
+  "original_profile_access": false,
+  "processes_signaled": false,
+  "manual_compositor_credit": false,
+  "history": [
+    "Independent source review found a reentrant pending-queue stall after rejected Save; root fixed queue release and added an actual Qt regression before final qualification",
+    "Final incremental build follows the complete initial build because the reviewed queue correction changed Window source during the initial build",
+    "Final source delta after pre-qualification pins is README wording only; all21 final source hashes match tested input",
+    "No fixture/refreeze, test deadline, flags or checks were relaxed",
+    "Initial install guard assumed raw build ELF equals installed ELF; corrected verification replays the exact CMake RUNPATH transformation and requires complete byte equality before promotion"
+  ],
+  "limitations": [
+    "Only existing unchanged Primary tables.config, no missing-file creation/recovery promotion",
+    "Native-only13-ID geometry/order/sort namespace; original Java records preserved, no shared Java effective-layout parity",
+    "Java Reset All Tables erases the native map; ordinary Java normal-map codec retains it semantically, with interning disabled in the inert helper",
+    "No live original profile, full client switching, complete plugins or whole-client performance qualification",
+    "Default preview launcher starts a fresh sample profile each time",
+    "No measured whole-client performance improvement is claimed"
+  ],
+  "qualification_evidence_sha256": {
+    "local-verification.json": "3ba6aa2fa340a4f83d1244d45ca4ed619c21ec22239f345c433666e399b14933",
+    "hosted-verification.json": "8e2da9071aadcc11fe7414690f497b6b16d88425b1bf3254dee6aefdef59e630",
+    "source-commit.json": "d76d79f4d859d43f8040e051b819097f38e12c561c3dbbd71d0eb9d5451c1dbb",
+    "dist-promotion.json": "3f2d6e9fe52c95315bea5cad415b8b6a3c02f146ae2889b30df319119fb0d2e7",
+    "installed-rpath-equivalence.json": "fd516407ece4e9150311906164a99d317d96f05692dccaab5c732ef2069a5aed",
+    "evidence-manifest.json": "670fcefc4103bffd49bdf4b3059be75beeca87720720254a34e266aa740707e7"
+  }
+}
