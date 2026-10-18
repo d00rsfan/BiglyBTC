@@ -47,6 +47,7 @@ public:
   void setSavedServices(SavedServicesPresentation);
   void beginColumnLayoutSession(quint64 session);
   void setColumnLayouts(ColumnLayoutsPresentation);
+  void setColumnLayoutSaved(ColumnLayoutSavePresentation);
   void setBusy(bool);
   void setMessage(const QString&);
   void setOfflinePreview(bool);
@@ -54,6 +55,7 @@ signals:
   void refreshRequested();
   void savedServicesRequested(quint64 request);
   void columnLayoutsRequested(quint64 session, quint64 request);
+  void columnLayoutSaveRequested(biglybtc::ui::ColumnLayoutSaveSubmission);
   void continueRequested(biglybtc::ui::Target);
   void detailsRequested(biglybtc::ui::Target);
   void cancelRequested();
@@ -77,6 +79,7 @@ private:
   void failSavedServices(quint64 request, const QString& message);
   void refreshColumnLayouts(bool initial = false);
   void queueColumnLayouts();
+  void saveColumnLayout();
   void updateGeneral();
   void updateCounts();
   void updateActions();
@@ -108,6 +111,10 @@ private:
   std::optional<ColumnRequest> activeColumnRequest_;
   std::optional<ColumnRequest> pendingColumnRequest_;
   bool columnDispatchQueued_ = false;
+  bool columnSaveAvailable_ = false;
+  quint64 columnSaveRequest_ = 0;
+  std::optional<ColumnRequest> activeColumnSave_;
+
   QTabWidget* detailTabs_;
   QLineEdit* filter_;
   QSplitter* splitter_;
@@ -126,6 +133,7 @@ private:
   QTableView* filesTable_;
   QAction* closeTab_;
   QAction* reloadColumns_;
+  QAction* saveColumns_;
   QAction* continue_;
   QAction* cancel_;
   QAction* refresh_;

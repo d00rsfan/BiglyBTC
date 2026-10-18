@@ -92,6 +92,8 @@ struct SessionBridge::Host {
   std::map<std::string, Known> known;
   std::set<std::string> currentHashes;
   ui::Presentation lastSnapshot{};
+  std::shared_ptr<const core::Document> columnBaseline{};
+  std::optional<storage::RecoverySource> columnBaselineSource{};
 
   void accepts(const ui::Target& target) const {
     if (target.generation != revision || !currentHashes.contains(target.hash.toStdString())) {
@@ -156,6 +158,8 @@ SessionBridge::SessionBridge(QObject* parent) : QObject(parent) {
   qRegisterMetaType<ui::Details>();
   qRegisterMetaType<ui::SavedServicesPresentation>();
   qRegisterMetaType<ui::ColumnLayoutsPresentation>();
+  qRegisterMetaType<ui::ColumnLayoutSaveSubmission>();
+  qRegisterMetaType<ui::ColumnLayoutSavePresentation>();
   completionMonitor_ = new QTimer(this);
   completionMonitor_->setInterval(20);
   connect(completionMonitor_, &QTimer::timeout, this, [this] {
@@ -309,6 +313,8 @@ bool SessionBridge::columnLayouts(quint64 session, quint64 request) {
     packet->session = session;
     packet->request = request;
     checkpoint(stop);
+    host_->columnBaseline.reset();
+    host_->columnBaselineSource.reset();
     auto view = storage::readColumnLayoutsView(host_->lease, stop);
     checkpoint(stop);
     if (!view) {
@@ -320,6 +326,9 @@ bool SessionBridge::columnLayouts(quint64 session, quint64 request) {
       packet->failure = tr("Saved column layout source is unavailable");
     } else {
       packet->snapshot = std::make_shared<const core::ColumnLayouts>(std::move(*view->snapshot));
+      packet->nativePreferences = std::move(view->nativePreferences);
+      host_->columnBaseline = packet->snapshot->source;
+      host_->columnBaselineSource = view->recoverySource;
       packet->state = ui::ColumnLayoutReadState::Ready;
     }
     checkpoint(stop);
@@ -335,6 +344,48 @@ bool SessionBridge::columnLayouts(quint64 session, quint64 request) {
       }
       // Hold busy through direct result slots, including cancellation/deletion.
       emit columnLayoutsReady(presentation);
+      if (!guard) { return; }
+      completionMonitor_->stop();
+      busy_ = false;
+      emit busyChanged(false);
+    }, Qt::QueuedConnection);
+  }, false);
+}
+bool SessionBridge::saveColumnLayout(ui::ColumnLayoutSaveSubmission submission) {
+  if (!submission || submission->session == 0 || submission->request == 0
+      || submission->session != publishedColumnLayoutSession_ || !submission->preferences
+      || !core::validateClassicPreferences(*submission->preferences)) { return false; }
+  // Copy bounded input before worker dispatch; the worker never borrows GUI data.
+  const auto session = submission->session;
+  const auto request = submission->request;
+  auto preferences = std::make_shared<const core::ClassicPreferences>(*submission->preferences);
+  return dispatch([this, session, request, preferences = std::move(preferences)](std::stop_token stop) {
+    auto packet = std::make_shared<ui::ColumnLayoutSavePacket>();
+    packet->session = session;
+    packet->request = request;
+    checkpoint(stop);
+    if (!host_ || host_->columnLayoutSession != session || !host_->columnBaseline
+        || !host_->columnBaselineSource) {
+      packet->failure = tr("Reload the saved column layout before saving");
+    } else {
+      const auto result = storage::saveClassicPreferencesView(host_->lease,
+          *host_->columnBaseline, *host_->columnBaselineSource, *preferences, stop);
+      // No cancellation checkpoint here: save may already have replaced primary.
+      if (result) {
+        host_->columnBaseline = *result;
+        host_->columnBaselineSource = storage::RecoverySource::Primary;
+        packet->saved = true;
+      } else {
+        host_->columnBaseline.reset();
+        host_->columnBaselineSource.reset();
+        packet->failure = text(result.error().message);
+      }
+    }
+    ui::ColumnLayoutSavePresentation presentation = std::move(packet);
+    QMetaObject::invokeMethod(this, [this, presentation = std::move(presentation)] {
+      QPointer<SessionBridge> guard(this);
+      // Always deliver the actual write result, including after cancellation.
+      emit columnLayoutSaved(presentation);
       if (!guard) { return; }
       completionMonitor_->stop();
       busy_ = false;

@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "original_source_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_parent": "ba28f998f3709cbfc692b74c30b634b576ffef20",
+  "scope": "Explicit native-only classic column preference persistence on generated profiles; original live profile excluded",
+  "namespace": "BiglyBTC.ClassicColumns.v1",
+  "version": 1,
+  "stable_ids": [
+    "name",
+    "state",
+    "size",
+    "progress",
+    "download-rate",
+    "upload-rate",
+    "received",
+    "sent",
+    "hash",
+    "saved-queue-position",
+    "saved-selected-size",
+    "saved-selected-remaining",
+    "saved-selected-done"
+  ],
+  "schema_rules": "Strict version/incomplete/complete dictionaries; each pane exactly13 columns, full unique known-ID order and single known-ID sort with strict0/1 ascending; visible0/1; Name width absent, every other width16..8192; unknown private fields/namespace versions refuse overwrite",
+  "limits": {
+    "whole_bytes": 4194304,
+    "whole_nodes": 100000,
+    "whole_depth": 64,
+    "private_bytes": 32768,
+    "private_nodes": 1024,
+    "private_depth": 8
+  },
+  "read_precedence": "Valid private v1 wins; absent namespace falls back to reviewed original import; malformed/unsupported private data fails optional layout read without blocking library open",
+  "capture": "Immutable bounded GUI snapshot of both panes; hidden remembered widths captured through a detached public Qt header state; Name remains Stretch and sampled width is omitted",
+  "save_trigger": "Only View > Save current column layout; no autosave on resize/Reset/close/timer",
+  "baseline": "Worker-owned pristine last successful layout-read bytes and source within a unique held-lease session; only unchanged existing Primary may save; bytes/presence conflict contract, not primary-inode CAS",
+  "storage": "Existing ConfigFile transaction and .bak/.saving recovery filenames; no second profile/sidecar, no creation from Missing or recovery promotion; pre-existing saving preserved",
+  "opaque_preservation": "Native edit replaces only private root value; every original untouched root key/value encoding and relative order is retained",
+  "cancellation": "Check before synchronous save; after entering save return actual result including possible post-rename errors even when stop requested",
+  "async_edits": "Acknowledgement never applies headers or changes selection/filter/details/library revision; newer per-pane revisions remain unsaved; failed/missing acknowledgement requires Reload before retry",
+  "reset": "Construction-time native preview baseline remains local; only explicit Save persists it",
+  "java_compatibility": "Pinned normal whole-map encoding retains native ASCII namespace semantically, may reorder/re-encode dictionaries; resetAllTables erases whole root including native map; native geometry/sort is not adopted by Java",
+  "limits_of_qualification": [
+    "No original-profile or payload access; default preview still starts a fresh generated sample per launch",
+    "No Java registry/plugin effective-layout equality or native/Java shared column writer",
+    "No full client switching, network/plugin completion or whole-client performance claim",
+    "No stronger filesystem race/power-loss guarantee than the existing ConfigFile adapter"
+  ]
+}

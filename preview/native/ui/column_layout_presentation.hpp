@@ -1,6 +1,7 @@
 #pragma once
 
 #include "biglybtc/column_layout.hpp"
+#include "biglybtc/classic_preferences.hpp"
 
 #include <QMetaType>
 #include <QString>
@@ -19,9 +20,27 @@ struct ColumnLayoutsPacket {
   std::optional<ColumnLayoutReadSource> source{};
   std::shared_ptr<const core::ColumnLayouts> snapshot{};
   QString failure;
+  std::optional<core::ClassicPreferences> nativePreferences{};
 };
 using ColumnLayoutsPresentation = std::shared_ptr<const ColumnLayoutsPacket>;
+
+// Immutable header capture; all file baselines remain worker-owned.
+struct ColumnLayoutSaveRequest {
+  quint64 session = 0;
+  quint64 request = 0;
+  std::shared_ptr<const core::ClassicPreferences> preferences;
+};
+using ColumnLayoutSaveSubmission = std::shared_ptr<const ColumnLayoutSaveRequest>;
+struct ColumnLayoutSavePacket {
+  quint64 session = 0;
+  quint64 request = 0;
+  bool saved = false;
+  QString failure;
+};
+using ColumnLayoutSavePresentation = std::shared_ptr<const ColumnLayoutSavePacket>;
 
 } // namespace biglybtc::ui
 
 Q_DECLARE_METATYPE(biglybtc::ui::ColumnLayoutsPresentation)
+Q_DECLARE_METATYPE(biglybtc::ui::ColumnLayoutSaveSubmission)
+Q_DECLARE_METATYPE(biglybtc::ui::ColumnLayoutSavePresentation)

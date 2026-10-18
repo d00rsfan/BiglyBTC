@@ -25,7 +25,8 @@ starting services, scanning shares or opening saved paths. All three views can c
 the View shortcuts. Closing My Torrents retains its screen state for Ctrl+1. Each torrent
 pane has its own column chooser: right-click the header, or use **View >
 Incomplete Columns / Complete Columns**. Reset Columns restores the preview
-defaults. These choices are currently kept for the window session; original
+defaults. **View > Save current column layout** explicitly saves both panes
+when an unchanged valid primary `tables.config` is available. Full original
 saved-column settings compatibility remains unfinished. The **Saved queue
 position** column shows the raw recorded position when present. It does not
 represent an active native scheduler; unknown values stay blank (—). See its
@@ -103,8 +104,17 @@ cancellation between reader calls. The desktop imports a reviewed subset once
 when a profile opens. View > Reload Saved Column Layout explicitly imports it
 again; ordinary Refresh preserves your session choices. Changes made after a
 read request win independently for each pane, and Reset restores the preview's
-construction defaults. The chooser remains session-only; no settings are written.
-Name keeps its responsive width. This maps layout IDs, without claiming Java's
+construction defaults. A valid BiglyBTC preference map takes precedence over this
+original-layout fallback. **View > Save current column layout** writes both panes’
+13 native column choices into `BiglyBTC.ClassicColumns.v1` in `tables.config`.
+It preserves original Java table/plugin records and checks the primary file against
+the last successful layout read before saving. Edits made during a save stay local
+and unsaved. There is no automatic save on resize, Reset or window close.
+Name keeps its responsive width. Missing files, recovery-derived loads, unknown
+private versions and changed baselines must be resolved before this first writer
+can save. Java’s Reset All Tables command erases the private map; ordinary pinned Java
+map saves retain it semantically. See the [native preference contract](docs/classic-preferences-contract.json).
+The default sample launcher still creates a fresh temporary profile on every launch. This maps layout IDs, without claiming Java's
 registered defaults, plugin columns, full settings or row-sort equivalence. See the
 [UI import policy](docs/classic-column-layout-import-contract.json),
 [layout contract](docs/classic-column-layout-contract.json),

@@ -281,4 +281,105 @@ bool ClassicColumns::applyLayout(const core::SavedTableLayout& saved, quint64 ex
   return true;
 }
 
+
+std::optional<core::ClassicPanePreferences> ClassicColumns::capturePreferences() const {
+  QPointer<const ClassicColumns> guard(this);
+  QPointer<QTableView> table = table_;
+  if (!table || !editRevision()) { return std::nullopt; }
+  QPointer<QHeaderView> header = table->horizontalHeader();
+  QPointer<QAbstractItemModel> model = table->model();
+  const auto revision = editRevision();
+  const auto count = static_cast<int>(core::ClassicPreferenceIds.size());
+  const auto current = [&] {
+    return guard && table && header && model && table->model() == model.data()
+        && table->horizontalHeader() == header.data() && header->count() == count
+        && guard->editRevision() == revision;
+  };
+  if (!current()) { return std::nullopt; }
+  try {
+    // sectionSize() is zero while hidden, and sectionSizeHint() does not retain
+    // manual widths. Qt's public state roundtrip preserves its hidden-size map.
+    // Only this detached header is unhidden; the live header is never changed.
+    const auto state = header->saveState();
+    if (!current()) { return std::nullopt; }
+    QHeaderView copied(Qt::Horizontal);
+    copied.setModel(model.data());
+    if (!current() || !copied.restoreState(state) || copied.count() != count) { return std::nullopt; }
+    copied.setSectionResizeMode(QHeaderView::Interactive);
+    core::ClassicPanePreferences result;
+    for (int logical = 0; logical < count; ++logical) {
+      const auto index = static_cast<std::size_t>(logical);
+      result.columns[index].visible = !header->isSectionHidden(logical);
+      if (logical != 0) {
+        if (copied.isSectionHidden(logical)) { copied.showSection(logical); }
+        if (!current()) { return std::nullopt; }
+        const auto width = copied.sectionSize(logical);
+        if (width < 16 || width > 8192) { return std::nullopt; }
+        result.columns[index].width = width;
+      }
+      const int ordered = header->logicalIndex(logical);
+      if (ordered < 0 || ordered >= count) { return std::nullopt; }
+      result.order[index] = core::ClassicPreferenceIds[static_cast<std::size_t>(ordered)];
+    }
+    const int sort = header->sortIndicatorSection();
+    if (sort < 0 || sort >= count) { return std::nullopt; }
+    result.sortId = core::ClassicPreferenceIds[static_cast<std::size_t>(sort)];
+    result.ascending = header->sortIndicatorOrder() == Qt::AscendingOrder;
+    if (!current() || !core::validateClassicPreferences({result, result})) { return std::nullopt; }
+    return result;
+  } catch (const std::bad_alloc&) { return std::nullopt; }
+}
+
+bool ClassicColumns::applyPreferences(const core::ClassicPanePreferences& preferences,
+    quint64 expectedRevision, const std::function<bool()>& stillCurrent) {
+  if (!table_ || editRevision() != expectedRevision) { return false; }
+  // Own every requested value before invoking any borrowed callback or Qt signal:
+  // a reentrant owner deletion must not invalidate the caller's input reference.
+  std::optional<core::ClassicPanePreferences> admitted;
+  try {
+    if (!core::validateClassicPreferences({preferences, preferences})) { return false; }
+    admitted = preferences;
+  } catch (const std::bad_alloc&) { return false; }
+  QPointer<ClassicColumns> guard(this);
+  QPointer<QTableView> table = table_;
+  QPointer<QHeaderView> header = table->horizontalHeader();
+  const auto revision = editRevision();
+  const int count = static_cast<int>(core::ClassicPreferenceIds.size());
+  const auto valid = [&] {
+    return guard && table && header && table->horizontalHeader() == header.data()
+        && header->count() == count && guard->editRevision() == revision
+        && revision == expectedRevision;
+  };
+  const auto current = [&] {
+    if (!valid() || (stillCurrent && !stillCurrent())) { return false; }
+    return valid(); // The borrowed predicate may reset or delete this controller.
+  };
+  if (!current()) { return false; }
+  InternalChange change(*this);
+  header->setSectionResizeMode(0, QHeaderView::Stretch);
+  if (!current()) { return false; }
+  for (int visual = 0; visual < count; ++visual) {
+    const auto& id = admitted->order[static_cast<std::size_t>(visual)];
+    const auto found = std::find(core::ClassicPreferenceIds.begin(), core::ClassicPreferenceIds.end(), id);
+    const int logical = static_cast<int>(found - core::ClassicPreferenceIds.begin());
+    header->moveSection(header->visualIndex(logical), visual);
+    if (!current()) { return false; }
+  }
+  for (int logical = 0; logical < count; ++logical) {
+    const auto& column = admitted->columns[static_cast<std::size_t>(logical)];
+    table->setColumnHidden(logical, !column.visible);
+    if (!current()) { return false; }
+    if (column.width) {
+      header->resizeSection(logical, *column.width);
+      if (!current()) { return false; }
+    }
+  }
+  const auto sort = std::find(core::ClassicPreferenceIds.begin(), core::ClassicPreferenceIds.end(), admitted->sortId);
+  table->sortByColumn(static_cast<int>(sort - core::ClassicPreferenceIds.begin()),
+      admitted->ascending ? Qt::AscendingOrder : Qt::DescendingOrder);
+  if (!current()) { return false; }
+  refreshActions();
+  return true;
+}
+
 } // namespace biglybtc::ui

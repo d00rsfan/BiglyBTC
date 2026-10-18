@@ -26,7 +26,7 @@ int main(int argc, char** argv) {
   const auto parsed = std::from_chars(portText.data(), portText.data() + portText.size(), port);
   if (!generated || pathError || canonical != profile || normalized != profile || parsed.ec != std::errc{}
       || parsed.ptr != portText.data() + portText.size() || port > 65535) {
-    std::cerr << "Use a generated /tmp/biglybtc-* profile and an owned endpoint (0 for a read-only preview)\n";
+    std::cerr << "Use a generated /tmp/biglybtc-* profile and an owned endpoint (0 for an offline preview)\n";
     return 2;
   }
   try {
@@ -48,6 +48,7 @@ int main(int argc, char** argv) {
     QObject::connect(&bridge, &Bridge::savedServicesReady, &window, &Window::setSavedServices);
     QObject::connect(&bridge, &Bridge::columnLayoutSessionReady, &window, &Window::beginColumnLayoutSession);
     QObject::connect(&bridge, &Bridge::columnLayoutsReady, &window, &Window::setColumnLayouts);
+    QObject::connect(&bridge, &Bridge::columnLayoutSaved, &window, &Window::setColumnLayoutSaved);
     QObject::connect(&bridge, &Bridge::busyChanged, &window, &Window::setBusy);
     QObject::connect(&bridge, &Bridge::messageReady, &window, &Window::setMessage);
     QObject::connect(&window, &Window::refreshRequested, &bridge, &Bridge::refresh);
@@ -55,6 +56,7 @@ int main(int argc, char** argv) {
     QObject::connect(&window, &Window::detailsRequested, &bridge, &Bridge::details);
     QObject::connect(&window, &Window::savedServicesRequested, &bridge, &Bridge::savedServices);
     QObject::connect(&window, &Window::columnLayoutsRequested, &bridge, &Bridge::columnLayouts);
+    QObject::connect(&window, &Window::columnLayoutSaveRequested, &bridge, &Bridge::saveColumnLayout);
     QObject::connect(&window, &Window::cancelRequested, &bridge, &Bridge::cancel);
     bridge.open(profile, static_cast<unsigned short>(port));
     window.show();

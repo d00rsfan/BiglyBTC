@@ -24,6 +24,7 @@ public:
   bool refresh();
   bool savedServices(quint64 request);
   bool columnLayouts(quint64 session, quint64 request);
+  bool saveColumnLayout(ui::ColumnLayoutSaveSubmission);
   bool details(ui::Target target);
   bool continueDownload(ui::Target target);
   void cancel();
@@ -35,6 +36,7 @@ signals:
   void savedServicesReady(biglybtc::ui::SavedServicesPresentation);
   void columnLayoutSessionReady(quint64 session);
   void columnLayoutsReady(biglybtc::ui::ColumnLayoutsPresentation);
+  void columnLayoutSaved(biglybtc::ui::ColumnLayoutSavePresentation);
   void busyChanged(bool);
   void messageReady(QString);
 private:

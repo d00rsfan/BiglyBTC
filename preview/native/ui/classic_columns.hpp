@@ -1,6 +1,7 @@
 #pragma once
 
 #include "biglybtc/column_layout.hpp"
+#include "biglybtc/classic_preferences.hpp"
 
 #include <QObject>
 #include <QPointer>
@@ -27,6 +28,12 @@ public:
   std::optional<quint64> editRevision() const noexcept;
   // Optional predicate is borrowed only during this call, never retained.
   bool applyLayout(const core::SavedTableLayout&, quint64 expectedRevision,
+      const std::function<bool()>& stillCurrent = {});
+
+  // Native preferences cover the complete fixed catalogue. Hidden widths are
+  // read from a detached copy of the header state, never by showing live columns.
+  std::optional<core::ClassicPanePreferences> capturePreferences() const;
+  bool applyPreferences(const core::ClassicPanePreferences&, quint64 expectedRevision,
       const std::function<bool()>& stillCurrent = {});
 
 private:
