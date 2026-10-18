@@ -29,6 +29,13 @@ struct FileDetails {
   std::vector<FileItem> items;
 };
 using FilePresentation = std::shared_ptr<const FileDetails>;
+struct SavedSelectedValues {
+  std::optional<qint64> bytes{};
+  std::optional<qint64> remaining{};
+  std::optional<qint32> percentThousandths{};
+  quint32 defaults = 0;
+  quint32 diagnostics = 0;
+};
 struct LibraryItem {
   QString key;
   QString hash;
@@ -40,6 +47,7 @@ struct LibraryItem {
   std::optional<qint64> sent{};
   bool canContinue = false;
   std::optional<qint64> savedPosition{};
+  std::optional<SavedSelectedValues> savedSelected{};
 };
 struct LibraryPresentation {
   quint64 revision = 0;
@@ -63,7 +71,7 @@ struct Details {
 class LibraryModel final : public QAbstractTableModel {
   Q_OBJECT
 public:
-  static constexpr int Columns = 10;
+  static constexpr int Columns = 13;
   static constexpr int KeyRole = Qt::UserRole + 1;
   static constexpr int CompletionRole = Qt::UserRole + 2;
   static constexpr std::size_t MaximumRows = 100000;

@@ -1,0 +1,199 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "scope": "Optional labelled saved-selected table columns over fixed pure cached statistics; no live/pane equivalence",
+  "upstream_repository": "https://github.com/BiglySoftware/BiglyBT",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_prerequisite": "aaa7a1f4a84b66c0edc3d900c701e38a81fcfd2b",
+  "source_files": [
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java",
+      "sha256": "3b2eb44625911187e3058b7363b96b7ee813a9bf8051de54fada0f1ccc3243c7",
+      "git_blob": "73350c54c291c03b2fafe54b5f7618d31fabab8e",
+      "bytes": 37856
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerController.java",
+      "sha256": "b22ccde4addada902b8bac14c2177e7496b9329304c534d6ed2fdde9dbdc8860",
+      "git_blob": "e575894d6a17d3dcbdd0af857e08445025b24f49",
+      "bytes": 89343
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+      "sha256": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a",
+      "git_blob": "12c9b2e45ab7fa3a9839672087ec207ef83d9e35",
+      "bytes": 107520
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+      "sha256": "a88937664cb90354be6600448a63684b6a7b5c9e7906a9425b9f5a4758afbeda",
+      "git_blob": "99617ee6753153c8af1598fc17cf28ed7631319b",
+      "bytes": 183839
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/DownloadManagerState.java",
+      "sha256": "9bd11377c6abe2f4cf1e0cb10cc42032917679216fccb12fbb43a239a13a2867",
+      "git_blob": "0257df6b197c2e3ac1e0baa11083c6078d197445",
+      "bytes": 17477
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/DownloadManager.java",
+      "sha256": "cfa73bb4c32801fa98565e163cbf7100a24240c790c25cdf2c4ce265402538a6",
+      "git_blob": "1ab44517eb0da5ff5d0bb46fa9b8bbd90275f959",
+      "bytes": 24669
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/DownloadManagerStats.java",
+      "sha256": "5bef43e44a54039626ee7bf6486bdfbb9223aa49560fe8f4bb3b253346873bd6",
+      "git_blob": "121b775b4416d03ed72a646e54846157600c151b",
+      "bytes": 7536
+    },
+    {
+      "path": "core/src/com/biglybt/core/disk/DiskManager.java",
+      "sha256": "f4f90a96208101e683727485fd1b04da8f4d41e4fc9c8d50381efb1e7e37f2f8",
+      "git_blob": "c599e861ffd2e4af8f7314ab3ac0fb9911f390d4",
+      "bytes": 8239
+    },
+    {
+      "path": "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java",
+      "sha256": "6755b950c548c5a7d153b9aef2c1024c7c5c79d5880fd858f3bac4261adcdf8c",
+      "git_blob": "0612105280e1489fc628d155bd12c7606ac0e0c3",
+      "bytes": 127577
+    },
+    {
+      "path": "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java",
+      "sha256": "821229517d374be10b95b4c2b623e3f25b356bf6d29724067933d943f719bcef",
+      "git_blob": "a9766d0fd5dea49342d7c59b62c8d4278f596c91",
+      "bytes": 76554
+    },
+    {
+      "path": "core/src/com/biglybt/core/disk/impl/DiskManagerFileInfoImpl.java",
+      "sha256": "b5a773cc601c0e0fb97a526056b8e32470a93db7f2dc34d627aca842768ce8a7",
+      "git_blob": "6cad394e04f3906cd53aed7a478c5d3c2b1735bc",
+      "bytes": 18466
+    },
+    {
+      "path": "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java",
+      "sha256": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39",
+      "git_blob": "f992aecdc28168d656c322512434ff1cbaf95c02",
+      "bytes": 144403
+    },
+    {
+      "path": "core/src/com/biglybt/pif/download/Download.java",
+      "sha256": "3e6484279df6215385591a0f7f297920fe234fb9e9baf7a57a0ba09d86a2e74e",
+      "git_blob": "d8db4041424ab4ef6e68cb76c109285ca0d37bb2",
+      "bytes": 27779
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/UIConfigDefaultsSWT.java",
+      "sha256": "d13d076fe7fcdb1a29a1d1aa42073a27a994ce03b98af4e39d0676f5a91cf343",
+      "git_blob": "09169cea167e1ffcc3d933394886c0d49fcc851a",
+      "bytes": 13423
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/MyTorrentsView.java",
+      "sha256": "5d019924be50987d683aa82a2000a42cce3297156036ddd5ab8fa65f8eef88fd",
+      "git_blob": "34a79c82aed9153f63b499aba136bb6628316cbc",
+      "bytes": 113057
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/SizeItem.java",
+      "sha256": "799ccd6d2457b69094ad64829387420e38777a23d67c6f3ae06adee2c87a4136",
+      "git_blob": "d13727e725af6b65af4f3a72f3758ac39c64c82c",
+      "bytes": 5874
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/RemainingItem.java",
+      "sha256": "c85e3a3d0ac983b63e29d45631c945696ef6e923018e61c9ab11019a59caf232",
+      "git_blob": "3e49fd9ff265c879bfc9fa6b18726ceb3d5a49c0",
+      "bytes": 2915
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DoneItem.java",
+      "sha256": "5844b06d3c9bf42447e8835bdb18af7417a55e71aa3ddecc3b3769c45e23f0f4",
+      "git_blob": "6289897f59d4b4c09406f7ce000a844bee6b3c13",
+      "bytes": 2979
+    },
+    {
+      "path": "core/src/com/biglybt/core/util/DisplayFormatters.java",
+      "sha256": "9c39600a8c46d455c91cbfa4f4eb826c2b7af2fd56a43c5ea61f04811a3192f7",
+      "git_blob": "a6b5fed59b21876db0a75a733c53ec2794742c3d",
+      "bytes": 49013
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/table/utils/TableColumnCreator.java",
+      "sha256": "e0ce2a57077d76685b1e71d2cb7a831c7cc79fa1e5f93f7979536146ac80053a",
+      "git_blob": "b7011d0601c1c94e716f5ff9aab19ed93c33c7ae",
+      "bytes": 18733
+    }
+  ],
+  "root_policy": {
+    "append_only_columns": {
+      "10": "Saved selected size (bytes)",
+      "11": "Saved selected remaining (bytes)",
+      "12": "Saved selected done"
+    },
+    "default_visibility": "hidden in both panes; reset restores hidden state",
+    "inputs": "Only current cached size, RAW saved completedbytes and current cached fixed DND facts; no previous/fallback/live values",
+    "done_display": "integer permille rendered with one decimal; numeric sorting by integer permille",
+    "unknown": "em dash display/accessibility and invalid numeric sort role",
+    "snapshots": "Replace/clear saved-selected fields independently on every snapshot; telemetry/details leave them unchanged",
+    "validation": "Reject presentation before mutation for negative saved size/remaining, remaining above known size or permille outside0..1000",
+    "unchanged": "Logical0\u20139, Name default sort, full Progress/Size, completion panes, target identity and actions",
+    "tooltip": "Saved snapshot of selected files excluding skipped files, with unavailable/inconsistent values explicit"
+  },
+  "source_semantics": [
+    {
+      "id": "SIZE",
+      "methods": [
+        "SizeItem.refresh",
+        "sizeitemsort.compareTo",
+        "SizeItem.cellHover"
+      ],
+      "fact": "Manager Size reads selected remaining first then selected size. Its sort key is size, remaining (unless simple sort), second-line state. Metadata download subsequently becomes sort\u22121/blank. Size formatting can be custom/localized and show a second line; none of that is a plain saved scalar equality claim."
+    },
+    {
+      "id": "REMAINING",
+      "methods": [
+        "RemainingItem.getRemaining",
+        "RemainingItem.refresh"
+      ],
+      "fact": "Manager Remaining checks metadata first, then reads selected remaining; negative values keep their numeric sort key but display blank. The accepted native normal domain instead publishes an unknown diagnostic for invalid tuples."
+    },
+    {
+      "id": "DONE",
+      "methods": [
+        "DoneItem.refresh",
+        "DisplayFormatters.formatPercentFromThousands"
+      ],
+      "fact": "Manager Done uses stats selected permille and does not apply the Size/Remaining metadata suppression. File Done uses separate wrapped-long multiply/divide/narrowing. Original percentage rendering uses locale percentage_format(thousands/1000.0); fixed one-decimal native text is an adaptation."
+    },
+    {
+      "id": "DEFAULTS",
+      "methods": [
+        "TableColumnCreator.createIncompleteDM",
+        "TableColumnCreator.createCompleteDM",
+        "TableColumnCreator.setVisibility",
+        "DoneItem.DoneItem"
+      ],
+      "fact": "Original fallback defaults show Size in both panes and Done only incomplete; Remaining appears in neither default array. Existing saved column settings and force-visible flags can override fallback visibility. Original fallback sort is Rank ascending; native currently sorts Name ascending and keeps that behavior."
+    },
+    {
+      "id": "PANE",
+      "methods": [
+        "MyTorrentsView.isOurDownloadManager",
+        "DownloadManagerImpl.isDownloadComplete"
+      ],
+      "fact": "Selected Done1000 and no-DiskManager cached candidates do not establish retained assumedComplete or original DND preference pane routing. Keep current native CompletionRole based on full bytes/completed unchanged and do not call it original pane parity."
+    }
+  ],
+  "limitations": [
+    "Actual independent original helper observations and comparison are pending; copied expressions/tests are not original runtime equality.",
+    "Metadata-download attrs.flags and suppression are outside first facts API; do not identify these labelled saved columns as complete original live Size/Remaining semantics.",
+    "Public assumedComplete lifecycle and DND Always In Incomplete preference remain separate from selected Done/cached controller flags and unchanged native panes.",
+    "Original byte/custom/locale percentage formats, composite Size sort/second-line/tooltip behavior, persisted column settings, original Rank/default visibility and per-file Done are not implemented by this proposal.",
+    "The inventory/cache pair is an owned read observation, not proof of live atomicity, current payload verification or original state recovery."
+  ],
+  "source_derived_only": true,
+  "java_manager_runtime_equality_credit": 0
+}

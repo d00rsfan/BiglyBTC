@@ -54,15 +54,29 @@ def prepare(root):
             info["files"] = [{"length": size // 2, "path": ["Read me.txt"]},
                              {"length": size // 2, "path": ["Examples", "Unicode — ש.txt"]}]
         identity = hashlib.sha1(encode(info)).digest()
-        torrent = {"info": info, "attributes": {"displayname": name}}
+        completed = size if complete else size // 4
+        attributes = {"displayname": name}
+        # Selected-file totals are synthetic saved snapshots, not live progress.
+        # Match the generated saved priorities; the last row deliberately lacks
+        # a skipped-size snapshot, so its dependent saved metrics stay unknown.
+        if index == 0:
+            attributes.update({"skipfss": 0, "skipbdl": 0, "parameters": {"dndflags": 0}})
+        elif index == 1:
+            attributes.update({"skipfss": size // 2, "skipbdl": 0, "parameters": {"dndflags": 1}})
+        elif index == 2:
+            attributes.update({"skipfss": size, "skipbdl": completed, "parameters": {"dndflags": 3}})
+        torrent = {"info": info, "attributes": attributes}
         torrent_path = active / (identity.hex().upper() + ".dat")
         torrent_path.write_bytes(encode(torrent))
         downloads.append({"torrent": str(torrent_path), "torrent_hash": identity,
                           "save_dir": str(payload), "save_file": name,
                           "persistent": 1, "state": state, "position": index + 1,
-                          "completedbytes": size if complete else size // 4,
+                          "completedbytes": completed,
                           "downloaded": size * 2, "uploaded": size // 2})
-        cache.append({"hash": identity, "name": name, "size": size, "fc": count, "tt": 1})
+        if index in (1, 2):
+            downloads[-1]["file_priorities"] = [1, 0] if index == 1 else [0, 0]
+        cache.append({"hash": identity, "name": name, "size": size, "fc": count, "tt": 1,
+                      "attributes": attributes})
         if index == 3:
             paused.append({"hash": identity, "force": 0, "owner": 1})
     (profile / "downloads.config").write_bytes(encode({"downloads": downloads, "pause_data": paused}))

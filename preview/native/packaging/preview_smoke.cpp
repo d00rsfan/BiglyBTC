@@ -96,10 +96,32 @@ private slots:
     QVERIFY(!window.continueAction().isEnabled());
     QCOMPARE(window.incompleteTable().model()->rowCount(), 3);
     QCOMPARE(window.completeTable().model()->rowCount(), 1);
-    QCOMPARE(window.model().columnCount(), 10);
+    QCOMPARE(window.model().columnCount(), 13);
     QCOMPARE(window.model().headerData(9, Qt::Horizontal, Qt::DisplayRole).toString(), QStringLiteral("Saved queue position"));
     QVERIFY(!window.incompleteTable().isColumnHidden(9));
     QVERIFY(!window.completeTable().isColumnHidden(9));
+    for (int column = 10; column < 13; ++column) {
+      QVERIFY(window.incompleteTable().isColumnHidden(column));
+      QVERIFY(window.completeTable().isColumnHidden(column));
+    }
+    const std::array<qint64, 3> selectedSizes{32768, 32768, 0};
+    const std::array<qint64, 3> selectedRemaining{0, 16384, 0};
+    const std::array<int, 3> selectedDone{1000, 500, 1000};
+    for (int row = 0; row < 4; ++row) {
+      if (row == 3) {
+        for (int column = 10; column < 13; ++column) {
+          QVERIFY(!window.model().data(window.model().index(row, column), Qt::UserRole).isValid());
+          QCOMPARE(window.model().data(window.model().index(row, column), Qt::DisplayRole).toString(), QString::fromUtf8("—"));
+        }
+      } else {
+        const auto at = static_cast<std::size_t>(row);
+        QCOMPARE(window.model().data(window.model().index(row, 10), Qt::UserRole).toLongLong(), selectedSizes[at]);
+        QCOMPARE(window.model().data(window.model().index(row, 11), Qt::UserRole).toLongLong(), selectedRemaining[at]);
+        QCOMPARE(window.model().data(window.model().index(row, 12), Qt::UserRole).toInt(), selectedDone[at]);
+      }
+    }
+    // Zero selected bytes/100% saved selected Done does not reclassify the row.
+    QCOMPARE(window.model().completionAt(2), std::optional<bool>{false});
 
     for (int row = 0; row < 4; ++row) {
       const auto at = static_cast<std::size_t>(row);
@@ -137,7 +159,8 @@ private slots:
         QCOMPARE(size, total / fileCounts[at]);
         sum += size;
         QCOMPARE(window.filesModel().originalIndex(file).value_or(-1), file);
-        QVERIFY(window.filesModel().data(window.filesModel().index(file, 3), Qt::UserRole).toBool());
+        const bool wanted = row != 2 && !(row == 1 && file == 1);
+        QCOMPARE(window.filesModel().data(window.filesModel().index(file, 3), Qt::UserRole).toBool(), wanted);
       }
       QCOMPARE(sum, total);
     }
@@ -156,6 +179,34 @@ private slots:
       QCOMPARE(image.absoluteDir().canonicalPath(), root.canonicalPath());
       QVERIFY(!image.exists());
       QVERIFY(window.grab().save(capture));
+      const auto chooserTarget = window.filesModel().target();
+      QVERIFY(chooserTarget);
+      // Exercise the actual chooser and retain a second view of the new saved
+      // columns, then restore the usual preview defaults before navigation.
+      for (auto* table : {&window.incompleteTable(), &window.completeTable()}) {
+        const auto prefix = table == &window.completeTable() ? QStringLiteral("classic-columns-complete")
+                                                            : QStringLiteral("classic-columns-incomplete");
+        for (int column = 2; column < 13; ++column) {
+          auto* action = table->findChild<QAction*>(prefix + QStringLiteral("-column-%1").arg(column));
+          QVERIFY(action);
+          const bool wanted = column >= 10;
+          if (action->isChecked() != wanted) { action->trigger(); }
+          QCOMPARE(table->isColumnHidden(column), !wanted);
+        }
+      }
+      QCoreApplication::processEvents();
+      const auto selectedCapture = root.filePath(QStringLiteral("saved-selected-preview.png"));
+      QVERIFY(!QFileInfo::exists(selectedCapture));
+      QVERIFY(window.grab().save(selectedCapture));
+      for (auto* table : {&window.incompleteTable(), &window.completeTable()}) {
+        const auto name = table == &window.completeTable() ? QStringLiteral("classic-columns-complete-reset")
+                                                          : QStringLiteral("classic-columns-incomplete-reset");
+        auto* reset = table->findChild<QAction*>(name);
+        QVERIFY(reset);
+        reset->trigger();
+        for (int column = 10; column < 13; ++column) { QVERIFY(table->isColumnHidden(column)); }
+      }
+      QVERIFY(window.filesModel().target() == chooserTarget);
     }
     QSignalSpy saved(&bridge, &app::SessionBridge::savedServicesReady);
     const auto detailCount = details.count();

@@ -194,6 +194,13 @@ if(BIGLYBTC_DESKTOP)
   add_test(NAME classic-saved-queue-position COMMAND biglybtc-saved-position-tests)
   set_tests_properties(classic-saved-queue-position PROPERTIES TIMEOUT 120
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "ui;unit;classic;read-only")
+  add_executable(biglybtc-saved-selected-tests saved_selected_tests.cpp)
+  set_target_properties(biglybtc-saved-selected-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-saved-selected-tests PRIVATE biglybtc_desktop_host biglybtc_profile Qt6::Test)
+  target_compile_options(biglybtc-saved-selected-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME classic-saved-selected-statistics COMMAND biglybtc-saved-selected-tests)
+  set_tests_properties(classic-saved-selected-statistics PROPERTIES TIMEOUT 120
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "ui;unit;classic;read-only;dnd")
   add_executable(biglybtc-classic-tests classic_tests.cpp)
   set_target_properties(biglybtc-classic-tests PROPERTIES AUTOMOC ON)
   target_link_libraries(biglybtc-classic-tests PRIVATE biglybtc_ui Qt6::Test)

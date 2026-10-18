@@ -82,11 +82,16 @@ and `migration/fixtures/saved-services/README.md` within this preview tree.
 
 The cache reader also retains fixed saved DND facts and exposes a pure selected-size,
 remaining and permille projection. Missing or inconsistent counters stay unknown;
-source defaults and cached completion candidates remain separate. The classic
-tables do not yet use these aggregates. Independent synthetic fixtures and pinned
-source reviews qualify this bounded primitive, with no Java manager/runtime
-equality claim. See the [source contract](docs/saved-dnd-progress-contract.json)
-and [math/default review](docs/saved-dnd-math-review.json).
+source defaults and cached completion candidates remain separate. Three optional
+columns show **Saved selected size**, **Saved selected remaining** and **Saved
+selected done**. Enable them through either pane’s column chooser; they start
+hidden, and Reset Columns hides them again. They reflect the current saved
+snapshot and stay separate from live progress and completion-pane grouping.
+Unknown values use an em dash. Independent synthetic fixtures and pinned source
+reviews qualify this bounded primitive, with no Java manager/runtime equality
+claim. See the [column contract](docs/saved-selected-columns-contract.json),
+[source contract](docs/saved-dnd-progress-contract.json) and
+[math/default review](docs/saved-dnd-math-review.json).
 
 No performance improvement or full migration completion is claimed by this source
 milestone.

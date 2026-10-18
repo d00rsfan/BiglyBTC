@@ -1,6 +1,7 @@
 #include "session_bridge.hpp"
 
 #include "library_view.hpp"
+#include "biglybtc/saved_dnd.hpp"
 #include "local_session.hpp"
 #include "saved_service_view.hpp"
 
@@ -93,8 +94,12 @@ struct SessionBridge::Host {
       const auto hash = saved.hash ? saved.hash->hex() : std::string{};
       QString name = text(saved.saveFile.value_or(std::filesystem::path(saved.saveDirectory).filename().string()));
       std::optional<qint64> size;
+      std::optional<ui::SavedSelectedValues> savedSelected;
       if (row.cached) {
         const auto& cached = *row.cached;
+        const auto selected = core::projectSavedDndProgress(cached.bytes, saved.completedBytes, cached.savedDnd);
+        savedSelected = ui::SavedSelectedValues{.bytes = selected.selectedBytes, .remaining = selected.selectedRemaining,
+            .percentThousandths = selected.percentThousandths, .defaults = selected.defaults, .diagnostics = selected.diagnostics};
         if (cached.displayName && !cached.displayName->empty()) { name = text(*cached.displayName); }
         else if (cached.utf8Name && !cached.utf8Name->empty()) { name = text(*cached.utf8Name); }
         else if (name.isEmpty() && cached.name) { name = text(*cached.name); }
@@ -116,7 +121,7 @@ struct SessionBridge::Host {
           .bytes = size, .completed = saved.completedBytes && *saved.completedBytes >= 0 ? saved.completedBytes : std::nullopt,
           .received = saved.downloaded, .sent = saved.uploaded,
           .canContinue = peerPort != 0 && unique && saved.persistent && !stopped && !paused,
-          .savedPosition = saved.position});
+          .savedPosition = saved.position, .savedSelected = std::move(savedSelected)});
     }
     lastSnapshot = result;
     return result;

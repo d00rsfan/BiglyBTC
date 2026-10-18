@@ -161,7 +161,7 @@ private slots:
     ui::LibraryModel model;
     QAbstractItemModelTester tester(&model, QAbstractItemModelTester::FailureReportingMode::QtTest);
     QVERIFY(model.apply(sample({present ? std::optional<qint64>{value} : std::nullopt})));
-    QCOMPARE(model.columnCount(), 10);
+    QCOMPARE(model.columnCount(), 13);
     const QStringList oldHeaders{QStringLiteral("Name"), QStringLiteral("State"), QStringLiteral("Size (bytes)"),
         QStringLiteral("Progress"), QStringLiteral("Down (B/s)"), QStringLiteral("Up (B/s)"),
         QStringLiteral("Received (bytes)"), QStringLiteral("Sent (bytes)"), QStringLiteral("Hash")};

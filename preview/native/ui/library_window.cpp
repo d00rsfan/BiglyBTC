@@ -92,6 +92,10 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     table->setColumnWidth(1, 100);
     table->setColumnWidth(3, 85);
     table->setColumnWidth(9, 180);
+    table->setColumnWidth(10, 220);
+    table->setColumnWidth(11, 250);
+    table->setColumnWidth(12, 180);
+    for (const int column : {10, 11, 12}) { table->setColumnHidden(column, true); }
     table->setColumnHidden(table == completeTable_ ? 4 : 5, true);
     table->setColumnHidden(8, true);
     table->installEventFilter(this);

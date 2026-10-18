@@ -8,6 +8,9 @@ QVariant number(std::optional<qint64> value, int role) {
   if (value) { return QVariant::fromValue(*value); }
   return role == Qt::UserRole ? QVariant{} : QVariant{QString::fromUtf8("—")};
 }
+QString savedSelectedTooltip() {
+  return LibraryModel::tr("Saved snapshot of selected files, excluding skipped files. These values are not live progress. An em dash means the saved data is unavailable or inconsistent.");
+}
 }
 
 LibraryModel::LibraryModel(QObject* parent) : QAbstractTableModel(parent) {}
@@ -19,6 +22,7 @@ QVariant LibraryModel::data(const QModelIndex& index, int role) const {
   const auto& row = rows_[static_cast<std::size_t>(index.row())];
   if (role == KeyRole) { return row.item.key; }
   if (role == CompletionRole) { return completionAt(index.row()).value_or(false); }
+  if (role == Qt::ToolTipRole) { return index.column() >= 10 ? QVariant{savedSelectedTooltip()} : QVariant{}; }
   if (role != Qt::DisplayRole && role != Qt::UserRole && role != Qt::AccessibleTextRole) { return {}; }
   switch (index.column()) {
     case 0: return row.item.name;
@@ -36,14 +40,25 @@ QVariant LibraryModel::data(const QModelIndex& index, int role) const {
     case 7: return number(row.item.sent, role);
     case 8: return row.item.hash;
     case 9: return number(row.item.savedPosition, role);
+    case 10: return number(row.item.savedSelected ? row.item.savedSelected->bytes : std::optional<qint64>{}, role);
+    case 11: return number(row.item.savedSelected ? row.item.savedSelected->remaining : std::optional<qint64>{}, role);
+    case 12: {
+      const auto percent = row.item.savedSelected ? row.item.savedSelected->percentThousandths : std::optional<qint32>{};
+      if (!percent) { return number(std::nullopt, role); }
+      if (role == Qt::UserRole) { return QVariant::fromValue(*percent); }
+      return QStringLiteral("%1.%2%").arg(*percent / 10).arg(*percent % 10);
+    }
     default: return {};
   }
 }
 
 QVariant LibraryModel::headerData(int section, Qt::Orientation orientation, int role) const {
-  if (orientation != Qt::Horizontal || role != Qt::DisplayRole || section < 0 || section >= Columns) { return {}; }
+  if (orientation != Qt::Horizontal || section < 0 || section >= Columns) { return {}; }
+  if (role == Qt::ToolTipRole && section >= 10) { return savedSelectedTooltip(); }
+  if (role != Qt::DisplayRole) { return {}; }
   const QStringList names{tr("Name"), tr("State"), tr("Size (bytes)"), tr("Progress"),
-      tr("Down (B/s)"), tr("Up (B/s)"), tr("Received (bytes)"), tr("Sent (bytes)"), tr("Hash"), tr("Saved queue position")};
+      tr("Down (B/s)"), tr("Up (B/s)"), tr("Received (bytes)"), tr("Sent (bytes)"), tr("Hash"), tr("Saved queue position"),
+      tr("Saved selected size (bytes)"), tr("Saved selected remaining (bytes)"), tr("Saved selected done")};
   return names[section];
 }
 
@@ -54,6 +69,12 @@ bool LibraryModel::apply(const Presentation& snapshot) {
   for (std::size_t i = 0; i < snapshot->items.size(); ++i) {
     const auto& item = snapshot->items[i];
     if (item.key.isEmpty() || keys.contains(item.key) || (item.bytes && *item.bytes < 0)) { return false; }
+    if (item.savedSelected) {
+      const auto& saved = *item.savedSelected;
+      if ((saved.bytes && *saved.bytes < 0) || (saved.remaining && *saved.remaining < 0)
+          || (saved.bytes && saved.remaining && *saved.remaining > *saved.bytes)
+          || (saved.percentThousandths && (*saved.percentThousandths < 0 || *saved.percentThousandths > 1000))) { return false; }
+    }
     keys.insert(item.key, true);
     if (!item.hash.isEmpty()) {
       if (hashes.contains(item.hash)) { hashes[item.hash] = -1; }
