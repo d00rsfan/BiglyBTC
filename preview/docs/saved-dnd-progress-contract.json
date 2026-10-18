@@ -1,0 +1,595 @@
+{
+  "schema": 1,
+  "status": "FROZEN focused source/minimal API policy; no source/native execution; full DND parity OPEN",
+  "observed_at_utc": "2026-10-18T09:44:02.946623+00:00",
+  "source_context": {
+    "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "repository": "https://github.com/BiglySoftware/BiglyBT",
+    "reused_audit": "migration/evidence/20261018-navigation/next-library-columns-audit.json",
+    "reused_audit_sha256": "a6253890e826161bf1d880c772355ef0804a626b476a95d5ec5090380beb1d5e",
+    "reused_source_paths_verified_unchanged": [
+      "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java",
+      "core/src/com/biglybt/core/download/impl/DownloadManagerController.java",
+      "core/src/com/biglybt/core/download/DownloadManagerState.java",
+      "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+      "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java",
+      "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java",
+      "uis/src/com/biglybt/ui/swt/views/MyTorrentsView.java"
+    ],
+    "new_focused_source_pins": {
+      "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java": {
+        "git_blob": "12c9b2e45ab7fa3a9839672087ec207ef83d9e35",
+        "sha256": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a"
+      },
+      "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java": {
+        "git_blob": "a9766d0fd5dea49342d7c59b62c8d4278f596c91",
+        "sha256": "821229517d374be10b95b4c2b623e3f25b356bf6d29724067933d943f719bcef"
+      },
+      "core/src/com/biglybt/core/download/DownloadManager.java": {
+        "git_blob": "1ab44517eb0da5ff5d0bb46fa9b8bbd90275f959",
+        "sha256": "cfa73bb4c32801fa98565e163cbf7100a24240c790c25cdf2c4ce265402538a6"
+      },
+      "core/src/com/biglybt/pif/download/Download.java": {
+        "git_blob": "d8db4041424ab4ef6e68cb76c109285ca0d37bb2",
+        "sha256": "3e6484279df6215385591a0f7f297920fe234fb9e9baf7a57a0ba09d86a2e74e"
+      },
+      "uis/src/com/biglybt/ui/swt/UIConfigDefaultsSWT.java": {
+        "git_blob": "09169cea167e1ffcc3d933394886c0d49fcc851a",
+        "sha256": "d13d076fe7fcdb1a29a1d1aa42073a27a994ce03b98af4e39d0676f5a91cf343"
+      }
+    },
+    "scope": "Adds cache/default/per-file-persistence findings to the existing audit; does not repeat its32-file source survey."
+  },
+  "native_context": {
+    "repository": "https://github.com/d00rsfan/BiglyBTC",
+    "saved_queue_checkpoint": "ec56329fdfab1a45a8eafd7bacc97c163d5815c2",
+    "metadata_checkpoint": "a5633ee56f68ff8d031cd7bf2922d0508a55938a",
+    "observed_head": "efdf27688594ceecd6d27f8bc2c6e7c0e4c5ce4c",
+    "data_adapter_source_pins": {
+      "preview/native/adapters/library_view.hpp": {
+        "at_saved_queue_checkpoint": {
+          "git_blob": "68edbc945c5047491a8e3dc4a24db29246bc6304",
+          "sha256": "43877d12f340bdd43cb1df1b98eddf6b39c89b7ec51d63de3b572ba9d4b5a82e"
+        },
+        "at_metadata_checkpoint": {
+          "git_blob": "68edbc945c5047491a8e3dc4a24db29246bc6304",
+          "sha256": "43877d12f340bdd43cb1df1b98eddf6b39c89b7ec51d63de3b572ba9d4b5a82e"
+        },
+        "observed_working_sha256": "43877d12f340bdd43cb1df1b98eddf6b39c89b7ec51d63de3b572ba9d4b5a82e",
+        "working_matches_metadata_checkpoint": true
+      },
+      "preview/native/adapters/library_view.cpp": {
+        "at_saved_queue_checkpoint": {
+          "git_blob": "a245ebeedbc659214a33da1d33801a3435dde5be",
+          "sha256": "a9aa1e0f6ccde4a7b4990f2340da1dd3472d372441b1389805e5d16ef1b229d4"
+        },
+        "at_metadata_checkpoint": {
+          "git_blob": "a245ebeedbc659214a33da1d33801a3435dde5be",
+          "sha256": "a9aa1e0f6ccde4a7b4990f2340da1dd3472d372441b1389805e5d16ef1b229d4"
+        },
+        "observed_working_sha256": "a9aa1e0f6ccde4a7b4990f2340da1dd3472d372441b1389805e5d16ef1b229d4",
+        "working_matches_metadata_checkpoint": true
+      },
+      "preview/native/core/include/biglybtc/state_cache.hpp": {
+        "at_saved_queue_checkpoint": {
+          "git_blob": "18f78efab7c906e81f562ec6202513b49c387046",
+          "sha256": "036be2d5a02e1cab9be638496e7b066ef13619a22443ea508a3d583f8f5dcd15"
+        },
+        "at_metadata_checkpoint": {
+          "git_blob": "18f78efab7c906e81f562ec6202513b49c387046",
+          "sha256": "036be2d5a02e1cab9be638496e7b066ef13619a22443ea508a3d583f8f5dcd15"
+        },
+        "observed_working_sha256": "036be2d5a02e1cab9be638496e7b066ef13619a22443ea508a3d583f8f5dcd15",
+        "working_matches_metadata_checkpoint": true
+      },
+      "preview/native/core/src/state_cache.cpp": {
+        "at_saved_queue_checkpoint": {
+          "git_blob": "38271e50a7ea8500879f75a5293b97e307df727a",
+          "sha256": "b73688291e949eb592b0e12281e79bf19dc1000a4f5b9d80f6a06a63238e4fc2"
+        },
+        "at_metadata_checkpoint": {
+          "git_blob": "38271e50a7ea8500879f75a5293b97e307df727a",
+          "sha256": "b73688291e949eb592b0e12281e79bf19dc1000a4f5b9d80f6a06a63238e4fc2"
+        },
+        "observed_working_sha256": "b73688291e949eb592b0e12281e79bf19dc1000a4f5b9d80f6a06a63238e4fc2",
+        "working_matches_metadata_checkpoint": true
+      },
+      "preview/native/adapters/torrent_state.hpp": {
+        "at_saved_queue_checkpoint": {
+          "git_blob": "37a0040383586324fd1cc3808bb37a70aa1fd862",
+          "sha256": "947bb4933bbfe11d1e7162e0f1d039ff25feb3ad59f0227a2fb4b52f770318c6"
+        },
+        "at_metadata_checkpoint": {
+          "git_blob": "37a0040383586324fd1cc3808bb37a70aa1fd862",
+          "sha256": "947bb4933bbfe11d1e7162e0f1d039ff25feb3ad59f0227a2fb4b52f770318c6"
+        },
+        "observed_working_sha256": "947bb4933bbfe11d1e7162e0f1d039ff25feb3ad59f0227a2fb4b52f770318c6",
+        "working_matches_metadata_checkpoint": true
+      },
+      "preview/native/adapters/torrent_state.cpp": {
+        "at_saved_queue_checkpoint": {
+          "git_blob": "dbaa0b47fa85990c3bce733f8deed03f8fca6406",
+          "sha256": "215f3e4ad1483615543529af0cbfc557645706f2536048126438b9399d3df0f7"
+        },
+        "at_metadata_checkpoint": {
+          "git_blob": "dbaa0b47fa85990c3bce733f8deed03f8fca6406",
+          "sha256": "215f3e4ad1483615543529af0cbfc557645706f2536048126438b9399d3df0f7"
+        },
+        "observed_working_sha256": "215f3e4ad1483615543529af0cbfc557645706f2536048126438b9399d3df0f7",
+        "working_matches_metadata_checkpoint": true
+      },
+      "preview/native/adapters/encoded_document.hpp": {
+        "at_saved_queue_checkpoint": {
+          "git_blob": "13f1983a56ac851a283d764119456b376de81e69",
+          "sha256": "fce354efe66973b5ad655b9d0fd09891bc610206d54918bdc0f4ca6ae6b333be"
+        },
+        "at_metadata_checkpoint": {
+          "git_blob": "13f1983a56ac851a283d764119456b376de81e69",
+          "sha256": "fce354efe66973b5ad655b9d0fd09891bc610206d54918bdc0f4ca6ae6b333be"
+        },
+        "observed_working_sha256": "fce354efe66973b5ad655b9d0fd09891bc610206d54918bdc0f4ca6ae6b333be",
+        "working_matches_metadata_checkpoint": true
+      },
+      "preview/native/adapters/profile.hpp": {
+        "at_saved_queue_checkpoint": {
+          "git_blob": "7594d248eddb981d1463b89df1d49839651dafd7",
+          "sha256": "e91ff37048e02b87a4d6f97d774fe3e33b491febd0b2ec55d3dedbbf20dd60ff"
+        },
+        "at_metadata_checkpoint": {
+          "git_blob": "7594d248eddb981d1463b89df1d49839651dafd7",
+          "sha256": "e91ff37048e02b87a4d6f97d774fe3e33b491febd0b2ec55d3dedbbf20dd60ff"
+        },
+        "observed_working_sha256": "e91ff37048e02b87a4d6f97d774fe3e33b491febd0b2ec55d3dedbbf20dd60ff",
+        "working_matches_metadata_checkpoint": true
+      },
+      "preview/native/core/include/biglybtc/file_policy.hpp": {
+        "at_saved_queue_checkpoint": {
+          "git_blob": "89c7adcc3bc137400a7b237916d1281692bdef4b",
+          "sha256": "0d199f329d775783d9f4195ba6e14ff660b410ce4bfc555c4c55b4eaa43bff46"
+        },
+        "at_metadata_checkpoint": {
+          "git_blob": "89c7adcc3bc137400a7b237916d1281692bdef4b",
+          "sha256": "0d199f329d775783d9f4195ba6e14ff660b410ce4bfc555c4c55b4eaa43bff46"
+        },
+        "observed_working_sha256": "0d199f329d775783d9f4195ba6e14ff660b410ce4bfc555c4c55b4eaa43bff46",
+        "working_matches_metadata_checkpoint": true
+      },
+      "preview/native/core/src/file_policy.cpp": {
+        "at_saved_queue_checkpoint": {
+          "git_blob": "21450534293976d730a19a2301b899410be508e7",
+          "sha256": "a50ae3dfcb3d75d9c3220db803823bf91a7f4daaf40ee54f7c325bda7d6a764a"
+        },
+        "at_metadata_checkpoint": {
+          "git_blob": "21450534293976d730a19a2301b899410be508e7",
+          "sha256": "a50ae3dfcb3d75d9c3220db803823bf91a7f4daaf40ee54f7c325bda7d6a764a"
+        },
+        "observed_working_sha256": "a50ae3dfcb3d75d9c3220db803823bf91a7f4daaf40ee54f7c325bda7d6a764a",
+        "working_matches_metadata_checkpoint": true
+      },
+      "preview/native/core/include/biglybtc/torrent_layout.hpp": {
+        "at_saved_queue_checkpoint": {
+          "git_blob": "12af9e19b96ed883085116061ef75c4215b84821",
+          "sha256": "59accc489872b0f69444da51cdd2a79aeaa0510deeaf1a01434aab2b8699a775"
+        },
+        "at_metadata_checkpoint": {
+          "git_blob": "12af9e19b96ed883085116061ef75c4215b84821",
+          "sha256": "59accc489872b0f69444da51cdd2a79aeaa0510deeaf1a01434aab2b8699a775"
+        },
+        "observed_working_sha256": "59accc489872b0f69444da51cdd2a79aeaa0510deeaf1a01434aab2b8699a775",
+        "working_matches_metadata_checkpoint": true
+      },
+      "preview/native/core/src/torrent_layout.cpp": {
+        "at_saved_queue_checkpoint": {
+          "git_blob": "68aa4737d65a640a872f91a82e4f9b9f78b2ce0c",
+          "sha256": "58e6961c5136d1a5f9adf860748a9b3e645fe0ff05ccb50836f339a636ce072d"
+        },
+        "at_metadata_checkpoint": {
+          "git_blob": "68aa4737d65a640a872f91a82e4f9b9f78b2ce0c",
+          "sha256": "58e6961c5136d1a5f9adf860748a9b3e645fe0ff05ccb50836f339a636ce072d"
+        },
+        "observed_working_sha256": "58e6961c5136d1a5f9adf860748a9b3e645fe0ff05ccb50836f339a636ce072d",
+        "working_matches_metadata_checkpoint": true
+      },
+      "preview/native/engine/local_session.hpp": {
+        "at_saved_queue_checkpoint": {
+          "git_blob": "b9cda8f74f4a83f71c7415ddf704ca5a7b06912a",
+          "sha256": "3ac5e56321e5202a27cc542c0d8ca9daa6a8354d7a2c1b6293b7e3fdda3caa4b"
+        },
+        "at_metadata_checkpoint": {
+          "git_blob": "b9cda8f74f4a83f71c7415ddf704ca5a7b06912a",
+          "sha256": "3ac5e56321e5202a27cc542c0d8ca9daa6a8354d7a2c1b6293b7e3fdda3caa4b"
+        },
+        "observed_working_sha256": "3ac5e56321e5202a27cc542c0d8ca9daa6a8354d7a2c1b6293b7e3fdda3caa4b",
+        "working_matches_metadata_checkpoint": true
+      },
+      "preview/native/engine/local_session.cpp": {
+        "at_saved_queue_checkpoint": {
+          "git_blob": "e9b39b56690c8156d985358cc5da7a0e9830bbf1",
+          "sha256": "5a74426229f890480d7cb062d0a11aaaf74c51ced5d1ed713b758f0a9f5eef9d"
+        },
+        "at_metadata_checkpoint": {
+          "git_blob": "e9b39b56690c8156d985358cc5da7a0e9830bbf1",
+          "sha256": "5a74426229f890480d7cb062d0a11aaaf74c51ced5d1ed713b758f0a9f5eef9d"
+        },
+        "observed_working_sha256": "5a74426229f890480d7cb062d0a11aaaf74c51ced5d1ed713b758f0a9f5eef9d",
+        "working_matches_metadata_checkpoint": true
+      },
+      "preview/native/app/session_bridge.cpp": {
+        "at_saved_queue_checkpoint": {
+          "git_blob": "d67a543b8fa82cf1520f65b356f3dc8642502d07",
+          "sha256": "0fe02643a7e93cd91073d2f5d688507b534aaa17f12e4f7c4f630b045a3e029a"
+        },
+        "at_metadata_checkpoint": {
+          "git_blob": "d67a543b8fa82cf1520f65b356f3dc8642502d07",
+          "sha256": "0fe02643a7e93cd91073d2f5d688507b534aaa17f12e4f7c4f630b045a3e029a"
+        },
+        "observed_working_sha256": "0fe02643a7e93cd91073d2f5d688507b534aaa17f12e4f7c4f630b045a3e029a",
+        "working_matches_metadata_checkpoint": true
+      }
+    },
+    "separate_ui_slice": {
+      "preview/native/ui/library_window.hpp": {
+        "metadata_checkpoint": {
+          "git_blob": "b360486bfe0bd79fcfbb178e9ac1d439928147ea",
+          "sha256": "6f9c106f6eadaa7e643685296fd9e37a30ca6de22ba06619ec9442f8174b2132"
+        },
+        "observed_working_sha256": "8f64bcb083935e8064ef6ea9b0952ef1201c7d2102835bc26c9c36a3d52e3151",
+        "scope": "Separate Close Tab UI slice; not an input to pure DND arithmetic or this source-only architecture proposal."
+      },
+      "preview/native/ui/library_window.cpp": {
+        "metadata_checkpoint": {
+          "git_blob": "7196f288b82260f913e1ab5d610cdc3640fca53c",
+          "sha256": "0e73ac7632cbfc1f3bc375c6993423d4e5cddbfbe7b5a2997f149e12f9f01b1d"
+        },
+        "observed_working_sha256": "5d9ac47ea40b9d6ce2bb32739daecb977daad817fa07d2e22fe7d1b13ebe76a6",
+        "scope": "Separate Close Tab UI slice; not an input to pure DND arithmetic or this source-only architecture proposal."
+      }
+    }
+  },
+  "new_findings": [
+    {
+      "id": "D1",
+      "source": "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+      "anchors": [
+        "CachedStateWrapper.export around4178–4185",
+        "CachedStateWrapper constructor around4083",
+        "getAdditionalMapProperty around5389"
+      ],
+      "fact": "Each active/cache.dat state entry exports full attributes, not just name and size. Cached attributes can be returned without loading the per-torrent state.",
+      "consequence": "Aggregate skipped-byte facts and dndflags are available in the existing single startup cache read when present and well formed."
+    },
+    {
+      "id": "D2",
+      "source": "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+      "anchors": [
+        "CachedStateWrapper.fixup around4497–4501",
+        "CachedStateWrapper.getSize around5031"
+      ],
+      "fact": "On real-state fixup, cached attributes replace newly loaded state attributes. Cached size is returned directly only when>0; zero/missing forces original fixup.",
+      "consequence": "Do not overwrite retained cache facts with older .dat attributes. Cache-only raw zero is not a resolved original size without selected geometry or an explicitly separate native raw-snapshot policy."
+    },
+    {
+      "id": "D3",
+      "source": "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+      "anchors": [
+        "parameters initialization around919",
+        "parameterExists around1717",
+        "getLongParameter around1752",
+        "getLongAttribute around2787"
+      ],
+      "fact": "DND flags are nested in attributes.parameters. parameterExists distinguishes absent flags from explicitly present0. skipfss defaults-1; absent skipbdl returns0. Long attribute wrong types can throw; malformed parameter values can log and return0.",
+      "consequence": "A typed native parser must retain field presence/type diagnostics instead of silently treating every missing or malformed input as a successful zero."
+    },
+    {
+      "id": "D4",
+      "source": "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java",
+      "anchors": [
+        "storeFileDownloaded around4131"
+      ],
+      "fact": "Saved per-file downloaded bytes are attributes.filedownloaded.downloaded, a List of Long in original file index order.",
+      "consequence": "No payload stat/read is required to obtain a saved per-file counter; it still needs geometry/index/range/provenance validation before publishing a metric."
+    },
+    {
+      "id": "D5",
+      "source": "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java",
+      "anchors": [
+        "FileSkeleton fields around404",
+        "loadFileDownloaded around1703",
+        "loadFilePriorities around1652",
+        "storeFilePriorities around1594"
+      ],
+      "fact": "Original loadFileDownloaded loads only min(fileCount,listLength), leaves other skeleton counters at Java default0, and may retain a prefix after a type fault. File policy decode and skeleton priority changes can calculate/write skipped caches.",
+      "consequence": "Partial-list/default recovery and callback/write effects are source-only boundaries. A conservative native selected-row publication requires an exact valid indexed list or stays unknown; never invoke the skeleton to fill gaps."
+    },
+    {
+      "id": "D6",
+      "source": "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+      "anchors": [
+        "isDownloadComplete around4242",
+        "requestAssumedCompleteMode around3339",
+        "setAssumedComplete around3357"
+      ],
+      "fact": "Public isDownloadComplete(false) returns assumedComplete; its true branch calls the controller. Re-evaluating assumed mode can write state/times and inspect actual file length/mtime.",
+      "consequence": "A pure controller completion candidate is distinct from the full public assumed-state lifecycle; do not call requestAssumedCompleteMode or claim its effects in a saved projection."
+    },
+    {
+      "id": "D7",
+      "sources": [
+        "core/src/com/biglybt/core/download/DownloadManager.java",
+        "core/src/com/biglybt/pif/download/Download.java",
+        "uis/src/com/biglybt/ui/swt/UIConfigDefaultsSWT.java"
+      ],
+      "anchors": [
+        "DownloadManager.default isMetadataDownload around468",
+        "Download.FLAG_METADATA_DOWNLOAD=0x200 around174",
+        "UIConfigDefaultsSWT default around82"
+      ],
+      "fact": "Metadata-download status comes from attributes.flags bit0x200. The DND Always In Incomplete view setting defaultsfalse, but its actual saved/configured value changes which public completion branch MyTorrents requests.",
+      "consequence": "Metadata Size/Remaining suppression and pane membership need these separate inputs. cache.dp is discard-pieces metadata, not downloaded bytes or completion."
+    },
+    {
+      "id": "D8",
+      "sources": [
+        "preview/native/adapters/library_view.hpp",
+        "preview/native/adapters/library_view.cpp",
+        "preview/native/core/src/state_cache.cpp"
+      ],
+      "fact": "readLibrarySource already owns the immutable decoded cacheDocument once, but readStateCache currently extracts only displayname from attributes and readLibraryView discards the backing cache ownership.",
+      "consequence": "Reuse one-pass parsing/indexing or add fixed owned DND facts to CachedTorrent; do not reread cache per row or scan every .dat at startup."
+    },
+    {
+      "id": "D9",
+      "sources": [
+        "preview/native/adapters/torrent_state.cpp",
+        "preview/native/engine/local_session.cpp"
+      ],
+      "fact": "Read-only TorrentStateStore.load and queryTorrent read .dat/.bak and verify metadata identity. Only beginUpdate hydrates cached attributes, and that path writes state/cache. queryTorrent returns file length/policy/padding but no downloaded field.",
+      "consequence": "Never use beginUpdate/save for read-only progress. Add explicit immutable cache-attribute precedence to any selected-row enrichment rather than assuming load already matches original wrapper behavior."
+    }
+  ],
+  "minimal_persisted_inputs": [
+    {
+      "field": "hash/sourceIndex/revision",
+      "path": "downloads.config downloads row hash; active/cache.dat state row hash",
+      "purpose": "Bind saved totals, cached attributes and output to one inventory identity/source row and owner generation. Duplicate cache hashes keep qualified last-entry behavior; duplicate inventory rows remain separately keyed."
+    },
+    {
+      "field": "totalBytes T",
+      "path": "active/cache.dat state[].size, or selected qualified info geometry total",
+      "type": "signed64, positive cache value directly source-resolved",
+      "purpose": "Selected size/full remaining arithmetic. Preserve zero raw cache separately until geometry resolves the original fixup boundary."
+    },
+    {
+      "field": "completedBytes C",
+      "path": "downloads.config downloads[].completedbytes",
+      "type": "optional signed64",
+      "purpose": "Full remaining fallback. downloaded/uploaded are transfer totals and must never substitute. Missing/negative C invokes original file-info recovery, which the cache-only path must not perform."
+    },
+    {
+      "field": "skippedBytes K",
+      "path": "state[].attributes.skipfss or effective selected attributes.skipfss",
+      "type": "optional signed64; original missing default-1",
+      "purpose": "Selected size and remaining. K<0 means unresolved/recovery required, not zero."
+    },
+    {
+      "field": "skippedCompletedBytes B",
+      "path": "state[].attributes.skipbdl or effective selected attributes.skipbdl",
+      "type": "optional signed64; original absent Long attribute default0",
+      "purpose": "Exclude only not-yet-downloaded skipped bytes. Inside a present valid map, use original source default0 for absence with explicit provenance; raw optional remains absent, never a verified payload claim."
+    },
+    {
+      "field": "dndFlags",
+      "path": "state[].attributes.parameters.dndflags",
+      "type": "optional signed64; actual presence separately retained",
+      "purpose": "bit0 HASDND, bit1 COMPLETE_NO_DND; higher bits ignored. Absent is not equivalent to present0. Controller candidates and selected percent remain independent."
+    },
+    {
+      "field": "torrentFlags/metadataDownload",
+      "path": "state[].attributes.flags",
+      "type": "optional signed64 in known attributes dictionary; FLAG_METADATA_DOWNLOAD=0x200",
+      "purpose": "Original Size and Remaining hide metadata-download values. Done has no direct metadata guard; do not blanket-couple its source getter to the other columns."
+    },
+    {
+      "field": "dndAlwaysIncomplete view preference",
+      "path": "configuration key DND Always In Incomplete",
+      "type": "boolean; original UI defaultfalse",
+      "purpose": "Choose the intended source public completion branch for pane integration. Preference extraction/default provenance is not yet wired in native UI."
+    },
+    {
+      "field": "selected-row fallback geometry/policy/counters",
+      "path": "qualified state info; downloads row file_priorities_c/file_priorities; effective attributes.filedownloaded.downloaded",
+      "type": "matching original file index/order/length/padding plus exact indexed signed64 list",
+      "purpose": "On explicit selected-row demand, validate/recompute saved-only aggregates when source facts are unavailable. No file length/exists/mtime calls, pieces verification or directory traversal."
+    }
+  ],
+  "pure_projection_proposal": {
+    "suggested_component": "core saved_dnd_progress; Qt/engine/storage independent",
+    "input": "Owned fixed SavedDndFacts with optional raw T/C/K/B/dndFlags/torrentFlags, attributes/parameters presence and fixed type-status bits; immutable identity/source/provenance stamp supplied by caller. A read-only Node extractor returns owned facts without retaining borrowed pointers.",
+    "output": "Owned SavedDndProjection with independent Metric<int64> selectedBytes/remainingBytes, Metric<int32> percentThousandths, cached hasDnd/selectedComplete facts, controller-no-DM completion candidates and fixed bounded diagnostics. Each Metric carries known/default-derived/unknown-invalid reason and source stamp; never expose heap callback or writer authority.",
+    "limits": {
+      "startup_entries": 100000,
+      "selected_files": 100000,
+      "diagnostics_per_row_proposed": 16,
+      "policy": "Only lower limits; honor existing bounded parser/gzip/file/geometry caps. Check counts and checked-size sums before allocating/walking. Do not add unbounded strings, recursive scans or per-row copies of entire documents."
+    },
+    "independent_fields": [
+      "Selected size can be known when full completed bytes are absent.",
+      "S==0 causes the original Stats percent1000 without reading remaining; a known selected percent does not imply controller or pane completion.",
+      "Raw full bytes stay separate from selected bytes; never overwrite geometry used by Files/transfer ownership.",
+      "Retain contradictory saved flags/counters as separate evidence with diagnostics rather than force them into a fabricated consistent state."
+    ],
+    "candidate_saved_no_disk_math": {
+      "definitions": "T=resolved full size,C=saved full completed,K=resolved skipped total,B=saved/default-derived skipped completed.",
+      "full_remaining": "R=wrap64(T-C)",
+      "selected_size": "S=wrap64(T-K)",
+      "selected_remaining": "Q=max(0,wrap64(R-wrap64(K-B)))",
+      "percent": "S==0 ->1000; S<0 ->0; otherwise Java float32 division of wrap64(S-Q) by S, float32 multiply1000, Java float-to-int truncation/saturation; change result1000 to999 if Q>0, else clamp negative to0. Source has no generic upper clamp.",
+      "eligibility": "This is the saved/no-DiskManager getter branch only. Full live delegation/checking/state transitions are separate. A future native invalid-input/overflow admission policy must be frozen separately from exact raw Java arithmetic and cannot receive unearned equality credit."
+    },
+    "completion": "For known present dndFlags, no-DM Controller(false) uses full remaining==0 when HASDND is false, else cached COMPLETE_NO_DND. Controller(true) returnsfalse for HASDND in this no-READY-DM path. Public DMImpl(false) instead returns assumedComplete. Name the pure candidate honestly; full pane parity remains OPEN until source/owner/config integration gates pass.",
+    "unknown_policy": "No attributes/malformed maps/types, unresolved/negative K, invalid/missing C and mismatched identities yield affected-field unknown/diagnostic. Missing B only in a present valid map uses explicit source default0; missing K records source default-1 and remains unresolved. Preserve raw facts and fixed default provenance; no invented raw0 or100%.",
+    "native_input_domain_proposal": "Coordinator confirmed strict native domain: after0<=B<=K<=T and0<=C<=T, if C<B or C-B>S then selectedRemaining and positive-S Done are unknown+CountersInconsistent. Preserve independently known S, S==0 Done1000 and flags/controller candidates. Raw source formula/clamp on inconsistent values is separately characterized, not native equality.",
+    "scope": "Broader source architecture below; the minimal first implementation is restricted by first_implementation_scope. Metadata/view preference/selected-row integration remain OPEN."
+  },
+  "startup_and_selected_row_architecture": [
+    "Keep startup to the existing downloads.config read plus single active/cache.dat read; no per-torrent .dat opens, glob, stat payload, directory walk, engine session or peer lookup.",
+    "Extract fixed DND facts in the existing one-pass state-cache parse, keeping matching hash/last-entry behavior. Alternatively index readLibrarySource.cacheDocument once and retain its shared immutable owner, never an unowned Node pointer.",
+    "Rows with missing aggregates render explicit unknown selected metrics. The library remains usable; do not schedule an automatic N-file fallback for100000 rows.",
+    "For one explicitly requested selected row, reuse current safe metadata .dat/.bak load, identity validation, originalLayout and originalFilePolicy. These are metadata-only reads; no beginUpdate, save, payload inspection or link/path resolution.",
+    "Apply cached attributes as effective source if present, matching original wrapper precedence. If cache is unavailable, a separately tagged per-torrent attribute snapshot may supply fallback facts; never mix older .dat attrs into a newer cache snapshot silently.",
+    "Require exact per-file downloaded count and matching original index geometry for a conservative native per-file metric; original partial/min-length/default0 behavior is characterized separately with zero native equality credit.",
+    "Bind selected request/result to current library revision/hash/source row and source provenance. For saved inventory priorities, retain one immutable inventory snapshot or compare a retained whole-inventory digest before using a later reread; owner generation alone does not detect external profile edits.",
+    "Keep retained documents bounded/shared once or retain compact fixed facts; avoid one large backing document copy per row. Selected enrichment cache should be bounded and invalidated by a new authoritative snapshot.",
+    "Later append explicit selected metrics to UI snapshot/Details fields and update the affected sort/filter roles with existing generation/target guards; hidden/closed MyTorrents must not initiate detail reads or be reopened by late results. No silent substitution into existing full-byte fields."
+  ],
+  "test_and_source_probe_plan": {
+    "synthetic_native_policy": [
+      "Hand-encoded cache attributes with explicit/missing/wrong-type fields, duplicate cache identities and unknown properties; preserve raw document and existing parser duplicate-dictionary-key policy.",
+      "Partial-known metrics: known S with unknown C/B; zero selected size; present flags0/1/2/3/highbits; metadata flag bit0x200; view preference true/false/missing provenance.",
+      "Skipped files already downloaded, all skipped/none skipped, C<B, inconsistent cached flags versus percent, near-long/float precision boundaries; fix native invalid/overflow policy before expected assertions.",
+      "Selected geometry validation: exact count/order, zero-length/padding/v1-v2 qualified layouts, unsupported link/path rules stay errors, short/long/type-fault downloaded lists stay unknown with no implicit zero-fill.",
+      "Lifetime/immutability: owned facts outlive source documents; shared retained cache not copied per row; caps lowered/raised rejection, zero per-torrent reads at startup, exactly selected metadata reads on demand, no save/payload stat/callback access.",
+      "UI future tests: numeric selected sorting, source-independent completion facts, pane migration only under approved completion policy, stale revision/late details/hidden tab guards, full geometry fields unchanged."
+    ],
+    "java_source_probe": "Before implementation, freeze an independent inert helper extracting complete original selected Stats/no-DM Controller methods and exact constant/default fragments from cb8. Supply only explicit in-memory getters/counters/flags and record call order; never construct original DownloadManager/Core/DiskManager, initialize timers, touch a normal profile or call setAssumedComplete.",
+    "source_groups": [
+      "Admitted positive-cache/no-DM successful arithmetic and explicit flag-presence cases may become eligible after frozen source collection.",
+      "Getter faults, K<0 recovery scans/writes, partial per-file type/list recovery, malformed/default coercion, live-DM delegation, assumedComplete setters and wider invalid arithmetic remain independently characterized boundary rows with zero automatic native credit."
+    ],
+    "preexecution_gate": "Freeze exact helper source/method hashes, command grammar, eligibility IDs and expected counts before the first JVM. Collect actual source outputs before any native comparison; no fixture fitting or synthetic transcript presented as Java evidence.",
+    "current_credit": "No helper, fixture freeze, Java/native execution or equality comparison exists for this proposal."
+  },
+  "coordinator_questions": [
+    {
+      "id": "Q1",
+      "question": "For absent skipbdl with known nonnegative skipfss, publish the original explicit default0 as SavedDefault evidence or require a present counter for conservative selected remaining?",
+      "suggested": "Preserve absence/default provenance in the type; do not call either choice verified on-disk completion. Freeze the choice before implementation.",
+      "resolution": "Root chose original defaults with provenance, independently confirmed: missing K default-1/unresolved; missing B default0. No K-to0 guess."
+    },
+    {
+      "id": "Q2",
+      "question": "Which valid-but-inconsistent cached arithmetic results remain displayable saved facts versus Unknown diagnostics?",
+      "suggested": "Keep raw facts and independent flags; qualify source math first and fix a bounded native admission policy separately.",
+      "status": "RESOLVED for minimal first slice",
+      "resolution": "Coordinator confirmed strict native domain: after0<=B<=K<=T and0<=C<=T, if C<B or C-B>S then selectedRemaining and positive-S Done are unknown+CountersInconsistent. Preserve independently known S, S==0 Done1000 and flags/controller candidates. Raw source formula/clamp on inconsistent values is separately characterized, not native equality."
+    },
+    {
+      "id": "Q3",
+      "question": "Retain one bounded immutable inventory document or only its digest for selected-row file-policy coherence?",
+      "suggested": "Prefer a single owner snapshot when memory budget permits; otherwise digest-check the selected reread and return Conflict on change.",
+      "status": "OPEN future-stage question, outside this first implementation."
+    },
+    {
+      "id": "Q4",
+      "question": "When to integrate source-aware completion/pane policy?",
+      "suggested": "After actual pure source/math tests and explicit DND Always In Incomplete/default extraction. Do not equate Done1000 with public assumedComplete or quietly reclassify current rows.",
+      "status": "OPEN future-stage question, outside this first implementation."
+    }
+  ],
+  "remaining_open": [
+    "Actual frozen independent Java source observations and native arithmetic/projection implementation/qualification.",
+    "Source-aware selected Size/Remaining/Done UI rendering/sorting and chosen unknown policy.",
+    "Saved controller candidate versus full assumedComplete lifecycle and configured pane behavior.",
+    "Live checking/allocating/READY DiskManager delegation, actual verified file/piece progress, payload-backed DND/storage/parity and persistent update ownership."
+  ],
+  "validation_scope": {
+    "performed": [
+      "Read exact committed source/default/cache/file-counter paths and selected current adapters.",
+      "Reused prior original source pins and computed only focused new/source-context hashes.",
+      "Source-level architecture and eligibility planning only."
+    ],
+    "execution_credit": 0,
+    "not_performed": [
+      "No production or test edits.",
+      "No normal profile/client/Java/network/GUI access.",
+      "No payload stat/read, directory scan, build, test, source helper or native execution."
+    ]
+  },
+  "independent_math_source_contract": {
+    "path": "migration/evidence/20261018-navigation/saved-dnd-math-review.json",
+    "sha256": "9a51ed571449487a651d0a80169943df593fba628beca178b712282ea8cc433f",
+    "scope": "Independent source-only exact math/default/flags/delegation contract; no Java/native execution or equality credit."
+  },
+  "first_implementation_scope": {
+    "status": "FROZEN minimal API and policy; coordinator authorized isolated production authoring only after this freeze, no execution credit.",
+    "included": [
+      "Pure allocation-free saved/no-DM aggregate projection.",
+      "Fixed owned DND cache facts appended to CachedTorrent, with non-poisoning diagnostics for newly introduced fields.",
+      "Synthetic parser/policy tests and separately frozen inert original-source probe before any equality claim."
+    ],
+    "open": [
+      "UI rendering/pane classification/public assumed-complete lifecycle.",
+      "Selected geometry/per-file details and fallback I/O.",
+      "All real payload/verification/storage/DiskManager behavior."
+    ],
+    "proposed_files": [
+      "preview/native/core/include/biglybtc/saved_dnd.hpp",
+      "preview/native/core/src/saved_dnd.cpp"
+    ],
+    "cache_integration": "Append SavedDndFacts savedDnd{} to CachedTorrent; existing size/name fields and last-entry-wins/caps/owned lifetimes stay intact.",
+    "api": {
+      "SavedDndFacts": [
+        "bool attributesPresent=false; bool attributesDictionary=false;",
+        "bool parametersPresent=false; bool parametersDictionary=false;",
+        "bool skippedBytesPresent=false; bool skippedDownloadedBytesPresent=false; bool dndFlagsPresent=false;",
+        "optional<int64_t> skippedBytes, skippedDownloadedBytes, dndFlags; // stored integer values only",
+        "uint32_t defaults=0; uint32_t diagnostics=0; // named fixed bit masks"
+      ],
+      "SavedDndProgress": [
+        "optional<int64_t> selectedBytes, selectedRemaining;",
+        "optional<int32_t> percentThousandths;",
+        "optional<bool> cachedHasDnd, cachedCompleteNoDnd;",
+        "optional<bool> controllerNoDiskCompleteExcludingDnd, controllerNoDiskCompleteIncludingDnd;",
+        "uint32_t defaults=0; uint32_t diagnostics=0;"
+      ],
+      "functions": [
+        "SavedDndFacts readSavedDndFacts(const core::Node* attributes) noexcept;",
+        "SavedDndProgress projectSavedDndProgress(optional<int64_t> cachedBytes, optional<int64_t> completedBytes, const SavedDndFacts&) noexcept;",
+        "constexpr bool hasSavedDndIssue(uint32_t, SavedDndIssue) noexcept;",
+        "constexpr bool hasSavedDndDefault(uint32_t, SavedDndDefault) noexcept;"
+      ],
+      "ownership": "All returned fields fixed and owned. Node borrowed for one call only. No callback, shared mutable state, retained raw pointer, IO, serialization/edit, allocation or clock.",
+      "issue_names": [
+        "AttributesMissing",
+        "AttributesType",
+        "ParametersType",
+        "SkippedBytesType",
+        "SkippedDownloadedBytesType",
+        "DndFlagsType",
+        "TotalUnresolved",
+        "CompletedMissing",
+        "CompletedRange",
+        "SkippedUnresolved",
+        "SkippedRange",
+        "SkippedDownloadedRange",
+        "CountersInconsistent",
+        "ArithmeticOverflow",
+        "FlagsMissing"
+      ],
+      "default_names": {
+        "SkippedBytes": "Effective source default-1/unresolved, never raw stored0.",
+        "SkippedDownloadedBytes": "Effective source default0 in present valid attrs, raw optional stays absent."
+      }
+    },
+    "defaults_policy": {
+      "K_missing": "Inside PRESENT valid attributes dictionary: record default provenance K=-1, keep raw optional absent; selected K-dependent metrics unresolved with no original recovery scan/write.",
+      "B_missing": "Inside PRESENT valid attributes dictionary: record default provenance B=0, keep raw optional absent; use effective0 as original source default, never describe it as a stored or verified payload counter.",
+      "attributes_missing_or_invalid": "Unknown; do not apply the valid-map defaults to an absent/malformed map.",
+      "typed_invalid": "Present but invalid type remains diagnostic+unknown, never converted into a source default.",
+      "flags_missing": "Unknown flags/candidates, never apply default parameter0 because parameterExists is false.",
+      "extra_flag_bits": "Ignore high/unknown bits for the original long-mask boolean facts while preserving raw signed64 flags."
+    },
+    "metric_dependencies": [
+      "Require cache T>0 for size-based aggregate metrics; keep raw T unchanged. Nonpositive cached size is original-fixup unresolved, not selected geometry.",
+      "Selected size needs resolved K with0<=K<=T, independently of C/B.",
+      "Selected Done for S==0 is1000 independently of C/B, exactly the source Stats early return; it never determines pane completeness.",
+      "For S>0, Done needs valid selected remaining and exact Java float32/truncation/residual999 behavior.",
+      "Cached flag booleans need only a valid explicitly present dndflags integer. With HASDND=true, no-DM controller candidates use cached selectedComplete/including=false without reading size/remaining; with HASDND=false they need valid full remaining.",
+      "Invalid field/range/checked arithmetic makes only affected metrics unknown. Preserve independent usable fields and fixed diagnostics."
+    ],
+    "existing_parser_boundary": "Coordinator confirmed unchanged: readStateCache still drops a whole row for existing non-dictionary attributes/malformed displayname errors. ONLY new DND subfield/map errors are non-poisoning for otherwise-valid rows. Standalone reader reports unknown for bad attrs; no legacy whole-row rescue.",
+    "execution_credit": 0,
+    "range_policy": "Coordinator confirmed strict native domain: after0<=B<=K<=T and0<=C<=T, if C<B or C-B>S then selectedRemaining and positive-S Done are unknown+CountersInconsistent. Preserve independently known S, S==0 Done1000 and flags/controller candidates. Raw source formula/clamp on inconsistent values is separately characterized, not native equality.",
+    "source_scope": "Pure saved/no-DM candidate only; full UI panes/assumedComplete/fallback IO remain OPEN. Original defaults/types/recovery are characterized by the independent9a51 math contract."
+  }
+}

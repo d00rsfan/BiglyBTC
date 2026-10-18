@@ -1,6 +1,7 @@
 #pragma once
 
 #include "biglybtc/library.hpp"
+#include "biglybtc/saved_dnd.hpp"
 
 #include <map>
 
@@ -16,6 +17,7 @@ struct CachedTorrent {
   std::optional<std::int64_t> files;
   std::optional<std::int64_t> type;
   bool privateTorrent = false;
+  SavedDndFacts savedDnd{};
 };
 struct CacheIssue { std::size_t sourceIndex; CacheError error; };
 struct StateCache {

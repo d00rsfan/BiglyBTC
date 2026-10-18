@@ -1,0 +1,928 @@
+{
+  "schema": 1,
+  "status": "SOURCE_REVIEW_COMPLETE_NO_EXECUTION",
+  "date": "2026-10-18",
+  "subject": "Saved DND-aware Size, Remaining, Done and completion facts for classic My Torrents",
+  "scope": {
+    "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "native_reference_commit": "ec56329fdfab1a45a8eafd7bacc97c163d5815c2",
+    "source_files_pinned": 19,
+    "complete_method_declarations_and_bodies_selected": 44,
+    "native_context_files_pinned": 9,
+    "allowed_observations": "Read original committed Java source and native baseline bytes; static text/brace/hash inspection only.",
+    "actual_java_observations": 0,
+    "native_test_executions": 0,
+    "runtime_equality_credit": 0,
+    "excluded": [
+      "Ordinary Java constructors/configuration/listeners/managers, recovery/facade initialization and profile writes",
+      "Live profile/data/filesystem probes, app/client/network execution",
+      "A copied or extracted formula probe being described as actual original Java runtime equality",
+      "Native production, tests, CMake and shared plan changes"
+    ],
+    "open_scope": "DND-aware manager metrics, per-file downloaded facts and pane compatibility remain work to implement and qualify; this audit does not defer or reduce that scope."
+  },
+  "original_files": [
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java",
+      "sha256": "3b2eb44625911187e3058b7363b96b7ee813a9bf8051de54fada0f1ccc3243c7",
+      "git_blob": "73350c54c291c03b2fafe54b5f7618d31fabab8e",
+      "bytes": 37856
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerController.java",
+      "sha256": "b22ccde4addada902b8bac14c2177e7496b9329304c534d6ed2fdde9dbdc8860",
+      "git_blob": "e575894d6a17d3dcbdd0af857e08445025b24f49",
+      "bytes": 89343
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+      "sha256": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a",
+      "git_blob": "12c9b2e45ab7fa3a9839672087ec207ef83d9e35",
+      "bytes": 107520
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+      "sha256": "a88937664cb90354be6600448a63684b6a7b5c9e7906a9425b9f5a4758afbeda",
+      "git_blob": "99617ee6753153c8af1598fc17cf28ed7631319b",
+      "bytes": 183839
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/DownloadManagerState.java",
+      "sha256": "9bd11377c6abe2f4cf1e0cb10cc42032917679216fccb12fbb43a239a13a2867",
+      "git_blob": "0257df6b197c2e3ac1e0baa11083c6078d197445",
+      "bytes": 17477
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/DownloadManager.java",
+      "sha256": "cfa73bb4c32801fa98565e163cbf7100a24240c790c25cdf2c4ce265402538a6",
+      "git_blob": "1ab44517eb0da5ff5d0bb46fa9b8bbd90275f959",
+      "bytes": 24669
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/DownloadManagerStats.java",
+      "sha256": "5bef43e44a54039626ee7bf6486bdfbb9223aa49560fe8f4bb3b253346873bd6",
+      "git_blob": "121b775b4416d03ed72a646e54846157600c151b",
+      "bytes": 7536
+    },
+    {
+      "path": "core/src/com/biglybt/core/disk/DiskManager.java",
+      "sha256": "f4f90a96208101e683727485fd1b04da8f4d41e4fc9c8d50381efb1e7e37f2f8",
+      "git_blob": "c599e861ffd2e4af8f7314ab3ac0fb9911f390d4",
+      "bytes": 8239
+    },
+    {
+      "path": "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java",
+      "sha256": "6755b950c548c5a7d153b9aef2c1024c7c5c79d5880fd858f3bac4261adcdf8c",
+      "git_blob": "0612105280e1489fc628d155bd12c7606ac0e0c3",
+      "bytes": 127577
+    },
+    {
+      "path": "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java",
+      "sha256": "821229517d374be10b95b4c2b623e3f25b356bf6d29724067933d943f719bcef",
+      "git_blob": "a9766d0fd5dea49342d7c59b62c8d4278f596c91",
+      "bytes": 76554
+    },
+    {
+      "path": "core/src/com/biglybt/core/disk/impl/DiskManagerFileInfoImpl.java",
+      "sha256": "b5a773cc601c0e0fb97a526056b8e32470a93db7f2dc34d627aca842768ce8a7",
+      "git_blob": "6cad394e04f3906cd53aed7a478c5d3c2b1735bc",
+      "bytes": 18466
+    },
+    {
+      "path": "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java",
+      "sha256": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39",
+      "git_blob": "f992aecdc28168d656c322512434ff1cbaf95c02",
+      "bytes": 144403
+    },
+    {
+      "path": "core/src/com/biglybt/pif/download/Download.java",
+      "sha256": "3e6484279df6215385591a0f7f297920fe234fb9e9baf7a57a0ba09d86a2e74e",
+      "git_blob": "d8db4041424ab4ef6e68cb76c109285ca0d37bb2",
+      "bytes": 27779
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/UIConfigDefaultsSWT.java",
+      "sha256": "d13d076fe7fcdb1a29a1d1aa42073a27a994ce03b98af4e39d0676f5a91cf343",
+      "git_blob": "09169cea167e1ffcc3d933394886c0d49fcc851a",
+      "bytes": 13423
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/MyTorrentsView.java",
+      "sha256": "5d019924be50987d683aa82a2000a42cce3297156036ddd5ab8fa65f8eef88fd",
+      "git_blob": "34a79c82aed9153f63b499aba136bb6628316cbc",
+      "bytes": 113057
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/SizeItem.java",
+      "sha256": "799ccd6d2457b69094ad64829387420e38777a23d67c6f3ae06adee2c87a4136",
+      "git_blob": "d13727e725af6b65af4f3a72f3758ac39c64c82c",
+      "bytes": 5874
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/RemainingItem.java",
+      "sha256": "c85e3a3d0ac983b63e29d45631c945696ef6e923018e61c9ab11019a59caf232",
+      "git_blob": "3e49fd9ff265c879bfc9fa6b18726ceb3d5a49c0",
+      "bytes": 2915
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DoneItem.java",
+      "sha256": "5844b06d3c9bf42447e8835bdb18af7417a55e71aa3ddecc3b3769c45e23f0f4",
+      "git_blob": "6289897f59d4b4c09406f7ce000a844bee6b3c13",
+      "bytes": 2979
+    },
+    {
+      "path": "core/src/com/biglybt/core/util/DisplayFormatters.java",
+      "sha256": "9c39600a8c46d455c91cbfa4f4eb826c2b7af2fd56a43c5ea61f04811a3192f7",
+      "git_blob": "a6b5fed59b21876db0a75a733c53ec2794742c3d",
+      "bytes": 49013
+    }
+  ],
+  "original_complete_method_selections": [
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java",
+      "symbol": "getCompleted",
+      "first_line": 289,
+      "last_line": 310,
+      "declaration_and_body_sha256": "aa4fe561b628ab5986e337c86721bf3596fa986ad0ef568f4ac8a7c9e0daffb5",
+      "bytes": 636
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java",
+      "symbol": "getDownloadCompleted",
+      "first_line": 318,
+      "last_line": 355,
+      "declaration_and_body_sha256": "f11b0dfcca0ed33a70da01c9814a574e42f70a1a408f38b3e4b866aade7355b6",
+      "bytes": 1092
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java",
+      "symbol": "setDownloadCompletedBytes",
+      "first_line": 358,
+      "last_line": 360,
+      "declaration_and_body_sha256": "5ae90dd33e8b0b0c78354e57985cc788617243b9a480c22a0fdf0210b98094d1",
+      "bytes": 115
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java",
+      "symbol": "recalcDownloadCompleteBytes",
+      "first_line": 363,
+      "last_line": 378,
+      "declaration_and_body_sha256": "907be7874e8284855bb36729e22d288bd207933141eb9325e2d424666a387f33",
+      "bytes": 538
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java",
+      "symbol": "getDownloadCompletedBytes",
+      "first_line": 381,
+      "last_line": 384,
+      "declaration_and_body_sha256": "2e3892b9129a6cb908f3ef143e5ebdcaf30f18f6d67688fbded027d342c73bf8",
+      "bytes": 119
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java",
+      "symbol": "getRemaining",
+      "first_line": 808,
+      "last_line": 823,
+      "declaration_and_body_sha256": "4533d324bcaaf590f4ecab0e0c76c24dcb73765144fadef7d14a00b652c026f8",
+      "bytes": 273
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java",
+      "symbol": "getDiskManagerIfNotTransient",
+      "first_line": 825,
+      "last_line": 836,
+      "declaration_and_body_sha256": "a5da4035edbd2f1dbde18a7c9199f96c98be0742ccd4c18583da5ab222f565b4",
+      "bytes": 354
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java",
+      "symbol": "restoreSessionTotals",
+      "first_line": 1521,
+      "last_line": 1562,
+      "declaration_and_body_sha256": "59327c42f068e479913d07060a1740f86d4f37f149eb95e79240777cd314380d",
+      "bytes": 1891
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java",
+      "symbol": "setSkippedFileStats",
+      "first_line": 1564,
+      "last_line": 1584,
+      "declaration_and_body_sha256": "7b3606d3ad8f1a93e153955dced7a6f27b4811d70c40b282b3e482466a2625a6",
+      "bytes": 631
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java",
+      "symbol": "getSkippedFileSetSize",
+      "first_line": 1586,
+      "last_line": 1610,
+      "declaration_and_body_sha256": "31139a0c2a14879cf2855eeccba57cce8370b299110c4b9efc796ead9bf0040b",
+      "bytes": 597
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java",
+      "symbol": "getRemainingExcludingDND",
+      "first_line": 1627,
+      "last_line": 1650,
+      "declaration_and_body_sha256": "d6c9e717f3988ff3865f584a29de1f482a020afb842e24f5602dae1689eecc95",
+      "bytes": 555
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java",
+      "symbol": "getSizeExcludingDND",
+      "first_line": 1653,
+      "last_line": 1669,
+      "declaration_and_body_sha256": "b8d3cea53789342a592afe658d9c7f7b413bb1828e4d9bfe257803634df8cd96",
+      "bytes": 450
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java",
+      "symbol": "getPercentDoneExcludingDND",
+      "first_line": 1672,
+      "last_line": 1693,
+      "declaration_and_body_sha256": "de7086261396721c0ede0e79a880b7be5924f45aae8a8dde7fc36994d3cb7a74",
+      "bytes": 550
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerController.java",
+      "symbol": "setInitialState",
+      "first_line": 278,
+      "last_line": 325,
+      "declaration_and_body_sha256": "7f36504cd27b68cdf21d8f1a9f8dd9dc42a62e4e6a620db207e437c46eaad010",
+      "bytes": 1302
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerController.java",
+      "symbol": "calculateCompleteness",
+      "first_line": 2375,
+      "last_line": 2408,
+      "declaration_and_body_sha256": "67b95dc4696c015a97f40d973b8a787d453d010ffe4f4df236f0722cf2758077",
+      "bytes": 842
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerController.java",
+      "symbol": "isDownloadComplete",
+      "first_line": 2416,
+      "last_line": 2454,
+      "declaration_and_body_sha256": "cb88b8ccd209198bf1ee2059e7010dafa6feb025656b1f808ecb66080892b3fa",
+      "bytes": 1268
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+      "symbol": "getDefaultOverride",
+      "first_line": 147,
+      "last_line": 207,
+      "declaration_and_body_sha256": "a19ba1be9570d7e6b660a74f5a9d285601c247ba5fb1813414f3513caee865bf",
+      "bytes": 1593
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+      "symbol": "parameterExists",
+      "first_line": 1716,
+      "last_line": 1718,
+      "declaration_and_body_sha256": "2bfdbbe6c436adb754afb3ff11cb866ff86d9b1bfc6672e7c6d6aea7a174987a",
+      "bytes": 88
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+      "symbol": "getLongParameter",
+      "first_line": 1751,
+      "last_line": 1802,
+      "declaration_and_body_sha256": "3353fa830957e280958f419293371c794a65cddf4a085e7d1ef94db588fffda6",
+      "bytes": 897
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+      "symbol": "setLongParameter",
+      "first_line": 1805,
+      "last_line": 1833,
+      "declaration_and_body_sha256": "ef66cf835b75c23403b9016e4f1111b4d32e39dc079dc4226415f4fc1d268897",
+      "bytes": 596
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+      "symbol": "getLongAttribute",
+      "first_line": 2787,
+      "last_line": 2838,
+      "declaration_and_body_sha256": "dc421a79c1ebf17a6d0e1ee1dfb4c62d31fe03e86ffc657a3bd0e14da65458cf",
+      "bytes": 869
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+      "symbol": "getMapAttribute",
+      "first_line": 3130,
+      "last_line": 3147,
+      "declaration_and_body_sha256": "9f78231538b3a955fd15315b2c4ff26cf7c27ae11ae4e98800db6f613f291235",
+      "bytes": 240
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+      "symbol": "getFlag",
+      "first_line": 1633,
+      "last_line": 1640,
+      "declaration_and_body_sha256": "78f38b49e731bd4659330580041d017716bad6291bd08bc27d969a33dd33e478",
+      "bytes": 125
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+      "symbol": "getSize",
+      "first_line": 2264,
+      "last_line": 2273,
+      "declaration_and_body_sha256": "1848c07bfed540718fbc947554a780c64a4efba7280ba6c447680ee643816f0f",
+      "bytes": 100
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+      "symbol": "getAssumedComplete",
+      "first_line": 3334,
+      "last_line": 3336,
+      "declaration_and_body_sha256": "355f6ba0a6dd461a11f6d8838afe67709088dfbe6c6cc2fd647657084fdb0e0a",
+      "bytes": 67
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+      "symbol": "requestAssumedCompleteMode",
+      "first_line": 3339,
+      "last_line": 3341,
+      "declaration_and_body_sha256": "fcb9f317cdac0306ab53e9d7194359130e096f960b86db71b694f303307614bf",
+      "bytes": 97
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+      "symbol": "isDownloadComplete",
+      "first_line": 4242,
+      "last_line": 4248,
+      "declaration_and_body_sha256": "65daa867011505d71dd6f77c1d4fdb6733b473bc0146948bb0a5842687040ab4",
+      "bytes": 167
+    },
+    {
+      "path": "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java",
+      "symbol": "fixupSkippedCalculation",
+      "first_line": 1786,
+      "last_line": 1837,
+      "declaration_and_body_sha256": "e8b1726b1d2a90d18ccbd0a156d7dac9ec8508d029df7847f634d7c529aae329",
+      "bytes": 1689
+    },
+    {
+      "path": "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java",
+      "symbol": "getRemainingExcludingDND",
+      "first_line": 1840,
+      "last_line": 1846,
+      "declaration_and_body_sha256": "576bebedb447eb582f55355f9aa8fe9f56ee42861e97ae285d8e01d83c01f850",
+      "bytes": 136
+    },
+    {
+      "path": "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java",
+      "symbol": "getSizeExcludingDND",
+      "first_line": 1849,
+      "last_line": 1853,
+      "declaration_and_body_sha256": "c3e05120d360e626462479be36c76b7d8170f04f6dec178c4c3d6591c676ae56",
+      "bytes": 115
+    },
+    {
+      "path": "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java",
+      "symbol": "getPercentDoneExcludingDND",
+      "first_line": 1856,
+      "last_line": 1863,
+      "declaration_and_body_sha256": "005dcaa14bcab1c43f60be2ffe6f207e38f22cc89f58fed4496d64bc9709ad0c",
+      "bytes": 261
+    },
+    {
+      "path": "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java",
+      "symbol": "setPieceDone",
+      "first_line": 1870,
+      "last_line": 2099,
+      "declaration_and_body_sha256": "f4309bc2b73ebcf53e057417b807735a5cad5264fd07f043f01dd9c458582d9a",
+      "bytes": 8749
+    },
+    {
+      "path": "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java",
+      "symbol": "storeFileDownloaded",
+      "first_line": 4130,
+      "last_line": 4161,
+      "declaration_and_body_sha256": "32455af80ca2e8aa77a2be34a70e9d512567cfe7cc19ffef5b563ba3b209228b",
+      "bytes": 813
+    },
+    {
+      "path": "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java",
+      "symbol": "storeFilePriorities",
+      "first_line": 1587,
+      "last_line": 1649,
+      "declaration_and_body_sha256": "9cab398c7e2df8a330d0dcee12086be061a096bd2947fd4e7896ab108539e667",
+      "bytes": 1962
+    },
+    {
+      "path": "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java",
+      "symbol": "loadFileDownloaded",
+      "first_line": 1702,
+      "last_line": 1735,
+      "declaration_and_body_sha256": "69b5d696406d73975779f58bc55ce5d40d29882742e49bbe87097470750126d0",
+      "bytes": 883
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/MyTorrentsView.java",
+      "symbol": "isOurDownloadManager",
+      "first_line": 1546,
+      "last_line": 1565,
+      "declaration_and_body_sha256": "68c29b4eb28371b5c765abc6627c41d3d7faa2b41fd112b0135b4793fed6534d",
+      "bytes": 612
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/SizeItem.java",
+      "symbol": "refresh",
+      "first_line": 72,
+      "last_line": 129,
+      "declaration_and_body_sha256": "921bf99dcfb580f39d78814130aa70d70dce474a10f0b98b5a75625478d4bebe",
+      "bytes": 1627
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/RemainingItem.java",
+      "symbol": "getRemaining",
+      "first_line": 75,
+      "last_line": 92,
+      "declaration_and_body_sha256": "401b65de76154f0b7e5e1ee677507d2f95ea2429dd8630a464514594db0c784b",
+      "bytes": 572
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DoneItem.java",
+      "symbol": "refresh",
+      "first_line": 67,
+      "last_line": 89,
+      "declaration_and_body_sha256": "788e5e1b24d946ca681e638432b3fe2bf43ff9319754c8b1e10167bdcd992a86",
+      "bytes": 781
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+      "symbol": "export",
+      "first_line": 4163,
+      "last_line": 4262,
+      "declaration_and_body_sha256": "068bade243c6beaef3dde231f4224fa9c322c6aac60b68bb6ea838dd9a033d76",
+      "bytes": 2605
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+      "symbol": "getSize",
+      "first_line": 5030,
+      "last_line": 5046,
+      "declaration_and_body_sha256": "0a4d917dfa81064cd96d139264b1a225d1fcc6bd26147d21d41e1148a7d74c90",
+      "bytes": 203
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+      "symbol": "getAdditionalMapProperty",
+      "first_line": 5385,
+      "last_line": 5417,
+      "declaration_and_body_sha256": "3dc926ca98c425aa4822092069a9d77fd73223408e72c1c7516fcf5ed912764a",
+      "bytes": 520
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+      "symbol": "setAssumedComplete",
+      "first_line": 3356,
+      "last_line": 3507,
+      "declaration_and_body_sha256": "05e67c81ecf1939569862787335d5b9b656366af7c90689648d1a2351ab0a158",
+      "bytes": 4091
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+      "symbol": "requestAssumedCompleteMode",
+      "first_line": 3343,
+      "last_line": 3349,
+      "declaration_and_body_sha256": "cf80cc71d22f8c1280da9af0fc9df32fb52fa3ab0bdbf600bf2d14773f29925e",
+      "bytes": 233
+    }
+  ],
+  "native_context": [
+    {
+      "path": "preview/native/core/include/biglybtc/library.hpp",
+      "sha256": "8ad4e7f5346300fdc03c6318d629b6185874d35109511ca445609639b7168875",
+      "bytes": 1823,
+      "equal_saved_queue_position_commit": true
+    },
+    {
+      "path": "preview/native/core/src/library.cpp",
+      "sha256": "3ba21404a77e0e3c9e23cbf267be130609598ed6646693df7c4f656306895348",
+      "bytes": 6670,
+      "equal_saved_queue_position_commit": true
+    },
+    {
+      "path": "preview/native/core/include/biglybtc/state_cache.hpp",
+      "sha256": "036be2d5a02e1cab9be638496e7b066ef13619a22443ea508a3d583f8f5dcd15",
+      "bytes": 1006,
+      "equal_saved_queue_position_commit": true
+    },
+    {
+      "path": "preview/native/core/src/state_cache.cpp",
+      "sha256": "b73688291e949eb592b0e12281e79bf19dc1000a4f5b9d80f6a06a63238e4fc2",
+      "bytes": 2833,
+      "equal_saved_queue_position_commit": true
+    },
+    {
+      "path": "preview/native/adapters/library_view.hpp",
+      "sha256": "43877d12f340bdd43cb1df1b98eddf6b39c89b7ec51d63de3b572ba9d4b5a82e",
+      "bytes": 991,
+      "equal_saved_queue_position_commit": true
+    },
+    {
+      "path": "preview/native/adapters/library_view.cpp",
+      "sha256": "a9aa1e0f6ccde4a7b4990f2340da1dd3472d372441b1389805e5d16ef1b229d4",
+      "bytes": 2590,
+      "equal_saved_queue_position_commit": true
+    },
+    {
+      "path": "preview/native/engine/local_session.hpp",
+      "sha256": "3ac5e56321e5202a27cc542c0d8ca9daa6a8354d7a2c1b6293b7e3fdda3caa4b",
+      "bytes": 1816,
+      "equal_saved_queue_position_commit": true
+    },
+    {
+      "path": "preview/native/ui/library_model.hpp",
+      "sha256": "5fbc9384b339e109fee7718d917219cbb33fa7c153d142df2db33aa5c89cb24c",
+      "bytes": 2597,
+      "equal_saved_queue_position_commit": true
+    },
+    {
+      "path": "preview/native/ui/library_model.cpp",
+      "sha256": "f55e2840877c9df938944e9c88904e9b11f62f3d00e8a843d2370f8a1afc1d2e",
+      "bytes": 5974,
+      "equal_saved_queue_position_commit": true
+    }
+  ],
+  "context_evidence": [
+    {
+      "path": "migration/evidence/20261018-navigation/next-library-columns-audit.json",
+      "sha256": "a6253890e826161bf1d880c772355ef0804a626b476a95d5ec5090380beb1d5e",
+      "relation": "Earlier broad audit; this additive review derives the exact DND formulas and saved-only boundary."
+    },
+    {
+      "path": "migration/evidence/20261018-navigation/next-library-columns-proposal.md",
+      "sha256": "02aec20b9f7bb2126b49b368c57d8babaca28ccb1ec45a8e0ea7803bf0416727",
+      "relation": "Earlier proposal; no existing file is rewritten."
+    }
+  ],
+  "persisted_inputs": {
+    "inventory": {
+      "completedbytes": "DownloadManagerStatsImpl saved completed bytes C, including skipped-file downloaded bytes. GlobalManagerImpl restores Long when present and saves getDownloadCompletedBytes().",
+      "downloaded": "Lifetime received traffic; never substitute for C or selected downloaded bytes.",
+      "state": "Startup state is not a DND completion boolean.",
+      "absence": "C starts at -1, but manager construction may first seed it to full size from resume completion/for-seeding. Missing completedbytes cannot be inferred to be zero or -1 as a final startup outcome using only the inventory."
+    },
+    "cache": {
+      "location": "active/cache.dat gzip state list; matching binary torrent hash, last encountered original map entry wins.",
+      "attributes": "CachedStateWrapper.export stores the entire torrent attributes map, not just displayname. Constructor retains that map; getAdditionalMapProperty(attributes) returns it without delegate fixup when present.",
+      "size": "CachedStateWrapper.getSize() returns cached size only if >0; otherwise attempts delegate fixup, returning its size if successful or 0 if fixup fails. A saved cache zero/negative/missing size alone is not proof of an original no-fixup zero-sized torrent.",
+      "coherence": "Inventory and cache are separate saved files. A copied snapshot can own consistent inputs, but source cache fields do not prove current payload verification, freshness or a live atomic observation."
+    },
+    "attributes": [
+      {
+        "path": "attributes.skipfss",
+        "name": "K, saved skipped-file-set length",
+        "source_default": -1,
+        "type": "Long",
+        "meaning": "Sum of length for skipped files when last calculated; any negative saved value requests original recomputation, not a no-skipped-files sentinel."
+      },
+      {
+        "path": "attributes.skipbdl",
+        "name": "B, saved skipped-but-downloaded bytes",
+        "source_default": 0,
+        "type": "Long",
+        "meaning": "Sum of downloaded bytes for skipped files when last calculated. Absence has source default zero; this is a defaulted cache fact, not verified zero downloaded bytes."
+      },
+      {
+        "path": "attributes.parameters.dndflags",
+        "name": "F, cached controller facts",
+        "source_getter_default": 0,
+        "presence_semantic": true,
+        "type": "Long on decoded bencode; getter also accepts Boolean/Integer in in-memory maps",
+        "meaning": "Bit0 HASDND=1, bit1 COMPLETE_NO_DND=2. Parameter presence is distinct from getter default zero."
+      },
+      {
+        "path": "attributes.flags",
+        "name": "metadata-download flags",
+        "source_default": 0,
+        "type": "Long",
+        "metadata_mask": 512,
+        "meaning": "getFlag tests (flags & mask)!=0 over the full signed long; not low32 narrowing."
+      },
+      {
+        "path": "attributes.filedownloaded.downloaded",
+        "name": "Per-file downloaded byte list",
+        "type": "List<Long>",
+        "meaning": "Used by file skeleton restoration. Not an aggregate selected-completion substitute without exact geometry/index and skip policy."
+      }
+    ],
+    "invalid_types": [
+      "attributes, parameters or filedownloaded of non-map type reach original Map casts; source points can throw ClassCastException. Do not describe them as ordinary empty maps.",
+      "getLongAttribute casts the stored value to Long before defaults. Bytes/list/map at skipfss, skipbdl or flags can throw ClassCastException. It does not parse numeric text or use low32.",
+      "getLongParameter accepts Boolean, Integer and Long; missing/null uses the declared default, other types log Invalid parameter and return0. For a present malformed dndflags value, parameterExists remains true and the controller treats the returned0 as cached facts. A bounded native malformed-field/unknown policy must be described as policy, not identical exception behavior.",
+      "The relevant long-attribute getters do not range-check Long values. Negative B, K greater than T, C greater than T and inconsistent cached flags are not sanitized into a coherent tuple by these methods.",
+      "getLongAttribute/getMapAttribute call informWillRead and use a monitor; these are not safe functions to invoke from a read-only native snapshot adapter."
+    ],
+    "parameter_details": [
+      "State construction uses an empty parameter map only when the map is absent/null. parameterExists is containsKey, not getLongParameter()!=0.",
+      "setLongParameter always stores a Long, including explicit zero; no default-value elision. setParameterDefault removes the entry.",
+      "getDefaultOverride contains no DND_FLAGS override. The declared default0 therefore does not encode missing cached-values initialization.",
+      "Unknown F high bits and a negative signed F are accepted; the controller tests only masks1 and2. Do not int32-narrow before masking.",
+      "cache.dp records discard-pieces/resume-complete optimization; it is not C, downloaded bytes, or general pane-completion evidence."
+    ]
+  },
+  "exact_math": {
+    "notation": {
+      "T": "download_manager.getSize() / total torrent length",
+      "C": "nonnegative saved completed bytes after any required original recalculation; includes skipped data",
+      "K": "saved skipped-file-set size after any required original recalculation",
+      "B": "saved skipped-but-downloaded (source absent default0)",
+      "R": "full remaining",
+      "S": "selected (non-DND) size",
+      "Q": "selected remaining",
+      "wrap64": "Java signed long two-complement arithmetic: each long addition/subtraction/multiplication wraps modulo2^64 then reinterprets signed; no C++ signed-overflow UB",
+      "f32": "Java float conversion/operation; keep float32 division and multiplication rather than replacing with double percent",
+      "jfloatToInt": "Java floating-to-int narrowing truncates towardzero, saturates outside int range, NaN→0; it is not low32 narrowing",
+      "jlongToInt": "Java long-to-int narrowing keeps low32bits; distinct from float-to-int"
+    },
+    "stats_full_remaining": {
+      "formula": "R = wrap64(T - C)",
+      "source": "DownloadManagerStatsImpl.getRemaining + recalcDownloadCompleteBytes",
+      "precedence": [
+        "getDiskManagerIfNotTransient rejects INITIALIZING, ALLOCATING and CHECKING; otherwise a nonnull disk manager supplies full remaining directly.",
+        "Without eligible disk manager, getDownloadCompletedBytes always calls recalcDownloadCompleteBytes. If saved C<0, original sums every file.getDownloaded() with wrap64 and writes the saved in-memory C.",
+        "R has no clamp. C>T can yield negative R; the DND remaining wrapper performs its own later clamp."
+      ]
+    },
+    "stats_selected_size": {
+      "formula": "S = wrap64(T - K)",
+      "source": "DownloadManagerStatsImpl.getSizeExcludingDND",
+      "precedence": [
+        "If disk manager exists and state is neither INITIALIZING nor ALLOCATING, return diskManager.getSizeExcludingDND(). CHECKING, READY, FAULTY and other nonexcluded states all pass this particular gate.",
+        "Otherwise use T and getSkippedFileSetSize(). If K<0, original iterates the file facades, sums skipped lengths and downloaded counts, then setSkippedFileStats writes skipfss/skipbdl when changed.",
+        "The returned S is not clamped or range-validated. Native can compute S from T,K independently of C/B, provided its accepted-input policy is explicit."
+      ]
+    },
+    "stats_selected_remaining": {
+      "formula": [
+        "R = getRemaining()",
+        "U = wrap64(K - B)",
+        "Q = wrap64(R - U)",
+        "if Q < 0: Q = 0"
+      ],
+      "source": "DownloadManagerStatsImpl.getRemainingExcludingDND",
+      "precedence": [
+        "Same direct selected-disk gate as selected size (excludes only INITIALIZING/ALLOCATING, not CHECKING).",
+        "Fallback reads full R first, then getSkippedFileSetSize(); if that latter call recalculates, it can change both K and B before subtraction.",
+        "Only Q<0 is clamped; there is no clamp to S, T or R. Do not collapse this to clamped(C-B)/S before preserving these ordered effects and intermediate wrap."
+      ]
+    },
+    "stats_selected_done_thousandths": {
+      "formula": [
+        "S = getSizeExcludingDND()",
+        "if S == 0: return 1000",
+        "if S < 0: return 0",
+        "Q = getRemainingExcludingDND()",
+        "P = f32(f32(wrap64(S - Q)) / f32(S))",
+        "result = jfloatToInt(f32(f32(1000) * P))",
+        "if result == 1000 and Q > 0: result = 999",
+        "else if result < 0: result = 0",
+        "return result"
+      ],
+      "source": "DownloadManagerStatsImpl.getPercentDoneExcludingDND",
+      "consequences": [
+        "S==0 and S<0 short-circuit before any call to selected remaining. Missing C therefore need not prevent a source-derived S==0 Done value if S is independently established.",
+        "No upper clamp to1000 exists. Preserve the exact source or label any extra publication validation as native policy.",
+        "1000 with Q>0 is corrected to999 to avoid reporting100% due float rounding. A double calculation or integer-ratio calculation can change results.",
+        "Done1000 is not a universal pane-completion predicate. Cached flag completion, controller state and public assumedComplete are separate facts."
+      ]
+    },
+    "live_disk_selected": {
+      "source": "DiskManagerImpl.fixupSkippedCalculation/getRemainingExcludingDND/getSizeExcludingDND/getPercentDoneExcludingDND",
+      "formula": [
+        "When marked changed and current files exist, sum skipped file lengths→K and downloaded→B under file_piece_lock with Java long wrapping.",
+        "Q = max(0, wrap64(remaining - wrap64(K - B))).",
+        "S = wrap64(totalLength - K).",
+        "Its own percent method returns0 for S<=0, otherwise jfloatToInt(f32(1000)*f32(f32(wrap64(S-Q))/f32(S))). It lacks the Stats wrapper zero-size1000, negative clamp and1000→999 corrections."
+      ],
+      "effects": [
+        "Updates cached disk fields and publishes changed K/B back through DownloadManagerStatsImpl.setSkippedFileStats.",
+        "setPieceDone maintains full remaining and per-file downloaded, clamps the per-file updated count into[0,length], adjusts B for skipped deltas and recalculates Q in finally. These live piece/file values are unavailable in a saved-only cache reader.",
+        "Separate getter calls can observe state changes. A native owned snapshot is an explicit observation boundary, not proof of original live atomicity."
+      ],
+      "critical_distinction": "DoneItem calls manager.stats.getPercentDoneExcludingDND, not diskManager.getPercentDoneExcludingDND; do not substitute the latter."
+    },
+    "other_progress_paths": {
+      "source": "DownloadManagerStatsImpl.getCompleted/getDownloadCompleted",
+      "rules": [
+        "getCompleted can mean initialization/allocation/checking progress, returning stored completed or dm.getPercentDone in transient states.",
+        "getDownloadCompleted(bLive) measures full bytes, not selected bytes: (int)(wrap64(1000 * completedBytes) / total), total0→0. Its long-division and low32 int narrowing differ from selected float calculation.",
+        "Live nontransient full completion may update saved C; transient full completion returns a live value without updating saved C. These side effects are not a saved-cache arithmetic function."
+      ]
+    }
+  },
+  "completion_contract": {
+    "controller_cache_initialization": {
+      "source": "DownloadManagerController.setInitialState",
+      "rule": "Only if parameterExists(dndflags): cachedComplete=(F&2)!=0; cachedHasDnd=(F&1)!=0; cachedValuesSet=true. Missing F leaves cachedValuesSet false; do not infer noDND from the getter default0."
+    },
+    "calculateCompleteness": {
+      "source": "DownloadManagerController.calculateCompleteness",
+      "rule": [
+        "Start selectedComplete=true, hasDnd=false.",
+        "For each file in order: if skipped, set hasDnd=true; else if downloaded!=length, set selectedComplete=false. Stop once hasDnd && !selectedComplete.",
+        "Publish those three cache fields and write F=(selectedComplete?2:0)|(hasDnd?1:0)."
+      ],
+      "edges": [
+        "Equality is downloaded==length, not downloaded>=length.",
+        "All-skipped and empty file arrays leave selectedComplete=true.",
+        "No totals, percent threshold or cache skip-byte comparison is consulted by this method.",
+        "This method writes state; it is not a permissible pure saved-reader fallback."
+      ]
+    },
+    "controller_isDownloadComplete": {
+      "source": "DownloadManagerController.isDownloadComplete(boolean includeDnd)",
+      "ordered_rules": [
+        "If cachedValuesSet is false, try to fill file facades (which may create skeletons, consult live file set, calculate completeness and dispatch deferred priority notifications).",
+        "If cachedHasDnd is false, return stats.getRemaining()==0, regardless of includeDnd or cachedComplete bit.",
+        "With DND and disk manager state exactly READY, return (includeDnd ? dm.getRemaining() : dm.getRemainingExcludingDND()) == 0.",
+        "With DND and no READY disk manager: includeDnd=true→false; includeDnd=false→cachedComplete."
+      ],
+      "saved_no_ready_truth_table": [
+        {
+          "F_low2": 0,
+          "hasDnd": false,
+          "cachedComplete": false,
+          "controller_include_false": "R==0",
+          "controller_include_true": "R==0"
+        },
+        {
+          "F_low2": 1,
+          "hasDnd": true,
+          "cachedComplete": false,
+          "controller_include_false": false,
+          "controller_include_true": false
+        },
+        {
+          "F_low2": 2,
+          "hasDnd": false,
+          "cachedComplete": true,
+          "controller_include_false": "R==0",
+          "controller_include_true": "R==0"
+        },
+        {
+          "F_low2": 3,
+          "hasDnd": true,
+          "cachedComplete": true,
+          "controller_include_false": true,
+          "controller_include_true": false
+        }
+      ],
+      "caveat": "This table describes initialized controller cached-fact logic with no READY disk, not the public manager assumed-complete lifecycle."
+    },
+    "public_manager": {
+      "source": "DownloadManagerImpl.isDownloadComplete / requestAssumedCompleteMode / setAssumedComplete",
+      "rule": "isDownloadComplete(false) returns retained assumedComplete directly. true delegates controller(true). requestAssumedCompleteMode computes controller(false), invokes setAssumedComplete, then returns that candidate.",
+      "effects": [
+        "Manager construction can initialize assumed completion from resume-data complete or for-seeding and set C=T.",
+        "GlobalManagerImpl restores optional completedbytes, restores stats K/B and then calls requestAssumedCompleteMode. Full startup can therefore reconcile the candidate, but also runs other initialization and observer effects.",
+        "setAssumedComplete can write completion timestamps, enqueue or run actual filesystem length/lastModified checks, change downloading state and notify completion listeners. Do not call it in a read-only projection or describe a cached candidate as its full lifecycle equality."
+      ]
+    },
+    "classic_pane_membership": {
+      "source": "MyTorrentsView.isOurDownloadManager + parameterChanged / UIConfigDefaultsSWT",
+      "default_preference": "DND Always In Incomplete=false",
+      "ordered_rule": [
+        "Tag filter first; generic Download data-source type can accept either completion category.",
+        "For completion-specific classic panes, bCompleted = dm.isDownloadComplete(bDNDalwaysIncomplete). Select completed-only iff true, incomplete-only iff false.",
+        "Default false reaches retained assumedComplete; preference true reaches controller(true)."
+      ],
+      "must_not_infer": [
+        "Full C>=T is not the exact original predicate (controller noDND uses R==0, not R<=0).",
+        "Done==1000 or selectedRemaining==0 is not a substitute for cached controller facts or retained assumed state.",
+        "F==3 with incomplete full torrent can have selected Done100% and default completed pane while includeDnd=true remains false absent READY disk.",
+        "Unknown completion may be routed by a documented native fallback, but must not be re-labelled known original incomplete."
+      ]
+    }
+  },
+  "ui_columns": {
+    "SizeItem": {
+      "manager": "Calls selected remaining, then selected size. If manager is metadata-download, sort=-1 and text blank after these calls. Otherwise selected size is numeric value and primary sort.",
+      "file": "Uses full file length and wrap64(length-downloaded); obtains manager to apply the same metadata suppression.",
+      "secondary_sort_and_text": "Composite size, remaining (or0 under simpleSort), second-line flag. Second line only maxLines>1 && remaining>0 && width>150. Custom size formatter precedes ordinary byte formatting. Tooltip can expose full-minus-selected bytes. These formatting/sorting requirements are separate from publishing a scalar selected-size DTO."
+    },
+    "RemainingItem": {
+      "manager": "Checks metadata first→-1/blank; else selected remaining.",
+      "file": "Checks file metadata→-1/blank; else wrap64(length-downloaded), no numeric clamp.",
+      "display": "Any negative remaining is displayed blank, preserving raw negative sort value."
+    },
+    "DoneItem": {
+      "manager": "Always stats-selected thousandths; no direct metadata guard.",
+      "file": "If length==0 return1000; else jlongToInt(wrap64(downloaded*1000)/length). No clamp to[0,1000] and not the manager float formula.",
+      "format": "DisplayFormatters.formatPercentFromThousands formats thousands/1000.0 through locale percentage formatter. Native one-decimal text may be a chosen UI adaptation, not exact original localized formatting."
+    },
+    "metadata_precedence": "Do not blanket-suppress Done because Size/Remaining suppress metadata. A pure snapshot can avoid executing original side-effectful Size pre-check calculations; that is value projection only, not full call/effect-order parity."
+  },
+  "per_file_boundary": {
+    "scope_owner": "Codec owns per-file source acquisition/geometry/index/skip-policy architecture; these notes constrain its mathematics only.",
+    "source": [
+      "DiskManagerImpl.storeFileDownloaded writes a filedownloaded map containing downloaded List<Long> in file order.",
+      "DiskManagerUtil.loadFileDownloaded returns when map/list absent, restores only min(files.length,list.size), and catches Throwable around the sequential element loop. A malformed middle element can leave a restored prefix with later skeleton counts at initial0. The list cast itself precedes that try.",
+      "FileSkeleton.downloaded initializes to0. Both skeleton and real file setDownloaded simply assign the supplied long; persisted values are not clamped there. Live setPieceDone later has separate clamps.",
+      "storeFilePriorities on non-real file sets recomputes K/B using file.getDownloaded, so original priority changes can alter cached DND aggregates and completeness."
+    ],
+    "native_known_requirements": [
+      "Only publish known per-file progress after an owned exact identity/geometry/index mapping and explicit valid downloaded-count policy.",
+      "Do not turn missing/truncated/malformed saved list suffixes into verified zero downloaded bytes or report original partial recovery as complete source equality.",
+      "Keep file length, skipped state, padding, downloaded count and aggregate DND cache provenance distinct. Do not distribute aggregate C or received bytes across files."
+    ]
+  },
+  "saved_only_projection": {
+    "knowledge_table": [
+      {
+        "fact": "Selected size S",
+        "minimum": "Established T and explicit K>=0, interpreted under an explicit arithmetic/validation policy.",
+        "independent_of": "C, B, F, live disk; zero/negative cached T alone does not establish original no-fixup T."
+      },
+      {
+        "fact": "Selected remaining Q",
+        "minimum": "Established full R (or nonnegative C,T with no original recalculation required), K>=0 and B or explicitly labelled original missing-B default0.",
+        "unknown_when": "Missing/negative C, missing/negative K, malformed types, unmatched cache hash or unavailable size unless independent coherent evidence resolves them."
+      },
+      {
+        "fact": "Selected Done",
+        "minimum": "Known S: S==0→1000; S<0→0; S>0 also needs Q.",
+        "independent_of": "F and retained assumedComplete; percent does not prove those facts."
+      },
+      {
+        "fact": "Controller candidate excludingDND",
+        "minimum": "Explicit valid F; if hasDnd then use bit2 without C; if noDnd need known R and exact R==0.",
+        "unknown_when": "F missing requires original facade path; invalid F requires separately declared native malformed-field policy."
+      },
+      {
+        "fact": "Pane membership with includeDnd preference",
+        "minimum": "Preference plus authoritative adopted owner state or explicitly labelled saved controller/assumed-completion projection.",
+        "unknown_when": "Saved candidate alone cannot reproduce arbitrary retained assumedComplete lifecycle; preference itself unavailable/malformed is not automatically false unless default application is explicit."
+      },
+      {
+        "fact": "Per-file Done/Remaining",
+        "minimum": "Owned geometry and valid per-index saved downloaded count, plus metadata fact and exact byte/float distinctions.",
+        "unknown_when": "Only aggregate C/K/B or a partial recovered list is available."
+      }
+    ],
+    "native_policy_choices_to_document": [
+      "Separate optional full geometry/completed bytes, selected size/remaining/thousandths, metadata state, saved controller DND facts and completion classification; never overwrite full bytes/C with selected bytes.",
+      "For an accepted normal tuple, useful checks are 0<=C<=T, 0<=K<=T, 0<=B<=K and 0<=C-B<=T-K. These are conservative native publication conditions, not range checks present in the original getters. Preserve raw data/diagnostics when rejecting a tuple.",
+      "Absence of skipbdl can follow original default0 with explicit default provenance; stricter unknown publication is another policy and must be named.",
+      "Same-generation retained immutable cache/DTO ownership is needed when details/telemetry/snapshots update. A new full-byte telemetry value cannot silently retain stale selectedDone/remaining computed from older C.",
+      "Do not require N per-torrent opens for a startup cache projection: readLibrarySource already retains raw cacheDocument once. Codec owns concrete IO/reuse/lower-cap/error decisions.",
+      "Do not change the existing full-byte Progress/pane behavior while calling it exact original DND parity; route through the new declared data semantics and meaningful tests."
+    ]
+  },
+  "recommended_bounded_verification": {
+    "credit": "Native/source-reading-derived unit expectations only until actual independently fenced original runtime observations are obtained; an extracted/copied formula is not that observation.",
+    "cases": [
+      "K absent/-1/other-negative, B absent vs0 vs malformed, F absent vs0/1/2/3 plus negative/highbits; parameters wrong type.",
+      "No DND, some DND, all skipped (S0), selected zero-length files, completed==length vs overlength.",
+      "Independent selected-size availability with C missing; S0 Done short-circuit without C/Q; unknown positive-S Done without Q.",
+      "C/T/K/B inconsistent boundaries, Q negative clamp, Q>S, no upperpercent clamp, wrap64 subtractions/multiplication and no C++ signed-overflow UB.",
+      "Float32 precision just below completion (Q>0 but rounded raw1000→999), binary32 conversion versus double; compare separate integer per-file formula.",
+      "F==0/2 ignores cachedComplete if hasDnd=false; F==1/3 without READY; includeDnd defaultfalse/true and unknown retained assumedComplete separately.",
+      "Metadata bit present/absent/malformed; Size/Remaining blank but no blanket Done suppression.",
+      "Per-file list absent/truncated/extra/bad middle type/out-of-range counts; explicit no false suffixzero or aggregate redistribution.",
+      "Snapshot/telemetry/details revision transitions clear/recompute dependent selected metrics and preserve target identity.",
+      "No writes, recovery constructor, per-row IO scan, file-size probe or original Java profile access."
+    ]
+  },
+  "findings": [
+    {
+      "id": "DND-MATH-1",
+      "severity": "implementation_requirement",
+      "finding": "Use ordered Java-long and float32 manager math, including S0→1000 and raw1000/Q>0→999, and distinguish per-file integer math."
+    },
+    {
+      "id": "DND-COMPLETE-1",
+      "severity": "implementation_requirement",
+      "finding": "Keep saved controller flags, selected percent and retained assumedComplete distinct; dndflags absence is not noDND."
+    },
+    {
+      "id": "DND-EVIDENCE-1",
+      "severity": "implementation_requirement",
+      "finding": "Saved cache only cannot imply live verification, successful original recovery, nonpositive-size fixup outcome or assumed-state lifecycle equality."
+    },
+    {
+      "id": "DND-INVALID-1",
+      "severity": "explicit_policy_required",
+      "finding": "Original malformed-type exceptions/defaults and unchecked inconsistent Long inputs must remain distinguishable from native conservative unknown/diagnostic policy."
+    }
+  ],
+  "blockers_to_this_source_contract": [],
+  "unresolved_for_implementation": [
+    "Decide and document publication of absent-B default0 versus stricter unknown with explicit provenance.",
+    "Select exact native normal-tuple limits and malformed/inconsistent-field diagnostics without silently changing original raw values.",
+    "Specify saved pane-candidate fallback when original retained assumed state or DND preference is unknown; do not invent a known original completion verdict.",
+    "Actual original-runtime arithmetic/completion observations, if desired, require a separately reviewed immutable inert seam and independent evidence; none exist in this review."
+  ],
+  "integrity": {
+    "source_before_after_equal": true,
+    "original_git_blob_checks": 19,
+    "native_baseline_byte_checks": 9,
+    "historical_evidence_unchanged": true,
+    "production_edits": 0,
+    "review_only_output": "migration/evidence/20261018-navigation/saved-dnd-math-review.json"
+  }
+}

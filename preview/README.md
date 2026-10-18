@@ -80,5 +80,13 @@ primitives and their tab/worker integration are tested with synthetic public
 inputs. Full hosting/sharing services remain unfinished. See [source and policy contract](docs/saved-hosting-sharing-source.json)
 and `migration/fixtures/saved-services/README.md` within this preview tree.
 
+The cache reader also retains fixed saved DND facts and exposes a pure selected-size,
+remaining and permille projection. Missing or inconsistent counters stay unknown;
+source defaults and cached completion candidates remain separate. The classic
+tables do not yet use these aggregates. Independent synthetic fixtures and pinned
+source reviews qualify this bounded primitive, with no Java manager/runtime
+equality claim. See the [source contract](docs/saved-dnd-progress-contract.json)
+and [math/default review](docs/saved-dnd-math-review.json).
+
 No performance improvement or full migration completion is claimed by this source
 milestone.

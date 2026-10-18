@@ -46,6 +46,7 @@ std::expected<StateCache, CacheError> readStateCache(const Document& document,
         if (attributes->type != Node::Type::Dictionary) { throw Failure{CacheError::Entry}; }
         value.displayName = text(*attributes, "displayname", maximumNameBytes);
       }
+      value.savedDnd = readSavedDndFacts(entry.find("attributes"));
       result.torrents.insert_or_assign(identity->hex(), std::move(value));
     } catch (const Failure& failure) { result.issues.push_back({index, failure.error}); }
   }
