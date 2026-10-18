@@ -31,7 +31,15 @@ C++ toolchain and build options; this is not a stable public C++ ABI.
 
 Production development uses C++23, GCC16/Clang24 and Qt6.12. The SDK CI recipe
 targets GitHub's hosted GCC14 toolchain as an additional standalone C boundary
-check. Recipes are currently under `ci/`, awaiting workflow-scope authorization
-before activation; no hosted CI pass is claimed. No stable
+check. The SDK workflow is registered under `.github/workflows/`; see Actions
+for current run results. No stable
 plugin ABI, signed production catalogue, public binary release or complete
 performance/behavior equivalence is claimed by this source foundation.
+
+## Continuous integration
+
+The workflow is [`.github/workflows/plugin-sdk.yml`](.github/workflows/plugin-sdk.yml). [View runs](https://github.com/d00rsfan/BiglyBTC/actions).
+
+It runs on GitHub-hosted Ubuntu 24.04 runners for pushes to `main`, pull requests, and manual dispatch.
+
+For future workflow changes, push using this repository's SSH URL (`git@github.com:d00rsfan/BiglyBTC.git`). HTTPS pushes authenticated with an OAuth token require the additional `workflow` scope to add or update workflow files. Viewing public Actions runs does not require that scope.

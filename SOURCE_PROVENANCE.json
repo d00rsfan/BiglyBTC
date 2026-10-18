@@ -4,7 +4,7 @@
   "original_biglybt_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
   "sdk_commit": null,
   "core_commit": null,
-  "ci_enabled": false,
+  "ci_enabled": true,
   "scope": "sdk development source foundation only; no binary/catalogue release or full application/plugin parity claim",
   "files_sha256": {
     "plugin-sdk/.gitignore": "862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793",
@@ -38,8 +38,17 @@
     "core/src/state_cache.cpp": "b73688291e949eb592b0e12281e79bf19dc1000a4f5b9d80f6a06a63238e4fc2",
     "core/src/torrent_layout.cpp": "58e6961c5136d1a5f9adf860748a9b3e645fe0ff05ccb50836f339a636ce072d",
     "core/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
-    "README.md": "ccbaaa4060d7887c3447f2aaa6509047bfe7c0a204c97cb8fd4dff9980886217",
+    "README.md": "a77860e1d445279c55854017fd3d1ea85b2083d4109acd161afb3c1b2e516362",
     "CMakeLists.txt": "009e619cac5bbdf7b315352669899426d40f67133de1efdd525045e45bfd4995",
-    "ci/plugin-sdk.yml": "e3000fd72c283348e7e1846e7b64b61898e39e3800e4646ffefcef0d26b0e183"
+    ".github/workflows/plugin-sdk.yml": "e3000fd72c283348e7e1846e7b64b61898e39e3800e4646ffefcef0d26b0e183"
+  },
+  "ci_activation": {
+    "date": "2026-10-18",
+    "previous_public_commit": "499466856913d4d7d5e73d2a143c845864c7b44d",
+    "transport": "ssh",
+    "workflow_path": ".github/workflows/plugin-sdk.yml",
+    "runner": "GitHub-hosted ubuntu-24.04",
+    "mode": "push, pull_request, workflow_dispatch",
+    "note": "Workflow registered; this manifest does not assert a successful remote run."
   }
 }
