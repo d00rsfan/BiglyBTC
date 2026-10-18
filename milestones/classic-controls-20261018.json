@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "repository": "https://github.com/d00rsfan/BiglyBTC",
+  "native_commit": "7458daa2bf576e872282166e296373c1454504f7",
+  "previous_navigation_commit": "9abef333ab0a4178bc68e098a038d04514a37ddc",
+  "upstream_repository": "https://github.com/BiglySoftware/BiglyBT",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "scope": "Classic My Torrents navigation plus fixed-nine-column per-pane visibility/reset; full UI/client parity unfinished",
+  "source_contract": "preview/docs/classic-columns-source.json",
+  "local": {
+    "units_passed": 25,
+    "units_failed": 0,
+    "column_qt_rows_passed": 13,
+    "preview_smoke_qt_rows_passed_per_scale": 3,
+    "offscreen_scale_factors_passed": [
+      1,
+      1.5,
+      2
+    ]
+  },
+  "hosted": {
+    "desktop_run": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39110941426",
+    "desktop_result": "success",
+    "units_passed": 25,
+    "units_failed": 0,
+    "preview_smoke_passed": true,
+    "sdk_run": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39110941443",
+    "sdk_result": "success"
+  },
+  "files_at_native_commit_sha256": {
+    "milestones/my-torrents-navigation-20261018.json": "d8f495e8d6045758e240b381f0f520c25475d23ac7c66ff04da1aeb742efa541",
+    "preview/README.md": "6a9041442c1fb89670470981475936b03fc7b6435b51ef2338060219045423cd",
+    "preview/docs/classic-columns-source.json": "efbdaf795abc85b7574e08162c7b412e81ebdfba1cb973755d140af3467f82ac",
+    "preview/native/tests/CMakeLists.txt": "bc0904aebabfda7c3c3d9a43a4181450bcc7ca24612511c12b22c0ca2d47c711",
+    "preview/native/tests/column_tests.cpp": "ec229ba6f86da20a8a341fcdbbab79e37d666309333fb0ec14174292b2d61bc4",
+    "preview/native/ui/CMakeLists.txt": "561f54757ea016fc1c41df2c5b83d04f1b9b54cbee317c1e95ea1091b96ddd0d",
+    "preview/native/ui/classic_columns.cpp": "7eff7d0eae0c38261cd8a0f36bf7cc31f87b97f03d5a57815b75f3d9c91c868b",
+    "preview/native/ui/classic_columns.hpp": "18e90f2c4ede7a5d8e04eb95b1fa566d8b92f07d9010b37dbd017776b080937d",
+    "preview/native/ui/library_window.cpp": "bdf7eb5f12747ba2daaaee093dcaba263ca796a87eb483af3e7f308301f4168a"
+  },
+  "limits": [
+    "Column choices last for the window session; original settings import/save/editor parity open",
+    "My Tracker/My Shares service integration still unavailable",
+    "No real compositor popup/accessibility qualification for new controls",
+    "No original-profile/performance claim",
+    "No binary release"
+  ]
+}
