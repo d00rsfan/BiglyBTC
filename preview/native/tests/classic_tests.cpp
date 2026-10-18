@@ -101,7 +101,7 @@ private slots:
     QCOMPARE(complete.selectionBehavior(), QAbstractItemView::SelectRows);
     QCOMPARE(window.splitter().orientation(), Qt::Vertical);
     QCOMPARE(window.splitter().count(), 2);
-    QCOMPARE(window.mainTabs().tabText(0), QStringLiteral("Library"));
+    QCOMPARE(window.mainTabs().tabText(0), QStringLiteral("My Torrents"));
     QCOMPARE(window.detailTabs().tabText(0), QStringLiteral("General"));
     QCOMPARE(window.detailTabs().tabText(1), QStringLiteral("Files"));
     QCOMPARE(window.detailTabs().currentIndex(), 0);

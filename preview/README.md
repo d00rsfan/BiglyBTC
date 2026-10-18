@@ -4,26 +4,33 @@ This additive `preview/` tree contains the C++23/Qt6.12 desktop preview, its
 bounded native core/profile/engine adapters and selected native unit fixtures.
 The repository root continues to build its existing plugin SDK by default.
 `SOURCE_PROVENANCE.json` describes that older export; the separate
-`PREVIEW_PROVENANCE.json` records this preview's exact source commit and files.
+`PREVIEW_PROVENANCE.json` records the first export snapshot and its exact files.
+Later development is recorded in Git history and the repository's `milestones/`
+records. [Classic navigation source contract](docs/classic-navigation-source.json)
+pins the original menu, naming and shortcut behavior.
 
 The application is under development. Its default preview launcher creates four
 synthetic torrents in a fresh private `/tmp/biglybtc-preview-*` profile and passes
 port0, which disables transfers. It never opens the user's `~/.biglybt` profile.
 Original-profile switching, full networking/session/plugin behavior and complete
 UI parity remain unfinished. This milestone adds the first classic shell: a
-Library tab, incomplete/complete tables, name filtering and shared General/Files
-details. Unavailable actions remain disabled. See the milestone verification
+My Torrents tab, incomplete/complete tables, name filtering and shared General/Files
+details. **View > My Torrents (Ctrl+1)** returns to the existing torrent screen
+from anywhere in the window, preserving the filter and selection. My Tracker
+and My Shares are listed with their original Ctrl+2/3 shortcuts but remain
+unavailable until their hosting/sharing services are implemented. Other
+unavailable actions remain disabled. See the milestone verification
 record and Actions run for the checks performed on the actual revision.
 
 Build independently with the pinned compiler, Qt6.12.0 and libtorrent2.0.12:
 
 ```sh
-cmake -S preview/native -B /tmp/biglybtc-public-preview-build -G Ninja \
+cmake -S preview/native -B build/desktop -G Ninja \
   -DCMAKE_CXX_COMPILER=/usr/bin/g++-16 -DCMAKE_BUILD_TYPE=Release \
   -DBIGLYBTC_LOCAL_ENGINE=ON -DBIGLYBTC_DESKTOP=ON \
   -DCMAKE_PREFIX_PATH="/path/to/Qt/6.12.0/gcc_64;/path/to/libtorrent-prefix"
-nice -n 5 cmake --build /tmp/biglybtc-public-preview-build --parallel 2
-ctest --test-dir /tmp/biglybtc-public-preview-build -L unit \
+nice -n 5 cmake --build build/desktop --parallel 2
+ctest --test-dir build/desktop -L unit \
   --no-tests=error --output-on-failure
 ```
 

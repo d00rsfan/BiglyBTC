@@ -11,6 +11,7 @@
 #include <QSignalSpy>
 #include <QSortFilterProxyModel>
 #include <QTableView>
+#include <QTabWidget>
 #include <QtTest>
 
 #include <array>
@@ -83,6 +84,10 @@ private slots:
     window.show();
     QTRY_VERIFY_WITH_TIMEOUT(snapshots.count() == 1 && !bridge.busy(), 30000);
     QCOMPARE(window.model().rowCount(), 4);
+    QCOMPARE(window.mainTabs().tabText(0), QStringLiteral("My Torrents"));
+    auto* myTorrents = window.findChild<QAction*>(QStringLiteral("classic-my-torrents"));
+    QVERIFY(myTorrents && myTorrents->isEnabled());
+    QCOMPARE(myTorrents->shortcut(), QKeySequence(QStringLiteral("Ctrl+1")));
     QVERIFY(!window.continueAction().isEnabled());
     QCOMPARE(window.incompleteTable().model()->rowCount(), 3);
     QCOMPARE(window.completeTable().model()->rowCount(), 1);

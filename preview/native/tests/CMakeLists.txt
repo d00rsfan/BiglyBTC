@@ -166,6 +166,13 @@ if(BIGLYBTC_DESKTOP)
   set_target_properties(biglybtc-classic-tests PROPERTIES AUTOMOC ON)
   target_link_libraries(biglybtc-classic-tests PRIVATE biglybtc_ui Qt6::Test)
   target_compile_options(biglybtc-classic-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_executable(biglybtc-navigation-tests navigation_tests.cpp)
+  set_target_properties(biglybtc-navigation-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-navigation-tests PRIVATE biglybtc_ui Qt6::Test)
+  target_compile_options(biglybtc-navigation-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME classic-view-navigation COMMAND biglybtc-navigation-tests)
+  set_tests_properties(classic-view-navigation PROPERTIES TIMEOUT 120
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "ui;unit;classic;navigation")
   add_test(NAME classic-library-layout COMMAND biglybtc-classic-tests)
   set_tests_properties(classic-library-layout PROPERTIES TIMEOUT 120
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "ui;unit;classic")

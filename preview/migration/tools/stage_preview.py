@@ -42,7 +42,7 @@ def main():
         "Run ./BiglyBTC-preview from this folder. Qt and the libtorrent runtime\n"
         "are included alongside the application; no system installation is needed.\n"
         "The four torrents are generated examples. Transfers are disabled.\n"
-        "Check sorting, Unicode, Files/Ctrl+I, Refresh/F5, scaling, and window close.\n"
+        "Check My Torrents/Ctrl+1, sorting, Unicode, Files/Ctrl+I, Refresh/F5, scaling, and window close.\n"
         "Each launch uses a fresh /tmp/biglybtc-preview-* sample profile.\n"
         "The original ~/.biglybt profile is never opened by this launcher.\n"
         "Full client/plugin migration and original-profile switching remain unfinished.\n")

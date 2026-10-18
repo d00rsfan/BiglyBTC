@@ -1,0 +1,300 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "status": "frozen_source_contract_only",
+  "user_priority": "View > My Torrents with Ctrl+1 first, then other My... navigation. Display literal My Torrents instead of Library; original classic English agrees.",
+  "upstream": {
+    "repository": "https://github.com/BiglySoftware/BiglyBT",
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "source_files": [
+      {
+        "path": "uis/src/com/biglybt/ui/swt/mainwindow/MainMenuV2.java",
+        "symbols": [
+          "addViewMenu",
+          "buildSimpleViewMenu"
+        ],
+        "sha256": "e7045fd861fc5eb62a26033fb48c39af42c4d8071dcc67d68bd39d142678d6b1",
+        "git_blob": "cdf1fd41311e98762ac58a168d7c09c3894304d0"
+      },
+      {
+        "path": "uis/src/com/biglybt/ui/swt/mainwindow/MenuFactory.java",
+        "symbols": [
+          "addMyTorrentsMenuItem",
+          "addMyTrackerMenuItem",
+          "addMySharesMenuItem",
+          "addViewToolbarMenuItem",
+          "addClientStatsMenuItem",
+          "addSubscriptionMenuItem",
+          "addMenuItem"
+        ],
+        "sha256": "178e65a1154cc19d67b3fd3c4be5c84cfe666a616e527d1aed0db39112a6f1b4",
+        "git_blob": "fe6baf3bb1da72362773aedced66ff48084c4d4e"
+      },
+      {
+        "path": "uis/src/com/biglybt/ui/swt/mainwindow/IMenuConstants.java",
+        "symbols": [
+          "MENU_ID_MY_TORRENTS",
+          "MENU_ID_MY_TRACKERS",
+          "MENU_ID_MY_SHARES",
+          "MENU_ID_CLIENT_STATS",
+          "MENU_ID_SUBSCRIPTIONS"
+        ],
+        "sha256": "b8638f6316da62e74476a13376f09f79ece8fa013eeec7b172207e853dde2e8f",
+        "git_blob": "f586712de95578ed1f4dfc6dbee99aeff6b5219e"
+      },
+      {
+        "path": "uis/src/com/biglybt/ui/swt/KeyBindings.java",
+        "symbols": [
+          "SPECIAL_KEYS",
+          "setAccelerator",
+          "parseKeyBinding"
+        ],
+        "sha256": "bb17a964a742d89ac6a78ae6c9bd1a7fa9e853a6ea613b21606d0a87aff8ba4d",
+        "git_blob": "cd7af1dcc0b4f39c716df662117a44e8aebb1c85"
+      },
+      {
+        "path": "core/src/com/biglybt/core/internat/MessageText.java",
+        "symbols": [
+          "UI suffix aliases during bundle assembly",
+          "getUISuffix",
+          "expandValue"
+        ],
+        "sha256": "d97fee68a83150d5f04cf58a296ff70185f4f988a5ccac1896804d0954635e28",
+        "git_blob": "420315cf5222a987ee9d8c4da86bf44be4ba0f04"
+      },
+      {
+        "path": "core/src/com/biglybt/internat/MessagesBundle.properties",
+        "symbols": [
+          "MainWindow.menu.view.mytorrents/mytracker/myshares",
+          "library.name._classic",
+          "library.name._vuze",
+          "Meta+1/2/3"
+        ],
+        "sha256": "a73301400676c4295396be3e4e033e68e8b912a547e2c5a32425253809ba83c0",
+        "git_blob": "6b9be9a72dcb4c5618239927c5629449533ce9df"
+      },
+      {
+        "path": "core/src/com/biglybt/internat/MessagesBundle_fr_FR.properties",
+        "symbols": [
+          "localized My Torrents/My Tracker/My Shares and library aliases"
+        ],
+        "sha256": "af4eba71686d3e9ae174b4b907e62ac4547f8bee4bdf7b8739681de74bef9237",
+        "git_blob": "a0c20f8468c84c7ae7d20427edf4b3471334e5fc"
+      },
+      {
+        "path": "core/src/com/biglybt/internat/MessagesBundle_de_DE.properties",
+        "symbols": [
+          "localized My Torrents/My Tracker/My Shares and library aliases"
+        ],
+        "sha256": "7d0c2773d37931792d404c4aa071099223d7937e701cfbe6c57d70b14316f59c",
+        "git_blob": "c06c885a95890b54b5d1072598bb975b95a84a25"
+      },
+      {
+        "path": "core/src/com/biglybt/internat/MessagesBundle_iw_IL.properties",
+        "symbols": [
+          "localized Hebrew My Torrents/My Tracker/My Shares"
+        ],
+        "sha256": "352069824afce821920bb1bfea49a9ddef87917e2dd2201f50b1621271551706",
+        "git_blob": "d5c983f88422d7d266bf04fd0db7a7f4adf970bb"
+      },
+      {
+        "path": "core/src/com/biglybt/ui/mdi/MultipleDocumentInterface.java",
+        "symbols": [
+          "SIDEBAR_SECTION_LIBRARY",
+          "SIDEBAR_SECTION_MY_TRACKER",
+          "SIDEBAR_SECTION_MY_SHARES",
+          "SIDEBAR_SECTION_CLIENT_STATS"
+        ],
+        "sha256": "6afb0ea3ed64e4e0764a4689a692643ed15c4464dec8202f2ea8d78137d159fb",
+        "git_blob": "23472827209f19808ce940730789213780a0d41c"
+      },
+      {
+        "path": "uis/src/com/biglybt/ui/swt/shells/main/MainMDISetup.java",
+        "symbols": [
+          "setupSidebarClassic",
+          "MyTracker/MyShares/ClientStats registration"
+        ],
+        "sha256": "cecfce4f796772a5997913f711c27bd27fcd0895397d18fe3658262de66e5938",
+        "git_blob": "a34502ff825448fa7db14cf27e560519d37f31f4"
+      },
+      {
+        "path": "uis/src/com/biglybt/ui/swt/mdi/BaseMDI.java",
+        "symbols": [
+          "showEntryByID",
+          "loadEntryByID",
+          "loadAndGetEntryByID",
+          "closeEntry",
+          "loadCloseables"
+        ],
+        "sha256": "6d4e0eb41359cb8d2d704dbcb70b50d3df1008832239509df3b69501af94ae0f",
+        "git_blob": "c1d36a2db9f1691e9840bcce94dbf3f1f26a3877"
+      },
+      {
+        "path": "uis/src/com/biglybt/ui/swt/mdi/TabbedMDI.java",
+        "symbols": [
+          "main constructor",
+          "showEntry",
+          "closeEntryByID",
+          "keyboard filter"
+        ],
+        "sha256": "8a69fc161b6946b1f3821afdecc4c36c9dbac91430b8c315573a7d4330b6e481",
+        "git_blob": "2d956e729ab8ec07021e9340ef68da08688ca323"
+      },
+      {
+        "path": "uis/src/com/biglybt/ui/swt/mdi/TabbedEntry.java",
+        "symbols": [
+          "setCloseable",
+          "destroyEntry"
+        ],
+        "sha256": "8b1167b2ab5344f321702c10107385a53476351599bd14b2f7d4fea0c1d3eaf4",
+        "git_blob": "a4911e0db4e0b919f3ab577d0f30825a6f57ba80"
+      },
+      {
+        "path": "uis/src/com/biglybt/ui/swt/views/MyTrackerView.java",
+        "symbols": [
+          "basicItems",
+          "constructor",
+          "tableLifeCycleEventOccurred",
+          "defaultSelected",
+          "fillMenu"
+        ],
+        "sha256": "99df8b284878b79340418b1bf4e26c15d8695ccec29c531b5b11fa36ba13b49f",
+        "git_blob": "f2744258d02271f7261c4412c3f69a0a89113009"
+      },
+      {
+        "path": "uis/src/com/biglybt/ui/swt/views/MySharesView.java",
+        "symbols": [
+          "basicItems",
+          "constructor",
+          "tableViewInitialized",
+          "tableViewDestroyed",
+          "createRows",
+          "defaultSelected",
+          "share"
+        ],
+        "sha256": "c031a5102a421bbe592f24f2f8d7eb36efda39abb38a10d7e02010bb4ccff9ca",
+        "git_blob": "168739108dd08aa271440931c040038b2a6883c7"
+      },
+      {
+        "path": "uis/src/com/biglybt/ui/swt/views/clientstats/ClientStatsView.java",
+        "symbols": [
+          "CONFIG_FILE",
+          "initYourTableView",
+          "peer/statistic collector boundaries"
+        ],
+        "sha256": "5d1f4926bc12344026d52ab6e3da02b45e7e30f1c78a6da93d402e47f190bc1a",
+        "git_blob": "c8f732f744ae9ace43b8ec364de4618b5a9e29d3"
+      }
+    ]
+  },
+  "label_contract": {
+    "menu_key": "MainWindow.menu.view.mytorrents=&{library.name}",
+    "tab_key": "MyTorrentsView.mytorrents={library.name}",
+    "classic_alias": "library.name._classic=My Torrents",
+    "modern_alias": "library.name._vuze=Library",
+    "mechanism": "MessageText chooses ._classic for ui=az2 and inserts corresponding base aliases; message expressions then expand. This is source behavior, not a read of the running user configuration.",
+    "compatibility": "Preserve internal original MDI identity Library and existing Library.* configuration keys; changing displayed wording is not a persistent-key migration.",
+    "locale_variants": "French source uses Mes torrents/Mes trackers/Mes partages; German Meine Torrents/Mein Tracker/Mein Share; Hebrew provides localized My... strings. Do not freeze all languages to English: the user-requested English preview label is My Torrents. Mnemonic ampersands are UI metadata, not visible literal characters."
+  },
+  "primary_entries": [
+    {
+      "label": "My Torrents",
+      "menu_id": "MainWindow.menu.view.mytorrents",
+      "source_mdi_id": "Library",
+      "source_accelerator": "Meta+1",
+      "linux_accelerator": "Ctrl+1",
+      "source_handler": "MenuFactory.addMyTorrentsMenuItem -> MDI.showEntryByID(Library)",
+      "close_policy": "setupSidebarClassic creates library entry with closeable=false",
+      "first_slice": "Activate existing split-table My Torrents screen from any main page; preserve table/filter/detail state, do not recreate the worker/profile lease."
+    },
+    {
+      "label": "My Tracker",
+      "menu_id": "MainWindow.menu.view.mytracker",
+      "source_mdi_id": "MyTrackerView",
+      "source_accelerator": "Meta+2",
+      "linux_accelerator": "Ctrl+2",
+      "source_handler": "MenuFactory.addMyTrackerMenuItem -> MDI.showEntryByID(MyTrackerView)",
+      "close_policy": "registered createEntry(builder,true), reopen by same ID after close",
+      "domain": "TRHostTorrent hosted/published tracker entries from core.getTrackerHost(); not per-download announce URLs and not the All Trackers screen.",
+      "first_slice": "Open a distinct clearly offline read-only page, using supplied generated host rows or an honest no-hosted-data-supplied state. Never start tracker hosting as a navigation side effect."
+    },
+    {
+      "label": "My Shares",
+      "menu_id": "MainWindow.menu.view.myshares",
+      "source_mdi_id": "MySharesView",
+      "source_accelerator": "Meta+3",
+      "linux_accelerator": "Ctrl+3",
+      "source_handler": "MenuFactory.addMySharesMenuItem -> MDI.showEntryByID(MySharesView)",
+      "close_policy": "registered createEntry(builder,true), reopen by same ID after close",
+      "domain": "ShareManager ShareResource objects, with file/directory/directory-contents sharing semantics; not a list of every completed download or payload file.",
+      "first_slice": "Open distinct clearly offline read-only supplied sharing view or unavailable empty state. No folder scan, drag/drop sharing, torrent creation, publishing or default share-manager initialization."
+    }
+  ],
+  "view_menu_source_order": [
+    "My Torrents",
+    "My Tracker",
+    "My Shares",
+    "Toolbar (checked)",
+    "Transfers Bar",
+    "Client Stats",
+    "Remote Pairing",
+    "Subscriptions",
+    "conditional Beta entry",
+    "plugin-provided View entries"
+  ],
+  "menu_scope_notes": [
+    "MainMenuV2 rebuilds View children on menu-show; MenuFactory attaches accelerators through KeyBindings. Native QAction lifetime must make Ctrl+1/2/3 active while the menu is closed, not create shortcuts only while showing the menu.",
+    "KeyBindings maps Meta/Cmd to platform primary modifier: Ctrl on Linux, Command on macOS. Localized/platform-specific accelerator overrides are supported; do not interpret source Meta as Linux Super.",
+    "All Peers/Detailed List/Device Manager calls are commented out in this classic View list. Console/Statistics/Speed Limits are Tools entries on Linux (View on macOS); Ctrl+4 and Ctrl+5 belong to Console and Statistics, not additional invented My... pages.",
+    "Toolbar toggles actual visibility and follows IconBar.enabled with listener removal on disposal. Remote Pairing/Subscriptions are service boundaries, not harmless equivalent local table actions."
+  ],
+  "mdi_navigation_contract": [
+    "showEntryByID delegates loadEntryByID(id,true,false,null). Existing entry is activated/reused, not duplicated; absent entries use registered factory/builder and become active.",
+    "TabbedMDI main constructor disables destroy-on-deactivate to retain main-view UI state. showEntry hides old and shows new; activating current entry re-shows/notifies rather than cloning it.",
+    "Main library is noncloseable. My Tracker and My Shares can close, release view subscriptions and reopen once by stable ID. User-initiated close selects a previous entry; this is navigation, never torrent removal or owner shutdown.",
+    "Main TabbedMDI tracks bounded selection history (64) and tabsauto.config open-tab state. This preview need not import/write real tabsauto.config; persistence must remain generated-profile-only until explicitly integrated.",
+    "Source keyboard handling includes Esc/Ctrl+F4 close, F6/Ctrl+Tab next tab and File close-tab Ctrl+W. Preserve current Cancel/Escape semantics during an active native operation; do not add an unconditional global Escape handler that bypasses cancellation/lifecycle rules."
+  ],
+  "bounded_screen_followups": [
+    {
+      "priority": 0,
+      "work": "Literal My Torrents and navigation actions",
+      "acceptance": "View first item My Torrents shows Ctrl+1; menu activation and shortcut return to same existing screen from My Tracker/My Shares. Repeated activation leaves one tab per stable ID and preserves filter/sort/selection."
+    },
+    {
+      "priority": 1,
+      "work": "My Tracker/My Shares distinct close/reopen navigation",
+      "acceptance": "Ctrl+2/3 and menu actions open/focus correct page, do not duplicate it; close/reopen works without canceling unrelated transfer/lease. Empty/unavailable state distinguishes no supplied generated rows from a real verified empty user service."
+    },
+    {
+      "priority": 2,
+      "work": "Owned read-only models with public generated snapshots",
+      "acceptance": "Tracker columns begin Name, Tracker, Status, Category, Passive, External, Persistent, Seeds, Peers (remaining announce/scrape/completion/byte counters only when genuinely supplied). Share columns follow Name, Type, Category, Tags, Persistent, Date. No invented healthy states, statistics, shares or trackers; source row lifecycle subscriptions are modeled safely before live integration."
+    },
+    {
+      "priority": 3,
+      "work": "Toolbar visibility and lightweight generated Transfers Bar",
+      "acceptance": "Toggle actual visible state with synchronized checkmark; auxiliary bar uses actual owned displayed telemetry or explicit offline/unknown values. No peer/service/network startup."
+    },
+    {
+      "priority": 4,
+      "work": "Client Stats or other service-backed pages",
+      "acceptance": "ClientStatsView aggregates peer-client observations and persists ClientStats.dat; qualify an owned supplied snapshot before claiming client statistics. Keep pairing, subscriptions and plugin views explicitly unavailable until their service contracts exist. This audit does not authorize those services."
+    }
+  ],
+  "acceptance_for_implementers": [
+    "Exercise Ctrl+1/2/3 from table, filter editor, General/Files and alternate main pages with menu closed; visible active page and focus match the action once.",
+    "Record main-page IDs separately from selected-torrent hash/generation. Pending detail completion may safely update its retained My Torrents page only; it cannot replace another active page or revive a closed auxiliary page.",
+    "Changing navigation does not acquire another profile lease, rebuild the session worker, join peers, read the original profile or mutate inventory/cache/payloads.",
+    "Repeated open/focus/close/reopen releases page-owned connections/subscriptions and avoids duplicate actions; unavailable destructive/share/host buttons never dispatch.",
+    "Automated model/action/keyboard tests and a source-bound manual compositor check remain future actual evidence. No app/build/test/process/network action was performed for this audit."
+  ],
+  "credit_limits": [
+    "No new SWT observation or screenshot",
+    "No native implementation/compile/UI result",
+    "No tracker hosting/sharing/peer collection",
+    "No source/native semantic equality or live-profile compatibility",
+    "No performance claim"
+  ],
+  "questions": "No user clarification needed: literal English My Torrents and Ctrl+1 are explicit. Technical decisions above bound the offline implementation."
+}

@@ -40,7 +40,7 @@ QLabel* field(QWidget* parent) {
 
 LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     incompleteTable_(new QTableView(this)), completeTable_(new QTableView(this)), activeTable_(incompleteTable_),
-    mainTabs_(new QTabWidget(this)), detailTabs_(new QTabWidget(this)), filter_(new QLineEdit(this)),
+    mainTabs_(new QTabWidget(this)), torrentsPage_(new QWidget(mainTabs_)), detailTabs_(new QTabWidget(this)), filter_(new QLineEdit(this)),
     splitter_(new QSplitter(Qt::Vertical, this)), incompleteCount_(new QLabel(this)), completeCount_(new QLabel(this)),
     generalName_(field(this)), generalState_(field(this)), generalSize_(field(this)), generalProgress_(field(this)),
     generalReceived_(field(this)), generalHash_(field(this)), previewStatus_(new QLabel(tr("Preview"), this)),
@@ -127,11 +127,12 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   connect(detailTabs_, &QTabWidget::currentChanged, this, [this](int index) {
     if (index == 1) { suppressAutomaticDetails_ = false; requestDetails(); }
   });
-  auto* library = new QWidget(mainTabs_);
+  auto* library = torrentsPage_;
+  library->setObjectName(QStringLiteral("classic-my-torrents-page"));
   auto* layout = new QVBoxLayout(library);
   layout->setContentsMargins(6, 4, 6, 4);
   auto* header = new QHBoxLayout;
-  auto* heading = new QLabel(tr("Library"), library);
+  auto* heading = new QLabel(tr("My Torrents"), library);
   heading->setAlignment(Qt::AlignCenter);
   header->addWidget(heading, 1);
   auto* filterLabel = new QLabel(tr("&Filter:"), library);
@@ -152,7 +153,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   content->setStretchFactor(1, 1);
   content->setSizes({540, 200});
   layout->addWidget(content);
-  mainTabs_->addTab(library, tr("Library"));
+  mainTabs_->addTab(library, tr("My Torrents"));
   setCentralWidget(mainTabs_);
   connect(filter_, &QLineEdit::textChanged, this, [this](const QString& value) {
     const auto hashes = selectedHashes();
@@ -213,6 +214,24 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   auto* quit = file->addAction(tr("&Quit"));
   quit->setShortcut(QKeySequence::Quit);
   connect(quit, &QAction::triggered, this, &QWidget::close);
+  auto* myTorrents = view->addAction(tr("My &Torrents"));
+  myTorrents->setObjectName(QStringLiteral("classic-my-torrents"));
+  myTorrents->setShortcut(QKeySequence(QStringLiteral("Ctrl+1")));
+  myTorrents->setShortcutContext(Qt::WindowShortcut);
+  connect(myTorrents, &QAction::triggered, this, &LibraryWindow::showMyTorrents);
+  auto* myTracker = unavailable(view, tr("My &Tracker"), QStringLiteral("my-tracker"), QStyle::SP_DriveNetIcon);
+  myTracker->setShortcut(QKeySequence(QStringLiteral("Ctrl+2")));
+  auto* myShares = unavailable(view, tr("My &Shares"), QStringLiteral("my-shares"), QStyle::SP_DirIcon);
+  myShares->setShortcut(QKeySequence(QStringLiteral("Ctrl+3")));
+  auto* toolbarVisibility = toolbar->toggleViewAction();
+  toolbarVisibility->setText(tr("Toolbar"));
+  toolbarVisibility->setObjectName(QStringLiteral("classic-show-toolbar"));
+  view->addAction(toolbarVisibility);
+  unavailable(view, tr("Transfers Bar"), QStringLiteral("transfer-bar"), QStyle::SP_ArrowUp);
+  unavailable(view, tr("Client Stats"), QStringLiteral("client-statistics"), QStyle::SP_FileDialogDetailedView);
+  unavailable(view, tr("Remote Pairing…"), QStringLiteral("remote-pairing"), QStyle::SP_DriveNetIcon);
+  unavailable(view, tr("Subscriptions"), QStringLiteral("subscriptions"), QStyle::SP_FileDialogListView);
+  view->addSeparator();
   refresh_ = view->addAction(style()->standardIcon(QStyle::SP_BrowserReload), tr("&Refresh"));
   refresh_->setObjectName(QStringLiteral("classic-refresh"));
   refresh_->setShortcut(QKeySequence(Qt::Key_F5));
@@ -229,7 +248,6 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   auto* focusFilter = view->addAction(tr("Filter torrents"));
   focusFilter->setShortcut(QKeySequence::Find);
   connect(focusFilter, &QAction::triggered, filter_, [this] { filter_->setFocus(); filter_->selectAll(); });
-  view->addAction(toolbar->toggleViewAction());
   torrent->addSeparator();
   continue_ = torrent->addAction(tr("&Continue"));
   continue_->setObjectName(QStringLiteral("classic-continue"));
@@ -269,6 +287,12 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   updateGeneral();
   updateCounts();
   setMessage(tr("Opening library…"));
+}
+
+void LibraryWindow::showMyTorrents() {
+  if (closing_) { return; }
+  mainTabs_->setCurrentWidget(torrentsPage_);
+  activeTable_->setFocus(Qt::ShortcutFocusReason);
 }
 
 void LibraryWindow::setOfflinePreview(bool offline) {

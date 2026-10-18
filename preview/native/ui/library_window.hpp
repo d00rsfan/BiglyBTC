@@ -54,6 +54,7 @@ private:
   QStringList selectedHashes() const;
   void restoreSelection(const QStringList&, bool initial = false);
   void activate(QTableView*);
+  void showMyTorrents();
   void updateGeneral();
   void updateCounts();
   void updateActions();
@@ -65,6 +66,7 @@ private:
   QTableView* completeTable_;
   QTableView* activeTable_;
   QTabWidget* mainTabs_;
+  QWidget* torrentsPage_;
   QTabWidget* detailTabs_;
   QLineEdit* filter_;
   QSplitter* splitter_;
