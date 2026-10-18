@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "scope": "Classic Close Tab for three known views and retained My Torrents reopening; saved-page one-time font width defaults",
+  "upstream_repository": "https://github.com/BiglySoftware/BiglyBT",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_repository": "https://github.com/d00rsfan/BiglyBTC",
+  "native_commit": "4bfa2d85c9154ac3ede33c8298d2d7209d6589c5",
+  "pushed": true,
+  "native_units_passed": 32,
+  "native_units_skipped": 0,
+  "close_tab_qt_rows_passed": 16,
+  "sanitized_lifecycle_checks_passed": 3,
+  "sanitized_qt_rows": {
+    "classic-close-tab-lifecycle": 16,
+    "saved-services-bridge-lifecycle": 17,
+    "saved-services-view-navigation": 19
+  },
+  "sanitizers": "GCC16 Debug ASan/UBSan;detect_leaks=1;halt_on_error=1",
+  "three_view_smoke_scales_passed": [
+    1,
+    1.5,
+    2
+  ],
+  "preview_smoke_qt_rows_per_scale": 3,
+  "visual_offscreen_captures_reviewed": true,
+  "manual_compositor_credit": false,
+  "java_runtime_equality_credit": 0,
+  "source_sha256": {
+    "preview/README.md": "9b67f3e3be5236c21221b346c464b1889a673b611f301b5b99050068ab1e3ab6",
+    "preview/docs/classic-close-tab-contract.json": "aa558d5335e13a6ef3dd143d0627a2f6b6bdfc03d38570c8af51d4479120eb6e",
+    "preview/docs/classic-closeability-correction.json": "82a0f01a27c842ca6921868e9d10f1f80d7d0acdc24880e0790a50b86c012806",
+    "preview/native/packaging/preview_smoke.cpp": "52c790a8fbab667cd85fec4ab2f4ac18af4c33a102a8f0fa02879a7453e2d414",
+    "preview/native/tests/CMakeLists.txt": "58a95bd4f3128bbd0a509026ef1944694feafa779a43ae540d557ccdb61c6ad7",
+    "preview/native/tests/classic_close_tab_tests.cpp": "15a923fd5505550c01edd6e2a465a8e3405b9a4d9ed7b4e1289d1cb187e344c0",
+    "preview/native/tests/navigation_tests.cpp": "f78865828d432fdb7e891e72dcc862db76f002ab881f6c892213877695c43fa9",
+    "preview/native/tests/saved_services_navigation_tests.cpp": "5d9689192f4fd693b24986a11d0912f9538ce3ae6047230ba0f1cd79c2ef1f5f",
+    "preview/native/ui/library_window.cpp": "5d9ac47ea40b9d6ce2bb32739daecb977daad817fa07d2e22fe7d1b13ebe76a6",
+    "preview/native/ui/library_window.hpp": "8f64bcb083935e8064ef6ea9b0952ef1201c7d2102835bc26c9c36a3d52e3151",
+    "preview/native/ui/saved_service_pages.cpp": "931e08d0fb4e3d3693368e68442d7d39ab149fcd3b2e66f27ce509ba118f7d3b"
+  },
+  "normal_profile_access": false,
+  "processes_signaled": false,
+  "hosted_desktop": {
+    "run": 39116079560,
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39116079560",
+    "status": "success",
+    "native_units_passed": 32,
+    "all_three_view_captures": true
+  },
+  "hosted_sdk": {
+    "run": 39116079517,
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39116079517",
+    "status": "success"
+  },
+  "limitations": [
+    "Native retained widgets differ from original view destruction/recreation",
+    "Qt adjacent-tab selection differs from original MDI history",
+    "Full plugin close-veto/persisted-view/window/tray lifecycle remains open",
+    "Full client/profile/performance compatibility remains open"
+  ],
+  "milestone_tag": "milestone-classic-tabs-20261018"
+}
