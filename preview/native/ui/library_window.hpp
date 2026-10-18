@@ -1,0 +1,99 @@
+#pragma once
+
+#include "library_model.hpp"
+#include "file_model.hpp"
+
+#include <QMainWindow>
+
+class QAction;
+class QLabel;
+class QSortFilterProxyModel;
+class QTableView;
+class QTabWidget;
+class QLineEdit;
+class QSplitter;
+class QEvent;
+
+namespace biglybtc::ui {
+
+class LibraryWindow final : public QMainWindow {
+  Q_OBJECT
+public:
+  LibraryWindow();
+  LibraryModel& model() { return *model_; }
+  QTableView& table() { return *activeTable_; }
+  QTableView& incompleteTable() { return *incompleteTable_; }
+  QTableView& completeTable() { return *completeTable_; }
+  QTabWidget& mainTabs() { return *mainTabs_; }
+  QTabWidget& detailTabs() { return *detailTabs_; }
+  QLineEdit& filter() { return *filter_; }
+  QSplitter& splitter() { return *splitter_; }
+  QAction& continueAction() { return *continue_; }
+  QAction& cancelAction() { return *cancel_; }
+  QAction& filesAction() { return *files_; }
+  QAction& paddingAction() { return *padding_; }
+  FileModel& filesModel() { return *filesModel_; }
+  QTableView& filesTable() { return *filesTable_; }
+  void setPresentation(const Presentation&);
+  void setTelemetry(const Telemetry&);
+  void setDetails(const Details&);
+  void setBusy(bool);
+  void setMessage(const QString&);
+  void setOfflinePreview(bool);
+signals:
+  void refreshRequested();
+  void continueRequested(biglybtc::ui::Target);
+  void detailsRequested(biglybtc::ui::Target);
+  void cancelRequested();
+protected:
+  void closeEvent(QCloseEvent*) override;
+  bool eventFilter(QObject*, QEvent*) override;
+private:
+  std::optional<Target> selected() const;
+  std::optional<Target> actionTarget() const;
+  QStringList selectedHashes() const;
+  void restoreSelection(const QStringList&, bool initial = false);
+  void activate(QTableView*);
+  void updateGeneral();
+  void updateCounts();
+  void updateActions();
+  void selectionChanged();
+  void requestDetails(bool force = false);
+  void popup(QTableView*, const QPoint&);
+  LibraryModel* model_;
+  QTableView* incompleteTable_;
+  QTableView* completeTable_;
+  QTableView* activeTable_;
+  QTabWidget* mainTabs_;
+  QTabWidget* detailTabs_;
+  QLineEdit* filter_;
+  QSplitter* splitter_;
+  QLabel* incompleteCount_;
+  QLabel* completeCount_;
+  QLabel* generalName_;
+  QLabel* generalState_;
+  QLabel* generalSize_;
+  QLabel* generalProgress_;
+  QLabel* generalReceived_;
+  QLabel* generalHash_;
+  QLabel* previewStatus_;
+  QLabel* message_;
+  FileModel* filesModel_;
+  QSortFilterProxyModel* filesProxy_;
+  QTableView* filesTable_;
+  QAction* continue_;
+  QAction* cancel_;
+  QAction* refresh_;
+  QAction* files_;
+  QAction* padding_;
+  std::optional<Target> detailsRequestedFor_;
+  std::optional<int> restoreFileIndex_;
+  bool busy_ = false;
+  bool closing_ = false;
+  bool suppressAutomaticDetails_ = false;
+  bool updating_ = false;
+  bool presented_ = false;
+  bool contextOpen_ = false;
+  std::optional<Target> contextTarget_;
+};
+} // namespace biglybtc::ui

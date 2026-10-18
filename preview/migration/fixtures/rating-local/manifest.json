@@ -1,0 +1,59 @@
+{
+  "upstream_commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+  "source_sha256": {
+    "com/aelitis/azureus/plugins/rating/updater/RatingsUpdater.java": "a5a74e1ccfdc81eefb3b30e8cd12a7c51f420d7e77936c9a2044e8853a299ba6"
+  },
+  "method_sha256": {
+    "LOAD": "fe3ea2eeaa03d24d6afa8033c52e5e64f5003f8e47bf9e878e88342d7cb68003",
+    "STORE": "1208b2ab33f16a30c0a2c9937ff352d6f43b4070d3a698fe1bad692d216d81ce"
+  },
+  "harness_sha256": "439431bca265364cb07f13448d58a064cedd90232da3bca84864bfb72f24090c",
+  "qualified_data_manifest_sha256": "15b053e883add4e9fcfcbd942e6b59d6d9b397055ebf1b72b9404539325ba79b",
+  "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+  "helper_class_sha256": {
+    "RatingLocalOracle.class": "b014f8f1978f939360ee8caaccea20820b91bbd79ce8eedd2987fc7417a98411",
+    "RatingLocalOracle$Download.class": "b605998c153c82c7cdf1324e727ab51a5864fc11024cf06f1d78e6b35eb6e311",
+    "RatingLocalOracle$Plugin.class": "97c1a402ccf910bf19248a0d879a67fd5a58c4ba568b07fcce76044ebac6299d"
+  },
+  "files_sha256": {
+    "commands.txt": "ecc190391ca0d61c34105151b7f607896082bcf2f29ccacc9c27c437b1228697",
+    "expected.txt": "71af01ae1c4e5496f1e3449b09609d6d262df2de93926ef7e1a20261c452bfed",
+    "digit-zeroes.txt": "bbbe2b6c847a90702a6b37ab63d445dcee1a0daa4132d33af3f87f94e8944dfa",
+    "runtime.txt": "a3bdaf447261e3dfc0e8663de929b21a5708f56222d3f5e5424f92b917aaeba2"
+  },
+  "observations": 70000,
+  "exhaustive_bmp_cases": 65536,
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+    "-XX:ActiveProcessorCount=2",
+    "-Djava.security.manager=ReferenceFence",
+    "-Dbiglybtc.test.root=/tmp/biglybtc-rating-local-oracle-ju3bckau",
+    "-Duser.home=/tmp/biglybtc-rating-local-oracle-ju3bckau",
+    "-Dazureus.config.path=/tmp/biglybtc-rating-local-oracle-ju3bckau/profile",
+    "-cp",
+    "/tmp/biglybtc-rating-local-oracle-ju3bckau/classes:/tmp/biglybtc-rating-oracle-s0t_5rzb/classes:/tmp/biglybtc-oracle/classes",
+    "RatingLocalOracle",
+    "/tmp/biglybtc-rating-local-oracle-ju3bckau"
+  ],
+  "compile_command": [
+    "nice",
+    "-n",
+    "5",
+    "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+    "-J-XX:ActiveProcessorCount=2",
+    "--release",
+    "8",
+    "-encoding",
+    "UTF-8",
+    "-cp",
+    "/tmp/biglybtc-rating-local-oracle-ju3bckau/classes:/tmp/biglybtc-rating-oracle-s0t_5rzb/classes:/tmp/biglybtc-oracle/classes",
+    "-d",
+    "/tmp/biglybtc-rating-local-oracle-ju3bckau/classes",
+    "/tmp/biglybtc-rating-local-oracle-ju3bckau/source/RatingLocalOracle.java"
+  ],
+  "work": "/tmp/biglybtc-rating-local-oracle-ju3bckau",
+  "scope": "Exact original load/store bodies and qualified original RatingData, supplied Download/Plugin/getNick/setter/publication recorder only. Java17 UTF16/Integer.parseInt including all BMP units; no normal updater, attribute file I/O, DDB, timers or network."
+}

@@ -1,0 +1,50 @@
+#pragma once
+
+#include "biglybtc/executor.hpp"
+#include "library_model.hpp"
+
+#include <QObject>
+
+#include <filesystem>
+#include <atomic>
+#include <mutex>
+
+class QTimer;
+
+namespace biglybtc::app {
+
+class SessionBridge final : public QObject {
+  Q_OBJECT
+public:
+  explicit SessionBridge(QObject* parent = nullptr);
+  ~SessionBridge() override;
+  bool open(std::filesystem::path profile, unsigned short ownedPeerPort);
+  bool refresh();
+  bool details(ui::Target target);
+  bool continueDownload(ui::Target target);
+  void cancel();
+  bool busy() const { return busy_; }
+signals:
+  void snapshotReady(biglybtc::ui::Presentation);
+  void progressReady(biglybtc::ui::Telemetry);
+  void detailsReady(biglybtc::ui::Details);
+  void busyChanged(bool);
+  void messageReady(QString);
+private:
+  struct Host;
+  bool dispatch(std::move_only_function<void(std::stop_token)> operation);
+  void ready(ui::Presentation snapshot, QString message = {});
+  void failed(QString message);
+  void progress(ui::Telemetry update);
+  std::unique_ptr<Host> host_;
+  std::optional<core::Ticket> current_;
+  std::shared_ptr<std::atomic_bool> completionPosted_;
+  QTimer* completionMonitor_ = nullptr;
+  std::mutex progressMutex_;
+  std::optional<ui::Telemetry> latestProgress_;
+  bool deliveryQueued_ = false;
+  bool busy_ = false;
+  // Destroy/join this worker before host/lease, tickets, mutex or QObject context.
+  core::Executor worker_{8};
+};
+} // namespace biglybtc::app

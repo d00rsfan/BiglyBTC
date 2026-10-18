@@ -1,0 +1,106 @@
+name: Native desktop preview unit and smoke tests
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'preview/**'
+      - '.github/workflows/native-preview.yml'
+      - 'migration/tools/hosted_preview_dependencies.sh'
+  pull_request:
+    paths:
+      - 'preview/**'
+      - '.github/workflows/native-preview.yml'
+      - 'migration/tools/hosted_preview_dependencies.sh'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: native-preview-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  preview:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 45
+    env:
+      QT_QPA_PLATFORM: offscreen
+      TMPDIR: /tmp
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned compiler, libtorrent and Qt 6.12.0 SDK
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -m 700 "$RUNNER_TEMP/biglybtc-preview-ci-evidence"
+          {
+            printf 'BUILD_DIR=%s/biglybtc-preview-ci-build\n' "$RUNNER_TEMP"
+            printf 'EVIDENCE_DIR=%s/biglybtc-preview-ci-evidence\n' "$RUNNER_TEMP"
+          } >> "$GITHUB_ENV"
+          bash migration/tools/hosted_preview_dependencies.sh --install bundled-qt "$RUNNER_TEMP/biglybtc-preview-ci-dependencies"
+      - name: Configure and build the desktop preview
+        shell: bash
+        run: |
+          set -euo pipefail
+          # DEB enables the runtime planner and smoke target; no CPack/package is run.
+          /usr/bin/cmake -S preview/native -B "$BUILD_DIR" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DCMAKE_CXX_COMPILER="$BIGLYBTC_CXX" \
+            -DCMAKE_PREFIX_PATH="$BIGLYBTC_QT_PREFIX;/usr" \
+            -DCMAKE_INSTALL_PREFIX=/usr \
+            -DBIGLYBTC_LOCAL_ENGINE=ON \
+            -DBIGLYBTC_DESKTOP=ON \
+            -DBIGLYBTC_DEB=ON \
+            -DBIGLYBTC_BUNDLE_QT=ON \
+            '-DBIGLYBTC_DEB_CONTACT=d00rsfan <d00rsfan@users.noreply.github.com>' \
+            2>&1 | tee "$EVIDENCE_DIR/configure.log"
+          nice -n 5 /usr/bin/cmake --build "$BUILD_DIR" --parallel 2 \
+            2>&1 | tee "$EVIDENCE_DIR/build.log"
+      - name: Run offline unit tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          export QT_PLUGIN_PATH="$BIGLYBTC_QT_PREFIX/plugins"
+          export QT_QPA_PLATFORM_PLUGIN_PATH="$BIGLYBTC_QT_PREFIX/plugins/platforms"
+          /usr/bin/ctest --test-dir "$BUILD_DIR" -L unit --no-tests=error \
+            --output-on-failure --output-junit "$EVIDENCE_DIR/unit-tests.xml" \
+            2>&1 | tee "$EVIDENCE_DIR/unit-tests.log"
+      - name: Run actual offline preview smoke and capture classic view
+        shell: bash
+        run: |
+          set -euo pipefail
+          export QT_PLUGIN_PATH="$BIGLYBTC_QT_PREFIX/plugins"
+          export QT_QPA_PLATFORM_PLUGIN_PATH="$BIGLYBTC_QT_PREFIX/plugins/platforms"
+          preview_root=$(python3 -c 'import uuid; print("/tmp/biglybtc-preview-" + uuid.uuid4().hex)')
+          test ! -e "$preview_root"
+          printf '%s\n' "$preview_root" > "$EVIDENCE_DIR/sample-root.txt"
+          python3 preview/native/packaging/preview.py --prepare "$preview_root" \
+            2>&1 | tee "$EVIDENCE_DIR/sample-preparation.log"
+          mkdir -m 700 "$preview_root/xdg-config" "$preview_root/xdg-cache" "$preview_root/runtime"
+          export XDG_CONFIG_HOME="$preview_root/xdg-config"
+          export XDG_CACHE_HOME="$preview_root/xdg-cache"
+          export XDG_RUNTIME_DIR="$preview_root/runtime"
+          export BIGLYBTC_PREVIEW_PROFILE="$preview_root/profile"
+          export BIGLYBTC_PREVIEW_CAPTURE="$preview_root/classic-preview.png"
+          "$BUILD_DIR/biglybtc-preview-smoke" -o -,txt \
+            2>&1 | tee "$EVIDENCE_DIR/preview-smoke.txt"
+          cp -- "$preview_root/classic-preview.png" "$EVIDENCE_DIR/classic-preview.png"
+      - name: Preserve test, screenshot and dependency evidence
+        if: always()
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: native-preview-ubuntu-26.04-gcc
+          path: |
+            ${{ runner.temp }}/biglybtc-preview-ci-evidence
+            ${{ runner.temp }}/biglybtc-preview-ci-build/CMakeCache.txt
+            ${{ runner.temp }}/biglybtc-preview-ci-build/CTestTestfile.cmake
+            ${{ runner.temp }}/biglybtc-preview-ci-build/Testing/Temporary
+            ${{ runner.temp }}/biglybtc-preview-ci-build/qt-runtime.json
+            ${{ runner.temp }}/biglybtc-preview-ci-dependencies/*.txt
+            ${{ runner.temp }}/biglybtc-preview-ci-dependencies/*.tsv
+            ${{ runner.temp }}/biglybtc-preview-ci-dependencies/*.log
+            ${{ runner.temp }}/biglybtc-preview-ci-dependencies/*.env
+            ${{ runner.temp }}/biglybtc-preview-ci-dependencies/qt-archives-SHA256SUMS
+            ${{ runner.temp }}/biglybtc-preview-ci-dependencies/qt-Updates*.xml
+          if-no-files-found: warn
+          retention-days: 7

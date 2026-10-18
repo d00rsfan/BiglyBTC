@@ -1,0 +1,2912 @@
+{
+  "schema": 1,
+  "repository": "https://github.com/d00rsfan/BiglyBTC",
+  "private_source_commit": "eb7bb0f463d4ae40d6099e13d9f84941654fd606",
+  "destination_base_commit": "139e62038b1511bd343330a039f42a61f8f9132f",
+  "original_biglybt_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "scope": "Offline generated-profile native preview source milestone; not full client/plugin parity or a binary release",
+  "root_sdk_unchanged": {
+    "CMakeLists.txt": "009e619cac5bbdf7b315352669899426d40f67133de1efdd525045e45bfd4995",
+    "SOURCE_PROVENANCE.json": "b5d6cacc666c22893b2922c00215ace79221f1d596ebe16788f21c8366952fed"
+  },
+  "preserved_existing_files_sha256": {
+    ".github/workflows/plugin-sdk.yml": "e3000fd72c283348e7e1846e7b64b61898e39e3800e4646ffefcef0d26b0e183",
+    "CMakeLists.txt": "009e619cac5bbdf7b315352669899426d40f67133de1efdd525045e45bfd4995",
+    "LICENSE": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73",
+    "README.md": "a77860e1d445279c55854017fd3d1ea85b2083d4109acd161afb3c1b2e516362",
+    "SOURCE_PROVENANCE.json": "b5d6cacc666c22893b2922c00215ace79221f1d596ebe16788f21c8366952fed",
+    "core/BiglyBTCCoreConfig.cmake.in": "cd41ff91c094f97798b9ce8e1988a4a805d0ddd90c99c8feb45223b033e1c087",
+    "core/CMakeLists.txt": "bd0e3c00533497d4ad524bb4ff82adf26e1f353a24a6f7b5c5ff53cf94a64d09",
+    "core/COPYING": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73",
+    "core/NOTICE.md": "134ce136c10d24a9fe87da3e3502cf03f8e641578f699b84a68b6b6f3907cf63",
+    "core/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "core/include/biglybtc/bencode.hpp": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+    "core/include/biglybtc/executor.hpp": "d2afcc590573e64bce376aadc42051198353e4c79c5f69f8a2452ab5a7d3d8bc",
+    "core/include/biglybtc/file_policy.hpp": "0d199f329d775783d9f4195ba6e14ff660b410ce4bfc555c4c55b4eaa43bff46",
+    "core/include/biglybtc/library.hpp": "8ad4e7f5346300fdc03c6318d629b6185874d35109511ca445609639b7168875",
+    "core/include/biglybtc/state_cache.hpp": "036be2d5a02e1cab9be638496e7b066ef13619a22443ea508a3d583f8f5dcd15",
+    "core/include/biglybtc/torrent_layout.hpp": "59accc489872b0f69444da51cdd2a79aeaa0510deeaf1a01434aab2b8699a775",
+    "core/src/bencode.cpp": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08",
+    "core/src/executor.cpp": "bd3adadaec6e4f48c0ffbb8ffc77e2c67c15296302105a73e984f58e4e8d7613",
+    "core/src/file_policy.cpp": "a50ae3dfcb3d75d9c3220db803823bf91a7f4daaf40ee54f7c325bda7d6a764a",
+    "core/src/library.cpp": "3ba21404a77e0e3c9e23cbf267be130609598ed6646693df7c4f656306895348",
+    "core/src/state_cache.cpp": "b73688291e949eb592b0e12281e79bf19dc1000a4f5b9d80f6a06a63238e4fc2",
+    "core/src/torrent_layout.cpp": "58e6961c5136d1a5f9adf860748a9b3e645fe0ff05ccb50836f339a636ce072d",
+    "plugin-sdk/.gitignore": "862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793",
+    "plugin-sdk/CMakeLists.txt": "33616c6a6f7f5757015f30adc9ad15f1163e70f8283d8103dc4e3d982819b426",
+    "plugin-sdk/LICENSE": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73",
+    "plugin-sdk/README.md": "373b1ba28bc2342d4a871ae069ccdecc4860f68e14567656d52814021ddf3e56",
+    "plugin-sdk/include/biglybtc/plugin.h": "119da17cfe1147e786d19bc84401a7e2f9a6d71ee256f6a6307efe8ba0d7b552",
+    "plugin-sdk/include/biglybtc/plugin_host.hpp": "f4fc41a44b1b9f10106fb66b7efecb517d66c0a9e7b5ab8e1579236d7daace99",
+    "plugin-sdk/include/biglybtc/scheduler.h": "54675a9fffa63923111c037cf5b4711d548a614e4e0760edb1c3bf990f97fc46",
+    "plugin-sdk/src/host.cpp": "ee5c7a9904c70edaf9dac47223cbd31ab8ee6d25683643d2486a97ab9289d0e3",
+    "plugin-sdk/tests/abi.c": "54aa3646f34b0f076d8af9bbc70113450d6b16daf743c942ed84bbd206e50885",
+    "plugin-sdk/tests/host.cpp": "9bdfdbcdd7f85fe0822e1ddedd6e2ab6c3b2e7afa13bb5cd8d9c06edd3f84a10",
+    "plugin-sdk/tests/module.c": "87ce79175d258b27cb019a337666593c9b69b278a3ef7952700d371c17e2d25b",
+    "plugin-sdk/tests/store_test.py": "41ce00e21834d40fef4565f0065ca8953cf9491687726145e3dc4ea2556149f8",
+    "plugin-sdk/tools/plugin_store.py": "a9a4ae4ad0ce89f4c8c9d91fda226d0413e32d834046f3b0b7c0c838cf1ed78a"
+  },
+  "files": {
+    ".github/workflows/biglybtc-linux-deb.yml": {
+      "source": ".github/workflows/biglybtc-linux-deb.yml",
+      "source_git_blob": "ce038c0985eb86530bf0cfeaa56699d61ac6935c",
+      "sha256": "b88eeb7ab580ddd0792ebd386e203990aec67f3a335b167155809d7cf805e2bb"
+    },
+    "preview/LICENSE": {
+      "source": "LICENSE",
+      "source_git_blob": "23cb790338e191e29205d6f4123882c0583ef8eb",
+      "sha256": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73"
+    },
+    "preview/migration/fixtures/mldht-cache/case-000.cache": {
+      "source": "migration/fixtures/mldht-cache/case-000.cache",
+      "source_git_blob": "3093bb3594d6f6f4cf5e80b0a08f7739d965b681",
+      "sha256": "0cc5e6dcff65db159883ab54035aa8106ef02099083a4d39be82251c61d3efb7"
+    },
+    "preview/migration/fixtures/mldht-cache/case-000.expected": {
+      "source": "migration/fixtures/mldht-cache/case-000.expected",
+      "source_git_blob": "fd7a29588d60b5305a3adad0f4d5cf01a1ca0d4a",
+      "sha256": "8c34e24a25db20e377aa03842fa35c22aabd837bdd13cfeb25aab1e66f8f2015"
+    },
+    "preview/migration/fixtures/mldht-cache/case-001.cache": {
+      "source": "migration/fixtures/mldht-cache/case-001.cache",
+      "source_git_blob": "b9507cf9c28b05eb8f036f955980cf12f02db9fc",
+      "sha256": "48158aece56fdebb2c5344fbd700a4fe3129562286e37b934e6ec3f54d261071"
+    },
+    "preview/migration/fixtures/mldht-cache/case-001.expected": {
+      "source": "migration/fixtures/mldht-cache/case-001.expected",
+      "source_git_blob": "c0586f9c4e8ea68a5dd643e1d10c701cfb73cc3d",
+      "sha256": "ed471b65ac338568dd728b970823460dc8511d3c1189e2877c0cc5349912579d"
+    },
+    "preview/migration/fixtures/mldht-cache/case-002.cache": {
+      "source": "migration/fixtures/mldht-cache/case-002.cache",
+      "source_git_blob": "a8bbe1041c7640a425b828006c35c6c8c89ba554",
+      "sha256": "c2ccdf7cb833d0c3af85b4bf25cebde9c601fc7bebfd685754235c8eb0b5db8e"
+    },
+    "preview/migration/fixtures/mldht-cache/case-002.expected": {
+      "source": "migration/fixtures/mldht-cache/case-002.expected",
+      "source_git_blob": "79cb3b1ae3c9b0e273668320436a59e1cd62180f",
+      "sha256": "ac0fa176a51162cbe57f7cb8aa3377adcded59cb7d7dcca29ba0b100dbe8f208"
+    },
+    "preview/migration/fixtures/mldht-cache/case-003.cache": {
+      "source": "migration/fixtures/mldht-cache/case-003.cache",
+      "source_git_blob": "2064de8879c4ad1000c0e57143ad027ffbc709af",
+      "sha256": "62c9d57feae1433fe2c46ef340bf1439a26e5b3abc68131e4fd4395b9e7ab65b"
+    },
+    "preview/migration/fixtures/mldht-cache/case-003.expected": {
+      "source": "migration/fixtures/mldht-cache/case-003.expected",
+      "source_git_blob": "068097d685db40d3b52e8618a1a171debca9119c",
+      "sha256": "8e042c233304935d289d673d59eb817ea5d84f8c4e3747a85538cf66f84d7c75"
+    },
+    "preview/migration/fixtures/mldht-cache/case-004.cache": {
+      "source": "migration/fixtures/mldht-cache/case-004.cache",
+      "source_git_blob": "889453f48a6f45b59530e523698d4b147cf25c35",
+      "sha256": "6670fcbb1218854df21013f39085d1015da5d5aa8fb2af13fc3d06eba7750a2c"
+    },
+    "preview/migration/fixtures/mldht-cache/case-004.expected": {
+      "source": "migration/fixtures/mldht-cache/case-004.expected",
+      "source_git_blob": "6dc80b322c7e63d5ff84bc65c5dac38e4ec1756b",
+      "sha256": "a2070138a93ad03691e0d6aff44309897603506e01afba2d5be7927d1a8fe713"
+    },
+    "preview/migration/fixtures/mldht-cache/case-005.cache": {
+      "source": "migration/fixtures/mldht-cache/case-005.cache",
+      "source_git_blob": "a968b5cfae2c585b1c82c9dc5d2442a2754a407e",
+      "sha256": "4ff4acd77e7f61d641d7291fede690f7cc428a1a78ec771787440e9fa8282bd8"
+    },
+    "preview/migration/fixtures/mldht-cache/case-005.expected": {
+      "source": "migration/fixtures/mldht-cache/case-005.expected",
+      "source_git_blob": "6dc80b322c7e63d5ff84bc65c5dac38e4ec1756b",
+      "sha256": "a2070138a93ad03691e0d6aff44309897603506e01afba2d5be7927d1a8fe713"
+    },
+    "preview/migration/fixtures/mldht-cache/case-006.cache": {
+      "source": "migration/fixtures/mldht-cache/case-006.cache",
+      "source_git_blob": "d08478a36b952ca5de19be9885fb0964d3f03824",
+      "sha256": "c04f006e4c76a806bfa20f26dce62b726e95c034476b37cf815796d9f14defac"
+    },
+    "preview/migration/fixtures/mldht-cache/case-006.expected": {
+      "source": "migration/fixtures/mldht-cache/case-006.expected",
+      "source_git_blob": "c0586f9c4e8ea68a5dd643e1d10c701cfb73cc3d",
+      "sha256": "ed471b65ac338568dd728b970823460dc8511d3c1189e2877c0cc5349912579d"
+    },
+    "preview/migration/fixtures/mldht-cache/case-007.cache": {
+      "source": "migration/fixtures/mldht-cache/case-007.cache",
+      "source_git_blob": "3c6c646e7e21a534ad50917a2672698947dc3d38",
+      "sha256": "25cc6b0822c72b8a432f385e42a772f180dad878ba366958556c6fa45a5f8cb8"
+    },
+    "preview/migration/fixtures/mldht-cache/case-007.expected": {
+      "source": "migration/fixtures/mldht-cache/case-007.expected",
+      "source_git_blob": "79cb3b1ae3c9b0e273668320436a59e1cd62180f",
+      "sha256": "ac0fa176a51162cbe57f7cb8aa3377adcded59cb7d7dcca29ba0b100dbe8f208"
+    },
+    "preview/migration/fixtures/mldht-cache/case-008.cache": {
+      "source": "migration/fixtures/mldht-cache/case-008.cache",
+      "source_git_blob": "9ad79aae63082b2d3c17ac98af4449aec1e448cc",
+      "sha256": "173e7951928fade139ac7164e4107c7624db79ea1344d4627a5332f04d84a98d"
+    },
+    "preview/migration/fixtures/mldht-cache/case-008.expected": {
+      "source": "migration/fixtures/mldht-cache/case-008.expected",
+      "source_git_blob": "c0586f9c4e8ea68a5dd643e1d10c701cfb73cc3d",
+      "sha256": "ed471b65ac338568dd728b970823460dc8511d3c1189e2877c0cc5349912579d"
+    },
+    "preview/migration/fixtures/mldht-cache/case-009.cache": {
+      "source": "migration/fixtures/mldht-cache/case-009.cache",
+      "source_git_blob": "8b9b8ba61ac7509b884811e44c848dad1f3a2eb2",
+      "sha256": "ee7f8c9294ee355e50c73fab222aad67ce8092adad1ef3d09b9741dec93cdec8"
+    },
+    "preview/migration/fixtures/mldht-cache/case-009.expected": {
+      "source": "migration/fixtures/mldht-cache/case-009.expected",
+      "source_git_blob": "fd7a29588d60b5305a3adad0f4d5cf01a1ca0d4a",
+      "sha256": "8c34e24a25db20e377aa03842fa35c22aabd837bdd13cfeb25aab1e66f8f2015"
+    },
+    "preview/migration/fixtures/mldht-cache/case-010.cache": {
+      "source": "migration/fixtures/mldht-cache/case-010.cache",
+      "source_git_blob": "68261459ffb1861e163db1800f564e76ded40d71",
+      "sha256": "a8647e002a4685b4d05369ca40db2d832eb263f4b8ed6745c51758cf82890f15"
+    },
+    "preview/migration/fixtures/mldht-cache/case-010.expected": {
+      "source": "migration/fixtures/mldht-cache/case-010.expected",
+      "source_git_blob": "fb9af0155834b632a982f64b8de813162e24a8ab",
+      "sha256": "9c936cd3ce59697400293462574d4861e8581bd26a077142aea6f0d88cdf5db6"
+    },
+    "preview/migration/fixtures/mldht-cache/case-011.cache": {
+      "source": "migration/fixtures/mldht-cache/case-011.cache",
+      "source_git_blob": "b9656e9f27921d4c745d1ef961fb109869485a50",
+      "sha256": "6d6a6156829dfa48358853409a489d3c7c69506870a2c296c3667cd54f45db89"
+    },
+    "preview/migration/fixtures/mldht-cache/case-011.expected": {
+      "source": "migration/fixtures/mldht-cache/case-011.expected",
+      "source_git_blob": "7f003819bc76dc3e5e84b174acff8eec8b57717a",
+      "sha256": "78ae7a2278ec1ac93ac8381e0db34e1f4c557d7b803d602c21fb440a12778eb6"
+    },
+    "preview/migration/fixtures/mldht-cache/case-012.cache": {
+      "source": "migration/fixtures/mldht-cache/case-012.cache",
+      "source_git_blob": "eb3575f7372baa01b1583d2390dee10f3c8ed34d",
+      "sha256": "e6c1b021f259166ce52a5c5a8f450c72ac7b242b9038d23176f60cea924274c6"
+    },
+    "preview/migration/fixtures/mldht-cache/case-012.expected": {
+      "source": "migration/fixtures/mldht-cache/case-012.expected",
+      "source_git_blob": "b6536fb3175ed31e574a57a32a9e2b2a4b407885",
+      "sha256": "116ca72a4421c4597ff5fe83935e8697a5fc4acee2342be2f59aaff1fa01d596"
+    },
+    "preview/migration/fixtures/mldht-cache/case-013.cache": {
+      "source": "migration/fixtures/mldht-cache/case-013.cache",
+      "source_git_blob": "9fff4cc1e4dfa4778c18a179d34e9bbf16d13118",
+      "sha256": "6510896ed8cc0d5a1250ae8da0712e1bdcdc7ca72f3b2b7d6c29ffa8cd0fc782"
+    },
+    "preview/migration/fixtures/mldht-cache/case-013.expected": {
+      "source": "migration/fixtures/mldht-cache/case-013.expected",
+      "source_git_blob": "05de55e469c262325220ec46c7e9221c47350f49",
+      "sha256": "1c1feccec4a17851b050398aade6d748a751e1436b0c3ece73b722601af20441"
+    },
+    "preview/migration/fixtures/mldht-cache/case-014.cache": {
+      "source": "migration/fixtures/mldht-cache/case-014.cache",
+      "source_git_blob": "e2cae3d18d5cf43436c8872c4d08b808a2417aee",
+      "sha256": "e6f6baafba13a8d819e2aae16f23eb266697e9c9f35eda3cd7fe7726db6b478e"
+    },
+    "preview/migration/fixtures/mldht-cache/case-014.expected": {
+      "source": "migration/fixtures/mldht-cache/case-014.expected",
+      "source_git_blob": "f9738ea6fdb834f2141bd01545c0693bd5aebda9",
+      "sha256": "1ad96c0fbe05dbecc162edde0d24483d191d42af4ef11dfc8a3eee8923d85c9f"
+    },
+    "preview/migration/fixtures/mldht-cache/case-015.cache": {
+      "source": "migration/fixtures/mldht-cache/case-015.cache",
+      "source_git_blob": "55713f7998d546732c300c0a2b54fe3cd32f1dea",
+      "sha256": "dcc266864cd9bf666dea3abc03e6279e79494be3430f78f1c0f3033977069f17"
+    },
+    "preview/migration/fixtures/mldht-cache/case-015.expected": {
+      "source": "migration/fixtures/mldht-cache/case-015.expected",
+      "source_git_blob": "f9738ea6fdb834f2141bd01545c0693bd5aebda9",
+      "sha256": "1ad96c0fbe05dbecc162edde0d24483d191d42af4ef11dfc8a3eee8923d85c9f"
+    },
+    "preview/migration/fixtures/mldht-cache/case-016.cache": {
+      "source": "migration/fixtures/mldht-cache/case-016.cache",
+      "source_git_blob": "247ba10e151d33f11f1437b9daad335b805fd95b",
+      "sha256": "5d44593c67213ab428fc686785bda652eb388cfdc2bd17294cac672d6575190e"
+    },
+    "preview/migration/fixtures/mldht-cache/case-016.expected": {
+      "source": "migration/fixtures/mldht-cache/case-016.expected",
+      "source_git_blob": "7f003819bc76dc3e5e84b174acff8eec8b57717a",
+      "sha256": "78ae7a2278ec1ac93ac8381e0db34e1f4c557d7b803d602c21fb440a12778eb6"
+    },
+    "preview/migration/fixtures/mldht-cache/case-017.cache": {
+      "source": "migration/fixtures/mldht-cache/case-017.cache",
+      "source_git_blob": "4f29488129a7fc9a8f6813cf207281b8d091d96d",
+      "sha256": "89ac5a60afe356eeeafd790dfdcb8bfd25d379ff37e9a63065121756453d9f5e"
+    },
+    "preview/migration/fixtures/mldht-cache/case-017.expected": {
+      "source": "migration/fixtures/mldht-cache/case-017.expected",
+      "source_git_blob": "b6536fb3175ed31e574a57a32a9e2b2a4b407885",
+      "sha256": "116ca72a4421c4597ff5fe83935e8697a5fc4acee2342be2f59aaff1fa01d596"
+    },
+    "preview/migration/fixtures/mldht-cache/case-018.cache": {
+      "source": "migration/fixtures/mldht-cache/case-018.cache",
+      "source_git_blob": "d002511d9dfeb778069d4ea828a24f6223b9d4be",
+      "sha256": "62c884e9de918440a9613f62a370bb911584805991c8929b356e4dac923aa713"
+    },
+    "preview/migration/fixtures/mldht-cache/case-018.expected": {
+      "source": "migration/fixtures/mldht-cache/case-018.expected",
+      "source_git_blob": "7f003819bc76dc3e5e84b174acff8eec8b57717a",
+      "sha256": "78ae7a2278ec1ac93ac8381e0db34e1f4c557d7b803d602c21fb440a12778eb6"
+    },
+    "preview/migration/fixtures/mldht-cache/case-019.cache": {
+      "source": "migration/fixtures/mldht-cache/case-019.cache",
+      "source_git_blob": "9b7d090c2d8973ab4f924ae4848e2784f06184d3",
+      "sha256": "21f52ea3ddc3cfa857a2048b15063ec7ff3bcb28b708db9d394359841bac07f3"
+    },
+    "preview/migration/fixtures/mldht-cache/case-019.expected": {
+      "source": "migration/fixtures/mldht-cache/case-019.expected",
+      "source_git_blob": "fb9af0155834b632a982f64b8de813162e24a8ab",
+      "sha256": "9c936cd3ce59697400293462574d4861e8581bd26a077142aea6f0d88cdf5db6"
+    },
+    "preview/migration/fixtures/mldht-cache/case-020.cache": {
+      "source": "migration/fixtures/mldht-cache/case-020.cache",
+      "source_git_blob": "38adfda0401c01420024983a42a4bec913174090",
+      "sha256": "7cb50ad8ad00f690f0076757261dc65d3d6b1617e4a477a12397bd18e2a829d8"
+    },
+    "preview/migration/fixtures/mldht-cache/case-020.expected": {
+      "source": "migration/fixtures/mldht-cache/case-020.expected",
+      "source_git_blob": "9d5d5fa092acec48d6a178fca70057d2d237c22a",
+      "sha256": "b3fb8e6ca9ae72d0d11c40355bfb520cb6f8131f8fe710ae6be2b2fb1363a507"
+    },
+    "preview/migration/fixtures/mldht-cache/case-021.cache": {
+      "source": "migration/fixtures/mldht-cache/case-021.cache",
+      "source_git_blob": "6d6e20c63cba361a9603eafd1caa278b2d5e3ddd",
+      "sha256": "c9846cf6923f51768939e8fd32778119ad68199197779860e8554d6224761492"
+    },
+    "preview/migration/fixtures/mldht-cache/case-021.expected": {
+      "source": "migration/fixtures/mldht-cache/case-021.expected",
+      "source_git_blob": "522de9315fe990802f9b08daf3fbdea00deb7153",
+      "sha256": "fe40eb4945df19ddf418c77d2cbbd44127d22af4f6e3aa956781724672460256"
+    },
+    "preview/migration/fixtures/mldht-cache/case-022.cache": {
+      "source": "migration/fixtures/mldht-cache/case-022.cache",
+      "source_git_blob": "ebfe60e34c8a13dc43bd63d5b75989504399f6a0",
+      "sha256": "64082755a5cdca21ceaf89375452a892b5b0426cdc3282f0480e3b763e3501a8"
+    },
+    "preview/migration/fixtures/mldht-cache/case-022.expected": {
+      "source": "migration/fixtures/mldht-cache/case-022.expected",
+      "source_git_blob": "17934d2d4488e0ad5bafbafe014e37c0427fb805",
+      "sha256": "2fc7ccf5836df3210e202164503e2913c8c503d42c366c0c4ad9916969d67b99"
+    },
+    "preview/migration/fixtures/mldht-cache/case-023.cache": {
+      "source": "migration/fixtures/mldht-cache/case-023.cache",
+      "source_git_blob": "33fdb75cc2e3dca6b207880b2e4ce7a446feeba4",
+      "sha256": "7d2c4decc4b901fd854de8a917185e05c6da45f227d674b8d0ae28f14119a032"
+    },
+    "preview/migration/fixtures/mldht-cache/case-023.expected": {
+      "source": "migration/fixtures/mldht-cache/case-023.expected",
+      "source_git_blob": "4c1c195074663584a42a0efd0a51a03c4dc54da5",
+      "sha256": "641e86bddaad3ce9aae84389788f7b05dfab757994237172c2f69e36756b4601"
+    },
+    "preview/migration/fixtures/mldht-cache/case-024.cache": {
+      "source": "migration/fixtures/mldht-cache/case-024.cache",
+      "source_git_blob": "6e20dff5b425b94ddee4da2b8f0be32a0ce586d3",
+      "sha256": "4f22141c7ea0c2ddedbf1e46e9b5473d8248c392d24ad0d45180b6bf4b59e9b6"
+    },
+    "preview/migration/fixtures/mldht-cache/case-024.expected": {
+      "source": "migration/fixtures/mldht-cache/case-024.expected",
+      "source_git_blob": "75f4ca3cdbc82ca4dc6d6570ebbc443798f6c96c",
+      "sha256": "718c6413e768e8bde8da5f65b1f98315cf6910b0059c23b1798af3338199dc1b"
+    },
+    "preview/migration/fixtures/mldht-cache/case-025.cache": {
+      "source": "migration/fixtures/mldht-cache/case-025.cache",
+      "source_git_blob": "b8486d4bc4707d8ed3f4e0bfdbd787477b01d008",
+      "sha256": "6f3c8134aabdce544dabd7bcf3e6f4c6ca7b52fe09257c95e5a79799789ab592"
+    },
+    "preview/migration/fixtures/mldht-cache/case-025.expected": {
+      "source": "migration/fixtures/mldht-cache/case-025.expected",
+      "source_git_blob": "75f4ca3cdbc82ca4dc6d6570ebbc443798f6c96c",
+      "sha256": "718c6413e768e8bde8da5f65b1f98315cf6910b0059c23b1798af3338199dc1b"
+    },
+    "preview/migration/fixtures/mldht-cache/case-026.cache": {
+      "source": "migration/fixtures/mldht-cache/case-026.cache",
+      "source_git_blob": "f1ecf6bbe9799324b04a3128d6b9d1e7783cb1df",
+      "sha256": "5bb6024cd67e11381b313fb9b8427ce305d19f7e3940a7e09940798d1d787f8f"
+    },
+    "preview/migration/fixtures/mldht-cache/case-026.expected": {
+      "source": "migration/fixtures/mldht-cache/case-026.expected",
+      "source_git_blob": "522de9315fe990802f9b08daf3fbdea00deb7153",
+      "sha256": "fe40eb4945df19ddf418c77d2cbbd44127d22af4f6e3aa956781724672460256"
+    },
+    "preview/migration/fixtures/mldht-cache/case-027.cache": {
+      "source": "migration/fixtures/mldht-cache/case-027.cache",
+      "source_git_blob": "3867fcee4e0a3278e2d225e1c11cca18708c383b",
+      "sha256": "dcfa7075669a49d5463c4440312fdf2732a8bc5117b86dd81e44c15c2135d108"
+    },
+    "preview/migration/fixtures/mldht-cache/case-027.expected": {
+      "source": "migration/fixtures/mldht-cache/case-027.expected",
+      "source_git_blob": "17934d2d4488e0ad5bafbafe014e37c0427fb805",
+      "sha256": "2fc7ccf5836df3210e202164503e2913c8c503d42c366c0c4ad9916969d67b99"
+    },
+    "preview/migration/fixtures/mldht-cache/case-028.cache": {
+      "source": "migration/fixtures/mldht-cache/case-028.cache",
+      "source_git_blob": "ff6eaaecf3ce199dd3cf8f66e38d725f6372c6ee",
+      "sha256": "bdff44a5dc315a7730138ee02cdd17d5f42bbbc1e25e958b5a74be46bcb5e3bb"
+    },
+    "preview/migration/fixtures/mldht-cache/case-028.expected": {
+      "source": "migration/fixtures/mldht-cache/case-028.expected",
+      "source_git_blob": "522de9315fe990802f9b08daf3fbdea00deb7153",
+      "sha256": "fe40eb4945df19ddf418c77d2cbbd44127d22af4f6e3aa956781724672460256"
+    },
+    "preview/migration/fixtures/mldht-cache/case-029.cache": {
+      "source": "migration/fixtures/mldht-cache/case-029.cache",
+      "source_git_blob": "3c6438db25a2b439c6c23fcf0edec365b78c3216",
+      "sha256": "e34ed0400bbfd9fddeb23899e237c4f37dbe890a0b88dae86463c7445b7931ff"
+    },
+    "preview/migration/fixtures/mldht-cache/case-029.expected": {
+      "source": "migration/fixtures/mldht-cache/case-029.expected",
+      "source_git_blob": "9d5d5fa092acec48d6a178fca70057d2d237c22a",
+      "sha256": "b3fb8e6ca9ae72d0d11c40355bfb520cb6f8131f8fe710ae6be2b2fb1363a507"
+    },
+    "preview/migration/fixtures/mldht-cache/case-030.cache": {
+      "source": "migration/fixtures/mldht-cache/case-030.cache",
+      "source_git_blob": "82d9ec2004214eb3546bfd2ab18286e0189f8e51",
+      "sha256": "435311f628baf4f4b0c2847afe397ffce1adf98345b6f16940b4f66f89f11916"
+    },
+    "preview/migration/fixtures/mldht-cache/case-030.expected": {
+      "source": "migration/fixtures/mldht-cache/case-030.expected",
+      "source_git_blob": "60e5a58a7e7d8ea911a30edf8244ef4ea29d08bb",
+      "sha256": "8d3e2a450a7a346692369d6e03c4ed83d9ad63cf9e1cb76ea6b101dcd7a05b66"
+    },
+    "preview/migration/fixtures/mldht-cache/case-031.cache": {
+      "source": "migration/fixtures/mldht-cache/case-031.cache",
+      "source_git_blob": "dd666a2381f056b4983d93d229b09440e9593b94",
+      "sha256": "250a8bf4be7aad28558201870ea14c09eecc7aca62790b27d9c6673b950117db"
+    },
+    "preview/migration/fixtures/mldht-cache/case-031.expected": {
+      "source": "migration/fixtures/mldht-cache/case-031.expected",
+      "source_git_blob": "d9cea7e054f1a6b123202125691dc39a17c0abfa",
+      "sha256": "8bfe0c0ca29ef1f57109eb94d2e4d765d899bfe1aeb708acb562276fe7edd19a"
+    },
+    "preview/migration/fixtures/mldht-cache/case-032.cache": {
+      "source": "migration/fixtures/mldht-cache/case-032.cache",
+      "source_git_blob": "fcb1e54705003d223b81eb42c0594b43da2af72e",
+      "sha256": "e6968c30febda2e1b6d5be231e4213a9d17607e474f27999567a6b9ebe48e9fb"
+    },
+    "preview/migration/fixtures/mldht-cache/case-032.expected": {
+      "source": "migration/fixtures/mldht-cache/case-032.expected",
+      "source_git_blob": "ba930b377ede7d62bd032ca8a1729b615d77c8ca",
+      "sha256": "98ad9d03a6693f3aae26cefbb9036e0fdbd9f3ef93b470d72b181c280014a40a"
+    },
+    "preview/migration/fixtures/mldht-cache/case-033.cache": {
+      "source": "migration/fixtures/mldht-cache/case-033.cache",
+      "source_git_blob": "0832c53f777808c630e974c9ac7937a06e904799",
+      "sha256": "f30d8a53a70b222b632900aa46f8274e18a98a91d5c5b794a1e12f4584e26d96"
+    },
+    "preview/migration/fixtures/mldht-cache/case-033.expected": {
+      "source": "migration/fixtures/mldht-cache/case-033.expected",
+      "source_git_blob": "a936686e6294cd8d95dc3febade0dac82d91e104",
+      "sha256": "635ad9e09ff3319434adcf779198d3b42fe70bdd4d496553269ad5b4ee3c8b14"
+    },
+    "preview/migration/fixtures/mldht-cache/case-034.cache": {
+      "source": "migration/fixtures/mldht-cache/case-034.cache",
+      "source_git_blob": "8678919b19e8d27b2cadbc267c679ff74e86fbe3",
+      "sha256": "34cbb054504aff8f92e259412406bc90a56ccd48aea05acbd9e41921f7190fc2"
+    },
+    "preview/migration/fixtures/mldht-cache/case-034.expected": {
+      "source": "migration/fixtures/mldht-cache/case-034.expected",
+      "source_git_blob": "0e5bf0b5a557f8e04c30e8ef1ea110596edf2aeb",
+      "sha256": "b655563255ad95f1c3fae66ec59e22778465accbe27444a3eb1d1dd5c9b201f0"
+    },
+    "preview/migration/fixtures/mldht-cache/case-035.cache": {
+      "source": "migration/fixtures/mldht-cache/case-035.cache",
+      "source_git_blob": "eebf2fb148d781b43b68b864631d3e4d8ff14c61",
+      "sha256": "1a26a5712fa2b41a39057d2af5c6f8a2e21c0c3cbf7b44d0b77cafae8095e46c"
+    },
+    "preview/migration/fixtures/mldht-cache/case-035.expected": {
+      "source": "migration/fixtures/mldht-cache/case-035.expected",
+      "source_git_blob": "0e5bf0b5a557f8e04c30e8ef1ea110596edf2aeb",
+      "sha256": "b655563255ad95f1c3fae66ec59e22778465accbe27444a3eb1d1dd5c9b201f0"
+    },
+    "preview/migration/fixtures/mldht-cache/case-036.cache": {
+      "source": "migration/fixtures/mldht-cache/case-036.cache",
+      "source_git_blob": "bb46576a93fdfadb71711b05857b51fec9dbde62",
+      "sha256": "828ddf13f0710e5044c5f6d8c2fbb98d74325f8836baad242006c36151438e87"
+    },
+    "preview/migration/fixtures/mldht-cache/case-036.expected": {
+      "source": "migration/fixtures/mldht-cache/case-036.expected",
+      "source_git_blob": "d9cea7e054f1a6b123202125691dc39a17c0abfa",
+      "sha256": "8bfe0c0ca29ef1f57109eb94d2e4d765d899bfe1aeb708acb562276fe7edd19a"
+    },
+    "preview/migration/fixtures/mldht-cache/case-037.cache": {
+      "source": "migration/fixtures/mldht-cache/case-037.cache",
+      "source_git_blob": "c4d898ddfd355deb22401de4d7db40451092cbaa",
+      "sha256": "aa27fa99df59a0746dd45aa8ac4bf877f01f77437df8caf567ab8eccec87f2aa"
+    },
+    "preview/migration/fixtures/mldht-cache/case-037.expected": {
+      "source": "migration/fixtures/mldht-cache/case-037.expected",
+      "source_git_blob": "ba930b377ede7d62bd032ca8a1729b615d77c8ca",
+      "sha256": "98ad9d03a6693f3aae26cefbb9036e0fdbd9f3ef93b470d72b181c280014a40a"
+    },
+    "preview/migration/fixtures/mldht-cache/case-038.cache": {
+      "source": "migration/fixtures/mldht-cache/case-038.cache",
+      "source_git_blob": "5f72e6e0468badebbd6ea3b4c6c3e4e88d904c58",
+      "sha256": "e22a0061f6c3872c3642357071289df9581e18c9157428f19b74caa9a8c3f14a"
+    },
+    "preview/migration/fixtures/mldht-cache/case-038.expected": {
+      "source": "migration/fixtures/mldht-cache/case-038.expected",
+      "source_git_blob": "d9cea7e054f1a6b123202125691dc39a17c0abfa",
+      "sha256": "8bfe0c0ca29ef1f57109eb94d2e4d765d899bfe1aeb708acb562276fe7edd19a"
+    },
+    "preview/migration/fixtures/mldht-cache/case-039.cache": {
+      "source": "migration/fixtures/mldht-cache/case-039.cache",
+      "source_git_blob": "67975d1a91a7ab52bfd5575de0765422671f3a37",
+      "sha256": "7af2491af961b5560b88c6f9418f2020bb5e1382846d2ca095e21b886f0065e2"
+    },
+    "preview/migration/fixtures/mldht-cache/case-039.expected": {
+      "source": "migration/fixtures/mldht-cache/case-039.expected",
+      "source_git_blob": "60e5a58a7e7d8ea911a30edf8244ef4ea29d08bb",
+      "sha256": "8d3e2a450a7a346692369d6e03c4ed83d9ad63cf9e1cb76ea6b101dcd7a05b66"
+    },
+    "preview/migration/fixtures/mldht-cache/case-040.cache": {
+      "source": "migration/fixtures/mldht-cache/case-040.cache",
+      "source_git_blob": "202df133d8893bc0d5a88e6525a533660be0779d",
+      "sha256": "19c6a67d233cf7e10d31717f8e2f9bd88960ba5c1fcbacf4b97447ed434f6099"
+    },
+    "preview/migration/fixtures/mldht-cache/case-040.expected": {
+      "source": "migration/fixtures/mldht-cache/case-040.expected",
+      "source_git_blob": "6010bc15eda7a496089cb08dc3844aff7d7a619e",
+      "sha256": "b78f963a1df14743d312b7c523e976247651ca5bc28827816da98a14974224e9"
+    },
+    "preview/migration/fixtures/mldht-cache/case-041.cache": {
+      "source": "migration/fixtures/mldht-cache/case-041.cache",
+      "source_git_blob": "67a2aeb8188c1e5b74c2486fffc958a371d89b37",
+      "sha256": "79b70d98207865600a1eab4b88c67de7a453eac5572d174e83caf9a4e859c600"
+    },
+    "preview/migration/fixtures/mldht-cache/case-041.expected": {
+      "source": "migration/fixtures/mldht-cache/case-041.expected",
+      "source_git_blob": "7a34f96ac74a755fed1eccf2a8a253719d183264",
+      "sha256": "a4fd4661e1d9466fb2a3d4d3f35dd2e0b6a9dca3b9a6afc2a409e6a72a294d60"
+    },
+    "preview/migration/fixtures/mldht-cache/case-042.cache": {
+      "source": "migration/fixtures/mldht-cache/case-042.cache",
+      "source_git_blob": "86f33aff8a857f430d5670543ffd856993b1ab86",
+      "sha256": "ac567d013a3b5bb613c2e02029ea73713538ffd25206dcefbac294fd40c3b68d"
+    },
+    "preview/migration/fixtures/mldht-cache/case-042.expected": {
+      "source": "migration/fixtures/mldht-cache/case-042.expected",
+      "source_git_blob": "985d572c52b8febb47f324654cd4cf77990503e2",
+      "sha256": "d57c6c91f3c88fa18796c72e18adfc0846ca0967a8e3ee2749ae2402b7709f94"
+    },
+    "preview/migration/fixtures/mldht-cache/case-043.cache": {
+      "source": "migration/fixtures/mldht-cache/case-043.cache",
+      "source_git_blob": "d575fa2918bb2f66c060b34a57918c6fe1d4ad0a",
+      "sha256": "7df8ebd2e6a70bd31220e346071547a3f6c05bdcd90e46a4481dc3d8163624c7"
+    },
+    "preview/migration/fixtures/mldht-cache/case-043.expected": {
+      "source": "migration/fixtures/mldht-cache/case-043.expected",
+      "source_git_blob": "fe1b5ddcb44246e43a97bacae8535aa29b22efab",
+      "sha256": "97b46e03acb4fbd7a1ec4231e49ede679a4c6a5ce6a47b77e8c340b18ad0dfea"
+    },
+    "preview/migration/fixtures/mldht-cache/case-044.cache": {
+      "source": "migration/fixtures/mldht-cache/case-044.cache",
+      "source_git_blob": "ae33eb066cbbd461cd579c16f30231e36a759c31",
+      "sha256": "67ad4e4700f1ef25286a188e490d67fa8a8a341f09b71f2461d2cb9d36c1522b"
+    },
+    "preview/migration/fixtures/mldht-cache/case-044.expected": {
+      "source": "migration/fixtures/mldht-cache/case-044.expected",
+      "source_git_blob": "632239855fd0d314ef5ebb390e4959ce87547457",
+      "sha256": "758a8c4ba737d9377be3217d279ec2b83dc8a04ccfcff79253695f629c688e4a"
+    },
+    "preview/migration/fixtures/mldht-cache/case-045.cache": {
+      "source": "migration/fixtures/mldht-cache/case-045.cache",
+      "source_git_blob": "e70ca90214630a0dab7101373d1be9aa73a1a4b6",
+      "sha256": "484b5b179835e7eefbb5841e915e3e8ec1f656b517abfc434351a7149cebb737"
+    },
+    "preview/migration/fixtures/mldht-cache/case-045.expected": {
+      "source": "migration/fixtures/mldht-cache/case-045.expected",
+      "source_git_blob": "632239855fd0d314ef5ebb390e4959ce87547457",
+      "sha256": "758a8c4ba737d9377be3217d279ec2b83dc8a04ccfcff79253695f629c688e4a"
+    },
+    "preview/migration/fixtures/mldht-cache/case-046.cache": {
+      "source": "migration/fixtures/mldht-cache/case-046.cache",
+      "source_git_blob": "d3c9d3f473a00dc5980ce03a846a950ca7ca27c9",
+      "sha256": "eb1a9fc60c03f777a51fe09cf490fc27ad43485eb41ce2b5f75842dd67f71db0"
+    },
+    "preview/migration/fixtures/mldht-cache/case-046.expected": {
+      "source": "migration/fixtures/mldht-cache/case-046.expected",
+      "source_git_blob": "7a34f96ac74a755fed1eccf2a8a253719d183264",
+      "sha256": "a4fd4661e1d9466fb2a3d4d3f35dd2e0b6a9dca3b9a6afc2a409e6a72a294d60"
+    },
+    "preview/migration/fixtures/mldht-cache/case-047.cache": {
+      "source": "migration/fixtures/mldht-cache/case-047.cache",
+      "source_git_blob": "0ae3fea86dc2a908a60b4754b06186af5756b843",
+      "sha256": "351632fde087975db98c668b7cbe2cbb1718698940c0bda974754e7575af1f39"
+    },
+    "preview/migration/fixtures/mldht-cache/case-047.expected": {
+      "source": "migration/fixtures/mldht-cache/case-047.expected",
+      "source_git_blob": "985d572c52b8febb47f324654cd4cf77990503e2",
+      "sha256": "d57c6c91f3c88fa18796c72e18adfc0846ca0967a8e3ee2749ae2402b7709f94"
+    },
+    "preview/migration/fixtures/mldht-cache/case-048.cache": {
+      "source": "migration/fixtures/mldht-cache/case-048.cache",
+      "source_git_blob": "d32306cf2480a998176c83cdda11db436b0b6fda",
+      "sha256": "81ce1e4dd313176b98a1e00d88094ba77793a33fa1c81df7bf6dd00fb7a074c8"
+    },
+    "preview/migration/fixtures/mldht-cache/case-048.expected": {
+      "source": "migration/fixtures/mldht-cache/case-048.expected",
+      "source_git_blob": "7a34f96ac74a755fed1eccf2a8a253719d183264",
+      "sha256": "a4fd4661e1d9466fb2a3d4d3f35dd2e0b6a9dca3b9a6afc2a409e6a72a294d60"
+    },
+    "preview/migration/fixtures/mldht-cache/case-049.cache": {
+      "source": "migration/fixtures/mldht-cache/case-049.cache",
+      "source_git_blob": "88e3414dcd956a171fd9865b6df1a13d5593ddff",
+      "sha256": "6e6f690581d916f368fd2567777a812ed135ab003b1c99634ebb9ccce249ea42"
+    },
+    "preview/migration/fixtures/mldht-cache/case-049.expected": {
+      "source": "migration/fixtures/mldht-cache/case-049.expected",
+      "source_git_blob": "6010bc15eda7a496089cb08dc3844aff7d7a619e",
+      "sha256": "b78f963a1df14743d312b7c523e976247651ca5bc28827816da98a14974224e9"
+    },
+    "preview/migration/fixtures/mldht-cache/case-050.cache": {
+      "source": "migration/fixtures/mldht-cache/case-050.cache",
+      "source_git_blob": "b13ec0e13bc0b017a6a66c4814a330855491b49f",
+      "sha256": "e38d2aa831cf3f2b47c7ec76935d18d9b4fe615fc319230ae7c4fd0aac8ea49d"
+    },
+    "preview/migration/fixtures/mldht-cache/case-050.expected": {
+      "source": "migration/fixtures/mldht-cache/case-050.expected",
+      "source_git_blob": "4f50d988b7b10be08cb8a3767cdbb9df82d1ce43",
+      "sha256": "cf4c375dd73f7b2975080a29cafec4884cafd0b4c053859c62fc830c326fa576"
+    },
+    "preview/migration/fixtures/mldht-cache/case-051.cache": {
+      "source": "migration/fixtures/mldht-cache/case-051.cache",
+      "source_git_blob": "53719d7492ee03ca3a63e8e88e94ea183b8eb64c",
+      "sha256": "d6717a8d820035e103fbafcca42fe79065c75d0c56f49eb4f0453dbb91826f0f"
+    },
+    "preview/migration/fixtures/mldht-cache/case-051.expected": {
+      "source": "migration/fixtures/mldht-cache/case-051.expected",
+      "source_git_blob": "ce0fdf4b66f5a3bea8820c3e3c0fb2b7babe4e2a",
+      "sha256": "23e83d182fd803d0f2291f71fa3720fb9dd02cc5e5f6c106b2842946643ec628"
+    },
+    "preview/migration/fixtures/mldht-cache/case-052.cache": {
+      "source": "migration/fixtures/mldht-cache/case-052.cache",
+      "source_git_blob": "cc8160591e2028ea08bb4e3a73fe484df7adaa98",
+      "sha256": "2b0886e36f3cfb5436518700cab84e0a4b19b28d3f389337da46c84ffa6efe49"
+    },
+    "preview/migration/fixtures/mldht-cache/case-052.expected": {
+      "source": "migration/fixtures/mldht-cache/case-052.expected",
+      "source_git_blob": "457fcb60ed8de7f1f8074ffb4f049d6021364f83",
+      "sha256": "f8cecc2cb3132692165822f05eda2ef90dcbcba42db90947614443cf8c396e87"
+    },
+    "preview/migration/fixtures/mldht-cache/case-053.cache": {
+      "source": "migration/fixtures/mldht-cache/case-053.cache",
+      "source_git_blob": "5828e112d835ce1ef2e92eb4985d6fe614b6861e",
+      "sha256": "12638e0e3c56977b2404e2077a8b92f57d890f0e6c0881b859dc348cf5eb2673"
+    },
+    "preview/migration/fixtures/mldht-cache/case-053.expected": {
+      "source": "migration/fixtures/mldht-cache/case-053.expected",
+      "source_git_blob": "4348a1bb2b66121758705d7174dc111cc2c42491",
+      "sha256": "f6c9a51399c2be535baff23fc669f264e9e133dc6f3e8b0211e0d52fc4c0e75c"
+    },
+    "preview/migration/fixtures/mldht-cache/case-054.cache": {
+      "source": "migration/fixtures/mldht-cache/case-054.cache",
+      "source_git_blob": "a07c202a8698dfeaef6dd110c4d3c30a46ce17da",
+      "sha256": "1cf44ac5f12c9fead9feafffef85bbf35b025a7c477a51ed3efd197d0f203588"
+    },
+    "preview/migration/fixtures/mldht-cache/case-054.expected": {
+      "source": "migration/fixtures/mldht-cache/case-054.expected",
+      "source_git_blob": "517b9b3d75663690a9d1376553d143660657c04c",
+      "sha256": "e14906395e187cde91f3a9f6a356f3d67cfd496a62bbe4eef452e4c1a9cf3fe4"
+    },
+    "preview/migration/fixtures/mldht-cache/case-055.cache": {
+      "source": "migration/fixtures/mldht-cache/case-055.cache",
+      "source_git_blob": "85ba35ef8adb6dc72ebcd8730bdfeffe246a847d",
+      "sha256": "5065ca883edd33996ce38aab2442cbebcb740f51a7b1e46a46499361152e5f1d"
+    },
+    "preview/migration/fixtures/mldht-cache/case-055.expected": {
+      "source": "migration/fixtures/mldht-cache/case-055.expected",
+      "source_git_blob": "75917e475eeeda0e68ef7ad7012ff58ae9303b27",
+      "sha256": "2b1c11dc4f24a0fd7671d9107eaf7286b8fe9b86d0ed2b5bfc3672ef15a705f8"
+    },
+    "preview/migration/fixtures/mldht-cache/case-056.cache": {
+      "source": "migration/fixtures/mldht-cache/case-056.cache",
+      "source_git_blob": "8db172dff16b1804568ff9873175bf1256316d72",
+      "sha256": "772e72756a7c6417e4dcdb47d002489088769b8b0641ac50d0b32b72b57396a1"
+    },
+    "preview/migration/fixtures/mldht-cache/case-056.expected": {
+      "source": "migration/fixtures/mldht-cache/case-056.expected",
+      "source_git_blob": "222d301eebbcf69458307acc6697d46a02d4743f",
+      "sha256": "bf1d2276c19d4964d69524677045b90a28ab63ebf02d8f528c2b8aa87c2f0af0"
+    },
+    "preview/migration/fixtures/mldht-cache/case-057.cache": {
+      "source": "migration/fixtures/mldht-cache/case-057.cache",
+      "source_git_blob": "a61cd1a7aa23914f32b7df4e116beec728ea55ef",
+      "sha256": "611f1b4f824f52ac88f9875e4eddf6f9918ca781036cd4b86c6c99dd98c17cf9"
+    },
+    "preview/migration/fixtures/mldht-cache/case-057.expected": {
+      "source": "migration/fixtures/mldht-cache/case-057.expected",
+      "source_git_blob": "222d301eebbcf69458307acc6697d46a02d4743f",
+      "sha256": "bf1d2276c19d4964d69524677045b90a28ab63ebf02d8f528c2b8aa87c2f0af0"
+    },
+    "preview/migration/fixtures/mldht-cache/case-058.cache": {
+      "source": "migration/fixtures/mldht-cache/case-058.cache",
+      "source_git_blob": "f50b099bc0662cd25a752d69b5b484e662408448",
+      "sha256": "c0d0d3133e3f28d71adfe6fffe7d505b14ebdfd9cac6ab9a2305bca6e9c6a70e"
+    },
+    "preview/migration/fixtures/mldht-cache/case-058.expected": {
+      "source": "migration/fixtures/mldht-cache/case-058.expected",
+      "source_git_blob": "222d301eebbcf69458307acc6697d46a02d4743f",
+      "sha256": "bf1d2276c19d4964d69524677045b90a28ab63ebf02d8f528c2b8aa87c2f0af0"
+    },
+    "preview/migration/fixtures/mldht-cache/case-059.cache": {
+      "source": "migration/fixtures/mldht-cache/case-059.cache",
+      "source_git_blob": "57a243ac4ec0467f2e272815eaad21494af9d9dc",
+      "sha256": "b90da84ee3aaf51bb7d3f9e29ec1861a812843b24bf3136fb545d984a294568f"
+    },
+    "preview/migration/fixtures/mldht-cache/case-059.expected": {
+      "source": "migration/fixtures/mldht-cache/case-059.expected",
+      "source_git_blob": "222d301eebbcf69458307acc6697d46a02d4743f",
+      "sha256": "bf1d2276c19d4964d69524677045b90a28ab63ebf02d8f528c2b8aa87c2f0af0"
+    },
+    "preview/migration/fixtures/mldht-cache/case-060.cache": {
+      "source": "migration/fixtures/mldht-cache/case-060.cache",
+      "source_git_blob": "1d71534aab97b8618c84aadcf849f976542a1a59",
+      "sha256": "43ba48c367a1a7b94ed0b4694602b27cde87cdbb734cdf4fde13fcce6aff5ab1"
+    },
+    "preview/migration/fixtures/mldht-cache/case-060.expected": {
+      "source": "migration/fixtures/mldht-cache/case-060.expected",
+      "source_git_blob": "6a03c5e1c29c1f5d23b5171711860034e08643b4",
+      "sha256": "fa1e64122d805544dfa56cc21716acbf611a8e47ee6bc2d87ff9d41d40550b54"
+    },
+    "preview/migration/fixtures/mldht-cache/case-061.cache": {
+      "source": "migration/fixtures/mldht-cache/case-061.cache",
+      "source_git_blob": "8e5666ef4f4e262037fbd2ee577c8011e0236695",
+      "sha256": "307e3446d2205c0cba9b50e4ff603af6f061fcb45cacde687cca3413f868dbc1"
+    },
+    "preview/migration/fixtures/mldht-cache/case-061.expected": {
+      "source": "migration/fixtures/mldht-cache/case-061.expected",
+      "source_git_blob": "2c5807e1764f8897af36477302b135b20f0dfd69",
+      "sha256": "0e8151fb0b7a3d928a6426505cbc1832de75f82d2a46f7db314bc80f93e5ffa5"
+    },
+    "preview/migration/fixtures/mldht-cache/case-062.cache": {
+      "source": "migration/fixtures/mldht-cache/case-062.cache",
+      "source_git_blob": "c42e816f930e4156ae71b6f4838b2ddadc671486",
+      "sha256": "959a45d44e6fcf58361ed004681556fe50129f2109e817dec098c00c9e5d2578"
+    },
+    "preview/migration/fixtures/mldht-cache/case-062.expected": {
+      "source": "migration/fixtures/mldht-cache/case-062.expected",
+      "source_git_blob": "bd894e7c3185b7d2711151799bcba71b23ea71ba",
+      "sha256": "526c0b572479ae7c3392b39b63f7033eedfb93f3fd472a571ea6e14c57011158"
+    },
+    "preview/migration/fixtures/mldht-cache/case-063.cache": {
+      "source": "migration/fixtures/mldht-cache/case-063.cache",
+      "source_git_blob": "a11085715783651d23d86a99b1da3113df7ede0b",
+      "sha256": "97ed7bec0482b251dcbc79b2fbda605e1e0dd7c9d28b72531a6707513bb87697"
+    },
+    "preview/migration/fixtures/mldht-cache/case-063.expected": {
+      "source": "migration/fixtures/mldht-cache/case-063.expected",
+      "source_git_blob": "222d301eebbcf69458307acc6697d46a02d4743f",
+      "sha256": "bf1d2276c19d4964d69524677045b90a28ab63ebf02d8f528c2b8aa87c2f0af0"
+    },
+    "preview/migration/fixtures/mldht-cache/manifest.json": {
+      "source": "migration/fixtures/mldht-cache/manifest.json",
+      "source_git_blob": "ec9c10ebfee736eedae17b2f8b18c85b61d1c68d",
+      "sha256": "827b4bbd19eca3a65b1b69fb93c6ea11a58bc4849eaa7d2b589b92386bbe9b30"
+    },
+    "preview/migration/fixtures/plugin-attributes/commands.txt": {
+      "source": "migration/fixtures/plugin-attributes/commands.txt",
+      "source_git_blob": "830a19ba812b59ec2d87222b4391a578c5878916",
+      "sha256": "268911e39b7254e45b8c76a47f84670249d8f17def20fa35f763b38814c5a2d1"
+    },
+    "preview/migration/fixtures/plugin-attributes/expected.txt": {
+      "source": "migration/fixtures/plugin-attributes/expected.txt",
+      "source_git_blob": "b29cd05e75eba0c5c01d88b0270896a8500e7ebb",
+      "sha256": "2c7539cc4f1b4bb65456320ce78eecbb0fc8933773c839b42518acffb198ec08"
+    },
+    "preview/migration/fixtures/plugin-attributes/manifest.json": {
+      "source": "migration/fixtures/plugin-attributes/manifest.json",
+      "source_git_blob": "9a68146c345e448bda9cc15a5287fd7ab9657edb",
+      "sha256": "9b694680305c7e82593fcf9c49c6a05114c761f4c21fb1ed9ab20566d4f4e6b4"
+    },
+    "preview/migration/fixtures/plugin-settings/case-000.config": {
+      "source": "migration/fixtures/plugin-settings/case-000.config",
+      "source_git_blob": "3e6c22954519e52652bae44b11426be945682c0e",
+      "sha256": "a3699b13782cf1277ae03e2d822d4e9861e808a1c2ad115675b047260a0e7eba"
+    },
+    "preview/migration/fixtures/plugin-settings/case-000.expected": {
+      "source": "migration/fixtures/plugin-settings/case-000.expected",
+      "source_git_blob": "4944a6b82250b70c536b66285060677d2e22fc8c",
+      "sha256": "fffcd57f77293fbe7710f07346a3ab939ed1dccc0335e0a12eec6ed0a5b982a6"
+    },
+    "preview/migration/fixtures/plugin-settings/case-000.folder": {
+      "source": "migration/fixtures/plugin-settings/case-000.folder",
+      "source_git_blob": "0baa8340d50ad09b77ec7818d92fbc34c4f4e682",
+      "sha256": "1040da46a0ff3fbbcfc663fb0b4bba81ad8f05e2bb9526ff3dd6cd2f3d350631"
+    },
+    "preview/migration/fixtures/plugin-settings/case-001.config": {
+      "source": "migration/fixtures/plugin-settings/case-001.config",
+      "source_git_blob": "9245158b295a82d4b72a835a793af91a1f330087",
+      "sha256": "fc42430a096276de93f301d4ae0d128cc12da37b46ccd6f5aae44b43102d0ece"
+    },
+    "preview/migration/fixtures/plugin-settings/case-001.expected": {
+      "source": "migration/fixtures/plugin-settings/case-001.expected",
+      "source_git_blob": "2d68948c40ef1fc7dc7de5b0911d423564347fbb",
+      "sha256": "3af2ac2384a7ab5f04a539cb6b34279b73c1768552b84cc45278c697ddd295f4"
+    },
+    "preview/migration/fixtures/plugin-settings/case-001.folder": {
+      "source": "migration/fixtures/plugin-settings/case-001.folder",
+      "source_git_blob": "0baa8340d50ad09b77ec7818d92fbc34c4f4e682",
+      "sha256": "1040da46a0ff3fbbcfc663fb0b4bba81ad8f05e2bb9526ff3dd6cd2f3d350631"
+    },
+    "preview/migration/fixtures/plugin-settings/case-002.config": {
+      "source": "migration/fixtures/plugin-settings/case-002.config",
+      "source_git_blob": "50e643c45995154b6a0250dc2116d1d45b56cc5f",
+      "sha256": "20bc144e62efeafad4d8590bd09051a981d7e3c95deba78a9d6919527e1d6114"
+    },
+    "preview/migration/fixtures/plugin-settings/case-002.expected": {
+      "source": "migration/fixtures/plugin-settings/case-002.expected",
+      "source_git_blob": "31d8db4b9fc1bcfe2837be38e2bd6a6b25302f64",
+      "sha256": "1c552bb54d589444cb6baa5ecf80ac7685c71e00ad39ed47a052b230e210e05f"
+    },
+    "preview/migration/fixtures/plugin-settings/case-002.folder": {
+      "source": "migration/fixtures/plugin-settings/case-002.folder",
+      "source_git_blob": "0baa8340d50ad09b77ec7818d92fbc34c4f4e682",
+      "sha256": "1040da46a0ff3fbbcfc663fb0b4bba81ad8f05e2bb9526ff3dd6cd2f3d350631"
+    },
+    "preview/migration/fixtures/plugin-settings/case-003.config": {
+      "source": "migration/fixtures/plugin-settings/case-003.config",
+      "source_git_blob": "195d589affcae28a8b865c68b7488b838b3ad907",
+      "sha256": "e04247ae84faf3801179625908a02b4cc3bd21faf94657350fe85b323a857857"
+    },
+    "preview/migration/fixtures/plugin-settings/case-003.expected": {
+      "source": "migration/fixtures/plugin-settings/case-003.expected",
+      "source_git_blob": "267a3113d4fc216923a249ef716e896032f8ec4f",
+      "sha256": "cd6482f48463662505a95a2e14e86728e0a53ece4bf2686a49adb84a74085a20"
+    },
+    "preview/migration/fixtures/plugin-settings/case-003.folder": {
+      "source": "migration/fixtures/plugin-settings/case-003.folder",
+      "source_git_blob": "0baa8340d50ad09b77ec7818d92fbc34c4f4e682",
+      "sha256": "1040da46a0ff3fbbcfc663fb0b4bba81ad8f05e2bb9526ff3dd6cd2f3d350631"
+    },
+    "preview/migration/fixtures/plugin-settings/case-004.config": {
+      "source": "migration/fixtures/plugin-settings/case-004.config",
+      "source_git_blob": "4a3f9db92c176f75d2c81245ffe9165b9e71ca43",
+      "sha256": "5ee96911854b4a27086d0e85f13a70842f91717ceb03c89ad3a506ce86ce957c"
+    },
+    "preview/migration/fixtures/plugin-settings/case-004.expected": {
+      "source": "migration/fixtures/plugin-settings/case-004.expected",
+      "source_git_blob": "85221edf920785612d85b83edfefaeeb8ab4bdfe",
+      "sha256": "ee20960a9d894c12edc17630f07687ba71f22c290dd24eeec1dc355ec7b564c9"
+    },
+    "preview/migration/fixtures/plugin-settings/case-004.folder": {
+      "source": "migration/fixtures/plugin-settings/case-004.folder",
+      "source_git_blob": "0baa8340d50ad09b77ec7818d92fbc34c4f4e682",
+      "sha256": "1040da46a0ff3fbbcfc663fb0b4bba81ad8f05e2bb9526ff3dd6cd2f3d350631"
+    },
+    "preview/migration/fixtures/plugin-settings/case-005.config": {
+      "source": "migration/fixtures/plugin-settings/case-005.config",
+      "source_git_blob": "ec9dcc6d2f6ce9a29b778a9d475c805f5f8d0c87",
+      "sha256": "b077cd320d1a6c6488f0dbd5b6a1c0574dc2502f892381bfda130aeb11c16b58"
+    },
+    "preview/migration/fixtures/plugin-settings/case-005.expected": {
+      "source": "migration/fixtures/plugin-settings/case-005.expected",
+      "source_git_blob": "4944a6b82250b70c536b66285060677d2e22fc8c",
+      "sha256": "fffcd57f77293fbe7710f07346a3ab939ed1dccc0335e0a12eec6ed0a5b982a6"
+    },
+    "preview/migration/fixtures/plugin-settings/case-005.folder": {
+      "source": "migration/fixtures/plugin-settings/case-005.folder",
+      "source_git_blob": "0baa8340d50ad09b77ec7818d92fbc34c4f4e682",
+      "sha256": "1040da46a0ff3fbbcfc663fb0b4bba81ad8f05e2bb9526ff3dd6cd2f3d350631"
+    },
+    "preview/migration/fixtures/plugin-settings/case-006.config": {
+      "source": "migration/fixtures/plugin-settings/case-006.config",
+      "source_git_blob": "2b02d589eb3c6f8cdbf76e9ddfdcff55b93c9deb",
+      "sha256": "114f4188c84afbe366a57a9950900d53b99ea61eaf7cfc6285d790490d61656f"
+    },
+    "preview/migration/fixtures/plugin-settings/case-006.expected": {
+      "source": "migration/fixtures/plugin-settings/case-006.expected",
+      "source_git_blob": "2d68948c40ef1fc7dc7de5b0911d423564347fbb",
+      "sha256": "3af2ac2384a7ab5f04a539cb6b34279b73c1768552b84cc45278c697ddd295f4"
+    },
+    "preview/migration/fixtures/plugin-settings/case-006.folder": {
+      "source": "migration/fixtures/plugin-settings/case-006.folder",
+      "source_git_blob": "0baa8340d50ad09b77ec7818d92fbc34c4f4e682",
+      "sha256": "1040da46a0ff3fbbcfc663fb0b4bba81ad8f05e2bb9526ff3dd6cd2f3d350631"
+    },
+    "preview/migration/fixtures/plugin-settings/case-007.config": {
+      "source": "migration/fixtures/plugin-settings/case-007.config",
+      "source_git_blob": "62c72a3d2b1730bc910b6944945fe2234ce76f2b",
+      "sha256": "6b59fd470d8ac6ec3367bc649d232eeb0f43e38faa30df36833b2a22a0c4a022"
+    },
+    "preview/migration/fixtures/plugin-settings/case-007.expected": {
+      "source": "migration/fixtures/plugin-settings/case-007.expected",
+      "source_git_blob": "4944a6b82250b70c536b66285060677d2e22fc8c",
+      "sha256": "fffcd57f77293fbe7710f07346a3ab939ed1dccc0335e0a12eec6ed0a5b982a6"
+    },
+    "preview/migration/fixtures/plugin-settings/case-007.folder": {
+      "source": "migration/fixtures/plugin-settings/case-007.folder",
+      "source_git_blob": "0baa8340d50ad09b77ec7818d92fbc34c4f4e682",
+      "sha256": "1040da46a0ff3fbbcfc663fb0b4bba81ad8f05e2bb9526ff3dd6cd2f3d350631"
+    },
+    "preview/migration/fixtures/plugin-settings/case-008.config": {
+      "source": "migration/fixtures/plugin-settings/case-008.config",
+      "source_git_blob": "cde5fe0778174771311dee9889aff7ee11e1f1e0",
+      "sha256": "184e62d3ec9c9b5e48d9915b7a0301a5aed625a711227e58636d24db9203724b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-008.expected": {
+      "source": "migration/fixtures/plugin-settings/case-008.expected",
+      "source_git_blob": "267a3113d4fc216923a249ef716e896032f8ec4f",
+      "sha256": "cd6482f48463662505a95a2e14e86728e0a53ece4bf2686a49adb84a74085a20"
+    },
+    "preview/migration/fixtures/plugin-settings/case-008.folder": {
+      "source": "migration/fixtures/plugin-settings/case-008.folder",
+      "source_git_blob": "0baa8340d50ad09b77ec7818d92fbc34c4f4e682",
+      "sha256": "1040da46a0ff3fbbcfc663fb0b4bba81ad8f05e2bb9526ff3dd6cd2f3d350631"
+    },
+    "preview/migration/fixtures/plugin-settings/case-009.config": {
+      "source": "migration/fixtures/plugin-settings/case-009.config",
+      "source_git_blob": "72ca460b6fe63ba3134812dbaa7f46d77523beb5",
+      "sha256": "7dd8dd8a41ee849fae9e9696c3ab25af40dda841a24fb99abe983df1cb1b271f"
+    },
+    "preview/migration/fixtures/plugin-settings/case-009.expected": {
+      "source": "migration/fixtures/plugin-settings/case-009.expected",
+      "source_git_blob": "1a51863e16a084e43fcb9943fa25d7e836fd9bb6",
+      "sha256": "4a6d4fe573f0d1632b4af014e653f92ea4de69b5032f0b80c9812dd0cc8e07bc"
+    },
+    "preview/migration/fixtures/plugin-settings/case-009.folder": {
+      "source": "migration/fixtures/plugin-settings/case-009.folder",
+      "source_git_blob": "0baa8340d50ad09b77ec7818d92fbc34c4f4e682",
+      "sha256": "1040da46a0ff3fbbcfc663fb0b4bba81ad8f05e2bb9526ff3dd6cd2f3d350631"
+    },
+    "preview/migration/fixtures/plugin-settings/case-010.config": {
+      "source": "migration/fixtures/plugin-settings/case-010.config",
+      "source_git_blob": "2cd3a79fcea6ded134aaf4fe531e4d64bd91b591",
+      "sha256": "86d5588d3401a155eaf1058b9062def0f8c763d69c1ba0a684330547bec3f7e4"
+    },
+    "preview/migration/fixtures/plugin-settings/case-010.expected": {
+      "source": "migration/fixtures/plugin-settings/case-010.expected",
+      "source_git_blob": "d2ef57ed75441638f5b9f24b6c8fa203bb6703f4",
+      "sha256": "d6cac88401f560af1453a88809b4d4b0c115b972e8aaf0de60b841a550de0bd0"
+    },
+    "preview/migration/fixtures/plugin-settings/case-010.folder": {
+      "source": "migration/fixtures/plugin-settings/case-010.folder",
+      "source_git_blob": "0baa8340d50ad09b77ec7818d92fbc34c4f4e682",
+      "sha256": "1040da46a0ff3fbbcfc663fb0b4bba81ad8f05e2bb9526ff3dd6cd2f3d350631"
+    },
+    "preview/migration/fixtures/plugin-settings/case-011.config": {
+      "source": "migration/fixtures/plugin-settings/case-011.config",
+      "source_git_blob": "8174f00bf3689ca0198af23065c88bee3650c9ac",
+      "sha256": "eb44489c6c249e165b6480c93cf24e2b66e6a22a3bfaf33763bed29235800b99"
+    },
+    "preview/migration/fixtures/plugin-settings/case-011.expected": {
+      "source": "migration/fixtures/plugin-settings/case-011.expected",
+      "source_git_blob": "4fdb816466e8902b40e740ae664f455b1e437ce3",
+      "sha256": "74291f57710d042fe0c810d9c99b5163aad86efb656df7f234604b0c653d824f"
+    },
+    "preview/migration/fixtures/plugin-settings/case-011.folder": {
+      "source": "migration/fixtures/plugin-settings/case-011.folder",
+      "source_git_blob": "0baa8340d50ad09b77ec7818d92fbc34c4f4e682",
+      "sha256": "1040da46a0ff3fbbcfc663fb0b4bba81ad8f05e2bb9526ff3dd6cd2f3d350631"
+    },
+    "preview/migration/fixtures/plugin-settings/case-012.config": {
+      "source": "migration/fixtures/plugin-settings/case-012.config",
+      "source_git_blob": "df23fee1f16f03a6b62346d0c7e820d70b274610",
+      "sha256": "806f47c9c612da90962dad099772fc09b96be16e8dfa09a54d11714ea02be5dc"
+    },
+    "preview/migration/fixtures/plugin-settings/case-012.expected": {
+      "source": "migration/fixtures/plugin-settings/case-012.expected",
+      "source_git_blob": "916d3de86a0a9f767cce8cd7cd558cb40ccc9b64",
+      "sha256": "27eaebf8aa5036eadd7e3f9e9c6fae37637f615877cd74bdd7469560700f774e"
+    },
+    "preview/migration/fixtures/plugin-settings/case-012.folder": {
+      "source": "migration/fixtures/plugin-settings/case-012.folder",
+      "source_git_blob": "0baa8340d50ad09b77ec7818d92fbc34c4f4e682",
+      "sha256": "1040da46a0ff3fbbcfc663fb0b4bba81ad8f05e2bb9526ff3dd6cd2f3d350631"
+    },
+    "preview/migration/fixtures/plugin-settings/case-013.config": {
+      "source": "migration/fixtures/plugin-settings/case-013.config",
+      "source_git_blob": "01a87462241ca829aae610291e366b66ee539c3b",
+      "sha256": "e407b48745a6e3c6548972e31b77916d383dd878e1820d433dd77a37d892d16a"
+    },
+    "preview/migration/fixtures/plugin-settings/case-013.expected": {
+      "source": "migration/fixtures/plugin-settings/case-013.expected",
+      "source_git_blob": "f5b6375483b44dd46435bd4adcf7b5e137757e2d",
+      "sha256": "e2ab57f39bf6995518fcb0df038924b3c7253a58f62a6f7a61d5dbfcafb40d5e"
+    },
+    "preview/migration/fixtures/plugin-settings/case-013.folder": {
+      "source": "migration/fixtures/plugin-settings/case-013.folder",
+      "source_git_blob": "0baa8340d50ad09b77ec7818d92fbc34c4f4e682",
+      "sha256": "1040da46a0ff3fbbcfc663fb0b4bba81ad8f05e2bb9526ff3dd6cd2f3d350631"
+    },
+    "preview/migration/fixtures/plugin-settings/case-014.config": {
+      "source": "migration/fixtures/plugin-settings/case-014.config",
+      "source_git_blob": "dfc87051aea187f894f4f627ec1523d34e82da8b",
+      "sha256": "5eb246346de07d8d8e3ba4358bf14acee07bc6c94c856a937751df9c827a99c6"
+    },
+    "preview/migration/fixtures/plugin-settings/case-014.expected": {
+      "source": "migration/fixtures/plugin-settings/case-014.expected",
+      "source_git_blob": "2232055c63061e2060a03ea36380d941506835b4",
+      "sha256": "b2851bbb0770b7e2bdb740e5a438bd4267e7008c661c81b29b5300df1c6db253"
+    },
+    "preview/migration/fixtures/plugin-settings/case-014.folder": {
+      "source": "migration/fixtures/plugin-settings/case-014.folder",
+      "source_git_blob": "0baa8340d50ad09b77ec7818d92fbc34c4f4e682",
+      "sha256": "1040da46a0ff3fbbcfc663fb0b4bba81ad8f05e2bb9526ff3dd6cd2f3d350631"
+    },
+    "preview/migration/fixtures/plugin-settings/case-015.config": {
+      "source": "migration/fixtures/plugin-settings/case-015.config",
+      "source_git_blob": "315206062292cb67a793bd3668dea8ee65d0a02f",
+      "sha256": "3df90991a50b1f52bfd375466b836d3c3cb531f5878a1d5b50d37a8aea7e96da"
+    },
+    "preview/migration/fixtures/plugin-settings/case-015.expected": {
+      "source": "migration/fixtures/plugin-settings/case-015.expected",
+      "source_git_blob": "2edfe132ed394515907187381ace7a29980b26e2",
+      "sha256": "f19dd59d4d35f8a96adbfa2f92b6db452c2781e2dc61392333e1d3138a3b7b65"
+    },
+    "preview/migration/fixtures/plugin-settings/case-015.folder": {
+      "source": "migration/fixtures/plugin-settings/case-015.folder",
+      "source_git_blob": "4de7cbbebc71da23b9537be9be5e8aef11216271",
+      "sha256": "0309dfdefee294257cab24972cbf13dac072670777c136fb70482dbe1c849b48"
+    },
+    "preview/migration/fixtures/plugin-settings/case-016.config": {
+      "source": "migration/fixtures/plugin-settings/case-016.config",
+      "source_git_blob": "92da2a8ac38bae74ca3182c2ee29f2b6e63da426",
+      "sha256": "9de87675b84cfb1b47945e7481dd3948c7754af6c4924c47c9dc79177907165c"
+    },
+    "preview/migration/fixtures/plugin-settings/case-016.expected": {
+      "source": "migration/fixtures/plugin-settings/case-016.expected",
+      "source_git_blob": "501a29067abbfc5a166ee7647b27b606fb34878e",
+      "sha256": "ab82058fa5928e3aa3fd0afc24b6f7f4b41f56a634dacc3999d1f6753b38a43c"
+    },
+    "preview/migration/fixtures/plugin-settings/case-016.folder": {
+      "source": "migration/fixtures/plugin-settings/case-016.folder",
+      "source_git_blob": "4de7cbbebc71da23b9537be9be5e8aef11216271",
+      "sha256": "0309dfdefee294257cab24972cbf13dac072670777c136fb70482dbe1c849b48"
+    },
+    "preview/migration/fixtures/plugin-settings/case-017.config": {
+      "source": "migration/fixtures/plugin-settings/case-017.config",
+      "source_git_blob": "f5c16acb921c05cf25f61aac898cda7b877a1c83",
+      "sha256": "70f9017bba7396261ae8f20daa5089403c7a392079db0d072bb7ffb7bcc43407"
+    },
+    "preview/migration/fixtures/plugin-settings/case-017.expected": {
+      "source": "migration/fixtures/plugin-settings/case-017.expected",
+      "source_git_blob": "6c265886b7948200cfd7198f8f70af3e3d6d7b82",
+      "sha256": "8f3d148351861e183511594d8ea953422174403dc70fb734d457d7278eb0de89"
+    },
+    "preview/migration/fixtures/plugin-settings/case-017.folder": {
+      "source": "migration/fixtures/plugin-settings/case-017.folder",
+      "source_git_blob": "4de7cbbebc71da23b9537be9be5e8aef11216271",
+      "sha256": "0309dfdefee294257cab24972cbf13dac072670777c136fb70482dbe1c849b48"
+    },
+    "preview/migration/fixtures/plugin-settings/case-018.config": {
+      "source": "migration/fixtures/plugin-settings/case-018.config",
+      "source_git_blob": "55cba9831b596eb7e2421e3954b46047ad1885e2",
+      "sha256": "e12fd4f50b9332d074efd7365a21c9a266f8e16a270ff8a7d9f897eddcd14e87"
+    },
+    "preview/migration/fixtures/plugin-settings/case-018.expected": {
+      "source": "migration/fixtures/plugin-settings/case-018.expected",
+      "source_git_blob": "541f12829c8ec2159ae45bdcd9570bcfab1f1f64",
+      "sha256": "67c41b8a9c2af86c89b46d8110cd960a8a4bfb2520deeb6f73291b83202a0526"
+    },
+    "preview/migration/fixtures/plugin-settings/case-018.folder": {
+      "source": "migration/fixtures/plugin-settings/case-018.folder",
+      "source_git_blob": "4de7cbbebc71da23b9537be9be5e8aef11216271",
+      "sha256": "0309dfdefee294257cab24972cbf13dac072670777c136fb70482dbe1c849b48"
+    },
+    "preview/migration/fixtures/plugin-settings/case-019.config": {
+      "source": "migration/fixtures/plugin-settings/case-019.config",
+      "source_git_blob": "a1afbd40fc1d1b2aab71848bd609c0d4e23b28d7",
+      "sha256": "9771c24115ed0bdb1ccbca9807b25bbd0f008a162f46190ed5bb70791ed93836"
+    },
+    "preview/migration/fixtures/plugin-settings/case-019.expected": {
+      "source": "migration/fixtures/plugin-settings/case-019.expected",
+      "source_git_blob": "3f15c2dbbac7946d080a3ed009e32f229e217968",
+      "sha256": "7e5ec00728e44015e3e25f95faba476658691b44d275b1dcbd3d50f8d32eeb4c"
+    },
+    "preview/migration/fixtures/plugin-settings/case-019.folder": {
+      "source": "migration/fixtures/plugin-settings/case-019.folder",
+      "source_git_blob": "4de7cbbebc71da23b9537be9be5e8aef11216271",
+      "sha256": "0309dfdefee294257cab24972cbf13dac072670777c136fb70482dbe1c849b48"
+    },
+    "preview/migration/fixtures/plugin-settings/case-020.config": {
+      "source": "migration/fixtures/plugin-settings/case-020.config",
+      "source_git_blob": "aa0fd6c388a1c310296899e1154fd7356b6ae758",
+      "sha256": "21432811056b76d84f3f58eec7abcd95e024b17067d94595faa20834d2cf0328"
+    },
+    "preview/migration/fixtures/plugin-settings/case-020.expected": {
+      "source": "migration/fixtures/plugin-settings/case-020.expected",
+      "source_git_blob": "2edfe132ed394515907187381ace7a29980b26e2",
+      "sha256": "f19dd59d4d35f8a96adbfa2f92b6db452c2781e2dc61392333e1d3138a3b7b65"
+    },
+    "preview/migration/fixtures/plugin-settings/case-020.folder": {
+      "source": "migration/fixtures/plugin-settings/case-020.folder",
+      "source_git_blob": "4de7cbbebc71da23b9537be9be5e8aef11216271",
+      "sha256": "0309dfdefee294257cab24972cbf13dac072670777c136fb70482dbe1c849b48"
+    },
+    "preview/migration/fixtures/plugin-settings/case-021.config": {
+      "source": "migration/fixtures/plugin-settings/case-021.config",
+      "source_git_blob": "ec610b82f9ec36dd13de9c7647d0f2f1c4e0d50e",
+      "sha256": "9d142d6126b75b3f76780d3c74817999bd669520e1f98e95dc120dac3a12fc51"
+    },
+    "preview/migration/fixtures/plugin-settings/case-021.expected": {
+      "source": "migration/fixtures/plugin-settings/case-021.expected",
+      "source_git_blob": "501a29067abbfc5a166ee7647b27b606fb34878e",
+      "sha256": "ab82058fa5928e3aa3fd0afc24b6f7f4b41f56a634dacc3999d1f6753b38a43c"
+    },
+    "preview/migration/fixtures/plugin-settings/case-021.folder": {
+      "source": "migration/fixtures/plugin-settings/case-021.folder",
+      "source_git_blob": "4de7cbbebc71da23b9537be9be5e8aef11216271",
+      "sha256": "0309dfdefee294257cab24972cbf13dac072670777c136fb70482dbe1c849b48"
+    },
+    "preview/migration/fixtures/plugin-settings/case-022.config": {
+      "source": "migration/fixtures/plugin-settings/case-022.config",
+      "source_git_blob": "ece1bc455d8c23dd1bc878f1187a552bc5eb56d2",
+      "sha256": "c8afb9e45e12667a8204f34d36d83c9a14580dbf8d6451cb6f3791a24c4d3906"
+    },
+    "preview/migration/fixtures/plugin-settings/case-022.expected": {
+      "source": "migration/fixtures/plugin-settings/case-022.expected",
+      "source_git_blob": "2edfe132ed394515907187381ace7a29980b26e2",
+      "sha256": "f19dd59d4d35f8a96adbfa2f92b6db452c2781e2dc61392333e1d3138a3b7b65"
+    },
+    "preview/migration/fixtures/plugin-settings/case-022.folder": {
+      "source": "migration/fixtures/plugin-settings/case-022.folder",
+      "source_git_blob": "4de7cbbebc71da23b9537be9be5e8aef11216271",
+      "sha256": "0309dfdefee294257cab24972cbf13dac072670777c136fb70482dbe1c849b48"
+    },
+    "preview/migration/fixtures/plugin-settings/case-023.config": {
+      "source": "migration/fixtures/plugin-settings/case-023.config",
+      "source_git_blob": "201aceb1097f1e468f24039281c32db2fceea8e9",
+      "sha256": "e1935e10bff1e617ff3c36bbe52474fa04481ccb05f96cc793f34c08cb8491c7"
+    },
+    "preview/migration/fixtures/plugin-settings/case-023.expected": {
+      "source": "migration/fixtures/plugin-settings/case-023.expected",
+      "source_git_blob": "541f12829c8ec2159ae45bdcd9570bcfab1f1f64",
+      "sha256": "67c41b8a9c2af86c89b46d8110cd960a8a4bfb2520deeb6f73291b83202a0526"
+    },
+    "preview/migration/fixtures/plugin-settings/case-023.folder": {
+      "source": "migration/fixtures/plugin-settings/case-023.folder",
+      "source_git_blob": "4de7cbbebc71da23b9537be9be5e8aef11216271",
+      "sha256": "0309dfdefee294257cab24972cbf13dac072670777c136fb70482dbe1c849b48"
+    },
+    "preview/migration/fixtures/plugin-settings/case-024.config": {
+      "source": "migration/fixtures/plugin-settings/case-024.config",
+      "source_git_blob": "cc1f094935cf6f7d3c513c363548680ff8914796",
+      "sha256": "e4d46d63e7f210d5db136613b44d4de9b64651e0dfebadcae28218575e0d5f59"
+    },
+    "preview/migration/fixtures/plugin-settings/case-024.expected": {
+      "source": "migration/fixtures/plugin-settings/case-024.expected",
+      "source_git_blob": "902b12bf2c9e5c4e37ab60003f272db89b2affa2",
+      "sha256": "8ca1e279a4b56f186f96886900990753d915c5b672d6ade761ca2eb8ee31e559"
+    },
+    "preview/migration/fixtures/plugin-settings/case-024.folder": {
+      "source": "migration/fixtures/plugin-settings/case-024.folder",
+      "source_git_blob": "4de7cbbebc71da23b9537be9be5e8aef11216271",
+      "sha256": "0309dfdefee294257cab24972cbf13dac072670777c136fb70482dbe1c849b48"
+    },
+    "preview/migration/fixtures/plugin-settings/case-025.config": {
+      "source": "migration/fixtures/plugin-settings/case-025.config",
+      "source_git_blob": "ab30fd0792da4ab04d09950c7c24a9d51254109f",
+      "sha256": "ae695864650c30a4382db14c53f71ea7f1541531b94960f110d36945cec62236"
+    },
+    "preview/migration/fixtures/plugin-settings/case-025.expected": {
+      "source": "migration/fixtures/plugin-settings/case-025.expected",
+      "source_git_blob": "b65a705156331bbb13e6049c63e94f5de191a24d",
+      "sha256": "e5fea97c9f86daaad02831989a91120ed4d59f6cc3d32340bfae3a64fce433b2"
+    },
+    "preview/migration/fixtures/plugin-settings/case-025.folder": {
+      "source": "migration/fixtures/plugin-settings/case-025.folder",
+      "source_git_blob": "4de7cbbebc71da23b9537be9be5e8aef11216271",
+      "sha256": "0309dfdefee294257cab24972cbf13dac072670777c136fb70482dbe1c849b48"
+    },
+    "preview/migration/fixtures/plugin-settings/case-026.config": {
+      "source": "migration/fixtures/plugin-settings/case-026.config",
+      "source_git_blob": "ea98520d1c57fbf08f94abed269c71f65aeaf6b8",
+      "sha256": "2bf8ed2caf4b1b01cccf65aa3c7ffc7206989671b3f4ff3a77f622a8fbdaa3f6"
+    },
+    "preview/migration/fixtures/plugin-settings/case-026.expected": {
+      "source": "migration/fixtures/plugin-settings/case-026.expected",
+      "source_git_blob": "13cdaceda0793da15075704d3576c7e8e4f18a47",
+      "sha256": "636843815931f75acf688bdf88808ac296613f9fd8d871f601e18ad6edbf0a66"
+    },
+    "preview/migration/fixtures/plugin-settings/case-026.folder": {
+      "source": "migration/fixtures/plugin-settings/case-026.folder",
+      "source_git_blob": "4de7cbbebc71da23b9537be9be5e8aef11216271",
+      "sha256": "0309dfdefee294257cab24972cbf13dac072670777c136fb70482dbe1c849b48"
+    },
+    "preview/migration/fixtures/plugin-settings/case-027.config": {
+      "source": "migration/fixtures/plugin-settings/case-027.config",
+      "source_git_blob": "ce9849123786c2abf71bb2369fe6efd5fffb0018",
+      "sha256": "883fe222c1895ef0b02559eb9753fe4fbe67581e735fe8b3205eab921481674d"
+    },
+    "preview/migration/fixtures/plugin-settings/case-027.expected": {
+      "source": "migration/fixtures/plugin-settings/case-027.expected",
+      "source_git_blob": "fb88614e0a1245b50db2de62cd2995e85083a991",
+      "sha256": "6ab4e073b2bca4bfdb9c009bdfa6f931e3868992b6b6c5df70671afa06ec093d"
+    },
+    "preview/migration/fixtures/plugin-settings/case-027.folder": {
+      "source": "migration/fixtures/plugin-settings/case-027.folder",
+      "source_git_blob": "4de7cbbebc71da23b9537be9be5e8aef11216271",
+      "sha256": "0309dfdefee294257cab24972cbf13dac072670777c136fb70482dbe1c849b48"
+    },
+    "preview/migration/fixtures/plugin-settings/case-028.config": {
+      "source": "migration/fixtures/plugin-settings/case-028.config",
+      "source_git_blob": "11f089d84844dcb05e744b72cd1777186890b1cb",
+      "sha256": "0291f774c1f1fd040c8165b7e3f0507c7add6cec3cf1d0518349d609c4b46fe1"
+    },
+    "preview/migration/fixtures/plugin-settings/case-028.expected": {
+      "source": "migration/fixtures/plugin-settings/case-028.expected",
+      "source_git_blob": "902b12bf2c9e5c4e37ab60003f272db89b2affa2",
+      "sha256": "8ca1e279a4b56f186f96886900990753d915c5b672d6ade761ca2eb8ee31e559"
+    },
+    "preview/migration/fixtures/plugin-settings/case-028.folder": {
+      "source": "migration/fixtures/plugin-settings/case-028.folder",
+      "source_git_blob": "4de7cbbebc71da23b9537be9be5e8aef11216271",
+      "sha256": "0309dfdefee294257cab24972cbf13dac072670777c136fb70482dbe1c849b48"
+    },
+    "preview/migration/fixtures/plugin-settings/case-029.config": {
+      "source": "migration/fixtures/plugin-settings/case-029.config",
+      "source_git_blob": "c7c4e11dd9a2c96e043183a5cf60ea49cb332f38",
+      "sha256": "01d286ba2712a694f57aeacb214d843966db0798dd8e0e2b4e814ad5de595ab8"
+    },
+    "preview/migration/fixtures/plugin-settings/case-029.expected": {
+      "source": "migration/fixtures/plugin-settings/case-029.expected",
+      "source_git_blob": "015964cd2c680d5d0a72667f864566124e60eac9",
+      "sha256": "6d87a4fc81c3806a4694451c6a14c2f5a8e7f680f3e0981897182535cb96842e"
+    },
+    "preview/migration/fixtures/plugin-settings/case-029.folder": {
+      "source": "migration/fixtures/plugin-settings/case-029.folder",
+      "source_git_blob": "4de7cbbebc71da23b9537be9be5e8aef11216271",
+      "sha256": "0309dfdefee294257cab24972cbf13dac072670777c136fb70482dbe1c849b48"
+    },
+    "preview/migration/fixtures/plugin-settings/case-030.config": {
+      "source": "migration/fixtures/plugin-settings/case-030.config",
+      "source_git_blob": "4390180fc0db6f8754248b46adf207bb79399125",
+      "sha256": "7a02de529ef54fcf73d501760a4213234c8e829f840dc5d2299fc7a92bab9c1b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-030.expected": {
+      "source": "migration/fixtures/plugin-settings/case-030.expected",
+      "source_git_blob": "6332997d3c26fc50e0f8a2d894b6a04f61efeab8",
+      "sha256": "c06682447e1eac8d8af8d2364cbfc23cdf58cfcfaaf9418196f122d7c5f11f86"
+    },
+    "preview/migration/fixtures/plugin-settings/case-030.folder": {
+      "source": "migration/fixtures/plugin-settings/case-030.folder",
+      "source_git_blob": "52a70572fbaf33747cbd8ec72ef4e5d1baa391f1",
+      "sha256": "151a59dfc2ad36fbf0aca18da7cab61ed2f895ed2522546f4daa375b4d7b0b30"
+    },
+    "preview/migration/fixtures/plugin-settings/case-031.config": {
+      "source": "migration/fixtures/plugin-settings/case-031.config",
+      "source_git_blob": "0e65b98cbd31e8ebf79a1a7d5aa8ce99a6908097",
+      "sha256": "56ffd160cb886b471ce7e57724fea84f308b25dfa588834a16f9fef8b090c4ac"
+    },
+    "preview/migration/fixtures/plugin-settings/case-031.expected": {
+      "source": "migration/fixtures/plugin-settings/case-031.expected",
+      "source_git_blob": "46c0691c9a27290f101dae0a7fbe719482c92cf3",
+      "sha256": "adf675b759c97a51069186a8b0c11b380264cc82fd7350405f9d1428cfdb4335"
+    },
+    "preview/migration/fixtures/plugin-settings/case-031.folder": {
+      "source": "migration/fixtures/plugin-settings/case-031.folder",
+      "source_git_blob": "52a70572fbaf33747cbd8ec72ef4e5d1baa391f1",
+      "sha256": "151a59dfc2ad36fbf0aca18da7cab61ed2f895ed2522546f4daa375b4d7b0b30"
+    },
+    "preview/migration/fixtures/plugin-settings/case-032.config": {
+      "source": "migration/fixtures/plugin-settings/case-032.config",
+      "source_git_blob": "976df8ae8f171188d30b17edc6805a1619905b19",
+      "sha256": "d6591839847ea5afbb1e6da99dabd382084457074ae1b1d0d2baa64f4843821f"
+    },
+    "preview/migration/fixtures/plugin-settings/case-032.expected": {
+      "source": "migration/fixtures/plugin-settings/case-032.expected",
+      "source_git_blob": "b2c5b0624a68121dbd144571d7ea4747472e1f24",
+      "sha256": "8bc4a9f03f772f07c43b76ecb3ea69de51acafda0a1585d02926756d88db1e2d"
+    },
+    "preview/migration/fixtures/plugin-settings/case-032.folder": {
+      "source": "migration/fixtures/plugin-settings/case-032.folder",
+      "source_git_blob": "52a70572fbaf33747cbd8ec72ef4e5d1baa391f1",
+      "sha256": "151a59dfc2ad36fbf0aca18da7cab61ed2f895ed2522546f4daa375b4d7b0b30"
+    },
+    "preview/migration/fixtures/plugin-settings/case-033.config": {
+      "source": "migration/fixtures/plugin-settings/case-033.config",
+      "source_git_blob": "ca3767b9c2241e73a7af0ceda60940270d1af58d",
+      "sha256": "5c8793fbfa20ee2bfd3a3e03c00a76e7de7a80da193e05ed29aa786be000def8"
+    },
+    "preview/migration/fixtures/plugin-settings/case-033.expected": {
+      "source": "migration/fixtures/plugin-settings/case-033.expected",
+      "source_git_blob": "2bccac3d14eda824161f586377208dfe513adcbb",
+      "sha256": "0927c8ea3fe395f7368f5d3b1c146bc125bb841fa7b390e7837165914b470bf6"
+    },
+    "preview/migration/fixtures/plugin-settings/case-033.folder": {
+      "source": "migration/fixtures/plugin-settings/case-033.folder",
+      "source_git_blob": "52a70572fbaf33747cbd8ec72ef4e5d1baa391f1",
+      "sha256": "151a59dfc2ad36fbf0aca18da7cab61ed2f895ed2522546f4daa375b4d7b0b30"
+    },
+    "preview/migration/fixtures/plugin-settings/case-034.config": {
+      "source": "migration/fixtures/plugin-settings/case-034.config",
+      "source_git_blob": "837a302080c1c0d8c8325ccd311c0a42ef763f60",
+      "sha256": "e3e75e92e8820d458152d32e603d4bad9f1cf0e0ecc624cfa426de8d025a8131"
+    },
+    "preview/migration/fixtures/plugin-settings/case-034.expected": {
+      "source": "migration/fixtures/plugin-settings/case-034.expected",
+      "source_git_blob": "37956cfecdf036b1ab6bd9548d85e333e7fae511",
+      "sha256": "c1c93eb985c3fd492921d3ff4a86005ed5a76cf68d4a90ebb4be1fa90d86d217"
+    },
+    "preview/migration/fixtures/plugin-settings/case-034.folder": {
+      "source": "migration/fixtures/plugin-settings/case-034.folder",
+      "source_git_blob": "52a70572fbaf33747cbd8ec72ef4e5d1baa391f1",
+      "sha256": "151a59dfc2ad36fbf0aca18da7cab61ed2f895ed2522546f4daa375b4d7b0b30"
+    },
+    "preview/migration/fixtures/plugin-settings/case-035.config": {
+      "source": "migration/fixtures/plugin-settings/case-035.config",
+      "source_git_blob": "03c1bd7701aa83f42137b488e9ae5bd832214a77",
+      "sha256": "022617ba9126b3e81deda57f1c1f232afc5015924f3ac329b14e2813b2a70a4f"
+    },
+    "preview/migration/fixtures/plugin-settings/case-035.expected": {
+      "source": "migration/fixtures/plugin-settings/case-035.expected",
+      "source_git_blob": "6332997d3c26fc50e0f8a2d894b6a04f61efeab8",
+      "sha256": "c06682447e1eac8d8af8d2364cbfc23cdf58cfcfaaf9418196f122d7c5f11f86"
+    },
+    "preview/migration/fixtures/plugin-settings/case-035.folder": {
+      "source": "migration/fixtures/plugin-settings/case-035.folder",
+      "source_git_blob": "52a70572fbaf33747cbd8ec72ef4e5d1baa391f1",
+      "sha256": "151a59dfc2ad36fbf0aca18da7cab61ed2f895ed2522546f4daa375b4d7b0b30"
+    },
+    "preview/migration/fixtures/plugin-settings/case-036.config": {
+      "source": "migration/fixtures/plugin-settings/case-036.config",
+      "source_git_blob": "0362a63fea18aec172e87306d2e2e58d836c480c",
+      "sha256": "603a4610411891b70634b715567036da7350257c5dccadf749ea3e668e418a3a"
+    },
+    "preview/migration/fixtures/plugin-settings/case-036.expected": {
+      "source": "migration/fixtures/plugin-settings/case-036.expected",
+      "source_git_blob": "46c0691c9a27290f101dae0a7fbe719482c92cf3",
+      "sha256": "adf675b759c97a51069186a8b0c11b380264cc82fd7350405f9d1428cfdb4335"
+    },
+    "preview/migration/fixtures/plugin-settings/case-036.folder": {
+      "source": "migration/fixtures/plugin-settings/case-036.folder",
+      "source_git_blob": "52a70572fbaf33747cbd8ec72ef4e5d1baa391f1",
+      "sha256": "151a59dfc2ad36fbf0aca18da7cab61ed2f895ed2522546f4daa375b4d7b0b30"
+    },
+    "preview/migration/fixtures/plugin-settings/case-037.config": {
+      "source": "migration/fixtures/plugin-settings/case-037.config",
+      "source_git_blob": "ecb396f2d7abf6325f7a28406b4e01cc19b1838e",
+      "sha256": "7f77aeb1d16f2e2042b166395c7d783c0bbff0ca3bb7460b0ced9a6fb86f2b31"
+    },
+    "preview/migration/fixtures/plugin-settings/case-037.expected": {
+      "source": "migration/fixtures/plugin-settings/case-037.expected",
+      "source_git_blob": "6332997d3c26fc50e0f8a2d894b6a04f61efeab8",
+      "sha256": "c06682447e1eac8d8af8d2364cbfc23cdf58cfcfaaf9418196f122d7c5f11f86"
+    },
+    "preview/migration/fixtures/plugin-settings/case-037.folder": {
+      "source": "migration/fixtures/plugin-settings/case-037.folder",
+      "source_git_blob": "52a70572fbaf33747cbd8ec72ef4e5d1baa391f1",
+      "sha256": "151a59dfc2ad36fbf0aca18da7cab61ed2f895ed2522546f4daa375b4d7b0b30"
+    },
+    "preview/migration/fixtures/plugin-settings/case-038.config": {
+      "source": "migration/fixtures/plugin-settings/case-038.config",
+      "source_git_blob": "d5da6db44d4482d1513b9b6a4a2a5b64c3418023",
+      "sha256": "71d886d62600f619728f3c6ebadf4e1f0e47cb581885d1b7dfc4777164cbedd6"
+    },
+    "preview/migration/fixtures/plugin-settings/case-038.expected": {
+      "source": "migration/fixtures/plugin-settings/case-038.expected",
+      "source_git_blob": "2bccac3d14eda824161f586377208dfe513adcbb",
+      "sha256": "0927c8ea3fe395f7368f5d3b1c146bc125bb841fa7b390e7837165914b470bf6"
+    },
+    "preview/migration/fixtures/plugin-settings/case-038.folder": {
+      "source": "migration/fixtures/plugin-settings/case-038.folder",
+      "source_git_blob": "52a70572fbaf33747cbd8ec72ef4e5d1baa391f1",
+      "sha256": "151a59dfc2ad36fbf0aca18da7cab61ed2f895ed2522546f4daa375b4d7b0b30"
+    },
+    "preview/migration/fixtures/plugin-settings/case-039.config": {
+      "source": "migration/fixtures/plugin-settings/case-039.config",
+      "source_git_blob": "316b2977301c2e2b39b6da0bb0279300c874de3b",
+      "sha256": "ca8d69e7ec91c22a7d4538f65ca385ccffd4d2274c2af96181a94f73bffb48aa"
+    },
+    "preview/migration/fixtures/plugin-settings/case-039.expected": {
+      "source": "migration/fixtures/plugin-settings/case-039.expected",
+      "source_git_blob": "c8e9c762f10f8cb5d99392aaebdb8cf48d1a3fea",
+      "sha256": "d7346558c9a576aee956fb29ba8c1bb4a7838db56201a0aa37c2d044787713fa"
+    },
+    "preview/migration/fixtures/plugin-settings/case-039.folder": {
+      "source": "migration/fixtures/plugin-settings/case-039.folder",
+      "source_git_blob": "52a70572fbaf33747cbd8ec72ef4e5d1baa391f1",
+      "sha256": "151a59dfc2ad36fbf0aca18da7cab61ed2f895ed2522546f4daa375b4d7b0b30"
+    },
+    "preview/migration/fixtures/plugin-settings/case-040.config": {
+      "source": "migration/fixtures/plugin-settings/case-040.config",
+      "source_git_blob": "9ba549b3c73e21aa5021578cd3925e9a624ed7b0",
+      "sha256": "b1fa6e864fc0e89513b4dff30c66af171215ef187819fc5682e722223fb52a22"
+    },
+    "preview/migration/fixtures/plugin-settings/case-040.expected": {
+      "source": "migration/fixtures/plugin-settings/case-040.expected",
+      "source_git_blob": "f4015f5cf0abde7b68b8760c1f1e2957dbb444ac",
+      "sha256": "4332c8f4a180d5991c0259006957e0afcea8b3048f23d56b8e94b4f2eced6509"
+    },
+    "preview/migration/fixtures/plugin-settings/case-040.folder": {
+      "source": "migration/fixtures/plugin-settings/case-040.folder",
+      "source_git_blob": "52a70572fbaf33747cbd8ec72ef4e5d1baa391f1",
+      "sha256": "151a59dfc2ad36fbf0aca18da7cab61ed2f895ed2522546f4daa375b4d7b0b30"
+    },
+    "preview/migration/fixtures/plugin-settings/case-041.config": {
+      "source": "migration/fixtures/plugin-settings/case-041.config",
+      "source_git_blob": "a80d07f3f91abed02434c0bc7318a9d5c8b6fcb2",
+      "sha256": "16bdbc3e5f4c8ad17cfc5123559fba33e61fa4fa415887cbaf0946c4e6b4b3c8"
+    },
+    "preview/migration/fixtures/plugin-settings/case-041.expected": {
+      "source": "migration/fixtures/plugin-settings/case-041.expected",
+      "source_git_blob": "5ddb95bb24567f2e688974d85e22f2b0d7562187",
+      "sha256": "69193e21a43e90366bf6cd25646510859d7d69174a50d8ae32d4af24b94f00a6"
+    },
+    "preview/migration/fixtures/plugin-settings/case-041.folder": {
+      "source": "migration/fixtures/plugin-settings/case-041.folder",
+      "source_git_blob": "52a70572fbaf33747cbd8ec72ef4e5d1baa391f1",
+      "sha256": "151a59dfc2ad36fbf0aca18da7cab61ed2f895ed2522546f4daa375b4d7b0b30"
+    },
+    "preview/migration/fixtures/plugin-settings/case-042.config": {
+      "source": "migration/fixtures/plugin-settings/case-042.config",
+      "source_git_blob": "fb7104e72d382fc5f79a440d5209f93f75fc6c98",
+      "sha256": "44b24a6f677f15b62e87681806a5ab0f3021412338830a1e63a43305d52c8343"
+    },
+    "preview/migration/fixtures/plugin-settings/case-042.expected": {
+      "source": "migration/fixtures/plugin-settings/case-042.expected",
+      "source_git_blob": "55316f4a8672d2907afbef0c0334b24dec1d7479",
+      "sha256": "87f5063fad93190a70597436f1a6ebdb2625ea8ca4ca022d9b85a66157d03093"
+    },
+    "preview/migration/fixtures/plugin-settings/case-042.folder": {
+      "source": "migration/fixtures/plugin-settings/case-042.folder",
+      "source_git_blob": "52a70572fbaf33747cbd8ec72ef4e5d1baa391f1",
+      "sha256": "151a59dfc2ad36fbf0aca18da7cab61ed2f895ed2522546f4daa375b4d7b0b30"
+    },
+    "preview/migration/fixtures/plugin-settings/case-043.config": {
+      "source": "migration/fixtures/plugin-settings/case-043.config",
+      "source_git_blob": "3fc7cdf777cea365b5808b01b8cc73bb8c60c06f",
+      "sha256": "b0ee41cf39f8f772229a9baeec3d756661fb95a66741907c6579aa8aa6dad12f"
+    },
+    "preview/migration/fixtures/plugin-settings/case-043.expected": {
+      "source": "migration/fixtures/plugin-settings/case-043.expected",
+      "source_git_blob": "c8e9c762f10f8cb5d99392aaebdb8cf48d1a3fea",
+      "sha256": "d7346558c9a576aee956fb29ba8c1bb4a7838db56201a0aa37c2d044787713fa"
+    },
+    "preview/migration/fixtures/plugin-settings/case-043.folder": {
+      "source": "migration/fixtures/plugin-settings/case-043.folder",
+      "source_git_blob": "52a70572fbaf33747cbd8ec72ef4e5d1baa391f1",
+      "sha256": "151a59dfc2ad36fbf0aca18da7cab61ed2f895ed2522546f4daa375b4d7b0b30"
+    },
+    "preview/migration/fixtures/plugin-settings/case-044.config": {
+      "source": "migration/fixtures/plugin-settings/case-044.config",
+      "source_git_blob": "86c775bfa5b0f60742cdf029a5eb89616212e863",
+      "sha256": "ddc8560b877903ff269a52b73dc12d99f13a2c711e0ae7dade26fde55baef535"
+    },
+    "preview/migration/fixtures/plugin-settings/case-044.expected": {
+      "source": "migration/fixtures/plugin-settings/case-044.expected",
+      "source_git_blob": "9679030e56ad0300b09f0f2fcb09a98a666c0e2d",
+      "sha256": "fbe9370a5804ffede887bbffb674805f7174648455f11ae35a01958a8f60e31c"
+    },
+    "preview/migration/fixtures/plugin-settings/case-044.folder": {
+      "source": "migration/fixtures/plugin-settings/case-044.folder",
+      "source_git_blob": "52a70572fbaf33747cbd8ec72ef4e5d1baa391f1",
+      "sha256": "151a59dfc2ad36fbf0aca18da7cab61ed2f895ed2522546f4daa375b4d7b0b30"
+    },
+    "preview/migration/fixtures/plugin-settings/case-045.config": {
+      "source": "migration/fixtures/plugin-settings/case-045.config",
+      "source_git_blob": "6144e4adf5a467c86bf80cf7edd5495917f66926",
+      "sha256": "79a4313f0b4b012d361d85a4578efbac5378103b6e61fe818aa8010546e057c5"
+    },
+    "preview/migration/fixtures/plugin-settings/case-045.expected": {
+      "source": "migration/fixtures/plugin-settings/case-045.expected",
+      "source_git_blob": "96cd3e62a7444fb74483dbf2f10039bc6d5d5783",
+      "sha256": "a25b53b9e81dc727223aa9098fea73607b5161cbd17880b8e639ae573b664b57"
+    },
+    "preview/migration/fixtures/plugin-settings/case-045.folder": {
+      "source": "migration/fixtures/plugin-settings/case-045.folder",
+      "source_git_blob": "db90042c38b840a7cae1f10977810a28e7087cf2",
+      "sha256": "0d39ab0cd1b17c8625d63cd8a6826f5cf830e1eed34d706241d6a84b9b4b9ac9"
+    },
+    "preview/migration/fixtures/plugin-settings/case-046.config": {
+      "source": "migration/fixtures/plugin-settings/case-046.config",
+      "source_git_blob": "b28a75a026dbd6e9918b5651595ef2d01dc7fa72",
+      "sha256": "32cfefe0f1516cf213dc815127afa4176f04e65c71af8f65e65fcec459e0a552"
+    },
+    "preview/migration/fixtures/plugin-settings/case-046.expected": {
+      "source": "migration/fixtures/plugin-settings/case-046.expected",
+      "source_git_blob": "0f9ffd4f3f8a4e89daa5e28de7e5655a866931c4",
+      "sha256": "3b20431278ee8375cb27edc0de9fdbe9899d5986dc7ac962c1a8db2271ddee57"
+    },
+    "preview/migration/fixtures/plugin-settings/case-046.folder": {
+      "source": "migration/fixtures/plugin-settings/case-046.folder",
+      "source_git_blob": "db90042c38b840a7cae1f10977810a28e7087cf2",
+      "sha256": "0d39ab0cd1b17c8625d63cd8a6826f5cf830e1eed34d706241d6a84b9b4b9ac9"
+    },
+    "preview/migration/fixtures/plugin-settings/case-047.config": {
+      "source": "migration/fixtures/plugin-settings/case-047.config",
+      "source_git_blob": "b64c06cc81e99ffd53e33074fae33375872d88b2",
+      "sha256": "b9fd005b79323db2aba9020ed4893b3c8d12214d221321aa7b6946fe71a25de8"
+    },
+    "preview/migration/fixtures/plugin-settings/case-047.expected": {
+      "source": "migration/fixtures/plugin-settings/case-047.expected",
+      "source_git_blob": "0f9ffd4f3f8a4e89daa5e28de7e5655a866931c4",
+      "sha256": "3b20431278ee8375cb27edc0de9fdbe9899d5986dc7ac962c1a8db2271ddee57"
+    },
+    "preview/migration/fixtures/plugin-settings/case-047.folder": {
+      "source": "migration/fixtures/plugin-settings/case-047.folder",
+      "source_git_blob": "db90042c38b840a7cae1f10977810a28e7087cf2",
+      "sha256": "0d39ab0cd1b17c8625d63cd8a6826f5cf830e1eed34d706241d6a84b9b4b9ac9"
+    },
+    "preview/migration/fixtures/plugin-settings/case-048.config": {
+      "source": "migration/fixtures/plugin-settings/case-048.config",
+      "source_git_blob": "4feb1366d0e2a6f8e6a9777ed0030412511282b4",
+      "sha256": "853b05c523e870a859af904f761ec5a864c51faeccd4fddd19d3b6b5744dc866"
+    },
+    "preview/migration/fixtures/plugin-settings/case-048.expected": {
+      "source": "migration/fixtures/plugin-settings/case-048.expected",
+      "source_git_blob": "0f9ffd4f3f8a4e89daa5e28de7e5655a866931c4",
+      "sha256": "3b20431278ee8375cb27edc0de9fdbe9899d5986dc7ac962c1a8db2271ddee57"
+    },
+    "preview/migration/fixtures/plugin-settings/case-048.folder": {
+      "source": "migration/fixtures/plugin-settings/case-048.folder",
+      "source_git_blob": "db90042c38b840a7cae1f10977810a28e7087cf2",
+      "sha256": "0d39ab0cd1b17c8625d63cd8a6826f5cf830e1eed34d706241d6a84b9b4b9ac9"
+    },
+    "preview/migration/fixtures/plugin-settings/case-049.config": {
+      "source": "migration/fixtures/plugin-settings/case-049.config",
+      "source_git_blob": "232787f6d9a43f3a3a7d095f7aba440eaf85bb2a",
+      "sha256": "a62ff991392a068a224ecd2c9e84f4c4ff4fd9a79911effa72b81b5979654753"
+    },
+    "preview/migration/fixtures/plugin-settings/case-049.expected": {
+      "source": "migration/fixtures/plugin-settings/case-049.expected",
+      "source_git_blob": "0f9ffd4f3f8a4e89daa5e28de7e5655a866931c4",
+      "sha256": "3b20431278ee8375cb27edc0de9fdbe9899d5986dc7ac962c1a8db2271ddee57"
+    },
+    "preview/migration/fixtures/plugin-settings/case-049.folder": {
+      "source": "migration/fixtures/plugin-settings/case-049.folder",
+      "source_git_blob": "db90042c38b840a7cae1f10977810a28e7087cf2",
+      "sha256": "0d39ab0cd1b17c8625d63cd8a6826f5cf830e1eed34d706241d6a84b9b4b9ac9"
+    },
+    "preview/migration/fixtures/plugin-settings/case-050.config": {
+      "source": "migration/fixtures/plugin-settings/case-050.config",
+      "source_git_blob": "7aeea1b8afd4d617766fc1507404f46fd46e3480",
+      "sha256": "4e836e932336f3588262710feb57117505c01d0d85c0122c137c913b2c0e58b0"
+    },
+    "preview/migration/fixtures/plugin-settings/case-050.expected": {
+      "source": "migration/fixtures/plugin-settings/case-050.expected",
+      "source_git_blob": "96cd3e62a7444fb74483dbf2f10039bc6d5d5783",
+      "sha256": "a25b53b9e81dc727223aa9098fea73607b5161cbd17880b8e639ae573b664b57"
+    },
+    "preview/migration/fixtures/plugin-settings/case-050.folder": {
+      "source": "migration/fixtures/plugin-settings/case-050.folder",
+      "source_git_blob": "db90042c38b840a7cae1f10977810a28e7087cf2",
+      "sha256": "0d39ab0cd1b17c8625d63cd8a6826f5cf830e1eed34d706241d6a84b9b4b9ac9"
+    },
+    "preview/migration/fixtures/plugin-settings/case-051.config": {
+      "source": "migration/fixtures/plugin-settings/case-051.config",
+      "source_git_blob": "cb17d2c5cd7d9c785a9a50bace297823fb096f9a",
+      "sha256": "0847835a7e616bdc08933532ef875a8173f4d38b576b4d41aaa530f2bf872584"
+    },
+    "preview/migration/fixtures/plugin-settings/case-051.expected": {
+      "source": "migration/fixtures/plugin-settings/case-051.expected",
+      "source_git_blob": "0f9ffd4f3f8a4e89daa5e28de7e5655a866931c4",
+      "sha256": "3b20431278ee8375cb27edc0de9fdbe9899d5986dc7ac962c1a8db2271ddee57"
+    },
+    "preview/migration/fixtures/plugin-settings/case-051.folder": {
+      "source": "migration/fixtures/plugin-settings/case-051.folder",
+      "source_git_blob": "db90042c38b840a7cae1f10977810a28e7087cf2",
+      "sha256": "0d39ab0cd1b17c8625d63cd8a6826f5cf830e1eed34d706241d6a84b9b4b9ac9"
+    },
+    "preview/migration/fixtures/plugin-settings/case-052.config": {
+      "source": "migration/fixtures/plugin-settings/case-052.config",
+      "source_git_blob": "3836409dbdd54777bd05d4e26f02a214a239c766",
+      "sha256": "b4a22de731842b48c63f27834af590cbbf11956dcf4f5491c4006de243e4a6b5"
+    },
+    "preview/migration/fixtures/plugin-settings/case-052.expected": {
+      "source": "migration/fixtures/plugin-settings/case-052.expected",
+      "source_git_blob": "96cd3e62a7444fb74483dbf2f10039bc6d5d5783",
+      "sha256": "a25b53b9e81dc727223aa9098fea73607b5161cbd17880b8e639ae573b664b57"
+    },
+    "preview/migration/fixtures/plugin-settings/case-052.folder": {
+      "source": "migration/fixtures/plugin-settings/case-052.folder",
+      "source_git_blob": "db90042c38b840a7cae1f10977810a28e7087cf2",
+      "sha256": "0d39ab0cd1b17c8625d63cd8a6826f5cf830e1eed34d706241d6a84b9b4b9ac9"
+    },
+    "preview/migration/fixtures/plugin-settings/case-053.config": {
+      "source": "migration/fixtures/plugin-settings/case-053.config",
+      "source_git_blob": "6b1baac9cb3e7f8d0062e0188e2b69e53bd64a4c",
+      "sha256": "3e5eeb1cb58855491d4ef173b88d129accea10ed17d92952030f95adacfd5cff"
+    },
+    "preview/migration/fixtures/plugin-settings/case-053.expected": {
+      "source": "migration/fixtures/plugin-settings/case-053.expected",
+      "source_git_blob": "0f9ffd4f3f8a4e89daa5e28de7e5655a866931c4",
+      "sha256": "3b20431278ee8375cb27edc0de9fdbe9899d5986dc7ac962c1a8db2271ddee57"
+    },
+    "preview/migration/fixtures/plugin-settings/case-053.folder": {
+      "source": "migration/fixtures/plugin-settings/case-053.folder",
+      "source_git_blob": "db90042c38b840a7cae1f10977810a28e7087cf2",
+      "sha256": "0d39ab0cd1b17c8625d63cd8a6826f5cf830e1eed34d706241d6a84b9b4b9ac9"
+    },
+    "preview/migration/fixtures/plugin-settings/case-054.config": {
+      "source": "migration/fixtures/plugin-settings/case-054.config",
+      "source_git_blob": "e3cbcfe07145efbfd1a1731750f4d15ffc1160bb",
+      "sha256": "cd697ca3d9bb2ccb91e950c8be4919e3c4e993611863bccf61d79246d0572fff"
+    },
+    "preview/migration/fixtures/plugin-settings/case-054.expected": {
+      "source": "migration/fixtures/plugin-settings/case-054.expected",
+      "source_git_blob": "0f9ffd4f3f8a4e89daa5e28de7e5655a866931c4",
+      "sha256": "3b20431278ee8375cb27edc0de9fdbe9899d5986dc7ac962c1a8db2271ddee57"
+    },
+    "preview/migration/fixtures/plugin-settings/case-054.folder": {
+      "source": "migration/fixtures/plugin-settings/case-054.folder",
+      "source_git_blob": "db90042c38b840a7cae1f10977810a28e7087cf2",
+      "sha256": "0d39ab0cd1b17c8625d63cd8a6826f5cf830e1eed34d706241d6a84b9b4b9ac9"
+    },
+    "preview/migration/fixtures/plugin-settings/case-055.config": {
+      "source": "migration/fixtures/plugin-settings/case-055.config",
+      "source_git_blob": "4f250eaa5267387a0e7650ed6df0539e7b479dea",
+      "sha256": "f1d14c51617e45229d08347844107d2caac151ec52b25f21445ee84f0eaf7d77"
+    },
+    "preview/migration/fixtures/plugin-settings/case-055.expected": {
+      "source": "migration/fixtures/plugin-settings/case-055.expected",
+      "source_git_blob": "26c170482a667d16a72d5f8ee926d07a9ee18f0d",
+      "sha256": "b491b7069cf1bd53595ee69aa1faa5b4279c533ac6a7d17112e64e2bbda84bbc"
+    },
+    "preview/migration/fixtures/plugin-settings/case-055.folder": {
+      "source": "migration/fixtures/plugin-settings/case-055.folder",
+      "source_git_blob": "db90042c38b840a7cae1f10977810a28e7087cf2",
+      "sha256": "0d39ab0cd1b17c8625d63cd8a6826f5cf830e1eed34d706241d6a84b9b4b9ac9"
+    },
+    "preview/migration/fixtures/plugin-settings/case-056.config": {
+      "source": "migration/fixtures/plugin-settings/case-056.config",
+      "source_git_blob": "cf29123da4e3dcba893d9f218d37e798393946dc",
+      "sha256": "10f6e3fc05049cd0871452cfde73cff53dafcd05b621044be5097a89659818d1"
+    },
+    "preview/migration/fixtures/plugin-settings/case-056.expected": {
+      "source": "migration/fixtures/plugin-settings/case-056.expected",
+      "source_git_blob": "96cd3e62a7444fb74483dbf2f10039bc6d5d5783",
+      "sha256": "a25b53b9e81dc727223aa9098fea73607b5161cbd17880b8e639ae573b664b57"
+    },
+    "preview/migration/fixtures/plugin-settings/case-056.folder": {
+      "source": "migration/fixtures/plugin-settings/case-056.folder",
+      "source_git_blob": "db90042c38b840a7cae1f10977810a28e7087cf2",
+      "sha256": "0d39ab0cd1b17c8625d63cd8a6826f5cf830e1eed34d706241d6a84b9b4b9ac9"
+    },
+    "preview/migration/fixtures/plugin-settings/case-057.config": {
+      "source": "migration/fixtures/plugin-settings/case-057.config",
+      "source_git_blob": "4b98109fc0c98421e1ccf800497fd3ee956feaf7",
+      "sha256": "e77df81dab915c23311bf8c0b86ae9423045acff86296a16b2756f41ab93baed"
+    },
+    "preview/migration/fixtures/plugin-settings/case-057.expected": {
+      "source": "migration/fixtures/plugin-settings/case-057.expected",
+      "source_git_blob": "0f9ffd4f3f8a4e89daa5e28de7e5655a866931c4",
+      "sha256": "3b20431278ee8375cb27edc0de9fdbe9899d5986dc7ac962c1a8db2271ddee57"
+    },
+    "preview/migration/fixtures/plugin-settings/case-057.folder": {
+      "source": "migration/fixtures/plugin-settings/case-057.folder",
+      "source_git_blob": "db90042c38b840a7cae1f10977810a28e7087cf2",
+      "sha256": "0d39ab0cd1b17c8625d63cd8a6826f5cf830e1eed34d706241d6a84b9b4b9ac9"
+    },
+    "preview/migration/fixtures/plugin-settings/case-058.config": {
+      "source": "migration/fixtures/plugin-settings/case-058.config",
+      "source_git_blob": "bf632322fddf3743cc965879e638590aaa98da41",
+      "sha256": "b97e0d6f08ccf6434f13fe3bb100da6db312de76dff4eacc21bb165a6ea401de"
+    },
+    "preview/migration/fixtures/plugin-settings/case-058.expected": {
+      "source": "migration/fixtures/plugin-settings/case-058.expected",
+      "source_git_blob": "0f9ffd4f3f8a4e89daa5e28de7e5655a866931c4",
+      "sha256": "3b20431278ee8375cb27edc0de9fdbe9899d5986dc7ac962c1a8db2271ddee57"
+    },
+    "preview/migration/fixtures/plugin-settings/case-058.folder": {
+      "source": "migration/fixtures/plugin-settings/case-058.folder",
+      "source_git_blob": "db90042c38b840a7cae1f10977810a28e7087cf2",
+      "sha256": "0d39ab0cd1b17c8625d63cd8a6826f5cf830e1eed34d706241d6a84b9b4b9ac9"
+    },
+    "preview/migration/fixtures/plugin-settings/case-059.config": {
+      "source": "migration/fixtures/plugin-settings/case-059.config",
+      "source_git_blob": "9eee80c9826a5cc46595b24d54ca88e39fbe0a62",
+      "sha256": "1feb9de81290b0c101ef32f8c7f9f45838e49c2bbad9d31acc42de8e4f996416"
+    },
+    "preview/migration/fixtures/plugin-settings/case-059.expected": {
+      "source": "migration/fixtures/plugin-settings/case-059.expected",
+      "source_git_blob": "96cd3e62a7444fb74483dbf2f10039bc6d5d5783",
+      "sha256": "a25b53b9e81dc727223aa9098fea73607b5161cbd17880b8e639ae573b664b57"
+    },
+    "preview/migration/fixtures/plugin-settings/case-059.folder": {
+      "source": "migration/fixtures/plugin-settings/case-059.folder",
+      "source_git_blob": "db90042c38b840a7cae1f10977810a28e7087cf2",
+      "sha256": "0d39ab0cd1b17c8625d63cd8a6826f5cf830e1eed34d706241d6a84b9b4b9ac9"
+    },
+    "preview/migration/fixtures/plugin-settings/case-060.config": {
+      "source": "migration/fixtures/plugin-settings/case-060.config",
+      "source_git_blob": "321c454d325c5ad9728d5ae051102fba3944c887",
+      "sha256": "a556fe5115e74de2233038a95fbe95ee128e1b92fed2f30821d74dc6e10bdf42"
+    },
+    "preview/migration/fixtures/plugin-settings/case-060.expected": {
+      "source": "migration/fixtures/plugin-settings/case-060.expected",
+      "source_git_blob": "2f0bc755e3fedce3e86b29d92eef97f0747b4a57",
+      "sha256": "a8177cb0383aeb9f4e47242096cebd34617b92d3166cd00414d50dcd3ab432b1"
+    },
+    "preview/migration/fixtures/plugin-settings/case-060.folder": {
+      "source": "migration/fixtures/plugin-settings/case-060.folder",
+      "source_git_blob": "463e1b38dace1b9b7524fb7e2e6f77a17ff09330",
+      "sha256": "572a4e618f48388bfd64b44e0e154b19af262e8fa7b34c1915f49e4c80a9db2b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-061.config": {
+      "source": "migration/fixtures/plugin-settings/case-061.config",
+      "source_git_blob": "1b4645d5cfbddb22943d50214f15ddd38b6e4f82",
+      "sha256": "a976acbb0f2b4a3e0c8c982057235365ff20981e5389488ecd0d76dec332bec7"
+    },
+    "preview/migration/fixtures/plugin-settings/case-061.expected": {
+      "source": "migration/fixtures/plugin-settings/case-061.expected",
+      "source_git_blob": "977c66143bd99eae649adc1e543a1a1d94d6f07e",
+      "sha256": "2ba7084d90af6f606595b5efea43e099ae77165948f63d4ac2c6583fce5da971"
+    },
+    "preview/migration/fixtures/plugin-settings/case-061.folder": {
+      "source": "migration/fixtures/plugin-settings/case-061.folder",
+      "source_git_blob": "463e1b38dace1b9b7524fb7e2e6f77a17ff09330",
+      "sha256": "572a4e618f48388bfd64b44e0e154b19af262e8fa7b34c1915f49e4c80a9db2b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-062.config": {
+      "source": "migration/fixtures/plugin-settings/case-062.config",
+      "source_git_blob": "c2dc45fa398b3f5c3b79f45c696e2dbe123f5bcf",
+      "sha256": "f0b60ad6097c9c9f05797b069d4256dcbefd06a1fc6b6366fd11abcb6cec6af8"
+    },
+    "preview/migration/fixtures/plugin-settings/case-062.expected": {
+      "source": "migration/fixtures/plugin-settings/case-062.expected",
+      "source_git_blob": "50852d6084e613c859f531b46fedada529b17763",
+      "sha256": "2d9a55fe20f2f2cddc104b53f558ebf8d4e19ebcc2ef22a9bb5af9c7f97e0d92"
+    },
+    "preview/migration/fixtures/plugin-settings/case-062.folder": {
+      "source": "migration/fixtures/plugin-settings/case-062.folder",
+      "source_git_blob": "463e1b38dace1b9b7524fb7e2e6f77a17ff09330",
+      "sha256": "572a4e618f48388bfd64b44e0e154b19af262e8fa7b34c1915f49e4c80a9db2b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-063.config": {
+      "source": "migration/fixtures/plugin-settings/case-063.config",
+      "source_git_blob": "d25807ead347a486122d298c80b5821923b54521",
+      "sha256": "abfa73e17eae6c770e5d1d3e62aef008bd94e1c7a371326caed2c92257111dc1"
+    },
+    "preview/migration/fixtures/plugin-settings/case-063.expected": {
+      "source": "migration/fixtures/plugin-settings/case-063.expected",
+      "source_git_blob": "b026aa37a80a6a308e0e37463f2ab2b6908e9fe2",
+      "sha256": "14cd13e46f0ab84283ac06cfb16595a6b5a5a8604d7e66f1a3fd0b434f5a00b7"
+    },
+    "preview/migration/fixtures/plugin-settings/case-063.folder": {
+      "source": "migration/fixtures/plugin-settings/case-063.folder",
+      "source_git_blob": "463e1b38dace1b9b7524fb7e2e6f77a17ff09330",
+      "sha256": "572a4e618f48388bfd64b44e0e154b19af262e8fa7b34c1915f49e4c80a9db2b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-064.config": {
+      "source": "migration/fixtures/plugin-settings/case-064.config",
+      "source_git_blob": "2a68bd506c7cde97c15f1d9c1f759d36665ca56f",
+      "sha256": "3f126e5de35711a3bc74fbc184866efff10d7ff279cdbe581b5e559b609a69ea"
+    },
+    "preview/migration/fixtures/plugin-settings/case-064.expected": {
+      "source": "migration/fixtures/plugin-settings/case-064.expected",
+      "source_git_blob": "cf27682835f3e2b1ac22148a5ad3bbf710386374",
+      "sha256": "8834ba415c572d4c343064a8837721ae2cfcf95c380d8624ec3ae54cf658b0b8"
+    },
+    "preview/migration/fixtures/plugin-settings/case-064.folder": {
+      "source": "migration/fixtures/plugin-settings/case-064.folder",
+      "source_git_blob": "463e1b38dace1b9b7524fb7e2e6f77a17ff09330",
+      "sha256": "572a4e618f48388bfd64b44e0e154b19af262e8fa7b34c1915f49e4c80a9db2b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-065.config": {
+      "source": "migration/fixtures/plugin-settings/case-065.config",
+      "source_git_blob": "ab5932cb0fdd039fbeb2616dd457cbf57755dac1",
+      "sha256": "c2e232771ef37d668ba75f78b3e2c17c9ec63353344f21d761466629ead6c774"
+    },
+    "preview/migration/fixtures/plugin-settings/case-065.expected": {
+      "source": "migration/fixtures/plugin-settings/case-065.expected",
+      "source_git_blob": "2f0bc755e3fedce3e86b29d92eef97f0747b4a57",
+      "sha256": "a8177cb0383aeb9f4e47242096cebd34617b92d3166cd00414d50dcd3ab432b1"
+    },
+    "preview/migration/fixtures/plugin-settings/case-065.folder": {
+      "source": "migration/fixtures/plugin-settings/case-065.folder",
+      "source_git_blob": "463e1b38dace1b9b7524fb7e2e6f77a17ff09330",
+      "sha256": "572a4e618f48388bfd64b44e0e154b19af262e8fa7b34c1915f49e4c80a9db2b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-066.config": {
+      "source": "migration/fixtures/plugin-settings/case-066.config",
+      "source_git_blob": "6941dcde651ae682def52ebec7cc43462deda1bc",
+      "sha256": "9a7769dfd0f0b7ae50b58b83a6c246ba01af97011de47e17dae47003636a12b3"
+    },
+    "preview/migration/fixtures/plugin-settings/case-066.expected": {
+      "source": "migration/fixtures/plugin-settings/case-066.expected",
+      "source_git_blob": "977c66143bd99eae649adc1e543a1a1d94d6f07e",
+      "sha256": "2ba7084d90af6f606595b5efea43e099ae77165948f63d4ac2c6583fce5da971"
+    },
+    "preview/migration/fixtures/plugin-settings/case-066.folder": {
+      "source": "migration/fixtures/plugin-settings/case-066.folder",
+      "source_git_blob": "463e1b38dace1b9b7524fb7e2e6f77a17ff09330",
+      "sha256": "572a4e618f48388bfd64b44e0e154b19af262e8fa7b34c1915f49e4c80a9db2b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-067.config": {
+      "source": "migration/fixtures/plugin-settings/case-067.config",
+      "source_git_blob": "6ed6d614035ff60be0669cd2b44525a28d8df5eb",
+      "sha256": "2fe1c2e4541ae38d235060c9dc160819fb81de119c5021eade96773ecc2960ae"
+    },
+    "preview/migration/fixtures/plugin-settings/case-067.expected": {
+      "source": "migration/fixtures/plugin-settings/case-067.expected",
+      "source_git_blob": "2f0bc755e3fedce3e86b29d92eef97f0747b4a57",
+      "sha256": "a8177cb0383aeb9f4e47242096cebd34617b92d3166cd00414d50dcd3ab432b1"
+    },
+    "preview/migration/fixtures/plugin-settings/case-067.folder": {
+      "source": "migration/fixtures/plugin-settings/case-067.folder",
+      "source_git_blob": "463e1b38dace1b9b7524fb7e2e6f77a17ff09330",
+      "sha256": "572a4e618f48388bfd64b44e0e154b19af262e8fa7b34c1915f49e4c80a9db2b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-068.config": {
+      "source": "migration/fixtures/plugin-settings/case-068.config",
+      "source_git_blob": "328537d432294b67107eb7003e09b7e99272ba57",
+      "sha256": "6e34cea4e2cf886195768ceb56b44f20be54b3774f5e7443416111fb854ae6bb"
+    },
+    "preview/migration/fixtures/plugin-settings/case-068.expected": {
+      "source": "migration/fixtures/plugin-settings/case-068.expected",
+      "source_git_blob": "b026aa37a80a6a308e0e37463f2ab2b6908e9fe2",
+      "sha256": "14cd13e46f0ab84283ac06cfb16595a6b5a5a8604d7e66f1a3fd0b434f5a00b7"
+    },
+    "preview/migration/fixtures/plugin-settings/case-068.folder": {
+      "source": "migration/fixtures/plugin-settings/case-068.folder",
+      "source_git_blob": "463e1b38dace1b9b7524fb7e2e6f77a17ff09330",
+      "sha256": "572a4e618f48388bfd64b44e0e154b19af262e8fa7b34c1915f49e4c80a9db2b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-069.config": {
+      "source": "migration/fixtures/plugin-settings/case-069.config",
+      "source_git_blob": "2521153d4afb54df53778eb6a5474ff2a1ea4433",
+      "sha256": "ce351e284d900e864d4965434490928c15b70a1a0317269371a88935cb1587f5"
+    },
+    "preview/migration/fixtures/plugin-settings/case-069.expected": {
+      "source": "migration/fixtures/plugin-settings/case-069.expected",
+      "source_git_blob": "38877d38912114f4dc0f088da83b51c3ba51648e",
+      "sha256": "7c257a9df2f9f6100aa13ed37166f3595309451481ef19de9b5c12ad658682e1"
+    },
+    "preview/migration/fixtures/plugin-settings/case-069.folder": {
+      "source": "migration/fixtures/plugin-settings/case-069.folder",
+      "source_git_blob": "463e1b38dace1b9b7524fb7e2e6f77a17ff09330",
+      "sha256": "572a4e618f48388bfd64b44e0e154b19af262e8fa7b34c1915f49e4c80a9db2b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-070.config": {
+      "source": "migration/fixtures/plugin-settings/case-070.config",
+      "source_git_blob": "c30d01df225b07e4cffb6e15fadb7c65e9924750",
+      "sha256": "a50bfac43196c636ecc576c6c22172db5b8082a7ef65d8bab16e3d9226e95cdf"
+    },
+    "preview/migration/fixtures/plugin-settings/case-070.expected": {
+      "source": "migration/fixtures/plugin-settings/case-070.expected",
+      "source_git_blob": "08a05ac44b4f11fc642238f90f5c53c56c3b2cb7",
+      "sha256": "71036ce736e636b417282321dc8844c256f8a42e0374b13f9b7a93705fd3b0d8"
+    },
+    "preview/migration/fixtures/plugin-settings/case-070.folder": {
+      "source": "migration/fixtures/plugin-settings/case-070.folder",
+      "source_git_blob": "463e1b38dace1b9b7524fb7e2e6f77a17ff09330",
+      "sha256": "572a4e618f48388bfd64b44e0e154b19af262e8fa7b34c1915f49e4c80a9db2b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-071.config": {
+      "source": "migration/fixtures/plugin-settings/case-071.config",
+      "source_git_blob": "95cd3ec175ab150fa79c9c26aa9dd074eca5ebf6",
+      "sha256": "a6f10ac99903cb107b47fb9e0342f27260f812651624a7f4b975092b36e851c3"
+    },
+    "preview/migration/fixtures/plugin-settings/case-071.expected": {
+      "source": "migration/fixtures/plugin-settings/case-071.expected",
+      "source_git_blob": "99e545914973192aa28e46a2aa0d0a5b78be85e5",
+      "sha256": "784c52edf3abc392db138e8cef7bbb062ba0c4f4177e919b7239e7ee278c583b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-071.folder": {
+      "source": "migration/fixtures/plugin-settings/case-071.folder",
+      "source_git_blob": "463e1b38dace1b9b7524fb7e2e6f77a17ff09330",
+      "sha256": "572a4e618f48388bfd64b44e0e154b19af262e8fa7b34c1915f49e4c80a9db2b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-072.config": {
+      "source": "migration/fixtures/plugin-settings/case-072.config",
+      "source_git_blob": "93b8b7c45cbb2e9e73400d72c7100bf9752106d5",
+      "sha256": "2384b4073c8cb9055d980bd7cf1c72c34522e6bb828a5f608f79522888fa1a4a"
+    },
+    "preview/migration/fixtures/plugin-settings/case-072.expected": {
+      "source": "migration/fixtures/plugin-settings/case-072.expected",
+      "source_git_blob": "ed1a8316e0b66c2699126ddaa8a07347f9617dcd",
+      "sha256": "ae699dcc80af25f3f93c2dc799d9604b59dea88e7d0bd5401adb04db0ddabd82"
+    },
+    "preview/migration/fixtures/plugin-settings/case-072.folder": {
+      "source": "migration/fixtures/plugin-settings/case-072.folder",
+      "source_git_blob": "463e1b38dace1b9b7524fb7e2e6f77a17ff09330",
+      "sha256": "572a4e618f48388bfd64b44e0e154b19af262e8fa7b34c1915f49e4c80a9db2b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-073.config": {
+      "source": "migration/fixtures/plugin-settings/case-073.config",
+      "source_git_blob": "369114d6af6b2d506f4ba4efe127941e20b342d3",
+      "sha256": "954b403e22166fdb6552adb7c4a479a0b34be059d573321950e4f253d5ff6c25"
+    },
+    "preview/migration/fixtures/plugin-settings/case-073.expected": {
+      "source": "migration/fixtures/plugin-settings/case-073.expected",
+      "source_git_blob": "38877d38912114f4dc0f088da83b51c3ba51648e",
+      "sha256": "7c257a9df2f9f6100aa13ed37166f3595309451481ef19de9b5c12ad658682e1"
+    },
+    "preview/migration/fixtures/plugin-settings/case-073.folder": {
+      "source": "migration/fixtures/plugin-settings/case-073.folder",
+      "source_git_blob": "463e1b38dace1b9b7524fb7e2e6f77a17ff09330",
+      "sha256": "572a4e618f48388bfd64b44e0e154b19af262e8fa7b34c1915f49e4c80a9db2b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-074.config": {
+      "source": "migration/fixtures/plugin-settings/case-074.config",
+      "source_git_blob": "c905e7aa5bad9b1d85dda0187a360c442b88e575",
+      "sha256": "0416912e557bb1e6811c35ad06906fe863dc665b0e3bf21e0d12da0af5ae9f48"
+    },
+    "preview/migration/fixtures/plugin-settings/case-074.expected": {
+      "source": "migration/fixtures/plugin-settings/case-074.expected",
+      "source_git_blob": "f0a16a7b2592b70ae372d9562969cb4014142f7b",
+      "sha256": "5b391b60b545f54ec107882cf4d6d1847330a9a10c7a7462c6382269c94702ce"
+    },
+    "preview/migration/fixtures/plugin-settings/case-074.folder": {
+      "source": "migration/fixtures/plugin-settings/case-074.folder",
+      "source_git_blob": "463e1b38dace1b9b7524fb7e2e6f77a17ff09330",
+      "sha256": "572a4e618f48388bfd64b44e0e154b19af262e8fa7b34c1915f49e4c80a9db2b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-075.config": {
+      "source": "migration/fixtures/plugin-settings/case-075.config",
+      "source_git_blob": "a0013b2b6f9bd4b11d774cbac22c25bd9dc56f05",
+      "sha256": "8042fffafbf72bab4ea6dc6620ee5b141aa8057833dcce7ec0f741d3b4dfec1b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-075.expected": {
+      "source": "migration/fixtures/plugin-settings/case-075.expected",
+      "source_git_blob": "d28075387c02784b83783ac208e0a7265ee7aecd",
+      "sha256": "748cd42448e8a91f54eaa451f7b46bf228be7c5b35b9f82751af742131826220"
+    },
+    "preview/migration/fixtures/plugin-settings/case-075.folder": {
+      "source": "migration/fixtures/plugin-settings/case-075.folder",
+      "source_git_blob": "1c2e52cfe7542a64cdea57e5fec2fc1739846c03",
+      "sha256": "850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e"
+    },
+    "preview/migration/fixtures/plugin-settings/case-076.config": {
+      "source": "migration/fixtures/plugin-settings/case-076.config",
+      "source_git_blob": "b0ed86674fb0d9ae36819c2c46bfb127cbea38a4",
+      "sha256": "370b67d98aba6da6d369f102c3aeafd29a48d780d449a5ef825b237c16234600"
+    },
+    "preview/migration/fixtures/plugin-settings/case-076.expected": {
+      "source": "migration/fixtures/plugin-settings/case-076.expected",
+      "source_git_blob": "618bc9911c3a89b52f775ce630838dc047577107",
+      "sha256": "e16f090f0c3bf302c69a5490a3e11a817104feb2ed9151a0a10b279106c47035"
+    },
+    "preview/migration/fixtures/plugin-settings/case-076.folder": {
+      "source": "migration/fixtures/plugin-settings/case-076.folder",
+      "source_git_blob": "1c2e52cfe7542a64cdea57e5fec2fc1739846c03",
+      "sha256": "850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e"
+    },
+    "preview/migration/fixtures/plugin-settings/case-077.config": {
+      "source": "migration/fixtures/plugin-settings/case-077.config",
+      "source_git_blob": "07503d7ade877f72a8707b3dd32c56804a7c6983",
+      "sha256": "3ad6200a090e89832c14d898ead4f79e9b115b056051850f65738c844fd267a8"
+    },
+    "preview/migration/fixtures/plugin-settings/case-077.expected": {
+      "source": "migration/fixtures/plugin-settings/case-077.expected",
+      "source_git_blob": "618bc9911c3a89b52f775ce630838dc047577107",
+      "sha256": "e16f090f0c3bf302c69a5490a3e11a817104feb2ed9151a0a10b279106c47035"
+    },
+    "preview/migration/fixtures/plugin-settings/case-077.folder": {
+      "source": "migration/fixtures/plugin-settings/case-077.folder",
+      "source_git_blob": "1c2e52cfe7542a64cdea57e5fec2fc1739846c03",
+      "sha256": "850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e"
+    },
+    "preview/migration/fixtures/plugin-settings/case-078.config": {
+      "source": "migration/fixtures/plugin-settings/case-078.config",
+      "source_git_blob": "d2d7bfdac0216ab4ab977d1b54ac079468aee1e8",
+      "sha256": "353d721f5d1de5d13b6a3c0cbcb0a17a8fb58867dede932e8a5957038d503b6b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-078.expected": {
+      "source": "migration/fixtures/plugin-settings/case-078.expected",
+      "source_git_blob": "618bc9911c3a89b52f775ce630838dc047577107",
+      "sha256": "e16f090f0c3bf302c69a5490a3e11a817104feb2ed9151a0a10b279106c47035"
+    },
+    "preview/migration/fixtures/plugin-settings/case-078.folder": {
+      "source": "migration/fixtures/plugin-settings/case-078.folder",
+      "source_git_blob": "1c2e52cfe7542a64cdea57e5fec2fc1739846c03",
+      "sha256": "850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e"
+    },
+    "preview/migration/fixtures/plugin-settings/case-079.config": {
+      "source": "migration/fixtures/plugin-settings/case-079.config",
+      "source_git_blob": "d936bd2157cd2a94701e71675ec09bfc59bb2ded",
+      "sha256": "98909ced103b0cbd1b6a811bb61a9003d5a8f9dc933541c9837ca624c1a3a317"
+    },
+    "preview/migration/fixtures/plugin-settings/case-079.expected": {
+      "source": "migration/fixtures/plugin-settings/case-079.expected",
+      "source_git_blob": "618bc9911c3a89b52f775ce630838dc047577107",
+      "sha256": "e16f090f0c3bf302c69a5490a3e11a817104feb2ed9151a0a10b279106c47035"
+    },
+    "preview/migration/fixtures/plugin-settings/case-079.folder": {
+      "source": "migration/fixtures/plugin-settings/case-079.folder",
+      "source_git_blob": "1c2e52cfe7542a64cdea57e5fec2fc1739846c03",
+      "sha256": "850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e"
+    },
+    "preview/migration/fixtures/plugin-settings/case-080.config": {
+      "source": "migration/fixtures/plugin-settings/case-080.config",
+      "source_git_blob": "a795341347cf64db570cf81c3b149cda3b327268",
+      "sha256": "7262a9c3754cc30ab18655e8812cbaff65ff09a016fbef027c372758a3bd1b96"
+    },
+    "preview/migration/fixtures/plugin-settings/case-080.expected": {
+      "source": "migration/fixtures/plugin-settings/case-080.expected",
+      "source_git_blob": "d28075387c02784b83783ac208e0a7265ee7aecd",
+      "sha256": "748cd42448e8a91f54eaa451f7b46bf228be7c5b35b9f82751af742131826220"
+    },
+    "preview/migration/fixtures/plugin-settings/case-080.folder": {
+      "source": "migration/fixtures/plugin-settings/case-080.folder",
+      "source_git_blob": "1c2e52cfe7542a64cdea57e5fec2fc1739846c03",
+      "sha256": "850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e"
+    },
+    "preview/migration/fixtures/plugin-settings/case-081.config": {
+      "source": "migration/fixtures/plugin-settings/case-081.config",
+      "source_git_blob": "9ebb6e95ea38171b8611b9f0c933fb23c2c54d4e",
+      "sha256": "44966c6e8f6f210878ddbe5720eb50a1b57ec9fc8ee77a720d3caa4516546f87"
+    },
+    "preview/migration/fixtures/plugin-settings/case-081.expected": {
+      "source": "migration/fixtures/plugin-settings/case-081.expected",
+      "source_git_blob": "618bc9911c3a89b52f775ce630838dc047577107",
+      "sha256": "e16f090f0c3bf302c69a5490a3e11a817104feb2ed9151a0a10b279106c47035"
+    },
+    "preview/migration/fixtures/plugin-settings/case-081.folder": {
+      "source": "migration/fixtures/plugin-settings/case-081.folder",
+      "source_git_blob": "1c2e52cfe7542a64cdea57e5fec2fc1739846c03",
+      "sha256": "850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e"
+    },
+    "preview/migration/fixtures/plugin-settings/case-082.config": {
+      "source": "migration/fixtures/plugin-settings/case-082.config",
+      "source_git_blob": "626dfa7940afae05991a14c90f8fa54525c2bfb4",
+      "sha256": "39163344ccb8916b491057b72a7005f2d7a8dad0549deed1d2644895bef6c2e7"
+    },
+    "preview/migration/fixtures/plugin-settings/case-082.expected": {
+      "source": "migration/fixtures/plugin-settings/case-082.expected",
+      "source_git_blob": "d28075387c02784b83783ac208e0a7265ee7aecd",
+      "sha256": "748cd42448e8a91f54eaa451f7b46bf228be7c5b35b9f82751af742131826220"
+    },
+    "preview/migration/fixtures/plugin-settings/case-082.folder": {
+      "source": "migration/fixtures/plugin-settings/case-082.folder",
+      "source_git_blob": "1c2e52cfe7542a64cdea57e5fec2fc1739846c03",
+      "sha256": "850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e"
+    },
+    "preview/migration/fixtures/plugin-settings/case-083.config": {
+      "source": "migration/fixtures/plugin-settings/case-083.config",
+      "source_git_blob": "d01747a49143d71e692f1cf221e1e61dd21aba16",
+      "sha256": "2febb3323eb42aa090cf7c1abc4858879b427f889f656fac52b9e470d5cc6732"
+    },
+    "preview/migration/fixtures/plugin-settings/case-083.expected": {
+      "source": "migration/fixtures/plugin-settings/case-083.expected",
+      "source_git_blob": "618bc9911c3a89b52f775ce630838dc047577107",
+      "sha256": "e16f090f0c3bf302c69a5490a3e11a817104feb2ed9151a0a10b279106c47035"
+    },
+    "preview/migration/fixtures/plugin-settings/case-083.folder": {
+      "source": "migration/fixtures/plugin-settings/case-083.folder",
+      "source_git_blob": "1c2e52cfe7542a64cdea57e5fec2fc1739846c03",
+      "sha256": "850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e"
+    },
+    "preview/migration/fixtures/plugin-settings/case-084.config": {
+      "source": "migration/fixtures/plugin-settings/case-084.config",
+      "source_git_blob": "b7bc7c78b635747f60303ae27ff297728e28bcdb",
+      "sha256": "57bd39000e3b067b618837a1b48f08c59197ea713e3d06d812217731ac2a9119"
+    },
+    "preview/migration/fixtures/plugin-settings/case-084.expected": {
+      "source": "migration/fixtures/plugin-settings/case-084.expected",
+      "source_git_blob": "618bc9911c3a89b52f775ce630838dc047577107",
+      "sha256": "e16f090f0c3bf302c69a5490a3e11a817104feb2ed9151a0a10b279106c47035"
+    },
+    "preview/migration/fixtures/plugin-settings/case-084.folder": {
+      "source": "migration/fixtures/plugin-settings/case-084.folder",
+      "source_git_blob": "1c2e52cfe7542a64cdea57e5fec2fc1739846c03",
+      "sha256": "850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e"
+    },
+    "preview/migration/fixtures/plugin-settings/case-085.config": {
+      "source": "migration/fixtures/plugin-settings/case-085.config",
+      "source_git_blob": "96dfdc582d2e531ca3d12d0fb0a34785ceee3f4e",
+      "sha256": "642091da49fba18d00f220a6203ddc8f6c2b5b5a90015d3e919f76648386eb13"
+    },
+    "preview/migration/fixtures/plugin-settings/case-085.expected": {
+      "source": "migration/fixtures/plugin-settings/case-085.expected",
+      "source_git_blob": "97276599a286a4c67afb763dd98b9749a0259db2",
+      "sha256": "cd13871c051d58eedb6179141a398a748d1fc33d212830d9cb0d9c7f071fab1b"
+    },
+    "preview/migration/fixtures/plugin-settings/case-085.folder": {
+      "source": "migration/fixtures/plugin-settings/case-085.folder",
+      "source_git_blob": "1c2e52cfe7542a64cdea57e5fec2fc1739846c03",
+      "sha256": "850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e"
+    },
+    "preview/migration/fixtures/plugin-settings/case-086.config": {
+      "source": "migration/fixtures/plugin-settings/case-086.config",
+      "source_git_blob": "00b05845125421e31b6df64e5c42ae26bb618889",
+      "sha256": "ba5db24d7a268d92556099493405216b74dd9592d297e42139b5e60abdb03687"
+    },
+    "preview/migration/fixtures/plugin-settings/case-086.expected": {
+      "source": "migration/fixtures/plugin-settings/case-086.expected",
+      "source_git_blob": "d28075387c02784b83783ac208e0a7265ee7aecd",
+      "sha256": "748cd42448e8a91f54eaa451f7b46bf228be7c5b35b9f82751af742131826220"
+    },
+    "preview/migration/fixtures/plugin-settings/case-086.folder": {
+      "source": "migration/fixtures/plugin-settings/case-086.folder",
+      "source_git_blob": "1c2e52cfe7542a64cdea57e5fec2fc1739846c03",
+      "sha256": "850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e"
+    },
+    "preview/migration/fixtures/plugin-settings/case-087.config": {
+      "source": "migration/fixtures/plugin-settings/case-087.config",
+      "source_git_blob": "58ffce928fe579fdf2e41fb380f851df389717d6",
+      "sha256": "24d8880c2a44d284ce609399a5401e120ec9f470479ddbe59fd05216f8cb8996"
+    },
+    "preview/migration/fixtures/plugin-settings/case-087.expected": {
+      "source": "migration/fixtures/plugin-settings/case-087.expected",
+      "source_git_blob": "618bc9911c3a89b52f775ce630838dc047577107",
+      "sha256": "e16f090f0c3bf302c69a5490a3e11a817104feb2ed9151a0a10b279106c47035"
+    },
+    "preview/migration/fixtures/plugin-settings/case-087.folder": {
+      "source": "migration/fixtures/plugin-settings/case-087.folder",
+      "source_git_blob": "1c2e52cfe7542a64cdea57e5fec2fc1739846c03",
+      "sha256": "850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e"
+    },
+    "preview/migration/fixtures/plugin-settings/case-088.config": {
+      "source": "migration/fixtures/plugin-settings/case-088.config",
+      "source_git_blob": "149bcf728d0b7a9e8d7a80cc4570e5ebca861d3d",
+      "sha256": "4740876f0f86e2f9f59a27a33065887bae1e54580573e637572d722dfe19a6e9"
+    },
+    "preview/migration/fixtures/plugin-settings/case-088.expected": {
+      "source": "migration/fixtures/plugin-settings/case-088.expected",
+      "source_git_blob": "618bc9911c3a89b52f775ce630838dc047577107",
+      "sha256": "e16f090f0c3bf302c69a5490a3e11a817104feb2ed9151a0a10b279106c47035"
+    },
+    "preview/migration/fixtures/plugin-settings/case-088.folder": {
+      "source": "migration/fixtures/plugin-settings/case-088.folder",
+      "source_git_blob": "1c2e52cfe7542a64cdea57e5fec2fc1739846c03",
+      "sha256": "850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e"
+    },
+    "preview/migration/fixtures/plugin-settings/case-089.config": {
+      "source": "migration/fixtures/plugin-settings/case-089.config",
+      "source_git_blob": "8a3b20a1410ea470c6a737737e4ee62130234dd1",
+      "sha256": "7d92fcc47c111a3c51227a7ac3b3182e127679a37dcc826d8958da5b1927d8cf"
+    },
+    "preview/migration/fixtures/plugin-settings/case-089.expected": {
+      "source": "migration/fixtures/plugin-settings/case-089.expected",
+      "source_git_blob": "7bbbad048fea29f82370e24d6ea2f2a36bd6cccf",
+      "sha256": "b37e8fa1004b0515599f97875a10ac5dc0c7544f1be9e5ec5e7950bbff7f5fd4"
+    },
+    "preview/migration/fixtures/plugin-settings/case-089.folder": {
+      "source": "migration/fixtures/plugin-settings/case-089.folder",
+      "source_git_blob": "1c2e52cfe7542a64cdea57e5fec2fc1739846c03",
+      "sha256": "850f7dc43910ff890f8879c0ed26fe697c93a067ad93a7d50f466a7028a9bf4e"
+    },
+    "preview/migration/fixtures/plugin-settings/manifest.json": {
+      "source": "migration/fixtures/plugin-settings/manifest.json",
+      "source_git_blob": "2d29fb1d23255df1699fb5f213ab662b7502d5be",
+      "sha256": "97f4d0f1cb887b8cdb61c5637404b6ad5a9d49b148a5b7ad9a86a4f2bc4de2bb"
+    },
+    "preview/migration/fixtures/rating-data/commands.txt": {
+      "source": "migration/fixtures/rating-data/commands.txt",
+      "source_git_blob": "0d911c9005dcb57cc479a879fd4f985207ccbde9",
+      "sha256": "db3e186aa8732f554fe45648f8c70b1915057145dd12493b3336b5ffc7905919"
+    },
+    "preview/migration/fixtures/rating-data/expected.txt": {
+      "source": "migration/fixtures/rating-data/expected.txt",
+      "source_git_blob": "0867599cccd613f408a9dcaf731d698bf0c42f36",
+      "sha256": "e17460cae22483868685a15d47a47e551d128714153ad60bf3ac1e5595884f04"
+    },
+    "preview/migration/fixtures/rating-data/manifest.json": {
+      "source": "migration/fixtures/rating-data/manifest.json",
+      "source_git_blob": "ed687e6611bdf7f6233188615522370285796b0c",
+      "sha256": "15b053e883add4e9fcfcbd942e6b59d6d9b397055ebf1b72b9404539325ba79b"
+    },
+    "preview/migration/fixtures/rating-local/commands.txt": {
+      "source": "migration/fixtures/rating-local/commands.txt",
+      "source_git_blob": "8574e1f32683e551d61b5334dff37166866c40b9",
+      "sha256": "ecc190391ca0d61c34105151b7f607896082bcf2f29ccacc9c27c437b1228697"
+    },
+    "preview/migration/fixtures/rating-local/digit-zeroes.txt": {
+      "source": "migration/fixtures/rating-local/digit-zeroes.txt",
+      "source_git_blob": "757cc547a19af85c8e3b4cecc714bebdf34ba4a0",
+      "sha256": "bbbe2b6c847a90702a6b37ab63d445dcee1a0daa4132d33af3f87f94e8944dfa"
+    },
+    "preview/migration/fixtures/rating-local/expected.txt": {
+      "source": "migration/fixtures/rating-local/expected.txt",
+      "source_git_blob": "c859e305f6c6f7994ac1f33f862c501278d75301",
+      "sha256": "71af01ae1c4e5496f1e3449b09609d6d262df2de93926ef7e1a20261c452bfed"
+    },
+    "preview/migration/fixtures/rating-local/manifest.json": {
+      "source": "migration/fixtures/rating-local/manifest.json",
+      "source_git_blob": "1a5eeb11a78ccee736a8f4b4e400c90d8bcf41c7",
+      "sha256": "a925ba5d0983bc20e0653bc2648e10cd45886e896379d09ef250735e498f57ea"
+    },
+    "preview/migration/fixtures/rating-local/runtime.txt": {
+      "source": "migration/fixtures/rating-local/runtime.txt",
+      "source_git_blob": "4a8f9cd25d7de2aecf8c1074a7ad7bc5dd6f53a9",
+      "sha256": "a3bdaf447261e3dfc0e8663de929b21a5708f56222d3f5e5424f92b917aaeba2"
+    },
+    "preview/migration/fixtures/rpc-profile/cases.json": {
+      "source": "migration/fixtures/rpc-profile/cases.json",
+      "source_git_blob": "9b95c4c134271bba8d141db55f25807cef92e669",
+      "sha256": "4332facf46bc93da89fe27957065b0f948bcc3888c0e575f1194af50cf134604"
+    },
+    "preview/migration/fixtures/rpc-profile/manifest.json": {
+      "source": "migration/fixtures/rpc-profile/manifest.json",
+      "source_git_blob": "8348614ed44fdfa72605faa138f23b1f6c0408f8",
+      "sha256": "78c1755f4fce31aabbaad673f5530eb1d947768628ee9707fed3e490a35b5bf8"
+    },
+    "preview/migration/probes/engine/CMakeLists.txt": {
+      "source": "migration/probes/engine/CMakeLists.txt",
+      "source_git_blob": "daa119d13b226eb2bcccffde6617041a87aa7822",
+      "sha256": "e5f53d26ba72fa35af3b2582f2206d3c562c28a2932edcefe939d2809108cae4"
+    },
+    "preview/migration/probes/engine/main.cpp": {
+      "source": "migration/probes/engine/main.cpp",
+      "source_git_blob": "c920408ba01cbbfc2ac3d122c0a2d96f1e393d8a",
+      "sha256": "071c2a75838770bf90278a246eab1b190263f8ea9de806b72b7fafebe1a9d119"
+    },
+    "preview/migration/probes/engine/multifile_peer.cpp": {
+      "source": "migration/probes/engine/multifile_peer.cpp",
+      "source_git_blob": "d8b322e99964c0bdcd906cef6d21c72309b5c9de",
+      "sha256": "5c6e9fb5ea9493d69b43eb0b62c70c85b6632d6f0f81632986ee145356f1a834"
+    },
+    "preview/migration/probes/protocols/CMakeLists.txt": {
+      "source": "migration/probes/protocols/CMakeLists.txt",
+      "source_git_blob": "82c9803dd3f267a9b92ffacc1c167759b45128b3",
+      "sha256": "ad3b2f08d6e9a165657dfe68922340e5b552403736b2cb871d3c79d4062d19a2"
+    },
+    "preview/migration/probes/protocols/bencode.hpp": {
+      "source": "migration/probes/protocols/bencode.hpp",
+      "source_git_blob": "aed04b18c076ba205a9c293f9cef7a2cf09ffe25",
+      "sha256": "9deb2031beb2b74a97bda01e36f25c40c257855b90f11eb929108e27101d30f5"
+    },
+    "preview/migration/probes/protocols/crypto.cpp": {
+      "source": "migration/probes/protocols/crypto.cpp",
+      "source_git_blob": "ff0741f6d997561a45620d4cb846b08b01a2312d",
+      "sha256": "582d652d7bfc11d6697136eac5890144b19b2840c1fde1c834d6317467475abf"
+    },
+    "preview/migration/probes/protocols/crypto.hpp": {
+      "source": "migration/probes/protocols/crypto.hpp",
+      "source_git_blob": "3cbc73c9a3b81526c99c26be8f639fe1c19618b7",
+      "sha256": "f0750af75e6d5a89ba3a483be0342350f2f50080b2325d50a231bf1d6fe7acff"
+    },
+    "preview/migration/probes/protocols/main.cpp": {
+      "source": "migration/probes/protocols/main.cpp",
+      "source_git_blob": "2b4628f43aa7ad3ed597ad785548751db0cead8e",
+      "sha256": "2828256e0ed3af4323dbf293ccddae2a0e3e15ca81229a08e62460af5094216e"
+    },
+    "preview/migration/probes/protocols/tests.cpp": {
+      "source": "migration/probes/protocols/tests.cpp",
+      "source_git_blob": "2457294f6346a61208c0ecde652c7e09b743415f",
+      "sha256": "becfa464bb95531c9de1b50530a8886667a0adb5e8cd482db236bb7b5a09bad7"
+    },
+    "preview/README.md": {
+      "source": "migration/publication/preview/README.md",
+      "source_git_blob": "ba79aa66f977709468d1e14c3dab3bb760c8e695",
+      "sha256": "8bbc20eb71acbdd171a62b36df054923ea75aa8615f704d65ed42c4ea3365f78"
+    },
+    ".gitignore": {
+      "source": "migration/publication/preview/gitignore",
+      "source_git_blob": "f6e69240f8658da0d79792a7ca32e92d549b894e",
+      "sha256": "27325f8781607a01d7cd20ab5e2c0367a218982184b7e0b896ae077027d0446c"
+    },
+    ".github/workflows/native-preview.yml": {
+      "source": "migration/publication/preview/native-preview.yml",
+      "source_git_blob": "0124e22972eff80af6bdc98d12047c58b5e4021c",
+      "sha256": "b78b0914b4370b9b25b041858a5c113400afd19983785ec9dd6e3754a045a498"
+    },
+    "preview/migration/tools/desktop_interop.py": {
+      "source": "migration/tools/desktop_interop.py",
+      "source_git_blob": "4b8f5671f02af1502703aa43d3d25913deb74ef4",
+      "sha256": "4aad9ab5871b35be172369bcc1e9f8257dec247dce6e7d0b0d8c9faca0b8d49c"
+    },
+    "preview/migration/tools/engine.py": {
+      "source": "migration/tools/engine.py",
+      "source_git_blob": "d33efddbe745033682e205d4b8d97ac66ea38163",
+      "sha256": "d256add344e32dfcafb84c34c7213711b5800f088c4a1395f0f1e918d2f0d56c"
+    },
+    "preview/migration/tools/handoff.py": {
+      "source": "migration/tools/handoff.py",
+      "source_git_blob": "128fe057ad7d4a0f3378644366c290f6fb93d46c",
+      "sha256": "715cc1de2198a2d593501302b41186983dbe495172bd0b4c1709ddd399070bd6"
+    },
+    "migration/tools/hosted_preview_dependencies.sh": {
+      "source": "migration/tools/hosted_preview_dependencies.sh",
+      "source_git_blob": "507008b29cccca333572418b84867fe054cebd40",
+      "sha256": "32af91ec7a551667fb5b558558b80929d14480bbb3d22252d33f21f4ce2f4066"
+    },
+    "preview/migration/tools/multifile_handoff.py": {
+      "source": "migration/tools/multifile_handoff.py",
+      "source_git_blob": "a5222934605d87de228cf8ff4eefc8a5e2fb79dd",
+      "sha256": "d3b10577b03c1f7f67eb67c94acd012f38d3eca4ea51fdd9f039f558bb1124f6"
+    },
+    "preview/migration/tools/multifile_prepare.py": {
+      "source": "migration/tools/multifile_prepare.py",
+      "source_git_blob": "2e20a19c583701244e8791506de20dc3dc0b2aa8",
+      "sha256": "6b7a592ee150aa548e93a80ab742ee375a1e6e977e47f2ffc34d3fde90414bb5"
+    },
+    "preview/migration/tools/oracle.py": {
+      "source": "migration/tools/oracle.py",
+      "source_git_blob": "c1220686d5da49a060aa32037b137812e2bbfee2",
+      "sha256": "8eb1cc4758ba78b4679b05b553ed8f6b7c1c1abe1745b8b1f5357ae681f0710f"
+    },
+    "preview/migration/tools/peer_interop.py": {
+      "source": "migration/tools/peer_interop.py",
+      "source_git_blob": "5d8fa113ab095070d37f86798700fa203cc355d8",
+      "sha256": "93e1577f1896fbd438a93b0e128c90b394fedaca42fe56db8189fc7f43f5b299"
+    },
+    "preview/migration/tools/sources.py": {
+      "source": "migration/tools/sources.py",
+      "source_git_blob": "cff083147fe5c12df01af4b1dc4673baec04e078",
+      "sha256": "16c4a0e46fdd52b313e6a2d28e592dc0314e8398a270ab0d7083f66a7abf5733"
+    },
+    "preview/migration/tools/stage_preview.py": {
+      "source": "migration/tools/stage_preview.py",
+      "source_git_blob": "823792f10bb7751c7f547689e9b76f2be689f9bf",
+      "sha256": "7fa95c7226df6ce3fc2dbc413a2a188fdb4eecddeb6357aa46f872127e61e7e2"
+    },
+    "preview/migration/tools/state_interop.py": {
+      "source": "migration/tools/state_interop.py",
+      "source_git_blob": "ec70d27367dfb564b6edcdc1a1f079fbb0e6d98e",
+      "sha256": "6b6c64b8f2ccfb9e5d8d818b156d9556685ce6f2c4b2d07c0ba51d68ccb7625e"
+    },
+    "preview/native/CMakeLists.txt": {
+      "source": "native/CMakeLists.txt",
+      "source_git_blob": "7718cfabaf513af1e65c5d0a6e87e2b3068f1cac",
+      "sha256": "f19b755253c754692a0f5273236cbd2f771d01bafd7e22ff4bd0a0592d6fd8da"
+    },
+    "preview/native/adapters/CMakeLists.txt": {
+      "source": "native/adapters/CMakeLists.txt",
+      "source_git_blob": "4488df030eec6c44c44c677496d682e399ef9306",
+      "sha256": "e788d8c6e537b5d2960d5693c0c2f7e083b1b13f6cd2466c3645d261e4046bae"
+    },
+    "preview/native/adapters/MPL-2.0.txt": {
+      "source": "native/adapters/MPL-2.0.txt",
+      "source_git_blob": "14e2f777f6c395e7e04ab4aa306bbcc4b0c1120e",
+      "sha256": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85"
+    },
+    "preview/native/adapters/encoded_document.cpp": {
+      "source": "native/adapters/encoded_document.cpp",
+      "source_git_blob": "bed474c4c2079a96928446b966c256f0bf711a02",
+      "sha256": "6963883e88118c95d2668c926cb6c15b78c5eb299ccf2f98bbba5b0026f276a2"
+    },
+    "preview/native/adapters/encoded_document.hpp": {
+      "source": "native/adapters/encoded_document.hpp",
+      "source_git_blob": "13f1983a56ac851a283d764119456b376de81e69",
+      "sha256": "fce354efe66973b5ad655b9d0fd09891bc610206d54918bdc0f4ca6ae6b333be"
+    },
+    "preview/native/adapters/file_io.cpp": {
+      "source": "native/adapters/file_io.cpp",
+      "source_git_blob": "37c74a5d4cfef571335468776c2a112974643e90",
+      "sha256": "c55df3bfa6531534819a798351a5320365e1081d774f466fe4342bffa54793b9"
+    },
+    "preview/native/adapters/file_io.hpp": {
+      "source": "native/adapters/file_io.hpp",
+      "source_git_blob": "d3c5943ff61707c9c3c24a4ad912ded4f90da293",
+      "sha256": "41b14236290a65b52f75d56f076857a1ffd037f9bd823f1f9afef98c82a9cd37"
+    },
+    "preview/native/adapters/library_view.cpp": {
+      "source": "native/adapters/library_view.cpp",
+      "source_git_blob": "a245ebeedbc659214a33da1d33801a3435dde5be",
+      "sha256": "a9aa1e0f6ccde4a7b4990f2340da1dd3472d372441b1389805e5d16ef1b229d4"
+    },
+    "preview/native/adapters/library_view.hpp": {
+      "source": "native/adapters/library_view.hpp",
+      "source_git_blob": "68edbc945c5047491a8e3dc4a24db29246bc6304",
+      "sha256": "43877d12f340bdd43cb1df1b98eddf6b39c89b7ec51d63de3b572ba9d4b5a82e"
+    },
+    "preview/native/adapters/mldht_cache.cpp": {
+      "source": "native/adapters/mldht_cache.cpp",
+      "source_git_blob": "2943889c8c56382f0dab621135a3a6d9c8f56585",
+      "sha256": "5d5b5b4f33388ea03c45e4acf3fce8eee4d203cef1e701f6e2bd4495c7c615ae"
+    },
+    "preview/native/adapters/mldht_cache.hpp": {
+      "source": "native/adapters/mldht_cache.hpp",
+      "source_git_blob": "031c9f29973d124a67c5a56198a8644758617cca",
+      "sha256": "b3aadc2899eb224456baa7540ed988bd2e8bd0762f7fd35eeb01c23580bcd12c"
+    },
+    "preview/native/adapters/plugin_attributes.cpp": {
+      "source": "native/adapters/plugin_attributes.cpp",
+      "source_git_blob": "10ed1fbb982f86d59e0fc5584f7065d1f8db6d70",
+      "sha256": "52cc2ef53e6da91516389330eff9aa50537687cda75c3704a2658cece0cb6fce"
+    },
+    "preview/native/adapters/plugin_attributes.hpp": {
+      "source": "native/adapters/plugin_attributes.hpp",
+      "source_git_blob": "659606b4533557abd422a93560e15e19d25a4442",
+      "sha256": "ee79aa4f830c23d30d0cee54fe67e766822a777698e8a75456ea482abf0237e3"
+    },
+    "preview/native/adapters/plugin_keys.cpp": {
+      "source": "native/adapters/plugin_keys.cpp",
+      "source_git_blob": "ed887390d11210142d0f875c119cba3108d75930",
+      "sha256": "20f7681d3d24ce67280b95743bc78ef6cc81e1cd04773ea55eb97b096f7da9a2"
+    },
+    "preview/native/adapters/plugin_keys.hpp": {
+      "source": "native/adapters/plugin_keys.hpp",
+      "source_git_blob": "078e6e08b9284348960d0b34e0d9d9a05b203ea8",
+      "sha256": "c80f48e876f915f5623b1ddb22f47850ea19f0e387f24a5e959dbcd46fa9cd3c"
+    },
+    "preview/native/adapters/plugin_settings.cpp": {
+      "source": "native/adapters/plugin_settings.cpp",
+      "source_git_blob": "8d9fee5b0c7a97e216a7a3828886d8ba7ae34a77",
+      "sha256": "fcb17247a550e30103028498e781bcb9f0b088290b7b8cd414c0e3263233b640"
+    },
+    "preview/native/adapters/plugin_settings.hpp": {
+      "source": "native/adapters/plugin_settings.hpp",
+      "source_git_blob": "c64a529d8223006ad3c577da63888d7aa55a3efb",
+      "sha256": "d711ed6f31510182db70c678e61d362c9583686af9e11dd3ba37da37b7b74991"
+    },
+    "preview/native/adapters/profile.cpp": {
+      "source": "native/adapters/profile.cpp",
+      "source_git_blob": "7104c1aceac28fe57f70d06930d44733d96ee551",
+      "sha256": "f31f99cf73484c0c4fb058a6fc9e3937ecd74412f5ae794c775c0a7e8c4b91ee"
+    },
+    "preview/native/adapters/profile.hpp": {
+      "source": "native/adapters/profile.hpp",
+      "source_git_blob": "7594d248eddb981d1463b89df1d49839651dafd7",
+      "sha256": "e91ff37048e02b87a4d6f97d774fe3e33b491febd0b2ec55d3dedbbf20dd60ff"
+    },
+    "preview/native/adapters/rpc_profile.cpp": {
+      "source": "native/adapters/rpc_profile.cpp",
+      "source_git_blob": "4248820cba254fa609bfcfb70b637144e9e81327",
+      "sha256": "fb54979bb5ef2cf205795e5e09a71573233614c1fa64b58646906828cd5c8785"
+    },
+    "preview/native/adapters/rpc_profile.hpp": {
+      "source": "native/adapters/rpc_profile.hpp",
+      "source_git_blob": "83c523ab49eb20ba22895df6ea15df00e406d2b3",
+      "sha256": "2a19a6c2df89044f9ddc98dfedf5c37bbb7a5252d31a3dd853587d57685b3ffa"
+    },
+    "preview/native/adapters/torrent_state.cpp": {
+      "source": "native/adapters/torrent_state.cpp",
+      "source_git_blob": "dbaa0b47fa85990c3bce733f8deed03f8fca6406",
+      "sha256": "215f3e4ad1483615543529af0cbfc557645706f2536048126438b9399d3df0f7"
+    },
+    "preview/native/adapters/torrent_state.hpp": {
+      "source": "native/adapters/torrent_state.hpp",
+      "source_git_blob": "37a0040383586324fd1cc3808bb37a70aa1fd862",
+      "sha256": "947bb4933bbfe11d1e7162e0f1d039ff25feb3ad59f0227a2fb4b52f770318c6"
+    },
+    "preview/native/app/CMakeLists.txt": {
+      "source": "native/app/CMakeLists.txt",
+      "source_git_blob": "59aebeffc8f076c82545434ebe2d067368220cca",
+      "sha256": "daeaee58dfff6d5e963299296c7212ed70046bb3250c881059511e4fca7d418c"
+    },
+    "preview/native/app/main.cpp": {
+      "source": "native/app/main.cpp",
+      "source_git_blob": "f0a4970dd7f9c7b6c77c0805345ccca4e5f846eb",
+      "sha256": "f01b44655983ac1647c2784a31eadfc4663e38a397608d67a0255daee5a9ccff"
+    },
+    "preview/native/app/main_desktop.cpp": {
+      "source": "native/app/main_desktop.cpp",
+      "source_git_blob": "6b980c4d14f453248ea5865aaeb855fdae7c4f95",
+      "sha256": "321dd6beca9a6b052d105873be494090e39ecfb7db68196f46edee691dd8b766"
+    },
+    "preview/native/app/session_bridge.cpp": {
+      "source": "native/app/session_bridge.cpp",
+      "source_git_blob": "78e014e86428cb758ddaf019fe96d7fcdca34a34",
+      "sha256": "c9d8145e15602b2b0c2b0ed58ce04786905f2e021caeca85f64fddd4528c0e3e"
+    },
+    "preview/native/app/session_bridge.hpp": {
+      "source": "native/app/session_bridge.hpp",
+      "source_git_blob": "ceba9cd1c1bc933bd5dc70725d16219aa33d6ec1",
+      "sha256": "e7312e57494c9106a20f55ccde826e483d904902a720def65fbb19669c96bb45"
+    },
+    "preview/native/cmake/Toolchain.cmake": {
+      "source": "native/cmake/Toolchain.cmake",
+      "source_git_blob": "e5524498385657fa80b50842092c09c5754e43ec",
+      "sha256": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564"
+    },
+    "preview/native/core/BiglyBTCCoreConfig.cmake.in": {
+      "source": "native/core/BiglyBTCCoreConfig.cmake.in",
+      "source_git_blob": "f138cfed1d14d644e50787870eb4eb49fc2fb733",
+      "sha256": "cd41ff91c094f97798b9ce8e1988a4a805d0ddd90c99c8feb45223b033e1c087"
+    },
+    "preview/native/core/CMakeLists.txt": {
+      "source": "native/core/CMakeLists.txt",
+      "source_git_blob": "391e1225983442a6e0a0210662c399e5de603695",
+      "sha256": "bd0e3c00533497d4ad524bb4ff82adf26e1f353a24a6f7b5c5ff53cf94a64d09"
+    },
+    "preview/native/core/COPYING": {
+      "source": "native/core/COPYING",
+      "source_git_blob": "23cb790338e191e29205d6f4123882c0583ef8eb",
+      "sha256": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73"
+    },
+    "preview/native/core/NOTICE.md": {
+      "source": "native/core/NOTICE.md",
+      "source_git_blob": "1fddd1b8d341ddf3961d63eb4ff50a1a758fb852",
+      "sha256": "134ce136c10d24a9fe87da3e3502cf03f8e641578f699b84a68b6b6f3907cf63"
+    },
+    "preview/native/core/include/biglybtc/bencode.hpp": {
+      "source": "native/core/include/biglybtc/bencode.hpp",
+      "source_git_blob": "88e48d0acfe97437d0c094acbd8fceaaa1d32a86",
+      "sha256": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd"
+    },
+    "preview/native/core/include/biglybtc/executor.hpp": {
+      "source": "native/core/include/biglybtc/executor.hpp",
+      "source_git_blob": "52325a8c91c7ca6972f38c7e47f9f99fae61f188",
+      "sha256": "0d99cc28102acb980070efc9a72f8e0686ecf94dc43bb81198694245c6b72777"
+    },
+    "preview/native/core/include/biglybtc/file_policy.hpp": {
+      "source": "native/core/include/biglybtc/file_policy.hpp",
+      "source_git_blob": "89c7adcc3bc137400a7b237916d1281692bdef4b",
+      "sha256": "0d199f329d775783d9f4195ba6e14ff660b410ce4bfc555c4c55b4eaa43bff46"
+    },
+    "preview/native/core/include/biglybtc/library.hpp": {
+      "source": "native/core/include/biglybtc/library.hpp",
+      "source_git_blob": "9eae63582317528f8b2b046c5275ccb7e442c2f3",
+      "sha256": "8ad4e7f5346300fdc03c6318d629b6185874d35109511ca445609639b7168875"
+    },
+    "preview/native/core/include/biglybtc/state_cache.hpp": {
+      "source": "native/core/include/biglybtc/state_cache.hpp",
+      "source_git_blob": "18f78efab7c906e81f562ec6202513b49c387046",
+      "sha256": "036be2d5a02e1cab9be638496e7b066ef13619a22443ea508a3d583f8f5dcd15"
+    },
+    "preview/native/core/include/biglybtc/torrent_layout.hpp": {
+      "source": "native/core/include/biglybtc/torrent_layout.hpp",
+      "source_git_blob": "12af9e19b96ed883085116061ef75c4215b84821",
+      "sha256": "59accc489872b0f69444da51cdd2a79aeaa0510deeaf1a01434aab2b8699a775"
+    },
+    "preview/native/core/src/bencode.cpp": {
+      "source": "native/core/src/bencode.cpp",
+      "source_git_blob": "2c77566816f6f0293fce8637901f259852a392f6",
+      "sha256": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08"
+    },
+    "preview/native/core/src/executor.cpp": {
+      "source": "native/core/src/executor.cpp",
+      "source_git_blob": "c8499f48d6e2edb3275a5e43df2181a4244597ea",
+      "sha256": "b886692587ef8c5efc269ea3735f2b64f3432a255b8a1bd57b357627bc3da77a"
+    },
+    "preview/native/core/src/file_policy.cpp": {
+      "source": "native/core/src/file_policy.cpp",
+      "source_git_blob": "21450534293976d730a19a2301b899410be508e7",
+      "sha256": "a50ae3dfcb3d75d9c3220db803823bf91a7f4daaf40ee54f7c325bda7d6a764a"
+    },
+    "preview/native/core/src/library.cpp": {
+      "source": "native/core/src/library.cpp",
+      "source_git_blob": "3465fff582d5c17c4a3f37760710260c644c7a50",
+      "sha256": "3ba21404a77e0e3c9e23cbf267be130609598ed6646693df7c4f656306895348"
+    },
+    "preview/native/core/src/state_cache.cpp": {
+      "source": "native/core/src/state_cache.cpp",
+      "source_git_blob": "38271e50a7ea8500879f75a5293b97e307df727a",
+      "sha256": "b73688291e949eb592b0e12281e79bf19dc1000a4f5b9d80f6a06a63238e4fc2"
+    },
+    "preview/native/core/src/torrent_layout.cpp": {
+      "source": "native/core/src/torrent_layout.cpp",
+      "source_git_blob": "68aa4737d65a640a872f91a82e4f9b9f78b2ce0c",
+      "sha256": "58e6961c5136d1a5f9adf860748a9b3e645fe0ff05ccb50836f339a636ce072d"
+    },
+    "preview/native/engine/CMakeLists.txt": {
+      "source": "native/engine/CMakeLists.txt",
+      "source_git_blob": "cc32acb08bf6c5d12fc089f7f97da23c3eb7f595",
+      "sha256": "ee58a160b63acccdf5fc31139e8dce64e0c7c27115bec9bf9a406a7a0a593058"
+    },
+    "preview/native/engine/local_session.cpp": {
+      "source": "native/engine/local_session.cpp",
+      "source_git_blob": "e9b39b56690c8156d985358cc5da7a0e9830bbf1",
+      "sha256": "5a74426229f890480d7cb062d0a11aaaf74c51ced5d1ed713b758f0a9f5eef9d"
+    },
+    "preview/native/engine/local_session.hpp": {
+      "source": "native/engine/local_session.hpp",
+      "source_git_blob": "b9cda8f74f4a83f71c7415ddf704ca5a7b06912a",
+      "sha256": "3ac5e56321e5202a27cc542c0d8ca9daa6a8354d7a2c1b6293b7e3fdda3caa4b"
+    },
+    "preview/native/engine/local_support.hpp": {
+      "source": "native/engine/local_support.hpp",
+      "source_git_blob": "d6d3fc99bb403a2a4cdbee881c9eb6abb408640c",
+      "sha256": "c8e4bf6a1df817359ba6c27a76b3307025e90b404d67eacb0f9b21482e08b22b"
+    },
+    "preview/native/engine/multifile_session.cpp": {
+      "source": "native/engine/multifile_session.cpp",
+      "source_git_blob": "c13dcb4ec30df2017d1225267261e09d43ab20b9",
+      "sha256": "ab09eb93faf057e69068f5467e535d753b68887be0a82d7970532a11331bf57a"
+    },
+    "preview/native/engine/multifile_session.hpp": {
+      "source": "native/engine/multifile_session.hpp",
+      "source_git_blob": "37998d3f0ecb4c0839f31ef66e1620a42c1062e6",
+      "sha256": "fdc94f4b83c03b224ae9bcd00939ee5ae89a99da52a42c9ea3ee7c4be2eb3fa7"
+    },
+    "preview/native/packaging/BiglyBTC-preview.desktop": {
+      "source": "native/packaging/BiglyBTC-preview.desktop",
+      "source_git_blob": "3c357f223eef55bdaa869fce167836587b88a4a1",
+      "sha256": "95fbceb24a0014b5c4a591d5374ea642270abf4645e4c0f527646ee5cec298c9"
+    },
+    "preview/native/packaging/Debian.cmake": {
+      "source": "native/packaging/Debian.cmake",
+      "source_git_blob": "fb45d5fce1c2fa6358ed14ca82e126c1154485a5",
+      "sha256": "199e30ada08caa175f3c898b7fa9ae26f153e02aa78b3d1815c661e3bb6188bb"
+    },
+    "preview/native/packaging/EXPERIMENTAL.txt": {
+      "source": "native/packaging/EXPERIMENTAL.txt",
+      "source_git_blob": "c47e107cdda5bdfebc28f61b92e43f32a974515d",
+      "sha256": "f65716ef57277467d4683659fd482b59e15523767f306aec5599ba2c0fd5c9f1"
+    },
+    "preview/native/packaging/README.md": {
+      "source": "native/packaging/README.md",
+      "source_git_blob": "2b32d9cfb9f285a62abfc2abc028fd48009d9619",
+      "sha256": "5b80750ce3a887f725fedd1652a34a7aa371e994b7d9f166a8a980a7b1144586"
+    },
+    "preview/native/packaging/audit_deb.py": {
+      "source": "native/packaging/audit_deb.py",
+      "source_git_blob": "c016ce6010d5610120b75036835076caafb08730",
+      "sha256": "39d0095b489124936c3970c80dfa2c92eba3f9692873383683765073b064a1e5"
+    },
+    "preview/native/packaging/notices/GPL-3.0-only.txt": {
+      "source": "native/packaging/notices/GPL-3.0-only.txt",
+      "source_git_blob": "94a9ed024d3859793618152ea559a168bbcbb5e2",
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+    },
+    "preview/native/packaging/notices/ICU-LICENSE.txt": {
+      "source": "native/packaging/notices/ICU-LICENSE.txt",
+      "source_git_blob": "22472dc2ec219cd7d4d97a66e9a3cce6e2a4acc1",
+      "sha256": "f3005e195ff74d8812cc1f182a1c446fab678d70a10e3dada497585befee5416"
+    },
+    "preview/native/packaging/notices/LGPL-3.0-only.txt": {
+      "source": "native/packaging/notices/LGPL-3.0-only.txt",
+      "source_git_blob": "65c5ca88a67c30becee01c5a8816d964b03862f9",
+      "sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768"
+    },
+    "preview/native/packaging/notices/Qt-runtime.txt": {
+      "source": "native/packaging/notices/Qt-runtime.txt",
+      "source_git_blob": "575161e3ab6b00a3b554d5099ba7b60942217de1",
+      "sha256": "e718ffc9e5324b52aa2f450687405b1d93e7d7b5750a7725f339cf39d8efa5ce"
+    },
+    "preview/native/packaging/notices/sources.json": {
+      "source": "native/packaging/notices/sources.json",
+      "source_git_blob": "6bd0b842a7ff48412d3d6372dbe1f0e9996cd4e6",
+      "sha256": "24a4dd22aa2cadac1533c3c7135295c5aa58d5fcf9bc8f9e40e58888a72ac510"
+    },
+    "preview/native/packaging/preview.py": {
+      "source": "native/packaging/preview.py",
+      "source_git_blob": "59b1d49875a0a0526dad650f57dd5b4454d55b89",
+      "sha256": "01780ea4fd3e438011f7be81c4c2fd94c48090b731b751d82068dc74a83776c1"
+    },
+    "preview/native/packaging/preview_smoke.cpp": {
+      "source": "native/packaging/preview_smoke.cpp",
+      "source_git_blob": "89b151689ed39c31274eb99bcafb075e5935c6f8",
+      "sha256": "6dd49db620c5234257012567a16cb8b2d74e356decdc42e9e0b0c634448c32d5"
+    },
+    "preview/native/packaging/qt_bundle.py": {
+      "source": "native/packaging/qt_bundle.py",
+      "source_git_blob": "abbf304b380225692692ffc36fe6e74d77dd2610",
+      "sha256": "05b6643493cc0ee3b0be148851545ad83f20cf831af77d2149feafd70c962802"
+    },
+    "preview/native/packaging/strict_shlibdeps.py.in": {
+      "source": "native/packaging/strict_shlibdeps.py.in",
+      "source_git_blob": "7ba5bbb833d32b43bb4928a181edb731282acbc9",
+      "sha256": "c3170bb867f842496ecf2ccf513ff2b393d25ac26887ab794d12ab3cf0baef4c"
+    },
+    "preview/native/packaging/test_packaging.py": {
+      "source": "native/packaging/test_packaging.py",
+      "source_git_blob": "cc8895993f6fe79b3309fff8359ce52a8a46ea83",
+      "sha256": "05dcbbc85a770cca5ad308019149c647e1235653625089776b182f483efe321e"
+    },
+    "preview/native/packaging/test_qt_bundle.py": {
+      "source": "native/packaging/test_qt_bundle.py",
+      "source_git_blob": "e5a57f51bf7e944a32b507860e710fb1112ac79c",
+      "sha256": "bea34359853f9f0c867a08b82f0043bebf687762023efd3af05e50b7d1d683c4"
+    },
+    "preview/native/plugins/BiglyBTC-plugin-azrating/CMakeLists.txt": {
+      "source": "native/plugins/BiglyBTC-plugin-azrating/CMakeLists.txt",
+      "source_git_blob": "c9e30cb3058c6341a299b774e96a636300a59903",
+      "sha256": "48433386273b9e925cc4b80faf1ed631f2dc974ba23bede50ee1cbc96d1a6558"
+    },
+    "preview/native/plugins/BiglyBTC-plugin-azrating/COPYING": {
+      "source": "native/plugins/BiglyBTC-plugin-azrating/COPYING",
+      "source_git_blob": "9efa6fbc962836e243e20f7f23db062e2c077d28",
+      "sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6"
+    },
+    "preview/native/plugins/BiglyBTC-plugin-azrating/README.md": {
+      "source": "native/plugins/BiglyBTC-plugin-azrating/README.md",
+      "source_git_blob": "60cabb305d2372cef0c73e4b5fc121306e4daa2b",
+      "sha256": "7faab0376135593181ce61f671e677879bc0910f2376c98392f6d471e0ecc9fa"
+    },
+    "preview/native/plugins/BiglyBTC-plugin-azrating/bounds_test.cpp": {
+      "source": "native/plugins/BiglyBTC-plugin-azrating/bounds_test.cpp",
+      "source_git_blob": "2d9889225af3286d6356514fb159eefd99ec50a2",
+      "sha256": "f583acdd72fa17c76e2aa83577a7c5e059f77ad542626ba9c027d65fce95851f"
+    },
+    "preview/native/plugins/BiglyBTC-plugin-azrating/fixture_test.py": {
+      "source": "native/plugins/BiglyBTC-plugin-azrating/fixture_test.py",
+      "source_git_blob": "d22e92b3844bcacea70f0f201402fe8149d920de",
+      "sha256": "a9cf68d51de499d9e5ce348ddf7b5a920333c598849a189e14224a1226998998"
+    },
+    "preview/native/plugins/BiglyBTC-plugin-azrating/local_bounds_test.cpp": {
+      "source": "native/plugins/BiglyBTC-plugin-azrating/local_bounds_test.cpp",
+      "source_git_blob": "08dc1da13c7545bf795e3c0fc48296ee6753dd17",
+      "sha256": "d5c1485a107ef0aa69c10ed4f5940db0e220a2536c0992ca4a82021f3c947b53"
+    },
+    "preview/native/plugins/BiglyBTC-plugin-azrating/local_driver.cpp": {
+      "source": "native/plugins/BiglyBTC-plugin-azrating/local_driver.cpp",
+      "source_git_blob": "d38e7be4587c66d9434f17193b65677a9f71b19a",
+      "sha256": "489616a8c83188b7f521d445253801eafb91f064b5ed45b8921059f967901b6c"
+    },
+    "preview/native/plugins/BiglyBTC-plugin-azrating/local_fixture_test.py": {
+      "source": "native/plugins/BiglyBTC-plugin-azrating/local_fixture_test.py",
+      "source_git_blob": "b14cb3b1bbd293cb3c5c19fdb1b206fe4f26f4c8",
+      "sha256": "8bd9137ec272243e7f61891c87d4f36d06bed80968a9ff38c7f18e558d76b804"
+    },
+    "preview/native/plugins/BiglyBTC-plugin-azrating/local_rating.cpp": {
+      "source": "native/plugins/BiglyBTC-plugin-azrating/local_rating.cpp",
+      "source_git_blob": "70ca3f2c719e0a01d7703a7cf446adee8c435303",
+      "sha256": "baa6682bbac733889c5b47c80667cacd191c83e6a372b46c66c4b03d129f50b2"
+    },
+    "preview/native/plugins/BiglyBTC-plugin-azrating/local_rating.hpp": {
+      "source": "native/plugins/BiglyBTC-plugin-azrating/local_rating.hpp",
+      "source_git_blob": "6b8664882e213e375a11a44956fa2cb69ed28ab8",
+      "sha256": "17b2d6739d0f1e5e2594185dd948448ed4584e0890b679213501ec45506a49f3"
+    },
+    "preview/native/plugins/BiglyBTC-plugin-azrating/rating_data.cpp": {
+      "source": "native/plugins/BiglyBTC-plugin-azrating/rating_data.cpp",
+      "source_git_blob": "0175a48159da3ab44f6cb540bd41bb4988065e8a",
+      "sha256": "9cc52433ca85c6edab960f5fe7fcf5c7fa319f15dad5fc6f5bd3ac9f92031896"
+    },
+    "preview/native/plugins/BiglyBTC-plugin-azrating/rating_data.hpp": {
+      "source": "native/plugins/BiglyBTC-plugin-azrating/rating_data.hpp",
+      "source_git_blob": "9e4bdde0e51367e2317ac8e95fca92e1c65904b7",
+      "sha256": "912589da9cf1bea24c927a90013bf332b023f4c5cb158e28dbe0a493f6f87058"
+    },
+    "preview/native/plugins/BiglyBTC-plugin-azrating/rating_driver.cpp": {
+      "source": "native/plugins/BiglyBTC-plugin-azrating/rating_driver.cpp",
+      "source_git_blob": "d91944f51920f0cde4667de9d288d5063c167438",
+      "sha256": "64637e0fdd5091c2e8aaeedcf9f2a948634105e2b4f104e3ebd66459313a13ee"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "source": "native/tests/CMakeLists.txt",
+      "source_git_blob": "45c5ab693fbcef915386cfdb5f564f6fb226467a",
+      "sha256": "63ce84488155e28a1b5bb8dd7cec0da188d8285d96c4981efffd4e3b529c192b"
+    },
+    "preview/native/tests/activation_rejections.py": {
+      "source": "native/tests/activation_rejections.py",
+      "source_git_blob": "d6f8f9da9f032a436fcefdda2f66a282df24db94",
+      "sha256": "4f25e64918a9a3cd62a23c841aa91be2348dc154261154c576778c10faa69286"
+    },
+    "preview/native/tests/cache_tests.cpp": {
+      "source": "native/tests/cache_tests.cpp",
+      "source_git_blob": "f02b4fe8cf381a728bb3aac53b3b82778cf4fd3e",
+      "sha256": "a3717ea590b077d0c9d86ce5b2b666f24b7f5f93a15835e1a304aa3fdebd37d2"
+    },
+    "preview/native/tests/classic_tests.cpp": {
+      "source": "native/tests/classic_tests.cpp",
+      "source_git_blob": "f2c1af6ef7dcb49e7e11656a8d3d2e558b1cd313",
+      "sha256": "5ff5d40648143a31fdc2313cbccb1260caa00e6ac38c8951f51932d649c442be"
+    },
+    "preview/native/tests/codec_tests.cpp": {
+      "source": "native/tests/codec_tests.cpp",
+      "source_git_blob": "3e8c17d1553a6f08b8f0b458ae76dcd84b27dca3",
+      "sha256": "38a56d66a1c9069c246c1d15254c387ef3eb35cd0724f296ca2182b4be94c3e5"
+    },
+    "preview/native/tests/desktop_case.py": {
+      "source": "native/tests/desktop_case.py",
+      "source_git_blob": "137139a7ad603a73bf7a83246d26df2b7470d2b3",
+      "sha256": "c47a9be07c605e5a01e360669eb913a445bc9586d869f7529ba79e8acab704c5"
+    },
+    "preview/native/tests/desktop_tests.cpp": {
+      "source": "native/tests/desktop_tests.cpp",
+      "source_git_blob": "3bb56c5ffa72df0758223071a9cc5b889c7c9276",
+      "sha256": "33f4aec2448da8e8517719114347185a01c1d6069cfe3d702752d5d2bfa6cc64"
+    },
+    "preview/native/tests/document_edit_tests.cpp": {
+      "source": "native/tests/document_edit_tests.cpp",
+      "source_git_blob": "53913bf5449ff5890726cfc49b13589a9ead760b",
+      "sha256": "de628c050a9d5b32c6689bb357bd594105ddd82d1d388189af529bbd4fa23eb1"
+    },
+    "preview/native/tests/executor_finalizer_tests.cpp": {
+      "source": "native/tests/executor_finalizer_tests.cpp",
+      "source_git_blob": "e46cf49828ec45e4c0494c747b8d5580947fee33",
+      "sha256": "14b024235761416b11a005ebba10033bb2963c41ec7748487e78a7aa8f5bdaf6"
+    },
+    "preview/native/tests/executor_startup_allocation.cpp": {
+      "source": "native/tests/executor_startup_allocation.cpp",
+      "source_git_blob": "6700bd7cc2d527f97c7ed8da5205d88b2c085f7b",
+      "sha256": "06b16614a4f44dc721df9339174af89381113bf93fd061a3c1e589ec7c45619f"
+    },
+    "preview/native/tests/executor_startup_allocation.hpp": {
+      "source": "native/tests/executor_startup_allocation.hpp",
+      "source_git_blob": "e841a2c1fe5dba9967ba78c7c9497bdc389e48d9",
+      "sha256": "bf019c709db4f96773e19621a2dea26eae966d1f33997efb652d6beb6b44f3ee"
+    },
+    "preview/native/tests/executor_startup_failure_tests.cpp": {
+      "source": "native/tests/executor_startup_failure_tests.cpp",
+      "source_git_blob": "f430f22152bb12ec4005a9055eb6258a2efc7104",
+      "sha256": "4b14e9dafe83b339ccbe714c1aac31e84c3875102f001d7000b4ce3fdcfd2458"
+    },
+    "preview/native/tests/executor_tests.cpp": {
+      "source": "native/tests/executor_tests.cpp",
+      "source_git_blob": "859744d27b4d180d12b07dd3dda7ae2f2b660050",
+      "sha256": "039cd9a55aae2b9ef9381f420622530d23c610e5bdf44d8d30e9dc8fa7824a0d"
+    },
+    "preview/native/tests/file_details_case.py": {
+      "source": "native/tests/file_details_case.py",
+      "source_git_blob": "4563c489deb190ad297993dd87172e0879cfa482",
+      "sha256": "667d822933baaad00054b8e9d67ee85a0b574de42bcfe3bf8aaea7faa94deb87"
+    },
+    "preview/native/tests/file_policy_interop.py": {
+      "source": "native/tests/file_policy_interop.py",
+      "source_git_blob": "2e11fc4fb835131a560dc3bde9bebb4bbf400c02",
+      "sha256": "96529775670c0781b119b35d51966437221348269c1a6d6d89df10c152dcd436"
+    },
+    "preview/native/tests/file_policy_tests.cpp": {
+      "source": "native/tests/file_policy_tests.cpp",
+      "source_git_blob": "bbc6945cb2b1bff6ecd6454ffe5173604df38ee4",
+      "sha256": "44ea437aea0ad52c744149db87ed150754cd3795f822168931b5ff260a36c975"
+    },
+    "preview/native/tests/geometry_interop.py": {
+      "source": "native/tests/geometry_interop.py",
+      "source_git_blob": "477d8fb43706303e00e70666c0eaa2d405069a9d",
+      "sha256": "cd47b7eb1c87215f9b06bdaaac7f2104da9ee0b4f1c632cb317301afbd732bc3"
+    },
+    "preview/native/tests/handoff_tests.py": {
+      "source": "native/tests/handoff_tests.py",
+      "source_git_blob": "d5242db197d3bdafdf3a29720f7fa02a03f0f2f1",
+      "sha256": "59254caf97d561bbec276a025925d5d9a30756eb3d78586954a31f8bf9c9d0ef"
+    },
+    "preview/native/tests/library_driver.cpp": {
+      "source": "native/tests/library_driver.cpp",
+      "source_git_blob": "8479cd07cb3a1c4772149b08faeb5cb76a1cad35",
+      "sha256": "89bce06260b8bf1d46db0e1b7613a0e4438c472607994f8fd9dff65f351cd65c"
+    },
+    "preview/native/tests/library_interop.py": {
+      "source": "native/tests/library_interop.py",
+      "source_git_blob": "64dbad01f2b3a9d9b88f4175f49ba66963ac7e99",
+      "sha256": "801ae1f4bbc2d20a57f00cda012f3b1514ca5daeda3776bb2408a20940c1beeb"
+    },
+    "preview/native/tests/library_tests.cpp": {
+      "source": "native/tests/library_tests.cpp",
+      "source_git_blob": "9ebe5305589c762c3931c0347b7a1f71867c3515",
+      "sha256": "4e531c8d924186b7c338b633bd75c6813e7084622ac8a9a6ce30d5995bd18af9"
+    },
+    "preview/native/tests/library_view_driver.cpp": {
+      "source": "native/tests/library_view_driver.cpp",
+      "source_git_blob": "cdd82050261ac7fde9a16f094374872ffa53ab86",
+      "sha256": "c3e81851453e7eeabda16a5274822312a9849355863135e1afc7d49ec702eba6"
+    },
+    "preview/native/tests/library_view_interop.py": {
+      "source": "native/tests/library_view_interop.py",
+      "source_git_blob": "38da4c7e976cf0363e1f2d9569a0df647636b72f",
+      "sha256": "9a045da05bb9d7276ce74fb269f310042d9a749539bfe290ac3dc93faa2fae36"
+    },
+    "preview/native/tests/mldht_cache_driver.cpp": {
+      "source": "native/tests/mldht_cache_driver.cpp",
+      "source_git_blob": "cf36bfe85da21f7a65c659a6bfc6d07f0f18d283",
+      "sha256": "039f1eda1c689264a50befbeeb21c9461a57ab9919b5ffd73ffddd885ab26eed"
+    },
+    "preview/native/tests/mldht_cache_fixtures.py": {
+      "source": "native/tests/mldht_cache_fixtures.py",
+      "source_git_blob": "4ae6b0af6c0bff728df2b34a64f42e8c515911c0",
+      "sha256": "df7a7cac4a4a3974c26fdb69b87fb77e349d8a21f38272eeb720dd24015712f6"
+    },
+    "preview/native/tests/multifile_case.py": {
+      "source": "native/tests/multifile_case.py",
+      "source_git_blob": "5bff5b28bb6cb769289d3eb616b163304cc2bc00",
+      "sha256": "e581663cfbf9941c84734bdc83dcb424b6bd70f7409796c0ee0a0834a6a0e090"
+    },
+    "preview/native/tests/peer_readiness_tests.py": {
+      "source": "native/tests/peer_readiness_tests.py",
+      "source_git_blob": "a5471849d8faf7ad96d174fc697456a22732e990",
+      "sha256": "9b04563215458b4534cff3ed4a3ce42c656a33d985f07c8ad014a0f238fd557d"
+    },
+    "preview/native/tests/plugin_attributes_bounds.cpp": {
+      "source": "native/tests/plugin_attributes_bounds.cpp",
+      "source_git_blob": "9e95b67d307eb02cec4903bedcd85306e4d97814",
+      "sha256": "29a29a96dfa3f6b0e989f139e85094dda13bac55497cb6ec07eccb940c68f650"
+    },
+    "preview/native/tests/plugin_attributes_driver.cpp": {
+      "source": "native/tests/plugin_attributes_driver.cpp",
+      "source_git_blob": "4ae0b556897a4faf190e0300d027960f363a0223",
+      "sha256": "189304504669f5417a1cf3d4929ff7cfd71b88d631d8d6605586edcd5dbc8f07"
+    },
+    "preview/native/tests/plugin_attributes_fixtures.py": {
+      "source": "native/tests/plugin_attributes_fixtures.py",
+      "source_git_blob": "f31ccd0fc9d8c5ff0797f2adf446effe3558f689",
+      "sha256": "5b7df86885b5bcece92e56142fde7f86137ca6bde58c5b8d300f2e2a41c3305b"
+    },
+    "preview/native/tests/plugin_settings_driver.cpp": {
+      "source": "native/tests/plugin_settings_driver.cpp",
+      "source_git_blob": "cbe5f56d06cca8355c7c0d346085a6095c41e01a",
+      "sha256": "b7b603b0b8d9bf948c688427e74100f8f0cdd12790ae81c67b4adfef893e5ccb"
+    },
+    "preview/native/tests/plugin_settings_fixtures.py": {
+      "source": "native/tests/plugin_settings_fixtures.py",
+      "source_git_blob": "3ad69cf101f2709a97c486bb23dbaf49f67659ef",
+      "sha256": "3e3216171250c38bb5fb6e3517be8da830b1057b9f4b50403e761bb18241af63"
+    },
+    "preview/native/tests/profile_driver.cpp": {
+      "source": "native/tests/profile_driver.cpp",
+      "source_git_blob": "25e83f2615512e2c8f42f6acb6a1724d388ea604",
+      "sha256": "ade623da8fcfc7f86daecbf9e661566df914bd834cee4d085aae23e89787bf37"
+    },
+    "preview/native/tests/profile_tests.py": {
+      "source": "native/tests/profile_tests.py",
+      "source_git_blob": "e1a916bc3ee8892ac7b6c46bce92c8d7f7ab394f",
+      "sha256": "6e6b8e68fcef7502a2a407f8f403964492b72402dfde01c4b32dff59e54d044a"
+    },
+    "preview/native/tests/profile_write_faults.py": {
+      "source": "native/tests/profile_write_faults.py",
+      "source_git_blob": "1cece63b0890df889eefdb10292dc8cdbe01124b",
+      "sha256": "e3e9c03260a148cb8a8584b93e7436aa93b984c0f96c9a4a62d11bbf19f0b786"
+    },
+    "preview/native/tests/replaced_saving_fault.cpp": {
+      "source": "native/tests/replaced_saving_fault.cpp",
+      "source_git_blob": "58598fb77de2d884c8aa8394a2d023099b9c4dd6",
+      "sha256": "1c9ddeedadfa8a231b40983ff0506a5e2c2f113d5156bd1864fb9e9185e85c66"
+    },
+    "preview/native/tests/replaced_saving_fault.py": {
+      "source": "native/tests/replaced_saving_fault.py",
+      "source_git_blob": "0a1d6ef40aa8fcb15687c913e0b8093e4d1c2a2e",
+      "sha256": "bfbaa321ce18b685fd957e1d7c777222e1a5e4bed346dac95d7d711e90c362e8"
+    },
+    "preview/native/tests/rpc_profile_driver.cpp": {
+      "source": "native/tests/rpc_profile_driver.cpp",
+      "source_git_blob": "5e2969e91179264f25a322ff3cff39a129cb0d64",
+      "sha256": "d95ef1aec22ed892cda40e05633f2cc99a15b9cb193e5963a623f8f1e0e6d944"
+    },
+    "preview/native/tests/rpc_profile_fixtures.py": {
+      "source": "native/tests/rpc_profile_fixtures.py",
+      "source_git_blob": "7e389310cbf4c2577ecb103a5f6dd061a820e020",
+      "sha256": "75be47c90c85c9b0af0538496c9e4ea59b2e0ed24abebead5b7186c4a8234e29"
+    },
+    "preview/native/tests/state_driver.cpp": {
+      "source": "native/tests/state_driver.cpp",
+      "source_git_blob": "3232406e2e8764a117195d85805d20862f92eaa3",
+      "sha256": "4e846b31189a568a66bd55a7b3a799ebcb0d57f5d8f5019414ddf843e1c6458e"
+    },
+    "preview/native/tests/torrent_layout_tests.cpp": {
+      "source": "native/tests/torrent_layout_tests.cpp",
+      "source_git_blob": "c240eb60fc101a90bfc431b0db6232bdf5050ca3",
+      "sha256": "6a77efaef7b9f157d36107d1fbf66fe532defcfdb09df9327e51455cb1b9b4cd"
+    },
+    "preview/native/tests/torrent_state_driver.cpp": {
+      "source": "native/tests/torrent_state_driver.cpp",
+      "source_git_blob": "9e968833701237f53fc731a58f4ecdf2432b734f",
+      "sha256": "7e6f140b4761ade41ae8911ec0ba4fc5dc1a7a90d55a6ef871d9d37d3002e9b1"
+    },
+    "preview/native/tests/torrent_state_tests.py": {
+      "source": "native/tests/torrent_state_tests.py",
+      "source_git_blob": "0da8e760e2d2ce4710b711b44a8d3c785d2c686a",
+      "sha256": "d5d522f86d94e1e461d0fbd7d070bbc877b44aaa331f30eebca5685800091394"
+    },
+    "preview/native/ui/CMakeLists.txt": {
+      "source": "native/ui/CMakeLists.txt",
+      "source_git_blob": "c6f1e0671edf4bc2c57e899518df9815dc195327",
+      "sha256": "0c4f64d37e1cc89051d7da02844d5c38f366e3d28151ff103e34bb543598b69d"
+    },
+    "preview/native/ui/classic_filter.cpp": {
+      "source": "native/ui/classic_filter.cpp",
+      "source_git_blob": "6bf562c659c6f7c80033bbbae284f9667eb7cc55",
+      "sha256": "2186674f85e4bf6eeb6eeb1b2c568c3b4f060eac4a443d04130144dab3d50003"
+    },
+    "preview/native/ui/classic_filter.hpp": {
+      "source": "native/ui/classic_filter.hpp",
+      "source_git_blob": "ca6270d8a42d31408b2d06b2d0d584b9d49a67cc",
+      "sha256": "be3b774a0f50a7075154d936cab10fc922772ca95a7436ae93e55a00d9c02634"
+    },
+    "preview/native/ui/file_model.cpp": {
+      "source": "native/ui/file_model.cpp",
+      "source_git_blob": "5ec7a911611456360d4b57530e907ba36e69436e",
+      "sha256": "a3085e257868c9a175db26efd2381641b313dcdc6f075d7cd6630720deb2c733"
+    },
+    "preview/native/ui/file_model.hpp": {
+      "source": "native/ui/file_model.hpp",
+      "source_git_blob": "61ac1bc06656d64d7aa1f40a1860c32ce8b1610b",
+      "sha256": "0aee945350a17d48a60a76eef199b9bf1f6186556304293ead37b5abda60f26c"
+    },
+    "preview/native/ui/library_model.cpp": {
+      "source": "native/ui/library_model.cpp",
+      "source_git_blob": "5be4a8f2173572a0a7a94440a3b79ad3d8770326",
+      "sha256": "969cf42a17663ce27225a54cfbdded4033cffb66a6c0f0c55afd4bffb3a9a56a"
+    },
+    "preview/native/ui/library_model.hpp": {
+      "source": "native/ui/library_model.hpp",
+      "source_git_blob": "36714eb1fda6af2cb6e49be6e1f2fefe0c01b260",
+      "sha256": "2b1a5590eb2091d058f30d75a440ef57bf7da37b2ee8b2b295ddc5d8971d20ef"
+    },
+    "preview/native/ui/library_window.cpp": {
+      "source": "native/ui/library_window.cpp",
+      "source_git_blob": "b8a324c68de1599405c61002c97f538aaa9a2dba",
+      "sha256": "f61c4d072d7524480146f5ec14bca6ddb511217b0cfc81f2fbc706f5c391eeee"
+    },
+    "preview/native/ui/library_window.hpp": {
+      "source": "native/ui/library_window.hpp",
+      "source_git_blob": "e4be81ddd4ffb25e81e0eede98a340d75844338b",
+      "sha256": "97f9bb533850d3cb7f904c2472218b583eb8eaab8b283d494a3bcfbf28d15b92"
+    }
+  },
+  "source_bytes": 6845333,
+  "excluded": [
+    "original Java workspace/classes",
+    "SpeedScheduler and all other plugin implementations",
+    "private evidence/builds/profiles/keys",
+    "unqualified native services",
+    "developer-specific CMakePresets"
+  ],
+  "verification_scope": "Source export only; build/unit/Qt/packaging validation and publication remain separate",
+  "java_integration": "Not exported/qualified: reference core, Java harnesses and operational evidence are absent. Run selected native units; do not claim full CTest/integration passed.",
+  "exporter_sha256": "38f69faf4f57e2eb37b40084e123216997115d07b9159032ab06afe4ea0d5572"
+}

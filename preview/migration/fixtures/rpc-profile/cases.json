@@ -1,0 +1,415 @@
+[
+  {
+    "name": "primary-default-counter",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU="
+    },
+    "native_details": "DETAIL 1 0 0 0 0 0\nORIGIN PRIMARY\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 73\n"
+  },
+  {
+    "name": "empty-inventory",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGVl"
+    },
+    "native_details": "DETAIL 0 0 0 0 0 0\n",
+    "expected": "COUNTER 1 0\n"
+  },
+  {
+    "name": "cached-zero",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "active/cache.dat": "H4sIAAAAAAAC/0sxtSouSSxJzUkxNLBKLCkpykwqLUktTjEytQrIKU3PzNOryC1PTSrNBNJAIiVHLzMl0yA11cQqI7E4w8jASkbs+H2fzGTlXOlWniVxLfl2f52DUlNTARtPCMJYAAAA"
+    },
+    "native_details": "DETAIL 0 0 0 0 0 0\nORIGIN CACHE\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 0\n"
+  },
+  {
+    "name": "cached-negative",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "active/cache.dat": "H4sIAAAAAAAC/0sxtSouSSxJzUkxNLBKLCkpykwqLUktTjEytQrIKU3PzNOryC1PTSrNBNJAIiVHLzMlU9c8NdXEKiOxOMPIwEpG7Ph9n8xk5VzpVp4lcS35dn+dg1JTUwE/HALzWQAAAA=="
+    },
+    "native_details": "DETAIL 0 0 0 0 0 0\nORIGIN CACHE\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 -7\n"
+  },
+  {
+    "name": "cached-full64",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "active/cache.dat": "H4sIAAAAAAAC/0sxtSouSSxJzUkxNLBKLCkpykwqLUktTjEytQrIKU3PzNOryC1PTSrNBNJAIiVHLzMl08TI0sTSzNzI0iw11cQqI7E4w8jASkbs+H2fzGTlXOlWniVxLfl2f52DUlNTAZ6czeJhAAAA"
+    },
+    "native_details": "DETAIL 0 0 0 0 0 0\nORIGIN CACHE\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 4294967296\n"
+  },
+  {
+    "name": "cached-max",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "active/cache.dat": "H4sIAAAAAAAC/0sxtSouSSxJzUkxNLBKLCkpykwqLUktTjEytQrIKU3PzNOryC1PTSrNBNJAIiVHLzMl09LIyNjY3MjA2MzC1MTc3NTCwDw11cQqI7E4w8jASkbs+H2fzGTlXOlWniVxLfl2f52DUlNTAdyAUaZqAAAA"
+    },
+    "native_details": "DETAIL 0 0 0 0 0 0\nORIGIN CACHE\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 9223372036854775807\n"
+  },
+  {
+    "name": "cached-min",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "active/cache.dat": "H4sIAAAAAAAC/0sxtSouSSxJzUkxNLBKLCkpykwqLUktTjEytQrIKU3PzNOryC1PTSrNBNJAIiVHLzMlU9fSyMjY2NzIwNjMwtTE3NzUwsAiNdXEKiOxOMPIwEpG7Ph9n8xk5VzpVp4lcS35dn+dg1JTUwHKU6sCawAAAA=="
+    },
+    "native_details": "DETAIL 0 0 0 0 0 0\nORIGIN CACHE\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 -9223372036854775808\n"
+  },
+  {
+    "name": "cached-empty-overrides",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "active/cache.dat": "H4sIAAAAAAAC/0sxtSouSSxJzUkxNLBKLCkpykwqLUktTkk1scpILM4wMrCSETt+3yczWTlXupVnSVxLvt1f56DU1FQAJ0LdujkAAAA="
+    },
+    "native_details": "DETAIL 0 0 0 0 0 0\nORIGIN CACHE\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 0\n"
+  },
+  {
+    "name": "cached-missing-attributes",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "active/cache.dat": "H4sIAAAAAAAC/0sxtSouSSxJzUkxscpILM4wMrCSETt+3yczWTlXupVnSVxLvt1f56DU1FQAB32mVioAAAA="
+    },
+    "native_details": "DETAIL 1 0 0 0 0 0\nORIGIN PRIMARY\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 73\n"
+  },
+  {
+    "name": "cached-duplicate-last-wins",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "active/cache.dat": "H4sIAAAAAAAC/0sxtSouSSxJzUkxNLBKLCkpykwqLUktTjEytQrIKU3PzNOryC1PTSrNBNJAIiVHLzMl09AgNdXEKiOxOMPIwEpG7Ph9n8xk5VzpVp4lcS35dn+dg1JJMc2IoGmpqQAT9hyYpwAAAA=="
+    },
+    "native_details": "DETAIL 0 0 0 0 0 0\nORIGIN CACHE\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 20\n"
+  },
+  {
+    "name": "cached-last-missing-falls-back",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "active/cache.dat": "H4sIAAAAAAAC/0sxtSouSSxJzUkxNLBKLCkpykwqLUktTjEytQrIKU3PzNOryC1PTSrNBNJAIiVHLzMl09AgNdXEKiOxOMPIwEpG7Ph9n8xk5VzpVp4lcS35dn+dg1JT8EunpgIAPv8yCHgAAAA="
+    },
+    "native_details": "DETAIL 1 0 0 0 0 0\nORIGIN PRIMARY\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 73\n"
+  },
+  {
+    "name": "cached-wrong-map",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "active/cache.dat": "H4sIAAAAAAAC/0sxtSouSSxJzUkxNLBKLCkpykwqLUktzkk1scpILM4wMrCSETt+3yczWTlXupVnSVxLvt1f56DU1FQA1s2+RTkAAAA="
+    },
+    "native_details": "DETAIL 0 0 0 1 0 1\nORIGIN UNAVAILABLE\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 -\n"
+  },
+  {
+    "name": "cached-wrong-id",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "active/cache.dat": "H4sIAAAAAAAC/0sxtSouSSxJzUkxNLBKLCkpykwqLUktTjEytQrIKU3PzNOryC1PTSrNBNJAIiVHLzPF1Kq8KD8vPdXEKiOxOMPIwEpG7Ph9n8xk5VzpVp4lcS35dn+dg1JTUwFTd31DXAAAAA=="
+    },
+    "native_details": "DETAIL 0 0 0 0 0 1\nORIGIN UNAVAILABLE\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 -\n"
+  },
+  {
+    "name": "primary-missing-map",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDQ6aW5mb2RlZQ=="
+    },
+    "native_details": "DETAIL 1 0 0 0 0 0\nORIGIN PRIMARY\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 0\n"
+  },
+  {
+    "name": "primary-wrong-map",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNsZTQ6aW5mb2RlZQ=="
+    },
+    "native_details": "DETAIL 1 0 0 0 0 0\nORIGIN PRIMARY\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 0\n"
+  },
+  {
+    "name": "primary-wrong-id",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZDU6d3JvbmdlNDppbmZvZGVl"
+    },
+    "native_details": "DETAIL 1 0 0 0 0 1\nORIGIN UNAVAILABLE\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 -\n"
+  },
+  {
+    "name": "cache-only-primary-missing",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/cache.dat": "H4sIAAAAAAAC/0sxtSouSSxJzUkxNLBKLCkpykwqLUktTjEytQrIKU3PzNOryC1PTSrNBNJAIiVHLzMl09IyNdXEKiOxOMPIwEpG7Ph9n8xk5VzpVp4lcS35dn+dg1JTUwGC/YEsWQAAAA=="
+    },
+    "native_details": "DETAIL 0 0 0 0 0 0\nORIGIN CACHE\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 99\n"
+  },
+  {
+    "name": "cache-only-primary-corrupt",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "YnJva2Vu",
+      "active/cache.dat": "H4sIAAAAAAAC/0sxtSouSSxJzUkxNLBKLCkpykwqLUktTjEytQrIKU3PzNOryC1PTSrNBNJAIiVHLzMl09IyNdXEKiOxOMPIwEpG7Ph9n8xk5VzpVp4lcS35dn+dg1JTUwGC/YEsWQAAAA=="
+    },
+    "native_details": "DETAIL 0 0 0 0 0 0\nORIGIN CACHE\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 99\n"
+  },
+  {
+    "name": "cache-only-primary-symlink",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/protected": "bXVzdCBuZXZlciBiZSByZWFkIGFzIHN0YXRl",
+      "active/cache.dat": "H4sIAAAAAAAC/0sxtSouSSxJzUkxNLBKLCkpykwqLUktTjEytQrIKU3PzNOryC1PTSrNBNJAIiVHLzMl09IyNdXEKiOxOMPIwEpG7Ph9n8xk5VzpVp4lcS35dn+dg1JTUwGC/YEsWQAAAA=="
+    },
+    "native_details": "DETAIL 0 0 0 0 0 0\nORIGIN CACHE\n",
+    "links": {
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "protected"
+    },
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 99\n"
+  },
+  {
+    "name": "cache-only-primary-fifo",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/cache.dat": "H4sIAAAAAAAC/0sxtSouSSxJzUkxNLBKLCkpykwqLUktTjEytQrIKU3PzNOryC1PTSrNBNJAIiVHLzMl09IyNdXEKiOxOMPIwEpG7Ph9n8xk5VzpVp4lcS35dn+dg1JTUwGC/YEsWQAAAA=="
+    },
+    "native_details": "DETAIL 0 0 0 0 0 0\nORIGIN CACHE\n",
+    "fifos": [
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat"
+    ],
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 99\n"
+  },
+  {
+    "name": "primary-backup-missing",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat.bak": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU="
+    },
+    "native_details": "DETAIL 1 0 0 0 0 0\nORIGIN BACKUP\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 73\n"
+  },
+  {
+    "name": "primary-backup-corrupt",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "YnJva2Vu",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat.bak": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU="
+    },
+    "native_details": "DETAIL 1 0 0 0 0 0\nORIGIN BACKUP\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 73\n"
+  },
+  {
+    "name": "corrupt-cache-falls-back",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "active/cache.dat": "YnJva2Vu"
+    },
+    "native_details": "DETAIL 1 0 0 0 1 0\nORIGIN PRIMARY\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 73\n"
+  },
+  {
+    "name": "no-readable-state",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "YnJva2Vu"
+    },
+    "native_details": "DETAIL 1 0 0 0 0 1\nORIGIN UNAVAILABLE\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 -\n"
+  },
+  {
+    "name": "counter-folder-case",
+    "folder": "XmWebUI",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "biglybt.config": "ZDI3OlBsdWdpbi5YbVdlYlVJLnhtdWkubmV4dC5pZGk0Mjk0OTY3Mjk2ZTI3OlBsdWdpbi54bXdlYnVpLnhtdWkubmV4dC5pZGkxM2Vl"
+    },
+    "native_details": "DETAIL 1 0 0 0 0 0\nORIGIN PRIMARY\n",
+    "expected": "COUNTER 4294967296 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 73\n"
+  },
+  {
+    "name": "counter-folder-utf8",
+    "folder": "café",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "biglybt.config": "ZDI1OlBsdWdpbi5jYWbDqS54bXVpLm5leHQuaWRpNDI5NDk2NzI5NmUyNzpQbHVnaW4ueG13ZWJ1aS54bXVpLm5leHQuaWRpMTNlZQ=="
+    },
+    "native_details": "DETAIL 1 0 0 0 0 0\nORIGIN PRIMARY\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 73\n"
+  },
+  {
+    "name": "counter-folder-latin1",
+    "folder": "café",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "biglybt.config": "ZDI0OlBsdWdpbi5jYWbpLnhtdWkubmV4dC5pZGk0Mjk0OTY3Mjk2ZTI3OlBsdWdpbi54bXdlYnVpLnhtdWkubmV4dC5pZGkxM2Vl"
+    },
+    "native_details": "DETAIL 1 0 0 0 0 0\nORIGIN PRIMARY\n",
+    "expected": "COUNTER 4294967296 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 73\n"
+  },
+  {
+    "name": "counter-folder-unicode",
+    "folder": "דלת",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "biglybt.config": "ZDI3OlBsdWdpbi54bXdlYnVpLnhtdWkubmV4dC5pZGkxM2UyNjpQbHVnaW4u15PXnNeqLnhtdWkubmV4dC5pZGk0Mjk0OTY3Mjk2ZWU="
+    },
+    "native_details": "DETAIL 1 0 0 0 0 0\nORIGIN PRIMARY\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 73\n"
+  },
+  {
+    "name": "counter-max",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "biglybt.config": "ZDI3OlBsdWdpbi54bXdlYnVpLnhtdWkubmV4dC5pZGk5MjIzMzcyMDM2ODU0Nzc1ODA3ZWU="
+    },
+    "native_details": "DETAIL 1 0 0 0 0 0\nORIGIN PRIMARY\n",
+    "expected": "COUNTER 9223372036854775807 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 73\n"
+  },
+  {
+    "name": "counter-min",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "biglybt.config": "ZDI3OlBsdWdpbi54bXdlYnVpLnhtdWkubmV4dC5pZGktOTIyMzM3MjAzNjg1NDc3NTgwOGVl"
+    },
+    "native_details": "DETAIL 1 0 0 0 0 0\nORIGIN PRIMARY\n",
+    "expected": "COUNTER -9223372036854775808 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 73\n"
+  },
+  {
+    "name": "counter-wrong",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "biglybt.config": "ZDI3OlBsdWdpbi54bXdlYnVpLnhtdWkubmV4dC5pZDU6d3Jvbmdl"
+    },
+    "native_details": "DETAIL 1 0 0 0 0 0\nORIGIN PRIMARY\n",
+    "expected": "COUNTER 1 1\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 73\n"
+  },
+  {
+    "name": "archive-order-duplicates-full64",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "dlarchive.config": "ZDU6c3R1YnNsZDQ6YXR0cmQyNTpQbHVnaW4ueG13ZWJ1aS54bXVpLmRsLmlkaTczZWU0Omhhc2gzMjqGM4VPtoEyBC2hfI8VTwzu29lPjxjiQfH5X7XaKFsxkmVkNDphdHRyZDI1OlBsdWdpbi54bXdlYnVpLnhtdWkuZGwuaWRpLTJlZTQ6aGFzaDIwOhwWx99MaWMjbRuFDKRehG8+/UNSZWQ0OmF0dHJkZTQ6aGFzaDMyOoYzhU+2gTIELaF8jxVPDO7b2U+PGOJB8flftdooWzGSZWQ0Omhhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVkNDphdHRyZDI1OlBsdWdpbi54bXdlYnVpLnhtdWkuZGwuaWRpOTIyMzM3MjAzNjg1NDc3NTgwN2VlNDpoYXNoMzI6hjOFT7aBMgQtoXyPFU8M7tvZT48Y4kHx+V+12ihbMZJlZWU="
+    },
+    "native_details": "DETAIL 1 0 0 0 0 0\nORIGIN PRIMARY\nORIGIN ARCHIVE\nORIGIN ARCHIVE\nORIGIN ARCHIVE\nORIGIN ARCHIVE\nORIGIN ARCHIVE\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 73\nID S 0 8633854FB68132042DA17C8F154F0CEEDBD94F8F18E241F1F95FB5DA285B3192 73\nID S 1 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 -2\nID S 2 8633854FB68132042DA17C8F154F0CEEDBD94F8F18E241F1F95FB5DA285B3192 0\nID S 3 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 0\nID S 4 8633854FB68132042DA17C8F154F0CEEDBD94F8F18E241F1F95FB5DA285B3192 9223372036854775807\n"
+  },
+  {
+    "name": "archive-wrong-value",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "dlarchive.config": "ZDU6c3R1YnNsZDQ6YXR0cmQyNTpQbHVnaW4ueG13ZWJ1aS54bXVpLmRsLmlkbGVlNDpoYXNoMjA6HBbH30xpYyNtG4UMpF6Ebz79Q1JlZWU="
+    },
+    "native_details": "DETAIL 1 0 0 0 0 1\nORIGIN PRIMARY\nORIGIN UNAVAILABLE\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 73\nID S 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 -\n"
+  },
+  {
+    "name": "archive-wrong-map",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVlZQ==",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU=",
+      "dlarchive.config": "ZDU6c3R1YnNsZDQ6YXR0cmxlNDpoYXNoMjA6HBbH30xpYyNtG4UMpF6Ebz79Q1JlZWU="
+    },
+    "native_details": "DETAIL 1 0 0 0 0 1\nORIGIN PRIMARY\nORIGIN UNAVAILABLE\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 73\nID S 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 -\n"
+  },
+  {
+    "name": "legacy-inventory",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDc6b2xkLWtleWQ4OnNhdmVfZGlyMzk6L25vbmV4aXN0ZW50L2JpZ2x5YnRjLXRlc3Qtb25seS1wYXlsb2FkNTpzdGF0ZWk3MGU3OnRvcnJlbnQzOTovbm9uZXhpc3RlbnQvYmlnbHlidGMtdGVzdC1vbmx5LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDocFsffTGljI20bhQykXoRvPv1DUmVl",
+      "active/1C16C7DF4C6963236D1B850CA45E846F3EFD4352.dat": "ZDEwOmF0dHJpYnV0ZXNkMjU6UGx1Z2luLnhtd2VidWkueG11aS5kbC5pZGk3M2VlNDppbmZvZDQ6bmFtZTk6Z2VuZXJhdGVkZWU="
+    },
+    "native_details": "DETAIL 1 1 0 0 0 0\nORIGIN PRIMARY\n",
+    "expected": "COUNTER 1 0\nID A 0 1C16C7DF4C6963236D1B850CA45E846F3EFD4352 73\n"
+  },
+  {
+    "name": "original-generated-v1",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ5OmFsbG9jYXRlZGkxZTE0OmNvbXBsZXRlZGJ5dGVzaTEzMTA3MmUxMjpjcmVhdGlvblRpbWVpMTc5MjE5NDUyMTA4N2U5OmRpc2NhcmRlZGkwZTEwOmRvd25sb2FkZWRpMTMxMTQ0ZTEwOmZvcmNlU3RhcnRpMGUxMzpoYXNoZmFpbGJ5dGVzaTBlNTptYXhkbGkwZTU6bWF4dWxpMGUxMDpwZXJzaXN0ZW50aTFlODpwb3NpdGlvbmkxZTg6c2F2ZV9kaXIzNDovdG1wL2JpZ2x5YnRjLXBlZXItdjEvamF2YS9wYXlsb2FkOTpzYXZlX2ZpbGUxMzpnZW5lcmF0ZWQuYmluMTg6c2Vjb25kc0Rvd25sb2FkaW5naTFlMTg6c2Vjb25kc09ubHlTZWVkaW5naTBlNTpzdGF0ZWk3NWU3OnRvcnJlbnQ0MDovdG1wL2JpZ2x5YnRjLXBlZXItdjEvamF2YS9pbnB1dC50b3JyZW50MTI6dG9ycmVudF9oYXNoMjA6eybRn33C0vnZ+JethRsKtuDVjGw4OnVwbG9hZGVkaTBlNzp1cGxvYWRzaTZlZWVl",
+      "active/cache.dat": "H4sIAAAAAAAA/5VTPY/UMBCtuYKShmYrutvEzvd0t7uchERBwR9w4smeWa9jxc4eewhR0dFDRwMlLVRICMQPAIkCiQJo+QPQIMZ7HAcLOgmlSSZv3rw3fpYZOC88aslBzDWyGIT3vaoHj06WUAspVkJpFSNj0AjTObFCqfqqgMgvbVSruV7Xvtm1iP3uikU3CB9ZsdadkNEcDfZEL8e1Mjv/25BD0y2t9ooVFWdVmvE0SxiyFFqlUXaHJvSglKT69EsrlrC44IjBTUBqZRaOa8yg1WLuVBkollKZtpOq8U4doeJ5giUY9Iddv3A6h2tDrVUTKKzoxRI99mEh0shjEo78eHdufDJ7LCTNH3u1xFPJLC8z5NU2dOMM/V/wjcMk3YYHG2f0xDkmbLtHC+fHovFqhdsNRZVhONBwBq4b+gY3lvUwV6aEK4YmKTPHFOxCdirPsmLzPtiQgxR6dMMST+TQKgpw2PToHcXIMh7D90cvXp37/OXOhQ8Pnn+qntnZ+cevA2qhbOtcYIlJbkcta0uzGVwNcoJKp0wTDjH+ozBotct+VXxnLYXwNz95igl45yQNWZEn1RmShRTqgRdw4L2FKGK8GMf0MGCRMKYbiDgBcWRlAdPOeDReIhmlipXU20hSUQEZC4ms13Tgk5DeyfVRjy32SP2jVt30Q09oaRWjCFGRUmXmFQy+LUcLXDsObUP/UjgQ7oCWc+vSm4e3X7799v7r/Sd3L+48/fjunk7BUMhYAn/cAFp6r1akIgenwrY3NJvA/gw5y4HWSFL8KGQkkJT5mVez7wIwOg5GVEx4PmPVfjGb8hnfr2bVflkVe7MyY5N4b5JfjmdZOc2nYyk8B+83HoOzf8mlK/cDacTWsFEEAAA=",
+      "active/7B26D19F7DC2D2F9D9F897AD851B0AB6E0D58C6C.dat": "ZDg6YW5ub3VuY2UyNzpodHRwOi8vMTI3LjAuMC4xOjEvYW5ub3VuY2UxMDphdHRyaWJ1dGVzZDExOmNhbm9zYXZlZGlyOTc6L3RtcC9iaWdseWJ0Yy1wZWVyLXYxL2phdmEvcGF5bG9hZC9nZW5lcmF0ZWQuYmluCi90bXAvYmlnbHlidGMtcGVlci12MS9qYXZhL3BheWxvYWQvZ2VuZXJhdGVkLmJpbjY6Y29tcGx0aTE3OTIxOTQ1MjQ1MzFlMTQ6ZmlsZWRvd25sb2FkZWRkMTA6ZG93bmxvYWRlZGxpMTMxMDcyZWVlMTA6ZmlsZWxpbmtzMmxlNTpmbGFnc2k4ZTE0Om1kaW5mb2RpY3RzaXplaTI2M2U4Om5ldHdvcmtzbDY6UHVibGljZTEwOnBhcmFtZXRlcnNkODpkbmRmbGFnc2kwZTI1OnN0YXRzLmRvd25sb2FkLmFkZGVkLnRpbWVpMTc5MjE5NDUyMTY4NWUyOTpzdGF0cy5kb3dubG9hZC5jb21wbGV0ZWQudGltZWkxNzkyMTk0NTI0NTMxZTM0OnN0YXRzLmRvd25sb2FkLmZpbGUuY29tcGxldGVkLnRpbWVpMTc5MjE5NDUyNDUwNmVlMTE6cGVlcnNvdXJjZXNsNjpQbHVnaW44OkluY29taW5nZTE0OnJlc3VtZWNvbXBsZXRlaTJlNzpzZWNyZXRzZDI6cDEyMDr+pMDDCeLrfxbcmL3hObdwRA6lxWU3OnNraXBmc3NpMGUxMDpzdG9yZXR5cGVzbDE6TGU3OnZlcnNpb25pMmVlMjY6YXp1cmV1c19wcml2YXRlX3Byb3BlcnRpZXNkZTE4OmF6dXJldXNfcHJvcGVydGllc2Q3OkNvbnRlbnRkZWUxMDpjcmVhdGVkIGJ5MjU6QmlnbHlCVCByZWZlcmVuY2UgZml4dHVyZTg6ZW5jb2Rpbmc5OnV0Zjgga2V5czQ6aW5mb2Q2Omxlbmd0aGkxMzEwNzJlNDpuYW1lMTM6Z2VuZXJhdGVkLmJpbjEwOm5hbWUudXRmLTgxMzpnZW5lcmF0ZWQuYmluMTI6cGllY2UgbGVuZ3RoaTE2Mzg0ZTY6cGllY2VzMTYwOv6kwMMJ4ut/FtyYveE5t3BEDqXFWUBpMHa20OtHTKPY/BtFA0F3rG9h/oWomROTVZg9ueNYo8KReJ9cSNkRtM3JCZ13NHQar4P1YJifssyRJKYOkIaXEMuWCqIFHHoDeNh4J0W52WolRJKnaSrMhsHTHu719StrHzM5JDJP4oV47vjTARNdxb1p9Squ0Ad1eyJTNPKGVA+3nljFBYXKFqZlNjpyZXN1bWVkNDpkYXRhZDY6YmxvY2tzZGUxMTpyZXN1bWUgZGF0YTg6AQEBAQEBAQE1OnZhbGlkaTFlZWUxNjp0b3JyZW50IGZpbGVuYW1lODY6L3RtcC9iaWdseWJ0Yy1wZWVyLXYxL2phdmEvcHJvZmlsZS9hY3RpdmUvN0IyNkQxOUY3REMyRDJGOUQ5Rjg5N0FEODUxQjBBQjZFMEQ1OEM2Qy5kYXQyMTp1bmtub3duLmZ1dHVyZS5wbHVnaW5kNjpiaW5hcnk0OgD/gAE2Om5lc3RlZGwxMTpkbyBub3QgZHJvcGktNGVlZWU="
+    },
+    "native_details": "DETAIL 0 0 0 0 0 0\nORIGIN CACHE\n",
+    "expected": "COUNTER 1 0\nID A 0 7B26D19F7DC2D2F9D9F897AD851B0AB6E0D58C6C 0\n"
+  },
+  {
+    "name": "original-generated-v2",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ5OmFsbG9jYXRlZGkxZTE0OmNvbXBsZXRlZGJ5dGVzaTEzMTA3MmUxMjpjcmVhdGlvblRpbWVpMTc5MjE5NDYxMzcxNWU5OmRpc2NhcmRlZGkwZTEwOmRvd25sb2FkZWRpMTMxMTQ0ZTEwOmZvcmNlU3RhcnRpMGUxMzpoYXNoZmFpbGJ5dGVzaTBlNTptYXhkbGkwZTU6bWF4dWxpMGUxMDpwZXJzaXN0ZW50aTFlODpwb3NpdGlvbmkxZTg6c2F2ZV9kaXIzNDovdG1wL2JpZ2x5YnRjLXBlZXItdjIvamF2YS9wYXlsb2FkOTpzYXZlX2ZpbGUxMzpnZW5lcmF0ZWQuYmluMTg6c2Vjb25kc0Rvd25sb2FkaW5naTFlMTg6c2Vjb25kc09ubHlTZWVkaW5naTBlNTpzdGF0ZWk3NWU3OnRvcnJlbnQ0MDovdG1wL2JpZ2x5YnRjLXBlZXItdjIvamF2YS9pbnB1dC50b3JyZW50MTI6dG9ycmVudF9oYXNoMjA6XbPgD3iOt0bWcDxBYwJFIT8Vg5A4OnVwbG9hZGVkaTBlNzp1cGxvYWRzaTZlZWVl",
+      "active/cache.dat": "H4sIAAAAAAAA/5VTPYsUQRAFQ0EEQQwMPMHQ3ZnumZ2PQhDvY0EwEDnNDHqna/ba7e1pu3v2bi/UwEz8Bf4EEw9M/QUGBneJgT/F6l2O81Y4kImmqPfqvarXcgQ+iIBachBTjSwFEYJTkz6glxVMhBQLobRKkTFohOm8WKBUri4hCXObTNRULyehGVhEN1jw5A31J1YsdSdkMkWDjujlcKLM9f8FFNB0c6uDYmXNWZ0XrEiLEbIcWqVRdocmYlBKUn3xpxXLWFpyxOgmdmplZp5rHEGrxdSrKlLMpTJtJ1UTvDpGxeoMKzAYDjs387qA5/1EqyZSWOHEHAO6uBBp5JqEI1/vzg/PZw+FpPnDoOZ4ITnndYm83mxdOcPwT/vKYZZvtkcbV2AYYdgmRgsfhqIJaoGbAFaVGA8ab+C73jW4sqz7qTIVPDU0SZkp5mBnsov7ZPnqp7cxCDk49P0cz/XQLkrw2DgMnnJkWcaheudOXp3e+nByph58OSt+vDWfv/96eOMnO743u/Pixt2ImCnbeh8ZU9LeEXxpSQiDZ1FblOyVaVYXvVTotRpcVEJnLSXyL3N5hRkE7yUNWZBB1RmSiJTwnpdwEIKFJGG8HKb0MWCJMKbriTgDcWxlCTudCWiCRDJNFSsJ20gSWgOZjPGcLOn62zHK2/tbDlt0SPitVh2F3lG3tKS5AipSxMx0BC/3x4OKQ9tQPYcD4Q94Cq+//r559PHb+NQ+etJc27v/+Pb7TzkYShvL4NJToOU7tSAFBXgVt76iWSd3nXZWAK2QZIStGJZIUhVXvlHXxcZknZBktLud7aXpuKyqve0yL3aLMs12clZkKc9HnGVjNqqyOh1KETiEoOJ76UNbxUkp0Gv7A4KljHdMBAAA",
+      "active/5DB3E00F788EB746D6703C41630245213F158390.dat": "ZDg6YW5ub3VuY2UyNzpodHRwOi8vMTI3LjAuMC4xOjEvYW5ub3VuY2UxMDphdHRyaWJ1dGVzZDExOmNhbm9zYXZlZGlyOTc6L3RtcC9iaWdseWJ0Yy1wZWVyLXYyL2phdmEvcGF5bG9hZC9nZW5lcmF0ZWQuYmluCi90bXAvYmlnbHlidGMtcGVlci12Mi9qYXZhL3BheWxvYWQvZ2VuZXJhdGVkLmJpbjY6Y29tcGx0aTE3OTIxOTQ2MTYwNjVlMTQ6ZmlsZWRvd25sb2FkZWRkMTA6ZG93bmxvYWRlZGxpMTMxMDcyZWVlMTA6ZmlsZWxpbmtzMmxlNTpmbGFnc2k4ZTE0Om1kaW5mb2RpY3RzaXplaTE5M2U4Om5ldHdvcmtzbDY6UHVibGljZTEwOnBhcmFtZXRlcnNkODpkbmRmbGFnc2kwZTI1OnN0YXRzLmRvd25sb2FkLmFkZGVkLnRpbWVpMTc5MjE5NDYxNDI5N2UyOTpzdGF0cy5kb3dubG9hZC5jb21wbGV0ZWQudGltZWkxNzkyMTk0NjE2MDY1ZTM0OnN0YXRzLmRvd25sb2FkLmZpbGUuY29tcGxldGVkLnRpbWVpMTc5MjE5NDYxNjAxNWVlMTE6cGVlcnNvdXJjZXNsNjpQbHVnaW44OkluY29taW5nZTE0OnJlc3VtZWNvbXBsZXRlaTJlNzpzZWNyZXRzZDI6cDEzMjo4gnK0VtYSh7TXaSSu1zbOcW6ewNwsDdIxeh9rF1ING2U3OnNraXBmc3NpMGUxMDpzdG9yZXR5cGVzbDE6TGU3OnZlcnNpb25pMmVlMjY6YXp1cmV1c19wcml2YXRlX3Byb3BlcnRpZXNkZTE4OmF6dXJldXNfcHJvcGVydGllc2Q3OkNvbnRlbnRkZWUxMDpjcmVhdGVkIGJ5MjU6QmlnbHlCVCByZWZlcmVuY2UgZml4dHVyZTg6ZW5jb2Rpbmc1OlVURi04NDppbmZvZDk6ZmlsZSB0cmVlZDEzOmdlbmVyYXRlZC5iaW5kMDpkNjpsZW5ndGhpMTMxMDcyZTExOnBpZWNlcyByb290MzI6OIJytFbWEoe012kkrtc2znFunsDcLA3SMXofaxdSDRtlZWUxMjptZXRhIHZlcnNpb25pMmU0Om5hbWUxMzpnZW5lcmF0ZWQuYmluMTA6bmFtZS51dGYtODEzOmdlbmVyYXRlZC5iaW4xMjpwaWVjZSBsZW5ndGhpMTYzODRlZTEyOnBpZWNlIGxheWVyc2QzMjo4gnK0VtYSh7TXaSSu1zbOcW6ewNwsDdIxeh9rF1INGzI1Njo2gMoyJucXrxbVVdiOgo70xUDzibcDOKYte6/JfChRlWAgEAxvXpHWU7y0rWrvu9kFlbuIhH75ts4fBDyQVUufFl17U0s8bSiDNqWP2HUnVMvEwsKis1wCVqX27Mb8yRmVEVOlbDa1wQAJzDywqsaAsHcYjKdZ2yqY9wE2f2FSNKWjPcPzUTF3PoWutg6jiGQIzGoKa9ErK/38sfwelJiO7Hbs6oIO4HJz+Turtfztt4ZFVCMzpCx0EKMU9TmDOj7QNsXv2ZIJ2117p2cp46mZoVimerP6Z1fHXW1TCkEEvl+3EtzEfBkP3g+lZTKtKsugjR2axZ1I8WV2JZRvgiJ5ZTY6cmVzdW1lZDQ6ZGF0YWQ2OmJsb2Nrc2RlMTE6cmVzdW1lIGRhdGE4OgEBAQEBAQEBNTp2YWxpZGkxZWVlMTY6dG9ycmVudCBmaWxlbmFtZTg2Oi90bXAvYmlnbHlidGMtcGVlci12Mi9qYXZhL3Byb2ZpbGUvYWN0aXZlLzVEQjNFMDBGNzg4RUI3NDZENjcwM0M0MTYzMDI0NTIxM0YxNTgzOTAuZGF0MjE6dW5rbm93bi5mdXR1cmUucGx1Z2luZDY6YmluYXJ5NDoA/4ABNjpuZXN0ZWRsMTE6ZG8gbm90IGRyb3BpLTRlZWVl"
+    },
+    "native_details": "DETAIL 0 0 0 0 0 0\nORIGIN CACHE\n",
+    "expected": "COUNTER 1 0\nID A 0 5DB3E00F788EB746D6703C41630245213F158390 0\n"
+  },
+  {
+    "name": "original-generated-hybrid",
+    "folder": "xmwebui",
+    "files": {
+      "downloads.config": "ZDk6ZG93bmxvYWRzbGQ5OmFsbG9jYXRlZGkxZTE0OmNvbXBsZXRlZGJ5dGVzaTEzMTA3MmUxMjpjcmVhdGlvblRpbWVpMTc5MjE5NDYzNzExOGU5OmRpc2NhcmRlZGkwZTEwOmRvd25sb2FkZWRpMTMxMTQ0ZTEwOmZvcmNlU3RhcnRpMGUxMzpoYXNoZmFpbGJ5dGVzaTBlNTptYXhkbGkwZTU6bWF4dWxpMGUxMDpwZXJzaXN0ZW50aTFlODpwb3NpdGlvbmkxZTg6c2F2ZV9kaXIzODovdG1wL2JpZ2x5YnRjLXBlZXItaHlicmlkL2phdmEvcGF5bG9hZDk6c2F2ZV9maWxlMTM6Z2VuZXJhdGVkLmJpbjE4OnNlY29uZHNEb3dubG9hZGluZ2kxZTE4OnNlY29uZHNPbmx5U2VlZGluZ2kwZTU6c3RhdGVpNzVlNzp0b3JyZW50NDQ6L3RtcC9iaWdseWJ0Yy1wZWVyLWh5YnJpZC9qYXZhL2lucHV0LnRvcnJlbnQxMjp0b3JyZW50X2hhc2gyMDoEihTXz4Z+icd6AZ2rAUV17D8uMjg6dXBsb2FkZWRpMGU3OnVwbG9hZHNpNmVlZWU=",
+      "active/cache.dat": "H4sIAAAAAAAA/51TPY/UMBDVSTRQUCHq/QOXxPnONOhub09CoqDgD3jjya5Zr2PZzh57BXRI8Ato6KDiB1AhISFESUlDAy38BsQ4x+l0CwIJpUkm82bee34WBTjPPSqRAl8oZAlw762cDx6dqGHOBd9wqWSCjEHLde/4BoW0LCkg9msTz+VCbee+3TeIdn+5nVsp4vsEig3fqp6LeIEaLe0Q0Vzqa/8DKqHt10Z5yaomZU1eZk1REaMcOqlQ9Cc6YFAIon/xpSTLWFKliEFW6FRSr1yqsIBO8YWTdRixFlJ3vZCtd/IUZVYzrEGjP+ntyqkS7g5zJdswwnDL1+jRBmeEFmdDUkzPTHTR+e6IC9ofebnGC8pVWRSYNrutozL0v7WPCrN8tz3I+AsmKTFjuxjFnY946+UGdwFVlmA42XAOrh9si6NkNSykruG2pk1SLzAHsxK9JAXV+D4YOdpv0Q1rPKdDVlTgsLXoHeXJsDSBHy/evrv69dujm5+fvfnSvDZH11++D10raTrnwpSE6PYE2RrazeBOoBNYOqnb8RAvFQYl9y8qvjeG0nhZTwbeOUFLNqRJ9ppoIaV7SCtYem8gjllaRQk9DFjMte4HGpwBPzWigmmvPWovkIRSxQjCtoKINkDCQiLnWzrww5Dgw3sTix1aJPykkw/8YKlbGBkiREVKlV40MPiunqxw61LoWvqXw5K7JZlz5emNTx8fP3zy4XTv+au92fD9VpTmoClkLINLN4BMt3JDLEpwMrg9jhkD+yvkrASykaj4SchIGNIk/7yitg/N8Vk44iSvD1h+VE2P67Ka1c20qg4S1hwdHCYsL6piNs2O01mWRoL7FLwnZ+tR3Z8o07X7CdcQ/ydeBAAA",
+      "active/048A14D7CF867E89C77A019DAB014575EC3F2E32.dat": "ZDg6YW5ub3VuY2UyNzpodHRwOi8vMTI3LjAuMC4xOjEvYW5ub3VuY2UxMDphdHRyaWJ1dGVzZDExOmNhbm9zYXZlZGlyMTA1Oi90bXAvYmlnbHlidGMtcGVlci1oeWJyaWQvamF2YS9wYXlsb2FkL2dlbmVyYXRlZC5iaW4KL3RtcC9iaWdseWJ0Yy1wZWVyLWh5YnJpZC9qYXZhL3BheWxvYWQvZ2VuZXJhdGVkLmJpbjY6Y29tcGx0aTE3OTIxOTQ2Mzk1NzBlMTQ6ZmlsZWRvd25sb2FkZWRkMTA6ZG93bmxvYWRlZGxpMTMxMDcyZWVlMTA6ZmlsZWxpbmtzMmxlNTpmbGFnc2k4ZTE0Om1kaW5mb2RpY3RzaXplaTM4MWU4Om5ldHdvcmtzbDY6UHVibGljZTEwOnBhcmFtZXRlcnNkODpkbmRmbGFnc2kwZTI1OnN0YXRzLmRvd25sb2FkLmFkZGVkLnRpbWVpMTc5MjE5NDYzNzY1NWUyOTpzdGF0cy5kb3dubG9hZC5jb21wbGV0ZWQudGltZWkxNzkyMTk0NjM5NTcwZTM0OnN0YXRzLmRvd25sb2FkLmZpbGUuY29tcGxldGVkLnRpbWVpMTc5MjE5NDYzOTUwNmVlMTE6cGVlcnNvdXJjZXNsNjpQbHVnaW44OkluY29taW5nZTE0OnJlc3VtZWNvbXBsZXRlaTJlNzpzZWNyZXRzZDI6cDEyMDr+pMDDCeLrfxbcmL3hObdwRA6lxWU3OnNraXBmc3NpMGUxMDpzdG9yZXR5cGVzbDE6TGU3OnZlcnNpb25pMmVlMjY6YXp1cmV1c19wcml2YXRlX3Byb3BlcnRpZXNkZTE4OmF6dXJldXNfcHJvcGVydGllc2Q3OkNvbnRlbnRkZWUxMDpjcmVhdGVkIGJ5MjU6QmlnbHlCVCByZWZlcmVuY2UgZml4dHVyZTg6ZW5jb2Rpbmc5OnV0Zjgga2V5czQ6aW5mb2Q5OmZpbGUgdHJlZWQxMzpnZW5lcmF0ZWQuYmluZDA6ZDY6bGVuZ3RoaTEzMTA3MmUxMTpwaWVjZXMgcm9vdDMyOjiCcrRW1hKHtNdpJK7XNs5xbp7A3CwN0jF6H2sXUg0bZWVlNjpsZW5ndGhpMTMxMDcyZTEyOm1ldGEgdmVyc2lvbmkyZTQ6bmFtZTEzOmdlbmVyYXRlZC5iaW4xMDpuYW1lLnV0Zi04MTM6Z2VuZXJhdGVkLmJpbjEyOnBpZWNlIGxlbmd0aGkxNjM4NGU2OnBpZWNlczE2MDr+pMDDCeLrfxbcmL3hObdwRA6lxVlAaTB2ttDrR0yj2PwbRQNBd6xvYf6FqJkTk1WYPbnjWKPCkXifXEjZEbTNyQmddzR0Gq+D9WCYn7LMkSSmDpCGlxDLlgqiBRx6A3jYeCdFudlqJUSSp2kqzIbB0x7u9fUrax8zOSQyT+KFeO740wETXcW9afUqrtAHdXsiUzTyhlQPt55YxQWFyhamZTEyOnBpZWNlIGxheWVyc2QzMjo4gnK0VtYSh7TXaSSu1zbOcW6ewNwsDdIxeh9rF1INGzI1Njo2gMoyJucXrxbVVdiOgo70xUDzibcDOKYte6/JfChRlWAgEAxvXpHWU7y0rWrvu9kFlbuIhH75ts4fBDyQVUufFl17U0s8bSiDNqWP2HUnVMvEwsKis1wCVqX27Mb8yRmVEVOlbDa1wQAJzDywqsaAsHcYjKdZ2yqY9wE2f2FSNKWjPcPzUTF3PoWutg6jiGQIzGoKa9ErK/38sfwelJiO7Hbs6oIO4HJz+Turtfztt4ZFVCMzpCx0EKMU9TmDOj7QNsXv2ZIJ2117p2cp46mZoVimerP6Z1fHXW1TCkEEvl+3EtzEfBkP3g+lZTKtKsugjR2axZ1I8WV2JZRvgiJ5ZTY6cmVzdW1lZDQ6ZGF0YWQ2OmJsb2Nrc2RlMTE6cmVzdW1lIGRhdGE4OgEBAQEBAQEBNTp2YWxpZGkxZWVlMTY6dG9ycmVudCBmaWxlbmFtZTkwOi90bXAvYmlnbHlidGMtcGVlci1oeWJyaWQvamF2YS9wcm9maWxlL2FjdGl2ZS8wNDhBMTREN0NGODY3RTg5Qzc3QTAxOURBQjAxNDU3NUVDM0YyRTMyLmRhdDIxOnVua25vd24uZnV0dXJlLnBsdWdpbmQ2OmJpbmFyeTQ6AP+AATY6bmVzdGVkbDExOmRvIG5vdCBkcm9waS00ZWVlZQ=="
+    },
+    "native_details": "DETAIL 0 0 0 0 0 0\nORIGIN CACHE\n",
+    "expected": "COUNTER 1 0\nID A 0 048A14D7CF867E89C77A019DAB014575EC3F2E32 0\n"
+  }
+]

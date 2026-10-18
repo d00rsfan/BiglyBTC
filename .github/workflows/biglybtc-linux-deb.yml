@@ -1,0 +1,141 @@
+name: BiglyBTC hosted development DEB preview
+# Draft application CI: requires the complete preview source export. Publishing
+# remains separate until the development signing key is configured securely.
+
+on:
+  workflow_dispatch:
+    inputs:
+      build_system_qt:
+        description: Also build the small variant once exact Qt6.12.0 Debian packages exist
+        type: boolean
+        default: false
+      maintainer:
+        description: Actual package maintainer, Name <email>
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: biglybtc-deb-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  variants:
+    runs-on: ubuntu-26.04
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
+    steps:
+      - id: select
+        env:
+          BIGLYBTC_INCLUDE_SYSTEM_QT: ${{ inputs.build_system_qt }}
+        run: |
+          python3 - <<'PYCODE'
+          import json, os
+          variants = [{"qt": "bundled-qt", "bundle": "ON"}]
+          if os.environ["BIGLYBTC_INCLUDE_SYSTEM_QT"] == "true":
+              variants.append({"qt": "system-qt", "bundle": "OFF"})
+          with open(os.environ["GITHUB_OUTPUT"], "a") as output:
+              output.write("matrix=" + json.dumps({"include": variants}) + "\n")
+          PYCODE
+
+  package:
+    needs: variants
+    # Explicit GA label: https://github.com/actions/runner-images/issues/14747
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix: ${{ fromJSON(needs.variants.outputs.matrix) }}
+    env:
+      BIGLYBTC_PACKAGE_CONTACT: ${{ inputs.maintainer }}
+      BIGLYBTC_QT_VARIANT: ${{ matrix.qt }}
+      BIGLYBTC_QT_BUNDLE: ${{ matrix.bundle }}
+      QT_QPA_PLATFORM: offscreen
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Require the complete application source export
+        run: |
+          python3 - <<'PYCODE'
+          import os, pathlib
+          checkout = pathlib.Path(os.environ["GITHUB_WORKSPACE"])
+          source = checkout / "preview" if (checkout / "preview/native/CMakeLists.txt").is_file() else checkout
+          required = ["LICENSE", "native/CMakeLists.txt", "native/engine/local_session.cpp",
+              "native/app/main.cpp", "native/ui/library_window.cpp", "native/core/CMakeLists.txt",
+              "native/adapters/CMakeLists.txt", "native/packaging/Debian.cmake"]
+          missing = [name for name in required if not (source / name).is_file()]
+          if missing:
+              raise SystemExit("Application sources are not exported at this revision; an SDK/core-only "
+                  "checkout cannot build an application DEB. Missing: " + ", ".join(missing))
+          suffix = "-".join((os.environ["GITHUB_RUN_ID"], os.environ["GITHUB_RUN_ATTEMPT"], os.environ["BIGLYBTC_QT_VARIANT"]))
+          output = pathlib.Path(os.environ["RUNNER_TEMP"]) / ("biglybtc-debs-" + suffix)
+          output.mkdir()
+          with open(os.environ["GITHUB_ENV"], "a") as env:
+              env.write("BIGLYBTC_PREVIEW_ROOT=" + str(source) + "\n")
+              env.write("BIGLYBTC_PACKAGE_BUILD=" + str(output / "build") + "\n")
+              env.write("BIGLYBTC_PACKAGE_OUTPUT=" + str(output) + "\n")
+              env.write("BIGLYBTC_DEPENDENCY_ROOT=" + str(pathlib.Path(os.environ["RUNNER_TEMP"]) / ("biglybtc-dependencies-" + suffix)) + "\n")
+          PYCODE
+      - name: Provision hosted dependencies
+        run: bash migration/tools/hosted_preview_dependencies.sh --install "$BIGLYBTC_QT_VARIANT" "$BIGLYBTC_DEPENDENCY_ROOT"
+      - name: Check packaging policies
+        run: python3 "$BIGLYBTC_PREVIEW_ROOT/native/packaging/test_packaging.py"
+      - name: Check private Qt relocation
+        if: matrix.bundle == 'ON'
+        run: |
+          python3 "$BIGLYBTC_PREVIEW_ROOT/native/packaging/test_qt_bundle.py" \
+            --sdk "$BIGLYBTC_QT_PREFIX" --output "$BIGLYBTC_PACKAGE_OUTPUT/qt-relocation.json"
+      - name: Configure development variant
+        run: |
+          set -o pipefail
+          nice -n 5 cmake -S "$BIGLYBTC_PREVIEW_ROOT/native" -B "$BIGLYBTC_PACKAGE_BUILD" -G Ninja \
+            -DCMAKE_BUILD_TYPE=Release "-DCMAKE_CXX_COMPILER=$BIGLYBTC_CXX" \
+            -DCMAKE_INSTALL_PREFIX=/usr -DBIGLYBTC_INSTALL_CORE=OFF \
+            -DBIGLYBTC_LOCAL_ENGINE=ON -DBIGLYBTC_DESKTOP=ON -DBIGLYBTC_DEB=ON \
+            "-DBIGLYBTC_BUNDLE_QT=$BIGLYBTC_QT_BUNDLE" \
+            "-DBIGLYBTC_DEB_CONTACT=$BIGLYBTC_PACKAGE_CONTACT" \
+            "-DCMAKE_PREFIX_PATH=$BIGLYBTC_QT_PREFIX;/usr" \
+            2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/configure.log"
+      - name: Build and check native units
+        run: |
+          set -o pipefail
+          nice -n 5 cmake --build "$BIGLYBTC_PACKAGE_BUILD" --parallel 2 2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/build.log"
+          ctest --test-dir "$BIGLYBTC_PACKAGE_BUILD" -L unit --no-tests=error --output-on-failure \
+            2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/unit-tests.log"
+      - name: Package and audit
+        run: |
+          set -o pipefail
+          nice -n 5 cpack --config "$BIGLYBTC_PACKAGE_BUILD/CPackConfig.cmake" -B "$BIGLYBTC_PACKAGE_OUTPUT" \
+            2>&1 | tee "$BIGLYBTC_PACKAGE_OUTPUT/cpack.log"
+          python3 "$BIGLYBTC_PREVIEW_ROOT/native/packaging/audit_deb.py" "$BIGLYBTC_PACKAGE_OUTPUT"/*.deb \
+            --output "$BIGLYBTC_PACKAGE_OUTPUT/package-audit.json"
+          git rev-parse HEAD > "$BIGLYBTC_PACKAGE_OUTPUT/source-revision.txt"
+          cp "$BIGLYBTC_DEPENDENCY_ROOT/installed-packages.tsv" "$BIGLYBTC_PACKAGE_OUTPUT/"
+          cp "$BIGLYBTC_DEPENDENCY_ROOT/compiler.txt" "$BIGLYBTC_PACKAGE_OUTPUT/"
+          if test -f "$BIGLYBTC_DEPENDENCY_ROOT/qt-archives-SHA256SUMS"; then
+            cp "$BIGLYBTC_DEPENDENCY_ROOT/qt-archives-SHA256SUMS" "$BIGLYBTC_PACKAGE_OUTPUT/"
+            cp "$BIGLYBTC_DEPENDENCY_ROOT/python-packages.txt" "$BIGLYBTC_PACKAGE_OUTPUT/"
+          fi
+          (cd "$BIGLYBTC_PACKAGE_OUTPUT" && sha256sum -- *.deb > SHA256SUMS)
+      - name: Retain packages and failure diagnostics
+        if: always() && env.BIGLYBTC_PACKAGE_OUTPUT != ''
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: BiglyBTC-linux-amd64-${{ matrix.qt }}
+          path: |
+            ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/*.deb
+            ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/*.json
+            ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/*.txt
+            ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/*.tsv
+            ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/*.log
+            ${{ env.BIGLYBTC_PACKAGE_OUTPUT }}/SHA256SUMS
+            ${{ env.BIGLYBTC_PACKAGE_BUILD }}/CMakeCache.txt
+            ${{ env.BIGLYBTC_PACKAGE_BUILD }}/Testing/Temporary/
+            ${{ env.BIGLYBTC_DEPENDENCY_ROOT }}/bootstrap.log
+          if-no-files-found: error
+          retention-days: 14
+

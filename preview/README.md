@@ -1,0 +1,58 @@
+# BiglyBTC native desktop preview
+
+This additive `preview/` tree contains the C++23/Qt6.12 desktop preview, its
+bounded native core/profile/engine adapters and selected native unit fixtures.
+The repository root continues to build its existing plugin SDK by default.
+`SOURCE_PROVENANCE.json` describes that older export; the separate
+`PREVIEW_PROVENANCE.json` records this preview's exact source commit and files.
+
+The application is under development. Its default preview launcher creates four
+synthetic torrents in a fresh private `/tmp/biglybtc-preview-*` profile and passes
+port0, which disables transfers. It never opens the user's `~/.biglybt` profile.
+Original-profile switching, full networking/session/plugin behavior and complete
+UI parity remain unfinished. This milestone adds the first classic shell: a
+Library tab, incomplete/complete tables, name filtering and shared General/Files
+details. Unavailable actions remain disabled. See the milestone verification
+record and Actions run for the checks performed on the actual revision.
+
+Build independently with the pinned compiler, Qt6.12.0 and libtorrent2.0.12:
+
+```sh
+cmake -S preview/native -B /tmp/biglybtc-public-preview-build -G Ninja \
+  -DCMAKE_CXX_COMPILER=/usr/bin/g++-16 -DCMAKE_BUILD_TYPE=Release \
+  -DBIGLYBTC_LOCAL_ENGINE=ON -DBIGLYBTC_DESKTOP=ON \
+  -DCMAKE_PREFIX_PATH="/path/to/Qt/6.12.0/gcc_64;/path/to/libtorrent-prefix"
+nice -n 5 cmake --build /tmp/biglybtc-public-preview-build --parallel 2
+ctest --test-dir /tmp/biglybtc-public-preview-build -L unit \
+  --no-tests=error --output-on-failure
+```
+
+Choose a fresh build path. The toolchain guard requires its exact qualified
+GCC16/Clang24 and libstdc++16 identities; a different compiler must not silently
+substitute. Local dependency prefixes are examples, not bundled SDKs. See
+`native/packaging/README.md` for experimental private-Qt DEB options. The manual
+hosted development DEB workflow provisions a recorded Ubuntu26.04 environment;
+its presence does not prove that CI has run or that a release was published.
+
+Only the selected native units/fixtures and separately recorded Qt checks can be
+claimed passing. The original Java reference build, harnesses, normal profile
+and operational evidence are intentionally absent. Some integration wrappers
+return skip when these inputs are missing; others require unavailable inputs.
+Do not interpret a full unfiltered CTest invocation as supported integration
+qualification, and never manufacture Java evidence to make it pass.
+
+Only the already published rating data/local-policy module is included because
+the current native target graph builds it. It is not a running rating plugin.
+SpeedScheduler and other plugin implementations, unrelated native services,
+private evidence, keys, binaries and development builds are excluded.
+
+For an already staged runnable folder use its top-level `./BiglyBTC-preview`
+launcher; the installed-layout shell wrappers are not portable folder entrypoints.
+To stage a folder from a build configured with `BIGLYBTC_DEB=ON` and
+`BIGLYBTC_BUNDLE_QT=ON`, run `python3 preview/migration/tools/stage_preview.py
+--build build --output dist --libtorrent-package /path/to/libtorrent-rasterbar2.0t64_2.0.12-1_amd64.deb`
+on one line. Enabling the install layout does not build a `.deb`; no CPack or
+system installation is needed. The ordinary libtorrent runtime is extracted
+alongside the private Qt files for a user-local preview.
+No performance improvement or full migration completion is claimed by this source
+milestone.

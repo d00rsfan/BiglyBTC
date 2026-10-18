@@ -1,0 +1,227 @@
+add_executable(biglybtc-profile-driver profile_driver.cpp)
+add_executable(biglybtc-rpc-profile-driver rpc_profile_driver.cpp)
+target_link_libraries(biglybtc-rpc-profile-driver PRIVATE biglybtc_rpc_profile)
+target_compile_options(biglybtc-rpc-profile-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_executable(biglybtc-mldht-cache-driver mldht_cache_driver.cpp)
+target_link_libraries(biglybtc-mldht-cache-driver PRIVATE biglybtc_mldht_cache biglybtc_profile)
+target_compile_options(biglybtc-mldht-cache-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_executable(biglybtc-plugin-settings-driver plugin_settings_driver.cpp)
+target_link_libraries(biglybtc-plugin-settings-driver PRIVATE biglybtc_plugin_settings)
+target_compile_options(biglybtc-plugin-settings-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_executable(biglybtc-plugin-attributes-driver plugin_attributes_driver.cpp)
+target_link_libraries(biglybtc-plugin-attributes-driver PRIVATE biglybtc_plugin_attributes biglybtc_plugin_settings)
+target_compile_options(biglybtc-plugin-attributes-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_executable(biglybtc-plugin-attributes-bounds-tests plugin_attributes_bounds.cpp)
+target_link_libraries(biglybtc-plugin-attributes-bounds-tests PRIVATE biglybtc_plugin_attributes biglybtc_plugin_settings)
+target_compile_options(biglybtc-plugin-attributes-bounds-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME bounded-plugin-attributes COMMAND biglybtc-plugin-attributes-bounds-tests)
+set_tests_properties(bounded-plugin-attributes PROPERTIES TIMEOUT 30 LABELS "unit")
+target_link_libraries(biglybtc-profile-driver PRIVATE biglybtc_profile)
+target_compile_options(biglybtc-profile-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_executable(biglybtc-core-tests "${CMAKE_CURRENT_SOURCE_DIR}/../../migration/probes/protocols/tests.cpp")
+target_include_directories(biglybtc-core-tests PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../migration/probes/protocols")
+target_link_libraries(biglybtc-core-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-core-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME bounded-core-formats COMMAND biglybtc-core-tests)
+add_executable(biglybtc-library-tests library_tests.cpp)
+target_link_libraries(biglybtc-library-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-library-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME saved-library-inventory COMMAND biglybtc-library-tests)
+set_tests_properties(saved-library-inventory PROPERTIES TIMEOUT 30)
+add_executable(biglybtc-library-driver library_driver.cpp)
+target_link_libraries(biglybtc-library-driver PRIVATE biglybtc_profile)
+target_compile_options(biglybtc-library-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_executable(biglybtc-cache-tests cache_tests.cpp)
+target_link_libraries(biglybtc-cache-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-cache-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME cached-state-metadata COMMAND biglybtc-cache-tests)
+set_tests_properties(cached-state-metadata PROPERTIES TIMEOUT 30 LABELS "unit")
+add_executable(biglybtc-torrent-layout-tests torrent_layout_tests.cpp)
+target_link_libraries(biglybtc-torrent-layout-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-torrent-layout-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME original-torrent-geometry COMMAND biglybtc-torrent-layout-tests)
+set_tests_properties(original-torrent-geometry PROPERTIES TIMEOUT 30 LABELS "unit")
+add_executable(biglybtc-file-policy-tests file_policy_tests.cpp)
+target_link_libraries(biglybtc-file-policy-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-file-policy-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME original-file-priorities COMMAND biglybtc-file-policy-tests)
+set_tests_properties(original-file-priorities PROPERTIES TIMEOUT 30 LABELS "unit")
+add_executable(biglybtc-library-view-driver library_view_driver.cpp)
+target_link_libraries(biglybtc-library-view-driver PRIVATE biglybtc_profile)
+target_compile_options(biglybtc-library-view-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_executable(biglybtc-document-edit-tests document_edit_tests.cpp)
+target_link_libraries(biglybtc-document-edit-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-document-edit-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME structured-document-edits COMMAND biglybtc-document-edit-tests)
+set_tests_properties(structured-document-edits PROPERTIES TIMEOUT 30)
+add_executable(biglybtc-codec-tests codec_tests.cpp)
+target_link_libraries(biglybtc-codec-tests PRIVATE biglybtc_state_codec)
+target_compile_options(biglybtc-codec-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME compressed-state-envelope COMMAND biglybtc-codec-tests)
+set_tests_properties(compressed-state-envelope PROPERTIES TIMEOUT 30)
+add_executable(biglybtc-state-driver state_driver.cpp)
+target_link_libraries(biglybtc-state-driver PRIVATE biglybtc_state_codec)
+target_compile_options(biglybtc-state-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_executable(biglybtc-torrent-state-driver torrent_state_driver.cpp)
+target_link_libraries(biglybtc-torrent-state-driver PRIVATE biglybtc_profile)
+target_compile_options(biglybtc-torrent-state-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_executable(biglybtc-executor-tests executor_tests.cpp)
+target_link_libraries(biglybtc-executor-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-executor-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME bounded-executor COMMAND biglybtc-executor-tests)
+set_tests_properties(bounded-executor PROPERTIES TIMEOUT 30)
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+add_test(NAME original-rpc-profile-snapshot COMMAND Python3::Interpreter
+  "${CMAKE_CURRENT_SOURCE_DIR}/rpc_profile_fixtures.py" "$<TARGET_FILE:biglybtc-rpc-profile-driver>")
+set_tests_properties(original-rpc-profile-snapshot PROPERTIES TIMEOUT 180 LABELS "unit;fixtures;read-only")
+add_test(NAME original-mldht-routing-cache COMMAND Python3::Interpreter
+  "${CMAKE_CURRENT_SOURCE_DIR}/mldht_cache_fixtures.py" "$<TARGET_FILE:biglybtc-mldht-cache-driver>")
+set_tests_properties(original-mldht-routing-cache PROPERTIES TIMEOUT 120 LABELS "unit;fixtures")
+add_test(NAME original-plugin-settings COMMAND Python3::Interpreter
+  "${CMAKE_CURRENT_SOURCE_DIR}/plugin_settings_fixtures.py" "$<TARGET_FILE:biglybtc-plugin-settings-driver>")
+set_tests_properties(original-plugin-settings PROPERTIES TIMEOUT 90 LABELS "unit;fixtures")
+add_test(NAME original-plugin-attributes COMMAND Python3::Interpreter
+  "${CMAKE_CURRENT_SOURCE_DIR}/plugin_attributes_fixtures.py" "$<TARGET_FILE:biglybtc-plugin-attributes-driver>")
+set_tests_properties(original-plugin-attributes PROPERTIES TIMEOUT 90 LABELS "unit;fixtures")
+add_test(NAME owned-peer-readiness COMMAND Python3::Interpreter "${CMAKE_CURRENT_SOURCE_DIR}/peer_readiness_tests.py")
+set_tests_properties(owned-peer-readiness PROPERTIES TIMEOUT 30 LABELS "unit;fixtures")
+add_test(NAME java-file-priority-loader COMMAND Python3::Interpreter
+  "${CMAKE_CURRENT_SOURCE_DIR}/file_policy_interop.py" --driver "$<TARGET_FILE:biglybtc-file-policy-tests>")
+set_tests_properties(java-file-priority-loader PROPERTIES TIMEOUT 360 SKIP_RETURN_CODE 77 LABELS "integration;java;local-files")
+add_test(NAME java-multifile-geometry COMMAND Python3::Interpreter
+  "${CMAKE_CURRENT_SOURCE_DIR}/geometry_interop.py" --driver "$<TARGET_FILE:biglybtc-torrent-layout-tests>")
+set_tests_properties(java-multifile-geometry PROPERTIES TIMEOUT 120 SKIP_RETURN_CODE 77 LABELS "integration;java;local-files")
+add_test(NAME java-cached-library-view COMMAND Python3::Interpreter
+  "${CMAKE_CURRENT_SOURCE_DIR}/library_view_interop.py" --driver "$<TARGET_FILE:biglybtc-library-view-driver>")
+set_tests_properties(java-cached-library-view PROPERTIES TIMEOUT 120 SKIP_RETURN_CODE 77 LABELS "integration;java;local-files")
+add_test(NAME torrent-state-java-interop COMMAND Python3::Interpreter
+  "${CMAKE_CURRENT_SOURCE_DIR}/torrent_state_tests.py" --driver "$<TARGET_FILE:biglybtc-torrent-state-driver>")
+set_tests_properties(torrent-state-java-interop PROPERTIES TIMEOUT 240 SKIP_RETURN_CODE 77)
+add_test(NAME java-saved-library-inventory COMMAND Python3::Interpreter
+  "${CMAKE_CURRENT_SOURCE_DIR}/library_interop.py" --driver "$<TARGET_FILE:biglybtc-library-driver>")
+set_tests_properties(java-saved-library-inventory PROPERTIES TIMEOUT 120 SKIP_RETURN_CODE 77)
+add_test(NAME state-java-interop COMMAND Python3::Interpreter
+  "${CMAKE_CURRENT_SOURCE_DIR}/../../migration/tools/state_interop.py" --driver "$<TARGET_FILE:biglybtc-state-driver>")
+set_tests_properties(state-java-interop PROPERTIES TIMEOUT 180)
+add_test(NAME profile-java-interop COMMAND Python3::Interpreter
+  "${CMAKE_CURRENT_SOURCE_DIR}/profile_tests.py" --driver "$<TARGET_FILE:biglybtc-profile-driver>")
+set_tests_properties(profile-java-interop PROPERTIES TIMEOUT 180)
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+  add_test(NAME profile-real-write-faults COMMAND Python3::Interpreter
+    "${CMAKE_CURRENT_SOURCE_DIR}/profile_write_faults.py" --driver "$<TARGET_FILE:biglybtc-profile-driver>")
+  set_tests_properties(profile-real-write-faults PROPERTIES TIMEOUT 360 RUN_SERIAL TRUE
+    LABELS "integration;java;local-files;faults")
+endif()
+set_tests_properties(bounded-core-formats saved-library-inventory structured-document-edits
+  compressed-state-envelope bounded-executor PROPERTIES LABELS "unit")
+set_tests_properties(torrent-state-java-interop java-saved-library-inventory state-java-interop
+  profile-java-interop PROPERTIES LABELS "integration;java;local-files")
+if(BIGLYBTC_LOCAL_ENGINE)
+  add_test(NAME saved-policy-preflight-no-mutation COMMAND Python3::Interpreter
+    "${CMAKE_CURRENT_SOURCE_DIR}/activation_rejections.py" --app "$<TARGET_FILE:BiglyBTC-headless>")
+  set_tests_properties(saved-policy-preflight-no-mutation PROPERTIES TIMEOUT 600 SKIP_RETURN_CODE 77 RUN_SERIAL TRUE
+    LABELS "integration;loopback;policy;faults")
+  add_executable(biglybtc-owned-test-peer "${CMAKE_CURRENT_SOURCE_DIR}/../../migration/probes/engine/main.cpp")
+  target_link_libraries(biglybtc-owned-test-peer PRIVATE LibtorrentRasterbar::torrent-rasterbar)
+  target_compile_options(biglybtc-owned-test-peer PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_executable(biglybtc-multifile-test-peer "${CMAKE_CURRENT_SOURCE_DIR}/../../migration/probes/engine/multifile_peer.cpp")
+  target_link_libraries(biglybtc-multifile-test-peer PRIVATE BiglyBTC::Core LibtorrentRasterbar::torrent-rasterbar)
+  target_compile_options(biglybtc-multifile-test-peer PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  foreach(type IN ITEMS 1 3 2)
+    add_test(NAME "same-profile-handoff-${type}" COMMAND Python3::Interpreter
+      "${CMAKE_CURRENT_SOURCE_DIR}/handoff_tests.py" --app "$<TARGET_FILE:BiglyBTC-headless>"
+      --peer "$<TARGET_FILE:biglybtc-owned-test-peer>" --type "${type}")
+    set_tests_properties("same-profile-handoff-${type}" PROPERTIES TIMEOUT 360
+      SKIP_RETURN_CODE 77 RUN_SERIAL TRUE LABELS "integration;loopback;same-profile")
+  endforeach()
+  foreach(type IN ITEMS 1 3 2)
+    add_test(NAME "multifile-java-${type}" COMMAND Python3::Interpreter
+      "${CMAKE_CURRENT_SOURCE_DIR}/multifile_case.py" --app "$<TARGET_FILE:BiglyBTC-headless>"
+      --peer "$<TARGET_FILE:biglybtc-multifile-test-peer>" --type "${type}")
+    set_tests_properties("multifile-java-${type}" PROPERTIES TIMEOUT 900 SKIP_RETURN_CODE 77 RUN_SERIAL TRUE
+      LABELS "integration;loopback;same-profile;multifile")
+  endforeach()
+  foreach(type IN ITEMS 1 3)
+    add_test(NAME "multifile-crash3-java-first-${type}" COMMAND Python3::Interpreter
+      "${CMAKE_CURRENT_SOURCE_DIR}/multifile_case.py" --app "$<TARGET_FILE:BiglyBTC-headless>"
+      --peer "$<TARGET_FILE:biglybtc-multifile-test-peer>" --type "${type}" --crash 3)
+    set_tests_properties("multifile-crash3-java-first-${type}" PROPERTIES TIMEOUT 900 SKIP_RETURN_CODE 77 RUN_SERIAL TRUE
+      LABELS "integration;loopback;same-profile;multifile;crash")
+  endforeach()
+  foreach(type IN ITEMS 1 3 2)
+    add_test(NAME "multifile-original-policy-${type}" COMMAND Python3::Interpreter
+      "${CMAKE_CURRENT_SOURCE_DIR}/multifile_case.py" --app "$<TARGET_FILE:BiglyBTC-headless>"
+      --peer "$<TARGET_FILE:biglybtc-multifile-test-peer>" --type "${type}" --priorities)
+    set_tests_properties("multifile-original-policy-${type}" PROPERTIES TIMEOUT 900 SKIP_RETURN_CODE 77 RUN_SERIAL TRUE
+      LABELS "integration;loopback;same-profile;multifile;policy")
+  endforeach()
+endif()
+if(BIGLYBTC_DESKTOP)
+  find_package(Qt6 6.12.0 EXACT REQUIRED COMPONENTS Test)
+  add_executable(biglybtc-desktop-tests desktop_tests.cpp)
+  set_target_properties(biglybtc-desktop-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-desktop-tests PRIVATE biglybtc_desktop_host biglybtc_profile Qt6::Test)
+  target_compile_options(biglybtc-desktop-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_executable(biglybtc-classic-tests classic_tests.cpp)
+  set_target_properties(biglybtc-classic-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-classic-tests PRIVATE biglybtc_ui Qt6::Test)
+  target_compile_options(biglybtc-classic-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME classic-library-layout COMMAND biglybtc-classic-tests)
+  set_tests_properties(classic-library-layout PROPERTIES TIMEOUT 120
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "ui;unit;classic")
+  add_test(NAME desktop-model-and-lifecycle COMMAND biglybtc-desktop-tests
+    modelValuesSelectionAndStaleTargets closeWaitsForCancellationAndWorkerTeardown cancellationFromBusyNotificationCompletes)
+  set_tests_properties(desktop-model-and-lifecycle PROPERTIES TIMEOUT 120
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "ui;unit")
+  add_test(NAME desktop-files-model COMMAND biglybtc-desktop-tests filesValuesSelectionAndStaleResults)
+  set_tests_properties(desktop-files-model PROPERTIES TIMEOUT 120
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "ui;unit;files")
+  foreach(type IN ITEMS 1 3 2)
+    add_test(NAME "desktop-readonly-files-${type}" COMMAND Python3::Interpreter
+      "${CMAKE_CURRENT_SOURCE_DIR}/file_details_case.py" --test "$<TARGET_FILE:biglybtc-desktop-tests>" --type "${type}")
+    set_tests_properties("desktop-readonly-files-${type}" PROPERTIES TIMEOUT 600 SKIP_RETURN_CODE 77 RUN_SERIAL TRUE
+      LABELS "ui;integration;loopback;files;read-only")
+  endforeach()
+  add_test(NAME desktop-readonly-paused-files COMMAND Python3::Interpreter
+    "${CMAKE_CURRENT_SOURCE_DIR}/file_details_case.py" --test "$<TARGET_FILE:biglybtc-desktop-tests>" --type 3 --paused)
+  set_tests_properties(desktop-readonly-paused-files PROPERTIES TIMEOUT 600 SKIP_RETURN_CODE 77 RUN_SERIAL TRUE
+    LABELS "ui;integration;loopback;files;read-only")
+  function(biglybtc_desktop_case name type action)
+    add_test(NAME "desktop-java-${name}" COMMAND Python3::Interpreter
+      "${CMAKE_CURRENT_SOURCE_DIR}/desktop_case.py" --test "$<TARGET_FILE:biglybtc-desktop-tests>"
+      --peer "$<TARGET_FILE:biglybtc-owned-test-peer>" --type "${type}" --action "${action}")
+    set_tests_properties("desktop-java-${name}" PROPERTIES TIMEOUT 600 SKIP_RETURN_CODE 77
+      RUN_SERIAL TRUE LABELS "ui;integration;loopback;same-profile")
+  endfunction()
+  biglybtc_desktop_case(v1 1 complete)
+  biglybtc_desktop_case(v2 3 complete)
+  biglybtc_desktop_case(hybrid 2 complete)
+  biglybtc_desktop_case(cancel 1 cancel)
+  biglybtc_desktop_case(close 1 close)
+  foreach(type IN ITEMS 1 3 2)
+    add_test(NAME "desktop-multifile-java-${type}" COMMAND Python3::Interpreter
+      "${CMAKE_CURRENT_SOURCE_DIR}/multifile_case.py" --gui-test "$<TARGET_FILE:biglybtc-desktop-tests>"
+      --peer "$<TARGET_FILE:biglybtc-multifile-test-peer>" --type "${type}")
+    set_tests_properties("desktop-multifile-java-${type}" PROPERTIES TIMEOUT 900 SKIP_RETURN_CODE 77 RUN_SERIAL TRUE
+      LABELS "ui;integration;loopback;same-profile;multifile")
+  endforeach()
+  add_test(NAME desktop-original-file-policy COMMAND Python3::Interpreter
+    "${CMAKE_CURRENT_SOURCE_DIR}/multifile_case.py" --gui-test "$<TARGET_FILE:biglybtc-desktop-tests>"
+    --peer "$<TARGET_FILE:biglybtc-multifile-test-peer>" --type 3 --priorities)
+  set_tests_properties(desktop-original-file-policy PROPERTIES TIMEOUT 900 SKIP_RETURN_CODE 77 RUN_SERIAL TRUE
+    LABELS "ui;integration;loopback;same-profile;multifile;policy")
+endif()
+
+# Worker finalization and allocation rollback are isolated from the original suite.
+add_executable(biglybtc-executor-finalizer-tests executor_finalizer_tests.cpp)
+target_link_libraries(biglybtc-executor-finalizer-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-executor-finalizer-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME executor-owner-finalizer COMMAND biglybtc-executor-finalizer-tests)
+set_tests_properties(executor-owner-finalizer PROPERTIES TIMEOUT 30 LABELS "unit")
+add_executable(biglybtc-executor-startup-failure-tests executor_startup_failure_tests.cpp executor_startup_allocation.cpp)
+target_link_libraries(biglybtc-executor-startup-failure-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-executor-startup-failure-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+# Linux test-only allocation fault: preserve the real C++/sanitizer allocators.
+target_link_options(biglybtc-executor-startup-failure-tests PRIVATE "LINKER:--wrap=_Znwm")
+add_test(NAME executor-startup-rollback COMMAND biglybtc-executor-startup-failure-tests)
+set_tests_properties(executor-startup-rollback PROPERTIES TIMEOUT 30 LABELS "unit")

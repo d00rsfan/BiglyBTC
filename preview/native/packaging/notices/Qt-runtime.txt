@@ -1,0 +1,18 @@
+This experimental package uses a private, dynamically linked Qt runtime.
+Qt is Copyright The Qt Company Ltd. and other contributors. Qt libraries and
+plugins in this package remain replaceable shared libraries. LGPLv3 and GPLv3
+license texts, ICU's license and the original SDK component SPDX bills of
+materials accompany this notice.
+
+SDK: Qt 6.12.0, gcc_64. Original SDK source references and third-party component
+identities are retained in the accompanying SPDX files. The qtbase SDK record
+identifies commit 025bdad181de241e81bf853c8a2d7bf3d19261a9 and qtsvg identifies
+commit 883a58532078d003cefef0a549bfe9f885ce41f5.
+Qt source: https://code.qt.io/cgit/qt/
+Qt source archives: https://download.qt.io/official_releases/qt/6.12/6.12.0/
+ICU source: https://github.com/unicode-org/icu/releases/tag/release-73-2
+
+This is local experimental packaging, without a redistribution qualification.
+Complete exact SDK/source artifact, build recipe, attribution and corresponding
+source delivery records before publishing a release. SPDX entries with
+NOASSERTION are unresolved provenance; they are not license grants.

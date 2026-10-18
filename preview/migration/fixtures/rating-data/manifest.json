@@ -1,0 +1,49 @@
+{
+  "upstream_commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+  "core_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+  "source_sha256": {
+    "com/aelitis/azureus/plugins/rating/updater/RatingData.java": "4c8ddf99ef6b59fdd5a1ab6ba86da41a4e39710a7deef19590d3598a32386d26",
+    "com/aelitis/azureus/plugins/rating/updater/RatingResults.java": "8ee1b597f79a38c888e880f1a8a9053a5800ca4e1a25b6d243e529a3c433231a",
+    "com/aelitis/azureus/plugins/rating/updater/KeyGenUtils.java": "4725714fbd9fc49f5997ed7d698b264a16b39cddc1182aaca30d024cd5cb5ea1"
+  },
+  "helper_source_sha256": {
+    "RatingOracle.java": "8f180f2ed2b87f9422859ac1f615e60047fbc8421be5be4969e7536c4df4ae66",
+    "ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+    "com/aelitis/azureus/plugins/rating/updater/KeyGenUtils.java": "4725714fbd9fc49f5997ed7d698b264a16b39cddc1182aaca30d024cd5cb5ea1",
+    "com/aelitis/azureus/plugins/rating/updater/RatingData.java": "4c8ddf99ef6b59fdd5a1ab6ba86da41a4e39710a7deef19590d3598a32386d26",
+    "com/aelitis/azureus/plugins/rating/updater/RatingResults.java": "8ee1b597f79a38c888e880f1a8a9053a5800ca4e1a25b6d243e529a3c433231a",
+    "com/biglybt/pif/utils/StaticUtilities.java": "59fc476ec70c014fd5801b9b057b373963152b59a60e67c2376000bc6b203bbd"
+  },
+  "helper_class_sha256": {
+    "RatingOracle.class": "56649554da9f4b7a8ac6d1a64a11ec6978f962d9b6be6d8a4ec1deb2ba9323f3",
+    "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd",
+    "com/aelitis/azureus/plugins/rating/updater/KeyGenUtils.class": "5a31419a571cce8b676ac378ba6be66e45159f9cc7874337e215c5357cb3d921",
+    "com/aelitis/azureus/plugins/rating/updater/RatingData.class": "ec3fa8ff16ef4b8a7c59a310aac71071a2505e8197f4ba1adff0a7e32fb0a64f",
+    "com/aelitis/azureus/plugins/rating/updater/RatingResults.class": "2e9aa845b2d0f8ac7d7a75075ed8cefff51dbc5b4e0f1efe11de6a4587dd57f5",
+    "com/biglybt/pif/utils/StaticUtilities$Formatters.class": "69620f4bdc46481fbceaa0dfb2d1b9e83d7b04ed740778f62587f5cee4e8fe81",
+    "com/biglybt/pif/utils/StaticUtilities.class": "59a04748f171c00ef4f2ef34aed406911caddad90896480e0c9f00fe0aa1cc15"
+  },
+  "commands_sha256": "db3e186aa8732f554fe45648f8c70b1915057145dd12493b3336b5ffc7905919",
+  "expected_sha256": "e17460cae22483868685a15d47a47e551d128714153ad60bf3ac1e5595884f04",
+  "raw_stdout_sha256": "e17460cae22483868685a15d47a47e551d128714153ad60bf3ac1e5595884f04",
+  "raw_stderr_sha256": "d21fb41c9e6115c630c5a58523527e98d14089cb3d247b1ebaad5f657dad1483",
+  "observations": 1819,
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+    "-XX:ActiveProcessorCount=2",
+    "-Djava.security.manager=ReferenceFence",
+    "-Dbiglybtc.test.root=/tmp/biglybtc-rating-oracle-s0t_5rzb",
+    "-Duser.home=/tmp/biglybtc-rating-oracle-s0t_5rzb",
+    "-Dazureus.config.path=/tmp/biglybtc-rating-oracle-s0t_5rzb/profile",
+    "-cp",
+    "/tmp/biglybtc-rating-oracle-s0t_5rzb/classes:/tmp/biglybtc-oracle/classes",
+    "RatingOracle",
+    "/tmp/biglybtc-rating-oracle-s0t_5rzb/commands.txt"
+  ],
+  "work": "/tmp/biglybtc-rating-oracle-s0t_5rzb",
+  "scope": "Unchanged original RatingData/RatingResults/KeyGenUtils with supplied bencode formatter; no plugin/core initialization, DDB, attributes, UI, sockets or publication"
+}

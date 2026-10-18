@@ -1,0 +1,11 @@
+BiglyBTC is an unfinished native migration of BiglyBT.
+
+This development build accepts generated /tmp/biglybtc-* profiles only. It does
+not yet support ordinary use of an existing live profile. The intended finished
+application will share BiglyBT's original profile, torrent and temporary files.
+
+The bundled-qt variant includes a private Qt runtime and its ICU support files;
+the system-qt variant uses system Qt packages. The C++ runtime, torrent engine
+and ordinary OS dependencies remain system supplied. No Java plugins are bundled.
+Installation does not launch either client, change file associations, register a
+service, alter a profile, or install or remove Java plugins.

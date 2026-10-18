@@ -1,0 +1,35 @@
+#!@Python3_EXECUTABLE@
+"""Keep CPack's dependency calculation strict, including private Qt libraries."""
+
+import json
+import pathlib
+import re
+import subprocess
+import sys
+
+arguments = sys.argv[1:]
+if "-O" in arguments:
+    # CPack itself adds this flag. Dropping it is intentional: external runtimes
+    # without package metadata must be diagnosed, never silently omitted.
+    arguments = [arg for arg in arguments if arg != "--ignore-missing-info"]
+    runtime_root = "@BIGLYBTC_DEB_RUNTIME_PACKAGE_ROOT@"
+    if runtime_root:
+        arguments.append("-S" + runtime_root)
+    manifest = pathlib.Path("usr/share/doc/biglybtc-experimental/qt-runtime.json")
+    if manifest.is_file():
+        runtime = json.loads(manifest.read_text())
+        mappings = []
+        for item in runtime["files"]:
+            path = pathlib.Path(item["destination"])
+            if "/qt/lib/" not in str(path):
+                continue
+            output = subprocess.run(["readelf", "--dynamic", str(path)], capture_output=True,
+                text=True, check=True, timeout=30).stdout
+            for soname in re.findall(r"\(SONAME\).*\[([^\]]+)\]", output):
+                match = re.fullmatch(r"(libQt6[A-Za-z0-9]+|libicu(?:data|i18n|uc))\.so\.([0-9]+)", soname)
+                if not match:
+                    raise ValueError("Unexpected bundled library identity: " + soname)
+                mappings.append(f"{match[1]} {match[2]} biglybtc-experimental")
+        pathlib.Path("debian/shlibs.local").write_text("\n".join(mappings) + "\n")
+        arguments.extend(["-xbiglybtc-experimental", "-l" + str(pathlib.Path("usr/lib/biglybtc/qt/lib").resolve())])
+sys.exit(subprocess.run(["@BIGLYBTC_DPKG_SHLIBDEPS@", *arguments]).returncode)
