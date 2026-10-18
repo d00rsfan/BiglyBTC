@@ -102,6 +102,12 @@ quint64 requestAt(const QSignalSpy& spy, int row) {
 }
 // The provider models only the Window/worker signal order, using local DTOs.
 // It provides no Bridge, filesystem, service, or actual-worker coverage.
+// Manual-delivery cases accept synchronously, like the real Bridge, while the
+// test retains control of packet delivery and the final busy release.
+void bindHeldSyntheticOwner(ui::LibraryWindow& window) {
+  QObject::connect(&window, &ui::LibraryWindow::savedServicesRequested, &window,
+      [&window](quint64) { window.setBusy(true); }, Qt::DirectConnection);
+}
 void bindSyntheticOwner(ui::LibraryWindow& window) {
   QObject::connect(&window, &ui::LibraryWindow::savedServicesRequested, &window,
       [&window](quint64 request) {
@@ -316,12 +322,14 @@ private slots:
 
   void closeReopenRejectsStaleGeneration() {
     ui::LibraryWindow window;
+    bindHeldSyntheticOwner(window);
     window.setPresentation(library());
     QSignalSpy requests(&window, &ui::LibraryWindow::savedServicesRequested);
     auto* open = action(window, QStringLiteral("classic-my-tracker"));
     QVERIFY(open);
     open->trigger();
     QTRY_COMPARE(requests.count(), 1);
+    QVERIFY(window.cancelAction().isEnabled()); // Accepted before the signal returned.
     const auto oldRequest = requestAt(requests, 0);
     QVERIFY(oldRequest != 0);
     auto* oldPage = hostingPage(window);
@@ -345,6 +353,7 @@ private slots:
     QCOMPARE(current->model().rowCount(), 0);
     window.setBusy(false);
     QTRY_COMPARE(requests.count(), 2);
+    QVERIFY(window.cancelAction().isEnabled()); // Accepted before the signal returned.
     const auto newRequest = requestAt(requests, 1);
     QCOMPARE(newRequest, current->generation());
     QVERIFY(newRequest > oldRequest);
@@ -362,6 +371,7 @@ private slots:
 
   void busyNavigationAndRefreshKeepOnlyLatestPending() {
     ui::LibraryWindow window;
+    bindHeldSyntheticOwner(window);
     window.setPresentation(library());
     window.show();
     window.activateWindow();
@@ -395,6 +405,7 @@ private slots:
     QCOMPARE(refreshes.count(), 0);
     window.setBusy(false);
     QTRY_COMPARE(requests.count(), 1);
+    QVERIFY(window.cancelAction().isEnabled()); // Accepted before the signal returned.
     QCOMPARE(requestAt(requests, 0), latest);
     window.setBusy(true);
     window.setSavedServices(ready(latest));
@@ -407,6 +418,7 @@ private slots:
 
   void noResultBusyReleaseFailsOnlyActiveAndRetainsNewerPending() {
     ui::LibraryWindow window;
+    bindHeldSyntheticOwner(window);
     window.setPresentation(library());
     QSignalSpy requests(&window, &ui::LibraryWindow::savedServicesRequested);
     auto* hostAction = action(window, QStringLiteral("classic-my-tracker"));
@@ -414,6 +426,7 @@ private slots:
     QVERIFY(hostAction && shareAction);
     hostAction->trigger();
     QTRY_COMPARE(requests.count(), 1);
+    QVERIFY(window.cancelAction().isEnabled()); // Accepted before the signal returned.
     const auto active = requestAt(requests, 0);
     window.setBusy(true);
     shareAction->trigger();
@@ -427,6 +440,7 @@ private slots:
     QCOMPARE(hostPage->state(), ui::SavedPageState::Loading);
     QCOMPARE(sharePage->state(), ui::SavedPageState::Loading);
     QTRY_COMPARE(requests.count(), 2);
+    QVERIFY(window.cancelAction().isEnabled()); // Accepted before the signal returned.
     QCOMPARE(requestAt(requests, 1), latest);
     window.setBusy(true);
     window.setSavedServices(ready(active, 'A'));
@@ -442,6 +456,7 @@ private slots:
 
   void failedActiveRefreshRecoversWithoutAcceptingOldPacket() {
     ui::LibraryWindow window;
+    bindHeldSyntheticOwner(window);
     window.setPresentation(library());
     QSignalSpy requests(&window, &ui::LibraryWindow::savedServicesRequested);
     auto* open = action(window, QStringLiteral("classic-my-tracker"));
@@ -449,6 +464,7 @@ private slots:
     QVERIFY(open && refresh);
     open->trigger();
     QTRY_COMPARE(requests.count(), 1);
+    QVERIFY(window.cancelAction().isEnabled()); // Accepted before the signal returned.
     const auto failed = requestAt(requests, 0);
     QSignalSpy cancellations(&window, &ui::LibraryWindow::cancelRequested);
     window.setBusy(true);
@@ -464,6 +480,7 @@ private slots:
     QCOMPARE(page->state(), ui::SavedPageState::Failed);
     refresh->trigger();
     QTRY_COMPARE(requests.count(), 2);
+    QVERIFY(window.cancelAction().isEnabled()); // Accepted before the signal returned.
     const auto next = requestAt(requests, 1);
     QVERIFY(next > failed);
     QCOMPARE(page->state(), ui::SavedPageState::Loading);
@@ -521,6 +538,7 @@ private slots:
   void independentPacketStatesAndSources() {
     QFETCH(int, kind);
     ui::LibraryWindow window;
+    bindHeldSyntheticOwner(window);
     window.setPresentation(library());
     window.setBusy(true);
     auto* hostAction = action(window, QStringLiteral("classic-my-tracker"));
@@ -536,6 +554,7 @@ private slots:
     QCOMPARE(hosts->generation(), generation);
     window.setBusy(false);
     QTRY_COMPARE(requests.count(), 1);
+    QVERIFY(window.cancelAction().isEnabled()); // Accepted before the signal returned.
     QCOMPARE(requestAt(requests, 0), generation);
     window.setBusy(true);
     auto value = std::make_shared<ui::SavedServicesPacket>(*ready(generation));
@@ -568,12 +587,14 @@ private slots:
 
   void unrelatedAndDuplicatePacketsCannotReplaceCurrentRows() {
     ui::LibraryWindow window;
+    bindHeldSyntheticOwner(window);
     window.setPresentation(library());
     QSignalSpy requests(&window, &ui::LibraryWindow::savedServicesRequested);
     auto* open = action(window, QStringLiteral("classic-my-tracker"));
     QVERIFY(open);
     open->trigger();
     QTRY_COMPARE(requests.count(), 1);
+    QVERIFY(window.cancelAction().isEnabled()); // Accepted before the signal returned.
     const auto active = requestAt(requests, 0);
     auto* page = hostingPage(window);
     QVERIFY(page);

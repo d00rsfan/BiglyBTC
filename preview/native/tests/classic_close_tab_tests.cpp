@@ -84,6 +84,12 @@ ui::SavedServicesPresentation missing(quint64 request) {
   value->sharing.state = ui::SavedPageState::Missing;
   return value;
 }
+// Manual-delivery cases accept synchronously, like the real Bridge, while the
+// test retains control of packet delivery and the final busy release.
+void bindHeldSyntheticOwner(ui::LibraryWindow& window) {
+  QObject::connect(&window, &ui::LibraryWindow::savedServicesRequested, &window,
+      [&window](quint64) { window.setBusy(true); }, Qt::DirectConnection);
+}
 void bindSyntheticOwner(ui::LibraryWindow& window) {
   QObject::connect(&window, &ui::LibraryWindow::savedServicesRequested, &window, [&window](quint64 request) {
     window.setBusy(true);
@@ -384,6 +390,7 @@ private slots:
 
   void busyAuxiliaryCloseReopenRejectsOldPacketAndKeepsLatestPending() {
     ui::LibraryWindow window;
+    bindHeldSyntheticOwner(window);
     window.setPresentation(sample());
     window.show();
     window.activateWindow();
@@ -397,6 +404,7 @@ private slots:
     QSignalSpy resets(&window.model(), &QAbstractItemModel::modelReset);
     open->trigger();
     QTRY_COMPARE(requests.count(), 1);
+    QVERIFY(window.cancelAction().isEnabled()); // Accepted before the signal returned.
     const auto oldRequest = requestAt(requests, 0);
     auto* oldPage = window.hostingPage();
     QVERIFY(oldPage);
@@ -421,6 +429,7 @@ private slots:
     QCOMPARE(fresh->state(), ui::SavedPageState::Loading);
     window.setBusy(false);
     QTRY_COMPARE(requests.count(), 2);
+    QVERIFY(window.cancelAction().isEnabled()); // Accepted before the signal returned.
     QCOMPARE(requestAt(requests, 1), latest);
     window.setBusy(true);
     window.setSavedServices(missing(latest));
