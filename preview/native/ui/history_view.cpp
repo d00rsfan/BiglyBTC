@@ -3,6 +3,7 @@
 #include "saved_history_plot.hpp"
 
 #include <QAbstractTableModel>
+#include <QComboBox>
 #include <QDateEdit>
 #include <QDateTime>
 #include <QEvent>
@@ -80,7 +81,8 @@ private:
   std::shared_ptr<const core::SavedHistoryDay> snapshot_;
 };
 
-HistoryView::HistoryView(QWidget* parent, std::optional<core::HistoryDate> initialDate) : QWidget(parent) {
+HistoryView::HistoryView(QWidget* parent, std::optional<core::HistoryDate> initialDate,
+    SavedHistoryTraffic initialTraffic) : QWidget(parent) {
   setObjectName(QStringLiteral("statistics-history-view")); setAccessibleName(tr("Saved UTC daily traffic history"));
   auto* layout = new QVBoxLayout(this);
   auto* controls = new QHBoxLayout;
@@ -93,7 +95,14 @@ HistoryView::HistoryView(QWidget* parent, std::optional<core::HistoryDate> initi
   date_->setDateRange(QDate(1970, 1, 1), QDate(9999, 12, 31)); date_->setDisplayFormat(QStringLiteral("yyyy-MM-dd 'UTC'"));
   date_->setObjectName(QStringLiteral("saved-history-date")); date_->setAccessibleName(tr("Selected UTC day"));
   auto* reload = new QPushButton(tr("Refresh history"), this); reload->setObjectName(QStringLiteral("saved-history-refresh"));
-  controls->addWidget(previous_); controls->addWidget(date_); controls->addWidget(next_); controls->addStretch(); controls->addWidget(reload);
+  traffic_ = new QComboBox(this); traffic_->setObjectName(QStringLiteral("saved-history-traffic"));
+  traffic_->setAccessibleName(tr("Chart traffic"));
+  traffic_->addItem(tr("Payload")); traffic_->addItem(tr("Protocol")); traffic_->addItem(tr("DHT"));
+  traffic_->setCurrentIndex(validSavedHistoryTraffic(initialTraffic) ? static_cast<int>(initialTraffic) : 0);
+  auto* trafficTitle = label(tr("Traffic"), QStringLiteral("saved-history-traffic-title"), this);
+  trafficTitle->setBuddy(traffic_);
+  controls->addWidget(previous_); controls->addWidget(date_); controls->addWidget(next_);
+  controls->addWidget(trafficTitle); controls->addWidget(traffic_); controls->addStretch(); controls->addWidget(reload);
   layout->addLayout(controls);
   status_ = label(tr("No saved day has been loaded"), QStringLiteral("saved-history-status"), this); layout->addWidget(status_);
   auto* summary = new QGridLayout;
@@ -113,15 +122,19 @@ HistoryView::HistoryView(QWidget* parent, std::optional<core::HistoryDate> initi
   table_->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive); table_->horizontalHeader()->setStretchLastSection(false);
   table_->setColumnWidth(0, 155); for (int i = 1; i < 7; ++i) { table_->setColumnWidth(i, 155); }
   table_->setMinimumHeight(150); layout->addWidget(table_, 1);
-  layout->addWidget(label(tr("Saved hourly payload traffic for this UTC date. Unknown hours are gaps; recorded zero remains 0 bytes. Values may include signed corrections. Rolling History unavailable."),
+  layout->addWidget(label(tr("Saved hourly traffic for this UTC date. Unknown hours are gaps; recorded zero remains 0 bytes. Values may include signed corrections. Rolling History unavailable."),
       QStringLiteral("statistics-history-unavailable"), this));
   connect(previous_, &QPushButton::clicked, this, [this] { date_->setDate(date_->date().addDays(-1)); });
   connect(next_, &QPushButton::clicked, this, [this] { date_->setDate(date_->date().addDays(1)); });
   connect(date_, &QDateEdit::dateChanged, this, [this] { dateChanged(); });
   connect(reload, &QPushButton::clicked, this, [this] { requestRead(); });
+  connect(traffic_, &QComboBox::currentIndexChanged, this, [this] {
+    if (advance()) { QMetaObject::invokeMethod(this, &HistoryView::refresh, Qt::QueuedConnection); }
+  });
 }
 
 core::HistoryDate HistoryView::selectedDate() const { return savedDate(date_->date()); }
+SavedHistoryTraffic HistoryView::traffic() const { return static_cast<SavedHistoryTraffic>(traffic_->currentIndex()); }
 bool HistoryView::advance() {
   if (exhausted_ || revision_ == std::numeric_limits<quint64>::max()) { exhausted_ = true; return false; }
   ++revision_; dirty_ = true; return true;
@@ -197,7 +210,7 @@ void HistoryView::refresh() {
   }
   if (!current()) { return; } previous_->setEnabled(date_->date() > date_->minimumDate());
   if (!current()) { return; } next_->setEnabled(date_->date() < date_->maximumDate());
-  if (!current()) { return; } plot_->setDay(selectedDate(), snapshot);
+  if (!current()) { return; } plot_->setDay(selectedDate(), snapshot, traffic());
   if (!current()) { return; } model_->setSnapshot(std::move(snapshot));
   if (current()) { dirty_ = false; }
 }

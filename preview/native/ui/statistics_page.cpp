@@ -190,9 +190,10 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
   auto* historyLayout = new QVBoxLayout(history);
   historyLayout->setContentsMargins(0, 0, 0, 0);
   historyTabs_ = new QTabWidget(history); historyTabs_->setObjectName(QStringLiteral("statistics-history-tabs"));
-  history_ = new HistoryView(historyTabs_, initial ? std::optional{initial->dailyDate} : std::nullopt);
+  history_ = new HistoryView(historyTabs_, initial ? std::optional{initial->dailyDate} : std::nullopt,
+      initial ? initial->dailyTraffic : SavedHistoryTraffic::Payload);
   historyWeek_ = new HistoryWeekView(historyTabs_, initial ? std::optional{initial->weekEnding} : std::nullopt,
-      initial && initial->hourly);
+      initial && initial->hourly, initial ? initial->weekTraffic : SavedHistoryTraffic::Payload);
   historyLayout->addWidget(historyTabs_);
   connect(history_, &HistoryView::readRequested, this, [this](core::HistoryDate date) {
     // HistoryView emits only when visible; do not drop its first show signal
@@ -220,7 +221,7 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
 std::optional<StatisticsNavigation> StatisticsPage::navigation() const {
   const StatisticsNavigation result{tabs_->currentIndex(), activityViews_->currentIndex(),
       transferTabs_->currentIndex(), historyTabs_->currentIndex(), history_->selectedDate(),
-      historyWeek_->selectedDate(), historyWeek_->hourlyResolution()};
+      historyWeek_->selectedDate(), historyWeek_->hourlyResolution(), history_->traffic(), historyWeek_->traffic()};
   if (!validStatisticsNavigation(result)) { return {}; }
   return result;
 }

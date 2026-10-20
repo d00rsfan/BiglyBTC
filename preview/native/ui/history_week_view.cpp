@@ -101,7 +101,7 @@ private:
 };
 
 HistoryWeekView::HistoryWeekView(QWidget* parent, std::optional<core::HistoryDate> endingDate,
-    bool hourly) : QWidget(parent) {
+    bool hourly, SavedHistoryTraffic initialTraffic) : QWidget(parent) {
   setObjectName(QStringLiteral("statistics-history-week-view")); setAccessibleName(tr("Seven saved UTC days"));
   auto* layout = new QVBoxLayout(this); auto* controls = new QHBoxLayout;
   previous_ = new QPushButton(tr("Previous 7 days"), this); previous_->setObjectName(QStringLiteral("saved-history-week-previous"));
@@ -119,7 +119,14 @@ HistoryWeekView::HistoryWeekView(QWidget* parent, std::optional<core::HistoryDat
   resolution_->setCurrentIndex(hourly ? 1 : 0);
   auto* resolutionTitle = label(tr("Graph resolution:"), QStringLiteral("saved-history-week-resolution-title"), this);
   resolutionTitle->setBuddy(resolution_);
+  traffic_ = new QComboBox(this); traffic_->setObjectName(QStringLiteral("saved-history-week-traffic"));
+  traffic_->setAccessibleName(tr("Chart traffic"));
+  traffic_->addItem(tr("Payload")); traffic_->addItem(tr("Protocol")); traffic_->addItem(tr("DHT"));
+  traffic_->setCurrentIndex(validSavedHistoryTraffic(initialTraffic) ? static_cast<int>(initialTraffic) : 0);
+  auto* trafficTitle = label(tr("Traffic"), QStringLiteral("saved-history-week-traffic-title"), this);
+  trafficTitle->setBuddy(traffic_);
   controls->addWidget(date_); controls->addWidget(next_); controls->addWidget(resolutionTitle); controls->addWidget(resolution_);
+  controls->addWidget(trafficTitle); controls->addWidget(traffic_);
   controls->addStretch(); controls->addWidget(reload); layout->addLayout(controls);
   range_ = label({}, QStringLiteral("saved-history-week-range"), this); layout->addWidget(range_);
   status_ = label(tr("No saved days have been loaded"), QStringLiteral("saved-history-week-status"), this); layout->addWidget(status_);
@@ -143,9 +150,13 @@ HistoryWeekView::HistoryWeekView(QWidget* parent, std::optional<core::HistoryDat
   connect(resolution_, &QComboBox::currentIndexChanged, this, [this] {
     if (advance()) { QMetaObject::invokeMethod(this, &HistoryWeekView::refresh, Qt::QueuedConnection); }
   });
+  connect(traffic_, &QComboBox::currentIndexChanged, this, [this] {
+    if (advance()) { QMetaObject::invokeMethod(this, &HistoryWeekView::refresh, Qt::QueuedConnection); }
+  });
 }
 core::HistoryDate HistoryWeekView::selectedDate() const { return savedDate(date_->date()); }
 bool HistoryWeekView::hourlyResolution() const { return resolution_->currentIndex() == 1; }
+SavedHistoryTraffic HistoryWeekView::traffic() const { return static_cast<SavedHistoryTraffic>(traffic_->currentIndex()); }
 bool HistoryWeekView::advance() {
   if (exhausted_ || revision_ == std::numeric_limits<quint64>::max()) { exhausted_ = true; return false; }
   ++revision_; dirty_ = true; return true;
@@ -217,8 +228,8 @@ void HistoryWeekView::refresh() {
   if (!current()) { return; } next_->setEnabled(date_->date().addDays(7) <= date_->maximumDate());
   if (!current()) { return; }
   const auto source = frame_ && frame_->state == HistoryWeekReadState::Ready ? frame_->snapshot : nullptr;
-  if (resolution_->currentIndex() == 1) { plot_->setWeekHourly(selectedDate(), source); }
-  else { plot_->setWeek(selectedDate(), source); }
+  if (resolution_->currentIndex() == 1) { plot_->setWeekHourly(selectedDate(), source, traffic()); }
+  else { plot_->setWeek(selectedDate(), source, traffic()); }
   if (!current()) { return; } model_->setBinding(frame_, selectedDate(), loading_);
   if (current()) { dirty_ = false; }
 }

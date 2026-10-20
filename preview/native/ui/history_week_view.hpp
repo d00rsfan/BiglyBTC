@@ -1,6 +1,7 @@
 #pragma once
 
 #include "history_week_presentation.hpp"
+#include "saved_history_traffic.hpp"
 
 #include <QPointer>
 #include <QWidget>
@@ -24,13 +25,15 @@ class HistoryWeekView final : public QWidget {
   Q_OBJECT
 public:
   explicit HistoryWeekView(QWidget* parent = nullptr,
-      std::optional<core::HistoryDate> endingDate = {}, bool hourly = false);
+      std::optional<core::HistoryDate> endingDate = {}, bool hourly = false,
+      SavedHistoryTraffic initialTraffic = SavedHistoryTraffic::Payload);
   void beginRequest(quint64 session, quint64 request, core::HistoryDate endingDate);
   void setPresentation(HistoryWeekPresentation);
   void setFailed(quint64 session, quint64 request, core::HistoryDate endingDate, const QString&);
   void resetSession(quint64 session);
   core::HistoryDate selectedDate() const;
   bool hourlyResolution() const;
+  SavedHistoryTraffic traffic() const;
   HistoryWeekPresentation presentation() const { return frame_; }
 signals:
   void readRequested(biglybtc::core::HistoryDate);
@@ -47,6 +50,7 @@ private:
   void observeWindow();
   QDateEdit* date_ = nullptr;
   QComboBox* resolution_ = nullptr;
+  QComboBox* traffic_ = nullptr;
   QPushButton* previous_ = nullptr;
   QPushButton* next_ = nullptr;
   QLabel* status_ = nullptr;

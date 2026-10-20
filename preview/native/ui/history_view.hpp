@@ -1,12 +1,14 @@
 #pragma once
 
 #include "history_presentation.hpp"
+#include "saved_history_traffic.hpp"
 
 #include <QPointer>
 #include <QWidget>
 
 #include <optional>
 
+class QComboBox;
 class QDateEdit;
 class QLabel;
 class QPushButton;
@@ -22,12 +24,14 @@ class SavedHistoryPlot;
 class HistoryView final : public QWidget {
   Q_OBJECT
 public:
-  explicit HistoryView(QWidget* parent = nullptr, std::optional<core::HistoryDate> initialDate = {});
+  explicit HistoryView(QWidget* parent = nullptr, std::optional<core::HistoryDate> initialDate = {},
+      SavedHistoryTraffic initialTraffic = SavedHistoryTraffic::Payload);
   void beginRequest(quint64 session, quint64 request, core::HistoryDate);
   void setPresentation(HistoryPresentation);
   void setFailed(quint64 session, quint64 request, core::HistoryDate, const QString&);
   void resetSession(quint64 session);
   core::HistoryDate selectedDate() const;
+  SavedHistoryTraffic traffic() const;
   HistoryPresentation presentation() const { return frame_; }
 signals:
   void readRequested(biglybtc::core::HistoryDate);
@@ -43,6 +47,7 @@ private:
   void dateChanged();
   void observeWindow();
   QDateEdit* date_ = nullptr;
+  QComboBox* traffic_ = nullptr;
   QPushButton* previous_ = nullptr;
   QPushButton* next_ = nullptr;
   QLabel* status_ = nullptr;

@@ -2,6 +2,8 @@
 
 #include <biglybtc/saved_history_week.hpp>
 
+#include "saved_history_traffic.hpp"
+
 #include <type_traits>
 
 namespace biglybtc::ui {
@@ -13,6 +15,8 @@ struct StatisticsNavigation {
   core::HistoryDate dailyDate{};
   core::HistoryDate weekEnding{1970, 1, 7};
   bool hourly = false;
+  SavedHistoryTraffic dailyTraffic = SavedHistoryTraffic::Payload;
+  SavedHistoryTraffic weekTraffic = SavedHistoryTraffic::Payload;
   bool operator==(const StatisticsNavigation&) const = default;
 };
 static_assert(std::is_trivially_copyable_v<StatisticsNavigation>);
@@ -23,7 +27,9 @@ inline bool validStatisticsNavigation(const StatisticsNavigation& value) noexcep
       && value.transfers >= 0 && value.transfers <= 1
       && value.history >= 0 && value.history <= 1
       && core::validHistoryDate(value.dailyDate)
-      && core::savedHistoryWeekDates(value.weekEnding).has_value();
+      && core::savedHistoryWeekDates(value.weekEnding).has_value()
+      && validSavedHistoryTraffic(value.dailyTraffic)
+      && validSavedHistoryTraffic(value.weekTraffic);
 }
 
 } // namespace biglybtc::ui

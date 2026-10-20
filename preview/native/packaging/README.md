@@ -75,3 +75,7 @@ a release. Workflow syntax checks do not establish a successful hosted build.
 Plugin GitHub release/catalogue and shared-profile contracts are in
 [AD-006](../../migration/decisions/AD-006.md). The native plugin loader/update
 verifier remains pending; no automatic executable plugin download is active.
+
+History chart Traffic selects Payload, Protocol or DHT for the existing saved UTC
+buckets. Each chart keeps its own choice on same-session reopening. Switching
+reprojects accepted facts without another read; tables and payload summaries stay unchanged.
