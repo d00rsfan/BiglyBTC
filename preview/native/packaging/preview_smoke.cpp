@@ -44,6 +44,7 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
   QObject::connect(&bridge, &app::SessionBridge::statisticsReady, &window, &ui::LibraryWindow::setStatistics);
   QObject::connect(&bridge, &app::SessionBridge::historyReady, &window, &ui::LibraryWindow::setHistory);
   QObject::connect(&bridge, &app::SessionBridge::historyWeekReady, &window, &ui::LibraryWindow::setHistoryWeek);
+  QObject::connect(&bridge, &app::SessionBridge::historyMonthReady, &window, &ui::LibraryWindow::setHistoryMonth);
   QObject::connect(&bridge, &app::SessionBridge::engineStatisticsReady, &window, &ui::LibraryWindow::setEngineStatistics);
   QObject::connect(&bridge, &app::SessionBridge::columnLayoutSessionReady, &window, &ui::LibraryWindow::beginColumnLayoutSession);
   QObject::connect(&bridge, &app::SessionBridge::columnLayoutsReady, &window, &ui::LibraryWindow::setColumnLayouts);
@@ -57,6 +58,7 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
   QObject::connect(&window, &ui::LibraryWindow::statisticsRequested, &bridge, &app::SessionBridge::statistics);
   QObject::connect(&window, &ui::LibraryWindow::historyRequested, &bridge, &app::SessionBridge::history);
   QObject::connect(&window, &ui::LibraryWindow::historyWeekRequested, &bridge, &app::SessionBridge::historyWeek);
+  QObject::connect(&window, &ui::LibraryWindow::historyMonthRequested, &bridge, &app::SessionBridge::historyMonth);
   QObject::connect(&window, &ui::LibraryWindow::columnLayoutsRequested, &bridge, &app::SessionBridge::columnLayouts);
   QObject::connect(&window, &ui::LibraryWindow::columnLayoutSaveRequested, &bridge, &app::SessionBridge::saveColumnLayout);
   QObject::connect(&window, &ui::LibraryWindow::cancelRequested, &bridge, &app::SessionBridge::cancel);
@@ -1102,6 +1104,207 @@ private slots:
       }
     }
     QVERIFY(QDir(root.filePath(QStringLiteral("payload"))).entryList(QDir::AllEntries | QDir::NoDotAndDotDot).isEmpty());
+  }
+
+  void generatedThirtyDayHistoryKeepsExactDailyFactsAndFreshReopen() {
+    QCOMPARE(QGuiApplication::platformName(), QStringLiteral("offscreen"));
+    const auto profile = qEnvironmentVariable("BIGLYBTC_PREVIEW_PROFILE");
+    const QFileInfo profileInfo(profile);
+    const QDir root(profileInfo.absolutePath());
+    QVERIFY(profileInfo.isDir()); QCOMPARE(profileInfo.fileName(), QStringLiteral("profile"));
+    QCOMPARE(profileInfo.canonicalFilePath(), profile);
+    QCOMPARE(QFileInfo(root.absolutePath()).absolutePath(), QStringLiteral("/tmp"));
+    QVERIFY(root.dirName().startsWith(QStringLiteral("biglybtc-preview-")));
+    const QDate ending(2024, 1, 2);
+    QMap<QString, bool> present; QMap<QString, QByteArray> original;
+    const auto remember = [&](const QString& path) {
+      const bool exists = QFileInfo::exists(path); present.insert(path, exists);
+      if (exists) { original.insert(path, bytes(path)); }
+    };
+    for (const auto& leaf : {QStringLiteral("downloads.config"), QStringLiteral("BiglyBT.statistics"),
+        QStringLiteral("tables.config"), QStringLiteral("tracker.config"), QStringLiteral("sharing.config")}) {
+      remember(profile + QLatin1Char('/') + leaf);
+    }
+    for (int offset = 0; offset < 30; ++offset) {
+      const auto path = profile + ending.addDays(-offset).toString(QStringLiteral("'/stats/'yyyy/MM/dd'.dat'"));
+      remember(path); remember(path + QStringLiteral(".bak")); remember(path + QStringLiteral(".saving"));
+    }
+    const QDir active(profile + QStringLiteral("/active"));
+    const auto activeFiles = active.entryList({QStringLiteral("*.dat")}, QDir::Files);
+    QCOMPARE(activeFiles.size(), 5);
+    for (const auto& leaf : activeFiles) { remember(active.filePath(leaf)); }
+    QVERIFY(!original.value(profile + QStringLiteral("/downloads.config")).isEmpty());
+    QVERIFY(!original.value(profile + QStringLiteral("/stats/2024/01/02.dat")).isEmpty());
+    const auto payload = root.filePath(QStringLiteral("payload"));
+    QVERIFY(QDir(payload).entryList(QDir::AllEntries | QDir::NoDotAndDotDot).isEmpty());
+
+    // Generated offscreen Clipboard only; restore all preexisting MIME formats
+    // even when a QtTest assertion returns early. No compositor claim is made.
+    struct ClipboardRestore final {
+      QPointer<QClipboard> clipboard;
+      std::unique_ptr<QMimeData> saved;
+      explicit ClipboardRestore(QClipboard* value) : clipboard(value), saved(std::make_unique<QMimeData>()) {
+        if (const auto* mime = clipboard->mimeData(QClipboard::Clipboard)) {
+          for (const auto& format : mime->formats()) { saved->setData(format, mime->data(format)); }
+        }
+      }
+      ~ClipboardRestore() { if (clipboard) { clipboard->setMimeData(saved.release(), QClipboard::Clipboard); } }
+      ClipboardRestore(const ClipboardRestore&) = delete;
+      ClipboardRestore& operator=(const ClipboardRestore&) = delete;
+    };
+    auto* clipboard = QGuiApplication::clipboard(); QVERIFY(clipboard);
+    ClipboardRestore clipboardRestore(clipboard);
+    const auto sentinel = QStringLiteral("BiglyBTC generated 30-day preview Clipboard sentinel");
+    clipboard->setText(sentinel, QClipboard::Clipboard);
+    qRegisterMetaType<QClipboard::Mode>();
+    QSignalSpy clipboardChanges(clipboard, &QClipboard::changed); QVERIFY(clipboardChanges.isValid());
+
+    ui::LibraryWindow window; app::SessionBridge bridge; wire(window, bridge);
+    window.setOfflinePreview(true); window.resize(1280, 900); window.show();
+    QCoreApplication::processEvents(); window.activateWindow();
+    QSignalSpy layouts(&bridge, &app::SessionBridge::columnLayoutsReady);
+    QSignalSpy totals(&bridge, &app::SessionBridge::statisticsReady);
+    QSignalSpy days(&bridge, &app::SessionBridge::historyReady);
+    QSignalSpy weeks(&bridge, &app::SessionBridge::historyWeekReady);
+    QSignalSpy months(&bridge, &app::SessionBridge::historyMonthReady);
+    QSignalSpy snapshots(&bridge, &app::SessionBridge::snapshotReady);
+    QVERIFY(bridge.open(profile.toStdString(), 0));
+    QTRY_VERIFY_WITH_TIMEOUT(layouts.count() == 1 && !bridge.busy(), 30000);
+    auto* statistics = window.findChild<QAction*>(QStringLiteral("classic-statistics"));
+    auto* close = window.findChild<QAction*>(QStringLiteral("classic-close-tab"));
+    QVERIFY(statistics); QVERIFY(close); statistics->trigger();
+    QTRY_VERIFY_WITH_TIMEOUT(totals.count() == 1 && !bridge.busy(), 30000);
+    auto* page = window.statisticsPage(); QVERIFY(page);
+    auto* date = page->findChild<QDateEdit*>(QStringLiteral("saved-history-month-date"));
+    auto* periods = page->findChild<QTabWidget*>(QStringLiteral("statistics-history-tabs"));
+    auto* transfers = page->findChild<QTabWidget*>(QStringLiteral("statistics-transfer-tabs"));
+    auto* traffic = page->findChild<QComboBox*>(QStringLiteral("saved-history-month-traffic"));
+    QVERIFY(date); QVERIFY(periods); QVERIFY(transfers); QVERIFY(traffic);
+    QCOMPARE(periods->count(), 3); QCOMPARE(periods->tabText(2), QStringLiteral("30 days"));
+    QCOMPARE(date->minimumDate(), QDate(1970, 1, 30)); QCOMPARE(traffic->count(), 3);
+    date->setDate(ending); periods->setCurrentIndex(2);
+    page->tabs().setCurrentIndex(1); transfers->setCurrentIndex(1);
+    QTRY_VERIFY_WITH_TIMEOUT(months.count() == 1 && page->historyMonthPresentation() && !bridge.busy(), 30000);
+    const auto packet = page->historyMonthPresentation();
+    QCOMPARE(packet->state, ui::HistoryMonthReadState::Ready); QVERIFY(packet->snapshot);
+    QCOMPARE(packet->endingDate, (core::HistoryDate{2024, 1, 2}));
+    QCOMPARE(packet->snapshot->days.front().date, (core::HistoryDate{2023, 12, 4}));
+    QCOMPARE(packet->snapshot->days.back().date, (core::HistoryDate{2024, 1, 2}));
+
+    // Independent constants from preview.py's generated records, in the saved
+    // protocol-up/payload-up/protocol-down/payload-down/DHT-up/DHT-down order.
+    using Counters = std::array<std::int64_t, 6>;
+    std::array<std::optional<Counters>, 30> expected{};
+    expected[23] = Counters{768, 6144, 384, 12288, 96, 192};
+    expected[24] = Counters{640, 5120, 320, 10240, 80, 160};
+    expected[26] = Counters{-128, -1024, -64, -2048, -16, -32};
+    expected[28] = Counters{0, 0, 0, 0, 0, 0};
+    expected[29] = Counters{16896, 1081344, 33792, 17301504, 2112, 4224};
+    auto* table = page->findChild<QTableView*>(QStringLiteral("saved-history-month-days")); QVERIFY(table);
+    QCOMPARE(table->model()->rowCount(), 30); QCOMPARE(table->model()->columnCount(), 8);
+    for (std::size_t i = 0; i < 30; ++i) {
+      const auto& row = packet->snapshot->days[i];
+      const auto qtDate = ending.addDays(static_cast<int>(i) - 29);
+      QCOMPARE(row.date, (core::HistoryDate{qtDate.year(), static_cast<unsigned>(qtDate.month()), static_cast<unsigned>(qtDate.day())}));
+      const bool filePresent = i == 23 || i == 24 || i == 26 || i == 27 || i == 28 || i == 29;
+      QCOMPARE(row.snapshot.has_value(), filePresent);
+      if (row.snapshot) {
+        QCOMPARE(row.snapshot->date, row.date);
+        QCOMPARE(row.snapshot->totals, expected[i]);
+        if (i == 27) { QCOMPARE(row.snapshot->observations, std::size_t{0}); }
+      }
+      QCOMPARE(table->model()->data(table->model()->index(static_cast<int>(i), 1)).toString(),
+          !filePresent ? QStringLiteral("Missing") : i == 27 ? QStringLiteral("No observations") : QStringLiteral("Observed"));
+      for (std::size_t counter = 0; counter < 6; ++counter) {
+        const auto cell = table->model()->index(static_cast<int>(i), static_cast<int>(counter) + 2);
+        const auto value = table->model()->data(cell, Qt::UserRole);
+        QCOMPARE(value.isValid(), expected[i].has_value());
+        if (expected[i]) {
+          QCOMPARE(value.toLongLong(), (*expected[i])[counter]);
+          QCOMPARE(table->model()->data(cell).toString(), QStringLiteral("%1 bytes").arg((*expected[i])[counter]));
+        } else { QCOMPARE(table->model()->data(cell).toString(), QString::fromUtf8("—")); }
+      }
+    }
+    auto* plot = page->findChild<ui::SavedHistoryPlot*>(QStringLiteral("saved-history-month-chart")); QVERIFY(plot);
+    constexpr std::array<ui::SavedHistoryTraffic, 3> kinds{
+        ui::SavedHistoryTraffic::Payload, ui::SavedHistoryTraffic::Protocol, ui::SavedHistoryTraffic::Dht};
+    constexpr std::array<std::array<std::size_t, 2>, 3> indices{{{3, 1}, {2, 0}, {5, 4}}};
+    for (int choice = 0; choice < 3; ++choice) {
+      traffic->setCurrentIndex(choice);
+      QTRY_VERIFY_WITH_TIMEOUT(plot->presentation() && plot->presentation()->mode() == ui::SavedHistoryPlotMode::Month
+          && plot->presentation()->traffic() == kinds[static_cast<std::size_t>(choice)], 1000);
+      const auto frame = plot->presentation(); QCOMPARE(frame->buckets().size(), std::size_t{30});
+      for (std::size_t i = 0; i < 30; ++i) {
+        const auto& bucket = frame->buckets()[i]; QCOMPARE(bucket.date, packet->snapshot->days[i].date); QVERIFY(!bucket.hour);
+        QCOMPARE(bucket.downloaded.has_value(), expected[i].has_value()); QCOMPARE(bucket.uploaded.has_value(), expected[i].has_value());
+        if (expected[i]) {
+          QCOMPARE(*bucket.downloaded, (*expected[i])[indices[static_cast<std::size_t>(choice)][0]]);
+          QCOMPARE(*bucket.uploaded, (*expected[i])[indices[static_cast<std::size_t>(choice)][1]]);
+        }
+      }
+      QCOMPARE(months.count(), 1); QCOMPARE(days.count(), 0); QCOMPARE(weeks.count(), 0); QCOMPARE(totals.count(), 1);
+      QVERIFY(page->historyMonthPresentation() == packet); QCOMPARE(snapshots.count(), 1);
+      QCOMPARE(clipboardChanges.count(), 0); QCOMPARE(clipboard->text(QClipboard::Clipboard), sentinel);
+    }
+    const auto frame = plot->presentation();
+    auto* copy = plot->findChild<QAction*>(QStringLiteral("saved-history-copy-selection"), Qt::FindDirectChildrenOnly);
+    QVERIFY(copy); QVERIFY(!copy->isEnabled()); QVERIFY(!plot->selectedBucket());
+    QTRY_VERIFY_WITH_TIMEOUT(window.isActiveWindow(), 1000);
+    plot->setFocus(Qt::OtherFocusReason); QTRY_VERIFY_WITH_TIMEOUT(plot->hasFocus(), 1000);
+    QTest::keyClick(plot, Qt::Key_Home); QCOMPARE(plot->selectedBucket(), std::optional<std::size_t>{0});
+    const auto unknown = QStringLiteral("2023-12-04 UTC\nDHT downloaded: Unknown\nDHT uploaded: Unknown");
+    QCOMPARE(plot->toolTip(), unknown); QCOMPARE(clipboardChanges.count(), 0);
+    QTest::keyClick(plot, Qt::Key_C, Qt::ControlModifier);
+    QTRY_COMPARE_WITH_TIMEOUT(clipboard->text(QClipboard::Clipboard), unknown, 1000);
+    QTest::keyClick(plot, Qt::Key_End); QTest::keyClick(plot, Qt::Key_Left);
+    QCOMPARE(plot->selectedBucket(), std::optional<std::size_t>{28});
+    const auto zero = QStringLiteral("2024-01-01 UTC\nDHT downloaded: 0 bytes\nDHT uploaded: 0 bytes");
+    QCOMPARE(plot->accessibleDescription(), zero); QVERIFY(copy->isEnabled());
+    QTest::keyClick(plot, Qt::Key_C, Qt::ControlModifier);
+    QTRY_COMPARE_WITH_TIMEOUT(clipboard->text(QClipboard::Clipboard), zero, 1000);
+    QTest::keyClick(plot, Qt::Key_End); QCOMPARE(plot->selectedBucket(), std::optional<std::size_t>{29});
+    const auto exact = QStringLiteral("2024-01-02 UTC\nDHT downloaded: 4224 bytes\nDHT uploaded: 2112 bytes");
+    QCOMPARE(plot->toolTip(), exact); QCOMPARE(plot->accessibleDescription(), exact);
+    copy->trigger(); QCOMPARE(clipboard->text(QClipboard::Clipboard), exact);
+    const auto afterCopy = clipboardChanges.count(); QCOMPARE(afterCopy, 3);
+    const auto* copiedMime = clipboard->mimeData(QClipboard::Clipboard);
+    QVERIFY(copiedMime); QVERIFY(copiedMime->hasText()); QVERIFY(!copiedMime->hasHtml());
+    QVERIFY(page->historyMonthPresentation() == packet); QVERIFY(plot->presentation() == frame);
+    QCOMPARE(months.count(), 1); QCOMPARE(days.count(), 0); QCOMPARE(weeks.count(), 0); QCOMPARE(totals.count(), 1);
+    const auto capture = qEnvironmentVariable("BIGLYBTC_PREVIEW_CAPTURE");
+    if (!capture.isEmpty()) {
+      const auto path = root.filePath(QStringLiteral("statistics-history-month-preview.png"));
+      table->scrollToBottom(); QCoreApplication::processEvents();
+      QVERIFY(!QFileInfo::exists(path)); QVERIFY(window.grab().save(path));
+    }
+
+    const auto remembered = page->navigation(); QVERIFY(remembered);
+    QCOMPARE(remembered->history, 2); QCOMPARE(remembered->monthEnding, (core::HistoryDate{2024, 1, 2}));
+    QCOMPARE(remembered->monthTraffic, ui::SavedHistoryTraffic::Dht);
+    QPointer oldPage(page); QPointer oldPlot(plot); close->trigger();
+    QTRY_VERIFY_WITH_TIMEOUT(oldPage.isNull() && oldPlot.isNull(), 1000);
+    statistics->trigger(); page = window.statisticsPage(); QVERIFY(page); QCOMPARE(page->navigation(), remembered);
+    QTRY_VERIFY_WITH_TIMEOUT(totals.count() == 2 && months.count() == 2
+        && page->historyMonthPresentation() && !bridge.busy(), 30000);
+    QVERIFY(page->historyMonthPresentation() != packet);
+    QCOMPARE(page->historyMonthPresentation()->endingDate, (core::HistoryDate{2024, 1, 2}));
+    QVERIFY(page->historyMonthPresentation()->snapshot); QVERIFY(page->historyMonthPresentation()->snapshot != packet->snapshot);
+    QVERIFY(page->historyMonthPresentation()->snapshot->days[29].snapshot);
+    QCOMPARE(page->historyMonthPresentation()->snapshot->days[29].snapshot->totals, expected[29]);
+    plot = page->findChild<ui::SavedHistoryPlot*>(QStringLiteral("saved-history-month-chart")); QVERIFY(plot);
+    QTRY_VERIFY_WITH_TIMEOUT(plot->presentation() && plot->presentation()->mode() == ui::SavedHistoryPlotMode::Month
+        && plot->presentation()->traffic() == ui::SavedHistoryTraffic::Dht, 1000);
+    QVERIFY(plot->presentation() != frame); QVERIFY(!plot->selectedBucket());
+    copy = plot->findChild<QAction*>(QStringLiteral("saved-history-copy-selection"), Qt::FindDirectChildrenOnly);
+    QVERIFY(copy); QVERIFY(!copy->isEnabled());
+    QCOMPARE(days.count(), 0); QCOMPARE(weeks.count(), 0); QCOMPARE(totals.count(), 2); QCOMPARE(months.count(), 2); QCOMPARE(snapshots.count(), 1);
+    QCOMPARE(clipboardChanges.count(), afterCopy); QCOMPARE(clipboard->text(QClipboard::Clipboard), exact);
+    for (const auto& change : clipboardChanges) { QCOMPARE(qvariant_cast<QClipboard::Mode>(change[0]), QClipboard::Clipboard); }
+    for (auto it = present.cbegin(); it != present.cend(); ++it) {
+      QCOMPARE(QFileInfo::exists(it.key()), it.value());
+      if (it.value()) { QCOMPARE(bytes(it.key()), original.value(it.key())); }
+    }
+    QVERIFY(QDir(payload).entryList(QDir::AllEntries | QDir::NoDotAndDotDot).isEmpty());
   }
 };
 QTEST_MAIN(PreviewSmoke)

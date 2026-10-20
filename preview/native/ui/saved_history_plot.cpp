@@ -59,6 +59,9 @@ QString description(const SavedHistoryPlotFrame& frame) {
   if (frame.mode() == SavedHistoryPlotMode::WeekHourly) {
     return QObject::tr("Saved hourly %1 traffic in bytes, seven independent UTC days ending %2").arg(traffic, dateText(frame.endingDate()));
   }
+  if (frame.mode() == SavedHistoryPlotMode::Month) {
+    return QObject::tr("Saved daily %1 traffic in bytes, 30 independent UTC days ending %2").arg(traffic, dateText(frame.endingDate()));
+  }
   return frame.mode() == SavedHistoryPlotMode::Day
       ? QObject::tr("Saved hourly %1 traffic in bytes for %2 UTC").arg(traffic, dateText(frame.endingDate()))
       : QObject::tr("Saved daily %1 traffic in bytes, seven independent UTC days ending %2").arg(traffic, dateText(frame.endingDate()));
@@ -143,6 +146,28 @@ SavedHistoryPlotPresentation savedHistoryWeekHourlyPlot(core::HistoryDate end,
   frame->finish(); return frame;
 }
 
+SavedHistoryPlotPresentation savedHistoryMonthPlot(core::HistoryDate end,
+    std::shared_ptr<const core::SavedHistoryMonth> source, SavedHistoryTraffic traffic) {
+  const auto dates = core::savedHistoryMonthDates(end); if (!dates || !validSavedHistoryTraffic(traffic)) { return {}; }
+  const auto indices = counterIndices(traffic);
+  bool matching = source && source->endingDate == end;
+  if (matching) {
+    for (std::size_t i = 0; i < dates->size(); ++i) {
+      const auto& row = source->days[i];
+      if (row.date != (*dates)[i] || (row.snapshot && row.snapshot->date != row.date)) { matching = false; break; }
+    }
+  }
+  auto frame = std::shared_ptr<SavedHistoryPlotFrame>(new SavedHistoryPlotFrame(SavedHistoryPlotMode::Month, end, core::SavedHistoryMonthDays, traffic));
+  for (std::size_t i = 0; i < frame->count_; ++i) {
+    auto& bucket = frame->buckets_[i]; bucket.date = (*dates)[i];
+    if (matching && source->days[i].snapshot && source->days[i].snapshot->totals) {
+      bucket.downloaded = (*source->days[i].snapshot->totals)[indices[0]];
+      bucket.uploaded = (*source->days[i].snapshot->totals)[indices[1]];
+    }
+  }
+  frame->finish(); return frame;
+}
+
 QString SavedHistoryPlotFrame::bucketLabel(std::size_t index) const {
   if (index >= count_) { return {}; }
   const auto& bucket = buckets_[index];
@@ -221,6 +246,13 @@ void SavedHistoryPlot::setWeekHourly(core::HistoryDate end, std::shared_ptr<cons
   QPointer<SavedHistoryPlot> guard(this); const auto before = frame_;
   const auto revision = interactionRevision_;
   auto next = savedHistoryWeekHourlyPlot(end, std::move(source), traffic);
+  if (guard && guard->frame_ == before && guard->interactionRevision_ == revision && next) { guard->replace(std::move(next)); }
+}
+
+void SavedHistoryPlot::setMonth(core::HistoryDate end, std::shared_ptr<const core::SavedHistoryMonth> source, SavedHistoryTraffic traffic) {
+  QPointer<SavedHistoryPlot> guard(this); const auto before = frame_;
+  const auto revision = interactionRevision_;
+  auto next = savedHistoryMonthPlot(end, std::move(source), traffic);
   if (guard && guard->frame_ == before && guard->interactionRevision_ == revision && next) { guard->replace(std::move(next)); }
 }
 

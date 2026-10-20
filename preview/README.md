@@ -232,3 +232,19 @@ or widgets are kept. A new profile session clears closed-tab navigation memory.
 Existing visible-page session reset behavior is unchanged. This preference does
 not survive restarting the app and writes no original configuration files.
 See [navigation contract](docs/statistics-navigation-contract.json).
+
+
+Transfers → History → **30 days** displays thirty independent saved UTC daily
+records ending on the selected date. Previous/next move exactly thirty days;
+Refresh 30 days or F5 rereads this range through the same held profile. The table
+keeps all six signed counters, distinguishing missing files, present files with
+no observations, and recorded zero. No 30-day sum or varying calendar month is
+inferred. The chart switches among Payload, Protocol and DHT using the accepted
+records without another read; keyboard inspection and Copy selected values work
+on all thirty date buckets. Copy writes only when explicitly invoked.
+
+Closing and reopening Statistics in the same profile session retains the date
+and traffic choice as scalars, creates fresh widgets and rereads saved records.
+This read-only browser adds no recording, cache writes or persistent preferences.
+Its selected daily records differ from the original rolling month graph's hourly
+queries and pixel merging; it does not establish Java monthly graph equality.

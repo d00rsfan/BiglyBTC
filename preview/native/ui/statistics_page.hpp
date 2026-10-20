@@ -4,6 +4,7 @@
 #include "engine_statistics_presentation.hpp"
 #include "history_presentation.hpp"
 #include "history_week_presentation.hpp"
+#include "history_month_presentation.hpp"
 #include "library_model.hpp"
 #include "statistics_presentation.hpp"
 #include "statistics_navigation.hpp"
@@ -25,6 +26,7 @@ namespace biglybtc::ui {
 class EngineActivityView;
 class HistoryView;
 class HistoryWeekView;
+class HistoryMonthView;
 
 // GUI-thread only; completions are accepted once for the current nonzero pair.
 // This read-only page neither performs IO nor starts transfers/sampling timers.
@@ -54,6 +56,12 @@ public:
   core::HistoryDate selectedHistoryWeekDate() const;
   HistoryWeekPresentation historyWeekPresentation() const;
   bool historyWeekSelected() const;
+  void beginHistoryMonthRequest(quint64 session, quint64 request, core::HistoryDate);
+  void setHistoryMonth(HistoryMonthPresentation);
+  void setHistoryMonthFailed(quint64 session, quint64 request, core::HistoryDate, const QString&);
+  core::HistoryDate selectedHistoryMonthDate() const;
+  HistoryMonthPresentation historyMonthPresentation() const;
+  bool historyMonthSelected() const;
   // Caller first admits generation+hash through LibraryModel. The page also
   // rejects invalid identity/negative payload telemetry and resets on target change.
   void recordPayload(const Telemetry&, const QString& displayName);
@@ -67,6 +75,7 @@ signals:
   void refreshRequested();
   void historyRequested(biglybtc::core::HistoryDate);
   void historyWeekRequested(biglybtc::core::HistoryDate);
+  void historyMonthRequested(biglybtc::core::HistoryDate);
 protected:
   void showEvent(QShowEvent*) override;
   bool eventFilter(QObject*, QEvent*) override;
@@ -95,6 +104,7 @@ private:
   HistoryView* history_ = nullptr;
   QTabWidget* historyTabs_ = nullptr;
   HistoryWeekView* historyWeek_ = nullptr;
+  HistoryMonthView* historyMonth_ = nullptr;
   QWidget* engineDetails_ = nullptr;
   QLabel* engineStatus_ = nullptr;
   QLabel* engineTarget_ = nullptr;

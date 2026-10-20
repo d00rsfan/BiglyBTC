@@ -17,7 +17,7 @@
 
 namespace {
 using namespace biglybtc;
-constexpr core::HistoryDate Daily{2024, 2, 29}, Ending{2024, 3, 2};
+constexpr core::HistoryDate Daily{2024, 2, 29}, Ending{2024, 3, 2}, MonthEnding{2024, 3, 30};
 template<class T> T& child(QWidget& parent, const char* name) {
   auto* value = parent.findChild<T*>(QString::fromLatin1(name)); if (!value) { throw std::runtime_error("Missing navigation control"); } return *value;
 }
@@ -25,7 +25,8 @@ QDate qtDate(core::HistoryDate d) { return {d.year, static_cast<int>(d.month), s
 ui::StatisticsNavigation choices(unsigned bits = 15, bool hourly = true) {
   return {.section = static_cast<int>(bits & 1), .activity = static_cast<int>((bits >> 1) & 1),
       .transfers = static_cast<int>((bits >> 2) & 1), .history = static_cast<int>((bits >> 3) & 1),
-      .dailyDate = Daily, .weekEnding = Ending, .hourly = hourly};
+      .dailyDate = Daily, .weekEnding = Ending, .hourly = hourly,
+      .monthEnding = MonthEnding, .monthTraffic = ui::SavedHistoryTraffic::Dht};
 }
 void visible(ui::StatisticsPage& page) { page.resize(1180, 850); page.show(); QCoreApplication::processEvents(); }
 void verifyControls(ui::StatisticsPage& page, const ui::StatisticsNavigation& value) {
@@ -35,6 +36,8 @@ void verifyControls(ui::StatisticsPage& page, const ui::StatisticsNavigation& va
   QCOMPARE(child<QTabWidget>(page, "statistics-history-tabs").currentIndex(), value.history);
   QCOMPARE(child<QDateEdit>(page, "saved-history-date").date(), qtDate(value.dailyDate));
   QCOMPARE(child<QDateEdit>(page, "saved-history-week-date").date(), qtDate(value.weekEnding));
+  QCOMPARE(child<QDateEdit>(page, "saved-history-month-date").date(), qtDate(value.monthEnding));
+  QCOMPARE(child<QComboBox>(page, "saved-history-month-traffic").currentIndex(), static_cast<int>(value.monthTraffic));
   QCOMPARE(child<QComboBox>(page, "saved-history-week-resolution").currentIndex(), value.hourly ? 1 : 0);
 }
 bool today(core::HistoryDate date, QDate first, QDate last) { return qtDate(date) == first || qtDate(date) == last; }
@@ -61,14 +64,15 @@ private slots:
       auto invalid = choices();
       switch (kind) {
         case 0: invalid.section = -1; break; case 1: invalid.activity = 2; break;
-        case 2: invalid.transfers = -1; break; case 3: invalid.history = 2; break;
+        case 2: invalid.transfers = -1; break; case 3: invalid.history = 3; break;
         case 4: invalid.dailyDate = {2023, 2, 29}; break; case 5: invalid.dailyDate = {10000, 1, 1}; break;
         case 6: invalid.weekEnding = {1970, 1, 6}; break; default: invalid.weekEnding = {2024, 4, 31}; break;
       }
       QVERIFY(!ui::validStatisticsNavigation(invalid)); const auto first = QDateTime::currentDateTimeUtc().date();
       ui::StatisticsPage page(nullptr, invalid); const auto last = QDateTime::currentDateTimeUtc().date(); const auto result = page.navigation(); QVERIFY(result);
       QCOMPARE(result->section, 0); QCOMPARE(result->activity, 0); QCOMPARE(result->transfers, 0); QCOMPARE(result->history, 0); QVERIFY(!result->hourly);
-      QVERIFY(today(result->dailyDate, first, last)); QVERIFY(today(result->weekEnding, first, last)); verifyControls(page, *result);
+      QVERIFY(today(result->dailyDate, first, last)); QVERIFY(today(result->weekEnding, first, last));
+      QVERIFY(today(result->monthEnding, first, last)); QCOMPARE(result->monthTraffic, ui::SavedHistoryTraffic::Payload); verifyControls(page, *result);
     }
   }
   void firstShowReadsOnlyTheSelectedHistorySubview_data() {
@@ -90,6 +94,8 @@ private slots:
   void capturesEditedHiddenChoicesAndRestoresBeforeAnyFirstShow() {
     ui::StatisticsPage first; child<QDateEdit>(first, "saved-history-date").setDate(qtDate(Daily));
     child<QDateEdit>(first, "saved-history-week-date").setDate(qtDate(Ending));
+    child<QDateEdit>(first, "saved-history-month-date").setDate(qtDate(MonthEnding));
+    child<QComboBox>(first, "saved-history-month-traffic").setCurrentIndex(2);
     child<QTabWidget>(first, "statistics-activity-views").setCurrentIndex(1);
     child<QTabWidget>(first, "statistics-transfer-tabs").setCurrentIndex(1);
     child<QTabWidget>(first, "statistics-history-tabs").setCurrentIndex(1);

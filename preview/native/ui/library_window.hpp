@@ -8,6 +8,7 @@
 #include "statistics_navigation.hpp"
 #include "history_presentation.hpp"
 #include "history_week_presentation.hpp"
+#include "history_month_presentation.hpp"
 #include "engine_statistics_presentation.hpp"
 
 #include <QMainWindow>
@@ -56,6 +57,7 @@ public:
   void setStatistics(StatisticsPresentation);
   void setHistory(HistoryPresentation);
   void setHistoryWeek(HistoryWeekPresentation);
+  void setHistoryMonth(HistoryMonthPresentation);
   void setEngineStatistics(EngineStatisticsPresentation);
   void beginColumnLayoutSession(quint64 session);
   void setColumnLayouts(ColumnLayoutsPresentation);
@@ -69,6 +71,7 @@ signals:
   void statisticsRequested(quint64 session, quint64 request);
   void historyRequested(quint64 session, quint64 request, biglybtc::core::HistoryDate date);
   void historyWeekRequested(quint64 session, quint64 request, biglybtc::core::HistoryDate endingDate);
+  void historyMonthRequested(quint64 session, quint64 request, biglybtc::core::HistoryDate endingDate);
   void columnLayoutsRequested(quint64 session, quint64 request);
   void columnLayoutSaveRequested(biglybtc::ui::ColumnLayoutSaveSubmission);
   void continueRequested(biglybtc::ui::Target);
@@ -91,6 +94,7 @@ private:
   void refreshStatistics();
   void refreshHistory(core::HistoryDate);
   void refreshHistoryWeek(core::HistoryDate);
+  void refreshHistoryMonth(core::HistoryDate);
   void queueStatistics();
   void queueOptionalViews();
   void closePage(int index);
@@ -129,6 +133,7 @@ private:
     QPointer<StatisticsPage> page;
     std::optional<core::HistoryDate> historyDate{};
     bool historyWeek = false;
+    bool historyMonth = false;
   };
   quint64 statisticsRequest_ = 0;
   quint64 historyRequest_ = 0;

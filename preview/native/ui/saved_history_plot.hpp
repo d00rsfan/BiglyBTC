@@ -1,6 +1,7 @@
 #pragma once
 
 #include <biglybtc/saved_history_week.hpp>
+#include <biglybtc/saved_history_month.hpp>
 #include "saved_history_traffic.hpp"
 
 #include <QPointF>
@@ -22,7 +23,7 @@ class QPaintEvent;
 
 namespace biglybtc::ui {
 
-enum class SavedHistoryPlotMode { Day, Week, WeekHourly };
+enum class SavedHistoryPlotMode { Day, Week, WeekHourly, Month };
 struct SavedHistoryPlotBucket {
   core::HistoryDate date;
   std::optional<unsigned> hour;
@@ -34,7 +35,7 @@ using SavedHistoryPlotPresentation = std::shared_ptr<const SavedHistoryPlotFrame
 
 // Bounded owned scalar projection only: no sums/rates, IO or Java equality.
 // Invalid requested date/range returns null. A null or date-mismatched source
-// gives24/7/168 unknown buckets. Facts never retain a caller's mutable DTO alias.
+// gives24/7/168/30 unknown buckets. Facts never retain a caller's mutable DTO alias.
 SavedHistoryPlotPresentation savedHistoryDayPlot(
     core::HistoryDate, std::shared_ptr<const core::SavedHistoryDay>,
     SavedHistoryTraffic traffic = SavedHistoryTraffic::Payload);
@@ -43,6 +44,10 @@ SavedHistoryPlotPresentation savedHistoryWeekPlot(
     SavedHistoryTraffic traffic = SavedHistoryTraffic::Payload);
 SavedHistoryPlotPresentation savedHistoryWeekHourlyPlot(
     core::HistoryDate endingDate, std::shared_ptr<const core::SavedHistoryWeek>,
+    SavedHistoryTraffic traffic = SavedHistoryTraffic::Payload);
+
+SavedHistoryPlotPresentation savedHistoryMonthPlot(
+    core::HistoryDate endingDate, std::shared_ptr<const core::SavedHistoryMonth>,
     SavedHistoryTraffic traffic = SavedHistoryTraffic::Payload);
 
 class SavedHistoryPlotFrame final {
@@ -65,6 +70,8 @@ private:
       core::HistoryDate, std::shared_ptr<const core::SavedHistoryWeek>, SavedHistoryTraffic);
   friend SavedHistoryPlotPresentation savedHistoryWeekHourlyPlot(
       core::HistoryDate, std::shared_ptr<const core::SavedHistoryWeek>, SavedHistoryTraffic);
+  friend SavedHistoryPlotPresentation savedHistoryMonthPlot(
+      core::HistoryDate, std::shared_ptr<const core::SavedHistoryMonth>, SavedHistoryTraffic);
   SavedHistoryPlotFrame(SavedHistoryPlotMode, core::HistoryDate, std::size_t, SavedHistoryTraffic);
   void finish() noexcept;
   SavedHistoryPlotMode mode_;
@@ -87,6 +94,7 @@ public:
   void setDay(core::HistoryDate, std::shared_ptr<const core::SavedHistoryDay>, SavedHistoryTraffic traffic = SavedHistoryTraffic::Payload);
   void setWeek(core::HistoryDate endingDate, std::shared_ptr<const core::SavedHistoryWeek>, SavedHistoryTraffic traffic = SavedHistoryTraffic::Payload);
   void setWeekHourly(core::HistoryDate endingDate, std::shared_ptr<const core::SavedHistoryWeek>, SavedHistoryTraffic traffic = SavedHistoryTraffic::Payload);
+  void setMonth(core::HistoryDate endingDate, std::shared_ptr<const core::SavedHistoryMonth>, SavedHistoryTraffic traffic = SavedHistoryTraffic::Payload);
   SavedHistoryPlotPresentation presentation() const noexcept { return frame_; }
   std::optional<std::size_t> selectedBucket() const noexcept { return selectedBucket_; }
   // A selected caption reserves 24 additional bottom pixels. Without selection

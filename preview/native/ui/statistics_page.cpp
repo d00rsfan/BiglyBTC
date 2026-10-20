@@ -4,6 +4,7 @@
 #include "engine_activity_view.hpp"
 #include "history_view.hpp"
 #include "history_week_view.hpp"
+#include "history_month_view.hpp"
 
 #include <QDateTime>
 #include <QEvent>
@@ -194,6 +195,8 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
       initial ? initial->dailyTraffic : SavedHistoryTraffic::Payload);
   historyWeek_ = new HistoryWeekView(historyTabs_, initial ? std::optional{initial->weekEnding} : std::nullopt,
       initial && initial->hourly, initial ? initial->weekTraffic : SavedHistoryTraffic::Payload);
+  historyMonth_ = new HistoryMonthView(historyTabs_, initial ? std::optional{initial->monthEnding} : std::nullopt,
+      initial ? initial->monthTraffic : SavedHistoryTraffic::Payload);
   historyLayout->addWidget(historyTabs_);
   connect(history_, &HistoryView::readRequested, this, [this](core::HistoryDate date) {
     // HistoryView emits only when visible; do not drop its first show signal
@@ -201,7 +204,9 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
     emit historyRequested(date);
   });
   connect(historyWeek_, &HistoryWeekView::readRequested, this, [this](core::HistoryDate date) { emit historyWeekRequested(date); });
+  connect(historyMonth_, &HistoryMonthView::readRequested, this, [this](core::HistoryDate date) { emit historyMonthRequested(date); });
   historyTabs_->addTab(history_, tr("Daily")); historyTabs_->addTab(historyWeek_, tr("7 days"));
+  historyTabs_->addTab(historyMonth_, tr("30 days"));
   transferTabs->addTab(history, tr("History")); transferLayout->addWidget(transferTabs); tabs_->addTab(transfers, tr("Transfers"));
   auto* refresh = new QPushButton(tr("Refresh saved totals"), this); refresh->setObjectName(QStringLiteral("statistics-refresh"));
   connect(refresh, &QPushButton::clicked, this, &StatisticsPage::refreshRequested);
@@ -221,7 +226,8 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
 std::optional<StatisticsNavigation> StatisticsPage::navigation() const {
   const StatisticsNavigation result{tabs_->currentIndex(), activityViews_->currentIndex(),
       transferTabs_->currentIndex(), historyTabs_->currentIndex(), history_->selectedDate(),
-      historyWeek_->selectedDate(), historyWeek_->hourlyResolution(), history_->traffic(), historyWeek_->traffic()};
+      historyWeek_->selectedDate(), historyWeek_->hourlyResolution(), history_->traffic(), historyWeek_->traffic(),
+      historyMonth_->selectedDate(), historyMonth_->traffic()};
   if (!validStatisticsNavigation(result)) { return {}; }
   return result;
 }
@@ -235,6 +241,7 @@ void StatisticsPage::setHistoryFailed(quint64 session, quint64 request, core::Hi
 void StatisticsPage::resetHistorySession(quint64 session) {
   QPointer<StatisticsPage> guard(this); history_->resetSession(session);
   if (guard) { guard->historyWeek_->resetSession(session); }
+  if (guard) { guard->historyMonth_->resetSession(session); }
 }
 core::HistoryDate StatisticsPage::selectedHistoryDate() const { return history_->selectedDate(); }
 HistoryPresentation StatisticsPage::historyPresentation() const { return history_->presentation(); }
@@ -252,6 +259,18 @@ core::HistoryDate StatisticsPage::selectedHistoryWeekDate() const { return histo
 HistoryWeekPresentation StatisticsPage::historyWeekPresentation() const { return historyWeek_->presentation(); }
 bool StatisticsPage::historyWeekSelected() const {
   return tabs_->currentIndex() == 1 && transferTabs_->currentIndex() == 1 && historyTabs_->currentIndex() == 1;
+}
+void StatisticsPage::beginHistoryMonthRequest(quint64 session, quint64 request, core::HistoryDate date) {
+  historyMonth_->beginRequest(session, request, date);
+}
+void StatisticsPage::setHistoryMonth(HistoryMonthPresentation packet) { historyMonth_->setPresentation(std::move(packet)); }
+void StatisticsPage::setHistoryMonthFailed(quint64 session, quint64 request, core::HistoryDate date, const QString& failure) {
+  historyMonth_->setFailed(session, request, date, failure);
+}
+core::HistoryDate StatisticsPage::selectedHistoryMonthDate() const { return historyMonth_->selectedDate(); }
+HistoryMonthPresentation StatisticsPage::historyMonthPresentation() const { return historyMonth_->presentation(); }
+bool StatisticsPage::historyMonthSelected() const {
+  return tabs_->currentIndex() == 1 && transferTabs_->currentIndex() == 1 && historyTabs_->currentIndex() == 2;
 }
 QTabWidget& StatisticsPage::tabs() { return *tabs_; }
 std::size_t StatisticsPage::sampleCount() const { return plot_->count(); }

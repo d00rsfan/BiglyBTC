@@ -33,7 +33,7 @@
 
 namespace {
 using namespace biglybtc;
-constexpr core::HistoryDate Daily{2024, 2, 29}, Ending{2024, 3, 2};
+constexpr core::HistoryDate Daily{2024, 2, 29}, Ending{2024, 3, 2}, MonthEnding{2024, 3, 30};
 template<class T> T& child(QObject& owner, const char* name) {
   auto* value = owner.findChild<T*>(QString::fromLatin1(name)); if (!value) { throw std::runtime_error("Missing navigation control"); } return *value;
 }
@@ -41,12 +41,15 @@ QAction& action(ui::LibraryWindow& w, const char* name) { return child<QAction>(
 QDate qtDate(core::HistoryDate d) { return {d.year, static_cast<int>(d.month), static_cast<int>(d.day)}; }
 ui::StatisticsNavigation choices(bool selectedWeek = true) {
   return {.section = selectedWeek ? 1 : 0, .activity = 1, .transfers = 1, .history = 1,
-      .dailyDate = Daily, .weekEnding = Ending, .hourly = true};
+      .dailyDate = Daily, .weekEnding = Ending, .hourly = true,
+      .monthEnding = MonthEnding, .monthTraffic = ui::SavedHistoryTraffic::Dht};
 }
 void choose(ui::StatisticsPage& page, const ui::StatisticsNavigation& value) {
   page.tabs().setCurrentIndex(0); // Edit History while hidden, then activate only the chosen branch.
   child<QDateEdit>(page, "saved-history-date").setDate(qtDate(value.dailyDate));
   child<QDateEdit>(page, "saved-history-week-date").setDate(qtDate(value.weekEnding));
+  child<QDateEdit>(page, "saved-history-month-date").setDate(qtDate(value.monthEnding));
+  child<QComboBox>(page, "saved-history-month-traffic").setCurrentIndex(static_cast<int>(value.monthTraffic));
   child<QTabWidget>(page, "statistics-activity-views").setCurrentIndex(value.activity);
   child<QTabWidget>(page, "statistics-transfer-tabs").setCurrentIndex(value.transfers);
   child<QTabWidget>(page, "statistics-history-tabs").setCurrentIndex(value.history);
@@ -132,6 +135,8 @@ void defaults(ui::StatisticsPage& page) {
   const auto now = QDateTime::currentDateTimeUtc().date();
   QVERIFY(qtDate(state->dailyDate) == now || qtDate(state->dailyDate) == now.addDays(-1));
   QVERIFY(qtDate(state->weekEnding) == now || qtDate(state->weekEnding) == now.addDays(-1));
+  QVERIFY(qtDate(state->monthEnding) == now || qtDate(state->monthEnding) == now.addDays(-1));
+  QCOMPARE(state->monthTraffic, ui::SavedHistoryTraffic::Payload);
 }
 } // namespace
 
