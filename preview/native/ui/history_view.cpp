@@ -1,5 +1,7 @@
 #include "history_view.hpp"
 
+#include "saved_history_plot.hpp"
+
 #include <QAbstractTableModel>
 #include <QDateEdit>
 #include <QDateTime>
@@ -99,6 +101,8 @@ HistoryView::HistoryView(QWidget* parent) : QWidget(parent) {
   summary->addWidget(label(tr("Daily payload uploaded:"), QStringLiteral("saved-history-upload-title"), this), 0, 2);
   summary->addWidget(uploaded_, 0, 3); summary->setColumnStretch(1, 1); summary->setColumnStretch(3, 1); layout->addLayout(summary);
   observations_ = label(tr("No saved observations"), QStringLiteral("saved-history-observations"), this); layout->addWidget(observations_);
+  plot_ = new SavedHistoryPlot(this); plot_->setObjectName(QStringLiteral("saved-history-chart"));
+  layout->addWidget(plot_);
   table_ = new QTableView(this); table_->setObjectName(QStringLiteral("saved-history-hours"));
   table_->setAccessibleName(tr("24 UTC hours; six saved byte counters")); model_ = new HoursModel(table_); table_->setModel(model_);
   table_->setEditTriggers(QAbstractItemView::NoEditTriggers); table_->setSelectionBehavior(QAbstractItemView::SelectRows);
@@ -106,7 +110,7 @@ HistoryView::HistoryView(QWidget* parent) : QWidget(parent) {
   table_->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive); table_->horizontalHeader()->setStretchLastSection(false);
   table_->setColumnWidth(0, 155); for (int i = 1; i < 7; ++i) { table_->setColumnWidth(i, 155); }
   table_->setMinimumHeight(150); layout->addWidget(table_, 1);
-  layout->addWidget(label(tr("Rolling History unavailable; daily saved records are shown above. UTC hourly values are signed saved observations, not live engine traffic or a complete rolling graph. Unknown hours are not zero. Read-only: no history writer, reset or file changes."),
+  layout->addWidget(label(tr("Saved hourly payload traffic for this UTC date. Unknown hours are gaps; recorded zero remains 0 bytes. Values may include signed corrections. Rolling History unavailable."),
       QStringLiteral("statistics-history-unavailable"), this));
   connect(previous_, &QPushButton::clicked, this, [this] { date_->setDate(date_->date().addDays(-1)); });
   connect(next_, &QPushButton::clicked, this, [this] { date_->setDate(date_->date().addDays(1)); });
@@ -190,6 +194,7 @@ void HistoryView::refresh() {
   }
   if (!current()) { return; } previous_->setEnabled(date_->date() > date_->minimumDate());
   if (!current()) { return; } next_->setEnabled(date_->date() < date_->maximumDate());
+  if (!current()) { return; } plot_->setDay(selectedDate(), snapshot);
   if (!current()) { return; } model_->setSnapshot(std::move(snapshot));
   if (current()) { dirty_ = false; }
 }

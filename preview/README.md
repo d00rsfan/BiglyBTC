@@ -203,3 +203,12 @@ the original whole-period query can account for midnight spill differently from
 independent daily reads. Rolling graphs and live history recording remain open.
 The offline launcher generates sample periods for today and 2024-01-02 without
 opening the original profile or enabling transfers.
+
+
+Saved History charts show payload downloaded and uploaded above both the Daily
+hourly table and the 7 days table. Each point uses its exact signed saved value;
+unknown hours or days leave gaps, while recorded zero remains a point. Hover a
+bucket for its UTC label and exact byte values. The existing date navigation and
+Refresh/F5 update the selected chart and table together. These fixed saved UTC
+charts do not add rolling queries, history recording or a combined weekly total.
+See [chart contract](docs/history-charts-contract.json).

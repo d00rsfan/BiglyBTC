@@ -15,6 +15,8 @@ class QTableView;
 
 namespace biglybtc::ui {
 
+class SavedHistoryPlot;
+
 // GUI-thread only. No IO, sampling timer, writer, or filesystem path exposure.
 // Hidden/minimized views cache immutable deliveries and render on activation.
 class HistoryView final : public QWidget {
@@ -47,6 +49,7 @@ private:
   QLabel* downloaded_ = nullptr;
   QLabel* uploaded_ = nullptr;
   QLabel* observations_ = nullptr;
+  SavedHistoryPlot* plot_ = nullptr;
   QTableView* table_ = nullptr;
   HoursModel* model_ = nullptr;
   QPointer<QWidget> observedWindow_;

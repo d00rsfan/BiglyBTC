@@ -1,6 +1,7 @@
 #include "library_window.hpp"
 #include "session_bridge.hpp"
 #include "statistics_page.hpp"
+#include "saved_history_plot.hpp"
 
 #include <QAction>
 #include <QApplication>
@@ -515,6 +516,16 @@ private slots:
     QCOMPARE(table->model()->rowCount(), 24); QCOMPARE(table->model()->columnCount(), 7);
     QCOMPARE(table->model()->data(table->model()->index(2, 4)).toString(), QStringLiteral("0 bytes"));
     QCOMPARE(table->model()->data(table->model()->index(3, 4)).toString(), QStringLiteral("—"));
+    auto* plot = page->findChild<ui::SavedHistoryPlot*>(QStringLiteral("saved-history-chart")); QVERIFY(plot); QVERIFY(plot->isVisible());
+    const auto plotted = plot->presentation(); QVERIFY(plotted); QCOMPARE(plotted->mode(), ui::SavedHistoryPlotMode::Day);
+    QCOMPARE(plotted->buckets().size(), std::size_t{24});
+    for (std::size_t i = 0; i < 24; ++i) {
+      const auto& bucket = plotted->buckets()[i]; const auto& hour = frame->snapshot->hours[i];
+      QVERIFY(bucket.date == frame->date); QVERIFY(bucket.hour == i);
+      QCOMPARE(bucket.downloaded.has_value(), hour.has_value()); QCOMPARE(bucket.uploaded.has_value(), hour.has_value());
+      if (hour) { QCOMPARE(*bucket.downloaded, (*hour)[3]); QCOMPARE(*bucket.uploaded, (*hour)[1]); }
+    }
+    QVERIFY(plotted->buckets()[2].downloaded == std::int64_t{0}); QVERIFY(!plotted->buckets()[3].downloaded);
     const auto capture = qEnvironmentVariable("BIGLYBTC_PREVIEW_CAPTURE");
     if (!capture.isEmpty()) {
       const auto path = root.filePath(QStringLiteral("statistics-history-preview.png")); QVERIFY(!QFileInfo::exists(path)); QVERIFY(window.grab().save(path));
@@ -522,6 +533,9 @@ private slots:
     editor->setDate(QDate(2024, 1, 4));
     QTRY_VERIFY_WITH_TIMEOUT(page->historyPresentation() && page->historyPresentation()->date == (core::HistoryDate{2024, 1, 4}) && !bridge.busy(), 30000);
     QCOMPARE(page->historyPresentation()->state, ui::HistoryReadState::Missing); QVERIFY(!page->historyPresentation()->snapshot);
+    QVERIFY(plot->presentation());
+    for (const auto& bucket : plot->presentation()->buckets()) { QVERIFY(!bucket.downloaded); QVERIFY(!bucket.uploaded); }
+    QVERIFY(plot->presentation() != plotted); QVERIFY(plotted->buckets()[2].downloaded == std::int64_t{0});
     if (!capture.isEmpty()) {
       const auto path = root.filePath(QStringLiteral("statistics-history-missing-preview.png")); QVERIFY(!QFileInfo::exists(path)); QVERIFY(window.grab().save(path));
     }
@@ -563,6 +577,17 @@ private slots:
     QCOMPARE(table->model()->data(table->model()->index(3, 5)).toString(), QStringLiteral("-2048 bytes"));
     QCOMPARE(table->model()->data(table->model()->index(5, 5)).toString(), QStringLiteral("0 bytes"));
     QVERIFY(!table->model()->data(table->model()->index(2, 5), Qt::UserRole).isValid());
+    auto* plot = page->findChild<ui::SavedHistoryPlot*>(QStringLiteral("saved-history-week-chart")); QVERIFY(plot); QVERIFY(plot->isVisible());
+    const auto plotted = plot->presentation(); QVERIFY(plotted); QCOMPARE(plotted->mode(), ui::SavedHistoryPlotMode::Week);
+    QCOMPARE(plotted->buckets().size(), std::size_t{7});
+    for (std::size_t i = 0; i < 7; ++i) {
+      const auto& bucket = plotted->buckets()[i]; const auto& day = packet->snapshot->days[i];
+      QVERIFY(bucket.date == day.date); QVERIFY(!bucket.hour);
+      const auto known = day.snapshot && day.snapshot->totals;
+      QCOMPARE(bucket.downloaded.has_value(), known); QCOMPARE(bucket.uploaded.has_value(), known);
+      if (known) { QCOMPARE(*bucket.downloaded, (*day.snapshot->totals)[3]); QCOMPARE(*bucket.uploaded, (*day.snapshot->totals)[1]); }
+    }
+    QVERIFY(plotted->buckets()[3].downloaded == std::int64_t{-2048}); QVERIFY(plotted->buckets()[5].downloaded == std::int64_t{0});
     const auto capture = qEnvironmentVariable("BIGLYBTC_PREVIEW_CAPTURE");
     if (!capture.isEmpty()) {
       const auto path = root.filePath(QStringLiteral("statistics-history-week-preview.png")); QVERIFY(!QFileInfo::exists(path)); QVERIFY(window.grab().save(path));
@@ -571,6 +596,9 @@ private slots:
     QTRY_VERIFY_WITH_TIMEOUT(page->historyWeekPresentation() && page->historyWeekPresentation()->endingDate == (core::HistoryDate{2024, 2, 1}) && !bridge.busy(), 30000);
     QCOMPARE(page->historyWeekPresentation()->state, ui::HistoryWeekReadState::Ready);
     for (const auto& row : page->historyWeekPresentation()->snapshot->days) { QVERIFY(!row.snapshot); }
+    QVERIFY(plot->presentation());
+    for (const auto& bucket : plot->presentation()->buckets()) { QVERIFY(!bucket.downloaded); QVERIFY(!bucket.uploaded); }
+    QVERIFY(plot->presentation() != plotted); QVERIFY(plotted->buckets()[3].downloaded == std::int64_t{-2048});
     if (!capture.isEmpty()) {
       const auto path = root.filePath(QStringLiteral("statistics-history-week-missing-preview.png")); QVERIFY(!QFileInfo::exists(path)); QVERIFY(window.grab().save(path));
     }

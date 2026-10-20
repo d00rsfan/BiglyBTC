@@ -1,0 +1,97 @@
+{
+  "schema": 1,
+  "component": "statistics.saved_history_charts",
+  "feature": "F21.saved_history_charts",
+  "milestone": "P04-20",
+  "status": "Source and behavior contract; actual qualification is recorded separately.",
+  "qualification": "See the published milestone for executed source hashes, tests and captures.",
+  "original_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "title": "Saved UTC payload traffic charts",
+  "location": [
+    "Statistics > Transfers > History > Daily",
+    "Statistics > Transfers > History > 7 days"
+  ],
+  "scope": [
+    "A chart is added above each existing saved-history table. Daily remains the default.",
+    "The chart consumes the already accepted immutable saved result; it makes no new reads or requests.",
+    "Daily contains 24 UTC hourly buckets; 7 days contains exactly seven oldest-to-newest UTC daily buckets.",
+    "Only payload download and payload upload are drawn. All six original counter domains remain in the existing tables.",
+    "Values are signed byte counts for each bucket, never transfer rates, interpolated estimates or a combined weekly total."
+  ],
+  "values": {
+    "download_index": 3,
+    "upload_index": 1,
+    "integer_domain": "Signed 64-bit integers, including negative adjustments and observed zero.",
+    "daily": "Optional saved hourly counters; an absent snapshot or hour is unknown.",
+    "seven_days": "Optional member daily total; a missing file or a present day without observations is unknown.",
+    "unknown": "A gap in both traces, not a fabricated zero.",
+    "zero": "An actual known point on the zero axis.",
+    "connection": "Only adjacent known buckets connect; isolated known buckets have a visible marker.",
+    "arithmetic": "Rendering uses finite floating coordinates without signed integer subtraction or absolute-value overflow; original raw integers remain exact."
+  },
+  "presentation": {
+    "units": "bytes; never bytes/s",
+    "timezone": "UTC",
+    "legend": "Payload download and upload use distinct colors and line styles.",
+    "tooltip": "Nearest bucket with literal plain text UTC identity and exact signed integer values; unknown explicitly labeled.",
+    "accessibility": "Accessible period and byte-unit description; all raw bucket facts retained.",
+    "layout": "Plot height is bounded to 180–260 logical pixels. Narrow views use sparse or elided tick labels; the table remains resizable and scrollable.",
+    "semantic_ids": [
+      "saved-history-chart",
+      "saved-history-week-chart"
+    ]
+  },
+  "lifecycle": {
+    "binding": "Existing nonzero session/request/date and Ready-result admission applies unchanged.",
+    "clearing": "Pending, missing, failed, new-date and new-profile results clear plotted known values.",
+    "hidden": "Views retain accepted immutable packets but defer chart facts, tooltip, labels and model mutation until visible and not minimized.",
+    "reentry": "The plot update precedes the table update. QPointer and revision checks stop older work after callback deletion or a newer frame.",
+    "excluded": [
+      "newfileIO",
+      "timer",
+      "worker",
+      "lease",
+      "networkowner",
+      "writer",
+      "cache",
+      "accounting",
+      "weeklyaggregate",
+      "animation",
+      "smoothing"
+    ]
+  },
+  "original_source_reference": {
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+    "symbols": [
+      "createHistoryPanel",
+      "refreshHistory"
+    ],
+    "counter_constants": "core/src/com/biglybt/core/stats/transfer/LongTermStats.java",
+    "differences": "Original History plots two payload directions using the selected period and current clock, with pixel merging and integer display scaling. Fixed UTC hourly/daily saved buckets do not claim original rolling-graph, clock-clamping, width-mapping, legend-interaction or UI runtime parity."
+  },
+  "equality_scope": {
+    "new_java_runtime_oracle_execution": false,
+    "accounting_changed": false,
+    "retained_original_java_scalar_comparisons": {
+      "daily": 2550,
+      "independent_seven_day_members": 3150
+    },
+    "retained_expected_tsv_sha256": {
+      "daily": "72ef5198898fef0a1fa7ea5221751b1d6ddbde674ce0be83e75f38586a096bbc",
+      "seven_day_members": "ad9e2da44b29dcb6e9b4baaf76022a573fd0fd546d7f6de97a54eac33d457975"
+    },
+    "new_graph_java_equality_credit": 0,
+    "limits": "Existing corpus comparisons cover numeric saved-period totals only. No presence, strict-error, current-clock, live-writer, global-owner or original UI equality is added."
+  },
+  "broader_gates_open": [
+    "Original rolling-history graph parity",
+    "Whole-period totals",
+    "Live history writer/global owner",
+    "Original manager/UI runtime parity",
+    "Atomic storage snapshots",
+    "Seamless original-profile switching",
+    "Full client/plugins",
+    "Performance or release qualification"
+  ],
+  "native_parent": "94bf1cb1c17ea7979bc56ae21e9837605689f6a1"
+}

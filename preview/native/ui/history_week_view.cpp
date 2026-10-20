@@ -1,5 +1,7 @@
 #include "history_week_view.hpp"
 
+#include "saved_history_plot.hpp"
+
 #include <QAbstractTableModel>
 #include <QDateEdit>
 #include <QDateTime>
@@ -110,6 +112,8 @@ HistoryWeekView::HistoryWeekView(QWidget* parent) : QWidget(parent) {
   controls->addWidget(date_); controls->addWidget(next_); controls->addStretch(); controls->addWidget(reload); layout->addLayout(controls);
   range_ = label({}, QStringLiteral("saved-history-week-range"), this); layout->addWidget(range_);
   status_ = label(tr("No saved days have been loaded"), QStringLiteral("saved-history-week-status"), this); layout->addWidget(status_);
+  plot_ = new SavedHistoryPlot(this); plot_->setObjectName(QStringLiteral("saved-history-week-chart"));
+  layout->addWidget(plot_);
   table_ = new QTableView(this); table_->setObjectName(QStringLiteral("saved-history-week-days"));
   table_->setAccessibleName(tr("Seven UTC dates; saved state and six daily byte counters"));
   model_ = new DaysModel(selectedDate(), table_); table_->setModel(model_);
@@ -196,6 +200,8 @@ void HistoryWeekView::refresh() {
   }
   if (!current()) { return; } previous_->setEnabled(date_->date().addDays(-7) >= date_->minimumDate());
   if (!current()) { return; } next_->setEnabled(date_->date().addDays(7) <= date_->maximumDate());
+  if (!current()) { return; }
+  plot_->setWeek(selectedDate(), frame_ && frame_->state == HistoryWeekReadState::Ready ? frame_->snapshot : nullptr);
   if (!current()) { return; } model_->setBinding(frame_, selectedDate(), loading_);
   if (current()) { dirty_ = false; }
 }

@@ -15,6 +15,8 @@ class QTableView;
 
 namespace biglybtc::ui {
 
+class SavedHistoryPlot;
+
 // GUI-thread-only saved records browser. No IO, timer, totals across days,
 // directory scan or live history service. Supplied frames remain immutable.
 class HistoryWeekView final : public QWidget {
@@ -45,6 +47,7 @@ private:
   QPushButton* next_ = nullptr;
   QLabel* status_ = nullptr;
   QLabel* range_ = nullptr;
+  SavedHistoryPlot* plot_ = nullptr;
   QTableView* table_ = nullptr;
   DaysModel* model_ = nullptr;
   QPointer<QWidget> observedWindow_;
