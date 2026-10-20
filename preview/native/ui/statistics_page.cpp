@@ -3,6 +3,7 @@
 #include "engine_activity_history.hpp"
 #include "engine_activity_view.hpp"
 #include "history_view.hpp"
+#include "history_week_view.hpp"
 
 #include <QDateTime>
 #include <QEvent>
@@ -186,12 +187,16 @@ StatisticsPage::StatisticsPage(QWidget* parent) : QWidget(parent), tabs_(new QTa
   auto* history = new QWidget(transferTabs); history->setObjectName(QStringLiteral("statistics-transfers-history"));
   auto* historyLayout = new QVBoxLayout(history);
   historyLayout->setContentsMargins(0, 0, 0, 0);
-  history_ = new HistoryView(history); historyLayout->addWidget(history_);
+  historyTabs_ = new QTabWidget(history); historyTabs_->setObjectName(QStringLiteral("statistics-history-tabs"));
+  history_ = new HistoryView(historyTabs_); historyWeek_ = new HistoryWeekView(historyTabs_);
+  historyLayout->addWidget(historyTabs_);
   connect(history_, &HistoryView::readRequested, this, [this](core::HistoryDate date) {
     // HistoryView emits only when visible; do not drop its first show signal
     // while QTabWidget is finishing synchronous activation.
     emit historyRequested(date);
   });
+  connect(historyWeek_, &HistoryWeekView::readRequested, this, [this](core::HistoryDate date) { emit historyWeekRequested(date); });
+  historyTabs_->addTab(history_, tr("Daily")); historyTabs_->addTab(historyWeek_, tr("7 days"));
   transferTabs->addTab(history, tr("History")); transferLayout->addWidget(transferTabs); tabs_->addTab(transfers, tr("Transfers"));
   auto* refresh = new QPushButton(tr("Refresh saved totals"), this); refresh->setObjectName(QStringLiteral("statistics-refresh"));
   connect(refresh, &QPushButton::clicked, this, &StatisticsPage::refreshRequested);
@@ -209,11 +214,26 @@ void StatisticsPage::setHistory(HistoryPresentation packet) { history_->setPrese
 void StatisticsPage::setHistoryFailed(quint64 session, quint64 request, core::HistoryDate date, const QString& failure) {
   history_->setFailed(session, request, date, failure);
 }
-void StatisticsPage::resetHistorySession(quint64 session) { history_->resetSession(session); }
+void StatisticsPage::resetHistorySession(quint64 session) {
+  QPointer<StatisticsPage> guard(this); history_->resetSession(session);
+  if (guard) { guard->historyWeek_->resetSession(session); }
+}
 core::HistoryDate StatisticsPage::selectedHistoryDate() const { return history_->selectedDate(); }
 HistoryPresentation StatisticsPage::historyPresentation() const { return history_->presentation(); }
 bool StatisticsPage::historySelected() const {
-  return tabs_->currentIndex() == 1 && transferTabs_->currentIndex() == 1;
+  return tabs_->currentIndex() == 1 && transferTabs_->currentIndex() == 1 && historyTabs_->currentIndex() == 0;
+}
+void StatisticsPage::beginHistoryWeekRequest(quint64 session, quint64 request, core::HistoryDate date) {
+  historyWeek_->beginRequest(session, request, date);
+}
+void StatisticsPage::setHistoryWeek(HistoryWeekPresentation packet) { historyWeek_->setPresentation(std::move(packet)); }
+void StatisticsPage::setHistoryWeekFailed(quint64 session, quint64 request, core::HistoryDate date, const QString& failure) {
+  historyWeek_->setFailed(session, request, date, failure);
+}
+core::HistoryDate StatisticsPage::selectedHistoryWeekDate() const { return historyWeek_->selectedDate(); }
+HistoryWeekPresentation StatisticsPage::historyWeekPresentation() const { return historyWeek_->presentation(); }
+bool StatisticsPage::historyWeekSelected() const {
+  return tabs_->currentIndex() == 1 && transferTabs_->currentIndex() == 1 && historyTabs_->currentIndex() == 1;
 }
 QTabWidget& StatisticsPage::tabs() { return *tabs_; }
 std::size_t StatisticsPage::sampleCount() const { return plot_->count(); }

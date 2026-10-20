@@ -1,0 +1,2 @@
+# Preserve all generated inputs and actual Java output bytes.
+* -text

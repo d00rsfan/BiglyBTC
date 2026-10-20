@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "component": "statistics.saved_history_week",
+  "feature": "F20.saved_history_week",
+  "milestone": "P04-19",
+  "status": "Source and behavior contract; actual qualification is recorded separately.",
+  "qualification": "See published milestone evidence for executed source hashes and results.",
+  "original_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_parent": "fe09d1c9430a5a3c684d34be97a6661d08704c72",
+  "title": "Saved seven-day overview of independent UTC daily records",
+  "scope": [
+    "Statistics > Transfers > History contains Daily (unchanged default) and 7 days.",
+    "The selected UTC ending date defines exactly seven oldest-to-newest dates, end minus 6 through end. Each row is an independent existing daily-file read.",
+    "Seven dated rows show saved source state and six original signed byte totals. No weekly total, ratio, rolling graph or aggregate is computed.",
+    "Previous/next moves exactly 7 days; an explicit calendar edit may choose any complete supported seven-day interval. Refresh/F5 rereads only the selected history mode.",
+    "The bottom Refresh saved totals remains saved-only. Activity and measured-engine counters/graphs are independent."
+  ],
+  "counters": [
+    "protocol upload",
+    "payload upload",
+    "protocol download",
+    "payload download",
+    "DHT upload",
+    "DHT download"
+  ],
+  "dates": {
+    "timezone": "UTC",
+    "first_ending_date": "1970-01-07",
+    "last_ending_date": "9999-12-31",
+    "members": 7,
+    "invalid_partial_range": "Rejected without truncation or clamping",
+    "clock_policy": "Selected calendar dates; no original current-clock end clamp"
+  },
+  "daily_reader_semantics": [
+    "Complete VERSION1 start/end records have 9 fields; ordinary deltas have 6. Absolute start baselines are parsed, never usage.",
+    "A positive start minute anchors observations. Zero or negative starts deactivate it; valid inactive records remain ignored. Each anchored delta/end advances one reconstructed minute.",
+    "The end record timestamp does not replace the reconstructed time. End does not clear the original reader anchor. Duplicate reconstructed minutes add; signed adjustments remain signed.",
+    "Only observations inside each member UTC day are counted. Rollover spill records in another pathname day are excluded independently.",
+    "Missing file, present empty/header-only file, unknown total and real observed zero remain distinct. Java zero arrays are numeric comparison expectations only.",
+    "Native exact record/version validation, checked signed arithmetic, bounds and whole-read cancellation differ deliberately from permissive Java skipping/wrapping."
+  ],
+  "storage": {
+    "path": "stats/YYYY/MM/DD.dat",
+    "ownership": "Borrow the existing held profile lease; reuse the unchanged daily reader sequentially for seven exact derived paths.",
+    "per_file_limits": {
+      "bytes": 1048576,
+      "nonblank_records": 8192,
+      "line_bytes_excluding_LF_CRLF": 512
+    },
+    "maximum_input_bytes_across_seven_files": 7340032,
+    "buffer_policy": "At most one daily file buffer at a time; return only complete owned primitive results.",
+    "missing_policy": "Missing member is an absent snapshot row; a successful seven-day result may contain seven missing rows.",
+    "error_policy": "Unsafe, changed, malformed, overflowing, excessive, failed or cancelled member rejects the whole batch; no partial result is published.",
+    "consistency_limit": "Seven individually checked sequential reads do not form a transactional multi-file snapshot.",
+    "excluded": [
+      "directory discovery",
+      "cache.dat",
+      "recovery fallback",
+      "writes",
+      "second lease",
+      "new worker",
+      "engine or network ownership"
+    ]
+  },
+  "delivery": {
+    "binding": "Mode/kind, profile session, request, selected ending date and live page must match.",
+    "pending": "One latest coalesced day/week history request shares the existing optional Statistics slot; saved totals remain independently pending.",
+    "lifetime": "Closing the page drops pending delivery without cancelling unrelated work; new profile clears both views; stale replies cannot replace current facts.",
+    "rendering": "Hidden/minimized views retain immutable facts and defer label/model mutation; no timer or IO in UI."
+  },
+  "original_source_differences": [
+    "Original TS_WEEK graph spans 168 hour buckets around the current hour and uses payload-only pixel merging/scaling plus a whole-period total. This overview is seven independent UTC day rows.",
+    "A whole multi-day original Date query can count a rollover spill from the prior file because it filters against the entire requested interval. The sum of independent member queries is not claimed equal to that result, and no sum is supplied.",
+    "Original sliding/current calendar-week overloads depend on now, default-timezone Calendar and configured week start; none is invoked or ported.",
+    "No Java cache, writer, ordinary Core/session owner, original UI or TimeFormatter initialization is activated by characterization."
+  ],
+  "actual_original_java_characterization": {
+    "runtime": "OpenJDK 17.0.20+8-1-26.04-Ubuntu; javac --release 8",
+    "source": "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsBase.java",
+    "source_sha256": "1f9e0967309777ad4c19be9ee123351c9a21755337a0d48fa52dd3752de5ca7f",
+    "profiles": 3,
+    "member_dates": 21,
+    "present_files": 18,
+    "missing_files": 3,
+    "queries": 525,
+    "scalar_observations": 3150,
+    "whole_week_queries": 0,
+    "expected_tsv": "tests/fixtures/history-week/expected.tsv",
+    "expected_tsv_sha256": "ad9e2da44b29dcb6e9b4baaf76022a573fd0fd546d7f6de97a54eac33d457975",
+    "fixture_manifest_sha256": "0990f669114c03a4206ea7300a03fbea5d62b7d8deb80c9b0ef4a934c436d691",
+    "method": "Actual unchanged complete Java class and interfaces with inert bounded providers; independent Date/Date/nonnull-accepter query for each member day and hour; raw stdout is exported without expected-output algorithm.",
+    "clock": "Fixed 2030 provider, all generated query dates strictly earlier.",
+    "equality_scope": "Only six numeric totals per valid supplied period. Presence/counts/strict errors/current-clock behavior have zero Java equality credit.",
+    "retained_P04_18_scalar_comparisons": 2550
+  },
+  "broader_gates_open": [
+    "original rolling-history graph",
+    "combined period totals",
+    "cache/live writer/global history owner",
+    "ordinary original manager/UI runtime parity",
+    "atomic storage snapshot",
+    "seamless original-profile/payload switching",
+    "full client/plugins",
+    "performance or release qualification"
+  ]
+}

@@ -193,3 +193,13 @@ explicitly generated saved history for previewing this screen. Original rolling
 history graphs, live history recording and persistent global ownership remain
 unfinished. Format, bounds and the independent Java reader fixtures are documented
 in docs/saved-history-contract.json and native/tests/fixtures/saved-history/.
+
+The Statistics > Transfers > History screen now also offers **7 days** beside
+Daily. Select an ending UTC date to read seven independent daily files, oldest
+first, through the same profile lease. Missing files, present empty files,
+observed zero and signed counters remain distinct. Previous/next move seven days;
+Refresh history or F5 reloads only this overview. No weekly total is inferred:
+the original whole-period query can account for midnight spill differently from
+independent daily reads. Rolling graphs and live history recording remain open.
+The offline launcher generates sample periods for today and 2024-01-02 without
+opening the original profile or enabling transfers.
