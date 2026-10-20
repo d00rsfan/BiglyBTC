@@ -98,6 +98,8 @@ jobs:
           cp -- "$preview_root/statistics-history-missing-preview.png" "$EVIDENCE_DIR/statistics-history-missing-preview.png"
           cp -- "$preview_root/statistics-history-week-preview.png" "$EVIDENCE_DIR/statistics-history-week-preview.png"
           cp -- "$preview_root/statistics-history-week-missing-preview.png" "$EVIDENCE_DIR/statistics-history-week-missing-preview.png"
+          cp -- "$preview_root/statistics-history-week-hourly-preview.png" "$EVIDENCE_DIR/statistics-history-week-hourly-preview.png"
+          cp -- "$preview_root/statistics-history-week-hourly-missing-preview.png" "$EVIDENCE_DIR/statistics-history-week-hourly-missing-preview.png"
       - name: Preserve test, screenshot and dependency evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

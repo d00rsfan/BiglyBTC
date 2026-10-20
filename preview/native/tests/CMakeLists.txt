@@ -315,6 +315,13 @@ if(BIGLYBTC_DESKTOP)
   add_test(NAME statistics-page-behavior COMMAND biglybtc-statistics-page-tests)
   set_tests_properties(statistics-page-behavior PROPERTIES TIMEOUT 120
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;ui;statistics;config")
+  add_executable(biglybtc-history-hourly-resolution-tests history_hourly_resolution_tests.cpp)
+  set_target_properties(biglybtc-history-hourly-resolution-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-history-hourly-resolution-tests PRIVATE biglybtc_ui Qt6::Test)
+  target_compile_options(biglybtc-history-hourly-resolution-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME saved-history-hourly-resolution COMMAND biglybtc-history-hourly-resolution-tests)
+  set_tests_properties(saved-history-hourly-resolution PROPERTIES TIMEOUT 120
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;ui;statistics;history;charts")
   add_executable(biglybtc-saved-history-plot-tests saved_history_plot_tests.cpp)
   set_target_properties(biglybtc-saved-history-plot-tests PROPERTIES AUTOMOC ON)
   target_link_libraries(biglybtc-saved-history-plot-tests PRIVATE biglybtc_ui Qt6::Test)

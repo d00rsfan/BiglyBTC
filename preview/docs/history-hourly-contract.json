@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "component": "statistics.saved_history_hourly",
+  "feature": "F21.saved_history_hourly",
+  "milestone": "P04-21",
+  "title": "Hourly saved payload traffic for seven UTC dates",
+  "status": "Source and behavior contract; actual qualification is recorded separately in the published milestone.",
+  "original_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_parent": "775f84222031c1f43ee96e76c53fff0a5ef1e225",
+  "location": "Statistics > Transfers > History > 7 days",
+  "control": {
+    "label": "Graph resolution",
+    "object_name": "saved-history-week-resolution",
+    "items": [
+      {
+        "index": 0,
+        "text": "Daily totals",
+        "default": true,
+        "buckets": 7
+      },
+      {
+        "index": 1,
+        "text": "Hourly values",
+        "buckets": 168
+      }
+    ],
+    "lifetime": "Retained until the view is destroyed; no configuration write."
+  },
+  "data": {
+    "dates": "The seven selected UTC dates, oldest to newest; independent of the current clock.",
+    "hourly_order": "First selected date at 00:00 through last selected date at 23:00, exactly 168 fixed buckets.",
+    "downloaded_index": 3,
+    "uploaded_index": 1,
+    "source": "Each accepted saved day supplies its optional hourly counters directly; no re-read or division of a daily total.",
+    "units": "Signed 64-bit byte counts, including negative corrections; never bytes/s.",
+    "unknown": "A missing day, empty day, header-only day, or absent hour is a gap, not zero.",
+    "zero": "An observed zero is a real point.",
+    "ownership": "Bounded scalar copies do not retain mutable source aliases.",
+    "validation": "An invalid requested seven-day range has no new frame; any mismatched supplied row or snapshot date produces a correctly labelled all-unknown frame."
+  },
+  "rendering": {
+    "plot_object_name": "saved-history-week-chart",
+    "connections": "Only adjacent known buckets connect, including across UTC midnight; unknown hours break both traces.",
+    "isolated": "An isolated known value has a visible marker.",
+    "signed_range": "Y range includes zero and both payload directions. Coordinates remain finite across the full int64 domain; no signed integer subtraction or absolute-value overflow.",
+    "ticks": "Sparse UTC date/hour labels at midnight and the final hour when space permits. Exact bucket identity remains available in tooltips and copied facts.",
+    "tooltip": "Nearest bucket; literal plain-text UTC date and hour plus exact signed payload values or Unknown.",
+    "legend": "Payload download and upload have distinct colors and line styles.",
+    "size": "Existing bounded 180\u2013260 logical pixel plot height; narrow views preserve all facts."
+  },
+  "unchanged": {
+    "daily_view": "Existing Daily chart, date controls and hourly table remain unchanged.",
+    "seven_day_table": "Exactly seven rows and eight columns, including all six saved counters and state, for either chart resolution. No weekly sum.",
+    "workers_accounting": "No parser, adapter, worker, DTO, fixture or accounting change.",
+    "default": "Daily remains the default History tab and Daily totals remains the default seven-day resolution."
+  },
+  "lifecycle": {
+    "rendering_only": "Changing resolution makes no read request or session/request/date mutation and does not notify or reset the unchanged table model.",
+    "pending_and_error": "Pending, failed, missing-day and profile/date reset states clear known values in the selected resolution.",
+    "hidden": "Hidden/minimized resolution changes retain accepted packets but defer chart facts, tooltips and table mutation until visible.",
+    "stale": "Existing nonzero session/request/date admission is unchanged.",
+    "reentry": "Nested mode changes or a newer result win; older work stops after a plot callback. Direct owner deletion is guarded.",
+    "excluded": [
+      "new IO",
+      "timer",
+      "sampling",
+      "animation",
+      "smoothing",
+      "weekly aggregate",
+      "new storage or network owner",
+      "writer"
+    ],
+    "render_delivery": "A resolution selection invalidates older work immediately; its GUI rendering is delivered after the selection control finishes changing. No read is requested."
+  },
+  "original_source_reference": {
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+    "symbols": [
+      "createHistoryPanel",
+      "refreshHistory"
+    ],
+    "counter_constants": "core/src/com/biglybt/core/stats/transfer/LongTermStats.java",
+    "difference": "Original rolling History uses current-clock period queries, pixel merging and integer display scaling. This selectable fixed saved UTC projection adds no original graph/UI runtime parity."
+  },
+  "equality_scope": {
+    "new_java_runtime_execution": false,
+    "new_hourly_graph_java_equality_credit": 0,
+    "retained_scalar_comparisons": {
+      "daily": 2550,
+      "independent_seven_day_members": 3150
+    },
+    "retained_expected_tsv_sha256": {
+      "daily": "72ef5198898fef0a1fa7ea5221751b1d6ddbde674ce0be83e75f38586a096bbc",
+      "seven_day_members": "ad9e2da44b29dcb6e9b4baaf76022a573fd0fd546d7f6de97a54eac33d457975"
+    },
+    "limits": "Retained corpus checks compare saved numeric totals only; no new presence/error/current-clock/live-writer/global-owner/UI equality is claimed."
+  },
+  "broader_gates_open": [
+    "Original rolling-history graph parity",
+    "Whole-period totals",
+    "Live history writer/global owner",
+    "Atomic storage snapshots",
+    "Seamless original-profile switching",
+    "Full client/plugins",
+    "Performance or release qualification"
+  ]
+}

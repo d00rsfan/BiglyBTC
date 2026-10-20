@@ -3,6 +3,7 @@
 #include "saved_history_plot.hpp"
 
 #include <QAbstractTableModel>
+#include <QComboBox>
 #include <QDateEdit>
 #include <QDateTime>
 #include <QEvent>
@@ -109,7 +110,12 @@ HistoryWeekView::HistoryWeekView(QWidget* parent) : QWidget(parent) {
   date_->setObjectName(QStringLiteral("saved-history-week-date")); date_->setAccessibleName(tr("Last UTC date of seven days"));
   auto* reload = new QPushButton(tr("Refresh 7 days"), this); reload->setObjectName(QStringLiteral("saved-history-week-refresh"));
   controls->addWidget(previous_); controls->addWidget(label(tr("Ending:"), QStringLiteral("saved-history-week-date-title"), this));
-  controls->addWidget(date_); controls->addWidget(next_); controls->addStretch(); controls->addWidget(reload); layout->addLayout(controls);
+  resolution_ = new QComboBox(this); resolution_->setObjectName(QStringLiteral("saved-history-week-resolution"));
+  resolution_->setAccessibleName(tr("Graph resolution")); resolution_->addItem(tr("Daily totals")); resolution_->addItem(tr("Hourly values"));
+  auto* resolutionTitle = label(tr("Graph resolution:"), QStringLiteral("saved-history-week-resolution-title"), this);
+  resolutionTitle->setBuddy(resolution_);
+  controls->addWidget(date_); controls->addWidget(next_); controls->addWidget(resolutionTitle); controls->addWidget(resolution_);
+  controls->addStretch(); controls->addWidget(reload); layout->addLayout(controls);
   range_ = label({}, QStringLiteral("saved-history-week-range"), this); layout->addWidget(range_);
   status_ = label(tr("No saved days have been loaded"), QStringLiteral("saved-history-week-status"), this); layout->addWidget(status_);
   plot_ = new SavedHistoryPlot(this); plot_->setObjectName(QStringLiteral("saved-history-week-chart"));
@@ -129,6 +135,9 @@ HistoryWeekView::HistoryWeekView(QWidget* parent) : QWidget(parent) {
   connect(next_, &QPushButton::clicked, this, [this] { date_->setDate(date_->date().addDays(7)); });
   connect(date_, &QDateEdit::dateChanged, this, [this] { dateChanged(); });
   connect(reload, &QPushButton::clicked, this, [this] { requestRead(); });
+  connect(resolution_, &QComboBox::currentIndexChanged, this, [this] {
+    if (advance()) { QMetaObject::invokeMethod(this, &HistoryWeekView::refresh, Qt::QueuedConnection); }
+  });
 }
 core::HistoryDate HistoryWeekView::selectedDate() const { return savedDate(date_->date()); }
 bool HistoryWeekView::advance() {
@@ -201,7 +210,9 @@ void HistoryWeekView::refresh() {
   if (!current()) { return; } previous_->setEnabled(date_->date().addDays(-7) >= date_->minimumDate());
   if (!current()) { return; } next_->setEnabled(date_->date().addDays(7) <= date_->maximumDate());
   if (!current()) { return; }
-  plot_->setWeek(selectedDate(), frame_ && frame_->state == HistoryWeekReadState::Ready ? frame_->snapshot : nullptr);
+  const auto source = frame_ && frame_->state == HistoryWeekReadState::Ready ? frame_->snapshot : nullptr;
+  if (resolution_->currentIndex() == 1) { plot_->setWeekHourly(selectedDate(), source); }
+  else { plot_->setWeek(selectedDate(), source); }
   if (!current()) { return; } model_->setBinding(frame_, selectedDate(), loading_);
   if (current()) { dirty_ = false; }
 }

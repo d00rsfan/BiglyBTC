@@ -20,6 +20,9 @@ QString amount(std::optional<std::int64_t> value) {
   return value ? QObject::tr("%1 bytes").arg(*value) : QObject::tr("Unknown");
 }
 QString description(const SavedHistoryPlotFrame& frame) {
+  if (frame.mode() == SavedHistoryPlotMode::WeekHourly) {
+    return QObject::tr("Saved hourly payload traffic in bytes, seven independent UTC days ending %1").arg(dateText(frame.endingDate()));
+  }
   return frame.mode() == SavedHistoryPlotMode::Day
       ? QObject::tr("Saved hourly payload traffic in bytes for %1 UTC").arg(dateText(frame.endingDate()))
       : QObject::tr("Saved daily payload traffic in bytes, seven independent UTC days ending %1").arg(dateText(frame.endingDate()));
@@ -78,6 +81,29 @@ SavedHistoryPlotPresentation savedHistoryWeekPlot(core::HistoryDate end,
   frame->finish(); return frame;
 }
 
+SavedHistoryPlotPresentation savedHistoryWeekHourlyPlot(core::HistoryDate end,
+    std::shared_ptr<const core::SavedHistoryWeek> source) {
+  const auto dates = core::savedHistoryWeekDates(end); if (!dates) { return {}; }
+  bool matching = source && source->endingDate == end;
+  if (matching) {
+    for (std::size_t i = 0; i < dates->size(); ++i) {
+      const auto& row = source->days[i];
+      if (row.date != (*dates)[i] || (row.snapshot && row.snapshot->date != row.date)) { matching = false; break; }
+    }
+  }
+  auto frame = std::shared_ptr<SavedHistoryPlotFrame>(new SavedHistoryPlotFrame(SavedHistoryPlotMode::WeekHourly, end, 168));
+  for (std::size_t day = 0; day < dates->size(); ++day) {
+    for (unsigned hour = 0; hour < 24; ++hour) {
+      auto& bucket = frame->buckets_[day * 24 + hour]; bucket.date = (*dates)[day]; bucket.hour = hour;
+      if (matching && source->days[day].snapshot && source->days[day].snapshot->hours[hour]) {
+        bucket.downloaded = (*source->days[day].snapshot->hours[hour])[3];
+        bucket.uploaded = (*source->days[day].snapshot->hours[hour])[1];
+      }
+    }
+  }
+  frame->finish(); return frame;
+}
+
 QString SavedHistoryPlotFrame::bucketLabel(std::size_t index) const {
   if (index >= count_) { return {}; }
   const auto& bucket = buckets_[index];
@@ -125,6 +151,12 @@ void SavedHistoryPlot::setWeek(core::HistoryDate end, std::shared_ptr<const core
   auto next = savedHistoryWeekPlot(end, std::move(source));
   if (guard && guard->frame_ == before && next) { guard->replace(std::move(next)); }
 }
+void SavedHistoryPlot::setWeekHourly(core::HistoryDate end, std::shared_ptr<const core::SavedHistoryWeek> source) {
+  QPointer<SavedHistoryPlot> guard(this); const auto before = frame_;
+  auto next = savedHistoryWeekHourlyPlot(end, std::move(source));
+  if (guard && guard->frame_ == before && next) { guard->replace(std::move(next)); }
+}
+
 void SavedHistoryPlot::replace(SavedHistoryPlotPresentation next) {
   QPointer<SavedHistoryPlot> guard(this);
   const auto name = description(*next), tip = summary(*next);
@@ -222,7 +254,12 @@ void SavedHistoryPlot::paintEvent(QPaintEvent*) {
   painter.setPen(palette().text().color()); qreal previousRight = -1;
   for (std::size_t i = 0; i < frame->buckets().size(); ++i) {
     const auto& bucket = frame->buckets()[i];
-    const auto label = bucket.hour ? QStringLiteral("%1:00").arg(*bucket.hour, 2, 10, QLatin1Char('0'))
+    const bool hourlyWeek = frame->mode() == SavedHistoryPlotMode::WeekHourly;
+    if (hourlyWeek && bucket.hour != 0 && i + 1 != frame->buckets().size()) { continue; }
+    const auto label = hourlyWeek
+        ? QStringLiteral("%1-%2 %3:00").arg(bucket.date.month, 2, 10, QLatin1Char('0'))
+            .arg(bucket.date.day, 2, 10, QLatin1Char('0')).arg(*bucket.hour, 2, 10, QLatin1Char('0'))
+        : bucket.hour ? QStringLiteral("%1:00").arg(*bucket.hour, 2, 10, QLatin1Char('0'))
         : QStringLiteral("%1-%2").arg(bucket.date.month, 2, 10, QLatin1Char('0')).arg(bucket.date.day, 2, 10, QLatin1Char('0'));
     const auto x = area.left() + area.width() * (static_cast<qreal>(i) / static_cast<qreal>(frame->buckets().size() - 1));
     const qreal labelWidth = metrics.horizontalAdvance(label);

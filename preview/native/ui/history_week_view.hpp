@@ -7,6 +7,7 @@
 
 #include <optional>
 
+class QComboBox;
 class QDateEdit;
 class QLabel;
 class QPushButton;
@@ -43,6 +44,7 @@ private:
   void dateChanged();
   void observeWindow();
   QDateEdit* date_ = nullptr;
+  QComboBox* resolution_ = nullptr;
   QPushButton* previous_ = nullptr;
   QPushButton* next_ = nullptr;
   QLabel* status_ = nullptr;

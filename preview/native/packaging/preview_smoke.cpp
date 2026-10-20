@@ -5,6 +5,7 @@
 
 #include <QAction>
 #include <QApplication>
+#include <QComboBox>
 #include <QDir>
 #include <QDateEdit>
 #include <QFile>
@@ -589,6 +590,28 @@ private slots:
     }
     QVERIFY(plotted->buckets()[3].downloaded == std::int64_t{-2048}); QVERIFY(plotted->buckets()[5].downloaded == std::int64_t{0});
     const auto capture = qEnvironmentVariable("BIGLYBTC_PREVIEW_CAPTURE");
+    auto* resolution = page->findChild<QComboBox*>(QStringLiteral("saved-history-week-resolution")); QVERIFY(resolution);
+    QCOMPARE(resolution->currentIndex(), 0); QCOMPARE(reads.count(), 1);
+    resolution->setCurrentIndex(1);
+    QTRY_COMPARE_WITH_TIMEOUT(plot->presentation()->mode(), ui::SavedHistoryPlotMode::WeekHourly, 1000);
+    const auto hourly = plot->presentation(); QVERIFY(hourly); QCOMPARE(hourly->mode(), ui::SavedHistoryPlotMode::WeekHourly);
+    QCOMPARE(hourly->buckets().size(), std::size_t{168});
+    for (std::size_t i = 0; i < 168; ++i) {
+      const auto& bucket = hourly->buckets()[i]; const auto& day = packet->snapshot->days[i / 24];
+      QVERIFY(bucket.date == day.date); QVERIFY(bucket.hour == i % 24);
+      const auto hour = day.snapshot ? day.snapshot->hours[i % 24] : std::nullopt;
+      QCOMPARE(bucket.downloaded.has_value(), hour.has_value()); QCOMPARE(bucket.uploaded.has_value(), hour.has_value());
+      if (hour) { QCOMPARE(*bucket.downloaded, (*hour)[3]); QCOMPARE(*bucket.uploaded, (*hour)[1]); }
+    }
+    QVERIFY(page->historyWeekPresentation() == packet); QCOMPARE(reads.count(), 1);
+    QCOMPARE(table->model()->rowCount(), 7); QCOMPARE(table->model()->columnCount(), 8);
+    if (!capture.isEmpty()) {
+      const auto path = root.filePath(QStringLiteral("statistics-history-week-hourly-preview.png")); QVERIFY(!QFileInfo::exists(path)); QVERIFY(window.grab().save(path));
+    }
+    resolution->setCurrentIndex(0); QTRY_COMPARE_WITH_TIMEOUT(plot->presentation()->mode(), ui::SavedHistoryPlotMode::Week, 1000);
+    QCOMPARE(plotted->buckets().size(), std::size_t{7}); QVERIFY(plotted->buckets()[3].downloaded == std::int64_t{-2048});
+    QVERIFY(page->historyWeekPresentation() == packet); QCOMPARE(reads.count(), 1);
+
     if (!capture.isEmpty()) {
       const auto path = root.filePath(QStringLiteral("statistics-history-week-preview.png")); QVERIFY(!QFileInfo::exists(path)); QVERIFY(window.grab().save(path));
     }
@@ -599,6 +622,16 @@ private slots:
     QVERIFY(plot->presentation());
     for (const auto& bucket : plot->presentation()->buckets()) { QVERIFY(!bucket.downloaded); QVERIFY(!bucket.uploaded); }
     QVERIFY(plot->presentation() != plotted); QVERIFY(plotted->buckets()[3].downloaded == std::int64_t{-2048});
+    resolution->setCurrentIndex(1);
+    QTRY_COMPARE_WITH_TIMEOUT(plot->presentation()->mode(), ui::SavedHistoryPlotMode::WeekHourly, 1000);
+    QVERIFY(plot->presentation()); QCOMPARE(plot->presentation()->mode(), ui::SavedHistoryPlotMode::WeekHourly);
+    QCOMPARE(plot->presentation()->buckets().size(), std::size_t{168});
+    for (const auto& bucket : plot->presentation()->buckets()) { QVERIFY(!bucket.downloaded); QVERIFY(!bucket.uploaded); }
+    QCOMPARE(reads.count(), 2); QCOMPARE(table->model()->rowCount(), 7); QCOMPARE(table->model()->columnCount(), 8);
+    if (!capture.isEmpty()) {
+      const auto path = root.filePath(QStringLiteral("statistics-history-week-hourly-missing-preview.png")); QVERIFY(!QFileInfo::exists(path)); QVERIFY(window.grab().save(path));
+    }
+    resolution->setCurrentIndex(0); QTRY_COMPARE_WITH_TIMEOUT(plot->presentation()->mode(), ui::SavedHistoryPlotMode::Week, 1000);
     if (!capture.isEmpty()) {
       const auto path = root.filePath(QStringLiteral("statistics-history-week-missing-preview.png")); QVERIFY(!QFileInfo::exists(path)); QVERIFY(window.grab().save(path));
     }

@@ -17,7 +17,7 @@ class QPaintEvent;
 
 namespace biglybtc::ui {
 
-enum class SavedHistoryPlotMode { Day, Week };
+enum class SavedHistoryPlotMode { Day, Week, WeekHourly };
 struct SavedHistoryPlotBucket {
   core::HistoryDate date;
   std::optional<unsigned> hour;
@@ -29,10 +29,12 @@ using SavedHistoryPlotPresentation = std::shared_ptr<const SavedHistoryPlotFrame
 
 // Bounded owned scalar projection only: no sums/rates, IO or Java equality.
 // Invalid requested date/range returns null. A null or date-mismatched source
-// gives24/7 unknown buckets. Facts never retain a caller's mutable DTO alias.
+// gives24/7/168 unknown buckets. Facts never retain a caller's mutable DTO alias.
 SavedHistoryPlotPresentation savedHistoryDayPlot(
     core::HistoryDate, std::shared_ptr<const core::SavedHistoryDay>);
 SavedHistoryPlotPresentation savedHistoryWeekPlot(
+    core::HistoryDate endingDate, std::shared_ptr<const core::SavedHistoryWeek>);
+SavedHistoryPlotPresentation savedHistoryWeekHourlyPlot(
     core::HistoryDate endingDate, std::shared_ptr<const core::SavedHistoryWeek>);
 
 class SavedHistoryPlotFrame final {
@@ -52,11 +54,13 @@ private:
       core::HistoryDate, std::shared_ptr<const core::SavedHistoryDay>);
   friend SavedHistoryPlotPresentation savedHistoryWeekPlot(
       core::HistoryDate, std::shared_ptr<const core::SavedHistoryWeek>);
+  friend SavedHistoryPlotPresentation savedHistoryWeekHourlyPlot(
+      core::HistoryDate, std::shared_ptr<const core::SavedHistoryWeek>);
   SavedHistoryPlotFrame(SavedHistoryPlotMode, core::HistoryDate, std::size_t);
   void finish() noexcept;
   SavedHistoryPlotMode mode_;
   core::HistoryDate endingDate_;
-  std::array<SavedHistoryPlotBucket, 24> buckets_{};
+  std::array<SavedHistoryPlotBucket, 168> buckets_{};
   std::size_t count_;
   std::int64_t minimum_ = 0, maximum_ = 0;
 };
@@ -70,6 +74,7 @@ public:
   explicit SavedHistoryPlot(QWidget* parent = nullptr);
   void setDay(core::HistoryDate, std::shared_ptr<const core::SavedHistoryDay>);
   void setWeek(core::HistoryDate endingDate, std::shared_ptr<const core::SavedHistoryWeek>);
+  void setWeekHourly(core::HistoryDate endingDate, std::shared_ptr<const core::SavedHistoryWeek>);
   SavedHistoryPlotPresentation presentation() const noexcept { return frame_; }
   QRectF plotRect() const;
   QSize sizeHint() const override;

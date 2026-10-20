@@ -212,3 +212,13 @@ bucket for its UTC label and exact byte values. The existing date navigation and
 Refresh/F5 update the selected chart and table together. These fixed saved UTC
 charts do not add rolling queries, history recording or a combined weekly total.
 See [chart contract](docs/history-charts-contract.json).
+
+
+In Statistics (Ctrl+5), open Transfers → History → 7 days and choose Graph
+resolution: Hourly values for 168 UTC hourly buckets across the selected seven
+dates. Daily totals remains the default and the seven-row daily table stays
+visible in both modes. Switching resolution uses the already loaded records and
+does not reread files. Hover a bucket for the full UTC date, hour and signed byte
+values. Missing observations leave gaps; recorded zero stays visible.
+These selected UTC dates differ from the original rolling current-clock query.
+See [hourly resolution contract](docs/history-hourly-contract.json).
