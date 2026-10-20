@@ -478,13 +478,15 @@ private slots:
     QVERIFY(window.filesModel().target() == target);
     QTest::keyClick(&window.filter(), Qt::Key_5, Qt::ControlModifier);
     QCOMPARE(window.statisticsPage(), page); QCOMPARE(page->tabs().currentIndex(), 1); QCOMPARE(reads.count(), 1);
+    const auto expectedNavigation = page->navigation(); QVERIFY(expectedNavigation); QCOMPARE(expectedNavigation->section, 1);
     QPointer<ui::StatisticsPage> old(page);
     QTest::keyClick(&page->tabs(), Qt::Key_W, Qt::ControlModifier); QVERIFY(!window.statisticsPage());
     QCOMPARE(cancels.count(), 0);
     QTest::keyClick(&window.filter(), Qt::Key_5, Qt::ControlModifier);
     QTRY_VERIFY_WITH_TIMEOUT(window.statisticsPage() && window.statisticsPage()->readState() == ui::StatisticsReadState::Ready
         && reads.count() == 2 && !bridge.busy(), 30000);
-    QCOMPARE(window.statisticsPage()->tabs().currentIndex(), 0); QTRY_VERIFY(old.isNull());
+    QCOMPARE(window.statisticsPage()->tabs().currentIndex(), expectedNavigation->section); QTRY_VERIFY(old.isNull());
+    QCOMPARE(window.statisticsPage()->navigation(), expectedNavigation);
     QCOMPARE(window.statisticsPage()->sampleCount(), std::size_t{0});
     QCOMPARE(snapshots.count(), 1); QCOMPARE(details.count(), detailCount); QCOMPARE(bytes(path), saved);
     QCOMPARE(bytes(profile + QStringLiteral("/tables.config")), tables);
