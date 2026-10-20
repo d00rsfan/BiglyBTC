@@ -1,10 +1,14 @@
 #include "saved_history_plot.hpp"
 
+#include <QAction>
+#include <QClipboard>
 #include <QEvent>
+#include <QGuiApplication>
 #include <QFontMetrics>
 #include <QFocusEvent>
 #include <QHelpEvent>
 #include <QKeyEvent>
+#include <QKeySequence>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPointer>
@@ -176,6 +180,29 @@ SavedHistoryPlot::SavedHistoryPlot(QWidget* parent) : QWidget(parent) {
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
   setFocusPolicy(Qt::StrongFocus);
   setAccessibleName(tr("Saved payload traffic in bytes"));
+  auto* copyAction = new QAction(tr("Copy selected values"), this);
+  copyAction->setObjectName(QStringLiteral("saved-history-copy-selection"));
+  copyAction->setShortcut(QKeySequence::Copy);
+  copyAction->setShortcutContext(Qt::WidgetShortcut);
+  copyAction->setEnabled(false);
+  connect(copyAction, &QAction::triggered, this, [this] {
+    QPointer<SavedHistoryPlot> guard(this); const auto frame = frame_;
+    const auto revision = interactionRevision_; const auto selection = selectedBucket_;
+    if (!frame || !selection || *selection >= frame->buckets().size()) { return; }
+    const auto text = frame->bucketToolTip(*selection);
+    const auto current = [&] {
+      return guard && guard->frame_ == frame && guard->interactionRevision_ == revision
+          && guard->selectedBucket_ == selection;
+    };
+    if (!current()) { return; }
+    QPointer<QClipboard> clipboard(QGuiApplication::clipboard());
+    if (!clipboard || !current()) { return; }
+    // Clipboard notifications may replace data, inspect another bucket, copy
+    // again or delete this plot. Do no receiver work after publication.
+    clipboard->setText(text, QClipboard::Clipboard);
+  });
+  setContextMenuPolicy(Qt::ActionsContextMenu);
+  addAction(copyAction);
 }
 QSize SavedHistoryPlot::sizeHint() const { return {640, 220}; }
 void SavedHistoryPlot::setDay(core::HistoryDate date, std::shared_ptr<const core::SavedHistoryDay> source, SavedHistoryTraffic traffic) {
@@ -213,6 +240,10 @@ void SavedHistoryPlot::replace(SavedHistoryPlotPresentation next) {
   guard->frame_ = next; guard->selectedBucket_.reset();
   const auto revision = guard->interactionRevision_;
   const auto current = [&] { return guard && guard->frame_ == next && guard->interactionRevision_ == revision; };
+  if (auto* copyAction = guard->findChild<QAction*>(QStringLiteral("saved-history-copy-selection"), Qt::FindDirectChildrenOnly)) {
+    copyAction->setEnabled(false);
+    if (!current()) { return; }
+  }
   guard->setAccessibleName(name);
   if (!current()) { return; }
   guard->setAccessibleDescription(explanation);
@@ -253,15 +284,25 @@ void SavedHistoryPlot::selectBucket(std::size_t index) {
   QPointer<SavedHistoryPlot> guard(this); const auto frame = frame_;
   const auto beforeRevision = interactionRevision_;
   if (!frame || index >= frame->buckets().size()) { return; }
-  const auto text = frame->bucketToolTip(index);
+  const auto name = description(*frame), text = frame->bucketToolTip(index);
   if (!guard || guard->frame_ != frame || guard->interactionRevision_ != beforeRevision
       || !guard->advanceInteraction()) { return; }
   guard->selectedBucket_ = index;
   const auto revision = guard->interactionRevision_;
   const auto current = [&] { return guard && guard->frame_ == frame && guard->interactionRevision_ == revision; };
   // Publish only after the key event is accepted and scalar state is committed.
-  // Each setter can synchronously dispatch a callback that replaces/deletes us
-  // or sends another key against this very same immutable frame.
+  // Action and property callbacks may replace/delete us or inspect another
+  // bucket against this very same immutable frame.
+  if (auto* copyAction = guard->findChild<QAction*>(QStringLiteral("saved-history-copy-selection"), Qt::FindDirectChildrenOnly)) {
+    copyAction->setEnabled(true);
+    if (!current()) { return; }
+  }
+  // A key reentered from replacement's action-state notification may precede
+  // that frame's name publication. Keep the canonical frame name current too.
+  if (guard->accessibleName() != name) {
+    guard->setAccessibleName(name);
+    if (!current()) { return; }
+  }
   guard->setToolTip(text);
   if (!current()) { return; }
   // Qt 6.12 emits DescriptionChanged here only when the text actually changes.

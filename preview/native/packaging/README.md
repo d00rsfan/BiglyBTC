@@ -83,3 +83,9 @@ reprojects accepted facts without another read; tables and payload summaries sta
 Tab to a saved History chart, then use Left/Right, Home or End to inspect exact
 UTC buckets, including unknown gaps. The focused cursor and caption show the
 selected traffic values. A new accepted chart clears the cursor; no read is added.
+
+Use the focused saved History chart's Copy shortcut (Ctrl+C on Linux), or its
+context menu **Copy selected values**, to copy the selected UTC bucket and exact
+traffic values, including Unknown. Selection enables the action; replacing the
+frame clears it. Hover and navigation do not copy. Only the normal Clipboard is
+written, with no new saved reads, file writes or configuration persistence.

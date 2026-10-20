@@ -329,6 +329,13 @@ if(BIGLYBTC_DESKTOP)
   add_test(NAME statistics-navigation-window-worker COMMAND biglybtc-statistics-navigation-window-tests)
   set_tests_properties(statistics-navigation-window-worker PROPERTIES TIMEOUT 120
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;ui;statistics;navigation")
+  add_executable(biglybtc-history-copy-tests history_copy_tests.cpp)
+  set_target_properties(biglybtc-history-copy-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-history-copy-tests PRIVATE biglybtc_ui Qt6::Test)
+  target_compile_options(biglybtc-history-copy-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME saved-history-copy COMMAND biglybtc-history-copy-tests)
+  set_tests_properties(saved-history-copy PROPERTIES TIMEOUT 120
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;ui;statistics;history;charts;clipboard")
   add_executable(biglybtc-history-keyboard-tests history_keyboard_tests.cpp)
   set_target_properties(biglybtc-history-keyboard-tests PROPERTIES AUTOMOC ON)
   target_link_libraries(biglybtc-history-keyboard-tests PRIVATE biglybtc_ui Qt6::Test)
