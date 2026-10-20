@@ -104,6 +104,7 @@ jobs:
           cp -- "$preview_root/statistics-navigation-new-session-preview.png" "$EVIDENCE_DIR/statistics-navigation-new-session-preview.png"
           cp -- "$preview_root/statistics-history-protocol-preview.png" "$EVIDENCE_DIR/statistics-history-protocol-preview.png"
           cp -- "$preview_root/statistics-history-dht-preview.png" "$EVIDENCE_DIR/statistics-history-dht-preview.png"
+          cp -- "$preview_root/statistics-history-keyboard-preview.png" "$EVIDENCE_DIR/statistics-history-keyboard-preview.png"
       - name: Preserve test, screenshot and dependency evidence
         if: always()
         uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

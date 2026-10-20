@@ -9,10 +9,14 @@
 #include <QWidget>
 
 #include <array>
+#include <cstdint>
 #include <memory>
+#include <optional>
 #include <span>
 
 class QEvent;
+class QFocusEvent;
+class QKeyEvent;
 class QMouseEvent;
 class QPaintEvent;
 
@@ -73,7 +77,9 @@ private:
 
 // GUI-thread only. No source ownership outside the copied immutable facts, no
 // timers or signals. Setters preserve a nested newer frame and guard synchronous
-// tooltip/accessibility event callbacks that delete this widget.
+// tooltip/accessibility event callbacks that delete this widget. Keyboard
+// inspection is local scalar state, including unknown buckets; mouse hover does
+// not move it. Focus loss hides the guide but retains the selected bucket.
 class SavedHistoryPlot final : public QWidget {
   Q_OBJECT
 public:
@@ -82,16 +88,27 @@ public:
   void setWeek(core::HistoryDate endingDate, std::shared_ptr<const core::SavedHistoryWeek>, SavedHistoryTraffic traffic = SavedHistoryTraffic::Payload);
   void setWeekHourly(core::HistoryDate endingDate, std::shared_ptr<const core::SavedHistoryWeek>, SavedHistoryTraffic traffic = SavedHistoryTraffic::Payload);
   SavedHistoryPlotPresentation presentation() const noexcept { return frame_; }
+  std::optional<std::size_t> selectedBucket() const noexcept { return selectedBucket_; }
+  // A selected caption reserves 24 additional bottom pixels. Without selection
+  // this is the unchanged chart rectangle used before keyboard inspection.
   QRectF plotRect() const;
   QSize sizeHint() const override;
 protected:
   void paintEvent(QPaintEvent*) override;
   void mouseMoveEvent(QMouseEvent*) override;
+  void keyPressEvent(QKeyEvent*) override;
+  void focusInEvent(QFocusEvent*) override;
+  void focusOutEvent(QFocusEvent*) override;
   bool event(QEvent*) override;
 private:
   void replace(SavedHistoryPlotPresentation);
   bool bucketToolTip(qreal x);
+  void selectBucket(std::size_t);
+  // Never reuse a token: exhaustion rejects a new frame/key mutation.
+  bool advanceInteraction() noexcept;
   SavedHistoryPlotPresentation frame_;
+  std::optional<std::size_t> selectedBucket_;
+  std::uint64_t interactionRevision_ = 0;
 };
 
 } // namespace biglybtc::ui

@@ -79,3 +79,7 @@ verifier remains pending; no automatic executable plugin download is active.
 History chart Traffic selects Payload, Protocol or DHT for the existing saved UTC
 buckets. Each chart keeps its own choice on same-session reopening. Switching
 reprojects accepted facts without another read; tables and payload summaries stay unchanged.
+
+Tab to a saved History chart, then use Left/Right, Home or End to inspect exact
+UTC buckets, including unknown gaps. The focused cursor and caption show the
+selected traffic values. A new accepted chart clears the cursor; no read is added.

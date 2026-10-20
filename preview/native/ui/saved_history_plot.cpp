@@ -2,13 +2,18 @@
 
 #include <QEvent>
 #include <QFontMetrics>
+#include <QFocusEvent>
 #include <QHelpEvent>
+#include <QKeyEvent>
 #include <QMouseEvent>
 #include <QPainter>
 #include <QPointer>
+#include <QStyle>
+#include <QStyleOptionFocusRect>
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 namespace biglybtc::ui {
 namespace {
@@ -169,36 +174,48 @@ std::optional<QPointF> SavedHistoryPlotFrame::point(std::size_t index, bool uplo
 SavedHistoryPlot::SavedHistoryPlot(QWidget* parent) : QWidget(parent) {
   setMouseTracking(true); setMinimumHeight(180); setMaximumHeight(260);
   setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
+  setFocusPolicy(Qt::StrongFocus);
   setAccessibleName(tr("Saved payload traffic in bytes"));
 }
 QSize SavedHistoryPlot::sizeHint() const { return {640, 220}; }
 void SavedHistoryPlot::setDay(core::HistoryDate date, std::shared_ptr<const core::SavedHistoryDay> source, SavedHistoryTraffic traffic) {
   QPointer<SavedHistoryPlot> guard(this); const auto before = frame_;
+  const auto revision = interactionRevision_;
   auto next = savedHistoryDayPlot(date, std::move(source), traffic);
-  if (guard && guard->frame_ == before && next) { guard->replace(std::move(next)); }
+  if (guard && guard->frame_ == before && guard->interactionRevision_ == revision && next) { guard->replace(std::move(next)); }
 }
 void SavedHistoryPlot::setWeek(core::HistoryDate end, std::shared_ptr<const core::SavedHistoryWeek> source, SavedHistoryTraffic traffic) {
   QPointer<SavedHistoryPlot> guard(this); const auto before = frame_;
+  const auto revision = interactionRevision_;
   auto next = savedHistoryWeekPlot(end, std::move(source), traffic);
-  if (guard && guard->frame_ == before && next) { guard->replace(std::move(next)); }
+  if (guard && guard->frame_ == before && guard->interactionRevision_ == revision && next) { guard->replace(std::move(next)); }
 }
 void SavedHistoryPlot::setWeekHourly(core::HistoryDate end, std::shared_ptr<const core::SavedHistoryWeek> source, SavedHistoryTraffic traffic) {
   QPointer<SavedHistoryPlot> guard(this); const auto before = frame_;
+  const auto revision = interactionRevision_;
   auto next = savedHistoryWeekHourlyPlot(end, std::move(source), traffic);
-  if (guard && guard->frame_ == before && next) { guard->replace(std::move(next)); }
+  if (guard && guard->frame_ == before && guard->interactionRevision_ == revision && next) { guard->replace(std::move(next)); }
 }
 
+bool SavedHistoryPlot::advanceInteraction() noexcept {
+  if (interactionRevision_ == std::numeric_limits<std::uint64_t>::max()) { return false; }
+  ++interactionRevision_;
+  return true;
+}
 void SavedHistoryPlot::replace(SavedHistoryPlotPresentation next) {
   QPointer<SavedHistoryPlot> guard(this);
+  const auto before = frame_; const auto beforeRevision = interactionRevision_;
   const auto name = description(*next), tip = summary(*next);
-  if (!guard) { return; }
-  frame_ = next;
-  const auto current = [&] { return guard && guard->frame_ == next; };
+  const auto names = seriesNames(next->traffic());
+  const auto explanation = tr("%1 uses a solid blue line. %2 uses a dashed orange line. Values are signed bytes; unknown buckets are not connected.").arg(names[0], names[1]);
+  if (!guard || guard->frame_ != before || guard->interactionRevision_ != beforeRevision
+      || !guard->advanceInteraction()) { return; }
+  guard->frame_ = next; guard->selectedBucket_.reset();
+  const auto revision = guard->interactionRevision_;
+  const auto current = [&] { return guard && guard->frame_ == next && guard->interactionRevision_ == revision; };
   guard->setAccessibleName(name);
   if (!current()) { return; }
-  const auto names = seriesNames(next->traffic());
-  if (!current()) { return; }
-  guard->setAccessibleDescription(tr("%1 uses a solid blue line. %2 uses a dashed orange line. Values are signed bytes; unknown buckets are not connected.").arg(names[0], names[1]));
+  guard->setAccessibleDescription(explanation);
   if (!current()) { return; }
   guard->setToolTip(tip);
   if (current()) { guard->update(); }
@@ -210,10 +227,11 @@ QRectF SavedHistoryPlot::plotRect() const {
   const int textWidth = std::max(metrics.horizontalAdvance(tr("%1 bytes").arg(minimum)),
       metrics.horizontalAdvance(tr("%1 bytes").arg(maximum)));
   const qreal left = std::min(static_cast<qreal>(textWidth + 12), std::max(qreal{20}, static_cast<qreal>(width()) * 0.36));
-  return QRectF(rect()).adjusted(left, 48, -12, -30);
+  return QRectF(rect()).adjusted(left, 48, -12, selectedBucket_ ? -54 : -30);
 }
 bool SavedHistoryPlot::bucketToolTip(qreal x) {
   QPointer<SavedHistoryPlot> guard(this); const auto frame = frame_;
+  const auto revision = interactionRevision_;
   QString tip = tr("No saved history selected");
   if (frame) {
     const auto area = plotRect(); std::size_t index = 0;
@@ -223,13 +241,62 @@ bool SavedHistoryPlot::bucketToolTip(qreal x) {
     }
     tip = frame->bucketToolTip(index);
   }
-  if (!guard || guard->frame_ != frame) { return false; }
+  if (!guard || guard->frame_ != frame || guard->interactionRevision_ != revision) { return false; }
   guard->setToolTip(tip);
-  return guard && guard->frame_ == frame;
+  return guard && guard->frame_ == frame && guard->interactionRevision_ == revision;
 }
 void SavedHistoryPlot::mouseMoveEvent(QMouseEvent* event) {
   QPointer<SavedHistoryPlot> guard(this);
   if (bucketToolTip(event->position().x()) && guard) { guard->QWidget::mouseMoveEvent(event); }
+}
+void SavedHistoryPlot::selectBucket(std::size_t index) {
+  QPointer<SavedHistoryPlot> guard(this); const auto frame = frame_;
+  const auto beforeRevision = interactionRevision_;
+  if (!frame || index >= frame->buckets().size()) { return; }
+  const auto text = frame->bucketToolTip(index);
+  if (!guard || guard->frame_ != frame || guard->interactionRevision_ != beforeRevision
+      || !guard->advanceInteraction()) { return; }
+  guard->selectedBucket_ = index;
+  const auto revision = guard->interactionRevision_;
+  const auto current = [&] { return guard && guard->frame_ == frame && guard->interactionRevision_ == revision; };
+  // Publish only after the key event is accepted and scalar state is committed.
+  // Each setter can synchronously dispatch a callback that replaces/deletes us
+  // or sends another key against this very same immutable frame.
+  guard->setToolTip(text);
+  if (!current()) { return; }
+  // Qt 6.12 emits DescriptionChanged here only when the text actually changes.
+  guard->setAccessibleDescription(text);
+  if (current()) { guard->update(); }
+}
+void SavedHistoryPlot::keyPressEvent(QKeyEvent* event) {
+  const bool navigation = event->key() == Qt::Key_Left || event->key() == Qt::Key_Right
+      || event->key() == Qt::Key_Home || event->key() == Qt::Key_End;
+  if (!navigation || event->modifiers() != Qt::NoModifier || !isVisible()
+      || window()->isMinimized() || !hasFocus() || !frame_) {
+    QWidget::keyPressEvent(event); return;
+  }
+  const auto last = frame_->buckets().size() - 1;
+  auto index = selectedBucket_.value_or(0);
+  if (event->key() == Qt::Key_Home) { index = 0; }
+  else if (event->key() == Qt::Key_End) { index = last; }
+  else if (selectedBucket_) {
+    if (event->key() == Qt::Key_Left && index > 0) { --index; }
+    else if (event->key() == Qt::Key_Right && index < last) { ++index; }
+  }
+  event->accept();
+  selectBucket(index);
+}
+void SavedHistoryPlot::focusInEvent(QFocusEvent* event) {
+  QPointer<SavedHistoryPlot> guard(this); const auto frame = frame_;
+  const auto revision = interactionRevision_;
+  QWidget::focusInEvent(event);
+  if (guard && guard->frame_ == frame && guard->interactionRevision_ == revision) { guard->update(); }
+}
+void SavedHistoryPlot::focusOutEvent(QFocusEvent* event) {
+  QPointer<SavedHistoryPlot> guard(this); const auto frame = frame_;
+  const auto revision = interactionRevision_;
+  QWidget::focusOutEvent(event);
+  if (guard && guard->frame_ == frame && guard->interactionRevision_ == revision) { guard->update(); }
 }
 bool SavedHistoryPlot::event(QEvent* event) {
   if (event->type() == QEvent::ToolTip) {
@@ -240,8 +307,20 @@ bool SavedHistoryPlot::event(QEvent* event) {
 }
 void SavedHistoryPlot::paintEvent(QPaintEvent*) {
   if (!isVisible() || window()->isMinimized()) { return; }
-  const auto frame = frame_; QPainter painter(this); painter.setRenderHint(QPainter::Antialiasing);
+  const auto frame = frame_; const auto selection = selectedBucket_; QPainter painter(this); painter.setRenderHint(QPainter::Antialiasing);
   painter.fillRect(rect(), palette().base()); const auto area = plotRect(); const auto metrics = painter.fontMetrics();
+  if (hasFocus()) {
+    QStyleOptionFocusRect focus; focus.initFrom(this);
+    focus.rect = rect().adjusted(1, 1, -2, -2); focus.backgroundColor = palette().base().color();
+    style()->drawPrimitive(QStyle::PE_FrameFocusRect, &focus, &painter, this);
+  }
+  if (frame && selection && *selection < frame->buckets().size()) {
+    auto caption = frame->bucketToolTip(*selection);
+    caption.replace(QLatin1Char('\n'), QStringLiteral("  |  "));
+    painter.setPen(palette().text().color());
+    painter.drawText(QRect(8, height() - 24, std::max(0, width() - 16), 24), Qt::AlignLeft | Qt::AlignVCenter,
+        metrics.elidedText(caption, Qt::ElideRight, std::max(0, width() - 16)));
+  }
   painter.setPen(palette().text().color());
   const auto title = frame ? description(*frame) : tr("No saved history selected");
   painter.drawText(QRect(8, 0, std::max(0, width() - 16), 22), Qt::AlignLeft | Qt::AlignVCenter,
@@ -281,6 +360,20 @@ void SavedHistoryPlot::paintEvent(QPaintEvent*) {
         if (i > 0) { if (const auto previous = frame->point(i - 1, series == 1, area)) { painter.drawLine(*previous, *point); } }
         painter.drawEllipse(*point, 2.5, 2.5);
       }
+    }
+    painter.restore();
+  }
+  if (hasFocus() && selection && *selection < frame->buckets().size()) {
+    // X exists even for an unknown bucket. Unknown values deliberately have no
+    // Y coordinate or point outline, and the series above still keep gaps.
+    const auto x = area.left() + area.width() * (static_cast<qreal>(*selection)
+        / static_cast<qreal>(frame->buckets().size() - 1));
+    painter.save(); painter.setClipRect(area.adjusted(-6, -6, 6, 6));
+    painter.setPen(QPen(palette().highlight().color(), 1.0, Qt::DashLine));
+    painter.drawLine(QPointF{x, area.top()}, QPointF{x, area.bottom()});
+    painter.setPen(QPen(palette().highlight().color(), 1.5)); painter.setBrush(Qt::NoBrush);
+    for (const bool uploaded : {false, true}) {
+      if (const auto point = frame->point(*selection, uploaded, area)) { painter.drawEllipse(*point, 5.0, 5.0); }
     }
     painter.restore();
   }

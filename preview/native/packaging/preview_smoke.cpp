@@ -784,6 +784,138 @@ private slots:
     QVERIFY(QDir(root.filePath(QStringLiteral("payload"))).entryList(QDir::AllEntries | QDir::NoDotAndDotDot).isEmpty());
   }
 
+  void savedHistoryKeyboardInspectsRealBucketsWithoutExtraReads() {
+    const auto profile = qEnvironmentVariable("BIGLYBTC_PREVIEW_PROFILE");
+    const QDir root(QFileInfo(profile).absolutePath());
+    QCOMPARE(QFileInfo(root.absolutePath()).absolutePath(), QStringLiteral("/tmp"));
+    QVERIFY(root.dirName().startsWith(QStringLiteral("biglybtc-preview-")));
+    const QDate ending(2024, 1, 2);
+    std::array<QString, 12> paths{
+        profile + QStringLiteral("/downloads.config"),
+        profile + QStringLiteral("/BiglyBT.statistics"),
+        profile + QStringLiteral("/tables.config"),
+        profile + QStringLiteral("/tracker.config"),
+        profile + QStringLiteral("/sharing.config")};
+    for (int offset = 0; offset < 7; ++offset) {
+      paths[5 + static_cast<std::size_t>(offset)] = profile
+          + ending.addDays(-offset).toString(QStringLiteral("'/stats/'yyyy/MM/dd'.dat'"));
+    }
+    QMap<QString, bool> present; QMap<QString, QByteArray> original;
+    for (const auto& path : paths) {
+      const bool exists = QFileInfo::exists(path); present.insert(path, exists);
+      if (exists) {
+        QFile file(path); QVERIFY(file.open(QIODevice::ReadOnly));
+        original.insert(path, file.readAll()); QCOMPARE(file.error(), QFileDevice::NoError);
+      }
+    }
+    QVERIFY(!original.value(profile + QStringLiteral("/downloads.config")).isEmpty());
+    QVERIFY(!original.value(profile + QStringLiteral("/stats/2024/01/02.dat")).isEmpty());
+    QVERIFY(QDir(root.filePath(QStringLiteral("payload"))).entryList(QDir::AllEntries | QDir::NoDotAndDotDot).isEmpty());
+
+    ui::LibraryWindow window; app::SessionBridge bridge; wire(window, bridge);
+    window.setOfflinePreview(true); window.resize(1280, 900); window.show(); window.activateWindow();
+    QSignalSpy layouts(&bridge, &app::SessionBridge::columnLayoutsReady);
+    QSignalSpy totals(&bridge, &app::SessionBridge::statisticsReady);
+    QSignalSpy days(&bridge, &app::SessionBridge::historyReady);
+    QSignalSpy weeks(&bridge, &app::SessionBridge::historyWeekReady);
+    QSignalSpy snapshots(&bridge, &app::SessionBridge::snapshotReady);
+    QVERIFY(bridge.open(profile.toStdString(), 0));
+    QTRY_VERIFY_WITH_TIMEOUT(layouts.count() == 1 && !bridge.busy(), 30000);
+    auto* statistics = window.findChild<QAction*>(QStringLiteral("classic-statistics"));
+    auto* close = window.findChild<QAction*>(QStringLiteral("classic-close-tab"));
+    QVERIFY(statistics); QVERIFY(close); statistics->trigger();
+    QTRY_VERIFY_WITH_TIMEOUT(totals.count() == 1 && !bridge.busy(), 30000);
+    auto* page = window.statisticsPage(); QVERIFY(page);
+    auto* date = page->findChild<QDateEdit*>(QStringLiteral("saved-history-week-date"));
+    auto* periods = page->findChild<QTabWidget*>(QStringLiteral("statistics-history-tabs"));
+    auto* transfers = page->findChild<QTabWidget*>(QStringLiteral("statistics-transfer-tabs"));
+    auto* traffic = page->findChild<QComboBox*>(QStringLiteral("saved-history-week-traffic"));
+    auto* resolution = page->findChild<QComboBox*>(QStringLiteral("saved-history-week-resolution"));
+    QVERIFY(date); QVERIFY(periods); QVERIFY(transfers); QVERIFY(traffic); QVERIFY(resolution);
+    date->setDate(ending); traffic->setCurrentIndex(2); resolution->setCurrentIndex(1);
+    periods->setCurrentIndex(1); page->tabs().setCurrentIndex(1); transfers->setCurrentIndex(1);
+    QTRY_VERIFY_WITH_TIMEOUT(weeks.count() == 1 && page->historyWeekPresentation() && !bridge.busy(), 30000);
+    const auto packet = page->historyWeekPresentation();
+    QCOMPARE(packet->state, ui::HistoryWeekReadState::Ready); QVERIFY(packet->snapshot);
+    QCOMPARE(packet->endingDate, (core::HistoryDate{2024, 1, 2}));
+    auto* plot = page->findChild<ui::SavedHistoryPlot*>(QStringLiteral("saved-history-week-chart"));
+    QVERIFY(plot); QVERIFY(plot->isVisible());
+    QTRY_VERIFY_WITH_TIMEOUT(plot->presentation()
+        && plot->presentation()->mode() == ui::SavedHistoryPlotMode::WeekHourly
+        && plot->presentation()->traffic() == ui::SavedHistoryTraffic::Dht, 1000);
+    const auto frame = plot->presentation(); QCOMPARE(frame->buckets().size(), std::size_t{168});
+    QVERIFY(!plot->selectedBucket()); std::optional<std::size_t> lastKnown;
+    for (std::size_t i = 0; i < 168; ++i) {
+      const auto& savedDay = packet->snapshot->days[i / 24].snapshot;
+      const auto savedHour = savedDay ? savedDay->hours[i % 24] : std::nullopt;
+      const auto& bucket = frame->buckets()[i];
+      QCOMPARE(bucket.date, packet->snapshot->days[i / 24].date);
+      QVERIFY(bucket.hour == i % 24);
+      QCOMPARE(bucket.downloaded.has_value(), savedHour.has_value());
+      QCOMPARE(bucket.uploaded.has_value(), savedHour.has_value());
+      if (savedHour) {
+        QCOMPARE(*bucket.downloaded, (*savedHour)[5]); QCOMPARE(*bucket.uploaded, (*savedHour)[4]);
+        lastKnown = i;
+      }
+    }
+    QVERIFY(lastKnown); QVERIFY(*lastKnown < std::size_t{167});
+    QVERIFY(!frame->buckets().back().downloaded); QVERIFY(!frame->buckets().back().uploaded);
+    plot->setFocus(Qt::OtherFocusReason); QTRY_VERIFY_WITH_TIMEOUT(plot->hasFocus(), 1000);
+    QTest::keyClick(plot, Qt::Key_End);
+    QCOMPARE(plot->selectedBucket(), std::optional<std::size_t>{167});
+    QCOMPARE(plot->toolTip(), frame->bucketToolTip(167)); QCOMPARE(plot->accessibleDescription(), frame->bucketToolTip(167));
+    QVERIFY(plot->accessibleDescription().contains(QStringLiteral("2024-01-02 23:00 UTC")));
+    QVERIFY(plot->accessibleDescription().contains(QStringLiteral("DHT downloaded: Unknown")));
+    QVERIFY(plot->accessibleDescription().contains(QStringLiteral("DHT uploaded: Unknown")));
+    QTest::keyClick(plot, Qt::Key_End); QCOMPARE(plot->selectedBucket(), std::optional<std::size_t>{167});
+    QTest::keyClick(plot, Qt::Key_Home); QCOMPARE(plot->selectedBucket(), std::optional<std::size_t>{0});
+    QTest::keyClick(plot, Qt::Key_Left); QCOMPARE(plot->selectedBucket(), std::optional<std::size_t>{0});
+    QTest::keyClick(plot, Qt::Key_Right); QCOMPARE(plot->selectedBucket(), std::optional<std::size_t>{1});
+    QTest::keyClick(plot, Qt::Key_Home); QCOMPARE(plot->selectedBucket(), std::optional<std::size_t>{0});
+    QTest::keyClick(plot, Qt::Key_End); QCOMPARE(plot->selectedBucket(), std::optional<std::size_t>{167});
+    // Select an actually observed bucket near End; the supplied fixture's last
+    // hour is intentionally unknown, so it must not be treated as saved zero.
+    for (std::size_t i = 167; i > *lastKnown; --i) { QTest::keyClick(plot, Qt::Key_Left); }
+    QCOMPARE(plot->selectedBucket(), lastKnown);
+    const auto exact = frame->bucketToolTip(*lastKnown);
+    QCOMPARE(plot->toolTip(), exact); QCOMPARE(plot->accessibleDescription(), exact);
+    QVERIFY(exact.contains(frame->bucketLabel(*lastKnown)));
+    QVERIFY(exact.contains(QStringLiteral("DHT downloaded: %1 bytes").arg(*frame->buckets()[*lastKnown].downloaded)));
+    QVERIFY(exact.contains(QStringLiteral("DHT uploaded: %1 bytes").arg(*frame->buckets()[*lastKnown].uploaded)));
+    QVERIFY(plot->presentation() == frame); QVERIFY(page->historyWeekPresentation() == packet);
+    QCOMPARE(weeks.count(), 1); QCOMPARE(days.count(), 0); QCOMPARE(totals.count(), 1); QCOMPARE(snapshots.count(), 1);
+    const auto capture = qEnvironmentVariable("BIGLYBTC_PREVIEW_CAPTURE");
+    if (!capture.isEmpty()) {
+      const auto path = root.filePath(QStringLiteral("statistics-history-keyboard-preview.png"));
+      QVERIFY(!QFileInfo::exists(path)); QVERIFY(plot->hasFocus()); QVERIFY(window.grab().save(path));
+    }
+
+    const auto remembered = page->navigation(); QVERIFY(remembered);
+    QCOMPARE(remembered->weekEnding, (core::HistoryDate{2024, 1, 2}));
+    QCOMPARE(remembered->weekTraffic, ui::SavedHistoryTraffic::Dht); QVERIFY(remembered->hourly);
+    QPointer oldPage(page); QPointer oldPlot(plot); close->trigger();
+    QTRY_VERIFY_WITH_TIMEOUT(oldPage.isNull() && oldPlot.isNull(), 1000);
+    statistics->trigger(); page = window.statisticsPage(); QVERIFY(page); QCOMPARE(page->navigation(), remembered);
+    QTRY_VERIFY_WITH_TIMEOUT(totals.count() == 2 && weeks.count() == 2
+        && page->historyWeekPresentation() && !bridge.busy(), 30000);
+    plot = page->findChild<ui::SavedHistoryPlot*>(QStringLiteral("saved-history-week-chart")); QVERIFY(plot);
+    QTRY_VERIFY_WITH_TIMEOUT(plot->presentation()
+        && plot->presentation()->mode() == ui::SavedHistoryPlotMode::WeekHourly
+        && plot->presentation()->traffic() == ui::SavedHistoryTraffic::Dht, 1000);
+    QVERIFY(plot->presentation() != frame); QVERIFY(!plot->selectedBucket());
+    QVERIFY(page->historyWeekPresentation() != packet);
+    QCOMPARE(page->historyWeekPresentation()->endingDate, (core::HistoryDate{2024, 1, 2}));
+    QCOMPARE(days.count(), 0); QCOMPARE(weeks.count(), 2); QCOMPARE(totals.count(), 2); QCOMPARE(snapshots.count(), 1);
+    for (auto it = present.cbegin(); it != present.cend(); ++it) {
+      QCOMPARE(QFileInfo::exists(it.key()), it.value());
+      if (it.value()) {
+        QFile file(it.key()); QVERIFY(file.open(QIODevice::ReadOnly));
+        QCOMPARE(file.readAll(), original.value(it.key())); QCOMPARE(file.error(), QFileDevice::NoError);
+      }
+    }
+    QVERIFY(QDir(root.filePath(QStringLiteral("payload"))).entryList(QDir::AllEntries | QDir::NoDotAndDotDot).isEmpty());
+  }
+
 };
 QTEST_MAIN(PreviewSmoke)
 #include "preview_smoke.moc"
