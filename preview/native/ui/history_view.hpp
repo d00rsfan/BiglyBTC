@@ -22,7 +22,7 @@ class SavedHistoryPlot;
 class HistoryView final : public QWidget {
   Q_OBJECT
 public:
-  explicit HistoryView(QWidget* parent = nullptr);
+  explicit HistoryView(QWidget* parent = nullptr, std::optional<core::HistoryDate> initialDate = {});
   void beginRequest(quint64 session, quint64 request, core::HistoryDate);
   void setPresentation(HistoryPresentation);
   void setFailed(quint64 session, quint64 request, core::HistoryDate, const QString&);

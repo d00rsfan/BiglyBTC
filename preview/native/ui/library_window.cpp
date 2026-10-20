@@ -416,7 +416,10 @@ void LibraryWindow::showStatistics() {
   QPointer<LibraryWindow> guard(this);
   const bool fresh = !statisticsPage_;
   if (fresh) {
-    statisticsPage_ = new StatisticsPage(mainTabs_);
+    const auto navigation = columnSession_ != 0 && rememberedStatisticsNavigation_
+        && rememberedStatisticsNavigation_->session == columnSession_
+        ? std::optional<StatisticsNavigation>{rememberedStatisticsNavigation_->navigation} : std::nullopt;
+    statisticsPage_ = new StatisticsPage(mainTabs_, navigation);
     connect(statisticsPage_.data(), &StatisticsPage::refreshRequested, this, &LibraryWindow::refreshStatistics);
     connect(statisticsPage_.data(), &StatisticsPage::historyRequested, this, &LibraryWindow::refreshHistory);
     connect(statisticsPage_.data(), &StatisticsPage::historyWeekRequested, this, &LibraryWindow::refreshHistoryWeek);
@@ -593,16 +596,25 @@ void LibraryWindow::queueOptionalViews() {
 }
 void LibraryWindow::closePage(int index) {
   if (closing_) { return; }
+  QPointer<LibraryWindow> guard(this);
   QPointer<QWidget> page(mainTabs_->widget(index));
   if (!page) { return; }
   const bool retainedLibrary = page == torrentsPage_;
   if (!retainedLibrary) {
     if (page == hostingPage_.data()) { hostingPage_.clear(); }
     else if (page == sharesPage_.data()) { sharesPage_.clear(); }
-    else if (page == statisticsPage_.data()) { statisticsPage_.clear(); pendingStatisticsRequest_.reset(); pendingHistoryRequest_.reset(); }
+    else if (page == statisticsPage_.data()) {
+      const QPointer<StatisticsPage> statisticsPage = statisticsPage_;
+      const auto session = columnSession_;
+      const auto navigation = statisticsPage->navigation();
+      if (!guard || !page || statisticsPage_ != statisticsPage || columnSession_ != session) { return; }
+      if (session != 0 && navigation) {
+        rememberedStatisticsNavigation_ = StatisticsNavigationRecord{session, *navigation};
+      } else { rememberedStatisticsNavigation_.reset(); }
+      statisticsPage_.clear(); pendingStatisticsRequest_.reset(); pendingHistoryRequest_.reset();
+    }
     else { return; }
   }
-  QPointer<LibraryWindow> guard(this);
   mainTabs_->removeTab(index);
   if (!guard) { return; }
   // Keep the library widgets and selection owned for View > My Torrents.
@@ -676,6 +688,7 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
   columnSession_ = session;
+  rememberedStatisticsNavigation_.reset();
   latestEngineStatistics_.reset();
   engineActivity_.reset();
   activeStatisticsRequest_.reset();

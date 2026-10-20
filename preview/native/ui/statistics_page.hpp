@@ -6,6 +6,7 @@
 #include "history_week_presentation.hpp"
 #include "library_model.hpp"
 #include "statistics_presentation.hpp"
+#include "statistics_navigation.hpp"
 
 #include <QElapsedTimer>
 #include <QPointer>
@@ -32,7 +33,8 @@ class StatisticsPage final : public QWidget {
   Q_OBJECT
 public:
   static constexpr std::size_t MaximumSamples = 600;
-  explicit StatisticsPage(QWidget* parent = nullptr);
+  explicit StatisticsPage(QWidget* parent = nullptr, std::optional<StatisticsNavigation> initial = {});
+  std::optional<StatisticsNavigation> navigation() const;
   void beginRequest(quint64 session, quint64 request);
   void setPresentation(StatisticsPresentation);
   void setFailed(quint64 session, quint64 request, const QString& message);

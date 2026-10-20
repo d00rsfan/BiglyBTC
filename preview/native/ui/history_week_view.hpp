@@ -23,12 +23,14 @@ class SavedHistoryPlot;
 class HistoryWeekView final : public QWidget {
   Q_OBJECT
 public:
-  explicit HistoryWeekView(QWidget* parent = nullptr);
+  explicit HistoryWeekView(QWidget* parent = nullptr,
+      std::optional<core::HistoryDate> endingDate = {}, bool hourly = false);
   void beginRequest(quint64 session, quint64 request, core::HistoryDate endingDate);
   void setPresentation(HistoryWeekPresentation);
   void setFailed(quint64 session, quint64 request, core::HistoryDate endingDate, const QString&);
   void resetSession(quint64 session);
   core::HistoryDate selectedDate() const;
+  bool hourlyResolution() const;
   HistoryWeekPresentation presentation() const { return frame_; }
 signals:
   void readRequested(biglybtc::core::HistoryDate);

@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "milestone": "P04-22",
+  "component": "statistics.navigation_state",
+  "feature": "F21.statistics_navigation",
+  "title": "Remember Statistics navigation while reopening its tab",
+  "status": "Source and behavior contract; actual qualification is recorded in the published milestone.",
+  "original_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_parent": "42b45749abd481014486a33844520c5d670b534b",
+  "scope": "Navigation choices retained only inside one LibraryWindow and the same nonzero profile session.",
+  "choices": [
+    "Activity / Transfers",
+    "Payload / Engine traffic",
+    "Current / History",
+    "Daily / 7 days",
+    "Daily UTC date",
+    "Seven-day ending UTC date",
+    "Daily totals / Hourly values"
+  ],
+  "capture": "All choices are captured, including controls in hidden subviews. Only scalar indices, UTC dates and the resolution boolean are retained.",
+  "reopen": {
+    "same_session": "A fresh Statistics page is initialized before display. The selected saved view performs its existing lazy read; saved results are not restored.",
+    "already_open": "The same open page is reused with its existing state and request behavior.",
+    "lifetime": "The old page is destroyed through the existing deferred deletion path. No widget or result packet is retained by navigation memory.",
+    "invalid": "An invalid supplied navigation state discards all supplied choices and uses all constructor defaults, including current UTC dates.",
+    "default": "Without remembered valid state, Activity / Payload remains first; Transfers uses Current and History uses Daily.",
+    "first_history_read": "Only the selected Daily or 7 days view requests its initial date on activation; hidden choices do not create reads."
+  },
+  "session": {
+    "eligible": "Only the same current nonzero profile session may restore a closed tab.",
+    "new_profile": "An accepted monotonic profile session clears closed-tab memory before outward callbacks.",
+    "ignored": "Zero, duplicate and older session announcements do not clear valid current closed-tab memory.",
+    "active_page": "Existing navigation and reset behavior of an already visible page is preserved. Closing it later captures its current choices for the new session.",
+    "excluded": "No restoration across different windows or application restarts; session zero never stores closed-tab choices."
+  },
+  "safety": {
+    "requests": "Existing page/session/request identity fences and latest-pending coalescing remain unchanged. An old page or late packet cannot settle a new page. Closing a tab does not cancel unrelated work.",
+    "library": "My Torrents filtering, selection, columns, actions and Ctrl shortcuts remain independent.",
+    "hidden": "Existing hidden/minimized rendering deferral remains unchanged.",
+    "ownership": "Trivially copyable value with no pointers, strings, widgets, packets or external resources.",
+    "no_new_operations": [
+      "configuration or history writes",
+      "payload writes",
+      "reader",
+      "worker",
+      "lease",
+      "result cache",
+      "timer",
+      "network",
+      "accounting"
+    ]
+  },
+  "scope_limits": {
+    "new_java_execution": false,
+    "new_java_equality_credit": 0,
+    "retained_original_java_scalar_comparisons": {
+      "daily": 2550,
+      "independent_seven_day_members": 3150
+    },
+    "original_runtime_parity": "This is a native per-window convenience; no original Java UI persistence or runtime equality is claimed.",
+    "broader_gates_open": [
+      "Original rolling History graph/global owner",
+      "Full-client/plugin integration",
+      "Seamless profile switching qualification",
+      "Performance or release qualification"
+    ]
+  },
+  "qualification": "New page and window regression suites exercise actual controls, generated owned profiles, fresh reads, request fences and deletion/reentry. Executed counts and source hashes come from the milestone receipt, not this contract."
+}

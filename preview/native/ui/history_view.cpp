@@ -80,13 +80,16 @@ private:
   std::shared_ptr<const core::SavedHistoryDay> snapshot_;
 };
 
-HistoryView::HistoryView(QWidget* parent) : QWidget(parent) {
+HistoryView::HistoryView(QWidget* parent, std::optional<core::HistoryDate> initialDate) : QWidget(parent) {
   setObjectName(QStringLiteral("statistics-history-view")); setAccessibleName(tr("Saved UTC daily traffic history"));
   auto* layout = new QVBoxLayout(this);
   auto* controls = new QHBoxLayout;
   previous_ = new QPushButton(tr("Previous day"), this); previous_->setObjectName(QStringLiteral("saved-history-previous"));
   next_ = new QPushButton(tr("Next day"), this); next_->setObjectName(QStringLiteral("saved-history-next"));
-  date_ = new QDateEdit(QDateTime::currentDateTimeUtc().date(), this); date_->setCalendarPopup(true);
+  const auto initial = initialDate && core::validHistoryDate(*initialDate)
+      ? QDate(initialDate->year, static_cast<int>(initialDate->month), static_cast<int>(initialDate->day))
+      : QDateTime::currentDateTimeUtc().date();
+  date_ = new QDateEdit(initial, this); date_->setCalendarPopup(true);
   date_->setDateRange(QDate(1970, 1, 1), QDate(9999, 12, 31)); date_->setDisplayFormat(QStringLiteral("yyyy-MM-dd 'UTC'"));
   date_->setObjectName(QStringLiteral("saved-history-date")); date_->setAccessibleName(tr("Selected UTC day"));
   auto* reload = new QPushButton(tr("Refresh history"), this); reload->setObjectName(QStringLiteral("saved-history-refresh"));

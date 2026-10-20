@@ -8,6 +8,7 @@
 #include <QComboBox>
 #include <QDir>
 #include <QDateEdit>
+#include <QDateTime>
 #include <QFile>
 #include <QFileInfo>
 #include <QHeaderView>
@@ -23,6 +24,7 @@
 #include <QtTest>
 
 #include <array>
+#include <memory>
 
 namespace {
 using namespace biglybtc;
@@ -638,6 +640,74 @@ private slots:
     for (auto it = files.cbegin(); it != files.cend(); ++it) { QCOMPARE(bytes(it.key()), it.value()); }
     QVERIFY(!QFileInfo::exists(profile + QStringLiteral("/stats/2023/12/29.dat")));
     QCOMPARE(bytes(profile + QStringLiteral("/BiglyBT.statistics")), saved); QCOMPARE(reads.count(), 2); QCOMPARE(days.count(), 0); QCOMPARE(totals.count(), 1); QCOMPARE(snapshots.count(), 1);
+    QVERIFY(QDir(root.filePath(QStringLiteral("payload"))).entryList(QDir::AllEntries | QDir::NoDotAndDotDot).isEmpty());
+  }
+
+
+  void statisticsNavigationSurvivesCloseAndNewSessionClearsMemory() {
+    const auto profile = qEnvironmentVariable("BIGLYBTC_PREVIEW_PROFILE");
+    const QDir root(QFileInfo(profile).absolutePath());
+    QCOMPARE(QFileInfo(root.absolutePath()).absolutePath(), QStringLiteral("/tmp"));
+    QVERIFY(root.dirName().startsWith(QStringLiteral("biglybtc-preview-")));
+    QMap<QString, QByteArray> original;
+    for (const auto& name : {QStringLiteral("/downloads.config"), QStringLiteral("/tables.config"), QStringLiteral("/BiglyBT.statistics"), QStringLiteral("/stats/2024/01/02.dat")}) {
+      original.insert(profile + name, bytes(profile + name)); QVERIFY(!original.value(profile + name).isEmpty());
+    }
+    ui::LibraryWindow window; auto bridge = std::make_unique<app::SessionBridge>(); wire(window, *bridge);
+    window.setOfflinePreview(true); window.resize(1280, 900); window.show(); window.activateWindow();
+    QSignalSpy columns(bridge.get(), &app::SessionBridge::columnLayoutsReady), snapshots(bridge.get(), &app::SessionBridge::snapshotReady);
+    QSignalSpy totals(bridge.get(), &app::SessionBridge::statisticsReady), weeks(bridge.get(), &app::SessionBridge::historyWeekReady), days(bridge.get(), &app::SessionBridge::historyReady);
+    QVERIFY(bridge->open(profile.toStdString(), 0)); QTRY_VERIFY_WITH_TIMEOUT(columns.count() == 1 && !bridge->busy(), 30000);
+    auto* statistics = window.findChild<QAction*>(QStringLiteral("classic-statistics"));
+    auto* close = window.findChild<QAction*>(QStringLiteral("classic-close-tab")); QVERIFY(statistics); QVERIFY(close);
+    statistics->trigger(); QTRY_VERIFY_WITH_TIMEOUT(totals.count() == 1 && !bridge->busy(), 30000);
+    auto* page = window.statisticsPage(); QVERIFY(page);
+    auto* daily = page->findChild<QDateEdit*>(QStringLiteral("saved-history-date"));
+    auto* ending = page->findChild<QDateEdit*>(QStringLiteral("saved-history-week-date"));
+    auto* periods = page->findChild<QTabWidget*>(QStringLiteral("statistics-history-tabs"));
+    auto* transfers = page->findChild<QTabWidget*>(QStringLiteral("statistics-transfer-tabs"));
+    auto* resolution = page->findChild<QComboBox*>(QStringLiteral("saved-history-week-resolution"));
+    QVERIFY(daily); QVERIFY(ending); QVERIFY(periods); QVERIFY(transfers); QVERIFY(resolution);
+    daily->setDate(QDate(2024, 1, 1)); ending->setDate(QDate(2024, 1, 2));
+    resolution->setCurrentIndex(1); periods->setCurrentIndex(1); transfers->setCurrentIndex(1); page->tabs().setCurrentIndex(1);
+    QTRY_VERIFY_WITH_TIMEOUT(weeks.count() == 1 && page->historyWeekPresentation() && !bridge->busy(), 30000);
+    const auto remembered = page->navigation(); QVERIFY(remembered); QVERIFY(remembered->hourly);
+    QCOMPARE(remembered->dailyDate, (core::HistoryDate{2024, 1, 1})); QCOMPARE(remembered->weekEnding, (core::HistoryDate{2024, 1, 2}));
+    QPointer old(page); close->trigger(); QVERIFY(!window.statisticsPage()); QTRY_VERIFY(old.isNull());
+    statistics->trigger(); page = window.statisticsPage(); QVERIFY(page); QCOMPARE(page->navigation(), remembered);
+    QTRY_VERIFY_WITH_TIMEOUT(totals.count() == 2 && weeks.count() == 2 && page->historyWeekPresentation() && !bridge->busy(), 30000);
+    QCOMPARE(page->navigation(), remembered); QCOMPARE(days.count(), 0); QCOMPARE(snapshots.count(), 1);
+    auto* chart = page->findChild<ui::SavedHistoryPlot*>(QStringLiteral("saved-history-week-chart")); QVERIFY(chart);
+    QTRY_COMPARE(chart->presentation()->mode(), ui::SavedHistoryPlotMode::WeekHourly); QCOMPARE(chart->presentation()->buckets().size(), std::size_t{168});
+    QCOMPARE(page->historyWeekPresentation()->endingDate, remembered->weekEnding);
+    const auto capture = qEnvironmentVariable("BIGLYBTC_PREVIEW_CAPTURE");
+    if (!capture.isEmpty()) {
+      const auto path = root.filePath(QStringLiteral("statistics-navigation-reopened-preview.png")); QVERIFY(!QFileInfo::exists(path)); QVERIFY(window.grab().save(path));
+    }
+    old = page; close->trigger(); QTRY_VERIFY(old.isNull());
+    const auto second = root.filePath(QStringLiteral("navigation-new-session")); QVERIFY(!QFileInfo::exists(second)); QVERIFY(QDir().mkpath(second));
+    const auto write = [&](const QString& name, const QByteArray& data) {
+      QFile file(second + name); return file.open(QIODevice::WriteOnly | QIODevice::NewOnly) && file.write(data) == data.size() && file.flush();
+    };
+    QVERIFY(write(QStringLiteral("/downloads.config"), QByteArrayLiteral("d9:downloadslee")));
+    QVERIFY(write(QStringLiteral("/tables.config"), QByteArrayLiteral("de")));
+    QVERIFY(write(QStringLiteral("/BiglyBT.statistics"), original.value(profile + QStringLiteral("/BiglyBT.statistics"))));
+    bridge.reset(); // Each existing worker owns exactly one profile; join it before the next owner.
+    app::SessionBridge replacement; wire(window, replacement);
+    QSignalSpy nextColumns(&replacement, &app::SessionBridge::columnLayoutsReady), nextSnapshots(&replacement, &app::SessionBridge::snapshotReady);
+    QSignalSpy nextTotals(&replacement, &app::SessionBridge::statisticsReady), nextWeeks(&replacement, &app::SessionBridge::historyWeekReady), nextDays(&replacement, &app::SessionBridge::historyReady);
+    QVERIFY(replacement.open(second.toStdString(), 0)); QTRY_VERIFY_WITH_TIMEOUT(nextColumns.count() == 1 && !replacement.busy(), 30000);
+    statistics->trigger(); page = window.statisticsPage(); QVERIFY(page);
+    QTRY_VERIFY_WITH_TIMEOUT(nextTotals.count() == 1 && !replacement.busy(), 30000);
+    const auto fresh = page->navigation(); QVERIFY(fresh);
+    QCOMPARE(fresh->section, 0); QCOMPARE(fresh->activity, 0); QCOMPARE(fresh->transfers, 0); QCOMPARE(fresh->history, 0); QVERIFY(!fresh->hourly);
+    QVERIFY(fresh->dailyDate != remembered->dailyDate); QVERIFY(fresh->weekEnding != remembered->weekEnding);
+    QCOMPARE(weeks.count(), 2); QCOMPARE(days.count(), 0); QCOMPARE(snapshots.count(), 1);
+    QCOMPARE(nextWeeks.count(), 0); QCOMPARE(nextDays.count(), 0); QCOMPARE(nextSnapshots.count(), 1);
+    if (!capture.isEmpty()) {
+      const auto path = root.filePath(QStringLiteral("statistics-navigation-new-session-preview.png")); QVERIFY(!QFileInfo::exists(path)); QVERIFY(window.grab().save(path));
+    }
+    for (auto it = original.cbegin(); it != original.cend(); ++it) { QCOMPARE(bytes(it.key()), it.value()); }
     QVERIFY(QDir(root.filePath(QStringLiteral("payload"))).entryList(QDir::AllEntries | QDir::NoDotAndDotDot).isEmpty());
   }
 

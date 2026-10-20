@@ -5,6 +5,7 @@
 #include "saved_services_presentation.hpp"
 #include "column_layout_presentation.hpp"
 #include "statistics_presentation.hpp"
+#include "statistics_navigation.hpp"
 #include "history_presentation.hpp"
 #include "history_week_presentation.hpp"
 #include "engine_statistics_presentation.hpp"
@@ -116,6 +117,12 @@ private:
   QPointer<SavedHostingPage> hostingPage_;
   QPointer<SavedSharesPage> sharesPage_;
   QPointer<StatisticsPage> statisticsPage_;
+  struct StatisticsNavigationRecord {
+    quint64 session = 0;
+    StatisticsNavigation navigation{};
+  };
+  // Closed-tab memory contains only scalar choices, never widgets or results.
+  std::optional<StatisticsNavigationRecord> rememberedStatisticsNavigation_;
   struct StatisticsRequest {
     quint64 session = 0;
     quint64 request = 0;

@@ -100,18 +100,23 @@ private:
   bool loading_ = false;
 };
 
-HistoryWeekView::HistoryWeekView(QWidget* parent) : QWidget(parent) {
+HistoryWeekView::HistoryWeekView(QWidget* parent, std::optional<core::HistoryDate> endingDate,
+    bool hourly) : QWidget(parent) {
   setObjectName(QStringLiteral("statistics-history-week-view")); setAccessibleName(tr("Seven saved UTC days"));
   auto* layout = new QVBoxLayout(this); auto* controls = new QHBoxLayout;
   previous_ = new QPushButton(tr("Previous 7 days"), this); previous_->setObjectName(QStringLiteral("saved-history-week-previous"));
   next_ = new QPushButton(tr("Next 7 days"), this); next_->setObjectName(QStringLiteral("saved-history-week-next"));
-  date_ = new QDateEdit(QDateTime::currentDateTimeUtc().date(), this); date_->setCalendarPopup(true);
+  const auto initial = endingDate && core::savedHistoryWeekDates(*endingDate)
+      ? QDate(endingDate->year, static_cast<int>(endingDate->month), static_cast<int>(endingDate->day))
+      : QDateTime::currentDateTimeUtc().date();
+  date_ = new QDateEdit(initial, this); date_->setCalendarPopup(true);
   date_->setDateRange(QDate(1970, 1, 7), QDate(9999, 12, 31)); date_->setDisplayFormat(QStringLiteral("yyyy-MM-dd 'UTC'"));
   date_->setObjectName(QStringLiteral("saved-history-week-date")); date_->setAccessibleName(tr("Last UTC date of seven days"));
   auto* reload = new QPushButton(tr("Refresh 7 days"), this); reload->setObjectName(QStringLiteral("saved-history-week-refresh"));
   controls->addWidget(previous_); controls->addWidget(label(tr("Ending:"), QStringLiteral("saved-history-week-date-title"), this));
   resolution_ = new QComboBox(this); resolution_->setObjectName(QStringLiteral("saved-history-week-resolution"));
   resolution_->setAccessibleName(tr("Graph resolution")); resolution_->addItem(tr("Daily totals")); resolution_->addItem(tr("Hourly values"));
+  resolution_->setCurrentIndex(hourly ? 1 : 0);
   auto* resolutionTitle = label(tr("Graph resolution:"), QStringLiteral("saved-history-week-resolution-title"), this);
   resolutionTitle->setBuddy(resolution_);
   controls->addWidget(date_); controls->addWidget(next_); controls->addWidget(resolutionTitle); controls->addWidget(resolution_);
@@ -140,6 +145,7 @@ HistoryWeekView::HistoryWeekView(QWidget* parent) : QWidget(parent) {
   });
 }
 core::HistoryDate HistoryWeekView::selectedDate() const { return savedDate(date_->date()); }
+bool HistoryWeekView::hourlyResolution() const { return resolution_->currentIndex() == 1; }
 bool HistoryWeekView::advance() {
   if (exhausted_ || revision_ == std::numeric_limits<quint64>::max()) { exhausted_ = true; return false; }
   ++revision_; dirty_ = true; return true;

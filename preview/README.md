@@ -222,3 +222,13 @@ does not reread files. Hover a bucket for the full UTC date, hour and signed byt
 values. Missing observations leave gaps; recorded zero stays visible.
 These selected UTC dates differ from the original rolling current-clock query.
 See [hourly resolution contract](docs/history-hourly-contract.json).
+
+
+Statistics remembers its selected subviews, both saved History dates and graph
+resolution when you close its tab (Ctrl+W) and reopen it (Ctrl+5) in the same
+profile session. Reopening creates fresh widgets and reloads saved records through
+the existing worker. Only scalar choices are retained in memory; no data snapshots
+or widgets are kept. A new profile session clears closed-tab navigation memory.
+Existing visible-page session reset behavior is unchanged. This preference does
+not survive restarting the app and writes no original configuration files.
+See [navigation contract](docs/statistics-navigation-contract.json).

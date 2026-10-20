@@ -109,7 +109,8 @@ private:
   std::size_t first_ = 0, count_ = 0;
 };
 
-StatisticsPage::StatisticsPage(QWidget* parent) : QWidget(parent), tabs_(new QTabWidget(this)),
+StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigation> initial)
+    : QWidget(parent), tabs_(new QTabWidget(this)),
     activity_(new QWidget(tabs_)), plot_(new ActivityPlot(activity_)),
     transfer_(label(tr("No observed transfer"), QStringLiteral("statistics-transfer-name"), activity_)),
     downloadRate_(label(unavailable(), QStringLiteral("statistics-payload-download-rate"), activity_)),
@@ -117,6 +118,7 @@ StatisticsPage::StatisticsPage(QWidget* parent) : QWidget(parent), tabs_(new QTa
     observations_(label(tr("No activity samples yet"), QStringLiteral("statistics-activity-observations"), activity_)),
     status_(label(tr("Not loaded"), QStringLiteral("statistics-read-status"), this)),
     provenance_(label(tr("Source: unavailable; save time unknown"), QStringLiteral("statistics-source"), this)) {
+  if (initial && !validStatisticsNavigation(*initial)) { initial.reset(); }
   setObjectName(QStringLiteral("classic-statistics-page"));
   setAccessibleName(tr("Statistics")); tabs_->setObjectName(QStringLiteral("statistics-tabs"));
   activity_->setObjectName(QStringLiteral("statistics-activity"));
@@ -188,7 +190,9 @@ StatisticsPage::StatisticsPage(QWidget* parent) : QWidget(parent), tabs_(new QTa
   auto* historyLayout = new QVBoxLayout(history);
   historyLayout->setContentsMargins(0, 0, 0, 0);
   historyTabs_ = new QTabWidget(history); historyTabs_->setObjectName(QStringLiteral("statistics-history-tabs"));
-  history_ = new HistoryView(historyTabs_); historyWeek_ = new HistoryWeekView(historyTabs_);
+  history_ = new HistoryView(historyTabs_, initial ? std::optional{initial->dailyDate} : std::nullopt);
+  historyWeek_ = new HistoryWeekView(historyTabs_, initial ? std::optional{initial->weekEnding} : std::nullopt,
+      initial && initial->hourly);
   historyLayout->addWidget(historyTabs_);
   connect(history_, &HistoryView::readRequested, this, [this](core::HistoryDate date) {
     // HistoryView emits only when visible; do not drop its first show signal
@@ -201,11 +205,24 @@ StatisticsPage::StatisticsPage(QWidget* parent) : QWidget(parent), tabs_(new QTa
   auto* refresh = new QPushButton(tr("Refresh saved totals"), this); refresh->setObjectName(QStringLiteral("statistics-refresh"));
   connect(refresh, &QPushButton::clicked, this, &StatisticsPage::refreshRequested);
   auto* layout = new QVBoxLayout(this); layout->addWidget(status_); layout->addWidget(provenance_); layout->addWidget(tabs_, 1); layout->addWidget(refresh);
+  if (initial) {
+    activityViews_->setCurrentIndex(initial->activity);
+    historyTabs_->setCurrentIndex(initial->history);
+    transferTabs_->setCurrentIndex(initial->transfers);
+    tabs_->setCurrentIndex(initial->section);
+  }
   connect(tabs_, &QTabWidget::currentChanged, this, [this](int) {
     QPointer<StatisticsPage> guard(this); refreshActivity(); if (guard) { guard->refreshEngine(); }
   });
   connect(transferTabs_, &QTabWidget::currentChanged, this, [this](int) { refreshEngine(); });
   connect(activityViews_, &QTabWidget::currentChanged, this, [this](int) { refreshActivity(); });
+}
+std::optional<StatisticsNavigation> StatisticsPage::navigation() const {
+  const StatisticsNavigation result{tabs_->currentIndex(), activityViews_->currentIndex(),
+      transferTabs_->currentIndex(), historyTabs_->currentIndex(), history_->selectedDate(),
+      historyWeek_->selectedDate(), historyWeek_->hourlyResolution()};
+  if (!validStatisticsNavigation(result)) { return {}; }
+  return result;
 }
 void StatisticsPage::beginHistoryRequest(quint64 session, quint64 request, core::HistoryDate date) {
   history_->beginRequest(session, request, date);
