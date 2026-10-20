@@ -84,6 +84,18 @@ target_link_options(biglybtc-history-week-view-tests PRIVATE "LINKER:--wrap=read
 add_test(NAME saved-history-week-reader COMMAND biglybtc-history-week-view-tests
   "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/history-week")
 set_tests_properties(saved-history-week-reader PROPERTIES TIMEOUT 120 LABELS "unit;fixtures;statistics;history;read-only")
+add_executable(biglybtc-saved-history-month-tests saved_history_month_tests.cpp)
+target_link_libraries(biglybtc-saved-history-month-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-saved-history-month-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME saved-history-month-dates COMMAND biglybtc-saved-history-month-tests)
+set_tests_properties(saved-history-month-dates PROPERTIES TIMEOUT 120 LABELS "unit;fixtures;statistics;history;read-only")
+add_executable(biglybtc-history-month-view-tests history_month_view_tests.cpp)
+target_link_libraries(biglybtc-history-month-view-tests PRIVATE biglybtc_profile)
+target_compile_options(biglybtc-history-month-view-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_link_options(biglybtc-history-month-view-tests PRIVATE "LINKER:--wrap=read" "LINKER:--wrap=openat")
+add_test(NAME saved-history-month-reader COMMAND biglybtc-history-month-view-tests
+  "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/history-week")
+set_tests_properties(saved-history-month-reader PROPERTIES TIMEOUT 120 LABELS "unit;fixtures;statistics;history;read-only")
 add_executable(biglybtc-classic-preferences-tests classic_preferences_tests.cpp)
 target_link_libraries(biglybtc-classic-preferences-tests PRIVATE BiglyBTC::Core)
 target_compile_options(biglybtc-classic-preferences-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)

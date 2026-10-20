@@ -12,7 +12,7 @@ endif()
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 find_package(Threads REQUIRED)
-add_library(biglybtc_core STATIC src/bencode.cpp src/executor.cpp src/library.cpp src/state_cache.cpp src/torrent_layout.cpp src/file_policy.cpp src/saved_services.cpp src/saved_dnd.cpp src/column_layout.cpp src/classic_preferences.cpp src/saved_statistics.cpp src/engine_statistics.cpp src/saved_history.cpp src/saved_history_week.cpp)
+add_library(biglybtc_core STATIC src/bencode.cpp src/executor.cpp src/library.cpp src/state_cache.cpp src/torrent_layout.cpp src/file_policy.cpp src/saved_services.cpp src/saved_dnd.cpp src/column_layout.cpp src/classic_preferences.cpp src/saved_statistics.cpp src/engine_statistics.cpp src/saved_history.cpp src/saved_history_week.cpp src/saved_history_month.cpp)
 add_library(BiglyBTC::Core ALIAS biglybtc_core)
 target_include_directories(biglybtc_core PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
