@@ -10,6 +10,8 @@
 
 namespace biglybtc::engine {
 
+class PersistentSession;
+
 enum class LocalStage { StatePrepared, Checked, Flushed, CompletionLinked, CompletionSaved, InventorySaved };
 struct LocalProgress {
   enum class Phase { Checking, Downloading, Flushing } phase;
@@ -59,6 +61,10 @@ struct TorrentDetails {
 std::expected<LocalReport, storage::Error> continueLocal(const LocalOptions& options);
 std::expected<LocalReport, storage::Error> continueLocal(const storage::ProfileLease& lease,
     const LocalOptions& options);
+// Opt-in owner: absolute counters/session survive this operation; the original
+// convenience overloads keep their independent ephemeral-session behavior.
+std::expected<LocalReport, storage::Error> continueLocal(PersistentSession& owner,
+    const storage::ProfileLease& lease, const LocalOptions& options);
 std::expected<TorrentDetails, storage::Error> queryTorrent(const storage::ProfileLease& lease,
     const core::TorrentHash& hash);
 

@@ -4,6 +4,7 @@
 #include "column_layout_view.hpp"
 #include "biglybtc/saved_dnd.hpp"
 #include "local_session.hpp"
+#include "persistent_session.hpp"
 #include "saved_service_view.hpp"
 #include "statistics_view.hpp"
 #include "../adapters/history_view.hpp"
@@ -23,6 +24,22 @@
 namespace biglybtc::app {
 namespace {
 struct Failure { storage::Error error; };
+ui::NativeSessionPresentation nativePacket(const engine::ApplicationPeerObservation& value) {
+  ui::NativeSessionState state;
+  switch (value.state) {
+    case engine::AccountingState::Starting: state = ui::NativeSessionState::Starting; break;
+    case engine::AccountingState::Idle: state = ui::NativeSessionState::Idle; break;
+    case engine::AccountingState::Active: state = ui::NativeSessionState::Active; break;
+    case engine::AccountingState::Retiring: state = ui::NativeSessionState::Retiring; break;
+    case engine::AccountingState::Closing: state = ui::NativeSessionState::Closing; break;
+    case engine::AccountingState::Closed: state = ui::NativeSessionState::Closed; break;
+    case engine::AccountingState::Uncertified: state = ui::NativeSessionState::Uncertified; break;
+    default: return {};
+  }
+  return std::make_shared<const ui::NativeSessionPacket>(ui::NativeSessionPacket{
+      value.identity.profileSession, value.identity.applicationRun, value.identity.engineEpoch,
+      value.sequence, state, value.observed, value.ownerElapsedNanoseconds});
+}
 quint64 reserveColumnLayoutSession() {
   static std::atomic<quint64> last{0};
   auto previous = last.load(std::memory_order_relaxed);
@@ -92,6 +109,8 @@ struct SessionBridge::Host {
   std::filesystem::path profile;
   unsigned short peerPort;
   storage::ProfileLease lease;
+  // Declared after lease: affine engine destruction/join precedes lease release.
+  std::unique_ptr<engine::PersistentSession> engine{};
   const quint64 columnLayoutSession;
   quint64 revision = 0;
   quint64 engineOperation = 0;
@@ -172,6 +191,7 @@ SessionBridge::SessionBridge(QObject* parent) : QObject(parent) {
   qRegisterMetaType<ui::HistoryRangePresentation>();
   qRegisterMetaType<core::HistoryRangeRequest>();
   qRegisterMetaType<ui::EngineStatisticsPresentation>();
+  qRegisterMetaType<ui::NativeSessionPresentation>();
   qRegisterMetaType<ui::ColumnLayoutsPresentation>();
   qRegisterMetaType<ui::ColumnLayoutSaveSubmission>();
   qRegisterMetaType<ui::ColumnLayoutSavePresentation>();
@@ -186,15 +206,41 @@ SessionBridge::SessionBridge(QObject* parent) : QObject(parent) {
     // future must also release the GUI's busy state and deferred window close.
     if (!result && !completionPosted_->load()) {
       QPointer<SessionBridge> guard(this);
+      if (closingSession_) {
+        closingSession_ = false;
+        idleMonitor_->start();
+        emit sessionCloseFailed();
+        if (!guard) { return; }
+      }
       busy_ = false;
       emit busyChanged(false);
       if (!guard) { return; }
       emit messageReady(result.error() == core::WorkError::Cancelled ? tr("Cancelled") : tr("Session command failed"));
     }
   });
-  if (!worker_.start()) { throw std::runtime_error("Cannot start native session worker"); }
+  if (!worker_.start([this]() noexcept {
+        if (host_ && host_->engine) { host_->engine->clearObservationSink(); }
+        host_.reset(); // Worker-affine fallback abort/join, then held lease.
+      })) { throw std::runtime_error("Cannot start native session worker"); }
+  idleMonitor_ = new QTimer(this);
+  idleMonitor_->setInterval(1000);
+  connect(idleMonitor_, &QTimer::timeout, this, [this] {
+    if (busy_ || closingSession_) { return; }
+    if (idlePoll_) {
+      if (idlePoll_->result().wait_for(std::chrono::seconds{0}) != std::future_status::ready) { return; }
+      static_cast<void>(idlePoll_->result().get());
+      idlePoll_.reset();
+    }
+    auto poll = worker_.submit([this](std::stop_token stop) -> core::WorkResult {
+      if (!stop.stop_requested() && host_ && host_->engine) { static_cast<void>(host_->engine->poll()); }
+      return {};
+    });
+    if (poll) { idlePoll_.emplace(std::move(*poll)); }
+  });
+  idleMonitor_->start();
 }
 SessionBridge::~SessionBridge() {
+  idleMonitor_->stop();
   if (current_) { current_->cancel(); }
   worker_.requestShutdown();
 }
@@ -228,16 +274,17 @@ void SessionBridge::failed(QString message) {
     emit messageReady(message);
   }, Qt::QueuedConnection);
 }
-bool SessionBridge::dispatch(std::move_only_function<void(std::stop_token)> operation, bool recoverLibrarySnapshot) {
-  if (busy_) { return false; }
+bool SessionBridge::dispatch(std::move_only_function<void(std::stop_token)> operation, bool recoverLibrarySnapshot, bool closingOperation) {
+  if (busy_ || (closingSession_ && !closingOperation)) { return false; }
   busy_ = true;
   auto posted = std::make_shared<std::atomic_bool>(false);
-  auto submitted = worker_.submit([this, posted, operation = std::move(operation), recoverLibrarySnapshot](std::stop_token stop) mutable -> core::WorkResult {
+  auto submitted = worker_.submit([this, posted, operation = std::move(operation), recoverLibrarySnapshot, closingOperation](std::stop_token stop) mutable -> core::WorkResult {
     try { checkpoint(stop); operation(stop); posted->store(true); return {}; }
     catch (const Failure& failure) {
       const bool cancelled = failure.error.code == storage::ErrorCode::Cancelled || stop.stop_requested();
       const auto message = cancelled ? tr("Cancelled") : text(failure.error.message);
-      if (!recoverLibrarySnapshot) {
+      if (closingOperation) { closeFailed(message); }
+      else if (!recoverLibrarySnapshot) {
         // Optional configuration reads must not refresh or revise the library.
         failed(message);
       } else if (cancelled && host_ && host_->lastSnapshot) {
@@ -252,7 +299,8 @@ bool SessionBridge::dispatch(std::move_only_function<void(std::stop_token)> oper
       posted->store(true);
       return std::unexpected(cancelled ? core::WorkError::Cancelled : core::WorkError::Failed);
     } catch (const std::exception& failure) {
-      failed(text(failure.what()));
+      if (closingOperation) { closeFailed(text(failure.what())); }
+      else { failed(text(failure.what())); }
       posted->store(true);
       return std::unexpected(core::WorkError::Failed);
     }
@@ -698,6 +746,25 @@ bool SessionBridge::continueDownload(ui::Target target) {
       packet.successful = successful;
       engineStatistics(std::make_shared<const ui::EngineStatisticsPacket>(packet));
     };
+    if (host_->peerPort == 0) {
+      ended(false);
+      throw Failure{{storage::ErrorCode::Unsupported, "Transfers are disabled in this offline profile"}};
+    }
+    if (!host_->engine) {
+      // Reuse depends on a reviewed source AND actual mapped runtime. Default
+      // unbound builds keep the established per-operation destruction barrier.
+      auto owner = engine::PersistentSession::create({1, host_->columnLayoutSession, 1});
+      if (!owner && owner.error() != engine::AccountingError::DependencyUnqualified) {
+        ended(false);
+        throw Failure{{storage::ErrorCode::Io, "Cannot create the native engine owner"}};
+      }
+      if (owner) {
+        host_->engine = std::move(*owner);
+        static_cast<void>(host_->engine->setObservationSink([this](engine::ApplicationPeerObservation value) {
+          nativeSession(nativePacket(value));
+        }));
+      }
+    }
     auto options = engine::LocalOptions{.profile = host_->profile, .hash = identity(target),
         .peerPort = host_->peerPort, .stop = stop};
     options.progress = [this, target](const engine::LocalProgress& value) {
@@ -712,7 +779,10 @@ bool SessionBridge::continueDownload(ui::Target target) {
       engineStatistics(std::make_shared<const ui::EngineStatisticsPacket>(packet));
     };
     const auto report = [&] {
-      try { return take(engine::continueLocal(host_->lease, options)); }
+      try {
+        return host_->engine ? take(engine::continueLocal(*host_->engine, host_->lease, options))
+            : take(engine::continueLocal(host_->lease, options));
+      }
       catch (...) { ended(false); throw; }
     }();
     ended(true);
@@ -722,5 +792,69 @@ bool SessionBridge::continueDownload(ui::Target target) {
     ready(host_->query({}), tr("Complete"));
   });
 }
-void SessionBridge::cancel() { if (current_) { current_->cancel(); } }
+void SessionBridge::nativeSession(ui::NativeSessionPresentation packet) {
+  if (!packet) { return; }
+  {
+    const std::lock_guard lock(progressMutex_);
+    latestNativeSession_ = std::move(packet);
+    if (nativeDeliveryQueued_) { return; }
+    nativeDeliveryQueued_ = true;
+  }
+  QMetaObject::invokeMethod(this, [this] {
+    std::optional<ui::NativeSessionPresentation> packet;
+    {
+      const std::lock_guard lock(progressMutex_);
+      packet.swap(latestNativeSession_);
+      nativeDeliveryQueued_ = false;
+    }
+    if (packet && (*packet)->session == publishedColumnLayoutSession_) { emit nativeSessionReady(*packet); }
+  }, Qt::QueuedConnection);
+}
+bool SessionBridge::closeSession() {
+  if (busy_ || closingSession_) { return false; }
+  closingSession_ = true;
+  idleMonitor_->stop();
+  QPointer<SessionBridge> guard(this);
+  const bool accepted = dispatch([this](std::stop_token) {
+    const auto session = host_ ? host_->columnLayoutSession : quint64{0};
+    bool joined = true;
+    bool released = true;
+    ui::NativeSessionPresentation finalObservation;
+    if (host_ && host_->engine) {
+      host_->engine->clearObservationSink();
+      const auto receipt = host_->engine->close(std::chrono::steady_clock::now() + std::chrono::seconds{5});
+      joined = receipt.sessionJoined;
+      released = receipt.retirement.storageReleased;
+      try {
+        if (const auto last = host_->engine->latest()) { finalObservation = nativePacket(*last); }
+      } catch (...) {} // Optional immutable telemetry cannot retain Host/lease.
+    }
+    host_.reset(); // Required lifetime barrier before GUI close acknowledgement.
+    try { nativeSession(std::move(finalObservation)); } catch (...) {}
+    QMetaObject::invokeMethod(this, [this, session, joined, released] {
+      QPointer<SessionBridge> guard(this);
+      completionMonitor_->stop();
+      busy_ = false;
+      emit busyChanged(false);
+      if (guard) { emit sessionClosed(session, joined, released); }
+    }, Qt::QueuedConnection);
+  }, false, true);
+  if (!guard) { return accepted; }
+  if (!accepted) { closingSession_ = false; idleMonitor_->start(); }
+  return accepted;
+}
+void SessionBridge::closeFailed(QString message) {
+  QMetaObject::invokeMethod(this, [this, message = std::move(message)] {
+    QPointer<SessionBridge> guard(this);
+    closingSession_ = false;
+    idleMonitor_->start();
+    emit sessionCloseFailed();
+    if (!guard) { return; }
+    completionMonitor_->stop();
+    busy_ = false;
+    emit busyChanged(false);
+    if (guard) { emit messageReady(message); }
+  }, Qt::QueuedConnection);
+}
+void SessionBridge::cancel() { if (current_ && !closingSession_) { current_->cancel(); } }
 } // namespace biglybtc::app

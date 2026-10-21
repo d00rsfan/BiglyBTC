@@ -1,0 +1,105 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_UNCOMPILED_UNQUALIFIED",
+  "scope": "P04-29_ISOLATED_TEST_ONLY_LT_CAUSAL_OVERLAY_AND_TESTS",
+  "original_reference": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "libtorrent_recorded_upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "libtorrent_archive_sha256": "fa0168f5c2b510105ce4e215f5863c80597112b99fc4f30514de2a6ea84da1b5",
+  "parent_source_build_record_sha256": "436931d4c6b87274c60b89877afedc19e06485bc4f04d120a3ab3e1889abfc66",
+  "retained_parent_artifact_sha256": "c35f1b0408508c019f002c438d70dd361a55be20286ded56711efd6bba2424e3",
+  "before_sha256": {
+    "src/peer_connection.cpp": "41d22135c8f01adb1eaf6f668b7113d09b270da0d593b2b9cb6fb866048ee7e4",
+    "src/mmap_disk_io.cpp": "e28fdbb4f9eec4f7808098051987a5f9beab1fca1be3e5d0b628fb73c4ae1410",
+    "include/libtorrent/mmap_storage.hpp": "8b7d60a7e946eaa789d31fcd0c2f720a6bda1fbaa0a345218919fdedad44ee87",
+    "src/torrent.cpp": "d0b8d64c54583cb9287d20aaf5ea5bc2e85cbf0caa5d5c9df42f40c77187d185",
+    "src/session_impl.cpp": "e33778939a03634f7ca588752f924afcdf790ac48ddd2a127af71e00f34d1c65"
+  },
+  "source_sha256": {
+    "include/libtorrent/aux_/biglybtc_causal_test.hpp": "6c8942610714de8effaa13b6286fb9efb5f9b45eef320822955d4d4cb4e94eb7",
+    "include/libtorrent/mmap_storage.hpp": "92606cadfc513fda25016c36ef71ac5c4c9e73b1c35de1621d2ab7bf04517729",
+    "src/biglybtc_causal_test.cpp": "8ac20d265abe3d7dde66b638574c113c8bfb5c9874d46eb452aceb42aedc08d6",
+    "src/mmap_disk_io.cpp": "38690ea74b49d086f989d8f995bb486e955d590e6c60395e92bd3e42aca71b3a",
+    "src/peer_connection.cpp": "223e0358de276c5bfd50e762e13475c854daea67e342a49d1115ce3efc28aaad",
+    "src/session_impl.cpp": "07101e1b6d6d36eab6fcf05e99b0cf6078c9dfbc3a7f99ad8f962d07e2db854a",
+    "src/torrent.cpp": "c9933b4cb853200d2d71df3022eb01fb87ee1493c1e1497eb8ede71bc0620af0"
+  },
+  "test_sha256": {
+    "tests/causal_worker.hpp": "e5cfb37a21515346ae34e5df2144253eeadfd20e7ada64a0c538a63463627df6",
+    "tests/persistent_causal_tests.cpp": "c5bdfe4878ae852f1ec001bbeb73e994a5762ece425f15afe1457b66e690ff71"
+  },
+  "artifacts_sha256": {
+    "BUILD-NOTES.md": "344ba17d0c4a73e773e9d9c0de34079413f0780f1bac14b6006bf7a16890f956",
+    "PLAN.md": "7057f830d2ecfa086a1b5ce3b361179a905ab54d8a5441ff7c54fdcf2a07ee40",
+    "author-notes.json": "535878b6a46be2c02156a2e652a11109c8e9b9aa9522cd93fc9a234b785c5b6d",
+    "before/include/libtorrent/mmap_storage.hpp": "8b7d60a7e946eaa789d31fcd0c2f720a6bda1fbaa0a345218919fdedad44ee87",
+    "before/src/mmap_disk_io.cpp": "e28fdbb4f9eec4f7808098051987a5f9beab1fca1be3e5d0b628fb73c4ae1410",
+    "before/src/peer_connection.cpp": "41d22135c8f01adb1eaf6f668b7113d09b270da0d593b2b9cb6fb866048ee7e4",
+    "before/src/session_impl.cpp": "e33778939a03634f7ca588752f924afcdf790ac48ddd2a127af71e00f34d1c65",
+    "before/src/torrent.cpp": "d0b8d64c54583cb9287d20aaf5ea5bc2e85cbf0caa5d5c9df42f40c77187d185",
+    "check_source.py": "f245422120293ec2923aa9e5184e1f8202b8b06ef47b486bea5b916c71c76eb2",
+    "libtorrent-causal.patch": "d186f4bdfc797fdcb81a38613f527478076cf374dec91da977cc6645a9764d9b",
+    "overlay/include/libtorrent/aux_/biglybtc_causal_test.hpp": "6c8942610714de8effaa13b6286fb9efb5f9b45eef320822955d4d4cb4e94eb7",
+    "overlay/include/libtorrent/mmap_storage.hpp": "92606cadfc513fda25016c36ef71ac5c4c9e73b1c35de1621d2ab7bf04517729",
+    "overlay/src/biglybtc_causal_test.cpp": "8ac20d265abe3d7dde66b638574c113c8bfb5c9874d46eb452aceb42aedc08d6",
+    "overlay/src/mmap_disk_io.cpp": "38690ea74b49d086f989d8f995bb486e955d590e6c60395e92bd3e42aca71b3a",
+    "overlay/src/peer_connection.cpp": "223e0358de276c5bfd50e762e13475c854daea67e342a49d1115ce3efc28aaad",
+    "overlay/src/session_impl.cpp": "07101e1b6d6d36eab6fcf05e99b0cf6078c9dfbc3a7f99ad8f962d07e2db854a",
+    "overlay/src/torrent.cpp": "c9933b4cb853200d2d71df3022eb01fb87ee1493c1e1497eb8ede71bc0620af0",
+    "overlay-target.cmake": "a05013c6db066627fb4c078fa9e82f4406cfae3e568890a070fd6e05dc74cbb1",
+    "prepare_overlay.py": "da0085859d030d531c19a97fe8023a02225811f2880040d81cedd0477370942c",
+    "static-checks.json": "3e989d3ab0f3bf71beccd8beb8910d2fea0350d03ad4b4c5cfd775ee7d84219c",
+    "tests/causal_worker.hpp": "e5cfb37a21515346ae34e5df2144253eeadfd20e7ada64a0c538a63463627df6",
+    "tests/persistent_causal_tests.cpp": "c5bdfe4878ae852f1ec001bbeb73e994a5762ece425f15afe1457b66e690ff71"
+  },
+  "historical_context_sha256": {
+    "implementation/manifest.json": "a6d937f283471f20d2d5b8b1b6c098eb687c1926299b0a5cc0b461a33a1975f7",
+    "implementation-amendments/session-error/manifest.json": "92a61053fafb2678c6589e42b5617edf5ee8b664e122400c2e18e2bd0a4d6470",
+    "DESIGN-FAULTS.md": "786838449dbdfb504a64d023ecd6e0c85aab4df2ab241d5cab89428d5459fa40",
+    "review-fence-oracle.md": "d59d05526a39e8204efdc1fd95262e49d294b51f6d5cdac090dfe3a5b694cada",
+    "review-fence-oracle-pins.json": "d86bb5910017840853e3c2779cfac50e472c944c87cb0aeaa222f509ef1f6820",
+    "runtime-guard/CONTRACT.md": "05a75f9bdeedc14a3896f4e3d683e2da12cc2923c159aa79277e302de0d82a74",
+    "runtime-guard/manifest.json": "40b09c4fc898159d71bcdd331b4cc2b9f04df09ed1d0cb8b4cf8e615989f0186",
+    "runtime-guard/staging/engine/runtime-binding/approved-runtime.json": "010c6094b62e5e2e597ce6267b0125f6560d1a043a792218389ef4b962e871ae",
+    "fault-fixtures/manifest.json": "c1cc6b082c43fa3b266d6e907f4940b056bebce3e8cf815dfa0e4aabf640ffed"
+  },
+  "retained_native_context_sha256": {
+    "preview/native/tests/owned_engine_fixture.hpp": "799b00c13c45dfd9f8edc0e3e89deff616eb872497a67ced52935aca53330cfa",
+    "preview/native/core/include/biglybtc/engine_statistics.hpp": "f5946fd72b06312dd4772bbfb7f4c84ebbfcff53971b737e8ba7cda4902678f9",
+    "build/dependencies/source-qualified-2.0.12/retention.json": "9b9ba22c14eafac097aecea13097ef59be6b686ff7150814b5d8889f6acc3b91",
+    "build/dependencies/source-qualified-2.0.12/gcc16-source-build.json": "436931d4c6b87274c60b89877afedc19e06485bc4f04d120a3ab3e1889abfc66"
+  },
+  "new_or_changed_upstream_inputs": {
+    "modified": 5,
+    "new": 2
+  },
+  "test_counts_planned_unobserved": {
+    "behavior_methods": 3,
+    "qt_rows_including_init_cleanup": 5,
+    "translation_units": 1
+  },
+  "runtime_binding": {
+    "unqualified_create": "FAIL_TEST_NOT_SKIP",
+    "current_catalog_approves_instrumented_provider": false,
+    "required_provider_purpose": "source-bound-qualification-only",
+    "causal_qualified_initially": false,
+    "no_implicit_artifact_trust": true
+  },
+  "execution": {
+    "compiler": 0,
+    "preprocessor": 0,
+    "native_tests": 0,
+    "java": 0,
+    "network": 0,
+    "target_imports": 0,
+    "git_mutations": 0,
+    "profile_access": 0
+  },
+  "actual_native_or_dependency_mutations_by_author": 0,
+  "pending_gates": [
+    "independent full source review",
+    "root isolated source-build and exact source/build/toolchain/dependency/image binding",
+    "reviewed instrumented provider manifest/catalog addition",
+    "actual causal Qt tests with bounded raw ledger",
+    "separate synthetic policy fault cases and ordinary/fault/sanitizer regressions"
+  ]
+}

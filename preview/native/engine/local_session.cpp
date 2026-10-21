@@ -1,5 +1,6 @@
 #include "local_session.hpp"
 #include "local_support.hpp"
+#include "persistent_session_support.hpp"
 #include "multifile_session.hpp"
 #include "file_io.hpp"
 #include "torrent_state.hpp"
@@ -249,7 +250,7 @@ void completeState(storage::TorrentStateFile& state, int pieces, std::int64_t si
   done(state.replaceSection("attributes", attributes.serialize()));
 }
 
-LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options) {
+LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options, PersistentSession* owner = nullptr) {
   require(options.peerPort != 0 && options.timeout > 0s && options.timeout <= 180s, "Invalid owned-loopback options");
   require(!options.stop.stop_requested(), "Local session cancelled", ErrorCode::Cancelled);
   auto namedProfile = directory(options.profile);
@@ -280,7 +281,7 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options)
   const auto policy = readPolicy(selectedEntry.root(), static_cast<std::size_t>(info->num_files()));
   if (info->num_files() != 1 || original.document().find("info")->find("files")
       || std::filesystem::path(info->files().file_path(lt::file_index_t{0})).has_parent_path()) {
-    return take(continueMultifile(lease, options, *selected, inventory, store, original, info, policy));
+    return take(continueMultifile(lease, options, *selected, inventory, store, original, info, policy, owner));
   }
   auto initialAttributes = dictionary(original.document().find("attributes"));
   auto files = mapping(*selected, initialAttributes.root());
@@ -314,7 +315,49 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options)
         "Unrecognized payload hard link", ErrorCode::UnsafePath);
   }
   LocalReport report{0, 0, info->total_size(), {}};
-  {
+  if (owner) {
+    PersistentOperation operation(*owner, lease, options);
+    lt::add_torrent_params parameters;
+    parameters.download_limit = policy.downloadLimit;
+    parameters.upload_limit = policy.uploadLimit;
+    for (auto priority : policy.priorities) { parameters.file_priorities.push_back(lt::download_priority_t{priority}); }
+    parameters.ti = info;
+    parameters.save_path = files.parent.string();
+    parameters.renamed_files[lt::file_index_t{0}] = files.actual;
+    parameters.flags &= ~lt::torrent_flags::paused;
+    parameters.flags &= ~lt::torrent_flags::auto_managed;
+    parameters.flags |= lt::torrent_flags::disable_dht | lt::torrent_flags::disable_lsd | lt::torrent_flags::disable_pex;
+    auto handle = operation.add(std::move(parameters));
+    auto nextProgress = std::chrono::steady_clock::time_point::min();
+    auto publish = [&](const lt::torrent_status& status, LocalProgress::Phase phase, bool force = false) {
+      const auto now = std::chrono::steady_clock::now();
+      if (!options.progress || (!force && now < nextProgress)) { return; }
+      options.progress({phase, status.total_done, status.download_payload_rate, status.upload_payload_rate,
+          status.num_pieces, info->num_pieces()});
+      nextProgress = now + 200ms;
+    };
+    operation.wait(options, [&](const auto&) {
+      const auto status = handle.status();
+      publish(status, LocalProgress::Phase::Checking);
+      return status.state != lt::torrent_status::checking_files && status.state != lt::torrent_status::checking_resume_data;
+    });
+    report.reusedPieces = handle.status().num_pieces;
+    observe(options, LocalStage::Checked);
+    require(!options.stop.stop_requested(), "Local session cancelled", ErrorCode::Cancelled);
+    handle.connect_peer({lt::make_address("127.0.0.1"), options.peerPort});
+    operation.wait(options, [&](const auto&) {
+      const auto status = handle.status();
+      publish(status, LocalProgress::Phase::Downloading);
+      return status.is_seeding;
+    });
+    report.received = handle.status().total_payload_download;
+    publish(handle.status(), LocalProgress::Phase::Flushing, true);
+    operation.request(); // A fresh observation may arrive during the existing flush wait.
+    handle.pause();
+    handle.save_resume_data(lt::torrent_handle::flush_disk_cache);
+    operation.wait(options, [&](const auto& pending) { return operation.flushed(pending); });
+    operation.retire(); // Required BEFORE the unchanged payload/state publication.
+  } else {
     lt::session session(settings());
     SessionStatisticsSampler statistics(session, options);
     lt::add_torrent_params parameters;
@@ -446,6 +489,16 @@ std::expected<LocalReport, Error> continueLocal(const LocalOptions& options) {
 
 std::expected<LocalReport, Error> continueLocal(const storage::ProfileLease& lease, const LocalOptions& options) {
   try { return run(lease, options); }
+  catch (const Failure& failure) { return std::unexpected(failure.error); }
+  catch (const std::exception& failure) { return std::unexpected(Error{ErrorCode::Io, failure.what()}); }
+}
+
+std::expected<LocalReport, Error> continueLocal(PersistentSession& owner,
+    const storage::ProfileLease& lease, const LocalOptions& options) {
+  try {
+    PersistentCall call(owner, lease);
+    return run(lease, options, &owner);
+  }
   catch (const Failure& failure) { return std::unexpected(failure.error); }
   catch (const std::exception& failure) { return std::unexpected(Error{ErrorCode::Io, failure.what()}); }
 }

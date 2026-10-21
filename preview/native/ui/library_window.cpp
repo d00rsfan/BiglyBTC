@@ -637,6 +637,15 @@ void LibraryWindow::setHistoryRange(HistoryRangePresentation packet) {
   }
   if (guard) { queueOptionalViews(); }
 }
+void LibraryWindow::setNativeSession(NativeSessionPresentation packet) {
+  if (closing_ || !acceptNativeSession(latestNativeSession_, packet, columnSession_)) { return; }
+  latestNativeSession_ = std::move(packet);
+}
+void LibraryWindow::completeSessionClose() {
+  if (!closing_ || !sessionCloseRequested_ || sessionCloseAcknowledged_) { return; }
+  sessionCloseAcknowledged_ = true;
+  QTimer::singleShot(0, this, &QWidget::close);
+}
 void LibraryWindow::setEngineStatistics(EngineStatisticsPresentation packet) {
   if (closing_ || !acceptEngineStatistics(latestEngineStatistics_, packet, columnSession_)) { return; }
   const bool fresh = !latestEngineStatistics_ || packet->operation > latestEngineStatistics_->operation;
@@ -756,6 +765,7 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
   columnSession_ = session;
+  latestNativeSession_.reset();
   rememberedStatisticsNavigation_.reset();
   latestEngineStatistics_.reset();
   engineActivity_.reset();
@@ -1203,6 +1213,14 @@ void LibraryWindow::closeEvent(QCloseEvent* event) {
     setMessage(tr("Finishing current operation…"));
     event->ignore();
     emit cancelRequested();
+    return;
+  }
+  if (sessionCloseEnabled_ && !sessionCloseAcknowledged_) {
+    event->ignore();
+    if (!sessionCloseRequested_) {
+      sessionCloseRequested_ = true;
+      emit sessionCloseRequested();
+    }
     return;
   }
   activeSavedRequest_.reset();

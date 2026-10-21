@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "purpose": "source-bound-qualification-only",
+  "causal_qualified": false,
+  "source_build_record": "instrumented-source-build-record-v2.json",
+  "source_build_record_sha256": "c2a18c7d10684fd5b943e5e2d167e57d7417b3d1fddc0d641904386d41e47b91",
+  "source_root": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/causal-v2/source",
+  "build_root": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/causal-v2/build",
+  "install_root": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/causal-v2/install",
+  "artifact": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/causal-v2/install/lib/libtorrent-rasterbar.so.2.0.12",
+  "artifact_sha256": "60ac6edd933f028f63f67f5f567066aefe069cda0693fe7c987448412fd444a3",
+  "artifact_bytes": 8774224
+}

@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "purpose": "source-bound-qualification-only",
+  "causal_qualified": false,
+  "source_build_record": "source-build-record.json",
+  "source_build_record_sha256": "436931d4c6b87274c60b89877afedc19e06485bc4f04d120a3ab3e1889abfc66",
+  "source_root": "/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/source",
+  "build_root": "/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/build-provenance",
+  "install_root": "/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/install",
+  "artifact": "/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/install/lib/libtorrent-rasterbar.so.2.0.12",
+  "artifact_sha256": "c35f1b0408508c019f002c438d70dd361a55be20286ded56711efd6bba2424e3",
+  "artifact_bytes": 8737560,
+  "retention_receipt": "retained-runtime.json",
+  "retention_receipt_sha256": "9b9ba22c14eafac097aecea13097ef59be6b686ff7150814b5d8889f6acc3b91"
+}

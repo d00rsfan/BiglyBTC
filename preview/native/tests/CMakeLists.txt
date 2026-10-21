@@ -610,3 +610,66 @@ foreach(corpus IN ITEMS history-range history-range-dense)
     "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/${corpus}")
   set_tests_properties(saved-${corpus}-original-corpus PROPERTIES TIMEOUT 120 LABELS "unit;statistics;history;fixtures;read-only")
 endforeach()
+
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-persistent-session-tests persistent_session_tests.cpp)
+  set_target_properties(biglybtc-persistent-session-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-persistent-session-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+  target_compile_options(biglybtc-persistent-session-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME persistent-native-peer-session COMMAND biglybtc-persistent-session-tests)
+  set_tests_properties(persistent-native-peer-session PROPERTIES TIMEOUT 240 LABELS "unit;integration;loopback;statistics")
+endif()
+
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-native-session-integration-tests native_session_integration_tests.cpp)
+  set_target_properties(biglybtc-native-session-integration-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-native-session-integration-tests PRIVATE biglybtc_desktop_host biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+  target_compile_options(biglybtc-native-session-integration-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME persistent-native-session-window-worker COMMAND biglybtc-native-session-integration-tests)
+  set_tests_properties(persistent-native-session-window-worker PROPERTIES TIMEOUT 240
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;ui;integration;loopback;statistics")
+endif()
+
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-persistent-session-fault-tests persistent_api_faults.cpp persistent_session_fault_tests.cpp)
+  set_target_properties(biglybtc-persistent-session-fault-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-persistent-session-fault-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+  target_compile_options(biglybtc-persistent-session-fault-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_link_options(biglybtc-persistent-session-fault-tests PRIVATE
+    LINKER:--wrap=_ZN10libtorrent14session_handle10pop_alertsEPSt6vectorIPNS_5alertESaIS3_EE
+    LINKER:--wrap=_ZN10libtorrent14session_handle18post_session_statsEv
+    LINKER:--wrap=_ZN10libtorrent14session_handle14remove_torrentERKNS_14torrent_handleENS_5flags13bitfield_flagIhNS_16remove_flags_tagEvEE
+    LINKER:--wrap=_ZN10libtorrent21session_stats_metricsEv
+    LINKER:--wrap=_ZNK10libtorrent19session_stats_alert8countersEv
+)
+  add_test(NAME persistent-native-peer-faults COMMAND biglybtc-persistent-session-fault-tests)
+  set_tests_properties(persistent-native-peer-faults PROPERTIES TIMEOUT 180 LABELS "unit;integration;loopback;statistics")
+endif()
+
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-app-close-fault-tests app_close_faults.cpp persistent_api_faults.cpp app_close_fault_tests.cpp)
+  set_target_properties(biglybtc-app-close-fault-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-app-close-fault-tests PRIVATE biglybtc_desktop_host biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+  target_compile_options(biglybtc-app-close-fault-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_link_options(biglybtc-app-close-fault-tests PRIVATE
+    LINKER:--wrap=_ZN10libtorrent14session_handle10pop_alertsEPSt6vectorIPNS_5alertESaIS3_EE
+    LINKER:--wrap=_ZN10libtorrent14session_handle18post_session_statsEv
+    LINKER:--wrap=_ZN10libtorrent14session_handle14remove_torrentERKNS_14torrent_handleENS_5flags13bitfield_flagIhNS_16remove_flags_tagEvEE
+    LINKER:--wrap=_ZN10libtorrent21session_stats_metricsEv
+    LINKER:--wrap=_ZNK10libtorrent19session_stats_alert8countersEv
+    LINKER:--wrap=_ZN8biglybtc4core8Executor6submitESt18move_only_functionIJFSt8expectedIvNS0_9WorkErrorEESt10stop_tokenEEE
+    LINKER:--wrap=_ZN10libtorrent7sessionD1Ev
+    LINKER:--wrap=_Znwm
+)
+  add_test(NAME persistent-native-session-close-faults COMMAND biglybtc-app-close-fault-tests)
+  set_tests_properties(persistent-native-session-close-faults PROPERTIES TIMEOUT 180
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;ui;integration;loopback;statistics")
+endif()
+
+if(BIGLYBTC_LOCAL_ENGINE)
+  include(RuntimeBindingTests.cmake)
+endif()
+
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP)
+  include(CausalQualificationTests.cmake)
+endif()

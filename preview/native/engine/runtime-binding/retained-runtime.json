@@ -1,0 +1,26 @@
+{
+  "status": "BYTE_EXACT_RETAINED_CANDIDATE_NOT_CAUSALLY_QUALIFIED",
+  "source_build_record_sha256": "436931d4c6b87274c60b89877afedc19e06485bc4f04d120a3ab3e1889abfc66",
+  "destination": "/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12",
+  "maps_verified": {
+    "source": 472,
+    "build-provenance": 4,
+    "install": 282
+  },
+  "original_roots": {
+    "source": "/tmp/biglybtc-deps/libtorrent-2.0.12-release/libtorrent-2.0.12",
+    "build-provenance": "/tmp/biglybtc-deps/build-source-gcc16",
+    "install": "/tmp/biglybtc-deps/from-source-gcc16"
+  },
+  "retained_roots": {
+    "source": "/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/source",
+    "build-provenance": "/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/build-provenance",
+    "install": "/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/install"
+  },
+  "artifact": "/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/install/lib/libtorrent-rasterbar.so.2.0.12",
+  "artifact_sha256": "c35f1b0408508c019f002c438d70dd361a55be20286ded56711efd6bba2424e3",
+  "rebuilt": false,
+  "original_files_changed": false,
+  "installed_metadata_paths_historical": true,
+  "note": "The four build provenance files are evidence only; do not run this relocated Ninja cache. CMake imported install targets are relocatable; pkgconfig/build paths retain original bytes."
+}

@@ -267,3 +267,21 @@ the remaining Statistics service views are still unfinished.
 Transfers → Current now shows all six measured engine interval rates: combined,
 payload and protocol for receive/send. They retain the existing one-operation
 scope and are independent of saved application totals.
+
+
+**Persistent peer accounting prerequisite (P04-29)** adds a worker-owned engine
+that can retain actual peer counters across consecutive experimental single-file
+and multifile operations. It records absolute observations independently of
+optional UI callbacks, samples an admitted session while idle, and coordinates
+normal window close with worker cleanup before releasing the profile lease.
+Existing Activity and Transfers widgets continue to show their documented
+per-operation measurements; exposing the new observations is a later milestone.
+
+The portable preview and ordinary builds keep the existing per-operation engine
+path. Persistent admission is off by default and requires an exact approved
+source/build/install manifest plus checks of the actual loaded library. A version
+string alone does not enable it. Qualification uses separately owned loopback
+fixtures, including a test-only instrumented library which is never shipped.
+See [the persistent accounting contract](docs/persistent-peer-accounting.md)
+for the counter domain, conditional retirement guarantees and build boundaries.
+This stage does not write original lifetime totals, marks, history or caches.

@@ -10,6 +10,7 @@
 #include "history_month_presentation.hpp"
 #include "history_range_presentation.hpp"
 #include "engine_statistics_presentation.hpp"
+#include "native_session_presentation.hpp"
 
 #include <QObject>
 
@@ -39,6 +40,7 @@ public:
   bool details(ui::Target target);
   bool continueDownload(ui::Target target);
   void cancel();
+  bool closeSession();
   bool busy() const { return busy_; }
 signals:
   void snapshotReady(biglybtc::ui::Presentation);
@@ -54,24 +56,34 @@ signals:
   void columnLayoutSessionReady(quint64 session);
   void columnLayoutsReady(biglybtc::ui::ColumnLayoutsPresentation);
   void columnLayoutSaved(biglybtc::ui::ColumnLayoutSavePresentation);
+  void nativeSessionReady(biglybtc::ui::NativeSessionPresentation);
+  void sessionClosed(quint64 session, bool joined, bool storageReleased);
+  void sessionCloseFailed();
   void busyChanged(bool);
   void messageReady(QString);
 private:
   struct Host;
-  bool dispatch(std::move_only_function<void(std::stop_token)> operation, bool recoverLibrarySnapshot = true);
+  bool dispatch(std::move_only_function<void(std::stop_token)> operation, bool recoverLibrarySnapshot = true, bool closingOperation = false);
   void ready(ui::Presentation snapshot, QString message = {});
   void failed(QString message);
   void progress(ui::Telemetry update);
   void engineStatistics(ui::EngineStatisticsPresentation);
+  void nativeSession(ui::NativeSessionPresentation);
+  void closeFailed(QString);
   std::unique_ptr<Host> host_;
   std::optional<core::Ticket> current_;
   std::shared_ptr<std::atomic_bool> completionPosted_;
   QTimer* completionMonitor_ = nullptr;
+  QTimer* idleMonitor_ = nullptr;
+  std::optional<core::Ticket> idlePoll_;
+  bool closingSession_ = false;
   std::mutex progressMutex_;
   std::optional<ui::Telemetry> latestProgress_;
   bool deliveryQueued_ = false;
   std::optional<ui::EngineStatisticsPresentation> latestEngineStatistics_;
   bool engineDeliveryQueued_ = false;
+  std::optional<ui::NativeSessionPresentation> latestNativeSession_;
+  bool nativeDeliveryQueued_ = false;
   bool busy_ = false;
   // GUI-thread publication only; worker commands capture the requested identity.
   quint64 publishedColumnLayoutSession_ = 0;

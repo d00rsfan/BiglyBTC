@@ -70,6 +70,18 @@ int main(int argc, char** argv) {
     QObject::connect(&window, &Window::columnLayoutSaveRequested, &bridge, &Bridge::saveColumnLayout);
     QObject::connect(&window, &Window::cancelRequested, &bridge, &Bridge::cancel);
     bridge.open(profile, static_cast<unsigned short>(port));
+    window.enableSessionCloseHandshake();
+    QObject::connect(&bridge, &Bridge::nativeSessionReady, &window, &Window::setNativeSession);
+    QObject::connect(&window, &Window::sessionCloseRequested, &bridge, [&] {
+      if (!bridge.closeSession()) {
+        window.retrySessionClose();
+        window.setMessage(QStringLiteral("Cannot close the native session yet; retry closing the window"));
+      }
+    });
+    QObject::connect(&bridge, &Bridge::sessionClosed, &window, [&](quint64, bool, bool) {
+      window.completeSessionClose();
+    });
+    QObject::connect(&bridge, &Bridge::sessionCloseFailed, &window, &Window::retrySessionClose);
     window.show();
     return application.exec();
   } catch (const std::exception& error) {

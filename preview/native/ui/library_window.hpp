@@ -1,5 +1,7 @@
 #pragma once
 
+#include "native_session_presentation.hpp"
+
 #include "library_model.hpp"
 #include "file_model.hpp"
 #include "saved_services_presentation.hpp"
@@ -61,6 +63,11 @@ public:
   void setHistoryMonth(HistoryMonthPresentation);
   void setHistoryRange(HistoryRangePresentation);
   void setEngineStatistics(EngineStatisticsPresentation);
+  void setNativeSession(NativeSessionPresentation);
+  NativeSessionPresentation nativeSessionSnapshot() const { return latestNativeSession_; }
+  void enableSessionCloseHandshake() { sessionCloseEnabled_ = true; }
+  void completeSessionClose();
+  void retrySessionClose() { sessionCloseRequested_ = false; closing_ = false; updateActions(); }
   void beginColumnLayoutSession(quint64 session);
   void setColumnLayouts(ColumnLayoutsPresentation);
   void setColumnLayoutSaved(ColumnLayoutSavePresentation);
@@ -80,6 +87,7 @@ signals:
   void continueRequested(biglybtc::ui::Target);
   void detailsRequested(biglybtc::ui::Target);
   void cancelRequested();
+  void sessionCloseRequested();
 protected:
   void closeEvent(QCloseEvent*) override;
   bool eventFilter(QObject*, QEvent*) override;
@@ -197,6 +205,10 @@ private:
   std::optional<int> restoreFileIndex_;
   bool busy_ = false;
   bool closing_ = false;
+  bool sessionCloseEnabled_ = false;
+  bool sessionCloseRequested_ = false;
+  bool sessionCloseAcknowledged_ = false;
+  NativeSessionPresentation latestNativeSession_{};
   bool suppressAutomaticDetails_ = false;
   bool updating_ = false;
   bool presented_ = false;
