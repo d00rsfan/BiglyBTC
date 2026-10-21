@@ -1,8 +1,11 @@
 #include "biglybtc/saved_history.hpp"
+#include "biglybtc/saved_history_range.hpp"
 
 #include <charconv>
 #include <chrono>
 #include <limits>
+#include <new>
+#include <utility>
 
 namespace biglybtc::core {
 namespace {
@@ -34,25 +37,14 @@ bool add(I& target, I amount) noexcept {
   target += amount;
   return true;
 }
-} // namespace
-
-bool validHistoryDate(HistoryDate date) noexcept {
-  if (date.year < 1970 || date.year > 9999 || date.month < 1 || date.month > 12
-      || date.day < 1 || date.day > 31) { return false; }
-  return std::chrono::year_month_day{std::chrono::year{date.year},
-      std::chrono::month{date.month}, std::chrono::day{date.day}}.ok();
-}
-
-std::expected<SavedHistoryDay, SavedHistoryError> readSavedHistoryDay(
-    std::string_view bytes, HistoryDate date, std::stop_token stop) {
+// Shared strict record traversal. The callback receives reconstructed epoch
+// minutes only after the complete source record has been validated. It may
+// report a checked aggregation error at the same point as the old day reader.
+template<class Emit>
+std::expected<void, SavedHistoryError> records(std::string_view bytes,
+    std::stop_token stop, Emit emit) {
   if (stop.stop_requested()) { return std::unexpected(SavedHistoryError::Cancelled); }
-  if (!validHistoryDate(date)) { return std::unexpected(SavedHistoryError::InvalidDate); }
   if (bytes.size() > SavedHistoryMaximumBytes) { return std::unexpected(SavedHistoryError::Limit); }
-  const auto day = std::chrono::sys_days{std::chrono::year{date.year}
-      / std::chrono::month{date.month} / std::chrono::day{date.day}};
-  const I dayBegin = static_cast<I>(day.time_since_epoch().count()) * 1440;
-  const I dayEnd = dayBegin + 1440;
-  SavedHistoryDay result{.date = date};
   std::optional<I> minute;
   std::size_t records = 0;
   std::size_t offset = 0;
@@ -108,8 +100,35 @@ std::expected<SavedHistoryDay, SavedHistoryError> readSavedHistoryDay(
     if (!minute) { continue; }
     if (*minute == MaximumMinute) { return std::unexpected(SavedHistoryError::Overflow); }
     ++*minute;
-    if (*minute < dayBegin || *minute >= dayEnd) { ++result.outsideDayRecords; continue; }
-    const auto hour = static_cast<std::size_t>((*minute - dayBegin) / 60);
+    auto accepted = emit(*minute, counters);
+    if (!accepted) { return std::unexpected(accepted.error()); }
+  }
+  if (stop.stop_requested()) { return std::unexpected(SavedHistoryError::Cancelled); }
+  return {};
+}
+} // namespace
+
+bool validHistoryDate(HistoryDate date) noexcept {
+  if (date.year < 1970 || date.year > 9999 || date.month < 1 || date.month > 12
+      || date.day < 1 || date.day > 31) { return false; }
+  return std::chrono::year_month_day{std::chrono::year{date.year},
+      std::chrono::month{date.month}, std::chrono::day{date.day}}.ok();
+}
+
+std::expected<SavedHistoryDay, SavedHistoryError> readSavedHistoryDay(
+    std::string_view bytes, HistoryDate date, std::stop_token stop) {
+  if (stop.stop_requested()) { return std::unexpected(SavedHistoryError::Cancelled); }
+  if (!validHistoryDate(date)) { return std::unexpected(SavedHistoryError::InvalidDate); }
+  if (bytes.size() > SavedHistoryMaximumBytes) { return std::unexpected(SavedHistoryError::Limit); }
+  const auto day = std::chrono::sys_days{std::chrono::year{date.year}
+      / std::chrono::month{date.month} / std::chrono::day{date.day}};
+  const I dayBegin = static_cast<I>(day.time_since_epoch().count()) * 1440;
+  const I dayEnd = dayBegin + 1440;
+  SavedHistoryDay result{.date = date};
+  const auto parsed = records(bytes, stop, [&](I minute, const HistoryCounters& counters)
+      -> std::expected<void, SavedHistoryError> {
+    if (minute < dayBegin || minute >= dayEnd) { ++result.outsideDayRecords; return {}; }
+    const auto hour = static_cast<std::size_t>((minute - dayBegin) / 60);
     auto hourly = result.hours[hour].value_or(HistoryCounters{});
     auto totals = result.totals.value_or(HistoryCounters{});
     for (std::size_t i = 0; i < counters.size(); ++i) {
@@ -120,9 +139,27 @@ std::expected<SavedHistoryDay, SavedHistoryError> readSavedHistoryDay(
     result.hours[hour] = hourly;
     result.totals = totals;
     ++result.observations;
-  }
-  if (stop.stop_requested()) { return std::unexpected(SavedHistoryError::Cancelled); }
+    return {};
+  });
+  if (!parsed) { return std::unexpected(parsed.error()); }
   return result;
+}
+
+std::expected<std::vector<SavedHistoryRecord>, SavedHistoryError> readSavedHistoryRecords(
+    std::string_view bytes, std::stop_token stop) {
+  try {
+    std::vector<SavedHistoryRecord> result;
+    const auto parsed = records(bytes, stop, [&](I minute, const HistoryCounters& counters)
+        -> std::expected<void, SavedHistoryError> {
+      // The traversal has already checked minute multiplication and increment.
+      result.push_back({minute * MinuteMillis, counters});
+      return {};
+    });
+    if (!parsed) { return std::unexpected(parsed.error()); }
+    return result;
+  } catch (const std::bad_alloc&) {
+    return std::unexpected(stop.stop_requested() ? SavedHistoryError::Cancelled : SavedHistoryError::Memory);
+  }
 }
 
 } // namespace biglybtc::core

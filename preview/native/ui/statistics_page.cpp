@@ -5,6 +5,7 @@
 #include "history_view.hpp"
 #include "history_week_view.hpp"
 #include "history_month_view.hpp"
+#include "history_range_view.hpp"
 
 #include <QDateTime>
 #include <QEvent>
@@ -152,11 +153,13 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
   engineLayout->addWidget(engineStatus_); engineLayout->addWidget(engineTarget_);
   engineDetails_ = new QWidget(engine); engineDetails_->setObjectName(QStringLiteral("statistics-engine-counters"));
   auto* engineForm = new QFormLayout(engineDetails_);
-  const std::array<const char*, 8> engineIds{"received", "sent", "payload-received", "payload-sent",
-      "protocol-received", "protocol-sent", "receive-rate", "send-rate"};
-  const std::array<QString, 8> engineTitles{tr("Received (payload + protocol):"), tr("Sent (payload + protocol):"),
+  const std::array<const char*, 12> engineIds{"received", "sent", "payload-received", "payload-sent",
+      "protocol-received", "protocol-sent", "receive-rate", "send-rate",
+      "payload-receive-rate", "payload-send-rate", "protocol-receive-rate", "protocol-send-rate"};
+  const std::array<QString, 12> engineTitles{tr("Received (payload + protocol):"), tr("Sent (payload + protocol):"),
       tr("Payload received:"), tr("Payload sent:"), tr("Protocol received:"), tr("Protocol sent:"),
-      tr("Combined receive rate:"), tr("Combined send rate:")};
+      tr("Combined receive rate:"), tr("Combined send rate:"), tr("Payload receive rate:"), tr("Payload send rate:"),
+      tr("Protocol receive rate:"), tr("Protocol send rate:")};
   for (std::size_t i = 0; i < engineValues_.size(); ++i) {
     engineValues_[i] = label(unavailable(), QStringLiteral("statistics-engine-") + QString::fromLatin1(engineIds[i]), engineDetails_);
     engineForm->addRow(engineTitles[i], engineValues_[i]);
@@ -197,6 +200,8 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
       initial && initial->hourly, initial ? initial->weekTraffic : SavedHistoryTraffic::Payload);
   historyMonth_ = new HistoryMonthView(historyTabs_, initial ? std::optional{initial->monthEnding} : std::nullopt,
       initial ? initial->monthTraffic : SavedHistoryTraffic::Payload);
+  historyRange_ = new HistoryRangeView(historyTabs_, initial ? initial->rangePeriod : core::HistoryPeriod::Week,
+      initial ? initial->rangeOffset : 0, initial ? initial->rangeTraffic : SavedHistoryTraffic::Payload);
   historyLayout->addWidget(historyTabs_);
   connect(history_, &HistoryView::readRequested, this, [this](core::HistoryDate date) {
     // HistoryView emits only when visible; do not drop its first show signal
@@ -207,6 +212,8 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
   connect(historyMonth_, &HistoryMonthView::readRequested, this, [this](core::HistoryDate date) { emit historyMonthRequested(date); });
   historyTabs_->addTab(history_, tr("Daily")); historyTabs_->addTab(historyWeek_, tr("7 days"));
   historyTabs_->addTab(historyMonth_, tr("30 days"));
+  connect(historyRange_, &HistoryRangeView::readRequested, this, &StatisticsPage::historyRangeRequested);
+  historyTabs_->addTab(historyRange_, tr("Rolling history"));
   transferTabs->addTab(history, tr("History")); transferLayout->addWidget(transferTabs); tabs_->addTab(transfers, tr("Transfers"));
   auto* refresh = new QPushButton(tr("Refresh saved totals"), this); refresh->setObjectName(QStringLiteral("statistics-refresh"));
   connect(refresh, &QPushButton::clicked, this, &StatisticsPage::refreshRequested);
@@ -227,7 +234,7 @@ std::optional<StatisticsNavigation> StatisticsPage::navigation() const {
   const StatisticsNavigation result{tabs_->currentIndex(), activityViews_->currentIndex(),
       transferTabs_->currentIndex(), historyTabs_->currentIndex(), history_->selectedDate(),
       historyWeek_->selectedDate(), historyWeek_->hourlyResolution(), history_->traffic(), historyWeek_->traffic(),
-      historyMonth_->selectedDate(), historyMonth_->traffic()};
+      historyMonth_->selectedDate(), historyMonth_->traffic(), historyRange_->period(), historyRange_->offset(), historyRange_->traffic()};
   if (!validStatisticsNavigation(result)) { return {}; }
   return result;
 }
@@ -242,6 +249,7 @@ void StatisticsPage::resetHistorySession(quint64 session) {
   QPointer<StatisticsPage> guard(this); history_->resetSession(session);
   if (guard) { guard->historyWeek_->resetSession(session); }
   if (guard) { guard->historyMonth_->resetSession(session); }
+  if (guard) { guard->historyRange_->resetSession(session); }
 }
 core::HistoryDate StatisticsPage::selectedHistoryDate() const { return history_->selectedDate(); }
 HistoryPresentation StatisticsPage::historyPresentation() const { return history_->presentation(); }
@@ -272,6 +280,18 @@ HistoryMonthPresentation StatisticsPage::historyMonthPresentation() const { retu
 bool StatisticsPage::historyMonthSelected() const {
   return tabs_->currentIndex() == 1 && transferTabs_->currentIndex() == 1 && historyTabs_->currentIndex() == 2;
 }
+void StatisticsPage::beginHistoryRangeRequest(quint64 session, quint64 request, core::HistoryRangeRequest query) {
+  historyRange_->beginRequest(session, request, query);
+}
+void StatisticsPage::setHistoryRange(HistoryRangePresentation packet) { historyRange_->setPresentation(std::move(packet)); }
+void StatisticsPage::setHistoryRangeFailed(quint64 session, quint64 request, core::HistoryRangeRequest query, const QString& failure) {
+  historyRange_->setFailed(session, request, query, failure);
+}
+HistoryRangePresentation StatisticsPage::historyRangePresentation() const { return historyRange_->presentation(); }
+bool StatisticsPage::historyRangeSelected() const {
+  return tabs_->currentIndex() == 1 && transferTabs_->currentIndex() == 1 && historyTabs_->currentIndex() == 3;
+}
+void StatisticsPage::refreshHistoryRange() { historyRange_->requestRefresh(); }
 QTabWidget& StatisticsPage::tabs() { return *tabs_; }
 std::size_t StatisticsPage::sampleCount() const { return plot_->count(); }
 bool StatisticsPage::accepts(quint64 session, quint64 request) const {
@@ -406,7 +426,7 @@ void StatisticsPage::refreshEngine() {
   }
   const auto target = packet ? tr("Transfer: %1").arg(packet->name.isEmpty() ? tr("(unnamed transfer)") : packet->name) : QString{};
   const auto identity = packet ? tr("%1; generation %2; engine operation %3").arg(packet->target.hash).arg(packet->target.generation).arg(packet->operation) : QString{};
-  std::array<Fact, 10> facts{};
+  std::array<Fact, 14> facts{};
   facts[0] = {engineStatus_, std::move(status), sample ? tr("Last actual observation: %1 nanoseconds since the first accepted observation").arg(sample->elapsedNanoseconds) : QString{}};
   facts[1] = {engineTarget_, target, identity};
   for (std::size_t i = 0; i < engineValues_.size(); ++i) {
@@ -421,12 +441,17 @@ void StatisticsPage::refreshEngine() {
       facts[2 + i].tip = QString::number(values[i]) + tr(" measured bytes in this engine operation");
     }
     if (sample->rates) {
-      facts[8].text = tr("%1 bytes/s").arg(sample->rates->received);
-      facts[9].text = tr("%1 bytes/s").arg(sample->rates->sent);
-      facts[8].tip = tr("%1 measured combined receive bytes per second").arg(sample->rates->received);
-      facts[9].tip = tr("%1 measured combined send bytes per second").arg(sample->rates->sent);
+      const auto& rates = *sample->rates;
+      const std::array<std::int64_t, 6> values{rates.received, rates.sent, rates.payloadReceived,
+          rates.payloadSent, rates.protocolReceived, rates.protocolSent};
+      for (std::size_t i = 0; i < values.size(); ++i) {
+        facts[8 + i].text = tr("%1 bytes/s").arg(values[i]);
+        facts[8 + i].tip = tr("%1 measured bytes per second over the last accepted engine interval").arg(values[i]);
+      }
     } else {
-      facts[8].tip = tr("Requires an actual engine interval; no rate is inferred"); facts[9].tip = facts[8].tip;
+      for (std::size_t i = 8; i < facts.size(); ++i) {
+        facts[i].tip = tr("Requires an actual engine interval; no rate is inferred");
+      }
     }
   }
   engineDirty_ = false;

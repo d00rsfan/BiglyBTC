@@ -64,7 +64,7 @@ private slots:
       auto invalid = choices();
       switch (kind) {
         case 0: invalid.section = -1; break; case 1: invalid.activity = 2; break;
-        case 2: invalid.transfers = -1; break; case 3: invalid.history = 3; break;
+        case 2: invalid.transfers = -1; break; case 3: invalid.history = 4; break;
         case 4: invalid.dailyDate = {2023, 2, 29}; break; case 5: invalid.dailyDate = {10000, 1, 1}; break;
         case 6: invalid.weekEnding = {1970, 1, 6}; break; default: invalid.weekEnding = {2024, 4, 31}; break;
       }

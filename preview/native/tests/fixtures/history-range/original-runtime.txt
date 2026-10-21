@@ -1,0 +1,1 @@
+ACTUAL_ORIGINAL_DATE_QUERIES ranges=13 profiles=6 queries=5114 scalarObservations=30684 filenames=5614 fileReads=3358 listeners=6 averages=36 forbiddenProviderCalls=0 caches=disabled clock=explicit

@@ -160,7 +160,7 @@ Intervals use monotonic observation times and exact checked integer arithmetic;
 they do not reproduce Java's ten-second smoothing. Sampling is optional and cannot
 change transfer success. Saved overall totals are read independently and are never
 written or incremented with these operation counters. See the [engine statistics
-contract](docs/engine-statistics-contract.json). Global Activity/history and a
+contract](docs/engine-statistics-contract.json). Global Activity/live history recording and a
 persistent all-application engine remain unfinished.
 
 **Activity > Engine traffic** plots actual combined, payload and protocol rates for
@@ -189,9 +189,8 @@ History reads original stats/YYYY/MM/DD.dat v1 records under the held profile,
 without modifying records or caches. It loads only when selected and uses the
 existing worker queue. Changing profiles clears old results; closing/reopening
 Statistics rereads the selected/default day. The offline launcher includes
-explicitly generated saved history for previewing this screen. Original rolling
-history graphs, live history recording and persistent global ownership remain
-unfinished. Format, bounds and the independent Java reader fixtures are documented
+explicitly generated saved history for previewing this screen. Rolling queries are available in the separate Rolling history tab described
+below. Live history recording and persistent global ownership remain unfinished. Format, bounds and the independent Java reader fixtures are documented
 in docs/saved-history-contract.json and native/tests/fixtures/saved-history/.
 
 The Statistics > Transfers > History screen now also offers **7 days** beside
@@ -200,7 +199,8 @@ first, through the same profile lease. Missing files, present empty files,
 observed zero and signed counters remain distinct. Previous/next move seven days;
 Refresh history or F5 reloads only this overview. No weekly total is inferred:
 the original whole-period query can account for midnight spill differently from
-independent daily reads. Rolling graphs and live history recording remain open.
+independent daily reads. Use Rolling history for whole-period queries. Live
+history recording remains open.
 The offline launcher generates sample periods for today and 2024-01-02 without
 opening the original profile or enabling transfers.
 
@@ -248,3 +248,22 @@ and traffic choice as scalars, creates fresh widgets and rereads saved records.
 This read-only browser adds no recording, cache writes or persistent preferences.
 Its selected daily records differ from the original rolling month graph's hourly
 queries and pixel merging; it does not establish Java monthly graph equality.
+
+
+**Transfers → History → Rolling history** offers Hour, Day, Week, Month, Year
+and All, with previous/next periods and Refresh/F5. It reconstructs original
+minute observations and clamps queries to their captured UTC time. Month is a
+fixed30-day span with720 hourly buckets; Year uses365 daily buckets. All finds
+the earliest saved UTC date through a bounded read-only inventory. Payload,
+protocol and DHT remain six separate counters. Independent whole-period totals
+can differ from graph bucket sums at boundaries or spilled records, matching the
+original query's filename membership rules. Missing/unobserved values remain
+unknown, observed zero and signed adjustments remain exact. Hidden views defer
+work; stale responses cannot replace newer selections. Reopening retains scalar
+period/offset/traffic choices and reads fresh data. No history/cache writer is
+started. Application-global recording, lifetime accounting, Java smoothing and
+the remaining Statistics service views are still unfinished.
+
+Transfers → Current now shows all six measured engine interval rates: combined,
+payload and protocol for receive/send. They retain the existing one-operation
+scope and are independent of saved application totals.

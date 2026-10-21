@@ -575,3 +575,38 @@ target_compile_options(biglybtc-executor-startup-failure-tests PRIVATE -Wall -We
 target_link_options(biglybtc-executor-startup-failure-tests PRIVATE "LINKER:--wrap=_Znwm")
 add_test(NAME executor-startup-rollback COMMAND biglybtc-executor-startup-failure-tests)
 set_tests_properties(executor-startup-rollback PROPERTIES TIMEOUT 30 LABELS "unit")
+
+# Rolling original-format history: pure query, held lease, and real GUI worker.
+add_executable(biglybtc-saved-history-range-tests saved_history_range_tests.cpp)
+target_link_libraries(biglybtc-saved-history-range-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-saved-history-range-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME saved-history-rolling-query COMMAND biglybtc-saved-history-range-tests)
+set_tests_properties(saved-history-rolling-query PROPERTIES TIMEOUT 120 LABELS "unit;statistics;history")
+add_executable(biglybtc-history-range-reader-tests history_range_reader_tests.cpp)
+target_link_libraries(biglybtc-history-range-reader-tests PRIVATE biglybtc_profile)
+target_compile_options(biglybtc-history-range-reader-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_link_options(biglybtc-history-range-reader-tests PRIVATE "LINKER:--wrap=read" "LINKER:--wrap=readdir")
+add_test(NAME saved-history-rolling-reader COMMAND biglybtc-history-range-reader-tests)
+set_tests_properties(saved-history-rolling-reader PROPERTIES TIMEOUT 120 LABELS "unit;statistics;history;read-only")
+add_executable(biglybtc-history-range-query-driver history_range_query_driver.cpp)
+target_link_libraries(biglybtc-history-range-query-driver PRIVATE biglybtc_profile)
+target_compile_options(biglybtc-history-range-query-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+if(BIGLYBTC_DESKTOP)
+  foreach(kind IN ITEMS history-range-view history-range-integration engine-rates-view)
+    string(REPLACE "-" "_" source "${kind}")
+    add_executable(biglybtc-${kind}-tests ${source}_tests.cpp)
+    set_target_properties(biglybtc-${kind}-tests PROPERTIES AUTOMOC ON)
+    target_link_libraries(biglybtc-${kind}-tests PRIVATE biglybtc_desktop_host Qt6::Test)
+    target_compile_options(biglybtc-${kind}-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME ${kind} COMMAND biglybtc-${kind}-tests)
+    set_tests_properties(${kind} PROPERTIES TIMEOUT 120 ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;ui;statistics;history")
+  endforeach()
+endif()
+
+foreach(corpus IN ITEMS history-range history-range-dense)
+  add_test(NAME saved-${corpus}-original-corpus COMMAND Python3::Interpreter
+    "${CMAKE_CURRENT_SOURCE_DIR}/history_range_corpus.py"
+    "$<TARGET_FILE:biglybtc-history-range-query-driver>"
+    "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/${corpus}")
+  set_tests_properties(saved-${corpus}-original-corpus PROPERTIES TIMEOUT 120 LABELS "unit;statistics;history;fixtures;read-only")
+endforeach()

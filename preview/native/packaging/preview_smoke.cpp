@@ -1180,7 +1180,8 @@ private slots:
     auto* transfers = page->findChild<QTabWidget*>(QStringLiteral("statistics-transfer-tabs"));
     auto* traffic = page->findChild<QComboBox*>(QStringLiteral("saved-history-month-traffic"));
     QVERIFY(date); QVERIFY(periods); QVERIFY(transfers); QVERIFY(traffic);
-    QCOMPARE(periods->count(), 3); QCOMPARE(periods->tabText(2), QStringLiteral("30 days"));
+    QCOMPARE(periods->count(), 4); QCOMPARE(periods->tabText(2), QStringLiteral("30 days"));
+    QCOMPARE(periods->tabText(3), QStringLiteral("Rolling history"));
     QCOMPARE(date->minimumDate(), QDate(1970, 1, 30)); QCOMPARE(traffic->count(), 3);
     date->setDate(ending); periods->setCurrentIndex(2);
     page->tabs().setCurrentIndex(1); transfers->setCurrentIndex(1);

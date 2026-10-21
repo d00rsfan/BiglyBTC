@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "status": "ACTUAL_ORIGINAL_JAVA_DATE_QUERY_OUTPUT",
+  "original_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_full_subjects": {
+    "core/src/com/biglybt/core/stats/transfer/LongTermStats.java": {
+      "git_blob": "a369578b191cf4ead71a32e15b5592dcfa06212c",
+      "sha256": "f1a4bfaa8d15e8b0f9318a2af1653a854f9969bc09b80f4e9bd3c48afb62e1bf",
+      "bytes": 2666,
+      "compiled_path": "src/com/biglybt/core/stats/transfer/LongTermStats.java"
+    },
+    "core/src/com/biglybt/core/stats/transfer/LongTermStatsListener.java": {
+      "git_blob": "e43a6369202effd6ce07520789ba8d0b890e9941",
+      "sha256": "212cf7beb50619e90575f86ceb1357d59e43c69806f00fc18e3406cee8afc258",
+      "bytes": 973,
+      "compiled_path": "src/com/biglybt/core/stats/transfer/LongTermStatsListener.java"
+    },
+    "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsBase.java": {
+      "git_blob": "5f3aed69cf85d10d927bc8fe8e8677e2b8ea567f",
+      "sha256": "1f9e0967309777ad4c19be9ee123351c9a21755337a0d48fa52dd3752de5ca7f",
+      "bytes": 29331,
+      "compiled_path": "src/com/biglybt/core/stats/transfer/impl/LongTermStatsBase.java"
+    }
+  },
+  "original_query": "LongTermStatsBase.getTotalUsageInPeriod(Date, Date, RecordAccepter)",
+  "nonnull_accepter": true,
+  "cache_reads_writes": false,
+  "clock": "explicit per-query nowMillis",
+  "source_capsule_manifest_sha256": "1003c722775ca7a0e132fa643d5d4f4279147cef20e7b8386ee4e4c566664095",
+  "actual_private_execution_receipt_sha256": "35db26a7a449a5c0e16e1201e2606611a28b49b4ba466a0743fec50cea107bf1",
+  "actual_original_date_queries": 5114,
+  "actual_original_scalar_observations": 30684,
+  "actual_original_filenames_enumerated": 5614,
+  "actual_original_file_reads": 3358,
+  "actual_unfired_constructor_listeners": 6,
+  "actual_inert_average_objects": 36,
+  "forbidden_provider_calls": 0,
+  "input_raw_dat_files_unchanged": 12,
+  "expected_tsv_sha256": "696759860c16b43500ba05da26bde9069ae29efa704f92d1f5b038ba3a5bd92c",
+  "presence_equality_credit": 0,
+  "observation_count_equality_credit": 0,
+  "original_planner_equality_credit": 0,
+  "original_profile_access": false,
+  "original_process_access": false,
+  "scope": "Only the six numeric return fields for these independently declared Date queries on generated files; no original period-planner, cache/writer, live manager, UI or whole Statistics parity.",
+  "fixture_sha256": {
+    ".gitattributes": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da",
+    "README.md": "9dac27d4c371d7b1dac73fdd734441158fec4db53df63ddbe812bbe0a3cb9c22",
+    "expected.tsv": "696759860c16b43500ba05da26bde9069ae29efa704f92d1f5b038ba3a5bd92c",
+    "java-version.stderr": "e55b949b4794157555eb56fdc97fd948533bd2580523ab9188cfdcf10dee4e22",
+    "java-version.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "javac-version.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "javac-version.stdout": "72d0dd22cae7d8322d11ddc6616ef41085b81cea643fd49fb31ec205b92d4010",
+    "original-runtime.txt": "15a4559f434bca43418761938c50b395a092862caa0529d6400148bf4b723e5a",
+    "profiles/empty/stats/.keep": "b9f7978d78c38a7258b5a685cc0643036117c7b321070de1bcb093f0ceb56538",
+    "profiles/epoch/stats/1970/01/01.dat": "57dfcbc2b166eb693d63e3164860bb12f33ff487a1eea1878bd4ed3293c95705",
+    "profiles/extreme/stats/2024/03/01.dat": "7d959a540c541fa4cd43b230ae98b0aa373c5305aba7a5e20287efe17f92b9aa",
+    "profiles/normal/stats/2024/01/31.dat": "87de22d2eee4cef738b5419b65c2631436e884723264699d1b96f83e6ff7b603",
+    "profiles/normal/stats/2024/02/01.dat": "06c0153c7ea41d1ee7982aa7d63edd0c312dd830f3ff1fdec5b6f6475423ff47",
+    "profiles/normal/stats/2024/02/10.dat": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "profiles/normal/stats/2024/02/28.dat": "f0e080e041654341ad19e60ccbc649f525bef9b2c16161645f09cea9b6191f48",
+    "profiles/normal/stats/2024/02/29.dat": "4788f277443bdbcb6c69a1c17ed0b0d5ccb1099e3d519ba92064672e5ce25ba1",
+    "profiles/normal/stats/2024/03/01.dat": "40687d7268c3c9cc1bb0c67a6fc1d5f049b48c56f3235406698708a63483717f",
+    "profiles/spill/stats/2024/03/01.dat": "06828b1eb561b066343095d6afdb8fa39b42bddea6135beebf33edc316dbe68e",
+    "profiles/spill/stats/2024/03/02.dat": "e4725632eea46a4bdb085ccf3408fc2e69eed1a3a88e84713703f0462a6e07eb",
+    "profiles/zero/stats/2024/02/29.dat": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "profiles/zero/stats/2024/03/01.dat": "7c67fdb41c74a3742fe54273f7d52afd301b6a8f9f84bc2d0d1e9a2aca49c1ad",
+    "queries.tsv": "66c5d1deea924bc21ee32120ec694a819edc35b5e5028ae739faaf698142e5c7",
+    "ranges.json": "3594c5871b388cdc8b6f22ea0a3e53cf9a51b6e2e2bc2ac3c3faf933d792fc83"
+  }
+}

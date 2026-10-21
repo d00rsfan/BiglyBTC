@@ -293,7 +293,8 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   connect(refresh_, &QAction::triggered, this, [this] {
     if (closing_) { return; }
     if (onStatisticsPage()) {
-      if (statisticsPage_->historyMonthSelected()) { refreshHistoryMonth(statisticsPage_->selectedHistoryMonthDate()); }
+      if (statisticsPage_->historyRangeSelected()) { statisticsPage_->refreshHistoryRange(); }
+      else if (statisticsPage_->historyMonthSelected()) { refreshHistoryMonth(statisticsPage_->selectedHistoryMonthDate()); }
       else if (statisticsPage_->historyWeekSelected()) { refreshHistoryWeek(statisticsPage_->selectedHistoryWeekDate()); }
       else if (statisticsPage_->historySelected()) { refreshHistory(statisticsPage_->selectedHistoryDate()); }
       else { refreshStatistics(); }
@@ -425,6 +426,7 @@ void LibraryWindow::showStatistics() {
     connect(statisticsPage_.data(), &StatisticsPage::historyRequested, this, &LibraryWindow::refreshHistory);
     connect(statisticsPage_.data(), &StatisticsPage::historyWeekRequested, this, &LibraryWindow::refreshHistoryWeek);
     connect(statisticsPage_.data(), &StatisticsPage::historyMonthRequested, this, &LibraryWindow::refreshHistoryMonth);
+    connect(statisticsPage_.data(), &StatisticsPage::historyRangeRequested, this, &LibraryWindow::refreshHistoryRange);
     const QPointer<StatisticsPage> page = statisticsPage_;
     page->resetHistorySession(columnSession_);
     if (!guard || !page || statisticsPage_ != page) { return; }
@@ -498,6 +500,18 @@ void LibraryWindow::refreshHistoryMonth(core::HistoryDate date) {
   pendingHistoryRequest_ = request;
   queueStatistics();
 }
+void LibraryWindow::refreshHistoryRange(core::HistoryRangeRequest query) {
+  if (closing_ || !statisticsPage_ || columnSession_ == 0 || !core::planSavedHistoryRange(query)) { return; }
+  if (historyRequest_ == std::numeric_limits<quint64>::max()) {
+    setMessage(tr("History request counter exhausted")); return;
+  }
+  const StatisticsRequest request{columnSession_, ++historyRequest_, statisticsPage_, {}, false, false, query};
+  QPointer<LibraryWindow> guard(this);
+  request.page->beginHistoryRangeRequest(request.session, request.request, query);
+  if (!guard || !request.page || statisticsPage_ != request.page
+      || historyRequest_ != request.request || columnSession_ != request.session) { return; }
+  pendingHistoryRequest_ = request; queueStatistics();
+}
 void LibraryWindow::queueStatistics() {
   if (statisticsDispatchQueued_ || closing_ || busy_ || activeSavedRequest_
       || activeColumnRequest_ || activeColumnSave_ || activeStatisticsRequest_
@@ -507,8 +521,8 @@ void LibraryWindow::queueStatistics() {
     statisticsDispatchQueued_ = false;
     if (closing_ || busy_ || activeSavedRequest_ || activeColumnRequest_ || activeColumnSave_
         || activeStatisticsRequest_ || (!pendingStatisticsRequest_ && !pendingHistoryRequest_)) { return; }
-    // Saved totals have independent pending work. Daily, seven-day and 30-day reads
-    // coalesce by latest date/mode, sharing the same active optional worker slot.
+    // Saved totals have independent pending work. History modes coalesce by
+    // latest query, sharing the same active optional worker slot.
     const bool history = !pendingStatisticsRequest_;
     const auto request = history ? *pendingHistoryRequest_ : *pendingStatisticsRequest_;
     if (history) { pendingHistoryRequest_.reset(); }
@@ -520,7 +534,8 @@ void LibraryWindow::queueStatistics() {
     }
     activeStatisticsRequest_ = request;
     QPointer<LibraryWindow> guard(this);
-    if (request.historyMonth) { emit historyMonthRequested(request.session, request.request, *request.historyDate); }
+    if (request.range) { emit historyRangeRequested(request.session, request.request, *request.range); }
+    else if (request.historyMonth) { emit historyMonthRequested(request.session, request.request, *request.historyDate); }
     else if (request.historyWeek) { emit historyWeekRequested(request.session, request.request, *request.historyDate); }
     else if (request.historyDate) { emit historyRequested(request.session, request.request, *request.historyDate); }
     else { emit statisticsRequested(request.session, request.request); }
@@ -530,10 +545,13 @@ void LibraryWindow::queueStatistics() {
         && activeStatisticsRequest_->page == request.page
         && activeStatisticsRequest_->historyDate == request.historyDate
         && activeStatisticsRequest_->historyWeek == request.historyWeek
-        && activeStatisticsRequest_->historyMonth == request.historyMonth) {
+        && activeStatisticsRequest_->historyMonth == request.historyMonth
+        && activeStatisticsRequest_->range == request.range) {
       activeStatisticsRequest_.reset();
       if (request.page && request.page == statisticsPage_) {
-        if (request.historyMonth) {
+        if (request.range) {
+          request.page->setHistoryRangeFailed(request.session, request.request, *request.range, tr("Rolling history request was not accepted"));
+        } else if (request.historyMonth) {
           request.page->setHistoryMonthFailed(request.session, request.request, *request.historyDate, tr("30-day history request was not accepted"));
         } else if (request.historyWeek) {
           request.page->setHistoryWeekFailed(request.session, request.request, *request.historyDate, tr("Seven-day history request was not accepted"));
@@ -548,7 +566,7 @@ void LibraryWindow::queueStatistics() {
   });
 }
 void LibraryWindow::setStatistics(StatisticsPresentation packet) {
-  if (!packet || !activeStatisticsRequest_ || activeStatisticsRequest_->historyDate
+  if (!packet || !activeStatisticsRequest_ || activeStatisticsRequest_->range || activeStatisticsRequest_->historyDate
       || activeStatisticsRequest_->historyWeek || activeStatisticsRequest_->historyMonth
       || packet->session != activeStatisticsRequest_->session
       || packet->request != activeStatisticsRequest_->request) { return; }
@@ -562,7 +580,7 @@ void LibraryWindow::setStatistics(StatisticsPresentation packet) {
   if (guard) { queueOptionalViews(); }
 }
 void LibraryWindow::setHistory(HistoryPresentation packet) {
-  if (!packet || !activeStatisticsRequest_ || !activeStatisticsRequest_->historyDate
+  if (!packet || !activeStatisticsRequest_ || activeStatisticsRequest_->range || !activeStatisticsRequest_->historyDate
       || activeStatisticsRequest_->historyWeek || activeStatisticsRequest_->historyMonth
       || packet->session != activeStatisticsRequest_->session
       || packet->request != activeStatisticsRequest_->request
@@ -577,7 +595,7 @@ void LibraryWindow::setHistory(HistoryPresentation packet) {
   if (guard) { queueOptionalViews(); }
 }
 void LibraryWindow::setHistoryWeek(HistoryWeekPresentation packet) {
-  if (!packet || !activeStatisticsRequest_ || !activeStatisticsRequest_->historyWeek
+  if (!packet || !activeStatisticsRequest_ || activeStatisticsRequest_->range || !activeStatisticsRequest_->historyWeek
       || activeStatisticsRequest_->historyMonth
       || !activeStatisticsRequest_->historyDate || packet->session != activeStatisticsRequest_->session
       || packet->request != activeStatisticsRequest_->request
@@ -592,7 +610,7 @@ void LibraryWindow::setHistoryWeek(HistoryWeekPresentation packet) {
   if (guard) { queueOptionalViews(); }
 }
 void LibraryWindow::setHistoryMonth(HistoryMonthPresentation packet) {
-  if (!packet || !activeStatisticsRequest_ || !activeStatisticsRequest_->historyMonth
+  if (!packet || !activeStatisticsRequest_ || activeStatisticsRequest_->range || !activeStatisticsRequest_->historyMonth
       || activeStatisticsRequest_->historyWeek
       || !activeStatisticsRequest_->historyDate || packet->session != activeStatisticsRequest_->session
       || packet->request != activeStatisticsRequest_->request
@@ -603,6 +621,19 @@ void LibraryWindow::setHistoryMonth(HistoryMonthPresentation packet) {
   QPointer<LibraryWindow> guard(this);
   if (request.page && request.page == statisticsPage_ && packet->session == columnSession_) {
     request.page->setHistoryMonth(std::move(packet));
+  }
+  if (guard) { queueOptionalViews(); }
+}
+void LibraryWindow::setHistoryRange(HistoryRangePresentation packet) {
+  if (!packet || !activeStatisticsRequest_ || !activeStatisticsRequest_->range
+      || activeStatisticsRequest_->historyDate || activeStatisticsRequest_->historyWeek || activeStatisticsRequest_->historyMonth
+      || packet->session != activeStatisticsRequest_->session || packet->request != activeStatisticsRequest_->request
+      || packet->query != *activeStatisticsRequest_->range) { return; }
+  const auto request = *activeStatisticsRequest_; activeStatisticsRequest_.reset();
+  if (closing_) { return; }
+  QPointer<LibraryWindow> guard(this);
+  if (request.page && request.page == statisticsPage_ && packet->session == columnSession_) {
+    request.page->setHistoryRange(std::move(packet));
   }
   if (guard) { queueOptionalViews(); }
 }
@@ -743,7 +774,8 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
     if (!guard || !page || statisticsPage_ != page || columnSession_ != session) { return; }
     refreshStatistics();
     if (guard && page && statisticsPage_ == page && columnSession_ == session) {
-      if (page->historyMonthSelected()) { refreshHistoryMonth(page->selectedHistoryMonthDate()); }
+      if (page->historyRangeSelected()) { page->refreshHistoryRange(); }
+      else if (page->historyMonthSelected()) { refreshHistoryMonth(page->selectedHistoryMonthDate()); }
       else if (page->historyWeekSelected()) { refreshHistoryWeek(page->selectedHistoryWeekDate()); }
       else if (page->historySelected()) { refreshHistory(page->selectedHistoryDate()); }
     }
@@ -1108,7 +1140,9 @@ void LibraryWindow::setBusy(bool value) {
     const auto request = *activeStatisticsRequest_;
     activeStatisticsRequest_.reset();
     if (!closing_ && request.page && request.page == statisticsPage_) {
-      if (request.historyMonth) {
+      if (request.range) {
+        request.page->setHistoryRangeFailed(request.session, request.request, *request.range, tr("Rolling history request did not complete"));
+      } else if (request.historyMonth) {
         request.page->setHistoryMonthFailed(request.session, request.request, *request.historyDate, tr("30-day history request did not complete"));
       } else if (request.historyWeek) {
         request.page->setHistoryWeekFailed(request.session, request.request, *request.historyDate, tr("Seven-day history request did not complete"));

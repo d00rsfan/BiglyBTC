@@ -98,7 +98,7 @@ private slots:
   void dailyRemainsDefaultAndWeeklyReadsAreLazyAndIndependent() {
     ui::StatisticsPage page; QSignalSpy daily(&page, &ui::StatisticsPage::historyRequested), weekly(&page, &ui::StatisticsPage::historyWeekRequested); show(page);
     QCOMPARE(page.tabs().count(), 2); QCOMPARE(page.tabs().currentIndex(), 0); QCOMPARE(daily.size(), 0); QCOMPARE(weekly.size(), 0);
-    auto& nested = child<QTabWidget>(page, "statistics-history-tabs"); QCOMPARE(nested.count(), 3); QCOMPARE(nested.currentIndex(), 0);
+    auto& nested = child<QTabWidget>(page, "statistics-history-tabs"); QCOMPARE(nested.count(), 4); QCOMPARE(nested.tabText(3), QStringLiteral("Rolling history")); QCOMPARE(nested.currentIndex(), 0);
     QCOMPARE(nested.tabText(0), QStringLiteral("Daily")); QCOMPARE(nested.tabText(1), QStringLiteral("7 days")); QCOMPARE(nested.tabText(2), QStringLiteral("30 days"));
     history(page); QVERIFY(page.historySelected()); QVERIFY(!page.historyWeekSelected()); QCOMPARE(daily.size(), 1); QCOMPARE(weekly.size(), 0);
     QVERIFY(page.findChild<QTableView*>(QStringLiteral("saved-history-hours"))); QCOMPARE(model(page).rowCount(), 7);

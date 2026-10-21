@@ -66,6 +66,8 @@ jobs:
           export BIGLYBTC_ENGINE_CAPTURE_DIRECTORY="$EVIDENCE_DIR/engine-captures"
           mkdir -m 700 "$EVIDENCE_DIR/activity-captures"
           export BIGLYBTC_ENGINE_ACTIVITY_CAPTURE_DIRECTORY="$EVIDENCE_DIR/activity-captures"
+          mkdir -m 700 "$EVIDENCE_DIR/range-captures"
+          export BIGLYBTC_HISTORY_RANGE_CAPTURE_DIRECTORY="$EVIDENCE_DIR/range-captures"
           /usr/bin/ctest --test-dir "$BUILD_DIR" -L unit --no-tests=error \
             --output-on-failure --output-junit "$EVIDENCE_DIR/unit-tests.xml" \
             2>&1 | tee "$EVIDENCE_DIR/unit-tests.log"

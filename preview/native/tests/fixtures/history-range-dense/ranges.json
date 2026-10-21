@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "ranges": [
+    {
+      "id": "dense-day",
+      "profile": "normal",
+      "period": "Day",
+      "offset": 0,
+      "now_millis": 1709382870000,
+      "start_millis": 1709296500000,
+      "end_millis": 1709382900000,
+      "bucket_millis": 60000,
+      "bucket_count": 1440,
+      "native_plan_degenerate_all_policy": false
+    },
+    {
+      "id": "dense-month",
+      "profile": "normal",
+      "period": "Month",
+      "offset": 0,
+      "now_millis": 1709382870000,
+      "start_millis": 1706792400000,
+      "end_millis": 1709384400000,
+      "bucket_millis": 3600000,
+      "bucket_count": 720,
+      "native_plan_degenerate_all_policy": false
+    }
+  ],
+  "range_count": 2,
+  "query_count": 2162,
+  "six_scalar_observations_if_executed": 12972,
+  "native_presence_observation_equality_credit": 0,
+  "original_period_planner_equality_credit": 0
+}

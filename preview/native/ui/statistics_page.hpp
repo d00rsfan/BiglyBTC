@@ -5,6 +5,7 @@
 #include "history_presentation.hpp"
 #include "history_week_presentation.hpp"
 #include "history_month_presentation.hpp"
+#include "history_range_presentation.hpp"
 #include "library_model.hpp"
 #include "statistics_presentation.hpp"
 #include "statistics_navigation.hpp"
@@ -27,6 +28,7 @@ class EngineActivityView;
 class HistoryView;
 class HistoryWeekView;
 class HistoryMonthView;
+class HistoryRangeView;
 
 // GUI-thread only; completions are accepted once for the current nonzero pair.
 // This read-only page neither performs IO nor starts transfers/sampling timers.
@@ -62,6 +64,12 @@ public:
   core::HistoryDate selectedHistoryMonthDate() const;
   HistoryMonthPresentation historyMonthPresentation() const;
   bool historyMonthSelected() const;
+  void beginHistoryRangeRequest(quint64, quint64, core::HistoryRangeRequest);
+  void setHistoryRange(HistoryRangePresentation);
+  void setHistoryRangeFailed(quint64, quint64, core::HistoryRangeRequest, const QString&);
+  HistoryRangePresentation historyRangePresentation() const;
+  bool historyRangeSelected() const;
+  void refreshHistoryRange();
   // Caller first admits generation+hash through LibraryModel. The page also
   // rejects invalid identity/negative payload telemetry and resets on target change.
   void recordPayload(const Telemetry&, const QString& displayName);
@@ -76,6 +84,7 @@ signals:
   void historyRequested(biglybtc::core::HistoryDate);
   void historyWeekRequested(biglybtc::core::HistoryDate);
   void historyMonthRequested(biglybtc::core::HistoryDate);
+  void historyRangeRequested(biglybtc::core::HistoryRangeRequest);
 protected:
   void showEvent(QShowEvent*) override;
   bool eventFilter(QObject*, QEvent*) override;
@@ -105,10 +114,11 @@ private:
   QTabWidget* historyTabs_ = nullptr;
   HistoryWeekView* historyWeek_ = nullptr;
   HistoryMonthView* historyMonth_ = nullptr;
+  HistoryRangeView* historyRange_ = nullptr;
   QWidget* engineDetails_ = nullptr;
   QLabel* engineStatus_ = nullptr;
   QLabel* engineTarget_ = nullptr;
-  std::array<QLabel*, 8> engineValues_{};
+  std::array<QLabel*, 12> engineValues_{};
   EngineStatisticsPresentation engine_{};
   bool engineDirty_ = true;
   std::array<QLabel*, 13> raw_{};

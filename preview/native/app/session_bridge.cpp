@@ -9,6 +9,7 @@
 #include "../adapters/history_view.hpp"
 #include "../adapters/history_week_view.hpp"
 #include "../adapters/history_month_view.hpp"
+#include "../adapters/history_range_view.hpp"
 
 #include <QMetaObject>
 #include <QPointer>
@@ -168,6 +169,8 @@ SessionBridge::SessionBridge(QObject* parent) : QObject(parent) {
   qRegisterMetaType<core::HistoryDate>();
   qRegisterMetaType<ui::HistoryPresentation>();
   qRegisterMetaType<ui::HistoryMonthPresentation>();
+  qRegisterMetaType<ui::HistoryRangePresentation>();
+  qRegisterMetaType<core::HistoryRangeRequest>();
   qRegisterMetaType<ui::EngineStatisticsPresentation>();
   qRegisterMetaType<ui::ColumnLayoutsPresentation>();
   qRegisterMetaType<ui::ColumnLayoutSaveSubmission>();
@@ -465,6 +468,40 @@ bool SessionBridge::historyMonth(quint64 session, quint64 request, core::History
         return;
       }
       emit historyMonthReady(presentation);
+      if (!guard) { return; }
+      completionMonitor_->stop(); busy_ = false; emit busyChanged(false);
+    }, Qt::QueuedConnection);
+  }, false); // Optional history never queries or revises the saved Library.
+}
+bool SessionBridge::historyRange(quint64 session, quint64 request, core::HistoryRangeRequest query) {
+  if (session == 0 || request == 0 || session != publishedColumnLayoutSession_
+      || !core::planSavedHistoryRange(query)) { return false; }
+  return dispatch([this, session, request, query](std::stop_token stop) {
+    if (!host_ || host_->columnLayoutSession != session) {
+      throw Failure{{storage::ErrorCode::Conflict, "This history session is no longer active"}};
+    }
+    auto packet = std::make_shared<ui::HistoryRangePacket>();
+    packet->session = session; packet->request = request; packet->query = query;
+    checkpoint(stop);
+    auto view = storage::readSavedHistoryRangeView(host_->lease, query, stop);
+    checkpoint(stop);
+    if (!view) {
+      if (view.error().code == storage::ErrorCode::Cancelled) { throw Failure{std::move(view.error())}; }
+      packet->failure = text(view.error().message);
+    } else {
+      packet->snapshot = std::make_shared<const core::SavedHistoryRange>(std::move(*view));
+      packet->state = ui::HistoryRangeReadState::Ready;
+    }
+    checkpoint(stop);
+    ui::HistoryRangePresentation presentation = std::move(packet);
+    QMetaObject::invokeMethod(this, [this, presentation = std::move(presentation), stop] {
+      QPointer<SessionBridge> guard(this);
+      if (stop.stop_requested() || presentation->session != publishedColumnLayoutSession_) {
+        completionMonitor_->stop(); busy_ = false; emit busyChanged(false);
+        if (guard && stop.stop_requested()) { emit messageReady(tr("Cancelled")); }
+        return;
+      }
+      emit historyRangeReady(presentation);
       if (!guard) { return; }
       completionMonitor_->stop(); busy_ = false; emit busyChanged(false);
     }, Qt::QueuedConnection);
