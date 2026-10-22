@@ -1,0 +1,63 @@
+{
+  "status": "qualified bounded Statistics controls; full Statistics in_progress",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_source_commit": "2c5a81227e750202403fec188fbb71817aa3cfca",
+  "local": {
+    "gcc": {
+      "covered_suites": 17,
+      "successful_first_batch": 13,
+      "previously_unbuilt_targets_built_and_passed": 4
+    },
+    "clang": {
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0
+    },
+    "asan_ubsan_lsan": {
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0,
+      "detect_leaks": true
+    }
+  },
+  "original_java_handoff": {
+    "actual_native_cases": 2,
+    "overall_field_comparisons": 52,
+    "history_scalar_comparisons": 300,
+    "opaque_subtree_comparisons": 4,
+    "original_subject_recompiled": false,
+    "availability_equality_claimed": false
+  },
+  "hosted": {
+    "run": 39849224530,
+    "head": "2c5a81227e750202403fec188fbb71817aa3cfca",
+    "conclusion": "success",
+    "unit_suites": 102,
+    "failures": 0,
+    "artifact_id": 12456748520,
+    "archive_sha256": "7cd61831c7c16beb60a38d728a2d70f6688e48e57f657749e5dbb784849b0f31",
+    "captures": 28
+  },
+  "portable": {
+    "native_source": "2c5a81227e750202403fec188fbb71817aa3cfca",
+    "dist": "/home/yurii/Java/BiglyBTC/dist",
+    "rollback": "/home/yurii/Java/BiglyBTC/build/statistics-completion-20261022/controls-publication/previous-dist",
+    "manifest_sha256": "6680f0033c3b0f4f5578d93d85cd3e5279d42b1877f9802afab36b2f99773467",
+    "files": 107,
+    "promoted": true,
+    "system_installation": false
+  },
+  "scope": [
+    "configured original smoothing policy",
+    "actual session-global limits, upload-slot mode and safe proxy family",
+    "successful-append-driven visible history refresh",
+    "Overall and since-mark averages/ratios",
+    "original Java reads actual native-written Overall/history files"
+  ],
+  "remaining": [
+    "idle startup before first transfer",
+    "original Cache/Tracker parity and remaining service providers",
+    "capacity/ASN/auto-speed/swarm estimates",
+    "normal-profile switching and full-client migration"
+  ]
+}

@@ -264,7 +264,7 @@ string alone does not enable it. Qualification uses separately owned loopback
 fixtures, including a test-only instrumented library which is never shipped.
 See [the persistent accounting contract](docs/persistent-peer-accounting.md)
 for the counter domain, conditional retirement guarantees and build boundaries.
-This stage does not write original lifetime totals, marks, history or caches.
+That earlier P04-29 prerequisite did not write lifetime totals or history; the connected Statistics implementation described above now supplies compatible accounting and recording.
 
 The current Statistics controls also read the original smoothing setting, show
 applied session-global rate/connection limits and proxy mode, and refresh the
@@ -272,3 +272,5 @@ visible saved History query after successful minute-record writes. Transfers
 shows total/since-mark averages and ratios. The isolated native session settings
 are distinct from whole original configuration/runtime activation, which remains
 in progress.
+
+The connected controls milestone is qualified at source `2c5a81227e750202403fec188fbb71817aa3cfca`: GCC17 affected suites, Clang17, leak-enabled ASan/UBSan17, hosted102, portable smoke and actual private-runtime workers passed. Original Java classes read both actual native-written test profiles. See [validation receipt](../migration/evidence/statistics-controls-20261022.json).
