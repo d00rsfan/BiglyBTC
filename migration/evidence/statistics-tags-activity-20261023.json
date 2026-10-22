@@ -1,0 +1,44 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "idle_source": "ede540798e690175204196c0cd40196ecaee7fdf",
+  "tags_source": "6b090767f881eecee8fedc726c94f9a5ed57b358",
+  "activity_source": "dbe9230de8b096820a68b2b95e5c51f8e3736e19",
+  "qualification_commit": "998db441c4f9d0ed1746ed564eec89f33ad541b9",
+  "gcc": {
+    "tags_suites_across_repaired_attempts": 15,
+    "activity_suites": 6,
+    "unique_suites": 23,
+    "additional_test_only_legacy_tab_suites": 4,
+    "unchanged_oracles_reused": true
+  },
+  "secondary": {
+    "clang": {
+      "passed_suites": 12,
+      "seconds": 76.98640713
+    },
+    "sanitized": {
+      "passed_suites": 12,
+      "seconds": 95.806389
+    }
+  },
+  "asan_detect_leaks": true,
+  "full_statistics_complete": false,
+  "status": "qualified",
+  "hosted": {
+    "run": 39863152931,
+    "head": "998db441c4f9d0ed1746ed564eec89f33ad541b9",
+    "conclusion": "success",
+    "unit_suites": 107,
+    "failures": 0,
+    "artifact_id": 12463002523,
+    "archive_sha256": "9dcf76f0d1fb393a0174a54538d7ef64ff3c06ccef4fed3b73a1ef95d26a5c4d"
+  },
+  "portable": {
+    "manifest_sha256": "7f17e98086f0445a900060415884890d6c73a9d96db0b8a11735c3cfb24ee3cd",
+    "files": 107,
+    "promoted": true,
+    "system_installation": false
+  },
+  "frozen_followups": "Country and Azureus transport source only; not adopted or executed",
+  "user_requested_stop": true
+}

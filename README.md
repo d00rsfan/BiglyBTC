@@ -62,3 +62,8 @@ For future workflow changes, push using this repository's SSH URL (`git@github.c
 The connected Statistics accounting milestone is qualified at source
 `292193b3e837d6bf36468d6c64ee8c982a693003`; see the [validation record](migration/evidence/statistics-accounting-20261022.json).
 The remaining Statistics services and full client migration are still in progress.
+
+Manual Tags now reads original tag.config and displays observed per-torrent rates.
+Activity offers original-style ten-second windows, measured intervals and configured
+combined smoothing. See the [qualified Tags/Activity milestone](migration/evidence/statistics-tags-activity-20261023.json).
+Full Statistics, automatic tag management and remaining services are still in progress.
