@@ -44,7 +44,12 @@ QLabel* field(ui::StatisticsPage& page, const char* id) {
   if (!value) { throw std::runtime_error(std::string("Missing semantic field: ") + id); }
   return value;
 }
-void show(ui::StatisticsPage& page) { page.resize(1000, 800); page.show(); QCoreApplication::processEvents(); }
+void show(ui::StatisticsPage& page) {
+  // This retained fixture exercises the operation Payload view explicitly.
+  auto* activity = page.findChild<QTabWidget*>(QStringLiteral("statistics-activity-views"));
+  if (!activity) { throw std::runtime_error("Missing operation Payload subtab"); }
+  activity->setCurrentIndex(0); page.resize(1000, 800); page.show(); QCoreApplication::processEvents();
+}
 ui::Telemetry payload(qint64 down = 100, qint64 up = 50, quint64 generation = 1, const QString& hash = QStringLiteral("HASH-A")) {
   return {{hash, generation}, 2048, down, up, QStringLiteral("Downloading")};
 }
@@ -91,7 +96,7 @@ private slots:
     ui::StatisticsPage page;
     QCOMPARE(page.objectName(), QStringLiteral("classic-statistics-page"));
     QCOMPARE(page.tabs().objectName(), QStringLiteral("statistics-tabs"));
-    QCOMPARE(page.tabs().count(), 2); QCOMPARE(page.tabs().currentIndex(), 0);
+    QCOMPARE(page.tabs().count(), 5); QCOMPARE(page.tabs().currentIndex(), 0);
     QCOMPARE(page.tabs().tabText(0), QStringLiteral("Activity")); QCOMPARE(page.tabs().tabText(1), QStringLiteral("Transfers"));
     auto* inner = page.findChild<QTabWidget*>(QStringLiteral("statistics-transfer-tabs")); QVERIFY(inner);
     QCOMPARE(inner->tabText(0), QStringLiteral("Current")); QCOMPARE(inner->tabText(1), QStringLiteral("History")); QCOMPARE(inner->currentIndex(), 0);
@@ -100,7 +105,9 @@ private slots:
     QCOMPARE(page.sampleCount(), std::size_t{0}); QVERIFY(!page.readState()); QVERIFY(!page.loading());
     QCOMPARE(field(page, "statistics-payload-download-rate")->text(), QStringLiteral("Unavailable"));
     QCOMPARE(field(page, "statistics-activity-observations")->text(), QStringLiteral("No activity samples yet"));
-    QVERIFY(field(page, "statistics-current-unavailable")->text().contains(QStringLiteral("unavailable")));
+    QVERIFY(page.findChild<QWidget*>(QStringLiteral("statistics-native-session-view")));
+    QCOMPARE(field(page, "native-session-status")->text(), QStringLiteral("No session traffic observations yet"));
+    QCOMPARE(field(page, "native-session-counter-received")->text(), QStringLiteral("Unavailable"));
     QVERIFY(field(page, "statistics-history-unavailable")->text().contains(QStringLiteral("History unavailable")));
     auto* refresh = page.findChild<QPushButton*>(QStringLiteral("statistics-refresh")); QVERIFY(refresh);
     QSignalSpy requests(&page, &ui::StatisticsPage::refreshRequested); refresh->click(); QCOMPARE(requests.count(), 1);
@@ -391,7 +398,8 @@ private slots:
     QCOMPARE(field(page, "statistics-saved-downloaded")->text(), QStringLiteral("1024 bytes"));
     QCOMPARE(page.sampleCount(), std::size_t{0}); // Engine packets never add Activity samples.
     QCOMPARE(field(page, "statistics-payload-download-rate")->text(), QStringLiteral("Unavailable"));
-    QCOMPARE(field(page, "statistics-current-unavailable")->text(), QStringLiteral("Current global rates and this-session totals: unavailable"));
+    QCOMPARE(field(page, "native-session-status")->text(), QStringLiteral("No session traffic observations yet"));
+    QCOMPARE(field(page, "native-session-counter-received")->text(), QStringLiteral("Unavailable")); // Operation packets cannot populate the independent session group.
   }
   void engineFirstCounterSampleDoesNotInventRateButMeasuredZeroIsShown() {
     ui::StatisticsPage page; page.beginRequest(1, 1); showEngine(page);

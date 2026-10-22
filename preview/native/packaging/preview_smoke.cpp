@@ -706,7 +706,7 @@ private slots:
     statistics->trigger(); page = window.statisticsPage(); QVERIFY(page);
     QTRY_VERIFY_WITH_TIMEOUT(nextTotals.count() == 1 && !replacement.busy(), 30000);
     const auto fresh = page->navigation(); QVERIFY(fresh);
-    QCOMPARE(fresh->section, 0); QCOMPARE(fresh->activity, 0); QCOMPARE(fresh->transfers, 0); QCOMPARE(fresh->history, 0); QVERIFY(!fresh->hourly);
+    QCOMPARE(fresh->section, 0); QCOMPARE(fresh->activity, 2); QCOMPARE(fresh->transfers, 0); QCOMPARE(fresh->history, 0); QVERIFY(!fresh->hourly);
     QVERIFY(fresh->dailyDate != remembered->dailyDate); QVERIFY(fresh->weekEnding != remembered->weekEnding);
     QCOMPARE(weeks.count(), 2); QCOMPARE(days.count(), 0); QCOMPARE(snapshots.count(), 1);
     QCOMPARE(nextWeeks.count(), 0); QCOMPARE(nextDays.count(), 0); QCOMPARE(nextSnapshots.count(), 1);

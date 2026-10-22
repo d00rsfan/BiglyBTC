@@ -2,6 +2,11 @@
 
 #include "engine_activity_history.hpp"
 #include "engine_activity_view.hpp"
+#include "native_activity_history.hpp"
+#include "native_activity_view.hpp"
+#include "native_session_view.hpp"
+#include "overall_view.hpp"
+#include "runtime_metrics_view.hpp"
 #include "history_view.hpp"
 #include "history_week_view.hpp"
 #include "history_month_view.hpp"
@@ -137,14 +142,19 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
   activityViews_ = new QTabWidget(activitySection); activityViews_->setObjectName(QStringLiteral("statistics-activity-views"));
   activityViews_->addTab(activity_, tr("Payload"));
   engineActivity_ = new EngineActivityView(activityViews_); activityViews_->addTab(engineActivity_, tr("Engine traffic"));
+  nativeActivityView_ = new NativeActivityView(activityViews_); activityViews_->addTab(nativeActivityView_, tr("Session traffic"));
   activitySectionLayout->addWidget(activityViews_); tabs_->addTab(activitySection, tr("Activity"));
   auto* transfers = new QWidget(tabs_); transfers->setObjectName(QStringLiteral("statistics-transfers"));
   auto* transferLayout = new QVBoxLayout(transfers);
   auto* transferTabs = new QTabWidget(transfers); transferTabs_ = transferTabs; transferTabs->setObjectName(QStringLiteral("statistics-transfer-tabs"));
   auto* current = new QScrollArea(transferTabs); current->setWidgetResizable(true); current->setObjectName(QStringLiteral("statistics-transfers-current"));
   auto* contents = new QWidget(current); auto* currentLayout = new QVBoxLayout(contents);
-  currentLayout->addWidget(label(tr("Current global rates and this-session totals: unavailable"), QStringLiteral("statistics-current-unavailable"), contents));
-  auto* engine = new QGroupBox(tr("Transfer engine session"), contents);
+  auto* native = new QGroupBox(tr("Current session"), contents);
+  native->setObjectName(QStringLiteral("statistics-native-session"));
+  auto* nativeLayout = new QVBoxLayout(native);
+  nativeSessionView_ = new NativeSessionView(native); nativeLayout->addWidget(nativeSessionView_);
+  currentLayout->addWidget(native);
+  auto* engine = new QGroupBox(tr("Transfer operation"), contents);
   engine->setObjectName(QStringLiteral("statistics-engine-session"));
   auto* engineLayout = new QVBoxLayout(engine);
   engineStatus_ = label(tr("Unavailable: no owned transfer engine has been observed"), QStringLiteral("statistics-engine-status"), engine);
@@ -168,6 +178,11 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
   engineLayout->addWidget(label(tr("One experimental transfer engine only. Peer payload + protocol traffic; IP, tracker and DHT totals are not included. These measurements are separate from application lifetime, global totals, saved totals and history. Ended counters are the last observation, not an exhaustive final accounting."),
       QStringLiteral("statistics-engine-scope"), engine));
   currentLayout->addWidget(engine);
+  auto* live = new QGroupBox(tr("Overall transfers"), contents);
+  auto* liveLayout = new QVBoxLayout(live);
+  overallView_ = new OverallView(live); liveLayout->addWidget(overallView_);
+  connect(overallView_, &OverallView::markRequested, this, &StatisticsPage::markRequested);
+  currentLayout->addWidget(live);
   auto* totals = new QGroupBox(tr("Last-saved overall totals"), contents); auto* totalsForm = new QFormLayout(totals);
   const std::array<const char*, 13> ids{"downloaded", "uploaded", "uptime", "mark-time", "mark-downloaded", "mark-uploaded", "mark-uptime",
       "dht-downloaded", "dht-uploaded", "protocol-uploaded", "data-uploaded", "protocol-downloaded", "data-downloaded"};
@@ -215,6 +230,18 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
   connect(historyRange_, &HistoryRangeView::readRequested, this, &StatisticsPage::historyRangeRequested);
   historyTabs_->addTab(historyRange_, tr("Rolling history"));
   transferTabs->addTab(history, tr("History")); transferLayout->addWidget(transferTabs); tabs_->addTab(transfers, tr("Transfers"));
+  runtimeViews_[0] = new RuntimeMetricsView(core::RuntimeMetricGroup::Peer, transferTabs);
+  runtimeViews_[0]->setObjectName(QStringLiteral("statistics-connections-metrics"));
+  transferTabs->addTab(runtimeViews_[0], tr("Connections"));
+  runtimeViews_[1] = new RuntimeMetricsView(core::RuntimeMetricGroup::Disk, tabs_);
+  runtimeViews_[1]->setObjectName(QStringLiteral("statistics-cache-metrics"));
+  tabs_->addTab(runtimeViews_[1], tr("Cache"));
+  runtimeViews_[2] = new RuntimeMetricsView(core::RuntimeMetricGroup::Tracker, tabs_);
+  runtimeViews_[2]->setObjectName(QStringLiteral("statistics-tracker-metrics"));
+  tabs_->addTab(runtimeViews_[2], tr("Tracker"));
+  runtimeViews_[3] = new RuntimeMetricsView({}, tabs_);
+  runtimeViews_[3]->setObjectName(QStringLiteral("statistics-all-metrics"));
+  tabs_->addTab(runtimeViews_[3], tr("Counters"));
   auto* refresh = new QPushButton(tr("Refresh saved totals"), this); refresh->setObjectName(QStringLiteral("statistics-refresh"));
   connect(refresh, &QPushButton::clicked, this, &StatisticsPage::refreshRequested);
   auto* layout = new QVBoxLayout(this); layout->addWidget(status_); layout->addWidget(provenance_); layout->addWidget(tabs_, 1); layout->addWidget(refresh);
@@ -223,7 +250,7 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
     historyTabs_->setCurrentIndex(initial->history);
     transferTabs_->setCurrentIndex(initial->transfers);
     tabs_->setCurrentIndex(initial->section);
-  }
+  } else { activityViews_->setCurrentIndex(2); }
   connect(tabs_, &QTabWidget::currentChanged, this, [this](int) {
     QPointer<StatisticsPage> guard(this); refreshActivity(); if (guard) { guard->refreshEngine(); }
   });
@@ -326,6 +353,8 @@ void StatisticsPage::beginRequest(quint64 session, quint64 request) {
   if (newEngineSession) {
     engineActivity_->clear();
     if (!lifetime || lifetime->session_ != session || lifetime->request_ != request) { return; }
+    beginNativeSession(session);
+    if (!lifetime || lifetime->session_ != session || lifetime->request_ != request) { return; }
   }
   const auto facts = emptyFacts(tr("Loading last-saved statistics…"), tr("Source: unavailable; save time unknown"));
   if (!writeFacts(facts)) { return; }
@@ -381,6 +410,55 @@ void StatisticsPage::setPresentation(StatisticsPresentation packet) {
   }
   loading_ = false; state_ = StatisticsReadState::Ready;
   (void)writeFacts(facts);
+}
+void StatisticsPage::setRuntimeMetrics(RuntimeMetricsPresentation packet) {
+  QPointer<StatisticsPage> guard(this); const auto views = runtimeViews_;
+  for (const auto& view : views) {
+    if (!guard) { return; }
+    if (view) { view->setPresentation(packet); }
+  }
+}
+void StatisticsPage::setOverall(OverallPresentation packet) { if (overallView_) { overallView_->setPresentation(std::move(packet)); } }
+void StatisticsPage::setAccountingBusy(bool busy) { if (overallView_) { overallView_->setCommandBusy(busy); } }
+void StatisticsPage::beginNativeSession(quint64 session) {
+  if (!session || session <= nativeSessionBinding_) { return; }
+  nativeSessionBinding_ = session; nativeActivityFrame_.reset();
+  QPointer<StatisticsPage> guard(this);
+  if (nativeSessionView_) { nativeSessionView_->beginSession(session); }
+  if (!guard || guard->nativeSessionBinding_ != session) { return; }
+  if (guard->nativeActivityView_) { guard->nativeActivityView_->beginSession(session); }
+  if (!guard || guard->nativeSessionBinding_ != session) { return; }
+  // A synchronous child callback may already have delivered an actual packet
+  // for this binding. Replay the latest cache after BOTH children are bound.
+  const auto views = guard->runtimeViews_;
+  for (const auto& view : views) {
+    if (!guard || guard->nativeSessionBinding_ != session) { return; }
+    if (view) { view->beginSession(session); }
+  }
+  if (!guard || guard->nativeSessionBinding_ != session) { return; }
+  if (guard->overallView_) { guard->overallView_->beginSession(session); }
+  if (!guard || guard->nativeSessionBinding_ != session) { return; }
+  guard->refreshNative();
+}
+void StatisticsPage::setNativeActivity(NativeActivityPresentation frame) {
+  if (!frame || !frame->latest() || frame->latest()->applicationRun < nativeApplicationRun_
+      || !acceptNativeSession(nativeActivityFrame_ ? nativeActivityFrame_->latest() : NativeSessionPresentation{},
+          frame->latest(), nativeSessionBinding_)) { return; }
+  nativeApplicationRun_ = frame->latest()->applicationRun;
+  nativeActivityFrame_ = std::move(frame); refreshNative();
+}
+NativeSessionPresentation StatisticsPage::nativeSessionSnapshot() const {
+  return nativeActivityFrame_ ? nativeActivityFrame_->latest() : NativeSessionPresentation{};
+}
+void StatisticsPage::refreshNative() {
+  const auto frame = nativeActivityFrame_;
+  if (!frame || !frame->latest()) { return; }
+  QPointer<StatisticsPage> guard(this); const auto session = nativeSessionBinding_;
+  const auto current = [&] { return guard && guard->nativeSessionBinding_ == session && guard->nativeActivityFrame_ == frame; };
+  if (nativeSessionView_) { nativeSessionView_->setPresentation(frame->latest()); }
+  if (!current()) { return; }
+  if (guard->nativeActivityView_) { guard->nativeActivityView_->setPresentation(frame); }
+  // No work after the final callback-capable child setter.
 }
 void StatisticsPage::setEngineStatistics(EngineStatisticsPresentation packet) {
   if (!acceptEngineStatistics(engine_, packet, session_)) { return; }

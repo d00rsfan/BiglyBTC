@@ -1,0 +1,9 @@
+{
+  "status": "ACTUAL_ORIGINAL_ARITHMETIC_FIXTURE_ONLY",
+  "whole_manager_runtime_credit": 0,
+  "native_comparisons": 0,
+  "cases": 39,
+  "commands": 161,
+  "subject_stdout_sha256": "b5abfbfda691350f03a3f753dd680bda64bef4ec6a643c554c712c31cfdf4be9",
+  "manifest_sha256": "61fa47b7c015b666f1f690c2c081c5e53ed5804db52722b89d665239a36eefa1"
+}

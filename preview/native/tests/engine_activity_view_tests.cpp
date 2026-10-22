@@ -98,10 +98,11 @@ private slots:
   }
   void nestedActivityPreservesPayloadDefaultAndExistingIdentities() {
     ui::StatisticsPage page; showPage(page);
-    QCOMPARE(page.tabs().count(), 2); QCOMPARE(page.tabs().currentIndex(), 0);
+    QCOMPARE(page.tabs().count(), 5); QCOMPARE(page.tabs().currentIndex(), 0);
     QCOMPARE(page.tabs().tabText(0), QStringLiteral("Activity")); QCOMPARE(page.tabs().tabText(1), QStringLiteral("Transfers"));
-    auto& tabs = activityTabs(page); QCOMPARE(tabs.count(), 2); QCOMPARE(tabs.currentIndex(), 0);
+    auto& tabs = activityTabs(page); QCOMPARE(tabs.count(), 3); QCOMPARE(tabs.currentIndex(), 2);
     QCOMPARE(tabs.tabText(0), QStringLiteral("Payload")); QCOMPARE(tabs.tabText(1), QStringLiteral("Engine traffic"));
+    QCOMPARE(tabs.tabText(2), QStringLiteral("Session traffic"));
     QVERIFY(page.findChild<QWidget*>(QStringLiteral("statistics-activity")));
     QVERIFY(page.findChild<QWidget*>(QStringLiteral("statistics-activity-plot")));
     QCOMPARE(page.sampleCount(), std::size_t{0}); QVERIFY(!page.engineActivitySnapshot());
@@ -308,6 +309,7 @@ private slots:
   }
   void pageSavedRefreshKeepsFrameNewProfileClearsAndPayloadRemainsSeparate() {
     ui::EngineActivityHistory h; const auto frame = known(h); ui::StatisticsPage page; page.beginRequest(1, 1); showPage(page);
+    activityTabs(page).setCurrentIndex(0); // Explicitly exercise retained operation Payload rendering.
     ui::Telemetry payload{{QStringLiteral("PAYLOAD-HASH"), 3}, 20, 100, 50, QStringLiteral("Downloading")}; page.recordPayload(payload, QStringLiteral("Payload"));
     page.setEngineActivity(frame); QVERIFY(page.engineActivitySnapshot() == frame); QCOMPARE(page.sampleCount(), std::size_t{1});
     page.beginRequest(1, 2); QVERIFY(page.engineActivitySnapshot() == frame);

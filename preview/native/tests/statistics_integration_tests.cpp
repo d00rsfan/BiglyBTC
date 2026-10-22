@@ -262,6 +262,8 @@ private slots:
     ui::LibraryWindow w; show(w); rows(w); QVERIFY(bindSession(w)); syntheticOwner(w);
     action(w, "classic-statistics")->trigger(); QTRY_COMPARE(w.statisticsPage()->readState(), std::optional{ui::StatisticsReadState::Ready});
     auto* page = w.statisticsPage(); const auto target = *w.model().targetAt(0); const auto selected = w.filesModel().target();
+    auto* activity = page->findChild<QTabWidget*>(QStringLiteral("statistics-activity-views"));
+    QVERIFY(activity); activity->setCurrentIndex(0); // This fixture exercises the retained Payload view.
     w.setTelemetry({target, 50, 8192, 1024, QStringLiteral("Downloading")}); QCOMPARE(page->sampleCount(), std::size_t{1});
     auto stale = target; ++stale.generation; w.setTelemetry({stale, 51, 999, 999, QStringLiteral("Stale")});
     w.setTelemetry({target, 50, -1, 1024, QStringLiteral("Invalid")}); QCOMPARE(page->sampleCount(), std::size_t{1});

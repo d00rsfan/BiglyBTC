@@ -46,7 +46,7 @@ private slots:
     gate.release(); // Before all subsequent assertions/destructors can join Bridge.
     QTRY_VERIFY_WITH_TIMEOUT(closed.count() == 1 && !w.isVisible(),15000);
     QVERIFY(closed.first().at(1).toBool()); QVERIFY(closed.first().at(2).toBool());
-    auto lease = storage::ProfileLease::acquire(f.native()); QVERIFY(lease); QVERIFY(f.intact());
+    auto lease = storage::ProfileLease::acquire(f.native()); QVERIFY(lease); QVERIFY(f.accountingIntact());
   }
   void optionalAllocationFailureCannotRetainHostOrSuppressCloseAcknowledgement() {
     test::OwnedEngineFixture f(false); QTRY_VERIFY_WITH_TIMEOUT(f.ready(),30000);
@@ -61,7 +61,7 @@ private slots:
     QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);
     QCOMPARE(fault.joinedSessions(),std::size_t{1}); QCOMPARE(fault.allocationFailures(),std::size_t{1});
     QCOMPARE(failed.count(),0); QVERIFY(closed.first().at(1).toBool());
-    auto lease = storage::ProfileLease::acquire(f.native()); QVERIFY(lease); QVERIFY(f.intact());
+    auto lease = storage::ProfileLease::acquire(f.native()); QVERIFY(lease); QVERIFY(f.accountingIntact());
   }
   void rejectedCloseDispatchMayDeleteBridgeBeforeReturn() {
     test::OwnedEngineFixture f(false); QTRY_VERIFY_WITH_TIMEOUT(f.ready(),30000);

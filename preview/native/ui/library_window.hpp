@@ -1,12 +1,15 @@
 #pragma once
 
 #include "native_session_presentation.hpp"
+#include "native_activity_presentation.hpp"
 
 #include "library_model.hpp"
 #include "file_model.hpp"
 #include "saved_services_presentation.hpp"
 #include "column_layout_presentation.hpp"
 #include "statistics_presentation.hpp"
+#include "overall_presentation.hpp"
+#include "runtime_metrics_presentation.hpp"
 #include "statistics_navigation.hpp"
 #include "history_presentation.hpp"
 #include "history_week_presentation.hpp"
@@ -31,6 +34,7 @@ namespace biglybtc::ui {
 class ClassicColumns;
 class StatisticsPage;
 class EngineActivityHistory;
+class NativeActivityHistory;
 
 class LibraryWindow final : public QMainWindow {
   Q_OBJECT
@@ -64,7 +68,10 @@ public:
   void setHistoryRange(HistoryRangePresentation);
   void setEngineStatistics(EngineStatisticsPresentation);
   void setNativeSession(NativeSessionPresentation);
+  void setOverall(OverallPresentation);
+  void setRuntimeMetrics(RuntimeMetricsPresentation);
   NativeSessionPresentation nativeSessionSnapshot() const { return latestNativeSession_; }
+  NativeActivityPresentation nativeActivitySnapshot() const { return latestNativeActivity_; }
   void enableSessionCloseHandshake() { sessionCloseEnabled_ = true; }
   void completeSessionClose();
   void retrySessionClose() { sessionCloseRequested_ = false; closing_ = false; updateActions(); }
@@ -88,6 +95,7 @@ signals:
   void detailsRequested(biglybtc::ui::Target);
   void cancelRequested();
   void sessionCloseRequested();
+  void markRequested(quint64 session, bool clear);
 protected:
   void closeEvent(QCloseEvent*) override;
   bool eventFilter(QObject*, QEvent*) override;
@@ -168,6 +176,9 @@ private:
   QPointer<ClassicColumns> completeColumns_;
   EngineStatisticsPresentation latestEngineStatistics_;
   std::shared_ptr<EngineActivityHistory> engineActivity_;
+  std::shared_ptr<NativeActivityHistory> nativeActivity_;
+  NativeActivityPresentation latestNativeActivity_;
+  quint64 nativeApplicationRun_ = 0;
   quint64 columnSession_ = 0;
   quint64 columnRequest_ = 0;
   std::optional<ColumnRequest> activeColumnRequest_;
@@ -209,6 +220,8 @@ private:
   bool sessionCloseRequested_ = false;
   bool sessionCloseAcknowledged_ = false;
   NativeSessionPresentation latestNativeSession_{};
+  OverallPresentation latestOverall_{};
+  RuntimeMetricsPresentation latestRuntime_{};
   bool suppressAutomaticDetails_ = false;
   bool updating_ = false;
   bool presented_ = false;

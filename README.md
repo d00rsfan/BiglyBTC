@@ -16,6 +16,12 @@ with transfers disabled. See [build instructions](preview/README.md),
 The existing root SDK build remains the default; build the desktop from
 `preview/native`. Keep local build outputs under `build/desktop`.
 
+Statistics (Ctrl+5) includes retained session Activity, current peer traffic,
+compatible overall totals/marks and minute recording for source-qualified local
+sessions. Native Cache/Tracker/Counters/Connections tables consume actual engine
+measurements. Offline samples stay read-only; full Statistics and original-client
+service parity remain under development. See [preview details](preview/README.md).
+
 The source application and its running profile are kept separate from development
 tests. Native plugin repositories retain their original runtime IDs. Native
 artifacts belong in an original plugin folder's `biglybtc/` child beside Java JARs;

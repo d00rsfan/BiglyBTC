@@ -12,7 +12,7 @@ endif()
 include(GNUInstallDirs)
 include(CMakePackageConfigHelpers)
 find_package(Threads REQUIRED)
-add_library(biglybtc_core STATIC src/bencode.cpp src/executor.cpp src/library.cpp src/state_cache.cpp src/torrent_layout.cpp src/file_policy.cpp src/saved_services.cpp src/saved_dnd.cpp src/column_layout.cpp src/classic_preferences.cpp src/saved_statistics.cpp src/engine_statistics.cpp src/saved_history.cpp src/saved_history_week.cpp src/saved_history_month.cpp src/saved_history_range.cpp)
+add_library(biglybtc_core STATIC src/bencode.cpp src/executor.cpp src/library.cpp src/state_cache.cpp src/torrent_layout.cpp src/file_policy.cpp src/saved_services.cpp src/saved_dnd.cpp src/column_layout.cpp src/classic_preferences.cpp src/saved_statistics.cpp src/overall_statistics.cpp src/overall_document.cpp src/engine_statistics.cpp src/saved_history.cpp src/saved_history_week.cpp src/saved_history_month.cpp src/saved_history_range.cpp)
 add_library(BiglyBTC::Core ALIAS biglybtc_core)
 target_include_directories(biglybtc_core PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
@@ -37,3 +37,5 @@ install(FILES "${CMAKE_CURRENT_BINARY_DIR}/BiglyBTCCoreConfig.cmake"
 install(EXPORT BiglyBTCCoreTargets NAMESPACE BiglyBTC:: DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/BiglyBTCCore")
 install(FILES COPYING NOTICE.md DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/BiglyBTCCore")
 endif()
+
+target_sources(biglybtc_core PRIVATE src/source_rate_average.cpp src/minute_history.cpp)

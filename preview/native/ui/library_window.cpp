@@ -3,6 +3,7 @@
 #include "classic_columns.hpp"
 #include "statistics_page.hpp"
 #include "engine_activity_history.hpp"
+#include "native_activity_history.hpp"
 
 #include <QAction>
 #include <QCloseEvent>
@@ -423,11 +424,20 @@ void LibraryWindow::showStatistics() {
         ? std::optional<StatisticsNavigation>{rememberedStatisticsNavigation_->navigation} : std::nullopt;
     statisticsPage_ = new StatisticsPage(mainTabs_, navigation);
     connect(statisticsPage_.data(), &StatisticsPage::refreshRequested, this, &LibraryWindow::refreshStatistics);
+    const QPointer<StatisticsPage> markPage = statisticsPage_;
+    connect(markPage, &StatisticsPage::markRequested, this, [this, markPage](bool clear) {
+      if (markPage && markPage == statisticsPage_ && !busy_ && !closing_ && columnSession_) {
+        emit markRequested(columnSession_, clear);
+      }
+    });
     connect(statisticsPage_.data(), &StatisticsPage::historyRequested, this, &LibraryWindow::refreshHistory);
     connect(statisticsPage_.data(), &StatisticsPage::historyWeekRequested, this, &LibraryWindow::refreshHistoryWeek);
     connect(statisticsPage_.data(), &StatisticsPage::historyMonthRequested, this, &LibraryWindow::refreshHistoryMonth);
     connect(statisticsPage_.data(), &StatisticsPage::historyRangeRequested, this, &LibraryWindow::refreshHistoryRange);
     const QPointer<StatisticsPage> page = statisticsPage_;
+    const auto session = columnSession_;
+    page->beginNativeSession(session);
+    if (!guard || !page || statisticsPage_ != page || columnSession_ != session) { return; }
     page->resetHistorySession(columnSession_);
     if (!guard || !page || statisticsPage_ != page) { return; }
     mainTabs_->addTab(statisticsPage_.data(), tr("Statistics"));
@@ -439,6 +449,14 @@ void LibraryWindow::showStatistics() {
   page->tabs().setFocus(Qt::ShortcutFocusReason);
   if (guard && page && statisticsPage_ == page && fresh) {
     refreshStatistics();
+    if (guard && page && statisticsPage_ == page) {
+      page->setAccountingBusy(busy_);
+      if (guard && page && statisticsPage_ == page && latestOverall_) { page->setOverall(latestOverall_); }
+      if (guard && page && statisticsPage_ == page && latestRuntime_) { page->setRuntimeMetrics(latestRuntime_); }
+    }
+    if (guard && page && statisticsPage_ == page && latestNativeActivity_) {
+      page->setNativeActivity(latestNativeActivity_);
+    }
     if (guard && page && statisticsPage_ == page && engineActivity_) {
       page->setEngineActivity(engineActivity_->snapshot());
     }
@@ -637,9 +655,31 @@ void LibraryWindow::setHistoryRange(HistoryRangePresentation packet) {
   }
   if (guard) { queueOptionalViews(); }
 }
+void LibraryWindow::setRuntimeMetrics(RuntimeMetricsPresentation packet) {
+  if (!packet || packet->session != columnSession_ || !packet->epoch || !packet->sequence
+      || (latestRuntime_ && (packet->epoch < latestRuntime_->epoch
+          || (packet->epoch == latestRuntime_->epoch && packet->sequence <= latestRuntime_->sequence)))) { return; }
+  latestRuntime_ = std::move(packet);
+  if (statisticsPage_) { statisticsPage_->setRuntimeMetrics(latestRuntime_); }
+}
+void LibraryWindow::setOverall(OverallPresentation packet) {
+  if (!packet || packet->session != columnSession_ || !packet->sequence
+      || (latestOverall_ && (packet->sequence <= latestOverall_->sequence || latestOverall_->closed))) { return; }
+  latestOverall_ = std::move(packet);
+  if (statisticsPage_) { statisticsPage_->setOverall(latestOverall_); }
+}
 void LibraryWindow::setNativeSession(NativeSessionPresentation packet) {
-  if (closing_ || !acceptNativeSession(latestNativeSession_, packet, columnSession_)) { return; }
-  latestNativeSession_ = std::move(packet);
+  if (closing_ || !packet || packet->applicationRun < nativeApplicationRun_
+      || !acceptNativeSession(latestNativeSession_, packet, columnSession_)) { return; }
+  // One GUI-owned history across operations and optional widget lifetimes.
+  // It consumes only the independent absolute native-session stream.
+  if (!nativeActivity_) { nativeActivity_ = std::make_shared<NativeActivityHistory>(); }
+  if (!nativeActivity_->observe(packet, columnSession_)) { return; }
+  auto frame = nativeActivity_->snapshot();
+  nativeApplicationRun_ = packet->applicationRun;
+  latestNativeSession_ = std::move(packet); latestNativeActivity_ = std::move(frame);
+  const QPointer<StatisticsPage> page = statisticsPage_;
+  if (page) { page->setNativeActivity(latestNativeActivity_); }
 }
 void LibraryWindow::completeSessionClose() {
   if (!closing_ || !sessionCloseRequested_ || sessionCloseAcknowledged_) { return; }
@@ -765,7 +805,8 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
   columnSession_ = session;
-  latestNativeSession_.reset();
+  latestOverall_.reset(); latestRuntime_.reset();
+  latestNativeSession_.reset(); latestNativeActivity_.reset(); nativeActivity_.reset();
   rememberedStatisticsNavigation_.reset();
   latestEngineStatistics_.reset();
   engineActivity_.reset();
@@ -780,9 +821,13 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (!guard) { return; }
   const QPointer<StatisticsPage> page = statisticsPage_;
   if (page) {
+    page->beginNativeSession(session);
+    if (!guard || !page || statisticsPage_ != page || columnSession_ != session) { return; }
     page->resetHistorySession(session);
     if (!guard || !page || statisticsPage_ != page || columnSession_ != session) { return; }
     refreshStatistics();
+    if (!guard || !page || statisticsPage_ != page || columnSession_ != session) { return; }
+    if (latestNativeActivity_) { page->setNativeActivity(latestNativeActivity_); }
     if (guard && page && statisticsPage_ == page && columnSession_ == session) {
       if (page->historyRangeSelected()) { page->refreshHistoryRange(); }
       else if (page->historyMonthSelected()) { refreshHistoryMonth(page->selectedHistoryMonthDate()); }
@@ -1144,6 +1189,8 @@ void LibraryWindow::setMessage(const QString& message) { message_->setText(messa
 void LibraryWindow::setBusy(bool value) {
   QPointer<LibraryWindow> guard(this);
   busy_ = value;
+  if (statisticsPage_) { statisticsPage_->setAccountingBusy(value); }
+  if (!guard) { return; }
   updateActions();
   if (!guard || busy_) { return; }
   if (activeStatisticsRequest_) {

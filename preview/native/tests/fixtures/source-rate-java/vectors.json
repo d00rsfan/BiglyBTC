@@ -1,0 +1,1212 @@
+{
+  "status": "FINITE_INPUTS_NO_EXPECTED_OUTPUTS",
+  "case_count": 39,
+  "command_count": 161,
+  "cases": [
+    {
+      "id": "empty-and-lazy-zero",
+      "kind": "average",
+      "parameters": [
+        "1000",
+        "10",
+        "100000"
+      ],
+      "commands": [
+        [
+          "average",
+          "100000"
+        ],
+        [
+          "sum",
+          "101000"
+        ],
+        [
+          "add",
+          "110000",
+          "0"
+        ],
+        [
+          "point",
+          "110000"
+        ],
+        [
+          "average",
+          "111000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "current-excluded-warmup-decay",
+      "kind": "average",
+      "parameters": [
+        "1000",
+        "10",
+        "100000"
+      ],
+      "commands": [
+        [
+          "add",
+          "100000",
+          "1000"
+        ],
+        [
+          "average",
+          "100999"
+        ],
+        [
+          "average",
+          "101000"
+        ],
+        [
+          "point",
+          "101000"
+        ],
+        [
+          "average",
+          "110000"
+        ],
+        [
+          "average",
+          "111000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "multiple-current-values",
+      "kind": "average",
+      "parameters": [
+        "1000",
+        "10",
+        "100000"
+      ],
+      "commands": [
+        [
+          "add",
+          "100000",
+          "100"
+        ],
+        [
+          "add",
+          "100900",
+          "200"
+        ],
+        [
+          "add",
+          "101000",
+          "400"
+        ],
+        [
+          "sum",
+          "101000"
+        ],
+        [
+          "sum",
+          "102000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "signed-corrections",
+      "kind": "average",
+      "parameters": [
+        "1000",
+        "10",
+        "100000"
+      ],
+      "commands": [
+        [
+          "add",
+          "100000",
+          "-500"
+        ],
+        [
+          "average",
+          "101000"
+        ],
+        [
+          "add",
+          "101000",
+          "200"
+        ],
+        [
+          "sum",
+          "102000"
+        ],
+        [
+          "double",
+          "102000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "slot-wrap",
+      "kind": "average",
+      "parameters": [
+        "1000",
+        "10",
+        "100000"
+      ],
+      "commands": [
+        [
+          "add",
+          "100000",
+          "9223372036854775807"
+        ],
+        [
+          "add",
+          "100000",
+          "9223372036854775807"
+        ],
+        [
+          "sum",
+          "101000"
+        ],
+        [
+          "average",
+          "101000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "sum-wrap",
+      "kind": "average",
+      "parameters": [
+        "1000",
+        "10",
+        "100000"
+      ],
+      "commands": [
+        [
+          "add",
+          "100000",
+          "9223372036854775807"
+        ],
+        [
+          "add",
+          "101000",
+          "9223372036854775807"
+        ],
+        [
+          "sum",
+          "102000"
+        ],
+        [
+          "average",
+          "102000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "minimum-long",
+      "kind": "average",
+      "parameters": [
+        "1000",
+        "10",
+        "100000"
+      ],
+      "commands": [
+        [
+          "add",
+          "100000",
+          "-9223372036854775808"
+        ],
+        [
+          "sum",
+          "101000"
+        ],
+        [
+          "average",
+          "101000"
+        ],
+        [
+          "double",
+          "101000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "clear-and-explicit-clock-reset",
+      "kind": "average",
+      "parameters": [
+        "1000",
+        "10",
+        "100000"
+      ],
+      "commands": [
+        [
+          "add",
+          "100000",
+          "1234"
+        ],
+        [
+          "clear",
+          "50000"
+        ],
+        [
+          "average",
+          "50000"
+        ],
+        [
+          "add",
+          "50000",
+          "700"
+        ],
+        [
+          "sum",
+          "51000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "long-idle-and-ring-reuse",
+      "kind": "average",
+      "parameters": [
+        "1000",
+        "10",
+        "100000"
+      ],
+      "commands": [
+        [
+          "add",
+          "100000",
+          "120"
+        ],
+        [
+          "sum",
+          "999000"
+        ],
+        [
+          "add",
+          "999000",
+          "15"
+        ],
+        [
+          "sum",
+          "1000000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "requested-period-clamping",
+      "kind": "average",
+      "parameters": [
+        "1000",
+        "10",
+        "100000"
+      ],
+      "commands": [
+        [
+          "add",
+          "100000",
+          "100"
+        ],
+        [
+          "add",
+          "101000",
+          "200"
+        ],
+        [
+          "add",
+          "102000",
+          "300"
+        ],
+        [
+          "period",
+          "103000",
+          "-1"
+        ],
+        [
+          "period",
+          "103000",
+          "1"
+        ],
+        [
+          "period",
+          "103000",
+          "2000"
+        ],
+        [
+          "period",
+          "103000",
+          "2147483647"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "two-second-refresh-point-unscaled",
+      "kind": "average",
+      "parameters": [
+        "2000",
+        "10",
+        "100000"
+      ],
+      "commands": [
+        [
+          "add",
+          "100000",
+          "1000"
+        ],
+        [
+          "point",
+          "102000"
+        ],
+        [
+          "period",
+          "102000",
+          "1"
+        ],
+        [
+          "period",
+          "102000",
+          "4000"
+        ],
+        [
+          "average",
+          "102000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "full-capacity-window",
+      "kind": "average",
+      "parameters": [
+        "1000",
+        "1800",
+        "100000"
+      ],
+      "commands": [
+        [
+          "add",
+          "100000",
+          "1800"
+        ],
+        [
+          "average",
+          "101000"
+        ],
+        [
+          "average",
+          "1900000"
+        ],
+        [
+          "average",
+          "1901000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "maximum-admitted-time",
+      "kind": "average",
+      "parameters": [
+        "1000",
+        "10",
+        "9223372036854774000"
+      ],
+      "commands": [
+        [
+          "add",
+          "9223372036854774000",
+          "9"
+        ],
+        [
+          "sum",
+          "9223372036854775807"
+        ],
+        [
+          "point",
+          "9223372036854775807"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "source-backward-clock",
+      "kind": "average",
+      "parameters": [
+        "1000",
+        "10",
+        "100000"
+      ],
+      "commands": [
+        [
+          "add",
+          "100000",
+          "500"
+        ],
+        [
+          "sum",
+          "99000"
+        ],
+        [
+          "add",
+          "98000",
+          "250"
+        ],
+        [
+          "average",
+          "101000"
+        ]
+      ],
+      "scope": "java-characterization-native-rejects-backward"
+    },
+    {
+      "id": "source-negative-clock",
+      "kind": "average",
+      "parameters": [
+        "1000",
+        "10",
+        "100000"
+      ],
+      "commands": [
+        [
+          "add",
+          "100000",
+          "1"
+        ],
+        [
+          "point",
+          "-1000"
+        ],
+        [
+          "sum",
+          "101000"
+        ]
+      ],
+      "scope": "java-characterization-native-rejects-negative"
+    },
+    {
+      "id": "source-allocated-zero-time-point",
+      "kind": "average",
+      "parameters": [
+        "1000",
+        "10",
+        "0"
+      ],
+      "commands": [
+        [
+          "add",
+          "0",
+          "1"
+        ],
+        [
+          "point",
+          "0"
+        ],
+        [
+          "period",
+          "0",
+          "1"
+        ],
+        [
+          "sum",
+          "1000"
+        ]
+      ],
+      "scope": "java-characterization-native-rejects-point-zero"
+    },
+    {
+      "id": "source-subsecond-divisor",
+      "kind": "average",
+      "parameters": [
+        "100",
+        "1",
+        "100000"
+      ],
+      "commands": [
+        [
+          "add",
+          "100000",
+          "7"
+        ],
+        [
+          "period",
+          "100600",
+          "200"
+        ]
+      ],
+      "scope": "java-only-subsecond-domain"
+    },
+    {
+      "id": "factory-rejects-refresh",
+      "kind": "average",
+      "parameters": [
+        "99",
+        "10",
+        "100000"
+      ],
+      "commands": [],
+      "scope": "java-only-invalid-factory"
+    },
+    {
+      "id": "factory-rejects-period",
+      "kind": "average",
+      "parameters": [
+        "1000",
+        "0",
+        "100000"
+      ],
+      "commands": [],
+      "scope": "java-only-invalid-factory"
+    },
+    {
+      "id": "default-thirty-and-ten-second-paths",
+      "kind": "global",
+      "parameters": [
+        "30",
+        "100000"
+      ],
+      "commands": [
+        [
+          "receive",
+          "100000",
+          "3000",
+          "100",
+          "0"
+        ],
+        [
+          "send",
+          "100000",
+          "1200",
+          "60",
+          "0"
+        ],
+        [
+          "tick",
+          "100000",
+          "1"
+        ],
+        [
+          "read",
+          "101000"
+        ],
+        [
+          "read",
+          "111000"
+        ],
+        [
+          "read",
+          "131000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "lan-separation",
+      "kind": "global",
+      "parameters": [
+        "30",
+        "100000"
+      ],
+      "commands": [
+        [
+          "receive",
+          "100000",
+          "1000",
+          "100",
+          "1"
+        ],
+        [
+          "receive",
+          "100000",
+          "500",
+          "50",
+          "0"
+        ],
+        [
+          "send",
+          "100000",
+          "200",
+          "20",
+          "1"
+        ],
+        [
+          "tick",
+          "100000",
+          "1"
+        ],
+        [
+          "read",
+          "101000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "signed-cumulative-corrections",
+      "kind": "global",
+      "parameters": [
+        "10",
+        "100000"
+      ],
+      "commands": [
+        [
+          "receive",
+          "100000",
+          "1000",
+          "200",
+          "0"
+        ],
+        [
+          "tick",
+          "100000",
+          "1"
+        ],
+        [
+          "receive",
+          "101000",
+          "-300",
+          "-50",
+          "0"
+        ],
+        [
+          "tick",
+          "101000",
+          "2"
+        ],
+        [
+          "read",
+          "102000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "low-window-clamp",
+      "kind": "global",
+      "parameters": [
+        "-2147483648",
+        "100000"
+      ],
+      "commands": [
+        [
+          "receive",
+          "100000",
+          "100",
+          "10",
+          "0"
+        ],
+        [
+          "tick",
+          "100000",
+          "1"
+        ],
+        [
+          "read",
+          "101000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "high-window-clamp",
+      "kind": "global",
+      "parameters": [
+        "2147483647",
+        "100000"
+      ],
+      "commands": [
+        [
+          "receive",
+          "100000",
+          "100",
+          "10",
+          "0"
+        ],
+        [
+          "tick",
+          "100000",
+          "19"
+        ],
+        [
+          "read",
+          "101000"
+        ],
+        [
+          "tick",
+          "120000",
+          "20"
+        ],
+        [
+          "read",
+          "140000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "reconfigure-tests-old-interval-first",
+      "kind": "global",
+      "parameters": [
+        "120",
+        "100000"
+      ],
+      "commands": [
+        [
+          "receive",
+          "100000",
+          "1200",
+          "100",
+          "0"
+        ],
+        [
+          "tick",
+          "100000",
+          "2"
+        ],
+        [
+          "config",
+          "101000",
+          "30"
+        ],
+        [
+          "receive",
+          "101000",
+          "600",
+          "50",
+          "0"
+        ],
+        [
+          "tick",
+          "101000",
+          "3"
+        ],
+        [
+          "read",
+          "102000"
+        ],
+        [
+          "tick",
+          "102000",
+          "4"
+        ],
+        [
+          "read",
+          "103000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "interval-boundary-and-retained-baseline",
+      "kind": "global",
+      "parameters": [
+        "119",
+        "100000"
+      ],
+      "commands": [
+        [
+          "receive",
+          "100000",
+          "1000",
+          "100",
+          "0"
+        ],
+        [
+          "tick",
+          "100000",
+          "1"
+        ],
+        [
+          "config",
+          "101000",
+          "120"
+        ],
+        [
+          "receive",
+          "101000",
+          "500",
+          "50",
+          "0"
+        ],
+        [
+          "tick",
+          "101000",
+          "2"
+        ],
+        [
+          "read",
+          "104000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "counter-wrap-and-int-narrowing",
+      "kind": "global",
+      "parameters": [
+        "10",
+        "100000"
+      ],
+      "commands": [
+        [
+          "receive",
+          "100000",
+          "9223372036854775807",
+          "21474836480",
+          "0"
+        ],
+        [
+          "send",
+          "100000",
+          "9223372036854775807",
+          "1",
+          "0"
+        ],
+        [
+          "tick",
+          "100000",
+          "1"
+        ],
+        [
+          "receive",
+          "101000",
+          "9223372036854775807",
+          "-1",
+          "0"
+        ],
+        [
+          "tick",
+          "101000",
+          "2"
+        ],
+        [
+          "read",
+          "102000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "irregular-ticks-and-late-time",
+      "kind": "global",
+      "parameters": [
+        "30",
+        "100000"
+      ],
+      "commands": [
+        [
+          "receive",
+          "100000",
+          "900",
+          "0",
+          "0"
+        ],
+        [
+          "tick",
+          "100000",
+          "7"
+        ],
+        [
+          "receive",
+          "107500",
+          "600",
+          "0",
+          "0"
+        ],
+        [
+          "tick",
+          "107500",
+          "11"
+        ],
+        [
+          "read",
+          "108000"
+        ],
+        [
+          "read",
+          "160000"
+        ]
+      ],
+      "scope": "native-admitted"
+    },
+    {
+      "id": "source-global-backward-clock",
+      "kind": "global",
+      "parameters": [
+        "30",
+        "100000"
+      ],
+      "commands": [
+        [
+          "receive",
+          "100000",
+          "100",
+          "1",
+          "0"
+        ],
+        [
+          "tick",
+          "100000",
+          "1"
+        ],
+        [
+          "tick",
+          "99000",
+          "2"
+        ],
+        [
+          "read",
+          "101000"
+        ]
+      ],
+      "scope": "java-characterization-native-rejects-backward"
+    },
+    {
+      "id": "production-full-period-warmup",
+      "kind": "smooth",
+      "parameters": [
+        "30",
+        "0",
+        "100000"
+      ],
+      "commands": [
+        [
+          "add",
+          "100000",
+          "300"
+        ],
+        [
+          "read",
+          "100000"
+        ],
+        [
+          "read",
+          "101000"
+        ]
+      ],
+      "scope": "source-characterization-no-native-replay-implementation"
+    },
+    {
+      "id": "replay-partial-population",
+      "kind": "smooth",
+      "parameters": [
+        "30",
+        "1",
+        "100000"
+      ],
+      "commands": [
+        [
+          "add",
+          "100000",
+          "300"
+        ],
+        [
+          "read",
+          "100000"
+        ],
+        [
+          "add",
+          "100000",
+          "600"
+        ],
+        [
+          "read",
+          "100000"
+        ]
+      ],
+      "scope": "source-characterization-no-native-replay-implementation"
+    },
+    {
+      "id": "replay-two-second-interval",
+      "kind": "smooth",
+      "parameters": [
+        "120",
+        "1",
+        "100000"
+      ],
+      "commands": [
+        [
+          "add",
+          "100000",
+          "301"
+        ],
+        [
+          "read",
+          "100000"
+        ],
+        [
+          "add",
+          "100001",
+          "-100"
+        ],
+        [
+          "read",
+          "100001"
+        ]
+      ],
+      "scope": "source-characterization-no-native-replay-implementation"
+    },
+    {
+      "id": "replay-long-to-double-and-reset",
+      "kind": "smooth",
+      "parameters": [
+        "30",
+        "1",
+        "100000"
+      ],
+      "commands": [
+        [
+          "add",
+          "100000",
+          "9223372036854775807"
+        ],
+        [
+          "add",
+          "100000",
+          "-9223372036854775808"
+        ],
+        [
+          "read",
+          "100000"
+        ],
+        [
+          "recreate",
+          "101000"
+        ],
+        [
+          "read",
+          "101000"
+        ]
+      ],
+      "scope": "source-characterization-no-native-replay-implementation"
+    },
+    {
+      "id": "exponential-periods",
+      "kind": "exponential",
+      "parameters": [
+        "periods",
+        "10"
+      ],
+      "commands": [
+        [
+          "update",
+          "100"
+        ],
+        [
+          "update",
+          "200"
+        ],
+        [
+          "read"
+        ],
+        [
+          "reset"
+        ],
+        [
+          "read"
+        ]
+      ],
+      "scope": "source-only-not-inspected-production-path"
+    },
+    {
+      "id": "exponential-weight-negative-input",
+      "kind": "exponential",
+      "parameters": [
+        "weight",
+        "0.25"
+      ],
+      "commands": [
+        [
+          "update",
+          "-100"
+        ],
+        [
+          "update",
+          "50"
+        ],
+        [
+          "read"
+        ]
+      ],
+      "scope": "source-only-not-inspected-production-path"
+    },
+    {
+      "id": "exponential-zero-weight",
+      "kind": "exponential",
+      "parameters": [
+        "weight",
+        "0.0"
+      ],
+      "commands": [
+        [
+          "update",
+          "100"
+        ],
+        [
+          "read"
+        ]
+      ],
+      "scope": "source-only-not-inspected-production-path"
+    },
+    {
+      "id": "exponential-one-weight-extreme",
+      "kind": "exponential",
+      "parameters": [
+        "weight",
+        "1.0"
+      ],
+      "commands": [
+        [
+          "update",
+          "1.7976931348623157E308"
+        ],
+        [
+          "update",
+          "-1.7976931348623157E308"
+        ],
+        [
+          "read"
+        ]
+      ],
+      "scope": "source-only-not-inspected-production-path"
+    },
+    {
+      "id": "exponential-invalid-period",
+      "kind": "exponential",
+      "parameters": [
+        "periods",
+        "0"
+      ],
+      "commands": [
+        [
+          "update",
+          "1"
+        ],
+        [
+          "read"
+        ]
+      ],
+      "scope": "source-only-not-inspected-production-path"
+    },
+    {
+      "id": "exponential-nan-weight",
+      "kind": "exponential",
+      "parameters": [
+        "weight",
+        "NaN"
+      ],
+      "commands": [
+        [
+          "update",
+          "10"
+        ],
+        [
+          "read"
+        ]
+      ],
+      "scope": "source-only-not-inspected-production-path"
+    }
+  ]
+}

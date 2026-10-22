@@ -1,0 +1,203 @@
+CASE	empty-and-lazy-zero	average	CREATED
+RESULT	empty-and-lazy-zero	0	average	0
+RESULT	empty-and-lazy-zero	1	sum	0
+RESULT	empty-and-lazy-zero	2	add	OK
+RESULT	empty-and-lazy-zero	3	point	0
+RESULT	empty-and-lazy-zero	4	average	0
+CASE	current-excluded-warmup-decay	average	CREATED
+RESULT	current-excluded-warmup-decay	0	add	OK
+RESULT	current-excluded-warmup-decay	1	average	0
+RESULT	current-excluded-warmup-decay	2	average	100
+RESULT	current-excluded-warmup-decay	3	point	1000
+RESULT	current-excluded-warmup-decay	4	average	100
+RESULT	current-excluded-warmup-decay	5	average	0
+CASE	multiple-current-values	average	CREATED
+RESULT	multiple-current-values	0	add	OK
+RESULT	multiple-current-values	1	add	OK
+RESULT	multiple-current-values	2	add	OK
+RESULT	multiple-current-values	3	sum	300
+RESULT	multiple-current-values	4	sum	700
+CASE	signed-corrections	average	CREATED
+RESULT	signed-corrections	0	add	OK
+RESULT	signed-corrections	1	average	-50
+RESULT	signed-corrections	2	add	OK
+RESULT	signed-corrections	3	sum	-300
+RESULT	signed-corrections	4	double	-0x1.ep4:c03e000000000000
+CASE	slot-wrap	average	CREATED
+RESULT	slot-wrap	0	add	OK
+RESULT	slot-wrap	1	add	OK
+RESULT	slot-wrap	2	sum	-2
+RESULT	slot-wrap	3	average	0
+CASE	sum-wrap	average	CREATED
+RESULT	sum-wrap	0	add	OK
+RESULT	sum-wrap	1	add	OK
+RESULT	sum-wrap	2	sum	-2
+RESULT	sum-wrap	3	average	0
+CASE	minimum-long	average	CREATED
+RESULT	minimum-long	0	add	OK
+RESULT	minimum-long	1	sum	-9223372036854775808
+RESULT	minimum-long	2	average	-922337203685477580
+RESULT	minimum-long	3	double	-0x1.999999999999ap59:c3a999999999999a
+CASE	clear-and-explicit-clock-reset	average	CREATED
+RESULT	clear-and-explicit-clock-reset	0	add	OK
+RESULT	clear-and-explicit-clock-reset	1	clear	OK
+RESULT	clear-and-explicit-clock-reset	2	average	0
+RESULT	clear-and-explicit-clock-reset	3	add	OK
+RESULT	clear-and-explicit-clock-reset	4	sum	700
+CASE	long-idle-and-ring-reuse	average	CREATED
+RESULT	long-idle-and-ring-reuse	0	add	OK
+RESULT	long-idle-and-ring-reuse	1	sum	0
+RESULT	long-idle-and-ring-reuse	2	add	OK
+RESULT	long-idle-and-ring-reuse	3	sum	15
+CASE	requested-period-clamping	average	CREATED
+RESULT	requested-period-clamping	0	add	OK
+RESULT	requested-period-clamping	1	add	OK
+RESULT	requested-period-clamping	2	add	OK
+RESULT	requested-period-clamping	3	period	60
+RESULT	requested-period-clamping	4	period	300
+RESULT	requested-period-clamping	5	period	250
+RESULT	requested-period-clamping	6	period	60
+CASE	two-second-refresh-point-unscaled	average	CREATED
+RESULT	two-second-refresh-point-unscaled	0	add	OK
+RESULT	two-second-refresh-point-unscaled	1	point	1000
+RESULT	two-second-refresh-point-unscaled	2	period	1000
+RESULT	two-second-refresh-point-unscaled	3	period	250
+RESULT	two-second-refresh-point-unscaled	4	average	100
+CASE	full-capacity-window	average	CREATED
+RESULT	full-capacity-window	0	add	OK
+RESULT	full-capacity-window	1	average	1
+RESULT	full-capacity-window	2	average	1
+RESULT	full-capacity-window	3	average	0
+CASE	maximum-admitted-time	average	CREATED
+RESULT	maximum-admitted-time	0	add	OK
+RESULT	maximum-admitted-time	1	sum	9
+RESULT	maximum-admitted-time	2	point	9
+CASE	source-backward-clock	average	CREATED
+RESULT	source-backward-clock	0	add	OK
+RESULT	source-backward-clock	1	sum	0
+RESULT	source-backward-clock	2	add	OK
+RESULT	source-backward-clock	3	average	25
+CASE	source-negative-clock	average	CREATED
+RESULT	source-negative-clock	0	add	OK
+RESULT	source-negative-clock	1	point	ERROR:java.lang.ArrayIndexOutOfBoundsException
+RESULT	source-negative-clock	2	sum	0
+CASE	source-allocated-zero-time-point	average	CREATED
+RESULT	source-allocated-zero-time-point	0	add	OK
+RESULT	source-allocated-zero-time-point	1	point	ERROR:java.lang.ArrayIndexOutOfBoundsException
+RESULT	source-allocated-zero-time-point	2	period	ERROR:java.lang.ArrayIndexOutOfBoundsException
+RESULT	source-allocated-zero-time-point	3	sum	1
+CASE	source-subsecond-divisor	average	CREATED
+RESULT	source-subsecond-divisor	0	add	OK
+RESULT	source-subsecond-divisor	1	period	ERROR:java.lang.ArithmeticException
+CASE	factory-rejects-refresh	average	FACTORY_NULL
+CASE	factory-rejects-period	average	FACTORY_NULL
+CASE	default-thirty-and-ten-second-paths	global	CREATED
+RESULT	default-thirty-and-ten-second-paths	0	receive	OK
+RESULT	default-thirty-and-ten-second-paths	1	send	OK
+RESULT	default-thirty-and-ten-second-paths	2	tick	OK
+RESULT	default-thirty-and-ten-second-paths	3	read	policy=30,1;totals=3000,100,1200,60;rates=300,10,120,6;no-lan=300,10,120,6;combined-int=310,126;activity-promoted=310,126;smooth=103,42
+RESULT	default-thirty-and-ten-second-paths	4	read	policy=30,1;totals=3000,100,1200,60;rates=0,0,0,0;no-lan=0,0,0,0;combined-int=0,0;activity-promoted=0,0;smooth=103,42
+RESULT	default-thirty-and-ten-second-paths	5	read	policy=30,1;totals=3000,100,1200,60;rates=0,0,0,0;no-lan=0,0,0,0;combined-int=0,0;activity-promoted=0,0;smooth=0,0
+CASE	lan-separation	global	CREATED
+RESULT	lan-separation	0	receive	OK
+RESULT	lan-separation	1	receive	OK
+RESULT	lan-separation	2	send	OK
+RESULT	lan-separation	3	tick	OK
+RESULT	lan-separation	4	read	policy=30,1;totals=1500,150,200,20;rates=150,15,20,2;no-lan=50,5,0,0;combined-int=165,22;activity-promoted=165,22;smooth=55,7
+CASE	signed-cumulative-corrections	global	CREATED
+RESULT	signed-cumulative-corrections	0	receive	OK
+RESULT	signed-cumulative-corrections	1	tick	OK
+RESULT	signed-cumulative-corrections	2	receive	OK
+RESULT	signed-cumulative-corrections	3	tick	OK
+RESULT	signed-cumulative-corrections	4	read	policy=10,1;totals=700,150,0,0;rates=70,15,0,0;no-lan=70,15,0,0;combined-int=85,0;activity-promoted=85,0;smooth=85,0
+CASE	low-window-clamp	global	CREATED
+RESULT	low-window-clamp	0	receive	OK
+RESULT	low-window-clamp	1	tick	OK
+RESULT	low-window-clamp	2	read	policy=10,1;totals=100,10,0,0;rates=10,1,0,0;no-lan=10,1,0,0;combined-int=11,0;activity-promoted=11,0;smooth=11,0
+CASE	high-window-clamp	global	CREATED
+RESULT	high-window-clamp	0	receive	OK
+RESULT	high-window-clamp	1	tick	OK
+RESULT	high-window-clamp	2	read	policy=1800,20;totals=100,10,0,0;rates=10,1,0,0;no-lan=10,1,0,0;combined-int=11,0;activity-promoted=11,0;smooth=0,0
+RESULT	high-window-clamp	3	tick	OK
+RESULT	high-window-clamp	4	read	policy=1800,20;totals=100,10,0,0;rates=0,0,0,0;no-lan=0,0,0,0;combined-int=0,0;activity-promoted=0,0;smooth=0,0
+CASE	reconfigure-tests-old-interval-first	global	CREATED
+RESULT	reconfigure-tests-old-interval-first	0	receive	OK
+RESULT	reconfigure-tests-old-interval-first	1	tick	OK
+RESULT	reconfigure-tests-old-interval-first	2	config	OK
+RESULT	reconfigure-tests-old-interval-first	3	receive	OK
+RESULT	reconfigure-tests-old-interval-first	4	tick	OK
+RESULT	reconfigure-tests-old-interval-first	5	read	policy=30,1;totals=1800,150,0,0;rates=180,15,0,0;no-lan=180,15,0,0;combined-int=195,0;activity-promoted=195,0;smooth=10,0
+RESULT	reconfigure-tests-old-interval-first	6	tick	OK
+RESULT	reconfigure-tests-old-interval-first	7	read	policy=30,1;totals=1800,150,0,0;rates=180,15,0,0;no-lan=180,15,0,0;combined-int=195,0;activity-promoted=195,0;smooth=21,0
+CASE	interval-boundary-and-retained-baseline	global	CREATED
+RESULT	interval-boundary-and-retained-baseline	0	receive	OK
+RESULT	interval-boundary-and-retained-baseline	1	tick	OK
+RESULT	interval-boundary-and-retained-baseline	2	config	OK
+RESULT	interval-boundary-and-retained-baseline	3	receive	OK
+RESULT	interval-boundary-and-retained-baseline	4	tick	OK
+RESULT	interval-boundary-and-retained-baseline	5	read	policy=120,2;totals=1500,150,0,0;rates=150,15,0,0;no-lan=150,15,0,0;combined-int=165,0;activity-promoted=165,0;smooth=4,0
+CASE	counter-wrap-and-int-narrowing	global	CREATED
+RESULT	counter-wrap-and-int-narrowing	0	receive	OK
+RESULT	counter-wrap-and-int-narrowing	1	send	OK
+RESULT	counter-wrap-and-int-narrowing	2	tick	OK
+RESULT	counter-wrap-and-int-narrowing	3	receive	OK
+RESULT	counter-wrap-and-int-narrowing	4	tick	OK
+RESULT	counter-wrap-and-int-narrowing	5	read	policy=10,1;totals=-2,21474836479,9223372036854775807,1;rates=0,2147483647,922337203685477580,0;no-lan=0,2147483647,922337203685477580,0;combined-int=2147483647,-858993460;activity-promoted=2147483647,922337203685477580;smooth=2147483647,-922337203685477580
+CASE	irregular-ticks-and-late-time	global	CREATED
+RESULT	irregular-ticks-and-late-time	0	receive	OK
+RESULT	irregular-ticks-and-late-time	1	tick	OK
+RESULT	irregular-ticks-and-late-time	2	receive	OK
+RESULT	irregular-ticks-and-late-time	3	tick	OK
+RESULT	irregular-ticks-and-late-time	4	read	policy=30,1;totals=1500,0,0,0;rates=150,0,0,0;no-lan=150,0,0,0;combined-int=150,0;activity-promoted=150,0;smooth=50,0
+RESULT	irregular-ticks-and-late-time	5	read	policy=30,1;totals=1500,0,0,0;rates=0,0,0,0;no-lan=0,0,0,0;combined-int=0,0;activity-promoted=0,0;smooth=0,0
+CASE	source-global-backward-clock	global	CREATED
+RESULT	source-global-backward-clock	0	receive	OK
+RESULT	source-global-backward-clock	1	tick	OK
+RESULT	source-global-backward-clock	2	tick	OK
+RESULT	source-global-backward-clock	3	read	policy=30,1;totals=100,1,0,0;rates=10,0,0,0;no-lan=10,0,0,0;combined-int=10,0;activity-promoted=10,0;smooth=0,0
+CASE	production-full-period-warmup	smooth	CREATED
+RESULT	production-full-period-warmup	0	add	OK
+RESULT	production-full-period-warmup	1	read	0
+RESULT	production-full-period-warmup	2	read	10
+CASE	replay-partial-population	smooth	CREATED
+RESULT	replay-partial-population	0	add	OK
+RESULT	replay-partial-population	1	read	300
+RESULT	replay-partial-population	2	add	OK
+RESULT	replay-partial-population	3	read	450
+CASE	replay-two-second-interval	smooth	CREATED
+RESULT	replay-two-second-interval	0	add	OK
+RESULT	replay-two-second-interval	1	read	150
+RESULT	replay-two-second-interval	2	add	OK
+RESULT	replay-two-second-interval	3	read	50
+CASE	replay-long-to-double-and-reset	smooth	CREATED
+RESULT	replay-long-to-double-and-reset	0	add	OK
+RESULT	replay-long-to-double-and-reset	1	add	OK
+RESULT	replay-long-to-double-and-reset	2	read	0
+RESULT	replay-long-to-double-and-reset	3	recreate	OK
+RESULT	replay-long-to-double-and-reset	4	read	0
+CASE	exponential-periods	exponential	CREATED
+RESULT	exponential-periods	0	update	0x1.22e8bacp4:40322e8bac000000
+RESULT	exponential-periods	1	update	0x1.99ead88cf56bep5:40499ead88cf56be
+RESULT	exponential-periods	2	read	0x1.99ead88cf56bep5:40499ead88cf56be
+RESULT	exponential-periods	3	reset	OK
+RESULT	exponential-periods	4	read	0x0.0p0:0
+CASE	exponential-weight-negative-input	exponential	CREATED
+RESULT	exponential-weight-negative-input	0	update	-0x1.9p4:c039000000000000
+RESULT	exponential-weight-negative-input	1	update	-0x1.9p2:c019000000000000
+RESULT	exponential-weight-negative-input	2	read	-0x1.9p2:c019000000000000
+CASE	exponential-zero-weight	exponential	CREATED
+RESULT	exponential-zero-weight	0	update	0x0.0p0:0
+RESULT	exponential-zero-weight	1	read	0x0.0p0:0
+CASE	exponential-one-weight-extreme	exponential	CREATED
+RESULT	exponential-one-weight-extreme	0	update	0x1.fffffffffffffp1023:7fefffffffffffff
+RESULT	exponential-one-weight-extreme	1	update	-Infinity:fff0000000000000
+RESULT	exponential-one-weight-extreme	2	read	-Infinity:fff0000000000000
+ExponentialMovingAverage:: ERROR: bad periods: 0
+CASE	exponential-invalid-period	exponential	CREATED
+RESULT	exponential-invalid-period	0	update	0x1.0p1:4000000000000000
+RESULT	exponential-invalid-period	1	read	0x1.0p1:4000000000000000
+CASE	exponential-nan-weight	exponential	CREATED
+RESULT	exponential-nan-weight	0	update	NaN:7ff8000000000000
+RESULT	exponential-nan-weight	1	read	NaN:7ff8000000000000
+FENCE	forbidden=0	clock_calls=413	configuration_calls=17
+COMPLETE	cases=39	commands=161	whole_manager_runtime_credit=0

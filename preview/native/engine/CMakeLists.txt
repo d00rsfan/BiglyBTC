@@ -8,3 +8,5 @@ target_link_libraries(biglybtc_local_engine PUBLIC biglybtc_profile PRIVATE Libt
 target_compile_options(biglybtc_local_engine PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/runtime-binding/PersistentRuntimeBinding.cmake")
+
+target_sources(biglybtc_local_engine PRIVATE runtime_metrics_sampler.cpp)

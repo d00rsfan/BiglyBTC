@@ -123,60 +123,40 @@ registered defaults, plugin columns, full settings or row-sort equivalence. See 
 [pinned source audit](docs/classic-column-persistence-source.json).
 
 **Tools > Statistics (Ctrl+5)** opens one reusable, closeable Statistics tab.
-New pages start on Activity; Ctrl+1 restores My Torrents with its selection,
-filter, columns and details. Activity shows at most600 actual observations of
-the latest transfer's payload download/upload rates, with an explicit transfer
-name and actual arrival times. It starts empty and resets for another transfer.
-Hidden views collect bounded observations without a sampling timer or painting.
-Global data-plus-protocol rates remain unavailable.
+Ctrl+1 restores My Torrents with its selection, filter, columns and details.
+Activity defaults to **Session traffic**, retaining up to600 actual combined,
+payload and protocol rate observations across transfers and closing/reopening
+Statistics. Payload and Engine traffic retain their separate per-operation views.
+Unknown intervals break graph lines; hidden/minimized views retain data without
+painting or starting an engine.
 
-Transfers > Current shows last-saved overall totals, uptime, separate data,
-protocol and DHT counters, mark baselines and derived since-mark values from the
-original default `BiglyBT.statistics` filename. Its fixed-leaf read-only adapter
-uses the existing profile lease and reports primary/backup/saving provenance.
-Absent or invalid values stay unavailable. Combined counters are not added to
-their splits or DHT again. Mark time is an epoch-millisecond label, not a save
-timestamp. Refresh saved totals/F5 does not refresh the torrent library or write
-statistics. Application-wide session counters, global history and the other
-original Statistics subviews remain unfinished. The generated launcher sample includes
-original-format saved statistics; offline Activity stays empty. See the
-[Statistics contract](docs/classic-statistics-contract.json).
+Transfers > Current separates the persistent native session, latest operation,
+live overall accounting and last-saved totals. Raw interval rates remain separate
+from ten-second windows and thirty-second smoothing over actual sample arrivals.
+The window arithmetic follows the original source; sample arrival timing does not
+claim equivalence to the original Java packet-event timing.
 
-No performance improvement or full migration completion is claimed by this source
-milestone.
+A source-qualified persistent session enables compatible **BiglyBT.statistics**
+accounting and **Set mark / Clear mark**. Marks save immediately; original overall
+arithmetic updates every minute and saves every ten updates and on explicit close.
+Unknown document fields survive saves. Failed or recovered storage remains visible
+and blocks further writes; transfer success and lease release remain independent.
+Only actual joined close receipts can certify final peer counters. The ordinary
+unbound engine fallback and offline sample remain read-only.
 
-Transfers > Current also shows measured counters for the **latest owned engine
-operation** when an experimental transfer runs. It reports combined peer bytes,
-payload and derived protocol bytes in each direction, plus interval receive/send
-rates. The first observation has no rate. Each operation starts fresh; ended or
-cancelled operations retain their last observation, which is not an exhaustive
-shutdown accounting. Opening/reopening Statistics restores the latest operation's
-facts, and a different profile clears them. The ordinary generated sample has no
-active engine, so these fields remain unavailable there.
+Transfers > History retains its saved UTC day/week/month/rolling browsers. Qualified
+sessions append original-format six-field minute records under stats/YYYY/MM/DD.dat,
+including start/end and UTC rollover. DHT is a separate domain and is explicitly
+disabled in these isolated local sessions. Unknown intervals are not filled with
+zero; ambiguous append failures stop automatic recording.
 
-These measurements belong to one temporary engine session, not the original
-application-wide session. IP overhead, tracker and DHT traffic are excluded.
-Intervals use monotonic observation times and exact checked integer arithmetic;
-they do not reproduce Java's ten-second smoothing. Sampling is optional and cannot
-change transfer success. Saved overall totals are read independently and are never
-written or incremented with these operation counters. See the [engine statistics
-contract](docs/engine-statistics-contract.json). Global Activity/live history recording and a
-persistent all-application engine remain unfinished.
-
-**Activity > Engine traffic** plots actual combined, payload and protocol rates for
-receive and send from the latest experimental engine operation. The original
-Payload view stays first and remains separate. Up to600 known-rate observations
-are retained by the Window while Statistics is closed and replayed on reopening.
-Plots use the engine's steady elapsed observation times. Skipped observations and
-unavailable-rate intervals break the lines; a first unavailable rate is never
-shown as zero. Ending an operation retains its last observed history, and a new
-operation/profile starts fresh. Refresh saved totals preserves these observations.
-Hidden/minimized graphs cache owned data without painting or starting timers.
-
-This is temporary per-operation history; global application traffic, Java rate
-smoothing, persistent history and the remaining original Statistics services are
-unfinished. The offline launcher generates no engine samples. See the
-[engine Activity contract](docs/engine-activity-contract.json).
+**Cache**, **Tracker**, **Counters** and Transfers > **Connections** show actual
+native engine counters and gauges, with name filtering and numeric sorting.
+They consume the existing stats responses and never start a service on opening.
+Values are labelled unavailable before observations and last-observed after close.
+These native metric tables do not claim the original Java cache/tracker service UI
+or the remaining DHT, DDB, Vivaldi, Tags and Country providers are complete.
+The default generated offline sample has no engine observations.
 
 Statistics > Transfers > History now browses one saved UTC day. Select a date or
 use Previous day / Next day, then Refresh history (or F5 while History is selected)

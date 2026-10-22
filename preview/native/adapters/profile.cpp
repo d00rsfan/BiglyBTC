@@ -26,7 +26,7 @@ std::unexpected<Error> error(ErrorCode code, std::string message) {
 
 
 bool validName(std::string_view name) {
-  if (name.empty() || name.size() > 240 || name.front() == '.' || !name.ends_with(".config")) {
+  if (name.empty() || name.size() > 240 || name.front() == '.' || (!name.ends_with(".config") && name != "BiglyBT.statistics")) {
     return false;
   }
   for (const unsigned char value : name) {

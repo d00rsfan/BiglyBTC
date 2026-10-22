@@ -9,3 +9,10 @@ set_target_properties(biglybtc_ui PROPERTIES AUTOMOC ON)
 target_include_directories(biglybtc_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
 target_link_libraries(biglybtc_ui PUBLIC Qt6::Widgets BiglyBTC::Core)
 target_compile_options(biglybtc_ui PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+target_sources(biglybtc_ui PRIVATE overall_presentation.hpp overall_view.hpp overall_view.cpp
+  native_session_view.hpp native_session_view.cpp
+  native_activity_presentation.hpp native_activity_history.hpp native_activity_history.cpp
+  native_activity_view.hpp native_activity_view.cpp)
+
+target_sources(biglybtc_ui PRIVATE runtime_metrics_presentation.hpp runtime_metrics_view.hpp runtime_metrics_view.cpp)

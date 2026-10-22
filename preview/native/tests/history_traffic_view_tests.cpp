@@ -195,7 +195,7 @@ private slots:
     for (const bool invalidDaily : {false, true}) {
       auto bad = *nav; bad.section = 1; bad.activity = 1; bad.transfers = 1; bad.history = 1; if (invalidDaily) { bad.dailyTraffic = static_cast<Traffic>(99); } else { bad.weekTraffic = static_cast<Traffic>(-1); }
       QVERIFY(!ui::validStatisticsNavigation(bad)); ui::StatisticsPage fallback(nullptr, bad); const auto defaults = fallback.navigation(); QVERIFY(defaults);
-      QCOMPARE(defaults->section, 0); QCOMPARE(defaults->activity, 0); QCOMPARE(defaults->transfers, 0); QCOMPARE(defaults->history, 0); QVERIFY(!defaults->hourly);
+      QCOMPARE(defaults->section, 0); QCOMPARE(defaults->activity, 2); QCOMPARE(defaults->transfers, 0); QCOMPARE(defaults->history, 0); QVERIFY(!defaults->hourly);
       QCOMPARE(defaults->dailyTraffic, Traffic::Payload); QCOMPARE(defaults->weekTraffic, Traffic::Payload);
       const auto today = QDateTime::currentDateTimeUtc().date();
       const auto isCurrentUtcDate = [&](core::HistoryDate d) { const QDate date(d.year, static_cast<int>(d.month), static_cast<int>(d.day)); return date == today || date == today.addDays(-1); };

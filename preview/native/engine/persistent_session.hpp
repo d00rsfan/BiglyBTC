@@ -1,6 +1,7 @@
 #pragma once
 
 #include "local_session.hpp"
+#include "biglybtc/runtime_metrics.hpp"
 
 #include <chrono>
 #include <cstdint>
@@ -91,6 +92,8 @@ public:
   std::expected<void, AccountingError> setObservationSink(ApplicationObservationSink);
   void clearObservationSink() noexcept;
   std::optional<ApplicationPeerObservation> latest() const;
+  // Worker-only optional last accepted stats snapshot. No request or engine creation.
+  std::shared_ptr<const core::RuntimeMetrics> diagnostics() const noexcept;
   // Cleared before each admitted call, so failed preparation cannot expose an
   // earlier operation receipt. Returns owned scalar evidence only.
   std::optional<RetirementReceipt> lastRetirement() const;

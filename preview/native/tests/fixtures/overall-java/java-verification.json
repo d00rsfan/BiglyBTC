@@ -1,0 +1,14 @@
+{
+  "status": "ACTUAL_ORIGINAL_JAVA_99_SCENARIOS_PASSED_NOT_NATIVE_EQUALITY",
+  "stdout_sha256": "52318ceb642f8e0f3e9d57b0caa536c3c0cb05e6dfeb54ab7e48c94b6c76cf1c",
+  "scenarios": 99,
+  "records": 567,
+  "expanded_commands": 584,
+  "actual_force_callbacks": 87,
+  "actual_timer_callbacks": 38,
+  "forbidden": 0,
+  "all_monitors_balanced": true,
+  "class_source_receipts_byte_identical": true,
+  "numeric_expected_outputs": 0,
+  "scope": "typed inert providers/captured void saves; no physical config IO or native equality"
+}

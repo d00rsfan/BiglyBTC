@@ -1,6 +1,8 @@
 #pragma once
 
 #include "engine_activity_presentation.hpp"
+#include "native_activity_presentation.hpp"
+#include "native_session_presentation.hpp"
 #include "engine_statistics_presentation.hpp"
 #include "history_presentation.hpp"
 #include "history_week_presentation.hpp"
@@ -8,6 +10,8 @@
 #include "history_range_presentation.hpp"
 #include "library_model.hpp"
 #include "statistics_presentation.hpp"
+#include "overall_presentation.hpp"
+#include "runtime_metrics_presentation.hpp"
 #include "statistics_navigation.hpp"
 
 #include <QElapsedTimer>
@@ -25,6 +29,10 @@ class QTabWidget;
 namespace biglybtc::ui {
 
 class EngineActivityView;
+class NativeSessionView;
+class OverallView;
+class RuntimeMetricsView;
+class NativeActivityView;
 class HistoryView;
 class HistoryWeekView;
 class HistoryMonthView;
@@ -42,6 +50,13 @@ public:
   void beginRequest(quint64 session, quint64 request);
   void setPresentation(StatisticsPresentation);
   void setFailed(quint64 session, quint64 request, const QString& message);
+  void beginNativeSession(quint64 session);
+  void setOverall(OverallPresentation);
+  void setRuntimeMetrics(RuntimeMetricsPresentation);
+  void setAccountingBusy(bool);
+  void setNativeActivity(NativeActivityPresentation);
+  NativeSessionPresentation nativeSessionSnapshot() const;
+  NativeActivityPresentation nativeActivitySnapshot() const { return nativeActivityFrame_; }
   void setEngineStatistics(EngineStatisticsPresentation);
   void setEngineActivity(EngineActivityPresentation);
   EngineActivityPresentation engineActivitySnapshot() const;
@@ -80,6 +95,7 @@ public:
   quint64 session() const { return session_; }
   quint64 request() const { return request_; }
 signals:
+  void markRequested(bool clear);
   void refreshRequested();
   void historyRequested(biglybtc::core::HistoryDate);
   void historyWeekRequested(biglybtc::core::HistoryDate);
@@ -98,10 +114,17 @@ private:
   void clearActivity();
   void refreshActivity();
   void refreshEngine();
+  void refreshNative();
   QTabWidget* tabs_;
   QWidget* activity_;
   QTabWidget* activityViews_ = nullptr;
   EngineActivityView* engineActivity_ = nullptr;
+  QPointer<OverallView> overallView_;
+  std::array<QPointer<RuntimeMetricsView>, 4> runtimeViews_{};
+  QPointer<NativeSessionView> nativeSessionView_;
+  QPointer<NativeActivityView> nativeActivityView_;
+  NativeActivityPresentation nativeActivityFrame_;
+  quint64 nativeSessionBinding_ = 0, nativeApplicationRun_ = 0;
   ActivityPlot* plot_;
   QLabel* transfer_;
   QLabel* downloadRate_;

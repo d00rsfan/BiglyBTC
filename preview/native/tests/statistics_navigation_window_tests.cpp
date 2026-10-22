@@ -130,7 +130,7 @@ auto weekPacket(quint64 session, quint64 request, int payload = 44) {
   value->state = ui::HistoryWeekReadState::Ready; value->snapshot = std::move(source); return value;
 }
 void defaults(ui::StatisticsPage& page) {
-  const auto state = page.navigation(); QVERIFY(state); QCOMPARE(state->section, 0); QCOMPARE(state->activity, 0);
+  const auto state = page.navigation(); QVERIFY(state); QCOMPARE(state->section, 0); QCOMPARE(state->activity, 2);
   QCOMPARE(state->transfers, 0); QCOMPARE(state->history, 0); QVERIFY(!state->hourly);
   const auto now = QDateTime::currentDateTimeUtc().date();
   QVERIFY(qtDate(state->dailyDate) == now || qtDate(state->dailyDate) == now.addDays(-1));

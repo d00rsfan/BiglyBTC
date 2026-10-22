@@ -2,6 +2,7 @@
 
 #include "biglybtc/library.hpp"
 #include "biglybtc/bencode.hpp"
+#include "biglybtc/saved_statistics.hpp"
 
 #include <QByteArray>
 #include <QCryptographicHash>
@@ -159,6 +160,52 @@ public:
     return read(profile + QStringLiteral("/BiglyBT.statistics")) == statistics
         && !QFile::exists(profile + QStringLiteral("/BiglyBT.statistics.bak"))
         && !QFile::exists(profile + QStringLiteral("/BiglyBT.statistics.saving"));
+  }
+  // Explicit persisted-accounting contract. intact() above remains unchanged
+  // for offline/unbound/destructor cases that must preserve the whole original.
+  bool accountingIntact(bool complete = true) const {
+    for (const auto& file : files) {
+      const auto path = payload + '/' + file.relative; struct stat current{};
+      if (::stat(path.toStdString().c_str(), &current) != 0 || current.st_dev != file.before.st_dev
+          || current.st_ino != file.before.st_ino || (complete && read(path) != file.expected)) { return false; }
+    }
+    const auto primary = profile + QStringLiteral("/BiglyBT.statistics");
+    const auto regular = [](const QString& path) {
+      const QFileInfo info(path); return info.isFile() && !info.isSymLink();
+    };
+    if (!regular(primary) || QFileInfo::exists(primary + QStringLiteral(".saving"))
+        || QFileInfo(primary + QStringLiteral(".saving")).isSymLink()) { return false; }
+    const auto original = core::readSavedStatistics(std::string_view(statistics.constData(), static_cast<std::size_t>(statistics.size())));
+    if (!original || !original->hasAll) { return false; }
+    const auto rawEqual = [](const core::Document& before, const core::Node& a,
+                             const core::Document& after, const core::Node* b) {
+      return b && before.originalBytes().substr(a.begin, a.end - a.begin)
+          == after.originalBytes().substr(b->begin, b->end - b->begin);
+    };
+    const auto valid = [&](const QByteArray& bytes) {
+      if (bytes == statistics) { return true; } // Failed/no-op save preserves the original whole map.
+      const auto parsed = core::readSavedStatistics(std::string_view(bytes.constData(), static_cast<std::size_t>(bytes.size())));
+      if (!parsed || !parsed->hasAll) { return false; }
+      for (const auto& field : parsed->values) {
+        if (!field.value || field.invalidType) { return false; }
+      }
+      const auto& oldRoot = original->source->root();
+      for (std::size_t i = 0; i < oldRoot.children.size(); i += 2) {
+        const auto key = oldRoot.children[i].bytes;
+        if (key != "all" && !rawEqual(*original->source, oldRoot.children[i + 1], *parsed->source, parsed->source->find(key))) { return false; }
+      }
+      const auto* oldAll = original->source->find("all");
+      const auto* newAll = parsed->source->find("all");
+      for (std::size_t i = 0; i < oldAll->children.size(); i += 2) {
+        const auto key = oldAll->children[i].bytes;
+        if (std::find(core::SavedStatisticKeys.begin(), core::SavedStatisticKeys.end(), key) == core::SavedStatisticKeys.end()
+            && !rawEqual(*original->source, oldAll->children[i + 1], *parsed->source, newAll->find(key))) { return false; }
+      }
+      return true;
+    };
+    if (!valid(read(primary))) { return false; }
+    const auto backup = primary + QStringLiteral(".bak"); const QFileInfo backupInfo(backup);
+    return !backupInfo.isSymLink() && (!backupInfo.exists() || (regular(backup) && valid(read(backup))));
   }
 private:
   std::unique_ptr<lt::session> seed_;

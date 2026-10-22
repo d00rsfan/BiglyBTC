@@ -5,6 +5,9 @@
 #include "biglybtc/saved_dnd.hpp"
 #include "local_session.hpp"
 #include "persistent_session.hpp"
+#include "overall_statistics_service.hpp"
+#include "source_rate_projection.hpp"
+#include "minute_history_writer.hpp"
 #include "saved_service_view.hpp"
 #include "statistics_view.hpp"
 #include "../adapters/history_view.hpp"
@@ -17,6 +20,8 @@
 #include <QTimer>
 
 #include <limits>
+#include <bit>
+#include <chrono>
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -24,7 +29,26 @@
 namespace biglybtc::app {
 namespace {
 struct Failure { storage::Error error; };
-ui::NativeSessionPresentation nativePacket(const engine::ApplicationPeerObservation& value) {
+std::int64_t wallMillis() noexcept {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+}
+OverallOwnerIdentity ownerIdentity(const engine::AccountingIdentity& value) noexcept {
+  return {value.applicationRun, value.profileSession, value.engineEpoch};
+}
+core::OverallPeerCounters peerCounters(const core::EngineCounters& value) noexcept {
+  return {value.payloadReceived, value.received - value.payloadReceived,
+      value.payloadSent, value.sent - value.payloadSent};
+}
+core::HistoryCounters historyPeer(const core::EngineCounters& value) noexcept {
+  return {value.sent - value.payloadSent, value.payloadSent, value.received - value.payloadReceived,
+      value.payloadReceived, 0, 0}; // Actual isolatedSettings explicitly disables DHT.
+}
+core::MinuteHistoryInput historyInput(const core::EngineCounters& value) noexcept {
+  const auto v = historyPeer(value);
+  return {std::array{v[0], v[1], v[2], v[3]}, std::array<std::int64_t, 2>{0, 0}};
+}
+ui::NativeSessionPresentation nativePacket(const engine::ApplicationPeerObservation& value,
+    std::optional<core::SourceRateValues> rates = {}) {
   ui::NativeSessionState state;
   switch (value.state) {
     case engine::AccountingState::Starting: state = ui::NativeSessionState::Starting; break;
@@ -38,7 +62,7 @@ ui::NativeSessionPresentation nativePacket(const engine::ApplicationPeerObservat
   }
   return std::make_shared<const ui::NativeSessionPacket>(ui::NativeSessionPacket{
       value.identity.profileSession, value.identity.applicationRun, value.identity.engineEpoch,
-      value.sequence, state, value.observed, value.ownerElapsedNanoseconds});
+      value.sequence, state, value.observed, value.ownerElapsedNanoseconds, std::move(rates)});
 }
 quint64 reserveColumnLayoutSession() {
   static std::atomic<quint64> last{0};
@@ -112,6 +136,19 @@ struct SessionBridge::Host {
   // Declared after lease: affine engine destruction/join precedes lease release.
   std::unique_ptr<engine::PersistentSession> engine{};
   const quint64 columnLayoutSession;
+  // All services are worker-owned; the held lease outlives their destruction.
+  std::unique_ptr<OverallStatisticsService> overall{};
+  std::unique_ptr<SourceRateProjection> sourceRates{};
+  std::optional<storage::Error> overallOpenFailure{};
+  core::MinuteHistoryRecorder minuteHistory{};
+  std::optional<storage::Error> historyFailure{};
+  bool historyEnabled = true;
+  std::optional<core::EngineStatistics> lastCounterSample{};
+  std::chrono::steady_clock::time_point lastCounterArrival{};
+  std::chrono::steady_clock::time_point lastAccountingTick = std::chrono::steady_clock::now();
+  std::optional<core::SourceRateValues> latestSourceRates{};
+  quint64 overallSequence = 0;
+  std::chrono::steady_clock::time_point lastOverallPublication{};
   quint64 revision = 0;
   quint64 engineOperation = 0;
   std::map<std::string, Known> known;
@@ -122,6 +159,8 @@ struct SessionBridge::Host {
   bool columnBaselineMissing = false;
   std::stop_token columnBaselineReadStop{};
 
+  Host(std::filesystem::path p, unsigned short port, storage::ProfileLease held, quint64 session)
+      : profile(std::move(p)), peerPort(port), lease(std::move(held)), columnLayoutSession(session) {}
   void accepts(const ui::Target& target) const {
     if (target.generation != revision || !currentHashes.contains(target.hash.toStdString())) {
       throw Failure{{storage::ErrorCode::Conflict, "This download selection is stale; refresh the library"}};
@@ -192,6 +231,8 @@ SessionBridge::SessionBridge(QObject* parent) : QObject(parent) {
   qRegisterMetaType<core::HistoryRangeRequest>();
   qRegisterMetaType<ui::EngineStatisticsPresentation>();
   qRegisterMetaType<ui::NativeSessionPresentation>();
+  qRegisterMetaType<ui::OverallPresentation>();
+  qRegisterMetaType<ui::RuntimeMetricsPresentation>();
   qRegisterMetaType<ui::ColumnLayoutsPresentation>();
   qRegisterMetaType<ui::ColumnLayoutSaveSubmission>();
   qRegisterMetaType<ui::ColumnLayoutSavePresentation>();
@@ -232,7 +273,9 @@ SessionBridge::SessionBridge(QObject* parent) : QObject(parent) {
       idlePoll_.reset();
     }
     auto poll = worker_.submit([this](std::stop_token stop) -> core::WorkResult {
-      if (!stop.stop_requested() && host_ && host_->engine) { static_cast<void>(host_->engine->poll()); }
+      if (!stop.stop_requested() && host_ && host_->engine) {
+        static_cast<void>(host_->engine->poll()); tickAccounting();
+      }
       return {};
     });
     if (poll) { idlePoll_.emplace(std::move(*poll)); }
@@ -324,8 +367,7 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
     if (host_) { throw Failure{{storage::ErrorCode::Conflict, "A profile is already open"}}; }
     auto lease = take(storage::ProfileLease::acquire(profile));
     const auto session = reserveColumnLayoutSession();
-    host_ = std::make_unique<Host>(Host{.profile = profile, .peerPort = ownedPeerPort, .lease = std::move(lease),
-        .columnLayoutSession = session, .known = {}, .currentHashes = {}});
+    host_ = std::make_unique<Host>(profile, ownedPeerPort, std::move(lease), session);
     ready(host_->query(stop));
   });
 }
@@ -760,8 +802,29 @@ bool SessionBridge::continueDownload(ui::Target target) {
       }
       if (owner) {
         host_->engine = std::move(*owner);
+        // Optional accounting setup cannot change transfer/storage success.
+        try {
+          const auto started = wallMillis();
+          host_->lastAccountingTick = std::chrono::steady_clock::now();
+          auto settings = storage::ConfigFile::load(host_->lease, "biglybt.config");
+          if (settings) {
+            if (const auto* enabled = settings->document().find("long.term.stats.enable")) {
+              if (enabled->type == core::Node::Type::Integer) { host_->historyEnabled = enabled->integer != 0; }
+              else {
+                host_->historyEnabled = false;
+                host_->historyFailure = storage::Error{storage::ErrorCode::InvalidFormat, "Invalid long.term.stats.enable setting"};
+              }
+            }
+          } else if (settings.error().code != storage::ErrorCode::Missing) {
+            host_->historyEnabled = false; host_->historyFailure = std::move(settings.error());
+          }
+          auto service = OverallStatisticsService::open(host_->lease, {1, host_->columnLayoutSession, 1}, started, wallMillis());
+          if (service) { host_->overall = std::move(*service); }
+          else { host_->overallOpenFailure = std::move(service.error()); }
+          host_->sourceRates = std::make_unique<SourceRateProjection>();
+        } catch (...) {} // Owner retention is independent of optional allocations.
         static_cast<void>(host_->engine->setObservationSink([this](engine::ApplicationPeerObservation value) {
-          nativeSession(nativePacket(value));
+          observeNative(value);
         }));
       }
     }
@@ -791,6 +854,167 @@ bool SessionBridge::continueDownload(ui::Target target) {
     if (known.name.isEmpty()) { known.name = text(report.payload.filename().string()); }
     ready(host_->query({}), tr("Complete"));
   });
+}
+void SessionBridge::observeNative(const engine::ApplicationPeerObservation& value) noexcept {
+  if (!host_) { return; }
+  // Fixed essential retention precedes every optional allocation/publication.
+  if (value.observed && host_->overall) {
+    static_cast<void>(host_->overall->capture({ownerIdentity(value.identity), value.sequence,
+        peerCounters(value.observed->counters), OverallSampleQuality::Observed}));
+  }
+  if (value.observed && (!host_->lastCounterSample
+      || value.observed->elapsedNanoseconds > host_->lastCounterSample->elapsedNanoseconds)) {
+    host_->lastCounterSample = value.observed;
+    host_->lastCounterArrival = std::chrono::steady_clock::now();
+  }
+  if (host_->sourceRates) {
+    host_->latestSourceRates = host_->sourceRates->observe(value.observed, value.ownerElapsedNanoseconds, value.sequence);
+  }
+  if (value.state == engine::AccountingState::Uncertified && host_->overall && !host_->overall->uncertified()) {
+    // Save the retained observed prefix before latching the missing-tail state.
+    tickAccounting(true);
+    static_cast<void>(host_->overall->invalidate(ownerIdentity(value.identity)));
+  }
+  tickAccounting();
+  try {
+    const auto now = std::chrono::steady_clock::now();
+    if (now - host_->lastOverallPublication >= std::chrono::seconds{1}) {
+      host_->lastOverallPublication = now; publishOverall(); publishRuntimeMetrics(value);
+    }
+  } catch (...) {} // Optional UI cannot disconnect the essential sink.
+  try { nativeSession(nativePacket(value, host_->latestSourceRates)); } catch (...) {}
+}
+void SessionBridge::tickAccounting(bool force, bool ending) noexcept {
+  if (!host_ || !host_->overall) { return; }
+  const auto steadyNow = std::chrono::steady_clock::now();
+  const bool due = steadyNow - host_->lastAccountingTick >= std::chrono::seconds{60};
+  const auto wallNow = wallMillis();
+  // History starts on the first actual counter sample, independently of the
+  // sixty-second Overall update. Its absolute baseline is the original twelve-
+  // entry snapshot plus each actual source difference (Java long arithmetic).
+  try {
+    if (!ending && host_->historyEnabled && !host_->historyFailure && host_->lastCounterSample) {
+      const auto id = core::MinuteHistoryIdentity{1, host_->columnLayoutSession, 1};
+      const bool fresh = steadyNow - host_->lastCounterArrival <= std::chrono::seconds{3};
+      const auto state = host_->minuteHistory.state();
+      std::optional<core::MinuteHistoryRequest> request;
+      if (!fresh || host_->overall->uncertified()) {
+        if (state.active) { request = core::MinuteHistoryRequest{core::MinuteHistoryEvent::Suspend, id, wallNow, {}, {}}; }
+      } else if (!state.active) {
+        const auto source = historyPeer(host_->lastCounterSample->counters);
+        const auto snap = host_->overall->observation().snapshot;
+        core::HistoryCounters baseline{};
+        for (std::size_t i = 0; i < baseline.size(); ++i) {
+          baseline[i] = std::bit_cast<std::int64_t>(static_cast<std::uint64_t>(snap[i])
+              + static_cast<std::uint64_t>(source[i]) - static_cast<std::uint64_t>(snap[i + 6]));
+        }
+        request = core::MinuteHistoryRequest{core::MinuteHistoryEvent::Start, id, wallNow,
+            historyInput(host_->lastCounterSample->counters), baseline};
+      } else if (due) {
+        request = core::MinuteHistoryRequest{core::MinuteHistoryEvent::Tick, id, wallNow,
+            historyInput(host_->lastCounterSample->counters), {}};
+      }
+      if (request) {
+        auto written = storage::writeMinuteHistory(host_->lease, host_->minuteHistory, *request);
+        if (!written) { host_->historyFailure = std::move(written.error()); }
+      }
+    }
+    if (!due && !force) { return; }
+    if (due) { host_->lastAccountingTick = steadyNow; }
+    auto updated = host_->overall->tick(wallNow, {core::OverallDhtResolution::Empty, {}}, force);
+    if (updated) {
+      // Explicit close also saves a ClockGap prefix; this does not reinterpret
+      // Java's early-returning force branch as a save intention.
+      if (force && updated->disposition == core::OverallUpdateDisposition::ClockGap) {
+        static_cast<void>(host_->overall->saveCurrent());
+      } else { static_cast<void>(host_->overall->flush()); }
+    }
+    try { publishOverall(); } catch (...) {}
+  } catch (...) {} // Accounting diagnostics must not fail successful storage.
+}
+void SessionBridge::publishRuntimeMetrics(const engine::ApplicationPeerObservation& value) {
+  if (!host_ || !host_->engine) { return; }
+  auto packet = std::make_shared<ui::RuntimeMetricsPacket>();
+  packet->session = host_->columnLayoutSession; packet->epoch = value.identity.engineEpoch;
+  packet->sequence = value.sequence; packet->snapshot = host_->engine->diagnostics();
+  packet->current = value.state == engine::AccountingState::Idle || value.state == engine::AccountingState::Active;
+  ui::RuntimeMetricsPresentation result = std::move(packet);
+  {
+    const std::lock_guard lock(progressMutex_);
+    latestRuntime_ = std::move(result);
+    if (runtimeDeliveryQueued_) { return; }
+    runtimeDeliveryQueued_ = true;
+  }
+  QMetaObject::invokeMethod(this, [this] {
+    std::optional<ui::RuntimeMetricsPresentation> result;
+    {
+      const std::lock_guard lock(progressMutex_);
+      result.swap(latestRuntime_); runtimeDeliveryQueued_ = false;
+    }
+    if (result && (*result)->session == publishedColumnLayoutSession_) { emit runtimeMetricsReady(*result); }
+  }, Qt::QueuedConnection);
+}
+void SessionBridge::publishOverall(bool closed) {
+  if (!host_ || (!host_->overall && !host_->overallOpenFailure)
+      || host_->overallSequence == std::numeric_limits<quint64>::max()) { return; }
+  auto packet = std::make_shared<ui::OverallPacket>();
+  packet->session = host_->columnLayoutSession; packet->sequence = ++host_->overallSequence;
+  packet->closed = closed;
+  if (host_->overall) {
+    const auto& service = *host_->overall;
+    packet->available = true; packet->values = service.values();
+    packet->values = service.projectedValues();
+    if (service.baseline().snapshot) { packet->saved = service.baseline().snapshot->values; }
+    packet->dirty = service.dirty() || !packet->saved || *packet->saved != packet->values;
+    packet->writable = service.latestSample().has_value() && !service.writesBlocked() && !service.uncertified() && !closed;
+    packet->finalCounters = service.finalCountersApplied();
+    if (const auto* failure = service.lastStorageError()) { packet->failure = text(failure->message); }
+    else if (service.writesBlocked()) { packet->failure = tr("Statistics saving is blocked"); }
+    else if (service.uncertified()) { packet->failure = tr("The final traffic interval is unavailable; last observed counters retained"); }
+  } else { packet->failure = text(host_->overallOpenFailure->message); }
+  if (host_->historyFailure) { packet->historyFailure = text(host_->historyFailure->message); }
+  ui::OverallPresentation result = std::move(packet);
+  {
+    const std::lock_guard lock(progressMutex_);
+    latestOverall_ = std::move(result);
+    if (overallDeliveryQueued_) { return; }
+    overallDeliveryQueued_ = true;
+  }
+  QMetaObject::invokeMethod(this, [this] {
+    std::optional<ui::OverallPresentation> result;
+    {
+      const std::lock_guard lock(progressMutex_);
+      result.swap(latestOverall_); overallDeliveryQueued_ = false;
+    }
+    if (result && (*result)->session == publishedColumnLayoutSession_) { emit overallReady(*result); }
+  }, Qt::QueuedConnection);
+}
+bool SessionBridge::markStatistics(quint64 session, bool clear) {
+  if (!session || session != publishedColumnLayoutSession_) { return false; }
+  return dispatch([this, session, clear](std::stop_token stop) {
+    if (!host_ || host_->columnLayoutSession != session || !host_->overall) {
+      throw Failure{{storage::ErrorCode::Unsupported, "Live statistics accounting is not active"}};
+    }
+    checkpoint(stop);
+    auto& service = *host_->overall;
+    if (service.writesBlocked() || service.uncertified()) {
+      throw Failure{{storage::ErrorCode::Conflict, "Statistics saving is blocked; current values are retained"}};
+    }
+    // Update/stage once, then publish only the complete marked values.
+    auto updated = service.tick(wallMillis(), {core::OverallDhtResolution::Empty, {}}, true);
+    if (!updated) { throw Failure{{storage::ErrorCode::Conflict, "Current statistics are unavailable"}}; }
+    const auto saved = clear ? service.clearMark(stop) : service.setMark(wallMillis(), stop);
+    publishOverall();
+    if (!saved) {
+      if (const auto* failure = service.lastStorageError()) { throw Failure{*failure}; }
+      throw Failure{{storage::ErrorCode::Io, "Cannot save the statistics mark"}};
+    }
+    QMetaObject::invokeMethod(this, [this, clear] {
+      QPointer<SessionBridge> guard(this);
+      completionMonitor_->stop(); busy_ = false; emit busyChanged(false);
+      if (guard) { emit messageReady(clear ? tr("Statistics mark cleared") : tr("Statistics mark saved")); }
+    }, Qt::QueuedConnection);
+  }, false);
 }
 void SessionBridge::nativeSession(ui::NativeSessionPresentation packet) {
   if (!packet) { return; }
@@ -825,8 +1049,27 @@ bool SessionBridge::closeSession() {
       const auto receipt = host_->engine->close(std::chrono::steady_clock::now() + std::chrono::seconds{5});
       joined = receipt.sessionJoined;
       released = receipt.retirement.storageReleased;
+      if (host_->overall && receipt.sessionJoined && released && receipt.retirement.peerCounters) {
+        const auto& final = *receipt.retirement.peerCounters;
+        static_cast<void>(host_->overall->capture({ownerIdentity(final.identity()), final.sequence(),
+            peerCounters(final.counters()), OverallSampleQuality::ClosedFinal}));
+        if (host_->minuteHistory.state().active) {
+          try {
+            auto ended = storage::writeMinuteHistory(host_->lease, host_->minuteHistory,
+                {core::MinuteHistoryEvent::End, {1, host_->columnLayoutSession, 1}, wallMillis(), historyInput(final.counters()), {}});
+            if (!ended && !host_->historyFailure) { host_->historyFailure = std::move(ended.error()); }
+          } catch (...) {}
+        }
+      } else if (host_->minuteHistory.state().active) {
+        try { static_cast<void>(storage::writeMinuteHistory(host_->lease, host_->minuteHistory,
+            {core::MinuteHistoryEvent::Suspend, {1, host_->columnLayoutSession, 1}, wallMillis(), {}, {}})); } catch (...) {}
+      }
+      tickAccounting(true, true);
+      try { publishOverall(true); } catch (...) {}
       try {
-        if (const auto last = host_->engine->latest()) { finalObservation = nativePacket(*last); }
+        if (const auto last = host_->engine->latest()) {
+          finalObservation = nativePacket(*last); publishRuntimeMetrics(*last);
+        }
       } catch (...) {} // Optional immutable telemetry cannot retain Host/lease.
     }
     host_.reset(); // Required lifetime barrier before GUI close acknowledgement.

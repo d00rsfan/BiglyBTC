@@ -11,6 +11,8 @@
 #include "history_range_presentation.hpp"
 #include "engine_statistics_presentation.hpp"
 #include "native_session_presentation.hpp"
+#include "overall_presentation.hpp"
+#include "runtime_metrics_presentation.hpp"
 
 #include <QObject>
 
@@ -19,6 +21,8 @@
 #include <mutex>
 
 class QTimer;
+
+namespace biglybtc::engine { struct ApplicationPeerObservation; }
 
 namespace biglybtc::app {
 
@@ -31,6 +35,7 @@ public:
   bool refresh();
   bool savedServices(quint64 request);
   bool statistics(quint64 session, quint64 request);
+  bool markStatistics(quint64 session, bool clear);
   bool history(quint64 session, quint64 request, core::HistoryDate date);
   bool historyWeek(quint64 session, quint64 request, core::HistoryDate endingDate);
   bool historyMonth(quint64 session, quint64 request, core::HistoryDate endingDate);
@@ -57,6 +62,8 @@ signals:
   void columnLayoutsReady(biglybtc::ui::ColumnLayoutsPresentation);
   void columnLayoutSaved(biglybtc::ui::ColumnLayoutSavePresentation);
   void nativeSessionReady(biglybtc::ui::NativeSessionPresentation);
+  void overallReady(biglybtc::ui::OverallPresentation);
+  void runtimeMetricsReady(biglybtc::ui::RuntimeMetricsPresentation);
   void sessionClosed(quint64 session, bool joined, bool storageReleased);
   void sessionCloseFailed();
   void busyChanged(bool);
@@ -69,6 +76,10 @@ private:
   void progress(ui::Telemetry update);
   void engineStatistics(ui::EngineStatisticsPresentation);
   void nativeSession(ui::NativeSessionPresentation);
+  void observeNative(const engine::ApplicationPeerObservation&) noexcept;
+  void tickAccounting(bool force = false, bool ending = false) noexcept;
+  void publishOverall(bool closed = false);
+  void publishRuntimeMetrics(const engine::ApplicationPeerObservation&);
   void closeFailed(QString);
   std::unique_ptr<Host> host_;
   std::optional<core::Ticket> current_;
@@ -84,6 +95,9 @@ private:
   bool engineDeliveryQueued_ = false;
   std::optional<ui::NativeSessionPresentation> latestNativeSession_;
   bool nativeDeliveryQueued_ = false;
+  std::optional<ui::OverallPresentation> latestOverall_;
+  std::optional<ui::RuntimeMetricsPresentation> latestRuntime_;
+  bool overallDeliveryQueued_ = false, runtimeDeliveryQueued_ = false;
   bool busy_ = false;
   // GUI-thread publication only; worker commands capture the requested identity.
   quint64 publishedColumnLayoutSession_ = 0;

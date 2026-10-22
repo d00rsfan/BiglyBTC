@@ -1,6 +1,7 @@
 #pragma once
 
 #include "biglybtc/engine_statistics.hpp"
+#include "biglybtc/source_rate_values.hpp"
 
 #include <QMetaType>
 #include <memory>
@@ -19,6 +20,7 @@ struct NativeSessionPacket {
   NativeSessionState state = NativeSessionState::Starting;
   std::optional<core::EngineStatistics> sample{};
   qint64 ownerElapsedNanoseconds = 0;
+  std::optional<core::SourceRateValues> sourceRates{};
 };
 using NativeSessionPresentation = std::shared_ptr<const NativeSessionPacket>;
 

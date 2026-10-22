@@ -1,0 +1,148 @@
+{
+  "schema": 1,
+  "status": "ACTUAL_JAVA_BYTES_FROZEN_NATIVE_REPLAY_NOT_EXECUTED_BY_GENERATOR",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "java_release": 17,
+  "java_execution_receipt_sha256": "88984539e79f66aff755e3330008287eec8d1d522bc241f79a4c5a99a628f6f8",
+  "java_commands_sha256": "995cb5cfd254fb57e43670341f47afc4202f87da88e07fc5502037e9a2c3be86",
+  "actual_subjects_sha256": {
+    "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsBase.java": "1f9e0967309777ad4c19be9ee123351c9a21755337a0d48fa52dd3752de5ca7f",
+    "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsImpl.java": "9dd5c8f8f551bc69e61f000defa73f845dc4011fc5e631dd1a5d5c377af7dc6d",
+    "core/src/com/biglybt/core/stats/transfer/LongTermStats.java": "f1a4bfaa8d15e8b0f9318a2af1653a854f9969bc09b80f4e9bd3c48afb62e1bf",
+    "core/src/com/biglybt/core/stats/transfer/LongTermStatsListener.java": "212cf7beb50619e90575f86ceb1357d59e43c69806f00fc18e3406cee8afc258"
+  },
+  "all_compiled_java_sources_sha256": {
+    "com/biglybt/core/stats/transfer/impl/LongTermStatsBase.java": "1f9e0967309777ad4c19be9ee123351c9a21755337a0d48fa52dd3752de5ca7f",
+    "com/biglybt/core/stats/transfer/impl/LongTermStatsImpl.java": "9dd5c8f8f551bc69e61f000defa73f845dc4011fc5e631dd1a5d5c377af7dc6d",
+    "com/biglybt/core/stats/transfer/LongTermStats.java": "f1a4bfaa8d15e8b0f9318a2af1653a854f9969bc09b80f4e9bd3c48afb62e1bf",
+    "com/biglybt/core/stats/transfer/LongTermStatsListener.java": "212cf7beb50619e90575f86ceb1357d59e43c69806f00fc18e3406cee8afc258",
+    "com/biglybt/core/config/ParameterListener.java": "1004b91dd3461a738e266ad43552e5a041efd084cbec506454241aea5911a23c",
+    "com/biglybt/core/util/AERunnable.java": "a8eab90ccc2031135d5991ef3fe2328b00e3551a9d298d44e4dd97f2059bc9f2",
+    "com/biglybt/core/util/AsyncDispatcher.java": "8e890b2c74135d559f5d6195762fc085a0b8c0b4fb580d123fa19b3d1a62d30a",
+    "com/biglybt/core/util/CopyOnWriteList.java": "dbf0f549b2fcca5eb2d7ff340f3b62cbf17a98402da97eeb6b0f352e56664359",
+    "com/biglybt/core/util/Debug.java": "9b0ee42483e0acc8c2bc2e91dbdb1f50fef60f5e7152db16583d74db40af320c",
+    "com/biglybt/core/util/TimerEventPerformer.java": "05442c05f475d480ad64ab0ae9ec6ed409ca9162694d9e160ed6bd6619d4d1cc",
+    "com/biglybt/core/util/TimerEventPeriodic.java": "70eb440a3693be15a6466572f18ee54c5d0fb0e9e1b16e4c5a1c4f5ba7414ab9",
+    "com/biglybt/core/util/average/Average.java": "c9b896eda56e43a292fce66d1057f02f62c96ea134045f9ea8f1a5588b457a47",
+    "com/biglybt/core/stats/transfer/impl/LongTermStatsWrapper.java": "7b512564c93cbe9f7b59c1ae7c0aff2212c587508575901761a1c9ceadc9a788",
+    "fixture/LiteralProvider.java": "46e36950f8ded4103cc7df384f84a4575d51cbd6feae3bb71632cf0add3e5987",
+    "com/biglybt/core/util/SystemTime.java": "e264712696c74c16d0a71021a47148d2f2056eb2c8c65480dde6a06472472a64",
+    "com/biglybt/core/util/SimpleTimer.java": "40f7e346e95e1974687265b7f12c891acb4a3f67416e8ae491407a2754536699",
+    "com/biglybt/core/config/COConfigurationManager.java": "ac51dbf64fb897a973ff5de18d5d37b5043b8da2533fe8dbccc2dfa2b81cd57a",
+    "com/biglybt/core/CoreComponent.java": "4cf0ada5778e4679939e68f32f9f72c7644c93516a1b950ee9d36b778c4f1a99",
+    "com/biglybt/core/CoreLifecycleAdapter.java": "930d1c4704da6e91ff25cf7e4d580a6d70aa429173e15b556cea04a2bd12980e",
+    "com/biglybt/core/Core.java": "b5e2c9265166d06d596c27c647ffd821e98ee355da17139e973bc6affb9847dd",
+    "com/biglybt/core/global/GlobalManager.java": "1239d4f5a90ffb73cb0fd8945f53770e94e465c47425b033d10e6e2962834b1e",
+    "com/biglybt/core/global/GlobalManagerStats.java": "69591fddc0f7003c7780edfece7fe165bf70ac766004e78dae18a36d83851330",
+    "com/biglybt/core/stats/transfer/StatsFactory.java": "cefe284a2b435fbe386278f0553d6400d87bc332e2f89097e2282747426f98c8",
+    "com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java": "105818c4021dda87085efd0873701a5b30adbb363721c6f8908ed10b1ce5b660",
+    "com/biglybt/pif/PluginManager.java": "3a416edeb4226e75d048b8b9d1e0a2ec2955a2d98135c4a5b91061ef65ad5737",
+    "com/biglybt/pif/PluginInterface.java": "e7529ea23bf69dd5d4e3dba669b87eecf4f11b87b6d46f11f0c75f738666fc93",
+    "com/biglybt/plugin/dht/DHTPlugin.java": "8b7cd9b8bc6ad17e8b2bd3c9e377a6bbac613cf6d4fa0bdd3ede2b531b22bcf8",
+    "com/biglybt/core/dht/DHT.java": "f5a214d2671650d0399affb5c8e4ce8c9bde90cb789daebe76d4a6ff34f0c7b8",
+    "com/biglybt/core/dht/transport/DHTTransport.java": "9f3dbe4ec4870ffb19e4ae3aa43bfe8552baff601be55648308da485ade4b3b4",
+    "com/biglybt/core/dht/transport/DHTTransportStats.java": "ba9c801d4eb36d57243b7569f03b2f53a777892a28e553c9a760939699518dc0",
+    "com/biglybt/core/util/TimerEvent.java": "b981c0e4339f8bf28eecea87102993270619684615450f5586c6ed8d22307572",
+    "com/biglybt/core/util/average/AverageFactory.java": "e437a123a627bfbb97958a552d992b8d453068601f45761977ba66b86a95978a",
+    "com/biglybt/core/util/FileUtil.java": "90a03e3d7f24f5fbe56d03fb448ca85bc2cc6323bd5a6c312e73b5625e8b2ac0",
+    "fixture/MinuteWriterOracle.java": "147a001fa51d41b7a7be78ba45df27fba7089fd777595fe834f85ee07ad7e27d"
+  },
+  "plans": [
+    {
+      "name": "backward-date",
+      "literal_plan_sha256": "d455b6f318d616bc765694eb08882a2cdcb2733ba09e0727e041b8cb60aac954",
+      "actual_stdout_sha256": "1d16bbd5602d1b0f58a54e31283f3a467939da2ca51f7411279ec00dda7c7dee",
+      "actions": 3,
+      "file_observations": 5
+    },
+    {
+      "name": "epoch-anchor",
+      "literal_plan_sha256": "d056db251d7d1d34d2374b6782931518e8f8e6d1f8cd8d8632d9fbb84c78e5a1",
+      "actual_stdout_sha256": "361b32d4f903328cefcb3f215dcfe50797f19e8c57d4cc16a93e2ca82c6fc127",
+      "actions": 3,
+      "file_observations": 3
+    },
+    {
+      "name": "header-only-zero",
+      "literal_plan_sha256": "10446d4a6a794228e4b7339c870381e91b8d98d4b34eda6827e99f459101a057",
+      "actual_stdout_sha256": "bb42e730d2dd55beeae5fbedf0e0c025814c48ad1ea9a70fcbb27395a3f4a361",
+      "actions": 1,
+      "file_observations": 1
+    },
+    {
+      "name": "late-and-duplicate",
+      "literal_plan_sha256": "39edfa87f27ffd02afea7a3fb52d9e410f19ec7962595de889d6031973fc6f52",
+      "actual_stdout_sha256": "dea533b7a169715c1e7e7e596a8019fa2e2613447da1f84f684974196f00d500",
+      "actions": 4,
+      "file_observations": 4
+    },
+    {
+      "name": "midnight-end",
+      "literal_plan_sha256": "aeca0fca2f1eb3e57a546e6ef5b28c1274a2ae502d365f4602084d087dcf15d1",
+      "actual_stdout_sha256": "0a9ac11196e0c2546ceaea324f484e0afac8e16b17d7803f349415d73b7f4af2",
+      "actions": 2,
+      "file_observations": 3
+    },
+    {
+      "name": "midnight-tick",
+      "literal_plan_sha256": "1debef6d1fabbd9233b684e426f9e69826169e67c9d16770ba86943deb11c936",
+      "actual_stdout_sha256": "6d4ed62d5d1f490c5300f6e49899e26409870777280a93e66b57fcfe5e7b08fa",
+      "actions": 4,
+      "file_observations": 7
+    },
+    {
+      "name": "restart-same-file",
+      "literal_plan_sha256": "9d5defd7ca08ce3730a5c7fa1fdac03abc334ee360985ffa8ad732ebded546b2",
+      "actual_stdout_sha256": "5492c25a78dd9741cf0a5d0cec00da16d25a56c76e303b327a1e125d2a4f9a95",
+      "actions": 4,
+      "file_observations": 4
+    },
+    {
+      "name": "signed-adjustment",
+      "literal_plan_sha256": "abeea86c8e9a5b6cb7fa548025f8358c60b7a2abd97921336d658f72bac04349",
+      "actual_stdout_sha256": "c59d533d20c39cc20dd7885c087f97286a86afd829897ac0a65874650048328f",
+      "actions": 3,
+      "file_observations": 3
+    }
+  ],
+  "literal_actions": 24,
+  "file_observations": 30,
+  "expected_present_bytes": 1561,
+  "excluded_cases": [],
+  "subject_output_sha256": {
+    "backward-date": "1d16bbd5602d1b0f58a54e31283f3a467939da2ca51f7411279ec00dda7c7dee",
+    "epoch-anchor": "361b32d4f903328cefcb3f215dcfe50797f19e8c57d4cc16a93e2ca82c6fc127",
+    "header-only-zero": "bb42e730d2dd55beeae5fbedf0e0c025814c48ad1ea9a70fcbb27395a3f4a361",
+    "late-and-duplicate": "dea533b7a169715c1e7e7e596a8019fa2e2613447da1f84f684974196f00d500",
+    "midnight-end": "0a9ac11196e0c2546ceaea324f484e0afac8e16b17d7803f349415d73b7f4af2",
+    "midnight-tick": "6d4ed62d5d1f490c5300f6e49899e26409870777280a93e66b57fcfe5e7b08fa",
+    "restart-same-file": "5492c25a78dd9741cf0a5d0cec00da16d25a56c76e303b327a1e125d2a4f9a95",
+    "signed-adjustment": "c59d533d20c39cc20dd7885c087f97286a86afd829897ac0a65874650048328f"
+  },
+  "files_sha256": {
+    ".gitattributes": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da",
+    "README.md": "e92d41a51fccb10406c475798b035028c3cf3e6f4b58c77db347596bf09c5998",
+    "literal-plans/backward-date.tsv": "d455b6f318d616bc765694eb08882a2cdcb2733ba09e0727e041b8cb60aac954",
+    "literal-plans/epoch-anchor.tsv": "d056db251d7d1d34d2374b6782931518e8f8e6d1f8cd8d8632d9fbb84c78e5a1",
+    "literal-plans/header-only-zero.tsv": "10446d4a6a794228e4b7339c870381e91b8d98d4b34eda6827e99f459101a057",
+    "literal-plans/late-and-duplicate.tsv": "39edfa87f27ffd02afea7a3fb52d9e410f19ec7962595de889d6031973fc6f52",
+    "literal-plans/midnight-end.tsv": "aeca0fca2f1eb3e57a546e6ef5b28c1274a2ae502d365f4602084d087dcf15d1",
+    "literal-plans/midnight-tick.tsv": "1debef6d1fabbd9233b684e426f9e69826169e67c9d16770ba86943deb11c936",
+    "literal-plans/restart-same-file.tsv": "9d5defd7ca08ce3730a5c7fa1fdac03abc334ee360985ffa8ad732ebded546b2",
+    "literal-plans/signed-adjustment.tsv": "abeea86c8e9a5b6cb7fa548025f8358c60b7a2abd97921336d658f72bac04349",
+    "original-java/backward-date.stdout": "1d16bbd5602d1b0f58a54e31283f3a467939da2ca51f7411279ec00dda7c7dee",
+    "original-java/epoch-anchor.stdout": "361b32d4f903328cefcb3f215dcfe50797f19e8c57d4cc16a93e2ca82c6fc127",
+    "original-java/header-only-zero.stdout": "bb42e730d2dd55beeae5fbedf0e0c025814c48ad1ea9a70fcbb27395a3f4a361",
+    "original-java/late-and-duplicate.stdout": "dea533b7a169715c1e7e7e596a8019fa2e2613447da1f84f684974196f00d500",
+    "original-java/midnight-end.stdout": "0a9ac11196e0c2546ceaea324f484e0afac8e16b17d7803f349415d73b7f4af2",
+    "original-java/midnight-tick.stdout": "6d4ed62d5d1f490c5300f6e49899e26409870777280a93e66b57fcfe5e7b08fa",
+    "original-java/restart-same-file.stdout": "5492c25a78dd9741cf0a5d0cec00da16d25a56c76e303b327a1e125d2a4f9a95",
+    "original-java/signed-adjustment.stdout": "c59d533d20c39cc20dd7885c087f97286a86afd829897ac0a65874650048328f",
+    "replay.inc": "220fdefdbfb23f43a0b124a6e98877e3eb68b764e9ba73ad9bc72c4431cc00ea"
+  },
+  "generator_sha256": "cba2c9586d668d0db72988cb67572f708027007ba5d454c73b9af98169962656",
+  "expected_algorithm_reimplemented": false,
+  "new_java_execution_by_generator": false,
+  "native_execution_by_generator": false,
+  "full_client_or_crash_durability_credit": false
+}

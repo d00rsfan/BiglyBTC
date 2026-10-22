@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "status": "DATA_ONLY_DERIVATION_NATIVE_COMPARISON_NOT_EXECUTED",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "raw_scenarios": 99,
+  "admitted_reducer_scenarios": 95,
+  "excluded_provider_construction_cases": [
+    {
+      "id": "all_string_wrong",
+      "reason": "String",
+      "scope": "Java provider/construction structural fault, not numeric reducer domain"
+    },
+    {
+      "id": "all_list_wrong",
+      "reason": "List",
+      "scope": "Java provider/construction structural fault, not numeric reducer domain"
+    },
+    {
+      "id": "null_root",
+      "reason": "NULL_ROOT",
+      "scope": "Java provider/construction structural fault, not numeric reducer domain"
+    },
+    {
+      "id": "load_provider_throw",
+      "reason": "READ_THROW",
+      "scope": "Java provider/construction structural fault, not numeric reducer domain"
+    }
+  ],
+  "observation_records": 164,
+  "captured_save_maps_compared": 91,
+  "external_after_capture_save_faults": 1,
+  "emitted_checks": 1560,
+  "source_input_sha256": "f5e250c64cdc69d3cf61d7b81f8178ee146babe3f1f2687ed4971684740aa7c4",
+  "original_java_stdout_sha256": "52318ceb642f8e0f3e9d57b0caa536c3c0cb05e6dfeb54ab7e48c94b6c76cf1c",
+  "files": {
+    "README.md": "7769ab874b8dd27c9a830ce16d75ed7da72bc664cfeb643d1b8c6f3e63ca31f2",
+    "replay.inc": "cb25e19823065ea9399658bbf11acbdc87cd3b54dd7dc8323eec1cb3a4d7edab",
+    "inputs.json": "f5e250c64cdc69d3cf61d7b81f8178ee146babe3f1f2687ed4971684740aa7c4",
+    "java-verification.json": "5da97811422dd29ec30860b3497dbd7f6d018041a4447b8b58a3bf65189ffb10",
+    "original-java.jsonl": "52318ceb642f8e0f3e9d57b0caa536c3c0cb05e6dfeb54ab7e48c94b6c76cf1c",
+    ".gitattributes": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da"
+  },
+  "scope": "Typed reducer numeric values/save intentions only. No provider call counts, original physical IO, native execution or whole-class lifecycle credit.",
+  "derivation_amendment": {
+    "before_replay_sha256": "87e7295dbaa43a398287d7352e1b1bf45937ae576394bed3abebfdb567f80cb9",
+    "change": "Annotate six intentionally unused DHT inputs in mark/getter-only scenarios; all 1560 checks and Java outputs unchanged."
+  }
+}

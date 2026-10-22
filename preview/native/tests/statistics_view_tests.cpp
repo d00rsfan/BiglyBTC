@@ -391,11 +391,24 @@ int main() {
       const auto current = storage::readSavedStatisticsView(area.held()); require(current.has_value(), "fresh read failed"); loaded(*old, storage::RecoverySource::Primary, full(100)); loaded(*current, storage::RecoverySource::Primary, full(200));
       require(old->snapshot->source.get() != current->snapshot->source.get(), "two reads borrowed a shared mutable document"); preserved(area, before, area.held().directoryHandle());
     });
-    run("only exact original fixed leaf is read and ConfigFile config rule stays closed", [&] {
+    run("reader uses exact leaf and ConfigFile admits only the compatible statistics exception", [&] {
       Area area; area.write(area.profile / "biglybt.statistics", full(123)); area.write(area.profile / "BiglyBT.statistics.config", full(456)); area.hold(); const auto before = area.observe(Filename);
       const auto missing = storage::readSavedStatisticsView(area.held()); require(missing && missing->missing(), "reader used lowercase/appended config alias");
+      preserved(area, before, area.held().directoryHandle());
+      const auto raw = full(789); area.write(area.profile / Filename, raw);
+      const auto acceptedBefore = area.observe(Filename); const int fd = area.held().directoryHandle();
       const auto generic = storage::ConfigFile::load(area.held(), Filename, core::Limits{});
-      require(!generic && generic.error().code == storage::ErrorCode::UnsafePath, "statistics reader widened ConfigFile filename validator"); preserved(area, before, area.held().directoryHandle());
+      require(generic && generic->recoverySource() == storage::RecoverySource::Primary,
+          "ConfigFile rejected the exact compatible statistics filename");
+      require(generic->document().originalBytes() == raw && generic->document().serialize() == raw,
+          "ConfigFile changed the original statistics document");
+      for (const auto* name : {"biglybt.statistics", "Other.statistics", "BiglyBT.statistics.bak",
+          "BiglyBT.statisticsx", "../BiglyBT.statistics", "/BiglyBT.statistics", "sub/BiglyBT.statistics"}) {
+        const auto rejected = storage::ConfigFile::load(area.held(), name, core::Limits{});
+        require(!rejected && rejected.error().code == storage::ErrorCode::UnsafePath,
+            "ConfigFile admitted an arbitrary statistics name or traversal alias");
+      }
+      preserved(area, acceptedBefore, fd);
     });
     std::cout << "PASS " << cases << " saved statistics reader cases; " << assertions << " assertions\n"; return 0;
   } catch (const std::exception& failure) { std::cerr << "FAIL " << active << ": " << failure.what() << '\n'; return 1; }

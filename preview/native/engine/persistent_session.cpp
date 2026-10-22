@@ -1,5 +1,6 @@
 #include "persistent_session_support.hpp"
 #include "persistent_runtime_guard.hpp"
+#include "runtime_metrics_sampler.hpp"
 
 #include <libtorrent/alert_types.hpp>
 #include <libtorrent/session.hpp>
@@ -72,6 +73,8 @@ struct PersistentSession::Impl {
   std::optional<core::EngineCounters> operationBaseline{};
   core::EngineStatisticsAccumulator operationAccumulator{};
   core::EngineStatisticsAccumulator absoluteAccumulator{};
+  detail::RuntimeMetricsSampler runtimeMetrics{};
+  std::int64_t lastDiagnostics = -1;
   std::array<int, 4> indices{{-1, -1, -1, -1}};
   std::optional<AccountingError> counterFailure{};
   std::optional<core::EngineStatistics> lastStatistics{};
@@ -129,6 +132,7 @@ struct PersistentSession::Impl {
           if (indices[earlier] == indices[wanted]) { counterError(AccountingError::CounterMapping); return; }
         }
       }
+      static_cast<void>(runtimeMetrics.map({metrics.data(), metrics.size()}));
     } catch (...) { counterError(AccountingError::CounterMapping); }
   }
   void post(bool force) noexcept {
@@ -163,6 +167,14 @@ struct PersistentSession::Impl {
     }
     ++responses;
     lastStatistics = *accepted; // Fixed primitive retention precedes all sinks.
+    // Optional copying cannot alter retained peer counters or their response/fence state.
+    // Optional catalog copies run at 1Hz; essential peer accounting above
+    // retains every accepted response at its independent higher cadence.
+    if (lastDiagnostics < 0 || now - lastDiagnostics >= 1000000000) {
+      lastDiagnostics = now;
+      static_cast<void>(runtimeMetrics.capture(
+          {counters.data(), static_cast<std::size_t>(counters.size())}, responses, now));
+    }
     publish();
     statisticsSequence = sequence;
     if (!operationSink || !operationBaseline) { return; }
@@ -433,6 +445,10 @@ void PersistentSession::clearObservationSink() noexcept {
 std::optional<ApplicationPeerObservation> PersistentSession::latest() const {
   if (!impl_->onWorker()) { return {}; }
   return impl_->observation;
+}
+std::shared_ptr<const core::RuntimeMetrics> PersistentSession::diagnostics() const noexcept {
+  if (!impl_->onWorker()) { return {}; }
+  return impl_->runtimeMetrics.latest();
 }
 std::optional<RetirementReceipt> PersistentSession::lastRetirement() const {
   if (!impl_->onWorker()) { return {}; }

@@ -63,14 +63,14 @@ private slots:
     for (int kind = 0; kind < 8; ++kind) {
       auto invalid = choices();
       switch (kind) {
-        case 0: invalid.section = -1; break; case 1: invalid.activity = 2; break;
+        case 0: invalid.section = -1; break; case 1: invalid.activity = 3; break;
         case 2: invalid.transfers = -1; break; case 3: invalid.history = 4; break;
         case 4: invalid.dailyDate = {2023, 2, 29}; break; case 5: invalid.dailyDate = {10000, 1, 1}; break;
         case 6: invalid.weekEnding = {1970, 1, 6}; break; default: invalid.weekEnding = {2024, 4, 31}; break;
       }
       QVERIFY(!ui::validStatisticsNavigation(invalid)); const auto first = QDateTime::currentDateTimeUtc().date();
       ui::StatisticsPage page(nullptr, invalid); const auto last = QDateTime::currentDateTimeUtc().date(); const auto result = page.navigation(); QVERIFY(result);
-      QCOMPARE(result->section, 0); QCOMPARE(result->activity, 0); QCOMPARE(result->transfers, 0); QCOMPARE(result->history, 0); QVERIFY(!result->hourly);
+      QCOMPARE(result->section, 0); QCOMPARE(result->activity, 2); QCOMPARE(result->transfers, 0); QCOMPARE(result->history, 0); QVERIFY(!result->hourly);
       QVERIFY(today(result->dailyDate, first, last)); QVERIFY(today(result->weekEnding, first, last));
       QVERIFY(today(result->monthEnding, first, last)); QCOMPARE(result->monthTraffic, ui::SavedHistoryTraffic::Payload); verifyControls(page, *result);
     }

@@ -162,7 +162,7 @@ private slots:
     } else { QCOMPARE(native.count(),0); }
     QVERIFY(!w.close()); QVERIFY(w.isVisible());
     QTRY_VERIFY_WITH_TIMEOUT(closed.count() == 1 && releasedBeforeAck && !w.isVisible(),15000);
-    QVERIFY(fixture.intact(false));
+    QVERIFY(active ? fixture.accountingIntact(false) : fixture.intact(false));
   }
   void destructionDuringActiveObservationReleasesWorkerOwnedLease() {
     test::OwnedEngineFixture fixture(false,true); QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);

@@ -122,10 +122,28 @@ bool sameMetadata(const struct stat& left, const struct stat& right) {
       && left.st_mtim.tv_sec == right.st_mtim.tv_sec && left.st_mtim.tv_nsec == right.st_mtim.tv_nsec
       && left.st_ctim.tv_sec == right.st_ctim.tv_sec && left.st_ctim.tv_nsec == right.st_ctim.tv_nsec;
 }
-bool canonicalMatches(const char* path) {
-  if (!path || !*path) { return false; }
-  std::array<char, 4096> resolved{};
-  return ::realpath(path, resolved.data()) && std::string_view(resolved.data()) == runtime_binding::artifact;
+using CanonicalPath = std::array<char, 4096>;
+std::optional<CanonicalPath> canonicalPath(const char* path) {
+  if (!path || !*path) { return {}; }
+  CanonicalPath result{};
+  if (!::realpath(path, result.data()) || result[0] != '/') { return {}; }
+  return result;
+}
+bool canonicalMatches(const char* path, const CanonicalPath& actual) {
+  const auto resolved = canonicalPath(path);
+  return resolved && std::string_view(resolved->data()) == actual.data();
+}
+bool relocatableSourceArtifact() {
+  // Only the two already-reviewed manifests for the exact, uninstrumented
+  // source-built image may move. Configure still verifies their complete
+  // source/build/install proof before emitting these compiled constants.
+  constexpr std::string_view original = "010c6094b62e5e2e597ce6267b0125f6560d1a043a792218389ef4b962e871ae";
+  constexpr std::string_view retained = "aa5f1767640fc1ca5f978360ddb8eebd26fc29b2f0c34b44fdf7416299a1bb3c";
+  return (std::string_view(runtime_binding::manifest) == original
+          || std::string_view(runtime_binding::manifest) == retained)
+      && std::string_view(runtime_binding::sha256)
+          == "c35f1b0408508c019f002c438d70dd361a55be20286ded56711efd6bba2424e3"
+      && runtime_binding::bytes == 8737560ULL;
 }
 bool hashed(int descriptor) {
   Digest context;
@@ -159,7 +177,10 @@ bool checkLoadedProvider() {
   Library library{::dlopen("libtorrent-rasterbar.so.2.0", RTLD_NOW | RTLD_NOLOAD)};
   if (!library.value) { return false; }
   link_map* object = nullptr;
-  if (::dlinfo(library.value, RTLD_DI_LINKMAP, &object) || !object || !canonicalMatches(object->l_name)) { return false; }
+  if (::dlinfo(library.value, RTLD_DI_LINKMAP, &object) || !object) { return false; }
+  const auto actual = canonicalPath(object->l_name);
+  if (!actual || (std::string_view(actual->data()) != runtime_binding::artifact
+                  && !relocatableSourceArtifact())) { return false; }
   // These are ORIGINAL dynamic exports, not &method / __wrap_* references.
   // GNU --wrap test seams therefore do not misidentify the test executable as LT.
   constexpr const char* symbols[] = {
@@ -169,34 +190,43 @@ bool checkLoadedProvider() {
       "_ZN10libtorrent14session_handle10pop_alertsEPSt6vectorIPNS_5alertESaIS3_EE",
       "_ZNK10libtorrent19session_stats_alert8countersEv",
       "_ZN10libtorrent14session_handle14remove_torrentERKNS_14torrent_handleENS_5flags13bitfield_flagIhNS_16remove_flags_tagEvEE"};
-  void* anchor = nullptr;
+  std::array<std::uintptr_t, 6> addresses{};
+  std::array<Mapping, 6> beforeMappings{};
+  std::size_t at = 0;
   for (const auto* name : symbols) {
     void* exported = ::dlsym(library.value, name);
     Dl_info info{};
     if (!exported || exported != ::dlsym(RTLD_DEFAULT, name) || !::dladdr(exported, &info)
         || reinterpret_cast<std::uintptr_t>(info.dli_fbase) != object->l_addr
-        || !canonicalMatches(info.dli_fname)) { return false; }
-    if (!anchor) { anchor = exported; }
+        || !canonicalMatches(info.dli_fname, *actual)) { return false; }
+    const auto address = reinterpret_cast<std::uintptr_t>(exported);
+    ObjectQuery query{object->l_addr, address, 0};
+    ::dl_iterate_phdr(objectContaining, &query);
+    const auto mapping = mappingFor(address);
+    if (query.matches != 1 || !mapping || at == addresses.size()) { return false; }
+    addresses[at] = address; beforeMappings[at] = *mapping; ++at;
   }
-  const auto address = reinterpret_cast<std::uintptr_t>(anchor);
-  ObjectQuery query{object->l_addr, address, 0};
-  ::dl_iterate_phdr(objectContaining, &query);
-  const auto beforeMapping = mappingFor(address);
-  if (query.matches != 1 || !beforeMapping) { return false; }
+  if (at != addresses.size()) { return false; }
+  // The path is selected by the already loaded object, never by a runtime caller
+  // or by loading the configured provider to mask a different active image.
   // A replaced FIFO must fail metadata admission rather than block opening.
-  Descriptor file{::open(runtime_binding::artifact, O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK)};
+  Descriptor file{::open(actual->data(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK)};
   if (file.value < 0) { return false; }
   struct stat before{}, after{}, named{};
   if (::fstat(file.value, &before) || !S_ISREG(before.st_mode) || before.st_size < 0
-      || static_cast<unsigned long long>(before.st_size) != runtime_binding::bytes
-      || static_cast<std::uint64_t>(before.st_ino) != beforeMapping->inode
-      || static_cast<std::uint64_t>(::major(before.st_dev)) != beforeMapping->deviceMajor
-      || static_cast<std::uint64_t>(::minor(before.st_dev)) != beforeMapping->deviceMinor
-      || !hashed(file.value) || ::fstat(file.value, &after) || !sameMetadata(before, after)
-      || ::lstat(runtime_binding::artifact, &named) || !sameMetadata(after, named)) { return false; }
-  const auto afterMapping = mappingFor(address);
-  return afterMapping && *beforeMapping == *afterMapping
-      && canonicalMatches(object->l_name);
+      || static_cast<unsigned long long>(before.st_size) != runtime_binding::bytes) { return false; }
+  for (const auto& mapping : beforeMappings) {
+    if (static_cast<std::uint64_t>(before.st_ino) != mapping.inode
+        || static_cast<std::uint64_t>(::major(before.st_dev)) != mapping.deviceMajor
+        || static_cast<std::uint64_t>(::minor(before.st_dev)) != mapping.deviceMinor) { return false; }
+  }
+  if (!hashed(file.value) || ::fstat(file.value, &after) || !sameMetadata(before, after)
+      || ::lstat(actual->data(), &named) || !sameMetadata(after, named)) { return false; }
+  for (std::size_t i = 0; i < addresses.size(); ++i) {
+    const auto afterMapping = mappingFor(addresses[i]);
+    if (!afterMapping || beforeMappings[i] != *afterMapping) { return false; }
+  }
+  return canonicalMatches(object->l_name, *actual);
 }
 } // namespace
 #endif

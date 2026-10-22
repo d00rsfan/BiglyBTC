@@ -1,0 +1,5 @@
+# action\tUTC_millis\tprotocol_sent\tpayload_sent\tprotocol_received\tpayload_received\tDHT_sent\tDHT_received\tabsolute_baseline_six_or_dashes
+S	1704067200000	10	20	30	40	50	60	100	200	300	400	500	600
+E	1704067260000	11	22	33	44	55	66	-	-	-	-	-	-
+S	1704067320000	11	22	33	44	55	66	101	202	303	404	505	606
+E	1704067380000	12	24	36	48	60	72	-	-	-	-	-	-

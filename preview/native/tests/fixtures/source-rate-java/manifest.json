@@ -1,0 +1,125 @@
+{
+  "status": "DATA_ONLY_LITERAL_DERIVATION_NATIVE_EXECUTION_PENDING",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "average_cases": 13,
+  "global_cases": 9,
+  "admitted_commands": 109,
+  "scalar_expectations": 316,
+  "excluded_cases": [
+    {
+      "case": "source-backward-clock",
+      "reason": "java-characterization-native-rejects-backward",
+      "equality_credit": 0
+    },
+    {
+      "case": "source-negative-clock",
+      "reason": "java-characterization-native-rejects-negative",
+      "equality_credit": 0
+    },
+    {
+      "case": "source-allocated-zero-time-point",
+      "reason": "java-characterization-native-rejects-point-zero",
+      "equality_credit": 0
+    },
+    {
+      "case": "source-subsecond-divisor",
+      "reason": "java-only-subsecond-domain",
+      "equality_credit": 0
+    },
+    {
+      "case": "factory-rejects-refresh",
+      "reason": "java-only-invalid-factory",
+      "equality_credit": 0
+    },
+    {
+      "case": "factory-rejects-period",
+      "reason": "java-only-invalid-factory",
+      "equality_credit": 0
+    },
+    {
+      "case": "source-global-backward-clock",
+      "reason": "java-characterization-native-rejects-backward",
+      "equality_credit": 0
+    },
+    {
+      "case": "production-full-period-warmup",
+      "reason": "source-characterization-no-native-replay-implementation",
+      "equality_credit": 0
+    },
+    {
+      "case": "replay-partial-population",
+      "reason": "source-characterization-no-native-replay-implementation",
+      "equality_credit": 0
+    },
+    {
+      "case": "replay-two-second-interval",
+      "reason": "source-characterization-no-native-replay-implementation",
+      "equality_credit": 0
+    },
+    {
+      "case": "replay-long-to-double-and-reset",
+      "reason": "source-characterization-no-native-replay-implementation",
+      "equality_credit": 0
+    },
+    {
+      "case": "exponential-periods",
+      "reason": "source-only-not-inspected-production-path",
+      "equality_credit": 0
+    },
+    {
+      "case": "exponential-weight-negative-input",
+      "reason": "source-only-not-inspected-production-path",
+      "equality_credit": 0
+    },
+    {
+      "case": "exponential-zero-weight",
+      "reason": "source-only-not-inspected-production-path",
+      "equality_credit": 0
+    },
+    {
+      "case": "exponential-one-weight-extreme",
+      "reason": "source-only-not-inspected-production-path",
+      "equality_credit": 0
+    },
+    {
+      "case": "exponential-invalid-period",
+      "reason": "source-only-not-inspected-production-path",
+      "equality_credit": 0
+    },
+    {
+      "case": "exponential-nan-weight",
+      "reason": "source-only-not-inspected-production-path",
+      "equality_credit": 0
+    }
+  ],
+  "excluded_commands": [
+    {
+      "case": "signed-corrections",
+      "index": 4,
+      "operation": "double",
+      "equality_credit": 0,
+      "reason": "No native double-average API; terminal command, no later admitted state affected."
+    },
+    {
+      "case": "minimum-long",
+      "index": 3,
+      "operation": "double",
+      "equality_credit": 0,
+      "reason": "No native double-average API; terminal command, no later admitted state affected."
+    }
+  ],
+  "input_sha256": "8e9d09cb5ff26a043b23a27813e2c55abbc92371964c61531a8c88a767eb00b5",
+  "actual_java_stdout_sha256": "b5abfbfda691350f03a3f753dd680bda64bef4ec6a643c554c712c31cfdf4be9",
+  "original_source_pins_sha256": "c9f543c42e9933412df9a66413e02c6198a2fe0ba1881e0dd318ef8af63770d1",
+  "source_extraction_provenance_sha256": "71fe330004cf40b479d9ff4bb0cc9303b532b566fd2f122e51c17d918b1177b0",
+  "whole_manager_runtime_credit": 0,
+  "native_execution": false,
+  "files": {
+    ".gitattributes": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da",
+    "README.md": "b14ceb559bfaddba931ea4ebcf61077b057e2f97a049ef3b9985052785efbe81",
+    "java-receipt.json": "ecf73bd0ff45dc9e52ab41bdebbc28bb703b24c7ea1e8f33ee9d71cddc0bf9b1",
+    "original-rates.stdout": "b5abfbfda691350f03a3f753dd680bda64bef4ec6a643c554c712c31cfdf4be9",
+    "replay.inc": "f1a988e77706fb76ad6902cd271d3e5449be93143654e2da13acadca3b61251d",
+    "vectors.json": "8e9d09cb5ff26a043b23a27813e2c55abbc92371964c61531a8c88a767eb00b5"
+  }
+}
