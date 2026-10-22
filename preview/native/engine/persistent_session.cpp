@@ -1,6 +1,7 @@
 #include "persistent_session_support.hpp"
 #include "persistent_runtime_guard.hpp"
 #include "runtime_metrics_sampler.hpp"
+#include "effective_rate_limits.hpp"
 
 #include <libtorrent/alert_types.hpp>
 #include <libtorrent/session.hpp>
@@ -52,6 +53,7 @@ struct PersistentSession::Impl {
   const std::int64_t origin = static_cast<std::int64_t>(Clock::now().time_since_epoch().count());
   std::unique_ptr<lt::session> session{};
   AccountingState phase = AccountingState::Starting;
+  core::SessionRateLimits rateLimits{};
   bool call = false;
   bool deferPublication = false;
   bool poisoned = false;
@@ -106,7 +108,7 @@ struct PersistentSession::Impl {
     std::int64_t now = 0;
     if (!elapsed(now)) { counterError(AccountingError::CounterInvalid); return; }
     observation = ApplicationPeerObservation{identity, ++sequence,
-        counterFailure ? AccountingState::Uncertified : phase, lastStatistics, now};
+        counterFailure ? AccountingState::Uncertified : phase, lastStatistics, now, rateLimits};
     if (deferPublication || !sink) { return; }
     try {
       // A local owning copy allows the optional sink to clear its registration
@@ -306,6 +308,7 @@ struct PersistentSession::Impl {
       try {
         session = std::make_unique<lt::session>(detail::settings());
         session->pause();
+        rateLimits = detail::readEffectiveRateLimits(*session); // Optional read, never applies settings.
         phase = AccountingState::Idle;
         mapCounters();
       } catch (...) { joinPoisoned(); throw; }

@@ -177,12 +177,12 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
   engineDetails_->hide(); engineLayout->addWidget(engineDetails_);
   engineLayout->addWidget(label(tr("One experimental transfer engine only. Peer payload + protocol traffic; IP, tracker and DHT totals are not included. These measurements are separate from application lifetime, global totals, saved totals and history. Ended counters are the last observation, not an exhaustive final accounting."),
       QStringLiteral("statistics-engine-scope"), engine));
-  currentLayout->addWidget(engine);
   auto* live = new QGroupBox(tr("Overall transfers"), contents);
   auto* liveLayout = new QVBoxLayout(live);
   overallView_ = new OverallView(live); liveLayout->addWidget(overallView_);
   connect(overallView_, &OverallView::markRequested, this, &StatisticsPage::markRequested);
   currentLayout->addWidget(live);
+  currentLayout->addWidget(engine);
   auto* totals = new QGroupBox(tr("Last-saved overall totals"), contents); auto* totalsForm = new QFormLayout(totals);
   const std::array<const char*, 13> ids{"downloaded", "uploaded", "uptime", "mark-time", "mark-downloaded", "mark-uploaded", "mark-uptime",
       "dht-downloaded", "dht-uploaded", "protocol-uploaded", "data-uploaded", "protocol-downloaded", "data-downloaded"};
@@ -202,7 +202,7 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
     sinceForm->addRow(sinceTitles[i], since_[i]);
   }
   currentLayout->addWidget(since);
-  currentLayout->addWidget(label(tr("Saved combined counters already include data and protocol. Split counters and DHT are shown separately, never added again. The file contains no save timestamp. No mark/reset or write is performed."),
+  currentLayout->addWidget(label(tr("These are last-read saved totals; Refresh saved totals reloads them. Live overall totals and mark controls are shown above. Saved combined counters already include data and protocol. Split counters and DHT are shown separately, never added again. The file contains no save timestamp."),
       QStringLiteral("statistics-saved-scope"), contents));
   currentLayout->addStretch(); current->setWidget(contents); transferTabs->addTab(current, tr("Current"));
   auto* history = new QWidget(transferTabs); history->setObjectName(QStringLiteral("statistics-transfers-history"));
@@ -253,8 +253,12 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
   } else { activityViews_->setCurrentIndex(2); }
   connect(tabs_, &QTabWidget::currentChanged, this, [this](int) {
     QPointer<StatisticsPage> guard(this); refreshActivity(); if (guard) { guard->refreshEngine(); }
+    if (guard) { guard->queueHistoryVisibility(); }
   });
-  connect(transferTabs_, &QTabWidget::currentChanged, this, [this](int) { refreshEngine(); });
+  connect(transferTabs_, &QTabWidget::currentChanged, this, [this](int) {
+    QPointer<StatisticsPage> guard(this); refreshEngine(); if (guard) { guard->queueHistoryVisibility(); }
+  });
+  connect(historyTabs_, &QTabWidget::currentChanged, this, [this](int) { queueHistoryVisibility(); });
   connect(activityViews_, &QTabWidget::currentChanged, this, [this](int) { refreshActivity(); });
 }
 std::optional<StatisticsNavigation> StatisticsPage::navigation() const {
@@ -585,6 +589,17 @@ void StatisticsPage::refreshActivity() {
   }
   if (plot && isVisible() && activity_->isVisible() && !window()->isMinimized()) { plot->update(); }
 }
+void StatisticsPage::queueHistoryVisibility() {
+  if (historyVisibilityQueued_) { return; }
+  historyVisibilityQueued_ = true;
+  QMetaObject::invokeMethod(this, [this] {
+    historyVisibilityQueued_ = false;
+    if (isVisible() && !window()->isMinimized()
+        && (historySelected() || historyWeekSelected() || historyMonthSelected() || historyRangeSelected())) {
+      emit historyVisible(); // Final access; Window may rebind or delete this page.
+    }
+  }, Qt::QueuedConnection);
+}
 void StatisticsPage::showEvent(QShowEvent* event) {
   QWidget::showEvent(event);
   if (observedWindow_ != window()) {
@@ -595,6 +610,7 @@ void StatisticsPage::showEvent(QShowEvent* event) {
   plot_->setUpdatesEnabled(!window()->isMinimized());
   if (!guard) { return; }
   refreshActivity(); if (guard) { guard->refreshEngine(); }
+  if (guard) { guard->queueHistoryVisibility(); }
 }
 bool StatisticsPage::eventFilter(QObject* object, QEvent* event) {
   if (object == observedWindow_ && (event->type() == QEvent::WindowStateChange || event->type() == QEvent::Show)) {
@@ -605,6 +621,7 @@ bool StatisticsPage::eventFilter(QObject* object, QEvent* event) {
     if (!guard) { return false; }
     QMetaObject::invokeMethod(this, [guard] {
       if (guard) { guard->refreshActivity(); } if (guard) { guard->refreshEngine(); }
+      if (guard) { guard->queueHistoryVisibility(); }
     }, Qt::QueuedConnection);
   }
   return QWidget::eventFilter(object, event);

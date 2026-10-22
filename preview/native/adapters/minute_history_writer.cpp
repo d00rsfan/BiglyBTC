@@ -214,23 +214,27 @@ Result append(const ProfileLease& lease, const core::MinuteHistoryAction& action
 } // namespace
 
 std::expected<void, Error> writeMinuteHistory(const ProfileLease& lease, core::MinuteHistoryRecorder& recorder,
-    const core::MinuteHistoryRequest& request, std::stop_token stop) {
+    const core::MinuteHistoryRequest& request, std::stop_token stop, MinuteHistoryWriteReceipt* receipt) {
+  if (receipt) { *receipt = {}; }
   if (stop.stop_requested()) { return cancelled(); }
   if (!lease.valid()) { return error(ErrorCode::UnsafePath, "Minute history requires a held profile lease"); }
   auto plan = recorder.prepare(request);
   if (!plan) { return domainError(plan.error()); }
   Transaction transaction{recorder, *plan, stop};
+  std::size_t appended = 0;
   try {
     for (const auto& action : plan->actions()) {
       if (transaction.cancelledBeforeMutation()) { return cancelled(); }
       if (action.kind() == core::MinuteHistoryActionKind::Close) { continue; }
       auto result = append(lease, action, transaction);
       if (!result) { return result; }
+      ++appended;
     }
     if (transaction.cancelledBeforeMutation()) { return cancelled(); }
     const auto committed = recorder.finish(*plan, core::MinuteHistoryIoResult::Complete);
     transaction.finished = true;
     if (!committed) { return domainError(committed.error()); }
+    if (receipt) { receipt->appendedActions = appended; }
     return {};
   } catch (const std::bad_alloc&) {
     return error(ErrorCode::Io, "Insufficient memory while appending minute history");

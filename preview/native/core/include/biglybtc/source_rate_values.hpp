@@ -1,5 +1,7 @@
 #pragma once
 
+#include "biglybtc/source_rate_average.hpp"
+
 #include <cstdint>
 
 namespace biglybtc::core {
@@ -14,6 +16,7 @@ struct SourceRateValues {
   std::int64_t protocolSent = 0;
   std::int64_t smoothedReceived = 0;
   std::int64_t smoothedSent = 0;
+  SourceSmoothingPolicy smoothing{};
   bool operator==(const SourceRateValues&) const = default;
 };
 

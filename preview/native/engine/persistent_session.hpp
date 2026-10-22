@@ -2,6 +2,7 @@
 
 #include "local_session.hpp"
 #include "biglybtc/runtime_metrics.hpp"
+#include "biglybtc/effective_rate_limits.hpp"
 
 #include <chrono>
 #include <cstdint>
@@ -32,6 +33,7 @@ struct ApplicationPeerObservation {
   std::optional<core::EngineStatistics> observed;
   // Actual owner lifetime, separate from EngineStatistics first-observation time.
   std::int64_t ownerElapsedNanoseconds = 0;
+  core::SessionRateLimits rateLimits{};
 };
 
 using ApplicationObservationSink = std::function<void(ApplicationPeerObservation)>;

@@ -62,7 +62,7 @@ ui::NativeSessionPresentation nativePacket(const engine::ApplicationPeerObservat
   }
   return std::make_shared<const ui::NativeSessionPacket>(ui::NativeSessionPacket{
       value.identity.profileSession, value.identity.applicationRun, value.identity.engineEpoch,
-      value.sequence, state, value.observed, value.ownerElapsedNanoseconds, std::move(rates)});
+      value.sequence, state, value.observed, value.ownerElapsedNanoseconds, std::move(rates), value.rateLimits});
 }
 quint64 reserveColumnLayoutSession() {
   static std::atomic<quint64> last{0};
@@ -143,6 +143,7 @@ struct SessionBridge::Host {
   core::MinuteHistoryRecorder minuteHistory{};
   std::optional<storage::Error> historyFailure{};
   bool historyEnabled = true;
+  quint64 historyRevision = 0;
   std::optional<core::EngineStatistics> lastCounterSample{};
   std::chrono::steady_clock::time_point lastCounterArrival{};
   std::chrono::steady_clock::time_point lastAccountingTick = std::chrono::steady_clock::now();
@@ -821,7 +822,8 @@ bool SessionBridge::continueDownload(ui::Target target) {
           auto service = OverallStatisticsService::open(host_->lease, {1, host_->columnLayoutSession, 1}, started, wallMillis());
           if (service) { host_->overall = std::move(*service); }
           else { host_->overallOpenFailure = std::move(service.error()); }
-          host_->sourceRates = std::make_unique<SourceRateProjection>();
+          const auto smoothing = configuredSourceSmoothing(settings ? &settings->document() : nullptr);
+          host_->sourceRates = std::make_unique<SourceRateProjection>(smoothing.windowSeconds);
         } catch (...) {} // Owner retention is independent of optional allocations.
         static_cast<void>(host_->engine->setObservationSink([this](engine::ApplicationPeerObservation value) {
           observeNative(value);
@@ -915,8 +917,10 @@ void SessionBridge::tickAccounting(bool force, bool ending) noexcept {
             historyInput(host_->lastCounterSample->counters), {}};
       }
       if (request) {
-        auto written = storage::writeMinuteHistory(host_->lease, host_->minuteHistory, *request);
+        storage::MinuteHistoryWriteReceipt receipt;
+        auto written = storage::writeMinuteHistory(host_->lease, host_->minuteHistory, *request, {}, &receipt);
         if (!written) { host_->historyFailure = std::move(written.error()); }
+        else if (receipt.appendedActions) { publishHistoryChange(); }
       }
     }
     if (!due && !force) { return; }
@@ -953,6 +957,35 @@ void SessionBridge::publishRuntimeMetrics(const engine::ApplicationPeerObservati
     }
     if (result && (*result)->session == publishedColumnLayoutSession_) { emit runtimeMetricsReady(*result); }
   }, Qt::QueuedConnection);
+}
+void SessionBridge::publishHistoryChange() noexcept {
+  if (!host_ || host_->historyRevision == std::numeric_limits<quint64>::max()) { return; }
+  const HistoryChange change{host_->columnLayoutSession, ++host_->historyRevision};
+  try {
+    {
+      const std::lock_guard lock(progressMutex_);
+      latestHistoryChange_ = change;
+      if (historyChangeDeliveryQueued_) { return; }
+      historyChangeDeliveryQueued_ = true;
+    }
+    const bool queued = QMetaObject::invokeMethod(this, [this] {
+      std::optional<HistoryChange> change;
+      {
+        const std::lock_guard lock(progressMutex_);
+        change.swap(latestHistoryChange_); historyChangeDeliveryQueued_ = false;
+      }
+      if (change && change->session == publishedColumnLayoutSession_) {
+        emit historyChanged(change->session, change->revision); // Last access: receiver may delete Bridge.
+      }
+    }, Qt::QueuedConnection);
+    if (!queued) {
+      const std::lock_guard lock(progressMutex_); historyChangeDeliveryQueued_ = false;
+    }
+  } catch (...) {
+    // Optional delivery cannot fail accounting or a successful disk transaction.
+    // Retain the latest scalar; the next actual mutation can retry publication.
+    const std::lock_guard lock(progressMutex_); historyChangeDeliveryQueued_ = false;
+  }
 }
 void SessionBridge::publishOverall(bool closed) {
   if (!host_ || (!host_->overall && !host_->overallOpenFailure)
@@ -1055,9 +1088,11 @@ bool SessionBridge::closeSession() {
             peerCounters(final.counters()), OverallSampleQuality::ClosedFinal}));
         if (host_->minuteHistory.state().active) {
           try {
+            storage::MinuteHistoryWriteReceipt historyReceipt;
             auto ended = storage::writeMinuteHistory(host_->lease, host_->minuteHistory,
-                {core::MinuteHistoryEvent::End, {1, host_->columnLayoutSession, 1}, wallMillis(), historyInput(final.counters()), {}});
+                {core::MinuteHistoryEvent::End, {1, host_->columnLayoutSession, 1}, wallMillis(), historyInput(final.counters()), {}}, {}, &historyReceipt);
             if (!ended && !host_->historyFailure) { host_->historyFailure = std::move(ended.error()); }
+            else if (ended && historyReceipt.appendedActions) { publishHistoryChange(); }
           } catch (...) {}
         }
       } else if (host_->minuteHistory.state().active) {

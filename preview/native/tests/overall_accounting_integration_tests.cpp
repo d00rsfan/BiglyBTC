@@ -2,8 +2,10 @@
 #include "library_window.hpp"
 #include "statistics_page.hpp"
 #include "overall_presentation.hpp"
+#include "effective_rate_limit_text.hpp"
 #include "runtime_metrics_view.hpp"
 #include "owned_engine_fixture.hpp"
+#include "accounting_handoff_capture.hpp"
 #include "persistent_session.hpp"
 #include "../adapters/history_view.hpp"
 #include "biglybtc/saved_history_range.hpp"
@@ -12,10 +14,12 @@
 #include <QAction>
 #include <QApplication>
 #include <QDateTime>
+#include <QDateEdit>
 #include <QFileInfo>
 #include <QLabel>
 #include <QPushButton>
 #include <QSignalSpy>
+#include <QScrollArea>
 #include <QTabWidget>
 #include <QTableView>
 #include <QtTest>
@@ -42,12 +46,17 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
   QObject::connect(&bridge, &app::SessionBridge::columnLayoutSessionReady, &window, &ui::LibraryWindow::beginColumnLayoutSession);
   QObject::connect(&bridge, &app::SessionBridge::columnLayoutsReady, &window, &ui::LibraryWindow::setColumnLayouts);
   QObject::connect(&bridge, &app::SessionBridge::statisticsReady, &window, &ui::LibraryWindow::setStatistics);
+  QObject::connect(&bridge, &app::SessionBridge::historyChanged, &window, &ui::LibraryWindow::setHistoryRevision);
+  QObject::connect(&bridge, &app::SessionBridge::historyReady, &window, &ui::LibraryWindow::setHistory);
+  QObject::connect(&bridge, &app::SessionBridge::historyWeekReady, &window, &ui::LibraryWindow::setHistoryWeek);
   QObject::connect(&bridge, &app::SessionBridge::nativeSessionReady, &window, &ui::LibraryWindow::setNativeSession);
   QObject::connect(&bridge, &app::SessionBridge::overallReady, &window, &ui::LibraryWindow::setOverall);
   QObject::connect(&bridge, &app::SessionBridge::runtimeMetricsReady, &window, &ui::LibraryWindow::setRuntimeMetrics);
   QObject::connect(&bridge, &app::SessionBridge::busyChanged, &window, &ui::LibraryWindow::setBusy);
   QObject::connect(&window, &ui::LibraryWindow::columnLayoutsRequested, &bridge, &app::SessionBridge::columnLayouts);
   QObject::connect(&window, &ui::LibraryWindow::statisticsRequested, &bridge, &app::SessionBridge::statistics);
+  QObject::connect(&window, &ui::LibraryWindow::historyRequested, &bridge, &app::SessionBridge::history);
+  QObject::connect(&window, &ui::LibraryWindow::historyWeekRequested, &bridge, &app::SessionBridge::historyWeek);
   QObject::connect(&window, &ui::LibraryWindow::markRequested, &bridge, &app::SessionBridge::markStatistics);
 }
 ui::StatisticsPage& openStatistics(ui::LibraryWindow& window) {
@@ -174,11 +183,41 @@ private slots:
     QVERIFY(!latest(packets));
     QVERIFY(!child<QPushButton>(page, "statistics-set-mark").isEnabled());
     const auto beforeTransferDate = QDateTime::currentDateTimeUtc().date();
+    QSignalSpy historyChanges(&bridge, &app::SessionBridge::historyChanged);
+    QSignalSpy historyReads(&window, &ui::LibraryWindow::historyWeekRequested);
+    child<QDateEdit>(page, "saved-history-week-date").setDate(beforeTransferDate.addDays(1));
+    child<QTabWidget>(page, "statistics-transfer-tabs").setCurrentIndex(1);
+    child<QTabWidget>(page, "statistics-history-tabs").setCurrentIndex(1);
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && page.historyWeekPresentation()
+        && page.historyWeekPresentation()->snapshot, 10000);
+    QVERIFY(std::all_of(page.historyWeekPresentation()->snapshot->days.begin(),
+        page.historyWeekPresentation()->snapshot->days.end(), [](const auto& day) { return !day.snapshot; }));
+    const auto readsBeforeStart = historyReads.count();
     const auto target = window.model().targetAt(0); QVERIFY(target);
     QVERIFY(bridge.continueDownload(*target));
     QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && latest(packets) && latest(packets)->available
         && window.nativeSessionSnapshot() && window.nativeSessionSnapshot()->sample
         && window.nativeSessionSnapshot()->sample->counters.payloadReceived > 0, 30000);
+    // Actual bound owner's one get_settings snapshot, delivered by the real
+    // Bridge. Isolated defaults are session-unlimited, not unknown or inferred
+    // from torrent policy; the connection/choker/proxy facts must also survive.
+    const auto actualOwnerSettings = window.nativeSessionSnapshot()->rateLimits;
+    QVERIFY(core::validSessionRateLimits(actualOwnerSettings));
+    QVERIFY(actualOwnerSettings.download.state == core::RateLimitState::Unlimited);
+    QVERIFY(actualOwnerSettings.upload.state == core::RateLimitState::Unlimited);
+    QCOMPARE(actualOwnerSettings.download.bytesPerSecond, std::int64_t{0});
+    QCOMPARE(actualOwnerSettings.upload.bytesPerSecond, std::int64_t{0});
+    QVERIFY(actualOwnerSettings.connections.connectionLimit.has_value());
+    QVERIFY(*actualOwnerSettings.connections.connectionLimit > 0);
+    QVERIFY(actualOwnerSettings.connections.uploadSlots.state != core::UploadSlotState::Unavailable);
+    QVERIFY(actualOwnerSettings.connections.proxy == core::SessionProxyMode::Disabled);
+    // Start actually created a saved day file. Its successful write revision
+    // invalidates the currently visible week exactly after transfer busy clears.
+    QTRY_VERIFY_WITH_TIMEOUT(!historyChanges.empty() && historyReads.count() > readsBeforeStart
+        && !bridge.busy() && page.historyWeekPresentation() && page.historyWeekPresentation()->snapshot
+        && std::any_of(page.historyWeekPresentation()->snapshot->days.begin(),
+            page.historyWeekPresentation()->snapshot->days.end(), [](const auto& day) { return day.snapshot.has_value(); }), 10000);
+    QCOMPARE(child<QDateEdit>(page, "saved-history-week-date").date(), beforeTransferDate.addDays(1));
     QVERIFY(payloadIntact(fixture));
     // Compare actual independent response tuples once the isolated owner is
     // idle; do not equate two publication sequences or elapsed clocks.
@@ -208,6 +247,10 @@ private slots:
     page.tabs().setCurrentIndex(1);
     child<QTabWidget>(page, "statistics-transfer-tabs").setCurrentIndex(0);
     QTRY_VERIFY_WITH_TIMEOUT(child<QPushButton>(page, "statistics-set-mark").isEnabled(), 5000);
+    QCOMPARE(child<QLabel>(page, "native-session-download-limit").text(), QStringLiteral("Session download limit: Unlimited"));
+    QCOMPARE(child<QLabel>(page, "native-session-upload-limit").text(), QStringLiteral("Session upload limit: Unlimited"));
+    QCOMPARE(child<QLabel>(page, "native-session-connection-settings").text(),
+        QStringLiteral("Session settings: %1").arg(ui::sessionConnectionSettingsText(actualOwnerSettings.connections)));
     QTest::mouseClick(&child<QPushButton>(page, "statistics-set-mark"), Qt::LeftButton);
     QTRY_VERIFY_WITH_TIMEOUT(marks.count() == 1 && !bridge.busy() && latest(packets)->saved
         && field(*latest(packets)->saved, Field::MarkTime) > 0, 10000);
@@ -238,13 +281,17 @@ private slots:
     QVERIFY(field(cleared, Field::Downloaded) >= field(marked, Field::Downloaded));
     QVERIFY(opaquePreserved(original, clearedBytes));
     QCOMPARE(test::read(statisticsPath + QStringLiteral(".bak")), markedBytes);
-    bool releasedAtAcknowledgement = false;
+    const auto historyRevisionBeforeClose = historyChanges.last().at(1).toULongLong();
+    bool releasedAtAcknowledgement = false, endRevisionBeforeAcknowledgement = false;
     QObject::connect(&bridge, &app::SessionBridge::sessionClosed, &window, [&](quint64, bool joined, bool released) {
       auto lease = storage::ProfileLease::acquire(fixture.native());
       releasedAtAcknowledgement = joined && released && lease.has_value();
+      endRevisionBeforeAcknowledgement = !historyChanges.empty()
+          && historyChanges.last().at(1).toULongLong() > historyRevisionBeforeClose;
     });
     QVERIFY(bridge.closeSession());
     QTRY_VERIFY_WITH_TIMEOUT(closed.count() == 1 && releasedAtAcknowledgement && latest(packets)->closed, 15000);
+    QVERIFY(endRevisionBeforeAcknowledgement);
     QVERIFY(latest(packets)->finalCounters); QVERIFY(latest(packets)->saved);
     QVERIFY(!latest(packets)->writable); QVERIFY(latest(packets)->failure.isEmpty());
     QVERIFY(latest(packets)->historyFailure.isEmpty());
@@ -299,6 +346,18 @@ private slots:
     for (std::size_t i = 0; i < recorded.size(); ++i) {
       const auto firstActual = firstAbsolute[i] - InitialParts[i];
       QVERIFY(firstActual >= 0); QCOMPARE(recorded[i], peerFinal[i] - firstActual);
+    }
+    if (!qEnvironmentVariable("BIGLYBTC_ACCOUNTING_HANDOFF_DIRECTORY").isEmpty()) {
+      // Optional owned capture only. Select the actual Current page and reveal
+      // the Overall group after its joined-close packet has rendered.
+      page.tabs().setCurrentIndex(1);
+      child<QTabWidget>(page, "statistics-transfer-tabs").setCurrentIndex(0);
+      child<QScrollArea>(page, "statistics-transfers-current").ensureWidgetVisible(
+          &child<QWidget>(page, "statistics-overall-live"), 0, 20);
+      QTRY_COMPARE(child<QLabel>(page, "overall-live-value-0").text(),
+          QString::number(latest(packets)->values[0]));
+      test::captureAccountingHandoff(multifile, fixture.profile, original, persisted, dates, final,
+          closed.last().at(1).toBool(), closed.last().at(2).toBool(), window);
     }
     ui::LibraryWindow reopened; app::SessionBridge reopenedBridge; wire(reopened, reopenedBridge);
     reopened.resize(1280, 1000); reopened.show();

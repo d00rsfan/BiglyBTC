@@ -115,6 +115,27 @@ private slots:
     ui::StatisticsNavigation bad; bad.activity=3; QVERIFY(!ui::validStatisticsNavigation(bad));
     ui::StatisticsPage fallback(nullptr,bad); QCOMPARE(fallback.navigation()->activity,2);
   }
+  void windowedLabelReportsActualConfiguredWindowAndInterval_data() {
+    QTest::addColumn<int>("window"); QTest::addColumn<int>("interval");
+    QTest::newRow("minimum") << 10 << 1; QTest::newRow("default") << 30 << 1;
+    QTest::newRow("two-second") << 120 << 2; QTest::newRow("nonmultiple") << 333 << 5;
+    QTest::newRow("maximum") << 1800 << 20;
+  }
+  void windowedLabelReportsActualConfiguredWindowAndInterval() {
+    QFETCH(int, window); QFETCH(int, interval);
+    ui::NativeSessionView view; QVERIFY(view.beginSession(7)); show(view);
+    auto p = packet();
+    p->sourceRates = core::SourceRateValues{1, 2, 3, 4, 5, 6, {window, interval}};
+    QVERIFY(view.setPresentation(p));
+    const auto expected = QStringLiteral("10 s receive: payload 1, protocol 2 bytes/s; send: payload 3, protocol 4 bytes/s. %1 s smoothed receive / send (%2 s interval): 5 / 6 bytes/s.")
+        .arg(window).arg(interval);
+    QCOMPARE(child<QLabel>(view, "native-session-windowed-rates").text(), expected);
+    QCOMPARE(child<QLabel>(view, "native-session-windowed-rates").textFormat(), Qt::PlainText);
+    QCOMPARE(child<QLabel>(view, "native-session-rate-received").text(), QStringLiteral("100"));
+    auto closed = std::make_shared<ui::NativeSessionPacket>(*p); ++closed->sequence;
+    closed->state = ui::NativeSessionState::Closed; QVERIFY(view.setPresentation(closed));
+    QCOMPARE(child<QLabel>(view, "native-session-windowed-rates").text(), QStringLiteral("Windowed rates unavailable"));
+  }
   void nativeGroupPrecedesOperationAndStreamsNeverPopulateEachOther() {
     ui::StatisticsPage page; page.beginRequest(7,1); show(page); page.tabs().setCurrentIndex(1);
     auto& group=child<QGroupBox>(page,"statistics-native-session"); auto& operation=child<QGroupBox>(page,"statistics-engine-session");

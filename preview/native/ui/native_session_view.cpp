@@ -1,4 +1,5 @@
 #include "native_session_view.hpp"
+#include "effective_rate_limit_text.hpp"
 
 #include <QEvent>
 #include <QGridLayout>
@@ -63,6 +64,11 @@ NativeSessionView::NativeSessionView(QWidget* parent) : QWidget(parent),
   layout->addLayout(grid);
   windows_ = label(tr("Windowed rates unavailable"), QStringLiteral("native-session-windowed-rates"), this);
   layout->addWidget(windows_);
+  limits_[0] = label(tr("Session download limit: Unavailable"), QStringLiteral("native-session-download-limit"), this);
+  limits_[1] = label(tr("Session upload limit: Unavailable"), QStringLiteral("native-session-upload-limit"), this);
+  layout->addWidget(limits_[0]); layout->addWidget(limits_[1]);
+  configuration_ = label(sessionConnectionSettingsText({}), QStringLiteral("native-session-connection-settings"), this);
+  layout->addWidget(configuration_);
   layout->addWidget(label(tr("One native engine session: peer payload and protocol. No IP, tracker or DHT totals. Counters are absolute observations, not operation sums or saved lifetime totals."),
       QStringLiteral("native-session-scope"), this));
 }
@@ -81,7 +87,7 @@ void NativeSessionView::refresh() {
   const auto current = [&] { return guard && guard->packet_ == packet && guard->revision_ == revision
       && guard->isVisible() && !guard->window()->isMinimized(); };
   struct Fact { QPointer<QLabel> target; QString text; QString tip; };
-  std::array<Fact, 15> facts{};
+  std::array<Fact, 18> facts{};
   const auto identity = packet ? tr("Profile %1; run %2; epoch %3; sequence %4")
       .arg(packet->session).arg(packet->applicationRun).arg(packet->epoch).arg(packet->sequence) : QString{};
   facts[0] = {state_, stateText(packet), identity};
@@ -104,10 +110,20 @@ void NativeSessionView::refresh() {
         rates ? tr("%1 actual interval bytes per second").arg(values[i]) : tr("No current measured interval rate; no zero inferred")};
   }
   const auto windowed = packet && currentRates(packet->state) ? packet->sourceRates : std::nullopt;
-  facts[14] = {windows_, windowed ? tr("10 s receive: payload %1, protocol %2 bytes/s; send: payload %3, protocol %4 bytes/s. 30 s smoothed receive / send: %5 / %6 bytes/s.")
+  facts[14] = {windows_, windowed ? tr("10 s receive: payload %1, protocol %2 bytes/s; send: payload %3, protocol %4 bytes/s. %7 s smoothed receive / send (%8 s interval): %5 / %6 bytes/s.")
       .arg(windowed->payloadReceived).arg(windowed->protocolReceived).arg(windowed->payloadSent).arg(windowed->protocolSent)
-      .arg(windowed->smoothedReceived).arg(windowed->smoothedSent) : tr("Windowed rates unavailable"),
+      .arg(windowed->smoothedReceived).arg(windowed->smoothedSent)
+      .arg(windowed->smoothing.windowSeconds).arg(windowed->smoothing.intervalSeconds) : tr("Windowed rates unavailable"),
       tr("Source-style windows use actual cumulative sample arrival times; raw measured interval rates above remain separate.")};
+  const auto limitValues = packet ? packet->rateLimits : core::SessionRateLimits{};
+  const bool lastLimits = packet && (packet->state == NativeSessionState::Closing
+      || packet->state == NativeSessionState::Closed || packet->state == NativeSessionState::Uncertified);
+  facts[15] = {limits_[0], (lastLimits ? tr("Last observed session download limit: %1") : tr("Session download limit: %1"))
+      .arg(effectiveRateLimitText(limitValues.download)), effectiveRateLimitScope()};
+  facts[16] = {limits_[1], (lastLimits ? tr("Last observed session upload limit: %1") : tr("Session upload limit: %1"))
+      .arg(effectiveRateLimitText(limitValues.upload)), effectiveRateLimitScope()};
+  facts[17] = {configuration_, (lastLimits ? tr("Last observed session settings: %1") : tr("Session settings: %1"))
+      .arg(sessionConnectionSettingsText(limitValues.connections)), sessionConnectionSettingsScope()};
   dirty_ = false;
   for (const auto& fact : facts) {
     if (!current() || !fact.target) { if (guard) { guard->dirty_ = true; } return; }

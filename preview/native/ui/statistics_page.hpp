@@ -97,6 +97,7 @@ public:
 signals:
   void markRequested(bool clear);
   void refreshRequested();
+  void historyVisible();
   void historyRequested(biglybtc::core::HistoryDate);
   void historyWeekRequested(biglybtc::core::HistoryDate);
   void historyMonthRequested(biglybtc::core::HistoryDate);
@@ -115,6 +116,7 @@ private:
   void refreshActivity();
   void refreshEngine();
   void refreshNative();
+  void queueHistoryVisibility();
   QTabWidget* tabs_;
   QWidget* activity_;
   QTabWidget* activityViews_ = nullptr;
@@ -156,6 +158,7 @@ private:
   QElapsedTimer clock_;
   quint64 activityRevision_ = 0;
   bool activityDirty_ = true;
+  bool historyVisibilityQueued_ = false;
 };
 
 } // namespace biglybtc::ui

@@ -770,3 +770,33 @@ if(BIGLYBTC_DESKTOP)
   add_test(NAME runtime-metrics-view COMMAND biglybtc-runtime-metrics-view-tests)
   set_tests_properties(runtime-metrics-view PROPERTIES TIMEOUT 120 ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;ui;statistics")
 endif()
+
+# Session-global effective limits: keep the engine-off SDK dependency-free.
+if(BIGLYBTC_LOCAL_ENGINE)
+  add_executable(biglybtc-effective-rate-limits-tests effective_rate_limits_tests.cpp
+    "${PROJECT_SOURCE_DIR}/engine/effective_rate_limits.cpp")
+  target_link_libraries(biglybtc-effective-rate-limits-tests PRIVATE BiglyBTC::Core LibtorrentRasterbar::torrent-rasterbar)
+  target_compile_options(biglybtc-effective-rate-limits-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME effective-rate-limits COMMAND biglybtc-effective-rate-limits-tests)
+  set_tests_properties(effective-rate-limits PROPERTIES TIMEOUT 120 LABELS "unit;statistics;read-only")
+endif()
+if(BIGLYBTC_DESKTOP)
+  add_executable(biglybtc-effective-rate-limits-ui-tests effective_rate_limits_ui_tests.cpp)
+  set_target_properties(biglybtc-effective-rate-limits-ui-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-effective-rate-limits-ui-tests PRIVATE biglybtc_ui Qt6::Test)
+  target_compile_options(biglybtc-effective-rate-limits-ui-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME effective-rate-limits-ui COMMAND biglybtc-effective-rate-limits-ui-tests)
+  set_tests_properties(effective-rate-limits-ui PROPERTIES TIMEOUT 120
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;ui;statistics;read-only")
+endif()
+
+# Successful owned minute-history writes invalidate only the visible saved query.
+if(BIGLYBTC_DESKTOP)
+  add_executable(biglybtc-history-live-refresh-tests history_live_refresh_tests.cpp)
+  set_target_properties(biglybtc-history-live-refresh-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-history-live-refresh-tests PRIVATE biglybtc_ui Qt6::Test)
+  target_compile_options(biglybtc-history-live-refresh-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME saved-history-live-refresh COMMAND biglybtc-history-live-refresh-tests)
+  set_tests_properties(saved-history-live-refresh PROPERTIES TIMEOUT 120
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;ui;statistics")
+endif()

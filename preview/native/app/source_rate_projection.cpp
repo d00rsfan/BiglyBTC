@@ -1,4 +1,5 @@
 #include "source_rate_projection.hpp"
+#include "biglybtc/bencode.hpp"
 
 #include <utility>
 
@@ -13,6 +14,19 @@ bool monotonic(const core::EngineCounters& before, const core::EngineCounters& a
       && after.sent - after.payloadSent >= before.sent - before.payloadSent;
 }
 }
+
+core::SourceSmoothingPolicy configuredSourceSmoothing(const core::Document* settings) noexcept {
+  int configured = 30;
+  if (settings && settings->root().type == core::Node::Type::Dictionary) {
+    if (const auto* value = settings->find("Stats Smoothing Secs"); value && value->type == core::Node::Type::Integer) {
+      configured = core::narrowSourceRate(value->integer);
+    }
+  }
+  return core::sourceSmoothingPolicy(configured);
+}
+
+SourceRateProjection::SourceRateProjection(int configuredSeconds) noexcept
+    : policy_(core::sourceSmoothingPolicy(configuredSeconds)) {}
 
 std::optional<core::SourceRateValues> SourceRateProjection::observe(
     const std::optional<core::EngineStatistics>& sample,
@@ -41,7 +55,7 @@ std::optional<core::SourceRateValues> SourceRateProjection::observe(
   const auto millis = ownerElapsedNanoseconds / 1000000;
   if (!previous_) {
     auto bucket = core::SourceRateAverage::create(1000, 10, millis);
-    auto smoothing = core::SourceRateSmoothing::create(30, millis);
+    auto smoothing = core::SourceRateSmoothing::create(policy_.windowSeconds, millis);
     if (!bucket || !smoothing) { failed_ = true; return {}; }
     payloadReceived_ = *bucket; protocolReceived_ = *bucket;
     payloadSent_ = *bucket; protocolSent_ = *bucket;
@@ -68,9 +82,10 @@ std::optional<core::SourceRateValues> SourceRateProjection::observe(
       || !protocolReceived_->add(protocolReceived - previousProtocolReceived, millis)
       || !payloadSent_->add(b.payloadSent - a.payloadSent, millis)
       || !protocolSent_->add(protocolSent - previousProtocolSent, millis)
-      // Default interval1 admits every explicit delivery. This is a window over
-      // actual delivery deltas, not a fabricated original SimpleTimer schedule.
-      || !smoothing_->tick(0, 30, relative, millis)) {
+      // Whole observed owner seconds select the configured source interval.
+      // This never manufactures timer callbacks or byte-arrival observations;
+      // gated cumulative differences remain pending for a later actual sample.
+      || !smoothing_->tick(core::narrowSourceRate(millis / 1000), policy_.windowSeconds, relative, millis)) {
     failed_ = true; return {};
   }
   const auto rxPayload = payloadReceived_->average(millis);
@@ -82,7 +97,7 @@ std::optional<core::SourceRateValues> SourceRateProjection::observe(
     failed_ = true; return {};
   }
   last_ = core::SourceRateValues{*rxPayload, *rxProtocol, *txPayload, *txProtocol,
-      smooth->received, smooth->sent};
+      smooth->received, smooth->sent, smoothing_->policy()};
   previous_ = *sample; sequence_ = sequence;
   ownerElapsed_ = ownerElapsedNanoseconds; gap_ = false;
   return last_;

@@ -53,6 +53,8 @@ signals:
   void detailsReady(biglybtc::ui::Details);
   void savedServicesReady(biglybtc::ui::SavedServicesPresentation);
   void statisticsReady(biglybtc::ui::StatisticsPresentation);
+  // Actual successful saved-history mutations only, scoped to one profile.
+  void historyChanged(quint64 session, quint64 revision);
   void historyReady(biglybtc::ui::HistoryPresentation);
   void historyWeekReady(biglybtc::ui::HistoryWeekPresentation);
   void historyMonthReady(biglybtc::ui::HistoryMonthPresentation);
@@ -79,6 +81,7 @@ private:
   void observeNative(const engine::ApplicationPeerObservation&) noexcept;
   void tickAccounting(bool force = false, bool ending = false) noexcept;
   void publishOverall(bool closed = false);
+  void publishHistoryChange() noexcept;
   void publishRuntimeMetrics(const engine::ApplicationPeerObservation&);
   void closeFailed(QString);
   std::unique_ptr<Host> host_;
@@ -98,6 +101,9 @@ private:
   std::optional<ui::OverallPresentation> latestOverall_;
   std::optional<ui::RuntimeMetricsPresentation> latestRuntime_;
   bool overallDeliveryQueued_ = false, runtimeDeliveryQueued_ = false;
+  struct HistoryChange { quint64 session = 0, revision = 0; };
+  std::optional<HistoryChange> latestHistoryChange_;
+  bool historyChangeDeliveryQueued_ = false;
   bool busy_ = false;
   // GUI-thread publication only; worker commands capture the requested identity.
   quint64 publishedColumnLayoutSession_ = 0;

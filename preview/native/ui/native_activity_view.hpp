@@ -29,6 +29,7 @@ private:
   QPointer<QLabel> state_;
   QPointer<QLabel> samples_;
   std::array<QPointer<QLabel>, 6> rates_{};
+  std::array<QPointer<QLabel>, 2> limits_{};
   std::array<QPointer<Chart>, 2> charts_{};
   QPointer<QWidget> observedWindow_;
 };

@@ -423,6 +423,8 @@ void LibraryWindow::showStatistics() {
         && rememberedStatisticsNavigation_->session == columnSession_
         ? std::optional<StatisticsNavigation>{rememberedStatisticsNavigation_->navigation} : std::nullopt;
     statisticsPage_ = new StatisticsPage(mainTabs_, navigation);
+    requestedHistoryRevisions_.fill(0);
+    connect(statisticsPage_.data(), &StatisticsPage::historyVisible, this, &LibraryWindow::queueLiveHistoryRefresh);
     connect(statisticsPage_.data(), &StatisticsPage::refreshRequested, this, &LibraryWindow::refreshStatistics);
     const QPointer<StatisticsPage> markPage = statisticsPage_;
     connect(markPage, &StatisticsPage::markRequested, this, [this, markPage](bool clear) {
@@ -482,6 +484,7 @@ void LibraryWindow::refreshHistory(core::HistoryDate date) {
     setMessage(tr("History request counter exhausted"));
     return;
   }
+  requestedHistoryRevisions_[0] = savedHistoryRevision_;
   const StatisticsRequest request{columnSession_, ++historyRequest_, statisticsPage_, date};
   QPointer<LibraryWindow> guard(this);
   request.page->beginHistoryRequest(request.session, request.request, date);
@@ -496,6 +499,7 @@ void LibraryWindow::refreshHistoryWeek(core::HistoryDate date) {
     setMessage(tr("History request counter exhausted"));
     return;
   }
+  requestedHistoryRevisions_[1] = savedHistoryRevision_;
   const StatisticsRequest request{columnSession_, ++historyRequest_, statisticsPage_, date, true};
   QPointer<LibraryWindow> guard(this);
   request.page->beginHistoryWeekRequest(request.session, request.request, date);
@@ -510,6 +514,7 @@ void LibraryWindow::refreshHistoryMonth(core::HistoryDate date) {
     setMessage(tr("History request counter exhausted"));
     return;
   }
+  requestedHistoryRevisions_[2] = savedHistoryRevision_;
   const StatisticsRequest request{columnSession_, ++historyRequest_, statisticsPage_, date, false, true};
   QPointer<LibraryWindow> guard(this);
   request.page->beginHistoryMonthRequest(request.session, request.request, date);
@@ -523,12 +528,39 @@ void LibraryWindow::refreshHistoryRange(core::HistoryRangeRequest query) {
   if (historyRequest_ == std::numeric_limits<quint64>::max()) {
     setMessage(tr("History request counter exhausted")); return;
   }
+  requestedHistoryRevisions_[3] = savedHistoryRevision_;
   const StatisticsRequest request{columnSession_, ++historyRequest_, statisticsPage_, {}, false, false, query};
   QPointer<LibraryWindow> guard(this);
   request.page->beginHistoryRangeRequest(request.session, request.request, query);
   if (!guard || !request.page || statisticsPage_ != request.page
       || historyRequest_ != request.request || columnSession_ != request.session) { return; }
   pendingHistoryRequest_ = request; queueStatistics();
+}
+void LibraryWindow::setHistoryRevision(quint64 session, quint64 revision) {
+  if (closing_ || !session || session != columnSession_ || !revision || revision <= savedHistoryRevision_) { return; }
+  savedHistoryRevision_ = revision;
+  queueLiveHistoryRefresh();
+}
+void LibraryWindow::queueLiveHistoryRefresh() {
+  if (liveHistoryRefreshQueued_ || closing_ || !savedHistoryRevision_ || !statisticsPage_) { return; }
+  liveHistoryRefreshQueued_ = true;
+  QTimer::singleShot(0, this, [this] {
+    liveHistoryRefreshQueued_ = false;
+    if (closing_ || busy_ || activeSavedRequest_ || activeColumnRequest_ || activeColumnSave_
+        || activeStatisticsRequest_ || !statisticsPage_ || !statisticsPage_->isVisible() || isMinimized()
+        || (latestNativeSession_ && latestNativeSession_->state == NativeSessionState::Closed)) { return; }
+    const QPointer<StatisticsPage> page = statisticsPage_;
+    const auto kind = page->historyRangeSelected() ? 3 : page->historyMonthSelected() ? 2
+        : page->historyWeekSelected() ? 1 : page->historySelected() ? 0 : -1;
+    if (kind < 0 || requestedHistoryRevisions_[static_cast<std::size_t>(kind)] >= savedHistoryRevision_) { return; }
+    // Mark before callbacks. The existing request channel retains only its latest
+    // pending query and rejects stale generations; failures do not create a poll.
+    requestedHistoryRevisions_[static_cast<std::size_t>(kind)] = savedHistoryRevision_;
+    if (kind == 3) { page->refreshHistoryRange(); }
+    else if (kind == 2) { refreshHistoryMonth(page->selectedHistoryMonthDate()); }
+    else if (kind == 1) { refreshHistoryWeek(page->selectedHistoryWeekDate()); }
+    else { refreshHistory(page->selectedHistoryDate()); }
+  });
 }
 void LibraryWindow::queueStatistics() {
   if (statisticsDispatchQueued_ || closing_ || busy_ || activeSavedRequest_
@@ -710,6 +742,7 @@ void LibraryWindow::queueOptionalViews() {
   queueSavedServices();
   queueColumnLayouts();
   queueStatistics();
+  queueLiveHistoryRefresh();
 }
 void LibraryWindow::closePage(int index) {
   if (closing_) { return; }
@@ -805,6 +838,7 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
   columnSession_ = session;
+  savedHistoryRevision_ = 0; requestedHistoryRevisions_.fill(0);
   latestOverall_.reset(); latestRuntime_.reset();
   latestNativeSession_.reset(); latestNativeActivity_.reset(); nativeActivity_.reset();
   rememberedStatisticsNavigation_.reset();

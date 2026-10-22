@@ -16,3 +16,5 @@ target_sources(biglybtc_ui PRIVATE overall_presentation.hpp overall_view.hpp ove
   native_activity_view.hpp native_activity_view.cpp)
 
 target_sources(biglybtc_ui PRIVATE runtime_metrics_presentation.hpp runtime_metrics_view.hpp runtime_metrics_view.cpp)
+
+target_sources(biglybtc_ui PRIVATE effective_rate_limit_text.hpp)

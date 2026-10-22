@@ -265,3 +265,10 @@ fixtures, including a test-only instrumented library which is never shipped.
 See [the persistent accounting contract](docs/persistent-peer-accounting.md)
 for the counter domain, conditional retirement guarantees and build boundaries.
 This stage does not write original lifetime totals, marks, history or caches.
+
+The current Statistics controls also read the original smoothing setting, show
+applied session-global rate/connection limits and proxy mode, and refresh the
+visible saved History query after successful minute-record writes. Transfers
+shows total/since-mark averages and ratios. The isolated native session settings
+are distinct from whole original configuration/runtime activation, which remains
+in progress.

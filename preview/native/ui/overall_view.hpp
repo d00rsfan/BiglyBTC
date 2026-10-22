@@ -25,7 +25,7 @@ private:
   bool busy_ = false, dirty_ = true;
   QPointer<QLabel> status_;
   QPointer<QLabel> saved_;
-  std::array<QPointer<QLabel>, 8> values_{};
+  std::array<QPointer<QLabel>, 11> values_{};
   QPointer<QPushButton> mark_;
   QPointer<QPushButton> clear_;
   QPointer<QWidget> observedWindow_;

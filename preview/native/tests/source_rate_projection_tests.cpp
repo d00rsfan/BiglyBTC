@@ -1,4 +1,5 @@
 #include "../app/source_rate_projection.hpp"
+#include "biglybtc/bencode.hpp"
 
 #include <cstdint>
 #include <cstdlib>
@@ -173,6 +174,60 @@ int main() {
       CHECK(second.observe(sample(Advanced, 2 * Second), 2 * Second, std::numeric_limits<std::uint64_t>::max()) == SourceRateValues{});
       CHECK(!second.observe(sample(Advanced, 3 * Second), 3 * Second, 1));
       CHECK(first.observe(sample(Advanced, 3 * Second), 3 * Second, 4) == FirstWindow);
+    });
+    family("original config low32 narrowing then policy clamps and honest defaults", [] {
+      using biglybtc::app::configuredSourceSmoothing;
+      using biglybtc::core::SourceSmoothingPolicy;
+      CHECK(configuredSourceSmoothing() == (SourceSmoothingPolicy{30, 1}));
+      for (const auto text : {"de", "le", "d20:Stats Smoothing Secs3:120e", "d20:Stats Smoothing Secslee",
+          "d20:Stats Smoothing Secsdee", "d5:otheri120ee"}) {
+        auto document = biglybtc::core::Document::parse(text); CHECK(document);
+        CHECK(configuredSourceSmoothing(&*document) == (SourceSmoothingPolicy{30, 1}));
+      }
+      struct ConfigCase { std::int64_t raw; SourceSmoothingPolicy expected; };
+      const ConfigCase cases[]{
+          {0, {10, 1}}, {-1, {10, 1}}, {10, {10, 1}}, {59, {59, 1}}, {60, {60, 1}},
+          {119, {119, 1}}, {120, {120, 2}}, {333, {333, 5}}, {1199, {1199, 19}},
+          {1200, {1200, 20}}, {1800, {1800, 20}}, {1801, {1800, 20}},
+          {4294967416LL, {120, 2}}, {4294967295LL, {10, 1}},
+          {std::numeric_limits<std::int64_t>::max(), {10, 1}},
+          {std::numeric_limits<std::int64_t>::min(), {10, 1}}};
+      for (const auto& value : cases) {
+        auto document = biglybtc::core::Document::parse("d20:Stats Smoothing Secsi" + std::to_string(value.raw) + "ee");
+        CHECK(document); CHECK(configuredSourceSmoothing(&*document) == value.expected);
+        SourceRateProjection projection(configuredSourceSmoothing(&*document).windowSeconds);
+        CHECK(projection.policy() == value.expected);
+      }
+    });
+    family("configured smoothing uses observed whole second interval and excludes partial bucket", [] {
+      SourceRateProjection projection(120);
+      CHECK(projection.policy() == (biglybtc::core::SourceSmoothingPolicy{120, 2}));
+      CHECK(!projection.observe(sample(Baseline, 0), 0, 1));
+      CHECK(projection.observe(sample(Advanced, Second), Second, 2)
+          == (SourceRateValues{0, 0, 0, 0, 0, 0, {120, 2}}));
+      CHECK(projection.observe(sample(Advanced, 2 * Second), 2 * Second, 3)
+          == (SourceRateValues{80, 20, 40, 10, 0, 0, {120, 2}}));
+      CHECK(projection.observe(sample(Advanced, 3 * Second), 3 * Second, 4)
+          == (SourceRateValues{80, 20, 40, 10, 0, 0, {120, 2}}));
+      CHECK(projection.observe(sample(Advanced, 4 * Second), 4 * Second, 5)
+          == (SourceRateValues{80, 20, 40, 10, 8, 4, {120, 2}}));
+      SourceRateProjection minimum(0);
+      CHECK(!minimum.observe(sample(Baseline, 0), 0, 1));
+      CHECK(minimum.observe(sample(Advanced, Second), Second, 2)
+          == (SourceRateValues{0, 0, 0, 0, 0, 0, {10, 1}}));
+      CHECK(minimum.observe(sample(Advanced, 2 * Second), 2 * Second, 3)
+          == (SourceRateValues{80, 20, 40, 10, 100, 50, {10, 1}}));
+    });
+    family("owner snapshots configured policy without retaining or rereading document", [] {
+      auto document = biglybtc::core::Document::parse("d20:Stats Smoothing Secsi120ee"); CHECK(document);
+      SourceRateProjection first(biglybtc::app::configuredSourceSmoothing(&*document).windowSeconds);
+      CHECK(document->setInteger("Stats Smoothing Secs", 1800));
+      SourceRateProjection next(biglybtc::app::configuredSourceSmoothing(&*document).windowSeconds);
+      CHECK(first.policy() == (biglybtc::core::SourceSmoothingPolicy{120, 2}));
+      CHECK(next.policy() == (biglybtc::core::SourceSmoothingPolicy{1800, 20}));
+      CHECK(!first.observe(sample({}, 0), 0, 1));
+      const auto actual = first.observe(sample({}, Second), Second, 2); CHECK(actual);
+      CHECK(actual->smoothing == first.policy());
     });
     std::cout << "PASS " << families << " source-rate projection families; " << assertions
               << " assertions; sample-delivery windows only, raw intervals unchanged\n";

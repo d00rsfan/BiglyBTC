@@ -2,6 +2,7 @@
 
 #include "biglybtc/engine_statistics.hpp"
 #include "biglybtc/source_rate_values.hpp"
+#include "biglybtc/effective_rate_limits.hpp"
 
 #include <QMetaType>
 #include <memory>
@@ -21,6 +22,7 @@ struct NativeSessionPacket {
   std::optional<core::EngineStatistics> sample{};
   qint64 ownerElapsedNanoseconds = 0;
   std::optional<core::SourceRateValues> sourceRates{};
+  core::SessionRateLimits rateLimits{};
 };
 using NativeSessionPresentation = std::shared_ptr<const NativeSessionPacket>;
 
@@ -29,6 +31,8 @@ inline bool acceptNativeSession(const NativeSessionPresentation& current,
   const auto valid = [expectedSession](const NativeSessionPresentation& p) {
     if (!p || !expectedSession || p->session != expectedSession || !p->applicationRun
         || !p->epoch || !p->sequence || p->ownerElapsedNanoseconds < 0
+        || !core::validSessionRateLimits(p->rateLimits)
+        || (p->sourceRates && p->sourceRates->smoothing != core::sourceSmoothingPolicy(p->sourceRates->smoothing.windowSeconds))
         || (p->sample && (!core::validEngineStatistics(*p->sample)
             || p->sample->elapsedNanoseconds > p->ownerElapsedNanoseconds))) { return false; }
     switch (p->state) {

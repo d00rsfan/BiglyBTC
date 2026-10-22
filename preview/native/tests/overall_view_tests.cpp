@@ -1,4 +1,5 @@
 #include "overall_view.hpp"
+#include "overall_transfer_summary.hpp"
 #include "overall_presentation.hpp"
 #include "library_window.hpp"
 #include "statistics_page.hpp"
@@ -16,6 +17,7 @@
 #include <QtTest>
 
 #include <functional>
+#include <initializer_list>
 #include <limits>
 #include <memory>
 #include <stdexcept>
@@ -95,6 +97,152 @@ private slots:
     QCOMPARE(QGuiApplication::platformName(), QStringLiteral("offscreen"));
     QApplication::setQuitOnLastWindowClosed(false);
     qRegisterMetaType<ui::OverallPresentation>();
+  }
+  void summaryUsesStoredTotalsAndPrivateSinceMarkQueries() {
+    const core::OverallValues values{1200, 300, 10, 999, 200, 100, 2, 19, 23, 31, 37, 41, 43};
+    const auto before = values;
+    const auto summary = ui::overallTransferSummary(values);
+    QVERIFY(summary);
+    QCOMPARE(summary->averageDownload, std::int32_t{120});
+    QCOMPARE(summary->averageUpload, std::int32_t{30});
+    QCOMPARE(summary->sinceMarkAverageDownload, std::int64_t{125});
+    QCOMPARE(summary->sinceMarkAverageUpload, std::int64_t{25});
+    QCOMPARE(summary->shareRatioThousandths, std::int64_t{250});
+    QCOMPARE(summary->sinceMarkShareRatioThousandths, std::int64_t{200});
+    QVERIFY(values == before);
+    auto futureMarks = values;
+    futureMarks[4] = 2000; futureMarks[5] = 500; futureMarks[6] = 20;
+    const auto futureBefore = futureMarks;
+    const auto future = ui::overallTransferSummary(futureMarks);
+    QVERIFY(future);
+    QCOMPARE(future->averageDownload, std::int32_t{120});
+    QCOMPARE(future->averageUpload, std::int32_t{30});
+    QCOMPARE(future->sinceMarkAverageDownload, std::int64_t{0});
+    QCOMPARE(future->sinceMarkAverageUpload, std::int64_t{0});
+    QCOMPARE(future->sinceMarkShareRatioThousandths, std::int64_t{0});
+    QVERIFY(futureMarks == futureBefore); // Only the private reducer copy clamps marks.
+  }
+  void summaryRetainsOriginalShortUptimeAndSignedIntNarrowing() {
+    for (const auto seconds : {std::int64_t{-7}, std::int64_t{0}, std::int64_t{1}}) {
+      core::OverallValues values{1200, 300, seconds};
+      const auto summary = ui::overallTransferSummary(values);
+      QVERIFY(summary);
+      QCOMPARE(summary->averageDownload, std::int32_t{0});
+      QCOMPARE(summary->averageUpload, std::int32_t{0});
+      QCOMPARE(summary->sinceMarkAverageDownload, std::int64_t{0});
+      QCOMPARE(summary->sinceMarkAverageUpload, std::int64_t{0});
+      QCOMPARE(summary->shareRatioThousandths, std::int64_t{250});
+    }
+    const core::OverallValues wide{4294967296LL, 4294967298LL, 2};
+    const auto summary = ui::overallTransferSummary(wide);
+    QVERIFY(summary);
+    QCOMPARE(summary->averageDownload, std::numeric_limits<std::int32_t>::min());
+    QCOMPARE(summary->averageUpload, std::int32_t{-2147483647});
+    QCOMPARE(summary->sinceMarkAverageDownload, std::int64_t{-2147483648LL});
+    QCOMPARE(summary->sinceMarkAverageUpload, std::int64_t{-2147483647});
+    QCOMPARE(summary->shareRatioThousandths, std::int64_t{1000});
+    const core::OverallValues wrapped{std::numeric_limits<std::int64_t>::max(), -7, 2, 0, -1, 20, 9};
+    const auto wrappedSummary = ui::overallTransferSummary(wrapped);
+    QVERIFY(wrappedSummary);
+    QCOMPARE(wrappedSummary->averageDownload, std::int32_t{-1});
+    QCOMPARE(wrappedSummary->averageUpload, std::int32_t{-3});
+    QCOMPARE(wrappedSummary->sinceMarkAverageDownload, std::int64_t{0});
+    QCOMPARE(wrappedSummary->sinceMarkAverageUpload, std::int64_t{0});
+  }
+  void ratioRetainsZeroDenominatorWrapAndSignedPadding() {
+    // Literal source boundaries, not ratios recomputed by the tested helper.
+    QCOMPARE(ui::overallShareRatio(7, 0), std::int64_t{7000});
+    QCOMPARE(ui::overallShareRatio(0, 0), std::int64_t{0});
+    QCOMPARE(ui::overallShareRatio(1, 3), std::int64_t{333});
+    QCOMPARE(ui::overallShareRatio(-1, 1000), std::int64_t{-1});
+    QCOMPARE(ui::overallShareRatio(std::numeric_limits<std::int64_t>::max(), 1), std::int64_t{-1000});
+    QCOMPARE(ui::overallShareRatio(1152921504606846976LL, -1), std::numeric_limits<std::int64_t>::min());
+    QCOMPARE(ui::overallShareRatio(std::numeric_limits<std::int64_t>::min(), 1), std::int64_t{0});
+    QCOMPARE(QString::fromStdString(ui::overallShareRatioText(0)), QStringLiteral("0.000"));
+    QCOMPARE(QString::fromStdString(ui::overallShareRatioText(7000)), QStringLiteral("7.000"));
+    QCOMPARE(QString::fromStdString(ui::overallShareRatioText(333)), QStringLiteral("0.333"));
+    QCOMPARE(QString::fromStdString(ui::overallShareRatioText(-1)), QStringLiteral("0.0-1"));
+    QCOMPARE(QString::fromStdString(ui::overallShareRatioText(-99)), QStringLiteral("0.-99"));
+    QCOMPARE(QString::fromStdString(ui::overallShareRatioText(-1000)), QStringLiteral("-1.000"));
+    QCOMPARE(QString::fromStdString(ui::overallShareRatioText(std::numeric_limits<std::int64_t>::min())),
+        QStringLiteral("-9223372036854775.-808"));
+  }
+  void summaryLabelsUseProjectedValuesAndRemainPlainText() {
+    ui::OverallView view; view.beginSession(7); show(view);
+    for (int i = 8; i < 11; ++i) {
+      QCOMPARE(value(view, i).text(), QStringLiteral("Unavailable"));
+      QCOMPARE(value(view, i).textFormat(), Qt::PlainText);
+    }
+    auto data = packet();
+    data->values = {1200, 300, 10, 999, 200, 100, 2, 19, 23, 31, 37, 41, 43};
+    data->saved = core::OverallValues{}; // UI must use the actual projected packet, not saved baseline or a clock.
+    const auto before = data->values;
+    view.setPresentation(data);
+    QCOMPARE(value(view, 8).text(), QStringLiteral("120 / 30"));
+    QCOMPARE(value(view, 9).text(), QStringLiteral("125 / 25"));
+    QCOMPARE(value(view, 10).text(), QStringLiteral("0.250 / 0.200"));
+    QVERIFY(data->values == before);
+    QVERIFY(child<QPushButton>(view, "statistics-set-mark").isEnabled());
+    QVERIFY(child<QPushButton>(view, "statistics-clear-mark").isEnabled());
+    QVERIFY(view.findChildren<QTimer*>().isEmpty());
+    auto unavailable = packet(2); unavailable->available = false;
+    view.setPresentation(unavailable);
+    for (int i = 8; i < 11; ++i) { QCOMPARE(value(view, i).text(), QStringLiteral("Unavailable")); }
+  }
+  void knownZeroAndWrappedRatiosRemainExactInLabels() {
+    ui::OverallView view; view.beginSession(7); show(view);
+    auto zero = packet(); zero->values.fill(0); zero->values[1] = 7;
+    view.setPresentation(zero);
+    QCOMPARE(value(view, 8).text(), QStringLiteral("0 / 0"));
+    QCOMPARE(value(view, 9).text(), QStringLiteral("0 / 0"));
+    QCOMPARE(value(view, 10).text(), QStringLiteral("7.000 / 7.000"));
+    auto wrapped = packet(2); wrapped->values.fill(0);
+    wrapped->values[0] = 1; wrapped->values[1] = std::numeric_limits<std::int64_t>::max();
+    wrapped->values[2] = 2; view.setPresentation(wrapped);
+    QCOMPARE(value(view, 8).text(), QStringLiteral("0 / -1"));
+    QCOMPARE(value(view, 9).text(), QStringLiteral("0 / -1"));
+    QCOMPARE(value(view, 10).text(), QStringLiteral("-1.000 / -1.000"));
+  }
+  void summaryRenderingDefersWhenHiddenOrMinimized() {
+    ui::OverallView view; view.beginSession(7); show(view);
+    auto first = packet(); first->values = {1200, 300, 10, 0, 200, 100, 2};
+    view.setPresentation(first);
+    auto second = packet(2); second->values = {2400, 1200, 20, 0, 200, 100, 2};
+    view.hide(); view.setPresentation(second); QCoreApplication::processEvents();
+    QCOMPARE(value(view, 8).text(), QStringLiteral("120 / 30"));
+    QCOMPARE(value(view, 10).text(), QStringLiteral("0.250 / 0.200"));
+    view.show(); QTRY_COMPARE(value(view, 8).text(), QStringLiteral("120 / 60"));
+    QCOMPARE(value(view, 9).text(), QStringLiteral("122 / 61"));
+    QCOMPARE(value(view, 10).text(), QStringLiteral("0.500 / 0.500"));
+    view.showMinimized(); QTRY_VERIFY(view.isMinimized());
+    auto third = packet(3); third->values = {3000, 3000, 30, 0, 0, 0, 0};
+    view.setPresentation(third); QCoreApplication::processEvents();
+    QCOMPARE(value(view, 10).text(), QStringLiteral("0.500 / 0.500"));
+    view.showNormal(); QTRY_COMPARE(value(view, 8).text(), QStringLiteral("100 / 100"));
+    QCOMPARE(value(view, 9).text(), QStringLiteral("100 / 100"));
+    QCOMPARE(value(view, 10).text(), QStringLiteral("1.000 / 1.000"));
+  }
+  void summaryAccessibleCallbackNewerPacketWinsRemainingRows() {
+    ui::OverallView view; view.beginSession(7); show(view);
+    auto first = packet(); first->values = {1200, 300, 10, 0, 200, 100, 2}; view.setPresentation(first);
+    auto newer = packet(3); newer->values = {3000, 3000, 30, 0, 0, 0, 0};
+    AccessScope replace(&value(view, 8), [&] { view.setPresentation(newer); });
+    auto older = packet(2); older->values = {2400, 1200, 20, 0, 200, 100, 2};
+    view.setPresentation(older);
+    QVERIFY2(replace.arm.fired, "Actual summary QLabel NameChanged callback must replace the packet");
+    QCOMPARE(value(view, 8).text(), QStringLiteral("100 / 100"));
+    QCOMPARE(value(view, 9).text(), QStringLiteral("100 / 100"));
+    QCOMPARE(value(view, 10).text(), QStringLiteral("1.000 / 1.000"));
+  }
+  void finalSummaryAccessibleCallbackCanDeleteView() {
+    auto view = std::make_unique<ui::OverallView>(); view->beginSession(7); show(*view);
+    auto first = packet(); first->values = {1200, 300, 10, 0, 200, 100, 2}; view->setPresentation(first);
+    QPointer<ui::OverallView> guard(view.get());
+    AccessScope remove(&value(*view, 10), [&] { view.reset(); });
+    auto next = packet(2); next->values = {2400, 1200, 20, 0, 200, 100, 2};
+    view->setPresentation(next);
+    QVERIFY2(remove.arm.fired, "Actual final summary QLabel NameChanged callback must delete the owner");
+    QVERIFY(guard.isNull());
   }
   void unstartedIsUnknownPlainTextAndInert() {
     ui::OverallView view; view.beginSession(7); show(view);

@@ -27,6 +27,8 @@ private:
   QPointer<QLabel> uptime_;
   std::array<QPointer<QLabel>, 6> counters_{}, rates_{};
   QPointer<QLabel> windows_;
+  std::array<QPointer<QLabel>, 2> limits_{};
+  QPointer<QLabel> configuration_;
   QPointer<QWidget> observedWindow_;
 };
 } // namespace biglybtc::ui

@@ -1,6 +1,7 @@
 #include "native_activity_view.hpp"
 
 #include "native_activity_history.hpp"
+#include "effective_rate_limit_text.hpp"
 
 #include <QEvent>
 #include <QGridLayout>
@@ -77,6 +78,8 @@ protected:
     for (const auto& point : points) {
       const auto rate = values(point.rates, sending_);
       maximum = std::max({maximum, rate[0], rate[1], rate[2]});
+      const auto limit = sending_ ? point.rateLimits.upload : point.rateLimits.download;
+      if (limit.state == core::RateLimitState::Limited) { maximum = std::max(maximum, limit.bytesPerSecond); }
     }
     const auto maximumLabel = tr("%1 bytes/s").arg(maximum);
     const int left = painter.fontMetrics().horizontalAdvance(maximumLabel) + 16;
@@ -97,8 +100,8 @@ protected:
     // convert the bounded nonnegative differences; close large times stay apart.
     const auto first = points.front().elapsedNanoseconds;
     const auto span = points.back().elapsedNanoseconds - first;
-    const std::array<QColor, 3> colors{QColor(30, 125, 205), QColor(38, 150, 90), QColor(190, 95, 20)};
-    const std::array<Qt::PenStyle, 3> styles{Qt::SolidLine, Qt::DashLine, Qt::DotLine};
+    const std::array<QColor, 4> colors{QColor(30, 125, 205), QColor(38, 150, 90), QColor(190, 95, 20), QColor(130, 70, 180)};
+    const std::array<Qt::PenStyle, 4> styles{Qt::SolidLine, Qt::DashLine, Qt::DotLine, Qt::DashDotLine};
     std::array<QPointF, NativeActivityHistory::MaximumPoints> run{};
     const auto scale = static_cast<qreal>(std::max<std::int64_t>(1, maximum));
     for (std::size_t series = 0; series < colors.size(); ++series) {
@@ -113,7 +116,9 @@ protected:
         if (!point.connectedToPrevious) { flush(); }
         const auto elapsed = point.elapsedNanoseconds - first;
         const auto x = span > 0 ? area.left() + area.width() * (static_cast<qreal>(elapsed) / static_cast<qreal>(span)) : area.right();
-        const auto rate = values(point.rates, sending_)[series];
+        const auto limit = sending_ ? point.rateLimits.upload : point.rateLimits.download;
+        if (series == 3 && limit.state != core::RateLimitState::Limited) { flush(); continue; }
+        const auto rate = series == 3 ? limit.bytesPerSecond : values(point.rates, sending_)[series];
         run[count++] = {x, area.bottom() - area.height() * (static_cast<qreal>(rate) / scale)};
       }
       flush();
@@ -146,9 +151,13 @@ NativeActivityView::NativeActivityView(QWidget* parent) : QWidget(parent),
     rates_[i] = plainLabel(unavailable(), QStringLiteral("native-activity-rate-") + QString::fromLatin1(RateIds[i]), this);
     rates->addWidget(rates_[i], static_cast<int>(i / 2) + 1, static_cast<int>(i % 2) + 1);
   }
+  rates->addWidget(plainLabel(tr("Session limit:"), QStringLiteral("native-activity-limit-heading"), this), 4, 0);
+  limits_[0] = plainLabel(unavailable(), QStringLiteral("native-activity-download-limit"), this);
+  limits_[1] = plainLabel(unavailable(), QStringLiteral("native-activity-upload-limit"), this);
+  rates->addWidget(limits_[0], 4, 1); rates->addWidget(limits_[1], 4, 2);
   rates->setColumnStretch(1, 1); rates->setColumnStretch(2, 1);
   layout->addLayout(rates); layout->addWidget(samples_);
-  layout->addWidget(plainLabel(tr("Combined: blue solid; payload: green dashed; protocol: orange dotted. Gaps stay disconnected."), QStringLiteral("native-activity-legend"), this));
+  layout->addWidget(plainLabel(tr("Combined: blue solid; payload: green dashed; protocol: orange dotted. Session limit: purple dash-dot when finite. Gaps stay disconnected."), QStringLiteral("native-activity-legend"), this));
   charts_[0] = new Chart(false, this); charts_[1] = new Chart(true, this);
   layout->addWidget(charts_[0], 1); layout->addWidget(charts_[1], 1);
   layout->addWidget(plainLabel(tr("One native engine epoch across transfers and idle time. Up to 600 actual interval-rate observations; no inferred zero or smoothing. Peer traffic only, excluding IP, tracker and DHT traffic. Closed sessions retain observations, not exhaustive final totals."),
@@ -192,7 +201,7 @@ void NativeActivityView::refresh() {
     }
   }
   struct Fact { QPointer<QLabel> target; QString text; QString tip; };
-  std::array<Fact, 8> facts{};
+  std::array<Fact, 10> facts{};
   facts[0] = {state_, status, latest ? tr("Profile %1; run %2; epoch %3; sequence %4")
       .arg(latest->session).arg(latest->applicationRun).arg(latest->epoch).arg(latest->sequence) : QString{}};
   facts[1] = {samples_, frame && !frame->points().empty() ? tr("%1 actual rate observations (maximum 600)").arg(frame->points().size())
@@ -201,6 +210,10 @@ void NativeActivityView::refresh() {
     facts[2 + i] = {rates_[i], rates ? tr("%1 bytes/s").arg(values[i]) : unavailable(),
         rates ? tr("%1 actual measured interval bytes per second").arg(values[i]) : tr("No current measured interval rate; no zero inferred")};
   }
+  const auto limitValues = latest ? latest->rateLimits : core::SessionRateLimits{};
+  const auto limitScope = (latest && !live ? tr("Last observed. ") : QString{}) + effectiveRateLimitScope();
+  facts[8] = {limits_[0], effectiveRateLimitText(limitValues.download), limitScope};
+  facts[9] = {limits_[1], effectiveRateLimitText(limitValues.upload), limitScope};
   dirty_ = false;
   for (const auto& fact : facts) {
     if (!current() || !fact.target) { if (guard) { guard->dirty_ = true; } return; }

@@ -13,6 +13,7 @@ struct NativeActivityPoint {
   std::int64_t elapsedNanoseconds = 0;
   core::EngineRates rates{};
   bool connectedToPrevious = false;
+  core::SessionRateLimits rateLimits{}; // Compact two-limit value; never full metrics per point.
   bool operator==(const NativeActivityPoint&) const = default;
 };
 class NativeActivitySnapshot final {

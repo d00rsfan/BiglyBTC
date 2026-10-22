@@ -47,6 +47,7 @@ int main(int argc, char** argv) {
     QObject::connect(&bridge, &Bridge::detailsReady, &window, &Window::setDetails);
     QObject::connect(&bridge, &Bridge::savedServicesReady, &window, &Window::setSavedServices);
     QObject::connect(&bridge, &Bridge::statisticsReady, &window, &Window::setStatistics);
+    QObject::connect(&bridge, &Bridge::historyChanged, &window, &Window::setHistoryRevision);
     QObject::connect(&bridge, &Bridge::historyReady, &window, &Window::setHistory);
     QObject::connect(&bridge, &Bridge::historyWeekReady, &window, &Window::setHistoryWeek);
     QObject::connect(&bridge, &Bridge::historyMonthReady, &window, &Window::setHistoryMonth);

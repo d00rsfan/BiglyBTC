@@ -20,6 +20,8 @@
 #include <QMainWindow>
 #include <QPointer>
 
+#include <array>
+
 class QAction;
 class QLabel;
 class QSortFilterProxyModel;
@@ -62,6 +64,7 @@ public:
   void setSavedServices(SavedServicesPresentation);
   StatisticsPage* statisticsPage() const;
   void setStatistics(StatisticsPresentation);
+  void setHistoryRevision(quint64 session, quint64 revision);
   void setHistory(HistoryPresentation);
   void setHistoryWeek(HistoryWeekPresentation);
   void setHistoryMonth(HistoryMonthPresentation);
@@ -116,6 +119,7 @@ private:
   void refreshHistoryMonth(core::HistoryDate);
   void refreshHistoryRange(core::HistoryRangeRequest);
   void queueStatistics();
+  void queueLiveHistoryRefresh();
   void queueOptionalViews();
   void closePage(int index);
   bool onSavedServicePage() const;
@@ -162,6 +166,9 @@ private:
   std::optional<StatisticsRequest> activeStatisticsRequest_;
   std::optional<StatisticsRequest> pendingStatisticsRequest_;
   bool statisticsDispatchQueued_ = false;
+  quint64 savedHistoryRevision_ = 0;
+  std::array<quint64, 4> requestedHistoryRevisions_{};
+  bool liveHistoryRefreshQueued_ = false;
   quint64 savedRequest_ = 0;
   std::optional<quint64> activeSavedRequest_;
   std::optional<quint64> pendingSavedRequest_;

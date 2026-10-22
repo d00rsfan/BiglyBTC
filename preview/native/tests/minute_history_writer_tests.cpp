@@ -338,8 +338,10 @@ int main() {
     run("rollover-later-file-failure-keeps-old-prefix-poisons-no-retry", [] {
       Area area; area.tree(); core::MinuteHistoryRecorder recorder; start(area, recorder, Jan1 - 60000);
       auto hook = fileHook(Fault::FailNewHeader, area.month()); hook.name = "01.dat";
+      storage::MinuteHistoryWriteReceipt receipt{99};
       { Arm arm(hook); error(storage::writeMinuteHistory(*area.lease, recorder,
-          request(core::MinuteHistoryEvent::Tick, Jan1, {11,22,33,44,55,66})), storage::ErrorCode::Io); }
+          request(core::MinuteHistoryEvent::Tick, Jan1, {11,22,33,44,55,66}), {}, &receipt), storage::ErrorCode::Io); }
+      check(receipt.appendedActions == 0, "failed rollover batch advertised its already appended old-file prefix");
       const auto oldFile = area.profile / "stats/2023/12/31.dat";
       check(hook.fired && read(oldFile).ends_with("1,2,3,4,5,6\n") && absent(area.day()) && recorder.state().poisoned, "two-file failure was misreported or rolled back");
     });
@@ -351,6 +353,34 @@ int main() {
       check(::unlink(area.day().c_str()) == 0, "fixture removal failed"); start(area, recorder);
       success(storage::writeMinuteHistory(*area.lease, recorder, request(core::MinuteHistoryEvent::Suspend, -1)));
       check(read(area.day()) == Header && !recorder.state().active, "suspend invented e");
+    });
+    run("successful-write-receipts-exclude-close-only-cancel-and-uncertain-append", [] {
+      Area area; core::MinuteHistoryRecorder recorder; storage::MinuteHistoryWriteReceipt receipt{99};
+      success(storage::writeMinuteHistory(*area.lease, recorder, request(core::MinuteHistoryEvent::Start), {}, &receipt));
+      check(receipt.appendedActions == 1 && read(area.day()) == Header, "start receipt missing actual header append");
+      success(storage::writeMinuteHistory(*area.lease, recorder, request(core::MinuteHistoryEvent::Suspend, -1), {}, &receipt));
+      check(receipt.appendedActions == 0 && read(area.day()) == Header, "close-only success advertised changed bytes");
+      std::stop_source stop; stop.request_stop(); receipt.appendedActions = 99;
+      error(storage::writeMinuteHistory(*area.lease, recorder, request(core::MinuteHistoryEvent::Start), stop.get_token(), &receipt), storage::ErrorCode::Cancelled);
+      check(receipt.appendedActions == 0, "cancelled plan retained a stale success receipt");
+      success(storage::writeMinuteHistory(*area.lease, recorder, request(core::MinuteHistoryEvent::Start), {}, &receipt));
+      auto hook = fileHook(Fault::FileSync, area.day()); receipt.appendedActions = 99;
+      { Arm arm(hook); error(storage::writeMinuteHistory(*area.lease, recorder,
+          request(core::MinuteHistoryEvent::Tick, Jan1 + 60000, {11,22,33,44,55,66}), {}, &receipt), storage::ErrorCode::Io); }
+      check(hook.fired && recorder.state().poisoned && read(area.day()).ends_with("1,2,3,4,5,6\n")
+          && receipt.appendedActions == 0, "uncertain real append published a successful receipt");
+    });
+    run("rollover-and-end-success-count-actual-appends-once-per-plan", [] {
+      Area area; core::MinuteHistoryRecorder recorder; storage::MinuteHistoryWriteReceipt receipt;
+      success(storage::writeMinuteHistory(*area.lease, recorder,
+          request(core::MinuteHistoryEvent::Start, Jan1 - 60000), {}, &receipt));
+      check(receipt.appendedActions == 1, "start append count wrong");
+      success(storage::writeMinuteHistory(*area.lease, recorder,
+          request(core::MinuteHistoryEvent::Tick, Jan1, {11,22,33,44,55,66}), {}, &receipt));
+      check(receipt.appendedActions == 2, "rollover must report both real appended records in one receipt");
+      success(storage::writeMinuteHistory(*area.lease, recorder,
+          request(core::MinuteHistoryEvent::End, Jan1 + 60000, {13,26,39,52,65,78}), {}, &receipt));
+      check(receipt.appendedActions == 1 && !recorder.state().active, "end append receipt includes non-IO close action");
     });
     run("signed-adjustments-and-full-width-baseline-remain-exact", [] {
       Area area; core::MinuteHistoryRecorder recorder; auto value = request(core::MinuteHistoryEvent::Start);

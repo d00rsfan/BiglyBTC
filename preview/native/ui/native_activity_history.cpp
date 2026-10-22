@@ -34,7 +34,7 @@ bool NativeActivityHistory::observe(NativeSessionPresentation incoming, quint64 
     auto destination = (begin_ + size_) % MaximumPoints;
     if (size_ == MaximumPoints) { destination = begin_; begin_ = (begin_ + 1) % MaximumPoints; }
     else { ++size_; }
-    points_[destination] = {incoming->sample->elapsedNanoseconds, *incoming->sample->rates, connected};
+    points_[destination] = {incoming->sample->elapsedNanoseconds, *incoming->sample->rates, connected, incoming->rateLimits};
     points_[begin_].connectedToPrevious = false;
     connectable_ = healthy(incoming->state);
   } else {
