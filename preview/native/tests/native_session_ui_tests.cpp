@@ -5,6 +5,7 @@
 #include <QAccessible>
 #include <QApplication>
 #include <QColor>
+#include <QComboBox>
 #include <QEvent>
 #include <QFont>
 #include <QImage>
@@ -281,6 +282,7 @@ private slots:
     next->ownerElapsedNanoseconds = max; next->sample->elapsedNanoseconds = max;
     next->sample->rates = core::EngineRates{}; QVERIFY(history.observe(next, 7));
     ui::NativeActivityView graph; QVERIFY(graph.beginSession(7)); show(graph); QVERIFY(graph.setPresentation(history.snapshot()));
+    graph.findChild<QComboBox*>(QStringLiteral("native-activity-rate-mode"))->setCurrentIndex(1);QCoreApplication::processEvents();
     QCOMPARE(graph.presentation()->points().back().elapsedNanoseconds - graph.presentation()->points().front().elapsedNanoseconds, qint64{2});
     QVERIFY(coloredMiddle(chart(graph).grab().toImage(), QColor(38,150,90)) > 5);
     QVERIFY(chart(graph).toolTip().contains(QString::number(max)));
@@ -326,6 +328,8 @@ private slots:
     QVERIFY(gap.observe(a, 7)); auto skipped = std::make_shared<ui::NativeSessionPacket>(*b); skipped->sequence = 3;
     QVERIFY(gap.observe(skipped, 7));
     ui::NativeActivityView lines, separated; QVERIFY(lines.beginSession(7)); QVERIFY(separated.beginSession(7)); show(lines); show(separated);
+    lines.findChild<QComboBox*>(QStringLiteral("native-activity-rate-mode"))->setCurrentIndex(1);
+    separated.findChild<QComboBox*>(QStringLiteral("native-activity-rate-mode"))->setCurrentIndex(1);QCoreApplication::processEvents();
     QVERIFY(lines.setPresentation(continuous.snapshot())); QVERIFY(separated.setPresentation(gap.snapshot()));
     for (const bool send : {false,true}) {
       const auto line = chart(lines, send).grab().toImage(), dots = chart(separated, send).grab().toImage();

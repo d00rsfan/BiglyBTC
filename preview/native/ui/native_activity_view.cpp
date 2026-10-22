@@ -3,6 +3,7 @@
 #include "native_activity_history.hpp"
 #include "effective_rate_limit_text.hpp"
 
+#include <QComboBox>
 #include <QEvent>
 #include <QGridLayout>
 #include <QFontMetrics>
@@ -41,9 +42,16 @@ QString readableElapsed(std::int64_t nanoseconds) {
   return QString::number(whole) + (digits.isEmpty() ? QString{} : QLatin1Char('.') + digits) + QLatin1Char(' ') + unit;
 }
 constexpr std::array<const char*, 6> RateIds{"received", "sent", "payload-received", "payload-sent", "protocol-received", "protocol-sent"};
-std::array<std::int64_t, 3> values(const core::EngineRates& rates, bool sending) {
-  return sending ? std::array{rates.sent, rates.payloadSent, rates.protocolSent}
-                 : std::array{rates.received, rates.payloadReceived, rates.protocolReceived};
+QString modeTitle(NativeActivityRateMode mode) {
+  switch(mode){
+    case NativeActivityRateMode::Source10s:return QObject::tr("10-second rates");
+    case NativeActivityRateMode::Interval:return QObject::tr("Measured interval rates");
+    case NativeActivityRateMode::Smoothed:return QObject::tr("Configured smoothed combined rates");
+  }
+  return QObject::tr("Unavailable rates");
+}
+NativeActivitySeries values(const NativeActivityPoint& point,NativeActivityRateMode mode,bool sending) {
+  return nativeActivityRates(point.rates,point.sourceRates,mode,sending);
 }
 } // namespace
 
@@ -56,16 +64,17 @@ public:
     setMinimumHeight(150); setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
   }
   void cacheFrame(NativeActivityPresentation frame) { frame_ = std::move(frame); }
+  void cacheMode(NativeActivityRateMode mode) { mode_=mode; }
   void repaintFrame() {
-    const auto frame = frame_; const auto points = frame ? frame->points() : std::span<const NativeActivityPoint>{};
+    const auto frame = frame_; const auto mode=mode_; const auto points = frame ? frame->points() : std::span<const NativeActivityPoint>{};
     const auto tip = points.empty() ? tr("No actual measured native session rate observations")
         : tr("Observed elapsed: %1; span %2. Exact plotted range: %3 to %4 ns; span %5 ns.")
             .arg(readableElapsed(points.front().elapsedNanoseconds))
             .arg(readableElapsed(points.back().elapsedNanoseconds - points.front().elapsedNanoseconds))
             .arg(points.front().elapsedNanoseconds).arg(points.back().elapsedNanoseconds)
             .arg(points.back().elapsedNanoseconds - points.front().elapsedNanoseconds);
-    QPointer<Chart> guard(this); setToolTip(tip);
-    if (guard && guard->frame_ == frame) { guard->update(); }
+    QPointer<Chart> guard(this); setToolTip(modeTitle(mode)+QStringLiteral(". ")+tip);
+    if (guard && guard->frame_ == frame && guard->mode_==mode) { guard->update(); }
   }
 protected:
   void paintEvent(QPaintEvent*) override {
@@ -74,10 +83,10 @@ protected:
     const auto points = frame ? frame->points() : std::span<const NativeActivityPoint>{};
     QPainter painter(this); painter.setRenderHint(QPainter::Antialiasing);
     painter.fillRect(rect(), palette().base());
-    std::int64_t maximum = 0;
+    std::int64_t maximum = 0;bool anyRate=false;
     for (const auto& point : points) {
-      const auto rate = values(point.rates, sending_);
-      maximum = std::max({maximum, rate[0], rate[1], rate[2]});
+      const auto rate = values(point,mode_,sending_);
+      for(const auto& value:rate){if(value){maximum=std::max(maximum,*value);anyRate=true;}}
       const auto limit = sending_ ? point.rateLimits.upload : point.rateLimits.download;
       if (limit.state == core::RateLimitState::Limited) { maximum = std::max(maximum, limit.bytesPerSecond); }
     }
@@ -96,6 +105,9 @@ protected:
       painter.drawText(area, Qt::AlignCenter, tr("No measured native session rate samples yet"));
       return;
     }
+    if(!anyRate){
+      painter.setPen(palette().text().color());painter.drawText(area,Qt::AlignCenter,tr("Selected rate observations unavailable"));
+    }
     // History guarantees ordered nonnegative int64 times. Subtract FIRST, then
     // convert the bounded nonnegative differences; close large times stay apart.
     const auto first = points.front().elapsedNanoseconds;
@@ -107,19 +119,25 @@ protected:
     for (std::size_t series = 0; series < colors.size(); ++series) {
       painter.setPen(QPen(colors[series], 2.0, styles[series]));
       std::size_t count = 0;
+      std::optional<core::SourceSmoothingPolicy> priorPolicy;
       const auto flush = [&] {
         if (count == 1) { painter.drawPoint(run[0]); }
         else if (count > 1) { painter.drawPolyline(run.data(), static_cast<int>(count)); }
         count = 0;
       };
       for (const auto& point : points) {
-        if (!point.connectedToPrevious) { flush(); }
+        if (!point.connectedToPrevious) { flush();priorPolicy.reset(); }
+        if(mode_==NativeActivityRateMode::Smoothed && series<3 && point.sourceRates){
+          if(priorPolicy && *priorPolicy!=point.sourceRates->smoothing){flush();}
+          priorPolicy=point.sourceRates->smoothing;
+        }
         const auto elapsed = point.elapsedNanoseconds - first;
         const auto x = span > 0 ? area.left() + area.width() * (static_cast<qreal>(elapsed) / static_cast<qreal>(span)) : area.right();
         const auto limit = sending_ ? point.rateLimits.upload : point.rateLimits.download;
         if (series == 3 && limit.state != core::RateLimitState::Limited) { flush(); continue; }
-        const auto rate = series == 3 ? limit.bytesPerSecond : values(point.rates, sending_)[series];
-        run[count++] = {x, area.bottom() - area.height() * (static_cast<qreal>(rate) / scale)};
+        const auto rate = series == 3 ? std::optional<std::int64_t>{limit.bytesPerSecond} : values(point,mode_,sending_)[series];
+        if(!rate){flush();continue;}
+        run[count++] = {x, area.bottom() - area.height() * (static_cast<qreal>(*rate) / scale)};
       }
       flush();
     }
@@ -131,6 +149,7 @@ protected:
   }
 private:
   const bool sending_;
+  NativeActivityRateMode mode_=NativeActivityRateMode::Source10s;
   NativeActivityPresentation frame_{};
 };
 
@@ -141,8 +160,8 @@ NativeActivityView::NativeActivityView(QWidget* parent) : QWidget(parent),
   setAccessibleName(tr("Native session peer traffic history"));
   auto* layout = new QVBoxLayout(this); layout->addWidget(state_);
   auto* rates = new QGridLayout;
-  rates->addWidget(plainLabel(tr("Receive"), QStringLiteral("native-activity-receive-heading"), this), 0, 1);
-  rates->addWidget(plainLabel(tr("Send"), QStringLiteral("native-activity-send-heading"), this), 0, 2);
+  rates->addWidget(plainLabel(tr("Latest interval receive"), QStringLiteral("native-activity-receive-heading"), this), 0, 1);
+  rates->addWidget(plainLabel(tr("Latest interval send"), QStringLiteral("native-activity-send-heading"), this), 0, 2);
   const std::array<QString, 3> titles{tr("Combined:"), tr("Payload:"), tr("Protocol:")};
   for (std::size_t i = 0; i < titles.size(); ++i) {
     rates->addWidget(plainLabel(titles[i], QStringLiteral("native-activity-rate-heading-") + QString::number(i), this), static_cast<int>(i) + 1, 0);
@@ -157,10 +176,23 @@ NativeActivityView::NativeActivityView(QWidget* parent) : QWidget(parent),
   rates->addWidget(limits_[0], 4, 1); rates->addWidget(limits_[1], 4, 2);
   rates->setColumnStretch(1, 1); rates->setColumnStretch(2, 1);
   layout->addLayout(rates); layout->addWidget(samples_);
-  layout->addWidget(plainLabel(tr("Combined: blue solid; payload: green dashed; protocol: orange dotted. Session limit: purple dash-dot when finite. Gaps stay disconnected."), QStringLiteral("native-activity-legend"), this));
+  modeChoice_=new QComboBox(this);modeChoice_->setObjectName(QStringLiteral("native-activity-rate-mode"));
+  modeChoice_->setAccessibleName(tr("Activity graph rate calculation"));
+  modeChoice_->addItems({tr("10-second rates"),tr("Measured interval rates"),tr("Configured smoothed combined rates")});
+  modeChoice_->setCurrentIndex(0);layout->addWidget(modeChoice_);
+  graphRates_=plainLabel(unavailable(),QStringLiteral("native-activity-selected-rates"),this);layout->addWidget(graphRates_);
+  legend_=plainLabel(QString{},QStringLiteral("native-activity-legend"),this);layout->addWidget(legend_);
+  connect(modeChoice_,&QComboBox::currentIndexChanged,this,[this](int index){
+    if(index<0 || index>2 || revision_==std::numeric_limits<quint64>::max()){return;}
+    ++revision_;mode_=static_cast<NativeActivityRateMode>(index);dirty_=true;
+    for(const auto& chart:charts_){if(chart){chart->cacheMode(mode_);}}
+    // Qt setters still execute after their direct signal; render only after the
+    // control returns, so tooltip/accessibility callbacks may safely delete it.
+    queueRefresh();
+  });
   charts_[0] = new Chart(false, this); charts_[1] = new Chart(true, this);
   layout->addWidget(charts_[0], 1); layout->addWidget(charts_[1], 1);
-  layout->addWidget(plainLabel(tr("One native engine epoch across transfers and idle time. Up to 600 actual interval-rate observations; no inferred zero or smoothing. Peer traffic only, excluding IP, tracker and DHT traffic. Closed sessions retain observations, not exhaustive final totals."),
+  layout->addWidget(plainLabel(tr("One native engine epoch across transfers and idle time. Up to 600 observed intervals. The graph can use 10-second sample-timed rates, measured intervals or configured smoothed combined rates. Missing values stay unavailable. Peer traffic excludes IP, tracker and DHT. Closed sessions retain observations, not exhaustive final totals."),
       QStringLiteral("native-activity-scope"), this));
 }
 bool NativeActivityView::beginSession(quint64 session) {
@@ -201,7 +233,7 @@ void NativeActivityView::refresh() {
     }
   }
   struct Fact { QPointer<QLabel> target; QString text; QString tip; };
-  std::array<Fact, 10> facts{};
+  std::array<Fact, 12> facts{};
   facts[0] = {state_, status, latest ? tr("Profile %1; run %2; epoch %3; sequence %4")
       .arg(latest->session).arg(latest->applicationRun).arg(latest->epoch).arg(latest->sequence) : QString{}};
   facts[1] = {samples_, frame && !frame->points().empty() ? tr("%1 actual rate observations (maximum 600)").arg(frame->points().size())
@@ -214,6 +246,22 @@ void NativeActivityView::refresh() {
   const auto limitScope = (latest && !live ? tr("Last observed. ") : QString{}) + effectiveRateLimitScope();
   facts[8] = {limits_[0], effectiveRateLimitText(limitValues.download), limitScope};
   facts[9] = {limits_[1], effectiveRateLimitText(limitValues.upload), limitScope};
+  const auto selectedReceive=nativeActivityRates(rates,live && latest?latest->sourceRates:std::nullopt,mode_,false);
+  const auto selectedSend=nativeActivityRates(rates,live && latest?latest->sourceRates:std::nullopt,mode_,true);
+  const auto number=[](const auto& value){return value?QString::number(*value):unavailable();};
+  const auto scope=mode_==NativeActivityRateMode::Interval?tr("Actual counter-observation intervals, not averaged windows.")
+      :mode_==NativeActivityRateMode::Source10s?tr("10-second source-style buckets over actual sample delivery. Byte-arrival timing is not reconstructed.")
+      :tr("Configured source-style combined-rate smoothing. Payload/protocol smoothing is unavailable.");
+  const auto text=mode_==NativeActivityRateMode::Smoothed
+      ?tr("Smoothed receive / send: %1 / %2 bytes/s").arg(number(selectedReceive[0]),number(selectedSend[0]))
+      :tr("Graph receive / send: %1 / %2 bytes/s; payload %3 / %4; protocol %5 / %6")
+          .arg(number(selectedReceive[0]),number(selectedSend[0]),number(selectedReceive[1]),number(selectedSend[1]),number(selectedReceive[2]),number(selectedSend[2]));
+  const auto policy=latest && latest->sourceRates?tr(" Window %1 seconds; update interval %2 seconds.")
+      .arg(latest->sourceRates->smoothing.windowSeconds).arg(latest->sourceRates->smoothing.intervalSeconds):QString{};
+  facts[10]={graphRates_,text,scope+(mode_==NativeActivityRateMode::Smoothed?policy:QString{})};
+  facts[11]={legend_,mode_==NativeActivityRateMode::Smoothed
+      ?tr("Combined: blue solid. Session limit: purple dash-dot when finite. Missing observations break the line.")
+      :tr("Combined: blue solid; payload: green dashed; protocol: orange dotted. Session limit: purple dash-dot when finite. Gaps stay disconnected."),scope};
   dirty_ = false;
   for (const auto& fact : facts) {
     if (!current() || !fact.target) { if (guard) { guard->dirty_ = true; } return; }
@@ -231,8 +279,12 @@ void NativeActivityView::refresh() {
     if (!current()) { if (guard) { guard->dirty_ = true; } return; }
   }
 }
+void NativeActivityView::queueRefresh() {
+  if(queued_){return;}queued_=true;QPointer<NativeActivityView> guard(this);
+  QMetaObject::invokeMethod(this,[guard]{if(guard){guard->queued_=false;guard->refresh();}},Qt::QueuedConnection);
+}
 void NativeActivityView::showEvent(QShowEvent* event) {
-  QWidget::showEvent(event);
+  QPointer<NativeActivityView> guard(this);QWidget::showEvent(event);if(!guard){return;}
   if (observedWindow_ != window()) {
     if (observedWindow_) { observedWindow_->removeEventFilter(this); }
     observedWindow_ = window(); observedWindow_->installEventFilter(this);

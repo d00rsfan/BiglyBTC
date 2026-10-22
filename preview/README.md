@@ -286,3 +286,10 @@ idle zeros require an actual sampled idle owner. Tags overlap, so their rows are
 not session totals. Profile changes and close/reopen reject stale generations.
 Automatic tags, rule execution and historical tag graphs remain separate work.
 Opening this view never starts a torrent or network service.
+
+Activity > Session traffic defaults to **10-second rates**. The graph selector
+also offers measured interval rates and configured smoothed combined rates.
+All modes use the same retained observations; changing modes does not request
+engine data. Missing source observations leave gaps. Smoothed payload/protocol
+components are unavailable because that provider supplies combined values only.
+The latest-interval numeric facts remain separately labelled.

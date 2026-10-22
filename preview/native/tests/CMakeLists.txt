@@ -850,3 +850,12 @@ if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIM
   add_test(NAME manual-tag-worker COMMAND biglybtc-manual-tag-bridge-tests)
   set_tests_properties(manual-tag-worker PROPERTIES TIMEOUT 240 ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;ui;statistics;tags;integration;loopback")
 endif()
+
+if(BIGLYBTC_DESKTOP)
+  add_executable(biglybtc-native-activity-rate-modes-tests native_activity_rate_modes_tests.cpp)
+  set_target_properties(biglybtc-native-activity-rate-modes-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-native-activity-rate-modes-tests PRIVATE biglybtc_ui Qt6::Test)
+  target_compile_options(biglybtc-native-activity-rate-modes-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME native-activity-rate-modes COMMAND biglybtc-native-activity-rate-modes-tests)
+  set_tests_properties(native-activity-rate-modes PROPERTIES TIMEOUT 120 ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;ui;statistics;activity")
+endif()

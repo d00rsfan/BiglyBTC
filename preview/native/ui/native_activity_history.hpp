@@ -6,6 +6,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <span>
+#include <optional>
 #include <vector>
 
 namespace biglybtc::ui {
@@ -14,6 +15,7 @@ struct NativeActivityPoint {
   core::EngineRates rates{};
   bool connectedToPrevious = false;
   core::SessionRateLimits rateLimits{}; // Compact two-limit value; never full metrics per point.
+  std::optional<core::SourceRateValues> sourceRates{}; // Fixed scalar source windows, no timer or provider retained.
   bool operator==(const NativeActivityPoint&) const = default;
 };
 class NativeActivitySnapshot final {
