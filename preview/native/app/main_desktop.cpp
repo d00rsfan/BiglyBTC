@@ -70,6 +70,8 @@ int main(int argc, char** argv) {
     QObject::connect(&window, &Window::columnLayoutsRequested, &bridge, &Bridge::columnLayouts);
     QObject::connect(&window, &Window::columnLayoutSaveRequested, &bridge, &Bridge::saveColumnLayout);
     QObject::connect(&window, &Window::cancelRequested, &bridge, &Bridge::cancel);
+    QObject::connect(&window, &Window::manualTagStatisticsRequested, &bridge, &Bridge::manualTagStatistics);
+    QObject::connect(&bridge, &Bridge::manualTagStatisticsReady, &window, &Window::setManualTagStatistics);
     bridge.open(profile, static_cast<unsigned short>(port));
     window.enableSessionCloseHandshake();
     QObject::connect(&bridge, &Bridge::nativeSessionReady, &window, &Window::setNativeSession);

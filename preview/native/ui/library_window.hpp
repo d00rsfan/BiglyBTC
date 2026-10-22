@@ -10,6 +10,7 @@
 #include "statistics_presentation.hpp"
 #include "overall_presentation.hpp"
 #include "runtime_metrics_presentation.hpp"
+#include "manual_tag_presentation.hpp"
 #include "statistics_navigation.hpp"
 #include "history_presentation.hpp"
 #include "history_week_presentation.hpp"
@@ -73,6 +74,8 @@ public:
   void setNativeSession(NativeSessionPresentation);
   void setOverall(OverallPresentation);
   void setRuntimeMetrics(RuntimeMetricsPresentation);
+  void setManualTagStatistics(ManualTagStatisticsPresentation);
+  ManualTagStatisticsPresentation manualTagStatisticsSnapshot() const { return latestManualTags_; }
   NativeSessionPresentation nativeSessionSnapshot() const { return latestNativeSession_; }
   NativeActivityPresentation nativeActivitySnapshot() const { return latestNativeActivity_; }
   void enableSessionCloseHandshake() { sessionCloseEnabled_ = true; }
@@ -88,6 +91,7 @@ signals:
   void refreshRequested();
   void savedServicesRequested(quint64 request);
   void statisticsRequested(quint64 session, quint64 request);
+  void manualTagStatisticsRequested(quint64 session);
   void historyRequested(quint64 session, quint64 request, biglybtc::core::HistoryDate date);
   void historyWeekRequested(quint64 session, quint64 request, biglybtc::core::HistoryDate endingDate);
   void historyMonthRequested(quint64 session, quint64 request, biglybtc::core::HistoryDate endingDate);
@@ -121,6 +125,7 @@ private:
   void queueStatistics();
   void queueLiveHistoryRefresh();
   void queueOptionalViews();
+  void queueManualTagStatistics();
   void closePage(int index);
   bool onSavedServicePage() const;
   bool hasLoadingServices(quint64 request) const;
@@ -229,6 +234,9 @@ private:
   NativeSessionPresentation latestNativeSession_{};
   OverallPresentation latestOverall_{};
   RuntimeMetricsPresentation latestRuntime_{};
+  ManualTagStatisticsPresentation latestManualTags_{};
+  QPointer<StatisticsPage> pendingManualTagRead_;
+  bool manualTagDispatchQueued_ = false;
   bool suppressAutomaticDetails_ = false;
   bool updating_ = false;
   bool presented_ = false;

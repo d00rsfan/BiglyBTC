@@ -39,3 +39,5 @@ install(FILES COPYING NOTICE.md DESTINATION "${CMAKE_INSTALL_DATADIR}/licenses/B
 endif()
 
 target_sources(biglybtc_core PRIVATE src/source_rate_average.cpp src/minute_history.cpp)
+
+target_sources(biglybtc_core PRIVATE src/saved_download_tags.cpp src/manual_tag_statistics.cpp)

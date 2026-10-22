@@ -155,7 +155,7 @@ native engine counters and gauges, with name filtering and numeric sorting.
 They consume the existing stats responses and never start a service on opening.
 Values are labelled unavailable before observations and last-observed after close.
 These native metric tables do not claim the original Java cache/tracker service UI
-or the remaining DHT, DDB, Vivaldi, Tags and Country providers are complete.
+or the remaining DHT, DDB, Vivaldi and Country providers are complete.
 The default generated offline sample has no engine observations.
 
 Statistics > Transfers > History now browses one saved UTC day. Select a date or
@@ -170,7 +170,7 @@ without modifying records or caches. It loads only when selected and uses the
 existing worker queue. Changing profiles clears old results; closing/reopening
 Statistics rereads the selected/default day. The offline launcher includes
 explicitly generated saved history for previewing this screen. Rolling queries are available in the separate Rolling history tab described
-below. Live history recording and persistent global ownership remain unfinished. Format, bounds and the independent Java reader fixtures are documented
+below. Qualified native sessions also record history as described above. Format, bounds and the independent Java reader fixtures are documented
 in docs/saved-history-contract.json and native/tests/fixtures/saved-history/.
 
 The Statistics > Transfers > History screen now also offers **7 days** beside
@@ -276,3 +276,13 @@ in progress.
 The connected controls milestone is qualified at source `2c5a81227e750202403fec188fbb71817aa3cfca`: GCC17 affected suites, Clang17, leak-enabled ASan/UBSan17, hosted102, portable smoke and actual private-runtime workers passed. Original Java classes read both actual native-written test profiles. See [validation receipt](../migration/evidence/statistics-controls-20261022.json).
 
 A qualified native owner now starts on successful profile open with an explicit owned loopback endpoint, before a first transfer or opening Statistics. Idle zero traffic and elapsed time are actual engine observations; the first transfer retains that owner. Offline port0 and unqualified fallback remain read-only. Transfers Current adds the original combined-traffic session share ratio. Disk, Tracker and Connections now provide compact named summaries above their searchable raw measurements, with distinct counts and units.
+
+Manual download-tag Statistics reads original `tag.config` on opening **Tags**
+or choosing **Refresh tags** (F5). Original names, visibility and canonical torrent
+members are retained without rewriting the file. The table joins declared members
+to the current saved library and displays actual same-torrent combined and payload
+rates when the native owner proves coverage. Missing observations remain unknown;
+idle zeros require an actual sampled idle owner. Tags overlap, so their rows are
+not session totals. Profile changes and close/reopen reject stale generations.
+Automatic tags, rule execution and historical tag graphs remain separate work.
+Opening this view never starts a torrent or network service.

@@ -2,6 +2,7 @@
 
 #include "biglybtc/library.hpp"
 #include "biglybtc/engine_statistics.hpp"
+#include "biglybtc/target_traffic.hpp"
 #include "profile.hpp"
 
 #include <chrono>
@@ -13,6 +14,8 @@ namespace biglybtc::engine {
 class PersistentSession;
 
 enum class LocalStage { StatePrepared, Checked, Flushed, CompletionLinked, CompletionSaved, InventorySaved };
+using LocalTargetTraffic = core::TargetTraffic;
+
 struct LocalProgress {
   enum class Phase { Checking, Downloading, Flushing } phase;
   std::int64_t completedBytes;
@@ -20,6 +23,8 @@ struct LocalProgress {
   std::int64_t uploadRate;
   int pieces;
   int totalPieces;
+  // Actual same-snapshot rates for the command target; absent is unknown.
+  std::optional<LocalTargetTraffic> targetTraffic{};
 };
 struct LocalOptions {
   std::filesystem::path profile;

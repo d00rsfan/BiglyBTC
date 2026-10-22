@@ -34,7 +34,17 @@ if [[ $variant != compiler-only ]]; then
     libxcb-xkb1 libx11-xcb1 libfontconfig1 libfreetype6 libdbus-1-3
     libglib2.0-0t64 libgtk-3-0t64 libwayland-client0 libwayland-cursor0 libwayland-egl1)
 fi
-sudo apt-get update
+# The runner mirror list can prefer an Azure mirror that stalls large pinned
+# compiler downloads. Keep its original contents and use Ubuntu's canonical
+# HTTPS archive; package versions and APT signature verification stay unchanged.
+if [[ -e /etc/apt/apt-mirrors.txt ]]; then
+  [[ -f /etc/apt/apt-mirrors.txt && ! -L /etc/apt/apt-mirrors.txt ]] || { echo "Unexpected APT mirror list type" >&2; exit 1; }
+  cp /etc/apt/apt-mirrors.txt "$destination/apt-mirrors-before.txt"
+  printf '%s\n' 'https://archive.ubuntu.com/ubuntu' | sudo tee /etc/apt/apt-mirrors.txt >/dev/null
+  cp /etc/apt/apt-mirrors.txt "$destination/apt-mirrors-selected.txt"
+fi
+apt_options=(-o Acquire::http::Timeout=30 -o Acquire::https::Timeout=30 -o Acquire::Retries=2)
+sudo timeout --signal=TERM --kill-after=15s 180s apt-get "${apt_options[@]}" -o APT::Update::Error-Mode=any update
 if [[ $variant == system-qt ]]; then
   # Resolute initially has6.10.2. Never substitute that for required6.12.0.
   qt_deb=$(apt-cache madison qt6-base-dev | awk '$3 ~ /^6\.12\.0([+~-]|$)/ { print $3; exit }')
@@ -42,7 +52,7 @@ if [[ $variant == system-qt ]]; then
   packages+=("qt6-base-dev=$qt_deb" qt6-base-dev-tools qt6-qpa-plugins qt6-wayland qt6-svg-dev qt6-image-formats-plugins)
 fi
 printf '%s\n' "${packages[@]}" > "$destination/requested-packages.txt"
-sudo env DEBIAN_FRONTEND=noninteractive apt-get install --yes --no-install-recommends "${packages[@]}"
+sudo env DEBIAN_FRONTEND=noninteractive timeout --signal=TERM --kill-after=15s 600s apt-get "${apt_options[@]}" install --yes --no-install-recommends "${packages[@]}"
 dpkg-query -W -f='${binary:Package}\t${Version}\n' > "$destination/installed-packages.tsv"
 /usr/bin/g++-16 --version | tee "$destination/compiler.txt"
 grep -F '16.0.1 20260322' "$destination/compiler.txt" >/dev/null

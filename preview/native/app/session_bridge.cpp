@@ -10,6 +10,7 @@
 #include "minute_history_writer.hpp"
 #include "saved_service_view.hpp"
 #include "statistics_view.hpp"
+#include "saved_download_tags_view.hpp"
 #include "../adapters/history_view.hpp"
 #include "../adapters/history_week_view.hpp"
 #include "../adapters/history_month_view.hpp"
@@ -70,6 +71,16 @@ quint64 reserveColumnLayoutSession() {
   for (;;) {
     if (previous == std::numeric_limits<quint64>::max()) {
       throw Failure{{storage::ErrorCode::Unsupported, "Column layout session identities are exhausted"}};
+    }
+    if (last.compare_exchange_weak(previous, previous + 1, std::memory_order_relaxed)) { return previous + 1; }
+  }
+}
+quint64 reserveLibraryRevision() {
+  static std::atomic<quint64> last{0};
+  auto previous = last.load(std::memory_order_relaxed);
+  for (;;) {
+    if (previous == std::numeric_limits<quint64>::max()) {
+      throw Failure{{storage::ErrorCode::Unsupported, "Library revision identities are exhausted"}};
     }
     if (last.compare_exchange_weak(previous, previous + 1, std::memory_order_relaxed)) { return previous + 1; }
   }
@@ -154,6 +165,19 @@ struct SessionBridge::Host {
   quint64 engineOperation = 0;
   std::map<std::string, Known> known;
   std::set<std::string> currentHashes;
+  // Optional manual-tag cache is worker-only and never loaded by startup.
+  bool manualTagsEnabled = false, manualTagCommandActive = false, manualTagEnded = false;
+  quint64 manualTagRevision = 0, manualTagSequence = 0;
+  quint64 manualResolvedLibrary = 0, manualResolvedTag = 0;
+  ui::ManualTagReadState manualTagReadState = ui::ManualTagReadState::Failed;
+  QString manualTagFailure, manualJoinFailure;
+  std::shared_ptr<const core::SavedDownloadTags> manualTagSource;
+  std::shared_ptr<const core::ManualTagMembership> manualMembership;
+  quint64 manualOwnerEpoch = 0, manualOwnerSequence = 0;
+  engine::AccountingState manualOwnerState = engine::AccountingState::Starting;
+  bool manualOwnerSampled = false, manualIdleAuthority = false;
+  std::optional<core::TargetTraffic> manualTarget;
+  core::ManualTagTraffic manualLastTraffic{};
   ui::Presentation lastSnapshot{};
   std::shared_ptr<const core::Document> columnBaseline{};
   std::optional<storage::RecoverySource> columnBaselineSource{};
@@ -172,7 +196,7 @@ struct SessionBridge::Host {
     auto source = take(storage::readLibraryView(lease));
     checkpoint(stop);
     auto result = std::make_shared<ui::LibraryPresentation>();
-    result->revision = ++revision;
+    result->revision = revision = reserveLibraryRevision();
     std::map<std::string, int> counts;
     std::set<std::string> pauses;
     for (const auto& pause : source.pauses) { pauses.insert(pause.hash.hex()); }
@@ -225,6 +249,7 @@ SessionBridge::SessionBridge(QObject* parent) : QObject(parent) {
   qRegisterMetaType<ui::Details>();
   qRegisterMetaType<ui::SavedServicesPresentation>();
   qRegisterMetaType<ui::StatisticsPresentation>();
+  qRegisterMetaType<ui::ManualTagStatisticsPresentation>();
   qRegisterMetaType<core::HistoryDate>();
   qRegisterMetaType<ui::HistoryPresentation>();
   qRegisterMetaType<ui::HistoryMonthPresentation>();
@@ -289,12 +314,14 @@ SessionBridge::~SessionBridge() {
   worker_.requestShutdown();
 }
 void SessionBridge::ready(ui::Presentation snapshot, QString message) {
+  publishManualTags(); // Rejoin cached tags after an actual library revision change; no IO.
   // host_ is worker-owned. Publish its immutable identity by value on the GUI.
   const auto session = host_ ? host_->columnLayoutSession : quint64{0};
   QMetaObject::invokeMethod(this, [this, snapshot = std::move(snapshot), message = std::move(message), session] {
     QPointer<SessionBridge> guard(this);
     if (session != 0 && publishedColumnLayoutSession_ == 0) {
       publishedColumnLayoutSession_ = session;
+      profileClosed_ = false;
       // The initial optional read is queued by the UI; direct reentry remains busy.
       emit columnLayoutSessionReady(session);
       if (!guard) { return; }
@@ -333,7 +360,7 @@ bool SessionBridge::dispatch(std::move_only_function<void(std::stop_token)> oper
         failed(message);
       } else if (cancelled && host_ && host_->lastSnapshot) {
         auto snapshot = std::make_shared<ui::LibraryPresentation>(*host_->lastSnapshot);
-        snapshot->revision = ++host_->revision;
+        snapshot->revision = host_->revision = reserveLibraryRevision();
         host_->lastSnapshot = snapshot;
         ready(snapshot, message);
       } else if (host_ && !cancelled) {
@@ -380,12 +407,14 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
   });
 }
 bool SessionBridge::refresh() {
+  if (profileClosed_) { return false; }
   return dispatch([this](std::stop_token stop) {
     if (!host_) { throw Failure{{storage::ErrorCode::Missing, "No profile is open"}}; }
     ready(host_->query(stop));
   });
 }
 bool SessionBridge::savedServices(quint64 request) {
+  if (profileClosed_) { return false; }
   if (request == 0) { return false; }
   return dispatch([this, request](std::stop_token stop) {
     if (!host_) { throw Failure{{storage::ErrorCode::Missing, "No profile is open"}}; }
@@ -465,6 +494,140 @@ bool SessionBridge::statistics(quint64 session, quint64 request) {
       emit busyChanged(false);
     }, Qt::QueuedConnection);
   }, false); // Optional statistics failures never query/revise the library.
+}
+ui::ManualTagStatisticsPresentation SessionBridge::manualTagPacket() {
+  if (!host_ || !host_->manualTagsEnabled || !host_->revision || !host_->manualTagRevision
+      || host_->manualTagSequence == std::numeric_limits<quint64>::max()) { return {}; }
+  auto& host = *host_;
+  if (host.manualTagReadState == ui::ManualTagReadState::Ready
+      && (host.manualResolvedLibrary != host.revision || host.manualResolvedTag != host.manualTagRevision)) {
+    host.manualMembership.reset(); host.manualJoinFailure.clear();
+    host.manualResolvedLibrary = host.revision; host.manualResolvedTag = host.manualTagRevision;
+    if (!host.lastSnapshot || host.lastSnapshot->revision != host.revision
+        || host.currentHashes.size() > core::MaximumManualTagLibraryHashes || !host.manualTagSource) {
+      host.manualJoinFailure = tr("The current library is unavailable for manual tags");
+    } else {
+      std::vector<core::TorrentHash> hashes; hashes.reserve(host.currentHashes.size());
+      for (const auto& key : host.currentHashes) {
+        const auto raw = QByteArray::fromHex(QByteArray::fromStdString(key));
+        const auto hash = core::TorrentHash::parse(std::string_view(raw.constData(), static_cast<std::size_t>(raw.size())));
+        if (!hash) { host.manualJoinFailure = tr("Invalid current library identity"); break; }
+        hashes.push_back(*hash);
+      }
+      if (host.manualJoinFailure.isEmpty()) {
+        auto joined = core::resolveManualTagMembership(host.columnLayoutSession, host.revision,
+            host.manualTagRevision, *host.manualTagSource, hashes);
+        if (joined) { host.manualMembership = std::move(*joined); }
+        else { host.manualJoinFailure = tr("Cannot resolve bounded manual tag membership"); }
+      }
+    }
+  }
+  auto packet = std::make_shared<ui::ManualTagStatisticsPacket>();
+  packet->session = host.columnLayoutSession; packet->epoch = host.manualOwnerEpoch;
+  packet->libraryRevision = host.revision; packet->tagRevision = host.manualTagRevision;
+  packet->readState = host.manualTagReadState; packet->failure = host.manualTagFailure;
+  if (packet->readState == ui::ManualTagReadState::Ready) {
+    if (!host.manualMembership) {
+      packet->readState = ui::ManualTagReadState::Failed;
+      packet->failure = host.manualJoinFailure.isEmpty() ? tr("Manual tag membership is unavailable") : host.manualJoinFailure;
+    } else {
+      packet->membership = host.manualMembership;
+      if (host.manualTagEnded) {
+        packet->traffic = host.manualLastTraffic; packet->traffic.current = false;
+      } else if (host.engine && host.manualOwnerSampled
+          && host.manualOwnerState == engine::AccountingState::Idle && host.manualIdleAuthority && !host.manualTagCommandActive) {
+        // Actual owner Idle means no registered handle in the one-owner source.
+        packet->traffic = {core::ManualTagTrafficState::Idle, {}, true, true};
+      } else if (host.engine && host.manualTagCommandActive && host.manualTarget
+          && host.manualOwnerState == engine::AccountingState::Active && host.manualOwnerSampled) {
+        // One admitted owner handle, and this exact handle's same-status rates.
+        packet->traffic = {core::ManualTagTrafficState::Active, host.manualTarget, true, true};
+      } else if (host.manualOwnerState == engine::AccountingState::Retiring
+          || host.manualOwnerState == engine::AccountingState::Closing
+          || host.manualOwnerState == engine::AccountingState::Closed
+          || host.manualOwnerState == engine::AccountingState::Uncertified) {
+        packet->traffic = host.manualLastTraffic; packet->traffic.current = false;
+      }
+      if (packet->traffic.target && !host.manualMembership->contains(packet->traffic.target->hash)) {
+        packet->traffic = {}; // Changed membership never adopts an old target.
+      }
+      if (packet->traffic.current && packet->traffic.state != core::ManualTagTrafficState::Unavailable) {
+        host.manualLastTraffic = packet->traffic;
+      }
+    }
+  }
+  if (host.manualTagEnded) { packet->traffic.current = false; }
+  packet->sequence = ++host.manualTagSequence;
+  return packet;
+}
+void SessionBridge::deliverManualTags(ui::ManualTagStatisticsPresentation packet) {
+  const auto previous = deliveredManualTags_ && packet && deliveredManualTags_->session == packet->session
+      ? deliveredManualTags_ : ui::ManualTagStatisticsPresentation{};
+  if (!ui::acceptManualTagStatistics(previous, packet, publishedColumnLayoutSession_)) { return; }
+  deliveredManualTags_ = packet;
+  emit manualTagStatisticsReady(std::move(packet)); // Last access: direct receiver may delete Bridge.
+}
+void SessionBridge::publishManualTags() noexcept {
+  try {
+    auto packet = manualTagPacket(); if (!packet) { return; }
+    {
+      const std::lock_guard lock(progressMutex_);
+      latestManualTags_ = std::move(packet);
+      if (manualTagDeliveryQueued_) { return; }
+      manualTagDeliveryQueued_ = true;
+    }
+    if (QMetaObject::invokeMethod(this, [this] {
+      std::optional<ui::ManualTagStatisticsPresentation> packet;
+      {
+        const std::lock_guard lock(progressMutex_);
+        packet.swap(latestManualTags_); manualTagDeliveryQueued_ = false;
+      }
+      if (packet) { deliverManualTags(std::move(*packet)); }
+    }, Qt::QueuedConnection)) { return; }
+    const std::lock_guard lock(progressMutex_); manualTagDeliveryQueued_ = false;
+  } catch (...) {
+    // All parser/join/UI allocation failures are optional, never transfer failures.
+    const std::lock_guard lock(progressMutex_); manualTagDeliveryQueued_ = false;
+  }
+}
+bool SessionBridge::manualTagStatistics(quint64 session) {
+  if (!session || session != publishedColumnLayoutSession_) { return false; }
+  return dispatch([this, session](std::stop_token stop) {
+    if (!host_ || host_->columnLayoutSession != session) {
+      throw Failure{{storage::ErrorCode::Conflict, "This manual tag session is no longer active"}};
+    }
+    auto& host = *host_;
+    if (host.manualTagRevision == std::numeric_limits<quint64>::max()) {
+      throw Failure{{storage::ErrorCode::Unsupported, "Manual tag revisions are exhausted"}};
+    }
+    checkpoint(stop);
+    // Every explicit Refresh reads anew; samples only reuse this result.
+    host.manualTagsEnabled = true; ++host.manualTagRevision;
+    host.manualTagReadState = ui::ManualTagReadState::Failed;
+    host.manualTagSource.reset(); host.manualMembership.reset();
+    host.manualTagFailure.clear(); host.manualJoinFailure.clear();
+    auto view = storage::readSavedDownloadTagsView(host.lease, stop);
+    checkpoint(stop);
+    if (!view) {
+      if (view.error().code == storage::ErrorCode::Cancelled) { throw Failure{view.error()}; }
+      host.manualTagFailure = text(view.error().message);
+    } else if (view->missing()) {
+      host.manualTagReadState = ui::ManualTagReadState::Missing;
+    } else if (!view->snapshot || !view->recoverySource) {
+      host.manualTagFailure = tr("Manual tag source is unavailable");
+    } else {
+      host.manualTagSource = std::make_shared<const core::SavedDownloadTags>(std::move(*view->snapshot));
+      host.manualTagReadState = ui::ManualTagReadState::Ready;
+    }
+    auto packet = manualTagPacket(); checkpoint(stop);
+    QMetaObject::invokeMethod(this, [this, packet = std::move(packet), stop] {
+      QPointer<SessionBridge> guard(this);
+      if (!stop.stop_requested()) { deliverManualTags(packet); }
+      if (!guard) { return; }
+      completionMonitor_->stop(); busy_ = false; emit busyChanged(false);
+      if (guard && stop.stop_requested()) { emit messageReady(tr("Cancelled")); }
+    }, Qt::QueuedConnection);
+  }, false);
 }
 bool SessionBridge::history(quint64 session, quint64 request, core::HistoryDate date) {
   if (session == 0 || request == 0 || session != publishedColumnLayoutSession_
@@ -704,6 +867,7 @@ bool SessionBridge::saveColumnLayout(ui::ColumnLayoutSaveSubmission submission) 
   }, false);
 }
 bool SessionBridge::details(ui::Target target) {
+  if (profileClosed_) { return false; }
   return dispatch([this, target = std::move(target)](std::stop_token stop) {
     if (!host_) { throw Failure{{storage::ErrorCode::Missing, "No profile is open"}}; }
     host_->accepts(target);
@@ -772,6 +936,7 @@ void SessionBridge::engineStatistics(ui::EngineStatisticsPresentation packet) {
   }, Qt::QueuedConnection);
 }
 bool SessionBridge::continueDownload(ui::Target target) {
+  if (profileClosed_) { return false; }
   return dispatch([this, target = std::move(target)](std::stop_token stop) {
     if (!host_) { throw Failure{{storage::ErrorCode::Missing, "No profile is open"}}; }
     host_->accepts(target);
@@ -802,9 +967,22 @@ bool SessionBridge::continueDownload(ui::Target target) {
     }
     try { initializePersistentOwner(stop); }
     catch (...) { ended(false); throw; }
+    host_->manualTagCommandActive = true; host_->manualTarget.reset(); host_->manualIdleAuthority = false;
+    publishManualTags();
+    const auto finishTags = [this](Host* host) noexcept {
+      if (host_.get() != host) { return; }
+      host->manualTagCommandActive = false; host->manualTarget.reset(); publishManualTags();
+    };
+    const std::unique_ptr<Host, decltype(finishTags)> tagCommand(host_.get(), finishTags);
     auto options = engine::LocalOptions{.profile = host_->profile, .hash = identity(target),
         .peerPort = host_->peerPort, .stop = stop};
-    options.progress = [this, target](const engine::LocalProgress& value) {
+    options.progress = [this, target, commandHash = options.hash](const engine::LocalProgress& value) {
+      if (host_ && host_->manualTagCommandActive) {
+        host_->manualTarget = value.targetTraffic && value.targetTraffic->hash == commandHash
+            && core::validTargetTraffic(*value.targetTraffic) ? value.targetTraffic : std::nullopt;
+        // Fixed owned primitives are retained before optional UI allocation.
+        publishManualTags();
+      }
       const auto state = value.phase == engine::LocalProgress::Phase::Checking ? tr("Checking")
           : value.phase == engine::LocalProgress::Phase::Downloading ? tr("Downloading") : tr("Finishing");
       progress({target, value.completedBytes, value.downloadRate, value.uploadRate, state});
@@ -898,6 +1076,13 @@ void SessionBridge::observeNative(const engine::ApplicationPeerObservation& valu
       host_->lastOverallPublication = now; publishOverall(); publishRuntimeMetrics(value);
     }
   } catch (...) {} // Optional UI cannot disconnect the essential sink.
+  if (value.identity.profileSession == host_->columnLayoutSession && value.identity.engineEpoch
+      && value.identity.engineEpoch >= host_->manualOwnerEpoch && value.sequence > host_->manualOwnerSequence) {
+    host_->manualOwnerEpoch = value.identity.engineEpoch; host_->manualOwnerSequence = value.sequence;
+    host_->manualOwnerState = value.state; host_->manualOwnerSampled = value.observed.has_value();
+    host_->manualIdleAuthority = value.state == engine::AccountingState::Idle && value.observed.has_value();
+    publishManualTags();
+  }
   try { nativeSession(nativePacket(value, host_->latestSourceRates)); } catch (...) {}
 }
 void SessionBridge::tickAccounting(bool force, bool ending) noexcept {
@@ -1121,14 +1306,20 @@ bool SessionBridge::closeSession() {
         }
       } catch (...) {} // Optional immutable telemetry cannot retain Host/lease.
     }
+    if (host_) { host_->manualTagEnded = true; publishManualTags(); }
     host_.reset(); // Required lifetime barrier before GUI close acknowledgement.
     try { nativeSession(std::move(finalObservation)); } catch (...) {}
     QMetaObject::invokeMethod(this, [this, session, joined, released] {
       QPointer<SessionBridge> guard(this);
       completionMonitor_->stop();
+      publishedColumnLayoutSession_ = 0; // Reject old-session requests before releasing busy.
+      profileClosed_ = true;
       busy_ = false;
-      emit busyChanged(false);
-      if (guard) { emit sessionClosed(session, joined, released); }
+      emit busyChanged(false); // Keep closingSession_ true through this callback.
+      if (!guard) { return; }
+      closingSession_ = false;
+      idleMonitor_->start();
+      emit sessionClosed(session, joined, released); // Final access: receiver may reopen or delete Bridge.
     }, Qt::QueuedConnection);
   }, false, true);
   if (!guard) { return accepted; }

@@ -12,6 +12,7 @@
 #include "statistics_presentation.hpp"
 #include "overall_presentation.hpp"
 #include "runtime_metrics_presentation.hpp"
+#include "manual_tag_presentation.hpp"
 #include "statistics_navigation.hpp"
 
 #include <QElapsedTimer>
@@ -32,6 +33,7 @@ class EngineActivityView;
 class NativeSessionView;
 class OverallView;
 class RuntimeMetricsView;
+class ManualTagStatisticsView;
 class NativeActivityView;
 class HistoryView;
 class HistoryWeekView;
@@ -53,6 +55,9 @@ public:
   void beginNativeSession(quint64 session);
   void setOverall(OverallPresentation);
   void setRuntimeMetrics(RuntimeMetricsPresentation);
+  void setManualTagStatistics(ManualTagStatisticsPresentation);
+  ManualTagStatisticsPresentation manualTagStatisticsSnapshot() const;
+  bool manualTagsSelected() const;
   void setAccountingBusy(bool);
   void setNativeActivity(NativeActivityPresentation);
   NativeSessionPresentation nativeSessionSnapshot() const;
@@ -98,6 +103,8 @@ signals:
   void markRequested(bool clear);
   void refreshRequested();
   void historyVisible();
+  void manualTagsVisible();
+  void manualTagStatisticsRequested(quint64 session);
   void historyRequested(biglybtc::core::HistoryDate);
   void historyWeekRequested(biglybtc::core::HistoryDate);
   void historyMonthRequested(biglybtc::core::HistoryDate);
@@ -123,6 +130,7 @@ private:
   EngineActivityView* engineActivity_ = nullptr;
   QPointer<OverallView> overallView_;
   std::array<QPointer<RuntimeMetricsView>, 4> runtimeViews_{};
+  QPointer<ManualTagStatisticsView> manualTags_;
   QPointer<NativeSessionView> nativeSessionView_;
   QPointer<NativeActivityView> nativeActivityView_;
   NativeActivityPresentation nativeActivityFrame_;

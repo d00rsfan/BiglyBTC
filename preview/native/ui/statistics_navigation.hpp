@@ -29,7 +29,7 @@ struct StatisticsNavigation {
 static_assert(std::is_trivially_copyable_v<StatisticsNavigation>);
 
 inline bool validStatisticsNavigation(const StatisticsNavigation& value) noexcept {
-  return value.section >= 0 && value.section <= 4
+  return value.section >= 0 && value.section <= 5
       && value.activity >= 0 && value.activity <= 2
       && value.transfers >= 0 && value.transfers <= 2
       && value.history >= 0 && value.history <= 3

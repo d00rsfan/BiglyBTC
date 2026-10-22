@@ -294,7 +294,8 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   connect(refresh_, &QAction::triggered, this, [this] {
     if (closing_) { return; }
     if (onStatisticsPage()) {
-      if (statisticsPage_->historyRangeSelected()) { statisticsPage_->refreshHistoryRange(); }
+      if (statisticsPage_->manualTagsSelected()) { pendingManualTagRead_ = statisticsPage_; queueManualTagStatistics(); }
+      else if (statisticsPage_->historyRangeSelected()) { statisticsPage_->refreshHistoryRange(); }
       else if (statisticsPage_->historyMonthSelected()) { refreshHistoryMonth(statisticsPage_->selectedHistoryMonthDate()); }
       else if (statisticsPage_->historyWeekSelected()) { refreshHistoryWeek(statisticsPage_->selectedHistoryWeekDate()); }
       else if (statisticsPage_->historySelected()) { refreshHistory(statisticsPage_->selectedHistoryDate()); }
@@ -427,6 +428,12 @@ void LibraryWindow::showStatistics() {
     connect(statisticsPage_.data(), &StatisticsPage::historyVisible, this, &LibraryWindow::queueLiveHistoryRefresh);
     connect(statisticsPage_.data(), &StatisticsPage::refreshRequested, this, &LibraryWindow::refreshStatistics);
     const QPointer<StatisticsPage> markPage = statisticsPage_;
+    connect(markPage, &StatisticsPage::manualTagsVisible, this, &LibraryWindow::queueManualTagStatistics);
+    connect(markPage, &StatisticsPage::manualTagStatisticsRequested, this, [this, markPage](quint64 session) {
+      if (closing_ || !markPage || markPage != statisticsPage_ || !session || session != columnSession_) { return; }
+      pendingManualTagRead_ = markPage;
+      queueManualTagStatistics();
+    });
     connect(markPage, &StatisticsPage::markRequested, this, [this, markPage](bool clear) {
       if (markPage && markPage == statisticsPage_ && !busy_ && !closing_ && columnSession_) {
         emit markRequested(columnSession_, clear);
@@ -455,6 +462,7 @@ void LibraryWindow::showStatistics() {
       page->setAccountingBusy(busy_);
       if (guard && page && statisticsPage_ == page && latestOverall_) { page->setOverall(latestOverall_); }
       if (guard && page && statisticsPage_ == page && latestRuntime_) { page->setRuntimeMetrics(latestRuntime_); }
+      if (guard && page && statisticsPage_ == page && latestManualTags_) { page->setManualTagStatistics(latestManualTags_); }
     }
     if (guard && page && statisticsPage_ == page && latestNativeActivity_) {
       page->setNativeActivity(latestNativeActivity_);
@@ -694,6 +702,11 @@ void LibraryWindow::setRuntimeMetrics(RuntimeMetricsPresentation packet) {
   latestRuntime_ = std::move(packet);
   if (statisticsPage_) { statisticsPage_->setRuntimeMetrics(latestRuntime_); }
 }
+void LibraryWindow::setManualTagStatistics(ManualTagStatisticsPresentation packet) {
+  if (closing_ || !acceptManualTagStatistics(latestManualTags_, packet, columnSession_)) { return; }
+  latestManualTags_ = std::move(packet);
+  if (statisticsPage_) { statisticsPage_->setManualTagStatistics(latestManualTags_); }
+}
 void LibraryWindow::setOverall(OverallPresentation packet) {
   if (!packet || packet->session != columnSession_ || !packet->sequence
       || (latestOverall_ && (packet->sequence <= latestOverall_->sequence || latestOverall_->closed))) { return; }
@@ -743,6 +756,22 @@ void LibraryWindow::queueOptionalViews() {
   queueColumnLayouts();
   queueStatistics();
   queueLiveHistoryRefresh();
+  queueManualTagStatistics();
+}
+void LibraryWindow::queueManualTagStatistics() {
+  if (manualTagDispatchQueued_ || !pendingManualTagRead_) { return; }
+  manualTagDispatchQueued_ = true;
+  QMetaObject::invokeMethod(this, [this] {
+    manualTagDispatchQueued_ = false;
+    const QPointer<StatisticsPage> page = pendingManualTagRead_;
+    if (!page || page != statisticsPage_ || !columnSession_ || closing_) {
+      pendingManualTagRead_.clear(); return;
+    }
+    // One explicit read intent survives busy/hidden deferral, never a poll.
+    if (busy_ || !onStatisticsPage() || !page->isVisible() || isMinimized() || !page->manualTagsSelected()) { return; }
+    pendingManualTagRead_.clear();
+    emit manualTagStatisticsRequested(columnSession_); // Final access; receiver may delete/rebind this window.
+  }, Qt::QueuedConnection);
 }
 void LibraryWindow::closePage(int index) {
   if (closing_) { return; }
@@ -761,7 +790,7 @@ void LibraryWindow::closePage(int index) {
       if (session != 0 && navigation) {
         rememberedStatisticsNavigation_ = StatisticsNavigationRecord{session, *navigation};
       } else { rememberedStatisticsNavigation_.reset(); }
-      statisticsPage_.clear(); pendingStatisticsRequest_.reset(); pendingHistoryRequest_.reset();
+      statisticsPage_.clear(); pendingStatisticsRequest_.reset(); pendingHistoryRequest_.reset(); pendingManualTagRead_.clear();
     }
     else { return; }
   }
@@ -839,7 +868,7 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   QPointer<LibraryWindow> guard(this);
   columnSession_ = session;
   savedHistoryRevision_ = 0; requestedHistoryRevisions_.fill(0);
-  latestOverall_.reset(); latestRuntime_.reset();
+  latestOverall_.reset(); latestRuntime_.reset(); latestManualTags_.reset(); pendingManualTagRead_.clear();
   latestNativeSession_.reset(); latestNativeActivity_.reset(); nativeActivity_.reset();
   rememberedStatisticsNavigation_.reset();
   latestEngineStatistics_.reset();

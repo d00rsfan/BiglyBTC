@@ -1,5 +1,6 @@
 #include "local_session.hpp"
 #include "local_support.hpp"
+#include "target_traffic.hpp"
 #include "persistent_session_support.hpp"
 #include "multifile_session.hpp"
 #include "file_io.hpp"
@@ -333,7 +334,7 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
       const auto now = std::chrono::steady_clock::now();
       if (!options.progress || (!force && now < nextProgress)) { return; }
       options.progress({phase, status.total_done, status.download_payload_rate, status.upload_payload_rate,
-          status.num_pieces, info->num_pieces()});
+          status.num_pieces, info->num_pieces(), targetTraffic(options.hash, status)});
       nextProgress = now + 200ms;
     };
     operation.wait(options, [&](const auto&) {
@@ -378,7 +379,7 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
       const auto now = std::chrono::steady_clock::now();
       if (!options.progress || (!force && now < nextProgress)) { return; }
       options.progress({phase, status.total_done, status.download_payload_rate, status.upload_payload_rate,
-          status.num_pieces, info->num_pieces()});
+          status.num_pieces, info->num_pieces(), targetTraffic(options.hash, status)});
       nextProgress = now + 200ms;
     };
     wait(session, options, [&](const auto&) {

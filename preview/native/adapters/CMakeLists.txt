@@ -39,3 +39,5 @@ target_link_libraries(biglybtc_saved_service_view PUBLIC biglybtc_profile)
 target_compile_options(biglybtc_saved_service_view PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
 target_sources(biglybtc_profile PRIVATE minute_history_writer.cpp)
+
+target_sources(biglybtc_profile PRIVATE saved_download_tags_view.cpp)

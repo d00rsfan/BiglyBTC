@@ -1,5 +1,6 @@
 #include "multifile_session.hpp"
 #include "local_support.hpp"
+#include "target_traffic.hpp"
 #include "persistent_session_support.hpp"
 #include "biglybtc/torrent_layout.hpp"
 
@@ -286,7 +287,7 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
         if (done) { complete += file.bytes; }
       }
       options.progress({phase, std::min(complete, layout.bytes), status.download_payload_rate,
-          status.upload_payload_rate, status.num_pieces, info->num_pieces()});
+          status.upload_payload_rate, status.num_pieces, info->num_pieces(), targetTraffic(options.hash, status)});
       next = now + 200ms;
     };
     operation.wait(options, [&](const auto&) {
@@ -345,7 +346,7 @@ LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options,
         if (done) { complete += file.bytes; }
       }
       options.progress({phase, std::min(complete, layout.bytes), status.download_payload_rate,
-          status.upload_payload_rate, status.num_pieces, info->num_pieces()});
+          status.upload_payload_rate, status.num_pieces, info->num_pieces(), targetTraffic(options.hash, status)});
       next = now + 200ms;
     };
     wait(session, options, [&](const auto&) {

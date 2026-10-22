@@ -96,7 +96,7 @@ private slots:
     ui::StatisticsPage page;
     QCOMPARE(page.objectName(), QStringLiteral("classic-statistics-page"));
     QCOMPARE(page.tabs().objectName(), QStringLiteral("statistics-tabs"));
-    QCOMPARE(page.tabs().count(), 5); QCOMPARE(page.tabs().currentIndex(), 0);
+    QCOMPARE(page.tabs().count(), 6); QCOMPARE(page.tabs().tabText(5), QStringLiteral("Tags")); QCOMPARE(page.tabs().currentIndex(), 0);
     QCOMPARE(page.tabs().tabText(0), QStringLiteral("Activity")); QCOMPARE(page.tabs().tabText(1), QStringLiteral("Transfers"));
     auto* inner = page.findChild<QTabWidget*>(QStringLiteral("statistics-transfer-tabs")); QVERIFY(inner);
     QCOMPARE(inner->tabText(0), QStringLiteral("Current")); QCOMPARE(inner->tabText(1), QStringLiteral("History")); QCOMPARE(inner->currentIndex(), 0);

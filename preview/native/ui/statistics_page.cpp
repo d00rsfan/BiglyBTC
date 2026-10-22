@@ -7,6 +7,7 @@
 #include "native_session_view.hpp"
 #include "overall_view.hpp"
 #include "runtime_metrics_view.hpp"
+#include "manual_tag_view.hpp"
 #include "history_view.hpp"
 #include "history_week_view.hpp"
 #include "history_month_view.hpp"
@@ -242,6 +243,10 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
   runtimeViews_[3] = new RuntimeMetricsView({}, tabs_);
   runtimeViews_[3]->setObjectName(QStringLiteral("statistics-all-metrics"));
   tabs_->addTab(runtimeViews_[3], tr("Counters"));
+  manualTags_ = new ManualTagStatisticsView(tabs_);
+  tabs_->addTab(manualTags_, tr("Tags")); // Append: existing stored ordinals remain stable.
+  connect(manualTags_, &ManualTagStatisticsView::readRequested,
+      this, &StatisticsPage::manualTagStatisticsRequested);
   auto* refresh = new QPushButton(tr("Refresh saved totals"), this); refresh->setObjectName(QStringLiteral("statistics-refresh"));
   connect(refresh, &QPushButton::clicked, this, &StatisticsPage::refreshRequested);
   auto* layout = new QVBoxLayout(this); layout->addWidget(status_); layout->addWidget(provenance_); layout->addWidget(tabs_, 1); layout->addWidget(refresh);
@@ -422,6 +427,13 @@ void StatisticsPage::setRuntimeMetrics(RuntimeMetricsPresentation packet) {
     if (view) { view->setPresentation(packet); }
   }
 }
+void StatisticsPage::setManualTagStatistics(ManualTagStatisticsPresentation packet) {
+  if (manualTags_) { manualTags_->setPresentation(std::move(packet)); }
+}
+ManualTagStatisticsPresentation StatisticsPage::manualTagStatisticsSnapshot() const {
+  return manualTags_ ? manualTags_->presentation() : ManualTagStatisticsPresentation{};
+}
+bool StatisticsPage::manualTagsSelected() const { return tabs_->currentIndex() == 5; }
 void StatisticsPage::setOverall(OverallPresentation packet) { if (overallView_) { overallView_->setPresentation(std::move(packet)); } }
 void StatisticsPage::setAccountingBusy(bool busy) { if (overallView_) { overallView_->setCommandBusy(busy); } }
 void StatisticsPage::beginNativeSession(quint64 session) {
@@ -441,6 +453,8 @@ void StatisticsPage::beginNativeSession(quint64 session) {
   }
   if (!guard || guard->nativeSessionBinding_ != session) { return; }
   if (guard->overallView_) { guard->overallView_->beginSession(session); }
+  if (!guard || guard->nativeSessionBinding_ != session) { return; }
+  if (guard->manualTags_) { guard->manualTags_->beginSession(session); }
   if (!guard || guard->nativeSessionBinding_ != session) { return; }
   guard->refreshNative();
 }
@@ -594,6 +608,10 @@ void StatisticsPage::queueHistoryVisibility() {
   historyVisibilityQueued_ = true;
   QMetaObject::invokeMethod(this, [this] {
     historyVisibilityQueued_ = false;
+    if (isVisible() && !window()->isMinimized() && manualTagsSelected()) {
+      emit manualTagsVisible(); // Final access: owner may rebind/delete the page.
+      return;
+    }
     if (isVisible() && !window()->isMinimized()
         && (historySelected() || historyWeekSelected() || historyMonthSelected() || historyRangeSelected())) {
       emit historyVisible(); // Final access; Window may rebind or delete this page.
