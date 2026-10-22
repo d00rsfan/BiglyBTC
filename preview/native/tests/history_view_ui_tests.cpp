@@ -90,7 +90,7 @@ private slots:
   }
   void pageDefaultPreservesActivityAndLazyHistoryActivation() {
     ui::StatisticsPage page; QSignalSpy reads(&page, &ui::StatisticsPage::historyRequested); show(page);
-    QCOMPARE(page.tabs().count(), 5); QCOMPARE(page.tabs().currentIndex(), 0); QCOMPARE(reads.size(), 0);
+    QCOMPARE(page.tabs().count(), 6); QCOMPARE(page.tabs().tabText(5), QStringLiteral("Tags")); QCOMPARE(page.tabs().currentIndex(), 0); QCOMPARE(reads.size(), 0);
     QVERIFY(!page.historySelected()); QVERIFY(!page.historyPresentation());
     QCOMPARE(child<QTabWidget>(page, "statistics-activity-views").currentIndex(), 2);
     QVERIFY(field(page, "statistics-history-unavailable").contains(QStringLiteral("History unavailable")));
