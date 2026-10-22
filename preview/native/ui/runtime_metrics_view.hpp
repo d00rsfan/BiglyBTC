@@ -5,6 +5,7 @@
 #include <QPointer>
 #include <QWidget>
 #include <optional>
+#include <array>
 
 class QAbstractTableModel;
 class QLabel;
@@ -38,6 +39,9 @@ private:
   QString search_;
   bool dirty_ = true, rendering_ = false, queued_ = false;
   QPointer<QLabel> status_;
+  std::optional<core::RuntimeMetricGroup> summaryGroup_;
+  std::array<QPointer<QLabel>, 3> summaries_{};
+  std::size_t summaryCount_ = 0;
   QPointer<QLineEdit> filter_;
   QPointer<QTableView> table_;
   QPointer<QAbstractTableModel> model_;

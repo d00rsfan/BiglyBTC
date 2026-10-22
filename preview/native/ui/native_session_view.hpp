@@ -29,6 +29,7 @@ private:
   QPointer<QLabel> windows_;
   std::array<QPointer<QLabel>, 2> limits_{};
   QPointer<QLabel> configuration_;
+  QPointer<QLabel> ratio_;
   QPointer<QWidget> observedWindow_;
 };
 } // namespace biglybtc::ui

@@ -1,5 +1,6 @@
 #include "native_session_view.hpp"
 #include "effective_rate_limit_text.hpp"
+#include "overall_transfer_summary.hpp"
 
 #include <QEvent>
 #include <QGridLayout>
@@ -62,6 +63,8 @@ NativeSessionView::NativeSessionView(QWidget* parent) : QWidget(parent),
     grid->addWidget(rates_[i], static_cast<int>(i / 2) + 1, static_cast<int>(i % 2) + 3);
   }
   layout->addLayout(grid);
+  ratio_ = label(tr("Session share ratio: Unavailable"), QStringLiteral("native-session-share-ratio"), this);
+  ratio_->setAccessibleName(tr("Session share ratio")); layout->addWidget(ratio_);
   windows_ = label(tr("Windowed rates unavailable"), QStringLiteral("native-session-windowed-rates"), this);
   layout->addWidget(windows_);
   limits_[0] = label(tr("Session download limit: Unavailable"), QStringLiteral("native-session-download-limit"), this);
@@ -87,7 +90,7 @@ void NativeSessionView::refresh() {
   const auto current = [&] { return guard && guard->packet_ == packet && guard->revision_ == revision
       && guard->isVisible() && !guard->window()->isMinimized(); };
   struct Fact { QPointer<QLabel> target; QString text; QString tip; };
-  std::array<Fact, 18> facts{};
+  std::array<Fact, 19> facts{};
   const auto identity = packet ? tr("Profile %1; run %2; epoch %3; sequence %4")
       .arg(packet->session).arg(packet->applicationRun).arg(packet->epoch).arg(packet->sequence) : QString{};
   facts[0] = {state_, stateText(packet), identity};
@@ -124,6 +127,15 @@ void NativeSessionView::refresh() {
       .arg(effectiveRateLimitText(limitValues.upload)), effectiveRateLimitScope()};
   facts[17] = {configuration_, (lastLimits ? tr("Last observed session settings: %1") : tr("Session settings: %1"))
       .arg(sessionConnectionSettingsText(limitValues.connections)), sessionConnectionSettingsScope()};
+  const auto ratio = sample ? QString::fromStdString(overallShareRatioText(
+      overallShareRatio(sample->counters.sent, sample->counters.received))) : tr("Unavailable");
+  auto ratioScope = sample ? tr("Absolute peer payload + protocol counters: %1 sent bytes / %2 received bytes. IP, tracker and DHT are excluded.")
+      .arg(sample->counters.sent).arg(sample->counters.received)
+      : tr("No accepted session counter sample; no zero ratio is inferred");
+  if (sample && sample->counters.received == 0) { ratioScope += tr(" Zero received bytes uses denominator 1."); }
+  if (lastLimits && sample) { ratioScope += tr(" Last observed counters; this is not an exhaustive final ratio."); }
+  facts[18] = {ratio_, (lastLimits ? tr("Last observed session share ratio: %1") : tr("Session share ratio: %1"))
+      .arg(ratio), ratioScope};
   dirty_ = false;
   for (const auto& fact : facts) {
     if (!current() || !fact.target) { if (guard) { guard->dirty_ = true; } return; }

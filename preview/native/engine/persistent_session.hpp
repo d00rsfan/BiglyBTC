@@ -89,6 +89,12 @@ public:
   PersistentSession(PersistentSession&&) = delete;
   PersistentSession& operator=(PersistentSession&&) = delete;
 
+  // Explicit application/profile startup only, never Statistics navigation.
+  // Bind the held lease and initialize the same isolated LT session used by
+  // prepare(); no torrent, synthetic sample, new pump or final receipt is made.
+  // create() stays lazy/source-guarded for existing independent API callers.
+  std::expected<void, AccountingError> startIdle(const storage::ProfileLease&);
+
   // Stable owner-level observation sink/mailbox is connected outside the ctor.
   // UI callback failure/coalescing must not disable counter retention or sealing.
   std::expected<void, AccountingError> setObservationSink(ApplicationObservationSink);

@@ -78,6 +78,7 @@ private:
   void progress(ui::Telemetry update);
   void engineStatistics(ui::EngineStatisticsPresentation);
   void nativeSession(ui::NativeSessionPresentation);
+  void initializePersistentOwner(std::stop_token);
   void observeNative(const engine::ApplicationPeerObservation&) noexcept;
   void tickAccounting(bool force = false, bool ending = false) noexcept;
   void publishOverall(bool closed = false);

@@ -369,7 +369,14 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
     auto lease = take(storage::ProfileLease::acquire(profile));
     const auto session = reserveColumnLayoutSession();
     host_ = std::make_unique<Host>(profile, ownedPeerPort, std::move(lease), session);
-    ready(host_->query(stop));
+    const auto snapshot = host_->query(stop); // Validate the profile before optional engine startup.
+    QString startupFailure;
+    try { initializePersistentOwner(stop); }
+    catch (const Failure& failure) {
+      if (failure.error.code == storage::ErrorCode::Cancelled) { throw; }
+      startupFailure = tr("Live statistics unavailable: %1").arg(text(failure.error.message));
+    }
+    ready(snapshot, std::move(startupFailure));
   });
 }
 bool SessionBridge::refresh() {
@@ -793,43 +800,8 @@ bool SessionBridge::continueDownload(ui::Target target) {
       ended(false);
       throw Failure{{storage::ErrorCode::Unsupported, "Transfers are disabled in this offline profile"}};
     }
-    if (!host_->engine) {
-      // Reuse depends on a reviewed source AND actual mapped runtime. Default
-      // unbound builds keep the established per-operation destruction barrier.
-      auto owner = engine::PersistentSession::create({1, host_->columnLayoutSession, 1});
-      if (!owner && owner.error() != engine::AccountingError::DependencyUnqualified) {
-        ended(false);
-        throw Failure{{storage::ErrorCode::Io, "Cannot create the native engine owner"}};
-      }
-      if (owner) {
-        host_->engine = std::move(*owner);
-        // Optional accounting setup cannot change transfer/storage success.
-        try {
-          const auto started = wallMillis();
-          host_->lastAccountingTick = std::chrono::steady_clock::now();
-          auto settings = storage::ConfigFile::load(host_->lease, "biglybt.config");
-          if (settings) {
-            if (const auto* enabled = settings->document().find("long.term.stats.enable")) {
-              if (enabled->type == core::Node::Type::Integer) { host_->historyEnabled = enabled->integer != 0; }
-              else {
-                host_->historyEnabled = false;
-                host_->historyFailure = storage::Error{storage::ErrorCode::InvalidFormat, "Invalid long.term.stats.enable setting"};
-              }
-            }
-          } else if (settings.error().code != storage::ErrorCode::Missing) {
-            host_->historyEnabled = false; host_->historyFailure = std::move(settings.error());
-          }
-          auto service = OverallStatisticsService::open(host_->lease, {1, host_->columnLayoutSession, 1}, started, wallMillis());
-          if (service) { host_->overall = std::move(*service); }
-          else { host_->overallOpenFailure = std::move(service.error()); }
-          const auto smoothing = configuredSourceSmoothing(settings ? &settings->document() : nullptr);
-          host_->sourceRates = std::make_unique<SourceRateProjection>(smoothing.windowSeconds);
-        } catch (...) {} // Owner retention is independent of optional allocations.
-        static_cast<void>(host_->engine->setObservationSink([this](engine::ApplicationPeerObservation value) {
-          observeNative(value);
-        }));
-      }
-    }
+    try { initializePersistentOwner(stop); }
+    catch (...) { ended(false); throw; }
     auto options = engine::LocalOptions{.profile = host_->profile, .hash = identity(target),
         .peerPort = host_->peerPort, .stop = stop};
     options.progress = [this, target](const engine::LocalProgress& value) {
@@ -856,6 +828,48 @@ bool SessionBridge::continueDownload(ui::Target target) {
     if (known.name.isEmpty()) { known.name = text(report.payload.filename().string()); }
     ready(host_->query({}), tr("Complete"));
   });
+}
+void SessionBridge::initializePersistentOwner(std::stop_token stop) {
+  if (!host_ || host_->peerPort == 0 || host_->engine) { return; }
+  checkpoint(stop);
+  // Preserve the exact source/runtime guard and default unbound fallback.
+  auto owner = engine::PersistentSession::create({1, host_->columnLayoutSession, 1});
+  if (!owner) {
+    if (owner.error() == engine::AccountingError::DependencyUnqualified) { return; }
+    throw Failure{{storage::ErrorCode::Io, "Cannot create the native engine owner"}};
+  }
+  if (!(*owner)->startIdle(host_->lease)) {
+    throw Failure{{storage::ErrorCode::Io, "Cannot initialize the native idle session"}};
+  }
+  checkpoint(stop); // Local owning pointer aborts/joins before a cancelled publication.
+  host_->engine = std::move(*owner);
+  // Optional accounting setup cannot change transfer/storage success.
+  try {
+    const auto started = wallMillis();
+    host_->lastAccountingTick = std::chrono::steady_clock::now();
+    auto settings = storage::ConfigFile::load(host_->lease, "biglybt.config");
+    if (settings) {
+      if (const auto* enabled = settings->document().find("long.term.stats.enable")) {
+        if (enabled->type == core::Node::Type::Integer) { host_->historyEnabled = enabled->integer != 0; }
+        else {
+          host_->historyEnabled = false;
+          host_->historyFailure = storage::Error{storage::ErrorCode::InvalidFormat, "Invalid long.term.stats.enable setting"};
+        }
+      }
+    } else if (settings.error().code != storage::ErrorCode::Missing) {
+      host_->historyEnabled = false; host_->historyFailure = std::move(settings.error());
+    }
+    auto service = OverallStatisticsService::open(host_->lease, {1, host_->columnLayoutSession, 1}, started, wallMillis());
+    if (service) { host_->overall = std::move(*service); }
+    else { host_->overallOpenFailure = std::move(service.error()); }
+    const auto smoothing = configuredSourceSmoothing(settings ? &settings->document() : nullptr);
+    host_->sourceRates = std::make_unique<SourceRateProjection>(smoothing.windowSeconds);
+  } catch (...) {} // Owner retention is independent of optional allocations.
+  static_cast<void>(host_->engine->setObservationSink([this](engine::ApplicationPeerObservation value) {
+    observeNative(value);
+  }));
+  // The existing idle monitor is the only startup poller. Availability and
+  // zeros are published only by actual session_stats responses after GUI open.
 }
 void SessionBridge::observeNative(const engine::ApplicationPeerObservation& value) noexcept {
   if (!host_) { return; }

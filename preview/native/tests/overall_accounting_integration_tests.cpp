@@ -176,23 +176,35 @@ private slots:
     QSignalSpy rows(&bridge, &app::SessionBridge::snapshotReady), packets(&bridge, &app::SessionBridge::overallReady);
     QSignalSpy runtime(&bridge, &app::SessionBridge::runtimeMetricsReady);
     QSignalSpy marks(&window, &ui::LibraryWindow::markRequested), closed(&bridge, &app::SessionBridge::sessionClosed);
+    QSignalSpy historyChanges(&bridge, &app::SessionBridge::historyChanged);
     QVERIFY(bridge.open(fixture.native(), fixture.port()));
     QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && !rows.empty(), 30000);
     auto& page = openStatistics(window);
     QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && page.readState().has_value(), 30000);
-    QVERIFY(!latest(packets));
-    QVERIFY(!child<QPushButton>(page, "statistics-set-mark").isEnabled());
+    QTRY_VERIFY_WITH_TIMEOUT(latest(packets) && latest(packets)->available && latest(packets)->writable
+        && window.nativeSessionSnapshot() && window.nativeSessionSnapshot()->sample
+        && !historyChanges.empty(), 10000);
+    const auto startupOwner = window.nativeSessionSnapshot();
+    QCOMPARE(startupOwner->sample->counters, core::EngineCounters{});
+    QCOMPARE(latest(packets)->values[static_cast<std::size_t>(Field::Downloaded)], InitialDown);
+    QCOMPARE(latest(packets)->values[static_cast<std::size_t>(Field::Uploaded)], InitialUp);
+    QVERIFY(child<QPushButton>(page, "statistics-set-mark").isEnabled());
+    QVERIFY(historyChanges.last().at(1).toULongLong() > 0);
     const auto beforeTransferDate = QDateTime::currentDateTimeUtc().date();
-    QSignalSpy historyChanges(&bridge, &app::SessionBridge::historyChanged);
     QSignalSpy historyReads(&window, &ui::LibraryWindow::historyWeekRequested);
+    const auto readsBeforeStartupSelection = historyReads.count();
     child<QDateEdit>(page, "saved-history-week-date").setDate(beforeTransferDate.addDays(1));
     child<QTabWidget>(page, "statistics-transfer-tabs").setCurrentIndex(1);
     child<QTabWidget>(page, "statistics-history-tabs").setCurrentIndex(1);
     QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && page.historyWeekPresentation()
         && page.historyWeekPresentation()->snapshot, 10000);
-    QVERIFY(std::all_of(page.historyWeekPresentation()->snapshot->days.begin(),
-        page.historyWeekPresentation()->snapshot->days.end(), [](const auto& day) { return !day.snapshot; }));
-    const auto readsBeforeStart = historyReads.count();
+    QVERIFY(std::any_of(page.historyWeekPresentation()->snapshot->days.begin(),
+        page.historyWeekPresentation()->snapshot->days.end(), [](const auto& day) { return day.snapshot.has_value(); }));
+    // Startup wrote a real Start header from actual idle counters. A header
+    // alone has unknown totals; any completed idle minute has measured zeros.
+    for (const auto& day : page.historyWeekPresentation()->snapshot->days) {
+      if (day.snapshot && day.snapshot->totals) { QCOMPARE(*day.snapshot->totals, core::HistoryCounters{}); }
+    }
     const auto target = window.model().targetAt(0); QVERIFY(target);
     QVERIFY(bridge.continueDownload(*target));
     QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && latest(packets) && latest(packets)->available
@@ -211,9 +223,12 @@ private slots:
     QVERIFY(*actualOwnerSettings.connections.connectionLimit > 0);
     QVERIFY(actualOwnerSettings.connections.uploadSlots.state != core::UploadSlotState::Unavailable);
     QVERIFY(actualOwnerSettings.connections.proxy == core::SessionProxyMode::Disabled);
-    // Start actually created a saved day file. Its successful write revision
-    // invalidates the currently visible week exactly after transfer busy clears.
-    QTRY_VERIFY_WITH_TIMEOUT(!historyChanges.empty() && historyReads.count() > readsBeforeStart
+    QCOMPARE(window.nativeSessionSnapshot()->epoch, startupOwner->epoch);
+    QCOMPARE(window.nativeSessionSnapshot()->applicationRun, startupOwner->applicationRun);
+    // Start is now an application-startup event while My Torrents is open.
+    // Selecting Week reads that actual saved file; transfer does not recreate
+    // the owner/baseline. Dedicated invalidation tests retain live-refresh proof.
+    QTRY_VERIFY_WITH_TIMEOUT(!historyChanges.empty() && historyReads.count() > readsBeforeStartupSelection
         && !bridge.busy() && page.historyWeekPresentation() && page.historyWeekPresentation()->snapshot
         && std::any_of(page.historyWeekPresentation()->snapshot->days.begin(),
             page.historyWeekPresentation()->snapshot->days.end(), [](const auto& day) { return day.snapshot.has_value(); }), 10000);

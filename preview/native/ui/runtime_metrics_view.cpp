@@ -1,4 +1,5 @@
 #include "runtime_metrics_view.hpp"
+#include "runtime_service_summary.hpp"
 
 #include <QAbstractTableModel>
 #include <QByteArray>
@@ -122,6 +123,30 @@ RuntimeMetricsView::RuntimeMetricsView(std::optional<core::RuntimeMetricGroup> f
   status_ = new QLabel(tr("Runtime measurements unavailable"), this);
   status_->setObjectName(QStringLiteral("runtime-metrics-status")); status_->setTextFormat(Qt::PlainText);
   status_->setWordWrap(true); layout->addWidget(status_);
+  if (filter == core::RuntimeMetricGroup::Disk || filter == core::RuntimeMetricGroup::Tracker
+      || filter == core::RuntimeMetricGroup::Peer) {
+    summaryGroup_ = filter;
+    const bool disk = filter == core::RuntimeMetricGroup::Disk;
+    const bool peer = filter == core::RuntimeMetricGroup::Peer;
+    auto* title = new QLabel(disk ? tr("Disk activity") : peer ? tr("Connections") : tr("Tracker activity"), this);
+    title->setObjectName(QStringLiteral("runtime-service-summary")); title->setTextFormat(Qt::PlainText);
+    layout->addWidget(title);
+    summaryCount_ = disk || peer ? 3 : 2;
+    const std::array<const char*, 3> diskIds{"runtime-disk-jobs", "runtime-disk-buffers-files", "runtime-disk-operations"};
+    const std::array<const char*, 3> trackerIds{"runtime-tracker-queue", "runtime-tracker-traffic", ""};
+    const std::array<const char*, 3> peerIds{"runtime-peer-connections", "runtime-peer-upload-slots", "runtime-peer-request-queues"};
+    for (std::size_t i = 0; i < summaryCount_; ++i) {
+      summaries_[i] = new QLabel(tr("Unavailable"), this);
+      summaries_[i]->setObjectName(QString::fromLatin1(disk ? diskIds[i] : peer ? peerIds[i] : trackerIds[i]));
+      summaries_[i]->setTextFormat(Qt::PlainText); summaries_[i]->setWordWrap(true);
+      layout->addWidget(summaries_[i]);
+    }
+    auto* note = new QLabel(disk
+        ? tr("Counts describe disk jobs, buffers and file handles. They do not measure cache capacity or a cache hit rate.")
+        : peer ? tr("These are observed peer, slot and waiting-socket counts. Peers with requests are not individual request counts. They do not estimate capacity, ASN, routes or automatic speed control.")
+        : tr("The queue covers HTTP announces, not all active trackers. Reported traffic includes estimated protocol costs."), this);
+    note->setTextFormat(Qt::PlainText); note->setWordWrap(true); layout->addWidget(note);
+  }
   filter_ = new QLineEdit(this); filter_->setObjectName(QStringLiteral("runtime-metrics-filter"));
   filter_->setAccessibleName(tr("Search measurement names")); filter_->setPlaceholderText(tr("Search measurement names"));
   filter_->setMaxLength(256); layout->addWidget(filter_);
@@ -175,15 +200,23 @@ void RuntimeMetricsView::refresh() {
   if (!dirty_ || rendering_ || !isVisible() || window()->isMinimized()) { return; }
   if (!model_ || !proxy_ || !table_ || !filter_ || !status_ || table_->model() != proxy_
       || proxy_->sourceModel() != model_) { return; }
+  for (std::size_t i = 0; i < summaryCount_; ++i) { if (!summaries_[i]) { return; } }
   QPointer<RuntimeMetricsView> guard(this);
   const auto packet = packet_; const auto revision = revision_;
+  const auto summaries = summaries_; const auto summaryCount = summaryCount_;
   const auto current = [&] { return guard && guard->revision_ == revision && guard->packet_ == packet
       && guard->isVisible() && !guard->window()->isMinimized(); };
   const QPointer<QAbstractTableModel> model = model_; const QPointer<QSortFilterProxyModel> proxy = proxy_;
   const QPointer<QTableView> table = table_; const QPointer<QLabel> status = status_;
-  const auto children = [&] { return current() && model && proxy && table && status
-      && guard->model_ == model && guard->proxy_ == proxy && guard->table_ == table && guard->status_ == status
-      && table->model() == proxy && proxy->sourceModel() == model; };
+  const auto children = [&] {
+    if (!current() || !model || !proxy || !table || !status
+        || guard->model_ != model || guard->proxy_ != proxy || guard->table_ != table || guard->status_ != status
+        || table->model() != proxy || proxy->sourceModel() != model) { return false; }
+    for (std::size_t i = 0; i < summaryCount; ++i) {
+      if (!summaries[i] || guard->summaries_[i] != summaries[i]) { return false; }
+    }
+    return true;
+  };
   rendering_ = true;
   struct Finish {
     QPointer<RuntimeMetricsView> view; quint64 revision;
@@ -223,6 +256,52 @@ void RuntimeMetricsView::refresh() {
   if (!children()) { return; }
   status->setAccessibleDescription(text + QLatin1Char(' ') + tip);
   if (!children()) { return; }
+  const auto summary = projectRuntimeServiceSummary(snapshot.get());
+  const auto number = [&](RuntimeServiceMetric field) {
+    const auto value = summary.get(field);
+    return value ? QString::number(*value) : tr("Unavailable");
+  };
+  using Field = RuntimeServiceMetric;
+  struct SummaryFact { QString text, source; };
+  std::array<SummaryFact, 3> summaryFacts{};
+  if (summaryGroup_ == core::RuntimeMetricGroup::Disk) {
+    summaryFacts[0] = {tr("Queued / running / fenced jobs: %1 / %2 / %3")
+        .arg(number(Field::QueuedDiskJobs)).arg(number(Field::RunningDiskJobs)).arg(number(Field::FencedDiskJobs)),
+        QStringLiteral("disk.queued_disk_jobs; disk.num_running_disk_jobs; disk.blocked_disk_jobs (job counts)")};
+    summaryFacts[1] = {tr("Buffers in use / pooled open files: %1 / %2")
+        .arg(number(Field::DiskBuffers)).arg(number(Field::OpenFiles)),
+        QStringLiteral("disk.disk_blocks_in_use; disk.file_pool_size (buffer and file-handle counts, not bytes)")};
+    summaryFacts[2] = {tr("Read / write operations: %1 / %2")
+        .arg(number(Field::ReadOperations)).arg(number(Field::WriteOperations)),
+        QStringLiteral("disk.num_read_ops; disk.num_write_ops (cumulative engine operation counts)")};
+  } else if (summaryGroup_ == core::RuntimeMetricGroup::Tracker) {
+    summaryFacts[0] = {tr("Queued HTTP announces: %1").arg(number(Field::QueuedHttpAnnounces)),
+        QStringLiteral("tracker.num_queued_tracker_announces (queued HTTP announces, not active trackers)")};
+    summaryFacts[1] = {tr("Tracker traffic estimate (received / sent bytes): %1 / %2")
+        .arg(number(Field::TrackerReceived)).arg(number(Field::TrackerSent)),
+        QStringLiteral("net.recv_tracker_bytes; net.sent_tracker_bytes (engine byte reports include estimated protocol costs)")};
+  } else if (summaryGroup_ == core::RuntimeMetricGroup::Peer) {
+    summaryFacts[0] = {tr("Connected / connecting peers: %1 / %2")
+        .arg(number(Field::ConnectedPeers)).arg(number(Field::ConnectingPeers)),
+        QStringLiteral("peer.num_peers_connected; peer.num_peers_half_open (peer counts; half-open connections are separate)")};
+    summaryFacts[1] = {tr("Allowed upload slots: %1; unchoked / optimistic peers: %2 / %3")
+        .arg(number(Field::AllowedUploadSlots)).arg(number(Field::UnchokedUploadPeers)).arg(number(Field::OptimisticUploadPeers)),
+        QStringLiteral("ses.num_unchoke_slots (dynamic allowed slots); peer.num_peers_up_unchoked_all; peer.num_peers_up_unchoked_optimistic (peer counts, optimistic included in total)")};
+    summaryFacts[2] = {tr("Peers with upload / download requests: %1 / %2; bandwidth queues (send / receive sockets): %3 / %4")
+        .arg(number(Field::UploadRequestPeers)).arg(number(Field::DownloadRequestPeers))
+        .arg(number(Field::UploadBandwidthQueue)).arg(number(Field::DownloadBandwidthQueue)),
+        QStringLiteral("peer.num_peers_up_requests; peer.num_peers_down_requests (peers with requests, not request counts); net.limiter_up_queue; net.limiter_down_queue (waiting socket counts, not bytes)")};
+  }
+  for (std::size_t i = 0; i < summaryCount; ++i) {
+    const auto& fact = summaryFacts[i];
+    summaries[i]->setText(fact.text);
+    if (!children()) { return; }
+    const auto detail = fact.source + QLatin1Char('\n') + fact.text;
+    summaries[i]->setToolTip(detail);
+    if (!children()) { return; }
+    summaries[i]->setAccessibleDescription(detail);
+    if (!children()) { return; }
+  }
   dirty_ = false;
 }
 void RuntimeMetricsView::showEvent(QShowEvent* event) {

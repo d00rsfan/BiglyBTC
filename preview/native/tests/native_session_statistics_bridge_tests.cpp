@@ -78,13 +78,18 @@ private slots:
     QSignalSpy closed(&bridge,&app::SessionBridge::sessionClosed);
     QVERIFY(bridge.open(fixture.native(),fixture.port()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&rows.count()>0,30000);
     auto& page=open(window);QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&page.readState().has_value(),30000);
-    QCOMPARE(child<QTabWidget>(page,"statistics-activity-views").currentIndex(),2);QVERIFY(!window.nativeSessionSnapshot());
+    QCOMPARE(child<QTabWidget>(page,"statistics-activity-views").currentIndex(),2);
+    QTRY_VERIFY_WITH_TIMEOUT(window.nativeSessionSnapshot()&&window.nativeSessionSnapshot()->sample
+        &&window.nativeSessionSnapshot()->state==ui::NativeSessionState::Idle,10000);
+    const auto startup=window.nativeSessionSnapshot();
+    QCOMPARE(startup->sample->counters,core::EngineCounters{}); // Actual startup observation, not absence/guessed zero.
     const auto firstTarget=window.model().targetAt(0);QVERIFY(firstTarget);QVERIFY(bridge.continueDownload(*firstTarget));
     QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&window.nativeSessionSnapshot()&&window.nativeSessionSnapshot()->sample
         &&window.nativeSessionSnapshot()->sample->counters.payloadReceived>0,30000);
     QTRY_VERIFY_WITH_TIMEOUT(window.nativeSessionSnapshot()->sample->rates
         &&window.nativeSessionSnapshot()->sample->rates->received==0,10000);
     const auto first=window.nativeSessionSnapshot();const auto retained=window.nativeActivitySnapshot();QVERIFY(retained);
+    QCOMPARE(first->epoch,startup->epoch);QCOMPARE(first->applicationRun,startup->applicationRun);
     QVERIFY(!retained->points().empty());QVERIFY(page.nativeSessionSnapshot()==first);
     page.tabs().setCurrentIndex(1);
     QTRY_COMPARE(child<QLabel>(page,"native-session-counter-received").text(),QString::number(first->sample->counters.received));

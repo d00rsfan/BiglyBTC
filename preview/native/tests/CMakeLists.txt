@@ -800,3 +800,15 @@ if(BIGLYBTC_DESKTOP)
   set_tests_properties(saved-history-live-refresh PROPERTIES TIMEOUT 120
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;ui;statistics")
 endif()
+
+# Explicit qualified idle startup; default/unbound desktop cohorts stay unchanged.
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-startup-statistics-tests startup_statistics_tests.cpp)
+  set_target_properties(biglybtc-startup-statistics-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-startup-statistics-tests PRIVATE
+    biglybtc_desktop_host biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+  target_compile_options(biglybtc-startup-statistics-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME startup-statistics-worker COMMAND biglybtc-startup-statistics-tests)
+  set_tests_properties(startup-statistics-worker PROPERTIES TIMEOUT 240
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;ui;statistics;startup;integration;loopback")
+endif()

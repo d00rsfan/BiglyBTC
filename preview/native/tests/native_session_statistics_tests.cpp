@@ -24,6 +24,7 @@
 #include <unistd.h>
 
 #include <functional>
+#include <limits>
 #include <memory>
 #include <stdexcept>
 
@@ -99,6 +100,78 @@ class NativeSessionStatisticsTests final : public QObject {
 private slots:
   void initTestCase() {
     QCOMPARE(QGuiApplication::platformName(),QStringLiteral("offscreen")); QApplication::setQuitOnLastWindowClosed(false);
+  }
+  void sessionShareRatioUsesAbsoluteCombinedCounters_data() {
+    QTest::addColumn<qint64>("received"); QTest::addColumn<qint64>("sent"); QTest::addColumn<QString>("expected");
+    QTest::newRow("combined-not-payload-or-rates") << qint64{5000} << qint64{3000} << QStringLiteral("0.600");
+    QTest::newRow("zero-denominator-one") << qint64{0} << qint64{7} << QStringLiteral("7.000");
+    QTest::newRow("observed-zero") << qint64{0} << qint64{0} << QStringLiteral("0.000");
+    QTest::newRow("fraction-truncation") << qint64{3} << qint64{1} << QStringLiteral("0.333");
+    QTest::newRow("positive-input-multiply-wrap") << qint64{1} << std::numeric_limits<qint64>::max() << QStringLiteral("-1.000");
+    QTest::newRow("wrapped-signed-remainder-padding") << qint64{1000} << std::numeric_limits<qint64>::max() << QStringLiteral("0.0-1");
+    QTest::newRow("wrapped-minimum") << qint64{1} << qint64{1152921504606846976LL} << QStringLiteral("-9223372036854775.-808");
+  }
+  void sessionShareRatioUsesAbsoluteCombinedCounters() {
+    QFETCH(qint64,received);QFETCH(qint64,sent);QFETCH(QString,expected);
+    ui::NativeSessionView view;QVERIFY(view.beginSession(7));show(view);
+    auto value=packet();value->sample->counters={received,sent,0,0};
+    value->sample->rates.reset();
+    if(received==5000 && sent==3000) { value->sample->rates=core::EngineRates{70,900,50,800,20,100}; }
+    const auto sample=*value->sample;QVERIFY(view.setPresentation(value));
+    auto& ratio=child<QLabel>(view,"native-session-share-ratio");
+    QCOMPARE(ratio.text(),QStringLiteral("Session share ratio: ")+expected);
+    QCOMPARE(ratio.textFormat(),Qt::PlainText);QVERIFY(*value->sample==sample);
+    QVERIFY(ratio.toolTip().contains(QString::number(sent)));QVERIFY(ratio.toolTip().contains(QString::number(received)));
+    QVERIFY(ratio.toolTip().contains(QStringLiteral("IP, tracker and DHT are excluded")));
+    QVERIFY(view.findChildren<QTimer*>().isEmpty());
+  }
+  void sessionRatioUnknownObservedZeroAndClosedLastObservationAreDistinct() {
+    ui::NativeSessionView view;QVERIFY(view.beginSession(7));show(view);
+    auto& ratio=child<QLabel>(view,"native-session-share-ratio");
+    QCOMPARE(ratio.text(),QStringLiteral("Session share ratio: Unavailable"));
+    auto unknown=packet();unknown->state=ui::NativeSessionState::Starting;unknown->sample.reset();
+    QVERIFY(view.setPresentation(unknown));QCOMPARE(ratio.text(),QStringLiteral("Session share ratio: Unavailable"));
+    auto zero=packet(2);zero->sample->counters={0,0,0,0};zero->sample->rates.reset();
+    QVERIFY(view.setPresentation(zero));QCOMPARE(ratio.text(),QStringLiteral("Session share ratio: 0.000"));
+    QVERIFY(ratio.toolTip().contains(QStringLiteral("denominator 1")));
+    auto closed=std::make_shared<ui::NativeSessionPacket>(*zero);closed->sequence=3;closed->state=ui::NativeSessionState::Closed;
+    QVERIFY(view.setPresentation(closed));QCOMPARE(ratio.text(),QStringLiteral("Last observed session share ratio: 0.000"));
+    QVERIFY(ratio.toolTip().contains(QStringLiteral("not an exhaustive final ratio")));
+    ui::NativeSessionView noSample;QVERIFY(noSample.beginSession(7));show(noSample);
+    auto empty=packet();empty->state=ui::NativeSessionState::Closed;empty->sample.reset();QVERIFY(noSample.setPresentation(empty));
+    QCOMPARE(child<QLabel>(noSample,"native-session-share-ratio").text(),QStringLiteral("Last observed session share ratio: Unavailable"));
+  }
+  void sessionRatioDefersHiddenMinimizedAndRejectsStaleCounters() {
+    ui::NativeSessionView view;QVERIFY(view.beginSession(7));show(view);QVERIFY(view.setPresentation(packet()));
+    auto& ratio=child<QLabel>(view,"native-session-share-ratio");QCOMPARE(ratio.text(),QStringLiteral("Session share ratio: 0.600"));
+    view.hide();auto second=packet(2);second->sample->counters={10000,9000,4000,2500};QVERIFY(view.setPresentation(second));
+    QCoreApplication::processEvents();QCOMPARE(ratio.text(),QStringLiteral("Session share ratio: 0.600"));
+    view.show();QTRY_COMPARE(ratio.text(),QStringLiteral("Session share ratio: 0.900"));
+    view.showMinimized();QTRY_VERIFY(view.isMinimized());auto third=packet(3);third->sample->counters={15000,15000,4000,2500};
+    QVERIFY(view.setPresentation(third));QCoreApplication::processEvents();QCOMPARE(ratio.text(),QStringLiteral("Session share ratio: 0.900"));
+    view.showNormal();QTRY_COMPARE(ratio.text(),QStringLiteral("Session share ratio: 1.000"));
+    QVERIFY(!view.setPresentation(second));QCOMPARE(ratio.text(),QStringLiteral("Session share ratio: 1.000"));
+  }
+  void sessionRatioTooltipCallbackRebindKeepsOnlyNewProfileFacts() {
+    ui::NativeSessionView view;QVERIFY(view.beginSession(7));show(view);
+    auto& ratio=child<QLabel>(view,"native-session-share-ratio");ratio.setToolTip({});Hook hook;
+    hook.callback=[&]{view.beginSession(8);auto latest=packet(2,8);latest->sample->counters={9000,9000,4000,2500};view.setPresentation(latest);};
+    ratio.installEventFilter(&hook);QVERIFY(view.setPresentation(packet()));QVERIFY(!hook.armed);
+    QCOMPARE(view.presentation()->session,quint64{8});QCOMPARE(ratio.text(),QStringLiteral("Session share ratio: 1.000"));
+    QVERIFY(!view.setPresentation(packet(9,7)));
+  }
+  void sessionRatioTooltipCallbackCanDeleteOwner() {
+    QPointer<ui::NativeSessionView> view=new ui::NativeSessionView;QVERIFY(view->beginSession(7));show(*view);
+    auto& ratio=child<QLabel>(*view,"native-session-share-ratio");ratio.setToolTip({});Hook hook;hook.consume=true;
+    hook.callback=[&]{delete view.data();};ratio.installEventFilter(&hook);
+    view->setPresentation(packet());QVERIFY(!hook.armed);QVERIFY(!view);
+  }
+  void sessionRatioTooltipCallbackCanDeleteOnlyItsOwnLabel() {
+    ui::NativeSessionView view;QVERIFY(view.beginSession(7));show(view);
+    QPointer<QLabel> ratio=&child<QLabel>(view,"native-session-share-ratio");ratio->setToolTip({});Hook hook;hook.consume=true;
+    hook.callback=[&]{delete ratio.data();};ratio->installEventFilter(&hook);
+    QVERIFY(view.setPresentation(packet()));QVERIFY(!hook.armed);QVERIFY(!ratio);
+    QVERIFY(view.setPresentation(packet(2)));QCOMPARE(view.presentation()->sequence,quint64{2});
   }
   void freshDefaultAndExplicitOldNavigationPreserveAllThreeIndices() {
     ui::StatisticsPage fresh;

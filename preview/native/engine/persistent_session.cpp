@@ -294,6 +294,17 @@ struct PersistentSession::Impl {
           "Persistent owner cannot cross profile identities", storage::ErrorCode::Conflict);
     } else { profileDevice = profile.st_dev; profileInode = profile.st_ino; profileBound = true; }
   }
+  void ensureSession() {
+    if (!session) {
+      try {
+        session = std::make_unique<lt::session>(detail::settings());
+        session->pause();
+        rateLimits = detail::readEffectiveRateLimits(*session); // Optional read, never applies settings.
+        phase = AccountingState::Idle;
+        mapCounters();
+      } catch (...) { joinPoisoned(); throw; }
+    }
+  }
   void prepare(const storage::ProfileLease& lease, const LocalOptions& options) {
     detail::require(call && onWorker() && !registered && !poisoned && !closed,
         "Persistent owner is not available", storage::ErrorCode::Conflict);
@@ -304,15 +315,7 @@ struct PersistentSession::Impl {
     try { operationSink = options.statistics; } catch (...) { operationSink = {}; }
     operationBaseline.reset(); operationAccumulator = {};
     transferError = false; storageError = false; removalLost = false; removalSeen = false;
-    if (!session) {
-      try {
-        session = std::make_unique<lt::session>(detail::settings());
-        session->pause();
-        rateLimits = detail::readEffectiveRateLimits(*session); // Optional read, never applies settings.
-        phase = AccountingState::Idle;
-        mapCounters();
-      } catch (...) { joinPoisoned(); throw; }
-    }
+    ensureSession();
     // Fresh absolute baseline while no torrent is admitted. Failure omits the
     // operation observer; it never substitutes absolute owner totals for it.
     if (fresh(Clock::now() + CertificationBudget) && lastStatistics) {
@@ -435,6 +438,25 @@ PersistentSession::~PersistentSession() {
   impl_->sink = {}; impl_->operationSink = {};
   impl_->session.reset();
 }
+std::expected<void, AccountingError> PersistentSession::startIdle(const storage::ProfileLease& lease) {
+  if (!impl_->onWorker()) { return std::unexpected(AccountingError::WrongThread); }
+  if (impl_->call) { return std::unexpected(AccountingError::ActiveOperation); }
+  if (impl_->closed) { return std::unexpected(AccountingError::Closing); }
+  if (impl_->poisoned) { return std::unexpected(AccountingError::OwnerResetRequired); }
+  impl_->call = true;
+  try {
+    impl_->bind(lease);
+    impl_->ensureSession();
+    impl_->call = false;
+    return {};
+  } catch (const std::bad_alloc&) {
+    impl_->call = false;
+    return std::unexpected(AccountingError::Memory);
+  } catch (...) {
+    impl_->call = false;
+    return std::unexpected(AccountingError::Engine);
+  }
+}
 std::expected<void, AccountingError> PersistentSession::setObservationSink(ApplicationObservationSink sink) {
   if (!impl_->onWorker()) { return std::unexpected(AccountingError::WrongThread); }
   if (impl_->call) { return std::unexpected(AccountingError::ActiveOperation); }
@@ -462,7 +484,7 @@ std::expected<void, AccountingError> PersistentSession::poll() {
   if (impl_->call) { return std::unexpected(AccountingError::ActiveOperation); }
   if (impl_->closed) { return std::unexpected(AccountingError::Closing); }
   if (impl_->poisoned) { return std::unexpected(AccountingError::OwnerResetRequired); }
-  if (!impl_->session) { return {}; } // Statistics/offline opening creates no engine.
+  if (!impl_->session) { return {}; } // create() alone and offline opening stay lazy.
   impl_->call = true;
   try {
     static_cast<void>(impl_->pop());

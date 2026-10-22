@@ -1,4 +1,5 @@
 #include "runtime_metrics_view.hpp"
+#include "runtime_service_summary.hpp"
 #include "library_window.hpp"
 #include "statistics_page.hpp"
 
@@ -45,6 +46,37 @@ auto packet(quint64 sequence = 1, quint64 session = 7, quint64 epoch = 1) {
   value->session=session; value->epoch=epoch; value->sequence=sequence; value->snapshot=snapshot(sequence);
   return value;
 }
+auto servicePacket(quint64 sequence = 1, quint64 session = 7, quint64 epoch = 1) {
+  auto value = packet(sequence, session, epoch); auto facts = snapshot(sequence);
+  using Type = core::RuntimeMetricType; using Group = core::RuntimeMetricGroup;
+  facts->metrics = {
+      {"disk.queued_disk_jobs",Type::Gauge,Group::Disk,0},
+      {"disk.num_running_disk_jobs",Type::Gauge,Group::Disk,2},
+      {"disk.blocked_disk_jobs",Type::Gauge,Group::Disk,3},
+      {"disk.disk_blocks_in_use",Type::Gauge,Group::Disk,4},
+      {"disk.file_pool_size",Type::Gauge,Group::Disk,5},
+      {"disk.num_read_ops",Type::Counter,Group::Disk,6},
+      {"disk.num_write_ops",Type::Counter,Group::Disk,7},
+      {"tracker.num_queued_tracker_announces",Type::Gauge,Group::Tracker,0},
+      {"net.recv_tracker_bytes",Type::Counter,Group::Net,8},
+      {"net.sent_tracker_bytes",Type::Counter,Group::Net,9}};
+  value->snapshot = facts; return value;
+}
+auto connectionPacket(quint64 sequence = 1, quint64 session = 7, quint64 epoch = 1) {
+  auto value = packet(sequence, session, epoch); auto facts = snapshot(sequence);
+  using Type = core::RuntimeMetricType; using Group = core::RuntimeMetricGroup;
+  facts->metrics = {
+      {"peer.num_peers_connected",Type::Gauge,Group::Peer,0},
+      {"peer.num_peers_half_open",Type::Gauge,Group::Peer,2},
+      {"ses.num_unchoke_slots",Type::Gauge,Group::Other,8},
+      {"peer.num_peers_up_unchoked_all",Type::Gauge,Group::Peer,3},
+      {"peer.num_peers_up_unchoked_optimistic",Type::Gauge,Group::Peer,1},
+      {"peer.num_peers_up_requests",Type::Gauge,Group::Peer,4},
+      {"peer.num_peers_down_requests",Type::Gauge,Group::Peer,5},
+      {"net.limiter_up_queue",Type::Gauge,Group::Net,6},
+      {"net.limiter_down_queue",Type::Gauge,Group::Net,7}};
+  value->snapshot = facts; return value;
+}
 QTableView& table(QWidget& view) { return child<QTableView>(view,"runtime-metrics-table"); }
 QLabel& status(QWidget& view) { return child<QLabel>(view,"runtime-metrics-status"); }
 QLineEdit& search(QWidget& view) { return child<QLineEdit>(view,"runtime-metrics-filter"); }
@@ -89,6 +121,198 @@ private slots:
   void initTestCase() {
     QCOMPARE(QGuiApplication::platformName(),QStringLiteral("offscreen"));
     QApplication::setQuitOnLastWindowClosed(false);
+  }
+  void connectionProjectionCopiesSelectedZeroAndFullSignedCounts() {
+    using Field=ui::RuntimeServiceMetric;
+    auto input=connectionPacket();auto facts=std::make_shared<core::RuntimeMetrics>(*input->snapshot);
+    facts->metrics[1].value=std::numeric_limits<std::int64_t>::max();
+    facts->metrics[7].value=std::numeric_limits<std::int64_t>::min();
+    const auto projected=ui::projectRuntimeServiceSummary(facts.get());
+    QVERIFY(projected.get(Field::ConnectedPeers)==0);
+    QVERIFY(projected.get(Field::ConnectingPeers)==std::numeric_limits<std::int64_t>::max());
+    QVERIFY(projected.get(Field::AllowedUploadSlots)==8);
+    QVERIFY(projected.get(Field::UnchokedUploadPeers)==3);QVERIFY(projected.get(Field::OptimisticUploadPeers)==1);
+    QVERIFY(projected.get(Field::UploadRequestPeers)==4);QVERIFY(projected.get(Field::DownloadRequestPeers)==5);
+    QVERIFY(projected.get(Field::UploadBandwidthQueue)==std::numeric_limits<std::int64_t>::min());
+    QVERIFY(projected.get(Field::DownloadBandwidthQueue)==7);
+    QVERIFY(!projected.get(Field::QueuedDiskJobs));QVERIFY(!projected.get(Field::QueuedHttpAnnounces));
+    facts->metrics.clear();QVERIFY(projected.get(Field::AllowedUploadSlots)==8); // Owned primitives, no alias.
+  }
+  void connectionProjectionDoesNotInferAbsentMistypedOrDuplicateFacts() {
+    using Field=ui::RuntimeServiceMetric;
+    auto input=connectionPacket();auto facts=std::make_shared<core::RuntimeMetrics>(*input->snapshot);
+    facts->metrics[0].type=core::RuntimeMetricType::Counter;
+    facts->metrics[1].group=core::RuntimeMetricGroup::Other;
+    facts->metrics.push_back(facts->metrics[2]);
+    facts->metrics[4].name="peer.num_peers_up_unchoked_optimistic.extra";
+    const auto projected=ui::projectRuntimeServiceSummary(facts.get());
+    QVERIFY(!projected.get(Field::ConnectedPeers));QVERIFY(!projected.get(Field::ConnectingPeers));
+    QVERIFY(!projected.get(Field::AllowedUploadSlots));QVERIFY(!projected.get(Field::OptimisticUploadPeers));
+    QVERIFY(projected.get(Field::UnchokedUploadPeers)==3);QVERIFY(projected.get(Field::UploadRequestPeers)==4);
+    QVERIFY(projected.get(Field::DownloadRequestPeers)==5);QVERIFY(projected.get(Field::UploadBandwidthQueue)==6);
+    auto empty=packet();QVERIFY(!ui::projectRuntimeServiceSummary(empty->snapshot.get()).get(Field::ConnectedPeers));
+  }
+  void connectionSummaryUsesDistinctPeerSlotAndSocketUnitsWithoutChangingRawFilter() {
+    ui::RuntimeMetricsView view(core::RuntimeMetricGroup::Peer);QVERIFY(view.beginSession(7));show(view);
+    auto actual=connectionPacket();actual->current=false;QVERIFY(view.setPresentation(actual));
+    QCOMPARE(child<QLabel>(view,"runtime-peer-connections").text(),QStringLiteral("Connected / connecting peers: 0 / 2"));
+    QCOMPARE(child<QLabel>(view,"runtime-peer-upload-slots").text(),QStringLiteral("Allowed upload slots: 8; unchoked / optimistic peers: 3 / 1"));
+    auto& requests=child<QLabel>(view,"runtime-peer-request-queues");
+    QCOMPARE(requests.text(),QStringLiteral("Peers with upload / download requests: 4 / 5; bandwidth queues (send / receive sockets): 6 / 7"));
+    QVERIFY(requests.toolTip().contains(QStringLiteral("peers with requests, not request counts")));
+    QVERIFY(requests.toolTip().contains(QStringLiteral("waiting socket counts, not bytes")));
+    QCOMPARE(requests.textFormat(),Qt::PlainText);QVERIFY(status(view).text().startsWith(QStringLiteral("Last observed")));
+    QCOMPARE(table(view).model()->rowCount(),6); // ses.* and net.* facts do not enter the raw Peer filter.
+    search(view).setText(QStringLiteral("no-match"));QTRY_COMPARE(table(view).model()->rowCount(),0);
+    QCOMPARE(child<QLabel>(view,"runtime-peer-connections").text(),QStringLiteral("Connected / connecting peers: 0 / 2"));
+    QVERIFY(view.findChildren<QTimer*>().isEmpty());
+    auto missing=packet(2);missing->snapshot.reset();QVERIFY(view.setPresentation(missing));
+    QCOMPARE(child<QLabel>(view,"runtime-peer-connections").text(),QStringLiteral("Connected / connecting peers: Unavailable / Unavailable"));
+  }
+  void connectionSummaryDefersHiddenAndMinimizedAndClearsAcrossEpochs() {
+    ui::RuntimeMetricsView view(core::RuntimeMetricGroup::Peer);QVERIFY(view.beginSession(7));show(view);
+    QVERIFY(view.setPresentation(connectionPacket()));auto& text=child<QLabel>(view,"runtime-peer-connections");
+    view.hide();auto next=connectionPacket(2);auto facts=std::make_shared<core::RuntimeMetrics>(*next->snapshot);
+    facts->metrics[0].value=22;next->snapshot=facts;QVERIFY(view.setPresentation(next));
+    QCoreApplication::processEvents();QCOMPARE(text.text(),QStringLiteral("Connected / connecting peers: 0 / 2"));
+    view.show();QTRY_COMPARE(text.text(),QStringLiteral("Connected / connecting peers: 22 / 2"));
+    view.showMinimized();QTRY_VERIFY(view.isMinimized());QVERIFY(view.setPresentation(connectionPacket(3)));
+    QCoreApplication::processEvents();QCOMPARE(text.text(),QStringLiteral("Connected / connecting peers: 22 / 2"));
+    view.showNormal();QTRY_COMPARE(text.text(),QStringLiteral("Connected / connecting peers: 0 / 2"));
+    auto newer=packet(1,7,2);newer->snapshot.reset();QVERIFY(view.setPresentation(newer));
+    QCOMPARE(text.text(),QStringLiteral("Connected / connecting peers: Unavailable / Unavailable"));
+    QVERIFY(!view.setPresentation(connectionPacket(99,7,1)));
+    QVERIFY(view.beginSession(8));QVERIFY(!view.setPresentation(connectionPacket(9,7,2)));
+    QVERIFY(view.setPresentation(connectionPacket(1,8,1)));
+    QCOMPARE(text.text(),QStringLiteral("Connected / connecting peers: 0 / 2"));
+  }
+  void connectionSummaryTooltipReplacementCannotResumeOlderFacts() {
+    ui::RuntimeMetricsView view(core::RuntimeMetricGroup::Peer);QVERIFY(view.beginSession(7));show(view);
+    auto& text=child<QLabel>(view,"runtime-peer-upload-slots");text.setToolTip({});Hook hook;
+    hook.callback=[&]{auto next=connectionPacket(2);auto facts=std::make_shared<core::RuntimeMetrics>(*next->snapshot);
+      facts->metrics[0].value=99;facts->metrics[2].value=24;facts->metrics[5].value=77;next->snapshot=facts;view.setPresentation(next);};
+    text.installEventFilter(&hook);QVERIFY(view.setPresentation(connectionPacket()));QVERIFY(!hook.armed);
+    QTRY_COMPARE(child<QLabel>(view,"runtime-peer-connections").text(),QStringLiteral("Connected / connecting peers: 99 / 2"));
+    QCOMPARE(text.text(),QStringLiteral("Allowed upload slots: 24; unchoked / optimistic peers: 3 / 1"));
+    QVERIFY(child<QLabel>(view,"runtime-peer-request-queues").text().startsWith(QStringLiteral("Peers with upload / download requests: 77 / 5;")));
+    QVERIFY(text.accessibleDescription().contains(QStringLiteral("Allowed upload slots: 24")));
+  }
+  void connectionSummaryFinalTooltipCanDeleteOwnerWithoutTrailingAccess() {
+    QPointer<ui::RuntimeMetricsView> view=new ui::RuntimeMetricsView(core::RuntimeMetricGroup::Peer);
+    QVERIFY(view->beginSession(7));show(*view);auto& text=child<QLabel>(*view,"runtime-peer-request-queues");text.setToolTip({});
+    Hook hook;hook.consume=true;hook.callback=[&]{delete view.data();};text.installEventFilter(&hook);
+    view->setPresentation(connectionPacket());QVERIFY(!hook.armed);QVERIFY(!view);
+  }
+  void serviceProjectionCopiesExactFactsAndRetainsRawSignedBounds() {
+    using Field = ui::RuntimeServiceMetric;
+    auto value = servicePacket(); auto facts = std::make_shared<core::RuntimeMetrics>(*value->snapshot);
+    facts->metrics[5].value = std::numeric_limits<std::int64_t>::max();
+    facts->metrics[8].value = std::numeric_limits<std::int64_t>::min();
+    const auto projected = ui::projectRuntimeServiceSummary(facts.get());
+    QVERIFY(projected.get(Field::QueuedDiskJobs) == 0); QVERIFY(projected.get(Field::RunningDiskJobs) == 2);
+    QVERIFY(projected.get(Field::FencedDiskJobs) == 3); QVERIFY(projected.get(Field::DiskBuffers) == 4);
+    QVERIFY(projected.get(Field::OpenFiles) == 5); QVERIFY(projected.get(Field::ReadOperations) == std::numeric_limits<std::int64_t>::max());
+    QVERIFY(projected.get(Field::WriteOperations) == 7); QVERIFY(projected.get(Field::QueuedHttpAnnounces) == 0);
+    QVERIFY(projected.get(Field::TrackerReceived) == std::numeric_limits<std::int64_t>::min());
+    QVERIFY(projected.get(Field::TrackerSent) == 9);
+    facts->metrics.clear(); QVERIFY(projected.get(Field::TrackerSent) == 9);
+    QVERIFY(!projected.get(static_cast<Field>(999)));
+  }
+  void serviceProjectionDoesNotInventMissingMistypedDuplicateOrOverflowFacts() {
+    using Field = ui::RuntimeServiceMetric;
+    QVERIFY(ui::projectRuntimeServiceSummary(nullptr) == ui::RuntimeServiceSummary{});
+    auto value = servicePacket(); auto facts = std::make_shared<core::RuntimeMetrics>(*value->snapshot);
+    facts->metrics[0].type = core::RuntimeMetricType::Counter;
+    facts->metrics[1].group = core::RuntimeMetricGroup::Peer;
+    facts->metrics.push_back(facts->metrics[2]);
+    facts->metrics[3].name = "disk.disk_blocks_in_use.extra";
+    const auto projected = ui::projectRuntimeServiceSummary(facts.get());
+    QVERIFY(!projected.get(Field::QueuedDiskJobs)); QVERIFY(!projected.get(Field::RunningDiskJobs));
+    QVERIFY(!projected.get(Field::FencedDiskJobs)); QVERIFY(!projected.get(Field::DiskBuffers));
+    QVERIFY(projected.get(Field::OpenFiles) == 5); QVERIFY(projected.get(Field::TrackerReceived) == 8);
+    facts->metrics.resize(core::MaximumRuntimeMetrics + 1);
+    QVERIFY(ui::projectRuntimeServiceSummary(facts.get()) == ui::RuntimeServiceSummary{});
+  }
+  void diskSummaryShowsMeasuredZeroCountsAndIndependentMissingValues() {
+    ui::RuntimeMetricsView view(core::RuntimeMetricGroup::Disk); QVERIFY(view.beginSession(7)); show(view);
+    auto& jobs = child<QLabel>(view,"runtime-disk-jobs");
+    QTRY_VERIFY(jobs.text().contains(QStringLiteral("Unavailable")));
+    QVERIFY(view.setPresentation(servicePacket()));
+    QCOMPARE(jobs.text(),QStringLiteral("Queued / running / fenced jobs: 0 / 2 / 3"));
+    QCOMPARE(child<QLabel>(view,"runtime-disk-buffers-files").text(),QStringLiteral("Buffers in use / pooled open files: 4 / 5"));
+    QCOMPARE(child<QLabel>(view,"runtime-disk-operations").text(),QStringLiteral("Read / write operations: 6 / 7"));
+    QCOMPARE(jobs.textFormat(),Qt::PlainText); QCOMPARE(table(view).model()->rowCount(),7);
+    auto partial=servicePacket(2);auto facts=std::make_shared<core::RuntimeMetrics>(*partial->snapshot);
+    facts->metrics.erase(facts->metrics.begin());partial->snapshot=facts;QVERIFY(view.setPresentation(partial));
+    QCOMPARE(jobs.text(),QStringLiteral("Queued / running / fenced jobs: Unavailable / 2 / 3"));
+    auto missing=packet(3);missing->snapshot.reset();QVERIFY(view.setPresentation(missing));
+    QVERIFY(jobs.text().contains(QStringLiteral("Unavailable / Unavailable / Unavailable")));
+  }
+  void trackerSummaryUsesAcceptedNetCountersWithoutChangingGenericFilter() {
+    ui::RuntimeMetricsView view(core::RuntimeMetricGroup::Tracker);QVERIFY(view.beginSession(7));show(view);
+    auto actual=servicePacket();actual->current=false;QVERIFY(view.setPresentation(actual));
+    QCOMPARE(table(view).model()->rowCount(),1);
+    QCOMPARE(child<QLabel>(view,"runtime-tracker-queue").text(),QStringLiteral("Queued HTTP announces: 0"));
+    auto& traffic=child<QLabel>(view,"runtime-tracker-traffic");
+    QCOMPARE(traffic.text(),QStringLiteral("Tracker traffic estimate (received / sent bytes): 8 / 9"));
+    QVERIFY(traffic.toolTip().contains(QStringLiteral("estimated protocol costs")));
+    QVERIFY(status(view).text().startsWith(QStringLiteral("Last observed")));
+    search(view).setText(QStringLiteral("no-match"));QTRY_COMPARE(table(view).model()->rowCount(),0);
+    QCOMPARE(traffic.text(),QStringLiteral("Tracker traffic estimate (received / sent bytes): 8 / 9"));
+    QVERIFY(view.findChildren<QTimer*>().isEmpty());
+  }
+  void serviceSummaryAddsPeerDiagnosticsButKeepsUnfilteredAndRawTableRules() {
+    for(const auto group:{std::optional<core::RuntimeMetricGroup>{},std::optional{core::RuntimeMetricGroup::Peer}}) {
+      ui::RuntimeMetricsView view(group);QVERIFY(view.beginSession(7));show(view);QVERIFY(view.setPresentation(servicePacket()));
+      if (group) {
+        QCOMPARE(child<QLabel>(view,"runtime-service-summary").text(),QStringLiteral("Connections"));
+        QCOMPARE(child<QLabel>(view,"runtime-peer-connections").text(),QStringLiteral("Connected / connecting peers: Unavailable / Unavailable"));
+      } else { QVERIFY(!view.findChild<QLabel*>(QStringLiteral("runtime-service-summary"))); }
+      QCOMPARE(table(view).model()->rowCount(),group?0:10);
+    }
+  }
+  void summaryLabelsDeferWhileHiddenAndMinimizedThenRenderLatest() {
+    ui::RuntimeMetricsView view(core::RuntimeMetricGroup::Disk);QVERIFY(view.beginSession(7));show(view);
+    QVERIFY(view.setPresentation(servicePacket()));auto& text=child<QLabel>(view,"runtime-disk-jobs");
+    const auto old=text.text();view.hide();auto changed=servicePacket(2);
+    auto facts=std::make_shared<core::RuntimeMetrics>(*changed->snapshot);facts->metrics[0].value=90;changed->snapshot=facts;
+    QVERIFY(view.setPresentation(changed));QCoreApplication::processEvents();QCOMPARE(text.text(),old);
+    view.show();QTRY_COMPARE(text.text(),QStringLiteral("Queued / running / fenced jobs: 90 / 2 / 3"));
+    view.showMinimized();QTRY_VERIFY(view.isMinimized());QVERIFY(view.setPresentation(servicePacket(3)));
+    QCoreApplication::processEvents();QCOMPARE(text.text(),QStringLiteral("Queued / running / fenced jobs: 90 / 2 / 3"));
+    view.showNormal();QTRY_COMPARE(text.text(),QStringLiteral("Queued / running / fenced jobs: 0 / 2 / 3"));
+  }
+  void summarySessionAndEpochResetCannotBeUndoneByStaleFacts() {
+    ui::RuntimeMetricsView view(core::RuntimeMetricGroup::Tracker);QVERIFY(view.beginSession(7));show(view);
+    QVERIFY(view.setPresentation(servicePacket(4)));auto& text=child<QLabel>(view,"runtime-tracker-queue");
+    QVERIFY(view.beginSession(8));QVERIFY(text.text().contains(QStringLiteral("Unavailable")));
+    QVERIFY(!view.setPresentation(servicePacket(9,7)));QVERIFY(text.text().contains(QStringLiteral("Unavailable")));
+    QVERIFY(view.setPresentation(servicePacket(1,8)));QCOMPARE(text.text(),QStringLiteral("Queued HTTP announces: 0"));
+    auto empty=packet(1,8,2);empty->snapshot.reset();QVERIFY(view.setPresentation(empty));
+    QVERIFY(text.text().contains(QStringLiteral("Unavailable")));QVERIFY(!view.setPresentation(servicePacket(99,8,1)));
+  }
+  void summaryCallbackProfileRebindQueuesOnlyLatestFacts() {
+    ui::RuntimeMetricsView view(core::RuntimeMetricGroup::Disk);QVERIFY(view.beginSession(7));show(view);
+    auto& text=child<QLabel>(view,"runtime-disk-jobs");text.setToolTip({});Hook hook;
+    hook.callback=[&]{view.beginSession(8);auto latest=servicePacket(2,8);auto facts=std::make_shared<core::RuntimeMetrics>(*latest->snapshot);
+      facts->metrics[0].value=99;latest->snapshot=facts;view.setPresentation(latest);};text.installEventFilter(&hook);
+    QVERIFY(view.setPresentation(servicePacket()));QVERIFY(!hook.armed);
+    QTRY_COMPARE(view.presentation()->session,quint64{8});
+    QTRY_COMPARE(text.text(),QStringLiteral("Queued / running / fenced jobs: 99 / 2 / 3"));
+    QVERIFY(!view.setPresentation(servicePacket(99,7)));
+  }
+  void summaryCallbackCanDeleteOwnerWithoutContinuingLabelUpdates() {
+    QPointer<ui::RuntimeMetricsView> view=new ui::RuntimeMetricsView(core::RuntimeMetricGroup::Disk);
+    QVERIFY(view->beginSession(7));show(*view);auto& text=child<QLabel>(*view,"runtime-disk-jobs");text.setToolTip({});
+    Hook hook;hook.consume=true;hook.callback=[&]{delete view.data();};text.installEventFilter(&hook);
+    view->setPresentation(servicePacket());QVERIFY(!hook.armed);QVERIFY(!view);
+  }
+  void summaryCallbackCanDeleteOnlyItsLabelAndStillCacheFuturePackets() {
+    ui::RuntimeMetricsView view(core::RuntimeMetricGroup::Tracker);QVERIFY(view.beginSession(7));show(view);
+    QPointer<QLabel> label=&child<QLabel>(view,"runtime-tracker-queue");label->setToolTip({});
+    Hook hook;hook.consume=true;hook.callback=[&]{delete label.data();};label->installEventFilter(&hook);
+    QVERIFY(view.setPresentation(servicePacket()));QVERIFY(!hook.armed);QVERIFY(!label);
+    QVERIFY(view.setPresentation(servicePacket(2)));QCOMPARE(view.presentation()->sequence,quint64{2});
   }
   void unknownIsNotRecordedZeroAndTableHasExactThreeColumns() {
     ui::RuntimeMetricsView view;show(view);QVERIFY(view.beginSession(7));

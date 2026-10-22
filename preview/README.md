@@ -274,3 +274,5 @@ are distinct from whole original configuration/runtime activation, which remains
 in progress.
 
 The connected controls milestone is qualified at source `2c5a81227e750202403fec188fbb71817aa3cfca`: GCC17 affected suites, Clang17, leak-enabled ASan/UBSan17, hosted102, portable smoke and actual private-runtime workers passed. Original Java classes read both actual native-written test profiles. See [validation receipt](../migration/evidence/statistics-controls-20261022.json).
+
+A qualified native owner now starts on successful profile open with an explicit owned loopback endpoint, before a first transfer or opening Statistics. Idle zero traffic and elapsed time are actual engine observations; the first transfer retains that owner. Offline port0 and unqualified fallback remain read-only. Transfers Current adds the original combined-traffic session share ratio. Disk, Tracker and Connections now provide compact named summaries above their searchable raw measurements, with distinct counts and units.
