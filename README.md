@@ -58,3 +58,7 @@ The workflow is [`.github/workflows/plugin-sdk.yml`](.github/workflows/plugin-sd
 It runs on GitHub-hosted Ubuntu 24.04 runners for pushes to `main`, pull requests, and manual dispatch.
 
 For future workflow changes, push using this repository's SSH URL (`git@github.com:d00rsfan/BiglyBTC.git`). HTTPS pushes authenticated with an OAuth token require the additional `workflow` scope to add or update workflow files. Viewing public Actions runs does not require that scope.
+
+The connected Statistics accounting milestone is qualified at source
+`292193b3e837d6bf36468d6c64ee8c982a693003`; see the [validation record](migration/evidence/statistics-accounting-20261022.json).
+The remaining Statistics services and full client migration are still in progress.

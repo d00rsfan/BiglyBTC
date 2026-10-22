@@ -1,0 +1,70 @@
+{
+  "status": "qualified bounded package; full Statistics remains in_progress",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_source_commit": "292193b3e837d6bf36468d6c64ee8c982a693003",
+  "native_parent": "01973075251a3078f45973318fb841422ff25f7c",
+  "local": {
+    "gcc_default": {
+      "full_attempt": 99,
+      "initial_failures": 6,
+      "focused_corrections_passed": 6,
+      "final_covered_suites": 99
+    },
+    "gcc_source": {
+      "full_affected_attempt": 33,
+      "initial_failures": 2,
+      "focused_corrections_passed": 3,
+      "final_covered_suites": 33
+    },
+    "clang": {
+      "suites": 35,
+      "failures": 0,
+      "skips": 0
+    },
+    "asan_ubsan_lsan": {
+      "suites": 35,
+      "failures": 0,
+      "skips": 0,
+      "detect_leaks": true
+    }
+  },
+  "hosted": {
+    "run": 39843436848,
+    "source_commit": "292193b3e837d6bf36468d6c64ee8c982a693003",
+    "suites": 99,
+    "failures": 0,
+    "skips": 0,
+    "captures": 28,
+    "sdk_run": 39843436887,
+    "sdk_result": "success",
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39843436848"
+  },
+  "portable": {
+    "manifest_sha256": "29aba35174ade993c9be4397e2a23a8716e3f3ca0ec789f1fec4fab897ae73cd",
+    "files": 107,
+    "system_installation": false,
+    "launch": "dist/BiglyBTC-preview",
+    "runtime_sha256": "c35f1b0408508c019f002c438d70dd361a55be20286ded56711efd6bba2424e3"
+  },
+  "scope": [
+    "persistent peer-session Activity/Current",
+    "original rate arithmetic with cumulative-sample delivery timing",
+    "compatible Overall fields, marks and fixed-name transactions",
+    "original-format six-field minute recording",
+    "actual native disk/tracker/peer/general metric tables",
+    "exact uninstrumented copied runtime admission"
+  ],
+  "remaining": [
+    "configured smoothing and session-global limits follow-up",
+    "write-driven visible history refresh follow-up",
+    "Transfers derived summary and diagnostics follow-up",
+    "capacity, ASN, auto-speed and original service parity",
+    "DHT/DDB/Vivaldi, Tags, Country service providers",
+    "normal-profile activation/switching and broader client migration"
+  ],
+  "notes": [
+    "GCC initial failures and focused fixes retained; passing full default set is independently confirmed by hosted CI at exact final source.",
+    "First portable verifier attempts had helper argument/path assumptions; product smoke and actual workers passed verification-v3 with private product Qt; SDK QtTest is test-only.",
+    "No system installation, original running application or live profile access."
+  ]
+}
