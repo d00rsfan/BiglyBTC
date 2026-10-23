@@ -38,3 +38,6 @@ target_sources(biglybtc_ui PRIVATE saved_speed_map_widget.hpp saved_speed_map_wi
 
 target_sources(biglybtc_ui PRIVATE live_speed_manager_view.hpp live_speed_manager_view.cpp
   live_speed_map_widget.hpp live_speed_map_widget.cpp)
+
+target_sources(biglybtc_ui PRIVATE owned_lookup_tree_widget.hpp owned_lookup_tree_widget.cpp)
+target_link_libraries(biglybtc_ui PUBLIC biglybtc_azureus_control)

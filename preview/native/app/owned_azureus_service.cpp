@@ -15,6 +15,7 @@
 namespace biglybtc::app {
 namespace router=services::azureus_router;
 namespace nodes=services::azureus_nodes;
+namespace control=services::azureus_control;
 struct OwnedAzureusService::Command {
   AzureusServiceCommand kind=AzureusServiceCommand::Ping;
   std::uint64_t id=0,target=0;
@@ -75,8 +76,13 @@ struct OwnedAzureusService::Impl {
     void command(Command value){
       {std::lock_guard lock(state_->mutex);if(state_->stop){releaseLocked();state_->advance();return;}}
       try{
-        if(value.kind==AzureusServiceCommand::AllowPeer){auto allowed=actor_.allowPeer(value.peer);if(allowed){routerKnown(value.peer);}complete(value,allowed);return;}
+        if(value.kind==AzureusServiceCommand::AllowPeer){auto allowed=actor_.allowPeer(value.peer);if(allowed){rememberOwned(value.peer);routerKnown(value.peer);}complete(value,allowed);return;}
+        if(value.kind==AzureusServiceCommand::LookupValue){beginLookup(value);return;}
         if(value.kind==AzureusServiceCommand::Cancel){
+          if(lookupCommand_&&lookupCommand_->id==value.target&&!lookupResultPublished_){
+            const auto cancelled=lookup_->cancel(lookupNow());pumpLookup();
+            complete(value,cancelled?std::expected<void,azureus::Failure>{}:std::unexpected(azureus::Failure::State));return;
+          }
           for(auto& item:active_){if(item.id==value.target){const bool cancelled=actor_.cancel(item.ticket);complete(value,cancelled?std::expected<void,azureus::Failure>{}:std::unexpected(azureus::Failure::State));return;}}
           complete(value,std::unexpected(azureus::Failure::State));return;
         }
@@ -93,13 +99,24 @@ struct OwnedAzureusService::Impl {
     }
     void shutdown()noexcept{
       bool closed=true;try{actor_.close();}catch(...){closed=false;}
-      if(closed){publish();}
+      if(closed){
+        // actor.close() actually closes all outstanding tickets. Its queued
+        // callbacks need not run after the event loop stops; record only that
+        // actual Closed boundary, never successful child replies.
+        if(lookup_&&!lookupResultPublished_){
+          static_cast<void>(lookup_->close(lookupNow()));
+          for(auto& rpc:lookupRpcs_){if(rpc.node){static_cast<void>(lookup_->finish(rpc.node,control::LookupNodeState::Closed,lookupNow()));rpc={};}}
+          finishLookup();
+        }
+        publish();
+      }
       std::lock_guard lock(state_->mutex);state_->value.state=closed?AzureusServiceState::Closed:AzureusServiceState::Failed;
       if(!closed){state_->value.current=false;state_->value.error=AzureusServiceError::Memory;}
       state_->value.current=false;state_->value.outstandingCommands=0;state_->advance();
     }
   private:
     struct Active {std::uint64_t id=0;azureus::Ticket ticket;};
+    struct LookupRpc {std::uint64_t node=0;azureus::Ticket ticket;azureus::Peer peer;bool cancellationRequested=false;};
     using Clock=std::chrono::steady_clock;
     std::int64_t routerNow()const noexcept{
       return std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now()-routerStarted_).count();
@@ -169,6 +186,143 @@ struct OwnedAzureusService::Impl {
       }catch(...){routerFailed(router::RouterError::Memory);}
     }
 
+    static std::int64_t lookupNow()noexcept{return std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();}
+    static std::optional<azureus::Peer> lookupPeer(const services::azureus_dht::Address& value){
+      if(!value.port){return {};}
+      if(value.length==4){quint32 address=0;for(unsigned i=0;i<4;++i){address=(address<<8)|value.bytes[i];}return azureus::Peer{QHostAddress(address),value.port};}
+      if(value.length==16){Q_IPV6ADDR address;std::copy_n(value.bytes.begin(),16,address.c);return azureus::Peer{QHostAddress(address),value.port};}
+      return {};
+    }
+    bool isOwned(const azureus::Peer& peer)const noexcept{
+      return std::ranges::any_of(ownedPeers_,[&](const auto& item){return item&&*item==peer;});
+    }
+    void rememberOwned(const azureus::Peer& peer)noexcept{
+      if(isOwned(peer)){return;}for(auto& item:ownedPeers_){if(!item){item=peer;return;}}
+    }
+    control::AdmittedContact lookupAdmission(const nodes::Contact& contact)const{
+      const auto peer=lookupPeer(contact.address);
+      return {contact,peer&&validPeer(*peer,options_.bindAddress)&&isOwned(*peer)};
+    }
+    void failLookup(AzureusServiceError error)noexcept{
+      // Optional lookup failure never stops the actor, changes byte accounting
+      // or promotes an outstanding request to successful completion.
+      for(auto& rpc:lookupRpcs_){if(rpc.node){try{static_cast<void>(actor_.cancel(rpc.ticket));}catch(...){}rpc={};}}
+      lookup_.reset();lookupSnapshot_.reset();lookupFailure_=error;
+      if(lookupCommand_&&!lookupResultPublished_){
+        lookupResultPublished_=true;
+        std::lock_guard lock(state_->mutex);releaseLocked();
+        state_->value.lastResult=AzureusServiceResult{lookupCommand_->id,0,AzureusServiceCommand::LookupValue,true,error,{}};state_->advance();
+      }
+      publish();
+    }
+    void captureLookup()noexcept{
+      if(!lookup_){return;}
+      try{
+        auto actual=lookup_->snapshot();if(!actual){lookupSnapshot_.reset();lookupFailure_=AzureusServiceError::Memory;return;}
+        if(lookupSnapshot_&&lookupSnapshot_->lookup==actual->lookup&&lookupSnapshot_->revision==actual->revision){return;}
+        lookupSnapshot_=std::make_shared<const control::LookupSnapshot>(std::move(*actual));lookupFailure_.reset();
+      }catch(...){lookupSnapshot_.reset();lookupFailure_=AzureusServiceError::Memory;}
+    }
+    void finishLookup()noexcept{
+      if(!lookup_||!lookupCommand_||lookupResultPublished_){return;}
+      try{
+        auto actual=lookup_->snapshot();if(!actual){failLookup(AzureusServiceError::Memory);return;}
+        if(!control::lookupTerminal(actual->state)||std::ranges::any_of(lookupRpcs_,[](const auto& rpc){return rpc.node!=0;})){return;}
+        std::optional<azureus::Failure> failure;
+        switch(actual->state){
+          case control::LookupState::Complete:break;
+          case control::LookupState::Cancelled:failure=azureus::Failure::Cancelled;break;
+          case control::LookupState::Closed:failure=azureus::Failure::Closed;break;
+          case control::LookupState::TimedOut:failure=azureus::Failure::Timeout;break;
+          default:failure=azureus::Failure::State;break;
+        }
+        lookupResultPublished_=true;reply(*lookupCommand_,failure,true);
+      }catch(...){failLookup(AzureusServiceError::Memory);}
+    }
+    void lookupReply(std::uint64_t operation,std::uint64_t node,azureus::FindValueOutcome outcome)noexcept{
+      if(!lookup_||!lookupCommand_||lookupCommand_->id!=operation||lookupResultPublished_){return;}
+      auto found=std::ranges::find(lookupRpcs_,node,&LookupRpc::node);if(found==lookupRpcs_.end()){return;}
+      try{
+        const auto now=lookupNow();bool terminal=true;
+        const auto peer=found->peer;routerReply(peer,outcome);
+        if(!outcome){
+          auto state=control::LookupNodeState::Failed;
+          if(outcome.error()==azureus::Failure::Timeout){state=control::LookupNodeState::Timeout;}
+          else if(outcome.error()==azureus::Failure::Cancelled){state=control::LookupNodeState::Cancelled;}
+          else if(outcome.error()==azureus::Failure::Closed){state=control::LookupNodeState::Closed;}
+          static_cast<void>(lookup_->finish(node,state,now));
+        }else if(const auto* body=std::get_if<azureus::lookup::ReplyBody>(&outcome->body())){
+          terminal=!body->continuation;
+          if(const auto* values=std::get_if<azureus::lookup::FoundValues>(&body->result)){
+            static_cast<void>(lookup_->values(node,values->values,body->continuation,values->diversification,now));
+          }else if(const auto* contacts=std::get_if<azureus::lookup::FoundContacts>(&body->result)){
+            if(contacts->providerFailures){
+              if(body->continuation){static_cast<void>(lookup_->contacts(node,{},true,now));}
+              else{static_cast<void>(lookup_->finish(node,control::LookupNodeState::Failed,now));}
+            }
+            else{
+              std::vector<control::AdmittedContact> admitted;admitted.reserve(contacts->contacts.size());
+              for(const auto& contact:contacts->contacts){admitted.push_back(lookupAdmission(contact));}
+              static_cast<void>(lookup_->contacts(node,admitted,body->continuation,now));
+            }
+          }
+        }else{static_cast<void>(lookup_->finish(node,control::LookupNodeState::Failed,now));}
+        if(terminal){*found={};}
+        pumpLookup();publish();
+      }catch(...){failLookup(AzureusServiceError::Memory);}
+    }
+    void pumpLookup()noexcept{
+      if(!lookup_||!lookupCommand_||lookupResultPublished_){return;}
+      try{
+        const auto now=lookupNow();auto intents=lookup_->takeIntents(now);
+        if(!intents){failLookup(AzureusServiceError::Transport);return;}
+        for(const auto& intent:*intents){
+          auto free=std::ranges::find(lookupRpcs_,std::uint64_t{0},&LookupRpc::node);
+          const auto peer=lookupPeer(intent.contact.address);
+          if(free==lookupRpcs_.end()||!peer||!validPeer(*peer,options_.bindAddress)||!isOwned(*peer)){
+            static_cast<void>(lookup_->finish(intent.node,control::LookupNodeState::Rejected,lookupNow()));continue;
+          }
+          const auto remaining=lookupTimeoutMillis_-(lookupNow()-lookupStartedMillis_);
+          if(remaining<=0){static_cast<void>(lookup_->finish(intent.node,control::LookupNodeState::Rejected,lookupNow()));continue;}
+          free->node=intent.node;free->peer=*peer;const auto operation=lookupCommand_->id;
+          auto ticket=actor_.findValue(*peer,intent.contact.protocol,intent.target,intent.flags,intent.maximumValues,this,
+              [this,operation,node=intent.node](azureus::FindValueOutcome result){lookupReply(operation,node,std::move(result));},std::chrono::milliseconds(remaining));
+          if(!ticket){*free={};static_cast<void>(lookup_->finish(intent.node,control::LookupNodeState::Failed,lookupNow()));continue;}
+          free->ticket=*ticket;
+          if(!lookup_->sent(intent.node,ticket->value,lookupNow())){failLookup(AzureusServiceError::Transport);return;}
+        }
+        auto cancellations=lookup_->cancellationIntents();if(!cancellations){failLookup(AzureusServiceError::Memory);return;}
+        for(const auto& intent:*cancellations){
+          auto rpc=std::ranges::find(lookupRpcs_,intent.node,&LookupRpc::node);
+          if(rpc!=lookupRpcs_.end()&&rpc->ticket.value==intent.ticket&&!rpc->cancellationRequested){
+            rpc->cancellationRequested=true;static_cast<void>(actor_.cancel(rpc->ticket));
+            // false can mean a real reply is already queued. Do not fabricate
+            // cancellation acknowledgement; its actual callback settles it.
+          }
+        }
+        finishLookup();
+      }catch(...){failLookup(AzureusServiceError::Memory);}
+    }
+    void beginLookup(const Command& command)noexcept{
+      if(lookupCommand_&&!lookupResultPublished_){failCommand(command,AzureusServiceError::Capacity);return;}
+      if(!isOwned(command.peer)){complete(command,std::unexpected(azureus::Failure::Peer));return;}
+      try{
+        const auto transport=actor_.statisticsSnapshot();const auto local=routerIdentity(actor_.endpoint(),options_.version);
+        const auto seedId=routerIdentity(command.peer,options_.version);
+        if(!transport||!local||!seedId){failCommand(command,AzureusServiceError::Transport);return;}
+        nodes::Contact seed;seed.id=*seedId;seed.protocol=options_.version;seed.address.port=command.peer.port;
+        if(command.peer.address.protocol()==QAbstractSocket::IPv4Protocol){seed.address.length=4;const auto address=command.peer.address.toIPv4Address();for(unsigned i=0;i<4;++i){seed.address.bytes[i]=static_cast<std::uint8_t>(address>>(24-8*i));}}
+        else{seed.address.length=16;const auto address=command.peer.address.toIPv6Address();std::copy_n(address.c,16,seed.address.bytes.begin());}
+        control::LookupOptions options;options.target=command.node;options.localId=*local;options.flags=static_cast<std::uint8_t>(command.flags);
+        options.maximumValues=static_cast<std::size_t>(command.maximumValues);options.timeoutMillis=std::chrono::ceil<std::chrono::milliseconds>(command.timeout).count();
+        auto candidate=std::make_unique<control::LookupController>();const std::array seeds{control::AdmittedContact{seed,true}};
+        const auto now=lookupNow();auto started=candidate->start(transport->generation(),command.id,options,seeds,now);
+        if(!started){failCommand(command,AzureusServiceError::Invalid);return;}
+        lookup_=std::move(candidate);lookupCommand_=command;lookupResultPublished_=false;lookupSnapshot_.reset();lookupFailure_.reset();
+        lookupStartedMillis_=now;lookupTimeoutMillis_=options.timeoutMillis;lookupRpcs_={};pumpLookup();publish();
+      }catch(...){lookup_.reset();lookupSnapshot_.reset();lookupFailure_=AzureusServiceError::Memory;failCommand(command,AzureusServiceError::Memory);}
+    }
+
     static azureus::Config configuration(const AzureusServiceOptions& options){azureus::Config config;config.network=options.network;config.version=options.version;
       config.servePings=options.servePings;config.observeOperations=true;config.enableVivaldi=options.enableVivaldi;config.maximumPending=options.maximumPending;config.maximumPeers=options.maximumPeers;return config;}
     void releaseLocked(){if(state_->value.outstandingCommands){--state_->value.outstandingCommands;}}
@@ -184,13 +338,13 @@ struct OwnedAzureusService::Impl {
       try{
         const auto actual=actor_.dhtStatisticsSnapshot(); // Exported getter is noexcept and fixed-state.
         if(!actual){std::lock_guard lock(state_->mutex);state_->value.current=false;state_->value.error=AzureusServiceError::Transport;state_->value.transportFailure=actual.error();state_->advance();return;}
-        captureRouter();
+        captureRouter();captureLookup();
         if(last_&&sameFacts(*last_,*actual)){std::lock_guard lock(state_->mutex);const bool current=!state_->stop&&state_->value.state==AzureusServiceState::Running&&actual->transport().state()==azureus::TransportStatisticsState::Bound;
-          if(state_->value.current!=current||state_->value.error||state_->value.routerSnapshot!=routerSnapshot_||state_->value.routerFailure!=routerFailure_){
+          if(state_->value.current!=current||state_->value.error||state_->value.routerSnapshot!=routerSnapshot_||state_->value.routerFailure!=routerFailure_||state_->value.lookupSnapshot!=lookupSnapshot_||state_->value.lookupFailure!=lookupFailure_){
             state_->value.current=current;state_->value.error.reset();state_->value.transportFailure.reset();
-            state_->value.routerSnapshot=routerSnapshot_;state_->value.routerFailure=routerFailure_;state_->advance();}return;}
+            state_->value.routerSnapshot=routerSnapshot_;state_->value.routerFailure=routerFailure_;state_->value.lookupSnapshot=lookupSnapshot_;state_->value.lookupFailure=lookupFailure_;state_->advance();}return;}
         auto copied=std::make_shared<const azureus::OwnedDhtStatisticsSnapshot>(*actual);
-        std::lock_guard lock(state_->mutex);last_=copied;state_->value.snapshot=std::move(copied);state_->value.routerSnapshot=routerSnapshot_;state_->value.routerFailure=routerFailure_;state_->value.current=!state_->stop&&state_->value.state==AzureusServiceState::Running&&actual->transport().state()==azureus::TransportStatisticsState::Bound;state_->value.error.reset();state_->value.transportFailure.reset();state_->advance();
+        std::lock_guard lock(state_->mutex);last_=copied;state_->value.snapshot=std::move(copied);state_->value.routerSnapshot=routerSnapshot_;state_->value.routerFailure=routerFailure_;state_->value.lookupSnapshot=lookupSnapshot_;state_->value.lookupFailure=lookupFailure_;state_->value.current=!state_->stop&&state_->value.state==AzureusServiceState::Running&&actual->transport().state()==azureus::TransportStatisticsState::Bound;state_->value.error.reset();state_->value.transportFailure.reset();state_->advance();
       }catch(...){std::lock_guard lock(state_->mutex);state_->value.current=false;state_->value.error=AzureusServiceError::Memory;state_->advance();}
     }
     std::shared_ptr<State> state_;
@@ -198,6 +352,14 @@ struct OwnedAzureusService::Impl {
     QEventLoop& loop_;
     azureus::OwnedPingTransport actor_;
     std::array<Active,32> active_{};
+    std::array<std::optional<azureus::Peer>,32> ownedPeers_{};
+    std::array<LookupRpc,control::LookupController::MaximumParallelism> lookupRpcs_{};
+    std::unique_ptr<control::LookupController> lookup_;
+    std::optional<Command> lookupCommand_;
+    bool lookupResultPublished_=true;
+    std::int64_t lookupStartedMillis_=0,lookupTimeoutMillis_=0;
+    std::shared_ptr<const control::LookupSnapshot> lookupSnapshot_;
+    std::optional<AzureusServiceError> lookupFailure_;
     std::shared_ptr<const azureus::OwnedDhtStatisticsSnapshot> last_;
     nodes::NodeCache nodeCache_; // Constructed, used and destroyed on this owner.
     Clock::time_point routerStarted_{};
@@ -254,6 +416,7 @@ std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::submit(Com
   if(value.kind==AzureusServiceCommand::Cancel&&!value.target){return std::unexpected(AzureusServiceError::Invalid);}
   if(value.kind!=AzureusServiceCommand::AllowPeer&&value.kind!=AzureusServiceCommand::Cancel&&(value.timeout<=std::chrono::nanoseconds::zero()||value.timeout>std::chrono::seconds(30))){return std::unexpected(AzureusServiceError::Invalid);}
   if(value.kind==AzureusServiceCommand::FindValue&&(value.maximumValues<0||value.maximumValues>255)){return std::unexpected(AzureusServiceError::Invalid);}
+  if(value.kind==AzureusServiceCommand::LookupValue&&((value.flags!=0&&value.flags!=8)||value.maximumValues<1||value.maximumValues>64||value.timeout<std::chrono::milliseconds(1))){return std::unexpected(AzureusServiceError::Invalid);}
   if(state.value.outstandingCommands>=impl_->options.maximumCommands||state.nextRequest==std::numeric_limits<std::uint64_t>::max()){return std::unexpected(AzureusServiceError::Capacity);}
   value.id=++state.nextRequest;++state.value.outstandingCommands;auto* owner=static_cast<Impl::Owner*>(state.owner);
   try{if(!QMetaObject::invokeMethod(owner,[owner,value]{owner->command(value);},Qt::QueuedConnection)){--state.value.outstandingCommands;return std::unexpected(AzureusServiceError::Dispatch);}}
@@ -263,6 +426,7 @@ std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::allowPeer(
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::ping(azureus::Peer peer,std::chrono::nanoseconds timeout){Command value;value.peer=std::move(peer);value.timeout=timeout;return submit(value);}
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::findNode(azureus::Peer peer,azureus::find::nodes::NodeId target,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::FindNode;value.peer=std::move(peer);value.node=target;value.timeout=timeout;return submit(value);}
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::findValue(azureus::Peer peer,azureus::lookup::nodes::NodeId target,std::int32_t flags,std::int32_t maximumValues,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::FindValue;value.peer=std::move(peer);value.node=target;value.flags=flags;value.maximumValues=maximumValues;value.timeout=timeout;return submit(value);}
+std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::lookupValue(azureus::Peer seed,azureus::lookup::nodes::NodeId target,std::int32_t flags,std::int32_t maximumValues,std::chrono::nanoseconds timeout){Command value;value.kind=AzureusServiceCommand::LookupValue;value.peer=std::move(seed);value.node=target;value.flags=flags;value.maximumValues=maximumValues;value.timeout=timeout;return submit(value);}
 std::expected<std::uint64_t,AzureusServiceError> OwnedAzureusService::cancel(std::uint64_t request){Command value;value.kind=AzureusServiceCommand::Cancel;value.target=request;return submit(value);}
 std::expected<void,AzureusServiceError> OwnedAzureusService::close(){
   if(QThread::currentThread()==&impl_->thread){return std::unexpected(AzureusServiceError::Thread);}std::lock_guard lifecycle(impl_->closeMutex);auto& state=*impl_->state;

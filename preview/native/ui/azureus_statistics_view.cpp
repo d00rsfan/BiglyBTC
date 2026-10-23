@@ -1,4 +1,5 @@
 #include "azureus_statistics_view.hpp"
+#include "owned_lookup_tree_widget.hpp"
 #include <QAbstractTableModel>
 #include <QEvent>
 #include <QHeaderView>
@@ -233,6 +234,7 @@ AzureusStatisticsView::AzureusStatisticsView(AzureusStatisticsSection section,QW
     peerTable_->setModel(peerModel_);peerTable_->setEditTriggers(QAbstractItemView::NoEditTriggers);peerTable_->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
     peerTable_->setColumnWidth(0,175);peerTable_->setColumnWidth(5,150);peerTable_->setColumnWidth(8,185);layout->addWidget(peerTable_,1);
   }
+  if(section==AzureusStatisticsSection::Operations){lookup_=new OwnedLookupTreeWidget(this);layout->addWidget(lookup_,1);}
   if(section==AzureusStatisticsSection::Dht){
     routerState_=plain(tr("Router observation unavailable; no counts inferred"),"azureus-router-status",this);layout->addWidget(routerState_);
     routerModel_=new RouterModel(this);routerTable_=new QTableView(this);routerTable_->setObjectName(QStringLiteral("azureus-router-table"));
@@ -241,7 +243,9 @@ AzureusStatisticsView::AzureusStatisticsView(AzureusStatisticsSection section,QW
   }
   layout->addWidget(plain(tr("DHT network activity. Vivaldi positions estimate network latency; they are not geographic locations. This preview does not enable public DHT routing or distributed storage."),"azureus-statistics-scope",this));
 }
-bool AzureusStatisticsView::beginSession(quint64 session){if(!session||session<=session_||revision_==std::numeric_limits<quint64>::max()){return false;}++revision_;session_=session;packet_.reset();if(plot_){plot_->cache({});}if(timeline_){timeline_->cache({});}dirty_=true;refresh();return true;}
+bool AzureusStatisticsView::beginSession(quint64 session){if(!session||session<=session_||revision_==std::numeric_limits<quint64>::max()){return false;}++revision_;session_=session;packet_.reset();if(plot_){plot_->cache({});}if(timeline_){timeline_->cache({});}dirty_=true;
+  QPointer<AzureusStatisticsView> guard(this);const auto lookup=lookup_;if(lookup){lookup->beginSession(session);}if(guard&&guard->session_==session){refresh();}return true;
+}
 bool AzureusStatisticsView::setPresentation(AzureusStatisticsPresentation packet){if(revision_==std::numeric_limits<quint64>::max()||!acceptAzureusStatistics(packet_,packet,session_)){return false;}++revision_;packet_=std::move(packet);if(plot_){plot_->cache(packet_->snapshot,packet_->current);}if(timeline_){timeline_->cache(packet_->snapshot);}dirty_=true;refresh();return true;}
 void AzureusStatisticsView::queueRefresh(){if(queued_){return;}queued_=true;QPointer<AzureusStatisticsView> guard(this);QMetaObject::invokeMethod(this,[guard]{if(guard){guard->queued_=false;guard->refresh();}},Qt::QueuedConnection);}
 void AzureusStatisticsView::refresh(){
@@ -326,6 +330,8 @@ void AzureusStatisticsView::refresh(){
     if(!current()||!timeline){return;}timeline->setMinimumHeight(timeline->requiredHeight());if(!current()||!timeline){return;}
     const auto description=timeline->description();timeline->setAccessibleDescription(description);if(!current()||!timeline){return;}
     timeline->setToolTip(description);if(!current()||!timeline){return;}timeline->update();
+    const auto lookup=lookup_;if(!current()||!lookup){return;}
+    lookup->setSnapshot(packet?packet->lookupSnapshot:std::shared_ptr<const services::azureus_control::LookupSnapshot>{},packet&&packet->current,session_);if(!current()||!lookup){return;}
   }
   label->setAccessibleDescription(text);if(!current()){return;}dirty_=false;
 }

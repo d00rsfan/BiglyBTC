@@ -38,3 +38,13 @@ target_link_libraries(biglybtc_azureus_owned_udp PUBLIC Qt6::Core Qt6::Network P
 target_compile_features(biglybtc_azureus_owned_udp PUBLIC cxx_std_23)
 target_compile_options(biglybtc_azureus_owned_udp PRIVATE -Wall -Wextra -Wpedantic -Werror)
 set_target_properties(biglybtc_azureus_owned_udp PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+# Explicit iterative GET policy has no Qt or I/O dependency.
+add_library(biglybtc_azureus_control STATIC azureus_control/lookup.cpp)
+target_include_directories(biglybtc_azureus_control PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/azureus_control"
+  "${CMAKE_CURRENT_SOURCE_DIR}/azureus_nodes"
+  "${CMAKE_CURRENT_SOURCE_DIR}/azureus_dht")
+target_compile_features(biglybtc_azureus_control PUBLIC cxx_std_23)
+target_compile_options(biglybtc_azureus_control PRIVATE -Wall -Wextra -Wpedantic -Werror)
+set_target_properties(biglybtc_azureus_control PROPERTIES POSITION_INDEPENDENT_CODE ON)

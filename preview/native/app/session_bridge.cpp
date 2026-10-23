@@ -1309,6 +1309,7 @@ void SessionBridge::publishAzureus() noexcept {
     else if (observation && observation->snapshot) {
       packet->state = ui::AzureusStatisticsState::Observed; packet->snapshot = observation->snapshot;
       packet->routerSnapshot = observation->routerSnapshot;
+      packet->lookupSnapshot = observation->lookupSnapshot;
     } else {
       packet->state = ui::AzureusStatisticsState::Unavailable;
       packet->failure = tr("DHT service observations are unavailable");

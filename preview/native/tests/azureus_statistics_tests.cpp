@@ -2,6 +2,8 @@
 #include "owned_transport.hpp"
 #include <QApplication>
 #include <QDir>
+#include <QFile>
+#include <QFileInfo>
 #include <QImage>
 #include <QLabel>
 #include <QPointer>
@@ -19,6 +21,8 @@
 #include <vector>
 #include <stdexcept>
 #include <set>
+#include <sys/stat.h>
+#include <unistd.h>
 
 namespace {
 using namespace biglybtc;
@@ -45,6 +49,12 @@ int greenPixelsNear(const QImage& image,QPointF logical){
   const auto dpr=image.devicePixelRatio();const int x=qRound(logical.x()*dpr),y=qRound(logical.y()*dpr),radius=qCeil(6*dpr);int count=0;
   for(int py=std::max(0,y-radius);py<std::min(image.height(),y+radius+1);++py){for(int px=std::max(0,x-radius);px<std::min(image.width(),x+radius+1);++px){
     const auto c=image.pixelColor(px,py);if(c.green()>100&&c.green()>c.red()+40&&c.green()>c.blue()+15){++count;}}}return count;
+}
+void optionalPeerCapture(QWidget& widget){
+  const auto raw=qEnvironmentVariable("BIGLYBTC_VIVALDI_CAPTURE_DIRECTORY");if(raw.isEmpty()){return;}const QFileInfo info(raw);const auto path=info.absoluteFilePath();struct stat st{};
+  if(!info.isAbsolute()||info.isSymLink()||info.canonicalFilePath()!=path||::lstat(path.toLocal8Bit().constData(),&st)!=0||!S_ISDIR(st.st_mode)||st.st_uid!=::geteuid()||(st.st_mode&0077)!=0){throw std::runtime_error("Vivaldi capture directory must be owned canonical private directory");}
+  QCoreApplication::processEvents();QFile output(path+QStringLiteral("/actual-vivaldi-peer-cloud.png"));
+  if(!output.open(QIODevice::WriteOnly|QIODevice::NewOnly)||!output.setPermissions(QFileDevice::ReadOwner|QFileDevice::WriteOwner)||!widget.grab().save(&output,"PNG")||!output.flush()){throw std::runtime_error("Exclusive Vivaldi capture failed");}
 }
 class Hook final:public QObject{
 public:bool armed=true;std::function<void()> callback;
@@ -216,6 +226,7 @@ private slots:
      QVERIFY(description.contains(QString::number(report.rttNanoseconds)+QStringLiteral(" ns")));QVERIFY(model->index(row,0).data(Qt::AccessibleDescriptionRole).toString().contains(QStringLiteral("not geography")));
    }
    QVERIFY(description.contains(QStringLiteral("Blue: local")));QVERIFY(description.contains(QStringLiteral("Orange: last reported")));QVERIFY(!plot.grab().isNull());
+   optionalPeerCapture(view);
    plot.setMinimumSize(0,0);for(const auto& size:{QSize(1,1),QSize(80,40),QSize(300,200)}){plot.resize(size);QVERIFY(!plot.grab().isNull());}
    auto retained=std::make_shared<ui::AzureusStatisticsPacket>(*packet);retained->sequence=2;retained->current=false;QVERIFY(view.setPresentation(retained));
    QVERIFY(plot.accessibleDescription().startsWith(QStringLiteral("Last observed.")));QVERIFY(child<QLabel>(view,"azureus-vivaldi-peers-status").text().contains(QStringLiteral("Last observed.")));

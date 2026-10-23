@@ -81,3 +81,7 @@ endif()
 if(BIGLYBTC_DESKTOP)
   target_sources(biglybtc_desktop_host PRIVATE owned_dht_accounting.cpp)
 endif()
+
+if(BIGLYBTC_DESKTOP)
+  target_link_libraries(biglybtc_owned_azureus_service PUBLIC biglybtc_azureus_control)
+endif()

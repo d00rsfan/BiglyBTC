@@ -95,3 +95,11 @@ Actual owned DHT UDP payload bytes now feed Overall and minute history, preservi
 unknown gaps and independently joined final prefixes. Vivaldi displays the
 bounded set of actual peer reports with RTT and provenance; public DHT routing
 and whole original-service parity remain in progress.
+
+
+Statistics DDB Operations now includes an observed recursive GET tree and
+read-only inspection of actual returned values. Explicit owned lookups follow
+discovered contacts only after exact endpoint admission, retain actual request
+and cancellation outcomes, and publish immutable snapshots. Opening Statistics
+does not start a lookup. Public DHT routing, PUT and other engine migration work
+remain separate from this owned-service implementation.

@@ -1,6 +1,7 @@
 #pragma once
 #include "owned_transport.hpp"
 #include "router.hpp"
+#include "../services/azureus_control/lookup.hpp"
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -14,7 +15,7 @@ enum class AzureusServiceError {
   Disabled,Invalid,NoApplication,Start,Closed,Capacity,Dispatch,Memory,Thread,UnknownRequest,Transport
 };
 enum class AzureusServiceState { Starting,Running,Closing,Closed,Failed };
-enum class AzureusServiceCommand { AllowPeer,Ping,FindNode,FindValue,Cancel };
+enum class AzureusServiceCommand { AllowPeer,Ping,FindNode,FindValue,Cancel,LookupValue };
 struct AzureusServiceOptions {
   bool enabled=false;
   QHostAddress bindAddress{QHostAddress::LocalHost};
@@ -45,11 +46,13 @@ struct AzureusServiceObservation {
   // above also qualify this snapshot. Failure does not fail the UDP service.
   std::shared_ptr<const services::azureus_router::RouterStatisticsSnapshot> routerSnapshot;
   std::optional<services::azureus_router::RouterError> routerFailure;
+  std::shared_ptr<const services::azureus_control::LookupSnapshot> lookupSnapshot;
+  std::optional<AzureusServiceError> lookupFailure;
 };
 // Explicit Host-owned development service. create(enabled=false) returns before
 // any Qt thread/socket exists. A dedicated Qt event loop exclusively constructs,
 // calls and destroys the existing numeric-loopback actor. No bootstrap/public
-// peer, routing controller/DB activation, profile IO, observer timer or GUI callback is added.
+// peer, full DHT controller/DB activation, profile IO, observer timer or GUI callback is added.
 // The optional bounded router records explicit known contacts and qualified
 // replies/timeouts only. Its Ping/NodeAdded intents are never executed here.
 class OwnedAzureusService final {
@@ -63,8 +66,9 @@ public:
   // Thread-safe passive bounded mailbox copy. Never posts, reads or starts work.
   AzureusServiceObservation observation()const;
   // These return bounded queue admission IDs, not reply/transaction success.
-  // An explicit request also allows its supplied same-family loopback peer on
-  // this owner. The remote owner must independently allow this endpoint.
+  // Direct single-RPC requests also allow their supplied same-family loopback
+  // peer on this owner. Recursive GET requires prior allowPeer admission.
+  // The remote owner must independently allow this endpoint.
   std::expected<std::uint64_t,AzureusServiceError> allowPeer(azureus::Peer);
   std::expected<std::uint64_t,AzureusServiceError> ping(azureus::Peer,
       std::chrono::nanoseconds timeout=std::chrono::seconds(2));
@@ -73,6 +77,12 @@ public:
   std::expected<std::uint64_t,AzureusServiceError> findValue(azureus::Peer,
       azureus::lookup::nodes::NodeId,std::int32_t flags,std::int32_t maximumValues,
       std::chrono::nanoseconds timeout=std::chrono::seconds(2));
+  // Explicit bounded iterative GET; seed and every discovered child must have
+  // succeeded through allowPeer(). Returned contacts do not grant admission.
+  // One active lookup; observation() and Statistics never start/refresh it.
+  std::expected<std::uint64_t,AzureusServiceError> lookupValue(azureus::Peer seed,
+      azureus::lookup::nodes::NodeId target,std::int32_t flags=0,std::int32_t maximumValues=32,
+      std::chrono::nanoseconds timeout=std::chrono::seconds(5));
   std::expected<std::uint64_t,AzureusServiceError> cancel(std::uint64_t request);
   // Seals admission and joins even with queued/active work; idempotent. No forced
   // termination or detached actor. Call/destruction must not race object lifetime.

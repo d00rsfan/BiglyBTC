@@ -7,6 +7,7 @@ class QTableView;
 class QAbstractTableModel;
 class QShowEvent;
 namespace biglybtc::ui {
+class OwnedLookupTreeWidget;
 enum class AzureusStatisticsSection { Dht, Operations, Vivaldi };
 class AzureusStatisticsView final:public QWidget {
   Q_OBJECT
@@ -37,6 +38,7 @@ private:
   QPointer<QAbstractTableModel> routerModel_;
   QPointer<PositionPlot> plot_;
   QPointer<OperationTimeline> timeline_;
+  QPointer<OwnedLookupTreeWidget> lookup_;
   QPointer<QWidget> observedWindow_;
 };
 } // namespace biglybtc::ui
