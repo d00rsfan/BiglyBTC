@@ -22,3 +22,14 @@ target_sources(biglybtc_ui PRIVATE effective_rate_limit_text.hpp)
 target_sources(biglybtc_ui PRIVATE manual_tag_presentation.hpp manual_tag_view.hpp manual_tag_view.cpp)
 
 target_sources(biglybtc_ui PRIVATE native_activity_rates.hpp)
+
+target_sources(biglybtc_ui PRIVATE country_statistics_presentation.hpp country_statistics_view.hpp country_statistics_view.cpp)
+
+target_sources(biglybtc_ui PRIVATE tracker_statistics_presentation.hpp tracker_statistics_view.hpp tracker_statistics_view.cpp)
+
+target_sources(biglybtc_ui PRIVATE azureus_statistics_presentation.hpp azureus_statistics_view.hpp azureus_statistics_view.cpp)
+target_include_directories(biglybtc_ui PUBLIC "${PROJECT_SOURCE_DIR}/services/azureus_udp")
+
+target_sources(biglybtc_ui PRIVATE cache_statistics_view.hpp cache_statistics_view.cpp)
+
+target_sources(biglybtc_ui PRIVATE saved_speed_manager_presentation.hpp saved_speed_manager_view.hpp saved_speed_manager_view.cpp)

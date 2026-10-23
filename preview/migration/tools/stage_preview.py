@@ -157,6 +157,31 @@ def main():
                 if not any(resolved.is_relative_to(root) for root in roots):
                     raise ValueError("Non-system dependency outside the distribution: " + loaded)
             loaders[name] = output
+    country_bundle = None
+    module = destination / "usr/lib/biglybtc/lib/BiglyBTC-plugin-azlocprov.so"
+    approval = args.build / "app/generated/country_approval.hpp"
+    if module.exists() or approval.exists():
+        compiled = approval.read_text()
+        approved_sha = re.search(r'Sha256\[\] = "([0-9a-f]{64})";', compiled)
+        approved_bytes = re.search(r'Bytes = ([0-9]+);', compiled)
+        version = re.search(r'Version\[\] = "([0-9.]+)";', compiled)
+        if not approved_sha or not approved_bytes or not version:
+            raise ValueError("Invalid compiled Country module approval")
+        payload = module.read_bytes()
+        if (len(payload) != int(approved_bytes[1]) or
+                hashlib.sha256(payload).hexdigest() != approved_sha[1]):
+            raise ValueError("Packaged Country module differs from its compiled approval")
+        output = subprocess.check_output(["ldd", str(module)], env=environment, text=True, timeout=30)
+        if "not found" in output or "/tmp/" in output or "/opt/Qt" in output:
+            raise ValueError("Country module retains a missing or build-only dependency: " + output)
+        for soname in ("libmaxminddb.so.0", "libarchive.so.13"):
+            resolved = re.findall(r"^\s*" + re.escape(soname) + r" => (.+?) \(", output, re.MULTILINE)
+            if len(resolved) != 1 or Path(resolved[0]).resolve() != module.parent / soname:
+                raise ValueError("Country module does not use its private dependency: " + soname)
+        country_bundle = {"artifact": module.relative_to(destination).as_posix(),
+            "sha256": approved_sha[1], "bytes": len(payload), "version": version[1],
+            "approval": "compiled application-owned bundle", "database_included": False,
+            "loader": output}
     files = {}
     for path in sorted(destination.rglob("*")):
         if path.is_file():
@@ -167,6 +192,8 @@ def main():
         "dependency_package_sha256": hashlib.sha256(package.read_bytes()).hexdigest(),
         "files_sha256": files, "loader": linked, "system_installation": False,
     }
+    if country_bundle is not None:
+        manifest["country_bundle"] = country_bundle
     if provider is not None:
         manifest["libtorrent_runtime"] = provider
         manifest["loaders"] = loaders

@@ -41,3 +41,11 @@ target_compile_options(biglybtc_saved_service_view PRIVATE -Wall -Wextra -Wpedan
 target_sources(biglybtc_profile PRIVATE minute_history_writer.cpp)
 
 target_sources(biglybtc_profile PRIVATE saved_download_tags_view.cpp)
+
+if(BIGLYBTC_DESKTOP)
+  find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+  target_sources(biglybtc_profile PRIVATE country_provider.cpp country_provider_binding.cpp)
+  target_link_libraries(biglybtc_profile PUBLIC BiglyBTC::PluginHost PRIVATE OpenSSL::Crypto)
+endif()
+
+target_sources(biglybtc_profile PRIVATE saved_speed_manager_view.cpp)

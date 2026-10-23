@@ -1,5 +1,7 @@
 #include "library_window.hpp"
 #include "session_bridge.hpp"
+#include "country_provider_binding.hpp"
+#include "country_approval.hpp"
 
 #include <QApplication>
 
@@ -9,8 +11,8 @@
 #include <stdexcept>
 
 int main(int argc, char** argv) {
-  if (argc != 4 || std::string_view(argv[1]) != "--experimental-local") {
-    std::cerr << "Usage: BiglyBTC --experimental-local GENERATED_PROFILE OWNED_PEER_PORT\n";
+  if ((argc != 4 && argc != 6) || std::string_view(argv[1]) != "--experimental-local") {
+    std::cerr << "Usage: BiglyBTC --experimental-local GENERATED_PROFILE OWNED_PEER_PORT [--country-db ABSOLUTE_DIRECTORY]\n";
     return 2;
   }
   const std::filesystem::path profile(argv[2]);
@@ -29,6 +31,14 @@ int main(int argc, char** argv) {
     std::cerr << "Use a generated /tmp/biglybtc-* profile and an owned endpoint (0 for an offline preview)\n";
     return 2;
   }
+  std::filesystem::path countryDatabase;
+  if (argc == 6) {
+    countryDatabase = argv[5];
+    if (std::string_view(argv[4]) != "--country-db" || !countryDatabase.is_absolute()) {
+      std::cerr << "Country data requires --country-db ABSOLUTE_DIRECTORY\n";
+      return 2;
+    }
+  }
   try {
     if (!std::setlocale(LC_CTYPE, "")) { throw std::runtime_error("Unable to initialize the filesystem character locale"); }
     QApplication application(argc, argv);
@@ -39,7 +49,21 @@ int main(int argc, char** argv) {
     if (port == 0) {
       window.setWindowTitle(QStringLiteral("BiglyBTC — Offline preview"));
     }
-    biglybtc::app::SessionBridge bridge;
+    biglybtc::app::SessionBridge::CountryProviderFactory countryFactory;
+    if (!countryDatabase.empty()) {
+      const auto executable = std::filesystem::canonical("/proc/self/exe");
+      auto module = executable.parent_path().parent_path() / "lib/BiglyBTC-plugin-azlocprov.so";
+      // Build-tree preview uses the same compiled approved module beside the executable.
+      if (!std::filesystem::exists(module)) { module = executable.parent_path() / "BiglyBTC-plugin-azlocprov.so"; }
+      const biglybtc::storage::CountryModuleApproval approval{biglybtc::app::country_bundle::Sha256,
+          biglybtc::app::country_bundle::Bytes, biglybtc::app::country_bundle::Version};
+      countryFactory = [module, approval, countryDatabase](const biglybtc::storage::ProfileLease& lease) {
+        auto provider = biglybtc::storage::loadApprovedCountryProvider(lease, module, approval, countryDatabase);
+        if (!provider) { std::cerr << "Country provider unavailable: " << provider.error().message << '\n'; return std::unique_ptr<biglybtc::storage::CountryProvider>{}; }
+        return std::move(*provider);
+      };
+    }
+    biglybtc::app::SessionBridge bridge(nullptr, std::move(countryFactory));
     using Window = biglybtc::ui::LibraryWindow;
     using Bridge = biglybtc::app::SessionBridge;
     QObject::connect(&bridge, &Bridge::snapshotReady, &window, &Window::setPresentation);
@@ -72,6 +96,8 @@ int main(int argc, char** argv) {
     QObject::connect(&window, &Window::cancelRequested, &bridge, &Bridge::cancel);
     QObject::connect(&window, &Window::manualTagStatisticsRequested, &bridge, &Bridge::manualTagStatistics);
     QObject::connect(&bridge, &Bridge::manualTagStatisticsReady, &window, &Window::setManualTagStatistics);
+    QObject::connect(&window, &Window::countryStatisticsRequested, &bridge, &Bridge::countryStatistics);
+    QObject::connect(&bridge, &Bridge::countryStatisticsReady, &window, &Window::setCountryStatistics);
     bridge.open(profile, static_cast<unsigned short>(port));
     window.enableSessionCloseHandshake();
     QObject::connect(&bridge, &Bridge::nativeSessionReady, &window, &Window::setNativeSession);

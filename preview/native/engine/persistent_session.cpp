@@ -1,7 +1,9 @@
 #include "persistent_session_support.hpp"
+#include "tracker_statistics_sampler.hpp"
 #include "persistent_runtime_guard.hpp"
 #include "runtime_metrics_sampler.hpp"
 #include "effective_rate_limits.hpp"
+#include "peer_payload_observer.hpp"
 
 #include <libtorrent/alert_types.hpp>
 #include <libtorrent/session.hpp>
@@ -51,6 +53,7 @@ struct PersistentSession::Impl {
   AccountingIdentity identity;
   const std::thread::id worker = std::this_thread::get_id();
   const std::int64_t origin = static_cast<std::int64_t>(Clock::now().time_since_epoch().count());
+  std::shared_ptr<core::PeerPayloadLedger> peerPayloadLedger{};
   std::unique_ptr<lt::session> session{};
   AccountingState phase = AccountingState::Starting;
   core::SessionRateLimits rateLimits{};
@@ -87,7 +90,12 @@ struct PersistentSession::Impl {
   bool forceNext = false;
   std::int64_t lastPost = 0;
 
-  explicit Impl(AccountingIdentity value) : identity(value) {}
+  explicit Impl(AccountingIdentity value) : identity(value) {
+    // Optional diagnostics cannot stop creation, transfer or retirement.
+    try { peerPayloadLedger = std::make_shared<core::PeerPayloadLedger>(
+        core::PeerPayloadIdentity{value.applicationRun, value.profileSession, value.engineEpoch}); }
+    catch (...) { peerPayloadLedger.reset(); }
+  }
   bool onWorker() const noexcept { return worker == std::this_thread::get_id(); }
   bool elapsed(std::int64_t& result) const noexcept {
     const auto now = static_cast<std::int64_t>(Clock::now().time_since_epoch().count());
@@ -331,6 +339,7 @@ struct PersistentSession::Impl {
         "Persistent admission is unavailable", storage::ErrorCode::Conflict);
     token.number = operation;
     parameters.userdata = &token;
+    detail::attachPeerPayloadObserver(parameters, peerPayloadLedger, operation);
     // Keep the new torrent paused until its returned weak handle is registered.
     // Any exception/ambiguous add forces abort+join before another admission.
     parameters.flags |= lt::torrent_flags::paused | lt::torrent_flags::duplicate_is_error;
@@ -470,6 +479,15 @@ void PersistentSession::clearObservationSink() noexcept {
 std::optional<ApplicationPeerObservation> PersistentSession::latest() const {
   if (!impl_->onWorker()) { return {}; }
   return impl_->observation;
+}
+std::optional<core::TrackerStatistics> PersistentSession::trackerStatistics() const noexcept {
+  if (!impl_ || !impl_->onWorker()) { return std::nullopt; }
+  // This preview owner deliberately clears trackers before adding a torrent.
+  return sampleTrackerStatistics(impl_->active, core::TrackerPolicy::DisabledByIsolation);
+}
+std::optional<core::PeerPayloadSnapshot> PersistentSession::peerPayloads() const noexcept {
+  if (!impl_->onWorker() || !impl_->peerPayloadLedger) { return std::nullopt; }
+  return impl_->peerPayloadLedger->snapshot();
 }
 std::shared_ptr<const core::RuntimeMetrics> PersistentSession::diagnostics() const noexcept {
   if (!impl_->onWorker()) { return {}; }

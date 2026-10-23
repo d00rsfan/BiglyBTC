@@ -162,7 +162,10 @@ def prepare(root):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--prepare", type=Path, help="Create sample data in a new /tmp/biglybtc-* directory and exit")
+    parser.add_argument("--country-db", type=Path, help="Optional private directory containing GeoLite2-Country.mmdb")
     args = parser.parse_args()
+    if args.country_db is not None and not args.country_db.is_absolute():
+        parser.error("--country-db requires an absolute data directory")
     if args.prepare:
         try:
             validate_root(args.prepare)
@@ -189,7 +192,10 @@ def main():
             directory.mkdir(mode=0o700)
             environment[variable] = str(directory)
         print("BiglyBTC offline preview — generated sample data:", profile, flush=True)
-        return subprocess.run([str(executable), "--experimental-local", str(profile), "0"],
+        command = [str(executable), "--experimental-local", str(profile), "0"]
+        if args.country_db is not None:
+            command += ["--country-db", str(args.country_db)]
+        return subprocess.run(command,
                               env=environment, check=False).returncode
 
 

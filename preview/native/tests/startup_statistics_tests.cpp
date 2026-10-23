@@ -1,6 +1,8 @@
 #include "session_bridge.hpp"
 #include "library_window.hpp"
 #include "statistics_page.hpp"
+#include "tracker_statistics_view.hpp"
+#include "azureus_statistics_view.hpp"
 #include "native_activity_history.hpp"
 #include "persistent_session.hpp"
 #include "owned_engine_fixture.hpp"
@@ -35,6 +37,7 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
   QObject::connect(&bridge, &app::SessionBridge::statisticsReady, &window, &ui::LibraryWindow::setStatistics);
   QObject::connect(&bridge, &app::SessionBridge::nativeSessionReady, &window, &ui::LibraryWindow::setNativeSession);
   QObject::connect(&bridge, &app::SessionBridge::overallReady, &window, &ui::LibraryWindow::setOverall);
+  QObject::connect(&bridge, &app::SessionBridge::runtimeMetricsReady, &window, &ui::LibraryWindow::setRuntimeMetrics);
   QObject::connect(&bridge, &app::SessionBridge::busyChanged, &window, &ui::LibraryWindow::setBusy);
   QObject::connect(&window, &ui::LibraryWindow::columnLayoutsRequested, &bridge, &app::SessionBridge::columnLayouts);
   QObject::connect(&window, &ui::LibraryWindow::statisticsRequested, &bridge, &app::SessionBridge::statistics);
@@ -112,6 +115,16 @@ private slots:
     QVERIFY(child<QLabel>(page, "native-session-uptime").text().startsWith(QStringLiteral("Observed owner uptime:")));
     QCOMPARE(window.nativeSessionSnapshot()->epoch, idle->epoch);
     QCOMPARE(operations.count(), 0);
+    QCOMPARE(page.tabs().count(), 10);
+    auto* trackers = page.findChild<ui::TrackerStatisticsView*>(); QVERIFY(trackers);
+    QTRY_VERIFY(trackers->presentation() && trackers->presentation()->snapshot);
+    QCOMPARE(trackers->presentation()->snapshot->state, core::TrackerReadState::DisabledByIsolation);
+    const auto services = page.findChildren<ui::AzureusStatisticsView*>(); QCOMPARE(services.size(), 3);
+    for (const auto* service : services) {
+      QTRY_VERIFY(service->presentation());
+      QCOMPARE(service->presentation()->state, ui::AzureusStatisticsState::Disabled);
+      QVERIFY(!service->presentation()->snapshot);
+    }
     QVERIFY(bridge.continueDownload(*target));
     QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy() && window.nativeSessionSnapshot()
         && window.nativeSessionSnapshot()->sample && window.nativeSessionSnapshot()->sample->counters.payloadReceived > 0

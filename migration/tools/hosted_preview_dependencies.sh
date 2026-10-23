@@ -26,7 +26,7 @@ compiler_version=16-20260322-1ubuntu1
 packages=("g++-16=$compiler_version" "libstdc++-16-dev=$compiler_version"
   ca-certificates curl cmake ninja-build pkgconf dpkg-dev binutils git python3-venv zlib1g-dev libssl-dev)
 if [[ $variant == bundled-qt || $variant == system-qt ]]; then
-  packages+=(libboost1.90-dev=1.90.0-6ubuntu1 libtorrent-rasterbar-dev=2.0.12-1 libtorrent-rasterbar2.0t64=2.0.12-1)
+  packages+=(libboost1.90-dev=1.90.0-6ubuntu1 libtorrent-rasterbar-dev=2.0.12-1 libtorrent-rasterbar2.0t64=2.0.12-1 libmaxminddb-dev libarchive-dev)
 fi
 if [[ $variant != compiler-only ]]; then
   packages+=(libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-x11-0 libxcb-cursor0

@@ -81,7 +81,7 @@ private slots:
   void dailyDefaultAndThreeIndependentLazyDatesArePreserved() {
     ui::StatisticsPage page; page.resetHistorySession(1); QSignalSpy days(&page, &ui::StatisticsPage::historyRequested), weeks(&page, &ui::StatisticsPage::historyWeekRequested), months(&page, &ui::StatisticsPage::historyMonthRequested);
     child<QDateEdit>(page, "saved-history-month-date").setDate(qtDate(End)); show(page);
-    QCOMPARE(page.tabs().count(), 6); QCOMPARE(page.tabs().tabText(5), QStringLiteral("Tags")); auto& periods = child<QTabWidget>(page, "statistics-history-tabs"); QCOMPARE(periods.count(), 4); QCOMPARE(periods.currentIndex(), 0); QCOMPARE(periods.tabText(2), QStringLiteral("30 days"));
+    QCOMPARE(page.tabs().count(), 10); QCOMPARE(page.tabs().tabText(5), QStringLiteral("Tags")); QCOMPARE(page.tabs().tabText(6), QStringLiteral("Country")); auto& periods = child<QTabWidget>(page, "statistics-history-tabs"); QCOMPARE(periods.count(), 4); QCOMPARE(periods.currentIndex(), 0); QCOMPARE(periods.tabText(2), QStringLiteral("30 days"));
     QCOMPARE(days.count(), 0); QCOMPARE(weeks.count(), 0); QCOMPARE(months.count(), 0);
     choose(page, 2); QVERIFY(page.historyMonthSelected()); QVERIFY(!page.historySelected()); QVERIFY(!page.historyWeekSelected()); QCOMPARE(months.count(), 1); QCOMPARE(qvariant_cast<core::HistoryDate>(months.at(0).at(0)), End);
     QCOMPARE(days.count(), 0); QCOMPARE(weeks.count(), 0); choose(page, 0); QCOMPARE(days.count(), 1); choose(page, 1); QCOMPARE(weeks.count(), 1); choose(page, 2); QCOMPARE(months.count(), 1);

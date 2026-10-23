@@ -294,7 +294,8 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   connect(refresh_, &QAction::triggered, this, [this] {
     if (closing_) { return; }
     if (onStatisticsPage()) {
-      if (statisticsPage_->manualTagsSelected()) { pendingManualTagRead_ = statisticsPage_; queueManualTagStatistics(); }
+      if (statisticsPage_->countrySelected()) { pendingCountryRead_ = statisticsPage_; queueCountryStatistics(); }
+      else if (statisticsPage_->manualTagsSelected()) { pendingManualTagRead_ = statisticsPage_; queueManualTagStatistics(); }
       else if (statisticsPage_->historyRangeSelected()) { statisticsPage_->refreshHistoryRange(); }
       else if (statisticsPage_->historyMonthSelected()) { refreshHistoryMonth(statisticsPage_->selectedHistoryMonthDate()); }
       else if (statisticsPage_->historyWeekSelected()) { refreshHistoryWeek(statisticsPage_->selectedHistoryWeekDate()); }
@@ -429,6 +430,11 @@ void LibraryWindow::showStatistics() {
     connect(statisticsPage_.data(), &StatisticsPage::refreshRequested, this, &LibraryWindow::refreshStatistics);
     const QPointer<StatisticsPage> markPage = statisticsPage_;
     connect(markPage, &StatisticsPage::manualTagsVisible, this, &LibraryWindow::queueManualTagStatistics);
+    connect(markPage, &StatisticsPage::countryVisible, this, [this, markPage](bool activate) {
+      if (closing_ || !markPage || markPage != statisticsPage_ || !columnSession_) { return; }
+      if (activate) { pendingCountryRead_ = markPage; }
+      queueCountryStatistics();
+    });
     connect(markPage, &StatisticsPage::manualTagStatisticsRequested, this, [this, markPage](quint64 session) {
       if (closing_ || !markPage || markPage != statisticsPage_ || !session || session != columnSession_) { return; }
       pendingManualTagRead_ = markPage;
@@ -463,6 +469,7 @@ void LibraryWindow::showStatistics() {
       if (guard && page && statisticsPage_ == page && latestOverall_) { page->setOverall(latestOverall_); }
       if (guard && page && statisticsPage_ == page && latestRuntime_) { page->setRuntimeMetrics(latestRuntime_); }
       if (guard && page && statisticsPage_ == page && latestManualTags_) { page->setManualTagStatistics(latestManualTags_); }
+      if (guard && page && statisticsPage_ == page && latestCountry_) { page->setCountryStatistics(latestCountry_); }
     }
     if (guard && page && statisticsPage_ == page && latestNativeActivity_) {
       page->setNativeActivity(latestNativeActivity_);
@@ -707,6 +714,11 @@ void LibraryWindow::setManualTagStatistics(ManualTagStatisticsPresentation packe
   latestManualTags_ = std::move(packet);
   if (statisticsPage_) { statisticsPage_->setManualTagStatistics(latestManualTags_); }
 }
+void LibraryWindow::setCountryStatistics(CountryStatisticsPresentation packet) {
+  if (closing_ || !acceptCountryStatistics(latestCountry_, packet, columnSession_)) { return; }
+  latestCountry_ = std::move(packet);
+  if (statisticsPage_) { statisticsPage_->setCountryStatistics(latestCountry_); }
+}
 void LibraryWindow::setOverall(OverallPresentation packet) {
   if (!packet || packet->session != columnSession_ || !packet->sequence
       || (latestOverall_ && (packet->sequence <= latestOverall_->sequence || latestOverall_->closed))) { return; }
@@ -757,6 +769,7 @@ void LibraryWindow::queueOptionalViews() {
   queueStatistics();
   queueLiveHistoryRefresh();
   queueManualTagStatistics();
+  queueCountryStatistics();
 }
 void LibraryWindow::queueManualTagStatistics() {
   if (manualTagDispatchQueued_ || !pendingManualTagRead_) { return; }
@@ -771,6 +784,20 @@ void LibraryWindow::queueManualTagStatistics() {
     if (busy_ || !onStatisticsPage() || !page->isVisible() || isMinimized() || !page->manualTagsSelected()) { return; }
     pendingManualTagRead_.clear();
     emit manualTagStatisticsRequested(columnSession_); // Final access; receiver may delete/rebind this window.
+  }, Qt::QueuedConnection);
+}
+void LibraryWindow::queueCountryStatistics() {
+  if (countryDispatchQueued_ || !pendingCountryRead_) { return; }
+  countryDispatchQueued_ = true;
+  QMetaObject::invokeMethod(this, [this] {
+    countryDispatchQueued_ = false;
+    const QPointer<StatisticsPage> page = pendingCountryRead_;
+    if (!page || page != statisticsPage_ || !columnSession_ || closing_) {
+      pendingCountryRead_.clear(); return;
+    }
+    if (busy_ || !onStatisticsPage() || !page->isVisible() || isMinimized() || !page->countrySelected()) { return; }
+    pendingCountryRead_.clear();
+    emit countryStatisticsRequested(columnSession_); // Final access: receiver may delete/rebind this window.
   }, Qt::QueuedConnection);
 }
 void LibraryWindow::closePage(int index) {
@@ -790,7 +817,7 @@ void LibraryWindow::closePage(int index) {
       if (session != 0 && navigation) {
         rememberedStatisticsNavigation_ = StatisticsNavigationRecord{session, *navigation};
       } else { rememberedStatisticsNavigation_.reset(); }
-      statisticsPage_.clear(); pendingStatisticsRequest_.reset(); pendingHistoryRequest_.reset(); pendingManualTagRead_.clear();
+      statisticsPage_.clear(); pendingStatisticsRequest_.reset(); pendingHistoryRequest_.reset(); pendingManualTagRead_.clear(); pendingCountryRead_.clear();
     }
     else { return; }
   }
@@ -868,7 +895,7 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   QPointer<LibraryWindow> guard(this);
   columnSession_ = session;
   savedHistoryRevision_ = 0; requestedHistoryRevisions_.fill(0);
-  latestOverall_.reset(); latestRuntime_.reset(); latestManualTags_.reset(); pendingManualTagRead_.clear();
+  latestOverall_.reset(); latestRuntime_.reset(); latestManualTags_.reset(); pendingManualTagRead_.clear(); latestCountry_.reset(); pendingCountryRead_.clear();
   latestNativeSession_.reset(); latestNativeActivity_.reset(); nativeActivity_.reset();
   rememberedStatisticsNavigation_.reset();
   latestEngineStatistics_.reset();
@@ -892,7 +919,8 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
     if (!guard || !page || statisticsPage_ != page || columnSession_ != session) { return; }
     if (latestNativeActivity_) { page->setNativeActivity(latestNativeActivity_); }
     if (guard && page && statisticsPage_ == page && columnSession_ == session) {
-      if (page->historyRangeSelected()) { page->refreshHistoryRange(); }
+      if (page->countrySelected()) { pendingCountryRead_ = page; queueCountryStatistics(); }
+      else if (page->historyRangeSelected()) { page->refreshHistoryRange(); }
       else if (page->historyMonthSelected()) { refreshHistoryMonth(page->selectedHistoryMonthDate()); }
       else if (page->historyWeekSelected()) { refreshHistoryWeek(page->selectedHistoryWeekDate()); }
       else if (page->historySelected()) { refreshHistory(page->selectedHistoryDate()); }

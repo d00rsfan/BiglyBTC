@@ -8,6 +8,11 @@
 #include "overall_view.hpp"
 #include "runtime_metrics_view.hpp"
 #include "manual_tag_view.hpp"
+#include "country_statistics_view.hpp"
+#include "tracker_statistics_view.hpp"
+#include "azureus_statistics_view.hpp"
+#include "cache_statistics_view.hpp"
+#include "saved_speed_manager_view.hpp"
 #include "history_view.hpp"
 #include "history_week_view.hpp"
 #include "history_month_view.hpp"
@@ -234,17 +239,32 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
   runtimeViews_[0] = new RuntimeMetricsView(core::RuntimeMetricGroup::Peer, transferTabs);
   runtimeViews_[0]->setObjectName(QStringLiteral("statistics-connections-metrics"));
   transferTabs->addTab(runtimeViews_[0], tr("Connections"));
-  runtimeViews_[1] = new RuntimeMetricsView(core::RuntimeMetricGroup::Disk, tabs_);
-  runtimeViews_[1]->setObjectName(QStringLiteral("statistics-cache-metrics"));
-  tabs_->addTab(runtimeViews_[1], tr("Cache"));
-  runtimeViews_[2] = new RuntimeMetricsView(core::RuntimeMetricGroup::Tracker, tabs_);
+  savedSpeed_ = new SavedSpeedManagerView(transferTabs);
+  transferTabs->addTab(savedSpeed_, tr("Capacity"));
+  connect(savedSpeed_, &SavedSpeedManagerView::readRequested, this, [this](quint64) { emit refreshRequested(); });
+  cache_ = new CacheStatisticsView(tabs_);
+  tabs_->addTab(cache_, tr("Cache"));
+  auto* trackerTabs = new QTabWidget(tabs_);
+  trackerTabs->setObjectName(QStringLiteral("statistics-tracker-tabs"));
+  trackers_ = new TrackerStatisticsView(trackerTabs);
+  trackerTabs->addTab(trackers_, tr("Trackers"));
+  runtimeViews_[2] = new RuntimeMetricsView(core::RuntimeMetricGroup::Tracker, trackerTabs);
   runtimeViews_[2]->setObjectName(QStringLiteral("statistics-tracker-metrics"));
-  tabs_->addTab(runtimeViews_[2], tr("Tracker"));
+  trackerTabs->addTab(runtimeViews_[2], tr("Counters"));
+  tabs_->addTab(trackerTabs, tr("Tracker"));
   runtimeViews_[3] = new RuntimeMetricsView({}, tabs_);
   runtimeViews_[3]->setObjectName(QStringLiteral("statistics-all-metrics"));
   tabs_->addTab(runtimeViews_[3], tr("Counters"));
   manualTags_ = new ManualTagStatisticsView(tabs_);
   tabs_->addTab(manualTags_, tr("Tags")); // Append: existing stored ordinals remain stable.
+  country_ = new CountryStatisticsView(tabs_);
+  tabs_->addTab(country_, tr("Country"));
+  azureus_[0] = new AzureusStatisticsView(AzureusStatisticsSection::Dht, tabs_);
+  azureus_[1] = new AzureusStatisticsView(AzureusStatisticsSection::Operations, tabs_);
+  azureus_[2] = new AzureusStatisticsView(AzureusStatisticsSection::Vivaldi, tabs_);
+  tabs_->addTab(azureus_[0], tr("DHT"));
+  tabs_->addTab(azureus_[1], tr("DDB Operations"));
+  tabs_->addTab(azureus_[2], tr("Vivaldi"));
   connect(manualTags_, &ManualTagStatisticsView::readRequested,
       this, &StatisticsPage::manualTagStatisticsRequested);
   auto* refresh = new QPushButton(tr("Refresh saved totals"), this); refresh->setObjectName(QStringLiteral("statistics-refresh"));
@@ -376,6 +396,9 @@ void StatisticsPage::setFailed(quint64 session, quint64 request, const QString& 
 }
 void StatisticsPage::setPresentation(StatisticsPresentation packet) {
   if (!packet || !accepts(packet->session, packet->request)) { return; }
+  QPointer<StatisticsPage> guard(this);
+  if (savedSpeed_ && packet->savedSpeed) { savedSpeed_->setPresentation(packet->savedSpeed); }
+  if (!guard || !guard->accepts(packet->session, packet->request)) { return; }
   if (packet->state == StatisticsReadState::Failed) { setFailed(packet->session, packet->request, packet->failure); return; }
   if (packet->state == StatisticsReadState::Missing) {
     if (packet->source || packet->snapshot || !packet->failure.isEmpty()) { setFailed(packet->session, packet->request, tr("Saved statistics result is incomplete")); return; }
@@ -421,7 +444,31 @@ void StatisticsPage::setPresentation(StatisticsPresentation packet) {
   (void)writeFacts(facts);
 }
 void StatisticsPage::setRuntimeMetrics(RuntimeMetricsPresentation packet) {
-  QPointer<StatisticsPage> guard(this); const auto views = runtimeViews_;
+  QPointer<StatisticsPage> guard(this);
+  if (cache_) { cache_->setPresentation(packet); }
+  if (!guard) { return; }
+  if (packet) {
+    auto service = std::make_shared<AzureusStatisticsPacket>();
+    service->session = packet->session; service->sequence = packet->sequence;
+    service->snapshot = packet->azureus;
+    service->state = packet->azureus ? AzureusStatisticsState::Observed
+        : packet->azureusDisabledByPolicy ? AzureusStatisticsState::Disabled : AzureusStatisticsState::Unavailable;
+    const auto views = azureus_;
+    for (const auto& view : views) {
+      if (!guard) { return; }
+      if (view) { view->setPresentation(service); }
+    }
+  }
+  if (!guard) { return; }
+  if (packet && trackers_) {
+    auto tracker = std::make_shared<TrackerStatisticsPacket>();
+    tracker->session = packet->session; tracker->epoch = packet->epoch;
+    tracker->sequence = packet->sequence; tracker->current = packet->current;
+    tracker->snapshot = packet->tracker;
+    trackers_->setPresentation(std::move(tracker));
+  }
+  if (!guard) { return; }
+  const auto views = guard->runtimeViews_;
   for (const auto& view : views) {
     if (!guard) { return; }
     if (view) { view->setPresentation(packet); }
@@ -434,6 +481,13 @@ ManualTagStatisticsPresentation StatisticsPage::manualTagStatisticsSnapshot() co
   return manualTags_ ? manualTags_->presentation() : ManualTagStatisticsPresentation{};
 }
 bool StatisticsPage::manualTagsSelected() const { return tabs_->currentIndex() == 5; }
+void StatisticsPage::setCountryStatistics(CountryStatisticsPresentation packet) {
+  if (country_) { country_->setPresentation(std::move(packet)); }
+}
+CountryStatisticsPresentation StatisticsPage::countryStatisticsSnapshot() const {
+  return country_ ? country_->presentation() : CountryStatisticsPresentation{};
+}
+bool StatisticsPage::countrySelected() const { return tabs_->currentIndex() == 6; }
 void StatisticsPage::setOverall(OverallPresentation packet) { if (overallView_) { overallView_->setPresentation(std::move(packet)); } }
 void StatisticsPage::setAccountingBusy(bool busy) { if (overallView_) { overallView_->setCommandBusy(busy); } }
 void StatisticsPage::beginNativeSession(quint64 session) {
@@ -455,6 +509,20 @@ void StatisticsPage::beginNativeSession(quint64 session) {
   if (guard->overallView_) { guard->overallView_->beginSession(session); }
   if (!guard || guard->nativeSessionBinding_ != session) { return; }
   if (guard->manualTags_) { guard->manualTags_->beginSession(session); }
+  if (!guard || guard->nativeSessionBinding_ != session) { return; }
+  if (guard->country_) { guard->country_->beginSession(session); }
+  if (!guard || guard->nativeSessionBinding_ != session) { return; }
+  if (guard->trackers_) { guard->trackers_->beginSession(session); }
+  if (!guard || guard->nativeSessionBinding_ != session) { return; }
+  if (guard->cache_) { guard->cache_->beginSession(session); }
+  if (!guard || guard->nativeSessionBinding_ != session) { return; }
+  if (guard->savedSpeed_) { guard->savedSpeed_->beginSession(session); }
+  if (!guard || guard->nativeSessionBinding_ != session) { return; }
+  const auto azureusViews = guard->azureus_;
+  for (const auto& view : azureusViews) {
+    if (!guard || guard->nativeSessionBinding_ != session) { return; }
+    if (view) { view->beginSession(session); }
+  }
   if (!guard || guard->nativeSessionBinding_ != session) { return; }
   guard->refreshNative();
 }
@@ -608,6 +676,15 @@ void StatisticsPage::queueHistoryVisibility() {
   historyVisibilityQueued_ = true;
   QMetaObject::invokeMethod(this, [this] {
     historyVisibilityQueued_ = false;
+    if (!countrySelected()) { countrySelectionPublished_ = false; }
+    if (isVisible() && !window()->isMinimized() && countrySelected()) {
+      // The worker already publishes while hidden. Window drains explicit
+      // refreshes when restored; a delayed Show must not request a second read.
+      const bool activate = !countrySelectionPublished_;
+      countrySelectionPublished_ = true;
+      emit countryVisible(activate); // Final access: a receiver may delete or rebind this page.
+      return;
+    }
     if (isVisible() && !window()->isMinimized() && manualTagsSelected()) {
       emit manualTagsVisible(); // Final access: owner may rebind/delete the page.
       return;

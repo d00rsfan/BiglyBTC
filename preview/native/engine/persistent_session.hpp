@@ -1,7 +1,9 @@
 #pragma once
+#include "biglybtc/tracker_statistics.hpp"
 
 #include "local_session.hpp"
 #include "biglybtc/runtime_metrics.hpp"
+#include "biglybtc/peer_payload_ledger.hpp"
 #include "biglybtc/effective_rate_limits.hpp"
 
 #include <chrono>
@@ -102,6 +104,11 @@ public:
   std::optional<ApplicationPeerObservation> latest() const;
   // Worker-only optional last accepted stats snapshot. No request or engine creation.
   std::shared_ptr<const core::RuntimeMetrics> diagnostics() const noexcept;
+  // Passive, lossy per-peer observations only. No IO/request, complete tail,
+  // country mapping, aggregate byte total or accounting certification.
+  std::optional<core::PeerPayloadSnapshot> peerPayloads() const noexcept;
+  // Passive read, with the same isolation policy as this owner.
+  std::optional<core::TrackerStatistics> trackerStatistics() const noexcept;
   // Cleared before each admitted call, so failed preparation cannot expose an
   // earlier operation receipt. Returns owned scalar evidence only.
   std::optional<RetirementReceipt> lastRetirement() const;

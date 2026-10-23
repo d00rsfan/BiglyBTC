@@ -29,9 +29,9 @@ struct StatisticsNavigation {
 static_assert(std::is_trivially_copyable_v<StatisticsNavigation>);
 
 inline bool validStatisticsNavigation(const StatisticsNavigation& value) noexcept {
-  return value.section >= 0 && value.section <= 5
+  return value.section >= 0 && value.section <= 9
       && value.activity >= 0 && value.activity <= 2
-      && value.transfers >= 0 && value.transfers <= 2
+      && value.transfers >= 0 && value.transfers <= 3
       && value.history >= 0 && value.history <= 3
       && core::validHistoryDate(value.dailyDate)
       && core::savedHistoryWeekDates(value.weekEnding).has_value()

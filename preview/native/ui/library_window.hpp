@@ -11,6 +11,7 @@
 #include "overall_presentation.hpp"
 #include "runtime_metrics_presentation.hpp"
 #include "manual_tag_presentation.hpp"
+#include "country_statistics_presentation.hpp"
 #include "statistics_navigation.hpp"
 #include "history_presentation.hpp"
 #include "history_week_presentation.hpp"
@@ -75,6 +76,8 @@ public:
   void setOverall(OverallPresentation);
   void setRuntimeMetrics(RuntimeMetricsPresentation);
   void setManualTagStatistics(ManualTagStatisticsPresentation);
+  void setCountryStatistics(CountryStatisticsPresentation);
+  CountryStatisticsPresentation countryStatisticsSnapshot() const { return latestCountry_; }
   ManualTagStatisticsPresentation manualTagStatisticsSnapshot() const { return latestManualTags_; }
   NativeSessionPresentation nativeSessionSnapshot() const { return latestNativeSession_; }
   NativeActivityPresentation nativeActivitySnapshot() const { return latestNativeActivity_; }
@@ -92,6 +95,7 @@ signals:
   void savedServicesRequested(quint64 request);
   void statisticsRequested(quint64 session, quint64 request);
   void manualTagStatisticsRequested(quint64 session);
+  void countryStatisticsRequested(quint64 session);
   void historyRequested(quint64 session, quint64 request, biglybtc::core::HistoryDate date);
   void historyWeekRequested(quint64 session, quint64 request, biglybtc::core::HistoryDate endingDate);
   void historyMonthRequested(quint64 session, quint64 request, biglybtc::core::HistoryDate endingDate);
@@ -126,6 +130,7 @@ private:
   void queueLiveHistoryRefresh();
   void queueOptionalViews();
   void queueManualTagStatistics();
+  void queueCountryStatistics();
   void closePage(int index);
   bool onSavedServicePage() const;
   bool hasLoadingServices(quint64 request) const;
@@ -237,6 +242,9 @@ private:
   ManualTagStatisticsPresentation latestManualTags_{};
   QPointer<StatisticsPage> pendingManualTagRead_;
   bool manualTagDispatchQueued_ = false;
+  CountryStatisticsPresentation latestCountry_{};
+  QPointer<StatisticsPage> pendingCountryRead_;
+  bool countryDispatchQueued_ = false;
   bool suppressAutomaticDetails_ = false;
   bool updating_ = false;
   bool presented_ = false;

@@ -293,3 +293,29 @@ All modes use the same retained observations; changing modes does not request
 engine data. Missing source observations leave gaps. Smoothed payload/protocol
 components are unavailable because that provider supplies combined values only.
 The latest-interval numeric facts remain separately labelled.
+
+
+Statistics now exposes all ten sections through Tools → Statistics (Ctrl+5):
+Activity, Transfers, Cache, Tracker, Counters, Tags, Country, DHT,
+DDB Operations and Vivaldi. Transfers also has Capacity, which reads the original
+saved ASN/settings and `net/pm_<AS>.dat` estimates without initializing auto-speed.
+Cache adds disk job/file/buffer summaries and a bounded operation-rate graph;
+the searchable native counters remain available.
+
+Country retains measured payload-byte prefixes for completed connections and
+keeps current rates separate. The first raw peer counter is a baseline; restored
+amounts and missing intervals do not become new traffic. Geographic lookup is
+optional: `BiglyBTC-preview --country-db /absolute/private/data-directory` uses
+`GeoLite2-Country.mmdb` from that directory. No database is bundled or downloaded.
+The preview's private azlocprov module is approved by the compiled application;
+this option selects data only. Existing Java JARs and plugin directories are
+not modified. Original plugin IDs and existing file formats remain unchanged.
+
+Tracker observations include announce/scrape state when the owner permits it.
+The isolated application keeps trackers and public DHT disabled. Actual owned
+loopback providers exercise tracker responses, Azureus transport/transaction
+history and Vivaldi1 coordinates; the DDB plot shows measured transaction events.
+Opening Statistics never enables those services. Public Azureus routing, full
+DDB control trees, live auto-speed/ASN discovery and original Java cache-manager
+services remain separate core migration work. Native mmap disk operation
+measurements do not supply Java cache-hit ratios or cache capacity.

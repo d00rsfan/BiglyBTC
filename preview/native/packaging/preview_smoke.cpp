@@ -476,6 +476,19 @@ private slots:
       const auto transfers = root.filePath(QStringLiteral("statistics-transfers-preview.png"));
       QVERIFY(!QFileInfo::exists(transfers)); QVERIFY(window.grab().save(transfers));
     }
+    const QStringList families{QStringLiteral("Cache"), QStringLiteral("Tracker"),
+        QStringLiteral("Counters"), QStringLiteral("Tags"), QStringLiteral("Country"),
+        QStringLiteral("DHT"), QStringLiteral("DDB Operations"), QStringLiteral("Vivaldi")};
+    QCOMPARE(page->tabs().count(), 10);
+    for (int index = 2; index < 10; ++index) {
+      page->tabs().setCurrentIndex(index); QCoreApplication::processEvents();
+      QCOMPARE(page->tabs().tabText(index), families[index - 2]);
+      if (!capture.isEmpty()) {
+        const auto image = root.filePath(QStringLiteral("statistics-section-%1-preview.png").arg(index));
+        QVERIFY(!QFileInfo::exists(image)); QVERIFY(window.grab().save(image));
+      }
+    }
+    page->tabs().setCurrentIndex(1); QCoreApplication::processEvents();
     QTest::keyClick(&page->tabs(), Qt::Key_1, Qt::ControlModifier);
     QCOMPARE(window.mainTabs().currentWidget()->objectName(), QStringLiteral("classic-my-torrents-page"));
     QCOMPARE(window.filter().text(), QStringLiteral("Paused")); QCOMPARE(table.columnWidth(1), 247);

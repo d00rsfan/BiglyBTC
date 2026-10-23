@@ -16,6 +16,21 @@ std::expected<Module, LoadError> Module::load(const std::filesystem::path& artif
     return std::unexpected(LoadError{"Invalid host options"});
   }
   const int file = ::open(artifact.c_str(), O_RDONLY | O_CLOEXEC | O_NOFOLLOW | O_NONBLOCK);
+  return loadOwnedDescriptor(file, expectedId, capabilities, options, expectedVersion);
+}
+std::expected<Module, LoadError> Module::loadDescriptor(int authenticatedDescriptor,
+    std::string_view expectedId, std::uint64_t capabilities, const bt_plugin_options_v1& options,
+    std::string_view expectedVersion) {
+  if (expectedId.empty() || expectedId.size() > 64 || options.size != sizeof(options)
+      || options.abi != BT_PLUGIN_ABI_V1 || options.reserved != 0) {
+    return std::unexpected(LoadError{"Invalid host options"});
+  }
+  const int file = ::fcntl(authenticatedDescriptor, F_DUPFD_CLOEXEC, 3);
+  return loadOwnedDescriptor(file, expectedId, capabilities, options, expectedVersion);
+}
+std::expected<Module, LoadError> Module::loadOwnedDescriptor(int file,
+    std::string_view expectedId, std::uint64_t capabilities, const bt_plugin_options_v1& options,
+    std::string_view expectedVersion) {
   struct stat info{};
   if (file < 0) { return std::unexpected(LoadError{"Cannot open native module"}); }
   if (::fstat(file, &info) != 0 || !S_ISREG(info.st_mode) || info.st_nlink != 1

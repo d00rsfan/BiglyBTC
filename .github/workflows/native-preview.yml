@@ -42,12 +42,14 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          python3 preview/native/tests/fetch_country_fixture.py "$RUNNER_TEMP/country-fixtures/GeoIP2-Country-Test.mmdb"
           # DEB enables the runtime planner and smoke target; no CPack/package is run.
           /usr/bin/cmake -S preview/native -B "$BUILD_DIR" -G Ninja \
             -DCMAKE_BUILD_TYPE=Release \
             -DCMAKE_CXX_COMPILER="$BIGLYBTC_CXX" \
             -DCMAKE_PREFIX_PATH="$BIGLYBTC_QT_PREFIX;/usr" \
             -DCMAKE_INSTALL_PREFIX=/usr \
+            -DBIGLYBTC_COUNTRY_MMDB_FIXTURE="$RUNNER_TEMP/country-fixtures/GeoIP2-Country-Test.mmdb" \
             -DBIGLYBTC_LOCAL_ENGINE=ON \
             -DBIGLYBTC_DESKTOP=ON \
             -DBIGLYBTC_DEB=ON \
@@ -98,6 +100,9 @@ jobs:
           cp -- "$preview_root/saved-selected-preview.png" "$EVIDENCE_DIR/saved-selected-preview.png"
           cp -- "$preview_root/statistics-activity-preview.png" "$EVIDENCE_DIR/statistics-activity-preview.png"
           cp -- "$preview_root/statistics-transfers-preview.png" "$EVIDENCE_DIR/statistics-transfers-preview.png"
+          for section in {2..9}; do
+            cp -- "$preview_root/statistics-section-$section-preview.png" "$EVIDENCE_DIR/"
+          done
           cp -- "$preview_root/statistics-history-preview.png" "$EVIDENCE_DIR/statistics-history-preview.png"
           cp -- "$preview_root/statistics-history-missing-preview.png" "$EVIDENCE_DIR/statistics-history-missing-preview.png"
           cp -- "$preview_root/statistics-history-week-preview.png" "$EVIDENCE_DIR/statistics-history-week-preview.png"

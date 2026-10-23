@@ -12,3 +12,7 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/runtime-binding/PersistentRuntimeBinding.cm
 target_sources(biglybtc_local_engine PRIVATE runtime_metrics_sampler.cpp)
 
 target_sources(biglybtc_local_engine PRIVATE effective_rate_limits.cpp)
+
+target_sources(biglybtc_local_engine PRIVATE peer_payload_observer.cpp)
+
+target_sources(biglybtc_local_engine PRIVATE tracker_statistics_sampler.cpp)

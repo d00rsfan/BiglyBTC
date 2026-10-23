@@ -14,23 +14,27 @@
 #include "overall_presentation.hpp"
 #include "runtime_metrics_presentation.hpp"
 #include "manual_tag_presentation.hpp"
+#include "country_statistics_presentation.hpp"
 
 #include <QObject>
 
 #include <filesystem>
+#include <functional>
 #include <atomic>
 #include <mutex>
 
 class QTimer;
 
 namespace biglybtc::engine { struct ApplicationPeerObservation; }
+namespace biglybtc::storage { class ProfileLease; class CountryProvider; }
 
 namespace biglybtc::app {
 
 class SessionBridge final : public QObject {
   Q_OBJECT
 public:
-  explicit SessionBridge(QObject* parent = nullptr);
+  using CountryProviderFactory = std::function<std::unique_ptr<storage::CountryProvider>(const storage::ProfileLease&)>;
+  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {});
   ~SessionBridge() override;
   bool open(std::filesystem::path profile, unsigned short ownedPeerPort);
   bool refresh();
@@ -38,6 +42,7 @@ public:
   bool statistics(quint64 session, quint64 request);
   bool markStatistics(quint64 session, bool clear);
   bool manualTagStatistics(quint64 session);
+  bool countryStatistics(quint64 session);
   bool history(quint64 session, quint64 request, core::HistoryDate date);
   bool historyWeek(quint64 session, quint64 request, core::HistoryDate endingDate);
   bool historyMonth(quint64 session, quint64 request, core::HistoryDate endingDate);
@@ -69,6 +74,7 @@ signals:
   void overallReady(biglybtc::ui::OverallPresentation);
   void runtimeMetricsReady(biglybtc::ui::RuntimeMetricsPresentation);
   void manualTagStatisticsReady(biglybtc::ui::ManualTagStatisticsPresentation);
+  void countryStatisticsReady(biglybtc::ui::CountryStatisticsPresentation);
   void sessionClosed(quint64 session, bool joined, bool storageReleased);
   void sessionCloseFailed();
   void busyChanged(bool);
@@ -90,6 +96,9 @@ private:
   ui::ManualTagStatisticsPresentation manualTagPacket();
   void publishManualTags() noexcept;
   void deliverManualTags(ui::ManualTagStatisticsPresentation);
+  ui::CountryStatisticsPresentation countryPacket();
+  void publishCountries() noexcept;
+  void deliverCountries(ui::CountryStatisticsPresentation);
   void closeFailed(QString);
   std::unique_ptr<Host> host_;
   std::optional<core::Ticket> current_;
@@ -115,6 +124,10 @@ private:
   std::optional<ui::ManualTagStatisticsPresentation> latestManualTags_;
   bool manualTagDeliveryQueued_ = false;
   ui::ManualTagStatisticsPresentation deliveredManualTags_; // GUI-only admission state.
+  std::optional<ui::CountryStatisticsPresentation> latestCountries_;
+  bool countryDeliveryQueued_ = false;
+  ui::CountryStatisticsPresentation deliveredCountries_; // GUI-only admission state.
+  CountryProviderFactory countryProviderFactory_; // Invoked only by the worker.
   bool busy_ = false;
   // GUI-thread publication only; worker commands capture the requested identity.
   quint64 publishedColumnLayoutSession_ = 0;

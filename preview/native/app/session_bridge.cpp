@@ -11,6 +11,8 @@
 #include "saved_service_view.hpp"
 #include "statistics_view.hpp"
 #include "saved_download_tags_view.hpp"
+#include "country_provider.hpp"
+#include "../adapters/saved_speed_manager_view.hpp"
 #include "../adapters/history_view.hpp"
 #include "../adapters/history_week_view.hpp"
 #include "../adapters/history_month_view.hpp"
@@ -178,6 +180,11 @@ struct SessionBridge::Host {
   bool manualOwnerSampled = false, manualIdleAuthority = false;
   std::optional<core::TargetTraffic> manualTarget;
   core::ManualTagTraffic manualLastTraffic{};
+  // Optional geography is never initialized by profile startup or transfers.
+  bool countriesEnabled = false, countryProviderAttempted = false, countryEnded = false;
+  quint64 countrySequence = 0;
+  std::unique_ptr<storage::CountryProvider> countryProvider;
+  std::shared_ptr<const core::CountryStatistics> lastCountries;
   ui::Presentation lastSnapshot{};
   std::shared_ptr<const core::Document> columnBaseline{};
   std::optional<storage::RecoverySource> columnBaselineSource{};
@@ -242,7 +249,8 @@ struct SessionBridge::Host {
   }
 };
 
-SessionBridge::SessionBridge(QObject* parent) : QObject(parent) {
+SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory)
+    : QObject(parent), countryProviderFactory_(std::move(factory)) {
   qRegisterMetaType<ui::Target>();
   qRegisterMetaType<ui::Presentation>();
   qRegisterMetaType<ui::Telemetry>();
@@ -250,6 +258,7 @@ SessionBridge::SessionBridge(QObject* parent) : QObject(parent) {
   qRegisterMetaType<ui::SavedServicesPresentation>();
   qRegisterMetaType<ui::StatisticsPresentation>();
   qRegisterMetaType<ui::ManualTagStatisticsPresentation>();
+  qRegisterMetaType<ui::CountryStatisticsPresentation>();
   qRegisterMetaType<core::HistoryDate>();
   qRegisterMetaType<ui::HistoryPresentation>();
   qRegisterMetaType<ui::HistoryMonthPresentation>();
@@ -476,6 +485,35 @@ bool SessionBridge::statistics(quint64 session, quint64 request) {
       }
     }
     checkpoint(stop);
+    // Saved capacity is independent of Overall: optional parse/read failures
+    // never turn an otherwise valid saved-totals read into a failure.
+    try {
+      auto speed = std::make_shared<ui::SavedSpeedManagerPacket>();
+      speed->session = session; speed->sequence = request;
+      speed->livePolicy = ui::AutoSpeedPolicy::Inactive;
+      auto settings = storage::ConfigFile::load(host_->lease, "biglybt.config");
+      if (!settings && settings.error().code != storage::ErrorCode::Missing) {
+        speed->failure = text(settings.error().message);
+      } else {
+        auto saved = storage::readSavedSpeedManagerView(host_->lease,
+            settings ? std::string_view(settings->document().originalBytes()) : std::string_view("de"), stop);
+        if (!saved) { speed->failure = text(saved.error().message); }
+        else {
+          speed->settings = std::make_shared<const core::SavedSpeedSettings>(std::move(saved->settings));
+          if (saved->history && saved->recoverySource) {
+            speed->history = std::make_shared<const core::SavedSpeedHistory>(std::move(*saved->history));
+            switch (*saved->recoverySource) {
+              case storage::RecoverySource::Primary: speed->source = ui::SavedSpeedManagerSource::Primary; break;
+              case storage::RecoverySource::Backup: speed->source = ui::SavedSpeedManagerSource::Backup; break;
+              case storage::RecoverySource::Saving: speed->source = ui::SavedSpeedManagerSource::Saving; break;
+            }
+            speed->state = ui::SavedSpeedManagerState::Ready;
+          } else { speed->state = ui::SavedSpeedManagerState::Missing; }
+        }
+      }
+      packet->savedSpeed = std::move(speed);
+    } catch (...) {} // Optional presentation allocation is outside saved totals.
+    checkpoint(stop);
     ui::StatisticsPresentation presentation = std::move(packet);
     QMetaObject::invokeMethod(this, [this, presentation = std::move(presentation), stop] {
       QPointer<SessionBridge> guard(this);
@@ -590,6 +628,75 @@ void SessionBridge::publishManualTags() noexcept {
     const std::lock_guard lock(progressMutex_); manualTagDeliveryQueued_ = false;
   }
 }
+ui::CountryStatisticsPresentation SessionBridge::countryPacket() {
+  if (!host_ || !host_->countriesEnabled || host_->countrySequence == std::numeric_limits<quint64>::max()) { return {}; }
+  auto& host = *host_; bool current = false;
+  if (host.engine) {
+    // Owned scalar copy from the existing passive observer, never another pump.
+    const auto ledger = host.engine->peerPayloads();
+    if (ledger && ledger->identity.profileSession == host.columnLayoutSession) {
+      const auto projected = host.countryProvider ? host.countryProvider->snapshot(*ledger)
+          : core::projectCountryStatistics(*ledger, {}, false);
+      if (projected) {
+        host.lastCountries = std::make_shared<const core::CountryStatistics>(*projected);
+        current = !host.countryEnded && (host.manualOwnerState == engine::AccountingState::Idle
+            || host.manualOwnerState == engine::AccountingState::Active);
+      }
+    }
+  }
+  auto packet = std::make_shared<ui::CountryStatisticsPacket>();
+  packet->session = host.columnLayoutSession; packet->sequence = ++host.countrySequence;
+  packet->snapshot = host.lastCountries; packet->epoch = packet->snapshot ? packet->snapshot->identity.engineEpoch : 0;
+  packet->current = current; return packet;
+}
+void SessionBridge::deliverCountries(ui::CountryStatisticsPresentation packet) {
+  const auto previous = deliveredCountries_ && packet && deliveredCountries_->session == packet->session
+      ? deliveredCountries_ : ui::CountryStatisticsPresentation{};
+  if (!ui::acceptCountryStatistics(previous, packet, publishedColumnLayoutSession_)) { return; }
+  deliveredCountries_ = packet;
+  emit countryStatisticsReady(std::move(packet)); // Final access; receiver may delete Bridge.
+}
+void SessionBridge::publishCountries() noexcept {
+  try {
+    auto packet = countryPacket(); if (!packet) { return; }
+    {
+      const std::lock_guard lock(progressMutex_); latestCountries_ = std::move(packet);
+      if (countryDeliveryQueued_) { return; } countryDeliveryQueued_ = true;
+    }
+    if (QMetaObject::invokeMethod(this, [this] {
+      std::optional<ui::CountryStatisticsPresentation> packet;
+      {
+        const std::lock_guard lock(progressMutex_); packet.swap(latestCountries_); countryDeliveryQueued_ = false;
+      }
+      if (packet) { deliverCountries(std::move(*packet)); }
+    }, Qt::QueuedConnection)) { return; }
+    const std::lock_guard lock(progressMutex_); countryDeliveryQueued_ = false;
+  } catch (...) {
+    // Optional geography, ledger copy and GUI allocations never fail a transfer.
+    const std::lock_guard lock(progressMutex_); countryDeliveryQueued_ = false;
+  }
+}
+bool SessionBridge::countryStatistics(quint64 session) {
+  if (!session || session != publishedColumnLayoutSession_) { return false; }
+  return dispatch([this, session](std::stop_token stop) {
+    if (!host_ || host_->columnLayoutSession != session) {
+      throw Failure{{storage::ErrorCode::Conflict, "This country statistics session is no longer active"}};
+    }
+    checkpoint(stop); auto& host = *host_; host.countriesEnabled = true;
+    if (!host.countryProviderAttempted) {
+      host.countryProviderAttempted = true;
+      try { if (countryProviderFactory_) { host.countryProvider = countryProviderFactory_(host.lease); } }
+      catch (...) {} // Authentication/provider failure remains unavailable, never guessed.
+    }
+    auto packet = countryPacket(); checkpoint(stop);
+    QMetaObject::invokeMethod(this, [this, packet = std::move(packet), stop] {
+      QPointer<SessionBridge> guard(this); if (!stop.stop_requested()) { deliverCountries(packet); }
+      if (!guard) { return; } completionMonitor_->stop(); busy_ = false; emit busyChanged(false);
+      if (guard && stop.stop_requested()) { emit messageReady(tr("Cancelled")); }
+    }, Qt::QueuedConnection);
+  }, false);
+}
+
 bool SessionBridge::manualTagStatistics(quint64 session) {
   if (!session || session != publishedColumnLayoutSession_) { return false; }
   return dispatch([this, session](std::stop_token stop) {
@@ -1070,9 +1177,11 @@ void SessionBridge::observeNative(const engine::ApplicationPeerObservation& valu
     static_cast<void>(host_->overall->invalidate(ownerIdentity(value.identity)));
   }
   tickAccounting();
+  bool countryDue = false;
   try {
     const auto now = std::chrono::steady_clock::now();
     if (now - host_->lastOverallPublication >= std::chrono::seconds{1}) {
+      countryDue = true;
       host_->lastOverallPublication = now; publishOverall(); publishRuntimeMetrics(value);
     }
   } catch (...) {} // Optional UI cannot disconnect the essential sink.
@@ -1083,6 +1192,9 @@ void SessionBridge::observeNative(const engine::ApplicationPeerObservation& valu
     host_->manualIdleAuthority = value.state == engine::AccountingState::Idle && value.observed.has_value();
     publishManualTags();
   }
+  if (countryDue || value.state == engine::AccountingState::Retiring
+      || value.state == engine::AccountingState::Closing || value.state == engine::AccountingState::Closed
+      || value.state == engine::AccountingState::Uncertified) { publishCountries(); }
   try { nativeSession(nativePacket(value, host_->latestSourceRates)); } catch (...) {}
 }
 void SessionBridge::tickAccounting(bool force, bool ending) noexcept {
@@ -1140,6 +1252,12 @@ void SessionBridge::publishRuntimeMetrics(const engine::ApplicationPeerObservati
   auto packet = std::make_shared<ui::RuntimeMetricsPacket>();
   packet->session = host_->columnLayoutSession; packet->epoch = value.identity.engineEpoch;
   packet->sequence = value.sequence; packet->snapshot = host_->engine->diagnostics();
+  // The qualified isolated preview has no public Azureus owner; opening views
+  // must not instantiate one. Both public DHT and discovery stay disabled.
+  packet->azureusDisabledByPolicy = true;
+  if (auto tracker = host_->engine->trackerStatistics()) {
+    packet->tracker = std::make_shared<const core::TrackerStatistics>(std::move(*tracker));
+  }
   packet->current = value.state == engine::AccountingState::Idle || value.state == engine::AccountingState::Active;
   ui::RuntimeMetricsPresentation result = std::move(packet);
   {
@@ -1306,7 +1424,10 @@ bool SessionBridge::closeSession() {
         }
       } catch (...) {} // Optional immutable telemetry cannot retain Host/lease.
     }
-    if (host_) { host_->manualTagEnded = true; publishManualTags(); }
+    if (host_) {
+      host_->manualTagEnded = true; publishManualTags();
+      host_->countryEnded = true; publishCountries();
+    }
     host_.reset(); // Required lifetime barrier before GUI close acknowledgement.
     try { nativeSession(std::move(finalObservation)); } catch (...) {}
     QMetaObject::invokeMethod(this, [this, session, joined, released] {

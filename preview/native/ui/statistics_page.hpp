@@ -13,6 +13,7 @@
 #include "overall_presentation.hpp"
 #include "runtime_metrics_presentation.hpp"
 #include "manual_tag_presentation.hpp"
+#include "country_statistics_presentation.hpp"
 #include "statistics_navigation.hpp"
 
 #include <QElapsedTimer>
@@ -34,6 +35,11 @@ class NativeSessionView;
 class OverallView;
 class RuntimeMetricsView;
 class ManualTagStatisticsView;
+class CountryStatisticsView;
+class TrackerStatisticsView;
+class AzureusStatisticsView;
+class CacheStatisticsView;
+class SavedSpeedManagerView;
 class NativeActivityView;
 class HistoryView;
 class HistoryWeekView;
@@ -58,6 +64,9 @@ public:
   void setManualTagStatistics(ManualTagStatisticsPresentation);
   ManualTagStatisticsPresentation manualTagStatisticsSnapshot() const;
   bool manualTagsSelected() const;
+  void setCountryStatistics(CountryStatisticsPresentation);
+  CountryStatisticsPresentation countryStatisticsSnapshot() const;
+  bool countrySelected() const;
   void setAccountingBusy(bool);
   void setNativeActivity(NativeActivityPresentation);
   NativeSessionPresentation nativeSessionSnapshot() const;
@@ -104,6 +113,7 @@ signals:
   void refreshRequested();
   void historyVisible();
   void manualTagsVisible();
+  void countryVisible(bool activate = true);
   void manualTagStatisticsRequested(quint64 session);
   void historyRequested(biglybtc::core::HistoryDate);
   void historyWeekRequested(biglybtc::core::HistoryDate);
@@ -131,6 +141,12 @@ private:
   QPointer<OverallView> overallView_;
   std::array<QPointer<RuntimeMetricsView>, 4> runtimeViews_{};
   QPointer<ManualTagStatisticsView> manualTags_;
+  QPointer<CountryStatisticsView> country_;
+  bool countrySelectionPublished_ = false;
+  QPointer<TrackerStatisticsView> trackers_;
+  QPointer<CacheStatisticsView> cache_;
+  QPointer<SavedSpeedManagerView> savedSpeed_;
+  std::array<QPointer<AzureusStatisticsView>, 3> azureus_{};
   QPointer<NativeSessionView> nativeSessionView_;
   QPointer<NativeActivityView> nativeActivityView_;
   NativeActivityPresentation nativeActivityFrame_;

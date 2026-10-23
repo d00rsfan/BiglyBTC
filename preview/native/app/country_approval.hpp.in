@@ -1,0 +1,8 @@
+#pragma once
+#include <cstdint>
+namespace biglybtc::app::country_bundle {
+inline constexpr char Basename[] = "BiglyBTC-plugin-azlocprov.so";
+inline constexpr char Sha256[] = "@MODULE_SHA256@";
+inline constexpr std::uint64_t Bytes = @MODULE_BYTES@;
+inline constexpr char Version[] = "@VERSION@";
+}

@@ -61,6 +61,14 @@ BT_PLUGIN_EXPORT const bt_plugin_v1 *biglybtc_plugin_entry(uint32_t requested_ab
 
 #define BT_LOCATION_LOOKUP UINT32_C(0x1001)
 #define BT_LOCATION_FLAG UINT32_C(0x1002)
+/* Additive opt-in operations; existing lookup/flag semantics are unchanged. */
+#define BT_LOCATION_DATABASE_STATUS UINT32_C(0x1003)
+#define BT_LOCATION_LOOKUP_CHECKED UINT32_C(0x1004)
+typedef struct bt_location_database_request_v1 { uint32_t reserved; } bt_location_database_request_v1;
+typedef struct bt_location_database_result_v1 {
+  uint32_t available; /* 1 only while the retained owned DB identity is usable */
+  uint32_t reserved;
+} bt_location_database_result_v1;
 typedef struct bt_location_request_v1 {
   uint32_t family; /* 4 or 6; numeric addresses only, never DNS */
   uint8_t address[16]; /* network byte order; IPv4 uses first four bytes */

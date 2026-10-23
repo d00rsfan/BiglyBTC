@@ -98,7 +98,7 @@ private slots:
   }
   void nestedActivityPreservesPayloadDefaultAndExistingIdentities() {
     ui::StatisticsPage page; showPage(page);
-    QCOMPARE(page.tabs().count(), 6); QCOMPARE(page.tabs().tabText(5), QStringLiteral("Tags")); QCOMPARE(page.tabs().currentIndex(), 0);
+    QCOMPARE(page.tabs().count(), 10); QCOMPARE(page.tabs().tabText(5), QStringLiteral("Tags")); QCOMPARE(page.tabs().tabText(6), QStringLiteral("Country")); QCOMPARE(page.tabs().currentIndex(), 0);
     QCOMPARE(page.tabs().tabText(0), QStringLiteral("Activity")); QCOMPARE(page.tabs().tabText(1), QStringLiteral("Transfers"));
     auto& tabs = activityTabs(page); QCOMPARE(tabs.count(), 3); QCOMPARE(tabs.currentIndex(), 2);
     QCOMPARE(tabs.tabText(0), QStringLiteral("Payload")); QCOMPARE(tabs.tabText(1), QStringLiteral("Engine traffic"));

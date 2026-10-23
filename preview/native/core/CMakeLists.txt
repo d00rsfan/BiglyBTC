@@ -41,3 +41,11 @@ endif()
 target_sources(biglybtc_core PRIVATE src/source_rate_average.cpp src/minute_history.cpp)
 
 target_sources(biglybtc_core PRIVATE src/saved_download_tags.cpp src/manual_tag_statistics.cpp)
+
+target_sources(biglybtc_core PRIVATE src/peer_payload_ledger.cpp src/country_statistics.cpp)
+
+target_sources(biglybtc_core PRIVATE src/tracker_statistics.cpp)
+
+target_sources(biglybtc_core PRIVATE src/disk_statistics.cpp)
+
+target_sources(biglybtc_core PRIVATE src/saved_speed_manager.cpp)

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "biglybtc/saved_statistics.hpp"
+#include "saved_speed_manager_presentation.hpp"
 
 #include <QMetaType>
 #include <QString>
@@ -19,6 +20,7 @@ struct StatisticsPacket {
   std::optional<StatisticsReadSource> source{};
   std::shared_ptr<const core::SavedStatistics> snapshot{};
   QString failure;
+  SavedSpeedManagerPresentation savedSpeed{};
 };
 using StatisticsPresentation = std::shared_ptr<const StatisticsPacket>;
 
