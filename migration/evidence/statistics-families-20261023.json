@@ -23,7 +23,9 @@
   "hosted_final_source": {
     "source": "fbda051338e08c66242e97494e533ad420a1de38",
     "run": 40013558473,
-    "conclusion": "pending"
+    "conclusion": "success",
+    "units": 120,
+    "smoke_rows": 13
   },
   "public_location_module": "252bcf70f3dfd7a3fa6aa0d3efeb38bae6c61df4",
   "portable": {
