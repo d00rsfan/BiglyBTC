@@ -64,3 +64,12 @@ if(BIGLYBTC_DESKTOP)
   install(FILES "${biglybtc_archive_libdir}/../../share/doc/libarchive13t64/copyright"
     DESTINATION share/doc/biglybtc-experimental RENAME libarchive-copyright)
 endif()
+
+if(BIGLYBTC_DESKTOP)
+  add_library(biglybtc_owned_azureus_service STATIC owned_azureus_service.cpp)
+  target_include_directories(biglybtc_owned_azureus_service PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+  target_link_libraries(biglybtc_owned_azureus_service PUBLIC biglybtc_azureus_owned_udp Threads::Threads)
+  target_compile_features(biglybtc_owned_azureus_service PUBLIC cxx_std_23)
+  target_compile_options(biglybtc_owned_azureus_service PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_link_libraries(biglybtc_desktop_host PRIVATE biglybtc_owned_azureus_service)
+endif()

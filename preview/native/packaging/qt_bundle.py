@@ -48,7 +48,7 @@ def plan(sdk, version, notices):
     for plugin_type in PLUGIN_TYPES:
         for plugin in sorted((sdk / "plugins" / plugin_type).glob("*.so")):
             add(plugin, f"{PRIVATE}/plugins/{plugin_type}/{plugin.name}", True)
-    queue.extend(("libQt6Core.so.6", "libQt6Gui.so.6", "libQt6Widgets.so.6"))
+    queue.extend(("libQt6Core.so.6", "libQt6Gui.so.6", "libQt6Widgets.so.6", "libQt6Network.so.6"))
     seen = set()
     while queue:
         name = queue.pop()

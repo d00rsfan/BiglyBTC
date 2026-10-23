@@ -30,11 +30,14 @@ namespace biglybtc::storage { class ProfileLease; class CountryProvider; }
 
 namespace biglybtc::app {
 
+class OwnedAzureusService;
+
 class SessionBridge final : public QObject {
   Q_OBJECT
 public:
   using CountryProviderFactory = std::function<std::unique_ptr<storage::CountryProvider>(const storage::ProfileLease&)>;
-  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {});
+  using AzureusServiceFactory = std::function<std::unique_ptr<OwnedAzureusService>(const storage::ProfileLease&)>;
+  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {});
   ~SessionBridge() override;
   bool open(std::filesystem::path profile, unsigned short ownedPeerPort);
   bool refresh();
@@ -73,6 +76,7 @@ signals:
   void nativeSessionReady(biglybtc::ui::NativeSessionPresentation);
   void overallReady(biglybtc::ui::OverallPresentation);
   void runtimeMetricsReady(biglybtc::ui::RuntimeMetricsPresentation);
+  void azureusStatisticsReady(biglybtc::ui::AzureusStatisticsPresentation);
   void manualTagStatisticsReady(biglybtc::ui::ManualTagStatisticsPresentation);
   void countryStatisticsReady(biglybtc::ui::CountryStatisticsPresentation);
   void sessionClosed(quint64 session, bool joined, bool storageReleased);
@@ -93,6 +97,7 @@ private:
   void publishOverall(bool closed = false);
   void publishHistoryChange() noexcept;
   void publishRuntimeMetrics(const engine::ApplicationPeerObservation&);
+  void publishAzureus() noexcept;
   ui::ManualTagStatisticsPresentation manualTagPacket();
   void publishManualTags() noexcept;
   void deliverManualTags(ui::ManualTagStatisticsPresentation);
@@ -128,6 +133,9 @@ private:
   bool countryDeliveryQueued_ = false;
   ui::CountryStatisticsPresentation deliveredCountries_; // GUI-only admission state.
   CountryProviderFactory countryProviderFactory_; // Invoked only by the worker.
+  AzureusServiceFactory azureusServiceFactory_; // Explicit owner policy; absent means disabled.
+  std::optional<ui::AzureusStatisticsPresentation> latestAzureus_;
+  bool azureusDeliveryQueued_ = false;
   bool busy_ = false;
   // GUI-thread publication only; worker commands capture the requested identity.
   quint64 publishedColumnLayoutSession_ = 0;

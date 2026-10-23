@@ -38,6 +38,7 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
   QObject::connect(&bridge, &app::SessionBridge::nativeSessionReady, &window, &ui::LibraryWindow::setNativeSession);
   QObject::connect(&bridge, &app::SessionBridge::overallReady, &window, &ui::LibraryWindow::setOverall);
   QObject::connect(&bridge, &app::SessionBridge::runtimeMetricsReady, &window, &ui::LibraryWindow::setRuntimeMetrics);
+  QObject::connect(&bridge, &app::SessionBridge::azureusStatisticsReady, &window, &ui::LibraryWindow::setAzureusStatistics);
   QObject::connect(&bridge, &app::SessionBridge::busyChanged, &window, &ui::LibraryWindow::setBusy);
   QObject::connect(&window, &ui::LibraryWindow::columnLayoutsRequested, &bridge, &app::SessionBridge::columnLayouts);
   QObject::connect(&window, &ui::LibraryWindow::statisticsRequested, &bridge, &app::SessionBridge::statistics);

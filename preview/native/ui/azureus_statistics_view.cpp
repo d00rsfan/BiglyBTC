@@ -51,6 +51,31 @@ public:
   bool replace(std::shared_ptr<const udp::OwnedDhtStatisticsSnapshot> source,const std::function<bool()>& current){QPointer<Model> guard(this);beginResetModel();if(!guard){return false;}const bool accepted=current();if(!guard){return false;}if(accepted){source_=std::move(source);}endResetModel();return accepted&&guard;}
 private:const AzureusStatisticsSection kind_;std::shared_ptr<const udp::OwnedDhtStatisticsSnapshot> source_;
 };
+class RouterModel final:public QAbstractTableModel{
+public:
+  using Snapshot=services::azureus_router::RouterStatisticsSnapshot;
+  explicit RouterModel(QObject* parent):QAbstractTableModel(parent){}
+  int rowCount(const QModelIndex& parent={})const override{return parent.isValid()||!source_?0:7;}
+  int columnCount(const QModelIndex& parent={})const override{return parent.isValid()?0:2;}
+  QVariant headerData(int section,Qt::Orientation orientation,int role)const override{
+    if(orientation!=Qt::Horizontal||role!=Qt::DisplayRole){return {};}
+    return section==0?QVariant(tr("Router statistic")):section==1?QVariant(tr("Observed count")):QVariant{};
+  }
+  QVariant data(const QModelIndex& index,int role)const override{
+    if(!index.isValid()||index.model()!=this||index.row()<0||index.row()>=rowCount()||index.column()<0||index.column()>=2){return {};}
+    static constexpr std::array<const char*,7> labels{"Nodes","Leaves","Bucket contacts","Replacements","Live contacts","Unknown contacts","Failing contacts"};
+    const auto row=static_cast<std::size_t>(index.row());const auto value=source_->counts()[row];
+    if(role==Qt::UserRole&&index.column()==1){return QVariant::fromValue(static_cast<qulonglong>(value));}
+    if(role!=Qt::DisplayRole&&role!=Qt::AccessibleTextRole){return {};}
+    return index.column()==0?QVariant(tr(labels[row])):QVariant(QString::number(value));
+  }
+  bool replace(std::shared_ptr<const Snapshot> source,const std::function<bool()>& current){
+    QPointer<RouterModel> guard(this);beginResetModel();if(!guard){return false;}
+    const bool accepted=current();if(!guard){return false;}if(accepted){source_=std::move(source);}
+    endResetModel();return accepted&&guard;
+  }
+private:std::shared_ptr<const Snapshot> source_;
+};
 }
 class AzureusStatisticsView::PositionPlot final:public QWidget{
 public:
@@ -139,6 +164,12 @@ AzureusStatisticsView::AzureusStatisticsView(AzureusStatisticsSection section,QW
   }
   if(section!=AzureusStatisticsSection::Vivaldi){model_=new Model(section,this);table_=new QTableView(this);table_->setObjectName(QStringLiteral("azureus-statistics-table"));table_->setModel(model_);table_->setEditTriggers(QAbstractItemView::NoEditTriggers);table_->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);table_->setColumnWidth(0,section==AzureusStatisticsSection::Dht?360:150);table_->setColumnWidth(1,200);if(section==AzureusStatisticsSection::Operations){table_->setColumnWidth(2,180);table_->setColumnWidth(3,240);}layout->addWidget(table_,1);}
   else{plot_=new PositionPlot(this);plot_->setObjectName(QStringLiteral("azureus-vivaldi-plot"));plot_->setAccessibleName(tr("Local Vivaldi1 estimate and last peer-reported position"));plot_->setMinimumHeight(200);layout->addWidget(plot_,1);}
+  if(section==AzureusStatisticsSection::Dht){
+    routerState_=plain(tr("Router observation unavailable; no counts inferred"),"azureus-router-status",this);layout->addWidget(routerState_);
+    routerModel_=new RouterModel(this);routerTable_=new QTableView(this);routerTable_->setObjectName(QStringLiteral("azureus-router-table"));
+    routerTable_->setModel(routerModel_);routerTable_->setEditTriggers(QAbstractItemView::NoEditTriggers);routerTable_->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+    routerTable_->setColumnWidth(0,360);routerTable_->setColumnWidth(1,200);layout->addWidget(routerTable_,1);
+  }
   layout->addWidget(plain(tr("DHT network activity. Vivaldi positions estimate network latency; they are not geographic locations. This preview does not enable public DHT routing or distributed storage."),"azureus-statistics-scope",this));
 }
 bool AzureusStatisticsView::beginSession(quint64 session){if(!session||session<=session_||revision_==std::numeric_limits<quint64>::max()){return false;}++revision_;session_=session;packet_.reset();if(plot_){plot_->cache({});}if(timeline_){timeline_->cache({});}dirty_=true;refresh();return true;}
@@ -151,9 +182,29 @@ void AzureusStatisticsView::refresh(){
   rendering_=true;struct Finish{QPointer<AzureusStatisticsView> view;quint64 revision;~Finish(){if(view){view->rendering_=false;if(view->dirty_&&view->revision_!=revision){view->queueRefresh();}}}} finish{guard,revision};
   const auto source=packet?packet->snapshot:std::shared_ptr<const udp::OwnedDhtStatisticsSnapshot>{};
   if(section_!=AzureusStatisticsSection::Vivaldi){if(!table||!model||table->model()!=model){return;}if(!static_cast<Model*>(model.data())->replace(source,current)||!current()){return;}}
+  if(section_==AzureusStatisticsSection::Dht){
+    const auto router=packet?packet->routerSnapshot:std::shared_ptr<const services::azureus_router::RouterStatisticsSnapshot>{};
+    const auto routerLabel=routerState_;const auto routerTable=routerTable_;const auto routerModel=routerModel_;
+    if(!routerLabel||!routerTable||!routerModel||routerTable->model()!=routerModel){return;}
+    if(!static_cast<RouterModel*>(routerModel.data())->replace(router,current)||!current()||!routerLabel){return;}
+    QString routerText=tr("Router observation unavailable; no counts inferred");
+    if(router){const auto& config=router->config();
+      routerText=tr("Owned router; K %1 / B %2 / replacements %3; %4 leaf records. Bounded to %5 contacts / %6 nodes.")
+          .arg(config.k).arg(config.b).arg(config.replacements).arg(router->buckets().size())
+          .arg(services::azureus_router::MaximumRouterContacts).arg(services::azureus_router::MaximumRouterNodes);
+      routerText+=router->limited()?tr(" Partial: %1 capacity drops / %2 lost intents.").arg(router->capacityDrops()).arg(router->lostIntents())
+          :tr(" No reported capacity or intent loss.");
+      if(router->sleeping()){routerText+=tr(" Sleeping.");}if(router->suspended()){routerText+=tr(" Suspended.");}
+      if(!packet->current){routerText+=tr(" Last observed.");}
+    }
+    routerLabel->setText(routerText);if(!current()||!routerLabel){return;}
+    routerLabel->setToolTip(tr("Seven source router counts; local contact included, replacement liveness excluded. No owner or request is started here."));if(!current()||!routerLabel){return;}
+    routerLabel->setAccessibleDescription(routerText);if(!current()){return;}
+  }
   QString text=tr("Azureus service observation unavailable");
   if(packet){if(packet->state==AzureusStatisticsState::Disabled){text=tr("Azureus service disabled by host policy");}else if(packet->state==AzureusStatisticsState::Unavailable){text=packet->failure.isEmpty()?text:tr("Azureus observation unavailable: %1").arg(packet->failure);}else{
     const auto& transport=source->transport();text=tr("Network %1 / %2; %3").arg(transport.network()).arg(familyName(transport.family())).arg(transport.state()==udp::TransportStatisticsState::NotStarted?tr("not started"):transport.state()==udp::TransportStatisticsState::Closed?tr("closed; last observed"):tr("owned transport observed"));
+    if(!packet->current && transport.state()!=udp::TransportStatisticsState::Closed){text+=tr("; last observed");}
     if(section_==AzureusStatisticsSection::Operations){text+=source->operationsEnabled()?tr("; up to64 transaction events, %1 dropped").arg(source->droppedEvents()):tr("; operation observation disabled");}
     if(section_==AzureusStatisticsSection::Vivaldi&&!source->vivaldiEnabled()){text+=tr("; coordinate provider disabled");}
   }}

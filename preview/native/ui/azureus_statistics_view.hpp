@@ -28,6 +28,9 @@ private:
   QPointer<QLabel> state_,coordinates_;
   QPointer<QTableView> table_;
   QPointer<QAbstractTableModel> model_;
+  QPointer<QLabel> routerState_;
+  QPointer<QTableView> routerTable_;
+  QPointer<QAbstractTableModel> routerModel_;
   QPointer<PositionPlot> plot_;
   QPointer<OperationTimeline> timeline_;
   QPointer<QWidget> observedWindow_;

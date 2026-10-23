@@ -315,7 +315,13 @@ Tracker observations include announce/scrape state when the owner permits it.
 The isolated application keeps trackers and public DHT disabled. Actual owned
 loopback providers exercise tracker responses, Azureus transport/transaction
 history and Vivaldi1 coordinates; the DDB plot shows measured transaction events.
-Opening Statistics never enables those services. Public Azureus routing, full
+An explicit per-profile Azureus factory now owns its Qt event-loop thread and
+router under the profile lease. Its independent immutable GUI channel also
+works without a torrent engine, retains actual facts on close and clears them
+on a new profile. The DHT view shows the router's seven source-defined counts
+and reports native capacity/intent loss. Default policy creates no DHT owner;
+opening Statistics never enables those services. The private Qt runtime includes
+Qt Network for the owned UDP actor. Public Azureus routing, full
 DDB control trees, live auto-speed/ASN discovery and original Java cache-manager
 services remain separate core migration work. Native mmap disk operation
 measurements do not supply Java cache-hit ratios or cache capacity.

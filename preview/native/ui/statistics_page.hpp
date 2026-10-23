@@ -12,6 +12,7 @@
 #include "statistics_presentation.hpp"
 #include "overall_presentation.hpp"
 #include "runtime_metrics_presentation.hpp"
+#include "azureus_statistics_presentation.hpp"
 #include "manual_tag_presentation.hpp"
 #include "country_statistics_presentation.hpp"
 #include "statistics_navigation.hpp"
@@ -61,6 +62,7 @@ public:
   void beginNativeSession(quint64 session);
   void setOverall(OverallPresentation);
   void setRuntimeMetrics(RuntimeMetricsPresentation);
+  void setAzureusStatistics(AzureusStatisticsPresentation);
   void setManualTagStatistics(ManualTagStatisticsPresentation);
   ManualTagStatisticsPresentation manualTagStatisticsSnapshot() const;
   bool manualTagsSelected() const;

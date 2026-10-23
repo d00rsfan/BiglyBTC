@@ -443,22 +443,19 @@ void StatisticsPage::setPresentation(StatisticsPresentation packet) {
   loading_ = false; state_ = StatisticsReadState::Ready;
   (void)writeFacts(facts);
 }
+void StatisticsPage::setAzureusStatistics(AzureusStatisticsPresentation packet) {
+  if (!packet || packet->session != nativeSessionBinding_) { return; }
+  QPointer<StatisticsPage> guard(this);
+  const auto session = nativeSessionBinding_;
+  const auto views = azureus_;
+  for (const auto& view : views) {
+    if (!guard || guard->nativeSessionBinding_ != session) { return; }
+    if (view) { view->setPresentation(packet); }
+  }
+}
 void StatisticsPage::setRuntimeMetrics(RuntimeMetricsPresentation packet) {
   QPointer<StatisticsPage> guard(this);
   if (cache_) { cache_->setPresentation(packet); }
-  if (!guard) { return; }
-  if (packet) {
-    auto service = std::make_shared<AzureusStatisticsPacket>();
-    service->session = packet->session; service->sequence = packet->sequence;
-    service->snapshot = packet->azureus;
-    service->state = packet->azureus ? AzureusStatisticsState::Observed
-        : packet->azureusDisabledByPolicy ? AzureusStatisticsState::Disabled : AzureusStatisticsState::Unavailable;
-    const auto views = azureus_;
-    for (const auto& view : views) {
-      if (!guard) { return; }
-      if (view) { view->setPresentation(service); }
-    }
-  }
   if (!guard) { return; }
   if (packet && trackers_) {
     auto tracker = std::make_shared<TrackerStatisticsPacket>();

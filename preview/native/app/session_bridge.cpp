@@ -1,4 +1,5 @@
 #include "session_bridge.hpp"
+#include "owned_azureus_service.hpp"
 
 #include "library_view.hpp"
 #include "column_layout_view.hpp"
@@ -148,6 +149,9 @@ struct SessionBridge::Host {
   storage::ProfileLease lease;
   // Declared after lease: affine engine destruction/join precedes lease release.
   std::unique_ptr<engine::PersistentSession> engine{};
+  std::unique_ptr<OwnedAzureusService> azureus{};
+  bool azureusEnabled = false, azureusPublished = false;
+  quint64 azureusSequence = 0, azureusObservationSequence = 0;
   const quint64 columnLayoutSession;
   // All services are worker-owned; the held lease outlives their destruction.
   std::unique_ptr<OverallStatisticsService> overall{};
@@ -249,8 +253,8 @@ struct SessionBridge::Host {
   }
 };
 
-SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory)
-    : QObject(parent), countryProviderFactory_(std::move(factory)) {
+SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory)
+    : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)) {
   qRegisterMetaType<ui::Target>();
   qRegisterMetaType<ui::Presentation>();
   qRegisterMetaType<ui::Telemetry>();
@@ -268,6 +272,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory)
   qRegisterMetaType<ui::NativeSessionPresentation>();
   qRegisterMetaType<ui::OverallPresentation>();
   qRegisterMetaType<ui::RuntimeMetricsPresentation>();
+  qRegisterMetaType<ui::AzureusStatisticsPresentation>();
   qRegisterMetaType<ui::ColumnLayoutsPresentation>();
   qRegisterMetaType<ui::ColumnLayoutSaveSubmission>();
   qRegisterMetaType<ui::ColumnLayoutSavePresentation>();
@@ -308,8 +313,9 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory)
       idlePoll_.reset();
     }
     auto poll = worker_.submit([this](std::stop_token stop) -> core::WorkResult {
-      if (!stop.stop_requested() && host_ && host_->engine) {
-        static_cast<void>(host_->engine->poll()); tickAccounting();
+      if (!stop.stop_requested() && host_) {
+        if (host_->engine) { static_cast<void>(host_->engine->poll()); tickAccounting(); }
+        publishAzureus();
       }
       return {};
     });
@@ -406,6 +412,11 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
     const auto session = reserveColumnLayoutSession();
     host_ = std::make_unique<Host>(profile, ownedPeerPort, std::move(lease), session);
     const auto snapshot = host_->query(stop); // Validate the profile before optional engine startup.
+    host_->azureusEnabled = static_cast<bool>(azureusServiceFactory_);
+    if (azureusServiceFactory_) {
+      try { host_->azureus = azureusServiceFactory_(host_->lease); }
+      catch (...) {} // An optional service cannot invalidate an otherwise valid profile.
+    }
     QString startupFailure;
     try { initializePersistentOwner(stop); }
     catch (const Failure& failure) {
@@ -413,6 +424,7 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
       startupFailure = tr("Live statistics unavailable: %1").arg(text(failure.error.message));
     }
     ready(snapshot, std::move(startupFailure));
+    publishAzureus(); // Posted after the profile identity; independent of the torrent engine.
   });
 }
 bool SessionBridge::refresh() {
@@ -1247,14 +1259,48 @@ void SessionBridge::tickAccounting(bool force, bool ending) noexcept {
     try { publishOverall(); } catch (...) {}
   } catch (...) {} // Accounting diagnostics must not fail successful storage.
 }
+void SessionBridge::publishAzureus() noexcept {
+  if (!host_) { return; }
+  try {
+    std::optional<AzureusServiceObservation> observation;
+    if (host_->azureus) { observation = host_->azureus->observation(); }
+    if (host_->azureusPublished && (!observation || observation->sequence == host_->azureusObservationSequence)) { return; }
+    if (host_->azureusSequence == std::numeric_limits<quint64>::max()) { return; }
+    auto packet = std::make_shared<ui::AzureusStatisticsPacket>();
+    packet->session = host_->columnLayoutSession; packet->sequence = host_->azureusSequence + 1;
+    packet->current = observation && observation->current;
+    if (!host_->azureusEnabled) { packet->state = ui::AzureusStatisticsState::Disabled; }
+    else if (observation && observation->snapshot) {
+      packet->state = ui::AzureusStatisticsState::Observed; packet->snapshot = observation->snapshot;
+      packet->routerSnapshot = observation->routerSnapshot;
+    } else {
+      packet->state = ui::AzureusStatisticsState::Unavailable;
+      packet->failure = tr("DHT service observations are unavailable");
+    }
+    {
+      const std::lock_guard lock(progressMutex_);
+      latestAzureus_ = std::move(packet);
+      ++host_->azureusSequence; host_->azureusPublished = true;
+      if (observation) { host_->azureusObservationSequence = observation->sequence; }
+      if (azureusDeliveryQueued_) { return; }
+      azureusDeliveryQueued_ = true;
+    }
+    QMetaObject::invokeMethod(this, [this] {
+      std::optional<ui::AzureusStatisticsPresentation> packet;
+      {
+        const std::lock_guard lock(progressMutex_);
+        packet.swap(latestAzureus_); azureusDeliveryQueued_ = false;
+      }
+      if (packet && (*packet)->session == publishedColumnLayoutSession_) { emit azureusStatisticsReady(*packet); }
+    }, Qt::QueuedConnection);
+  } catch (...) {} // Passive optional snapshots never fail storage/transfer commands.
+}
 void SessionBridge::publishRuntimeMetrics(const engine::ApplicationPeerObservation& value) {
+  publishAzureus();
   if (!host_ || !host_->engine) { return; }
   auto packet = std::make_shared<ui::RuntimeMetricsPacket>();
   packet->session = host_->columnLayoutSession; packet->epoch = value.identity.engineEpoch;
   packet->sequence = value.sequence; packet->snapshot = host_->engine->diagnostics();
-  // The qualified isolated preview has no public Azureus owner; opening views
-  // must not instantiate one. Both public DHT and discovery stay disabled.
-  packet->azureusDisabledByPolicy = true;
   if (auto tracker = host_->engine->trackerStatistics()) {
     packet->tracker = std::make_shared<const core::TrackerStatistics>(std::move(*tracker));
   }
@@ -1394,10 +1440,14 @@ bool SessionBridge::closeSession() {
     bool joined = true;
     bool released = true;
     ui::NativeSessionPresentation finalObservation;
+    if (host_ && host_->azureus) {
+      joined = static_cast<bool>(host_->azureus->close());
+      publishAzureus();
+    }
     if (host_ && host_->engine) {
       host_->engine->clearObservationSink();
       const auto receipt = host_->engine->close(std::chrono::steady_clock::now() + std::chrono::seconds{5});
-      joined = receipt.sessionJoined;
+      joined = joined && receipt.sessionJoined;
       released = receipt.retirement.storageReleased;
       if (host_->overall && receipt.sessionJoined && released && receipt.retirement.peerCounters) {
         const auto& final = *receipt.retirement.peerCounters;

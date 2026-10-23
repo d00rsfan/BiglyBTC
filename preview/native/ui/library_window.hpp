@@ -10,6 +10,7 @@
 #include "statistics_presentation.hpp"
 #include "overall_presentation.hpp"
 #include "runtime_metrics_presentation.hpp"
+#include "azureus_statistics_presentation.hpp"
 #include "manual_tag_presentation.hpp"
 #include "country_statistics_presentation.hpp"
 #include "statistics_navigation.hpp"
@@ -75,8 +76,10 @@ public:
   void setNativeSession(NativeSessionPresentation);
   void setOverall(OverallPresentation);
   void setRuntimeMetrics(RuntimeMetricsPresentation);
+  void setAzureusStatistics(AzureusStatisticsPresentation);
   void setManualTagStatistics(ManualTagStatisticsPresentation);
   void setCountryStatistics(CountryStatisticsPresentation);
+  AzureusStatisticsPresentation azureusStatisticsSnapshot() const { return latestAzureus_; }
   CountryStatisticsPresentation countryStatisticsSnapshot() const { return latestCountry_; }
   ManualTagStatisticsPresentation manualTagStatisticsSnapshot() const { return latestManualTags_; }
   NativeSessionPresentation nativeSessionSnapshot() const { return latestNativeSession_; }
@@ -239,6 +242,7 @@ private:
   NativeSessionPresentation latestNativeSession_{};
   OverallPresentation latestOverall_{};
   RuntimeMetricsPresentation latestRuntime_{};
+  AzureusStatisticsPresentation latestAzureus_{};
   ManualTagStatisticsPresentation latestManualTags_{};
   QPointer<StatisticsPage> pendingManualTagRead_;
   bool manualTagDispatchQueued_ = false;

@@ -15,9 +15,6 @@ struct RuntimeMetricsPacket {
   std::shared_ptr<const core::RuntimeMetrics> snapshot{};
   bool current = true;
   std::shared_ptr<const core::TrackerStatistics> tracker{};
-  // Actual service policy, supplied by the owner; absence remains unavailable.
-  bool azureusDisabledByPolicy = false;
-  std::shared_ptr<const services::azureus_udp::OwnedDhtStatisticsSnapshot> azureus{};
 };
 using RuntimeMetricsPresentation = std::shared_ptr<const RuntimeMetricsPacket>;
 } // namespace biglybtc::ui

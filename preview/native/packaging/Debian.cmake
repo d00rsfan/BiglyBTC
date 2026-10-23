@@ -40,6 +40,7 @@ if(BIGLYBTC_DEB_RUNTIME_PACKAGE_ROOT AND
   message(FATAL_ERROR "The external runtime package requires its original Debian control and shlibs metadata")
 endif()
 if(BIGLYBTC_BUNDLE_QT)
+  set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${CMAKE_CURRENT_LIST_DIR}/qt_bundle.py")
   execute_process(COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_LIST_DIR}/qt_bundle.py"
     --sdk "${BIGLYBTC_QT_RUNTIME_ROOT}" --version "${BIGLYBTC_QT_RUNTIME_VERSION}"
     --notices "${CMAKE_CURRENT_LIST_DIR}/notices"
