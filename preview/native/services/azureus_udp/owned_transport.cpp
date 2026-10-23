@@ -109,6 +109,8 @@ std::expected<OwnedDhtStatisticsSnapshot,Failure> OwnedPingTransport::dhtStatist
   for(std::size_t i=0;i<eventCount_;++i){value.events_[i]=operationEvents_[(eventBegin_+i)%operationEvents_.size()];}
   if(config_.enableVivaldi){value.local_=vivaldi_.value();value.remote_=lastRemotePosition_;value.rtt_=lastRtt_;value.coordinateObservations_=vivaldi_.observations();}
   value.ping_=lastPing_;value.pingLost_=pingLost_;
+  value.peerCount_=peerPositionCount_;value.droppedPeers_=droppedPeerPositions_;value.peersLost_=peerPositionsLost_;
+  std::copy_n(peerPositions_.begin(),peerPositionCount_,value.peers_.begin());
   return value;
 }
 void OwnedPingTransport::observePing(const Pending& pending,const Result& result)noexcept{
@@ -153,11 +155,40 @@ void OwnedPingTransport::observeVivaldi(const Pending& pending,const packet::Dec
     std::array<float,4> parts{};
     for(std::size_t i=0;i<parts.size();++i){std::uint32_t bits=0;for(std::size_t j=0;j<4;++j){bits=(bits<<8)|static_cast<unsigned char>(position->bytes[i*4+j]);}parts[i]=std::bit_cast<float>(bits);}
     const VivaldiValue remote{{parts[0],parts[1],parts[2]},parts[3]};if(!validVivaldiValue(remote)){continue;}
-    const auto elapsed=std::chrono::duration_cast<std::chrono::nanoseconds>(Clock::now()-pending.started).count();if(elapsed<=0){return;}
+    const auto now=Clock::now();
+    const auto elapsed=std::chrono::duration_cast<std::chrono::nanoseconds>(now-pending.started).count();if(elapsed<=0){return;}
+    const auto observed=std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
     const float rtt=static_cast<float>(static_cast<double>(elapsed)/1000000.0);
     const auto random=[]()noexcept{return static_cast<float>(QRandomGenerator::system()->generateDouble());};
-    if(vivaldi_.observe(rtt,remote,random)){lastRemotePosition_=remote;lastRtt_=elapsed;}return;
+    const bool accepted=vivaldi_.observe(rtt,remote,random);
+    if(accepted){lastRemotePosition_=remote;lastRtt_=elapsed;}
+    observePeerPosition(pending,remote,elapsed,observed,accepted);return;
   }
+}
+void OwnedPingTransport::observePeerPosition(const Pending& pending,VivaldiValue remote,std::int64_t elapsed,std::int64_t observed,bool accepted)noexcept{
+  if(!statisticsGeneration_||observed<0||elapsed<=0||peerPositionSequence_==std::numeric_limits<std::uint64_t>::max()){
+    peerPositionsLost_=true;return;
+  }
+  VivaldiPeerObservation report;report.position=remote;report.generation=statisticsGeneration_;
+  report.sequence=++peerPositionSequence_;report.ticket=pending.ticket.value;
+  report.observedSteadyNanoseconds=observed;report.rttNanoseconds=elapsed;report.localUpdateAccepted=accepted;
+  report.endpoint.port=pending.peer.port;
+  if(pending.peer.address.protocol()==QAbstractSocket::IPv4Protocol){
+    report.endpoint.length=4;const auto ip=pending.peer.address.toIPv4Address();
+    for(unsigned i=0;i<4;++i){report.endpoint.bytes[i]=static_cast<std::uint8_t>(ip>>(24-8*i));}
+  }else{
+    report.endpoint.length=16;const auto ip=pending.peer.address.toIPv6Address();std::copy_n(ip.c,16,report.endpoint.bytes.begin());
+  }
+  const auto end=peerPositions_.begin()+peerPositionCount_;
+  const auto existing=std::find_if(peerPositions_.begin(),end,[&](const auto& value){return value.endpoint==report.endpoint;});
+  if(existing!=end){
+    // Refresh recency without growing the collection or claiming a new peer.
+    std::move(existing+1,end,existing);--peerPositionCount_;
+  }else if(peerPositionCount_==peerPositions_.size()){
+    std::move(peerPositions_.begin()+1,end,peerPositions_.begin());--peerPositionCount_;
+    if(droppedPeerPositions_!=std::numeric_limits<std::uint64_t>::max()){++droppedPeerPositions_;}else{peerPositionsLost_=true;}
+  }
+  peerPositions_[peerPositionCount_++]=report;
 }
 Peer OwnedPingTransport::normalize(Peer peer) {
   if (peer.address.protocol()==QAbstractSocket::IPv6Protocol) {
@@ -321,6 +352,7 @@ std::expected<Ticket,Failure> OwnedPingTransport::submit(Peer peer,std::int8_t r
   pending.death=connect(receiver,&QObject::destroyed,this,[this,ticket] { abandon(ticket); });
   pending_.emplace(transaction,std::move(pending));
   const auto sent=socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port);
+  observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
   if (sent!=static_cast<qint64>(wire->size())) {
     const auto found=pending_.find(transaction);observeOperation(found->second,OperationEventKind::SendFailed);disconnect(found->second.death);pending_.erase(found);armDeadline();return std::unexpected(Failure::Send);
   }
@@ -397,7 +429,9 @@ void OwnedPingTransport::answer(const Peer& peer,const packet::Decoded& request,
   reply.positions=positions;
   const auto wire=packet::encodeReply(reply);
   if (!wire || wire->size()>static_cast<std::size_t>(maximumDatagram)) { ++statistics_.malformed;return; }
-  if (socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port)==static_cast<qint64>(wire->size())) { ++statistics_.sent; }
+  const auto sent=socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port);
+  observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
+  if (sent==static_cast<qint64>(wire->size())) { ++statistics_.sent; }
 }
 void OwnedPingTransport::answer(const Peer& peer,const find::Decoded& request,std::int64_t receivedAt) {
   if (!config_.findNodeReply) { return; }
@@ -408,7 +442,9 @@ void OwnedPingTransport::answer(const Peer& peer,const find::Decoded& request,st
   reply.randomId=snapshot.randomId;reply.status=snapshot.status;reply.estimatedSize=snapshot.estimatedSize;reply.contacts=snapshot.contacts;
   const auto wire=find::encodeReply(reply);
   if (!wire || wire->size()>static_cast<std::size_t>(maximumDatagram)) { ++statistics_.malformed;return; }
-  if (socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port)==static_cast<qint64>(wire->size())) { ++statistics_.sent; }
+  const auto sent=socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port);
+  observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
+  if (sent==static_cast<qint64>(wire->size())) { ++statistics_.sent; }
 }
 void OwnedPingTransport::answer(const Peer& peer,const lookup::Decoded& request,std::int64_t receivedAt) {
   if (!config_.findValueReply) { return; }const auto& incoming=request.header().fields();
@@ -423,7 +459,9 @@ void OwnedPingTransport::answer(const Peer& peer,const lookup::Decoded& request,
     }
     reply.contacts=piece.contacts;lookup::positions::Positions positions;reply.positions=positions;
     const auto wire=lookup::encodeReply(reply);if (!wire || wire->size()>static_cast<std::size_t>(maximumDatagram)) { ++statistics_.malformed;return; }
-    if (socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port)!=static_cast<qint64>(wire->size())) { ++statistics_.ioErrors;return; }++statistics_.sent;
+    const auto sent=socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port);
+    observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
+    if (sent!=static_cast<qint64>(wire->size())) { ++statistics_.ioErrors;return; }++statistics_.sent;
   }
 }
 void OwnedPingTransport::answer(const Peer& peer,const storage::Decoded& request,std::int64_t receivedAt) {
@@ -445,14 +483,18 @@ void OwnedPingTransport::answer(const Peer& peer,const storage::Decoded& request
     auto encoded=storage::encodeReply(reply);if (encoded) { wire=std::move(*encoded); }
   }
   if (!wire || wire->size()>static_cast<std::size_t>(maximumDatagram)) { ++statistics_.malformed;return; }
-  if (socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port)!=static_cast<qint64>(wire->size())) { ++statistics_.ioErrors;return; }
+  const auto sent=socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),peer.address,peer.port);
+  observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
+  if (sent!=static_cast<qint64>(wire->size())) { ++statistics_.ioErrors;return; }
   ++statistics_.sent;
 }
 void OwnedPingTransport::sendServiceReply(ServiceReceipt& receipt,std::expected<std::string,Failure> wire) {
   if (!wire || wire->size()>static_cast<std::size_t>(maximumDatagram)) {
     receipt.status=ServiceStatus::EncodeFailed;++statistics_.malformed;return;
   }
-  if (socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),receipt.peer.address,receipt.peer.port)!=static_cast<qint64>(wire->size())) {
+  const auto sent=socket_.writeDatagram(wire->data(),static_cast<qint64>(wire->size()),receipt.peer.address,receipt.peer.port);
+  observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
+  if (sent!=static_cast<qint64>(wire->size())) {
     receipt.status=ServiceStatus::SendFailed;++statistics_.ioErrors;return;
   }
   receipt.sent=true;receipt.status=receipt.addressMismatch?ServiceStatus::AddressRejected:ServiceStatus::Replied;++statistics_.sent;
@@ -541,13 +583,20 @@ void OwnedPingTransport::consume() {
   if (draining_ || state_!=State::Bound) { return; }draining_=true;++statistics_.readTurns;
   for (unsigned i=0;i<workPerTurn && state_==State::Bound && socket_.hasPendingDatagrams();++i) {
     const auto size=socket_.pendingDatagramSize();++statistics_.received;
-    if (size>maximumDatagram) { socket_.receiveDatagram(0);++statistics_.oversized;continue; }
+    if (size>maximumDatagram) {
+      socket_.receiveDatagram(0);statistics_.receivedPayloadBytes.reset();
+      // Existing bounded discard intentionally obtains no actual full payload.
+      // Do not substitute the peeked size,0 or an assumed packet-size constant.
+      ++statistics_.oversized;continue;
+    }
     const auto datagram=socket_.receiveDatagram(maximumDatagram);
-    if (!datagram.isValid()) { ++statistics_.ioErrors;break; }
+    if (!datagram.isValid()) { statistics_.receivedPayloadBytes.reset();++statistics_.ioErrors;break; }
+    const auto data=datagram.data();
+    observeSocketPayloadBytes(statistics_.receivedPayloadBytes,data.size());
     if (datagram.senderPort()<=0 || datagram.senderPort()>65535) { ++statistics_.malformed;continue; }
     const auto peer=normalize({datagram.senderAddress(),static_cast<quint16>(datagram.senderPort())});
     if (!allowed(peer)) { ++statistics_.unowned;continue; }
-    const auto data=datagram.data();if (data.isEmpty()) { ++statistics_.malformed;continue; }
+    if (data.isEmpty()) { ++statistics_.malformed;continue; }
     const auto kind=(static_cast<unsigned char>(data.front())&128)?packet::udp::Kind::Request:packet::udp::Kind::Reply;
     std::string bytes(data.constData(),static_cast<std::size_t>(data.size()));
     // Bind supported reply type/transaction/connection/endpoint before parsing

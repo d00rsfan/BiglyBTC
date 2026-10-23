@@ -29,6 +29,16 @@ private:
   std::int64_t observed_=0;
   std::optional<std::int64_t> rtt_;
 };
+// An actually received, endpoint-correlated V1 report. Report identity is
+// separate from sealed PING completion receipts and never asserts routing,
+// geographical location, remote authentication or continued peer liveness.
+struct VivaldiPeerObservation {
+  azureus_dht::Address endpoint;
+  VivaldiValue position;
+  std::uint64_t generation=0,sequence=0,ticket=0;
+  std::int64_t observedSteadyNanoseconds=0,rttNanoseconds=0;
+  bool localUpdateAccepted=false;
+};
 enum class OperationEventKind { Sent,PartialReply,Reply,RemoteError,Timeout,Cancelled,Closed,Abandoned,Capacity,SendFailed };
 struct OperationEvent {
   std::uint64_t serial=0,ticket=0;std::int32_t requestAction=0;
@@ -40,6 +50,7 @@ public:
   OwnedDhtStatisticsSnapshot(const OwnedDhtStatisticsSnapshot&)=default;
   OwnedDhtStatisticsSnapshot& operator=(const OwnedDhtStatisticsSnapshot&)=default;
   static constexpr std::size_t MaximumEvents=64;
+  static constexpr std::size_t MaximumPeers=64;
   const TransportStatisticsSnapshot& transport()const noexcept{return transport_;}
   bool operationsEnabled()const noexcept{return operationsEnabled_;}
   bool vivaldiEnabled()const noexcept{return vivaldiEnabled_;}
@@ -51,6 +62,9 @@ public:
   std::uint64_t coordinateObservations()const noexcept{return coordinateObservations_;}
   const std::optional<OwnedPingObservation>& pingObservation()const noexcept{return ping_;}
   bool pingObservationsLost()const noexcept{return pingLost_;}
+  std::span<const VivaldiPeerObservation> peerPositions()const noexcept{return {peers_.data(),peerCount_};}
+  std::uint64_t droppedPeerPositions()const noexcept{return droppedPeers_;}
+  bool peerPositionsLost()const noexcept{return peersLost_;}
 private:
   friend class OwnedPingTransport;
   explicit OwnedDhtStatisticsSnapshot(TransportStatisticsSnapshot value)noexcept:transport_(value){}
@@ -60,5 +74,7 @@ private:
   VivaldiValue local_{};std::optional<VivaldiValue> remote_;std::optional<std::int64_t> rtt_;
   std::uint64_t coordinateObservations_=0;
   std::optional<OwnedPingObservation> ping_;bool pingLost_=false;
+  std::array<VivaldiPeerObservation,MaximumPeers> peers_{};
+  std::size_t peerCount_=0;std::uint64_t droppedPeers_=0;bool peersLost_=false;
 };
 } // namespace biglybtc::services::azureus_udp

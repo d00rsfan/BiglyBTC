@@ -90,3 +90,8 @@ global NoLAN/automatic-speed service parity remains in progress.
 The [qualified SpeedManager record](migration/evidence/statistics-speed-manager-20261024.json)
 includes local compiler/sanitizer checks, hosted130 units/13 smoke rows and the
 updated private-Qt portable preview with complete rollback.
+
+Actual owned DHT UDP payload bytes now feed Overall and minute history, preserving
+unknown gaps and independently joined final prefixes. Vivaldi displays the
+bounded set of actual peer reports with RTT and provenance; public DHT routing
+and whole original-service parity remain in progress.

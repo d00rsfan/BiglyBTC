@@ -204,6 +204,7 @@ private:
   void armDeadline();
   void observeOperation(const Pending&,OperationEventKind) noexcept;
   void observeVivaldi(const Pending&,const packet::Decoded&) noexcept;
+  void observePeerPosition(const Pending&,VivaldiValue,std::int64_t elapsed,std::int64_t observed,bool accepted)noexcept;
   void expire();
   void finish(std::int32_t,Result);
   void part(std::int32_t,Result);
@@ -241,5 +242,7 @@ private:
   std::optional<VivaldiValue> lastRemotePosition_;std::optional<std::int64_t> lastRtt_;
   std::optional<OwnedPingObservation> lastPing_;
   std::uint64_t pingSequence_=0;bool pingLost_=false;
+  std::array<VivaldiPeerObservation,OwnedDhtStatisticsSnapshot::MaximumPeers> peerPositions_{};
+  std::size_t peerPositionCount_=0;std::uint64_t peerPositionSequence_=0,droppedPeerPositions_=0;bool peerPositionsLost_=false;
 };
 }

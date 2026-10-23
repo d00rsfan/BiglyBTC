@@ -160,7 +160,7 @@ void SavedSpeedMapWidget::paintEvent(QPaintEvent*) {
   painter.setPen(palette().text().color());
   painter.drawText(QRectF(area.left(), area.bottom() + 4, area.width(), 22), Qt::AlignCenter, tr("Upload (bytes/s)"));
   painter.save(); painter.translate(18, area.center().y()); painter.rotate(-90);
-  painter.drawText(QRectF(-area.height() / 2, -12, area.height(), 24), Qt::AlignCenter, tr("Download (bytes/s)")); painter.restore();
+  painter.drawText(QRectF(-area.height() / 2, -12, area.height(), 24), Qt::AlignCenter, tr("Download (B/s)")); painter.restore();
   painter.drawText(QPointF(area.left(), area.bottom() + 17), QStringLiteral("0"));
   painter.drawText(QRectF(area.right() - 110, area.bottom() + 5, 110, 20), Qt::AlignRight,
       source && source->maxUploadBytesPerSecond ? QString::number(*source->maxUploadBytesPerSecond) : QString{});

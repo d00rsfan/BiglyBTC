@@ -26,8 +26,12 @@ private:
   quint64 session_=0,revision_=0;bool dirty_=true,queued_=false,rendering_=false;
   AzureusStatisticsPresentation packet_;
   QPointer<QLabel> state_,coordinates_;
+  QPointer<QLabel> sentPayloadBytes_,receivedPayloadBytes_;
   QPointer<QTableView> table_;
   QPointer<QAbstractTableModel> model_;
+  QPointer<QLabel> peerState_;
+  QPointer<QTableView> peerTable_;
+  QPointer<QAbstractTableModel> peerModel_;
   QPointer<QLabel> routerState_;
   QPointer<QTableView> routerTable_;
   QPointer<QAbstractTableModel> routerModel_;

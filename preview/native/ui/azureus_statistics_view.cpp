@@ -2,6 +2,7 @@
 #include <QAbstractTableModel>
 #include <QEvent>
 #include <QHeaderView>
+#include <QHostAddress>
 #include <QLabel>
 #include <QPainter>
 #include <QScrollArea>
@@ -10,6 +11,7 @@
 #include <QVBoxLayout>
 #include <algorithm>
 #include <array>
+#include <cmath>
 #include <functional>
 #include <limits>
 
@@ -51,6 +53,51 @@ public:
   bool replace(std::shared_ptr<const udp::OwnedDhtStatisticsSnapshot> source,const std::function<bool()>& current){QPointer<Model> guard(this);beginResetModel();if(!guard){return false;}const bool accepted=current();if(!guard){return false;}if(accepted){source_=std::move(source);}endResetModel();return accepted&&guard;}
 private:const AzureusStatisticsSection kind_;std::shared_ptr<const udp::OwnedDhtStatisticsSnapshot> source_;
 };
+QString endpointText(const services::azureus_dht::Address& endpoint){
+  if(endpoint.length==4){quint32 ip=0;for(unsigned i=0;i<4;++i){ip=(ip<<8)|endpoint.bytes[i];}
+    return QHostAddress(ip).toString()+QLatin1Char(':')+QString::number(endpoint.port);}
+  if(endpoint.length==16){Q_IPV6ADDR ip{};std::copy_n(endpoint.bytes.begin(),16,ip.c);
+    return QLatin1Char('[')+QHostAddress(ip).toString()+QStringLiteral("]:")+QString::number(endpoint.port);}
+  return QObject::tr("Endpoint unavailable");
+}
+QString peerDescription(const udp::VivaldiPeerObservation& value){
+  const auto& position=value.position;const auto& c=position.coordinates;
+  return QObject::tr("Peer %1; last reported Vivaldi1 x %2 / y %3 / height %4 ms; error %5; actual correlated RTT %6 ns; report %7; ticket %8; owner receive time %9 ns; local update %10. Reported coordinates are latency estimates, not geography or a current-liveness claim.")
+      .arg(endpointText(value.endpoint)).arg(c.x,0,'g',9).arg(c.y,0,'g',9).arg(c.h,0,'g',9).arg(position.error,0,'g',9)
+      .arg(value.rttNanoseconds).arg(value.sequence).arg(value.ticket).arg(value.observedSteadyNanoseconds)
+      .arg(value.localUpdateAccepted?QObject::tr("accepted"):QObject::tr("not accepted"))+QObject::tr(" Actor generation %1.").arg(value.generation);
+}
+class PeerPositionModel final:public QAbstractTableModel{
+public:
+  explicit PeerPositionModel(QObject* parent):QAbstractTableModel(parent){}
+  int rowCount(const QModelIndex& parent={})const override{return parent.isValid()||!source_||!source_->vivaldiEnabled()?0:static_cast<int>(source_->peerPositions().size());}
+  int columnCount(const QModelIndex& parent={})const override{return parent.isValid()?0:10;}
+  QVariant headerData(int section,Qt::Orientation orientation,int role)const override{
+    if(orientation!=Qt::Horizontal||role!=Qt::DisplayRole||section<0||section>=10){return {};}
+    static constexpr std::array<const char*,10> labels{"Peer endpoint","X (ms)","Y (ms)","Height (ms)","Error","Actual RTT (ns)","Report sequence","Operation ticket","Owner receive time (ns)","Local update"};return tr(labels[static_cast<std::size_t>(section)]);
+  }
+  QVariant data(const QModelIndex& index,int role)const override{
+    if(!index.isValid()||index.model()!=this||index.row()<0||index.row()>=rowCount()||index.column()<0||index.column()>=10){return {};}
+    const auto& value=source_->peerPositions()[static_cast<std::size_t>(index.row())];const auto& c=value.position.coordinates;
+    if(role==Qt::ToolTipRole||role==Qt::AccessibleDescriptionRole){return peerDescription(value);}
+    if(role==Qt::UserRole){switch(index.column()){
+      case 1:return c.x;case 2:return c.y;case 3:return c.h;case 4:return value.position.error;
+      case 5:return QVariant::fromValue(static_cast<qlonglong>(value.rttNanoseconds));
+      case 6:return QVariant::fromValue(static_cast<qulonglong>(value.sequence));case 7:return QVariant::fromValue(static_cast<qulonglong>(value.ticket));
+      case 8:return QVariant::fromValue(static_cast<qlonglong>(value.observedSteadyNanoseconds));case 9:return value.localUpdateAccepted;default:return {};}}
+    if(role!=Qt::DisplayRole&&role!=Qt::AccessibleTextRole){return {};}
+    switch(index.column()){
+      case 0:return endpointText(value.endpoint);case 1:return QString::number(c.x,'g',9);case 2:return QString::number(c.y,'g',9);
+      case 3:return QString::number(c.h,'g',9);case 4:return QString::number(value.position.error,'g',9);case 5:return QString::number(value.rttNanoseconds);
+      case 6:return QString::number(value.sequence);case 7:return QString::number(value.ticket);case 8:return QString::number(value.observedSteadyNanoseconds);
+      case 9:return value.localUpdateAccepted?tr("Accepted"):tr("Not accepted");default:return {};}
+  }
+  bool replace(std::shared_ptr<const udp::OwnedDhtStatisticsSnapshot> source,const std::function<bool()>& current){
+    QPointer<PeerPositionModel> guard(this);beginResetModel();if(!guard){return false;}
+    const bool accepted=current();if(!guard){return false;}if(accepted){source_=std::move(source);}endResetModel();return accepted&&guard;
+  }
+private:std::shared_ptr<const udp::OwnedDhtStatisticsSnapshot> source_;
+};
 class RouterModel final:public QAbstractTableModel{
 public:
   using Snapshot=services::azureus_router::RouterStatisticsSnapshot;
@@ -80,20 +127,33 @@ private:std::shared_ptr<const Snapshot> source_;
 class AzureusStatisticsView::PositionPlot final:public QWidget{
 public:
   using QWidget::QWidget;
-  void cache(std::shared_ptr<const udp::OwnedDhtStatisticsSnapshot> value){source_=std::move(value);}
+  void cache(std::shared_ptr<const udp::OwnedDhtStatisticsSnapshot> value,bool current=true){source_=std::move(value);current_=current;}
+  QString description()const{
+    if(!source_||!source_->vivaldiEnabled()){return tr("Vivaldi peer observations unavailable");}
+    const auto& p=source_->localPosition();QString result=tr("Blue: local Vivaldi1 estimate x %1 / y %2 / height %3 ms; error %4. Orange: last reported peer coordinates; retained reports do not establish current liveness or geographic location.")
+        .arg(p.coordinates.x,0,'g',9).arg(p.coordinates.y,0,'g',9).arg(p.coordinates.h,0,'g',9).arg(p.error,0,'g',9);
+    if(!current_||source_->transport().state()==udp::TransportStatisticsState::Closed){result=tr("Last observed. ")+result;}
+    for(const auto& peer:source_->peerPositions()){result+=QLatin1Char('\n')+peerDescription(peer);}
+    result+=tr("\n%1 peer reports retained; %2 older reports evicted%3.").arg(source_->peerPositions().size()).arg(source_->droppedPeerPositions())
+        .arg(source_->peerPositionsLost()?tr("; additional report loss"):QString{});return result;
+  }
 protected:
   void paintEvent(QPaintEvent*)override{
     if(!isVisible()||window()->isMinimized()){return;}QPainter painter(this);painter.fillRect(rect(),palette().base());
-    const auto source=source_;if(!source||!source->vivaldiEnabled()||!source->coordinateObservations()){
+    const auto source=source_;if(!source||!source->vivaldiEnabled()||(!source->coordinateObservations()&&source->peerPositions().empty())){
       painter.setPen(palette().text().color());painter.drawText(rect(),Qt::AlignCenter,tr("No observed Vivaldi1 coordinates"));return;}
-    const auto local=source->localPosition().coordinates;const auto remote=source->remotePosition();
-    float extent=std::max({1.0f,std::abs(local.x),std::abs(local.y)});if(remote){extent=std::max({extent,std::abs(remote->coordinates.x),std::abs(remote->coordinates.y)});}
-    const QRectF area=QRectF(rect()).adjusted(28,28,-28,-28);if(area.width()<=0||area.height()<=0){return;}
+    const auto local=source->localPosition().coordinates;double extent=1;
+    const auto include=[&](udp::VivaldiCoordinates c){if(udp::validVivaldiCoordinates(c)){extent=std::max({extent,std::abs(static_cast<double>(c.x)),std::abs(static_cast<double>(c.y))});}};
+    include(local);for(const auto& peer:source->peerPositions()){include(peer.position.coordinates);}
+    const QRectF area=QRectF(rect()).adjusted(44,28,-20,-40);if(area.width()<=0||area.height()<=0){return;}
     painter.setPen(palette().mid().color());painter.drawRect(area);painter.drawLine(QPointF(area.center().x(),area.top()),QPointF(area.center().x(),area.bottom()));painter.drawLine(QPointF(area.left(),area.center().y()),QPointF(area.right(),area.center().y()));
-    const auto draw=[&](udp::VivaldiCoordinates c,QColor color){painter.setPen(QPen(color,2));painter.setBrush(color);painter.drawEllipse(QPointF(area.center().x()+area.width()*0.45*(static_cast<double>(c.x)/extent),area.center().y()-area.height()*0.45*(static_cast<double>(c.y)/extent)),4,4);};
-    if(remote){draw(remote->coordinates,QColor(190,95,20));}draw(local,QColor(30,125,205));
+    painter.setPen(palette().text().color());painter.drawText(QRectF(area.left(),area.bottom()+4,area.width(),25),Qt::AlignCenter,tr("Vivaldi X / Y latency coordinates (ms)"));
+    const auto draw=[&](udp::VivaldiCoordinates c,QColor color,bool localPoint){if(!udp::validVivaldiCoordinates(c)){return;}
+      const QPointF point(area.center().x()+area.width()*0.45*(static_cast<double>(c.x)/extent),area.center().y()-area.height()*0.45*(static_cast<double>(c.y)/extent));
+      painter.setPen(QPen(color,2));painter.setBrush(color);if(localPoint){painter.drawRect(QRectF(point.x()-4,point.y()-4,8,8));}else{painter.drawEllipse(point,4,4);}};
+    for(const auto& peer:source->peerPositions()){draw(peer.position.coordinates,QColor(190,95,20),false);}draw(local,QColor(30,125,205),true);
   }
-private:std::shared_ptr<const udp::OwnedDhtStatisticsSnapshot> source_;
+private:std::shared_ptr<const udp::OwnedDhtStatisticsSnapshot> source_;bool current_=false;
 };
 class AzureusStatisticsView::OperationTimeline final:public QWidget{
 public:
@@ -162,8 +222,17 @@ AzureusStatisticsView::AzureusStatisticsView(AzureusStatisticsSection section,QW
     auto* scroll=new QScrollArea(this);scroll->setObjectName(QStringLiteral("azureus-operation-timeline-scroll"));scroll->setWidgetResizable(true);scroll->setMinimumHeight(150);scroll->setMaximumHeight(280);
     timeline_=new OperationTimeline;scroll->setWidget(timeline_);layout->addWidget(scroll,1);
   }
+  if(section==AzureusStatisticsSection::Dht){
+    sentPayloadBytes_=plain(tr("UDP payload bytes sent: Unavailable"),"azureus-dht-sent-payload-bytes",this);layout->addWidget(sentPayloadBytes_);
+    receivedPayloadBytes_=plain(tr("UDP payload bytes received: Unavailable"),"azureus-dht-received-payload-bytes",this);layout->addWidget(receivedPayloadBytes_);
+  }
   if(section!=AzureusStatisticsSection::Vivaldi){model_=new Model(section,this);table_=new QTableView(this);table_->setObjectName(QStringLiteral("azureus-statistics-table"));table_->setModel(model_);table_->setEditTriggers(QAbstractItemView::NoEditTriggers);table_->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);table_->setColumnWidth(0,section==AzureusStatisticsSection::Dht?360:150);table_->setColumnWidth(1,200);if(section==AzureusStatisticsSection::Operations){table_->setColumnWidth(2,180);table_->setColumnWidth(3,240);}layout->addWidget(table_,1);}
-  else{plot_=new PositionPlot(this);plot_->setObjectName(QStringLiteral("azureus-vivaldi-plot"));plot_->setAccessibleName(tr("Local Vivaldi1 estimate and last peer-reported position"));plot_->setMinimumHeight(200);layout->addWidget(plot_,1);}
+  else{plot_=new PositionPlot(this);plot_->setObjectName(QStringLiteral("azureus-vivaldi-plot"));plot_->setAccessibleName(tr("Local Vivaldi1 estimate and last-reported peer cloud"));plot_->setMinimumHeight(200);layout->addWidget(plot_,1);
+    peerState_=plain(tr("Peer coordinate observations unavailable"),"azureus-vivaldi-peers-status",this);layout->addWidget(peerState_);
+    peerModel_=new PeerPositionModel(this);peerTable_=new QTableView(this);peerTable_->setObjectName(QStringLiteral("azureus-vivaldi-peers-table"));
+    peerTable_->setModel(peerModel_);peerTable_->setEditTriggers(QAbstractItemView::NoEditTriggers);peerTable_->horizontalHeader()->setSectionResizeMode(QHeaderView::Interactive);
+    peerTable_->setColumnWidth(0,175);peerTable_->setColumnWidth(5,150);peerTable_->setColumnWidth(8,185);layout->addWidget(peerTable_,1);
+  }
   if(section==AzureusStatisticsSection::Dht){
     routerState_=plain(tr("Router observation unavailable; no counts inferred"),"azureus-router-status",this);layout->addWidget(routerState_);
     routerModel_=new RouterModel(this);routerTable_=new QTableView(this);routerTable_->setObjectName(QStringLiteral("azureus-router-table"));
@@ -173,7 +242,7 @@ AzureusStatisticsView::AzureusStatisticsView(AzureusStatisticsSection section,QW
   layout->addWidget(plain(tr("DHT network activity. Vivaldi positions estimate network latency; they are not geographic locations. This preview does not enable public DHT routing or distributed storage."),"azureus-statistics-scope",this));
 }
 bool AzureusStatisticsView::beginSession(quint64 session){if(!session||session<=session_||revision_==std::numeric_limits<quint64>::max()){return false;}++revision_;session_=session;packet_.reset();if(plot_){plot_->cache({});}if(timeline_){timeline_->cache({});}dirty_=true;refresh();return true;}
-bool AzureusStatisticsView::setPresentation(AzureusStatisticsPresentation packet){if(revision_==std::numeric_limits<quint64>::max()||!acceptAzureusStatistics(packet_,packet,session_)){return false;}++revision_;packet_=std::move(packet);if(plot_){plot_->cache(packet_->snapshot);}if(timeline_){timeline_->cache(packet_->snapshot);}dirty_=true;refresh();return true;}
+bool AzureusStatisticsView::setPresentation(AzureusStatisticsPresentation packet){if(revision_==std::numeric_limits<quint64>::max()||!acceptAzureusStatistics(packet_,packet,session_)){return false;}++revision_;packet_=std::move(packet);if(plot_){plot_->cache(packet_->snapshot,packet_->current);}if(timeline_){timeline_->cache(packet_->snapshot);}dirty_=true;refresh();return true;}
 void AzureusStatisticsView::queueRefresh(){if(queued_){return;}queued_=true;QPointer<AzureusStatisticsView> guard(this);QMetaObject::invokeMethod(this,[guard]{if(guard){guard->queued_=false;guard->refresh();}},Qt::QueuedConnection);}
 void AzureusStatisticsView::refresh(){
   if(!dirty_||rendering_||!isVisible()||window()->isMinimized()||!state_||!coordinates_){return;}
@@ -183,6 +252,27 @@ void AzureusStatisticsView::refresh(){
   const auto source=packet?packet->snapshot:std::shared_ptr<const udp::OwnedDhtStatisticsSnapshot>{};
   if(section_!=AzureusStatisticsSection::Vivaldi){if(!table||!model||table->model()!=model){return;}if(!static_cast<Model*>(model.data())->replace(source,current)||!current()){return;}}
   if(section_==AzureusStatisticsSection::Dht){
+    const auto sent=sentPayloadBytes_,received=receivedPayloadBytes_;
+    if(!sent||!received){return;}
+    const auto payloadText=[&](bool upload){
+      QString result=upload?tr("UDP payload bytes sent: "):tr("UDP payload bytes received: ");
+      if(!source){return result+tr("Unavailable");}
+      const auto& transport=source->transport();const auto& counts=transport.counters();
+      const auto& bytes=upload?counts.sentPayloadBytes:counts.receivedPayloadBytes;
+      result+=bytes?tr("%1 bytes").arg(*bytes):tr("Unknown (overflow or unmeasured discard)");
+      if(!packet->current||transport.state()==udp::TransportStatisticsState::Closed){result+=tr("; last observed");}
+      else if(transport.state()==udp::TransportStatisticsState::NotStarted){result+=tr("; transport not started");}
+      return result;
+    };
+    const std::array<QPointer<QLabel>,2> payloadLabels{sent,received};
+    const std::array<QString,2> payloadValues{payloadText(true),payloadText(false)};
+    const auto payloadScope=tr("Actual successful socket-write payload bytes or dequeued UDP payload bytes for this one owned transport. Includes received malformed/unowned data. Excludes UDP/IP overhead; no packet-count estimate or global DHT total. Unknown remains unknown after overflow or an unmeasured discard.");
+    for(std::size_t i=0;i<payloadLabels.size();++i){
+      const auto target=payloadLabels[i];if(!current()||!target){return;}
+      target->setText(payloadValues[i]);if(!current()||!target){return;}
+      target->setToolTip(payloadScope);if(!current()||!target){return;}
+      target->setAccessibleDescription(payloadValues[i]+QLatin1Char(' ')+payloadScope);if(!current()){return;}
+    }
     const auto router=packet?packet->routerSnapshot:std::shared_ptr<const services::azureus_router::RouterStatisticsSnapshot>{};
     const auto routerLabel=routerState_;const auto routerTable=routerTable_;const auto routerModel=routerModel_;
     if(!routerLabel||!routerTable||!routerModel||routerTable->model()!=routerModel){return;}
@@ -211,10 +301,27 @@ void AzureusStatisticsView::refresh(){
   label->setText(text);if(!current()){return;}label->setToolTip(tr("No service is started or sampled by this widget."));if(!current()){return;}
   QString coordinateText=tr("No coordinate observations");
   if(source&&source->vivaldiEnabled()&&source->coordinateObservations()){
-    const auto& value=source->localPosition();coordinateText=tr("Local Vivaldi1: x %1, y %2, height %3, error %4. Observed RTT %5 ns; %6 accepted observations. Blue: local estimate; orange: last peer.")
+    const auto& value=source->localPosition();coordinateText=tr("Local Vivaldi1: x %1, y %2, height %3, error %4. Observed RTT %5 ns; %6 accepted observations. Blue: local estimate; orange: last-reported peers.")
         .arg(value.coordinates.x,0,'g',9).arg(value.coordinates.y,0,'g',9).arg(value.coordinates.h,0,'g',9).arg(value.error,0,'g',9).arg(source->lastRttNanoseconds()?QString::number(*source->lastRttNanoseconds()):tr("Unavailable")).arg(source->coordinateObservations());
   }
-  if(section_==AzureusStatisticsSection::Vivaldi){coordinates->setText(coordinateText);if(!current()||!plot){return;}plot->cache(source);plot->update();}
+  if(section_==AzureusStatisticsSection::Vivaldi){
+    coordinates->setText(coordinateText);if(!current()||!plot){return;}
+    const auto peerLabel=peerState_;const auto peerTable=peerTable_;const auto peerModel=peerModel_;
+    if(!peerLabel||!peerTable||!peerModel||peerTable->model()!=peerModel){return;}
+    if(!static_cast<PeerPositionModel*>(peerModel.data())->replace(source,current)||!current()||!peerLabel){return;}
+    QString peerText=tr("Peer coordinate observations unavailable");
+    if(source&&source->vivaldiEnabled()){
+      peerText=tr("%1 last-reported peers retained (bound %2); %3 older reports evicted%4. Blue square: local estimate; orange circles: peer reports. Height/error and actual RTT are in the table; these are not geographic positions or proof of current liveness.")
+          .arg(source->peerPositions().size()).arg(udp::OwnedDhtStatisticsSnapshot::MaximumPeers).arg(source->droppedPeerPositions())
+          .arg(source->peerPositionsLost()?tr("; report loss detected"):QString{});
+      if((packet&&!packet->current)||source->transport().state()==udp::TransportStatisticsState::Closed){peerText+=tr(" Last observed.");}
+    }
+    peerLabel->setText(peerText);if(!current()||!peerLabel||!plot){return;}
+    peerLabel->setToolTip(peerText);if(!current()||!peerLabel||!plot){return;}
+    peerLabel->setAccessibleDescription(peerText);if(!current()||!plot){return;}
+    plot->cache(source,packet&&packet->current);const auto description=plot->description();plot->setAccessibleDescription(description);if(!current()||!plot){return;}
+    plot->setToolTip(tr("Blue square: local latency estimate. Orange circles: last-reported peer coordinates. Inspect the peer table for endpoint, actual RTT, height/error and report provenance. No geography or current liveness is inferred."));if(!current()||!plot){return;}plot->update();
+  }
   if(section_==AzureusStatisticsSection::Operations){
     if(!current()||!timeline){return;}timeline->setMinimumHeight(timeline->requiredHeight());if(!current()||!timeline){return;}
     const auto description=timeline->description();timeline->setAccessibleDescription(description);if(!current()||!timeline){return;}

@@ -7,6 +7,7 @@
 #include <QPointer>
 #include <QPixmap>
 #include <QTimer>
+#include <QUdpSocket>
 #include <QTableView>
 #include <QtTest>
 #include <QtMath>
@@ -14,6 +15,8 @@
 #include <cmath>
 #include <functional>
 #include <limits>
+#include <memory>
+#include <vector>
 #include <stdexcept>
 #include <set>
 
@@ -155,6 +158,96 @@ private slots:
    view.showMinimized();QTRY_VERIFY(view.isMinimized());auto disabled=std::make_shared<ui::AzureusStatisticsPacket>();disabled->session=7;disabled->sequence=3;disabled->state=ui::AzureusStatisticsState::Disabled;QVERIFY(view.setPresentation(disabled));QCoreApplication::processEvents();QCOMPARE(child<QTableView>(view,"azureus-statistics-table").model()->rowCount(),2);
    view.showNormal();QTRY_COMPARE(child<QTableView>(view,"azureus-statistics-table").model()->rowCount(),0);
    child<QLabel>(view,"azureus-statistics-status").setToolTip({});Hook rebind;rebind.callback=[&]{view.beginSession(8);};child<QLabel>(view,"azureus-statistics-status").installEventFilter(&rebind);QVERIFY(view.setPresentation(owner.pull(4)));QTRY_VERIFY(!view.presentation());
+ }
+ void actualOwnedPayloadBytesKeepZeroPositiveAndRetainedDistinctWithoutChangingTableRows(){
+   Owners owner;ui::AzureusStatisticsView view(ui::AzureusStatisticsSection::Dht);QVERIFY(view.beginSession(7));show(view);
+   const auto empty=owner.pull();QVERIFY(empty->snapshot->transport().counters().sentPayloadBytes);QVERIFY(empty->snapshot->transport().counters().receivedPayloadBytes);
+   QCOMPARE(*empty->snapshot->transport().counters().sentPayloadBytes,std::uint64_t{0});QVERIFY(view.setPresentation(empty));
+   auto& sent=child<QLabel>(view,"azureus-dht-sent-payload-bytes");auto& received=child<QLabel>(view,"azureus-dht-received-payload-bytes");
+   QCOMPARE(sent.text(),QStringLiteral("UDP payload bytes sent: 0 bytes"));QCOMPARE(received.text(),QStringLiteral("UDP payload bytes received: 0 bytes"));
+   int calls=0;QVERIFY(owner.ping(calls));QTRY_COMPARE_WITH_TIMEOUT(calls,1,3000);const auto packet=owner.pull(2);const auto& bytes=packet->snapshot->transport().counters();
+   QVERIFY(bytes.sentPayloadBytes&&*bytes.sentPayloadBytes>0);QVERIFY(bytes.receivedPayloadBytes&&*bytes.receivedPayloadBytes>0);QVERIFY(view.setPresentation(packet));
+   QCOMPARE(sent.text(),QStringLiteral("UDP payload bytes sent: %1 bytes").arg(*bytes.sentPayloadBytes));QCOMPARE(received.text(),QStringLiteral("UDP payload bytes received: %1 bytes").arg(*bytes.receivedPayloadBytes));
+   QCOMPARE(child<QTableView>(view,"azureus-statistics-table").model()->rowCount(),22);QCOMPARE(sent.textFormat(),Qt::PlainText);QCOMPARE(received.textFormat(),Qt::PlainText);
+   QVERIFY(sent.toolTip().contains(QStringLiteral("Excludes UDP/IP overhead")));QVERIFY(received.accessibleDescription().contains(QStringLiteral("no packet-count estimate or global DHT total")));
+   const auto before=owner.client.statistics().sent;auto retained=std::make_shared<ui::AzureusStatisticsPacket>(*packet);retained->sequence=3;retained->current=false;QVERIFY(view.setPresentation(retained));
+   QVERIFY(sent.text().contains(QStringLiteral("last observed")));QVERIFY(received.text().contains(QStringLiteral("last observed")));QCOMPARE(owner.client.statistics().sent,before);
+   owner.client.close();const auto closed=owner.pull(4);QVERIFY(view.setPresentation(closed));QVERIFY(sent.text().contains(QStringLiteral("last observed")));
+   QCOMPARE(*closed->snapshot->transport().counters().sentPayloadBytes,*bytes.sentPayloadBytes);QVERIFY(view.findChildren<QTimer*>().isEmpty());
+ }
+ void actualDiscardMakesReceivedBytesUnknownAndHiddenProfileChangesStayFenced(){
+   Owners owner;ui::AzureusStatisticsView view(ui::AzureusStatisticsSection::Dht);QVERIFY(view.beginSession(7));show(view);QVERIFY(view.setPresentation(owner.pull()));
+   auto& received=child<QLabel>(view,"azureus-dht-received-payload-bytes");const auto zero=received.text();view.hide();
+   QUdpSocket sender;const QByteArray oversized(1401,'x');QCOMPARE(sender.writeDatagram(oversized,owner.client.endpoint().address,owner.client.endpoint().port),qint64{1401});
+   QTRY_COMPARE_WITH_TIMEOUT(owner.client.statistics().oversized,std::uint64_t{1},3000);const auto unknown=owner.pull(2);QVERIFY(!unknown->snapshot->transport().counters().receivedPayloadBytes);QVERIFY(view.setPresentation(unknown));
+   QCOMPARE(received.text(),zero);show(view);QTRY_VERIFY(received.text().contains(QStringLiteral("Unknown (overflow or unmeasured discard)")));
+   const auto unknownText=received.text();int calls=0;QVERIFY(owner.ping(calls));QTRY_COMPARE_WITH_TIMEOUT(calls,1,3000);const auto next=owner.pull(3);QVERIFY(!next->snapshot->transport().counters().receivedPayloadBytes);QVERIFY(view.setPresentation(next));QCOMPARE(received.text(),unknownText);
+   view.hide();QVERIFY(view.beginSession(8));QVERIFY(!view.presentation());QVERIFY(!view.setPresentation(next));show(view);QTRY_COMPARE(received.text(),QStringLiteral("UDP payload bytes received: Unavailable"));
+   Owners fresh;const auto actual=fresh.pull(1,8);QVERIFY(view.setPresentation(actual));QCOMPARE(received.text(),QStringLiteral("UDP payload bytes received: 0 bytes"));
+ }
+ void payloadFactCallbacksMayReplaceTheProfileOrDeleteTheOwningView(){
+   Owners owner;ui::AzureusStatisticsView view(ui::AzureusStatisticsSection::Dht);QVERIFY(view.beginSession(7));show(view);
+   Hook rebind;rebind.callback=[&]{QVERIFY(view.beginSession(8));QVERIFY(view.setPresentation(owner.pull(1,8)));};
+   child<QLabel>(view,"azureus-dht-sent-payload-bytes").setToolTip({});child<QLabel>(view,"azureus-dht-sent-payload-bytes").installEventFilter(&rebind);QVERIFY(view.setPresentation(owner.pull()));QVERIFY(!rebind.armed);
+   QTRY_VERIFY(view.presentation()&&view.presentation()->session==8);QTRY_COMPARE(child<QLabel>(view,"azureus-dht-received-payload-bytes").text(),QStringLiteral("UDP payload bytes received: 0 bytes"));
+   QPointer<ui::AzureusStatisticsView> victim=new ui::AzureusStatisticsView(ui::AzureusStatisticsSection::Dht);QVERIFY(victim->beginSession(7));show(*victim);
+   Hook remove;remove.callback=[&]{delete victim.data();};child<QLabel>(*victim,"azureus-dht-sent-payload-bytes").setToolTip({});child<QLabel>(*victim,"azureus-dht-sent-payload-bytes").installEventFilter(&remove);
+   victim->setPresentation(owner.pull(2));QVERIFY(victim.isNull());QVERIFY(!remove.armed);
+ }
+ void actualReportedPeerCloudShowsEndpointCoordinatesAndCorrelatedRtt(){
+   Owners owner;udp::Config config;config.servePings=true;config.enableVivaldi=true;udp::OwnedPingTransport second(std::move(config));
+   QVERIFY(second.start());QVERIFY(second.allowPeer(owner.client.endpoint()));QVERIFY(owner.client.allowPeer(second.endpoint()));int primed=0;
+   QVERIFY(owner.server.ping(owner.client.endpoint(),55,&owner.receiver,[&](udp::Outcome result){if(result){++primed;}},2s));QTRY_COMPARE_WITH_TIMEOUT(primed,1,3000);
+   QVERIFY(second.ping(owner.client.endpoint(),55,&owner.receiver,[&](udp::Outcome result){if(result){++primed;}},2s));QTRY_COMPARE_WITH_TIMEOUT(primed,2,3000);
+   int replies=0;QVERIFY(owner.ping(replies));QVERIFY(owner.client.ping(second.endpoint(),55,&owner.receiver,[&](udp::Outcome result){if(result){++replies;}},2s));QTRY_COMPARE_WITH_TIMEOUT(replies,2,3000);
+   const auto packet=owner.pull();QCOMPARE(packet->snapshot->peerPositions().size(),std::size_t{2});QCOMPARE(packet->snapshot->droppedPeerPositions(),std::uint64_t{0});
+   ui::AzureusStatisticsView view(ui::AzureusStatisticsSection::Vivaldi);QVERIFY(view.beginSession(7));show(view);QVERIFY(view.setPresentation(packet));
+   auto* model=child<QTableView>(view,"azureus-vivaldi-peers-table").model();QCOMPARE(model->rowCount(),2);QCOMPARE(model->columnCount(),10);
+   auto& plot=child<QWidget>(view,"azureus-vivaldi-plot");const auto description=plot.accessibleDescription();
+   for(int row=0;row<2;++row){const auto& report=packet->snapshot->peerPositions()[static_cast<std::size_t>(row)];
+     QVERIFY(model->index(row,0).data().toString().endsWith(QLatin1Char(':')+QString::number(report.endpoint.port)));
+     QCOMPARE(model->index(row,1).data(Qt::UserRole).toFloat(),report.position.coordinates.x);QCOMPARE(model->index(row,2).data(Qt::UserRole).toFloat(),report.position.coordinates.y);
+     QCOMPARE(model->index(row,3).data(Qt::UserRole).toFloat(),report.position.coordinates.h);QCOMPARE(model->index(row,4).data(Qt::UserRole).toFloat(),report.position.error);
+     QCOMPARE(model->index(row,5).data(Qt::UserRole).toLongLong(),static_cast<qlonglong>(report.rttNanoseconds));QVERIFY(report.rttNanoseconds>0);
+     QCOMPARE(model->index(row,6).data(Qt::UserRole).toULongLong(),static_cast<qulonglong>(report.sequence));QVERIFY(report.sequence>0);
+     QCOMPARE(model->index(row,7).data(Qt::UserRole).toULongLong(),static_cast<qulonglong>(report.ticket));QVERIFY(report.ticket>0);
+     QCOMPARE(model->index(row,8).data(Qt::UserRole).toLongLong(),static_cast<qlonglong>(report.observedSteadyNanoseconds));
+     QCOMPARE(model->index(row,9).data(Qt::UserRole).toBool(),report.localUpdateAccepted);
+     QVERIFY(description.contains(QString::number(report.rttNanoseconds)+QStringLiteral(" ns")));QVERIFY(model->index(row,0).data(Qt::AccessibleDescriptionRole).toString().contains(QStringLiteral("not geography")));
+   }
+   QVERIFY(description.contains(QStringLiteral("Blue: local")));QVERIFY(description.contains(QStringLiteral("Orange: last reported")));QVERIFY(!plot.grab().isNull());
+   plot.setMinimumSize(0,0);for(const auto& size:{QSize(1,1),QSize(80,40),QSize(300,200)}){plot.resize(size);QVERIFY(!plot.grab().isNull());}
+   auto retained=std::make_shared<ui::AzureusStatisticsPacket>(*packet);retained->sequence=2;retained->current=false;QVERIFY(view.setPresentation(retained));
+   QVERIFY(plot.accessibleDescription().startsWith(QStringLiteral("Last observed.")));QVERIFY(child<QLabel>(view,"azureus-vivaldi-peers-status").text().contains(QStringLiteral("Last observed.")));
+ }
+ void actualPeerCapacityEvictionIsShownWithoutInventingUnobservedPoints(){
+   udp::Config observing;observing.enableVivaldi=true;udp::OwnedPingTransport client(std::move(observing));QVERIFY(client.start());QObject receiver;
+   std::vector<std::unique_ptr<udp::OwnedPingTransport>> servers;servers.reserve(65);int replies=0;
+   for(unsigned i=0;i<65;++i){udp::Config config;config.servePings=true;config.enableVivaldi=true;auto server=std::make_unique<udp::OwnedPingTransport>(std::move(config));
+     QVERIFY(server->start());QVERIFY(server->allowPeer(client.endpoint()));QVERIFY(client.allowPeer(server->endpoint()));servers.push_back(std::move(server));}
+   for(std::size_t i=0;i<64;++i){QVERIFY(client.ping(servers[i]->endpoint(),55,&receiver,[&](udp::Outcome result){if(result){++replies;}},2s));}
+   QTRY_COMPARE_WITH_TIMEOUT(replies,64,3000);const auto first=client.dhtStatisticsSnapshot();QVERIFY(first);QCOMPARE(first->peerPositions().size(),std::size_t{64});
+   QVERIFY(client.ping(servers[64]->endpoint(),55,&receiver,[&](udp::Outcome result){if(result){++replies;}},2s));QTRY_COMPARE_WITH_TIMEOUT(replies,65,3000);
+   const auto last=client.dhtStatisticsSnapshot();QVERIFY(last);QCOMPARE(last->peerPositions().size(),std::size_t{64});QCOMPARE(last->droppedPeerPositions(),std::uint64_t{1});
+   QCOMPARE(first->droppedPeerPositions(),std::uint64_t{0});QCOMPARE(first->peerPositions().size(),std::size_t{64});
+   ui::AzureusStatisticsView view(ui::AzureusStatisticsSection::Vivaldi);QVERIFY(view.beginSession(7));show(view);QVERIFY(view.setPresentation(operationPacket(*last)));
+   QCOMPARE(child<QTableView>(view,"azureus-vivaldi-peers-table").model()->rowCount(),64);
+   const auto text=child<QLabel>(view,"azureus-vivaldi-peers-status").text();QVERIFY(text.contains(QStringLiteral("bound 64")));QVERIFY(text.contains(QStringLiteral("1 older reports evicted")));
+   QVERIFY(text.contains(QStringLiteral("not geographic positions or proof of current liveness")));QVERIFY(view.findChildren<QTimer*>().isEmpty());
+ }
+ void peerCloudHiddenUpdatesAndRenderingCallbacksKeepSessionFences(){
+   Owners owner;int replies=0;QVERIFY(owner.ping(replies));QTRY_COMPARE_WITH_TIMEOUT(replies,1,3000);
+   ui::AzureusStatisticsView view(ui::AzureusStatisticsSection::Vivaldi);QVERIFY(view.beginSession(7));show(view);const auto first=owner.pull();QVERIFY(view.setPresentation(first));
+   auto* model=child<QTableView>(view,"azureus-vivaldi-peers-table").model();const auto oldSequence=model->index(0,6).data(Qt::UserRole);view.hide();
+   QVERIFY(owner.ping(replies));QTRY_COMPARE_WITH_TIMEOUT(replies,2,3000);const auto later=owner.pull(2);QVERIFY(view.setPresentation(later));QCOMPARE(model->index(0,6).data(Qt::UserRole),oldSequence);
+   show(view);QTRY_COMPARE(model->index(0,6).data(Qt::UserRole).toULongLong(),static_cast<qulonglong>(later->snapshot->peerPositions()[0].sequence));
+   view.hide();QVERIFY(view.beginSession(8));QVERIFY(!view.presentation());QVERIFY(!view.setPresentation(later));show(view);QTRY_COMPARE(model->rowCount(),0);
+   QVERIFY(view.setPresentation(owner.pull(1,8)));Hook rebind;rebind.callback=[&]{QVERIFY(view.beginSession(9));QVERIFY(view.setPresentation(owner.pull(1,9)));};
+   child<QLabel>(view,"azureus-vivaldi-peers-status").setToolTip({});child<QLabel>(view,"azureus-vivaldi-peers-status").installEventFilter(&rebind);
+   QVERIFY(view.setPresentation(owner.pull(2,8)));QVERIFY(!rebind.armed);QTRY_VERIFY(view.presentation()&&view.presentation()->session==9);QTRY_COMPARE(model->rowCount(),1);
+   QPointer<ui::AzureusStatisticsView> victim=new ui::AzureusStatisticsView(ui::AzureusStatisticsSection::Vivaldi);QVERIFY(victim->beginSession(7));show(*victim);
+   Hook remove;remove.callback=[&]{delete victim.data();};child<QLabel>(*victim,"azureus-vivaldi-peers-status").setToolTip({});child<QLabel>(*victim,"azureus-vivaldi-peers-status").installEventFilter(&remove);
+   victim->setPresentation(owner.pull(3));QVERIFY(victim.isNull());QVERIFY(!remove.armed);
  }
  void tooltipCallbackMayDeleteViewOrJustTheStatusChild(){
    Owners owner;QPointer<ui::AzureusStatisticsView> view=new ui::AzureusStatisticsView(ui::AzureusStatisticsSection::Dht);view->beginSession(7);show(*view);child<QLabel>(*view,"azureus-statistics-status").setToolTip({});Hook remove;remove.callback=[&]{delete view.data();};child<QLabel>(*view,"azureus-statistics-status").installEventFilter(&remove);

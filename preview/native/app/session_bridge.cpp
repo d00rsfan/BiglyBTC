@@ -1,5 +1,6 @@
 #include "session_bridge.hpp"
 #include "owned_azureus_service.hpp"
+#include "owned_dht_accounting.hpp"
 #include "live_speed_mapper_binding.hpp"
 
 #include "library_view.hpp"
@@ -49,11 +50,12 @@ core::OverallPeerCounters peerCounters(const core::EngineCounters& value) noexce
 }
 core::HistoryCounters historyPeer(const core::EngineCounters& value) noexcept {
   return {value.sent - value.payloadSent, value.payloadSent, value.received - value.payloadReceived,
-      value.payloadReceived, 0, 0}; // Actual isolatedSettings explicitly disables DHT.
+      value.payloadReceived, 0, 0}; // Caller fills the independent owned DHT source.
 }
-core::MinuteHistoryInput historyInput(const core::EngineCounters& value) noexcept {
+core::MinuteHistoryInput historyInput(const core::EngineCounters& value,
+    std::optional<std::array<std::int64_t, 2>> dht) noexcept {
   const auto v = historyPeer(value);
-  return {std::array{v[0], v[1], v[2], v[3]}, std::array<std::int64_t, 2>{0, 0}};
+  return {std::array{v[0], v[1], v[2], v[3]}, dht};
 }
 ui::NativeSessionPresentation nativePacket(const engine::ApplicationPeerObservation& value,
     std::optional<core::SourceRateValues> rates = {}) {
@@ -155,6 +157,7 @@ struct SessionBridge::Host {
   std::unique_ptr<engine::PersistentSession> engine{};
   std::unique_ptr<OwnedAzureusService> azureus{};
   bool azureusEnabled = false, azureusPublished = false;
+  std::optional<OwnedDhtAccounting> dhtAccounting{};
   quint64 azureusSequence = 0, azureusObservationSequence = 0;
   const quint64 columnLayoutSession;
   // All services are worker-owned; the held lease outlives their destruction.
@@ -421,6 +424,7 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
     host_ = std::make_unique<Host>(profile, ownedPeerPort, std::move(lease), session);
     const auto snapshot = host_->query(stop); // Validate the profile before optional engine startup.
     host_->azureusEnabled = static_cast<bool>(azureusServiceFactory_);
+    host_->dhtAccounting.emplace(host_->azureusEnabled);
     if (azureusServiceFactory_) {
       try { host_->azureus = azureusServiceFactory_(host_->lease); }
       catch (...) {} // An optional service cannot invalidate an otherwise valid profile.
@@ -1222,8 +1226,18 @@ void SessionBridge::observeNative(const engine::ApplicationPeerObservation& valu
       || value.state == engine::AccountingState::Uncertified) { publishCountries(); }
   try { nativeSession(nativePacket(value, host_->latestSourceRates)); } catch (...) {}
 }
+void SessionBridge::refreshDhtAccounting(bool ending) noexcept {
+  if (!host_ || !host_->dhtAccounting) { return; }
+  try {
+    std::optional<AzureusServiceObservation> observation;
+    if (host_->azureus) { observation = host_->azureus->observation(); }
+    host_->dhtAccounting->observe(observation, ending);
+  } catch (...) { host_->dhtAccounting->observe({}, ending); }
+}
 void SessionBridge::tickAccounting(bool force, bool ending) noexcept {
-  if (!host_ || !host_->overall) { return; }
+  if (!host_ || !host_->overall || !host_->dhtAccounting) { return; }
+  refreshDhtAccounting(ending);
+  const auto dht = host_->dhtAccounting->historyCounters(ending);
   const auto steadyNow = std::chrono::steady_clock::now();
   const bool due = steadyNow - host_->lastAccountingTick >= std::chrono::seconds{60};
   const auto wallNow = wallMillis();
@@ -1236,10 +1250,11 @@ void SessionBridge::tickAccounting(bool force, bool ending) noexcept {
       const bool fresh = steadyNow - host_->lastCounterArrival <= std::chrono::seconds{3};
       const auto state = host_->minuteHistory.state();
       std::optional<core::MinuteHistoryRequest> request;
-      if (!fresh || host_->overall->uncertified()) {
+      if (!fresh || !dht || host_->overall->uncertified()) {
         if (state.active) { request = core::MinuteHistoryRequest{core::MinuteHistoryEvent::Suspend, id, wallNow, {}, {}}; }
       } else if (!state.active) {
-        const auto source = historyPeer(host_->lastCounterSample->counters);
+        auto source = historyPeer(host_->lastCounterSample->counters);
+        source[4] = (*dht)[0]; source[5] = (*dht)[1];
         const auto snap = host_->overall->observation().snapshot;
         core::HistoryCounters baseline{};
         for (std::size_t i = 0; i < baseline.size(); ++i) {
@@ -1247,10 +1262,10 @@ void SessionBridge::tickAccounting(bool force, bool ending) noexcept {
               + static_cast<std::uint64_t>(source[i]) - static_cast<std::uint64_t>(snap[i + 6]));
         }
         request = core::MinuteHistoryRequest{core::MinuteHistoryEvent::Start, id, wallNow,
-            historyInput(host_->lastCounterSample->counters), baseline};
+            historyInput(host_->lastCounterSample->counters, dht), baseline};
       } else if (due) {
         request = core::MinuteHistoryRequest{core::MinuteHistoryEvent::Tick, id, wallNow,
-            historyInput(host_->lastCounterSample->counters), {}};
+            historyInput(host_->lastCounterSample->counters, dht), {}};
       }
       if (request) {
         storage::MinuteHistoryWriteReceipt receipt;
@@ -1261,13 +1276,18 @@ void SessionBridge::tickAccounting(bool force, bool ending) noexcept {
     }
     if (!due && !force) { return; }
     if (due) { host_->lastAccountingTick = steadyNow; }
-    auto updated = host_->overall->tick(wallNow, {core::OverallDhtResolution::Empty, {}}, force);
+    auto updated = host_->overall->tick(wallNow, host_->dhtAccounting->overallInput(ending), force);
     if (updated) {
       // Explicit close also saves a ClockGap prefix; this does not reinterpret
       // Java's early-returning force branch as a save intention.
       if (force && updated->disposition == core::OverallUpdateDisposition::ClockGap) {
         static_cast<void>(host_->overall->saveCurrent());
       } else { static_cast<void>(host_->overall->flush()); }
+    } else if (ending && force && updated.error() == OverallServiceError::Domain) {
+      // The original reducer applies peer deltas before a missing DHT cell.
+      // Explicit close persists that known prefix, retaining the previous DHT
+      // totals. This is not a certified missing DHT tail or final-counter claim.
+      static_cast<void>(host_->overall->saveCurrent());
     }
     try { publishOverall(); } catch (...) {}
   } catch (...) {} // Accounting diagnostics must not fail successful storage.
@@ -1277,6 +1297,7 @@ void SessionBridge::publishAzureus() noexcept {
   try {
     std::optional<AzureusServiceObservation> observation;
     if (host_->azureus) { observation = host_->azureus->observation(); }
+    if (host_->dhtAccounting) { host_->dhtAccounting->observe(observation); }
     if (host_->liveSpeedMapper) { host_->liveSpeedMapper->observeAzureus(observation, steadyMillis()); }
     publishLiveSpeed();
     if (host_->azureusPublished && (!observation || observation->sequence == host_->azureusObservationSequence)) { return; }
@@ -1407,13 +1428,21 @@ void SessionBridge::publishOverall(bool closed) {
     packet->values = service.projectedValues();
     if (service.baseline().snapshot) { packet->saved = service.baseline().snapshot->values; }
     packet->dirty = service.dirty() || !packet->saved || *packet->saved != packet->values;
-    packet->writable = service.latestSample().has_value() && !service.writesBlocked() && !service.uncertified() && !closed;
+    packet->writable = service.latestSample().has_value() && !service.writesBlocked() && !service.uncertified() && !closed
+        && host_->dhtAccounting && host_->dhtAccounting->historyCounters().has_value();
     packet->finalCounters = service.finalCountersApplied();
     if (const auto* failure = service.lastStorageError()) { packet->failure = text(failure->message); }
     else if (service.writesBlocked()) { packet->failure = tr("Statistics saving is blocked"); }
     else if (service.uncertified()) { packet->failure = tr("The final traffic interval is unavailable; last observed counters retained"); }
   } else { packet->failure = text(host_->overallOpenFailure->message); }
   if (host_->historyFailure) { packet->historyFailure = text(host_->historyFailure->message); }
+  if (host_->dhtAccounting && !host_->dhtAccounting->historyCounters(closed)) {
+    if (!packet->failure.isEmpty()) { packet->failure += QStringLiteral("; "); }
+    packet->failure += tr("DHT byte observations are unavailable; previously recorded totals retained");
+    if (packet->historyFailure.isEmpty() && host_->historyEnabled) {
+      packet->historyFailure = tr("Saved history is suspended while DHT byte observations are unavailable");
+    }
+  }
   ui::OverallPresentation result = std::move(packet);
   {
     const std::lock_guard lock(progressMutex_);
@@ -1433,7 +1462,7 @@ void SessionBridge::publishOverall(bool closed) {
 bool SessionBridge::markStatistics(quint64 session, bool clear) {
   if (!session || session != publishedColumnLayoutSession_) { return false; }
   return dispatch([this, session, clear](std::stop_token stop) {
-    if (!host_ || host_->columnLayoutSession != session || !host_->overall) {
+    if (!host_ || host_->columnLayoutSession != session || !host_->overall || !host_->dhtAccounting) {
       throw Failure{{storage::ErrorCode::Unsupported, "Live statistics accounting is not active"}};
     }
     checkpoint(stop);
@@ -1442,7 +1471,8 @@ bool SessionBridge::markStatistics(quint64 session, bool clear) {
       throw Failure{{storage::ErrorCode::Conflict, "Statistics saving is blocked; current values are retained"}};
     }
     // Update/stage once, then publish only the complete marked values.
-    auto updated = service.tick(wallMillis(), {core::OverallDhtResolution::Empty, {}}, true);
+    refreshDhtAccounting();
+    auto updated = service.tick(wallMillis(), host_->dhtAccounting->overallInput(), true);
     if (!updated) { throw Failure{{storage::ErrorCode::Conflict, "Current statistics are unavailable"}}; }
     const auto saved = clear ? service.clearMark(stop) : service.setMark(wallMillis(), stop);
     publishOverall();
@@ -1489,6 +1519,7 @@ bool SessionBridge::closeSession() {
       joined = static_cast<bool>(host_->azureus->close());
       publishAzureus();
     }
+    refreshDhtAccounting(true); // Actual actor join precedes final accounting and lease release.
     if (host_ && host_->engine) {
       host_->engine->clearObservationSink();
       const auto receipt = host_->engine->close(std::chrono::steady_clock::now() + std::chrono::seconds{5});
@@ -1502,7 +1533,7 @@ bool SessionBridge::closeSession() {
           try {
             storage::MinuteHistoryWriteReceipt historyReceipt;
             auto ended = storage::writeMinuteHistory(host_->lease, host_->minuteHistory,
-                {core::MinuteHistoryEvent::End, {1, host_->columnLayoutSession, 1}, wallMillis(), historyInput(final.counters()), {}}, {}, &historyReceipt);
+                {core::MinuteHistoryEvent::End, {1, host_->columnLayoutSession, 1}, wallMillis(), historyInput(final.counters(), host_->dhtAccounting->historyCounters(true)), {}}, {}, &historyReceipt);
             if (!ended && !host_->historyFailure) { host_->historyFailure = std::move(ended.error()); }
             else if (ended && historyReceipt.appendedActions) { publishHistoryChange(); }
           } catch (...) {}

@@ -77,3 +77,7 @@ endif()
 if(BIGLYBTC_DESKTOP)
   target_sources(biglybtc_desktop_host PRIVATE live_speed_mapper_binding.cpp)
 endif()
+
+if(BIGLYBTC_DESKTOP)
+  target_sources(biglybtc_desktop_host PRIVATE owned_dht_accounting.cpp)
+endif()

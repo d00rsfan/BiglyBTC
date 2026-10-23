@@ -2,13 +2,27 @@
 #pragma once
 #include <cstddef>
 #include <cstdint>
+#include <limits>
+#include <optional>
 
 namespace biglybtc::services::azureus_udp {
 struct Statistics {
   std::uint64_t received=0,sent=0,requests=0,replies=0,malformed=0,oversized=0,unowned=0,foreign=0,
       timeouts=0,cancelled=0,abandoned=0,callbackErrors=0,ioErrors=0,readTurns=0,deliveryTurns=0,
       serviceCapacityDrops=0,serviceAddressRejected=0,authorityErrors=0,policyErrors=0;
+  // Actual successful socket-write return values / dequeued UDP payload sizes.
+  // No IP/UDP overhead or packet-count estimate. Overflow/failed read/discard is
+  // sticky unknown; existing packet/outcome counters retain their semantics.
+  std::optional<std::uint64_t> sentPayloadBytes{0},receivedPayloadBytes{0};
 };
+inline void observeSocketPayloadBytes(std::optional<std::uint64_t>& total,std::int64_t actualBytes)noexcept{
+  // A failed write/read reports no successful payload observation. An unknown
+  // cumulative total cannot become known again from later small observations.
+  if(actualBytes<0||!total){return;}
+  const auto bytes=static_cast<std::uint64_t>(actualBytes);
+  if(bytes>std::numeric_limits<std::uint64_t>::max()-*total){total.reset();}
+  else{*total+=bytes;}
+}
 enum class TransportStatisticsState { NotStarted, Bound, Closed };
 enum class TransportStatisticsFamily { Unbound, IPv4, IPv6 };
 class OwnedPingTransport;

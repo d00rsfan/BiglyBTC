@@ -72,7 +72,7 @@ void LiveSpeedMapWidget::paintEvent(QPaintEvent*) {
   painter.setPen(palette().mid().color()); painter.drawRect(area); painter.setPen(palette().text().color());
   painter.drawText(QRectF(area.left(), area.bottom() + 3, area.width(), 22), Qt::AlignCenter, tr("Mapped upload (bytes/s)"));
   painter.save(); painter.translate(17, area.center().y()); painter.rotate(-90);
-  painter.drawText(QRectF(-area.height() / 2, -12, area.height(), 24), Qt::AlignCenter, tr("Mapped download (bytes/s)")); painter.restore();
+  painter.drawText(QRectF(-area.height() / 2, -12, area.height(), 24), Qt::AlignCenter, tr("Download (B/s)")); painter.restore();
   const auto source = source_;
   if (!source || source->history.empty()) {
     painter.drawText(area.adjusted(8, 8, -8, -8), Qt::AlignCenter | Qt::TextWordWrap,
