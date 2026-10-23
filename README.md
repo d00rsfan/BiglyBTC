@@ -72,3 +72,7 @@ Statistics now includes Country, Cache, Tracker, saved Capacity/ASN, DHT, DDB
 Operations and Vivaldi views alongside Activity, Transfers, Counters and Tags.
 The [qualified native families record](migration/evidence/statistics-families-20261023.json)
 tracks the current portable preview and remaining service integration.
+
+Application-owned DHT observations now reach Statistics independently of the torrent
+engine, with retained router counts and joined shutdown. See the
+[qualified owner/router milestone](migration/evidence/statistics-owned-dht-20261023.json).

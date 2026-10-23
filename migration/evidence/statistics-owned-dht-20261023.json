@@ -1,0 +1,39 @@
+{
+  "scope": "Application-owned numeric-loopback DHT/router Statistics; full public services remain unfinished",
+  "source": "c793f61a4bb82f36ca7220cf35581cc5cb83c230",
+  "inputs": 29,
+  "gcc_suites": 11,
+  "clang_suites": 6,
+  "asan_ubsan_lsan_suites": 6,
+  "hosted": {
+    "run": 40016884895,
+    "units": 125,
+    "smoke_rows": 13,
+    "conclusion": "success"
+  },
+  "portable": {
+    "native_source": "c793f61a4bb82f36ca7220cf35581cc5cb83c230",
+    "dist": "/home/yurii/Java/BiglyBTC/dist",
+    "rollback": "/home/yurii/Java/BiglyBTC/build/statistics-finish-20261023/owned-dht-publication/previous-dist",
+    "old_manifest_sha256": "d7431f1cbdc1ad02e2150fd7bc95f85cb75e3044a20b3f19dd52d5fe751875f1",
+    "manifest_sha256": "28e5ad15477701eaa9ed55498d6ab593d0f476b065cf006edbd02d89d97d8e89",
+    "files": 113,
+    "captures": 27,
+    "system_installation": false,
+    "original_profile_or_process_access": false
+  },
+  "private_runtime_actual_suites": 5,
+  "test_fixture_amendment": {
+    "path": "preview/native/tests/owned_azureus_service_tests.cpp",
+    "sha256": "3f80898a892451b383f6e4ecf7eab1a987403c68c0704123028e59f06316ce89",
+    "scope": "Config value initialization and optional emplace only; identical responder data and assertions"
+  },
+  "remaining": [
+    "public routing/bootstrap",
+    "recursive DDB controller trees",
+    "Vivaldi2",
+    "active auto-speed/ASN"
+  ],
+  "original_profile_or_process_access": false,
+  "system_installation": false
+}

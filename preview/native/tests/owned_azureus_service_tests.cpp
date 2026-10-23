@@ -38,7 +38,7 @@ private slots:
    const auto second=client->ping(server->endpoint());QVERIFY(second);QTRY_VERIFY_WITH_TIMEOUT(successful(*client,*second),3000);QCOMPARE(initial.snapshot->transport().counters().sent,std::uint64_t{0});QCOMPARE(first.snapshot->coordinateObservations(),std::uint64_t{1});QVERIFY(client->observation().snapshot->events().size()<=64);
  }
  void existingActualFindNodeAndStreamingFindValueRunOnTheQtOwner(){
-   udp::Config remote;remote.findNodeReply=udp::FindNodeReply{};udp::FindValueSlice partial;partial.continuation=true;partial.values=std::vector<udp::lookup::values::Value>{};udp::FindValueSlice terminal;terminal.values=std::vector<udp::lookup::values::Value>{};remote.findValueReply=std::vector<udp::FindValueSlice>{partial,terminal};
+   udp::Config remote{};remote.findNodeReply.emplace();udp::FindValueSlice partial;partial.continuation=true;partial.values=std::vector<udp::lookup::values::Value>{};udp::FindValueSlice terminal;terminal.values=std::vector<udp::lookup::values::Value>{};remote.findValueReply=std::vector<udp::FindValueSlice>{partial,terminal};
    udp::OwnedPingTransport server(std::move(remote));QVERIFY(server.start());auto client=make();QVERIFY(server.allowPeer(client->endpoint()));
    const auto node=client->findNode(server.endpoint(),udp::find::nodes::NodeId{});QVERIFY(node);QTRY_VERIFY_WITH_TIMEOUT(successful(*client,*node),3000);
    const auto values=client->findValue(server.endpoint(),udp::lookup::nodes::NodeId{},0,255);QVERIFY(values);QTRY_VERIFY_WITH_TIMEOUT(successful(*client,*values),3000);
