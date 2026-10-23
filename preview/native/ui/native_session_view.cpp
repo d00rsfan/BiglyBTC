@@ -1,6 +1,7 @@
 #include "native_session_view.hpp"
 #include "effective_rate_limit_text.hpp"
 #include "overall_transfer_summary.hpp"
+#include "protocol_share.hpp"
 
 #include <QEvent>
 #include <QGridLayout>
@@ -25,6 +26,16 @@ constexpr std::array<const char*, 6> Names{
 bool currentRates(NativeSessionState state) {
   return state == NativeSessionState::Idle || state == NativeSessionState::Active
       || state == NativeSessionState::Retiring;
+}
+QString shareText(std::optional<std::uint16_t> value) {
+  if (!value) { return QObject::tr("Unavailable"); }
+  auto result = QString::number(*value / 10);
+  if (*value % 10) { result += QLatin1Char('.') + QString::number(*value % 10); }
+  return result + QLatin1Char('%');
+}
+QString rateShareText(std::optional<std::uint16_t> interval, std::optional<std::uint16_t> source) {
+  if (!interval && !source) { return QObject::tr("Unavailable"); }
+  return QObject::tr("Interval %1; 10 s %2").arg(shareText(interval), shareText(source));
 }
 QString stateText(const NativeSessionPresentation& packet) {
   if (!packet) { return QObject::tr("No session traffic observations yet"); }
@@ -62,6 +73,16 @@ NativeSessionView::NativeSessionView(QWidget* parent) : QWidget(parent),
     grid->addWidget(counters_[i], static_cast<int>(i / 2) + 1, static_cast<int>(i % 2) + 1);
     grid->addWidget(rates_[i], static_cast<int>(i / 2) + 1, static_cast<int>(i % 2) + 3);
   }
+  grid->addWidget(label(tr("Protocol share"), QStringLiteral("native-session-protocol-share-heading"), this), 4, 0);
+  for (std::size_t i = 0; i < counterShares_.size(); ++i) {
+    const auto direction = QString::fromLatin1(Names[i]);
+    counterShares_[i] = label(tr("Unavailable"), QStringLiteral("native-session-protocol-share-counter-") + direction, this);
+    rateShares_[i] = label(tr("Unavailable"), QStringLiteral("native-session-protocol-share-rate-") + direction, this);
+    counterShares_[i]->setAccessibleName(i ? tr("Sent epoch protocol share") : tr("Received epoch protocol share"));
+    rateShares_[i]->setAccessibleName(i ? tr("Send interval and 10 second protocol shares") : tr("Receive interval and 10 second protocol shares"));
+    grid->addWidget(counterShares_[i], 4, static_cast<int>(i) + 1);
+    grid->addWidget(rateShares_[i], 4, static_cast<int>(i) + 3);
+  }
   layout->addLayout(grid);
   ratio_ = label(tr("Session share ratio: Unavailable"), QStringLiteral("native-session-share-ratio"), this);
   ratio_->setAccessibleName(tr("Session share ratio")); layout->addWidget(ratio_);
@@ -90,7 +111,7 @@ void NativeSessionView::refresh() {
   const auto current = [&] { return guard && guard->packet_ == packet && guard->revision_ == revision
       && guard->isVisible() && !guard->window()->isMinimized(); };
   struct Fact { QPointer<QLabel> target; QString text; QString tip; };
-  std::array<Fact, 19> facts{};
+  std::array<Fact, 23> facts{};
   const auto identity = packet ? tr("Profile %1; run %2; epoch %3; sequence %4")
       .arg(packet->session).arg(packet->applicationRun).arg(packet->epoch).arg(packet->sequence) : QString{};
   facts[0] = {state_, stateText(packet), identity};
@@ -136,6 +157,19 @@ void NativeSessionView::refresh() {
   if (lastLimits && sample) { ratioScope += tr(" Last observed counters; this is not an exhaustive final ratio."); }
   facts[18] = {ratio_, (lastLimits ? tr("Last observed session share ratio: %1") : tr("Session share ratio: %1"))
       .arg(ratio), ratioScope};
+  for (std::size_t i = 0; i < counterShares_.size(); ++i) {
+    const auto epochShare = sample ? protocolShareTenths(counters[2 + i], counters[4 + i]) : std::nullopt;
+    const auto intervalShare = rates ? protocolShareTenths(values[2 + i], values[4 + i]) : std::nullopt;
+    const auto sourceShare = !windowed ? std::optional<std::uint16_t>{} : i
+        ? protocolShareTenths(windowed->payloadSent, windowed->protocolSent)
+        : protocolShareTenths(windowed->payloadReceived, windowed->protocolReceived);
+    const auto epochTip = sample ? tr("Protocol %1 / combined %2 last-observed bytes of this engine epoch. %3")
+        .arg(counters[4 + i]).arg(counters[i]).arg(lastLimits ? tr("Retained observation, not exhaustive final totals.") : QString{})
+        : tr("No accepted epoch counter sample; no zero share inferred.");
+    const auto rateTip = tr("Protocol / (payload + protocol) within each named rate domain. Interval uses independently floored measured component rates; 10 s uses the source-style window. Neither falls back to the other. Known zero uses denominator1. Exact checked arithmetic rounds to one decimal, ties to even; missing, negative or unrepresentable sums remain unavailable.");
+    facts[19 + i] = {counterShares_[i], epochShare && lastLimits ? tr("%1 (last observed)").arg(shareText(epochShare)) : shareText(epochShare), epochTip};
+    facts[21 + i] = {rateShares_[i], rateShareText(intervalShare, sourceShare), rateTip};
+  }
   dirty_ = false;
   for (const auto& fact : facts) {
     if (!current() || !fact.target) { if (guard) { guard->dirty_ = true; } return; }

@@ -1,5 +1,6 @@
 #include "runtime_metrics_view.hpp"
 #include "runtime_service_summary.hpp"
+#include "connections_history_view.hpp"
 
 #include <QAbstractTableModel>
 #include <QByteArray>
@@ -147,6 +148,9 @@ RuntimeMetricsView::RuntimeMetricsView(std::optional<core::RuntimeMetricGroup> f
         : tr("The queue covers HTTP announces, not all active trackers. Reported traffic includes estimated protocol costs."), this);
     note->setTextFormat(Qt::PlainText); note->setWordWrap(true); layout->addWidget(note);
   }
+  if (filter == core::RuntimeMetricGroup::Peer) {
+    connections_ = new ConnectionsHistoryView(this); layout->addWidget(connections_);
+  }
   filter_ = new QLineEdit(this); filter_->setObjectName(QStringLiteral("runtime-metrics-filter"));
   filter_->setAccessibleName(tr("Search measurement names")); filter_->setPlaceholderText(tr("Search measurement names"));
   filter_->setMaxLength(256); layout->addWidget(filter_);
@@ -169,6 +173,7 @@ RuntimeMetricsView::RuntimeMetricsView(std::optional<core::RuntimeMetricGroup> f
 bool RuntimeMetricsView::beginSession(quint64 session) {
   if (!session || session <= session_ || revision_ == std::numeric_limits<quint64>::max()) { return false; }
   ++revision_; session_ = session; packet_.reset(); snapshotSequence_ = 0; snapshotTime_ = 0;
+  if (connections_) { connections_->clear(); }
   dirty_ = true; refresh(); return true;
 }
 bool RuntimeMetricsView::setPresentation(RuntimeMetricsPresentation packet) {
@@ -187,7 +192,9 @@ bool RuntimeMetricsView::setPresentation(RuntimeMetricsPresentation packet) {
   }
   if (!sameEpoch) { snapshotSequence_ = 0; snapshotTime_ = 0; }
   if (packet->snapshot) { snapshotSequence_ = packet->snapshot->sequence; snapshotTime_ = packet->snapshot->ownerElapsedNanoseconds; }
-  ++revision_; packet_ = std::move(packet); dirty_ = true; refresh(); return true;
+  ++revision_; packet_ = std::move(packet); dirty_ = true;
+  if (connections_) { connections_->cache(packet_->snapshot.get(),packet_->current,!sameEpoch); }
+  refresh(); return true;
 }
 void RuntimeMetricsView::queueRefresh() {
   if (queued_) { return; }
@@ -204,6 +211,8 @@ void RuntimeMetricsView::refresh() {
   QPointer<RuntimeMetricsView> guard(this);
   const auto packet = packet_; const auto revision = revision_;
   const auto summaries = summaries_; const auto summaryCount = summaryCount_;
+  const auto connections = connections_;
+  const bool needsConnections = summaryGroup_ == core::RuntimeMetricGroup::Peer;
   const auto current = [&] { return guard && guard->revision_ == revision && guard->packet_ == packet
       && guard->isVisible() && !guard->window()->isMinimized(); };
   const QPointer<QAbstractTableModel> model = model_; const QPointer<QSortFilterProxyModel> proxy = proxy_;
@@ -212,6 +221,7 @@ void RuntimeMetricsView::refresh() {
     if (!current() || !model || !proxy || !table || !status
         || guard->model_ != model || guard->proxy_ != proxy || guard->table_ != table || guard->status_ != status
         || table->model() != proxy || proxy->sourceModel() != model) { return false; }
+    if (needsConnections && (!connections || guard->connections_ != connections)) { return false; }
     for (std::size_t i = 0; i < summaryCount; ++i) {
       if (!summaries[i] || guard->summaries_[i] != summaries[i]) { return false; }
     }
@@ -302,6 +312,7 @@ void RuntimeMetricsView::refresh() {
     summaries[i]->setAccessibleDescription(detail);
     if (!children()) { return; }
   }
+  if (connections) { connections->refresh(); if (!children()) { return; } }
   dirty_ = false;
 }
 void RuntimeMetricsView::showEvent(QShowEvent* event) {

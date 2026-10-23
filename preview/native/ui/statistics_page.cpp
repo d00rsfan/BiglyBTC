@@ -263,7 +263,10 @@ StatisticsPage::StatisticsPage(QWidget* parent, std::optional<StatisticsNavigati
   azureus_[1] = new AzureusStatisticsView(AzureusStatisticsSection::Operations, tabs_);
   azureus_[2] = new AzureusStatisticsView(AzureusStatisticsSection::Vivaldi, tabs_);
   tabs_->addTab(azureus_[0], tr("DHT"));
-  tabs_->addTab(azureus_[1], tr("DDB Operations"));
+  auto* operationsScroll = new QScrollArea(tabs_); operationsScroll->setWidgetResizable(true);
+  operationsScroll->setObjectName(QStringLiteral("statistics-ddb-operations-scroll"));
+  operationsScroll->setWidget(azureus_[1]);
+  tabs_->addTab(operationsScroll, tr("DDB Operations"));
   tabs_->addTab(azureus_[2], tr("Vivaldi"));
   connect(manualTags_, &ManualTagStatisticsView::readRequested,
       this, &StatisticsPage::manualTagStatisticsRequested);
@@ -465,6 +468,10 @@ void StatisticsPage::setRuntimeMetrics(RuntimeMetricsPresentation packet) {
   if (cache_) { cache_->setPresentation(packet); }
   if (!guard) { return; }
   if (packet && trackers_) {
+    const auto view = trackers_;
+    const auto session = nativeSessionBinding_;
+    view->setRuntimeMetrics(packet);
+    if (!guard || !view || guard->nativeSessionBinding_ != session || guard->trackers_ != view) { return; }
     auto tracker = std::make_shared<TrackerStatisticsPacket>();
     tracker->session = packet->session; tracker->epoch = packet->epoch;
     tracker->sequence = packet->sequence; tracker->current = packet->current;

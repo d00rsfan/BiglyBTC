@@ -103,3 +103,8 @@ discovered contacts only after exact endpoint admission, retain actual request
 and cancellation outcomes, and publish immutable snapshots. Opening Statistics
 does not start a lookup. Public DHT routing, PUT and other engine migration work
 remain separate from this owned-service implementation.
+
+Connections and Tracker include bounded histories from actual accepted engine
+observations. Current transfers also show checked protocol-traffic shares.
+Missing observations remain gaps, and closed sessions retain last-observed
+facts. Statistics reuses existing sampling and does not start network services.

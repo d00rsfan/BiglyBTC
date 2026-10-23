@@ -15,9 +15,11 @@ class QSortFilterProxyModel;
 class QTableView;
 
 namespace biglybtc::ui {
+class ConnectionsHistoryView;
 
 // GUI-only bounded view; snapshots supplied here must remain immutable. No IO,
-// sampling, service initialization, history, timers or automatic refresh reads.
+// sampling, service initialization, timers or automatic refresh reads. Peer
+// observations additionally feed a bounded, value-only connection history.
 class RuntimeMetricsView final : public QWidget {
   Q_OBJECT
 public:
@@ -39,6 +41,7 @@ private:
   QString search_;
   bool dirty_ = true, rendering_ = false, queued_ = false;
   QPointer<QLabel> status_;
+  QPointer<ConnectionsHistoryView> connections_;
   std::optional<core::RuntimeMetricGroup> summaryGroup_;
   std::array<QPointer<QLabel>, 3> summaries_{};
   std::size_t summaryCount_ = 0;

@@ -26,6 +26,7 @@ private:
   QPointer<QLabel> state_;
   QPointer<QLabel> uptime_;
   std::array<QPointer<QLabel>, 6> counters_{}, rates_{};
+  std::array<QPointer<QLabel>, 2> counterShares_{}, rateShares_{};
   QPointer<QLabel> windows_;
   std::array<QPointer<QLabel>, 2> limits_{};
   QPointer<QLabel> configuration_;
