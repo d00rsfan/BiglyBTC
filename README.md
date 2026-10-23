@@ -86,3 +86,7 @@ PING observations, with separate live/saved maps, retained states and source
 sustained/choke policy candidates. Viewing Statistics starts no probes or limit
 adjustments. These native session inputs include local traffic; full original
 global NoLAN/automatic-speed service parity remains in progress.
+
+The [qualified SpeedManager record](migration/evidence/statistics-speed-manager-20261024.json)
+includes local compiler/sanitizer checks, hosted130 units/13 smoke rows and the
+updated private-Qt portable preview with complete rollback.
