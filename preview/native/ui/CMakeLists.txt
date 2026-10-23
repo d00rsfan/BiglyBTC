@@ -35,3 +35,6 @@ target_sources(biglybtc_ui PRIVATE cache_statistics_view.hpp cache_statistics_vi
 target_sources(biglybtc_ui PRIVATE saved_speed_manager_presentation.hpp saved_speed_manager_view.hpp saved_speed_manager_view.cpp)
 
 target_sources(biglybtc_ui PRIVATE saved_speed_map_widget.hpp saved_speed_map_widget.cpp)
+
+target_sources(biglybtc_ui PRIVATE live_speed_manager_view.hpp live_speed_manager_view.cpp
+  live_speed_map_widget.hpp live_speed_map_widget.cpp)

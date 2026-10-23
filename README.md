@@ -80,3 +80,9 @@ engine, with retained router counts and joined shutdown. See the
 Transfers → Capacity now plots the original saved SpeedManager map, preserving
 malformed gaps and raw values. A bounded passive mapper reproduces source
 variance/limit-estimate arithmetic; it does not start probes or adjust limits.
+
+Capacity also receives actual owned-session rate windows and correlated owned
+PING observations, with separate live/saved maps, retained states and source
+sustained/choke policy candidates. Viewing Statistics starts no probes or limit
+adjustments. These native session inputs include local traffic; full original
+global NoLAN/automatic-speed service parity remains in progress.

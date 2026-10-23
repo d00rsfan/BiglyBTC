@@ -114,6 +114,29 @@ def prepare(root):
         "TableDefault.MySeeders": classic_table(132),
         "Table.UnknownPlugin": {"opaque": [b"\x00\xff", 7]},
     }))
+    # Generated original-format saved SpeedManager example, never live pings.
+    # The private ASN and map are display fixtures; no service is enabled.
+    (profile / "biglybt.config").write_bytes(encode({
+        "ASN Details": [{"as": "64512", "name": "Offline saved example",
+                         "bgp": "192.0.2.0/24", "v": 4}],
+        "Auto Upload Speed Version": 2, "Auto Upload Speed Enabled": 0,
+        "Auto Upload Speed Seeding Enabled": 0,
+        "preview.opaque": b"\x00\xff",
+    }))
+    network = profile / "net"
+    network.mkdir(mode=0o700)
+    def saved_estimate(speed):
+        return {"s": speed, "m": "1.0", "t": "0.0", "h": 8, "w": 1700000000000}
+    (network / "pm_64512.dat").write_bytes(encode({
+        "upcap": saved_estimate(65536), "downcap": saved_estimate(262144),
+        "pings": [{"x": x, "y": 4*x + 2*i, "m": metric}
+                  for i, (x, metric) in enumerate(zip(
+                      [16, 32, 48, 64, 80, 96, 80, 64],
+                      [20, 35, 60, 90, 145, 220, 60, 30]))],
+        "preview.opaque": b"\x00\xff",
+    }))
+    (profile / "biglybt.config").chmod(0o600)
+    (network / "pm_64512.dat").chmod(0o600)
     # Generated last-saved original overall statistics; no live client is read.
     # Combined totals already include their data/protocol splits. DHT is separate.
     (profile / "BiglyBT.statistics").write_bytes(encode({"all": {

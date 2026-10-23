@@ -73,3 +73,7 @@ if(BIGLYBTC_DESKTOP)
   target_compile_options(biglybtc_owned_azureus_service PRIVATE -Wall -Wextra -Wpedantic -Werror)
   target_link_libraries(biglybtc_desktop_host PRIVATE biglybtc_owned_azureus_service)
 endif()
+
+if(BIGLYBTC_DESKTOP)
+  target_sources(biglybtc_desktop_host PRIVATE live_speed_mapper_binding.cpp)
+endif()

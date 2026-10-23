@@ -469,6 +469,7 @@ void LibraryWindow::showStatistics() {
       if (guard && page && statisticsPage_ == page && latestOverall_) { page->setOverall(latestOverall_); }
       if (guard && page && statisticsPage_ == page && latestRuntime_) { page->setRuntimeMetrics(latestRuntime_); }
       if (guard && page && statisticsPage_ == page && latestAzureus_) { page->setAzureusStatistics(latestAzureus_); }
+      if (guard && page && statisticsPage_ == page && latestLiveSpeed_) { page->setLiveSpeedManager(latestLiveSpeed_); }
       if (guard && page && statisticsPage_ == page && latestManualTags_) { page->setManualTagStatistics(latestManualTags_); }
       if (guard && page && statisticsPage_ == page && latestCountry_) { page->setCountryStatistics(latestCountry_); }
     }
@@ -703,6 +704,12 @@ void LibraryWindow::setHistoryRange(HistoryRangePresentation packet) {
   }
   if (guard) { queueOptionalViews(); }
 }
+void LibraryWindow::setLiveSpeedManager(LiveSpeedManagerPresentation packet) {
+  if (closing_ || !acceptLiveSpeedManager(latestLiveSpeed_, packet, columnSession_)) { return; }
+  latestLiveSpeed_ = std::move(packet);
+  if (statisticsPage_) { statisticsPage_->setLiveSpeedManager(latestLiveSpeed_); }
+}
+LiveSpeedManagerPresentation LibraryWindow::liveSpeedManagerSnapshot() const { return latestLiveSpeed_; }
 void LibraryWindow::setAzureusStatistics(AzureusStatisticsPresentation packet) {
   if (closing_ || !acceptAzureusStatistics(latestAzureus_, packet, columnSession_)) { return; }
   latestAzureus_ = std::move(packet);
@@ -901,7 +908,7 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   QPointer<LibraryWindow> guard(this);
   columnSession_ = session;
   savedHistoryRevision_ = 0; requestedHistoryRevisions_.fill(0);
-  latestAzureus_.reset();
+  latestAzureus_.reset(); latestLiveSpeed_.reset();
   latestOverall_.reset(); latestRuntime_.reset(); latestManualTags_.reset(); pendingManualTagRead_.clear(); latestCountry_.reset(); pendingCountryRead_.clear();
   latestNativeSession_.reset(); latestNativeActivity_.reset(); nativeActivity_.reset();
   rememberedStatisticsNavigation_.reset();
@@ -922,6 +929,8 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
     if (!guard || !page || statisticsPage_ != page || columnSession_ != session) { return; }
     // A binding callback may already have supplied the new session's service packet.
     if (latestAzureus_) { page->setAzureusStatistics(latestAzureus_); }
+    if (!guard || !page || statisticsPage_ != page || columnSession_ != session) { return; }
+    if (latestLiveSpeed_) { page->setLiveSpeedManager(latestLiveSpeed_); }
     if (!guard || !page || statisticsPage_ != page || columnSession_ != session) { return; }
     page->resetHistorySession(session);
     if (!guard || !page || statisticsPage_ != page || columnSession_ != session) { return; }

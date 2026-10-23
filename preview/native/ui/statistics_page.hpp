@@ -13,6 +13,7 @@
 #include "overall_presentation.hpp"
 #include "runtime_metrics_presentation.hpp"
 #include "azureus_statistics_presentation.hpp"
+#include "live_speed_manager_presentation.hpp"
 #include "manual_tag_presentation.hpp"
 #include "country_statistics_presentation.hpp"
 #include "statistics_navigation.hpp"
@@ -63,6 +64,8 @@ public:
   void setOverall(OverallPresentation);
   void setRuntimeMetrics(RuntimeMetricsPresentation);
   void setAzureusStatistics(AzureusStatisticsPresentation);
+  void setLiveSpeedManager(LiveSpeedManagerPresentation);
+  LiveSpeedManagerPresentation liveSpeedManagerSnapshot() const;
   void setManualTagStatistics(ManualTagStatisticsPresentation);
   ManualTagStatisticsPresentation manualTagStatisticsSnapshot() const;
   bool manualTagsSelected() const;

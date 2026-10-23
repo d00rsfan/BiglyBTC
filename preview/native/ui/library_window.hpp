@@ -11,6 +11,7 @@
 #include "overall_presentation.hpp"
 #include "runtime_metrics_presentation.hpp"
 #include "azureus_statistics_presentation.hpp"
+#include "live_speed_manager_presentation.hpp"
 #include "manual_tag_presentation.hpp"
 #include "country_statistics_presentation.hpp"
 #include "statistics_navigation.hpp"
@@ -77,6 +78,8 @@ public:
   void setOverall(OverallPresentation);
   void setRuntimeMetrics(RuntimeMetricsPresentation);
   void setAzureusStatistics(AzureusStatisticsPresentation);
+  void setLiveSpeedManager(LiveSpeedManagerPresentation);
+  LiveSpeedManagerPresentation liveSpeedManagerSnapshot() const;
   void setManualTagStatistics(ManualTagStatisticsPresentation);
   void setCountryStatistics(CountryStatisticsPresentation);
   AzureusStatisticsPresentation azureusStatisticsSnapshot() const { return latestAzureus_; }
@@ -243,6 +246,7 @@ private:
   OverallPresentation latestOverall_{};
   RuntimeMetricsPresentation latestRuntime_{};
   AzureusStatisticsPresentation latestAzureus_{};
+  LiveSpeedManagerPresentation latestLiveSpeed_{};
   ManualTagStatisticsPresentation latestManualTags_{};
   QPointer<StatisticsPage> pendingManualTagRead_;
   bool manualTagDispatchQueued_ = false;

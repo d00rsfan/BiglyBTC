@@ -1,6 +1,8 @@
 #include "library_window.hpp"
 #include "session_bridge.hpp"
 #include "statistics_page.hpp"
+#include "saved_speed_manager_view.hpp"
+#include "saved_speed_map_widget.hpp"
 #include "saved_history_plot.hpp"
 
 #include <QAction>
@@ -11,6 +13,7 @@
 #include <QDir>
 #include <QDateEdit>
 #include <QDateTime>
+#include <QScrollArea>
 #include <QFile>
 #include <QFileInfo>
 #include <QHeaderView>
@@ -42,6 +45,7 @@ void wire(ui::LibraryWindow& window, app::SessionBridge& bridge) {
   QObject::connect(&bridge, &app::SessionBridge::detailsReady, &window, &ui::LibraryWindow::setDetails);
   QObject::connect(&bridge, &app::SessionBridge::savedServicesReady, &window, &ui::LibraryWindow::setSavedServices);
   QObject::connect(&bridge, &app::SessionBridge::statisticsReady, &window, &ui::LibraryWindow::setStatistics);
+  QObject::connect(&bridge, &app::SessionBridge::liveSpeedManagerReady, &window, &ui::LibraryWindow::setLiveSpeedManager);
   QObject::connect(&bridge, &app::SessionBridge::historyReady, &window, &ui::LibraryWindow::setHistory);
   QObject::connect(&bridge, &app::SessionBridge::historyWeekReady, &window, &ui::LibraryWindow::setHistoryWeek);
   QObject::connect(&bridge, &app::SessionBridge::historyMonthReady, &window, &ui::LibraryWindow::setHistoryMonth);
@@ -476,6 +480,24 @@ private slots:
       const auto transfers = root.filePath(QStringLiteral("statistics-transfers-preview.png"));
       QVERIFY(!QFileInfo::exists(transfers)); QVERIFY(window.grab().save(transfers));
     }
+    // Exercise the actual held-profile saved map, including private runtime painting.
+    const auto readsBeforeCapacity = reads.count();
+    transferTabs->setCurrentIndex(3);
+    auto* capacity = page->findChild<ui::SavedSpeedManagerView*>(QStringLiteral("saved-speed-manager-view"));
+    auto* savedMap = page->findChild<ui::SavedSpeedMapWidget*>(QStringLiteral("saved-speed-map"));
+    QVERIFY(capacity && savedMap);
+    QTRY_VERIFY_WITH_TIMEOUT(capacity->presentation() && capacity->presentation()->state == ui::SavedSpeedManagerState::Ready
+        && savedMap->map() && reads.count() == readsBeforeCapacity + 1 && !bridge.busy(), 30000);
+    QCOMPARE(savedMap->map()->records.size(), std::size_t{8});
+    QVERIFY(savedMap->map()->source->originalBytes() == capacity->presentation()->history->source->originalBytes());
+    const auto capacityReads = reads.count();
+    auto* scroll = capacity->findChild<QScrollArea*>(QStringLiteral("capacity-scroll"));
+    QVERIFY(scroll); scroll->ensureWidgetVisible(savedMap);
+    if (!capture.isEmpty()) {
+      const auto image = root.filePath(QStringLiteral("statistics-capacity-preview.png"));
+      QVERIFY(!QFileInfo::exists(image)); QCoreApplication::processEvents(); QVERIFY(window.grab().save(image));
+    }
+    transferTabs->setCurrentIndex(0);
     const QStringList families{QStringLiteral("Cache"), QStringLiteral("Tracker"),
         QStringLiteral("Counters"), QStringLiteral("Tags"), QStringLiteral("Country"),
         QStringLiteral("DHT"), QStringLiteral("DDB Operations"), QStringLiteral("Vivaldi")};
@@ -494,14 +516,14 @@ private slots:
     QCOMPARE(window.filter().text(), QStringLiteral("Paused")); QCOMPARE(table.columnWidth(1), 247);
     QVERIFY(window.filesModel().target() == target);
     QTest::keyClick(&window.filter(), Qt::Key_5, Qt::ControlModifier);
-    QCOMPARE(window.statisticsPage(), page); QCOMPARE(page->tabs().currentIndex(), 1); QCOMPARE(reads.count(), 1);
+    QCOMPARE(window.statisticsPage(), page); QCOMPARE(page->tabs().currentIndex(), 1); QCOMPARE(reads.count(), capacityReads);
     const auto expectedNavigation = page->navigation(); QVERIFY(expectedNavigation); QCOMPARE(expectedNavigation->section, 1);
     QPointer<ui::StatisticsPage> old(page);
     QTest::keyClick(&page->tabs(), Qt::Key_W, Qt::ControlModifier); QVERIFY(!window.statisticsPage());
     QCOMPARE(cancels.count(), 0);
     QTest::keyClick(&window.filter(), Qt::Key_5, Qt::ControlModifier);
     QTRY_VERIFY_WITH_TIMEOUT(window.statisticsPage() && window.statisticsPage()->readState() == ui::StatisticsReadState::Ready
-        && reads.count() == 2 && !bridge.busy(), 30000);
+        && reads.count() == capacityReads + 1 && !bridge.busy(), 30000);
     QCOMPARE(window.statisticsPage()->tabs().currentIndex(), expectedNavigation->section); QTRY_VERIFY(old.isNull());
     QCOMPARE(window.statisticsPage()->navigation(), expectedNavigation);
     QCOMPARE(window.statisticsPage()->sampleCount(), std::size_t{0});

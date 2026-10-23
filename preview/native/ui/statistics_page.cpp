@@ -443,6 +443,13 @@ void StatisticsPage::setPresentation(StatisticsPresentation packet) {
   loading_ = false; state_ = StatisticsReadState::Ready;
   (void)writeFacts(facts);
 }
+void StatisticsPage::setLiveSpeedManager(LiveSpeedManagerPresentation packet) {
+  if (!packet || packet->session != nativeSessionBinding_) { return; }
+  if (savedSpeed_) { savedSpeed_->setLivePresentation(std::move(packet)); }
+}
+LiveSpeedManagerPresentation StatisticsPage::liveSpeedManagerSnapshot() const {
+  return savedSpeed_ ? savedSpeed_->livePresentation() : LiveSpeedManagerPresentation{};
+}
 void StatisticsPage::setAzureusStatistics(AzureusStatisticsPresentation packet) {
   if (!packet || packet->session != nativeSessionBinding_) { return; }
   QPointer<StatisticsPage> guard(this);

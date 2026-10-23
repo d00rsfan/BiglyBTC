@@ -15,6 +15,7 @@
 #include "runtime_metrics_presentation.hpp"
 #include "manual_tag_presentation.hpp"
 #include "country_statistics_presentation.hpp"
+#include "live_speed_manager_presentation.hpp"
 
 #include <QObject>
 
@@ -77,6 +78,7 @@ signals:
   void overallReady(biglybtc::ui::OverallPresentation);
   void runtimeMetricsReady(biglybtc::ui::RuntimeMetricsPresentation);
   void azureusStatisticsReady(biglybtc::ui::AzureusStatisticsPresentation);
+  void liveSpeedManagerReady(biglybtc::ui::LiveSpeedManagerPresentation);
   void manualTagStatisticsReady(biglybtc::ui::ManualTagStatisticsPresentation);
   void countryStatisticsReady(biglybtc::ui::CountryStatisticsPresentation);
   void sessionClosed(quint64 session, bool joined, bool storageReleased);
@@ -98,6 +100,7 @@ private:
   void publishHistoryChange() noexcept;
   void publishRuntimeMetrics(const engine::ApplicationPeerObservation&);
   void publishAzureus() noexcept;
+  void publishLiveSpeed() noexcept;
   ui::ManualTagStatisticsPresentation manualTagPacket();
   void publishManualTags() noexcept;
   void deliverManualTags(ui::ManualTagStatisticsPresentation);
@@ -136,6 +139,8 @@ private:
   AzureusServiceFactory azureusServiceFactory_; // Explicit owner policy; absent means disabled.
   std::optional<ui::AzureusStatisticsPresentation> latestAzureus_;
   bool azureusDeliveryQueued_ = false;
+  std::optional<ui::LiveSpeedManagerPresentation> latestLiveSpeed_;
+  bool liveSpeedDeliveryQueued_ = false;
   bool busy_ = false;
   // GUI-thread publication only; worker commands capture the requested identity.
   quint64 publishedColumnLayoutSession_ = 0;

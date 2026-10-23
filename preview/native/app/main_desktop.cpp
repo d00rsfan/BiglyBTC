@@ -104,6 +104,7 @@ int main(int argc, char** argv) {
     QObject::connect(&bridge, &Bridge::overallReady, &window, &Window::setOverall);
     QObject::connect(&bridge, &Bridge::runtimeMetricsReady, &window, &Window::setRuntimeMetrics);
     QObject::connect(&bridge, &Bridge::azureusStatisticsReady, &window, &Window::setAzureusStatistics);
+    QObject::connect(&bridge, &Bridge::liveSpeedManagerReady, &window, &Window::setLiveSpeedManager);
     QObject::connect(&window, &Window::markRequested, &bridge, &Bridge::markStatistics);
     QObject::connect(&window, &Window::sessionCloseRequested, &bridge, [&] {
       if (!bridge.closeSession()) {

@@ -35,6 +35,12 @@ bool sameFacts(const azureus::OwnedDhtStatisticsSnapshot& a,const azureus::Owned
       ||a.operationsEnabled()!=b.operationsEnabled()||a.vivaldiEnabled()!=b.vivaldiEnabled()||a.droppedEvents()!=b.droppedEvents()
       ||a.localPosition()!=b.localPosition()||a.remotePosition()!=b.remotePosition()||a.lastRttNanoseconds()!=b.lastRttNanoseconds()
       ||a.coordinateObservations()!=b.coordinateObservations()||a.events().size()!=b.events().size()){return false;}
+  if(a.pingObservationsLost()!=b.pingObservationsLost()||bool(a.pingObservation())!=bool(b.pingObservation())){return false;}
+  if(a.pingObservation()){
+    const auto& p=*a.pingObservation();const auto& q=*b.pingObservation();
+    if(p.generation()!=q.generation()||p.sequence()!=q.sequence()||p.kind()!=q.kind()||p.endpoint()!=q.endpoint()
+        ||p.observedSteadyNanoseconds()!=q.observedSteadyNanoseconds()||p.rttNanoseconds()!=q.rttNanoseconds()){return false;}
+  }
   for(std::size_t i=0;i<a.events().size();++i){const auto& p=a.events()[i];const auto& q=b.events()[i];
     if(std::tie(p.serial,p.ticket,p.requestAction,p.kind,p.elapsedNanoseconds)!=std::tie(q.serial,q.ticket,q.requestAction,q.kind,q.elapsedNanoseconds)){return false;}}
   return true; // Pull publication itself is deliberately excluded from fact equality.

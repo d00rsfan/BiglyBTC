@@ -1,5 +1,6 @@
 #include "session_bridge.hpp"
 #include "owned_azureus_service.hpp"
+#include "live_speed_mapper_binding.hpp"
 
 #include "library_view.hpp"
 #include "column_layout_view.hpp"
@@ -33,6 +34,9 @@
 namespace biglybtc::app {
 namespace {
 struct Failure { storage::Error error; };
+std::int64_t steadyMillis() noexcept {
+  return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();
+}
 std::int64_t wallMillis() noexcept {
   return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
 }
@@ -156,6 +160,9 @@ struct SessionBridge::Host {
   // All services are worker-owned; the held lease outlives their destruction.
   std::unique_ptr<OverallStatisticsService> overall{};
   std::unique_ptr<SourceRateProjection> sourceRates{};
+  std::unique_ptr<LiveSpeedMapperBinding> liveSpeedMapper{};
+  std::uint64_t liveSpeedRevision = 0, liveSpeedSequence = 0;
+  bool liveSpeedPublished = false;
   std::optional<storage::Error> overallOpenFailure{};
   core::MinuteHistoryRecorder minuteHistory{};
   std::optional<storage::Error> historyFailure{};
@@ -270,6 +277,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
   qRegisterMetaType<core::HistoryRangeRequest>();
   qRegisterMetaType<ui::EngineStatisticsPresentation>();
   qRegisterMetaType<ui::NativeSessionPresentation>();
+  qRegisterMetaType<ui::LiveSpeedManagerPresentation>();
   qRegisterMetaType<ui::OverallPresentation>();
   qRegisterMetaType<ui::RuntimeMetricsPresentation>();
   qRegisterMetaType<ui::AzureusStatisticsPresentation>();
@@ -314,8 +322,8 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
     }
     auto poll = worker_.submit([this](std::stop_token stop) -> core::WorkResult {
       if (!stop.stop_requested() && host_) {
+        publishAzureus(); // Consume older RTT receipts before advancing source rate buckets.
         if (host_->engine) { static_cast<void>(host_->engine->poll()); tickAccounting(); }
-        publishAzureus();
       }
       return {};
     });
@@ -1140,6 +1148,7 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
   }
   checkpoint(stop); // Local owning pointer aborts/joins before a cancelled publication.
   host_->engine = std::move(*owner);
+  try { host_->liveSpeedMapper = std::make_unique<LiveSpeedMapperBinding>(host_->columnLayoutSession); } catch (...) {}
   // Optional accounting setup cannot change transfer/storage success.
   try {
     const auto started = wallMillis();
@@ -1179,6 +1188,10 @@ void SessionBridge::observeNative(const engine::ApplicationPeerObservation& valu
       || value.observed->elapsedNanoseconds > host_->lastCounterSample->elapsedNanoseconds)) {
     host_->lastCounterSample = value.observed;
     host_->lastCounterArrival = std::chrono::steady_clock::now();
+  }
+  publishAzureus(); // Passive actor mailbox; never submits a probe or starts a service.
+  if (host_->liveSpeedMapper) {
+    host_->liveSpeedMapper->observeEngine(value, steadyMillis()); publishLiveSpeed();
   }
   if (host_->sourceRates) {
     host_->latestSourceRates = host_->sourceRates->observe(value.observed, value.ownerElapsedNanoseconds, value.sequence);
@@ -1264,6 +1277,8 @@ void SessionBridge::publishAzureus() noexcept {
   try {
     std::optional<AzureusServiceObservation> observation;
     if (host_->azureus) { observation = host_->azureus->observation(); }
+    if (host_->liveSpeedMapper) { host_->liveSpeedMapper->observeAzureus(observation, steadyMillis()); }
+    publishLiveSpeed();
     if (host_->azureusPublished && (!observation || observation->sequence == host_->azureusObservationSequence)) { return; }
     if (host_->azureusSequence == std::numeric_limits<quint64>::max()) { return; }
     auto packet = std::make_shared<ui::AzureusStatisticsPacket>();
@@ -1294,6 +1309,36 @@ void SessionBridge::publishAzureus() noexcept {
       if (packet && (*packet)->session == publishedColumnLayoutSession_) { emit azureusStatisticsReady(*packet); }
     }, Qt::QueuedConnection);
   } catch (...) {} // Passive optional snapshots never fail storage/transfer commands.
+}
+void SessionBridge::publishLiveSpeed() noexcept {
+  if (!host_) { return; }
+  try {
+    const auto value = host_->liveSpeedMapper ? host_->liveSpeedMapper->observation() : LiveSpeedMapperObservation{};
+    if ((host_->liveSpeedPublished && value.revision == host_->liveSpeedRevision)
+        || host_->liveSpeedSequence == std::numeric_limits<quint64>::max()) { return; }
+    auto packet = std::make_shared<ui::LiveSpeedManagerPacket>();
+    packet->session = host_->columnLayoutSession; packet->sequence = ++host_->liveSpeedSequence;
+    packet->snapshot = value.snapshot; packet->epoch = value.snapshot ? value.epoch : 0; packet->current = value.current && bool(value.snapshot);
+    switch (value.failure) {
+      case LiveSpeedFailure::None: break;
+      case LiveSpeedFailure::EngineUnavailable: packet->failure = tr("Native engine observations are unavailable or ended"); break;
+      case LiveSpeedFailure::Alignment: packet->failure = tr("RTT and observed rate windows could not be aligned"); break;
+      case LiveSpeedFailure::ReceiptLoss: packet->failure = tr("The RTT observation stream has a gap"); break;
+      case LiveSpeedFailure::Clock: packet->failure = tr("Observation timing is unavailable"); break;
+      case LiveSpeedFailure::Input: packet->failure = tr("A mapper input could not be admitted"); break;
+      case LiveSpeedFailure::Memory: packet->failure = tr("The optional mapper snapshot is unavailable"); break;
+    }
+    {
+      const std::lock_guard lock(progressMutex_);
+      latestLiveSpeed_ = std::move(packet); host_->liveSpeedRevision = value.revision; host_->liveSpeedPublished = true;
+      if (liveSpeedDeliveryQueued_) { return; } liveSpeedDeliveryQueued_ = true;
+    }
+    QMetaObject::invokeMethod(this, [this] {
+      std::optional<ui::LiveSpeedManagerPresentation> result;
+      { const std::lock_guard lock(progressMutex_); result.swap(latestLiveSpeed_); liveSpeedDeliveryQueued_ = false; }
+      if (result && (*result)->session == publishedColumnLayoutSession_) { emit liveSpeedManagerReady(*result); }
+    }, Qt::QueuedConnection);
+  } catch (...) {} // Optional mapper publication cannot fail transfer/storage/retirement.
 }
 void SessionBridge::publishRuntimeMetrics(const engine::ApplicationPeerObservation& value) {
   publishAzureus();
@@ -1475,6 +1520,7 @@ bool SessionBridge::closeSession() {
       } catch (...) {} // Optional immutable telemetry cannot retain Host/lease.
     }
     if (host_) {
+      if (host_->liveSpeedMapper) { host_->liveSpeedMapper->close(); } publishLiveSpeed();
       host_->manualTagEnded = true; publishManualTags();
       host_->countryEnded = true; publishCountries();
     }

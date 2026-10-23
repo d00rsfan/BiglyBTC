@@ -193,6 +193,7 @@ private:
     Ticket ticket;Peer peer;std::int64_t connection;std::int32_t expectedAction;Clock::time_point expires;
     std::shared_ptr<CallbackState> callback;QMetaObject::Connection death;Clock::time_point started;
   };
+  void observePing(const Pending&,const Result&)noexcept;
   struct Completion { std::shared_ptr<CallbackState> callback;Result outcome; };
   std::expected<Ticket,Failure> submit(Peer,std::int8_t,QObject*,CompletionCallback,
       std::chrono::nanoseconds,std::int32_t action,Encoder);
@@ -238,5 +239,7 @@ private:
   std::size_t eventBegin_=0,eventCount_=0;std::uint64_t eventSerial_=0,droppedEvents_=0;
   VivaldiPosition vivaldi_;
   std::optional<VivaldiValue> lastRemotePosition_;std::optional<std::int64_t> lastRtt_;
+  std::optional<OwnedPingObservation> lastPing_;
+  std::uint64_t pingSequence_=0;bool pingLost_=false;
 };
 }

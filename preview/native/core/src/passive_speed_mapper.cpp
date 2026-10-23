@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 // Derived policy: Azureus Software, Inc. SpeedManagerPingMapperImpl (cb8c6cb9).
 #include "biglybtc/passive_speed_mapper.hpp"
+#include "biglybtc/saved_speed_manager.hpp"
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -57,9 +58,9 @@ std::expected<PassiveSpeedEstimate,PassiveSpeedError> estimate(const std::vector
 }
 std::expected<void,PassiveSpeedError> PassiveSpeedMapper::gap(PassiveSpeedObservation input,PassiveSpeedError error)noexcept{
   lastAttempt_=input;if(input.observedMillis>=0&&(!lastTime_||input.observedMillis>*lastTime_)){lastTime_=input.observedMillis;}
-  contiguous_=0;recentCount_=0;recentNext_=0;lastUpload_=0;lastDownload_=0;
+  contiguous_=0;recentCount_=0;recentNext_=0;lastUpload_=0;lastDownload_=0;resetWarmup();lastEventWasSpeedOnly_=false;
   if(gaps_!=std::numeric_limits<std::uint64_t>::max()){++gaps_;}
-  state_=error==PassiveSpeedError::Missing?PassiveSpeedState::Gap:error==PassiveSpeedError::Clock?PassiveSpeedState::Clock:error==PassiveSpeedError::Overflow?PassiveSpeedState::Overflow:PassiveSpeedState::Invalid;
+  state_=error==PassiveSpeedError::Missing?PassiveSpeedState::Gap:error==PassiveSpeedError::Clock?PassiveSpeedState::Clock:error==PassiveSpeedError::Overflow?PassiveSpeedState::Overflow:error==PassiveSpeedError::Memory?PassiveSpeedState::Memory:PassiveSpeedState::Invalid;
   return std::unexpected(error);
 }
 std::expected<void,PassiveSpeedError> PassiveSpeedMapper::observe(PassiveSpeedObservation input)noexcept{
@@ -81,14 +82,160 @@ std::expected<void,PassiveSpeedError> PassiveSpeedMapper::observe(PassiveSpeedOb
     std::move(points_.begin()+discard,points_.end(),points_.begin());count_-=discard;dropped_+=discard;points_[0].connectedToPrevious=false;
   }
   points_[count_++]={input,upload,download,static_cast<std::uint16_t>(metric),rtt,contiguous_!=0};
-  lastTime_=input.observedMillis;lastAttempt_=input;lastUpload_=rawUpload;lastDownload_=rawDownload;recent_=recent;recentNext_=next;recentCount_=count;contiguous_=std::min(contiguous_+1,2U);++accepted_;state_=PassiveSpeedState::Ready;return {};
+  lastTime_=input.observedMillis;lastAttempt_=input;lastUpload_=rawUpload;lastDownload_=rawDownload;recent_=recent;recentNext_=next;recentCount_=count;contiguous_=std::min(contiguous_+1,2U);++accepted_;state_=PassiveSpeedState::Ready;lastEventWasSpeedOnly_=false;
+  try{auto result=updateAfterPing();if(!result){return gap(input,result.error());}return {};}
+  catch(const std::bad_alloc&){return gap(input,PassiveSpeedError::Memory);}
 }
+
+void PassiveSpeedMapper::resetWarmup()noexcept{
+  uploadSpeeds_.fill(0);downloadSpeeds_.fill(0);speedNext_=0;speedCount_=0;
+  rawUpload_.reset();rawDownload_.reset();
+  // A discontinuity cannot stand in for the five actual good observations.
+  if(up_.lastBad){up_.countdown=5;}if(down_.lastBad){down_.countdown=5;}
+  if(up_.capacity){up_.capacity->current=false;}if(down_.capacity){down_.capacity->current=false;}
+}
+void PassiveSpeedMapper::sustain(Axis& axis,std::uint16_t minimum,std::int64_t when,bool qualified)noexcept{
+  const auto speed=static_cast<std::int64_t>(minimum)*Divisor;
+  if(axis.capacity&&axis.capacity->value.estimateType==1){return;}
+  const auto previous=axis.capacity?axis.capacity->value.bytesPerSecond:0;
+  if(speed>previous){
+    if(!axis.capacity){axis.capacity=PassiveSpeedCapacity{};}
+    auto& capacity=*axis.capacity;capacity.value.bytesPerSecond=speed;
+    capacity.value.metricRating=0;capacity.value.estimateType=0;capacity.value.fromSaved=false;
+    capacity.origin=PassiveCapacityOrigin::Sustained;capacity.lastDerivedMillis=when;capacity.current=true;
+  }else if(qualified&&axis.capacity&&axis.capacity->origin!=PassiveCapacityOrigin::Saved&&speed>=previous){
+    axis.capacity->current=true;axis.capacity->lastDerivedMillis=when;
+  }
+}
+std::expected<void,PassiveSpeedError> PassiveSpeedMapper::decrease(Axis& axis,std::int64_t when){
+  if((axis.capacity&&axis.capacity->value.estimateType==1)||axis.badCount<MaximumBadHistory){return {};}
+  const auto cap=axis.capacity?axis.capacity->value.bytesPerSecond:0;
+  if(cap>0&&cap<10*1024){return {};}
+  auto sorted=axis.bad;std::sort(sorted.begin(),sorted.end(),[](const auto& a,const auto& b){return a.bytesPerSecond<b.bytesPerSecond;});
+  constexpr std::size_t Trim=MaximumBadHistory/4,End=MaximumBadHistory-Trim,Count=End-Trim;
+  std::int64_t total=0;
+  for(std::size_t i=Trim;i<End;++i){const auto speed=sorted[i].bytesPerSecond;
+    if(speed<0||speed>std::numeric_limits<std::int32_t>::max()-total){return std::unexpected(PassiveSpeedError::Overflow);}total+=speed;
+  }
+  const auto average=total/static_cast<std::int64_t>(Count);
+  // Preserve this early exit before evaluating the source int variance.
+  if(cap>0&&average>=cap){return {};}
+  std::int64_t squares=0;
+  for(std::size_t i=Trim;i<End;++i){const auto delta=sorted[i].bytesPerSecond-average;
+    // Every admitted speed/average fits a nonnegative Java int, so square fits
+    // int64; Java's compound int narrowing is deliberately NOT wrapped here.
+    const auto square=delta*delta;
+    if(square>std::numeric_limits<std::int32_t>::max()-squares){return std::unexpected(PassiveSpeedError::Overflow);}squares+=square;
+  }
+  const auto deviation=static_cast<std::int64_t>(std::sqrt(static_cast<double>(squares)/Count));
+  if(cap<=0||(deviation<cap/2&&average<cap)){
+    if(!axis.capacity){axis.capacity=PassiveSpeedCapacity{};}
+    auto& capacity=*axis.capacity;capacity.value.bytesPerSecond=average;capacity.value.estimateType=0.5f;
+    // Source setters retain the previous metric/hits/when metadata.
+    capacity.value.fromSaved=false;capacity.origin=PassiveCapacityOrigin::Choke;
+    capacity.lastDerivedMillis=when;capacity.current=true;
+    std::move(axis.bad.begin()+Trim,axis.bad.begin()+axis.badCount,axis.bad.begin());axis.badCount-=Trim;
+  }
+  return {};
+}
+std::expected<void,PassiveSpeedError> PassiveSpeedMapper::updateAxis(Axis& axis,const std::optional<PassiveSpeedEstimate>& raw,float current,std::int64_t when){
+  if(!raw){return {};}
+  const PassiveSpeedLimitRecord record{raw->bytesPerSecond,raw->metricRating,raw->estimateType,raw->hits,raw->whenMillis,false};
+  if(record.metricRating==-1){
+    if(axis.countdown==0&&(!axis.lastBad||axis.lastBad->bytesPerSecond!=record.bytesPerSecond)){
+      axis.countdown=5;
+      if(axis.badCount==MaximumBadHistory){std::move(axis.bad.begin()+1,axis.bad.end(),axis.bad.begin());--axis.badCount;}
+      axis.bad[axis.badCount++]=record;
+      if(const auto result=decrease(axis,when);!result){return result;}
+    }
+    axis.lastBad=record;
+  }else if(record.metricRating==1&&(!axis.bestGood||axis.bestGood->bytesPerSecond<record.bytesPerSecond)){
+    axis.bestGood=record;
+  }
+  if(axis.countdown){if(current==-1){axis.countdown=5;}else if(current==1){--axis.countdown;}}
+  return {};
+}
+std::expected<void,PassiveSpeedError> PassiveSpeedMapper::updateAfterPing(){
+  std::optional<PassiveSpeedEstimate> upload,download;
+  const auto& point=points_[count_-1];
+  if(contiguous_>=2){
+    std::vector<PassiveSpeedZone> zones;zones.reserve(count_-1);
+    for(std::size_t i=1;i<count_;++i){if(points_[i].connectedToPrevious){zones.push_back(zone(points_[i-1],points_[i]));}}
+    if(!zones.empty()){
+      auto result=estimate(zones,true,point.input.observedMillis);if(!result){return std::unexpected(result.error());}upload=std::move(*result);
+      result=estimate(zones,false,point.input.observedMillis);if(!result){return std::unexpected(result.error());}download=std::move(*result);
+    }
+  }
+  // Stage both axes/ring before commit: one failed arithmetic policy cannot
+  // publish a half-updated capacity. The actual point above remains recorded.
+  auto up=up_,down=down_;auto uploads=uploadSpeeds_,downloads=downloadSpeeds_;
+  uploads[speedNext_]=point.metric<Bad?point.uploadBin:0;downloads[speedNext_]=point.metric<Bad?point.downloadBin:0;
+  const auto qualified=std::min(speedCount_+1,static_cast<unsigned>(SustainedSamples));
+  sustain(up,*std::min_element(uploads.begin(),uploads.end()),point.input.observedMillis,qualified==SustainedSamples);
+  sustain(down,*std::min_element(downloads.begin(),downloads.end()),point.input.observedMillis,qualified==SustainedSamples);
+  auto result=updateAxis(up,upload,rating(point.metric),point.input.observedMillis);if(!result){return result;}
+  result=updateAxis(down,download,rating(point.metric),point.input.observedMillis);if(!result){return result;}
+  up_=up;down_=down;uploadSpeeds_=uploads;downloadSpeeds_=downloads;speedCount_=qualified;speedNext_=(speedNext_+1)%SustainedSamples;
+  rawUpload_=std::move(upload);rawDownload_=std::move(download);return {};
+}
+std::expected<void,PassiveSpeedError> PassiveSpeedMapper::observeSpeed(PassiveSpeedRateObservation value)noexcept{
+  const PassiveSpeedObservation input{value.observedMillis,value.uploadBytesPerSecond,value.downloadBytesPerSecond,{},false};
+  if(value.observedMillis<0||(lastTime_&&value.observedMillis<=*lastTime_)){return gap(input,PassiveSpeedError::Clock);}
+  if(!value.uploadBytesPerSecond||!value.downloadBytesPerSecond){return gap(input,PassiveSpeedError::Missing);}
+  if(*value.uploadBytesPerSecond<0||*value.downloadBytesPerSecond<0){return gap(input,PassiveSpeedError::Invalid);}
+  if(speedOnlyAccepted_==std::numeric_limits<std::uint64_t>::max()){return gap(input,PassiveSpeedError::Overflow);}
+  uploadSpeeds_[speedNext_]=quantize(*value.uploadBytesPerSecond);downloadSpeeds_[speedNext_]=quantize(*value.downloadBytesPerSecond);
+  speedNext_=(speedNext_+1)%SustainedSamples;speedCount_=std::min(speedCount_+1,static_cast<unsigned>(SustainedSamples));
+  sustain(up_,*std::min_element(uploadSpeeds_.begin(),uploadSpeeds_.end()),value.observedMillis,speedCount_==SustainedSamples);
+  sustain(down_,*std::min_element(downloadSpeeds_.begin(),downloadSpeeds_.end()),value.observedMillis,speedCount_==SustainedSamples);
+  ++speedOnlyAccepted_;lastAttempt_=input;lastTime_=value.observedMillis;lastEventWasSpeedOnly_=true;state_=PassiveSpeedState::Ready;return {};
+}
+std::expected<void,PassiveSpeedError> PassiveSpeedMapper::restoreSaved(std::string_view bytes){try{
+  if(restored_||accepted_||speedOnlyAccepted_||lastAttempt_){return std::unexpected(PassiveSpeedError::Invalid);}
+  auto source=readSavedSpeedHistory(bytes);if(!source){return std::unexpected(source.error()==SavedSpeedError::Memory?PassiveSpeedError::Memory:PassiveSpeedError::Invalid);}
+  const auto convert=[](const SavedSpeedEstimate& estimate)->std::expected<PassiveSpeedLimitRecord,PassiveSpeedError>{
+    if(!estimate.present||estimate.malformed||!estimate.bytesPerSecond||*estimate.bytesPerSecond<0||!estimate.hits||!estimate.whenMillis||!estimate.metric||!estimate.type||!std::isfinite(*estimate.metric)||!std::isfinite(*estimate.type)){return std::unexpected(PassiveSpeedError::Invalid);}
+    return PassiveSpeedLimitRecord{*estimate.bytesPerSecond,*estimate.metric,*estimate.type,*estimate.hits,*estimate.whenMillis,true};
+  };
+  const auto record=[&](const Node& node)->std::expected<PassiveSpeedLimitRecord,PassiveSpeedError>{
+    const auto& raw=source->source->originalBytes();
+    if(node.type!=Node::Type::Dictionary||node.begin>node.end||node.end>raw.size()){return std::unexpected(PassiveSpeedError::Invalid);}
+    std::string selected="d5:upcap";selected.append(raw,node.begin,node.end-node.begin);selected+='e';
+    auto parsed=readSavedSpeedHistory(selected);if(!parsed){return std::unexpected(parsed.error()==SavedSpeedError::Memory?PassiveSpeedError::Memory:PassiveSpeedError::Invalid);}return convert(parsed->upload);
+  };
+  const auto load=[&](Axis& axis,const SavedSpeedEstimate& capacity,std::string_view badKey,std::string_view bestKey)->std::expected<void,PassiveSpeedError>{
+    if(capacity.present){auto value=convert(capacity);if(!value){return std::unexpected(value.error());}axis.capacity=PassiveSpeedCapacity{*value,PassiveCapacityOrigin::Saved,{},false};}
+    if(const auto* bads=source->source->find(badKey)){
+      if(bads->type!=Node::Type::List||bads->children.size()>MaximumBadHistory){return std::unexpected(PassiveSpeedError::Invalid);}
+      for(const auto& node:bads->children){auto value=record(node);if(!value){return std::unexpected(value.error());}axis.bad[axis.badCount++]=*value;axis.lastBad=*value;}
+    }
+    if(const auto* good=source->source->find(bestKey)){auto value=record(*good);if(!value){return std::unexpected(value.error());}axis.bestGood=*value;}
+    return {};
+  };
+  Axis up,down;auto result=load(up,source->upload,"lbus","bgu");if(!result){return result;}
+  result=load(down,source->download,"lbds","bgd");if(!result){return result;}
+  up_=up;down_=down;savedSource_=source->source;restored_=true;return {};
+ }catch(const std::bad_alloc&){return std::unexpected(PassiveSpeedError::Memory);}}
 std::expected<PassiveSpeedSnapshot,PassiveSpeedError> PassiveSpeedMapper::snapshot()const{try{
   PassiveSpeedSnapshot value;value.state=state_;value.accepted=accepted_;value.dropped=dropped_;value.gaps=gaps_;value.lastAttempt=lastAttempt_;
   value.history.assign(points_.begin(),points_.begin()+count_);if(count_){value.zones.reserve(count_-1);}for(std::size_t i=1;i<count_;++i){if(points_[i].connectedToPrevious){value.zones.push_back(zone(points_[i-1],points_[i]));}}
-  if(state_==PassiveSpeedState::Ready&&count_){value.currentMetricRating=rating(points_[count_-1].metric);
-    if(contiguous_>=2&&!value.zones.empty()){auto up=estimate(value.zones,true,points_[count_-1].input.observedMillis);if(!up){return std::unexpected(up.error());}auto down=estimate(value.zones,false,points_[count_-1].input.observedMillis);if(!down){return std::unexpected(down.error());}value.upload=std::move(*up);value.download=std::move(*down);}
+  if(state_==PassiveSpeedState::Ready){
+    if(count_&&contiguous_){value.currentMetricRating=rating(points_[count_-1].metric);}value.upload=rawUpload_;value.download=rawDownload_;
   }
+  const auto persistent=[](const std::optional<PassiveSpeedEstimate>& raw,const Axis& axis,bool& fromSaved)->std::optional<PassiveSpeedEstimate>{
+    if(!raw||raw->metricRating==-1){return raw;}
+    const PassiveSpeedLimitRecord* chosen=nullptr;
+    if(axis.bestGood&&axis.lastBad){chosen=axis.lastBad->whenMillis>axis.bestGood->whenMillis?&*axis.lastBad:axis.bestGood->bytesPerSecond>axis.lastBad->bytesPerSecond?&*axis.bestGood:&*axis.lastBad;}
+    else if(axis.bestGood){chosen=&*axis.bestGood;}else if(axis.lastBad){chosen=&*axis.lastBad;}
+    if(!chosen||raw->bytesPerSecond>chosen->bytesPerSecond){return raw;}
+    auto result=*raw;result.bytesPerSecond=static_cast<std::int32_t>(chosen->bytesPerSecond);fromSaved=chosen->fromSaved;return result;
+  };
+  value.persistentUpload=persistent(value.upload,up_,value.persistentUploadFromSaved);value.persistentDownload=persistent(value.download,down_,value.persistentDownloadFromSaved);
+  value.uploadCapacity=up_.capacity;value.downloadCapacity=down_.capacity;
+  value.badUpload.assign(up_.bad.begin(),up_.bad.begin()+up_.badCount);value.badDownload.assign(down_.bad.begin(),down_.bad.begin()+down_.badCount);
+  value.lastBadUpload=up_.lastBad;value.lastBadDownload=down_.lastBad;value.bestGoodUpload=up_.bestGood;value.bestGoodDownload=down_.bestGood;
+  value.badUploadCountdown=up_.countdown;value.badDownloadCountdown=down_.countdown;value.sustainedSamples=speedCount_;
+  value.speedOnlyAccepted=speedOnlyAccepted_;value.lastEventWasSpeedOnly=lastEventWasSpeedOnly_;value.savedSource=savedSource_;
   return value;
  }catch(const std::bad_alloc&){return std::unexpected(PassiveSpeedError::Memory);}}
 } // namespace biglybtc::core

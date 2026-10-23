@@ -108,7 +108,33 @@ std::expected<OwnedDhtStatisticsSnapshot,Failure> OwnedPingTransport::dhtStatist
   value.count_=eventCount_;value.dropped_=droppedEvents_;
   for(std::size_t i=0;i<eventCount_;++i){value.events_[i]=operationEvents_[(eventBegin_+i)%operationEvents_.size()];}
   if(config_.enableVivaldi){value.local_=vivaldi_.value();value.remote_=lastRemotePosition_;value.rtt_=lastRtt_;value.coordinateObservations_=vivaldi_.observations();}
+  value.ping_=lastPing_;value.pingLost_=pingLost_;
   return value;
+}
+void OwnedPingTransport::observePing(const Pending& pending,const Result& result)noexcept{
+  if(!config_.observeOperations||pending.expectedAction!=1025||!statisticsGeneration_){return;}
+  if(pingSequence_==std::numeric_limits<std::uint64_t>::max()){pingLost_=true;lastPing_.reset();return;}
+  const auto now=Clock::now();
+  const auto observed=std::chrono::duration_cast<std::chrono::nanoseconds>(now.time_since_epoch()).count();
+  const auto elapsed=std::chrono::duration_cast<std::chrono::nanoseconds>(now-pending.started).count();
+  if(observed<0||elapsed<0){pingLost_=true;lastPing_.reset();return;}
+  OwnedPingObservation value;value.generation_=statisticsGeneration_;value.sequence_=++pingSequence_;value.observed_=observed;
+  value.endpoint_.port=pending.peer.port;
+  if(pending.peer.address.protocol()==QAbstractSocket::IPv4Protocol){
+    value.endpoint_.length=4;const auto ip=pending.peer.address.toIPv4Address();
+    for(unsigned i=0;i<4;++i){value.endpoint_.bytes[i]=static_cast<std::uint8_t>(ip>>(24-8*i));}
+  }else{
+    value.endpoint_.length=16;const auto ip=pending.peer.address.toIPv6Address();std::copy_n(ip.c,16,value.endpoint_.bytes.begin());
+  }
+  if(result&&std::holds_alternative<packet::Decoded>(*result)){value.kind_=PingObservationKind::Reply;value.rtt_=elapsed;}
+  else if(result){value.kind_=PingObservationKind::RemoteError;}
+  else{switch(result.error()){
+    case Failure::Timeout:value.kind_=PingObservationKind::Timeout;break;
+    case Failure::Cancelled:value.kind_=PingObservationKind::Cancelled;break;
+    case Failure::Closed:value.kind_=PingObservationKind::Closed;break;
+    default:value.kind_=PingObservationKind::Failed;break;
+  }}
+  lastPing_=value;
 }
 void OwnedPingTransport::observeOperation(const Pending& pending,OperationEventKind kind) noexcept {
   if(!config_.observeOperations){return;}
@@ -307,6 +333,7 @@ void OwnedPingTransport::armDeadline() {
 }
 void OwnedPingTransport::finish(std::int32_t transaction,Result outcome) {
   const auto found=pending_.find(transaction);if (found==pending_.end()) { return; }
+  observePing(found->second,outcome);
   OperationEventKind kind=OperationEventKind::Reply;
   if(outcome && std::holds_alternative<remote_error::Decoded>(*outcome)){kind=OperationEventKind::RemoteError;}
   else if(!outcome){switch(outcome.error()){
