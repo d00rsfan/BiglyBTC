@@ -33,3 +33,5 @@ target_link_libraries(biglybtc_ui PUBLIC biglybtc_azureus_owned_udp)
 target_sources(biglybtc_ui PRIVATE cache_statistics_view.hpp cache_statistics_view.cpp)
 
 target_sources(biglybtc_ui PRIVATE saved_speed_manager_presentation.hpp saved_speed_manager_view.hpp saved_speed_manager_view.cpp)
+
+target_sources(biglybtc_ui PRIVATE saved_speed_map_widget.hpp saved_speed_map_widget.cpp)

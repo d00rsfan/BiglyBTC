@@ -76,3 +76,7 @@ tracks the current portable preview and remaining service integration.
 Application-owned DHT observations now reach Statistics independently of the torrent
 engine, with retained router counts and joined shutdown. See the
 [qualified owner/router milestone](migration/evidence/statistics-owned-dht-20261023.json).
+
+Transfers → Capacity now plots the original saved SpeedManager map, preserving
+malformed gaps and raw values. A bounded passive mapper reproduces source
+variance/limit-estimate arithmetic; it does not start probes or adjust limits.

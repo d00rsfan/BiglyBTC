@@ -7,6 +7,7 @@ class QLabel;
 class QPushButton;
 class QShowEvent;
 namespace biglybtc::ui {
+class SavedSpeedMapWidget;
 class SavedSpeedManagerView final:public QWidget {
  Q_OBJECT
 public:
@@ -23,6 +24,7 @@ private:
  void queueRead(bool explicitRead=false);void queueRefresh();void refresh();
  quint64 session_=0,revision_=0;bool dirty_=true,queued_=false,reading_=false,readSent_=false,explicitPending_=false;
  SavedSpeedManagerPresentation packet_;
+ QPointer<SavedSpeedMapWidget> map_;
  std::array<QPointer<QLabel>,9> facts_{};QPointer<QPushButton> refresh_;QPointer<QWidget> observedWindow_;
 };
 } // namespace biglybtc::ui

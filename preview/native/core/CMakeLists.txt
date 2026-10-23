@@ -49,3 +49,5 @@ target_sources(biglybtc_core PRIVATE src/tracker_statistics.cpp)
 target_sources(biglybtc_core PRIVATE src/disk_statistics.cpp)
 
 target_sources(biglybtc_core PRIVATE src/saved_speed_manager.cpp)
+
+target_sources(biglybtc_core PRIVATE src/saved_speed_map.cpp src/passive_speed_mapper.cpp)
