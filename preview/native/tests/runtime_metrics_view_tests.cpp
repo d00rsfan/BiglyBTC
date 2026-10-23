@@ -480,7 +480,10 @@ private slots:
     for(int section=2;section<=4;++section) {
       auto navigation=*defaults;navigation.section=section;navigation.transfers=2;
       QVERIFY(ui::validStatisticsNavigation(navigation));ui::StatisticsPage page(nullptr,navigation);
-      page.beginNativeSession(7);show(page);page.setRuntimeMetrics(packet());
+      page.beginNativeSession(7);show(page);
+      if(section==2){child<QTabWidget>(page,"cache-tabs").setCurrentIndex(1);}
+      if(section==3){child<QTabWidget>(page,"statistics-tracker-tabs").setCurrentIndex(1);}
+      page.setRuntimeMetrics(packet());
       QCOMPARE(page.tabs().currentIndex(),section);QCOMPARE(page.navigation()->transfers,2);
       const char* id=section==2?"statistics-cache-metrics":section==3?"statistics-tracker-metrics":"statistics-all-metrics";
       auto& view=child<ui::RuntimeMetricsView>(page,id);QTRY_COMPARE(table(view).model()->rowCount(),section==4?5:1);
