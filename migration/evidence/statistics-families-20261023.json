@@ -1,0 +1,44 @@
+{
+  "scope": "Native Statistics families; full original service migration remains in progress",
+  "implementation": "5ea3fb7391a3e5df107754b5bba95492f19efd1b",
+  "test_followup": "eb671331dcb665e1f97b66a2f628ff86571089fc",
+  "runtime_followup": "fbda051338e08c66242e97494e533ad420a1de38",
+  "sections": 10,
+  "gcc_unique_affected_suites": 25,
+  "clang_suites": 13,
+  "clang_runtime_followup": "Changed observer object compiled; prior suites reused",
+  "sanitizer_suites": 13,
+  "sanitizers": [
+    "address",
+    "undefined",
+    "leak"
+  ],
+  "hosted_parent": {
+    "source": "eb671331dcb665e1f97b66a2f628ff86571089fc",
+    "run": 40011838412,
+    "units": 120,
+    "smoke_rows": 13,
+    "conclusion": "success"
+  },
+  "hosted_final_source": {
+    "source": "fbda051338e08c66242e97494e533ad420a1de38",
+    "run": 40013558473,
+    "conclusion": "pending"
+  },
+  "public_location_module": "252bcf70f3dfd7a3fa6aa0d3efeb38bae6c61df4",
+  "portable": {
+    "native_source": "fbda051338e08c66242e97494e533ad420a1de38",
+    "dist": "/home/yurii/Java/BiglyBTC/dist",
+    "rollback": "/home/yurii/Java/BiglyBTC/build/statistics-finish-20261023/publication/previous-dist",
+    "old_manifest_sha256": "7f17e98086f0445a900060415884890d6c73a9d96db0b8a11735c3cfb24ee3cd",
+    "manifest_sha256": "d7431f1cbdc1ad02e2150fd7bc95f85cb75e3044a20b3f19dd52d5fe751875f1",
+    "files": 112,
+    "captures": 27,
+    "system_installation": false,
+    "original_profile_or_process_access": false
+  },
+  "evidence_workbench": "migration/evidence/20261023-statistics-families/",
+  "next": "Actual application-owned DHT service, router and independent GUI observation channel",
+  "original_profile_or_process_access": false,
+  "system_installation": false
+}

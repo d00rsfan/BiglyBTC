@@ -67,3 +67,8 @@ Manual Tags now reads original tag.config and displays observed per-torrent rate
 Activity offers original-style ten-second windows, measured intervals and configured
 combined smoothing. See the [qualified Tags/Activity milestone](migration/evidence/statistics-tags-activity-20261023.json).
 Full Statistics, automatic tag management and remaining services are still in progress.
+
+Statistics now includes Country, Cache, Tracker, saved Capacity/ASN, DHT, DDB
+Operations and Vivaldi views alongside Activity, Transfers, Counters and Tags.
+The [qualified native families record](migration/evidence/statistics-families-20261023.json)
+tracks the current portable preview and remaining service integration.
