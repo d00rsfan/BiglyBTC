@@ -103,7 +103,7 @@ public:
     try {
       const auto peer = handle.native_handle();
       if (!peer) { ledger_->noteLoss(core::PeerPayloadIssue::SampleUnavailable); return {}; }
-      if (peer->type() != lt::connection_type::bittorrent) {
+      if (handle.type() != lt::connection_type::bittorrent) {
         ledger_->noteLoss(core::PeerPayloadIssue::UnsupportedConnection); return {};
       }
       const auto endpoint = numeric(handle.remote());
