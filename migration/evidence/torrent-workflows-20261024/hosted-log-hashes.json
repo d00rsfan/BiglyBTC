@@ -1,0 +1,12 @@
+{
+  "hosted-40090465981.log": {
+    "bytes": 30849,
+    "sha256": "10b1c2f1fbd98fc6be5974f5622e1ec16d4707266c08a1dbd66315f4b015685f",
+    "gzip_sha256": "769d5ebbfb26bafdf6d96c151f20d569277fa2c2376254635ea60c2cb8cd2bc2"
+  },
+  "hosted-40090466024.log": {
+    "bytes": 317768,
+    "sha256": "3dc5f38d8e25215a5a7ac17cc2cbf7810023c868b7d70efcfdaba36b9b354308",
+    "gzip_sha256": "22f29f0b8b672a9372ebabffb6ed197ebea2990ff37524a39fc13c6c42dfdab9"
+  }
+}

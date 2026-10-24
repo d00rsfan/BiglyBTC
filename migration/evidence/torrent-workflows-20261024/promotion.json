@@ -1,0 +1,10 @@
+{
+  "native_source": "08a44ec3134e32c8f1cebc4061f5fa608ba2cc35",
+  "dist": "/home/yurii/Java/BiglyBTC/dist",
+  "rollback": "/home/yurii/Java/BiglyBTC/build/torrent-workflows-20261024/portable/workflow-final-r1/previous-dist",
+  "old_manifest_sha256": "5e272dfd4e2d5afc3b3e88b3618836968be225f70ec7543ab8f610094966591e",
+  "manifest_sha256": "f38d56989a1cb26f988f715106830e1550b08e5d7eec595008a310e06d5d108c",
+  "manifest_files": 114,
+  "system_installation": false,
+  "original_profile_or_process_access": false
+}

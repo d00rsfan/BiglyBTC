@@ -1,34 +1,46 @@
-# Compatible torrent workflows — implementation boundary
+# Everyday torrent workflows: qualified preview
 
-This commit follows core milestone8795a76eef634bc6167713d913af7d302e3e028d.
-Original BiglyBT baseline: cb8c6cb9bb97916cbc7e80338a017200ffc3e71f.
-Replacement LT2.0.12 source:740a0b9aeabe00e762cc0efe4a0f27593db2550b.
+Final native source `08a44ec3134e32c8f1cebc4061f5fa608ba2cc35` is pushed directly on `main`. Original baseline
+`cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`; replacement libtorrent source `740a0b9aeabe00e762cc0efe4a0f27593db2550b`.
 
-Adds persisted original magnets, actual metadata-only storage routing and verified
-retirement before ordinary import, pending UI/retry/destination controls and
-original atomic force-start. New file imports select normal-priority files.
-Essential per-admission raw counters survive pause/resume independently of the
-optional peer observer and LT tick-lagged lifetime counters. Portable packaging
-adds an explicit-profile launcher; the offline sample launcher stays available.
+My Torrents now controls multiple retained transfers and seeding through one
+engine owner. Shared saved Start/Stop/Pause/Resume/Queue/Force Start/order actions,
+stopped-file selection, journaled torrent import and original pending magnets
+connect to actual transfer/metadata work. Supported original linear/incomplete
+storage, priorities, unknown fields and resume intent are preserved. Normal
+settings are translated into explicit network policy; unsupported routes fail
+before payload mutation.
 
-Initial connected GCC run passed16/19 suites. Subsequent failing runs are retained
-as failures: stop_when_ready blocked metadata; ConfigFile refused the private
-.torrent staging suffix; all_time counters lagged; import encoded files as skipped.
-The raw-epoch run passed managed-download, magnet-intake, managed-seeding and
-managed-library-command-routing, then was stopped after its known import failure.
-Final affected import run passed3/3 (torrent-intake, managed-magnet, magnet-host).
-No interrupted run is claimed as a complete successful batch. Source manifests
-bind each actual run. Final secondary/hosted/private-runtime qualification and
-exact final implementation hash will be recorded by a later provenance commit.
+Actual generated Java → native partial → Java → native complete → Java handoffs
+pass for v1 single and Unicode/multiple/empty-file cases: four native admissions,
+six original API reload observations, same payload inodes and checked bytes,
+piece states, names, priorities, limits and intent. This reuses the retained
+original Java 17 classes; it does not rebuild original core or touch its live
+profile. Metadata/payload and HTTP/UDP tracker checks use owned numeric loopback.
 
-All profiles/endpoints/payloads are generated and owned. Running original Java,
-ordinary profile/payloads and system installation were not accessed. Broad full
-original engine/plugin parity, unqualified storage/proxy combinations and public
-swarm performance remain separate migration work.
+Final GCC7 affected suites pass. Clang26 passes before the ABI-only extraction;
+all seven affected suites pass again on final source. Final ASan/UBSan26 passes
+with leak detection. The single source-bound private-ABI counter shim excludes
+vptr instrumentation because the approved provider hides private RTTI; all its
+other checks remain. No sanitized-provider claim is made. Hosted desktop and
+SDK runs pass at the exact final source (148 desktop units, 13 smoke rows,
+2 SDK tests); run IDs and logs are retained.
 
-The source-bound private LT access is isolated in managed_payload_counters.cpp.
-The approved DSO hides libtorrent::torrent RTTI; this single ABI shim therefore
-disables UBSan vptr instrumentation. Address, all other undefined-behavior and
-leak checks remain enabled, and all other translation units keep vptr checks.
-No runtime provider or counter algorithm changed. The affected GCC7 suites pass;
-final Clang continuation and full sanitizer/private-runtime checks follow.
+Private Qt6.12.0 and the approved uninstrumented LT runtime pass 13 smoke rows and
+21 related suites. All 28 captures are retained. The 114-file
+portable is promoted to `~/Java/BiglyBTC/dist`; manifest
+`f38d56989a1cb26f988f715106830e1550b08e5d7eec595008a310e06d5d108c`. Full old dist is retained at
+`/home/yurii/Java/BiglyBTC/build/torrent-workflows-20261024/portable/workflow-final-r1/previous-dist`. The normal launcher requires an explicit absolute
+`--profile`; its no-argument rejection happens before profile/network setup.
+For development use `~/.bitlybtc`, never the running original profile.
+
+Initial failures remain visible in the prior implementation evidence: metadata
+paused before BEP9, an inadmissible staging suffix, lagging lifetime counters,
+all-skipped import priorities, deprecated Qt test macros and hidden private RTTI.
+Each was repaired and only affected checks repeated; aborted runs receive no
+pass credit. Full logs remain on disk. No system installation or Debian build.
+
+This closes P03-07's bounded everyday workflow preview. Broad original engine,
+plugin, storage and network parity remain in the migration plan. No public-swarm
+or measured performance claim, full v2/hybrid handoff claim or real-compositor
+qualification is made. No human question blocks this chapter.

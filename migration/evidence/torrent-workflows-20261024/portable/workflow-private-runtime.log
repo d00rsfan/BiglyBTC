@@ -1,0 +1,57 @@
+Test project /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+      Start  93: desktop-model-and-lifecycle
+ 1/21 Test  #93: desktop-model-and-lifecycle ...............   Passed    0.67 sec
+      Start  94: desktop-files-model
+ 2/21 Test  #94: desktop-files-model .......................   Passed    0.16 sec
+      Start 117: persistent-native-peer-session
+ 3/21 Test #117: persistent-native-peer-session ............   Passed   40.59 sec
+      Start 118: persistent-native-session-window-worker
+ 4/21 Test #118: persistent-native-session-window-worker ...   Passed   22.39 sec
+      Start 150: startup-statistics-worker
+ 5/21 Test #150: startup-statistics-worker .................   Passed   20.05 sec
+      Start 193: library-commands
+ 6/21 Test #193: library-commands ..........................   Passed    0.02 sec
+      Start 194: library-action-ui
+ 7/21 Test #194: library-action-ui .........................   Passed    0.92 sec
+      Start 195: network-policy
+ 8/21 Test #195: network-policy ............................   Passed    0.01 sec
+      Start 196: managed-tracker
+ 9/21 Test #196: managed-tracker ...........................   Passed   17.57 sec
+      Start 197: managed-download
+10/21 Test #197: managed-download ..........................   Passed   15.83 sec
+      Start 198: managed-storage
+11/21 Test #198: managed-storage ...........................   Passed    0.03 sec
+      Start 199: torrent-intake
+12/21 Test #199: torrent-intake ............................   Passed    0.05 sec
+      Start 200: file-priority-ui
+13/21 Test #200: file-priority-ui ..........................   Passed    0.54 sec
+      Start 201: file-policy-commands
+14/21 Test #201: file-policy-commands ......................   Passed    0.02 sec
+      Start 202: torrent-import-ui
+15/21 Test #202: torrent-import-ui .........................   Passed    0.17 sec
+      Start 203: magnet-intake
+16/21 Test #203: magnet-intake .............................   Passed    0.02 sec
+      Start 204: metadata-disk-router
+17/21 Test #204: metadata-disk-router ......................   Passed    1.47 sec
+      Start 205: managed-seeding
+18/21 Test #205: managed-seeding ...........................   Passed   18.66 sec
+      Start 206: managed-magnet
+19/21 Test #206: managed-magnet ............................   Passed    2.49 sec
+      Start 207: managed-library-command-routing
+20/21 Test #207: managed-library-command-routing ...........   Passed   27.82 sec
+      Start 208: magnet-host
+21/21 Test #208: magnet-host ...............................   Passed    7.25 sec
+
+100% tests passed, 0 tests failed out of 21
+
+Label Time Summary:
+files                =   0.16 sec*proc (1 test)
+integration          =  83.03 sec*proc (3 tests)
+loopback             =  83.03 sec*proc (3 tests)
+startup              =  20.05 sec*proc (1 test)
+statistics           =  83.03 sec*proc (3 tests)
+torrent-workflows    =  92.86 sec*proc (16 tests)
+ui                   =  43.28 sec*proc (4 tests)
+unit                 = 176.73 sec*proc (21 tests)
+
+Total Test time (real) = 176.75 sec

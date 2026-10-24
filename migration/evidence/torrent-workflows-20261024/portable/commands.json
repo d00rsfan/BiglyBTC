@@ -1,0 +1,141 @@
+[
+  {
+    "name": "stage",
+    "argv": [
+      "python3",
+      "/home/yurii/Java/BiglyBTC/preview/migration/tools/stage_preview.py",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--output",
+      "/home/yurii/Java/BiglyBTC/build/torrent-workflows-20261024/portable/workflow-final-r1/candidate",
+      "--libtorrent-package",
+      "/home/yurii/Java/BiglyBTC/build/dependencies/packages/libtorrent-rasterbar2.0t64_2.0.12-1_amd64.deb",
+      "--source-libtorrent",
+      "/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/install/lib/libtorrent-rasterbar.so.2.0.12"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 1.8719354635104537
+  },
+  {
+    "name": "loader-BiglyBTC",
+    "argv": [
+      "ldd",
+      "/home/yurii/Java/BiglyBTC/build/torrent-workflows-20261024/portable/workflow-final-r1/candidate/usr/lib/biglybtc/bin/BiglyBTC"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 0.03487023990601301
+  },
+  {
+    "name": "rpath-BiglyBTC",
+    "argv": [
+      "readelf",
+      "--dynamic",
+      "/home/yurii/Java/BiglyBTC/build/torrent-workflows-20261024/portable/workflow-final-r1/candidate/usr/lib/biglybtc/bin/BiglyBTC"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 0.009273126721382141
+  },
+  {
+    "name": "loader-BiglyBTC-headless",
+    "argv": [
+      "ldd",
+      "/home/yurii/Java/BiglyBTC/build/torrent-workflows-20261024/portable/workflow-final-r1/candidate/usr/lib/biglybtc/bin/BiglyBTC-headless"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 0.033738384023308754
+  },
+  {
+    "name": "rpath-BiglyBTC-headless",
+    "argv": [
+      "readelf",
+      "--dynamic",
+      "/home/yurii/Java/BiglyBTC/build/torrent-workflows-20261024/portable/workflow-final-r1/candidate/usr/lib/biglybtc/bin/BiglyBTC-headless"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 0.007129531353712082
+  },
+  {
+    "name": "loader-test",
+    "argv": [
+      "ldd",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/biglybtc-preview-smoke"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 0.03663714788854122
+  },
+  {
+    "name": "prepare-generated-profile",
+    "argv": [
+      "python3",
+      "/home/yurii/Java/BiglyBTC/preview/native/packaging/preview.py",
+      "--prepare",
+      "/tmp/biglybtc-preview-ogj5dox_"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 0.16774138156324625
+  },
+  {
+    "name": "normal-launcher-usage",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/torrent-workflows-20261024/portable/workflow-final-r1/candidate/BiglyBTC"
+    ],
+    "exit_code": 2,
+    "expected_exit": 2,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 0.06561961490660906
+  },
+  {
+    "name": "smoke-private-runtime",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/biglybtc-preview-smoke",
+      "-o",
+      "-,txt"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 14.874577396549284
+  },
+  {
+    "name": "workflow-private-runtime",
+    "argv": [
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "-R",
+      "^(library\\-commands|network\\-policy|library\\-action\\-ui|managed\\-download|managed\\-tracker|managed\\-storage|torrent\\-intake|file\\-policy\\-commands|file\\-priority\\-ui|torrent\\-import\\-ui|magnet\\-intake|metadata\\-disk\\-router|managed\\-seeding|managed\\-magnet|managed\\-library\\-command\\-routing|magnet\\-host|persistent\\-native\\-peer\\-session|startup\\-statistics\\-worker|desktop\\-model\\-and\\-lifecycle|desktop\\-files\\-model|persistent\\-native\\-session\\-window\\-worker)$",
+      "--no-tests=error",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBTC/build/torrent-workflows-20261024/portable/workflow-final-r1/verification/workflow-tests.xml"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 176.79282245784998
+  }
+]

@@ -1,0 +1,55 @@
+{
+  "schema": 1,
+  "scope": "generated original Java / managed persistent native / original Java same-profile v1 interoperability; staging only",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_reference": "14232b346e7dc70d45e8a41fee1746244a080b46",
+  "capsule_sha256": {
+    "run.py": "4c86212ce3c6c55395eab288fc6d39d04fc2ff0cb8662f4c3d402daf2a06aed9",
+    "ManagedHandoffOracle.java": "98ac3e987ddc2585a908da488303fd0acff37bc4965cdc837535bc048114c812",
+    "ADOPTION.md": "43f184197c2c3be94ef881fd8e734611e24e47072af8b2ee48a95d13a1f243b3",
+    "staging/preview/native/tests/managed_handoff_driver.cpp": "851184c2a28b908c9d3ce2620742567fd9f70f95ff0054b46d56aa00bb3e9da6"
+  },
+  "source_sha256": {
+    "preview/native/tests/managed_handoff_driver.cpp": "851184c2a28b908c9d3ce2620742567fd9f70f95ff0054b46d56aa00bb3e9da6"
+  },
+  "reference_sha256": {
+    "migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+    "migration/fixtures/java/EngineOracle.java": "325ca455bfdcd754e4369261348856a9c2143268dd189c3716f1cb7ba4cf7765",
+    "migration/fixtures/java/InteropOracle.java": "0914d4c62b6f701d16a8787943eeec998a5b5e910d1b03acf8f910d8c037363b",
+    "migration/fixtures/java/MultiFileOracle.java": "5b160525c8e560b0683ad53935689e184fabe7cd3bdbd76d33de0271bdfdb3ce",
+    "migration/fixtures/java/MultiEngineOracle.java": "c22f9c6ad4257573715df3242090fd48b54e5aae40ae77d88134d7ec65a9ec16",
+    "migration/tools/peer_interop.py": "93e1577f1896fbd438a93b0e128c90b394fedaca42fe56db8189fc7f43f5b299",
+    "migration/tools/handoff.py": "715cc1de2198a2d593501302b41186983dbe495172bd0b4c1709ddd399070bd6",
+    "migration/tools/oracle.py": "8eb1cc4758ba78b4679b05b553ed8f6b7c1c1abe1745b8b1f5357ae681f0710f",
+    "migration/tools/sources.py": "16c4a0e46fdd52b313e6a2d28e592dc0314e8398a270ab0d7083f66a7abf5733",
+    "migration/evidence/P00-04/reference-fence.json": "0c35e6bb2212e681ed4be8ecc65c50e35d7e191701bee59c9e139f2fbcb17302"
+  },
+  "original_production_sha256": {
+    "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39",
+    "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java": "3b2eb44625911187e3058b7363b96b7ee813a9bf8051de54fada0f1ccc3243c7",
+    "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java": "821229517d374be10b95b4c2b623e3f25b356bf6d29724067933d943f719bcef",
+    "core/src/com/biglybt/core/disk/impl/resume/RDResumeHandler.java": "dd63d0d6944ab73d7c29d6c190258b9cf2b6552d80972644188edab1b87882bc"
+  },
+  "java_retention_path": "/home/yurii/Java/BiglyBTC/build/dependencies/java-oracle-17-20261021/retention.json",
+  "java_retention_sha256": "7472e8bda8d832fd5a962cda76ba1fcefaa0e6e9b4cad2621e0be97e6fbec9dd",
+  "native_api_sha256": {
+    "preview/native/engine/persistent_session.hpp": "8bf60c5f8e4699cfce25810dc2b355b90869c04b454f4763f15f4cc965bc7878",
+    "preview/native/engine/managed_download.hpp": "a992a745980f054adc0c22cab8975882569cc8ddc18ffd5ac36825d58a90ddae",
+    "preview/native/tests/owned_engine_fixture.hpp": "22e43b024c87175358c0a5ca50f9b482547704acfc61622e1f090acab35bde5e"
+  },
+  "planned_cases": [
+    "v1-single",
+    "v1-multifile"
+  ],
+  "planned_native_admissions": 4,
+  "planned_original_reload_observations": 6,
+  "actual_execution": null,
+  "original_core_recompile_planned": false,
+  "python_source_ast_only": "PASS",
+  "amendment": {
+    "reason": "Actual original Java reload removes an incomplete suffix when an individual file is fully checked, even while the multifile torrent remains partial.",
+    "previous_manifest_sha256": "714ade20493f131c2a11cd8fc8b7acbc858532da1c6ac7e2d607bf21006a25aa",
+    "before_runner_sha256": "b5947d8937b958c0f7f7e108b1c752787410ab0af32ada65ac7a64d0e914b0ee",
+    "native_production_changed": false
+  }
+}
