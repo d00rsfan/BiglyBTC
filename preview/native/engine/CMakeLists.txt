@@ -37,3 +37,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
 endif()
 
 target_sources(biglybtc_local_engine PRIVATE live_settings.cpp live_settings.hpp)
+
+target_sources(biglybtc_local_engine PRIVATE torrent_creator.cpp)
+find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+target_sources(biglybtc_profile PRIVATE ../adapters/file_operations.cpp ../adapters/file_operation_io.cpp)
+target_link_libraries(biglybtc_profile PRIVATE OpenSSL::Crypto)

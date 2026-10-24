@@ -1311,3 +1311,52 @@ target_link_libraries(biglybtc-queue-settings-roundtrip-driver PRIVATE biglybtc_
 target_compile_options(biglybtc-queue-settings-roundtrip-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
 # The original-Java handoff is a separate explicit generated-profile recipe;
 # do not run Java through every CTest/compiler lane.
+
+if(BIGLYBTC_LOCAL_ENGINE)
+  add_executable(biglybtc-torrent-creator-tests torrent_creator_tests.cpp)
+  target_link_libraries(biglybtc-torrent-creator-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar)
+  target_compile_options(biglybtc-torrent-creator-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_link_options(biglybtc-torrent-creator-tests PRIVATE "LINKER:--wrap=fsync")
+  add_test(NAME torrent-creator COMMAND biglybtc-torrent-creator-tests)
+  set_tests_properties(torrent-creator PROPERTIES TIMEOUT 120 LABELS "unit;engine;torrent")
+  add_executable(biglybtc-torrent-creator-driver torrent_creator_driver.cpp)
+  target_link_libraries(biglybtc-torrent-creator-driver PRIVATE biglybtc_local_engine)
+  target_compile_options(biglybtc-torrent-creator-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_executable(biglybtc-file-operations-tests file_operations_tests.cpp)
+  target_link_libraries(biglybtc-file-operations-tests PRIVATE biglybtc_profile OpenSSL::Crypto)
+  target_compile_options(biglybtc-file-operations-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_link_options(biglybtc-file-operations-tests PRIVATE "LINKER:--wrap=linkat")
+  add_test(NAME file-operations COMMAND biglybtc-file-operations-tests)
+  set_tests_properties(file-operations PROPERTIES TIMEOUT 120 LABELS "unit;storage;fileops")
+endif()
+if(BIGLYBTC_DESKTOP)
+  foreach(fileops_ui IN ITEMS file_operation_dialog torrent_creation_dialog)
+    string(REPLACE "_" "-" fileops_target "${fileops_ui}")
+    add_executable(biglybtc-${fileops_target}-tests ${fileops_ui}_tests.cpp)
+    set_target_properties(biglybtc-${fileops_target}-tests PROPERTIES AUTOMOC ON)
+    target_link_libraries(biglybtc-${fileops_target}-tests PRIVATE biglybtc_ui Qt6::Test)
+    target_compile_options(biglybtc-${fileops_target}-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME ${fileops_target} COMMAND biglybtc-${fileops_target}-tests)
+    set_tests_properties(${fileops_target} PROPERTIES LABELS "unit;ui;fileops" TIMEOUT 90 ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+  endforeach()
+endif()
+
+# Root appends inside the existing desktop tests area. No author CMake mutation.
+if(BIGLYBTC_DESKTOP AND BIGLYBTC_LOCAL_ENGINE AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-file-operations-host-tests file_operations_bridge_tests.cpp)
+  set_target_properties(biglybtc-file-operations-host-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-file-operations-host-tests PRIVATE
+    biglybtc_desktop_host biglybtc_local_engine biglybtc_profile Qt6::Test
+    LibtorrentRasterbar::torrent-rasterbar)
+  target_compile_options(biglybtc-file-operations-host-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME file-operations-host COMMAND biglybtc-file-operations-host-tests)
+  set_tests_properties(file-operations-host PROPERTIES
+    LABELS "unit;integration;fileops;runtime-bound" TIMEOUT 240
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()
+
+if(BIGLYBTC_LOCAL_ENGINE)
+  add_executable(biglybtc-file-operations-driver file_operations_driver.cpp)
+  target_link_libraries(biglybtc-file-operations-driver PRIVATE biglybtc_profile OpenSSL::Crypto)
+  target_compile_options(biglybtc-file-operations-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()

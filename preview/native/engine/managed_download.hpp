@@ -38,5 +38,7 @@ struct ManagedDownloadOptions {
   unsigned short ownedLoopbackPeerPort = 0;
   bool forceStart = false;
   bool queued = false;
+  // Queue-policy admission: verify under stop_when_ready, then retain pause.
+  bool manuallyPaused = false;
 };
 } // namespace biglybtc::engine

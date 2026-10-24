@@ -1,4 +1,5 @@
 #pragma once
+#include "file_operation_presentation.hpp"
 #include "options_presentation.hpp"
 #include "scheduler_presentation.hpp"
 
@@ -40,6 +41,8 @@ class QMenu;
 
 namespace biglybtc::ui {
 
+class FileOperationDialog;
+class TorrentCreationDialog;
 class OptionsDialog;
 class SchedulerDialog;
 class ClassicColumns;
@@ -106,6 +109,13 @@ public:
   void setOptionsSaved(OptionsSavePresentation);
   void rejectOptionsRequest(OptionsRequest);
   void rejectOptionsSave(const OptionsSubmission&);
+  void setFileOperationPlan(FileOperationPlanPresentation);
+  void setFileOperationResult(FileOperationResultPresentation);
+  void setTorrentCreationProgress(TorrentCreationProgressPresentation);
+  void setTorrentCreationResult(TorrentCreationResultPresentation);
+  void rejectFileOperationRequest(FileOperationRequest);
+  void rejectFileOperationSubmission(const FileOperationSubmission&);
+  void rejectTorrentCreationRequest(const TorrentCreationRequest&);
   void setIntakeDefaults(quint64 session, QString directory);
   void setBusy(bool);
   void setMessage(const QString&);
@@ -114,6 +124,11 @@ public:
   bool submitTorrentImport(QString metadata, QString destination, bool start);
   bool submitMagnetImport(QString uri, QString destination);
 signals:
+  void fileOperationPlanRequested(biglybtc::ui::FileOperationRequest);
+  void fileOperationExecuteRequested(biglybtc::ui::FileOperationSubmission);
+  void fileOperationCancelRequested(biglybtc::ui::FileOperationRequest);
+  void torrentCreateRequested(biglybtc::ui::TorrentCreationRequest);
+  void torrentCreateCancelRequested(biglybtc::ui::TorrentCreationRequest);
   void schedulerRequested(biglybtc::ui::SchedulerRequest);
   void schedulerSaveRequested(biglybtc::ui::SchedulerSubmission);
   void optionsRequested(biglybtc::ui::OptionsRequest);
@@ -189,6 +204,16 @@ private:
   void refreshColumnLayouts(bool initial = false);
   void queueColumnLayouts();
   void saveColumnLayout();
+  void openFileOperation(FileOperation);
+  void openTorrentCreation();
+  QPointer<FileOperationDialog> fileOperationDialog_;
+  QPointer<TorrentCreationDialog> torrentCreationDialog_;
+  std::array<QPointer<QAction>,4> fileOperationActions_;
+  QPointer<QAction> createTorrentAction_;
+  std::optional<FileOperationRequest> activeFileOperation_;
+  bool fileOperationExecuting_ = false;
+  std::optional<TorrentCreationRequest> activeTorrentCreation_;
+  quint64 creationDialogRevision_ = 0;
   void openOptions();
   void openScheduler();
   void queueScheduler();

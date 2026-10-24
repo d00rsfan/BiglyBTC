@@ -45,3 +45,6 @@ target_link_libraries(biglybtc_ui PUBLIC biglybtc_azureus_control)
 target_sources(biglybtc_ui PRIVATE connections_history_view.cpp connections_history_view.hpp protocol_share.hpp tracker_activity_history.hpp)
 
 target_sources(biglybtc_ui PRIVATE options_presentation.hpp options_dialog.hpp options_dialog.cpp)
+
+target_sources(biglybtc_ui PRIVATE file_operation_presentation.hpp file_operation_dialog.hpp file_operation_dialog.cpp
+  torrent_creation_dialog.hpp torrent_creation_dialog.cpp)

@@ -1152,6 +1152,7 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
     auto storage = detail::take(detail::ManagedStorage::prepare(lease, options.hash, *impl_->network));
     impl_->ensureSession();
     auto value = std::make_unique<Impl::Managed>(++impl_->operation, std::move(storage), options.hash);
+    value->manualPaused = options.manuallyPaused; value->status.manuallyPaused = options.manuallyPaused;
     auto parameters = value->storage.parameters();
     // ManagedStorage deliberately reconstructs checked original state instead
     // of restoring LT transfer totals. Never charge inherited totals twice.
@@ -1171,7 +1172,7 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
         "Exact managed transfer counters require the approved source ABI", storage::ErrorCode::Unsupported);
     detail::attachPeerPayloadObserver(parameters, impl_->peerPayloadLedger, impl_->operation);
     parameters.flags |= lt::torrent_flags::paused | lt::torrent_flags::duplicate_is_error;
-    if (impl_->queuePolicy) {
+    if (impl_->queuePolicy || options.manuallyPaused) {
       parameters.flags &= ~lt::torrent_flags::auto_managed;
       parameters.flags |= lt::torrent_flags::stop_when_ready;
     }
@@ -1192,7 +1193,7 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
     slot->second->status.retained = true;
     impl_->managedLease = &lease;
     impl_->phase = AccountingState::Active;
-    if (impl_->queuePolicy || !options.queued || options.forceStart) { slot->second->handle.resume(); }
+    if (impl_->queuePolicy || options.manuallyPaused || !options.queued || options.forceStart) { slot->second->handle.resume(); }
     // stop_when_ready atomically pauses at the end of checking, before payload
     // transfer; the sole owner poll then applies the selected original rule.
     impl_->session->resume();
@@ -1221,6 +1222,7 @@ std::expected<void, storage::Error> PersistentSession::pauseManaged(const core::
     if (impl_->queuePolicy) { impl_->sampleManaged(value); }
   }
   else {
+    if (!impl_->queuePolicy) { value.handle.unset_flags(lt::torrent_flags::stop_when_ready); }
     if (!value.forceStart && !impl_->queuePolicy) { value.handle.set_flags(lt::torrent_flags::auto_managed); }
     if (impl_->queuePolicy) {
       value.handle.unset_flags(lt::torrent_flags::auto_managed);
@@ -1240,6 +1242,7 @@ std::expected<void, storage::Error> PersistentSession::queueManaged(const core::
   }
   auto& value = *found->second;
   value.manualPaused = false; value.forceStart = forceStart;
+  if (!impl_->queuePolicy) { value.handle.unset_flags(lt::torrent_flags::stop_when_ready); }
   if (forceStart) { value.handle.unset_flags(lt::torrent_flags::auto_managed); value.handle.resume(); }
   else if (impl_->queuePolicy) {
     value.handle.unset_flags(lt::torrent_flags::auto_managed);
@@ -1256,6 +1259,23 @@ std::expected<void, storage::Error> PersistentSession::stopManaged(const core::T
   if (found == impl_->managed.end()) { return {}; }
   try { impl_->requestStop(*found->second); return {}; }
   catch (...) { return std::unexpected(storage::Error{storage::ErrorCode::Io, "Cannot request torrent flush"}); }
+}
+std::expected<void, storage::Error> PersistentSession::forgetManaged(const core::TorrentHash& hash, bool removePeerHints) {
+  if (!impl_->onWorker() || impl_->call || impl_->registered || impl_->closed || impl_->poisoned) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Managed retirement is unavailable"});
+  }
+  const auto found = impl_->managed.find(hash.hex());
+  if (found == impl_->managed.end()) { return {}; }
+  const auto& value = *found->second;
+  if (value.handle.is_valid() || value.removing || value.status.retained
+      || value.status.phase != ManagedPhase::Stopped || !value.flushed || !value.removed) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Torrent files are still retained or retirement is uncertified"});
+  }
+  if (value.status.failure) { return std::unexpected(*value.status.failure); }
+  impl_->managedByHandle.erase(value.handle);
+  impl_->managed.erase(found); // Releases ManagedStorage's path/file descriptors.
+  if (removePeerHints) { impl_->importPeers.erase(hash.hex()); }
+  return {};
 }
 std::optional<unsigned short> PersistentSession::tcpListenPort() const noexcept {
   if (!impl_->onWorker() || !impl_->session || impl_->closed || impl_->poisoned

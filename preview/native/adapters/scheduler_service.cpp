@@ -396,4 +396,31 @@ std::expected<void,Error> SchedulerService::revokeForManual(const ProfileLease& 
     p.snapshot.diagnostic.clear();p.warning();return {};
   });
 }
+std::expected<bool,Error> SchedulerService::rebindOwnedPause(const ProfileLease& lease,
+    const core::TorrentHash& hash,std::uint64_t oldToken,std::uint64_t newToken,std::uint64_t manualRevision) {
+  return guarded([&]()->std::expected<bool,Error>{
+    auto& p=*impl_;p.held(lease);
+    if((hash.bytes().size()!=20&&hash.bytes().size()!=32)||!oldToken||newToken<=oldToken){
+      fail(ErrorCode::InvalidFormat,"Invalid scheduler pause admission transfer");}
+    if(p.pending||p.intent.bytes||p.poisoned||p.snapshot.interruptedAction){
+      fail(ErrorCode::Busy,"An unsettled scheduler action prevents pause admission transfer");}
+    unchanged(lease.directoryHandle(),"biglybt.config",p.config,ConfigMaximum);
+    if(p.data.get()>=0){
+      unchanged(p.data.get(),XmlName,p.xml,XmlMaximum);
+      unchanged(p.data.get(),OwnershipName,p.ownership,scheduler::OwnershipFile::MaximumBytes);
+      unchanged(p.data.get(),IntentName,p.intent,IntentMaximum);
+    }
+    const auto found=p.authority.find(hash.hex());
+    if(found==p.authority.end()){return false;}
+    if(found->second!=std::pair{oldToken,manualRevision}){
+      fail(ErrorCode::Conflict,"Scheduler pause authority does not match the retired admission");}
+    const auto owned=scheduler::OwnershipFile::read(p.snapshot.ownershipBytes);
+    if(!owned){fail(ErrorCode::Conflict,"Acknowledged scheduler pause source is invalid");}
+    const auto present=owned->contains(hashBytes(hash));
+    if(!present||!*present){fail(ErrorCode::Conflict,"Acknowledged scheduler pause record is unavailable");}
+    // advance() checks exhaustion before mutating anything and invalidates both
+    // issued actions and rate acknowledgements bound to the old admission.
+    p.advance();found->second={newToken,manualRevision};return true;
+  });
+}
 } // namespace biglybtc::storage

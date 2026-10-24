@@ -99,6 +99,13 @@ public:
   // Call BEFORE every explicit user action. In-memory authority is revoked even
   // if IO fails; caller still honors the user's command and surfaces the error.
   std::expected<void, Error> revokeForManual(const ProfileLease&, const core::TorrentHash&);
+  // After a committed move/relink and actual paused re-admission only: transfer
+  // existing acknowledged same-session pause authority to the new admission.
+  // False means no authority exists (legacy records never mint authority).
+  // Tokens must advance; journal/source CAS or identity mismatches reject. No
+  // original ownership bytes are written; all outstanding plans become stale.
+  std::expected<bool, Error> rebindOwnedPause(const ProfileLease&, const core::TorrentHash&,
+      std::uint64_t oldToken, std::uint64_t newToken, std::uint64_t manualRevision);
 private:
   struct Impl;
   explicit SchedulerService(std::unique_ptr<Impl>);

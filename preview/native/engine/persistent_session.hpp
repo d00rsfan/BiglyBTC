@@ -121,6 +121,9 @@ public:
   std::expected<void, storage::Error> pauseManaged(const core::TorrentHash&, bool paused);
   std::expected<void, storage::Error> queueManaged(const core::TorrentHash&, bool forceStart, bool queued);
   std::expected<void, storage::Error> stopManaged(const core::TorrentHash&);
+  // Release retained path descriptors/obsolete overlay only after successful
+  // flush, exact handle removal and compatible checkpoint. Owner counters stay.
+  std::expected<void, storage::Error> forgetManaged(const core::TorrentHash&, bool removePeerHints = false);
   std::vector<ManagedDownloadStatus> managedDownloads() const;
   bool managedAvailable() const noexcept;
   std::optional<unsigned short> tcpListenPort() const noexcept;

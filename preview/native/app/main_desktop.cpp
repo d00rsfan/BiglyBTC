@@ -122,6 +122,15 @@ int main(int argc, char** argv) {
     QObject::connect(&window, &Window::refreshRequested, &bridge, &Bridge::refresh);
     QObject::connect(&window, &Window::downloadActionRequested, &bridge, &Bridge::downloadAction);
     QObject::connect(&window, &Window::filePolicyRequested, &bridge, &Bridge::filePolicy);
+    QObject::connect(&window,&Window::fileOperationPlanRequested,&bridge,[&](biglybtc::ui::FileOperationRequest r){if(!bridge.prepareFileOperation(r)){window.rejectFileOperationRequest(r);}});
+    QObject::connect(&window,&Window::fileOperationExecuteRequested,&bridge,[&](biglybtc::ui::FileOperationSubmission r){if(!bridge.executeFileOperation(r)){window.rejectFileOperationSubmission(r);}});
+    QObject::connect(&window,&Window::fileOperationCancelRequested,&bridge,&Bridge::cancelFileOperation);
+    QObject::connect(&window,&Window::torrentCreateRequested,&bridge,[&](biglybtc::ui::TorrentCreationRequest r){if(!bridge.createTorrent(r)){window.rejectTorrentCreationRequest(r);}});
+    QObject::connect(&window,&Window::torrentCreateCancelRequested,&bridge,&Bridge::cancelTorrentCreation);
+    QObject::connect(&bridge,&Bridge::fileOperationPrepared,&window,&Window::setFileOperationPlan);
+    QObject::connect(&bridge,&Bridge::fileOperationFinished,&window,&Window::setFileOperationResult);
+    QObject::connect(&bridge,&Bridge::torrentCreationProgress,&window,&Window::setTorrentCreationProgress);
+    QObject::connect(&bridge,&Bridge::torrentCreated,&window,&Window::setTorrentCreationResult);
     QObject::connect(&window, &Window::torrentImportRequested, &bridge, &Bridge::torrentImport);
     QObject::connect(&window, &Window::magnetImportRequested, &bridge, &Bridge::magnetImport);
     QObject::connect(&window, &Window::continueRequested, &bridge, &Bridge::continueDownload);

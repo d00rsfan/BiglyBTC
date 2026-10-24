@@ -1,4 +1,5 @@
 #pragma once
+#include "file_operation_presentation.hpp"
 #include "options_presentation.hpp"
 #include "scheduler_presentation.hpp"
 
@@ -54,6 +55,11 @@ public:
   bool saveScheduler(ui::SchedulerSubmission);
   bool loadOptions(ui::OptionsRequest);
   bool saveOptions(ui::OptionsSubmission);
+  bool prepareFileOperation(ui::FileOperationRequest);
+  bool executeFileOperation(ui::FileOperationSubmission);
+  void cancelFileOperation(ui::FileOperationRequest);
+  bool createTorrent(ui::TorrentCreationRequest);
+  void cancelTorrentCreation(ui::TorrentCreationRequest);
   bool refresh();
   bool savedServices(quint64 request);
   bool statistics(quint64 session, quint64 request);
@@ -72,6 +78,10 @@ public:
   bool closeSession();
   bool busy() const { return busy_; }
 signals:
+  void fileOperationPrepared(biglybtc::ui::FileOperationPlanPresentation);
+  void fileOperationFinished(biglybtc::ui::FileOperationResultPresentation);
+  void torrentCreationProgress(biglybtc::ui::TorrentCreationProgressPresentation);
+  void torrentCreated(biglybtc::ui::TorrentCreationResultPresentation);
   void schedulerReady(biglybtc::ui::SchedulerPresentation);
   void schedulerSaved(biglybtc::ui::SchedulerSavePresentation);
   void optionsReady(biglybtc::ui::OptionsPresentation);
@@ -106,6 +116,7 @@ signals:
 private:
   struct Host;
   bool dispatch(std::move_only_function<void(std::stop_token)> operation, bool recoverLibrarySnapshot = true, bool closingOperation = false);
+  void creationProgress(ui::TorrentCreationProgressPresentation);
   void ready(ui::Presentation snapshot, QString message = {});
   void failed(QString message);
   void progress(ui::Telemetry update);
@@ -163,6 +174,10 @@ private:
   std::optional<ui::LiveSpeedManagerPresentation> latestLiveSpeed_;
   bool liveSpeedDeliveryQueued_ = false;
   SchedulerFactory schedulerFactory_;
+  std::optional<ui::FileOperationRequest> guiFileOperation_;
+  std::optional<ui::TorrentCreationRequest> guiCreation_;
+  ui::TorrentCreationProgressPresentation latestCreationProgress_;
+  bool creationProgressQueued_ = false;
   bool busy_ = false;
   // GUI-thread publication only; worker commands capture the requested identity.
   quint64 publishedColumnLayoutSession_ = 0;

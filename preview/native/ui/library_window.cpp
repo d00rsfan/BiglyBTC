@@ -1,3 +1,5 @@
+#include "file_operation_dialog.hpp"
+#include "torrent_creation_dialog.hpp"
 #include "library_window.hpp"
 #include "options_dialog.hpp"
 #include "scheduler_dialog.hpp"
@@ -322,7 +324,17 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   pauseResume_->setToolTip(tr("Pause or resume every selected torrent when all permit the same action."));
   connect(pauseResume_.data(), &QAction::triggered, this, [this] { dispatchDownloadAlias(true); });
   toolbar->addAction(pauseResume_.data());
-  toolbar->addAction(unavailable(torrent, tr("Delete"), QStringLiteral("remove"), QStyle::SP_TrashIcon));
+  const std::array<QString,4> operationNames{tr("Remove Torrent…"),tr("Remove and Delete Data…"),tr("Move Data…"),tr("Set Data Location…")};
+  const std::array<QString,4> operationIds{QStringLiteral("classic-remove"),QStringLiteral("classic-delete-data"),QStringLiteral("classic-move-data"),QStringLiteral("classic-set-data-location")};
+  for(std::size_t index=0;index<operationNames.size();++index){
+    auto* item=torrent->addAction(operationNames[index]);item->setObjectName(operationIds[index]);item->setEnabled(false);
+    fileOperationActions_[index]=item;connect(item,&QAction::triggered,this,[this,index]{openFileOperation(static_cast<FileOperation>(index));});
+  }
+  fileOperationActions_[0]->setShortcut(QKeySequence(QStringLiteral("Delete")));
+  toolbar->addAction(fileOperationActions_[0]);
+  createTorrentAction_=file->addAction(tr("Create Torrent…"));createTorrentAction_->setObjectName(QStringLiteral("classic-create-torrent"));
+  createTorrentAction_->setShortcut(QKeySequence(QStringLiteral("Ctrl+N")));createTorrentAction_->setEnabled(false);
+  connect(createTorrentAction_,&QAction::triggered,this,&LibraryWindow::openTorrentCreation);
   auto allCommand = [this, transfers](core::DownloadAction action, const QString& label,
       const QString& id, QStyle::StandardPixmap icon) {
     auto* item = transfers->addAction(style()->standardIcon(icon), label);
@@ -1017,6 +1029,9 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
   columnSession_ = session;
+  activeFileOperation_.reset();activeTorrentCreation_.reset();
+  if(fileOperationDialog_){const auto dialog=fileOperationDialog_;dialog->invalidateSession();if(!guard){return;}if(dialog){dialog->close();}if(!guard){return;}}
+  if(torrentCreationDialog_){const auto dialog=torrentCreationDialog_;dialog->invalidateSession();if(!guard){return;}if(dialog){dialog->close();}if(!guard){return;}}
   defaultSaveDirectory_.clear();
   pendingSchedulerLoad_.reset(); activeSchedulerLoad_.reset(); activeSchedulerSave_.reset();
   if (schedulerDialog_) { schedulerDialog_->invalidateSession(); schedulerDialog_->close(); }
@@ -1329,6 +1344,10 @@ void LibraryWindow::updateActions() {
       && !activeColumnRequest_ && !pendingColumnRequest_ && !activeColumnSave_ && !activeStatisticsRequest_
       && columnSaveRequest_ != std::numeric_limits<quint64>::max());
   reloadColumns_->setEnabled(!closing_ && columnSession_ != 0 && columnRequest_ != std::numeric_limits<quint64>::max());
+  const auto fileTargets=selectedDownloadTargets();
+  const bool fileActionsAllowed=!closing_&&!busy_&&!offlinePreview_&&columnSession_&&fileTargets&&fileTargets->size()==1;
+  for(const auto& action:fileOperationActions_){if(action){action->setEnabled(fileActionsAllowed);}}
+  if(createTorrentAction_){createTorrentAction_->setEnabled(!closing_&&!busy_&&!offlinePreview_&&columnSession_);}
   if (schedulerAction_) { schedulerAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }
   if (optionsAction_) { optionsAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }
   queueDownloadActions();
@@ -1739,6 +1758,15 @@ void LibraryWindow::setDetails(const Details& details) {
 void LibraryWindow::setMessage(const QString& message) { message_->setText(message.left(8192)); }
 void LibraryWindow::setBusy(bool value) {
   QPointer<LibraryWindow> optionsGuard(this);
+  if(fileOperationDialog_){fileOperationDialog_->setBusy(value);}if(!optionsGuard){return;}
+  if(torrentCreationDialog_){torrentCreationDialog_->setBusy(value);}if(!optionsGuard){return;}
+  if(!value&&activeFileOperation_&&fileOperationDialog_&&fileOperationDialog_->pending()){
+    const auto request=*activeFileOperation_;
+    if(fileOperationExecuting_){FileOperationSubmission v{fileOperationDialog_->plan(),false};rejectFileOperationSubmission(v);}
+    else{rejectFileOperationRequest(request);}
+    if(!optionsGuard){return;}
+  }
+  if(!value&&activeTorrentCreation_&&torrentCreationDialog_&&torrentCreationDialog_->pending()){rejectTorrentCreationRequest(*activeTorrentCreation_);if(!optionsGuard){return;}}
   if (schedulerDialog_) { schedulerDialog_->setBusy(value); }
   if (!optionsGuard) { return; }
   if (optionsDialog_) { optionsDialog_->setBusy(value); }
@@ -1817,6 +1845,8 @@ void LibraryWindow::setBusy(bool value) {
 }
 void LibraryWindow::closeEvent(QCloseEvent* event) {
   QPointer<LibraryWindow> optionsGuard(this);
+  if(fileOperationDialog_&&fileOperationDialog_->isVisible()&&!fileOperationDialog_->close()){event->ignore();return;}if(!optionsGuard){return;}
+  if(torrentCreationDialog_&&torrentCreationDialog_->isVisible()&&!torrentCreationDialog_->close()){event->ignore();return;}if(!optionsGuard){return;}
   if (schedulerDialog_ && schedulerDialog_->isVisible() && !schedulerDialog_->close()) { event->ignore(); return; }
   if (!optionsGuard) { return; }
   pendingSchedulerLoad_.reset();
@@ -1870,7 +1900,7 @@ void LibraryWindow::popup(QTableView* table, const QPoint& point) {
   menu->addSeparator();
   menu->addAction(startStop_.data());
   menu->addAction(pauseResume_.data());
-  menu->addAction(findChild<QAction*>(QStringLiteral("classic-remove")));
+  for(const auto& action:fileOperationActions_){if(action){menu->addAction(action);}}
   menu->addSeparator();
   menu->addAction(continue_);
   menu->addAction(cancel_);
@@ -1995,4 +2025,5 @@ void LibraryWindow::setIntakeDefaults(quint64 session, QString directory) {
   if (!closing_ && session && session == columnSession_) { defaultSaveDirectory_ = std::move(directory); }
 }
 
+#include "file_operations_window.inc"
 } // namespace biglybtc::ui

@@ -1,4 +1,7 @@
 #include "torrent_intake.hpp"
+#include "file_operations.hpp"
+#include "torrent_creator.hpp"
+#include <thread>
 #include "magnet_intake.hpp"
 #include "file_policy_commands.hpp"
 #include "library_commands.hpp"
@@ -262,6 +265,9 @@ struct SessionBridge::Host {
   QString intakeDefault;
   bool intakeDefaultLoaded = false;
 
+  std::optional<storage::PreparedFileOperation> filePlan;
+  ui::FileOperationPlanPresentation filePlanPacket;
+  bool fileRecoveryRequired = false;
   std::unique_ptr<storage::SchedulerService> scheduler;
   bool schedulerRestoreDefaults=false;
   bool schedulerAttempted=false, schedulerTagsLoaded=false, schedulerTagsAvailable=false;
@@ -794,6 +800,7 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
   return dispatch([this, profile = std::move(profile), ownedPeerPort](std::stop_token stop) {
     if (host_) { throw Failure{{storage::ErrorCode::Conflict, "A profile is already open"}}; }
     auto lease = take(storage::ProfileLease::acquire(profile));
+    static_cast<void>(take(storage::recoverFileOperation(lease)));
     static_cast<void>(take(storage::recoverTorrentIntake(lease)));
     const auto session = reserveColumnLayoutSession();
     host_ = std::make_unique<Host>(profile, ownedPeerPort, std::move(lease), session);
@@ -820,6 +827,7 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
     auto lease = take(storage::ProfileLease::acquire(profile));
     host_ = std::make_unique<Host>(profile, 0, std::move(lease), reserveColumnLayoutSession());
     host_->normalNetwork = true;
+    static_cast<void>(take(storage::recoverFileOperation(host_->lease)));
     static_cast<void>(take(storage::recoverTorrentIntake(host_->lease)));
     auto inventory = storage::ConfigFile::load(host_->lease, "downloads.config");
     if (!inventory && inventory.error().code == storage::ErrorCode::Missing) {
@@ -852,6 +860,7 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
     if (!host_ || !host_->engine || !host_->lastSnapshot) {
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
+    if (host_->fileRecoveryRequired) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
     if (take(storage::recoverTorrentIntake(host_->lease))) {
       throw Failure{{storage::ErrorCode::Conflict, "Recovered a pending torrent import; library refreshed"}};
     }
@@ -965,6 +974,7 @@ bool SessionBridge::torrentImport(QString metadata, QString destination, bool st
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
     checkpoint(stop);
+    if (host_->fileRecoveryRequired) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
     static_cast<void>(take(storage::recoverTorrentIntake(host_->lease)));
     const auto hash = take(storage::importTorrent(host_->lease,
         std::filesystem::path(metadata.toUtf8().toStdString()),
@@ -989,6 +999,7 @@ bool SessionBridge::magnetImport(QString uri, QString destination) {
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
     checkpoint(stop);
+    if (host_->fileRecoveryRequired) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
     static_cast<void>(take(storage::recoverTorrentIntake(host_->lease)));
     const auto intent = take(engine::parseMagnetIntent(uri.toUtf8().toStdString(),
         std::filesystem::path(destination.toUtf8().toStdString()), false, host_->networkPolicy));
@@ -1024,6 +1035,7 @@ bool SessionBridge::filePolicy(ui::Target target, ui::FileIndices selected, int 
     if (!host_ || !host_->engine || !host_->engine->managedAvailable()) {
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
+    if (host_->fileRecoveryRequired) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
     if (take(storage::recoverTorrentIntake(host_->lease))) {
       throw Failure{{storage::ErrorCode::Conflict, "Recovered a pending torrent import; library refreshed"}};
     }
@@ -2505,6 +2517,7 @@ bool SessionBridge::saveScheduler(ui::SchedulerSubmission value) {
 void SessionBridge::tickScheduler() noexcept {
   if(!host_||!host_->engine){return;}
   try{
+    if(host_->fileRecoveryRequired){return;}
     ensureScheduler();if(!host_->scheduler){return;}
     if(!host_->scheduler->snapshot().settings.enabled&&host_->schedulerPaused.empty()&&!host_->schedulerRestoreDefaults){return;}
     const auto now=std::chrono::steady_clock::now();
@@ -2599,4 +2612,5 @@ void SessionBridge::tickScheduler() noexcept {
   }
 }
 
+#include "file_operations_bridge.inc"
 } // namespace biglybtc::app
