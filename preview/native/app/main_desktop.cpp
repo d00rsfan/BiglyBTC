@@ -75,6 +75,15 @@ int main(int argc, char** argv) {
     biglybtc::app::SessionBridge bridge(nullptr, std::move(countryFactory));
     using Window = biglybtc::ui::LibraryWindow;
     using Bridge = biglybtc::app::SessionBridge;
+    QObject::connect(&bridge, &Bridge::optionsReady, &window, &Window::setOptions);
+    QObject::connect(&bridge, &Bridge::optionsSaved, &window, &Window::setOptionsSaved);
+    QObject::connect(&bridge, &Bridge::intakeDefaultsReady, &window, &Window::setIntakeDefaults);
+    QObject::connect(&window, &Window::optionsRequested, &bridge, [&](biglybtc::ui::OptionsRequest request) {
+      if (!bridge.loadOptions(request)) { window.rejectOptionsRequest(request); }
+    });
+    QObject::connect(&window, &Window::optionsSaveRequested, &bridge, [&](biglybtc::ui::OptionsSubmission submission) {
+      if (!bridge.saveOptions(submission)) { window.rejectOptionsSave(submission); }
+    });
     QObject::connect(&bridge, &Bridge::snapshotReady, &window, &Window::setPresentation);
     QObject::connect(&bridge, &Bridge::progressReady, &window, &Window::setTelemetry);
     QObject::connect(&bridge, &Bridge::detailsReady, &window, &Window::setDetails);

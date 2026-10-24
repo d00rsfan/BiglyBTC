@@ -1,0 +1,13 @@
+{
+  "initial_core_header_sha256": "8f6553921811b0791306c6afb26c9c65b71663e1e533253518b1a5092667b10e",
+  "intermediate_core_header_sha256": "d94f9bd82c76c863f8549a2a91fae3fbdfdd1711b4502378d81448298e5f7ef6",
+  "final_core_header_sha256": "c09602383bd52bcfb2795001ceb571a7005128511fc3f4388947326a5b2bc1ba",
+  "changes": [
+    "RenameIncomplete/IncompleteSuffix applicability NextAdmission to OriginalOnly with precise native naming limitation help",
+    "LAN Speed Enabled original default true with explicit native missing fallback divergence help"
+  ],
+  "api_or_id_changes": false,
+  "catalog_fields": 50,
+  "initial_before_image": "header-amendment/before/application_settings.hpp",
+  "intermediate_before_image": "header-amendment/rename-incomplete-before-lan.hpp"
+}

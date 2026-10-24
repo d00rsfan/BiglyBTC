@@ -1,0 +1,77 @@
+{
+  "case": "options-close-gcc",
+  "build": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+  "tests": [
+    "options-host",
+    "options-dialog",
+    "desktop-model-and-lifecycle",
+    "desktop-files-model"
+  ],
+  "commands": [
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "-S",
+        "preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/install;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr;/home/yurii/Java/BiglyBTC/build/dependencies/country/sysroot/usr;/opt/Qt/6.12.0/gcc_64",
+        "-DBIGLYBTC_COUNTRY_MMDB_FIXTURE=/home/yurii/Java/BiglyBTC/build/dependencies/country/GeoIP2-Country-Test.mmdb"
+      ],
+      "exit": 0,
+      "seconds": 3.92,
+      "log": "options-close-gcc-configure.txt"
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "--parallel",
+        "3",
+        "--target",
+        "biglybtc-options-host-tests",
+        "biglybtc-options-dialog-tests",
+        "biglybtc-desktop-tests",
+        "biglybtc-desktop-tests",
+        "BiglyBTC",
+        "BiglyBTC-headless",
+        "biglybtc-preview-smoke",
+        "biglybtc-settings-roundtrip-driver",
+        "--",
+        "-k",
+        "0"
+      ],
+      "exit": 0,
+      "seconds": 32.54,
+      "log": "options-close-gcc-build.txt"
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "-R",
+        "^(options\\-host|options\\-dialog|desktop\\-model\\-and\\-lifecycle|desktop\\-files\\-model)$",
+        "--no-tests=error",
+        "--output-on-failure",
+        "--verbose",
+        "--output-junit",
+        "/home/yurii/Java/BiglyBT/build/options-20261024/options-close-gcc.xml"
+      ],
+      "exit": 0,
+      "seconds": 2.52,
+      "log": "options-close-gcc-tests.txt"
+    }
+  ],
+  "source_manifest_sha256": "8c12cbe4d83812af4a17670fa6a995c2798d23c335c94edd4509a3c990b05181"
+}

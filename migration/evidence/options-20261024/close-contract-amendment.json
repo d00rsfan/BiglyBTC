@@ -1,0 +1,15 @@
+{
+  "reason": "Propagate actual immediate dialog-close approval to QWidget callers; parent window closes once. Pending save/dirty prompt still veto.",
+  "files": [
+    {
+      "path": "preview/native/ui/options_dialog.cpp",
+      "before_sha256": "53fa0774d47329b7b8037b7a0c233457a6a8883464561e54c4c9a6800e9ad9d6",
+      "sha256": "02b24f155a541995ccc2231d060bd26e207f70d4c299bb8486d465a3ea9cb689"
+    },
+    {
+      "path": "preview/native/tests/options_host_tests.cpp",
+      "before_sha256": "9f882cb4cfcf232e493631e3b5c8d8c8f261d919e994199c9985a7608803b170",
+      "sha256": "57dc703bebe0cacd0a5a65b0bb8a990a281bf83488a88c909494af0e0b0bf12d"
+    }
+  ]
+}

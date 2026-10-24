@@ -1,0 +1,23 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original": {
+    "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194",
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin.java": "96f206eb132f85d9f9c1a1d35ab0eb85e33e76d75865e2c979c37139dfc66111",
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopConfigModel.java": "3c46e88ab04ee8afeba60a6fd02a7c293be15ec4f382f54922402fe1234afe55"
+  },
+  "LT_version": "2.0.12",
+  "LT_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "LT": {
+    "include/libtorrent/settings_pack.hpp": "101e5bd1561765eedfe498e753cc23cb66611bf8a47b66455497fb91e7514d67",
+    "src/settings_pack.cpp": "059759d20da14fc8ada6177df77562addda1a033ef6fe08edf631f757dfd9bf4",
+    "src/session_impl.cpp": "e33778939a03634f7ca588752f924afcdf790ac48ddd2a127af71e00f34d1c65",
+    "src/session_handle.cpp": "4982bbac9aa578949623ee62781b124900b75c95ca99d5fb1adc410ef728b74e"
+  },
+  "native": {
+    "engine/network_policy.hpp": "bfeedf4dbf85731a33a47e21ee5e9f39e683fddf118c3d83995fe2d0ed5cade2",
+    "engine/network_policy.cpp": "f78b9c0d10968802f7fdd026a7d6ab9a2fe5103e803cd2ca08b5b0b0bc152b00",
+    "engine/effective_rate_limits.hpp": "86142c426bb841705d1fc4dc74eb7ba20eb625bb505e1a7077f17548c506aefa",
+    "engine/effective_rate_limits.cpp": "d9648d7ce0f7f5db6b89381987462850978df1ae67a9ec3f3ef54e491657d1eb",
+    "tests/owned_engine_fixture.hpp": "22e43b024c87175358c0a5ca50f9b482547704acfc61622e1f090acab35bde5e"
+  }
+}

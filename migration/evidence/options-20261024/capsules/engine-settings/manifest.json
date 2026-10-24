@@ -1,0 +1,28 @@
+{
+  "status": "FROZEN_SOURCE_STAGING_ONLY",
+  "source_directory": "staging",
+  "before_sha256": {
+    "engine/live_settings.cpp": null,
+    "engine/live_settings.hpp": null,
+    "engine/persistent_session.cpp": "a3bb2fbd0f472314aa1b30d0a7d9335acf06e05b16e45bd4c9318659128beaf9",
+    "engine/persistent_session.hpp": "8bf60c5f8e4699cfce25810dc2b355b90869c04b454f4763f15f4cc965bc7878",
+    "tests/engine_live_settings_tests.cpp": null
+  },
+  "source_sha256": {
+    "engine/live_settings.cpp": "dbf769390a53a6206b672de2ca1f1472d8afecec33f9e66df9eaa7154e2b6544",
+    "engine/live_settings.hpp": "994986cd1837e623db60b5663a8a49f4737766f6ee3457b10af0c3c6916fa7a7",
+    "engine/persistent_session.cpp": "5839a934418a474f30961d51b883103fed7ee420d36cb66a90bea78a815f1ff4",
+    "engine/persistent_session.hpp": "4abfb496bfccd4c7f2150f819ab7efc43162e911cb6bc29c327681e7fab24e14",
+    "tests/engine_live_settings_tests.cpp": "bc0500d7f654b67f1c244453c974bb2485c309f96918beadd5d8dc719c805045"
+  },
+  "changes_patch_sha256": "08ddc315eafde50e3401d1edec2f42958951b67d651cdda8b258b8f6ceda4c34",
+  "source_pins_sha256": "43caff6eb6ec05fa9b3ce24f1a069f2b27f93d843c78b5d5cc783cad662bd221",
+  "assessment_sha256": "7088f019e23a7e252fee629404917244e21947dd74a154bd66d966aa9e58cff1",
+  "adoption_sha256": "6b870004650ec6f5152d96649550a78f05352375b60f9f8b4278b473eefc4a2c",
+  "source_behavioral_methods": 5,
+  "actual_qt_rows": null,
+  "actual_assertions": null,
+  "author_native_writes": 0,
+  "author_builds_tests_Java_Git": 0,
+  "new_runtime_or_original_scheduler_equality_credit": 0
+}

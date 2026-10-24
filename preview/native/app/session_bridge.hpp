@@ -1,4 +1,5 @@
 #pragma once
+#include "options_presentation.hpp"
 
 #include "biglybtc/executor.hpp"
 #include "column_layout_presentation.hpp"
@@ -47,6 +48,8 @@ public:
   bool torrentImport(QString metadata, QString destination, bool start);
   bool magnetImport(QString uri, QString destination);
   bool filePolicy(ui::Target, ui::FileIndices, int priority, bool skipped);
+  bool loadOptions(ui::OptionsRequest);
+  bool saveOptions(ui::OptionsSubmission);
   bool refresh();
   bool savedServices(quint64 request);
   bool statistics(quint64 session, quint64 request);
@@ -65,6 +68,9 @@ public:
   bool closeSession();
   bool busy() const { return busy_; }
 signals:
+  void optionsReady(biglybtc::ui::OptionsPresentation);
+  void optionsSaved(biglybtc::ui::OptionsSavePresentation);
+  void intakeDefaultsReady(quint64 session, QString directory);
   void snapshotReady(biglybtc::ui::Presentation);
   void progressReady(biglybtc::ui::Telemetry);
   void detailsReady(biglybtc::ui::Details);

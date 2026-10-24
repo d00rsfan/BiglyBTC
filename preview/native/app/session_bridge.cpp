@@ -4,6 +4,8 @@
 #include "library_commands.hpp"
 #include "network_policy.hpp"
 #include "session_bridge.hpp"
+#include "application_settings.hpp"
+#include "../engine/live_settings.hpp"
 #include "owned_azureus_service.hpp"
 #include "owned_dht_accounting.hpp"
 #include "live_speed_mapper_binding.hpp"
@@ -243,6 +245,12 @@ struct SessionBridge::Host {
   std::optional<storage::RecoverySource> columnBaselineSource{};
   bool columnBaselineMissing = false;
   std::stop_token columnBaselineReadStop{};
+
+  std::optional<storage::ApplicationSettingsSnapshot> optionsBaseline;
+  quint64 optionsRevision = 0;
+  std::stop_token optionsReadStop;
+  QString intakeDefault;
+  bool intakeDefaultLoaded = false;
 
   Host(std::filesystem::path p, unsigned short port, storage::ProfileLease held, quint64 session)
       : profile(std::move(p)), peerPort(port), lease(std::move(held)), columnLayoutSession(session) {}
@@ -564,7 +572,14 @@ SessionBridge::~SessionBridge() {
   if (current_) { current_->cancel(); }
   worker_.requestShutdown();
 }
+namespace { QString optionDefaultPath(const storage::ApplicationSettingsSnapshot&); engine::LiveQueueLimits optionQueues(const core::Document&); }
+
 void SessionBridge::ready(ui::Presentation snapshot, QString message) {
+  if (host_ && !host_->intakeDefaultLoaded) {
+    host_->intakeDefaultLoaded = true;
+    auto settings = storage::readApplicationSettings(host_->lease);
+    if (settings) { host_->intakeDefault = optionDefaultPath(*settings); }
+  }
   if (host_) {
     const auto notice = host_->pendingNotice();
     if (!notice.isEmpty()) { message = message.isEmpty() ? notice : message + QLatin1Char('\n') + notice; }
@@ -572,7 +587,7 @@ void SessionBridge::ready(ui::Presentation snapshot, QString message) {
   publishManualTags(); // Rejoin cached tags after an actual library revision change; no IO.
   // host_ is worker-owned. Publish its immutable identity by value on the GUI.
   const auto session = host_ ? host_->columnLayoutSession : quint64{0};
-  QMetaObject::invokeMethod(this, [this, snapshot = std::move(snapshot), message = std::move(message), session] {
+  QMetaObject::invokeMethod(this, [this, snapshot = std::move(snapshot), message = std::move(message), session, directory = host_ ? host_->intakeDefault : QString{}] {
     QPointer<SessionBridge> guard(this);
     if (session != 0 && publishedColumnLayoutSession_ == 0) {
       publishedColumnLayoutSession_ = session;
@@ -586,6 +601,8 @@ void SessionBridge::ready(ui::Presentation snapshot, QString message) {
     emit busyChanged(false);
     if (!guard) { return; }
     emit snapshotReady(snapshot);
+    if (!guard) { return; }
+    emit intakeDefaultsReady(session, directory);
     if (!guard) { return; }
     if (!message.isEmpty()) { emit messageReady(message); }
   }, Qt::QueuedConnection);
@@ -1627,6 +1644,8 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
     auto applied = (*owner)->configureNetwork(*policy);
     if (!applied) { throw Failure{applied.error()}; }
     host_->networkPolicy = std::move(*policy);
+    auto live = (*owner)->applyLiveSettings(host_->networkPolicy, config ? optionQueues(config->document()) : engine::LiveQueueLimits{});
+    if (!live) { throw Failure{live.error()}; }
   }
   if (!(*owner)->startIdle(host_->lease)) {
     throw Failure{{storage::ErrorCode::Io, "Cannot initialize the native idle session"}};
@@ -2073,4 +2092,156 @@ void SessionBridge::closeFailed(QString message) {
   }, Qt::QueuedConnection);
 }
 void SessionBridge::cancel() { if (current_ && !closingSession_) { current_->cancel(); } }
+
+namespace {
+engine::LiveQueueLimits optionQueues(const core::Document& document) {
+  engine::LiveQueueLimits result;
+  for (const auto& [key, slot] : {std::pair{"max downloads", &result.maximumDownloads},
+                                std::pair{"max active torrents", &result.maximumActive}}) {
+    if (const auto* value = document.find(key)) {
+      if (value->type != core::Node::Type::Integer || value->integer < 0 || value->integer > 1000000) {
+        throw Failure{{storage::ErrorCode::InvalidFormat, std::string("Invalid setting: ") + key}};
+      }
+      *slot = static_cast<int>(value->integer);
+    }
+  }
+  return result;
+}
+ui::OptionsPresentation optionPacket(const storage::ApplicationSettingsSnapshot& snapshot,
+    quint64 session, quint64 request, quint64 revision, bool restart) {
+  auto values = std::make_shared<ui::OptionsValues>();
+  values->fields.reserve(snapshot.fields.size());
+  for (const auto& field : snapshot.fields) {
+    ui::OptionsFieldState state;
+    switch (field.state) {
+      case storage::SettingState::Defaulted: state = ui::OptionsFieldState::Defaulted; break;
+      case storage::SettingState::Stored: state = ui::OptionsFieldState::Stored; break;
+      case storage::SettingState::InvalidType: state = ui::OptionsFieldState::InvalidType; break;
+      case storage::SettingState::OutOfRange: state = ui::OptionsFieldState::OutOfRange; break;
+      case storage::SettingState::UnavailableDefault: state = ui::OptionsFieldState::UnavailableDefault; break;
+      default: throw Failure{{storage::ErrorCode::InvalidFormat, "Unknown configuration field state"}};
+    }
+    values->fields.push_back({field.id, state, field.value});
+  }
+  auto packet = std::make_shared<ui::OptionsPacket>();
+  packet->session = session; packet->request = request; packet->revision = revision;
+  packet->snapshot = std::move(values); packet->restartRequired = restart;
+  return packet;
+}
+QString optionDefaultPath(const storage::ApplicationSettingsSnapshot& snapshot) {
+  for (const auto& field : snapshot.fields) {
+    if (field.id != core::SettingId::DefaultSavePath || !field.value
+        || (field.state != storage::SettingState::Stored && field.state != storage::SettingState::Defaulted)) { continue; }
+    const auto* raw = std::get_if<std::string>(&*field.value);
+    if (!raw) { return {}; }
+    const auto value = QString::fromUtf8(raw->data(), static_cast<qsizetype>(raw->size()));
+    return value.toUtf8().toStdString() == *raw ? value : QString{};
+  }
+  return {};
+}
+}
+
+bool SessionBridge::loadOptions(ui::OptionsRequest request) {
+  if (profileClosed_ || !request.session || !request.request || request.session != publishedColumnLayoutSession_) { return false; }
+  return dispatch([this, request](std::stop_token stop) {
+    auto failure = std::make_shared<ui::OptionsPacket>();
+    failure->session = request.session; failure->request = request.request;
+    ui::OptionsPresentation result = failure;
+    if (!host_ || host_->columnLayoutSession != request.session) {
+      failure->failure = tr("This settings session is no longer active");
+    } else {
+      host_->optionsBaseline.reset();
+      host_->optionsReadStop = stop;
+      auto read = storage::readApplicationSettings(host_->lease, stop);
+      if (!read) { failure->failure = text(read.error().message); }
+      else if (stop.stop_requested()) { failure->failure = tr("Cancelled"); }
+      else if (host_->optionsRevision == std::numeric_limits<quint64>::max()) {
+        failure->failure = tr("Reopen the profile before editing more settings");
+      } else {
+        bool restart = !host_->engine;
+        if (read->source) {
+          const auto policy = engine::readNetworkPolicy(read->source.get(), {.mode = engine::NetworkMode::Normal});
+          if (policy) {
+            auto live = engine::prepareLiveSettings(host_->networkPolicy, *policy);
+            restart = restart || !live || live->restartFields != 0;
+          }
+        }
+        result = optionPacket(*read, request.session, request.request, ++host_->optionsRevision, restart);
+        host_->optionsBaseline = std::move(*read);
+      }
+    }
+    QMetaObject::invokeMethod(this, [this, result = std::move(result)] {
+      QPointer<SessionBridge> guard(this);
+      if (result->session == publishedColumnLayoutSession_) { emit optionsReady(result); }
+      if (!guard) { return; }
+      completionMonitor_->stop(); busy_ = false; emit busyChanged(false);
+    }, Qt::QueuedConnection);
+  }, false);
+}
+
+bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
+  if (profileClosed_ || !submission.session || !submission.request || !submission.revision
+      || submission.session != publishedColumnLayoutSession_
+      || submission.changes.size() > core::applicationSettingsCatalog().size()) { return false; }
+  for (const auto& change : submission.changes) {
+    const auto* field = core::applicationSetting(change.id);
+    if (!field || !core::validApplicationSettingValue(*field, change.value)) { return false; }
+  }
+  return dispatch([this, submission = std::move(submission)](std::stop_token stop) {
+    auto packet = std::make_shared<ui::OptionsSavePacket>();
+    packet->session = submission.session; packet->request = submission.request; packet->revision = submission.revision;
+    if (!host_ || host_->columnLayoutSession != submission.session || !host_->optionsBaseline
+        || host_->optionsRevision != submission.revision || host_->optionsReadStop.stop_requested()
+        || host_->optionsRevision == std::numeric_limits<quint64>::max()) {
+      packet->failure = tr("Reload settings before saving; this snapshot is no longer current");
+    } else {
+      auto prepared = storage::prepareApplicationSettings(*host_->optionsBaseline, submission.changes);
+      if (!prepared) { packet->failure = text(prepared.error().message); }
+      else {
+        auto policy = engine::readNetworkPolicy(&prepared->document(), {.mode = engine::NetworkMode::Normal});
+        if (!policy) { packet->failure = tr("Unsupported or invalid setting: %1").arg(text(policy.error().field)); }
+        else {
+          const auto queues = optionQueues(prepared->document());
+          auto planned = engine::prepareLiveSettings(host_->networkPolicy, *policy, queues);
+          if (!planned) { packet->failure = text(planned.error().message); }
+          else {
+            auto saved = storage::saveApplicationSettings(host_->lease, *host_->optionsBaseline, *prepared, stop);
+            // Once committed, never replace the actual write result with cancellation.
+            if (!saved) { packet->failure = text(saved.error().message); }
+            else {
+              packet->saved = true;
+              packet->restartRequired = !host_->engine || planned->restartFields != 0;
+              host_->optionsBaseline = std::move(*saved);
+              ++host_->optionsRevision;
+              if (host_->engine) {
+                auto applied = host_->engine->applyLiveSettings(*policy, queues);
+                if (applied) { host_->networkPolicy = std::move(planned->effectivePolicy); }
+                else {
+                  packet->restartRequired = true;
+                  packet->failure = tr("Settings were saved; restart BiglyBTC to apply them");
+                }
+              }
+              packet->snapshot = optionPacket(*host_->optionsBaseline, submission.session,
+                  submission.request, host_->optionsRevision, packet->restartRequired);
+              host_->intakeDefault = optionDefaultPath(*host_->optionsBaseline);
+            }
+          }
+        }
+      }
+    }
+    const auto directory = host_ ? host_->intakeDefault : QString{};
+    ui::OptionsSavePresentation result = std::move(packet);
+    QMetaObject::invokeMethod(this, [this, result = std::move(result), directory] {
+      QPointer<SessionBridge> guard(this);
+      if (result->session == publishedColumnLayoutSession_) {
+        emit optionsSaved(result);
+        if (!guard) { return; }
+        if (result->saved) { emit intakeDefaultsReady(result->session, directory); }
+      }
+      if (!guard) { return; }
+      completionMonitor_->stop(); busy_ = false; emit busyChanged(false);
+    }, Qt::QueuedConnection);
+  }, false);
+}
+
 } // namespace biglybtc::app

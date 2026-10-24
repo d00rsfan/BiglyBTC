@@ -1,0 +1,141 @@
+{
+  "capsule_manifests_sha256": {
+    "settings-adapter": "22499d36c883f2ce4dc957a1578595ed228fe4ecf1daa424c7b21da4da5c1821",
+    "options-ui": "e2f4056f6df4374fdb54276cf67eb920261bd27319c915946f18ca91304c533b",
+    "engine-settings": "15138026753a24aa00a03504e203a2c1038ed10ad8de7dfcbf90993b1f3d5851",
+    "root": "e1aec51c2007920caea9a85f92a1183f454e3c769e6bcd16388bbf2c373ec725"
+  },
+  "source_count": 24,
+  "files": [
+    {
+      "path": "preview/native/adapters/application_settings.cpp",
+      "before_sha256": null,
+      "sha256": "17e57d7816e1f1b6c624373e1f58d64fd086eae4a189c9b1c3b50dd19e77924c",
+      "bytes": 11785,
+      "staged": "staging/preview/native/adapters/application_settings.cpp"
+    },
+    {
+      "path": "preview/native/adapters/application_settings.hpp",
+      "before_sha256": null,
+      "sha256": "29fe8264a4976a5ad96644831fc11cd5ae1e714b514d721da002a1780511134c",
+      "bytes": 3154,
+      "staged": "staging/preview/native/adapters/application_settings.hpp"
+    },
+    {
+      "path": "preview/native/core/include/biglybtc/application_settings.hpp",
+      "before_sha256": null,
+      "sha256": "c09602383bd52bcfb2795001ceb571a7005128511fc3f4388947326a5b2bc1ba",
+      "bytes": 12829,
+      "staged": "staging/preview/native/core/include/biglybtc/application_settings.hpp"
+    },
+    {
+      "path": "preview/native/tests/application_settings_tests.cpp",
+      "before_sha256": null,
+      "sha256": "395ef542495915857a11bba51c0dd99675d08a28e6d15987fed655b420487e27",
+      "bytes": 13834,
+      "staged": "staging/preview/native/tests/application_settings_tests.cpp"
+    },
+    {
+      "path": "preview/native/tests/settings_roundtrip_driver.cpp",
+      "before_sha256": null,
+      "sha256": "730b1181c2ccb1ac162c3ca7e20e156015ef1598882c6b05a12e98a7c7585f14",
+      "bytes": 4916,
+      "staged": "staging/preview/native/tests/settings_roundtrip_driver.cpp"
+    },
+    {
+      "path": "preview/native/tests/options_dialog_tests.cpp",
+      "before_sha256": null,
+      "sha256": "15e9129262671665b733defa5b7b49a7b299b9baca0f1c00ec459060defae089"
+    },
+    {
+      "path": "preview/native/ui/options_dialog.cpp",
+      "before_sha256": null,
+      "sha256": "53fa0774d47329b7b8037b7a0c233457a6a8883464561e54c4c9a6800e9ad9d6"
+    },
+    {
+      "path": "preview/native/ui/options_dialog.hpp",
+      "before_sha256": null,
+      "sha256": "cd08ec9229da880363768815f218b3a62c2222666b13eb2cad8d8a86c2302c17"
+    },
+    {
+      "path": "preview/native/ui/options_presentation.hpp",
+      "before_sha256": null,
+      "sha256": "f216ab046f6d3cec1af2ffe912ca071614e2dfb2f1de10b005cad1f5264a74c0"
+    },
+    {
+      "path": "preview/native/engine/live_settings.cpp",
+      "before_sha256": null,
+      "sha256": "dbf769390a53a6206b672de2ca1f1472d8afecec33f9e66df9eaa7154e2b6544"
+    },
+    {
+      "path": "preview/native/engine/live_settings.hpp",
+      "before_sha256": null,
+      "sha256": "994986cd1837e623db60b5663a8a49f4737766f6ee3457b10af0c3c6916fa7a7"
+    },
+    {
+      "path": "preview/native/engine/persistent_session.cpp",
+      "before_sha256": "a3bb2fbd0f472314aa1b30d0a7d9335acf06e05b16e45bd4c9318659128beaf9",
+      "sha256": "5839a934418a474f30961d51b883103fed7ee420d36cb66a90bea78a815f1ff4"
+    },
+    {
+      "path": "preview/native/engine/persistent_session.hpp",
+      "before_sha256": "8bf60c5f8e4699cfce25810dc2b355b90869c04b454f4763f15f4cc965bc7878",
+      "sha256": "4abfb496bfccd4c7f2150f819ab7efc43162e911cb6bc29c327681e7fab24e14"
+    },
+    {
+      "path": "preview/native/tests/engine_live_settings_tests.cpp",
+      "before_sha256": null,
+      "sha256": "bc0500d7f654b67f1c244453c974bb2485c309f96918beadd5d8dc719c805045"
+    },
+    {
+      "path": "preview/native/app/session_bridge.hpp",
+      "before_sha256": "a27649926250d2f114b85f65bf0fe73da38ddf24548c986a4adeb375b119210c",
+      "sha256": "f67ec822aff525de53f6bc4f6780e19b732a59eaf1e12ae35bf804dd59442df8"
+    },
+    {
+      "path": "preview/native/app/session_bridge.cpp",
+      "before_sha256": "39230dfbe0ce8d81f7ac64479476a43332027017d9243b7381e76bc1e0323cf9",
+      "sha256": "ef970eda8be83bec0c01abfa3ac26566bc51b2880dff600eaf0da50ed855d212"
+    },
+    {
+      "path": "preview/native/ui/library_window.hpp",
+      "before_sha256": "f7c300ff1b0dfdca6f9a4851411d88c3ac1d334cdaeea4c0df972e03a45e8f12",
+      "sha256": "84fcc982da70c76b70169aad4280cf9b9e00a0a36714de7b12d9506f43160d44"
+    },
+    {
+      "path": "preview/native/ui/library_window.cpp",
+      "before_sha256": "010d03bf08e4f148b7e8c3b358d9a876e65a8520a85c8f84b500af8bf3b7ce1c",
+      "sha256": "9da1160b174c0f65e7a20a8e794a8e7c2713082551ceb6124aa0e378e41ea34e"
+    },
+    {
+      "path": "preview/native/app/main_desktop.cpp",
+      "before_sha256": "4e4c5318c8c71278afe6e279d08b108329f86c7777c4963f569909b4eafffa2b",
+      "sha256": "6ae10523499d41ceb0af254a7da628a2e4b34b7a00cde5ef64f96d8f7a2bcb91"
+    },
+    {
+      "path": "preview/native/adapters/CMakeLists.txt",
+      "before_sha256": "c05003a6d89a206104162ec73e95f2b9a5f7805997529ce093afed5449c1662e",
+      "sha256": "a39c68776f29111ed2918701cbf4ea987cc7f7c3b9b21bd57122500e7bc93a95"
+    },
+    {
+      "path": "preview/native/ui/CMakeLists.txt",
+      "before_sha256": "86cd613e88a3b1ba6773b1f4dbe4287c0686c9b7fd76d741b50460b4c1707d53",
+      "sha256": "9e5552e01652bf4c109144374c76e1409359a325e267e8d60d0c133c7fbe588d"
+    },
+    {
+      "path": "preview/native/engine/CMakeLists.txt",
+      "before_sha256": "26c84f47e003c39d096a4f6924fd52229e5cccef0b35be3a49b906212486beee",
+      "sha256": "dccfd048c0b5f55508e9196b737107668361fce8c94c6d1398a019461eadd22d"
+    },
+    {
+      "path": "preview/native/tests/CMakeLists.txt",
+      "before_sha256": "fee7a4bf543fb07fe7fba39fa132acbc590f632bf5bda093f23733c7217a96ba",
+      "sha256": "fd7b0aa2e40b864cb726166f2b06fd08a6a1bc02d86910029c285ba0addd0157"
+    },
+    {
+      "path": "preview/native/tests/options_host_tests.cpp",
+      "before_sha256": null,
+      "sha256": "9f882cb4cfcf232e493631e3b5c8d8c8f261d919e994199c9985a7608803b170"
+    }
+  ]
+}

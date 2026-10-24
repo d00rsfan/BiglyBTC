@@ -1,4 +1,5 @@
 #pragma once
+#include "options_presentation.hpp"
 
 #include "native_session_presentation.hpp"
 #include "native_activity_presentation.hpp"
@@ -38,6 +39,7 @@ class QMenu;
 
 namespace biglybtc::ui {
 
+class OptionsDialog;
 class ClassicColumns;
 class StatisticsPage;
 class EngineActivityHistory;
@@ -94,6 +96,11 @@ public:
   void beginColumnLayoutSession(quint64 session);
   void setColumnLayouts(ColumnLayoutsPresentation);
   void setColumnLayoutSaved(ColumnLayoutSavePresentation);
+  void setOptions(OptionsPresentation);
+  void setOptionsSaved(OptionsSavePresentation);
+  void rejectOptionsRequest(OptionsRequest);
+  void rejectOptionsSave(const OptionsSubmission&);
+  void setIntakeDefaults(quint64 session, QString directory);
   void setBusy(bool);
   void setMessage(const QString&);
   void setOfflinePreview(bool);
@@ -101,6 +108,8 @@ public:
   bool submitTorrentImport(QString metadata, QString destination, bool start);
   bool submitMagnetImport(QString uri, QString destination);
 signals:
+  void optionsRequested(biglybtc::ui::OptionsRequest);
+  void optionsSaveRequested(biglybtc::ui::OptionsSubmission);
   void refreshRequested();
   void torrentImportRequested(QString metadata, QString destination, bool start);
   void magnetImportRequested(QString uri, QString destination);
@@ -172,12 +181,20 @@ private:
   void refreshColumnLayouts(bool initial = false);
   void queueColumnLayouts();
   void saveColumnLayout();
+  void openOptions();
+  void queueOptions();
   void updateGeneral();
   void updateCounts();
   void updateActions();
   void selectionChanged();
   void requestDetails(bool force = false);
   void popup(QTableView*, const QPoint&);
+  QAction* optionsAction_ = nullptr;
+  QPointer<OptionsDialog> optionsDialog_;
+  std::optional<OptionsRequest> pendingOptionsLoad_, activeOptionsLoad_;
+  std::optional<OptionsSubmission> activeOptionsSave_;
+  bool optionsDispatchQueued_ = false;
+  QString defaultSaveDirectory_;
   LibraryModel* model_;
   QTableView* incompleteTable_;
   QTableView* completeTable_;

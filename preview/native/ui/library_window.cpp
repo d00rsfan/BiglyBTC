@@ -1,4 +1,5 @@
 #include "library_window.hpp"
+#include "options_dialog.hpp"
 #include "classic_filter.hpp"
 #include "classic_columns.hpp"
 #include "statistics_page.hpp"
@@ -339,7 +340,9 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   statistics->setShortcut(QKeySequence(QStringLiteral("Ctrl+5")));
   statistics->setShortcutContext(Qt::WindowShortcut);
   connect(statistics, &QAction::triggered, this, &LibraryWindow::showStatistics);
-  unavailable(tools, tr("Options…"), QStringLiteral("options"), QStyle::SP_FileDialogDetailedView);
+  optionsAction_ = tools->addAction(tr("Options…"));
+  optionsAction_->setObjectName(QStringLiteral("classic-options"));
+  connect(optionsAction_, &QAction::triggered, this, &LibraryWindow::openOptions);
   unavailable(plugins, tr("Plugin management…"), QStringLiteral("plugins"), QStyle::SP_FileDialogDetailedView);
   unavailable(community, tr("Forums"), QStringLiteral("forums"), QStyle::SP_DialogHelpButton);
   auto* about = help->addAction(tr("About BiglyBTC"));
@@ -855,6 +858,7 @@ void LibraryWindow::setNativeSession(NativeSessionPresentation packet) {
 void LibraryWindow::completeSessionClose() {
   if (!closing_ || !sessionCloseRequested_ || sessionCloseAcknowledged_) { return; }
   sessionCloseAcknowledged_ = true;
+  if (optionsDialog_) { optionsDialog_->invalidateSession(); }
   QTimer::singleShot(0, this, &QWidget::close);
 }
 void LibraryWindow::setEngineStatistics(EngineStatisticsPresentation packet) {
@@ -1008,6 +1012,9 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
   columnSession_ = session;
+  defaultSaveDirectory_.clear();
+  pendingOptionsLoad_.reset(); activeOptionsLoad_.reset(); activeOptionsSave_.reset();
+  if (optionsDialog_) { optionsDialog_->invalidateSession(); optionsDialog_->close(); }
   savedHistoryRevision_ = 0; requestedHistoryRevisions_.fill(0);
   latestAzureus_.reset(); latestLiveSpeed_.reset();
   latestOverall_.reset(); latestRuntime_.reset(); latestManualTags_.reset(); pendingManualTagRead_.clear(); latestCountry_.reset(); pendingCountryRead_.clear();
@@ -1315,6 +1322,7 @@ void LibraryWindow::updateActions() {
       && !activeColumnRequest_ && !pendingColumnRequest_ && !activeColumnSave_ && !activeStatisticsRequest_
       && columnSaveRequest_ != std::numeric_limits<quint64>::max());
   reloadColumns_->setEnabled(!closing_ && columnSession_ != 0 && columnRequest_ != std::numeric_limits<quint64>::max());
+  if (optionsAction_) { optionsAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }
   queueDownloadActions();
 }
 std::optional<DownloadTargets> LibraryWindow::selectedDownloadTargets() const {
@@ -1591,6 +1599,7 @@ void LibraryWindow::openImportDialog(bool magnet) {
   QPointer<QLineEdit> destination = new QLineEdit(row);
   destination->setObjectName(QStringLiteral("import-destination"));
   destination->setMaxLength(4096); destination->setAccessibleName(tr("Download directory"));
+  destination->setText(defaultSaveDirectory_);
   auto* browse = new QPushButton(tr("Browse…"), row);
   browse->setObjectName(QStringLiteral("import-browse-destination"));
   line->addWidget(destination.data(), 1); line->addWidget(browse);
@@ -1617,7 +1626,7 @@ void LibraryWindow::openImportDialog(bool magnet) {
   connect(destination.data(), &QLineEdit::textChanged, dialog.data(), validate, Qt::QueuedConnection);
   connect(browse, &QPushButton::clicked, dialog.data(), [dialog, destination] {
     if (!dialog || !destination) { return; }
-    const auto path = QFileDialog::getExistingDirectory(dialog.data(), tr("Download directory"));
+    const auto path = QFileDialog::getExistingDirectory(dialog.data(), tr("Download directory"), destination->text());
     if (dialog && destination && !path.isEmpty()) { destination->setText(path); }
   });
   connect(buttons, &QDialogButtonBox::accepted, dialog.data(), &QDialog::accept);
@@ -1721,6 +1730,15 @@ void LibraryWindow::setDetails(const Details& details) {
 }
 void LibraryWindow::setMessage(const QString& message) { message_->setText(message.left(8192)); }
 void LibraryWindow::setBusy(bool value) {
+  QPointer<LibraryWindow> optionsGuard(this);
+  if (optionsDialog_) { optionsDialog_->setBusy(value); }
+  if (!optionsGuard) { return; }
+  if (!value) {
+    if (activeOptionsLoad_) { rejectOptionsRequest(*activeOptionsLoad_); }
+    if (!optionsGuard) { return; }
+    if (activeOptionsSave_) { rejectOptionsSave(*activeOptionsSave_); }
+    if (!optionsGuard) { return; }
+  }
   QPointer<LibraryWindow> guard(this);
   busy_ = value;
   if (statisticsPage_) { statisticsPage_->setAccountingBusy(value); }
@@ -1775,6 +1793,7 @@ void LibraryWindow::setBusy(bool value) {
     QTimer::singleShot(0, this, &QWidget::close);
     return;
   }
+  queueOptions();
   queueOptionalViews();
   if (mainTabs_->currentWidget() == torrentsPage_
       && (detailTabs_->currentIndex() == 1 || (selected() && !model_->hasDetails(*selected())))) {
@@ -1782,6 +1801,10 @@ void LibraryWindow::setBusy(bool value) {
   }
 }
 void LibraryWindow::closeEvent(QCloseEvent* event) {
+  QPointer<LibraryWindow> optionsGuard(this);
+  if (optionsDialog_ && optionsDialog_->isVisible() && !optionsDialog_->close()) { event->ignore(); return; }
+  if (!optionsGuard) { return; }
+  pendingOptionsLoad_.reset();
   closing_ = true;
   pendingSavedRequest_.reset();
   pendingColumnRequest_.reset();
@@ -1843,4 +1866,62 @@ void LibraryWindow::popup(QTableView* table, const QPoint& point) {
   contextTarget_.reset();
   updateActions();
 }
+
+void LibraryWindow::openOptions() {
+  if (closing_ || !columnSession_) { return; }
+  if (optionsDialog_) { optionsDialog_->show(); optionsDialog_->raise(); optionsDialog_->activateWindow(); return; }
+  optionsDialog_ = new OptionsDialog(this);
+  optionsDialog_->setAttribute(Qt::WA_DeleteOnClose);
+  optionsDialog_->setWindowModality(Qt::WindowModal);
+  optionsDialog_->beginSession(columnSession_);
+  optionsDialog_->setBusy(busy_);
+  connect(optionsDialog_, &OptionsDialog::loadRequested, this, [this](OptionsRequest request) {
+    pendingOptionsLoad_ = request; queueOptions();
+  });
+  connect(optionsDialog_, &OptionsDialog::saveRequested, this, [this](OptionsSubmission submission) {
+    activeOptionsSave_ = submission;
+    emit optionsSaveRequested(std::move(submission));
+  });
+  connect(optionsDialog_, &QObject::destroyed, this, [this] {
+    pendingOptionsLoad_.reset(); activeOptionsLoad_.reset(); activeOptionsSave_.reset();
+  });
+  optionsDialog_->show();
+}
+void LibraryWindow::queueOptions() {
+  if (!pendingOptionsLoad_ || busy_ || closing_ || optionsDispatchQueued_) { return; }
+  optionsDispatchQueued_ = true;
+  QTimer::singleShot(0, this, [this] {
+    optionsDispatchQueued_ = false;
+    if (!pendingOptionsLoad_ || busy_ || closing_ || !optionsDialog_) { return; }
+    const auto request = *pendingOptionsLoad_;
+    pendingOptionsLoad_.reset(); activeOptionsLoad_ = request;
+    emit optionsRequested(request);
+  });
+}
+void LibraryWindow::setOptions(OptionsPresentation packet) {
+  if (!packet || !optionsDialog_ || !activeOptionsLoad_
+      || packet->session != activeOptionsLoad_->session || packet->request != activeOptionsLoad_->request) { return; }
+  activeOptionsLoad_.reset(); optionsDialog_->setSnapshot(std::move(packet));
+}
+void LibraryWindow::setOptionsSaved(OptionsSavePresentation packet) {
+  if (!packet || !optionsDialog_ || !activeOptionsSave_
+      || packet->session != activeOptionsSave_->session || packet->request != activeOptionsSave_->request
+      || packet->revision != activeOptionsSave_->revision) { return; }
+  activeOptionsSave_.reset(); optionsDialog_->setSaveResult(std::move(packet));
+}
+void LibraryWindow::rejectOptionsRequest(OptionsRequest request) {
+  auto packet = std::make_shared<OptionsPacket>(); packet->session = request.session; packet->request = request.request;
+  packet->failure = tr("Settings could not be loaded; reload when the current operation finishes");
+  setOptions(std::move(packet));
+}
+void LibraryWindow::rejectOptionsSave(const OptionsSubmission& request) {
+  auto packet = std::make_shared<OptionsSavePacket>(); packet->session = request.session;
+  packet->request = request.request; packet->revision = request.revision;
+  packet->failure = tr("No settings result was received; reload settings before retrying");
+  setOptionsSaved(std::move(packet));
+}
+void LibraryWindow::setIntakeDefaults(quint64 session, QString directory) {
+  if (!closing_ && session && session == columnSession_) { defaultSaveDirectory_ = std::move(directory); }
+}
+
 } // namespace biglybtc::ui

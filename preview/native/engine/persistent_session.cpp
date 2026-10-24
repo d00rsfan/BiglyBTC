@@ -76,6 +76,7 @@ struct PersistentSession::Impl {
   std::map<std::string, std::unique_ptr<Managed>> managed;
   const storage::ProfileLease* managedLease = nullptr; // Same bound lease, owned by Host.
   std::optional<NetworkPolicy> network;
+  std::optional<LiveQueueLimits> liveQueueLimits;
   bool appliedSeedingOnly = false;
   struct Magnet {
     std::unique_ptr<OperationToken> token;
@@ -407,6 +408,15 @@ struct PersistentSession::Impl {
           detail::require(translated.has_value(), "Network policy cannot be applied");
           settings = std::move(*translated);
         }
+        if (liveQueueLimits) {
+          auto live = makeLiveSettingsPack(network.value_or(NetworkPolicy{}), liveQueueLimits, appliedSeedingOnly);
+          detail::require(live.has_value(), "Live startup settings cannot be applied");
+          for (const int key : {lt::settings_pack::upload_rate_limit, lt::settings_pack::download_rate_limit,
+              lt::settings_pack::active_downloads, lt::settings_pack::active_seeds, lt::settings_pack::active_limit}) {
+            settings.set_int(key, live->get_int(key));
+          }
+          settings.set_bool(lt::settings_pack::dont_count_slow_torrents, false);
+        }
         settings.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::error
             | lt::alert_category::status | lt::alert_category::storage));
         lt::session_params parameters(settings);
@@ -569,7 +579,7 @@ struct PersistentSession::Impl {
       }
       const bool seedingOnly = any && onlySeeds && !magnetActive();
       if (seedingOnly != appliedSeedingOnly) {
-        auto settings = makeNetworkSettings(*network, seedingOnly);
+        auto settings = makeLiveSettingsPack(*network, liveQueueLimits, seedingOnly);
         if (settings) {
           settings->set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::error
               | lt::alert_category::status | lt::alert_category::storage));
@@ -813,6 +823,67 @@ std::expected<void, storage::Error> PersistentSession::configureNetwork(const Ne
       "Unsupported network setting: " + settings.error().field}); }
   impl_->network = policy;
   return {};
+}
+std::optional<LiveSettingsSnapshot> PersistentSession::liveSettings() const noexcept {
+  if (!impl_->onWorker() || !impl_->session || impl_->closed || impl_->poisoned) { return {}; }
+  try {
+    const auto actual = impl_->session->get_settings();
+    LiveSettingsSnapshot value;
+    value.rateLimits = detail::projectEffectiveRateLimits(actual);
+    value.activeDownloads = actual.get_int(lt::settings_pack::active_downloads);
+    value.activeSeeds = actual.get_int(lt::settings_pack::active_seeds);
+    value.activeLimit = actual.get_int(lt::settings_pack::active_limit);
+    value.countSlowTorrents = !actual.get_bool(lt::settings_pack::dont_count_slow_torrents);
+    value.listenInterfaces = actual.get_str(lt::settings_pack::listen_interfaces);
+    value.outgoingInterfaces = actual.get_str(lt::settings_pack::outgoing_interfaces);
+    if (value.listenInterfaces.size() > 4096 || value.outgoingInterfaces.size() > 4096) { return {}; }
+    value.proxyType = actual.get_int(lt::settings_pack::proxy_type);
+    value.dht = actual.get_bool(lt::settings_pack::enable_dht);
+    value.localDiscovery = actual.get_bool(lt::settings_pack::enable_lsd);
+    value.upnp = actual.get_bool(lt::settings_pack::enable_upnp);
+    value.natpmp = actual.get_bool(lt::settings_pack::enable_natpmp);
+    return value;
+  } catch (...) { return {}; }
+}
+std::expected<LiveSettingsResult, storage::Error> PersistentSession::applyLiveSettings(
+    const NetworkPolicy& requested, std::optional<LiveQueueLimits> queues) {
+  if (!impl_->onWorker() || impl_->call || impl_->registered || impl_->closed || impl_->closingAdmission || impl_->poisoned) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Live settings owner is unavailable"});
+  }
+  auto plan = prepareLiveSettings(impl_->network.value_or(NetworkPolicy{}), requested, queues ? queues : impl_->liveQueueLimits);
+  if (!plan) { return std::unexpected(plan.error()); }
+  auto settings = makeLiveSettingsPack(plan->effectivePolicy, plan->queues, impl_->appliedSeedingOnly);
+  if (!settings) { return std::unexpected(settings.error()); }
+  impl_->call = true;
+  struct Reset { Impl& value; ~Reset() { value.call = false; } } reset{*impl_};
+  try {
+    const LiveSettingsResult result{plan->restartFields, bool(impl_->session)};
+    // Only the narrow pack reaches LT, and only after Host's successful save.
+    // get_settings below is the same network-thread FIFO barrier after apply.
+    if (impl_->session) { impl_->session->apply_settings(*settings); }
+    impl_->network = std::move(plan->effectivePolicy);
+    impl_->liveQueueLimits = plan->queues;
+    if (!impl_->session) { return result; }
+    const auto actual = liveSettings();
+    const auto expectedUpload = core::effectiveSessionRateLimit(settings->get_int(lt::settings_pack::upload_rate_limit));
+    const auto expectedDownload = core::effectiveSessionRateLimit(settings->get_int(lt::settings_pack::download_rate_limit));
+    const bool confirmed = actual && actual->rateLimits.upload == expectedUpload && actual->rateLimits.download == expectedDownload
+        && (!impl_->liveQueueLimits || (actual->activeDownloads == settings->get_int(lt::settings_pack::active_downloads)
+            && actual->activeLimit == settings->get_int(lt::settings_pack::active_limit)
+            && actual->activeSeeds == -1 && actual->countSlowTorrents));
+    if (!confirmed) {
+      impl_->rateLimits = {}; impl_->publish();
+      return std::unexpected(storage::Error{storage::ErrorCode::Io,
+          "Saved live settings were submitted but their actual application is unavailable; restart the owner"});
+    }
+    impl_->rateLimits = actual->rateLimits;
+    impl_->publish(); // Optional publication cannot reenter live mutation while call is held.
+    return result;
+  } catch (...) {
+    impl_->rateLimits = {}; impl_->publish();
+    return std::unexpected(storage::Error{storage::ErrorCode::Io,
+        "Live settings application failed; saved preferences remain and the owner may require restart"});
+  }
 }
 std::expected<void, storage::Error> PersistentSession::startManaged(
     const storage::ProfileLease& lease, const ManagedDownloadOptions& options) {

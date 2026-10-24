@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "scope": "Tools Options GUI only; worker owns settings IO, validation and engine effects",
+  "source_directory": "staging",
+  "source_sha256": {
+    "preview/native/tests/options_dialog_tests.cpp": "15e9129262671665b733defa5b7b49a7b299b9baca0f1c00ec459060defae089",
+    "preview/native/ui/options_dialog.cpp": "53fa0774d47329b7b8037b7a0c233457a6a8883464561e54c4c9a6800e9ad9d6",
+    "preview/native/ui/options_dialog.hpp": "cd08ec9229da880363768815f218b3a62c2222666b13eb2cad8d8a86c2302c17",
+    "preview/native/ui/options_presentation.hpp": "f216ab046f6d3cec1af2ffe912ca071614e2dfb2f1de10b005cad1f5264a74c0"
+  },
+  "before_sha256": {
+    "preview/native/tests/options_dialog_tests.cpp": null,
+    "preview/native/ui/options_dialog.cpp": null,
+    "preview/native/ui/options_dialog.hpp": null,
+    "preview/native/ui/options_presentation.hpp": null
+  },
+  "dependency_sha256": {
+    "core/include/biglybtc/application_settings.hpp": "c09602383bd52bcfb2795001ceb571a7005128511fc3f4388947326a5b2bc1ba"
+  },
+  "signals": [
+    "loadRequested(OptionsRequest)",
+    "saveRequested(OptionsSubmission)"
+  ],
+  "sparse_changes": true,
+  "storage_engine_dependencies": false,
+  "author_execution": false,
+  "test_source_methods": [
+    "initTestCase",
+    "classicPagesMaskPasswordsAndLabelUnavailableFeatures",
+    "hiddenAndBusyInitialReadCoalescesUntilVisibleIdle",
+    "staleAndMalformedReadPacketsCannotReplaceCurrentProfile",
+    "sparseEditsPreserveInvalidAndMissingFields",
+    "returningToLoadedValueSubmitsNothing",
+    "invalidEditedValueDoesNotReachWorker",
+    "failedSaveRetainsDraftAndRetryUsesOriginalRevision",
+    "okWaitsForMatchingCommitAndPendingCloseCannotDiscard",
+    "dirtyCancelAndDiscardAreExplicit",
+    "readFailureCanRetryAndSessionInvalidationDropsCredentials",
+    "loadAndSaveSignalCallbacksMayDeleteDialog",
+    "enabledCallbackMayRebindProfileWithoutOldValuesLeaking"
+  ],
+  "actual_test_results": null,
+  "artifact_sha256": {
+    "ADOPTION.md": "4b65df0316e1c46aa2f3da60ed7655469bc7bcc51c4483a53831b34db318d4e7",
+    "staging/tests/options_dialog_tests.cpp": "15e9129262671665b733defa5b7b49a7b299b9baca0f1c00ec459060defae089",
+    "staging/ui/options_dialog.cpp": "53fa0774d47329b7b8037b7a0c233457a6a8883464561e54c4c9a6800e9ad9d6",
+    "staging/ui/options_dialog.hpp": "cd08ec9229da880363768815f218b3a62c2222666b13eb2cad8d8a86c2302c17",
+    "staging/ui/options_presentation.hpp": "f216ab046f6d3cec1af2ffe912ca071614e2dfb2f1de10b005cad1f5264a74c0"
+  }
+}

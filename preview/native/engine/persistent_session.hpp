@@ -3,6 +3,7 @@
 
 #include "local_session.hpp"
 #include "managed_download.hpp"
+#include "live_settings.hpp"
 #include "biglybtc/runtime_metrics.hpp"
 #include "biglybtc/peer_payload_ledger.hpp"
 #include "biglybtc/effective_rate_limits.hpp"
@@ -103,6 +104,13 @@ public:
 
   // Configure before startIdle/admission. No live routing-policy mutation.
   std::expected<void, storage::Error> configureNetwork(const NetworkPolicy&);
+  // Host calls pure prepareLiveSettings BEFORE persistence, this method only
+  // AFTER successful save. Routing changes remain pending for owner recreation.
+  // Before startIdle this caches safe values without creating an LT session.
+  std::expected<LiveSettingsResult, storage::Error> applyLiveSettings(
+      const NetworkPolicy&, std::optional<LiveQueueLimits> queues = {});
+  // Actual get_settings projection; worker-only/no engine creation or alert pop.
+  std::optional<LiveSettingsSnapshot> liveSettings() const noexcept;
   // Worker-affine, nonblocking admission/control. The sole poll pump advances
   // checking, transfer, flush/removal and compatible checkpoints for every hash.
   std::expected<void, storage::Error> startManaged(const storage::ProfileLease&, const ManagedDownloadOptions&);

@@ -1,0 +1,182 @@
+{
+  "scope": "Source-only settings catalog and compatible sparse config writer; no original-Java equality execution credit",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_observed_head": "a98c94e0cee216049ac31b46ebaf91fc118e5081",
+  "sources": [
+    {
+      "repository": "original",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java",
+      "git_blob": "72d5cccf803da692911b9a0e56777262138d6e00",
+      "sha256": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194",
+      "ranges": [
+        {
+          "start": 146,
+          "end": 173,
+          "sha256": "0c434516b8c2002c7366fa5d3aadd1ace61c7dea2746625017af7791fa604836"
+        },
+        {
+          "start": 192,
+          "end": 225,
+          "sha256": "542f032cc3ecc01f0122d3f4eabcc30eef333ca1da145101aa8e540002feeaa9"
+        },
+        {
+          "start": 250,
+          "end": 251,
+          "sha256": "8c6b612c3aba694bd16a9e92d1b9ba1e7ea4999741be8e13f73eeace849b6b40"
+        },
+        {
+          "start": 319,
+          "end": 343,
+          "sha256": "8b97afd69561b58d1003939affe6626e5aaaeef33c71b9087019d8469ccbd37e"
+        },
+        {
+          "start": 382,
+          "end": 410,
+          "sha256": "ce1eadf05d741fe1eb84e24cb87e71e58266ca55a128e2cbd58707b713c79e4b"
+        },
+        {
+          "start": 500,
+          "end": 507,
+          "sha256": "291478638f3273c119cc24c66d3d91537008cc2ff08cabae519aebabfc017cf3"
+        },
+        {
+          "start": 612,
+          "end": 616,
+          "sha256": "680597bf284bd9dc24e278b4f745838fff928bb67cee32356d20a9d163684cd9"
+        },
+        {
+          "start": 661,
+          "end": 663,
+          "sha256": "066923b6a3ac6223cdf03be5f55a17cfb2e5820623e5a6d99515f8fe63876ec4"
+        },
+        {
+          "start": 746,
+          "end": 746,
+          "sha256": "c4f7363f4bfaf6443e3058ad54d7880214411509fc745096e406925ff9506c00"
+        }
+      ]
+    },
+    {
+      "repository": "original",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/core/config/impl/ConfigurationManager.java",
+      "git_blob": "811e21d1f34fe1c5e2a8daf7616e7e3eb22e2e0f",
+      "sha256": "2627f71f0dd69b2cee577331ad6ce05fd230d47df816b592d07236c9b759bc82",
+      "ranges": [
+        {
+          "start": 40,
+          "end": 48,
+          "sha256": "a44814d31f21821009b8afdb79ace49b88791e3be147c4d33c8133cd603c0046"
+        },
+        {
+          "start": 180,
+          "end": 190,
+          "sha256": "f9fe198c9799633965a9cf510b3c33c2595b373208d94f389dc360aec60bb314"
+        },
+        {
+          "start": 230,
+          "end": 241,
+          "sha256": "f537db3617c573e24a06113eccbe213ca4de57a533d86c24c8bcb1a2d9be4308"
+        },
+        {
+          "start": 274,
+          "end": 285,
+          "sha256": "8ba4b2d64ae716ef5eaa22a52d329ef93afc426d8be3c3404829b0d479e25141"
+        },
+        {
+          "start": 312,
+          "end": 320,
+          "sha256": "efc8f5de372fa521caed39beb10388491a83059d05b254215685640dbb6e383b"
+        }
+      ]
+    },
+    {
+      "repository": "original",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/core/config/ConfigKeys.java",
+      "git_blob": "1ad42192021e391b3b239adffac26597b2f6ffba",
+      "sha256": "29779ff4bd0f04e021cdafd91f7b50dcf870a0ed81405288e4553d3c6c092b21",
+      "ranges": [
+        {
+          "start": 90,
+          "end": 96,
+          "sha256": "7294f72fa97df0f6ebe7834197b71f186d4c24969ab5ce7f0035da0d2f413af9"
+        }
+      ]
+    },
+    {
+      "repository": "original",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/plugin/dht/DHTPlugin.java",
+      "git_blob": "cd5cd9f90f9fea18b5dc555e2f4ac5354071fea3",
+      "sha256": "3af95cb144c85a02fcede7fda881f03e887286ec51574ac13fbb219c68b37748",
+      "ranges": [
+        {
+          "start": 180,
+          "end": 197,
+          "sha256": "e65f9fa02e42ae5266066030f84c7a6ebcabf19bf5316d764aeb38adb6f9db52"
+        }
+      ]
+    },
+    {
+      "repository": "original",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopConfigModel.java",
+      "git_blob": "f6b665e72d7e29e4585ec3c8d27b73a03a2cb29e",
+      "sha256": "3c46e88ab04ee8afeba60a6fd02a7c293be15ec4f382f54922402fe1234afe55",
+      "ranges": [
+        {
+          "start": 510,
+          "end": 595,
+          "sha256": "197b9e9c50d43fea24629c4a95cb5a6b4c0a39560838a0f47058ef7a95916709"
+        }
+      ]
+    },
+    {
+      "repository": "native",
+      "observed_head": "a98c94e0cee216049ac31b46ebaf91fc118e5081",
+      "path": "preview/native/adapters/profile.hpp",
+      "sha256": "0e7bb950e4d66e2fdf88b2733cb00d149e8b17ea805348300327af8418649831",
+      "git_blob_at_observed_head": "a4b035ff0e21bba87eee63cdee35563590ef71a6"
+    },
+    {
+      "repository": "native",
+      "observed_head": "a98c94e0cee216049ac31b46ebaf91fc118e5081",
+      "path": "preview/native/adapters/profile.cpp",
+      "sha256": "cd7099f4f2b7d56ca4f540583b1123bb2b3e384ea21d9685b0bd158609a02cbf",
+      "git_blob_at_observed_head": "2d99b388b092584f4e26053dd36dac27dc019c08"
+    },
+    {
+      "repository": "native",
+      "observed_head": "a98c94e0cee216049ac31b46ebaf91fc118e5081",
+      "path": "preview/native/core/include/biglybtc/bencode.hpp",
+      "sha256": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+      "git_blob_at_observed_head": "88e48d0acfe97437d0c094acbd8fceaaa1d32a86"
+    },
+    {
+      "repository": "native",
+      "observed_head": "a98c94e0cee216049ac31b46ebaf91fc118e5081",
+      "path": "preview/native/core/src/bencode.cpp",
+      "sha256": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08",
+      "git_blob_at_observed_head": "2c77566816f6f0293fce8637901f259852a392f6"
+    },
+    {
+      "repository": "native",
+      "observed_head": "a98c94e0cee216049ac31b46ebaf91fc118e5081",
+      "path": "preview/native/engine/network_policy.cpp",
+      "sha256": "f78b9c0d10968802f7fdd026a7d6ab9a2fe5103e803cd2ca08b5b0b0bc152b00",
+      "git_blob_at_observed_head": "e322eed04244ef7a8a4389bea634d652c6875836"
+    }
+  ],
+  "filename": "biglybt.config",
+  "filename_basis": "ConfigurationManager.CONFIG_FILENAME; current native Host same fixed choice. azureus.config is untouched and is not a fallback.",
+  "policy_differences": [
+    "50 selected fields only; unknown and dormant fields retain exact raw original subtrees.",
+    "Original Default save path is platform-derived and therefore unavailable until explicitly saved; no home path fabricated.",
+    "Original LAN Speed Enabled default is true; native NetworkPolicy missing fallback is false and explicit true unsupported. Sparse read/save does not materialize either default.",
+    "Native editor limits rates to nonnegative INT_MAX/1024 KiB/s and queue caps to 1000000; preexisting incompatible values remain visible, are not silently clamped or defaulted.",
+    "Rename Incomplete Files and suffix are OriginalOnly: existing importer does not implement new-import naming; no payload rename or move.",
+    "Backup/Saving snapshots remain diagnostic read-only until explicitly recovered outside this API. ConfigFile original storage errors are passed through."
+  ]
+}

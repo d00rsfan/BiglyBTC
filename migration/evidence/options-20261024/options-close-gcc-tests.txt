@@ -1,0 +1,111 @@
+UpdateCTestConfiguration  from :/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/DartConfiguration.tcl
+Test project /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 93
+    Start  93: desktop-model-and-lifecycle
+
+93: Test command: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-desktop-tests "modelValuesSelectionAndStaleTargets" "closeWaitsForCancellationAndWorkerTeardown" "cancellationFromBusyNotificationCompletes"
+93: Working Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+93: Environment variables: 
+93:  QT_QPA_PLATFORM=offscreen
+93: Test timeout computed to be: 120
+93: ********* Start testing of DesktopTests *********
+93: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+93: PASS   : DesktopTests::initTestCase()
+93: PASS   : DesktopTests::modelValuesSelectionAndStaleTargets()
+93: QWARN  : DesktopTests::closeWaitsForCancellationAndWorkerTeardown() This plugin does not support propagateSizeHints()
+93: QWARN  : DesktopTests::closeWaitsForCancellationAndWorkerTeardown() This plugin does not support propagateSizeHints()
+93: PASS   : DesktopTests::closeWaitsForCancellationAndWorkerTeardown()
+93: PASS   : DesktopTests::cancellationFromBusyNotificationCompletes()
+93: PASS   : DesktopTests::cleanupTestCase()
+93: Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 547ms
+93: ********* Finished testing of DesktopTests *********
+1/4 Test  #93: desktop-model-and-lifecycle ......   Passed    0.66 sec
+test 94
+    Start  94: desktop-files-model
+
+94: Test command: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-desktop-tests "filesValuesSelectionAndStaleResults"
+94: Working Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+94: Environment variables: 
+94:  QT_QPA_PLATFORM=offscreen
+94: Test timeout computed to be: 120
+94: ********* Start testing of DesktopTests *********
+94: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+94: PASS   : DesktopTests::initTestCase()
+94: QWARN  : DesktopTests::filesValuesSelectionAndStaleResults() This plugin does not support propagateSizeHints()
+94: QWARN  : DesktopTests::filesValuesSelectionAndStaleResults() This plugin does not support propagateSizeHints()
+94: PASS   : DesktopTests::filesValuesSelectionAndStaleResults()
+94: PASS   : DesktopTests::cleanupTestCase()
+94: Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 175ms
+94: ********* Finished testing of DesktopTests *********
+2/4 Test  #94: desktop-files-model ..............   Passed    0.33 sec
+test 210
+    Start 210: options-dialog
+
+210: Test command: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-options-dialog-tests
+210: Working Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+210: Environment variables: 
+210:  QT_QPA_PLATFORM=offscreen
+210: Test timeout computed to be: 240
+210: ********* Start testing of OptionsDialogTests *********
+210: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+210: PASS   : OptionsDialogTests::initTestCase()
+210: PASS   : OptionsDialogTests::classicPagesMaskPasswordsAndLabelUnavailableFeatures()
+210: PASS   : OptionsDialogTests::hiddenAndBusyInitialReadCoalescesUntilVisibleIdle()
+210: PASS   : OptionsDialogTests::staleAndMalformedReadPacketsCannotReplaceCurrentProfile()
+210: PASS   : OptionsDialogTests::sparseEditsPreserveInvalidAndMissingFields()
+210: PASS   : OptionsDialogTests::returningToLoadedValueSubmitsNothing()
+210: PASS   : OptionsDialogTests::invalidEditedValueDoesNotReachWorker()
+210: PASS   : OptionsDialogTests::failedSaveRetainsDraftAndRetryUsesOriginalRevision()
+210: PASS   : OptionsDialogTests::okWaitsForMatchingCommitAndPendingCloseCannotDiscard()
+210: QWARN  : OptionsDialogTests::dirtyCancelAndDiscardAreExplicit() This plugin does not support propagateSizeHints()
+210: QWARN  : OptionsDialogTests::dirtyCancelAndDiscardAreExplicit() This plugin does not support propagateSizeHints()
+210: PASS   : OptionsDialogTests::dirtyCancelAndDiscardAreExplicit()
+210: PASS   : OptionsDialogTests::readFailureCanRetryAndSessionInvalidationDropsCredentials()
+210: PASS   : OptionsDialogTests::loadAndSaveSignalCallbacksMayDeleteDialog()
+210: PASS   : OptionsDialogTests::enabledCallbackMayRebindProfileWithoutOldValuesLeaking()
+210: PASS   : OptionsDialogTests::cleanupTestCase()
+210: Totals: 14 passed, 0 failed, 0 skipped, 0 blacklisted, 452ms
+210: ********* Finished testing of OptionsDialogTests *********
+3/4 Test #210: options-dialog ...................   Passed    0.60 sec
+test 211
+    Start 211: options-host
+
+211: Test command: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-options-host-tests
+211: Working Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+211: Environment variables: 
+211:  QT_QPA_PLATFORM=offscreen
+211: Test timeout computed to be: 240
+211: ********* Start testing of OptionsHostTests *********
+211: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+211: PASS   : OptionsHostTests::initTestCase()
+211: PASS   : OptionsHostTests::savesSparseOriginalValuesAndReturnsFreshRevision()
+211: PASS   : OptionsHostTests::externalEditAndIncompatibleNetworkRejectBeforePublication()
+211: PASS   : OptionsHostTests::wrongSessionAndInvalidValuesHaveNoSideEffect()
+211: QWARN  : OptionsHostTests::toolsMenuOpensBoundDialogAndUsesCompatibleSave() This plugin does not support propagateSizeHints()
+211: PASS   : OptionsHostTests::toolsMenuOpensBoundDialogAndUsesCompatibleSave()
+211: PASS   : OptionsHostTests::cleanupTestCase()
+211: Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 748ms
+211: ********* Finished testing of OptionsHostTests *********
+4/4 Test #211: options-host .....................   Passed    0.86 sec
+
+The following tests passed:
+	desktop-model-and-lifecycle
+	desktop-files-model
+	options-dialog
+	options-host
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+files      =   0.33 sec*proc (1 test)
+options    =   1.46 sec*proc (2 tests)
+ui         =   0.99 sec*proc (2 tests)
+unit       =   2.45 sec*proc (4 tests)
+
+Total Test time (real) =   2.46 sec

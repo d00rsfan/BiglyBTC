@@ -35,3 +35,5 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
   set_property(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/managed_payload_counters.cpp"
     APPEND PROPERTY COMPILE_OPTIONS "-fno-sanitize=vptr")
 endif()
+
+target_sources(biglybtc_local_engine PRIVATE live_settings.cpp live_settings.hpp)

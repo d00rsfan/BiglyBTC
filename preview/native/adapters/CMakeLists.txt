@@ -53,3 +53,5 @@ target_sources(biglybtc_profile PRIVATE saved_speed_manager_view.cpp)
 target_sources(biglybtc_profile PRIVATE library_commands.cpp)
 
 target_sources(biglybtc_profile PRIVATE file_policy_commands.cpp)
+
+target_sources(biglybtc_profile PRIVATE application_settings.cpp)

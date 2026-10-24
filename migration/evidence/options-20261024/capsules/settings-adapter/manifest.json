@@ -1,0 +1,46 @@
+{
+  "status": "SOURCE_FROZEN_UNEXECUTED",
+  "subjects": {
+    "preview/native/adapters/application_settings.cpp": {
+      "before_sha256": null,
+      "sha256": "17e57d7816e1f1b6c624373e1f58d64fd086eae4a189c9b1c3b50dd19e77924c",
+      "bytes": 11785,
+      "staged": "staging/preview/native/adapters/application_settings.cpp"
+    },
+    "preview/native/adapters/application_settings.hpp": {
+      "before_sha256": null,
+      "sha256": "29fe8264a4976a5ad96644831fc11cd5ae1e714b514d721da002a1780511134c",
+      "bytes": 3154,
+      "staged": "staging/preview/native/adapters/application_settings.hpp"
+    },
+    "preview/native/core/include/biglybtc/application_settings.hpp": {
+      "before_sha256": null,
+      "sha256": "c09602383bd52bcfb2795001ceb571a7005128511fc3f4388947326a5b2bc1ba",
+      "bytes": 12829,
+      "staged": "staging/preview/native/core/include/biglybtc/application_settings.hpp"
+    },
+    "preview/native/tests/application_settings_tests.cpp": {
+      "before_sha256": null,
+      "sha256": "395ef542495915857a11bba51c0dd99675d08a28e6d15987fed655b420487e27",
+      "bytes": 13834,
+      "staged": "staging/preview/native/tests/application_settings_tests.cpp"
+    },
+    "preview/native/tests/settings_roundtrip_driver.cpp": {
+      "before_sha256": null,
+      "sha256": "730b1181c2ccb1ac162c3ca7e20e156015ef1598882c6b05a12e98a7c7585f14",
+      "bytes": 4916,
+      "staged": "staging/preview/native/tests/settings_roundtrip_driver.cpp"
+    }
+  },
+  "source_provenance_sha256": "63fa06a7c883ef1f900929f34e917edd8682c7e0f8e64be671d65b33bb4d92c5",
+  "header_amendment_manifest_sha256": "5e361a2f2a4e8638f3c708d45bc148c87029921dc44efbfb648581bcd8b89335",
+  "planned_test_families": 11,
+  "actual_builds_or_tests_run": false,
+  "targets": {
+    "adapter": "Add adapters/application_settings.cpp to biglybtc_profile; core catalog is header-only",
+    "regression": "biglybtc-application-settings-tests links biglybtc_profile; LINKER:--wrap=fsync; no Qt",
+    "handoff": "biglybtc-settings-roundtrip-driver links biglybtc_profile; PROFILE apply|check; root owns original-Java execution"
+  },
+  "private_cas_boundary": "Prepared value privately binds original shared immutable source identity + recovery marker. Save re-loads exact whole primary raw bytes; ConfigFile retains its own actual held directory identity and transaction CAS. No generic filename or credential output.",
+  "adoption_notes_sha256": "018a703580eb964e02eee16fdb9891d1cb4e279c35541af5d594f803fb38a8c4"
+}
