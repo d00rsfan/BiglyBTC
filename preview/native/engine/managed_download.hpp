@@ -18,6 +18,15 @@ struct ManagedDownloadStatus {
   bool checked = false, selectedComplete = false;
   std::optional<storage::Error> failure{};
 };
+enum class MagnetPhase { Resolving, Retiring, Imported, Failed, Cancelled };
+struct PendingMagnetStatus {
+  core::TorrentHash hash;
+  std::uint64_t admission = 0;
+  std::string name;
+  MagnetPhase phase = MagnetPhase::Resolving;
+  bool retained = false;
+  std::optional<storage::Error> failure{};
+};
 struct ManagedDownloadOptions {
   core::TorrentHash hash;
   unsigned short ownedLoopbackPeerPort = 0;

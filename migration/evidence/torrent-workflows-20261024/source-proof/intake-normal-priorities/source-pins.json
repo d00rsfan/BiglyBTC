@@ -1,0 +1,17 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_source": "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java",
+  "original_source_sha256": "821229517d374be10b95b4c2b623e3f25b356bf6d29724067933d943f719bcef",
+  "method": "storeFilePriorities",
+  "lines": [
+    1588,
+    1620
+  ],
+  "semantics": {
+    "legacy0": "skipped",
+    "legacy_minus1": "normal selected priority0"
+  },
+  "native_decoder": "core/src/file_policy.cpp",
+  "native_decoder_sha256": "a50ae3dfcb3d75d9c3220db803823bf91a7f4daaf40ee54f7c325bda7d6a764a",
+  "native_decoder_header_sha256": "0d199f329d775783d9f4195ba6e14ff660b410ce4bfc555c4c55b4eaa43bff46"
+}

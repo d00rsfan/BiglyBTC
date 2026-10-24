@@ -1,0 +1,6 @@
+{
+  "path": "preview/native/engine/persistent_session.cpp",
+  "before_sha256": "56e34c55c194938349c04284f1a4a358d8238f86a4d013a7c6a0c2f37e206d06",
+  "after_sha256": "a3bb2fbd0f472314aa1b30d0a7d9335acf06e05b16e45bd4c9318659128beaf9",
+  "reason": "Use safe ConfigFile .config suffix for private bencoded actual metadata; preserve existing filename whitelist and parsing/hash checks."
+}

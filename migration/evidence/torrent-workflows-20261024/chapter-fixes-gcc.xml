@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="6"
+	failures="3"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="487"
+	timestamp="2026-10-24T13:35:54"
+	>
+	<testcase name="managed-download" classname="managed-download" time="15.7637" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of ManagedDownloadTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedDownloadTests::initTestCase()
+PASS   : ManagedDownloadTests::concurrentMixedHandlesRemainControllableUnderOneOwner()
+PASS   : ManagedDownloadTests::partialStopAndRepeatedHashCheckpointsKeepFreshSavedIntent()
+PASS   : ManagedDownloadTests::failedAndForeignAdmissionsDoNotReplaceTheOtherActiveTorrent()
+PASS   : ManagedDownloadTests::unsafePayloadPreparationDoesNotAdmitOrRewriteAProfile()
+PASS   : ManagedDownloadTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 15753ms
+********* Finished testing of ManagedDownloadTests *********
+</system-out>
+	</testcase>
+	<testcase name="magnet-intake" classname="magnet-intake" time="0.0199217" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>15 magnet-intake families, 469 assertions passed
+</system-out>
+	</testcase>
+	<testcase name="managed-seeding" classname="managed-seeding" time="19.3925" status="fail">
+		<failure message="Failed"/>
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of ManagedSeedingTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedSeedingTests::initTestCase()
+FAIL!  : ManagedSeedingTests::completedNativeHandleUploadsActualPayloadToAnIndependentOwnedLeecher(single) Compared values are not the same
+   Actual   (uploaded-&gt;received): 131072
+   Expected (before-&gt;received)  : 65527
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/managed_seeding_tests.cpp(167)]
+FAIL!  : ManagedSeedingTests::completedNativeHandleUploadsActualPayloadToAnIndependentOwnedLeecher(multifile) Compared values are not the same
+   Actual   (uploaded-&gt;received): 131072
+   Expected (before-&gt;received)  : 65527
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/managed_seeding_tests.cpp(167)]
+PASS   : ManagedSeedingTests::selectedCompletionRetainsSparseSkippedLinearStorageAndOriginalPolicyOnReopen()
+FAIL!  : ManagedSeedingTests::immediateStopBeforeFirstPieceSampleRetainsExistingDataForRestart() Compared values are not the same
+   Actual   (restarted-&gt;received)                                              : 65527
+   Expected (std::int64_t{test::OwnedEngineFixture::PayloadBytes - PieceBytes}): 114688
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/managed_seeding_tests.cpp(276)]
+PASS   : ManagedSeedingTests::cleanupTestCase()
+Totals: 3 passed, 3 failed, 0 skipped, 0 blacklisted, 19378ms
+********* Finished testing of ManagedSeedingTests *********
+</system-out>
+	</testcase>
+	<testcase name="managed-magnet" classname="managed-magnet" time="240.11" status="fail">
+		<failure message="Timeout"/>
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of ManagedMagnetTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedMagnetTests::initTestCase()
+FAIL!  : ManagedMagnetTests::actualMetadataThenMaterialPayload(single-forced) 'pump(*service, pending.hash, MagnetPhase::Imported)' returned FALSE. (magnet phase=Failed retained=0 admission=1 failure=Held profile lease and safe configuration filename required; owner state=1 sequence=450 actualCounters=1)
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/managed_magnet_tests.cpp(258)]
+FAIL!  : ManagedMagnetTests::actualMetadataThenMaterialPayload(multifile-normal) 'pump(*service, pending.hash, MagnetPhase::Imported)' returned FALSE. (magnet phase=Failed retained=0 admission=1 failure=Held profile lease and safe configuration filename required; owner state=1 sequence=450 actualCounters=1)
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/managed_magnet_tests.cpp(258)]
+</system-out>
+	</testcase>
+	<testcase name="managed-library-command-routing" classname="managed-library-command-routing" time="27.4825" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of LibraryCommandsBridgeTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : LibraryCommandsBridgeTests::initTestCase()
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(stale-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(unknown-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(duplicate-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(unauthorized-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(invalid-action-next)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(invalid-action-large)
+QWARN  : LibraryCommandsBridgeTests::mixedTargetsRouteSavedIntentAndActualProgressIndep...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="magnet-host" classname="magnet-host" time="184.467" status="fail">
+		<failure message="Failed"/>
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of MagnetBridgeTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MagnetBridgeTests::initTestCase()
+FAIL!  : MagnetBridgeTests::actualMetadataImportsAndStartsInSameOwner(single) 'row(rows, pending.hash) &amp;&amp; row(rows, pending.hash)-&gt;bytes == test::OwnedEngineFixture::PayloadBytes' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/magnet_bridge_tests.cpp(141)]
+FAIL!  : MagnetBridgeTests::actualMetadataImportsAndStartsInSameOwner(multi) 'row(rows, pending.hash) &amp;&amp; row(rows, pending.hash)-&gt;bytes == test::OwnedEngineFixture::PayloadBytes' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/magnet_bridge_tests.cpp(141)]
+PASS   : MagnetBridgeTests::importedCrashRecoveryPreservesLaterStopAndDoesNotResolveAgain()
+PASS   : MagnetBridgeTests::legacyDestinationAndWholeSelectionCasRemainSafe()
+PASS   : MagnetBridgeTests::legacyResubmissionAttachesDestinationAndRetainsOriginalStoppedIntent()
+PASS   : MagnetBridgeTests::malformedPendingReadRetainsDisabledRowAndDoesNotRewriteConfig()
+PASS   : MagnetBridgeTests::cleanupTestCase()
+Totals: 6 passed, 2 failed, 0 skipped, 0 blacklisted, 184235ms
+********* Finished testing of MagnetBridgeTests *********
+</system-out>
+	</testcase>
+</testsuite>

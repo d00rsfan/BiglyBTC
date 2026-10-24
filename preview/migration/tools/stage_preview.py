@@ -114,8 +114,31 @@ def main():
         f"os.environ['LD_LIBRARY_PATH'] = {library_path}\n"
         "os.execv(str(root / 'usr/bin/BiglyBTC-preview'), ['BiglyBTC-preview', *sys.argv[1:]])\n")
     launcher.chmod(0o755)
+    # Normal product entry point is relocatable too. No profile, listen port or
+    # service policy is selected here; main requires explicit --profile input.
+    normal_launcher = destination / "BiglyBTC"
+    normal_launcher.write_text(
+        '#!/usr/bin/env python3\n'
+        'import os, sys\n'
+        'from pathlib import Path\n'
+        'root = Path(__file__).resolve().parent\n'
+        "private = root / 'usr/lib/biglybtc'\n"
+        "lookup = root / 'dependencies/libtorrent/usr/lib/x86_64-linux-gnu'\n"
+        "os.environ['LD_LIBRARY_PATH'] = os.pathsep.join(map(str, [private / 'lib', private / 'qt/lib', lookup]))\n"
+        "os.environ['QT_PLUGIN_PATH'] = str(private / 'qt/plugins')\n"
+        "os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = str(private / 'qt/plugins/platforms')\n"
+        "os.execv(str(private / 'bin/BiglyBTC'), ['BiglyBTC', *sys.argv[1:]])\n"
+    )
+    normal_launcher.chmod(0o755)
     (destination / "README.txt").write_text(
-        "BiglyBTC offline desktop preview\n\n"
+        "BiglyBTC portable development client\n\n"
+        "Normal client: ./BiglyBTC --profile /absolute/path/to/profile\n"
+        "Pass an existing absolute profile directory without symbolic links.\n"
+        "For development, use a separate owned directory such as ~/.biglybtc-dev;\n"
+        "expand it to its absolute path when passing --profile. The launcher\n"
+        "does not create a profile, choose ports or copy the Java profile.\n"
+        "The original ~/.biglybt directory is never chosen automatically.\n\n"
+        "Offline generated-sample preview:\n"
         "Run ./BiglyBTC-preview from this folder. Qt and the libtorrent runtime\n"
         "are included alongside the application; no system installation is needed.\n"
         "The four torrents are generated examples. Transfers are disabled.\n"
@@ -187,8 +210,9 @@ def main():
         if path.is_file():
             files[path.relative_to(destination).as_posix()] = hashlib.sha256(path.read_bytes()).hexdigest()
     manifest = {
-        "scope": "Offline generated-sample development preview; full migration remains unfinished",
+        "scope": "Portable development client; explicit profile or generated offline preview; full migration remains unfinished",
         "build": str(args.build.resolve()), "launch": "./BiglyBTC-preview",
+        "normal_launch": "./BiglyBTC --profile ABSOLUTE_PROFILE",
         "dependency_package_sha256": hashlib.sha256(package.read_bytes()).hexdigest(),
         "files_sha256": files, "loader": linked, "system_installation": False,
     }

@@ -1,0 +1,71 @@
+UpdateCTestConfiguration  from :/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/DartConfiguration.tcl
+Test project /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 199
+    Start 199: torrent-intake
+
+199: Test command: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-torrent-intake-tests
+199: Working Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+199: Test timeout computed to be: 240
+199: 13 torrent-intake families, 605 assertions passed
+1/3 Test #199: torrent-intake ...................   Passed    0.03 sec
+test 206
+    Start 206: managed-magnet
+
+206: Test command: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-managed-magnet-tests
+206: Working Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+206: Test timeout computed to be: 240
+206: ********* Start testing of ManagedMagnetTests *********
+206: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+206: PASS   : ManagedMagnetTests::initTestCase()
+206: PASS   : ManagedMagnetTests::actualMetadataThenMaterialPayload(single-forced)
+206: PASS   : ManagedMagnetTests::actualMetadataThenMaterialPayload(multifile-normal)
+206: PASS   : ManagedMagnetTests::stoppedIntentImportsRealMetadataWithoutMaterialPayload()
+206: PASS   : ManagedMagnetTests::resolvingCancelAndJoinedClose(explicit-cancel-retires-intent)
+206: PASS   : ManagedMagnetTests::resolvingCancelAndJoinedClose(joined-close-retains-recovery-intent)
+206: PASS   : ManagedMagnetTests::unsafeActualMetadataNeverTouchesPayload(single-name-traversal)
+206: PASS   : ManagedMagnetTests::unsafeActualMetadataNeverTouchesPayload(multifile-component-traversal)
+206: PASS   : ManagedMagnetTests::admissionsRequirePersistedIntentAndExactHeldProfile()
+206: PASS   : ManagedMagnetTests::cleanupTestCase()
+206: Totals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 2360ms
+206: ********* Finished testing of ManagedMagnetTests *********
+2/3 Test #206: managed-magnet ...................   Passed    2.38 sec
+test 208
+    Start 208: magnet-host
+
+208: Test command: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-magnet-host-tests
+208: Working Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+208: Environment variables: 
+208:  QT_QPA_PLATFORM=offscreen
+208: Test timeout computed to be: 240
+208: ********* Start testing of MagnetBridgeTests *********
+208: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+208: PASS   : MagnetBridgeTests::initTestCase()
+208: PASS   : MagnetBridgeTests::actualMetadataImportsAndStartsInSameOwner(single)
+208: PASS   : MagnetBridgeTests::actualMetadataImportsAndStartsInSameOwner(multi)
+208: PASS   : MagnetBridgeTests::importedCrashRecoveryPreservesLaterStopAndDoesNotResolveAgain()
+208: PASS   : MagnetBridgeTests::legacyDestinationAndWholeSelectionCasRemainSafe()
+208: PASS   : MagnetBridgeTests::legacyResubmissionAttachesDestinationAndRetainsOriginalStoppedIntent()
+208: PASS   : MagnetBridgeTests::malformedPendingReadRetainsDisabledRowAndDoesNotRewriteConfig()
+208: PASS   : MagnetBridgeTests::cleanupTestCase()
+208: Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 7351ms
+208: ********* Finished testing of MagnetBridgeTests *********
+3/3 Test #208: magnet-host ......................   Passed    7.50 sec
+
+The following tests passed:
+	torrent-intake
+	managed-magnet
+	magnet-host
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+torrent-workflows    =   9.90 sec*proc (3 tests)
+unit                 =   9.90 sec*proc (3 tests)
+
+Total Test time (real) =   9.91 sec

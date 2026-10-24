@@ -1,0 +1,79 @@
+{
+  "case": "chapter-epochs-gcc",
+  "build": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+  "tests": [
+    "magnet-intake",
+    "managed-magnet",
+    "managed-library-command-routing",
+    "magnet-host",
+    "managed-download",
+    "managed-seeding"
+  ],
+  "commands": [
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "-S",
+        "preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/install;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr;/home/yurii/Java/BiglyBTC/build/dependencies/country/sysroot/usr;/opt/Qt/6.12.0/gcc_64",
+        "-DBIGLYBTC_COUNTRY_MMDB_FIXTURE=/home/yurii/Java/BiglyBTC/build/dependencies/country/GeoIP2-Country-Test.mmdb"
+      ],
+      "exit": 0,
+      "seconds": 3.27,
+      "log": "chapter-epochs-gcc-configure.txt"
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "--parallel",
+        "3",
+        "--target",
+        "biglybtc-magnet-intake-tests",
+        "biglybtc-managed-magnet-tests",
+        "biglybtc-library-commands-bridge-tests",
+        "biglybtc-magnet-host-tests",
+        "biglybtc-managed-download-tests",
+        "biglybtc-managed-seeding-tests",
+        "BiglyBTC",
+        "biglybtc-managed-handoff-driver",
+        "--",
+        "-k",
+        "0"
+      ],
+      "exit": 0,
+      "seconds": 38.27,
+      "log": "chapter-epochs-gcc-build.txt"
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "-R",
+        "^(magnet\\-intake|managed\\-magnet|managed\\-library\\-command\\-routing|magnet\\-host|managed\\-download|managed\\-seeding)$",
+        "--no-tests=error",
+        "--output-on-failure",
+        "--verbose",
+        "--output-junit",
+        "/home/yurii/Java/BiglyBT/build/torrent-workflows-20261024/chapter-epochs-gcc.xml"
+      ],
+      "exit": -15,
+      "seconds": 316.87,
+      "log": "chapter-epochs-gcc-tests.txt"
+    }
+  ],
+  "source_manifest_sha256": "65dec3aa958238323e173766eb463b5c11e892e8ec992d2858c94579362c3a79"
+}

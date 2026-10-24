@@ -344,7 +344,7 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   unavailable(community, tr("Forums"), QStringLiteral("forums"), QStyle::SP_DialogHelpButton);
   auto* about = help->addAction(tr("About BiglyBTC"));
   connect(about, &QAction::triggered, this, [this] {
-    QMessageBox::about(this, tr("About BiglyBTC"), tr("BiglyBTC\nClassic desktop preview\n\nLibrary and file details use generated sample data.\nThe full client is under development."));
+    QMessageBox::about(this, tr("About BiglyBTC"), tr("BiglyBTC\nClassic desktop preview\n\nLibrary and file details reflect the selected profile.\nThe full client is under development."));
   });
   file->addSeparator();
   closeTab_ = file->addAction(tr("Close &Tab"));

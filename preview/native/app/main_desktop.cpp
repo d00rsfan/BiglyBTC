@@ -95,6 +95,7 @@ int main(int argc, char** argv) {
     QObject::connect(&window, &Window::downloadActionRequested, &bridge, &Bridge::downloadAction);
     QObject::connect(&window, &Window::filePolicyRequested, &bridge, &Bridge::filePolicy);
     QObject::connect(&window, &Window::torrentImportRequested, &bridge, &Bridge::torrentImport);
+    QObject::connect(&window, &Window::magnetImportRequested, &bridge, &Bridge::magnetImport);
     QObject::connect(&window, &Window::continueRequested, &bridge, &Bridge::continueDownload);
     QObject::connect(&window, &Window::detailsRequested, &bridge, &Bridge::details);
     QObject::connect(&window, &Window::savedServicesRequested, &bridge, &Bridge::savedServices);

@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_UNEXECUTED",
+  "native_base": "8795a76eef634bc6167713d913af7d302e3e028d",
+  "files": [
+    {
+      "path": "preview/native/app/session_bridge.cpp",
+      "before_sha256": "c6102a4f6cdb904f011e9ec4354c094b098607c76da1eecd981b934364f5bf5e",
+      "sha256": "39230dfbe0ce8d81f7ac64479476a43332027017d9243b7381e76bc1e0323cf9"
+    },
+    {
+      "path": "preview/native/engine/magnet_intake.cpp",
+      "before_sha256": "dd5a1682e9309e795439003ae2ed08e6360279e015c3ffe964c1204d0f0a2153",
+      "sha256": "15dfa57488dbf3d61dbe88e7a3fcc004a3d4d21bbd694b69cf1e2253ccb56d19"
+    },
+    {
+      "path": "preview/native/tests/magnet_bridge_tests.cpp",
+      "before_sha256": "bfce3c0223191f141c56e252fb98e4f91d4a0777c4a2d7f325f8c7504d32c75f",
+      "sha256": "4a31021adfa07d12f22d4b846e881827cf803e283fd2b3f69da883a8c46472fd"
+    },
+    {
+      "path": "preview/native/tests/magnet_intake_tests.cpp",
+      "before_sha256": "3e1a44a7157ddfd7f4b5d01493a7877af12762aaed729e2b228db6ff2020f518",
+      "sha256": "f2a7f51a8b1479a42b9318fe709927229defffea7ed347f13668cea545b9cce8"
+    },
+    {
+      "path": "preview/native/engine/magnet_intake.hpp",
+      "before_sha256": "fd7173198a86219e6ac4b73e492bfdf4190dbeb1a098ec241973217e460d0a07",
+      "sha256": "08f34f9787fb9a2ca8fcae59dc2e72e91dad0e13c1bfd0ac080dae1ac07fcc72"
+    }
+  ],
+  "host_old_methods_unchanged": true,
+  "planned_bridge_qt_rows": 8,
+  "intake_added_families": 2,
+  "compiler_runs": 0,
+  "test_runs": 0,
+  "native_writes": 0,
+  "artifacts": {
+    "changes.patch": "fbd0c72bd25b10ce72319db6580280f05add1c8448bc9df73b0be5e1b8a273be",
+    "prepare.py": "269717f94f33c44e7e7f4e180e592817796be6a55a38e15c989d095262637d53",
+    "host-test-method.cpp": "74f1fbcb7857326a78c07db02cd461d124dc1f8041021a3520e6eab947b25bf4",
+    "ADOPTION.md": "e1b90edefc62b82cede6c06bf71163e47740a2fc1dff43aac6ab87497fe561f1"
+  }
+}

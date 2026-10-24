@@ -45,6 +45,7 @@ public:
   bool openNormal(std::filesystem::path profile);
   bool downloadAction(ui::DownloadTargets, core::DownloadAction);
   bool torrentImport(QString metadata, QString destination, bool start);
+  bool magnetImport(QString uri, QString destination);
   bool filePolicy(ui::Target, ui::FileIndices, int priority, bool skipped);
   bool refresh();
   bool savedServices(quint64 request);

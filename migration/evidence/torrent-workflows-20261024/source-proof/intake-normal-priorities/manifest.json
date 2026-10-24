@@ -1,0 +1,20 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_INTAKE_NORMAL_PRIORITY_FIX",
+  "source_directory": "staging",
+  "before_sha256": {
+    "adapters/torrent_intake.cpp": "509c6a57096a927d9b5c8bb20fb4631d06ed9ecc724b56a502f2871e1eb5f9ba",
+    "tests/torrent_intake_tests.cpp": "2d443805d7d9c9a5ce85c2b23c2db3063de20de318dc45b63a62d44e09250bd4"
+  },
+  "source_sha256": {
+    "adapters/torrent_intake.cpp": "31a41aef8cb58733ddb82b801ac8f0b920c663b516df73eca996d6273609ee6b",
+    "tests/torrent_intake_tests.cpp": "81a39ec3770d882459cbd5b5b8513e495a29fc35a1113b689a5628f337f6199b"
+  },
+  "patch_sha256": "ffaf64baefae199dd9aa6c2919c631aabfa9dfea1c1d76447010456b1dbc03e3",
+  "source_pins_sha256": "50259163f1ca4a372aab74b39e383ee3429b9d0a4d72b183bfec2ed056f5c7bf",
+  "README_sha256": "54c7be108625d6c483b116d7198b44f01435ff9cdd03dec9a56e715af191f3d9",
+  "new_test_families": 0,
+  "existing_single_multifile_family_strengthened": true,
+  "all_other_test_bodies_and_assertions_unchanged": true,
+  "author_native_writes": 0,
+  "author_builds_tests_Java_Git": 0
+}

@@ -1,10 +1,15 @@
 #include "persistent_session_support.hpp"
+#include "managed_payload_counters.hpp"
 #include "tracker_statistics_sampler.hpp"
 #include "persistent_runtime_guard.hpp"
 #include "runtime_metrics_sampler.hpp"
 #include "effective_rate_limits.hpp"
 #include "peer_payload_observer.hpp"
 #include "managed_storage.hpp"
+#include "magnet_intake.hpp"
+#include "metadata_disk_router.hpp"
+#include <libtorrent/session_params.hpp>
+#include <libtorrent/write_resume_data.hpp>
 #include "network_policy.hpp"
 #include <libtorrent/torrent_status.hpp>
 #include <map>
@@ -57,6 +62,7 @@ struct PersistentSession::Impl {
   struct Managed {
     std::unique_ptr<OperationToken> token;
     detail::ManagedStorage storage;
+    std::shared_ptr<detail::ManagedPayloadCounters> payloadCounters = std::make_shared<detail::ManagedPayloadCounters>();
     lt::torrent_handle handle;
     ManagedDownloadStatus status;
     bool manualPaused = false, forceStart = false, stop = false;
@@ -71,6 +77,25 @@ struct PersistentSession::Impl {
   const storage::ProfileLease* managedLease = nullptr; // Same bound lease, owned by Host.
   std::optional<NetworkPolicy> network;
   bool appliedSeedingOnly = false;
+  struct Magnet {
+    std::unique_ptr<OperationToken> token;
+    PendingMagnet intent;
+    lt::torrent_handle handle;
+    PendingMagnetStatus status;
+    Clock::time_point expires{}, deadline{};
+    bool removing = false, removed = false, cancel = false, shutdown = false;
+    std::string metadata;
+    Magnet(std::uint64_t id, PendingMagnet value)
+        : token(std::make_unique<OperationToken>(OperationToken{id})), intent(std::move(value)),
+          status{.hash = intent.hash, .admission = id, .name = intent.displayName} {}
+  };
+  std::map<std::string, std::unique_ptr<Magnet>> magnets;
+  std::shared_ptr<detail::MetadataDiskPolicy> diskPolicy = std::make_shared<detail::MetadataDiskPolicy>();
+  storage::ProfileLease* magnetLease = nullptr;
+  std::filesystem::path magnetProfile;
+  std::vector<ManagedDownloadOptions> autoStarts;
+  std::map<std::string, std::vector<lt::tcp::endpoint>> importPeers;
+  bool closingAdmission = false;
   AccountingIdentity identity;
   const std::thread::id worker = std::this_thread::get_id();
   const std::int64_t origin = static_cast<std::int64_t>(Clock::now().time_since_epoch().count());
@@ -273,6 +298,10 @@ struct PersistentSession::Impl {
     for (auto* alert : pending) {
       if (!alert) { continue; }
       if (auto* statistics = lt::alert_cast<lt::session_stats_alert>(alert)) { retain(*statistics); }
+      const bool lifecycle = lt::alert_cast<lt::torrent_removed_alert>(alert)
+          || lt::alert_cast<lt::save_resume_data_alert>(alert) || lt::alert_cast<lt::file_error_alert>(alert)
+          || lt::alert_cast<lt::torrent_error_alert>(alert) || lt::alert_cast<lt::save_resume_data_failed_alert>(alert);
+      if (!lifecycle) { continue; }
       for (auto& [key, entry] : managed) {
         static_cast<void>(key);
         auto& value = *entry;
@@ -292,6 +321,22 @@ struct PersistentSession::Impl {
         if (auto* failed = lt::alert_cast<lt::file_error_alert>(alert)) { fail(failed->handle); }
         if (auto* failed = lt::alert_cast<lt::torrent_error_alert>(alert)) { fail(failed->handle); }
         if (auto* failed = lt::alert_cast<lt::save_resume_data_failed_alert>(alert)) { fail(failed->handle); }
+      }
+    }
+    for (auto* alert : pending) {
+      if (!alert) { continue; }
+      auto* removed = lt::alert_cast<lt::torrent_removed_alert>(alert);
+      auto* fileError = lt::alert_cast<lt::file_error_alert>(alert);
+      auto* torrentError = lt::alert_cast<lt::torrent_error_alert>(alert);
+      if (!removed && !fileError && !torrentError) { continue; }
+      for (auto& [key, entry] : magnets) {
+        static_cast<void>(key); auto& value = *entry;
+        if (removed && removed->handle == value.handle
+            && removed->userdata.get<OperationToken>() == value.token.get()) { value.removed = true; }
+        if ((fileError && fileError->handle == value.handle) || (torrentError && torrentError->handle == value.handle)) {
+          value.status.failure = storage::Error{storage::ErrorCode::Io, "Magnet metadata transfer failed; recovery intent retained"};
+          requestMagnetRetirement(value);
+        }
       }
     }
     return pending;
@@ -336,6 +381,10 @@ struct PersistentSession::Impl {
       entry->status.failure = storage::Error{storage::ErrorCode::Io,
           "Engine owner joined after failure; original pieces require recheck"};
     }
+    for (auto& [key, entry] : magnets) {
+      static_cast<void>(key); entry->status.retained = false; entry->status.phase = MagnetPhase::Failed;
+      entry->status.failure = storage::Error{storage::ErrorCode::Io, "Engine joined after failure; magnet recovery intent retained"};
+    }
     outstanding = false;
     counterError(AccountingError::OwnerResetRequired);
     publish(); // Explicit uncertified state; retained values are last-observed.
@@ -360,7 +409,9 @@ struct PersistentSession::Impl {
         }
         settings.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::error
             | lt::alert_category::status | lt::alert_category::storage));
-        session = std::make_unique<lt::session>(settings);
+        lt::session_params parameters(settings);
+        parameters.disk_io_constructor = detail::metadataDiskConstructor(diskPolicy);
+        session = std::make_unique<lt::session>(std::move(parameters));
         session->pause();
         rateLimits = detail::readEffectiveRateLimits(*session); // Optional read, never applies settings.
         phase = AccountingState::Idle;
@@ -369,7 +420,7 @@ struct PersistentSession::Impl {
     }
   }
   void prepare(const storage::ProfileLease& lease, const LocalOptions& options) {
-    detail::require(call && onWorker() && !registered && !managedActive() && !poisoned && !closed,
+    detail::require(call && onWorker() && !registered && !managedActive() && !magnetActive() && !poisoned && !closed,
         "Persistent owner is not available", storage::ErrorCode::Conflict);
     bind(lease);
     // Optional callback allocation failure does not prevent safe transfer or
@@ -427,12 +478,27 @@ struct PersistentSession::Impl {
   }
   void sampleManaged(Managed& value, bool pieces = false) {
     if (!value.handle.is_valid() || value.removing) { return; }
-    const auto sample = value.handle.status(pieces ? lt::torrent_handle::query_pieces : lt::status_flags_t{});
+    lt::torrent_status sample;
+    detail::ManagedPayloadCounters::Sample actual;
+    for (int attempt = 0; attempt < 4; ++attempt) {
+      const auto epoch = value.payloadCounters->epoch();
+      if (!epoch) { break; }
+      sample = value.handle.status(pieces ? lt::torrent_handle::query_pieces : lt::status_flags_t{});
+      actual = value.payloadCounters->combine(*epoch, sample.total_payload_download, sample.total_payload_upload);
+      if (actual.state != detail::ManagedPayloadCounters::Read::Retry) { break; }
+    }
+    if (actual.state != detail::ManagedPayloadCounters::Read::Accepted) {
+      value.status.failure = storage::Error{storage::ErrorCode::Io,
+          "Exact managed transfer counters are unavailable; saved state requires recheck"};
+      requestStop(value);
+      value.status.phase = ManagedPhase::Failed;
+      return; // Never checkpoint guessed/zero/tick-lagged transfer totals.
+    }
     value.status.retained = true;
     value.status.completed = sample.total_done;
     value.status.bytes = sample.total;
-    value.status.received = sample.total_payload_download;
-    value.status.sent = sample.total_payload_upload;
+    value.status.received = actual.received;
+    value.status.sent = actual.sent;
     value.status.downloadRate = sample.download_payload_rate;
     value.status.uploadRate = sample.upload_payload_rate;
     value.status.pieces = sample.num_pieces;
@@ -493,7 +559,7 @@ struct PersistentSession::Impl {
         removalLost = true; transferError = true;
       }
     }
-    if (!registered && !managedActive() && !closed && !poisoned) { phase = AccountingState::Idle; }
+    if (!registered && !managedActive() && !magnetActive() && !closed && !poisoned) { phase = AccountingState::Idle; }
     if (network && session && !poisoned) {
       bool any = false, onlySeeds = true;
       for (const auto& [key, entry] : managed) {
@@ -501,7 +567,7 @@ struct PersistentSession::Impl {
         if (!entry->handle.is_valid() || entry->stop) { continue; }
         any = true; onlySeeds = onlySeeds && entry->status.selectedComplete;
       }
-      const bool seedingOnly = any && onlySeeds;
+      const bool seedingOnly = any && onlySeeds && !magnetActive();
       if (seedingOnly != appliedSeedingOnly) {
         auto settings = makeNetworkSettings(*network, seedingOnly);
         if (settings) {
@@ -526,6 +592,105 @@ struct PersistentSession::Impl {
       return true;
     } catch (...) { return false; }
   }
+  bool magnetActive() const noexcept {
+    for (const auto& [key, entry] : magnets) {
+      static_cast<void>(key);
+      if (entry->handle.is_valid() || (entry->removing && !entry->removed)) { return true; }
+    }
+    return false;
+  }
+  void requestMagnetRetirement(Magnet& value) {
+    if (value.removing || !value.handle.is_valid()) { return; }
+    value.status.phase = MagnetPhase::Retiring;
+    value.deadline = Clock::now() + CertificationBudget;
+    value.handle.unset_flags(lt::torrent_flags::auto_managed);
+    value.handle.pause();
+    session->remove_torrent(value.handle); // Registered route has no filesystem storage.
+    value.removing = true;
+  }
+  void advanceMagnets() {
+    for (auto& [key, entry] : magnets) {
+      static_cast<void>(key); auto& value = *entry;
+      if (!value.status.retained) { continue; }
+      if (!value.removing && !value.cancel && !value.shutdown && !value.status.failure) {
+        try {
+          const auto metadata = value.handle.torrent_file();
+          if (metadata && metadata->is_valid()) {
+            const auto actual = metadata->info_hashes();
+            detail::require((!value.intent.requested.has_v1() || (actual.has_v1() && actual.v1 == value.intent.requested.v1))
+                && (!value.intent.requested.has_v2() || (actual.has_v2() && actual.v2 == value.intent.requested.v2)),
+                "Received metadata does not match every requested full hash", storage::ErrorCode::InvalidFormat);
+            lt::add_torrent_params parameters;
+            parameters.ti = std::make_shared<lt::torrent_info>(*metadata);
+            const auto bytes = lt::write_torrent_file_buf(parameters, {});
+            detail::require(!bytes.empty() && bytes.size() <= 32 * 1024 * 1024,
+                "Received magnet metadata exceeds its bound", storage::ErrorCode::InvalidFormat);
+            value.metadata.assign(bytes.data(), bytes.size());
+            requestMagnetRetirement(value);
+          } else if (Clock::now() >= value.expires) {
+            value.status.failure = storage::Error{storage::ErrorCode::Io, "Magnet metadata deadline expired; recovery intent retained"};
+            requestMagnetRetirement(value);
+          }
+        } catch (const detail::Failure& failure) { value.status.failure = failure.error; requestMagnetRetirement(value); }
+        catch (...) {
+          value.status.failure = storage::Error{storage::ErrorCode::Io, "Cannot retain received magnet metadata; recovery intent retained"};
+          requestMagnetRetirement(value);
+        }
+      }
+      if (value.removing && value.removed && !value.handle.is_valid()) {
+        value.status.retained = false;
+        value.removing = false;
+        if (value.status.failure) { value.status.phase = MagnetPhase::Failed; continue; }
+        try {
+          detail::require(magnetLease && network, "Magnet profile context is unavailable", storage::ErrorCode::Conflict);
+          if (value.cancel) {
+            detail::done(cancelPendingMagnet(*magnetLease, value.intent));
+            value.status.phase = MagnetPhase::Cancelled;
+          } else if (!value.metadata.empty()) {
+            const auto filename = "BiglyBTC.metadata." + value.intent.hash.hex() + ".config";
+            auto existing = storage::ConfigFile::load(*magnetLease, filename);
+            if (existing) {
+              detail::require(existing->recoverySource() == storage::RecoverySource::Primary
+                  && existing->document().serialize() == value.metadata,
+                  "Received metadata staging file conflicts with an earlier admission", storage::ErrorCode::Conflict);
+            } else {
+              if (existing.error().code != storage::ErrorCode::Missing) { throw detail::Failure{existing.error()}; }
+              static_cast<void>(detail::take(storage::ConfigFile::createMissing(*magnetLease, filename, value.metadata)));
+            }
+            const auto hash = detail::take(completePendingMagnet(*magnetLease, value.intent, magnetProfile / filename, *network));
+            value.status.phase = MagnetPhase::Imported;
+            // These numeric hints were admitted under this owner's immutable
+            // bind/proxy policy. Retain them across metadata and payload handles
+            // (and a later same-owner Stop/Start), without bypassing LT routing.
+            importPeers.insert_or_assign(hash.hex(), value.intent.peers);
+            if (!value.intent.stopped && !closingAdmission) { autoStarts.push_back({hash, 0, value.intent.forceStart, false}); }
+            value.metadata.clear(); value.metadata.shrink_to_fit();
+          } else { value.status.phase = MagnetPhase::Resolving; } // Normal close preserves unresolved original intent.
+        } catch (const detail::Failure& failure) { value.status.failure = failure.error; value.status.phase = MagnetPhase::Failed; }
+        catch (...) {
+          value.status.failure = storage::Error{storage::ErrorCode::Io, "Magnet import failed; recovery intent retained"};
+          value.status.phase = MagnetPhase::Failed;
+        }
+      } else if (value.removing && Clock::now() >= value.deadline) {
+        value.status.failure = storage::Error{storage::ErrorCode::Io, "Magnet retirement fence was lost; recovery intent retained"};
+        removalLost = true; transferError = true;
+      }
+    }
+  }
+  bool retireMagnets(Clock::time_point deadline) noexcept {
+    try {
+      for (auto& [key, entry] : magnets) {
+        static_cast<void>(key);
+        if (entry->handle.is_valid()) { entry->shutdown = true; requestMagnetRetirement(*entry); }
+      }
+      advanceMagnets();
+      while (magnetActive() && Clock::now() < deadline && !removalLost) {
+        static_cast<void>(pop()); advanceMagnets();
+        if (magnetActive()) { std::this_thread::sleep_for(20ms); }
+      }
+      return !magnetActive() && !removalLost;
+    } catch (...) { return false; }
+  }
   RetirementReceipt finishRetirement(RetirementReceipt result) noexcept {
     retirement = result; // Receipt and essential counters exist BEFORE callbacks.
     deferPublication = false;
@@ -543,7 +708,13 @@ struct PersistentSession::Impl {
     }
     phase = AccountingState::Retiring;
     try {
-      if (!retireManaged(deadline)) {
+      // Start both retirement paths before waiting so independent disk and
+      // metadata lifetimes share the close budget rather than consuming it twice.
+      for (auto& [key, entry] : magnets) {
+        static_cast<void>(key);
+        if (entry->handle.is_valid()) { entry->shutdown = true; requestMagnetRetirement(*entry); }
+      }
+      if (!retireManaged(deadline) || !retireMagnets(deadline)) {
         result.accountingFailure = AccountingError::StorageFenceLost;
         joinPoisoned(); return finishRetirement(result);
       }
@@ -668,9 +839,22 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
     impl_->ensureSession();
     auto value = std::make_unique<Impl::Managed>(++impl_->operation, std::move(storage), options.hash);
     auto parameters = value->storage.parameters();
+    // ManagedStorage deliberately reconstructs checked original state instead
+    // of restoring LT transfer totals. Never charge inherited totals twice.
+    detail::require(parameters.total_downloaded == 0 && parameters.total_uploaded == 0,
+        "Managed admission requires fresh transfer counter bases", storage::ErrorCode::Conflict);
+    detail::require(!impl_->diskPolicy->isMetadataPath(std::filesystem::path(parameters.save_path)),
+        "Reserved metadata storage cannot be used for ordinary payload", storage::ErrorCode::UnsafePath);
+    if (const auto hints = impl_->importPeers.find(key); hints != impl_->importPeers.end() && !hints->second.empty()) {
+      detail::require(impl_->network->mode == NetworkMode::Normal,
+          "Numeric magnet peer hints cannot bypass isolation", storage::ErrorCode::Unsupported);
+      parameters.peers = hints->second;
+    }
     value->status.totalPieces = parameters.ti->num_pieces();
     value->status.bytes = parameters.ti->total_size();
     parameters.userdata = value->token.get();
+    detail::require(detail::attachManagedPayloadCounters(parameters, value->payloadCounters),
+        "Exact managed transfer counters require the approved source ABI", storage::ErrorCode::Unsupported);
     detail::attachPeerPayloadObserver(parameters, impl_->peerPayloadLedger, impl_->operation);
     parameters.flags |= lt::torrent_flags::paused | lt::torrent_flags::duplicate_is_error;
     if (options.forceStart) { parameters.flags &= ~lt::torrent_flags::auto_managed; }
@@ -734,6 +918,103 @@ std::expected<void, storage::Error> PersistentSession::stopManaged(const core::T
   if (found == impl_->managed.end()) { return {}; }
   try { impl_->requestStop(*found->second); return {}; }
   catch (...) { return std::unexpected(storage::Error{storage::ErrorCode::Io, "Cannot request torrent flush"}); }
+}
+std::optional<unsigned short> PersistentSession::tcpListenPort() const noexcept {
+  if (!impl_->onWorker() || !impl_->session || impl_->closed || impl_->poisoned
+      || (impl_->network && !impl_->network->incomingTcp)) { return std::nullopt; }
+  try { const auto port = impl_->session->listen_port(); return port ? std::optional{port} : std::nullopt; }
+  catch (...) { return std::nullopt; }
+}
+std::expected<void, storage::Error> PersistentSession::startMagnet(storage::ProfileLease& lease,
+    const PendingMagnet& intent, const std::filesystem::path& profile) {
+  if (!managedAvailable() || impl_->call || impl_->closingAdmission) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Magnet admission is unavailable"});
+  }
+  const auto key = intent.hash.hex();
+  const auto old = impl_->magnets.find(key);
+  if (old != impl_->magnets.end() && old->second->status.retained) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Magnet is already resolving or retiring"});
+  }
+  if (const auto active = impl_->managed.find(key); active != impl_->managed.end() && active->second->status.retained) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Torrent is already admitted"});
+  }
+  impl_->call = true;
+  try {
+    impl_->bind(lease); impl_->retirement.reset();
+    detail::require(!intent.sourceEntry.empty() && intent.destination.has_value(),
+        "Persist the magnet and select its destination before resolving", storage::ErrorCode::Conflict);
+    detail::require(profile.is_absolute() && profile.lexically_normal() == profile,
+        "Magnet profile path must be absolute and normalized", storage::ErrorCode::UnsafePath);
+    const auto directory = detail::directory(profile);
+    struct stat held{}, named{};
+    detail::require(::fstat(lease.directoryHandle(), &held) == 0 && ::fstat(directory.get(), &named) == 0
+        && held.st_dev == named.st_dev && held.st_ino == named.st_ino,
+        "Magnet profile path differs from its held lease", storage::ErrorCode::Conflict);
+    detail::require(intent.timeoutMillis > 0 && intent.timeoutMillis <= 24LL * 60 * 60 * 1000,
+        "Unsupported magnet resolution deadline", storage::ErrorCode::InvalidFormat);
+    detail::require(impl_->operation != std::numeric_limits<std::uint64_t>::max(), "Admission identity exhausted");
+    if (!impl_->network) { impl_->network = NetworkPolicy{}; }
+    const auto current = detail::take(readPendingMagnets(lease, *impl_->network));
+    const auto saved = std::ranges::find_if(current, [&](const auto& value) { return value.hash == intent.hash; });
+    detail::require(saved != current.end() && saved->sourceEntry == intent.sourceEntry,
+        "Magnet recovery intent is stale", storage::ErrorCode::Conflict);
+    const auto admission = ++impl_->operation;
+    const auto virtualPath = profile / (".BiglyBTC.metadata." + key + "." + std::to_string(admission));
+    detail::done(impl_->diskPolicy->registerMetadataPath(virtualPath));
+    auto parameters = detail::take(metadataOnlyParameters(intent, *impl_->network, virtualPath));
+    auto value = std::make_unique<Impl::Magnet>(admission, intent);
+    parameters.userdata = value->token.get();
+    detail::attachPeerPayloadObserver(parameters, impl_->peerPayloadLedger, admission);
+    parameters.flags |= lt::torrent_flags::paused | lt::torrent_flags::duplicate_is_error;
+    parameters.flags &= ~lt::torrent_flags::auto_managed;
+    impl_->ensureSession();
+    if (old != impl_->magnets.end()) { impl_->magnets.erase(old); }
+    auto [slot, inserted] = impl_->magnets.emplace(key, std::move(value));
+    detail::require(inserted, "Duplicate magnet admission", storage::ErrorCode::Conflict);
+    lt::error_code error;
+    try { slot->second->handle = impl_->session->add_torrent(std::move(parameters), error); }
+    catch (...) { impl_->joinPoisoned(); throw; }
+    if (error || !slot->second->handle.is_valid()) {
+      impl_->magnets.erase(slot);
+      throw detail::Failure{{storage::ErrorCode::Io, "Cannot admit magnet metadata; recovery intent retained"}};
+    }
+    impl_->magnetLease = &lease; impl_->managedLease = &lease; impl_->magnetProfile = profile;
+    slot->second->expires = Clock::now() + std::chrono::milliseconds(intent.timeoutMillis);
+    slot->second->status.retained = true;
+    impl_->phase = AccountingState::Active;
+    slot->second->handle.resume(); impl_->session->resume(); impl_->publish();
+    impl_->call = false; return {};
+  } catch (const detail::Failure& failure) { impl_->call = false; return std::unexpected(failure.error); }
+  catch (...) { impl_->call = false; return std::unexpected(storage::Error{storage::ErrorCode::Io, "Magnet admission failed; recovery intent retained"}); }
+}
+std::expected<void, storage::Error> PersistentSession::cancelMagnet(const core::TorrentHash& hash) {
+  if (!managedAvailable() || impl_->call) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Magnet cancellation is unavailable"});
+  }
+  const auto found = impl_->magnets.find(hash.hex());
+  if (found == impl_->magnets.end()) { return std::unexpected(storage::Error{storage::ErrorCode::Missing, "Magnet is not admitted"}); }
+  auto& value = *found->second;
+  if (value.status.phase == MagnetPhase::Imported || value.status.phase == MagnetPhase::Cancelled) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Magnet has already left the pending lifecycle"});
+  }
+  try {
+    value.cancel = true;
+    if (value.status.retained) { impl_->requestMagnetRetirement(value); }
+    else {
+      if (!impl_->magnetLease) { return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Magnet lease is unavailable"}); }
+      auto removed = cancelPendingMagnet(*impl_->magnetLease, value.intent);
+      if (!removed) { return removed; }
+      value.status.failure.reset(); value.status.phase = MagnetPhase::Cancelled;
+    }
+    return {};
+  } catch (...) { return std::unexpected(storage::Error{storage::ErrorCode::Io, "Cannot cancel magnet; recovery intent retained"}); }
+}
+std::vector<PendingMagnetStatus> PersistentSession::pendingMagnets() const {
+  std::vector<PendingMagnetStatus> result;
+  if (!impl_->onWorker()) { return result; }
+  result.reserve(impl_->magnets.size());
+  for (const auto& [key, entry] : impl_->magnets) { static_cast<void>(key); result.push_back(entry->status); }
+  return result;
 }
 std::expected<void, storage::Error> PersistentSession::reorderManaged(std::span<const core::TorrentHash> order) {
   if (!managedAvailable() || impl_->call) { return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Managed queue is unavailable"}); }
@@ -802,6 +1083,7 @@ std::expected<void, AccountingError> PersistentSession::poll() {
   try {
     static_cast<void>(impl_->pop());
     impl_->advanceManaged();
+    impl_->advanceMagnets();
     if (impl_->transferError || impl_->removalLost) {
       impl_->counterError(AccountingError::Engine);
       impl_->joinPoisoned();
@@ -813,6 +1095,16 @@ std::expected<void, AccountingError> PersistentSession::poll() {
   if (impl_->counterFailure && (!impl_->observation
       || impl_->observation->state != AccountingState::Uncertified)) { impl_->publish(); }
   impl_->call = false;
+  auto starts = std::move(impl_->autoStarts); impl_->autoStarts.clear();
+  if (impl_->magnetLease && !impl_->poisoned && !impl_->closingAdmission) {
+    for (const auto& options : starts) {
+      auto admitted = startManaged(*impl_->magnetLease, options);
+      if (!admitted) {
+        const auto found = impl_->magnets.find(options.hash.hex());
+        if (found != impl_->magnets.end()) { found->second->status.failure = admitted.error(); }
+      }
+    }
+  }
   if (impl_->counterFailure) { return std::unexpected(*impl_->counterFailure); }
   return {};
 }
@@ -821,6 +1113,7 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
   if (impl_->call) { return {{0, false, {}, AccountingError::ActiveOperation}, false}; }
   if (impl_->closed) { return {impl_->retirement.value_or(RetirementReceipt{}), true}; }
   impl_->call = true;
+  impl_->closingAdmission = true;
   impl_->phase = AccountingState::Closing;
   const auto result = impl_->retire(std::min(deadline, Clock::now() + CertificationBudget));
   impl_->sink = {}; impl_->operationSink = {};
@@ -834,6 +1127,12 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
     static_cast<void>(key);
     if (entry->status.failure) { checkpointFailure = entry->status.failure; break; }
   }
+  if (!checkpointFailure) {
+    for (const auto& [key, entry] : impl_->magnets) {
+      static_cast<void>(key);
+      if (entry->status.failure) { checkpointFailure = entry->status.failure; break; }
+    }
+  }
   return {result, true, std::move(checkpointFailure)};
 }
 
@@ -841,7 +1140,7 @@ namespace detail {
 PersistentCall::PersistentCall(PersistentSession& owner, const storage::ProfileLease& lease) : owner_(owner) {
   auto& impl = *owner_.impl_;
   require(impl.onWorker(), "Persistent owner called from another thread", storage::ErrorCode::Conflict);
-  require(!impl.call && !impl.closed && !impl.poisoned && !impl.managedActive(),
+  require(!impl.call && !impl.closed && !impl.poisoned && !impl.managedActive() && !impl.magnetActive(),
       "Persistent owner is active, closed or requires reset", storage::ErrorCode::Conflict);
   require(impl.operation != std::numeric_limits<std::uint64_t>::max(),
       "Persistent operation identity exhausted", storage::ErrorCode::Conflict);

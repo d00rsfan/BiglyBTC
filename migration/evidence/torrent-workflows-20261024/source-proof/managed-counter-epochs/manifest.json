@@ -1,0 +1,45 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_UNEXECUTED",
+  "native_base": "8795a76eef634bc6167713d913af7d302e3e028d",
+  "libtorrent_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "files": [
+    {
+      "path": "preview/native/engine/persistent_session.cpp",
+      "before_sha256": "b4a5522b5ff14b34bf3e7d74b8c3cb8959f27002455c574a341e390bb9ece504",
+      "sha256": "56e34c55c194938349c04284f1a4a358d8238f86a4d013a7c6a0c2f37e206d06"
+    },
+    {
+      "path": "preview/native/engine/managed_payload_counters.hpp",
+      "before_sha256": null,
+      "sha256": "2d3bca68f95aabe46265c632fdbf1f1d64cd169747d1ace216184532bf3afbcc"
+    },
+    {
+      "path": "preview/native/tests/managed_download_tests.cpp",
+      "before_sha256": "4e20adee6bcab3bf04c6cbb4f8ed70b54abf14095bc7c70356596b65a5c1f045",
+      "sha256": "5503121df5fde26df787b1f940ff6f85e51e1d7f741d669eb7751fd8d0efb16c"
+    }
+  ],
+  "dependencies": {
+    "libtorrent/include/libtorrent/torrent.hpp": "f9da4c3df6fa52718106e5862f8e6df85bb614b2d8395e584830ff539ecb92c3",
+    "libtorrent/include/libtorrent/torrent_handle.hpp": "97638a77492f9c9a11e40e82eeb522dd9bab0e3a1ff6596be0594bcaa8ce8019",
+    "libtorrent/include/libtorrent/torrent_status.hpp": "8d536cd124ed6b4b124db781fc75a6bf6e645db9622f05e4e24f6dd98ec33db4",
+    "libtorrent/include/libtorrent/extensions.hpp": "4a7aebe8285441b63744647c45ca9cbcc0d1fba4f4fb388cd65be8cbb326b9fe",
+    "libtorrent/include/libtorrent/stat.hpp": "1458d8cc96f226f862e197568d4ea5850402b9f8e19e1fdafb45f9eb4279019b",
+    "libtorrent/src/torrent.cpp": "d0b8d64c54583cb9287d20aaf5ea5bc2e85cbf0caa5d5c9df42f40c77187d185",
+    "libtorrent/src/session_impl.cpp": "e33778939a03634f7ca588752f924afcdf790ac48ddd2a127af71e00f34d1c65",
+    "preview/native/engine/managed_storage.cpp": "9655badab6b2d3c8a9bdaa78db75298813a900fd53a09ff92abb7e598940a0fa",
+    "preview/native/tests/managed_seeding_tests.cpp": "09834d41d68ddaa0187eed61ffc92ba4f71c1797c17f9439c13291e7d06fb44b",
+    "preview/native/tests/library_commands_bridge_tests.cpp": "914d4697871b5ab1e38dce8c47ede078459b99c10b96b4e560488cd2d237c7c8"
+  },
+  "existing_real_assertions_unchanged": true,
+  "new_regression_methods": 2,
+  "native_writes": 0,
+  "compiler_runs": 0,
+  "test_runs": 0,
+  "artifacts": {
+    "changes.patch": "fbe14553375302415bda51b8bbc84b6e3e806b6ca1d828f34c5cc82ca4e8a020",
+    "ADOPTION.md": "081d2d94743a5115f6b3f0494fec8c1f34f09a883436be6bf60035c894d04fee",
+    "prepare.py": "006e1076f0118d4b3f69b1145d74095540e19ea83e5ea0f357f8ec5383155f33"
+  }
+}

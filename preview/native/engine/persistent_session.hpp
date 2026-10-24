@@ -42,6 +42,7 @@ struct ApplicationPeerObservation {
 using ApplicationObservationSink = std::function<void(ApplicationPeerObservation)>;
 
 struct NetworkPolicy;
+struct PendingMagnet;
 namespace detail { class PersistentCall; class PersistentOperation; }
 class PersistentSession;
 // Only the source-bound successful retirement protocol may mint a settled
@@ -110,6 +111,14 @@ public:
   std::expected<void, storage::Error> stopManaged(const core::TorrentHash&);
   std::vector<ManagedDownloadStatus> managedDownloads() const;
   bool managedAvailable() const noexcept;
+  std::optional<unsigned short> tcpListenPort() const noexcept;
+  // Already-persisted original pending intent. Metadata uses a non-filesystem
+  // disk route in this SAME session; actual validated metadata is imported only
+  // after its exact handle has retired. The held profile path is authenticated.
+  std::expected<void, storage::Error> startMagnet(storage::ProfileLease&, const PendingMagnet&,
+      const std::filesystem::path& profile);
+  std::expected<void, storage::Error> cancelMagnet(const core::TorrentHash&);
+  std::vector<PendingMagnetStatus> pendingMagnets() const;
   std::expected<void, storage::Error> reorderManaged(std::span<const core::TorrentHash>);
 
   // Stable owner-level observation sink/mailbox is connected outside the ctor.

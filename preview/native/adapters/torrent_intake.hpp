@@ -18,9 +18,11 @@ enum class TorrentIntakeStage { JournalSynced, StatePublished, ArchivePublished,
 // Full validation precedes the first journal write. An I/O failure can leave a
 // durable pending transaction, never a partial downloads.config row. Do not
 // retry blindly: run explicit recovery before further inventory mutations.
+// forceStart commits forceStart=1 + Waiting atomically (takes precedence over
+// stopped); the optional trailing argument preserves existing source call sites.
 std::expected<core::TorrentHash, Error> importTorrent(ProfileLease&,
     const std::filesystem::path& metadata, const std::filesystem::path& destination,
-    bool stopped, void (*observer)(TorrentIntakeStage) = nullptr);
+    bool stopped, void (*observer)(TorrentIntakeStage) = nullptr, bool forceStart = false);
 
 // Startup recovery before loading library/admitting operations. No pending
 // transaction => nullopt. Rebuilds the exact append from journal input and

@@ -1163,3 +1163,63 @@ if(BIGLYBTC_DESKTOP)
   add_test(NAME torrent-import-ui COMMAND biglybtc-torrent-import-ui-tests)
   set_tests_properties(torrent-import-ui PROPERTIES ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()
+
+if(BIGLYBTC_LOCAL_ENGINE)
+  add_executable(biglybtc-magnet-intake-tests magnet_intake_tests.cpp)
+  target_link_libraries(biglybtc-magnet-intake-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar)
+  target_compile_options(biglybtc-magnet-intake-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME magnet-intake COMMAND biglybtc-magnet-intake-tests)
+endif()
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP)
+  add_executable(biglybtc-metadata-disk-router-tests metadata_disk_router_tests.cpp)
+  set_target_properties(biglybtc-metadata-disk-router-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-metadata-disk-router-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+  target_compile_options(biglybtc-metadata-disk-router-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME metadata-disk-router COMMAND biglybtc-metadata-disk-router-tests)
+  set_tests_properties(metadata-disk-router PROPERTIES TIMEOUT 180)
+endif()
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  foreach(part IN ITEMS seeding magnet)
+    add_executable(biglybtc-managed-${part}-tests managed_${part}_tests.cpp)
+    set_target_properties(biglybtc-managed-${part}-tests PROPERTIES AUTOMOC ON)
+    target_link_libraries(biglybtc-managed-${part}-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network)
+    target_compile_options(biglybtc-managed-${part}-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME managed-${part} COMMAND biglybtc-managed-${part}-tests)
+    set_tests_properties(managed-${part} PROPERTIES TIMEOUT 240)
+  endforeach()
+  add_executable(biglybtc-library-commands-bridge-tests library_commands_bridge_tests.cpp persistent_api_faults.cpp)
+  set_target_properties(biglybtc-library-commands-bridge-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-library-commands-bridge-tests PRIVATE biglybtc_desktop_host biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+  target_compile_options(biglybtc-library-commands-bridge-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_link_options(biglybtc-library-commands-bridge-tests PRIVATE
+    LINKER:--wrap=_ZN10libtorrent14session_handle10pop_alertsEPSt6vectorIPNS_5alertESaIS3_EE
+    LINKER:--wrap=_ZN10libtorrent14session_handle18post_session_statsEv
+    LINKER:--wrap=_ZN10libtorrent14session_handle14remove_torrentERKNS_14torrent_handleENS_5flags13bitfield_flagIhNS_16remove_flags_tagEvEE
+    LINKER:--wrap=_ZN10libtorrent21session_stats_metricsEv
+    LINKER:--wrap=_ZNK10libtorrent19session_stats_alert8countersEv)
+  add_test(NAME managed-library-command-routing COMMAND biglybtc-library-commands-bridge-tests)
+  set_tests_properties(managed-library-command-routing PROPERTIES TIMEOUT 240 ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+  add_executable(biglybtc-managed-handoff-driver managed_handoff_driver.cpp)
+  target_link_libraries(biglybtc-managed-handoff-driver PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Core)
+  target_compile_options(biglybtc-managed-handoff-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-magnet-host-tests magnet_bridge_tests.cpp)
+  set_target_properties(biglybtc-magnet-host-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-magnet-host-tests PRIVATE biglybtc_desktop_host biglybtc_local_engine biglybtc_profile LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+  target_compile_options(biglybtc-magnet-host-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME magnet-host COMMAND biglybtc-magnet-host-tests)
+  set_tests_properties(magnet-host PROPERTIES TIMEOUT 180 ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()
+
+# Everyday workflow suites participate in hosted unit verification.
+foreach(workflow_case IN ITEMS library-commands library-action-ui network-policy
+    managed-tracker managed-download managed-storage torrent-intake file-priority-ui
+    file-policy-commands torrent-import-ui magnet-intake metadata-disk-router
+    managed-seeding managed-magnet managed-library-command-routing magnet-host)
+  if(TEST ${workflow_case})
+    set_property(TEST ${workflow_case} APPEND PROPERTY LABELS unit torrent-workflows)
+    set_property(TEST ${workflow_case} PROPERTY TIMEOUT 240)
+  endif()
+endforeach()

@@ -1,0 +1,103 @@
+Test project /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+      Start  84: owned-engine-activity-window-worker
+ 1/19 Test  #84: owned-engine-activity-window-worker .......   Passed   13.99 sec
+      Start  93: desktop-model-and-lifecycle
+ 2/19 Test  #93: desktop-model-and-lifecycle ...............   Passed    0.60 sec
+      Start  94: desktop-files-model
+ 3/19 Test  #94: desktop-files-model .......................   Passed    0.31 sec
+      Start 117: persistent-native-peer-session
+ 4/19 Test #117: persistent-native-peer-session ............   Passed   41.99 sec
+      Start 118: persistent-native-session-window-worker
+ 5/19 Test #118: persistent-native-session-window-worker ...   Passed   23.05 sec
+      Start 119: persistent-native-peer-faults
+ 6/19 Test #119: persistent-native-peer-faults .............   Passed   86.97 sec
+      Start 120: persistent-native-session-close-faults
+ 7/19 Test #120: persistent-native-session-close-faults ....   Passed   14.65 sec
+      Start 142: overall-accounting-window-worker
+ 8/19 Test #142: overall-accounting-window-worker ..........   Passed   28.30 sec
+      Start 150: startup-statistics-worker
+ 9/19 Test #150: startup-statistics-worker .................   Passed   18.76 sec
+      Start 167: tracker-statistics-sampler
+10/19 Test #167: tracker-statistics-sampler ................   Passed    0.18 sec
+      Start 196: managed-tracker
+11/19 Test #196: managed-tracker ...........................   Passed    7.65 sec
+      Start 197: managed-download
+12/19 Test #197: managed-download ..........................   Passed   15.85 sec
+      Start 199: torrent-intake
+13/19 Test #199: torrent-intake ............................   Passed    0.03 sec
+      Start 203: magnet-intake
+14/19 Test #203: magnet-intake .............................   Passed    0.01 sec
+      Start 204: metadata-disk-router
+15/19 Test #204: metadata-disk-router ......................   Passed    1.39 sec
+      Start 205: managed-seeding
+16/19 Test #205: managed-seeding ...........................   Passed   18.58 sec
+      Start 206: managed-magnet
+17/19 Test #206: managed-magnet ............................***Timeout 240.11 sec
+********* Start testing of ManagedMagnetTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedMagnetTests::initTestCase()
+FAIL!  : ManagedMagnetTests::actualMetadataThenMaterialPayload(single-forced) 'pump(*service, pending.hash, MagnetPhase::Imported)' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/managed_magnet_tests.cpp(222)]
+FAIL!  : ManagedMagnetTests::actualMetadataThenMaterialPayload(multifile-normal) 'pump(*service, pending.hash, MagnetPhase::Imported)' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/managed_magnet_tests.cpp(222)]
+
+      Start 207: managed-library-command-routing
+18/19 Test #207: managed-library-command-routing ...........***Failed   25.33 sec
+********* Start testing of LibraryCommandsBridgeTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : LibraryCommandsBridgeTests::initTestCase()
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(stale-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(unknown-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(duplicate-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(unauthorized-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(invalid-action-next)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(invalid-action-large)
+QWARN  : LibraryCommandsBridgeTests::mixedTargetsRouteSavedIntentAndActualProgressIndependently() This plugin does not support propagateSizeHints()
+QWARN  : LibraryCommandsBridgeTests::mixedTargetsRouteSavedIntentAndActualProgressIndependently() This plugin does not support propagateSizeHints()
+FAIL!  : LibraryCommandsBridgeTests::mixedTargetsRouteSavedIntentAndActualProgressIndependently() 'row(intent, *single.hash).downloaded && *row(intent, *single.hash).downloaded > 0' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/library_commands_bridge_tests.cpp(306)]
+PASS   : LibraryCommandsBridgeTests::passivePhaseSnapshotCannotReleaseQueuedCommandBusyOwnership()
+PASS   : LibraryCommandsBridgeTests::closeReportsActualCheckpointConflictAfterJoiningAndReleasingProfile()
+PASS   : LibraryCommandsBridgeTests::cleanupTestCase()
+Totals: 10 passed, 1 failed, 0 skipped, 0 blacklisted, 25225ms
+********* Finished testing of LibraryCommandsBridgeTests *********
+
+      Start 208: magnet-host
+19/19 Test #208: magnet-host ...............................***Failed  184.48 sec
+********* Start testing of MagnetBridgeTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MagnetBridgeTests::initTestCase()
+FAIL!  : MagnetBridgeTests::actualMetadataImportsAndStartsInSameOwner(single) 'row(rows, pending.hash) && row(rows, pending.hash)->bytes == test::OwnedEngineFixture::PayloadBytes' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/magnet_bridge_tests.cpp(141)]
+FAIL!  : MagnetBridgeTests::actualMetadataImportsAndStartsInSameOwner(multi) 'row(rows, pending.hash) && row(rows, pending.hash)->bytes == test::OwnedEngineFixture::PayloadBytes' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/magnet_bridge_tests.cpp(141)]
+PASS   : MagnetBridgeTests::importedCrashRecoveryPreservesLaterStopAndDoesNotResolveAgain()
+PASS   : MagnetBridgeTests::legacyDestinationAndWholeSelectionCasRemainSafe()
+PASS   : MagnetBridgeTests::legacyResubmissionAttachesDestinationAndRetainsOriginalStoppedIntent()
+PASS   : MagnetBridgeTests::malformedPendingReadRetainsDisabledRowAndDoesNotRewriteConfig()
+PASS   : MagnetBridgeTests::cleanupTestCase()
+Totals: 6 passed, 2 failed, 0 skipped, 0 blacklisted, 184291ms
+********* Finished testing of MagnetBridgeTests *********
+
+
+84% tests passed, 3 tests failed out of 19
+
+Label Time Summary:
+accounting           =  28.30 sec*proc (1 test)
+activity             =  13.99 sec*proc (1 test)
+files                =   0.31 sec*proc (1 test)
+integration          = 185.60 sec*proc (6 tests)
+loopback             = 213.90 sec*proc (7 tests)
+startup              =  18.76 sec*proc (1 test)
+statistics           = 227.90 sec*proc (8 tests)
+torrent-workflows    = 493.42 sec*proc (9 tests)
+ui                   =  99.66 sec*proc (7 tests)
+unit                 = 722.22 sec*proc (19 tests)
+
+Total Test time (real) = 722.24 sec
+
+The following tests FAILED:
+	206 - managed-magnet (Timeout)                          torrent-workflows unit
+	207 - managed-library-command-routing (Failed)          torrent-workflows unit
+	208 - magnet-host (Failed)                              torrent-workflows unit
+Errors while running CTest

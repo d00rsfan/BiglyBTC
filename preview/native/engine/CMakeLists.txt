@@ -23,3 +23,5 @@ target_sources(biglybtc_local_engine PRIVATE network_policy.cpp managed_storage.
 # profile library remains independent of the native engine owner and all UI.
 target_sources(biglybtc_profile PRIVATE ../adapters/torrent_intake.cpp)
 target_link_libraries(biglybtc_profile PRIVATE LibtorrentRasterbar::torrent-rasterbar)
+
+target_sources(biglybtc_local_engine PRIVATE magnet_intake.cpp metadata_disk_router.cpp)

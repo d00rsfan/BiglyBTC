@@ -1,4 +1,6 @@
 #include "persistent_session.hpp"
+#include "managed_payload_counters.hpp"
+#include <limits>
 #include "owned_engine_fixture.hpp"
 
 #include <QtTest>
@@ -99,6 +101,36 @@ std::int64_t integer(const core::Node& node, std::string_view key) {
 class ManagedDownloadTests final : public QObject {
   Q_OBJECT
 private slots:
+  void rawEpochContinuityKeepsUntickedBytesAndCrossingReadsRetry() {
+    using Counters = engine::detail::ManagedPayloadCounters;
+    Counters counters; QVERIFY(!counters.epoch()); counters.installed();
+    const auto first = counters.epoch(); QVERIFY(first);
+    auto value = counters.combine(*first, 65527, 31);
+    QCOMPARE(value.state, Counters::Read::Accepted); QCOMPARE(value.received, std::int64_t{65527});
+    counters.seal(131072, 37); // Actual pre-clear raw total, including unticked bytes.
+    value = counters.combine(*first, 0, 0); QCOMPARE(value.state, Counters::Read::Retry);
+    const auto second = counters.epoch(); QVERIFY(second);
+    value = counters.combine(*second, 5, 7);
+    QCOMPARE(value.state, Counters::Read::Accepted);
+    QCOMPARE(value.received, std::int64_t{131077}); QCOMPARE(value.sent, std::int64_t{44});
+    counters.seal(5, 7);
+    const auto third = counters.epoch(); QVERIFY(third);
+    value = counters.combine(*third, 0, 0);
+    QCOMPARE(value.state, Counters::Read::Accepted);
+    QCOMPARE(value.received, std::int64_t{131077}); QCOMPARE(value.sent, std::int64_t{44});
+  }
+  void rawEpochInvalidReadsAndOverflowFailWithoutFallback() {
+    using Counters = engine::detail::ManagedPayloadCounters;
+    Counters regressed; regressed.installed(); const auto first = regressed.epoch(); QVERIFY(first);
+    QCOMPARE(regressed.combine(*first, 10, 20).state, Counters::Read::Accepted);
+    regressed.seal(9, 20); QVERIFY(!regressed.epoch());
+    QCOMPARE(regressed.combine(*first, 0, 0).state, Counters::Read::Failed);
+    Counters overflow; overflow.installed(); overflow.seal(std::numeric_limits<std::int64_t>::max(), 0);
+    const auto full = overflow.epoch(); QVERIFY(full);
+    QCOMPARE(overflow.combine(*full, 1, 0).state, Counters::Read::Failed); QVERIFY(!overflow.epoch());
+    Counters negative; negative.installed(); const auto empty = negative.epoch(); QVERIFY(empty);
+    QCOMPARE(negative.combine(*empty, 0, -1).state, Counters::Read::Failed); QVERIFY(!negative.epoch());
+  }
   void concurrentMixedHandlesRemainControllableUnderOneOwner() {
     test::OwnedEngineFixture single(false, true), multi(true, true);
     QTRY_VERIFY_WITH_TIMEOUT(single.ready() && multi.ready(), 30000);

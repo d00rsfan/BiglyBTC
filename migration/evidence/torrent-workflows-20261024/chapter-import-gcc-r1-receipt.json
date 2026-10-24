@@ -1,0 +1,73 @@
+{
+  "case": "chapter-import-gcc-r1",
+  "build": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+  "tests": [
+    "torrent-intake",
+    "managed-magnet",
+    "magnet-host"
+  ],
+  "commands": [
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "-S",
+        "preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/install;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr;/home/yurii/Java/BiglyBTC/build/dependencies/country/sysroot/usr;/opt/Qt/6.12.0/gcc_64",
+        "-DBIGLYBTC_COUNTRY_MMDB_FIXTURE=/home/yurii/Java/BiglyBTC/build/dependencies/country/GeoIP2-Country-Test.mmdb"
+      ],
+      "exit": 0,
+      "seconds": 4.64,
+      "log": "chapter-import-gcc-r1-configure.txt"
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "--parallel",
+        "3",
+        "--target",
+        "biglybtc-torrent-intake-tests",
+        "biglybtc-managed-magnet-tests",
+        "biglybtc-magnet-host-tests",
+        "BiglyBTC",
+        "biglybtc-managed-handoff-driver",
+        "--",
+        "-k",
+        "0"
+      ],
+      "exit": 0,
+      "seconds": 17.23,
+      "log": "chapter-import-gcc-r1-build.txt"
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "-R",
+        "^(torrent\\-intake|managed\\-magnet|magnet\\-host)$",
+        "--no-tests=error",
+        "--output-on-failure",
+        "--verbose",
+        "--output-junit",
+        "/home/yurii/Java/BiglyBT/build/torrent-workflows-20261024/chapter-import-gcc-r1.xml"
+      ],
+      "exit": 0,
+      "seconds": 9.95,
+      "log": "chapter-import-gcc-r1-tests.txt"
+    }
+  ],
+  "source_manifest_sha256": "cad09433f77e59f079d91f62d48d51d0cd2a9f9f59601a23098058c536d030f8"
+}

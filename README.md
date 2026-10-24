@@ -116,3 +116,11 @@ Connections and Tracker include bounded histories from actual accepted engine
 observations. Current transfers also show checked protocol-traffic shares.
 Missing observations remain gaps, and closed sessions retain last-observed
 facts. Statistics reuses existing sampling and does not start network services.
+
+Everyday My Torrents now supports concurrent retained downloads/seeding, saved
+Start/Stop/Pause/Resume/Force Start/queue controls, stopped-file priorities and
+compatible torrent/magnet intake. Pending original magnets can receive an explicit
+destination. The portable build offers `./BiglyBTC --profile ABSOLUTE_PROFILE`;
+its separate offline preview still generates sample data. The bounded implementation
+and failure/repair evidence are in [the workflow record](migration/evidence/torrent-workflows-20261024/README.md).
+Full original engine/plugin parity and public-swarm performance remain in progress.

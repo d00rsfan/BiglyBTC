@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "scope": "Correct metadata start flag plus passive bounded assertion diagnostics",
+  "native_base": "14232b346e7dc70d45e8a41fee1746244a080b46",
+  "libtorrent_source": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "source_directory": "staging",
+  "before_sha256": {
+    "preview/native/engine/magnet_intake.cpp": "15dfa57488dbf3d61dbe88e7a3fcc004a3d4d21bbd694b69cf1e2253ccb56d19",
+    "preview/native/tests/magnet_intake_tests.cpp": "f2a7f51a8b1479a42b9318fe709927229defffea7ed347f13668cea545b9cce8",
+    "preview/native/tests/managed_magnet_tests.cpp": "7534001ef0511b57f4ba33c2cc9c35675edbdd3504affdf7baf90c81db3b722a"
+  },
+  "source_sha256": {
+    "preview/native/engine/magnet_intake.cpp": "4bdf32b6129f1429d11663e4a52ab109f315adf1ffddf4dd35e3dc29e092bc08",
+    "preview/native/tests/magnet_intake_tests.cpp": "288cb10be02390dab4972ca05d5ca01bc0c5d38189f7f378747a2c7cbb398043",
+    "preview/native/tests/managed_magnet_tests.cpp": "ffdf64673ae627e2b2556d083f83151ee714a7737fd1bb7b1a7d407cdcde2724"
+  },
+  "upstream_source": {
+    "include/libtorrent/torrent_flags.hpp": {
+      "sha256": "a6f3effd2db3e391fe3440efb6e906a77f6b93ba0a8af81a6229430ee52caaa2",
+      "ranges": [
+        [
+          153,
+          187
+        ]
+      ]
+    },
+    "src/torrent.cpp": {
+      "sha256": "d0b8d64c54583cb9287d20aaf5ea5bc2e85cbf0caa5d5c9df42f40c77187d185",
+      "ranges": [
+        [
+          134,
+          151
+        ],
+        [
+          674,
+          691
+        ],
+        [
+          11708,
+          11725
+        ],
+        [
+          11758,
+          11790
+        ]
+      ]
+    }
+  },
+  "failure_log": {
+    "path": "/home/yurii/Java/BiglyBT/build/torrent-workflows-20261024/chapter-gcc-tests.txt",
+    "sha256": "8d652d9b8b9d1a411284cf999a07047be68dab1732aea61ea1be249d4a179983"
+  },
+  "conditions_unchanged": true,
+  "deadlines_unchanged": true,
+  "diagnostic_assertion_count": 7,
+  "author_execution": false,
+  "artifact_sha256": {
+    "ADOPTION.md": "8731999bb71c87a7e8f48b7ab3469ff1cad0a36908b59d41bfe1abdb96169da6",
+    "before/preview/native/engine/magnet_intake.cpp": "15dfa57488dbf3d61dbe88e7a3fcc004a3d4d21bbd694b69cf1e2253ccb56d19",
+    "before/preview/native/tests/magnet_intake_tests.cpp": "f2a7f51a8b1479a42b9318fe709927229defffea7ed347f13668cea545b9cce8",
+    "before/preview/native/tests/managed_magnet_tests.cpp": "7534001ef0511b57f4ba33c2cc9c35675edbdd3504affdf7baf90c81db3b722a",
+    "change.patch": "5e6259307f9ab5d0f95bdd9d73d6e6139f95943f0c55914109095938cacc58dc",
+    "staging/preview/native/engine/magnet_intake.cpp": "4bdf32b6129f1429d11663e4a52ab109f315adf1ffddf4dd35e3dc29e092bc08",
+    "staging/preview/native/tests/magnet_intake_tests.cpp": "288cb10be02390dab4972ca05d5ca01bc0c5d38189f7f378747a2c7cbb398043",
+    "staging/preview/native/tests/managed_magnet_tests.cpp": "ffdf64673ae627e2b2556d083f83151ee714a7737fd1bb7b1a7d407cdcde2724"
+  }
+}

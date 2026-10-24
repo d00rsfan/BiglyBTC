@@ -1,4 +1,5 @@
 #include "torrent_intake.hpp"
+#include "magnet_intake.hpp"
 #include "file_policy_commands.hpp"
 #include "library_commands.hpp"
 #include "network_policy.hpp"
@@ -37,6 +38,7 @@
 #include <QStringList>
 #include <map>
 #include <set>
+#include <tuple>
 #include <stdexcept>
 
 namespace biglybtc::app {
@@ -177,6 +179,15 @@ struct SessionBridge::Host {
   std::filesystem::path profile;
   unsigned short peerPort;
   bool normalNetwork = false;
+  engine::NetworkPolicy networkPolicy{}; // Isolated until normal configure succeeds.
+  using MagnetStamp = std::tuple<std::uint64_t, engine::MagnetPhase, bool, std::string,
+      std::optional<storage::ErrorCode>, std::string>;
+  std::map<std::string, MagnetStamp> lastMagnetPhases;
+  std::map<std::string, engine::PendingMagnet> pendingIntents;
+  std::set<std::string> pendingTargets;
+  std::optional<storage::Error> pendingReadFailure;
+  bool pendingSourceCurrent = false;
+  std::map<std::string, std::uint64_t> reportedMagnetAdmissions;
   std::map<std::string, engine::ManagedPhase> lastManagedPhases;
   std::map<std::string, storage::Error> admissionFailures;
   std::vector<storage::LibraryCompletionPool> movePools;
@@ -240,9 +251,77 @@ struct SessionBridge::Host {
       throw Failure{{storage::ErrorCode::Conflict, "This download selection is stale; refresh the library"}};
     }
   }
+  void readMagnets() {
+    auto read = engine::readPendingMagnets(lease, networkPolicy);
+    pendingSourceCurrent = read.has_value();
+    if (!read) {
+      pendingReadFailure = read.error(); // Keep previous rows, visibly nonactionable.
+      return;
+    }
+    std::map<std::string, engine::PendingMagnet> fresh;
+    for (auto& item : *read) { fresh.emplace(item.hash.hex(), std::move(item)); }
+    pendingIntents = std::move(fresh);
+    pendingReadFailure.reset();
+  }
+  QString pendingNotice() const {
+    if (pendingReadFailure) {
+      return SessionBridge::tr("Pending magnets could not be read: %1").arg(text(pendingReadFailure->message));
+    }
+    for (const auto& [hash, item] : pendingIntents) {
+      (void)hash;
+      if (!item.destination) {
+        return SessionBridge::tr("A recovered magnet needs an explicit destination; its saved intent was retained");
+      }
+    }
+    return {};
+  }
+  quint16 magnetActions(const engine::PendingMagnet* intent, const engine::PendingMagnetStatus* live) const {
+    if (!engine || !engine->managedAvailable() || !pendingSourceCurrent || !intent) { return 0; }
+    if (live && (live->phase == engine::MagnetPhase::Retiring
+        || (live->retained && live->phase != engine::MagnetPhase::Resolving))) { return 0; }
+    quint16 actions = actionBit(core::DownloadAction::Stop);
+    if ((!live || (!live->retained && live->phase == engine::MagnetPhase::Failed)) && intent->destination) {
+      actions |= actionBit(core::DownloadAction::Start);
+    }
+    return actions;
+  }
+  void bootstrapMagnets(std::stop_token stop) {
+    readMagnets();
+    if (!pendingSourceCurrent || !engine) { return; }
+    const auto library = take(storage::readLibraryView(lease));
+    // Copy before completion removes a persisted row. No new handle is admitted
+    // for a crash-recovered magnet already present in the ordinary inventory.
+    const auto pending = pendingIntents;
+    for (const auto& [hash, intent] : pending) {
+      checkpoint(stop);
+      const storage::LibraryItem* existing = nullptr;
+      bool duplicate = false;
+      for (const auto& item : library.items) {
+        if (item.saved.hash && *item.saved.hash == intent.hash) {
+          if (existing) { duplicate = true; }
+          existing = &item;
+        }
+      }
+      std::expected<void, storage::Error> admitted;
+      if (duplicate) {
+        admitted = std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Duplicate ordinary magnet identity"});
+      } else if (existing) {
+        auto completed = engine::completePendingMagnet(lease, intent, existing->saved.torrentFile, networkPolicy);
+        if (!completed) { admitted = std::unexpected(completed.error()); }
+      } else if (!intent.destination) {
+        admitted = std::unexpected(storage::Error{storage::ErrorCode::Missing, "Recovered magnet needs an explicit destination"});
+      } else {
+        admitted = engine->startMagnet(lease, intent, profile);
+      }
+      if (!admitted) { admissionFailures.insert_or_assign(hash, admitted.error()); }
+      else { admissionFailures.erase(hash); }
+    }
+    readMagnets();
+  }
   ui::Presentation query(std::stop_token stop) {
     checkpoint(stop);
     auto source = take(storage::readLibraryView(lease));
+    readMagnets();
     checkpoint(stop);
     auto result = std::make_shared<ui::LibraryPresentation>();
     result->revision = revision = reserveLibraryRevision();
@@ -252,6 +331,20 @@ struct SessionBridge::Host {
     for (const auto& item : source.items) { if (item.saved.hash) { ++counts[item.saved.hash->hex()]; } }
     std::map<std::string, engine::ManagedDownloadStatus> live;
     if (engine) { for (auto& item : engine->managedDownloads()) { live.emplace(item.hash.hex(), std::move(item)); } }
+    std::map<std::string, engine::PendingMagnetStatus> magnets;
+    if (engine) {
+      for (auto& item : engine->pendingMagnets()) {
+        // Imported metadata may already be an ordinary row even if its optional
+        // autostart failed. Report that admission once; retry remains ordinary.
+        if (item.phase == engine::MagnetPhase::Imported && item.failure
+            && (!reportedMagnetAdmissions.contains(item.hash.hex())
+                || reportedMagnetAdmissions.at(item.hash.hex()) != item.admission)) {
+          admissionFailures.insert_or_assign(item.hash.hex(), *item.failure);
+          reportedMagnetAdmissions.insert_or_assign(item.hash.hex(), item.admission);
+        }
+        magnets.emplace(item.hash.hex(), std::move(item));
+      }
+    }
     movePools.clear();
     std::array<std::set<std::int64_t>, 2> poolPositions;
     bool classified = true;
@@ -268,7 +361,8 @@ struct SessionBridge::Host {
     }
     if (!classified) { movePools.clear(); }
     currentHashes.clear();
-    result->items.reserve(source.items.size());
+    pendingTargets.clear();
+    result->items.reserve(source.items.size() + pendingIntents.size() + magnets.size());
     for (const auto& row : source.items) {
       const auto& saved = row.saved;
       const auto hash = saved.hash ? saved.hash->hex() : std::string{};
@@ -300,7 +394,13 @@ struct SessionBridge::Host {
       quint16 actions = 0;
       const auto active = live.find(hash);
       const bool retained = active != live.end() && active->second.retained;
-      const bool retiring = retained && (active->second.phase == engine::ManagedPhase::Stopping || active->second.failure);
+      if (active != live.end() && active->second.totalPieces > 0) {
+        size = active->second.bytes; // Actual admitted metadata survives handle retirement.
+        known.insert_or_assign(hash, Known{name, size});
+      }
+      const auto metadata = magnets.find(hash);
+      const bool magnetRetained = metadata != magnets.end() && metadata->second.retained;
+      const bool retiring = magnetRetained || (retained && (active->second.phase == engine::ManagedPhase::Stopping || active->second.failure));
       if (retained) { state = managedState(active->second.phase); }
       if (admissionFailures.contains(hash) || (active != live.end() && active->second.failure)) { state = SessionBridge::tr("Error"); }
       if (engine && engine->managedAvailable() && unique && saved.persistent && !retiring) {
@@ -320,8 +420,32 @@ struct SessionBridge::Host {
       result->items.push_back({.key = text(key), .hash = text(hash), .name = name, .state = state,
           .bytes = size, .completed = completed,
           .received = saved.downloaded, .sent = saved.uploaded,
-          .canContinue = peerPort != 0 && unique && saved.persistent && !stopped && !paused && !retained,
+          .canContinue = peerPort != 0 && unique && saved.persistent && !stopped && !paused && !retained && !magnetRetained,
           .savedPosition = saved.position, .savedSelected = std::move(savedSelected), .actionMask = actions});
+    }
+    std::set<std::string> pendingHashes;
+    for (const auto& [hash, item] : pendingIntents) { (void)item; pendingHashes.insert(hash); }
+    // An unresolved retained handle remains visible even if a later config read
+    // fails or no longer contains its row. Never invent a cancellable CAS input.
+    for (const auto& [hash, item] : magnets) { if (item.retained) { pendingHashes.insert(hash); } }
+    for (const auto& hash : pendingHashes) {
+      if (counts.contains(hash)) { continue; } // One ordinary row owns this identity after import.
+      const auto saved = pendingIntents.find(hash);
+      const auto active = magnets.find(hash);
+      const auto* intent = saved == pendingIntents.end() ? nullptr : &saved->second;
+      const auto* liveMagnet = active == magnets.end() ? nullptr : &active->second;
+      QString state = SessionBridge::tr("Magnet needs attention");
+      if (!pendingSourceCurrent) { state = SessionBridge::tr("Magnet read error"); }
+      else if (liveMagnet && liveMagnet->phase == engine::MagnetPhase::Resolving) { state = SessionBridge::tr("Resolving metadata"); }
+      else if (liveMagnet && liveMagnet->phase == engine::MagnetPhase::Retiring) { state = SessionBridge::tr("Retiring metadata"); }
+      if ((liveMagnet && liveMagnet->failure) || admissionFailures.contains(hash)) { state = SessionBridge::tr("Magnet error"); }
+      if (intent && !intent->destination) { state = SessionBridge::tr("Magnet needs destination"); }
+      const auto name = intent && !intent->displayName.empty() ? intent->displayName
+          : liveMagnet && !liveMagnet->name.empty() ? liveMagnet->name : hash;
+      currentHashes.insert(hash);
+      pendingTargets.insert(hash);
+      result->items.push_back({.key = text(hash), .hash = text(hash), .name = text(name), .state = state,
+          .actionMask = magnetActions(intent, liveMagnet)});
     }
     lastSnapshot = result;
     return result;
@@ -403,6 +527,14 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
             changed = changed || added || prior->second != item.phase;
             prior->second = item.phase;
           }
+          std::map<std::string, Host::MagnetStamp> magnets;
+          for (const auto& item : host_->engine->pendingMagnets()) {
+            magnets.emplace(item.hash.hex(), Host::MagnetStamp{item.admission, item.phase, item.retained,
+                item.name, item.failure ? std::optional{item.failure->code} : std::nullopt,
+                item.failure ? item.failure->message : std::string{}});
+          }
+          changed = changed || magnets != host_->lastMagnetPhases;
+          host_->lastMagnetPhases = std::move(magnets);
           if (changed) {
             const auto snapshot = host_->query(stop);
             const auto session = host_->columnLayoutSession;
@@ -433,6 +565,10 @@ SessionBridge::~SessionBridge() {
   worker_.requestShutdown();
 }
 void SessionBridge::ready(ui::Presentation snapshot, QString message) {
+  if (host_) {
+    const auto notice = host_->pendingNotice();
+    if (!notice.isEmpty()) { message = message.isEmpty() ? notice : message + QLatin1Char('\n') + notice; }
+  }
   publishManualTags(); // Rejoin cached tags after an actual library revision change; no IO.
   // host_ is worker-owned. Publish its immutable identity by value on the GUI.
   const auto session = host_ ? host_->columnLayoutSession : quint64{0};
@@ -560,6 +696,7 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
           {*saved.hash, 0, saved.forceStart, saved.startup == core::StartupState::Queued});
       if (!started) { host_->admissionFailures.insert_or_assign(saved.hash->hex(), started.error()); }
     }
+    host_->bootstrapMagnets(stop); // Ordinary admissions precede pending metadata recovery.
     ready(host_->query(stop), host_->admissionFailures.empty() ? QString{} : tr("Some torrents require attention; saved data was preserved"));
   });
 }
@@ -575,6 +712,19 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
     // Validate the entire UI selection before any saved intent or engine effect.
     std::set<std::string> unique;
     std::vector<core::TorrentHash> hashes;
+    std::map<std::string, engine::PendingMagnet> pendingSelection;
+    const bool hasPending = std::ranges::any_of(targets, [&](const auto& target) {
+      return host_->pendingTargets.contains(target.hash.toStdString());
+    });
+    std::map<std::string, engine::PendingMagnet> freshPending;
+    std::vector<engine::PendingMagnetStatus> metadata;
+    if (hasPending) {
+      // Whole-selection CAS admission before either pending or ordinary effects.
+      for (auto& item : take(engine::readPendingMagnets(host_->lease, host_->networkPolicy))) {
+        freshPending.emplace(item.hash.hex(), std::move(item));
+      }
+      metadata = host_->engine->pendingMagnets();
+    }
     for (const auto& target : targets) {
       checkpoint(stop); host_->accepts(target);
       auto hash = identity(target);
@@ -583,11 +733,40 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
       if (row == host_->lastSnapshot->items.end() || !(row->actionMask & actionBit(action))) {
         throw Failure{{storage::ErrorCode::Conflict, "Download action is no longer available; refresh the library"}};
       }
+      if (host_->pendingTargets.contains(hash.hex())) {
+        const auto before = host_->pendingIntents.find(hash.hex());
+        const auto fresh = freshPending.find(hash.hex());
+        const auto live = std::ranges::find_if(metadata, [&](const auto& item) { return item.hash == hash; });
+        if (before == host_->pendingIntents.end() || fresh == freshPending.end()
+            || before->second.sourceEntry != fresh->second.sourceEntry
+            || !(host_->magnetActions(&fresh->second, live == metadata.end() ? nullptr : &*live) & actionBit(action))) {
+          throw Failure{{storage::ErrorCode::Conflict, "Pending magnet changed; refresh the library"}};
+        }
+        pendingSelection.emplace(hash.hex(), fresh->second);
+      }
       hashes.push_back(std::move(hash));
     }
     QStringList failures;
     for (const auto& hash : hashes) {
       checkpoint(stop);
+      if (const auto pending = pendingSelection.find(hash.hex()); pending != pendingSelection.end()) {
+        std::expected<void, storage::Error> controlled;
+        if (action == core::DownloadAction::Start) {
+          controlled = host_->engine->startMagnet(host_->lease, pending->second, host_->profile);
+        } else {
+          const auto current = host_->engine->pendingMagnets();
+          const auto live = std::ranges::find_if(current, [&](const auto& item) { return item.hash == hash; });
+          // The engine owns retirement whenever an exact handle is retained.
+          // Adapter-only cancellation is safe solely without a metadata handle.
+          controlled = live != current.end() && live->retained ? host_->engine->cancelMagnet(hash)
+              : engine::cancelPendingMagnet(host_->lease, pending->second);
+        }
+        if (!controlled) {
+          host_->admissionFailures.insert_or_assign(hash.hex(), controlled.error());
+          failures.push_back(text(hash.hex()) + QStringLiteral(": ") + text(controlled.error().message));
+        } else { host_->admissionFailures.erase(hash.hex()); }
+        continue;
+      }
       auto changed = storage::applyLibraryCommand(host_->lease, hash, action, host_->movePools);
       if (!changed) { failures.push_back(text(hash.hex()) + QStringLiteral(": ") + text(changed.error().message)); continue; }
       host_->admissionFailures.erase(hash.hex());
@@ -646,6 +825,42 @@ bool SessionBridge::torrentImport(QString metadata, QString destination, bool st
       }
     }
     ready(host_->query({}), message);
+  });
+}
+bool SessionBridge::magnetImport(QString uri, QString destination) {
+  if (profileClosed_ || uri.isEmpty() || destination.isEmpty()) { return false; }
+  return dispatch([this, uri = std::move(uri), destination = std::move(destination)](std::stop_token stop) {
+    if (!host_ || !host_->engine || !host_->engine->managedAvailable()) {
+      throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
+    }
+    checkpoint(stop);
+    static_cast<void>(take(storage::recoverTorrentIntake(host_->lease)));
+    const auto intent = take(engine::parseMagnetIntent(uri.toUtf8().toStdString(),
+        std::filesystem::path(destination.toUtf8().toStdString()), false, host_->networkPolicy));
+    const auto library = take(storage::readLibraryView(host_->lease));
+    for (const auto& item : library.items) {
+      if (item.saved.hash && *item.saved.hash == intent.hash) {
+        throw Failure{{storage::ErrorCode::Conflict, "This magnet is already in the library"}};
+      }
+    }
+    const auto existing = take(engine::readPendingMagnets(host_->lease, host_->networkPolicy));
+    const auto prior = std::ranges::find_if(existing, [&](const auto& value) { return value.hash == intent.hash; });
+    for (const auto& active : host_->engine->pendingMagnets()) {
+      if (active.hash == intent.hash && active.retained) {
+        throw Failure{{storage::ErrorCode::Conflict, "This magnet is already resolving or retiring"}};
+      }
+    }
+    if (prior != existing.end() && (prior->uri != intent.uri || prior->requested != intent.requested)) {
+      throw Failure{{storage::ErrorCode::Conflict, "A different magnet request already owns this identity"}};
+    }
+    checkpoint(stop); // From persistence onward, failures retain the original recovery row.
+    const auto persisted = prior == existing.end()
+        ? take(engine::queuePendingMagnet(host_->lease, intent, host_->networkPolicy))
+        : take(engine::attachPendingMagnetDestination(host_->lease, *prior, *intent.destination, host_->networkPolicy));
+    const auto admitted = host_->engine->startMagnet(host_->lease, persisted, host_->profile);
+    if (!admitted) { host_->admissionFailures.insert_or_assign(persisted.hash.hex(), admitted.error()); }
+    else { host_->admissionFailures.erase(persisted.hash.hex()); }
+    ready(host_->query({}), admitted ? tr("Resolving magnet metadata") : text(admitted.error().message));
   });
 }
 bool SessionBridge::filePolicy(ui::Target target, ui::FileIndices selected, int priority, bool skipped) {
@@ -1411,6 +1626,7 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
     if (!policy) { throw Failure{{storage::ErrorCode::Unsupported, "Unsupported network setting: " + policy.error().field}}; }
     auto applied = (*owner)->configureNetwork(*policy);
     if (!applied) { throw Failure{applied.error()}; }
+    host_->networkPolicy = std::move(*policy);
   }
   if (!(*owner)->startIdle(host_->lease)) {
     throw Failure{{storage::ErrorCode::Io, "Cannot initialize the native idle session"}};

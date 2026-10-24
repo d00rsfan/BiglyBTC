@@ -1,0 +1,70 @@
+Test project /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+    Start 197: managed-download
+1/6 Test #197: managed-download ..................   Passed   15.76 sec
+    Start 203: magnet-intake
+2/6 Test #203: magnet-intake .....................   Passed    0.02 sec
+    Start 205: managed-seeding
+3/6 Test #205: managed-seeding ...................***Failed   19.39 sec
+********* Start testing of ManagedSeedingTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedSeedingTests::initTestCase()
+FAIL!  : ManagedSeedingTests::completedNativeHandleUploadsActualPayloadToAnIndependentOwnedLeecher(single) Compared values are not the same
+   Actual   (uploaded->received): 131072
+   Expected (before->received)  : 65527
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/managed_seeding_tests.cpp(167)]
+FAIL!  : ManagedSeedingTests::completedNativeHandleUploadsActualPayloadToAnIndependentOwnedLeecher(multifile) Compared values are not the same
+   Actual   (uploaded->received): 131072
+   Expected (before->received)  : 65527
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/managed_seeding_tests.cpp(167)]
+PASS   : ManagedSeedingTests::selectedCompletionRetainsSparseSkippedLinearStorageAndOriginalPolicyOnReopen()
+FAIL!  : ManagedSeedingTests::immediateStopBeforeFirstPieceSampleRetainsExistingDataForRestart() Compared values are not the same
+   Actual   (restarted->received)                                              : 65527
+   Expected (std::int64_t{test::OwnedEngineFixture::PayloadBytes - PieceBytes}): 114688
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/managed_seeding_tests.cpp(276)]
+PASS   : ManagedSeedingTests::cleanupTestCase()
+Totals: 3 passed, 3 failed, 0 skipped, 0 blacklisted, 19378ms
+********* Finished testing of ManagedSeedingTests *********
+
+    Start 206: managed-magnet
+4/6 Test #206: managed-magnet ....................***Timeout 240.11 sec
+********* Start testing of ManagedMagnetTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedMagnetTests::initTestCase()
+FAIL!  : ManagedMagnetTests::actualMetadataThenMaterialPayload(single-forced) 'pump(*service, pending.hash, MagnetPhase::Imported)' returned FALSE. (magnet phase=Failed retained=0 admission=1 failure=Held profile lease and safe configuration filename required; owner state=1 sequence=450 actualCounters=1)
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/managed_magnet_tests.cpp(258)]
+FAIL!  : ManagedMagnetTests::actualMetadataThenMaterialPayload(multifile-normal) 'pump(*service, pending.hash, MagnetPhase::Imported)' returned FALSE. (magnet phase=Failed retained=0 admission=1 failure=Held profile lease and safe configuration filename required; owner state=1 sequence=450 actualCounters=1)
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/managed_magnet_tests.cpp(258)]
+
+    Start 207: managed-library-command-routing
+5/6 Test #207: managed-library-command-routing ...   Passed   27.48 sec
+    Start 208: magnet-host
+6/6 Test #208: magnet-host .......................***Failed  184.47 sec
+********* Start testing of MagnetBridgeTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MagnetBridgeTests::initTestCase()
+FAIL!  : MagnetBridgeTests::actualMetadataImportsAndStartsInSameOwner(single) 'row(rows, pending.hash) && row(rows, pending.hash)->bytes == test::OwnedEngineFixture::PayloadBytes' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/magnet_bridge_tests.cpp(141)]
+FAIL!  : MagnetBridgeTests::actualMetadataImportsAndStartsInSameOwner(multi) 'row(rows, pending.hash) && row(rows, pending.hash)->bytes == test::OwnedEngineFixture::PayloadBytes' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/magnet_bridge_tests.cpp(141)]
+PASS   : MagnetBridgeTests::importedCrashRecoveryPreservesLaterStopAndDoesNotResolveAgain()
+PASS   : MagnetBridgeTests::legacyDestinationAndWholeSelectionCasRemainSafe()
+PASS   : MagnetBridgeTests::legacyResubmissionAttachesDestinationAndRetainsOriginalStoppedIntent()
+PASS   : MagnetBridgeTests::malformedPendingReadRetainsDisabledRowAndDoesNotRewriteConfig()
+PASS   : MagnetBridgeTests::cleanupTestCase()
+Totals: 6 passed, 2 failed, 0 skipped, 0 blacklisted, 184235ms
+********* Finished testing of MagnetBridgeTests *********
+
+
+50% tests passed, 3 tests failed out of 6
+
+Label Time Summary:
+torrent-workflows    = 487.24 sec*proc (6 tests)
+unit                 = 487.24 sec*proc (6 tests)
+
+Total Test time (real) = 487.24 sec
+
+The following tests FAILED:
+	205 - managed-seeding (Failed)                          torrent-workflows unit
+	206 - managed-magnet (Timeout)                          torrent-workflows unit
+	208 - magnet-host (Failed)                              torrent-workflows unit
+Errors while running CTest

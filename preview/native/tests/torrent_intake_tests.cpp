@@ -1,5 +1,6 @@
 #include "../adapters/torrent_intake.hpp"
 #include "../adapters/torrent_state.hpp"
+#include "biglybtc/file_policy.hpp"
 
 #include <libtorrent/hasher.hpp>
 
@@ -134,6 +135,21 @@ int main() {
         const auto saved = area.saved();
         CHECK(saved.downloads.size() == 1);
         const auto& entry = saved.downloads.front();
+        // Original legacy encoding:0 means skipped; -1 decodes to selected
+        // normal priority0. Check the published row through the actual shared
+        // decoder for BOTH a one-file and a multi-file import.
+        const auto inventory = document(area.profile / "downloads.config");
+        const auto* rows = inventory.find("downloads"); CHECK(rows && rows->children.size() == 1);
+        const auto& imported = rows->children.front();
+        const std::size_t files = multi ? 2 : 1;
+        const auto policies = compat::originalFilePolicy(imported, files);
+        CHECK(policies && policies->size() == files);
+        for (const auto& policy : *policies) { CHECK(!policy.skipped && policy.priority == 0); }
+        const auto* priorities = imported.find("file_priorities");
+        CHECK(priorities && priorities->type == core::Node::Type::List && priorities->children.size() == files);
+        for (const auto& priority : priorities->children) {
+          CHECK(priority.type == core::Node::Type::Integer && priority.integer == -1);
+        }
         CHECK(entry.hash && *entry.hash == *result && entry.saveDirectory == area.destination && entry.saveFile == (multi ? "bundle" : "sample.bin"));
         CHECK(entry.torrentFile == area.archive(multi) && entry.persistent && !entry.forceStart);
         CHECK(entry.originalState == (multi ? 70 : 0) && entry.downloaded == 0 && entry.completedBytes == 0);
@@ -291,6 +307,45 @@ int main() {
       const auto result = storage::importTorrent(*area.lease, area.metadata, area.destination, false);
       CHECK(!result && result.error().code == Code::UnsafePath); area.noMutation();
       (void)moved;
+    });
+    run("force start is part of the same journaled row", [] {
+      Area area;
+      const auto imported = storage::importTorrent(*area.lease, area.metadata, area.destination, true, nullptr, true);
+      CHECK(imported && *imported == identity());
+      const auto saved = area.saved();
+      CHECK(saved.downloads.size() == 1 && saved.downloads.front().forceStart);
+      CHECK(saved.downloads.front().originalState == 0 && saved.downloads.front().startup == core::StartupState::Waiting);
+      area.noPayload();
+    });
+    run("old version-one journal defaults missing force to false and rejects unknown extras", [] {
+      for (int kind = 0; kind < 3; ++kind) {
+        Area area;
+        crashStage = Stage::JournalSynced;
+        const auto child = ::fork(); CHECK(child >= 0);
+        if (child == 0) {
+          (void)storage::importTorrent(*area.lease, area.metadata, area.destination, false, crashAt);
+          ::_exit(90);
+        }
+        int status = 0;
+        while (::waitpid(child, &status, 0) < 0) { if (errno != EINTR) { throw std::runtime_error("owned child wait failed"); } }
+        CHECK(WIFEXITED(status) && WEXITSTATUS(status) == 37);
+        const auto path = area.profile / "BiglyBTC.torrent-import";
+        auto journal = read(path);
+        const std::string field = "10:forceStarti0e";
+        const auto position = journal.find(field); CHECK(position != std::string::npos);
+        if (kind < 2) { journal.erase(position, field.size()); }
+        if (kind == 1) { journal.insert(journal.size() - 1, "6:futurei1e"); }
+        if (kind == 2) { journal.replace(position, field.size(), "10:forceStarti2e"); }
+        write(path, journal);
+        area.reopen(); const auto result = storage::recoverTorrentIntake(*area.lease);
+        if (kind != 0) {
+          CHECK(!result && read(path) == journal && !fs::exists(area.profile / "downloads.config"));
+        } else {
+          CHECK(result && result->has_value());
+          CHECK(area.saved().downloads.size() == 1 && !area.saved().downloads.front().forceStart);
+        }
+        area.noPayload();
+      }
     });
     std::cout << families << " torrent-intake families, " << assertions << " assertions passed\n";
     return 0;

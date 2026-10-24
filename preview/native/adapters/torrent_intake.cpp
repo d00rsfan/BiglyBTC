@@ -196,11 +196,11 @@ struct Plan {
   core::TorrentHash hash;
   std::string metadata, destination, profile, state, inventory;
   std::optional<std::string> before, oldBackup;
-  bool stopped;
+  bool stopped, forceStart;
   mode_t inventoryMode;
 };
 Plan plan(std::string metadata, std::string destination, std::string profile,
-    std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode) {
+    std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart) {
   auto torrent = parse(metadata, MaximumMetadata);
   uniqueKeys(torrent.root());
   const auto* info = torrent.find("info");
@@ -251,10 +251,11 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   const auto archive = profile + "/torrents/" + hash->hex() + ".torrent";
   std::string entry = "d" + b("torrent_hash") + b(std::string_view(digest, 20)) + b("torrent") + b(archive)
       + b("save_dir") + b(destination) + b("save_file") + b(original->name) + b("persistent") + "i1e"
-      + b("state") + i(stopped ? 70 : 0) + b("position") + i(position + 1) + b("forceStart") + "i0e"
+      + b("state") + i(stopped && !forceStart ? 70 : 0) + b("position") + i(position + 1)
+      + b("forceStart") + i(forceStart ? 1 : 0)
       + b("downloaded") + "i0e" + b("uploaded") + "i0e" + b("completedbytes") + "i0e"
       + b("maxdl") + "i0e" + b("maxul") + "i0e" + b("file_priorities") + 'l';
-  for (std::size_t n = 0; n < original->files.size(); ++n) { entry += "i0e"; }
+  for (std::size_t n = 0; n < original->files.size(); ++n) { entry += "i-1e"; }
   entry += "ee";
   std::string list = raw(inventory, *downloads);
   list.insert(list.size() - 1, entry);
@@ -281,13 +282,14 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   require(verify && verify->issues.empty() && verify->downloads.size() == saved->downloads.size() + 1,
       ErrorCode::InvalidFormat, "New inventory failed its original reader");
   return {*hash, std::move(metadata), std::move(destination), std::move(profile), std::move(state), std::move(after),
-      std::move(before), std::move(oldBackup), stopped, static_cast<mode_t>(mode & 0777)};
+      std::move(before), std::move(oldBackup), stopped, forceStart, static_cast<mode_t>(mode & 0777)};
 }
 std::string journalBytes(const Plan& p) {
   return "d" + b("version") + "i1e" + b("metadata") + b(p.metadata) + b("destination") + b(p.destination)
       + b("profile") + b(p.profile) + b("stopped") + i(p.stopped ? 1 : 0) + b("mode") + i(p.inventoryMode)
       + b("before_present") + i(p.before ? 1 : 0) + b("before") + b(p.before.value_or(""))
-      + b("backup_present") + i(p.oldBackup ? 1 : 0) + b("backup") + b(p.oldBackup.value_or("")) + 'e';
+      + b("backup_present") + i(p.oldBackup ? 1 : 0) + b("backup") + b(p.oldBackup.value_or(""))
+      + b("forceStart") + i(p.forceStart ? 1 : 0) + 'e';
 }
 std::string text(const Node* value) {
   require(value && value->type == Node::Type::Bytes, ErrorCode::InvalidFormat, "Invalid intake journal string");
@@ -300,14 +302,17 @@ std::int64_t integer(const Node* value) {
 Plan readJournal(std::string bytes, const std::string& profile) {
   auto document = parse(std::move(bytes), MaximumJournal);
   uniqueKeys(document.root());
-  require(document.root().children.size() == 20 && integer(document.find("version")) == 1,
+  const auto* force = document.find("forceStart");
+  require(((document.root().children.size() == 20 && !force) || (document.root().children.size() == 22 && force))
+      && integer(document.find("version")) == 1,
       ErrorCode::Unsupported, "Unknown intake journal version or fields");
   const auto before = integer(document.find("before_present"));
   const auto backup = integer(document.find("backup_present"));
   const auto stopped = integer(document.find("stopped"));
   const auto mode = integer(document.find("mode"));
+  const auto forceStart = force ? integer(force) : 0;
   require((before == 0 || before == 1) && (backup == 0 || backup == 1) && (stopped == 0 || stopped == 1)
-      && mode >= 0 && mode <= 0777 && text(document.find("profile")) == profile,
+      && (forceStart == 0 || forceStart == 1) && mode >= 0 && mode <= 0777 && text(document.find("profile")) == profile,
       ErrorCode::Conflict, "Intake journal identity/flags differ from this profile");
   auto destination = text(document.find("destination"));
   destinationPath(destination);
@@ -316,7 +321,7 @@ Plan readJournal(std::string bytes, const std::string& profile) {
   require((before || old.empty()) && (backup || bak.empty()), ErrorCode::InvalidFormat, "Invalid absent journal input");
   return plan(text(document.find("metadata")), std::move(destination), profile,
       before ? std::optional{std::move(old)} : std::nullopt,
-      backup ? std::optional{std::move(bak)} : std::nullopt, stopped == 1, static_cast<mode_t>(mode));
+      backup ? std::optional{std::move(bak)} : std::nullopt, stopped == 1, static_cast<mode_t>(mode), forceStart == 1);
 }
 struct Stage { Descriptor fd; struct stat info{}; };
 Stage stage(int root, const std::string& name, std::string_view data, mode_t mode) {
@@ -441,7 +446,7 @@ void cacheAbsent(int root, const core::TorrentHash& hash) {
 
 std::expected<core::TorrentHash, Error> importTorrent(ProfileLease& lease,
     const fs::path& metadata, const fs::path& destination, bool stopped,
-    void (*observer)(TorrentIntakeStage)) {
+    void (*observer)(TorrentIntakeStage), bool forceStart) {
   try {
     const auto profile = profilePath(lease);
     const int root = lease.directoryHandle();
@@ -454,7 +459,7 @@ std::expected<core::TorrentHash, Error> importTorrent(ProfileLease& lease,
     const auto backup = read(root, "downloads.config.bak", MaximumInventory);
     require(before || !backup, ErrorCode::Conflict, "Resolve missing inventory primary before intake");
     auto p = plan(std::move(source->bytes), destination.native(), profile, contents(before), contents(backup),
-        stopped, before ? before->info.st_mode : 0600);
+        stopped, before ? before->info.st_mode : 0600, forceStart);
     auto active = childDirectory(root, "active", false);
     auto archive = childDirectory(root, "torrents", false);
     if (active.get() >= 0) {
