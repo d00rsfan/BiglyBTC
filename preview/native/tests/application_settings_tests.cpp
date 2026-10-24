@@ -1,3 +1,4 @@
+#include "biglybtc/queue_policy.hpp"
 #include "application_settings.hpp"
 #include <array>
 #include <cerrno>
@@ -67,7 +68,7 @@ extern "C" int __wrap_fsync(int fd) {
 int main() {
   try {
     run("catalog original literals and field constraints",[]{
-      CHECK(core::applicationSettingsCatalog().size()==50);
+      CHECK(core::applicationSettingsCatalog().size()==100);
       for(const auto& item:core::applicationSettingsCatalog()) {
         CHECK(core::applicationSetting(item.id)==&item); CHECK(!item.key.empty()&&!item.label.empty());
         const auto value=core::applicationSettingDefault(item); if(value){CHECK(core::validApplicationSettingValue(item,*value));}
@@ -81,7 +82,7 @@ int main() {
       CHECK(!core::applicationSetting(static_cast<Id>(999)));
     });
     run("missing and explicit default no-op never materialize config",[]{
-      Area area;const auto snapshot=area.snapshot();CHECK(snapshot.missing());CHECK(snapshot.fields.size()==50);
+      Area area;const auto snapshot=area.snapshot();CHECK(snapshot.missing());CHECK(snapshot.fields.size()==100);
       CHECK(field(snapshot,Id::UploadLimit).state==State::Defaulted);
       CHECK(field(snapshot,Id::DefaultSavePath).state==State::UnavailableDefault);
       const auto desired=prepare(snapshot,{{Id::UploadLimit,std::int64_t{0}},{Id::TcpEnabled,true}});CHECK(!desired.changed());
@@ -174,6 +175,21 @@ int main() {
       auto edited=core::Document::parse("de");CHECK(edited&&edited->replaceValue("opaque","i1e"));
       before.source=std::make_shared<const core::Document>(std::move(*edited));CHECK(!storage::prepareApplicationSettings(before,{}));
       CHECK(read(area.primary())=="de");
+    });
+    run("classic FP default and sparse float queue settings",[]{
+      Area area;write(area.primary(),"d2:ui3:az27:unknownli7e3:rawee");
+      const auto before=read(area.primary());const auto snapshot=area.snapshot();
+      CHECK(!std::get<bool>(*field(snapshot,Id::FirstPriorityIgnoreZeroPeers).value));
+      CHECK(read(area.primary())==before);
+      CHECK(core::applicationSetting(Id::MinDownloads)->applicability==core::SettingsApplicability::Live);
+      const auto edited=prepare(snapshot,{{Id::RankMode,std::int64_t{3}},
+          {Id::IgnoreShareRatio,std::string("1.25")},{Id::FirstPriorityIgnoreZeroPeers,true}});
+      const auto saved=take(storage::saveApplicationSettings(*area.lease,snapshot,edited));
+      const auto policy=core::readQueuePolicy(saved.source.get());CHECK(policy);
+      CHECK(policy->rankMode==core::QueueRankMode::Timed);CHECK(policy->ignoreShareRatio==1250);
+      CHECK(policy->firstPriorityIgnoreZeroPeers);
+      CHECK(read(area.primary()).find("7:unknownli7e3:rawe")!=std::string::npos);
+      CHECK(read(area.root/"biglybt.config.bak")==before);
     });
     std::cout<<families<<" application-settings families, "<<checks<<" assertions passed\n";
     return 0;

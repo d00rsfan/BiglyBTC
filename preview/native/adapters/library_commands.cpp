@@ -139,8 +139,8 @@ std::expected<void,Error> reorder(const Snapshot& saved, const core::TorrentHash
 }
 } // namespace
 
-std::expected<LibraryCommandResult,Error> applyLibraryCommand(ProfileLease& lease,
-    const core::TorrentHash& hash, Action action, std::span<const LibraryCompletionPool> pools) {
+static std::expected<LibraryCommandResult,Error> applyLibraryCommandImpl(const ProfileLease& lease,
+    const core::TorrentHash& hash, Action action, std::span<const LibraryCompletionPool> pools, bool clearForceOnly) {
   bool saving = false;
   try {
     if (static_cast<unsigned>(action) > static_cast<unsigned>(Action::MoveBottom)) {
@@ -156,7 +156,8 @@ std::expected<LibraryCommandResult,Error> applyLibraryCommand(ProfileLease& leas
     LibraryCommandResult result{action,*found,*found,pauseFor(*saved,hash),pauseFor(*saved,hash),{},false,file->recoverySource()};
     std::unordered_map<std::size_t,std::int64_t> positions;
     const auto beforeState = result.before.startup;
-    if (moveAction(action)) {
+    if (clearForceOnly) { result.after.forceStart = false; }
+    else if (moveAction(action)) {
       if (auto moved = reorder(*saved,hash,action,pools,result,positions); !moved) { return std::unexpected(moved.error()); }
     } else if (action == Action::Pause) {
       if (!result.pauseBefore) {
@@ -262,4 +263,13 @@ std::expected<LibraryCommandResult,Error> applyLibraryCommand(ProfileLease& leas
         : "Insufficient memory preparing saved-library command");
   }
 }
+std::expected<LibraryCommandResult,Error> applyLibraryCommand(const ProfileLease& lease,
+    const core::TorrentHash& hash, Action action, std::span<const LibraryCompletionPool> pools) {
+  return applyLibraryCommandImpl(lease,hash,action,pools,false);
+}
+std::expected<LibraryCommandResult,Error> clearLibraryForceStart(const ProfileLease& lease,
+    const core::TorrentHash& hash) {
+  return applyLibraryCommandImpl(lease,hash,Action::ForceStart,{},true);
+}
+
 } // namespace biglybtc::storage

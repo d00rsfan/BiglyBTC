@@ -19,7 +19,7 @@ struct OptionsField {
 };
 // Worker translates typed adapter facts; no Document, profile, or storage owner
 // enters the GUI. Every catalog field occurs exactly once in a valid snapshot.
-struct OptionsValues { std::vector<OptionsField> fields; };
+struct OptionsValues { std::vector<OptionsField> fields; bool originalClassicUi=false; };
 struct OptionsPacket {
   quint64 session = 0, request = 0, revision = 0;
   std::shared_ptr<const OptionsValues> snapshot;
@@ -72,6 +72,10 @@ inline bool validOptionsValues(const OptionsValues& values) noexcept {
         break;
       case OptionsFieldState::Defaulted:
         if (!typed || !field.defaultValue || !core::validApplicationSettingValue(field, *item.value)) { return false; }
+        if(field.id==core::SettingId::FirstPriorityIgnoreZeroPeers && values.originalClassicUi){
+          if(std::get<bool>(*item.value)){return false;}
+          break;
+        }
         if (!std::visit([&](const auto& fallback) {
           using T = std::decay_t<decltype(fallback)>;
           if constexpr (std::is_same_v<T, std::string_view>) {

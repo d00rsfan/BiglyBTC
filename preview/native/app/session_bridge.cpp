@@ -5,6 +5,9 @@
 #include "network_policy.hpp"
 #include "session_bridge.hpp"
 #include "application_settings.hpp"
+#include "scheduler_service.hpp"
+#include "torrent_state.hpp"
+#include <QDateTime>
 #include "../engine/live_settings.hpp"
 #include "owned_azureus_service.hpp"
 #include "owned_dht_accounting.hpp"
@@ -176,6 +179,11 @@ core::TorrentHash identity(const ui::Target& target) {
 }
 }
 
+namespace {
+void take(std::expected<void, storage::Error> value) {
+  if (!value) { throw Failure{std::move(value.error())}; }
+}
+}
 struct SessionBridge::Host {
   struct Known { QString name; std::optional<qint64> bytes{}; };
   std::filesystem::path profile;
@@ -190,7 +198,9 @@ struct SessionBridge::Host {
   std::optional<storage::Error> pendingReadFailure;
   bool pendingSourceCurrent = false;
   std::map<std::string, std::uint64_t> reportedMagnetAdmissions;
-  std::map<std::string, engine::ManagedPhase> lastManagedPhases;
+  using ManagedStamp = std::tuple<engine::ManagedPhase, std::optional<core::QueueReason>,
+      bool, std::uint32_t, bool>;
+  std::map<std::string, ManagedStamp> lastManagedPhases;
   std::map<std::string, storage::Error> admissionFailures;
   std::vector<storage::LibraryCompletionPool> movePools;
   storage::ProfileLease lease;
@@ -251,6 +261,96 @@ struct SessionBridge::Host {
   std::stop_token optionsReadStop;
   QString intakeDefault;
   bool intakeDefaultLoaded = false;
+
+  std::unique_ptr<storage::SchedulerService> scheduler;
+  bool schedulerRestoreDefaults=false;
+  bool schedulerAttempted=false, schedulerTagsLoaded=false, schedulerTagsAvailable=false;
+  std::optional<std::chrono::steady_clock::time_point> schedulerLastTick;
+  QString schedulerFailure, schedulerPublishedFailure;
+  std::map<std::string,std::uint64_t> manualRevisions;
+  std::set<std::string> schedulerPaused;
+  struct SchedulerMembership { bool available=false; std::vector<std::string> names; };
+  std::map<std::string,SchedulerMembership> schedulerMemberships;
+  SchedulerMembership schedulerMembership(const core::TorrentHash& hash) {
+    const auto key=hash.hex();
+    if(const auto known=schedulerMemberships.find(key);known!=schedulerMemberships.end()){
+      auto cached=known->second;
+      if(scheduler->snapshot().settings.useTags){cached.available=cached.available&&schedulerTagsLoaded&&schedulerTagsAvailable;}
+      return cached;
+    }
+    SchedulerMembership result;
+    if(scheduler->snapshot().settings.useTags){
+      if(!schedulerTagsLoaded){
+        schedulerTagsLoaded=true;
+        auto source=storage::readSavedDownloadTagsView(lease);
+        if(source){
+          schedulerTagsAvailable=true;
+          if(source->snapshot){
+            for(const auto& tag:source->snapshot->tags){
+              if(!tag.rawName||tag.nameMayRequireLocalization||tag.duplicateId||tag.membersMalformed){schedulerTagsAvailable=false;break;}
+              for(const auto& member:tag.uniqueHashes){auto& row=schedulerMemberships[member.hex()];row.available=true;row.names.push_back(*tag.rawName);}
+            }
+            if(!source->snapshot->issues.empty()){schedulerTagsAvailable=false;}
+          }
+        }
+      }
+      if(const auto tag=schedulerMemberships.find(key);tag!=schedulerMemberships.end()){result=tag->second;}
+      result.available=schedulerTagsAvailable;
+    }else{
+      auto store=storage::TorrentStateStore::open(lease);
+      if(store){
+        auto state=store->load(lease,hash);
+        if(state){
+          result.available=true;result.names={"Uncategorized"};
+          if(const auto* attributes=state->document().find("attributes")){
+            if(attributes->type!=core::Node::Type::Dictionary){result.available=false;}
+            if(const auto* category=attributes->find("category")){
+              if(category->type==core::Node::Type::Bytes&&category->bytes.size()<=4096){result.names={std::string(category->bytes)};}
+              else{result.available=false;}
+            }
+          }
+        }
+      }
+    }
+    schedulerMemberships.insert_or_assign(key,result);return result;
+  }
+  std::vector<storage::SchedulerTorrent> schedulerTorrents() {
+    const auto saved=take(storage::readLibraryView(lease));
+    const auto active=engine?engine->managedDownloads():std::vector<engine::ManagedDownloadStatus>{};
+    std::map<std::string,const engine::ManagedDownloadStatus*> live;
+    for(const auto& row:active){if(row.retained){live.emplace(row.hash.hex(),&row);}}
+    std::set<std::string> pauses,unique;
+    for(const auto& row:saved.pauses){pauses.insert(row.hash.hex());}
+    std::vector<storage::SchedulerTorrent> result;result.reserve(saved.items.size());
+    const bool filters=scheduler->snapshot().configuration&&std::ranges::any_of(
+        scheduler->snapshot().configuration->schedules,[](const auto& rule){return rule.enabled&&(rule.onlyCategory||rule.excludeCategory);});
+    for(const auto& row:saved.items){
+      if(!row.saved.hash||!row.saved.persistent){continue;}
+      const auto& hash=*row.saved.hash;const auto key=hash.hex();
+      if(!unique.insert(key).second){throw Failure{{storage::ErrorCode::Conflict,"Ambiguous scheduler torrent identity"}};}
+      const auto found=live.find(key);
+      // No inferred completion or synthetic admission for saved-only/unchecked
+      // rows. Scheduling effects require this owner's actual retained handle.
+      if(found==live.end()||!found->second->checked||found->second->failure){continue;}
+      storage::SchedulerTorrent item;item.hash=hash;item.manualRevision=manualRevisions[key];
+      item.forceStarted=row.saved.forceStart;item.paused=pauses.contains(key);
+      {
+        const auto& current=*found->second;item.token=current.admission;item.complete=current.selectedComplete;
+        switch(current.phase){
+          case engine::ManagedPhase::Checking:item.state=storage::scheduler::TorrentState::Preparing;break;
+          case engine::ManagedPhase::Downloading:item.state=storage::scheduler::TorrentState::Downloading;break;
+          case engine::ManagedPhase::Seeding:item.state=storage::scheduler::TorrentState::Seeding;break;
+          case engine::ManagedPhase::Stopping:item.state=storage::scheduler::TorrentState::Stopping;break;
+          case engine::ManagedPhase::Failed:item.state=storage::scheduler::TorrentState::Error;break;
+          case engine::ManagedPhase::Paused:case engine::ManagedPhase::Stopped:item.state=storage::scheduler::TorrentState::Stopped;break;
+          default:item.state=storage::scheduler::TorrentState::Queued;break;
+        }
+      }
+      if(filters){auto membership=schedulerMembership(hash);item.membershipsAvailable=membership.available;item.memberships=std::move(membership.names);}
+      result.push_back(std::move(item));
+    }
+    return result;
+  }
 
   Host(std::filesystem::path p, unsigned short port, storage::ProfileLease held, quint64 session)
       : profile(std::move(p)), peerPort(port), lease(std::move(held)), columnLayoutSession(session) {}
@@ -409,7 +509,29 @@ struct SessionBridge::Host {
       const auto metadata = magnets.find(hash);
       const bool magnetRetained = metadata != magnets.end() && metadata->second.retained;
       const bool retiring = magnetRetained || (retained && (active->second.phase == engine::ManagedPhase::Stopping || active->second.failure));
-      if (retained) { state = managedState(active->second.phase); }
+      if (retained) {
+        state = managedState(active->second.phase);
+        if(active->second.phase==engine::ManagedPhase::Paused&&schedulerPaused.contains(hash)){state=tr("Paused — Speed Scheduler");}
+        const auto reason = active->second.queueReason;
+        if (active->second.phase == engine::ManagedPhase::Queued && reason) {
+          switch (*reason) {
+            case core::QueueReason::DownloadLimit: state = tr("Queued — download limit"); break;
+            case core::QueueReason::ActiveLimit: state = tr("Queued — active torrent limit"); break;
+            case core::QueueReason::StalledLimit: state = tr("Queued — stalled seed limit"); break;
+            case core::QueueReason::IgnoreShareRatio: state = tr("Queued — share ratio reached"); break;
+            case core::QueueReason::IgnoreZeroPeers: state = tr("Queued — no peers"); break;
+            case core::QueueReason::IgnoreSeedCount: state = tr("Queued — seed count reached"); break;
+            case core::QueueReason::IgnorePeerSeedRatio: state = tr("Queued — peer/seed ratio"); break;
+            case core::QueueReason::WaitingForScrape: state = tr("Queued — waiting for tracker counts"); break;
+            case core::QueueReason::TimedRotation: state = tr("Queued — timed rotation"); break;
+            case core::QueueReason::UploadLimit: state = tr("Queued — upload limit"); break;
+            case core::QueueReason::UnknownFacts: state = tr("Queued — rule observations unavailable"); break;
+            default: break;
+          }
+        } else if (active->second.phase == engine::ManagedPhase::Seeding && active->second.firstPriority) {
+          state = tr("Seeding — first priority");
+        }
+      }
       if (admissionFailures.contains(hash) || (active != live.end() && active->second.failure)) { state = SessionBridge::tr("Error"); }
       if (engine && engine->managedAvailable() && unique && saved.persistent && !retiring) {
         if (!retained || paused) { actions |= actionBit(core::DownloadAction::Start); }
@@ -460,8 +582,12 @@ struct SessionBridge::Host {
   }
 };
 
-SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory)
-    : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)) {
+SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory, SchedulerFactory schedulerFactory)
+    : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)), schedulerFactory_(std::move(schedulerFactory)) {
+  qRegisterMetaType<ui::SchedulerRequest>();
+  qRegisterMetaType<ui::SchedulerSubmission>();
+  qRegisterMetaType<ui::SchedulerPresentation>();
+  qRegisterMetaType<ui::SchedulerSavePresentation>();
   qRegisterMetaType<ui::Target>();
   qRegisterMetaType<ui::DownloadTargets>();
   qRegisterMetaType<ui::FileIndices>();
@@ -527,13 +653,15 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
       if (!stop.stop_requested() && host_) {
         publishAzureus(); // Consume older RTT receipts before advancing source rate buckets.
         if (host_->engine) {
-          static_cast<void>(host_->engine->poll()); tickAccounting();
+          static_cast<void>(host_->engine->poll()); tickScheduler(); tickAccounting();
           auto current = host_->engine->managedDownloads();
           bool changed = current.size() != host_->lastManagedPhases.size();
           for (const auto& item : current) {
-            auto [prior, added] = host_->lastManagedPhases.emplace(item.hash.hex(), item.phase);
-            changed = changed || added || prior->second != item.phase;
-            prior->second = item.phase;
+            const Host::ManagedStamp stamp{item.phase,item.queueReason,
+                item.firstPriority,item.unavailableQueueInputs,item.forceStart};
+            auto [prior, added] = host_->lastManagedPhases.emplace(item.hash.hex(), stamp);
+            changed = changed || added || prior->second != stamp;
+            prior->second = stamp;
           }
           std::map<std::string, Host::MagnetStamp> magnets;
           for (const auto& item : host_->engine->pendingMagnets()) {
@@ -714,6 +842,7 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
       if (!started) { host_->admissionFailures.insert_or_assign(saved.hash->hex(), started.error()); }
     }
     host_->bootstrapMagnets(stop); // Ordinary admissions precede pending metadata recovery.
+    tickScheduler();
     ready(host_->query(stop), host_->admissionFailures.empty() ? QString{} : tr("Some torrents require attention; saved data was preserved"));
   });
 }
@@ -783,6 +912,15 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
           failures.push_back(text(hash.hex()) + QStringLiteral(": ") + text(controlled.error().message));
         } else { host_->admissionFailures.erase(hash.hex()); }
         continue;
+      }
+      if(static_cast<unsigned>(action)<=static_cast<unsigned>(core::DownloadAction::ForceStart)){
+        auto& revision=host_->manualRevisions[hash.hex()];
+        if(revision==std::numeric_limits<std::uint64_t>::max()){throw Failure{{storage::ErrorCode::Conflict,"Manual action revision exhausted"}};}
+        ++revision;host_->schedulerPaused.erase(hash.hex());
+        if(host_->scheduler){
+          const auto revoked=host_->scheduler->revokeForManual(host_->lease,hash);
+          if(!revoked){failures.push_back(tr("Scheduler ownership was revoked; cleanup needs attention: %1").arg(text(revoked.error().message)));}
+        }
       }
       auto changed = storage::applyLibraryCommand(host_->lease, hash, action, host_->movePools);
       if (!changed) { failures.push_back(text(hash.hex()) + QStringLiteral(": ") + text(changed.error().message)); continue; }
@@ -1641,6 +1779,11 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
     auto policy = engine::readNetworkPolicy(config ? &config->document() : nullptr,
         {.mode = engine::NetworkMode::Normal});
     if (!policy) { throw Failure{{storage::ErrorCode::Unsupported, "Unsupported network setting: " + policy.error().field}}; }
+    auto queues = core::readQueuePolicy(config ? &config->document() : nullptr);
+    if (!queues) { throw Failure{{storage::ErrorCode::InvalidFormat,
+        "Invalid queue setting: " + queues.error().key}}; }
+    auto configuredQueue = (*owner)->configureQueuePolicy(*queues);
+    if (!configuredQueue) { throw Failure{configuredQueue.error()}; }
     auto applied = (*owner)->configureNetwork(*policy);
     if (!applied) { throw Failure{applied.error()}; }
     host_->networkPolicy = std::move(*policy);
@@ -2110,6 +2253,7 @@ engine::LiveQueueLimits optionQueues(const core::Document& document) {
 ui::OptionsPresentation optionPacket(const storage::ApplicationSettingsSnapshot& snapshot,
     quint64 session, quint64 request, quint64 revision, bool restart) {
   auto values = std::make_shared<ui::OptionsValues>();
+  if(snapshot.source){const auto* originalUi=snapshot.source->find("ui");values->originalClassicUi=originalUi&&originalUi->type==core::Node::Type::Bytes&&originalUi->bytes=="az2";}
   values->fields.reserve(snapshot.fields.size());
   for (const auto& field : snapshot.fields) {
     ui::OptionsFieldState state;
@@ -2201,6 +2345,9 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
         auto policy = engine::readNetworkPolicy(&prepared->document(), {.mode = engine::NetworkMode::Normal});
         if (!policy) { packet->failure = tr("Unsupported or invalid setting: %1").arg(text(policy.error().field)); }
         else {
+          const auto queuePolicy = core::readQueuePolicy(&prepared->document());
+          if (!queuePolicy) { packet->failure = tr("Invalid queue setting: %1").arg(text(queuePolicy.error().key)); }
+          else {
           const auto queues = optionQueues(prepared->document());
           auto planned = engine::prepareLiveSettings(host_->networkPolicy, *policy, queues);
           if (!planned) { packet->failure = text(planned.error().message); }
@@ -2215,7 +2362,12 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
               ++host_->optionsRevision;
               if (host_->engine) {
                 auto applied = host_->engine->applyLiveSettings(*policy, queues);
-                if (applied) { host_->networkPolicy = std::move(planned->effectivePolicy); }
+                if (applied) {
+                  host_->networkPolicy = std::move(planned->effectivePolicy);
+                  const auto queued = host_->engine->configureQueuePolicy(*queuePolicy);
+                  if (!queued) { applied = std::unexpected(queued.error()); }
+
+                }
                 else {
                   packet->restartRequired = true;
                   packet->failure = tr("Settings were saved; restart BiglyBTC to apply them");
@@ -2224,7 +2376,13 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
               packet->snapshot = optionPacket(*host_->optionsBaseline, submission.session,
                   submission.request, host_->optionsRevision, packet->restartRequired);
               host_->intakeDefault = optionDefaultPath(*host_->optionsBaseline);
+              if(host_->scheduler){
+                const auto refreshed=host_->scheduler->reload(host_->lease);
+                if(!refreshed){host_->schedulerFailure=text(refreshed.error().message);}
+                else{host_->schedulerMemberships.clear();host_->schedulerTagsLoaded=false;host_->schedulerTagsAvailable=false;host_->schedulerLastTick.reset();}
+              }
             }
+          }
           }
         }
       }
@@ -2242,6 +2400,203 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
       completionMonitor_->stop(); busy_ = false; emit busyChanged(false);
     }, Qt::QueuedConnection);
   }, false);
+}
+
+namespace {
+ui::SchedulerPresentation schedulerPacket(const storage::SchedulerSnapshot& source,
+    quint64 session, quint64 request) {
+  auto values=std::make_shared<ui::SchedulerValues>();
+  values->preferences={source.settings.enabled,source.settings.useTags,source.settings.overrideForced,source.settings.pollMilliseconds};
+  if(source.configuration){values->configuration=*source.configuration;values->hasSavedSchedules=true;}
+  values->inheritedOwnershipUnverified=source.inheritedOwnershipUnverified;
+  values->interruptedAction=source.interruptedAction;
+  values->directory=text(source.directoryLeaf);values->diagnostic=text(source.diagnostic);
+  auto result=std::make_shared<ui::SchedulerPacket>();result->session=session;result->request=request;
+  result->revision=source.revision;result->snapshot=std::move(values);return result;
+}
+}
+void SessionBridge::ensureScheduler() {
+  if(!host_||host_->schedulerAttempted){return;}host_->schedulerAttempted=true;
+  if(!schedulerFactory_){host_->schedulerFailure=tr("Speed Scheduler is unavailable in this build");return;}
+  try{host_->scheduler=schedulerFactory_(host_->lease);}
+  catch(const std::exception& error){host_->schedulerFailure=tr("Speed Scheduler could not load: %1").arg(QString::fromUtf8(error.what()));}
+  catch(...){host_->schedulerFailure=tr("Speed Scheduler could not load");}
+  if(!host_->scheduler&&host_->schedulerFailure.isEmpty()){host_->schedulerFailure=tr("Speed Scheduler could not load");}
+}
+bool SessionBridge::loadScheduler(ui::SchedulerRequest request) {
+  if(profileClosed_||!request.session||!request.request||request.session!=publishedColumnLayoutSession_){return false;}
+  return dispatch([this,request](std::stop_token stop){
+    auto failure=std::make_shared<ui::SchedulerPacket>();failure->session=request.session;failure->request=request.request;
+    ui::SchedulerPresentation result=failure;
+    if(!host_||host_->columnLayoutSession!=request.session){failure->failure=tr("This scheduling session is no longer active");}
+    else{
+      ensureScheduler();
+      if(!host_->scheduler){failure->failure=host_->schedulerFailure;}
+      else{
+        auto read=host_->scheduler->reload(host_->lease,stop);
+        if(!read){failure->failure=text(read.error().message);}
+        else{host_->schedulerMemberships.clear();host_->schedulerTagsLoaded=false;result=schedulerPacket(host_->scheduler->snapshot(),request.session,request.request);}
+      }
+    }
+    QMetaObject::invokeMethod(this,[this,result]{
+      QPointer<SessionBridge> guard(this);if(result->session==publishedColumnLayoutSession_){emit schedulerReady(result);}
+      if(!guard){return;}completionMonitor_->stop();busy_=false;emit busyChanged(false);
+    },Qt::QueuedConnection);
+  },false);
+}
+bool SessionBridge::saveScheduler(ui::SchedulerSubmission value) {
+  if(profileClosed_||!value.session||!value.request||!value.revision||value.session!=publishedColumnLayoutSession_
+      ||value.schedules.size()>storage::scheduler::MaximumSchedules){return false;}
+  return dispatch([this,value=std::move(value)](std::stop_token stop){
+    auto result=std::make_shared<ui::SchedulerSavePacket>();result->session=value.session;result->request=value.request;result->revision=value.revision;
+    if(!host_||host_->columnLayoutSession!=value.session||!host_->scheduler){result->failure=tr("Reload schedules before saving");}
+    else try{
+      const auto& current=host_->scheduler->snapshot();
+      if(current.revision!=value.revision){throw Failure{{storage::ErrorCode::Conflict,"Schedules changed; reload before saving"}};}
+      constexpr int RateMax=std::numeric_limits<int>::max()/1024;
+      if(value.preferences.pollMilliseconds<1000||value.defaultUpload<0||value.defaultUpload>RateMax
+          ||value.defaultDownload<0||value.defaultDownload>RateMax){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid schedule speeds or interval"}};}
+      storage::SchedulerXmlChanges xml;
+      const storage::scheduler::Configuration empty;
+      const auto& source=current.configuration?*current.configuration:empty;
+      if(value.defaultUpload!=source.defaultUpload||value.defaultDownload!=source.defaultDownload||value.enforceDefaults!=source.defaultsEnforce){
+        xml.defaults=storage::SchedulerXmlChanges::Defaults{value.defaultUpload,value.defaultDownload,value.enforceDefaults};
+      }
+      std::set<std::size_t> retained;
+      for(const auto& row:value.schedules){
+        if(row.sourceIndex){
+          if(*row.sourceIndex>=source.schedules.size()||!retained.insert(*row.sourceIndex).second){throw Failure{{storage::ErrorCode::Conflict,"Invalid schedule selection"}};}
+          if(row.value!=source.schedules[*row.sourceIndex]){xml.update.push_back({*row.sourceIndex,row.value});}
+        }else{xml.append.push_back(row.value);}
+      }
+      for(std::size_t i=0;i<source.schedules.size();++i){if(!retained.contains(i)){xml.remove.push_back(i);}}
+      const bool writeXml=xml.defaults||!xml.update.empty()||!xml.remove.empty()||!xml.append.empty();
+      storage::SchedulerSettingsChanges settings;
+      if(value.preferences.enabled!=current.settings.enabled){settings.enabled=value.preferences.enabled;}
+      if(value.preferences.useTags!=current.settings.useTags){settings.useTags=value.preferences.useTags;}
+      if(value.preferences.overrideForced!=current.settings.overrideForced){settings.overrideForced=value.preferences.overrideForced;}
+      if(value.preferences.pollMilliseconds!=current.settings.pollMilliseconds){settings.pollMilliseconds=value.preferences.pollMilliseconds;}
+      // Both edits are validated before the first write. There is no cross-file
+      // atomicity claim: schedules commit first; settings failure is explicit.
+      if(writeXml){static_cast<void>(take(storage::patchSchedulerXml(current.originalXml,xml)));}
+      if(writeXml){static_cast<void>(take(host_->scheduler->saveSchedules(host_->lease,current.revision,xml,stop)));result->schedulesSaved=true;}
+      static_cast<void>(take(host_->scheduler->saveSettings(host_->lease,host_->scheduler->snapshot().revision,settings,
+          result->schedulesSaved?std::stop_token{}:stop)));
+      result->saved=true;host_->schedulerLastTick.reset();host_->schedulerRestoreDefaults=true;host_->schedulerMemberships.clear();host_->schedulerTagsLoaded=false;
+      // Live policy application is independent of the confirmed save result.
+      // Its diagnostics are retained; a failed tick never rolls back a save.
+      tickScheduler();
+      // A successful rate publication reloads the scheduler's configuration CAS
+      // and advances its editor revision. Return the final snapshot, not a stale
+      // packet constructed before that tick.
+      result->snapshot=schedulerPacket(host_->scheduler->snapshot(),value.session,value.request);
+    }catch(const Failure& error){
+      result->failure=text(error.error.message);
+      if(result->schedulesSaved){result->failure=tr("Schedules saved; settings were not saved: %1").arg(result->failure);
+        result->snapshot=schedulerPacket(host_->scheduler->snapshot(),value.session,value.request);}
+    }
+    ui::SchedulerSavePresentation packet=result;
+    QMetaObject::invokeMethod(this,[this,packet]{
+      QPointer<SessionBridge> guard(this);if(packet->session==publishedColumnLayoutSession_){emit schedulerSaved(packet);}
+      if(!guard){return;}completionMonitor_->stop();busy_=false;emit busyChanged(false);
+    },Qt::QueuedConnection);
+  },false);
+}
+void SessionBridge::tickScheduler() noexcept {
+  if(!host_||!host_->engine){return;}
+  try{
+    ensureScheduler();if(!host_->scheduler){return;}
+    if(!host_->scheduler->snapshot().settings.enabled&&host_->schedulerPaused.empty()&&!host_->schedulerRestoreDefaults){return;}
+    const auto now=std::chrono::steady_clock::now();
+    const auto interval=std::chrono::milliseconds(host_->scheduler->snapshot().settings.pollMilliseconds);
+    if(host_->schedulerLastTick&&now-*host_->schedulerLastTick<interval){return;}host_->schedulerLastTick=now;
+    host_->schedulerFailure.clear();
+    auto torrents=host_->schedulerTorrents();
+    const auto actual=host_->engine->liveSettings();
+    if(!actual||actual->rateLimits.upload.state==core::RateLimitState::Unavailable
+        ||actual->rateLimits.download.state==core::RateLimitState::Unavailable){return;}
+    const auto local=QDateTime::currentDateTime();
+    auto plan=take(host_->scheduler->evaluate({local.date().dayOfWeek()%7,local.time().hour()*60+local.time().minute()},
+        torrents,static_cast<int>(actual->rateLimits.upload.bytesPerSecond/1024),static_cast<int>(actual->rateLimits.download.bytesPerSecond/1024)));
+    bool ratesApplied=true,configurationPublished=false;
+    if(plan.uploadKiB||plan.downloadKiB){
+      auto source=take(storage::readApplicationSettings(host_->lease));
+      bool seedingOnly=false;
+      if(host_->networkPolicy.seedingOnlyUpload){
+        const auto live=host_->engine->managedDownloads();bool any=false,onlySeeds=true;
+        for(const auto& row:live){if(row.retained&&row.phase!=engine::ManagedPhase::Stopping){any=true;onlySeeds=onlySeeds&&row.selectedComplete;}}
+        seedingOnly=any&&onlySeeds&&host_->engine->pendingMagnets().empty();
+      }
+      std::vector<core::SettingChange> edits;
+      if(plan.uploadKiB){edits.push_back({seedingOnly?core::SettingId::SeedingUploadLimit:core::SettingId::UploadLimit,std::int64_t{*plan.uploadKiB}});}
+      if(plan.downloadKiB){edits.push_back({core::SettingId::DownloadLimit,std::int64_t{*plan.downloadKiB}});}
+      auto prepared=take(storage::prepareApplicationSettings(source,edits));
+      auto requested=engine::readNetworkPolicy(&prepared.document(),{.mode=engine::NetworkMode::Normal});
+      if(!requested){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid saved routing while applying scheduled rates"}};}
+      auto safe=take(engine::prepareLiveSettings(host_->networkPolicy,*requested));
+      static_cast<void>(take(storage::saveApplicationSettings(host_->lease,source,prepared)));
+      configurationPublished=true;
+      const auto applied=host_->engine->applyLiveSettings(*requested);
+      ratesApplied=applied.has_value();if(applied){host_->networkPolicy=std::move(safe.effectivePolicy);}
+      if(!applied){host_->schedulerFailure=tr("Scheduled speeds were saved; restart to apply them");}
+    }
+    static_cast<void>(take(host_->scheduler->acknowledgeRates(plan.id,ratesApplied,ratesApplied)));
+    if(ratesApplied){host_->schedulerRestoreDefaults=false;}
+    if(configurationPublished){
+      // Our own confirmed config write invalidated the old action CAS baseline.
+      // A reload retains same-byte, acknowledged current-session ownership.
+      static_cast<void>(take(host_->scheduler->reload(host_->lease)));
+      host_->schedulerMemberships.clear();host_->schedulerTagsLoaded=false;host_->schedulerTagsAvailable=false;
+      const auto currentLimits=host_->engine->liveSettings();
+      if(!currentLimits||currentLimits->rateLimits.upload.state==core::RateLimitState::Unavailable
+          ||currentLimits->rateLimits.download.state==core::RateLimitState::Unavailable){
+        throw Failure{{storage::ErrorCode::Io,"Actual limits unavailable after scheduled rate publication"}};
+      }
+      torrents=host_->schedulerTorrents();const auto currentTime=QDateTime::currentDateTime();
+      plan=take(host_->scheduler->evaluate({currentTime.date().dayOfWeek()%7,currentTime.time().hour()*60+currentTime.time().minute()},
+          torrents,static_cast<int>(currentLimits->rateLimits.upload.bytesPerSecond/1024),
+          static_cast<int>(currentLimits->rateLimits.download.bytesPerSecond/1024)));
+      // Only the first plan's rate effects were applied. New outstanding rate
+      // changes remain unacknowledged for the next tick; actions use this fresh
+      // plan and its exact new revision/current rows.
+      static_cast<void>(take(host_->scheduler->acknowledgeRates(plan.id,false,false)));
+    }
+    for(const auto& action:plan.actions){
+      auto current=host_->schedulerTorrents();
+      const auto row=std::ranges::find(current,action.hash,&storage::SchedulerTorrent::hash);
+      if(row==current.end()){continue;}
+      auto began=host_->scheduler->beginAction(host_->lease,action,*row);
+      if(!began){host_->schedulerFailure=text(began.error().message);continue;}
+      bool intentConfirmed=false;
+      try{
+        if(action.kind!=storage::scheduler::ActionKind::SetStopReason){
+          const bool pause=action.kind==storage::scheduler::ActionKind::Pause;
+          auto persisted=storage::applyLibraryCommand(host_->lease,action.hash,pause?core::DownloadAction::Pause:core::DownloadAction::Resume);
+          // A failed publication can be indeterminate; retain the journal and
+          // revoke resume authority rather than claiming no filesystem effect.
+          if(!persisted){throw Failure{persisted.error()};}intentConfirmed=true;
+          auto controlled=host_->engine->pauseManaged(action.hash,pause);
+          if(!controlled){throw Failure{controlled.error()};}
+          if(pause){host_->schedulerPaused.insert(action.hash.hex());}else{host_->schedulerPaused.erase(action.hash.hex());}
+        }
+        static_cast<void>(take(host_->scheduler->finishAction(host_->lease,action,storage::SchedulerActionResult::Succeeded)));
+      }catch(const Failure& error){
+        static_cast<void>(host_->scheduler->finishAction(host_->lease,action,storage::SchedulerActionResult::Indeterminate));
+        host_->schedulerFailure=text(error.error.message);
+        static_cast<void>(intentConfirmed);break;
+      }
+    }
+    if(host_->schedulerFailure.isEmpty()){host_->schedulerFailure=text(host_->scheduler->snapshot().diagnostic);}
+  }catch(const Failure& error){host_->schedulerFailure=text(error.error.message);}
+  catch(const std::exception& error){host_->schedulerFailure=QString::fromUtf8(error.what());}
+  catch(...){host_->schedulerFailure=tr("Scheduler policy is unavailable");}
+  if(host_->schedulerFailure!=host_->schedulerPublishedFailure){
+    host_->schedulerPublishedFailure=host_->schedulerFailure;
+    if(!host_->schedulerFailure.isEmpty()){
+      const auto message=host_->schedulerFailure;const auto session=host_->columnLayoutSession;
+      QMetaObject::invokeMethod(this,[this,message,session]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit messageReady(message);}},Qt::QueuedConnection);
+    }
+  }
 }
 
 } // namespace biglybtc::app

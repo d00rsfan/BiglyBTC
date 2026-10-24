@@ -89,3 +89,38 @@ endif()
 if(BIGLYBTC_DESKTOP)
   target_link_libraries(biglybtc_desktop_host PRIVATE LibtorrentRasterbar::torrent-rasterbar)
 endif()
+
+if(BIGLYBTC_DESKTOP)
+  set(biglybtc_scheduler_source "${CMAKE_CURRENT_SOURCE_DIR}/../plugins/BiglyBTC-plugin-SpeedScheduler")
+  add_library(biglybtc_scheduler_policy STATIC "${biglybtc_scheduler_source}/scheduler.cpp"
+    "${biglybtc_scheduler_source}/original_xml.cpp" "${biglybtc_scheduler_source}/ownership_file.cpp")
+  set_target_properties(biglybtc_scheduler_policy PROPERTIES POSITION_INDEPENDENT_CODE ON)
+  target_include_directories(biglybtc_scheduler_policy PUBLIC "${biglybtc_scheduler_source}")
+  target_link_libraries(biglybtc_scheduler_policy PRIVATE Qt6::Core)
+  target_compile_options(biglybtc_scheduler_policy PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_library(biglybtc_scheduler_module MODULE "${biglybtc_scheduler_source}/module.cpp")
+  set_target_properties(biglybtc_scheduler_module PROPERTIES PREFIX "" OUTPUT_NAME "BiglyBTC-plugin-SpeedScheduler"
+    CXX_VISIBILITY_PRESET hidden VISIBILITY_INLINES_HIDDEN ON CXX_EXTENSIONS OFF
+    BUILD_WITH_INSTALL_RPATH ON INSTALL_RPATH "$ORIGIN")
+  target_link_libraries(biglybtc_scheduler_module PRIVATE biglybtc_scheduler_policy BiglyBTC::PluginAPI)
+  target_compile_options(biglybtc_scheduler_module PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_library(biglybtc_scheduler_service STATIC ../adapters/scheduler_service.cpp ../adapters/scheduler_xml.cpp
+    ../adapters/scheduler_io.cpp ../adapters/scheduler_module.cpp)
+  target_include_directories(biglybtc_scheduler_service PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../adapters")
+  target_link_libraries(biglybtc_scheduler_service PUBLIC biglybtc_profile BiglyBTC::PluginHost
+    biglybtc_scheduler_policy PRIVATE Qt6::Core OpenSSL::Crypto)
+  target_compile_options(biglybtc_scheduler_service PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_link_libraries(biglybtc_desktop_host PRIVATE biglybtc_scheduler_service)
+  target_include_directories(biglybtc_ui PUBLIC "${biglybtc_scheduler_source}")
+  target_sources(biglybtc_ui PRIVATE ../ui/scheduler_dialog.cpp ../ui/scheduler_dialog.hpp ../ui/scheduler_presentation.hpp)
+  set(scheduler_approval "${CMAKE_CURRENT_BINARY_DIR}/generated/scheduler_approval.hpp")
+  add_custom_command(OUTPUT "${scheduler_approval}"
+    COMMAND "${CMAKE_COMMAND}" "-DINPUT=$<TARGET_FILE:biglybtc_scheduler_module>" "-DOUTPUT=${scheduler_approval}" -DVERSION=0.1.0
+      -P "${CMAKE_CURRENT_SOURCE_DIR}/generate_scheduler_approval.cmake"
+    DEPENDS biglybtc_scheduler_module generate_scheduler_approval.cmake scheduler_approval.hpp.in VERBATIM)
+  target_sources(BiglyBTC PRIVATE "${scheduler_approval}")
+  # FILES preserves the exact artifact authenticated by the compiled approval.
+  install(FILES "$<TARGET_FILE:biglybtc_scheduler_module>" DESTINATION lib/biglybtc/lib)
+  install(FILES "${biglybtc_scheduler_source}/LICENSE" "${biglybtc_scheduler_source}/NOTICE.md"
+    "${biglybtc_scheduler_source}/SOURCE_PROVENANCE.json" DESTINATION share/doc/biglybtc-experimental/SpeedScheduler)
+endif()

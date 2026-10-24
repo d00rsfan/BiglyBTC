@@ -1,0 +1,8 @@
+#pragma once
+#include <cstdint>
+#include <string_view>
+namespace biglybtc::app::scheduler_bundle {
+inline constexpr auto Sha256="@MODULE_SHA256@";
+inline constexpr std::uint64_t Bytes=@MODULE_BYTES@;
+inline constexpr auto Version="@VERSION@";
+}

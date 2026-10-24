@@ -2,6 +2,8 @@
 #include "session_bridge.hpp"
 #include "country_provider_binding.hpp"
 #include "country_approval.hpp"
+#include "scheduler_approval.hpp"
+#include "scheduler_service.hpp"
 
 #include <QApplication>
 
@@ -72,9 +74,26 @@ int main(int argc, char** argv) {
         return std::move(*provider);
       };
     }
-    biglybtc::app::SessionBridge bridge(nullptr, std::move(countryFactory));
+    const auto executable=std::filesystem::canonical("/proc/self/exe");
+    auto schedulerModule=executable.parent_path().parent_path()/"lib/BiglyBTC-plugin-SpeedScheduler.so";
+    if(!std::filesystem::exists(schedulerModule)){schedulerModule=executable.parent_path()/"BiglyBTC-plugin-SpeedScheduler.so";}
+    const biglybtc::storage::SchedulerModuleApproval schedulerApproval{
+        biglybtc::app::scheduler_bundle::Sha256,biglybtc::app::scheduler_bundle::Bytes,biglybtc::app::scheduler_bundle::Version};
+    biglybtc::app::SessionBridge::SchedulerFactory schedulerFactory=[schedulerModule,schedulerApproval](const biglybtc::storage::ProfileLease& lease){
+      auto loaded=biglybtc::storage::loadApprovedSchedulerService(lease,schedulerModule,schedulerApproval);
+      if(!loaded){throw std::runtime_error(loaded.error().message);}return std::move(*loaded);
+    };
+    biglybtc::app::SessionBridge bridge(nullptr, std::move(countryFactory), {}, std::move(schedulerFactory));
     using Window = biglybtc::ui::LibraryWindow;
     using Bridge = biglybtc::app::SessionBridge;
+    QObject::connect(&bridge,&Bridge::schedulerReady,&window,&Window::setScheduler);
+    QObject::connect(&bridge,&Bridge::schedulerSaved,&window,&Window::setSchedulerSaved);
+    QObject::connect(&window,&Window::schedulerRequested,&bridge,[&](biglybtc::ui::SchedulerRequest request){
+      if(!bridge.loadScheduler(request)){window.rejectSchedulerRequest(request);}
+    });
+    QObject::connect(&window,&Window::schedulerSaveRequested,&bridge,[&](biglybtc::ui::SchedulerSubmission submission){
+      if(!bridge.saveScheduler(submission)){window.rejectSchedulerSave(submission);}
+    });
     QObject::connect(&bridge, &Bridge::optionsReady, &window, &Window::setOptions);
     QObject::connect(&bridge, &Bridge::optionsSaved, &window, &Window::setOptionsSaved);
     QObject::connect(&bridge, &Bridge::intakeDefaultsReady, &window, &Window::setIntakeDefaults);

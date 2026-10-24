@@ -111,6 +111,10 @@ public:
       const NetworkPolicy&, std::optional<LiveQueueLimits> queues = {});
   // Actual get_settings projection; worker-only/no engine creation or alert pop.
   std::optional<LiveSettingsSnapshot> liveSettings() const noexcept;
+  // Optional original-rule controller. Pure validation precedes activation;
+  // it uses this owner's sole pump and never enables a second LT scheduler.
+  std::expected<void, storage::Error> configureQueuePolicy(const core::QueuePolicy&);
+  std::optional<core::QueuePolicy> queuePolicy() const;
   // Worker-affine, nonblocking admission/control. The sole poll pump advances
   // checking, transfer, flush/removal and compatible checkpoints for every hash.
   std::expected<void, storage::Error> startManaged(const storage::ProfileLease&, const ManagedDownloadOptions&);

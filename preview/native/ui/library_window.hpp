@@ -1,5 +1,6 @@
 #pragma once
 #include "options_presentation.hpp"
+#include "scheduler_presentation.hpp"
 
 #include "native_session_presentation.hpp"
 #include "native_activity_presentation.hpp"
@@ -40,6 +41,7 @@ class QMenu;
 namespace biglybtc::ui {
 
 class OptionsDialog;
+class SchedulerDialog;
 class ClassicColumns;
 class StatisticsPage;
 class EngineActivityHistory;
@@ -96,6 +98,10 @@ public:
   void beginColumnLayoutSession(quint64 session);
   void setColumnLayouts(ColumnLayoutsPresentation);
   void setColumnLayoutSaved(ColumnLayoutSavePresentation);
+  void setScheduler(SchedulerPresentation);
+  void setSchedulerSaved(SchedulerSavePresentation);
+  void rejectSchedulerRequest(SchedulerRequest);
+  void rejectSchedulerSave(const SchedulerSubmission&);
   void setOptions(OptionsPresentation);
   void setOptionsSaved(OptionsSavePresentation);
   void rejectOptionsRequest(OptionsRequest);
@@ -108,6 +114,8 @@ public:
   bool submitTorrentImport(QString metadata, QString destination, bool start);
   bool submitMagnetImport(QString uri, QString destination);
 signals:
+  void schedulerRequested(biglybtc::ui::SchedulerRequest);
+  void schedulerSaveRequested(biglybtc::ui::SchedulerSubmission);
   void optionsRequested(biglybtc::ui::OptionsRequest);
   void optionsSaveRequested(biglybtc::ui::OptionsSubmission);
   void refreshRequested();
@@ -182,6 +190,8 @@ private:
   void queueColumnLayouts();
   void saveColumnLayout();
   void openOptions();
+  void openScheduler();
+  void queueScheduler();
   void queueOptions();
   void updateGeneral();
   void updateCounts();
@@ -189,6 +199,11 @@ private:
   void selectionChanged();
   void requestDetails(bool force = false);
   void popup(QTableView*, const QPoint&);
+  QAction* schedulerAction_ = nullptr;
+  QPointer<SchedulerDialog> schedulerDialog_;
+  std::optional<SchedulerRequest> pendingSchedulerLoad_, activeSchedulerLoad_;
+  std::optional<SchedulerSubmission> activeSchedulerSave_;
+  bool schedulerDispatchQueued_=false;
   QAction* optionsAction_ = nullptr;
   QPointer<OptionsDialog> optionsDialog_;
   std::optional<OptionsRequest> pendingOptionsLoad_, activeOptionsLoad_;

@@ -1,5 +1,6 @@
 #include "library_window.hpp"
 #include "options_dialog.hpp"
+#include "scheduler_dialog.hpp"
 #include "classic_filter.hpp"
 #include "classic_columns.hpp"
 #include "statistics_page.hpp"
@@ -340,6 +341,9 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   statistics->setShortcut(QKeySequence(QStringLiteral("Ctrl+5")));
   statistics->setShortcutContext(Qt::WindowShortcut);
   connect(statistics, &QAction::triggered, this, &LibraryWindow::showStatistics);
+  schedulerAction_=tools->addAction(tr("Speed Scheduler…"));
+  schedulerAction_->setObjectName(QStringLiteral("classic-speed-scheduler"));
+  connect(schedulerAction_,&QAction::triggered,this,&LibraryWindow::openScheduler);
   optionsAction_ = tools->addAction(tr("Options…"));
   optionsAction_->setObjectName(QStringLiteral("classic-options"));
   connect(optionsAction_, &QAction::triggered, this, &LibraryWindow::openOptions);
@@ -858,6 +862,7 @@ void LibraryWindow::setNativeSession(NativeSessionPresentation packet) {
 void LibraryWindow::completeSessionClose() {
   if (!closing_ || !sessionCloseRequested_ || sessionCloseAcknowledged_) { return; }
   sessionCloseAcknowledged_ = true;
+  if (schedulerDialog_) { schedulerDialog_->invalidateSession(); }
   if (optionsDialog_) { optionsDialog_->invalidateSession(); }
   QTimer::singleShot(0, this, &QWidget::close);
 }
@@ -1013,6 +1018,8 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   QPointer<LibraryWindow> guard(this);
   columnSession_ = session;
   defaultSaveDirectory_.clear();
+  pendingSchedulerLoad_.reset(); activeSchedulerLoad_.reset(); activeSchedulerSave_.reset();
+  if (schedulerDialog_) { schedulerDialog_->invalidateSession(); schedulerDialog_->close(); }
   pendingOptionsLoad_.reset(); activeOptionsLoad_.reset(); activeOptionsSave_.reset();
   if (optionsDialog_) { optionsDialog_->invalidateSession(); optionsDialog_->close(); }
   savedHistoryRevision_ = 0; requestedHistoryRevisions_.fill(0);
@@ -1322,6 +1329,7 @@ void LibraryWindow::updateActions() {
       && !activeColumnRequest_ && !pendingColumnRequest_ && !activeColumnSave_ && !activeStatisticsRequest_
       && columnSaveRequest_ != std::numeric_limits<quint64>::max());
   reloadColumns_->setEnabled(!closing_ && columnSession_ != 0 && columnRequest_ != std::numeric_limits<quint64>::max());
+  if (schedulerAction_) { schedulerAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }
   if (optionsAction_) { optionsAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }
   queueDownloadActions();
 }
@@ -1731,9 +1739,15 @@ void LibraryWindow::setDetails(const Details& details) {
 void LibraryWindow::setMessage(const QString& message) { message_->setText(message.left(8192)); }
 void LibraryWindow::setBusy(bool value) {
   QPointer<LibraryWindow> optionsGuard(this);
+  if (schedulerDialog_) { schedulerDialog_->setBusy(value); }
+  if (!optionsGuard) { return; }
   if (optionsDialog_) { optionsDialog_->setBusy(value); }
   if (!optionsGuard) { return; }
   if (!value) {
+    if (activeSchedulerLoad_) { rejectSchedulerRequest(*activeSchedulerLoad_); }
+    if (!optionsGuard) { return; }
+    if (activeSchedulerSave_) { rejectSchedulerSave(*activeSchedulerSave_); }
+    if (!optionsGuard) { return; }
     if (activeOptionsLoad_) { rejectOptionsRequest(*activeOptionsLoad_); }
     if (!optionsGuard) { return; }
     if (activeOptionsSave_) { rejectOptionsSave(*activeOptionsSave_); }
@@ -1793,6 +1807,7 @@ void LibraryWindow::setBusy(bool value) {
     QTimer::singleShot(0, this, &QWidget::close);
     return;
   }
+  queueScheduler();
   queueOptions();
   queueOptionalViews();
   if (mainTabs_->currentWidget() == torrentsPage_
@@ -1802,6 +1817,9 @@ void LibraryWindow::setBusy(bool value) {
 }
 void LibraryWindow::closeEvent(QCloseEvent* event) {
   QPointer<LibraryWindow> optionsGuard(this);
+  if (schedulerDialog_ && schedulerDialog_->isVisible() && !schedulerDialog_->close()) { event->ignore(); return; }
+  if (!optionsGuard) { return; }
+  pendingSchedulerLoad_.reset();
   if (optionsDialog_ && optionsDialog_->isVisible() && !optionsDialog_->close()) { event->ignore(); return; }
   if (!optionsGuard) { return; }
   pendingOptionsLoad_.reset();
@@ -1919,6 +1937,59 @@ void LibraryWindow::rejectOptionsSave(const OptionsSubmission& request) {
   packet->request = request.request; packet->revision = request.revision;
   packet->failure = tr("No settings result was received; reload settings before retrying");
   setOptionsSaved(std::move(packet));
+}
+void LibraryWindow::openScheduler() {
+  if (closing_ || !columnSession_) { return; }
+  if (schedulerDialog_) { schedulerDialog_->show(); schedulerDialog_->raise(); schedulerDialog_->activateWindow(); return; }
+  schedulerDialog_ = new SchedulerDialog(this);
+  schedulerDialog_->setAttribute(Qt::WA_DeleteOnClose);
+  schedulerDialog_->setWindowModality(Qt::WindowModal);
+  schedulerDialog_->beginSession(columnSession_);
+  schedulerDialog_->setBusy(busy_);
+  connect(schedulerDialog_, &SchedulerDialog::loadRequested, this, [this](SchedulerRequest request) {
+    pendingSchedulerLoad_ = request; queueScheduler();
+  });
+  connect(schedulerDialog_, &SchedulerDialog::saveRequested, this, [this](SchedulerSubmission submission) {
+    activeSchedulerSave_ = submission;
+    emit schedulerSaveRequested(std::move(submission));
+  });
+  connect(schedulerDialog_, &QObject::destroyed, this, [this] {
+    pendingSchedulerLoad_.reset(); activeSchedulerLoad_.reset(); activeSchedulerSave_.reset();
+  });
+  schedulerDialog_->show();
+}
+void LibraryWindow::queueScheduler() {
+  if (!pendingSchedulerLoad_ || busy_ || closing_ || schedulerDispatchQueued_) { return; }
+  schedulerDispatchQueued_ = true;
+  QTimer::singleShot(0, this, [this] {
+    schedulerDispatchQueued_ = false;
+    if (!pendingSchedulerLoad_ || busy_ || closing_ || !schedulerDialog_) { return; }
+    const auto request = *pendingSchedulerLoad_;
+    pendingSchedulerLoad_.reset(); activeSchedulerLoad_ = request;
+    emit schedulerRequested(request);
+  });
+}
+void LibraryWindow::setScheduler(SchedulerPresentation packet) {
+  if (!packet || !schedulerDialog_ || !activeSchedulerLoad_
+      || packet->session != activeSchedulerLoad_->session || packet->request != activeSchedulerLoad_->request) { return; }
+  activeSchedulerLoad_.reset(); schedulerDialog_->setSnapshot(std::move(packet));
+}
+void LibraryWindow::setSchedulerSaved(SchedulerSavePresentation packet) {
+  if (!packet || !schedulerDialog_ || !activeSchedulerSave_
+      || packet->session != activeSchedulerSave_->session || packet->request != activeSchedulerSave_->request
+      || packet->revision != activeSchedulerSave_->revision) { return; }
+  activeSchedulerSave_.reset(); schedulerDialog_->setSaveResult(std::move(packet));
+}
+void LibraryWindow::rejectSchedulerRequest(SchedulerRequest request) {
+  auto packet = std::make_shared<SchedulerPacket>(); packet->session = request.session; packet->request = request.request;
+  packet->failure = tr("Schedules could not be loaded; reload when the current operation finishes");
+  setScheduler(std::move(packet));
+}
+void LibraryWindow::rejectSchedulerSave(const SchedulerSubmission& request) {
+  auto packet = std::make_shared<SchedulerSavePacket>(); packet->session = request.session;
+  packet->request = request.request; packet->revision = request.revision;
+  packet->failure = tr("No schedule result was received; reload schedules before retrying");
+  setSchedulerSaved(std::move(packet));
 }
 void LibraryWindow::setIntakeDefaults(quint64 session, QString directory) {
   if (!closing_ && session && session == columnSession_) { defaultSaveDirectory_ = std::move(directory); }

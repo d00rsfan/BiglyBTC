@@ -11,6 +11,7 @@
 #include <QPushButton>
 #include <QSignalSpy>
 #include <QTreeWidget>
+#include <QTreeWidgetItemIterator>
 #include <QtTest>
 
 #include <functional>
@@ -90,6 +91,14 @@ private slots:
       tree->setCurrentItem(tree->topLevelItem(0)->child(1));
       QCoreApplication::processEvents();
       QVERIFY(h.dialog.grab().save(capture + QStringLiteral("/options-proxy.png")));
+
+      tree->expandAll();
+      for (const auto& name : {QStringLiteral("Queue"), QStringLiteral("Seeding"), QStringLiteral("First Priority"), QStringLiteral("Ignore")}) {
+        QTreeWidgetItem* page = nullptr;
+        for (QTreeWidgetItemIterator it(tree); *it; ++it) { if ((*it)->text(0) == name) { page = *it; break; } }
+        QVERIFY(page); tree->setCurrentItem(page); QCoreApplication::processEvents();
+        QVERIFY(h.dialog.grab().save(capture + QStringLiteral("/options-") + name.toLower().replace(' ', '-') + QStringLiteral(".png")));
+      }
     }
   }
   void hiddenAndBusyInitialReadCoalescesUntilVisibleIdle() {

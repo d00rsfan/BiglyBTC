@@ -6,6 +6,7 @@
 #include "effective_rate_limits.hpp"
 #include "peer_payload_observer.hpp"
 #include "managed_storage.hpp"
+#include "library_commands.hpp"
 #include "magnet_intake.hpp"
 #include "metadata_disk_router.hpp"
 #include <libtorrent/session_params.hpp>
@@ -66,6 +67,37 @@ struct PersistentSession::Impl {
     lt::torrent_handle handle;
     ManagedDownloadStatus status;
     bool manualPaused = false, forceStart = false, stop = false;
+    bool policyHeld = false, completedTransition = false, completionHandled = false;
+    core::QueueActivityMemory activity;
+    std::optional<Clock::time_point> runningSince, seedingSince;
+    std::optional<lt::time_point> trackerRunningSince, trackerSeedingSince;
+    std::int64_t secondsDownloading = 0, secondsSeeding = 0;
+    lt::time_point timelineCursor = lt::clock_type::now();
+    lt::torrent_status::state_t timelineState = lt::torrent_status::checking_resume_data;
+    bool timelinePaused = true, timelineLost = false;
+    lt::time_duration downloadElapsed{}, seedElapsed{};
+    void advanceTimeline(lt::time_point stamp) {
+      if (stamp < timelineCursor) { timelineLost = true; return; }
+      if (!timelinePaused) {
+        if (timelineState == lt::torrent_status::downloading) { downloadElapsed += stamp-timelineCursor; }
+        else if (timelineState == lt::torrent_status::finished || timelineState == lt::torrent_status::seeding) { seedElapsed += stamp-timelineCursor; }
+      }
+      timelineCursor = stamp;
+    }
+    void projectTimeline(lt::time_point now) {
+      auto downloading=downloadElapsed, seeding=seedElapsed;
+      if (now>=timelineCursor && !timelinePaused) {
+        if (timelineState == lt::torrent_status::downloading) { downloading += now-timelineCursor; }
+        else if (timelineState == lt::torrent_status::finished || timelineState == lt::torrent_status::seeding) { seeding += now-timelineCursor; }
+      }
+      secondsDownloading=std::chrono::duration_cast<std::chrono::seconds>(downloading).count();
+      secondsSeeding=std::chrono::duration_cast<std::chrono::seconds>(seeding).count();
+    }
+    std::optional<std::int64_t> idleUploadSeconds;
+    std::optional<core::QueueSwarm> swarm;
+    int connectedLeechers = 0;
+    std::optional<std::uint32_t> queuePosition;
+    std::int64_t remainingBytes = 0, badPayloadBytes = 0;
     bool flushed = false, removing = false, removed = false;
     Clock::time_point deadline{};
     std::vector<std::uint8_t> verified;
@@ -74,9 +106,11 @@ struct PersistentSession::Impl {
           status{.hash = hash, .admission = id} {}
   };
   std::map<std::string, std::unique_ptr<Managed>> managed;
+  std::map<lt::torrent_handle, Managed*> managedByHandle;
   const storage::ProfileLease* managedLease = nullptr; // Same bound lease, owned by Host.
   std::optional<NetworkPolicy> network;
   std::optional<LiveQueueLimits> liveQueueLimits;
+  std::optional<core::QueuePolicy> queuePolicy;
   bool appliedSeedingOnly = false;
   struct Magnet {
     std::unique_ptr<OperationToken> token;
@@ -271,6 +305,12 @@ struct PersistentSession::Impl {
           transferError = true; removalLost = true;
           counterError(AccountingError::Engine);
         }
+        for (int type : {lt::state_changed_alert::alert_type, lt::torrent_paused_alert::alert_type,
+            lt::torrent_resumed_alert::alert_type}) {
+          if (dropped->dropped_alerts.test(type)) {
+            for (auto& [key,value] : managed) { static_cast<void>(key);value->timelineLost=true; }
+          }
+        }
         for (int type : {lt::torrent_removed_alert::alert_type, lt::file_error_alert::alert_type,
             lt::torrent_error_alert::alert_type, lt::save_resume_data_failed_alert::alert_type,
             lt::listen_failed_alert::alert_type}) {
@@ -299,29 +339,49 @@ struct PersistentSession::Impl {
     for (auto* alert : pending) {
       if (!alert) { continue; }
       if (auto* statistics = lt::alert_cast<lt::session_stats_alert>(alert)) { retain(*statistics); }
-      const bool lifecycle = lt::alert_cast<lt::torrent_removed_alert>(alert)
-          || lt::alert_cast<lt::save_resume_data_alert>(alert) || lt::alert_cast<lt::file_error_alert>(alert)
-          || lt::alert_cast<lt::torrent_error_alert>(alert) || lt::alert_cast<lt::save_resume_data_failed_alert>(alert);
-      if (!lifecycle) { continue; }
-      for (auto& [key, entry] : managed) {
-        static_cast<void>(key);
-        auto& value = *entry;
-        if (auto* removed = lt::alert_cast<lt::torrent_removed_alert>(alert);
-            removed && removed->handle == value.handle
-            && removed->userdata.get<OperationToken>() == value.token.get()) { value.removed = true; }
-        if (auto* saved = lt::alert_cast<lt::save_resume_data_alert>(alert);
-            saved && saved->handle == value.handle && value.stop) { value.flushed = true; }
-        auto fail = [&](const lt::torrent_handle& handle) {
-          if (handle == value.handle) {
-            value.status.failure = storage::Error{storage::ErrorCode::Io,
-                "Torrent storage/flush failed; saved pieces require recheck"};
-            value.status.phase = ManagedPhase::Failed;
-            if (!value.stop) { requestStop(value); }
+      const auto* torrentAlert = dynamic_cast<const lt::torrent_alert*>(alert);
+      if (!torrentAlert) { continue; }
+      const auto owned = managedByHandle.find(torrentAlert->handle);
+      if (owned == managedByHandle.end()) { continue; }
+      auto& value = *owned->second;
+      if (const auto* state = lt::alert_cast<lt::state_changed_alert>(alert)) {
+        value.advanceTimeline(state->timestamp()); value.timelineState=state->state;
+      }
+      if (const auto* paused = lt::alert_cast<lt::torrent_paused_alert>(alert)) {
+        value.advanceTimeline(paused->timestamp()); value.timelinePaused=true;
+      }
+      if (const auto* resumed = lt::alert_cast<lt::torrent_resumed_alert>(alert)) {
+        value.advanceTimeline(resumed->timestamp()); value.timelinePaused=false;
+      }
+      if (queuePolicy) {
+        if (const auto* scrape = lt::alert_cast<lt::scrape_reply_alert>(alert);
+            scrape && scrape->complete>=0 && scrape->incomplete>=0) {
+          int seeds=scrape->complete, peers=scrape->incomplete;
+          if(value.status.phase==ManagedPhase::Seeding&&value.trackerSeedingSince
+              &&scrape->timestamp()>*value.trackerSeedingSince&&seeds>0){--seeds;}
+          if(value.status.phase==ManagedPhase::Downloading&&value.trackerRunningSince
+              &&scrape->timestamp()>*value.trackerRunningSince&&peers>0){--peers;}
+          value.swarm=core::QueueSwarm{seeds,peers,true};
+        }
+        if (const auto* announce = lt::alert_cast<lt::tracker_reply_alert>(alert);
+            announce && value.handle.is_valid() && !value.stop) {
+          const auto observed=value.handle.status(lt::status_flags_t{});
+          if(observed.num_complete>=0&&observed.num_incomplete>=0){
+            // Announce fallback in the original does not subtract self. These
+            // are observed tracker totals; connected peers are a separate input.
+            value.swarm=core::QueueSwarm{observed.num_complete,observed.num_incomplete,true};
           }
-        };
-        if (auto* failed = lt::alert_cast<lt::file_error_alert>(alert)) { fail(failed->handle); }
-        if (auto* failed = lt::alert_cast<lt::torrent_error_alert>(alert)) { fail(failed->handle); }
-        if (auto* failed = lt::alert_cast<lt::save_resume_data_failed_alert>(alert)) { fail(failed->handle); }
+        }
+      }
+      if (const auto* removed = lt::alert_cast<lt::torrent_removed_alert>(alert);
+          removed && removed->userdata.get<OperationToken>()==value.token.get()) {
+        value.advanceTimeline(removed->timestamp());value.timelinePaused=true;value.removed=true;
+      }
+      if (const auto* saved = lt::alert_cast<lt::save_resume_data_alert>(alert); saved && value.stop) {value.flushed=true;}
+      if(lt::alert_cast<lt::file_error_alert>(alert)||lt::alert_cast<lt::torrent_error_alert>(alert)
+          ||lt::alert_cast<lt::save_resume_data_failed_alert>(alert)) {
+        value.status.failure=storage::Error{storage::ErrorCode::Io,"Torrent storage/flush failed; saved pieces require recheck"};
+        value.status.phase=ManagedPhase::Failed;if(!value.stop){requestStop(value);}
       }
     }
     for (auto* alert : pending) {
@@ -417,7 +477,10 @@ struct PersistentSession::Impl {
           }
           settings.set_bool(lt::settings_pack::dont_count_slow_torrents, false);
         }
-        settings.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::error
+        if (queuePolicy) {
+          settings.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::tracker
+              | lt::alert_category::error | lt::alert_category::status | lt::alert_category::storage));
+        } else settings.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::error
             | lt::alert_category::status | lt::alert_category::storage));
         lt::session_params parameters(settings);
         parameters.disk_io_constructor = detail::metadataDiskConstructor(diskPolicy);
@@ -512,6 +575,32 @@ struct PersistentSession::Impl {
     value.status.downloadRate = sample.download_payload_rate;
     value.status.uploadRate = sample.upload_payload_rate;
     value.status.pieces = sample.num_pieces;
+    value.remainingBytes = std::max<std::int64_t>(0, sample.total_wanted - sample.total_wanted_done);
+    value.badPayloadBytes = std::max<std::int64_t>(0, sample.total_failed_bytes)
+        + std::max<std::int64_t>(0, sample.total_redundant_bytes);
+    const auto now = Clock::now();
+    const bool transferring = !(sample.flags & lt::torrent_flags::paused)
+        && sample.state != lt::torrent_status::checking_files
+        && sample.state != lt::torrent_status::checking_resume_data && !value.stop;
+    if (transferring) {
+      if (!value.runningSince) { value.runningSince = now; value.trackerRunningSince = lt::clock_type::now(); }
+      if (sample.is_finished && !value.seedingSince) { value.seedingSince = now; value.trackerSeedingSince = lt::clock_type::now(); }
+    } else { value.runningSince.reset(); value.seedingSince.reset(); value.trackerRunningSince.reset(); value.trackerSeedingSince.reset(); }
+    if (!sample.is_finished) { value.seedingSince.reset(); value.trackerSeedingSince.reset(); }
+    // LT active_duration includes verification time. Original counters track
+    // peer-manager download/seeding time, so use actual state/pause alert
+    // timestamps retained by this owner's sole pump instead.
+    value.projectTimeline(lt::clock_type::now());
+    if (sample.last_upload.time_since_epoch().count() > 0) {
+      value.idleUploadSeconds = std::max<std::int64_t>(0,
+          std::chrono::duration_cast<std::chrono::seconds>(lt::clock_type::now() - sample.last_upload).count());
+    }
+    value.connectedLeechers = std::max(0, sample.num_peers - sample.num_seeds);
+    if (value.status.checked && sample.is_finished && !value.status.selectedComplete) {
+      value.completedTransition = true;
+    }
+    value.status.forceStart = value.forceStart;
+    value.status.manuallyPaused = value.manualPaused;
 
     value.status.complete = sample.is_seeding;
     value.status.checked = sample.state != lt::torrent_status::checking_files
@@ -541,6 +630,124 @@ struct PersistentSession::Impl {
     value.handle.pause();
     value.handle.save_resume_data(lt::torrent_handle::flush_disk_cache);
   }
+  void applyQueue() {
+    std::vector<core::QueueTorrentFacts> facts;
+    facts.reserve(managed.size());
+    std::map<std::uint64_t, Managed*> targets;
+    const auto now = Clock::now();
+    const auto millis = [](Clock::duration duration) {
+      return std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+    };
+    core::QueueContext context;
+    context.nowMillis = millis(now.time_since_epoch());
+    context.ownerStartedMillis = origin / 1000000;
+    context.uploadLimitBytesPerSecond = rateLimits.upload.bytesPerSecond;
+    context.downloadLimitBytesPerSecond = rateLimits.download.bytesPerSecond;
+    std::int64_t upload = 0, download = 0;
+    bool any = false, onlySeeds = true;
+    for (const auto& [key, entry] : managed) {
+      static_cast<void>(key);
+      const auto& value = *entry;
+      if (!value.handle.is_valid() || value.removing || value.stop || value.status.failure) { continue; }
+      const auto& saved = value.storage.queueMetadata();
+      core::QueueTorrentFacts item;
+      item.token = value.status.admission;
+      item.position = value.queuePosition.value_or(static_cast<std::uint32_t>(std::clamp<std::int64_t>(saved.position, 1,
+          std::numeric_limits<std::int32_t>::max())));
+      switch (value.status.phase) {
+        case ManagedPhase::Checking: item.state = core::QueueTorrentState::Checking; break;
+        case ManagedPhase::Downloading: item.state = core::QueueTorrentState::Downloading; break;
+        case ManagedPhase::Seeding: item.state = core::QueueTorrentState::Seeding; break;
+        case ManagedPhase::Paused: item.state = core::QueueTorrentState::Stopped; break;
+        default: item.state = core::QueueTorrentState::Queued; break;
+      }
+      item.complete = value.status.selectedComplete;
+      item.forceStart = value.forceStart; item.manuallyPaused = value.manualPaused;
+      item.newlyCompleted = value.completedTransition && !value.completionHandled;
+      item.minimumShareRatio = saved.minimumShareRatio;
+      item.maximumShareRatio = saved.maximumShareRatio;
+      // Original share ratio uses good received data. Both saved and actual
+      // admission counters are checked before addition; never wrap a rank input.
+      if (value.status.received <= std::numeric_limits<std::int64_t>::max() - saved.downloaded
+          && value.status.sent <= std::numeric_limits<std::int64_t>::max() - saved.uploaded) {
+        auto received = saved.downloaded + value.status.received;
+        received -= std::min(received, saved.discarded);
+        received -= std::min(received, saved.hashFailed);
+        received -= std::min(received, value.badPayloadBytes);
+        const auto sent = saved.uploaded + value.status.sent;
+        if (received <= 0) { item.shareRatio = -1; }
+        else {
+          const auto ratio = static_cast<long double>(sent) * 1000 / received;
+          item.shareRatio = static_cast<std::int32_t>(std::min<long double>(ratio,
+              std::numeric_limits<std::int32_t>::max()));
+        }
+      }
+      if (value.secondsDownloading <= std::numeric_limits<std::int64_t>::max() - saved.secondsDownloading) {
+        item.secondsDownloading = saved.secondsDownloading + value.secondsDownloading;
+      }
+      if (value.secondsSeeding <= std::numeric_limits<std::int64_t>::max() - saved.secondsSeeding) {
+        item.secondsSeeding = saved.secondsSeeding + value.secondsSeeding;
+      }
+      item.secondsSinceLastUpload = value.idleUploadSeconds;
+      item.runningMillis = value.runningSince ? millis(now - *value.runningSince) : 0;
+      item.seedingMillis = value.seedingSince ? millis(now - *value.seedingSince) : 0;
+      item.swarm = value.swarm;
+      item.connectedLeechers = value.connectedLeechers;
+      item.downloadBytesPerSecond = value.status.downloadRate;
+      item.uploadBytesPerSecond = value.status.uploadRate;
+      item.sizeBytes = value.status.bytes; item.remainingBytes = value.remainingBytes;
+      if (value.status.downloadRate > 0) { item.etaSeconds = value.remainingBytes / value.status.downloadRate; }
+      item.activity = value.activity;
+      upload += value.status.uploadRate; download += value.status.downloadRate;
+      any = true; onlySeeds = onlySeeds && item.complete;
+      targets.emplace(item.token, entry.get());
+      facts.push_back(std::move(item));
+    }
+    context.uploadBytesPerSecond = upload; context.downloadBytesPerSecond = download;
+    context.seedingOnly = any && onlySeeds && !magnetActive();
+    auto plan = core::evaluateQueue(*queuePolicy, facts, context);
+    if (!plan) {
+      for (auto& [key, value] : managed) {
+        static_cast<void>(key); value->status.unavailableQueueInputs |= 0x80000000U;
+      }
+      return; // No partial effects from a rejected plan.
+    }
+    // Release slots before starting replacements. Every effect remains bound
+    // to the same retained handle/admission, not to a row or stale UI index.
+    for (const auto action : {core::QueueAction::Queue, core::QueueAction::Run, core::QueueAction::Preserve}) {
+      for (const auto& decision : plan->decisions) {
+        if (decision.action != action) { continue; }
+        const auto found = targets.find(decision.token);
+        if (found == targets.end()) { continue; }
+        auto& value = *found->second;
+        if (!value.handle.is_valid() || value.stop || value.removing || value.status.failure) { continue; }
+        value.activity = decision.activity;
+        value.status.queueReason = decision.reason;
+        value.status.seedingRank = decision.seedingRank;
+        value.status.firstPriority = decision.firstPriority;
+        value.status.unavailableQueueInputs = plan->unavailableInputs;
+        if (decision.clearForceStart && value.forceStart && managedLease) {
+          auto saved = storage::clearLibraryForceStart(*managedLease, value.status.hash);
+          if (!saved) { value.status.unavailableQueueInputs |= 0x40000000U; continue; }
+          value.forceStart = false; value.status.forceStart = false;
+        }
+        if (decision.moveNewSeedToTop) {
+          // Original group renumbering needs completion authority for every
+          // saved row. Do not invent it from incomplete inventory coverage.
+          value.status.unavailableQueueInputs |= 1U << 5;
+        }
+        if (value.completedTransition) { value.completionHandled = true; }
+        if (action == core::QueueAction::Preserve || value.manualPaused || !value.status.checked) { continue; }
+        value.handle.unset_flags(lt::torrent_flags::auto_managed | lt::torrent_flags::stop_when_ready);
+        if (action == core::QueueAction::Queue) {
+          if (!value.policyHeld) { value.handle.pause(); value.policyHeld = true; }
+        } else {
+          value.handle.resume(); value.policyHeld = false;
+        }
+      }
+    }
+  }
+
   void advanceManaged() {
     for (auto& [key, entry] : managed) {
       static_cast<void>(key);
@@ -553,9 +760,13 @@ struct PersistentSession::Impl {
         value.removing = true;
       }
       if (value.removing && value.removed && !value.handle.is_valid()) {
+        if(value.timelineLost && !value.status.failure) {
+          value.status.failure=storage::Error{storage::ErrorCode::Io,"Original active-time observations were lost; saved state requires recheck"};
+        }
         if (!value.status.failure && managedLease) {
+          value.projectTimeline(lt::clock_type::now());
           auto saved = value.storage.checkpoint(*managedLease, value.verified, value.status.complete,
-              value.status.received, value.status.sent);
+              value.status.received, value.status.sent, value.secondsDownloading, value.secondsSeeding);
           if (!saved) { value.status.failure = saved.error(); }
         }
         value.status.retained = false;
@@ -569,6 +780,7 @@ struct PersistentSession::Impl {
         removalLost = true; transferError = true;
       }
     }
+    if (queuePolicy && !closingAdmission && !registered && !poisoned) { applyQueue(); }
     if (!registered && !managedActive() && !magnetActive() && !closed && !poisoned) { phase = AccountingState::Idle; }
     if (network && session && !poisoned) {
       bool any = false, onlySeeds = true;
@@ -582,7 +794,8 @@ struct PersistentSession::Impl {
         auto settings = makeLiveSettingsPack(*network, liveQueueLimits, seedingOnly);
         if (settings) {
           settings->set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::error
-              | lt::alert_category::status | lt::alert_category::storage));
+              | lt::alert_category::status | lt::alert_category::storage
+              | (queuePolicy ? lt::alert_category::tracker : lt::alert_category_t{})));
           session->apply_settings(*settings);
           rateLimits = detail::readEffectiveRateLimits(*session);
           appliedSeedingOnly = seedingOnly;
@@ -885,16 +1098,46 @@ std::expected<LiveSettingsResult, storage::Error> PersistentSession::applyLiveSe
         "Live settings application failed; saved preferences remain and the owner may require restart"});
   }
 }
+std::expected<void, storage::Error> PersistentSession::configureQueuePolicy(const core::QueuePolicy& policy) {
+  if (!managedAvailable() || impl_->call) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Queue policy is unavailable"});
+  }
+  const auto validated = core::evaluateQueue(policy, {}, {});
+  if (!validated) { return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,
+      "Invalid queue policy: " + validated.error().key}); }
+  impl_->queuePolicy = policy;
+  if (impl_->session) {
+    lt::settings_pack settings;
+    settings.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::tracker
+        | lt::alert_category::error | lt::alert_category::status | lt::alert_category::storage));
+    impl_->session->apply_settings(settings);
+    for (auto& [key, value] : impl_->managed) {
+      static_cast<void>(key);
+      if (value->handle.is_valid() && !value->stop) { value->handle.unset_flags(lt::torrent_flags::auto_managed); }
+    }
+    impl_->applyQueue();
+  }
+  return {};
+}
+std::optional<core::QueuePolicy> PersistentSession::queuePolicy() const {
+  return impl_->onWorker() ? impl_->queuePolicy : std::nullopt;
+}
+
 std::expected<void, storage::Error> PersistentSession::startManaged(
     const storage::ProfileLease& lease, const ManagedDownloadOptions& options) {
   if (!impl_->onWorker() || impl_->call || impl_->registered || impl_->closed || impl_->poisoned) {
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Managed admission is unavailable"});
+  }
+  if (impl_->queuePolicy && static_cast<std::size_t>(std::ranges::count_if(impl_->managed,
+      [](const auto& row){return row.second->status.retained||row.second->removing;})) >= core::MaximumQueueTorrents) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Original-rule queue capacity exceeded"});
   }
   const auto key = options.hash.hex();
   if (const auto found = impl_->managed.find(key); found != impl_->managed.end()) {
     if (found->second->handle.is_valid() || found->second->removing) {
       return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Torrent is already admitted or retiring"});
     }
+    impl_->managedByHandle.erase(found->second->handle);
     impl_->managed.erase(found);
   }
   impl_->call = true;
@@ -928,7 +1171,11 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
         "Exact managed transfer counters require the approved source ABI", storage::ErrorCode::Unsupported);
     detail::attachPeerPayloadObserver(parameters, impl_->peerPayloadLedger, impl_->operation);
     parameters.flags |= lt::torrent_flags::paused | lt::torrent_flags::duplicate_is_error;
-    if (options.forceStart) { parameters.flags &= ~lt::torrent_flags::auto_managed; }
+    if (impl_->queuePolicy) {
+      parameters.flags &= ~lt::torrent_flags::auto_managed;
+      parameters.flags |= lt::torrent_flags::stop_when_ready;
+    }
+    else if (options.forceStart) { parameters.flags &= ~lt::torrent_flags::auto_managed; }
     else { parameters.flags |= lt::torrent_flags::auto_managed; }
     value->forceStart = options.forceStart;
     auto [slot, inserted] = impl_->managed.emplace(key, std::move(value));
@@ -940,10 +1187,14 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
       impl_->managed.erase(slot);
       throw detail::Failure{{storage::ErrorCode::Io, "Cannot add original torrent to the managed session"}};
     }
+    try { impl_->managedByHandle.emplace(slot->second->handle,slot->second.get()); }
+    catch (...) { impl_->joinPoisoned(); throw; }
     slot->second->status.retained = true;
     impl_->managedLease = &lease;
     impl_->phase = AccountingState::Active;
-    if (!options.queued || options.forceStart) { slot->second->handle.resume(); }
+    if (impl_->queuePolicy || !options.queued || options.forceStart) { slot->second->handle.resume(); }
+    // stop_when_ready atomically pauses at the end of checking, before payload
+    // transfer; the sole owner poll then applies the selected original rule.
     impl_->session->resume();
     if (options.ownedLoopbackPeerPort) {
       detail::require(impl_->network->mode == NetworkMode::IsolatedLoopback,
@@ -965,20 +1216,36 @@ std::expected<void, storage::Error> PersistentSession::pauseManaged(const core::
   }
   auto& value = *found->second;
   value.manualPaused = paused;
-  if (paused) { value.handle.unset_flags(lt::torrent_flags::auto_managed); value.handle.pause(); }
+  if (paused) {
+    value.handle.unset_flags(lt::torrent_flags::auto_managed); value.handle.pause();
+    if (impl_->queuePolicy) { impl_->sampleManaged(value); }
+  }
   else {
-    if (!value.forceStart) { value.handle.set_flags(lt::torrent_flags::auto_managed); }
-    value.handle.resume();
+    if (!value.forceStart && !impl_->queuePolicy) { value.handle.set_flags(lt::torrent_flags::auto_managed); }
+    if (impl_->queuePolicy) {
+      value.handle.unset_flags(lt::torrent_flags::auto_managed);
+      value.handle.pause(); value.policyHeld = true;
+      impl_->sampleManaged(value); impl_->applyQueue();
+    } else { value.handle.resume(); value.policyHeld = false; }
   }
   return {};
 }
 std::expected<void, storage::Error> PersistentSession::queueManaged(const core::TorrentHash& hash, bool forceStart, bool queued) {
-  auto changed = pauseManaged(hash, false);
-  if (!changed) { return changed; }
-  auto& value = *impl_->managed.at(hash.hex());
-  value.forceStart = forceStart;
+  if (!managedAvailable() || impl_->call) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Managed queue control is unavailable"});
+  }
+  const auto found = impl_->managed.find(hash.hex());
+  if (found == impl_->managed.end() || !found->second->handle.is_valid() || found->second->stop) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Torrent is not active"});
+  }
+  auto& value = *found->second;
+  value.manualPaused = false; value.forceStart = forceStart;
   if (forceStart) { value.handle.unset_flags(lt::torrent_flags::auto_managed); value.handle.resume(); }
-  else { value.handle.set_flags(lt::torrent_flags::auto_managed); if (queued) { value.handle.pause(); } }
+  else if (impl_->queuePolicy) {
+    value.handle.unset_flags(lt::torrent_flags::auto_managed);
+    value.handle.pause(); value.policyHeld = true;
+  } else { value.handle.set_flags(lt::torrent_flags::auto_managed); if (queued) { value.handle.pause(); } else { value.handle.resume(); } }
+  if (impl_->queuePolicy) { impl_->sampleManaged(value); impl_->applyQueue(); }
   return {};
 }
 std::expected<void, storage::Error> PersistentSession::stopManaged(const core::TorrentHash& hash) {
@@ -1094,7 +1361,8 @@ std::expected<void, storage::Error> PersistentSession::reorderManaged(std::span<
     const auto found = impl_->managed.find(hash.hex());
     if (found == impl_->managed.end() || !found->second->handle.is_valid()
         || found->second->stop || found->second->status.selectedComplete) { continue; }
-    found->second->handle.queue_position_set(lt::queue_position_t{position++});
+    found->second->queuePosition = ++position;
+    found->second->handle.queue_position_set(lt::queue_position_t{position-1});
   }
   return {};
 }

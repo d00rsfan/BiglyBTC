@@ -1,5 +1,6 @@
 #pragma once
 #include "options_presentation.hpp"
+#include "scheduler_presentation.hpp"
 
 #include "biglybtc/executor.hpp"
 #include "column_layout_presentation.hpp"
@@ -29,7 +30,7 @@
 class QTimer;
 
 namespace biglybtc::engine { struct ApplicationPeerObservation; }
-namespace biglybtc::storage { class ProfileLease; class CountryProvider; }
+namespace biglybtc::storage { class ProfileLease; class CountryProvider; class SchedulerService; }
 
 namespace biglybtc::app {
 
@@ -40,7 +41,8 @@ class SessionBridge final : public QObject {
 public:
   using CountryProviderFactory = std::function<std::unique_ptr<storage::CountryProvider>(const storage::ProfileLease&)>;
   using AzureusServiceFactory = std::function<std::unique_ptr<OwnedAzureusService>(const storage::ProfileLease&)>;
-  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {});
+  using SchedulerFactory = std::function<std::unique_ptr<storage::SchedulerService>(const storage::ProfileLease&)>;
+  explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {}, SchedulerFactory = {});
   ~SessionBridge() override;
   bool open(std::filesystem::path profile, unsigned short ownedPeerPort);
   bool openNormal(std::filesystem::path profile);
@@ -48,6 +50,8 @@ public:
   bool torrentImport(QString metadata, QString destination, bool start);
   bool magnetImport(QString uri, QString destination);
   bool filePolicy(ui::Target, ui::FileIndices, int priority, bool skipped);
+  bool loadScheduler(ui::SchedulerRequest);
+  bool saveScheduler(ui::SchedulerSubmission);
   bool loadOptions(ui::OptionsRequest);
   bool saveOptions(ui::OptionsSubmission);
   bool refresh();
@@ -68,6 +72,8 @@ public:
   bool closeSession();
   bool busy() const { return busy_; }
 signals:
+  void schedulerReady(biglybtc::ui::SchedulerPresentation);
+  void schedulerSaved(biglybtc::ui::SchedulerSavePresentation);
   void optionsReady(biglybtc::ui::OptionsPresentation);
   void optionsSaved(biglybtc::ui::OptionsSavePresentation);
   void intakeDefaultsReady(quint64 session, QString directory);
@@ -105,6 +111,8 @@ private:
   void progress(ui::Telemetry update);
   void engineStatistics(ui::EngineStatisticsPresentation);
   void nativeSession(ui::NativeSessionPresentation);
+  void ensureScheduler();
+  void tickScheduler() noexcept;
   void initializePersistentOwner(std::stop_token);
   void observeNative(const engine::ApplicationPeerObservation&) noexcept;
   void refreshDhtAccounting(bool ending = false) noexcept;
@@ -154,6 +162,7 @@ private:
   bool azureusDeliveryQueued_ = false;
   std::optional<ui::LiveSpeedManagerPresentation> latestLiveSpeed_;
   bool liveSpeedDeliveryQueued_ = false;
+  SchedulerFactory schedulerFactory_;
   bool busy_ = false;
   // GUI-thread publication only; worker commands capture the requested identity.
   quint64 publishedColumnLayoutSession_ = 0;

@@ -5,6 +5,7 @@
 #include <QtTest>
 
 #include <libtorrent/peer_info.hpp>
+#include <libtorrent/alert_types.hpp>
 
 #include <algorithm>
 #include <array>
@@ -128,7 +129,10 @@ private slots:
     {
       QTemporaryDir leecherRoot(QStringLiteral("/tmp/biglybtc-managed-leecher-XXXXXX"));
       QVERIFY(leecherRoot.isValid());
-      lt::session leecher(test::localSettings());
+      auto leecherSettings = test::localSettings();
+      leecherSettings.set_int(lt::settings_pack::alert_mask,
+          leecherSettings.get_int(lt::settings_pack::alert_mask) | static_cast<int>(lt::alert_category::connect));
+      lt::session leecher(leecherSettings);
       const auto raw = test::read(fixture.stateFile); lt::error_code error;
       auto metadata = std::make_shared<lt::torrent_info>(
           lt::span<const char>(raw.constData(), static_cast<std::size_t>(raw.size())), error, lt::from_span);
@@ -144,6 +148,15 @@ private slots:
       bool sawNative = false, sawOtherPeer = false;
       const auto downloadedFromNative = [&] {
         const auto result = service->poll();
+        // The small loopback transfer may finish and disconnect between polls.
+        // Retain actual connection alerts as well as current peer snapshots.
+        std::vector<lt::alert*> alerts; leecher.pop_alerts(&alerts);
+        for (const auto* alert : alerts) {
+          if (const auto* connected = lt::alert_cast<lt::peer_connect_alert>(alert)) {
+            if (connected->endpoint == native) { sawNative = true; }
+            else { sawOtherPeer = true; }
+          }
+        }
         std::vector<lt::peer_info> peers; handle.get_peer_info(peers);
         for (const auto& peer : peers) {
           if (peer.ip == native) { sawNative = true; }

@@ -223,13 +223,17 @@ OptionsDialog::OptionsDialog(QWidget* parent) : QDialog(parent), impl_(std::make
   auto* tree = new QTreeWidget(this); tree->setObjectName(QStringLiteral("options-sections"));
   tree->setHeaderHidden(true); tree->setMaximumWidth(210); tree->setMinimumWidth(160);
   auto* pages = new QStackedWidget(this); pages->setObjectName(QStringLiteral("options-pages"));
-  const std::array<QString, 6> names{QStringLiteral("Connection"), QStringLiteral("Advanced"), QStringLiteral("Proxy"),
-      QStringLiteral("Transfer"), QStringLiteral("Queue"), QStringLiteral("Files")};
-  std::array<QFormLayout*, 6> forms{}; QTreeWidgetItem* connection = nullptr;
+  const std::array<QString, 9> names{QStringLiteral("Connection"), QStringLiteral("Advanced"), QStringLiteral("Proxy"),
+      QStringLiteral("Transfer"), QStringLiteral("Queue"), QStringLiteral("Files"),
+      QStringLiteral("Seeding"), QStringLiteral("First Priority"), QStringLiteral("Ignore")};
+  std::array<QFormLayout*, 9> forms{}; QTreeWidgetItem* connection = nullptr; QTreeWidgetItem* queue = nullptr; QTreeWidgetItem* seeding = nullptr;
   for (std::size_t index = 0; index < names.size(); ++index) {
-    auto* item = index == 1 || index == 2 ? new QTreeWidgetItem(connection) : new QTreeWidgetItem(tree);
+    auto* parent = index == 1 || index == 2 ? connection : index == 6 ? queue : index >= 7 ? seeding : nullptr;
+    auto* item = parent ? new QTreeWidgetItem(parent) : new QTreeWidgetItem(tree);
     item->setText(0, names[index]); item->setData(0, Qt::UserRole, static_cast<int>(index));
     if (index == 0) { connection = item; }
+    if (index == 4) { queue = item; }
+    if (index == 6) { seeding = item; }
     auto* scroll = new QScrollArea(pages); scroll->setWidgetResizable(true);
     auto* page = new QWidget(scroll); auto* vertical = new QVBoxLayout(page);
     auto* heading = new QLabel(names[index], page); heading->setTextFormat(Qt::PlainText); vertical->addWidget(heading);

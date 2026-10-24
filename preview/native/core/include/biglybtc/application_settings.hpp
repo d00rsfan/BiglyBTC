@@ -11,7 +11,7 @@
 #include <type_traits>
 
 namespace biglybtc::core {
-enum class SettingsSection { Connection, Advanced, Proxy, Transfer, Queue, Files };
+enum class SettingsSection { Connection, Advanced, Proxy, Transfer, Queue, Files, Seeding, FirstPriority, Ignore };
 enum class SettingsApplicability { Live, NextAdmission, Restart, OriginalOnly };
 enum class SettingKind { Boolean, Integer, String };
 enum class SettingStringRule { Text, Port, ProxyVersion, AbsolutePath, Suffix };
@@ -26,7 +26,8 @@ enum class SettingId {
   UploadLimit, DownloadLimit, SeedingUploadLimit, SeedingUploadEnabled,
   AutoUpload, AutoSeedingUpload, LanRates,
   MaxActive, MaxDownloads, MinDownloads,
-  DefaultSavePath, RenameIncomplete, IncompleteSuffix, Count
+  DefaultSavePath, RenameIncomplete, IncompleteSuffix,
+  LinkMinimumDownloads, IgnoreChecking, MaximumActiveWhenSeedingEnabled, MaximumActiveWhenSeeding, RankMode, DownloadOrder, PreferLargerSwarms, SeedCountFallback, MinimumPeersToBoostNoSeeds, MinimumDownloadBytesPerSecond, MinimumSeedBytesPerSecond, MinimumSeedSeconds, MinimumSeedActiveSeconds, TimedMinimumWithPeersSeconds, TimedMaximumWithPeersSeconds, MaximumStalledSeeds, StalledSeedsIgnoreZeroPeers, AutoStartZeroPeers, FirstPriorityMode, FirstPriorityShareRatio, FirstPrioritySeedMinutes, FirstPriorityActiveMinutes, FirstPriorityIgnoreSeedPeerRatio, FirstPriorityIgnoreIdleMinutes, FirstPriorityIgnoreZeroPeers, IgnoreShareRatio, IgnoreShareRatioSeedStart, IgnoreSeedCount, IgnorePeerSeedRatio, IgnorePeerSeedRatioSeedStart, IgnoreZeroPeers, PeersAsFullCopy, FakeFullCopySeedStart, StopOnceBandwidthMet, PreventNewSeedsAtUploadLimit, UploadLimitSlack, UploadLimitSlackIsPercent, NewSeedsMoveTop, RetainForceStartOnComplete, LightSeedingEnabled, ReservedLightSeedSlots, FlexibleSeedSlots, OriginalQueueOption0, OriginalQueueOption1, OriginalQueueOption2, OriginalQueueOption3, OriginalQueueOption4, OriginalQueueOption5, OriginalQueueOption6, OriginalQueueOption7, Count
 };
 using SettingValue = std::variant<bool, std::int64_t, std::string>;
 using SettingDefault = std::variant<bool, std::int64_t, std::string_view>;
@@ -107,12 +108,62 @@ inline constexpr std::array Catalog{
   boolean(AutoUpload,Transfer,"Auto Upload Speed Enabled","Automatic upload control",false,A::OriginalOnly,"Native passive estimates do not control rates; native routing requires disabled."),
   boolean(AutoSeedingUpload,Transfer,"Auto Upload Speed Seeding Enabled","Automatic seeding upload control",false,A::OriginalOnly,"Native routing requires disabled."),
   boolean(LanRates,Transfer,"LAN Speed Enabled","Separate LAN rates",true,A::OriginalOnly,"Original default is enabled. Native routing has no separate LAN rates: absent uses its disabled fallback; explicitly enabled must be disabled to repair routing."),
-  integer(MaxActive,Queue,"max active torrents","Maximum active torrents",4,0,1000000,A::Live,"Zero is unlimited; native engine cap, not all original seeding rules."),
+  integer(MaxActive,Queue,"max active torrents","Maximum active torrents",4,0,1000000,A::Live,"Zero is unlimited; original queue rules control ordinary torrents. Forced downloads bypass the cap."),
   integer(MaxDownloads,Queue,"max downloads","Maximum downloading torrents",4,0,1000000,A::Live,"Zero is unlimited; forced handles bypass automatic queueing."),
-  integer(MinDownloads,Queue,"min downloads","Minimum downloads",1,0,1000000,A::OriginalOnly,"Original scheduler policy; retained for the original client."),
+  integer(MinDownloads,Queue,"min downloads","Minimum downloads",1,0,1000000,A::Live,"Reserves download slots within the original queue policy."),
   string(DefaultSavePath,Files,"Default save path","Default download directory",std::nullopt,4096,A::NextAdmission,SettingStringRule::AbsolutePath,false,"Original default is platform-derived; no path is inferred here. Does not move existing payloads."),
   boolean(RenameIncomplete,Files,"Rename Incomplete Files","Add suffix while incomplete",false,A::OriginalOnly,"Saved for the original client; native new-import suffix naming is not implemented. Existing payloads are not renamed."),
-  string(IncompleteSuffix,Files,"Rename Incomplete Files Extension","Incomplete suffix",std::string_view{".az!"},64,A::OriginalOnly,SettingStringRule::Suffix,false,"Saved for the original client; native new-import suffix naming is not implemented.")
+  string(IncompleteSuffix,Files,"Rename Incomplete Files Extension","Incomplete suffix",std::string_view{".az!"},64,A::OriginalOnly,SettingStringRule::Suffix,false,"Saved for the original client; native new-import suffix naming is not implemented."),
+  boolean(LinkMinimumDownloads,Queue,"StartStopManager_bMaxMinDLLinked","Link minimum downloads to maximum",false,A::Live,""),
+  boolean(IgnoreChecking,Queue,"StartStopManager_bMaxDownloadIgnoreChecking","Do not count checking downloads",false,A::Live,""),
+  boolean(MaximumActiveWhenSeedingEnabled,Queue,"StartStopManager_bMaxActiveTorrentsWhenSeedingEnabled","Separate active limit when only seeding",false,A::Live,""),
+  integer(MaximumActiveWhenSeeding,Queue,"StartStopManager_iMaxActiveTorrentsWhenSeeding","Active limit when only seeding",0,0,std::numeric_limits<int>::max(),A::Live,""),
+  integer(RankMode,Seeding,"StartStopManager_iRankType","Seed ranking mode",1,0,4,A::Live,"0 queue order; 1 seed/peer ratio; 2 seed count; 3 timed rotation; 4 peer count."),
+  integer(DownloadOrder,Queue,"StartStopManager_Downloading_iSortType","Download ordering",0,0,8,A::Live,"0 position, 1 seeds, 2 speed, 3 reverse seeds, 4 size, 5 reverse size, 6 ETA, 7 file priority, 8 remaining. Active speed/ETA probes and file-priority ranking need further providers; unavailable observations retain order."),
+  boolean(PreferLargerSwarms,Seeding,"StartStopManager_bPreferLargerSwarms","Prefer larger swarms",true,A::Live,""),
+  integer(SeedCountFallback,Seeding,"StartStopManager_iRankTypeSeedFallback","Seed-count fallback threshold",0,0,std::numeric_limits<int>::max(),A::Live,""),
+  integer(MinimumPeersToBoostNoSeeds,Seeding,"StartStopManager_iMinPeersToBoostNoSeeds","Minimum peers to boost torrents without seeds",1,0,std::numeric_limits<int>::max(),A::Live,""),
+  integer(MinimumDownloadBytesPerSecond,Queue,"StartStopManager_iMinSpeedForActiveDL","Active download threshold (B/s)",512,0,std::numeric_limits<int>::max(),A::Live,""),
+  integer(MinimumSeedBytesPerSecond,Seeding,"StartStopManager_iMinSpeedForActiveSeeding","Active seeding threshold (B/s)",512,0,std::numeric_limits<int>::max(),A::Live,""),
+  integer(MinimumSeedSeconds,Seeding,"StartStopManager_iMinSeedingTime","Minimum seeding time (seconds)",300,0,std::numeric_limits<int>::max(),A::Live,""),
+  integer(MinimumSeedActiveSeconds,Seeding,"StartStopManager_iMinSeedingTimeWhenActive","Minimum active seeding time (seconds)",900,0,std::numeric_limits<int>::max(),A::Live,""),
+  integer(TimedMinimumWithPeersSeconds,Seeding,"StartStopManager_iTimed_MinSeedingTimeWithPeers","Timed rotation: minimum with peers (seconds)",0,0,std::numeric_limits<int>::max(),A::Live,""),
+  integer(TimedMaximumWithPeersSeconds,Seeding,"StartStopManager_iTimed_MaxSeedingTimeWithPeers","Timed rotation: maximum with peers (seconds)",0,0,std::numeric_limits<int>::max(),A::Live,""),
+  integer(MaximumStalledSeeds,Seeding,"StartStopManager_iMaxStalledSeeding","Maximum stalled seeds",5,0,std::numeric_limits<int>::max(),A::Live,""),
+  boolean(StalledSeedsIgnoreZeroPeers,Seeding,"StartStopManager_bMaxStalledSeedingIgnoreZP","Exclude torrents without peers from stalled limit",true,A::Live,""),
+  boolean(AutoStartZeroPeers,Seeding,"StartStopManager_bAutoStart0Peers","Automatically start torrents without peers",false,A::Live,""),
+  integer(FirstPriorityMode,FirstPriority,"StartStopManager_iFirstPriority_Type","Match first-priority criteria",1,0,1,A::Live,"0 requires all enabled criteria; 1 accepts any enabled criterion."),
+  integer(FirstPriorityShareRatio,FirstPriority,"StartStopManager_iFirstPriority_ShareRatio","First-priority share ratio (thousandths)",500,0,std::numeric_limits<int>::max(),A::Live,""),
+  integer(FirstPrioritySeedMinutes,FirstPriority,"StartStopManager_iFirstPriority_SeedingMinutes","First-priority seeding time (minutes)",0,0,std::numeric_limits<int>::max()/60,A::Live,""),
+  integer(FirstPriorityActiveMinutes,FirstPriority,"StartStopManager_iFirstPriority_DLMinutes","First-priority active time (minutes)",0,0,std::numeric_limits<int>::max()/60,A::Live,""),
+  integer(FirstPriorityIgnoreSeedPeerRatio,FirstPriority,"StartStopManager_iFirstPriority_ignoreSPRatio","Exclude above seed/peer ratio",0,0,std::numeric_limits<int>::max(),A::Live,""),
+  integer(FirstPriorityIgnoreIdleMinutes,FirstPriority,"StartStopManager_iFirstPriority_ignoreIdleMinutes","Exclude after upload idle time (minutes)",0,0,std::numeric_limits<int>::max(),A::Live,""),
+  boolean(FirstPriorityIgnoreZeroPeers,FirstPriority,"StartStopManager_bFirstPriority_ignore0Peer","Exclude known torrents without peers",true,A::Live,"Original default is false for ui=az2, true otherwise. Unknown tracker counts do not mean zero peers."),
+  string(IgnoreShareRatio,Ignore,"Stop Ratio","Stop share ratio",std::string_view{"0"},64,A::Live,SettingStringRule::Text,false,"Original Float stored as decimal bytes; native policy converts binary32 to thousandths. No full-default rewrite."),
+  integer(IgnoreShareRatioSeedStart,Ignore,"StartStopManager_iIgnoreShareRatioSeedStart","Apply share ratio from this seed count",0,0,std::numeric_limits<int>::max(),A::Live,""),
+  integer(IgnoreSeedCount,Ignore,"StartStopManager_iIgnoreSeedCount","Stop above this seed count",0,0,std::numeric_limits<int>::max(),A::Live,""),
+  integer(IgnorePeerSeedRatio,Ignore,"Stop Peers Ratio","Stop peer/seed ratio",0,0,std::numeric_limits<int>::max(),A::Live,""),
+  integer(IgnorePeerSeedRatioSeedStart,Ignore,"StartStopManager_iIgnoreRatioPeersSeedStart","Apply peer/seed ratio from this seed count",0,0,std::numeric_limits<int>::max(),A::Live,""),
+  boolean(IgnoreZeroPeers,Ignore,"StartStopManager_bIgnore0Peers","Ignore torrents with no peers",true,A::Live,""),
+  integer(PeersAsFullCopy,Seeding,"StartStopManager_iNumPeersAsFullCopy","Peers per equivalent full copy",0,0,std::numeric_limits<int>::max(),A::Live,""),
+  integer(FakeFullCopySeedStart,Seeding,"StartStopManager_iFakeFullCopySeedStart","Count equivalent copies from this seed count",0,0,std::numeric_limits<int>::max(),A::Live,""),
+  boolean(StopOnceBandwidthMet,Queue,"StartStopManager_bStopOnceBandwidthMet","Stop queue additions when bandwidth is full",true,A::Live,""),
+  boolean(PreventNewSeedsAtUploadLimit,Seeding,"StartStopManager_bStartNoMoreSeedsWhenUpLimitMet","Do not start seeds at upload limit",false,A::Live,""),
+  integer(UploadLimitSlack,Seeding,"StartStopManager_bStartNoMoreSeedsWhenUpLimitMetSlack","Upload-limit threshold",95,0,std::numeric_limits<int>::max(),A::Live,""),
+  boolean(UploadLimitSlackIsPercent,Seeding,"StartStopManager_bStartNoMoreSeedsWhenUpLimitMetPercent","Upload threshold is a percentage",true,A::Live,""),
+  boolean(NewSeedsMoveTop,Queue,"StartStopManager_bNewSeedsMoveTop","Move newly completed seeds to top",true,A::OriginalOnly,"Saved for Java; native completion-group normalization remains pending."),
+  boolean(RetainForceStartOnComplete,Queue,"StartStopManager_bRetainForceStartWhenComplete","Keep force-start after completion",false,A::Live,"Transition intent only; worker persists original force/pool ordering before engine effects."),
+  boolean(LightSeedingEnabled,Seeding,"Enable Light Seeding","Light seeding",true,A::OriginalOnly,"Original light/reserved/flexible slot provider is unavailable; do not claim native effects."),
+  integer(ReservedLightSeedSlots,Seeding,"Light Seed Slots Reserved","Reserved light-seed slots",4,0,std::numeric_limits<int>::max(),A::OriginalOnly,"Original light/reserved/flexible slot provider is unavailable; do not claim native effects."),
+  integer(FlexibleSeedSlots,Seeding,"Flexible Seed Slots","Flexible seed slots",5,0,std::numeric_limits<int>::max(),A::OriginalOnly,"Original light/reserved/flexible slot provider is unavailable; do not claim native effects."),
+  integer(OriginalQueueOption0,Seeding,"StartStopManager_Downloading_iTestTimeSecs","StartStopManager_Downloading_iTestTimeSecs",120,0,std::numeric_limits<int>::max(),A::OriginalOnly,"active download probe unavailable"),
+  integer(OriginalQueueOption1,Seeding,"StartStopManager_Downloading_iRetestTimeMins","StartStopManager_Downloading_iRetestTimeMins",30,0,std::numeric_limits<int>::max(),A::OriginalOnly,"active download probe unavailable"),
+  boolean(OriginalQueueOption2,Seeding,"StartStopManager_Downloading_bTestActive","StartStopManager_Downloading_bTestActive",false,A::OriginalOnly,"active download probe unavailable"),
+  boolean(OriginalQueueOption3,Seeding,"StartStopManager_bAutoReposition","StartStopManager_bAutoReposition",false,A::OriginalOnly,"saved pool-position normalization outside pure reducer"),
+  boolean(OriginalQueueOption4,Seeding,"Disconnect Seed","Disconnect Seed",true,A::OriginalOnly,"peer connection policy outside queue reducer"),
+  boolean(OriginalQueueOption5,Seeding,"Use Super Seeding","Use Super Seeding",false,A::OriginalOnly,"torrent transport feature outside queue reducer"),
+  integer(OriginalQueueOption6,Seeding,"StartStopManager_iAddForSeedingDLCopyCount","StartStopManager_iAddForSeedingDLCopyCount",1,0,std::numeric_limits<int>::max(),A::OriginalOnly,"new seed admission accounting outside reducer"),
+  boolean(OriginalQueueOption7,Seeding,"StartStopManager_bAddForDownloadingSR1","StartStopManager_bAddForDownloadingSR1",true,A::OriginalOnly,"new download admission accounting outside reducer")
 };
 static_assert(Catalog.size() == static_cast<std::size_t>(SettingId::Count));
 } // namespace settings_detail

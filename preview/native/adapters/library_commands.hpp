@@ -37,8 +37,12 @@ struct LibraryCommandResult {
 // returns changed=false without replacing any file. A publication/sync error is
 // returned as-is; it must not be described as proof that no replacement occurred.
 // ForceStart sets true (not a toggle). No completion pool => moves Unsupported.
-std::expected<LibraryCommandResult, Error> applyLibraryCommand(ProfileLease&,
+std::expected<LibraryCommandResult, Error> applyLibraryCommand(const ProfileLease&,
     const core::TorrentHash&, core::DownloadAction,
     std::span<const LibraryCompletionPool> completionPools = {});
+
+// Automatic completion transition: clear only original force fields, retaining
+// saved startup, pause ownership, position and every unknown value.
+std::expected<LibraryCommandResult, Error> clearLibraryForceStart(const ProfileLease&, const core::TorrentHash&);
 
 } // namespace biglybtc::storage

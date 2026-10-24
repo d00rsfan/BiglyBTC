@@ -314,6 +314,7 @@ void writeProgress(storage::TorrentStateFile& state, const std::vector<std::int6
 struct ManagedStorage::Impl {
   core::TorrentHash hash;
   core::SavedDownload captured;
+  ManagedQueueMetadata queue;
   storage::TorrentStateStore store;
   storage::TorrentStateFile state;
   compat::OriginalLayout layout;
@@ -334,6 +335,7 @@ ManagedStorage::ManagedStorage(ManagedStorage&&) noexcept=default;
 ManagedStorage& ManagedStorage::operator=(ManagedStorage&&) noexcept=default;
 ManagedStorage::~ManagedStorage()=default;
 lt::add_torrent_params ManagedStorage::parameters() const { return impl_?impl_->params:lt::add_torrent_params{}; }
+const ManagedQueueMetadata& ManagedStorage::queueMetadata() const { return impl_->queue; }
 
 std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy) {
   try {
@@ -342,9 +344,33 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     require(inventory.recoverySource()!=storage::RecoverySource::Saving,"Resolve saved-inventory recovery before managed preparation",ErrorCode::Conflict);
     const auto saved=selected(inventory.document(),hash);
     const auto& row=entryFor(inventory.document(),saved,!inventory.document().find("downloads"));
+    ManagedQueueMetadata queue;
+    queue.position=saved.position.value_or(1);
+    queue.downloaded=saved.downloaded.value_or(0); queue.uploaded=saved.uploaded.value_or(0);
+    for (const auto& [key,target] : {std::pair{"discarded",&queue.discarded},
+        {"hashfailbytes",&queue.hashFailed},{"secondsDownloading",&queue.secondsDownloading},
+        {"secondsOnlySeeding",&queue.secondsSeeding}}) {
+      if (const auto* value=row.find(key)) {
+        require(value->type==core::Node::Type::Integer && value->integer>=0,
+            "Invalid original queue statistics: "+std::string(key),ErrorCode::InvalidFormat);
+        *target=value->integer;
+      }
+    }
     require(saved.downloaded.value_or(0)>=0&&saved.uploaded.value_or(0)>=0,"Negative saved cumulative transfer counters",ErrorCode::InvalidFormat);
     auto store=take(storage::TorrentStateStore::open(lease)); auto original=take(store.load(lease,hash));
     const auto source=authoritative(lease,original);
+    if (const auto* attributes=source.find("attributes")) {
+      if (const auto* parameters=attributes->find("parameters")) {
+        for (const auto& [key,target] : {std::pair{"sr.min",&queue.minimumShareRatio},{"sr.max",&queue.maximumShareRatio}}) {
+          if (const auto* value=parameters->find(key)) {
+            require(value->type==core::Node::Type::Integer && value->integer>=0
+                && value->integer<=std::numeric_limits<std::int32_t>::max(),
+                "Invalid original per-torrent share ratio",ErrorCode::InvalidFormat);
+            *target=static_cast<std::int32_t>(value->integer);
+          }
+        }
+      }
+    }
     if (const auto* encoding=source.find("encoding")) {
       auto name=text(encoding); std::erase_if(name,[](unsigned char c) { return c=='-'||c=='_'||c==' '; });
       std::ranges::transform(name,name.begin(),[](unsigned char c) { return c>='A'&&c<='Z'?static_cast<char>(c+32):static_cast<char>(c); });
@@ -403,14 +429,17 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
       }
       params.renamed_files[lt::file_index_t{static_cast<int>(slot.index)}]=slot.actual.string();
     }
-    return ManagedStorage(std::make_unique<Impl>(hash,saved,std::move(store),std::move(state),std::move(layout),std::move(params),save,
-      std::move(slots),std::move(pending),profile.st_dev,profile.st_ino));
+    auto result=std::make_unique<Impl>(hash,saved,std::move(store),std::move(state),std::move(layout),std::move(params),save,
+      std::move(slots),std::move(pending),profile.st_dev,profile.st_ino);
+    result->queue=queue;
+    return ManagedStorage(std::move(result));
   } catch (const Failure& error) { return std::unexpected(error.error); }
   catch (const std::exception&) { return std::unexpected(Error{ErrorCode::Io,"Managed storage preparation failed; prepared state may require recheck"}); }
 }
 
 std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease& lease,std::span<const std::uint8_t> verified,
-    bool complete,std::int64_t received,std::int64_t sent) {
+    bool complete,std::int64_t received,std::int64_t sent,
+    std::int64_t secondsDownloading,std::int64_t secondsSeeding) {
   try {
     require(impl_!=nullptr,"Managed storage was moved or released",ErrorCode::Conflict); auto& owner=*impl_;
     require(!owner.attempted,"Managed admission checkpoint already attempted",ErrorCode::Conflict);
@@ -427,7 +456,18 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
     require(current.torrentFile==owner.captured.torrentFile&&current.saveDirectory==owner.captured.saveDirectory
       &&current.saveFile==owner.captured.saveFile&&current.legacySavePath==owner.captured.legacySavePath,"Managed saved mapping changed during admission",ErrorCode::Conflict);
     require(current.downloaded.value_or(0)==previousReceived&&current.uploaded.value_or(0)==previousSent,"Saved cumulative counters changed during managed admission",ErrorCode::Conflict);
+    require(secondsDownloading>=0&&secondsSeeding>=0
+        &&secondsDownloading<=std::numeric_limits<std::int64_t>::max()-owner.queue.secondsDownloading
+        &&secondsSeeding<=std::numeric_limits<std::int64_t>::max()-owner.queue.secondsSeeding,
+        "Managed queue elapsed times overflow",ErrorCode::InvalidFormat);
     auto entry=dictionary(&entryFor(inventory.document(),current,!inventory.document().find("downloads")));
+    for (const auto& [key,expected] : {std::pair{"secondsDownloading",owner.queue.secondsDownloading},
+        {"secondsOnlySeeding",owner.queue.secondsSeeding}}) {
+      if (const auto* value=entry.find(key)) {
+        require(value->type==core::Node::Type::Integer&&value->integer==expected,
+            "Original queue elapsed times changed during admission",ErrorCode::Conflict);
+      } else { require(expected==0,"Original queue elapsed time disappeared",ErrorCode::Conflict); }
+    }
     std::vector<std::int64_t> counts(owner.layout.files.size()),verifiedEnds(owner.layout.files.size()); std::int64_t total=0;
     for (std::size_t index=0;index<owner.layout.files.size();++index) {
       const auto& file=owner.layout.files[index];
@@ -457,6 +497,8 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       allocated=allocated&&opened.st_size==slot.bytes; sync(slot.data.get());
     }
     put(entry,"downloaded",intValue(previousReceived+received)); put(entry,"uploaded",intValue(previousSent+sent)); put(entry,"completedbytes",intValue(total));
+    if (secondsDownloading) { put(entry,"secondsDownloading",intValue(owner.queue.secondsDownloading+secondsDownloading)); }
+    if (secondsSeeding) { put(entry,"secondsOnlySeeding",intValue(owner.queue.secondsSeeding+secondsSeeding)); }
     put(entry,"allocated",allocated?"i1e":"i0e");
     // The fresh root retains all current user command fields, policy and pauses.
     if (current.legacyKey) { put(inventory.document(),*current.legacyKey,entry.serialize()); }

@@ -59,6 +59,10 @@ ApplicationSettingsSnapshot project(std::shared_ptr<const core::Document> source
     const auto* node = result.source ? result.source->find(field.key) : nullptr;
     if (!node) {
       value.value = core::applicationSettingDefault(field);
+      if(field.id==core::SettingId::FirstPriorityIgnoreZeroPeers && result.source){
+        const auto* ui=result.source->find("ui");
+        if(ui&&ui->type==core::Node::Type::Bytes&&ui->bytes=="az2"){value.value=false;}
+      }
       if (!value.value) { value.state = SettingState::UnavailableDefault; }
     } else {
       value.state = SettingState::InvalidType;

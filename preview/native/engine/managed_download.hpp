@@ -1,5 +1,6 @@
 #pragma once
 #include "biglybtc/library.hpp"
+#include "biglybtc/queue_policy.hpp"
 #include "profile.hpp"
 #include <cstdint>
 #include <optional>
@@ -17,6 +18,11 @@ struct ManagedDownloadStatus {
   bool retained = false;
   bool checked = false, selectedComplete = false;
   std::optional<storage::Error> failure{};
+  std::optional<core::QueueReason> queueReason{};
+  std::optional<std::int32_t> seedingRank{};
+  bool firstPriority = false;
+  std::uint32_t unavailableQueueInputs = 0;
+  bool forceStart = false, manuallyPaused = false;
 };
 enum class MagnetPhase { Resolving, Retiring, Imported, Failed, Cancelled };
 struct PendingMagnetStatus {
