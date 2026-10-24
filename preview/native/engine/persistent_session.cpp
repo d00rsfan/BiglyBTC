@@ -4,6 +4,10 @@
 #include "runtime_metrics_sampler.hpp"
 #include "effective_rate_limits.hpp"
 #include "peer_payload_observer.hpp"
+#include "managed_storage.hpp"
+#include "network_policy.hpp"
+#include <libtorrent/torrent_status.hpp>
+#include <map>
 
 #include <libtorrent/alert_types.hpp>
 #include <libtorrent/session.hpp>
@@ -50,6 +54,23 @@ bool subtract(const core::EngineCounters& value, const core::EngineCounters& bas
 
 struct PersistentSession::Impl {
   struct OperationToken { std::uint64_t number = 0; } token;
+  struct Managed {
+    std::unique_ptr<OperationToken> token;
+    detail::ManagedStorage storage;
+    lt::torrent_handle handle;
+    ManagedDownloadStatus status;
+    bool manualPaused = false, forceStart = false, stop = false;
+    bool flushed = false, removing = false, removed = false;
+    Clock::time_point deadline{};
+    std::vector<std::uint8_t> verified;
+    Managed(std::uint64_t id, detail::ManagedStorage files, const core::TorrentHash& hash)
+        : token(std::make_unique<OperationToken>(OperationToken{id})), storage(std::move(files)),
+          status{.hash = hash, .admission = id} {}
+  };
+  std::map<std::string, std::unique_ptr<Managed>> managed;
+  const storage::ProfileLease* managedLease = nullptr; // Same bound lease, owned by Host.
+  std::optional<NetworkPolicy> network;
+  bool appliedSeedingOnly = false;
   AccountingIdentity identity;
   const std::thread::id worker = std::this_thread::get_id();
   const std::int64_t origin = static_cast<std::int64_t>(Clock::now().time_since_epoch().count());
@@ -252,6 +273,26 @@ struct PersistentSession::Impl {
     for (auto* alert : pending) {
       if (!alert) { continue; }
       if (auto* statistics = lt::alert_cast<lt::session_stats_alert>(alert)) { retain(*statistics); }
+      for (auto& [key, entry] : managed) {
+        static_cast<void>(key);
+        auto& value = *entry;
+        if (auto* removed = lt::alert_cast<lt::torrent_removed_alert>(alert);
+            removed && removed->handle == value.handle
+            && removed->userdata.get<OperationToken>() == value.token.get()) { value.removed = true; }
+        if (auto* saved = lt::alert_cast<lt::save_resume_data_alert>(alert);
+            saved && saved->handle == value.handle && value.stop) { value.flushed = true; }
+        auto fail = [&](const lt::torrent_handle& handle) {
+          if (handle == value.handle) {
+            value.status.failure = storage::Error{storage::ErrorCode::Io,
+                "Torrent storage/flush failed; saved pieces require recheck"};
+            value.status.phase = ManagedPhase::Failed;
+            if (!value.stop) { requestStop(value); }
+          }
+        };
+        if (auto* failed = lt::alert_cast<lt::file_error_alert>(alert)) { fail(failed->handle); }
+        if (auto* failed = lt::alert_cast<lt::torrent_error_alert>(alert)) { fail(failed->handle); }
+        if (auto* failed = lt::alert_cast<lt::save_resume_data_failed_alert>(alert)) { fail(failed->handle); }
+      }
     }
     return pending;
   }
@@ -289,6 +330,12 @@ struct PersistentSession::Impl {
     // Not bounded by the certification deadline. No callback is made by LT
     // destruction, and no joined tail is relabeled as a final counter sample.
     session.reset();
+    for (auto& [key, entry] : managed) {
+      static_cast<void>(key); entry->status.retained = false;
+      entry->status.phase = ManagedPhase::Failed;
+      entry->status.failure = storage::Error{storage::ErrorCode::Io,
+          "Engine owner joined after failure; original pieces require recheck"};
+    }
     outstanding = false;
     counterError(AccountingError::OwnerResetRequired);
     publish(); // Explicit uncertified state; retained values are last-observed.
@@ -305,7 +352,15 @@ struct PersistentSession::Impl {
   void ensureSession() {
     if (!session) {
       try {
-        session = std::make_unique<lt::session>(detail::settings());
+        auto settings = detail::settings();
+        if (network) {
+          auto translated = makeNetworkSettings(*network);
+          detail::require(translated.has_value(), "Network policy cannot be applied");
+          settings = std::move(*translated);
+        }
+        settings.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::error
+            | lt::alert_category::status | lt::alert_category::storage));
+        session = std::make_unique<lt::session>(settings);
         session->pause();
         rateLimits = detail::readEffectiveRateLimits(*session); // Optional read, never applies settings.
         phase = AccountingState::Idle;
@@ -314,7 +369,7 @@ struct PersistentSession::Impl {
     }
   }
   void prepare(const storage::ProfileLease& lease, const LocalOptions& options) {
-    detail::require(call && onWorker() && !registered && !poisoned && !closed,
+    detail::require(call && onWorker() && !registered && !managedActive() && !poisoned && !closed,
         "Persistent owner is not available", storage::ErrorCode::Conflict);
     bind(lease);
     // Optional callback allocation failure does not prevent safe transfer or
@@ -363,6 +418,114 @@ struct PersistentSession::Impl {
       throw;
     }
   }
+  bool managedActive() const noexcept {
+    for (const auto& [key, entry] : managed) {
+      static_cast<void>(key);
+      if (entry->handle.is_valid() || (entry->removing && !entry->removed)) { return true; }
+    }
+    return false;
+  }
+  void sampleManaged(Managed& value, bool pieces = false) {
+    if (!value.handle.is_valid() || value.removing) { return; }
+    const auto sample = value.handle.status(pieces ? lt::torrent_handle::query_pieces : lt::status_flags_t{});
+    value.status.retained = true;
+    value.status.completed = sample.total_done;
+    value.status.bytes = sample.total;
+    value.status.received = sample.total_payload_download;
+    value.status.sent = sample.total_payload_upload;
+    value.status.downloadRate = sample.download_payload_rate;
+    value.status.uploadRate = sample.upload_payload_rate;
+    value.status.pieces = sample.num_pieces;
+
+    value.status.complete = sample.is_seeding;
+    value.status.checked = sample.state != lt::torrent_status::checking_files
+        && sample.state != lt::torrent_status::checking_resume_data
+        && sample.state != lt::torrent_status::downloading_metadata;
+    value.status.selectedComplete = sample.is_finished;
+    if (pieces) {
+      value.verified.assign(static_cast<std::size_t>(value.status.totalPieces), 0);
+      for (int i = 0; i < sample.pieces.size() && i < value.status.totalPieces; ++i) {
+        value.verified[static_cast<std::size_t>(i)] = sample.pieces[lt::piece_index_t{i}] ? 1 : 0;
+      }
+    }
+    if (value.status.failure) { value.status.phase = ManagedPhase::Failed; }
+    else if (value.stop) { value.status.phase = ManagedPhase::Stopping; }
+    else if (value.manualPaused) { value.status.phase = ManagedPhase::Paused; }
+    else if (sample.state == lt::torrent_status::checking_files
+        || sample.state == lt::torrent_status::checking_resume_data) { value.status.phase = ManagedPhase::Checking; }
+    else if (sample.flags & lt::torrent_flags::paused) { value.status.phase = ManagedPhase::Queued; }
+    else { value.status.phase = sample.is_finished ? ManagedPhase::Seeding : ManagedPhase::Downloading; }
+  }
+  void requestStop(Managed& value) {
+    if (value.stop || !value.handle.is_valid()) { return; }
+    value.stop = true;
+    value.status.phase = ManagedPhase::Stopping;
+    value.deadline = Clock::now() + CertificationBudget;
+    value.handle.unset_flags(lt::torrent_flags::auto_managed);
+    value.handle.pause();
+    value.handle.save_resume_data(lt::torrent_handle::flush_disk_cache);
+  }
+  void advanceManaged() {
+    for (auto& [key, entry] : managed) {
+      static_cast<void>(key);
+      auto& value = *entry;
+      sampleManaged(value);
+      if (!value.stop || (!value.handle.is_valid() && !value.removing)) { continue; }
+      if (value.flushed && !value.removing) {
+        sampleManaged(value, true);
+        session->remove_torrent(value.handle); // Retain token/storage until exact weak expiration.
+        value.removing = true;
+      }
+      if (value.removing && value.removed && !value.handle.is_valid()) {
+        if (!value.status.failure && managedLease) {
+          auto saved = value.storage.checkpoint(*managedLease, value.verified, value.status.complete,
+              value.status.received, value.status.sent);
+          if (!saved) { value.status.failure = saved.error(); }
+        }
+        value.status.retained = false;
+        value.status.phase = value.status.failure ? ManagedPhase::Failed : ManagedPhase::Stopped;
+        value.status.downloadRate = 0; value.status.uploadRate = 0;
+        value.removing = false;
+      } else if (Clock::now() >= value.deadline) {
+        value.status.failure = storage::Error{storage::ErrorCode::Io,
+            "Torrent storage retirement deadline expired; owner must join before release"};
+        value.status.phase = ManagedPhase::Failed;
+        removalLost = true; transferError = true;
+      }
+    }
+    if (!registered && !managedActive() && !closed && !poisoned) { phase = AccountingState::Idle; }
+    if (network && session && !poisoned) {
+      bool any = false, onlySeeds = true;
+      for (const auto& [key, entry] : managed) {
+        static_cast<void>(key);
+        if (!entry->handle.is_valid() || entry->stop) { continue; }
+        any = true; onlySeeds = onlySeeds && entry->status.selectedComplete;
+      }
+      const bool seedingOnly = any && onlySeeds;
+      if (seedingOnly != appliedSeedingOnly) {
+        auto settings = makeNetworkSettings(*network, seedingOnly);
+        if (settings) {
+          settings->set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::error
+              | lt::alert_category::status | lt::alert_category::storage));
+          session->apply_settings(*settings);
+          rateLimits = detail::readEffectiveRateLimits(*session);
+          appliedSeedingOnly = seedingOnly;
+        }
+      }
+    }
+  }
+  bool retireManaged(Clock::time_point deadline) noexcept {
+    try {
+      for (auto& [key, entry] : managed) { static_cast<void>(key); requestStop(*entry); }
+      while (managedActive() && Clock::now() < deadline && !removalLost) {
+        static_cast<void>(pop());
+        advanceManaged();
+        if (managedActive()) { std::this_thread::sleep_for(20ms); }
+      }
+      if (managedActive() || removalLost) { return false; }
+      return true;
+    } catch (...) { return false; }
+  }
   RetirementReceipt finishRetirement(RetirementReceipt result) noexcept {
     retirement = result; // Receipt and essential counters exist BEFORE callbacks.
     deferPublication = false;
@@ -380,6 +543,10 @@ struct PersistentSession::Impl {
     }
     phase = AccountingState::Retiring;
     try {
+      if (!retireManaged(deadline)) {
+        result.accountingFailure = AccountingError::StorageFenceLost;
+        joinPoisoned(); return finishRetirement(result);
+      }
       session->pause();
       if (registered) {
         active.pause();
@@ -466,6 +633,129 @@ std::expected<void, AccountingError> PersistentSession::startIdle(const storage:
     return std::unexpected(AccountingError::Engine);
   }
 }
+std::expected<void, storage::Error> PersistentSession::configureNetwork(const NetworkPolicy& policy) {
+  if (!impl_->onWorker() || impl_->call || impl_->session || impl_->closed || impl_->poisoned) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Configure networking before owner startup"});
+  }
+  auto settings = makeNetworkSettings(policy);
+  if (!settings) { return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,
+      "Unsupported network setting: " + settings.error().field}); }
+  impl_->network = policy;
+  return {};
+}
+std::expected<void, storage::Error> PersistentSession::startManaged(
+    const storage::ProfileLease& lease, const ManagedDownloadOptions& options) {
+  if (!impl_->onWorker() || impl_->call || impl_->registered || impl_->closed || impl_->poisoned) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Managed admission is unavailable"});
+  }
+  const auto key = options.hash.hex();
+  if (const auto found = impl_->managed.find(key); found != impl_->managed.end()) {
+    if (found->second->handle.is_valid() || found->second->removing) {
+      return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Torrent is already admitted or retiring"});
+    }
+    impl_->managed.erase(found);
+  }
+  impl_->call = true;
+  try {
+    impl_->bind(lease);
+    impl_->retirement.reset();
+    detail::require(!options.ownedLoopbackPeerPort || !impl_->network
+        || impl_->network->mode == NetworkMode::IsolatedLoopback,
+        "Owned endpoint shortcut requires isolated networking");
+    detail::require(impl_->operation != std::numeric_limits<std::uint64_t>::max(), "Admission identity exhausted");
+    if (!impl_->network) { impl_->network = NetworkPolicy{}; }
+    auto storage = detail::take(detail::ManagedStorage::prepare(lease, options.hash, *impl_->network));
+    impl_->ensureSession();
+    auto value = std::make_unique<Impl::Managed>(++impl_->operation, std::move(storage), options.hash);
+    auto parameters = value->storage.parameters();
+    value->status.totalPieces = parameters.ti->num_pieces();
+    value->status.bytes = parameters.ti->total_size();
+    parameters.userdata = value->token.get();
+    detail::attachPeerPayloadObserver(parameters, impl_->peerPayloadLedger, impl_->operation);
+    parameters.flags |= lt::torrent_flags::paused | lt::torrent_flags::duplicate_is_error;
+    if (options.forceStart) { parameters.flags &= ~lt::torrent_flags::auto_managed; }
+    else { parameters.flags |= lt::torrent_flags::auto_managed; }
+    value->forceStart = options.forceStart;
+    auto [slot, inserted] = impl_->managed.emplace(key, std::move(value));
+    detail::require(inserted, "Duplicate managed admission", storage::ErrorCode::Conflict);
+    lt::error_code error;
+    try { slot->second->handle = impl_->session->add_torrent(std::move(parameters), error); }
+    catch (...) { impl_->joinPoisoned(); throw; }
+    if (error || !slot->second->handle.is_valid()) {
+      impl_->managed.erase(slot);
+      throw detail::Failure{{storage::ErrorCode::Io, "Cannot add original torrent to the managed session"}};
+    }
+    slot->second->status.retained = true;
+    impl_->managedLease = &lease;
+    impl_->phase = AccountingState::Active;
+    if (!options.queued || options.forceStart) { slot->second->handle.resume(); }
+    impl_->session->resume();
+    if (options.ownedLoopbackPeerPort) {
+      detail::require(impl_->network->mode == NetworkMode::IsolatedLoopback,
+          "Owned endpoint shortcut requires isolated networking");
+      slot->second->handle.connect_peer(lt::tcp::endpoint(lt::address_v4::loopback(), options.ownedLoopbackPeerPort));
+    }
+    impl_->publish(); impl_->call = false;
+    return {};
+  } catch (const detail::Failure& failure) { impl_->call = false; return std::unexpected(failure.error); }
+  catch (...) { impl_->call = false; return std::unexpected(storage::Error{storage::ErrorCode::Io, "Managed admission failed"}); }
+}
+std::expected<void, storage::Error> PersistentSession::pauseManaged(const core::TorrentHash& hash, bool paused) {
+  if (!impl_->onWorker() || impl_->call || impl_->closed || impl_->poisoned) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Managed control is unavailable"});
+  }
+  auto found = impl_->managed.find(hash.hex());
+  if (found == impl_->managed.end() || !found->second->handle.is_valid() || found->second->stop) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Torrent is not active"});
+  }
+  auto& value = *found->second;
+  value.manualPaused = paused;
+  if (paused) { value.handle.unset_flags(lt::torrent_flags::auto_managed); value.handle.pause(); }
+  else {
+    if (!value.forceStart) { value.handle.set_flags(lt::torrent_flags::auto_managed); }
+    value.handle.resume();
+  }
+  return {};
+}
+std::expected<void, storage::Error> PersistentSession::queueManaged(const core::TorrentHash& hash, bool forceStart, bool queued) {
+  auto changed = pauseManaged(hash, false);
+  if (!changed) { return changed; }
+  auto& value = *impl_->managed.at(hash.hex());
+  value.forceStart = forceStart;
+  if (forceStart) { value.handle.unset_flags(lt::torrent_flags::auto_managed); value.handle.resume(); }
+  else { value.handle.set_flags(lt::torrent_flags::auto_managed); if (queued) { value.handle.pause(); } }
+  return {};
+}
+std::expected<void, storage::Error> PersistentSession::stopManaged(const core::TorrentHash& hash) {
+  if (!impl_->onWorker() || impl_->call || impl_->closed || impl_->poisoned) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Managed control is unavailable"});
+  }
+  const auto found = impl_->managed.find(hash.hex());
+  if (found == impl_->managed.end()) { return {}; }
+  try { impl_->requestStop(*found->second); return {}; }
+  catch (...) { return std::unexpected(storage::Error{storage::ErrorCode::Io, "Cannot request torrent flush"}); }
+}
+std::expected<void, storage::Error> PersistentSession::reorderManaged(std::span<const core::TorrentHash> order) {
+  if (!managedAvailable() || impl_->call) { return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Managed queue is unavailable"}); }
+  int position = 0;
+  for (const auto& hash : order) {
+    const auto found = impl_->managed.find(hash.hex());
+    if (found == impl_->managed.end() || !found->second->handle.is_valid()
+        || found->second->stop || found->second->status.selectedComplete) { continue; }
+    found->second->handle.queue_position_set(lt::queue_position_t{position++});
+  }
+  return {};
+}
+bool PersistentSession::managedAvailable() const noexcept {
+  return impl_->onWorker() && !impl_->closed && !impl_->poisoned && !impl_->registered;
+}
+std::vector<ManagedDownloadStatus> PersistentSession::managedDownloads() const {
+  std::vector<ManagedDownloadStatus> result;
+  if (!impl_->onWorker()) { return result; }
+  result.reserve(impl_->managed.size());
+  for (const auto& [key, value] : impl_->managed) { static_cast<void>(key); result.push_back(value->status); }
+  return result;
+}
 std::expected<void, AccountingError> PersistentSession::setObservationSink(ApplicationObservationSink sink) {
   if (!impl_->onWorker()) { return std::unexpected(AccountingError::WrongThread); }
   if (impl_->call) { return std::unexpected(AccountingError::ActiveOperation); }
@@ -482,8 +772,13 @@ std::optional<ApplicationPeerObservation> PersistentSession::latest() const {
 }
 std::optional<core::TrackerStatistics> PersistentSession::trackerStatistics() const noexcept {
   if (!impl_ || !impl_->onWorker()) { return std::nullopt; }
-  // This preview owner deliberately clears trackers before adding a torrent.
-  return sampleTrackerStatistics(impl_->active, core::TrackerPolicy::DisabledByIsolation);
+  const auto policy = impl_->network && impl_->network->mode == NetworkMode::Normal
+      ? core::TrackerPolicy::Permitted : core::TrackerPolicy::DisabledByIsolation;
+  for (const auto& [key, entry] : impl_->managed) {
+    static_cast<void>(key);
+    if (entry->handle.is_valid()) { return sampleTrackerStatistics(entry->handle, policy); }
+  }
+  return sampleTrackerStatistics(impl_->active, policy);
 }
 std::optional<core::PeerPayloadSnapshot> PersistentSession::peerPayloads() const noexcept {
   if (!impl_->onWorker() || !impl_->peerPayloadLedger) { return std::nullopt; }
@@ -506,6 +801,7 @@ std::expected<void, AccountingError> PersistentSession::poll() {
   impl_->call = true;
   try {
     static_cast<void>(impl_->pop());
+    impl_->advanceManaged();
     if (impl_->transferError || impl_->removalLost) {
       impl_->counterError(AccountingError::Engine);
       impl_->joinPoisoned();
@@ -533,14 +829,19 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
   impl_->closed = true; impl_->phase = AccountingState::Closed;
   impl_->publish(); // Sink is cleared: update immutable state, no shutdown callback.
   impl_->call = false;
-  return {result, true};
+  std::optional<storage::Error> checkpointFailure;
+  for (const auto& [key, entry] : impl_->managed) {
+    static_cast<void>(key);
+    if (entry->status.failure) { checkpointFailure = entry->status.failure; break; }
+  }
+  return {result, true, std::move(checkpointFailure)};
 }
 
 namespace detail {
 PersistentCall::PersistentCall(PersistentSession& owner, const storage::ProfileLease& lease) : owner_(owner) {
   auto& impl = *owner_.impl_;
   require(impl.onWorker(), "Persistent owner called from another thread", storage::ErrorCode::Conflict);
-  require(!impl.call && !impl.closed && !impl.poisoned,
+  require(!impl.call && !impl.closed && !impl.poisoned && !impl.managedActive(),
       "Persistent owner is active, closed or requires reset", storage::ErrorCode::Conflict);
   require(impl.operation != std::numeric_limits<std::uint64_t>::max(),
       "Persistent operation identity exhausted", storage::ErrorCode::Conflict);

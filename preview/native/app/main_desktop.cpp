@@ -11,30 +11,39 @@
 #include <stdexcept>
 
 int main(int argc, char** argv) {
-  if ((argc != 4 && argc != 6) || std::string_view(argv[1]) != "--experimental-local") {
-    std::cerr << "Usage: BiglyBTC --experimental-local GENERATED_PROFILE OWNED_PEER_PORT [--country-db ABSOLUTE_DIRECTORY]\n";
+  const bool normal = argc >= 2 && std::string_view(argv[1]) == "--profile";
+  const bool local = argc >= 2 && std::string_view(argv[1]) == "--experimental-local";
+  if ((!normal && !local) || (normal && argc != 3 && argc != 5) || (local && argc != 4 && argc != 6)) {
+    std::cerr << "Usage: BiglyBTC --profile ABSOLUTE_PROFILE [--country-db ABSOLUTE_DIRECTORY]\n"
+                 "       BiglyBTC --experimental-local GENERATED_PROFILE OWNED_PEER_PORT [--country-db ABSOLUTE_DIRECTORY]\n";
     return 2;
   }
   const std::filesystem::path profile(argv[2]);
   const auto normalized = profile.lexically_normal();
-  auto part = normalized.begin();
-  bool generated = part != normalized.end() && *part++ == "/";
-  generated = generated && part != normalized.end() && *part++ == "tmp";
-  generated = generated && part != normalized.end() && part->string().starts_with("biglybtc-");
   std::error_code pathError;
   const auto canonical = std::filesystem::canonical(profile, pathError);
-  unsigned int port = 0;
-  const std::string_view portText(argv[3]);
-  const auto parsed = std::from_chars(portText.data(), portText.data() + portText.size(), port);
-  if (!generated || pathError || canonical != profile || normalized != profile || parsed.ec != std::errc{}
-      || parsed.ptr != portText.data() + portText.size() || port > 65535) {
-    std::cerr << "Use a generated /tmp/biglybtc-* profile and an owned endpoint (0 for an offline preview)\n";
+  if (pathError || !profile.is_absolute() || canonical != profile || normalized != profile) {
+    std::cerr << "Use an existing absolute profile directory without symbolic links\n";
     return 2;
   }
+  unsigned int port = 0;
+  if (local) {
+    auto part = normalized.begin();
+    bool generated = part != normalized.end() && *part++ == "/";
+    generated = generated && part != normalized.end() && *part++ == "tmp";
+    generated = generated && part != normalized.end() && part->string().starts_with("biglybtc-");
+    const std::string_view portText(argv[3]);
+    const auto parsed = std::from_chars(portText.data(), portText.data() + portText.size(), port);
+    if (!generated || parsed.ec != std::errc{} || parsed.ptr != portText.data() + portText.size() || port > 65535) {
+      std::cerr << "Use a generated /tmp/biglybtc-* profile and an owned endpoint (0 for an offline preview)\n";
+      return 2;
+    }
+  }
   std::filesystem::path countryDatabase;
-  if (argc == 6) {
-    countryDatabase = argv[5];
-    if (std::string_view(argv[4]) != "--country-db" || !countryDatabase.is_absolute()) {
+  const int countryOption = normal ? 3 : 4;
+  if (argc > countryOption) {
+    countryDatabase = argv[countryOption + 1];
+    if (std::string_view(argv[countryOption]) != "--country-db" || !countryDatabase.is_absolute()) {
       std::cerr << "Country data requires --country-db ABSOLUTE_DIRECTORY\n";
       return 2;
     }
@@ -45,8 +54,8 @@ int main(int argc, char** argv) {
     QCoreApplication::setApplicationName(QStringLiteral("BiglyBTC"));
     QCoreApplication::setApplicationVersion(QStringLiteral("0.1.0"));
     biglybtc::ui::LibraryWindow window;
-    window.setOfflinePreview(port == 0);
-    if (port == 0) {
+    window.setOfflinePreview(!normal && port == 0);
+    if (!normal && port == 0) {
       window.setWindowTitle(QStringLiteral("BiglyBTC — Offline preview"));
     }
     biglybtc::app::SessionBridge::CountryProviderFactory countryFactory;
@@ -83,6 +92,9 @@ int main(int argc, char** argv) {
     QObject::connect(&bridge, &Bridge::busyChanged, &window, &Window::setBusy);
     QObject::connect(&bridge, &Bridge::messageReady, &window, &Window::setMessage);
     QObject::connect(&window, &Window::refreshRequested, &bridge, &Bridge::refresh);
+    QObject::connect(&window, &Window::downloadActionRequested, &bridge, &Bridge::downloadAction);
+    QObject::connect(&window, &Window::filePolicyRequested, &bridge, &Bridge::filePolicy);
+    QObject::connect(&window, &Window::torrentImportRequested, &bridge, &Bridge::torrentImport);
     QObject::connect(&window, &Window::continueRequested, &bridge, &Bridge::continueDownload);
     QObject::connect(&window, &Window::detailsRequested, &bridge, &Bridge::details);
     QObject::connect(&window, &Window::savedServicesRequested, &bridge, &Bridge::savedServices);
@@ -98,7 +110,8 @@ int main(int argc, char** argv) {
     QObject::connect(&bridge, &Bridge::manualTagStatisticsReady, &window, &Window::setManualTagStatistics);
     QObject::connect(&window, &Window::countryStatisticsRequested, &bridge, &Bridge::countryStatistics);
     QObject::connect(&bridge, &Bridge::countryStatisticsReady, &window, &Window::setCountryStatistics);
-    bridge.open(profile, static_cast<unsigned short>(port));
+    if (normal) { bridge.openNormal(profile); }
+    else { bridge.open(profile, static_cast<unsigned short>(port)); }
     window.enableSessionCloseHandshake();
     QObject::connect(&bridge, &Bridge::nativeSessionReady, &window, &Window::setNativeSession);
     QObject::connect(&bridge, &Bridge::overallReady, &window, &Window::setOverall);

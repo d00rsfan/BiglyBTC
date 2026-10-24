@@ -64,6 +64,10 @@ std::optional<int> FileModel::originalIndex(int row) const {
   if (row < 0 || row >= rowCount()) { return std::nullopt; }
   return presentation_->items[static_cast<std::size_t>(row)].index;
 }
+bool FileModel::editableAt(int row) const {
+  return presentation_ && presentation_->canEdit && target_ == presentation_->target
+      && row >= 0 && row < rowCount() && !presentation_->items[static_cast<std::size_t>(row)].padding;
+}
 int FileModel::rowFor(int original) const {
   if (!presentation_) { return -1; }
   for (std::size_t i = 0; i < presentation_->items.size(); ++i) {

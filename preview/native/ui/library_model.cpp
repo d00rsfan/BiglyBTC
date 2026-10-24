@@ -68,7 +68,8 @@ bool LibraryModel::apply(const Presentation& snapshot) {
   QHash<QString, bool> keys;
   for (std::size_t i = 0; i < snapshot->items.size(); ++i) {
     const auto& item = snapshot->items[i];
-    if (item.key.isEmpty() || keys.contains(item.key) || (item.bytes && *item.bytes < 0)) { return false; }
+    if (item.key.isEmpty() || keys.contains(item.key) || (item.bytes && *item.bytes < 0)
+        || (item.actionMask & ~AllDownloadActions) != 0) { return false; }
     if (item.savedSelected) {
       const auto& saved = *item.savedSelected;
       if ((saved.bytes && *saved.bytes < 0) || (saved.remaining && *saved.remaining < 0)
@@ -119,6 +120,12 @@ std::optional<Target> LibraryModel::targetAt(int row) const {
 }
 bool LibraryModel::canContinue(const Target& target) const {
   return accepts(target) && rows_[static_cast<std::size_t>(rowFor(target.hash))].item.canContinue;
+}
+quint16 LibraryModel::permittedActionsAt(int row) const {
+  return row >= 0 && row < rowCount() ? rows_[static_cast<std::size_t>(row)].item.actionMask : quint16{0};
+}
+quint16 LibraryModel::permittedActions(const Target& target) const {
+  return accepts(target) ? permittedActionsAt(rowFor(target.hash)) : quint16{0};
 }
 bool LibraryModel::hasDetails(const Target& target) const {
   return accepts(target) && rows_[static_cast<std::size_t>(rowFor(target.hash))].item.bytes.has_value();

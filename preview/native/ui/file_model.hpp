@@ -13,6 +13,8 @@ public:
   void select(std::optional<Target> target);
   bool apply(const FilePresentation&);
   std::optional<Target> target() const { return target_; }
+  FilePresentation presentation() const { return presentation_; }
+  bool editableAt(int row) const;
   int rowCount(const QModelIndex& parent = {}) const override;
   int columnCount(const QModelIndex& parent = {}) const override;
   QVariant data(const QModelIndex&, int role) const override;

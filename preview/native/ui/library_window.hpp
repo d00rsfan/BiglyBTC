@@ -34,6 +34,7 @@ class QTabWidget;
 class QLineEdit;
 class QSplitter;
 class QEvent;
+class QMenu;
 
 namespace biglybtc::ui {
 
@@ -96,8 +97,13 @@ public:
   void setBusy(bool);
   void setMessage(const QString&);
   void setOfflinePreview(bool);
+  // Syntactic UI admission only; the Host owns metadata/URI validation and IO.
+  bool submitTorrentImport(QString metadata, QString destination, bool start);
+  bool submitMagnetImport(QString uri, QString destination);
 signals:
   void refreshRequested();
+  void torrentImportRequested(QString metadata, QString destination, bool start);
+  void magnetImportRequested(QString uri, QString destination);
   void savedServicesRequested(quint64 request);
   void statisticsRequested(quint64 session, quint64 request);
   void manualTagStatisticsRequested(quint64 session);
@@ -109,6 +115,8 @@ signals:
   void columnLayoutsRequested(quint64 session, quint64 request);
   void columnLayoutSaveRequested(biglybtc::ui::ColumnLayoutSaveSubmission);
   void continueRequested(biglybtc::ui::Target);
+  void downloadActionRequested(biglybtc::ui::DownloadTargets, biglybtc::core::DownloadAction);
+  void filePolicyRequested(biglybtc::ui::Target, biglybtc::ui::FileIndices, int priority, bool skipped);
   void detailsRequested(biglybtc::ui::Target);
   void cancelRequested();
   void sessionCloseRequested();
@@ -120,6 +128,24 @@ private:
   std::optional<Target> selected() const;
   std::optional<Target> actionTarget() const;
   QStringList selectedHashes() const;
+  std::optional<DownloadTargets> selectedDownloadTargets() const;
+  std::optional<DownloadTargets> downloadTargets(core::DownloadAction, bool all) const;
+  void dispatchDownload(core::DownloadAction, bool all = false);
+  void dispatchDownloadAlias(bool pauseResume);
+  void bindDownloadMenu(QMenu*);
+  void queueDownloadActions();
+  void updateDownloadActions();
+  struct FilePolicySelection {
+    Target target;
+    FileIndices indices;
+    FilePresentation source;
+    bool operator==(const FilePolicySelection&) const = default;
+  };
+  std::optional<FilePolicySelection> filePolicySelection() const;
+  void dispatchFilePolicy(int priority, bool skipped);
+  void filePopup(const QPoint&);
+  bool canImport() const;
+  void openImportDialog(bool magnet);
   void restoreSelection(const QStringList&, bool initial = false);
   void activate(QTableView*);
   void showMyTorrents();
@@ -235,6 +261,27 @@ private:
   QAction* refresh_;
   QAction* files_;
   QAction* padding_;
+  std::array<QPointer<QAction>, 10> downloadActions_;
+  QPointer<QAction> startStop_;
+  QPointer<QAction> pauseResume_;
+  QPointer<QAction> startAll_;
+  QPointer<QAction> stopAll_;
+  std::optional<core::DownloadAction> startStopChoice_;
+  std::optional<core::DownloadAction> pauseResumeChoice_;
+  bool offlinePreview_ = false;
+  bool downloadDispatching_ = false;
+  bool downloadActionsQueued_ = false;
+  quint64 downloadActionRevision_ = 0;
+  quint64 renderedDownloadRevision_ = 0;
+  quint64 downloadMenuToken_ = 0;
+  bool downloadMenuOpen_ = false;
+  quint64 downloadMenuRevision_ = 0;
+  std::optional<DownloadTargets> downloadMenuTargets_;
+  QPointer<QAction> openTorrent_;
+  QPointer<QAction> openMagnet_;
+  std::array<QPointer<QAction>, 4> filePolicyActions_;
+  bool fileMenuOpen_ = false;
+  std::optional<FilePolicySelection> fileMenuSelection_;
   std::optional<Target> detailsRequestedFor_;
   std::optional<int> restoreFileIndex_;
   bool busy_ = false;

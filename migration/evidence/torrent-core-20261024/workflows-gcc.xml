@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="9"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="30"
+	timestamp="2026-10-24T12:37:46"
+	>
+	<testcase name="library-action-ui" classname="library-action-ui" time="0.981133" status="run">
+		<properties/>
+		<system-out>********* Start testing of LibraryActionUiTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : LibraryActionUiTests::initTestCase()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-start) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-start) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-start) This plugin does not support propagateSizeHints()
+PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-start)
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-stop) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-stop) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachComman...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="network-policy" classname="network-policy" time="0.00908093" status="run">
+		<properties/>
+		<system-out>17 network-policy families, 165 assertions passed
+</system-out>
+	</testcase>
+	<testcase name="managed-tracker" classname="managed-tracker" time="12.5695" status="run">
+		<properties/>
+		<system-out>********* Start testing of ManagedTrackerTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedTrackerTests::initTestCase()
+PASS   : ManagedTrackerTests::httpTrackerActuallyDiscoversOwnedPeer()
+PASS   : ManagedTrackerTests::udpTrackerActuallyDiscoversOwnedPeer()
+PASS   : ManagedTrackerTests::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 12545ms
+********* Finished testing of ManagedTrackerTests *********
+</system-out>
+	</testcase>
+	<testcase name="managed-download" classname="managed-download" time="15.8816" status="run">
+		<properties/>
+		<system-out>********* Start testing of ManagedDownloadTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedDownloadTests::initTestCase()
+PASS   : ManagedDownloadTests::concurrentMixedHandlesRemainControllableUnderOneOwner()
+PASS   : ManagedDownloadTests::partialStopAndRepeatedHashCheckpointsKeepFreshSavedIntent()
+PASS   : ManagedDownloadTests::failedAndForeignAdmissionsDoNotReplaceTheOtherActiveTorrent()
+PASS   : ManagedDownloadTests::unsafePayloadPreparationDoesNotAdmitOrRewriteAProfile()
+PASS   : ManagedDownloadTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 15851ms
+********* Finished testing of ManagedDownloadTests *********
+</system-out>
+	</testcase>
+	<testcase name="managed-storage" classname="managed-storage" time="0.0246666" status="run">
+		<properties/>
+		<system-out>case new-independent-payload-root-and-filtered-parameters
+case partial-piece-progress-and-fresh-command-preservation
+case skipped-linear-sparse-file-and-boundary-piece-counts
+case single-completion-suffix-and-unknown-state-fields
+case multifile-completion-renames-only-owned-actual-paths
+case completed-target-collision-retains-incomplete-source
+case existing-single-journal-and-recognized-hardlink-recovery
+case unsafe-links-storetypes-oversize-and-symlinks-fail-before-state
+case authoritative-cache-policy-is-preflighted-without-mutation
+case policy-permitted-trackers-retained-without-engine-start
+case invalid-checkpoints-never-publish-complete-flags
+case verified-late-piece-needs-actual-file-extent
+case payload-replacement-and-cumulative-rebase-refuse
+case original-pure-v2-truncated-and-explicit-full-keys
+case wrong-profile-and-moved-storage-refuse
+PASS 15 managed-storage families; 455 assertions; generated profiles and files only; no engine activation or Java-runtime equality credit
+</system-out>
+	</testcase>
+	<testcase name="torrent-intake" classname="torrent-intake" time="0.0169615" status="run">
+		<properties/>
+		<system-out>11 torrent-intake families, 515 assertions passed
+</system-out>
+	</testcase>
+	<testcase name="file-priority-ui" classname="file-priority-ui" time="0.464561" status="run">
+		<properties/>
+		<system-out>********* Start testing of FilePriorityUiTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : FilePriorityUiTests::initTestCase()
+QWARN  : FilePriorityUiTests::selectedOriginalIndicesRoute(normal) This plugin does not support propagateSizeHints()
+QWARN  : FilePriorityUiTests::selectedOriginalIndicesRoute(normal) This plugin does not support propagateSizeHints()
+QWARN  : FilePriorityUiTests::selectedOriginalIndicesRoute(normal) This plugin does not support raise()
+QWARN  : FilePriorityUiTests::selectedOriginalIndicesRoute(normal) This plugin does not support grabbing the keyboard
+PASS   : FilePriorityUiTests::selectedOriginalIndicesRoute(normal)
+QWARN  : FilePriorityUiTests::selectedOriginalIndicesRoute(high) This plugin does not support propagateSizeHints()
+QWARN  : FilePriorityUiTests::selectedOriginalIndicesRoute(high) This plugin does not support propagateSizeHints()
+QWARN ...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="file-policy-commands" classname="file-policy-commands" time="0.0132418" status="run">
+		<properties/>
+		<system-out>********* Start testing of FilePolicyCommandsTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : FilePolicyCommandsTests::initTestCase()
+PASS   : FilePolicyCommandsTests::changedPoliciesRoundTripAndInvalidateResume(plain-state)
+PASS   : FilePolicyCommandsTests::changedPoliciesRoundTripAndInvalidateResume(gzip-state)
+PASS   : FilePolicyCommandsTests::identicalPolicyIsAnActualNoWrite()
+PASS   : FilePolicyCommandsTests::invalidPolicyRejectsBeforeAnyWrite(wrong-count)
+PASS   : FilePolicyCommandsTests::invalidPolicyRejectsBeforeAnyWrite(duplicate-download)
+PASS   : FilePolicyCommandsTests::invalidPolicyRejectsBeforeAnyWrite(padding-enabled)
+PASS   : FilePolicyCommandsTests::invalidPolicyRejectsBeforeAnyWrite(malformed-priorities)
+PASS   : FilePolicyCommandsTests::invalidPolicyRejectsBeforeAnyWrite(eight-ranks)
+PASS   : FilePolicyCommandsTests::invalidPolicyRejectsBeforeAnyWrite(mi...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="torrent-import-ui" classname="torrent-import-ui" time="0.26093" status="run">
+		<properties/>
+		<system-out>********* Start testing of TorrentImportUiTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : TorrentImportUiTests::initTestCase()
+PASS   : TorrentImportUiTests::fileMenuAndToolbarShareCtrlOpenWithoutNeedingRows()
+PASS   : TorrentImportUiTests::submissionsOwnExactUserValues(torrent-start)
+PASS   : TorrentImportUiTests::submissionsOwnExactUserValues(torrent-stopped)
+PASS   : TorrentImportUiTests::submissionsOwnExactUserValues(magnet-link)
+PASS   : TorrentImportUiTests::malformedOrUnboundedFormValuesNeverDispatch()
+QWARN  : TorrentImportUiTests::noProfileBusyOfflineAndClosingBlockBothSubmissionPaths() This plugin does not support propagateSizeHints()
+PASS   : TorrentImportUiTests::noProfileBusyOfflineAndClosingBlockBothSubmissionPaths()
+PASS   : TorrentImportUiTests::signalReentryIsBlockedAndOwnerMayBeDeleted()
+PASS   : TorrentImportUiTests::cleanupTestCase()
+Totals: 9 passed, ...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

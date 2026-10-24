@@ -22,6 +22,14 @@ sessions. Native Cache/Tracker/Counters/Connections tables consume actual engine
 measurements. Offline samples stay read-only; full Statistics and original-client
 service parity remain under development. See [preview details](preview/README.md).
 
+The next core chapter now retains multiple torrents under one worker-owned
+session, with shared Start/Stop/Pause/Resume/Queue actions, compatible saved
+intent/checkpoints, journaled `.torrent` import and stopped-file priorities.
+The explicit `--profile /absolute/profile` entry uses the original profile lock;
+qualification uses generated profiles and owned loopback peers. Magnet
+resolution, actual seeding/handoff checks and the combined compiler/runtime
+boundary remain in progress. See [core milestone evidence](migration/evidence/torrent-core-20261024/milestone.json).
+
 The source application and its running profile are kept separate from development
 tests. Native plugin repositories retain their original runtime IDs. Native
 artifacts belong in an original plugin folder's `biglybtc/` child beside Java JARs;

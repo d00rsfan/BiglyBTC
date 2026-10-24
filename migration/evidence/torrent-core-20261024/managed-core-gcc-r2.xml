@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="9"
+	failures="3"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="186"
+	timestamp="2026-10-24T12:21:01"
+	>
+	<testcase name="persistent-native-peer-session" classname="persistent-native-peer-session" time="41.5957" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration;loopback;statistics;unit"/>
+		</properties>
+		<system-out>********* Start testing of PersistentSessionTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : PersistentSessionTests::initTestCase()
+PASS   : PersistentSessionTests::lazyOwnerAndPermanentCloseNeverFabricateAZeroSample()
+PASS   : PersistentSessionTests::foreignThreadCannotPollOrCloseTheOwner()
+PASS   : PersistentSessionTests::sequentialMixedLayoutsAndRepeatedHashUseOneAbsoluteEpoch()
+PASS   : PersistentSessionTests::activeCancellationRetiresBeforeCallbackStorageUnwindsAndCanRetrySameHash()
+PASS   : PersistentSessionTests::optionalThrowingSinksDoNotDisableEssentialRetentionOrSafeTransfer()
+PASS   : PersistentSessionTests::preparationFailureCannotExposeEarlierSettlementOrEraseAbsoluteTotals()
+PASS   : PersistentSessionTests::foreignProfileIsRejectedBeforeCompatibleCacheOrPayloadAccess()
+PASS   : PersistentSessionTests::throwingProgressRetiresAnAlreadyRegisteredTorrentBeforeRet...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="persistent-native-session-window-worker" classname="persistent-native-session-window-worker" time="22.7808" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration;loopback;statistics;ui;unit"/>
+		</properties>
+		<system-out>********* Start testing of NativeSessionIntegrationTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : NativeSessionIntegrationTests::initTestCase()
+PASS   : NativeSessionIntegrationTests::immutableAdmissionRejectsWrongDomainRegressionsAndTerminalReplays()
+QWARN  : NativeSessionIntegrationTests::oneOwnerSurvivesRepeatedOperationAndIdle(single) This plugin does not support propagateSizeHints()
+QWARN  : NativeSessionIntegrationTests::oneOwnerSurvivesRepeatedOperationAndIdle(single) This plugin does not support propagateSizeHints()
+PASS   : NativeSessionIntegrationTests::oneOwnerSurvivesRepeatedOperationAndIdle(single)
+QWARN  : NativeSessionIntegrationTests::oneOwnerSurvivesRepeatedOperationAndIdle(multifile) This plugin does not support propagateSizeHints()
+QWARN  : NativeSessionIntegrationTests::oneOwnerSurvivesRepeatedOperationAndIdle(multifile) This plugin does not support p...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="persistent-native-peer-faults" classname="persistent-native-peer-faults" time="87.1767" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration;loopback;statistics;unit"/>
+		</properties>
+		<system-out>********* Start testing of PersistentSessionFaultTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : PersistentSessionFaultTests::initTestCase()
+PASS   : PersistentSessionFaultTests::realPassThroughHasAllRequiredWrapperHitsAndActualCounterReceipt()
+PASS   : PersistentSessionFaultTests::oldIdleRequestMustBeDeliveredBeforeDistinctCloseProbe()
+PASS   : PersistentSessionFaultTests::losingActualCloseResponseCannotPromoteAnOlderCheckpoint()
+PASS   : PersistentSessionFaultTests::attributablePostExceptionDoesNotBlockRealStorageOrInventZeros()
+PASS   : PersistentSessionFaultTests::ownedRuntimeMetricMappingFaultsCannotMintCounters(missing)
+PASS   : PersistentSessionFaultTests::ownedRuntimeMetricMappingFaultsCannotMintCounters(duplicate-name)
+PASS   : PersistentSessionFaultTests::ownedRuntimeMetricMappingFaultsCannotMintCounters(wrong-type)
+PASS   : PersistentSessionFaultTests::ownedRun...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="persistent-native-session-close-faults" classname="persistent-native-session-close-faults" time="14.7461" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration;loopback;statistics;ui;unit"/>
+		</properties>
+		<system-out>********* Start testing of AppCloseFaultTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : AppCloseFaultTests::initTestCase()
+QWARN  : AppCloseFaultTests::queuedCloseIgnoresRepeatedCancellation(idle-pop) This plugin does not support propagateSizeHints()
+QWARN  : AppCloseFaultTests::queuedCloseIgnoresRepeatedCancellation(idle-pop) This plugin does not support propagateSizeHints()
+PASS   : AppCloseFaultTests::queuedCloseIgnoresRepeatedCancellation(idle-pop)
+QWARN  : AppCloseFaultTests::queuedCloseIgnoresRepeatedCancellation(idle-post) This plugin does not support propagateSizeHints()
+QWARN  : AppCloseFaultTests::queuedCloseIgnoresRepeatedCancellation(idle-post) This plugin does not support propagateSizeHints()
+PASS   : AppCloseFaultTests::queuedCloseIgnoresRepeatedCancellation(idle-post)
+PASS   : AppCloseFaultTests::optionalAllocationFailureCannotRetainHostOrSuppressCloseAckno...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="library-commands" classname="library-commands" time="0.0325996" status="run">
+		<properties/>
+		<system-out>case start-stop-force-with-opaque-preservation
+case force-pause-resume
+case stopped-pause-and-idempotence
+case start-versus-queue-and-forced-resumption
+case resume-absent-and-start-queue-active-are-noops
+case stop-paused-preserves-other-pause-bytes
+case stopped-force-controller-conditional
+case legacy-fields-and-root-metadata
+case moves-keep-completion-pools-separate
+case move-pools-required-exact-and-unique
+case malformed-positions-never-guessed-normalized-or-overflowed
+case move-boundary-noop-and-legacy-pool
+case duplicate-stale-and-malformed-identities-refuse
+case malformed-or-duplicate-pause-data-refuses
+case invalid-action-and-lease-refuse
+case saving-recovery-refuses-backup-recovery-uses-existing-cas-policy
+case existing-saving-path-conflict-does-not-overwrite
+case v2-hash-and-unrelated-binary-values
+case legacy-advertised-malformed-row-cannot-hide-target
+PASS 19 saved-library command families; 658 assertions; generated profiles only; no engine actions or Java-runtime equality credit
+</system-out>
+	</testcase>
+	<testcase name="library-action-ui" classname="library-action-ui" time="0.853073" status="fail">
+		<failure message="Failed"/>
+		<properties/>
+		<system-out>********* Start testing of LibraryActionUiTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : LibraryActionUiTests::initTestCase()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-start) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-start) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-start) This plugin does not support propagateSizeHints()
+PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-start)
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-stop) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-stop) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-stop) This plugin does not support propagateSizeHints()
+PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-stop)
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-pause) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-pause) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-pause) This plugin does not support propagateSizeHints()
+PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-pause)
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-resume) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-resume) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-resume) This plugin does not support propagateSizeHints()
+PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-resume)
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-queue) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-queue) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-queue) This plugin does not support propagateSizeHints()
+PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-queue)
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-force-start) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-force-start) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-force-start) This plugin does not support propagateSizeHints()
+PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-force-start)
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-top) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-top) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-top) This plugin does not support propagateSizeHints()
+PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-top)
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-up) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-up) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-up) This plugin does not support propagateSizeHints()
+PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-up)
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-down) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-down) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-down) This plugin does not support propagateSizeHints()
+PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-down)
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-bottom) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-bottom) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-bottom) This plugin does not support propagateSizeHints()
+PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-bottom)
+QWARN  : LibraryActionUiTests::unsupportedMemberNeverDispatchesPartialSelection() This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::unsupportedMemberNeverDispatchesPartialSelection() This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::unsupportedMemberNeverDispatchesPartialSelection() This plugin does not support propagateSizeHints()
+PASS   : LibraryActionUiTests::unsupportedMemberNeverDispatchesPartialSelection()
+QWARN  : LibraryActionUiTests::transfersAllIncludesFilteredAndCompleteRows() This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::transfersAllIncludesFilteredAndCompleteRows() This plugin does not support propagateSizeHints()
+FAIL!  : LibraryActionUiTests::transfersAllIncludesFilteredAndCompleteRows() Compared values are not the same
+   Actual   (requests.count()): 0
+   Expected (2)               : 2
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/library_action_ui_tests.cpp(159)]
+QWARN  : LibraryActionUiTests::toolbarAndContextReuseTheCommandObjects() This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::toolbarAndContextReuseTheCommandObjects() This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::toolbarAndContextReuseTheCommandObjects() This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::toolbarAndContextReuseTheCommandObjects() This plugin does not support raise()
+QWARN  : LibraryActionUiTests::toolbarAndContextReuseTheCommandObjects() This plugin does not support grabbing the keyboard
+PASS   : LibraryActionUiTests::toolbarAndContextReuseTheCommandObjects()
+QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-library-revision) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-library-revision) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-library-revision) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-library-revision) This plugin does not support raise()
+QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-library-revision) This plugin does not support grabbing the keyboard
+PASS   : LibraryActionUiTests::openMenuDoesNotRetarget(new-library-revision)
+QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-selection) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-selection) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-selection) This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-selection) This plugin does not support raise()
+QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-selection) This plugin does not support grabbing the keyboard
+PASS   : LibraryActionUiTests::openMenuDoesNotRetarget(new-selection)
+QWARN  : LibraryActionUiTests::explicitPermissionsBusyAndOfflineAreIndependentOfSavedNames() This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::explicitPermissionsBusyAndOfflineAreIndependentOfSavedNames() This plugin does not support propagateSizeHints()
+PASS   : LibraryActionUiTests::explicitPermissionsBusyAndOfflineAreIndependentOfSavedNames()
+QWARN  : LibraryActionUiTests::invalidCapabilitiesAndAmbiguousTargetsFailClosed() This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::invalidCapabilitiesAndAmbiguousTargetsFailClosed() This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::invalidCapabilitiesAndAmbiguousTargetsFailClosed() This plugin does not support propagateSizeHints()
+PASS   : LibraryActionUiTests::invalidCapabilitiesAndAmbiguousTargetsFailClosed()
+PASS   : LibraryActionUiTests::actionPropertyCallbacksCannotResumeOldState()
+QWARN  : LibraryActionUiTests::dispatchReentryCannotSubmitTwiceOrMutateCapturedTargets() This plugin does not support propagateSizeHints()
+QWARN  : LibraryActionUiTests::dispatchReentryCannotSubmitTwiceOrMutateCapturedTargets() This plugin does not support propagateSizeHints()
+PASS   : LibraryActionUiTests::dispatchReentryCannotSubmitTwiceOrMutateCapturedTargets()
+PASS   : LibraryActionUiTests::dispatchAllowsOwnerDeletionWithoutASecondPublication()
+PASS   : LibraryActionUiTests::cleanupTestCase()
+Totals: 21 passed, 1 failed, 0 skipped, 0 blacklisted, 701ms
+********* Finished testing of LibraryActionUiTests *********
+</system-out>
+	</testcase>
+	<testcase name="network-policy" classname="network-policy" time="0.00620509" status="fail">
+		<failure message="Failed"/>
+		<properties/>
+		<system-out>malformed known config and network selection: result
+</system-out>
+	</testcase>
+	<testcase name="managed-tracker" classname="managed-tracker" time="7.62569" status="run">
+		<properties/>
+		<system-out>********* Start testing of ManagedTrackerTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedTrackerTests::initTestCase()
+PASS   : ManagedTrackerTests::httpTrackerActuallyDiscoversOwnedPeer()
+PASS   : ManagedTrackerTests::udpTrackerActuallyDiscoversOwnedPeer()
+PASS   : ManagedTrackerTests::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 7612ms
+********* Finished testing of ManagedTrackerTests *********
+</system-out>
+	</testcase>
+	<testcase name="managed-download" classname="managed-download" time="11.7621" status="fail">
+		<failure message="Failed"/>
+		<properties/>
+		<system-out>********* Start testing of ManagedDownloadTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedDownloadTests::initTestCase()
+PASS   : ManagedDownloadTests::concurrentMixedHandlesRemainControllableUnderOneOwner()
+FAIL!  : ManagedDownloadTests::partialStopAndRepeatedHashCheckpointsKeepFreshSavedIntent() 'verified &gt; 0 &amp;&amp; verified &lt; test::OwnedEngineFixture::PayloadBytes' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/managed_download_tests.cpp(204)]
+PASS   : ManagedDownloadTests::failedAndForeignAdmissionsDoNotReplaceTheOtherActiveTorrent()
+PASS   : ManagedDownloadTests::unsafePayloadPreparationDoesNotAdmitOrRewriteAProfile()
+PASS   : ManagedDownloadTests::cleanupTestCase()
+Totals: 5 passed, 1 failed, 0 skipped, 0 blacklisted, 11748ms
+********* Finished testing of ManagedDownloadTests *********
+</system-out>
+	</testcase>
+</testsuite>

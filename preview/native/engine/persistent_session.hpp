@@ -2,6 +2,7 @@
 #include "biglybtc/tracker_statistics.hpp"
 
 #include "local_session.hpp"
+#include "managed_download.hpp"
 #include "biglybtc/runtime_metrics.hpp"
 #include "biglybtc/peer_payload_ledger.hpp"
 #include "biglybtc/effective_rate_limits.hpp"
@@ -40,6 +41,7 @@ struct ApplicationPeerObservation {
 
 using ApplicationObservationSink = std::function<void(ApplicationPeerObservation)>;
 
+struct NetworkPolicy;
 namespace detail { class PersistentCall; class PersistentOperation; }
 class PersistentSession;
 // Only the source-bound successful retirement protocol may mint a settled
@@ -72,12 +74,13 @@ struct CloseReceipt {
   // Epoch-final evidence requires this successful explicit close (permanently
   // closed admission gate), joined==true, storageReleased and peerCounters.
   bool sessionJoined = false;
+  std::optional<storage::Error> checkpointFailure{};
 };
 
 // Confined to the existing Host executor's worker thread from creation through
 // destruction. The service outlives individual continuation operations. The
-// initial implementation admits at most ONE torrent at a time, reusing the same
-// LT session and absolute counters across successes, cancellations and failures.
+// managed path retains multiple torrents in the same LT session. The legacy
+// continuation path remains exclusive and reuses the same absolute counters.
 // No raw session/handle is exposed to the UI or callers; all pop_alerts go through
 // one internal pump. No original profile or new public network is implied.
 class PersistentSession final {
@@ -96,6 +99,18 @@ public:
   // prepare(); no torrent, synthetic sample, new pump or final receipt is made.
   // create() stays lazy/source-guarded for existing independent API callers.
   std::expected<void, AccountingError> startIdle(const storage::ProfileLease&);
+
+  // Configure before startIdle/admission. No live routing-policy mutation.
+  std::expected<void, storage::Error> configureNetwork(const NetworkPolicy&);
+  // Worker-affine, nonblocking admission/control. The sole poll pump advances
+  // checking, transfer, flush/removal and compatible checkpoints for every hash.
+  std::expected<void, storage::Error> startManaged(const storage::ProfileLease&, const ManagedDownloadOptions&);
+  std::expected<void, storage::Error> pauseManaged(const core::TorrentHash&, bool paused);
+  std::expected<void, storage::Error> queueManaged(const core::TorrentHash&, bool forceStart, bool queued);
+  std::expected<void, storage::Error> stopManaged(const core::TorrentHash&);
+  std::vector<ManagedDownloadStatus> managedDownloads() const;
+  bool managedAvailable() const noexcept;
+  std::expected<void, storage::Error> reorderManaged(std::span<const core::TorrentHash>);
 
   // Stable owner-level observation sink/mailbox is connected outside the ctor.
   // UI callback failure/coalescing must not disable counter retention or sealing.

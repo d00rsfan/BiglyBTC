@@ -7,6 +7,11 @@
 
 #include <QAction>
 #include <QCloseEvent>
+#include <QCheckBox>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QDir>
+#include <QFileDialog>
 #include <QEvent>
 #include <QFormLayout>
 #include <QHeaderView>
@@ -17,6 +22,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QMessageBox>
+#include <QPushButton>
 #include <QSignalBlocker>
 #include <QSortFilterProxyModel>
 #include <QSplitter>
@@ -28,12 +34,32 @@
 #include <QTimer>
 #include <QToolBar>
 #include <QVBoxLayout>
+#include <QUrl>
+#include <QUrlQuery>
 
+#include <algorithm>
 #include <functional>
 #include <limits>
 
 namespace biglybtc::ui {
 namespace {
+bool importPath(const QString& value) {
+  return !value.trimmed().isEmpty() && value.size() <= 4096 && !value.contains(QChar(u'\0'))
+      && QDir::isAbsolutePath(value);
+}
+bool torrentImportFields(const QString& metadata, const QString& destination) {
+  return importPath(metadata) && metadata.endsWith(QStringLiteral(".torrent"), Qt::CaseInsensitive)
+      && importPath(destination);
+}
+bool magnetImportFields(const QString& uri, const QString& destination) {
+  if (uri.size() > 16384 || uri.contains(QChar(u'\0')) || uri.contains(QChar(u'\n'))
+      || uri.contains(QChar(u'\r')) || !importPath(destination)) { return false; }
+  const QUrl parsed(uri, QUrl::StrictMode);
+  if (!parsed.isValid() || parsed.scheme().compare(QStringLiteral("magnet"), Qt::CaseInsensitive) != 0
+      || !parsed.host().isEmpty() || !parsed.path().isEmpty()) { return false; }
+  const QUrlQuery query(parsed);
+  return query.hasQueryItem(QStringLiteral("xt")) && !query.queryItemValue(QStringLiteral("xt")).isEmpty();
+}
 QSortFilterProxyModel* proxy(QTableView* table) {
   return static_cast<QSortFilterProxyModel*>(table->model());
 }
@@ -133,7 +159,27 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   filesTable_->setSortingEnabled(true);
   filesTable_->sortByColumn(0, Qt::AscendingOrder);
   filesTable_->setSelectionBehavior(QAbstractItemView::SelectRows);
-  filesTable_->setSelectionMode(QAbstractItemView::SingleSelection);
+  filesTable_->setSelectionMode(QAbstractItemView::ExtendedSelection);
+  filesTable_->setContextMenuPolicy(Qt::CustomContextMenu);
+  connect(filesTable_, &QTableView::customContextMenuRequested, this, &LibraryWindow::filePopup);
+  connect(filesTable_->selectionModel(), &QItemSelectionModel::selectionChanged, this,
+      [this] { queueDownloadActions(); });
+  connect(filesModel_, &QAbstractItemModel::modelReset, this, [this] { queueDownloadActions(); });
+  connect(filesModel_, &QAbstractItemModel::dataChanged, this, [this] { queueDownloadActions(); });
+  const std::array<QString, 4> policyNames{tr("Normal"), tr("High"), tr("Low"), tr("Do not download")};
+  const std::array<QString, 4> policyIds{QStringLiteral("files-priority-normal"), QStringLiteral("files-priority-high"),
+      QStringLiteral("files-priority-low"), QStringLiteral("files-priority-skip")};
+  const std::array<int, 4> priorities{0, 1, -1, 0};
+  for (std::size_t i = 0; i < filePolicyActions_.size(); ++i) {
+    auto* item = new QAction(policyNames[i], this);
+    item->setObjectName(policyIds[i]);
+    item->setEnabled(false);
+    item->setToolTip(tr("Change selected files after the torrent has stopped."));
+    filePolicyActions_[i] = item;
+    connect(item, &QAction::triggered, this, [this, priority = priorities[i], skipped = i == 3] {
+      dispatchFilePolicy(priority, skipped);
+    });
+  }
   filesTable_->setAlternatingRowColors(true);
   filesTable_->verticalHeader()->hide();
   filesTable_->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
@@ -153,7 +199,9 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     detailTabs_->setTabToolTip(index, tr("This view is not available in the preview yet."));
   }
   connect(detailTabs_, &QTabWidget::currentChanged, this, [this](int index) {
+    QPointer<LibraryWindow> guard(this);
     if (index == 1) { suppressAutomaticDetails_ = false; requestDetails(); }
+    if (guard) { queueDownloadActions(); }
   });
   auto* library = torrentsPage_;
   library->setObjectName(QStringLiteral("classic-my-torrents-page"));
@@ -219,20 +267,73 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     action->setStatusTip(action->toolTip());
     return action;
   };
-  toolbar->addAction(unavailable(file, tr("Add"), QStringLiteral("open"), QStyle::SP_DialogOpenButton));
+  file->setObjectName(QStringLiteral("classic-file-menu"));
+  openTorrent_ = file->addAction(style()->standardIcon(QStyle::SP_DialogOpenButton), tr("Open Torrent File…"));
+  openTorrent_->setObjectName(QStringLiteral("classic-open"));
+  openTorrent_->setShortcut(QKeySequence(QStringLiteral("Ctrl+O")));
+  openTorrent_->setShortcutContext(Qt::WindowShortcut);
+  openTorrent_->setToolTip(tr("Import a torrent file into the current profile."));
+  openTorrent_->setEnabled(false);
+  connect(openTorrent_.data(), &QAction::triggered, this, [this] { openImportDialog(false); });
+  toolbar->addAction(openTorrent_.data());
+  openMagnet_ = file->addAction(tr("Open Magnet Link…"));
+  openMagnet_->setObjectName(QStringLiteral("classic-open-magnet"));
+  openMagnet_->setToolTip(tr("Import a magnet link into the current profile."));
+  openMagnet_->setEnabled(false);
+  connect(openMagnet_.data(), &QAction::triggered, this, [this] { openImportDialog(true); });
   toolbar->addAction(unavailable(tools, tr("Search"), QStringLiteral("search"), QStyle::SP_FileDialogContentsView));
   toolbar->addSeparator();
   toolbar->addAction(unavailable(torrent, tr("Launch"), QStringLiteral("launch"), QStyle::SP_MediaPlay));
-  for (const auto& item : {std::pair{tr("Top"), QStringLiteral("top")}, {tr("Up"), QStringLiteral("up")},
-      {tr("Down"), QStringLiteral("down")}, {tr("Bottom"), QStringLiteral("bottom")}}) {
-    toolbar->addAction(unavailable(torrent, item.first, item.second,
-        item.second == QStringLiteral("top") || item.second == QStringLiteral("up") ? QStyle::SP_ArrowUp : QStyle::SP_ArrowDown));
-  }
+  torrent->setObjectName(QStringLiteral("classic-torrent-menu"));
+  transfers->setObjectName(QStringLiteral("classic-transfers-menu"));
+  auto command = [this, torrent](core::DownloadAction action, const QString& label,
+      const QString& id, QStyle::StandardPixmap icon) {
+    auto* item = torrent->addAction(style()->standardIcon(icon), label);
+    item->setObjectName(QStringLiteral("classic-") + id);
+    item->setEnabled(false);
+    item->setToolTip(tr("Apply %1 to every selected torrent when permitted by the current session.").arg(label));
+    downloadActions_[static_cast<std::size_t>(action)] = item;
+    connect(item, &QAction::triggered, this, [this, action] { dispatchDownload(action); });
+    return item;
+  };
+  toolbar->addAction(command(core::DownloadAction::MoveTop, tr("Top"), QStringLiteral("top"), QStyle::SP_ArrowUp));
+  toolbar->addAction(command(core::DownloadAction::MoveUp, tr("Up"), QStringLiteral("up"), QStyle::SP_ArrowUp));
+  toolbar->addAction(command(core::DownloadAction::MoveDown, tr("Down"), QStringLiteral("down"), QStyle::SP_ArrowDown));
+  toolbar->addAction(command(core::DownloadAction::MoveBottom, tr("Bottom"), QStringLiteral("bottom"), QStyle::SP_ArrowDown));
+  torrent->addSeparator();
+  command(core::DownloadAction::Start, tr("Start"), QStringLiteral("start"), QStyle::SP_MediaPlay);
+  command(core::DownloadAction::Stop, tr("Stop"), QStringLiteral("stop"), QStyle::SP_MediaStop);
+  command(core::DownloadAction::Pause, tr("Pause"), QStringLiteral("pause"), QStyle::SP_MediaPause);
+  command(core::DownloadAction::Resume, tr("Resume"), QStringLiteral("resume"), QStyle::SP_MediaPlay);
+  command(core::DownloadAction::Queue, tr("Queue"), QStringLiteral("queue"), QStyle::SP_ArrowDown);
+  command(core::DownloadAction::ForceStart, tr("Force Start"), QStringLiteral("force-start"), QStyle::SP_MediaPlay);
   toolbar->addSeparator();
-  toolbar->addAction(unavailable(torrent, tr("Start / Stop"), QStringLiteral("start-stop"), QStyle::SP_MediaPlay));
+  startStop_ = torrent->addAction(style()->standardIcon(QStyle::SP_MediaPlay), tr("Start / Stop"));
+  startStop_->setObjectName(QStringLiteral("classic-start-stop"));
+  startStop_->setEnabled(false);
+  startStop_->setToolTip(tr("Start or stop every selected torrent when all permit the same action."));
+  connect(startStop_.data(), &QAction::triggered, this, [this] { dispatchDownloadAlias(false); });
+  toolbar->addAction(startStop_.data());
+  pauseResume_ = torrent->addAction(style()->standardIcon(QStyle::SP_MediaPause), tr("Pause / Resume"));
+  pauseResume_->setObjectName(QStringLiteral("classic-pause-resume"));
+  pauseResume_->setEnabled(false);
+  pauseResume_->setToolTip(tr("Pause or resume every selected torrent when all permit the same action."));
+  connect(pauseResume_.data(), &QAction::triggered, this, [this] { dispatchDownloadAlias(true); });
+  toolbar->addAction(pauseResume_.data());
   toolbar->addAction(unavailable(torrent, tr("Delete"), QStringLiteral("remove"), QStyle::SP_TrashIcon));
-  unavailable(transfers, tr("Start All"), QStringLiteral("start-all"), QStyle::SP_MediaPlay);
-  unavailable(transfers, tr("Stop All"), QStringLiteral("stop-all"), QStyle::SP_MediaStop);
+  auto allCommand = [this, transfers](core::DownloadAction action, const QString& label,
+      const QString& id, QStyle::StandardPixmap icon) {
+    auto* item = transfers->addAction(style()->standardIcon(icon), label);
+    item->setObjectName(QStringLiteral("classic-") + id);
+    item->setEnabled(false);
+    item->setToolTip(tr("Apply to all eligible torrents, including those hidden by the filter."));
+    connect(item, &QAction::triggered, this, [this, action] { dispatchDownload(action, true); });
+    return item;
+  };
+  startAll_ = allCommand(core::DownloadAction::Start, tr("Start All"), QStringLiteral("start-all"), QStyle::SP_MediaPlay);
+  stopAll_ = allCommand(core::DownloadAction::Stop, tr("Stop All"), QStringLiteral("stop-all"), QStyle::SP_MediaStop);
+  bindDownloadMenu(torrent);
+  bindDownloadMenu(transfers);
   auto* statistics = tools->addAction(style()->standardIcon(QStyle::SP_FileDialogDetailedView), tr("&Statistics"));
   statistics->setObjectName(QStringLiteral("classic-statistics"));
   statistics->setShortcut(QKeySequence(QStringLiteral("Ctrl+5")));
@@ -1121,7 +1222,10 @@ void LibraryWindow::setColumnLayoutSaved(ColumnLayoutSavePresentation packet) {
 }
 
 void LibraryWindow::setOfflinePreview(bool offline) {
+  offlinePreview_ = offline;
+  QPointer<LibraryWindow> guard(this);
   previewStatus_->setText(offline ? tr("Offline preview") : tr("Local test"));
+  if (guard) { queueDownloadActions(); }
 }
 bool LibraryWindow::eventFilter(QObject* watched, QEvent* event) {
   if (!updating_ && event->type() == QEvent::FocusIn) {
@@ -1211,7 +1315,327 @@ void LibraryWindow::updateActions() {
       && !activeColumnRequest_ && !pendingColumnRequest_ && !activeColumnSave_ && !activeStatisticsRequest_
       && columnSaveRequest_ != std::numeric_limits<quint64>::max());
   reloadColumns_->setEnabled(!closing_ && columnSession_ != 0 && columnRequest_ != std::numeric_limits<quint64>::max());
+  queueDownloadActions();
 }
+std::optional<DownloadTargets> LibraryWindow::selectedDownloadTargets() const {
+  if (mainTabs_->currentWidget() != torrentsPage_) { return std::nullopt; }
+  const auto selectedRows = activeTable_->selectionModel()->selectedRows(0);
+  if (selectedRows.isEmpty()) { return std::nullopt; }
+  std::vector<int> rows;
+  rows.reserve(static_cast<std::size_t>(selectedRows.size()));
+  for (const auto& selectedRow : selectedRows) {
+    const auto source = proxy(activeTable_)->mapToSource(selectedRow);
+    if (!source.isValid()) { return std::nullopt; }
+    rows.push_back(source.row());
+  }
+  std::sort(rows.begin(), rows.end());
+  if (std::adjacent_find(rows.begin(), rows.end()) != rows.end()) { return std::nullopt; }
+  DownloadTargets result;
+  result.reserve(rows.size());
+  for (const int row : rows) {
+    const auto target = model_->targetAt(row);
+    if (!target) { return std::nullopt; }
+    result.push_back(*target);
+  }
+  return result;
+}
+
+std::optional<DownloadTargets> LibraryWindow::downloadTargets(core::DownloadAction action, bool all) const {
+  const auto bit = downloadActionBit(action);
+  if (bit == 0 || busy_ || closing_ || offlinePreview_ || updating_
+      || downloadActionRevision_ == std::numeric_limits<quint64>::max()
+      || downloadMenuToken_ == std::numeric_limits<quint64>::max()) { return std::nullopt; }
+  if (downloadMenuOpen_ && downloadMenuRevision_ != model_->revision()) { return std::nullopt; }
+  if (all) {
+    DownloadTargets result;
+    for (int row = 0; row < model_->rowCount(); ++row) {
+      if ((model_->permittedActionsAt(row) & bit) == 0) { continue; }
+      const auto target = model_->targetAt(row);
+      // An eligible but ambiguous identity invalidates the whole submission.
+      if (!target) { return std::nullopt; }
+      result.push_back(*target);
+    }
+    return result.empty() ? std::nullopt : std::optional{std::move(result)};
+  }
+  auto targets = selectedDownloadTargets();
+  if (!targets || (downloadMenuOpen_ && targets != downloadMenuTargets_)) { return std::nullopt; }
+  for (const auto& target : *targets) {
+    if ((model_->permittedActions(target) & bit) == 0) { return std::nullopt; }
+  }
+  return targets;
+}
+
+void LibraryWindow::dispatchDownload(core::DownloadAction action, bool all) {
+  // Never dispatch from stale visual state or from a reentrant action callback.
+  if (downloadDispatching_ || (!all && renderedDownloadRevision_ != downloadActionRevision_)) { return; }
+  auto targets = downloadTargets(action, all);
+  if (!targets) { return; }
+  downloadDispatching_ = true;
+  QPointer<LibraryWindow> guard(this);
+  emit downloadActionRequested(std::move(*targets), action);
+  if (guard) { guard->downloadDispatching_ = false; }
+}
+
+void LibraryWindow::dispatchDownloadAlias(bool pauseResume) {
+  const auto choice = pauseResume ? pauseResumeChoice_ : startStopChoice_;
+  if (choice) { dispatchDownload(*choice); }
+}
+
+void LibraryWindow::bindDownloadMenu(QMenu* menu) {
+  connect(menu, &QMenu::aboutToShow, this, [this] {
+    if (downloadMenuToken_ == std::numeric_limits<quint64>::max()) {
+      renderedDownloadRevision_ = 0;
+      return;
+    }
+    ++downloadMenuToken_;
+    downloadMenuOpen_ = true;
+    downloadMenuRevision_ = model_->revision();
+    downloadMenuTargets_ = selectedDownloadTargets();
+    queueDownloadActions();
+  });
+  connect(menu, &QMenu::aboutToHide, this, [this] {
+    const auto token = downloadMenuToken_;
+    // QAction::triggered may follow aboutToHide; keep its captured intent until
+    // the menu's synchronous activation has returned to the event loop.
+    QMetaObject::invokeMethod(this, [this, token] {
+      if (token != downloadMenuToken_) { return; }
+      downloadMenuOpen_ = false;
+      downloadMenuTargets_.reset();
+      queueDownloadActions();
+    }, Qt::QueuedConnection);
+  });
+}
+
+void LibraryWindow::queueDownloadActions() {
+  if (downloadActionRevision_ == std::numeric_limits<quint64>::max()) {
+    renderedDownloadRevision_ = 0;
+    return;
+  }
+  ++downloadActionRevision_;
+  if (downloadActionsQueued_) { return; }
+  downloadActionsQueued_ = true;
+  QMetaObject::invokeMethod(this, &LibraryWindow::updateDownloadActions, Qt::QueuedConnection);
+}
+
+void LibraryWindow::updateDownloadActions() {
+  downloadActionsQueued_ = false;
+  const auto revision = downloadActionRevision_;
+  const auto modelRevision = model_->revision();
+  const auto fileSource = filesModel_->presentation();
+  QPointer<LibraryWindow> guard(this);
+  const auto current = [&] {
+    return guard && guard->downloadActionRevision_ == revision
+        && guard->model_->revision() == modelRevision && guard->filesModel_->presentation() == fileSource;
+  };
+  std::array<bool, 10> enabled{};
+  for (std::size_t i = 0; i < enabled.size(); ++i) {
+    enabled[i] = downloadTargets(static_cast<core::DownloadAction>(i), false).has_value();
+  }
+  const auto startStop = enabled[static_cast<std::size_t>(core::DownloadAction::Stop)]
+      ? std::optional{core::DownloadAction::Stop}
+      : enabled[static_cast<std::size_t>(core::DownloadAction::Start)]
+          ? std::optional{core::DownloadAction::Start} : std::nullopt;
+  const auto pauseResume = enabled[static_cast<std::size_t>(core::DownloadAction::Pause)]
+      ? std::optional{core::DownloadAction::Pause}
+      : enabled[static_cast<std::size_t>(core::DownloadAction::Resume)]
+          ? std::optional{core::DownloadAction::Resume} : std::nullopt;
+  const bool startAll = downloadTargets(core::DownloadAction::Start, true).has_value();
+  const bool stopAll = downloadTargets(core::DownloadAction::Stop, true).has_value();
+  const bool filesEditable = filePolicySelection().has_value();
+  const bool importsAllowed = canImport();
+  // Publish only from this queued entry point. A QAction::changed observer may
+  // delete/rebind the Window; no old selection/model caller resumes afterward.
+  for (std::size_t i = 0; i < enabled.size(); ++i) {
+    const auto item = downloadActions_[i];
+    if (item) { item->setEnabled(enabled[i]); }
+    if (!current()) { return; }
+  }
+  if (startAll_) { startAll_->setEnabled(startAll); }
+  if (!current()) { return; }
+  if (stopAll_) { stopAll_->setEnabled(stopAll); }
+  if (!current()) { return; }
+  if (startStop_) { startStop_->setEnabled(startStop.has_value()); }
+  if (!current()) { return; }
+  if (startStop_) { startStop_->setText(startStop == core::DownloadAction::Stop ? tr("Stop")
+      : startStop == core::DownloadAction::Start ? tr("Start") : tr("Start / Stop")); }
+  if (!current()) { return; }
+  if (pauseResume_) { pauseResume_->setEnabled(pauseResume.has_value()); }
+  if (!current()) { return; }
+  if (pauseResume_) { pauseResume_->setText(pauseResume == core::DownloadAction::Pause ? tr("Pause")
+      : pauseResume == core::DownloadAction::Resume ? tr("Resume") : tr("Pause / Resume")); }
+  if (!current()) { return; }
+  for (const auto& item : filePolicyActions_) {
+    if (item) { item->setEnabled(filesEditable); }
+    if (!current()) { return; }
+  }
+  if (openTorrent_) { openTorrent_->setEnabled(importsAllowed); }
+  if (!current()) { return; }
+  if (openMagnet_) { openMagnet_->setEnabled(importsAllowed); }
+  if (!current()) { return; }
+  startStopChoice_ = startStop;
+  pauseResumeChoice_ = pauseResume;
+  renderedDownloadRevision_ = revision;
+}
+
+std::optional<LibraryWindow::FilePolicySelection> LibraryWindow::filePolicySelection() const {
+  if (busy_ || closing_ || offlinePreview_ || updating_ || mainTabs_->currentWidget() != torrentsPage_
+      || detailTabs_->currentIndex() != 1) { return std::nullopt; }
+  const auto target = selected();
+  const auto source = filesModel_->presentation();
+  if (!target || !model_->accepts(*target) || !source || !source->canEdit || source->target != *target
+      || filesModel_->target() != target) { return std::nullopt; }
+  const auto rows = filesTable_->selectionModel()->selectedRows(0);
+  if (rows.isEmpty()) { return std::nullopt; }
+  FileIndices indices;
+  indices.reserve(static_cast<std::size_t>(rows.size()));
+  for (const auto& row : rows) {
+    const auto sourceRow = filesProxy_->mapToSource(row);
+    if (!sourceRow.isValid() || !filesModel_->editableAt(sourceRow.row())) { return std::nullopt; }
+    const auto original = filesModel_->originalIndex(sourceRow.row());
+    if (!original) { return std::nullopt; }
+    indices.push_back(*original);
+  }
+  std::sort(indices.begin(), indices.end());
+  if (std::adjacent_find(indices.begin(), indices.end()) != indices.end()) { return std::nullopt; }
+  FilePolicySelection result{*target, std::move(indices), source};
+  if (fileMenuOpen_ && result != fileMenuSelection_) { return std::nullopt; }
+  return result;
+}
+
+void LibraryWindow::dispatchFilePolicy(int priority, bool skipped) {
+  if (downloadDispatching_ || renderedDownloadRevision_ != downloadActionRevision_) { return; }
+  auto selectedFiles = filePolicySelection();
+  if (!selectedFiles) { return; }
+  downloadDispatching_ = true;
+  QPointer<LibraryWindow> guard(this);
+  emit filePolicyRequested(selectedFiles->target, std::move(selectedFiles->indices), priority, skipped);
+  if (guard) { guard->downloadDispatching_ = false; }
+}
+
+void LibraryWindow::filePopup(const QPoint& point) {
+  if (fileMenuOpen_) { return; }
+  const auto index = filesTable_->indexAt(point);
+  QPointer<LibraryWindow> guard(this);
+  if (!index.isValid()) { filesTable_->selectionModel()->clearSelection(); }
+  else if (!filesTable_->selectionModel()->isSelected(index)) { filesTable_->setCurrentIndex(index); }
+  if (!guard) { return; }
+  // Retain only the already owned immutable file frame and exact original IDs.
+  // New details, a new Target or selection changes invalidate this menu intent.
+  fileMenuSelection_ = filePolicySelection();
+  fileMenuOpen_ = true;
+  queueDownloadActions();
+  QPointer<QMenu> menu(new QMenu(this));
+  menu->setObjectName(QStringLiteral("files-priority-context"));
+  for (const auto& item : filePolicyActions_) { if (item) { menu->addAction(item.data()); } }
+  menu->exec(filesTable_->viewport()->mapToGlobal(point));
+  if (!guard) { return; }
+  if (menu) { menu->deleteLater(); }
+  fileMenuOpen_ = false;
+  fileMenuSelection_.reset();
+  queueDownloadActions();
+}
+
+bool LibraryWindow::canImport() const {
+  return columnSession_ != 0 && !busy_ && !closing_ && !offlinePreview_;
+}
+
+bool LibraryWindow::submitTorrentImport(QString metadata, QString destination, bool start) {
+  if (!canImport() || downloadDispatching_ || !torrentImportFields(metadata, destination)) { return false; }
+  downloadDispatching_ = true;
+  QPointer<LibraryWindow> guard(this);
+  emit torrentImportRequested(std::move(metadata), std::move(destination), start);
+  if (guard) { guard->downloadDispatching_ = false; }
+  return true;
+}
+
+bool LibraryWindow::submitMagnetImport(QString uri, QString destination) {
+  if (!canImport() || downloadDispatching_ || !magnetImportFields(uri, destination)) { return false; }
+  downloadDispatching_ = true;
+  QPointer<LibraryWindow> guard(this);
+  emit magnetImportRequested(std::move(uri), std::move(destination));
+  if (guard) { guard->downloadDispatching_ = false; }
+  return true;
+}
+
+void LibraryWindow::openImportDialog(bool magnet) {
+  if (!canImport() || downloadDispatching_) { return; }
+  const auto session = columnSession_;
+  QPointer<LibraryWindow> guard(this);
+  QPointer<QDialog> dialog = new QDialog(this);
+  dialog->setObjectName(magnet ? QStringLiteral("magnet-import-dialog") : QStringLiteral("torrent-import-dialog"));
+  dialog->setWindowTitle(magnet ? tr("Open Magnet Link") : tr("Open Torrent File"));
+  auto* layout = new QVBoxLayout(dialog);
+  auto* form = new QFormLayout;
+  QPointer<QLineEdit> source = new QLineEdit(dialog);
+  source->setObjectName(QStringLiteral("import-source"));
+  source->setMaxLength(magnet ? 16384 : 4096);
+  source->setAccessibleName(magnet ? tr("Magnet link") : tr("Torrent file"));
+  if (magnet) {
+    source->setPlaceholderText(QStringLiteral("magnet:?xt=urn:btih:…"));
+    form->addRow(tr("Magnet link:"), source.data());
+  } else {
+    auto* row = new QWidget(dialog);
+    auto* line = new QHBoxLayout(row); line->setContentsMargins(0, 0, 0, 0);
+    auto* browse = new QPushButton(tr("Browse…"), row);
+    browse->setObjectName(QStringLiteral("import-browse-torrent"));
+    line->addWidget(source.data(), 1); line->addWidget(browse);
+    form->addRow(tr("Torrent file:"), row);
+    connect(browse, &QPushButton::clicked, dialog.data(), [dialog, source] {
+      if (!dialog || !source) { return; }
+      const auto path = QFileDialog::getOpenFileName(dialog.data(), tr("Open Torrent File"), {}, tr("Torrent files (*.torrent)"));
+      if (dialog && source && !path.isEmpty()) { source->setText(path); }
+    });
+  }
+  auto* row = new QWidget(dialog);
+  auto* line = new QHBoxLayout(row); line->setContentsMargins(0, 0, 0, 0);
+  QPointer<QLineEdit> destination = new QLineEdit(row);
+  destination->setObjectName(QStringLiteral("import-destination"));
+  destination->setMaxLength(4096); destination->setAccessibleName(tr("Download directory"));
+  auto* browse = new QPushButton(tr("Browse…"), row);
+  browse->setObjectName(QStringLiteral("import-browse-destination"));
+  line->addWidget(destination.data(), 1); line->addWidget(browse);
+  form->addRow(tr("Download directory:"), row);
+  layout->addLayout(form);
+  QPointer<QCheckBox> start;
+  if (!magnet) {
+    start = new QCheckBox(tr("Start download"), dialog);
+    start->setObjectName(QStringLiteral("import-start")); start->setChecked(true);
+    layout->addWidget(start.data());
+  }
+  auto* buttons = new QDialogButtonBox(QDialogButtonBox::Open | QDialogButtonBox::Cancel, dialog);
+  layout->addWidget(buttons);
+  QPointer<QPushButton> open = buttons->button(QDialogButtonBox::Open);
+  open->setEnabled(false);
+  auto validate = [dialog, source, destination, open, magnet] {
+    if (!dialog || !source || !destination || !open) { return; }
+    const bool valid = magnet ? magnetImportFields(source->text(), destination->text())
+        : torrentImportFields(source->text(), destination->text());
+    open->setEnabled(valid);
+  };
+  // Button property callbacks occur after the line edit's own setter returns.
+  connect(source.data(), &QLineEdit::textChanged, dialog.data(), validate, Qt::QueuedConnection);
+  connect(destination.data(), &QLineEdit::textChanged, dialog.data(), validate, Qt::QueuedConnection);
+  connect(browse, &QPushButton::clicked, dialog.data(), [dialog, destination] {
+    if (!dialog || !destination) { return; }
+    const auto path = QFileDialog::getExistingDirectory(dialog.data(), tr("Download directory"));
+    if (dialog && destination && !path.isEmpty()) { destination->setText(path); }
+  });
+  connect(buttons, &QDialogButtonBox::accepted, dialog.data(), &QDialog::accept);
+  connect(buttons, &QDialogButtonBox::rejected, dialog.data(), &QDialog::reject);
+  dialog->resize(640, dialog->sizeHint().height());
+  const int result = dialog->exec();
+  QString sourceValue, destinationValue;
+  bool startValue = false;
+  if (dialog && result == QDialog::Accepted && source && destination) {
+    sourceValue = source->text(); destinationValue = destination->text();
+    startValue = start && start->isChecked();
+  }
+  if (dialog) { delete dialog.data(); }
+  if (!guard || result != QDialog::Accepted || columnSession_ != session) { return; }
+  if (magnet) { submitMagnetImport(std::move(sourceValue), std::move(destinationValue)); }
+  else { submitTorrentImport(std::move(sourceValue), std::move(destinationValue), startValue); }
+}
+
 void LibraryWindow::selectionChanged() {
   if (updating_) { return; }
   updateActions();
@@ -1398,8 +1822,13 @@ void LibraryWindow::popup(QTableView* table, const QPoint& point) {
   contextOpen_ = true;
   updateActions();
   QPointer<QMenu> menu(new QMenu(this));
+  menu->setObjectName(QStringLiteral("classic-torrent-context"));
+  bindDownloadMenu(menu);
   menu->addAction(findChild<QAction*>(QStringLiteral("classic-launch")));
-  menu->addAction(findChild<QAction*>(QStringLiteral("classic-start-stop")));
+  for (const auto& item : downloadActions_) { if (item) { menu->addAction(item.data()); } }
+  menu->addSeparator();
+  menu->addAction(startStop_.data());
+  menu->addAction(pauseResume_.data());
   menu->addAction(findChild<QAction*>(QStringLiteral("classic-remove")));
   menu->addSeparator();
   menu->addAction(continue_);

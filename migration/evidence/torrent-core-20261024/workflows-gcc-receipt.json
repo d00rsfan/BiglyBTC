@@ -1,0 +1,83 @@
+{
+  "case": "workflows-gcc",
+  "build": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+  "tests": [
+    "library-action-ui",
+    "network-policy",
+    "managed-download",
+    "managed-tracker",
+    "managed-storage",
+    "torrent-intake",
+    "file-policy-commands",
+    "file-priority-ui",
+    "torrent-import-ui"
+  ],
+  "commands": [
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "-S",
+        "preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/install;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr;/home/yurii/Java/BiglyBTC/build/dependencies/country/sysroot/usr;/opt/Qt/6.12.0/gcc_64",
+        "-DBIGLYBTC_COUNTRY_MMDB_FIXTURE=/home/yurii/Java/BiglyBTC/build/dependencies/country/GeoIP2-Country-Test.mmdb"
+      ],
+      "exit": 0,
+      "seconds": 3.17,
+      "log": "workflows-gcc-configure.txt"
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "--parallel",
+        "3",
+        "--target",
+        "biglybtc-library-action-ui-tests",
+        "biglybtc-network-policy-tests",
+        "biglybtc-managed-download-tests",
+        "biglybtc-managed-tracker-tests",
+        "biglybtc-managed-storage-tests",
+        "biglybtc-torrent-intake-tests",
+        "biglybtc-file-policy-commands-tests",
+        "biglybtc-file-priority-ui-tests",
+        "biglybtc-torrent-import-ui-tests",
+        "BiglyBTC",
+        "--",
+        "-k",
+        "0"
+      ],
+      "exit": 0,
+      "seconds": 197.86,
+      "log": "workflows-gcc-build.txt"
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "-R",
+        "^(library\\-action\\-ui|network\\-policy|managed\\-download|managed\\-tracker|managed\\-storage|torrent\\-intake|file\\-policy\\-commands|file\\-priority\\-ui|torrent\\-import\\-ui)$",
+        "--no-tests=error",
+        "--output-on-failure",
+        "--output-junit",
+        "/home/yurii/Java/BiglyBT/build/torrent-workflows-20261024/workflows-gcc.xml"
+      ],
+      "exit": 0,
+      "seconds": 30.27,
+      "log": "workflows-gcc-tests.txt"
+    }
+  ],
+  "source_manifest_sha256": "0ea7a6096778c381b1349e3f4630f9cdc23d0ff8f4639efffae1dbb1a0f76305"
+}

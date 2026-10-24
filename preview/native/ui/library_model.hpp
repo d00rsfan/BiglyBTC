@@ -1,5 +1,7 @@
 #pragma once
 
+#include <biglybtc/download_action.hpp>
+
 #include <QAbstractTableModel>
 #include <QHash>
 #include <QMetaType>
@@ -16,6 +18,14 @@ struct Target {
   quint64 generation = 0;
   bool operator==(const Target&) const = default;
 };
+using DownloadTargets = std::vector<Target>;
+using FileIndices = std::vector<int>;
+inline constexpr quint16 AllDownloadActions = (quint16{1} << 10) - 1;
+constexpr quint16 downloadActionBit(core::DownloadAction action) noexcept {
+  const auto ordinal = static_cast<unsigned>(action);
+  return ordinal < 10 ? static_cast<quint16>(quint16{1} << ordinal) : quint16{0};
+}
+
 struct FileItem {
   int index;
   QString path;
@@ -27,6 +37,8 @@ struct FileItem {
 struct FileDetails {
   Target target;
   std::vector<FileItem> items;
+  // Host grants editing only after the target has no retained engine handle.
+  bool canEdit = false;
 };
 using FilePresentation = std::shared_ptr<const FileDetails>;
 struct SavedSelectedValues {
@@ -48,6 +60,8 @@ struct LibraryItem {
   bool canContinue = false;
   std::optional<qint64> savedPosition{};
   std::optional<SavedSelectedValues> savedSelected{};
+  // Current Host-authorized actions. Saved state names grant no permissions.
+  quint16 actionMask = 0;
 };
 struct LibraryPresentation {
   quint64 revision = 0;
@@ -89,6 +103,9 @@ public:
   bool accepts(const Target& target) const;
   bool canContinue(const Target& target) const;
   bool hasDetails(const Target& target) const;
+  quint64 revision() const noexcept { return revision_; }
+  quint16 permittedActions(const Target&) const;
+  quint16 permittedActionsAt(int row) const;
 private:
   struct Row {
     LibraryItem item;
@@ -102,6 +119,9 @@ private:
 } // namespace biglybtc::ui
 
 Q_DECLARE_METATYPE(biglybtc::ui::Target)
+Q_DECLARE_METATYPE(biglybtc::ui::DownloadTargets)
+Q_DECLARE_METATYPE(biglybtc::ui::FileIndices)
+Q_DECLARE_METATYPE(biglybtc::core::DownloadAction)
 Q_DECLARE_METATYPE(biglybtc::ui::Presentation)
 Q_DECLARE_METATYPE(biglybtc::ui::Telemetry)
 Q_DECLARE_METATYPE(biglybtc::ui::Details)

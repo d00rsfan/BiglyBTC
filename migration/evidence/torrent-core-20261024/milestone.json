@@ -1,0 +1,29 @@
+{
+  "state": "in_progress",
+  "chapter": "everyday-torrent-workflows",
+  "native_base": "14232b346e7dc70d45e8a41fee1746244a080b46",
+  "upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "libtorrent_source": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "gcc_suites_passed_current_batch": 9,
+  "prior_persistent_regressions_passed": 4,
+  "prior_saved_commands_passed": 1,
+  "compiler": "GCC16",
+  "qt": "6.12.0",
+  "scope": [
+    "persistent multi-torrent ownership and asynchronous controls",
+    "original downloads.config intents and queue moves",
+    "linear payload preparation and compatible partial/full checkpoint",
+    "normal network settings and owned HTTP/UDP tracker discovery",
+    "journaled .torrent import and stopped-file priorities",
+    "classic shared commands and import/file dialogs"
+  ],
+  "remaining": [
+    "actual magnet metadata resolution and Java-compatible recovery",
+    "actual native-to-owned-peer seeding qualification",
+    "generated Java/native/Java handoff",
+    "combined Clang/sanitizer/hosted/private-runtime boundary"
+  ],
+  "whole_chapter_complete": false,
+  "portable_dist_changed": false,
+  "new_Java_runs": 0
+}

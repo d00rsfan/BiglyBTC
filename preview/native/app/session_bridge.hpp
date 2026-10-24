@@ -23,6 +23,7 @@
 #include <functional>
 #include <atomic>
 #include <mutex>
+#include <map>
 
 class QTimer;
 
@@ -41,6 +42,10 @@ public:
   explicit SessionBridge(QObject* parent = nullptr, CountryProviderFactory = {}, AzureusServiceFactory = {});
   ~SessionBridge() override;
   bool open(std::filesystem::path profile, unsigned short ownedPeerPort);
+  bool openNormal(std::filesystem::path profile);
+  bool downloadAction(ui::DownloadTargets, core::DownloadAction);
+  bool torrentImport(QString metadata, QString destination, bool start);
+  bool filePolicy(ui::Target, ui::FileIndices, int priority, bool skipped);
   bool refresh();
   bool savedServices(quint64 request);
   bool statistics(quint64 session, quint64 request);
@@ -118,7 +123,7 @@ private:
   bool closingSession_ = false;
   bool profileClosed_ = false; // GUI-only: closed admission differs from never-opened failure routing.
   std::mutex progressMutex_;
-  std::optional<ui::Telemetry> latestProgress_;
+  std::map<QString, ui::Telemetry> latestProgress_;
   bool deliveryQueued_ = false;
   std::optional<ui::EngineStatisticsPresentation> latestEngineStatistics_;
   bool engineDeliveryQueued_ = false;

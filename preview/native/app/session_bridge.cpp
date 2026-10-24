@@ -1,3 +1,7 @@
+#include "torrent_intake.hpp"
+#include "file_policy_commands.hpp"
+#include "library_commands.hpp"
+#include "network_policy.hpp"
 #include "session_bridge.hpp"
 #include "owned_azureus_service.hpp"
 #include "owned_dht_accounting.hpp"
@@ -28,6 +32,9 @@
 #include <limits>
 #include <bit>
 #include <chrono>
+#include <algorithm>
+#include <array>
+#include <QStringList>
 #include <map>
 #include <set>
 #include <stdexcept>
@@ -138,6 +145,23 @@ ui::SavedServiceResult<Snapshot> savedResult(std::expected<View, storage::Error>
   result.state = ui::SavedPageState::Ready;
   return result;
 }
+QString managedState(engine::ManagedPhase state) {
+  switch (state) {
+    case engine::ManagedPhase::Checking: return SessionBridge::tr("Checking");
+    case engine::ManagedPhase::Queued: return SessionBridge::tr("Queued");
+    case engine::ManagedPhase::Downloading: return SessionBridge::tr("Downloading");
+    case engine::ManagedPhase::Seeding: return SessionBridge::tr("Seeding");
+    case engine::ManagedPhase::Paused: return SessionBridge::tr("Paused");
+    case engine::ManagedPhase::Stopping: return SessionBridge::tr("Stopping");
+    case engine::ManagedPhase::Stopped: return SessionBridge::tr("Stopped");
+    case engine::ManagedPhase::Failed: return SessionBridge::tr("Error");
+  }
+  return {};
+}
+constexpr quint16 actionBit(core::DownloadAction value) {
+  const auto ordinal = static_cast<unsigned int>(value);
+  return ordinal < 10 ? static_cast<quint16>(1U << ordinal) : quint16{0};
+}
 core::TorrentHash identity(const ui::Target& target) {
   const auto hex = target.hash.toLatin1();
   const auto bytes = QByteArray::fromHex(hex);
@@ -152,6 +176,10 @@ struct SessionBridge::Host {
   struct Known { QString name; std::optional<qint64> bytes{}; };
   std::filesystem::path profile;
   unsigned short peerPort;
+  bool normalNetwork = false;
+  std::map<std::string, engine::ManagedPhase> lastManagedPhases;
+  std::map<std::string, storage::Error> admissionFailures;
+  std::vector<storage::LibraryCompletionPool> movePools;
   storage::ProfileLease lease;
   // Declared after lease: affine engine destruction/join precedes lease release.
   std::unique_ptr<engine::PersistentSession> engine{};
@@ -222,6 +250,23 @@ struct SessionBridge::Host {
     std::set<std::string> pauses;
     for (const auto& pause : source.pauses) { pauses.insert(pause.hash.hex()); }
     for (const auto& item : source.items) { if (item.saved.hash) { ++counts[item.saved.hash->hex()]; } }
+    std::map<std::string, engine::ManagedDownloadStatus> live;
+    if (engine) { for (auto& item : engine->managedDownloads()) { live.emplace(item.hash.hex(), std::move(item)); } }
+    movePools.clear();
+    std::array<std::set<std::int64_t>, 2> poolPositions;
+    bool classified = true;
+    for (const auto& item : source.items) {
+      if (!item.saved.hash || !item.saved.position || counts[item.saved.hash->hex()] != 1) { classified = false; break; }
+      const auto found = live.find(item.saved.hash->hex());
+      if (found == live.end() || !found->second.checked || found->second.failure) { classified = false; break; }
+      const bool complete = found->second.selectedComplete;
+      if (!poolPositions[complete ? 1 : 0].insert(*item.saved.position).second) { classified = false; break; }
+      movePools.push_back({*item.saved.hash, complete});
+    }
+    for (const auto& pool : poolPositions) {
+      if (!pool.empty() && (*pool.begin() != 1 || *pool.rbegin() != static_cast<std::int64_t>(pool.size()))) { classified = false; }
+    }
+    if (!classified) { movePools.clear(); }
     currentHashes.clear();
     result->items.reserve(source.items.size());
     for (const auto& row : source.items) {
@@ -252,11 +297,31 @@ struct SessionBridge::Host {
       const bool unique = !hash.empty() && counts[hash] == 1;
       if (unique) { currentHashes.insert(hash); }
       const auto key = unique ? hash : hash + ":" + std::to_string(saved.sourceIndex);
+      quint16 actions = 0;
+      const auto active = live.find(hash);
+      const bool retained = active != live.end() && active->second.retained;
+      const bool retiring = retained && (active->second.phase == engine::ManagedPhase::Stopping || active->second.failure);
+      if (retained) { state = managedState(active->second.phase); }
+      if (admissionFailures.contains(hash) || (active != live.end() && active->second.failure)) { state = SessionBridge::tr("Error"); }
+      if (engine && engine->managedAvailable() && unique && saved.persistent && !retiring) {
+        if (!retained || paused) { actions |= actionBit(core::DownloadAction::Start); }
+        if (!stopped || retained || paused) { actions |= actionBit(core::DownloadAction::Stop); }
+        if (!paused && !stopped) { actions |= actionBit(core::DownloadAction::Pause); }
+        if (paused) { actions |= actionBit(core::DownloadAction::Resume); }
+        if (!saved.forceStart) { actions |= actionBit(core::DownloadAction::ForceStart); }
+        actions |= actionBit(core::DownloadAction::Queue);
+        if (!movePools.empty()) {
+          actions |= actionBit(core::DownloadAction::MoveTop) | actionBit(core::DownloadAction::MoveUp)
+              | actionBit(core::DownloadAction::MoveDown) | actionBit(core::DownloadAction::MoveBottom);
+        }
+      }
+      auto completed = saved.completedBytes && *saved.completedBytes >= 0 ? saved.completedBytes : std::nullopt;
+      if (retained) { completed = active->second.completed; size = active->second.bytes; }
       result->items.push_back({.key = text(key), .hash = text(hash), .name = name, .state = state,
-          .bytes = size, .completed = saved.completedBytes && *saved.completedBytes >= 0 ? saved.completedBytes : std::nullopt,
+          .bytes = size, .completed = completed,
           .received = saved.downloaded, .sent = saved.uploaded,
-          .canContinue = peerPort != 0 && unique && saved.persistent && !stopped && !paused,
-          .savedPosition = saved.position, .savedSelected = std::move(savedSelected)});
+          .canContinue = peerPort != 0 && unique && saved.persistent && !stopped && !paused && !retained,
+          .savedPosition = saved.position, .savedSelected = std::move(savedSelected), .actionMask = actions});
     }
     lastSnapshot = result;
     return result;
@@ -266,6 +331,9 @@ struct SessionBridge::Host {
 SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory)
     : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)) {
   qRegisterMetaType<ui::Target>();
+  qRegisterMetaType<ui::DownloadTargets>();
+  qRegisterMetaType<ui::FileIndices>();
+  qRegisterMetaType<core::DownloadAction>();
   qRegisterMetaType<ui::Presentation>();
   qRegisterMetaType<ui::Telemetry>();
   qRegisterMetaType<ui::Details>();
@@ -326,7 +394,32 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
     auto poll = worker_.submit([this](std::stop_token stop) -> core::WorkResult {
       if (!stop.stop_requested() && host_) {
         publishAzureus(); // Consume older RTT receipts before advancing source rate buckets.
-        if (host_->engine) { static_cast<void>(host_->engine->poll()); tickAccounting(); }
+        if (host_->engine) {
+          static_cast<void>(host_->engine->poll()); tickAccounting();
+          auto current = host_->engine->managedDownloads();
+          bool changed = current.size() != host_->lastManagedPhases.size();
+          for (const auto& item : current) {
+            auto [prior, added] = host_->lastManagedPhases.emplace(item.hash.hex(), item.phase);
+            changed = changed || added || prior->second != item.phase;
+            prior->second = item.phase;
+          }
+          if (changed) {
+            const auto snapshot = host_->query(stop);
+            const auto session = host_->columnLayoutSession;
+            publishManualTags();
+            QMetaObject::invokeMethod(this, [this, snapshot, session] {
+              if (!profileClosed_ && session == publishedColumnLayoutSession_) { emit snapshotReady(snapshot); }
+            }, Qt::QueuedConnection);
+          }
+          else {
+            for (const auto& item : current) {
+              if (host_->currentHashes.contains(item.hash.hex()) && item.phase != engine::ManagedPhase::Stopped) {
+                progress({{text(item.hash.hex()), host_->revision}, item.completed,
+                    item.downloadRate, item.uploadRate, managedState(item.phase)});
+              }
+            }
+          }
+        }
       }
       return {};
     });
@@ -420,6 +513,7 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
   return dispatch([this, profile = std::move(profile), ownedPeerPort](std::stop_token stop) {
     if (host_) { throw Failure{{storage::ErrorCode::Conflict, "A profile is already open"}}; }
     auto lease = take(storage::ProfileLease::acquire(profile));
+    static_cast<void>(take(storage::recoverTorrentIntake(lease)));
     const auto session = reserveColumnLayoutSession();
     host_ = std::make_unique<Host>(profile, ownedPeerPort, std::move(lease), session);
     const auto snapshot = host_->query(stop); // Validate the profile before optional engine startup.
@@ -435,8 +529,157 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
       if (failure.error.code == storage::ErrorCode::Cancelled) { throw; }
       startupFailure = tr("Live statistics unavailable: %1").arg(text(failure.error.message));
     }
-    ready(snapshot, std::move(startupFailure));
+    ready(host_->engine ? host_->query(stop) : snapshot, std::move(startupFailure));
     publishAzureus(); // Posted after the profile identity; independent of the torrent engine.
+  });
+}
+bool SessionBridge::openNormal(std::filesystem::path profile) {
+  return dispatch([this, profile = std::move(profile)](std::stop_token stop) {
+    if (host_) { throw Failure{{storage::ErrorCode::Conflict, "A profile is already open"}}; }
+    auto lease = take(storage::ProfileLease::acquire(profile));
+    host_ = std::make_unique<Host>(profile, 0, std::move(lease), reserveColumnLayoutSession());
+    host_->normalNetwork = true;
+    static_cast<void>(take(storage::recoverTorrentIntake(host_->lease)));
+    auto inventory = storage::ConfigFile::load(host_->lease, "downloads.config");
+    if (!inventory && inventory.error().code == storage::ErrorCode::Missing) {
+      static_cast<void>(take(storage::ConfigFile::createMissing(host_->lease, "downloads.config", "d9:downloadslee")));
+    } else if (!inventory) { throw Failure{inventory.error()}; }
+    static_cast<void>(host_->query(stop));
+    host_->dhtAccounting.emplace(false);
+    initializePersistentOwner(stop);
+    if (!host_->engine) { throw Failure{{storage::ErrorCode::Unsupported, "This build lacks a qualified engine runtime"}}; }
+    const auto source = take(storage::readLibraryView(host_->lease));
+    std::set<std::string> paused;
+    for (const auto& pause : source.pauses) { paused.insert(pause.hash.hex()); }
+    for (const auto& item : source.items) {
+      checkpoint(stop);
+      const auto& saved = item.saved;
+      if (!saved.hash || !saved.persistent || saved.startup == core::StartupState::Stopped
+          || paused.contains(saved.hash->hex()) || !host_->currentHashes.contains(saved.hash->hex())) { continue; }
+      auto started = host_->engine->startManaged(host_->lease,
+          {*saved.hash, 0, saved.forceStart, saved.startup == core::StartupState::Queued});
+      if (!started) { host_->admissionFailures.insert_or_assign(saved.hash->hex(), started.error()); }
+    }
+    ready(host_->query(stop), host_->admissionFailures.empty() ? QString{} : tr("Some torrents require attention; saved data was preserved"));
+  });
+}
+bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAction action) {
+  if (profileClosed_ || targets.empty()) { return false; }
+  return dispatch([this, targets = std::move(targets), action](std::stop_token stop) {
+    if (!host_ || !host_->engine || !host_->lastSnapshot) {
+      throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
+    }
+    if (take(storage::recoverTorrentIntake(host_->lease))) {
+      throw Failure{{storage::ErrorCode::Conflict, "Recovered a pending torrent import; library refreshed"}};
+    }
+    // Validate the entire UI selection before any saved intent or engine effect.
+    std::set<std::string> unique;
+    std::vector<core::TorrentHash> hashes;
+    for (const auto& target : targets) {
+      checkpoint(stop); host_->accepts(target);
+      auto hash = identity(target);
+      if (!unique.insert(hash.hex()).second) { throw Failure{{storage::ErrorCode::Conflict, "Duplicate download selection"}}; }
+      const auto row = std::ranges::find_if(host_->lastSnapshot->items, [&](const auto& value) { return value.hash == target.hash; });
+      if (row == host_->lastSnapshot->items.end() || !(row->actionMask & actionBit(action))) {
+        throw Failure{{storage::ErrorCode::Conflict, "Download action is no longer available; refresh the library"}};
+      }
+      hashes.push_back(std::move(hash));
+    }
+    QStringList failures;
+    for (const auto& hash : hashes) {
+      checkpoint(stop);
+      auto changed = storage::applyLibraryCommand(host_->lease, hash, action, host_->movePools);
+      if (!changed) { failures.push_back(text(hash.hex()) + QStringLiteral(": ") + text(changed.error().message)); continue; }
+      host_->admissionFailures.erase(hash.hex());
+      std::expected<void, storage::Error> controlled;
+      auto states = host_->engine->managedDownloads();
+      const auto live = std::ranges::find_if(states, [&](const auto& value) { return value.hash == hash; });
+      const bool active = live != states.end() && live->retained;
+      switch (action) {
+        case core::DownloadAction::Stop: controlled = host_->engine->stopManaged(hash); break;
+        case core::DownloadAction::Pause:
+          if (active) { controlled = host_->engine->pauseManaged(hash, true); } break;
+        case core::DownloadAction::Start: case core::DownloadAction::Resume:
+        case core::DownloadAction::Queue: case core::DownloadAction::ForceStart:
+          if (changed->pauseAfter || changed->after.startup == core::StartupState::Stopped) { break; }
+          if (active) { controlled = host_->engine->queueManaged(hash, changed->after.forceStart,
+              changed->after.startup == core::StartupState::Queued); }
+          else { controlled = host_->engine->startManaged(host_->lease,
+              {hash, host_->peerPort, changed->after.forceStart, changed->after.startup == core::StartupState::Queued}); }
+          break;
+        default: {
+          auto source = take(storage::readLibraryView(host_->lease));
+          std::ranges::stable_sort(source.items, {}, [](const auto& item) { return item.saved.position.value_or(0); });
+          std::vector<core::TorrentHash> order;
+          for (const auto& item : source.items) { if (item.saved.hash) { order.push_back(*item.saved.hash); } }
+          controlled = host_->engine->reorderManaged(order);
+          break;
+        }
+      }
+      if (!controlled) {
+        host_->admissionFailures.insert_or_assign(hash.hex(), controlled.error());
+        failures.push_back(text(hash.hex()) + QStringLiteral(": ") + text(controlled.error().message));
+      }
+    }
+    ready(host_->query({}), failures.empty() ? tr("Download command applied") : failures.join(QLatin1Char('\n')));
+  });
+}
+bool SessionBridge::torrentImport(QString metadata, QString destination, bool start) {
+  if (profileClosed_ || metadata.isEmpty() || destination.isEmpty()) { return false; }
+  return dispatch([this, metadata = std::move(metadata), destination = std::move(destination), start](std::stop_token stop) {
+    if (!host_ || !host_->engine || !host_->engine->managedAvailable()) {
+      throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
+    }
+    checkpoint(stop);
+    static_cast<void>(take(storage::recoverTorrentIntake(host_->lease)));
+    const auto hash = take(storage::importTorrent(host_->lease,
+        std::filesystem::path(metadata.toUtf8().toStdString()),
+        std::filesystem::path(destination.toUtf8().toStdString()), !start));
+    const auto details = engine::queryTorrent(host_->lease, hash);
+    if (details) { host_->known.insert_or_assign(hash.hex(), Host::Known{text(details->name), details->bytes}); }
+    QString message = tr("Torrent added");
+    if (start) {
+      auto admitted = host_->engine->startManaged(host_->lease, {hash, host_->peerPort, false, false});
+      if (!admitted) {
+        host_->admissionFailures.insert_or_assign(hash.hex(), admitted.error());
+        message = text(admitted.error().message);
+      }
+    }
+    ready(host_->query({}), message);
+  });
+}
+bool SessionBridge::filePolicy(ui::Target target, ui::FileIndices selected, int priority, bool skipped) {
+  if (profileClosed_ || selected.empty()) { return false; }
+  return dispatch([this, target = std::move(target), selected = std::move(selected), priority, skipped](std::stop_token stop) {
+    if (!host_ || !host_->engine || !host_->engine->managedAvailable()) {
+      throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
+    }
+    if (take(storage::recoverTorrentIntake(host_->lease))) {
+      throw Failure{{storage::ErrorCode::Conflict, "Recovered a pending torrent import; library refreshed"}};
+    }
+    host_->accepts(target);
+    const auto hash = identity(target);
+    for (const auto& live : host_->engine->managedDownloads()) {
+      if (live.hash == hash && live.retained) {
+        throw Failure{{storage::ErrorCode::Conflict, "Stop the torrent before changing its file selection"}};
+      }
+    }
+    const auto files = take(engine::queryTorrent(host_->lease, hash));
+    std::vector<compat::FilePolicy> policies;
+    policies.reserve(files.entries.size());
+    for (const auto& file : files.entries) { policies.push_back({file.padding || file.skipped, file.padding ? 0 : file.priority}); }
+    std::set<int> unique;
+    for (const int index : selected) {
+      if (index < 0 || static_cast<std::size_t>(index) >= files.entries.size() || files.entries[static_cast<std::size_t>(index)].padding
+          || !unique.insert(index).second || files.entries[static_cast<std::size_t>(index)].index != index) {
+        throw Failure{{storage::ErrorCode::Conflict, "This file selection is stale or includes padding"}};
+      }
+      policies[static_cast<std::size_t>(index)] = {skipped, skipped ? 0 : priority};
+    }
+    checkpoint(stop);
+    auto saved = storage::setFilePolicies(host_->lease, hash, policies);
+    if (!saved) { throw Failure{saved.error()}; }
+    ready(host_->query({}), tr("File selection saved"));
   });
 }
 bool SessionBridge::refresh() {
@@ -1011,6 +1254,12 @@ bool SessionBridge::details(ui::Target target) {
     host_->known.insert_or_assign(target.hash.toStdString(), Host::Known{name, value.bytes});
     auto files = std::make_shared<ui::FileDetails>();
     files->target = target;
+    files->canEdit = host_->engine && host_->engine->managedAvailable();
+    if (host_->engine) {
+      for (const auto& active : host_->engine->managedDownloads()) {
+        if (active.hash == identity(target) && active.retained) { files->canEdit = false; }
+      }
+    }
     files->items.reserve(value.entries.size());
     for (const auto& file : value.entries) {
       files->items.push_back({file.index, text(file.path), file.bytes, file.priority, file.skipped, file.padding});
@@ -1028,18 +1277,25 @@ bool SessionBridge::details(ui::Target target) {
 void SessionBridge::progress(ui::Telemetry update) {
   {
     const std::lock_guard lock(progressMutex_);
-    latestProgress_ = std::move(update);
+    // Coalesce per hash: one busy torrent must not erase another torrent's
+    // progress. The model revision still rejects old-session deliveries.
+    const auto key = update.target.hash;
+    if (latestProgress_.size() >= ui::LibraryModel::MaximumRows && !latestProgress_.contains(key)) { return; }
+    latestProgress_.insert_or_assign(key, std::move(update));
     if (deliveryQueued_) { return; }
     deliveryQueued_ = true;
   }
   QMetaObject::invokeMethod(this, [this] {
-    std::optional<ui::Telemetry> update;
+    std::map<QString, ui::Telemetry> updates;
     {
       const std::lock_guard lock(progressMutex_);
-      update.swap(latestProgress_);
+      updates.swap(latestProgress_);
       deliveryQueued_ = false;
     }
-    if (update) { emit progressReady(*update); }
+    QPointer<SessionBridge> guard(this);
+    for (const auto& [key, update] : updates) {
+      static_cast<void>(key); emit progressReady(update); if (!guard) { return; }
+    }
   }, Qt::QueuedConnection);
 }
 void SessionBridge::engineStatistics(ui::EngineStatisticsPresentation packet) {
@@ -1139,13 +1395,22 @@ bool SessionBridge::continueDownload(ui::Target target) {
   });
 }
 void SessionBridge::initializePersistentOwner(std::stop_token stop) {
-  if (!host_ || host_->peerPort == 0 || host_->engine) { return; }
+  if (!host_ || (host_->peerPort == 0 && !host_->normalNetwork) || host_->engine) { return; }
   checkpoint(stop);
   // Preserve the exact source/runtime guard and default unbound fallback.
   auto owner = engine::PersistentSession::create({1, host_->columnLayoutSession, 1});
   if (!owner) {
     if (owner.error() == engine::AccountingError::DependencyUnqualified) { return; }
     throw Failure{{storage::ErrorCode::Io, "Cannot create the native engine owner"}};
+  }
+  if (host_->normalNetwork) {
+    auto config = storage::ConfigFile::load(host_->lease, "biglybt.config");
+    if (!config && config.error().code != storage::ErrorCode::Missing) { throw Failure{config.error()}; }
+    auto policy = engine::readNetworkPolicy(config ? &config->document() : nullptr,
+        {.mode = engine::NetworkMode::Normal});
+    if (!policy) { throw Failure{{storage::ErrorCode::Unsupported, "Unsupported network setting: " + policy.error().field}}; }
+    auto applied = (*owner)->configureNetwork(*policy);
+    if (!applied) { throw Failure{applied.error()}; }
   }
   if (!(*owner)->startIdle(host_->lease)) {
     throw Failure{{storage::ErrorCode::Io, "Cannot initialize the native idle session"}};
@@ -1516,6 +1781,7 @@ bool SessionBridge::closeSession() {
     bool joined = true;
     bool released = true;
     ui::NativeSessionPresentation finalObservation;
+    QString checkpointFailure;
     if (host_ && host_->azureus) {
       joined = static_cast<bool>(host_->azureus->close());
       publishAzureus();
@@ -1526,6 +1792,7 @@ bool SessionBridge::closeSession() {
       const auto receipt = host_->engine->close(std::chrono::steady_clock::now() + std::chrono::seconds{5});
       joined = joined && receipt.sessionJoined;
       released = receipt.retirement.storageReleased;
+      if (receipt.checkpointFailure) { checkpointFailure = text(receipt.checkpointFailure->message); }
       if (host_->overall && receipt.sessionJoined && released && receipt.retirement.peerCounters) {
         const auto& final = *receipt.retirement.peerCounters;
         static_cast<void>(host_->overall->capture({ownerIdentity(final.identity()), final.sequence(),
@@ -1558,7 +1825,7 @@ bool SessionBridge::closeSession() {
     }
     host_.reset(); // Required lifetime barrier before GUI close acknowledgement.
     try { nativeSession(std::move(finalObservation)); } catch (...) {}
-    QMetaObject::invokeMethod(this, [this, session, joined, released] {
+    QMetaObject::invokeMethod(this, [this, session, joined, released, checkpointFailure] {
       QPointer<SessionBridge> guard(this);
       completionMonitor_->stop();
       publishedColumnLayoutSession_ = 0; // Reject old-session requests before releasing busy.
@@ -1568,6 +1835,7 @@ bool SessionBridge::closeSession() {
       if (!guard) { return; }
       closingSession_ = false;
       idleMonitor_->start();
+      if (!checkpointFailure.isEmpty()) { emit messageReady(checkpointFailure); if (!guard) { return; } }
       emit sessionClosed(session, joined, released); // Final access: receiver may reopen or delete Bridge.
     }, Qt::QueuedConnection);
   }, false, true);

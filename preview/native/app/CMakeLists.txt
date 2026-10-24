@@ -85,3 +85,7 @@ endif()
 if(BIGLYBTC_DESKTOP)
   target_link_libraries(biglybtc_owned_azureus_service PUBLIC biglybtc_azureus_control)
 endif()
+
+if(BIGLYBTC_DESKTOP)
+  target_link_libraries(biglybtc_desktop_host PRIVATE LibtorrentRasterbar::torrent-rasterbar)
+endif()
