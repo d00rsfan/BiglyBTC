@@ -77,8 +77,8 @@ private slots:
     QVERIFY(!policy->registerMetadataPath("relative/path"));
     QVERIFY(!policy->registerMetadataPath("/"));
     QVERIFY(!policy->registerMetadataPath(std::string("/bad\0path", 9)));
-    QVERIFY_EXCEPTION_THROWN(policy->isMetadataPath("relative"), std::invalid_argument);
-    QVERIFY_EXCEPTION_THROWN(engine::detail::metadataDiskConstructor({}), std::invalid_argument);
+    QVERIFY_THROWS_EXCEPTION(std::invalid_argument, policy->isMetadataPath("relative"));
+    QVERIFY_THROWS_EXCEPTION(std::invalid_argument, engine::detail::metadataDiskConstructor({}));
     for (std::size_t i = 1; i < Policy::MaximumMetadataPaths; ++i) {
       QVERIFY(policy->registerMetadataPath(root / std::to_string(i)));
     }
@@ -183,7 +183,7 @@ private slots:
       QCOMPARE(index(holder), static_cast<std::uint32_t>(i));
       holder.reset();
     }
-    QVERIFY_EXCEPTION_THROWN(engine.disk->new_torrent(geometry.parameters(path), {}), std::length_error);
+    QVERIFY_THROWS_EXCEPTION(std::length_error, engine.disk->new_torrent(geometry.parameters(path), {}));
     QVERIFY(!std::filesystem::exists(path));
   }
 
