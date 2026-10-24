@@ -1,0 +1,81 @@
+{
+  "case": "chapter-abi-gcc",
+  "build": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+  "tests": [
+    "managed-download",
+    "managed-seeding",
+    "managed-library-command-routing",
+    "managed-magnet",
+    "magnet-host",
+    "metadata-disk-router",
+    "torrent-intake"
+  ],
+  "commands": [
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "-S",
+        "preview/native",
+        "-B",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "-DCMAKE_PREFIX_PATH=/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/install;/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr;/home/yurii/Java/BiglyBTC/build/dependencies/country/sysroot/usr;/opt/Qt/6.12.0/gcc_64",
+        "-DBIGLYBTC_COUNTRY_MMDB_FIXTURE=/home/yurii/Java/BiglyBTC/build/dependencies/country/GeoIP2-Country-Test.mmdb"
+      ],
+      "exit": 0,
+      "seconds": 3.37,
+      "log": "chapter-abi-gcc-configure.txt"
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "--parallel",
+        "3",
+        "--target",
+        "biglybtc-managed-download-tests",
+        "biglybtc-managed-seeding-tests",
+        "biglybtc-library-commands-bridge-tests",
+        "biglybtc-managed-magnet-tests",
+        "biglybtc-magnet-host-tests",
+        "biglybtc-metadata-disk-router-tests",
+        "biglybtc-torrent-intake-tests",
+        "BiglyBTC",
+        "biglybtc-managed-handoff-driver",
+        "--",
+        "-k",
+        "0"
+      ],
+      "exit": 0,
+      "seconds": 50.39,
+      "log": "chapter-abi-gcc-build.txt"
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "-R",
+        "^(managed\\-download|managed\\-seeding|managed\\-library\\-command\\-routing|managed\\-magnet|magnet\\-host|metadata\\-disk\\-router|torrent\\-intake)$",
+        "--no-tests=error",
+        "--output-on-failure",
+        "--verbose",
+        "--output-junit",
+        "/home/yurii/Java/BiglyBT/build/torrent-workflows-20261024/chapter-abi-gcc.xml"
+      ],
+      "exit": 0,
+      "seconds": 75.47,
+      "log": "chapter-abi-gcc-tests.txt"
+    }
+  ],
+  "source_manifest_sha256": "b73cacf5b039fb2d1530dbf806b3880f1f6337803b10d0e2a8259b01d4e8cf28"
+}

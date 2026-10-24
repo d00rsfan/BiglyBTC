@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_UNEXECUTED",
+  "native_base": "49f02c870f70cb7a1aa42cf71c4e53a89eca07a0",
+  "files": [
+    {
+      "path": "preview/native/engine/managed_payload_counters.hpp",
+      "before_sha256": "2d3bca68f95aabe46265c632fdbf1f1d64cd169747d1ace216184532bf3afbcc",
+      "sha256": "eb9087bfbf0d3fb4afcb85b85fd73f27136078246cc85f37677b116161918b11"
+    },
+    {
+      "path": "preview/native/engine/managed_payload_counters.cpp",
+      "before_sha256": null,
+      "sha256": "bb3e2dfaf89ce99d887d1ba392e5c164629e6f0d105d33a5ce238973180a9b76"
+    },
+    {
+      "path": "preview/native/engine/CMakeLists.txt",
+      "before_sha256": "26772b3004105ea1231d7b69f7b5a498117e36384a2686afda56d941ed408eb6",
+      "sha256": "26c84f47e003c39d096a4f6924fd52229e5cccef0b35be3a49b906212486beee"
+    }
+  ],
+  "unchanged_guards": {
+    "preview/native/engine/persistent_session.cpp": "a3bb2fbd0f472314aa1b30d0a7d9335acf06e05b16e45bd4c9318659128beaf9",
+    "preview/native/tests/managed_download_tests.cpp": "5503121df5fde26df787b1f940ff6f85e51e1d7f741d669eb7751fd8d0efb16c"
+  },
+  "counter_class_body_exact": true,
+  "plugin_and_attach_bodies_exact": true,
+  "vptr_exclusion_scope": "only engine/managed_payload_counters.cpp",
+  "other_sanitizers_changed": false,
+  "native_writes": 0,
+  "compiler_runs": 0,
+  "test_runs": 0,
+  "artifacts": {
+    "prepare.py": "b887fb75c2339dd59e49b44d304552b2f7247983e901981b0eda87e2d5f03890",
+    "changes.patch": "0232997f89dfe22c4524d59dc36b528a1ede6270e2f9490297c0b5d7c621b096",
+    "ADOPTION.md": "8504ec48dcffb615f07b697d08dcddc943b37559b303075f4b7af58f6b4ea6ab"
+  }
+}

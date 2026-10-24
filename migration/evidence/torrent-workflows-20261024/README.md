@@ -25,3 +25,10 @@ All profiles/endpoints/payloads are generated and owned. Running original Java,
 ordinary profile/payloads and system installation were not accessed. Broad full
 original engine/plugin parity, unqualified storage/proxy combinations and public
 swarm performance remain separate migration work.
+
+The source-bound private LT access is isolated in managed_payload_counters.cpp.
+The approved DSO hides libtorrent::torrent RTTI; this single ABI shim therefore
+disables UBSan vptr instrumentation. Address, all other undefined-behavior and
+leak checks remain enabled, and all other translation units keep vptr checks.
+No runtime provider or counter algorithm changed. The affected GCC7 suites pass;
+final Clang continuation and full sanitizer/private-runtime checks follow.

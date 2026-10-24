@@ -1,0 +1,156 @@
+UpdateCTestConfiguration  from :/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/DartConfiguration.tcl
+Test project /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 197
+    Start 197: managed-download
+
+197: Test command: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-managed-download-tests
+197: Working Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+197: Test timeout computed to be: 240
+197: ********* Start testing of ManagedDownloadTests *********
+197: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+197: PASS   : ManagedDownloadTests::initTestCase()
+197: PASS   : ManagedDownloadTests::rawEpochContinuityKeepsUntickedBytesAndCrossingReadsRetry()
+197: PASS   : ManagedDownloadTests::rawEpochInvalidReadsAndOverflowFailWithoutFallback()
+197: PASS   : ManagedDownloadTests::concurrentMixedHandlesRemainControllableUnderOneOwner()
+197: PASS   : ManagedDownloadTests::partialStopAndRepeatedHashCheckpointsKeepFreshSavedIntent()
+197: PASS   : ManagedDownloadTests::failedAndForeignAdmissionsDoNotReplaceTheOtherActiveTorrent()
+197: PASS   : ManagedDownloadTests::unsafePayloadPreparationDoesNotAdmitOrRewriteAProfile()
+197: PASS   : ManagedDownloadTests::cleanupTestCase()
+197: Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 15858ms
+197: ********* Finished testing of ManagedDownloadTests *********
+1/7 Test #197: managed-download ..................   Passed   15.87 sec
+test 199
+    Start 199: torrent-intake
+
+199: Test command: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-torrent-intake-tests
+199: Working Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+199: Test timeout computed to be: 240
+199: 13 torrent-intake families, 605 assertions passed
+2/7 Test #199: torrent-intake ....................   Passed    0.03 sec
+test 204
+    Start 204: metadata-disk-router
+
+204: Test command: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-metadata-disk-router-tests
+204: Working Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+204: Test timeout computed to be: 240
+204: ********* Start testing of MetadataDiskRouterTests *********
+204: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+204: PASS   : MetadataDiskRouterTests::initTestCase()
+204: PASS   : MetadataDiskRouterTests::registrationIsBoundedLexicalAndIndependentOfFilesystemExistence()
+204: PASS   : MetadataDiskRouterTests::realBackendOwnershipRemovalsAndGlobalIndicesNeverAlias()
+204: PASS   : MetadataDiskRouterTests::disabledForwardsEveryStorageOperationWithoutCreatingOrMovingFiles()
+204: PASS   : MetadataDiskRouterTests::lifetimeAdmissionBoundDoesNotRecycleRetiredDisabledIndices()
+204: PASS   : MetadataDiskRouterTests::oneActualSessionWritesOrdinaryPayloadAndDiscardsRegisteredPayload(exact)
+204: PASS   : MetadataDiskRouterTests::oneActualSessionWritesOrdinaryPayloadAndDiscardsRegisteredPayload(equivalent-trailing-separator)
+204: PASS   : MetadataDiskRouterTests::cleanupTestCase()
+204: Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 2284ms
+204: ********* Finished testing of MetadataDiskRouterTests *********
+3/7 Test #204: metadata-disk-router ..............   Passed    2.29 sec
+test 205
+    Start 205: managed-seeding
+
+205: Test command: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-managed-seeding-tests
+205: Working Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+205: Test timeout computed to be: 240
+205: ********* Start testing of ManagedSeedingTests *********
+205: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+205: PASS   : ManagedSeedingTests::initTestCase()
+205: PASS   : ManagedSeedingTests::completedNativeHandleUploadsActualPayloadToAnIndependentOwnedLeecher(single)
+205: PASS   : ManagedSeedingTests::completedNativeHandleUploadsActualPayloadToAnIndependentOwnedLeecher(multifile)
+205: PASS   : ManagedSeedingTests::selectedCompletionRetainsSparseSkippedLinearStorageAndOriginalPolicyOnReopen()
+205: PASS   : ManagedSeedingTests::immediateStopBeforeFirstPieceSampleRetainsExistingDataForRestart()
+205: PASS   : ManagedSeedingTests::cleanupTestCase()
+205: Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 18639ms
+205: ********* Finished testing of ManagedSeedingTests *********
+4/7 Test #205: managed-seeding ...................   Passed   18.67 sec
+test 206
+    Start 206: managed-magnet
+
+206: Test command: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-managed-magnet-tests
+206: Working Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+206: Test timeout computed to be: 240
+206: ********* Start testing of ManagedMagnetTests *********
+206: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+206: PASS   : ManagedMagnetTests::initTestCase()
+206: PASS   : ManagedMagnetTests::actualMetadataThenMaterialPayload(single-forced)
+206: PASS   : ManagedMagnetTests::actualMetadataThenMaterialPayload(multifile-normal)
+206: PASS   : ManagedMagnetTests::stoppedIntentImportsRealMetadataWithoutMaterialPayload()
+206: PASS   : ManagedMagnetTests::resolvingCancelAndJoinedClose(explicit-cancel-retires-intent)
+206: PASS   : ManagedMagnetTests::resolvingCancelAndJoinedClose(joined-close-retains-recovery-intent)
+206: PASS   : ManagedMagnetTests::unsafeActualMetadataNeverTouchesPayload(single-name-traversal)
+206: PASS   : ManagedMagnetTests::unsafeActualMetadataNeverTouchesPayload(multifile-component-traversal)
+206: PASS   : ManagedMagnetTests::admissionsRequirePersistedIntentAndExactHeldProfile()
+206: PASS   : ManagedMagnetTests::cleanupTestCase()
+206: Totals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 2708ms
+206: ********* Finished testing of ManagedMagnetTests *********
+5/7 Test #206: managed-magnet ....................   Passed    2.73 sec
+test 207
+    Start 207: managed-library-command-routing
+
+207: Test command: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-library-commands-bridge-tests
+207: Working Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+207: Environment variables: 
+207:  QT_QPA_PLATFORM=offscreen
+207: Test timeout computed to be: 240
+207: ********* Start testing of LibraryCommandsBridgeTests *********
+207: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+207: PASS   : LibraryCommandsBridgeTests::initTestCase()
+207: PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(stale-second)
+207: PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(unknown-second)
+207: PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(duplicate-second)
+207: PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(unauthorized-second)
+207: PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(invalid-action-next)
+207: PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(invalid-action-large)
+207: QWARN  : LibraryCommandsBridgeTests::mixedTargetsRouteSavedIntentAndActualProgressIndependently() This plugin does not support propagateSizeHints()
+207: QWARN  : LibraryCommandsBridgeTests::mixedTargetsRouteSavedIntentAndActualProgressIndependently() This plugin does not support propagateSizeHints()
+207: PASS   : LibraryCommandsBridgeTests::mixedTargetsRouteSavedIntentAndActualProgressIndependently()
+207: PASS   : LibraryCommandsBridgeTests::passivePhaseSnapshotCannotReleaseQueuedCommandBusyOwnership()
+207: PASS   : LibraryCommandsBridgeTests::closeReportsActualCheckpointConflictAfterJoiningAndReleasingProfile()
+207: PASS   : LibraryCommandsBridgeTests::cleanupTestCase()
+207: Totals: 11 passed, 0 failed, 0 skipped, 0 blacklisted, 28275ms
+207: ********* Finished testing of LibraryCommandsBridgeTests *********
+6/7 Test #207: managed-library-command-routing ...   Passed   28.39 sec
+test 208
+    Start 208: magnet-host
+
+208: Test command: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-magnet-host-tests
+208: Working Directory: /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests
+208: Environment variables: 
+208:  QT_QPA_PLATFORM=offscreen
+208: Test timeout computed to be: 240
+208: ********* Start testing of MagnetBridgeTests *********
+208: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+208: PASS   : MagnetBridgeTests::initTestCase()
+208: PASS   : MagnetBridgeTests::actualMetadataImportsAndStartsInSameOwner(single)
+208: PASS   : MagnetBridgeTests::actualMetadataImportsAndStartsInSameOwner(multi)
+208: PASS   : MagnetBridgeTests::importedCrashRecoveryPreservesLaterStopAndDoesNotResolveAgain()
+208: PASS   : MagnetBridgeTests::legacyDestinationAndWholeSelectionCasRemainSafe()
+208: PASS   : MagnetBridgeTests::legacyResubmissionAttachesDestinationAndRetainsOriginalStoppedIntent()
+208: PASS   : MagnetBridgeTests::malformedPendingReadRetainsDisabledRowAndDoesNotRewriteConfig()
+208: PASS   : MagnetBridgeTests::cleanupTestCase()
+208: Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 7223ms
+208: ********* Finished testing of MagnetBridgeTests *********
+7/7 Test #208: magnet-host .......................   Passed    7.41 sec
+
+The following tests passed:
+	managed-download
+	torrent-intake
+	metadata-disk-router
+	managed-seeding
+	managed-magnet
+	managed-library-command-routing
+	magnet-host
+
+100% tests passed, 0 tests failed out of 7
+
+Label Time Summary:
+torrent-workflows    =  75.39 sec*proc (7 tests)
+unit                 =  75.39 sec*proc (7 tests)
+
+Total Test time (real) =  75.40 sec
