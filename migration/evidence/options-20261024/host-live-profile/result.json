@@ -1,0 +1,82 @@
+{
+    "actual_observations": [
+        {
+            "actual_payload_received": "0",
+            "actual_payload_sent": "0",
+            "download_bytes_per_second": "0",
+            "epoch": "1",
+            "owner_elapsed_ns": "1967458744",
+            "proxy_mode": 1,
+            "sequence": "1",
+            "upload_bytes_per_second": "0"
+        },
+        {
+            "actual_payload_received": "0",
+            "actual_payload_sent": "0",
+            "download_bytes_per_second": "19456",
+            "epoch": "1",
+            "owner_elapsed_ns": "1972512663",
+            "proxy_mode": 1,
+            "sequence": "2",
+            "upload_bytes_per_second": "17408"
+        },
+        {
+            "actual_payload_received": "0",
+            "actual_payload_sent": "0",
+            "download_bytes_per_second": "29696",
+            "epoch": "1",
+            "owner_elapsed_ns": "1975023806",
+            "proxy_mode": 1,
+            "sequence": "3",
+            "upload_bytes_per_second": "23552"
+        },
+        {
+            "actual_payload_received": "0",
+            "actual_payload_sent": "0",
+            "download_bytes_per_second": "29696",
+            "epoch": "1",
+            "owner_elapsed_ns": "1979816747",
+            "proxy_mode": 1,
+            "sequence": "4",
+            "upload_bytes_per_second": "23552"
+        },
+        {
+            "actual_payload_received": "0",
+            "actual_payload_sent": "0",
+            "download_bytes_per_second": "29696",
+            "epoch": "1",
+            "owner_elapsed_ns": "2966934490",
+            "proxy_mode": 1,
+            "sequence": "5",
+            "upload_bytes_per_second": "23552"
+        },
+        {
+            "actual_payload_received": "0",
+            "actual_payload_sent": "0",
+            "download_bytes_per_second": "29696",
+            "epoch": "1",
+            "owner_elapsed_ns": "2990857105",
+            "proxy_mode": 1,
+            "sequence": "9",
+            "upload_bytes_per_second": "23552"
+        }
+    ],
+    "application_run": "1",
+    "cas_rejection_preserved_effective_rates": true,
+    "external_config_sha256": "04b2b26502e89c0e0936bbd0ff2ddf3838e65079baec7a71c3b7dcee951f36cc",
+    "joined": true,
+    "lease_reacquired": true,
+    "limits": "Bridge packet exposes actual rates/proxy, not get_settings queue caps or bind interfaces; saved cap/bind values are not claimed as active readback",
+    "options_reads": 2,
+    "options_saves": 4,
+    "original_config_sha256": "fa71c86b57b59728a0d9c901375584cb48122628ebc394712db319f6f517b2a9",
+    "original_unknown_retained_on_success": true,
+    "owner_epoch": "1",
+    "payload_operations": 0,
+    "pending_restart_retained": true,
+    "profile": "/tmp/biglybtc-options-host-live-20261024-r2/profile",
+    "scope": "Actual Bridge source-qualified idle owner, effective rate/proxy observations and saved queue/restart state; no transfer/public network",
+    "source_commit": "c191e73cb0feffbd4a61f1bef67df7f5dcb8d621",
+    "status": "PASS_ACTUAL_OPTIONS_HOST_LIVE",
+    "storage_released": true
+}

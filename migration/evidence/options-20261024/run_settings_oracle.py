@@ -28,7 +28,18 @@ def main():
     def run(name,argv):
         command={'name':name,'argv':list(map(str,argv))};commands.append(command)
         with (work/(name+'.stdout')).open('w') as out,(work/(name+'.stderr')).open('w') as err:
-            result=subprocess.run(command['argv'],cwd=work,env=env,stdout=out,stderr=err,timeout=90)
+            result=subprocess.Popen(command['argv'],cwd=work,env=env,stdout=out,stderr=err)
+            command['pid']=result.pid
+            (work/'commands.json').write_text(json.dumps(commands,indent=2)+'\n')
+            try:
+                result.wait(timeout=20)
+            except subprocess.TimeoutExpired:
+                if str(argv[0]).endswith('/java'):
+                    with (work/(name+'.threads')).open('w') as trace:
+                        subprocess.run([str(JAVA/'jstack'),str(result.pid)],stdout=trace,stderr=subprocess.STDOUT,timeout=15)
+                try: result.wait(timeout=55)
+                except subprocess.TimeoutExpired:
+                    result.kill();result.wait();raise
         command['exit_code']=result.returncode
         (work/'commands.json').write_text(json.dumps(commands,indent=2)+'\n')
         assert result.returncode==0,name

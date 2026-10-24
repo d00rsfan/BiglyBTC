@@ -1,0 +1,6 @@
+{
+  "before_sha256": "fa6f2bc78153883fb4ace50e86d4d29a3d825f17c28cac9452667037be7f2c9c",
+  "sha256": "609d6c2a34904d3b1e91e292f2ce2636229b716fe910b785a33259bb088d7c2c",
+  "change": "Warm Debug on launcher thread before COConfigurationManager, as retained EngineOracle already does. No fence/core/network change.",
+  "diagnostic_stack_observed": false
+}

@@ -1,0 +1,14 @@
+{
+  "previous_dist_manifest_sha256": "f38d56989a1cb26f988f715106830e1550b08e5d7eec595008a310e06d5d108c",
+  "previous_qualified_source": "5355bce0d40bbe0a5487acb7ee22c71a641a7b81",
+  "previous_qualification_receipt": "/home/yurii/Java/BiglyBTC/build/statistics-finish-20261023/statistics-finish-publication/verification-v2/result.json",
+  "previous_qualification_receipt_sha256": "183f5940afd5beb73dc01749843666b3e92164f4df69229a68d7c59754d3d6ee",
+  "libtorrent_package": "/home/yurii/Java/BiglyBTC/build/dependencies/packages/libtorrent-rasterbar2.0t64_2.0.12-1_amd64.deb",
+  "source_libtorrent": "/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/install/lib/libtorrent-rasterbar.so.2.0.12",
+  "tool_sha256": {
+    "/home/yurii/Java/BiglyBT/build/options-20261024/portable/qualify.py": "4553dbd2f0005eccf74b930f7139e375a598355f864fafb466e937f133e0607a",
+    "/home/yurii/Java/BiglyBT/build/options-20261024/portable/promote.py": "5657307a74cc0b0260f85753285a6b5f1a75e2ea6c20cddb9a464f00c0865c68",
+    "/home/yurii/Java/BiglyBTC/preview/migration/tools/stage_preview.py": "20484187a9007742d08390673fc0b66e91c451dcd15b9db8c2ae3c7042140b4a"
+  },
+  "offline_launcher_sha256": "985f7086a7001c990e7318501f49da57137e8b767318d970c64909441ceb67f3"
+}

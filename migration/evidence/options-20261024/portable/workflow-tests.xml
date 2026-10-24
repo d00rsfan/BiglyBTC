@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="4"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="8"
+	timestamp="2026-10-24T16:00:45"
+	>
+	<testcase name="application-settings" classname="application-settings" time="0.0116202" status="run">
+		<properties>
+			<property name="cmake_labels" value="compatibility;options;unit"/>
+		</properties>
+		<system-out>11 application-settings families, 309 assertions passed
+</system-out>
+	</testcase>
+	<testcase name="options-dialog" classname="options-dialog" time="0.393354" status="run">
+		<properties>
+			<property name="cmake_labels" value="options;unit"/>
+		</properties>
+		<system-out>********* Start testing of OptionsDialogTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OptionsDialogTests::initTestCase()
+PASS   : OptionsDialogTests::classicPagesMaskPasswordsAndLabelUnavailableFeatures()
+PASS   : OptionsDialogTests::hiddenAndBusyInitialReadCoalescesUntilVisibleIdle()
+PASS   : OptionsDialogTests::staleAndMalformedReadPacketsCannotReplaceCurrentProfile()
+PASS   : OptionsDialogTests::sparseEditsPreserveInvalidAndMissingFields()
+PASS   : OptionsDialogTests::returningToLoadedValueSubmitsNothing()
+PASS   : OptionsDialogTests::invalidEditedValueDoesNotReachWorker()
+PASS   : OptionsDialogTests::failedSaveRetainsDraftAndRetryUsesOriginalRevision()
+PASS   : OptionsDialogTests::okWaitsForMatchingCommitAndPendingCloseCannotDiscard()
+QWARN  : OptionsDialogTests::dirtyCancelAndDiscardAreExplicit() This plugin does not support propagateSizeHints()
+QWARN  : OptionsDia...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="options-host" classname="options-host" time="0.775688" status="run">
+		<properties>
+			<property name="cmake_labels" value="options;unit"/>
+		</properties>
+		<system-out>********* Start testing of OptionsHostTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OptionsHostTests::initTestCase()
+PASS   : OptionsHostTests::savesSparseOriginalValuesAndReturnsFreshRevision()
+PASS   : OptionsHostTests::externalEditAndIncompatibleNetworkRejectBeforePublication()
+PASS   : OptionsHostTests::wrongSessionAndInvalidValuesHaveNoSideEffect()
+QWARN  : OptionsHostTests::toolsMenuOpensBoundDialogAndUsesCompatibleSave() This plugin does not support propagateSizeHints()
+PASS   : OptionsHostTests::toolsMenuOpensBoundDialogAndUsesCompatibleSave()
+PASS   : OptionsHostTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 750ms
+********* Finished testing of OptionsHostTests *********
+</system-out>
+	</testcase>
+	<testcase name="engine-live-settings" classname="engine-live-settings" time="6.94558" status="run">
+		<properties>
+			<property name="cmake_labels" value="options;unit"/>
+		</properties>
+		<system-out>********* Start testing of EngineLiveSettingsTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : EngineLiveSettingsTests::initTestCase()
+PASS   : EngineLiveSettingsTests::purePlanPreservesAllActiveRoutingAndEmitsOnlyNarrowKeys()
+PASS   : EngineLiveSettingsTests::cachedBeforeIdleCreatesNoSessionAndStartupUsesOriginalQueueDefaults()
+PASS   : EngineLiveSettingsTests::liveRatesAndQueueCapsKeepActualRoutesAndManualPauseAcrossActiveTransfer()
+PASS   : EngineLiveSettingsTests::seedingUploadTransitionPreservesNewSafeRatesAndQueueCaps()
+PASS   : EngineLiveSettingsTests::invalidOrForeignThreadRequestLeavesEveryActualSettingUnchanged()
+PASS   : EngineLiveSettingsTests::cleanupTestCase()
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 6936ms
+********* Finished testing of EngineLiveSettingsTests *********
+</system-out>
+	</testcase>
+</testsuite>

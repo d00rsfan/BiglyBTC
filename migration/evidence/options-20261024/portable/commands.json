@@ -1,0 +1,141 @@
+[
+  {
+    "name": "stage",
+    "argv": [
+      "python3",
+      "/home/yurii/Java/BiglyBTC/preview/migration/tools/stage_preview.py",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--output",
+      "/home/yurii/Java/BiglyBTC/build/options-20261024/portable/options-final-r2/candidate",
+      "--libtorrent-package",
+      "/home/yurii/Java/BiglyBTC/build/dependencies/packages/libtorrent-rasterbar2.0t64_2.0.12-1_amd64.deb",
+      "--source-libtorrent",
+      "/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/install/lib/libtorrent-rasterbar.so.2.0.12"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 1.1672188118100166
+  },
+  {
+    "name": "loader-BiglyBTC",
+    "argv": [
+      "ldd",
+      "/home/yurii/Java/BiglyBTC/build/options-20261024/portable/options-final-r2/candidate/usr/lib/biglybtc/bin/BiglyBTC"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 0.016239129938185215
+  },
+  {
+    "name": "rpath-BiglyBTC",
+    "argv": [
+      "readelf",
+      "--dynamic",
+      "/home/yurii/Java/BiglyBTC/build/options-20261024/portable/options-final-r2/candidate/usr/lib/biglybtc/bin/BiglyBTC"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 0.00471117440611124
+  },
+  {
+    "name": "loader-BiglyBTC-headless",
+    "argv": [
+      "ldd",
+      "/home/yurii/Java/BiglyBTC/build/options-20261024/portable/options-final-r2/candidate/usr/lib/biglybtc/bin/BiglyBTC-headless"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 0.01757349818944931
+  },
+  {
+    "name": "rpath-BiglyBTC-headless",
+    "argv": [
+      "readelf",
+      "--dynamic",
+      "/home/yurii/Java/BiglyBTC/build/options-20261024/portable/options-final-r2/candidate/usr/lib/biglybtc/bin/BiglyBTC-headless"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 0.005430544726550579
+  },
+  {
+    "name": "loader-test",
+    "argv": [
+      "ldd",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/biglybtc-preview-smoke"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 0.016673198901116848
+  },
+  {
+    "name": "prepare-generated-profile",
+    "argv": [
+      "python3",
+      "/home/yurii/Java/BiglyBTC/preview/native/packaging/preview.py",
+      "--prepare",
+      "/tmp/biglybtc-preview-kl0bmfwc"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 0.16613738890737295
+  },
+  {
+    "name": "normal-launcher-usage",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/options-20261024/portable/options-final-r2/candidate/BiglyBTC"
+    ],
+    "exit_code": 2,
+    "expected_exit": 2,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 0.1145461667329073
+  },
+  {
+    "name": "smoke-private-runtime",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/biglybtc-preview-smoke",
+      "-o",
+      "-,txt"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 12.933050679974258
+  },
+  {
+    "name": "workflow-private-runtime",
+    "argv": [
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "-R",
+      "^(application\\-settings|options\\-dialog|options\\-host|engine\\-live\\-settings)$",
+      "--no-tests=error",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBTC/build/options-20261024/portable/options-final-r2/verification/workflow-tests.xml"
+    ],
+    "exit_code": 0,
+    "expected_exit": 0,
+    "succeeded": true,
+    "timed_out": false,
+    "seconds": 8.198243180289865
+  }
+]

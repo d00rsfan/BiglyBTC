@@ -1,0 +1,52 @@
+{
+  "products": [
+    "BiglyBTC",
+    "BiglyBTC-headless",
+    "biglybtc-preview-smoke"
+  ],
+  "tests": [
+    "application-settings",
+    "options-dialog",
+    "options-host",
+    "engine-live-settings"
+  ],
+  "retained_capture_names": [
+    "classic-preview.png",
+    "my-shares-preview.png",
+    "my-tracker-preview.png",
+    "saved-selected-preview.png",
+    "statistics-activity-preview.png",
+    "statistics-capacity-preview.png",
+    "statistics-history-copy-preview.png",
+    "statistics-history-dht-preview.png",
+    "statistics-history-keyboard-preview.png",
+    "statistics-history-missing-preview.png",
+    "statistics-history-month-preview.png",
+    "statistics-history-preview.png",
+    "statistics-history-protocol-preview.png",
+    "statistics-history-week-hourly-missing-preview.png",
+    "statistics-history-week-hourly-preview.png",
+    "statistics-history-week-missing-preview.png",
+    "statistics-history-week-preview.png",
+    "statistics-navigation-new-session-preview.png",
+    "statistics-navigation-reopened-preview.png",
+    "statistics-section-2-preview.png",
+    "statistics-section-3-preview.png",
+    "statistics-section-4-preview.png",
+    "statistics-section-5-preview.png",
+    "statistics-section-6-preview.png",
+    "statistics-section-7-preview.png",
+    "statistics-section-8-preview.png",
+    "statistics-section-9-preview.png",
+    "statistics-transfers-preview.png"
+  ],
+  "scope": "Test-registration-only CMake amendment. Four new suites plus13smoke; prior18 private suites reuse only with identical full executable hashes and identical production source/provider.",
+  "capture_scale": 1,
+  "expected_final_source": null,
+  "test_targets": {
+    "application-settings": "biglybtc-application-settings-tests",
+    "options-dialog": "biglybtc-options-dialog-tests",
+    "options-host": "biglybtc-options-host-tests",
+    "engine-live-settings": "biglybtc-engine-live-settings-tests"
+  }
+}

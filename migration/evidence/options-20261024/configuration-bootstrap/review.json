@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "status": "SOURCE_REVIEW_PASS_MINIMAL_HELPER_AMENDMENT",
+  "execution_by_reviewer": false,
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "amendment": "Initialize unchanged original Debug class on launcher thread before COConfigurationManager.initialise(). Parent adopted the candidate while source diagnosis was being frozen. Diagnostic markers remain exact.",
+  "before_sha256": "fa6f2bc78153883fb4ace50e86d4d29a3d825f17c28cac9452667037be7f2c9c",
+  "after_sha256": "609d6c2a34904d3b1e91e292f2ce2636229b716fe910b785a33259bb088d7c2c",
+  "patch_sha256": "816ce353d27a2c6c5534d9f1650f020383ce0592e56da86d6ae2115ad42e3100",
+  "findings": [
+    {
+      "id": "BOOTSTRAP-1",
+      "evidence": "migration/evidence/P00-03/java-startup-thread-dump.txt:160-276",
+      "finding": "Historical captured upstream cycle: configuration owner holds ConfigMan ReentrantLock and waits for Debug class initialization; RootUpdater initializes Debug -> AEDiagnostics.getLogger/startup -> CO.addAndFireParameterListeners -> ConfigurationManager.getInstance and waits for the same ConfigMan lock. This is an earlier actual dump, not the current SettingsOracle JVM."
+    },
+    {
+      "id": "BOOTSTRAP-2",
+      "evidence": "migration/evidence/P00-03/maven-core.json overlay; ReferenceStartupListener.java:8-9; EngineOracle.java:24,52",
+      "finding": "Repository already records this upstream deadlock and exactly this launcher-thread Debug warmup. Multiple inert helpers use the same ordering without rewriting original classes."
+    },
+    {
+      "id": "BOOTSTRAP-3",
+      "evidence": "COConfigurationManager.java:279-284; ConfigurationManager.java:92-128,170-182; Debug.java:38-51; AEDiagnostics.java:132-170,420-435; FileUtil.java:107-129",
+      "finding": "Original configuration loading holds ConfigMan across load/check/SystemProperties; FileUtil initialization starts an asynchronous helper, while first Debug initialization recursively requests configuration. Early same-thread Debug initialization avoids the historical cross-thread lock inversion and retains original reentrant loader/saver behavior."
+    },
+    {
+      "id": "BOOTSTRAP-4",
+      "evidence": "run_settings_oracle.py; peer_interop.py:16-28; ReferenceFence.java",
+      "finding": "Existing flags isolate config/install/home/tmp/preferences, preserve retained original classes and installed ReferenceFence, disable automatic security-manager replacement/plugin loading, and open java.net for original Java17 DNS adapter. No added bootstrap flags or fence relaxation are supported or needed for this candidate."
+    }
+  ],
+  "current_failure_causality": "Root reports oracle-r1/r2 timeouts and failed owned-child jstack attachment; no usable current causal dump exists. The source-supported historical diagnosis must not be described as a captured current deadlock.",
+  "root_execution_receipt_observed": {
+    "path": "build/options-20261024/oracle-r3/result.json",
+    "sha256": "e3efb87c9fc084918829479ceff2c9e6413dc6434d3d7a95a98fd45e8fd1b524",
+    "status": "PASS_ACTUAL_JAVA_NATIVE_JAVA_NATIVE_SETTINGS",
+    "logs": "Both actual Java invocations reached SETTINGS_AFTER_INITIALISE and their original CREATE/CHECK PASS markers; native apply/reload returned0. This is parent execution evidence, not reviewer execution or a full application equality claim."
+  },
+  "constraints": {
+    "original_production_modified": false,
+    "retained_original_classes_recompiled": false,
+    "fence_changed": false,
+    "core_factory_or_start_added": false,
+    "production_or_native_changes_by_reviewer": false,
+    "candidate_executed_by_reviewer": false
+  },
+  "scope_limit": "Original Debug/config initialization can start utility diagnostics/timer threads and write generated config/logs. No thread-free initialization, original-client startup, generic config recovery/durability equivalence, or whole application parity is claimed. No initialiseFromMap substitution, copied algorithm or CoreFactory/start is used.",
+  "input_sha256": {
+    "build/options-20261024/SettingsOracle.java": "609d6c2a34904d3b1e91e292f2ce2636229b716fe910b785a33259bb088d7c2c",
+    "build/options-20261024/run_settings_oracle.py": "69c14f1bdd6700e3e9d2fae72661e2ecbfc4a27d484b0d77eb0b8097b9f462ac",
+    "build/options-20261024/java-bootstrap-amendment.json": "81949de0b8eda0a0dbd1bd334cdf0c691390e405205b2232ef44821afbe873f4",
+    "migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+    "migration/fixtures/java/ReferenceStartupListener.java": "4049cdb6cfb0bfb79b4b6fefe55a788029f772069168a0bef6195593156102b4",
+    "migration/fixtures/java/EngineOracle.java": "325ca455bfdcd754e4369261348856a9c2143268dd189c3716f1cb7ba4cf7765",
+    "migration/tools/peer_interop.py": "93e1577f1896fbd438a93b0e128c90b394fedaca42fe56db8189fc7f43f5b299",
+    "migration/evidence/P00-03/maven-core.json": "6947e8538fceda9b3089f875184b0686abac6418b8c56de7c4b48e97448b8d9b",
+    "migration/evidence/P00-03/java-startup-thread-dump.txt": "67791562ae2265e485b50e2abe242844722881f9c489ebaab2ec5a0958a6ddca",
+    "core/src/com/biglybt/core/config/COConfigurationManager.java": "5c966082555816d9df5fcc62e2f727ca6a9fbd9317554a66ea72123fea7df99c",
+    "core/src/com/biglybt/core/config/impl/ConfigurationManager.java": "2627f71f0dd69b2cee577331ad6ce05fd230d47df816b592d07236c9b759bc82",
+    "core/src/com/biglybt/core/config/impl/ConfigurationChecker.java": "79c718dac6d1f44d62938e8dda4168fa024066caff6e5af8887b27cf598e9b76",
+    "core/src/com/biglybt/core/util/Debug.java": "0d10d1ad2da659029acaf5fe54865320b8d90a982cfdf1d4e1f7e93d08dd6d14",
+    "core/src/com/biglybt/core/util/AEDiagnostics.java": "43bbbcf12ae21120aa25bc035222234792b910d2785c2569c6e794ce4bdaf128",
+    "core/src/com/biglybt/core/util/FileUtil.java": "6565fa6aa08efd7ef64d339db28040d909765b0808050c7b70ae9a09e8cb4ba2",
+    "core/src/com/biglybt/core/util/AsyncDispatcher.java": "6812e4f72536cf9457f02b1e205ea425abe7e094cf0220f6cfa5a52d467aba29",
+    "core/src/com/biglybt/core/util/AEMonitor.java": "10732da79c2ca2b92d0103036ccac23f0751a3141f0a770f5df24ea44aa96276",
+    "core/src/com/biglybt/core/security/impl/SESecurityManagerBC.java": "d835e63e22e8ad49a080641a895545c828da32d1f61f7b9c219ac7165711e66b",
+    "core/src/com/biglybt/core/security/impl/SESecurityManagerImpl.java": "036c7654c68ab646c709c5105feb02a20a9ac2c4e778e98dcd1bff7840bf3e68",
+    "core/src/com/biglybt/core/util/spi/AENameServiceJava12.java": "8dfe1676157a362b156e3fd301004503085dfaf632377279fd2eebf9e8150b76"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "source": "6dc23d24f1c2008ae817b7da3ee54abe15645572",
+  "identical_files_sha256": {
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/app/BiglyBTC": "472920c89bae8463f9aba3ce8a024c027d7244d3ea6ce60c9a1f0b1c79984570",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/app/BiglyBTC-headless": "dab088032d992818268fb1fb859a099eab8a9e0305d3bd95b9fc71fa8beb2682",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/biglybtc-preview-smoke": "ce799ec1493bd53d94106fa497ad30299f425ab73cc6804152d4df9f6dbbcee2",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-application-settings-tests": "484760b5420c462d9431d6c0939030d2303d008379d6bc689a342624c5d673bb",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-desktop-tests": "53e590cefcf90d9cc2f14f2032ecdbb24fee7f2a2e68dfb20bf161e6b70bdf95",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-effective-rate-limits-tests": "33bcfd5b01a1929f99b3b3f34092c480096d4ddb4fa05a7f2bba06c6f319ca9e",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-engine-activity-integration-tests": "9134ed2d2170671d7fe3695399a1d2b9e0d90127ca920e8baca21df500081d37",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-engine-live-settings-tests": "869cf182fea3e9ab5f7bd6fadd6548ef76cc9f0b36621fc22d853e420f718215",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-library-action-ui-tests": "0e20e4912688c72ee4dcd739e609ad03842583ea30cf04b2e9d57e6ac964a6f8",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-library-commands-bridge-tests": "e4a6e6b2676f31046ac67e1dee8f8ce64cb69667ac1ab3737560a2f625d2b6e0",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-magnet-host-tests": "e301e1d050bc04e6bfd0c6667292d6fec2b2457f23db9ceb3a1666aba743f846",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-managed-download-tests": "54dfd45f025874811dcfc7d2068aad10134e1ab42474703706e609f946891f2f",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-managed-magnet-tests": "b0cdcaa38c559a3cb4171448d28dce1ba263c986d08c39742c511cd0dbc2ded7",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-managed-seeding-tests": "0913117fde8ca5f384f1907103d3e4b200d064295edd6925b9ddd26bbb81d89c",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-network-policy-tests": "84880cf82907eac6a8cce990eea416ea7ddaa58e65ce2763313df135ddf3c9ce",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-options-dialog-tests": "14d84db09a3294a6714cdc4a3db456ad7f3aa608a0c9b9482b8d7145f7be458b",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-options-host-tests": "d771c9d40ee1e6c3a4020e06734d79a64b4a99b551429e5baf71f2e40f370d8e",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-overall-accounting-integration-tests": "cedbec9bd357078304a5d7447f06ce908fffd84eee0d19c3b933b215c3524d5b",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-startup-statistics-tests": "7e328cb9353fafc01f30ecff38cfda1110741c8823e0fb3abd22bd02c6ca4e6a",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-torrent-import-ui-tests": "acf0e13f40b6ad474ce6bb55a7baa9ba67fc8c2fb92b6f19028578b00d4a34fe"
+  },
+  "all_selected_binaries_byte_identical": true,
+  "only_test_registration_changed": true
+}

@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "status": "SOURCE_REVIEW_ONLY_PARENT_EXECUTION_DISTINCT",
+  "files": {
+    "SettingsOracle.before.java": "fa6f2bc78153883fb4ace50e86d4d29a3d825f17c28cac9452667037be7f2c9c",
+    "SettingsOracle.java": "609d6c2a34904d3b1e91e292f2ce2636229b716fe910b785a33259bb088d7c2c",
+    "candidate.patch": "816ce353d27a2c6c5534d9f1650f020383ce0592e56da86d6ae2115ad42e3100",
+    "review.json": "97df5de2afac9558f731f3b76dab3bc7845fa1673eaf9f42c4b699a9800336f9"
+  }
+}

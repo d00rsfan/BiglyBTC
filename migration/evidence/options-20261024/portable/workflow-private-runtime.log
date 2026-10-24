@@ -1,0 +1,18 @@
+Test project /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+    Start 209: application-settings
+1/4 Test #209: application-settings .............   Passed    0.01 sec
+    Start 210: options-dialog
+2/4 Test #210: options-dialog ...................   Passed    0.39 sec
+    Start 211: options-host
+3/4 Test #211: options-host .....................   Passed    0.78 sec
+    Start 212: engine-live-settings
+4/4 Test #212: engine-live-settings .............   Passed    6.95 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+compatibility    =   0.01 sec*proc (1 test)
+options          =   8.13 sec*proc (4 tests)
+unit             =   8.13 sec*proc (4 tests)
+
+Total Test time (real) =   8.13 sec

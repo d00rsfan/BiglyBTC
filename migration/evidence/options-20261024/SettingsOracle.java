@@ -11,7 +11,11 @@ public final class SettingsOracle {
         try {
             require(System.getSecurityManager() instanceof ReferenceFence, "Owned reference fence required");
             require(args.length == 1, "create|check required");
+            // Existing original oracle bootstrap avoids Debug/config class-init deadlock.
+            Class.forName("com.biglybt.core.util.Debug");
+            System.out.println("SETTINGS_BEFORE_INITIALISE");
             COConfigurationManager.initialise();
+            System.out.println("SETTINGS_AFTER_INITIALISE");
             if (args[0].equals("create")) {
                 COConfigurationManager.setParameter("Max Upload Speed KBs", 17);
                 COConfigurationManager.setParameter("Max Download Speed KBs", 31);

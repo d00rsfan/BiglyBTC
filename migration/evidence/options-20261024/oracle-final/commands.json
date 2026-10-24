@@ -1,0 +1,95 @@
+[
+  {
+    "name": "javac-helpers",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "-J-XX:ActiveProcessorCount=2",
+      "--release",
+      "8",
+      "-encoding",
+      "UTF-8",
+      "-proc:none",
+      "-implicit:none",
+      "-sourcepath",
+      "/tmp/biglybtc-settings-oracle-qztskjlu/empty-sourcepath",
+      "-cp",
+      "/tmp/biglybtc-oracle/classes",
+      "-d",
+      "/tmp/biglybtc-settings-oracle-qztskjlu/classes",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java",
+      "/home/yurii/Java/BiglyBT/build/options-20261024/SettingsOracle.java"
+    ],
+    "pid": 3,
+    "exit_code": 0
+  },
+  {
+    "name": "java-create",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-settings-oracle-qztskjlu",
+      "-Dbiglybtc.test.ports=",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-settings-oracle-qztskjlu/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-settings-oracle-qztskjlu/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-settings-oracle-qztskjlu/tmp",
+      "-Duser.home=/tmp/biglybtc-settings-oracle-qztskjlu/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-settings-oracle-qztskjlu/prefs",
+      "-cp",
+      "/tmp/biglybtc-settings-oracle-qztskjlu/classes:/tmp/biglybtc-oracle/classes",
+      "SettingsOracle",
+      "create"
+    ],
+    "pid": 23,
+    "exit_code": 0
+  },
+  {
+    "name": "native-apply",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-settings-roundtrip-driver",
+      "/tmp/biglybtc-settings-oracle-qztskjlu/profile",
+      "apply"
+    ],
+    "pid": 47,
+    "exit_code": 0
+  },
+  {
+    "name": "java-reload-save",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-settings-oracle-qztskjlu",
+      "-Dbiglybtc.test.ports=",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-settings-oracle-qztskjlu/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-settings-oracle-qztskjlu/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-settings-oracle-qztskjlu/tmp",
+      "-Duser.home=/tmp/biglybtc-settings-oracle-qztskjlu/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-settings-oracle-qztskjlu/prefs",
+      "-cp",
+      "/tmp/biglybtc-settings-oracle-qztskjlu/classes:/tmp/biglybtc-oracle/classes",
+      "SettingsOracle",
+      "check"
+    ],
+    "pid": 48,
+    "exit_code": 0
+  },
+  {
+    "name": "native-reload",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-settings-roundtrip-driver",
+      "/tmp/biglybtc-settings-oracle-qztskjlu/profile",
+      "check"
+    ],
+    "pid": 72,
+    "exit_code": 0
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "before_sha256": "0075e6ff83042cf4e7ff3316023ea340dba9d965d89cf94c05cac9e3187f0232",
+  "sha256": "40777a5640b1f592088a0d5365154bb14312225f8679697b2a3def40143b52ec",
+  "reason": "Initial fixture combined explicit bind with peer proxy, a correctly rejected unsupported combination. Use explicit wildcard desired bind for supported SOCKS5; active isolated bind/proxy must still remain unchanged. No product/assertion/fence changes.",
+  "first_attempt": "attempt-r1/actual-host-live.log"
+}

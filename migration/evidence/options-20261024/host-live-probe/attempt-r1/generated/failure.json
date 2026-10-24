@@ -1,0 +1,5 @@
+{
+    "reason": "Actual Options save failed: Unsupported or invalid setting: proxy Bind IP",
+    "status": "FAIL_ACTUAL_OPTIONS_HOST_LIVE",
+    "work": "/tmp/biglybtc-options-host-live-20261024-r1"
+}

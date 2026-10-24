@@ -1,0 +1,11 @@
+--- SettingsOracle.java
++++ SettingsOracle.java
+@@ -11,6 +11,8 @@
+         try {
+             require(System.getSecurityManager() instanceof ReferenceFence, "Owned reference fence required");
+             require(args.length == 1, "create|check required");
++            // Existing original oracle bootstrap avoids Debug/config class-init deadlock.
++            Class.forName("com.biglybt.core.util.Debug");
+             System.out.println("SETTINGS_BEFORE_INITIALISE");
+             COConfigurationManager.initialise();
+             System.out.println("SETTINGS_AFTER_INITIALISE");

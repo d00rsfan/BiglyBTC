@@ -1,0 +1,121 @@
+{
+  "status": "PASS_ACTUAL_JAVA_NATIVE_JAVA_NATIVE_SETTINGS",
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_driver_sha256": "32f9dab7011c3c2967b2da5c923ad847881eb102288c0bd34749fd299055c8cd",
+  "retention_sha256": "7472e8bda8d832fd5a962cda76ba1fcefaa0e6e9b4cad2621e0be97e6fbec9dd",
+  "cohort_files": 5432,
+  "original_core_recompiled": false,
+  "original_profile_or_process_access": false,
+  "scope": "Actual original COConfigurationManager getters/saver and native sparse adapter; owned generated configuration, no original core or networking startup",
+  "commands": [
+    {
+      "name": "javac-helpers",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+        "-J-XX:ActiveProcessorCount=2",
+        "--release",
+        "8",
+        "-encoding",
+        "UTF-8",
+        "-proc:none",
+        "-implicit:none",
+        "-sourcepath",
+        "/tmp/biglybtc-settings-oracle-qztskjlu/empty-sourcepath",
+        "-cp",
+        "/tmp/biglybtc-oracle/classes",
+        "-d",
+        "/tmp/biglybtc-settings-oracle-qztskjlu/classes",
+        "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java",
+        "/home/yurii/Java/BiglyBT/build/options-20261024/SettingsOracle.java"
+      ],
+      "pid": 3,
+      "exit_code": 0
+    },
+    {
+      "name": "java-create",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-settings-oracle-qztskjlu",
+        "-Dbiglybtc.test.ports=",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-settings-oracle-qztskjlu/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-settings-oracle-qztskjlu/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-settings-oracle-qztskjlu/tmp",
+        "-Duser.home=/tmp/biglybtc-settings-oracle-qztskjlu/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-settings-oracle-qztskjlu/prefs",
+        "-cp",
+        "/tmp/biglybtc-settings-oracle-qztskjlu/classes:/tmp/biglybtc-oracle/classes",
+        "SettingsOracle",
+        "create"
+      ],
+      "pid": 23,
+      "exit_code": 0
+    },
+    {
+      "name": "native-apply",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-settings-roundtrip-driver",
+        "/tmp/biglybtc-settings-oracle-qztskjlu/profile",
+        "apply"
+      ],
+      "pid": 47,
+      "exit_code": 0
+    },
+    {
+      "name": "java-reload-save",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-settings-oracle-qztskjlu",
+        "-Dbiglybtc.test.ports=",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-settings-oracle-qztskjlu/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-settings-oracle-qztskjlu/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-settings-oracle-qztskjlu/tmp",
+        "-Duser.home=/tmp/biglybtc-settings-oracle-qztskjlu/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-settings-oracle-qztskjlu/prefs",
+        "-cp",
+        "/tmp/biglybtc-settings-oracle-qztskjlu/classes:/tmp/biglybtc-oracle/classes",
+        "SettingsOracle",
+        "check"
+      ],
+      "pid": 48,
+      "exit_code": 0
+    },
+    {
+      "name": "native-reload",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-settings-roundtrip-driver",
+        "/tmp/biglybtc-settings-oracle-qztskjlu/profile",
+        "check"
+      ],
+      "pid": 72,
+      "exit_code": 0
+    }
+  ],
+  "fixture_sha256": {
+    "native-edited.config": "0ee04c78af46a48d8170db9af5947ca8bab8db7009d3f8a7a8e9e2eee945abcc",
+    "original-created.config": "7b1326fc675ae06f98aebdfa3870fe4d7af734f349123f0901952ed6b4bddbc3"
+  },
+  "logs_sha256": {
+    "native-reload.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "native-reload.stdout": "e111b81e1c179521886c762def21bf6ca490f8765d16587065ff84de8259dd67",
+    "java-reload-save.stderr": "32ddfaf08515fdc183896d185b457891f7428f493fb5fccb84ebba705764a2bf",
+    "java-reload-save.stdout": "b6d000d5204d36daebd5c5b5b9896c9966c3908161cfc702ee82f87289a097f4",
+    "native-apply.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "native-apply.stdout": "9095c5fc86baa2cde3c5477bf052b3cde6d03848574b78f580c679b688153733",
+    "java-create.stderr": "32ddfaf08515fdc183896d185b457891f7428f493fb5fccb84ebba705764a2bf",
+    "java-create.stdout": "aefe0cec1ed682f036439861c97fbbd1c54ab3d4082927e6b7709eb2b14afab6",
+    "javac-helpers.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "javac-helpers.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

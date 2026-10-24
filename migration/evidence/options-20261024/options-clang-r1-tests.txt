@@ -1,0 +1,504 @@
+UpdateCTestConfiguration  from :/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/DartConfiguration.tcl
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang
+Constructing a list of tests
+Done constructing a list of tests
+Updating test list for fixtures
+Added 0 tests to meet fixture requirements
+Checking test dependency graph...
+Checking test dependency graph end
+test 84
+      Start  84: owned-engine-activity-window-worker
+
+84: Test command: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-engine-activity-integration-tests
+84: Working Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+84: Environment variables: 
+84:  QT_QPA_PLATFORM=offscreen
+84: Test timeout computed to be: 120
+84: ********* Start testing of EngineActivityIntegrationTests *********
+84: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+84: PASS   : EngineActivityIntegrationTests::initTestCase()
+84: QWARN  : EngineActivityIntegrationTests::windowCollectsWithoutPageAndRestoresImmutableHistory() This plugin does not support propagateSizeHints()
+84: QWARN  : EngineActivityIntegrationTests::windowCollectsWithoutPageAndRestoresImmutableHistory() This plugin does not support propagateSizeHints()
+84: QWARN  : EngineActivityIntegrationTests::windowCollectsWithoutPageAndRestoresImmutableHistory() This plugin does not support propagateSizeHints()
+84: PASS   : EngineActivityIntegrationTests::windowCollectsWithoutPageAndRestoresImmutableHistory()
+84: QWARN  : EngineActivityIntegrationTests::windowRejectsUnboundStaleRepliesAndResetsAtEveryOperation() This plugin does not support propagateSizeHints()
+84: QWARN  : EngineActivityIntegrationTests::windowRejectsUnboundStaleRepliesAndResetsAtEveryOperation() This plugin does not support propagateSizeHints()
+84: QWARN  : EngineActivityIntegrationTests::windowRejectsUnboundStaleRepliesAndResetsAtEveryOperation() This plugin does not support propagateSizeHints()
+84: PASS   : EngineActivityIntegrationTests::windowRejectsUnboundStaleRepliesAndResetsAtEveryOperation()
+84: QWARN  : EngineActivityIntegrationTests::realTrafficCollectedWithClosedTabAndReopenedAfterCompletion(single-file) This plugin does not support propagateSizeHints()
+84: QWARN  : EngineActivityIntegrationTests::realTrafficCollectedWithClosedTabAndReopenedAfterCompletion(single-file) This plugin does not support propagateSizeHints()
+84: QWARN  : EngineActivityIntegrationTests::realTrafficCollectedWithClosedTabAndReopenedAfterCompletion(single-file) This plugin does not support propagateSizeHints()
+84: QWARN  : EngineActivityIntegrationTests::realTrafficCollectedWithClosedTabAndReopenedAfterCompletion(single-file) This plugin does not support propagateSizeHints()
+84: QWARN  : EngineActivityIntegrationTests::realTrafficCollectedWithClosedTabAndReopenedAfterCompletion(single-file) This plugin does not support propagateSizeHints()
+84: PASS   : EngineActivityIntegrationTests::realTrafficCollectedWithClosedTabAndReopenedAfterCompletion(single-file)
+84: QWARN  : EngineActivityIntegrationTests::realTrafficCollectedWithClosedTabAndReopenedAfterCompletion(multifile) This plugin does not support propagateSizeHints()
+84: QWARN  : EngineActivityIntegrationTests::realTrafficCollectedWithClosedTabAndReopenedAfterCompletion(multifile) This plugin does not support propagateSizeHints()
+84: QWARN  : EngineActivityIntegrationTests::realTrafficCollectedWithClosedTabAndReopenedAfterCompletion(multifile) This plugin does not support propagateSizeHints()
+84: QWARN  : EngineActivityIntegrationTests::realTrafficCollectedWithClosedTabAndReopenedAfterCompletion(multifile) This plugin does not support propagateSizeHints()
+84: QWARN  : EngineActivityIntegrationTests::realTrafficCollectedWithClosedTabAndReopenedAfterCompletion(multifile) This plugin does not support propagateSizeHints()
+84: PASS   : EngineActivityIntegrationTests::realTrafficCollectedWithClosedTabAndReopenedAfterCompletion(multifile)
+84: QWARN  : EngineActivityIntegrationTests::cancellationRetainsActualHistoryFromAnUnfinishedTransfer() This plugin does not support propagateSizeHints()
+84: QWARN  : EngineActivityIntegrationTests::cancellationRetainsActualHistoryFromAnUnfinishedTransfer() This plugin does not support propagateSizeHints()
+84: QWARN  : EngineActivityIntegrationTests::cancellationRetainsActualHistoryFromAnUnfinishedTransfer() This plugin does not support propagateSizeHints()
+84: PASS   : EngineActivityIntegrationTests::cancellationRetainsActualHistoryFromAnUnfinishedTransfer()
+84: PASS   : EngineActivityIntegrationTests::cleanupTestCase()
+84: Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 14135ms
+84: ********* Finished testing of EngineActivityIntegrationTests *********
+ 1/18 Test  #84: owned-engine-activity-window-worker ...   Passed   14.24 sec
+test 93
+      Start  93: desktop-model-and-lifecycle
+
+93: Test command: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-desktop-tests "modelValuesSelectionAndStaleTargets" "closeWaitsForCancellationAndWorkerTeardown" "cancellationFromBusyNotificationCompletes"
+93: Working Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+93: Environment variables: 
+93:  QT_QPA_PLATFORM=offscreen
+93: Test timeout computed to be: 120
+93: ********* Start testing of DesktopTests *********
+93: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+93: PASS   : DesktopTests::initTestCase()
+93: PASS   : DesktopTests::modelValuesSelectionAndStaleTargets()
+93: QWARN  : DesktopTests::closeWaitsForCancellationAndWorkerTeardown() This plugin does not support propagateSizeHints()
+93: QWARN  : DesktopTests::closeWaitsForCancellationAndWorkerTeardown() This plugin does not support propagateSizeHints()
+93: PASS   : DesktopTests::closeWaitsForCancellationAndWorkerTeardown()
+93: PASS   : DesktopTests::cancellationFromBusyNotificationCompletes()
+93: PASS   : DesktopTests::cleanupTestCase()
+93: Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 437ms
+93: ********* Finished testing of DesktopTests *********
+ 2/18 Test  #93: desktop-model-and-lifecycle ...........   Passed    0.58 sec
+test 94
+      Start  94: desktop-files-model
+
+94: Test command: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-desktop-tests "filesValuesSelectionAndStaleResults"
+94: Working Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+94: Environment variables: 
+94:  QT_QPA_PLATFORM=offscreen
+94: Test timeout computed to be: 120
+94: ********* Start testing of DesktopTests *********
+94: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+94: PASS   : DesktopTests::initTestCase()
+94: QWARN  : DesktopTests::filesValuesSelectionAndStaleResults() This plugin does not support propagateSizeHints()
+94: QWARN  : DesktopTests::filesValuesSelectionAndStaleResults() This plugin does not support propagateSizeHints()
+94: PASS   : DesktopTests::filesValuesSelectionAndStaleResults()
+94: PASS   : DesktopTests::cleanupTestCase()
+94: Totals: 3 passed, 0 failed, 0 skipped, 0 blacklisted, 165ms
+94: ********* Finished testing of DesktopTests *********
+ 3/18 Test  #94: desktop-files-model ...................   Passed    0.31 sec
+test 144
+      Start 144: overall-accounting-window-worker
+
+144: Test command: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-overall-accounting-integration-tests
+144: Working Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+144: Environment variables: 
+144:  QT_QPA_PLATFORM=offscreen
+144: Test timeout computed to be: 240
+144: ********* Start testing of OverallAccountingIntegrationTests *********
+144: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+144: PASS   : OverallAccountingIntegrationTests::initTestCase()
+144: QWARN  : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(single) This plugin does not support propagateSizeHints()
+144: QWARN  : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(single) This plugin does not support propagateSizeHints()
+144: QWARN  : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(single) This plugin does not support propagateSizeHints()
+144: QWARN  : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(single) This plugin does not support propagateSizeHints()
+144: QWARN  : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(single) This plugin does not support propagateSizeHints()
+144: QWARN  : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(single) This plugin does not support propagateSizeHints()
+144: PASS   : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(single)
+144: QWARN  : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(multifile) This plugin does not support propagateSizeHints()
+144: QWARN  : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(multifile) This plugin does not support propagateSizeHints()
+144: QWARN  : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(multifile) This plugin does not support propagateSizeHints()
+144: QWARN  : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(multifile) This plugin does not support propagateSizeHints()
+144: QWARN  : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(multifile) This plugin does not support propagateSizeHints()
+144: QWARN  : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(multifile) This plugin does not support propagateSizeHints()
+144: PASS   : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(multifile)
+144: QWARN  : OverallAccountingIntegrationTests::optionalFileFailuresPreserveTransferAndRelease(overall-saving-fifo) This plugin does not support propagateSizeHints()
+144: QWARN  : OverallAccountingIntegrationTests::optionalFileFailuresPreserveTransferAndRelease(overall-saving-fifo) This plugin does not support propagateSizeHints()
+144: QWARN  : OverallAccountingIntegrationTests::optionalFileFailuresPreserveTransferAndRelease(overall-saving-fifo) This plugin does not support propagateSizeHints()
+144: PASS   : OverallAccountingIntegrationTests::optionalFileFailuresPreserveTransferAndRelease(overall-saving-fifo)
+144: QWARN  : OverallAccountingIntegrationTests::optionalFileFailuresPreserveTransferAndRelease(history-directory-symlink) This plugin does not support propagateSizeHints()
+144: QWARN  : OverallAccountingIntegrationTests::optionalFileFailuresPreserveTransferAndRelease(history-directory-symlink) This plugin does not support propagateSizeHints()
+144: QWARN  : OverallAccountingIntegrationTests::optionalFileFailuresPreserveTransferAndRelease(history-directory-symlink) This plugin does not support propagateSizeHints()
+144: PASS   : OverallAccountingIntegrationTests::optionalFileFailuresPreserveTransferAndRelease(history-directory-symlink)
+144: QWARN  : OverallAccountingIntegrationTests::disabledMinuteRecordingStillPersistsActualOverallOnJoinedClose() This plugin does not support propagateSizeHints()
+144: QWARN  : OverallAccountingIntegrationTests::disabledMinuteRecordingStillPersistsActualOverallOnJoinedClose() This plugin does not support propagateSizeHints()
+144: PASS   : OverallAccountingIntegrationTests::disabledMinuteRecordingStillPersistsActualOverallOnJoinedClose()
+144: PASS   : OverallAccountingIntegrationTests::cleanupTestCase()
+144: Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 30815ms
+144: ********* Finished testing of OverallAccountingIntegrationTests *********
+ 4/18 Test #144: overall-accounting-window-worker ......   Passed   31.00 sec
+test 149
+      Start 149: effective-rate-limits
+
+149: Test command: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-effective-rate-limits-tests
+149: Working Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+149: Test timeout computed to be: 120
+149: PASS effective session-rate-limit projection; 77 assertions; explicit settings packs only, no session/network mutation
+ 5/18 Test #149: effective-rate-limits .................   Passed    0.01 sec
+test 152
+      Start 152: startup-statistics-worker
+
+152: Test command: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-startup-statistics-tests
+152: Working Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+152: Environment variables: 
+152:  QT_QPA_PLATFORM=offscreen
+152: Test timeout computed to be: 240
+152: ********* Start testing of StartupStatisticsTests *********
+152: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+152: PASS   : StartupStatisticsTests::initTestCase()
+152: QWARN  : StartupStatisticsTests::actualIdlePrecedesStatisticsAndSharesFirstOperation(single) This plugin does not support propagateSizeHints()
+152: QWARN  : StartupStatisticsTests::actualIdlePrecedesStatisticsAndSharesFirstOperation(single) This plugin does not support propagateSizeHints()
+152: QWARN  : StartupStatisticsTests::actualIdlePrecedesStatisticsAndSharesFirstOperation(single) This plugin does not support propagateSizeHints()
+152: PASS   : StartupStatisticsTests::actualIdlePrecedesStatisticsAndSharesFirstOperation(single)
+152: QWARN  : StartupStatisticsTests::actualIdlePrecedesStatisticsAndSharesFirstOperation(multifile) This plugin does not support propagateSizeHints()
+152: QWARN  : StartupStatisticsTests::actualIdlePrecedesStatisticsAndSharesFirstOperation(multifile) This plugin does not support propagateSizeHints()
+152: QWARN  : StartupStatisticsTests::actualIdlePrecedesStatisticsAndSharesFirstOperation(multifile) This plugin does not support propagateSizeHints()
+152: PASS   : StartupStatisticsTests::actualIdlePrecedesStatisticsAndSharesFirstOperation(multifile)
+152: PASS   : StartupStatisticsTests::closingRealIdleOwnerWithoutTorrentPersistsObservedUptimeAndZeroTraffic()
+152: QWARN  : StartupStatisticsTests::offlineOpenAndStatisticsStayWithoutAnOwner() This plugin does not support propagateSizeHints()
+152: QWARN  : StartupStatisticsTests::offlineOpenAndStatisticsStayWithoutAnOwner() This plugin does not support propagateSizeHints()
+152: QWARN  : StartupStatisticsTests::offlineOpenAndStatisticsStayWithoutAnOwner() This plugin does not support propagateSizeHints()
+152: PASS   : StartupStatisticsTests::offlineOpenAndStatisticsStayWithoutAnOwner()
+152: PASS   : StartupStatisticsTests::cleanupTestCase()
+152: Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 18599ms
+152: ********* Finished testing of StartupStatisticsTests *********
+ 6/18 Test #152: startup-statistics-worker .............   Passed   18.76 sec
+test 196
+      Start 196: library-action-ui
+
+196: Test command: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-library-action-ui-tests
+196: Working Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+196: Environment variables: 
+196:  QT_QPA_PLATFORM=offscreen
+196: Test timeout computed to be: 240
+196: ********* Start testing of LibraryActionUiTests *********
+196: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+196: PASS   : LibraryActionUiTests::initTestCase()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-start) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-start) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-start) This plugin does not support propagateSizeHints()
+196: PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-start)
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-stop) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-stop) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-stop) This plugin does not support propagateSizeHints()
+196: PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-stop)
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-pause) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-pause) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-pause) This plugin does not support propagateSizeHints()
+196: PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-pause)
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-resume) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-resume) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-resume) This plugin does not support propagateSizeHints()
+196: PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-resume)
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-queue) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-queue) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-queue) This plugin does not support propagateSizeHints()
+196: PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-queue)
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-force-start) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-force-start) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-force-start) This plugin does not support propagateSizeHints()
+196: PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-force-start)
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-top) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-top) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-top) This plugin does not support propagateSizeHints()
+196: PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-top)
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-up) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-up) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-up) This plugin does not support propagateSizeHints()
+196: PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-up)
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-down) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-down) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-down) This plugin does not support propagateSizeHints()
+196: PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-down)
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-bottom) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-bottom) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-bottom) This plugin does not support propagateSizeHints()
+196: PASS   : LibraryActionUiTests::eachCommandRoutesWholeSelection(classic-bottom)
+196: QWARN  : LibraryActionUiTests::unsupportedMemberNeverDispatchesPartialSelection() This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::unsupportedMemberNeverDispatchesPartialSelection() This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::unsupportedMemberNeverDispatchesPartialSelection() This plugin does not support propagateSizeHints()
+196: PASS   : LibraryActionUiTests::unsupportedMemberNeverDispatchesPartialSelection()
+196: QWARN  : LibraryActionUiTests::transfersAllIncludesFilteredAndCompleteRows() This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::transfersAllIncludesFilteredAndCompleteRows() This plugin does not support propagateSizeHints()
+196: PASS   : LibraryActionUiTests::transfersAllIncludesFilteredAndCompleteRows()
+196: QWARN  : LibraryActionUiTests::toolbarAndContextReuseTheCommandObjects() This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::toolbarAndContextReuseTheCommandObjects() This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::toolbarAndContextReuseTheCommandObjects() This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::toolbarAndContextReuseTheCommandObjects() This plugin does not support raise()
+196: QWARN  : LibraryActionUiTests::toolbarAndContextReuseTheCommandObjects() This plugin does not support grabbing the keyboard
+196: PASS   : LibraryActionUiTests::toolbarAndContextReuseTheCommandObjects()
+196: QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-library-revision) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-library-revision) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-library-revision) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-library-revision) This plugin does not support raise()
+196: QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-library-revision) This plugin does not support grabbing the keyboard
+196: PASS   : LibraryActionUiTests::openMenuDoesNotRetarget(new-library-revision)
+196: QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-selection) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-selection) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-selection) This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-selection) This plugin does not support raise()
+196: QWARN  : LibraryActionUiTests::openMenuDoesNotRetarget(new-selection) This plugin does not support grabbing the keyboard
+196: PASS   : LibraryActionUiTests::openMenuDoesNotRetarget(new-selection)
+196: QWARN  : LibraryActionUiTests::explicitPermissionsBusyAndOfflineAreIndependentOfSavedNames() This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::explicitPermissionsBusyAndOfflineAreIndependentOfSavedNames() This plugin does not support propagateSizeHints()
+196: PASS   : LibraryActionUiTests::explicitPermissionsBusyAndOfflineAreIndependentOfSavedNames()
+196: QWARN  : LibraryActionUiTests::invalidCapabilitiesAndAmbiguousTargetsFailClosed() This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::invalidCapabilitiesAndAmbiguousTargetsFailClosed() This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::invalidCapabilitiesAndAmbiguousTargetsFailClosed() This plugin does not support propagateSizeHints()
+196: PASS   : LibraryActionUiTests::invalidCapabilitiesAndAmbiguousTargetsFailClosed()
+196: PASS   : LibraryActionUiTests::actionPropertyCallbacksCannotResumeOldState()
+196: QWARN  : LibraryActionUiTests::dispatchReentryCannotSubmitTwiceOrMutateCapturedTargets() This plugin does not support propagateSizeHints()
+196: QWARN  : LibraryActionUiTests::dispatchReentryCannotSubmitTwiceOrMutateCapturedTargets() This plugin does not support propagateSizeHints()
+196: PASS   : LibraryActionUiTests::dispatchReentryCannotSubmitTwiceOrMutateCapturedTargets()
+196: PASS   : LibraryActionUiTests::dispatchAllowsOwnerDeletionWithoutASecondPublication()
+196: PASS   : LibraryActionUiTests::cleanupTestCase()
+196: Totals: 22 passed, 0 failed, 0 skipped, 0 blacklisted, 766ms
+196: ********* Finished testing of LibraryActionUiTests *********
+ 7/18 Test #196: library-action-ui .....................   Passed    0.92 sec
+test 197
+      Start 197: network-policy
+
+197: Test command: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-network-policy-tests
+197: Working Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+197: Test timeout computed to be: 240
+197: 17 network-policy families, 165 assertions passed
+ 8/18 Test #197: network-policy ........................   Passed    0.01 sec
+test 199
+      Start 199: managed-download
+
+199: Test command: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-managed-download-tests
+199: Working Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+199: Test timeout computed to be: 240
+199: ********* Start testing of ManagedDownloadTests *********
+199: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+199: PASS   : ManagedDownloadTests::initTestCase()
+199: PASS   : ManagedDownloadTests::rawEpochContinuityKeepsUntickedBytesAndCrossingReadsRetry()
+199: PASS   : ManagedDownloadTests::rawEpochInvalidReadsAndOverflowFailWithoutFallback()
+199: PASS   : ManagedDownloadTests::concurrentMixedHandlesRemainControllableUnderOneOwner()
+199: PASS   : ManagedDownloadTests::partialStopAndRepeatedHashCheckpointsKeepFreshSavedIntent()
+199: PASS   : ManagedDownloadTests::failedAndForeignAdmissionsDoNotReplaceTheOtherActiveTorrent()
+199: PASS   : ManagedDownloadTests::unsafePayloadPreparationDoesNotAdmitOrRewriteAProfile()
+199: PASS   : ManagedDownloadTests::cleanupTestCase()
+199: Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 14811ms
+199: ********* Finished testing of ManagedDownloadTests *********
+ 9/18 Test #199: managed-download ......................   Passed   14.82 sec
+test 204
+      Start 204: torrent-import-ui
+
+204: Test command: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-torrent-import-ui-tests
+204: Working Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+204: Environment variables: 
+204:  QT_QPA_PLATFORM=offscreen
+204: Test timeout computed to be: 240
+204: ********* Start testing of TorrentImportUiTests *********
+204: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+204: PASS   : TorrentImportUiTests::initTestCase()
+204: PASS   : TorrentImportUiTests::fileMenuAndToolbarShareCtrlOpenWithoutNeedingRows()
+204: PASS   : TorrentImportUiTests::submissionsOwnExactUserValues(torrent-start)
+204: PASS   : TorrentImportUiTests::submissionsOwnExactUserValues(torrent-stopped)
+204: PASS   : TorrentImportUiTests::submissionsOwnExactUserValues(magnet-link)
+204: PASS   : TorrentImportUiTests::malformedOrUnboundedFormValuesNeverDispatch()
+204: QWARN  : TorrentImportUiTests::noProfileBusyOfflineAndClosingBlockBothSubmissionPaths() This plugin does not support propagateSizeHints()
+204: PASS   : TorrentImportUiTests::noProfileBusyOfflineAndClosingBlockBothSubmissionPaths()
+204: PASS   : TorrentImportUiTests::signalReentryIsBlockedAndOwnerMayBeDeleted()
+204: PASS   : TorrentImportUiTests::cleanupTestCase()
+204: Totals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 144ms
+204: ********* Finished testing of TorrentImportUiTests *********
+10/18 Test #204: torrent-import-ui .....................   Passed    0.24 sec
+test 207
+      Start 207: managed-seeding
+
+207: Test command: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-managed-seeding-tests
+207: Working Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+207: Test timeout computed to be: 240
+207: ********* Start testing of ManagedSeedingTests *********
+207: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+207: PASS   : ManagedSeedingTests::initTestCase()
+207: PASS   : ManagedSeedingTests::completedNativeHandleUploadsActualPayloadToAnIndependentOwnedLeecher(single)
+207: PASS   : ManagedSeedingTests::completedNativeHandleUploadsActualPayloadToAnIndependentOwnedLeecher(multifile)
+207: PASS   : ManagedSeedingTests::selectedCompletionRetainsSparseSkippedLinearStorageAndOriginalPolicyOnReopen()
+207: PASS   : ManagedSeedingTests::immediateStopBeforeFirstPieceSampleRetainsExistingDataForRestart()
+207: PASS   : ManagedSeedingTests::cleanupTestCase()
+207: Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 19044ms
+207: ********* Finished testing of ManagedSeedingTests *********
+11/18 Test #207: managed-seeding .......................   Passed   19.05 sec
+test 208
+      Start 208: managed-magnet
+
+208: Test command: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-managed-magnet-tests
+208: Working Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+208: Test timeout computed to be: 240
+208: ********* Start testing of ManagedMagnetTests *********
+208: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+208: PASS   : ManagedMagnetTests::initTestCase()
+208: PASS   : ManagedMagnetTests::actualMetadataThenMaterialPayload(single-forced)
+208: PASS   : ManagedMagnetTests::actualMetadataThenMaterialPayload(multifile-normal)
+208: PASS   : ManagedMagnetTests::stoppedIntentImportsRealMetadataWithoutMaterialPayload()
+208: PASS   : ManagedMagnetTests::resolvingCancelAndJoinedClose(explicit-cancel-retires-intent)
+208: PASS   : ManagedMagnetTests::resolvingCancelAndJoinedClose(joined-close-retains-recovery-intent)
+208: PASS   : ManagedMagnetTests::unsafeActualMetadataNeverTouchesPayload(single-name-traversal)
+208: PASS   : ManagedMagnetTests::unsafeActualMetadataNeverTouchesPayload(multifile-component-traversal)
+208: PASS   : ManagedMagnetTests::admissionsRequirePersistedIntentAndExactHeldProfile()
+208: PASS   : ManagedMagnetTests::cleanupTestCase()
+208: Totals: 10 passed, 0 failed, 0 skipped, 0 blacklisted, 2547ms
+208: ********* Finished testing of ManagedMagnetTests *********
+12/18 Test #208: managed-magnet ........................   Passed    2.56 sec
+test 209
+      Start 209: managed-library-command-routing
+
+209: Test command: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-library-commands-bridge-tests
+209: Working Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+209: Environment variables: 
+209:  QT_QPA_PLATFORM=offscreen
+209: Test timeout computed to be: 240
+209: ********* Start testing of LibraryCommandsBridgeTests *********
+209: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+209: PASS   : LibraryCommandsBridgeTests::initTestCase()
+209: PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(stale-second)
+209: PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(unknown-second)
+209: PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(duplicate-second)
+209: PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(unauthorized-second)
+209: PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(invalid-action-next)
+209: PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(invalid-action-large)
+209: QWARN  : LibraryCommandsBridgeTests::mixedTargetsRouteSavedIntentAndActualProgressIndependently() This plugin does not support propagateSizeHints()
+209: QWARN  : LibraryCommandsBridgeTests::mixedTargetsRouteSavedIntentAndActualProgressIndependently() This plugin does not support propagateSizeHints()
+209: PASS   : LibraryCommandsBridgeTests::mixedTargetsRouteSavedIntentAndActualProgressIndependently()
+209: PASS   : LibraryCommandsBridgeTests::passivePhaseSnapshotCannotReleaseQueuedCommandBusyOwnership()
+209: PASS   : LibraryCommandsBridgeTests::closeReportsActualCheckpointConflictAfterJoiningAndReleasingProfile()
+209: PASS   : LibraryCommandsBridgeTests::cleanupTestCase()
+209: Totals: 11 passed, 0 failed, 0 skipped, 0 blacklisted, 28406ms
+209: ********* Finished testing of LibraryCommandsBridgeTests *********
+13/18 Test #209: managed-library-command-routing .......   Passed   28.54 sec
+test 210
+      Start 210: magnet-host
+
+210: Test command: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-magnet-host-tests
+210: Working Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+210: Environment variables: 
+210:  QT_QPA_PLATFORM=offscreen
+210: Test timeout computed to be: 240
+210: ********* Start testing of MagnetBridgeTests *********
+210: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+210: PASS   : MagnetBridgeTests::initTestCase()
+210: PASS   : MagnetBridgeTests::actualMetadataImportsAndStartsInSameOwner(single)
+210: PASS   : MagnetBridgeTests::actualMetadataImportsAndStartsInSameOwner(multi)
+210: PASS   : MagnetBridgeTests::importedCrashRecoveryPreservesLaterStopAndDoesNotResolveAgain()
+210: PASS   : MagnetBridgeTests::legacyDestinationAndWholeSelectionCasRemainSafe()
+210: PASS   : MagnetBridgeTests::legacyResubmissionAttachesDestinationAndRetainsOriginalStoppedIntent()
+210: PASS   : MagnetBridgeTests::malformedPendingReadRetainsDisabledRowAndDoesNotRewriteConfig()
+210: PASS   : MagnetBridgeTests::cleanupTestCase()
+210: Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 7340ms
+210: ********* Finished testing of MagnetBridgeTests *********
+14/18 Test #210: magnet-host ...........................   Passed    7.63 sec
+test 211
+      Start 211: application-settings
+
+211: Test command: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-application-settings-tests
+211: Working Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+211: Test timeout computed to be: 90
+211: 11 application-settings families, 309 assertions passed
+15/18 Test #211: application-settings ..................   Passed    0.02 sec
+test 212
+      Start 212: options-dialog
+
+212: Test command: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-options-dialog-tests
+212: Working Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+212: Environment variables: 
+212:  QT_QPA_PLATFORM=offscreen
+212: Test timeout computed to be: 240
+212: ********* Start testing of OptionsDialogTests *********
+212: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+212: PASS   : OptionsDialogTests::initTestCase()
+212: PASS   : OptionsDialogTests::classicPagesMaskPasswordsAndLabelUnavailableFeatures()
+212: PASS   : OptionsDialogTests::hiddenAndBusyInitialReadCoalescesUntilVisibleIdle()
+212: PASS   : OptionsDialogTests::staleAndMalformedReadPacketsCannotReplaceCurrentProfile()
+212: PASS   : OptionsDialogTests::sparseEditsPreserveInvalidAndMissingFields()
+212: PASS   : OptionsDialogTests::returningToLoadedValueSubmitsNothing()
+212: PASS   : OptionsDialogTests::invalidEditedValueDoesNotReachWorker()
+212: PASS   : OptionsDialogTests::failedSaveRetainsDraftAndRetryUsesOriginalRevision()
+212: PASS   : OptionsDialogTests::okWaitsForMatchingCommitAndPendingCloseCannotDiscard()
+212: QWARN  : OptionsDialogTests::dirtyCancelAndDiscardAreExplicit() This plugin does not support propagateSizeHints()
+212: QWARN  : OptionsDialogTests::dirtyCancelAndDiscardAreExplicit() This plugin does not support propagateSizeHints()
+212: PASS   : OptionsDialogTests::dirtyCancelAndDiscardAreExplicit()
+212: PASS   : OptionsDialogTests::readFailureCanRetryAndSessionInvalidationDropsCredentials()
+212: PASS   : OptionsDialogTests::loadAndSaveSignalCallbacksMayDeleteDialog()
+212: PASS   : OptionsDialogTests::enabledCallbackMayRebindProfileWithoutOldValuesLeaking()
+212: PASS   : OptionsDialogTests::cleanupTestCase()
+212: Totals: 14 passed, 0 failed, 0 skipped, 0 blacklisted, 745ms
+212: ********* Finished testing of OptionsDialogTests *********
+16/18 Test #212: options-dialog ........................   Passed    0.88 sec
+test 213
+      Start 213: options-host
+
+213: Test command: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-options-host-tests
+213: Working Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+213: Environment variables: 
+213:  QT_QPA_PLATFORM=offscreen
+213: Test timeout computed to be: 240
+213: ********* Start testing of OptionsHostTests *********
+213: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+213: PASS   : OptionsHostTests::initTestCase()
+213: PASS   : OptionsHostTests::savesSparseOriginalValuesAndReturnsFreshRevision()
+213: PASS   : OptionsHostTests::externalEditAndIncompatibleNetworkRejectBeforePublication()
+213: PASS   : OptionsHostTests::wrongSessionAndInvalidValuesHaveNoSideEffect()
+213: QWARN  : OptionsHostTests::toolsMenuOpensBoundDialogAndUsesCompatibleSave() This plugin does not support propagateSizeHints()
+213: PASS   : OptionsHostTests::toolsMenuOpensBoundDialogAndUsesCompatibleSave()
+213: PASS   : OptionsHostTests::cleanupTestCase()
+213: Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 719ms
+213: ********* Finished testing of OptionsHostTests *********
+17/18 Test #213: options-host ..........................   Passed    0.90 sec
+test 214
+      Start 214: engine-live-settings
+
+214: Test command: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-engine-live-settings-tests
+214: Working Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+214: Environment variables: 
+214:  QT_QPA_PLATFORM=offscreen
+214: Test timeout computed to be: 240
+214: ********* Start testing of EngineLiveSettingsTests *********
+214: Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+214: PASS   : EngineLiveSettingsTests::initTestCase()
+214: PASS   : EngineLiveSettingsTests::purePlanPreservesAllActiveRoutingAndEmitsOnlyNarrowKeys()
+214: PASS   : EngineLiveSettingsTests::cachedBeforeIdleCreatesNoSessionAndStartupUsesOriginalQueueDefaults()
+214: PASS   : EngineLiveSettingsTests::liveRatesAndQueueCapsKeepActualRoutesAndManualPauseAcrossActiveTransfer()
+214: PASS   : EngineLiveSettingsTests::seedingUploadTransitionPreservesNewSafeRatesAndQueueCaps()
+214: PASS   : EngineLiveSettingsTests::invalidOrForeignThreadRequestLeavesEveryActualSettingUnchanged()
+214: PASS   : EngineLiveSettingsTests::cleanupTestCase()
+214: Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 7010ms
+214: ********* Finished testing of EngineLiveSettingsTests *********
+18/18 Test #214: engine-live-settings ..................   Passed    7.02 sec
+
+The following tests passed:
+	owned-engine-activity-window-worker
+	desktop-model-and-lifecycle
+	desktop-files-model
+	overall-accounting-window-worker
+	effective-rate-limits
+	startup-statistics-worker
+	library-action-ui
+	network-policy
+	managed-download
+	torrent-import-ui
+	managed-seeding
+	managed-magnet
+	managed-library-command-routing
+	magnet-host
+	application-settings
+	options-dialog
+	options-host
+	engine-live-settings
+
+100% tests passed, 0 tests failed out of 18
+
+Label Time Summary:
+accounting           =  31.00 sec*proc (1 test)
+activity             =  14.24 sec*proc (1 test)
+compatibility        =   0.02 sec*proc (1 test)
+files                =   0.31 sec*proc (1 test)
+integration          =  18.76 sec*proc (1 test)
+loopback             =  49.76 sec*proc (2 tests)
+options              =   8.82 sec*proc (4 tests)
+read-only            =   0.01 sec*proc (1 test)
+startup              =  18.76 sec*proc (1 test)
+statistics           =  64.01 sec*proc (4 tests)
+torrent-workflows    =  73.77 sec*proc (8 tests)
+ui                   =  64.90 sec*proc (5 tests)
+unit                 = 147.49 sec*proc (18 tests)
+
+Total Test time (real) = 147.51 sec
