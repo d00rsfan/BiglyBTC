@@ -1,0 +1,7 @@
+{
+  "before_sha256": "fd7b0aa2e40b864cb726166f2b06fd08a6a1bc02d86910029c285ba0addd0157",
+  "sha256": "9835bf2596ffa120e5dce5bb66806f67709d4433f8f975bee3d5f735b6851f20",
+  "path": "preview/native/tests/CMakeLists.txt",
+  "change": "Register actual engine settings test only with the required approved runtime manifest, matching other managed owner tests. No test assert, runtime approval or production C++ changed.",
+  "initial_hosted_run": 40094586384
+}
