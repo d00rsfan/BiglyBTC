@@ -1,0 +1,28 @@
+Test project /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+    Start 214: scheduler-service
+1/6 Test #214: scheduler-service ................   Passed    0.02 sec
+    Start 219: torrent-creator
+2/6 Test #219: torrent-creator ..................   Passed    0.12 sec
+    Start 220: file-operations
+3/6 Test #220: file-operations ..................   Passed    0.03 sec
+    Start 221: file-operation-dialog
+4/6 Test #221: file-operation-dialog ............   Passed    0.11 sec
+    Start 222: torrent-creation-dialog
+5/6 Test #222: torrent-creation-dialog ..........   Passed    0.13 sec
+    Start 223: file-operations-host
+6/6 Test #223: file-operations-host .............   Passed   28.54 sec
+
+100% tests passed, 0 tests failed out of 6
+
+Label Time Summary:
+engine           =   0.12 sec*proc (1 test)
+fileops          =  28.81 sec*proc (4 tests)
+integration      =  28.54 sec*proc (1 test)
+runtime-bound    =  28.54 sec*proc (1 test)
+scheduler        =   0.02 sec*proc (1 test)
+storage          =   0.03 sec*proc (1 test)
+torrent          =   0.12 sec*proc (1 test)
+ui               =   0.24 sec*proc (2 tests)
+unit             =  28.95 sec*proc (6 tests)
+
+Total Test time (real) =  28.95 sec

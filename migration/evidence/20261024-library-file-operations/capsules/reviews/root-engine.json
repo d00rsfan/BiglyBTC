@@ -1,0 +1,66 @@
+{
+  "status": "SOURCE_REVIEW_COMPLETE_ONE_BLOCKER_ADDRESSED_BY_STAGED_AMENDMENT",
+  "execution": false,
+  "subjects": {
+    "/home/yurii/Java/BiglyBT/build/fileops-20261024/root/file_operations_bridge.inc": "d5b584dcb08534c85a5b9642c3c40760e74d50c4464b08cb84f0dfb67059e846",
+    "/home/yurii/Java/BiglyBT/build/fileops-20261024/root/staging/preview/native/engine/persistent_session.hpp": "b004a73d87a10e8ffa8bcfd292f5922c83053261d570505702199c520343f056",
+    "/home/yurii/Java/BiglyBT/build/fileops-20261024/root/staging/preview/native/engine/persistent_session.cpp": "caa30a1d339fc449032b934a03866ae742fbeb5b661d28ce0f3b2d710bbdfec4",
+    "/home/yurii/Java/BiglyBT/build/fileops-20261024/root/staging/preview/native/engine/managed_download.hpp": "34c9651317df189933fcc1eac27eb516cd376aa84f50b596466695d1ec5e20ca",
+    "/home/yurii/Java/BiglyBTC/preview/native/adapters/scheduler_service.hpp": "2e7b19c4712cbf44da35ceca7f7ace7d3bcdd57dc64f3ef4bfad7a3bfa1e244b",
+    "/home/yurii/Java/BiglyBTC/preview/native/adapters/scheduler_service.cpp": "89c5a27ea4ee6ec49a73f1b69fbd42a999eae0994d8efdb0285b87b4c1823523",
+    "/home/yurii/Java/BiglyBTC/preview/native/app/session_bridge.cpp": "7814e820963e9cf426eb7eb64427881ac536f5adb664550fe559d74aefe3d2ba",
+    "/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/source/src/torrent.cpp": "d0b8d64c54583cb9287d20aaf5ea5bc2e85cbf0caa5d5c9df42f40c77187d185"
+  },
+  "blockers": [
+    {
+      "id": "CF06-SCHEDULER-ADMISSION",
+      "subject": "file_operations_bridge.inc successful move/relink re-admission",
+      "finding": "New admission token invalidates SchedulerService acknowledged {token,manualRevision} pause authority; preserving schedulerPaused alone cannot authorize its later Resume.",
+      "source_proof": [
+        "Host schedulerTorrents uses actual ManagedDownloadStatus.admission",
+        "SchedulerService evaluate owns pause only for exact token/manualRevision (lines288-289)",
+        "finishAction records acknowledged old token (line357)",
+        "startManaged always allocates ++operation"
+      ],
+      "remedy_manifest": "/home/yurii/Java/BiglyBT/build/fileops-20261024/reviews/scheduler-rebind/manifest.json",
+      "remedy_manifest_sha256": "ce40a026daa0ffb38b496e32b6c93e709f119c2af3880ab9d33386f007b41781",
+      "integration_pending_root": true
+    }
+  ],
+  "resolved_findings": [
+    {
+      "id": "CF06-PEER-HINTS",
+      "finding": "Unconditional importPeers erase on forget lost approved magnet numeric hints during move/relink.",
+      "resolution": "Root staged forgetManaged(hash,bool removePeerHints=false), Host passes removal flag; reviewed current bytes preserve hints on move/relink."
+    }
+  ],
+  "checked": {
+    "paused_verification": "Queue-policy admission adds stop_when_ready before resume; LT set_state pauses before announcing/payload; applyQueue skips manualPaused/unchecked. No queue policy -> explicit rejection, not payload escape.",
+    "retirement": "forgetManaged rejects retained/valid/removing/non-Stopped/unflushed/unremoved/failure before releasing ManagedStorage descriptors. Host polls stop to successful checkpoint before forget/storage effects.",
+    "absolute_accounting": "forget only erases target overlay/index and optional removed-target peer hints; LT session, absoluteAccumulator, lastStatistics and source counter epoch remain intact. No final-counter claim added.",
+    "removal": "Host increments manualRevision and revokeForManual before removal; move/relink preserve manualRevision and pause data."
+  },
+  "original_java_reload_outline": {
+    "retained_class_count": 5432,
+    "reuse_inputs": {
+      "/home/yurii/Java/BiglyBT/build/torrent-workflows-20261024/managed-handoff/ManagedHandoffOracle.java": "98ac3e987ddc2585a908da488303fd0acff37bc4965cdc837535bc048114c812",
+      "/home/yurii/Java/BiglyBT/build/torrent-workflows-20261024/managed-handoff/run.py": "b5947d8937b958c0f7f7e108b1c752787410ab0af32ada65ac7a64d0e914b0ee",
+      "/home/yurii/Java/BiglyBT/build/torrent-workflows-20261024/managed-handoff/amendments/per-file-completion/staging/ManagedHandoffOracle.java": "98ac3e987ddc2585a908da488303fd0acff37bc4965cdc837535bc048114c812",
+      "/home/yurii/Java/BiglyBT/build/torrent-workflows-20261024/managed-handoff/amendments/per-file-completion/staging/run.py": "4c86212ce3c6c55395eab288fc6d39d04fc2ff0cb8662f4c3d402daf2a06aed9",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/StateStoreOracle.java": "31ffdd98eb2dd8ce024ec3a0defc8b558ad96679fb57e725391877f72996a3cf",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/EngineOracle.java": "325ca455bfdcd754e4369261348856a9c2143268dd189c3716f1cb7ba4cf7765",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/MultiEngineOracle.java": "c22f9c6ad4257573715df3242090fd48b54e5aae40ae77d88134d7ec65a9ec16",
+      "/home/yurii/Java/BiglyBT/migration/tools/peer_interop.py": "93e1577f1896fbd438a93b0e128c90b394fedaca42fe56db8189fc7f43f5b299",
+      "/home/yurii/Java/BiglyBTC/build/dependencies/java-oracle-17-20261021/retention.json": "7472e8bda8d832fd5a962cda76ba1fcefaa0e6e9b4cad2621e0be97e6fbec9dd"
+    },
+    "no_original_rebuild": true,
+    "steps": [
+      "Generate separate owned single/multifile profiles using existing original EngineOracle/MultiFileOracle producer; bind all paths under a fresh /tmp/biglybtc-* ReferenceFence root.",
+      "Run native real partial transfer then joined storage retirement; perform actual relocate/relink or remove. Record exact inventory/state bytes, payload inode/content map and unchanged opaque fields before original readback.",
+      "Reuse amended ManagedHandoffOracle actual GlobalManager reload + initialize/READY recheck against the SAME profile; pass expected moved target root. Assert hash, saved intent/force/pause, priorities, mapped actual per-file paths, completed verified bytes and unchanged info/unknown data. No Java startDownload/addPeer. Existing helper needs only a narrow moved-path parameter/expectation extension, not new core classes.",
+      "For RemoveKeepData/RemoveDeleteData use a small helper branch around existing configuredCore+getGlobalManager().getDownloadManagers(): assert removed hash absent, surviving row still loads unchanged; separately assert kept payload same inode/bytes or exact approved deleted paths absent. StateStoreOracle alone is insufficient to prove GlobalManager removal.",
+      "Compile only authored helpers against unchanged retained5432 classes, validate retention map before/after, use existing peer_interop.jvm/ReferenceFence and owned numeric loopback only if original initialization needs its bound listener. Retain raw actual stdout and source maps; no current execution credit."
+    ]
+  }
+}

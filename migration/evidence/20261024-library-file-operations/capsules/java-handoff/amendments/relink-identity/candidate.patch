@@ -1,0 +1,25 @@
+--- a/run.py
++++ b/run.py
+@@ -192,12 +192,20 @@
+                 if mode == 'relocate': need(not source.exists(), 'Relocate retained an old source leaf')
+                 elif mode == 'removeDelete': need(not source.exists(), 'Delete retained an approved leaf')
+                 else:
+-                    need(sha(source) == file['sha256'] and source.stat().st_ino == int(file['inode'])
+-                         and source.stat().st_dev == int(file['device']), 'Keep/relink modified actual source')
++                    need(sha(source) == file['sha256'] and source.stat().st_size == file['bytes'],
++                         'Keep/relink modified actual source content')
++                    # Relink previews describe the existing destination inode;
++                    # RemoveKeep describes the source. They are distinct files.
++                    if mode == 'removeKeep':
++                        need(source.stat().st_ino == int(file['inode']) and source.stat().st_dev == int(file['device']),
++                             'Keep modified the previewed source identity')
+                     payload_before_java[str(source)] = physical(source)
+                 if not removal:
+                     destination = path(file['destination'], case)
+                     need(sha(destination) == file['sha256'] and destination.stat().st_size == file['bytes'], 'Wrong actual destination bytes')
++                    if mode == 'relink':
++                        need(destination.stat().st_ino == int(file['inode']) and destination.stat().st_dev == int(file['device']),
++                             'Relink modified the previewed destination identity')
+                     expected_files[index] = {'path': str(destination), 'bytes': file['bytes'], 'sha256': file['sha256']}
+                     payload_before_java[str(destination)] = physical(destination)
+             survivor_path = case / 'survivor/survivor.bin'

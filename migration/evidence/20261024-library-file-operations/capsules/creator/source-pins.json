@@ -1,0 +1,105 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_sources": {
+    "core/src/com/biglybt/core/torrent/TOTorrentCreator.java": {
+      "git_blob": "3b3b20d27c9b4d74999cd3a223ddc36386306a70",
+      "sha256": "76829ee50c26d1ae7663a2c07e60f322dba2065b42eec7cf8ad13710d2614fd8",
+      "bytes": 1906
+    },
+    "core/src/com/biglybt/core/torrent/TOTorrentFactory.java": {
+      "git_blob": "94c2182204c29b061ccd1b571b65bb9504e86897",
+      "sha256": "91d651ffb6d23a515387dcd5d58a2ca53aed0f0fb4f211a91fb21ac0cf0203f0",
+      "bytes": 7411
+    },
+    "core/src/com/biglybt/core/torrent/TOTorrent.java": {
+      "git_blob": "98a198f2adbc4d925156ece5b5384318c68ec5fe",
+      "sha256": "14f6702cbcd6490bb184418a1be82afeba10fd70076193cfde44863fac20b3ca",
+      "bytes": 9315
+    },
+    "core/src/com/biglybt/core/torrent/TOTorrentFile.java": {
+      "git_blob": "bc17f8cba5d78b1714de545d471b4a50a230ce77",
+      "sha256": "2d4fab2fa791803564dd6857c15968875802b57368ebc73912d72b4bdb7b95a0",
+      "bytes": 1728
+    },
+    "core/src/com/biglybt/core/torrent/impl/TOTorrentCreatorImpl.java": {
+      "git_blob": "d6d991cedffcea96d6c15423b6a002b091786a4b",
+      "sha256": "a4eddc9d4150847a290caed0e9600cc0e7364d8bc5ac52e1bce3f62258df7771",
+      "bytes": 11384
+    },
+    "core/src/com/biglybt/core/torrent/impl/TOTorrentCreateImpl.java": {
+      "git_blob": "c0fb4a2cad282dadf23b06c52f5f13196f9f0924",
+      "sha256": "497a1d4663c65ddf9de0175d7ec788440bc23f9226e891fddc9183f51649c790",
+      "bytes": 21472
+    },
+    "core/src/com/biglybt/core/torrent/impl/TOTorrentFileHasher.java": {
+      "git_blob": "a5c174df647f6dcbdfacf5ad59bcc722229e32b1",
+      "sha256": "2623297d5c0cf09cf0a9ffafed1b952e93d7ec2e5467c3d4a45255be86c50f23",
+      "bytes": 7834
+    },
+    "core/src/com/biglybt/core/torrent/impl/TOTorrentDeserialiseImpl.java": {
+      "git_blob": "0d29d44d09bf40c6acbc9cb3162a7a4edd3874ef",
+      "sha256": "a94afaca1ed16990e95e172941acf5f613f28186ecf8c581bbdb9987e9b738d9",
+      "bytes": 25254
+    },
+    "core/src/com/biglybt/core/util/protocol/udp/Handler.java": {
+      "git_blob": "dd9cb6aba6ef37d62c12b47b73ebdabcc5f956ff",
+      "sha256": "710002d9b435c7af7d562696e1539bc577c68ec35b9d612a89a56c13d6198799",
+      "bytes": 1195
+    },
+    "uis/src/com/biglybt/ui/swt/maketorrent/NewTorrentWizard.java": {
+      "git_blob": "22a9182aa3f543f7b684f77cb8f4f7e379797441",
+      "sha256": "dd4f0d3f54db61cb85446aac3a6bfdfd9e134e7ede86101559d09d100b847d56",
+      "bytes": 9936
+    },
+    "uis/src/com/biglybt/ui/swt/maketorrent/SavePathPanel.java": {
+      "git_blob": "9280299fa98999df5b673e46bf8270e11ec2b24d",
+      "sha256": "1f358e646b851261c3ce00d25b982bc338a55cb60b9132a7e307fd86fc719863",
+      "bytes": 15680
+    },
+    "uis/src/com/biglybt/ui/swt/maketorrent/ProgressPanel.java": {
+      "git_blob": "ea36754d16d9f58b642e42f1bcb12c3b231c2b92",
+      "sha256": "3363ba2bb65a2c1645eba2267459ef15ed78f6839f8a29512e6cbfd5ae4ac4fc",
+      "bytes": 15792
+    }
+  },
+  "libtorrent": "2.0.12",
+  "lt_source_root": "/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/source",
+  "lt_sources": {
+    "include/libtorrent/create_torrent.hpp": {
+      "sha256": "8d82833c88c20dd7191fa13052ed870ab3bbf5f57b2bc239ab302afce53c8064",
+      "bytes": 24744
+    },
+    "src/create_torrent.cpp": {
+      "sha256": "c1b6ffc1ef886e86d3409536db6c19ed1c0d347c85d1a8cf29f8780d3fd51be2",
+      "bytes": 29855
+    },
+    "include/libtorrent/file_storage.hpp": {
+      "sha256": "0e2887531fc3daa6456255460f5e2aac132c184c7b7f11e9483f6bfd8129a80f",
+      "bytes": 30156
+    },
+    "src/file_storage.cpp": {
+      "sha256": "2d6bf3b7aa3014bde05ba4130dbac08d1d30e837459d1aeeb9cfab0b441d7fd6",
+      "bytes": 49913
+    },
+    "include/libtorrent/hasher.hpp": {
+      "sha256": "4054dc39a41dc041c127368c6ba9a94f27425c25717aa47f51c3bcaebb581970",
+      "bytes": 5625
+    },
+    "include/libtorrent/torrent_info.hpp": {
+      "sha256": "2e72bd8c9b26624626c152336eaea654f636f89e379c522db31b607b92b99db8",
+      "bytes": 32797
+    },
+    "src/torrent_info.cpp": {
+      "sha256": "5d91d6f12fe9af67db0c72436e51bdde437b2654b611f06c32197ff62c47c730",
+      "bytes": 55081
+    },
+    "include/libtorrent/bencode.hpp": {
+      "sha256": "f43c6d8d7f70008f31763858228c690ba9bbf3ec8303f93500e3907e16044961",
+      "bytes": 10325
+    },
+    "include/libtorrent/version.hpp": {
+      "sha256": "78facdac8e2d843d1c7aaf3ea39c3f6fd9c8af8c00934a4ec14f928b0c5a0c81",
+      "bytes": 2687
+    }
+  }
+}

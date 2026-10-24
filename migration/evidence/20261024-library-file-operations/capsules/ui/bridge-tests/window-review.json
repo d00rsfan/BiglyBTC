@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "status": "SOURCE_REVIEW_WITH_ROOT_FIXES_AND_PENDING_PAUSED_ADMISSION_BATCH",
+  "independent_subject": "Root-authored Host/Window routing; own UI implementation is context only, not independent review credit.",
+  "native_sha256": {
+    "preview/native/app/session_bridge.hpp": "b7ef294b3fada8575b8cbda9c9563993117b29432fe3ad20e9c523d6c41277fd",
+    "preview/native/app/session_bridge.cpp": "34b357f115e2139fa226cf2117822fb1d4b898d65776e64597da0e415369eff0",
+    "preview/native/app/file_operations_bridge.inc": "ed8548231fa25f6cfa0f94f265c13892f244f1368401751785cb7e7fcf12fa75",
+    "preview/native/ui/library_window.hpp": "07eafbfa475ba73064920ffac012446a5d08eed1d1491135b44a85e381517c30",
+    "preview/native/ui/library_window.cpp": "0cd7b283be2a45aff3568135c4129a8858c85301ed036e68f854bbd973775848",
+    "preview/native/ui/file_operations_window.inc": "6e4c05541b40e5e0d188773de4f5942bd237b85b64cd6fdfdc06ee56536f6c4e",
+    "preview/native/tests/owned_engine_fixture.hpp": "22e43b024c87175358c0a5ca50f9b482547704acfc61622e1f090acab35bde5e",
+    "preview/native/engine/managed_download.hpp": "34c9651317df189933fcc1eac27eb516cd376aa84f50b596466695d1ec5e20ca",
+    "preview/native/engine/persistent_session.cpp": "caa30a1d339fc449032b934a03866ae742fbeb5b661d28ce0f3b2d710bbdfec4",
+    "preview/native/ui/file_operation_presentation.hpp": "314f2f04280fa48ac50ff96167242970b6d1c944ac1d9fe985cb5bbde0309acd"
+  },
+  "findings": [
+    {
+      "id": "FB-1",
+      "finding": "Worker cached pointer equality rejects every privately copied dialog plan.",
+      "resolution": "Root value comparison sameFilePlan includes request/digest/roots/counts/all exact path fields; adopted source verified."
+    },
+    {
+      "id": "FB-2",
+      "finding": "Old selection revision could execute after explicit refresh/command.",
+      "resolution": "Root now calls Host::accepts before initial confirmation/reprepare; fresh CAS after retirement keeps approved scope."
+    },
+    {
+      "id": "FB-3",
+      "finding": "Window member accesses after dialog setters and invalidate/show/raise/activate may follow direct deletion or rebinding.",
+      "resolution": "Root guarded delivery/open/session-close paths with QPointers; current source pins captured."
+    },
+    {
+      "id": "FB-4",
+      "finding": "Paused readmission on isolated owner currently rejects without queue policy.",
+      "resolution": "Root correction pending next collected batch: manuallyPaused uses stop_when_ready independently of whole queue policy; read-only tests retain actual paused-move expectation."
+    }
+  ],
+  "test_scope": "Six behavior methods plus one bool import data family. Real source-bound owner, numeric owned TCP, generated profiles, actual worker/creator and actual Window result callback. No Java/runtime equality or deterministic successful-cancel credit.",
+  "execution_performed": false,
+  "native_mutated": false
+}

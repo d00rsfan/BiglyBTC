@@ -1,0 +1,129 @@
+[
+  {
+    "name": "javac-helpers",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "-J-XX:ActiveProcessorCount=2",
+      "--release",
+      "8",
+      "-encoding",
+      "UTF-8",
+      "-proc:none",
+      "-implicit:none",
+      "-sourcepath",
+      "/tmp/biglybtc-creator-java-1e9hvalk/empty-sourcepath",
+      "-cp",
+      "/tmp/biglybtc-oracle/classes",
+      "-d",
+      "/tmp/biglybtc-creator-java-1e9hvalk/classes",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java",
+      "/home/yurii/Java/BiglyBT/build/fileops-20261024/creator/java/TorrentCreationOracle.java"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "single-native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-torrent-creator-driver",
+      "/tmp/biglybtc-creator-java-1e9hvalk/single/payload-\u03c0.bin",
+      "/tmp/biglybtc-creator-java-1e9hvalk/single/created.torrent",
+      "0",
+      "1"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "single-java",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-creator-java-1e9hvalk",
+      "-Dbiglybtc.test.ports=",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-creator-java-1e9hvalk/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-creator-java-1e9hvalk/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-creator-java-1e9hvalk/tmp",
+      "-Duser.home=/tmp/biglybtc-creator-java-1e9hvalk/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-creator-java-1e9hvalk/prefs",
+      "-cp",
+      "/tmp/biglybtc-creator-java-1e9hvalk/classes:/tmp/biglybtc-oracle/classes",
+      "TorrentCreationOracle",
+      "/tmp/biglybtc-creator-java-1e9hvalk/single/created.torrent"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "multi-native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-torrent-creator-driver",
+      "/tmp/biglybtc-creator-java-1e9hvalk/multi/bundle-\u03c0",
+      "/tmp/biglybtc-creator-java-1e9hvalk/multi/created.torrent",
+      "49152",
+      "1"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "multi-java",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-creator-java-1e9hvalk",
+      "-Dbiglybtc.test.ports=",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-creator-java-1e9hvalk/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-creator-java-1e9hvalk/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-creator-java-1e9hvalk/tmp",
+      "-Duser.home=/tmp/biglybtc-creator-java-1e9hvalk/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-creator-java-1e9hvalk/prefs",
+      "-cp",
+      "/tmp/biglybtc-creator-java-1e9hvalk/classes:/tmp/biglybtc-oracle/classes",
+      "TorrentCreationOracle",
+      "/tmp/biglybtc-creator-java-1e9hvalk/multi/created.torrent"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "one-file-directory-native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-torrent-creator-driver",
+      "/tmp/biglybtc-creator-java-1e9hvalk/one-file-directory/bundle-\u03c0",
+      "/tmp/biglybtc-creator-java-1e9hvalk/one-file-directory/created.torrent",
+      "65536",
+      "0"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "one-file-directory-java",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-creator-java-1e9hvalk",
+      "-Dbiglybtc.test.ports=",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-creator-java-1e9hvalk/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-creator-java-1e9hvalk/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-creator-java-1e9hvalk/tmp",
+      "-Duser.home=/tmp/biglybtc-creator-java-1e9hvalk/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-creator-java-1e9hvalk/prefs",
+      "-cp",
+      "/tmp/biglybtc-creator-java-1e9hvalk/classes:/tmp/biglybtc-oracle/classes",
+      "TorrentCreationOracle",
+      "/tmp/biglybtc-creator-java-1e9hvalk/one-file-directory/created.torrent"
+    ],
+    "exit_code": 0
+  }
+]

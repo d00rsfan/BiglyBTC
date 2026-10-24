@@ -1,0 +1,34 @@
+{
+  "status": "PASS_SOURCE_ONLY",
+  "subject_manifest": "/home/yurii/Java/BiglyBT/build/fileops-20261024/storage/amendments/pause-map/manifest.json",
+  "subject_manifest_sha256": "f28d114d9a28d7f578ab94eba268c27c7407e366d5a8f6bfcd4fe8e37f96ba76",
+  "subjects": {
+    "preview/native/adapters/file_operations.cpp": {
+      "before": "f106479282575dbf6fc1edb650238c8811a4ccf5d9cd8c6ad1a23d704764bcbf",
+      "after": "321ee646c29db8319af92e00d4fc1a347a807a707d045a175fc60dd94ad26c01",
+      "native_before_match": true
+    },
+    "preview/native/tests/file_operations_tests.cpp": {
+      "before": "9e1a04fe8618dc2ed299c27b194c6b0de47a4eddc9d31742cb0dd037f03e4893",
+      "after": "df227099f980045a0235b1a430a732eb11f696522a5ffc04100c7cb35f7cde79",
+      "native_before_match": true
+    }
+  },
+  "checks": {
+    "production_full_byte_reversal": true,
+    "production_delta": "Exactly two selector-key replacements; pause dictionaries use hash, legacy byte rows unchanged; ordinary downloads and explicit cache hash selectors unchanged.",
+    "initial_and_recovery_paths": "withoutSelected is used for initial removal; selectedRows and withoutSelected also bind sparse recovery target pause state. Both now recognize modern dictionaries.",
+    "original_compatibility": "Matches original cb8 GlobalManagerImpl modern pause_data dict hash/force/owner and legacy raw-byte rows, plus qualified core readLibrary.",
+    "test_coverage": "Existing five families retained. Added Keep/Delete mixed target+survivor modern/legacy ownership; exact opaque survivor bytes; changed target rejects journal recovery before effects; restored target permits sparse recovery preserving unrelated survivor pause+counter checkpoint.",
+    "all_previous_assertions_retained": true,
+    "deadlines_or_main_family_count_changed": false,
+    "java_handoff_expectation": "Keep exact selected-pause removal assertion; no runner/helper amendment required."
+  },
+  "blockers": [],
+  "execution": {
+    "cpp_compile": false,
+    "cpp_tests": false,
+    "java_or_native_handoff": false,
+    "native_mutation": false
+  }
+}

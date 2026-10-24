@@ -1,0 +1,64 @@
+{
+  "status": "SOURCE_ONLY_UNEXECUTED",
+  "original_source": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_baseline": "a965fd3cf0547e041d58512c56fea1cccf972ccb",
+  "storage_manifest_sha256": "56fef798eda26126f2b995884e923576a7b52a9dda92c636de2ff49d4c53b583",
+  "producer_manifest_sha256": "1d48f2fbdd42910df95652185d9a1d0ed3f1157f15cabfbf50b16b595f0d9e71",
+  "producer_selected_normal_amendment_sha256": "824150bf5b6d20c08949111520c9d24be351986f3e33ed719d07af36ab33e9e7",
+  "producer_source_sha256": "e318ee00cf58a4e2e263d853ffe29dd3d813142e2902a414e75a5bd40e9480e1",
+  "files_sha256": {
+    "ADOPTION.md": "a450b568d68ccbe693da17eb2f88cafce725dd3b73c00c51834c21a0c7033837",
+    "FileOperationsOracle.java": "99d63f2d211ba9cd2b332433b9eaba287f821d817cad0541979c9b55b9ba1e02",
+    "run.py": "705bf9c6586bce5f63bfcbc3adefc33c3eb4bfed77166f262c8f80a4e4b69c9b"
+  },
+  "dependencies_sha256": {
+    "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+    "/home/yurii/Java/BiglyBT/migration/fixtures/java/EngineOracle.java": "325ca455bfdcd754e4369261348856a9c2143268dd189c3716f1cb7ba4cf7765",
+    "/home/yurii/Java/BiglyBT/migration/tools/peer_interop.py": "93e1577f1896fbd438a93b0e128c90b394fedaca42fe56db8189fc7f43f5b299",
+    "/home/yurii/Java/BiglyBT/migration/tools/handoff.py": "715cc1de2198a2d593501302b41186983dbe495172bd0b4c1709ddd399070bd6",
+    "/home/yurii/Java/BiglyBT/migration/tools/oracle.py": "8eb1cc4758ba78b4679b05b553ed8f6b7c1c1abe1745b8b1f5357ae681f0710f",
+    "/home/yurii/Java/BiglyBT/migration/tools/sources.py": "16c4a0e46fdd52b313e6a2d28e592dc0314e8398a270ab0d7083f66a7abf5733",
+    "/home/yurii/Java/BiglyBT/migration/evidence/P00-04/reference-fence.json": "0c35e6bb2212e681ed4be8ecc65c50e35d7e191701bee59c9e139f2fbcb17302",
+    "/home/yurii/Java/BiglyBTC/build/dependencies/java-oracle-17-20261021/retention.json": "7472e8bda8d832fd5a962cda76ba1fcefaa0e6e9b4cad2621e0be97e6fbec9dd",
+    "/home/yurii/Java/BiglyBT/build/fileops-20261024/storage/manifest.json": "56fef798eda26126f2b995884e923576a7b52a9dda92c636de2ff49d4c53b583",
+    "/home/yurii/Java/BiglyBT/build/fileops-20261024/storage-driver/manifest.json": "1d48f2fbdd42910df95652185d9a1d0ed3f1157f15cabfbf50b16b595f0d9e71",
+    "/home/yurii/Java/BiglyBT/build/fileops-20261024/storage-driver/amendments/selected-normal/manifest.json": "824150bf5b6d20c08949111520c9d24be351986f3e33ed719d07af36ab33e9e7",
+    "/home/yurii/Java/BiglyBT/build/fileops-20261024/storage-driver/amendments/selected-normal/file_operations_driver.cpp": "e318ee00cf58a4e2e263d853ffe29dd3d813142e2902a414e75a5bd40e9480e1"
+  },
+  "original_subjects": {
+    "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java": {
+      "git_blob": "f992aecdc28168d656c322512434ff1cbaf95c02",
+      "sha256": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39"
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java": {
+      "git_blob": "99617ee6753153c8af1598fc17cf28ed7631319b",
+      "sha256": "a88937664cb90354be6600448a63684b6a7b5c9e7906a9425b9f5a4758afbeda"
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java": {
+      "git_blob": "12c9b2e45ab7fa3a9839672087ec207ef83d9e35",
+      "sha256": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a"
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerController.java": {
+      "git_blob": "e575894d6a17d3dcbdd0af857e08445025b24f49",
+      "sha256": "b22ccde4addada902b8bac14c2177e7496b9329304c534d6ed2fdde9dbdc8860"
+    },
+    "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java": {
+      "git_blob": "0612105280e1489fc628d155bd12c7606ac0e0c3",
+      "sha256": "6755b950c548c5a7d153b9aef2c1024c7c5c79d5880fd858f3bac4261adcdf8c"
+    },
+    "core/src/com/biglybt/core/torrent/impl/TOTorrentDeserialiseImpl.java": {
+      "git_blob": "0d29d44d09bf40c6acbc9cb3162a7a4edd3874ef",
+      "sha256": "a94afaca1ed16990e95e172941acf5f613f28186ecf8c581bbdb9987e9b738d9"
+    },
+    "core/src/com/biglybt/core/util/BEncoder.java": {
+      "git_blob": "b7c115a50155809dcaf87edfce7e3eb25bea682e",
+      "sha256": "27f8a104b355bc8f79a3ff8fbb36efe0a34636add267ba212dad0638ab5c1fbe"
+    }
+  },
+  "reference_class_map": "/home/yurii/Java/BiglyBTC/build/dependencies/java-oracle-17-20261021/retention.json",
+  "cases_planned": 4,
+  "python_ast": "PASS",
+  "cpp_compile": false,
+  "java_compile_or_execution": false,
+  "native_mutations": false
+}

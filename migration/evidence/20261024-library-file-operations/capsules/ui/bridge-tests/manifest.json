@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "status": "SOURCE_FROZEN_NOT_COMPILED_OR_EXECUTED",
+  "native_base": "a965fd3cf0547e041d58512c56fea1cccf972ccb",
+  "sources": {
+    "preview/native/tests/file_operations_bridge_tests.cpp": {
+      "source": "staging/preview/native/tests/file_operations_bridge_tests.cpp",
+      "before_sha256": null,
+      "after_sha256": "402a175a05de556e596a8dbe291df856a4f3a5132bee21c3cf4d8998eae285fe"
+    }
+  },
+  "source_sha256": {
+    "preview/native/tests/file_operations_bridge_tests.cpp": "402a175a05de556e596a8dbe291df856a4f3a5132bee21c3cf4d8998eae285fe"
+  },
+  "context_sha256": {
+    "preview/native/app/session_bridge.hpp": "b7ef294b3fada8575b8cbda9c9563993117b29432fe3ad20e9c523d6c41277fd",
+    "preview/native/app/session_bridge.cpp": "34b357f115e2139fa226cf2117822fb1d4b898d65776e64597da0e415369eff0",
+    "preview/native/app/file_operations_bridge.inc": "ed8548231fa25f6cfa0f94f265c13892f244f1368401751785cb7e7fcf12fa75",
+    "preview/native/ui/library_window.hpp": "07eafbfa475ba73064920ffac012446a5d08eed1d1491135b44a85e381517c30",
+    "preview/native/ui/library_window.cpp": "0cd7b283be2a45aff3568135c4129a8858c85301ed036e68f854bbd973775848",
+    "preview/native/ui/file_operations_window.inc": "6e4c05541b40e5e0d188773de4f5942bd237b85b64cd6fdfdc06ee56536f6c4e",
+    "preview/native/tests/owned_engine_fixture.hpp": "22e43b024c87175358c0a5ca50f9b482547704acfc61622e1f090acab35bde5e",
+    "preview/native/engine/managed_download.hpp": "34c9651317df189933fcc1eac27eb516cd376aa84f50b596466695d1ec5e20ca",
+    "preview/native/engine/persistent_session.cpp": "caa30a1d339fc449032b934a03866ae742fbeb5b661d28ce0f3b2d710bbdfec4",
+    "preview/native/ui/file_operation_presentation.hpp": "314f2f04280fa48ac50ff96167242970b6d1c944ac1d9fe985cb5bbde0309acd"
+  },
+  "behavior_methods": [
+    "liveReadOnlyPreviewAndDefensiveDialogCopyThenRemoveKeep",
+    "pausedLiveMovePreservesCountersPauseAndRequiredRecheck",
+    "stoppedRelinkRetainsSourceAndDeleteRequiresNewConfirmedPlan",
+    "changedDisplayedScopeAndStaleTargetRejectBeforeAnyMutation",
+    "actualCreatorOnlyImportsWhenExplicitAndImportIsStopped",
+    "actualWindowResultCanDeleteWindowWhileBridgeCompletes"
+  ],
+  "test_target": "biglybtc-file-operations-host-tests",
+  "ctest_name": "file-operations-host",
+  "qt_rows_observed": null,
+  "native_writes": false,
+  "artifact_sha256": {
+    "ADOPTION.md": "a09ed930889803f063164fb12f9a355ee2ca01f727600d1166f53ca2d6a3264f",
+    "CMake.snippet": "370bbd745719610842d229b50c84e1802dea9e6e68193983c2434d272d8b8421",
+    "changes.patch": "42f86a78c6502f76084e9e8efa540d3ea5ce00ac65f1f329c08cecf42f0230cb",
+    "staging/preview/native/tests/file_operations_bridge_tests.cpp": "402a175a05de556e596a8dbe291df856a4f3a5132bee21c3cf4d8998eae285fe",
+    "window-review.json": "8be22909f402012e0f9f028ea8f15e60522e91704235f329e41fcb8cad3f48c8"
+  }
+}

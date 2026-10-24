@@ -1,0 +1,67 @@
+{
+  "status": "SOURCE_ONLY_UNEXECUTED",
+  "native_baseline": "a965fd3cf0547e041d58512c56fea1cccf972ccb",
+  "api": "expected<bool,Error> SchedulerService::rebindOwnedPause(lease,hash,oldToken,newToken,manualRevision)",
+  "changes": {
+    "preview/native/adapters/scheduler_service.cpp": {
+      "before_sha256": "89c5a27ea4ee6ec49a73f1b69fbd42a999eae0994d8efdb0285b87b4c1823523",
+      "after_sha256": "164301b40e1b5b9deacf4652ed9be41602e08f3ccfb028ab49dad52ecfba5505",
+      "before_bytes": 33591,
+      "after_bytes": 35381
+    },
+    "preview/native/adapters/scheduler_service.hpp": {
+      "before_sha256": "2e7b19c4712cbf44da35ceca7f7ace7d3bcdd57dc64f3ef4bfad7a3bfa1e244b",
+      "after_sha256": "a2d76898cebfc608bfffd4ede33cc919d351c9aa338655f3d48d331ba38b4503",
+      "before_bytes": 5435,
+      "after_bytes": 6006
+    },
+    "preview/native/tests/scheduler_service_tests.cpp": {
+      "before_sha256": "dc427d090478251e90e8d7c92aa0880921b7e447a38fc010da642e6aada2554b",
+      "after_sha256": "f694f71046d7e25408939492b36d61b18d9c79f07ad5078c024160c227e5e065",
+      "before_bytes": 13822,
+      "after_bytes": 18073
+    }
+  },
+  "files": {
+    "ADOPTION.md": {
+      "sha256": "35ad1128ab45b1e04fba9b1bdafeb9689dc374102bb64d1bc18bded839bf8bcb",
+      "bytes": 1394
+    },
+    "before/preview/native/adapters/scheduler_service.cpp": {
+      "sha256": "89c5a27ea4ee6ec49a73f1b69fbd42a999eae0994d8efdb0285b87b4c1823523",
+      "bytes": 33591
+    },
+    "before/preview/native/adapters/scheduler_service.hpp": {
+      "sha256": "2e7b19c4712cbf44da35ceca7f7ace7d3bcdd57dc64f3ef4bfad7a3bfa1e244b",
+      "bytes": 5435
+    },
+    "before/preview/native/tests/scheduler_service_tests.cpp": {
+      "sha256": "dc427d090478251e90e8d7c92aa0880921b7e447a38fc010da642e6aada2554b",
+      "bytes": 13822
+    },
+    "changes.patch": {
+      "sha256": "94e1f7055702eead5962c3ba42dc3c00118f1537b1b9dac1e4d68bd73fbd2dd4",
+      "bytes": 8818
+    },
+    "staging/preview/native/adapters/scheduler_service.cpp": {
+      "sha256": "164301b40e1b5b9deacf4652ed9be41602e08f3ccfb028ab49dad52ecfba5505",
+      "bytes": 35381
+    },
+    "staging/preview/native/adapters/scheduler_service.hpp": {
+      "sha256": "a2d76898cebfc608bfffd4ede33cc919d351c9aa338655f3d48d331ba38b4503",
+      "bytes": 6006
+    },
+    "staging/preview/native/tests/scheduler_service_tests.cpp": {
+      "sha256": "f694f71046d7e25408939492b36d61b18d9c79f07ad5078c024160c227e5e065",
+      "bytes": 18073
+    }
+  },
+  "checks": {
+    "native_before_bytes_exact": true,
+    "old_six_test_families_retained": true,
+    "new_suite": false,
+    "old_assertions_or_deadlines_removed": false,
+    "config_ownership_writes_added": false,
+    "compile_or_execution": false
+  }
+}

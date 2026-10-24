@@ -1,0 +1,109 @@
+--- a/preview/native/adapters/scheduler_service.cpp
++++ b/preview/native/adapters/scheduler_service.cpp
+@@ -396,4 +396,31 @@
+     p.snapshot.diagnostic.clear();p.warning();return {};
+   });
+ }
++std::expected<bool,Error> SchedulerService::rebindOwnedPause(const ProfileLease& lease,
++    const core::TorrentHash& hash,std::uint64_t oldToken,std::uint64_t newToken,std::uint64_t manualRevision) {
++  return guarded([&]()->std::expected<bool,Error>{
++    auto& p=*impl_;p.held(lease);
++    if((hash.bytes().size()!=20&&hash.bytes().size()!=32)||!oldToken||newToken<=oldToken){
++      fail(ErrorCode::InvalidFormat,"Invalid scheduler pause admission transfer");}
++    if(p.pending||p.intent.bytes||p.poisoned||p.snapshot.interruptedAction){
++      fail(ErrorCode::Busy,"An unsettled scheduler action prevents pause admission transfer");}
++    unchanged(lease.directoryHandle(),"biglybt.config",p.config,ConfigMaximum);
++    if(p.data.get()>=0){
++      unchanged(p.data.get(),XmlName,p.xml,XmlMaximum);
++      unchanged(p.data.get(),OwnershipName,p.ownership,scheduler::OwnershipFile::MaximumBytes);
++      unchanged(p.data.get(),IntentName,p.intent,IntentMaximum);
++    }
++    const auto found=p.authority.find(hash.hex());
++    if(found==p.authority.end()){return false;}
++    if(found->second!=std::pair{oldToken,manualRevision}){
++      fail(ErrorCode::Conflict,"Scheduler pause authority does not match the retired admission");}
++    const auto owned=scheduler::OwnershipFile::read(p.snapshot.ownershipBytes);
++    if(!owned){fail(ErrorCode::Conflict,"Acknowledged scheduler pause source is invalid");}
++    const auto present=owned->contains(hashBytes(hash));
++    if(!present||!*present){fail(ErrorCode::Conflict,"Acknowledged scheduler pause record is unavailable");}
++    // advance() checks exhaustion before mutating anything and invalidates both
++    // issued actions and rate acknowledgements bound to the old admission.
++    p.advance();found->second={newToken,manualRevision};return true;
++  });
++}
+ } // namespace biglybtc::storage
+--- a/preview/native/adapters/scheduler_service.hpp
++++ b/preview/native/adapters/scheduler_service.hpp
+@@ -99,6 +99,13 @@
+   // Call BEFORE every explicit user action. In-memory authority is revoked even
+   // if IO fails; caller still honors the user's command and surfaces the error.
+   std::expected<void, Error> revokeForManual(const ProfileLease&, const core::TorrentHash&);
++  // After a committed move/relink and actual paused re-admission only: transfer
++  // existing acknowledged same-session pause authority to the new admission.
++  // False means no authority exists (legacy records never mint authority).
++  // Tokens must advance; journal/source CAS or identity mismatches reject. No
++  // original ownership bytes are written; all outstanding plans become stale.
++  std::expected<bool, Error> rebindOwnedPause(const ProfileLease&, const core::TorrentHash&,
++      std::uint64_t oldToken, std::uint64_t newToken, std::uint64_t manualRevision);
+ private:
+   struct Impl;
+   explicit SchedulerService(std::unique_ptr<Impl>);
+--- a/preview/native/tests/scheduler_service_tests.cpp
++++ b/preview/native/tests/scheduler_service_tests.cpp
+@@ -115,6 +115,46 @@
+   check(!service->revokeForManual(f.lease,item.hash),"external CAS prevents destructive revoke rewrite");
+   auto after=take(service->evaluate({0,5},std::span(&item,1),17,19));check(after.actions.empty(),"manual authority revoked even when durable save fails");
+ }
++void pausedAdmissionRebind(const fs::path& module){
++  Fixture f(module);f.original();auto service=f.open();auto item=torrent();
++  const auto owner=f.profile/"plugins"/"SpeedScheduler"/"PausedTorrents.conf";
++  const auto intent=owner.parent_path()/"BiglyBTC.scheduler-intent";
++  const auto encoded=policy::originalOwnershipHash({reinterpret_cast<const std::uint8_t*>(item.hash.bytes().data()),item.hash.bytes().size()});
++  check(bool(encoded),"ownership hash fixture");write(owner,*encoded+"\r\nopaque line\r\n");done(service->reload(f.lease));
++  const auto inherited=read(owner);
++  check(!take(service->rebindOwnedPause(f.lease,item.hash,item.token,item.token+1,item.manualRevision)),"legacy hash alone cannot transfer authority");
++  check(read(owner)==inherited,"legacy rejection does not rewrite original ownership");
++  auto pause=take(service->evaluate({0,5},std::span(&item,1),7,9));check(pause.actions.size()==1,"pause plan fixture");
++  done(service->beginAction(f.lease,pause.actions.front(),item));done(service->finishAction(f.lease,pause.actions.front(),st::SchedulerActionResult::Succeeded));
++  done(service->saveSettings(f.lease,service->snapshot().revision,{.enabled=false}));
++  item.paused=true;item.state=policy::TorrentState::Stopped;
++  const auto issued=take(service->evaluate({0,5},std::span(&item,1),17,19));check(issued.actions.size()==1,"old paused admission has acknowledged resume authority");
++  const auto bytes=read(owner);struct stat before{};check(::stat(owner.c_str(),&before)==0,"ownership before identity");
++  check(!service->rebindOwnedPause(f.lease,item.hash,item.token+1,item.token+2,item.manualRevision),"wrong old token rejects");
++  check(!service->rebindOwnedPause(f.lease,item.hash,item.token,item.token+1,item.manualRevision+1),"wrong manual revision rejects");
++  check(!service->rebindOwnedPause(f.lease,item.hash,item.token,item.token,item.manualRevision),"nonadvancing token rejects");
++  write(intent,"unacknowledged external intent\n");
++  check(!service->rebindOwnedPause(f.lease,item.hash,item.token,item.token+1,item.manualRevision),"unexpected durable intent prevents transfer");fs::remove(intent);
++  const auto revision=service->snapshot().revision;
++  check(take(service->rebindOwnedPause(f.lease,item.hash,item.token,item.token+1,item.manualRevision)),"existing acknowledged pause transfers to actual new admission");
++  check(service->snapshot().revision>revision&&!service->beginAction(f.lease,issued.actions.front(),item),"transfer invalidates every old issued action");
++  check(!service->acknowledgeRates(issued.id,true,true),"old rate acknowledgement is stale after transfer");
++  struct stat after{};check(::stat(owner.c_str(),&after)==0&&before.st_dev==after.st_dev&&before.st_ino==after.st_ino
++      &&before.st_mtim.tv_sec==after.st_mtim.tv_sec&&before.st_mtim.tv_nsec==after.st_mtim.tv_nsec
++      &&before.st_ctim.tv_sec==after.st_ctim.tv_sec&&before.st_ctim.tv_nsec==after.st_ctim.tv_nsec
++      &&read(owner)==bytes,"transfer preserves original ownership bytes and inode timestamps");
++  auto old=take(service->evaluate({0,5},std::span(&item,1),17,19));check(old.actions.empty(),"old admission no longer owns pause");
++  ++item.token;auto resumed=take(service->evaluate({0,5},std::span(&item,1),17,19));
++  check(resumed.actions.size()==1&&resumed.actions.front().kind==policy::ActionKind::Resume,"new admission receives the existing resume authority");
++  done(service->beginAction(f.lease,resumed.actions.front(),item));
++  check(!service->rebindOwnedPause(f.lease,item.hash,item.token,item.token+1,item.manualRevision),"pending engine acknowledgement blocks transfer");
++  done(service->finishAction(f.lease,resumed.actions.front(),st::SchedulerActionResult::FailedBeforeEffect));
++  write(owner,bytes+"external edit\n");
++  check(!service->rebindOwnedPause(f.lease,item.hash,item.token,item.token+1,item.manualRevision),"ownership whole-source CAS rejects external edits");
++  check(read(owner)==bytes+"external edit\n","CAS failure preserves external source bytes");
++  done(service->reload(f.lease));
++  check(!take(service->rebindOwnedPause(f.lease,item.hash,item.token,item.token+1,item.manualRevision)),"reload of changed legacy source cannot recreate authority");
++}
+ void unsafeAndAuthentication(const fs::path& module){
+   Fixture world(module);world.original();fs::permissions(world.profile/"plugins",fs::perms::all);
+   const auto denied=st::loadApprovedSchedulerService(world.lease,world.module,world.approved);
+@@ -129,7 +169,7 @@
+ }
+ int main(int argc,char** argv){
+   try{check(argc==2,"usage: scheduler-service-tests approved-module.so");const auto module=fs::absolute(argv[1]);
+-    losslessXml();resolutionAndSparseConfig(module);creationAndCancellation(module);actualModuleAndOwnership(module);interruptionAndManualPriority(module);unsafeAndAuthentication(module);
+-    std::cout<<"scheduler service: six owned-fixture families passed\n";return 0;
++    losslessXml();resolutionAndSparseConfig(module);creationAndCancellation(module);actualModuleAndOwnership(module);interruptionAndManualPriority(module);pausedAdmissionRebind(module);unsafeAndAuthentication(module);
++    std::cout<<"scheduler service: seven owned-fixture families passed\n";return 0;
+   }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}
+ }

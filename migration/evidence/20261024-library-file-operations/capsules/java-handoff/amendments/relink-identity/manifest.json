@@ -1,0 +1,24 @@
+{
+  "status": "SOURCE_ONLY_UNEXECUTED",
+  "parent_manifest_sha256": "11b0f467dbc8e4bf616b7e6d4eafb4099824484181906b32cfd816bfb88630ed",
+  "before_run_sha256": "705bf9c6586bce5f63bfcbc3adefc33c3eb4bfed77166f262c8f80a4e4b69c9b",
+  "after_run_sha256": "364ec208af5b7ac370e768acd17783d2425b4fa96a2d27f1b91f9cfc4a73e164",
+  "after_runtime_manifest_sha256": "96c19c572c597f35399bb44dc0420b4109d8365ce19044011cd428cbad2f0d97",
+  "unchanged_java_helper_sha256": "99d63f2d211ba9cd2b332433b9eaba287f821d817cad0541979c9b55b9ba1e02",
+  "producer_actual_source_sha256": "7218430bfd35807096b74a6dbe9134ab923cc7d81dc29af2c603e4bb1a9965ff",
+  "files": {
+    "before-manifest.json": "11b0f467dbc8e4bf616b7e6d4eafb4099824484181906b32cfd816bfb88630ed",
+    "before-run.py": "705bf9c6586bce5f63bfcbc3adefc33c3eb4bfed77166f262c8f80a4e4b69c9b",
+    "candidate.patch": "9858f694dd4e55eaa57f0480f62756de588440db028e936c728b6281eb63a250",
+    "proof.json": "71cb84e983a8163219842a827e6b91bf1b0347d6bf97ae958e700ddcb8d4edae",
+    "staging/manifest.json": "96c19c572c597f35399bb44dc0420b4109d8365ce19044011cd428cbad2f0d97",
+    "staging/run.py": "364ec208af5b7ac370e768acd17783d2425b4fa96a2d27f1b91f9cfc4a73e164"
+  },
+  "checks": {
+    "python_ast": "PASS",
+    "only_two_runner_identity_blocks_changed": true,
+    "native_mutations": false,
+    "subject_execution": false,
+    "no_valid_assertion_or_deadline_weakened": true
+  }
+}

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="2"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="30"
+	timestamp="2026-10-24T19:27:13"
+	>
+	<testcase name="file-operations" classname="file-operations" time="0.229095" status="run">
+		<properties>
+			<property name="cmake_labels" value="fileops;storage;unit"/>
+		</properties>
+		<system-out>five generated file-operation families passed
+</system-out>
+	</testcase>
+	<testcase name="file-operations-host" classname="file-operations-host" time="29.9783" status="run">
+		<properties>
+			<property name="cmake_labels" value="fileops;integration;runtime-bound;unit"/>
+		</properties>
+		<system-out>********* Start testing of FileOperationsBridgeTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : FileOperationsBridgeTests::initTestCase()
+QWARN  : FileOperationsBridgeTests::liveReadOnlyPreviewAndDefensiveDialogCopyThenRemoveKeep() This plugin does not support propagateSizeHints()
+PASS   : FileOperationsBridgeTests::liveReadOnlyPreviewAndDefensiveDialogCopyThenRemoveKeep()
+PASS   : FileOperationsBridgeTests::pausedLiveMovePreservesCountersPauseAndRequiredRecheck()
+PASS   : FileOperationsBridgeTests::stoppedRelinkRetainsSourceAndDeleteRequiresNewConfirmedPlan()
+PASS   : FileOperationsBridgeTests::changedDisplayedScopeAndStaleTargetRejectBeforeAnyMutation()
+PASS   : FileOperationsBridgeTests::actualCreatorOnlyImportsWhenExplicitAndImportIsStopped(create-only)
+PASS   : FileOperationsBridgeTests::actualCreatorOnlyImportsWhenExplicitAndImportIsStopped(explicit-stopped-import)
+Q...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

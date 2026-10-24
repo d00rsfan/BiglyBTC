@@ -1,0 +1,18 @@
+{
+  "preview/native/tests/file_operations_bridge_tests.cpp": {
+    "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/ui/bridge-tests/staging/preview/native/tests/file_operations_bridge_tests.cpp",
+    "after_sha256": "402a175a05de556e596a8dbe291df856a4f3a5132bee21c3cf4d8998eae285fe",
+    "before_sha256": null,
+    "capsule_sha256": "6a0381fdd8a7699d3df6d033536c06d972f1b7dc68ad0053b37e70a22f4a1a6e"
+  },
+  "preview/native/tests/file_operations_driver.cpp": {
+    "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/storage-driver/amendments/selected-normal/file_operations_driver.cpp",
+    "after_sha256": "e318ee00cf58a4e2e263d853ffe29dd3d813142e2902a414e75a5bd40e9480e1",
+    "before_sha256": null,
+    "capsule_sha256": "824150bf5b6d20c08949111520c9d24be351986f3e33ed719d07af36ab33e9e7"
+  },
+  "preview/native/tests/CMakeLists.txt": {
+    "before_sha256": "1b4cf59491419e01158650a9f26d77580c248cb5e02b52354141d8b707a01ed0",
+    "after_sha256": "fe5f1e947763d8fcab4d4726479f9b6498e79fed3db37df8c676601247dc9104"
+  }
+}

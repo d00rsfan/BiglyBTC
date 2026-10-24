@@ -1,0 +1,86 @@
+{
+  "status": "SOURCE_FIX_ONLY_NO_SUBJECT_EXECUTION",
+  "bug": "Relink FileOperationEntry identity is the visible existing destination; previous runner compared it to unrelated original source identity.",
+  "source_selection": "const auto& visible=request.kind==FileOperationKind::Relink?f.destination:f.source; f.view.device/inode=visible stamp",
+  "source_cpp": {
+    "path": "/home/yurii/Java/BiglyBT/build/fileops-20261024/storage/staging/adapters/file_operations.cpp",
+    "sha256": "f106479282575dbf6fc1edb650238c8811a4ccf5d9cd8c6ad1a23d704764bcbf"
+  },
+  "retained_actual_receipt": {
+    "path": "/home/yurii/Java/BiglyBT/build/fileops-20261024/java-handoff/run-r2/case-relink/result.json",
+    "sha256": "569ff97fbec8d04e8455099e5132184750f62baf35c08506ee3af04a890b2304"
+  },
+  "readonly_actual_fixture_observations": [
+    {
+      "index": 0,
+      "preview_device": 46,
+      "preview_inode": 1044917,
+      "expected_sha256": "68e86f50273e2453e5cf878dc9a9d8046788081b8c72d6e5ce30772bf92b2337",
+      "source": {
+        "path": "/tmp/biglybtc-fileops-handoff-relink-_egrw23i/source/Bundle-\u6570\u636e/first-\u03b1.bin",
+        "device": 46,
+        "inode": 1044900,
+        "bytes": 17001,
+        "sha256": "68e86f50273e2453e5cf878dc9a9d8046788081b8c72d6e5ce30772bf92b2337"
+      },
+      "destination": {
+        "path": "/tmp/biglybtc-fileops-handoff-relink-_egrw23i/destination/Bundle-\u6570\u636e/first-\u03b1.bin",
+        "device": 46,
+        "inode": 1044917,
+        "bytes": 17001,
+        "sha256": "68e86f50273e2453e5cf878dc9a9d8046788081b8c72d6e5ce30772bf92b2337"
+      }
+    },
+    {
+      "index": 1,
+      "preview_device": 46,
+      "preview_inode": 1044918,
+      "expected_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source": {
+        "path": "/tmp/biglybtc-fileops-handoff-relink-_egrw23i/source/Bundle-\u6570\u636e/empty.bin",
+        "device": 46,
+        "inode": 1044901,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "destination": {
+        "path": "/tmp/biglybtc-fileops-handoff-relink-_egrw23i/destination/Bundle-\u6570\u636e/empty.bin",
+        "device": 46,
+        "inode": 1044918,
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    },
+    {
+      "index": 2,
+      "preview_device": 46,
+      "preview_inode": 1044919,
+      "expected_sha256": "14d2c0086182189cabc444fc864939885ea57e1a62b1d32b0b828145f0e657bc",
+      "source": {
+        "path": "/tmp/biglybtc-fileops-handoff-relink-_egrw23i/source/Bundle-\u6570\u636e/last-\u6570\u636e.bin",
+        "device": 46,
+        "inode": 1044902,
+        "bytes": 23002,
+        "sha256": "14d2c0086182189cabc444fc864939885ea57e1a62b1d32b0b828145f0e657bc"
+      },
+      "destination": {
+        "path": "/tmp/biglybtc-fileops-handoff-relink-_egrw23i/destination/Bundle-\u6570\u636e/last-\u6570\u636e.bin",
+        "device": 46,
+        "inode": 1044919,
+        "bytes": 23002,
+        "sha256": "14d2c0086182189cabc444fc864939885ea57e1a62b1d32b0b828145f0e657bc"
+      }
+    }
+  ],
+  "unchanged_assertions": [
+    "Source bytes/hash retained; explicit source byte length checked",
+    "RemoveKeep preview source inode remains exact",
+    "Relink preview destination inode now checked against correct file",
+    "Both source and destination physical maps remain unchanged through actual Java READY",
+    "All payload paths/hashes/checked pieces/unknowns/intent/class-source fences/timeouts/cases unchanged"
+  ],
+  "recipe_metadata": "Preserves initial recipe/manifest; new runtime manifest binds actual generated-dictionary driver7218430b plus historical source amendment chain.",
+  "execution": false,
+  "native_edits": false,
+  "compile": false
+}

@@ -1,0 +1,573 @@
+{
+  "status": "PASS_ACTUAL_NATIVE_FILE_OPERATIONS_ORIGINAL_JAVA",
+  "original_source": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_manifest_sha256": "96c19c572c597f35399bb44dc0420b4109d8365ce19044011cd428cbad2f0d97",
+  "native_driver_sha256": "76d2a248ce512501397ec0e443d8fe8598cdd74a77624b0bdef962085c80122a",
+  "retention_sha256": "7472e8bda8d832fd5a962cda76ba1fcefaa0e6e9b4cad2621e0be97e6fbec9dd",
+  "full_class_map_reference": "/home/yurii/Java/BiglyBTC/build/dependencies/java-oracle-17-20261021/retention.json",
+  "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+  "class_files_and_resources": 5432,
+  "helper_classes_sha256": {
+    "EngineOracle$1.class": "79d627c4854e87732f3b9b1d6e5014e4a51cb9bfbbd1b46abb79cd5b00f818a7",
+    "EngineOracle.class": "e910d5f9cf835560fe2059ab564172e65e0492af9a25bd7b4e2d6406809a4617",
+    "FileOperationsOracle.class": "958659ef802d4396f8e7bbe84cdc99b2adcb7b7b0396398188a92e4a8c5c8a2d",
+    "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd"
+  },
+  "class_map_verified_before_and_after": true,
+  "original_core_recompiled": false,
+  "original_profile_or_process_access": false,
+  "public_network_access": false,
+  "scope": "Generated v1 relocation/relink/removal and actual original GlobalManager READY; no engine continuation or whole-client parity",
+  "cases": [
+    {
+      "mode": "relocate",
+      "profile": "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/profile",
+      "target": "7E257DC1F2FE3C40FE404E4B16B37A34D827977F",
+      "survivor": "89FD4AE671573779E2836E341B505830C1CCE426",
+      "native_receipt_sha256": "32b0c1c82b46ae111ea596d3ee6dd49a0aaba7b3fe916100a1de5ed49631310f",
+      "actual_original_hashes": [
+        "7E257DC1F2FE3C40FE404E4B16B37A34D827977F",
+        "89FD4AE671573779E2836E341B505830C1CCE426"
+      ],
+      "actual_original_observations": {
+        "7E257DC1F2FE3C40FE404E4B16B37A34D827977F": {
+          "state": 70,
+          "force": false,
+          "paused": true,
+          "position": 1,
+          "received": 40003,
+          "sent": 123,
+          "files": {
+            "0": {
+              "priority": 0,
+              "skipped": false,
+              "downloaded": 17001,
+              "bytes": 17001,
+              "path": "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/destination/Bundle-\u6570\u636e/first-\u03b1.bin",
+              "sha256": "68e86f50273e2453e5cf878dc9a9d8046788081b8c72d6e5ce30772bf92b2337"
+            },
+            "1": {
+              "priority": 0,
+              "skipped": false,
+              "downloaded": 0,
+              "bytes": 0,
+              "path": "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/destination/Bundle-\u6570\u636e/empty.bin",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "2": {
+              "priority": 0,
+              "skipped": false,
+              "downloaded": 23002,
+              "bytes": 23002,
+              "path": "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/destination/Bundle-\u6570\u636e/last-\u6570\u636e.bin",
+              "sha256": "14d2c0086182189cabc444fc864939885ea57e1a62b1d32b0b828145f0e657bc"
+            }
+          },
+          "pieces": [
+            3,
+            3
+          ]
+        },
+        "89FD4AE671573779E2836E341B505830C1CCE426": {
+          "state": 70,
+          "force": false,
+          "paused": true,
+          "position": 2,
+          "received": 40003,
+          "sent": 123,
+          "files": {
+            "0": {
+              "priority": 0,
+              "skipped": false,
+              "downloaded": 40003,
+              "bytes": 40003,
+              "path": "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/survivor/survivor.bin",
+              "sha256": "4684ec7dd4f54f0ef0de7e16d33006def750c5074aa310cc5f9b723e53c19f67"
+            }
+          },
+          "pieces": [
+            3,
+            3
+          ]
+        }
+      },
+      "native_documents_before_java": {
+        ".azlock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "active/7E257DC1F2FE3C40FE404E4B16B37A34D827977F.dat": "af5ff2e8a061a7f42a77f024f6aa79608dd493838364172d4167bba2b80ca970",
+        "active/7E257DC1F2FE3C40FE404E4B16B37A34D827977F.dat.bak": "af5ff2e8a061a7f42a77f024f6aa79608dd493838364172d4167bba2b80ca970",
+        "active/89FD4AE671573779E2836E341B505830C1CCE426.dat": "a85dfa70454ac393dc4645130faa7b1cce713831be74dfeafa08288d8f0e48b2",
+        "downloads.config": "7b548df461d831c13b8d6e18692647dacaa1787b0a34ea0ef3342e1615c57f28"
+      },
+      "payload_map_after_java": {
+        "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/destination/Bundle-\u6570\u636e/first-\u03b1.bin": {
+          "device": 46,
+          "inode": 1050230,
+          "bytes": 17001,
+          "sha256": "68e86f50273e2453e5cf878dc9a9d8046788081b8c72d6e5ce30772bf92b2337"
+        },
+        "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/destination/Bundle-\u6570\u636e/empty.bin": {
+          "device": 46,
+          "inode": 1050231,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/destination/Bundle-\u6570\u636e/last-\u6570\u636e.bin": {
+          "device": 46,
+          "inode": 1050232,
+          "bytes": 23002,
+          "sha256": "14d2c0086182189cabc444fc864939885ea57e1a62b1d32b0b828145f0e657bc"
+        },
+        "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/survivor/survivor.bin": {
+          "device": 46,
+          "inode": 1050239,
+          "bytes": 40003,
+          "sha256": "4684ec7dd4f54f0ef0de7e16d33006def750c5074aa310cc5f9b723e53c19f67"
+        }
+      }
+    },
+    {
+      "mode": "relink",
+      "profile": "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/profile",
+      "target": "7E257DC1F2FE3C40FE404E4B16B37A34D827977F",
+      "survivor": "89FD4AE671573779E2836E341B505830C1CCE426",
+      "native_receipt_sha256": "f68a58da233741b50338bdfd40378c7e15b4ba9ed48192afbe09db5a7ccc8b99",
+      "actual_original_hashes": [
+        "7E257DC1F2FE3C40FE404E4B16B37A34D827977F",
+        "89FD4AE671573779E2836E341B505830C1CCE426"
+      ],
+      "actual_original_observations": {
+        "7E257DC1F2FE3C40FE404E4B16B37A34D827977F": {
+          "state": 70,
+          "force": false,
+          "paused": true,
+          "position": 1,
+          "received": 40003,
+          "sent": 123,
+          "files": {
+            "0": {
+              "priority": 0,
+              "skipped": false,
+              "downloaded": 17001,
+              "bytes": 17001,
+              "path": "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/destination/Bundle-\u6570\u636e/first-\u03b1.bin",
+              "sha256": "68e86f50273e2453e5cf878dc9a9d8046788081b8c72d6e5ce30772bf92b2337"
+            },
+            "1": {
+              "priority": 0,
+              "skipped": false,
+              "downloaded": 0,
+              "bytes": 0,
+              "path": "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/destination/Bundle-\u6570\u636e/empty.bin",
+              "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "2": {
+              "priority": 0,
+              "skipped": false,
+              "downloaded": 23002,
+              "bytes": 23002,
+              "path": "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/destination/Bundle-\u6570\u636e/last-\u6570\u636e.bin",
+              "sha256": "14d2c0086182189cabc444fc864939885ea57e1a62b1d32b0b828145f0e657bc"
+            }
+          },
+          "pieces": [
+            3,
+            3
+          ]
+        },
+        "89FD4AE671573779E2836E341B505830C1CCE426": {
+          "state": 70,
+          "force": false,
+          "paused": true,
+          "position": 2,
+          "received": 40003,
+          "sent": 123,
+          "files": {
+            "0": {
+              "priority": 0,
+              "skipped": false,
+              "downloaded": 40003,
+              "bytes": 40003,
+              "path": "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/survivor/survivor.bin",
+              "sha256": "4684ec7dd4f54f0ef0de7e16d33006def750c5074aa310cc5f9b723e53c19f67"
+            }
+          },
+          "pieces": [
+            3,
+            3
+          ]
+        }
+      },
+      "native_documents_before_java": {
+        ".azlock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "active/7E257DC1F2FE3C40FE404E4B16B37A34D827977F.dat": "3d9e836362af385fbb7a51ffb3cf1e89eccc447e12513f8da466fcaa1bdf3d00",
+        "active/7E257DC1F2FE3C40FE404E4B16B37A34D827977F.dat.bak": "3d9e836362af385fbb7a51ffb3cf1e89eccc447e12513f8da466fcaa1bdf3d00",
+        "active/89FD4AE671573779E2836E341B505830C1CCE426.dat": "a85dfa70454ac393dc4645130faa7b1cce713831be74dfeafa08288d8f0e48b2",
+        "downloads.config": "ba0f91165be465c677e0d6ac6a5e901fbd7dc652134fb207f3e4a5d1b32b2772"
+      },
+      "payload_map_after_java": {
+        "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/source/Bundle-\u6570\u636e/first-\u03b1.bin": {
+          "device": 46,
+          "inode": 1050321,
+          "bytes": 17001,
+          "sha256": "68e86f50273e2453e5cf878dc9a9d8046788081b8c72d6e5ce30772bf92b2337"
+        },
+        "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/destination/Bundle-\u6570\u636e/first-\u03b1.bin": {
+          "device": 46,
+          "inode": 1050338,
+          "bytes": 17001,
+          "sha256": "68e86f50273e2453e5cf878dc9a9d8046788081b8c72d6e5ce30772bf92b2337"
+        },
+        "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/source/Bundle-\u6570\u636e/empty.bin": {
+          "device": 46,
+          "inode": 1050322,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/destination/Bundle-\u6570\u636e/empty.bin": {
+          "device": 46,
+          "inode": 1050339,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/source/Bundle-\u6570\u636e/last-\u6570\u636e.bin": {
+          "device": 46,
+          "inode": 1050323,
+          "bytes": 23002,
+          "sha256": "14d2c0086182189cabc444fc864939885ea57e1a62b1d32b0b828145f0e657bc"
+        },
+        "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/destination/Bundle-\u6570\u636e/last-\u6570\u636e.bin": {
+          "device": 46,
+          "inode": 1050340,
+          "bytes": 23002,
+          "sha256": "14d2c0086182189cabc444fc864939885ea57e1a62b1d32b0b828145f0e657bc"
+        },
+        "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/survivor/survivor.bin": {
+          "device": 46,
+          "inode": 1050330,
+          "bytes": 40003,
+          "sha256": "4684ec7dd4f54f0ef0de7e16d33006def750c5074aa310cc5f9b723e53c19f67"
+        }
+      }
+    },
+    {
+      "mode": "removeKeep",
+      "profile": "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/profile",
+      "target": "7E257DC1F2FE3C40FE404E4B16B37A34D827977F",
+      "survivor": "89FD4AE671573779E2836E341B505830C1CCE426",
+      "native_receipt_sha256": "e6b593fb0dbff9ba514eb4304c92474e29b58fccb6f32412f75c73b96c1d41ac",
+      "actual_original_hashes": [
+        "89FD4AE671573779E2836E341B505830C1CCE426"
+      ],
+      "actual_original_observations": {
+        "89FD4AE671573779E2836E341B505830C1CCE426": {
+          "state": 70,
+          "force": false,
+          "paused": true,
+          "position": 1,
+          "received": 40003,
+          "sent": 123,
+          "files": {
+            "0": {
+              "priority": 0,
+              "skipped": false,
+              "downloaded": 40003,
+              "bytes": 40003,
+              "path": "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/survivor/survivor.bin",
+              "sha256": "4684ec7dd4f54f0ef0de7e16d33006def750c5074aa310cc5f9b723e53c19f67"
+            }
+          },
+          "pieces": [
+            3,
+            3
+          ]
+        }
+      },
+      "native_documents_before_java": {
+        ".azlock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "active/89FD4AE671573779E2836E341B505830C1CCE426.dat": "a85dfa70454ac393dc4645130faa7b1cce713831be74dfeafa08288d8f0e48b2",
+        "downloads.config": "c207072dbbc4ecaac8d630f8ca76f6d8317d430d08766c833331e12fa29d2bdd"
+      },
+      "payload_map_after_java": {
+        "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/source/Bundle-\u6570\u636e/first-\u03b1.bin": {
+          "device": 46,
+          "inode": 1050415,
+          "bytes": 17001,
+          "sha256": "68e86f50273e2453e5cf878dc9a9d8046788081b8c72d6e5ce30772bf92b2337"
+        },
+        "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/source/Bundle-\u6570\u636e/empty.bin": {
+          "device": 46,
+          "inode": 1050416,
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/source/Bundle-\u6570\u636e/last-\u6570\u636e.bin": {
+          "device": 46,
+          "inode": 1050417,
+          "bytes": 23002,
+          "sha256": "14d2c0086182189cabc444fc864939885ea57e1a62b1d32b0b828145f0e657bc"
+        },
+        "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/survivor/survivor.bin": {
+          "device": 46,
+          "inode": 1050424,
+          "bytes": 40003,
+          "sha256": "4684ec7dd4f54f0ef0de7e16d33006def750c5074aa310cc5f9b723e53c19f67"
+        }
+      }
+    },
+    {
+      "mode": "removeDelete",
+      "profile": "/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/profile",
+      "target": "7E257DC1F2FE3C40FE404E4B16B37A34D827977F",
+      "survivor": "89FD4AE671573779E2836E341B505830C1CCE426",
+      "native_receipt_sha256": "7200f83070bfe27613f86dca4d912540867044a99f6e04cf020a84264beeb48e",
+      "actual_original_hashes": [
+        "89FD4AE671573779E2836E341B505830C1CCE426"
+      ],
+      "actual_original_observations": {
+        "89FD4AE671573779E2836E341B505830C1CCE426": {
+          "state": 70,
+          "force": false,
+          "paused": true,
+          "position": 1,
+          "received": 40003,
+          "sent": 123,
+          "files": {
+            "0": {
+              "priority": 0,
+              "skipped": false,
+              "downloaded": 40003,
+              "bytes": 40003,
+              "path": "/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/survivor/survivor.bin",
+              "sha256": "4684ec7dd4f54f0ef0de7e16d33006def750c5074aa310cc5f9b723e53c19f67"
+            }
+          },
+          "pieces": [
+            3,
+            3
+          ]
+        }
+      },
+      "native_documents_before_java": {
+        ".azlock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "active/89FD4AE671573779E2836E341B505830C1CCE426.dat": "a85dfa70454ac393dc4645130faa7b1cce713831be74dfeafa08288d8f0e48b2",
+        "downloads.config": "beba8adeafa70cc434540c9340a1244a7099c1c151089cb0a883af507173ab96"
+      },
+      "payload_map_after_java": {
+        "/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/survivor/survivor.bin": {
+          "device": 46,
+          "inode": 1050507,
+          "bytes": 40003,
+          "sha256": "4684ec7dd4f54f0ef0de7e16d33006def750c5074aa310cc5f9b723e53c19f67"
+        }
+      }
+    }
+  ],
+  "commands": [
+    {
+      "name": "javac-fixtures",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+        "-J-XX:ActiveProcessorCount=2",
+        "--release",
+        "8",
+        "-encoding",
+        "UTF-8",
+        "-proc:none",
+        "-implicit:none",
+        "-sourcepath",
+        "/tmp/biglybtc-fileops-oracle-4obnt05d/empty-sourcepath",
+        "-cp",
+        "/tmp/biglybtc-oracle/classes",
+        "-d",
+        "/tmp/biglybtc-fileops-oracle-4obnt05d/classes",
+        "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java",
+        "/home/yurii/Java/BiglyBT/migration/fixtures/java/EngineOracle.java",
+        "/home/yurii/Java/BiglyBT/build/fileops-20261024/java-handoff/FileOperationsOracle.java"
+      ],
+      "cwd": "/tmp/biglybtc-fileops-oracle-4obnt05d",
+      "timeout_seconds": 90,
+      "state": "finished",
+      "exit_code": 0
+    },
+    {
+      "name": "relocate-native",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-file-operations-driver",
+        "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i",
+        "relocate",
+        "multi"
+      ],
+      "cwd": "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i",
+      "timeout_seconds": 120,
+      "state": "finished",
+      "exit_code": 0
+    },
+    {
+      "name": "relocate-java",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-fileops-handoff-relocate-d9ul049i",
+        "-Dbiglybtc.test.ports=53863",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/tmp",
+        "-Duser.home=/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/prefs",
+        "-cp",
+        "/tmp/biglybtc-fileops-oracle-4obnt05d/classes:/tmp/biglybtc-oracle/classes",
+        "FileOperationsOracle",
+        "53863"
+      ],
+      "cwd": "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i",
+      "timeout_seconds": 150,
+      "state": "finished",
+      "exit_code": 0
+    },
+    {
+      "name": "relink-native",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-file-operations-driver",
+        "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr",
+        "relink",
+        "multi"
+      ],
+      "cwd": "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr",
+      "timeout_seconds": 120,
+      "state": "finished",
+      "exit_code": 0
+    },
+    {
+      "name": "relink-java",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-fileops-handoff-relink-a5_s8awr",
+        "-Dbiglybtc.test.ports=60913",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/tmp",
+        "-Duser.home=/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/prefs",
+        "-cp",
+        "/tmp/biglybtc-fileops-oracle-4obnt05d/classes:/tmp/biglybtc-oracle/classes",
+        "FileOperationsOracle",
+        "60913"
+      ],
+      "cwd": "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr",
+      "timeout_seconds": 150,
+      "state": "finished",
+      "exit_code": 0
+    },
+    {
+      "name": "removeKeep-native",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-file-operations-driver",
+        "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed",
+        "removeKeep",
+        "multi"
+      ],
+      "cwd": "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed",
+      "timeout_seconds": 120,
+      "state": "finished",
+      "exit_code": 0
+    },
+    {
+      "name": "removeKeep-java",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed",
+        "-Dbiglybtc.test.ports=51391",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/tmp",
+        "-Duser.home=/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/prefs",
+        "-cp",
+        "/tmp/biglybtc-fileops-oracle-4obnt05d/classes:/tmp/biglybtc-oracle/classes",
+        "FileOperationsOracle",
+        "51391"
+      ],
+      "cwd": "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed",
+      "timeout_seconds": 150,
+      "state": "finished",
+      "exit_code": 0
+    },
+    {
+      "name": "removeDelete-native",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-file-operations-driver",
+        "/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik",
+        "removeDelete",
+        "multi"
+      ],
+      "cwd": "/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik",
+      "timeout_seconds": 120,
+      "state": "finished",
+      "exit_code": 0
+    },
+    {
+      "name": "removeDelete-java",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik",
+        "-Dbiglybtc.test.ports=37465",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/tmp",
+        "-Duser.home=/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/prefs",
+        "-cp",
+        "/tmp/biglybtc-fileops-oracle-4obnt05d/classes:/tmp/biglybtc-oracle/classes",
+        "FileOperationsOracle",
+        "37465"
+      ],
+      "cwd": "/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik",
+      "timeout_seconds": 150,
+      "state": "finished",
+      "exit_code": 0
+    }
+  ],
+  "logs_sha256": {
+    "javac-fixtures.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "javac-fixtures.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relink-java.stderr": "fd319618910d0b2f1b4f590c596fa79c3ac02b3e2bee7a2336b3128415866eb6",
+    "relink-java.stdout": "dfabe89782c272d324da9b695429cb47678a8774274a77409277843d7b1c4171",
+    "relink-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relink-native.stdout": "f68a58da233741b50338bdfd40378c7e15b4ba9ed48192afbe09db5a7ccc8b99",
+    "relocate-java.stderr": "fff9562c5002a055e9f24b9abbeb4c4c5e00c04482975e985095db1ce6910fff",
+    "relocate-java.stdout": "7dca43b1e5227579b7ed46dab67cd1d97757f7e6feb715b94384bd9781a40572",
+    "relocate-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "relocate-native.stdout": "32b0c1c82b46ae111ea596d3ee6dd49a0aaba7b3fe916100a1de5ed49631310f",
+    "removeDelete-java.stderr": "b962f12fabd324a784783f965d569f133fa44f8f37dd493736fcfacea0fd4a16",
+    "removeDelete-java.stdout": "9abbd86af1caf3d1a4462da617ee085c8a9b7e4a3e5ba1122855f4d7ec2c9ac2",
+    "removeDelete-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "removeDelete-native.stdout": "7200f83070bfe27613f86dca4d912540867044a99f6e04cf020a84264beeb48e",
+    "removeKeep-java.stderr": "c0109528aa7a824033f63a79982243b20923b523b6e319e5a331412f1667ebf3",
+    "removeKeep-java.stdout": "6734b055ddbd4a7536835f1964dfbdc99e28f36224d1efb7a655de7ac9c69059",
+    "removeKeep-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "removeKeep-native.stdout": "e6b593fb0dbff9ba514eb4304c92474e29b58fccb6f32412f75c73b96c1d41ac"
+  }
+}

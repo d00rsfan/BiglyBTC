@@ -6046,15 +6046,22 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-SpeedScheduler.git",
           "commit": "91c417ca5aa5494f8c5791d8f29cf96350a0071d",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "8aa48d6904c7df979f2730fa3cb4a66bb0ab8985",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
-        "migration/updates/queue.scheduler/20261024.md"
+        "migration/updates/queue.scheduler/20261024.md",
+        "migration/updates/library.file_operations/20261024.md"
       ],
       "evidence": [
         "migration/tasks/P08-01-queue-seeding-scheduling.md",
         "migration/evidence/20261024-queue-seeding-scheduling/verification.json",
-        "migration/evidence/20261024-queue-seeding-scheduling/REVIEW.md"
+        "migration/evidence/20261024-queue-seeding-scheduling/REVIEW.md",
+        "migration/evidence/20261024-library-file-operations/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-003.md"
     },
@@ -6105,6 +6112,152 @@
         "migration/evidence/20261024-queue-seeding-scheduling/REVIEW.md"
       ],
       "decision_ref": "migration/decisions/AD-003.md"
+    },
+    {
+      "id": "library.file_operations",
+      "feature_ids": [
+        "F02.file_relocation",
+        "F05.file_operation_recovery",
+        "F15.explicit_removal"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P03-08-library-file-operations.md"
+      ],
+      "target_paths": [
+        "native/adapters/file_operations.cpp",
+        "native/app/session_bridge.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java",
+            "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java"
+          ],
+          "source_symbols": [
+            "removeDownloadManager",
+            "moveDataFiles",
+            "setTorrentSaveDir"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "8aa48d6904c7df979f2730fa3cb4a66bb0ab8985",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "dda0654715ffa38feea15784a92bf6f00502523e",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/updates/library.file_operations/20261024.md"
+      ],
+      "evidence": [
+        "migration/tasks/P03-08-library-file-operations.md",
+        "migration/evidence/20261024-library-file-operations/verification.json"
+      ],
+      "decision_ref": "migration/decisions/AD-001.md"
+    },
+    {
+      "id": "formats.torrent_creation",
+      "feature_ids": [
+        "F01.original_torrent_creation"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P03-08-library-file-operations.md"
+      ],
+      "target_paths": [
+        "native/engine/torrent_creator.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/torrent/impl/TOTorrentCreateImpl.java",
+            "core/src/com/biglybt/core/torrent/impl/TOTorrentCreatorImpl.java"
+          ],
+          "source_symbols": [
+            "TOTorrentCreateImpl.create"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "8aa48d6904c7df979f2730fa3cb4a66bb0ab8985",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/updates/library.file_operations/20261024.md"
+      ],
+      "evidence": [
+        "migration/tasks/P03-08-library-file-operations.md",
+        "migration/evidence/20261024-library-file-operations/verification.json"
+      ],
+      "decision_ref": "migration/decisions/AD-001.md"
+    },
+    {
+      "id": "ui.classic_file_operations",
+      "feature_ids": [
+        "F19.file_operation_workflows",
+        "F21.original_creation_dialog"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P03-08-library-file-operations.md"
+      ],
+      "target_paths": [
+        "native/ui/file_operation_dialog.cpp",
+        "native/ui/torrent_creation_dialog.cpp",
+        "native/ui/library_window.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "uis/src/com/biglybt/ui/swt/TorrentUtil.java",
+            "uis/src/com/biglybt/ui/swt/maketorrent/NewTorrentWizard.java"
+          ],
+          "source_symbols": [
+            "removeDownloads",
+            "NewTorrentWizard"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "8aa48d6904c7df979f2730fa3cb4a66bb0ab8985",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/updates/library.file_operations/20261024.md"
+      ],
+      "evidence": [
+        "migration/tasks/P03-08-library-file-operations.md",
+        "migration/evidence/20261024-library-file-operations/verification.json"
+      ],
+      "decision_ref": "migration/decisions/AD-001.md"
     }
   ],
   "update_reviews": [],

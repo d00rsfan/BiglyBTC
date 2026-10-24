@@ -1,0 +1,13 @@
+# Root appends inside the existing desktop tests area. No author CMake mutation.
+if(BIGLYBTC_DESKTOP AND BIGLYBTC_LOCAL_ENGINE AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-file-operations-host-tests file_operations_bridge_tests.cpp)
+  set_target_properties(biglybtc-file-operations-host-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-file-operations-host-tests PRIVATE
+    biglybtc_desktop_host biglybtc_local_engine biglybtc_profile Qt6::Test
+    LibtorrentRasterbar::torrent-rasterbar)
+  target_compile_options(biglybtc-file-operations-host-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME file-operations-host COMMAND biglybtc-file-operations-host-tests)
+  set_tests_properties(file-operations-host PROPERTIES
+    LABELS "unit;integration;fileops;runtime-bound" TIMEOUT 240
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()

@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "status": "AUTHOR_SOURCE_CHECKS_ONLY",
+  "native_paths_previously_absent": [
+    "preview/native/tests/file_operation_dialog_tests.cpp",
+    "preview/native/tests/torrent_creation_dialog_tests.cpp",
+    "preview/native/ui/file_operation_dialog.cpp",
+    "preview/native/ui/file_operation_dialog.hpp",
+    "preview/native/ui/file_operation_presentation.hpp",
+    "preview/native/ui/torrent_creation_dialog.cpp",
+    "preview/native/ui/torrent_creation_dialog.hpp"
+  ],
+  "native_head": "a965fd3cf0547e041d58512c56fea1cccf972ccb",
+  "source_test_methods": {
+    "preview/native/tests/file_operation_dialog_tests.cpp": [
+      "exactOwnedPlanAndExplicitDeleteConfirmation",
+      "allOperationsKeepTargetIdentityAndDestinationEditsInvalidateApproval",
+      "busyFirstShowAndStaleOrMalformedPlansCannotAuthorize",
+      "cancelWaitsForActualOutcomeAndProgressIsOrdered",
+      "reentrantPlanAndExecuteReceiversMayDeleteOwner",
+      "enabledCallbackCanRebindAndInvalidateOuterPlan",
+      "profileInvalidationDropsPendingReplies",
+      "reopenedSameSessionNeverReusesOldRequest"
+    ],
+    "preview/native/tests/torrent_creation_dialog_tests.cpp": [
+      "explicitV1OptionsAndOriginalPieceChoicesArePreserved",
+      "invalidInputsAndBusyStateNeverDispatch",
+      "progressRejectsStaleSequenceRevisionRegressionsAndOverflows",
+      "failedCreateRetainsDraftAndRetryUsesFreshIdentity",
+      "cancellationWaitsAndPublishedOutcomeWinsWithoutAutomaticRetry",
+      "newProfileRejectsOldResultsAndInvalidationCloses",
+      "directRequestAndCancelCallbacksMayDeleteOwner",
+      "enabledChangeDeletionAbortsDispatch",
+      "reopenedSameSessionRejectsPreviousDialogResult"
+    ]
+  },
+  "new_native_files_written": false,
+  "cpp_or_java_compiled": false,
+  "tests_executed": false,
+  "runtime_qt_rows": null,
+  "known_ui_limits": {
+    "plan_paths": 65536,
+    "plan_path_text_utf16_units": 8388608,
+    "path_units": 32768,
+    "tracker_tiers": 16,
+    "trackers": 64,
+    "tracker_utf8_bytes": 2048,
+    "comment_utf8_bytes": 16384,
+    "manual_piece_sizes": 20,
+    "creator_formats": [
+      "v1"
+    ]
+  },
+  "critical_handoff": [
+    "Prepare/read-only preview never stops a live handle.",
+    "Worker keeps prepared storage plan and validates exact scope/identity after retirement, allowing only incidental checkpoint counter/time changes.",
+    "Delete protection0x40 remains authoritative on worker.",
+    "Dialog copies accepted plan before confirmation and exposes no storage-operation permissions.",
+    "Only explicit user Create/Confirm dispatches; no automatic import by widget.",
+    "Already-published creator failures block same-output retry.",
+    "Global-per-type request identities prevent old-dialog replies settling same-session reopened dialogs."
+  ]
+}

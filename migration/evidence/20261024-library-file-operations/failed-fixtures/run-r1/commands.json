@@ -1,0 +1,41 @@
+[
+  {
+    "name": "javac-fixtures",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "-J-XX:ActiveProcessorCount=2",
+      "--release",
+      "8",
+      "-encoding",
+      "UTF-8",
+      "-proc:none",
+      "-implicit:none",
+      "-sourcepath",
+      "/tmp/biglybtc-fileops-oracle-2qjoq81i/empty-sourcepath",
+      "-cp",
+      "/tmp/biglybtc-oracle/classes",
+      "-d",
+      "/tmp/biglybtc-fileops-oracle-2qjoq81i/classes",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/EngineOracle.java",
+      "/home/yurii/Java/BiglyBT/build/fileops-20261024/java-handoff/FileOperationsOracle.java"
+    ],
+    "cwd": "/tmp/biglybtc-fileops-oracle-2qjoq81i",
+    "timeout_seconds": 90,
+    "state": "finished",
+    "exit_code": 0
+  },
+  {
+    "name": "relocate-native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-file-operations-driver",
+      "/tmp/biglybtc-fileops-handoff-relocate-d9uskakd",
+      "relocate",
+      "multi"
+    ],
+    "cwd": "/tmp/biglybtc-fileops-handoff-relocate-d9uskakd",
+    "timeout_seconds": 120,
+    "state": "finished",
+    "exit_code": 2
+  }
+]

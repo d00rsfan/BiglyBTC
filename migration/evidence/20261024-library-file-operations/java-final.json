@@ -1,0 +1,12 @@
+{
+  "command": [
+    "python3",
+    "/home/yurii/Java/BiglyBT/build/fileops-20261024/java-handoff/run.py",
+    "--driver",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-file-operations-driver",
+    "--output",
+    "/home/yurii/Java/BiglyBT/build/fileops-20261024/java-handoff/run-r3"
+  ],
+  "exit": 1,
+  "seconds": 15.717762182466686
+}

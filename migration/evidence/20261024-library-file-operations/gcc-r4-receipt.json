@@ -1,0 +1,57 @@
+{
+  "case": "gcc-r4",
+  "build": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+  "selected": [
+    "file-operations",
+    "file-operations-host"
+  ],
+  "source_manifest_sha256": "e5703865ac0081a7f96a824ffafcc262cb6c01c4267e736f6ebb60e62596c254",
+  "commands": [
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "--parallel",
+        "2",
+        "--target",
+        "biglybtc-file-operations-tests",
+        "biglybtc-file-operations-host-tests",
+        "BiglyBTC",
+        "BiglyBTC-headless",
+        "biglybtc-torrent-creator-driver",
+        "biglybtc-preview-smoke",
+        "biglybtc-file-operations-driver",
+        "--",
+        "-k",
+        "0"
+      ],
+      "exit": 0,
+      "seconds": 24.21,
+      "log": "gcc-r4-build.log"
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "-R",
+        "^(file\\-operations|file\\-operations\\-host)$",
+        "--no-tests=error",
+        "--output-on-failure",
+        "--verbose",
+        "--output-junit",
+        "/home/yurii/Java/BiglyBT/build/fileops-20261024/gcc-r4.xml"
+      ],
+      "exit": 0,
+      "seconds": 29.47,
+      "log": "gcc-r4-tests.log"
+    }
+  ]
+}

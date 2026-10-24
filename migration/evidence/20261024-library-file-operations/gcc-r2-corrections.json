@@ -1,0 +1,10 @@
+{
+  "preview/native/tests/file_operations_driver.cpp": {
+    "before_sha256": "e318ee00cf58a4e2e263d853ffe29dd3d813142e2902a414e75a5bd40e9480e1",
+    "after_sha256": "1cfd2ceff1434567b7cd57739d4b91ae4eda12a1d2f1e03cbd4ce06414549acd"
+  },
+  "preview/native/ui/file_operation_dialog.cpp": {
+    "before_sha256": "812da38ffdad63d9a80c8f890cf2345f85233349ebff244e1d61fefb16b6072f",
+    "after_sha256": "958b17fa112adca711e1f88e00be9e9dfc700c25e78a38529a7800fb4a553324"
+  }
+}

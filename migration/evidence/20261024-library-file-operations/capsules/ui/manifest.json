@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "status": "SOURCE_FROZEN_NOT_COMPILED_OR_EXECUTED",
+  "native_base": "a965fd3cf0547e041d58512c56fea1cccf972ccb",
+  "original_base": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_sha256": {
+    "preview/native/tests/file_operation_dialog_tests.cpp": "c457f6ec3781fe4f418a5ea5d5e2330dc15c84d3c62810966496b2ed2757f50f",
+    "preview/native/tests/torrent_creation_dialog_tests.cpp": "d7ed3ae62f6ba34fa7653047b31ad6614e8520accfa88f5c03104da5e264675e",
+    "preview/native/ui/file_operation_dialog.cpp": "812da38ffdad63d9a80c8f890cf2345f85233349ebff244e1d61fefb16b6072f",
+    "preview/native/ui/file_operation_dialog.hpp": "6ef9e2c4993d5872788626aa226e71e794a67903336ca30d71679277d5944f72",
+    "preview/native/ui/file_operation_presentation.hpp": "314f2f04280fa48ac50ff96167242970b6d1c944ac1d9fe985cb5bbde0309acd",
+    "preview/native/ui/torrent_creation_dialog.cpp": "b8c7a22c53c59c39c49910b90f167f57e65ccc7503dabe9e5902c2e9cc6fd759",
+    "preview/native/ui/torrent_creation_dialog.hpp": "3f5df3d0920b6de0bc8c1ab7a7d37c37cc6a483b87e796b882d96b963c00a58b"
+  },
+  "sources": {
+    "preview/native/tests/file_operation_dialog_tests.cpp": {
+      "before_sha256": null,
+      "source": "staging/preview/native/tests/file_operation_dialog_tests.cpp",
+      "after_sha256": "c457f6ec3781fe4f418a5ea5d5e2330dc15c84d3c62810966496b2ed2757f50f"
+    },
+    "preview/native/tests/torrent_creation_dialog_tests.cpp": {
+      "before_sha256": null,
+      "source": "staging/preview/native/tests/torrent_creation_dialog_tests.cpp",
+      "after_sha256": "d7ed3ae62f6ba34fa7653047b31ad6614e8520accfa88f5c03104da5e264675e"
+    },
+    "preview/native/ui/file_operation_dialog.cpp": {
+      "before_sha256": null,
+      "source": "staging/preview/native/ui/file_operation_dialog.cpp",
+      "after_sha256": "812da38ffdad63d9a80c8f890cf2345f85233349ebff244e1d61fefb16b6072f"
+    },
+    "preview/native/ui/file_operation_dialog.hpp": {
+      "before_sha256": null,
+      "source": "staging/preview/native/ui/file_operation_dialog.hpp",
+      "after_sha256": "6ef9e2c4993d5872788626aa226e71e794a67903336ca30d71679277d5944f72"
+    },
+    "preview/native/ui/file_operation_presentation.hpp": {
+      "before_sha256": null,
+      "source": "staging/preview/native/ui/file_operation_presentation.hpp",
+      "after_sha256": "314f2f04280fa48ac50ff96167242970b6d1c944ac1d9fe985cb5bbde0309acd"
+    },
+    "preview/native/ui/torrent_creation_dialog.cpp": {
+      "before_sha256": null,
+      "source": "staging/preview/native/ui/torrent_creation_dialog.cpp",
+      "after_sha256": "b8c7a22c53c59c39c49910b90f167f57e65ccc7503dabe9e5902c2e9cc6fd759"
+    },
+    "preview/native/ui/torrent_creation_dialog.hpp": {
+      "before_sha256": null,
+      "source": "staging/preview/native/ui/torrent_creation_dialog.hpp",
+      "after_sha256": "3f5df3d0920b6de0bc8c1ab7a7d37c37cc6a483b87e796b882d96b963c00a58b"
+    }
+  },
+  "artifact_sha256": {
+    "ADOPTION.md": "8684c3babb25b922f1c9600ba4b7f2df131f0fabe4ea8f6e30b199b48a2163a8",
+    "CMake.snippet": "feb9aa75f3e7d818a8603b07c7a7c0d2d1394a27465ccdae41fe5acc1842ab64",
+    "changes.patch": "5fdd0938dcdceadfdec5539751f1f2754066e47dc6783febcf36d846678b1001",
+    "source-assessment.md": "65ae59d54a342462414dcebd7e8099ad1b4d40e7572e45b5d874ae84b8e73e65",
+    "source-checks.json": "45f57fc59b1f70d9c13b97107e4e3fdd28f7ff49564922f0dceaf792b15dd320",
+    "source-pins.json": "0710b198a2998a8ed9d34ec52b17acf24fb57a8c5da203c849081ae530dcac12",
+    "staging/preview/native/tests/file_operation_dialog_tests.cpp": "c457f6ec3781fe4f418a5ea5d5e2330dc15c84d3c62810966496b2ed2757f50f",
+    "staging/preview/native/tests/torrent_creation_dialog_tests.cpp": "d7ed3ae62f6ba34fa7653047b31ad6614e8520accfa88f5c03104da5e264675e",
+    "staging/preview/native/ui/file_operation_dialog.cpp": "812da38ffdad63d9a80c8f890cf2345f85233349ebff244e1d61fefb16b6072f",
+    "staging/preview/native/ui/file_operation_dialog.hpp": "6ef9e2c4993d5872788626aa226e71e794a67903336ca30d71679277d5944f72",
+    "staging/preview/native/ui/file_operation_presentation.hpp": "314f2f04280fa48ac50ff96167242970b6d1c944ac1d9fe985cb5bbde0309acd",
+    "staging/preview/native/ui/torrent_creation_dialog.cpp": "b8c7a22c53c59c39c49910b90f167f57e65ccc7503dabe9e5902c2e9cc6fd759",
+    "staging/preview/native/ui/torrent_creation_dialog.hpp": "3f5df3d0920b6de0bc8c1ab7a7d37c37cc6a483b87e796b882d96b963c00a58b"
+  },
+  "behavior_method_counts": {
+    "preview/native/tests/file_operation_dialog_tests.cpp": 8,
+    "preview/native/tests/torrent_creation_dialog_tests.cpp": 9
+  },
+  "runtime_qt_rows": null,
+  "native_mutations": false,
+  "original_profile_process_or_payload_access": false
+}

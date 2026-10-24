@@ -1,7 +1,23 @@
 # BiglyBTC migration state
 
+## Qualified library/file operations (2026-10-24)
+
+Source dda0654715ffa38feea15784a92bf6f00502523e is pushed directly to native main. Classic single-torrent
+keep/delete/move/relink and ordinary v1 creation, certified engine retirement,
+preserved pause/Scheduler authority and durable recovery pass20 unique GCC
+suites,12 Clang and12 ASan/UBSan/leak suites,3 original parser and4 actual
+original GlobalManager handoffs. Hosted desktop/SDK and private13 smoke rows/6
+suites pass. Dist promoted with complete rollback; manifest 8f0ad95fe64d27962f112129d8a128b6ae1b5414f4a29f826d768d4e73266169.
+[Review](evidence/20261024-library-file-operations/REVIEW.md) and
+[receipts](evidence/20261024-library-file-operations/verification.json).
+Original-family limits remain explicit in CF-06 and the source registry.
+No next chapter, active build/test/owner or human question. Preserve the running
+original profile/process/ordinary HEAD/index. Do not rerun adoption/promotion.
+Durable local work: build/fileops-20261024/; project: ../BiglyBTC on main.
+
 ## Qualified queue, seeding and scheduling (2026-10-24)
 
+Metadata a965fd3cf0547e041d58512c56fea1cccf972ccb is pushed directly to remote main.
 Source cda09f95bed76f3c29a514b345a70a29881dfc85 is published directly to native main.
 GCC covers 23 unique related suites. Final Clang and ASan/UBSan with leak checking
 each pass all 23 suites. Actual Java rank (190 scalar comparisons) and four-phase

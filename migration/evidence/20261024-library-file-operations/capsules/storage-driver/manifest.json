@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "implementation_manifest_sha256": "56fef798eda26126f2b995884e923576a7b52a9dda92c636de2ff49d4c53b583",
+  "source_directory": "staging",
+  "source_sha256": {
+    "preview/native/tests/file_operations_driver.cpp": "5037957cfc6f0465a36253f9ba956492fdae9a994892de1b85103c5fcbcb75e1"
+  },
+  "before_sha256": {
+    "preview/native/tests/file_operations_driver.cpp": null
+  },
+  "artifacts_sha256": {
+    "ADOPTION.md": "69bd026beca21cc65c31fe7b2264b89b991d0a650e892262b80f8ef20d464479"
+  },
+  "execution": "Source only; no C++/Java/build/run."
+}

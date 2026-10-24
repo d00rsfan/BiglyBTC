@@ -1,0 +1,7 @@
+{
+  "preview/native/app/session_bridge.hpp": "dfabeadddf4efa936522c6a5534b951333ca06d05f4bdfcecfe0751bda1a9ab5",
+  "preview/native/app/session_bridge.cpp": "7814e820963e9cf426eb7eb64427881ac536f5adb664550fe559d74aefe3d2ba",
+  "preview/native/ui/library_window.hpp": "8b0823d6f1a5de7f3f376475399d82ed8e646cfebcc2bd07786ef908a8a6af6d",
+  "preview/native/ui/library_window.cpp": "b2ade33eb94b1cd00deedc69df8cca5521f6d9da581d05e16a216beda1a75fb7",
+  "preview/native/app/main_desktop.cpp": "b3d0980be4a403f42f301cc31aa99a74961557227361c2b3700d375619565ff0"
+}

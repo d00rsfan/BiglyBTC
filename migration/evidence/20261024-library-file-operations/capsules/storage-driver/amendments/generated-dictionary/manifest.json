@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "before_sha256": {
+    "preview/native/tests/file_operations_driver.cpp": "1cfd2ceff1434567b7cd57739d4b91ae4eda12a1d2f1e03cbd4ce06414549acd"
+  },
+  "source_sha256": {
+    "preview/native/tests/file_operations_driver.cpp": "7218430bfd35807096b74a6dbe9134ab923cc7d81dc29af2c603e4bb1a9965ff"
+  },
+  "source_file": "file_operations_driver.cpp",
+  "failed_fixture": {
+    "path": "build/fileops-20261024/java-handoff/run-r1/case-relocate/profile/downloads.config",
+    "sha256": "f8520b8cd7b875e65317c17683d430937ff36d66c4672e4a0d12393519ba2ff0",
+    "bad_key_offset": 819,
+    "actual_bytes": "9:pause_data",
+    "correct_bytes": "10:pause_data"
+  },
+  "reason": "Only a generated dictionary key length is wrong; storage apply was not reached.",
+  "execution": "Read-only source/failed-output inspection only; no builds/runs/native writes."
+}

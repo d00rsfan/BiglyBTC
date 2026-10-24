@@ -1,0 +1,171 @@
+{
+  "baseline": "a965fd3cf0547e041d58512c56fea1cccf972ccb",
+  "capsules": {
+    "creator": "56320f0fb9fb1a6daa319339b9635270ea5f1ed3cf332a5bef843f41941e1f71",
+    "ui": "5a662610cd1d050b525d19c7f8497f9cbe49faa2c391425da52d60506e1e686d",
+    "reviews/scheduler-rebind": "ce40a026daa0ffb38b496e32b6c93e709f119c2af3880ab9d33386f007b41781",
+    "storage": "56fef798eda26126f2b995884e923576a7b52a9dda92c636de2ff49d4c53b583"
+  },
+  "files": {
+    "preview/native/adapters/file_operation_io.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/storage/staging/adapters/file_operation_io.cpp",
+      "before_sha256": null,
+      "after_sha256": "9713a9072e414d604cf8151b3f2ec073993eae102dda84accec55e127f532181"
+    },
+    "preview/native/adapters/file_operation_io.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/storage/staging/adapters/file_operation_io.hpp",
+      "before_sha256": null,
+      "after_sha256": "d5fd1adb33a25e4ced75e64e20021b52792e0b9e7d25e234a4272bcf85cfe92e"
+    },
+    "preview/native/adapters/file_operations.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/storage/staging/adapters/file_operations.cpp",
+      "before_sha256": null,
+      "after_sha256": "f106479282575dbf6fc1edb650238c8811a4ccf5d9cd8c6ad1a23d704764bcbf"
+    },
+    "preview/native/adapters/file_operations.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/storage/staging/adapters/file_operations.hpp",
+      "before_sha256": null,
+      "after_sha256": "30f5d791ae6233fdeb3186a6cac28aa032a87ec55d4e76ac32866848d07504e3"
+    },
+    "preview/native/adapters/scheduler_service.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/reviews/scheduler-rebind/staging/preview/native/adapters/scheduler_service.cpp",
+      "before_sha256": "89c5a27ea4ee6ec49a73f1b69fbd42a999eae0994d8efdb0285b87b4c1823523",
+      "after_sha256": "164301b40e1b5b9deacf4652ed9be41602e08f3ccfb028ab49dad52ecfba5505"
+    },
+    "preview/native/adapters/scheduler_service.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/reviews/scheduler-rebind/staging/preview/native/adapters/scheduler_service.hpp",
+      "before_sha256": "2e7b19c4712cbf44da35ceca7f7ace7d3bcdd57dc64f3ef4bfad7a3bfa1e244b",
+      "after_sha256": "a2d76898cebfc608bfffd4ede33cc919d351c9aa338655f3d48d331ba38b4503"
+    },
+    "preview/native/app/file_operations_bridge.inc": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/root/staging/preview/native/app/file_operations_bridge.inc",
+      "before_sha256": null,
+      "after_sha256": "ed8548231fa25f6cfa0f94f265c13892f244f1368401751785cb7e7fcf12fa75"
+    },
+    "preview/native/app/main_desktop.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/root/staging/preview/native/app/main_desktop.cpp",
+      "before_sha256": "b3d0980be4a403f42f301cc31aa99a74961557227361c2b3700d375619565ff0",
+      "after_sha256": "841e049efe36294a8653e4bc6c2abe95d11c24ce186f1f30779ba7dee1bc0f92"
+    },
+    "preview/native/app/session_bridge.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/root/staging/preview/native/app/session_bridge.cpp",
+      "before_sha256": "7814e820963e9cf426eb7eb64427881ac536f5adb664550fe559d74aefe3d2ba",
+      "after_sha256": "34b357f115e2139fa226cf2117822fb1d4b898d65776e64597da0e415369eff0"
+    },
+    "preview/native/app/session_bridge.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/root/staging/preview/native/app/session_bridge.hpp",
+      "before_sha256": "dfabeadddf4efa936522c6a5534b951333ca06d05f4bdfcecfe0751bda1a9ab5",
+      "after_sha256": "b7ef294b3fada8575b8cbda9c9563993117b29432fe3ad20e9c523d6c41277fd"
+    },
+    "preview/native/engine/CMakeLists.txt": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/root/staging/preview/native/engine/CMakeLists.txt",
+      "before_sha256": "dccfd048c0b5f55508e9196b737107668361fce8c94c6d1398a019461eadd22d",
+      "after_sha256": "66f4b7562233c5a56a8d2474e4a5110f0b496a054334d5ee0474fdc64e86435f"
+    },
+    "preview/native/engine/managed_download.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/root/staging/preview/native/engine/managed_download.hpp",
+      "before_sha256": "aea201564a2f72e7a93e6a8b86f2dcbed50b25a159e60637b567ce94c31b9387",
+      "after_sha256": "34c9651317df189933fcc1eac27eb516cd376aa84f50b596466695d1ec5e20ca"
+    },
+    "preview/native/engine/persistent_session.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/root/staging/preview/native/engine/persistent_session.cpp",
+      "before_sha256": "a7d1c1147deca77ad36074c2548eb8eec97685edb33ecb51c8be56190c05c232",
+      "after_sha256": "caa30a1d339fc449032b934a03866ae742fbeb5b661d28ce0f3b2d710bbdfec4"
+    },
+    "preview/native/engine/persistent_session.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/root/staging/preview/native/engine/persistent_session.hpp",
+      "before_sha256": "c2c17fa0e749397f5e8819466e2d6385c217688f2b896b5278e778a1ef6297c7",
+      "after_sha256": "b004a73d87a10e8ffa8bcfd292f5922c83053261d570505702199c520343f056"
+    },
+    "preview/native/engine/torrent_creator.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/creator/staging/preview/native/engine/torrent_creator.cpp",
+      "before_sha256": null,
+      "after_sha256": "ddb7fb12ac11abef2e1fa1721e400207b6cd3067f138d102ff52f056a0b0be15"
+    },
+    "preview/native/engine/torrent_creator.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/creator/staging/preview/native/engine/torrent_creator.hpp",
+      "before_sha256": null,
+      "after_sha256": "801606720c4df2520a5b597cbd654521df6ce923167bf505dc754c6d9806eab1"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/root/staging/preview/native/tests/CMakeLists.txt",
+      "before_sha256": "13c4264cdaf9f8a5e7baea848284ab2ff98b0fa7ef97bcc8ed62f9c7467155e3",
+      "after_sha256": "1b4cf59491419e01158650a9f26d77580c248cb5e02b52354141d8b707a01ed0"
+    },
+    "preview/native/tests/file_operation_dialog_tests.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/ui/staging/preview/native/tests/file_operation_dialog_tests.cpp",
+      "before_sha256": null,
+      "after_sha256": "c457f6ec3781fe4f418a5ea5d5e2330dc15c84d3c62810966496b2ed2757f50f"
+    },
+    "preview/native/tests/file_operations_tests.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/storage/staging/tests/file_operations_tests.cpp",
+      "before_sha256": null,
+      "after_sha256": "9e1a04fe8618dc2ed299c27b194c6b0de47a4eddc9d31742cb0dd037f03e4893"
+    },
+    "preview/native/tests/scheduler_service_tests.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/reviews/scheduler-rebind/staging/preview/native/tests/scheduler_service_tests.cpp",
+      "before_sha256": "dc427d090478251e90e8d7c92aa0880921b7e447a38fc010da642e6aada2554b",
+      "after_sha256": "f694f71046d7e25408939492b36d61b18d9c79f07ad5078c024160c227e5e065"
+    },
+    "preview/native/tests/torrent_creation_dialog_tests.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/ui/staging/preview/native/tests/torrent_creation_dialog_tests.cpp",
+      "before_sha256": null,
+      "after_sha256": "d7ed3ae62f6ba34fa7653047b31ad6614e8520accfa88f5c03104da5e264675e"
+    },
+    "preview/native/tests/torrent_creator_driver.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/creator/staging/preview/native/tests/torrent_creator_driver.cpp",
+      "before_sha256": null,
+      "after_sha256": "ce28b5efdd0353fb5be233d7e9927a440780b4ac95f7875fa6f7a70c756cdbdf"
+    },
+    "preview/native/tests/torrent_creator_tests.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/creator/staging/preview/native/tests/torrent_creator_tests.cpp",
+      "before_sha256": null,
+      "after_sha256": "9be5e541ecf06f76470a46e912505e40e988cbc0869e92df3b35e104b8b38e99"
+    },
+    "preview/native/ui/CMakeLists.txt": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/root/staging/preview/native/ui/CMakeLists.txt",
+      "before_sha256": "9e5552e01652bf4c109144374c76e1409359a325e267e8d60d0c133c7fbe588d",
+      "after_sha256": "bdbb4ab251725e62508477a68cd6bb0547de884e38e79482182bef578e5082f0"
+    },
+    "preview/native/ui/file_operation_dialog.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/ui/staging/preview/native/ui/file_operation_dialog.cpp",
+      "before_sha256": null,
+      "after_sha256": "812da38ffdad63d9a80c8f890cf2345f85233349ebff244e1d61fefb16b6072f"
+    },
+    "preview/native/ui/file_operation_dialog.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/ui/staging/preview/native/ui/file_operation_dialog.hpp",
+      "before_sha256": null,
+      "after_sha256": "6ef9e2c4993d5872788626aa226e71e794a67903336ca30d71679277d5944f72"
+    },
+    "preview/native/ui/file_operation_presentation.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/ui/staging/preview/native/ui/file_operation_presentation.hpp",
+      "before_sha256": null,
+      "after_sha256": "314f2f04280fa48ac50ff96167242970b6d1c944ac1d9fe985cb5bbde0309acd"
+    },
+    "preview/native/ui/file_operations_window.inc": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/root/staging/preview/native/ui/file_operations_window.inc",
+      "before_sha256": null,
+      "after_sha256": "6e4c05541b40e5e0d188773de4f5942bd237b85b64cd6fdfdc06ee56536f6c4e"
+    },
+    "preview/native/ui/library_window.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/root/staging/preview/native/ui/library_window.cpp",
+      "before_sha256": "b2ade33eb94b1cd00deedc69df8cca5521f6d9da581d05e16a216beda1a75fb7",
+      "after_sha256": "0cd7b283be2a45aff3568135c4129a8858c85301ed036e68f854bbd973775848"
+    },
+    "preview/native/ui/library_window.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/root/staging/preview/native/ui/library_window.hpp",
+      "before_sha256": "8b0823d6f1a5de7f3f376475399d82ed8e646cfebcc2bd07786ef908a8a6af6d",
+      "after_sha256": "07eafbfa475ba73064920ffac012446a5d08eed1d1491135b44a85e381517c30"
+    },
+    "preview/native/ui/torrent_creation_dialog.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/ui/staging/preview/native/ui/torrent_creation_dialog.cpp",
+      "before_sha256": null,
+      "after_sha256": "b8c7a22c53c59c39c49910b90f167f57e65ccc7503dabe9e5902c2e9cc6fd759"
+    },
+    "preview/native/ui/torrent_creation_dialog.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/fileops-20261024/ui/staging/preview/native/ui/torrent_creation_dialog.hpp",
+      "before_sha256": null,
+      "after_sha256": "3f5df3d0920b6de0bc8c1ab7a7d37c37cc6a483b87e796b882d96b963c00a58b"
+    }
+  }
+}

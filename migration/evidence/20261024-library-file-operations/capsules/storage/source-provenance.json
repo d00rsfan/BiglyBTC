@@ -1,0 +1,162 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_base": "a965fd3cf0547e041d58512c56fea1cccf972ccb",
+  "subjects": [
+    {
+      "path": "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "git_blob": "f992aecdc28168d656c322512434ff1cbaf95c02",
+      "sha256": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39",
+      "symbol_lines": {
+        "removeDownloadManager": [
+          1516,
+          1982,
+          1987,
+          1992,
+          4932
+        ]
+      }
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "git_blob": "99617ee6753153c8af1598fc17cf28ed7631319b",
+      "sha256": "a88937664cb90354be6600448a63684b6a7b5c9e7906a9425b9f5a4758afbeda",
+      "symbol_lines": {
+        "setTorrentSaveDir": [
+          3741,
+          5903,
+          5911,
+          5994,
+          6006,
+          6090
+        ],
+        "moveDataFiles": [
+          5746,
+          5751,
+          5756,
+          5761,
+          5766,
+          5771,
+          5777,
+          5781,
+          5825,
+          5829,
+          5841,
+          5848,
+          5853,
+          6122,
+          8082
+        ],
+        "deleteDataFiles": [
+          5279,
+          5283
+        ]
+      }
+    },
+    {
+      "path": "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "git_blob": "0612105280e1489fc628d155bd12c7606ac0e0c3",
+      "sha256": "6755b950c548c5a7d153b9aef2c1024c7c5c79d5880fd858f3bac4261adcdf8c",
+      "symbol_lines": {
+        "deleteDataFiles": [
+          3816
+        ]
+      }
+    },
+    {
+      "path": "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "git_blob": "a9766d0fd5dea49342d7c59b62c8d4278f596c91",
+      "sha256": "821229517d374be10b95b4c2b623e3f25b356bf6d29724067933d943f719bcef",
+      "symbol_lines": {
+        "setFileLinks": [
+          625
+        ],
+        "setFileLink": [
+          275,
+          399,
+          625,
+          895,
+          1187,
+          1199,
+          2713,
+          2728,
+          2789,
+          2811,
+          2926,
+          2941,
+          2990,
+          3005
+        ],
+        "delete": [
+          256,
+          281,
+          345,
+          347,
+          361,
+          371,
+          827,
+          1151,
+          1173,
+          1185,
+          1187,
+          1196,
+          1199,
+          2701,
+          2775,
+          2797,
+          2914
+        ]
+      }
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/DownloadManagerState.java",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "git_blob": "0257df6b197c2e3ac1e0baa11083c6078d197445",
+      "sha256": "9bd11377c6abe2f4cf1e0cb10cc42032917679216fccb12fbb43a239a13a2867",
+      "symbol_lines": {
+        "AT_FILE_LINKS2": [
+          55
+        ],
+        "AT_FLAGS": [
+          59
+        ],
+        "AT_CANONICAL_SD": [
+          79
+        ]
+      }
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/TorrentUtil.java",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "git_blob": "d0b786463c8a41ec88b8df44d46633c2871e9bd3",
+      "sha256": "394f77bf940d4c331263d92bd5208bbe6e2ec73fae1462d0b3a3a606c0eab825",
+      "symbol_lines": {
+        "FLAG_DO_NOT_DELETE_DATA_ON_REMOVE": [
+          5393,
+          5403,
+          5516,
+          5531
+        ]
+      }
+    },
+    {
+      "path": "core/src/com/biglybt/pif/download/Download.java",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "git_blob": "d8db4041424ab4ef6e68cb76c109285ca0d37bb2",
+      "sha256": "3e6484279df6215385591a0f7f297920fe234fb9e9baf7a57a0ba09d86a2e74e",
+      "symbol_lines": {
+        "FLAG_DO_NOT_DELETE_DATA_ON_REMOVE": [
+          153
+        ]
+      }
+    }
+  ],
+  "notes": [
+    "Original remove stops before inventory deletion and removes active state after publication.",
+    "Native relocation deliberately keeps source data until path publication rather than copying Java rename crash ordering.",
+    "No Java/runtime equality execution is claimed."
+  ]
+}

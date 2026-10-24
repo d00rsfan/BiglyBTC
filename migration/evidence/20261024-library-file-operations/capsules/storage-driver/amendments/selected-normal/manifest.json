@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "parent_manifest_sha256": "1d48f2fbdd42910df95652185d9a1d0ed3f1157f15cabfbf50b16b595f0d9e71",
+  "before_sha256": {
+    "preview/native/tests/file_operations_driver.cpp": "5037957cfc6f0465a36253f9ba956492fdae9a994892de1b85103c5fcbcb75e1"
+  },
+  "source_sha256": {
+    "preview/native/tests/file_operations_driver.cpp": "e318ee00cf58a4e2e263d853ffe29dd3d813142e2902a414e75a5bd40e9480e1"
+  },
+  "source_file": "file_operations_driver.cpp",
+  "reason": "Original file priority 0 is skipped; -1 selects ordinary priority0. Handoff must exercise selected real files, not all-DND READY. Exactly one literal changed in shared record generator, both target and survivor.",
+  "executed": false
+}

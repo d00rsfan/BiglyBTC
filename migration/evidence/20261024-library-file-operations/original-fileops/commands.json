@@ -1,0 +1,188 @@
+[
+  {
+    "name": "javac-fixtures",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "-J-XX:ActiveProcessorCount=2",
+      "--release",
+      "8",
+      "-encoding",
+      "UTF-8",
+      "-proc:none",
+      "-implicit:none",
+      "-sourcepath",
+      "/tmp/biglybtc-fileops-oracle-4obnt05d/empty-sourcepath",
+      "-cp",
+      "/tmp/biglybtc-oracle/classes",
+      "-d",
+      "/tmp/biglybtc-fileops-oracle-4obnt05d/classes",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/EngineOracle.java",
+      "/home/yurii/Java/BiglyBT/build/fileops-20261024/java-handoff/FileOperationsOracle.java"
+    ],
+    "cwd": "/tmp/biglybtc-fileops-oracle-4obnt05d",
+    "timeout_seconds": 90,
+    "state": "finished",
+    "exit_code": 0
+  },
+  {
+    "name": "relocate-native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-file-operations-driver",
+      "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i",
+      "relocate",
+      "multi"
+    ],
+    "cwd": "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i",
+    "timeout_seconds": 120,
+    "state": "finished",
+    "exit_code": 0
+  },
+  {
+    "name": "relocate-java",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-fileops-handoff-relocate-d9ul049i",
+      "-Dbiglybtc.test.ports=53863",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/tmp",
+      "-Duser.home=/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/prefs",
+      "-cp",
+      "/tmp/biglybtc-fileops-oracle-4obnt05d/classes:/tmp/biglybtc-oracle/classes",
+      "FileOperationsOracle",
+      "53863"
+    ],
+    "cwd": "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i",
+    "timeout_seconds": 150,
+    "state": "finished",
+    "exit_code": 0
+  },
+  {
+    "name": "relink-native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-file-operations-driver",
+      "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr",
+      "relink",
+      "multi"
+    ],
+    "cwd": "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr",
+    "timeout_seconds": 120,
+    "state": "finished",
+    "exit_code": 0
+  },
+  {
+    "name": "relink-java",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-fileops-handoff-relink-a5_s8awr",
+      "-Dbiglybtc.test.ports=60913",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/tmp",
+      "-Duser.home=/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/prefs",
+      "-cp",
+      "/tmp/biglybtc-fileops-oracle-4obnt05d/classes:/tmp/biglybtc-oracle/classes",
+      "FileOperationsOracle",
+      "60913"
+    ],
+    "cwd": "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr",
+    "timeout_seconds": 150,
+    "state": "finished",
+    "exit_code": 0
+  },
+  {
+    "name": "removeKeep-native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-file-operations-driver",
+      "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed",
+      "removeKeep",
+      "multi"
+    ],
+    "cwd": "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed",
+    "timeout_seconds": 120,
+    "state": "finished",
+    "exit_code": 0
+  },
+  {
+    "name": "removeKeep-java",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed",
+      "-Dbiglybtc.test.ports=51391",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/tmp",
+      "-Duser.home=/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/prefs",
+      "-cp",
+      "/tmp/biglybtc-fileops-oracle-4obnt05d/classes:/tmp/biglybtc-oracle/classes",
+      "FileOperationsOracle",
+      "51391"
+    ],
+    "cwd": "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed",
+    "timeout_seconds": 150,
+    "state": "finished",
+    "exit_code": 0
+  },
+  {
+    "name": "removeDelete-native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-file-operations-driver",
+      "/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik",
+      "removeDelete",
+      "multi"
+    ],
+    "cwd": "/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik",
+    "timeout_seconds": 120,
+    "state": "finished",
+    "exit_code": 0
+  },
+  {
+    "name": "removeDelete-java",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik",
+      "-Dbiglybtc.test.ports=37465",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/tmp",
+      "-Duser.home=/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/prefs",
+      "-cp",
+      "/tmp/biglybtc-fileops-oracle-4obnt05d/classes:/tmp/biglybtc-oracle/classes",
+      "FileOperationsOracle",
+      "37465"
+    ],
+    "cwd": "/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik",
+    "timeout_seconds": 150,
+    "state": "finished",
+    "exit_code": 0
+  }
+]

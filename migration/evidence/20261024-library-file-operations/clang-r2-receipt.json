@@ -1,0 +1,55 @@
+{
+  "case": "clang-r2",
+  "build": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+  "selected": [
+    "file-operations",
+    "file-operations-host"
+  ],
+  "source_manifest_sha256": "e5703865ac0081a7f96a824ffafcc262cb6c01c4267e736f6ebb60e62596c254",
+  "commands": [
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+        "--parallel",
+        "2",
+        "--target",
+        "biglybtc-file-operations-tests",
+        "biglybtc-file-operations-host-tests",
+        "BiglyBTC",
+        "BiglyBTC-headless",
+        "biglybtc-torrent-creator-driver",
+        "--",
+        "-k",
+        "0"
+      ],
+      "exit": 0,
+      "seconds": 10.18,
+      "log": "clang-r2-build.log"
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+        "-R",
+        "^(file\\-operations|file\\-operations\\-host)$",
+        "--no-tests=error",
+        "--output-on-failure",
+        "--verbose",
+        "--output-junit",
+        "/home/yurii/Java/BiglyBT/build/fileops-20261024/clang-r2.xml"
+      ],
+      "exit": 0,
+      "seconds": 29.4,
+      "log": "clang-r2-tests.log"
+    }
+  ]
+}

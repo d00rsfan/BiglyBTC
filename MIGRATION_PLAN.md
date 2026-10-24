@@ -1,6 +1,12 @@
 # Whole Solution C++ Migration Plan
 
-Qualified chapter: [Queue, seeding and scheduling](migration/tasks/P08-01-queue-seeding-scheduling.md).
+Qualified chapter: [Library/file operations — CF-06](migration/tasks/P03-08-library-file-operations.md).
+Classic keep/delete/move/relink, ordinary v1 creation, engine retirement and
+original-compatible recovery pass original/native, compiler/sanitizer, hosted
+and portable qualification. Broader original families remain explicitly in CF-06.
+No next chapter started; no pending human question.
+
+Previously qualified chapter: [Queue, seeding and scheduling](migration/tasks/P08-01-queue-seeding-scheduling.md).
 Compatible queue controls and ordinary rules, persistent engine authority and
 Speed Scheduler editor/runtime pass original/native, compiler/sanitizer, hosted
 and portable qualification. Full provider/recovery parity remains in CF-04.

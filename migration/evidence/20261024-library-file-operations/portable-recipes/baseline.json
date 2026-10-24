@@ -1,0 +1,12 @@
+{
+  "previous_dist_manifest_sha256": "0cb16425cde2f4782928a87544742445c8b734177bf0db97ec6b9a38f00f604d",
+  "previous_qualified_source": null,
+  "libtorrent_package": "/home/yurii/Java/BiglyBTC/build/dependencies/packages/libtorrent-rasterbar2.0t64_2.0.12-1_amd64.deb",
+  "source_libtorrent": "/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/install/lib/libtorrent-rasterbar.so.2.0.12",
+  "tool_sha256": {
+    "/home/yurii/Java/BiglyBT/build/fileops-20261024/portable/qualify.py": "605bf504bc464b89fc1bdbd691fa2096a73308c636bb8daaa797b3db6b64b88e",
+    "/home/yurii/Java/BiglyBT/build/fileops-20261024/portable/promote.py": "cef42123cdd5138eb8d571bf24a11d8da037b94f8c1897cf4e097b22df3d9bff",
+    "/home/yurii/Java/BiglyBTC/preview/migration/tools/stage_preview.py": "20484187a9007742d08390673fc0b66e91c451dcd15b9db8c2ae3c7042140b4a"
+  },
+  "offline_launcher_sha256": "985f7086a7001c990e7318501f49da57137e8b767318d970c64909441ceb67f3"
+}

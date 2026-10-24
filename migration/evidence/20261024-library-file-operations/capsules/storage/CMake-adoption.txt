@@ -1,0 +1,15 @@
+# Root-owned adoption recipe; not executed by author.
+# adapters/CMakeLists.txt (OpenSSL::Crypto is required for both desktop/headless):
+find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+add_library(biglybtc_file_operations STATIC file_operations.cpp file_operation_io.cpp)
+target_include_directories(biglybtc_file_operations PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(biglybtc_file_operations PUBLIC biglybtc_profile PRIVATE OpenSSL::Crypto)
+target_compile_options(biglybtc_file_operations PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+# tests/CMakeLists.txt:
+add_executable(biglybtc-file-operations-tests file_operations_tests.cpp)
+target_link_libraries(biglybtc-file-operations-tests PRIVATE biglybtc_file_operations OpenSSL::Crypto)
+target_compile_options(biglybtc-file-operations-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_link_options(biglybtc-file-operations-tests PRIVATE "LINKER:--wrap=linkat")
+add_test(NAME original-compatible-file-operations COMMAND biglybtc-file-operations-tests)
+set_tests_properties(original-compatible-file-operations PROPERTIES TIMEOUT 120 LABELS "unit;fixtures;fileops")

@@ -1,0 +1,19 @@
+{
+  "initial_manifest_sha256": "11b0f467dbc8e4bf616b7e6d4eafb4099824484181906b32cfd816bfb88630ed",
+  "driver_source_sha256": "7218430bfd35807096b74a6dbe9134ab923cc7d81dc29af2c603e4bb1a9965ff",
+  "amendments": [
+    {
+      "path": "build/fileops-20261024/gcc-r2-corrections.json",
+      "sha256": "6e0b4f13afab8bbc1ba677ffe3146c663585448bbc46eee6165e039b6dc34f88"
+    },
+    {
+      "path": "build/fileops-20261024/storage-driver/amendments/generated-dictionary/manifest.json",
+      "sha256": "3d6856adb85dc04e1a22fe94429713b1e768e0f40a61359b2ed3a4262c5e10c8"
+    },
+    {
+      "path": "build/fileops-20261024/handoff-driver-r2-build.json",
+      "sha256": "7cc48ab7b970ea586a86d76ef6e4477a4f9a8ec01cbd0f75591b316a19f4e6ee"
+    }
+  ],
+  "semantics": "jsonQuoted naming prevents std::quoted ADL; generated pause_data bencode key length corrected; no production behavior change"
+}

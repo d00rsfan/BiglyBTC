@@ -41,10 +41,16 @@ Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
   per-file/options controls and supported priority changes during active work.
   Qualify saved original priorities, selected completion and actual payload IO.
   Current stopped-file controls remain the existing supported boundary.
-- [ ] **CF-06 — Remaining library/file operations (P03/P04/P08).** Implement
-  removal versus deletion, relocation, torrent creation and associated dialogs.
-  Verify intended confirmations, original metadata consistency, recoverable
-  failures and preservation of unrelated files using generated data.
+- [ ] **CF-06 — Remaining original library/file families (P03/P04/P08).**
+  [P03-08](P03-08-library-file-operations.md) now qualifies single selected
+  ordinary keep/delete/move/relink, v1 file/directory creation, compatible intent,
+  retirement/recheck, confirmed recovery, actual original reload and dialogs.
+  [Review](../evidence/20261024-library-file-operations/REVIEW.md).
+  Still implement bulk operations, archive-deletion controls, advanced/virtual/
+  multi-source and256MiB original creation options, wider repair UX, and
+  supported linked/nonlinear/shared/merge/overwrite storage workflows.
+  CF-01/CF-02 retain wider layouts and v2/hybrid qualification. Preserve explicit
+  refusal for unsupported paths; the broad source families remain in_progress.
 - [ ] **CF-07 — Remaining engine/plugin integration (P05–P10).** Continue the
   feature/component inventory in the main plan. This chapter does not close full
   original engine/plugin parity or unavailable Statistics providers. Record
@@ -52,7 +58,9 @@ Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
 - [ ] **CF-08 — Wider runtime and performance qualification (P04/P11 and final
   qualification).** Supplement offscreen evidence with Linux compositor/scaling
   checks, applicable public-swarm interoperability and comparable CPU/memory
-  measurements. Track the private counter shim's vptr sanitizer exception until
+  measurements. Profile/optimize the current full-payload identity-validation
+  reads in move/relink/delete, including same-filesystem hardlink moves, without
+  weakening confirmed ownership or crash recovery. Track the private counter shim's vptr sanitizer exception until
   a supported ABI/provider change permits its removal; other checks remain on.
 
 The compatibility target remains opening the same original configuration and

@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="12"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="136"
+	timestamp="2026-10-24T19:19:23"
+	>
+	<testcase name="desktop-model-and-lifecycle" classname="desktop-model-and-lifecycle" time="2.97488" status="run">
+		<properties>
+			<property name="cmake_labels" value="ui;unit"/>
+		</properties>
+		<system-out>********* Start testing of DesktopTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : DesktopTests::initTestCase()
+PASS   : DesktopTests::modelValuesSelectionAndStaleTargets()
+QWARN  : DesktopTests::closeWaitsForCancellationAndWorkerTeardown() This plugin does not support propagateSizeHints()
+QWARN  : DesktopTests::closeWaitsForCancellationAndWorkerTeardown() This plugin does not support propagateSizeHints()
+PASS   : DesktopTests::closeWaitsForCancellationAndWorkerTeardown()
+PASS   : DesktopTests::cancellationFromBusyNotificationCompletes()
+PASS   : DesktopTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 2415ms
+********* Finished testing of DesktopTests *********
+</system-out>
+	</testcase>
+	<testcase name="persistent-native-peer-session" classname="persistent-native-peer-session" time="43.7095" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration;loopback;statistics;unit"/>
+		</properties>
+		<system-out>********* Start testing of PersistentSessionTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : PersistentSessionTests::initTestCase()
+PASS   : PersistentSessionTests::lazyOwnerAndPermanentCloseNeverFabricateAZeroSample()
+PASS   : PersistentSessionTests::foreignThreadCannotPollOrCloseTheOwner()
+PASS   : PersistentSessionTests::sequentialMixedLayoutsAndRepeatedHashUseOneAbsoluteEpoch()
+PASS   : PersistentSessionTests::activeCancellationRetiresBeforeCallbackStorageUnwindsAndCanRetrySameHash()
+PASS   : PersistentSessionTests::optionalThrowingSinksDoNotDisableEssentialRetentionOrSafeTransfer()
+PASS   : PersistentSessionTests::preparationFailureCannotExposeEarlierSettlementOrEraseAbsoluteTotals()
+PASS   : PersistentSessionTests::foreignProfileIsRejectedBeforeCompatibleCacheOrPayloadAccess()
+PASS   : PersistentSessionTests::throwingProgressRetiresAnAlreadyRegisteredTorrentBeforeRet...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="managed-download" classname="managed-download" time="16.496" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of ManagedDownloadTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedDownloadTests::initTestCase()
+PASS   : ManagedDownloadTests::rawEpochContinuityKeepsUntickedBytesAndCrossingReadsRetry()
+PASS   : ManagedDownloadTests::rawEpochInvalidReadsAndOverflowFailWithoutFallback()
+PASS   : ManagedDownloadTests::concurrentMixedHandlesRemainControllableUnderOneOwner()
+PASS   : ManagedDownloadTests::partialStopAndRepeatedHashCheckpointsKeepFreshSavedIntent()
+PASS   : ManagedDownloadTests::failedAndForeignAdmissionsDoNotReplaceTheOtherActiveTorrent()
+PASS   : ManagedDownloadTests::unsafePayloadPreparationDoesNotAdmitOrRewriteAProfile()
+PASS   : ManagedDownloadTests::cleanupTestCase()
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 16384ms
+********* Finished testing of ManagedDownloadTests *********
+</system-out>
+	</testcase>
+	<testcase name="managed-storage" classname="managed-storage" time="0.161805" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>case new-independent-payload-root-and-filtered-parameters
+case partial-piece-progress-and-fresh-command-preservation
+case skipped-linear-sparse-file-and-boundary-piece-counts
+case single-completion-suffix-and-unknown-state-fields
+case multifile-completion-renames-only-owned-actual-paths
+case completed-target-collision-retains-incomplete-source
+case existing-single-journal-and-recognized-hardlink-recovery
+case unsafe-links-storetypes-oversize-and-symlinks-fail-before-state
+case authoritative-cache-policy-is-preflighted-without-mutation
+case policy-permitted-trackers-retained-without-engine-start
+case invalid-checkpoints-never-publish-complete-flags
+case verified-late-piece-needs-actual-file-extent
+case payload-replacement-and-cumulative-rebase-refuse
+case original-pure-v2-truncated-and-explicit-full-keys
+case wrong-profile-and-moved-storage-refuse
+PASS 15 managed-storage families; 455 assertions; generated profiles and files only; no engine activation or Java-runtime equality credit
+</system-out>
+	</testcase>
+	<testcase name="managed-library-command-routing" classname="managed-library-command-routing" time="29.473" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of LibraryCommandsBridgeTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : LibraryCommandsBridgeTests::initTestCase()
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(stale-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(unknown-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(duplicate-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(unauthorized-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(invalid-action-next)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(invalid-action-large)
+QWARN  : LibraryCommandsBridgeTests::mixedTargetsRouteSavedIntentAndActualProgressIndep...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="scheduler-service" classname="scheduler-service" time="0.312523" status="run">
+		<properties>
+			<property name="cmake_labels" value="scheduler;unit"/>
+		</properties>
+		<system-out>scheduler service: seven owned-fixture families passed
+</system-out>
+	</testcase>
+	<testcase name="managed-queue" classname="managed-queue" time="11.3329" status="run">
+		<properties>
+			<property name="cmake_labels" value="queue;runtime-bound;unit"/>
+		</properties>
+		<system-out>********* Start testing of ManagedQueueTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedQueueTests::initTestCase()
+PASS   : ManagedQueueTests::limitsPauseResumeAndForceUseRealRetainedHandles(download-cap)
+PASS   : ManagedQueueTests::limitsPauseResumeAndForceUseRealRetainedHandles(active-cap)
+PASS   : ManagedQueueTests::completionRatioQueuesAndClearsOnlyForceBeforeActualCheckpoint()
+PASS   : ManagedQueueTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 11239ms
+********* Finished testing of ManagedQueueTests *********
+</system-out>
+	</testcase>
+	<testcase name="torrent-creator" classname="torrent-creator" time="0.299431" status="run">
+		<properties>
+			<property name="cmake_labels" value="engine;torrent;unit"/>
+		</properties>
+		<system-out>PASS 13 torrent creator families; 345 assertions
+</system-out>
+	</testcase>
+	<testcase name="file-operations" classname="file-operations" time="0.188784" status="run">
+		<properties>
+			<property name="cmake_labels" value="fileops;storage;unit"/>
+		</properties>
+		<system-out>five generated file-operation families passed
+</system-out>
+	</testcase>
+	<testcase name="file-operation-dialog" classname="file-operation-dialog" time="0.549542" status="run">
+		<properties>
+			<property name="cmake_labels" value="fileops;ui;unit"/>
+		</properties>
+		<system-out>********* Start testing of FileOperationDialogTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : FileOperationDialogTests::initTestCase()
+QWARN  : FileOperationDialogTests::exactOwnedPlanAndExplicitDeleteConfirmation() This plugin does not support propagateSizeHints()
+PASS   : FileOperationDialogTests::exactOwnedPlanAndExplicitDeleteConfirmation()
+QWARN  : FileOperationDialogTests::allOperationsKeepTargetIdentityAndDestinationEditsInvalidateApproval() This plugin does not support propagateSizeHints()
+QWARN  : FileOperationDialogTests::allOperationsKeepTargetIdentityAndDestinationEditsInvalidateApproval() This plugin does not support propagateSizeHints()
+QWARN  : FileOperationDialogTests::allOperationsKeepTargetIdentityAndDestinationEditsInvalidateApproval() This plugin does not support propagateSizeHints()
+PASS   : FileOperationDialogTests::allOperationsKeepTargetIdentityAnd...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="torrent-creation-dialog" classname="torrent-creation-dialog" time="0.636954" status="run">
+		<properties>
+			<property name="cmake_labels" value="fileops;ui;unit"/>
+		</properties>
+		<system-out>********* Start testing of TorrentCreationDialogTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : TorrentCreationDialogTests::initTestCase()
+QWARN  : TorrentCreationDialogTests::explicitV1OptionsAndOriginalPieceChoicesArePreserved() This plugin does not support propagateSizeHints()
+PASS   : TorrentCreationDialogTests::explicitV1OptionsAndOriginalPieceChoicesArePreserved()
+QWARN  : TorrentCreationDialogTests::invalidInputsAndBusyStateNeverDispatch() This plugin does not support propagateSizeHints()
+PASS   : TorrentCreationDialogTests::invalidInputsAndBusyStateNeverDispatch()
+PASS   : TorrentCreationDialogTests::progressRejectsStaleSequenceRevisionRegressionsAndOverflows()
+PASS   : TorrentCreationDialogTests::failedCreateRetainsDraftAndRetryUsesFreshIdentity()
+QWARN  : TorrentCreationDialogTests::cancellationWaitsAndPublishedOutcomeWinsWithoutAutomaticRetry() This plugin does...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="file-operations-host" classname="file-operations-host" time="30.2419" status="run">
+		<properties>
+			<property name="cmake_labels" value="fileops;integration;runtime-bound;unit"/>
+		</properties>
+		<system-out>********* Start testing of FileOperationsBridgeTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : FileOperationsBridgeTests::initTestCase()
+QWARN  : FileOperationsBridgeTests::liveReadOnlyPreviewAndDefensiveDialogCopyThenRemoveKeep() This plugin does not support propagateSizeHints()
+PASS   : FileOperationsBridgeTests::liveReadOnlyPreviewAndDefensiveDialogCopyThenRemoveKeep()
+PASS   : FileOperationsBridgeTests::pausedLiveMovePreservesCountersPauseAndRequiredRecheck()
+PASS   : FileOperationsBridgeTests::stoppedRelinkRetainsSourceAndDeleteRequiresNewConfirmedPlan()
+PASS   : FileOperationsBridgeTests::changedDisplayedScopeAndStaleTargetRejectBeforeAnyMutation()
+PASS   : FileOperationsBridgeTests::actualCreatorOnlyImportsWhenExplicitAndImportIsStopped(create-only)
+PASS   : FileOperationsBridgeTests::actualCreatorOnlyImportsWhenExplicitAndImportIsStopped(explicit-stopped-import)
+Q...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

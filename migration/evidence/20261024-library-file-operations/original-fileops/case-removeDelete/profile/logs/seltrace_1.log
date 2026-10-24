@@ -1,0 +1,8 @@
+﻿
+[2026/10/24 19:29] Log File Opened for BiglyBT 4.1.0.1_B07
+[19:29:40] Selector created for 'TCP network manager reader',OP_READ: logWithStack (AEDiagnostics.java:443)
+[19:29:40] Selector created for 'TCP network manager writer',OP_WRITE: logWithStack (AEDiagnostics.java:443)
+[19:29:40] Selector created for 'TCP Connect/Disconnect Manager',OP_CONNECT: logWithStack (AEDiagnostics.java:443)
+[19:29:40] TCP blocking server channel bound: /127.0.0.1:37465: logWithStack (AEDiagnostics.java:443)
+[19:29:41] Selector created for 'MCGroup:v4',OP_READ: logWithStack (AEDiagnostics.java:443)
+[19:29:41] Selector created for 'MCGroup:v6',OP_READ: logWithStack (AEDiagnostics.java:443)

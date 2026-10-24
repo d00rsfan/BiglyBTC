@@ -1,0 +1,880 @@
+{
+  "status": "QUALIFIED_BOUNDED_LIBRARY_FILE_OPERATIONS",
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_start": "a965fd3cf0547e041d58512c56fea1cccf972ccb",
+  "native_source": "dda0654715ffa38feea15784a92bf6f00502523e",
+  "compiler_lanes": {
+    "gcc-r1": {
+      "suites": 19,
+      "receipt_sha256": "800ccb8bb780f78ed0898f5c6b60fa0fc3678a76c789d6a5699ed1fb0509809b"
+    },
+    "gcc-r3": {
+      "suites": 9,
+      "receipt_sha256": "35d7366c0f8635951b309c9269cb32171e5f6b122910dd8292e850da9ed18b48"
+    },
+    "gcc-r4": {
+      "suites": 2,
+      "receipt_sha256": "1a76f125a272b8ba0099b6c49ea11f0cff8df800c2fd1619dfd73a581ee11f08"
+    },
+    "clang-r1": {
+      "suites": 12,
+      "receipt_sha256": "f047d88721c6f01d393f6a392a534427d67699f8e145eb6b54b56e115748616c"
+    },
+    "clang-r2": {
+      "suites": 2,
+      "receipt_sha256": "a5aa6164be33115e82efaa87c11ef3a3e9c9af9357801d75485a5efb0c660c32"
+    },
+    "sanitized-r1": {
+      "suites": 12,
+      "receipt_sha256": "26e41549afcbbf6b40df801cf0540f7274206710e00decce569cef988b7925c3"
+    },
+    "sanitized-r2": {
+      "suites": 2,
+      "receipt_sha256": "c404c532afcee52b32d8939c1b31e1780217a52ebc21e00f282c873cfc3f7466"
+    }
+  },
+  "gcc_unique_suites": 20,
+  "gcc_scope": "19 initial and9 integration suites cover20 unique suites, followed by2 affected reruns after the actual-Java-discovered modern pause-map fix. Clang/ASan each pass12 initial suites and then2 affected suites against final sources; only the two-file narrow fix differs. All4 original handoffs use the final implementation.",
+  "original_creation_cases": {
+    "status": "PASS_ACTUAL_NATIVE_CREATION_ORIGINAL_JAVA_PARSE",
+    "original_source": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "native_driver_sha256": "14b457db963c5298327bd3353225e2cf4eabbe7b86bb167a184dca716beb33f3",
+    "retention_sha256": "7472e8bda8d832fd5a962cda76ba1fcefaa0e6e9b4cad2621e0be97e6fbec9dd",
+    "original_core_recompiled": false,
+    "original_profile_access": false,
+    "network_operations": false,
+    "cases": [
+      {
+        "case": "single",
+        "info_hash_v1": "ca95dd8d0debfa7a9e1d74df6793d80684aa096d",
+        "source_files": 1,
+        "source_bytes": 77003,
+        "actual_piece_hashes": 3,
+        "torrent_sha256": "a52b25c83d097de0592f8203b524a999c9372c16847bb48848401a368b6c5217"
+      },
+      {
+        "case": "multi",
+        "info_hash_v1": "d85ce87b92d33870502ee8ef31c7179be14b66fc",
+        "source_files": 4,
+        "source_bytes": 67105,
+        "actual_piece_hashes": 2,
+        "torrent_sha256": "bc64b01aec41c8cc5149b6de42620df35573845ddf731c2ce961a6796f2f892b"
+      },
+      {
+        "case": "one-file-directory",
+        "info_hash_v1": "5c16814e0c9073841d7da50ba7f15d1bb9ba6f25",
+        "source_files": 1,
+        "source_bytes": 33001,
+        "actual_piece_hashes": 1,
+        "torrent_sha256": "1438c15a7dfcaddb31881387d3e9f6d4ceff938542a6ee1b085203514558a227"
+      }
+    ],
+    "commands": [
+      {
+        "name": "javac-helpers",
+        "argv": [
+          "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+          "-J-XX:ActiveProcessorCount=2",
+          "--release",
+          "8",
+          "-encoding",
+          "UTF-8",
+          "-proc:none",
+          "-implicit:none",
+          "-sourcepath",
+          "/tmp/biglybtc-creator-java-1e9hvalk/empty-sourcepath",
+          "-cp",
+          "/tmp/biglybtc-oracle/classes",
+          "-d",
+          "/tmp/biglybtc-creator-java-1e9hvalk/classes",
+          "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java",
+          "/home/yurii/Java/BiglyBT/build/fileops-20261024/creator/java/TorrentCreationOracle.java"
+        ],
+        "exit_code": 0
+      },
+      {
+        "name": "single-native",
+        "argv": [
+          "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-torrent-creator-driver",
+          "/tmp/biglybtc-creator-java-1e9hvalk/single/payload-\u03c0.bin",
+          "/tmp/biglybtc-creator-java-1e9hvalk/single/created.torrent",
+          "0",
+          "1"
+        ],
+        "exit_code": 0
+      },
+      {
+        "name": "single-java",
+        "argv": [
+          "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+          "-XX:ActiveProcessorCount=2",
+          "--add-opens=java.base/java.net=ALL-UNNAMED",
+          "-Djava.security.manager=ReferenceFence",
+          "-Dbiglybtc.test.root=/tmp/biglybtc-creator-java-1e9hvalk",
+          "-Dbiglybtc.test.ports=",
+          "-Dazureus.security.manager.install=0",
+          "-Dazureus.loadplugins=0",
+          "-Dazureus.skipSWTcheck=1",
+          "-Dazureus.config.path=/tmp/biglybtc-creator-java-1e9hvalk/profile",
+          "-Dazureus.install.path=/tmp/biglybtc-creator-java-1e9hvalk/install",
+          "-Djava.io.tmpdir=/tmp/biglybtc-creator-java-1e9hvalk/tmp",
+          "-Duser.home=/tmp/biglybtc-creator-java-1e9hvalk/home",
+          "-Djava.util.prefs.userRoot=/tmp/biglybtc-creator-java-1e9hvalk/prefs",
+          "-cp",
+          "/tmp/biglybtc-creator-java-1e9hvalk/classes:/tmp/biglybtc-oracle/classes",
+          "TorrentCreationOracle",
+          "/tmp/biglybtc-creator-java-1e9hvalk/single/created.torrent"
+        ],
+        "exit_code": 0
+      },
+      {
+        "name": "multi-native",
+        "argv": [
+          "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-torrent-creator-driver",
+          "/tmp/biglybtc-creator-java-1e9hvalk/multi/bundle-\u03c0",
+          "/tmp/biglybtc-creator-java-1e9hvalk/multi/created.torrent",
+          "49152",
+          "1"
+        ],
+        "exit_code": 0
+      },
+      {
+        "name": "multi-java",
+        "argv": [
+          "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+          "-XX:ActiveProcessorCount=2",
+          "--add-opens=java.base/java.net=ALL-UNNAMED",
+          "-Djava.security.manager=ReferenceFence",
+          "-Dbiglybtc.test.root=/tmp/biglybtc-creator-java-1e9hvalk",
+          "-Dbiglybtc.test.ports=",
+          "-Dazureus.security.manager.install=0",
+          "-Dazureus.loadplugins=0",
+          "-Dazureus.skipSWTcheck=1",
+          "-Dazureus.config.path=/tmp/biglybtc-creator-java-1e9hvalk/profile",
+          "-Dazureus.install.path=/tmp/biglybtc-creator-java-1e9hvalk/install",
+          "-Djava.io.tmpdir=/tmp/biglybtc-creator-java-1e9hvalk/tmp",
+          "-Duser.home=/tmp/biglybtc-creator-java-1e9hvalk/home",
+          "-Djava.util.prefs.userRoot=/tmp/biglybtc-creator-java-1e9hvalk/prefs",
+          "-cp",
+          "/tmp/biglybtc-creator-java-1e9hvalk/classes:/tmp/biglybtc-oracle/classes",
+          "TorrentCreationOracle",
+          "/tmp/biglybtc-creator-java-1e9hvalk/multi/created.torrent"
+        ],
+        "exit_code": 0
+      },
+      {
+        "name": "one-file-directory-native",
+        "argv": [
+          "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-torrent-creator-driver",
+          "/tmp/biglybtc-creator-java-1e9hvalk/one-file-directory/bundle-\u03c0",
+          "/tmp/biglybtc-creator-java-1e9hvalk/one-file-directory/created.torrent",
+          "65536",
+          "0"
+        ],
+        "exit_code": 0
+      },
+      {
+        "name": "one-file-directory-java",
+        "argv": [
+          "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+          "-XX:ActiveProcessorCount=2",
+          "--add-opens=java.base/java.net=ALL-UNNAMED",
+          "-Djava.security.manager=ReferenceFence",
+          "-Dbiglybtc.test.root=/tmp/biglybtc-creator-java-1e9hvalk",
+          "-Dbiglybtc.test.ports=",
+          "-Dazureus.security.manager.install=0",
+          "-Dazureus.loadplugins=0",
+          "-Dazureus.skipSWTcheck=1",
+          "-Dazureus.config.path=/tmp/biglybtc-creator-java-1e9hvalk/profile",
+          "-Dazureus.install.path=/tmp/biglybtc-creator-java-1e9hvalk/install",
+          "-Djava.io.tmpdir=/tmp/biglybtc-creator-java-1e9hvalk/tmp",
+          "-Duser.home=/tmp/biglybtc-creator-java-1e9hvalk/home",
+          "-Djava.util.prefs.userRoot=/tmp/biglybtc-creator-java-1e9hvalk/prefs",
+          "-cp",
+          "/tmp/biglybtc-creator-java-1e9hvalk/classes:/tmp/biglybtc-oracle/classes",
+          "TorrentCreationOracle",
+          "/tmp/biglybtc-creator-java-1e9hvalk/one-file-directory/created.torrent"
+        ],
+        "exit_code": 0
+      }
+    ],
+    "scope": "Actual original torrent decoder; exact v1 pieces, paths, Unicode, tiers, private/comment; no transfer or original creator byte-equality claim"
+  },
+  "original_file_operations_cases": {
+    "status": "PASS_ACTUAL_NATIVE_FILE_OPERATIONS_ORIGINAL_JAVA",
+    "original_source": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "source_manifest_sha256": "96c19c572c597f35399bb44dc0420b4109d8365ce19044011cd428cbad2f0d97",
+    "native_driver_sha256": "76d2a248ce512501397ec0e443d8fe8598cdd74a77624b0bdef962085c80122a",
+    "retention_sha256": "7472e8bda8d832fd5a962cda76ba1fcefaa0e6e9b4cad2621e0be97e6fbec9dd",
+    "full_class_map_reference": "/home/yurii/Java/BiglyBTC/build/dependencies/java-oracle-17-20261021/retention.json",
+    "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+    "class_files_and_resources": 5432,
+    "helper_classes_sha256": {
+      "EngineOracle$1.class": "79d627c4854e87732f3b9b1d6e5014e4a51cb9bfbbd1b46abb79cd5b00f818a7",
+      "EngineOracle.class": "e910d5f9cf835560fe2059ab564172e65e0492af9a25bd7b4e2d6406809a4617",
+      "FileOperationsOracle.class": "958659ef802d4396f8e7bbe84cdc99b2adcb7b7b0396398188a92e4a8c5c8a2d",
+      "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd"
+    },
+    "class_map_verified_before_and_after": true,
+    "original_core_recompiled": false,
+    "original_profile_or_process_access": false,
+    "public_network_access": false,
+    "scope": "Generated v1 relocation/relink/removal and actual original GlobalManager READY; no engine continuation or whole-client parity",
+    "cases": [
+      {
+        "mode": "relocate",
+        "profile": "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/profile",
+        "target": "7E257DC1F2FE3C40FE404E4B16B37A34D827977F",
+        "survivor": "89FD4AE671573779E2836E341B505830C1CCE426",
+        "native_receipt_sha256": "32b0c1c82b46ae111ea596d3ee6dd49a0aaba7b3fe916100a1de5ed49631310f",
+        "actual_original_hashes": [
+          "7E257DC1F2FE3C40FE404E4B16B37A34D827977F",
+          "89FD4AE671573779E2836E341B505830C1CCE426"
+        ],
+        "actual_original_observations": {
+          "7E257DC1F2FE3C40FE404E4B16B37A34D827977F": {
+            "state": 70,
+            "force": false,
+            "paused": true,
+            "position": 1,
+            "received": 40003,
+            "sent": 123,
+            "files": {
+              "0": {
+                "priority": 0,
+                "skipped": false,
+                "downloaded": 17001,
+                "bytes": 17001,
+                "path": "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/destination/Bundle-\u6570\u636e/first-\u03b1.bin",
+                "sha256": "68e86f50273e2453e5cf878dc9a9d8046788081b8c72d6e5ce30772bf92b2337"
+              },
+              "1": {
+                "priority": 0,
+                "skipped": false,
+                "downloaded": 0,
+                "bytes": 0,
+                "path": "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/destination/Bundle-\u6570\u636e/empty.bin",
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+              },
+              "2": {
+                "priority": 0,
+                "skipped": false,
+                "downloaded": 23002,
+                "bytes": 23002,
+                "path": "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/destination/Bundle-\u6570\u636e/last-\u6570\u636e.bin",
+                "sha256": "14d2c0086182189cabc444fc864939885ea57e1a62b1d32b0b828145f0e657bc"
+              }
+            },
+            "pieces": [
+              3,
+              3
+            ]
+          },
+          "89FD4AE671573779E2836E341B505830C1CCE426": {
+            "state": 70,
+            "force": false,
+            "paused": true,
+            "position": 2,
+            "received": 40003,
+            "sent": 123,
+            "files": {
+              "0": {
+                "priority": 0,
+                "skipped": false,
+                "downloaded": 40003,
+                "bytes": 40003,
+                "path": "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/survivor/survivor.bin",
+                "sha256": "4684ec7dd4f54f0ef0de7e16d33006def750c5074aa310cc5f9b723e53c19f67"
+              }
+            },
+            "pieces": [
+              3,
+              3
+            ]
+          }
+        },
+        "native_documents_before_java": {
+          ".azlock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "active/7E257DC1F2FE3C40FE404E4B16B37A34D827977F.dat": "af5ff2e8a061a7f42a77f024f6aa79608dd493838364172d4167bba2b80ca970",
+          "active/7E257DC1F2FE3C40FE404E4B16B37A34D827977F.dat.bak": "af5ff2e8a061a7f42a77f024f6aa79608dd493838364172d4167bba2b80ca970",
+          "active/89FD4AE671573779E2836E341B505830C1CCE426.dat": "a85dfa70454ac393dc4645130faa7b1cce713831be74dfeafa08288d8f0e48b2",
+          "downloads.config": "7b548df461d831c13b8d6e18692647dacaa1787b0a34ea0ef3342e1615c57f28"
+        },
+        "payload_map_after_java": {
+          "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/destination/Bundle-\u6570\u636e/first-\u03b1.bin": {
+            "device": 46,
+            "inode": 1050230,
+            "bytes": 17001,
+            "sha256": "68e86f50273e2453e5cf878dc9a9d8046788081b8c72d6e5ce30772bf92b2337"
+          },
+          "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/destination/Bundle-\u6570\u636e/empty.bin": {
+            "device": 46,
+            "inode": 1050231,
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/destination/Bundle-\u6570\u636e/last-\u6570\u636e.bin": {
+            "device": 46,
+            "inode": 1050232,
+            "bytes": 23002,
+            "sha256": "14d2c0086182189cabc444fc864939885ea57e1a62b1d32b0b828145f0e657bc"
+          },
+          "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/survivor/survivor.bin": {
+            "device": 46,
+            "inode": 1050239,
+            "bytes": 40003,
+            "sha256": "4684ec7dd4f54f0ef0de7e16d33006def750c5074aa310cc5f9b723e53c19f67"
+          }
+        }
+      },
+      {
+        "mode": "relink",
+        "profile": "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/profile",
+        "target": "7E257DC1F2FE3C40FE404E4B16B37A34D827977F",
+        "survivor": "89FD4AE671573779E2836E341B505830C1CCE426",
+        "native_receipt_sha256": "f68a58da233741b50338bdfd40378c7e15b4ba9ed48192afbe09db5a7ccc8b99",
+        "actual_original_hashes": [
+          "7E257DC1F2FE3C40FE404E4B16B37A34D827977F",
+          "89FD4AE671573779E2836E341B505830C1CCE426"
+        ],
+        "actual_original_observations": {
+          "7E257DC1F2FE3C40FE404E4B16B37A34D827977F": {
+            "state": 70,
+            "force": false,
+            "paused": true,
+            "position": 1,
+            "received": 40003,
+            "sent": 123,
+            "files": {
+              "0": {
+                "priority": 0,
+                "skipped": false,
+                "downloaded": 17001,
+                "bytes": 17001,
+                "path": "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/destination/Bundle-\u6570\u636e/first-\u03b1.bin",
+                "sha256": "68e86f50273e2453e5cf878dc9a9d8046788081b8c72d6e5ce30772bf92b2337"
+              },
+              "1": {
+                "priority": 0,
+                "skipped": false,
+                "downloaded": 0,
+                "bytes": 0,
+                "path": "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/destination/Bundle-\u6570\u636e/empty.bin",
+                "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+              },
+              "2": {
+                "priority": 0,
+                "skipped": false,
+                "downloaded": 23002,
+                "bytes": 23002,
+                "path": "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/destination/Bundle-\u6570\u636e/last-\u6570\u636e.bin",
+                "sha256": "14d2c0086182189cabc444fc864939885ea57e1a62b1d32b0b828145f0e657bc"
+              }
+            },
+            "pieces": [
+              3,
+              3
+            ]
+          },
+          "89FD4AE671573779E2836E341B505830C1CCE426": {
+            "state": 70,
+            "force": false,
+            "paused": true,
+            "position": 2,
+            "received": 40003,
+            "sent": 123,
+            "files": {
+              "0": {
+                "priority": 0,
+                "skipped": false,
+                "downloaded": 40003,
+                "bytes": 40003,
+                "path": "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/survivor/survivor.bin",
+                "sha256": "4684ec7dd4f54f0ef0de7e16d33006def750c5074aa310cc5f9b723e53c19f67"
+              }
+            },
+            "pieces": [
+              3,
+              3
+            ]
+          }
+        },
+        "native_documents_before_java": {
+          ".azlock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "active/7E257DC1F2FE3C40FE404E4B16B37A34D827977F.dat": "3d9e836362af385fbb7a51ffb3cf1e89eccc447e12513f8da466fcaa1bdf3d00",
+          "active/7E257DC1F2FE3C40FE404E4B16B37A34D827977F.dat.bak": "3d9e836362af385fbb7a51ffb3cf1e89eccc447e12513f8da466fcaa1bdf3d00",
+          "active/89FD4AE671573779E2836E341B505830C1CCE426.dat": "a85dfa70454ac393dc4645130faa7b1cce713831be74dfeafa08288d8f0e48b2",
+          "downloads.config": "ba0f91165be465c677e0d6ac6a5e901fbd7dc652134fb207f3e4a5d1b32b2772"
+        },
+        "payload_map_after_java": {
+          "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/source/Bundle-\u6570\u636e/first-\u03b1.bin": {
+            "device": 46,
+            "inode": 1050321,
+            "bytes": 17001,
+            "sha256": "68e86f50273e2453e5cf878dc9a9d8046788081b8c72d6e5ce30772bf92b2337"
+          },
+          "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/destination/Bundle-\u6570\u636e/first-\u03b1.bin": {
+            "device": 46,
+            "inode": 1050338,
+            "bytes": 17001,
+            "sha256": "68e86f50273e2453e5cf878dc9a9d8046788081b8c72d6e5ce30772bf92b2337"
+          },
+          "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/source/Bundle-\u6570\u636e/empty.bin": {
+            "device": 46,
+            "inode": 1050322,
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/destination/Bundle-\u6570\u636e/empty.bin": {
+            "device": 46,
+            "inode": 1050339,
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/source/Bundle-\u6570\u636e/last-\u6570\u636e.bin": {
+            "device": 46,
+            "inode": 1050323,
+            "bytes": 23002,
+            "sha256": "14d2c0086182189cabc444fc864939885ea57e1a62b1d32b0b828145f0e657bc"
+          },
+          "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/destination/Bundle-\u6570\u636e/last-\u6570\u636e.bin": {
+            "device": 46,
+            "inode": 1050340,
+            "bytes": 23002,
+            "sha256": "14d2c0086182189cabc444fc864939885ea57e1a62b1d32b0b828145f0e657bc"
+          },
+          "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/survivor/survivor.bin": {
+            "device": 46,
+            "inode": 1050330,
+            "bytes": 40003,
+            "sha256": "4684ec7dd4f54f0ef0de7e16d33006def750c5074aa310cc5f9b723e53c19f67"
+          }
+        }
+      },
+      {
+        "mode": "removeKeep",
+        "profile": "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/profile",
+        "target": "7E257DC1F2FE3C40FE404E4B16B37A34D827977F",
+        "survivor": "89FD4AE671573779E2836E341B505830C1CCE426",
+        "native_receipt_sha256": "e6b593fb0dbff9ba514eb4304c92474e29b58fccb6f32412f75c73b96c1d41ac",
+        "actual_original_hashes": [
+          "89FD4AE671573779E2836E341B505830C1CCE426"
+        ],
+        "actual_original_observations": {
+          "89FD4AE671573779E2836E341B505830C1CCE426": {
+            "state": 70,
+            "force": false,
+            "paused": true,
+            "position": 1,
+            "received": 40003,
+            "sent": 123,
+            "files": {
+              "0": {
+                "priority": 0,
+                "skipped": false,
+                "downloaded": 40003,
+                "bytes": 40003,
+                "path": "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/survivor/survivor.bin",
+                "sha256": "4684ec7dd4f54f0ef0de7e16d33006def750c5074aa310cc5f9b723e53c19f67"
+              }
+            },
+            "pieces": [
+              3,
+              3
+            ]
+          }
+        },
+        "native_documents_before_java": {
+          ".azlock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "active/89FD4AE671573779E2836E341B505830C1CCE426.dat": "a85dfa70454ac393dc4645130faa7b1cce713831be74dfeafa08288d8f0e48b2",
+          "downloads.config": "c207072dbbc4ecaac8d630f8ca76f6d8317d430d08766c833331e12fa29d2bdd"
+        },
+        "payload_map_after_java": {
+          "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/source/Bundle-\u6570\u636e/first-\u03b1.bin": {
+            "device": 46,
+            "inode": 1050415,
+            "bytes": 17001,
+            "sha256": "68e86f50273e2453e5cf878dc9a9d8046788081b8c72d6e5ce30772bf92b2337"
+          },
+          "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/source/Bundle-\u6570\u636e/empty.bin": {
+            "device": 46,
+            "inode": 1050416,
+            "bytes": 0,
+            "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/source/Bundle-\u6570\u636e/last-\u6570\u636e.bin": {
+            "device": 46,
+            "inode": 1050417,
+            "bytes": 23002,
+            "sha256": "14d2c0086182189cabc444fc864939885ea57e1a62b1d32b0b828145f0e657bc"
+          },
+          "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/survivor/survivor.bin": {
+            "device": 46,
+            "inode": 1050424,
+            "bytes": 40003,
+            "sha256": "4684ec7dd4f54f0ef0de7e16d33006def750c5074aa310cc5f9b723e53c19f67"
+          }
+        }
+      },
+      {
+        "mode": "removeDelete",
+        "profile": "/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/profile",
+        "target": "7E257DC1F2FE3C40FE404E4B16B37A34D827977F",
+        "survivor": "89FD4AE671573779E2836E341B505830C1CCE426",
+        "native_receipt_sha256": "7200f83070bfe27613f86dca4d912540867044a99f6e04cf020a84264beeb48e",
+        "actual_original_hashes": [
+          "89FD4AE671573779E2836E341B505830C1CCE426"
+        ],
+        "actual_original_observations": {
+          "89FD4AE671573779E2836E341B505830C1CCE426": {
+            "state": 70,
+            "force": false,
+            "paused": true,
+            "position": 1,
+            "received": 40003,
+            "sent": 123,
+            "files": {
+              "0": {
+                "priority": 0,
+                "skipped": false,
+                "downloaded": 40003,
+                "bytes": 40003,
+                "path": "/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/survivor/survivor.bin",
+                "sha256": "4684ec7dd4f54f0ef0de7e16d33006def750c5074aa310cc5f9b723e53c19f67"
+              }
+            },
+            "pieces": [
+              3,
+              3
+            ]
+          }
+        },
+        "native_documents_before_java": {
+          ".azlock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "active/89FD4AE671573779E2836E341B505830C1CCE426.dat": "a85dfa70454ac393dc4645130faa7b1cce713831be74dfeafa08288d8f0e48b2",
+          "downloads.config": "beba8adeafa70cc434540c9340a1244a7099c1c151089cb0a883af507173ab96"
+        },
+        "payload_map_after_java": {
+          "/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/survivor/survivor.bin": {
+            "device": 46,
+            "inode": 1050507,
+            "bytes": 40003,
+            "sha256": "4684ec7dd4f54f0ef0de7e16d33006def750c5074aa310cc5f9b723e53c19f67"
+          }
+        }
+      }
+    ],
+    "commands": [
+      {
+        "name": "javac-fixtures",
+        "argv": [
+          "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+          "-J-XX:ActiveProcessorCount=2",
+          "--release",
+          "8",
+          "-encoding",
+          "UTF-8",
+          "-proc:none",
+          "-implicit:none",
+          "-sourcepath",
+          "/tmp/biglybtc-fileops-oracle-4obnt05d/empty-sourcepath",
+          "-cp",
+          "/tmp/biglybtc-oracle/classes",
+          "-d",
+          "/tmp/biglybtc-fileops-oracle-4obnt05d/classes",
+          "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java",
+          "/home/yurii/Java/BiglyBT/migration/fixtures/java/EngineOracle.java",
+          "/home/yurii/Java/BiglyBT/build/fileops-20261024/java-handoff/FileOperationsOracle.java"
+        ],
+        "cwd": "/tmp/biglybtc-fileops-oracle-4obnt05d",
+        "timeout_seconds": 90,
+        "state": "finished",
+        "exit_code": 0
+      },
+      {
+        "name": "relocate-native",
+        "argv": [
+          "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-file-operations-driver",
+          "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i",
+          "relocate",
+          "multi"
+        ],
+        "cwd": "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i",
+        "timeout_seconds": 120,
+        "state": "finished",
+        "exit_code": 0
+      },
+      {
+        "name": "relocate-java",
+        "argv": [
+          "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+          "-XX:ActiveProcessorCount=2",
+          "--add-opens=java.base/java.net=ALL-UNNAMED",
+          "-Djava.security.manager=ReferenceFence",
+          "-Dbiglybtc.test.root=/tmp/biglybtc-fileops-handoff-relocate-d9ul049i",
+          "-Dbiglybtc.test.ports=53863",
+          "-Dazureus.security.manager.install=0",
+          "-Dazureus.loadplugins=0",
+          "-Dazureus.skipSWTcheck=1",
+          "-Dazureus.config.path=/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/profile",
+          "-Dazureus.install.path=/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/install",
+          "-Djava.io.tmpdir=/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/tmp",
+          "-Duser.home=/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/home",
+          "-Djava.util.prefs.userRoot=/tmp/biglybtc-fileops-handoff-relocate-d9ul049i/prefs",
+          "-cp",
+          "/tmp/biglybtc-fileops-oracle-4obnt05d/classes:/tmp/biglybtc-oracle/classes",
+          "FileOperationsOracle",
+          "53863"
+        ],
+        "cwd": "/tmp/biglybtc-fileops-handoff-relocate-d9ul049i",
+        "timeout_seconds": 150,
+        "state": "finished",
+        "exit_code": 0
+      },
+      {
+        "name": "relink-native",
+        "argv": [
+          "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-file-operations-driver",
+          "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr",
+          "relink",
+          "multi"
+        ],
+        "cwd": "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr",
+        "timeout_seconds": 120,
+        "state": "finished",
+        "exit_code": 0
+      },
+      {
+        "name": "relink-java",
+        "argv": [
+          "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+          "-XX:ActiveProcessorCount=2",
+          "--add-opens=java.base/java.net=ALL-UNNAMED",
+          "-Djava.security.manager=ReferenceFence",
+          "-Dbiglybtc.test.root=/tmp/biglybtc-fileops-handoff-relink-a5_s8awr",
+          "-Dbiglybtc.test.ports=60913",
+          "-Dazureus.security.manager.install=0",
+          "-Dazureus.loadplugins=0",
+          "-Dazureus.skipSWTcheck=1",
+          "-Dazureus.config.path=/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/profile",
+          "-Dazureus.install.path=/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/install",
+          "-Djava.io.tmpdir=/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/tmp",
+          "-Duser.home=/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/home",
+          "-Djava.util.prefs.userRoot=/tmp/biglybtc-fileops-handoff-relink-a5_s8awr/prefs",
+          "-cp",
+          "/tmp/biglybtc-fileops-oracle-4obnt05d/classes:/tmp/biglybtc-oracle/classes",
+          "FileOperationsOracle",
+          "60913"
+        ],
+        "cwd": "/tmp/biglybtc-fileops-handoff-relink-a5_s8awr",
+        "timeout_seconds": 150,
+        "state": "finished",
+        "exit_code": 0
+      },
+      {
+        "name": "removeKeep-native",
+        "argv": [
+          "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-file-operations-driver",
+          "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed",
+          "removeKeep",
+          "multi"
+        ],
+        "cwd": "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed",
+        "timeout_seconds": 120,
+        "state": "finished",
+        "exit_code": 0
+      },
+      {
+        "name": "removeKeep-java",
+        "argv": [
+          "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+          "-XX:ActiveProcessorCount=2",
+          "--add-opens=java.base/java.net=ALL-UNNAMED",
+          "-Djava.security.manager=ReferenceFence",
+          "-Dbiglybtc.test.root=/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed",
+          "-Dbiglybtc.test.ports=51391",
+          "-Dazureus.security.manager.install=0",
+          "-Dazureus.loadplugins=0",
+          "-Dazureus.skipSWTcheck=1",
+          "-Dazureus.config.path=/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/profile",
+          "-Dazureus.install.path=/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/install",
+          "-Djava.io.tmpdir=/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/tmp",
+          "-Duser.home=/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/home",
+          "-Djava.util.prefs.userRoot=/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed/prefs",
+          "-cp",
+          "/tmp/biglybtc-fileops-oracle-4obnt05d/classes:/tmp/biglybtc-oracle/classes",
+          "FileOperationsOracle",
+          "51391"
+        ],
+        "cwd": "/tmp/biglybtc-fileops-handoff-removeKeep-jpew9wed",
+        "timeout_seconds": 150,
+        "state": "finished",
+        "exit_code": 0
+      },
+      {
+        "name": "removeDelete-native",
+        "argv": [
+          "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-file-operations-driver",
+          "/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik",
+          "removeDelete",
+          "multi"
+        ],
+        "cwd": "/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik",
+        "timeout_seconds": 120,
+        "state": "finished",
+        "exit_code": 0
+      },
+      {
+        "name": "removeDelete-java",
+        "argv": [
+          "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+          "-XX:ActiveProcessorCount=2",
+          "--add-opens=java.base/java.net=ALL-UNNAMED",
+          "-Djava.security.manager=ReferenceFence",
+          "-Dbiglybtc.test.root=/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik",
+          "-Dbiglybtc.test.ports=37465",
+          "-Dazureus.security.manager.install=0",
+          "-Dazureus.loadplugins=0",
+          "-Dazureus.skipSWTcheck=1",
+          "-Dazureus.config.path=/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/profile",
+          "-Dazureus.install.path=/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/install",
+          "-Djava.io.tmpdir=/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/tmp",
+          "-Duser.home=/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/home",
+          "-Djava.util.prefs.userRoot=/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik/prefs",
+          "-cp",
+          "/tmp/biglybtc-fileops-oracle-4obnt05d/classes:/tmp/biglybtc-oracle/classes",
+          "FileOperationsOracle",
+          "37465"
+        ],
+        "cwd": "/tmp/biglybtc-fileops-handoff-removeDelete-a12a1tik",
+        "timeout_seconds": 150,
+        "state": "finished",
+        "exit_code": 0
+      }
+    ],
+    "logs_sha256": {
+      "javac-fixtures.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "javac-fixtures.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relink-java.stderr": "fd319618910d0b2f1b4f590c596fa79c3ac02b3e2bee7a2336b3128415866eb6",
+      "relink-java.stdout": "dfabe89782c272d324da9b695429cb47678a8774274a77409277843d7b1c4171",
+      "relink-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relink-native.stdout": "f68a58da233741b50338bdfd40378c7e15b4ba9ed48192afbe09db5a7ccc8b99",
+      "relocate-java.stderr": "fff9562c5002a055e9f24b9abbeb4c4c5e00c04482975e985095db1ce6910fff",
+      "relocate-java.stdout": "7dca43b1e5227579b7ed46dab67cd1d97757f7e6feb715b94384bd9781a40572",
+      "relocate-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "relocate-native.stdout": "32b0c1c82b46ae111ea596d3ee6dd49a0aaba7b3fe916100a1de5ed49631310f",
+      "removeDelete-java.stderr": "b962f12fabd324a784783f965d569f133fa44f8f37dd493736fcfacea0fd4a16",
+      "removeDelete-java.stdout": "9abbd86af1caf3d1a4462da617ee085c8a9b7e4a3e5ba1122855f4d7ec2c9ac2",
+      "removeDelete-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "removeDelete-native.stdout": "7200f83070bfe27613f86dca4d912540867044a99f6e04cf020a84264beeb48e",
+      "removeKeep-java.stderr": "c0109528aa7a824033f63a79982243b20923b523b6e319e5a331412f1667ebf3",
+      "removeKeep-java.stdout": "6734b055ddbd4a7536835f1964dfbdc99e28f36224d1efb7a655de7ac9c69059",
+      "removeKeep-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "removeKeep-native.stdout": "e6b593fb0dbff9ba514eb4304c92474e29b58fccb6f32412f75c73b96c1d41ac"
+    }
+  },
+  "hosted": [
+    {
+      "conclusion": "success",
+      "databaseId": 40111873458,
+      "headSha": "dda0654715ffa38feea15784a92bf6f00502523e",
+      "name": "Native plugin SDK contract",
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40111873458"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 40111873482,
+      "headSha": "dda0654715ffa38feea15784a92bf6f00502523e",
+      "name": "Native desktop preview unit and smoke tests",
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40111873482"
+    }
+  ],
+  "hosted_counts": {
+    "Native plugin SDK contract": 2,
+    "Native desktop preview unit and smoke tests": 159
+  },
+  "portable": {
+    "status": "PRIVATE_RUNTIME_QUALIFIED_NOT_PROMOTED",
+    "native_source": "dda0654715ffa38feea15784a92bf6f00502523e",
+    "source_map_sha256": "e5703865ac0081a7f96a824ffafcc262cb6c01c4267e736f6ebb60e62596c254",
+    "candidate": "/home/yurii/Java/BiglyBTC/build/fileops-20261024/portable/fileops-final/candidate",
+    "build": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+    "manifest_sha256": "8f0ad95fe64d27962f112129d8a128b6ae1b5414f4a29f826d768d4e73266169",
+    "manifest_files": 118,
+    "previous_manifest_sha256": "0cb16425cde2f4782928a87544742445c8b734177bf0db97ec6b9a38f00f604d",
+    "tests": [
+      "file-operations",
+      "torrent-creator",
+      "file-operation-dialog",
+      "torrent-creation-dialog",
+      "file-operations-host",
+      "scheduler-service"
+    ],
+    "suite_count": 6,
+    "smoke_qt_rows": 13,
+    "captures": {
+      "statistics-history-month-preview.png": "275318ab88c4c8f193ffb6f412e140229d84c784a292fd098cad36270f09af02",
+      "statistics-history-copy-preview.png": "278f489116c8fbfc30ad15b2b4d6cffce61109c1701c8b81f31253c9cb29fe45",
+      "statistics-history-keyboard-preview.png": "278f489116c8fbfc30ad15b2b4d6cffce61109c1701c8b81f31253c9cb29fe45",
+      "statistics-history-dht-preview.png": "d4d420aeb67a45e14d477018a5564d2593642cbe1f3fff64a16b1cc92e975063",
+      "statistics-history-protocol-preview.png": "852ac90d97880810b1024ba3156a23d9af380f486e798ad4b9af5cddb9cec55b",
+      "statistics-navigation-new-session-preview.png": "e5137f106f8e03c27fcdef56750c84378d646e62c2c2cab6a3c18bdf5a8e7b19",
+      "statistics-navigation-reopened-preview.png": "3f920d5e649a1709626a39b60ca410f55ff3b4b44cc89d8bfa7c94d2a85f3eee",
+      "statistics-history-week-missing-preview.png": "973da38d1c6c294eaf853a6d3b4b1a1ae46b34cd5863bb4ecbe169c353ccd620",
+      "statistics-history-week-hourly-missing-preview.png": "9ea2aa205d1fc608ae95a5ed79320443214104de767e516390e97e2ba3a1fb25",
+      "statistics-history-week-preview.png": "70042ff9deff29ba239e98f1b820f9f0e75e7be3c50f1afeef79800cf4c79d79",
+      "statistics-history-week-hourly-preview.png": "3f920d5e649a1709626a39b60ca410f55ff3b4b44cc89d8bfa7c94d2a85f3eee",
+      "statistics-history-missing-preview.png": "d8f46c011306a6ea0c2b7d4fcdf29166a87f57c09d2255913a686d4d9cd52a08",
+      "statistics-history-preview.png": "508bbbce9f2352dba4751bc056cae294a4e5dd6536007a9b126e23623b07f24f",
+      "statistics-section-9-preview.png": "1536ff351f211fe9a6d3bb55688177b742017b98ede0f6391400a125e9f2bb6b",
+      "statistics-section-8-preview.png": "dd93ec646cc23ceea705bfe7ab3fc9ac793e10fa0292e801023fb5a053876438",
+      "statistics-section-7-preview.png": "207c8fad759d7215d96ea995a2540aab57132259cb7a875773970fafb23c8446",
+      "statistics-section-6-preview.png": "d62cd2ee8888ae156253b44d6e6e9ebf78f2a08ae886f70b4a420ed3aef46ee9",
+      "statistics-section-5-preview.png": "af2560935dc0a71bda0478c11ab63cb79897694be4459ab1133ebf32fd333f92",
+      "statistics-section-4-preview.png": "c08db90bae4bf271dd3c6c8caf38958ac5384bbdd78d2252a813542d9c76dec8",
+      "statistics-section-3-preview.png": "be9484e7cfa39068cade12acfceb3a44e2a7689fe89c528f65955e6b6c643bf0",
+      "statistics-section-2-preview.png": "07794fbd4be90f6c89e84b32fc612293f20d546abe88eacc716b67dbf1b19f23",
+      "statistics-capacity-preview.png": "1972e079671d6be417c7bed9a08a50036bac28ede8f02b2874c28f7293d303dc",
+      "statistics-transfers-preview.png": "8ee1893a80bdc0d53d7846b67db391abd942e001d3bef31e0342d9d2781a4b8c",
+      "statistics-activity-preview.png": "43a205afbd0ee09c34ba3ef2c7e334e37ac316d3d7e7968dc9454a58ece31fde",
+      "my-shares-preview.png": "d1b593bda531e1485e9400bd69a0806a63dabf863f1aa4c4dc043d0295193c05",
+      "my-tracker-preview.png": "112bfbc8432048f36b483077af24218f6e299307ec8a60de991ac21d04321fbb",
+      "saved-selected-preview.png": "4479f58c81148d091e940898149b64ba97a9672c0754cb3f2f870066e81883c7",
+      "classic-preview.png": "af95e42763b034dba10820cb9b32eb278d2f6754e9a2256d1fa92a73d78e7196"
+    },
+    "capture_scale": 1,
+    "sample_root": "/tmp/biglybtc-preview-driukcmj",
+    "provider_sha256": "c35f1b0408508c019f002c438d70dd361a55be20286ded56711efd6bba2424e3",
+    "qt_version": "6.12.0",
+    "normal_launcher_usage_only": true,
+    "normal_launcher_profile_opened": false,
+    "original_profile_or_process_access": false,
+    "system_installation": false,
+    "promoted": false
+  },
+  "promotion": {
+    "native_source": "dda0654715ffa38feea15784a92bf6f00502523e",
+    "dist": "/home/yurii/Java/BiglyBTC/dist",
+    "rollback": "/home/yurii/Java/BiglyBTC/build/fileops-20261024/portable/fileops-final/previous-dist",
+    "old_manifest_sha256": "0cb16425cde2f4782928a87544742445c8b734177bf0db97ec6b9a38f00f604d",
+    "manifest_sha256": "8f0ad95fe64d27962f112129d8a128b6ae1b5414f4a29f826d768d4e73266169",
+    "manifest_files": 118,
+    "system_installation": false,
+    "original_profile_or_process_access": false
+  },
+  "open_human_questions": [],
+  "original_profile_or_process_access": false,
+  "system_installation": false,
+  "sanitizer_scope": "ASan/UBSan/leaks on native, with the preexisting managed_payload_counters.cpp vptr-only exception required by private LT RTTI. The shipped uninstrumented provider is not claimed fully sanitized.",
+  "scope_record": "scope.md",
+  "remaining_original_families": [
+    "bulk operations",
+    "advanced/v2/hybrid/virtual-source torrent wizard and256MiB manual pieces",
+    "archive deletion controls",
+    "external/nonlinear/shared/overlapping storage and merge/overwrite moves",
+    "wider interrupted-operation repair UX",
+    "full-payload validation IO in non-Keep file operations; compositor/public-swarm/performance qualification"
+  ]
+}

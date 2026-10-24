@@ -1,0 +1,79 @@
+{
+  "status": "SOURCE_ONLY_UNEXECUTED",
+  "native_baseline": "a965fd3cf0547e041d58512c56fea1cccf972ccb",
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "scope": "CF-06 standalone v1 creator; no import/session/network/payload writes",
+  "production_files": 2,
+  "test_files": 2,
+  "regression_families_planned": 13,
+  "java_handoff_cases_planned": 3,
+  "changes": {
+    "preview/native/engine/torrent_creator.cpp": {
+      "before_sha256": null,
+      "after_sha256": "ddb7fb12ac11abef2e1fa1721e400207b6cd3067f138d102ff52f056a0b0be15",
+      "bytes": 28624
+    },
+    "preview/native/engine/torrent_creator.hpp": {
+      "before_sha256": null,
+      "after_sha256": "801606720c4df2520a5b597cbd654521df6ce923167bf505dc754c6d9806eab1",
+      "bytes": 3638
+    },
+    "preview/native/tests/torrent_creator_driver.cpp": {
+      "before_sha256": null,
+      "after_sha256": "ce28b5efdd0353fb5be233d7e9927a440780b4ac95f7875fa6f7a70c756cdbdf",
+      "bytes": 1536
+    },
+    "preview/native/tests/torrent_creator_tests.cpp": {
+      "before_sha256": null,
+      "after_sha256": "9be5e541ecf06f76470a46e912505e40e988cbc0869e92df3b35e104b8b38e99",
+      "bytes": 17761
+    }
+  },
+  "files": {
+    "ADOPTION.md": {
+      "sha256": "0e7952a620a4679b53b2a2a71dfea682ee8a435493d757589890472fe5283ddf",
+      "bytes": 2258
+    },
+    "CONTRACT.md": {
+      "sha256": "8c8a234bcdb6ea2a9098f62d41adf45c61e5d59997759e32c69b2af3d75dda76",
+      "bytes": 5565
+    },
+    "java/TorrentCreationOracle.java": {
+      "sha256": "8b65b86d336dd425b65ee3121a8ca7844e36bd26d623ac1bce81fc751782dcdb",
+      "bytes": 4055
+    },
+    "java/run.py": {
+      "sha256": "5a57f83d9ddc9974dd1e1a23f28b83fe65bd10796f99215bac90f3539578e6f8",
+      "bytes": 8458
+    },
+    "source-pins.json": {
+      "sha256": "22b9412a6e9eebedd8476c1f34b60c21f5bb8c9d53a1b1192cf13d2cb6734882",
+      "bytes": 4496
+    },
+    "staging/preview/native/engine/torrent_creator.cpp": {
+      "sha256": "ddb7fb12ac11abef2e1fa1721e400207b6cd3067f138d102ff52f056a0b0be15",
+      "bytes": 28624
+    },
+    "staging/preview/native/engine/torrent_creator.hpp": {
+      "sha256": "801606720c4df2520a5b597cbd654521df6ce923167bf505dc754c6d9806eab1",
+      "bytes": 3638
+    },
+    "staging/preview/native/tests/torrent_creator_driver.cpp": {
+      "sha256": "ce28b5efdd0353fb5be233d7e9927a440780b4ac95f7875fa6f7a70c756cdbdf",
+      "bytes": 1536
+    },
+    "staging/preview/native/tests/torrent_creator_tests.cpp": {
+      "sha256": "9be5e541ecf06f76470a46e912505e40e988cbc0869e92df3b35e104b8b38e99",
+      "bytes": 17761
+    }
+  },
+  "checks": {
+    "python_recipe_ast": "PASS",
+    "new_native_destinations_absent": true,
+    "native_head_matches": true,
+    "cpp_compile": false,
+    "cpp_tests": false,
+    "java_compile_or_execution": false,
+    "native_mutations": false
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "native_base": "a965fd3cf0547e041d58512c56fea1cccf972ccb",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_directory": "staging",
+  "source_sha256": {
+    "preview/native/adapters/file_operation_io.cpp": "9713a9072e414d604cf8151b3f2ec073993eae102dda84accec55e127f532181",
+    "preview/native/adapters/file_operation_io.hpp": "d5fd1adb33a25e4ced75e64e20021b52792e0b9e7d25e234a4272bcf85cfe92e",
+    "preview/native/adapters/file_operations.cpp": "f106479282575dbf6fc1edb650238c8811a4ccf5d9cd8c6ad1a23d704764bcbf",
+    "preview/native/adapters/file_operations.hpp": "30f5d791ae6233fdeb3186a6cac28aa032a87ec55d4e76ac32866848d07504e3",
+    "preview/native/tests/file_operations_tests.cpp": "9e1a04fe8618dc2ed299c27b194c6b0de47a4eddc9d31742cb0dd037f03e4893"
+  },
+  "before_sha256": {
+    "preview/native/adapters/file_operation_io.cpp": null,
+    "preview/native/adapters/file_operation_io.hpp": null,
+    "preview/native/adapters/file_operations.cpp": null,
+    "preview/native/adapters/file_operations.hpp": null,
+    "preview/native/tests/file_operations_tests.cpp": null
+  },
+  "artifacts_sha256": {
+    "CMake-adoption.txt": "c66562ff910e4aff264f3fd2660c5c6389a47a0b51ba3e877a914ae6ce33c849",
+    "ADOPTION.md": "16e2835093fa33e8ab50355c485e5825b1999b4cbb7bf8a9c1e72432ddc67ee1",
+    "source-provenance.json": "2550dc78318e171070179a996ec019403b75be880bb220e3245b5f95bd2c5192"
+  },
+  "execution": "Source authored only; no builds/tests/Java/native edits.",
+  "public_api_frozen": true
+}

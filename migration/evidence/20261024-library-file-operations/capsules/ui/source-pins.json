@@ -1,0 +1,38 @@
+{
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_baseline": "a965fd3cf0547e041d58512c56fea1cccf972ccb",
+  "source_files": {
+    "uis/src/com/biglybt/ui/swt/TorrentUtil.java": {
+      "sha256": "394f77bf940d4c331263d92bd5208bbe6e2ec73fae1462d0b3a3a606c0eab825",
+      "git_blob": "d0b786463c8a41ec88b8df44d46633c2871e9bd3"
+    },
+    "uis/src/com/biglybt/ui/swt/views/utils/ManagerUtils.java": {
+      "sha256": "ac913334e5dc68beb75bed83981a711bd18b71c7e1bbdcb5c8f4b7ae486430e4",
+      "git_blob": "4b683b7c2c010196853032dc333a2c41626fe732"
+    },
+    "uis/src/com/biglybt/ui/swt/maketorrent/NewTorrentWizard.java": {
+      "sha256": "dd4f0d3f54db61cb85446aac3a6bfdfd9e134e7ede86101559d09d100b847d56",
+      "git_blob": "22a9182aa3f543f7b684f77cb8f4f7e379797441"
+    },
+    "uis/src/com/biglybt/ui/swt/maketorrent/SavePathPanel.java": {
+      "sha256": "1f358e646b851261c3ce00d25b982bc338a55cb60b9132a7e307fd86fc719863",
+      "git_blob": "9280299fa98999df5b673e46bf8270e11ec2b24d"
+    },
+    "core/src/com/biglybt/pif/download/Download.java": {
+      "sha256": "3e6484279df6215385591a0f7f297920fe234fb9e9baf7a57a0ba09d86a2e74e",
+      "git_blob": "d8db4041424ab4ef6e68cb76c109285ca0d37bb2"
+    }
+  },
+  "native_context": {
+    "preview/native/ui/library_model.hpp": "d11abef9d47a22e738356bdc2a7074eb15dca9ccee22fe53363b5327d5ee9dcd",
+    "preview/native/ui/scheduler_dialog.hpp": "cf4935859650f9ccdfc38e484c0fb616f7d1826aa2e257cf30845e59c054f46d",
+    "preview/native/ui/scheduler_dialog.cpp": "2193a754ee3529f115d63d6f43d803ba751d420f0bd2b22a6109f6b882bdb4a7",
+    "preview/native/ui/CMakeLists.txt": "9e5552e01652bf4c109144374c76e1409359a325e267e8d60d0c133c7fbe588d",
+    "preview/native/tests/CMakeLists.txt": "13c4264cdaf9f8a5e7baea848284ab2ff98b0fa7ef97bcc8ed62f9c7467155e3"
+  },
+  "creator_header": {
+    "path": "build/fileops-20261024/creator/staging/preview/native/engine/torrent_creator.hpp",
+    "sha256": "801606720c4df2520a5b597cbd654521df6ce923167bf505dc754c6d9806eab1"
+  },
+  "original_ui_oracle": "Not executed or emulated; retained original Java17 cohort does not contain TorrentUtil, ManagerUtils or NewTorrentWizard classes. No original SWT recompilation/startup authorized."
+}

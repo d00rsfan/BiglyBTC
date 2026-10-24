@@ -1,0 +1,75 @@
+{
+  "case": "clang-r1",
+  "build": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+  "selected": [
+    "file-operations",
+    "torrent-creator",
+    "file-operation-dialog",
+    "torrent-creation-dialog",
+    "file-operations-host",
+    "scheduler-service",
+    "managed-queue",
+    "managed-download",
+    "managed-library-command-routing",
+    "managed-storage",
+    "desktop-model-and-lifecycle",
+    "persistent-native-peer-session"
+  ],
+  "source_manifest_sha256": "e01ba11dcf00b885841f8e3e65476435f4315dec6c6e513aaceebcfa4f3c9452",
+  "commands": [
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+        "--parallel",
+        "1",
+        "--target",
+        "biglybtc-file-operations-tests",
+        "biglybtc-torrent-creator-tests",
+        "biglybtc-file-operation-dialog-tests",
+        "biglybtc-torrent-creation-dialog-tests",
+        "biglybtc-file-operations-host-tests",
+        "biglybtc-scheduler-service-tests",
+        "biglybtc-managed-queue-tests",
+        "biglybtc-managed-download-tests",
+        "biglybtc-library-commands-bridge-tests",
+        "biglybtc-managed-storage-tests",
+        "biglybtc-desktop-tests",
+        "biglybtc-persistent-session-tests",
+        "BiglyBTC",
+        "BiglyBTC-headless",
+        "biglybtc-torrent-creator-driver",
+        "--",
+        "-k",
+        "0"
+      ],
+      "exit": 0,
+      "seconds": 714.25,
+      "log": "clang-r1-build.log"
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+        "-R",
+        "^(file\\-operations|torrent\\-creator|file\\-operation\\-dialog|torrent\\-creation\\-dialog|file\\-operations\\-host|scheduler\\-service|managed\\-queue|managed\\-download|managed\\-library\\-command\\-routing|managed\\-storage|desktop\\-model\\-and\\-lifecycle|persistent\\-native\\-peer\\-session)$",
+        "--no-tests=error",
+        "--output-on-failure",
+        "--verbose",
+        "--output-junit",
+        "/home/yurii/Java/BiglyBT/build/fileops-20261024/clang-r1.xml"
+      ],
+      "exit": 0,
+      "seconds": 127.37,
+      "log": "clang-r1-tests.log"
+    }
+  ]
+}

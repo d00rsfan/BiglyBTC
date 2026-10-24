@@ -1,0 +1,10 @@
+{
+  "preview/native/engine/persistent_session.cpp": {
+    "before_sha256": "caa30a1d339fc449032b934a03866ae742fbeb5b661d28ce0f3b2d710bbdfec4",
+    "after_sha256": "936d6cb371d65744bc7aed06705875e0600c219830cb3c464ccba25d028e1334"
+  },
+  "preview/native/ui/torrent_creation_dialog.cpp": {
+    "before_sha256": "b8c7a22c53c59c39c49910b90f167f57e65ccc7503dabe9e5902c2e9cc6fd759",
+    "after_sha256": "0e33d7214fcf32f4834dc4eb98cdfa9fd7c2c9748e200470cb4782b04da56fe4"
+  }
+}

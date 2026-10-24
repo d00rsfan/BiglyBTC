@@ -1,0 +1,7 @@
+Additive original-reader producer, no execution by author.
+
+CLI: file_operations_driver /tmp/biglybtc-fileops-handoff-CASE relocate|relink|removeKeep|removeDelete [single|multi]. Root must be absent or an empty private canonical directory. Each invocation creates only owned generated inputs, takes/releases the actual ProfileLease and calls the frozen prepare/confirm/apply service. No engine/network/Java calls.
+
+Outputs: result.json and stdout JSON; profile, targetHash/survivorHash, actual preview sourceRoot/targetRoot, scope digest, per-file source/destination/bytes/SHA256/expected-byte sidecar/dev/inode. before-downloads.config, before-target.dat, before-survivor.dat contain exact generated pre-operation bytes. Both targets are stopped70 with valid v1 SHA1 pieces16384. Multi target contains Unicode names and an actual zero-length leaf. Survivor has independent geometry/hash. Relink target has identical bytes; caller's Java READY/recheck results must verify this independently. Archive/state unknowns and pause/inventory fields can be compared against exact before documents. No original Java compatibility result is claimed by this producer source.
+
+CMake: add_executable(biglybtc-file-operations-driver file_operations_driver.cpp); link PRIVATE biglybtc_file_operations OpenSSL::Crypto; compile -Wall -Wextra -Wpedantic -Werror. No link wrapping in this target. Coordinate runtime with Java handoff runner after central build.

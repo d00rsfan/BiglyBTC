@@ -1,0 +1,69 @@
+{
+  "status": "PASS source-only bounded scope",
+  "source_tree": "/home/yurii/Java/BiglyBTC/build/dependencies/source-qualified-2.0.12/source",
+  "subjects": {
+    "src/torrent.cpp": {
+      "sha256": "d0b8d64c54583cb9287d20aaf5ea5bc2e85cbf0caa5d5c9df42f40c77187d185",
+      "ranges": {
+        "checking_state_definition": [
+          132,
+          149
+        ],
+        "want_peers_gate": [
+          8236,
+          8250
+        ],
+        "incoming_gate": [
+          7978,
+          7983
+        ],
+        "checked_to_ready": [
+          8643,
+          8660
+        ],
+        "checked_announce": [
+          8710,
+          8712
+        ],
+        "announce_gates": [
+          10120,
+          10140
+        ],
+        "stop_when_ready": [
+          11708,
+          11724
+        ],
+        "synchronous_readiness_pause": [
+          11752,
+          11790
+        ],
+        "add_peer_dht_side_effect": [
+          11310,
+          11320
+        ]
+      }
+    },
+    "src/torrent_handle.cpp": {
+      "sha256": "9f8c985b4bff1fbf160fa8a68a4e808eb9a60caf10b853c1b29d08bea7fcb5fe",
+      "ranges": {
+        "connect_peer_queues_add_peer": [
+          823,
+          827
+        ]
+      }
+    },
+    "include/libtorrent/torrent_flags.hpp": {
+      "sha256": "a6f3effd2db3e391fe3440efb6e906a77f6b93ba0a8af81a6229430ee52caaa2",
+      "ranges": {
+        "public_stop_when_ready_contract": [
+          152,
+          187
+        ]
+      }
+    }
+  },
+  "proposal": "Remove manuallyPaused-without-queue rejection; paused+stop_when_ready and auto_managed false for queuePolicy or manuallyPaused; resume checking for either; explicit nonpolicy manual resume unsets stop_when_ready before resuming.",
+  "scope": "Valid managed metadata and ordinary checking, without seed-mode/no_verify_files shortcut. Readiness transition pauses synchronously before ordinary tracker announce or outgoing/incoming payload admission.",
+  "caveat": "connect_peer enqueues candidate; add_peer can add a session DHT node when session DHT is enabled. stop_when_ready is not a universal no-network guarantee. Isolated session disables DHT.",
+  "executed": false
+}

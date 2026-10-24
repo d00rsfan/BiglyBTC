@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "source_directory": "staging",
+  "before_sha256": {
+    "preview/native/adapters/file_operations.cpp": "f106479282575dbf6fc1edb650238c8811a4ccf5d9cd8c6ad1a23d704764bcbf",
+    "preview/native/tests/file_operations_tests.cpp": "9e1a04fe8618dc2ed299c27b194c6b0de47a4eddc9d31742cb0dd037f03e4893"
+  },
+  "source_sha256": {
+    "preview/native/adapters/file_operations.cpp": "321ee646c29db8319af92e00d4fc1a347a807a707d045a175fc60dd94ad26c01",
+    "preview/native/tests/file_operations_tests.cpp": "df227099f980045a0235b1a430a732eb11f696522a5ffc04100c7cb35f7cde79"
+  },
+  "artifacts_sha256": {
+    "candidate.patch": "8f947c8f8328f31a1ed85695ad15a9f0b12932bd2c3eca9095c644dfe9219fbc",
+    "ADOPTION.md": "f64c4f8abc52b99fb212030fc2d5d4828b4b7b90a27fe2bb692741c84d1bb8d2"
+  },
+  "reason": "Actual original Java handoff r3 found orphan dictionary pause after RemoveKeep; modern pause dictionaries use hash, not torrent_hash.",
+  "tests": "Five existing families retained; additive mixed encoding and sparse recovery regressions; unexecuted by author."
+}

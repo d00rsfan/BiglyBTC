@@ -1,0 +1,11 @@
+--- a/preview/native/tests/file_operations_driver.cpp
++++ b/preview/native/tests/file_operations_driver.cpp
+@@ -38,7 +38,7 @@
+   st::FileOperationKind kind;if(mode=="relocate"){kind=st::FileOperationKind::Relocate;}else if(mode=="relink"){kind=st::FileOperationKind::Relink;}else if(mode=="removeKeep"){kind=st::FileOperationKind::RemoveKeepData;}else{need(mode=="removeDelete","Invalid operation");kind=st::FileOperationKind::RemoveDeleteData;}
+   const auto profile=root/"profile",source=root/"source",destination=root/"destination";fs::create_directories(destination);auto selected=makeRecord(profile,source,root/"archives",multi?"Bundle-数据":"file-α.bin",multi,17);auto survivor=makeRecord(profile,root/"survivor",root/"archives","survivor.bin",false,29);
+   const auto rawHash=[](const core::TorrentHash& hash){const auto bytes=hash.bytes();return std::string(reinterpret_cast<const char*>(bytes.data()),bytes.size());};
+-  const auto inventory="d9:downloadsl"+selected.row+survivor.row+"e9:pause_datald4:hash"+b(rawHash(selected.hash))+"5:forcei0eed4:hash"+b(rawHash(survivor.hash))+"5:forcei0eee21:unknown.future.pluginli7e3:rawee";
++  const auto inventory="d9:downloadsl"+selected.row+survivor.row+"e10:pause_datald4:hash"+b(rawHash(selected.hash))+"5:forcei0eed4:hash"+b(rawHash(survivor.hash))+"5:forcei0eee21:unknown.future.pluginli7e3:rawee";
+   write(profile/"downloads.config",inventory);static_cast<void>(document(inventory));write(root/"before-downloads.config",inventory);write(root/"before-target.dat",selected.state);write(root/"before-survivor.dat",survivor.state);
+   if(kind==st::FileOperationKind::Relink){for(std::size_t i=0;i<selected.files.size();++i){write(destination/selected.files[i].lexically_relative(source),selected.contents[i]);}}
+   std::string receipt;
