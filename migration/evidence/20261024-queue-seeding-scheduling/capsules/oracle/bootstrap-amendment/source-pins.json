@@ -1,0 +1,129 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_files": {
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/DefaultRankCalculator.java": {
+      "sha256": "7895c91c55eafc117e4412e8c64a4d336ecfc5fed521e3af78de4ef38d102980",
+      "git_blob": "7b014105e8a42293ad3bc741ce3b640fc0931391"
+    },
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/DownloadingRankColumnListener.java": {
+      "sha256": "fda57ac61a767a10f7daa674a545c3cb60fc7a54d20641aafa1767f399c9701f",
+      "git_blob": "ff03e97c764212c80ae8d5e74f02d7f2509beec6"
+    },
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/RankCalculatorReal.java": {
+      "sha256": "d2599c2d7249ab731029313962ddffb6ab3413f8148338d9468eb5b71e6150bb",
+      "git_blob": "72e9d6af456da0d918456a39f1cd9d143e993466"
+    },
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/RankCalculatorSlotReserver.java": {
+      "sha256": "c2306e775706a294fbd0c0f43a868aa2cfaeb85ccf667ac0b2927e3c0d7a843c",
+      "git_blob": "d836e036313946f1aadb0c72b3cbed85cf873d7a"
+    },
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/SeedingRankColumnListener.java": {
+      "sha256": "5f9f8a86d1a6acefd811c098004c0f008e27ae2245d682f1075118b531406dfe",
+      "git_blob": "e5636124f3ec947e0eccce65bfc9c5f9f8ed24be"
+    },
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopConfigModel.java": {
+      "sha256": "3c46e88ab04ee8afeba60a6fd02a7c293be15ec4f382f54922402fe1234afe55",
+      "git_blob": "f6b665e72d7e29e4585ec3c8d27b73a03a2cb29e"
+    },
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin.java": {
+      "sha256": "96f206eb132f85d9f9c1a1d35ab0eb85e33e76d75865e2c979c37139dfc66111",
+      "git_blob": "f1685632907cc7934a4cb2a6711c329980a82a38"
+    },
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesFPListener.java": {
+      "sha256": "d10f0dfdc02b8aaae804e0a96631542a1ce2d28af2dccd3052e3d4ad93effa9d",
+      "git_blob": "386d729d788ce914e9c9d5c21a12c58f164455dc"
+    },
+    "core/src/com/biglybt/pifimpl/local/PluginCoreUtils.java": {
+      "sha256": "55bc689460ce46e6ea9025f2b6f52ff315d96767b9d5510c9a4c8c291d33e644"
+    },
+    "core/src/com/biglybt/core/config/COConfigurationManager.java": {
+      "sha256": "5c966082555816d9df5fcc62e2f727ca6a9fbd9317554a66ea72123fea7df99c"
+    },
+    "core/src/com/biglybt/core/util/SystemTime.java": {
+      "sha256": "d57063696e281cc005e5b146a8f863a2ca52180696a98b473ff8566851f97353"
+    },
+    "core/src/com/biglybt/core/util/ThreadPool.java": {
+      "sha256": "c3a32b784df6bc8a1a158e0294920b13084c6b815598c05b5b35f5fbf124d6aa"
+    },
+    "core/src/com/biglybt/core/util/FileUtil.java": {
+      "sha256": "6565fa6aa08efd7ef64d339db28040d909765b0808050c7b70ae9a09e8cb4ba2"
+    },
+    "core/src/com/biglybt/core/util/Debug.java": {
+      "sha256": "0d10d1ad2da659029acaf5fe54865320b8d90a982cfdf1d4e1f7e93d08dd6d14"
+    },
+    "core/src/com/biglybt/pif/download/Download.java": {
+      "sha256": "3e6484279df6215385591a0f7f297920fe234fb9e9baf7a57a0ba09d86a2e74e"
+    },
+    "core/src/com/biglybt/pif/download/DownloadStats.java": {
+      "sha256": "0f649f87bb0ff125b05240a423d2925973996eaed96403d6290ba50ceb451511"
+    },
+    "core/src/com/biglybt/pif/download/DownloadScrapeResult.java": {
+      "sha256": "4f9bde0a5ad0bab7d7c55365ee5f2a837ab72e26c9772c389f87affe57cf2f7f"
+    },
+    "core/src/com/biglybt/pif/PluginConfig.java": {
+      "sha256": "01c5b88394d574aac844c5cf1b189a8741210273d3691c80b3543ba6933a9226"
+    },
+    "core/src/com/biglybt/core/download/DownloadManager.java": {
+      "sha256": "cfa73bb4c32801fa98565e163cbf7100a24240c790c25cdf2c4ce265402538a6"
+    },
+    "core/src/com/biglybt/core/download/DownloadManagerState.java": {
+      "sha256": "9bd11377c6abe2f4cf1e0cb10cc42032917679216fccb12fbb43a239a13a2867"
+    },
+    "core/src/com/biglybt/core/util/FrequencyLimitedDispatcher.java": {
+      "sha256": "ee504cf9739b0777e050f64cb11abcb679c7bbb368e9bea91945aced3abde0ba"
+    }
+  },
+  "retained_subject_class_sha256": {
+    "com/biglybt/plugin/startstoprules/defaultplugin/DefaultRankCalculator.class": "83bb47ce76ffd5279720b41adf10f22156105124e3ce3460bee5c48a33cf8657",
+    "com/biglybt/plugin/startstoprules/defaultplugin/DownloadingRankColumnListener.class": "d98ded86c3a51210aeacbbbd32299410f744837307db9a7f724b07677a39669a",
+    "com/biglybt/plugin/startstoprules/defaultplugin/RankCalculatorReal$1.class": "0d6cace4c309adbb47e0378e3278e5195eb62253a09cd5f38ea4ebeee09d00aa",
+    "com/biglybt/plugin/startstoprules/defaultplugin/RankCalculatorReal$SR.class": "393c24e8967f6c200ddb6e49c260caea6801f40fb72fa77a5d380754292d67a7",
+    "com/biglybt/plugin/startstoprules/defaultplugin/RankCalculatorReal.class": "10f415fc8bac0ca18ccf291aff49e3b6f37322ee3365c2d543829e01621ea245",
+    "com/biglybt/plugin/startstoprules/defaultplugin/RankCalculatorSlotReserver.class": "a9b7a576e756f54c125f5f40529cacddea2f73622decc90e6eedb05e5c357191",
+    "com/biglybt/plugin/startstoprules/defaultplugin/SeedingRankColumnListener$Sorter.class": "464eccc39689b9c6ffeeef2d699649ca854ae27754967ccc82c50ba50c8e4e0c",
+    "com/biglybt/plugin/startstoprules/defaultplugin/SeedingRankColumnListener.class": "426fa8cdcb7cab87f26f35ebaa7a32d02b81bf5f96b4ae12cd9d3ebbb01d15d4",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopConfigModel.class": "c3366742eead35ebeaa479408e8e26df02edd74edd099691623c3c3db58d5104",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$1.class": "c4623530623c70123beb130a3cef68200f8e34ac3168d53771c1a1c890e0c2c8",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$10.class": "148a5bdf4c344912cc62c4bcb5beecf86bb7a07cafe953771c564082d08a25f2",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$11.class": "94ca063420a4ae8302d341fd5b25256b87486e52dda12a52224fed78985a66ee",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$2.class": "fec1c0ac78bf88b86199857e2fcb51307a863d074a8285af477ce05f57e43c18",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$3.class": "6290f32de9b3ce2975ca921a24a32cd9b6e3b815ed88efdc34661afc6899473c",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$4.class": "8783d250905f52de836ac1b11f76d836aa7f861def2cd4ca6bcdb4f261441667",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$5.class": "d24f7dcf3e59c7391645ef917b7f32ed0aa16498df3db898ae4828ed1cb8ff02",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$6.class": "8b6f00dd61d49a89aea4f5fe65aabbafd0e479df1a2c2d395a08488095a08fad",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$7.class": "ce7e923a719b914142e80bac3e7a468064bb6bf4b248a3ff0c840a1ae40897b9",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$8.class": "b1d0509fc66556c1619b311ce6569e363f3605f40586c07722dbf1201e78b351",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$9.class": "d5e202e326b41e2f58b157f606370f1ca414bf821b2da57d4d85257179550e61",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$ChangeCheckerTimerTask.class": "093f691355abd7b0abb06ae055ac9ce0593896cd6a0d5c3544c61c4ead8ff160",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$ChangeFlagCheckerTask.class": "56fdfa29298dbe70abeb802e8de02fcd5c94faffc964052c81e9cfaab78022ff",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$ProcessTagVarsComplete.class": "32e06b3b37c35f40544c3c18f6a7cd9370f094fc9c0ada5e7a492d5604613dd2",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$ProcessTagVarsIncomplete.class": "8094471c1807aa2963f0fe6b4cebbbd09e3b456fba904f6add2daca5610bcca3",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$ProcessVars.class": "35f96f656496ed5e28671b07918e78efd4301118f5400695496663676a88f3dc",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$ProcessVarsComplete.class": "d811ca6622816e832d0ad19e0d05865a87f7d3abe2a1241b17aaa1a0ad32d5a9",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$ProcessVarsIncomplete.class": "df02a850c94936fddd8494bffaea4037cfa071476ba1ad8ce15f91d5b439f3fb",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$RecalcSeedingRanksTask.class": "6fe6a8bb26756a380ce55bbe5a55f84850304969d3ac5dba634db76fe091269f",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$StartStopDMListener.class": "f0d2b3275169897cab726ec35136d8adfab9ac0df62b15718ef56536102e3dae",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$StartStopDMTrackerListener.class": "fdee1d3fc266ce9b2d719cae983481dd08994129bff82bb32a96b891412ff073",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$StartStopDownloadActivationListener.class": "d313adde9278fd3cb994908598f7f812b36046e609c897e673cafa1efd24e881",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$StartStopDownloadListener.class": "7bf6fe891c0a69ea4c4efc9bfab8ca06d071ab418149d75726e79a92de6d3d47",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$StartStopDownloadStateAttributeListener.class": "5bbafa26e35f3f1bfb854ab5970cfe68d4b69a3207740bac30d38d45b73132c0",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$TotalsStats.class": "53828c7453f086ae06fb50d21da957ba03765e76a1fa17d0544f4677733cd697",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin$UIAdapter.class": "44105ea504d23620d16c6c726892122e98d6824baf31060b5ab0518f76e74df8",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin.class": "0a168036380e6967fcc1e5e758e978fc8cb1e4ed8f352b4c0a5601eafcbf416a",
+    "com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesFPListener.class": "82150f894520355f768361c9be25a88c26019e40e0177d635aacd08e8fd1ebdc"
+  },
+  "retention_sha256": "7472e8bda8d832fd5a962cda76ba1fcefaa0e6e9b4cad2621e0be97e6fbec9dd",
+  "retained_class_files_total": 5432,
+  "provider_replacements": [
+    "com/biglybt/core/config/COConfigurationManager.java",
+    "com/biglybt/core/util/Debug.java",
+    "com/biglybt/core/util/FileUtil.java",
+    "com/biglybt/core/util/SystemTime.java",
+    "com/biglybt/core/util/ThreadPool.java",
+    "com/biglybt/pifimpl/local/PluginCoreUtils.java"
+  ],
+  "native_policy_header": {
+    "path": "build/queue-20261024/policy/staging/preview/native/core/include/biglybtc/queue_policy.hpp",
+    "sha256": "80646717699588c2839d2fe98bc3296b0d00dcca769931db3d1fb3be4b26b194"
+  }
+}

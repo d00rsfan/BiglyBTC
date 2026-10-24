@@ -1,0 +1,10 @@
+--- before/preview/native/tests/scheduler_dialog_tests.cpp
++++ after/preview/native/tests/scheduler_dialog_tests.cpp
+@@ -195,6 +195,7 @@
+     dialog.findChild<QSpinBox*>("scheduler-default-upload")->setValue(18);
+     auto* table=dialog.findChild<QTableWidget*>("scheduler-schedules");QVERIFY(table);
+     const QPointer<QWidget> deleted=table->cellWidget(0,4);QVERIFY(deleted);
++    table->removeCellWidget(0,4);
+     delete deleted.data();QVERIFY(deleted.isNull());
+     dialog.findChild<QPushButton*>("scheduler-apply")->click();
+     QCOMPARE(writes.count(),0);QVERIFY(!dialog.pending());QVERIFY(dialog.dirty());

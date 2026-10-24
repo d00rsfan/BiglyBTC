@@ -1,0 +1,96 @@
+void SessionBridge::tickScheduler() noexcept {
+  if(!host_||!host_->engine){return;}
+  try{
+    ensureScheduler();if(!host_->scheduler){return;}
+    if(!host_->scheduler->snapshot().settings.enabled&&host_->schedulerPaused.empty()&&!host_->schedulerRestoreDefaults){return;}
+    const auto now=std::chrono::steady_clock::now();
+    const auto interval=std::chrono::milliseconds(host_->scheduler->snapshot().settings.pollMilliseconds);
+    if(host_->schedulerLastTick&&now-*host_->schedulerLastTick<interval){return;}host_->schedulerLastTick=now;
+    host_->schedulerFailure.clear();
+    auto torrents=host_->schedulerTorrents();
+    const auto actual=host_->engine->liveSettings();
+    if(!actual||actual->rateLimits.upload.state==core::RateLimitState::Unavailable
+        ||actual->rateLimits.download.state==core::RateLimitState::Unavailable){return;}
+    const auto local=QDateTime::currentDateTime();
+    auto plan=take(host_->scheduler->evaluate({local.date().dayOfWeek()%7,local.time().hour()*60+local.time().minute()},
+        torrents,static_cast<int>(actual->rateLimits.upload.bytesPerSecond/1024),static_cast<int>(actual->rateLimits.download.bytesPerSecond/1024)));
+    bool ratesApplied=true,configurationPublished=false;
+    if(plan.uploadKiB||plan.downloadKiB){
+      auto source=take(storage::readApplicationSettings(host_->lease));
+      bool seedingOnly=false;
+      if(host_->networkPolicy.seedingOnlyUpload){
+        const auto live=host_->engine->managedDownloads();bool any=false,onlySeeds=true;
+        for(const auto& row:live){if(row.retained&&row.phase!=engine::ManagedPhase::Stopping){any=true;onlySeeds=onlySeeds&&row.selectedComplete;}}
+        seedingOnly=any&&onlySeeds&&host_->engine->pendingMagnets().empty();
+      }
+      std::vector<core::SettingChange> edits;
+      if(plan.uploadKiB){edits.push_back({seedingOnly?core::SettingId::SeedingUploadLimit:core::SettingId::UploadLimit,std::int64_t{*plan.uploadKiB}});}
+      if(plan.downloadKiB){edits.push_back({core::SettingId::DownloadLimit,std::int64_t{*plan.downloadKiB}});}
+      auto prepared=take(storage::prepareApplicationSettings(source,edits));
+      auto requested=engine::readNetworkPolicy(&prepared.document(),{.mode=engine::NetworkMode::Normal});
+      if(!requested){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid saved routing while applying scheduled rates"}};}
+      auto safe=take(engine::prepareLiveSettings(host_->networkPolicy,*requested));
+      static_cast<void>(take(storage::saveApplicationSettings(host_->lease,source,prepared)));
+      configurationPublished=true;
+      const auto applied=host_->engine->applyLiveSettings(*requested);
+      ratesApplied=applied.has_value();if(applied){host_->networkPolicy=std::move(safe.effectivePolicy);}
+      if(!applied){host_->schedulerFailure=tr("Scheduled speeds were saved; restart to apply them");}
+    }
+    static_cast<void>(take(host_->scheduler->acknowledgeRates(plan.id,ratesApplied,ratesApplied)));
+    if(ratesApplied){host_->schedulerRestoreDefaults=false;}
+    if(configurationPublished){
+      // Our own confirmed config write invalidated the old action CAS baseline.
+      // A reload retains same-byte, acknowledged current-session ownership.
+      static_cast<void>(take(host_->scheduler->reload(host_->lease)));
+      host_->schedulerMemberships.clear();host_->schedulerTagsLoaded=false;host_->schedulerTagsAvailable=false;
+      const auto currentLimits=host_->engine->liveSettings();
+      if(!currentLimits||currentLimits->rateLimits.upload.state==core::RateLimitState::Unavailable
+          ||currentLimits->rateLimits.download.state==core::RateLimitState::Unavailable){
+        throw Failure{{storage::ErrorCode::Io,"Actual limits unavailable after scheduled rate publication"}};
+      }
+      torrents=host_->schedulerTorrents();const auto currentTime=QDateTime::currentDateTime();
+      plan=take(host_->scheduler->evaluate({currentTime.date().dayOfWeek()%7,currentTime.time().hour()*60+currentTime.time().minute()},
+          torrents,static_cast<int>(currentLimits->rateLimits.upload.bytesPerSecond/1024),
+          static_cast<int>(currentLimits->rateLimits.download.bytesPerSecond/1024)));
+      // Only the first plan's rate effects were applied. New outstanding rate
+      // changes remain unacknowledged for the next tick; actions use this fresh
+      // plan and its exact new revision/current rows.
+      static_cast<void>(take(host_->scheduler->acknowledgeRates(plan.id,false,false)));
+    }
+    for(const auto& action:plan.actions){
+      auto current=host_->schedulerTorrents();
+      const auto row=std::ranges::find(current,action.hash,&storage::SchedulerTorrent::hash);
+      if(row==current.end()){continue;}
+      auto began=host_->scheduler->beginAction(host_->lease,action,*row);
+      if(!began){host_->schedulerFailure=text(began.error().message);continue;}
+      bool intentConfirmed=false;
+      try{
+        if(action.kind!=storage::scheduler::ActionKind::SetStopReason){
+          const bool pause=action.kind==storage::scheduler::ActionKind::Pause;
+          auto persisted=storage::applyLibraryCommand(host_->lease,action.hash,pause?core::DownloadAction::Pause:core::DownloadAction::Resume);
+          // A failed publication can be indeterminate; retain the journal and
+          // revoke resume authority rather than claiming no filesystem effect.
+          if(!persisted){throw Failure{persisted.error()};}intentConfirmed=true;
+          auto controlled=host_->engine->pauseManaged(action.hash,pause);
+          if(!controlled){throw Failure{controlled.error()};}
+          if(pause){host_->schedulerPaused.insert(action.hash.hex());}else{host_->schedulerPaused.erase(action.hash.hex());}
+        }
+        static_cast<void>(take(host_->scheduler->finishAction(host_->lease,action,storage::SchedulerActionResult::Succeeded)));
+      }catch(const Failure& error){
+        static_cast<void>(host_->scheduler->finishAction(host_->lease,action,storage::SchedulerActionResult::Indeterminate));
+        host_->schedulerFailure=text(error.error.message);
+        static_cast<void>(intentConfirmed);break;
+      }
+    }
+    if(host_->schedulerFailure.isEmpty()){host_->schedulerFailure=text(host_->scheduler->snapshot().diagnostic);}
+  }catch(const Failure& error){host_->schedulerFailure=text(error.error.message);}
+  catch(const std::exception& error){host_->schedulerFailure=QString::fromUtf8(error.what());}
+  catch(...){host_->schedulerFailure=tr("Scheduler policy is unavailable");}
+  if(host_->schedulerFailure!=host_->schedulerPublishedFailure){
+    host_->schedulerPublishedFailure=host_->schedulerFailure;
+    if(!host_->schedulerFailure.isEmpty()){
+      const auto message=host_->schedulerFailure;const auto session=host_->columnLayoutSession;
+      QMetaObject::invokeMethod(this,[this,message,session]{if(!profileClosed_&&session==publishedColumnLayoutSession_){emit messageReady(message);}},Qt::QueuedConnection);
+    }
+  }
+}

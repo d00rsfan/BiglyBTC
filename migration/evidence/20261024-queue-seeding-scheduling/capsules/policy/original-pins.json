@@ -1,0 +1,53 @@
+{
+  "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "files": {
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/DefaultRankCalculator.java": {
+      "sha256": "7895c91c55eafc117e4412e8c64a4d336ecfc5fed521e3af78de4ef38d102980",
+      "git_blob": "7b014105e8a42293ad3bc741ce3b640fc0931391"
+    },
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/DownloadingRankColumnListener.java": {
+      "sha256": "fda57ac61a767a10f7daa674a545c3cb60fc7a54d20641aafa1767f399c9701f",
+      "git_blob": "ff03e97c764212c80ae8d5e74f02d7f2509beec6"
+    },
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/RankCalculatorReal.java": {
+      "sha256": "d2599c2d7249ab731029313962ddffb6ab3413f8148338d9468eb5b71e6150bb",
+      "git_blob": "72e9d6af456da0d918456a39f1cd9d143e993466"
+    },
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/RankCalculatorSlotReserver.java": {
+      "sha256": "c2306e775706a294fbd0c0f43a868aa2cfaeb85ccf667ac0b2927e3c0d7a843c",
+      "git_blob": "d836e036313946f1aadb0c72b3cbed85cf873d7a"
+    },
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/SeedingRankColumnListener.java": {
+      "sha256": "5f9f8a86d1a6acefd811c098004c0f008e27ae2245d682f1075118b531406dfe",
+      "git_blob": "e5636124f3ec947e0eccce65bfc9c5f9f8ed24be"
+    },
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopConfigModel.java": {
+      "sha256": "3c46e88ab04ee8afeba60a6fd02a7c293be15ec4f382f54922402fe1234afe55",
+      "git_blob": "f6b665e72d7e29e4585ec3c8d27b73a03a2cb29e"
+    },
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin.java": {
+      "sha256": "96f206eb132f85d9f9c1a1d35ab0eb85e33e76d75865e2c979c37139dfc66111",
+      "git_blob": "f1685632907cc7934a4cb2a6711c329980a82a38"
+    },
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesFPListener.java": {
+      "sha256": "d10f0dfdc02b8aaae804e0a96631542a1ce2d28af2dccd3052e3d4ad93effa9d",
+      "git_blob": "386d729d788ce914e9c9d5c21a12c58f164455dc"
+    },
+    "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java": {
+      "sha256": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194",
+      "git_blob": "72d5cccf803da692911b9a0e56777262138d6e00"
+    },
+    "core/src/com/biglybt/core/config/impl/ConfigurationManager.java": {
+      "sha256": "2627f71f0dd69b2cee577331ad6ce05fd230d47df816b592d07236c9b759bc82",
+      "git_blob": "811e21d1f34fe1c5e2a8daf7616e7e3eb22e2e0f"
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java": {
+      "sha256": "3b2eb44625911187e3058b7363b96b7ee813a9bf8051de54fada0f1ccc3243c7",
+      "git_blob": "73350c54c291c03b2fafe54b5f7618d31fabab8e"
+    },
+    "core/src/com/biglybt/core/download/DownloadManagerState.java": {
+      "sha256": "9bd11377c6abe2f4cf1e0cb10cc42032917679216fccb12fbb43a239a13a2867",
+      "git_blob": "0257df6b197c2e3ac1e0baa11083c6078d197445"
+    }
+  }
+}

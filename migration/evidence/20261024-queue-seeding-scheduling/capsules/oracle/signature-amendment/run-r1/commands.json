@@ -1,0 +1,60 @@
+[
+  {
+    "name": "javac-new-helpers",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "-J-XX:ActiveProcessorCount=2",
+      "--release",
+      "8",
+      "-encoding",
+      "UTF-8",
+      "-proc:none",
+      "-implicit:none",
+      "-sourcepath",
+      "/tmp/biglybtc-queue-oracle-re86mne9/empty-sourcepath",
+      "-cp",
+      "/tmp/biglybtc-oracle/classes",
+      "-d",
+      "/tmp/biglybtc-queue-oracle-re86mne9/classes",
+      "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/QueueOracleFence.java",
+      "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/QueueRankLauncher.java",
+      "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/com/biglybt/core/config/COConfigurationManager.java",
+      "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/com/biglybt/core/util/Debug.java",
+      "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/com/biglybt/core/util/FileUtil.java",
+      "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/com/biglybt/core/util/StringInterner.java",
+      "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/com/biglybt/core/util/SystemTime.java",
+      "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/com/biglybt/core/util/ThreadPool.java",
+      "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/com/biglybt/pifimpl/local/PluginCoreUtils.java",
+      "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/com/biglybt/plugin/startstoprules/defaultplugin/QueueRankOracle.java",
+      "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/queueoracle/Providers.java"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "original",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "-Xmx128m",
+      "-Djava.security.manager=allow",
+      "-Dqueue.oracle.root=/tmp/biglybtc-queue-oracle-re86mne9",
+      "-Dqueue.oracle.cohort=/tmp/biglybtc-oracle/classes",
+      "-Djava.io.tmpdir=/tmp/biglybtc-queue-oracle-re86mne9/tmp",
+      "-Duser.home=/tmp/biglybtc-queue-oracle-re86mne9/forbidden-home",
+      "-Dazureus.config.path=/tmp/biglybtc-queue-oracle-re86mne9/forbidden-profile",
+      "-cp",
+      "/tmp/biglybtc-queue-oracle-re86mne9/classes",
+      "QueueRankLauncher",
+      "/tmp/biglybtc-queue-oracle-re86mne9/classes",
+      "/tmp/biglybtc-oracle/classes"
+    ],
+    "exit_code": 0
+  },
+  {
+    "name": "native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-queue-rank-oracle-driver"
+    ],
+    "exit_code": 0
+  }
+]

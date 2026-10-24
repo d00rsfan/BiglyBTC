@@ -1,0 +1,538 @@
+--- a/preview/native/ui/scheduler_dialog.cpp
++++ b/preview/native/ui/scheduler_dialog.cpp
+@@ -8,6 +8,7 @@
+ #include <QLabel>
+ #include <QLineEdit>
+ #include <QMessageBox>
++#include <QMetaObject>
+ #include <QPointer>
+ #include <QPushButton>
+ #include <QShowEvent>
+@@ -17,12 +18,23 @@
+ #include <QVBoxLayout>
+ #include <algorithm>
+ #include <limits>
++#include <optional>
++#include <vector>
+ 
+ namespace biglybtc::ui {
+ namespace {
+ constexpr int MaximumRate=std::numeric_limits<int>::max()/1024;
++// QObject::destroyed is delivered even while signals are blocked. Restore only
++// surviving objects; a normal QSignalBlocker can outlive its deleted target.
++class SafeSignalBlock final {
++public:
++  explicit SafeSignalBlock(QObject* object):object_(object),previous_(object->blockSignals(true)) {}
++  ~SafeSignalBlock() { if(object_) {object_->blockSignals(previous_);} }
++private:
++  QPointer<QObject> object_; bool previous_;
++};
+ bool valid(const SchedulerPreferences& p) {
+-  return p.pollMilliseconds>=1000&&p.pollMilliseconds<=3600000;
++  return p.pollMilliseconds>=1000; // int itself supplies the original upper bound.
+ }
+ bool valid(const schedule::Schedule& s) {
+   return s.start>=0&&s.start<1440&&s.end>=0&&s.end<1440&&s.upload>=0&&s.upload<=MaximumRate
+@@ -38,69 +50,117 @@
+ }
+ struct SchedulerDialog::Impl {
+   SchedulerDialog* q;
+-  quint64 session=0, highest=0, request=0, active=0;
++  quint64 session=0, highest=0, request=0, active=0, serial=0, controlsSerial=0;
+   bool busy=false, loading=false, saving=false, rendering=false, changed=false, closeAfterSave=false, loadWanted=false;
+   SchedulerPresentation baseline;
+   std::vector<std::optional<std::size_t>> sources;
+-  QTableWidget* table;
+-  QCheckBox *enabled,*tags,*forced,*enforce;
+-  QSpinBox *poll,*upload,*download;
+-  QLabel* status;
+-  QPushButton *apply,*ok,*cancel,*reload,*add,*remove;
++  QPointer<QTableWidget> table;
++  QPointer<QCheckBox> enabled,tags,forced,enforce;
++  QPointer<QSpinBox> poll,upload,download;
++  QPointer<QLabel> status;
++  QPointer<QPushButton> apply,ok,cancel,reload,add,remove;
+   QPointer<QMessageBox> question;
+-  SchedulerPreferences preferences() const { return {enabled->isChecked(),tags->isChecked(),forced->isChecked(),poll->value()}; }
+-  void setPreferences(const SchedulerPreferences& p) {
+-    enabled->setChecked(p.enabled);tags->setChecked(p.useTags);forced->setChecked(p.overrideForced);poll->setValue(p.pollMilliseconds);
+-  }
+-  void controls() {
++  struct Guard {
++    QPointer<SchedulerDialog> self; const Impl* owner; quint64 expected,session,request;
++    bool current() const {return self&&self->impl_.get()==owner&&owner->serial==expected&&owner->session==session&&owner->active==request;}
++  };
++  Guard guard() const {return {q,this,serial,session,active};}
++  bool advance() {
++    if(serial==std::numeric_limits<quint64>::max()){return false;}++serial;return true;
++  }
++  bool text(const QString& value) {
++    const auto alive=guard();if(status){status->setText(value);}return alive.current();
++  }
++  std::optional<SchedulerPreferences> preferences() const {
++    if(!enabled||!tags||!forced||!poll){return {};}
++    return SchedulerPreferences{enabled->isChecked(),tags->isChecked(),forced->isChecked(),poll->value()};
++  }
++  bool setPreferences(const SchedulerPreferences& p) {
++    const auto alive=guard();
++    if(!enabled||!tags||!forced||!poll){return false;}
++    enabled->setChecked(p.enabled);if(!alive.current()||!tags){return false;}
++    tags->setChecked(p.useTags);if(!alive.current()||!forced){return false;}
++    forced->setChecked(p.overrideForced);if(!alive.current()||!poll){return false;}
++    poll->setValue(p.pollMilliseconds);return alive.current();
++  }
++  bool controls() {
++    const auto alive=guard();
++    if(controlsSerial==std::numeric_limits<quint64>::max()){return false;}
++    const auto expected=++controlsSerial;
++    const auto current=[this,alive,expected]{return alive.current()&&controlsSerial==expected;};
+     const bool editable=session&&baseline&&!busy&&!loading&&!saving;
+-    for (QWidget* widget : std::initializer_list<QWidget*>{table,enabled,tags,forced,enforce,poll,upload,download,add,remove}) { widget->setEnabled(editable); }
+-    apply->setEnabled(editable&&changed);ok->setEnabled(editable);cancel->setEnabled(!saving);
+-    reload->setEnabled(session&&!busy&&!loading&&!saving&&!changed);
++    const std::vector<QPointer<QWidget>> widgets{table.data(),enabled.data(),tags.data(),forced.data(),enforce.data(),
++        poll.data(),upload.data(),download.data(),add.data(),remove.data()};
++    for(const auto& widget:widgets){if(widget){widget->setEnabled(editable);}if(!current()){return false;}}
++    if(apply){apply->setEnabled(editable&&changed);}if(!current()){return false;}
++    if(ok){ok->setEnabled(editable);}if(!current()){return false;}
++    if(cancel){cancel->setEnabled(!saving);}if(!current()){return false;}
++    if(reload){reload->setEnabled(session&&!busy&&!loading&&!saving&&!changed);}
++    return current();
+   }
+   void edited() {
+-    if (rendering||!baseline||saving||loading) { return; }
+-    changed=true;status->setText(QStringLiteral("Unsaved changes"));controls();
++    if(rendering||!baseline||saving||loading){return;}
++    changed=true;if(text(QStringLiteral("Unsaved changes"))){controls();}
+   }
+   void load() {
+-    if (!session||busy||loading||saving||!loadWanted||!q->isVisible()) { return; }
+-    loadWanted=false;loading=true;active=++request;controls();emit q->loadRequested({session,active});
++    if(!session||busy||loading||saving||!loadWanted||!q->isVisible()){return;}
++    if(request==std::numeric_limits<quint64>::max()||!advance()){
++      loadWanted=false;text(QStringLiteral("Request identity exhausted; reopen the window."));return;
++    }
++    loadWanted=false;loading=true;active=++request;const auto alive=guard();
++    if(!text(QStringLiteral("Loading schedules…"))||!alive.current()||!controls()||!alive.current()){return;}emit q->loadRequested({session,active});
+   }
+   QCheckBox* check(int row,int column,bool value) {
+-    auto* box=new QCheckBox(table);box->setChecked(value);table->setCellWidget(row,column,box);
+-    QObject::connect(box,&QCheckBox::toggled,q,[this]{edited();});return box;
+-  }
+-  void append(const schedule::Schedule& s,std::optional<std::size_t> source) {
+-    const int row=table->rowCount();table->insertRow(row);sources.push_back(source);
+-    check(row,0,s.enabled);
++    const auto alive=guard();if(!table){return nullptr;}
++    QPointer<QCheckBox> box=new QCheckBox(table);box->setChecked(value);
++    if(!alive.current()||!box||!table){return nullptr;}table->setCellWidget(row,column,box);
++    if(!alive.current()||!box){return nullptr;}
++    QObject::connect(box,&QCheckBox::toggled,q,[this]{edited();});return box.data();
++  }
++  bool append(const schedule::Schedule& s,std::optional<std::size_t> source) {
++    const auto alive=guard();if(!table){return false;}
++    const int row=table->rowCount();table->insertRow(row);if(!alive.current()||!table){return false;}sources.push_back(source);
++    check(row,0,s.enabled);if(!alive.current()||!table){return false;}
+     auto* days=new QWidget(table);auto* daysLayout=new QHBoxLayout(days);daysLayout->setContentsMargins(0,0,0,0);
+     const std::array<QString,7> names{QStringLiteral("Su"),QStringLiteral("Mo"),QStringLiteral("Tu"),QStringLiteral("We"),QStringLiteral("Th"),QStringLiteral("Fr"),QStringLiteral("Sa")};
+     for (int day=0;day<7;++day) {
+       auto* box=new QCheckBox(names[day],days);box->setObjectName(QStringLiteral("day-%1").arg(day));box->setChecked(s.days[day]);
+       daysLayout->addWidget(box);QObject::connect(box,&QCheckBox::toggled,q,[this]{edited();});
+     }
+-    table->setCellWidget(row,1,days);
++    table->setCellWidget(row,1,days);if(!alive.current()||!table){return false;}
+     for (int column : {2,3}) {
+       const int minute=column==2?s.start:s.end;auto* time=new QTimeEdit(QTime(minute/60,minute%60),table);
+-      time->setDisplayFormat(QStringLiteral("HH:mm"));table->setCellWidget(row,column,time);
++      time->setDisplayFormat(QStringLiteral("HH:mm"));table->setCellWidget(row,column,time);if(!alive.current()||!table){return false;}
+       QObject::connect(time,&QTimeEdit::timeChanged,q,[this]{edited();});
+     }
+     for (int column : {4,5}) {
+       auto* rate=new QSpinBox(table);rate->setRange(0,MaximumRate);rate->setSpecialValueText(QStringLiteral("Unlimited"));
+-      rate->setValue(column==4?s.upload:s.download);table->setCellWidget(row,column,rate);
++      rate->setValue(column==4?s.upload:s.download);table->setCellWidget(row,column,rate);if(!alive.current()||!table){return false;}
+       QObject::connect(rate,&QSpinBox::valueChanged,q,[this]{edited();});
+     }
+-    check(row,6,s.downloadsPaused);check(row,7,s.seedsPaused);
++    check(row,6,s.downloadsPaused);if(!alive.current()||!table){return false;}
++    check(row,7,s.seedsPaused);if(!alive.current()||!table){return false;}
+     auto* category=new QLineEdit(table);category->setMaxLength(4096);
+     if (s.category) { category->setText(QString::fromUtf8(*s.category)); }
+-    category->setProperty("wasNull",!s.category);table->setCellWidget(row,8,category);
+-    QObject::connect(category,&QLineEdit::textChanged,q,[this,category]{category->setProperty("wasNull",false);edited();});
+-    check(row,9,s.onlyCategory);check(row,10,s.excludeCategory);
+-  }
+-  SchedulerSubmission submission() const {
+-    SchedulerSubmission value{session,active,baseline->revision,preferences(),upload->value(),download->value(),enforce->isChecked(),{}};
++    category->setProperty("wasNull",!s.category);table->setCellWidget(row,8,category);if(!alive.current()||!table){return false;}
++    QObject::connect(category,&QLineEdit::textChanged,q,[self=QPointer<SchedulerDialog>(q),field=QPointer<QLineEdit>(category)]{
++      if(!self||!field){return;}const auto alive=self->impl_->guard();field->setProperty("wasNull",false);
++      if(alive.current()){self->impl_->edited();}
++    });
++    check(row,9,s.onlyCategory);if(!alive.current()||!table){return false;}
++    check(row,10,s.excludeCategory);return alive.current();
++  }
++  std::optional<SchedulerSubmission> submission() const {
++    const auto settings=preferences();
++    if(!settings||!baseline||!table||!upload||!download||!enforce||sources.size()!=static_cast<std::size_t>(table->rowCount())){return {};}
++    SchedulerSubmission value{session,active,baseline->revision,*settings,upload->value(),download->value(),enforce->isChecked(),{}};
+     for (int row=0;row<table->rowCount();++row) {
+       schedule::Schedule s;
++      for(int column:{0,6,7,9,10}){if(!qobject_cast<QCheckBox*>(table->cellWidget(row,column))){return {};}}
++      for(int column:{2,3}){if(!qobject_cast<QTimeEdit*>(table->cellWidget(row,column))){return {};}}
++      for(int column:{4,5}){if(!qobject_cast<QSpinBox*>(table->cellWidget(row,column))){return {};}}
++      if(!qobject_cast<QLineEdit*>(table->cellWidget(row,8))||!table->cellWidget(row,1)){return {};}
++      for(int day=0;day<7;++day){if(!table->cellWidget(row,1)->findChild<QCheckBox*>(QStringLiteral("day-%1").arg(day))){return {};}}
+       auto boolean=[&](int column){return qobject_cast<QCheckBox*>(table->cellWidget(row,column))->isChecked();};
+       s.enabled=boolean(0);s.downloadsPaused=boolean(6);s.seedsPaused=boolean(7);s.onlyCategory=boolean(9);s.excludeCategory=boolean(10);
+       for (int day=0;day<7;++day) {s.days[day]=table->cellWidget(row,1)->findChild<QCheckBox*>(QStringLiteral("day-%1").arg(day))->isChecked();}
+@@ -113,20 +173,39 @@
+     }
+     return value;
+   }
+-  void render(SchedulerPresentation packet) {
+-    rendering=true;baseline=std::move(packet);table->setRowCount(0);sources.clear();
+-    setPreferences(baseline->snapshot->preferences);
+-    const auto& c=baseline->snapshot->configuration;
+-    upload->setValue(c.defaultUpload);download->setValue(c.defaultDownload);enforce->setChecked(c.defaultsEnforce);
+-    for (std::size_t i=0;i<c.schedules.size();++i) {append(c.schedules[i],i);}
++  bool render(SchedulerPresentation packet) {
++    if(!advance()){return false;}const auto alive=guard();
++    rendering=true;baseline=std::move(packet);
++    struct Restore {
++      Guard alive;~Restore(){if(alive.current()){alive.self->impl_->rendering=false;}}
++    } restore{alive};
++    std::vector<std::unique_ptr<SafeSignalBlock>> blocked;
++    const std::vector<QPointer<QObject>> objects{table.data(),enabled.data(),tags.data(),
++      forced.data(),enforce.data(),poll.data(),upload.data(),download.data()};
++    for(const auto& object:objects){if(object){blocked.push_back(std::make_unique<SafeSignalBlock>(object));}}
++    if(!table||!upload||!download||!enforce){return false;}
++    const auto retained=baseline;
++    table->setRowCount(0);if(!alive.current()||!table){return false;}sources.clear();
++    if(!setPreferences(retained->snapshot->preferences)||!alive.current()){return false;}
++    const auto& c=retained->snapshot->configuration;
++    upload->setValue(c.defaultUpload);if(!alive.current()||!download){return false;}
++    download->setValue(c.defaultDownload);if(!alive.current()||!enforce){return false;}
++    enforce->setChecked(c.defaultsEnforce);if(!alive.current()){return false;}
++    for(std::size_t i=0;i<c.schedules.size();++i){if(!append(c.schedules[i],i)||!alive.current()){return false;}}
+     changed=false;rendering=false;
+-    status->setText(baseline->snapshot->diagnostic.isEmpty()?QStringLiteral("Schedules loaded. Zero speed means unlimited."):baseline->snapshot->diagnostic);
+-    controls();
++    if(!text(retained->snapshot->diagnostic.isEmpty()?QStringLiteral("Schedules loaded. Zero speed means unlimited."):retained->snapshot->diagnostic)){return false;}
++    return controls()&&alive.current();
+   }
+   void save(bool close) {
+-    if (!baseline||busy||loading||saving) {return;}
+-    if (!changed) {if(close){q->done(QDialog::Accepted);}return;}
+-    closeAfterSave=close;saving=true;active=++request;auto value=submission();controls();emit q->saveRequested(std::move(value));
++    if(!baseline||busy||loading||saving||rendering){return;}
++    if(!changed){if(close){q->done(QDialog::Accepted);}return;}
++    auto value=submission();
++    if(!value){text(QStringLiteral("A schedule control is unavailable; reload before saving."));return;}
++    if(request==std::numeric_limits<quint64>::max()||!advance()){
++      text(QStringLiteral("Request identity exhausted; reopen the window."));return;
++    }
++    closeAfterSave=close;saving=true;active=++request;value->request=active;
++    const auto alive=guard();if(!controls()||!alive.current()){return;}emit q->saveRequested(std::move(*value));
+   }
+   void close() {
+     if (saving) {return;}
+@@ -148,7 +227,7 @@
+   impl_->tags=check(QStringLiteral("Match manual tags instead of categories"),QStringLiteral("scheduler-use-tags"));
+   impl_->forced=check(QStringLiteral("Schedules may pause force-started torrents"),QStringLiteral("scheduler-override-forced"));
+   auto spin=[&](QString label,QString name,int low,int high){auto* value=new QSpinBox(this);value->setObjectName(name);value->setRange(low,high);form->addRow(label,value);connect(value,&QSpinBox::valueChanged,this,[this]{impl_->edited();});return value;};
+-  impl_->poll=spin(QStringLiteral("Check schedules every (milliseconds)"),QStringLiteral("scheduler-poll"),1000,3600000);
++  impl_->poll=spin(QStringLiteral("Check schedules every (milliseconds)"),QStringLiteral("scheduler-poll"),1000,std::numeric_limits<int>::max());
+   impl_->upload=spin(QStringLiteral("Default upload (KiB/s, 0 unlimited)"),QStringLiteral("scheduler-default-upload"),0,MaximumRate);
+   impl_->download=spin(QStringLiteral("Default download (KiB/s, 0 unlimited)"),QStringLiteral("scheduler-default-download"),0,MaximumRate);
+   impl_->enforce=check(QStringLiteral("Restore default speeds outside schedules"),QStringLiteral("scheduler-enforce-defaults"));layout->addLayout(form);
+@@ -159,8 +238,18 @@
+   impl_->table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);impl_->table->setColumnWidth(1,360);layout->addWidget(impl_->table,1);
+   auto* row=new QHBoxLayout;impl_->add=new QPushButton(QStringLiteral("Add"),this);impl_->remove=new QPushButton(QStringLiteral("Remove selected"),this);
+   impl_->add->setObjectName(QStringLiteral("scheduler-add"));impl_->remove->setObjectName(QStringLiteral("scheduler-remove"));row->addWidget(impl_->add);row->addWidget(impl_->remove);row->addStretch();layout->addLayout(row);
+-  connect(impl_->add,&QPushButton::clicked,this,[this]{if(impl_->sources.size()>=schedule::MaximumSchedules){return;}schedule::Schedule value;value.days.fill(true);impl_->append(value,{});impl_->edited();});
+-  connect(impl_->remove,&QPushButton::clicked,this,[this]{const int r=impl_->table->currentRow();if(r>=0){impl_->table->removeRow(r);impl_->sources.erase(impl_->sources.begin()+r);impl_->edited();}});
++  connect(impl_->add,&QPushButton::clicked,this,[self=QPointer<SchedulerDialog>(this)]{
++    if(!self||self->impl_->sources.size()>=schedule::MaximumSchedules){return;}
++    const auto alive=self->impl_->guard();schedule::Schedule value;value.days.fill(true);
++    if(self->impl_->append(value,{})&&alive.current()){self->impl_->edited();}
++  });
++  connect(impl_->remove,&QPushButton::clicked,this,[self=QPointer<SchedulerDialog>(this)]{
++    if(!self||!self->impl_->table){return;}const auto alive=self->impl_->guard();const int r=self->impl_->table->currentRow();
++    if(r>=0&&static_cast<std::size_t>(r)<self->impl_->sources.size()){
++      self->impl_->table->removeRow(r);if(!alive.current()){return;}
++      self->impl_->sources.erase(self->impl_->sources.begin()+r);self->impl_->edited();
++    }
++  });
+   impl_->status=new QLabel(this);impl_->status->setWordWrap(true);impl_->status->setTextFormat(Qt::PlainText);impl_->status->setObjectName(QStringLiteral("scheduler-status"));layout->addWidget(impl_->status);
+   auto* buttons=new QDialogButtonBox(QDialogButtonBox::Apply|QDialogButtonBox::Ok|QDialogButtonBox::Cancel,this);impl_->apply=buttons->button(QDialogButtonBox::Apply);impl_->ok=buttons->button(QDialogButtonBox::Ok);impl_->cancel=buttons->button(QDialogButtonBox::Cancel);
+   impl_->reload=buttons->addButton(QStringLiteral("Reload"),QDialogButtonBox::ResetRole);impl_->apply->setObjectName(QStringLiteral("scheduler-apply"));impl_->ok->setObjectName(QStringLiteral("scheduler-ok"));impl_->reload->setObjectName(QStringLiteral("scheduler-reload"));
+@@ -169,32 +258,67 @@
+ }
+ SchedulerDialog::~SchedulerDialog()=default;
+ bool SchedulerDialog::beginSession(quint64 session) {
+-  if (!session||session<=impl_->highest) {return false;}invalidateSession();impl_->session=session;impl_->highest=session;impl_->loadWanted=true;impl_->load();return true;
+-}
+-void SchedulerDialog::invalidateSession() {impl_->session=0;impl_->baseline.reset();impl_->changed=false;impl_->loadWanted=false;impl_->loading=impl_->saving=false;if(impl_->question){impl_->question->close();}impl_->controls();}
++  if(!session||session<=impl_->highest||impl_->serial>std::numeric_limits<quint64>::max()-2){return false;}
++  const QPointer<SchedulerDialog> self(this);const auto expectedSerial=impl_->serial+1;const auto previousHighest=impl_->highest;
++  invalidateSession();
++  if(!self||self->impl_->serial!=expectedSerial||self->impl_->highest!=previousHighest){return false;}
++  self->impl_->session=session;self->impl_->highest=session;self->impl_->loadWanted=true;
++  self->impl_->advance();self->impl_->load();return true;
++}
++void SchedulerDialog::invalidateSession() {
++  const QPointer<SchedulerDialog> self(this);impl_->advance();const auto alive=impl_->guard();
++  impl_->session=0;impl_->baseline.reset();impl_->changed=false;impl_->loadWanted=false;impl_->rendering=false;
++  impl_->loading=impl_->saving=impl_->closeAfterSave=false;
++  const auto prompt=impl_->question;impl_->question.clear();if(prompt){prompt->close();}
++  if(self&&alive.current()){self->impl_->controls();}
++}
+ bool SchedulerDialog::dirty() const noexcept {return impl_->changed;}
+ bool SchedulerDialog::pending() const noexcept {return impl_->loading||impl_->saving;}
+-void SchedulerDialog::setBusy(bool busy) {impl_->busy=busy;impl_->controls();if(!busy){impl_->load();}}
++void SchedulerDialog::setBusy(bool busy) {
++  const QPointer<SchedulerDialog> self(this);const auto alive=impl_->guard();impl_->busy=busy;
++  if(impl_->controls()&&self&&alive.current()&&!busy){self->impl_->load();}
++}
+ bool SchedulerDialog::setSnapshot(SchedulerPresentation packet) {
+   if (!packet||!impl_->loading||packet->session!=impl_->session||packet->request!=impl_->active) {return false;}
+   impl_->loading=false;
+-  if(!valid(packet)){impl_->status->setText(packet->failure.isEmpty()?QStringLiteral("Schedules unavailable; reload to retry."):packet->failure);impl_->controls();return false;}
+-  impl_->render(std::move(packet));return true;
++  if(!valid(packet)||(impl_->baseline&&packet->revision<impl_->baseline->revision)){
++    if(impl_->text(packet->failure.isEmpty()?QStringLiteral("Schedules unavailable; reload to retry."):packet->failure)){impl_->controls();}return false;
++  }
++  return impl_->render(std::move(packet));
+ }
+ bool SchedulerDialog::setSaveResult(SchedulerSavePresentation packet) {
+   if(!packet||!impl_->saving||!impl_->baseline||packet->session!=impl_->session||packet->request!=impl_->active||packet->revision!=impl_->baseline->revision){return false;}
+   const bool fresh=valid(packet->snapshot)&&packet->snapshot->session==impl_->session&&packet->snapshot->request==impl_->active&&packet->snapshot->revision>=impl_->baseline->revision;
+   if((packet->saved||packet->schedulesSaved)&&!fresh){return false;}
+-  const auto desired=impl_->preferences();const bool close=impl_->closeAfterSave;impl_->saving=false;impl_->closeAfterSave=false;
++  const auto desired=impl_->preferences();if(!desired){return false;}
++  const bool close=impl_->closeAfterSave;impl_->saving=false;impl_->closeAfterSave=false;
++  const QPointer<SchedulerDialog> self(this);
+   if(fresh&&(packet->saved||packet->schedulesSaved)){
+-    impl_->render(packet->snapshot);
+-    if(!packet->saved){impl_->rendering=true;impl_->setPreferences(desired);impl_->rendering=false;impl_->changed=desired!=packet->snapshot->snapshot->preferences;}
+-  }
+-  if(!packet->saved){impl_->status->setText(packet->failure.isEmpty()?QStringLiteral("Save failed; edits retained."):packet->failure);impl_->controls();return true;}
+-  impl_->changed=false;impl_->status->setText(QStringLiteral("Schedules and settings saved"));impl_->controls();if(close){done(QDialog::Accepted);}return true;
++    if(!impl_->render(packet->snapshot)||!self){return false;}
++    if(!packet->saved){
++      const auto alive=impl_->guard();impl_->rendering=true;
++      std::vector<std::unique_ptr<SafeSignalBlock>> blocked;
++      for(QObject* object:std::initializer_list<QObject*>{impl_->enabled.data(),impl_->tags.data(),impl_->forced.data(),impl_->poll.data()}){
++        if(object){blocked.push_back(std::make_unique<SafeSignalBlock>(object));}
++      }
++      if(!impl_->setPreferences(*desired)||!alive.current()){return false;}
++      impl_->rendering=false;impl_->changed=*desired!=packet->snapshot->snapshot->preferences;
++    }
++  }
++  if(!self){return false;}
++  if(!packet->saved){
++    if(impl_->text(packet->failure.isEmpty()?QStringLiteral("Save failed; edits retained."):packet->failure)){impl_->controls();}return true;
++  }
++  impl_->changed=false;
++  if(!impl_->text(QStringLiteral("Schedules and settings saved"))||!self){return false;}
++  const auto alive=impl_->guard();if(!impl_->controls()||!self||!alive.current()){return false;}
++  if(close){self->done(QDialog::Accepted);}return true;
+ }
+ void SchedulerDialog::accept(){impl_->save(true);}
+ void SchedulerDialog::reject(){impl_->close();}
+-void SchedulerDialog::showEvent(QShowEvent* event){QDialog::showEvent(event);impl_->load();}
++void SchedulerDialog::showEvent(QShowEvent* event){
++  const QPointer<SchedulerDialog> self(this);QDialog::showEvent(event);
++  if(self){QMetaObject::invokeMethod(self.data(),[self]{if(self){self->impl_->load();}},Qt::QueuedConnection);}
++}
+ void SchedulerDialog::closeEvent(QCloseEvent* event){const QPointer<SchedulerDialog> self(this);impl_->close();if(!self||!self->isVisible()){event->accept();}else{event->ignore();}}
+ } // namespace biglybtc::ui
+--- /dev/null
++++ b/preview/native/tests/scheduler_dialog_tests.cpp
+@@ -0,0 +1,186 @@
++#include "scheduler_dialog.hpp"
++
++#include <QCheckBox>
++#include <QEvent>
++#include <QLabel>
++#include <QHeaderView>
++#include <QPointer>
++#include <QPushButton>
++#include <QSignalSpy>
++#include <QSpinBox>
++#include <QTableWidget>
++#include <QtTest>
++#include <functional>
++#include <limits>
++
++using namespace biglybtc::ui;
++namespace {
++SchedulerPresentation packet(SchedulerRequest request, quint64 revision=1,
++    bool enabled=false, int upload=17, int poll=10000) {
++  auto values=std::make_shared<SchedulerValues>();
++  values->preferences={enabled,false,false,poll};
++  values->configuration.defaultUpload=upload;
++  values->configuration.defaultDownload=31;
++  values->configuration.defaultsEnforce=true;
++  schedule::Schedule item;
++  item.enabled=true;item.days.fill(true);item.start=60;item.end=120;
++  item.upload=42;item.download=77;item.category=std::string("owned π");
++  values->configuration.schedules.push_back(std::move(item));
++  values->hasSavedSchedules=true;
++  return std::make_shared<const SchedulerPacket>(SchedulerPacket{request.session,request.request,revision,std::move(values),{}});
++}
++SchedulerSavePresentation saved(const SchedulerSubmission& request, bool complete,
++    bool xmlSaved, SchedulerPresentation snapshot, QString failure={}) {
++  return std::make_shared<const SchedulerSavePacket>(SchedulerSavePacket{
++      request.session,request.request,request.revision,complete,xmlSaved,std::move(snapshot),std::move(failure)});
++}
++class EnabledHook final:public QObject {
++public:
++  std::function<void()> callback;
++protected:
++  bool eventFilter(QObject* watched,QEvent* event) override {
++    const QPointer<QObject> alive(watched);
++    if(event->type()==QEvent::EnabledChange&&callback){auto once=std::move(callback);once();}
++    return !alive;
++  }
++};
++}
++
++class SchedulerDialogTests final:public QObject {
++  Q_OBJECT
++private slots:
++  void initTestCase() {
++    qRegisterMetaType<SchedulerRequest>();qRegisterMetaType<SchedulerSubmission>();
++    qRegisterMetaType<SchedulerPresentation>();qRegisterMetaType<SchedulerSavePresentation>();
++  }
++  void lazyLoadAndFullPositiveJavaPollRange() {
++    SchedulerDialog dialog;QSignalSpy reads(&dialog,&SchedulerDialog::loadRequested);
++    QVERIFY(dialog.beginSession(7));QCOMPARE(reads.count(),0);
++    dialog.show();QTRY_COMPARE(reads.count(),1);
++    const auto request=reads.at(0).at(0).value<SchedulerRequest>();
++    QVERIFY(request.session==7&&request.request>0);
++    QVERIFY(dialog.setSnapshot(packet(request,1,false,17,std::numeric_limits<int>::max())));
++    auto* poll=dialog.findChild<QSpinBox*>("scheduler-poll");QVERIFY(poll);
++    QCOMPARE(poll->value(),std::numeric_limits<int>::max());
++    auto* table=dialog.findChild<QTableWidget*>("scheduler-schedules");QVERIFY(table);
++    QCOMPARE(table->rowCount(),1);QCOMPARE(table->columnCount(),11);
++    QCOMPARE(table->verticalHeader()->count(),1);
++    QVERIFY(!dialog.pending());QVERIFY(!dialog.dirty());QCOMPARE(reads.count(),1);
++  }
++  void staleSessionsRequestsAndMalformedSnapshotCannotReplaceDraft() {
++    SchedulerDialog dialog;QSignalSpy reads(&dialog,&SchedulerDialog::loadRequested);
++    QVERIFY(dialog.beginSession(3));dialog.show();QTRY_COMPARE(reads.count(),1);
++    const auto first=reads.at(0).at(0).value<SchedulerRequest>();
++    QVERIFY(!dialog.setSnapshot(packet({3,first.request+1},9,true,999)));
++    QVERIFY(dialog.pending());QVERIFY(dialog.setSnapshot(packet(first,4)));
++    auto* upload=dialog.findChild<QSpinBox*>("scheduler-default-upload");QVERIFY(upload);
++    upload->setValue(23);QVERIFY(dialog.dirty());
++    QVERIFY(!dialog.setSnapshot(packet(first,99,true,999)));QCOMPARE(upload->value(),23);
++    QVERIFY(!dialog.beginSession(0));QVERIFY(!dialog.beginSession(3));QVERIFY(!dialog.beginSession(2));
++    QVERIFY(dialog.beginSession(4));QTRY_COMPARE(reads.count(),2);
++    const auto next=reads.at(1).at(0).value<SchedulerRequest>();
++    QVERIFY(!dialog.setSnapshot(packet(first,100,true,999)));QVERIFY(dialog.pending());
++    auto malformed=std::make_shared<SchedulerPacket>(*packet(next));malformed->revision=0;
++    QVERIFY(!dialog.setSnapshot(malformed));QVERIFY(!dialog.pending());
++    auto* reload=dialog.findChild<QPushButton*>("scheduler-reload");QVERIFY(reload);QVERIFY(reload->isEnabled());
++    reload->click();QTRY_COMPARE(reads.count(),3);
++    QVERIFY(dialog.setSnapshot(packet(reads.at(2).at(0).value<SchedulerRequest>(),5,false,47)));
++    QCOMPARE(upload->value(),47);QVERIFY(!dialog.dirty());
++  }
++  void renderBlocksEditSignalsButKeepsModelAndHeaderNotifications() {
++    SchedulerDialog dialog;QSignalSpy reads(&dialog,&SchedulerDialog::loadRequested);
++    QVERIFY(dialog.beginSession(1));dialog.show();QTRY_COMPARE(reads.count(),1);
++    auto* enabled=dialog.findChild<QCheckBox*>("scheduler-enabled");QVERIFY(enabled);
++    QSignalSpy toggles(enabled,&QCheckBox::toggled);
++    auto* table=dialog.findChild<QTableWidget*>("scheduler-schedules");QVERIFY(table);
++    QSignalSpy rows(table->model(),&QAbstractItemModel::rowsInserted);
++    QVERIFY(dialog.setSnapshot(packet(reads.at(0).at(0).value<SchedulerRequest>(),1,true)));
++    QVERIFY(enabled->isChecked());QCOMPARE(toggles.count(),0);QVERIFY(rows.count()>0);
++    QCOMPARE(table->verticalHeader()->count(),1);QVERIFY(!dialog.dirty());
++    enabled->setChecked(false);QCOMPARE(toggles.count(),1);QVERIFY(dialog.dirty());
++  }
++  void partialXmlSaveRebasesRowsAndRetainsOnlyUncommittedPreferences() {
++    SchedulerDialog dialog;QSignalSpy reads(&dialog,&SchedulerDialog::loadRequested);
++    QSignalSpy writes(&dialog,&SchedulerDialog::saveRequested);
++    QVERIFY(dialog.beginSession(1));dialog.show();QTRY_COMPARE(reads.count(),1);
++    QVERIFY(dialog.setSnapshot(packet(reads.at(0).at(0).value<SchedulerRequest>(),10)));
++    auto* enabled=dialog.findChild<QCheckBox*>("scheduler-enabled");QVERIFY(enabled);enabled->setChecked(true);
++    auto* upload=dialog.findChild<QSpinBox*>("scheduler-default-upload");QVERIFY(upload);upload->setValue(91);
++    auto* apply=dialog.findChild<QPushButton*>("scheduler-apply");QVERIFY(apply);apply->click();
++    QCOMPARE(writes.count(),1);const auto first=writes.at(0).at(0).value<SchedulerSubmission>();
++    QVERIFY(first.session==1&&first.request>0&&first.revision==10);QCOMPARE(first.defaultUpload,91);
++    QVERIFY(first.preferences.enabled);QVERIFY(dialog.pending());
++    QVERIFY(dialog.setSaveResult(saved(first,false,true,packet({1,first.request},11,false,91),QStringLiteral("Settings save failed"))));
++    QVERIFY(!dialog.pending());QVERIFY(dialog.dirty());QVERIFY(enabled->isChecked());QCOMPARE(upload->value(),91);
++    apply->click();QCOMPARE(writes.count(),2);const auto second=writes.at(1).at(0).value<SchedulerSubmission>();
++    QCOMPARE(second.revision,quint64(11));QVERIFY(second.request>first.request);QVERIFY(second.preferences.enabled);
++    QVERIFY(!dialog.setSaveResult(saved(first,true,true,packet({1,first.request},12,true,91))));QVERIFY(dialog.pending());
++    QVERIFY(dialog.setSaveResult(saved(second,true,true,packet({1,second.request},12,true,91))));
++    QVERIFY(!dialog.pending());QVERIFY(!dialog.dirty());QVERIFY(enabled->isChecked());
++    QCOMPARE(dialog.findChild<QLabel*>("scheduler-status")->text(),QStringLiteral("Schedules and settings saved"));
++  }
++  void failedSaveRetainsWholeDraftAndCanRetry() {
++    SchedulerDialog dialog;QSignalSpy reads(&dialog,&SchedulerDialog::loadRequested);
++    QSignalSpy writes(&dialog,&SchedulerDialog::saveRequested);
++    QVERIFY(dialog.beginSession(1));dialog.show();QTRY_COMPARE(reads.count(),1);
++    QVERIFY(dialog.setSnapshot(packet(reads.at(0).at(0).value<SchedulerRequest>(),1)));
++    auto* upload=dialog.findChild<QSpinBox*>("scheduler-default-upload");QVERIFY(upload);upload->setValue(123);
++    auto* apply=dialog.findChild<QPushButton*>("scheduler-apply");QVERIFY(apply);apply->click();
++    QCOMPARE(writes.count(),1);const auto request=writes.at(0).at(0).value<SchedulerSubmission>();
++    QVERIFY(dialog.setSaveResult(saved(request,false,false,{},QStringLiteral("<owned CAS conflict>"))));
++    QVERIFY(dialog.dirty());QVERIFY(!dialog.pending());QCOMPARE(upload->value(),123);
++    auto* status=dialog.findChild<QLabel*>("scheduler-status");QVERIFY(status);
++    QCOMPARE(status->textFormat(),Qt::PlainText);QCOMPARE(status->text(),QStringLiteral("<owned CAS conflict>"));
++    apply->click();QCOMPARE(writes.count(),2);QVERIFY(dialog.pending());
++    const auto retry=writes.at(1).at(0).value<SchedulerSubmission>();QCOMPARE(retry.revision,request.revision);
++  }
++  void directLoadAndSaveReceiversMayDeleteDialog() {
++    QPointer<SchedulerDialog> loading=new SchedulerDialog;
++    connect(loading,&SchedulerDialog::loadRequested,this,[&](SchedulerRequest){delete loading.data();});
++    QVERIFY(loading->beginSession(1));loading->show();QTRY_VERIFY(loading.isNull());
++    QPointer<SchedulerDialog> saving=new SchedulerDialog;QSignalSpy reads(saving,&SchedulerDialog::loadRequested);
++    QVERIFY(saving->beginSession(1));saving->show();QTRY_COMPARE(reads.count(),1);
++    QVERIFY(saving->setSnapshot(packet(reads.at(0).at(0).value<SchedulerRequest>())));
++    saving->findChild<QSpinBox*>("scheduler-default-upload")->setValue(41);
++    connect(saving,&SchedulerDialog::saveRequested,this,[&](SchedulerSubmission){delete saving.data();});
++    auto* apply=saving->findChild<QPushButton*>("scheduler-apply");QVERIFY(apply);apply->click();
++    QVERIFY(saving.isNull());
++  }
++  void enabledChangeDuringRenderMayDeleteOwnerWithoutRestoringDeadBlockers() {
++    QPointer<SchedulerDialog> dialog=new SchedulerDialog;QSignalSpy reads(dialog,&SchedulerDialog::loadRequested);
++    QVERIFY(dialog->beginSession(1));dialog->show();QTRY_COMPARE(reads.count(),1);
++    auto* table=dialog->findChild<QTableWidget*>("scheduler-schedules");QVERIFY(table);QVERIFY(!table->isEnabled());
++    EnabledHook hook;hook.callback=[&]{delete dialog.data();};table->installEventFilter(&hook);
++    static_cast<void>(dialog->setSnapshot(packet(reads.at(0).at(0).value<SchedulerRequest>())));
++    QVERIFY(dialog.isNull());
++  }
++  void enabledChangeDuringRenderCanBindNewSessionAndOldRenderStops() {
++    SchedulerDialog dialog;QSignalSpy reads(&dialog,&SchedulerDialog::loadRequested);
++    QVERIFY(dialog.beginSession(1));dialog.show();QTRY_COMPARE(reads.count(),1);
++    auto* table=dialog.findChild<QTableWidget*>("scheduler-schedules");QVERIFY(table);
++    EnabledHook hook;hook.callback=[&]{QVERIFY(dialog.beginSession(2));};table->installEventFilter(&hook);
++    const auto old=reads.at(0).at(0).value<SchedulerRequest>();
++    QVERIFY(!dialog.setSnapshot(packet(old,8,true,100)));
++    QTRY_COMPARE(reads.count(),2);QVERIFY(dialog.pending());QVERIFY(!dialog.dirty());
++    QVERIFY(!dialog.setSnapshot(packet(old,9,true,200)));
++    const auto fresh=reads.at(1).at(0).value<SchedulerRequest>();QCOMPARE(fresh.session,quint64(2));
++    QVERIFY(dialog.setSnapshot(packet(fresh,1,false,37)));
++    QCOMPARE(dialog.findChild<QSpinBox*>("scheduler-default-upload")->value(),37);
++    QVERIFY(!dialog.findChild<QCheckBox*>("scheduler-enabled")->isChecked());QVERIFY(!dialog.dirty());
++  }
++  void deletedRowControlRefusesSaveAndKeepsDirtyDraft() {
++    SchedulerDialog dialog;QSignalSpy reads(&dialog,&SchedulerDialog::loadRequested);
++    QSignalSpy writes(&dialog,&SchedulerDialog::saveRequested);
++    QVERIFY(dialog.beginSession(1));dialog.show();QTRY_COMPARE(reads.count(),1);
++    QVERIFY(dialog.setSnapshot(packet(reads.at(0).at(0).value<SchedulerRequest>())));
++    dialog.findChild<QSpinBox*>("scheduler-default-upload")->setValue(18);
++    auto* table=dialog.findChild<QTableWidget*>("scheduler-schedules");QVERIFY(table);
++    delete table->cellWidget(0,4);
++    dialog.findChild<QPushButton*>("scheduler-apply")->click();
++    QCOMPARE(writes.count(),0);QVERIFY(!dialog.pending());QVERIFY(dialog.dirty());
++    QVERIFY(dialog.findChild<QLabel*>("scheduler-status")->text().contains(QStringLiteral("unavailable")));
++  }
++};
++
++QTEST_MAIN(SchedulerDialogTests)
++#include "scheduler_dialog_tests.moc"

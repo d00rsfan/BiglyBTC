@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="11"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="50"
+	timestamp="2026-10-24T17:56:17"
+	>
+	<testcase name="managed-seeding" classname="managed-seeding" time="18.5347" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of ManagedSeedingTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedSeedingTests::initTestCase()
+PASS   : ManagedSeedingTests::completedNativeHandleUploadsActualPayloadToAnIndependentOwnedLeecher(single)
+PASS   : ManagedSeedingTests::completedNativeHandleUploadsActualPayloadToAnIndependentOwnedLeecher(multifile)
+PASS   : ManagedSeedingTests::selectedCompletionRetainsSparseSkippedLinearStorageAndOriginalPolicyOnReopen()
+PASS   : ManagedSeedingTests::immediateStopBeforeFirstPieceSampleRetainsExistingDataForRestart()
+PASS   : ManagedSeedingTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 18519ms
+********* Finished testing of ManagedSeedingTests *********
+</system-out>
+	</testcase>
+	<testcase name="application-settings" classname="application-settings" time="0.0163701" status="run">
+		<properties>
+			<property name="cmake_labels" value="compatibility;options;unit"/>
+		</properties>
+		<system-out>12 application-settings families, 479 assertions passed
+</system-out>
+	</testcase>
+	<testcase name="options-dialog" classname="options-dialog" time="0.633807" status="run">
+		<properties>
+			<property name="cmake_labels" value="options;unit"/>
+		</properties>
+		<system-out>********* Start testing of OptionsDialogTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OptionsDialogTests::initTestCase()
+PASS   : OptionsDialogTests::classicPagesMaskPasswordsAndLabelUnavailableFeatures()
+PASS   : OptionsDialogTests::hiddenAndBusyInitialReadCoalescesUntilVisibleIdle()
+PASS   : OptionsDialogTests::staleAndMalformedReadPacketsCannotReplaceCurrentProfile()
+PASS   : OptionsDialogTests::sparseEditsPreserveInvalidAndMissingFields()
+PASS   : OptionsDialogTests::returningToLoadedValueSubmitsNothing()
+PASS   : OptionsDialogTests::invalidEditedValueDoesNotReachWorker()
+PASS   : OptionsDialogTests::failedSaveRetainsDraftAndRetryUsesOriginalRevision()
+PASS   : OptionsDialogTests::okWaitsForMatchingCommitAndPendingCloseCannotDiscard()
+QWARN  : OptionsDialogTests::dirtyCancelAndDiscardAreExplicit() This plugin does not support propagateSizeHints()
+QWARN  : OptionsDia...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="options-host" classname="options-host" time="0.896968" status="run">
+		<properties>
+			<property name="cmake_labels" value="options;unit"/>
+		</properties>
+		<system-out>********* Start testing of OptionsHostTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OptionsHostTests::initTestCase()
+PASS   : OptionsHostTests::savesSparseOriginalValuesAndReturnsFreshRevision()
+PASS   : OptionsHostTests::externalEditAndIncompatibleNetworkRejectBeforePublication()
+PASS   : OptionsHostTests::wrongSessionAndInvalidValuesHaveNoSideEffect()
+QWARN  : OptionsHostTests::toolsMenuOpensBoundDialogAndUsesCompatibleSave() This plugin does not support propagateSizeHints()
+PASS   : OptionsHostTests::toolsMenuOpensBoundDialogAndUsesCompatibleSave()
+PASS   : OptionsHostTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 864ms
+********* Finished testing of OptionsHostTests *********
+</system-out>
+	</testcase>
+	<testcase name="engine-live-settings" classname="engine-live-settings" time="6.98457" status="run">
+		<properties>
+			<property name="cmake_labels" value="options;unit"/>
+		</properties>
+		<system-out>********* Start testing of EngineLiveSettingsTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : EngineLiveSettingsTests::initTestCase()
+PASS   : EngineLiveSettingsTests::purePlanPreservesAllActiveRoutingAndEmitsOnlyNarrowKeys()
+PASS   : EngineLiveSettingsTests::cachedBeforeIdleCreatesNoSessionAndStartupUsesOriginalQueueDefaults()
+PASS   : EngineLiveSettingsTests::liveRatesAndQueueCapsKeepActualRoutesAndManualPauseAcrossActiveTransfer()
+PASS   : EngineLiveSettingsTests::seedingUploadTransitionPreservesNewSafeRatesAndQueueCaps()
+PASS   : EngineLiveSettingsTests::invalidOrForeignThreadRequestLeavesEveryActualSettingUnchanged()
+PASS   : EngineLiveSettingsTests::cleanupTestCase()
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 6970ms
+********* Finished testing of EngineLiveSettingsTests *********
+</system-out>
+	</testcase>
+	<testcase name="queue-policy" classname="queue-policy" time="0.0252577" status="run">
+		<properties>
+			<property name="cmake_labels" value="queue;unit"/>
+		</properties>
+		<system-out>22 queue-policy families, 8451 assertions passed
+</system-out>
+	</testcase>
+	<testcase name="scheduler-service" classname="scheduler-service" time="0.0349776" status="run">
+		<properties>
+			<property name="cmake_labels" value="scheduler;unit"/>
+		</properties>
+		<system-out>scheduler service: six owned-fixture families passed
+</system-out>
+	</testcase>
+	<testcase name="scheduler-dialog" classname="scheduler-dialog" time="0.303346" status="run">
+		<properties>
+			<property name="cmake_labels" value="scheduler;ui;unit"/>
+		</properties>
+		<system-out>********* Start testing of SchedulerDialogTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : SchedulerDialogTests::initTestCase()
+QWARN  : SchedulerDialogTests::lazyLoadAndFullPositiveJavaPollRange() This plugin does not support propagateSizeHints()
+PASS   : SchedulerDialogTests::lazyLoadAndFullPositiveJavaPollRange()
+QWARN  : SchedulerDialogTests::staleSessionsRequestsAndMalformedSnapshotCannotReplaceDraft() This plugin does not support propagateSizeHints()
+PASS   : SchedulerDialogTests::staleSessionsRequestsAndMalformedSnapshotCannotReplaceDraft()
+QWARN  : SchedulerDialogTests::renderBlocksEditSignalsButKeepsModelAndHeaderNotifications() This plugin does not support propagateSizeHints()
+PASS   : SchedulerDialogTests::renderBlocksEditSignalsButKeepsModelAndHeaderNotifications()
+QWARN  : SchedulerDialogTests::partialXmlSaveRebasesRowsAndRetainsOnlyUncommittedPreferences() Th...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="managed-queue" classname="managed-queue" time="10.8222" status="run">
+		<properties>
+			<property name="cmake_labels" value="queue;runtime-bound;unit"/>
+		</properties>
+		<system-out>********* Start testing of ManagedQueueTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedQueueTests::initTestCase()
+PASS   : ManagedQueueTests::limitsPauseResumeAndForceUseRealRetainedHandles(download-cap)
+PASS   : ManagedQueueTests::limitsPauseResumeAndForceUseRealRetainedHandles(active-cap)
+PASS   : ManagedQueueTests::completionRatioQueuesAndClearsOnlyForceBeforeActualCheckpoint()
+PASS   : ManagedQueueTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 10805ms
+********* Finished testing of ManagedQueueTests *********
+</system-out>
+	</testcase>
+	<testcase name="scheduler-host" classname="scheduler-host" time="0.834473" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration;scheduler;unit"/>
+		</properties>
+		<system-out>********* Start testing of SchedulerHostTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : SchedulerHostTests::initTestCase()
+PASS   : SchedulerHostTests::realModuleSparseSaveAndPartialConfigCasRemainExplicit()
+QWARN  : SchedulerHostTests::toolsDialogUsesActualWorkerAndFinalRevision() This plugin does not support propagateSizeHints()
+QWARN  : SchedulerHostTests::toolsDialogUsesActualWorkerAndFinalRevision() This plugin does not support propagateSizeHints()
+PASS   : SchedulerHostTests::toolsDialogUsesActualWorkerAndFinalRevision()
+PASS   : SchedulerHostTests::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 762ms
+********* Finished testing of SchedulerHostTests *********
+</system-out>
+	</testcase>
+	<testcase name="scheduler-host-engine" classname="scheduler-host-engine" time="11.2922" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration;scheduler;unit"/>
+		</properties>
+		<system-out>********* Start testing of SchedulerHostEngineTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : SchedulerHostEngineTests::initTestCase()
+PASS   : SchedulerHostEngineTests::scheduledRatesAndPauseUseFreshConfigThenManualStopWins(single)
+PASS   : SchedulerHostEngineTests::scheduledRatesAndPauseUseFreshConfigThenManualStopWins(multi)
+PASS   : SchedulerHostEngineTests::inheritedSavedPauseNeverBecomesCurrentAuthority()
+PASS   : SchedulerHostEngineTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 11228ms
+********* Finished testing of SchedulerHostEngineTests *********
+</system-out>
+	</testcase>
+</testsuite>

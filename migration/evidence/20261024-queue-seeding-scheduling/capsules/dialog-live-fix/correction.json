@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_CORRECTION_NOT_COMPILED_OR_RUN",
+  "issue": "Actual GCC deletedRowControlRefusesSaveAndKeepsDirtyDraft crashed; submission trusted raw table cellWidget values for casts after direct child deletion. Guard stored QObject lifetime before any cast/raw lookup use. Exact crashing instruction unavailable from authorized diagnostic.",
+  "source_changes": {
+    "production": "Guarded per-row control registry, synchronized with add/remove/render; submission refuses null/replaced control.",
+    "test": "Preserve all9 behavioral methods/assertions/deadlines; strengthen direct-deletion QPointer assertion and add opt-in positive-dialog capture."
+  },
+  "changed_test_methods": [
+    "lazyLoadAndFullPositiveJavaPollRange",
+    "deletedRowControlRefusesSaveAndKeepsDirtyDraft"
+  ],
+  "unchanged_method_count": 8,
+  "old_method_names": [
+    "initTestCase",
+    "lazyLoadAndFullPositiveJavaPollRange",
+    "staleSessionsRequestsAndMalformedSnapshotCannotReplaceDraft",
+    "renderBlocksEditSignalsButKeepsModelAndHeaderNotifications",
+    "partialXmlSaveRebasesRowsAndRetainsOnlyUncommittedPreferences",
+    "failedSaveRetainsWholeDraftAndCanRetry",
+    "directLoadAndSaveReceiversMayDeleteDialog",
+    "enabledChangeDuringRenderMayDeleteOwnerWithoutRestoringDeadBlockers",
+    "enabledChangeDuringRenderCanBindNewSessionAndOldRenderStops",
+    "deletedRowControlRefusesSaveAndKeepsDirtyDraft"
+  ],
+  "corrected_tests_executed": false,
+  "diagnostic": {
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-scheduler-dialog-tests",
+      "deletedRowControlRefusesSaveAndKeepsDirtyDraft",
+      "-nocrashhandler"
+    ],
+    "cwd": "/tmp/biglybtc-dialog-diagnostic-8acl34bb",
+    "environment": {
+      "QT_QPA_PLATFORM": "offscreen",
+      "LD_PRELOAD": "/home/yurii/Java/BiglyBT/build/history-hourly-20261020/diagnostic_backtrace.so",
+      "XDG_CONFIG_HOME": "/tmp/biglybtc-dialog-diagnostic-8acl34bb/config",
+      "XDG_CACHE_HOME": "/tmp/biglybtc-dialog-diagnostic-8acl34bb/cache"
+    },
+    "exit_code": -11,
+    "binary_sha256": "d818c8c3de8b513c91a5885d839a5b584a5f2b923550aa15487d63070e93d125",
+    "preload_sha256": "a24cf848a738ffc211eb5d92093e30267c4531fcd0c1df46cc458259c7a28d15",
+    "scope": "Parent-authorized existing single-method diagnostic only; no source compilation or rebuild."
+  },
+  "context_sha256": {
+    "preview/native/ui/scheduler_dialog.hpp": "cf4935859650f9ccdfc38e484c0fb616f7d1826aa2e257cf30845e59c054f46d",
+    "preview/native/ui/scheduler_presentation.hpp": "edb4b90ccccf57bfdd5ac54c83bf49f6cb3a5b6fc99e91075923c66c61a39e31"
+  }
+}

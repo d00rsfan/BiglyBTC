@@ -1,0 +1,18 @@
+{
+  "preview/native/adapters/scheduler_io.cpp": null,
+  "preview/native/adapters/scheduler_io.hpp": null,
+  "preview/native/adapters/scheduler_module.cpp": null,
+  "preview/native/adapters/scheduler_service.cpp": null,
+  "preview/native/adapters/scheduler_service.hpp": null,
+  "preview/native/adapters/scheduler_xml.cpp": null,
+  "preview/native/plugins/BiglyBTC-plugin-SpeedScheduler/LICENSE": null,
+  "preview/native/plugins/BiglyBTC-plugin-SpeedScheduler/NOTICE.md": null,
+  "preview/native/plugins/BiglyBTC-plugin-SpeedScheduler/SOURCE_PROVENANCE.json": null,
+  "preview/native/plugins/BiglyBTC-plugin-SpeedScheduler/module.cpp": null,
+  "preview/native/plugins/BiglyBTC-plugin-SpeedScheduler/original_xml.cpp": null,
+  "preview/native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_file.cpp": null,
+  "preview/native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_file.hpp": null,
+  "preview/native/plugins/BiglyBTC-plugin-SpeedScheduler/scheduler.cpp": null,
+  "preview/native/plugins/BiglyBTC-plugin-SpeedScheduler/scheduler.hpp": null,
+  "preview/native/tests/scheduler_service_tests.cpp": null
+}

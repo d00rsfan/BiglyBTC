@@ -1,0 +1,37 @@
+WARNING: A terminally deprecated method in java.lang.System has been called
+WARNING: System::setSecurityManager has been called by QueueRankLauncher (file:/tmp/biglybtc-queue-oracle-xyab7pa8/classes/)
+WARNING: Please consider reporting this to the maintainers of QueueRankLauncher
+WARNING: System::setSecurityManager will be removed in a future release
+Exception in thread "main" java.lang.ExceptionInInitializerError
+	at com.biglybt.core.util.StringInterner$FileKey.<init>(StringInterner.java:1117)
+	at com.biglybt.core.util.StringInterner$FileKey.<init>(StringInterner.java:1067)
+	at com.biglybt.core.util.StringInterner$FileKey.<clinit>(StringInterner.java:1051)
+	at java.base/java.lang.Class.forName0(Native Method)
+	at java.base/java.lang.Class.forName(Class.java:377)
+	at jdk.proxy1/jdk.proxy1.$Proxy3.<clinit>(Unknown Source)
+	at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance0(Native Method)
+	at java.base/jdk.internal.reflect.NativeConstructorAccessorImpl.newInstance(NativeConstructorAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingConstructorAccessorImpl.newInstance(DelegatingConstructorAccessorImpl.java:45)
+	at java.base/java.lang.reflect.Constructor.newInstanceWithCaller(Constructor.java:500)
+	at java.base/java.lang.reflect.Constructor.newInstance(Constructor.java:481)
+	at java.base/java.lang.reflect.Proxy.newProxyInstance(Proxy.java:1053)
+	at java.base/java.lang.reflect.Proxy.newProxyInstance(Proxy.java:1039)
+	at com.biglybt.plugin.startstoprules.defaultplugin.QueueRankOracle.proxy(QueueRankOracle.java:87)
+	at com.biglybt.plugin.startstoprules.defaultplugin.QueueRankOracle.run(QueueRankOracle.java:107)
+	at com.biglybt.plugin.startstoprules.defaultplugin.QueueRankOracle.main(QueueRankOracle.java:168)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at QueueRankLauncher.main(QueueRankLauncher.java:28)
+Caused by: java.lang.SecurityException: No thread creation
+	at QueueOracleFence.denied(QueueOracleFence.java:17)
+	at QueueOracleFence.checkAccess(QueueOracleFence.java:40)
+	at java.base/java.lang.ThreadGroup.checkAccess(ThreadGroup.java:335)
+	at java.base/java.lang.Thread.<init>(Thread.java:429)
+	at java.base/java.lang.Thread.<init>(Thread.java:715)
+	at java.base/java.lang.Thread.<init>(Thread.java:548)
+	at com.biglybt.core.util.AEThread2$threadWrapper.<init>(AEThread2.java:302)
+	at com.biglybt.core.util.AEThread2.start(AEThread2.java:137)
+	at com.biglybt.core.util.StringInterner.<clinit>(StringInterner.java:115)
+	... 21 more

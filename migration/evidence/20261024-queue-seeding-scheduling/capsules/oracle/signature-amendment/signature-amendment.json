@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_NOT_COMPILED_OR_EXECUTED",
+  "parent_manifest_sha256": "cfc33c0a2027063070743ceec661bc2e441416b57afe84b77e51451e7647ed3b",
+  "initial_manifest_sha256": "3487e3e9faa01bae1ab4d13bc4bb9542f8aad731060648e16f8743959815871e",
+  "reason": "Strict fence caught an original unused proxy-signature class initializing its asynchronous interner cleaner before first rank behavior. Keep the fence, add one explicit unused type scaffold, and leave original rank/interface classes unchanged.",
+  "failure_attempt": "../bootstrap-amendment/run-r1",
+  "failure_artifact_sha256": {
+    "classes/QueueOracleFence.class": "e53bd1825642ce8372ac9a629ab8ed1c686b9df61f57bb8a33d098549abc9ce7",
+    "classes/QueueRankLauncher.class": "7ccfbe7d2a07d31a9862510275ee1753ab770b0753b0b67cef1c022d5ae5a988",
+    "classes/com/biglybt/core/config/COConfigurationManager.class": "b896dd8d0d0be469a176d75000a5ac099d34edade8ba865d9c4b100a058f13e0",
+    "classes/com/biglybt/core/util/Debug.class": "660cf32fe81a1891da67f499bc99d8ef1b33f173fd83357d19e2833fcaadd85c",
+    "classes/com/biglybt/core/util/FileUtil.class": "1cf9a76e5f2075808343d3e821c099d499d09f1304f8ab45d49b9b7518a1706f",
+    "classes/com/biglybt/core/util/SystemTime.class": "f32251fb6e32965ad9e3118de94e3086faedc09033325b43dd93f8c10e6140d7",
+    "classes/com/biglybt/core/util/ThreadPool.class": "f660e2df96c076dc6a0294d7dc59f477f8416318555216f11b20c2c1b5a5b07c",
+    "classes/com/biglybt/pifimpl/local/PluginCoreUtils.class": "f2f85c61816e232c824419d608eaddb08c16e174269befdfffda4c6cb9c3137a",
+    "classes/com/biglybt/plugin/startstoprules/defaultplugin/QueueRankOracle$1.class": "90f69173fce8a6ba76f532b1a5191ac71a0889f88313cc290fc195d6ca4fc61b",
+    "classes/com/biglybt/plugin/startstoprules/defaultplugin/QueueRankOracle$Fixture.class": "fb8ce4d6b29c86c307d4f0df9d84f603740f263ff16ec839d5a17cdb78ecbe83",
+    "classes/com/biglybt/plugin/startstoprules/defaultplugin/QueueRankOracle.class": "0e0d8f815f09ca5ece5a34a9cbb566188d024062e478f620c1f87e6995ebbd52",
+    "classes/queueoracle/Providers.class": "4acef981dd72ce19282963eb8846a2fcd5496681a059fad670e90c063a88053a",
+    "commands.json": "c035077670c362b144a1a5dd03045c7b0a37c176ccfc2bfa59de181b033c8e71",
+    "javac-new-helpers.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "javac-new-helpers.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "original.stderr": "d41db999d9ac551970ea93bd413609e774082b2ab75b42a6d9185f73489af882",
+    "original.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "observed_original_stdout_bytes": 0,
+  "actual_scalar_comparisons_from_failure": 0,
+  "source_pins_sha256": "d7a97f0d377028121209dea69654eaaba599ecba29fd1e0c442fb756e7300fd5",
+  "before_after": {
+    "run.py": {
+      "before_sha256": "368ed5f322a70387f8f404929ba9a5b78616aa2e8a07b326399128d1eb6d3761",
+      "after_sha256": "70e1fedeb458b9b597030ec305853e4d70b10bfabc14ef5d1adc60959bf8f70b"
+    },
+    "SCOPE.md": {
+      "before_sha256": "132d47c5f6e91598e4bb80ea888ed0ef62c3a635d4481244078fa35fddece152",
+      "after_sha256": "d20d77ab3f47d1e93330649711a3afe554c4f8b206f0ef1774d4c42f60beccfa"
+    },
+    "source-pins.json": {
+      "before_sha256": "924392bc26c1d6e45a1ebff9c51a86a6d0139740c24f5a1c2d2e062670dacf24",
+      "after_sha256": "d7a97f0d377028121209dea69654eaaba599ecba29fd1e0c442fb756e7300fd5"
+    }
+  },
+  "new_provider": {
+    "path": "source/com/biglybt/core/util/StringInterner.java",
+    "sha256": "b3d0fd3adedd0464fecd20d80ece717d35898d728cd73c4e0f39c9a8eedb15b7",
+    "original_source_sha256": "3d425e024d5560a170838d8f5afdb9deb105deac21317b9e4496314ba462d550",
+    "original_source_git_blob": "adff39f0126a4f1d567518d720fd4b0c189b52dc"
+  },
+  "helper_java_sources": 11,
+  "explicit_provider_replacements": 7,
+  "unchanged_rank_main_sha256": "773e7ac5b84f3c2c38d5c7296168199885c87bac052d3af1ff58dde119dfe004",
+  "unchanged_fence_sha256": "5cf7342644823e4f6dbc67aa9de6c21761b9de43c52797719da03ffc7a66e9e7",
+  "unchanged_comparator_sha256": "1568c55a55a93177cf72902ee5cb7c958e3b90111365e4cd85762c2c33859976",
+  "original_retained_cohort_rebuilt": false,
+  "threads_or_network_allowed_during_subjects": false,
+  "compile_or_run_performed_by_author": false,
+  "root_execution_command": "python3 build/queue-20261024/oracle/signature-amendment/run.py --driver /ABSOLUTE/ROOT-BUILT/biglybtc-queue-rank-oracle-driver --attempt run-r1"
+}

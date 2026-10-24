@@ -1,0 +1,54 @@
+{
+  "preview/native/engine/persistent_session.cpp": {
+    "before_sha256": "5839a934418a474f30961d51b883103fed7ee420d36cb66a90bea78a815f1ff4",
+    "sha256": "98d7ffd78ac6f0e89f11222ad803dae1d05beea9ecdea4cdcd656936e0d81867"
+  },
+  "preview/native/engine/persistent_session.hpp": {
+    "before_sha256": "4abfb496bfccd4c7f2150f819ab7efc43162e911cb6bc29c327681e7fab24e14",
+    "sha256": "c2c17fa0e749397f5e8819466e2d6385c217688f2b896b5278e778a1ef6297c7"
+  },
+  "preview/native/engine/managed_storage.cpp": {
+    "before_sha256": "9655badab6b2d3c8a9bdaa78db75298813a900fd53a09ff92abb7e598940a0fa",
+    "sha256": "4dc01230f7c4f0f8c2a04d085c9be64c179d47c4f4fb0db24753cda66adf5252"
+  },
+  "preview/native/engine/managed_storage.hpp": {
+    "before_sha256": "622a713197a00c7275601e926090df5a84fcea04b94f5ae61443eb45caf53ff8",
+    "sha256": "e0aceaa36654afcde93f34512ae794eed586bf60ac59d658d4af2d905469cce1"
+  },
+  "preview/native/engine/managed_download.hpp": {
+    "before_sha256": "a992a745980f054adc0c22cab8975882569cc8ddc18ffd5ac36825d58a90ddae",
+    "sha256": "aea201564a2f72e7a93e6a8b86f2dcbed50b25a159e60637b567ce94c31b9387"
+  },
+  "preview/native/adapters/library_commands.cpp": {
+    "before_sha256": "fab12d36ff439c99d43a541d11f8e871ddd37509daaf2581aec0344672c70217",
+    "sha256": "af07bc5d9fcdd6f2e1b978e79f8d79d373ca3c6b491556fb777ecac8be9d461e"
+  },
+  "preview/native/adapters/library_commands.hpp": {
+    "before_sha256": "c5b69f13f75ac3e4d4331e26cbabe0b9d31b2c78d085335a9a2655610641c0a3",
+    "sha256": "0b96f73ae18cb72777df901b24f4d14b35f569fc07df6e742043450b9b59942d"
+  },
+  "preview/native/core/CMakeLists.txt": {
+    "before_sha256": "483e660a9831a5f6f09d4863d7b2a3e68e9e00f6dfb4edf358e713418666efe2",
+    "sha256": "6267449f70f13063037ccc016ce1d52880df615ea5bb6091867ca5bec7995e90"
+  },
+  "preview/native/tests/CMakeLists.txt": {
+    "before_sha256": "9835bf2596ffa120e5dce5bb66806f67709d4433f8f975bee3d5f735b6851f20",
+    "sha256": "60b77ce4e2b087def516847fbe9a996c20e89ab9db5d272a42afaaa287ff2249"
+  },
+  "preview/native/tests/queue_policy_tests.cpp": {
+    "before_sha256": null,
+    "sha256": "e92cbf437d05e70914db0d99c323e131b658cb37e9eebc9e1714bc264f0889a3"
+  },
+  "preview/native/core/src/queue_policy.cpp": {
+    "before_sha256": null,
+    "sha256": "504f5326526cbdc4c32d1f46ac79840e8bc1066b95ebc9b5fe870f8806a137d8"
+  },
+  "preview/native/core/include/biglybtc/queue_policy.hpp": {
+    "before_sha256": null,
+    "sha256": "80646717699588c2839d2fe98bc3296b0d00dcca769931db3d1fb3be4b26b194"
+  },
+  "preview/native/tests/queue_rank_driver.cpp": {
+    "before_sha256": null,
+    "sha256": "68aff811713afe9a3eb5e1fc8a8bf3129c98ebcfdb683eece213e637c56f76e2"
+  }
+}

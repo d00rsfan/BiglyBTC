@@ -1,0 +1,43 @@
+  SchedulerMembership schedulerMembership(const core::TorrentHash& hash) {
+    const auto key=hash.hex();
+    if(const auto known=schedulerMemberships.find(key);known!=schedulerMemberships.end()){
+      auto cached=known->second;
+      if(scheduler->snapshot().settings.useTags){cached.available=cached.available&&schedulerTagsLoaded&&schedulerTagsAvailable;}
+      return cached;
+    }
+    SchedulerMembership result;
+    if(scheduler->snapshot().settings.useTags){
+      if(!schedulerTagsLoaded){
+        schedulerTagsLoaded=true;
+        auto source=storage::readSavedDownloadTagsView(lease);
+        if(source){
+          schedulerTagsAvailable=true;
+          if(source->snapshot){
+            for(const auto& tag:source->snapshot->tags){
+              if(!tag.rawName||tag.nameMayRequireLocalization||tag.duplicateId||tag.membersMalformed){schedulerTagsAvailable=false;break;}
+              for(const auto& member:tag.uniqueHashes){auto& row=schedulerMemberships[member.hex()];row.available=true;row.names.push_back(*tag.rawName);}
+            }
+            if(!source->snapshot->issues.empty()){schedulerTagsAvailable=false;}
+          }
+        }
+      }
+      if(const auto tag=schedulerMemberships.find(key);tag!=schedulerMemberships.end()){result=tag->second;}
+      result.available=schedulerTagsAvailable;
+    }else{
+      auto store=storage::TorrentStateStore::open(lease);
+      if(store){
+        auto state=store->load(lease,hash);
+        if(state){
+          result.available=true;result.names={"Uncategorized"};
+          if(const auto* attributes=state->document().find("attributes")){
+            if(attributes->type!=core::Node::Type::Dictionary){result.available=false;}
+            if(const auto* category=attributes->find("category")){
+              if(category->type==core::Node::Type::Bytes&&category->bytes.size()<=4096){result.names={std::string(category->bytes)};}
+              else{result.available=false;}
+            }
+          }
+        }
+      }
+    }
+    schedulerMemberships.insert_or_assign(key,result);return result;
+  }

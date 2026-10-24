@@ -1,0 +1,119 @@
+--- a/preview/native/adapters/scheduler_io.hpp
++++ b/preview/native/adapters/scheduler_io.hpp
+@@ -2,9 +2,28 @@
+ #include "profile.hpp"
+ #include "file_io.hpp"
+ #include <stop_token>
++#include <utility>
++#include <unistd.h>
+ #include <sys/stat.h>
+ 
+ namespace biglybtc::storage::scheduler_detail {
++// Private owning fd; unlike shared storage::detail::Descriptor this service
++// needs move assignment when optional directories first become present.
++class Descriptor final {
++public:
++  explicit Descriptor(int value = -1) noexcept : value_(value) {}
++  Descriptor(const Descriptor&) = delete;
++  Descriptor& operator=(const Descriptor&) = delete;
++  Descriptor(Descriptor&& other) noexcept : value_(other.release()) {}
++  Descriptor& operator=(Descriptor&& other) noexcept {
++    if(this!=&other){if(value_>=0){::close(value_);}value_=other.release();}return *this;
++  }
++  ~Descriptor(){if(value_>=0){::close(value_);}}
++  int get() const noexcept{return value_;}
++  int release() noexcept{return std::exchange(value_,-1);}
++private:
++  int value_;
++};
+ struct Failure { Error error; };
+ [[noreturn]] void fail(ErrorCode, const char*);
+ [[noreturn]] void io(const char*);
+@@ -16,7 +35,7 @@
+ };
+ Raw read(int directory, const char* name, std::size_t maximum);
+ void unchanged(int directory, const char* name, const Raw&, std::size_t maximum);
+-detail::Descriptor directory(int parent, const char* name, bool missingAllowed = false);
++scheduler_detail::Descriptor directory(int parent, const char* name, bool missingAllowed = false);
+ void directoryIdentity(int parent, const char* name, int held);
+ // Cooperative held-lease CAS; not atomic against noncooperating final-nanosecond
+ // writers. Fixed exclusive temporary is deliberately retained on uncertain IO.
+--- a/preview/native/adapters/scheduler_io.cpp
++++ b/preview/native/adapters/scheduler_io.cpp
+@@ -22,7 +22,7 @@
+       &&a.st_ctim.tv_sec==b.st_ctim.tv_sec&&a.st_ctim.tv_nsec==b.st_ctim.tv_nsec;
+ }
+ Raw read(int parent,const char* name,std::size_t maximum) {
+-  detail::Descriptor fd(::openat(parent,name,O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK));
++  scheduler_detail::Descriptor fd(::openat(parent,name,O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK));
+   if(fd.get()<0){if(errno==ENOENT){return {};}io("Cannot open scheduler file without following links");}
+   Raw out;
+   if(::fstat(fd.get(),&out.identity)!=0){io("Cannot inspect scheduler file");}
+@@ -47,8 +47,8 @@
+   const auto now=read(parent,name,maximum);
+   if(now.bytes!=before.bytes||(before.bytes&&!same(before.identity,now.identity))){fail(ErrorCode::Conflict,"Scheduler source changed; reload before editing");}
+ }
+-detail::Descriptor directory(int parent,const char* name,bool missingAllowed) {
+-  detail::Descriptor fd(::openat(parent,name,O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));
++scheduler_detail::Descriptor directory(int parent,const char* name,bool missingAllowed) {
++  scheduler_detail::Descriptor fd(::openat(parent,name,O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));
+   if(fd.get()<0){if(missingAllowed&&errno==ENOENT){return fd;}io("Cannot open scheduler directory without following links");}
+   struct stat st{};if(::fstat(fd.get(),&st)!=0){io("Cannot inspect scheduler directory");}
+   if(!S_ISDIR(st.st_mode)||st.st_uid!=::geteuid()||(st.st_mode&0022)!=0||!st.st_nlink){fail(ErrorCode::UnsafePath,"Scheduler directory is not owned and live");}
+@@ -63,7 +63,7 @@
+   if(value.size()>maximum){fail(ErrorCode::InvalidFormat,"Scheduler output exceeds byte bound");}
+   unchanged(parent,name,before,maximum);
+   const auto temporary=std::string(name)+".BiglyBTC.saving";
+-  detail::Descriptor fd(::openat(parent,temporary.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC,0600));
++  scheduler_detail::Descriptor fd(::openat(parent,temporary.c_str(),O_WRONLY|O_CREAT|O_EXCL|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC,0600));
+   if(fd.get()<0){if(errno==EEXIST){fail(ErrorCode::Conflict,"Scheduler temporary exists; no blind recovery or overwrite");}io("Cannot create scheduler temporary");}
+   struct stat created{};if(::fstat(fd.get(),&created)!=0){io("Cannot inspect scheduler temporary");}
+   std::size_t pos=0;
+--- a/preview/native/adapters/scheduler_service.cpp
++++ b/preview/native/adapters/scheduler_service.cpp
+@@ -90,7 +90,7 @@
+ }
+ std::string locate(int plugins,const core::Document& config) {
+   if(plugins<0){return "SpeedScheduler";}
+-  detail::Descriptor copy(::openat(plugins,".",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));if(copy.get()<0){io("Cannot enumerate plugin data directories");}
++  scheduler_detail::Descriptor copy(::openat(plugins,".",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));if(copy.get()<0){io("Cannot enumerate plugin data directories");}
+   struct CloseDirectory {void operator()(DIR* value)const noexcept{if(value){::closedir(value);}}};
+   std::unique_ptr<DIR,CloseDirectory> entries(::fdopendir(copy.release()));
+   if(!entries){io("Cannot enumerate plugin data directories");}std::optional<std::string> selected;std::size_t count=0;
+@@ -148,7 +148,7 @@
+ struct SchedulerService::Impl {
+   plugins::Module module;
+   struct stat profile{};
+-  detail::Descriptor plugins{-1},data{-1};
++  scheduler_detail::Descriptor plugins{-1},data{-1};
+   SchedulerSnapshot snapshot;
+   Raw xml,ownership,intent,config;
+   std::map<std::string,std::pair<std::uint64_t,std::uint64_t>> authority;
+@@ -207,7 +207,7 @@
+     auto& p=*impl_;p.held(lease);checkStop(stop);
+     if(p.pending){fail(ErrorCode::Busy,"Cannot reload while scheduler action is awaiting acknowledgement");}
+     auto cfg=configuration(lease);auto plugins=directory(lease.directoryHandle(),"plugins",true);
+-    const auto leaf=locate(plugins.get(),cfg.document);auto data=plugins.get()<0?detail::Descriptor(-1):directory(plugins.get(),leaf.c_str(),true);
++    const auto leaf=locate(plugins.get(),cfg.document);auto data=plugins.get()<0?scheduler_detail::Descriptor(-1):directory(plugins.get(),leaf.c_str(),true);
+     auto xml=data.get()<0?Raw{}:read(data.get(),XmlName,XmlMaximum);
+     auto own=data.get()<0?Raw{}:read(data.get(),OwnershipName,scheduler::OwnershipFile::MaximumBytes);
+     auto intent=data.get()<0?Raw{}:read(data.get(),IntentName,IntentMaximum);
+--- a/preview/native/adapters/scheduler_module.cpp
++++ b/preview/native/adapters/scheduler_module.cpp
+@@ -16,13 +16,13 @@
+     if(!dots||!digits){fail(ErrorCode::InvalidFormat,"Invalid scheduler module version");}
+     if(!path.is_absolute()||path.lexically_normal()!=path||path.native().size()>4096||path.native().find('\0')!=std::string::npos||path.filename().empty()){
+       fail(ErrorCode::UnsafePath,"Scheduler module path must be explicit, absolute and normalized");}
+-    detail::Descriptor parent(::open("/",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));if(parent.get()<0){io("Cannot open scheduler module path root");}
++    scheduler_detail::Descriptor parent(::open("/",O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC));if(parent.get()<0){io("Cannot open scheduler module path root");}
+     for(const auto& component:path.parent_path().relative_path()){
+       if(component.empty()||component=="."||component==".."){fail(ErrorCode::UnsafePath,"Unsafe scheduler module parent");}
+-      detail::Descriptor next(::openat(parent.get(),component.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));
++      scheduler_detail::Descriptor next(::openat(parent.get(),component.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));
+       if(next.get()<0){io("Cannot traverse approved scheduler module parent");}parent=std::move(next);
+     }
+-    const auto leaf=path.filename().string();detail::Descriptor file(::openat(parent.get(),leaf.c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));
++    const auto leaf=path.filename().string();scheduler_detail::Descriptor file(::openat(parent.get(),leaf.c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));
+     if(file.get()<0){io("Cannot open approved scheduler module");}struct stat before{},after{},named{};
+     if(::fstat(file.get(),&before)!=0){io("Cannot inspect scheduler module");}
+     if(!S_ISREG(before.st_mode)||before.st_uid!=::geteuid()||before.st_nlink!=1||(before.st_mode&0022)!=0||before.st_size<=0||static_cast<std::uint64_t>(before.st_size)!=approval.bytes){

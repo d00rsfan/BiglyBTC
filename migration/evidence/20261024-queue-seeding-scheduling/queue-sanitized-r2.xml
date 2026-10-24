@@ -1,0 +1,362 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="23"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="212"
+	timestamp="2026-10-24T18:08:12"
+	>
+	<testcase name="desktop-model-and-lifecycle" classname="desktop-model-and-lifecycle" time="2.03192" status="run">
+		<properties>
+			<property name="cmake_labels" value="ui;unit"/>
+		</properties>
+		<system-out>********* Start testing of DesktopTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : DesktopTests::initTestCase()
+PASS   : DesktopTests::modelValuesSelectionAndStaleTargets()
+QWARN  : DesktopTests::closeWaitsForCancellationAndWorkerTeardown() This plugin does not support propagateSizeHints()
+QWARN  : DesktopTests::closeWaitsForCancellationAndWorkerTeardown() This plugin does not support propagateSizeHints()
+PASS   : DesktopTests::closeWaitsForCancellationAndWorkerTeardown()
+PASS   : DesktopTests::cancellationFromBusyNotificationCompletes()
+PASS   : DesktopTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 1485ms
+********* Finished testing of DesktopTests *********
+</system-out>
+	</testcase>
+	<testcase name="persistent-native-peer-session" classname="persistent-native-peer-session" time="43.4589" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration;loopback;statistics;unit"/>
+		</properties>
+		<system-out>********* Start testing of PersistentSessionTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : PersistentSessionTests::initTestCase()
+PASS   : PersistentSessionTests::lazyOwnerAndPermanentCloseNeverFabricateAZeroSample()
+PASS   : PersistentSessionTests::foreignThreadCannotPollOrCloseTheOwner()
+PASS   : PersistentSessionTests::sequentialMixedLayoutsAndRepeatedHashUseOneAbsoluteEpoch()
+PASS   : PersistentSessionTests::activeCancellationRetiresBeforeCallbackStorageUnwindsAndCanRetrySameHash()
+PASS   : PersistentSessionTests::optionalThrowingSinksDoNotDisableEssentialRetentionOrSafeTransfer()
+PASS   : PersistentSessionTests::preparationFailureCannotExposeEarlierSettlementOrEraseAbsoluteTotals()
+PASS   : PersistentSessionTests::foreignProfileIsRejectedBeforeCompatibleCacheOrPayloadAccess()
+PASS   : PersistentSessionTests::throwingProgressRetiresAnAlreadyRegisteredTorrentBeforeRet...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="overall-accounting-window-worker" classname="overall-accounting-window-worker" time="36.7505" status="run">
+		<properties>
+			<property name="cmake_labels" value="accounting;loopback;statistics;ui;unit"/>
+		</properties>
+		<system-out>********* Start testing of OverallAccountingIntegrationTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OverallAccountingIntegrationTests::initTestCase()
+QWARN  : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(single) This plugin does not support propagateSizeHints()
+QWARN  : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(single) This plugin does not support propagateSizeHints()
+QWARN  : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(single) This plugin does not support propagateSizeHints()
+QWARN  : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(single) This plugin does not support propagateSizeHints()
+QWARN  : OverallAccountingIntegrationTests::actualPeerTotalsMarksHistoryAndJoinedReopen(single) This plugin does not support propagateSizeHints()
+Q...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="effective-rate-limits" classname="effective-rate-limits" time="0.0232971" status="run">
+		<properties>
+			<property name="cmake_labels" value="read-only;statistics;unit"/>
+		</properties>
+		<system-out>PASS effective session-rate-limit projection; 77 assertions; explicit settings packs only, no session/network mutation
+</system-out>
+	</testcase>
+	<testcase name="startup-statistics-worker" classname="startup-statistics-worker" time="19.7298" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration;loopback;startup;statistics;ui;unit"/>
+		</properties>
+		<system-out>********* Start testing of StartupStatisticsTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : StartupStatisticsTests::initTestCase()
+QWARN  : StartupStatisticsTests::actualIdlePrecedesStatisticsAndSharesFirstOperation(single) This plugin does not support propagateSizeHints()
+QWARN  : StartupStatisticsTests::actualIdlePrecedesStatisticsAndSharesFirstOperation(single) This plugin does not support propagateSizeHints()
+QWARN  : StartupStatisticsTests::actualIdlePrecedesStatisticsAndSharesFirstOperation(single) This plugin does not support propagateSizeHints()
+PASS   : StartupStatisticsTests::actualIdlePrecedesStatisticsAndSharesFirstOperation(single)
+QWARN  : StartupStatisticsTests::actualIdlePrecedesStatisticsAndSharesFirstOperation(multifile) This plugin does not support propagateSizeHints()
+QWARN  : StartupStatisticsTests::actualIdlePrecedesStatisticsAndSharesFirstOperation(...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="library-commands" classname="library-commands" time="0.0695889" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>case start-stop-force-with-opaque-preservation
+case force-pause-resume
+case stopped-pause-and-idempotence
+case start-versus-queue-and-forced-resumption
+case resume-absent-and-start-queue-active-are-noops
+case stop-paused-preserves-other-pause-bytes
+case stopped-force-controller-conditional
+case legacy-fields-and-root-metadata
+case moves-keep-completion-pools-separate
+case move-pools-required-exact-and-unique
+case malformed-positions-never-guessed-normalized-or-overflowed
+case move-boundary-noop-and-legacy-pool
+case duplicate-stale-and-malformed-identities-refuse
+case malformed-or-duplicate-pause-data-refuses
+case invalid-action-and-lease-refuse
+case saving-recovery-refuses-backup-recovery-uses-existing-cas-policy
+case existing-saving-path-conflict-does-not-overwrite
+case v2-hash-and-unrelated-binary-values
+case legacy-advertised-malformed-row-cannot-hide-target
+PASS 19 saved-library command families; 658 assertions; generated profiles only; no engine actions or Java-runtime equality credit
+</system-out>
+	</testcase>
+	<testcase name="network-policy" classname="network-policy" time="0.0359201" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>17 network-policy families, 165 assertions passed
+</system-out>
+	</testcase>
+	<testcase name="managed-tracker" classname="managed-tracker" time="12.7341" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of ManagedTrackerTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedTrackerTests::initTestCase()
+PASS   : ManagedTrackerTests::httpTrackerActuallyDiscoversOwnedPeer()
+PASS   : ManagedTrackerTests::udpTrackerActuallyDiscoversOwnedPeer()
+PASS   : ManagedTrackerTests::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 12640ms
+********* Finished testing of ManagedTrackerTests *********
+</system-out>
+	</testcase>
+	<testcase name="managed-download" classname="managed-download" time="16.2143" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of ManagedDownloadTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedDownloadTests::initTestCase()
+PASS   : ManagedDownloadTests::rawEpochContinuityKeepsUntickedBytesAndCrossingReadsRetry()
+PASS   : ManagedDownloadTests::rawEpochInvalidReadsAndOverflowFailWithoutFallback()
+PASS   : ManagedDownloadTests::concurrentMixedHandlesRemainControllableUnderOneOwner()
+PASS   : ManagedDownloadTests::partialStopAndRepeatedHashCheckpointsKeepFreshSavedIntent()
+PASS   : ManagedDownloadTests::failedAndForeignAdmissionsDoNotReplaceTheOtherActiveTorrent()
+PASS   : ManagedDownloadTests::unsafePayloadPreparationDoesNotAdmitOrRewriteAProfile()
+PASS   : ManagedDownloadTests::cleanupTestCase()
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 16090ms
+********* Finished testing of ManagedDownloadTests *********
+</system-out>
+	</testcase>
+	<testcase name="managed-storage" classname="managed-storage" time="0.156934" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>case new-independent-payload-root-and-filtered-parameters
+case partial-piece-progress-and-fresh-command-preservation
+case skipped-linear-sparse-file-and-boundary-piece-counts
+case single-completion-suffix-and-unknown-state-fields
+case multifile-completion-renames-only-owned-actual-paths
+case completed-target-collision-retains-incomplete-source
+case existing-single-journal-and-recognized-hardlink-recovery
+case unsafe-links-storetypes-oversize-and-symlinks-fail-before-state
+case authoritative-cache-policy-is-preflighted-without-mutation
+case policy-permitted-trackers-retained-without-engine-start
+case invalid-checkpoints-never-publish-complete-flags
+case verified-late-piece-needs-actual-file-extent
+case payload-replacement-and-cumulative-rebase-refuse
+case original-pure-v2-truncated-and-explicit-full-keys
+case wrong-profile-and-moved-storage-refuse
+PASS 15 managed-storage families; 455 assertions; generated profiles and files only; no engine activation or Java-runtime equality credit
+</system-out>
+	</testcase>
+	<testcase name="file-policy-commands" classname="file-policy-commands" time="0.0656514" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of FilePolicyCommandsTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : FilePolicyCommandsTests::initTestCase()
+PASS   : FilePolicyCommandsTests::changedPoliciesRoundTripAndInvalidateResume(plain-state)
+PASS   : FilePolicyCommandsTests::changedPoliciesRoundTripAndInvalidateResume(gzip-state)
+PASS   : FilePolicyCommandsTests::identicalPolicyIsAnActualNoWrite()
+PASS   : FilePolicyCommandsTests::invalidPolicyRejectsBeforeAnyWrite(wrong-count)
+PASS   : FilePolicyCommandsTests::invalidPolicyRejectsBeforeAnyWrite(duplicate-download)
+PASS   : FilePolicyCommandsTests::invalidPolicyRejectsBeforeAnyWrite(padding-enabled)
+PASS   : FilePolicyCommandsTests::invalidPolicyRejectsBeforeAnyWrite(malformed-priorities)
+PASS   : FilePolicyCommandsTests::invalidPolicyRejectsBeforeAnyWrite(eight-ranks)
+PASS   : FilePolicyCommandsTests::invalidPolicyRejectsBeforeAnyWrite(mi...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="managed-seeding" classname="managed-seeding" time="19.0405" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of ManagedSeedingTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedSeedingTests::initTestCase()
+PASS   : ManagedSeedingTests::completedNativeHandleUploadsActualPayloadToAnIndependentOwnedLeecher(single)
+PASS   : ManagedSeedingTests::completedNativeHandleUploadsActualPayloadToAnIndependentOwnedLeecher(multifile)
+PASS   : ManagedSeedingTests::selectedCompletionRetainsSparseSkippedLinearStorageAndOriginalPolicyOnReopen()
+PASS   : ManagedSeedingTests::immediateStopBeforeFirstPieceSampleRetainsExistingDataForRestart()
+PASS   : ManagedSeedingTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 18887ms
+********* Finished testing of ManagedSeedingTests *********
+</system-out>
+	</testcase>
+	<testcase name="managed-library-command-routing" classname="managed-library-command-routing" time="28.6339" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of LibraryCommandsBridgeTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : LibraryCommandsBridgeTests::initTestCase()
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(stale-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(unknown-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(duplicate-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(unauthorized-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(invalid-action-next)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(invalid-action-large)
+QWARN  : LibraryCommandsBridgeTests::mixedTargetsRouteSavedIntentAndActualProgressIndep...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="application-settings" classname="application-settings" time="0.0508575" status="run">
+		<properties>
+			<property name="cmake_labels" value="compatibility;options;unit"/>
+		</properties>
+		<system-out>12 application-settings families, 479 assertions passed
+</system-out>
+	</testcase>
+	<testcase name="options-dialog" classname="options-dialog" time="0.960502" status="run">
+		<properties>
+			<property name="cmake_labels" value="options;unit"/>
+		</properties>
+		<system-out>********* Start testing of OptionsDialogTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OptionsDialogTests::initTestCase()
+PASS   : OptionsDialogTests::classicPagesMaskPasswordsAndLabelUnavailableFeatures()
+PASS   : OptionsDialogTests::hiddenAndBusyInitialReadCoalescesUntilVisibleIdle()
+PASS   : OptionsDialogTests::staleAndMalformedReadPacketsCannotReplaceCurrentProfile()
+PASS   : OptionsDialogTests::sparseEditsPreserveInvalidAndMissingFields()
+PASS   : OptionsDialogTests::returningToLoadedValueSubmitsNothing()
+PASS   : OptionsDialogTests::invalidEditedValueDoesNotReachWorker()
+PASS   : OptionsDialogTests::failedSaveRetainsDraftAndRetryUsesOriginalRevision()
+PASS   : OptionsDialogTests::okWaitsForMatchingCommitAndPendingCloseCannotDiscard()
+QWARN  : OptionsDialogTests::dirtyCancelAndDiscardAreExplicit() This plugin does not support propagateSizeHints()
+QWARN  : OptionsDia...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="options-host" classname="options-host" time="1.05144" status="run">
+		<properties>
+			<property name="cmake_labels" value="options;unit"/>
+		</properties>
+		<system-out>********* Start testing of OptionsHostTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OptionsHostTests::initTestCase()
+PASS   : OptionsHostTests::savesSparseOriginalValuesAndReturnsFreshRevision()
+PASS   : OptionsHostTests::externalEditAndIncompatibleNetworkRejectBeforePublication()
+PASS   : OptionsHostTests::wrongSessionAndInvalidValuesHaveNoSideEffect()
+QWARN  : OptionsHostTests::toolsMenuOpensBoundDialogAndUsesCompatibleSave() This plugin does not support propagateSizeHints()
+PASS   : OptionsHostTests::toolsMenuOpensBoundDialogAndUsesCompatibleSave()
+PASS   : OptionsHostTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 842ms
+********* Finished testing of OptionsHostTests *********
+</system-out>
+	</testcase>
+	<testcase name="engine-live-settings" classname="engine-live-settings" time="7.26461" status="run">
+		<properties>
+			<property name="cmake_labels" value="options;unit"/>
+		</properties>
+		<system-out>********* Start testing of EngineLiveSettingsTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : EngineLiveSettingsTests::initTestCase()
+PASS   : EngineLiveSettingsTests::purePlanPreservesAllActiveRoutingAndEmitsOnlyNarrowKeys()
+PASS   : EngineLiveSettingsTests::cachedBeforeIdleCreatesNoSessionAndStartupUsesOriginalQueueDefaults()
+PASS   : EngineLiveSettingsTests::liveRatesAndQueueCapsKeepActualRoutesAndManualPauseAcrossActiveTransfer()
+PASS   : EngineLiveSettingsTests::seedingUploadTransitionPreservesNewSafeRatesAndQueueCaps()
+PASS   : EngineLiveSettingsTests::invalidOrForeignThreadRequestLeavesEveryActualSettingUnchanged()
+PASS   : EngineLiveSettingsTests::cleanupTestCase()
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 7181ms
+********* Finished testing of EngineLiveSettingsTests *********
+</system-out>
+	</testcase>
+	<testcase name="queue-policy" classname="queue-policy" time="0.0768654" status="run">
+		<properties>
+			<property name="cmake_labels" value="queue;unit"/>
+		</properties>
+		<system-out>22 queue-policy families, 8451 assertions passed
+</system-out>
+	</testcase>
+	<testcase name="scheduler-service" classname="scheduler-service" time="0.219632" status="run">
+		<properties>
+			<property name="cmake_labels" value="scheduler;unit"/>
+		</properties>
+		<system-out>scheduler service: six owned-fixture families passed
+</system-out>
+	</testcase>
+	<testcase name="scheduler-dialog" classname="scheduler-dialog" time="0.513648" status="run">
+		<properties>
+			<property name="cmake_labels" value="scheduler;ui;unit"/>
+		</properties>
+		<system-out>********* Start testing of SchedulerDialogTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : SchedulerDialogTests::initTestCase()
+QWARN  : SchedulerDialogTests::lazyLoadAndFullPositiveJavaPollRange() This plugin does not support propagateSizeHints()
+PASS   : SchedulerDialogTests::lazyLoadAndFullPositiveJavaPollRange()
+QWARN  : SchedulerDialogTests::staleSessionsRequestsAndMalformedSnapshotCannotReplaceDraft() This plugin does not support propagateSizeHints()
+PASS   : SchedulerDialogTests::staleSessionsRequestsAndMalformedSnapshotCannotReplaceDraft()
+QWARN  : SchedulerDialogTests::renderBlocksEditSignalsButKeepsModelAndHeaderNotifications() This plugin does not support propagateSizeHints()
+PASS   : SchedulerDialogTests::renderBlocksEditSignalsButKeepsModelAndHeaderNotifications()
+QWARN  : SchedulerDialogTests::partialXmlSaveRebasesRowsAndRetainsOnlyUncommittedPreferences() Th...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="managed-queue" classname="managed-queue" time="11.2744" status="run">
+		<properties>
+			<property name="cmake_labels" value="queue;runtime-bound;unit"/>
+		</properties>
+		<system-out>********* Start testing of ManagedQueueTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedQueueTests::initTestCase()
+PASS   : ManagedQueueTests::limitsPauseResumeAndForceUseRealRetainedHandles(download-cap)
+PASS   : ManagedQueueTests::limitsPauseResumeAndForceUseRealRetainedHandles(active-cap)
+PASS   : ManagedQueueTests::completionRatioQueuesAndClearsOnlyForceBeforeActualCheckpoint()
+PASS   : ManagedQueueTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 11172ms
+********* Finished testing of ManagedQueueTests *********
+</system-out>
+	</testcase>
+	<testcase name="scheduler-host" classname="scheduler-host" time="0.949865" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration;scheduler;unit"/>
+		</properties>
+		<system-out>********* Start testing of SchedulerHostTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : SchedulerHostTests::initTestCase()
+PASS   : SchedulerHostTests::realModuleSparseSaveAndPartialConfigCasRemainExplicit()
+QWARN  : SchedulerHostTests::toolsDialogUsesActualWorkerAndFinalRevision() This plugin does not support propagateSizeHints()
+QWARN  : SchedulerHostTests::toolsDialogUsesActualWorkerAndFinalRevision() This plugin does not support propagateSizeHints()
+PASS   : SchedulerHostTests::toolsDialogUsesActualWorkerAndFinalRevision()
+PASS   : SchedulerHostTests::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 749ms
+********* Finished testing of SchedulerHostTests *********
+</system-out>
+	</testcase>
+	<testcase name="scheduler-host-engine" classname="scheduler-host-engine" time="10.8333" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration;scheduler;unit"/>
+		</properties>
+		<system-out>********* Start testing of SchedulerHostEngineTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : SchedulerHostEngineTests::initTestCase()
+PASS   : SchedulerHostEngineTests::scheduledRatesAndPauseUseFreshConfigThenManualStopWins(single)
+PASS   : SchedulerHostEngineTests::scheduledRatesAndPauseUseFreshConfigThenManualStopWins(multi)
+PASS   : SchedulerHostEngineTests::inheritedSavedPauseNeverBecomesCurrentAuthority()
+PASS   : SchedulerHostEngineTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 10579ms
+********* Finished testing of SchedulerHostEngineTests *********
+</system-out>
+	</testcase>
+</testsuite>

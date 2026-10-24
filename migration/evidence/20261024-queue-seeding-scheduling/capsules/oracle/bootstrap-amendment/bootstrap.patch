@@ -1,0 +1,89 @@
+--- before/source/QueueRankLauncher.java
++++ after/source/QueueRankLauncher.java
+@@ -6,8 +6,15 @@
+ /** Original classes never enter this parent loader; helper providers have exact allowlist precedence. */
+ public final class QueueRankLauncher {
+     public static void main(String[] args) throws Throwable {
+-        if (args.length != 2 || !(System.getSecurityManager() instanceof QueueOracleFence)) {
+-            throw new IllegalStateException("Fenced launcher needs helper/cohort roots");
++        if (args.length != 2 || System.getSecurityManager() != null) {
++            throw new IllegalStateException("Launcher needs helper/cohort roots and no preinstalled manager");
++        }
++        // Let the JVM finish its own bootstrap before denying new threads.
++        // No original subject/provider loader exists until this exact fence is installed.
++        QueueOracleFence fence = new QueueOracleFence();
++        System.setSecurityManager(fence);
++        if (System.getSecurityManager() != fence) {
++            throw new IllegalStateException("Exact queue fence was not installed");
+         }
+         URL[] urls = {new File(args[0]).toURI().toURL(), new File(args[1]).toURI().toURL()};
+         try (URLClassLoader isolated = new URLClassLoader(urls, ClassLoader.getSystemClassLoader().getParent())) {
+@@ -21,6 +28,9 @@
+                     .getMethod("main", String[].class).invoke(null, (Object)new String[0]);
+             } catch (InvocationTargetException error) { throw error.getCause(); }
+         }
+-        ((QueueOracleFence)System.getSecurityManager()).verify();
++        if (System.getSecurityManager() != fence) {
++            throw new IllegalStateException("Queue fence changed during invocation");
++        }
++        fence.verify();
+     }
+ }
+--- before/run.py
++++ after/run.py
+@@ -93,7 +93,7 @@
+             logical = path.relative_to(work / 'classes').with_suffix('').as_posix().split('$', 1)[0]
+             assert logical in allowed, logical
+         run('original', [JAVA / 'java', '-XX:ActiveProcessorCount=2', '-Xmx128m',
+-            '-Djava.security.manager=QueueOracleFence', '-Dqueue.oracle.root=' + str(work),
++            '-Djava.security.manager=allow', '-Dqueue.oracle.root=' + str(work),
+             '-Dqueue.oracle.cohort=' + str(COHORT), '-Djava.io.tmpdir=' + str(work / 'tmp'),
+             '-Duser.home=' + str(work / 'forbidden-home'),
+             '-Dazureus.config.path=' + str(work / 'forbidden-profile'),
+--- before/SCOPE.md
++++ after/SCOPE.md
+@@ -1,4 +1,4 @@
+-# Queue scalar oracle: source-only recipe
++# Queue scalar oracle: bootstrap-timing amendment
+ 
+ The subject is the retained, unchanged cb8c6cb9bb97916cbc7e80338a017200ffc3e71f
+ `RankCalculatorReal.class` and its original nested `SR` class. The actual
+@@ -34,6 +34,29 @@
+ root and a fresh durable result directory; original profile/processes are not
+ opened. The compiler and actual Java/native replay are parent-owned future
+ execution, not completed work in this capsule.
++
++## Bootstrap correction and retained first failure
++
++The parent-owned first attempt in `../run-r1` compiled the authored helpers, then
++failed during JVM bootstrap with exit -6. Its fatal log identifies
++`NotificationThread::initialize` under `Threads::create_vm`; the original helper
++launcher and subjects had not run. Those raw logs and the initial eighteen-file
++capsule remain untouched. This amendment has not been compiled or executed.
++
++The Java command now uses `-Djava.security.manager=allow`, which permits the JVM
++to finish its essential bootstrap before `QueueRankLauncher.main`. The launcher
++rejects a preinstalled manager, constructs the unchanged `QueueOracleFence`,
++installs it with `System.setSecurityManager`, and checks exact identity before
++constructing the isolated helper/subject classloader. The fence remains installed
++and verified after original invocation. No original class is loaded by the
++system launcher. Its thread, file, network, process and replacement restrictions
++remain byte-for-byte unchanged. This is a bootstrap-order correction, not a
++relaxation during the oracle subjects or providers.
++
++The runner's helper-output allowlist, before/after retained-cohort checks,
++comparison tape, native invocation, timeout cleanup and fresh-attempt archival
++are unchanged. New attempts live only under this amendment directory; the
++original failed attempt cannot be overwritten.
+ 
+ ## Fixed comparison scope
+ 
+@@ -74,7 +97,7 @@
+ Then, after independent review and explicit execution authorization:
+ 
+ ```
+-python3 build/queue-20261024/oracle/run.py \
++python3 build/queue-20261024/oracle/bootstrap-amendment/run.py \
+   --driver /ABSOLUTE/ROOT-BUILT/biglybtc-queue-rank-oracle-driver \
+   --attempt run-r1
+ ```

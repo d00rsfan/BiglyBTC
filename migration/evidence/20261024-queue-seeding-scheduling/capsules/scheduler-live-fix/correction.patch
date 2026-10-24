@@ -1,0 +1,38 @@
+--- a/preview/native/adapters/scheduler_io.cpp
++++ b/preview/native/adapters/scheduler_io.cpp
+@@ -51,7 +51,10 @@
+   detail::Descriptor fd(::openat(parent,name,O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));
+   if(fd.get()<0){if(missingAllowed&&errno==ENOENT){return fd;}io("Cannot open scheduler directory without following links");}
+   struct stat st{};if(::fstat(fd.get(),&st)!=0){io("Cannot inspect scheduler directory");}
+-  if(!S_ISDIR(st.st_mode)||st.st_uid!=::geteuid()||(st.st_mode&0022)!=0||!st.st_nlink){fail(ErrorCode::UnsafePath,"Scheduler directory is not owned and live");}
++  // Original plugin data directories may be group-writable (umask0002).
++  // They are data, never executable plugin authorization. Keep owned/live,
++  // nofollow identity checks and reject access by arbitrary other users.
++  if(!S_ISDIR(st.st_mode)||st.st_uid!=::geteuid()||(st.st_mode&0002)!=0||!st.st_nlink){fail(ErrorCode::UnsafePath,"Scheduler directory must be owned, live and not world-writable");}
+   directoryIdentity(parent,name,fd.get());return fd;
+ }
+ void directoryIdentity(int parent,const char* name,int fd) {
+--- a/preview/native/tests/scheduler_service_tests.cpp
++++ b/preview/native/tests/scheduler_service_tests.cpp
+@@ -69,7 +69,10 @@
+   check(edited16.starts_with("\xff\xfe")&&policy::readOriginalXml(edited16)->configuration.defaultUpload==13,"UTF16 sparse update");
+ }
+ void resolutionAndSparseConfig(const fs::path& module){
+-  Fixture f(module);f.original("SpeedScheduler_1.8",false);const auto initial=read(f.profile/"biglybt.config");auto service=f.open();
++  Fixture f(module);f.original("SpeedScheduler_1.8",false);
++  fs::permissions(f.profile/"plugins",fs::perms::owner_all|fs::perms::group_all|fs::perms::others_read|fs::perms::others_exec);
++  fs::permissions(f.profile/"plugins"/"SpeedScheduler_1.8",fs::perms::owner_all|fs::perms::group_all|fs::perms::others_read|fs::perms::others_exec);
++  const auto initial=read(f.profile/"biglybt.config");auto service=f.open();
+   check(service->snapshot().directoryLeaf=="SpeedScheduler_1.8","jar-only data/config selects actual directory");
+   const auto before=service->snapshot().revision;done(service->saveSettings(f.lease,before,{.overrideForced=true}));
+   auto document=core::Document::parse(read(f.profile/"biglybt.config"));check(document&&document->find("opaque")&&document->find("opaque")->find("keep")->bytes=="raw","opaque config retained");
+@@ -113,6 +116,9 @@
+   auto after=take(service->evaluate({0,5},std::span(&item,1),17,19));check(after.actions.empty(),"manual authority revoked even when durable save fails");
+ }
+ void unsafeAndAuthentication(const fs::path& module){
++  Fixture world(module);world.original();fs::permissions(world.profile/"plugins",fs::perms::all);
++  const auto denied=st::loadApprovedSchedulerService(world.lease,world.module,world.approved);
++  check(!denied&&denied.error().code==st::ErrorCode::UnsafePath,"world-writable plugin data root still rejects");
+   Fixture f(module);f.original();auto bad=f.approved;bad.sha256[0]=bad.sha256[0]=='0'?'1':'0';check(!st::loadApprovedSchedulerService(f.lease,f.module,bad),"bad approval rejects before native load");
+   auto service=f.open();write(f.profile/"plugins"/"SpeedScheduler"/"SavedSchedules.xml",Xml+"\n");
+   check(!service->saveSchedules(f.lease,service->snapshot().revision,{}),"XML CAS detects external bytes");

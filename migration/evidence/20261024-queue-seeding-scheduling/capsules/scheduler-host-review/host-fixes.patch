@@ -1,0 +1,119 @@
+--- a/preview/native/app/session_bridge.cpp
++++ b/preview/native/app/session_bridge.cpp
+@@ -268,7 +268,11 @@
+   std::map<std::string,SchedulerMembership> schedulerMemberships;
+   SchedulerMembership schedulerMembership(const core::TorrentHash& hash) {
+     const auto key=hash.hex();
+-    if(const auto known=schedulerMemberships.find(key);known!=schedulerMemberships.end()){return known->second;}
++    if(const auto known=schedulerMemberships.find(key);known!=schedulerMemberships.end()){
++      auto cached=known->second;
++      if(scheduler->snapshot().settings.useTags){cached.available=cached.available&&schedulerTagsLoaded&&schedulerTagsAvailable;}
++      return cached;
++    }
+     SchedulerMembership result;
+     if(scheduler->snapshot().settings.useTags){
+       if(!schedulerTagsLoaded){
+@@ -294,6 +298,7 @@
+         if(state){
+           result.available=true;result.names={"Uncategorized"};
+           if(const auto* attributes=state->document().find("attributes")){
++            if(attributes->type!=core::Node::Type::Dictionary){result.available=false;}
+             if(const auto* category=attributes->find("category")){
+               if(category->type==core::Node::Type::Bytes&&category->bytes.size()<=4096){result.names={std::string(category->bytes)};}
+               else{result.available=false;}
+@@ -318,9 +323,13 @@
+       if(!row.saved.hash||!row.saved.persistent){continue;}
+       const auto& hash=*row.saved.hash;const auto key=hash.hex();
+       if(!unique.insert(key).second){throw Failure{{storage::ErrorCode::Conflict,"Ambiguous scheduler torrent identity"}};}
++      const auto found=live.find(key);
++      // No inferred completion or synthetic admission for saved-only/unchecked
++      // rows. Scheduling effects require this owner's actual retained handle.
++      if(found==live.end()||!found->second->checked||found->second->failure){continue;}
+       storage::SchedulerTorrent item;item.hash=hash;item.manualRevision=manualRevisions[key];
+       item.forceStarted=row.saved.forceStart;item.paused=pauses.contains(key);
+-      if(const auto found=live.find(key);found!=live.end()){
++      {
+         const auto& current=*found->second;item.token=current.admission;item.complete=current.selectedComplete;
+         switch(current.phase){
+           case engine::ManagedPhase::Checking:item.state=storage::scheduler::TorrentState::Preparing;break;
+@@ -331,11 +340,6 @@
+           case engine::ManagedPhase::Paused:case engine::ManagedPhase::Stopped:item.state=storage::scheduler::TorrentState::Stopped;break;
+           default:item.state=storage::scheduler::TorrentState::Queued;break;
+         }
+-      }else{
+-        // These rows cannot carry current-session scheduler ownership. Their
+-        // stable private token is disjoint from bounded native admission IDs.
+-        item.token=(std::uint64_t{1}<<63)|static_cast<std::uint64_t>(row.saved.sourceIndex+1);
+-        item.state=row.saved.startup==core::StartupState::Stopped?storage::scheduler::TorrentState::Stopped:storage::scheduler::TorrentState::Queued;
+       }
+       if(filters){auto membership=schedulerMembership(hash);item.membershipsAvailable=membership.available;item.memberships=std::move(membership.names);}
+       result.push_back(std::move(item));
+@@ -2366,6 +2370,11 @@
+               packet->snapshot = optionPacket(*host_->optionsBaseline, submission.session,
+                   submission.request, host_->optionsRevision, packet->restartRequired);
+               host_->intakeDefault = optionDefaultPath(*host_->optionsBaseline);
++              if(host_->scheduler){
++                const auto refreshed=host_->scheduler->reload(host_->lease);
++                if(!refreshed){host_->schedulerFailure=text(refreshed.error().message);}
++                else{host_->schedulerMemberships.clear();host_->schedulerTagsLoaded=false;host_->schedulerTagsAvailable=false;host_->schedulerLastTick.reset();}
++              }
+             }
+           }
+           }
+@@ -2468,10 +2477,13 @@
+       static_cast<void>(take(host_->scheduler->saveSettings(host_->lease,host_->scheduler->snapshot().revision,settings,
+           result->schedulesSaved?std::stop_token{}:stop)));
+       result->saved=true;host_->schedulerLastTick.reset();host_->schedulerRestoreDefaults=true;host_->schedulerMemberships.clear();host_->schedulerTagsLoaded=false;
+-      result->snapshot=schedulerPacket(host_->scheduler->snapshot(),value.session,value.request);
+       // Live policy application is independent of the confirmed save result.
+       // Its diagnostics are retained; a failed tick never rolls back a save.
+       tickScheduler();
++      // A successful rate publication reloads the scheduler's configuration CAS
++      // and advances its editor revision. Return the final snapshot, not a stale
++      // packet constructed before that tick.
++      result->snapshot=schedulerPacket(host_->scheduler->snapshot(),value.session,value.request);
+     }catch(const Failure& error){
+       result->failure=text(error.error.message);
+       if(result->schedulesSaved){result->failure=tr("Schedules saved; settings were not saved: %1").arg(result->failure);
+@@ -2500,7 +2512,7 @@
+     const auto local=QDateTime::currentDateTime();
+     auto plan=take(host_->scheduler->evaluate({local.date().dayOfWeek()%7,local.time().hour()*60+local.time().minute()},
+         torrents,static_cast<int>(actual->rateLimits.upload.bytesPerSecond/1024),static_cast<int>(actual->rateLimits.download.bytesPerSecond/1024)));
+-    bool ratesApplied=true;
++    bool ratesApplied=true,configurationPublished=false;
+     if(plan.uploadKiB||plan.downloadKiB){
+       auto source=take(storage::readApplicationSettings(host_->lease));
+       bool seedingOnly=false;
+@@ -2517,12 +2529,32 @@
+       if(!requested){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid saved routing while applying scheduled rates"}};}
+       auto safe=take(engine::prepareLiveSettings(host_->networkPolicy,*requested));
+       static_cast<void>(take(storage::saveApplicationSettings(host_->lease,source,prepared)));
++      configurationPublished=true;
+       const auto applied=host_->engine->applyLiveSettings(*requested);
+       ratesApplied=applied.has_value();if(applied){host_->networkPolicy=std::move(safe.effectivePolicy);}
+       if(!applied){host_->schedulerFailure=tr("Scheduled speeds were saved; restart to apply them");}
+     }
+     static_cast<void>(take(host_->scheduler->acknowledgeRates(plan.id,ratesApplied,ratesApplied)));
+     if(ratesApplied){host_->schedulerRestoreDefaults=false;}
++    if(configurationPublished){
++      // Our own confirmed config write invalidated the old action CAS baseline.
++      // A reload retains same-byte, acknowledged current-session ownership.
++      static_cast<void>(take(host_->scheduler->reload(host_->lease)));
++      host_->schedulerMemberships.clear();host_->schedulerTagsLoaded=false;host_->schedulerTagsAvailable=false;
++      const auto currentLimits=host_->engine->liveSettings();
++      if(!currentLimits||currentLimits->rateLimits.upload.state==core::RateLimitState::Unavailable
++          ||currentLimits->rateLimits.download.state==core::RateLimitState::Unavailable){
++        throw Failure{{storage::ErrorCode::Io,"Actual limits unavailable after scheduled rate publication"}};
++      }
++      torrents=host_->schedulerTorrents();const auto currentTime=QDateTime::currentDateTime();
++      plan=take(host_->scheduler->evaluate({currentTime.date().dayOfWeek()%7,currentTime.time().hour()*60+currentTime.time().minute()},
++          torrents,static_cast<int>(currentLimits->rateLimits.upload.bytesPerSecond/1024),
++          static_cast<int>(currentLimits->rateLimits.download.bytesPerSecond/1024)));
++      // Only the first plan's rate effects were applied. New outstanding rate
++      // changes remain unacknowledged for the next tick; actions use this fresh
++      // plan and its exact new revision/current rows.
++      static_cast<void>(take(host_->scheduler->acknowledgeRates(plan.id,false,false)));
++    }
+     for(const auto& action:plan.actions){
+       auto current=host_->schedulerTorrents();
+       const auto row=std::ranges::find(current,action.hash,&storage::SchedulerTorrent::hash);

@@ -1,0 +1,39 @@
+{
+  "status": "PASS_ACTUAL_QUEUE_CONFIGURATION_HANDOFF_AND_FINAL_RANK_REPLAY",
+  "configuration": {
+    "receipt": "build/queue-20261024/queue-config/oracle-v1/result.json",
+    "receipt_sha256": "0034ee14990953ca51193cd92d373f21f08de35ea642c0e19116f113d849a0c4",
+    "native_driver_sha256": "a265df22b4402e5f522dec6a98a5189a0dc81d763221eb1248e7d763dbc5ee40",
+    "actual_handoff_phases": 4,
+    "conditional_first_priority_ignore_zero_peers": false,
+    "conditional_flag_materialized": false,
+    "retained_original_classes": 5432,
+    "helper_classes_emitted": [
+      "QueueSettingsOracle.class",
+      "ReferenceFence.class"
+    ],
+    "original_core_recompiled": false,
+    "source_manifest_sha256": "2b3b2cd5013377cdd09232241083d9c25a460a58819f6a6be6c3c76073024581"
+  },
+  "isolated_build": {
+    "receipt": "build/queue-20261024/queue-config/isolated-build-v1/result.json",
+    "receipt_sha256": "ea9a12db8254ec17d41b992dc6b6fa1c4e60deb63867f194ebc0f2e6a7dd780b",
+    "compiler_jobs": 1,
+    "shared_native_cache_mutated": false,
+    "input_archives_unchanged": true
+  },
+  "final_rank_replay": {
+    "receipt": "build/queue-20261024/oracle/final-native-replay-v1/result.json",
+    "receipt_sha256": "e106dae4199602923d1163c1fa2d857d3f4f753776d913be63a7ccd906ef1a31",
+    "native_driver_sha256": "9414330ba7d0d5fbb49ac8945fdfa8a1dcceceeaf464a563cbe97f1b240e4011",
+    "admitted_scalar_comparisons": 190,
+    "java_reexecuted": false
+  },
+  "recipes_sha256": {
+    "build/queue-20261024/queue-config/build_isolated_driver.py": "ffe8ae3d9dd4557a57167cb40107b9c0eecb6128d7e8dcf67c03e54090333c38",
+    "build/queue-20261024/queue-config/cmake-target.proposed": "b4b292b714bec2164f7dad49e62f398e09a489bb5e74d198dbf82922e08338f5",
+    "build/queue-20261024/oracle/final_native_replay.py": "52ff8e8744bd12dff7515b6b4e1bd8bf6efb9ee32ba96c1996026ceecd090f3a"
+  },
+  "original_profile_or_process_access": false,
+  "native_source_or_cmake_mutation": false
+}

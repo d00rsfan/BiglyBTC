@@ -1,0 +1,149 @@
+--- before-signature/run.py
++++ after/run.py
+@@ -83,6 +83,7 @@
+ 
+     try:
+         sources = sorted((HERE / 'source').rglob('*.java'))
++        assert {path.relative_to(HERE).as_posix() for path in sources} == set(manifest['java_source_allowlist']), 'Exact authored Java source allowlist required'
+         run('javac-new-helpers', [JAVA / 'javac', '-J-XX:ActiveProcessorCount=2', '--release', '8',
+             '-encoding', 'UTF-8', '-proc:none', '-implicit:none', '-sourcepath', work / 'empty-sourcepath',
+             '-cp', COHORT, '-d', work / 'classes', *sources])
+--- before-signature/SCOPE.md
++++ after/SCOPE.md
+@@ -1,4 +1,4 @@
+-# Queue scalar oracle: bootstrap-timing amendment
++# Queue scalar oracle: unused-signature amendment
+ 
+ The subject is the retained, unchanged cb8c6cb9bb97916cbc7e80338a017200ffc3e71f
+ `RankCalculatorReal.class` and its original nested `SR` class. The actual
+@@ -9,9 +9,9 @@
+ 
+ `QueueRankLauncher` makes an isolated URLClassLoader with helper output first,
+ the retained original class directory second, and the JDK platform loader as
+-parent. It verifies the subject's code origin. Only six original dependency
++parent. It verifies the subject's code origin. Only seven original dependency
+ names are replaced: `COConfigurationManager`, `SystemTime`, `ThreadPool`,
+-`Debug`, `FileUtil`, and `PluginCoreUtils`. Their complete new source is visible
++`Debug`, `FileUtil`, `PluginCoreUtils`, and `StringInterner`. Their complete new source is visible
+ in `source/`. Original subject classes cannot be emitted by helper compilation:
+ the source path is empty, implicit compilation is disabled, and the runner
+ checks every output class against the authored source names.
+@@ -58,6 +58,30 @@
+ are unchanged. New attempts live only under this amendment directory; the
+ original failed attempt cannot be overwritten.
+ 
++## Signature-only interner provider and retained fenced failure
++
++The bootstrap-amended parent attempt in `../bootstrap-amendment/run-r1` reached
++launcher main with the exact fence installed. Before constructing the first
++original rank subject, Java Proxy initialized `StringInterner.FileKey` while
++resolving the unchanged `DownloadManager.getSaveLocationFileKey` and
++`DownloadManagerState.getFileLink` method signatures. The original
++`FileKey.EMPTY_FILE` caused outer `StringInterner` initialization, whose cleaner
++starts `AEThread2`; the strict thread fence denied it. Raw original stdout is
++empty, so that failed attempt earns no scalar comparison credit. Its complete
++logs and both previous frozen capsules remain untouched.
++
++The seventh and only new provider is a signature-only `StringInterner` scaffold.
++It retains the `StringSupplier` interface shape and `DirKey extends FileKey`
++relationship, with no static EMPTY construction, cleaner, interning, filesystem
++value or algorithm. All declared constructors and value methods fail through
++the latched `Providers.fail`. The scalar subject has no StringInterner call;
++this provides unused return/argument type identities only. Actual original
++DownloadManager/DownloadManagerState interfaces are not replaced or narrowed.
++The runner additionally requires an explicit eleven-source allowlist, while its
++existing helper-output allowlist excludes implicit original compilation. This
++capsule has not been compiled or executed; any further unused signature service
++initialization must be reviewed explicitly instead of silently stubbed.
++
+ ## Fixed comparison scope
+ 
+ `vectors.json` and `vectors.tsv` contain 96 explicit input cases, not numeric
+@@ -97,7 +121,7 @@
+ Then, after independent review and explicit execution authorization:
+ 
+ ```
+-python3 build/queue-20261024/oracle/bootstrap-amendment/run.py \
++python3 build/queue-20261024/oracle/signature-amendment/run.py \
+   --driver /ABSOLUTE/ROOT-BUILT/biglybtc-queue-rank-oracle-driver \
+   --attempt run-r1
+ ```
+--- before-signature/source-pins.json
++++ after/source-pins.json
+@@ -71,6 +71,10 @@
+     },
+     "core/src/com/biglybt/core/util/FrequencyLimitedDispatcher.java": {
+       "sha256": "ee504cf9739b0777e050f64cb11abcb679c7bbb368e9bea91945aced3abde0ba"
++    },
++    "core/src/com/biglybt/core/util/StringInterner.java": {
++      "sha256": "3d425e024d5560a170838d8f5afdb9deb105deac21317b9e4496314ba462d550",
++      "git_blob": "adff39f0126a4f1d567518d720fd4b0c189b52dc"
+     }
+   },
+   "retained_subject_class_sha256": {
+@@ -120,10 +124,31 @@
+     "com/biglybt/core/util/FileUtil.java",
+     "com/biglybt/core/util/SystemTime.java",
+     "com/biglybt/core/util/ThreadPool.java",
+-    "com/biglybt/pifimpl/local/PluginCoreUtils.java"
++    "com/biglybt/pifimpl/local/PluginCoreUtils.java",
++    "com/biglybt/core/util/StringInterner.java"
+   ],
+   "native_policy_header": {
+     "path": "build/queue-20261024/policy/staging/preview/native/core/include/biglybtc/queue_policy.hpp",
+     "sha256": "80646717699588c2839d2fe98bc3296b0d00dcca769931db3d1fb3be4b26b194"
++  },
++  "retained_unused_signature_class_sha256": {
++    "com/biglybt/core/util/StringInterner.class": "e94653183994b673438802761efe1da79257897ba5cf2b2a4d51e8b8563373a9",
++    "com/biglybt/core/util/StringInterner$FileKey.class": "fcca5c4d541f160347cf6df70789937ad9677f12f794286f310808eadb985028",
++    "com/biglybt/core/util/StringInterner$DirKey.class": "97605282588f6be27eb20bf7a68f145f4b6dcdd05b55922cad38f975399de0cf",
++    "com/biglybt/core/util/StringInterner$StringSupplier.class": "034096ad44c4d548f50114c04ce85675751f073411ef865d5e82541a2527b2d2"
++  },
++  "signature_only_provider_scope": {
++    "source": "com/biglybt/core/util/StringInterner.java",
++    "types": [
++      "StringInterner",
++      "StringInterner.StringSupplier",
++      "StringInterner.FileKey",
++      "StringInterner.DirKey"
++    ],
++    "cause": "Proxy class initialization resolves original DownloadManager.getSaveLocationFileKey and DownloadManagerState.getFileLink signatures; original FileKey.EMPTY_FILE initialization starts the outer interner cleaner thread.",
++    "behavior": "Only type identities, interface shape and DirKey-is-FileKey inheritance are supplied. No production methods/fields/constructor semantics are emulated; any declared constructor or value-method invocation latches Providers.fail.",
++    "original_interfaces_unchanged": true,
++    "rank_subjects_unchanged": true,
++    "no_original_interner_behavior_equality": true
+   }
+ }
+--- /dev/null
++++ after/source/com/biglybt/core/util/StringInterner.java
+@@ -0,0 +1,30 @@
++package com.biglybt.core.util;
++
++import java.util.function.Supplier;
++import queueoracle.Providers;
++
++/**
++ * Signature-only provider for original proxy return types. No interning,
++ * filesystem values, EMPTY instances or cleanup threads are supplied.
++ * The scalar subject must never construct or use one of these values.
++ */
++public final class StringInterner {
++    private StringInterner() { throw Providers.fail("Unused StringInterner constructed"); }
++
++    public interface StringSupplier extends Supplier<String>, Comparable<StringSupplier> {
++        boolean isEmpty();
++    }
++
++    public static class FileKey implements StringSupplier {
++        protected FileKey() { throw Providers.fail("Unused FileKey constructed"); }
++        @Override public String get() { throw Providers.fail("Unused FileKey.get invoked"); }
++        @Override public boolean isEmpty() { throw Providers.fail("Unused FileKey.isEmpty invoked"); }
++        @Override public int compareTo(StringSupplier other) {
++            throw Providers.fail("Unused FileKey.compareTo invoked");
++        }
++    }
++
++    public static class DirKey extends FileKey {
++        private DirKey() { super(); }
++    }
++}

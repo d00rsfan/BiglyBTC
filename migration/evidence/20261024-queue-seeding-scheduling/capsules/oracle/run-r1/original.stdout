@@ -1,0 +1,28 @@
+java.lang.SecurityException 
+{0x00000000ffde7300} - klass: 'java/lang/SecurityException'
+ - ---- fields (total size 5 words):
+ - private transient 'depth' 'I' @12  6
+ - private transient 'backtrace' 'Ljava/lang/Object;' @16  a 'java/lang/Object'[6] {0x00000000ffde7328} (ffde7328)
+ - private 'detailMessage' 'Ljava/lang/String;' @20  "No thread creation"{0x00000000ffde72c0} (ffde72c0)
+ - private 'cause' 'Ljava/lang/Throwable;' @24  a 'java/lang/SecurityException'{0x00000000ffde7300} (ffde7300)
+ - private 'stackTrace' '[Ljava/lang/StackTraceElement;' @28  a 'java/lang/StackTraceElement'[0] {0x00000000ffd14aa8} (ffd14aa8)
+ - private 'suppressedExceptions' 'Ljava/util/List;' @32  a 'java/util/Collections$EmptyList'{0x00000000ffd14af8} (ffd14af8)
+#
+# A fatal error has been detected by the Java Runtime Environment:
+#
+#  Internal Error (exceptions.cpp:532), pid=23, tid=24
+#  fatal error: ExceptionMark destructor expects no pending exceptions
+#
+# JRE version: OpenJDK Runtime Environment (17.0.20+8) (build 17.0.20+8-1-26.04-Ubuntu)
+# Java VM: OpenJDK 64-Bit Server VM (17.0.20+8-1-26.04-Ubuntu, mixed mode, sharing, tiered, compressed oops, compressed class ptrs, g1 gc, linux-amd64)
+# Problematic frame:
+# V  [libjvm.so+0x6d9531]  ExceptionMark::~ExceptionMark()+0xb1
+#
+# No core dump will be written. Core dumps have been disabled. To enable core dumping, try "ulimit -c unlimited" before starting Java again
+#
+# An error report file with more information is saved as:
+# /tmp/biglybtc-queue-oracle-eiq0hjm7/hs_err_pid23.log
+#
+# If you would like to submit a bug report, please visit:
+#   https://bugs.launchpad.net/ubuntu/+source/openjdk-17
+#

@@ -1,0 +1,26 @@
+{
+  "status": "PASS",
+  "original_cases": 96,
+  "original_observed_scalars": 192,
+  "admitted_scalar_comparisons": 190,
+  "excluded_cases": [
+    "unknown-scrape"
+  ],
+  "mismatches": [],
+  "vectors_sha256": "cef24ea137ccd088c1ea40e497aa5b95028fd2ef2a9cb1a6922e4b7406c1e46a",
+  "original_stdout_sha256": "0e97f29d4de9ea7d93b752c3a2f9df2ebca5418cfb0b904700ffb5b862d2683d",
+  "native_stdout_sha256": "2e580aab66f341d5d2883f5696f9a00811d9aa987e6c5c73876caec276cf050b",
+  "scope": "Actual retained Java rank/FP methods under explicit inert providers versus pure native scalar outputs. No whole scheduler, timers, ordering effects, engine activation or client parity.",
+  "native_driver_sha256": "9414330ba7d0d5fbb49ac8945fdfa8a1dcceceeaf464a563cbe97f1b240e4011",
+  "native_only_replay": true,
+  "java_reexecuted": false,
+  "original_receipt_sha256": "3079f104e56d3d90b0e5e2cd5abe983d80cfbe4437d7f63140498f7a7cba8b39",
+  "original_receipt": "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/run-r1/result.json",
+  "command": [
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-queue-rank-oracle-driver"
+  ],
+  "stdin": "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/vectors.tsv",
+  "stdin_sha256": "dc5e94367062f2511daf1d6620d63b585adb24b05e998c1f2a743415807ec386",
+  "exit_code": 0,
+  "elapsed_seconds": 0.02742554247379303
+}

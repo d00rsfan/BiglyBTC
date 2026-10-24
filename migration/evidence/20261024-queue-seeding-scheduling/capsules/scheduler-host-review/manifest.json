@@ -1,0 +1,39 @@
+{
+  "source_only": true,
+  "source_directory": "staging",
+  "source_sha256": {
+    "preview/native/app/session_bridge.cpp": "1f9201ff0f0baa497015ca311dfa1e4a088ca7db79b46d521fa0b1fb48ada6c6",
+    "preview/native/tests/scheduler_host_engine_tests.cpp": "31bef2acb6534a376896e977c5b65b6e53734e7d07c6a2cce9bec8b350763597",
+    "preview/native/tests/scheduler_host_fixture.hpp": "34e5dd489cd5825fd4bc8ba28785516ab51e67649d5ab9e97a567fb60fccf7af",
+    "preview/native/tests/scheduler_host_tests.cpp": "3f3fcd38b5436e20b86073e08600b40edf06967a72a54fa28016786e875928c9"
+  },
+  "before_inputs": {
+    "staging/preview/native/app/session_bridge.cpp": "32b6105a700f3bcc4aeffd8d9970e9418a3fd483927599328558124ba9267b90",
+    "staging/preview/native/app/session_bridge.hpp": "dfabeadddf4efa936522c6a5534b951333ca06d05f4bdfcecfe0751bda1a9ab5",
+    "scheduler_host_methods.txt": "c70020d9162d541c9d7b58724227c3b37e256762b7dcb42ecd446c3646cdabe6",
+    "scheduler_host_members.txt": "4b93176af304aa9126e21df7bf0cf1a4377cedcd4ec5017c5f64dee6f1a0347f",
+    "staging/preview/native/ui/scheduler_presentation.hpp": "edb4b90ccccf57bfdd5ac54c83bf49f6cb3a5b6fc99e91075923c66c61a39e31"
+  },
+  "tests_executed": false,
+  "java_executed": false,
+  "native_mutated": false,
+  "artifact_sha256": {
+    "ADOPTION.md": "f2c64960b8c02ee3144fb9ff81f63c6bed408846b4b56463d166feebf4b6325f",
+    "before/scheduler_host_members.txt": "4b93176af304aa9126e21df7bf0cf1a4377cedcd4ec5017c5f64dee6f1a0347f",
+    "before/scheduler_host_methods.txt": "c70020d9162d541c9d7b58724227c3b37e256762b7dcb42ecd446c3646cdabe6",
+    "before/staging/preview/native/app/session_bridge.cpp": "32b6105a700f3bcc4aeffd8d9970e9418a3fd483927599328558124ba9267b90",
+    "before/staging/preview/native/app/session_bridge.hpp": "dfabeadddf4efa936522c6a5534b951333ca06d05f4bdfcecfe0751bda1a9ab5",
+    "before/staging/preview/native/ui/scheduler_presentation.hpp": "edb4b90ccccf57bfdd5ac54c83bf49f6cb3a5b6fc99e91075923c66c61a39e31",
+    "host-fixes.patch": "e91c74ef1dfbb4243a8f29105ad5226ab355acc7fd873831f44322d3bdcf3b55",
+    "input-sha256.json": "08274e901407fe4f6979ac40ab885d02004315cc48db57bfb0363456467b28d3",
+    "review.json": "a031f05606c8b4ef5d2e673d9e34afee607c241fef590a9158f59cde5df2ccd8",
+    "scheduler_membership.txt": "6f2cca2333f461143e680ad3bff3e2d7b3fbf97bcf7d4286c85ac0b6c46f0c06",
+    "scheduler_save.txt": "6a4652d2cbd6eab935ebbc6fd7f6700b0528ac4abe4398bd93774cb2cdc6bdb6",
+    "scheduler_tick.txt": "26bdc0e436f2585fc3edab0db9f9ef90df1812489d4e7235cddf1a95268aaaa9",
+    "scheduler_torrents.txt": "7a0411b16c2fed95f829eba775a9e712822a7788ac5e7e418f86f4b3b34e6187",
+    "staging/preview/native/app/session_bridge.cpp": "1f9201ff0f0baa497015ca311dfa1e4a088ca7db79b46d521fa0b1fb48ada6c6",
+    "staging/tests/scheduler_host_engine_tests.cpp": "31bef2acb6534a376896e977c5b65b6e53734e7d07c6a2cce9bec8b350763597",
+    "staging/tests/scheduler_host_fixture.hpp": "34e5dd489cd5825fd4bc8ba28785516ab51e67649d5ab9e97a567fb60fccf7af",
+    "staging/tests/scheduler_host_tests.cpp": "3f3fcd38b5436e20b86073e08600b40edf06967a72a54fa28016786e875928c9"
+  }
+}

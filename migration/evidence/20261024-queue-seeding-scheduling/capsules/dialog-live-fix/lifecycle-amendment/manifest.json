@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "status": "SOURCE_FROZEN_TEST_ONLY_LIFECYCLE_CORRECTION",
+  "sources": {
+    "preview/native/tests/scheduler_dialog_tests.cpp": {
+      "before_sha256": "9b811c8fd36d130b44249e3fbe3a78987ddf3abc16bb6cf5d8d88b6a8ae7b6a7",
+      "after_sha256": "902790876abbdfefd13e8b13c3541a3f64f4d9149e3a3c469eccec5f7a4d5962",
+      "before": "before/preview/native/tests/scheduler_dialog_tests.cpp",
+      "source": "staging/preview/native/tests/scheduler_dialog_tests.cpp"
+    }
+  },
+  "artifacts": {
+    "before/preview/native/tests/scheduler_dialog_tests.cpp": "9b811c8fd36d130b44249e3fbe3a78987ddf3abc16bb6cf5d8d88b6a8ae7b6a7",
+    "changes.patch": "f506a75994bba1927ccf385c9c18e5f25071e37c435afe926d054d53f0493e1e",
+    "correction.json": "a503f5c01f275c0d79bbae4a8c5ec7cf43f9da475ed56940188b36faf3d0e3d8",
+    "staging/preview/native/tests/scheduler_dialog_tests.cpp": "902790876abbdfefd13e8b13c3541a3f64f4d9149e3a3c469eccec5f7a4d5962"
+  },
+  "native_mutated": false,
+  "corrected_execution": false
+}

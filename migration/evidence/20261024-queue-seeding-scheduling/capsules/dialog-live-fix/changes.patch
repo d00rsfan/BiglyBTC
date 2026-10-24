@@ -1,0 +1,189 @@
+--- before/preview/native/ui/scheduler_dialog.cpp
++++ after/preview/native/ui/scheduler_dialog.cpp
+@@ -17,6 +17,7 @@
+ #include <QTimeEdit>
+ #include <QVBoxLayout>
+ #include <algorithm>
++#include <array>
+ #include <limits>
+ #include <optional>
+ #include <vector>
+@@ -54,6 +55,7 @@
+   bool busy=false, loading=false, saving=false, rendering=false, changed=false, closeAfterSave=false, loadWanted=false;
+   SchedulerPresentation baseline;
+   std::vector<std::optional<std::size_t>> sources;
++  std::vector<std::array<QPointer<QWidget>,11>> rowControls;
+   QPointer<QTableWidget> table;
+   QPointer<QCheckBox> enabled,tags,forced,enforce;
+   QPointer<QSpinBox> poll,upload,download;
+@@ -110,16 +112,24 @@
+     loadWanted=false;loading=true;active=++request;const auto alive=guard();
+     if(!text(QStringLiteral("Loading schedules…"))||!alive.current()||!controls()||!alive.current()){return;}emit q->loadRequested({session,active});
+   }
++  bool setCell(int row,int column,QWidget* widget) {
++    const auto alive=guard();
++    if(!table||row<0||static_cast<std::size_t>(row)>=rowControls.size()){return false;}
++    const QPointer<QWidget> retained(widget);
++    rowControls[static_cast<std::size_t>(row)][static_cast<std::size_t>(column)]=widget;
++    table->setCellWidget(row,column,widget);
++    return alive.current()&&table&&retained;
++  }
+   QCheckBox* check(int row,int column,bool value) {
+     const auto alive=guard();if(!table){return nullptr;}
+     QPointer<QCheckBox> box=new QCheckBox(table);box->setChecked(value);
+-    if(!alive.current()||!box||!table){return nullptr;}table->setCellWidget(row,column,box);
++    if(!alive.current()||!box||!table||!setCell(row,column,box)){return nullptr;}
+     if(!alive.current()||!box){return nullptr;}
+     QObject::connect(box,&QCheckBox::toggled,q,[this]{edited();});return box.data();
+   }
+   bool append(const schedule::Schedule& s,std::optional<std::size_t> source) {
+     const auto alive=guard();if(!table){return false;}
+-    const int row=table->rowCount();table->insertRow(row);if(!alive.current()||!table){return false;}sources.push_back(source);
++    const int row=table->rowCount();table->insertRow(row);if(!alive.current()||!table){return false;}sources.push_back(source);rowControls.emplace_back();
+     check(row,0,s.enabled);if(!alive.current()||!table){return false;}
+     auto* days=new QWidget(table);auto* daysLayout=new QHBoxLayout(days);daysLayout->setContentsMargins(0,0,0,0);
+     const std::array<QString,7> names{QStringLiteral("Su"),QStringLiteral("Mo"),QStringLiteral("Tu"),QStringLiteral("We"),QStringLiteral("Th"),QStringLiteral("Fr"),QStringLiteral("Sa")};
+@@ -127,22 +137,22 @@
+       auto* box=new QCheckBox(names[day],days);box->setObjectName(QStringLiteral("day-%1").arg(day));box->setChecked(s.days[day]);
+       daysLayout->addWidget(box);QObject::connect(box,&QCheckBox::toggled,q,[this]{edited();});
+     }
+-    table->setCellWidget(row,1,days);if(!alive.current()||!table){return false;}
++    if(!setCell(row,1,days)||!alive.current()||!table){return false;}
+     for (int column : {2,3}) {
+       const int minute=column==2?s.start:s.end;auto* time=new QTimeEdit(QTime(minute/60,minute%60),table);
+-      time->setDisplayFormat(QStringLiteral("HH:mm"));table->setCellWidget(row,column,time);if(!alive.current()||!table){return false;}
++      time->setDisplayFormat(QStringLiteral("HH:mm"));if(!setCell(row,column,time)||!alive.current()||!table){return false;}
+       QObject::connect(time,&QTimeEdit::timeChanged,q,[this]{edited();});
+     }
+     for (int column : {4,5}) {
+       auto* rate=new QSpinBox(table);rate->setRange(0,MaximumRate);rate->setSpecialValueText(QStringLiteral("Unlimited"));
+-      rate->setValue(column==4?s.upload:s.download);table->setCellWidget(row,column,rate);if(!alive.current()||!table){return false;}
++      rate->setValue(column==4?s.upload:s.download);if(!setCell(row,column,rate)||!alive.current()||!table){return false;}
+       QObject::connect(rate,&QSpinBox::valueChanged,q,[this]{edited();});
+     }
+     check(row,6,s.downloadsPaused);if(!alive.current()||!table){return false;}
+     check(row,7,s.seedsPaused);if(!alive.current()||!table){return false;}
+     auto* category=new QLineEdit(table);category->setMaxLength(4096);
+     if (s.category) { category->setText(QString::fromUtf8(*s.category)); }
+-    category->setProperty("wasNull",!s.category);table->setCellWidget(row,8,category);if(!alive.current()||!table){return false;}
++    category->setProperty("wasNull",!s.category);if(!setCell(row,8,category)||!alive.current()||!table){return false;}
+     QObject::connect(category,&QLineEdit::textChanged,q,[self=QPointer<SchedulerDialog>(q),field=QPointer<QLineEdit>(category)]{
+       if(!self||!field){return;}const auto alive=self->impl_->guard();field->setProperty("wasNull",false);
+       if(alive.current()){self->impl_->edited();}
+@@ -152,22 +162,28 @@
+   }
+   std::optional<SchedulerSubmission> submission() const {
+     const auto settings=preferences();
+-    if(!settings||!baseline||!table||!upload||!download||!enforce||sources.size()!=static_cast<std::size_t>(table->rowCount())){return {};}
++    if(!settings||!baseline||!table||!upload||!download||!enforce||sources.size()!=static_cast<std::size_t>(table->rowCount())||rowControls.size()!=sources.size()){return {};}
+     SchedulerSubmission value{session,active,baseline->revision,*settings,upload->value(),download->value(),enforce->isChecked(),{}};
+     for (int row=0;row<table->rowCount();++row) {
+       schedule::Schedule s;
+-      for(int column:{0,6,7,9,10}){if(!qobject_cast<QCheckBox*>(table->cellWidget(row,column))){return {};}}
+-      for(int column:{2,3}){if(!qobject_cast<QTimeEdit*>(table->cellWidget(row,column))){return {};}}
+-      for(int column:{4,5}){if(!qobject_cast<QSpinBox*>(table->cellWidget(row,column))){return {};}}
+-      if(!qobject_cast<QLineEdit*>(table->cellWidget(row,8))||!table->cellWidget(row,1)){return {};}
+-      for(int day=0;day<7;++day){if(!table->cellWidget(row,1)->findChild<QCheckBox*>(QStringLiteral("day-%1").arg(day))){return {};}}
+-      auto boolean=[&](int column){return qobject_cast<QCheckBox*>(table->cellWidget(row,column))->isChecked();};
++      const auto& cells=rowControls[static_cast<std::size_t>(row)];
++      // A directly deleted cell can remain in Qt's raw editor lookup until
++      // cleanup. Check the retained weak object before touching that lookup.
++      for(std::size_t column=0;column<cells.size();++column){
++        if(!cells[column]||table->cellWidget(row,static_cast<int>(column))!=cells[column].data()){return {};}
++      }
++      for(int column:{0,6,7,9,10}){if(!qobject_cast<QCheckBox*>(cells[static_cast<std::size_t>(column)].data())){return {};}}
++      for(int column:{2,3}){if(!qobject_cast<QTimeEdit*>(cells[static_cast<std::size_t>(column)].data())){return {};}}
++      for(int column:{4,5}){if(!qobject_cast<QSpinBox*>(cells[static_cast<std::size_t>(column)].data())){return {};}}
++      if(!qobject_cast<QLineEdit*>(cells[8].data())){return {};}
++      for(int day=0;day<7;++day){if(!cells[1]->findChild<QCheckBox*>(QStringLiteral("day-%1").arg(day))){return {};}}
++      auto boolean=[&](int column){return qobject_cast<QCheckBox*>(cells[static_cast<std::size_t>(column)].data())->isChecked();};
+       s.enabled=boolean(0);s.downloadsPaused=boolean(6);s.seedsPaused=boolean(7);s.onlyCategory=boolean(9);s.excludeCategory=boolean(10);
+-      for (int day=0;day<7;++day) {s.days[day]=table->cellWidget(row,1)->findChild<QCheckBox*>(QStringLiteral("day-%1").arg(day))->isChecked();}
+-      auto minute=[&](int column){const auto t=qobject_cast<QTimeEdit*>(table->cellWidget(row,column))->time();return t.hour()*60+t.minute();};
++      for (int day=0;day<7;++day) {s.days[day]=cells[1]->findChild<QCheckBox*>(QStringLiteral("day-%1").arg(day))->isChecked();}
++      auto minute=[&](int column){const auto t=qobject_cast<QTimeEdit*>(cells[static_cast<std::size_t>(column)].data())->time();return t.hour()*60+t.minute();};
+       s.start=minute(2);s.end=minute(3);
+-      s.upload=qobject_cast<QSpinBox*>(table->cellWidget(row,4))->value();s.download=qobject_cast<QSpinBox*>(table->cellWidget(row,5))->value();
+-      auto* category=qobject_cast<QLineEdit*>(table->cellWidget(row,8));
++      s.upload=qobject_cast<QSpinBox*>(cells[4].data())->value();s.download=qobject_cast<QSpinBox*>(cells[5].data())->value();
++      auto* category=qobject_cast<QLineEdit*>(cells[8].data());
+       s.category=category->property("wasNull").toBool()?std::nullopt:std::optional{category->text().toUtf8().toStdString()};
+       value.schedules.push_back({sources[static_cast<std::size_t>(row)],std::move(s)});
+     }
+@@ -185,7 +201,7 @@
+     for(const auto& object:objects){if(object){blocked.push_back(std::make_unique<SafeSignalBlock>(object));}}
+     if(!table||!upload||!download||!enforce){return false;}
+     const auto retained=baseline;
+-    table->setRowCount(0);if(!alive.current()||!table){return false;}sources.clear();
++    table->setRowCount(0);if(!alive.current()||!table){return false;}sources.clear();rowControls.clear();
+     if(!setPreferences(retained->snapshot->preferences)||!alive.current()){return false;}
+     const auto& c=retained->snapshot->configuration;
+     upload->setValue(c.defaultUpload);if(!alive.current()||!download){return false;}
+@@ -247,7 +263,7 @@
+     if(!self||!self->impl_->table){return;}const auto alive=self->impl_->guard();const int r=self->impl_->table->currentRow();
+     if(r>=0&&static_cast<std::size_t>(r)<self->impl_->sources.size()){
+       self->impl_->table->removeRow(r);if(!alive.current()){return;}
+-      self->impl_->sources.erase(self->impl_->sources.begin()+r);self->impl_->edited();
++      self->impl_->sources.erase(self->impl_->sources.begin()+r);self->impl_->rowControls.erase(self->impl_->rowControls.begin()+r);self->impl_->edited();
+     }
+   });
+   impl_->status=new QLabel(this);impl_->status->setWordWrap(true);impl_->status->setTextFormat(Qt::PlainText);impl_->status->setObjectName(QStringLiteral("scheduler-status"));layout->addWidget(impl_->status);
+--- before/preview/native/tests/scheduler_dialog_tests.cpp
++++ after/preview/native/tests/scheduler_dialog_tests.cpp
+@@ -1,10 +1,14 @@
+ #include "scheduler_dialog.hpp"
+ 
++#include <QApplication>
+ #include <QCheckBox>
++#include <QDir>
+ #include <QEvent>
++#include <QFileInfo>
+ #include <QLabel>
+ #include <QHeaderView>
+ #include <QPointer>
++#include <QPixmap>
+ #include <QPushButton>
+ #include <QSignalSpy>
+ #include <QSpinBox>
+@@ -12,9 +16,23 @@
+ #include <QtTest>
+ #include <functional>
+ #include <limits>
++#include <unistd.h>
+ 
+ using namespace biglybtc::ui;
+ namespace {
++bool captureScheduler(QWidget& widget) {
++  const auto requested=qgetenv("BIGLYBTC_SCHEDULER_CAPTURE_DIRECTORY");
++  if(requested.isEmpty()){return true;}
++  const QFileInfo directory(QString::fromLocal8Bit(requested));
++  if(!directory.isAbsolute()||!directory.isDir()||directory.isSymLink()
++      ||directory.ownerId()!=static_cast<uint>(::geteuid())
++      ||!(directory.permissions()&QFileDevice::WriteOwner)){return false;}
++  const auto canonical=directory.canonicalFilePath();if(canonical.isEmpty()){return false;}
++  const auto destination=QDir(canonical).filePath(QStringLiteral("speed-scheduler-preview.png"));
++  if(QFileInfo(destination).isSymLink()){return false;}
++  const QPointer<QWidget> alive(&widget);QApplication::processEvents();
++  return alive&&alive->grab().save(destination,"PNG");
++}
+ SchedulerPresentation packet(SchedulerRequest request, quint64 revision=1,
+     bool enabled=false, int upload=17, int poll=10000) {
+   auto values=std::make_shared<SchedulerValues>();
+@@ -66,6 +84,7 @@
+     QCOMPARE(table->rowCount(),1);QCOMPARE(table->columnCount(),11);
+     QCOMPARE(table->verticalHeader()->count(),1);
+     QVERIFY(!dialog.pending());QVERIFY(!dialog.dirty());QCOMPARE(reads.count(),1);
++    QVERIFY(captureScheduler(dialog));
+   }
+   void staleSessionsRequestsAndMalformedSnapshotCannotReplaceDraft() {
+     SchedulerDialog dialog;QSignalSpy reads(&dialog,&SchedulerDialog::loadRequested);
+@@ -175,7 +194,8 @@
+     QVERIFY(dialog.setSnapshot(packet(reads.at(0).at(0).value<SchedulerRequest>())));
+     dialog.findChild<QSpinBox*>("scheduler-default-upload")->setValue(18);
+     auto* table=dialog.findChild<QTableWidget*>("scheduler-schedules");QVERIFY(table);
+-    delete table->cellWidget(0,4);
++    const QPointer<QWidget> deleted=table->cellWidget(0,4);QVERIFY(deleted);
++    delete deleted.data();QVERIFY(deleted.isNull());
+     dialog.findChild<QPushButton*>("scheduler-apply")->click();
+     QCOMPARE(writes.count(),0);QVERIFY(!dialog.pending());QVERIFY(dialog.dirty());
+     QVERIFY(dialog.findChild<QLabel*>("scheduler-status")->text().contains(QStringLiteral("unavailable")));

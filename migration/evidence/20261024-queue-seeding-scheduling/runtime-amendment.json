@@ -1,0 +1,26 @@
+[
+  {
+    "path": "preview/native/engine/persistent_session.cpp",
+    "before_sha256": "4b1e883f7e146427658da03285b2c56224f77ec7aec51c9374b213958032fa42",
+    "source": "/home/yurii/Java/BiglyBT/build/queue-20261024/root/staging/preview/native/engine/persistent_session.cpp",
+    "sha256": "a7d1c1147deca77ad36074c2548eb8eec97685edb33ecb51c8be56190c05c232"
+  },
+  {
+    "path": "preview/native/core/src/queue_policy.cpp",
+    "before_sha256": "504f5326526cbdc4c32d1f46ac79840e8bc1066b95ebc9b5fe870f8806a137d8",
+    "source": "/home/yurii/Java/BiglyBT/build/queue-20261024/root/staging/preview/native/core/src/queue_policy.cpp",
+    "sha256": "ff6ad9100879002c088938c32926eefb4b5d3c6c4ecbce64c7a443b6fe3783bf"
+  },
+  {
+    "path": "preview/native/tests/queue_policy_tests.cpp",
+    "before_sha256": "8552071374ec02a2df3fb3b413bc2c0787c586ac659883b6dea7134e668da0e3",
+    "source": "/home/yurii/Java/BiglyBT/build/queue-20261024/root/staging/preview/native/tests/queue_policy_tests.cpp",
+    "sha256": "8512cb6472ae2c3f5f2ddf134770305d2ba61bae59ded9c839bdfe9b05eeaadc"
+  },
+  {
+    "path": "preview/native/tests/scheduler_host_engine_tests.cpp",
+    "before_sha256": "31bef2acb6534a376896e977c5b65b6e53734e7d07c6a2cce9bec8b350763597",
+    "source": "/home/yurii/Java/BiglyBT/build/queue-20261024/root/staging/preview/native/tests/scheduler_host_engine_tests.cpp",
+    "sha256": "68aa704ef71adc5bbdefe2a78ca65b3772fac53ee7a1662bd3dcfb49ee6a0d90"
+  }
+]

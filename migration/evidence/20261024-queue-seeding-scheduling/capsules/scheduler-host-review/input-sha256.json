@@ -1,0 +1,7 @@
+{
+  "staging/preview/native/app/session_bridge.cpp": "32b6105a700f3bcc4aeffd8d9970e9418a3fd483927599328558124ba9267b90",
+  "staging/preview/native/app/session_bridge.hpp": "dfabeadddf4efa936522c6a5534b951333ca06d05f4bdfcecfe0751bda1a9ab5",
+  "scheduler_host_methods.txt": "c70020d9162d541c9d7b58724227c3b37e256762b7dcb42ecd446c3646cdabe6",
+  "scheduler_host_members.txt": "4b93176af304aa9126e21df7bf0cf1a4377cedcd4ec5017c5f64dee6f1a0347f",
+  "staging/preview/native/ui/scheduler_presentation.hpp": "edb4b90ccccf57bfdd5ac54c83bf49f6cb3a5b6fc99e91075923c66c61a39e31"
+}

@@ -1,0 +1,6 @@
+# Copy frozen queue-config/driver.cpp to tests/queue_settings_roundtrip_driver.cpp.
+add_executable(biglybtc-queue-settings-roundtrip-driver queue_settings_roundtrip_driver.cpp)
+target_link_libraries(biglybtc-queue-settings-roundtrip-driver PRIVATE biglybtc_profile)
+target_compile_options(biglybtc-queue-settings-roundtrip-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+# The original-Java handoff is a separate explicit generated-profile recipe;
+# do not run Java through every CTest/compiler lane.

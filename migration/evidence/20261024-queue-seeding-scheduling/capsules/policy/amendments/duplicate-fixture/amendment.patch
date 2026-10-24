@@ -1,0 +1,25 @@
+--- a/preview/native/tests/queue_policy_tests.cpp
++++ b/preview/native/tests/queue_policy_tests.cpp
+@@ -52,7 +52,11 @@
+       auto d=config({{"max downloads",value}});const auto p=readQueuePolicy(&d);
+       CHECK(!p&&p.error().key=="max downloads");
+     }
+-    auto duplicate=config({{"max downloads","i1e"},{"max downloads","i2e"}});CHECK(!readQueuePolicy(&duplicate));
++    // The owning parser rejects duplicate dictionaries before a Document can
++    // enter the policy API. Do not require this deliberately invalid fixture
++    // to pass the valid-document helper.
++    const auto duplicate=Document::parse("d"+bytes("max downloads")+"i1e"+bytes("max downloads")+"i2ee");
++    CHECK(!duplicate&&duplicate.error().code=="duplicate_key");
+     auto boolean=config({{"StartStopManager_bIgnore0Peers","i2e"}});CHECK(!readQueuePolicy(&boolean));
+     auto duration=config({{"StartStopManager_iMinSeedingTime","i2147484e"}});
+     CHECK(readQueuePolicy(&duration).error().key=="StartStopManager_iMinSeedingTime");
+@@ -217,7 +221,8 @@
+     r=plan(p,std::array{a,b,c});for(const auto& d:r.decisions){CHECK(d.action==QueueAction::Preserve);}
+   });
+   run("invalid identity time and limits fail without a prefix plan",[]{
+-    auto p=read();auto f=download();CHECK(!evaluateQueue(p,std::array{f,f},context()));
++    auto p=read();const auto empty=evaluateQueue(p,{},{});CHECK(empty&&empty->decisions.empty());
++    auto f=download();CHECK(!evaluateQueue(p,std::array{f,f},context()));
+     f.token=0;CHECK(!evaluateQueue(p,std::span(&f,1),context()));f.token=1;
+     f.activity.lastObservationMillis=100001;CHECK(!evaluateQueue(p,std::span(&f,1),context()));f.activity={};
+     f.swarm=QueueSwarm{-1,0,true};CHECK(!evaluateQueue(p,std::span(&f,1),context()));f.swarm.reset();

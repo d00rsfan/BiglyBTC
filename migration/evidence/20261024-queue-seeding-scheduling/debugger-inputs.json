@@ -1,0 +1,10 @@
+{
+  "packages": {
+    "libsource-highlight4t64_3.1.9-4.3build2_amd64.deb": "ac2cae4028ef60f003bd62f719a0c9d2451c3ff3f72da6e9fef8808de7636b8a",
+    "gdb_17.1-2ubuntu1_amd64.deb": "e1034f3c120b99d9a34964b274d81d7525c4f22bf76f9f31308014a6bec20b3e",
+    "libipt2_2.1.2-3_amd64.deb": "0113f73b628f0fdeb00bb0099268088e5bbbbd231d03d65d2dac60edb3cb57ea"
+  },
+  "system_installation": false,
+  "purpose": "Isolated debugger for owned Qt regression child; downloaded/extracted only",
+  "data_directory": "/home/yurii/Java/BiglyBT/build/queue-20261024/debugger/usr/share/gdb"
+}

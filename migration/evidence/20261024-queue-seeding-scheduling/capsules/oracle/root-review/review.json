@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "status": "DRAFT_REVIEW_FINDINGS_WITH_SEPARATE_AUTHORED_UI_CANDIDATE",
+  "source_only": true,
+  "builds_or_tests_executed_by_reviewer": false,
+  "input_sha256": {
+    "preview/native/engine/persistent_session.cpp": "c6852c0c7776c19ff4d4033be18f497cf4c52612c685322f12114d98591f7d83",
+    "preview/native/engine/managed_storage.cpp": "4dc01230f7c4f0f8c2a04d085c9be64c179d47c4f4fb0db24753cda66adf5252",
+    "preview/native/engine/managed_storage.hpp": "e0aceaa36654afcde93f34512ae794eed586bf60ac59d658d4af2d905469cce1",
+    "preview/native/ui/scheduler_dialog.cpp": "0d46e889c15c74605c9730251309ce11299b227d80e8954c8f852fefbbe298b6",
+    "preview/native/ui/scheduler_dialog.hpp": "cf4935859650f9ccdfc38e484c0fb616f7d1826aa2e257cf30845e59c054f46d",
+    "preview/native/ui/scheduler_presentation.hpp": "edb4b90ccccf57bfdd5ac54c83bf49f6cb3a5b6fc99e91075923c66c61a39e31"
+  },
+  "queue_header_sha256": "80646717699588c2839d2fe98bc3296b0d00dcca769931db3d1fb3be4b26b194",
+  "findings": [
+    {
+      "id": "QROOT-1",
+      "severity": "high",
+      "finding": "Decision-to-managed linear search nested inside plan loops made each queue tick O(n\u00b2).",
+      "current_status": "Root corrected; current source builds targets map once and uses token lookup."
+    },
+    {
+      "id": "QROOT-2",
+      "severity": "high",
+      "finding": "Manual Resume and Queue initially resumed payload before the queue policy decided Run.",
+      "current_status": "Root corrected; checked policy-held torrents remain paused until actual plan Run, queueManaged no longer starts by calling Resume."
+    },
+    {
+      "id": "QROOT-3",
+      "severity": "high",
+      "finding": "LT active_duration includes verification and cannot be persisted as original peer-manager secondsDownloading.",
+      "current_status": "Root corrected to retained actual state/paused/resumed alert timestamps; checking excluded, dropped timeline events deny checkpoint. New mechanism still requires actual qualification."
+    },
+    {
+      "id": "QROOT-4",
+      "severity": "high",
+      "finding": "New per-torrent ratio validation initially followed beginUpdate/state save/payload creation.",
+      "current_status": "Root moved sr.min/sr.max validation to authoritative source preflight before mutation; observed in current source."
+    },
+    {
+      "id": "QROOT-5",
+      "severity": "medium",
+      "finding": "Only scrape_reply_alert populated swarm, while ranked native handles are not auto-managed and no explicit scrape request existed.",
+      "current_status": "Root added actual tracker-reply status fallback using num_complete/num_incomplete; no fictitious connected-peer substitution."
+    },
+    {
+      "id": "QROOT-6",
+      "severity": "high",
+      "finding": "Original SchedulerDialog Impl and raw child pointers survived synchronous Qt signals/events across render/controls/load/save/session changes, allowing deletion or newer-session reentry to continue old work.",
+      "current_status": "Separate authored candidate uses QPointer children, identity/generation guards and deletion-safe signal restoration, plus focused actual Qt callback tests. This is author source, not independently passed or executed."
+    },
+    {
+      "id": "QROOT-7",
+      "severity": "medium",
+      "finding": "Scheduler polling >1 hour was rejected/clamped despite original Java positive int range.",
+      "current_status": "Candidate accepts every int>=1000 and spin maximum INT_MAX as parent requested."
+    },
+    {
+      "id": "QROOT-8",
+      "severity": "scope_limit",
+      "finding": "Managed byte-counter share ratio projection uses long double and clamps rather than exact original Java long multiply/divide/narrowing. Values overflowing original 1000*uploaded are not exact-original arithmetic; float rounding near a quotient boundary should also receive a literal integer-boundary regression.",
+      "current_status": "Remaining explicit arithmetic-domain limit; scalar oracle supplies ratios directly and gives this projection no equality credit."
+    },
+    {
+      "id": "QROOT-9",
+      "severity": "scope_limit",
+      "finding": "Editor rejects complete snapshot when a persisted schedule rate exceeds the supported engine int/1024 domain; it does not silently clamp and save that value.",
+      "current_status": "Parent accepted current unsupported-editor behavior; no broad legacy schedule edit equality claim."
+    }
+  ],
+  "current_engine_assessment": "Reviewed corrections remove identified immediate ordering/performance/preflight defects. One retained LT session/sole alert consumer remains; policy-managed handles unset auto_managed and check under stop_when_ready before plan release. Actual timelines/failure paths and GUI candidate require root builds/runtime qualification. Shared Host scheduler wiring was excluded as in-progress.",
+  "ui_candidate": {
+    "source_paths": [
+      "preview/native/ui/scheduler_dialog.hpp",
+      "preview/native/ui/scheduler_dialog.cpp",
+      "preview/native/ui/scheduler_presentation.hpp",
+      "preview/native/tests/scheduler_dialog_tests.cpp"
+    ],
+    "behavior_methods_authored": 9,
+    "actual_qt_rows_observed": null,
+    "notes": "Same public DTO/header APIs. Initial show read queued past QWidget show tail; table model/header signals remain live, programmatic edit controls blocked. Partial XML save refreshes baseline revision while retaining uncommitted preferences. Raw pointers are not retained across callbacks."
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "status": "PASS_ISOLATED_DRIVER_BUILD",
+  "exit_code": 0,
+  "elapsed_seconds": 2.583273431286216,
+  "command": [
+    "/usr/bin/g++-16",
+    "-std=c++23",
+    "-O3",
+    "-DNDEBUG",
+    "-Wall",
+    "-Wextra",
+    "-Wpedantic",
+    "-Werror",
+    "-pthread",
+    "-I/home/yurii/Java/BiglyBTC/preview/native/core/include",
+    "-I/home/yurii/Java/BiglyBTC/preview/native/adapters",
+    "/home/yurii/Java/BiglyBT/build/queue-20261024/queue-config/driver.cpp",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/adapters/libbiglybtc_profile.a",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/adapters/libbiglybtc_state_codec.a",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/core/libbiglybtc_core.a",
+    "-lz",
+    "-o",
+    "/home/yurii/Java/BiglyBT/build/queue-20261024/queue-config/isolated-build-v1/biglybtc-queue-settings-roundtrip-driver"
+  ],
+  "input_sha256": {
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/adapters/libbiglybtc_profile.a": "516ef2b13015ba61aff00e3101b5440c46efc50f29ce9f45e77fa1c47a55712e",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/adapters/libbiglybtc_state_codec.a": "e7ec93331e0656c0ad2a79db85ff154ed1deead5af98c3c51c180aa8d5bcd660",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/core/libbiglybtc_core.a": "b75892d083453a3daa1d05a8d0624f7470c6cce1cfb09dc6bc01240b91bc8cb3",
+    "/home/yurii/Java/BiglyBT/build/queue-20261024/queue-config/driver.cpp": "4510d16b4704b11d63810aa9660dc6f167c432dfe7c0069053de562e51e57e7b",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/application_settings.hpp": "b61429754f6bdcd2cf17272a247a7379e7a09cfd18ed902ab704afa4ff2df63b",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/queue_policy.hpp": "80646717699588c2839d2fe98bc3296b0d00dcca769931db3d1fb3be4b26b194",
+    "/home/yurii/Java/BiglyBTC/preview/native/adapters/application_settings.hpp": "29fe8264a4976a5ad96644831fc11cd5ae1e714b514d721da002a1780511134c",
+    "/home/yurii/Java/BiglyBTC/preview/native/adapters/application_settings.cpp": "52265e305db16fab78f930c1fa047b497e071c4abdecec8b5837ac3b5f2a2464"
+  },
+  "inputs_unchanged": true,
+  "shared_native_cache_mutated": false,
+  "compiler_jobs": 1,
+  "driver_sha256": "a265df22b4402e5f522dec6a98a5189a0dc81d763221eb1248e7d763dbc5ee40"
+}

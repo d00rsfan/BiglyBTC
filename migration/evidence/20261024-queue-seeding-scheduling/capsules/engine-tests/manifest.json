@@ -1,0 +1,33 @@
+{
+  "status": "SOURCE_FROZEN_UNEXECUTED",
+  "subjects": {
+    "preview/native/tests/managed_queue_tests.cpp": {
+      "before_sha256": null,
+      "sha256": "3a6af7b66da3c63199c93fb2d8d17bf0f2aa28cb84005003885c682db22ceba3",
+      "bytes": 15716
+    }
+  },
+  "inputs": {
+    "build/queue-20261024/policy/manifest.json": {
+      "sha256": "a918820c32fe0e2a83c4d72a3b97bafeae8a0fa45c43c5074ec946bebfccda1f",
+      "role": "source/API input observed at author freeze; root owns implementation changes"
+    },
+    "build/queue-20261024/root/staging/preview/native/engine/persistent_session.hpp": {
+      "sha256": "c2c17fa0e749397f5e8819466e2d6385c217688f2b896b5278e778a1ef6297c7",
+      "role": "source/API input observed at author freeze; root owns implementation changes"
+    },
+    "build/queue-20261024/root/staging/preview/native/engine/managed_download.hpp": {
+      "sha256": "aea201564a2f72e7a93e6a8b86f2dcbed50b25a159e60637b567ce94c31b9387",
+      "role": "source/API input observed at author freeze; root owns implementation changes"
+    },
+    "/home/yurii/Java/BiglyBTC/preview/native/tests/owned_engine_fixture.hpp": {
+      "sha256": "22e43b024c87175358c0a5ca50f9b482547704acfc61622e1f090acab35bde5e",
+      "role": "source/API input observed at author freeze; root owns implementation changes"
+    }
+  },
+  "notes_sha256": "979c826407fc27cb5a0314e67fbb5a2b45b64c736ad4a4c33c190e9c33f02cf5",
+  "planned_behavior_cases": 3,
+  "planned_qt_rows": 5,
+  "actual_executions": 0,
+  "target": "biglybtc-managed-queue-tests; same approved-runtime/QtTest/local-engine/profile/LT setup as managed-downloads; no wrappers"
+}

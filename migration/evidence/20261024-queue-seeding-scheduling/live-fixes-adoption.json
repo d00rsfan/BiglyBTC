@@ -1,0 +1,46 @@
+{
+  "changes": {
+    "preview/native/adapters/scheduler_io.cpp": {
+      "before": "515bdba70796b72ae52f159ef33ab6f9b79f21b848abec27da29de9690c74308",
+      "after": "58f9e95c6cc608ea11deb89273141052140b0741e79f06c7321034f06234b32c"
+    },
+    "preview/native/tests/scheduler_service_tests.cpp": {
+      "before": "64190b2c6d6101135596fc29cc716bff2f72aaa6fbd0425d83fd939664f01ff7",
+      "after": "dc427d090478251e90e8d7c92aa0880921b7e447a38fc010da642e6aada2554b"
+    },
+    "preview/native/ui/scheduler_dialog.cpp": {
+      "before": "34f79894cd1c19a67da72640c4e60f1c16d1cbf2ccd3e7086c5a21c3714b4981",
+      "after": "2193a754ee3529f115d63d6f43d803ba751d420f0bd2b22a6109f6b882bdb4a7"
+    },
+    "preview/native/tests/scheduler_dialog_tests.cpp": {
+      "before": "ba7a459b1a7ac9c5847f61dd2009b7d4e1b0e3ba7d64f8fe29335b025f704fcd",
+      "after": "9b811c8fd36d130b44249e3fbe3a78987ddf3abc16bb6cf5d8d88b6a8ae7b6a7"
+    },
+    "preview/native/tests/managed_seeding_tests.cpp": {
+      "before": "09834d41d68ddaa0187eed61ffc92ba4f71c1797c17f9439c13291e7d06fb44b",
+      "after": "b0154117ef6aca732df0aafa262f30056eccc4fe6688a269a3a27a9bb1bf640d"
+    },
+    "preview/native/tests/queue_settings_roundtrip_driver.cpp": {
+      "before": null,
+      "after": "4510d16b4704b11d63810aa9660dc6f167c432dfe7c0069053de562e51e57e7b"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "before": "4b5907b3d5f12904658e9b214c7f25c7595a9017c9af7b3228df07a3e859b833",
+      "after": "13c4264cdaf9f8a5e7baea848284ab2ff98b0fa7ef97bcc8ed62f9c7467155e3"
+    },
+    "preview/native/app/session_bridge.cpp": {
+      "before": "3eca750703671f49823ac5afe9c780fa74d5ea2d69d8d65231ea0fa34e389605",
+      "after": "7814e820963e9cf426eb7eb64427881ac536f5adb664550fe559d74aefe3d2ba"
+    },
+    "preview/native/tests/options_dialog_tests.cpp": {
+      "before": "15e9129262671665b733defa5b7b49a7b299b9baca0f1c00ec459060defae089",
+      "after": "caab22c19f1fa34513b75785e0d469e398ab79bd64e621e8add0bf410f1f3512"
+    }
+  },
+  "capsules": {
+    "scheduler-live-fix": "5bb32d3abb126db54a557c2eb1a8c45b4507edf5e1e7400d843530e40eccec17",
+    "dialog-live-fix": "f9e84b8c80a43e9a790592fe07e6fbd0cdac908db1347a1d13386820cecf43f9",
+    "queue-config": "2b3b2cd5013377cdd09232241083d9c25a460a58819f6a6be6c3c76073024581"
+  },
+  "reason": "Actual GCC failures; preserve failure evidence. No redundant descriptor amendment."
+}

@@ -1,0 +1,38 @@
+[
+  {
+    "path": "preview/native/app/session_bridge.cpp",
+    "source": "/home/yurii/Java/BiglyBT/build/queue-20261024/root/staging/preview/native/app/session_bridge.cpp",
+    "before_sha256": "ade49c845328f09f0e2c0c6a9e72d0ef819c55d1932be7fcdd009bd64bff1fad",
+    "sha256": "3eca750703671f49823ac5afe9c780fa74d5ea2d69d8d65231ea0fa34e389605"
+  },
+  {
+    "path": "preview/native/engine/persistent_session.cpp",
+    "source": "/home/yurii/Java/BiglyBT/build/queue-20261024/root/staging/preview/native/engine/persistent_session.cpp",
+    "before_sha256": "c6852c0c7776c19ff4d4033be18f497cf4c52612c685322f12114d98591f7d83",
+    "sha256": "4b1e883f7e146427658da03285b2c56224f77ec7aec51c9374b213958032fa42"
+  },
+  {
+    "path": "preview/native/tests/CMakeLists.txt",
+    "source": "/home/yurii/Java/BiglyBT/build/queue-20261024/root/staging/preview/native/tests/CMakeLists.txt",
+    "before_sha256": "f45470c38233b207a60a7b1c47b284f663aee86efd47ca20b97c2e659713dc5a",
+    "sha256": "4b5907b3d5f12904658e9b214c7f25c7595a9017c9af7b3228df07a3e859b833"
+  },
+  {
+    "path": "preview/native/tests/scheduler_host_tests.cpp",
+    "source": "/home/yurii/Java/BiglyBT/build/queue-20261024/root/staging/preview/native/tests/scheduler_host_tests.cpp",
+    "before_sha256": null,
+    "sha256": "3f3fcd38b5436e20b86073e08600b40edf06967a72a54fa28016786e875928c9"
+  },
+  {
+    "path": "preview/native/tests/scheduler_host_engine_tests.cpp",
+    "source": "/home/yurii/Java/BiglyBT/build/queue-20261024/root/staging/preview/native/tests/scheduler_host_engine_tests.cpp",
+    "before_sha256": null,
+    "sha256": "31bef2acb6534a376896e977c5b65b6e53734e7d07c6a2cce9bec8b350763597"
+  },
+  {
+    "path": "preview/native/tests/scheduler_host_fixture.hpp",
+    "source": "/home/yurii/Java/BiglyBT/build/queue-20261024/root/staging/preview/native/tests/scheduler_host_fixture.hpp",
+    "before_sha256": null,
+    "sha256": "34e5dd489cd5825fd4bc8ba28785516ab51e67649d5ab9e97a567fb60fccf7af"
+  }
+]

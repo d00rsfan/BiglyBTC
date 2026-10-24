@@ -1,0 +1,31 @@
+{
+  "argv": [
+    "/home/yurii/Java/BiglyBT/build/queue-20261024/debugger/usr/bin/gdb",
+    "--data-directory=/home/yurii/Java/BiglyBT/build/queue-20261024/debugger/usr/share/gdb",
+    "-nx",
+    "-batch",
+    "-ex",
+    "set pagination off",
+    "-ex",
+    "set debuginfod enabled off",
+    "-ex",
+    "run",
+    "-ex",
+    "bt",
+    "--args",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-scheduler-dialog-tests",
+    "deletedRowControlRefusesSaveAndKeepsDirtyDraft",
+    "-nocrashhandler"
+  ],
+  "cwd": "/tmp/biglybtc-scheduler-gdb-5c0d5jac",
+  "exit_code": 1,
+  "binary_sha256": "1f943542ac8019f64620d8373fd6ff251f6f35b2f6965a4dcd7e07c70b388476",
+  "environment": {
+    "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBT/build/queue-20261024/debugger/usr/lib/x86_64-linux-gnu",
+    "QT_QPA_PLATFORM": "offscreen",
+    "DEBUGINFOD_URLS": "",
+    "XDG_CONFIG_HOME": "/tmp/biglybtc-scheduler-gdb-5c0d5jac/config",
+    "XDG_CACHE_HOME": "/tmp/biglybtc-scheduler-gdb-5c0d5jac/cache"
+  },
+  "scope": "Parent-authorized debugger of existing owned test method only; no compilation/source mutation/network."
+}

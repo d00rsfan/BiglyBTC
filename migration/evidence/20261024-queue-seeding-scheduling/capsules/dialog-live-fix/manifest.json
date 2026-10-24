@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "status": "SOURCE_FROZEN_CORRECTION_NOT_COMPILED_OR_RUN",
+  "sources": {
+    "preview/native/ui/scheduler_dialog.cpp": {
+      "before_sha256": "34f79894cd1c19a67da72640c4e60f1c16d1cbf2ccd3e7086c5a21c3714b4981",
+      "after_sha256": "2193a754ee3529f115d63d6f43d803ba751d420f0bd2b22a6109f6b882bdb4a7",
+      "before": "before/preview/native/ui/scheduler_dialog.cpp",
+      "source": "staging/preview/native/ui/scheduler_dialog.cpp"
+    },
+    "preview/native/tests/scheduler_dialog_tests.cpp": {
+      "before_sha256": "ba7a459b1a7ac9c5847f61dd2009b7d4e1b0e3ba7d64f8fe29335b025f704fcd",
+      "after_sha256": "9b811c8fd36d130b44249e3fbe3a78987ddf3abc16bb6cf5d8d88b6a8ae7b6a7",
+      "before": "before/preview/native/tests/scheduler_dialog_tests.cpp",
+      "source": "staging/preview/native/tests/scheduler_dialog_tests.cpp"
+    }
+  },
+  "artifacts": {
+    "ADOPTION.md": "7adb4acfd161cadfebe04d826aa2f8691b8f6c9e1aaa18fee521914737c412d4",
+    "before/preview/native/tests/scheduler_dialog_tests.cpp": "ba7a459b1a7ac9c5847f61dd2009b7d4e1b0e3ba7d64f8fe29335b025f704fcd",
+    "before/preview/native/ui/scheduler_dialog.cpp": "34f79894cd1c19a67da72640c4e60f1c16d1cbf2ccd3e7086c5a21c3714b4981",
+    "changes.patch": "2aeabf9f147f0a1516ff2e7e74061fb2f6349fde395ad199911f0193bb51e3ae",
+    "correction.json": "0cf2003269a91a5fb53f26bdf9e2c598fc478537d8d67482178bd31a6e7d5a49",
+    "diagnostic.json": "c1ddb7f682fb267ea0968a7ad6aa935bff9559d2f354f66e97b73a59871eb262",
+    "diagnostic.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "diagnostic.stdout": "f9711f60b5f044e5e4e0e600c015b08fb726c8e80d79996aaf2043b5ff771888",
+    "staging/preview/native/tests/scheduler_dialog_tests.cpp": "9b811c8fd36d130b44249e3fbe3a78987ddf3abc16bb6cf5d8d88b6a8ae7b6a7",
+    "staging/preview/native/ui/scheduler_dialog.cpp": "2193a754ee3529f115d63d6f43d803ba751d420f0bd2b22a6109f6b882bdb4a7"
+  },
+  "native_mutated": false,
+  "new_test_methods": 0,
+  "behavioral_methods_retained": 9,
+  "corrected_runtime_results": null
+}

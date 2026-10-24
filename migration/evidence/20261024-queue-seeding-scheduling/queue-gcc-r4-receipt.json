@@ -1,0 +1,53 @@
+{
+  "case": "queue-gcc-r4",
+  "build": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+  "selected": [
+    "scheduler-dialog"
+  ],
+  "source_manifest_sha256": "310d046ea24f37696898c3f78c97089b53af136880e327b52e845188155748a3",
+  "commands": [
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "--parallel",
+        "1",
+        "--target",
+        "biglybtc-scheduler-dialog-tests",
+        "BiglyBTC",
+        "BiglyBTC-headless",
+        "biglybtc-queue-rank-oracle-driver",
+        "--",
+        "-k",
+        "0"
+      ],
+      "exit": 0,
+      "seconds": 35.49,
+      "log": "queue-gcc-r4-build.log"
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+        "-R",
+        "^(scheduler\\-dialog)$",
+        "--no-tests=error",
+        "--output-on-failure",
+        "--verbose",
+        "--output-junit",
+        "/home/yurii/Java/BiglyBT/build/queue-20261024/queue-gcc-r4.xml"
+      ],
+      "exit": 0,
+      "seconds": 1.29,
+      "log": "queue-gcc-r4-tests.log"
+    }
+  ]
+}

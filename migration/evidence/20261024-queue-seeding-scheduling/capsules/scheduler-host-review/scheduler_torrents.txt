@@ -1,0 +1,37 @@
+  std::vector<storage::SchedulerTorrent> schedulerTorrents() {
+    const auto saved=take(storage::readLibraryView(lease));
+    const auto active=engine?engine->managedDownloads():std::vector<engine::ManagedDownloadStatus>{};
+    std::map<std::string,const engine::ManagedDownloadStatus*> live;
+    for(const auto& row:active){if(row.retained){live.emplace(row.hash.hex(),&row);}}
+    std::set<std::string> pauses,unique;
+    for(const auto& row:saved.pauses){pauses.insert(row.hash.hex());}
+    std::vector<storage::SchedulerTorrent> result;result.reserve(saved.items.size());
+    const bool filters=scheduler->snapshot().configuration&&std::ranges::any_of(
+        scheduler->snapshot().configuration->schedules,[](const auto& rule){return rule.enabled&&(rule.onlyCategory||rule.excludeCategory);});
+    for(const auto& row:saved.items){
+      if(!row.saved.hash||!row.saved.persistent){continue;}
+      const auto& hash=*row.saved.hash;const auto key=hash.hex();
+      if(!unique.insert(key).second){throw Failure{{storage::ErrorCode::Conflict,"Ambiguous scheduler torrent identity"}};}
+      const auto found=live.find(key);
+      // No inferred completion or synthetic admission for saved-only/unchecked
+      // rows. Scheduling effects require this owner's actual retained handle.
+      if(found==live.end()||!found->second->checked||found->second->failure){continue;}
+      storage::SchedulerTorrent item;item.hash=hash;item.manualRevision=manualRevisions[key];
+      item.forceStarted=row.saved.forceStart;item.paused=pauses.contains(key);
+      {
+        const auto& current=*found->second;item.token=current.admission;item.complete=current.selectedComplete;
+        switch(current.phase){
+          case engine::ManagedPhase::Checking:item.state=storage::scheduler::TorrentState::Preparing;break;
+          case engine::ManagedPhase::Downloading:item.state=storage::scheduler::TorrentState::Downloading;break;
+          case engine::ManagedPhase::Seeding:item.state=storage::scheduler::TorrentState::Seeding;break;
+          case engine::ManagedPhase::Stopping:item.state=storage::scheduler::TorrentState::Stopping;break;
+          case engine::ManagedPhase::Failed:item.state=storage::scheduler::TorrentState::Error;break;
+          case engine::ManagedPhase::Paused:case engine::ManagedPhase::Stopped:item.state=storage::scheduler::TorrentState::Stopped;break;
+          default:item.state=storage::scheduler::TorrentState::Queued;break;
+        }
+      }
+      if(filters){auto membership=schedulerMembership(hash);item.membershipsAvailable=membership.available;item.memberships=std::move(membership.names);}
+      result.push_back(std::move(item));
+    }
+    return result;
+  }

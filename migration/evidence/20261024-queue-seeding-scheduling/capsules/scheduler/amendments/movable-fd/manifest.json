@@ -1,0 +1,31 @@
+{
+  "source_only": true,
+  "reason": "shared Descriptor is not move-assignable",
+  "parent_manifest_sha256": "d0aaeb6537bf048d199c34f9a547e25b10beae8c2835c9c9f6036850a496f496",
+  "source_directory": "staging",
+  "source_sha256": {
+    "preview/native/adapters/scheduler_io.hpp": "6358ef43bce059caa441270d087d433056a9ca410cc3c8512ac247e6089a6bce",
+    "preview/native/adapters/scheduler_io.cpp": "414796ab694af41614c69b33ec99e364960731e7ab9f85fdc4b1831e821a51f4",
+    "preview/native/adapters/scheduler_service.cpp": "21bac5fa765ea887a2134bc8dc4b0979c97c3dcef8203965960ec611b025a1d2",
+    "preview/native/adapters/scheduler_module.cpp": "7bffd7900d233e759cc9b7cdd03641994aa268429bc481a61201913036056f18"
+  },
+  "before_sha256": {
+    "preview/native/adapters/scheduler_io.hpp": "6953c7bb8806c948375672ca29b1b34b79a048d758c7e3ab12923ec2337e5634",
+    "preview/native/adapters/scheduler_io.cpp": "515bdba70796b72ae52f159ef33ab6f9b79f21b848abec27da29de9690c74308",
+    "preview/native/adapters/scheduler_service.cpp": "89c5a27ea4ee6ec49a73f1b69fbd42a999eae0994d8efdb0285b87b4c1823523",
+    "preview/native/adapters/scheduler_module.cpp": "2652135fb4a47df30ff0baebc79a010a2c57d21c2bdaeb6a2e7f9abdbd50663b"
+  },
+  "artifact_sha256": {
+    "ADOPTION.md": "bb2e654454d49a7ebf08a7fa95babf320e5356d755612701ccab8ea0773377cf",
+    "amendment.patch": "e975a7db688f20804a92bc61ff02699fc052f06106ed969c38dab44f6a6725ed",
+    "before/adapters/scheduler_io.cpp": "515bdba70796b72ae52f159ef33ab6f9b79f21b848abec27da29de9690c74308",
+    "before/adapters/scheduler_io.hpp": "6953c7bb8806c948375672ca29b1b34b79a048d758c7e3ab12923ec2337e5634",
+    "before/adapters/scheduler_module.cpp": "2652135fb4a47df30ff0baebc79a010a2c57d21c2bdaeb6a2e7f9abdbd50663b",
+    "before/adapters/scheduler_service.cpp": "89c5a27ea4ee6ec49a73f1b69fbd42a999eae0994d8efdb0285b87b4c1823523",
+    "staging/adapters/scheduler_io.cpp": "414796ab694af41614c69b33ec99e364960731e7ab9f85fdc4b1831e821a51f4",
+    "staging/adapters/scheduler_io.hpp": "6358ef43bce059caa441270d087d433056a9ca410cc3c8512ac247e6089a6bce",
+    "staging/adapters/scheduler_module.cpp": "7bffd7900d233e759cc9b7cdd03641994aa268429bc481a61201913036056f18",
+    "staging/adapters/scheduler_service.cpp": "21bac5fa765ea887a2134bc8dc4b0979c97c3dcef8203965960ec611b025a1d2"
+  },
+  "executed": false
+}

@@ -1,0 +1,5 @@
+DEBUG::Sat Oct 24 17:33:06 IDT 2026  BC Provider 'BC_VUZE' initialised successfully (loaded from file:/tmp/biglybtc-oracle/classes/org/gudy/bouncycastle/jce/provider/BouncyCastleProvider.class)
+DEBUG::Sat Oct 24 17:33:06 IDT 2026  Not installing security manager - disabled by system property
+QUEUE_SETTINGS_BEFORE_INITIALISE
+QUEUE_SETTINGS_AFTER_INITIALISE
+QUEUE_SETTINGS_ORIGINAL_CHECK_PASS

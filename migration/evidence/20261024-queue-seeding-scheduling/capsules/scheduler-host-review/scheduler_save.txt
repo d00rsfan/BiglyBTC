@@ -1,0 +1,58 @@
+bool SessionBridge::saveScheduler(ui::SchedulerSubmission value) {
+  if(profileClosed_||!value.session||!value.request||!value.revision||value.session!=publishedColumnLayoutSession_
+      ||value.schedules.size()>storage::scheduler::MaximumSchedules){return false;}
+  return dispatch([this,value=std::move(value)](std::stop_token stop){
+    auto result=std::make_shared<ui::SchedulerSavePacket>();result->session=value.session;result->request=value.request;result->revision=value.revision;
+    if(!host_||host_->columnLayoutSession!=value.session||!host_->scheduler){result->failure=tr("Reload schedules before saving");}
+    else try{
+      const auto& current=host_->scheduler->snapshot();
+      if(current.revision!=value.revision){throw Failure{{storage::ErrorCode::Conflict,"Schedules changed; reload before saving"}};}
+      constexpr int RateMax=std::numeric_limits<int>::max()/1024;
+      if(value.preferences.pollMilliseconds<1000||value.defaultUpload<0||value.defaultUpload>RateMax
+          ||value.defaultDownload<0||value.defaultDownload>RateMax){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid schedule speeds or interval"}};}
+      storage::SchedulerXmlChanges xml;
+      const storage::scheduler::Configuration empty;
+      const auto& source=current.configuration?*current.configuration:empty;
+      if(value.defaultUpload!=source.defaultUpload||value.defaultDownload!=source.defaultDownload||value.enforceDefaults!=source.defaultsEnforce){
+        xml.defaults=storage::SchedulerXmlChanges::Defaults{value.defaultUpload,value.defaultDownload,value.enforceDefaults};
+      }
+      std::set<std::size_t> retained;
+      for(const auto& row:value.schedules){
+        if(row.sourceIndex){
+          if(*row.sourceIndex>=source.schedules.size()||!retained.insert(*row.sourceIndex).second){throw Failure{{storage::ErrorCode::Conflict,"Invalid schedule selection"}};}
+          if(row.value!=source.schedules[*row.sourceIndex]){xml.update.push_back({*row.sourceIndex,row.value});}
+        }else{xml.append.push_back(row.value);}
+      }
+      for(std::size_t i=0;i<source.schedules.size();++i){if(!retained.contains(i)){xml.remove.push_back(i);}}
+      const bool writeXml=xml.defaults||!xml.update.empty()||!xml.remove.empty()||!xml.append.empty();
+      storage::SchedulerSettingsChanges settings;
+      if(value.preferences.enabled!=current.settings.enabled){settings.enabled=value.preferences.enabled;}
+      if(value.preferences.useTags!=current.settings.useTags){settings.useTags=value.preferences.useTags;}
+      if(value.preferences.overrideForced!=current.settings.overrideForced){settings.overrideForced=value.preferences.overrideForced;}
+      if(value.preferences.pollMilliseconds!=current.settings.pollMilliseconds){settings.pollMilliseconds=value.preferences.pollMilliseconds;}
+      // Both edits are validated before the first write. There is no cross-file
+      // atomicity claim: schedules commit first; settings failure is explicit.
+      if(writeXml){static_cast<void>(take(storage::patchSchedulerXml(current.originalXml,xml)));}
+      if(writeXml){static_cast<void>(take(host_->scheduler->saveSchedules(host_->lease,current.revision,xml,stop)));result->schedulesSaved=true;}
+      static_cast<void>(take(host_->scheduler->saveSettings(host_->lease,host_->scheduler->snapshot().revision,settings,
+          result->schedulesSaved?std::stop_token{}:stop)));
+      result->saved=true;host_->schedulerLastTick.reset();host_->schedulerRestoreDefaults=true;host_->schedulerMemberships.clear();host_->schedulerTagsLoaded=false;
+      // Live policy application is independent of the confirmed save result.
+      // Its diagnostics are retained; a failed tick never rolls back a save.
+      tickScheduler();
+      // A successful rate publication reloads the scheduler's configuration CAS
+      // and advances its editor revision. Return the final snapshot, not a stale
+      // packet constructed before that tick.
+      result->snapshot=schedulerPacket(host_->scheduler->snapshot(),value.session,value.request);
+    }catch(const Failure& error){
+      result->failure=text(error.error.message);
+      if(result->schedulesSaved){result->failure=tr("Schedules saved; settings were not saved: %1").arg(result->failure);
+        result->snapshot=schedulerPacket(host_->scheduler->snapshot(),value.session,value.request);}
+    }
+    ui::SchedulerSavePresentation packet=result;
+    QMetaObject::invokeMethod(this,[this,packet]{
+      QPointer<SessionBridge> guard(this);if(packet->session==publishedColumnLayoutSession_){emit schedulerSaved(packet);}
+      if(!guard){return;}completionMonitor_->stop();busy_=false;emit busyChanged(false);
+    },Qt::QueuedConnection);
+  },false);
+}

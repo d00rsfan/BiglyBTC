@@ -1,0 +1,84 @@
+  std::unique_ptr<storage::SchedulerService> scheduler;
+  bool schedulerAttempted=false, schedulerTagsLoaded=false, schedulerTagsAvailable=false;
+  std::optional<std::chrono::steady_clock::time_point> schedulerLastTick;
+  QString schedulerFailure, schedulerPublishedFailure;
+  std::map<std::string,std::uint64_t> manualRevisions;
+  std::set<std::string> schedulerPaused;
+  struct SchedulerMembership { bool available=false; std::vector<std::string> names; };
+  std::map<std::string,SchedulerMembership> schedulerMemberships;
+  SchedulerMembership schedulerMembership(const core::TorrentHash& hash) {
+    const auto key=hash.hex();
+    if(const auto known=schedulerMemberships.find(key);known!=schedulerMemberships.end()){return known->second;}
+    SchedulerMembership result;
+    if(scheduler->snapshot().settings.useTags){
+      if(!schedulerTagsLoaded){
+        schedulerTagsLoaded=true;
+        auto source=storage::readSavedDownloadTagsView(lease);
+        if(source){
+          schedulerTagsAvailable=true;
+          if(source->snapshot){
+            for(const auto& tag:source->snapshot->tags){
+              if(!tag.rawName||tag.nameMayRequireLocalization||tag.duplicateId||tag.membersMalformed){schedulerTagsAvailable=false;break;}
+              for(const auto& member:tag.uniqueHashes){auto& row=schedulerMemberships[member.hex()];row.available=true;row.names.push_back(*tag.rawName);}
+            }
+            if(!source->snapshot->issues.empty()){schedulerTagsAvailable=false;}
+          }
+        }
+      }
+      if(const auto tag=schedulerMemberships.find(key);tag!=schedulerMemberships.end()){result=tag->second;}
+      result.available=schedulerTagsAvailable;
+    }else{
+      auto store=storage::TorrentStateStore::open(lease);
+      if(store){
+        auto state=store->load(lease,hash);
+        if(state){
+          result.available=true;result.names={"Uncategorized"};
+          if(const auto* attributes=state->document().find("attributes")){
+            if(const auto* category=attributes->find("category")){
+              if(category->type==core::Node::Type::Bytes&&category->bytes.size()<=4096){result.names={std::string(category->bytes)};}
+              else{result.available=false;}
+            }
+          }
+        }
+      }
+    }
+    schedulerMemberships.insert_or_assign(key,result);return result;
+  }
+  std::vector<storage::SchedulerTorrent> schedulerTorrents() {
+    const auto saved=take(storage::readLibraryView(lease));
+    const auto active=engine?engine->managedDownloads():std::vector<engine::ManagedDownloadStatus>{};
+    std::map<std::string,const engine::ManagedDownloadStatus*> live;
+    for(const auto& row:active){if(row.retained){live.emplace(row.hash.hex(),&row);}}
+    std::set<std::string> pauses,unique;
+    for(const auto& row:saved.pauses){pauses.insert(row.hash.hex());}
+    std::vector<storage::SchedulerTorrent> result;result.reserve(saved.items.size());
+    const bool filters=scheduler->snapshot().configuration&&std::ranges::any_of(
+        scheduler->snapshot().configuration->schedules,[](const auto& rule){return rule.enabled&&(rule.onlyCategory||rule.excludeCategory);});
+    for(const auto& row:saved.items){
+      if(!row.saved.hash||!row.saved.persistent){continue;}
+      const auto& hash=*row.saved.hash;const auto key=hash.hex();
+      if(!unique.insert(key).second){throw Failure{{storage::ErrorCode::Conflict,"Ambiguous scheduler torrent identity"}};}
+      storage::SchedulerTorrent item;item.hash=hash;item.manualRevision=manualRevisions[key];
+      item.forceStarted=row.saved.forceStart;item.paused=pauses.contains(key);
+      if(const auto found=live.find(key);found!=live.end()){
+        const auto& current=*found->second;item.token=current.admission;item.complete=current.selectedComplete;
+        switch(current.phase){
+          case engine::ManagedPhase::Checking:item.state=storage::scheduler::TorrentState::Preparing;break;
+          case engine::ManagedPhase::Downloading:item.state=storage::scheduler::TorrentState::Downloading;break;
+          case engine::ManagedPhase::Seeding:item.state=storage::scheduler::TorrentState::Seeding;break;
+          case engine::ManagedPhase::Stopping:item.state=storage::scheduler::TorrentState::Stopping;break;
+          case engine::ManagedPhase::Failed:item.state=storage::scheduler::TorrentState::Error;break;
+          case engine::ManagedPhase::Paused:case engine::ManagedPhase::Stopped:item.state=storage::scheduler::TorrentState::Stopped;break;
+          default:item.state=storage::scheduler::TorrentState::Queued;break;
+        }
+      }else{
+        // These rows cannot carry current-session scheduler ownership. Their
+        // stable private token is disjoint from bounded native admission IDs.
+        item.token=(std::uint64_t{1}<<63)|static_cast<std::uint64_t>(row.saved.sourceIndex+1);
+        item.state=row.saved.startup==core::StartupState::Stopped?storage::scheduler::TorrentState::Stopped:storage::scheduler::TorrentState::Queued;
+      }
+      if(filters){auto membership=schedulerMembership(hash);item.membershipsAvailable=membership.available;item.memberships=std::move(membership.names);}
+      result.push_back(std::move(item));
+    }
+    return result;
+  }

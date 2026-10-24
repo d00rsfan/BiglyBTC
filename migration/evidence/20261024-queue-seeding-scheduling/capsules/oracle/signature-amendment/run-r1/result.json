@@ -1,0 +1,81 @@
+{
+  "status": "PASS",
+  "original_cases": 96,
+  "original_observed_scalars": 192,
+  "admitted_scalar_comparisons": 190,
+  "excluded_cases": [
+    "unknown-scrape"
+  ],
+  "mismatches": [],
+  "vectors_sha256": "cef24ea137ccd088c1ea40e497aa5b95028fd2ef2a9cb1a6922e4b7406c1e46a",
+  "original_stdout_sha256": "0e97f29d4de9ea7d93b752c3a2f9df2ebca5418cfb0b904700ffb5b862d2683d",
+  "native_stdout_sha256": "2e580aab66f341d5d2883f5696f9a00811d9aa987e6c5c73876caec276cf050b",
+  "scope": "Actual retained Java rank/FP methods under explicit inert providers versus pure native scalar outputs. No whole scheduler, timers, ordering effects, engine activation or client parity.",
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "cohort_files": 5432,
+  "retention_sha256": "7472e8bda8d832fd5a962cda76ba1fcefaa0e6e9b4cad2621e0be97e6fbec9dd",
+  "native_driver_sha256": "96a9c159e1574eb87cdd0da91411892d3601aa28c8d26cdf714b107d5d2e91cb",
+  "original_recompiled": false,
+  "original_profile_or_process_access": false,
+  "commands": [
+    {
+      "name": "javac-new-helpers",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+        "-J-XX:ActiveProcessorCount=2",
+        "--release",
+        "8",
+        "-encoding",
+        "UTF-8",
+        "-proc:none",
+        "-implicit:none",
+        "-sourcepath",
+        "/tmp/biglybtc-queue-oracle-re86mne9/empty-sourcepath",
+        "-cp",
+        "/tmp/biglybtc-oracle/classes",
+        "-d",
+        "/tmp/biglybtc-queue-oracle-re86mne9/classes",
+        "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/QueueOracleFence.java",
+        "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/QueueRankLauncher.java",
+        "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/com/biglybt/core/config/COConfigurationManager.java",
+        "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/com/biglybt/core/util/Debug.java",
+        "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/com/biglybt/core/util/FileUtil.java",
+        "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/com/biglybt/core/util/StringInterner.java",
+        "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/com/biglybt/core/util/SystemTime.java",
+        "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/com/biglybt/core/util/ThreadPool.java",
+        "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/com/biglybt/pifimpl/local/PluginCoreUtils.java",
+        "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/com/biglybt/plugin/startstoprules/defaultplugin/QueueRankOracle.java",
+        "/home/yurii/Java/BiglyBT/build/queue-20261024/oracle/signature-amendment/source/queueoracle/Providers.java"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "original",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "-Xmx128m",
+        "-Djava.security.manager=allow",
+        "-Dqueue.oracle.root=/tmp/biglybtc-queue-oracle-re86mne9",
+        "-Dqueue.oracle.cohort=/tmp/biglybtc-oracle/classes",
+        "-Djava.io.tmpdir=/tmp/biglybtc-queue-oracle-re86mne9/tmp",
+        "-Duser.home=/tmp/biglybtc-queue-oracle-re86mne9/forbidden-home",
+        "-Dazureus.config.path=/tmp/biglybtc-queue-oracle-re86mne9/forbidden-profile",
+        "-cp",
+        "/tmp/biglybtc-queue-oracle-re86mne9/classes",
+        "QueueRankLauncher",
+        "/tmp/biglybtc-queue-oracle-re86mne9/classes",
+        "/tmp/biglybtc-oracle/classes"
+      ],
+      "exit_code": 0
+    },
+    {
+      "name": "native",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-queue-rank-oracle-driver"
+      ],
+      "exit_code": 0
+    }
+  ],
+  "manifest_sha256": "bb39d80b0fbccbc5f1dcb886c6059f46aa7780614b07af8226722406c710502e"
+}

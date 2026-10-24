@@ -1,0 +1,25 @@
+{
+  "commit": "8239f5b42c3f2f56126b7a382dc75a4bd8114607",
+  "files": {
+    "preview/native/engine/persistent_session.hpp": {
+      "sha256": "4abfb496bfccd4c7f2150f819ab7efc43162e911cb6bc29c327681e7fab24e14",
+      "git_blob": "8ecff6fa4c5265a0b5fc809d1d73750520f232df"
+    },
+    "preview/native/engine/persistent_session.cpp": {
+      "sha256": "5839a934418a474f30961d51b883103fed7ee420d36cb66a90bea78a815f1ff4",
+      "git_blob": "411a8927b4b77c9184e59918609aad27040b6e47"
+    },
+    "preview/native/engine/managed_download.hpp": {
+      "sha256": "a992a745980f054adc0c22cab8975882569cc8ddc18ffd5ac36825d58a90ddae",
+      "git_blob": "656bdc52253bdbb4ecb6b145e7f5c07d08724adc"
+    },
+    "preview/native/engine/live_settings.hpp": {
+      "sha256": "994986cd1837e623db60b5663a8a49f4737766f6ee3457b10af0c3c6916fa7a7",
+      "git_blob": "01b6f8cf93ff2e8ff3e1d8f22b200b34e5ee8fb3"
+    },
+    "preview/native/engine/live_settings.cpp": {
+      "sha256": "dbf769390a53a6206b672de2ca1f1472d8afecec33f9e66df9eaa7154e2b6544",
+      "git_blob": "f64888e28d20fe6ec1d0f3a058091728c9fa7e3b"
+    }
+  }
+}

@@ -1,0 +1,203 @@
+{
+  "source_only": true,
+  "java_executed": false,
+  "original_subjects": [
+    {
+      "repository": "BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/pifimpl/local/PluginConfigImpl.java",
+      "git_blob": "2cf2320c5cfe158b8e8a3a739758420a1a902ed3",
+      "sha256": "cc94b57a6e8ec46e36003deab0c711d3698ec7b448f41c7a78447f04e24e68a0",
+      "line_ranges": [
+        [
+          159,
+          185
+        ],
+        [
+          288,
+          320
+        ],
+        [
+          359,
+          365
+        ],
+        [
+          531,
+          540
+        ]
+      ]
+    },
+    {
+      "repository": "BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java",
+      "git_blob": "72d5cccf803da692911b9a0e56777262138d6e00",
+      "sha256": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194",
+      "line_ranges": [
+        [
+          78,
+          85
+        ]
+      ]
+    },
+    {
+      "repository": "BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/core/config/impl/ConfigurationManager.java",
+      "git_blob": "811e21d1f34fe1c5e2a8daf7616e7e3eb22e2e0f",
+      "sha256": "2627f71f0dd69b2cee577331ad6ce05fd230d47df816b592d07236c9b759bc82",
+      "line_ranges": [
+        [
+          338,
+          371
+        ]
+      ]
+    },
+    {
+      "repository": "BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/pifimpl/local/PluginInterfaceImpl.java",
+      "git_blob": "a75c9b6bc184826562c41dcb6a04441826d13ead",
+      "sha256": "5dc5d644e5506da757fa6281d3539c7a6ab8abdcf1d2fb3870f4827e35a7d501",
+      "line_ranges": [
+        [
+          154,
+          166
+        ]
+      ]
+    },
+    {
+      "repository": "BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/pifimpl/local/PluginInitializer.java",
+      "git_blob": "5b93c4bdcb65bef81b4fd9d79f66f7004bd1574b",
+      "sha256": "e5c8147d51ea5e8dbfc5b934af84453d007d00353a67444a0f69c9c37c6c4049",
+      "line_ranges": [
+        [
+          1388,
+          1410
+        ]
+      ]
+    },
+    {
+      "repository": "BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/pifimpl/local/download/DownloadImpl.java",
+      "git_blob": "59234cacd658e8ecec176b76baf2e2e9e5735a1f",
+      "sha256": "83d6c7140d01f26b82389da036253d5dd52ba71867b9faf54b75ad132236de29",
+      "line_ranges": [
+        [
+          380,
+          405
+        ]
+      ]
+    },
+    {
+      "repository": "BiglyBT-plugin-SpeedScheduler",
+      "commit": "1ee6a53dae017696d2f0002e4a0d74f5a9476af5",
+      "path": "speedscheduler/SpeedSchedulerPlugin.java",
+      "git_blob": "890d83f3191cece41cdb1cb37411a75b9eedf73f",
+      "sha256": "5766c6302ca5b9e5f0b18d36c61d3e33dd31230d47a56a439bce93fe0d169dee",
+      "line_ranges": [
+        [
+          33,
+          50
+        ],
+        [
+          68,
+          90
+        ],
+        [
+          174,
+          209
+        ],
+        [
+          288,
+          313
+        ]
+      ]
+    },
+    {
+      "repository": "BiglyBT-plugin-SpeedScheduler",
+      "commit": "1ee6a53dae017696d2f0002e4a0d74f5a9476af5",
+      "path": "speedscheduler/SpeedSchedulerThread.java",
+      "git_blob": "2d8cefb4f8bdb98e20fbf07f1614e8c2e2f16aef",
+      "sha256": "d0d14741402c60a52cae7ba2b07cde7e2aa58cdf81c464b809f98cbff4d457cc",
+      "line_ranges": [
+        [
+          127,
+          139
+        ],
+        [
+          555,
+          591
+        ],
+        [
+          600,
+          725
+        ],
+        [
+          760,
+          865
+        ]
+      ]
+    },
+    {
+      "repository": "BiglyBT-plugin-SpeedScheduler",
+      "commit": "1ee6a53dae017696d2f0002e4a0d74f5a9476af5",
+      "path": "speedscheduler/io/XmlScheduleIO.java",
+      "git_blob": "89a47e44aea1e399a5876e1b2393a5fd56a51027",
+      "sha256": "7c387c1bf7e649bfff35b4b2edb1d4805626230e387cf9f2708fed9383849752",
+      "line_ranges": [
+        [
+          52,
+          91
+        ],
+        [
+          320,
+          445
+        ]
+      ]
+    }
+  ],
+  "vendored_native_plugin_commit": "30b645e44f8e58829064c26b35694110e81fd222",
+  "reused_java_evidence": "Existing scheduler time/tick/ownership fixtures only; no new equality or runtime credit.",
+  "vendored_native_inputs": {
+    "LICENSE": {
+      "sha256": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73",
+      "git_blob": "23cb790338e191e29205d6f4123882c0583ef8eb"
+    },
+    "NOTICE.md": {
+      "sha256": "931ecbb2e41cc29addd676e7f1d24f956a77e129fc24bf65de10d5ea3f73df49",
+      "git_blob": "cbd9c3e3e46e2e6a0d9da3c4edcbd6add88ad0e7"
+    },
+    "SOURCE_PROVENANCE.json": {
+      "sha256": "6591cee7ad0b1ec4fd7bf89c07477de96092bb3744ae67083389a23253c62bff",
+      "git_blob": "fc98c3f13d23353445c4dda798044acffe6025b2"
+    },
+    "module.cpp": {
+      "sha256": "59f81f65f88088758bfc554e81904f0c265e11491897d221b5550130d2de5da4",
+      "git_blob": "72a00d471495d7e63f4a1b68dc5397f8ebfc1af7"
+    },
+    "original_xml.cpp": {
+      "sha256": "04a210b1f3e91b7458a0afa20057efd37e4b2b36d9dc5560e8d931e0b2231817",
+      "git_blob": "62a6f0c252d1555345b773ec2118c7f51d445e91"
+    },
+    "ownership_file.cpp": {
+      "sha256": "2016f51cc3c7fdd4977898b27f42de24ccd4b00d9b1e4965e6c701ce8f68f3ae",
+      "git_blob": "a90595d5f93a2896098cde9ceecdeb36e187569f"
+    },
+    "ownership_file.hpp": {
+      "sha256": "20ad7b0962cb9339b629ce9d8e3582cb848e7fe52f5f434a6306455f0c7be051",
+      "git_blob": "749b7333e36c92c9df96b40ac0ea7e2b0c33eaa6"
+    },
+    "scheduler.cpp": {
+      "sha256": "7b6a707e66d77674665e5d213ac3acc5d81e763af3f0bdedf37dc90bf3e6869d",
+      "git_blob": "7668209757bd6a94d70ef6965a0834b35f5dd313"
+    },
+    "scheduler.hpp": {
+      "sha256": "96f8bc6ecd338c21a5293a6476bf857a33228eab96904f97da4428352d97d170",
+      "git_blob": "20d665484d0ff6c5add3c152a03c3c84bad60338"
+    }
+  }
+}

@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "status": "SOURCE_REVIEW_TWO_ACTIONABLE_FINDINGS",
+  "execution_performed": false,
+  "native_or_oracle_mutations": false,
+  "reviewed_native_sha256": {
+    "preview/native/engine/persistent_session.cpp": "4b1e883f7e146427658da03285b2c56224f77ec7aec51c9374b213958032fa42",
+    "preview/native/engine/managed_storage.cpp": "4dc01230f7c4f0f8c2a04d085c9be64c179d47c4f4fb0db24753cda66adf5252",
+    "preview/native/engine/managed_storage.hpp": "e0aceaa36654afcde93f34512ae794eed586bf60ac59d658d4af2d905469cce1",
+    "preview/native/core/src/queue_policy.cpp": "504f5326526cbdc4c32d1f46ac79840e8bc1066b95ebc9b5fe870f8806a137d8",
+    "preview/native/core/include/biglybtc/queue_policy.hpp": "80646717699588c2839d2fe98bc3296b0d00dcca769931db3d1fb3be4b26b194"
+  },
+  "source_context_sha256": {
+    "cb8/core/src/com/biglybt/plugin/startstoprules/defaultplugin/RankCalculatorReal.java": "d2599c2d7249ab731029313962ddffb6ab3413f8148338d9468eb5b71e6150bb",
+    "cb8/core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java": "3b2eb44625911187e3058b7363b96b7ee813a9bf8051de54fada0f1ccc3243c7",
+    "LT2.0.12/src/torrent.cpp": "d0b8d64c54583cb9287d20aaf5ea5bc2e85cbf0caa5d5c9df42f40c77187d185"
+  },
+  "blockers": [
+    {
+      "id": "QE-1",
+      "path": "preview/native/engine/persistent_session.cpp",
+      "location": "startManaged: ManagedStorage::prepare precedes queue-capacity check",
+      "finding": "A rejected over-capacity admission can already mutate original state and create/extend payload files. Current count also includes all historical stopped entries.",
+      "fix": "Perform capacity preflight before ManagedStorage::prepare and count retained/admitting handles rather than historical status rows. Root independently identified and is addressing this."
+    },
+    {
+      "id": "QE-2",
+      "path": "preview/native/core/src/queue_policy.cpp",
+      "location": "evaluateQueue timedExpired alternative scan, current line474",
+      "finding": "Each expired timed seed scans all ordered facts again. With MaximumQueueTorrents8192 and no eligible queued seed this performs approximately67million predicates per evaluation.",
+      "fix": "Precompute the number of queued complete non-fixed non-ignored candidates once before the seed effect loop. An expired current Seeding item never belongs to that candidate set. Preserve rank/FP formulas."
+    }
+  ],
+  "verified_source_properties": [
+    "Managed timeline starts paused in checking_resume_data before add; only actual state_changed/resumed/paused events for the exact retained weak handle advance it. Checking and metadata states add neither downloading nor seeding time.",
+    "Removal event freezes the timeline; checkpoint requires exact removal acknowledgement plus weak expiration. Lost state/pause/resume alert types poison timeline and deny original checkpoint rather than inventing elapsed time.",
+    "Checkpoint reads current downloads.config, validates captured counters and elapsed baselines, checks additive bounds, and edits only cumulative transfer/completion/time fields. Current pause/startup/force/position fields remain from the fresh root.",
+    "Policy-managed admissions unset auto_managed and use stop_when_ready during checking. Checked Run/Queue decisions clear that flag; Preserve/manual pause/unchecked decisions do not resume. Stop requests bypass later queue effects.",
+    "Decision-to-handle application now uses a token map and three constant action passes, with slot pauses sent before Run requests. No engine-side per-decision managed-row scan remains.",
+    "Manual pause precedes force in pure policy; clear-on-complete force uses the dedicated saved CAS helper and does not overload Queue semantics."
+  ],
+  "provider_or_equality_limits_not_new_storage_blockers": [
+    "Tracker reply currently supplies torrent_status.num_complete/num_incomplete: LT derives these as maxima over cached tracker/endpoint/hash scrape fields, also updated by announces. They are real observed counts but not exact last-announce response fields. Original zero scrape-component fallback to last announce and scrape request-start self exclusion are not fully represented; native scrape uses response-alert timestamp plus sampled running/seeding epoch.",
+    "Actual state/pause timestamps avoid charging verification, but LT paused alert is a disk-stop completion acknowledgement and fractional intervals are accumulated. This is not certified identical original PEPeerManager lifetime rounding or pause-boundary timing.",
+    "Managed share-ratio projection uses checked cumulative additions and long-double product/clamp. Original Java long multiplication wraps before division/int narrowing at extremes; the passing scalar oracle supplies share ratio directly and does not qualify this engine projection.",
+    "Smoothed-global/per-torrent rate facts, tag first-priority hooks, disk-latency, stale-rank/file-priority observations and new-seed group renumbering remain explicit missing/conservative inputs; scalar rank190 comparison credit does not establish whole scheduler parity."
+  ],
+  "conclusion": "No further immediate storage/checkpoint or forced/manual precedence blocker found in the reviewed frontier beyond QE-1. QE-2 is a bounded but material tick-cost defect; fix before claiming no quadratic per-tick work. This report is source-only, not additional runtime qualification."
+}

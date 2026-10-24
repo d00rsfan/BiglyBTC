@@ -1,0 +1,20 @@
+[
+  "/usr/bin/g++-16",
+  "-std=c++23",
+  "-O3",
+  "-DNDEBUG",
+  "-Wall",
+  "-Wextra",
+  "-Wpedantic",
+  "-Werror",
+  "-pthread",
+  "-I/home/yurii/Java/BiglyBTC/preview/native/core/include",
+  "-I/home/yurii/Java/BiglyBTC/preview/native/adapters",
+  "/home/yurii/Java/BiglyBT/build/queue-20261024/queue-config/driver.cpp",
+  "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/adapters/libbiglybtc_profile.a",
+  "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/adapters/libbiglybtc_state_codec.a",
+  "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/core/libbiglybtc_core.a",
+  "-lz",
+  "-o",
+  "/home/yurii/Java/BiglyBT/build/queue-20261024/queue-config/isolated-build-v1/biglybtc-queue-settings-roundtrip-driver"
+]

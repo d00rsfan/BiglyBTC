@@ -1,0 +1,24 @@
+# Integration recipe only; root owns shared CMake changes.
+set(scheduler_source_dir "${CMAKE_CURRENT_SOURCE_DIR}/plugins/BiglyBTC-plugin-SpeedScheduler")
+add_library(biglybtc_scheduler_policy STATIC
+  "${scheduler_source_dir}/scheduler.cpp" "${scheduler_source_dir}/original_xml.cpp"
+  "${scheduler_source_dir}/ownership_file.cpp")
+set_target_properties(biglybtc_scheduler_policy PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_include_directories(biglybtc_scheduler_policy PUBLIC "${scheduler_source_dir}")
+target_link_libraries(biglybtc_scheduler_policy PRIVATE Qt6::Core)
+add_library(BiglyBTC-plugin-SpeedScheduler MODULE "${scheduler_source_dir}/module.cpp")
+target_link_libraries(BiglyBTC-plugin-SpeedScheduler PRIVATE biglybtc_scheduler_policy BiglyBTC::PluginAPI)
+set_target_properties(BiglyBTC-plugin-SpeedScheduler PROPERTIES PREFIX "")
+add_library(biglybtc_scheduler_service STATIC adapters/scheduler_service.cpp adapters/scheduler_xml.cpp
+  adapters/scheduler_io.cpp adapters/scheduler_module.cpp)
+target_include_directories(biglybtc_scheduler_service PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/adapters")
+target_link_libraries(biglybtc_scheduler_service PUBLIC biglybtc_profile BiglyBTC::PluginHost
+  biglybtc_scheduler_policy PRIVATE Qt6::Core OpenSSL::Crypto)
+add_executable(scheduler-service-tests tests/scheduler_service_tests.cpp)
+target_link_libraries(scheduler-service-tests PRIVATE biglybtc_scheduler_service)
+add_dependencies(scheduler-service-tests BiglyBTC-plugin-SpeedScheduler)
+add_test(NAME scheduler-service COMMAND scheduler-service-tests "$<TARGET_FILE:BiglyBTC-plugin-SpeedScheduler>")
+set_tests_properties(scheduler-service PROPERTIES LABELS unit TIMEOUT 120)
+# Apply existing project C++23/-Wall/-Wextra/-Wpedantic/-Werror flags to new targets.
+# Generate app approval from the built bundled MODULE SHA/size/version, using the
+# established Country module recipe. Add real Host action tests in the same batch.

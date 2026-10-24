@@ -1,0 +1,125 @@
+{
+  "status": "PASS_ACTUAL_JAVA_NATIVE_JAVA_NATIVE_QUEUE_SETTINGS",
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_driver_sha256": "a265df22b4402e5f522dec6a98a5189a0dc81d763221eb1248e7d763dbc5ee40",
+  "retention_sha256": "7472e8bda8d832fd5a962cda76ba1fcefaa0e6e9b4cad2621e0be97e6fbec9dd",
+  "cohort_files": 5432,
+  "original_core_recompiled": false,
+  "original_profile_or_process_access": false,
+  "scope": "Actual original COConfigurationManager queue getters/saver and native100-field sparse adapter plus readQueuePolicy; generated configuration, no original core/network startup",
+  "conditional_first_priority_ignore_zero_peers": false,
+  "conditional_flag_materialized": false,
+  "actual_handoff_phases": 4,
+  "commands": [
+    {
+      "name": "javac-helpers",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+        "-J-XX:ActiveProcessorCount=2",
+        "--release",
+        "8",
+        "-encoding",
+        "UTF-8",
+        "-proc:none",
+        "-implicit:none",
+        "-sourcepath",
+        "/tmp/biglybtc-queue-settings-oracle-0qb6gr0b/empty-sourcepath",
+        "-cp",
+        "/tmp/biglybtc-oracle/classes",
+        "-d",
+        "/tmp/biglybtc-queue-settings-oracle-0qb6gr0b/classes",
+        "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java",
+        "/home/yurii/Java/BiglyBT/build/queue-20261024/queue-config/QueueSettingsOracle.java"
+      ],
+      "pid": 3,
+      "exit_code": 0
+    },
+    {
+      "name": "java-create",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-queue-settings-oracle-0qb6gr0b",
+        "-Dbiglybtc.test.ports=",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-queue-settings-oracle-0qb6gr0b/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-queue-settings-oracle-0qb6gr0b/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-queue-settings-oracle-0qb6gr0b/tmp",
+        "-Duser.home=/tmp/biglybtc-queue-settings-oracle-0qb6gr0b/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-queue-settings-oracle-0qb6gr0b/prefs",
+        "-cp",
+        "/tmp/biglybtc-queue-settings-oracle-0qb6gr0b/classes:/tmp/biglybtc-oracle/classes",
+        "QueueSettingsOracle",
+        "create"
+      ],
+      "pid": 23,
+      "exit_code": 0
+    },
+    {
+      "name": "native-apply",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/queue-20261024/queue-config/isolated-build-v1/biglybtc-queue-settings-roundtrip-driver",
+        "/tmp/biglybtc-queue-settings-oracle-0qb6gr0b/profile",
+        "apply"
+      ],
+      "pid": 47,
+      "exit_code": 0
+    },
+    {
+      "name": "java-reload-save",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-queue-settings-oracle-0qb6gr0b",
+        "-Dbiglybtc.test.ports=",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-queue-settings-oracle-0qb6gr0b/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-queue-settings-oracle-0qb6gr0b/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-queue-settings-oracle-0qb6gr0b/tmp",
+        "-Duser.home=/tmp/biglybtc-queue-settings-oracle-0qb6gr0b/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-queue-settings-oracle-0qb6gr0b/prefs",
+        "-cp",
+        "/tmp/biglybtc-queue-settings-oracle-0qb6gr0b/classes:/tmp/biglybtc-oracle/classes",
+        "QueueSettingsOracle",
+        "check"
+      ],
+      "pid": 48,
+      "exit_code": 0
+    },
+    {
+      "name": "native-reload",
+      "argv": [
+        "/home/yurii/Java/BiglyBT/build/queue-20261024/queue-config/isolated-build-v1/biglybtc-queue-settings-roundtrip-driver",
+        "/tmp/biglybtc-queue-settings-oracle-0qb6gr0b/profile",
+        "check"
+      ],
+      "pid": 72,
+      "exit_code": 0
+    }
+  ],
+  "fixture_sha256": {
+    "original-resaved.config": "2159e4281d8d8a3ff1be1a1cd8eb70998c5db442342beeae422fafa88ac03ce2",
+    "native-edited.config": "9c2560d38253ac685eeed149be4b22b1f0aecf25410dee3b1f03818286c6d8bb",
+    "original-created.config": "b7d3f63d474a7e373a05100a30ccc3e3f9f76fc92095d11eed851df70730de40"
+  },
+  "logs_sha256": {
+    "native-reload.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "native-reload.stdout": "63ff7bfc20d7c50254c22df134afca7259d5aef78799d294347bc8ea03bee5d4",
+    "java-reload-save.stderr": "cc7242d5ea0ae2d5031b1186f9d6291b8c7e2452cfe212e37eee5a1212f5e404",
+    "java-reload-save.stdout": "51ab7822244803af6a86571b339dd79b83a43ddc0f63a2dbf11ca0d81457e991",
+    "native-apply.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "native-apply.stdout": "463c71b8c3b6d625c4c4422d45b4232aa6626fde97a7846d5bc2984271ed3d14",
+    "java-create.stderr": "cc7242d5ea0ae2d5031b1186f9d6291b8c7e2452cfe212e37eee5a1212f5e404",
+    "java-create.stdout": "ed838b3e8d931d7c1120d521cfdc0a183ec20efea048cb97c45b1e64dd78ef26",
+    "javac-helpers.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "javac-helpers.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

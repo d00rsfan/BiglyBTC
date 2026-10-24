@@ -1,0 +1,32 @@
+{
+  "source_only": true,
+  "source_directory": "staging",
+  "source_sha256": {
+    "preview/native/adapters/scheduler_io.cpp": "58f9e95c6cc608ea11deb89273141052140b0741e79f06c7321034f06234b32c",
+    "preview/native/tests/scheduler_service_tests.cpp": "dc427d090478251e90e8d7c92aa0880921b7e447a38fc010da642e6aada2554b"
+  },
+  "before_sha256": {
+    "preview/native/adapters/scheduler_io.cpp": "515bdba70796b72ae52f159ef33ab6f9b79f21b848abec27da29de9690c74308",
+    "preview/native/tests/scheduler_service_tests.cpp": "64190b2c6d6101135596fc29cc716bff2f72aaa6fbd0425d83fd939664f01ff7"
+  },
+  "actual_unchanged_dependencies": {
+    "preview/native/adapters/file_io.hpp": "8d0fc78f8b6fd62932c8ff07fcbcd8203d6bac0ca2255d86bb849c4b1b413cb6",
+    "preview/native/adapters/file_io.cpp": "a3fd490e8e49b8d066f27205ab25636ac51c5e0715bf5c25f169e877da17f89c",
+    "preview/native/adapters/scheduler_module.cpp": "2652135fb4a47df30ff0baebc79a010a2c57d21c2bdaeb6a2e7f9abdbd50663b",
+    "preview/native/adapters/scheduler_service.cpp": "89c5a27ea4ee6ec49a73f1b69fbd42a999eae0994d8efdb0285b87b4c1823523"
+  },
+  "failure_log_sha256": "845bac0017805314663e7cfd313e8109f6a3e919b29dac335e7e7a6113dd98ec",
+  "observed_process_umask": "0002",
+  "original_frozen_service_manifest": "d0aaeb6537bf048d199c34f9a547e25b10beae8c2835c9c9f6036850a496f496",
+  "movable_fd_amendment_adopted": false,
+  "tests_executed": false,
+  "native_mutated": false,
+  "artifact_sha256": {
+    "RATIONALE.md": "d852022e3fa452fe301a5a44bb1f8c98d12f2535a49a650431f5e72504c1fc49",
+    "before/preview/native/adapters/scheduler_io.cpp": "515bdba70796b72ae52f159ef33ab6f9b79f21b848abec27da29de9690c74308",
+    "before/preview/native/tests/scheduler_service_tests.cpp": "64190b2c6d6101135596fc29cc716bff2f72aaa6fbd0425d83fd939664f01ff7",
+    "correction.patch": "275881cd288f1553aadc0d813acc005b0843161abe64c4315472c0c78fdad100",
+    "staging/preview/native/adapters/scheduler_io.cpp": "58f9e95c6cc608ea11deb89273141052140b0741e79f06c7321034f06234b32c",
+    "staging/preview/native/tests/scheduler_service_tests.cpp": "dc427d090478251e90e8d7c92aa0880921b7e447a38fc010da642e6aada2554b"
+  }
+}

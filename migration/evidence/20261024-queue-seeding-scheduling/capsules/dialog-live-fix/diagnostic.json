@@ -1,0 +1,18 @@
+{
+  "argv": [
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-scheduler-dialog-tests",
+    "deletedRowControlRefusesSaveAndKeepsDirtyDraft",
+    "-nocrashhandler"
+  ],
+  "cwd": "/tmp/biglybtc-dialog-diagnostic-8acl34bb",
+  "environment": {
+    "QT_QPA_PLATFORM": "offscreen",
+    "LD_PRELOAD": "/home/yurii/Java/BiglyBT/build/history-hourly-20261020/diagnostic_backtrace.so",
+    "XDG_CONFIG_HOME": "/tmp/biglybtc-dialog-diagnostic-8acl34bb/config",
+    "XDG_CACHE_HOME": "/tmp/biglybtc-dialog-diagnostic-8acl34bb/cache"
+  },
+  "exit_code": -11,
+  "binary_sha256": "d818c8c3de8b513c91a5885d839a5b584a5f2b923550aa15487d63070e93d125",
+  "preload_sha256": "a24cf848a738ffc211eb5d92093e30267c4531fcd0c1df46cc458259c7a28d15",
+  "scope": "Parent-authorized existing single-method diagnostic only; no source compilation or rebuild."
+}

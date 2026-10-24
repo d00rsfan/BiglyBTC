@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_NOT_COMPILED_OR_CORRECTED_RUN",
+  "reason": "Parent-authorized actual gdb trace identifies QAbstractItemView::updateEditorGeometries during QDialog destruction after direct deletion of an owned index widget. Unregister it through removeCellWidget before actual deletion so Qt no longer retains that private editor entry.",
+  "trace_sha256": "9750e77b73957df920da0f86980466604ee4bf3d26a8742e7683412f0bb9cf5a",
+  "diagnostic_command_sha256": "41fa8dd2f6745b613c78416ba6de8b68691882b12cfd9e2f14febe0a2bba4c4a",
+  "diagnosed_binary_sha256": "1f943542ac8019f64620d8373fd6ff251f6f35b2f6965a4dcd7e07c70b388476",
+  "previous_fix_manifest_sha256": "f9e84b8c80a43e9a790592fe07e6fbd0cdac908db1347a1d13386820cecf43f9",
+  "unchanged_production_sha256": "2193a754ee3529f115d63d6f43d803ba751d420f0bd2b22a6109f6b882bdb4a7",
+  "scope": "One added public Qt lifecycle call in one existing test method. Actual retained widget deletion and QPointer-null assertion remain; all save/pending/dirty/unavailable checks, other methods and capture hook exact.",
+  "corrected_test_executed": false,
+  "test_methods_added_or_removed": 0
+}

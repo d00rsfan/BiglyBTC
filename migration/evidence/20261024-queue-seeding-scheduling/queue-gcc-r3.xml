@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="6"
+	failures="1"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="31"
+	timestamp="2026-10-24T17:37:23"
+	>
+	<testcase name="managed-seeding" classname="managed-seeding" time="18.7501" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of ManagedSeedingTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedSeedingTests::initTestCase()
+PASS   : ManagedSeedingTests::completedNativeHandleUploadsActualPayloadToAnIndependentOwnedLeecher(single)
+PASS   : ManagedSeedingTests::completedNativeHandleUploadsActualPayloadToAnIndependentOwnedLeecher(multifile)
+PASS   : ManagedSeedingTests::selectedCompletionRetainsSparseSkippedLinearStorageAndOriginalPolicyOnReopen()
+PASS   : ManagedSeedingTests::immediateStopBeforeFirstPieceSampleRetainsExistingDataForRestart()
+PASS   : ManagedSeedingTests::cleanupTestCase()
+Totals: 6 passed, 0 failed, 0 skipped, 0 blacklisted, 18741ms
+********* Finished testing of ManagedSeedingTests *********
+</system-out>
+	</testcase>
+	<testcase name="options-dialog" classname="options-dialog" time="0.792971" status="run">
+		<properties>
+			<property name="cmake_labels" value="options;unit"/>
+		</properties>
+		<system-out>********* Start testing of OptionsDialogTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OptionsDialogTests::initTestCase()
+PASS   : OptionsDialogTests::classicPagesMaskPasswordsAndLabelUnavailableFeatures()
+PASS   : OptionsDialogTests::hiddenAndBusyInitialReadCoalescesUntilVisibleIdle()
+PASS   : OptionsDialogTests::staleAndMalformedReadPacketsCannotReplaceCurrentProfile()
+PASS   : OptionsDialogTests::sparseEditsPreserveInvalidAndMissingFields()
+PASS   : OptionsDialogTests::returningToLoadedValueSubmitsNothing()
+PASS   : OptionsDialogTests::invalidEditedValueDoesNotReachWorker()
+PASS   : OptionsDialogTests::failedSaveRetainsDraftAndRetryUsesOriginalRevision()
+PASS   : OptionsDialogTests::okWaitsForMatchingCommitAndPendingCloseCannotDiscard()
+QWARN  : OptionsDialogTests::dirtyCancelAndDiscardAreExplicit() This plugin does not support propagateSizeHints()
+QWARN  : OptionsDia...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="scheduler-service" classname="scheduler-service" time="0.0231169" status="run">
+		<properties>
+			<property name="cmake_labels" value="scheduler;unit"/>
+		</properties>
+		<system-out>scheduler service: six owned-fixture families passed
+</system-out>
+	</testcase>
+	<testcase name="scheduler-dialog" classname="scheduler-dialog" time="0.320396" status="fail">
+		<failure message="SEGFAULT"/>
+		<properties>
+			<property name="cmake_labels" value="scheduler;ui;unit"/>
+		</properties>
+		<system-out>********* Start testing of SchedulerDialogTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : SchedulerDialogTests::initTestCase()
+QWARN  : SchedulerDialogTests::lazyLoadAndFullPositiveJavaPollRange() This plugin does not support propagateSizeHints()
+PASS   : SchedulerDialogTests::lazyLoadAndFullPositiveJavaPollRange()
+QWARN  : SchedulerDialogTests::staleSessionsRequestsAndMalformedSnapshotCannotReplaceDraft() This plugin does not support propagateSizeHints()
+PASS   : SchedulerDialogTests::staleSessionsRequestsAndMalformedSnapshotCannotReplaceDraft()
+QWARN  : SchedulerDialogTests::renderBlocksEditSignalsButKeepsModelAndHeaderNotifications() This plugin does not support propagateSizeHints()
+PASS   : SchedulerDialogTests::renderBlocksEditSignalsButKeepsModelAndHeaderNotifications()
+QWARN  : SchedulerDialogTests::partialXmlSaveRebasesRowsAndRetainsOnlyUncommittedPreferences() This plugin does not support propagateSizeHints()
+PASS   : SchedulerDialogTests::partialXmlSaveRebasesRowsAndRetainsOnlyUncommittedPreferences()
+QWARN  : SchedulerDialogTests::failedSaveRetainsWholeDraftAndCanRetry() This plugin does not support propagateSizeHints()
+PASS   : SchedulerDialogTests::failedSaveRetainsWholeDraftAndCanRetry()
+QWARN  : SchedulerDialogTests::directLoadAndSaveReceiversMayDeleteDialog() This plugin does not support propagateSizeHints()
+QWARN  : SchedulerDialogTests::directLoadAndSaveReceiversMayDeleteDialog() This plugin does not support propagateSizeHints()
+PASS   : SchedulerDialogTests::directLoadAndSaveReceiversMayDeleteDialog()
+QWARN  : SchedulerDialogTests::enabledChangeDuringRenderMayDeleteOwnerWithoutRestoringDeadBlockers() This plugin does not support propagateSizeHints()
+PASS   : SchedulerDialogTests::enabledChangeDuringRenderMayDeleteOwnerWithoutRestoringDeadBlockers()
+QWARN  : SchedulerDialogTests::enabledChangeDuringRenderCanBindNewSessionAndOldRenderStops() This plugin does not support propagateSizeHints()
+PASS   : SchedulerDialogTests::enabledChangeDuringRenderCanBindNewSessionAndOldRenderStops()
+QWARN  : SchedulerDialogTests::deletedRowControlRefusesSaveAndKeepsDirtyDraft() This plugin does not support propagateSizeHints()
+Received signal 11 (SIGSEGV), code SEGV_ACCERR, at instruction address 0x00007aee44e12b68, accessing address 0x00007aee44e12b68
+         deletedRowControlRefusesSaveAndKeepsDirtyDraft function time: 7ms, total time: 214ms
+</system-out>
+	</testcase>
+	<testcase name="scheduler-host" classname="scheduler-host" time="0.706489" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration;scheduler;unit"/>
+		</properties>
+		<system-out>********* Start testing of SchedulerHostTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : SchedulerHostTests::initTestCase()
+PASS   : SchedulerHostTests::realModuleSparseSaveAndPartialConfigCasRemainExplicit()
+QWARN  : SchedulerHostTests::toolsDialogUsesActualWorkerAndFinalRevision() This plugin does not support propagateSizeHints()
+QWARN  : SchedulerHostTests::toolsDialogUsesActualWorkerAndFinalRevision() This plugin does not support propagateSizeHints()
+PASS   : SchedulerHostTests::toolsDialogUsesActualWorkerAndFinalRevision()
+PASS   : SchedulerHostTests::cleanupTestCase()
+Totals: 4 passed, 0 failed, 0 skipped, 0 blacklisted, 604ms
+********* Finished testing of SchedulerHostTests *********
+</system-out>
+	</testcase>
+	<testcase name="scheduler-host-engine" classname="scheduler-host-engine" time="11.2942" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration;scheduler;unit"/>
+		</properties>
+		<system-out>********* Start testing of SchedulerHostEngineTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : SchedulerHostEngineTests::initTestCase()
+PASS   : SchedulerHostEngineTests::scheduledRatesAndPauseUseFreshConfigThenManualStopWins(single)
+PASS   : SchedulerHostEngineTests::scheduledRatesAndPauseUseFreshConfigThenManualStopWins(multi)
+PASS   : SchedulerHostEngineTests::inheritedSavedPauseNeverBecomesCurrentAuthority()
+PASS   : SchedulerHostEngineTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 11125ms
+********* Finished testing of SchedulerHostEngineTests *********
+</system-out>
+	</testcase>
+</testsuite>

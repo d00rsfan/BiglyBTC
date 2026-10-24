@@ -1,0 +1,39 @@
+{
+  "status": "SOURCE_FROZEN_UNEXECUTED",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_base": "8239f5b42c3f2f56126b7a382dc75a4bd8114607",
+  "subjects": {
+    "preview/native/core/include/biglybtc/queue_policy.hpp": {
+      "before_sha256": null,
+      "sha256": "80646717699588c2839d2fe98bc3296b0d00dcca769931db3d1fb3be4b26b194",
+      "bytes": 6999,
+      "staged": "staging/preview/native/core/include/biglybtc/queue_policy.hpp"
+    },
+    "preview/native/core/src/queue_policy.cpp": {
+      "before_sha256": null,
+      "sha256": "504f5326526cbdc4c32d1f46ac79840e8bc1066b95ebc9b5fe870f8806a137d8",
+      "bytes": 31909,
+      "staged": "staging/preview/native/core/src/queue_policy.cpp"
+    },
+    "preview/native/tests/queue_policy_tests.cpp": {
+      "before_sha256": null,
+      "sha256": "e92cbf437d05e70914db0d99c323e131b658cb37e9eebc9e1714bc264f0889a3",
+      "bytes": 16960,
+      "staged": "staging/preview/native/tests/queue_policy_tests.cpp"
+    }
+  },
+  "metadata": {
+    "AUDIT.md": "9e9f27e6201bb84422302615436d694fbac345e368853408ea127a58fd077a92",
+    "original-pins.json": "9423740ce8e81ecb740e437456ca7ccb686090709135fd2b0641415672dcced1",
+    "catalog.json": "b4b4381af047591b29e4f73cb815dbab274766a1e364090f761fbc87140f469d",
+    ".gitattributes": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da",
+    "native-input-pins.json": "e43b1207723cc80f522017dcab49135c931ff567d48745944d56550e31532634",
+    "CONTRACT.md": "ae4511fd1782dbf4783626dd696e7926fd4827ef21492a49404396e8d6e3690d"
+  },
+  "planned_plain_test_families": 21,
+  "actual_subject_executions": 0,
+  "independent_java_oracle": "Owned separately by error_oracle; no equality credit in this source capsule",
+  "target": "biglybtc-queue-policy-tests links BiglyBTC::Core; core library adds queue_policy.cpp; no Qt/LT/wrappers",
+  "early_header_sha256": "56a33011d8833235abd343d6a2beec1e929e156fe7837ab42f2cb28751c04c18",
+  "header_changes_since_early": "Comment only: exact original file-priority comparator indices1/3; API/member layout unchanged"
+}

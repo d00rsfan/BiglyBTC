@@ -1,0 +1,38 @@
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/usr/lib/x86_64-linux-gnu/libthread_db.so.1".
+[New Thread 0x7ffff2bb56c0 (LWP 1352922)]
+********* Start testing of SchedulerDialogTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : SchedulerDialogTests::initTestCase()
+QWARN  : SchedulerDialogTests::deletedRowControlRefusesSaveAndKeepsDirtyDraft() This plugin does not support propagateSizeHints()
+
+Thread 1 "biglybtc-schedu" received signal SIGSEGV, Segmentation fault.
+0x0000000000000020 in ?? ()
+#0  0x0000000000000020 in ?? ()
+#1  0x00007ffff7a9d120 in QAbstractItemView::updateEditorGeometries() () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6
+#2  0x00007ffff7a8ca9b in QAbstractItemView::updateGeometries() () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6
+#3  0x00007ffff7a8bde1 in QAbstractItemView::doItemsLayout() () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6
+#4  0x00007ffff7b035fe in QTableView::doItemsLayout() () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6
+#5  0x00007ffff7a8ca9b in QAbstractItemView::updateGeometries() () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6
+#6  0x00007ffff5ff6f40 in ?? () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6
+#7  0x00007ffff7abbcb2 in QHeaderView::viewportEvent(QEvent*) () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6
+#8  0x00007ffff5f8fb8e in QCoreApplicationPrivate::sendThroughObjectEventFilters(QObject*, QEvent*) () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6
+#9  0x00007ffff779693a in QApplicationPrivate::notify_helper(QObject*, QEvent*) () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6
+#10 0x00007ffff5f8fe20 in QCoreApplication::notifyInternal2(QObject*, QEvent*) () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6
+#11 0x00007ffff77f4123 in QWidgetPrivate::hideChildren(bool) () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6
+#12 0x00007ffff77f4110 in QWidgetPrivate::hideChildren(bool) () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6
+#13 0x00007ffff77f4110 in QWidgetPrivate::hideChildren(bool) () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6
+#14 0x00007ffff77f472f in QWidgetPrivate::hide_helper() () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6
+#15 0x00007ffff77f9b5c in QWidgetPrivate::setVisible(bool) () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6
+#16 0x00007ffff7a1f80a in QDialogPrivate::setVisible(bool) () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6
+#17 0x00007ffff7a1d925 in QDialog::~QDialog() () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6
+#18 0x00005555555a0d59 in SchedulerDialogTests::deletedRowControlRefusesSaveAndKeepsDirtyDraft() [clone .isra.0] ()
+#19 0x00007ffff5fa5092 in QMetaMethodInvoker::invokeImpl(QMetaMethod, void*, Qt::ConnectionType, long long, void const* const*, char const* const*, QtPrivate::QMetaTypeInterface const* const*) () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6
+#20 0x00007ffff5fa62d0 in QMetaMethod::invokeImpl(QMetaMethod, void*, Qt::ConnectionType, long long, void const* const*, char const* const*, QtPrivate::QMetaTypeInterface const* const*) () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6
+#21 0x00007ffff7f6e102 in ?? () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6
+#22 0x00007ffff7f75c73 in ?? () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6
+#23 0x00007ffff7f769a1 in ?? () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6
+#24 0x00007ffff7f77088 in ?? () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6
+#25 0x00007ffff7f77e4a in QTest::qRun() () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6
+#26 0x00007ffff7f78060 in QTest::qExec(QObject*, int, char**) () from /opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6
+#27 0x000055555559f844 in main ()

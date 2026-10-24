@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "status": "SOURCE_FROZEN_NO_EXECUTION",
+  "source_sha256": {
+    "preview/native/ui/scheduler_dialog.hpp": "cf4935859650f9ccdfc38e484c0fb616f7d1826aa2e257cf30845e59c054f46d",
+    "preview/native/ui/scheduler_dialog.cpp": "34f79894cd1c19a67da72640c4e60f1c16d1cbf2ccd3e7086c5a21c3714b4981",
+    "preview/native/ui/scheduler_presentation.hpp": "edb4b90ccccf57bfdd5ac54c83bf49f6cb3a5b6fc99e91075923c66c61a39e31",
+    "preview/native/tests/scheduler_dialog_tests.cpp": "ba7a459b1a7ac9c5847f61dd2009b7d4e1b0e3ba7d64f8fe29335b025f704fcd"
+  },
+  "before_sha256": {
+    "preview/native/ui/scheduler_dialog.hpp": "cf4935859650f9ccdfc38e484c0fb616f7d1826aa2e257cf30845e59c054f46d",
+    "preview/native/ui/scheduler_dialog.cpp": "0d46e889c15c74605c9730251309ce11299b227d80e8954c8f852fefbbe298b6",
+    "preview/native/ui/scheduler_presentation.hpp": "edb4b90ccccf57bfdd5ac54c83bf49f6cb3a5b6fc99e91075923c66c61a39e31"
+  },
+  "patch_sha256": "78023da6bb27d8fb78e17e72b55678f5f8d96c93cb0e242693e3549d477a843b",
+  "review_sha256": "ddc8f33d9c70b4b746c8afac30a8fd35958314eebe70170d817599bff469291b",
+  "adoption_sha256": "c1ea8066a72dca72cbfad20b837f1ecb782a56e1eea259d3f5d9242a6c03da77",
+  "new_test_behavior_methods": 9,
+  "actual_qt_rows": null
+}

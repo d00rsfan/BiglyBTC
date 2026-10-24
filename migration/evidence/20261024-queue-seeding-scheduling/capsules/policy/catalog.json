@@ -1,0 +1,415 @@
+{
+  "scope": "Suggested catalog rows for root-owned sparse Options editor; not auto-applied source edits",
+  "fields": [
+    {
+      "field": "maximumDownloads",
+      "key": "max downloads",
+      "original_kind": "integer",
+      "original_default": 4,
+      "editor_section": "Queue",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "maximumActive",
+      "key": "max active torrents",
+      "original_kind": "integer",
+      "original_default": 4,
+      "editor_section": "Queue",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "minimumDownloads",
+      "key": "min downloads",
+      "original_kind": "integer",
+      "original_default": 1,
+      "editor_section": "Queue",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "linkMinimumDownloads",
+      "key": "StartStopManager_bMaxMinDLLinked",
+      "original_kind": "boolean",
+      "original_default": false,
+      "editor_section": "Queue",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "ignoreChecking",
+      "key": "StartStopManager_bMaxDownloadIgnoreChecking",
+      "original_kind": "boolean",
+      "original_default": false,
+      "editor_section": "Queue",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "maximumActiveWhenSeedingEnabled",
+      "key": "StartStopManager_bMaxActiveTorrentsWhenSeedingEnabled",
+      "original_kind": "boolean",
+      "original_default": false,
+      "editor_section": "Queue",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "maximumActiveWhenSeeding",
+      "key": "StartStopManager_iMaxActiveTorrentsWhenSeeding",
+      "original_kind": "integer",
+      "original_default": 0,
+      "editor_section": "Queue",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "rankMode",
+      "key": "StartStopManager_iRankType",
+      "original_kind": "integer",
+      "original_default": 1,
+      "editor_section": "Seeding",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "downloadOrder",
+      "key": "StartStopManager_Downloading_iSortType",
+      "original_kind": "integer",
+      "original_default": 0,
+      "editor_section": "Queue",
+      "proposed_applicability": "Live",
+      "help": "0/1/3/4/5/7/8 use observed data;2 speed and6 ETA probing are unavailable, retain position and diagnose."
+    },
+    {
+      "field": "preferLargerSwarms",
+      "key": "StartStopManager_bPreferLargerSwarms",
+      "original_kind": "boolean",
+      "original_default": true,
+      "editor_section": "Seeding",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "seedCountFallback",
+      "key": "StartStopManager_iRankTypeSeedFallback",
+      "original_kind": "integer",
+      "original_default": 0,
+      "editor_section": "Seeding",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "minimumPeersToBoostNoSeeds",
+      "key": "StartStopManager_iMinPeersToBoostNoSeeds",
+      "original_kind": "integer",
+      "original_default": 1,
+      "editor_section": "Seeding",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "minimumDownloadBytesPerSecond",
+      "key": "StartStopManager_iMinSpeedForActiveDL",
+      "original_kind": "integer",
+      "original_default": 512,
+      "editor_section": "Queue",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "minimumSeedBytesPerSecond",
+      "key": "StartStopManager_iMinSpeedForActiveSeeding",
+      "original_kind": "integer",
+      "original_default": 512,
+      "editor_section": "Seeding",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "minimumSeedSeconds",
+      "key": "StartStopManager_iMinSeedingTime",
+      "original_kind": "integer",
+      "original_default": 300,
+      "editor_section": "Seeding",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "minimumSeedActiveSeconds",
+      "key": "StartStopManager_iMinSeedingTimeWhenActive",
+      "original_kind": "integer",
+      "original_default": 900,
+      "editor_section": "Seeding",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "timedMinimumWithPeersSeconds",
+      "key": "StartStopManager_iTimed_MinSeedingTimeWithPeers",
+      "original_kind": "integer",
+      "original_default": 0,
+      "editor_section": "Seeding",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "timedMaximumWithPeersSeconds",
+      "key": "StartStopManager_iTimed_MaxSeedingTimeWithPeers",
+      "original_kind": "integer",
+      "original_default": 0,
+      "editor_section": "Seeding",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "maximumStalledSeeds",
+      "key": "StartStopManager_iMaxStalledSeeding",
+      "original_kind": "integer",
+      "original_default": 5,
+      "editor_section": "Seeding",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "stalledSeedsIgnoreZeroPeers",
+      "key": "StartStopManager_bMaxStalledSeedingIgnoreZP",
+      "original_kind": "boolean",
+      "original_default": true,
+      "editor_section": "Seeding",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "autoStartZeroPeers",
+      "key": "StartStopManager_bAutoStart0Peers",
+      "original_kind": "boolean",
+      "original_default": false,
+      "editor_section": "Seeding",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "firstPriorityMode",
+      "key": "StartStopManager_iFirstPriority_Type",
+      "original_kind": "integer",
+      "original_default": 1,
+      "editor_section": "First Priority",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "firstPriorityShareRatio",
+      "key": "StartStopManager_iFirstPriority_ShareRatio",
+      "original_kind": "integer",
+      "original_default": 500,
+      "editor_section": "First Priority",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "firstPrioritySeedMinutes",
+      "key": "StartStopManager_iFirstPriority_SeedingMinutes",
+      "original_kind": "integer",
+      "original_default": 0,
+      "editor_section": "First Priority",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "firstPriorityActiveMinutes",
+      "key": "StartStopManager_iFirstPriority_DLMinutes",
+      "original_kind": "integer",
+      "original_default": 0,
+      "editor_section": "First Priority",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "firstPriorityIgnoreSeedPeerRatio",
+      "key": "StartStopManager_iFirstPriority_ignoreSPRatio",
+      "original_kind": "integer",
+      "original_default": 0,
+      "editor_section": "First Priority",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "firstPriorityIgnoreIdleMinutes",
+      "key": "StartStopManager_iFirstPriority_ignoreIdleMinutes",
+      "original_kind": "integer",
+      "original_default": 0,
+      "editor_section": "First Priority",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "firstPriorityIgnoreZeroPeers",
+      "key": "StartStopManager_bFirstPriority_ignore0Peer",
+      "original_kind": "boolean",
+      "original_default": true,
+      "editor_section": "First Priority",
+      "proposed_applicability": "Live",
+      "default_condition": "Defaultfalse when original ui byte string is az2; true otherwise."
+    },
+    {
+      "field": "ignoreShareRatio",
+      "key": "Stop Ratio",
+      "original_kind": "float-bytes",
+      "original_default": 0,
+      "editor_section": "Ignore",
+      "proposed_applicability": "Live",
+      "help": "Original Float stored as decimal bytes; native policy converts binary32 to thousandths. No full-default rewrite."
+    },
+    {
+      "field": "ignoreShareRatioSeedStart",
+      "key": "StartStopManager_iIgnoreShareRatioSeedStart",
+      "original_kind": "integer",
+      "original_default": 0,
+      "editor_section": "Ignore",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "ignoreSeedCount",
+      "key": "StartStopManager_iIgnoreSeedCount",
+      "original_kind": "integer",
+      "original_default": 0,
+      "editor_section": "Ignore",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "ignorePeerSeedRatio",
+      "key": "Stop Peers Ratio",
+      "original_kind": "integer",
+      "original_default": 0,
+      "editor_section": "Ignore",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "ignorePeerSeedRatioSeedStart",
+      "key": "StartStopManager_iIgnoreRatioPeersSeedStart",
+      "original_kind": "integer",
+      "original_default": 0,
+      "editor_section": "Ignore",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "ignoreZeroPeers",
+      "key": "StartStopManager_bIgnore0Peers",
+      "original_kind": "boolean",
+      "original_default": true,
+      "editor_section": "Ignore",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "peersAsFullCopy",
+      "key": "StartStopManager_iNumPeersAsFullCopy",
+      "original_kind": "integer",
+      "original_default": 0,
+      "editor_section": "Seeding",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "fakeFullCopySeedStart",
+      "key": "StartStopManager_iFakeFullCopySeedStart",
+      "original_kind": "integer",
+      "original_default": 0,
+      "editor_section": "Seeding",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "stopOnceBandwidthMet",
+      "key": "StartStopManager_bStopOnceBandwidthMet",
+      "original_kind": "boolean",
+      "original_default": true,
+      "editor_section": "Queue",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "preventNewSeedsAtUploadLimit",
+      "key": "StartStopManager_bStartNoMoreSeedsWhenUpLimitMet",
+      "original_kind": "boolean",
+      "original_default": false,
+      "editor_section": "Seeding",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "uploadLimitSlack",
+      "key": "StartStopManager_bStartNoMoreSeedsWhenUpLimitMetSlack",
+      "original_kind": "integer",
+      "original_default": 95,
+      "editor_section": "Seeding",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "uploadLimitSlackIsPercent",
+      "key": "StartStopManager_bStartNoMoreSeedsWhenUpLimitMetPercent",
+      "original_kind": "boolean",
+      "original_default": true,
+      "editor_section": "Seeding",
+      "proposed_applicability": "Live"
+    },
+    {
+      "field": "newSeedsMoveTop",
+      "key": "StartStopManager_bNewSeedsMoveTop",
+      "original_kind": "boolean",
+      "original_default": true,
+      "editor_section": "Queue",
+      "proposed_applicability": "Live",
+      "help": "Transition intent only; worker persists original force/pool ordering before engine effects."
+    },
+    {
+      "field": "retainForceStartOnComplete",
+      "key": "StartStopManager_bRetainForceStartWhenComplete",
+      "original_kind": "boolean",
+      "original_default": false,
+      "editor_section": "Queue",
+      "proposed_applicability": "Live",
+      "help": "Transition intent only; worker persists original force/pool ordering before engine effects."
+    },
+    {
+      "field": "lightSeedingEnabled",
+      "key": "Enable Light Seeding",
+      "original_kind": "boolean",
+      "original_default": true,
+      "editor_section": "Seeding",
+      "proposed_applicability": "OriginalOnly",
+      "help": "Original light/reserved/flexible slot provider is unavailable; do not claim native effects."
+    },
+    {
+      "field": "reservedLightSeedSlots",
+      "key": "Light Seed Slots Reserved",
+      "original_kind": "integer",
+      "original_default": 4,
+      "editor_section": "Seeding",
+      "proposed_applicability": "OriginalOnly",
+      "help": "Original light/reserved/flexible slot provider is unavailable; do not claim native effects."
+    },
+    {
+      "field": "flexibleSeedSlots",
+      "key": "Flexible Seed Slots",
+      "original_kind": "integer",
+      "original_default": 5,
+      "editor_section": "Seeding",
+      "proposed_applicability": "OriginalOnly",
+      "help": "Original light/reserved/flexible slot provider is unavailable; do not claim native effects."
+    }
+  ],
+  "dormant_original_only": [
+    {
+      "key": "StartStopManager_Downloading_iTestTimeSecs",
+      "default": 120,
+      "reason": "active download probe unavailable"
+    },
+    {
+      "key": "StartStopManager_Downloading_iRetestTimeMins",
+      "default": 30,
+      "reason": "active download probe unavailable"
+    },
+    {
+      "key": "StartStopManager_Downloading_bTestActive",
+      "default": false,
+      "reason": "active download probe unavailable"
+    },
+    {
+      "key": "StartStopManager_bAutoReposition",
+      "default": false,
+      "reason": "saved pool-position normalization outside pure reducer"
+    },
+    {
+      "key": "Disconnect Seed",
+      "default": true,
+      "reason": "peer connection policy outside queue reducer"
+    },
+    {
+      "key": "Use Super Seeding",
+      "default": false,
+      "reason": "torrent transport feature outside queue reducer"
+    },
+    {
+      "key": "StartStopManager_iAddForSeedingDLCopyCount",
+      "default": 1,
+      "reason": "new seed admission accounting outside reducer"
+    },
+    {
+      "key": "StartStopManager_bAddForDownloadingSR1",
+      "default": true,
+      "reason": "new download admission accounting outside reducer"
+    }
+  ]
+}

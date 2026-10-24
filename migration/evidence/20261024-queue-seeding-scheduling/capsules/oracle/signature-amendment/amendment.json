@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_BOOTSTRAP_AMENDMENT_NOT_EXECUTED",
+  "reason": "Parent-observed r1 JVM NotificationThread initialization failure while the thread-denying fence was installed before VM bootstrap; install the identical fence inside launcher main before any isolated subject/provider classload.",
+  "parent_manifest_sha256": "3487e3e9faa01bae1ab4d13bc4bb9542f8aad731060648e16f8743959815871e",
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "retention_sha256": "7472e8bda8d832fd5a962cda76ba1fcefaa0e6e9b4cad2621e0be97e6fbec9dd",
+  "source_pins_sha256": "924392bc26c1d6e45a1ebff9c51a86a6d0139740c24f5a1c2d2e062670dacf24",
+  "failed_attempt_relative_path": "../run-r1",
+  "failed_attempt_artifact_sha256": {
+    "classes/QueueOracleFence.class": "e53bd1825642ce8372ac9a629ab8ed1c686b9df61f57bb8a33d098549abc9ce7",
+    "classes/QueueRankLauncher.class": "e5700611a9d8aef60b0c052219f0ad95f0e83947471d19022e263677e30a595f",
+    "classes/com/biglybt/core/config/COConfigurationManager.class": "b896dd8d0d0be469a176d75000a5ac099d34edade8ba865d9c4b100a058f13e0",
+    "classes/com/biglybt/core/util/Debug.class": "660cf32fe81a1891da67f499bc99d8ef1b33f173fd83357d19e2833fcaadd85c",
+    "classes/com/biglybt/core/util/FileUtil.class": "1cf9a76e5f2075808343d3e821c099d499d09f1304f8ab45d49b9b7518a1706f",
+    "classes/com/biglybt/core/util/SystemTime.class": "f32251fb6e32965ad9e3118de94e3086faedc09033325b43dd93f8c10e6140d7",
+    "classes/com/biglybt/core/util/ThreadPool.class": "f660e2df96c076dc6a0294d7dc59f477f8416318555216f11b20c2c1b5a5b07c",
+    "classes/com/biglybt/pifimpl/local/PluginCoreUtils.class": "f2f85c61816e232c824419d608eaddb08c16e174269befdfffda4c6cb9c3137a",
+    "classes/com/biglybt/plugin/startstoprules/defaultplugin/QueueRankOracle$1.class": "90f69173fce8a6ba76f532b1a5191ac71a0889f88313cc290fc195d6ca4fc61b",
+    "classes/com/biglybt/plugin/startstoprules/defaultplugin/QueueRankOracle$Fixture.class": "fb8ce4d6b29c86c307d4f0df9d84f603740f263ff16ec839d5a17cdb78ecbe83",
+    "classes/com/biglybt/plugin/startstoprules/defaultplugin/QueueRankOracle.class": "0e0d8f815f09ca5ece5a34a9cbb566188d024062e478f620c1f87e6995ebbd52",
+    "classes/queueoracle/Providers.class": "4acef981dd72ce19282963eb8846a2fcd5496681a059fad670e90c063a88053a",
+    "commands.json": "6ec06e0ce7a5b44ea04d5a753d58b847f036e50e096216f81518322404c70146",
+    "hs_err_pid23.log": "6bbf73b5bd680e85992916cb56abb4b8039c3b4220bd1de75937319a7193ba28",
+    "javac-new-helpers.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "javac-new-helpers.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "original.stderr": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+    "original.stdout": "5ebd721dc64cdf16745d0e5b5740059a5d55d925f2984ad0be6d4411f3ef894d"
+  },
+  "observed_failed_original_exit_code": -6,
+  "observed_helper_javac_exit_code": 0,
+  "failure_phase": "JVM bootstrap before launcher/subject invocation; no original scalar credit",
+  "changes": {
+    "source/QueueRankLauncher.java": {
+      "before_sha256": "b36d837c24d1f296b1c09f6b13ceab7f41d424c3c7b38515c1ef1a1aedf97be7",
+      "after_sha256": "731bad43d10c221b57f5983c911bfb7194bb6f17c0f0a4ac2b32410a98eca02e"
+    },
+    "run.py": {
+      "before_sha256": "7006e5a732793d179f5d4bd9efa214256dac85aa1c883d5f90cf4693c3a48024",
+      "after_sha256": "368ed5f322a70387f8f404929ba9a5b78616aa2e8a07b326399128d1eb6d3761"
+    },
+    "SCOPE.md": {
+      "before_sha256": "d640f274dd0c7ade82b715a9b3197e4bd0f0dc6eee3c2d98e81ddbf9c44f4df3",
+      "after_sha256": "132d47c5f6e91598e4bb80ea888ed0ef62c3a635d4481244078fa35fddece152"
+    }
+  },
+  "unchanged_original_artifact_sha256": {
+    "author_vectors.py": "a6d558e49363a942e3ec2f4e2d104c830673f0173c37aaac72ccb9e031ad7463",
+    "compare.py": "1568c55a55a93177cf72902ee5cb7c958e3b90111365e4cd85762c2c33859976",
+    "queue_rank_driver.cpp": "68aff811713afe9a3eb5e1fc8a8bf3129c98ebcfdb683eece213e637c56f76e2",
+    "source/QueueOracleFence.java": "5cf7342644823e4f6dbc67aa9de6c21761b9de43c52797719da03ffc7a66e9e7",
+    "source/com/biglybt/core/config/COConfigurationManager.java": "d0b906ef4ec9986603b8a77a0b544d336e40b3520cf5f7f20e18be85753ac5e9",
+    "source/com/biglybt/core/util/Debug.java": "63dc7caa43e7cf3c9fd2447704ce9e74d5587faea2eaf921025fd490d6b5c641",
+    "source/com/biglybt/core/util/FileUtil.java": "60a19e9a6b9f3456097a0d5e47e886e2bb7c3e9f778239fc7184082f5661af0f",
+    "source/com/biglybt/core/util/SystemTime.java": "30796f2e99bd27a5737ad20e37b8ad659c0893106e844e9600653535ade85347",
+    "source/com/biglybt/core/util/ThreadPool.java": "f57001933b91f6bc889878cdfebc86d9750ff2e14221fbf3c274a788634766b2",
+    "source/com/biglybt/pifimpl/local/PluginCoreUtils.java": "59f8debaf74f5b59316e23834709c31239b87175e71c1230302d2f40bd8115be",
+    "source/com/biglybt/plugin/startstoprules/defaultplugin/QueueRankOracle.java": "773e7ac5b84f3c2c38d5c7296168199885c87bac052d3af1ff58dde119dfe004",
+    "source/queueoracle/Providers.java": "0dc91e4e626f394fca67d85bda086ba96997029c057994f5d7f7d0b5937e62f8",
+    "source-pins.json": "924392bc26c1d6e45a1ebff9c51a86a6d0139740c24f5a1c2d2e062670dacf24",
+    "vectors.json": "cef24ea137ccd088c1ea40e497aa5b95028fd2ef2a9cb1a6922e4b7406c1e46a",
+    "vectors.tsv": "dc5e94367062f2511daf1d6620d63b585adb24b05e998c1f2a743415807ec386"
+  },
+  "fence_byte_identical": true,
+  "runner_executable_change": "Only java.security.manager JVM argument changes; archival/cohort checks are byte-identical.",
+  "original_subjects_recompiled": false,
+  "new_amendment_compiled_or_executed": false,
+  "root_execution_command": "python3 build/queue-20261024/oracle/bootstrap-amendment/run.py --driver /ABSOLUTE/ROOT-BUILT/biglybtc-queue-rank-oracle-driver --attempt run-r1",
+  "scope": "Actual unchanged rank/first-priority scalar methods only; no original application bootstrap, engine scheduling or live-profile equality."
+}

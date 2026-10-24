@@ -1,0 +1,32 @@
+# Scheduler service adoption
+
+Source-only; no compilation, tests, module execution, original Java or profile access performed by the author.
+
+## Integration
+
+Install `staging/` beneath `preview/native/`. Build the vendored SpeedScheduler policy/XML/ownership sources as PIC, linked with Qt6::Core. Build its `module.cpp` as `BiglyBTC-plugin-SpeedScheduler` MODULE with BiglyBTC::PluginAPI; retain LICENSE, NOTICE.md and SOURCE_PROVENANCE.json with the bundle. These six implementation inputs are byte-identical to the standalone native plugin; evaluation executes its existing BT_SCHEDULER_EVALUATE ABI.
+
+Build a worker-only `biglybtc_scheduler_service` static target from adapters/scheduler_{service,xml,io,module}.cpp, with public adapter and vendored plugin include directories. Link biglybtc_profile, BiglyBTC::PluginHost, the vendored policy target, Qt6::Core and OpenSSL::Crypto. No engine/GUI dependency. Existing fixed ConfigFile validator is unchanged.
+
+Build tests/scheduler_service_tests.cpp against that service; pass the actual built module path as argv[1]. The test copies and explicitly hashes the generated library before loading; all profile/data changes use mkdtemp-owned fixtures. Six families cover raw XML/UTF16, jar-only data directory selection and sparse config, no-write missing/cancelled reads, actual approved module actions and current-session ownership, interrupted action/manual priority, CAS/FIFO/symlink/authentication failure. No Java equality credit is added.
+
+`loadApprovedSchedulerService(lease, absoluteModule, {sha256, bytes, version})` hashes an owned regular nofollow single-link descriptor, checks metadata and named identity before loading that exact retained descriptor. Approval must come from trusted compiled/installer metadata, never a profile or dialog. Bundle module inodes must remain immutable while loaded; this is not a code sandbox. Existing Module capability/id/version checks remain active.
+
+## Worker/Host contract
+
+- Construct once per held profile on its worker. `snapshot()` holds raw worker data; GUI receives a separate typed copy and revision, never original XML. `reload` is explicit, not triggered by display.
+- Resolve at most 1024 plugin entries without following links. An external plugin.id=SpeedScheduler descriptor selects its leaf. Original jar-only layouts can instead be identified by regular SavedSchedules.xml/PausedTorrents.conf plus their exact Plugin.<leaf> scheduler settings namespace. Multiple candidates reject. No jar is opened/executed. If no data exists, select SpeedScheduler without creating anything; first explicit XML save/action creates private dirs and a private data marker, not a fake Java plugin descriptor.
+- Poll using actual local weekday/minute and actual effective KiB limits. Supply stable torrent token/hash, manual revision, actual state/paused/force/completion, and source categories or real manual tags selected by `settings.useTags`. Unavailable memberships reject filtered evaluation. Disabled releases require current-session authority; inherited records never authorize resume.
+- Apply changed rate axes then `acknowledgeRates(plan.id, actualUploadSuccess, actualDownloadSuccess)`. Do not acknowledge unapplied effects. Explicit enabled→disabled save schedules the original defaults restore; disabled polling otherwise only releases owned pauses.
+- Before each action, gather current torrent fields and call `beginAction`. It validates the exact plan/action/revision, current scalar+membership state, config/XML/ownership CAS and durably fsyncs an intent. Only then change original pause_data through the existing library transaction and perform actual engine operation. Pause success includes original reason `Speed Scheduler`; SetStopReason is a reason-only host action.
+- Call `finishAction` after both saved/engine effects. Succeeded Pause grants authority only after ownership bytes and journal removal are synced. Resume/Restart removes the first original matching record. FailedBeforeEffect means neither effect happened; any partial/uncertain result is Indeterminate, retaining the journal and blocking automatic retries. Never call Succeeded merely because an engine command was queued.
+- BEFORE every manual Pause/Stop/Resume/Start/Queue/Force call `revokeForManual`. It invalidates plans and drops memory authority before IO; always honor the manual request even if its durable cleanup fails. Manual revoke removes all duplicate matching grants while preserving unrelated raw lines. No inherited grants become trusted after restart; interrupted journals require explicit review/override.
+- Lease must outlive service. Same-directory atomic rename/fsync is used for XML/conf; .BiglyBTC.saving is exclusive and retained on uncertain failures. Original .bak files are not invented/modified for these raw files. The existing ConfigFile transaction is reused only for sparse biglybt.config keys. One-file CAS is cooperative under the held lease, not atomic against arbitrary last-nanosecond external swaps, and saving XML+settings is not a cross-file transaction. UI saves XML before enable settings.
+
+## Exact defaults and limits
+
+Plugin key prefix is Plugin.<actual directory basename>., not runtime module id. Keys: speedscheduler.enabled=false; use.tags.not.cats=false; override.forced=false; thread.sleep.time=10000. Java Long.intValue narrowing is retained; polling uses max(1000,narrowed int), with no upper clamp. Wrong-type settings preserve bytes and use the original default, with a diagnostic. Source no-argument getPluginBooleanParameter uses ConfigurationDefaults.def_boolean=0.
+
+XML read/edit maximum4MiB, 10000 schedules; ownership8MiB/100000 lines; descriptor64KiB; intent1KiB. Edited rates must fit nonnegative int byte-rate conversion (KiB<=INT_MAX/1024) before any engine effects. Unsupported/ambiguous XML editing (duplicate known fields, non-ASCII element names, unsupported encoding) rejects rather than serializing unknown bytes away. Known attrs retain surrounding spelling/whitespace/unknown nodes; new/deleted schedule objects are explicit edits. UTF8 and UTF16 endian/BOM are retained.
+
+This implements the service boundary, not a running timer, module installer, original stop-reason persistence or permission to resume legacy/manual pauses. Original plugin startup XML/whole-file serialization and normalization are deliberately replaced by safer explicit missing/ambiguous/error behavior and raw-byte-preserving edits.

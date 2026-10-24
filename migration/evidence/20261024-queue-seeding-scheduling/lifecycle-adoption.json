@@ -1,0 +1,12 @@
+{
+  "manifest_sha256": "5d84c3b8d757d60bf1077d0995ee4f6c1954bd1de778041d3cf7489850fd9449",
+  "sources": {
+    "preview/native/tests/scheduler_dialog_tests.cpp": {
+      "before_sha256": "9b811c8fd36d130b44249e3fbe3a78987ddf3abc16bb6cf5d8d88b6a8ae7b6a7",
+      "after_sha256": "902790876abbdfefd13e8b13c3541a3f64f4d9149e3a3c469eccec5f7a4d5962",
+      "before": "before/preview/native/tests/scheduler_dialog_tests.cpp",
+      "source": "staging/preview/native/tests/scheduler_dialog_tests.cpp"
+    }
+  },
+  "production_changed": false
+}

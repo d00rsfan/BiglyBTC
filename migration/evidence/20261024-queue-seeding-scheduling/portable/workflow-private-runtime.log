@@ -1,0 +1,38 @@
+Test project /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+      Start 205: managed-seeding
+ 1/11 Test #205: managed-seeding ..................   Passed   18.53 sec
+      Start 209: application-settings
+ 2/11 Test #209: application-settings .............   Passed    0.02 sec
+      Start 210: options-dialog
+ 3/11 Test #210: options-dialog ...................   Passed    0.63 sec
+      Start 211: options-host
+ 4/11 Test #211: options-host .....................   Passed    0.90 sec
+      Start 212: engine-live-settings
+ 5/11 Test #212: engine-live-settings .............   Passed    6.98 sec
+      Start 213: queue-policy
+ 6/11 Test #213: queue-policy .....................   Passed    0.03 sec
+      Start 214: scheduler-service
+ 7/11 Test #214: scheduler-service ................   Passed    0.03 sec
+      Start 215: scheduler-dialog
+ 8/11 Test #215: scheduler-dialog .................   Passed    0.30 sec
+      Start 216: managed-queue
+ 9/11 Test #216: managed-queue ....................   Passed   10.82 sec
+      Start 217: scheduler-host
+10/11 Test #217: scheduler-host ...................   Passed    0.83 sec
+      Start 218: scheduler-host-engine
+11/11 Test #218: scheduler-host-engine ............   Passed   11.29 sec
+
+100% tests passed, 0 tests failed out of 11
+
+Label Time Summary:
+compatibility        =   0.02 sec*proc (1 test)
+integration          =  12.13 sec*proc (2 tests)
+options              =   8.53 sec*proc (4 tests)
+queue                =  10.85 sec*proc (2 tests)
+runtime-bound        =  10.82 sec*proc (1 test)
+scheduler            =  12.47 sec*proc (4 tests)
+torrent-workflows    =  18.53 sec*proc (1 test)
+ui                   =   0.30 sec*proc (1 test)
+unit                 =  50.38 sec*proc (11 tests)
+
+Total Test time (real) =  50.39 sec

@@ -1,0 +1,186 @@
+{
+  "preview/native/adapters/scheduler_io.hpp": {
+    "before_sha256": null,
+    "sha256": "6953c7bb8806c948375672ca29b1b34b79a048d758c7e3ab12923ec2337e5634"
+  },
+  "preview/native/adapters/scheduler_service.cpp": {
+    "before_sha256": null,
+    "sha256": "89c5a27ea4ee6ec49a73f1b69fbd42a999eae0994d8efdb0285b87b4c1823523"
+  },
+  "preview/native/adapters/scheduler_service.hpp": {
+    "before_sha256": null,
+    "sha256": "2e7b19c4712cbf44da35ceca7f7ace7d3bcdd57dc64f3ef4bfad7a3bfa1e244b"
+  },
+  "preview/native/adapters/scheduler_module.cpp": {
+    "before_sha256": null,
+    "sha256": "2652135fb4a47df30ff0baebc79a010a2c57d21c2bdaeb6a2e7f9abdbd50663b"
+  },
+  "preview/native/adapters/scheduler_xml.cpp": {
+    "before_sha256": null,
+    "sha256": "4cebefda6f37fae5ab69a111697c13d5c4f5a003f88d4e0bed3514f08f80451d"
+  },
+  "preview/native/adapters/scheduler_io.cpp": {
+    "before_sha256": null,
+    "sha256": "515bdba70796b72ae52f159ef33ab6f9b79f21b848abec27da29de9690c74308"
+  },
+  "preview/native/tests/scheduler_service_tests.cpp": {
+    "before_sha256": null,
+    "sha256": "64190b2c6d6101135596fc29cc716bff2f72aaa6fbd0425d83fd939664f01ff7"
+  },
+  "preview/native/plugins/BiglyBTC-plugin-SpeedScheduler/scheduler.cpp": {
+    "before_sha256": null,
+    "sha256": "7b6a707e66d77674665e5d213ac3acc5d81e763af3f0bdedf37dc90bf3e6869d"
+  },
+  "preview/native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_file.cpp": {
+    "before_sha256": null,
+    "sha256": "2016f51cc3c7fdd4977898b27f42de24ccd4b00d9b1e4965e6c701ce8f68f3ae"
+  },
+  "preview/native/plugins/BiglyBTC-plugin-SpeedScheduler/original_xml.cpp": {
+    "before_sha256": null,
+    "sha256": "04a210b1f3e91b7458a0afa20057efd37e4b2b36d9dc5560e8d931e0b2231817"
+  },
+  "preview/native/plugins/BiglyBTC-plugin-SpeedScheduler/LICENSE": {
+    "before_sha256": null,
+    "sha256": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73"
+  },
+  "preview/native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_file.hpp": {
+    "before_sha256": null,
+    "sha256": "20ad7b0962cb9339b629ce9d8e3582cb848e7fe52f5f434a6306455f0c7be051"
+  },
+  "preview/native/plugins/BiglyBTC-plugin-SpeedScheduler/scheduler.hpp": {
+    "before_sha256": null,
+    "sha256": "96f8bc6ecd338c21a5293a6476bf857a33228eab96904f97da4428352d97d170"
+  },
+  "preview/native/plugins/BiglyBTC-plugin-SpeedScheduler/SOURCE_PROVENANCE.json": {
+    "before_sha256": null,
+    "sha256": "6591cee7ad0b1ec4fd7bf89c07477de96092bb3744ae67083389a23253c62bff"
+  },
+  "preview/native/plugins/BiglyBTC-plugin-SpeedScheduler/NOTICE.md": {
+    "before_sha256": null,
+    "sha256": "931ecbb2e41cc29addd676e7f1d24f956a77e129fc24bf65de10d5ea3f73df49"
+  },
+  "preview/native/plugins/BiglyBTC-plugin-SpeedScheduler/module.cpp": {
+    "before_sha256": null,
+    "sha256": "59f81f65f88088758bfc554e81904f0c265e11491897d221b5550130d2de5da4"
+  },
+  "preview/native/tests/managed_queue_tests.cpp": {
+    "before_sha256": null,
+    "sha256": "3a6af7b66da3c63199c93fb2d8d17bf0f2aa28cb84005003885c682db22ceba3"
+  },
+  "preview/native/core/CMakeLists.txt": {
+    "before_sha256": "6267449f70f13063037ccc016ce1d52880df615ea5bb6091867ca5bec7995e90",
+    "sha256": "6267449f70f13063037ccc016ce1d52880df615ea5bb6091867ca5bec7995e90"
+  },
+  "preview/native/app/generate_scheduler_approval.cmake": {
+    "before_sha256": null,
+    "sha256": "4f09d26d5642a2730a505b4ab68558a53f144eac75fbde49e7a13611f2f63921"
+  },
+  "preview/native/app/CMakeLists.txt": {
+    "before_sha256": "04f0e89151a2050a465bdad2a6b9654b4e5fd0081b35a3649273f3cefdf8f68d",
+    "sha256": "ca218d49324aac6249f53618e706c99d4d1e2412560443a382dbc99176ab7f81"
+  },
+  "preview/native/app/session_bridge.cpp": {
+    "before_sha256": "ef970eda8be83bec0c01abfa3ac26566bc51b2880dff600eaf0da50ed855d212",
+    "sha256": "ade49c845328f09f0e2c0c6a9e72d0ef819c55d1932be7fcdd009bd64bff1fad"
+  },
+  "preview/native/app/main_desktop.cpp": {
+    "before_sha256": "6ae10523499d41ceb0af254a7da628a2e4b34b7a00cde5ef64f96d8f7a2bcb91",
+    "sha256": "b3d0980be4a403f42f301cc31aa99a74961557227361c2b3700d375619565ff0"
+  },
+  "preview/native/app/session_bridge.hpp": {
+    "before_sha256": "f67ec822aff525de53f6bc4f6780e19b732a59eaf1e12ae35bf804dd59442df8",
+    "sha256": "dfabeadddf4efa936522c6a5534b951333ca06d05f4bdfcecfe0751bda1a9ab5"
+  },
+  "preview/native/app/scheduler_approval.hpp.in": {
+    "before_sha256": null,
+    "sha256": "481b16a9764b03f13ca98819b8ed48e50420ca71fe4272e3b37d7b605d073d67"
+  },
+  "preview/native/adapters/application_settings.cpp": {
+    "before_sha256": "17e57d7816e1f1b6c624373e1f58d64fd086eae4a189c9b1c3b50dd19e77924c",
+    "sha256": "52265e305db16fab78f930c1fa047b497e071c4abdecec8b5837ac3b5f2a2464"
+  },
+  "preview/native/adapters/library_commands.cpp": {
+    "before_sha256": "af07bc5d9fcdd6f2e1b978e79f8d79d373ca3c6b491556fb777ecac8be9d461e",
+    "sha256": "af07bc5d9fcdd6f2e1b978e79f8d79d373ca3c6b491556fb777ecac8be9d461e"
+  },
+  "preview/native/adapters/library_commands.hpp": {
+    "before_sha256": "0b96f73ae18cb72777df901b24f4d14b35f569fc07df6e742043450b9b59942d",
+    "sha256": "0b96f73ae18cb72777df901b24f4d14b35f569fc07df6e742043450b9b59942d"
+  },
+  "preview/native/tests/application_settings_tests.cpp": {
+    "before_sha256": "395ef542495915857a11bba51c0dd99675d08a28e6d15987fed655b420487e27",
+    "sha256": "9c9af949fdc86e5835ceecf85ebf69090079f8b068af6d835375ed8a0fed7cc0"
+  },
+  "preview/native/tests/scheduler_dialog_tests.cpp": {
+    "before_sha256": null,
+    "sha256": "ba7a459b1a7ac9c5847f61dd2009b7d4e1b0e3ba7d64f8fe29335b025f704fcd"
+  },
+  "preview/native/tests/CMakeLists.txt": {
+    "before_sha256": "60b77ce4e2b087def516847fbe9a996c20e89ab9db5d272a42afaaa287ff2249",
+    "sha256": "f45470c38233b207a60a7b1c47b284f663aee86efd47ca20b97c2e659713dc5a"
+  },
+  "preview/native/ui/scheduler_dialog.hpp": {
+    "before_sha256": null,
+    "sha256": "cf4935859650f9ccdfc38e484c0fb616f7d1826aa2e257cf30845e59c054f46d"
+  },
+  "preview/native/ui/library_window.cpp": {
+    "before_sha256": "9da1160b174c0f65e7a20a8e794a8e7c2713082551ceb6124aa0e378e41ea34e",
+    "sha256": "b2ade33eb94b1cd00deedc69df8cca5521f6d9da581d05e16a216beda1a75fb7"
+  },
+  "preview/native/ui/scheduler_presentation.hpp": {
+    "before_sha256": null,
+    "sha256": "edb4b90ccccf57bfdd5ac54c83bf49f6cb3a5b6fc99e91075923c66c61a39e31"
+  },
+  "preview/native/ui/CMakeLists.txt": {
+    "before_sha256": "9e5552e01652bf4c109144374c76e1409359a325e267e8d60d0c133c7fbe588d",
+    "sha256": "9e5552e01652bf4c109144374c76e1409359a325e267e8d60d0c133c7fbe588d"
+  },
+  "preview/native/ui/library_window.hpp": {
+    "before_sha256": "84fcc982da70c76b70169aad4280cf9b9e00a0a36714de7b12d9506f43160d44",
+    "sha256": "8b0823d6f1a5de7f3f376475399d82ed8e646cfebcc2bd07786ef908a8a6af6d"
+  },
+  "preview/native/ui/options_presentation.hpp": {
+    "before_sha256": "f216ab046f6d3cec1af2ffe912ca071614e2dfb2f1de10b005cad1f5264a74c0",
+    "sha256": "74cfea59fcfecae3a4ef56eb9410c1ab1090163a3f84f05cbf4f219500ab0932"
+  },
+  "preview/native/ui/scheduler_dialog.cpp": {
+    "before_sha256": null,
+    "sha256": "34f79894cd1c19a67da72640c4e60f1c16d1cbf2ccd3e7086c5a21c3714b4981"
+  },
+  "preview/native/ui/options_dialog.cpp": {
+    "before_sha256": "02b24f155a541995ccc2231d060bd26e207f70d4c299bb8486d465a3ea9cb689",
+    "sha256": "d48f7d1596c776f2b8353baeec3d114e5845ad1843b9023e966fe16e7ac14b8b"
+  },
+  "preview/native/engine/persistent_session.cpp": {
+    "before_sha256": "98d7ffd78ac6f0e89f11222ad803dae1d05beea9ecdea4cdcd656936e0d81867",
+    "sha256": "c6852c0c7776c19ff4d4033be18f497cf4c52612c685322f12114d98591f7d83"
+  },
+  "preview/native/engine/managed_download.hpp": {
+    "before_sha256": "aea201564a2f72e7a93e6a8b86f2dcbed50b25a159e60637b567ce94c31b9387",
+    "sha256": "aea201564a2f72e7a93e6a8b86f2dcbed50b25a159e60637b567ce94c31b9387"
+  },
+  "preview/native/engine/persistent_session.hpp": {
+    "before_sha256": "c2c17fa0e749397f5e8819466e2d6385c217688f2b896b5278e778a1ef6297c7",
+    "sha256": "c2c17fa0e749397f5e8819466e2d6385c217688f2b896b5278e778a1ef6297c7"
+  },
+  "preview/native/engine/CMakeLists.txt": {
+    "before_sha256": "dccfd048c0b5f55508e9196b737107668361fce8c94c6d1398a019461eadd22d",
+    "sha256": "dccfd048c0b5f55508e9196b737107668361fce8c94c6d1398a019461eadd22d"
+  },
+  "preview/native/engine/managed_storage.hpp": {
+    "before_sha256": "e0aceaa36654afcde93f34512ae794eed586bf60ac59d658d4af2d905469cce1",
+    "sha256": "e0aceaa36654afcde93f34512ae794eed586bf60ac59d658d4af2d905469cce1"
+  },
+  "preview/native/engine/managed_storage.cpp": {
+    "before_sha256": "4dc01230f7c4f0f8c2a04d085c9be64c179d47c4f4fb0db24753cda66adf5252",
+    "sha256": "4dc01230f7c4f0f8c2a04d085c9be64c179d47c4f4fb0db24753cda66adf5252"
+  },
+  "preview/native/core/include/biglybtc/application_settings.hpp": {
+    "before_sha256": "c09602383bd52bcfb2795001ceb571a7005128511fc3f4388947326a5b2bc1ba",
+    "sha256": "b61429754f6bdcd2cf17272a247a7379e7a09cfd18ed902ab704afa4ff2df63b"
+  },
+  "preview/native/tests/queue_policy_tests.cpp": {
+    "before_sha256": "e92cbf437d05e70914db0d99c323e131b658cb37e9eebc9e1714bc264f0889a3",
+    "sha256": "8552071374ec02a2df3fb3b413bc2c0787c586ac659883b6dea7134e668da0e3"
+  }
+}

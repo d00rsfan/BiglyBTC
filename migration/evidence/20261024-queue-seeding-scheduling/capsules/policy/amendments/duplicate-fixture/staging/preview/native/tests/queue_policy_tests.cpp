@@ -1,0 +1,235 @@
+#include "biglybtc/queue_policy.hpp"
+
+#include <array>
+#include <cstdint>
+#include <iostream>
+#include <limits>
+#include <stdexcept>
+#include <string>
+#include <utility>
+
+namespace {
+using namespace biglybtc::core;
+std::size_t assertions=0,families=0;
+void check(bool value,const char* text){++assertions;if(!value){throw std::runtime_error(text);}}
+#define CHECK(...) check(static_cast<bool>((__VA_ARGS__)),#__VA_ARGS__)
+template<class F>void run(const char* name,F&& f){try{f();++families;}catch(const std::exception& e){throw std::runtime_error(std::string(name)+": "+e.what());}}
+std::string bytes(std::string_view s){return std::to_string(s.size())+':'+std::string(s);}
+Document config(std::initializer_list<std::pair<std::string,std::string>> fields){
+  std::string data="d";for(const auto& [key,value]:fields){data+=bytes(key)+value;}data+='e';
+  auto document=Document::parse(data);CHECK(document);return std::move(*document);
+}
+QueuePolicy read(const Document* d=nullptr){auto p=readQueuePolicy(d);CHECK(p);return *p;}
+QueueContext context(std::int64_t now=100000){QueueContext c;c.nowMillis=now;c.smoothedUploadBytesPerSecond=0;return c;}
+QueueTorrentFacts download(std::uint64_t token=1,std::uint32_t position=1){
+  QueueTorrentFacts f;f.token=token;f.position=position;f.shareRatio=1000;
+  f.secondsDownloading=100;f.secondsSeeding=0;f.smoothedUploadBytesPerSecond=0;
+  f.downloadBytesPerSecond=0;f.uploadBytesPerSecond=0;f.diskReadLatencyMillis=0;f.diskWriteLatencyMillis=0;
+  return f;
+}
+QueueTorrentFacts seed(std::uint64_t token=1,std::uint32_t position=1){
+  auto f=download(token,position);f.complete=true;f.secondsSeeding=1000;f.swarm=QueueSwarm{1,4,true};return f;
+}
+QueuePlan plan(const QueuePolicy& p,std::span<const QueueTorrentFacts> f,const QueueContext& c=context()){
+  auto r=evaluateQueue(p,f,c);CHECK(r);return std::move(*r);
+}
+QueueDecision decide(const QueuePolicy& p,const QueueTorrentFacts& f,const QueueContext& c=context()){
+  return plan(p,std::span(&f,1),c).decisions.front();
+}
+} // namespace
+int main(){try{
+  run("original defaults and modern versus az2 first priority",[]{
+    const auto p=read();CHECK(p.maximumActive==4&&p.maximumDownloads==4&&p.minimumDownloads==1);
+    CHECK(p.rankMode==QueueRankMode::SeedPeerRatio&&p.firstPriorityMode==QueueFirstPriorityMode::Any);
+    CHECK(p.firstPriorityShareRatio==500&&p.ignoreShareRatio==0&&p.ignoreZeroPeers&&p.firstPriorityIgnoreZeroPeers);
+    CHECK(p.minimumSeedSeconds==300&&p.minimumSeedActiveSeconds==900&&p.maximumStalledSeeds==5);
+    CHECK(p.minimumDownloadBytesPerSecond==512&&p.minimumSeedBytesPerSecond==512);
+    auto d=config({{"ui",bytes("az2")}});CHECK(!read(&d).firstPriorityIgnoreZeroPeers);
+    CHECK(read().reservedLightSeedSlots==4&&read().flexibleSeedSlots==5);
+  });
+  run("strict config errors carry exact key without clamping or materializing",[]{
+    for(const auto& value:std::array<std::string,3>{"i-1e",bytes("wrong"),"li4ee"}){
+      auto d=config({{"max downloads",value}});const auto p=readQueuePolicy(&d);
+      CHECK(!p&&p.error().key=="max downloads");
+    }
+    // The owning parser rejects duplicate dictionaries before a Document can
+    // enter the policy API. Do not require this deliberately invalid fixture
+    // to pass the valid-document helper.
+    const auto duplicate=Document::parse("d"+bytes("max downloads")+"i1e"+bytes("max downloads")+"i2ee");
+    CHECK(!duplicate&&duplicate.error().code=="duplicate_key");
+    auto boolean=config({{"StartStopManager_bIgnore0Peers","i2e"}});CHECK(!readQueuePolicy(&boolean));
+    auto duration=config({{"StartStopManager_iMinSeedingTime","i2147484e"}});
+    CHECK(readQueuePolicy(&duration).error().key=="StartStopManager_iMinSeedingTime");
+    auto none=Document::parse("le");CHECK(none&&!readQueuePolicy(&*none));
+  });
+  run("original Float byte string and numeric conversion uses thousandths",[]{
+    auto d=config({{"Stop Ratio",bytes("1.999")}});CHECK(read(&d).ignoreShareRatio==1999);
+    auto integer=config({{"Stop Ratio","i2e"}});CHECK(read(&integer).ignoreShareRatio==2000);
+    auto plus=config({{"Stop Ratio",bytes(" +0.5 ")}});CHECK(read(&plus).ignoreShareRatio==500);
+    for(const auto text:{"NaN","Infinity","-1","bad","2147484"}){
+      auto bad=config({{"Stop Ratio",bytes(text)}});CHECK(!readQueuePolicy(&bad));
+    }
+    CHECK(d.originalBytes()==d.serialize());
+  });
+  run("literal ordinary seed rank formulas and fallback boundary",[]{
+    auto p=read();auto f=seed();CHECK(decide(p,f).seedingRank==63999); //99999/(1.25 squared)
+    f.swarm=QueueSwarm{0,1,true};CHECK(decide(p,f).seedingRank==99999);
+    p.minimumPeersToBoostNoSeeds=2;CHECK(decide(p,f).seedingRank==0);
+    p.rankMode=QueueRankMode::SeedCount;f.swarm=QueueSwarm{3,9,true};CHECK(decide(p,f).seedingRank==999700000);
+    p.seedCountFallback=3;CHECK(decide(p,f).seedingRank==56249);
+    p.rankMode=QueueRankMode::PeerCount;CHECK(decide(p,f).seedingRank==2025);
+    f.swarm=QueueSwarm{0,11,true};CHECK(decide(p,f).seedingRank==11000);
+    p.rankMode=QueueRankMode::None;CHECK(decide(p,f).seedingRank==0);
+  });
+  run("Java wrapping rank extremes do not overflow native signed math",[]{
+    auto p=read();p.rankMode=QueueRankMode::PeerCount;auto f=seed();
+    f.swarm=QueueSwarm{0,std::numeric_limits<std::int32_t>::max(),true};CHECK(decide(p,f).seedingRank==1);
+    f.swarm=QueueSwarm{std::numeric_limits<std::int32_t>::max(),0,true};CHECK(decide(p,f).seedingRank==-7);
+    p.ignoreZeroPeers=false;CHECK(decide(p,f).seedingRank==0);
+    f=download();f.position=2147483647;CHECK(decide(p,f).seedingRank==-1147473647);
+  });
+  run("first priority any all strict ratio and enabled duration criteria",[]{
+    auto p=read();auto f=seed();f.shareRatio=499;CHECK(decide(p,f).firstPriority);
+    f.shareRatio=500;CHECK(!decide(p,f).firstPriority);f.shareRatio=-1;CHECK(!decide(p,f).firstPriority);
+    p.firstPrioritySeedMinutes=90;f.secondsSeeding=5399;CHECK(decide(p,f).firstPriority);
+    f.secondsSeeding=5400;CHECK(!decide(p,f).firstPriority);
+    p.firstPriorityMode=QueueFirstPriorityMode::All;f.shareRatio=100;CHECK(!decide(p,f).firstPriority);
+    f.secondsSeeding=5399;CHECK(decide(p,f).firstPriority);
+    f.minimumShareRatio=50;CHECK(!decide(p,f).firstPriority);
+    f.externallyFirstPriority=true;f.externallyNotFirstPriority=true;CHECK(decide(p,f).firstPriority);
+    f.externallyFirstPriority=false;CHECK(!decide(p,f).firstPriority);
+  });
+  run("first priority valid zero peers integer SP and strict idle boundaries",[]{
+    auto p=read();auto f=seed();f.shareRatio=0;f.swarm=QueueSwarm{8,0,true};CHECK(!decide(p,f).firstPriority);
+    f.swarm->valid=false;CHECK(decide(p,f).firstPriority);f.swarm.reset();CHECK(decide(p,f).firstPriority);
+    p.firstPriorityIgnoreSeedPeerRatio=10;f.swarm=QueueSwarm{19,2,true};CHECK(decide(p,f).firstPriority);
+    f.swarm->seeds=20;CHECK(!decide(p,f).firstPriority);
+    f.swarm=QueueSwarm{1,4,true};p.firstPriorityIgnoreIdleMinutes=1;f.secondsSinceLastUpload=60;CHECK(decide(p,f).firstPriority);
+    f.secondsSinceLastUpload=61;CHECK(!decide(p,f).firstPriority);
+    f.secondsSinceLastUpload.reset();f.secondsSeeding=61;CHECK(!decide(p,f).firstPriority);
+  });
+  run("ignore precedence overrides infinity and first priority bypass",[]{
+    auto p=read();auto f=seed();p.ignoreShareRatio=1000;p.ignoreSeedCount=2;p.ignorePeerSeedRatio=2;
+    f.shareRatio=1000;f.swarm=QueueSwarm{3,0,true};CHECK(decide(p,f).seedingRank==-8);
+    f.shareRatio=-1;CHECK(decide(p,f).seedingRank==-7);
+    f.swarm->peers=4;CHECK(decide(p,f).seedingRank==-5);
+    p.ignoreSeedCount=0;CHECK(decide(p,f).seedingRank==-4);
+    f.shareRatio=499;CHECK(decide(p,f).firstPriority&&decide(p,f).seedingRank>=0);
+    f.maximumShareRatio=250;CHECK(decide(p,f).firstPriority); //FP still overrides torrent max.
+  });
+  run("missing swarm is never fabricated zero and exact no-scrape gate persists",[]{
+    auto p=read();auto f=seed();f.swarm.reset();const auto d=decide(p,f,context(1000000));
+    CHECK(d.seedingRank==-9&&d.action==QueueAction::Queue&&d.reason==QueueReason::UnknownFacts);
+    const auto result=plan(p,std::span(&f,1));CHECK(result.unavailableInputs&1U);
+    f.swarm=QueueSwarm{0,0,true};CHECK(decide(p,f).seedingRank==-7);
+    f.swarm=QueueSwarm{0,0,false};CHECK(decide(p,f).seedingRank==-9);
+  });
+  run("minimum seed time preserves actual running work before ignore stop",[]{
+    auto p=read();auto f=seed();f.state=QueueTorrentState::Seeding;f.swarm=QueueSwarm{1,0,true};f.runningMillis=299999;
+    CHECK(decide(p,f).action==QueueAction::Preserve&&decide(p,f).reason==QueueReason::MinimumSeedingTime);
+    f.runningMillis=300000;CHECK(decide(p,f).action==QueueAction::Queue);
+    f.smoothedUploadBytesPerSecond=100;auto c=context();c.smoothedUploadBytesPerSecond=100;
+    f.runningMillis=899999;CHECK(decide(p,f,c).reason==QueueReason::MinimumSeedingTime);
+    f.runningMillis=900000;CHECK(decide(p,f,c).action==QueueAction::Queue);
+    f.smoothedUploadBytesPerSecond.reset();f.runningMillis=300000;CHECK(decide(p,f,c).reason==QueueReason::MinimumSeedingTime);
+  });
+  run("manual pause stopped failed and preparing are never resumed",[]{
+    auto p=read();auto f=download();f.forceStart=true;f.manuallyPaused=true;
+    CHECK(decide(p,f).action==QueueAction::Preserve&&decide(p,f).reason==QueueReason::ManualPause);
+    f.manuallyPaused=false;f.state=QueueTorrentState::Stopped;CHECK(decide(p,f).action==QueueAction::Preserve);
+    f.state=QueueTorrentState::Failed;CHECK(decide(p,f).action==QueueAction::Preserve);
+    f.forceStart=false;f.state=QueueTorrentState::Preparing;CHECK(decide(p,f).reason==QueueReason::Preparing);
+    f.state=QueueTorrentState::Checking;CHECK(decide(p,f).reason==QueueReason::Checking);
+  });
+  run("force download bypasses slots while force seed consumes a slot",[]{
+    auto p=read();p.maximumActive=1;p.maximumDownloads=1;p.minimumDownloads=0;
+    auto a=download(1,1),b=download(2,2);a.forceStart=true;
+    auto r=plan(p,std::array{a,b});CHECK(r.decisions[0].reason==QueueReason::Forced&&r.decisions[1].action==QueueAction::Run);
+    auto s=seed(3,3);s.forceStart=true;s.state=QueueTorrentState::Seeding;s.runningMillis=0;
+    r=plan(p,std::array{s,b});CHECK(r.decisions[1].action==QueueAction::Queue);
+    p.minimumDownloads=1;r=plan(p,std::array{s,b});CHECK(r.decisions[1].action==QueueAction::Run);
+    s.newlyCompleted=true;const auto transition=decide(p,s);CHECK(transition.clearForceStart&&transition.moveNewSeedToTop);
+    p.retainForceStartOnComplete=true;CHECK(!decide(p,s).clearForceStart);
+  });
+  run("queue caps order stable tokens zero unlimited and linked minimum",[]{
+    auto p=read();p.maximumDownloads=1;p.maximumActive=1;p.minimumDownloads=0;
+    const auto a=download(9,3),b=download(7,1),c=download(8,2);
+    auto r=plan(p,std::array{a,b,c});CHECK(r.decisions[0].token==9&&r.decisions[0].action==QueueAction::Queue);
+    CHECK(r.decisions[1].action==QueueAction::Run&&r.decisions[2].action==QueueAction::Queue);
+    p.maximumDownloads=0;r=plan(p,std::array{a,b,c});for(const auto& d:r.decisions){CHECK(d.action==QueueAction::Run);}
+    p.maximumDownloads=2;p.linkMinimumDownloads=true;r=plan(p,std::array{a,b,c});CHECK(r.decisions[2].action==QueueAction::Run);
+  });
+  run("actual rate grace hysteresis exact boundaries and latency recovery",[]{
+    auto p=read();auto f=download();f.state=QueueTorrentState::Downloading;f.runningMillis=30000;
+    const auto initial=decide(p,f,context());CHECK(initial.activelyDownloading);f.activity=initial.activity;
+    f.runningMillis=30001;
+    auto d=decide(p,f,context(100001));CHECK(d.activelyDownloading);f.activity=d.activity;
+    d=decide(p,f,context(110000));CHECK(d.activelyDownloading);f.activity=d.activity;
+    d=decide(p,f,context(110001));CHECK(!d.activelyDownloading);
+    f.activity=d.activity;f.diskWriteLatencyMillis=2501;d=decide(p,f,context(120001));f.activity=d.activity;
+    d=decide(p,f,context(130001));CHECK(d.activelyDownloading);f.activity=d.activity;f.diskWriteLatencyMillis=0;
+    d=decide(p,f,context(190001));CHECK(d.activelyDownloading);f.activity=d.activity;
+    d=decide(p,f,context(190002));CHECK(d.activelyDownloading);f.activity=d.activity;
+    d=decide(p,f,context(200002));CHECK(!d.activelyDownloading);
+  });
+  run("stalled download doesn't consume active slot but unknown rate does",[]{
+    auto p=read();p.maximumDownloads=1;p.maximumActive=1;p.minimumDownloads=0;
+    auto a=download(1,1),b=download(2,2);a.state=QueueTorrentState::Downloading;a.runningMillis=100000;
+    auto r=plan(p,std::array{a,b});CHECK(r.decisions[0].action==QueueAction::Preserve&&r.decisions[1].action==QueueAction::Run);
+    a.downloadBytesPerSecond.reset();r=plan(p,std::array{a,b});CHECK(!r.decisions[0].activityKnown&&r.decisions[1].action==QueueAction::Queue);
+  });
+  run("timed rotation uses actual elapsed and a real waiting alternative",[]{
+    auto p=read();p.rankMode=QueueRankMode::Timed;p.maximumActive=1;
+    auto a=seed(1,1),b=seed(2,2);a.state=QueueTorrentState::Seeding;a.runningMillis=400000;a.seedingMillis=300000;
+    const auto r=plan(p,std::array{a,b});CHECK(r.decisions[0].seedingRank==1&&r.decisions[0].reason==QueueReason::TimedRotation);
+    CHECK(r.decisions[0].action==QueueAction::Queue&&r.decisions[1].action==QueueAction::Run);
+    CHECK(decide(p,a).action==QueueAction::Run);
+    a.seedingMillis=299999;CHECK(decide(p,a).seedingRank==200000299);
+    p.timedMinimumWithPeersSeconds=600;p.timedMaximumWithPeersSeconds=900;a.connectedLeechers=1;
+    auto held=decide(p,a);CHECK(held.activity.timedMinimumMillis==840000);a.activity=held.activity;
+    p.timedMaximumWithPeersSeconds=700;CHECK(decide(p,a).activity.timedMinimumMillis==840000);
+  });
+  run("known zero autostart bypasses ignore rules without fabricated scrape",[]{
+    auto p=read();p.autoStartZeroPeers=true;p.ignoreShareRatio=1000;auto f=seed();f.swarm=QueueSwarm{3,0,true};
+    CHECK(decide(p,f).action==QueueAction::Run);f.swarm.reset();CHECK(decide(p,f).action==QueueAction::Queue);
+    f.swarm=QueueSwarm{3,0,false};CHECK(decide(p,f).action==QueueAction::Queue);
+  });
+  run("actual upload saturation threshold is strict and only prevents new seeds",[]{
+    auto p=read();p.preventNewSeedsAtUploadLimit=true;auto f=seed();auto c=context();c.uploadLimitBytesPerSecond=100*1024;
+    c.smoothedUploadBytesPerSecond=95*1024;CHECK(decide(p,f,c).action==QueueAction::Run);
+    c.smoothedUploadBytesPerSecond=96*1024;CHECK(decide(p,f,c).reason==QueueReason::UploadLimit);
+    c.smoothedUploadBytesPerSecond.reset();CHECK(decide(p,f,c).reason!=QueueReason::UploadLimit);
+  });
+  run("sorting missing observations remains deterministic and inputs unchanged",[]{
+    auto p=read();p.maximumDownloads=1;p.minimumDownloads=0;p.downloadOrder=QueueDownloadOrder::Size;
+    auto a=download(1,1),b=download(2,2),c=download(3,3);a.sizeBytes=10;c.sizeBytes=20;
+    const auto r=plan(p,std::array{a,b,c});CHECK(r.decisions[2].action==QueueAction::Run);
+    CHECK(a.sizeBytes==10&&!b.sizeBytes&&c.sizeBytes==20);
+    p.downloadOrder=QueueDownloadOrder::FilePriority;a.filePriority=std::vector<std::int64_t>{0,2,0,1};
+    c.filePriority=std::vector<std::int64_t>{0,2,0,3};CHECK(plan(p,std::array{a,b,c}).decisions[2].action==QueueAction::Run);
+    p.downloadOrder=QueueDownloadOrder::Speed;CHECK(plan(p,std::array{a,b,c}).unavailableInputs&16U);
+  });
+  run("stalled seed cap zero means999 and valid-zero exemption is explicit",[]{
+    auto p=read();p.maximumActive=1;p.maximumStalledSeeds=1;
+    auto a=seed(1,1),b=seed(2,2),c=seed(3,3);
+    for(auto* f:{&a,&b,&c}){f->state=QueueTorrentState::Seeding;f->runningMillis=1000000;}
+    auto r=plan(p,std::array{a,b,c});CHECK(r.decisions[0].action==QueueAction::Preserve);
+    CHECK(r.decisions[1].reason==QueueReason::StalledLimit&&r.decisions[2].reason==QueueReason::StalledLimit);
+    p.maximumStalledSeeds=0;r=plan(p,std::array{a,b,c});for(const auto& d:r.decisions){CHECK(d.action==QueueAction::Preserve);}
+    p.maximumStalledSeeds=1;p.ignoreZeroPeers=false;
+    for(auto* f:{&a,&b,&c}){f->swarm=QueueSwarm{1,0,true};}
+    r=plan(p,std::array{a,b,c});for(const auto& d:r.decisions){CHECK(d.action==QueueAction::Preserve);}
+  });
+  run("invalid identity time and limits fail without a prefix plan",[]{
+    auto p=read();const auto empty=evaluateQueue(p,{},{});CHECK(empty&&empty->decisions.empty());
+    auto f=download();CHECK(!evaluateQueue(p,std::array{f,f},context()));
+    f.token=0;CHECK(!evaluateQueue(p,std::span(&f,1),context()));f.token=1;
+    f.activity.lastObservationMillis=100001;CHECK(!evaluateQueue(p,std::span(&f,1),context()));f.activity={};
+    f.swarm=QueueSwarm{-1,0,true};CHECK(!evaluateQueue(p,std::span(&f,1),context()));f.swarm.reset();
+    auto bad=context();bad.uploadLimitBytesPerSecond=std::numeric_limits<std::int64_t>::max();CHECK(!evaluateQueue(p,std::span(&f,1),bad));
+    std::vector<QueueTorrentFacts> many(MaximumQueueTorrents+1);const auto limited=evaluateQueue(p,many,context());
+    CHECK(!limited&&limited.error().code==QueuePolicyErrorCode::Limit);
+    p.rankMode=static_cast<QueueRankMode>(99);CHECK(!evaluateQueue(p,std::span(&f,1),context()));
+  });
+  std::cout<<families<<" queue-policy families, "<<assertions<<" assertions passed\n";return 0;
+}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

@@ -1,0 +1,10 @@
+{
+  "native_source": "cda09f95bed76f3c29a514b345a70a29881dfc85",
+  "dist": "/home/yurii/Java/BiglyBTC/dist",
+  "rollback": "/home/yurii/Java/BiglyBTC/build/queue-20261024/portable/queue-final/previous-dist",
+  "old_manifest_sha256": "d05780d79469a113aef41efb50861cd02d2948341a0a4d10673a2923a2394725",
+  "manifest_sha256": "0cb16425cde2f4782928a87544742445c8b734177bf0db97ec6b9a38f00f604d",
+  "manifest_files": 118,
+  "system_installation": false,
+  "original_profile_or_process_access": false
+}

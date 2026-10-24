@@ -1,0 +1,18 @@
+{
+  "status": "SOURCE_ONLY_UNEXECUTED",
+  "parent_manifest_sha256": "a918820c32fe0e2a83c4d72a3b97bafeae8a0fa45c43c5074ec946bebfccda1f",
+  "subject": {
+    "path": "preview/native/tests/queue_policy_tests.cpp",
+    "before_sha256": "e92cbf437d05e70914db0d99c323e131b658cb37e9eebc9e1714bc264f0889a3",
+    "after_sha256": "8552071374ec02a2df3fb3b413bc2c0787c586ac659883b6dea7134e668da0e3",
+    "bytes": 17298
+  },
+  "reason": "Duplicate fixture is deliberately rejected by actual Document parser before policy; assert duplicate_key directly. Added empty-span pure-plan check within same family.",
+  "planned_test_families": 21,
+  "production_changes": false,
+  "executions": 0,
+  "failed_log": {
+    "path": "build/queue-20261024/policy-gcc-tests.log",
+    "sha256": "97f81d391205862728a309f42d116de7a399c9a9c77a53aec8e078ea1ae14ad7"
+  }
+}

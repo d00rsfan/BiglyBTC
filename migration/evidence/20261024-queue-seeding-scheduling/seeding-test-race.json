@@ -1,0 +1,6 @@
+{
+  "path": "preview/native/tests/managed_seeding_tests.cpp",
+  "before": "09834d41d68ddaa0187eed61ffc92ba4f71c1797c17f9439c13291e7d06fb44b",
+  "after": "b0154117ef6aca732df0aafa262f30056eccc4fe6688a269a3a27a9bb1bf640d",
+  "reason": "Full real payload transfer already succeeded; current peer snapshot raced disconnect. Record actual connect alerts in sole owned independent leecher, retain peer exclusion and actual counters/content assertions."
+}

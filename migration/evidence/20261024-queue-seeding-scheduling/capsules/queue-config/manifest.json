@@ -1,0 +1,40 @@
+{
+  "status": "SOURCE_FROZEN_UNEXECUTED",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "files": {
+    "driver.cpp": {
+      "sha256": "4510d16b4704b11d63810aa9660dc6f167c432dfe7c0069053de562e51e57e7b",
+      "bytes": 5411
+    },
+    "QueueSettingsOracle.java": {
+      "sha256": "f009aa8007dfc1d532aafa5a30097307efa8e3abee433a1a7ca86045f4ece101",
+      "bytes": 4522
+    },
+    "run.py": {
+      "sha256": "a844691c8a4a87ffad86e49610520fde1c79c1a28b382aff36828c949e2596b3",
+      "bytes": 5131
+    },
+    "ADOPTION.md": {
+      "sha256": "e4d36b49717f4c6b48aaaf4fea699cd61cace867f35808872070ac57460fefea",
+      "bytes": 2178
+    }
+  },
+  "inputs": {
+    "build/options-20261024/run_settings_oracle.py": "69c14f1bdd6700e3e9d2fae72661e2ecbfc4a27d484b0d77eb0b8097b9f462ac",
+    "build/options-20261024/SettingsOracle.java": "609d6c2a34904d3b1e91e292f2ce2636229b716fe910b785a33259bb088d7c2c",
+    "migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+    "migration/tools/peer_interop.py": "93e1577f1896fbd438a93b0e128c90b394fedaca42fe56db8189fc7f43f5b299",
+    "build/queue-20261024/policy/original-pins.json": "9423740ce8e81ecb740e437456ca7ccb686090709135fd2b0641415672dcced1",
+    "/home/yurii/Java/BiglyBTC/build/dependencies/java-oracle-17-20261021/retention.json": "7472e8bda8d832fd5a962cda76ba1fcefaa0e6e9b4cad2621e0be97e6fbec9dd",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/application_settings.hpp": "b61429754f6bdcd2cf17272a247a7379e7a09cfd18ed902ab704afa4ff2df63b",
+    "/home/yurii/Java/BiglyBTC/preview/native/adapters/application_settings.cpp": "52265e305db16fab78f930c1fa047b497e071c4abdecec8b5837ac3b5f2a2464",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/queue_policy.hpp": "80646717699588c2839d2fe98bc3296b0d00dcca769931db3d1fb3be4b26b194"
+  },
+  "native_destination": "preview/native/tests/queue_settings_roundtrip_driver.cpp",
+  "native_target": "biglybtc-queue-settings-roundtrip-driver",
+  "actual_executions": 0,
+  "planned_interop_phases": 4,
+  "original_project_rebuild": false,
+  "proven_bootstrap_reused": true,
+  "conditional_fp_default": "false for ui=az2; key must remain absent in all four phases"
+}
