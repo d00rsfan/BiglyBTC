@@ -105,11 +105,11 @@ std::optional<EncodedDocument> cacheDocument(const Raw& raw){if(!raw.bytes){retu
   auto d=EncodedDocument::parse(*raw.bytes,limits());require(d&&d->compressed()&&d->document().root().type==Node::Type::Dictionary,ErrorCode::InvalidFormat,"State cache must be a valid original compressed dictionary");return std::move(*d);}
 std::string selectedRows(const Node* list,const core::TorrentHash& hash,bool pause,std::string_view hashKey="torrent_hash"){
   if(!list){return "le";}require(list->type==Node::Type::List,ErrorCode::InvalidFormat,"Original selected rows are not a list");std::string out="l";const auto key=hash.bytes();
-  for(const auto& row:list->children){const auto* n=pause&&row.type==Node::Type::Bytes?&row:row.find(hashKey);if(n&&n->type==Node::Type::Bytes&&n->bytes.size()==key.size()&&std::equal(key.begin(),key.end(),reinterpret_cast<const std::byte*>(n->bytes.data()))){out+=encoded(row);}}return out+'e';
+  for(const auto& row:list->children){const auto* n=pause&&row.type==Node::Type::Bytes?&row:row.find(pause?std::string_view("hash"):hashKey);if(n&&n->type==Node::Type::Bytes&&n->bytes.size()==key.size()&&std::equal(key.begin(),key.end(),reinterpret_cast<const std::byte*>(n->bytes.data()))){out+=encoded(row);}}return out+'e';
 }
 std::string withoutSelected(const Node* list,const core::TorrentHash& hash,bool pause,std::optional<std::string_view> replacement={},std::string_view hashKey="torrent_hash"){
   require(list&&list->type==Node::Type::List,ErrorCode::InvalidFormat,"Original list is missing");std::string out="l";const auto key=hash.bytes();bool replaced=false;
-  for(const auto& row:list->children){const auto* n=pause&&row.type==Node::Type::Bytes?&row:row.find(hashKey);const bool match=n&&n->type==Node::Type::Bytes&&n->bytes.size()==key.size()&&std::equal(key.begin(),key.end(),reinterpret_cast<const std::byte*>(n->bytes.data()));
+  for(const auto& row:list->children){const auto* n=pause&&row.type==Node::Type::Bytes?&row:row.find(pause?std::string_view("hash"):hashKey);const bool match=n&&n->type==Node::Type::Bytes&&n->bytes.size()==key.size()&&std::equal(key.begin(),key.end(),reinterpret_cast<const std::byte*>(n->bytes.data()));
     if(!match){out+=encoded(row);}else if(replacement&&!replaced){out+=*replacement;replaced=true;}}
   if(replacement&&!replaced){fail(ErrorCode::Conflict,"Selected original row disappeared");}return out+'e';
 }
