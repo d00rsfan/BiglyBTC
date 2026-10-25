@@ -18,8 +18,11 @@ Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
   names and failure recovery. Preserve explicit rejection until supported.
   Core C/R/X mapped IO, compatible roots/defaults/links and generated partial/
   complete handoffs now qualify at `c0b2fbb2071b7aae302d2db24ba3c824df874d0a`.
-  [Evidence](../evidence/20261025-storage-resume/REVIEW.md). Allocation/EOF-short,
-  active DND and stopped L→C remain active; this item stays open.
+  [Core evidence](../evidence/20261025-storage-resume/REVIEW.md). Active DND,
+  stopped L→C, allocated tails and actual nonlinear Moves additionally qualify
+  at `2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5`.
+  [Workflow evidence](../evidence/20261025-storage-workflows/REVIEW.md).
+  Unsupported EOF-short/other corners keep this item open.
 - [ ] **CF-02 — v2/hybrid profile interoperability (P03/P11).** Extend actual
   partial/complete Java/native/Java reload checks beyond the two qualified v1
   cases. Cover full identities, alternate hybrid identities and broader original
@@ -44,7 +47,8 @@ Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
 - [ ] **CF-05 — Remaining intake/file options (P04).** Add original pre-add
   per-file/options controls and supported priority changes during active work.
   Qualify saved original priorities, selected completion and actual payload IO.
-  Current stopped-file controls remain the existing supported boundary.
+  Active priority/Skip controls now qualify at `2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5`;
+  pre-add file/options controls remain in progress.
 - [ ] **CF-06 — Remaining original library/file families (P03/P04/P08).**
   [P03-08](P03-08-library-file-operations.md) now qualifies single selected
   ordinary keep/delete/move/relink, v1 file/directory creation, compatible intent,

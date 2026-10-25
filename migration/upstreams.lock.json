@@ -501,15 +501,22 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "c0b2fbb2071b7aae302d2db24ba3c824df874d0a",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
-        "migration/updates/storage.original_managed_io/20261025-core.md"
+        "migration/updates/storage.original_managed_io/20261025-core.md",
+        "migration/updates/storage.original_managed_io/20261025-workflows.md"
       ],
       "evidence": [
         "migration/evidence/P01-02-storage/gcc-boundaries.txt",
         "migration/evidence/P01-02-storage/clang-ctest.txt",
-        "migration/evidence/20261025-storage-resume/verification.json"
+        "migration/evidence/20261025-storage-resume/verification.json",
+        "migration/evidence/20261025-storage-workflows/verification.json"
       ],
       "decision_ref": null
     },
@@ -6170,16 +6177,23 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "c0b2fbb2071b7aae302d2db24ba3c824df874d0a",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
         "migration/updates/library.file_operations/20261024.md",
-        "migration/updates/storage.original_managed_io/20261025-core.md"
+        "migration/updates/storage.original_managed_io/20261025-core.md",
+        "migration/updates/storage.original_managed_io/20261025-workflows.md"
       ],
       "evidence": [
         "migration/tasks/P03-08-library-file-operations.md",
         "migration/evidence/20261024-library-file-operations/verification.json",
-        "migration/evidence/20261025-storage-resume/verification.json"
+        "migration/evidence/20261025-storage-resume/verification.json",
+        "migration/evidence/20261025-storage-workflows/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -6315,13 +6329,20 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "c0b2fbb2071b7aae302d2db24ba3c824df874d0a",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
-        "migration/updates/storage.original_managed_io/20261025-core.md"
+        "migration/updates/storage.original_managed_io/20261025-core.md",
+        "migration/updates/storage.original_managed_io/20261025-workflows.md"
       ],
       "evidence": [
-        "migration/evidence/20261025-storage-resume/verification.json"
+        "migration/evidence/20261025-storage-resume/verification.json",
+        "migration/evidence/20261025-storage-workflows/verification.json"
       ],
       "decision_ref": null
     },

@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="14"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="124"
+	timestamp="2026-10-25T13:05:40"
+	>
+	<testcase name="managed-download" classname="managed-download" time="18.7818" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of ManagedDownloadTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedDownloadTests::initTestCase()
+PASS   : ManagedDownloadTests::rawEpochContinuityKeepsUntickedBytesAndCrossingReadsRetry()
+PASS   : ManagedDownloadTests::rawEpochInvalidReadsAndOverflowFailWithoutFallback()
+PASS   : ManagedDownloadTests::concurrentMixedHandlesRemainControllableUnderOneOwner()
+PASS   : ManagedDownloadTests::partialStopAndRepeatedHashCheckpointsKeepFreshSavedIntent()
+PASS   : ManagedDownloadTests::failedAndForeignAdmissionsDoNotReplaceTheOtherActiveTorrent()
+PASS   : ManagedDownloadTests::unsafePayloadPreparationDoesNotAdmitOrRewriteAProfile()
+PASS   : ManagedDownloadTests::cleanupTestCase()
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 18260ms
+********* Finished testing of ManagedDownloadTests *********
+</system-out>
+	</testcase>
+	<testcase name="managed-storage" classname="managed-storage" time="2.73239" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>case negative-original-links-use-authenticated-target-and-original-base
+case new-independent-payload-root-and-filtered-parameters
+case partial-piece-progress-and-fresh-command-preservation
+case skipped-linear-sparse-file-and-boundary-piece-counts
+case single-completion-suffix-and-unknown-state-fields
+case multifile-completion-renames-only-owned-actual-paths
+case completed-target-collision-retains-incomplete-source
+case existing-single-journal-and-recognized-hardlink-recovery
+case unsafe-links-storetypes-oversize-and-symlinks-fail-before-state
+case selected-compact-expands-with-original-storetype-and-no-stale-control
+case external-explicit-link-uses-owned-descriptor-with-original-path-preserved
+case compact-conversion-replays-original-edges-at-each-durable-boundary
+case compact-conversion-refuses-replaced-journal-inode-before-any-mutation
+case unchanged-reordered-map-still-authenticates-control-at-checkpoint
+case external-file-completion-is-per-file-and-applies-original-dnd-prefix-rule
+case retained-current-pa...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="file-priority-ui" classname="file-priority-ui" time="2.38404" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of FilePriorityUiTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : FilePriorityUiTests::initTestCase()
+QWARN  : FilePriorityUiTests::selectedOriginalIndicesRoute(normal) This plugin does not support propagateSizeHints()
+QWARN  : FilePriorityUiTests::selectedOriginalIndicesRoute(normal) This plugin does not support propagateSizeHints()
+QWARN  : FilePriorityUiTests::selectedOriginalIndicesRoute(normal) This plugin does not support raise()
+QWARN  : FilePriorityUiTests::selectedOriginalIndicesRoute(normal) This plugin does not support grabbing the keyboard
+PASS   : FilePriorityUiTests::selectedOriginalIndicesRoute(normal)
+QWARN  : FilePriorityUiTests::selectedOriginalIndicesRoute(high) This plugin does not support propagateSizeHints()
+QWARN  : FilePriorityUiTests::selectedOriginalIndicesRoute(high) This plugin does not support propagateSizeHints()
+QWARN ...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="file-policy-commands" classname="file-policy-commands" time="0.209882" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of FilePolicyCommandsTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : FilePolicyCommandsTests::initTestCase()
+PASS   : FilePolicyCommandsTests::changedPoliciesRoundTripAndInvalidateResume(plain-state)
+PASS   : FilePolicyCommandsTests::changedPoliciesRoundTripAndInvalidateResume(gzip-state)
+PASS   : FilePolicyCommandsTests::identicalPolicyIsAnActualNoWrite()
+PASS   : FilePolicyCommandsTests::invalidPolicyRejectsBeforeAnyWrite(wrong-count)
+PASS   : FilePolicyCommandsTests::invalidPolicyRejectsBeforeAnyWrite(duplicate-download)
+PASS   : FilePolicyCommandsTests::invalidPolicyRejectsBeforeAnyWrite(padding-enabled)
+PASS   : FilePolicyCommandsTests::invalidPolicyRejectsBeforeAnyWrite(malformed-priorities)
+PASS   : FilePolicyCommandsTests::invalidPolicyRejectsBeforeAnyWrite(eight-ranks)
+PASS   : FilePolicyCommandsTests::invalidPolicyRejectsBeforeAnyWrite(mi...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="metadata-disk-router" classname="metadata-disk-router" time="4.91825" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of MetadataDiskRouterTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MetadataDiskRouterTests::initTestCase()
+PASS   : MetadataDiskRouterTests::registrationIsBoundedLexicalAndIndependentOfFilesystemExistence()
+PASS   : MetadataDiskRouterTests::realBackendOwnershipRemovalsAndGlobalIndicesNeverAlias()
+PASS   : MetadataDiskRouterTests::disabledForwardsEveryStorageOperationWithoutCreatingOrMovingFiles()
+PASS   : MetadataDiskRouterTests::lifetimeAdmissionBoundDoesNotRecycleRetiredDisabledIndices()
+PASS   : MetadataDiskRouterTests::oneActualSessionWritesOrdinaryPayloadAndDiscardsRegisteredPayload(exact)
+PASS   : MetadataDiskRouterTests::oneActualSessionWritesOrdinaryPayloadAndDiscardsRegisteredPayload(equivalent-trailing-separator)
+PASS   : MetadataDiskRouterTests::cleanupTestCase()
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 4668ms
+********* Fi...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="managed-library-command-routing" classname="managed-library-command-routing" time="39.0666" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of LibraryCommandsBridgeTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : LibraryCommandsBridgeTests::initTestCase()
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(stale-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(unknown-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(duplicate-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(unauthorized-second)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(invalid-action-next)
+PASS   : LibraryCommandsBridgeTests::rejectsWholeSelectionBeforeFirstSavedOrEngineMutation(invalid-action-large)
+PASS   : LibraryCommandsBridgeTests::activeFileSelectionRetiresAndReadmitsWithoutChangi...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="managed-queue" classname="managed-queue" time="11.0601" status="run">
+		<properties>
+			<property name="cmake_labels" value="queue;runtime-bound;unit"/>
+		</properties>
+		<system-out>********* Start testing of ManagedQueueTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ManagedQueueTests::initTestCase()
+PASS   : ManagedQueueTests::limitsPauseResumeAndForceUseRealRetainedHandles(download-cap)
+PASS   : ManagedQueueTests::limitsPauseResumeAndForceUseRealRetainedHandles(active-cap)
+PASS   : ManagedQueueTests::completionRatioQueuesAndClearsOnlyForceBeforeActualCheckpoint()
+PASS   : ManagedQueueTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 10933ms
+********* Finished testing of ManagedQueueTests *********
+</system-out>
+	</testcase>
+	<testcase name="scheduler-host-engine" classname="scheduler-host-engine" time="11.6272" status="run">
+		<properties>
+			<property name="cmake_labels" value="integration;scheduler;unit"/>
+		</properties>
+		<system-out>********* Start testing of SchedulerHostEngineTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : SchedulerHostEngineTests::initTestCase()
+PASS   : SchedulerHostEngineTests::scheduledRatesAndPauseUseFreshConfigThenManualStopWins(single)
+PASS   : SchedulerHostEngineTests::scheduledRatesAndPauseUseFreshConfigThenManualStopWins(multi)
+PASS   : SchedulerHostEngineTests::inheritedSavedPauseNeverBecomesCurrentAuthority()
+PASS   : SchedulerHostEngineTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 11271ms
+********* Finished testing of SchedulerHostEngineTests *********
+</system-out>
+	</testcase>
+	<testcase name="file-operations" classname="file-operations" time="1.14825" status="run">
+		<properties>
+			<property name="cmake_labels" value="fileops;storage;unit"/>
+		</properties>
+		<system-out>ten generated file-operation families passed
+</system-out>
+	</testcase>
+	<testcase name="file-operations-host" classname="file-operations-host" time="29.527" status="run">
+		<properties>
+			<property name="cmake_labels" value="fileops;integration;runtime-bound;unit"/>
+		</properties>
+		<system-out>********* Start testing of FileOperationsBridgeTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : FileOperationsBridgeTests::initTestCase()
+QWARN  : FileOperationsBridgeTests::liveReadOnlyPreviewAndDefensiveDialogCopyThenRemoveKeep() This plugin does not support propagateSizeHints()
+PASS   : FileOperationsBridgeTests::liveReadOnlyPreviewAndDefensiveDialogCopyThenRemoveKeep()
+PASS   : FileOperationsBridgeTests::pausedLiveMovePreservesCountersPauseAndRequiredRecheck()
+PASS   : FileOperationsBridgeTests::stoppedRelinkRetainsSourceAndDeleteRequiresNewConfirmedPlan()
+PASS   : FileOperationsBridgeTests::changedDisplayedScopeAndStaleTargetRejectBeforeAnyMutation()
+PASS   : FileOperationsBridgeTests::actualCreatorOnlyImportsWhenExplicitAndImportIsStopped(create-only)
+PASS   : FileOperationsBridgeTests::actualCreatorOnlyImportsWhenExplicitAndImportIsStopped(explicit-stopped-import)
+Q...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="original-physical-file-io" classname="original-physical-file-io" time="0.104852" status="run">
+		<properties>
+			<property name="cmake_labels" value="fixtures;storage;unit"/>
+		</properties>
+		<system-out>seventeen original physical IO families passed
+</system-out>
+	</testcase>
+	<testcase name="original-disk-io" classname="original-disk-io" time="0.765553" status="run">
+		<properties>
+			<property name="cmake_labels" value="async;fixtures;storage;unit"/>
+		</properties>
+		<system-out>********* Start testing of OriginalDiskIoTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OriginalDiskIoTests::initTestCase()
+PASS   : OriginalDiskIoTests::actualCrossFilePaddingReadsWritesAndSha1()
+PASS   : OriginalDiskIoTests::actualPureV2ShortTailHashesOnlyActualBytes()
+PASS   : OriginalDiskIoTests::compactMissingZeroHoleFailsReadAndHash()
+PASS   : OriginalDiskIoTests::expiredReservationAndStaleGlobalIndexNeverReachMmap()
+PASS   : OriginalDiskIoTests::actualQueuedJobRetainsOwnerThroughRemovalAndDelivery()
+PASS   : OriginalDiskIoTests::flushFailureReturnsErrorAndRemainsStickyAtVoidBarrier()
+PASS   : OriginalDiskIoTests::actualQueuedBytesBackpressureResumesBelowLowWater()
+PASS   : OriginalDiskIoTests::cleanupTestCase()
+Totals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 709ms
+********* Finished testing of OriginalDiskIoTests *********
+</system-out>
+	</testcase>
+	<testcase name="original-linear-to-compact" classname="original-linear-to-compact" time="1.79314" status="run">
+		<properties/>
+		<system-out>PASS exact original compact edges and conservative resume
+PASS all durable stages reopen
+PASS actual short-write truncation sync failures
+PASS exact journal checksum body bounds
+PASS raw snapshot inode prefix conflicts
+PASS absent short aligned original files
+PASS streamed tail and no automatic Skip compaction
+PASS journal fsync and unpublished interruption refusal
+PASS pending compaction admission/edit fences
+PASS cancellation and explicit L-only scope
+</system-out>
+	</testcase>
+	<testcase name="file-compaction-ui" classname="file-compaction-ui" time="0.707502" status="run">
+		<properties>
+			<property name="cmake_labels" value="files;ui;unit"/>
+		</properties>
+		<system-out>********* Start testing of FileCompactionUiTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : FileCompactionUiTests::initTestCase()
+QWARN  : FileCompactionUiTests::explicitConfirmationRoutesOneOriginalIndexWithoutChangingSkip() This plugin does not support propagateSizeHints()
+QWARN  : FileCompactionUiTests::explicitConfirmationRoutesOneOriginalIndexWithoutChangingSkip() This plugin does not support propagateSizeHints()
+QWARN  : FileCompactionUiTests::explicitConfirmationRoutesOneOriginalIndexWithoutChangingSkip() This plugin does not support propagateSizeHints()
+QWARN  : FileCompactionUiTests::explicitConfirmationRoutesOneOriginalIndexWithoutChangingSkip() This plugin does not support propagateSizeHints()
+PASS   : FileCompactionUiTests::explicitConfirmationRoutesOneOriginalIndexWithoutChangingSkip()
+QWARN  : FileCompactionUiTests::unavailableMultiplePaddingBusyAndStaleFrame...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+</testsuite>

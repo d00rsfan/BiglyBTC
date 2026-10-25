@@ -1,0 +1,17 @@
+{
+  "source_only": true,
+  "executed": false,
+  "scope": "Fresh Target after intentional stale-command rejection; no assertion/deadline removal",
+  "before_sha256": {
+    "preview/native/tests/file_compaction_bridge_tests.cpp": "7539ca115b73983207b60cf6c3216859e8f274cad462c265039d4da8d5f1d8eb"
+  },
+  "source_sha256": {
+    "preview/native/tests/file_compaction_bridge_tests.cpp": "4e9ee778ed879243c71cbd2197ebec15641baf6ee3977fa4e1ff4d2cad3696bc"
+  },
+  "artifacts_sha256": {
+    "ADOPTION.md": "33ea4f84948868568708cbfd711d43668cbb03ca6685d429e4b5162d70ab6a70",
+    "before/preview/native/tests/file_compaction_bridge_tests.cpp": "7539ca115b73983207b60cf6c3216859e8f274cad462c265039d4da8d5f1d8eb",
+    "change.patch": "f7b2fe4d97d948f70698faa91bac0b3b6b6c7096bcde7ce606de03f2132b6f7d",
+    "staging/preview/native/tests/file_compaction_bridge_tests.cpp": "4e9ee778ed879243c71cbd2197ebec15641baf6ee3977fa4e1ff4d2cad3696bc"
+  }
+}

@@ -109,3 +109,14 @@ Portable dist promoted with complete rollback. [Review](../evidence/20261025-sto
 This task remains active: next coherent batch covers active priorities/DND,
 allocation-tail handling, stopped L→C and actual nonlinear Move handoffs. Other
 compatibility families retain their checklist entries. No human question.
+
+## Published storage workflow milestone
+
+Source `2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5` on main qualifies active priorities/DND,
+explicit stopped L→C, safe allocation tail and6 nonlinear Moves with original
+Java partial/full reloads. GCC/Clang/ASan each15 suites, hosted and private
+runtime pass. Dist promoted with full rollback.
+[Review](../evidence/20261025-storage-workflows/REVIEW.md).
+
+The task remains partial for unsupported EOF-short/other layout corners; broader
+CF02–CF08 work continues. No human question.

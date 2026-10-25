@@ -1,0 +1,17 @@
+{
+  "scope": "actual original linear8 -> native compact -> actual original compact3 -> native7/8 -> actual original READY",
+  "source_only": true,
+  "executed": false,
+  "native_writes": false,
+  "original_core_rebuild": false,
+  "python_ast": "PASS source-only",
+  "lexical_delimiters": "PASS source-only",
+  "files": {
+    "LinearCompactionOracle.java": "dfa4307dc1b604b8c476bd75a2e539ccdd784fb0466626f171ce48af31d74ff5",
+    "README.md": "00d8e94a7978cecbc609eb76f43c9e9ff5750e97db825929378840191652f855",
+    "Targets.cmake": "e930a6d2278a1fb56c1c8c2047979db1b53dce9f265aa8997c9f3f0a1d7225f9",
+    "provenance.json": "ea0cd97d27206a2da521a5a14478498aeef29cbc11403ef6154f9ab6bde4403e",
+    "run.py": "4ab926e9db3155b3cd4df1e7b0c003f7d9c8a785fb83a48bd57886c257f358a9",
+    "staging/preview/native/tests/linear_to_compact_handoff_driver.cpp": "b6575e3eee4478181a873fefdf27081280c4dfee2528493dd15a96582dacc3ea"
+  }
+}

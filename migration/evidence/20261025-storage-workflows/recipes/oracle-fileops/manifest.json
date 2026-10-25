@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "status": "SOURCE_FROZEN_ROOT_EXECUTION_PENDING",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "files": {
+    "ADOPTION.md": "efe165b6ee844d821a2ee5e51ddcc330e62d5e80d91a5cbbad9c1dffca5b7a57",
+    "Targets.cmake": "5dc4710d2a547c932496037ebbe0a843a5a51c695a1b5721cd5fd14145a9de8f",
+    "run.py": "6fac8558f090234672161e4b06829527cbff0a210af8e234e39e12dbdfaee4cd",
+    "runner.patch": "20f09638a1063f993d73710193d33cb4bf245131d2fb904d9d495721c3c90a22",
+    "staging/preview/native/tests/storage_fileops_handoff_driver.cpp": "d7ada44c82bba578235f82f8c155cb2249e71de56114fb9305851cfc37afa28b"
+  },
+  "base_files": {
+    "run.py": "1df4d4988dbdecbe784414be72e64ec15fcbc945ef185cb880aa138bd616855d",
+    "manifest.json": "5c4c881c0f416d27f5904abf1a67cc36672ae9687aac978a1c2f0a2131175afd",
+    "source-provenance.json": "a5ad825166e6c6d0171d46e13b4b490b20032cc2b446b92fd8001490f2d5ff17",
+    "StorageScriptOracle.java": "695ef8e3f961b1a52deea2926d52ab82226a1cad3a7e0810c7318c242580832a",
+    "StorageProfileOracle.java": "618d4f7b5f57c2c01db1aec55fc9d172f8f1d2797a1d0078883bd1d62ac87d24"
+  },
+  "source_sha256": {
+    "preview/native/tests/storage_fileops_handoff_driver.cpp": "d7ada44c82bba578235f82f8c155cb2249e71de56114fb9305851cfc37afa28b"
+  },
+  "source_directory": "staging",
+  "before_sha256": {
+    "preview/native/tests/storage_fileops_handoff_driver.cpp": null
+  },
+  "native_read_inputs": {
+    "preview/native/adapters/file_operations.hpp": "30f5d791ae6233fdeb3186a6cac28aa032a87ec55d4e76ac32866848d07504e3",
+    "preview/native/adapters/file_operations.cpp": "fafd08a46ab502093ca2eb712c3273cfff21d890ef23141d42a2d043d7ccf664",
+    "preview/native/tests/storage_handoff_driver.cpp": "914e8681f5ed26216dcb114487f5c2bad9f352dedd687e28e5de07b680c4d699"
+  },
+  "planned": {
+    "original_layouts": [
+      2,
+      3,
+      4
+    ],
+    "moves": 6,
+    "existing_managed_phases": 6
+  },
+  "author_executed_compiler_java_native_or_runner": false,
+  "native_or_existing_oracle_mutated": false
+}

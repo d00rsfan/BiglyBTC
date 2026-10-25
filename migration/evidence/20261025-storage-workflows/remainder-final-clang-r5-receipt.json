@@ -1,0 +1,20 @@
+{
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "ctest",
+    "--test-dir",
+    "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+    "-R",
+    "^(original\\-physical\\-file\\-io|original\\-disk\\-io|original\\-linear\\-to\\-compact|file\\-operations|file\\-policy\\-commands|managed\\-storage|managed\\-library\\-command\\-routing|file\\-operations\\-host|managed\\-queue|managed\\-download|file\\-priority\\-ui|file\\-compaction\\-ui|metadata\\-disk\\-router|scheduler\\-host\\-engine)$",
+    "--no-tests=error",
+    "--output-on-failure",
+    "--verbose",
+    "--output-junit",
+    "/home/yurii/Java/BiglyBT/build/storage-20261025/remainder-final-clang-r5.xml"
+  ],
+  "exit": 0,
+  "seconds": 107.14,
+  "source_manifest_sha256": "b7684dcf9ab0c25c1ceca20a32fe46afbc8f0296667d5a21679064143d5a9531"
+}

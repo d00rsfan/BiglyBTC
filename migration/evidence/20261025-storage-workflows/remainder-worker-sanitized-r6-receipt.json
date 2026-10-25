@@ -1,0 +1,20 @@
+{
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "ctest",
+    "--test-dir",
+    "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+    "-R",
+    "^(file\\-compaction\\-worker)$",
+    "--no-tests=error",
+    "--output-on-failure",
+    "--verbose",
+    "--output-junit",
+    "/home/yurii/Java/BiglyBT/build/storage-20261025/remainder-worker-sanitized-r6.xml"
+  ],
+  "exit": 0,
+  "seconds": 4.06,
+  "source_manifest_sha256": "52491ef51318d2cfe42cd77a3d1d486912d8cbe6ded341cd7cd2e680d0a9d4ca"
+}

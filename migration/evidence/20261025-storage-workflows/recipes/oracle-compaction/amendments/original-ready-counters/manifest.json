@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "status": "SOURCE_FROZEN_UNEXECUTED",
+  "baseline_manifest_sha256": "9b74685f0138eb0958d4b053c29ac7a0364c9372a456dad64f6378b544f24620",
+  "before_runner_sha256": "4ab926e9db3155b3cd4df1e7b0c003f7d9c8a785fb83a48bd57886c257f358a9",
+  "runner_sha256": "0c61350df406b643f9caf4b65e481f8066970fe9bd4faa17cd3dbf2cc58e5abb",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "files_sha256": {
+    "README.md": "102c03dc08b8dbdb4f7c332162b518c3dde6e6cf56d3138fe2abf47ff61a2b9c",
+    "before-run.py": "4ab926e9db3155b3cd4df1e7b0c003f7d9c8a785fb83a48bd57886c257f358a9",
+    "diagnosis.json": "bd4c07cbab7ab97f3395f66c8333c76aeb8a42e575ab8de9a2a3f0ea5a3240d0",
+    "run.py": "0c61350df406b643f9caf4b65e481f8066970fe9bd4faa17cd3dbf2cc58e5abb",
+    "runner.patch": "472176ab59b637deac58ea4932c6eee0f59b0577553d54b80bdec4631ad87d32"
+  },
+  "all_subjects_unexecuted_by_author": true,
+  "no_deadline_or_transfer_assertion_change": true
+}

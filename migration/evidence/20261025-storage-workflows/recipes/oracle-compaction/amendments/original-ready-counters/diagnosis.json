@@ -1,0 +1,114 @@
+{
+  "status": "SOURCE_DIAGNOSIS_EXISTING_ROOT_RUN_ONLY",
+  "failure": "runner compared post-Java zero-total initialization to pre-Java linear counters",
+  "actual": {
+    "native-input-linear8.stdout": {
+      "sha256": "da5c36c1479e20da40a9885dd889d0b32e6cb4d08a697e5b3e7bac2b1d681373",
+      "observations": {
+        "PROFILE_READY": [
+          "8",
+          "8",
+          "11111111"
+        ],
+        "PROFILE_INTENT": [
+          "false",
+          "false",
+          "1",
+          "32768",
+          "65536"
+        ],
+        "PROFILE_COUNTERS": [
+          "0",
+          "0"
+        ]
+      }
+    },
+    "reference-input-linear8.stdout": {
+      "sha256": "403d1c2e240d0dd713b02e446ca0c0ad82e6923ff67e75d31e7dd3732fe1ca98",
+      "observations": {
+        "PROFILE_READY": [
+          "8",
+          "8",
+          "11111111"
+        ],
+        "PROFILE_INTENT": [
+          "false",
+          "false",
+          "1",
+          "32768",
+          "65536"
+        ],
+        "PROFILE_COUNTERS": [
+          "0",
+          "0"
+        ]
+      }
+    },
+    "reference-original-compaction.stdout": {
+      "sha256": "50df57de289bcea461fa9236644807e87c45737e7c4fa96df46f89da58a77e3e",
+      "observations": {
+        "PROFILE_READY": [
+          "3",
+          "8",
+          "10000011"
+        ],
+        "PROFILE_INTENT": [
+          "false",
+          "false",
+          "1",
+          "32768",
+          "65536"
+        ],
+        "PROFILE_COUNTERS": [
+          "49152",
+          "49152"
+        ]
+      }
+    },
+    "native-compact-original-ready.stdout": {
+      "sha256": "0bd680d7e309a05f360185c2fbdc253a97c1d38bb3e1ca75288f2db4b953221b",
+      "observations": {
+        "PROFILE_READY": [
+          "3",
+          "8",
+          "10000011"
+        ],
+        "PROFILE_INTENT": [
+          "false",
+          "false",
+          "1",
+          "32768",
+          "65536"
+        ],
+        "PROFILE_COUNTERS": [
+          "49152",
+          "49152"
+        ]
+      }
+    }
+  },
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source": "core/src/com/biglybt/core/download/impl/DownloadManagerController.java",
+  "source_sha256": "b22ccde4addada902b8bac14c2177e7496b9329304c534d6ed2fdde9dbdc8860",
+  "git_blob": "e575894d6a17d3dcbdd0af857e08445025b24f49",
+  "source_range": {
+    "first": 3961,
+    "last": 3997,
+    "sha256": "537cea9d61d60edd24b529f9f5e8c9ffb03b3579b902a68f2b18634d2486d7d3"
+  },
+  "native_counter_preservation": "Existing pre-Java loop still requires every unchanged row field including downloaded/uploaded to equal before_row; this already passed in r5b.",
+  "kept_assertions": [
+    "READY3/8 and bitmap10000011",
+    "actual packed bytes/control/physical size equal original",
+    "per-file facts exact against original twin",
+    "native raw unknown/lifetime/intent preservation before Java",
+    "partial7/full8 actual subsequent handoffs",
+    "same immutable source/class maps and all timeouts"
+  ],
+  "added_assertions": [
+    "Both actual original linear input twins have identical intent and lifetime counters",
+    "Actual original compaction preserves unrelated user intent"
+  ],
+  "tests_run_by_author": false,
+  "native_modified": false
+}

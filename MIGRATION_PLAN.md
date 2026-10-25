@@ -1,5 +1,12 @@
 # Whole Solution C++ Migration Plan
 
+Latest published storage workflow: `2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5`.
+Active file selection, stopped compact storage and actual Java nonlinear Moves
+qualify; three15-suite compiler/sanitizer lanes, hosted and private runtime pass.
+[Review](migration/evidence/20261025-storage-workflows/REVIEW.md). CF01 corners and CF02–CF08 remain open;
+next work is v2/hybrid identity/layout/provider qualification and prepared intake,
+network/queue/creator integration. No human question.
+
 Published bounded CF-01 core: `c0b2fbb2071b7aae302d2db24ba3c824df874d0a`; actual C/R/X and12legacy/default
 handoffs, GCC/Clang/sanitizers, hosted and private portable checks pass.
 [Review](migration/evidence/20261025-storage-resume/REVIEW.md).

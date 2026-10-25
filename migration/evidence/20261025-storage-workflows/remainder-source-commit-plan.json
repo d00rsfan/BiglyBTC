@@ -1,0 +1,33 @@
+{
+  "branch": "main",
+  "parent": "730f69bebac671fdd0ccd5eb251202ebe6c03187",
+  "message": "Support active file selection and explicit compact storage",
+  "paths_sha256": {
+    "preview/native/adapters/file_operations.cpp": "bdaaa9eb8d1651a5884dabdd046b206d9fb87bbf832ccd4a912a87c972f4066c",
+    "preview/native/adapters/file_operations.hpp": "fe3715ea0d9efdf566ac7898d257c5cb4b410b1d152844b5fd8ade91a297307e",
+    "preview/native/adapters/file_policy_commands.cpp": "af6b7589b943b1713e884359862748d4cec29444627afe288446cac1a4e46dfc",
+    "preview/native/adapters/file_policy_commands.hpp": "2966d72b882e978b5b2446d429a335863bb504fc9986ebb3a567a8dbb0c77fb2",
+    "preview/native/adapters/linear_to_compact.cpp": "d01731e72e39c4407e6297d1951378807125c2681255692feecca17cf17abaa7",
+    "preview/native/adapters/linear_to_compact.hpp": "086d7a1e021cd8a944c921e224286362892f0071d6eda23c5bb5ea7cbf5d5938",
+    "preview/native/adapters/original_file_io.cpp": "35dae01a27b8e153f541bfbc62219c918c8767096526f4ffda31944fbf95fc6f",
+    "preview/native/adapters/original_file_io.hpp": "2ac45c78f66961e335250fd2cf50474b0ef842b1edbc49615e2939003069ef7e",
+    "preview/native/app/main_desktop.cpp": "c9825808bcc0401fc0e3565dc9ec589f9c5b48a202a184e08a3422432ee04310",
+    "preview/native/app/session_bridge.cpp": "d372686566326d7671359f9b87cbd277cc42d330fc1d53214b3235c8ff716a92",
+    "preview/native/app/session_bridge.hpp": "e8a17eda1061eacf7d214a6dfc0fc93f5cabae627992f1cadad18d79318ead70",
+    "preview/native/engine/CMakeLists.txt": "ffb614ed8b326fa2065d2017f136e6e3d162538df7a40236f843e1a246ff7778",
+    "preview/native/engine/managed_storage.cpp": "7b5bad173792f8363398e4f20b80d0ad3543b41541e0de7472e95cfac00f8a96",
+    "preview/native/engine/original_disk_io.cpp": "3ca48810f5317484a56e24db05d2a50a1ba7198ec58262c065a2d0e209737866",
+    "preview/native/tests/CMakeLists.txt": "76cff15b2eeab41e2cfb5327154c60cb71eff823c2300043376e334c88b2f83d",
+    "preview/native/tests/file_compaction_bridge_tests.cpp": "4e9ee778ed879243c71cbd2197ebec15641baf6ee3977fa4e1ff4d2cad3696bc",
+    "preview/native/tests/file_compaction_ui_tests.cpp": "f2af94bc68c55ce7bd3ee5cf5cc0ae6b29df9abb499ab9e45ac85e1a2316bab7",
+    "preview/native/tests/file_operations_tests.cpp": "ba4c86b4b3bff3eb9a138afdeb6c687e45ea0b7a440995c2935da01055457b74",
+    "preview/native/tests/library_commands_bridge_tests.cpp": "48fedb5200aa077f8f77691013f97fd01688fd0bd80f86bae1d606457de2dcb8",
+    "preview/native/tests/linear_to_compact_handoff_driver.cpp": "105da2d0c8e571c52fc149b957f5c1ca6614ff89786e4659535179f11aa7f1dd",
+    "preview/native/tests/linear_to_compact_tests.cpp": "d0198c39e46ee089c7a777764d325dab89160ab93eb902a25960dcb2cf1a28e0",
+    "preview/native/tests/original_file_io_tests.cpp": "9cabe19b25ed15d21e3ccdd81c686a36944ecccd5cace1df8ca27d50ea682296",
+    "preview/native/tests/storage_fileops_handoff_driver.cpp": "d7ada44c82bba578235f82f8c155cb2249e71de56114fb9305851cfc37afa28b",
+    "preview/native/ui/library_model.hpp": "1ef30c1dedc9e0b5fe0f8c72a12798e4cb4e16fcb6ba1f93ab834c869d887ff6",
+    "preview/native/ui/library_window.cpp": "439b239591604f24baad8b5206a39511dac8487f015082726f6270b291db8245",
+    "preview/native/ui/library_window.hpp": "9d710fa16340ca3a2b3910d9c2369d0a54112ac22cd0f68e5f23e4526b17a50b"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "command": [
+    "python3",
+    "-B",
+    "/home/yurii/Java/BiglyBT/build/storage-20261025/oracle-compaction/amendments/original-ready-counters/run.py",
+    "--reference-root",
+    "/home/yurii/Java/BiglyBT",
+    "--managed-driver",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-storage-handoff-driver",
+    "--compaction-driver",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-linear-to-compact-handoff-driver",
+    "--work",
+    "/tmp/biglybtc-managed-handoff-storage-compaction-r5c"
+  ],
+  "exit": 0,
+  "seconds": 61.08,
+  "runner_sha256": "0c61350df406b643f9caf4b65e481f8066970fe9bd4faa17cd3dbf2cc58e5abb",
+  "durable_copy": "/home/yurii/Java/BiglyBT/build/storage-20261025/oracle-compaction-r5c"
+}

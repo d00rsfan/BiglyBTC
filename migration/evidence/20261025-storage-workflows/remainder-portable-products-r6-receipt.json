@@ -1,0 +1,20 @@
+{
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "cmake",
+    "--build",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+    "--parallel",
+    "2",
+    "--target",
+    "biglybtc-preview-smoke",
+    "--",
+    "-k",
+    "0"
+  ],
+  "exit": 0,
+  "seconds": 35.62,
+  "source_manifest_sha256": "52491ef51318d2cfe42cd77a3d1d486912d8cbe6ded341cd7cd2e680d0a9d4ca"
+}

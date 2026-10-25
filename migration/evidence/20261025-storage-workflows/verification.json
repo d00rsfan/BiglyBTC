@@ -1,0 +1,58 @@
+{
+  "status": "QUALIFIED_BOUNDED_STORAGE_WORKFLOWS",
+  "native_source": "2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5",
+  "original_source": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "libtorrent_source": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "shipping_provider_sha256": "c35f1b0408508c019f002c438d70dd361a55be20286ded56711efd6bba2424e3",
+  "final_suites_per_lane": 15,
+  "lanes": [
+    "GCC16",
+    "Clang24",
+    "ASan/UBSan/leaks"
+  ],
+  "suite_composition": "14 final unchanged suites plus corrected worker suite; failed historical fixture receipts remain retained",
+  "actual_compaction_receipt": "oracle-compaction-r5c-receipt.json",
+  "actual_nonlinear_move_receipt": "oracle-fileops-r6-receipt.json",
+  "private_runtime_suites": 4,
+  "private_smoke_rows": 13,
+  "captures": 28,
+  "promoted": true,
+  "original_profile_or_process_access": false,
+  "system_installation": false,
+  "hosted": [
+    {
+      "conclusion": "success",
+      "databaseId": 40187991278,
+      "headSha": "2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5",
+      "name": "Native plugin SDK contract",
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40187991278"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 40187991269,
+      "headSha": "2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5",
+      "name": "Native desktop preview unit and smoke tests",
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40187991269"
+    }
+  ],
+  "hosted_counts": {
+    "Native plugin SDK contract": [
+      2
+    ],
+    "Native desktop preview unit and smoke tests": [
+      162
+    ]
+  },
+  "promotion": {
+    "native_source": "2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5",
+    "dist": "/home/yurii/Java/BiglyBTC/dist",
+    "rollback": "/home/yurii/Java/BiglyBTC/build/storage-20261025/remainder-portable/remainder-r6/previous-dist",
+    "old_manifest_sha256": "e1ebe4ce73877a31435b55d89b340d354607d483f3f56163f123b51f6dd90295",
+    "manifest_sha256": "bdee4d28fa24990920693782a186a8ec34fcafb772d3c7717aa886713fedc07e",
+    "manifest_files": 118,
+    "system_installation": false,
+    "original_profile_or_process_access": false
+  }
+}

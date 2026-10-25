@@ -1,0 +1,16 @@
+{
+  "status": "SOURCE_ONLY_NOT_ADOPTED",
+  "scope": "Byte-preserving stopped normalization of all-present allocation without any hash certificate; EOF-short untouched",
+  "before": {
+    "preview/native/adapters/original_file_io.hpp": "8a8f7f53f17f9e0a4641eb569853b9f205f42d48ccf9dba7580b647d08d87266",
+    "preview/native/adapters/original_file_io.cpp": "97b06e57f05996ba52bb9fa76675244c2ed252e7e6738c80d23169db9350b954",
+    "preview/native/engine/original_disk_io.cpp": "0cb5da3a9d4e94116fe517eaf8238a0fc1578c8beb9bec0fe1b1cb0bc15c5f31",
+    "preview/native/tests/original_file_io_tests.cpp": "dc5ef55779fc732b4686af71a7b5da9c37db14bdc023233c838ad60a5e95cd8c"
+  },
+  "after": {
+    "preview/native/adapters/original_file_io.hpp": "2ac45c78f66961e335250fd2cf50474b0ef842b1edbc49615e2939003069ef7e",
+    "preview/native/adapters/original_file_io.cpp": "35dae01a27b8e153f541bfbc62219c918c8767096526f4ffda31944fbf95fc6f",
+    "preview/native/engine/original_disk_io.cpp": "3ca48810f5317484a56e24db05d2a50a1ba7198ec58262c065a2d0e209737866",
+    "preview/native/tests/original_file_io_tests.cpp": "9cabe19b25ed15d21e3ccdd81c686a36944ecccd5cace1df8ca27d50ea682296"
+  }
+}
