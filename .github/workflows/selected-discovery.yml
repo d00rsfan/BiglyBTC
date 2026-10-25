@@ -1,0 +1,30 @@
+# Source-only fragment. External control files/catalog are NOT in the runtime ZIP.
+name: Qualify exact isolated selected discovery
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+  actions: read
+jobs:
+  private-discovery:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 20
+    env:
+      CONTROL: preview/migration/fixtures/selected-discovery-control
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Verify pinned upload run/artifact, restore exact inputs and run private namespaces
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 "$CONTROL/hosted.py" \
+            --catalog "$GITHUB_WORKSPACE/$CONTROL/hosted-inputs.json" \
+            --bundle "$RUNNER_TEMP/selected-discovery-inputs/bundle.zip"
+      - name: Retain actual protocol/namespace evidence even when rejected
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: selected-discovery-results
+          path: /home/yurii/Java/BiglyBT/build/storage-20261025/discovery-hosted-results
+          if-no-files-found: warn
+          retention-days: 14
