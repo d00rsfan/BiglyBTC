@@ -1,5 +1,12 @@
 # P08-01 — Queue, seeding rules and scheduling
 
+The two authorized final milestones are qualified: verified native SOCKS4a/USERID source `b43971447b44db2f107b205204e1637bff8124ff` and imported-original Scheduler source `6b44a2c21f88c32d6f94fe595d4a42877a895bc1`, final qualified source `861d4f17f2454086de8ec44a9814c292ce1f41fe`. Each GCC/Clang/leak-enabled ASan-UBSan lane passes20 affected suites; actual generated Java/native/Java pause switchback passes2 cases, and the standalone old-SDK denial proof covers275 headers without LT/loader linkage. These are bounded numeric SOCKS framing/authentication and explicit imported-pause recovery, not whole network/Scheduler parity. The current milestone plus two authorized milestones are finished: STOP. No next chapter or autonomous additional work. All CF01–CF08 remain open; no tracker/app-hostname4a proof, Java-enforced journal barrier, crash-recovery UI, new causal/DHT/public-wire, full network or performance closure is claimed.
+
+[Final two-milestone evidence](../evidence/20261025-proxy-scheduler/verification.json).
+
+## Historical records
+
+
 State: qualified bounded preview; full original provider parity remains in CF-04. User authorized this chapter on 2026-10-24 after Tools →
 Options. Native work stays on main. Preserve the running original client, its
 profile and real payloads; all qualification uses generated isolated data.

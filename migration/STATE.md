@@ -1,5 +1,12 @@
 # BiglyBTC migration state
 
+The two authorized final milestones are qualified: verified native SOCKS4a/USERID source `b43971447b44db2f107b205204e1637bff8124ff` and imported-original Scheduler source `6b44a2c21f88c32d6f94fe595d4a42877a895bc1`, final qualified source `861d4f17f2454086de8ec44a9814c292ce1f41fe`. Each GCC/Clang/leak-enabled ASan-UBSan lane passes20 affected suites; actual generated Java/native/Java pause switchback passes2 cases, and the standalone old-SDK denial proof covers275 headers without LT/loader linkage. These are bounded numeric SOCKS framing/authentication and explicit imported-pause recovery, not whole network/Scheduler parity. The current milestone plus two authorized milestones are finished: STOP. No next chapter or autonomous additional work. All CF01–CF08 remain open; no tracker/app-hostname4a proof, Java-enforced journal barrier, crash-recovery UI, new causal/DHT/public-wire, full network or performance closure is claimed.
+
+[Final two-milestone evidence](evidence/20261025-proxy-scheduler/verification.json).
+
+## Historical records
+
+
 Current bounded compatibility-provider milestone is qualified: implementation `c8afff5311e4ff650b17d09651e3db440a0c93e8`, test-only qualification followup `471ebb75fc66fefb0208b0d086a934b68aced84b`. Effective GCC/Clang/leak-enabled ASan-UBSan lanes each credit38 original unaffected PASS +2 focused followup PASS =40; no full40 rerun or identical full-snapshot claim. Actual original observations: priority8, probes14, nonlinear corners2, rate arithmetic23; packaging preflight7. Private b0e/3342 candidate passes13 smoke Qt rows,28 captures,5 positive cohorts and11 deployment controls. It remains private-only and unpromoted; published dist deefcbe remains unchanged. No full CF closure, new causal/DHT/public-wire, bound target ETA, native SOCKS4a/USERID admission or imported Scheduler recovery is claimed. All CF01–CF08 remain open.
 
 Latest explicit user boundary: finish this current milestone, then exactly two further milestones in the same compatibility chapter—verified native SOCKS4a/USERID admission and imported-original Scheduler pause recovery—then STOP. Both are pending. No next chapter is authorized. This boundary supersedes older open-ended continuation text preserved below as history.

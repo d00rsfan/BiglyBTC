@@ -1439,11 +1439,22 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-SpeedScheduler.git",
           "commit": "91c417ca5aa5494f8c5791d8f29cf96350a0071d",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "6b44a2c21f88c32d6f94fe595d4a42877a895bc1",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "861d4f17f2454086de8ec44a9814c292ce1f41fe",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/updates/plugins.speed_scheduler_ownership/20261017-initial-bounded.md",
-        "migration/evidence/20261018-navigation/scheduler-export-source-review.json"
+        "migration/evidence/20261018-navigation/scheduler-export-source-review.json",
+        "migration/updates/compatibility.providers/20261025-final-two.md"
       ],
       "evidence": [
         "migration/evidence/P04-06/gcc-original-ownership.json",
@@ -1457,7 +1468,8 @@
         "migration/evidence/20261018-scheduler-export/independent-inputs-oracle.json",
         "migration/evidence/20261018-scheduler-export/independent-validation-plan-oracle.json",
         "migration/evidence/20261018-scheduler-export/local-verification.json",
-        "migration/evidence/20261018-scheduler-export/committed-export-verification.json"
+        "migration/evidence/20261018-scheduler-export/committed-export-verification.json",
+        "migration/evidence/20261025-proxy-scheduler/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-003.md"
     },
@@ -5874,12 +5886,23 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "4f948e042df9467310a5752d4343b07915673f84",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b43971447b44db2f107b205204e1637bff8124ff",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "861d4f17f2454086de8ec44a9814c292ce1f41fe",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/updates/settings.classic_options/20261024.md",
         "migration/updates/queue.scheduler/20261024.md",
-        "migration/updates/torrent.compatibility/20261025.md"
+        "migration/updates/torrent.compatibility/20261025.md",
+        "migration/updates/compatibility.providers/20261025-final-two.md"
       ],
       "evidence": [
         "migration/tasks/P04-OPTIONS.md",
@@ -5887,7 +5910,8 @@
         "migration/evidence/20261024-options/REVIEW.md",
         "migration/evidence/20261024-queue-seeding-scheduling/verification.json",
         "migration/evidence/20261024-queue-seeding-scheduling/REVIEW.md",
-        "migration/evidence/20261025-v2-workflows/verification.json"
+        "migration/evidence/20261025-v2-workflows/verification.json",
+        "migration/evidence/20261025-proxy-scheduler/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -6008,12 +6032,23 @@
           "commit": "4f948e042df9467310a5752d4343b07915673f84",
           "purpose": "implementation",
           "repository": "https://github.com/d00rsfan/BiglyBTC.git"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b43971447b44db2f107b205204e1637bff8124ff",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "861d4f17f2454086de8ec44a9814c292ce1f41fe",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/updates/settings.classic_options/20261024.md",
         "migration/updates/queue.scheduler/20261024.md",
-        "migration/updates/torrent.compatibility/20261025.md"
+        "migration/updates/torrent.compatibility/20261025.md",
+        "migration/updates/compatibility.providers/20261025-final-two.md"
       ],
       "evidence": [
         "migration/tasks/P04-OPTIONS.md",
@@ -6021,7 +6056,8 @@
         "migration/evidence/20261024-options/REVIEW.md",
         "migration/evidence/20261024-queue-seeding-scheduling/verification.json",
         "migration/evidence/20261024-queue-seeding-scheduling/REVIEW.md",
-        "migration/evidence/20261025-v2-workflows/verification.json"
+        "migration/evidence/20261025-v2-workflows/verification.json",
+        "migration/evidence/20261025-proxy-scheduler/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -6077,19 +6113,31 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "471ebb75fc66fefb0208b0d086a934b68aced84b",
           "purpose": "tests"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "6b44a2c21f88c32d6f94fe595d4a42877a895bc1",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "861d4f17f2454086de8ec44a9814c292ce1f41fe",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/updates/queue.scheduler/20261024.md",
         "migration/updates/torrent.compatibility/20261025.md",
-        "migration/updates/compatibility.providers/20261025.md"
+        "migration/updates/compatibility.providers/20261025.md",
+        "migration/updates/compatibility.providers/20261025-final-two.md"
       ],
       "evidence": [
         "migration/tasks/P08-01-queue-seeding-scheduling.md",
         "migration/evidence/20261024-queue-seeding-scheduling/verification.json",
         "migration/evidence/20261024-queue-seeding-scheduling/REVIEW.md",
         "migration/evidence/20261025-v2-workflows/verification.json",
-        "migration/evidence/20261025-compatibility-providers/completion.json"
+        "migration/evidence/20261025-compatibility-providers/completion.json",
+        "migration/evidence/20261025-proxy-scheduler/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -6141,17 +6189,29 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "8aa48d6904c7df979f2730fa3cb4a66bb0ab8985",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "6b44a2c21f88c32d6f94fe595d4a42877a895bc1",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "861d4f17f2454086de8ec44a9814c292ce1f41fe",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/updates/queue.scheduler/20261024.md",
-        "migration/updates/library.file_operations/20261024.md"
+        "migration/updates/library.file_operations/20261024.md",
+        "migration/updates/compatibility.providers/20261025-final-two.md"
       ],
       "evidence": [
         "migration/tasks/P08-01-queue-seeding-scheduling.md",
         "migration/evidence/20261024-queue-seeding-scheduling/verification.json",
         "migration/evidence/20261024-queue-seeding-scheduling/REVIEW.md",
-        "migration/evidence/20261024-library-file-operations/verification.json"
+        "migration/evidence/20261024-library-file-operations/verification.json",
+        "migration/evidence/20261025-proxy-scheduler/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-003.md"
     },
@@ -6191,15 +6251,27 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "cda09f95bed76f3c29a514b345a70a29881dfc85",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "6b44a2c21f88c32d6f94fe595d4a42877a895bc1",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "861d4f17f2454086de8ec44a9814c292ce1f41fe",
+          "purpose": "integration"
         }
       ],
       "review_records": [
-        "migration/updates/queue.scheduler/20261024.md"
+        "migration/updates/queue.scheduler/20261024.md",
+        "migration/updates/compatibility.providers/20261025-final-two.md"
       ],
       "evidence": [
         "migration/tasks/P08-01-queue-seeding-scheduling.md",
         "migration/evidence/20261024-queue-seeding-scheduling/verification.json",
-        "migration/evidence/20261024-queue-seeding-scheduling/REVIEW.md"
+        "migration/evidence/20261024-queue-seeding-scheduling/REVIEW.md",
+        "migration/evidence/20261025-proxy-scheduler/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-003.md"
     },
@@ -6641,7 +6713,8 @@
       "decision_ref": null,
       "evidence": [
         "migration/evidence/20261025-v2-workflows/verification.json",
-        "migration/evidence/20261025-compatibility-providers/completion.json"
+        "migration/evidence/20261025-compatibility-providers/completion.json",
+        "migration/evidence/20261025-proxy-scheduler/verification.json"
       ],
       "feature_ids": [
         "F05.persistent_owned_local"
@@ -6662,11 +6735,22 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "471ebb75fc66fefb0208b0d086a934b68aced84b",
           "purpose": "tests"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b43971447b44db2f107b205204e1637bff8124ff",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "861d4f17f2454086de8ec44a9814c292ce1f41fe",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/updates/torrent.compatibility/20261025.md",
-        "migration/updates/compatibility.providers/20261025.md"
+        "migration/updates/compatibility.providers/20261025.md",
+        "migration/updates/compatibility.providers/20261025-final-two.md"
       ],
       "source_coverage": [
         {

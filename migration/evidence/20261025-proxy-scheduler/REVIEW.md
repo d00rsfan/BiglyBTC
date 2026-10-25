@@ -1,0 +1,40 @@
+# Verified proxy and imported Scheduler — final two authorized milestones
+
+Actual final qualified source: `861d4f17f2454086de8ec44a9814c292ce1f41fe`. Implementation commits:
+SOCKS4a/USERID `b43971447b44db2f107b205204e1637bff8124ff` (14 paths), imported
+Scheduler `6b44a2c21f88c32d6f94fe595d4a42877a895bc1` (9 paths; merged Host
+1e1cfa19236e5f1d30a97e44b28697774fe259d58e5aa564bd57fcdac3cc7a50).
+Later real compile/test fixes require explicit root commit receipts. Until an
+actual verification.json exists, this is a pending source-only template.
+
+The bounded source scope is verified native SOCKS4a/USERID admission through
+the already authenticated same-module provider, and explicit imported-original
+Scheduler permission recovery with held-lease/CAS, real saved/engine effects,
+manual revocation and fail-closed uncertainty. Stock/old SDK and foreign marker
+denials remain required. Neither headers nor a bare marker confer trust.
+
+Final qualification requires 20 affected suites per GCC/Clang/leak-enabled
+ASan-UBSan lane on the final coherent source; actual generated Java/native/Java
+switchback for ordinary single and forced multifile; and standalone denial with
+all 275 old SDK headers without LT/loader linkage. Raw results, failures,
+preflights, real source maps, original input/fixture recipes and command receipts
+are retained compactly. The prior 7.5 MB compatibility-provider archive and
+500 MB closed-fixture cache remain references, not duplicate Git payloads.
+
+Original baselines remain BiglyBT
+`cb8c6cb9bb97916cbc7e80338a017200ffc3e71f` and SpeedScheduler
+`1ee6a53dae017696d2f0002e4a0d74f5a9476af5`. Component first-port/integration
+baselines, broad states and target paths stay unchanged. Existing private
+b0e/3342 dependency and old selected/causal records are not reapproved or promoted.
+
+Limits: actual application route proof is controlled numeric SOCKS framing;
+tracker4a and application-hostname routing are not established by prior provider
+HTTP `.invalid` tests. Original Java ignores the native uncertainty journal:
+there is no Java-enforced crash barrier, whole Scheduler or new crash-recovery UI
+claim. No full network, public DHT/wire, causal-counter, or performance closure
+is inferred. All CF01–CF08 stay open. Hosted/private portable receipts, if retained
+as supplements, do not become success claims merely by being copied.
+
+This completes only the two additionally authorized milestones in the same
+compatibility chapter. After root final validation/export/publication: **STOP**.
+No next chapter or autonomous further implementation is authorized.

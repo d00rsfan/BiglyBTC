@@ -1,0 +1,72 @@
+{
+  "status": "TWO_AUTHORIZED_MILESTONES_QUALIFIED_STOP",
+  "qualified_source": "861d4f17f2454086de8ec44a9814c292ce1f41fe",
+  "socks4a_implementation": "b43971447b44db2f107b205204e1637bff8124ff",
+  "scheduler_implementation": "6b44a2c21f88c32d6f94fe595d4a42877a895bc1",
+  "followup_commits": [
+    "861d4f17f2454086de8ec44a9814c292ce1f41fe"
+  ],
+  "matrix": {
+    "gcc": {
+      "suites": 20,
+      "runs": [
+        {
+          "case": "next-two-gcc-tests-r1",
+          "seconds": 139.74,
+          "inputs_sha256": {
+            "next-two-gcc-tests-r1-receipt.json": "4ecb8a71f72c1d2b4ec45ba52ada44ff5c7c389f1589ee9e7e3e5a3f1946878b",
+            "next-two-gcc-tests-r1-source.json": "23b77f6076ebcf54b48824cc7cc1faa46360e04f88f875b4c231d7b8b3559141",
+            "next-two-gcc-tests-r1.xml": "8f6df7c6a1b5a7bbf3040d288aff1c5abb90c15d0190f6b4bb19d9e66f46dfb2",
+            "next-two-gcc-tests-r1.log": "b3ccd820cbe743458beeb022d96aed2be0529c8b59aef3c4dcedc7c62126251e"
+          }
+        }
+      ]
+    },
+    "clang": {
+      "suites": 20,
+      "runs": [
+        {
+          "case": "next-two-clang-tests-r1",
+          "seconds": 129.38,
+          "inputs_sha256": {
+            "next-two-clang-tests-r1-receipt.json": "bed54179ee1b85aac6c5f8cd9edc779436d41930adf5f3f75a1c2f26e79701c2",
+            "next-two-clang-tests-r1-source.json": "23b77f6076ebcf54b48824cc7cc1faa46360e04f88f875b4c231d7b8b3559141",
+            "next-two-clang-tests-r1.xml": "33e73a9af72ec9ed0d6cc41a318f2c2d9d084c507602498fc0717f66c7601d94",
+            "next-two-clang-tests-r1.log": "0403de58643da9ea56af7f6deb56816fd2f0b199ecba949aa67322d5253d319d"
+          }
+        }
+      ]
+    },
+    "sanitizers": {
+      "suites": 20,
+      "runs": [
+        {
+          "case": "next-two-san-tests-r1",
+          "seconds": 142.06,
+          "inputs_sha256": {
+            "next-two-san-tests-r1-receipt.json": "e407f430f454b88570a03223e772a9caec72126498ad199d64a00e9f420f3e50",
+            "next-two-san-tests-r1-source.json": "23b77f6076ebcf54b48824cc7cc1faa46360e04f88f875b4c231d7b8b3559141",
+            "next-two-san-tests-r1.xml": "ad1d2c5667337150f5c2f308f1c52c6119e434fc3975ccb044429558d4b0924e",
+            "next-two-san-tests-r1.log": "ea3bf272561b9c5a9c1c667709ccb9a7c765a42e55889009a1a0ca3acf92355a"
+          }
+        }
+      ]
+    }
+  },
+  "actual_java_cases": 2,
+  "actual_java_result_sha256": "eabff6bde5bf610393c4f326ed47fe21c399e70af22f5b32379e0b20b007b2d6",
+  "old_sdk_headers": 275,
+  "archive": {
+    "path": "retained-inputs.tar.gz",
+    "sha256": "2eaffd4e1f75c3a7847c68f7bad9cb97c0f13d994b2eea517929cbfe29ab7da6",
+    "bytes": 2294372,
+    "members": 412,
+    "member_manifest_sha256": "66acb773cc19623bf093677b909e76d68196212c87f3ba1ae19bb6ca938d6681"
+  },
+  "prior_basis": "../20261025-compatibility-providers/completion.json",
+  "all_CF01_CF08_open": true,
+  "stop_after": true,
+  "new_causal_or_DHT_or_full_network_Scheduler_performance_closure": false,
+  "portable_or_hosted_success_inferred": false,
+  "source_push_receipt_sha256": "431959042bc80daef6ce51162c9011b0235b93d23c0b0faae839c03af3ff4ecb"
+}
