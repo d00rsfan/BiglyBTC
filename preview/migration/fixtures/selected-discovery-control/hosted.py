@@ -17,9 +17,9 @@ import sys
 import zipfile
 
 sys.dont_write_bytecode = True
-CATALOG_SHA256 = 'cfd847973aa36c3325495feca36b2cfa59a2b0a022f8b8e12ddf524ee664551c'
+CATALOG_SHA256 = '4d7df02ad8f83990a8cd36a0788013e8058941fddabf232e2062a17b59d3dd5b'
 CHAPTER = '/home/yurii/Java/BiglyBT/build/storage-20261025'
-CAPSULE_SHA = 'f5c55c2dde4bba885f4e3fa1dbc81e3659e49880c0856797eba156703d692b2f'
+CAPSULE_SHA = '888fdd76a4fd585cfbacce50d5236318580e0e46983148249fd09e8807891856'
 PROVIDER_SHA = 'e74def09b2257a266786b8ddb116382d300716687bf26bbe57072f5ff90e8737'
 PROVIDER_IMAGE_SHA = 'd367afd6499859c5a57d66bddd352a977ff76c7fb76b5925302c2c9008c7ddbd'
 PROVIDER_IMAGE = Path(CHAPTER) / 'provider-candidate/install/lib/libtorrent-rasterbar.so.2.0.12'
