@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "status": "ROOT_REVIEWED_EXACT_BUNDLE_TRANSPORT",
+  "repository": "d00rsfan/BiglyBTC",
+  "release_tag": "qualification-selected-provider-20261025-d367afd6",
+  "asset_name": "bundle.zip",
+  "bundle_sha256": "91d589eef258ce7875fffd5f2081434088f04ba4968d1cf093f609c6826e9f4d",
+  "bundle_bytes": 16273367
+}

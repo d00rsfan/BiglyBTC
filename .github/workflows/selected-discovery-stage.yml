@@ -1,0 +1,28 @@
+# Source-only fragment. Adopt only after exact release spec + script pin review.
+name: Stage exact selected-discovery inputs
+on:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  stage:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 10
+    env:
+      CONTROL: preview/migration/fixtures/selected-discovery-control
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Download and verify one reviewed release asset without executing it
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python3 "$CONTROL/stage_release.py" \
+            --spec "$GITHUB_WORKSPACE/$CONTROL/stage-inputs.json" \
+            --directory "$RUNNER_TEMP/selected-discovery-staged"
+      - name: Stage only the exact bundle for a subsequent pinned-run catalog
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: selected-discovery-inputs
+          path: ${{ runner.temp }}/selected-discovery-staged/bundle.zip
+          if-no-files-found: error
+          retention-days: 14
