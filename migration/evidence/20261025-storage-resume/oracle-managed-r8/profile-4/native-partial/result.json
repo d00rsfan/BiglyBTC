@@ -1,0 +1,14 @@
+{
+    "complete": false,
+    "completed": "114688",
+    "hash": "7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C",
+    "mode": "partial",
+    "pieces": 7,
+    "received": "49152",
+    "schema": 1,
+    "sent": "0",
+    "session_joined": true,
+    "settled_payload_received": "49152",
+    "storage_released": true,
+    "total_pieces": 8
+}

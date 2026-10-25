@@ -1,0 +1,50 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original": {
+    "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java": {
+      "sha256": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39",
+      "git_blob": "f992aecdc28168d656c322512434ff1cbaf95c02"
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java": {
+      "sha256": "a88937664cb90354be6600448a63684b6a7b5c9e7906a9425b9f5a4758afbeda",
+      "git_blob": "99617ee6753153c8af1598fc17cf28ed7631319b"
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java": {
+      "sha256": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a",
+      "git_blob": "12c9b2e45ab7fa3a9839672087ec207ef83d9e35"
+    },
+    "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java": {
+      "sha256": "6755b950c548c5a7d153b9aef2c1024c7c5c79d5880fd858f3bac4261adcdf8c",
+      "git_blob": "0612105280e1489fc628d155bd12c7606ac0e0c3"
+    },
+    "core/src/com/biglybt/core/diskmanager/file/impl/FMFileAccessController.java": {
+      "sha256": "1f30efb473dbf6c41037badca094b9ec90c180b7a8b0d9dab4f0d97333decc2e",
+      "git_blob": "5443c6bc46d74b1c9afd593998dd6e01924140b3"
+    },
+    "core/src/com/biglybt/core/diskmanager/file/impl/FMFileAccessCompact.java": {
+      "sha256": "4cefe7807413de5636b7af7b716bd8feb209aae191eee9fcf1f59ed835c0332d",
+      "git_blob": "93549297dcd024516fbc90226c69f7d177ef856a"
+    },
+    "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java": {
+      "sha256": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194",
+      "git_blob": "72d5cccf803da692911b9a0e56777262138d6e00"
+    },
+    "core/src/com/biglybt/core/config/impl/ConfigurationManager.java": {
+      "sha256": "2627f71f0dd69b2cee577331ad6ce05fd230d47df816b592d07236c9b759bc82",
+      "git_blob": "811e21d1f34fe1c5e2a8daf7616e7e3eb22e2e0f"
+    }
+  },
+  "native_before": {
+    "preview/native/adapters/file_operations.cpp": "e040dafe25e7a2e87b79c6b16be4aca0a8872a15e224e59fb1b9a8f7f5791aa7",
+    "preview/native/engine/managed_storage.cpp": "50a6842b26f6b7c8cda9c052ab8667ea11922502e15cd05a3ac69e27d144adff",
+    "preview/native/tests/file_operations_tests.cpp": "a56203be9ac014ac0f06e44995fe731df82bd09257a140210f28d703abe4adf6",
+    "preview/native/tests/managed_storage_tests.cpp": "39105138544c1664d0046d0eb5587fcc7cde167dfd1a291276f16afc70b3087e"
+  },
+  "unchanged_dependencies": {
+    "preview/native/adapters/profile.hpp": "0e7bb950e4d66e2fdf88b2733cb00d149e8b17ea805348300327af8418649831",
+    "preview/native/adapters/original_file_io.hpp": "ca9c105faa6e38f785d672990b4df32c88b4556b49fa5998efd72536b6aa8714",
+    "preview/native/engine/original_control.hpp": "b997d8e5f53278815b49430a70c6682d9eb46b9de47fd6e9e934aeb957813e27",
+    "preview/native/core/include/biglybtc/library.hpp": "8ad4e7f5346300fdc03c6318d629b6185874d35109511ca445609639b7168875",
+    "preview/native/core/include/biglybtc/torrent_layout.hpp": "59accc489872b0f69444da51cdd2a79aeaa0510deeaf1a01434aab2b8699a775"
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "manifest": "amend-legacy-r5.json",
+  "adopted": false,
+  "reason": "Source-only patch .orig artifacts moved outside source tree; use amend-legacy-r5b."
+}

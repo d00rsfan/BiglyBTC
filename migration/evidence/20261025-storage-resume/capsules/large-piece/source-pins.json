@@ -1,0 +1,73 @@
+[
+  {
+    "repository": "BiglyBT",
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "path": "core/src/com/biglybt/core/torrent/TOTorrentFactory.java",
+    "sha256": "91d651ffb6d23a515387dcd5d58a2ca53aed0f0fb4f211a91fb21ac0cf0203f0",
+    "lines": [
+      50,
+      57
+    ]
+  },
+  {
+    "repository": "BiglyBT",
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "path": "core/src/com/biglybt/core/diskmanager/file/impl/FMFileAccessCompact.java",
+    "sha256": "4cefe7807413de5636b7af7b716bd8feb209aae191eee9fcf1f59ed835c0332d",
+    "lines": [
+      143,
+      182
+    ]
+  },
+  {
+    "repository": "BiglyBT",
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "path": "core/src/com/biglybt/core/diskmanager/file/impl/FMFileAccessController.java",
+    "sha256": "1f30efb473dbf6c41037badca094b9ec90c180b7a8b0d9dab4f0d97333decc2e",
+    "lines": [
+      259,
+      339
+    ]
+  },
+  {
+    "repository": "libtorrent",
+    "commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+    "path": "include/libtorrent/file_storage.hpp",
+    "sha256": "0e2887531fc3daa6456255460f5e2aac132c184c7b7f11e9483f6bfd8129a80f",
+    "lines": [
+      246,
+      254
+    ]
+  },
+  {
+    "repository": "libtorrent",
+    "commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+    "path": "src/torrent_info.cpp",
+    "sha256": "5d91d6f12fe9af67db0c72436e51bdde437b2654b611f06c32197ff62c47c730",
+    "lines": [
+      1190,
+      1206
+    ]
+  },
+  {
+    "repository": "libtorrent",
+    "commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+    "path": "src/create_torrent.cpp",
+    "sha256": "c1b6ffc1ef886e86d3409536db6c19ed1c0d347c85d1a8cf29f8780d3fd51be2",
+    "lines": [
+      458,
+      463
+    ]
+  },
+  {
+    "repository": "BiglyBTC",
+    "commit": "b44ec22ebb3dbb6cee3ade23c32a7ad26a373926 plus CF01 working sources",
+    "path": "preview/native/engine/original_disk_io.cpp",
+    "sha256": "b60e2aaa21e60e6e1de1328cccf561384e0d1eb1001e66be8a795ac9528e9bb5",
+    "lines": [
+      106,
+      139
+    ],
+    "scope": "actual source hashing is 16 KiB streaming, not piece-sized allocation"
+  }
+]

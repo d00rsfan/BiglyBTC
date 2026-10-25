@@ -1,0 +1,18 @@
+--- a/preview/native/engine/managed_storage.cpp
++++ b/preview/native/engine/managed_storage.cpp
+@@ -557,6 +557,7 @@
+         std::shared_ptr<OriginalControl> control;
+         if(slot.kind!=storage::OriginalStorageKind::Linear||slot.expanding) {control=take(OriginalControl::open(lease,hash.hex(),slot.index,slot.expanding?storage::OriginalStorageKind::Compact:slot.kind,true));}
+         auto io=take(storage::OriginalFileIo::open(mappedDescriptor.get(),slot.geometry,slot.kind,control?take(control->load()):std::nullopt,control?control->publisher():storage::OriginalControlPublisher{},true,slot.expanding&&slot.kind==storage::OriginalStorageKind::Compact,static_cast<unsigned>(slot.identity.st_nlink)));
++        if(io.recoveryPending()){done(io.recover());}
+         if((slot.kind==storage::OriginalStorageKind::Compact&&(!slot.skipped||storageDefaults.requested[slot.index]==storage::OriginalStorageKind::Linear))||slot.expanding) {
+           require(slot.identity.st_dev<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())&&slot.identity.st_ino<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()),"Compact conversion identity exceeds original journal range",ErrorCode::Unsupported);
+           auto attrs=dictionary(state.document().find("attributes"));std::string conversions="l";
+@@ -642,6 +643,7 @@
+       }
+       require(counts[index]>=0&&counts[index]<=file.bytes&&counts[index]<=std::numeric_limits<std::int64_t>::max()-total,"Verified file accounting overflows",ErrorCode::InvalidFormat); total+=counts[index];
+     }
++    if(owner.mapped){std::vector<std::uint8_t> completeFiles(owner.slots.size());for(const auto& slot:owner.slots){completeFiles[slot.index]=!slot.padding&&counts[slot.index]==slot.bytes;}done(owner.mapped->finishComplete(completeFiles));}
+     bool allocated=true;
+     for (auto& slot:owner.slots) {
+       if (slot.padding) { continue; } struct stat named{},opened{},parent{};

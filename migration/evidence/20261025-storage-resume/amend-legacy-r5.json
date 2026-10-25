@@ -1,0 +1,134 @@
+{
+  "files": {
+    "core/CMakeLists.txt": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/core/CMakeLists.txt",
+      "before_sha256": "bd0e3c00533497d4ad524bb4ff82adf26e1f353a24a6f7b5c5ff53cf94a64d09",
+      "sha256": "666bda3d50df2650fa24deaab700faa1fbd5ce0e98fcdf040e5708c1463b6a07"
+    },
+    "core/include/biglybtc/original_file_links.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/core/include/biglybtc/original_file_links.hpp",
+      "before_sha256": null,
+      "sha256": "17aaac8e64152c28e4f824a1c905d4bdf37c2156a8e26eb64cdf7b09aae237f3"
+    },
+    "core/include/biglybtc/torrent_layout.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/core/include/biglybtc/torrent_layout.hpp",
+      "before_sha256": "59accc489872b0f69444da51cdd2a79aeaa0510deeaf1a01434aab2b8699a775",
+      "sha256": "dbc001e070887b2c9727310c725f85d8fbaef1d4ed7c759caf0ac04b804f1be1"
+    },
+    "core/src/original_file_links.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/core/src/original_file_links.cpp",
+      "before_sha256": null,
+      "sha256": "9d32bff5afc90b0658be4f83b415420120ba1eb91103275a9c8c8cbaa0b0234a"
+    },
+    "core/src/torrent_layout.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/core/src/torrent_layout.cpp",
+      "before_sha256": "58e6961c5136d1a5f9adf860748a9b3e645fe0ff05ccb50836f339a636ce072d",
+      "sha256": "0bf004ce47331522dcd9bde15778ed7daae0613a47f6f207c16de734e356957a"
+    },
+    "preview/native/adapters/CMakeLists.txt": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/adapters/CMakeLists.txt",
+      "before_sha256": "27ef6103abab9464ba02313868eb32fec1adbbb7761e6fed37abdfd57a450da3",
+      "sha256": "7e4773d15adf46d820827046fbb5cd9bea5197dd223cabd06ff7994be5c9234f"
+    },
+    "preview/native/adapters/file_operations.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/adapters/file_operations.cpp",
+      "before_sha256": "e040dafe25e7a2e87b79c6b16be4aca0a8872a15e224e59fb1b9a8f7f5791aa7",
+      "sha256": "7456659f171653b55cfe9ab1507717480a975cbee838aee88c7bde18bfa4184b"
+    },
+    "preview/native/adapters/file_operations.cpp.orig": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/adapters/file_operations.cpp.orig",
+      "before_sha256": null,
+      "sha256": "e26bf0b7ea399e3e2063893a2cf3af1bb337e274d19b4c87f04f6d2f6f72b6ef"
+    },
+    "preview/native/adapters/original_file_io.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/adapters/original_file_io.cpp",
+      "before_sha256": "6502a4c2c53401c5840f937f8c4800a85ee92c25520daa752d1f64358b311ede",
+      "sha256": "896815d9751ae9f93a9f95b9160b5a0d47eb1ddc747a82100c041574efd1858d"
+    },
+    "preview/native/adapters/original_file_io.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/adapters/original_file_io.hpp",
+      "before_sha256": "ca9c105faa6e38f785d672990b4df32c88b4556b49fa5998efd72536b6aa8714",
+      "sha256": "8dc5bfbefef5faca376304c88e47ff1cc4b429620d927c368f9eb2500d2bfbde"
+    },
+    "preview/native/adapters/original_storage_defaults.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/adapters/original_storage_defaults.cpp",
+      "before_sha256": null,
+      "sha256": "1a490ad05a158e44b6c54a413341ba367a284e0aae5ed1d7e3cb032624cdba11"
+    },
+    "preview/native/adapters/original_storage_defaults.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/adapters/original_storage_defaults.hpp",
+      "before_sha256": null,
+      "sha256": "6c0f0a8d6b597f0f114f2ea2a11a06541e5d1109e848cb5ad55325c22db84d2a"
+    },
+    "preview/native/core/CMakeLists.txt": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/core/CMakeLists.txt",
+      "before_sha256": "6267449f70f13063037ccc016ce1d52880df615ea5bb6091867ca5bec7995e90",
+      "sha256": "bc0a9b60d76676b14a7d1b0535d816481fe9eb5bd741e6e0bcf688bc24ccf884"
+    },
+    "preview/native/core/include/biglybtc/original_file_links.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/core/include/biglybtc/original_file_links.hpp",
+      "before_sha256": null,
+      "sha256": "17aaac8e64152c28e4f824a1c905d4bdf37c2156a8e26eb64cdf7b09aae237f3"
+    },
+    "preview/native/core/include/biglybtc/torrent_layout.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/core/include/biglybtc/torrent_layout.hpp",
+      "before_sha256": "59accc489872b0f69444da51cdd2a79aeaa0510deeaf1a01434aab2b8699a775",
+      "sha256": "dbc001e070887b2c9727310c725f85d8fbaef1d4ed7c759caf0ac04b804f1be1"
+    },
+    "preview/native/core/src/original_file_links.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/core/src/original_file_links.cpp",
+      "before_sha256": null,
+      "sha256": "9d32bff5afc90b0658be4f83b415420120ba1eb91103275a9c8c8cbaa0b0234a"
+    },
+    "preview/native/core/src/torrent_layout.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/core/src/torrent_layout.cpp",
+      "before_sha256": "58e6961c5136d1a5f9adf860748a9b3e645fe0ff05ccb50836f339a636ce072d",
+      "sha256": "0bf004ce47331522dcd9bde15778ed7daae0613a47f6f207c16de734e356957a"
+    },
+    "preview/native/engine/managed_storage.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/engine/managed_storage.cpp",
+      "before_sha256": "50a6842b26f6b7c8cda9c052ab8667ea11922502e15cd05a3ac69e27d144adff",
+      "sha256": "48ed995dd2e5e0f0973567b8042e1090351836ac58f3da70a48701a902aca4e3"
+    },
+    "preview/native/engine/managed_storage.cpp.orig": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/engine/managed_storage.cpp.orig",
+      "before_sha256": null,
+      "sha256": "d0067d3a0a0d8700e97cdd628d8c1722923465de78d629d95623127342214d71"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/tests/CMakeLists.txt",
+      "before_sha256": "a25ae9c35de49ab6432a625e706a0bbe7cb3d09c098d9e5cce417dcb33d0f212",
+      "sha256": "e80a9e2a01d2264776614df4a2eb6629c080d040febedda247858cfdf9b2dd30"
+    },
+    "preview/native/tests/file_operations_tests.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/tests/file_operations_tests.cpp",
+      "before_sha256": "a56203be9ac014ac0f06e44995fe731df82bd09257a140210f28d703abe4adf6",
+      "sha256": "b90d5f94d9f9ee618040d71c2fa05284e46c0f74230c3d1da5efe9593b8a4bd8"
+    },
+    "preview/native/tests/managed_storage_tests.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/tests/managed_storage_tests.cpp",
+      "before_sha256": "39105138544c1664d0046d0eb5587fcc7cde167dfd1a291276f16afc70b3087e",
+      "sha256": "70e451db3c3fbdd9a1b70a0bdf48acafe1a560310c0257ce62490c6590512677"
+    },
+    "preview/native/tests/original_file_io_tests.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/tests/original_file_io_tests.cpp",
+      "before_sha256": "087721e95856c575f9375d81ff06e7fcc1c947b58ecdd22dd919892055305f64",
+      "sha256": "5ae0913a537343f7dc2bf21f6f6b1d0b092151381ebdb0e16a2c4b2d51d92e16"
+    },
+    "preview/native/tests/original_file_links_tests.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/tests/original_file_links_tests.cpp",
+      "before_sha256": null,
+      "sha256": "8acc21c7122d219440097dab96e3db7e0aca576d128457a1a2315bebcffe3667"
+    },
+    "preview/native/tests/original_storage_defaults_tests.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/tests/original_storage_defaults_tests.cpp",
+      "before_sha256": null,
+      "sha256": "90d66360b676fa16db9f69294f693bda70f6ab87070455f8873882e34e6d431a"
+    },
+    "preview/native/tests/torrent_layout_tests.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/tests/torrent_layout_tests.cpp",
+      "before_sha256": "6a77efaef7b9f157d36107d1fbf66fe532defcfdb09df9327e51455cb1b9b4cd",
+      "sha256": "b4b9b642c9a562766a0b55f9c996840ff49f45a61a487e96dcf760fa7d8e1204"
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "schema": 1,
+  "status": "SOURCE_FROZEN_ROOT_QUALIFICATION_PENDING",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "files": {
+    "README.md": "4fcdb293f4864601f5f8367a273b23772152c78d9c25d3dd4ecfc0e0df10b47e",
+    "Targets.cmake": "011ba46fa2b108eec568fbaccdd6cec73cfaa0c29d753cfe4418488181b37c6e",
+    "StorageDefaultsOracle.java": "e0bd7ac5177bc8915ba9ac777c9645f0ea24216688191d14a0ec257eef75f28e",
+    "run.py": "74345eef53162043d832592bc4972c9669ddf703c0d902835d7f29b639af9dd5",
+    "driver-before.cpp": "914e8681f5ed26216dcb114487f5c2bad9f352dedd687e28e5de07b680c4d699",
+    "driver.patch": "6d8f510dfea6af0cf367d74a42c76235deca65e8588e2cd3f6a0c3dbaa355d18",
+    "tests/storage_defaults_handoff_driver.cpp": "d12eabff01246dab3863af5347b78a21bfe2d9c0dc3665339f6af1db8e9ae5a8",
+    "source-provenance.json": "d1044a2e203cd47bc7a11c7fece1669f797aa81757b8a1800bc004d43acba0aa"
+  },
+  "adopt_source": {
+    "preview/native/tests/storage_defaults_handoff_driver.cpp": "tests/storage_defaults_handoff_driver.cpp"
+  },
+  "new_source_before_sha256": {
+    "preview/native/tests/storage_defaults_handoff_driver.cpp": null
+  },
+  "planned_input_cases": 12,
+  "actual_case_count": null,
+  "expected_original_numeric_outputs": null,
+  "original_decisions": "actual retained DownloadManager/GlobalManager/DiskManager/FileLinks methods; no subject replacements",
+  "author_executed_compilers_java_native": false,
+  "checks": [
+    "Python source parsed without import/execution",
+    "old storage driver remains exact",
+    "active original runner/helper files were read only",
+    "all original subject working files equal pinned cb8 blobs"
+  ]
+}

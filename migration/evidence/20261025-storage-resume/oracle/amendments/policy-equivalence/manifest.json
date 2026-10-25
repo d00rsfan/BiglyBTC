@@ -1,0 +1,6 @@
+{
+  "before_runner_sha256": "497ea8239ae447cbb08fb22361df2546957e489c3767ad5a8a65889e7a3a07ae",
+  "after_runner_sha256": "5d5794c61f45d32abca4d76a4099b766ab3f5cd8cfd6ca74c84e6086b1d780a3",
+  "reason": "Both exact compressed forms encode all3 normal policies; original Java reload/file facts remain required",
+  "production_changed": false
+}

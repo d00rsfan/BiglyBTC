@@ -1,0 +1,29 @@
+{
+  "files": {
+    "preview/native/engine/managed_storage.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/engine/managed_storage.cpp",
+      "before_sha256": "891fda2038db58dfc1c393ad8469e371156e47c8ac7b63f427d3061e987547b7",
+      "sha256": "89ea4436c47d32b7f390b363a62c19499eff8ae79bce2e785338f1484e935dcd"
+    },
+    "preview/native/engine/original_disk_io.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/engine/original_disk_io.cpp",
+      "before_sha256": "b262679aa27b43e3b4de83494acccd090cd9f0357fa9428a9ca436798192daec",
+      "sha256": "b60e2aaa21e60e6e1de1328cccf561384e0d1eb1001e66be8a795ac9528e9bb5"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/tests/CMakeLists.txt",
+      "before_sha256": "b2fcb17ac156218e5f1af23c6735fead34450cd6df941e8a3c417d80ea77d4c5",
+      "sha256": "a25ae9c35de49ab6432a625e706a0bbe7cb3d09c098d9e5cce417dcb33d0f212"
+    },
+    "preview/native/tests/managed_storage_tests.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/tests/managed_storage_tests.cpp",
+      "before_sha256": "f8935242c9ce043162c1234a200c40fa40aa50f54a6c4eb21fd39210e3be295a",
+      "sha256": "6d32ebce0df1c8d8ad9ea1071916922fe1127b338dcb32e78778fa08839166dd"
+    },
+    "preview/native/tests/original_disk_io_tests.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/tests/original_disk_io_tests.cpp",
+      "before_sha256": "409e67f6a6f5168598bd82c76d2138a1122d861daf8efce2e87b693e7af1fcfc",
+      "sha256": "8c39fa9a10b73cfedf251cd7101595044c62e4277b7a58a0263a2ce63a6b6774"
+    }
+  }
+}

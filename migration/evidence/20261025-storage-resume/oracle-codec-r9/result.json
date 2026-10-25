@@ -1,0 +1,772 @@
+{
+  "status": "PASS_ACTUAL_ORIGINAL_STORAGE_HANDOFF",
+  "phase": "codec",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_provenance_sha256": "a5ad825166e6c6d0171d46e13b4b490b20032cc2b446b92fd8001490f2d5ff17",
+  "manifest_sha256": "5c4c881c0f416d27f5904abf1a67cc36672ae9687aac978a1c2f0a2131175afd",
+  "retention_sha256": "7472e8bda8d832fd5a962cda76ba1fcefaa0e6e9b4cad2621e0be97e6fbec9dd",
+  "original_core_recompiled": false,
+  "original_profile_or_process_access": false,
+  "drivers": {
+    "codec_driver": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+      "sha256": "690153755ad3dab47ca71764396b80d848939c0040edb9ef0002037a111e84e1"
+    },
+    "managed_driver": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-storage-handoff-driver",
+      "sha256": "be52f4a250fb4b24f0fa4eb30b1762925d42c15113a6f12c5325e66b1794f082"
+    }
+  },
+  "codec": {
+    "2": {
+      "status": "PASS_ACTUAL_BIDIRECTIONAL_FMFILE",
+      "original": {
+        "control/fmfile1.dat": "f13c6bccd083cc8cfad8b24d0cda23872239cfe3d4cada78e9698d272f275b0d",
+        "fragment-0.bin": "cb637fc125feb6ea9e50ad1d03b2f86419322fbd90d33bbf98e347606e61b7e6",
+        "fragment-1.bin": "7feb3de1be3702bb6d1405554d7492c9b3cabae08d329e9c18dc8e19b08f36b8",
+        "fragment-2.bin": "6b5423b404963481313044557ddbb91b17d159ce81223a9d23e8f1417a9468a0",
+        "fragment-3.bin": "3c5187820d22b63777d217bb33b21d62663075118f01bbf5fc25306ce2d5828a",
+        "fragment-4.bin": "236a1e210a825452be964002400428627f165159d2d8984650e060bf77271903",
+        "fragment-5.bin": "660733f8b8ddf4c4ccf0c8cda53e021afd7bb474f9b027f54da765e17dfc8e01",
+        "fragment-6.bin": "4e2aaddf1ceaf4947c9a42c127221420d7116177a11c112c7cac75eb12a8ec86",
+        "native-read.tsv": "3180fe4a7be0cfcb8dd2b4351806aa77f423823b0d561cf460231a8c9bb0e8c7",
+        "payload.bin.az!": "93426255ab9766e0785c6859450b32786a39dd76a49b25e737498ee83a8e0dd9",
+        "read-first.bin": "cb637fc125feb6ea9e50ad1d03b2f86419322fbd90d33bbf98e347606e61b7e6",
+        "read-last.bin": "4e2aaddf1ceaf4947c9a42c127221420d7116177a11c112c7cac75eb12a8ec86",
+        "read-missing-one.bin": "add4fa3e6dbfb8723b21cfe7debadbed5d5f2ca1ab88c666470daed16afbe21a",
+        "read-native-read-first.bin": "cb637fc125feb6ea9e50ad1d03b2f86419322fbd90d33bbf98e347606e61b7e6",
+        "read-native-read-first.json": "5694b0d12456e7af84a7829e7befeffb78bbb2b4ee878dfff6666ad7fee47cb5",
+        "read-native-read-last.bin": "4e2aaddf1ceaf4947c9a42c127221420d7116177a11c112c7cac75eb12a8ec86",
+        "read-native-read-last.json": "d3ba926fd88136541e22a072a71abf027e93df37c44c29d4a4f19fcc56f9cbf8",
+        "request.tsv": "0c760b6228319fe42c8f5cad0cc6810e8a36cf36c8abd3122b3b441d6ffd57e6"
+      },
+      "native": {
+        "control/fmfile1.dat": "a42aeb0d6bff99dd99f4c8ee2d46e89a250b07fbeed379339e63476dccc60082",
+        "fragment-0.bin": "cb637fc125feb6ea9e50ad1d03b2f86419322fbd90d33bbf98e347606e61b7e6",
+        "fragment-1.bin": "7feb3de1be3702bb6d1405554d7492c9b3cabae08d329e9c18dc8e19b08f36b8",
+        "fragment-2.bin": "6b5423b404963481313044557ddbb91b17d159ce81223a9d23e8f1417a9468a0",
+        "fragment-3.bin": "3c5187820d22b63777d217bb33b21d62663075118f01bbf5fc25306ce2d5828a",
+        "fragment-4.bin": "236a1e210a825452be964002400428627f165159d2d8984650e060bf77271903",
+        "fragment-5.bin": "660733f8b8ddf4c4ccf0c8cda53e021afd7bb474f9b027f54da765e17dfc8e01",
+        "fragment-6.bin": "4e2aaddf1ceaf4947c9a42c127221420d7116177a11c112c7cac75eb12a8ec86",
+        "java-read.tsv": "6a787ff9ce46888bf8bcd40d9031b22ae2461ad1c9c7311cce583ea22638f5bf",
+        "payload.bin.az!": "93426255ab9766e0785c6859450b32786a39dd76a49b25e737498ee83a8e0dd9",
+        "read-first.bin": "cb637fc125feb6ea9e50ad1d03b2f86419322fbd90d33bbf98e347606e61b7e6",
+        "read-first.json": "5694b0d12456e7af84a7829e7befeffb78bbb2b4ee878dfff6666ad7fee47cb5",
+        "read-java-read-first.bin": "cb637fc125feb6ea9e50ad1d03b2f86419322fbd90d33bbf98e347606e61b7e6",
+        "read-java-read-last.bin": "4e2aaddf1ceaf4947c9a42c127221420d7116177a11c112c7cac75eb12a8ec86",
+        "read-last.bin": "4e2aaddf1ceaf4947c9a42c127221420d7116177a11c112c7cac75eb12a8ec86",
+        "read-last.json": "d3ba926fd88136541e22a072a71abf027e93df37c44c29d4a4f19fcc56f9cbf8",
+        "read-missing-one.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-missing-one.json": "53b396f9ebc8ad6a8a3fb9e625e7c8387691ea68ce48e3bf51cd602e387628e8",
+        "request.tsv": "0c760b6228319fe42c8f5cad0cc6810e8a36cf36c8abd3122b3b441d6ffd57e6"
+      }
+    },
+    "3": {
+      "status": "PASS_ACTUAL_BIDIRECTIONAL_FMFILE",
+      "original": {
+        "control/fmfile1.dat.2": "f200ecad1c70e98a1c025061986189e8a5510f6bb811642f2cd4c275a5e5f040",
+        "fragment-0.bin": "cb637fc125feb6ea9e50ad1d03b2f86419322fbd90d33bbf98e347606e61b7e6",
+        "fragment-1.bin": "7feb3de1be3702bb6d1405554d7492c9b3cabae08d329e9c18dc8e19b08f36b8",
+        "fragment-2.bin": "6b5423b404963481313044557ddbb91b17d159ce81223a9d23e8f1417a9468a0",
+        "fragment-3.bin": "3c5187820d22b63777d217bb33b21d62663075118f01bbf5fc25306ce2d5828a",
+        "fragment-4.bin": "236a1e210a825452be964002400428627f165159d2d8984650e060bf77271903",
+        "fragment-5.bin": "660733f8b8ddf4c4ccf0c8cda53e021afd7bb474f9b027f54da765e17dfc8e01",
+        "fragment-6.bin": "4e2aaddf1ceaf4947c9a42c127221420d7116177a11c112c7cac75eb12a8ec86",
+        "native-read.tsv": "e7745b529de6d7479b7c361a0ec95445a1552623fb775a0727941feb30964282",
+        "payload.bin.az!": "fe162ae878ddd829cb91c3163bacc7af7c2c858471036dc891d1561f8f8c2b2a",
+        "read-first.bin": "cb637fc125feb6ea9e50ad1d03b2f86419322fbd90d33bbf98e347606e61b7e6",
+        "read-last.bin": "4e2aaddf1ceaf4947c9a42c127221420d7116177a11c112c7cac75eb12a8ec86",
+        "read-missing-one.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-native-read-whole.bin": "c5202ddc1d99b0869894c631ef118b93027168bf6afac98f2ec1a9ee4117619d",
+        "read-native-read-whole.json": "0382941b512aacd6c2b7cdbe9903e32b26e75f486aa7b20aecfae2d810728194",
+        "read-one.bin": "7feb3de1be3702bb6d1405554d7492c9b3cabae08d329e9c18dc8e19b08f36b8",
+        "read-two.bin": "6b5423b404963481313044557ddbb91b17d159ce81223a9d23e8f1417a9468a0",
+        "read-whole.bin": "c5202ddc1d99b0869894c631ef118b93027168bf6afac98f2ec1a9ee4117619d",
+        "request.tsv": "a2b58818e67cd12d9c139b610fc16e753990ad36d4b73dc71cd454dcba57feb0"
+      },
+      "native": {
+        "control/fmfile1.dat.2": "1136394459fd1d9134f63fd04d4f3a78d15f0af15d6c75973cd3c86722c69512",
+        "fragment-0.bin": "cb637fc125feb6ea9e50ad1d03b2f86419322fbd90d33bbf98e347606e61b7e6",
+        "fragment-1.bin": "7feb3de1be3702bb6d1405554d7492c9b3cabae08d329e9c18dc8e19b08f36b8",
+        "fragment-2.bin": "6b5423b404963481313044557ddbb91b17d159ce81223a9d23e8f1417a9468a0",
+        "fragment-3.bin": "3c5187820d22b63777d217bb33b21d62663075118f01bbf5fc25306ce2d5828a",
+        "fragment-4.bin": "236a1e210a825452be964002400428627f165159d2d8984650e060bf77271903",
+        "fragment-5.bin": "660733f8b8ddf4c4ccf0c8cda53e021afd7bb474f9b027f54da765e17dfc8e01",
+        "fragment-6.bin": "4e2aaddf1ceaf4947c9a42c127221420d7116177a11c112c7cac75eb12a8ec86",
+        "java-read.tsv": "5ea7c45561998a3d59bf33f16b944261cf91a256ec22afd6b4f259504be03d25",
+        "payload.bin.az!": "d6e86d1da0a9b912f938ed530283db866bf4eba957bb6d02699ef91485f4ae68",
+        "read-first.bin": "cb637fc125feb6ea9e50ad1d03b2f86419322fbd90d33bbf98e347606e61b7e6",
+        "read-first.json": "5694b0d12456e7af84a7829e7befeffb78bbb2b4ee878dfff6666ad7fee47cb5",
+        "read-java-read-whole.bin": "c5202ddc1d99b0869894c631ef118b93027168bf6afac98f2ec1a9ee4117619d",
+        "read-last.bin": "4e2aaddf1ceaf4947c9a42c127221420d7116177a11c112c7cac75eb12a8ec86",
+        "read-last.json": "d3ba926fd88136541e22a072a71abf027e93df37c44c29d4a4f19fcc56f9cbf8",
+        "read-missing-one.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-missing-one.json": "53b396f9ebc8ad6a8a3fb9e625e7c8387691ea68ce48e3bf51cd602e387628e8",
+        "read-one.bin": "7feb3de1be3702bb6d1405554d7492c9b3cabae08d329e9c18dc8e19b08f36b8",
+        "read-one.json": "5c511c412115402e5e4fdd3865c1052258f95d97588ac3c4d001cead7fe5fa78",
+        "read-two.bin": "6b5423b404963481313044557ddbb91b17d159ce81223a9d23e8f1417a9468a0",
+        "read-two.json": "5c511c412115402e5e4fdd3865c1052258f95d97588ac3c4d001cead7fe5fa78",
+        "read-whole.bin": "c5202ddc1d99b0869894c631ef118b93027168bf6afac98f2ec1a9ee4117619d",
+        "read-whole.json": "0382941b512aacd6c2b7cdbe9903e32b26e75f486aa7b20aecfae2d810728194",
+        "request.tsv": "a2b58818e67cd12d9c139b610fc16e753990ad36d4b73dc71cd454dcba57feb0"
+      }
+    },
+    "4": {
+      "status": "PASS_ACTUAL_BIDIRECTIONAL_FMFILE",
+      "original": {
+        "control/fmfile1.dat.2": "ecf57629ec8a6e60dabf4705703292f3d032fb671b820352360a39a165d06c2f",
+        "fragment-0.bin": "cb637fc125feb6ea9e50ad1d03b2f86419322fbd90d33bbf98e347606e61b7e6",
+        "fragment-1.bin": "7feb3de1be3702bb6d1405554d7492c9b3cabae08d329e9c18dc8e19b08f36b8",
+        "fragment-2.bin": "6b5423b404963481313044557ddbb91b17d159ce81223a9d23e8f1417a9468a0",
+        "fragment-3.bin": "3c5187820d22b63777d217bb33b21d62663075118f01bbf5fc25306ce2d5828a",
+        "fragment-4.bin": "236a1e210a825452be964002400428627f165159d2d8984650e060bf77271903",
+        "fragment-5.bin": "660733f8b8ddf4c4ccf0c8cda53e021afd7bb474f9b027f54da765e17dfc8e01",
+        "fragment-6.bin": "4e2aaddf1ceaf4947c9a42c127221420d7116177a11c112c7cac75eb12a8ec86",
+        "native-read.tsv": "1c0b75815ba845d16a488dadbddf1e899d8f2ca443721c48be766945f399b28e",
+        "payload.bin.az!": "fe162ae878ddd829cb91c3163bacc7af7c2c858471036dc891d1561f8f8c2b2a",
+        "read-first.bin": "cb637fc125feb6ea9e50ad1d03b2f86419322fbd90d33bbf98e347606e61b7e6",
+        "read-last.bin": "4e2aaddf1ceaf4947c9a42c127221420d7116177a11c112c7cac75eb12a8ec86",
+        "read-missing-one.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-native-read-whole.bin": "c5202ddc1d99b0869894c631ef118b93027168bf6afac98f2ec1a9ee4117619d",
+        "read-native-read-whole.json": "0382941b512aacd6c2b7cdbe9903e32b26e75f486aa7b20aecfae2d810728194",
+        "read-one.bin": "7feb3de1be3702bb6d1405554d7492c9b3cabae08d329e9c18dc8e19b08f36b8",
+        "read-two.bin": "6b5423b404963481313044557ddbb91b17d159ce81223a9d23e8f1417a9468a0",
+        "read-whole.bin": "c5202ddc1d99b0869894c631ef118b93027168bf6afac98f2ec1a9ee4117619d",
+        "request.tsv": "fcd85943baf7392a1e2a7c27665a12467ee9fcb7c80d51451da995282d3b306b"
+      },
+      "native": {
+        "control/fmfile1.dat.2": "11baaa825df9a3cf9b733f87ab42dcb5be0b2677d5e8e51f58433b466bcc9e6c",
+        "fragment-0.bin": "cb637fc125feb6ea9e50ad1d03b2f86419322fbd90d33bbf98e347606e61b7e6",
+        "fragment-1.bin": "7feb3de1be3702bb6d1405554d7492c9b3cabae08d329e9c18dc8e19b08f36b8",
+        "fragment-2.bin": "6b5423b404963481313044557ddbb91b17d159ce81223a9d23e8f1417a9468a0",
+        "fragment-3.bin": "3c5187820d22b63777d217bb33b21d62663075118f01bbf5fc25306ce2d5828a",
+        "fragment-4.bin": "236a1e210a825452be964002400428627f165159d2d8984650e060bf77271903",
+        "fragment-5.bin": "660733f8b8ddf4c4ccf0c8cda53e021afd7bb474f9b027f54da765e17dfc8e01",
+        "fragment-6.bin": "4e2aaddf1ceaf4947c9a42c127221420d7116177a11c112c7cac75eb12a8ec86",
+        "java-read.tsv": "22bebf00749ca4c4cf9c58faf1129846c4bc47bfcd7653c784c960d840b52b65",
+        "payload.bin.az!": "d6e86d1da0a9b912f938ed530283db866bf4eba957bb6d02699ef91485f4ae68",
+        "read-first.bin": "cb637fc125feb6ea9e50ad1d03b2f86419322fbd90d33bbf98e347606e61b7e6",
+        "read-first.json": "5694b0d12456e7af84a7829e7befeffb78bbb2b4ee878dfff6666ad7fee47cb5",
+        "read-java-read-whole.bin": "c5202ddc1d99b0869894c631ef118b93027168bf6afac98f2ec1a9ee4117619d",
+        "read-last.bin": "4e2aaddf1ceaf4947c9a42c127221420d7116177a11c112c7cac75eb12a8ec86",
+        "read-last.json": "d3ba926fd88136541e22a072a71abf027e93df37c44c29d4a4f19fcc56f9cbf8",
+        "read-missing-one.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-missing-one.json": "53b396f9ebc8ad6a8a3fb9e625e7c8387691ea68ce48e3bf51cd602e387628e8",
+        "read-one.bin": "7feb3de1be3702bb6d1405554d7492c9b3cabae08d329e9c18dc8e19b08f36b8",
+        "read-one.json": "5c511c412115402e5e4fdd3865c1052258f95d97588ac3c4d001cead7fe5fa78",
+        "read-two.bin": "6b5423b404963481313044557ddbb91b17d159ce81223a9d23e8f1417a9468a0",
+        "read-two.json": "5c511c412115402e5e4fdd3865c1052258f95d97588ac3c4d001cead7fe5fa78",
+        "read-whole.bin": "c5202ddc1d99b0869894c631ef118b93027168bf6afac98f2ec1a9ee4117619d",
+        "read-whole.json": "0382941b512aacd6c2b7cdbe9903e32b26e75f486aa7b20aecfae2d810728194",
+        "request.tsv": "fcd85943baf7392a1e2a7c27665a12467ee9fcb7c80d51451da995282d3b306b"
+      }
+    }
+  },
+  "inherited_original_read_layouts": {
+    "compact-aligned": {
+      "original_known_file_pieces": [
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ],
+      "original_sha256": {
+        "control/fmfile1.dat": "795a25ee801fa7a5f658fcfa8122aa9793aa499a6f4bdbabd7348a6f6828a3c8",
+        "layout.config": "1ced715e1ba472b1951cc38c8745a81c67f6e35774de38977e984198ee9d135e",
+        "logical.bin": "fa43239bcee7b97ca62f007cc68487560a39e19f74f3dde7486db3f98df8e471",
+        "payload.bin.az!": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "present.bin": "af5570f5a1810b7af78caf4bc70a660f0df51e42baf91d4de5b2328de0e83dfc"
+      },
+      "native_read_sha256": {
+        "native-read.tsv": "1f7e0255a301ece75cbdb2208bb269eadade1ecc9719935b46f6e02e4c0e5f3f",
+        "read-inherited-0.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-0.json": "334bb458097a919847a51a295aaede94dcfd7f32d1a49ca18c2e6e764c3fbe82",
+        "read-inherited-1.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-1.json": "f60697b50491b084273198eb9d54ac1f28a247ec6acd14d9159723be87fee131",
+        "read-inherited-2.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-2.json": "fafdc8bce00befba088c42e1616c072ba728a022373ef0e7d679ea0b931aaf95",
+        "read-inherited-3.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-3.json": "4e6cf549a7691a7db60add35e66e69167302ab96b4ca4f6e25f38aa317e2ff8a",
+        "read-inherited-4.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-4.json": "968acd67cc1ff92b3a874008d5b753e963bf1c83412120554c879526eb8bc6bd",
+        "read-inherited-5.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-5.json": "902aa2693b649665b5ce538ad9345b6ab13e909028c3acfaa232b89f4aca8c20",
+        "read-inherited-6.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-6.json": "e227bab97a971025d268466eef73de938ecd34dd12715f6f899e344aab73139e",
+        "read-inherited-7.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-7.json": "093d6e38693a6ee67bab82ac25b0275df607d5e5032d9c9e7543db87b441a1da"
+      }
+    },
+    "compact-short": {
+      "original_known_file_pieces": [
+        1
+      ],
+      "original_sha256": {
+        "layout.config": "7726f37eae4e3db7e8cfbbef83b93c085403cec4213ee70cfcb4709e9f7a3733",
+        "logical.bin": "aa628a40702b482f880677ce1a88c3c722ffacba11381101257da7eaccc8a5d7",
+        "payload.bin.az!": "aa628a40702b482f880677ce1a88c3c722ffacba11381101257da7eaccc8a5d7",
+        "present.bin": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a"
+      },
+      "native_read_sha256": {
+        "native-read.tsv": "2a7bad4c37fb732face7ad0af0dec7d4be33596f5f5614f9ba7bf93b451a6638",
+        "read-inherited-0.bin": "aa628a40702b482f880677ce1a88c3c722ffacba11381101257da7eaccc8a5d7",
+        "read-inherited-0.json": "dfbc1313b3498c03f666af7cbb587f251626c136e0c651b3a7e7cbfaeedaf4f0"
+      }
+    },
+    "compact-unaligned": {
+      "original_known_file_pieces": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ],
+      "original_sha256": {
+        "control/fmfile1.dat": "f13c6bccd083cc8cfad8b24d0cda23872239cfe3d4cada78e9698d272f275b0d",
+        "layout.config": "face0a8725d18be167885f14e3fbd98f133934154437a2e757ed2fea3f32cb8b",
+        "logical.bin": "39f4b6d06b1c1aec1e93149e4e36b279a7617c9ac2c40fc9ce4b5270bd9b671a",
+        "payload.bin.az!": "93426255ab9766e0785c6859450b32786a39dd76a49b25e737498ee83a8e0dd9",
+        "present.bin": "9a82af456b20161225dfade094c2bfb765df8336d8e0fe8a0e90134babaa9c02"
+      },
+      "native_read_sha256": {
+        "native-read.tsv": "c3b74a30b9717892468faf3cb98f28bfe925e0517bf3a67076d352905ca03e9b",
+        "read-inherited-0.bin": "cb637fc125feb6ea9e50ad1d03b2f86419322fbd90d33bbf98e347606e61b7e6",
+        "read-inherited-0.json": "5694b0d12456e7af84a7829e7befeffb78bbb2b4ee878dfff6666ad7fee47cb5",
+        "read-inherited-1.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-1.json": "53b396f9ebc8ad6a8a3fb9e625e7c8387691ea68ce48e3bf51cd602e387628e8",
+        "read-inherited-2.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-2.json": "0dc17ac2f08caebe1d9c659ea5f06610f5e62d3676f9e1cd2f45ea4b45967846",
+        "read-inherited-3.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-3.json": "d12053262b02dcb421d0a324126491d08b7d3111538cc93365c96558af2fb780",
+        "read-inherited-4.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-4.json": "18da3ce970acd6c9ece1e6b438eb1a39e47f302cbd0365e0f4bf36fa32158d4a",
+        "read-inherited-5.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-5.json": "16c4b6df2bbd8da94331df0491d74820bc977112acec9fa400dd94b5ce98e2be",
+        "read-inherited-6.bin": "4e2aaddf1ceaf4947c9a42c127221420d7116177a11c112c7cac75eb12a8ec86",
+        "read-inherited-6.json": "d3ba926fd88136541e22a072a71abf027e93df37c44c29d4a4f19fcc56f9cbf8"
+      }
+    },
+    "reordered": {
+      "original_known_file_pieces": [
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "original_sha256": {
+        "control/fmfile1.dat.2": "c5a54a6d60892aaef4eb025d7fbce174c2ea597c42d2fd7f43678224e20935c1",
+        "layout.config": "fe7a74436f3409eb7b3754812248e86f2d2719194be49d52ef5b23787efc9720",
+        "logical.bin": "4671c93ff398b8620b8cee7fe6d122777f62c0e47d6da80e664a047dd3170aeb",
+        "payload.bin.az!": "4c8ed5ebde9239630c1e57c73b1d5e1765f10beb243a98105cb5925018cce955",
+        "present.bin": "5de162236d6e77211f42564c57d027b9d203da62bd0a0b5b5b490c00e5a5d4cc"
+      },
+      "native_read_sha256": {
+        "native-read.tsv": "16ce876baedc58a17b6c5b0001c111f2b277f10eb331cf456f9f4baa0dd36e78",
+        "read-inherited-0.bin": "cb637fc125feb6ea9e50ad1d03b2f86419322fbd90d33bbf98e347606e61b7e6",
+        "read-inherited-0.json": "5694b0d12456e7af84a7829e7befeffb78bbb2b4ee878dfff6666ad7fee47cb5",
+        "read-inherited-1.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-1.json": "53b396f9ebc8ad6a8a3fb9e625e7c8387691ea68ce48e3bf51cd602e387628e8",
+        "read-inherited-2.bin": "6b5423b404963481313044557ddbb91b17d159ce81223a9d23e8f1417a9468a0",
+        "read-inherited-2.json": "5c511c412115402e5e4fdd3865c1052258f95d97588ac3c4d001cead7fe5fa78",
+        "read-inherited-3.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-3.json": "d12053262b02dcb421d0a324126491d08b7d3111538cc93365c96558af2fb780",
+        "read-inherited-4.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-4.json": "18da3ce970acd6c9ece1e6b438eb1a39e47f302cbd0365e0f4bf36fa32158d4a",
+        "read-inherited-5.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-5.json": "16c4b6df2bbd8da94331df0491d74820bc977112acec9fa400dd94b5ce98e2be",
+        "read-inherited-6.bin": "4e2aaddf1ceaf4947c9a42c127221420d7116177a11c112c7cac75eb12a8ec86",
+        "read-inherited-6.json": "d3ba926fd88136541e22a072a71abf027e93df37c44c29d4a4f19fcc56f9cbf8"
+      }
+    },
+    "reordered-boundary": {
+      "original_known_file_pieces": [
+        1,
+        0,
+        1,
+        1
+      ],
+      "original_sha256": {
+        "control/fmfile1.dat.2": "a717cd03813e99345e5862e367376e8c7bc2254cd48ac273e6f1c0cd80ca9195",
+        "layout.config": "9f22fa76c586aafebea0635b14919fe2aa4dac817da22326e5b8b10d7de82715",
+        "logical.bin": "8df6d785347ff9253e0daae84ec945f0295c6e48729d24e542857954f1a3ccf0",
+        "payload.bin.az!": "5ffb93ffac10c3b6357f4eb649d82e580ee42f46b5c2d6e77d9c3c16304a5135",
+        "present.bin": "52a5c4a10657220cac05c63adfa923c7771c55d868a58ee360eb3d1511985c3e"
+      },
+      "native_read_sha256": {
+        "native-read.tsv": "ae3488363f6c78f40b70cac98583055786f110695ea18f2e6d8e05519311503e",
+        "read-inherited-0.bin": "9a56930e20664ad6e1c88f985f6ce4cf008b02f0f5e355f6ca8a1bf253faa1fb",
+        "read-inherited-0.json": "e325bdc4bbe022e8d5e7bf48e272caee4aced13cbf1accb220ec7046b8186e0a",
+        "read-inherited-1.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-1.json": "8af772e7d9eb059258320be44c17c5777aa6bf3180401485df88b99a8f4906dc",
+        "read-inherited-2.bin": "88a14a7d64aa576511d7cc2326a99831c05c5f848431896f0ca558b0b8600e87",
+        "read-inherited-2.json": "867a0a4fecc65e182f462dc47f193f798151518e475aad4a1b264da4fd4f6370",
+        "read-inherited-3.bin": "8f79ba694f332b0e95d5edd397ac5aee5714cb41eb1308babe17a08fb498ea74",
+        "read-inherited-3.json": "e325bdc4bbe022e8d5e7bf48e272caee4aced13cbf1accb220ec7046b8186e0a"
+      }
+    },
+    "reordered-compact": {
+      "original_known_file_pieces": [
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        1
+      ],
+      "original_sha256": {
+        "control/fmfile1.dat.2": "e090fed11e637045ab498b23018993a7b6a8d844529538a749c25ca00a652d82",
+        "layout.config": "87634f147253d64879559963db635d439b634dacf6c6e975af0ea32d306daa01",
+        "logical.bin": "4671c93ff398b8620b8cee7fe6d122777f62c0e47d6da80e664a047dd3170aeb",
+        "payload.bin.az!": "4c8ed5ebde9239630c1e57c73b1d5e1765f10beb243a98105cb5925018cce955",
+        "present.bin": "5de162236d6e77211f42564c57d027b9d203da62bd0a0b5b5b490c00e5a5d4cc"
+      },
+      "native_read_sha256": {
+        "native-read.tsv": "6f92dfb033c14ce3865a85d25f5f71b5d2ad56b6654f1cd4b0edfe61978a2861",
+        "read-inherited-0.bin": "cb637fc125feb6ea9e50ad1d03b2f86419322fbd90d33bbf98e347606e61b7e6",
+        "read-inherited-0.json": "5694b0d12456e7af84a7829e7befeffb78bbb2b4ee878dfff6666ad7fee47cb5",
+        "read-inherited-1.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-1.json": "53b396f9ebc8ad6a8a3fb9e625e7c8387691ea68ce48e3bf51cd602e387628e8",
+        "read-inherited-2.bin": "6b5423b404963481313044557ddbb91b17d159ce81223a9d23e8f1417a9468a0",
+        "read-inherited-2.json": "5c511c412115402e5e4fdd3865c1052258f95d97588ac3c4d001cead7fe5fa78",
+        "read-inherited-3.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-3.json": "d12053262b02dcb421d0a324126491d08b7d3111538cc93365c96558af2fb780",
+        "read-inherited-4.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-4.json": "18da3ce970acd6c9ece1e6b438eb1a39e47f302cbd0365e0f4bf36fa32158d4a",
+        "read-inherited-5.bin": "4fe7b59af6de3b665b67788cc2f99892ab827efae3a467342b3bb4e3bc8e5bfe",
+        "read-inherited-5.json": "16c4b6df2bbd8da94331df0491d74820bc977112acec9fa400dd94b5ce98e2be",
+        "read-inherited-6.bin": "4e2aaddf1ceaf4947c9a42c127221420d7116177a11c112c7cac75eb12a8ec86",
+        "read-inherited-6.json": "d3ba926fd88136541e22a072a71abf027e93df37c44c29d4a4f19fcc56f9cbf8"
+      }
+    },
+    "reordered-short": {
+      "original_known_file_pieces": [
+        1,
+        1
+      ],
+      "original_sha256": {
+        "control/fmfile1.dat.2": "3288b9d6f2a8aadbdc748b78fa20c83f3fcfbe9eaa66b4398610f84f412a8876",
+        "layout.config": "21d7bdd12d4db592df78894830777a25044058b1b35fb6b9e0e1a3af5b63c0d6",
+        "logical.bin": "73e2b384badbd976e9ee8f577296ff648a73cd05be8721aa2ad2e73388632e48",
+        "payload.bin.az!": "73e2b384badbd976e9ee8f577296ff648a73cd05be8721aa2ad2e73388632e48",
+        "present.bin": "9dcf97a184f32623d11a73124ceb99a5709b083721e878a16d78f596718ba7b2"
+      },
+      "native_read_sha256": {
+        "native-read.tsv": "12cb7fb323d07e752057ecbad5b3adb0eade536a93187a9d8b1f4bce4c6fcf10",
+        "read-inherited-0.bin": "cba885711a992798f96725ade76a82e872acc7b064b2434247092d7618962da0",
+        "read-inherited-0.json": "381b628d8f6cb0de97306f576b389bdd2d97cd6c8b4eb99f41e33ecd1b03d7d0",
+        "read-inherited-1.bin": "1c9bafbdf7ffdb1ba17e93f9a844bb07eaf6446f272bbbb516081d6fd381d82c",
+        "read-inherited-1.json": "381b628d8f6cb0de97306f576b389bdd2d97cd6c8b4eb99f41e33ecd1b03d7d0"
+      }
+    }
+  },
+  "authored_class_sha256": {
+    "EngineOracle$1.class": "79d627c4854e87732f3b9b1d6e5014e4a51cb9bfbbd1b46abb79cd5b00f818a7",
+    "EngineOracle.class": "e910d5f9cf835560fe2059ab564172e65e0492af9a25bd7b4e2d6406809a4617",
+    "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd",
+    "StorageOracle$1.class": "f3c8fde4f731edd1f3925039f401ae1ca6b0a620bf5fa3312cd43ed4dc9b4705",
+    "StorageOracle.class": "f36f8501fd905640b177f1b310886cd67ca92860e6c45028d545192335d268e9",
+    "StorageProfileOracle$1.class": "b9288360ae41b97c831b71824e66b301259c44166d5e35f85e0a65ff705c1525",
+    "StorageProfileOracle$2.class": "d2f319bac25b5f32332c890001db3db3cc04e673a53bb67aac6356211a948916",
+    "StorageProfileOracle.class": "d27c1e2b59fe0252b9bd674dbe53b51a209db04d487593b80647bb2a6b1bf16a",
+    "StorageScriptOracle$1.class": "3dd24591c9e12cddaa06e5b1a69ca1aa9375143d39c9f0e3c12a7ba76b9aff08",
+    "StorageScriptOracle.class": "453e0bc949cbbf4fa2e46e83945fa19028403bd02e239cb5bdba2967871c15eb"
+  },
+  "commands": [
+    {
+      "name": "compile-fixture-helpers",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+        "-J-XX:ActiveProcessorCount=2",
+        "--release",
+        "8",
+        "-encoding",
+        "UTF-8",
+        "-proc:none",
+        "-implicit:none",
+        "-sourcepath",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/empty-sourcepath",
+        "-cp",
+        "/tmp/biglybtc-oracle/classes",
+        "-d",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/classes",
+        "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java",
+        "/home/yurii/Java/BiglyBT/migration/fixtures/java/EngineOracle.java",
+        "/home/yurii/Java/BiglyBT/migration/fixtures/java/StorageOracle.java",
+        "/home/yurii/Java/BiglyBT/build/storage-20261025/oracle/StorageScriptOracle.java",
+        "/home/yurii/Java/BiglyBT/build/storage-20261025/oracle/StorageProfileOracle.java"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "timeout": 60
+    },
+    {
+      "name": "inherited-seven-layouts",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original",
+        "-Dbiglybtc.test.ports=",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/tmp",
+        "-Duser.home=/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/prefs",
+        "-cp",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/classes:/tmp/biglybtc-oracle/classes",
+        "StorageOracle",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original",
+      "timeout": 150
+    },
+    {
+      "name": "inherited-compact-aligned-native",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/compact-aligned",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/compact-aligned/native-read.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "timeout": 30
+    },
+    {
+      "name": "inherited-compact-short-native",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/compact-short",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/compact-short/native-read.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "timeout": 30
+    },
+    {
+      "name": "inherited-compact-unaligned-native",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/compact-unaligned",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/compact-unaligned/native-read.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "timeout": 30
+    },
+    {
+      "name": "inherited-reordered-native",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/reordered",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/reordered/native-read.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "timeout": 30
+    },
+    {
+      "name": "inherited-reordered-boundary-native",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/reordered-boundary",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/reordered-boundary/native-read.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "timeout": 30
+    },
+    {
+      "name": "inherited-reordered-compact-native",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/reordered-compact",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/reordered-compact/native-read.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "timeout": 30
+    },
+    {
+      "name": "inherited-reordered-short-native",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/reordered-short",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/reordered-short/native-read.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "timeout": 30
+    },
+    {
+      "name": "codec-2-original",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-codec-r9",
+        "-Dbiglybtc.test.ports=",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-codec-r9/tmp",
+        "-Duser.home=/tmp/biglybtc-managed-handoff-storage-codec-r9/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-codec-r9/prefs",
+        "-cp",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/classes:/tmp/biglybtc-oracle/classes",
+        "StorageScriptOracle",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2/original",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2/original/request.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "timeout": 150
+    },
+    {
+      "name": "codec-2-native",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2/native",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2/native/request.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2",
+      "timeout": 30
+    },
+    {
+      "name": "codec-2-native-reads-java",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2/original",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2/original/native-read.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2",
+      "timeout": 30
+    },
+    {
+      "name": "codec-2-java-reads-native",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-codec-r9",
+        "-Dbiglybtc.test.ports=",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-codec-r9/tmp",
+        "-Duser.home=/tmp/biglybtc-managed-handoff-storage-codec-r9/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-codec-r9/prefs",
+        "-cp",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/classes:/tmp/biglybtc-oracle/classes",
+        "StorageScriptOracle",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2/native",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2/native/java-read.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "timeout": 150
+    },
+    {
+      "name": "codec-3-original",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-codec-r9",
+        "-Dbiglybtc.test.ports=",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-codec-r9/tmp",
+        "-Duser.home=/tmp/biglybtc-managed-handoff-storage-codec-r9/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-codec-r9/prefs",
+        "-cp",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/classes:/tmp/biglybtc-oracle/classes",
+        "StorageScriptOracle",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3/original",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3/original/request.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "timeout": 150
+    },
+    {
+      "name": "codec-3-native",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3/native",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3/native/request.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3",
+      "timeout": 30
+    },
+    {
+      "name": "codec-3-native-reads-java",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3/original",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3/original/native-read.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3",
+      "timeout": 30
+    },
+    {
+      "name": "codec-3-java-reads-native",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-codec-r9",
+        "-Dbiglybtc.test.ports=",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-codec-r9/tmp",
+        "-Duser.home=/tmp/biglybtc-managed-handoff-storage-codec-r9/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-codec-r9/prefs",
+        "-cp",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/classes:/tmp/biglybtc-oracle/classes",
+        "StorageScriptOracle",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3/native",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3/native/java-read.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "timeout": 150
+    },
+    {
+      "name": "codec-4-original",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-codec-r9",
+        "-Dbiglybtc.test.ports=",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-codec-r9/tmp",
+        "-Duser.home=/tmp/biglybtc-managed-handoff-storage-codec-r9/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-codec-r9/prefs",
+        "-cp",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/classes:/tmp/biglybtc-oracle/classes",
+        "StorageScriptOracle",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4/original",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4/original/request.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "timeout": 150
+    },
+    {
+      "name": "codec-4-native",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4/native",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4/native/request.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4",
+      "timeout": 30
+    },
+    {
+      "name": "codec-4-native-reads-java",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4/original",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4/original/native-read.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4",
+      "timeout": 30
+    },
+    {
+      "name": "codec-4-java-reads-native",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-codec-r9",
+        "-Dbiglybtc.test.ports=",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-codec-r9/tmp",
+        "-Duser.home=/tmp/biglybtc-managed-handoff-storage-codec-r9/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-codec-r9/prefs",
+        "-cp",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/classes:/tmp/biglybtc-oracle/classes",
+        "StorageScriptOracle",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4/native",
+        "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4/native/java-read.tsv"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "timeout": 150
+    }
+  ],
+  "logs_sha256": {
+    "codec-2-java-reads-native.stderr": "b3f74eebec44abb76afe2fb48075e2364868bd2109cf18b7a765323420a5701a",
+    "codec-2-java-reads-native.stdout": "1f836718b5fd3d6e0507d1660ee79680e67db074f0fd40e39475b0de148b2eb6",
+    "codec-2-native-reads-java.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "codec-2-native-reads-java.stdout": "4bc019628ab310e095c56d49ab50e3efbfd2f32032eed33d8892392c8e386591",
+    "codec-2-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "codec-2-native.stdout": "1c59ddfd3d5154872ec899eb0682fd3021a47ce1ab99bbaec5a69e5c632917cb",
+    "codec-2-original.stderr": "17dc4c0642b70941f994b5d99db26b5449d1b3562581a1acf0397b823ece7d8d",
+    "codec-2-original.stdout": "a0120f35a3833132da3779a3d365b33732202b36f18320e309b7fff26cb47c72",
+    "codec-3-java-reads-native.stderr": "b41a18a66bce1270af31a959a521df881f84eb61400c59bd75a1c7e7ae43e765",
+    "codec-3-java-reads-native.stdout": "066aa7dbee8f950eaf5ff79fc3c623beb98260f99a7cf1d3277e42cf7dda3791",
+    "codec-3-native-reads-java.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "codec-3-native-reads-java.stdout": "6ab758cb27d3cca4bda96bd164d7518c592dc307181abe71810c2421bcf824ba",
+    "codec-3-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "codec-3-native.stdout": "c3bab0fefc9c7a777ec477b218ef353b06c91291d2982f2b73d5b4e4c1198641",
+    "codec-3-original.stderr": "b3f74eebec44abb76afe2fb48075e2364868bd2109cf18b7a765323420a5701a",
+    "codec-3-original.stdout": "acfd4d80ac3b958b4cb7b4affa15bf9fd51506dc63230f06c71b7705e443bab2",
+    "codec-4-java-reads-native.stderr": "0e1798412173f92632207e547988f9c7582012f3ab5dcf47eae499371fdb474d",
+    "codec-4-java-reads-native.stdout": "35d2ebd7341f62bd996099aa12592f35925922229b999b32e55b55b7612a8726",
+    "codec-4-native-reads-java.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "codec-4-native-reads-java.stdout": "6ab758cb27d3cca4bda96bd164d7518c592dc307181abe71810c2421bcf824ba",
+    "codec-4-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "codec-4-native.stdout": "c3bab0fefc9c7a777ec477b218ef353b06c91291d2982f2b73d5b4e4c1198641",
+    "codec-4-original.stderr": "379ed664c7fb27a397f5a97fbef7dae44f94b0c23abd679b61870d733f6097c0",
+    "codec-4-original.stdout": "9388761fef403edd9b51bd218efa1e2386fb4603a785e57f4a9fdbaacfa8083e",
+    "compile-fixture-helpers.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "compile-fixture-helpers.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "inherited-compact-aligned-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "inherited-compact-aligned-native.stdout": "7509fee6a3c3c5e6ebb74f6c8edee7164dff5423c0e765b9e6a81ef9232f7bcd",
+    "inherited-compact-short-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "inherited-compact-short-native.stdout": "86193c386af68775ad49dcc19550d32ead962d68f6bc14018cc450ed3d2c0c72",
+    "inherited-compact-unaligned-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "inherited-compact-unaligned-native.stdout": "c7523af888f92595bf23fb327ca6b9429a80d26c58e920c19f6b8bda1f764730",
+    "inherited-reordered-boundary-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "inherited-reordered-boundary-native.stdout": "b9a18a0fd22b6febfd38ff384ea6fe645161aff107fa8e71f347f1c68154f109",
+    "inherited-reordered-compact-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "inherited-reordered-compact-native.stdout": "09f6a9917d69e40b9af75bb9a35d7336773be843d139aa35f79109d406f21552",
+    "inherited-reordered-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "inherited-reordered-native.stdout": "09f6a9917d69e40b9af75bb9a35d7336773be843d139aa35f79109d406f21552",
+    "inherited-reordered-short-native.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "inherited-reordered-short-native.stdout": "31089e4a1c4acd5a3a74072833cea9012ec817a26ad681d33bcf6a3f2c9ad280",
+    "inherited-seven-layouts.stderr": "a0ecdff8d145419977d07c2d3d9a716a187ea585a32b89b6aa29f0d5f70042e3",
+    "inherited-seven-layouts.stdout": "8541784e9c86e8b0f4925ce2d5202b26f2ac6485aa449ed4d4d9abf614a098d3"
+  },
+  "scope": "Generated accepted-domain FMFile and actual v1 managed profile handoffs; missing bytes remain unverified",
+  "limitations": [
+    "No original core rebuild, real profile, public network, power-loss, arbitrary-format or whole-client claim"
+  ]
+}

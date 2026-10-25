@@ -1,0 +1,25 @@
+OPEN	4	3072	103304	16384
+WRITE	0	fragment-0.bin
+WRITE	95232	fragment-6.bin
+WRITE	29696	fragment-2.bin
+LENGTH	103304
+READ	13312	16384	missing-one
+WRITE	13312	fragment-1.bin
+COMPLETE	1	fragment-1.bin
+FLUSH
+CLOSE
+REOPEN
+READ	0	13312	first
+READ	95232	8072	last
+READ	13312	16384	one
+READ	29696	16384	two
+WRITE	46080	fragment-3.bin
+WRITE	62464	fragment-4.bin
+WRITE	78848	fragment-5.bin
+COMPLETE	5	fragment-5.bin
+FLUSH
+CLOSE
+REOPEN
+READ	0	103304	whole
+FLUSH
+CLOSE

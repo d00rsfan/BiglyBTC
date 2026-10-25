@@ -1,0 +1,8 @@
+build/storage-20261025/oracle/StorageScriptOracle.java:74: error: incompatible types: byte[] cannot be converted to TorrentDataHolder
+        metadata = TOTorrentFactory.deserialiseFromBEncodedByteArray(BEncoder.encode(torrent)).getFiles()[1];
+                                                                                    ^
+build/storage-20261025/oracle/StorageProfileOracle.java:61: error: incompatible types: byte[] cannot be converted to TorrentDataHolder
+        TOTorrent result = TOTorrentFactory.deserialiseFromBEncodedByteArray(BEncoder.encode(torrent));
+                                                                                            ^
+Note: Some messages have been simplified; recompile with -Xdiags:verbose to get full output
+2 errors

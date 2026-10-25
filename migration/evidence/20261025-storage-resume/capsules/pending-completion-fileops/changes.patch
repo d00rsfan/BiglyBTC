@@ -1,0 +1,138 @@
+--- a/preview/native/adapters/file_operations.cpp
++++ b/preview/native/adapters/file_operations.cpp
+@@ -54,6 +54,7 @@
+   std::uint64_t profileDevice=0,profileInode=0,targetDevice=0,targetInode=0;
+   std::vector<Payload> files;
+   std::vector<Control> controls;
++  std::vector<OriginalFileGeometry> controlGeometry;
+   std::vector<Edit> edits;
+   std::string scopeSelection;
+   bool attempted=false,journalCreated=false;
+@@ -109,8 +110,38 @@
+   for(std::size_t i=0;i<count;++i){for(const auto kind:{OriginalStorageKind::Compact,OriginalStorageKind::Reordered}){const auto path=parent/originalControlLeaf(i,kind);paths.push_back(path);paths.emplace_back(path.string()+".bak");}}
+   return paths;
+ }
++enum class CompletionRecord { None, Cleared, Pending, Malformed };
++CompletionRecord completionRecord(const std::optional<std::string>& raw){
++  if(!raw){return CompletionRecord::None;}constexpr std::string_view key="BiglyBTC.reorderedCompletion";
++  const auto d=core::Document::parse(*raw,limits(MaximumDocument));
++  if(!d||d->root().type!=Node::Type::Dictionary){return raw->find(key)==std::string::npos?CompletionRecord::None:CompletionRecord::Malformed;}
++  const Node* record=nullptr;for(std::size_t i=0;i<d->root().children.size();i+=2){if(d->root().children[i].bytes==key){if(record){return CompletionRecord::Malformed;}record=&d->root().children[i+1];}}
++  if(!record){return CompletionRecord::None;}if(record->type!=Node::Type::Dictionary){return CompletionRecord::Malformed;}
++  return record->children.empty()?CompletionRecord::Cleared:CompletionRecord::Pending;
++}
++void validateCompletionControls(const std::vector<Control>& controls,std::span<const OriginalFileGeometry> geometry){
++  if(controls.empty()){return;}require(controls.size()==geometry.size()*4,ErrorCode::InvalidFormat,"Original control geometry inventory differs");
++  for(std::size_t i=0;i<geometry.size();++i){for(std::size_t family=0;family<2;++family){const auto& primary=controls[i*4+family*2];const auto& backup=controls[i*4+family*2+1];
++    const auto a=completionRecord(primary.before.bytes),b=completionRecord(backup.before.bytes);
++    require(a!=CompletionRecord::Pending&&a!=CompletionRecord::Malformed,ErrorCode::Conflict,"Pending or malformed reordered completion must settle before file operation");
++    if(b==CompletionRecord::Pending||b==CompletionRecord::Malformed){const auto kind=family?OriginalStorageKind::Reordered:OriginalStorageKind::Compact;
++      require(primary.before.bytes&&OriginalFileIo::validateControl(geometry[i],kind,*primary.before.bytes).has_value(),ErrorCode::Conflict,"Authoritative backup reordered completion must settle before file operation");}
++  }}
++}
++void captureControlGeometry(Plan& p,const compat::OriginalLayout& layout){
++  for(const auto& file:layout.files){require(layout.pieceLength>0&&layout.pieceLength<=UINT32_MAX&&file.offset>=0&&file.bytes>=0,ErrorCode::InvalidFormat,"Invalid control geometry");p.controlGeometry.push_back({static_cast<std::uint64_t>(file.offset),static_cast<std::uint64_t>(file.bytes),static_cast<std::uint32_t>(layout.pieceLength)});}
++}
+ void checkControls(const Plan& p,bool recovering=false){
+-  for(const auto& c:p.controls){require(!inspect(fs::path(c.path.string()+".saving")),ErrorCode::Conflict,"Original control recovery is pending");const auto now=read(c.path,MaximumDocument);if(recovering&&p.preview.kind!=FileOperationKind::Relocate&&p.preview.kind!=FileOperationKind::Relink&&!now.bytes){continue;}require(now.bytes==c.before.bytes&&(!c.before.stamp||(now.stamp&&unchanged(*now.stamp,*c.before.stamp))),ErrorCode::Conflict,"Original control file changed after preparation");}
++  validateCompletionControls(p.controls,p.controlGeometry);std::vector<Control> current;current.reserve(p.controls.size());
++  for(const auto& c:p.controls){require(!inspect(fs::path(c.path.string()+".saving")),ErrorCode::Conflict,"Original control recovery is pending");auto now=read(c.path,MaximumDocument);
++    // An authenticated removal journal can already have removed its primary.
++    // Its accepted cleared beforeimage remains the authority for stale backup
++    // cleanup; move/relink never receive this exception.
++    if(recovering&&p.preview.kind!=FileOperationKind::Relocate&&p.preview.kind!=FileOperationKind::Relink&&!now.bytes){current.push_back(c);continue;}
++    current.push_back({c.path,std::move(now)});
++  }
++  validateCompletionControls(current,p.controlGeometry);
++  for(std::size_t i=0;i<current.size();++i){const auto& now=current[i].before;const auto& expected=p.controls[i].before;require(now.bytes==expected.bytes&&(!expected.stamp||(now.stamp&&unchanged(*now.stamp,*expected.stamp))),ErrorCode::Conflict,"Original control file changed after preparation");}
+ }
+ void payloadPath(const fs::path& path,const fs::path& profile){
+   pathShape(path);require(!intersects(path,profile),ErrorCode::UnsafePath,"Payload link overlaps the held profile");for(const auto& part:path){require(part!=".git"&&!part.native().starts_with(".BiglyBTC."),ErrorCode::UnsafePath,"Payload link overlaps a reserved control path");}
+@@ -255,6 +286,7 @@
+   p.edits.push_back({p.profile/"downloads.config",inventoryRaw,inventory.serialize(),FileOperationStage::InventoryPublished});
+   if(!moving(request.kind)){p.edits.push_back({statePath,stateRaw,std::nullopt,FileOperationStage::StateRemoved});const auto backup=fs::path(statePath.string()+".bak");auto raw=read(backup,MaximumDocument);if(raw.bytes){p.edits.push_back({backup,std::move(raw),std::nullopt,FileOperationStage::StateRemoved});}}
+   for(const auto& path:controlPaths(p.profile,request.hash,layout->files.size())){require(!inspect(fs::path(path.string()+".saving")),ErrorCode::Conflict,"Original control recovery is pending");p.controls.push_back({path,read(path,MaximumDocument)});}
++  captureControlGeometry(p,*layout);validateCompletionControls(p.controls,p.controlGeometry);
+   auto checkedDefaults=resolveOriginalStorageTypes(lease,request.hash,*layout,originalAttributes.root());require(checkedDefaults&&*checkedDefaults==*defaults,ErrorCode::Conflict,"Storage controls/defaults changed during file-operation preparation");
+   auto checkedRoot=resolveOriginalSaveRoot(rawSaved,*layout);require(checkedRoot&&checkedRoot->saveDirectory==saved->saveDirectory&&checkedRoot->saveFile==saved->saveFile,ErrorCode::Conflict,"Original root changed during file-operation preparation");
+   const auto material=canonical(p,true);p.preview.approvalScopeDigest=digest(material);p.preview.executionCasDigest=digest(canonical(p,false));
+@@ -346,6 +378,7 @@
+   if(p.preview.kind==FileOperationKind::RemoveDeleteData){if(const auto* flags=attrs.find("flags")){require(flags->type==Node::Type::Integer&&(flags->integer&0x40)==0,ErrorCode::Unsupported,"Original flags prohibit payload deletion");}}
+   for(const auto& f:p.files){require(f.view.index<layout->files.size()&&!layout->files[f.view.index].padding&&f.view.logicalBytes==layout->files[f.view.index].bytes,ErrorCode::InvalidFormat,"Recovery file geometry changed");payloadPath(f.view.source,p.profile);const auto expected=map[f.view.index];const auto base=fs::path(selected->saveDirectory)/(layout->multifile?fs::path(*selected->saveFile)/layout->files[f.view.index].path:fs::path(*selected->saveFile));require(f.view.source==expected||(expected==base&&!suffix.empty()&&f.view.source==fs::path(base.string()+suffix)),ErrorCode::UnsafePath,"Recovery source differs from original file mapping");if(moving(p.preview.kind)){require(f.view.destination==relocatedPath(*selected,*layout,f.view.index,f.view.source,p.destinationParent,suffix),ErrorCode::UnsafePath,"Recovery destination differs from approved mapping");}}
+   if(!p.controls.empty()){const auto expected=controlPaths(p.profile,p.preview.hash,layout->files.size());require(expected.size()==p.controls.size(),ErrorCode::InvalidFormat,"Recovery control inventory changed");for(std::size_t i=0;i<expected.size();++i){require(expected[i]==p.controls[i].path,ErrorCode::UnsafePath,"Recovery control is not an exact original indexed state leaf");}}else{for(std::size_t i=0;i<layout->files.size();++i){require(storageKind(attrs.root(),i,layout->files.size())==OriginalStorageKind::Linear,ErrorCode::InvalidFormat,"Legacy journal cannot omit nonlinear control inventory");}}
++  captureControlGeometry(p,*layout);validateCompletionControls(p.controls,p.controlGeometry);
+   for(const auto& f:p.files){const auto maximum=physicalMaximum(*layout,attrs.root(),f.view.index);if(f.source){ownedPayload(*f.source,maximum);}if(f.destination){ownedPayload(*f.destination,maximum);}}
+   p.journalCreated=true;return p;
+ }
+--- a/preview/native/adapters/original_file_io.cpp
++++ b/preview/native/adapters/original_file_io.cpp
+@@ -141,6 +141,17 @@
+ };
+ std::expected<std::uint64_t,Error> originalMaximumPhysicalSize(OriginalFileGeometry g,OriginalStorageKind k){return guarded([&]()->std::expected<std::uint64_t,Error>{return shape(g,k).maximum;});}
+ std::string originalControlLeaf(std::size_t index,OriginalStorageKind k){if(k==Kind::Linear){return {};}return "fmfile"+std::to_string(index)+".dat"+(k==Kind::Reordered||k==Kind::ReorderedCompact?".2":"");}
++std::expected<void,Error> OriginalFileIo::validateControl(OriginalFileGeometry g,Kind k,std::string_view raw){return guarded([&]()->std::expected<void,Error>{
++  require(k!=Kind::Linear&&raw.size()<=MaxControl,ErrorCode::InvalidFormat,"Invalid original control validation input");
++  const auto form=shape(g,k);Impl candidate(-1,g,k,form,std::nullopt,{});const std::string bytes(raw);(void)candidate.decode(bytes);
++  // Optimized short layouts do not consume a map in open(), but a selected
++  // control still needs its source-required envelope before it can supersede
++  // a backup containing native recovery state. No second map decoder.
++  if(!form.compact&&!form.reordered){const auto d=parse(bytes);
++    if(k==Kind::Compact){const auto n=integer(d,"length");require(integer(d,"version")==0&&n>=0&&static_cast<std::uint64_t>(n)<=g.fileBytes,ErrorCode::InvalidFormat,"Invalid short compact control");}
++    else{const auto n=integer(d,"len"),next=integer(d,"next");const auto* pieces=d.find("pieces"),*st=d.find("st");require(n>=0&&static_cast<std::uint64_t>(n)<=g.fileBytes&&next>=1&&static_cast<std::uint64_t>(next)<=form.count&&pieces&&pieces->type==core::Node::Type::Bytes&&pieces->bytes.size()==form.count*4&&(!st||(st->type==core::Node::Type::Integer&&(st->integer==3||st->integer==4))),ErrorCode::InvalidFormat,"Invalid short reordered control");}
++  }return {};
++});}
+ OriginalFileIo::OriginalFileIo(std::unique_ptr<Impl> p):impl_(std::move(p)){}
+ OriginalFileIo::OriginalFileIo(OriginalFileIo&&)noexcept=default;
+ OriginalFileIo& OriginalFileIo::operator=(OriginalFileIo&&)noexcept=default;
+--- a/preview/native/adapters/original_file_io.hpp
++++ b/preview/native/adapters/original_file_io.hpp
+@@ -5,6 +5,7 @@
+ #include <functional>
+ #include <memory>
+ #include <span>
++#include <string_view>
+ #include <vector>
+ namespace biglybtc::storage {
+ enum class OriginalStorageKind { Linear=1, Compact=2, Reordered=3, ReorderedCompact=4 };
+@@ -25,6 +26,11 @@
+ std::string originalControlLeaf(std::size_t fileIndex,OriginalStorageKind);
+ class OriginalFileIo final {
+ public:
++  // Pure control validation through the same geometry/map decoder as open().
++  // No descriptors, recovery, publication or payload access.
++  static std::expected<void,Error> validateControl(OriginalFileGeometry,
++      OriginalStorageKind,std::string_view);
++
+   // Borrowed authenticated owned regular descriptor; exclusive serialized use.
+   // Caller retains descriptor/publisher lifetime and path/inode authorization.
+   // authenticatedLinks=2 requires caller-proven exact journal aliases; default1.
+--- a/preview/native/tests/file_operations_tests.cpp
++++ b/preview/native/tests/file_operations_tests.cpp
+@@ -180,10 +180,26 @@
+   {Fixture f;auto row=doc(f.selected.row);std::string legacy="d";for(std::size_t i=0;i<row.root().children.size();i+=2){const auto& key=row.root().children[i];if(key.bytes=="save_dir"||key.bytes=="save_file"){continue;}legacy+=*core::encodeValue(key)+*core::encodeValue(row.root().children[i+1]);}legacy+=b("save_dir")+b(f.source.string())+'e';write(f.profile/"downloads.config","d"+b("old")+legacy+b("opaque")+b("raw")+'e');auto p=f.plan(st::FileOperationKind::RemoveKeepData);const auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false));take(st::applyFileOperation(f.lease,std::move(p),c));auto after=doc(read(f.profile/"downloads.config"));check(!after.find("old")&&after.find("opaque")->bytes=="raw"&&read(f.selected.files[0])=="hello","legacy dictionary keep removes only selected row and retains data");}
+ }
+ 
++void pendingReorderedCompletionGuards(){
++  const auto redo=[](std::string_view field){return "d"+b("BiglyBTC.reorderedCompletion")+std::string(field)+'e';};
++  const std::vector<std::string> unsafe={redo("d7:versioni1ee"),redo("i0e"),redo("le"),"d"+b("BiglyBTC.reorderedCompletion")};
++  for(const auto kind:{st::FileOperationKind::RemoveKeepData,st::FileOperationKind::RemoveDeleteData,st::FileOperationKind::Relocate,st::FileOperationKind::Relink}){
++    for(const bool backup:{false,true}){for(const auto& raw:unsafe){Fixture f;attributes(f,"l1:Re");if(kind==st::FileOperationKind::Relink){write(f.destination/"file.bin","hello");}auto path=control(f,0,true);if(backup){path+=std::string(".bak");}write(path,raw);const auto inventory=read(f.profile/"downloads.config"),state=read(f.selected.state);auto result=st::prepareFileOperation(f.lease,{f.selected.hash,kind,kind==st::FileOperationKind::Relocate||kind==st::FileOperationKind::Relink?std::optional<fs::path>(f.destination):std::nullopt});check(!result&&result.error().code==st::ErrorCode::Conflict&&result.error().message.find("reordered completion")!=std::string::npos,"native redo in authoritative primary/backup refuses all operation kinds");check(read(f.selected.files[0])=="hello"&&read(path)==raw&&read(f.profile/"downloads.config")==inventory&&read(f.selected.state)==state&&!st::hasPendingFileOperation(f.lease),"redo preparation refuses before payload/document/journal effects");}}
++  }
++  const auto cleared=[](){std::string map(4,'\0');map+=std::string(4,static_cast<char>(0xff));return "d3:leni5e4:nexti1e6:pieces"+b(map)+b("BiglyBTC.reorderedCompletion")+"dee";};
++  {Fixture f;attributes(f,"l1:Re");const auto c=control(f,0,true);write(c,cleared());write(c.string()+".bak",redo("d7:versioni1ee"));auto p=f.plan(st::FileOperationKind::RemoveKeepData);const auto accept=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false));take(st::applyFileOperation(f.lease,std::move(p),accept));check(read(f.selected.files[0])=="hello"&&!fs::exists(c)&&!fs::exists(c.string()+".bak"),"valid cleared primary permits obsolete pending backup and exact cleanup");}
++  {Fixture f;attributes(f,"l1:Re");const auto c=control(f,0,true);write(c,"opaque malformed primary");write(c.string()+".bak",redo("d7:versioni1ee"));auto result=st::prepareFileOperation(f.lease,{f.selected.hash,st::FileOperationKind::RemoveKeepData,{}});check(!result&&result.error().message.find("reordered completion")!=std::string::npos&&read(f.selected.files[0])=="hello","malformed primary cannot authorize pending backup transport");}
++  {Fixture f(true,true);attributes(f,"l1:L1:Re");const auto c=control(f,1,true);std::string map(8,'\0');map+=std::string(8,static_cast<char>(0xff));write(c,"d3:leni10e4:nexti1e6:pieces"+b(map)+b("BiglyBTC.reorderedCompletion")+"dee");write(c.string()+".bak",redo("d7:versioni1ee"));auto result=st::prepareFileOperation(f.lease,{f.selected.hash,st::FileOperationKind::RemoveKeepData,{}});check(!result&&result.error().message.find("reordered completion")!=std::string::npos&&read(f.selected.files[1])=="world!tail","invalid duplicate map cannot supersede pending backup even with cleared native key");}
++  for(const bool recovery:{false,true}){Fixture f;attributes(f,"l1:Re");const auto c=control(f,0,true);write(c,cleared());auto p=f.plan(st::FileOperationKind::RemoveDeleteData);const auto accept=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,true));
++    if(recovery){interruptAt=st::FileOperationStage::JournalSynced;interruptArmed=true;check(!st::applyFileOperation(f.lease,std::move(p),accept,interrupt)&&st::hasPendingFileOperation(f.lease),"accepted pre-effect removal journal retained");write(c,redo("d7:versioni1ee"));auto result=st::recoverFileOperation(f.lease);check(!result&&result.error().message.find("reordered completion")!=std::string::npos&&read(f.selected.files[0])=="hello"&&fs::exists(f.selected.state)&&st::hasPendingFileOperation(f.lease),"recovery independently refuses newly pending native redo before effects");}
++    else{write(c,redo("d7:versioni1ee"));auto result=st::applyFileOperation(f.lease,std::move(p),accept);check(!result&&result.error().message.find("reordered completion")!=std::string::npos&&read(f.selected.files[0])=="hello"&&!st::hasPendingFileOperation(f.lease),"apply revalidates redo before creating operation journal");}
++  }
++}
++
+ void realCopyBranch(){
+   Fixture f;struct stat from{},to{};check(::stat(f.source.c_str(),&from)==0&&::stat(f.destination.c_str(),&to)==0,"copy fixture dirs");copyFromDev=from.st_dev;copyFromIno=from.st_ino;copyToDev=to.st_dev;copyToIno=to.st_ino;copyHits=0;forceCopy=true;auto p=f.plan(st::FileOperationKind::Relocate);auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false));auto result=st::applyFileOperation(f.lease,std::move(p),c);forceCopy=false;take(std::move(result));check(copyHits>0&&read(f.destination/"file.bin")=="hello"&&!fs::exists(f.source/"file.bin"),"EXDEV fallback copies actual bytes and removes source only after publication");
+ }
+ }
+ extern "C" int __real_linkat(int,const char*,int,const char*,int);
+ extern "C" int __wrap_linkat(int a,const char* x,int b,const char* y,int flags){struct stat from{},to{};if(forceCopy&&std::string_view(x)=="file.bin"&&std::string_view(y)=="file.bin"&&::fstat(a,&from)==0&&::fstat(b,&to)==0&&from.st_dev==copyFromDev&&from.st_ino==copyFromIno&&to.st_dev==copyToDev&&to.st_ino==copyToIno){++copyHits;errno=EXDEV;return -1;}return __real_linkat(a,x,b,y,flags);}
+-int main(){try{keepAndDelete();relocationRecoveryPreservesBothUntilPublication();relinkAndScope();protectionAndConflicts();realCopyBranch();nonlinearControlsAndRecovery();nonlinearBoundaryRefusals();authenticatedExternalLinks();legacyRootsAndDefaultStoreRecovery();std::cout<<"nine generated file-operation families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
++int main(){try{keepAndDelete();relocationRecoveryPreservesBothUntilPublication();relinkAndScope();protectionAndConflicts();realCopyBranch();nonlinearControlsAndRecovery();nonlinearBoundaryRefusals();authenticatedExternalLinks();legacyRootsAndDefaultStoreRecovery();pendingReorderedCompletionGuards();std::cout<<"ten generated file-operation families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

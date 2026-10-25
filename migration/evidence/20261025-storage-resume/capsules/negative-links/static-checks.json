@@ -1,0 +1,18 @@
+{
+  "status": "PASS source-only reversal",
+  "subject_execution": false,
+  "builds": false,
+  "native_mutation": false,
+  "checks": [
+    {
+      "path": "preview/native/engine/managed_storage.cpp",
+      "whole_source_reversal_equal": true,
+      "all_other_bytes_unchanged": true
+    },
+    {
+      "path": "preview/native/adapters/file_operations.cpp",
+      "whole_source_reversal_equal": true,
+      "all_other_bytes_unchanged": true
+    }
+  ]
+}

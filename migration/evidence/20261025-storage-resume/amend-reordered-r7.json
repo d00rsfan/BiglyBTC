@@ -1,0 +1,34 @@
+{
+  "files": {
+    "preview/native/adapters/original_file_io.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/adapters/original_file_io.cpp",
+      "before_sha256": "896815d9751ae9f93a9f95b9160b5a0d47eb1ddc747a82100c041574efd1858d",
+      "sha256": "cb3e5c02b05aa9e174774832e0368b21a79e291f75316784084c9827640bb3b0"
+    },
+    "preview/native/adapters/original_file_io.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/adapters/original_file_io.hpp",
+      "before_sha256": "8dc5bfbefef5faca376304c88e47ff1cc4b429620d927c368f9eb2500d2bfbde",
+      "sha256": "0dc7150cb7df903f17b08fa4259df9f38ae73c8b18338b54b8d8031602f420cd"
+    },
+    "preview/native/engine/managed_storage.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/engine/managed_storage.cpp",
+      "before_sha256": "48ed995dd2e5e0f0973567b8042e1090351836ac58f3da70a48701a902aca4e3",
+      "sha256": "a19d21e28768059f81cdade969283bf69f2585459535f7537e0f00724a0fb40d"
+    },
+    "preview/native/engine/original_disk_io.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/engine/original_disk_io.cpp",
+      "before_sha256": "b60e2aaa21e60e6e1de1328cccf561384e0d1eb1001e66be8a795ac9528e9bb5",
+      "sha256": "0cb5da3a9d4e94116fe517eaf8238a0fc1578c8beb9bec0fe1b1cb0bc15c5f31"
+    },
+    "preview/native/engine/original_disk_io.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/engine/original_disk_io.hpp",
+      "before_sha256": "6b8a8bd55b68f37f5e96fdc1b172aca2646514d92acdcc6603cb782f2bfa1df9",
+      "sha256": "e0aed4b79fd8c0c375c14032a00fa3ef2df47518812bd259186d747973a7199b"
+    },
+    "preview/native/tests/original_file_io_tests.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/tests/original_file_io_tests.cpp",
+      "before_sha256": "5ae0913a537343f7dc2bf21f6f6b1d0b092151381ebdb0e16a2c4b2d51d92e16",
+      "sha256": "6abe38d3b09c5a211fa4bb18227f2fd51f5d78baf68c1fdb93f343950b50ad30"
+    }
+  }
+}

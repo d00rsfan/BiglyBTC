@@ -1,0 +1,57 @@
+--- managed_handoff_driver.cpp
++++ storage_handoff_driver.cpp
+@@ -1,5 +1,6 @@
+ #include "persistent_session.hpp"
+ #include "network_policy.hpp"
++#include "file_policy_commands.hpp"
+ #include "owned_engine_fixture.hpp"
+ #include "biglybtc/torrent_layout.hpp"
+ 
+@@ -14,6 +15,7 @@
+ #include <filesystem>
+ #include <iostream>
+ #include <thread>
++#include <vector>
+ #include <unistd.h>
+ 
+ namespace {
+@@ -57,7 +59,7 @@
+ int main(int argc, char** argv) {
+   QCoreApplication application(argc, argv);
+   if (argc != 7) {
+-    std::cerr << "Usage: managed_handoff_driver WORK_ROOT PROFILE METADATA EXPECTED OUTPUT partial|complete\n";
++    std::cerr << "Usage: storage_handoff_driver WORK_ROOT PROFILE METADATA EXPECTED OUTPUT partial|complete\n";
+     return 1;
+   }
+   try {
+@@ -91,15 +93,17 @@
+     require(fs::create_directory(seedRoot), "Cannot allocate owned seed directory");
+     for (std::size_t index = 0; index < layout->files.size(); ++index) {
+       const auto& file = layout->files[index];
+-      require(!file.padding, "V1 linear generated fixtures must not create physical padding");
++      require(!file.padding, "V1 generated storage fixtures must not create physical padding");
+       const fs::path relative = layout->multifile ? fs::path(layout->name) / file.path : fs::path(layout->name);
+       require(!relative.is_absolute() && relative.lexically_normal() == relative, "Unsafe generated relative path");
+       const auto wanted = layout->multifile ? expected / file.path : expected;
+       ownedPath(root, wanted, false);
+       auto data = test::read(text(wanted)); require(data.size() == file.bytes, "Generated expected length mismatch");
+       if (partial) {
+-        const auto first = std::max(file.offset, layout->bytes - layout->pieceLength);
+-        const auto last = std::min(file.offset + file.bytes, layout->bytes);
++        // Original storage fixtures already contain actual piece7. Leave
++        // missing piece5 unavailable at this real seed until the next owner.
++        const auto first = std::max(file.offset, layout->pieceLength * 5);
++        const auto last = std::min(file.offset + file.bytes, layout->pieceLength * 6);
+         if (last > first) {
+           std::fill(data.begin() + static_cast<qsizetype>(first - file.offset),
+               data.begin() + static_cast<qsizetype>(last - file.offset), '\0');
+@@ -126,6 +130,9 @@
+     } while (Clock::now() < seedDeadline);
+     require(seedReady, "Owned seed did not reach its actual piece boundary");
+     auto lease = storage::ProfileLease::acquire(profile); require(lease.has_value(), "Cannot acquire generated profile lease");
++    require(layout->files.size() == 3, "This storage handoff requires its authentic original three-file fixture");
++    const std::vector<compat::FilePolicy> selected(layout->files.size(), {.skipped = false, .priority = 0});
++    require(storage::setFilePolicies(*lease, *hash, selected).has_value(), "Cannot explicitly select all original files");
+     auto created = engine::PersistentSession::create({71, 72, partial ? 73U : 74U});
+     require(created.has_value(), "Managed handoff requires the approved source-bound runtime");
+     auto owner = std::move(*created);

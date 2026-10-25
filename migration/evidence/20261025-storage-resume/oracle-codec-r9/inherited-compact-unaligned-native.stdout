@@ -1,0 +1,15 @@
+STATE 1 length=103304 physicalBytes=21384
+READ inherited-0 missing=0
+STATE 2 length=103304 physicalBytes=21384
+READ inherited-1 missing=1
+STATE 3 length=103304 physicalBytes=21384
+READ inherited-2 missing=1
+STATE 4 length=103304 physicalBytes=21384
+READ inherited-3 missing=1
+STATE 5 length=103304 physicalBytes=21384
+READ inherited-4 missing=1
+STATE 6 length=103304 physicalBytes=21384
+READ inherited-5 missing=1
+STATE 7 length=103304 physicalBytes=21384
+READ inherited-6 missing=0
+STATE 8 length=103304 physicalBytes=21384

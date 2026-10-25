@@ -1,0 +1,11 @@
+--- before/StorageScriptOracle.java
++++ StorageScriptOracle.java
+@@ -71,7 +71,7 @@
+         info.put("pieces", new byte[20 * (int)((offset + length + piece - 1) / piece)]);
+         info.put("files", Arrays.asList(first, second)); torrent.put("info", info);
+         torrent.put("announce", "http://127.0.0.1:1/announce");
+-        metadata = TOTorrentFactory.deserialiseFromBEncodedByteArray(BEncoder.encode(torrent)).getFiles()[1];
++        metadata = TOTorrentFactory.deserialiseFromBEncodedByteArray(new TOTorrentFactory.TorrentDataHolder(BEncoder.encode(torrent))).getFiles()[1];
+         if (metadata.getOffsetInTorrent() != offset || metadata.getLength() != length) {
+             throw new IllegalStateException("Original torrent geometry disagrees");
+         }

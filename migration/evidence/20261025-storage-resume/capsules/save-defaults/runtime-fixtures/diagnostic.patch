@@ -1,0 +1,8 @@
+--- a/preview/native/tests/file_operations_tests.cpp
++++ b/preview/native/tests/file_operations_tests.cpp
+@@ -186,4 +186,4 @@
+ }
+ extern "C" int __real_linkat(int,const char*,int,const char*,int);
+ extern "C" int __wrap_linkat(int a,const char* x,int b,const char* y,int flags){struct stat from{},to{};if(forceCopy&&std::string_view(x)=="file.bin"&&std::string_view(y)=="file.bin"&&::fstat(a,&from)==0&&::fstat(b,&to)==0&&from.st_dev==copyFromDev&&from.st_ino==copyFromIno&&to.st_dev==copyToDev&&to.st_ino==copyToIno){++copyHits;errno=EXDEV;return -1;}return __real_linkat(a,x,b,y,flags);}
+-int main(){try{keepAndDelete();relocationRecoveryPreservesBothUntilPublication();relinkAndScope();protectionAndConflicts();realCopyBranch();nonlinearControlsAndRecovery();nonlinearBoundaryRefusals();authenticatedExternalLinks();legacyRootsAndDefaultStoreRecovery();std::cout<<"nine generated file-operation families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
++int main(){try{auto run=[](const char* name,auto&& body){std::cerr<<"family "<<name<<std::endl;body();};run("keepAndDelete",keepAndDelete);run("relocationRecoveryPreservesBothUntilPublication",relocationRecoveryPreservesBothUntilPublication);run("relinkAndScope",relinkAndScope);run("protectionAndConflicts",protectionAndConflicts);run("realCopyBranch",realCopyBranch);run("nonlinearControlsAndRecovery",nonlinearControlsAndRecovery);run("nonlinearBoundaryRefusals",nonlinearBoundaryRefusals);run("authenticatedExternalLinks",authenticatedExternalLinks);run("legacyRootsAndDefaultStoreRecovery",legacyRootsAndDefaultStoreRecovery);std::cout<<"nine generated file-operation families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

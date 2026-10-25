@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "status": "SOURCE_FROZEN_ROOT_QUALIFICATION_PENDING",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_baseline": "b44ec22ebb3dbb6cee3ade23c32a7ad26a373926",
+  "files": {
+    "CONTRACT.md": "0a6692c8e14e36f0e1509fa9628a7b18d8fea47323d9b2e52d646977b80714de",
+    "README.md": "5fe9d5e8cc0f79cb7d40b2ab4a23709595355df5409be488545d1fbfe07eb529",
+    "Targets.cmake": "268ff51f304eb306379c61d48892f4d61611b74625c129b2198f019f262d3516",
+    "StorageScriptOracle.java": "695ef8e3f961b1a52deea2926d52ab82226a1cad3a7e0810c7318c242580832a",
+    "StorageProfileOracle.java": "618d4f7b5f57c2c01db1aec55fc9d172f8f1d2797a1d0078883bd1d62ac87d24",
+    "run.py": "497ea8239ae447cbb08fb22361df2546957e489c3767ad5a8a65889e7a3a07ae",
+    "source-provenance.json": "a5ad825166e6c6d0171d46e13b4b490b20032cc2b446b92fd8001490f2d5ff17",
+    "tests/storage_handoff_driver.cpp": "914e8681f5ed26216dcb114487f5c2bad9f352dedd687e28e5de07b680c4d699",
+    "before/managed_handoff_driver.cpp": "851184c2a28b908c9d3ce2620742567fd9f70f95ff0054b46d56aa00bb3e9da6",
+    "managed-driver.patch": "c7c4015ed405c7ab075ffb5030eb6220bbfbfa3717bee16c32bff8684a4688ce",
+    "amendments/torrent-data-holder/StorageProfileOracle.java.patch": "fca57ecb0ab7c6bc9ca0d3709d0e6efec6d0959b88ce48de735c2ba1859edfa8",
+    "amendments/torrent-data-holder/StorageScriptOracle.java.patch": "43f4d38614242e797b22e702d7ecb2f91f80fafdf5ab4e7686f3c8e1fed09efc",
+    "amendments/torrent-data-holder/before-StorageProfileOracle.java": "b7d073d775dc612672e84907f37737c760f9c9d4bb98a6a35ce8bced216160c8",
+    "amendments/torrent-data-holder/before-StorageScriptOracle.java": "2b62a900548c7c1182d7e9df3f738acfae3d598d9260e50e8baf37e563ab61b8",
+    "amendments/torrent-data-holder/manifest.json": "c1cb5bfe3c40682a923d5b428e8a1b54b59090a8d14d9b66f44c5820cc9bc810"
+  },
+  "adopt_source": {
+    "preview/native/tests/storage_handoff_driver.cpp": "tests/storage_handoff_driver.cpp"
+  },
+  "new_source_before_sha256": {
+    "preview/native/tests/storage_handoff_driver.cpp": null
+  },
+  "reused_driver_before_sha256": "851184c2a28b908c9d3ce2620742567fd9f70f95ff0054b46d56aa00bb3e9da6",
+  "codec_dependency_manifest": "../codec-io/manifest.json",
+  "codec_dependency_manifest_sha256": "992b8fdfda46ab0e05111bcf2e12bf485ea28cc2cddf22b1c3a0bc2743997546",
+  "planned_cases": {
+    "inherited_original_read_maps": 7,
+    "raw_bidirectional_mutations": 3,
+    "authentic_profile_kinds": [
+      2,
+      3,
+      4
+    ],
+    "managed_phases_per_profile": [
+      "partial",
+      "complete"
+    ]
+  },
+  "author_executed_java_native_or_compilers": false,
+  "root_thin_compile_logs": "compile-check; root owns actual receipt and failures",
+  "shared_native_files_modified": false,
+  "original_profile_or_process_access": false
+}

@@ -1,5 +1,15 @@
 # BiglyBTC migration state
 
+Published bounded CF-01 core: `c0b2fbb2071b7aae302d2db24ba3c824df874d0a`; actual C/R/X and12legacy/default
+handoffs, GCC/Clang/sanitizers, hosted and private portable checks pass.
+[Review](evidence/20261025-storage-resume/REVIEW.md).
+Active work continues with allocation-tail, active priorities/DND and L→C; full
+CF-01 and subsequent CF-02–CF-08 remain open. No new human question.
+
+## Active storage/resume compatibility (2026-10-25)
+
+User authorizes all remaining plan work, starting with [CF-01 / P03-09](tasks/P03-09-storage-resume-compatibility.md). Complete original storage mappings, engine disk IO, related file operations and actual Java/native/Java handoffs. Reuse three source workers; root owns coherent builds/adoption/tracking. Work: build/storage-20261025/. Max3 compile jobs, native main, no real original profile/process access. Continue subsequent dependencies after this chapter; no blocking human question.
+
 ## Qualified library/file operations (2026-10-24)
 
 Source dda0654715ffa38feea15784a92bf6f00502523e is pushed directly to native main. Classic single-torrent

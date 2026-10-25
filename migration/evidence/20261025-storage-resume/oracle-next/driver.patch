@@ -1,0 +1,29 @@
+--- old/storage_handoff_driver.cpp
++++ new/storage_defaults_handoff_driver.cpp
+@@ -59,7 +59,7 @@
+ int main(int argc, char** argv) {
+   QCoreApplication application(argc, argv);
+   if (argc != 7) {
+-    std::cerr << "Usage: storage_handoff_driver WORK_ROOT PROFILE METADATA EXPECTED OUTPUT partial|complete\n";
++    std::cerr << "Usage: storage_defaults_handoff_driver WORK_ROOT PROFILE METADATA EXPECTED OUTPUT complete\n";
+     return 1;
+   }
+   try {
+@@ -71,7 +71,7 @@
+     require(::lstat(root.c_str(), &rootInfo) == 0 && S_ISDIR(rootInfo.st_mode) && rootInfo.st_uid == ::geteuid()
+         && (rootInfo.st_mode & 077) == 0, "Owned private test root required");
+     ownedPath(root, profile, true); ownedPath(root, metadataPath, false);
+-    require(mode == "partial" || mode == "complete", "Invalid managed handoff mode");
++    require(mode == "complete", "Defaults handoff requires actual complete transfer");
+     require(inside(root, output) && output.lexically_normal() == output && !fs::exists(output)
+         && !fs::is_symlink(fs::symlink_status(output)), "Fresh output under owned root required");
+     ownedPath(root, output.parent_path(), true);
+@@ -130,7 +130,7 @@
+     } while (Clock::now() < seedDeadline);
+     require(seedReady, "Owned seed did not reach its actual piece boundary");
+     auto lease = storage::ProfileLease::acquire(profile); require(lease.has_value(), "Cannot acquire generated profile lease");
+-    require(layout->files.size() == 3, "This storage handoff requires its authentic original three-file fixture");
++    require(layout->files.size() == (layout->multifile ? 3U : 1U), "Defaults fixture must be original single/three-file layout");
+     const std::vector<compat::FilePolicy> selected(layout->files.size(), {.skipped = false, .priority = 0});
+     require(storage::setFilePolicies(*lease, *hash, selected).has_value(), "Cannot explicitly select all original files");
+     auto created = engine::PersistentSession::create({71, 72, partial ? 73U : 74U});

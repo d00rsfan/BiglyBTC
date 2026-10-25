@@ -1,0 +1,14 @@
+STATE 1 length=0 physicalBytes=0
+STATE 2 length=13312 physicalBytes=13312
+STATE 3 length=103304 physicalBytes=21384
+STATE 4 length=103304 physicalBytes=21384
+STATE 5 length=103304 physicalBytes=21384
+READ missing-one missing=1
+STATE 6 length=103304 physicalBytes=21384
+STATE 7 length=103304 physicalBytes=21384
+STATE 9 length=103304 physicalBytes=21384
+READ first missing=0
+STATE 10 length=103304 physicalBytes=21384
+READ last missing=0
+STATE 11 length=103304 physicalBytes=21384
+STATE 12 length=103304 physicalBytes=21384

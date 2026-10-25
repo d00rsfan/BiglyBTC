@@ -1,0 +1,4 @@
+OPEN	2	3072	103304	16384
+READ	0	13312	java-read-first
+READ	95232	8072	java-read-last
+CLOSE

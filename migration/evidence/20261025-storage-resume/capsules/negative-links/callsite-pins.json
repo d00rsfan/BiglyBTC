@@ -1,0 +1,14 @@
+[
+  {
+    "path": "preview/native/engine/managed_storage.cpp",
+    "before_sha256": "50a6842b26f6b7c8cda9c052ab8667ea11922502e15cd05a3ac69e27d144adff",
+    "after_sha256": "6259579d33414e01cd3aee703e0364bec16c8c597c0b179f800a799a9ce2a54d",
+    "delta": "new header plus only filelinks2 parser/projection block; all later path/descriptor/control guards retained"
+  },
+  {
+    "path": "preview/native/adapters/file_operations.cpp",
+    "before_sha256": "e040dafe25e7a2e87b79c6b16be4aca0a8872a15e224e59fb1b9a8f7f5791aa7",
+    "after_sha256": "1355f191a8cdbbe2fa673a462d63be639021bdcbe0487d101ab0da5ac921505d",
+    "delta": "new header plus only filelinks2 parser/projection block; all later path/descriptor/control guards retained"
+  }
+]

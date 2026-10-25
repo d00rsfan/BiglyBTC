@@ -1,0 +1,35 @@
+{
+  "suites": [
+    "managed-download",
+    "managed-seeding",
+    "managed-library-command-routing",
+    "managed-queue",
+    "queue-policy",
+    "scheduler-host-engine",
+    "torrent-intake",
+    "file-policy-commands",
+    "file-priority-ui",
+    "file-operations-host",
+    "desktop-model-and-lifecycle",
+    "startup-statistics-worker",
+    "overall-accounting-window-worker",
+    "persistent-native-peer-session"
+  ],
+  "targets": [
+    "biglybtc-managed-download-tests",
+    "biglybtc-managed-seeding-tests",
+    "biglybtc-library-commands-bridge-tests",
+    "biglybtc-managed-queue-tests",
+    "biglybtc-queue-policy-tests",
+    "biglybtc-scheduler-host-engine-tests",
+    "biglybtc-torrent-intake-tests",
+    "biglybtc-file-policy-commands-tests",
+    "biglybtc-file-priority-ui-tests",
+    "biglybtc-file-operations-host-tests",
+    "biglybtc-desktop-tests",
+    "biglybtc-startup-statistics-tests",
+    "biglybtc-overall-accounting-integration-tests",
+    "biglybtc-persistent-session-tests",
+    "BiglyBTC-headless"
+  ]
+}

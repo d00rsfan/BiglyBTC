@@ -1,0 +1,12 @@
+{
+  "reason": "Original DMChecker738-773 refuses wholly compact or reordered-compact interior piece checks; C/X initial skippedfile therefore3, selectedR4. Actual nativepartial7/full8 assertions unchanged.",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "reference_subject": "core/src/com/biglybt/core/disk/impl/access/impl/DMCheckerImpl.java",
+  "reference_sha256": "446ed59e27d8ac052de4f8dad8a641c0cca6c1c88960781c8f7a4b92d2ce83ac",
+  "run_py_sha256": "1df4d4988dbdecbe784414be72e64ec15fcbc945ef185cb880aa138bd616855d",
+  "manifest_sha256": "5c4c881c0f416d27f5904abf1a67cc36672ae9687aac978a1c2f0a2131175afd",
+  "before_sha256": {
+    "run.py": "cdffe0fb18a79b26a9be8a4a31a8bbeda8da5d8746990ffb2fd0f743d4ca28f9",
+    "manifest.json": "002044b6c9399c58dcb1d465af56820b8e9a6345b3485ea39b1d22b7ee1b1bd5"
+  }
+}

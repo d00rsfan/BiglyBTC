@@ -1,0 +1,9 @@
+{
+  "existing_io_case_bodies_retained": 8,
+  "only_old_assertion_change": "unsupported boundary 128 MiB -> 256 MiB+1",
+  "new_io_case_bodies": 3,
+  "sdk_core_mirror_exact": true,
+  "author_builds": 0,
+  "author_tests_run": 0,
+  "native_writes": 0
+}

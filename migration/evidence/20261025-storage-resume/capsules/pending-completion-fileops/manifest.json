@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "scope": "Source-only pending native reordered-completion guard; no execution credit",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sources": {
+    "preview/native/adapters/file_operations.cpp": {
+      "before_sha256": "7456659f171653b55cfe9ab1507717480a975cbee838aee88c7bde18bfa4184b",
+      "sha256": "fafd08a46ab502093ca2eb712c3273cfff21d890ef23141d42a2d043d7ccf664",
+      "patch": "patches/preview/native/adapters/file_operations.cpp.patch",
+      "patch_sha256": "a4a720457375966683b478bf6ef1bb432b4fdaff6276ade93d3f590bc1979cce"
+    },
+    "preview/native/adapters/original_file_io.cpp": {
+      "before_sha256": "cb3e5c02b05aa9e174774832e0368b21a79e291f75316784084c9827640bb3b0",
+      "sha256": "db4bf21bc2bbf1ad2d2af180c75012643e200165f3139b050de3c6948d0417e4",
+      "patch": "patches/preview/native/adapters/original_file_io.cpp.patch",
+      "patch_sha256": "3162d62307a82ddeff39449f8ffae2d5b63bce7a44b21f93c519da49d82185a9"
+    },
+    "preview/native/adapters/original_file_io.hpp": {
+      "before_sha256": "0dc7150cb7df903f17b08fa4259df9f38ae73c8b18338b54b8d8031602f420cd",
+      "sha256": "eb3b18fa58bd2cff2315fe13ebe61de7b269eda5775541162c89541473607c71",
+      "patch": "patches/preview/native/adapters/original_file_io.hpp.patch",
+      "patch_sha256": "7a85589b5cd31b9500025ae238de45dbfb4d5629caa19b57275e123a9a2aceae"
+    },
+    "preview/native/tests/file_operations_tests.cpp": {
+      "before_sha256": "a7230dc92afaa44ec32ce781993904b14b25aceceed8a88a3a27cfbe1b571a6a",
+      "sha256": "235e791b9c9cdcb41cbeda7b5135fbd2706d562d3cc13fd6fc2cddd468bb36a0",
+      "patch": "patches/preview/native/tests/file_operations_tests.cpp.patch",
+      "patch_sha256": "499f8f2c55a505821b9c384ada855f94a8144a46cd6782bf8f5d941bb8ab69f8"
+    }
+  },
+  "changes_patch_sha256": "0fff73933a4a5ebcf3d9a8acf791d2f8c9a41a0d87876bf5ba76b32d892b8525",
+  "preserved_existing_test_bodies": true,
+  "new_family": "pendingReorderedCompletionGuards",
+  "new_family_cases": [
+    "all four operation kinds, primary/backup, pending/wrong integer/list/malformed redo",
+    "valid cleared primary supersedes stale pending backup",
+    "malformed primary cannot supersede pending backup",
+    "same geometry decoder rejects duplicate map authority",
+    "apply and journal recovery independently reject newly pending redo"
+  ],
+  "adoption": "Apply additive patches, not full-file replacement; compose with independent selection-policy patches. No CMake changes."
+}

@@ -1,5 +1,13 @@
 # Whole Solution C++ Migration Plan
 
+Published bounded CF-01 core: `c0b2fbb2071b7aae302d2db24ba3c824df874d0a`; actual C/R/X and12legacy/default
+handoffs, GCC/Clang/sanitizers, hosted and private portable checks pass.
+[Review](migration/evidence/20261025-storage-resume/REVIEW.md).
+Active work continues with allocation-tail, active priorities/DND and L→C; full
+CF-01 and subsequent CF-02–CF-08 remain open. No new human question.
+
+Active: [CF-01 storage/resume compatibility](migration/tasks/P03-09-storage-resume-compatibility.md). User authorizes remaining plan work, proceeding by dependency with batched validation and preserved original compatibility.
+
 Qualified chapter: [Library/file operations — CF-06](migration/tasks/P03-08-library-file-operations.md).
 Classic keep/delete/move/relink, ordinary v1 creation, engine retirement and
 original-compatible recovery pass original/native, compiler/sanitizer, hosted

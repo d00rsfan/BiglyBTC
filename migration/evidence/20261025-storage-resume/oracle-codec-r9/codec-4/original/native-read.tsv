@@ -1,0 +1,3 @@
+OPEN	4	3072	103304	16384
+READ	0	103304	native-read-whole
+CLOSE

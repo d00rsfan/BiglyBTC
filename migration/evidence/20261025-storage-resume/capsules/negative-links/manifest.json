@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "scope": "CF-01 exact negative-index original filelinks2 projection",
+  "status": "SOURCE_ONLY_NOT_EXECUTED",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "files": [
+    {
+      "path": "README.md",
+      "bytes": 3983,
+      "sha256": "86c3ecb3640658c930d8027001d9e18d4906190b496829e355fab66a9296ee84"
+    },
+    {
+      "path": "Targets.cmake",
+      "bytes": 596,
+      "sha256": "49d80aebb85edda7a40ad8e8bddcaf4a689edc02d6719aabbc1f78573a19eaac"
+    },
+    {
+      "path": "before/preview/native/adapters/file_operations.cpp",
+      "bytes": 60018,
+      "sha256": "e040dafe25e7a2e87b79c6b16be4aca0a8872a15e224e59fb1b9a8f7f5791aa7"
+    },
+    {
+      "path": "before/preview/native/engine/managed_storage.cpp",
+      "bytes": 55454,
+      "sha256": "50a6842b26f6b7c8cda9c052ab8667ea11922502e15cd05a3ac69e27d144adff"
+    },
+    {
+      "path": "callsite-candidates/preview/native/adapters/file_operations.cpp",
+      "bytes": 59661,
+      "sha256": "1355f191a8cdbbe2fa673a462d63be639021bdcbe0487d101ab0da5ac921505d"
+    },
+    {
+      "path": "callsite-candidates/preview/native/engine/managed_storage.cpp",
+      "bytes": 55213,
+      "sha256": "6259579d33414e01cd3aee703e0364bec16c8c597c0b179f800a799a9ce2a54d"
+    },
+    {
+      "path": "callsite-pins.json",
+      "bytes": 735,
+      "sha256": "b41c97824fdefef1ec35f2b973a743bf9a2de0b18cb63b3dd8f20a0b5976e77c"
+    },
+    {
+      "path": "file-operations-tests.inc",
+      "bytes": 1789,
+      "sha256": "9d5b816cb48e4ea7a7726fd3d63a449c36cdbce6ee511b260539ec491de67ed8"
+    },
+    {
+      "path": "file_operations.patch",
+      "bytes": 3261,
+      "sha256": "9440c325c1378d2858ee8f9d60820272c5c1aea48124b4aaec86e25b023763ca"
+    },
+    {
+      "path": "managed-storage-tests.inc",
+      "bytes": 1435,
+      "sha256": "11618cabebdc82ca69c2a3b0f29f791c2f3c2caa79b7634c1dc70f21725fa228"
+    },
+    {
+      "path": "managed_storage.patch",
+      "bytes": 3789,
+      "sha256": "b0dbec31f271705bb16ced2ec510e52bc1419003f9d32a27bc49b1decfe2c72f"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 3020,
+      "sha256": "1fb83136d629494e46af5cda4ef7fb28ad1afd81dbfc1a80a08df7e6cda15fdc"
+    },
+    {
+      "path": "staging/preview/native/core/include/biglybtc/original_file_links.hpp",
+      "bytes": 2121,
+      "sha256": "17aaac8e64152c28e4f824a1c905d4bdf37c2156a8e26eb64cdf7b09aae237f3"
+    },
+    {
+      "path": "staging/preview/native/core/src/original_file_links.cpp",
+      "bytes": 7292,
+      "sha256": "9d32bff5afc90b0658be4f83b415420120ba1eb91103275a9c8c8cbaa0b0234a"
+    },
+    {
+      "path": "staging/preview/native/tests/original_file_links_tests.cpp",
+      "bytes": 7591,
+      "sha256": "8acc21c7122d219440097dab96e3db7e0aca576d128457a1a2315bebcffe3667"
+    },
+    {
+      "path": "static-checks.json",
+      "bytes": 451,
+      "sha256": "2904011c086e44e1ab29f50ba037397737f3288c3dbc269ab9371a74cd4fd46f"
+    }
+  ],
+  "new_production": [
+    "preview/native/core/include/biglybtc/original_file_links.hpp",
+    "preview/native/core/src/original_file_links.cpp"
+  ],
+  "new_tests": [
+    "preview/native/tests/original_file_links_tests.cpp"
+  ],
+  "callsite_patches": [
+    "managed_storage.patch",
+    "file_operations.patch"
+  ],
+  "companion": "../save-defaults: resolveOriginalSaveRoot before exact base construction",
+  "runtime_credit": false
+}

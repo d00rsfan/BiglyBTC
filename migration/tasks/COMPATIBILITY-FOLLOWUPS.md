@@ -16,6 +16,10 @@ Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
   reordered and remaining unsupported original mappings. Qualify partial and
   complete generated Java/native/Java handoffs, file identities, incomplete
   names and failure recovery. Preserve explicit rejection until supported.
+  Core C/R/X mapped IO, compatible roots/defaults/links and generated partial/
+  complete handoffs now qualify at `c0b2fbb2071b7aae302d2db24ba3c824df874d0a`.
+  [Evidence](../evidence/20261025-storage-resume/REVIEW.md). Allocation/EOF-short,
+  active DND and stopped L→C remain active; this item stays open.
 - [ ] **CF-02 — v2/hybrid profile interoperability (P03/P11).** Extend actual
   partial/complete Java/native/Java reload checks beyond the two qualified v1
   cases. Cover full identities, alternate hybrid identities and broader original

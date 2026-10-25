@@ -1,0 +1,25 @@
+[
+  {
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "path": "core/src/com/biglybt/core/download/impl/DownloadManagerController.java",
+    "sha256": "b22ccde4addada902b8bac14c2177e7496b9329304c534d6ed2fdde9dbdc8860",
+    "lines": [
+      2303,
+      2316
+    ]
+  },
+  {
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "path": "core/src/com/biglybt/core/diskmanager/file/impl/FMFileAccessPieceReorderer.java",
+    "sha256": "325cc0dcee8457af8cda2208b59267fb3f0f1a007ee3ba91d5aef8c24122e24e",
+    "lines": [
+      624,
+      725
+    ]
+  },
+  {
+    "path": "build/storage-20261025/oracle-managed-r3/profile-3-java-complete.stderr",
+    "sha256": "21f79220c9cfc26477b2d9fdb7294f51056992ad68a56631765c020b875f0cf2",
+    "scope": "actual original READY failed raw size 103304/111616; retained immutable"
+  }
+]

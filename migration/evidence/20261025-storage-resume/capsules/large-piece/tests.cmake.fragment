@@ -1,0 +1,4 @@
+# Existing test target; preserve its current ftruncate interposer.
+# Add after target creation, no new test target or timeout changes.
+target_link_options(biglybtc-original-file-io-tests PRIVATE
+  "LINKER:--wrap=pread" "LINKER:--wrap=pwrite")

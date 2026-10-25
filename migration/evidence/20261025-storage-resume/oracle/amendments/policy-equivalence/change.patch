@@ -1,0 +1,11 @@
+--- before/run.py
++++ after/run.py
+@@ -321,7 +321,7 @@
+                     require(isinstance(row.get(key, 0), int) and row.get(key, 0) >= previous_row.get(key, 0),
+                             'Native lost original accumulated download/seeding time')
+                 if b'file_priorities_c' in row:
+-                    require(row[b'file_priorities_c'] == {b'-1': b'0-2'}, 'Native did not persist all three selected normal policies')
++                    require(row[b'file_priorities_c'] in ({b'-1': b'0-2'}, {b'-1': b'0,1,2'}), 'Native did not persist all three selected normal policies')
+                 else:
+                     require(row.get(b'file_priorities') == [-1, -1, -1], 'Native did not persist all three selected normal policies')
+                 port = peer_interop.unused_port()

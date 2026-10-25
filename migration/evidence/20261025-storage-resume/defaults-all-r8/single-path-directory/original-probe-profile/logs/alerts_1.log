@@ -1,0 +1,15 @@
+﻿
+[2026/10/25 11:03] Log File Opened for BiglyBT 4.1.0.1_B07
+[11:03:24] Alert:1:Failed to install DNS manager
+
+This will impact functions such as forced DNS resolution prevention with SOCKS
+
+Error: Test lookup failed: Network endpoint outside owned loopback tests
+
+[2026/10/25 11:03] Log File Opened for BiglyBT 4.1.0.1_B07
+[11:03:29] Alert:1:BiglyBT did not shutdown tidily. Check for any <A HREF="/tmp/biglybtc-managed-handoff-defaults-all-r8/single-path-directory/profile/logs/save">diagnostic log files</A>. Also read the wiki article <A HREF="https://wiki.biglybt.com/w/Vuze_disappears">BiglyBT Disappears</A> for more information.
+[11:03:29] Alert:1:Failed to install DNS manager
+
+This will impact functions such as forced DNS resolution prevention with SOCKS
+
+Error: Test lookup failed: Network endpoint outside owned loopback tests

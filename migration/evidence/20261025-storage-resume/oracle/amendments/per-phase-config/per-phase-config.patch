@@ -1,0 +1,13 @@
+--- oracle/run.py
++++ oracle/run.py
+@@ -286,9 +286,9 @@
+             _, before_spans = decoded(state)
+             opaque_path = (b'native.storage.opaque',)
+             require(opaque_path in before_spans, 'Original did not retain fixture opaque metadata')
+-            original_config = (case / 'profile/biglybt.config').read_bytes()
+             observations = []
+             for mode, expected_done in (('partial', 7), ('complete', 8)):
++                original_config = (case / 'profile/biglybt.config').read_bytes()
+                 before_inventory, _ = decoded(case / 'profile/downloads.config')
+                 require(len(before_inventory[b'downloads']) == 1, 'Unexpected original library cardinality')
+                 previous_row = before_inventory[b'downloads'][0]

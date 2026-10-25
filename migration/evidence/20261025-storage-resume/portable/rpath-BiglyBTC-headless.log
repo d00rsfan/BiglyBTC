@@ -1,0 +1,36 @@
+
+Dynamic section at offset 0x1a8510 contains 33 entries:
+  Tag        Type                         Name/Value
+ 0x0000000000000001 (NEEDED)             Shared library: [libz.so.1]
+ 0x0000000000000001 (NEEDED)             Shared library: [libcrypto.so.3]
+ 0x0000000000000001 (NEEDED)             Shared library: [libtorrent-rasterbar.so.2.0]
+ 0x0000000000000001 (NEEDED)             Shared library: [libstdc++.so.6]
+ 0x0000000000000001 (NEEDED)             Shared library: [libgcc_s.so.1]
+ 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]
+ 0x000000000000001d (RUNPATH)            Library runpath: [$ORIGIN/../qt/lib]
+ 0x000000000000000c (INIT)               0xd000
+ 0x000000000000000d (FINI)               0x1780c4
+ 0x0000000000000019 (INIT_ARRAY)         0x1a7d70
+ 0x000000000000001b (INIT_ARRAYSZ)       136 (bytes)
+ 0x000000000000001a (FINI_ARRAY)         0x1a7df8
+ 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)
+ 0x000000006ffffef5 (GNU_HASH)           0x3c8
+ 0x0000000000000005 (STRTAB)             0x2b70
+ 0x0000000000000006 (SYMTAB)             0x788
+ 0x000000000000000a (STRSZ)              16891 (bytes)
+ 0x000000000000000b (SYMENT)             24 (bytes)
+ 0x0000000000000015 (DEBUG)              0x0
+ 0x0000000000000003 (PLTGOT)             0x1a9760
+ 0x0000000000000002 (PLTRELSZ)           6072 (bytes)
+ 0x0000000000000014 (PLTREL)             RELA
+ 0x0000000000000017 (JMPREL)             0xaf10
+ 0x0000000000000007 (RELA)               0x7310
+ 0x0000000000000008 (RELASZ)             15360 (bytes)
+ 0x0000000000000009 (RELAENT)            24 (bytes)
+ 0x000000000000001e (FLAGS)              BIND_NOW
+ 0x000000006ffffffb (FLAGS_1)            Flags: NOW PIE
+ 0x000000006ffffffe (VERNEED)            0x7070
+ 0x000000006fffffff (VERNEEDNUM)         5
+ 0x000000006ffffff0 (VERSYM)             0x6d6c
+ 0x000000006ffffff9 (RELACOUNT)          518
+ 0x0000000000000000 (NULL)               0x0

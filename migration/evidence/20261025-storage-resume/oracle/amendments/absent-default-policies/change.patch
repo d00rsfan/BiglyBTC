@@ -1,0 +1,15 @@
+--- before/run.py
++++ after/run.py
+@@ -322,8 +322,10 @@
+                             'Native lost original accumulated download/seeding time')
+                 if b'file_priorities_c' in row:
+                     require(row[b'file_priorities_c'] in ({b'-1': b'0-2'}, {b'-1': b'0,1,2'}), 'Native did not persist all three selected normal policies')
+-                else:
+-                    require(row.get(b'file_priorities') == [-1, -1, -1], 'Native did not persist all three selected normal policies')
++                elif b'file_priorities' in row:
++                    require(row[b'file_priorities'] == [-1, -1, -1], 'Native did not persist all three selected normal policies')
++                # Original saves omit both fields when all files use normal defaults.
++                # The actual Java reload below must still report all3 normal/selected.
+                 port = peer_interop.unused_port()
+                 observed = profile_rows(java('profile-' + str(kind) + '-java-' + mode, case, 'StorageProfileOracle', port,
+                     'observe', kind, expected_done, ports=(port,), timeout=150))

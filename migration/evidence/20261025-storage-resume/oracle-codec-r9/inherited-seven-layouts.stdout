@@ -1,0 +1,9 @@
+DEBUG::Sun Oct 25 11:32:09 IST 2026  BC Provider 'BC_VUZE' initialised successfully (loaded from file:/tmp/biglybtc-oracle/classes/org/gudy/bouncycastle/jce/provider/BouncyCastleProvider.class)
+DEBUG::Sun Oct 25 11:32:09 IST 2026  Not installing security manager - disabled by system property
+LAYOUT compact-aligned type=2 offset=0 length=131072 pieces=8
+LAYOUT compact-unaligned type=2 offset=3072 length=103304 pieces=7
+LAYOUT compact-short type=2 offset=16320 length=32 pieces=1
+LAYOUT reordered type=3 offset=3072 length=103304 pieces=7
+LAYOUT reordered-compact type=4 offset=3072 length=103304 pieces=7
+LAYOUT reordered-short type=3 offset=0 length=32768 pieces=2
+LAYOUT reordered-boundary type=4 offset=16320 length=32896 pieces=4

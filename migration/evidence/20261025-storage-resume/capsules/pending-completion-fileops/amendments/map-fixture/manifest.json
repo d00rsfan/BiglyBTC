@@ -1,0 +1,12 @@
+{
+  "scope": "Source-only fixture precision; full geometry is three map slots, so duplicate slot reaches map validation instead of failing raw map length first",
+  "source_manifest_sha256": "4b49edf09c4101c67c0f0a8aa5fee2eb6bd49543f98db37d1450e71559401915",
+  "sources": {
+    "preview/native/tests/file_operations_tests.cpp": {
+      "before_sha256": "235e791b9c9cdcb41cbeda7b5135fbd2706d562d3cc13fd6fc2cddd468bb36a0",
+      "sha256": "e5f5191d3cfe2a0e005955688d7149943e34ee5410533a1c45c9c42d58da34ed"
+    }
+  },
+  "changes_patch_sha256": "67f2ed76e58ccb12eb9ca8130c85ed012b8633d0342dd28c33b03f96c6d59884",
+  "execution": null
+}

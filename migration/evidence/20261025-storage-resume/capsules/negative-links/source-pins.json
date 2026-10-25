@@ -1,0 +1,88 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_head": "b44ec22ebb3dbb6cee3ade23c32a7ad26a373926",
+  "original_subjects": [
+    {
+      "path": "core/src/com/biglybt/core/util/LinkFileMap.java",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "git_blob": "7c44007f711e902ac0807e7eb69d18782bf48058",
+      "sha256": "360e9acb5ff349e4e507487af847111d00c9ccc5e8d5e2f0053d02ead649abed",
+      "ranges": [
+        {
+          "first": 114,
+          "last": 138,
+          "sha256": "d59bae039c9e0a0d6497e4451d38fc345115c6c493e30880b548b0cd1a2be452"
+        },
+        {
+          "first": 194,
+          "last": 255,
+          "sha256": "25a07f90e25047dbd47f3248fd38d4049ef79885792d3d087d50c4b4309d6aa6"
+        },
+        {
+          "first": 290,
+          "last": 325,
+          "sha256": "2d2daedd3ad49c4ba22bf53289a4dbe1d9f16523f4ee6e5ece82537e1c0dee32"
+        }
+      ]
+    },
+    {
+      "path": "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "git_blob": "12c9b2e45ab7fa3a9839672087ec207ef83d9e35",
+      "sha256": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a",
+      "ranges": [
+        {
+          "first": 2500,
+          "last": 2568,
+          "sha256": "c426f9e0f9f24c317c602ab165073efaca4380b61cac6354811f80d36b21bba8"
+        },
+        {
+          "first": 2598,
+          "last": 2643,
+          "sha256": "9d6699ff10132b7e6a0a058bfea4e7cf979da3499788cc6a3b962b946600b403"
+        },
+        {
+          "first": 2972,
+          "last": 3029,
+          "sha256": "f366e11877af086b0ea6de5c0bfa5ef168ea35e6d7a01de0905acfa97681947a"
+        }
+      ]
+    },
+    {
+      "path": "core/src/com/biglybt/core/util/StringInterner.java",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "git_blob": "adff39f0126a4f1d567518d720fd4b0c189b52dc",
+      "sha256": "3d425e024d5560a170838d8f5afdb9deb105deac21317b9e4496314ba462d550",
+      "ranges": [
+        {
+          "first": 1050,
+          "last": 1230,
+          "sha256": "9ab712da7dfcca85461e0311afa087a9cc374011264e3590f3c5acda4f445081"
+        },
+        {
+          "first": 1330,
+          "last": 1385,
+          "sha256": "26c065ff7190d9def686632b2a5c0bee442cd385b5df3bc1391d5cdab88cbdec"
+        }
+      ]
+    }
+  ],
+  "native_read_inputs": [
+    {
+      "path": "preview/native/core/include/biglybtc/bencode.hpp",
+      "sha256": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd"
+    },
+    {
+      "path": "preview/native/core/CMakeLists.txt",
+      "sha256": "6267449f70f13063037ccc016ce1d52880df615ea5bb6091867ca5bec7995e90"
+    },
+    {
+      "path": "preview/native/tests/managed_storage_tests.cpp",
+      "sha256": "39105138544c1664d0046d0eb5587fcc7cde167dfd1a291276f16afc70b3087e"
+    },
+    {
+      "path": "preview/native/tests/file_operations_tests.cpp",
+      "sha256": "a56203be9ac014ac0f06e44995fe731df82bd09257a140210f28d703abe4adf6"
+    }
+  ]
+}

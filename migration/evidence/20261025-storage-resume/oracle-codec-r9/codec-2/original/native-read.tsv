@@ -1,0 +1,4 @@
+OPEN	2	3072	103304	16384
+READ	0	13312	native-read-first
+READ	95232	8072	native-read-last
+CLOSE

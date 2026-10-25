@@ -1,0 +1,6 @@
+{
+  "before_runner_sha256": "5d5794c61f45d32abca4d76a4099b766ab3f5cd8cfd6ca74c84e6086b1d780a3",
+  "after_runner_sha256": "cdffe0fb18a79b26a9be8a4a31a8bbeda8da5d8746990ffb2fd0f743d4ca28f9",
+  "production_changed": false,
+  "reason": "Original legitimately omits default normal policies; exact actual Java per-file priority/skipped assertions retained"
+}

@@ -1,0 +1,24 @@
+﻿
+[2026/10/25 11:07] Log File Opened for BiglyBT 4.1.0.1_B07
+[11:07:42] Selector created for 'TCP network manager reader',OP_READ: logWithStack (AEDiagnostics.java:443)
+[11:07:42] Selector created for 'TCP network manager writer',OP_WRITE: logWithStack (AEDiagnostics.java:443)
+[11:07:42] Selector created for 'TCP Connect/Disconnect Manager',OP_CONNECT: logWithStack (AEDiagnostics.java:443)
+[11:07:42] TCP blocking server channel bound: /127.0.0.1:51911: logWithStack (AEDiagnostics.java:443)
+[11:07:42] Selector created for 'MCGroup:v4',OP_READ: logWithStack (AEDiagnostics.java:443)
+[11:07:42] Selector created for 'MCGroup:v6',OP_READ: logWithStack (AEDiagnostics.java:443)
+
+[2026/10/25 11:07] Log File Opened for BiglyBT 4.1.0.1_B07
+[11:07:52] Selector created for 'TCP network manager reader',OP_READ: logWithStack (AEDiagnostics.java:443)
+[11:07:52] Selector created for 'TCP network manager writer',OP_WRITE: logWithStack (AEDiagnostics.java:443)
+[11:07:52] Selector created for 'TCP Connect/Disconnect Manager',OP_CONNECT: logWithStack (AEDiagnostics.java:443)
+[11:07:52] TCP blocking server channel bound: /127.0.0.1:43907: logWithStack (AEDiagnostics.java:443)
+[11:07:52] Selector created for 'MCGroup:v4',OP_READ: logWithStack (AEDiagnostics.java:443)
+[11:07:52] Selector created for 'MCGroup:v6',OP_READ: logWithStack (AEDiagnostics.java:443)
+
+[2026/10/25 11:08] Log File Opened for BiglyBT 4.1.0.1_B07
+[11:08:01] Selector created for 'TCP network manager reader',OP_READ: logWithStack (AEDiagnostics.java:443)
+[11:08:01] Selector created for 'TCP network manager writer',OP_WRITE: logWithStack (AEDiagnostics.java:443)
+[11:08:01] Selector created for 'TCP Connect/Disconnect Manager',OP_CONNECT: logWithStack (AEDiagnostics.java:443)
+[11:08:01] TCP blocking server channel bound: /127.0.0.1:38851: logWithStack (AEDiagnostics.java:443)
+[11:08:01] Selector created for 'MCGroup:v4',OP_READ: logWithStack (AEDiagnostics.java:443)
+[11:08:01] Selector created for 'MCGroup:v6',OP_READ: logWithStack (AEDiagnostics.java:443)

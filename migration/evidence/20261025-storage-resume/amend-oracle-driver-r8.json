@@ -1,0 +1,14 @@
+{
+  "files": {
+    "preview/native/tests/CMakeLists.txt": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/tests/CMakeLists.txt",
+      "before_sha256": "e80a9e2a01d2264776614df4a2eb6629c080d040febedda247858cfdf9b2dd30",
+      "sha256": "eb2068e9769597a62eefadc28f6fbe6f71e6e4c96b326b65aa88a11b88b82f23"
+    },
+    "preview/native/tests/storage_defaults_handoff_driver.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/tests/storage_defaults_handoff_driver.cpp",
+      "before_sha256": null,
+      "sha256": "d12eabff01246dab3863af5347b78a21bfe2d9c0dc3665339f6af1db8e9ae5a8"
+    }
+  }
+}

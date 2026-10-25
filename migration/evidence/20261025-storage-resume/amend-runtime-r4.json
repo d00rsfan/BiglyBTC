@@ -1,0 +1,39 @@
+{
+  "files": {
+    "preview/native/engine/managed_storage.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/engine/managed_storage.cpp",
+      "before_sha256": "89ea4436c47d32b7f390b363a62c19499eff8ae79bce2e785338f1484e935dcd",
+      "sha256": "50a6842b26f6b7c8cda9c052ab8667ea11922502e15cd05a3ac69e27d144adff"
+    },
+    "preview/native/engine/managed_storage.hpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/engine/managed_storage.hpp",
+      "before_sha256": "46c3e302582d396be03de9ac39901b3d7b334f9327dd15f954f801b4143ff74b",
+      "sha256": "3c6ae44f3c7b560df160bf51539041440d140530435d743743fc1cc0b9c42d78"
+    },
+    "preview/native/engine/persistent_session.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/engine/persistent_session.cpp",
+      "before_sha256": "0b6a5d00d20fff4a629b256b86442dc4d01a90008eaa83bfae4c22e07ef526ef",
+      "sha256": "fa408785f31f7506b53e638d0d354402e3bef5bc39eb7ad42d7875e97c7a14b1"
+    },
+    "preview/native/tests/file_operations_tests.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/tests/file_operations_tests.cpp",
+      "before_sha256": "ab4687dfc4e01b33280ec50ac05e15f8a66f19ea48cdc7609d06b16489dbdc78",
+      "sha256": "a56203be9ac014ac0f06e44995fe731df82bd09257a140210f28d703abe4adf6"
+    },
+    "preview/native/tests/managed_storage_tests.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/tests/managed_storage_tests.cpp",
+      "before_sha256": "6d32ebce0df1c8d8ad9ea1071916922fe1127b338dcb32e78778fa08839166dd",
+      "sha256": "39105138544c1664d0046d0eb5587fcc7cde167dfd1a291276f16afc70b3087e"
+    },
+    "preview/native/tests/original_control_tests.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/tests/original_control_tests.cpp",
+      "before_sha256": "5cf24c7e706d296503b65d090fe4f6e5ef88f2a9fc0331816bd365253aa09d68",
+      "sha256": "ee730911c01c294c623b66b2048b1e75dc4965d8f76a15d2cdb2be4b4dad749e"
+    },
+    "preview/native/tests/original_disk_io_tests.cpp": {
+      "source": "/home/yurii/Java/BiglyBT/build/storage-20261025/engine/staging/preview/native/tests/original_disk_io_tests.cpp",
+      "before_sha256": "8c39fa9a10b73cfedf251cd7101595044c62e4277b7a58a0263a2ce63a6b6774",
+      "sha256": "5bd5a76d9238f0442d84a9492ce150eb7ad23463bb35b9b4fde862aa60dace13"
+    }
+  }
+}

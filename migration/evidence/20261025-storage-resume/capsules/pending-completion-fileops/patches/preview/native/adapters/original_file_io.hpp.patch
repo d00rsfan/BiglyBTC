@@ -1,0 +1,22 @@
+--- a/preview/native/adapters/original_file_io.hpp
++++ b/preview/native/adapters/original_file_io.hpp
+@@ -5,6 +5,7 @@
+ #include <functional>
+ #include <memory>
+ #include <span>
++#include <string_view>
+ #include <vector>
+ namespace biglybtc::storage {
+ enum class OriginalStorageKind { Linear=1, Compact=2, Reordered=3, ReorderedCompact=4 };
+@@ -25,6 +26,11 @@
+ std::string originalControlLeaf(std::size_t fileIndex,OriginalStorageKind);
+ class OriginalFileIo final {
+ public:
++  // Pure control validation through the same geometry/map decoder as open().
++  // No descriptors, recovery, publication or payload access.
++  static std::expected<void,Error> validateControl(OriginalFileGeometry,
++      OriginalStorageKind,std::string_view);
++
+   // Borrowed authenticated owned regular descriptor; exclusive serialized use.
+   // Caller retains descriptor/publisher lifetime and path/inode authorization.
+   // authenticatedLinks=2 requires caller-proven exact journal aliases; default1.

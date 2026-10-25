@@ -1,0 +1,6 @@
+OPEN	4	16320	32896	16384
+READ	0	64	inherited-0
+READ	64	16384	inherited-1
+READ	16448	16384	inherited-2
+READ	32832	64	inherited-3
+CLOSE

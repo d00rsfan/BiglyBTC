@@ -1,0 +1,7 @@
+﻿
+[2026/10/25 11:03] Log File Opened for BiglyBT 4.1.0.1_B07
+[11:03:41] Alert:1:Failed to install DNS manager
+
+This will impact functions such as forced DNS resolution prevention with SOCKS
+
+Error: Test lookup failed: Network endpoint outside owned loopback tests

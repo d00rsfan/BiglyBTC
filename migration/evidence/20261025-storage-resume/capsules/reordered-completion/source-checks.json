@@ -1,0 +1,10 @@
+{
+  "old_io_families_byte_exact": 11,
+  "new_io_families": 2,
+  "checkpoint_completion_after_normalization": true,
+  "recovery_after_original_resume_invalidation": true,
+  "root_managed_storage_whole_file_install": false,
+  "author_builds": 0,
+  "author_test_runs": 0,
+  "native_writes": 0
+}

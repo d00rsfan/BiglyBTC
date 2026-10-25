@@ -1,0 +1,26 @@
+{
+  "command": [
+    "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+    "-J-XX:ActiveProcessorCount=2",
+    "--release",
+    "8",
+    "-encoding",
+    "UTF-8",
+    "-proc:none",
+    "-implicit:none",
+    "-sourcepath",
+    "build/storage-20261025/oracle/compile-check/empty-sourcepath",
+    "-cp",
+    "/tmp/biglybtc-oracle/classes",
+    "-d",
+    "build/storage-20261025/oracle/compile-check/classes",
+    "migration/fixtures/java/ReferenceFence.java",
+    "migration/fixtures/java/EngineOracle.java",
+    "migration/fixtures/java/StorageOracle.java",
+    "build/storage-20261025/oracle/StorageScriptOracle.java",
+    "build/storage-20261025/oracle/StorageProfileOracle.java"
+  ],
+  "exit": 1,
+  "seconds": 10.05,
+  "original_rebuilt": false
+}

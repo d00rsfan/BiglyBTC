@@ -1,0 +1,8 @@
+{
+  "scope": "Source-only diagnostic main, no production/native edits or runs",
+  "before_sha256": "a7230dc92afaa44ec32ce781993904b14b25aceceed8a88a3a27cfbe1b571a6a",
+  "source_sha256": "faf36e80a728626f6461983eab2d86c57c597180a05136f92b35bd01b0da25c8",
+  "patch_sha256": "d753c5deb97f350a72f35d6d03c6851ffc403936f116beed3bed4f57ca6fc8c9",
+  "reason": "Current native already contains the explicit shortR CAS fixture correction. Prior generic failure was compatible with old C marker on hello length5/piece4 maximum1. Named family labels identify any remaining failure. R11/logical10 sequence retains valid3-piece bound11.",
+  "assertions": "All method bodies and assertions remain exact; only testmain gains named diagnostic labels."
+}

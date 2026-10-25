@@ -1,0 +1,11 @@
+--- before/StorageProfileOracle.java
++++ StorageProfileOracle.java
+@@ -58,7 +58,7 @@
+         Map<String, Object> info = new HashMap<>(), torrent = new HashMap<>(), opaque = new HashMap<>();
+         info.put("name", "layout"); info.put("piece length", (long)PIECE); info.put("pieces", hashes); info.put("files", files);
+         torrent.put("info", info); torrent.put("announce", "http://127.0.0.1:1/announce");
+-        TOTorrent result = TOTorrentFactory.deserialiseFromBEncodedByteArray(BEncoder.encode(torrent));
++        TOTorrent result = TOTorrentFactory.deserialiseFromBEncodedByteArray(new TOTorrentFactory.TorrentDataHolder(BEncoder.encode(torrent)));
+         opaque.put("list", Arrays.asList(7L, "storage–π")); result.setAdditionalMapProperty("native.storage.opaque", opaque);
+         result.serialiseToBEncodedFile(root.resolve("input.torrent").toFile());
+         return result;

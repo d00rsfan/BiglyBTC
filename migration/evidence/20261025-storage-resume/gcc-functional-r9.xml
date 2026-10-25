@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="(empty)"
+	tests="9"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname=""
+	time="2"
+	timestamp="2026-10-25T11:15:28"
+	>
+	<testcase name="original-torrent-geometry" classname="original-torrent-geometry" time="0.00275489" status="run">
+		<properties>
+			<property name="cmake_labels" value="unit"/>
+		</properties>
+		<system-out>PASS original file geometry, UTF16 ordering, padding and malformed/overflow boundaries
+</system-out>
+	</testcase>
+	<testcase name="managed-storage" classname="managed-storage" time="0.0826334" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>case negative-original-links-use-authenticated-target-and-original-base
+case new-independent-payload-root-and-filtered-parameters
+case partial-piece-progress-and-fresh-command-preservation
+case skipped-linear-sparse-file-and-boundary-piece-counts
+case single-completion-suffix-and-unknown-state-fields
+case multifile-completion-renames-only-owned-actual-paths
+case completed-target-collision-retains-incomplete-source
+case existing-single-journal-and-recognized-hardlink-recovery
+case unsafe-links-storetypes-oversize-and-symlinks-fail-before-state
+case selected-compact-expands-with-original-storetype-and-no-stale-control
+case external-explicit-link-uses-owned-descriptor-with-original-path-preserved
+case compact-conversion-replays-original-edges-at-each-durable-boundary
+case compact-conversion-refuses-replaced-journal-inode-before-any-mutation
+case unchanged-reordered-map-still-authenticates-control-at-checkpoint
+case external-file-completion-is-per-file-and-applies-original-dnd-prefix-rule
+case retained-current-pa...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="metadata-disk-router" classname="metadata-disk-router" time="1.42284" status="run">
+		<properties>
+			<property name="cmake_labels" value="torrent-workflows;unit"/>
+		</properties>
+		<system-out>********* Start testing of MetadataDiskRouterTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : MetadataDiskRouterTests::initTestCase()
+PASS   : MetadataDiskRouterTests::registrationIsBoundedLexicalAndIndependentOfFilesystemExistence()
+PASS   : MetadataDiskRouterTests::realBackendOwnershipRemovalsAndGlobalIndicesNeverAlias()
+PASS   : MetadataDiskRouterTests::disabledForwardsEveryStorageOperationWithoutCreatingOrMovingFiles()
+PASS   : MetadataDiskRouterTests::lifetimeAdmissionBoundDoesNotRecycleRetiredDisabledIndices()
+PASS   : MetadataDiskRouterTests::oneActualSessionWritesOrdinaryPayloadAndDiscardsRegisteredPayload(exact)
+PASS   : MetadataDiskRouterTests::oneActualSessionWritesOrdinaryPayloadAndDiscardsRegisteredPayload(equivalent-trailing-separator)
+PASS   : MetadataDiskRouterTests::cleanupTestCase()
+Totals: 8 passed, 0 failed, 0 skipped, 0 blacklisted, 1413ms
+********* Fi...
+[This part of the test output was removed since it exceeds the threshold of 1024 bytes.]
+</system-out>
+	</testcase>
+	<testcase name="file-operations" classname="file-operations" time="0.16091" status="run">
+		<properties>
+			<property name="cmake_labels" value="fileops;storage;unit"/>
+		</properties>
+		<system-out>ten generated file-operation families passed
+</system-out>
+	</testcase>
+	<testcase name="original-physical-file-io" classname="original-physical-file-io" time="0.01174" status="run">
+		<properties>
+			<property name="cmake_labels" value="fixtures;storage;unit"/>
+		</properties>
+		<system-out>thirteen original physical IO families passed
+</system-out>
+	</testcase>
+	<testcase name="original-disk-io" classname="original-disk-io" time="0.742269" status="run">
+		<properties>
+			<property name="cmake_labels" value="async;fixtures;storage;unit"/>
+		</properties>
+		<system-out>********* Start testing of OriginalDiskIoTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OriginalDiskIoTests::initTestCase()
+PASS   : OriginalDiskIoTests::actualCrossFilePaddingReadsWritesAndSha1()
+PASS   : OriginalDiskIoTests::actualPureV2ShortTailHashesOnlyActualBytes()
+PASS   : OriginalDiskIoTests::compactMissingZeroHoleFailsReadAndHash()
+PASS   : OriginalDiskIoTests::expiredReservationAndStaleGlobalIndexNeverReachMmap()
+PASS   : OriginalDiskIoTests::actualQueuedJobRetainsOwnerThroughRemovalAndDelivery()
+PASS   : OriginalDiskIoTests::flushFailureReturnsErrorAndRemainsStickyAtVoidBarrier()
+PASS   : OriginalDiskIoTests::actualQueuedBytesBackpressureResumesBelowLowWater()
+PASS   : OriginalDiskIoTests::cleanupTestCase()
+Totals: 9 passed, 0 failed, 0 skipped, 0 blacklisted, 732ms
+********* Finished testing of OriginalDiskIoTests *********
+</system-out>
+	</testcase>
+	<testcase name="original-storage-controls" classname="original-storage-controls" time="0.0153174" status="run">
+		<properties/>
+		<system-out>four generated original-control families passed
+</system-out>
+	</testcase>
+	<testcase name="original-file-links" classname="original-file-links" time="0.00852815" status="run">
+		<properties/>
+		<system-out>PASS original signed file-link migration, exact bases, ordered put/reset, diagnostics and authority bounds
+</system-out>
+	</testcase>
+	<testcase name="original-storage-defaults" classname="original-storage-defaults" time="0.00810456" status="run">
+		<properties/>
+		<system-out>case simple-existing-directory-file-and-missing
+case multifile-root-and-captured-existence-decision
+case unsafe-root-components-and-symlinks
+case missing-empty-types-use-original-default-linear
+case configured-reorder-floor-threshold-and-captured-local
+case bad-settings-cannot-silently-default-to-linear
+case explicit-stores-do-not-load-unused-default-settings
+case compact-control-prevents-packed-linear-interpretation
+case reordered-control-and-unsupported-cross-family
+case unsafe-control-candidates-and-pending-publication
+case default-materialization-preserves-opaque-values
+case marker-identity-is-part-of-revalidation
+PASS 12 original-storage-default cases; 87 assertions; generated paths only; no Java equality credit
+</system-out>
+	</testcase>
+</testsuite>

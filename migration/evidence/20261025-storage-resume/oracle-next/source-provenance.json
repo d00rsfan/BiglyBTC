@@ -1,0 +1,68 @@
+{
+  "status": "SOURCE_ONLY_NOT_EXECUTED",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_sources": {
+    "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java": {
+      "sha256": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39",
+      "git_blob": "f992aecdc28168d656c322512434ff1cbaf95c02"
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java": {
+      "sha256": "a88937664cb90354be6600448a63684b6a7b5c9e7906a9425b9f5a4758afbeda",
+      "git_blob": "99617ee6753153c8af1598fc17cf28ed7631319b"
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java": {
+      "sha256": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a",
+      "git_blob": "12c9b2e45ab7fa3a9839672087ec207ef83d9e35"
+    },
+    "core/src/com/biglybt/core/util/LinkFileMap.java": {
+      "sha256": "360e9acb5ff349e4e507487af847111d00c9ccc5e8d5e2f0053d02ead649abed",
+      "git_blob": "7c44007f711e902ac0807e7eb69d18782bf48058"
+    },
+    "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java": {
+      "sha256": "6755b950c548c5a7d153b9aef2c1024c7c5c79d5880fd858f3bac4261adcdf8c",
+      "git_blob": "0612105280e1489fc628d155bd12c7606ac0e0c3"
+    },
+    "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java": {
+      "sha256": "821229517d374be10b95b4c2b623e3f25b356bf6d29724067933d943f719bcef",
+      "git_blob": "a9766d0fd5dea49342d7c59b62c8d4278f596c91"
+    },
+    "core/src/com/biglybt/core/diskmanager/file/impl/FMFileAccessController.java": {
+      "sha256": "1f30efb473dbf6c41037badca094b9ec90c180b7a8b0d9dab4f0d97333decc2e",
+      "git_blob": "5443c6bc46d74b1c9afd593998dd6e01924140b3"
+    },
+    "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java": {
+      "sha256": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194",
+      "git_blob": "72d5cccf803da692911b9a0e56777262138d6e00"
+    },
+    "core/src/com/biglybt/core/config/impl/ConfigurationManager.java": {
+      "sha256": "2627f71f0dd69b2cee577331ad6ce05fd230d47df816b592d07236c9b759bc82",
+      "git_blob": "811e21d1f34fe1c5e2a8daf7616e7e3eb22e2e0f"
+    },
+    "core/src/com/biglybt/core/torrent/TOTorrentFactory.java": {
+      "sha256": "91d651ffb6d23a515387dcd5d58a2ca53aed0f0fb4f211a91fb21ac0cf0203f0",
+      "git_blob": "94c2182204c29b061ccd1b571b65bb9504e86897"
+    }
+  },
+  "reference_sha256": {
+    "migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+    "migration/fixtures/java/EngineOracle.java": "325ca455bfdcd754e4369261348856a9c2143268dd189c3716f1cb7ba4cf7765",
+    "migration/tools/peer_interop.py": "93e1577f1896fbd438a93b0e128c90b394fedaca42fe56db8189fc7f43f5b299",
+    "migration/tools/handoff.py": "715cc1de2198a2d593501302b41186983dbe495172bd0b4c1709ddd399070bd6",
+    "migration/tools/oracle.py": "8eb1cc4758ba78b4679b05b553ed8f6b7c1c1abe1745b8b1f5357ae681f0710f",
+    "migration/tools/sources.py": "16c4a0e46fdd52b313e6a2d28e592dc0314e8398a270ab0d7083f66a7abf5733"
+  },
+  "java_retention": "/home/yurii/Java/BiglyBTC/build/dependencies/java-oracle-17-20261021/retention.json",
+  "java_retention_sha256": "7472e8bda8d832fd5a962cda76ba1fcefaa0e6e9b4cad2621e0be97e6fbec9dd",
+  "retained_cohort_entries": 5432,
+  "current_oracle_context": {
+    "build/storage-20261025/oracle/run.py": "cdffe0fb18a79b26a9be8a4a31a8bbeda8da5d8746990ffb2fd0f743d4ca28f9",
+    "build/storage-20261025/oracle/manifest.json": "002044b6c9399c58dcb1d465af56820b8e9a6345b3485ea39b1d22b7ee1b1bd5",
+    "build/storage-20261025/oracle/active-runner.json": "9bbcc4c60c8b4e1b51e8e2a9a0af182d07a0e105904eff1187d3605b69bfc6ea",
+    "build/storage-20261025/oracle/StorageProfileOracle.java": "618d4f7b5f57c2c01db1aec55fc9d172f8f1d2797a1d0078883bd1d62ac87d24",
+    "build/storage-20261025/oracle/tests/storage_handoff_driver.cpp": "914e8681f5ed26216dcb114487f5c2bad9f352dedd687e28e5de07b680c4d699"
+  },
+  "new_native_driver_before_sha256": "914e8681f5ed26216dcb114487f5c2bad9f352dedd687e28e5de07b680c4d699",
+  "unchanged_native_driver_sha256": "914e8681f5ed26216dcb114487f5c2bad9f352dedd687e28e5de07b680c4d699",
+  "original_core_recompiled": false,
+  "original_profile_or_process_access": false
+}

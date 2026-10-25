@@ -1,0 +1,6 @@
+﻿
+[2026/10/25 11:06] Log File Opened for BiglyBT 4.1.0.1_B07
+[11:06:18] addDownload: 7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C: isMagnet=false
+[11:06:18] createNewDownload: starts for , /tmp/biglybtc-managed-handoff-defaults-all-r8/negative-minimum-external/input.torrent,/tmp/biglybtc-managed-handoff-defaults-all-r8/negative-minimum-external/payload/initial, null
+[11:06:19] createNewDownload: : isMagnet=true
+[11:06:19] addDownloadManager: 7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C: actually adding

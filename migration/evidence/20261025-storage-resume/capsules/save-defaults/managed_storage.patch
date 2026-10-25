@@ -1,0 +1,76 @@
+--- a/preview/native/engine/managed_storage.cpp
++++ b/preview/native/engine/managed_storage.cpp
+@@ -1,6 +1,7 @@
+ #include "managed_storage.hpp"
+ #include "original_disk_io.hpp"
+ #include "original_control.hpp"
++#include "original_storage_defaults.hpp"
+ #include "local_support.hpp"
+ #include "network_policy.hpp"
+ #include "torrent_state.hpp"
+@@ -419,7 +420,8 @@
+     struct stat profile{}; require(lease.valid()&&::fstat(lease.directoryHandle(),&profile)==0,"Managed storage requires a valid held lease",ErrorCode::UnsafePath);
+     auto inventory=take(storage::ConfigFile::load(lease,"downloads.config"));
+     require(inventory.recoverySource()!=storage::RecoverySource::Saving,"Resolve saved-inventory recovery before managed preparation",ErrorCode::Conflict);
+-    const auto saved=selected(inventory.document(),hash);
++    const auto rawSaved=selected(inventory.document(),hash);
++    auto saved=rawSaved;
+     const auto& row=entryFor(inventory.document(),saved,!inventory.document().find("downloads"));
+     ManagedQueueMetadata queue;
+     queue.position=saved.position.value_or(1);
+@@ -456,6 +458,10 @@
+     const auto geometry=compat::originalLayout(source);
+     require(geometry.has_value(),"Invalid original managed geometry",ErrorCode::InvalidFormat); auto layout=*geometry;
+     auto info=metadata(source,hash,layout); auto attributes=dictionary(source.find("attributes"));
++    saved=take(storage::resolveOriginalSaveRoot(rawSaved,layout));
++    const auto storageDefaults=take(storage::resolveOriginalStorageTypes(lease,hash,layout,attributes.root()));
++    require(!storageDefaults.unsupportedConversion,"Original policy requires unsupported cross-family storage conversion");
++    done(storage::applyOriginalStorageDefaults(attributes,storageDefaults,true));
+     const auto parsedPolicy=compat::originalFilePolicy(row,layout.files.size()); require(parsedPolicy.has_value(),"Invalid original managed file priorities",ErrorCode::InvalidFormat);
+     auto pending=journals(attributes.root(),layout.multifile,layout.files.size()); const fs::path save(saved.saveDirectory);
+     require(save.is_absolute()&&save.lexically_normal()==save,"Managed save directory must be absolute and normalized",ErrorCode::UnsafePath);
+@@ -486,6 +492,12 @@
+     // All unsupported geometry/mapping/policy decisions precede state ownership
+     // and payload mutation. beginUpdate hydrates the same last cached sections.
+     auto state=take(store.beginUpdate(lease,hash)); auto actual=dictionary(state.document().find("attributes"));
++    const auto recheckedDefaults=take(storage::resolveOriginalStorageTypes(lease,hash,layout,actual.root()));
++    require(recheckedDefaults==storageDefaults,"Original storage defaults/controls changed during preparation",ErrorCode::Conflict);
++    const auto recheckedRoot=take(storage::resolveOriginalSaveRoot(rawSaved,layout));
++    require(recheckedRoot.saveDirectory==saved.saveDirectory&&recheckedRoot.saveFile==saved.saveFile,
++        "Original save-root interpretation changed during preparation",ErrorCode::Conflict);
++    done(storage::applyOriginalStorageDefaults(actual,storageDefaults,true));
+     {
+       auto check=plan(saved,actual.root(),layout,*parsedPolicy,save,journals(actual.root(),layout.multifile,layout.files.size()),profilePath);
+       require(check.size()==slots.size(),"Managed mapping changed during preparation",ErrorCode::Conflict);
+@@ -506,8 +518,22 @@
+     auto resume=dictionary(state.document().find("resume"));auto resumeData=dictionary(resume.find("data"));
+     put(resumeData,"valid","i0e");put(resumeData,"resume data",stringValue(std::string(static_cast<std::size_t>(info->num_pieces()),'\2')));put(resumeData,"blocks","de");
+     put(resume,"data",resumeData.serialize());done(state.replaceSection("resume",resume.serialize()));
++    done(storage::applyOriginalStorageDefaults(actual,storageDefaults));
+     put(actual,"resumecomplete","i1e");done(state.replaceSection("attributes",actual.serialize()));
+     writeLinks(state,slots,save,false); done(store.save(lease,state));
++    if(rawSaved.saveDirectory!=saved.saveDirectory||rawSaved.saveFile!=saved.saveFile||rawSaved.legacySavePath) {
++      // Capture the original first-load interpretation before creating parents:
++      // their later existence must not change a legacy path's meaning.
++      const auto& oldRow=entryFor(inventory.document(),rawSaved,!inventory.document().find("downloads"));
++      auto migrated=take(Document::parse(encoded(oldRow),storage::compatibleConfigLimits()).transform_error(
++          [](const auto&){return Error{ErrorCode::InvalidFormat,"Cannot migrate original save root"};}));
++      put(migrated,"save_dir",stringValue(saved.saveDirectory));put(migrated,"save_file",stringValue(*saved.saveFile));
++      if(rawSaved.legacyKey){put(inventory.document(),*rawSaved.legacyKey,migrated.serialize());}
++      else {const auto* rows=inventory.document().find("downloads");std::string list="l";
++        for(std::size_t i=0;i<rows->children.size();++i){list+=i==rawSaved.sourceIndex?migrated.serialize():encoded(rows->children[i]);}
++        put(inventory.document(),"downloads",list+'e');}
++      done(inventory.save(lease));
++    }
+     std::vector<std::optional<OriginalDiskFile>> mappedFiles(slots.size());
+     for (auto& slot:slots) {
+       if (slot.padding) { continue; }
+@@ -531,7 +557,7 @@
+         std::shared_ptr<OriginalControl> control;
+         if(slot.kind!=storage::OriginalStorageKind::Linear||slot.expanding) {control=take(OriginalControl::open(lease,hash.hex(),slot.index,slot.expanding?storage::OriginalStorageKind::Compact:slot.kind,true));}
+         auto io=take(storage::OriginalFileIo::open(mappedDescriptor.get(),slot.geometry,slot.kind,control?take(control->load()):std::nullopt,control?control->publisher():storage::OriginalControlPublisher{},true,slot.expanding&&slot.kind==storage::OriginalStorageKind::Compact,static_cast<unsigned>(slot.identity.st_nlink)));
+-        if((slot.kind==storage::OriginalStorageKind::Compact&&!slot.skipped)||slot.expanding) {
++        if((slot.kind==storage::OriginalStorageKind::Compact&&(!slot.skipped||storageDefaults.requested[slot.index]==storage::OriginalStorageKind::Linear))||slot.expanding) {
+           require(slot.identity.st_dev<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())&&slot.identity.st_ino<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()),"Compact conversion identity exceeds original journal range",ErrorCode::Unsupported);
+           auto attrs=dictionary(state.document().find("attributes"));std::string conversions="l";
+           // Existing other intents remain bound until their own iteration.

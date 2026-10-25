@@ -1,0 +1,1060 @@
+{
+  "status": "PASS_ACTUAL_ORIGINAL_STORAGE_HANDOFF",
+  "phase": "managed",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_provenance_sha256": "a5ad825166e6c6d0171d46e13b4b490b20032cc2b446b92fd8001490f2d5ff17",
+  "manifest_sha256": "5c4c881c0f416d27f5904abf1a67cc36672ae9687aac978a1c2f0a2131175afd",
+  "retention_sha256": "7472e8bda8d832fd5a962cda76ba1fcefaa0e6e9b4cad2621e0be97e6fbec9dd",
+  "original_core_recompiled": false,
+  "original_profile_or_process_access": false,
+  "drivers": {
+    "codec_driver": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+      "sha256": "0e16adb13e5760f3a329239eeb1fc80705152e307f706fd711edc50d5a0aba7a"
+    },
+    "managed_driver": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-storage-handoff-driver",
+      "sha256": "65245dae89192cfd9ee4ce7b5135975405bdf9885be945335941116c093110f3"
+    }
+  },
+  "managed": {
+    "2": {
+      "baseline": {
+        "files": {
+          "0": {
+            "priority": 0,
+            "skipped": false,
+            "kind": 1,
+            "downloaded": 3072,
+            "bytes": 3072,
+            "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/payload/layout/prefix.bin"
+          },
+          "1": {
+            "priority": 0,
+            "skipped": true,
+            "kind": 2,
+            "downloaded": 21384,
+            "bytes": 103304,
+            "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/payload/layout/payload.bin.az!"
+          },
+          "2": {
+            "priority": 0,
+            "skipped": false,
+            "kind": 1,
+            "downloaded": 24696,
+            "bytes": 24696,
+            "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/payload/layout/suffix.bin"
+          }
+        },
+        "pieces": [
+          3,
+          8,
+          "10000011"
+        ],
+        "hash": "7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C",
+        "intent": [
+          "false",
+          "false",
+          "1",
+          "32768",
+          "65536"
+        ],
+        "counters": [
+          49152,
+          49152
+        ],
+        "stopped": true
+      },
+      "handoffs": [
+        {
+          "mode": "partial",
+          "native": {
+            "complete": false,
+            "completed": "114688",
+            "hash": "7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C",
+            "mode": "partial",
+            "pieces": 7,
+            "received": "65536",
+            "schema": 1,
+            "sent": "0",
+            "session_joined": true,
+            "settled_payload_received": "65536",
+            "storage_released": true,
+            "total_pieces": 8
+          },
+          "original": {
+            "files": {
+              "0": {
+                "priority": 0,
+                "skipped": false,
+                "kind": 1,
+                "downloaded": 3072,
+                "bytes": 3072,
+                "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/payload/layout/prefix.bin"
+              },
+              "1": {
+                "priority": 0,
+                "skipped": false,
+                "kind": 1,
+                "downloaded": 86920,
+                "bytes": 103304,
+                "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/payload/layout/payload.bin.az!"
+              },
+              "2": {
+                "priority": 0,
+                "skipped": false,
+                "kind": 1,
+                "downloaded": 24696,
+                "bytes": 24696,
+                "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/payload/layout/suffix.bin"
+              }
+            },
+            "pieces": [
+              7,
+              8,
+              "11111011"
+            ],
+            "hash": "7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C",
+            "intent": [
+              "false",
+              "false",
+              "1",
+              "32768",
+              "65536"
+            ],
+            "counters": [
+              114688,
+              49152
+            ],
+            "stopped": true
+          }
+        },
+        {
+          "mode": "complete",
+          "native": {
+            "complete": true,
+            "completed": "131072",
+            "hash": "7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C",
+            "mode": "complete",
+            "pieces": 8,
+            "received": "16384",
+            "schema": 1,
+            "sent": "0",
+            "session_joined": true,
+            "settled_payload_received": "16384",
+            "storage_released": true,
+            "total_pieces": 8
+          },
+          "original": {
+            "files": {
+              "0": {
+                "priority": 0,
+                "skipped": false,
+                "kind": 1,
+                "downloaded": 3072,
+                "bytes": 3072,
+                "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/payload/layout/prefix.bin"
+              },
+              "1": {
+                "priority": 0,
+                "skipped": false,
+                "kind": 1,
+                "downloaded": 103304,
+                "bytes": 103304,
+                "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/payload/layout/payload.bin"
+              },
+              "2": {
+                "priority": 0,
+                "skipped": false,
+                "kind": 1,
+                "downloaded": 24696,
+                "bytes": 24696,
+                "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/payload/layout/suffix.bin"
+              }
+            },
+            "pieces": [
+              8,
+              8,
+              "11111111"
+            ],
+            "hash": "7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C",
+            "intent": [
+              "false",
+              "false",
+              "1",
+              "32768",
+              "65536"
+            ],
+            "counters": [
+              131072,
+              49152
+            ],
+            "stopped": true
+          }
+        }
+      ],
+      "profile_files": {
+        ".azlock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        ".certs": "9a17d084940e9954ae268ad8b3aae9f0f7c3df2cd17e97441763f8c6cc7e6d1d",
+        ".keystore": "09754edeef3ef6906c67e7ed4d41d9c32bdd840f10f45748b215d050fe198db8",
+        ".lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "BiglyBT.statistics": "2532ba0c0f0e2386362178b66ad0b403b0bc2603ce14352106f8fc0e039c805d",
+        "BiglyBT.statistics.bak": "8dfc99c021c25ed5fbf96ba18a12e414365b0e47e97ab6e232d0be2b7d08ac34",
+        "active/7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C.dat": "4fc52f95ecf2fa6b0a9a89bc1c2134f7e0a3f6fc71408581c1b380a9fdc74d17",
+        "active/7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C.dat.bak": "d052c668d887ee0559dc30444e93323f627ddcbf84521e5b89840dc31fcb004c",
+        "active/cache.dat": "44e87257b660dec92e052729c34d9d83f9cf598364d2f266e99ce06a1d4fe6cd",
+        "active/cache.dat.bak": "d0bb33e537ea4509eb3de7331134964f0e140710e5ddffded39ce0d584f6b92c",
+        "alltrackers.config": "6fca75550afce45adb2f367ec9315589181d12ea91677553f71ee9d55c80e10c",
+        "alltrackers.config.bak": "6fca75550afce45adb2f367ec9315589181d12ea91677553f71ee9d55c80e10c",
+        "biglybt.config": "189e1e10deabaf6025c392f50ed976db0e55230c6ef95c292f8b3ddeb73ad58b",
+        "biglybt.config.bak": "189e1e10deabaf6025c392f50ed976db0e55230c6ef95c292f8b3ddeb73ad58b",
+        "dlhistorya.config": "b5bbf5b3f3be534229d46465e5410af8b1d6a6834cfdea6760a55eaee8132c9f",
+        "dlhistorya.config.bak": "c913d371646f001db07abb3b736ae70ea9facb7a007e3a4b0043ae6646f0673c",
+        "downloads.config": "b5eaf059ae7d1d12bbe8475f2ceb135b7d661e06952cf90d3dd2a6d867c4e86a",
+        "downloads.config.bak": "b5eaf059ae7d1d12bbe8475f2ceb135b7d661e06952cf90d3dd2a6d867c4e86a",
+        "exported_params.properties": "31a3d5db2f824eb2c1cd16a6b3b5be000875dbb27224727ba4ff971355f8d1c7",
+        "ipfilter.cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "logs/DiskOps_1.log": "7549fb226095b893e84fb722f7c0a49317e21d9a0d4e7bc478a5be26bbebf8a8",
+        "logs/Swarm Merge_1.log": "e24c882f1e25e342b3d41d8b6c8c49a3106bb4de22b5b720a1a7bcfc4bb50ae6",
+        "logs/alerts_1.log": "08cb8f43ea91d2db36a6cfe7afa9309c6acbf270de424cc585c1b738544fe701",
+        "logs/debug_1.log": "f5385c73f555fbb6260eb5a7df297a92248c98ed6f912c2280e6d4ccbe2ffbbf",
+        "logs/seltrace_1.log": "786aa4ae88bac947509d18e1254396608b98d496b21cf2f7e2af06a9fbf21170",
+        "net/pm_default.dat": "3c7a374b954b5d31eed1be79aef2dedabf8e0b3859925c4092e19a74029a0a08",
+        "plugins/azupnpav/plugin.properties": "fea54f28ebac68f1f17f87a71e8df8a9bdad5dbfe4d4b866e29cefafc52769f8",
+        "stats/2026/10/25.dat": "166a53928f91d83cd6de0a47668b29844bb997101a131ebcb60f11f0d6d63962",
+        "tag.config": "2020da2940bb97780d1e76d79c5abd80fe91aee3995efe2691299751db352689"
+      }
+    },
+    "3": {
+      "baseline": {
+        "files": {
+          "0": {
+            "priority": 0,
+            "skipped": false,
+            "kind": 1,
+            "downloaded": 3072,
+            "bytes": 3072,
+            "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/payload/layout/prefix.bin"
+          },
+          "1": {
+            "priority": 0,
+            "skipped": false,
+            "kind": 3,
+            "downloaded": 37768,
+            "bytes": 103304,
+            "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/payload/layout/payload.bin.az!"
+          },
+          "2": {
+            "priority": 0,
+            "skipped": false,
+            "kind": 1,
+            "downloaded": 24696,
+            "bytes": 24696,
+            "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/payload/layout/suffix.bin"
+          }
+        },
+        "pieces": [
+          4,
+          8,
+          "10100011"
+        ],
+        "hash": "7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C",
+        "intent": [
+          "false",
+          "false",
+          "1",
+          "32768",
+          "65536"
+        ],
+        "counters": [
+          65536,
+          65536
+        ],
+        "stopped": true
+      },
+      "handoffs": [
+        {
+          "mode": "partial",
+          "native": {
+            "complete": false,
+            "completed": "114688",
+            "hash": "7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C",
+            "mode": "partial",
+            "pieces": 7,
+            "received": "49152",
+            "schema": 1,
+            "sent": "0",
+            "session_joined": true,
+            "settled_payload_received": "49152",
+            "storage_released": true,
+            "total_pieces": 8
+          },
+          "original": {
+            "files": {
+              "0": {
+                "priority": 0,
+                "skipped": false,
+                "kind": 1,
+                "downloaded": 3072,
+                "bytes": 3072,
+                "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/payload/layout/prefix.bin"
+              },
+              "1": {
+                "priority": 0,
+                "skipped": false,
+                "kind": 3,
+                "downloaded": 86920,
+                "bytes": 103304,
+                "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/payload/layout/payload.bin.az!"
+              },
+              "2": {
+                "priority": 0,
+                "skipped": false,
+                "kind": 1,
+                "downloaded": 24696,
+                "bytes": 24696,
+                "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/payload/layout/suffix.bin"
+              }
+            },
+            "pieces": [
+              7,
+              8,
+              "11111011"
+            ],
+            "hash": "7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C",
+            "intent": [
+              "false",
+              "false",
+              "1",
+              "32768",
+              "65536"
+            ],
+            "counters": [
+              114688,
+              65536
+            ],
+            "stopped": true
+          }
+        },
+        {
+          "mode": "complete",
+          "native": {
+            "complete": true,
+            "completed": "131072",
+            "hash": "7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C",
+            "mode": "complete",
+            "pieces": 8,
+            "received": "16384",
+            "schema": 1,
+            "sent": "0",
+            "session_joined": true,
+            "settled_payload_received": "16384",
+            "storage_released": true,
+            "total_pieces": 8
+          },
+          "original": {
+            "files": {
+              "0": {
+                "priority": 0,
+                "skipped": false,
+                "kind": 1,
+                "downloaded": 3072,
+                "bytes": 3072,
+                "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/payload/layout/prefix.bin"
+              },
+              "1": {
+                "priority": 0,
+                "skipped": false,
+                "kind": 3,
+                "downloaded": 103304,
+                "bytes": 103304,
+                "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/payload/layout/payload.bin"
+              },
+              "2": {
+                "priority": 0,
+                "skipped": false,
+                "kind": 1,
+                "downloaded": 24696,
+                "bytes": 24696,
+                "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/payload/layout/suffix.bin"
+              }
+            },
+            "pieces": [
+              8,
+              8,
+              "11111111"
+            ],
+            "hash": "7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C",
+            "intent": [
+              "false",
+              "false",
+              "1",
+              "32768",
+              "65536"
+            ],
+            "counters": [
+              131072,
+              65536
+            ],
+            "stopped": true
+          }
+        }
+      ],
+      "profile_files": {
+        ".azlock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        ".certs": "9a17d084940e9954ae268ad8b3aae9f0f7c3df2cd17e97441763f8c6cc7e6d1d",
+        ".keystore": "09754edeef3ef6906c67e7ed4d41d9c32bdd840f10f45748b215d050fe198db8",
+        ".lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "BiglyBT.statistics": "63642dd36ab1f3c28cf873ddd294f680e510375cc93d088e10299c75e951daeb",
+        "BiglyBT.statistics.bak": "8dfc99c021c25ed5fbf96ba18a12e414365b0e47e97ab6e232d0be2b7d08ac34",
+        "active/7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C/fmfile1.dat.2": "a2ff8dba57d9d55a5d528f6792bc6e2042a84236827709154a0d5718197a4b27",
+        "active/7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C/fmfile1.dat.2.bak": "d6ca8c2581de0d0919ced5ab1e5fcc09ba719dd2a822bcf6cee5b8daecbf780b",
+        "active/7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C.dat": "7d6d7bd413d6c790bf7cc0f049471b3fd2caeda0cb8144b8d23bbd261ada4416",
+        "active/7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C.dat.bak": "f3e25d18d30dfa9167971583db6ff40dbd50c61efd7c0d1c2f112f4417cb1d0b",
+        "active/cache.dat": "d77a03815b225bcf863bb75bae22877cdd9dc65a4ce2e65c5286ccd77cafa35c",
+        "active/cache.dat.bak": "7bb8eb791f97e206fac5597a6de8fcea604b7907c770a3dc3f8c864b9a5e1e16",
+        "alltrackers.config": "6fca75550afce45adb2f367ec9315589181d12ea91677553f71ee9d55c80e10c",
+        "alltrackers.config.bak": "6fca75550afce45adb2f367ec9315589181d12ea91677553f71ee9d55c80e10c",
+        "biglybt.config": "ca2ad033317607a717d182b97dec878a7c86ba8f8ab00d678ca241c73e81541b",
+        "biglybt.config.bak": "ca2ad033317607a717d182b97dec878a7c86ba8f8ab00d678ca241c73e81541b",
+        "dlhistorya.config": "6e49fcaf32f1ed0cca5b610dbe0f444dea7d3609b74cfe761ac5477087690bd4",
+        "downloads.config": "6da55985d5c55807bb3be0bae0a2973d868dfecbfd89492e78b384d2ecffec2b",
+        "downloads.config.bak": "6da55985d5c55807bb3be0bae0a2973d868dfecbfd89492e78b384d2ecffec2b",
+        "exported_params.properties": "31a3d5db2f824eb2c1cd16a6b3b5be000875dbb27224727ba4ff971355f8d1c7",
+        "ipfilter.cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "logs/DiskOps_1.log": "381b8d952bb6a50dfefcf1635894b1723fbbd2c4f39135e27448f3c51c8b422e",
+        "logs/Swarm Merge_1.log": "e1be7950f5351d3f168c3577e1d91ee016b4c0f4c64b41cf873e25e062f2912d",
+        "logs/alerts_1.log": "3d7c46b31cd1e62c473b540afe210adee54f5127a47ae84e8b36119c6fa7c96d",
+        "logs/debug_1.log": "6758c6a77928ee8477f9798493dd9e064e7b18b46bfaf9e338c21f714a12a870",
+        "logs/seltrace_1.log": "056608f77380b67c2391c674ac557b0d14e02c15d35cb4b37c7d6a10292bd672",
+        "net/pm_default.dat": "3c7a374b954b5d31eed1be79aef2dedabf8e0b3859925c4092e19a74029a0a08",
+        "plugins/azupnpav/plugin.properties": "fea54f28ebac68f1f17f87a71e8df8a9bdad5dbfe4d4b866e29cefafc52769f8",
+        "stats/2026/10/25.dat": "1126793a8753b085ec4dd2e4ec0f3e4a9729db575a083040dc99462275dee5af",
+        "tag.config": "2020da2940bb97780d1e76d79c5abd80fe91aee3995efe2691299751db352689"
+      }
+    },
+    "4": {
+      "baseline": {
+        "files": {
+          "0": {
+            "priority": 0,
+            "skipped": false,
+            "kind": 1,
+            "downloaded": 3072,
+            "bytes": 3072,
+            "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/payload/layout/prefix.bin"
+          },
+          "1": {
+            "priority": 0,
+            "skipped": true,
+            "kind": 4,
+            "downloaded": 21384,
+            "bytes": 103304,
+            "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/payload/layout/payload.bin.az!"
+          },
+          "2": {
+            "priority": 0,
+            "skipped": false,
+            "kind": 1,
+            "downloaded": 24696,
+            "bytes": 24696,
+            "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/payload/layout/suffix.bin"
+          }
+        },
+        "pieces": [
+          3,
+          8,
+          "10000011"
+        ],
+        "hash": "7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C",
+        "intent": [
+          "false",
+          "false",
+          "1",
+          "32768",
+          "65536"
+        ],
+        "counters": [
+          49152,
+          49152
+        ],
+        "stopped": true
+      },
+      "handoffs": [
+        {
+          "mode": "partial",
+          "native": {
+            "complete": false,
+            "completed": "114688",
+            "hash": "7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C",
+            "mode": "partial",
+            "pieces": 7,
+            "received": "49152",
+            "schema": 1,
+            "sent": "0",
+            "session_joined": true,
+            "settled_payload_received": "49152",
+            "storage_released": true,
+            "total_pieces": 8
+          },
+          "original": {
+            "files": {
+              "0": {
+                "priority": 0,
+                "skipped": false,
+                "kind": 1,
+                "downloaded": 3072,
+                "bytes": 3072,
+                "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/payload/layout/prefix.bin"
+              },
+              "1": {
+                "priority": 0,
+                "skipped": false,
+                "kind": 3,
+                "downloaded": 86920,
+                "bytes": 103304,
+                "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/payload/layout/payload.bin.az!"
+              },
+              "2": {
+                "priority": 0,
+                "skipped": false,
+                "kind": 1,
+                "downloaded": 24696,
+                "bytes": 24696,
+                "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/payload/layout/suffix.bin"
+              }
+            },
+            "pieces": [
+              7,
+              8,
+              "11111011"
+            ],
+            "hash": "7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C",
+            "intent": [
+              "false",
+              "false",
+              "1",
+              "32768",
+              "65536"
+            ],
+            "counters": [
+              98304,
+              49152
+            ],
+            "stopped": true
+          }
+        },
+        {
+          "mode": "complete",
+          "native": {
+            "complete": true,
+            "completed": "131072",
+            "hash": "7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C",
+            "mode": "complete",
+            "pieces": 8,
+            "received": "16384",
+            "schema": 1,
+            "sent": "0",
+            "session_joined": true,
+            "settled_payload_received": "16384",
+            "storage_released": true,
+            "total_pieces": 8
+          },
+          "original": {
+            "files": {
+              "0": {
+                "priority": 0,
+                "skipped": false,
+                "kind": 1,
+                "downloaded": 3072,
+                "bytes": 3072,
+                "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/payload/layout/prefix.bin"
+              },
+              "1": {
+                "priority": 0,
+                "skipped": false,
+                "kind": 3,
+                "downloaded": 103304,
+                "bytes": 103304,
+                "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/payload/layout/payload.bin"
+              },
+              "2": {
+                "priority": 0,
+                "skipped": false,
+                "kind": 1,
+                "downloaded": 24696,
+                "bytes": 24696,
+                "path": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/payload/layout/suffix.bin"
+              }
+            },
+            "pieces": [
+              8,
+              8,
+              "11111111"
+            ],
+            "hash": "7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C",
+            "intent": [
+              "false",
+              "false",
+              "1",
+              "32768",
+              "65536"
+            ],
+            "counters": [
+              114688,
+              49152
+            ],
+            "stopped": true
+          }
+        }
+      ],
+      "profile_files": {
+        ".azlock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        ".certs": "9a17d084940e9954ae268ad8b3aae9f0f7c3df2cd17e97441763f8c6cc7e6d1d",
+        ".keystore": "09754edeef3ef6906c67e7ed4d41d9c32bdd840f10f45748b215d050fe198db8",
+        ".lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "BiglyBT.statistics": "63642dd36ab1f3c28cf873ddd294f680e510375cc93d088e10299c75e951daeb",
+        "BiglyBT.statistics.bak": "8dfc99c021c25ed5fbf96ba18a12e414365b0e47e97ab6e232d0be2b7d08ac34",
+        "active/7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C/fmfile1.dat.2": "a2ff8dba57d9d55a5d528f6792bc6e2042a84236827709154a0d5718197a4b27",
+        "active/7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C/fmfile1.dat.2.bak": "f1617fc9c7612a735ee52375ad31a06077d9fd69b08956a185ed0d9efa964a4a",
+        "active/7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C.dat": "3f3db061a50e0fd4b81c01704a66e8fdea77e1de5b79db865dbc96cc3e1e6526",
+        "active/7EDA8617615C9370C7FAAFA4D3B3E4A1A594E69C.dat.bak": "0ccc8463fcd9d7d79634f36e5e7e92809f61823a2422dbaa8e711161ee54da8e",
+        "active/cache.dat": "44c9afd9f18e71a1a7ff8e15ea80c30245b2b71fea4af812b926cf879cd6ec00",
+        "active/cache.dat.bak": "6aae22c4137addcd552e16c136f0a150c5e1a693ba7948bf89a6fb8efe182219",
+        "alltrackers.config": "6fca75550afce45adb2f367ec9315589181d12ea91677553f71ee9d55c80e10c",
+        "alltrackers.config.bak": "6fca75550afce45adb2f367ec9315589181d12ea91677553f71ee9d55c80e10c",
+        "biglybt.config": "2974a21c47981565cec21ba23e2bee5f700d32956baafb36b90c4bb1873c2d56",
+        "biglybt.config.bak": "2974a21c47981565cec21ba23e2bee5f700d32956baafb36b90c4bb1873c2d56",
+        "dlhistorya.config": "9251a330db25401ea74112e8d32c2f52ac03e1c1c21e7d2c8a757196a3c2820f",
+        "dlhistorya.config.bak": "2151159a79bea4e517f7009aae99811e1556f179998745cb87bb1f9ac46bfac7",
+        "downloads.config": "071c00adcdc57ff5f3d4b3cc042a6cefdc1f45faeea2fd08fbb532452258d952",
+        "downloads.config.bak": "071c00adcdc57ff5f3d4b3cc042a6cefdc1f45faeea2fd08fbb532452258d952",
+        "exported_params.properties": "31a3d5db2f824eb2c1cd16a6b3b5be000875dbb27224727ba4ff971355f8d1c7",
+        "ipfilter.cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "logs/DiskOps_1.log": "510609564b30c80e06df9fa2e71e55e1e8ea57b411b9639dabbb63130d3db05d",
+        "logs/Swarm Merge_1.log": "1c1aaf495eed13a0ebf210f752860f6c8bf02275b4a9bb47681a4f0255b6956c",
+        "logs/alerts_1.log": "a0f3a549ccac23a5fde3c02b4d60743d01701409a1c0725377371c88ea91a32e",
+        "logs/debug_1.log": "7f8b5b89b32b243d2a47de68cdd299de26ab3062d69fb233c8a94cde72ee9aa8",
+        "logs/seltrace_1.log": "89cf76d5f9f663349520efb52f53385842c1eeed84542ed1b7cf5fd0a02fc23c",
+        "net/pm_default.dat": "3c7a374b954b5d31eed1be79aef2dedabf8e0b3859925c4092e19a74029a0a08",
+        "plugins/azupnpav/plugin.properties": "fea54f28ebac68f1f17f87a71e8df8a9bdad5dbfe4d4b866e29cefafc52769f8",
+        "stats/2026/10/25.dat": "7fc1c98e9563b79b2618598816626e76ea08cb07c6e6184549c774971dda8d44",
+        "tag.config": "2020da2940bb97780d1e76d79c5abd80fe91aee3995efe2691299751db352689"
+      }
+    }
+  },
+  "authored_class_sha256": {
+    "EngineOracle$1.class": "79d627c4854e87732f3b9b1d6e5014e4a51cb9bfbbd1b46abb79cd5b00f818a7",
+    "EngineOracle.class": "e910d5f9cf835560fe2059ab564172e65e0492af9a25bd7b4e2d6406809a4617",
+    "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd",
+    "StorageOracle$1.class": "f3c8fde4f731edd1f3925039f401ae1ca6b0a620bf5fa3312cd43ed4dc9b4705",
+    "StorageOracle.class": "f36f8501fd905640b177f1b310886cd67ca92860e6c45028d545192335d268e9",
+    "StorageProfileOracle$1.class": "b9288360ae41b97c831b71824e66b301259c44166d5e35f85e0a65ff705c1525",
+    "StorageProfileOracle$2.class": "d2f319bac25b5f32332c890001db3db3cc04e673a53bb67aac6356211a948916",
+    "StorageProfileOracle.class": "d27c1e2b59fe0252b9bd674dbe53b51a209db04d487593b80647bb2a6b1bf16a",
+    "StorageScriptOracle$1.class": "3dd24591c9e12cddaa06e5b1a69ca1aa9375143d39c9f0e3c12a7ba76b9aff08",
+    "StorageScriptOracle.class": "453e0bc949cbbf4fa2e46e83945fa19028403bd02e239cb5bdba2967871c15eb"
+  },
+  "commands": [
+    {
+      "name": "compile-fixture-helpers",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+        "-J-XX:ActiveProcessorCount=2",
+        "--release",
+        "8",
+        "-encoding",
+        "UTF-8",
+        "-proc:none",
+        "-implicit:none",
+        "-sourcepath",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/empty-sourcepath",
+        "-cp",
+        "/tmp/biglybtc-oracle/classes",
+        "-d",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/classes",
+        "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java",
+        "/home/yurii/Java/BiglyBT/migration/fixtures/java/EngineOracle.java",
+        "/home/yurii/Java/BiglyBT/migration/fixtures/java/StorageOracle.java",
+        "/home/yurii/Java/BiglyBT/build/storage-20261025/oracle/StorageScriptOracle.java",
+        "/home/yurii/Java/BiglyBT/build/storage-20261025/oracle/StorageProfileOracle.java"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-managed-r8",
+      "timeout": 60
+    },
+    {
+      "name": "profile-2-prepare",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2",
+        "-Dbiglybtc.test.ports=39281",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/tmp",
+        "-Duser.home=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/prefs",
+        "-cp",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/classes:/tmp/biglybtc-oracle/classes",
+        "StorageProfileOracle",
+        "39281",
+        "prepare",
+        "2",
+        "3"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2",
+      "timeout": 180
+    },
+    {
+      "name": "profile-2-native-partial",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-storage-handoff-driver",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/profile",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/input.torrent",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/expected/layout",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/native-partial",
+        "partial"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2",
+      "timeout": 120
+    },
+    {
+      "name": "profile-2-java-partial",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2",
+        "-Dbiglybtc.test.ports=52863",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/tmp",
+        "-Duser.home=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/prefs",
+        "-cp",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/classes:/tmp/biglybtc-oracle/classes",
+        "StorageProfileOracle",
+        "52863",
+        "observe",
+        "2",
+        "7"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2",
+      "timeout": 150
+    },
+    {
+      "name": "profile-2-native-complete",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-storage-handoff-driver",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/profile",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/input.torrent",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/expected/layout",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/native-complete",
+        "complete"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2",
+      "timeout": 120
+    },
+    {
+      "name": "profile-2-java-complete",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2",
+        "-Dbiglybtc.test.ports=56407",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/tmp",
+        "-Duser.home=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2/prefs",
+        "-cp",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/classes:/tmp/biglybtc-oracle/classes",
+        "StorageProfileOracle",
+        "56407",
+        "observe",
+        "2",
+        "8"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-2",
+      "timeout": 150
+    },
+    {
+      "name": "profile-3-prepare",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3",
+        "-Dbiglybtc.test.ports=51911",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/tmp",
+        "-Duser.home=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/prefs",
+        "-cp",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/classes:/tmp/biglybtc-oracle/classes",
+        "StorageProfileOracle",
+        "51911",
+        "prepare",
+        "3",
+        "4"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3",
+      "timeout": 180
+    },
+    {
+      "name": "profile-3-native-partial",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-storage-handoff-driver",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/profile",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/input.torrent",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/expected/layout",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/native-partial",
+        "partial"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3",
+      "timeout": 120
+    },
+    {
+      "name": "profile-3-java-partial",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3",
+        "-Dbiglybtc.test.ports=43907",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/tmp",
+        "-Duser.home=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/prefs",
+        "-cp",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/classes:/tmp/biglybtc-oracle/classes",
+        "StorageProfileOracle",
+        "43907",
+        "observe",
+        "3",
+        "7"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3",
+      "timeout": 150
+    },
+    {
+      "name": "profile-3-native-complete",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-storage-handoff-driver",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/profile",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/input.torrent",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/expected/layout",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/native-complete",
+        "complete"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3",
+      "timeout": 120
+    },
+    {
+      "name": "profile-3-java-complete",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3",
+        "-Dbiglybtc.test.ports=38851",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/tmp",
+        "-Duser.home=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3/prefs",
+        "-cp",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/classes:/tmp/biglybtc-oracle/classes",
+        "StorageProfileOracle",
+        "38851",
+        "observe",
+        "3",
+        "8"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-3",
+      "timeout": 150
+    },
+    {
+      "name": "profile-4-prepare",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4",
+        "-Dbiglybtc.test.ports=60329",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/tmp",
+        "-Duser.home=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/prefs",
+        "-cp",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/classes:/tmp/biglybtc-oracle/classes",
+        "StorageProfileOracle",
+        "60329",
+        "prepare",
+        "4",
+        "3"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4",
+      "timeout": 180
+    },
+    {
+      "name": "profile-4-native-partial",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-storage-handoff-driver",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/profile",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/input.torrent",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/expected/layout",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/native-partial",
+        "partial"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4",
+      "timeout": 120
+    },
+    {
+      "name": "profile-4-java-partial",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4",
+        "-Dbiglybtc.test.ports=52873",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/tmp",
+        "-Duser.home=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/prefs",
+        "-cp",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/classes:/tmp/biglybtc-oracle/classes",
+        "StorageProfileOracle",
+        "52873",
+        "observe",
+        "4",
+        "7"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4",
+      "timeout": 150
+    },
+    {
+      "name": "profile-4-native-complete",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-storage-handoff-driver",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/profile",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/input.torrent",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/expected/layout",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/native-complete",
+        "complete"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4",
+      "timeout": 120
+    },
+    {
+      "name": "profile-4-java-complete",
+      "argv": [
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "--add-opens=java.base/java.net=ALL-UNNAMED",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4",
+        "-Dbiglybtc.test.ports=55341",
+        "-Dazureus.security.manager.install=0",
+        "-Dazureus.loadplugins=0",
+        "-Dazureus.skipSWTcheck=1",
+        "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/profile",
+        "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/install",
+        "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/tmp",
+        "-Duser.home=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/home",
+        "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4/prefs",
+        "-cp",
+        "/tmp/biglybtc-managed-handoff-storage-managed-r8/classes:/tmp/biglybtc-oracle/classes",
+        "StorageProfileOracle",
+        "55341",
+        "observe",
+        "4",
+        "8"
+      ],
+      "cwd": "/tmp/biglybtc-managed-handoff-storage-managed-r8/profile-4",
+      "timeout": 150
+    }
+  ],
+  "logs_sha256": {
+    "compile-fixture-helpers.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "compile-fixture-helpers.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "profile-2-java-complete.stderr": "e44b5eaf409bd785bca21a471e56c4f2b7ddab779785c819cc60825abb4a1c63",
+    "profile-2-java-complete.stdout": "de0c3122f968e69d82d5bfbf7a4cbea5a0d5b989152dcded20fed191919d2876",
+    "profile-2-java-partial.stderr": "270b367cd100b91cd63d5aac6491002e29483c3df2a46d7b727fadb4de46107e",
+    "profile-2-java-partial.stdout": "8442c617aeafd4636b33321c3df222983fc1bbaa4329a30cb45b3f41f324dac7",
+    "profile-2-native-complete.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "profile-2-native-complete.stdout": "97d4a24aae80d358230e33d0e9a0defb1b5cb51f07fb3bb29bc89b424fc50022",
+    "profile-2-native-partial.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "profile-2-native-partial.stdout": "48aaf8d6bf9aa348e30258ee70b69adc0dfa97d5374f885ba8a8a1bf3fd8930c",
+    "profile-2-prepare.stderr": "5769a553b72f0600b2fb91a6b3d84b33be93272f28a771f93681162b6c57b779",
+    "profile-2-prepare.stdout": "0fb1801ea1418924025c8a11334119b5ceec1adf056f43300f8d1e44c762d65f",
+    "profile-3-java-complete.stderr": "5cbe297ceb802f8988bfe4a193e5d9ea6e57a9e2ebeeea55454ed122b890568f",
+    "profile-3-java-complete.stdout": "8ff6d8c7cf03deff439dc2d7f5fa4bd02f736f8fa327a2bfecb0a29cc3da0411",
+    "profile-3-java-partial.stderr": "07541714ad7254aca3a8cc0a5f15a4cf5a88b46a4ed3270216da56d4337220cd",
+    "profile-3-java-partial.stdout": "f7181b03d5032f34505ff1901689b81b24ee6a442bbd547c5f1ffec9cfa11385",
+    "profile-3-native-complete.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "profile-3-native-complete.stdout": "97d4a24aae80d358230e33d0e9a0defb1b5cb51f07fb3bb29bc89b424fc50022",
+    "profile-3-native-partial.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "profile-3-native-partial.stdout": "f3bd81c0501509747a1fc8c167f6c28ea8178ed8366e27218a9179455d47383f",
+    "profile-3-prepare.stderr": "83d4e354a4d0ecda714efa59d7a526dbce59c557f9525c0794b7baf5330f5e47",
+    "profile-3-prepare.stdout": "373338bb8666e9c09eef86b574fe099afb01d2cd2eba02fb1ec2c23840afa88d",
+    "profile-4-java-complete.stderr": "2263cb42f079263619c33250a6fe01517283d2a59bee83de56b46e1cd08949c0",
+    "profile-4-java-complete.stdout": "c200fe318b2624dbdbddfb0562309dcd8d196abd64ae48eee8c10b0c8d993bb6",
+    "profile-4-java-partial.stderr": "b97e7b65ef186a6d6155783e229639da0e9da8e2881c1d2b741843e9ff73b5bb",
+    "profile-4-java-partial.stdout": "6fea6835e246f87bdc43a872c74f4816d70b527b2f94048cb6e2eb4dd9189ce8",
+    "profile-4-native-complete.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "profile-4-native-complete.stdout": "97d4a24aae80d358230e33d0e9a0defb1b5cb51f07fb3bb29bc89b424fc50022",
+    "profile-4-native-partial.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "profile-4-native-partial.stdout": "f3bd81c0501509747a1fc8c167f6c28ea8178ed8366e27218a9179455d47383f",
+    "profile-4-prepare.stderr": "f13c8121676f1f501f3d490fcdeabac1c2b29dc1e9c013b52420867a2ffd3d4f",
+    "profile-4-prepare.stdout": "a2e36a468030e4edd55740c7ccacc07520b8f75db4ee4bffed99364b855c8a2d"
+  },
+  "scope": "Generated accepted-domain FMFile and actual v1 managed profile handoffs; missing bytes remain unverified",
+  "limitations": [
+    "No original core rebuild, real profile, public network, power-loss, arbitrary-format or whole-client claim"
+  ]
+}

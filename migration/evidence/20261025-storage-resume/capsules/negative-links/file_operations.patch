@@ -1,0 +1,28 @@
+--- a/preview/native/adapters/file_operations.cpp
++++ b/preview/native/adapters/file_operations.cpp
+@@ -1,5 +1,6 @@
++#include "biglybtc/original_file_links.hpp"
+ #include "file_operations.hpp"
+ #include "file_operation_io.hpp"
+ #include "original_file_io.hpp"
+ #include "encoded_document.hpp"
+ #include "biglybtc/torrent_layout.hpp"
+@@ -124,11 +125,17 @@
+   require(!saved.legacySavePath&&saved.saveFile&&fs::path(*saved.saveFile).filename()==fs::path(*saved.saveFile)&&!saved.saveFile->empty(),ErrorCode::Unsupported,"Legacy save-root mapping needs its qualified adapter");
+   // Deprecated filelinks is opaque: the pinned original reads filelinks2 only.
+   for(const auto* key:{"dnd_pfx","dnd_sf","dnd_al"}){if(const auto* n=attrs.find(key)){require(n->type==Node::Type::Bytes&&n->bytes.size()<=4096,ErrorCode::InvalidFormat,"Invalid original DND policy field");}}
+   const auto& stores=field(attrs,"storetypes",Node::Type::List);require(stores.children.size()==layout.files.size(),ErrorCode::InvalidFormat,"Storage types do not match metadata");std::vector<fs::path> out;out.reserve(layout.files.size());
+   for(std::size_t i=0;i<layout.files.size();++i){static_cast<void>(storageKind(attrs,i,layout.files.size()));out.push_back(fs::path(saved.saveDirectory)/(layout.multifile?fs::path(*saved.saveFile)/layout.files[i].path:fs::path(*saved.saveFile)));pathShape(out.back());}
+-  if(const auto* links=attrs.find("filelinks2")){require(links->type==Node::Type::List&&links->children.size()<=layout.files.size()*4,ErrorCode::InvalidFormat,"Invalid file links");for(const auto& row:links->children){const auto value=text(&row);const auto a=value.find('\n'),z=a==value.npos?a:value.find('\n',a+1);require(a!=value.npos&&z!=value.npos&&value.find('\n',z+1)==value.npos,ErrorCode::InvalidFormat,"Malformed original file link");std::size_t i=0;auto result=std::from_chars(value.data(),value.data()+a,i);require(result.ec==std::errc{}&&result.ptr==value.data()+a&&i<out.size(),ErrorCode::InvalidFormat,"Invalid file link index");const fs::path base=fs::path(saved.saveDirectory)/(layout.multifile?fs::path(*saved.saveFile)/layout.files[i].path:fs::path(*saved.saveFile));const auto from=value.substr(a+1,z-a-1),to=value.substr(z+1);require(from.empty()||fs::path(from)==base,ErrorCode::Unsupported,"File link source differs from original path");if(to.empty()||to==from){out[i]=base;}else{const fs::path target(to);pathShape(target);out[i]=target;}}}
++  std::vector<std::string> originalLinkBases; originalLinkBases.reserve(out.size());
++  for (const auto& path:out) { originalLinkBases.push_back(path.native()); }
++  const auto links=compat::resolveOriginalFileLinks(attrs.find("filelinks2"),originalLinkBases);
++  if(!links){fail(links.error().code==compat::OriginalFileLinksErrorCode::Memory?ErrorCode::Io:
++      links.error().code==compat::OriginalFileLinksErrorCode::AmbiguousBase?ErrorCode::UnsafePath:ErrorCode::InvalidFormat,
++      links.error().message.data());}
++  for(std::size_t i=0;i<out.size();++i){if(links->byIndex[i]){const fs::path target(links->byIndex[i]->target);pathShape(target);out[i]=target;}}
+   return out;
+ }
+ }
+ namespace {
+ bool moving(FileOperationKind kind){return kind==FileOperationKind::Relocate||kind==FileOperationKind::Relink;}

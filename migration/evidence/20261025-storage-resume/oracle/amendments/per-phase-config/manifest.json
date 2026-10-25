@@ -1,0 +1,8 @@
+{
+  "status": "SOURCE_ONLY_NARROW_RUNNER_FIX",
+  "before_sha256": "f08ea13e5d643e64bfe804ca2252942ec00ac57b11fd0870ae5c49a854064715",
+  "after_sha256": "497ea8239ae447cbb08fb22361df2546957e489c3767ad5a8a65889e7a3a07ae",
+  "initial_manifest_sha256": "b9c7272c0ca6d8401a0111a7f05dbc18d3615bf8d36f5ea2934387c507108df6",
+  "scope": "Move unchanged global-config capture inside each native phase, after legitimate prior Java listener-port update; original config-unchanged assertion remains exact. No native/tests/Java behavior changes.",
+  "apply": "Root applies candidate to base oracle/run.py, preserving initial manifest/history and updating active runner pin before actual execution. Candidate is not independently runnable in this amendment directory."
+}

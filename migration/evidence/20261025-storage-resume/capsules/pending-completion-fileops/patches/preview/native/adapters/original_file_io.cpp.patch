@@ -1,0 +1,20 @@
+--- a/preview/native/adapters/original_file_io.cpp
++++ b/preview/native/adapters/original_file_io.cpp
+@@ -141,6 +141,17 @@
+ };
+ std::expected<std::uint64_t,Error> originalMaximumPhysicalSize(OriginalFileGeometry g,OriginalStorageKind k){return guarded([&]()->std::expected<std::uint64_t,Error>{return shape(g,k).maximum;});}
+ std::string originalControlLeaf(std::size_t index,OriginalStorageKind k){if(k==Kind::Linear){return {};}return "fmfile"+std::to_string(index)+".dat"+(k==Kind::Reordered||k==Kind::ReorderedCompact?".2":"");}
++std::expected<void,Error> OriginalFileIo::validateControl(OriginalFileGeometry g,Kind k,std::string_view raw){return guarded([&]()->std::expected<void,Error>{
++  require(k!=Kind::Linear&&raw.size()<=MaxControl,ErrorCode::InvalidFormat,"Invalid original control validation input");
++  const auto form=shape(g,k);Impl candidate(-1,g,k,form,std::nullopt,{});const std::string bytes(raw);(void)candidate.decode(bytes);
++  // Optimized short layouts do not consume a map in open(), but a selected
++  // control still needs its source-required envelope before it can supersede
++  // a backup containing native recovery state. No second map decoder.
++  if(!form.compact&&!form.reordered){const auto d=parse(bytes);
++    if(k==Kind::Compact){const auto n=integer(d,"length");require(integer(d,"version")==0&&n>=0&&static_cast<std::uint64_t>(n)<=g.fileBytes,ErrorCode::InvalidFormat,"Invalid short compact control");}
++    else{const auto n=integer(d,"len"),next=integer(d,"next");const auto* pieces=d.find("pieces"),*st=d.find("st");require(n>=0&&static_cast<std::uint64_t>(n)<=g.fileBytes&&next>=1&&static_cast<std::uint64_t>(next)<=form.count&&pieces&&pieces->type==core::Node::Type::Bytes&&pieces->bytes.size()==form.count*4&&(!st||(st->type==core::Node::Type::Integer&&(st->integer==3||st->integer==4))),ErrorCode::InvalidFormat,"Invalid short reordered control");}
++  }return {};
++});}
+ OriginalFileIo::OriginalFileIo(std::unique_ptr<Impl> p):impl_(std::move(p)){}
+ OriginalFileIo::OriginalFileIo(OriginalFileIo&&)noexcept=default;
+ OriginalFileIo& OriginalFileIo::operator=(OriginalFileIo&&)noexcept=default;

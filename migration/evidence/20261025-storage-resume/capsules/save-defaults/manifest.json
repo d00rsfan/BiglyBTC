@@ -1,0 +1,41 @@
+{
+  "scope": "CF01 source-only save-root/defaults implementation, no native edits/builds/tests/Java execution",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_baseline": "b44ec22ebb3dbb6cee3ade23c32a7ad26a373926",
+  "sources": {
+    "preview/native/adapters/file_operations.cpp": "e26bf0b7ea399e3e2063893a2cf3af1bb337e274d19b4c87f04f6d2f6f72b6ef",
+    "preview/native/adapters/original_storage_defaults.cpp": "1a490ad05a158e44b6c54a413341ba367a284e0aae5ed1d7e3cb032624cdba11",
+    "preview/native/adapters/original_storage_defaults.hpp": "6c0f0a8d6b597f0f114f2ea2a11a06541e5d1109e848cb5ad55325c22db84d2a",
+    "preview/native/engine/managed_storage.cpp": "d0067d3a0a0d8700e97cdd628d8c1722923465de78d629d95623127342214d71",
+    "preview/native/tests/file_operations_tests.cpp": "f790e703ea14e529fefe8afd212bf374e322e3bf9a190e4d365f80417f87ab6e",
+    "preview/native/tests/managed_storage_tests.cpp": "57fddb8e87f6c84d2924a89753bc00f357d85651cc21cd16943129b28b474bfa",
+    "preview/native/tests/original_storage_defaults_tests.cpp": "90d66360b676fa16db9f69294f693bda70f6ab87070455f8873882e34e6d431a"
+  },
+  "before_sha256": {
+    "preview/native/adapters/file_operations.cpp": "e040dafe25e7a2e87b79c6b16be4aca0a8872a15e224e59fb1b9a8f7f5791aa7",
+    "preview/native/engine/managed_storage.cpp": "50a6842b26f6b7c8cda9c052ab8667ea11922502e15cd05a3ac69e27d144adff",
+    "preview/native/tests/file_operations_tests.cpp": "a56203be9ac014ac0f06e44995fe731df82bd09257a140210f28d703abe4adf6",
+    "preview/native/tests/managed_storage_tests.cpp": "39105138544c1664d0046d0eb5587fcc7cde167dfd1a291276f16afc70b3087e"
+  },
+  "new_paths": [
+    "preview/native/adapters/original_storage_defaults.cpp",
+    "preview/native/adapters/original_storage_defaults.hpp",
+    "preview/native/tests/original_storage_defaults_tests.cpp"
+  ],
+  "patches": {
+    "changes.patch": "72c638d5ebba9bd8de3f36e4673b405209acc9c5039732095f6d67edd0d92382",
+    "managed_storage.patch": "6eefd18e11ee9651b5db937e5a38e05e029c6855ab37ec2c3d97278c8d8a06ca",
+    "file_operations.patch": "8524805ed5e82cc0d38db54fb44a5a099785768ff0cf3d8290ad36b9871d2401"
+  },
+  "context": {
+    "source-pins.json": "6fae97489c0c794af3bd372a5c19c7bd36ff6c648623ab933b02a5a5414cb3e0",
+    "ADOPTION.md": "69a9eeeaab7d7c85ba28b1a7389ae055936eaa0b83493c2d341e3029178f4f28",
+    "ORACLE-EXTENSION.md": "2ffef09e65a48de49acd564fb43d88f8405a65fce0d03ac848124bb4e357693a"
+  },
+  "authoring_checks": {
+    "prior_test_bodies": "Three ManagedStorage families and one file-operation family appended; original bodies unchanged",
+    "new_plain_families_authored": 12,
+    "runtime_results": "not executed"
+  },
+  "integration": "Apply production patches alongside separate negative-links parser patches; do not overwrite shared whole-file candidates. Root owns CMake and all execution."
+}

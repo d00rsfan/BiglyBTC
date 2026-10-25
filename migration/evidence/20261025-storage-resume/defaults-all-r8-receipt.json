@@ -1,0 +1,16 @@
+{
+  "command": [
+    "python3",
+    "/home/yurii/Java/BiglyBT/build/storage-20261025/oracle-next/run.py",
+    "--reference-root",
+    "/home/yurii/Java/BiglyBT",
+    "--driver",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-storage-defaults-handoff-driver",
+    "--work",
+    "/tmp/biglybtc-managed-handoff-defaults-all-r8"
+  ],
+  "exit": 0,
+  "seconds": 193.79,
+  "runner_sha256": "74345eef53162043d832592bc4972c9669ddf703c0d902835d7f29b639af9dd5",
+  "durable_copy": "/home/yurii/Java/BiglyBT/build/storage-20261025/defaults-all-r8"
+}

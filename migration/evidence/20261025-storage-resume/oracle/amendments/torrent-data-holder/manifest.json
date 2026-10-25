@@ -1,0 +1,14 @@
+{
+  "status": "SOURCE_CORRECTION_NOT_EXECUTED",
+  "reason": "Pinned original factory accepts TorrentDataHolder rather than byte[]. Keep encoded actual dictionary and use its source public wrapper, as TorrentUtils.cloneTorrent does.",
+  "changes": {
+    "StorageScriptOracle.java": {
+      "before_sha256": "2b62a900548c7c1182d7e9df3f738acfae3d598d9260e50e8baf37e563ab61b8",
+      "after_sha256": "695ef8e3f961b1a52deea2926d52ab82226a1cad3a7e0810c7318c242580832a"
+    },
+    "StorageProfileOracle.java": {
+      "before_sha256": "b7d073d775dc612672e84907f37737c760f9c9d4bb98a6a35ce8bced216160c8",
+      "after_sha256": "618d4f7b5f57c2c01db1aec55fc9d172f8f1d2797a1d0078883bd1d62ac87d24"
+    }
+  }
+}

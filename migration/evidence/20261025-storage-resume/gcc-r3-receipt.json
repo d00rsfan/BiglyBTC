@@ -1,0 +1,28 @@
+{
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "cmake",
+    "--build",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+    "--parallel",
+    "3",
+    "--target",
+    "biglybtc-original-file-io-tests",
+    "biglybtc-original-file-io-driver",
+    "biglybtc-managed-storage-tests",
+    "biglybtc-file-operations-tests",
+    "biglybtc-metadata-disk-router-tests",
+    "biglybtc-storage-handoff-driver",
+    "biglybtc-original-control-tests",
+    "biglybtc-original-disk-io-tests",
+    "BiglyBTC",
+    "--",
+    "-k",
+    "0"
+  ],
+  "exit": 0,
+  "seconds": 355.27,
+  "source_manifest_sha256": "852f0c5b75a5b57732b84125c41c2af82cdd30691aa6dc21b5bc640fd06a5cef"
+}

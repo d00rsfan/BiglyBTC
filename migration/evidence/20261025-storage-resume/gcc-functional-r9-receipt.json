@@ -1,0 +1,20 @@
+{
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "ctest",
+    "--test-dir",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+    "-R",
+    "^(original\\-file\\-links|original\\-storage\\-defaults|original\\-torrent\\-geometry|original\\-physical\\-file\\-io|original\\-storage\\-controls|original\\-disk\\-io|managed\\-storage|file\\-operations|metadata\\-disk\\-router)$",
+    "--no-tests=error",
+    "--output-on-failure",
+    "--verbose",
+    "--output-junit",
+    "/home/yurii/Java/BiglyBT/build/storage-20261025/gcc-functional-r9.xml"
+  ],
+  "exit": 0,
+  "seconds": 2.48,
+  "source_manifest_sha256": "c364b75b1577924c7cc3eb707d87ec5ac391be3a26618b153096c5e854f2a45e"
+}

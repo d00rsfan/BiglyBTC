@@ -1,0 +1,49 @@
+--- a/preview/native/engine/managed_storage.cpp
++++ b/preview/native/engine/managed_storage.cpp
+@@ -1,5 +1,6 @@
++#include "biglybtc/original_file_links.hpp"
+ #include "managed_storage.hpp"
+ #include "original_disk_io.hpp"
+ #include "original_control.hpp"
+ #include "local_support.hpp"
+ #include "network_policy.hpp"
+@@ -219,25 +220,24 @@
+     slot.kind=type=="L"?storage::OriginalStorageKind::Linear:type=="C"?storage::OriginalStorageKind::Compact:type=="R"?storage::OriginalStorageKind::Reordered:storage::OriginalStorageKind::ReorderedCompact;
+     slot.geometry={static_cast<std::uint64_t>(file.offset),static_cast<std::uint64_t>(file.bytes),static_cast<std::uint32_t>(layout.pieceLength)};
+     (void)take(storage::originalMaximumPhysicalSize(slot.geometry,slot.kind));
+   }
+   std::set<std::size_t> linked;
+-  if (const auto* links=attributes.find("filelinks2")) {
+-    require(links->type==Node::Type::List&&links->children.size()<=layout.files.size()*4,"File-link list exceeds its bound");
+-    for (const auto& item:links->children) {
+-      const auto link=text(&item); const auto first=link.find('\n'),second=first==std::string::npos?first:link.find('\n',first+1);
+-      require(first!=std::string::npos&&second!=std::string::npos&&link.find('\n',second+1)==std::string::npos,"Malformed file link");
+-      std::size_t index=0; const auto parsed=std::from_chars(link.data(),link.data()+first,index);
+-      require(parsed.ec==std::errc{}&&parsed.ptr==link.data()+first&&index<result.size(),"Invalid file-link index");
+-      auto& slot=result[index]; const auto from=link.substr(first+1,second-first-1),to=link.substr(second+1);
+-      require(from.empty()||fs::path(from)==save/slot.base,"File-link source differs from saved path");
+-      if (to.empty()||to==from) { slot.actual=slot.base; linked.erase(index); continue; }
+-      const fs::path target(to);
+-      require(target.is_absolute()&&target.lexically_normal()==target&&target.native().size()<=4096&&target.native().find('\0')==std::string::npos,"Unsafe external file link",ErrorCode::UnsafePath);
+-      const auto within=target.lexically_relative(save);
+-      slot.actual=safeManagedRelative(within)?within:target; linked.insert(index);
+-    }
++  std::vector<std::string> originalLinkBases; originalLinkBases.reserve(result.size());
++  for (const auto& slot:result) { originalLinkBases.push_back((save/slot.base).native()); }
++  const auto links=compat::resolveOriginalFileLinks(attributes.find("filelinks2"),originalLinkBases);
++  if (!links) {
++    const auto code=links.error().code==compat::OriginalFileLinksErrorCode::Memory?ErrorCode::Io:
++        links.error().code==compat::OriginalFileLinksErrorCode::AmbiguousBase?ErrorCode::UnsafePath:ErrorCode::InvalidFormat;
++    require(false,std::string(links.error().message),code);
++  }
++  for (std::size_t index=0;index<result.size();++index) {
++    if (!links->byIndex[index]) { continue; }
++    auto& slot=result[index]; const fs::path target(links->byIndex[index]->target);
++    require(target.is_absolute()&&target.lexically_normal()==target&&target.native().size()<=4096&&target.native().find('\0')==std::string::npos,"Unsafe external file link",ErrorCode::UnsafePath);
++    const auto within=target.lexically_relative(save);
++    slot.actual=safeManagedRelative(within)?within:target; linked.insert(index);
+   }
+   const auto suffix=attributes.find("incompfilesuffix")?text(attributes.find("incompfilesuffix")):std::string{};
+   require(suffix.find('/')==std::string::npos&&suffix.find('\n')==std::string::npos,"Unsafe incomplete suffix",ErrorCode::UnsafePath);
+   std::map<std::size_t,const Journal*> byIndex; for (const auto& item:pending) { byIndex.emplace(item.index,&item); }
+   std::map<std::size_t,std::pair<std::uint64_t,std::uint64_t>> expanding;

@@ -1,0 +1,339 @@
+[
+  {
+    "name": "compile-fixture-helpers",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "-J-XX:ActiveProcessorCount=2",
+      "--release",
+      "8",
+      "-encoding",
+      "UTF-8",
+      "-proc:none",
+      "-implicit:none",
+      "-sourcepath",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/empty-sourcepath",
+      "-cp",
+      "/tmp/biglybtc-oracle/classes",
+      "-d",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/classes",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/EngineOracle.java",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/StorageOracle.java",
+      "/home/yurii/Java/BiglyBT/build/storage-20261025/oracle/StorageScriptOracle.java",
+      "/home/yurii/Java/BiglyBT/build/storage-20261025/oracle/StorageProfileOracle.java"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+    "timeout": 60
+  },
+  {
+    "name": "inherited-seven-layouts",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original",
+      "-Dbiglybtc.test.ports=",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/tmp",
+      "-Duser.home=/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/prefs",
+      "-cp",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/classes:/tmp/biglybtc-oracle/classes",
+      "StorageOracle",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original",
+    "timeout": 150
+  },
+  {
+    "name": "inherited-compact-aligned-native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/compact-aligned",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/compact-aligned/native-read.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+    "timeout": 30
+  },
+  {
+    "name": "inherited-compact-short-native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/compact-short",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/compact-short/native-read.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+    "timeout": 30
+  },
+  {
+    "name": "inherited-compact-unaligned-native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/compact-unaligned",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/compact-unaligned/native-read.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+    "timeout": 30
+  },
+  {
+    "name": "inherited-reordered-native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/reordered",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/reordered/native-read.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+    "timeout": 30
+  },
+  {
+    "name": "inherited-reordered-boundary-native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/reordered-boundary",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/reordered-boundary/native-read.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+    "timeout": 30
+  },
+  {
+    "name": "inherited-reordered-compact-native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/reordered-compact",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/reordered-compact/native-read.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+    "timeout": 30
+  },
+  {
+    "name": "inherited-reordered-short-native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/reordered-short",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/inherited-original/fixtures/reordered-short/native-read.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+    "timeout": 30
+  },
+  {
+    "name": "codec-2-original",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "-Dbiglybtc.test.ports=",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-codec-r9/tmp",
+      "-Duser.home=/tmp/biglybtc-managed-handoff-storage-codec-r9/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-codec-r9/prefs",
+      "-cp",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/classes:/tmp/biglybtc-oracle/classes",
+      "StorageScriptOracle",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2/original",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2/original/request.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+    "timeout": 150
+  },
+  {
+    "name": "codec-2-native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2/native",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2/native/request.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2",
+    "timeout": 30
+  },
+  {
+    "name": "codec-2-native-reads-java",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2/original",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2/original/native-read.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2",
+    "timeout": 30
+  },
+  {
+    "name": "codec-2-java-reads-native",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "-Dbiglybtc.test.ports=",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-codec-r9/tmp",
+      "-Duser.home=/tmp/biglybtc-managed-handoff-storage-codec-r9/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-codec-r9/prefs",
+      "-cp",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/classes:/tmp/biglybtc-oracle/classes",
+      "StorageScriptOracle",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2/native",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-2/native/java-read.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+    "timeout": 150
+  },
+  {
+    "name": "codec-3-original",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "-Dbiglybtc.test.ports=",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-codec-r9/tmp",
+      "-Duser.home=/tmp/biglybtc-managed-handoff-storage-codec-r9/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-codec-r9/prefs",
+      "-cp",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/classes:/tmp/biglybtc-oracle/classes",
+      "StorageScriptOracle",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3/original",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3/original/request.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+    "timeout": 150
+  },
+  {
+    "name": "codec-3-native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3/native",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3/native/request.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3",
+    "timeout": 30
+  },
+  {
+    "name": "codec-3-native-reads-java",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3/original",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3/original/native-read.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3",
+    "timeout": 30
+  },
+  {
+    "name": "codec-3-java-reads-native",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "-Dbiglybtc.test.ports=",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-codec-r9/tmp",
+      "-Duser.home=/tmp/biglybtc-managed-handoff-storage-codec-r9/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-codec-r9/prefs",
+      "-cp",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/classes:/tmp/biglybtc-oracle/classes",
+      "StorageScriptOracle",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3/native",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-3/native/java-read.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+    "timeout": 150
+  },
+  {
+    "name": "codec-4-original",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "-Dbiglybtc.test.ports=",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-codec-r9/tmp",
+      "-Duser.home=/tmp/biglybtc-managed-handoff-storage-codec-r9/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-codec-r9/prefs",
+      "-cp",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/classes:/tmp/biglybtc-oracle/classes",
+      "StorageScriptOracle",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4/original",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4/original/request.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+    "timeout": 150
+  },
+  {
+    "name": "codec-4-native",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4/native",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4/native/request.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4",
+    "timeout": 30
+  },
+  {
+    "name": "codec-4-native-reads-java",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-original-file-io-driver",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4/original",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4/original/native-read.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4",
+    "timeout": 30
+  },
+  {
+    "name": "codec-4-java-reads-native",
+    "argv": [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-managed-handoff-storage-codec-r9",
+      "-Dbiglybtc.test.ports=",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-managed-handoff-storage-codec-r9/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-managed-handoff-storage-codec-r9/tmp",
+      "-Duser.home=/tmp/biglybtc-managed-handoff-storage-codec-r9/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-managed-handoff-storage-codec-r9/prefs",
+      "-cp",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/classes:/tmp/biglybtc-oracle/classes",
+      "StorageScriptOracle",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4/native",
+      "/tmp/biglybtc-managed-handoff-storage-codec-r9/codec-4/native/java-read.tsv"
+    ],
+    "cwd": "/tmp/biglybtc-managed-handoff-storage-codec-r9",
+    "timeout": 150
+  }
+]

@@ -1,0 +1,28 @@
+STATE 1 length=0 physicalBytes=0
+STATE 2 length=13312 physicalBytes=13312
+STATE 3 length=103304 physicalBytes=21384
+STATE 4 length=103304 physicalBytes=46080
+STATE 5 length=103304 physicalBytes=46080
+READ missing-one missing=1
+STATE 6 length=103304 physicalBytes=46080
+STATE 7 length=103304 physicalBytes=62464
+STATE 8 length=103304 physicalBytes=62464
+STATE 9 length=103304 physicalBytes=62464
+STATE 11 length=103304 physicalBytes=62464
+READ first missing=0
+STATE 12 length=103304 physicalBytes=62464
+READ last missing=0
+STATE 13 length=103304 physicalBytes=62464
+READ one missing=0
+STATE 14 length=103304 physicalBytes=62464
+READ two missing=0
+STATE 15 length=103304 physicalBytes=62464
+STATE 16 length=103304 physicalBytes=78848
+STATE 17 length=103304 physicalBytes=95232
+STATE 18 length=103304 physicalBytes=111616
+STATE 19 length=103304 physicalBytes=111616
+STATE 20 length=103304 physicalBytes=111616
+STATE 22 length=103304 physicalBytes=111616
+READ whole missing=0
+STATE 23 length=103304 physicalBytes=111616
+STATE 24 length=103304 physicalBytes=111616

@@ -1,0 +1,19 @@
+{
+  "base_source": "c0b2fbb2071b7aae302d2db24ba3c824df874d0a",
+  "native_mutated": false,
+  "capsules": [
+    {
+      "capsule": "remainder/selection-policy",
+      "sha256": "45da3c7ab86c888777bb6c29f8ab640b46fa20e5d2bd60f8b0143a1380539d25"
+    },
+    {
+      "capsule": "remainder/allocator-tail",
+      "sha256": "499482750f0a58023c6dc27e9324ddc41080ac6ab76f731eab68b273c73993db"
+    },
+    {
+      "capsule": "oracle-fileops",
+      "sha256": "e08bf53359cfc7b0887e2a4de911a3a5d688886839936bf4ffa596b577a299ec"
+    }
+  ],
+  "stage": "/home/yurii/Java/BiglyBT/build/storage-20261025/next-stage"
+}

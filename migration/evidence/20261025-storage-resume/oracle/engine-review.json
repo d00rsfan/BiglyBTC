@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_REVISED_OUTPUT_RUNTIME_PENDING",
+  "execution_credit": false,
+  "subjects_sha256": {
+    "integrate.py": "9801e14404f8e9d0083e2d4bea0582fd8bf2d5bf613a309474dc2285870cce07",
+    "staging/preview/native/engine/managed_storage.cpp": "891fda2038db58dfc1c393ad8469e371156e47c8ac7b63f427d3061e987547b7",
+    "staging/preview/native/engine/managed_storage.hpp": "46c3e302582d396be03de9ac39901b3d7b334f9327dd15f954f801b4143ff74b",
+    "staging/preview/native/engine/original_control.cpp": "c371fe98b6bd350caedaa362802f24e5cb9f2f757a6ee438f910b3c5a08e48c0",
+    "staging/preview/native/engine/original_control.hpp": "b997d8e5f53278815b49430a70c6682d9eb46b9de47fd6e9e934aeb957813e27",
+    "staging/preview/native/engine/original_disk_io.cpp": "06d6a42ed11aead213d932c221d58b00c385314c86306cb3e519a09fa57d5b6d",
+    "staging/preview/native/engine/original_disk_io.hpp": "6b8a8bd55b68f37f5e96fdc1b172aca2646514d92acdcc6603cb782f2bfa1df9",
+    "staging/preview/native/tests/managed_storage_tests.cpp": "6a6b53ecdadf14d6ba6fd51a2921214470b0849d45f8b3532c17254ce527376a"
+  },
+  "native_matches_reviewed_stage": {
+    "preview/native/engine/managed_storage.cpp": false,
+    "preview/native/engine/managed_storage.hpp": true,
+    "preview/native/engine/original_control.cpp": true,
+    "preview/native/engine/original_control.hpp": true,
+    "preview/native/engine/original_disk_io.cpp": false,
+    "preview/native/engine/original_disk_io.hpp": false,
+    "preview/native/tests/managed_storage_tests.cpp": true
+  },
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_source_sha256": {
+    "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java": "6755b950c548c5a7d153b9aef2c1024c7c5c79d5880fd858f3bac4261adcdf8c",
+    "core/src/com/biglybt/core/download/DownloadManagerState.java": "9bd11377c6abe2f4cf1e0cb10cc42032917679216fccb12fbb43a239a13a2867",
+    "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a"
+  },
+  "findings": [
+    {
+      "id": "MSR-1",
+      "status": "FIXED_IN_REVIEWED_OUTPUT",
+      "issue": "String-prefix parent containment admitted profile-internal leaf ..payload. Actual output now checks exact first relative path component .. before admission."
+    },
+    {
+      "id": "MSR-2",
+      "status": "FIXED_IN_REVIEWED_OUTPUT",
+      "issue": "Cached unchanged map could skip original control CAS at checkpoint. Actual mapped flush now invokes per-file OriginalControl::load and latches failure even with unchanged map bytes."
+    },
+    {
+      "id": "MSR-3",
+      "status": "FIXED_IN_REVIEWED_OUTPUT",
+      "issue": "Compact conversion device/inode were cast to signed original journal without range gate. Actual output now checks both fit int64 before persisting intent."
+    },
+    {
+      "id": "MSR-4",
+      "status": "SOURCE_CONFIRMED_OPAQUE",
+      "issue": "Deprecated filelinks has no actual original reader; AT_FILE_LINKS2 exclusively drives getFileLinksSupport. Preserve filelinks opaque rather than treating it as authority."
+    },
+    {
+      "id": "MSR-5",
+      "status": "ADDRESSED_IN_REVIEWED_OUTPUT",
+      "issue": "Staged output now supports absolute same-parent completion intents (single v3/multi v4), strips incomplete suffix and unskipped dnd_pfx, and uses verified per-file intersection count rather than whole-torrent is_seeding for new completion. Previous no-external-rename boundary is historical."
+    },
+    {
+      "id": "MSR-6",
+      "status": "AUTHORING_RECIPE_ONLY",
+      "issue": "integrate.py is a one-shot transformation over baseline copied inputs. It is not idempotent and no longer reproduces all reviewed manual corrections; do not rerun it over adopted/current sources or describe it as final runtime replay recipe."
+    }
+  ],
+  "proof_notes": [
+    "C+intent before/after expansion retains packed source edge; state L is saved before retiring both original primary/backup controls; intent is cleared only afterward. Replaying L+intent after either retirement boundary avoids recopying unrelated data.",
+    "Journal index/format/dev/inode are validated against current authenticated payload before mutation. No missing mapping is promoted to a verified resume state; prepare persists all RECHECK flags first.",
+    "Explicit filelinks2 resolves to held nofollow descriptors; external physical names are retained in original links, padding stays virtual, same-path/inode aliases are rejected.",
+    "Completion controls use separate fixed-name original resilient candidates, whole observed stamp validation, same-directory sync and retained failure candidates. This source review is not a power-loss or runtime proof.",
+    "External v4 completion replay retains same-parent/no-follow/exact dev+ino constraints. Partial checked piece1 completes file1 while file0 retains its incomplete name. DND prefix is removed only for unskipped files, matching DiskManagerImpl1950 onward. Existing relative v1/v2 intent reader remains admitted."
+  ],
+  "additional_test_fragment": {
+    "path": "recovery-tests-fragment.cpp",
+    "sha256": "c4622d47fe6686b3b52e7225f787bef041d51b943463fc6754814829df7b9902",
+    "families": 4,
+    "conversion_durable_snapshots": 4,
+    "external_completion_scenarios": 3,
+    "new_target": false,
+    "executed": false,
+    "insert_before": "existing managed_storage_tests.cpp final PASS output inside main try",
+    "reviewed_existing_test_before_sha256": "6a6b53ecdadf14d6ba6fd51a2921214470b0849d45f8b3532c17254ce527376a"
+  },
+  "native_sources_modified_by_reviewer": false,
+  "builds_or_subject_runs_by_reviewer": false,
+  "previous_review": {
+    "path": "engine-review-initial.json",
+    "sha256": "eef8757d5a12269861abd2f17a800a636a05a6d3676ad0056bd34a61715e8559"
+  }
+}
