@@ -1,6 +1,9 @@
 #include "biglybtc/original_file_links.hpp"
 #include "managed_storage.hpp"
+#include "managed_payload_counters.hpp"
 #include "linear_to_compact.hpp"
+#include "original_layout_projection.hpp"
+#include "original_torrent_identity_lt.hpp"
 #include "original_disk_io.hpp"
 #include "original_control.hpp"
 #include "original_storage_defaults.hpp"
@@ -337,22 +340,18 @@ TorrentNetworkSelection networks(const Document& state, const Node& attributes) 
   }
   return result;
 }
-std::shared_ptr<lt::torrent_info> metadata(const Document& state, const core::TorrentHash& hash, const compat::OriginalLayout& layout) {
+struct ValidatedMetadata {std::shared_ptr<lt::torrent_info> info;storage::OriginalTorrentIdentity identity;};
+ValidatedMetadata metadata(const Document& state, const core::TorrentHash& hash, const compat::OriginalLayout& layout,
+    const std::shared_ptr<const ManagedPayloadCounterBridge>& swarmBridge) {
   const auto value=state.serialize(); lt::error_code error;
   auto info=std::make_shared<lt::torrent_info>(lt::span<const char>(value.data(),value.size()),error,lt::from_span);
   require(!error&&info->num_files()>0&&info->num_files()<=100000&&info->num_pieces()>0&&info->num_pieces()<=1000000,"Invalid or unbounded managed metadata",ErrorCode::InvalidFormat);
-  const auto key=hash.bytes(); const auto hashes=info->info_hashes();
-  const bool original20=key.size()==20&&((hashes.has_v1()&&std::memcmp(key.data(),hashes.v1.data(),20)==0)
-      ||(!hashes.has_v1()&&hashes.has_v2()&&std::memcmp(key.data(),hashes.v2.data(),20)==0));
-  require(original20||(key.size()==32&&hashes.has_v2()&&std::memcmp(key.data(),hashes.v2.data(),32)==0),
-      "Managed metadata hash mismatch",ErrorCode::InvalidFormat);
-  require(layout.files.size()==static_cast<std::size_t>(info->num_files())&&layout.bytes==info->total_size()&&layout.pieceLength==info->piece_length(),"Original/engine managed geometry differs");
-  for (std::size_t index=0;index<layout.files.size();++index) {
-    const auto file=lt::file_index_t{static_cast<int>(index)}; const auto& original=layout.files[index];
-    require(original.bytes==info->files().file_size(file)&&original.offset==info->files().file_offset(file)&&original.padding==info->files().pad_file_at(file),"Original/engine file indices differ");
-    require(original.padding||fs::path(info->files().file_path(file))==(layout.multifile?fs::path(layout.name)/original.path:fs::path(original.path)),"Original/engine filename codecs differ");
-  }
-  return info; // Keep original trackers/web seeds for the explicit policy filter.
+  auto identity=take(storage::originalTorrentIdentityFromLibtorrent(state,*info));
+  done(storage::validateOriginalTorrentKey(identity,hash,true)); // Existing explicit32 reader policy.
+  require(!(identity.selected==storage::OriginalSelectedHash::V2&&identity.full.v1)||swarmBridge,
+      "Selected-v2 hybrid requires the exact qualified swarm provider",ErrorCode::Unsupported);
+  (void)take(projectOriginalLayout(layout,*info)); // Only one authenticated synthetic pure-v2 tail is optional.
+  return {std::move(info),std::move(identity)}; // Keep original trackers/web seeds for the explicit policy filter.
 }
 std::vector<lt::download_priority_t> priorities(const std::vector<compat::FilePolicy>& policy, const compat::OriginalLayout& layout) {
   std::vector<std::int32_t> levels;
@@ -387,6 +386,8 @@ void writeProgress(storage::TorrentStateFile& state, const std::vector<std::int6
 
 struct ManagedStorage::Impl {
   core::TorrentHash hash;
+  storage::OriginalTorrentIdentity selectedIdentity;
+  std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge;
   core::SavedDownload captured;
   ManagedQueueMetadata queue;
   storage::TorrentStateStore store;
@@ -400,11 +401,15 @@ struct ManagedStorage::Impl {
   std::vector<ManagedPayloadClaim> payloadClaims;
   std::uint64_t profileDevice,profileInode;
   bool attempted=false;
-  Impl(core::TorrentHash key,core::SavedDownload selected,storage::TorrentStateStore owner,storage::TorrentStateFile source,
+  bool progressFromPieces=false;
+  Impl(core::TorrentHash key,storage::OriginalTorrentIdentity identity,core::SavedDownload selected,storage::TorrentStateStore owner,storage::TorrentStateFile source,
       compat::OriginalLayout geometry,lt::add_torrent_params parameters,fs::path root,std::vector<Slot> mapping,std::vector<Journal> journal,std::vector<ManagedPayloadClaim> claims,
       std::uint64_t device,std::uint64_t inode)
-    : hash(std::move(key)),captured(std::move(selected)),store(std::move(owner)),state(std::move(source)),layout(std::move(geometry)),
-      params(std::move(parameters)),save(std::move(root)),slots(std::move(mapping)),pending(std::move(journal)),payloadClaims(std::move(claims)),profileDevice(device),profileInode(inode) {}
+    : hash(std::move(key)),selectedIdentity(std::move(identity)),captured(std::move(selected)),store(std::move(owner)),state(std::move(source)),layout(std::move(geometry)),
+      params(std::move(parameters)),save(std::move(root)),slots(std::move(mapping)),pending(std::move(journal)),payloadClaims(std::move(claims)),profileDevice(device),profileInode(inode) {
+      progressFromPieces=layout.files.size()!=static_cast<std::size_t>(params.ti->num_files())
+          ||std::ranges::any_of(layout.files,[](const auto& file){return file.padding;});
+    }
 };
 ManagedStorage::ManagedStorage(std::unique_ptr<Impl> impl):impl_(std::move(impl)) {}
 ManagedStorage::ManagedStorage(ManagedStorage&&) noexcept=default;
@@ -412,13 +417,21 @@ ManagedStorage& ManagedStorage::operator=(ManagedStorage&&) noexcept=default;
 ManagedStorage::~ManagedStorage()=default;
 lt::add_torrent_params ManagedStorage::parameters() const { return impl_?impl_->params:lt::add_torrent_params{}; }
 const ManagedQueueMetadata& ManagedStorage::queueMetadata() const { return impl_->queue; }
+std::int64_t ManagedStorage::originalBytes() const noexcept { return impl_?impl_->layout.bytes:0; }
+bool ManagedStorage::originalProgressRequiresPieces() const noexcept { return impl_&&impl_->progressFromPieces; }
+std::expected<std::int64_t,Error> ManagedStorage::verifiedOriginalBytes(std::span<const std::uint8_t> pieces) const {
+  if(!impl_) return std::unexpected(Error{ErrorCode::Conflict,"Managed storage was moved or released"});
+  return biglybtc::engine::detail::verifiedOriginalBytes(impl_->layout.bytes,impl_->layout.pieceLength,pieces);
+}
 std::shared_ptr<OriginalDiskFiles> ManagedStorage::mappedFiles() const { return impl_?impl_->mapped:nullptr; }
 std::span<const ManagedPayloadClaim> ManagedStorage::claims() const noexcept { return impl_?std::span<const ManagedPayloadClaim>(impl_->payloadClaims):std::span<const ManagedPayloadClaim>{}; }
+const storage::OriginalTorrentIdentity& ManagedStorage::identity() const {return impl_->selectedIdentity;}
 
-std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed) {
+std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed,std::span<const storage::OriginalTorrentIdentity> retainedIdentities,std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge) {
   try {
     require(!storage::hasPendingOriginalCompaction(lease),"Recover pending explicit compaction with all profile handles retired before admission",ErrorCode::Conflict);
     require(claimed.size()<=MaximumManagedPayloadClaims,"Retained payload claim bound exceeded",ErrorCode::Unsupported);
+    require(retainedIdentities.size()<=MaximumManagedPayloadClaims,"Retained identity bound exceeded",ErrorCode::Unsupported);
     struct stat profile{}; require(lease.valid()&&::fstat(lease.directoryHandle(),&profile)==0,"Managed storage requires a valid held lease",ErrorCode::UnsafePath);
     auto inventory=take(storage::ConfigFile::load(lease,"downloads.config"));
     require(inventory.recoverySource()!=storage::RecoverySource::Saving,"Resolve saved-inventory recovery before managed preparation",ErrorCode::Conflict);
@@ -459,7 +472,14 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     }
     const auto geometry=compat::originalLayout(source);
     require(geometry.has_value(),"Invalid original managed geometry",ErrorCode::InvalidFormat); auto layout=*geometry;
-    auto info=metadata(source,hash,layout); auto attributes=dictionary(source.find("attributes"));
+    auto validated=metadata(source,hash,layout,swarmBridge);auto info=std::move(validated.info);auto identity=std::move(validated.identity);
+    lt::add_torrent_params params; params.ti=info;
+    if(swarmBridge) {
+      require(selectManagedSwarm(params,identity,swarmBridge),
+          "Selected swarm requires the same exact counter/provider module",ErrorCode::Unsupported);
+    } // Immutable admission flags are fixed before state ownership/payload effects.
+    for(const auto& retained:retainedIdentities){const auto relation=take(storage::compareOriginalTorrentIdentities(identity,retained));require(relation==storage::OriginalIdentityRelation::Distinct,"Full torrent identity is retained by another admission",ErrorCode::Conflict);}
+    auto attributes=dictionary(source.find("attributes"));
     saved=take(storage::resolveOriginalSaveRoot(rawSaved,layout));
     const auto storageDefaults=take(storage::resolveOriginalStorageTypes(lease,hash,layout,attributes.root()));
     require(!storageDefaults.unsupportedConversion,"Original policy requires unsupported cross-family storage conversion");
@@ -470,7 +490,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     const auto profilePath=fs::read_symlink(fs::path("/proc/self/fd")/std::to_string(lease.directoryHandle())).lexically_normal();
     require(profilePath.is_absolute(),"Cannot authenticate managed profile path",ErrorCode::UnsafePath);
     auto slots=plan(saved,attributes.root(),layout,*parsedPolicy,save,pending,profilePath);
-    const bool mapped=std::ranges::any_of(slots,[](const Slot& slot) {return !slot.padding&&(slot.kind!=storage::OriginalStorageKind::Linear||slot.actual.is_absolute()||slot.expanding);});
+    const bool mapped=static_cast<std::size_t>(info->num_files())!=slots.size()||std::ranges::any_of(slots,[](const Slot& slot) {return !slot.padding&&(slot.kind!=storage::OriginalStorageKind::Linear||slot.actual.is_absolute()||slot.expanding);});
     // Validate every existing physical map before creating files or owning state.
     for (const auto& slot:slots) {
       if(slot.padding||slot.kind==storage::OriginalStorageKind::Linear||slot.data.get()<0){continue;}
@@ -481,7 +501,8 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     if (::getrlimit(RLIMIT_NOFILE,&limit)==0&&limit.rlim_cur!=RLIM_INFINITY) { budget=std::min(budget,static_cast<std::size_t>(limit.rlim_cur/(mapped?8:4))); }
     const auto files=static_cast<std::size_t>(std::ranges::count_if(slots,[](const auto& slot) { return !slot.padding; }));
     require(files<=budget,"Managed payload exceeds descriptor budget");
-    lt::add_torrent_params params; params.ti=info; params.save_path=save.string(); params.file_priorities=priorities(*parsedPolicy,layout);
+    params.save_path=save.string(); params.file_priorities=priorities(*parsedPolicy,layout);
+    params.file_priorities.resize(static_cast<std::size_t>(info->num_files()),lt::download_priority_t{0});
     for (auto [key,target]:{std::pair{"maxdl",&params.download_limit},{"maxul",&params.upload_limit}}) {
       const auto value=integer(row.find(key)); require(value>=0&&value<=std::numeric_limits<int>::max(),"Unsupported disabled/overflowed per-torrent rate limit");
       *target=value?static_cast<int>(value):-1;
@@ -494,6 +515,8 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     // All unsupported geometry/mapping/policy decisions precede state ownership
     // and payload mutation. beginUpdate hydrates the same last cached sections.
     auto state=take(store.beginUpdate(lease,hash)); auto actual=dictionary(state.document().find("attributes"));
+    const auto actualIdentity=take(storage::originalTorrentIdentityFromLibtorrent(state.document(),*info));done(storage::validateOriginalTorrentKey(actualIdentity,hash,true));
+    require(take(storage::compareOriginalTorrentIdentities(identity,actualIdentity))==storage::OriginalIdentityRelation::SameSelected,"Authoritative original selected identity changed during preparation",ErrorCode::Conflict);
     const auto recheckedDefaults=take(storage::resolveOriginalStorageTypes(lease,hash,layout,actual.root()));
     require(recheckedDefaults==storageDefaults,"Original storage defaults/controls changed during preparation",ErrorCode::Conflict);
     const auto recheckedRoot=take(storage::resolveOriginalSaveRoot(rawSaved,layout));
@@ -536,7 +559,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
         put(inventory.document(),"downloads",list+'e');}
       done(inventory.save(lease));
     }
-    std::vector<std::optional<OriginalDiskFile>> mappedFiles(slots.size());
+    std::vector<std::optional<OriginalDiskFile>> mappedFiles(static_cast<std::size_t>(info->num_files()));
     for (auto& slot:slots) {
       if (slot.padding) { continue; }
       const auto journal=std::find_if(pending.begin(),pending.end(),[&](const auto& value) { return value.index==slot.index; });
@@ -588,9 +611,9 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
       params.renamed_files[lt::file_index_t{static_cast<int>(slot.index)}]=slot.actual.string();
     }
     for(std::size_t i=0;i<claimPlan.values.size();++i){const auto& id=slots[claimPlan.indices[i]].identity;claimPlan.values[i].device=static_cast<std::uint64_t>(id.st_dev);claimPlan.values[i].inode=static_cast<std::uint64_t>(id.st_ino);}
-    auto result=std::make_unique<Impl>(hash,saved,std::move(store),std::move(state),std::move(layout),std::move(params),save,
+    auto result=std::make_unique<Impl>(hash,std::move(identity),saved,std::move(store),std::move(state),std::move(layout),std::move(params),save,
       std::move(slots),std::move(pending),std::move(claimPlan.values),profile.st_dev,profile.st_ino);
-    result->queue=queue;
+    result->queue=queue; result->swarmBridge=std::move(swarmBridge);
     if(mapped){result->mapped=std::make_shared<OriginalDiskFiles>(info,std::move(mappedFiles));}
     return ManagedStorage(std::move(result));
   } catch (const Failure& error) { return std::unexpected(error.error); }
@@ -645,7 +668,7 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       }
       require(counts[index]>=0&&counts[index]<=file.bytes&&counts[index]<=std::numeric_limits<std::int64_t>::max()-total,"Verified file accounting overflows",ErrorCode::InvalidFormat); total+=counts[index];
     }
-    if(owner.mapped){std::vector<std::uint8_t> completeFiles(owner.slots.size());for(const auto& slot:owner.slots){completeFiles[slot.index]=!slot.padding&&counts[slot.index]==slot.bytes;}done(owner.mapped->finishComplete(completeFiles));}
+    if(owner.mapped){std::vector<std::uint8_t> completeFiles(static_cast<std::size_t>(owner.params.ti->num_files()));for(const auto& slot:owner.slots){completeFiles[slot.index]=!slot.padding&&counts[slot.index]==slot.bytes;}done(owner.mapped->finishComplete(completeFiles));}
     bool allocated=true;
     for (auto& slot:owner.slots) {
       if (slot.padding) { continue; } struct stat named{},opened{},parent{};

@@ -8,6 +8,7 @@
 
 #include "library_model.hpp"
 #include "file_model.hpp"
+#include "torrent_intake_presentation.hpp"
 #include "saved_services_presentation.hpp"
 #include "column_layout_presentation.hpp"
 #include "statistics_presentation.hpp"
@@ -49,6 +50,8 @@ class ClassicColumns;
 class StatisticsPage;
 class EngineActivityHistory;
 class NativeActivityHistory;
+
+class TorrentIntakeDialog;
 
 class LibraryWindow final : public QMainWindow {
   Q_OBJECT
@@ -117,6 +120,10 @@ public:
   void rejectFileOperationSubmission(const FileOperationSubmission&);
   void rejectTorrentCreationRequest(const TorrentCreationRequest&);
   void setIntakeDefaults(quint64 session, QString directory);
+  void setTorrentIntake(TorrentIntakePresentation);
+  void setTorrentIntakeFinished(TorrentIntakeResultPresentation);
+  void rejectTorrentIntake(const TorrentIntakeRequest&);
+  void rejectTorrentIntakeSubmission(const TorrentIntakeSubmission&);
   void setBusy(bool);
   void setMessage(const QString&);
   void setOfflinePreview(bool);
@@ -135,6 +142,8 @@ signals:
   void optionsSaveRequested(biglybtc::ui::OptionsSubmission);
   void refreshRequested();
   void torrentImportRequested(QString metadata, QString destination, bool start);
+  void torrentIntakeRequested(biglybtc::ui::TorrentIntakeRequest);
+  void torrentIntakeSubmitted(biglybtc::ui::TorrentIntakeSubmission);
   void magnetImportRequested(QString uri, QString destination);
   void savedServicesRequested(quint64 request);
   void statisticsRequested(quint64 session, quint64 request);
@@ -180,6 +189,7 @@ private:
   void filePopup(const QPoint&);
   bool canImport() const;
   void openImportDialog(bool magnet);
+  void openTorrentIntake();
   void restoreSelection(const QStringList&, bool initial = false);
   void activate(QTableView*);
   void showMyTorrents();
@@ -344,6 +354,9 @@ private:
   std::optional<FilePolicySelection> fileMenuSelection_;
   std::optional<Target> detailsRequestedFor_;
   std::optional<int> restoreFileIndex_;
+  QPointer<TorrentIntakeDialog> intakeDialog_;
+  std::optional<TorrentIntakeRequest> activeIntakePreview_;
+  std::optional<TorrentIntakeSubmission> activeIntakeSubmission_;
   bool busy_ = false;
   bool closing_ = false;
   bool sessionCloseEnabled_ = false;

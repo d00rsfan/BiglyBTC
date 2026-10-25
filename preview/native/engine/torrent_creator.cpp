@@ -1,4 +1,6 @@
 #include "torrent_creator.hpp"
+#include "original_torrent_identity_lt.hpp"
+#include "original_layout_projection.hpp"
 
 #include <libtorrent/bencode.hpp>
 #include <libtorrent/create_torrent.hpp>
@@ -16,6 +18,9 @@
 #include <iterator>
 #include <limits>
 #include <memory>
+#include <map>
+#include <set>
+#include <span>
 #include <new>
 #include <string_view>
 #include <sys/random.h>
@@ -304,8 +309,13 @@ void rejectOutputWithinSource(int outputParent, const Stamp& source, const fs::p
   fail(CreateErrorCode::Limit, path, "Output ancestry limit exceeded");
 }
 void validateOptions(const CreateOptions& options) {
-  if (options.pieceSize != 0 && std::find(CreatePieceSizes.begin(), CreatePieceSizes.end(), options.pieceSize) == CreatePieceSizes.end()) {
-    fail(CreateErrorCode::Options, options.output, "Unsupported piece size");
+  if (options.format!=CreateFormat::V1&&options.format!=CreateFormat::V2&&options.format!=CreateFormat::Hybrid) {
+    fail(CreateErrorCode::Options,options.output,"Unknown torrent format");
+  }
+  const bool merkle=options.format!=CreateFormat::V1;
+  const auto supported=merkle?std::span<const std::uint32_t>(CreateMerklePieceSizes):std::span<const std::uint32_t>(CreatePieceSizes);
+  if(options.pieceSize!=0&&std::find(supported.begin(),supported.end(),options.pieceSize)==supported.end()) {
+    fail(CreateErrorCode::Options,options.output,merkle?"V2 and hybrid require a supported power-of-two piece size":"Unsupported piece size");
   }
   if (options.comment.size() > CreateMaximumCommentBytes || !utf8(options.comment, true)
       || options.trackerTiers.size() > CreateMaximumTrackerTiers) {
@@ -368,6 +378,110 @@ void hashFiles(int root, const Inventory& inventory, lt::create_torrent& torrent
   }
   if (inPiece != 0) { torrent.set_hash(lt::piece_index_t{static_cast<int>(index++)}, hash.final()); }
   if (index != pieces || completed != inventory.total) { fail(CreateErrorCode::Generator, operation.options.source, "Piece accounting mismatch"); }
+}
+
+void hashMerkleFiles(int root,const Inventory& inventory,lt::create_torrent& torrent,
+    const Operation& operation,std::uint32_t size,std::size_t pieces,const std::string& sourceName) {
+  constexpr std::size_t Block=16384;
+  std::array<char,Block> buffer{},zeros{};
+  std::map<std::string,const Entry*> originals;
+  for(const auto& file:inventory.files) {
+    originals.emplace(inventory.directory?sourceName+'/'+file.relative:sourceName,&file);
+  }
+  std::set<std::string> visited;
+  const auto& files=torrent.files();
+  const bool v1=operation.options.format==CreateFormat::Hybrid;
+  lt::hasher v1Hash;std::uint32_t inPiece=0;std::size_t pieceIndex=0;
+  std::uint64_t completed=0,logical=0;
+  auto feed=[&](const char* data,std::size_t bytes) {
+    while(bytes) {
+      const auto count=std::min<std::size_t>(bytes,size-inPiece);
+      if(v1) v1Hash.update(data,static_cast<int>(count));
+      data+=count;bytes-=count;inPiece+=static_cast<std::uint32_t>(count);logical+=count;
+      if(inPiece==size) {
+        if(v1) torrent.set_hash(lt::piece_index_t{static_cast<int>(pieceIndex)},v1Hash.final());
+        ++pieceIndex;inPiece=0;v1Hash.reset();
+      }
+    }
+  };
+  operation.publish({CreateStage::Hashing,0,inventory.total,inventory.files.size(),0,pieces});
+  for(const auto index:files.file_range()) {
+    operation.cancelled();const auto length=files.file_size(index);
+    if(files.pad_file_at(index)) {
+      for(std::int64_t left=length;left>0;) {
+        operation.cancelled();const auto count=static_cast<std::size_t>(std::min<std::int64_t>(left,Block));
+        feed(zeros.data(),count);left-=static_cast<std::int64_t>(count);
+      }
+      continue; // Virtual bytes are never source progress or a pathname read.
+    }
+    const auto found=originals.find(files.file_path(index));
+    if(found==originals.end()||!visited.insert(found->first).second||found->second->observed.size!=length) {
+      fail(CreateErrorCode::Generator,operation.options.source,"Generator changed original real-file identity");
+    }
+    const auto& file=*found->second;const auto path=operation.options.source/file.relative;
+    auto input=openRelative(root,file.relative,path);
+    if(!same(file.observed,describe(input.get(),path))) fail(CreateErrorCode::Changed,path,"Source changed before Merkle hashing");
+    std::vector<lt::sha256_hash> leaves;leaves.reserve(size/Block);
+    std::int64_t offset=0;int filePiece=0;
+    while(offset<length) {
+      operation.cancelled();const auto wanted=static_cast<std::size_t>(std::min<std::int64_t>(Block,length-offset));
+      std::size_t filled=0;
+      while(filled<wanted) {
+        operation.cancelled();const auto count=::pread(input.get(),buffer.data()+filled,wanted-filled,offset+static_cast<off_t>(filled));
+        if(count<0&&errno==EINTR) continue;
+        if(count<0) fail(CreateErrorCode::Read,path,"Source Merkle read failed",errno);
+        if(count==0) fail(CreateErrorCode::Changed,path,"Source truncated during Merkle hashing");
+        filled+=static_cast<std::size_t>(count);
+      }
+      leaves.push_back(lt::hasher256(buffer.data(),static_cast<int>(wanted)).final());
+      feed(buffer.data(),wanted);offset+=static_cast<std::int64_t>(wanted);completed+=wanted;
+      if(leaves.size()==size/Block||offset==length) {
+        // Exact LT on_hash rule: files smaller than one piece pad only to the
+        // next block power-of-two; larger files pad every tail to piece width.
+        std::size_t width=size/Block;
+        if(length<static_cast<std::int64_t>(size)) {width=1;while(width<leaves.size()) width*=2;}
+        leaves.resize(width); // Missing Merkle leaves are zero hashes, not hashed zero-data.
+        for(auto n=width;n>1;n/=2) {
+          for(std::size_t j=0;j<n;j+=2) {
+            lt::hasher256 pair;pair.update(leaves[j].data(),32);pair.update(leaves[j+1].data(),32);leaves[j/2]=pair.final();
+          }
+        }
+        torrent.set_hash2(index,lt::piece_index_t::diff_type{filePiece++},leaves[0]);leaves.clear();
+      }
+      operation.publish({CreateStage::Hashing,completed,inventory.total,inventory.files.size(),pieceIndex,pieces});
+    }
+    if(!same(file.observed,describe(input.get(),path))) fail(CreateErrorCode::Changed,path,"Source changed while Merkle hashing");
+  }
+  if(inPiece) {
+    if(v1) torrent.set_hash(lt::piece_index_t{static_cast<int>(pieceIndex)},v1Hash.final());
+    ++pieceIndex;
+  }
+  if(visited.size()!=inventory.files.size()||completed!=inventory.total||logical!=static_cast<std::uint64_t>(files.total_size())||pieceIndex!=pieces) {
+    fail(CreateErrorCode::Generator,operation.options.source,"Merkle/source piece accounting mismatch");
+  }
+}
+
+void validateOriginalGeometry(const core::Document& document,const lt::torrent_info& parsed,
+    bool merkle,const fs::path& output) {
+  const auto layout=compat::originalLayout(document);
+  if(!layout||!detail::projectOriginalLayout(*layout,parsed)) {
+    fail(CreateErrorCode::Generator,output,"Generated file order/geometry differs from the original UTF16 layout");
+  }
+  if(merkle&&parsed.info_hashes().has_v1()) {
+    // Geometry-only scratch copy, never exported or used as a hash subject.
+    // The original also derives V2 roots by these exact tree indices in hybrid.
+    auto limits=storage::compatibleConfigLimits();limits.inputBytes=MaximumMetadataBytes;limits.stringBytes=MaximumMetadataBytes;
+    const auto* info=document.find("info");const auto* tree=info?info->find("file tree"):nullptr;
+    const auto* name=info?info->find("name"):nullptr;const auto* length=info?info->find("piece length"):nullptr;
+    if(!tree||!name||!length) fail(CreateErrorCode::Generator,output,"Generated hybrid lacks V2 fields");
+    const auto raw=[&](const core::Node& n){return document.originalBytes().substr(n.begin,n.end-n.begin);};
+    auto scratch=core::Document::parse("d4:infod9:file tree"+raw(*tree)+"12:meta versioni2e4:name"+raw(*name)+"12:piece length"+raw(*length)+"ee",limits);
+    if(!scratch) fail(CreateErrorCode::Generator,output,"Generated V2 validation subject rejected");
+    const auto v2=compat::originalLayout(*scratch);
+    if(!v2||!detail::projectOriginalLayout(*v2,parsed)) {
+      fail(CreateErrorCode::Generator,output,"Generated hybrid V1/V2 original indices differ");
+    }
+  }
 }
 
 // A private directory protects the temporary source of linkat from other users
@@ -467,10 +581,21 @@ std::expected<CreateResult, CreateError> createTorrent(const CreateOptions& subm
       const auto name = inventory.directory ? sourceParent.leaf + '/' + file.relative : sourceParent.leaf;
       files.add_file(name, file.observed.size);
     }
-    lt::create_torrent torrent(files, static_cast<int>(size), lt::create_torrent::v1_only);
-    if (files.num_files() != static_cast<int>(inventory.files.size()) || files.total_size() != static_cast<std::int64_t>(inventory.total)
-        || torrent.num_pieces() != static_cast<int>(pieces)) {
-      fail(CreateErrorCode::Generator, options.source, "Generator changed source layout");
+    const auto flags=options.format==CreateFormat::V1?lt::create_torrent::v1_only
+        :options.format==CreateFormat::V2?lt::create_torrent::v2_only:lt::create_flags_t{};
+    lt::create_torrent torrent(files,static_cast<int>(size),flags);
+    if(options.format==CreateFormat::Hybrid&&files.pad_file_at(lt::file_index_t{files.num_files()-1})) {
+      // New, unhashed generator inventory only. Original hybrid pads before
+      // following files, not after a final nonempty leaf. Keep real empty slots.
+      files.remove_tail_padding();
+      files.set_num_pieces(static_cast<int>(files.total_size()/size+(files.total_size()%size!=0)));
+    }
+    const auto generatedPieces=static_cast<std::size_t>(torrent.num_pieces());
+    if(generatedPieces>CreateMaximumPieces) fail(CreateErrorCode::Limit,options.source,"Padded piece count limit exceeded; choose a larger piece size");
+    if(generatedPieces==0||files.num_files()>static_cast<int>(2*CreateMaximumFiles)
+        ||(options.format==CreateFormat::V1&&(files.num_files()!=static_cast<int>(inventory.files.size())
+          ||files.total_size()!=static_cast<std::int64_t>(inventory.total)||generatedPieces!=pieces))) {
+      fail(CreateErrorCode::Generator,options.source,"Generator changed source layout or exceeded padded-piece bounds");
     }
     torrent.set_creation_date(0);
     torrent.set_creator("BiglyBTC");
@@ -479,34 +604,43 @@ std::expected<CreateResult, CreateError> createTorrent(const CreateOptions& subm
     for (std::size_t tier = 0; tier < options.trackerTiers.size(); ++tier) {
       for (const auto& url : options.trackerTiers[tier]) { torrent.add_tracker(url, static_cast<int>(tier)); }
     }
-    hashFiles(source.get(), inventory, torrent, operation, size, pieces);
+    if(options.format==CreateFormat::V1) hashFiles(source.get(),inventory,torrent,operation,size,pieces);
+    else hashMerkleFiles(source.get(),inventory,torrent,operation,size,generatedPieces,sourceParent.leaf);
     const auto entry = torrent.generate();
     std::vector<char> bytes;
     lt::bencode(std::back_inserter(bytes), entry);
     if (bytes.size() > MaximumMetadataBytes) { fail(CreateErrorCode::Limit, options.output, "Generated metadata limit exceeded"); }
     lt::error_code generatorError;
     lt::torrent_info parsed(bytes.data(), static_cast<int>(bytes.size()), generatorError);
-    if (generatorError || !parsed.info_hashes().has_v1() || parsed.info_hashes().has_v2()
-        || parsed.total_size() != static_cast<std::int64_t>(inventory.total)
-        || parsed.num_files() != static_cast<int>(inventory.files.size()) || parsed.num_pieces() != static_cast<int>(pieces)
-        || parsed.piece_length() != static_cast<int>(size)) {
-      fail(CreateErrorCode::Generator, options.output, "Generated metadata failed independent decoder validation");
+    const bool expectV1=options.format!=CreateFormat::V2,expectV2=options.format!=CreateFormat::V1;
+    if(generatorError||parsed.info_hashes().has_v1()!=expectV1||parsed.info_hashes().has_v2()!=expectV2
+        ||parsed.num_pieces()!=static_cast<int>(generatedPieces)||parsed.piece_length()!=static_cast<int>(size)) {
+      fail(CreateErrorCode::Generator,options.output,"Generated metadata failed independent format/Merkle validation");
     }
-    for (std::size_t index = 0; index < inventory.files.size(); ++index) {
-      const auto fileIndex = lt::file_index_t{static_cast<int>(index)};
-      const auto& file = inventory.files[index];
-      const auto expected = inventory.directory ? sourceParent.leaf + '/' + file.relative : sourceParent.leaf;
-      if (parsed.files().file_path(fileIndex) != expected || parsed.files().file_size(fileIndex) != file.observed.size) {
-        fail(CreateErrorCode::Generator, options.source / file.relative, "Generator or decoder changed a source path");
-      }
+    auto limits=storage::compatibleConfigLimits();limits.inputBytes=MaximumMetadataBytes;limits.stringBytes=MaximumMetadataBytes;
+    auto document=core::Document::parse(std::string(bytes.data(),bytes.size()),limits);
+    if(!document||!storage::originalTorrentInfoOrder(*document)) fail(CreateErrorCode::Generator,options.output,"Generated original key order is unsupported");
+    validateOriginalGeometry(*document,parsed,expectV2,options.output);
+    std::map<std::string,std::int64_t> expectedFiles;
+    for(const auto& file:inventory.files) expectedFiles.emplace(inventory.directory?sourceParent.leaf+'/'+file.relative:sourceParent.leaf,file.observed.size);
+    std::size_t realFiles=0;
+    for(const auto index:parsed.files().file_range()) {
+      if(parsed.files().pad_file_at(index)) continue;
+      const auto found=expectedFiles.find(parsed.files().file_path(index));
+      if(found==expectedFiles.end()||found->second!=parsed.files().file_size(index)) fail(CreateErrorCode::Generator,options.source,"Generated metadata changed an actual source file");
+      expectedFiles.erase(found);++realFiles;
     }
-    const auto digest = parsed.info_hashes().v1;
-    const auto identity = core::TorrentHash::parse(std::string_view(digest.data(), 20));
-    if (!identity) { fail(CreateErrorCode::Generator, options.output, "Generated v1 identity rejected"); }
-    CreateResult result{options.output, *identity, inventory.total, inventory.files.size(), size,
-        pieces, CreatePublication::Durable, {}};
-    operation.publish({CreateStage::Validating, inventory.total, inventory.total, inventory.files.size(), pieces, pieces});
-    operation.publish({CreateStage::Publishing, inventory.total, inventory.total, inventory.files.size(), pieces, pieces});
+    if(!expectedFiles.empty()||realFiles!=inventory.files.size()) fail(CreateErrorCode::Generator,options.source,"Generated metadata lost an actual source/empty file");
+    const auto selected=storage::originalTorrentIdentityFromLibtorrent(*document,parsed);
+    if(!selected) fail(CreateErrorCode::Generator,options.output,"Generated raw full/selected identity rejected");
+    core::TorrentHash legacy;
+    std::optional<core::TorrentHash> fullV1,fullV2;
+    if(expectV1) {const auto value=core::TorrentHash::parse(parsed.info_hashes().v1.to_string());if(!value) fail(CreateErrorCode::Generator,options.output,"Generated v1 digest rejected");legacy=*value;fullV1=*value;}
+    if(expectV2) {const auto value=core::TorrentHash::parse(parsed.info_hashes().v2.to_string());if(!value) fail(CreateErrorCode::Generator,options.output,"Generated v2 digest rejected");fullV2=*value;}
+    CreateResult result{options.output,legacy,inventory.total,inventory.files.size(),size,
+        generatedPieces,CreatePublication::Durable,{},options.format,selected->originalKey,std::move(fullV1),std::move(fullV2)};
+    operation.publish({CreateStage::Validating, inventory.total, inventory.total, inventory.files.size(), generatedPieces, generatedPieces});
+    operation.publish({CreateStage::Publishing, inventory.total, inventory.total, inventory.files.size(), generatedPieces, generatedPieces});
     Temporary temporary(outputParent.directory.get(), options.output);
     writeAll(temporary.file(), bytes, options.output);
     // No more user callbacks after these checks. Reopen every component and

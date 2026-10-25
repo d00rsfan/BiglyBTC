@@ -47,7 +47,7 @@ void applied(const core::QueuePolicy& p){
 int main(int argc,char** argv){try{
   require(argc==3,"Usage: queue-settings-roundtrip-driver PROFILE apply|check");
   const std::string_view phase(argv[2]);require(phase=="apply"||phase=="check","Invalid handoff phase");
-  require(core::applicationSettingsCatalog().size()==100,"Expected current100-field application settings catalog");
+  require(core::applicationSettingsCatalog().size()==101,"Expected current101-field application settings catalog");
   const auto profile=std::filesystem::canonical(argv[1]);
   auto lease=take(storage::ProfileLease::acquire(profile));
   const auto before=take(storage::readApplicationSettings(lease));unchanged(before);

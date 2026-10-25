@@ -53,6 +53,28 @@ private slots:
   QCOMPARE(request.options.pieceSize,quint64(49152));QVERIFY(request.options.privateTorrent);QVERIFY(!request.options.importAfterCreation);
   QCOMPARE(request.options.trackerTiers.size(),std::size_t(2));QCOMPARE(request.options.trackerTiers[0].size(),2);QCOMPARE(request.options.trackerTiers[1][0],QStringLiteral("http://other.invalid/a,b"));QCOMPARE(request.options.comment,QStringLiteral("<owned π>"));QVERIFY(dialog.pending());
  }
+ void explicitFormatsExposeOnlyCompatiblePieceSizesAndKeepV1Default() {
+  TorrentCreationDialog dialog;QSignalSpy requests(&dialog,&TorrentCreationDialog::createRequested);QVERIFY(dialog.beginSession(1,1));fill(dialog);
+  auto* format=dialog.findChild<QComboBox*>("torrent-creation-format");auto* piece=dialog.findChild<QComboBox*>("torrent-creation-piece-size");
+  QVERIFY(format&&piece);QCOMPARE(format->currentIndex(),0);QCOMPARE(piece->count(),21);piece->setCurrentIndex(2);
+  format->setCurrentIndex(1);QCoreApplication::processEvents();QCOMPARE(piece->count(),15);QCOMPARE(piece->currentData().toULongLong(),quint64(0));
+  QCOMPARE(piece->itemData(1).toULongLong(),quint64(16384));
+  for(int i=1;i<piece->count();++i){const auto n=piece->itemData(i).toULongLong();QVERIFY(n>=16384&&n<=134217728&&(n&(n-1))==0);}
+  piece->setCurrentIndex(1);dialog.accept();QCOMPARE(requests.count(),1);const auto first=requests[0][0].value<TorrentCreationRequest>();
+  QCOMPARE(first.options.format,TorrentCreationFormat::V2);QCOMPARE(first.options.pieceSize,quint64(16384));
+  QVERIFY(dialog.setResult(result(first,false,false,QStringLiteral("retry"))));format->setCurrentIndex(2);QCoreApplication::processEvents();
+  dialog.accept();QCOMPARE(requests.count(),2);QCOMPARE(requests[1][0].value<TorrentCreationRequest>().options.format,TorrentCreationFormat::Hybrid);
+  const auto second=requests[1][0].value<TorrentCreationRequest>();QVERIFY(dialog.setResult(result(second,false,false,QStringLiteral("retry"))));
+  format->setCurrentIndex(0);QCoreApplication::processEvents();QCOMPARE(piece->count(),21);QCOMPARE(piece->currentData().toULongLong(),quint64(0));
+ }
+ void invalidFormatAndSparseQueuedChangesDoNotDispatchInvalidOptions() {
+  TorrentCreationDialog dialog;QSignalSpy requests(&dialog,&TorrentCreationDialog::createRequested);QVERIFY(dialog.beginSession(1,1));fill(dialog);
+  auto* format=dialog.findChild<QComboBox*>("torrent-creation-format");auto* piece=dialog.findChild<QComboBox*>("torrent-creation-piece-size");
+  format->setCurrentIndex(-1);dialog.accept();QCOMPARE(requests.count(),0);format->setCurrentIndex(0);QCoreApplication::processEvents();piece->setCurrentIndex(2);
+  format->setCurrentIndex(1);dialog.accept();QCOMPARE(requests.count(),0); // Odd v1 size never slips through before queued repopulation.
+  format->setCurrentIndex(2);QCoreApplication::processEvents();dialog.accept();QCOMPARE(requests.count(),1);
+  QCOMPARE(requests[0][0].value<TorrentCreationRequest>().options.format,TorrentCreationFormat::Hybrid);
+ }
  void invalidInputsAndBusyStateNeverDispatch() {
   TorrentCreationDialog dialog;QSignalSpy requests(&dialog,&TorrentCreationDialog::createRequested);QVERIFY(!dialog.beginSession(0,1));QVERIFY(dialog.beginSession(1,1));dialog.show();
   dialog.accept();QCOMPARE(requests.count(),0);fill(dialog);dialog.setBusy(true);dialog.accept();QCOMPARE(requests.count(),0);dialog.setBusy(false);

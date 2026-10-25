@@ -1,4 +1,6 @@
 #include "../engine/torrent_creator.hpp"
+#include "../engine/original_layout_projection.hpp"
+#include "original_torrent_identity_lt.hpp"
 
 #include <libtorrent/hasher.hpp>
 #include <libtorrent/torrent_info.hpp>
@@ -91,6 +93,52 @@ void expect(const std::expected<CreateResult, CreateError>& result, CreateErrorC
 } // namespace
 int main() {
   try {
+    run("explicit v2 and hybrid retain actual full hashes and authenticated tail projection", [] {
+      for(const auto format:{CreateFormat::V2,CreateFormat::Hybrid}) {
+        Area area;const auto bytes=data(77003);write(area.source(),bytes);auto options=area.options();options.format=format;
+        options.privateTorrent=true;options.pieceSize=32768;const auto result=createTorrent(options);CHECK(result);
+        const auto info=load(area.output());const auto raw=read(area.output());auto document=biglybtc::core::Document::parse(raw);CHECK(document);
+        const auto layout=biglybtc::compat::originalLayout(*document);CHECK(layout);
+        const auto projection=biglybtc::engine::detail::projectOriginalLayout(*layout,info);CHECK(projection);
+        CHECK(result->format==format&&result->fullInfoHashV2&&result->fullInfoHashV2->bytes().size()==32);
+        CHECK(result->totalBytes==bytes.size()&&result->fileCount==1&&result->pieceCount==3);
+        CHECK(layout->bytes==77003&&projection->trailingPad.has_value()==(format==CreateFormat::V2));
+        const auto subject=biglybtc::storage::originalTorrentInfoSubject(*document);CHECK(subject);
+        CHECK(info.info_hashes().v2==lt::hasher256(subject->data(),static_cast<int>(subject->size())).final());
+        CHECK(result->selectedHash.bytes().size()==20&&read(area.source())==bytes);
+        if(format==CreateFormat::V2) {CHECK(result->infoHashV1.bytes().empty()&&!result->fullInfoHashV1);CHECK(std::equal(result->selectedHash.bytes().begin(),result->selectedHash.bytes().end(),result->fullInfoHashV2->bytes().begin()));}
+        else {CHECK(result->fullInfoHashV1&&result->infoHashV1==result->selectedHash);verifyPieces(info,bytes);}
+      }
+    });
+    run("new formats retain mixed real empty files virtual pad slots and physical bytes", [] {
+      for(const auto format:{CreateFormat::V2,CreateFormat::Hybrid}) {
+        Area area;const auto source=area.root/"bundle-π";fs::create_directories(source/"a-dir");
+        const auto a=data(17001,3),z=data(50003,9),tail=data(101,1);
+        write(source/"01-first.bin",a);write(source/"a-dir/02-שب.bin",z);write(source/"a-dir/03-empty.bin","");write(source/"z-last.bin",tail);
+        auto options=area.options();options.source=source;options.format=format;const auto result=createTorrent(options);CHECK(result&&result->fileCount==4);
+        const auto info=load(area.output());auto document=biglybtc::core::Document::parse(read(area.output()));CHECK(document);
+        const auto layout=biglybtc::compat::originalLayout(*document);CHECK(layout);
+        const auto projection=biglybtc::engine::detail::projectOriginalLayout(*layout,info);CHECK(projection);
+        CHECK(layout->files.size()==6&&layout->files[4].bytes==0&&!layout->files[4].padding);
+        CHECK(layout->files[1].padding&&layout->files[3].padding&&projection->trailingPad.has_value()==(format==CreateFormat::V2));
+        CHECK(read(source/"01-first.bin")==a&&read(source/"a-dir/02-שب.bin")==z&&read(source/"z-last.bin")==tail&&fs::file_size(source/"a-dir/03-empty.bin")==0);
+        if(format==CreateFormat::Hybrid){verifyPieces(info,a+std::string(32768-a.size(),'\0')+z+std::string(65536-z.size(),'\0')+tail);}
+      }
+    });
+    run("format constraints and divergent UTF16 ordering refuse before publication", [] {
+      Area area;write(area.source(),data(70003));auto options=area.options();options.format=CreateFormat::V2;options.pieceSize=49152;
+      expect(createTorrent(options),CreateErrorCode::Options);area.cleanOutput();options.format=static_cast<CreateFormat>(99);options.pieceSize=0;
+      expect(createTorrent(options),CreateErrorCode::Options);area.cleanOutput();
+      const auto source=area.root/"names";fs::create_directory(source);write(source/std::string("\xf0\x90\x80\x80-a"),"a");write(source/std::string("\xee\x80\x80-b"),"b");
+      for(const auto format:{CreateFormat::V2,CreateFormat::Hybrid}){options=area.options();options.source=source;options.format=format;expect(createTorrent(options),CreateErrorCode::Generator);area.cleanOutput();}
+      CHECK(fs::file_size(source/std::string("\xf0\x90\x80\x80-a"))==1&&fs::file_size(source/std::string("\xee\x80\x80-b"))==1);
+    });
+    run("v2 cancellation preserves payload and existing output rules", [] {
+      Area area;const auto bytes=data(100003);write(area.source(),bytes);auto options=area.options();options.format=CreateFormat::V2;std::stop_source stop;
+      const auto cancelled=createTorrent(options,[&](const CreateProgress& progress){if(progress.stage==CreateStage::Hashing&&progress.completedBytes>0)stop.request_stop();},stop.get_token());
+      expect(cancelled,CreateErrorCode::Cancelled);area.cleanOutput();CHECK(read(area.source())==bytes);
+      write(area.output(),"existing");expect(createTorrent(options),CreateErrorCode::Conflict);CHECK(read(area.output())=="existing");
+    });
     run("single actual bytes metadata and deterministic repeated generation", [] {
       Area area; const auto bytes = data(190123); write(area.source(), bytes);
       struct stat before{}; CHECK(::stat(area.source().c_str(), &before) == 0);

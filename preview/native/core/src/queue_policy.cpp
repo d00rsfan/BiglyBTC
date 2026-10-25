@@ -310,7 +310,17 @@ std::expected<QueuePolicy,QueuePolicyError> readQueuePolicy(const Document* docu
     BOOL(lightSeedingEnabled,"Enable Light Seeding");INT(reservedLightSeedSlots,"Light Seed Slots Reserved");INT(flexibleSeedSlots,"Flexible Seed Slots");
 #undef INT
 #undef BOOL
-    validatePolicy(p);return p;
+    validatePolicy(p);
+    // Host invokes this pure reader before sparse config publication. Reject
+    // unrepresentable original signed32 slot arithmetic before a save, not
+    // only after the live owner attempts to install the policy.
+    const auto stalled=p.minimumSeedBytesPerSecond==0?0:(p.maximumStalledSeeds==0?999:p.maximumStalledSeeds);
+    for(const auto limit:{p.maximumActive,p.maximumActiveWhenSeedingEnabled?p.maximumActiveWhenSeeding:p.maximumActive}){
+      if(!evaluateQueueSlotBudget({limit,0,p.reservedLightSeedSlots,0,p.reservedLightSeedSlots,0,0,stalled,p.reservedLightSeedSlots,p.flexibleSeedSlots})){
+        fail(Code::InvalidConfiguration,"Flexible Seed Slots");
+      }
+    }
+    return p;
   }catch(const Invalid& error){return std::unexpected(error.error);}
   catch(const std::bad_alloc&){return std::unexpected(Error{Code::Memory,"queue policy"});}
 }
@@ -323,7 +333,7 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
     std::vector<std::int64_t> minimums;minimums.reserve(facts.size());
     std::vector<bool> fixed(facts.size(),false);
     std::vector<std::size_t> order(facts.size());std::iota(order.begin(),order.end(),std::size_t{0});
-    if((p.lightSeedingEnabled&&p.reservedLightSeedSlots>0)||p.flexibleSeedSlots>0){plan.unavailableInputs|=4;}
+    if(p.lightSeedingEnabled&&p.reservedLightSeedSlots>0){plan.unavailableInputs|=4;}
     if(p.downloadOrder==QueueDownloadOrder::Speed||p.downloadOrder==QueueDownloadOrder::Eta){plan.unavailableInputs|=16;}
     bool seedsMayStart=p.rankMode==QueueRankMode::None||p.rankMode==QueueRankMode::Timed||c.nowMillis-c.ownerStartedMillis>90000;
     bool allScraped=true;
@@ -454,6 +464,29 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
     auto seedLimit=maximumActive==0?infinity:std::max<std::int64_t>(0,maximumActive-downloads);
     auto seeds=forceSeeds+heldSeeds;std::int64_t stalled=0;
     const auto maxStalled=p.minimumSeedBytesPerSecond==0?0:(p.maximumStalledSeeds==0?999:p.maximumStalledSeeds);
+    // Actual start-of-cycle load is independent of this ranked pass's running
+    // count. Flexible slots bound overlap with lower-ranked/minimum-held work;
+    // they do not increase the ordinary seed quota above.
+    std::int64_t globalActive=0,globalWaiting=0,globalStalled=0;
+    std::vector<unsigned> globalKind(facts.size(),0);
+    for(std::size_t i=0;i<facts.size();++i){const auto& f=facts[i];const auto& d=plan.decisions[i];
+      if(!f.complete||stopped(f)){continue;}
+      if(f.state==QueueTorrentState::Seeding){
+        if(d.activelySeeding||!d.activityKnown){++globalActive;globalKind[i]=1;}
+        else if(!(p.stalledSeedsIgnoreZeroPeers&&swarms[i].valid&&swarms[i].peers==0)){++globalStalled;globalKind[i]=3;}
+      }else if(f.state==QueueTorrentState::Waiting||f.state==QueueTorrentState::Preparing){++globalWaiting;globalKind[i]=2;}
+      else if(fixed[i]&&d.action==QueueAction::Run){++globalWaiting;globalKind[i]=2;}
+    }
+    const auto slotBudget=[&]{
+      // Unallocated original reserved placeholders consume exactly the same
+      // capacity they add. No native lightweight holder is fabricated here.
+      const auto reserved=static_cast<std::int64_t>(p.reservedLightSeedSlots);
+      auto result=evaluateQueueSlotBudget({maximumActive,downloads,seeds+reserved,stalled,
+          globalActive+reserved,globalWaiting,globalStalled,maxStalled,p.reservedLightSeedSlots,p.flexibleSeedSlots});
+      if(!result){fail(result.error().code==QueueSlotErrorCode::Limit?Code::Limit:result.error().code==QueueSlotErrorCode::Memory?Code::Memory:Code::InvalidFacts,result.error().field);}
+      plan.seedSlots=*result;return *result;
+    };
+    static_cast<void>(slotBudget());
     bool uploadProhibits=false;
     if(p.preventNewSeedsAtUploadLimit&&c.uploadLimitBytesPerSecond>0){
       if(c.smoothedUploadBytesPerSecond){
@@ -470,6 +503,14 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
     for(const auto i:order){
       const auto& f=facts[i];auto& d=plan.decisions[i];const auto& s=swarms[i];
       if(!f.complete||fixed[i]){continue;}
+      struct GlobalProjection {
+        std::int64_t& active;std::int64_t& waiting;std::int64_t& stalled;
+        const QueueTorrentFacts& fact;const QueueDecision& decision;unsigned original;
+        ~GlobalProjection(){
+          if(decision.action==QueueAction::Queue){if(original==1){--active;}else if(original==2){--waiting;}else if(original==3){--stalled;}}
+          else if(decision.action==QueueAction::Run&&fact.state==QueueTorrentState::Queued){++waiting;}
+        }
+      } globalProjection{globalActive,globalWaiting,globalStalled,f,d,globalKind[i]};
       // Reasons can change earlier in this ordered pass (notably the explicit
       // zero-peer override). Keep that behavior without rescanning every seed.
       struct CandidateChange {
@@ -494,6 +535,8 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
         d.action=QueueAction::Queue;d.reason=QueueReason::StalledLimit;continue;
       }
       if(uploadProhibits&&f.state==QueueTorrentState::Queued){d.action=QueueAction::Queue;d.reason=QueueReason::UploadLimit;continue;}
+      const auto slots=slotBudget();
+      if(f.state==QueueTorrentState::Queued&&!slots.underGlobal){d.action=QueueAction::Queue;d.reason=QueueReason::ActiveLimit;continue;}
       if(seeds<seedLimit){d.action=QueueAction::Run;if(d.reason!=QueueReason::UnknownFacts){d.reason=d.firstPriority?QueueReason::FirstPriority:QueueReason::Eligible;}++seeds;}
       else{d.action=QueueAction::Queue;d.reason=QueueReason::ActiveLimit;}
     }

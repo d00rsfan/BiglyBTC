@@ -48,3 +48,6 @@ target_sources(biglybtc_ui PRIVATE options_presentation.hpp options_dialog.hpp o
 
 target_sources(biglybtc_ui PRIVATE file_operation_presentation.hpp file_operation_dialog.hpp file_operation_dialog.cpp
   torrent_creation_dialog.hpp torrent_creation_dialog.cpp)
+
+target_sources(biglybtc_ui PRIVATE torrent_intake_presentation.hpp
+  torrent_intake_dialog.hpp torrent_intake_dialog.cpp)

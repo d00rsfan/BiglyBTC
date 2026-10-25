@@ -9,6 +9,8 @@
 #include <mutex>
 #include <optional>
 
+namespace biglybtc::storage { struct OriginalTorrentIdentity; }
+
 namespace biglybtc::engine::detail {
 
 // Essential per-admission counter continuity, separate from the deliberately
@@ -66,7 +68,19 @@ private:
   std::int64_t publishedReceived_ = 0, publishedSent_ = 0;
 };
 
-// Private source/ABI-bound implementation lives in the one LT shim TU.
+// Immutable pin to the approved provider's raw-counter AND selected-swarm ABI.
+// Resolve BEFORE preparing payload storage; absent/stock/unbound is unsupported.
+// The pin is retained by the installed factory/plugin for its full lifetime.
+struct ManagedPayloadCounterBridge;
+std::shared_ptr<const ManagedPayloadCounterBridge> managedPayloadCounterBridge() noexcept;
+// Before any state/payload effects, use a raw-info-validated full identity to
+// choose exactly one immutable swarm. Header presence or a marker is insufficient:
+// only the opaque, same-image-qualified bridge can authorize these flags.
+// Failure leaves every parameter unchanged. No metadata/hash rewriting occurs.
+bool selectManagedSwarm(libtorrent::add_torrent_params&,
+    const storage::OriginalTorrentIdentity&,
+    const std::shared_ptr<const ManagedPayloadCounterBridge>&) noexcept;
 bool attachManagedPayloadCounters(libtorrent::add_torrent_params&,
-    const std::shared_ptr<ManagedPayloadCounters>&) noexcept;
+    const std::shared_ptr<ManagedPayloadCounters>&,
+    std::shared_ptr<const ManagedPayloadCounterBridge>) noexcept;
 } // namespace biglybtc::engine::detail

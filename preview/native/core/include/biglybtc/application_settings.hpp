@@ -27,7 +27,7 @@ enum class SettingId {
   AutoUpload, AutoSeedingUpload, LanRates,
   MaxActive, MaxDownloads, MinDownloads,
   DefaultSavePath, RenameIncomplete, IncompleteSuffix,
-  LinkMinimumDownloads, IgnoreChecking, MaximumActiveWhenSeedingEnabled, MaximumActiveWhenSeeding, RankMode, DownloadOrder, PreferLargerSwarms, SeedCountFallback, MinimumPeersToBoostNoSeeds, MinimumDownloadBytesPerSecond, MinimumSeedBytesPerSecond, MinimumSeedSeconds, MinimumSeedActiveSeconds, TimedMinimumWithPeersSeconds, TimedMaximumWithPeersSeconds, MaximumStalledSeeds, StalledSeedsIgnoreZeroPeers, AutoStartZeroPeers, FirstPriorityMode, FirstPriorityShareRatio, FirstPrioritySeedMinutes, FirstPriorityActiveMinutes, FirstPriorityIgnoreSeedPeerRatio, FirstPriorityIgnoreIdleMinutes, FirstPriorityIgnoreZeroPeers, IgnoreShareRatio, IgnoreShareRatioSeedStart, IgnoreSeedCount, IgnorePeerSeedRatio, IgnorePeerSeedRatioSeedStart, IgnoreZeroPeers, PeersAsFullCopy, FakeFullCopySeedStart, StopOnceBandwidthMet, PreventNewSeedsAtUploadLimit, UploadLimitSlack, UploadLimitSlackIsPercent, NewSeedsMoveTop, RetainForceStartOnComplete, LightSeedingEnabled, ReservedLightSeedSlots, FlexibleSeedSlots, OriginalQueueOption0, OriginalQueueOption1, OriginalQueueOption2, OriginalQueueOption3, OriginalQueueOption4, OriginalQueueOption5, OriginalQueueOption6, OriginalQueueOption7, Count
+  LinkMinimumDownloads, IgnoreChecking, MaximumActiveWhenSeedingEnabled, MaximumActiveWhenSeeding, RankMode, DownloadOrder, PreferLargerSwarms, SeedCountFallback, MinimumPeersToBoostNoSeeds, MinimumDownloadBytesPerSecond, MinimumSeedBytesPerSecond, MinimumSeedSeconds, MinimumSeedActiveSeconds, TimedMinimumWithPeersSeconds, TimedMaximumWithPeersSeconds, MaximumStalledSeeds, StalledSeedsIgnoreZeroPeers, AutoStartZeroPeers, FirstPriorityMode, FirstPriorityShareRatio, FirstPrioritySeedMinutes, FirstPriorityActiveMinutes, FirstPriorityIgnoreSeedPeerRatio, FirstPriorityIgnoreIdleMinutes, FirstPriorityIgnoreZeroPeers, IgnoreShareRatio, IgnoreShareRatioSeedStart, IgnoreSeedCount, IgnorePeerSeedRatio, IgnorePeerSeedRatioSeedStart, IgnoreZeroPeers, PeersAsFullCopy, FakeFullCopySeedStart, StopOnceBandwidthMet, PreventNewSeedsAtUploadLimit, UploadLimitSlack, UploadLimitSlackIsPercent, NewSeedsMoveTop, RetainForceStartOnComplete, LightSeedingEnabled, ReservedLightSeedSlots, FlexibleSeedSlots, OriginalQueueOption0, OriginalQueueOption1, OriginalQueueOption2, OriginalQueueOption3, OriginalQueueOption4, OriginalQueueOption5, OriginalQueueOption6, OriginalQueueOption7, CheckBindOnStart, Count
 };
 using SettingValue = std::variant<bool, std::int64_t, std::string>;
 using SettingDefault = std::variant<bool, std::int64_t, std::string_view>;
@@ -76,9 +76,9 @@ inline constexpr std::array Catalog{
   boolean(Dht,Connection,"Peer Source Selection Default.DHT","DHT peer discovery",true,A::Restart),
   boolean(DhtPlugin,Connection,"Plugin.DHT.dht.enabled","Original DHT enable flag",true,A::Restart,"Controls the native normal-session discovery policy; Azureus owned service remains separate."),
   boolean(PeerExchange,Connection,"Peer Source Selection Default.PeerExchange","Peer exchange",true,A::Restart),
-  string(BindIp,Advanced,"Bind IP","Bind addresses",std::string_view{},1024,A::Restart,SettingStringRule::Text,false,"Numeric addresses separated by semicolons; interface-name binding is unsupported."),
+  string(BindIp,Advanced,"Bind IP","Bind addresses",std::string_view{},1024,A::Restart,SettingStringRule::Text,false,"Numeric addresses or interface selectors separated by semicolons, for example 127.0.0.1 or eth0[v4]. Explicit bindings are checked before startup and while the owner runs."),
   boolean(Ipv6,Advanced,"IPV6 Enable Support","IPv6",false,A::Restart),
-  boolean(EnforceBind,Advanced,"Enforce Bind IP","Enforce binding",false,A::Restart,"Requires a supported explicit numeric bind address."),
+  boolean(EnforceBind,Advanced,"Enforce Bind IP","Enforce binding",false,A::Restart,"Requires an assigned address or interface. Missing or lost bindings stop the native owner; there is no automatic unbound fallback."),
   boolean(RandomizePorts,Advanced,"Listen.Port.Randomize.Enable","Randomize ports",false,A::OriginalOnly,"Native routing currently requires this to be disabled."),
   string(TcpOverride,Advanced,"TCP.Listen.Port.Override","Advertised TCP port override",std::string_view{},64,A::OriginalOnly,SettingStringRule::Text,false,"Native routing currently requires this to be empty."),
   boolean(HttpDataEnabled,Advanced,"HTTP.Data.Listen.Port.Enable","HTTP data listener",false,A::OriginalOnly,"Native routing currently requires this to be disabled."),
@@ -153,9 +153,9 @@ inline constexpr std::array Catalog{
   boolean(UploadLimitSlackIsPercent,Seeding,"StartStopManager_bStartNoMoreSeedsWhenUpLimitMetPercent","Upload threshold is a percentage",true,A::Live,""),
   boolean(NewSeedsMoveTop,Queue,"StartStopManager_bNewSeedsMoveTop","Move newly completed seeds to top",true,A::OriginalOnly,"Saved for Java; native completion-group normalization remains pending."),
   boolean(RetainForceStartOnComplete,Queue,"StartStopManager_bRetainForceStartWhenComplete","Keep force-start after completion",false,A::Live,"Transition intent only; worker persists original force/pool ordering before engine effects."),
-  boolean(LightSeedingEnabled,Seeding,"Enable Light Seeding","Light seeding",true,A::OriginalOnly,"Original light/reserved/flexible slot provider is unavailable; do not claim native effects."),
-  integer(ReservedLightSeedSlots,Seeding,"Light Seed Slots Reserved","Reserved light-seed slots",4,0,std::numeric_limits<int>::max(),A::OriginalOnly,"Original light/reserved/flexible slot provider is unavailable; do not claim native effects."),
-  integer(FlexibleSeedSlots,Seeding,"Flexible Seed Slots","Flexible seed slots",5,0,std::numeric_limits<int>::max(),A::OriginalOnly,"Original light/reserved/flexible slot provider is unavailable; do not claim native effects."),
+  boolean(LightSeedingEnabled,Seeding,"Enable Light Seeding","Light seeding",true,A::OriginalOnly,"Queued lightweight tracker/activation service is unavailable; this saved setting is preserved for the original client."),
+  integer(ReservedLightSeedSlots,Seeding,"Light Seed Slots Reserved","Reserved light-seed slots",4,0,std::numeric_limits<int>::max(),A::OriginalOnly,"Queued lightweight tracker/activation service is unavailable; this saved setting is preserved for the original client."),
+  integer(FlexibleSeedSlots,Seeding,"Flexible Seed Slots","Flexible seed slots",5,0,std::numeric_limits<int>::max(),A::Live,"Limits temporary global overlap while seed ranks change. It does not increase the ordinary active-torrent quota."),
   integer(OriginalQueueOption0,Seeding,"StartStopManager_Downloading_iTestTimeSecs","StartStopManager_Downloading_iTestTimeSecs",120,0,std::numeric_limits<int>::max(),A::OriginalOnly,"active download probe unavailable"),
   integer(OriginalQueueOption1,Seeding,"StartStopManager_Downloading_iRetestTimeMins","StartStopManager_Downloading_iRetestTimeMins",30,0,std::numeric_limits<int>::max(),A::OriginalOnly,"active download probe unavailable"),
   boolean(OriginalQueueOption2,Seeding,"StartStopManager_Downloading_bTestActive","StartStopManager_Downloading_bTestActive",false,A::OriginalOnly,"active download probe unavailable"),
@@ -163,7 +163,8 @@ inline constexpr std::array Catalog{
   boolean(OriginalQueueOption4,Seeding,"Disconnect Seed","Disconnect Seed",true,A::OriginalOnly,"peer connection policy outside queue reducer"),
   boolean(OriginalQueueOption5,Seeding,"Use Super Seeding","Use Super Seeding",false,A::OriginalOnly,"torrent transport feature outside queue reducer"),
   integer(OriginalQueueOption6,Seeding,"StartStopManager_iAddForSeedingDLCopyCount","StartStopManager_iAddForSeedingDLCopyCount",1,0,std::numeric_limits<int>::max(),A::OriginalOnly,"new seed admission accounting outside reducer"),
-  boolean(OriginalQueueOption7,Seeding,"StartStopManager_bAddForDownloadingSR1","StartStopManager_bAddForDownloadingSR1",true,A::OriginalOnly,"new download admission accounting outside reducer")
+  boolean(OriginalQueueOption7,Seeding,"StartStopManager_bAddForDownloadingSR1","StartStopManager_bAddForDownloadingSR1",true,A::OriginalOnly,"new download admission accounting outside reducer"),
+  boolean(CheckBindOnStart,Advanced,"Check Bind IP On Start","Check bindings on startup",true,A::Restart,"Checks configured bindings before startup. Native explicit bindings always fail closed even when this warning preference is disabled.")
 };
 static_assert(Catalog.size() == static_cast<std::size_t>(SettingId::Count));
 } // namespace settings_detail

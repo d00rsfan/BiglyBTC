@@ -59,3 +59,5 @@ target_sources(biglybtc_profile PRIVATE application_settings.cpp)
 target_sources(biglybtc_profile PRIVATE original_file_io.cpp)
 
 target_sources(biglybtc_profile PRIVATE original_storage_defaults.cpp)
+
+target_sources(biglybtc_profile PRIVATE original_torrent_identity.cpp)

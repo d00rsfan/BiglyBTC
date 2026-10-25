@@ -1,5 +1,6 @@
 #include "file_operation_dialog.hpp"
 #include "torrent_creation_dialog.hpp"
+#include "torrent_intake_dialog.hpp"
 #include "library_window.hpp"
 #include "options_dialog.hpp"
 #include "scheduler_dialog.hpp"
@@ -1037,6 +1038,8 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   activeFileOperation_.reset();activeTorrentCreation_.reset();
   if(fileOperationDialog_){const auto dialog=fileOperationDialog_;dialog->invalidateSession();if(!guard){return;}if(dialog){dialog->close();}if(!guard){return;}}
   if(torrentCreationDialog_){const auto dialog=torrentCreationDialog_;dialog->invalidateSession();if(!guard){return;}if(dialog){dialog->close();}if(!guard){return;}}
+  activeIntakePreview_.reset();activeIntakeSubmission_.reset();
+  if(intakeDialog_){intakeDialog_->invalidateSession();if(!guard){return;}}
   defaultSaveDirectory_.clear();
   pendingSchedulerLoad_.reset(); activeSchedulerLoad_.reset(); activeSchedulerSave_.reset();
   if (schedulerDialog_) { schedulerDialog_->invalidateSession(); schedulerDialog_->close(); }
@@ -1634,6 +1637,7 @@ bool LibraryWindow::submitMagnetImport(QString uri, QString destination) {
 
 void LibraryWindow::openImportDialog(bool magnet) {
   if (!canImport() || downloadDispatching_) { return; }
+  if(!magnet){openTorrentIntake();return;}
   const auto session = columnSession_;
   QPointer<LibraryWindow> guard(this);
   QPointer<QDialog> dialog = new QDialog(this);
@@ -1710,6 +1714,51 @@ void LibraryWindow::openImportDialog(bool magnet) {
   if (!guard || result != QDialog::Accepted || columnSession_ != session) { return; }
   if (magnet) { submitMagnetImport(std::move(sourceValue), std::move(destinationValue)); }
   else { submitTorrentImport(std::move(sourceValue), std::move(destinationValue), startValue); }
+}
+
+void LibraryWindow::openTorrentIntake() {
+  if(!canImport()||downloadDispatching_){return;}
+  if(!intakeDialog_){
+    intakeDialog_=new TorrentIntakeDialog(this);intakeDialog_->setWindowModality(Qt::WindowModal);
+    connect(intakeDialog_,&TorrentIntakeDialog::previewRequested,this,[this](TorrentIntakeRequest request){
+      if(!canImport()||request.session!=columnSession_){if(intakeDialog_){intakeDialog_->rejectPreview(request);}return;}
+      activeIntakePreview_=request;emit torrentIntakeRequested(std::move(request));
+    });
+    connect(intakeDialog_,&TorrentIntakeDialog::submitted,this,[this](TorrentIntakeSubmission submission){
+      const auto preview=intakeDialog_?intakeDialog_->preview():TorrentIntakePresentation{};
+      if(!canImport()||!intakeDialog_||!intakeDialog_->isVisible()||!preview||submission.session!=columnSession_
+          ||preview->source.request!=submission.request||preview->revision!=submission.revision){
+        if(intakeDialog_){intakeDialog_->rejectSubmission(submission);}return;
+      }
+      activeIntakeSubmission_=submission;emit torrentIntakeSubmitted(std::move(submission));
+    });
+    connect(intakeDialog_,&TorrentIntakeDialog::previewCancelled,this,[this](TorrentIntakeRequest request){
+      if(activeIntakePreview_&&*activeIntakePreview_==request){activeIntakePreview_.reset();emit cancelRequested();}
+    });
+    connect(intakeDialog_,&QObject::destroyed,this,[this]{activeIntakePreview_.reset();activeIntakeSubmission_.reset();});
+  }
+  QPointer<LibraryWindow> guard(this);const auto dialog=intakeDialog_;
+  if(!dialog->beginSession(columnSession_,defaultSaveDirectory_)||!guard||!dialog){return;}
+  dialog->setBusy(busy_);if(!guard||!dialog){return;}dialog->show();
+}
+void LibraryWindow::setTorrentIntake(TorrentIntakePresentation packet) {
+  if(!packet||!activeIntakePreview_||packet->source!=*activeIntakePreview_||packet->source.session!=columnSession_){return;}
+  activeIntakePreview_.reset();if(intakeDialog_){intakeDialog_->setPreview(std::move(packet));}
+}
+void LibraryWindow::setTorrentIntakeFinished(TorrentIntakeResultPresentation packet) {
+  if(!packet||!activeIntakeSubmission_||packet->session!=columnSession_
+      ||packet->session!=activeIntakeSubmission_->session||packet->request!=activeIntakeSubmission_->request
+      ||packet->revision!=activeIntakeSubmission_->revision){return;}
+  activeIntakeSubmission_.reset();if(intakeDialog_){intakeDialog_->setResult(std::move(packet));}
+}
+void LibraryWindow::rejectTorrentIntake(const TorrentIntakeRequest& request) {
+  if(!activeIntakePreview_||*activeIntakePreview_!=request){return;}
+  const auto copied=request;activeIntakePreview_.reset();if(intakeDialog_){intakeDialog_->rejectPreview(copied);}
+}
+void LibraryWindow::rejectTorrentIntakeSubmission(const TorrentIntakeSubmission& submission) {
+  if(!activeIntakeSubmission_||activeIntakeSubmission_->session!=submission.session
+      ||activeIntakeSubmission_->request!=submission.request||activeIntakeSubmission_->revision!=submission.revision){return;}
+  const auto copied=submission;activeIntakeSubmission_.reset();if(intakeDialog_){intakeDialog_->rejectSubmission(copied);}
 }
 
 void LibraryWindow::selectionChanged() {
@@ -1798,6 +1847,9 @@ void LibraryWindow::setDetails(const Details& details) {
 void LibraryWindow::setMessage(const QString& message) { message_->setText(message.left(8192)); }
 void LibraryWindow::setBusy(bool value) {
   QPointer<LibraryWindow> optionsGuard(this);
+  if(intakeDialog_){intakeDialog_->setBusy(value);}if(!optionsGuard){return;}
+  if(!value&&activeIntakePreview_){rejectTorrentIntake(*activeIntakePreview_);if(!optionsGuard){return;}}
+  if(!value&&activeIntakeSubmission_){rejectTorrentIntakeSubmission(*activeIntakeSubmission_);if(!optionsGuard){return;}}
   if(fileOperationDialog_){fileOperationDialog_->setBusy(value);}if(!optionsGuard){return;}
   if(torrentCreationDialog_){torrentCreationDialog_->setBusy(value);}if(!optionsGuard){return;}
   if(!value&&activeFileOperation_&&fileOperationDialog_&&fileOperationDialog_->pending()){
@@ -1885,6 +1937,7 @@ void LibraryWindow::setBusy(bool value) {
 }
 void LibraryWindow::closeEvent(QCloseEvent* event) {
   QPointer<LibraryWindow> optionsGuard(this);
+  if(intakeDialog_&&intakeDialog_->isVisible()&&!intakeDialog_->close()){event->ignore();return;}if(!optionsGuard){return;}
   if(fileOperationDialog_&&fileOperationDialog_->isVisible()&&!fileOperationDialog_->close()){event->ignore();return;}if(!optionsGuard){return;}
   if(torrentCreationDialog_&&torrentCreationDialog_->isVisible()&&!torrentCreationDialog_->close()){event->ignore();return;}if(!optionsGuard){return;}
   if (schedulerDialog_ && schedulerDialog_->isVisible() && !schedulerDialog_->close()) { event->ignore(); return; }

@@ -25,8 +25,8 @@ std::expected<LiveSettingsPlan, storage::Error> prepareLiveSettings(const Networ
     const NetworkPolicy& requested, std::optional<LiveQueueLimits> queues) {
   try {
     if (!validQueues(queues)) { return std::unexpected(invalid("Native queue caps must be between 0 and 1,000,000")); }
-    if (auto valid = makeNetworkSettings(active); !valid) { return std::unexpected(policyError(valid.error())); }
-    if (auto valid = makeNetworkSettings(requested); !valid) { return std::unexpected(policyError(valid.error())); }
+    if (auto valid = validateNetworkPolicy(active); !valid) { return std::unexpected(policyError(valid.error())); }
+    if (auto valid = validateNetworkPolicy(requested); !valid) { return std::unexpected(policyError(valid.error())); }
     LiveSettingsPlan result{active, queues, 0};
     const auto difference = [&](bool changed, LiveRestartField field) {
       if (changed) { result.restartFields |= static_cast<std::uint32_t>(field); }
@@ -35,7 +35,8 @@ std::expected<LiveSettingsPlan, storage::Error> prepareLiveSettings(const Networ
     difference(active.incomingTcp != requested.incomingTcp || active.outgoingTcp != requested.outgoingTcp
         || active.incomingUtp != requested.incomingUtp || active.outgoingUtp != requested.outgoingUtp
         || active.ipv6 != requested.ipv6, LiveRestartField::Transports);
-    difference(active.listenPort != requested.listenPort || active.bindAddresses != requested.bindAddresses, LiveRestartField::Binding);
+    difference(active.listenPort != requested.listenPort || active.bindAddresses != requested.bindAddresses
+        || active.enforceBind != requested.enforceBind || active.checkBindOnStart != requested.checkBindOnStart, LiveRestartField::Binding);
     difference(!sameProxy(active.proxy, requested.proxy), LiveRestartField::Proxy);
     difference(active.dht != requested.dht || active.lsd != requested.lsd || active.upnp != requested.upnp
         || active.natpmp != requested.natpmp, LiveRestartField::Discovery);
@@ -55,7 +56,7 @@ std::expected<Settings, storage::Error> makeLiveSettingsPack(const NetworkPolicy
     std::optional<LiveQueueLimits> queues, bool seedingOnly) {
   try {
     if (!validQueues(queues)) { return std::unexpected(invalid("Native queue caps must be between 0 and 1,000,000")); }
-    if (auto valid = makeNetworkSettings(effective); !valid) { return std::unexpected(policyError(valid.error())); }
+    if (auto valid = validateNetworkPolicy(effective); !valid) { return std::unexpected(policyError(valid.error())); }
     Settings result;
     result.set_int(Settings::upload_rate_limit, seedingOnly && effective.seedingOnlyUpload
         ? effective.seedingUploadBytesPerSecond : effective.uploadBytesPerSecond);

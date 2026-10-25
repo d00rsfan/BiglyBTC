@@ -1,4 +1,5 @@
 #include "network_policy.hpp"
+#include "network_binding.hpp"
 
 #include <libtorrent/torrent_info.hpp>
 
@@ -152,10 +153,12 @@ void validate(const NetworkPolicy& p) {
   require(p.mode == NetworkMode::IsolatedLoopback || p.mode == NetworkMode::Normal,
       Code::InvalidConfiguration, "mode");
   require(p.listenPort >= 0 && p.listenPort <= 65535 && !p.bindAddresses.empty()
-      && p.bindAddresses.size() <= 16, Code::InvalidConfiguration, "Bind IP");
+      && p.bindAddresses.size() <= MaximumResolvedNetworkBinds, Code::InvalidConfiguration, "Bind IP");
   for (const auto& address : p.bindAddresses) {
-    require(numericAddress(address, "Bind IP") == address, Code::InvalidConfiguration, "Bind IP");
-    require(p.ipv6 || address.find(':') == std::string::npos, Code::InvalidConfiguration, "IPV6 Enable Support");
+    const auto selected = parseNetworkBindSelector(address);
+    require(selected && selected->canonical == address, Code::InvalidConfiguration, "Bind IP");
+    require(p.ipv6 || selected->family != NetworkBindFamily::V6, Code::Unsupported, "IPV6 Enable Support");
+    require(!p.enforceBind || !selected->wildcard, Code::Unsupported, "Enforce Bind IP wildcard");
   }
   require(p.uploadBytesPerSecond >= 0 && p.downloadBytesPerSecond >= 0 && p.seedingUploadBytesPerSecond >= 0,
       Code::InvalidConfiguration, "rate limits");
@@ -278,18 +281,22 @@ std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(
     require(!c.boolean("HTTP.Data.Listen.Port.Enable", false), Code::Unsupported, "HTTP.Data.Listen.Port.Enable");
     require(c.text("Additional Service Bind IPs").empty(), Code::Unsupported, "Additional Service Bind IPs");
     require(!c.boolean("Ignore Bind For LAN", false), Code::Unsupported, "Ignore Bind For LAN");
+    p.enforceBind = c.boolean("Enforce Bind IP", false);
+    p.checkBindOnStart = c.boolean("Check Bind IP On Start", true);
     p.bindAddresses.clear();
     auto bind = c.text("Bind IP");
     auto remaining = trim(bind);
     if (remaining.empty()) {
-      require(!c.boolean("Enforce Bind IP", false), Code::Unsupported, "Enforce Bind IP");
+      require(!p.enforceBind, Code::Unsupported, "Enforce Bind IP");
       p.bindAddresses.emplace_back("0.0.0.0");
       if (p.ipv6) { p.bindAddresses.emplace_back("::"); }
     } else {
       while (!remaining.empty()) {
         const auto end = remaining.find(';');
-        const auto address = numericAddress(trim(remaining.substr(0, end)), "Bind IP");
-        require(p.ipv6 || address.find(':') == std::string::npos, Code::Unsupported, "Bind IP / IPv6 disabled");
+        const auto selector = parseNetworkBindSelector(trim(remaining.substr(0, end)));
+        if (!selector) { return std::unexpected(selector.error()); }
+        const auto& address = selector->canonical;
+        require(p.ipv6 || selector->family != NetworkBindFamily::V6, Code::Unsupported, "Bind IP / IPv6 disabled");
         require(p.bindAddresses.size() < 16, Code::Limit, "Bind IP");
         require(std::ranges::find(p.bindAddresses, address) == p.bindAddresses.end(), Code::InvalidConfiguration, "Bind IP");
         p.bindAddresses.push_back(address);
@@ -349,6 +356,12 @@ std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(
   catch (const std::bad_alloc&) { return std::unexpected(NetworkPolicyError{Code::Memory, "network policy"}); }
 }
 
+std::expected<void, NetworkPolicyError> validateNetworkPolicy(const NetworkPolicy& policy) {
+  try { validate(policy); return {}; }
+  catch (const Failure& failure) { return std::unexpected(failure.error); }
+  catch (const std::bad_alloc&) { return std::unexpected(NetworkPolicyError{Code::Memory, "network policy"}); }
+}
+
 std::expected<libtorrent::settings_pack, NetworkPolicyError> makeNetworkSettings(
     const NetworkPolicy& p, bool seedingOnly) {
   try {
@@ -356,6 +369,8 @@ std::expected<libtorrent::settings_pack, NetworkPolicyError> makeNetworkSettings
     Settings result;
     std::string listen, outgoing;
     for (const auto& address : p.bindAddresses) {
+      const auto selected = parseNetworkBindSelector(address);
+      require(selected && selected->numeric, Code::Unsupported, "Bind IP needs worker resolution");
       if (!listen.empty()) { listen += ','; outgoing += ','; }
       listen += address.find(':') == std::string::npos ? address : '[' + address + ']';
       listen += ':' + std::to_string(p.listenPort);

@@ -142,6 +142,12 @@ bool SessionBridge::createTorrent(ui::TorrentCreationRequest request) {
       const bool sourceKindMatches=request.options.sourceKind==ui::TorrentCreationSource::File?std::filesystem::is_regular_file(sourceStatus):request.options.sourceKind==ui::TorrentCreationSource::Directory&&std::filesystem::is_directory(sourceStatus);
       if(sourceError||!sourceKindMatches){throw Failure{{storage::ErrorCode::InvalidFormat,"Selected source type does not match the file or directory"}};}
       if(request.options.pieceSize>std::numeric_limits<std::uint32_t>::max()){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid piece size"}};}
+      switch(request.options.format){
+        case ui::TorrentCreationFormat::V1: options.format=engine::CreateFormat::V1;break;
+        case ui::TorrentCreationFormat::V2: options.format=engine::CreateFormat::V2;break;
+        case ui::TorrentCreationFormat::Hybrid: options.format=engine::CreateFormat::Hybrid;break;
+        default: throw Failure{{storage::ErrorCode::InvalidFormat,"Unknown creation format"}};
+      }
       options.pieceSize=static_cast<std::uint32_t>(request.options.pieceSize);options.privateTorrent=request.options.privateTorrent;options.comment=request.options.comment.toUtf8().toStdString();
       for(const auto& tier:request.options.trackerTiers){std::vector<std::string> urls;for(const auto& url:tier){urls.push_back(url.toUtf8().toStdString());}options.trackerTiers.push_back(std::move(urls));}
       std::uint64_t sequence=0;std::optional<std::pair<std::uint64_t,std::uint64_t>> last;
@@ -152,7 +158,7 @@ bool SessionBridge::createTorrent(ui::TorrentCreationRequest request) {
       },stop);
       if(!created){result->cancelled=created.error().code==engine::CreateErrorCode::Cancelled;result->failure=text(created.error().message);}
       else{
-        result->outputPublished=true;result->output=QString::fromStdString(created->output.string());result->hash=text(created->infoHashV1.hex());
+        result->outputPublished=true;result->output=QString::fromStdString(created->output.string());result->hash=text(created->selectedHash.hex());
         if(created->publication!=engine::CreatePublication::Durable){result->failure=tr("Torrent file was published, but directory synchronization failed; verify the saved file before continuing");}
         else{
           result->completed=true;

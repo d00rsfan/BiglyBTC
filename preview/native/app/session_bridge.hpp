@@ -2,6 +2,7 @@
 #include "file_operation_presentation.hpp"
 #include "options_presentation.hpp"
 #include "scheduler_presentation.hpp"
+#include "torrent_intake_presentation.hpp"
 
 #include "biglybtc/executor.hpp"
 #include "column_layout_presentation.hpp"
@@ -49,6 +50,8 @@ public:
   bool openNormal(std::filesystem::path profile);
   bool downloadAction(ui::DownloadTargets, core::DownloadAction);
   bool torrentImport(QString metadata, QString destination, bool start);
+  bool previewTorrentIntake(ui::TorrentIntakeRequest);
+  bool importTorrentFiles(ui::TorrentIntakeSubmission);
   bool magnetImport(QString uri, QString destination);
   bool filePolicy(ui::Target, ui::FileIndices, int priority, bool skipped);
   bool compactFile(ui::Target, int originalIndex);
@@ -83,6 +86,8 @@ signals:
   void fileOperationFinished(biglybtc::ui::FileOperationResultPresentation);
   void torrentCreationProgress(biglybtc::ui::TorrentCreationProgressPresentation);
   void torrentCreated(biglybtc::ui::TorrentCreationResultPresentation);
+  void torrentIntakeReady(biglybtc::ui::TorrentIntakePresentation);
+  void torrentIntakeFinished(biglybtc::ui::TorrentIntakeResultPresentation);
   void schedulerReady(biglybtc::ui::SchedulerPresentation);
   void schedulerSaved(biglybtc::ui::SchedulerSavePresentation);
   void optionsReady(biglybtc::ui::OptionsPresentation);

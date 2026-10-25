@@ -1,6 +1,7 @@
 #pragma once
 
 #include "biglybtc/bencode.hpp"
+#include "biglybtc/queue_slots.hpp"
 
 #include <cstdint>
 #include <expected>
@@ -42,7 +43,8 @@ struct QueuePolicy {
   std::int32_t uploadLimitSlack = 95;
   bool uploadLimitSlackIsPercent = true;
   bool newSeedsMoveTop = true, retainForceStartOnComplete = false;
-  // These original features need providers outside this pure queue contract.
+  // Light seeding still requires its queued tracker/activation provider.
+  // Flexible slots are actual global transition headroom, not a larger quota.
   bool lightSeedingEnabled = true;
   std::int32_t reservedLightSeedSlots = 4, flexibleSeedSlots = 5;
   bool operator==(const QueuePolicy&) const = default;
@@ -118,6 +120,7 @@ struct QueuePlan {
   // bit0 unknown swarm, bit1 missing ratio/time/rate, bit2 light slots unavailable,
   // bit3 disk latency unavailable, bit4 dynamic speed/ETA probe unavailable.
   std::uint32_t unavailableInputs = 0;
+  std::optional<QueueSlotBudget> seedSlots; // Last planned current/global guard; no synthetic light owners.
 };
 inline constexpr std::size_t MaximumQueueTorrents = 8192;
 // No I/O, clocks, mutation, callbacks or LT dependency. Error returns no plan.

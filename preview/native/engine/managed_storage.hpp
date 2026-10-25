@@ -2,6 +2,7 @@
 
 #include "biglybtc/library.hpp"
 #include "profile.hpp"
+#include "original_torrent_identity.hpp"
 
 #include <libtorrent/add_torrent_params.hpp>
 #include <cstdint>
@@ -15,6 +16,7 @@ struct NetworkPolicy;
 namespace detail {
 
 class OriginalDiskFiles;
+struct ManagedPayloadCounterBridge;
 
 inline constexpr std::size_t MaximumManagedPayloadClaims=65536;
 struct ManagedPayloadClaim {
@@ -36,7 +38,9 @@ class ManagedStorage final {
 public:
   static std::expected<ManagedStorage,storage::Error> prepare(
       const storage::ProfileLease&,const core::TorrentHash&,const NetworkPolicy&,
-      std::span<const ManagedPayloadClaim> claimed={});
+      std::span<const ManagedPayloadClaim> claimed={},
+      std::span<const storage::OriginalTorrentIdentity> retainedIdentities={},
+      std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge={});
   ManagedStorage(ManagedStorage&&) noexcept;
   ManagedStorage& operator=(ManagedStorage&&) noexcept;
   ManagedStorage(const ManagedStorage&) = delete;
@@ -45,7 +49,11 @@ public:
   libtorrent::add_torrent_params parameters() const;
   const ManagedQueueMetadata& queueMetadata() const;
   std::shared_ptr<OriginalDiskFiles> mappedFiles() const;
+  std::int64_t originalBytes() const noexcept;
+  bool originalProgressRequiresPieces() const noexcept;
+  std::expected<std::int64_t,storage::Error> verifiedOriginalBytes(std::span<const std::uint8_t>) const;
   std::span<const ManagedPayloadClaim> claims() const noexcept;
+  const storage::OriginalTorrentIdentity& identity() const;
   // Only after this exact handle's save-resume flush + storage weak-expiration
   // removal fence. Totals are this admission's actual payload byte deltas;
   // they are checked and added to the captured saved cumulative counters.

@@ -13,7 +13,6 @@ std::unexpected<Error> bad(ErrorCode code,const char* message) { return std::une
 std::string raw(const core::Document& document,const core::Node& node) {
   return document.originalBytes().substr(node.begin,node.end-node.begin);
 }
-std::string bytes(std::string_view value) { return std::to_string(value.size())+":"+std::string(value); }
 }
 std::expected<void,Error> setFilePolicies(const ProfileLease& lease,const core::TorrentHash& hash,
     std::span<const compat::FilePolicy> policies) {
@@ -32,17 +31,11 @@ std::expected<void,Error> setFilePolicies(const ProfileLease& lease,const core::
   auto state=store->load(lease,hash); if(!state) { return std::unexpected(state.error()); }
   auto layout=compat::originalLayout(state->document());
   if(!layout || policies.size()!=layout->files.size()) { return bad(ErrorCode::InvalidFormat,"File selection does not match metadata"); }
-  std::set<std::int32_t> levels;
-  std::map<std::int64_t,std::string> groups;
   for(std::size_t i=0;i<policies.size();++i) {
-    const auto& policy=policies[i];
-    if(layout->files[i].padding && !policy.skipped) { return bad(ErrorCode::Unsupported,"Padding files cannot be selected"); }
-    if(policy.priority==std::numeric_limits<std::int32_t>::min()) { return bad(ErrorCode::Unsupported,"Priority cannot round trip through original encoding"); }
-    if(!policy.skipped && !layout->files[i].padding) { levels.insert(policy.priority); }
-    const std::int64_t encoded=policy.skipped?0:policy.priority<=0?static_cast<std::int64_t>(policy.priority)-1:policy.priority;
-    auto& ranges=groups[encoded]; if(!ranges.empty()) { ranges+=','; } ranges+=std::to_string(i);
+    if(layout->files[i].padding && !policies[i].skipped) { return bad(ErrorCode::Unsupported,"Padding files cannot be selected"); }
   }
-  if(levels.size()>7) { return bad(ErrorCode::Unsupported,"At most seven distinct linear priorities are supported"); }
+  auto policyEncoding=compat::encodeOriginalFilePolicy(policies);
+  if(!policyEncoding){return std::unexpected(Error{ErrorCode::Unsupported,policyEncoding.error().message});}
   const auto* rows=config->document().find("downloads");
   const auto& node=library->legacyMap?config->document().root().children.at(selected->sourceIndex*2+1):rows->children.at(selected->sourceIndex);
   auto entry=core::Document::parse(raw(config->document(),node),compatibleConfigLimits());
@@ -50,8 +43,7 @@ std::expected<void,Error> setFilePolicies(const ProfileLease& lease,const core::
   auto before=compat::originalFilePolicy(entry->root(),policies.size());
   if(!before) { return bad(ErrorCode::InvalidFormat,"Invalid saved file priorities"); }
   if(std::ranges::equal(*before,policies)) { return {}; }
-  std::string encoded="d";
-  for(const auto& [priority,ranges]:groups) { encoded+=bytes(std::to_string(priority))+bytes(ranges); } encoded+='e';
+  const auto& encoded=*policyEncoding;
   if(!entry->replaceValue("file_priorities_c",encoded)) { return bad(ErrorCode::InvalidFormat,"Cannot encode original file priorities"); }
   const auto checked=compat::originalFilePolicy(entry->root(),policies.size());
   if(!checked || !std::ranges::equal(*checked,policies)) { return bad(ErrorCode::InvalidFormat,"File priorities did not round trip"); }

@@ -51,6 +51,7 @@ struct FileOperationProgressPacket {
 using FileOperationProgressPresentation=std::shared_ptr<const FileOperationProgressPacket>;
 
 enum class TorrentCreationSource { File, Directory };
+enum class TorrentCreationFormat { V1, V2, Hybrid };
 struct TorrentCreationOptions {
   TorrentCreationSource sourceKind=TorrentCreationSource::File;
   QString source, output;
@@ -59,6 +60,7 @@ struct TorrentCreationOptions {
   bool privateTorrent=false;
   QString comment;
   bool importAfterCreation=false; // Explicit request; creation alone never imports.
+  TorrentCreationFormat format=TorrentCreationFormat::V1;
 };
 struct TorrentCreationRequest {
   quint64 session=0, request=0, revision=0;

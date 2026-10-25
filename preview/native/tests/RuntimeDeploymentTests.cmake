@@ -5,6 +5,8 @@ if(NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
   if(_biglybtc_deployment_manifest STREQUAL "010c6094b62e5e2e597ce6267b0125f6560d1a043a792218389ef4b962e871ae"
       OR _biglybtc_deployment_manifest STREQUAL "aa5f1767640fc1ca5f978360ddb8eebd26fc29b2f0c34b44fdf7416299a1bb3c")
     set(_biglybtc_deployment_mode source)
+  elseif(_biglybtc_deployment_manifest STREQUAL "e74def09b2257a266786b8ddb116382d300716687bf26bbe57072f5ff90e8737")
+    set(_biglybtc_deployment_mode selected)
   elseif(_biglybtc_deployment_manifest STREQUAL "28374ad5900f04c533a13afe90e81a7332f8a62b52db30adb0ed4dfe2fbce8ee"
       OR _biglybtc_deployment_manifest STREQUAL "37ce74d783fe42e42f09415ffd4358f330d5849803ef1064cb5abab7f89c5abc")
     set(_biglybtc_deployment_mode strict)
@@ -21,7 +23,7 @@ if(NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
   target_link_options(biglybtc-runtime-deployment-driver PRIVATE
     "LINKER:--wrap=open" "LINKER:--wrap=fstat" "LINKER:--wrap=read")
   set(_biglybtc_deployment_controls)
-  if(_biglybtc_deployment_mode STREQUAL "source")
+  if(_biglybtc_deployment_mode STREQUAL "source" OR _biglybtc_deployment_mode STREQUAL "selected")
     if(NOT TARGET biglybtc-runtime-interposition-driver OR "${_biglybtc_runtime_preload}" STREQUAL "")
       message(FATAL_ERROR "Copied runtime qualification needs the unchanged preload/interposition controls")
     endif()

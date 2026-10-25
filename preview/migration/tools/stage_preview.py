@@ -19,6 +19,17 @@ SOURCE_BUILD_RECORD_SHA256 = "436931d4c6b87274c60b89877afedc19e06485bc4f04d120a3
 LIBTORRENT_NAMES = ("libtorrent-rasterbar.so", "libtorrent-rasterbar.so.2.0",
                     "libtorrent-rasterbar.so.2.0.12")
 
+# Independent explicit lane; the original c35 selector and all instrumented
+# denials below remain unchanged. No version/capability-only authorization.
+SELECTED_LIBTORRENT_SHA256 = "d367afd6499859c5a57d66bddd352a977ff76c7fb76b5925302c2c9008c7ddbd"
+SELECTED_LIBTORRENT_BYTES = 9072560
+SELECTED_RUNTIME_MANIFEST_SHA256 = "e74def09b2257a266786b8ddb116382d300716687bf26bbe57072f5ff90e8737"
+SELECTED_BUILD_RECORD_SHA256 = "34bbba203833a31e59f0e9101f232fc2aaebe2bf080bdb8b640a29d68bd4016f"
+SELECTED_VERIFIERS = {
+    "verify_runtime_manifest.py": "36146305c9df31bba21a8daff00151a0bd1570d48e366af080b06c61ab55b50c",
+    "verify_provider_runtime.py": "fc9ae8203bb6f32f94d57a05c5ea174944bdf1dbbe41ae51d9caf987ac01d89a",
+}
+
 
 def source_libtorrent(path):
     resolved = path.resolve(strict=True)
@@ -29,6 +40,61 @@ def source_libtorrent(path):
             hashlib.sha256(payload).hexdigest() != SOURCE_LIBTORRENT_SHA256):
         raise ValueError("Source libtorrent SHA-256 does not match the approved uninstrumented image")
     return resolved, payload
+
+
+def selected_source_libtorrent(path, manifest_path, build):
+    """Preflight only. No output, loader, subprocess, DSO or owner invocation."""
+    import importlib.util
+    import sys
+    sys.dont_write_bytecode = True
+
+    def pinned_file(candidate, pin):
+        if (not candidate.is_absolute() or candidate.is_symlink() or not candidate.is_file()
+                or candidate.resolve(strict=True) != candidate
+                or hashlib.sha256(candidate.read_bytes()).hexdigest() != pin):
+            raise ValueError("Changed/unapproved selected-provider input: " + str(candidate))
+
+    manifest_path = manifest_path.absolute()
+    pinned_file(manifest_path, SELECTED_RUNTIME_MANIFEST_SHA256)
+    record_path = manifest_path.parent / "provider-source-build-record.json"
+    pinned_file(record_path, SELECTED_BUILD_RECORD_SHA256)
+    manifest = json.loads(manifest_path.read_bytes())
+    source = path.resolve(strict=True)
+    if (str(source) != manifest["artifact"] or manifest["artifact_sha256"] != SELECTED_LIBTORRENT_SHA256
+            or manifest["artifact_bytes"] != SELECTED_LIBTORRENT_BYTES or source.is_symlink()
+            or not source.is_file() or source.stat().st_size != SELECTED_LIBTORRENT_BYTES):
+        raise ValueError("Expected the exact reviewed selected-swarm provider")
+    payload = source.read_bytes()
+    if hashlib.sha256(payload).hexdigest() != SELECTED_LIBTORRENT_SHA256:
+        raise ValueError("Selected provider full artifact SHA-256 differs")
+    binding = Path(__file__).resolve().parents[2] / "native/engine/runtime-binding"
+    for name, pin in SELECTED_VERIFIERS.items():
+        pinned_file(binding / name, pin)
+    spec = importlib.util.spec_from_file_location("biglybtc_portable_source_approval", binding / "verify_runtime_manifest.py")
+    verifier = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(verifier)
+    admitted, pin = verifier.inspect(manifest_path, source, Path(manifest["install_root"]) / "include")
+    if pin != SELECTED_RUNTIME_MANIFEST_SHA256 or admitted != manifest:
+        raise ValueError("Selected provider failed complete source/build/SDK admission")
+    generated = build.resolve(strict=True) / "engine/runtime-binding"
+    receipt = json.loads((generated / "configure-receipt.json").read_bytes())
+    expected = {"manifest_sha256": SELECTED_RUNTIME_MANIFEST_SHA256,
+        "artifact_sha256": SELECTED_LIBTORRENT_SHA256, "artifact": str(source),
+        "source_files": 449, "full_source_files": 1072, "build_rules": 13,
+        "bundled_inputs": 16, "installed_files": 284, "build_files": 4,
+        "causal_qualified": False, "purpose": "source-bound-qualification-only",
+        "provider_counter_and_swarm_candidate": True}
+    if receipt != expected:
+        raise ValueError("Application was not configured against this exact provider/SDK")
+    header = (generated / "persistent_runtime_config.hpp").read_text()
+    required = ("#define BIGLYBTC_PERSISTENT_RUNTIME_BOUND 1",
+        'inline constexpr char artifact[] = ' + json.dumps(str(source)) + ';',
+        'inline constexpr char sha256[] = "' + SELECTED_LIBTORRENT_SHA256 + '";',
+        'inline constexpr char manifest[] = "' + SELECTED_RUNTIME_MANIFEST_SHA256 + '";',
+        "inline constexpr unsigned long long bytes = 9072560ULL;")
+    if any(text not in header for text in required):
+        raise ValueError("Application generated binding does not select this exact provider")
+    return source, payload
 
 
 def install_source_libtorrent(destination, dependency, source, payload):
@@ -69,6 +135,46 @@ def install_source_libtorrent(destination, dependency, source, payload):
     }
 
 
+def install_selected_libtorrent(destination, dependency, source, payload):
+    # Called only after complete admission above, before any loader check.
+    # Keep the original install_source_libtorrent implementation byte-exact.
+    if len(payload) != SELECTED_LIBTORRENT_BYTES or hashlib.sha256(payload).hexdigest() != SELECTED_LIBTORRENT_SHA256:
+        raise ValueError("Changed selected-provider bytes before private installation")
+    private = destination / "usr/lib/biglybtc/lib"
+    lookup = dependency / "usr/lib/x86_64-linux-gnu"
+    for directory in (private, lookup):
+        directory.mkdir(parents=True, exist_ok=True)
+        if directory.is_symlink() or not directory.resolve().is_relative_to(destination.resolve()):
+            raise ValueError("Runtime directory escapes the fresh distribution: " + str(directory))
+        for alias in directory.glob("libtorrent-rasterbar.so*"):
+            if alias.name not in LIBTORRENT_NAMES or (alias.is_dir() and not alias.is_symlink()):
+                raise ValueError("Unexpected runtime alias in the fresh distribution: " + str(alias))
+            alias.unlink()
+    canonical = private / LIBTORRENT_NAMES[-1]
+    canonical.write_bytes(payload)
+    canonical.chmod(0o644)
+    for name in LIBTORRENT_NAMES[:-1]:
+        (private / name).symlink_to(canonical.name)
+    for name in LIBTORRENT_NAMES:
+        (lookup / name).symlink_to(os.path.relpath(canonical, lookup))
+    aliases = []
+    for directory in (private, lookup):
+        for name in LIBTORRENT_NAMES:
+            alias = directory / name
+            if alias.resolve(strict=True) != canonical or hashlib.sha256(alias.read_bytes()).hexdigest() != SELECTED_LIBTORRENT_SHA256:
+                raise ValueError("Runtime alias does not resolve to the exact selected provider: " + str(alias))
+            aliases.append(alias.relative_to(destination).as_posix())
+    return {"provider": "source-built-selected-swarm-counter-v1", "version": "2.0.12",
+        "artifact_sha256": SELECTED_LIBTORRENT_SHA256, "artifact_bytes": SELECTED_LIBTORRENT_BYTES,
+        "source_input": str(source), "upstream_commit": SOURCE_LIBTORRENT_COMMIT,
+        "source_build_record_sha256": SELECTED_BUILD_RECORD_SHA256,
+        "runtime_manifest_sha256": SELECTED_RUNTIME_MANIFEST_SHA256,
+        "artifact": canonical.relative_to(destination).as_posix(), "aliases": aliases,
+        "instrumented": False, "causal_qualified": False,
+        "scope": "Exact source-built selected-swarm/counter dependency; source binding alone is not runtime or full client parity",
+        "package_role": "Original Debian package metadata and notices retained; its shared objects replaced"}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", type=Path, required=True)
@@ -76,11 +182,16 @@ def main():
     parser.add_argument("--libtorrent-package", type=Path, required=True)
     parser.add_argument("--source-libtorrent", type=Path,
         help="Optionally bundle only the exact approved uninstrumented GCC16 libtorrent image")
+    parser.add_argument("--source-provider-manifest", type=Path,
+        help="Explicit additional exact selected-swarm/counter provider manifest; no instrumented or version fallback")
     args = parser.parse_args()
+    if args.source_provider_manifest is not None and args.source_libtorrent is None:
+        parser.error("--source-provider-manifest also requires --source-libtorrent")
     source = None
     if args.source_libtorrent is not None:
         try:
-            source = source_libtorrent(args.source_libtorrent)
+            source = (source_libtorrent(args.source_libtorrent) if args.source_provider_manifest is None
+                      else selected_source_libtorrent(args.source_libtorrent, args.source_provider_manifest, args.build))
         except (OSError, ValueError) as error:
             parser.error(str(error))
     destination = args.output.absolute()
@@ -103,7 +214,8 @@ def main():
     subprocess.run(["dpkg-deb", "--extract", str(package), str(dependency)], check=True, timeout=60)
     provider = None
     if source is not None:
-        provider = install_source_libtorrent(destination, dependency, *source)
+        provider = (install_source_libtorrent(destination, dependency, *source) if args.source_provider_manifest is None
+                    else install_selected_libtorrent(destination, dependency, *source))
     lookup = "dependencies/libtorrent/usr/lib/x86_64-linux-gnu"
     library_path = "str(root / " + repr(lookup) + ")"
     if provider is not None:

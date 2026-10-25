@@ -1,11 +1,15 @@
 #pragma once
 
 #include "biglybtc/library.hpp"
+#include "biglybtc/file_policy.hpp"
+#include "biglybtc/torrent_layout.hpp"
 #include "profile.hpp"
 
 #include <expected>
 #include <filesystem>
 #include <optional>
+#include <memory>
+#include <stop_token>
 
 namespace biglybtc::storage {
 
@@ -23,6 +27,35 @@ enum class TorrentIntakeStage { JournalSynced, StatePublished, ArchivePublished,
 std::expected<core::TorrentHash, Error> importTorrent(ProfileLease&,
     const std::filesystem::path& metadata, const std::filesystem::path& destination,
     bool stopped, void (*observer)(TorrentIntakeStage) = nullptr, bool forceStart = false);
+
+// Read-only worker preview of the same validated raw metadata. The sealed value
+// retains exact source bytes/inode/stat; no payload/profile changes or engine.
+class TorrentIntakeMetadata final {
+public:
+  const core::TorrentHash& hash() const noexcept;
+  const compat::OriginalLayout& layout() const noexcept;
+  const std::filesystem::path& source() const noexcept;
+private:
+  struct Data;
+  std::shared_ptr<const Data> data_;
+  explicit TorrentIntakeMetadata(std::shared_ptr<const Data>);
+  friend std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(const std::filesystem::path&, std::stop_token);
+  friend std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
+      const TorrentIntakeMetadata&, const std::filesystem::path&, bool, std::span<const compat::FilePolicy>,
+      void (*)(TorrentIntakeStage), bool, std::stop_token);
+};
+std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(
+    const std::filesystem::path&, std::stop_token = {});
+// Full original-index vector, including immutable skipped padding entries.
+// All skipped => Stopped/no force, with no payload allocation. New journal option
+// records retain original priority/storage choices through every recovery stage.
+// Existing skipped leaves stay L; absent skipped leaves use source C/X policy.
+std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
+    const TorrentIntakeMetadata&, const std::filesystem::path& destination, bool stopped,
+    std::span<const compat::FilePolicy>, void (*observer)(TorrentIntakeStage) = nullptr,
+    bool forceStart = false, std::stop_token = {});
+
+bool hasPendingTorrentIntake(const ProfileLease&) noexcept;
 
 // Startup recovery before loading library/admitting operations. No pending
 // transaction => nullopt. Rebuilds the exact append from journal input and

@@ -209,6 +209,9 @@ struct SessionBridge::Host {
   std::map<std::string, storage::Error> admissionFailures;
   std::vector<storage::LibraryCompletionPool> movePools;
   storage::ProfileLease lease;
+  std::optional<storage::TorrentIntakeMetadata> intakeMetadata;
+  std::optional<ui::TorrentIntakeRequest> intakeRequest;
+  quint64 intakePreviewRevision = 0;
   // Declared after lease: affine engine destruction/join precedes lease release.
   std::unique_ptr<engine::PersistentSession> engine{};
   std::unique_ptr<OwnedAzureusService> azureus{};
@@ -621,6 +624,10 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
   qRegisterMetaType<ui::Presentation>();
   qRegisterMetaType<ui::Telemetry>();
   qRegisterMetaType<ui::Details>();
+  qRegisterMetaType<ui::TorrentIntakeRequest>();
+  qRegisterMetaType<ui::TorrentIntakePresentation>();
+  qRegisterMetaType<ui::TorrentIntakeSubmission>();
+  qRegisterMetaType<ui::TorrentIntakeResultPresentation>();
   qRegisterMetaType<ui::SavedServicesPresentation>();
   qRegisterMetaType<ui::StatisticsPresentation>();
   qRegisterMetaType<ui::ManualTagStatisticsPresentation>();
@@ -1014,6 +1021,81 @@ bool SessionBridge::torrentImport(QString metadata, QString destination, bool st
     ready(host_->query({}), message);
   });
 }
+bool SessionBridge::previewTorrentIntake(ui::TorrentIntakeRequest request) {
+  if(profileClosed_||!request.session||request.session!=publishedColumnLayoutSession_||!request.request){return false;}
+  return dispatch([this,request=std::move(request)](std::stop_token stop){
+    auto packet=std::make_shared<ui::TorrentIntakePacket>();packet->source=request;
+    try {
+      if(!host_||request.session!=host_->columnLayoutSession){throw Failure{{storage::ErrorCode::Conflict,"The profile changed; load the torrent again"}};}
+      if(host_->intakeRequest&&request.request<=host_->intakeRequest->request){throw Failure{{storage::ErrorCode::Conflict,"This file preview request is stale"}};}
+      host_->intakeRequest=request;host_->intakeMetadata.reset();
+      auto value=take(storage::inspectTorrentIntake(std::filesystem::path(request.metadata.toUtf8().toStdString()),stop));
+      if(value.layout().files.size()>ui::MaximumIntakePreviewFiles){throw Failure{{storage::ErrorCode::Unsupported,"This torrent has too many files for the preview editor"}};}
+      if(host_->intakePreviewRevision==std::numeric_limits<quint64>::max()){throw Failure{{storage::ErrorCode::Conflict,"File preview revisions are exhausted"}};}
+      packet->revision=++host_->intakePreviewRevision;packet->hash=text(value.hash().hex());packet->name=text(value.layout().name);
+      for(std::size_t n=0;n<value.layout().files.size();++n){
+        const auto& file=value.layout().files[n];packet->files.push_back({static_cast<int>(n),text(file.path),file.bytes,file.padding});
+      }
+      if(!ui::validTorrentIntake(packet)){throw Failure{{storage::ErrorCode::Unsupported,"Torrent paths exceed the preview editor limits"}};}
+      checkpoint(stop);host_->intakeMetadata.emplace(std::move(value));
+    }catch(const Failure& error){packet->failure=text(error.error.message);}
+    catch(const std::exception&){packet->failure=tr("The torrent file list could not be loaded");}
+    ui::TorrentIntakePresentation result=std::move(packet);
+    QMetaObject::invokeMethod(this,[this,result]{
+      QPointer<SessionBridge> guard(this);
+      if(!profileClosed_&&result->source.session==publishedColumnLayoutSession_){emit torrentIntakeReady(result);}
+      if(!guard){return;}completionMonitor_->stop();busy_=false;emit busyChanged(false);
+    },Qt::QueuedConnection);
+  },false);
+}
+bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
+  if(profileClosed_||!submission.session||submission.session!=publishedColumnLayoutSession_||!submission.request){return false;}
+  return dispatch([this,submission=std::move(submission)](std::stop_token stop){
+    auto result=std::make_shared<ui::TorrentIntakeResultPacket>();
+    result->session=submission.session;result->request=submission.request;result->revision=submission.revision;
+    try {
+      if(!host_||submission.session!=host_->columnLayoutSession||!host_->intakeRequest||!host_->intakeMetadata
+          ||submission.request!=host_->intakeRequest->request||submission.revision!=host_->intakePreviewRevision){
+        throw Failure{{storage::ErrorCode::Conflict,"The file preview is stale; load the torrent again"}};
+      }
+      if(host_->fileRecoveryRequired||storage::hasPendingFileOperation(host_->lease)
+          ||storage::hasPendingOriginalCompaction(host_->lease)||storage::hasPendingTorrentIntake(host_->lease)){
+        throw Failure{{storage::ErrorCode::Conflict,"Restart to finish pending storage recovery before importing"}};
+      }
+      const auto& layout=host_->intakeMetadata->layout();
+      if(submission.files.size()!=layout.files.size()){throw Failure{{storage::ErrorCode::Conflict,"File choices do not match the loaded torrent"}};}
+      bool selected=false;
+      for(std::size_t n=0;n<submission.files.size();++n){
+        if(layout.files[n].padding&&(!submission.files[n].skipped||submission.files[n].priority)){
+          throw Failure{{storage::ErrorCode::Unsupported,"Padding files cannot be selected"}};
+        }
+        selected=selected||(!layout.files[n].padding&&!submission.files[n].skipped&&layout.files[n].bytes>0);
+      }
+      const bool start=submission.start&&selected;
+      if(start&&(!host_->engine||!host_->engine->managedAvailable())){throw Failure{{storage::ErrorCode::Unsupported,"The engine is unavailable; add this torrent stopped instead"}};}
+      checkpoint(stop); // No payload/network work happens before the explicit commit.
+      const auto hash=take(storage::importTorrentWithFileOptions(host_->lease,*host_->intakeMetadata,
+          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,false,stop));
+      result->imported=true;result->hash=text(hash.hex());host_->intakeMetadata.reset();
+      const auto details=engine::queryTorrent(host_->lease,hash);
+      if(details){host_->known.insert_or_assign(hash.hex(),Host::Known{text(details->name),details->bytes});}
+      if(start){
+        const auto admitted=host_->engine->startManaged(host_->lease,{hash,host_->peerPort,false,false});
+        if(admitted){result->started=true;host_->admissionFailures.erase(hash.hex());}
+        else{host_->admissionFailures.insert_or_assign(hash.hex(),admitted.error());result->failure=tr("Torrent added; download could not start: %1").arg(text(admitted.error().message));}
+      }
+    }catch(const Failure& error){result->failure=text(error.error.message);}
+    catch(const std::exception&){result->failure=tr("Torrent import did not finish; inspect recovery status before retrying");}
+    if(host_&&storage::hasPendingTorrentIntake(host_->lease)){host_->fileRecoveryRequired=true;result->failure+=tr(" Restart to recover the accepted import.");}
+    ui::TorrentIntakeResultPresentation packet=result;
+    QMetaObject::invokeMethod(this,[this,packet]{
+      if(!profileClosed_&&packet->session==publishedColumnLayoutSession_){emit torrentIntakeFinished(packet);}
+    },Qt::QueuedConnection);
+    if(host_){ready(host_->query({}),result->failure.isEmpty()?tr("Torrent added with the selected file choices"):result->failure);}
+    else{failed(result->failure);}
+  });
+}
+
 bool SessionBridge::magnetImport(QString uri, QString destination) {
   if (profileClosed_ || uri.isEmpty() || destination.isEmpty()) { return false; }
   return dispatch([this, uri = std::move(uri), destination = std::move(destination)](std::stop_token stop) {

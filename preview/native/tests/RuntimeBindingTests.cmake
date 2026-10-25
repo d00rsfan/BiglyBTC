@@ -2,7 +2,7 @@
 # targets only; root keeps existing persistent/causal suites in the BOUND cohort
 # and all legacy operational suites in DEFAULT. No skip-as-pass policy.
 add_executable(biglybtc-runtime-binding-driver persistent_runtime_binding_driver.cpp)
-target_link_libraries(biglybtc-runtime-binding-driver PRIVATE biglybtc_local_engine)
+target_link_libraries(biglybtc-runtime-binding-driver PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar)
 target_compile_options(biglybtc-runtime-binding-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
 if(BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
   add_test(NAME persistent-runtime-default-unbound
@@ -26,7 +26,7 @@ else()
     "${CMAKE_CURRENT_SOURCE_DIR}/runtime_manifest_tests.py")
   set_tests_properties(persistent-runtime-manifest-negatives PROPERTIES TIMEOUT 60 LABELS "unit;runtime-binding")
   add_executable(biglybtc-runtime-negative-driver persistent_runtime_negative_driver.cpp)
-  target_link_libraries(biglybtc-runtime-negative-driver PRIVATE biglybtc_local_engine)
+  target_link_libraries(biglybtc-runtime-negative-driver PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar)
   target_include_directories(biglybtc-runtime-negative-driver PRIVATE
     "${PROJECT_BINARY_DIR}/engine/runtime-binding")
   target_compile_options(biglybtc-runtime-negative-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
@@ -91,7 +91,7 @@ else()
     "$<TARGET_FILE:biglybtc-runtime-binding-driver>" unbound)
   set_tests_properties(persistent-runtime-reject-preload PROPERTIES TIMEOUT 15 LABELS "unit;runtime-binding")
   add_executable(biglybtc-runtime-interposition-driver runtime_interposition_driver.cpp)
-  target_link_libraries(biglybtc-runtime-interposition-driver PRIVATE biglybtc_local_engine ${CMAKE_DL_LIBS})
+  target_link_libraries(biglybtc-runtime-interposition-driver PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar ${CMAKE_DL_LIBS})
   target_compile_options(biglybtc-runtime-interposition-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
   add_test(NAME persistent-runtime-reject-mapped-interposition COMMAND "${CMAKE_COMMAND}" -E env
     "LD_PRELOAD=${_biglybtc_runtime_preload}"

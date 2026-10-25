@@ -26,15 +26,10 @@ target_link_libraries(biglybtc_profile PRIVATE LibtorrentRasterbar::torrent-rast
 
 target_sources(biglybtc_local_engine PRIVATE magnet_intake.cpp metadata_disk_router.cpp)
 
-# Keep private LT layout/RTTI access in one translation unit. The approved
-# shared provider does not export libtorrent::torrent's private typeinfo, so
-# UBSan vptr instrumentation cannot cross that ABI boundary. Address and all
-# remaining undefined-behavior checks stay enabled here and in every caller.
+# The reviewed provider owns all private layout/stat reads. This TU uses only
+# public handles and a fixed supported export: keep ALL sanitizer checks enabled.
 target_sources(biglybtc_local_engine PRIVATE managed_payload_counters.cpp)
-if(CMAKE_CXX_COMPILER_ID MATCHES "^(GNU|Clang|AppleClang)$")
-  set_property(SOURCE "${CMAKE_CURRENT_SOURCE_DIR}/managed_payload_counters.cpp"
-    APPEND PROPERTY COMPILE_OPTIONS "-fno-sanitize=vptr")
-endif()
+target_link_libraries(biglybtc_local_engine PRIVATE ${CMAKE_DL_LIBS})
 
 target_sources(biglybtc_local_engine PRIVATE live_settings.cpp live_settings.hpp)
 
@@ -46,3 +41,5 @@ target_link_libraries(biglybtc_profile PRIVATE OpenSSL::Crypto)
 target_sources(biglybtc_local_engine PRIVATE original_disk_io.cpp original_control.cpp)
 
 target_sources(biglybtc_profile PRIVATE ../adapters/linear_to_compact.cpp)
+
+target_sources(biglybtc_local_engine PRIVATE network_binding.cpp)

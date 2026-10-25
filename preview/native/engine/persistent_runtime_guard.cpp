@@ -23,6 +23,7 @@
 #include <sys/stat.h>
 #include <sys/sysmacros.h>
 #include <unistd.h>
+#include <utility>
 #endif
 
 namespace biglybtc::engine::detail {
@@ -145,6 +146,16 @@ bool relocatableSourceArtifact() {
           == "c35f1b0408508c019f002c438d70dd361a55be20286ded56711efd6bba2424e3"
       && runtime_binding::bytes == 8737560ULL;
 }
+bool relocatableSelectedProviderArtifact() {
+  // Additional exact, uninstrumented source-built provider. Configure verifies
+  // its full449/1072 source cohort and installed SDK before these constants
+  // exist. Every loaded-export/mapping/FD/hash check below remains mandatory.
+  return std::string_view(runtime_binding::manifest)
+          == "e74def09b2257a266786b8ddb116382d300716687bf26bbe57072f5ff90e8737"
+      && std::string_view(runtime_binding::sha256)
+          == "d367afd6499859c5a57d66bddd352a977ff76c7fb76b5925302c2c9008c7ddbd"
+      && runtime_binding::bytes == 9072560ULL;
+}
 bool hashed(int descriptor) {
   Digest context;
   if (!context.value || EVP_DigestInit_ex(context.value, EVP_sha256(), nullptr) != 1) { return false; }
@@ -168,7 +179,7 @@ bool hashed(int descriptor) {
   }
   return std::string_view(encoded.data(), encoded.size()) == runtime_binding::sha256;
 }
-bool checkLoadedProvider() {
+bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* retainedPin = nullptr) {
   const char* preload = std::getenv("LD_PRELOAD");
   const char* audit = std::getenv("LD_AUDIT");
   if ((preload && *preload) || (audit && *audit)) { return false; }
@@ -180,7 +191,7 @@ bool checkLoadedProvider() {
   if (::dlinfo(library.value, RTLD_DI_LINKMAP, &object) || !object) { return false; }
   const auto actual = canonicalPath(object->l_name);
   if (!actual || (std::string_view(actual->data()) != runtime_binding::artifact
-                  && !relocatableSourceArtifact())) { return false; }
+                  && !relocatableSourceArtifact() && !relocatableSelectedProviderArtifact())) { return false; }
   // These are ORIGINAL dynamic exports, not &method / __wrap_* references.
   // GNU --wrap test seams therefore do not misidentify the test executable as LT.
   constexpr const char* symbols[] = {
@@ -189,11 +200,15 @@ bool checkLoadedProvider() {
       "_ZN10libtorrent14session_handle18post_session_statsEv",
       "_ZN10libtorrent14session_handle10pop_alertsEPSt6vectorIPNS_5alertESaIS3_EE",
       "_ZNK10libtorrent19session_stats_alert8countersEv",
-      "_ZN10libtorrent14session_handle14remove_torrentERKNS_14torrent_handleENS_5flags13bitfield_flagIhNS_16remove_flags_tagEvEE"};
-  std::array<std::uintptr_t, 6> addresses{};
-  std::array<Mapping, 6> beforeMappings{};
+      "_ZN10libtorrent14session_handle14remove_torrentERKNS_14torrent_handleENS_5flags13bitfield_flagIhNS_16remove_flags_tagEvEE",
+      "biglybtc_payload_counter_abi_v1", "biglybtc_read_payload_counters_v1",
+      "biglybtc_swarm_mask_abi_v1"};
+  const std::size_t required = counterBridge ? 9 : 6;
+  std::array<std::uintptr_t, 9> addresses{};
+  std::array<Mapping, 9> beforeMappings{};
   std::size_t at = 0;
-  for (const auto* name : symbols) {
+  for (; at < required; ++at) {
+    const auto* name = symbols[at];
     void* exported = ::dlsym(library.value, name);
     Dl_info info{};
     if (!exported || exported != ::dlsym(RTLD_DEFAULT, name) || !::dladdr(exported, &info)
@@ -204,9 +219,9 @@ bool checkLoadedProvider() {
     ::dl_iterate_phdr(objectContaining, &query);
     const auto mapping = mappingFor(address);
     if (query.matches != 1 || !mapping || at == addresses.size()) { return false; }
-    addresses[at] = address; beforeMappings[at] = *mapping; ++at;
+    addresses[at] = address; beforeMappings[at] = *mapping;
   }
-  if (at != addresses.size()) { return false; }
+  if (at != required) { return false; }
   // The path is selected by the already loaded object, never by a runtime caller
   // or by loading the configured provider to mask a different active image.
   // A replaced FIFO must fail metadata admission rather than block opening.
@@ -215,18 +230,27 @@ bool checkLoadedProvider() {
   struct stat before{}, after{}, named{};
   if (::fstat(file.value, &before) || !S_ISREG(before.st_mode) || before.st_size < 0
       || static_cast<unsigned long long>(before.st_size) != runtime_binding::bytes) { return false; }
-  for (const auto& mapping : beforeMappings) {
+  for (std::size_t i = 0; i < required; ++i) {
+    const auto& mapping = beforeMappings[i];
     if (static_cast<std::uint64_t>(before.st_ino) != mapping.inode
         || static_cast<std::uint64_t>(::major(before.st_dev)) != mapping.deviceMajor
         || static_cast<std::uint64_t>(::minor(before.st_dev)) != mapping.deviceMinor) { return false; }
   }
   if (!hashed(file.value) || ::fstat(file.value, &after) || !sameMetadata(before, after)
       || ::lstat(actual->data(), &named) || !sameMetadata(after, named)) { return false; }
-  for (std::size_t i = 0; i < addresses.size(); ++i) {
+  for (std::size_t i = 0; i < required; ++i) {
     const auto afterMapping = mappingFor(addresses[i]);
     if (!afterMapping || beforeMappings[i] != *afterMapping) { return false; }
   }
-  return canonicalMatches(object->l_name, *actual);
+  if (!canonicalMatches(object->l_name, *actual)) { return false; }
+  if (retainedPin) {
+    // Transfer, rather than reopen, the object which passed every mapping,
+    // descriptor, source-bound digest and before/after identity check above.
+    // exchange also prevents a double dlclose if shared_ptr allocation fails.
+    *retainedPin = std::shared_ptr<void>(std::exchange(library.value, nullptr),
+        [](void* value) { if (value) { ::dlclose(value); } });
+  }
+  return true;
 }
 } // namespace
 #endif
@@ -238,5 +262,19 @@ bool persistentRuntimeQualified() noexcept {
 #else
   return false;
 #endif
+}
+std::shared_ptr<void> managedPayloadCounterRuntimePin() noexcept {
+#if BIGLYBTC_PERSISTENT_RUNTIME_BOUND
+  try {
+    std::shared_ptr<void> pin;
+    if (!checkLoadedProvider(true, &pin)) { return {}; }
+    return pin;
+  } catch (...) { return {}; }
+#else
+  return {}; // Default build does not open a provider to manufacture approval.
+#endif
+}
+bool managedPayloadCounterRuntimeQualified() noexcept {
+  return static_cast<bool>(managedPayloadCounterRuntimePin());
 }
 } // namespace biglybtc::engine::detail

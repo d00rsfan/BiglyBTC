@@ -4,6 +4,8 @@
 #include <bit>
 #include <charconv>
 #include <limits>
+#include <map>
+#include <set>
 #include <optional>
 
 namespace biglybtc::compat {
@@ -81,6 +83,29 @@ std::expected<std::vector<FilePolicy>, PolicyError> originalFilePolicy(
     }
     return result;
   } catch (const Failure& failure) { return std::unexpected(PolicyError{failure.message}); }
+}
+
+std::expected<std::string, PolicyError> encodeOriginalFilePolicy(std::span<const FilePolicy> values) {
+  if (values.size() > 100000) { return std::unexpected(PolicyError{"File-priority count exceeds its bound"}); }
+  std::set<std::int32_t> levels;
+  std::map<std::int64_t, std::string> groups;
+  for (std::size_t index = 0; index < values.size(); ++index) {
+    const auto& value = values[index];
+    if (value.priority == std::numeric_limits<std::int32_t>::min() || (value.skipped && value.priority != 0)) {
+      return std::unexpected(PolicyError{"Priority cannot round trip through original encoding"});
+    }
+    if (!value.skipped) { levels.insert(value.priority); }
+    const std::int64_t key = value.skipped ? 0
+        : value.priority <= 0 ? static_cast<std::int64_t>(value.priority)-1 : value.priority;
+    auto& indices = groups[key]; if (!indices.empty()) { indices += ','; } indices += std::to_string(index);
+  }
+  if (levels.size() > 7) { return std::unexpected(PolicyError{"At most seven distinct file priorities are supported"}); }
+  std::string result = "d";
+  for (const auto& [key, indices] : groups) {
+    const auto name = std::to_string(key);
+    result += std::to_string(name.size())+':'+name+std::to_string(indices.size())+':'+indices;
+  }
+  return result+'e';
 }
 
 std::expected<std::vector<std::uint8_t>, PolicyError> linearPriorityRanks(std::span<const FilePolicy> policy) {

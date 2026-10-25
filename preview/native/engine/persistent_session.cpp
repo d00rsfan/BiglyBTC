@@ -12,6 +12,7 @@
 #include <libtorrent/session_params.hpp>
 #include <libtorrent/write_resume_data.hpp>
 #include "network_policy.hpp"
+#include "network_binding.hpp"
 #include <libtorrent/torrent_status.hpp>
 #include <map>
 
@@ -109,6 +110,7 @@ struct PersistentSession::Impl {
   std::map<lt::torrent_handle, Managed*> managedByHandle;
   const storage::ProfileLease* managedLease = nullptr; // Same bound lease, owned by Host.
   std::optional<NetworkPolicy> network;
+  std::optional<NetworkBinding> networkBinding;
   std::optional<LiveQueueLimits> liveQueueLimits;
   std::optional<core::QueuePolicy> queuePolicy;
   bool appliedSeedingOnly = false;
@@ -280,6 +282,7 @@ struct PersistentSession::Impl {
     return registered && handle == active;
   }
   std::vector<lt::alert*> pop() {
+    detail::require(bindingHealthy(), "Explicit network binding was lost; owner joined without a final certificate", storage::ErrorCode::Io);
     std::vector<lt::alert*> pending;
     session->pop_alerts(&pending); // The ONLY pop_alerts consumer for this owner.
     if (pending.size() > 4096) {
@@ -450,6 +453,14 @@ struct PersistentSession::Impl {
     counterError(AccountingError::OwnerResetRequired);
     publish(); // Explicit uncertified state; retained values are last-observed.
   }
+  bool bindingHealthy() noexcept {
+    if (!session || !networkBinding || networkBindingCurrent(*networkBinding)) { return !poisoned; }
+    transferError = true; removalLost = true; counterError(AccountingError::Engine);
+    // This check occurs before pop_alerts; no borrowed alert is invalidated in
+    // this turn. Joined destruction closes all existing network paths. There
+    // is no rebind, wildcard replacement, second pump or new sampling timer.
+    joinPoisoned(); return false;
+  }
   void bind(const storage::ProfileLease& lease) {
     struct stat profile{};
     detail::require(lease.valid() && ::fstat(lease.directoryHandle(), &profile) == 0 && S_ISDIR(profile.st_mode),
@@ -458,13 +469,18 @@ struct PersistentSession::Impl {
       detail::require(profile.st_dev == profileDevice && profile.st_ino == profileInode,
           "Persistent owner cannot cross profile identities", storage::ErrorCode::Conflict);
     } else { profileDevice = profile.st_dev; profileInode = profile.st_ino; profileBound = true; }
+    detail::require(bindingHealthy(), "Explicit network binding was lost", storage::ErrorCode::Io);
   }
   void ensureSession() {
+    detail::require(bindingHealthy(), "Explicit network binding was lost", storage::ErrorCode::Io);
     if (!session) {
       try {
         auto settings = detail::settings();
         if (network) {
-          auto translated = makeNetworkSettings(*network);
+          auto resolved = prepareNetworkBinding(*network);
+          detail::require(resolved.has_value(), "Configured network binding is unavailable", storage::ErrorCode::Io);
+          networkBinding = std::move(*resolved);
+          auto translated = makeNetworkSettings(networkBinding->effective);
           detail::require(translated.has_value(), "Network policy cannot be applied");
           settings = std::move(*translated);
         }
@@ -551,12 +567,14 @@ struct PersistentSession::Impl {
   }
   void sampleManaged(Managed& value, bool pieces = false) {
     if (!value.handle.is_valid() || value.removing) { return; }
+    const bool originalProgress=value.storage.originalProgressRequiresPieces();
+    const bool needPieces=pieces||originalProgress;
     lt::torrent_status sample;
     detail::ManagedPayloadCounters::Sample actual;
     for (int attempt = 0; attempt < 4; ++attempt) {
       const auto epoch = value.payloadCounters->epoch();
       if (!epoch) { break; }
-      sample = value.handle.status(pieces ? lt::torrent_handle::query_pieces : lt::status_flags_t{});
+      sample = value.handle.status(needPieces ? lt::torrent_handle::query_pieces : lt::status_flags_t{});
       actual = value.payloadCounters->combine(*epoch, sample.total_payload_download, sample.total_payload_upload);
       if (actual.state != detail::ManagedPayloadCounters::Read::Retry) { break; }
     }
@@ -569,7 +587,7 @@ struct PersistentSession::Impl {
     }
     value.status.retained = true;
     value.status.completed = sample.total_done;
-    value.status.bytes = sample.total;
+    value.status.bytes = value.storage.originalBytes();
     value.status.received = actual.received;
     value.status.sent = actual.sent;
     value.status.downloadRate = sample.download_payload_rate;
@@ -607,11 +625,19 @@ struct PersistentSession::Impl {
         && sample.state != lt::torrent_status::checking_resume_data
         && sample.state != lt::torrent_status::downloading_metadata;
     value.status.selectedComplete = sample.is_finished;
-    if (pieces) {
+    if (needPieces) {
       value.verified.assign(static_cast<std::size_t>(value.status.totalPieces), 0);
       for (int i = 0; i < sample.pieces.size() && i < value.status.totalPieces; ++i) {
         value.verified[static_cast<std::size_t>(i)] = sample.pieces[lt::piece_index_t{i}] ? 1 : 0;
       }
+    }
+    if(originalProgress) {
+      const auto projected=value.storage.verifiedOriginalBytes(value.verified);
+      if(sample.pieces.size()!=value.status.totalPieces||!projected) {
+        value.status.failure=storage::Error{storage::ErrorCode::Io,"Actual original verified progress is unavailable; state requires recheck"};
+        requestStop(value);value.status.phase=ManagedPhase::Failed;return;
+      }
+      value.status.completed=*projected;
     }
     if (value.status.failure) { value.status.phase = ManagedPhase::Failed; }
     else if (value.stop) { value.status.phase = ManagedPhase::Stopping; }
@@ -1031,7 +1057,7 @@ std::expected<void, storage::Error> PersistentSession::configureNetwork(const Ne
   if (!impl_->onWorker() || impl_->call || impl_->session || impl_->closed || impl_->poisoned) {
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Configure networking before owner startup"});
   }
-  auto settings = makeNetworkSettings(policy);
+  auto settings = validateNetworkPolicy(policy);
   if (!settings) { return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,
       "Unsupported network setting: " + settings.error().field}); }
   impl_->network = policy;
@@ -1141,6 +1167,13 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
       return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Torrent is already admitted or retirement is uncertified"});
     }
   }
+  // Required raw counter support is admitted before any ManagedStorage
+  // beginUpdate/create/truncate. Stock/old approved providers stay unsupported.
+  const auto payloadBridge = detail::managedPayloadCounterBridge();
+  if (!payloadBridge) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,
+        "Managed counter/selected-swarm provider ABI is unavailable"});
+  }
   impl_->call = true;
   try {
     impl_->bind(lease);
@@ -1151,12 +1184,14 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
     detail::require(impl_->operation != std::numeric_limits<std::uint64_t>::max(), "Admission identity exhausted");
     if (!impl_->network) { impl_->network = NetworkPolicy{}; }
     std::vector<detail::ManagedPayloadClaim> claimed;
+    std::vector<storage::OriginalTorrentIdentity> retainedIdentities;
     for(const auto& [identity,row]:impl_->managed) {
       (void)identity;if(previous!=impl_->managed.end()&&row.get()==previous->second.get()){continue;}
       const auto claims=row->storage.claims();detail::require(claims.size()<=detail::MaximumManagedPayloadClaims-claimed.size(),"Retained payload claim bound exceeded",storage::ErrorCode::Unsupported);
       claimed.insert(claimed.end(),claims.begin(),claims.end());
+      retainedIdentities.push_back(row->storage.identity());
     }
-    auto storage = detail::take(detail::ManagedStorage::prepare(lease, options.hash, *impl_->network,claimed));
+    auto storage = detail::take(detail::ManagedStorage::prepare(lease, options.hash, *impl_->network,claimed,retainedIdentities,payloadBridge));
     // A certified same-hash restart replaces its own old claim only after the
     // new read-only collision gate and complete preparation succeeded.
     if(previous!=impl_->managed.end()){impl_->managedByHandle.erase(previous->second->handle);impl_->managed.erase(previous);}
@@ -1182,7 +1217,7 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
     value->status.totalPieces = parameters.ti->num_pieces();
     value->status.bytes = parameters.ti->total_size();
     parameters.userdata = value->token.get();
-    detail::require(detail::attachManagedPayloadCounters(parameters, value->payloadCounters),
+    detail::require(detail::attachManagedPayloadCounters(parameters, value->payloadCounters, payloadBridge),
         "Exact managed transfer counters require the approved source ABI", storage::ErrorCode::Unsupported);
     detail::attachPeerPayloadObserver(parameters, impl_->peerPayloadLedger, impl_->operation);
     parameters.flags |= lt::torrent_flags::paused | lt::torrent_flags::duplicate_is_error;
@@ -1225,6 +1260,7 @@ std::expected<void, storage::Error> PersistentSession::pauseManaged(const core::
   if (!impl_->onWorker() || impl_->call || impl_->closed || impl_->poisoned) {
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Managed control is unavailable"});
   }
+  if (!impl_->bindingHealthy()) { return std::unexpected(storage::Error{storage::ErrorCode::Io, "Explicit network binding was lost; restart the owner"}); }
   auto found = impl_->managed.find(hash.hex());
   if (found == impl_->managed.end() || !found->second->handle.is_valid() || found->second->stop) {
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Torrent is not active"});
@@ -1250,6 +1286,7 @@ std::expected<void, storage::Error> PersistentSession::queueManaged(const core::
   if (!managedAvailable() || impl_->call) {
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Managed queue control is unavailable"});
   }
+  if (!impl_->bindingHealthy()) { return std::unexpected(storage::Error{storage::ErrorCode::Io, "Explicit network binding was lost; restart the owner"}); }
   const auto found = impl_->managed.find(hash.hex());
   if (found == impl_->managed.end() || !found->second->handle.is_valid() || found->second->stop) {
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Torrent is not active"});

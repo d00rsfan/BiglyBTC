@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 
 C35 = "c35f1b0408508c019f002c438d70dd361a55be20286ded56711efd6bba2424e3"
+SELECTED = "d367afd6499859c5a57d66bddd352a977ff76c7fb76b5925302c2c9008c7ddbd"
 INSTRUMENTED = {"3bb4f7666c002f4bdb0e303aebd235c6a39850f82813600c3a08a888f1a3f89d",
                 "60ac6edd933f028f63f67f5f567066aefe069cda0693fe7c987448412fd444a3"}
 
@@ -26,7 +27,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--driver", type=Path, required=True)
     parser.add_argument("--provider", type=Path, required=True)
-    parser.add_argument("--mode", choices=("source", "strict"), required=True)
+    parser.add_argument("--mode", choices=("source", "selected", "strict"), required=True)
     parser.add_argument("--alternate", type=Path)
     parser.add_argument("--interposition-driver", type=Path)
     parser.add_argument("--preload")
@@ -36,6 +37,10 @@ def main():
     if args.mode == "source":
         if original_sha != C35 or not args.alternate or not args.interposition_driver or not args.preload:
             raise ValueError("Source relocation requires exact c35f and existing rejection controls")
+    elif args.mode == "selected":
+        if (original_sha != SELECTED or provider.stat().st_size != 9072560
+                or not args.alternate or not args.interposition_driver or not args.preload):
+            raise ValueError("Selected relocation requires exact d367 and existing rejection controls")
     elif original_sha not in INSTRUMENTED:
         raise ValueError("Strict relocation test requires an exact retained instrumented image")
     root = Path(tempfile.mkdtemp(prefix="biglybtc-runtime-deploy-results-", dir="/tmp"))

@@ -7,6 +7,7 @@
 #include <expected>
 #include <filesystem>
 #include <functional>
+#include <optional>
 #include <stop_token>
 #include <string>
 #include <system_error>
@@ -31,6 +32,12 @@ inline constexpr std::size_t CreateMaximumTrackers = 64;
 inline constexpr std::size_t CreateMaximumTrackerBytes = 2048;
 inline constexpr std::size_t CreateMaximumCommentBytes = 16384;
 
+enum class CreateFormat { V1, V2, Hybrid };
+// BEP52 requires powers of two, at least16KiB; LT2.0.12 permits at most128MiB.
+inline constexpr std::array<std::uint32_t,14> CreateMerklePieceSizes{
+    16384,32768,65536,131072,262144,524288,1048576,2097152,4194304,
+    8388608,16777216,33554432,67108864,134217728};
+
 struct CreateOptions {
   std::filesystem::path source;
   std::filesystem::path output;
@@ -40,6 +47,7 @@ struct CreateOptions {
   std::vector<std::vector<std::string>> trackerTiers;
   bool privateTorrent = false;
   std::string comment;
+  CreateFormat format = CreateFormat::V1; // Appended; legacy calls remain v1.
 };
 
 enum class CreateStage { Scanning, Hashing, Validating, Publishing };
@@ -66,7 +74,7 @@ struct CreateError {
 enum class CreatePublication { Durable, PublishedDirectorySyncFailed, PublishedCleanupFailed };
 struct CreateResult {
   std::filesystem::path output;
-  core::TorrentHash infoHashV1;
+  core::TorrentHash infoHashV1; // Actual v1 digest; empty only for explicit pure-v2.
   std::uint64_t totalBytes;
   std::size_t fileCount;
   std::uint32_t pieceSize;
@@ -75,9 +83,12 @@ struct CreateResult {
   // Only populated after a post-publication sync/cleanup failure. The file exists;
   // callers must not automatically repeat creation or overwrite that file.
   std::error_code publicationError;
+  CreateFormat format = CreateFormat::V1;
+  core::TorrentHash selectedHash; // Original20 convention: v1 for hybrid, v2 prefix for pure-v2.
+  std::optional<core::TorrentHash> fullInfoHashV1, fullInfoHashV2;
 };
 
-// Synchronous, caller-thread-only v1 creation. No session, network, import,
+// Synchronous, caller-thread-only explicit v1/v2/hybrid creation. No session, network, import,
 // profile mutation, payload writes or clock reads. Callbacks must marshal their
 // own UI notifications; exceptions abort before publication. Cancellation is
 // checked through the final pre-publication barrier; publication is indivisible.

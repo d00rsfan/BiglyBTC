@@ -133,6 +133,10 @@ int main(int argc, char** argv) {
     QObject::connect(&bridge,&Bridge::torrentCreationProgress,&window,&Window::setTorrentCreationProgress);
     QObject::connect(&bridge,&Bridge::torrentCreated,&window,&Window::setTorrentCreationResult);
     QObject::connect(&window, &Window::torrentImportRequested, &bridge, &Bridge::torrentImport);
+    QObject::connect(&window,&Window::torrentIntakeRequested,&bridge,[&](biglybtc::ui::TorrentIntakeRequest r){if(!bridge.previewTorrentIntake(r)){window.rejectTorrentIntake(r);}});
+    QObject::connect(&window,&Window::torrentIntakeSubmitted,&bridge,[&](biglybtc::ui::TorrentIntakeSubmission r){if(!bridge.importTorrentFiles(r)){window.rejectTorrentIntakeSubmission(r);}});
+    QObject::connect(&bridge,&Bridge::torrentIntakeReady,&window,&Window::setTorrentIntake);
+    QObject::connect(&bridge,&Bridge::torrentIntakeFinished,&window,&Window::setTorrentIntakeFinished);
     QObject::connect(&window, &Window::magnetImportRequested, &bridge, &Bridge::magnetImport);
     QObject::connect(&window, &Window::continueRequested, &bridge, &Bridge::continueDownload);
     QObject::connect(&window, &Window::detailsRequested, &bridge, &Bridge::details);

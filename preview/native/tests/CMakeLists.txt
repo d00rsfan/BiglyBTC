@@ -1469,3 +1469,127 @@ if(BIGLYBTC_DESKTOP AND BIGLYBTC_LOCAL_ENGINE AND NOT BIGLYBTC_PERSISTENT_RUNTIM
   set_tests_properties(file-compaction-worker PROPERTIES TIMEOUT 120 LABELS "unit;ui;files;loopback"
     ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
 endif()
+
+# Frozen CF02 identity, CF03 binding, CF04 slots and CF05 pre-add chapters.
+add_executable(biglybtc-original-torrent-identity-tests original_torrent_identity_tests.cpp)
+target_link_libraries(biglybtc-original-torrent-identity-tests PRIVATE biglybtc_profile)
+target_compile_options(biglybtc-original-torrent-identity-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME original-torrent-identity COMMAND biglybtc-original-torrent-identity-tests)
+set_tests_properties(original-torrent-identity PROPERTIES TIMEOUT 30 LABELS "unit;fixtures;identity")
+add_executable(biglybtc-queue-slots-tests queue_slots_tests.cpp)
+target_link_libraries(biglybtc-queue-slots-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-queue-slots-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME queue-slots COMMAND biglybtc-queue-slots-tests)
+set_tests_properties(queue-slots PROPERTIES TIMEOUT 20 LABELS "unit;queue")
+if(BIGLYBTC_LOCAL_ENGINE)
+  find_package(ZLIB REQUIRED)
+  add_executable(biglybtc-original-identity-callers-tests original_identity_callers_tests.cpp)
+  target_link_libraries(biglybtc-original-identity-callers-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar ZLIB::ZLIB)
+  target_compile_options(biglybtc-original-identity-callers-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  # These ten families require the exact qualified UTF16/selected-swarm provider.
+  # Default stock-provider CI retains its explicit unbound/fallback cohorts.
+  if(BIGLYBTC_PAYLOAD_COUNTER_TEST_LANE STREQUAL "Qualified")
+    add_test(NAME original-identity-callers COMMAND biglybtc-original-identity-callers-tests)
+    set_tests_properties(original-identity-callers PROPERTIES TIMEOUT 120 LABELS "unit;fixtures;storage;qualified-provider")
+  endif()
+  add_executable(biglybtc-network-binding-tests network_binding_tests.cpp)
+  target_link_libraries(biglybtc-network-binding-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar)
+  target_compile_options(biglybtc-network-binding-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME network-binding COMMAND biglybtc-network-binding-tests)
+  set_tests_properties(network-binding PROPERTIES TIMEOUT 20 LABELS "unit;network")
+  add_executable(biglybtc-torrent-intake-file-options-tests torrent_intake_file_options_tests.cpp)
+  target_link_libraries(biglybtc-torrent-intake-file-options-tests PRIVATE biglybtc_profile LibtorrentRasterbar::torrent-rasterbar)
+  target_compile_options(biglybtc-torrent-intake-file-options-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME torrent-intake-file-options COMMAND biglybtc-torrent-intake-file-options-tests)
+  set_tests_properties(torrent-intake-file-options PROPERTIES TIMEOUT 120 LABELS "unit;intake;storage")
+endif()
+if(BIGLYBTC_DESKTOP)
+  add_executable(biglybtc-torrent-intake-dialog-tests torrent_intake_dialog_tests.cpp)
+  set_target_properties(biglybtc-torrent-intake-dialog-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-torrent-intake-dialog-tests PRIVATE biglybtc_ui Qt6::Test)
+  target_compile_options(biglybtc-torrent-intake-dialog-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME torrent-intake-file-options-ui COMMAND biglybtc-torrent-intake-dialog-tests)
+  set_tests_properties(torrent-intake-file-options-ui PROPERTIES TIMEOUT 120 ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;ui;intake")
+  if(BIGLYBTC_LOCAL_ENGINE AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+    add_executable(biglybtc-network-binding-owner-tests network_binding_owner_tests.cpp)
+    set_target_properties(biglybtc-network-binding-owner-tests PROPERTIES AUTOMOC ON)
+    target_link_libraries(biglybtc-network-binding-owner-tests PRIVATE biglybtc_local_engine biglybtc_profile LibtorrentRasterbar::torrent-rasterbar Qt6::Core Qt6::Network Qt6::Test)
+    target_compile_options(biglybtc-network-binding-owner-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    target_link_options(biglybtc-network-binding-owner-tests PRIVATE "LINKER:--wrap=getifaddrs")
+    add_test(NAME network-binding-owner COMMAND biglybtc-network-binding-owner-tests)
+    set_tests_properties(network-binding-owner PROPERTIES TIMEOUT 300 LABELS "unit;network;loopback")
+    add_executable(biglybtc-torrent-intake-files-bridge-tests torrent_intake_files_bridge_tests.cpp)
+    set_target_properties(biglybtc-torrent-intake-files-bridge-tests PROPERTIES AUTOMOC ON)
+    target_link_libraries(biglybtc-torrent-intake-files-bridge-tests PRIVATE biglybtc_desktop_host biglybtc_local_engine biglybtc_profile LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+    target_compile_options(biglybtc-torrent-intake-files-bridge-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME torrent-intake-file-options-worker COMMAND biglybtc-torrent-intake-files-bridge-tests)
+    set_tests_properties(torrent-intake-file-options-worker PROPERTIES TIMEOUT 120 ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "unit;intake;loopback;storage")
+  endif()
+endif()
+set(BIGLYBTC_PAYLOAD_COUNTER_TEST_LANE "" CACHE STRING "Qualified or Unsupported counter-provider qualification")
+set_property(CACHE BIGLYBTC_PAYLOAD_COUNTER_TEST_LANE PROPERTY STRINGS "" Qualified Unsupported)
+if(NOT BIGLYBTC_PAYLOAD_COUNTER_TEST_LANE STREQUAL "")
+  if(NOT BIGLYBTC_LOCAL_ENGINE OR NOT BIGLYBTC_DESKTOP)
+    message(FATAL_ERROR "Payload-counter fixture lanes require the local desktop engine and Qt Test")
+  endif()
+  if(BIGLYBTC_PAYLOAD_COUNTER_TEST_LANE STREQUAL "Qualified")
+    add_executable(biglybtc-provider-payload-counter-tests provider_payload_counter_tests.cpp)
+    set_target_properties(biglybtc-provider-payload-counter-tests PROPERTIES AUTOMOC ON)
+    target_link_libraries(biglybtc-provider-payload-counter-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+    target_compile_options(biglybtc-provider-payload-counter-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME provider-payload-counter COMMAND biglybtc-provider-payload-counter-tests)
+    set_tests_properties(provider-payload-counter PROPERTIES TIMEOUT 120 LABELS "unit;qualified-provider")
+  elseif(BIGLYBTC_PAYLOAD_COUNTER_TEST_LANE STREQUAL "Unsupported")
+    add_executable(biglybtc-provider-payload-counter-unsupported-tests provider_payload_counter_unsupported_tests.cpp)
+    set_target_properties(biglybtc-provider-payload-counter-unsupported-tests PROPERTIES AUTOMOC ON)
+    target_link_libraries(biglybtc-provider-payload-counter-unsupported-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+    target_compile_options(biglybtc-provider-payload-counter-unsupported-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    add_test(NAME provider-payload-counter-unsupported COMMAND biglybtc-provider-payload-counter-unsupported-tests)
+    set_tests_properties(provider-payload-counter-unsupported PROPERTIES TIMEOUT 60 LABELS "unit;unqualified-provider")
+  else()
+    message(FATAL_ERROR "Select Qualified or Unsupported for BIGLYBTC_PAYLOAD_COUNTER_TEST_LANE")
+  endif()
+endif()
+
+# Exact additional provider source/SDK/portable preflight; no owner or loader.
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_PAYLOAD_COUNTER_TEST_LANE STREQUAL "Qualified"
+    AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  add_test(NAME provider-runtime-inputs COMMAND Python3::Interpreter
+    "${CMAKE_CURRENT_SOURCE_DIR}/provider_runtime_inputs_tests.py")
+  set_tests_properties(provider-runtime-inputs PROPERTIES TIMEOUT 120
+    LABELS "unit;qualified-provider;source-binding"
+    ENVIRONMENT "PYTHONDONTWRITEBYTECODE=1")
+endif()
+
+# Append within the EXISTING Qualified payload-counter lane in tests/CMakeLists.
+# Unsupported lane reuses its existing target, amended with two selected-hybrid
+# rows. Never run the positive suite on a stock/old/unqualified provider.
+if(BIGLYBTC_PAYLOAD_COUNTER_TEST_LANE STREQUAL "Qualified")
+  add_executable(biglybtc-selected-swarm-admission-tests selected_swarm_admission_tests.cpp)
+  set_target_properties(biglybtc-selected-swarm-admission-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-selected-swarm-admission-tests PRIVATE
+    biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test ${CMAKE_DL_LIBS})
+  target_link_options(biglybtc-selected-swarm-admission-tests PRIVATE "LINKER:--wrap=dlsym")
+  target_compile_options(biglybtc-selected-swarm-admission-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME selected-swarm-admission COMMAND biglybtc-selected-swarm-admission-tests)
+  set_tests_properties(selected-swarm-admission PROPERTIES TIMEOUT 120 LABELS "unit;qualified-provider;original-identity")
+endif()
+
+# Root adopts the new source and merges this registration after CF01 qualification.
+# This driver is coordinated by run.py, never an unguarded standalone CTest run.
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-v2-managed-handoff-driver v2_managed_handoff_driver.cpp)
+  target_link_libraries(biglybtc-v2-managed-handoff-driver PRIVATE
+    biglybtc_local_engine biglybtc_profile LibtorrentRasterbar::torrent-rasterbar Qt6::Core)
+  target_compile_options(biglybtc-v2-managed-handoff-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+
+# Additive root-owned registration. Driver is run only by the fenced Python
+# recipe, never as an argument-free CTest. It requires the final approved SDK.
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND BIGLYBTC_PAYLOAD_COUNTER_TEST_LANE STREQUAL "Qualified")
+  add_executable(biglybtc-selected-hybrid-handoff-driver selected_hybrid_handoff_driver.cpp)
+  target_link_libraries(biglybtc-selected-hybrid-handoff-driver PRIVATE
+    biglybtc_local_engine biglybtc_profile LibtorrentRasterbar::torrent-rasterbar Qt6::Core)
+  target_compile_options(biglybtc-selected-hybrid-handoff-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()

@@ -11,6 +11,8 @@
 #include <QPlainTextEdit>
 #include <QPointer>
 #include <QProgressBar>
+#include <QSignalBlocker>
+#include <QMetaObject>
 #include <QPushButton>
 #include <QUrl>
 #include <QVBoxLayout>
@@ -18,12 +20,15 @@
 #include <array>
 #include <atomic>
 #include <limits>
+#include <span>
 
 namespace biglybtc::ui {
 namespace {
-// Exactly the v1 creator's supported original wizard choices. No v2/hybrid UI.
+// Preserve every original v1 choice; BEP52 formats allow only powers of two.
 constexpr std::array<quint64,20> PieceSizes{32768,49152,65536,98304,131072,196608,262144,393216,
     524288,786432,1048576,1572864,2097152,3145728,4194304,8388608,16777216,33554432,67108864,134217728};
+constexpr std::array<quint64,14> MerklePieceSizes{16384,32768,65536,131072,262144,524288,1048576,2097152,4194304,
+    8388608,16777216,33554432,67108864,134217728};
 constexpr quint64 MaximumBytes=quint64{1}<<44;
 std::optional<quint64> nextRequest() {
   static std::atomic<quint64> next{1};auto current=next.load(std::memory_order_relaxed);
@@ -40,10 +45,10 @@ bool hash(const QString& value) {
 struct TorrentCreationDialog::Impl {
   TorrentCreationDialog* q;
   quint64 session=0,highest=0,revision=0,version=0,sequence=0,completed=0,total=0;
-  bool busy=false,working=false,closing=false;
+  bool busy=false,working=false,closing=false,piecesQueued=false;
   TorrentCreationRequest active;
   QString publishedOutput;
-  QPointer<QComboBox> kind,piece;
+  QPointer<QComboBox> kind,piece,format;
   QPointer<QLineEdit> source,output;
   QPointer<QPlainTextEdit> trackers,comment;
   QPointer<QCheckBox> privateTorrent,import;
@@ -57,18 +62,30 @@ struct TorrentCreationDialog::Impl {
   bool text(const QString& value){const auto alive=guard();if(status){status->setText(value);}return alive.current();}
   bool controls(){
     const auto alive=guard();const bool editable=session&&!busy&&!working;
-    const std::vector<QPointer<QWidget>> fields{kind.data(),piece.data(),source.data(),output.data(),trackers.data(),comment.data(),privateTorrent.data(),import.data(),sourceBrowse.data(),outputBrowse.data()};
+    const std::vector<QPointer<QWidget>> fields{kind.data(),piece.data(),format.data(),source.data(),output.data(),trackers.data(),comment.data(),privateTorrent.data(),import.data(),sourceBrowse.data(),outputBrowse.data()};
     for(const auto& field:fields){if(field){field->setEnabled(editable);}if(!alive.current()){return false;}}
     if(create){create->setEnabled(editable&&output&&(publishedOutput.isEmpty()||output->text()!=publishedOutput));}if(!alive.current()){return false;}
     if(cancel){cancel->setEnabled(!closing);}return alive.current();
   }
+  bool pieceChoices(){
+    if(!piece||!format){return false;}const auto alive=guard();const auto selected=piece->currentData().toULongLong();
+    const bool merkle=format->currentIndex()!=0;QSignalBlocker blocked(piece);
+    const auto valid=[&]{if(!alive.current()||!piece){blocked.dismiss();return false;}return true;};
+    piece->clear();if(!valid()){return false;}
+    piece->addItem(QStringLiteral("Automatic"),QVariant::fromValue(quint64{0}));if(!valid()){return false;}
+    const auto choices=merkle?std::span<const quint64>(MerklePieceSizes):std::span<const quint64>(PieceSizes);
+    for(const auto size:choices){piece->addItem(QStringLiteral("%1 KiB").arg(size/1024),QVariant::fromValue(size));if(!valid()){return false;}}
+    const auto index=piece->findData(QVariant::fromValue(selected));piece->setCurrentIndex(index>=0?index:0);return valid();
+  }
   std::optional<TorrentCreationOptions> options()const {
-    if(!kind||!piece||!source||!output||!trackers||!comment||!privateTorrent||!import
-        ||kind->currentIndex()<0||kind->currentIndex()>1||piece->currentIndex()<0
+    if(!kind||!piece||!format||!source||!output||!trackers||!comment||!privateTorrent||!import
+        ||kind->currentIndex()<0||kind->currentIndex()>1||piece->currentIndex()<0||format->currentIndex()<0||format->currentIndex()>2
         ||!path(source->text())||!path(output->text())||comment->toPlainText().toUtf8().size()>16384){return {};}
     TorrentCreationOptions value;value.sourceKind=static_cast<TorrentCreationSource>(kind->currentIndex());value.source=source->text();value.output=output->text();
+    value.format=static_cast<TorrentCreationFormat>(format->currentIndex());
     value.pieceSize=piece->currentData().toULongLong();value.privateTorrent=privateTorrent->isChecked();value.comment=comment->toPlainText();value.importAfterCreation=import->isChecked();
-    if(value.pieceSize&&std::find(PieceSizes.begin(),PieceSizes.end(),value.pieceSize)==PieceSizes.end()){return {};}
+    const auto choices=value.format==TorrentCreationFormat::V1?std::span<const quint64>(PieceSizes):std::span<const quint64>(MerklePieceSizes);
+    if(value.pieceSize&&std::find(choices.begin(),choices.end(),value.pieceSize)==choices.end()){return {};}
     if(trackers->toPlainText().size()>131072){return {};}
     QStringList tier;std::size_t count=0;
     for(const auto& raw:trackers->toPlainText().split(QChar('\n'))){
@@ -103,18 +120,24 @@ TorrentCreationDialog::TorrentCreationDialog(QWidget* parent):QDialog(parent),im
   };
   form->addRow(QStringLiteral("Source"),fileRow(QStringLiteral("torrent-creation-source"),impl_->source,impl_->sourceBrowse));
   form->addRow(QStringLiteral("Output .torrent"),fileRow(QStringLiteral("torrent-creation-output"),impl_->output,impl_->outputBrowse));
+  impl_->format=new QComboBox(this);impl_->format->setObjectName(QStringLiteral("torrent-creation-format"));
+  impl_->format->addItems({QStringLiteral("V1"),QStringLiteral("V2"),QStringLiteral("Hybrid (V1 + V2)")});form->addRow(QStringLiteral("Format"),impl_->format);
   impl_->piece=new QComboBox(this);impl_->piece->setObjectName(QStringLiteral("torrent-creation-piece-size"));impl_->piece->addItem(QStringLiteral("Automatic"),QVariant::fromValue(quint64{0}));
   for(const auto size:PieceSizes){impl_->piece->addItem(QStringLiteral("%1 KiB").arg(size/1024),QVariant::fromValue(size));}form->addRow(QStringLiteral("Piece size"),impl_->piece);
   impl_->trackers=new QPlainTextEdit(this);impl_->trackers->setObjectName(QStringLiteral("torrent-creation-trackers"));impl_->trackers->setPlaceholderText(QStringLiteral("One tracker URL per line. Separate tiers with a blank line."));impl_->trackers->setMaximumHeight(130);form->addRow(QStringLiteral("Tracker tiers"),impl_->trackers);
   impl_->privateTorrent=new QCheckBox(QStringLiteral("Private torrent"),this);impl_->privateTorrent->setObjectName(QStringLiteral("torrent-creation-private"));form->addRow(QString{},impl_->privateTorrent);
   impl_->comment=new QPlainTextEdit(this);impl_->comment->setObjectName(QStringLiteral("torrent-creation-comment"));impl_->comment->setMaximumHeight(90);form->addRow(QStringLiteral("Comment"),impl_->comment);
   impl_->import=new QCheckBox(QStringLiteral("Add to My Torrents (stopped) after successful creation"),this);impl_->import->setObjectName(QStringLiteral("torrent-creation-import"));form->addRow(QString{},impl_->import);layout->addLayout(form);
-  auto* note=new QLabel(QStringLiteral("Creates a v1 torrent without modifying the source data. Existing output files are never overwritten."),this);note->setTextFormat(Qt::PlainText);note->setWordWrap(true);layout->addWidget(note);
+  auto* note=new QLabel(QStringLiteral("Creates the selected torrent format without modifying source data. Existing output files are never overwritten."),this);note->setTextFormat(Qt::PlainText);note->setWordWrap(true);layout->addWidget(note);
   impl_->progress=new QProgressBar(this);impl_->progress->setObjectName(QStringLiteral("torrent-creation-progress"));impl_->progress->setRange(0,10000);impl_->progress->setValue(0);impl_->progress->setTextVisible(false);layout->addWidget(impl_->progress);
   impl_->status=new QLabel(this);impl_->status->setObjectName(QStringLiteral("torrent-creation-status"));impl_->status->setTextFormat(Qt::PlainText);impl_->status->setWordWrap(true);layout->addWidget(impl_->status);
   auto* buttons=new QHBoxLayout;buttons->addStretch();impl_->create=new QPushButton(QStringLiteral("Create"),this);impl_->create->setObjectName(QStringLiteral("torrent-creation-create"));impl_->cancel=new QPushButton(QStringLiteral("Cancel"),this);impl_->cancel->setObjectName(QStringLiteral("torrent-creation-cancel"));buttons->addWidget(impl_->create);buttons->addWidget(impl_->cancel);layout->addLayout(buttons);
   connect(impl_->create,&QPushButton::clicked,this,&TorrentCreationDialog::accept);connect(impl_->cancel,&QPushButton::clicked,this,&TorrentCreationDialog::reject);
   connect(impl_->sourceBrowse,&QPushButton::clicked,this,[this]{impl_->choose(false);});connect(impl_->outputBrowse,&QPushButton::clicked,this,[this]{impl_->choose(true);});
+  connect(impl_->format,&QComboBox::currentIndexChanged,this,[this]{
+    if(!impl_->bump()||impl_->piecesQueued){return;}impl_->piecesQueued=true;
+    QMetaObject::invokeMethod(this,[this]{impl_->piecesQueued=false;impl_->pieceChoices();},Qt::QueuedConnection);
+  });
   connect(impl_->output,&QLineEdit::textChanged,this,[this]{impl_->controls();});impl_->controls();
 }
 TorrentCreationDialog::~TorrentCreationDialog()=default;

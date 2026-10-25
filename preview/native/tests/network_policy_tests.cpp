@@ -91,7 +91,10 @@ int main() {
       CHECK(settings && settings->get_str(Settings::listen_interfaces) == "127.0.0.1:6881,[2001:db8::1]:6881");
       CHECK(settings->get_str(Settings::outgoing_interfaces) == "127.0.0.1,2001:db8::1");
       auto interface = config({{"Bind IP", bytes("eth0[0]")}});
-      rejected(interface, Code::Unsupported);
+      const auto unresolved = normal(&interface);
+      CHECK(unresolved.bindAddresses == std::vector<std::string>{"eth0[0]"});
+      CHECK(engine::validateNetworkPolicy(unresolved));
+      CHECK(!engine::makeNetworkSettings(unresolved)); // Worker resolution is mandatory.
       auto missing = config({{"Enforce Bind IP", integer(1)}});
       rejected(missing, Code::Unsupported);
       auto disabled = config({{"Bind IP", bytes("::1")}});
