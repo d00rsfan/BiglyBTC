@@ -2,7 +2,9 @@
 #include "library_window.hpp"
 #include "options_dialog.hpp"
 #include "profile.hpp"
+#if defined(BIGLYBTC_SOCKS4_HOST_QUALIFIED_TESTS)
 #include "network_policy.hpp"
+#endif
 
 #include <QAction>
 #include <QApplication>
