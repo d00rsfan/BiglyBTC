@@ -1755,3 +1755,5 @@ if(BIGLYBTC_LOCAL_ENGINE AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "
       LABELS "unit;qualified-provider;runtime-binding" ENVIRONMENT "PYTHONDONTWRITEBYTECODE=1")
   endif()
 endif()
+
+include("${CMAKE_CURRENT_SOURCE_DIR}/NetworkProxyCapabilityTests.cmake")

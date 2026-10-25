@@ -170,7 +170,8 @@ void validate(const NetworkPolicy& p) {
       Code::InvalidConfiguration, "rate limits");
   const auto& proxy = p.proxy;
   require(proxy.kind == NetworkProxyKind::None || proxy.kind == NetworkProxyKind::Socks4
-      || proxy.kind == NetworkProxyKind::Socks5 || proxy.kind == NetworkProxyKind::Http,
+      || proxy.kind == NetworkProxyKind::Socks5 || proxy.kind == NetworkProxyKind::Http
+      || proxy.kind == NetworkProxyKind::Socks4a,
       Code::InvalidConfiguration, "proxy type");
   if (proxy.kind == NetworkProxyKind::None) {
     require(proxy.host.empty() && proxy.username.empty() && proxy.password.empty() && proxy.port == 0
@@ -181,11 +182,15 @@ void validate(const NetworkPolicy& p) {
         && proxy.username.size() <= 1024 && proxy.password.size() <= 1024
         && printable(proxy.username) && printable(proxy.password)
         && (!proxy.username.empty() || proxy.password.empty()), Code::InvalidConfiguration, "proxy");
-    if (proxy.kind == NetworkProxyKind::Socks4) {
-      // The current qualified LT socket factory does not forward SOCKS4 USERID.
-      // Never admit a configured identity and silently send an empty identity.
-      require(proxy.username.empty(), Code::Unsupported, "SOCKS4 USERID");
-      require(!proxy.remoteDns && proxy.password.empty() && !p.ipv6, Code::Unsupported, "SOCKS4 routing");
+    if (proxy.kind == NetworkProxyKind::Socks4 || proxy.kind == NetworkProxyKind::Socks4a) {
+      // Header/marker alone is never authority. Default/old providers keep the
+      // existing empty-USERID numeric-only route; extended routes need the
+      // opaque retained full RuntimeGuard proof for this actual loaded image.
+      require(proxy.username.empty() || p.socks4Capability, Code::Unsupported, "SOCKS4 USERID");
+      require(proxy.kind != NetworkProxyKind::Socks4a || p.socks4Capability,
+          Code::Unsupported, "SOCKS4a provider");
+      require(proxy.remoteDns == (proxy.kind == NetworkProxyKind::Socks4a)
+          && proxy.password.empty() && !p.ipv6, Code::Unsupported, "SOCKS4 routing");
     }
     if (proxy.kind != NetworkProxyKind::Socks5) {
       require(!p.dht && (!proxy.peers || (!p.incomingUtp && !p.outgoingUtp))
@@ -254,6 +259,7 @@ std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(
     if (options.mode == NetworkMode::IsolatedLoopback) { return p; }
     const Config c(configuration);
     p.mode = NetworkMode::Normal;
+    p.socks4Capability = std::move(options.socks4Capability);
     require(c.boolean("Network Selection Default.Public", true)
         && !c.boolean("Network Selection Default.Tor", false) && !c.boolean("Network Selection Default.I2P", false),
         Code::Unsupported, "Network Selection Default");
@@ -341,8 +347,10 @@ std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(
       NetworkProxy data;
       if (dataProxy) {
         const auto version = c.text("Proxy.Data.SOCKS.version", "V4");
-        require(version == "V4" || version == "V5", Code::Unsupported, "Proxy.Data.SOCKS.version");
-        data = proxyEndpoint(c, true, same, version == "V4" ? NetworkProxyKind::Socks4 : NetworkProxyKind::Socks5);
+        require(version == "V4" || version == "V4a" || version == "V5", Code::Unsupported, "Proxy.Data.SOCKS.version");
+        const auto kind = version == "V4" ? NetworkProxyKind::Socks4
+            : version == "V4a" ? NetworkProxyKind::Socks4a : NetworkProxyKind::Socks5;
+        data = proxyEndpoint(c, true, same, kind);
         require(c.text("Proxy.Data.NoProxy.PeerSet").empty(), Code::Unsupported, "Proxy.Data.NoProxy.PeerSet");
         if (!same) {
           for (int i = 2; i <= 3; ++i) {
@@ -359,9 +367,10 @@ std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(
       // This original switch gates TRACKER DNS only (AENameServiceJava12).
       // Data-only SOCKS4 consumes numeric peer endpoints; its valid original
       // route must not be rejected by an unrelated tracker-default preference.
-      // Explicit SOCKS4 remote-DNS requests remain unsupported by validate().
-      p.proxy.remoteDns = p.proxy.kind == NetworkProxyKind::Socks4 && !trackerProxy
-          ? false : trackerRemoteDns;
+      // V4a is the explicit original DATA-proxy remote-name selection; it is
+      // independent of the tracker-only preference and requires runtime proof.
+      p.proxy.remoteDns = p.proxy.kind == NetworkProxyKind::Socks4a
+          || (p.proxy.kind != NetworkProxyKind::Socks4 && trackerRemoteDns);
       // Peer-proxied sessions have no direct incoming listener in LT.
       if (dataProxy) { p.incomingTcp = false; p.incomingUtp = false; }
     }
@@ -419,7 +428,7 @@ std::expected<libtorrent::settings_pack, NetworkPolicyError> makeNetworkSettings
     result.set_int(Settings::allowed_enc_level, p.requireEncryption ? Settings::pe_rc4 : Settings::pe_both);
     const auto& proxy = p.proxy;
     int proxyType = Settings::none;
-    if (proxy.kind == NetworkProxyKind::Socks4) { proxyType = Settings::socks4; }
+    if (proxy.kind == NetworkProxyKind::Socks4 || proxy.kind == NetworkProxyKind::Socks4a) { proxyType = Settings::socks4; }
     if (proxy.kind == NetworkProxyKind::Socks5) { proxyType = proxy.username.empty() ? Settings::socks5 : Settings::socks5_pw; }
     if (proxy.kind == NetworkProxyKind::Http) { proxyType = proxy.username.empty() ? Settings::http : Settings::http_pw; }
     result.set_int(Settings::proxy_type, proxyType);

@@ -6,6 +6,7 @@
 #include <libtorrent/settings_pack.hpp>
 
 #include <expected>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -18,7 +19,12 @@ struct NetworkPolicyError {
   // Configuration key / bounded field name only. Never contains credentials or URLs.
   std::string field;
 };
-enum class NetworkProxyKind { None, Socks4, Socks5, Http };
+enum class NetworkProxyKind { None, Socks4, Socks5, Http, Socks4a };
+// Opaque proof owns the SAME already-loaded provider handle which passed the
+// complete source/artifact/mapping guard. Call only on the owner worker; pure
+// policy parsing never loads/verifies a provider. Missing/old SDK stays strict.
+struct VerifiedSocks4Capability;
+std::shared_ptr<const VerifiedSocks4Capability> verifiedSocks4Capability() noexcept;
 struct NetworkProxy {
   NetworkProxyKind kind = NetworkProxyKind::None;
   std::string host, username, password;
@@ -32,6 +38,7 @@ struct NetworkPolicyOptions {
   bool localDiscovery = false;
   // Requires both caller permission and original UPnP/NAT-PMP enable settings.
   bool portMapping = false;
+  std::shared_ptr<const VerifiedSocks4Capability> socks4Capability{};
 };
 struct NetworkPolicy {
   NetworkMode mode = NetworkMode::IsolatedLoopback;
@@ -52,6 +59,8 @@ struct NetworkPolicy {
   int uploadBytesPerSecond = 0, downloadBytesPerSecond = 0;
   int seedingUploadBytesPerSecond = 0;
   bool seedingOnlyUpload = false;
+  // Retains verified provider lifetime; no caller boolean or version allowlist.
+  std::shared_ptr<const VerifiedSocks4Capability> socks4Capability{};
 };
 struct TorrentNetworkSelection {
   bool publicNetwork = true, tor = false, i2p = false;

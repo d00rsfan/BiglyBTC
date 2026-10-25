@@ -196,6 +196,7 @@ struct SessionBridge::Host {
   unsigned short peerPort;
   bool normalNetwork = false;
   engine::NetworkPolicy networkPolicy{}; // Isolated until normal configure succeeds.
+  bool socks4CapabilityChecked = false; // Worker-owned, independent of config repair success.
   using MagnetStamp = std::tuple<std::uint64_t, engine::MagnetPhase, bool, std::string,
       std::optional<storage::ErrorCode>, std::string>;
   std::map<std::string, MagnetStamp> lastMagnetPhases;
@@ -2002,10 +2003,16 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
     throw Failure{{storage::ErrorCode::Io, "Cannot create the native engine owner"}};
   }
   if (host_->normalNetwork) {
+    if (!host_->socks4CapabilityChecked) {
+      // Retain actual provider proof before parsing any possibly invalid saved
+      // setting. Options can then repair that setting without starting routes.
+      host_->networkPolicy.socks4Capability = engine::verifiedSocks4Capability();
+      host_->socks4CapabilityChecked = true;
+    }
     auto config = storage::ConfigFile::load(host_->lease, "biglybt.config");
     if (!config && config.error().code != storage::ErrorCode::Missing) { throw Failure{config.error()}; }
     auto policy = engine::readNetworkPolicy(config ? &config->document() : nullptr,
-        {.mode = engine::NetworkMode::Normal});
+        {.mode = engine::NetworkMode::Normal, .socks4Capability = host_->networkPolicy.socks4Capability});
     if (!policy) { throw Failure{{storage::ErrorCode::Unsupported, "Unsupported network setting: " + policy.error().field}}; }
     auto queues = core::readQueuePolicy(config ? &config->document() : nullptr);
     if (!queues) { throw Failure{{storage::ErrorCode::InvalidFormat,
@@ -2534,7 +2541,8 @@ bool SessionBridge::loadOptions(ui::OptionsRequest request) {
       } else {
         bool restart = !host_->engine;
         if (read->source) {
-          const auto policy = engine::readNetworkPolicy(read->source.get(), {.mode = engine::NetworkMode::Normal});
+          const auto policy = engine::readNetworkPolicy(read->source.get(),
+              {.mode = engine::NetworkMode::Normal, .socks4Capability = host_->networkPolicy.socks4Capability});
           if (policy) {
             auto live = engine::prepareLiveSettings(host_->networkPolicy, *policy);
             restart = restart || !live || live->restartFields != 0;
@@ -2572,7 +2580,8 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
       auto prepared = storage::prepareApplicationSettings(*host_->optionsBaseline, submission.changes);
       if (!prepared) { packet->failure = text(prepared.error().message); }
       else {
-        auto policy = engine::readNetworkPolicy(&prepared->document(), {.mode = engine::NetworkMode::Normal});
+        auto policy = engine::readNetworkPolicy(&prepared->document(),
+            {.mode = engine::NetworkMode::Normal, .socks4Capability = host_->networkPolicy.socks4Capability});
         if (!policy) { packet->failure = tr("Unsupported or invalid setting: %1").arg(text(policy.error().field)); }
         else {
           const auto queuePolicy = core::readQueuePolicy(&prepared->document());
@@ -2762,7 +2771,8 @@ void SessionBridge::tickScheduler() noexcept {
       if(plan.uploadKiB){edits.push_back({seedingOnly?core::SettingId::SeedingUploadLimit:core::SettingId::UploadLimit,std::int64_t{*plan.uploadKiB}});}
       if(plan.downloadKiB){edits.push_back({core::SettingId::DownloadLimit,std::int64_t{*plan.downloadKiB}});}
       auto prepared=take(storage::prepareApplicationSettings(source,edits));
-      auto requested=engine::readNetworkPolicy(&prepared.document(),{.mode=engine::NetworkMode::Normal});
+      auto requested=engine::readNetworkPolicy(&prepared.document(),
+          {.mode=engine::NetworkMode::Normal,.socks4Capability=host_->networkPolicy.socks4Capability});
       if(!requested){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid saved routing while applying scheduled rates"}};}
       auto safe=take(engine::prepareLiveSettings(host_->networkPolicy,*requested));
       static_cast<void>(take(storage::saveApplicationSettings(host_->lease,source,prepared)));

@@ -13,6 +13,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <memory>
+#include <utility>
 #include <vector>
 
 // Actual owned-loopback SOCKS peers/origin. No public address, external name,
@@ -98,9 +99,13 @@ public:
   std::vector<Route> routes;
   QByteArray failure;
   const bool v5;
+  const QByteArray expectedSocks4User;
+  const bool remoteSocks4;
+  std::vector<QByteArray> socks4Users;
   const quint16 seedPort, trackerPort;
   void stopOwned() noexcept { abortOwnedSockets(server); }
-  Socks(bool version5, quint16 seed, quint16 tracker) : v5(version5), seedPort(seed), trackerPort(tracker) {
+  Socks(bool version5, quint16 seed, quint16 tracker, QByteArray user = {}, bool remote = false)
+      : v5(version5), expectedSocks4User(std::move(user)), remoteSocks4(remote), seedPort(seed), trackerPort(tracker) {
     test::require(server.listen(QHostAddress::LocalHost, 0), "owned proxy listen");
     connect(&server, &QTcpServer::newConnection, this, [this] {
       while (server.hasPendingConnections()) {
@@ -185,13 +190,21 @@ private:
     } else {
       if (data.size() < 9) return;
       const auto end = data.indexOf('\0', 8); if (end < 0) return;
-      if (octet(0) != 4 || octet(1) != 1 || !data.mid(8, end - 8).isEmpty()) { bad(channel, "invalid SOCKS4 CONNECT"); return; }
-      host = QHostAddress((static_cast<quint32>(octet(4)) << 24) | (static_cast<quint32>(octet(5)) << 16)
-          | (static_cast<quint32>(octet(6)) << 8) | octet(7)).toString().toLatin1();
+      if (octet(0) != 4 || octet(1) != 1 || data.mid(8, end - 8) != expectedSocks4User) { bad(channel, "invalid SOCKS4 CONNECT"); return; }
+      domain = data.mid(4, 4) == QByteArray::fromHex("00000001");
+      if (domain != remoteSocks4) { bad(channel, "unexpected SOCKS4 address mode"); return; }
       port = static_cast<quint16>((octet(2) << 8) | octet(3)); consumed = end + 1;
+      if (domain) {
+        const auto hostEnd = data.indexOf('\0', consumed); if (hostEnd < 0) return;
+        host = data.mid(consumed, hostEnd - consumed); consumed = hostEnd + 1;
+      } else {
+        host = QHostAddress((static_cast<quint32>(octet(4)) << 24) | (static_cast<quint32>(octet(5)) << 16)
+            | (static_cast<quint32>(octet(6)) << 8) | octet(7)).toString().toLatin1();
+      }
+      socks4Users.push_back(data.mid(8, end - 8));
     }
     const bool tracker = domain && host == "localhost" && port == trackerPort;
-    const bool peer = !domain && host == "127.0.0.2" && port == seedPort;
+    const bool peer = (!domain || (!v5 && remoteSocks4)) && host == "127.0.0.2" && port == seedPort;
     if (!tracker && !peer) { bad(channel, "unplanned proxy destination"); return; }
     data.remove(0, consumed); channel->phase = Phase::Opening;
     auto* upstream = new QTcpSocket(channel->client); channel->upstream = upstream;
@@ -366,6 +379,79 @@ private slots:
     const auto closed = exit.close();
     QVERIFY(closed.sessionJoined && closed.retirement.storageReleased); QVERIFY(fixture.accountingIntact());
   }
+#if defined(__linux__) && __has_include(<libtorrent/biglybtc_socks4a.hpp>)
+  void actualVerifiedSocks4IdentityAndRemoteNameRoutes_data() {
+    QTest::addColumn<bool>("remote");
+    QTest::newRow("qualified-numeric4-USERID") << false;
+    QTest::newRow("qualified4a-numeric-peer-name") << true;
+  }
+  void actualVerifiedSocks4IdentityAndRemoteNameRoutes() {
+    QFETCH(bool, remote);
+    // No skip or caller-trust substitute: this positive cohort requires the
+    // actual approved new SDK + complete mapped-image RuntimeGuard proof.
+    const auto capability = engine::verifiedSocks4Capability();
+    QVERIFY2(capability, "The actual loaded provider did not pass the exact source/image SOCKS4 capability proof");
+    test::OwnedEngineFixture fixture(false); lt::torrent_handle seedHandle; auto seed = seeder(fixture, seedHandle);
+    QTRY_VERIFY_WITH_TIMEOUT(seed->listen_port() != 0 && seedHandle.status().is_seeding, 30000);
+    Tracker tracker(seed->listen_port(), false);
+    Socks proxy(false, seed->listen_port(), tracker.server.serverPort(), "owned-user", remote);
+    trackerSource(fixture, tracker.server.serverPort(), false);
+    auto config = configuration(proxy.server.serverPort(), false, false);
+    QVERIFY(config.replaceValue("Proxy.Username", bytes("owned-user").toStdString()));
+    if (remote) { QVERIFY(config.replaceValue("Proxy.Data.SOCKS.version", bytes("V4a").toStdString())); }
+    const auto original = config.serialize();
+    QVERIFY(!engine::readNetworkPolicy(&config, {engine::NetworkMode::Normal}));
+    auto policy = engine::readNetworkPolicy(&config,
+        {.mode = engine::NetworkMode::Normal, .socks4Capability = capability});
+    QVERIFY(policy); QCOMPARE(policy->proxy.remoteDns, remote);
+    QCOMPARE(policy->proxy.kind, remote ? engine::NetworkProxyKind::Socks4a : engine::NetworkProxyKind::Socks4);
+    QCOMPARE(config.serialize(), original);
+    const auto settings = engine::makeNetworkSettings(*policy); QVERIFY(settings);
+    QCOMPARE(settings->get_int(lt::settings_pack::proxy_type), static_cast<int>(lt::settings_pack::socks4));
+    QCOMPARE(settings->get_str(lt::settings_pack::proxy_username), std::string("owned-user"));
+    QCOMPARE(settings->get_bool(lt::settings_pack::proxy_hostnames), remote);
+    auto invalid = *policy; invalid.socks4Capability.reset();
+    QVERIFY(!engine::makeNetworkSettings(invalid));
+    invalid = *policy; invalid.proxy.password = "not-a-SOCKS4-password";
+    QVERIFY(!engine::makeNetworkSettings(invalid));
+    invalid = *policy; invalid.outgoingUtp = true;
+    QVERIFY(!engine::makeNetworkSettings(invalid));
+    policy->listenPort = 0;
+    auto lease = storage::ProfileLease::acquire(fixture.native()); QVERIFY(lease);
+    auto owner = engine::PersistentSession::create({420, 421, static_cast<std::uint64_t>(remote ? 2 : 1)}); QVERIFY(owner);
+    OwnerExit exit{tracker, proxy, **owner};
+    QVERIFY((*owner)->configureNetwork(*policy)); QVERIFY((*owner)->startIdle(*lease));
+    QVERIFY((*owner)->startManaged(*lease, {*fixture.hash, 0, true, false}));
+    unsigned peerConnections = 0; bool direct = false;
+    std::optional<engine::AccountingError> pollFailure; SeedTrace trace;
+    const auto completed = [&] {
+      const auto polled = (*owner)->poll(); if (!polled) pollFailure = polled.error();
+      popSeed(*seed, peerConnections, direct, &trace);
+      const auto rows = (*owner)->managedDownloads(); return rows.size() == 1 && rows[0].complete && rows[0].received > 0;
+    };
+    QTRY_VERIFY2_WITH_TIMEOUT(completed(), qPrintable(facts(**owner, tracker, proxy, pollFailure) + QStringLiteral(" | ") + trace.facts(seedHandle, peerConnections, direct)), 30000);
+    QVERIFY2(proxy.failure.isEmpty(), proxy.failure.constData()); QVERIFY(tracker.requests > 0 && !tracker.wrongSource);
+    QVERIFY(peerConnections > 0 && !direct); QVERIFY(seedHandle.status().total_payload_upload > 0);
+    QVERIFY(!proxy.socks4Users.empty());
+    QVERIFY(std::ranges::all_of(proxy.socks4Users, [](const auto& user) { return user == "owned-user"; }));
+    QVERIFY(std::ranges::any_of(proxy.routes, [remote](const auto& route) {
+      return route.host == "127.0.0.2" && route.domain == remote && route.local == QHostAddress("127.0.0.3")
+          && route.queuedToSeed > 0 && route.queuedToClient > 0;
+    }));
+    const auto closed = exit.close();
+    QVERIFY(closed.sessionJoined && closed.retirement.storageReleased); QVERIFY(fixture.accountingIntact());
+  }
+#else
+  void oldSdkCannotMintSocks4IdentityOrRemoteNameAuthority() {
+    QVERIFY(!engine::verifiedSocks4Capability());
+    auto config = configuration(1080, false, false);
+    QVERIFY(config.replaceValue("Proxy.Username", bytes("owned-user").toStdString()));
+    QVERIFY(!engine::readNetworkPolicy(&config, {engine::NetworkMode::Normal}));
+    QVERIFY(config.replaceValue("Proxy.Username", bytes("").toStdString()));
+    QVERIFY(config.replaceValue("Proxy.Data.SOCKS.version", bytes("V4a").toStdString()));
+    QVERIFY(!engine::readNetworkPolicy(&config, {engine::NetworkMode::Normal}));
+  }
+#endif
   void actualAuthenticationFailureHasNoDirectTrackerOrPayloadFallback() {
     test::OwnedEngineFixture fixture(false); lt::torrent_handle seedHandle; auto seed = seeder(fixture, seedHandle);
     QTRY_VERIFY_WITH_TIMEOUT(seed->listen_port() != 0 && seedHandle.status().is_seeding, 30000);

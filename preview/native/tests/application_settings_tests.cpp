@@ -124,6 +124,20 @@ int main() {
       }
       CHECK(!storage::prepareApplicationSettings(snapshot,std::array{Change{Id::UploadLimit,std::int64_t{1}},Change{Id::UploadLimit,std::int64_t{2}}}));
     });
+    run("original V4a spelling is a sparse setting, not runtime authority",[]{
+      Area area;write(area.primary(),"d6:opaque3:raw"+b("Proxy.Data.SOCKS.version")+b("V4")+"e");
+      const auto before=area.snapshot();const auto bytes=read(area.primary());
+      const auto* version=core::applicationSetting(Id::PeerProxyVersion);CHECK(version);
+      CHECK(core::validApplicationSettingValue(*version,std::string("V4a")));
+      CHECK(!core::validApplicationSettingValue(*version,std::string("V4A")));
+      CHECK(!core::validApplicationSettingValue(*version,std::string("V4ax")));
+      const auto changed=prepare(before,{{Id::PeerProxyVersion,std::string("V4a")}});
+      const auto saved=take(storage::saveApplicationSettings(*area.lease,before,changed));
+      CHECK(field(saved,Id::PeerProxyVersion).state==State::Stored);
+      CHECK(std::get<std::string>(*field(saved,Id::PeerProxyVersion).value)=="V4a");
+      CHECK(raw(*saved.source,"opaque")=="3:raw");CHECK(read(area.root/"biglybt.config.bak")==bytes);
+      CHECK(!saved.source->find("Proxy.Data.Enable")&&!saved.source->find("Proxy.Username"));
+    });
     run("whole snapshot CAS checks unknown fields even on no-op",[]{
       Area area;write(area.primary(),"d6:opaquei1ee");const auto before=area.snapshot();const auto noop=prepare(before,{});
       const auto changed=prepare(before,{{Id::DownloadLimit,std::int64_t{4}}});write(area.primary(),"d6:opaquei2ee");

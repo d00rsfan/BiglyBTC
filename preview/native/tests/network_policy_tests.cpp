@@ -202,6 +202,26 @@ int main() {
       CHECK(document.replaceValue("Proxy.Data.SOCKS.version", bytes("V4a")));
       CHECK(!engine::readNetworkPolicy(&document, {engine::NetworkMode::Normal}));
     });
+    run("SOCKS4a and USERID require retained runtime proof, not enum or header", [] {
+      auto document = config({{"Proxy.Data.Enable", integer(1)}, {"Proxy.Data.SOCKS.version", bytes("V4a")},
+          {"Proxy.Host", bytes("127.0.0.1")}, {"Proxy.Port", bytes("1080")},
+          {"peercontrol.udp.public.enable", integer(0)}, {"Server Enable UDP", integer(0)},
+          {"Peer Source Selection Default.DHT", integer(0)}});
+      const auto original = document.originalBytes();
+      const auto parsed = engine::readNetworkPolicy(&document, {engine::NetworkMode::Normal});
+      CHECK(!parsed && parsed.error().code == Code::Unsupported && parsed.error().field == "SOCKS4a provider");
+      CHECK(document.serialize() == original);
+      CHECK(document.replaceValue("Proxy.Data.SOCKS.version", bytes("V4")));
+      auto numeric = engine::readNetworkPolicy(&document, {engine::NetworkMode::Normal}); CHECK(numeric);
+      numeric->proxy.kind = engine::NetworkProxyKind::Socks4a; numeric->proxy.remoteDns = true;
+      CHECK(!engine::validateNetworkPolicy(*numeric) && !engine::makeNetworkSettings(*numeric));
+      numeric->proxy.kind = engine::NetworkProxyKind::Socks4; numeric->proxy.remoteDns = false;
+      numeric->proxy.username = "owned-user";
+      CHECK(!engine::validateNetworkPolicy(*numeric) && !engine::makeNetworkSettings(*numeric));
+      numeric->proxy.username.clear(); CHECK(engine::validateNetworkPolicy(*numeric));
+      const auto plain = engine::makeNetworkSettings(*numeric);
+      CHECK(plain && plain->get_str(Settings::proxy_username).empty());
+    });
     run("tracker-only HTTP proxy retains explicitly direct peers", [] {
       auto document = config({{"Enable.Proxy", integer(1)}, {"Proxy.Host", bytes("127.0.0.1")},
           {"Proxy.Port", bytes("8080")}, {"Proxy.Username", bytes(" <NoNe> ")},

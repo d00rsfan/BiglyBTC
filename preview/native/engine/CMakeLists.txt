@@ -43,3 +43,6 @@ target_sources(biglybtc_local_engine PRIVATE original_disk_io.cpp original_contr
 target_sources(biglybtc_profile PRIVATE ../adapters/linear_to_compact.cpp)
 
 target_sources(biglybtc_local_engine PRIVATE network_binding.cpp)
+
+# Verified optional SOCKS4 capability, retained for the current owner.
+target_sources(biglybtc_local_engine PRIVATE network_proxy_capability.cpp)

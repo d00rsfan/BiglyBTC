@@ -95,7 +95,7 @@ inline constexpr std::array Catalog{
   string(ProxyPassword,Proxy,"Proxy.Password","Proxy password",std::string_view{},1024,A::Restart,SettingStringRule::Text,true),
   boolean(PeerProxyEnabled,Proxy,"Proxy.Data.Enable","Proxy peer connections",false,A::Restart),
   boolean(PeerProxySame,Proxy,"Proxy.Data.Same","Use tracker proxy for peers",true,A::Restart),
-  string(PeerProxyVersion,Proxy,"Proxy.Data.SOCKS.version","Peer SOCKS version",std::string_view{"V4"},2,A::Restart,SettingStringRule::ProxyVersion),
+  string(PeerProxyVersion,Proxy,"Proxy.Data.SOCKS.version","Peer SOCKS version",std::string_view{"V4"},3,A::Restart,SettingStringRule::ProxyVersion),
   string(PeerProxyHost,Proxy,"Proxy.Data.Host","Peer proxy host",std::string_view{},253,A::Restart),
   string(PeerProxyPort,Proxy,"Proxy.Data.Port","Peer proxy port",std::string_view{},5,A::Restart,SettingStringRule::Port),
   string(PeerProxyUsername,Proxy,"Proxy.Data.Username","Peer proxy username",std::string_view{"<none>"},1024,A::Restart),
@@ -198,7 +198,7 @@ inline bool validApplicationSettingValue(const SettingField& field, const Settin
       const auto parsed = std::from_chars(string->data(), string->data()+string->size(),port);
       return parsed.ec == std::errc{} && parsed.ptr == string->data()+string->size() && port >= 1 && port <= 65535;
     }
-    case SettingStringRule::ProxyVersion: return *string == "V4" || *string == "V5";
+    case SettingStringRule::ProxyVersion: return *string == "V4" || *string == "V4a" || *string == "V5";
     case SettingStringRule::AbsolutePath: {
       if (string->empty() || string->front() != '/' || string->back() == '/') { return *string == "/"; }
       std::size_t begin = 1;
