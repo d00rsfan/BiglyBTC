@@ -1,0 +1,168 @@
+{
+  "status": "PASS",
+  "runtime_manifest_sha256": "e74def09b2257a266786b8ddb116382d300716687bf26bbe57072f5ff90e8737",
+  "artifact_sha256": "d367afd6499859c5a57d66bddd352a977ff76c7fb76b5925302c2c9008c7ddbd",
+  "approver_sha256": "36146305c9df31bba21a8daff00151a0bd1570d48e366af080b06c61ab55b50c",
+  "approver_module_sha256": "fc9ae8203bb6f32f94d57a05c5ea174944bdf1dbbe41ae51d9caf987ac01d89a",
+  "driver_sha256": "476583703b9d8124dd9b8116b9595e5ec7eba55f86f684c6b36026130ff8048d",
+  "encoder_sha256": "dcaaf1690748f9d0e1fb8fc7ec110e502cbb4ce6e626fb3e5b51e595d562d222",
+  "capsule_sha256": "888fdd76a4fd585cfbacce50d5236318580e0e46983148249fd09e8807891856",
+  "actual_modes": [
+    {
+      "mode": "Both",
+      "selected_hashes": [
+        "b76e942dc79856b7d6c3fb4891aacaea91da482d",
+        "c42de61a3541c07352cc7a94c48f0bd31c9db560"
+      ],
+      "dht_get_peers": [
+        "b76e942dc79856b7d6c3fb4891aacaea91da482d",
+        "c42de61a3541c07352cc7a94c48f0bd31c9db560",
+        "cd4350db5a5c1a6c60f273698d530d8f8f919554"
+      ],
+      "dht_announces": [
+        "b76e942dc79856b7d6c3fb4891aacaea91da482d",
+        "c42de61a3541c07352cc7a94c48f0bd31c9db560"
+      ],
+      "actual_selected_dht_handshakes": 2,
+      "injected_wrong_source_replies": 4,
+      "actual_unknown_transaction_log_count": 2,
+      "foreign_candidate_handshakes": 0,
+      "actual_wrong_swarm_handshake_rejected": true,
+      "lsd_announcements": [
+        "b76e942dc79856b7d6c3fb4891aacaea91da482d",
+        "c42de61a3541c07352cc7a94c48f0bd31c9db560"
+      ],
+      "rejected_lsd_hash": "a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5",
+      "rejected_lsd_handshakes": 0,
+      "maintenance_get_peers_hashes": [
+        "cd4350db5a5c1a6c60f273698d530d8f8f919554"
+      ]
+    },
+    {
+      "mode": "V1Only",
+      "selected_hashes": [
+        "b76e942dc79856b7d6c3fb4891aacaea91da482d"
+      ],
+      "dht_get_peers": [
+        "b76e942dc79856b7d6c3fb4891aacaea91da482d",
+        "b9ab1332d59b2302e5e4f6cc35b01208bbf9038a"
+      ],
+      "dht_announces": [
+        "b76e942dc79856b7d6c3fb4891aacaea91da482d"
+      ],
+      "actual_selected_dht_handshakes": 1,
+      "injected_wrong_source_replies": 2,
+      "actual_unknown_transaction_log_count": 1,
+      "foreign_candidate_handshakes": 0,
+      "actual_wrong_swarm_handshake_rejected": true,
+      "lsd_announcements": [
+        "b76e942dc79856b7d6c3fb4891aacaea91da482d"
+      ],
+      "rejected_lsd_hash": "c42de61a3541c07352cc7a94c48f0bd31c9db560",
+      "rejected_lsd_handshakes": 0,
+      "maintenance_get_peers_hashes": [
+        "b9ab1332d59b2302e5e4f6cc35b01208bbf9038a"
+      ]
+    },
+    {
+      "mode": "V2Only",
+      "selected_hashes": [
+        "c42de61a3541c07352cc7a94c48f0bd31c9db560"
+      ],
+      "dht_get_peers": [
+        "8179813a71c23432fc41219e3d4c9e62ebecfc2b",
+        "c42de61a3541c07352cc7a94c48f0bd31c9db560"
+      ],
+      "dht_announces": [
+        "c42de61a3541c07352cc7a94c48f0bd31c9db560"
+      ],
+      "actual_selected_dht_handshakes": 1,
+      "injected_wrong_source_replies": 2,
+      "actual_unknown_transaction_log_count": 1,
+      "foreign_candidate_handshakes": 0,
+      "actual_wrong_swarm_handshake_rejected": true,
+      "lsd_announcements": [
+        "c42de61a3541c07352cc7a94c48f0bd31c9db560"
+      ],
+      "rejected_lsd_hash": "b76e942dc79856b7d6c3fb4891aacaea91da482d",
+      "rejected_lsd_handshakes": 0,
+      "maintenance_get_peers_hashes": [
+        "8179813a71c23432fc41219e3d4c9e62ebecfc2b"
+      ]
+    }
+  ],
+  "shared_host_multicast_fallback": false,
+  "public_network": false,
+  "files_sha256": {
+    "Both/dht-router.jsonl": "7b977c8823fef815fd04acfc269171d281f80ac343ae40ec6cde37ebfa04c265",
+    "Both/driver-command.json": "1da2669aa841d748b34082109858a4f817d5f360b35e2fa02bf2ba7157c524f4",
+    "Both/driver.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "Both/driver.stdout": "057fdf7ac75e6faeed48e92255ea49b43fe7293dab45001d3f768b716231b64a",
+    "Both/lsd.jsonl": "ef94fdef4df37770f4b0cbc221bf0d5c429b78261c724b1804890a28b88018f2",
+    "Both/owner/alerts.tsv": "5e8cf4a5ed011ec132f2c055ad850e97e1acd9eea0ab673369e1ed95f3618893",
+    "Both/owner/dht-packets.tsv": "d0e9e7061b77076748b6a98971f8e8af19219e11af6089d2529fc1c45fcbd07a",
+    "Both/owner/loaded-maps.txt": "31beb279ed45c40e18e247e2a93492058cbd29598f26aacaab6f7290bf6642c2",
+    "Both/owner/owned.bin": "9b8d82e220f2c07fbe1815cb441793f788e6bc4a37b6a76cbf24d30592a4e402",
+    "Both/peer-127.0.0.10-54597.jsonl": "d50cdeb788ecc6d5374be15d3a53af69f3ee94f53e256f17e60595ffb503731a",
+    "Both/peer-127.0.0.11-37867.jsonl": "8b027ac8e51683cecbc6ef8bd93c6b70a49671304c07946c2ca7595f08a43e7a",
+    "Both/peer-127.0.0.30-54829.jsonl": "9b0d97f6d8a484813030d2a214ac01320da3b74aae055e402a2e32d49e0ce6e8",
+    "Both/peer-127.0.0.40-39675.jsonl": "e615871469086174b8e1f8022c58f867ca148cd432d382112f7bf0d42fbe2ecc",
+    "Both/peer-127.0.0.41-60529.jsonl": "803391d378adcb825679de5d149d7642e6ac2f35a3aa2637305160351c6464bb",
+    "Both/result.json": "5117c1c4642fe684b4c9ba3d85dec28bd037160c06983688e7fe6456e0e8a12a",
+    "V1Only/dht-router.jsonl": "2b31da1106b09b71f95f02fdd662ecba598a83e991fe9e85a9e6f059244d56d3",
+    "V1Only/driver-command.json": "cd6db8df84799336ee15faedfb57c5d6088a433327cf1093eb579fba4e5cefb7",
+    "V1Only/driver.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "V1Only/driver.stdout": "24701e01c55d465fee9acecc2748404a9d192809530be2ce32b159d379db47ad",
+    "V1Only/lsd.jsonl": "13035533ad6a1ac2dad2f7bbc19dd8b57e7a0ecbc92f13077d1a1692ca9e45f2",
+    "V1Only/owner/alerts.tsv": "7c1e5b37f754e15e7873a395db3ee1a5876113e57b68cff07c8c1e1d60a1920f",
+    "V1Only/owner/dht-packets.tsv": "1158a788db385f4c64684ac84e229e4be05dc2c99c5dcb08f1ccaa0ae15b8462",
+    "V1Only/owner/loaded-maps.txt": "cfccfd606924618e8b76dedf255491311eb2fe8232a4dde06fc9dfb34f3cea08",
+    "V1Only/owner/owned.bin": "9b8d82e220f2c07fbe1815cb441793f788e6bc4a37b6a76cbf24d30592a4e402",
+    "V1Only/peer-127.0.0.10-55027.jsonl": "0a6e039788d02a7ce0faa2328ea160fb91903fcfffdf848a343e28057d59622b",
+    "V1Only/peer-127.0.0.30-48351.jsonl": "8f360b0420c180cdf65bec5abe99576a0ebbeb1db2617225652eae7eb7432c17",
+    "V1Only/peer-127.0.0.40-58965.jsonl": "e704af52aaef38c3d02f6f52ba8ae829eb307aac8c3a48f68b1a210fb0b27ef8",
+    "V1Only/result.json": "9a03f00bfae55ca7478b56ce072549efaf2d489f5b7bea3a427c838d17e787fb",
+    "V2Only/dht-router.jsonl": "22abb4bcb171eb5b81c031950539649bdf2d7f436d5f110c2097ed0397225025",
+    "V2Only/driver-command.json": "9522434e7df19ca3b0750a806a0ffc4335734dc2354ba84b97326bf841006889",
+    "V2Only/driver.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "V2Only/driver.stdout": "658a756543a328862314284052c59c7c1d0b8f14952a407b6ffa79027972b4e0",
+    "V2Only/lsd.jsonl": "4ba335c032083ee73e11108a42f20bcf191761fa168ca05e1586029c25523ab6",
+    "V2Only/owner/alerts.tsv": "825ed41a8ee7ca713d66ab24d6f1c11440c69199aed6c4b4354881bb594726aa",
+    "V2Only/owner/dht-packets.tsv": "24fe8bab1514e8607cc2cad8f7465379e2119cce20de5475d7e4e22b3a848873",
+    "V2Only/owner/loaded-maps.txt": "828eb07dcc578f4a3c4c60a07eb2d0129c2ef3a5960fa96532ad4dce29e02e89",
+    "V2Only/owner/owned.bin": "9b8d82e220f2c07fbe1815cb441793f788e6bc4a37b6a76cbf24d30592a4e402",
+    "V2Only/peer-127.0.0.10-44285.jsonl": "359368b61d8385bcf88171d6ec6b208b440e9ed27bee29873bd52ee73c2e8beb",
+    "V2Only/peer-127.0.0.30-54157.jsonl": "40e738b287539cc21c0d6e7c68fa1045c80bad92ca4d8a239d23261e68965016",
+    "V2Only/peer-127.0.0.40-34689.jsonl": "f6b8c6e6268a3edc841889fdabaa94372744b8443d7bc4ec0847ba22c56459f3",
+    "V2Only/result.json": "ae2e0756e2fb07def40b1ff25f65b4e8e4f6ebb95ab16b2517c69fd6623ac511",
+    "approval.json": "a20bb9d621a9958c6659b810e4b9d566026f415d85eb0c90886cadbadddc473f",
+    "approver.command.json": "cabf3e38e6c2c390ba9d6c7148c6765c71397bd121e376498f15b999861d9292",
+    "approver.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "approver.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "bound.hpp": "b90b3f6d416bc7f55dc34cf53afccab22b506d763724d3174df5521161e5b96c",
+    "encoder-output/0.bencode": "c1e92934c39f74f3d645ac1fdfc9030211e46f457478a26219c44e1dce7d78b0",
+    "encoder-output/1.bencode": "4131b038aa6e5ba32b09b1804f2ea5765e99d2dc88702d2c3d83b46b6cd305a1",
+    "encoder-output/2.bencode": "91c3d425891671fff39debc47d4f60fe80e49aaaaba2a4593c25cd448c805ad1",
+    "encoder-output/3.bencode": "e278443ee1587de52c0858230c3b56ade5e7cc71698c49cdab40d4b59218b82c",
+    "encoder-output/4.bencode": "c1e92934c39f74f3d645ac1fdfc9030211e46f457478a26219c44e1dce7d78b0",
+    "encoder-output/5.bencode": "4131b038aa6e5ba32b09b1804f2ea5765e99d2dc88702d2c3d83b46b6cd305a1",
+    "encoder-output/6.bencode": "91c3d425891671fff39debc47d4f60fe80e49aaaaba2a4593c25cd448c805ad1",
+    "encoder-output/7.bencode": "e278443ee1587de52c0858230c3b56ade5e7cc71698c49cdab40d4b59218b82c",
+    "encoder-output/loaded-maps.txt": "14cfb7959f8965ef18be93b0e2dec09c56cb2fc84cd5521910e03197094c3a5d",
+    "encoder.command.json": "4c72729bc16e50f4e6b4fe28abde2150d15a11ffde07f3878609b6480f065361",
+    "encoder.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "encoder.stdout": "e4116a68111366a750860a60420699b0e24c3bbf8b00e0f5a4ea48665799984e",
+    "isolated-runtime.command.json": "8c5f8245fec280ed8fd0ccf273b356ffd0ada332fa0071dbf0d62d651773293e",
+    "isolated-runtime.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "isolated-runtime.stdout": "855c694242a9c8c9ee924a695150b00d984c8a673ca5188b8fab74f7de8bfaae",
+    "namespace-identity.json": "9b745332e089db49aa5aa204fe6f21c9d441ae427f48d098ccbb4cccb4387ddf",
+    "namespace-outer-identities.json": "3c0806e88a55feae84057504ac6fa40675c14d8615312674b631589575987d10",
+    "namespace-setup-0.command.json": "32bee0a1b571a8d17747aec54ba43d88237fb69c2b07c254e00d14cdcd24e245",
+    "namespace-setup-0.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "namespace-setup-0.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "namespace-setup-1.command.json": "fbacd1aa64e9b9896d4f45a1dd1b27e6443bc3619157011c212f98b05997fc5d",
+    "namespace-setup-1.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "namespace-setup-1.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "runtime-results.json": "d8f0b6d6eac80ebc146526b92e5bccf1fedfa99dbe30e3d5c59b8cb47d09a4e5"
+  }
+}

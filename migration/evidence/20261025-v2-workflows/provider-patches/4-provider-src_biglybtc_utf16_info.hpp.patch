@@ -1,0 +1,86 @@
+--- /dev/null
++++ b/src/biglybtc_utf16_info.hpp
+@@ -0,0 +1,83 @@
++// Private compatibility exception for the pinned original BEncoder file tree.
++// No exported ABI; included only by torrent_info.cpp. No raw bytes are edited.
++#pragma once
++#include "libtorrent/bdecode.hpp"
++#include <algorithm>
++#include <cstdint>
++#include <string>
++#include <utility>
++
++namespace libtorrent { namespace aux { namespace biglybtc_info_detail {
++inline bool utf16Key(string_view bytes, std::u16string& out) {
++  out.clear();
++  for (std::size_t at=0;at<bytes.size();) {
++    const auto first=static_cast<unsigned char>(bytes[at++]);
++    std::uint32_t scalar=0, minimum=0; unsigned continuation=0;
++    if (first<0x80) { scalar=first; }
++    else if ((first&0xe0)==0xc0) { scalar=first&0x1f; continuation=1; minimum=0x80; }
++    else if ((first&0xf0)==0xe0) { scalar=first&0x0f; continuation=2; minimum=0x800; }
++    else if ((first&0xf8)==0xf0) { scalar=first&0x07; continuation=3; minimum=0x10000; }
++    else { return false; }
++    if (continuation>bytes.size()-at) { return false; }
++    for (unsigned i=0;i<continuation;++i) {
++      const auto next=static_cast<unsigned char>(bytes[at++]);
++      if ((next&0xc0)!=0x80) { return false; }
++      scalar=(scalar<<6)|(next&0x3f);
++    }
++    if (scalar<minimum||scalar>0x10ffff||(scalar>=0xd800&&scalar<=0xdfff)) { return false; }
++    if (scalar<0x10000) { out.push_back(static_cast<char16_t>(scalar)); }
++    else { scalar-=0x10000; out.push_back(static_cast<char16_t>(0xd800+(scalar>>10))); out.push_back(static_cast<char16_t>(0xdc00+(scalar&0x3ff))); }
++  }
++  return true;
++}
++inline bool byteLess(string_view a,string_view b) {
++  return std::lexicographical_compare(a.begin(),a.end(),b.begin(),b.end(),
++      [](char x,char y){return static_cast<unsigned char>(x)<static_cast<unsigned char>(y);});
++}
++inline bool canonicalScalar(bdecode_node const& node) {
++  auto const raw=node.data_section();
++  if (node.type()==bdecode_node::string_t) {
++    return raw.size()>=2&&(raw[0]!='0'||raw[1]==':');
++  }
++  if (node.type()==bdecode_node::int_t) {
++    if (raw.size()<3||raw[0]!='i'||raw[raw.size()-1]!='e') return false;
++    std::ptrdiff_t const start=raw[1]=='-'?2:1;
++    if (start>=raw.size()-1||raw[start]<'0'||raw[start]>'9') return false;
++    if (raw[start]=='0'&&(start==2||raw.size()!=3)) return false;
++    for (std::ptrdiff_t i=start;i<raw.size()-1;++i) if (raw[i]<'0'||raw[i]>'9') return false;
++  }
++  return true;
++}
++struct State { int tokens=0; bool changedOrder=false; };
++inline bool canonicalNode(bdecode_node const& node,std::ptrdiff_t treeOffset,bool inTree,int depth,State& state) {
++  if (depth>100||++state.tokens>2000000||!canonicalScalar(node)) return false;
++  if (node.type()==bdecode_node::dict_t) {
++    string_view previous; std::u16string priorUnits;
++    for (int i=0;i<node.dict_size();++i) {
++      auto const entry=node.dict_at_node(i);
++      if (++state.tokens>2000000||entry.first.type()!=bdecode_node::string_t||!canonicalScalar(entry.first)) return false;
++      auto const key=entry.first.string_value();
++      if (inTree) {
++        std::u16string units;
++        if (!utf16Key(key,units)||(i>0&&!(priorUnits<units))) return false;
++        if (i>0&&!byteLess(previous,key)) state.changedOrder=true;
++        priorUnits=std::move(units);
++      } else if (i>0&&!byteLess(previous,key)) return false;
++      previous=key;
++      if (!canonicalNode(entry.second,treeOffset,inTree||entry.second.data_offset()==treeOffset,depth+1,state)) return false;
++    }
++  } else if (node.type()==bdecode_node::list_t) {
++    for (int i=0;i<node.list_size();++i) if (!canonicalNode(node.list_at(i),treeOffset,inTree,depth+1,state)) return false;
++  } else if (node.type()!=bdecode_node::string_t&&node.type()!=bdecode_node::int_t) return false;
++  return true;
++}
++} // biglybtc_info_detail
++inline bool biglybtcOriginalUtf16Info(bdecode_node const& info) {
++  if (info.type()!=bdecode_node::dict_t||info.data_section().size()>32*1024*1024
++      ||info.dict_find_int_value("meta version",-1)!=2) return false;
++  auto const tree=info.dict_find_dict("file tree");
++  if (!tree) return false;
++  biglybtc_info_detail::State state;
++  return biglybtc_info_detail::canonicalNode(info,tree.data_offset(),false,0,state)&&state.changedOrder;
++}
++} } // libtorrent::aux

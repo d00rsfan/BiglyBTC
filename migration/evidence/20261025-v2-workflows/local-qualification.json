@@ -1,0 +1,418 @@
+{
+  "status": "BOUNDED_CORE_SOURCE_BATCH_QUALIFIED_DISCOVERY_NAMESPACE_PROOF_PENDING",
+  "source_plan_sha256": "eab27a49172a9747423270e08bd1a494a8b984727e4fe4a43583797f0d6b3e4a",
+  "compiler_lanes": {
+    "gcc": {
+      "suites": 31,
+      "latest_actual_results": {
+        "network-policy": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "managed-download": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "managed-storage": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "torrent-intake": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "file-priority-ui": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "file-policy-commands": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "metadata-disk-router": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "managed-library-command-routing": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "application-settings": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "queue-policy": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "managed-queue": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "scheduler-host-engine": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "torrent-creator": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "file-operations": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "torrent-creation-dialog": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "file-operations-host": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "original-physical-file-io": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "original-disk-io": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "original-linear-to-compact": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "file-compaction-ui": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "file-compaction-worker": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "original-torrent-identity": {
+          "passed": true,
+          "evidence": "next-gcc-identity-r4.xml"
+        },
+        "queue-slots": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "original-identity-callers": {
+          "passed": true,
+          "evidence": "identity-caller-qualification/tests.xml"
+        },
+        "network-binding": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "torrent-intake-file-options": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "torrent-intake-file-options-ui": {
+          "passed": true,
+          "evidence": "next-gcc-corrected-r2.xml"
+        },
+        "network-binding-owner": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "torrent-intake-file-options-worker": {
+          "passed": true,
+          "evidence": "next-gcc-corrected-r2.xml"
+        },
+        "provider-payload-counter": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        },
+        "selected-swarm-admission": {
+          "passed": true,
+          "evidence": "next-gcc-check-r1.xml"
+        }
+      },
+      "inputs_sha256": {
+        "next-gcc-check-r1.xml": "1833b6fb5259d545554e1242c185aba8364905c8b86af5cef10ff171b15f4538",
+        "next-gcc-corrected-r2.xml": "e157959eeb5acac7ce9ce15cea39ef03f7d185e81ae49f2d53aea473e7f2d883",
+        "next-gcc-identity-r4.xml": "5efe30c804d26bcb2c91b900557feb52f91ce757b8a484f455ca15c49dcfc287",
+        "identity-caller-qualification/tests.xml": "35d9460e8280a2d996c1f5fae8480e84a16385d51999413757f8a1d95d3c0978"
+      }
+    },
+    "clang": {
+      "suites": 31,
+      "latest_actual_results": {
+        "network-policy": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "managed-download": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "managed-storage": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "torrent-intake": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "file-priority-ui": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "file-policy-commands": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "metadata-disk-router": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "managed-library-command-routing": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "application-settings": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "queue-policy": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "managed-queue": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "scheduler-host-engine": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "torrent-creator": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "file-operations": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "torrent-creation-dialog": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "file-operations-host": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "original-physical-file-io": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "original-disk-io": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "original-linear-to-compact": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "file-compaction-ui": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "file-compaction-worker": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "original-torrent-identity": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "queue-slots": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "original-identity-callers": {
+          "passed": true,
+          "evidence": "next-clang-caller-final.xml"
+        },
+        "network-binding": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "torrent-intake-file-options": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "torrent-intake-file-options-ui": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "network-binding-owner": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "torrent-intake-file-options-worker": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "provider-payload-counter": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        },
+        "selected-swarm-admission": {
+          "passed": true,
+          "evidence": "next-clang-check-r1.xml"
+        }
+      },
+      "inputs_sha256": {
+        "next-clang-check-r1.xml": "a3609b772f0fc57899024a983e59425a6012b4d6cdafd6e25e8007fc38fe093e",
+        "next-clang-caller-final.xml": "110e3335cc38d4446b9ca20c7a085c903ec5e885418c5a98617837880c820692"
+      }
+    },
+    "sanitizers": {
+      "suites": 31,
+      "latest_actual_results": {
+        "network-policy": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "managed-download": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "managed-storage": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "torrent-intake": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "file-priority-ui": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "file-policy-commands": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "metadata-disk-router": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "managed-library-command-routing": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "application-settings": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "queue-policy": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "managed-queue": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "scheduler-host-engine": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "torrent-creator": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "file-operations": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "torrent-creation-dialog": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "file-operations-host": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "original-physical-file-io": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "original-disk-io": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "original-linear-to-compact": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "file-compaction-ui": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "file-compaction-worker": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "original-torrent-identity": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "queue-slots": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "original-identity-callers": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "network-binding": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "torrent-intake-file-options": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "torrent-intake-file-options-ui": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "network-binding-owner": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "torrent-intake-file-options-worker": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "provider-payload-counter": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        },
+        "selected-swarm-admission": {
+          "passed": true,
+          "evidence": "next-san-check-r1.xml"
+        }
+      },
+      "inputs_sha256": {
+        "next-san-check-r1.xml": "dcd65898f142e5aba52dc371920338e2f4e4aeb279b1aaa770a8862861ede8e1"
+      }
+    }
+  },
+  "runtime_suites": 9,
+  "runtime_xml_sha256": "4ff87204c6665920c505884d0c5f4de6fbbd4e2a6ddaf74037217e0d128b4c91",
+  "actual_oracles": {
+    "wire_cases": 6,
+    "handshake_observations": 96,
+    "creator_cases": 6,
+    "selected_hybrid_profiles": 2,
+    "v2_hybrid_profiles": 7
+  },
+  "remaining_gate": "Hosted discovery needs inherited PID1 namespace FDs opened outside the private user namespace. All checks remain; no host-network fallback.",
+  "dist_promoted": false,
+  "clang_final_caller_build_log_note": "The subsequent same-case check overwrote its small build log. Actual successful tool return was11.7s; final source/binary, Ninja state and corrected execution are retained. Full Clang batch log remains."
+}

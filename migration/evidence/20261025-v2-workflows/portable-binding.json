@@ -1,0 +1,16 @@
+{
+  "status": "STATIC_RECEIPT_AND_ARTIFACT_BINDING_PASS",
+  "source": "4f948e042df9467310a5752d4343b07915673f84",
+  "result_sha256": "4d8358c4f6089b950e550494636ddd49b3b59a001964e88f7d38c37fe041b01e",
+  "candidate_manifest_sha256": "deefcbe40681c1cd2d7352869be399d4e75d5d935a691bdc921fba11db71b221",
+  "command_records_verified": 19,
+  "captures_verified": 28,
+  "frozen_inputs_verified": true,
+  "copied_relocation_receipt_verified": true,
+  "candidate_all118files_verified": true,
+  "published_dist_was_unchanged_at_qualification_finish": true,
+  "dist_now_matches_candidate_after_root_promotion": true,
+  "root_promotion_separate_from_this_qualification": true,
+  "socks_capsule_manifest_sha256": "6a61e5644b78dbe57d80a26ee679a6b4bab3e6ca8e58976bb6c53f656b4c4414",
+  "no_additional_build_or_test_execution": true
+}

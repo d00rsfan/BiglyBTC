@@ -1,0 +1,12 @@
+--- a/provider/staging/test/test_biglybtc_utf16_info.cpp
++++ b/provider/staging/test/test_biglybtc_utf16_info.cpp
+@@ -21,7 +21,8 @@
+ }
+ std::string tree(bool javaOrder) {
+  auto const a=b(astral)+leaf('a'),z=b(bmp)+leaf('z');
+- return "d"+(javaOrder?a+z:z+a)+b(empty)+"d0:d6:lengthi0eeee";
++ const auto e=b(empty)+"d0:d6:lengthi0eee";
++ return "d"+(javaOrder?a+z+e:z+e+a)+"e";
+ }
+ std::string replaceOne(std::string value,std::string const& from,std::string const& to) {
+  auto const at=value.find(from);TEST_CHECK(at!=std::string::npos);

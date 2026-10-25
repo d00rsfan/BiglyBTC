@@ -1,0 +1,103 @@
+--- /dev/null
++++ b/include/libtorrent/biglybtc_payload_counters.hpp
+@@ -0,0 +1,38 @@
++// Supported only by the reviewed BiglyBTC LT2.0.12 provider.
++// This is a source/artifact-bound C++-handle ABI, not an upstream portable API.
++#ifndef TORRENT_BIGLYBTC_PAYLOAD_COUNTERS_HPP
++#define TORRENT_BIGLYBTC_PAYLOAD_COUNTERS_HPP
++
++#include "libtorrent/config.hpp"
++#include "libtorrent/fwd.hpp"
++#include <cstdint>
++#include <type_traits>
++
++namespace libtorrent {
++// Raw m_stat values copied in the provider, before the caller's existing
++// on_resume callback returns to LT's normal clear/reset path. No epoch, total,
++// reset, ownership/finality claim or private-class pointer crosses this ABI.
++struct BiglybtcPayloadCountersV1 {
++    std::int64_t received;
++    std::int64_t sent;
++    std::uint32_t files_checked;
++    std::uint32_t reserved;
++};
++static_assert(sizeof(BiglybtcPayloadCountersV1) == 24, "Counter ABI size");
++static_assert(std::is_standard_layout<BiglybtcPayloadCountersV1>::value
++    && std::is_trivially_copyable<BiglybtcPayloadCountersV1>::value, "Counter ABI layout");
++
++enum class BiglybtcPayloadCounterStatusV1 : std::uint32_t {
++    Accepted = 0, InvalidArgument = 1, InvalidHandle = 2,
++    WrongThread = 3, InvalidCounters = 4, Failed = 5
++};
++
++extern "C" TORRENT_EXPORT unsigned biglybtc_payload_counter_abi_v1() noexcept;
++// Only call from a callback on this handle's real io_context executor thread.
++// Unlike status(), this never dispatches or waits. Failure leaves *output
++// unchanged. A temporary weak-lock is released before the function returns.
++extern "C" TORRENT_EXPORT std::uint32_t biglybtc_read_payload_counters_v1(
++    torrent_handle const* handle, BiglybtcPayloadCountersV1* output,
++    std::uint32_t output_bytes) noexcept;
++}
++#endif
+--- a/include/libtorrent/torrent_handle.hpp
++++ b/include/libtorrent/torrent_handle.hpp
+@@ -43,6 +43,7 @@
+ #define TORRENT_TORRENT_HANDLE_HPP_INCLUDED
+ 
+ #include "libtorrent/config.hpp"
++#include "libtorrent/biglybtc_payload_counters.hpp"
+ 
+ #include <vector>
+ #include <set>
+@@ -242,6 +243,8 @@
+ 		friend struct aux::session_impl;
+ 		friend struct session_handle;
+ 		friend struct torrent;
++		friend std::uint32_t biglybtc_read_payload_counters_v1(torrent_handle const*,
++			BiglybtcPayloadCountersV1*, std::uint32_t) noexcept;
+ 		TORRENT_EXPORT friend std::size_t hash_value(torrent_handle const& th);
+ 
+ 		// constructs a torrent handle that does not refer to a torrent.
+--- a/src/torrent_handle.cpp
++++ b/src/torrent_handle.cpp
+@@ -953,6 +953,40 @@
+ #endif
+ 	}
+ 
++	extern "C" unsigned biglybtc_payload_counter_abi_v1() noexcept
++	{
++		return 1;
++	}
++
++	extern "C" std::uint32_t biglybtc_read_payload_counters_v1(
++		torrent_handle const* handle, BiglybtcPayloadCountersV1* output,
++		std::uint32_t const output_bytes) noexcept
++	{
++		using result = BiglybtcPayloadCounterStatusV1;
++		if (handle == nullptr || output == nullptr
++			|| output_bytes != sizeof(BiglybtcPayloadCountersV1))
++			return static_cast<std::uint32_t>(result::InvalidArgument);
++		try
++		{
++			// The layout and inline stat read stay inside their defining DSO.
++			// Never dispatch: a delayed read would miss the pre-clear boundary.
++			auto const t = handle->m_torrent.lock();
++			if (!t) return static_cast<std::uint32_t>(result::InvalidHandle);
++			if (!t->session().get_context().get_executor().running_in_this_thread())
++				return static_cast<std::uint32_t>(result::WrongThread);
++			auto const raw = t->statistics();
++			auto const received = raw.total_payload_download();
++			auto const sent = raw.total_payload_upload();
++			if (received < 0 || sent < 0)
++				return static_cast<std::uint32_t>(result::InvalidCounters);
++			BiglybtcPayloadCountersV1 const value{received, sent,
++				t->are_files_checked() ? 1u : 0u, 0u};
++			*output = value;
++			return static_cast<std::uint32_t>(result::Accepted);
++		}
++		catch (...) { return static_cast<std::uint32_t>(result::Failed); }
++	}
++
+ 	std::shared_ptr<torrent> torrent_handle::native_handle() const
+ 	{
+ 		return m_torrent.lock();

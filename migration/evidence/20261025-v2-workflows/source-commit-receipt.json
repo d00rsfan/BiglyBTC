@@ -1,0 +1,9 @@
+{
+  "source": "4f948e042df9467310a5752d4343b07915673f84",
+  "parent": "2790352f1ff7b2d4ff7fb2d5d3b6fc93faa86979",
+  "branch": "main",
+  "paths": 78,
+  "plan_sha256": "eab27a49172a9747423270e08bd1a494a8b984727e4fe4a43583797f0d6b3e4a",
+  "qualification_sha256": "a708c054e3a4e5589a10dfefd4765cf2e45939e22eb3c53d0ec8e8f71901c53f",
+  "dist_promoted": false
+}

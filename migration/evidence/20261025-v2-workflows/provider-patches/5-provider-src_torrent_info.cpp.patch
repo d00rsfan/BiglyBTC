@@ -1,0 +1,20 @@
+--- a/src/torrent_info.cpp
++++ b/src/torrent_info.cpp
+@@ -35,6 +35,7 @@
+ */
+ 
+ #include "libtorrent/config.hpp"
++#include "biglybtc_utf16_info.hpp"
+ #include "libtorrent/torrent_info.hpp"
+ #include "libtorrent/string_util.hpp" // is_space, is_i2p_url
+ #include "libtorrent/bencode.hpp"
+@@ -1166,7 +1167,8 @@
+ 		if (version > 0)
+ 		{
+ 			char error_string[200];
+-			if (info.has_soft_error(error_string))
++			if (info.has_soft_error(error_string)
++				&& !aux::biglybtcOriginalUtf16Info(info))
+ 			{
+ 				ec = errors::invalid_bencoding;
+ 				return false;

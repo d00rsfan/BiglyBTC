@@ -1223,18 +1223,25 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "a98c94e0cee216049ac31b46ebaf91fc118e5081",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
         "migration/updates/library.file_policy/20261017-initial-bounded.md",
-        "migration/updates/engine.everyday-workflows/20261024.md"
+        "migration/updates/engine.everyday-workflows/20261024.md",
+        "migration/updates/torrent.compatibility/20261025.md"
       ],
       "evidence": [
         "migration/evidence/P03-03/java-multifile-policy-prepared.json",
         "migration/evidence/P03-03/gcc-build-capsule.json",
         "migration/evidence/P03-03/gcc-full-37-last-test.txt",
         "migration/evidence/P01-02/final-gcc16-source-runtime.json",
-        "migration/evidence/20261024-torrent-workflows/verification.json"
+        "migration/evidence/20261024-torrent-workflows/verification.json",
+        "migration/evidence/20261025-v2-workflows/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-004.md"
     },
@@ -4058,13 +4065,19 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "8239f5b42c3f2f56126b7a382dc75a4bd8114607",
           "purpose": "integration"
+        },
+        {
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation",
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git"
         }
       ],
       "review_records": [
         "migration/evidence/P03-05-persistent-session/phase1-independent-review.md",
         "migration/evidence/P03-05-persistent-session/phase2-source-draft/independent-review.md",
         "migration/updates/engine.everyday-workflows/20261024.md",
-        "migration/updates/settings.classic_options/20261024.md"
+        "migration/updates/settings.classic_options/20261024.md",
+        "migration/updates/torrent.compatibility/20261025.md"
       ],
       "evidence": [
         "migration/tasks/P03-05-persistent-session.md",
@@ -4085,7 +4098,8 @@
         "migration/evidence/20261024-torrent-workflows/source-checkpoint.json",
         "migration/evidence/20261024-torrent-workflows/verification.json",
         "migration/evidence/20261024-torrent-workflows/REVIEW.md",
-        "migration/evidence/20261024-options/verification.json"
+        "migration/evidence/20261024-options/verification.json",
+        "migration/evidence/20261025-v2-workflows/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -5829,18 +5843,25 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "cda09f95bed76f3c29a514b345a70a29881dfc85",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
         "migration/updates/settings.classic_options/20261024.md",
-        "migration/updates/queue.scheduler/20261024.md"
+        "migration/updates/queue.scheduler/20261024.md",
+        "migration/updates/torrent.compatibility/20261025.md"
       ],
       "evidence": [
         "migration/tasks/P04-OPTIONS.md",
         "migration/evidence/20261024-options/verification.json",
         "migration/evidence/20261024-options/REVIEW.md",
         "migration/evidence/20261024-queue-seeding-scheduling/verification.json",
-        "migration/evidence/20261024-queue-seeding-scheduling/REVIEW.md"
+        "migration/evidence/20261024-queue-seeding-scheduling/REVIEW.md",
+        "migration/evidence/20261025-v2-workflows/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -5956,18 +5977,25 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "cda09f95bed76f3c29a514b345a70a29881dfc85",
           "purpose": "implementation"
+        },
+        {
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation",
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git"
         }
       ],
       "review_records": [
         "migration/updates/settings.classic_options/20261024.md",
-        "migration/updates/queue.scheduler/20261024.md"
+        "migration/updates/queue.scheduler/20261024.md",
+        "migration/updates/torrent.compatibility/20261025.md"
       ],
       "evidence": [
         "migration/tasks/P04-OPTIONS.md",
         "migration/evidence/20261024-options/verification.json",
         "migration/evidence/20261024-options/REVIEW.md",
         "migration/evidence/20261024-queue-seeding-scheduling/verification.json",
-        "migration/evidence/20261024-queue-seeding-scheduling/REVIEW.md"
+        "migration/evidence/20261024-queue-seeding-scheduling/REVIEW.md",
+        "migration/evidence/20261025-v2-workflows/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -6007,15 +6035,22 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "cda09f95bed76f3c29a514b345a70a29881dfc85",
           "purpose": "implementation"
+        },
+        {
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation",
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git"
         }
       ],
       "review_records": [
-        "migration/updates/queue.scheduler/20261024.md"
+        "migration/updates/queue.scheduler/20261024.md",
+        "migration/updates/torrent.compatibility/20261025.md"
       ],
       "evidence": [
         "migration/tasks/P08-01-queue-seeding-scheduling.md",
         "migration/evidence/20261024-queue-seeding-scheduling/verification.json",
-        "migration/evidence/20261024-queue-seeding-scheduling/REVIEW.md"
+        "migration/evidence/20261024-queue-seeding-scheduling/REVIEW.md",
+        "migration/evidence/20261025-v2-workflows/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -6182,18 +6217,25 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5",
           "purpose": "implementation"
+        },
+        {
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation",
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git"
         }
       ],
       "review_records": [
         "migration/updates/library.file_operations/20261024.md",
         "migration/updates/storage.original_managed_io/20261025-core.md",
-        "migration/updates/storage.original_managed_io/20261025-workflows.md"
+        "migration/updates/storage.original_managed_io/20261025-workflows.md",
+        "migration/updates/torrent.compatibility/20261025.md"
       ],
       "evidence": [
         "migration/tasks/P03-08-library-file-operations.md",
         "migration/evidence/20261024-library-file-operations/verification.json",
         "migration/evidence/20261025-storage-resume/verification.json",
-        "migration/evidence/20261025-storage-workflows/verification.json"
+        "migration/evidence/20261025-storage-workflows/verification.json",
+        "migration/evidence/20261025-v2-workflows/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -6230,14 +6272,21 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "8aa48d6904c7df979f2730fa3cb4a66bb0ab8985",
           "purpose": "implementation"
+        },
+        {
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation",
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git"
         }
       ],
       "review_records": [
-        "migration/updates/library.file_operations/20261024.md"
+        "migration/updates/library.file_operations/20261024.md",
+        "migration/updates/torrent.compatibility/20261025.md"
       ],
       "evidence": [
         "migration/tasks/P03-08-library-file-operations.md",
-        "migration/evidence/20261024-library-file-operations/verification.json"
+        "migration/evidence/20261024-library-file-operations/verification.json",
+        "migration/evidence/20261025-v2-workflows/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -6278,14 +6327,21 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "8aa48d6904c7df979f2730fa3cb4a66bb0ab8985",
           "purpose": "implementation"
+        },
+        {
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation",
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git"
         }
       ],
       "review_records": [
-        "migration/updates/library.file_operations/20261024.md"
+        "migration/updates/library.file_operations/20261024.md",
+        "migration/updates/torrent.compatibility/20261025.md"
       ],
       "evidence": [
         "migration/tasks/P03-08-library-file-operations.md",
-        "migration/evidence/20261024-library-file-operations/verification.json"
+        "migration/evidence/20261024-library-file-operations/verification.json",
+        "migration/evidence/20261025-v2-workflows/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -6334,15 +6390,22 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5",
           "purpose": "implementation"
+        },
+        {
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation",
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git"
         }
       ],
       "review_records": [
         "migration/updates/storage.original_managed_io/20261025-core.md",
-        "migration/updates/storage.original_managed_io/20261025-workflows.md"
+        "migration/updates/storage.original_managed_io/20261025-workflows.md",
+        "migration/updates/torrent.compatibility/20261025.md"
       ],
       "evidence": [
         "migration/evidence/20261025-storage-resume/verification.json",
-        "migration/evidence/20261025-storage-workflows/verification.json"
+        "migration/evidence/20261025-storage-workflows/verification.json",
+        "migration/evidence/20261025-v2-workflows/verification.json"
       ],
       "decision_ref": null
     },
@@ -6378,10 +6441,197 @@
           "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
         }
       ],
-      "native_commits": [],
-      "review_records": [],
-      "evidence": [],
+      "native_commits": [
+        {
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation",
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git"
+        }
+      ],
+      "review_records": [
+        "migration/updates/torrent.compatibility/20261025.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261025-v2-workflows/verification.json"
+      ],
       "decision_ref": null
+    },
+    {
+      "decision_ref": null,
+      "evidence": [
+        "migration/evidence/20261025-v2-workflows/verification.json"
+      ],
+      "feature_ids": [
+        "F01.original_file_geometry",
+        "F05.same_profile_local"
+      ],
+      "id": "engine.selected_swarm_admission",
+      "native_commits": [
+        {
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation",
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git"
+        }
+      ],
+      "review_records": [
+        "migration/updates/torrent.compatibility/20261025.md"
+      ],
+      "source_coverage": [
+        {
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/torrent/impl/TOTorrentImpl.java",
+            "core/src/com/biglybt/core/torrent/TOTorrent.java"
+          ],
+          "source_symbols": [
+            "selectHybridHashType",
+            "getEffectiveTorrentType"
+          ],
+          "upstream_id": "BiglyBT"
+        }
+      ],
+      "state": "in_progress",
+      "target_paths": [
+        "preview/native/engine/managed_payload_counters.cpp",
+        "preview/native/engine/persistent_runtime_guard.cpp",
+        "preview/native/engine/persistent_session.cpp"
+      ],
+      "task_records": [
+        "migration/tasks/P03-10-v2-hybrid-compatibility.md"
+      ]
+    },
+    {
+      "decision_ref": null,
+      "evidence": [
+        "migration/evidence/20261025-v2-workflows/verification.json"
+      ],
+      "feature_ids": [
+        "F05.persistent_owned_local"
+      ],
+      "id": "engine.payload_counter_bridge",
+      "native_commits": [
+        {
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation",
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git"
+        }
+      ],
+      "review_records": [
+        "migration/updates/torrent.compatibility/20261025.md"
+      ],
+      "source_coverage": [
+        {
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/peer/impl/control/PEPeerControlImpl.java"
+          ],
+          "source_symbols": [
+            "PEPeerControlImpl"
+          ],
+          "upstream_id": "BiglyBT"
+        }
+      ],
+      "state": "in_progress",
+      "target_paths": [
+        "preview/native/engine/managed_payload_counters.cpp",
+        "preview/native/engine/persistent_runtime_guard.cpp"
+      ],
+      "task_records": [
+        "migration/tasks/P03-10-v2-hybrid-compatibility.md"
+      ]
+    },
+    {
+      "decision_ref": null,
+      "evidence": [
+        "migration/evidence/20261025-v2-workflows/verification.json"
+      ],
+      "feature_ids": [
+        "F05.persistent_owned_local"
+      ],
+      "id": "engine.network_binding",
+      "native_commits": [
+        {
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation",
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git"
+        }
+      ],
+      "review_records": [
+        "migration/updates/torrent.compatibility/20261025.md"
+      ],
+      "source_coverage": [
+        {
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java"
+          ],
+          "source_symbols": [
+            "ConfigurationDefaults"
+          ],
+          "upstream_id": "BiglyBT"
+        }
+      ],
+      "state": "in_progress",
+      "target_paths": [
+        "preview/native/engine/network_binding.cpp",
+        "preview/native/engine/network_policy.cpp"
+      ],
+      "task_records": [
+        "migration/tasks/P04-OPTIONS.md"
+      ]
+    },
+    {
+      "decision_ref": null,
+      "evidence": [
+        "migration/evidence/20261025-v2-workflows/verification.json"
+      ],
+      "feature_ids": [
+        "F02.original_file_priorities"
+      ],
+      "id": "library.pre_add_file_options",
+      "native_commits": [
+        {
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation",
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git"
+        }
+      ],
+      "review_records": [
+        "migration/updates/torrent.compatibility/20261025.md"
+      ],
+      "source_coverage": [
+        {
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "source_paths": [
+            "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java"
+          ],
+          "source_symbols": [
+            "loadFilePriorities",
+            "storeFilePriorities"
+          ],
+          "upstream_id": "BiglyBT"
+        }
+      ],
+      "state": "in_progress",
+      "target_paths": [
+        "preview/native/adapters/torrent_intake.cpp",
+        "preview/native/ui/torrent_intake_dialog.cpp"
+      ],
+      "task_records": [
+        "migration/tasks/P03-07-everyday-torrent-workflows.md"
+      ]
     }
   ],
   "update_reviews": [],
@@ -7004,6 +7254,59 @@
         {
           "path": "migration/evidence/20261021-persistent-peer-accounting/recipes-and-source/causal-fixtures-v2/libtorrent-causal.patch",
           "sha256": "9253cb96f4893cd5df1c1be16642ef1361b6b9031750758a0bef5e86b0ee4c7e"
+        }
+      ],
+      "notices": [
+        "migration/notices/libtorrent-2.0.12-LICENSE",
+        "migration/notices/libtorrent-2.0.12-COPYING",
+        "migration/notices/libtorrent-2.0.12-debian-copyright"
+      ]
+    },
+    {
+      "id": "bounded-engine-libtorrent-selected-provider",
+      "name": "BiglyBTC selected-swarm/UTF16/public-payload LT provider",
+      "version": "2.0.12",
+      "repository_url": "https://github.com/arvidn/libtorrent.git",
+      "source_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+      "artifacts": [
+        {
+          "url": "file:///home/yurii/Java/BiglyBT/build/storage-20261025/provider-candidate/install/lib/libtorrent-rasterbar.so.2.0.12",
+          "sha256": "d367afd6499859c5a57d66bddd352a977ff76c7fb76b5925302c2c9008c7ddbd"
+        },
+        {
+          "url": "https://github.com/d00rsfan/BiglyBTC/releases/download/qualification-selected-provider-20261025-d367afd6-ns2/bundle.zip",
+          "sha256": "24f6ad223dc2e18bfc705b2b3a79121807d0eaf8385ea03692dba79c7c170e78"
+        }
+      ],
+      "build_recipe": "Exact source-qualified uninstrumented provider from upstream plus ordered retained overlays. Source/build record34bbba203833a31e59f0e9101f232fc2aaebe2bf080bdb8b640a29d68bd4016f; manifest e74def09b2257a266786b8ddb116382d300716687bf26bbe57072f5ff90e8737. 449 selected/1072 full source leaves,13 rules,16 bundled inputs,284 installed leaves,4 build evidence leaves. The immutable archive additionally carries actual fixture source and build proof; its archive hash differs from the inner DSO hash. See migration/evidence/20261025-v2-workflows/retained-inputs.json, retained-inputs.tar.gz and REVIEW.md. Runtime/image/source/SDK, owned wire and isolated discovery are qualified within the recorded scope. This lane does not inherit old causal/fence certification; all old provider records remain unchanged.",
+      "patches": [
+        {
+          "path": "migration/evidence/20261025-v2-workflows/provider-patches/1-provider.patch",
+          "sha256": "0d0cca63e8d0d534138a39681581fbcfbf01daa949bb5a3a6867759dba8d09b7"
+        },
+        {
+          "path": "migration/evidence/20261025-v2-workflows/provider-patches/2-amendment.patch",
+          "sha256": "10c513e98bd88f0d47c24fe83f572492b1a88474ecc3213ff9a05b269bfd45c8"
+        },
+        {
+          "path": "migration/evidence/20261025-v2-workflows/provider-patches/3-changes.patch",
+          "sha256": "956443438f447b2177596948452527af8d11db314b8ce5a6a2e1950cf7b1830a"
+        },
+        {
+          "path": "migration/evidence/20261025-v2-workflows/provider-patches/4-provider-src_biglybtc_utf16_info.hpp.patch",
+          "sha256": "e24615b751e9190fe74e937433e17d06a91678299a6ee98b63e5a888bb80403a"
+        },
+        {
+          "path": "migration/evidence/20261025-v2-workflows/provider-patches/5-provider-src_torrent_info.cpp.patch",
+          "sha256": "e54fea0ad63231c36de153fb82877836cab8aa6ae5f528875fe3644c948ab6fd"
+        },
+        {
+          "path": "migration/evidence/20261025-v2-workflows/provider-patches/6-provider-test_test_biglybtc_utf16_info.cpp.patch",
+          "sha256": "d0d26f3b5972ce407b98372b0bfc9cbf02cc7fa158434748a93dd2f871c017ca"
+        },
+        {
+          "path": "migration/evidence/20261025-v2-workflows/provider-patches/7-test_biglybtc_utf16_info.cpp.patch",
+          "sha256": "18629475d0f5ccab8be3aa9c6c67e70c2317ca2cb58b6a46b9b4fc229815a023"
         }
       ],
       "notices": [

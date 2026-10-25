@@ -1,5 +1,14 @@
 # Whole Solution C++ Migration Plan
 
+Latest qualified/published identity/provider/workflow source: `4f948e042df9467310a5752d4343b07915673f84`.
+Three31-suite compiler/sanitizer lanes, runtime9, actual Java/owned wire,
+private portable, isolated hosted discovery and exact-source hosted167+13smoke/SDK2
+pass. Dist118files is promoted; complete prior dist is retained for rollback.
+[Evidence and limitations](migration/evidence/20261025-v2-workflows/REVIEW.md). All CF01–CF08 remain open.
+Continue all remaining work autonomously; next48-path batch covers queue/probes,
+bulk file operations, local ratings and finite storage/proxy corners. No human
+question. Historical inactive-state notes below describe earlier milestones.
+
 Latest published storage workflow: `2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5`.
 Active file selection, stopped compact storage and actual Java nonlinear Moves
 qualify; three15-suite compiler/sanitizer lanes, hosted and private runtime pass.

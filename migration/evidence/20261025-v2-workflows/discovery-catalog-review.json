@@ -1,0 +1,12 @@
+{
+  "status": "ROOT_REVIEWED_EXACT_HOSTED_DISCOVERY_INPUTS",
+  "catalog_sha256": "4d7df02ad8f83990a8cd36a0788013e8058941fddabf232e2062a17b59d3dd5b",
+  "script_sha256": "f56af5fe069150e7d84339b78adb11d171bb9d1282c0da106c5391919491bc70",
+  "staging_run": 40196083774,
+  "artifact_id": 12599776661,
+  "artifact_digest": "sha256:3de67a1bdb85ed550c175062cb63a3b63f37dcab337a6467c8bc83c565f5b398",
+  "bundle_sha256": "24f6ad223dc2e18bfc705b2b3a79121807d0eaf8385ea03692dba79c7c170e78",
+  "members": 1397,
+  "local_restore_or_execute_performed": false,
+  "runtime_qualification": false
+}

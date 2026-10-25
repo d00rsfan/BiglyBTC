@@ -1,16 +1,17 @@
 # P03-10 — v2/hybrid original interoperability (CF-02)
 
-Source preparation while CF-01 qualification runs; no dependent production
-adoption until its storage prerequisite is qualified. User authorizes remaining
-plan work. No human question.
+Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
+Qualified bounded native source: `4f948e042df9467310a5752d4343b07915673f84`.
+[Review](../evidence/20261025-v2-workflows/REVIEW.md). No user question.
 
-Original baseline: cb8c6cb9bb97916cbc7e80338a017200ffc3e71f.
-Initial native baseline: b44ec22ebb3dbb6cee3ade23c32a7ad26a373926.
-Source plan/pins: build/storage-20261025/next-v2/.
+- [x] Shared selected20/full-hash checks, raw info and caller fences.
+- [x] Admitted UTF16 layout and exact pure-v2 trailing-pad projection.
+- [x] Actual generated partial/complete current-owner Java/native handoffs.
+- [x] Selected hybrid plain/MSE/tracker and isolated DHT/LSD qualification.
+- [x] Preserve original8/9 recheck and hybrid empty-file hash-cache limitations.
+- [x] GCC/Clang/ASan-UBSan each31 suites, runtime9, hosted167+smoke13/SDK2.
+- [x] Private runtime, immutable evidence/tracking and dist with full rollback.
+- [ ] Broader original profile/layout/route options and full-family equivalence.
 
-- [ ] Shared original-selected 20-byte identity/full hash checks and caller gates.
-- [ ] Preserve raw hashed info, qualified original UTF16 ordering and geometry.
-- [ ] Actual partial/complete current-owner v2/hybrid Java/native/Java cases.
-- [ ] Qualify selected hybrid swarm policy without implicit route broadening.
-- [ ] Preserve recorded original-only final-tail/empty-file recheck limitation.
-- [ ] Batched affected compiler/runtime/original qualification and provenance.
+CF-02 and every CF-01–CF-08 parent remain open. Later48-path queue/probe,
+bulk, local-rating and storage-corner integration is the next source batch.

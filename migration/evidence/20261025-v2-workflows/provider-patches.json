@@ -1,0 +1,30 @@
+[
+  {
+    "path": "migration/evidence/20261025-v2-workflows/provider-patches/1-provider.patch",
+    "sha256": "0d0cca63e8d0d534138a39681581fbcfbf01daa949bb5a3a6867759dba8d09b7"
+  },
+  {
+    "path": "migration/evidence/20261025-v2-workflows/provider-patches/2-amendment.patch",
+    "sha256": "10c513e98bd88f0d47c24fe83f572492b1a88474ecc3213ff9a05b269bfd45c8"
+  },
+  {
+    "path": "migration/evidence/20261025-v2-workflows/provider-patches/3-changes.patch",
+    "sha256": "956443438f447b2177596948452527af8d11db314b8ce5a6a2e1950cf7b1830a"
+  },
+  {
+    "path": "migration/evidence/20261025-v2-workflows/provider-patches/4-provider-src_biglybtc_utf16_info.hpp.patch",
+    "sha256": "e24615b751e9190fe74e937433e17d06a91678299a6ee98b63e5a888bb80403a"
+  },
+  {
+    "path": "migration/evidence/20261025-v2-workflows/provider-patches/5-provider-src_torrent_info.cpp.patch",
+    "sha256": "e54fea0ad63231c36de153fb82877836cab8aa6ae5f528875fe3644c948ab6fd"
+  },
+  {
+    "path": "migration/evidence/20261025-v2-workflows/provider-patches/6-provider-test_test_biglybtc_utf16_info.cpp.patch",
+    "sha256": "d0d26f3b5972ce407b98372b0bfc9cbf02cc7fa158434748a93dd2f871c017ca"
+  },
+  {
+    "path": "migration/evidence/20261025-v2-workflows/provider-patches/7-test_biglybtc_utf16_info.cpp.patch",
+    "sha256": "18629475d0f5ccab8be3aa9c6c67e70c2317ca2cb58b6a46b9b4fc229815a023"
+  }
+]

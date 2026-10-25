@@ -1,5 +1,13 @@
 # Open compatibility work after the everyday torrent preview
 
+Bounded source `4f948e042df9467310a5752d4343b07915673f84` now qualifies original-selected v2/hybrid
+identity, generated handoffs, exact selected provider, bind/interface, ordinary
+flexible queue slots, pre-add file choices and creator variants.
+[Review](../evidence/20261025-v2-workflows/REVIEW.md). The full families below
+remain open, including reproduced original limitations. The private payload
+shim is replaced by a public provider ABI; full native vptr sanitization is
+restored. Combined counters and old causal/fence proof are separate work.
+
 Read this checklist alongside MIGRATION_PLAN.md and STATE.md when selecting or
 closing a milestone. A qualified preview does not close these items. Keep an
 item open until its implementation commits and applicable interoperability or
@@ -48,7 +56,7 @@ Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
   per-file/options controls and supported priority changes during active work.
   Qualify saved original priorities, selected completion and actual payload IO.
   Active priority/Skip controls now qualify at `2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5`;
-  pre-add file/options controls remain in progress.
+  bounded pre-add choices additionally qualify at the source above; broader options remain open.
 - [ ] **CF-06 — Remaining original library/file families (P03/P04/P08).**
   [P03-08](P03-08-library-file-operations.md) now qualifies single selected
   ordinary keep/delete/move/relink, v1 file/directory creation, compatible intent,
@@ -68,8 +76,8 @@ Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
   checks, applicable public-swarm interoperability and comparable CPU/memory
   measurements. Profile/optimize the current full-payload identity-validation
   reads in move/relink/delete, including same-filesystem hardlink moves, without
-  weakening confirmed ownership or crash recovery. Track the private counter shim's vptr sanitizer exception until
-  a supported ABI/provider change permits its removal; other checks remain on.
+  weakening confirmed ownership or crash recovery. The supported public payload ABI now removes the vptr exception in the new
+  provider lane. Broader provider/client and performance evidence remains open.
 
 The compatibility target remains opening the same original configuration and
 torrent state in either client after closing the other. Use generated isolated

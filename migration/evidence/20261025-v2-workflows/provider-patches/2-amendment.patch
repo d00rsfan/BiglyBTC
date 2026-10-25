@@ -1,0 +1,23 @@
+--- a/src/bt_peer_connection.cpp
++++ b/src/bt_peer_connection.cpp
+@@ -49,6 +49,7 @@
+ #endif
+ 
+ #include "libtorrent/bt_peer_connection.hpp"
++#include "libtorrent/biglybtc_swarm.hpp"
+ #include "libtorrent/session.hpp"
+ #include "libtorrent/identify_client.hpp"
+ #include "libtorrent/entry.hpp"
+@@ -3448,7 +3449,11 @@
+ 
+ 				// this must go after the connection is attached to a torrent because that is what
+ 				// adds the peer info for incoming connections
+-				if (recv_buffer[7] & 0x10)
++				// A selected original v1 swarm may accept a v1 hybrid peer's
++				// upgrade offer without enabling the unselected v2 identity.
++				// Default/upstream admissions retain the exact old branch.
++				if ((recv_buffer[7] & 0x10)
++					&& t->swarm_selection_flags() != biglybtc_v1_only)
+ 				{
+ 					if (t->valid_metadata() && !t->info_hash().has_v2())
+ 					{

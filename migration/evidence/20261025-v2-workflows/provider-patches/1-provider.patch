@@ -1,0 +1,682 @@
+--- /dev/null
++++ b/include/libtorrent/biglybtc_swarm.hpp
+@@ -0,0 +1,23 @@
++// BiglyBTC source-provider extension. Not part of upstream libtorrent API.
++// Requires exact artifact binding AND biglybtc_swarm_mask_abi_v1()==1.
++#ifndef BIGLYBTC_LIBTORRENT_SWARM_HPP
++#define BIGLYBTC_LIBTORRENT_SWARM_HPP
++#include "libtorrent/info_hash.hpp"
++#include "libtorrent/torrent_flags.hpp"
++namespace libtorrent {
++// Admission only. Both clear preserves upstream dual-swarm behavior.
++// Both set, or an unavailable selected hash, rejects admission.
++constexpr torrent_flags_t biglybtc_v1_only{std::uint64_t{1} << 25};
++constexpr torrent_flags_t biglybtc_v2_only{std::uint64_t{1} << 26};
++constexpr torrent_flags_t biglybtc_swarm_mask = biglybtc_v1_only | biglybtc_v2_only;
++inline info_hash_t biglybtc_wire_hashes(info_hash_t full,torrent_flags_t flags) noexcept
++{
++ auto const selected=flags & biglybtc_swarm_mask;
++ if(selected==biglybtc_swarm_mask) return {};
++ if(selected==biglybtc_v1_only) return full.has_v1()?info_hash_t(full.v1):info_hash_t{};
++ if(selected==biglybtc_v2_only) return full.has_v2()?info_hash_t(full.v2):info_hash_t{};
++ return full;
++}
++extern "C" TORRENT_EXPORT unsigned biglybtc_swarm_mask_abi_v1() noexcept;
++}
++#endif
+--- a/include/libtorrent/torrent.hpp
++++ b/include/libtorrent/torrent.hpp
+@@ -374,7 +374,12 @@
+ 		~torrent() override;
+ 
+ 		// This may be called from multiple threads
+-		info_hash_t const& info_hash() const { return m_info_hash; }
++		// Internal wire identity: session indices and peer/discovery protocols.
++		info_hash_t const& info_hash() const { return m_wire_info_hash; }
++		// Full immutable metainfo identity remains available for disk/Merkle
++		// verification and public metadata/status access.
++		info_hash_t const& metadata_info_hash() const { return m_info_hash; }
++		torrent_flags_t swarm_selection_flags() const { return m_swarm_flags; }
+ 
+ 		bool is_deleted() const { return m_deleted; }
+ 
+@@ -1476,6 +1481,8 @@
+ 		// keep a copy of the info-hash here, so it can be accessed from multiple
+ 		// threads, and be cheap to access from the client
+ 		info_hash_t m_info_hash;
++		info_hash_t m_wire_info_hash;
++		torrent_flags_t const m_swarm_flags;
+ 
+ 	public:
+ 		// these are the lists this torrent belongs to. For more
+--- a/src/peer_connection.cpp
++++ b/src/peer_connection.cpp
+@@ -1135,7 +1135,7 @@
+ 		// if protocol_v2 is set on the peer, this better be a v2 torrent,
+ 		// otherwise something isn't right
+ 		TORRENT_ASSERT(ih.has_v2() || !peer_info_struct()->protocol_v2);
+-		return ih.get((ih.has_v2() && peer_info_struct()->protocol_v2)
++		return ih.get((!ih.has_v1() || (ih.has_v2() && peer_info_struct()->protocol_v2))
+ 			? protocol_version::V2 : protocol_version::V1);
+ 	}
+ 
+@@ -5344,10 +5344,10 @@
+ 				// this means we're in seed mode and we haven't yet
+ 				// verified this piece (r.piece)
+ 				disk_job_flags_t flags;
+-				if (t->info_hash().has_v1())
++				if (t->metadata_info_hash().has_v1())
+ 					flags |= disk_interface::v1_hash;
+ 				aux::vector<sha256_hash> hashes;
+-				if (t->info_hash().has_v2())
++				if (t->metadata_info_hash().has_v2())
+ 					hashes.resize(t->torrent_file().orig_files().blocks_in_piece2(r.piece));
+ 
+ 				span<sha256_hash> v2_hashes(hashes);
+@@ -5455,13 +5455,13 @@
+ 
+ 		// we're using the piece hashes here, we need the torrent to be loaded
+ 		if (!m_settings.get_bool(settings_pack::disable_hash_checks)
+-			&& t->info_hash().has_v1())
++			&& t->metadata_info_hash().has_v1())
+ 		{
+ 			hash_failed[protocol_version::V1] = piece_hash != t->torrent_file().hash_for_piece(piece);
+ 		}
+ 
+ 		if (!m_settings.get_bool(settings_pack::disable_hash_checks)
+-			&& t->info_hash().has_v2())
++			&& t->metadata_info_hash().has_v2())
+ 		{
+ 			hash_failed[protocol_version::V2] = false;
+ 
+--- a/src/read_resume_data.cpp
++++ b/src/read_resume_data.cpp
+@@ -38,6 +38,7 @@
+ 
+ #include "libtorrent/bdecode.hpp"
+ #include "libtorrent/read_resume_data.hpp"
++#include "libtorrent/biglybtc_swarm.hpp"
+ #include "libtorrent/add_torrent_params.hpp"
+ #include "libtorrent/socket_io.hpp" // for read_*_endpoint()
+ #include "libtorrent/hasher.hpp"
+@@ -271,6 +272,31 @@
+ 		apply_flag(ret.flags, rd, "disable_dht", torrent_flags::disable_dht);
+ 		apply_flag(ret.flags, rd, "disable_lsd", torrent_flags::disable_lsd);
+ 		apply_flag(ret.flags, rd, "disable_pex", torrent_flags::disable_pex);
++		int selection_keys=0;
++		for (int i=0;i<rd.dict_size();++i)
++			if (rd.dict_at(i).first=="biglybtc.swarm") ++selection_keys;
++		if (selection_keys>1)
++		{
++			ec=errors::invalid_info_hash;
++			return ret;
++		}
++		if (auto const selected=rd.dict_find("biglybtc.swarm"))
++		{
++			if (selected.type()!=bdecode_node::int_t || selected.int_value()<0 || selected.int_value()>2)
++			{
++				ec=errors::invalid_info_hash;
++				return ret;
++			}
++			if (selected.int_value()==1) ret.flags |= biglybtc_v1_only;
++			if (selected.int_value()==2) ret.flags |= biglybtc_v2_only;
++			auto const wire=biglybtc_wire_hashes(ret.info_hashes,ret.flags);
++			if (!wire.has_v1() && !wire.has_v2())
++			{
++				ec=errors::invalid_info_hash;
++				return ret;
++			}
++		}
++
+ 
+ 		ret.save_path = rd.dict_find_string_value("save_path").to_string();
+ 
+--- a/src/session_impl.cpp
++++ b/src/session_impl.cpp
+@@ -70,6 +70,7 @@
+ #include "libtorrent/ssl.hpp"
+ #include "libtorrent/peer_id.hpp"
+ #include "libtorrent/torrent_info.hpp"
++#include "libtorrent/biglybtc_swarm.hpp"
+ #include "libtorrent/tracker_manager.hpp"
+ #include "libtorrent/bencode.hpp"
+ #include "libtorrent/hasher.hpp"
+@@ -4966,7 +4967,7 @@
+ 		add_extensions_to_torrent(torrent_ptr, userdata);
+ #endif
+ 
+-		TORRENT_ASSERT(info_hash == torrent_ptr->torrent_file().info_hashes());
++		TORRENT_ASSERT(info_hash == torrent_ptr->info_hash());
+ 		insert_torrent(info_hash, torrent_ptr);
+ 
+         m_alerts.emplace_alert<add_torrent_alert>(handle, std::move(alert_params), ec);
+@@ -5043,6 +5044,16 @@
+ 			return ret_t{ptr_t(), params.info_hashes, false};
+ 		}
+ 
++		// Validate immutable selection before discovery, torrent construction or IO.
++		auto const wire_hashes=biglybtc_wire_hashes(
++			params.ti?params.ti->info_hashes():params.info_hashes,params.flags);
++		if ((params.flags & biglybtc_swarm_mask)
++			&& !wire_hashes.has_v1() && !wire_hashes.has_v2())
++		{
++			ec=errors::invalid_info_hash;
++			return ret_t{ptr_t(),params.info_hashes,false};
++		}
++
+ #ifndef TORRENT_DISABLE_DHT
+ 		// add params.dht_nodes to the DHT, if enabled
+ 		for (auto const& n : params.dht_nodes)
+@@ -5080,12 +5091,18 @@
+ 		}
+ 
+ 		// is the torrent already active?
+-		std::shared_ptr<torrent> torrent_ptr = find_torrent(params.info_hashes).lock();
++		std::shared_ptr<torrent> torrent_ptr = find_torrent(wire_hashes).lock();
+ 
+ 		if (torrent_ptr)
+ 		{
++			// Never return an existing dual-swarm handle for a selected request.
++			if (torrent_ptr->swarm_selection_flags() != (params.flags & biglybtc_swarm_mask))
++			{
++				ec=errors::duplicate_torrent;
++				return ret_t{ptr_t(),wire_hashes,false};
++			}
+ 			if (!(params.flags & torrent_flags::duplicate_is_error))
+-				return ret_t{std::move(torrent_ptr), params.info_hashes, false};
++				return ret_t{std::move(torrent_ptr), wire_hashes, false};
+ 
+ 			ec = errors::duplicate_torrent;
+ 			return ret_t{ptr_t(), params.info_hashes, false};
+@@ -5113,7 +5130,7 @@
+ 
+ 		// it's fine to copy this moved-from info_hash_t object, since its move
+ 		// construction is just a copy.
+-		return ret_t{std::move(torrent_ptr), params.info_hashes, true};
++		return ret_t{std::move(torrent_ptr), wire_hashes, true};
+ 	}
+ 
+ 	void session_impl::update_outgoing_interfaces()
+@@ -5638,7 +5655,7 @@
+ 		if (t->torrent_file().priv() || (t->torrent_file().is_i2p()
+ 			&& !m_settings.get_bool(settings_pack::allow_i2p_mixed))) return;
+ 
+-		protocol_version const v = ih == t->torrent_file().info_hashes().v1
++		protocol_version const v = ih == t->info_hash().v1
+ 			? protocol_version::V1 : protocol_version::V2;
+ 
+ 		t->add_peer(peer, peer_info::lsd, v == protocol_version::V2 ? pex_lt_v2 : pex_flags_t(0));
+--- a/src/torrent.cpp
++++ b/src/torrent.cpp
+@@ -66,6 +66,7 @@
+ #include <functional>
+ 
+ #include "libtorrent/torrent.hpp"
++#include "libtorrent/biglybtc_swarm.hpp"
+ #include "libtorrent/torrent_handle.hpp"
+ #include "libtorrent/announce_entry.hpp"
+ #include "libtorrent/torrent_info.hpp"
+@@ -245,6 +246,8 @@
+ 		, m_last_seen_complete(p.last_seen_complete)
+ 		, m_swarm_last_seen_complete(p.last_seen_complete)
+ 		, m_info_hash(p.info_hashes)
++		, m_wire_info_hash(biglybtc_wire_hashes(p.info_hashes,p.flags))
++		, m_swarm_flags(p.flags & biglybtc_swarm_mask)
+ 		, m_error_file(torrent_status::error_file_none)
+ 		, m_sequence_number(-1)
+ 		, m_peer_id(aux::generate_peer_id(settings()))
+@@ -907,7 +910,7 @@
+ 
+ 	torrent_flags_t torrent::flags() const
+ 	{
+-		torrent_flags_t ret = torrent_flags_t{};
++		torrent_flags_t ret = m_swarm_flags;
+ 		if (m_seed_mode)
+ 			ret |= torrent_flags::seed_mode;
+ 		if (m_upload_mode)
+@@ -2801,7 +2804,7 @@
+ #endif
+ 
+ 		// announce with the local discovery service
+-		m_torrent_file->info_hashes().for_each([&](sha1_hash const& ih, protocol_version)
++		m_wire_info_hash.for_each([&](sha1_hash const& ih, protocol_version)
+ 		{
+ 			m_ses.announce_lsd(ih, port);
+ 		});
+@@ -2889,7 +2892,7 @@
+ 		}
+ 
+ 		std::weak_ptr<torrent> self(shared_from_this());
+-		m_torrent_file->info_hashes().for_each([&](sha1_hash const& ih, protocol_version v)
++		m_wire_info_hash.for_each([&](sha1_hash const& ih, protocol_version v)
+ 		{
+ 			m_ses.dht()->announce(ih, announce_port, flags
+ 				, std::bind(&torrent::on_dht_announce_response_disp, self, v, _1));
+@@ -3167,8 +3170,8 @@
+ #endif
+ 		aux::array<bool const, num_protocols, protocol_version> const supports_protocol
+ 		{ {
+-			m_info_hash.has_v1(),
+-			m_info_hash.has_v2()
++			m_wire_info_hash.has_v1(),
++			m_wire_info_hash.has_v2()
+ 		} };
+ #ifdef __clang__
+ #pragma clang diagnostic pop
+@@ -3309,7 +3312,7 @@
+ 					req.key = tracker_key();
+ 
+ 					req.outgoing_socket = aep.socket;
+-					req.info_hash = m_torrent_file->info_hashes().get(ih);
++					req.info_hash = m_wire_info_hash.get(ih);
+ 					if (high_priority) req.kind |= tracker_request::high_priority;
+ 
+ #ifndef TORRENT_DISABLE_LOGGING
+@@ -3418,7 +3421,7 @@
+ 		{
+ 			if (!aep.enabled) continue;
+ 			req.outgoing_socket = aep.socket;
+-			m_torrent_file->info_hashes().for_each([&](sha1_hash const& ih, protocol_version)
++			m_wire_info_hash.for_each([&](sha1_hash const& ih, protocol_version)
+ 			{
+ 				req.info_hash = ih;
+ 				m_ses.queue_tracker_request(req, shared_from_this());
+@@ -3432,7 +3435,7 @@
+ 
+ 		INVARIANT_CHECK;
+ 
+-		protocol_version const hash_version = req.info_hash == m_info_hash.v1
++		protocol_version const hash_version = req.info_hash == m_wire_info_hash.v1
+ 			? protocol_version::V1 : protocol_version::V2;
+ 
+ 		aux::announce_entry* ae = find_tracker(req.url);
+@@ -3461,7 +3464,7 @@
+ 		INVARIANT_CHECK;
+ 		TORRENT_ASSERT(req.kind & tracker_request::scrape_request);
+ 
+-		protocol_version const hash_version = req.info_hash == m_info_hash.v1
++		protocol_version const hash_version = req.info_hash == m_wire_info_hash.v1
+ 			? protocol_version::V1 : protocol_version::V2;
+ 
+ 		aux::announce_entry* ae = find_tracker(req.url);
+@@ -3553,7 +3556,7 @@
+ 
+ 		time_point32 const now = aux::time_now32();
+ 
+-		protocol_version const v = r.info_hash == torrent_file().info_hashes().v1
++		protocol_version const v = r.info_hash == m_wire_info_hash.v1
+ 			? protocol_version::V1 : protocol_version::V2;
+ 
+ 		auto const interval = std::max(resp.interval, seconds32(
+@@ -4990,7 +4993,7 @@
+ 			if (alerts().should_post<cache_flushed_alert>())
+ 				alerts().emplace_alert<cache_flushed_alert>(get_handle());
+ 			alerts().emplace_alert<torrent_removed_alert>(get_handle()
+-				, info_hash(), get_userdata());
++				, metadata_info_hash(), get_userdata());
+ 		}
+ 
+ 		// TODO: 2 abort lookups this torrent has made via the
+@@ -7506,6 +7509,7 @@
+ 		TORRENT_ASSERT(peerinfo->connection == nullptr);
+ 
+ 		if (m_abort) return false;
++		if (!m_wire_info_hash.has(peerinfo->protocol())) return false;
+ 
+ 		peerinfo->last_connected = m_ses.session_time();
+ #if TORRENT_USE_ASSERTS
+@@ -7626,7 +7630,7 @@
+ 			{
+ 				// for ssl sockets, set the hostname
+ 				std::string const host_name = aux::to_hex(
+-					m_torrent_file->info_hashes().get(peerinfo->protocol()));
++					m_wire_info_hash.get(peerinfo->protocol()));
+ 
+ 				boost::apply_visitor(hostname_visitor{host_name}, ret);
+ 			}
+@@ -7712,7 +7716,7 @@
+ 
+ 	error_code torrent::initialize_merkle_trees()
+ 	{
+-		if (!info_hash().has_v2()) return {};
++		if (!metadata_info_hash().has_v2()) return {};
+ 
+ 		bool valid = m_torrent_file->v2_piece_hashes_verified();
+ 
+@@ -7793,7 +7797,7 @@
+ 		// the torrent's info hash might change
+ 		// e.g. it could be a hybrid torrent which we only had one of the hashes for
+ 		// so remove the existing entry
+-		info_hash_t const old_ih = m_torrent_file->info_hashes();
++		info_hash_t const old_ih = m_wire_info_hash;
+ 
+ 		error_code ec;
+ 		int pos = 0;
+@@ -7817,9 +7821,16 @@
+ 			return false;
+ 		}
+ 
+-		// we might already have this torrent in the session.
++		auto const selected_ih = biglybtc_wire_hashes(info->info_hashes(),m_swarm_flags);
++		if (!selected_ih.has_v1() && !selected_ih.has_v2())
++		{
++			set_error(errors::invalid_info_hash,torrent_status::error_file_metadata);
++			pause();
++			return false;
++		}
++		// Only selected wire identities participate in collision checks.
+ 		bool failed = false;
+-		info->info_hashes().for_each([&](sha1_hash const& ih, protocol_version)
++		selected_ih.for_each([&](sha1_hash const& ih, protocol_version)
+ 		{
+ 			if (failed) return;
+ 
+@@ -7855,6 +7866,7 @@
+ 		m_name_idx.clear();
+ 		m_torrent_file = info;
+ 		m_info_hash = m_torrent_file->info_hashes();
++		m_wire_info_hash = selected_ih;
+ 
+ 		m_size_on_disk = aux::size_on_disk(m_torrent_file->files());
+ 
+@@ -8908,6 +8920,7 @@
+ 		{
+ 			TORRENT_ASSERT(m_info_hash.v1 == m_torrent_file->info_hashes().v1);
+ 			TORRENT_ASSERT(m_info_hash.v2 == m_torrent_file->info_hashes().v2);
++			TORRENT_ASSERT(m_wire_info_hash == biglybtc_wire_hashes(m_info_hash,m_swarm_flags));
+ 		}
+ 
+ 		for (torrent_list_index_t i{}; i != m_links.end_index(); ++i)
+@@ -9602,7 +9615,7 @@
+ 		m_storage.reset();
+ 
+ 		alerts().emplace_alert<torrent_removed_alert>(get_handle()
+-			, info_hash(), get_userdata());
++			, metadata_info_hash(), get_userdata());
+ 	}
+ 
+ 	bool torrent::is_paused() const
+@@ -9970,8 +9983,8 @@
+ #endif
+ 		aux::array<bool const, num_protocols, protocol_version> const supports_protocol{
+ 		{
+-			m_info_hash.has_v1(),
+-			m_info_hash.has_v2()
++			m_wire_info_hash.has_v1(),
++			m_wire_info_hash.has_v2()
+ 		}};
+ #ifdef __clang__
+ #pragma clang diagnostic pop
+@@ -11259,6 +11272,8 @@
+ 	{
+ 		TORRENT_ASSERT(is_single_thread());
+ 
++		// A hint cannot opt a V1-only admission into the other swarm.
++		if ((flags & pex_lt_v2) && !m_wire_info_hash.has_v2()) return nullptr;
+ 		TORRENT_ASSERT(info_hash().has_v2() || !(flags & pex_lt_v2));
+ 
+ 		if (m_apply_ip_filter
+@@ -11320,7 +11335,7 @@
+ 		}
+ #endif
+ 
+-		if (!torrent_file().info_hashes().has_v1())
++		if (!m_wire_info_hash.has_v1())
+ 			flags |= pex_lt_v2;
+ 
+ 		need_peer_list();
+@@ -11857,9 +11872,9 @@
+ 		time_point32 const now = aux::time_now32();
+ 
+ 		st->handle = get_handle();
+-		st->info_hashes = info_hash();
++		st->info_hashes = metadata_info_hash();
+ #if TORRENT_ABI_VERSION < 3
+-		st->info_hash = info_hash().get_best();
++		st->info_hash = metadata_info_hash().get_best();
+ #endif
+ #if TORRENT_ABI_VERSION == 1
+ 		st->is_loaded = true;
+@@ -12013,8 +12028,8 @@
+ #endif
+ 			aux::array<bool const, num_protocols, protocol_version> const supports_protocol{
+ 			{
+-				m_info_hash.has_v1(),
+-				m_info_hash.has_v2()
++				m_wire_info_hash.has_v1(),
++				m_wire_info_hash.has_v2()
+ 			}};
+ #ifdef __clang__
+ #pragma clang diagnostic pop
+@@ -12264,8 +12279,8 @@
+ #endif
+ 		aux::array<bool const, num_protocols, protocol_version> const supports_protocol
+ 		{ {
+-			m_info_hash.has_v1(),
+-			m_info_hash.has_v2()
++			m_wire_info_hash.has_v1(),
++			m_wire_info_hash.has_v2()
+ 		} };
+ #ifdef __clang__
+ #pragma clang diagnostic pop
+@@ -12292,7 +12307,7 @@
+ 
+ 				if (aep != ae->endpoints.end())
+ 				{
+-					hash_version = r.info_hash == m_info_hash.v1
++					hash_version = r.info_hash == m_wire_info_hash.v1
+ 						? protocol_version::V1 : protocol_version::V2;
+ 					auto& a = aep->info_hashes[hash_version];
+ 					local_endpoint = aep->local_endpoint;
+@@ -12374,7 +12389,7 @@
+ 					if (aep != nullptr) local_endpoint = aep->local_endpoint;
+ 				}
+ 
+-				protocol_version hash_version = r.info_hash == m_info_hash.v1
++				protocol_version hash_version = r.info_hash == m_wire_info_hash.v1
+ 					? protocol_version::V1 : protocol_version::V2;
+ 
+ 				m_ses.alerts().emplace_alert<scrape_failed_alert>(get_handle()
+--- a/src/torrent_handle.cpp
++++ b/src/torrent_handle.cpp
+@@ -217,13 +217,13 @@
+ 	sha1_hash torrent_handle::info_hash() const
+ 	{
+ 		std::shared_ptr<torrent> t = m_torrent.lock();
+-		return t ? t->info_hash().get_best() : sha1_hash{};
++		return t ? t->metadata_info_hash().get_best() : sha1_hash{};
+ 	}
+ 
+ 	info_hash_t torrent_handle::info_hashes() const
+ 	{
+ 		std::shared_ptr<torrent> t = m_torrent.lock();
+-		return t ? t->info_hash() : info_hash_t();
++		return t ? t->metadata_info_hash() : info_hash_t();
+ 	}
+ 
+ 	int torrent_handle::max_uploads() const
+--- a/src/version.cpp
++++ b/src/version.cpp
+@@ -31,8 +31,11 @@
+ */
+ 
+ #include "libtorrent/version.hpp"
++#include "libtorrent/biglybtc_swarm.hpp"
+ 
+ namespace libtorrent {
++
++extern "C" unsigned biglybtc_swarm_mask_abi_v1() noexcept { return 1; }
+ 
+ char const* version()
+ {
+--- a/src/write_resume_data.cpp
++++ b/src/write_resume_data.cpp
+@@ -37,6 +37,7 @@
+ 
+ #include "libtorrent/bdecode.hpp"
+ #include "libtorrent/write_resume_data.hpp"
++#include "libtorrent/biglybtc_swarm.hpp"
+ #include "libtorrent/add_torrent_params.hpp"
+ #include "libtorrent/socket_io.hpp" // for write_*_endpoint()
+ #include "libtorrent/torrent_info.hpp"
+@@ -116,6 +117,10 @@
+ 		ret["disable_dht"] = bool(atp.flags & torrent_flags::disable_dht);
+ 		ret["disable_lsd"] = bool(atp.flags & torrent_flags::disable_lsd);
+ 		ret["disable_pex"] = bool(atp.flags & torrent_flags::disable_pex);
++		auto const selected=atp.flags & biglybtc_swarm_mask;
++		if (selected) ret["biglybtc.swarm"] = selected==biglybtc_v1_only?1:
++			selected==biglybtc_v2_only?2:3; // invalid combined bits fail on read
++
+ 
+ 		ret["added_time"] = atp.added_time;
+ 		ret["completed_time"] = atp.completed_time;
+--- /dev/null
++++ b/test/test_biglybtc_swarm.cpp
+@@ -0,0 +1,147 @@
++// Source-only tests for the source-qualified BiglyBTC provider extension.
++// These do not certify actual selected/unselected wire traffic or hash IO.
++#include "test.hpp"
++#include "libtorrent/biglybtc_swarm.hpp"
++#include "libtorrent/add_torrent_params.hpp"
++#include "libtorrent/bencode.hpp"
++#include "libtorrent/create_torrent.hpp"
++#include "libtorrent/disabled_disk_io.hpp"
++#include "libtorrent/error_code.hpp"
++#include "libtorrent/entry.hpp"
++#include "libtorrent/file_storage.hpp"
++#include "libtorrent/read_resume_data.hpp"
++#include "libtorrent/session.hpp"
++#include "libtorrent/session_params.hpp"
++#include "libtorrent/settings_pack.hpp"
++#include "libtorrent/torrent_handle.hpp"
++#include "libtorrent/torrent_info.hpp"
++#include "libtorrent/torrent_status.hpp"
++#include "libtorrent/write_resume_data.hpp"
++#include <iterator>
++#include <memory>
++#include <string>
++#include <vector>
++using namespace lt;
++namespace {
++info_hash_t hashes()
++{
++ sha1_hash v1;v1[0]=1;sha256_hash v2;v2[0]=2;
++ return {v1,v2};
++}
++std::shared_ptr<torrent_info> hybrid()
++{
++ file_storage files;files.add_file("owned.bin",16384);
++ create_torrent creator(files,16384);
++ creator.set_hash(piece_index_t{0},hashes().v1);
++ creator.set_hash2(file_index_t{0},piece_index_t::diff_type{0},hashes().v2);
++ std::vector<char> bytes;bencode(std::back_inserter(bytes),creator.generate());
++ error_code ec;auto out=std::make_shared<torrent_info>(bytes.data(),int(bytes.size()),ec);
++ TEST_CHECK(!ec);return out;
++}
++session_params isolated()
++{
++ settings_pack settings;
++ settings.set_str(settings_pack::listen_interfaces,"");
++ settings.set_str(settings_pack::outgoing_interfaces,"127.0.0.1");
++ settings.set_bool(settings_pack::enable_dht,false);
++ settings.set_bool(settings_pack::enable_lsd,false);
++ settings.set_bool(settings_pack::enable_upnp,false);
++ settings.set_bool(settings_pack::enable_natpmp,false);
++ settings.set_bool(settings_pack::enable_incoming_tcp,false);
++ settings.set_bool(settings_pack::enable_outgoing_tcp,false);
++ settings.set_bool(settings_pack::enable_incoming_utp,false);
++ settings.set_bool(settings_pack::enable_outgoing_utp,false);
++ session_params p(settings);p.disk_io_constructor=disabled_disk_io_constructor;return p;
++}
++add_torrent_params parameters(std::shared_ptr<torrent_info> info,torrent_flags_t selected)
++{
++ add_torrent_params p;p.ti=std::move(info);p.save_path=".";
++ p.flags &= ~torrent_flags::auto_managed;p.flags |= torrent_flags::paused | selected;
++ return p;
++}
++}
++TORRENT_TEST(biglybtc_swarm_hash_selection)
++{
++ auto const full=hashes();
++ for(auto const selected:{torrent_flags_t{},biglybtc_v1_only,biglybtc_v2_only})
++ {
++  auto const wire=biglybtc_wire_hashes(full,selected);
++  TEST_CHECK(wire.has_v1()==(selected!=biglybtc_v2_only));
++  TEST_CHECK(wire.has_v2()==(selected!=biglybtc_v1_only));
++  TEST_CHECK(full.has_v1()&&full.has_v2());
++ }
++ TEST_CHECK(!biglybtc_wire_hashes(full,biglybtc_swarm_mask).has_v1());
++ TEST_CHECK(!biglybtc_wire_hashes(full,biglybtc_swarm_mask).has_v2());
++ TEST_CHECK(!biglybtc_wire_hashes(info_hash_t(full.v1),biglybtc_v2_only).has_v2());
++ TEST_CHECK(!biglybtc_wire_hashes(info_hash_t(full.v2),biglybtc_v1_only).has_v1());
++ TEST_EQUAL(biglybtc_swarm_mask_abi_v1(),1u);
++}
++TORRENT_TEST(biglybtc_swarm_session_indices_and_immutable_admission)
++{
++ auto const info=hybrid();auto const full=info->info_hashes();
++ auto const section=info->info_section();std::string const raw(section.data(),section.size());
++ for(auto const selected:{torrent_flags_t{},biglybtc_v1_only,biglybtc_v2_only})
++ {
++  session owner(isolated());error_code ec;
++  auto handle=owner.add_torrent(parameters(info,selected),ec);TEST_CHECK(!ec);TEST_CHECK(handle.is_valid());
++  if(!handle.is_valid())continue;
++  TEST_CHECK(owner.find_torrent(full.v1).is_valid()==(selected!=biglybtc_v2_only));
++  TEST_CHECK(owner.find_torrent(full.v2).is_valid()==(selected!=biglybtc_v1_only));
++  TEST_CHECK(handle.info_hashes()==full);TEST_CHECK(handle.status().info_hashes==full);
++  handle.set_flags(torrent_flags_t{},biglybtc_swarm_mask);
++  TEST_CHECK((handle.status().flags & biglybtc_swarm_mask)==selected);
++  auto duplicate=parameters(info,selected==torrent_flags_t{}?biglybtc_v1_only:torrent_flags_t{});
++  auto rejected=owner.add_torrent(std::move(duplicate),ec);
++  TEST_CHECK(ec==errors::duplicate_torrent);TEST_CHECK(!rejected.is_valid());
++  auto const retained=handle.torrent_file()->info_section();
++  TEST_CHECK(std::string(retained.data(),retained.size())==raw);
++  TEST_CHECK(handle.torrent_file()->info_hashes()==full);
++ }
++}
++TORRENT_TEST(biglybtc_swarm_metadata_arrival_preserves_selection)
++{
++ auto const info=hybrid();auto const full=info->info_hashes();
++ for(auto const selected:{biglybtc_v1_only,biglybtc_v2_only})
++ {
++  session owner(isolated());add_torrent_params p;p.save_path=".";
++  p.info_hashes=biglybtc_wire_hashes(full,selected);
++  p.flags &= ~torrent_flags::auto_managed;p.flags |= torrent_flags::paused | selected;
++  error_code ec;auto handle=owner.add_torrent(std::move(p),ec);TEST_CHECK(!ec);
++  if(!handle.is_valid())continue;
++  TEST_CHECK(handle.set_metadata(info->info_section()));
++  TEST_CHECK(handle.info_hashes()==full);
++  TEST_CHECK(owner.find_torrent(full.v1).is_valid()==(selected==biglybtc_v1_only));
++  TEST_CHECK(owner.find_torrent(full.v2).is_valid()==(selected==biglybtc_v2_only));
++  TEST_CHECK((handle.status().flags & biglybtc_swarm_mask)==selected);
++ }
++}
++TORRENT_TEST(biglybtc_swarm_resume_and_invalid_admission)
++{
++ auto const info=hybrid();auto const full=info->info_hashes();
++ for(auto const selected:{torrent_flags_t{},biglybtc_v1_only,biglybtc_v2_only})
++ {
++  auto p=parameters(info,selected);p.info_hashes=full;
++  auto bytes=write_resume_data_buf(p);error_code ec;
++  auto restored=read_resume_data(bytes,ec);TEST_CHECK(!ec);
++  TEST_CHECK((restored.flags & biglybtc_swarm_mask)==selected);
++  TEST_CHECK(restored.info_hashes==full);
++ }
++ for(auto const selected:{biglybtc_swarm_mask,biglybtc_v2_only})
++ {
++  session owner(isolated());auto p=parameters({},selected);p.info_hashes=info_hash_t(full.v1);
++  error_code ec;auto rejected=owner.add_torrent(std::move(p),ec);
++  TEST_CHECK(ec==errors::invalid_info_hash);TEST_CHECK(!rejected.is_valid());TEST_CHECK(owner.get_torrents().empty());
++ }
++ auto invalid=parameters(info,biglybtc_v1_only);invalid.info_hashes=full;
++ auto malformed=write_resume_data(invalid);
++ malformed["biglybtc.swarm"]="bad";std::vector<char> bytes;
++ bencode(std::back_inserter(bytes),malformed);error_code ec;
++ (void)read_resume_data(bytes,ec);TEST_CHECK(ec==errors::invalid_info_hash);
++ auto duplicate=write_resume_data_buf(invalid);TEST_CHECK(!duplicate.empty());
++ if(!duplicate.empty())
++ {
++  duplicate.pop_back();std::string const field="14:biglybtc.swarmi0ee";
++  duplicate.insert(duplicate.end(),field.begin(),field.end());ec.clear();
++  (void)read_resume_data(duplicate,ec);TEST_CHECK(ec==errors::invalid_info_hash);
++ }
++}
