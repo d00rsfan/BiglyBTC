@@ -76,6 +76,10 @@ private slots:
   }
   void inheritedSavedPauseNeverBecomesCurrentAuthority(){
     test::OwnedEngineFixture f(false);prepare(f);sh::ApprovedModule module;
+    // Hold the original pause schedule from startup. Disabled polling now
+    // intentionally honors imported Java permission on its separate path.
+    auto initial=sh::document(test::read(f.profile+"/biglybt.config"));QVERIFY(initial.replaceValue("Plugin.SpeedScheduler.speedscheduler.enabled","i1e"));
+    test::write(f.profile+"/biglybt.config",QByteArray::fromStdString(initial.serialize()));
     {auto held=storage::ProfileLease::acquire(f.native());QVERIFY(held);QVERIFY(storage::applyLibraryCommand(*held,*f.hash,core::DownloadAction::Pause));}
     auto formatted=storage::scheduler::originalOwnershipHash({reinterpret_cast<const std::uint8_t*>(f.hash->bytes().data()),f.hash->bytes().size()});QVERIFY(formatted);
     const auto legacy=QByteArray::fromStdString(*formatted+"\r\nopaque legacy line\r\n");sh::write(sh::schedulerFile(f.profile,"PausedTorrents.conf"),legacy);

@@ -11,6 +11,7 @@
 #include "session_bridge.hpp"
 #include "application_settings.hpp"
 #include "scheduler_service.hpp"
+#include "ownership_file.hpp"
 #include "torrent_state.hpp"
 #include "../adapters/local_rating.hpp"
 #include <QDateTime>
@@ -329,6 +330,67 @@ struct SessionBridge::Host {
     }
     schedulerMemberships.insert_or_assign(key,result);return result;
   }
+  std::vector<storage::ImportedSchedulerTarget> schedulerImportedTargets() {
+    const auto source=take(storage::readLibraryView(lease));
+    const auto active=engine?engine->managedDownloads():std::vector<engine::ManagedDownloadStatus>{};
+    std::map<std::string,const engine::ManagedDownloadStatus*> live;
+    for(const auto& row:active){if(row.retained){live.emplace(row.hash.hex(),&row);}}
+    std::set<std::string> pauses,unique;
+    for(const auto& pause:source.pauses){pauses.insert(pause.hash.hex());}
+    const auto ownership=storage::scheduler::OwnershipFile::read(scheduler->snapshot().ownershipBytes);
+    if(!ownership){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid imported Scheduler ownership"}};}
+    const bool enabled=scheduler->snapshot().settings.enabled;
+    const bool filters=enabled&&scheduler->snapshot().configuration&&std::ranges::any_of(
+        scheduler->snapshot().configuration->schedules,[](const auto& rule){return rule.enabled&&(rule.onlyCategory||rule.excludeCategory);});
+    std::vector<storage::ImportedSchedulerTarget> result;
+    for(const auto& row:source.items){
+      if(!row.saved.hash||!row.saved.persistent){continue;}
+      const auto& hash=*row.saved.hash;const auto key=hash.hex();
+      if(!unique.insert(key).second){throw Failure{{storage::ErrorCode::Conflict,"Ambiguous imported Scheduler library target"}};}
+      // A manual command may precede lazy module creation. Its current-Host
+      // revocation remains authoritative even without a service to clean up.
+      const auto manual=manualRevisions.find(key);
+      if(manual!=manualRevisions.end()&&manual->second!=0){continue;}
+      const auto raw=hash.bytes();const auto present=ownership->contains({reinterpret_cast<const std::uint8_t*>(raw.data()),raw.size()});
+      if(!present){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid imported Scheduler hash"}};}
+      if(!*present){continue;}
+      storage::ImportedSchedulerTarget item;item.hash=hash;item.libraryRevision=revision;item.manualRevision=manualRevisions[key];
+      item.forceStarted=row.saved.forceStart;item.paused=pauses.contains(key);
+      item.state=row.saved.startup==core::StartupState::Stopped?storage::scheduler::TorrentState::Stopped
+          :row.saved.startup==core::StartupState::Queued?storage::scheduler::TorrentState::Queued:storage::scheduler::TorrentState::Waiting;
+      const auto found=live.find(key);
+      if(found!=live.end()){
+        const auto& current=*found->second;
+        if(current.failure||current.phase==engine::ManagedPhase::Stopping){continue;}
+        if(current.checked){item.complete=current.selectedComplete;}
+        switch(current.phase){
+          case engine::ManagedPhase::Checking:item.state=storage::scheduler::TorrentState::Preparing;break;
+          case engine::ManagedPhase::Downloading:item.state=storage::scheduler::TorrentState::Downloading;break;
+          case engine::ManagedPhase::Seeding:item.state=storage::scheduler::TorrentState::Seeding;break;
+          case engine::ManagedPhase::Paused:case engine::ManagedPhase::Stopped:item.state=storage::scheduler::TorrentState::Stopped;break;
+          default:item.state=storage::scheduler::TorrentState::Queued;break;
+        }
+      }else if(enabled){
+        // The existing original no-DiskManager projection is a saved source,
+        // distinct from an actual LT checked admission. No fake engine token.
+        if(row.cached){item.complete=core::projectSavedDndProgress(row.cached->bytes,row.saved.completedBytes,
+            row.cached->savedDnd).controllerNoDiskCompleteExcludingDnd;}
+        if(!item.complete){
+          const auto details=engine::queryTorrent(lease,hash);
+          auto store=storage::TorrentStateStore::open(lease);
+          if(details&&store){auto attrs=store->loadAttributes(lease,hash);
+            if(attrs&&!attrs->recoveredBackup()){
+              const auto facts=core::readSavedDndFacts(attrs->document().find("attributes"));
+              item.complete=core::projectSavedDndProgress(details->bytes,row.saved.completedBytes,facts).controllerNoDiskCompleteExcludingDnd;
+            }
+          }
+        }
+      }
+      if(filters){auto membership=schedulerMembership(hash);item.membershipsAvailable=membership.available;item.memberships=std::move(membership.names);}
+      result.push_back(std::move(item));
+    }
+    return result;
+  }
   std::vector<storage::SchedulerTorrent> schedulerTorrents() {
     const auto saved=take(storage::readLibraryView(lease));
     const auto active=engine?engine->managedDownloads():std::vector<engine::ManagedDownloadStatus>{};
@@ -526,7 +588,7 @@ struct SessionBridge::Host {
       }
       const bool paused = pauses.contains(hash);
       const bool stopped = saved.startup == core::StartupState::Stopped;
-      QString state = paused ? SessionBridge::tr("Paused") : stopped ? SessionBridge::tr("Stopped")
+      QString state = paused ? (schedulerPaused.contains(hash)?SessionBridge::tr("Paused — Speed Scheduler"):SessionBridge::tr("Paused")) : stopped ? SessionBridge::tr("Stopped")
           : size && saved.completedBytes && *saved.completedBytes >= *size ? SessionBridge::tr("Complete")
           : saved.startup == core::StartupState::Queued ? SessionBridge::tr("Queued") : SessionBridge::tr("Waiting");
       const bool unique = !hash.empty() && counts[hash] == 1;
@@ -2746,7 +2808,8 @@ void SessionBridge::tickScheduler() noexcept {
   try{
     if(host_->fileRecoveryRequired||storage::hasPendingOriginalCompaction(host_->lease)){return;}
     ensureScheduler();if(!host_->scheduler){return;}
-    if(!host_->scheduler->snapshot().settings.enabled&&host_->schedulerPaused.empty()&&!host_->schedulerRestoreDefaults){return;}
+    if(!host_->scheduler->snapshot().settings.enabled&&host_->schedulerPaused.empty()&&!host_->schedulerRestoreDefaults
+        &&host_->scheduler->snapshot().ownershipBytes.empty()){return;}
     const auto now=std::chrono::steady_clock::now();
     const auto interval=std::chrono::milliseconds(host_->scheduler->snapshot().settings.pollMilliseconds);
     if(host_->schedulerLastTick&&now-*host_->schedulerLastTick<interval){return;}host_->schedulerLastTick=now;
@@ -2825,6 +2888,46 @@ void SessionBridge::tickScheduler() noexcept {
         static_cast<void>(host_->scheduler->finishAction(host_->lease,action,storage::SchedulerActionResult::Indeterminate));
         host_->schedulerFailure=text(error.error.message);
         static_cast<void>(intentConfirmed);break;
+      }
+    }
+    // Saved Java permission is evaluated separately from acknowledged native
+    // pause ownership; saved-only targets do not acquire fake LT tokens.
+    const auto importedTime=QDateTime::currentDateTime();
+    auto importedTargets=host_->schedulerImportedTargets();
+    const auto imported=take(host_->scheduler->evaluateImported(host_->lease,
+        {importedTime.date().dayOfWeek()%7,importedTime.time().hour()*60+importedTime.time().minute()},importedTargets));
+    if(imported.unavailableTargets){host_->schedulerFailure=tr("Some saved Scheduler targets have unavailable completion observations");}
+    for(const auto& action:imported.actions){
+      auto current=host_->schedulerImportedTargets();
+      const auto row=std::ranges::find(current,action.target.hash,&storage::ImportedSchedulerTarget::hash);
+      if(row==current.end()){continue;}
+      const auto began=host_->scheduler->beginImportedAction(host_->lease,action,*row);
+      if(!began){host_->schedulerFailure=text(began.error().message);continue;}
+      try{
+        std::optional<storage::LibraryCommandResult> publication;
+        if(action.kind!=storage::scheduler::ActionKind::SetStopReason){
+          const auto command=action.kind==storage::scheduler::ActionKind::Resume?core::DownloadAction::Resume:core::DownloadAction::Start;
+          publication=take(storage::applyLibraryCommand(host_->lease,action.target.hash,command));
+          const auto& saved=*publication;
+          if(!saved.pauseAfter&&saved.after.startup!=core::StartupState::Stopped){
+            const auto active=host_->engine->managedDownloads();
+            const auto live=std::ranges::find(active,action.target.hash,&engine::ManagedDownloadStatus::hash);
+            const auto controlled=live!=active.end()&&live->retained
+                ?host_->engine->queueManaged(action.target.hash,saved.after.forceStart,saved.after.startup==core::StartupState::Queued)
+                :host_->engine->startManaged(host_->lease,{action.target.hash,host_->peerPort,saved.after.forceStart,saved.after.startup==core::StartupState::Queued});
+            if(!controlled){throw Failure{controlled.error()};}
+          }
+          host_->schedulerPaused.erase(action.target.hash.hex());
+        }
+        if(action.kind==storage::scheduler::ActionKind::SetStopReason&&action.target.paused){host_->schedulerPaused.insert(action.target.hash.hex());}
+        static_cast<void>(take(host_->scheduler->finishImportedAction(host_->lease,action,storage::SchedulerActionResult::Succeeded,
+            publication?&*publication:nullptr)));
+      }catch(const Failure& error){
+        static_cast<void>(host_->scheduler->finishImportedAction(host_->lease,action,storage::SchedulerActionResult::Indeterminate));
+        host_->schedulerFailure=text(error.error.message);break;
+      }catch(...){
+        static_cast<void>(host_->scheduler->finishImportedAction(host_->lease,action,storage::SchedulerActionResult::Indeterminate));
+        throw;
       }
     }
     if(host_->schedulerFailure.isEmpty()){host_->schedulerFailure=text(host_->scheduler->snapshot().diagnostic);}

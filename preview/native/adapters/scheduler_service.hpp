@@ -18,6 +18,7 @@
 
 namespace biglybtc::storage {
 namespace scheduler = plugins::speed_scheduler;
+struct LibraryCommandResult;
 struct SchedulerSettings {
   bool enabled = false, useTags = false, overrideForced = false;
   int pollMilliseconds = 10000;
@@ -69,6 +70,30 @@ struct SchedulerPlan {
 };
 enum class SchedulerActionResult { Succeeded, FailedBeforeEffect, Indeterminate };
 
+// A real saved-library target, independent of a retained LT admission token.
+struct ImportedSchedulerTarget {
+  core::TorrentHash hash;
+  std::uint64_t libraryRevision = 0, manualRevision = 0;
+  std::optional<bool> complete{}; // Not required by the original disabled branch.
+  bool forceStarted = false, paused = false;
+  scheduler::TorrentState state = scheduler::TorrentState::Stopped;
+  bool membershipsAvailable = true;
+  std::vector<std::string> memberships{};
+  bool operator==(const ImportedSchedulerTarget&) const = default;
+};
+struct ImportedSchedulerAction {
+  std::uint64_t plan = 0, ordinal = 0;
+  ImportedSchedulerTarget target;
+  scheduler::ActionKind kind;
+  bool operator==(const ImportedSchedulerAction&) const = default;
+};
+struct ImportedSchedulerPlan {
+  std::uint64_t id = 0, revision = 0;
+  std::size_t unavailableTargets = 0;
+  std::vector<ImportedSchedulerAction> actions;
+};
+
+
 // Worker-confined. Caller authenticates the module artifact BEFORE loading it;
 // this API does not treat a raw filesystem path as authenticated native code.
 // Borrowed held profile; no new lock, engine, timer, GUI or network owner.
@@ -96,6 +121,15 @@ public:
       const SchedulerTorrent& current, std::stop_token = {});
   std::expected<void, Error> finishAction(const ProfileLease&, const SchedulerAction&, SchedulerActionResult);
   std::expected<void, Error> acknowledgeRates(std::uint64_t plan, bool uploadApplied, bool downloadApplied);
+  // ImportedOriginal permission follows Java's persisted hash semantics. It
+  // never enters the separate acknowledged NativeCurrent authority map.
+  std::expected<ImportedSchedulerPlan, Error> evaluateImported(const ProfileLease&,
+      scheduler::LocalMinute, std::span<const ImportedSchedulerTarget>);
+  std::expected<void, Error> beginImportedAction(const ProfileLease&,
+      const ImportedSchedulerAction&, const ImportedSchedulerTarget&, std::stop_token = {});
+  std::expected<void, Error> finishImportedAction(const ProfileLease&,
+      const ImportedSchedulerAction&, SchedulerActionResult, const LibraryCommandResult* publication = nullptr);
+
   // Call BEFORE every explicit user action. In-memory authority is revoked even
   // if IO fails; caller still honors the user's command and surfaces the error.
   std::expected<void, Error> revokeForManual(const ProfileLease&, const core::TorrentHash&);

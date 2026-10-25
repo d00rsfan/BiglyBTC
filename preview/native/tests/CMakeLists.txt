@@ -1757,3 +1757,22 @@ if(BIGLYBTC_LOCAL_ENGINE AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "
 endif()
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/NetworkProxyCapabilityTests.cmake")
+
+# Imported original Scheduler permission: bound actual-owner fixture only.
+if(BIGLYBTC_DESKTOP AND TARGET biglybtc_local_engine AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-scheduler-imported-integration-tests scheduler_imported_integration_tests.cpp)
+  set_target_properties(biglybtc-scheduler-imported-integration-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-scheduler-imported-integration-tests PRIVATE biglybtc_desktop_host biglybtc_scheduler_service
+    biglybtc_local_engine biglybtc_profile Qt6::Test LibtorrentRasterbar::torrent-rasterbar)
+  target_compile_options(biglybtc-scheduler-imported-integration-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_dependencies(biglybtc-scheduler-imported-integration-tests biglybtc_scheduler_module)
+  add_test(NAME scheduler-imported-integration COMMAND biglybtc-scheduler-imported-integration-tests)
+  set_tests_properties(scheduler-imported-integration PROPERTIES TIMEOUT 240 LABELS "unit;scheduler;integration"
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen;BIGLYBTC_SCHEDULER_TEST_MODULE=$<TARGET_FILE:biglybtc_scheduler_module>")
+  # Explicit arguments required; the root recipe drives original/native phases.
+  add_executable(biglybtc-scheduler-imported-handoff-driver scheduler_imported_handoff_driver.cpp)
+  target_link_libraries(biglybtc-scheduler-imported-handoff-driver PRIVATE biglybtc_desktop_host biglybtc_scheduler_service
+    biglybtc_local_engine biglybtc_profile Qt6::Test LibtorrentRasterbar::torrent-rasterbar)
+  target_compile_options(biglybtc-scheduler-imported-handoff-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_dependencies(biglybtc-scheduler-imported-handoff-driver biglybtc_scheduler_module)
+endif()

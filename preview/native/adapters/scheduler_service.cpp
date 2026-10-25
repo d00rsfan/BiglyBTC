@@ -1,4 +1,5 @@
 #include "scheduler_service.hpp"
+#include "library_commands.hpp"
 #include "scheduler_io.hpp"
 #include "ownership_file.hpp"
 #include "biglybtc/scheduler.h"
@@ -142,7 +143,8 @@ std::string intentText(const SchedulerAction& action) {
   return "BiglyBTC Scheduler intent 1\n"+action.hash.hex()+"\n"+std::to_string(action.token)+"\n"+std::to_string(action.manualRevision)+"\n"+std::to_string(static_cast<int>(action.kind))+"\n";
 }
 bool intentFor(std::string_view bytes,const core::TorrentHash& hash) {
-  return bytes.starts_with("BiglyBTC Scheduler intent 1\n"+hash.hex()+"\n");
+  return bytes.starts_with("BiglyBTC Scheduler intent 1\n"+hash.hex()+"\n")
+      ||bytes.starts_with("BiglyBTC Scheduler imported intent 1\n"+hash.hex()+"\n");
 }
 }
 struct SchedulerService::Impl {
@@ -153,6 +155,13 @@ struct SchedulerService::Impl {
   Raw xml,ownership,intent,config;
   std::map<std::string,std::pair<std::uint64_t,std::uint64_t>> authority;
   std::optional<SchedulerAction> pending;
+  std::optional<ImportedSchedulerAction> importedPending;
+  std::optional<ImportedSchedulerPlan> importedIssued;
+  Raw importedInventory;
+  std::set<std::uint64_t> importedConsumed;
+  std::set<std::string> importedRevoked;
+  bool importedRevocationLost = false;
+
   std::optional<SchedulerPlan> issued;
   std::map<std::uint64_t,SchedulerTorrent> planInputs;
   std::set<std::uint64_t> consumed;
@@ -179,13 +188,13 @@ struct SchedulerService::Impl {
     }
     held(lease);
   }
-  void invalidatePlans(){issued.reset();planInputs.clear();consumed.clear();}
+  void invalidatePlans(){issued.reset();planInputs.clear();consumed.clear();importedIssued.reset();importedConsumed.clear();}
   void warning(){
     snapshot.interruptedAction=intent.bytes.has_value()||poisoned;
     snapshot.inheritedOwnershipUnverified=inheritedRecords;
     if(snapshot.interruptedAction){snapshot.diagnostic="An interrupted scheduler action requires review. Automatic actions are suspended.";}
     else if(snapshot.inheritedOwnershipUnverified&&snapshot.diagnostic.empty()){
-      snapshot.diagnostic="Existing pause records are preserved. Only pauses acknowledged in this session may be resumed automatically.";}
+      snapshot.diagnostic="Imported original pause records follow the original hash permission policy; native acknowledgements remain separate.";}
   }
   void advance(){if(snapshot.revision==UINT64_MAX){fail(ErrorCode::Conflict,"Scheduler revision exhausted");}++snapshot.revision;invalidatePlans();}
 };
@@ -205,7 +214,7 @@ std::expected<std::unique_ptr<SchedulerService>,Error> SchedulerService::open(co
 std::expected<void,Error> SchedulerService::reload(const ProfileLease& lease,std::stop_token stop) {
   return guarded([&]()->std::expected<void,Error>{
     auto& p=*impl_;p.held(lease);checkStop(stop);
-    if(p.pending){fail(ErrorCode::Busy,"Cannot reload while scheduler action is awaiting acknowledgement");}
+    if(p.pending||p.importedPending){fail(ErrorCode::Busy,"Cannot reload while scheduler action is awaiting acknowledgement");}
     auto cfg=configuration(lease);auto plugins=directory(lease.directoryHandle(),"plugins",true);
     const auto leaf=locate(plugins.get(),cfg.document);auto data=plugins.get()<0?detail::Descriptor(-1):directory(plugins.get(),leaf.c_str(),true);
     auto xml=data.get()<0?Raw{}:read(data.get(),XmlName,XmlMaximum);
@@ -226,7 +235,7 @@ std::expected<void,Error> SchedulerService::saveSchedules(const ProfileLease& le
   return guarded([&]()->std::expected<void,Error>{
     auto& p=*impl_;p.held(lease);checkStop(stop);
     if(revision!=p.snapshot.revision){fail(ErrorCode::Conflict,"Scheduler editor revision is stale");}
-    if(p.pending||p.poisoned){fail(ErrorCode::Busy,"Scheduler action must settle before editing");}
+    if(p.pending||p.importedPending||p.poisoned){fail(ErrorCode::Busy,"Scheduler action must settle before editing");}
     auto edited=patchSchedulerXml(p.snapshot.originalXml,changes);if(!edited){return std::unexpected(edited.error());}
     auto parsed=scheduler::readOriginalXml(*edited);if(!parsed){fail(ErrorCode::InvalidFormat,"Edited scheduler model failed validation");}
     safeConfiguration(parsed->configuration);checkStop(stop);p.makeData(lease);
@@ -239,7 +248,7 @@ std::expected<void,Error> SchedulerService::saveSchedules(const ProfileLease& le
 std::expected<void,Error> SchedulerService::saveSettings(const ProfileLease& lease,std::uint64_t revision,const SchedulerSettingsChanges& changes,std::stop_token stop) {
   return guarded([&]()->std::expected<void,Error>{
     auto& p=*impl_;p.held(lease);checkStop(stop);if(revision!=p.snapshot.revision){fail(ErrorCode::Conflict,"Scheduler settings revision is stale");}
-    if(p.pending||p.poisoned){fail(ErrorCode::Busy,"Scheduler action must settle before editing settings");}
+    if(p.pending||p.importedPending||p.poisoned){fail(ErrorCode::Busy,"Scheduler action must settle before editing settings");}
     if(changes.pollMilliseconds&&*changes.pollMilliseconds<1000){fail(ErrorCode::InvalidFormat,"Scheduler interval must be at least 1000 milliseconds");}
     auto cfg=configuration(lease);if(cfg.raw.bytes!=p.config.bytes||(cfg.raw.bytes&&!same(cfg.raw.identity,p.config.identity))){fail(ErrorCode::Conflict,"Configuration changed before scheduler settings save");}
     const auto prefix="Plugin."+p.snapshot.directoryLeaf+".";
@@ -267,7 +276,7 @@ std::expected<void,Error> SchedulerService::saveSettings(const ProfileLease& lea
 std::expected<SchedulerPlan,Error> SchedulerService::evaluate(scheduler::LocalMinute minute,std::span<const SchedulerTorrent> torrents,int upload,int download) {
   return guarded([&]()->std::expected<SchedulerPlan,Error>{
     auto& p=*impl_;
-    if(p.pending||p.snapshot.interruptedAction){fail(ErrorCode::Busy,"Interrupted/unacknowledged scheduler action blocks automatic effects");}
+    if(p.pending||p.importedPending||p.snapshot.interruptedAction){fail(ErrorCode::Busy,"Interrupted/unacknowledged scheduler action blocks automatic effects");}
     if(minute.sundayBasedDay<0||minute.sundayBasedDay>6||minute.minute<0||minute.minute>1439||upload<0||download<0
         ||upload>INT_MAX/1024||download>INT_MAX/1024||torrents.size()>scheduler::MaximumTorrents){fail(ErrorCode::InvalidFormat,"Invalid scheduler tick input");}
     if(p.snapshot.settings.enabled&&!p.snapshot.configuration){fail(ErrorCode::Missing,"No SavedSchedules.xml; scheduler has no schedule to enforce");}
@@ -321,7 +330,7 @@ std::expected<SchedulerPlan,Error> SchedulerService::evaluate(scheduler::LocalMi
 std::expected<void,Error> SchedulerService::beginAction(const ProfileLease& lease,const SchedulerAction& action,const SchedulerTorrent& current,std::stop_token stop) {
   return guarded([&]()->std::expected<void,Error>{
     auto& p=*impl_;p.held(lease);checkStop(stop);
-    if(p.pending||p.snapshot.interruptedAction){fail(ErrorCode::Busy,"A scheduler action is already pending/interrupted");}
+    if(p.pending||p.importedPending||p.snapshot.interruptedAction){fail(ErrorCode::Busy,"A scheduler action is already pending/interrupted");}
     if(!p.issued||action.plan!=p.issued->id||p.issued->revision!=p.snapshot.revision||action.ordinal>=p.issued->actions.size()
         ||p.issued->actions[action.ordinal]!=action||p.consumed.contains(action.ordinal)||current.hash!=action.hash||current.token!=action.token||current.manualRevision!=action.manualRevision){
       fail(ErrorCode::Conflict,"Scheduler action is stale or not the exact issued action");}
@@ -342,7 +351,7 @@ std::expected<void,Error> SchedulerService::beginAction(const ProfileLease& leas
 std::expected<void,Error> SchedulerService::finishAction(const ProfileLease& lease,const SchedulerAction& action,SchedulerActionResult result) {
   return guarded([&]()->std::expected<void,Error>{
     auto& p=*impl_;p.held(lease);
-    if(!p.pending||*p.pending!=action||!p.intent.bytes||*p.intent.bytes!=intentText(action)){fail(ErrorCode::Conflict,"Scheduler acknowledgement does not match durable pending action");}
+    if(!p.pending||p.importedPending||*p.pending!=action||!p.intent.bytes||*p.intent.bytes!=intentText(action)){fail(ErrorCode::Conflict,"Scheduler acknowledgement does not match durable pending action");}
     if(result==SchedulerActionResult::Indeterminate){p.poisoned=true;p.warning();fail(ErrorCode::Conflict,"Scheduler action outcome is uncertain; no automatic retry");}
     if(result!=SchedulerActionResult::Succeeded&&result!=SchedulerActionResult::FailedBeforeEffect){fail(ErrorCode::InvalidFormat,"Invalid scheduler action acknowledgement");}
     try{
@@ -371,8 +380,10 @@ std::expected<void,Error> SchedulerService::acknowledgeRates(std::uint64_t plan,
 std::expected<void,Error> SchedulerService::revokeForManual(const ProfileLease& lease,const core::TorrentHash& hash) {
   // No filesystem failure can restore in-memory authority over a user's action.
   auto& p=*impl_;p.authority.erase(hash.hex());p.invalidatePlans();
+  try{p.importedRevoked.insert(hash.hex());}catch(...){p.importedRevocationLost=true;p.poisoned=true;}
   return guarded([&]()->std::expected<void,Error>{
-    p.held(lease);if(hash.bytes().size()!=20&&hash.bytes().size()!=32){fail(ErrorCode::InvalidFormat,"Invalid manual scheduler revocation hash");}
+    p.held(lease);if(p.importedRevocationLost){p.warning();fail(ErrorCode::Io,"Manual Scheduler revocation could not be retained; automatic actions are suspended");}
+    if(hash.bytes().size()!=20&&hash.bytes().size()!=32){fail(ErrorCode::InvalidFormat,"Invalid manual scheduler revocation hash");}
     if(p.data.get()<0){return {};}
     auto file=scheduler::OwnershipFile::read(p.snapshot.ownershipBytes);if(!file){fail(ErrorCode::InvalidFormat,"Invalid scheduler ownership file");}
     auto canonical=scheduler::originalOwnershipHash(hashBytes(hash));if(!canonical){fail(ErrorCode::InvalidFormat,"Invalid manual revocation hash");}
@@ -388,7 +399,7 @@ std::expected<void,Error> SchedulerService::revokeForManual(const ProfileLease& 
     }
     if(bytes!=p.snapshot.ownershipBytes){p.ownership=replace(p.data.get(),OwnershipName,p.ownership,bytes,scheduler::OwnershipFile::MaximumBytes);p.snapshot.ownershipBytes=std::move(bytes);}
     if(p.intent.bytes&&intentFor(*p.intent.bytes,hash)){
-      remove(p.data.get(),IntentName,p.intent,IntentMaximum);p.intent={};p.pending.reset();
+      remove(p.data.get(),IntentName,p.intent,IntentMaximum);p.intent={};p.pending.reset();p.importedPending.reset();
       // Explicit user override settles this intent only. A previous unrelated IO
       // uncertainty still requires a new service/review rather than blind retry.
     }
@@ -402,7 +413,7 @@ std::expected<bool,Error> SchedulerService::rebindOwnedPause(const ProfileLease&
     auto& p=*impl_;p.held(lease);
     if((hash.bytes().size()!=20&&hash.bytes().size()!=32)||!oldToken||newToken<=oldToken){
       fail(ErrorCode::InvalidFormat,"Invalid scheduler pause admission transfer");}
-    if(p.pending||p.intent.bytes||p.poisoned||p.snapshot.interruptedAction){
+    if(p.pending||p.importedPending||p.intent.bytes||p.poisoned||p.snapshot.interruptedAction){
       fail(ErrorCode::Busy,"An unsettled scheduler action prevents pause admission transfer");}
     unchanged(lease.directoryHandle(),"biglybt.config",p.config,ConfigMaximum);
     if(p.data.get()>=0){
@@ -423,4 +434,5 @@ std::expected<bool,Error> SchedulerService::rebindOwnedPause(const ProfileLease&
     p.advance();found->second={newToken,manualRevision};return true;
   });
 }
+#include "scheduler_imported_service.inc"
 } // namespace biglybtc::storage
