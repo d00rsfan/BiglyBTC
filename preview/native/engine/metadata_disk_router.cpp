@@ -1,4 +1,5 @@
 #include "metadata_disk_router.hpp"
+#include "original_disk_io.hpp"
 
 #include <libtorrent/disabled_disk_io.hpp>
 #include <libtorrent/disk_interface.hpp>
@@ -43,6 +44,8 @@ public:
 #endif
     try { disabled_ = lt::disabled_disk_io_constructor(context, settings, counters); }
     catch (...) { real_->abort(true); throw; }
+    try { original_=originalDiskConstructor(context,[policy=policy_](const std::string& path){return policy->originalFiles(path);}); }
+    catch (...) {disabled_->abort(true);real_->abort(true);throw;}
   }
   ~MetadataDiskRouter() override = default;
 
@@ -53,7 +56,7 @@ public:
     }
     // Normalize/lookup BEFORE either backend sees the torrent. Never catch a
     // normalization/allocation failure and fall back to real file IO.
-    auto* backend = policy_->isMetadataPath(std::filesystem::path(parameters.path)) ? disabled_.get() : real_.get();
+    auto* backend = policy_->isMetadataPath(std::filesystem::path(parameters.path)) ? disabled_.get() : policy_->isOriginalPath(std::filesystem::path(parameters.path)) ? original_.get() : real_.get();
     auto holder = backend->new_torrent(parameters, torrent);
     if (!holder) { throw std::runtime_error("Disk backend returned no storage holder"); }
     const auto index = lt::storage_index_t{static_cast<std::uint32_t>(slots_.size())};
@@ -122,9 +125,9 @@ public:
   std::vector<lt::open_file_state> get_status(lt::storage_index_t index) const override {
     const auto& slot = at(index); return slot.backend->get_status(slot.holder);
   }
-  void abort(bool wait) override { disabled_->abort(wait); real_->abort(wait); }
-  void submit_jobs() override { real_->submit_jobs(); disabled_->submit_jobs(); }
-  void settings_updated() override { real_->settings_updated(); disabled_->settings_updated(); }
+  void abort(bool wait) override { original_->abort(wait); disabled_->abort(wait); real_->abort(wait); }
+  void submit_jobs() override { real_->submit_jobs(); disabled_->submit_jobs(); original_->submit_jobs(); }
+  void settings_updated() override { real_->settings_updated(); disabled_->settings_updated(); original_->settings_updated(); }
 private:
   Slot& at(lt::storage_index_t index) {
     auto& slot = slots_.at(static_cast<std::uint32_t>(index));
@@ -138,7 +141,7 @@ private:
   }
   std::shared_ptr<MetadataDiskPolicy> policy_;
   // Holders must be destroyed BEFORE their stock backends.
-  std::unique_ptr<lt::disk_interface> real_, disabled_;
+  std::unique_ptr<lt::disk_interface> real_, disabled_, original_;
   std::vector<Slot> slots_;
 };
 } // namespace
@@ -147,6 +150,7 @@ std::expected<void, storage::Error> MetadataDiskPolicy::registerMetadataPath(con
   try {
     const auto key = normalized(path);
     const std::lock_guard lock(mutex_);
+    if (originals_.contains(key)) { return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Original disk path already reserved"}); }
     if (paths_.contains(key)) { return {}; }
     if (paths_.size() >= MaximumMetadataPaths) {
       return std::unexpected(storage::Error{storage::ErrorCode::Unsupported, "Metadata path reservation limit reached"});
@@ -162,6 +166,19 @@ bool MetadataDiskPolicy::isMetadataPath(const std::filesystem::path& path) const
   const auto key = normalized(path);
   const std::lock_guard lock(mutex_);
   return paths_.contains(key);
+}
+std::expected<void,storage::Error> MetadataDiskPolicy::registerOriginalPath(const std::filesystem::path& path,std::shared_ptr<OriginalDiskFiles> files) {
+  try {const auto key=normalized(path);const std::lock_guard lock(mutex_);
+    if(!files||paths_.contains(key)||originals_.contains(key)){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Duplicate or invalid original storage reservation"});}
+    if(originals_.size()>=MaximumStorageAdmissions){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Original storage reservation limit"});}
+    originals_.emplace(key,files);return {};
+  }catch(...){return std::unexpected(storage::Error{storage::ErrorCode::UnsafePath,"Invalid original storage reservation"});}
+}
+bool MetadataDiskPolicy::isOriginalPath(const std::filesystem::path& path) const {const auto key=normalized(path);const std::lock_guard lock(mutex_);return originals_.contains(key);}
+std::shared_ptr<OriginalDiskFiles> MetadataDiskPolicy::originalFiles(const std::filesystem::path& path) const {
+  const auto key=normalized(path);const std::lock_guard lock(mutex_);const auto found=originals_.find(key);
+  if(found==originals_.end()){throw std::invalid_argument("Unreserved original storage path");}
+  auto result=found->second.lock();if(!result){throw std::invalid_argument("Retired original storage path");}return result;
 }
 lt::disk_io_constructor_type metadataDiskConstructor(std::shared_ptr<MetadataDiskPolicy> policy) {
   if (!policy) { throw std::invalid_argument("Metadata disk policy is required"); }

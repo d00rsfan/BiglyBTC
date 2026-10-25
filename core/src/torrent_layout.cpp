@@ -101,7 +101,7 @@ std::expected<OriginalLayout, LayoutError> originalLayout(const core::Document& 
     const auto* name = info->find("name.utf-8");
     OriginalLayout result{component(text(name ? name : info->find("name"))), false,
         integer(info->find("piece length")), 0, {}};
-    require(result.pieceLength > 0 && result.pieceLength <= 64 * 1024 * 1024, "Unqualified original piece length");
+    require(result.pieceLength > 0 && result.pieceLength <= OriginalMaximumPieceLength, "Unqualified original piece length");
     if (const auto* files = info->find("files")) {
       require(files->type == Node::Type::List && !files->children.empty(), "Invalid original v1 file list");
       result.multifile = true;

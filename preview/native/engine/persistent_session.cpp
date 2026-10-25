@@ -1133,12 +1133,13 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
     return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Original-rule queue capacity exceeded"});
   }
   const auto key = options.hash.hex();
-  if (const auto found = impl_->managed.find(key); found != impl_->managed.end()) {
-    if (found->second->handle.is_valid() || found->second->removing) {
-      return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Torrent is already admitted or retiring"});
+  const auto previous=impl_->managed.find(key);
+  if(previous!=impl_->managed.end()) {
+    const auto& row=*previous->second;
+    if(row.handle.is_valid()||row.removing||row.status.retained||row.status.phase!=ManagedPhase::Stopped
+        ||!row.flushed||!row.removed||row.status.failure) {
+      return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Torrent is already admitted or retirement is uncertified"});
     }
-    impl_->managedByHandle.erase(found->second->handle);
-    impl_->managed.erase(found);
   }
   impl_->call = true;
   try {
@@ -1149,11 +1150,24 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
         "Owned endpoint shortcut requires isolated networking");
     detail::require(impl_->operation != std::numeric_limits<std::uint64_t>::max(), "Admission identity exhausted");
     if (!impl_->network) { impl_->network = NetworkPolicy{}; }
-    auto storage = detail::take(detail::ManagedStorage::prepare(lease, options.hash, *impl_->network));
+    std::vector<detail::ManagedPayloadClaim> claimed;
+    for(const auto& [identity,row]:impl_->managed) {
+      (void)identity;if(previous!=impl_->managed.end()&&row.get()==previous->second.get()){continue;}
+      const auto claims=row->storage.claims();detail::require(claims.size()<=detail::MaximumManagedPayloadClaims-claimed.size(),"Retained payload claim bound exceeded",storage::ErrorCode::Unsupported);
+      claimed.insert(claimed.end(),claims.begin(),claims.end());
+    }
+    auto storage = detail::take(detail::ManagedStorage::prepare(lease, options.hash, *impl_->network,claimed));
+    // A certified same-hash restart replaces its own old claim only after the
+    // new read-only collision gate and complete preparation succeeded.
+    if(previous!=impl_->managed.end()){impl_->managedByHandle.erase(previous->second->handle);impl_->managed.erase(previous);}
     impl_->ensureSession();
     auto value = std::make_unique<Impl::Managed>(++impl_->operation, std::move(storage), options.hash);
     value->manualPaused = options.manuallyPaused; value->status.manuallyPaused = options.manuallyPaused;
     auto parameters = value->storage.parameters();
+    if(const auto mapped=value->storage.mappedFiles()) {
+      const auto virtualPath=std::filesystem::path(parameters.save_path)/".BiglyBTC-original-storage"/(options.hash.hex()+"-"+std::to_string(impl_->operation));
+      detail::done(impl_->diskPolicy->registerOriginalPath(virtualPath,mapped));parameters.save_path=virtualPath.string();
+    }
     // ManagedStorage deliberately reconstructs checked original state instead
     // of restoring LT transfer totals. Never charge inherited totals twice.
     detail::require(parameters.total_downloaded == 0 && parameters.total_uploaded == 0,

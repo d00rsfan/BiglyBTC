@@ -4,6 +4,10 @@
 
 namespace biglybtc::compat {
 
+// Largest original standard piece size, also accepted by the pinned engine
+// metadata reader. Torrent creation has its own, independent piece-size bound.
+inline constexpr std::int64_t OriginalMaximumPieceLength=256LL*1024*1024;
+
 struct LayoutError { std::string message; };
 struct OriginalFile {
   std::string path;

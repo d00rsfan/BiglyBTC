@@ -1360,3 +1360,67 @@ if(BIGLYBTC_LOCAL_ENGINE)
   target_link_libraries(biglybtc-file-operations-driver PRIVATE biglybtc_profile OpenSSL::Crypto)
   target_compile_options(biglybtc-file-operations-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
+
+# Original physical layouts also serve profile-bound file operations without LT.
+add_executable(biglybtc-original-file-io-tests original_file_io_tests.cpp)
+target_link_libraries(biglybtc-original-file-io-tests PRIVATE biglybtc_profile)
+target_compile_options(biglybtc-original-file-io-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_link_options(biglybtc-original-file-io-tests PRIVATE "LINKER:--wrap=ftruncate")
+# Existing test target; preserve its current ftruncate interposer.
+# Add after target creation, no new test target or timeout changes.
+target_link_options(biglybtc-original-file-io-tests PRIVATE
+  "LINKER:--wrap=pread" "LINKER:--wrap=pwrite")
+
+add_test(NAME original-physical-file-io COMMAND biglybtc-original-file-io-tests)
+set_tests_properties(original-physical-file-io PROPERTIES TIMEOUT 120 LABELS "unit;fixtures;storage")
+add_executable(biglybtc-original-file-io-driver original_file_io_driver.cpp)
+target_link_libraries(biglybtc-original-file-io-driver PRIVATE biglybtc_profile)
+target_compile_options(biglybtc-original-file-io-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+# Root merges this fragment into its normal source-bound test registration.
+# No CTest entry: run.py coordinates these actual original/native handoffs once.
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-storage-handoff-driver storage_handoff_driver.cpp)
+  target_link_libraries(biglybtc-storage-handoff-driver PRIVATE
+    biglybtc_local_engine biglybtc_profile LibtorrentRasterbar::torrent-rasterbar Qt6::Core)
+  target_compile_options(biglybtc-storage-handoff-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP)
+# Root-owned insertion; author did not execute.
+add_executable(biglybtc-original-disk-io-tests original_disk_io_tests.cpp)
+set_target_properties(biglybtc-original-disk-io-tests PROPERTIES AUTOMOC ON)
+target_link_libraries(biglybtc-original-disk-io-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+target_compile_options(biglybtc-original-disk-io-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME original-disk-io COMMAND biglybtc-original-disk-io-tests)
+set_tests_properties(original-disk-io PROPERTIES TIMEOUT 120 LABELS "unit;fixtures;storage;async")
+endif()
+
+if(BIGLYBTC_LOCAL_ENGINE)
+  add_executable(biglybtc-original-control-tests original_control_tests.cpp)
+  target_link_libraries(biglybtc-original-control-tests PRIVATE biglybtc_local_engine biglybtc_profile)
+  target_compile_options(biglybtc-original-control-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME original-storage-controls COMMAND biglybtc-original-control-tests)
+  set_tests_properties(original-storage-controls PROPERTIES TIMEOUT 120)
+endif()
+
+add_executable(biglybtc-original-file-links-tests original_file_links_tests.cpp)
+target_link_libraries(biglybtc-original-file-links-tests PRIVATE biglybtc_core)
+target_compile_features(biglybtc-original-file-links-tests PRIVATE cxx_std_23)
+target_compile_options(biglybtc-original-file-links-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME original-file-links COMMAND biglybtc-original-file-links-tests)
+
+add_executable(biglybtc-original-storage-defaults-tests original_storage_defaults_tests.cpp)
+target_link_libraries(biglybtc-original-storage-defaults-tests PRIVATE biglybtc_profile)
+target_compile_options(biglybtc-original-storage-defaults-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME original-storage-defaults COMMAND biglybtc-original-storage-defaults-tests)
+set_tests_properties(original-storage-defaults PROPERTIES TIMEOUT 120)
+
+# Root merges this into the existing source-bound fixture registration.
+# No automatic CTest: run.py coordinates original/native/original once.
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-storage-defaults-handoff-driver storage_defaults_handoff_driver.cpp)
+  target_link_libraries(biglybtc-storage-defaults-handoff-driver PRIVATE
+    biglybtc_local_engine biglybtc_profile LibtorrentRasterbar::torrent-rasterbar Qt6::Core)
+  target_compile_options(biglybtc-storage-defaults-handoff-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()

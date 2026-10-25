@@ -6,11 +6,23 @@
 #include <libtorrent/add_torrent_params.hpp>
 #include <cstdint>
 #include <memory>
+#include <filesystem>
+#include <vector>
 #include <span>
 
 namespace biglybtc::engine {
 struct NetworkPolicy;
 namespace detail {
+
+class OriginalDiskFiles;
+
+inline constexpr std::size_t MaximumManagedPayloadClaims=65536;
+struct ManagedPayloadClaim {
+  std::filesystem::path absolutePath;
+  // inode0 means a reserved future path. Known inode claims never depend on
+  // file size/mtime, which change during ordinary owned transfer.
+  std::uint64_t device=0,inode=0;
+};
 
 struct ManagedQueueMetadata {
   std::int64_t position = 1, downloaded = 0, uploaded = 0, discarded = 0, hashFailed = 0;
@@ -23,7 +35,8 @@ struct ManagedQueueMetadata {
 class ManagedStorage final {
 public:
   static std::expected<ManagedStorage,storage::Error> prepare(
-      const storage::ProfileLease&,const core::TorrentHash&,const NetworkPolicy&);
+      const storage::ProfileLease&,const core::TorrentHash&,const NetworkPolicy&,
+      std::span<const ManagedPayloadClaim> claimed={});
   ManagedStorage(ManagedStorage&&) noexcept;
   ManagedStorage& operator=(ManagedStorage&&) noexcept;
   ManagedStorage(const ManagedStorage&) = delete;
@@ -31,6 +44,8 @@ public:
   ~ManagedStorage();
   libtorrent::add_torrent_params parameters() const;
   const ManagedQueueMetadata& queueMetadata() const;
+  std::shared_ptr<OriginalDiskFiles> mappedFiles() const;
+  std::span<const ManagedPayloadClaim> claims() const noexcept;
   // Only after this exact handle's save-resume flush + storage weak-expiration
   // removal fence. Totals are this admission's actual payload byte deltas;
   // they are checked and added to the captured saved cumulative counters.

@@ -1,4 +1,8 @@
+#include "biglybtc/original_file_links.hpp"
 #include "managed_storage.hpp"
+#include "original_disk_io.hpp"
+#include "original_control.hpp"
+#include "original_storage_defaults.hpp"
 #include "local_support.hpp"
 #include "network_policy.hpp"
 #include "torrent_state.hpp"
@@ -35,6 +39,9 @@ struct Slot {
   fs::path base, actual, final;
   std::int64_t bytes;
   bool padding, skipped;
+  storage::OriginalStorageKind kind=storage::OriginalStorageKind::Linear;
+  storage::OriginalFileGeometry geometry{};
+  bool expanding=false;
   Descriptor parent{-1}, data{-1};
   struct stat identity{};
 };
@@ -43,6 +50,9 @@ bool safeManagedRelative(const fs::path& path) {
       || path.native().find('\n')!=std::string::npos || path.native().find('\0')!=std::string::npos) { return false; }
   for (const auto& part : path) { if (part.empty() || part=="." || part==".." || part.native().size()>255) { return false; } }
   return true;
+}
+bool safeManagedPhysical(const fs::path& path) {
+  return safeManagedRelative(path)||(path.is_absolute()&&path.lexically_normal()==path&&safeManagedRelative(path.relative_path()));
 }
 bool sameFile(const struct stat& a, const struct stat& b) {
   return S_ISREG(a.st_mode)&&S_ISREG(b.st_mode)&&a.st_dev==b.st_dev&&a.st_ino==b.st_ino;
@@ -104,14 +114,14 @@ std::vector<Journal> journals(const Node& attributes, bool multifile, std::size_
   require(value->type==Node::Type::Dictionary,"Invalid completion journal",ErrorCode::InvalidFormat);
   if (value->children.empty()) { return {}; }
   const auto version=integer(value->find("version"),-1);
-  require(version==(multifile?2:1),"Unsupported completion journal version");
+  require(version==(multifile?2:1)||version==(multifile?4:3),"Unsupported completion journal version");
   std::vector<Journal> result;
   const auto append=[&](const Node& item,std::size_t index) {
     const auto device=integer(item.find("device"),-1),inode=integer(item.find("inode"),-1);
     require(index<files&&device>=0&&inode>=0,"Invalid completion journal identity",ErrorCode::InvalidFormat);
     Journal entry{index,fs::path(text(item.find("source"))),fs::path(text(item.find("target"))),
       static_cast<std::uint64_t>(device),static_cast<std::uint64_t>(inode)};
-    require(safeManagedRelative(entry.source)&&safeManagedRelative(entry.target)&&entry.source!=entry.target
+    require((version>=3?safeManagedPhysical(entry.source)&&safeManagedPhysical(entry.target):safeManagedRelative(entry.source)&&safeManagedRelative(entry.target))&&entry.source!=entry.target
         &&entry.source.parent_path()==entry.target.parent_path(),"Unsafe completion journal",ErrorCode::UnsafePath);
     result.push_back(std::move(entry));
   };
@@ -138,12 +148,13 @@ void saveJournal(storage::TorrentStateFile& state, const storage::TorrentStateSt
     return record.serialize();
   };
   if (!pending.empty()) {
+    const bool absolute=std::ranges::any_of(pending,[](const auto& item){return item.source.is_absolute()||item.target.is_absolute();});
     if (multifile) {
-      put(value,"version","i2e"); std::string list="l"; for (const auto& item:pending) { list+=record(item,true); } put(value,"files",list+'e');
+      put(value,"version",absolute?"i4e":"i2e"); std::string list="l"; for (const auto& item:pending) { list+=record(item,true); } put(value,"files",list+'e');
     } else {
       require(pending.size()==1&&pending[0].index==0,"Invalid single-file completion journal",ErrorCode::InvalidFormat);
       value=take(Document::parse(record(pending[0],false),storage::compatibleConfigLimits()).transform_error([](const auto&) { return Error{ErrorCode::InvalidFormat,"Invalid completion journal encoding"}; }));
-      put(value,"version","i1e");
+      put(value,"version",absolute?"i3e":"i1e");
     }
   }
   put(attributes,JournalKey,value.serialize()); done(state.replaceSection("attributes",attributes.serialize())); done(store.save(lease,state));
@@ -174,7 +185,7 @@ bool inspect(Slot& slot, const fs::path& save, const Journal* journal, bool open
     struct stat parent{}; require(::fstat(slot.parent.get(),&parent)==0&&parent.st_uid==::geteuid(),"Missing managed file requires an owned parent",ErrorCode::UnsafePath);
     return false;
   }
-  require(S_ISREG(named.st_mode)&&named.st_uid==::geteuid()&&named.st_size>=0&&named.st_size<=slot.bytes
+  require(S_ISREG(named.st_mode)&&named.st_uid==::geteuid()&&named.st_size>=0&&static_cast<std::uint64_t>(named.st_size)<=take(storage::originalMaximumPhysicalSize(slot.geometry,slot.expanding?storage::OriginalStorageKind::Linear:slot.kind))
       &&named.st_nlink>=1&&named.st_nlink<=2,"Unsafe managed payload type, ownership, size or links",ErrorCode::UnsafePath);
   if (slot.identity.st_ino) { require(sameFile(slot.identity,named),"Managed payload identity changed after preflight",ErrorCode::Conflict); }
   if (journal) {
@@ -192,38 +203,53 @@ bool inspect(Slot& slot, const fs::path& save, const Journal* journal, bool open
   return true;
 }
 std::vector<Slot> plan(const core::SavedDownload& saved, const Node& attributes, const compat::OriginalLayout& layout,
-    const std::vector<compat::FilePolicy>& policy, const fs::path& save, const std::vector<Journal>& pending) {
+    const std::vector<compat::FilePolicy>& policy, const fs::path& save, const std::vector<Journal>& pending, const fs::path& profile) {
   require(!saved.legacySavePath&&saved.saveFile&&safeManagedRelative(fs::path(*saved.saveFile))&&!fs::path(*saved.saveFile).has_parent_path(),"Unsupported original save-root mapping",ErrorCode::UnsafePath);
-  require(!attributes.find("filelinks"),"Legacy file links require their qualified mapping adapter");
-  if (const auto* prefix=attributes.find("dnd_pfx")) { require(text(prefix).empty(),"DND prefix relocation requires its mapping adapter"); }
+  for (const auto* key : {"dnd_pfx","dnd_sf","dnd_al"}) {
+    if (const auto* field=attributes.find(key)) { require(field->type==Node::Type::Bytes&&field->bytes.size()<=4096,"Invalid original DND policy",ErrorCode::InvalidFormat); }
+  }
   const auto* stores=attributes.find("storetypes");
   require(stores&&stores->type==Node::Type::List&&stores->children.size()==layout.files.size(),"Storage-type count differs from metadata");
   std::vector<Slot> result; result.reserve(layout.files.size());
   for (std::size_t index=0;index<layout.files.size();++index) {
-    require(text(&stores->children[index])=="L","Compact or reordered storage requires its disk adapter");
+    const auto type=text(&stores->children[index]);
+    require(type=="L"||type=="C"||type=="R"||type=="X","Unknown original storage kind");
     const auto& file=layout.files[index]; const auto base=layout.multifile?fs::path(*saved.saveFile)/file.path:fs::path(*saved.saveFile);
     require(safeManagedRelative(base),"Unsafe managed payload path",ErrorCode::UnsafePath);
     result.push_back({index,base,base,base,file.bytes,file.padding,policy[index].skipped});
+    auto& slot=result.back();
+    slot.kind=type=="L"?storage::OriginalStorageKind::Linear:type=="C"?storage::OriginalStorageKind::Compact:type=="R"?storage::OriginalStorageKind::Reordered:storage::OriginalStorageKind::ReorderedCompact;
+    slot.geometry={static_cast<std::uint64_t>(file.offset),static_cast<std::uint64_t>(file.bytes),static_cast<std::uint32_t>(layout.pieceLength)};
+    (void)take(storage::originalMaximumPhysicalSize(slot.geometry,slot.kind));
   }
   std::set<std::size_t> linked;
-  if (const auto* links=attributes.find("filelinks2")) {
-    require(links->type==Node::Type::List&&links->children.size()<=layout.files.size()*4,"File-link list exceeds its bound");
-    for (const auto& item:links->children) {
-      const auto link=text(&item); const auto first=link.find('\n'),second=first==std::string::npos?first:link.find('\n',first+1);
-      require(first!=std::string::npos&&second!=std::string::npos&&link.find('\n',second+1)==std::string::npos,"Malformed file link");
-      std::size_t index=0; const auto parsed=std::from_chars(link.data(),link.data()+first,index);
-      require(parsed.ec==std::errc{}&&parsed.ptr==link.data()+first&&index<result.size(),"Invalid file-link index");
-      auto& slot=result[index]; const auto from=link.substr(first+1,second-first-1),to=link.substr(second+1);
-      require(from.empty()||fs::path(from)==save/slot.base,"File-link source differs from saved path");
-      if (to.empty()||to==from) { slot.actual=slot.base; linked.erase(index); continue; }
-      const fs::path target(to);
-      require(target.is_absolute()&&target.lexically_normal()==target&&target.parent_path()==(save/slot.base).parent_path(),"External file link is unsupported",ErrorCode::UnsafePath);
-      slot.actual=target.lexically_relative(save); require(safeManagedRelative(slot.actual),"Unsafe linked payload path",ErrorCode::UnsafePath); linked.insert(index);
-    }
+  std::vector<std::string> originalLinkBases; originalLinkBases.reserve(result.size());
+  for (const auto& slot:result) { originalLinkBases.push_back((save/slot.base).native()); }
+  const auto links=compat::resolveOriginalFileLinks(attributes.find("filelinks2"),originalLinkBases);
+  if (!links) {
+    const auto code=links.error().code==compat::OriginalFileLinksErrorCode::Memory?ErrorCode::Io:
+        links.error().code==compat::OriginalFileLinksErrorCode::AmbiguousBase?ErrorCode::UnsafePath:ErrorCode::InvalidFormat;
+    require(false,std::string(links.error().message),code);
+  }
+  for (std::size_t index=0;index<result.size();++index) {
+    if (!links->byIndex[index]) { continue; }
+    auto& slot=result[index]; const fs::path target(links->byIndex[index]->target);
+    require(target.is_absolute()&&target.lexically_normal()==target&&target.native().size()<=4096&&target.native().find('\0')==std::string::npos,"Unsafe external file link",ErrorCode::UnsafePath);
+    const auto within=target.lexically_relative(save);
+    slot.actual=safeManagedRelative(within)?within:target; linked.insert(index);
   }
   const auto suffix=attributes.find("incompfilesuffix")?text(attributes.find("incompfilesuffix")):std::string{};
   require(suffix.find('/')==std::string::npos&&suffix.find('\n')==std::string::npos,"Unsafe incomplete suffix",ErrorCode::UnsafePath);
   std::map<std::size_t,const Journal*> byIndex; for (const auto& item:pending) { byIndex.emplace(item.index,&item); }
+  std::map<std::size_t,std::pair<std::uint64_t,std::uint64_t>> expanding;
+  if (const auto* value=attributes.find("BiglyBTC.compactConversion")) {
+    require(value->type==Node::Type::List&&value->children.size()<=result.size(),"Invalid compact conversion journal",ErrorCode::InvalidFormat);
+    for (const auto& item:value->children) {
+      const auto index=integer(item.find("index"),-1),dev=integer(item.find("device"),-1),ino=integer(item.find("inode"),-1);
+      require(index>=0&&static_cast<std::size_t>(index)<result.size()&&dev>=0&&ino>0&&expanding.emplace(static_cast<std::size_t>(index),std::pair{static_cast<std::uint64_t>(dev),static_cast<std::uint64_t>(ino)}).second,"Invalid compact conversion identity",ErrorCode::InvalidFormat);
+      auto& slot=result[static_cast<std::size_t>(index)];require(slot.kind==storage::OriginalStorageKind::Compact||slot.kind==storage::OriginalStorageKind::Linear,"Conversion journal storage differs",ErrorCode::Conflict);slot.expanding=true;
+    }
+  }
   std::set<fs::path> physical; std::set<std::pair<std::uint64_t,std::uint64_t>> inodes;
   for (auto& slot:result) {
     if (slot.padding) { require(!byIndex.contains(slot.index),"Padding cannot own completion journal"); continue; }
@@ -237,14 +263,61 @@ std::vector<Slot> plan(const core::SavedDownload& saved, const Node& attributes,
         slot.actual+=suffix; require(safeManagedRelative(slot.actual),"Unsafe incomplete filename",ErrorCode::UnsafePath); inspect(slot,save,nullptr,true);
       }
     }
-    slot.final=slot.actual; requireUtf8Filesystem(save/slot.actual);
-    require(physical.insert(slot.actual).second,"Two files alias the same managed target",ErrorCode::UnsafePath);
+    slot.final=slot.actual; const auto absolute=(save/slot.actual).lexically_normal();requireUtf8Filesystem(absolute);
+    const auto outside=absolute.lexically_relative(profile);
+    require(!outside.empty()&&*outside.begin()=="..","Managed payload overlaps profile",ErrorCode::UnsafePath);
+    for (const auto& part:absolute) { require(part!=".git"&&!part.native().starts_with(".BiglyBTC"),"Managed payload overlaps reserved path",ErrorCode::UnsafePath); }
+    if (const auto found=expanding.find(slot.index);found!=expanding.end()) {require(slot.identity.st_ino&&found->second==std::pair{static_cast<std::uint64_t>(slot.identity.st_dev),static_cast<std::uint64_t>(slot.identity.st_ino)},"Compact conversion payload changed",ErrorCode::Conflict);}
+    require(physical.insert(absolute).second,"Two files alias the same managed target",ErrorCode::UnsafePath);
     if (slot.identity.st_ino) { require(inodes.emplace(slot.identity.st_dev,slot.identity.st_ino).second,"Two files alias the same managed inode",ErrorCode::UnsafePath); }
   }
   for (const auto& path:physical) {
-    auto parent=path.parent_path(); while (!parent.empty()) { require(!physical.contains(parent),"Managed file aliases another file's directory",ErrorCode::UnsafePath); parent=parent.parent_path(); }
+    auto parent=path.parent_path(); while (!parent.empty()&&parent!=parent.root_path()) { require(!physical.contains(parent),"Managed file aliases another file's directory",ErrorCode::UnsafePath); parent=parent.parent_path(); }
   }
   return result;
+}
+struct PayloadClaimPlan {
+  std::vector<ManagedPayloadClaim> values;
+  std::vector<std::size_t> indices;
+};
+bool pathWithin(const fs::path& child,const fs::path& parent) {
+  auto a=child.begin();for(auto b=parent.begin();b!=parent.end();++a,++b){if(a==child.end()||*a!=*b){return false;}}return true;
+}
+PayloadClaimPlan payloadClaimPlan(const std::vector<Slot>& mapping,const fs::path& save,
+    const Node& attributes,const std::vector<Journal>& pending) {
+  PayloadClaimPlan result;std::map<fs::path,std::size_t> paths;
+  const auto suffix=attributes.find("incompfilesuffix")?text(attributes.find("incompfilesuffix")):std::string{};
+  const auto prefix=attributes.find("dnd_pfx")?text(attributes.find("dnd_pfx")):std::string{};
+  auto add=[&](const fs::path& relative,std::size_t index) {
+    const auto absolute=(save/relative).lexically_normal();require(absolute.is_absolute()&&safeManagedPhysical(absolute),"Unsafe managed claim path",ErrorCode::UnsafePath);
+    const auto [at,inserted]=paths.emplace(absolute,index);if(!inserted){require(at->second==index,"Managed files share a current/completion path",ErrorCode::Conflict);return;}
+    require(result.values.size()<MaximumManagedPayloadClaims,"Managed payload claim bound exceeded",ErrorCode::Unsupported);
+    const auto& id=mapping[index].identity;result.values.push_back({absolute,static_cast<std::uint64_t>(id.st_dev),static_cast<std::uint64_t>(id.st_ino)});result.indices.push_back(index);
+  };
+  for(const auto& slot:mapping) {
+    if(slot.padding){continue;}add(slot.actual,slot.index);add(slot.final,slot.index);
+    const auto name=slot.actual.filename().string();
+    if(!suffix.empty()&&name.size()>suffix.size()&&name.ends_with(suffix)) {
+      auto next=name.substr(0,name.size()-suffix.size());if(!slot.skipped&&!prefix.empty()&&next.starts_with(prefix)){next.erase(0,prefix.size());}
+      auto target=slot.actual;target.replace_filename(next);require(!next.empty()&&safeManagedPhysical(target)&&target.filename()!=".git"&&!next.starts_with(".BiglyBTC"),"Unsafe forecast completion name",ErrorCode::UnsafePath);add(target,slot.index);
+    }
+  }
+  for(const auto& entry:pending){add(entry.source,entry.index);add(entry.target,entry.index);}
+  for(const auto& [path,index]:paths){(void)index;for(auto parent=path.parent_path();!parent.empty()&&parent!=parent.parent_path();parent=parent.parent_path()){require(!paths.contains(parent),"Managed file claims another file's directory",ErrorCode::Conflict);}}
+  return result;
+}
+void checkManagedClaims(std::span<const ManagedPayloadClaim> candidate,
+    std::span<const ManagedPayloadClaim> existing) {
+  require(existing.size()<=MaximumManagedPayloadClaims,"Retained payload claim bound exceeded",ErrorCode::Unsupported);
+  require(candidate.size()<=MaximumManagedPayloadClaims-existing.size(),"Combined payload claim bound exceeded",ErrorCode::Unsupported);
+  std::set<fs::path> paths;std::set<std::pair<std::uint64_t,std::uint64_t>> inodes;
+  for(const auto& claim:existing){require(claim.absolutePath.is_absolute()&&safeManagedPhysical(claim.absolutePath)&&claim.absolutePath!=fs::path("/")&&(claim.inode||!claim.device),"Malformed retained payload claim",ErrorCode::InvalidFormat);paths.insert(claim.absolutePath);if(claim.inode){inodes.emplace(claim.device,claim.inode);}}
+  for(const auto& claim:candidate) {
+    bool overlap=paths.contains(claim.absolutePath);
+    for(auto parent=claim.absolutePath.parent_path();!overlap&&!parent.empty()&&parent!=parent.parent_path();parent=parent.parent_path()){overlap=paths.contains(parent);}
+    const auto descendant=paths.lower_bound(claim.absolutePath);overlap=overlap||(descendant!=paths.end()&&pathWithin(*descendant,claim.absolutePath));
+    require(!overlap&&(!claim.inode||!inodes.contains({claim.device,claim.inode})),"Payload path/inode is retained by another managed admission",ErrorCode::Conflict);
+  }
 }
 TorrentNetworkSelection networks(const Document& state, const Node& attributes) {
   TorrentNetworkSelection result;
@@ -319,16 +392,18 @@ struct ManagedStorage::Impl {
   storage::TorrentStateFile state;
   compat::OriginalLayout layout;
   lt::add_torrent_params params;
+  std::shared_ptr<OriginalDiskFiles> mapped;
   fs::path save;
   std::vector<Slot> slots;
   std::vector<Journal> pending;
+  std::vector<ManagedPayloadClaim> payloadClaims;
   std::uint64_t profileDevice,profileInode;
   bool attempted=false;
   Impl(core::TorrentHash key,core::SavedDownload selected,storage::TorrentStateStore owner,storage::TorrentStateFile source,
-      compat::OriginalLayout geometry,lt::add_torrent_params parameters,fs::path root,std::vector<Slot> mapping,std::vector<Journal> journal,
+      compat::OriginalLayout geometry,lt::add_torrent_params parameters,fs::path root,std::vector<Slot> mapping,std::vector<Journal> journal,std::vector<ManagedPayloadClaim> claims,
       std::uint64_t device,std::uint64_t inode)
     : hash(std::move(key)),captured(std::move(selected)),store(std::move(owner)),state(std::move(source)),layout(std::move(geometry)),
-      params(std::move(parameters)),save(std::move(root)),slots(std::move(mapping)),pending(std::move(journal)),profileDevice(device),profileInode(inode) {}
+      params(std::move(parameters)),save(std::move(root)),slots(std::move(mapping)),pending(std::move(journal)),payloadClaims(std::move(claims)),profileDevice(device),profileInode(inode) {}
 };
 ManagedStorage::ManagedStorage(std::unique_ptr<Impl> impl):impl_(std::move(impl)) {}
 ManagedStorage::ManagedStorage(ManagedStorage&&) noexcept=default;
@@ -336,13 +411,17 @@ ManagedStorage& ManagedStorage::operator=(ManagedStorage&&) noexcept=default;
 ManagedStorage::~ManagedStorage()=default;
 lt::add_torrent_params ManagedStorage::parameters() const { return impl_?impl_->params:lt::add_torrent_params{}; }
 const ManagedQueueMetadata& ManagedStorage::queueMetadata() const { return impl_->queue; }
+std::shared_ptr<OriginalDiskFiles> ManagedStorage::mappedFiles() const { return impl_?impl_->mapped:nullptr; }
+std::span<const ManagedPayloadClaim> ManagedStorage::claims() const noexcept { return impl_?std::span<const ManagedPayloadClaim>(impl_->payloadClaims):std::span<const ManagedPayloadClaim>{}; }
 
-std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy) {
+std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed) {
   try {
+    require(claimed.size()<=MaximumManagedPayloadClaims,"Retained payload claim bound exceeded",ErrorCode::Unsupported);
     struct stat profile{}; require(lease.valid()&&::fstat(lease.directoryHandle(),&profile)==0,"Managed storage requires a valid held lease",ErrorCode::UnsafePath);
     auto inventory=take(storage::ConfigFile::load(lease,"downloads.config"));
     require(inventory.recoverySource()!=storage::RecoverySource::Saving,"Resolve saved-inventory recovery before managed preparation",ErrorCode::Conflict);
-    const auto saved=selected(inventory.document(),hash);
+    const auto rawSaved=selected(inventory.document(),hash);
+    auto saved=rawSaved;
     const auto& row=entryFor(inventory.document(),saved,!inventory.document().find("downloads"));
     ManagedQueueMetadata queue;
     queue.position=saved.position.value_or(1);
@@ -379,12 +458,25 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     const auto geometry=compat::originalLayout(source);
     require(geometry.has_value(),"Invalid original managed geometry",ErrorCode::InvalidFormat); auto layout=*geometry;
     auto info=metadata(source,hash,layout); auto attributes=dictionary(source.find("attributes"));
+    saved=take(storage::resolveOriginalSaveRoot(rawSaved,layout));
+    const auto storageDefaults=take(storage::resolveOriginalStorageTypes(lease,hash,layout,attributes.root()));
+    require(!storageDefaults.unsupportedConversion,"Original policy requires unsupported cross-family storage conversion");
+    done(storage::applyOriginalStorageDefaults(attributes,storageDefaults,true));
     const auto parsedPolicy=compat::originalFilePolicy(row,layout.files.size()); require(parsedPolicy.has_value(),"Invalid original managed file priorities",ErrorCode::InvalidFormat);
     auto pending=journals(attributes.root(),layout.multifile,layout.files.size()); const fs::path save(saved.saveDirectory);
     require(save.is_absolute()&&save.lexically_normal()==save,"Managed save directory must be absolute and normalized",ErrorCode::UnsafePath);
-    auto slots=plan(saved,attributes.root(),layout,*parsedPolicy,save,pending);
+    const auto profilePath=fs::read_symlink(fs::path("/proc/self/fd")/std::to_string(lease.directoryHandle())).lexically_normal();
+    require(profilePath.is_absolute(),"Cannot authenticate managed profile path",ErrorCode::UnsafePath);
+    auto slots=plan(saved,attributes.root(),layout,*parsedPolicy,save,pending,profilePath);
+    const bool mapped=std::ranges::any_of(slots,[](const Slot& slot) {return !slot.padding&&(slot.kind!=storage::OriginalStorageKind::Linear||slot.actual.is_absolute()||slot.expanding);});
+    // Validate every existing physical map before creating files or owning state.
+    for (const auto& slot:slots) {
+      if(slot.padding||slot.kind==storage::OriginalStorageKind::Linear||slot.data.get()<0){continue;}
+      auto control=take(OriginalControl::open(lease,hash.hex(),slot.index,slot.kind,false));
+      (void)take(storage::OriginalFileIo::open(slot.data.get(),slot.geometry,slot.kind,control?take(control->load()):std::nullopt,{},true,slot.expanding&&slot.kind==storage::OriginalStorageKind::Compact,static_cast<unsigned>(slot.identity.st_nlink)));
+    }
     struct rlimit limit{}; std::size_t budget=8192;
-    if (::getrlimit(RLIMIT_NOFILE,&limit)==0&&limit.rlim_cur!=RLIM_INFINITY) { budget=std::min(budget,static_cast<std::size_t>(limit.rlim_cur/4)); }
+    if (::getrlimit(RLIMIT_NOFILE,&limit)==0&&limit.rlim_cur!=RLIM_INFINITY) { budget=std::min(budget,static_cast<std::size_t>(limit.rlim_cur/(mapped?8:4))); }
     const auto files=static_cast<std::size_t>(std::ranges::count_if(slots,[](const auto& slot) { return !slot.padding; }));
     require(files<=budget,"Managed payload exceeds descriptor budget");
     lt::add_torrent_params params; params.ti=info; params.save_path=save.string(); params.file_priorities=priorities(*parsedPolicy,layout);
@@ -395,12 +487,24 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     params.flags&=~lt::torrent_flags::auto_managed; params.flags|=lt::torrent_flags::paused;
     auto filtered=applyTorrentNetworkPolicy(policy,networks(source,attributes.root()),params);
     require(filtered.has_value(),"Managed torrent network selection is unsupported by the owner policy");
+    auto claimPlan=payloadClaimPlan(slots,save,attributes.root(),pending);
+    checkManagedClaims(claimPlan.values,claimed);
     // All unsupported geometry/mapping/policy decisions precede state ownership
     // and payload mutation. beginUpdate hydrates the same last cached sections.
     auto state=take(store.beginUpdate(lease,hash)); auto actual=dictionary(state.document().find("attributes"));
+    const auto recheckedDefaults=take(storage::resolveOriginalStorageTypes(lease,hash,layout,actual.root()));
+    require(recheckedDefaults==storageDefaults,"Original storage defaults/controls changed during preparation",ErrorCode::Conflict);
+    const auto recheckedRoot=take(storage::resolveOriginalSaveRoot(rawSaved,layout));
+    require(recheckedRoot.saveDirectory==saved.saveDirectory&&recheckedRoot.saveFile==saved.saveFile,
+        "Original save-root interpretation changed during preparation",ErrorCode::Conflict);
+    done(storage::applyOriginalStorageDefaults(actual,storageDefaults,true));
     {
-      auto check=plan(saved,actual.root(),layout,*parsedPolicy,save,journals(actual.root(),layout.multifile,layout.files.size()));
+      auto check=plan(saved,actual.root(),layout,*parsedPolicy,save,journals(actual.root(),layout.multifile,layout.files.size()),profilePath);
       require(check.size()==slots.size(),"Managed mapping changed during preparation",ErrorCode::Conflict);
+      const auto refreshedClaims=payloadClaimPlan(check,save,actual.root(),journals(actual.root(),layout.multifile,layout.files.size()));
+      checkManagedClaims(refreshedClaims.values,claimed);
+      require(refreshedClaims.values.size()==claimPlan.values.size(),"Managed completion scope changed during preparation",ErrorCode::Conflict);
+      for(std::size_t i=0;i<claimPlan.values.size();++i){require(refreshedClaims.values[i].absolutePath==claimPlan.values[i].absolutePath,"Managed claim path changed during preparation",ErrorCode::Conflict);}
       for (std::size_t index=0;index<slots.size();++index) {
         require(check[index].actual==slots[index].actual,"Authoritative managed mapping changed",ErrorCode::Conflict);
         require((check[index].identity.st_ino==0)==(slots[index].identity.st_ino==0)
@@ -410,7 +514,27 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     // Cache values are copied before their backing state is relinquished.
     auto rechecked=applyTorrentNetworkPolicy(policy,networks(state.document(),actual.root()),params);
     require(rechecked.has_value(),"Authoritative torrent network policy changed",ErrorCode::Conflict);
+    // Before any payload write, Java must recheck after an interrupted owner.
+    auto resume=dictionary(state.document().find("resume"));auto resumeData=dictionary(resume.find("data"));
+    put(resumeData,"valid","i0e");put(resumeData,"resume data",stringValue(std::string(static_cast<std::size_t>(info->num_pieces()),'\2')));put(resumeData,"blocks","de");
+    put(resume,"data",resumeData.serialize());done(state.replaceSection("resume",resume.serialize()));
+    done(storage::applyOriginalStorageDefaults(actual,storageDefaults));
+    put(actual,"resumecomplete","i1e");done(state.replaceSection("attributes",actual.serialize()));
     writeLinks(state,slots,save,false); done(store.save(lease,state));
+    if(rawSaved.saveDirectory!=saved.saveDirectory||rawSaved.saveFile!=saved.saveFile||rawSaved.legacySavePath) {
+      // Capture the original first-load interpretation before creating parents:
+      // their later existence must not change a legacy path's meaning.
+      const auto& oldRow=entryFor(inventory.document(),rawSaved,!inventory.document().find("downloads"));
+      auto migrated=take(Document::parse(encoded(oldRow),storage::compatibleConfigLimits()).transform_error(
+          [](const auto&){return Error{ErrorCode::InvalidFormat,"Cannot migrate original save root"};}));
+      put(migrated,"save_dir",stringValue(saved.saveDirectory));put(migrated,"save_file",stringValue(*saved.saveFile));
+      if(rawSaved.legacyKey){put(inventory.document(),*rawSaved.legacyKey,migrated.serialize());}
+      else {const auto* rows=inventory.document().find("downloads");std::string list="l";
+        for(std::size_t i=0;i<rows->children.size();++i){list+=i==rawSaved.sourceIndex?migrated.serialize():encoded(rows->children[i]);}
+        put(inventory.document(),"downloads",list+'e');}
+      done(inventory.save(lease));
+    }
+    std::vector<std::optional<OriginalDiskFile>> mappedFiles(slots.size());
     for (auto& slot:slots) {
       if (slot.padding) { continue; }
       const auto journal=std::find_if(pending.begin(),pending.end(),[&](const auto& value) { return value.index==slot.index; });
@@ -424,14 +548,48 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
       }
       // LT mmap storage uses partfiles for missing/empty skipped files. Sparse
       // extension keeps skipped boundary-piece bytes in the original linear file.
-      if (slot.skipped&&slot.bytes>slot.identity.st_size) {
+      if (!mapped&&slot.skipped&&slot.bytes>slot.identity.st_size) {
         require(::ftruncate(slot.data.get(),slot.bytes)==0,"Cannot prepare skipped linear file",ErrorCode::Io); sync(slot.data.get());
+      }
+      if(mapped) {
+        Descriptor mappedDescriptor(::fcntl(slot.data.get(),F_DUPFD_CLOEXEC,3));
+        require(mappedDescriptor.get()>=0,"Cannot retain mapped payload descriptor",ErrorCode::Io);
+        std::shared_ptr<OriginalControl> control;
+        if(slot.kind!=storage::OriginalStorageKind::Linear||slot.expanding) {control=take(OriginalControl::open(lease,hash.hex(),slot.index,slot.expanding?storage::OriginalStorageKind::Compact:slot.kind,true));}
+        auto io=take(storage::OriginalFileIo::open(mappedDescriptor.get(),slot.geometry,slot.kind,control?take(control->load()):std::nullopt,control?control->publisher():storage::OriginalControlPublisher{},true,slot.expanding&&slot.kind==storage::OriginalStorageKind::Compact,static_cast<unsigned>(slot.identity.st_nlink)));
+        if(io.recoveryPending()){done(io.recover());}
+        if((slot.kind==storage::OriginalStorageKind::Compact&&(!slot.skipped||storageDefaults.requested[slot.index]==storage::OriginalStorageKind::Linear))||slot.expanding) {
+          require(slot.identity.st_dev<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())&&slot.identity.st_ino<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()),"Compact conversion identity exceeds original journal range",ErrorCode::Unsupported);
+          auto attrs=dictionary(state.document().find("attributes"));std::string conversions="l";
+          // Existing other intents remain bound until their own iteration.
+          if(const auto* old=attrs.find("BiglyBTC.compactConversion")) {for(const auto& row:old->children) {if(integer(row.find("index"),-1)!=static_cast<std::int64_t>(slot.index)){conversions+=encoded(row);}}}
+          conversions+="d5:index"+intValue(static_cast<std::int64_t>(slot.index))+"6:device"+intValue(static_cast<std::int64_t>(slot.identity.st_dev))+"5:inode"+intValue(static_cast<std::int64_t>(slot.identity.st_ino))+"e";
+          put(attrs,"BiglyBTC.compactConversion",conversions+'e');done(state.replaceSection("attributes",attrs.serialize()));done(store.save(lease,state));
+          if(slot.kind==storage::OriginalStorageKind::Compact){done(io.convertToLinear());}
+          slot.kind=storage::OriginalStorageKind::Linear;
+          attrs=dictionary(state.document().find("attributes"));std::string stores="l";
+          const auto* old=attrs.find("storetypes");for(std::size_t i=0;i<slots.size();++i){stores+=i==slot.index?"1:L":encoded(old->children[i]);}
+          put(attrs,"storetypes",stores+'e');done(state.replaceSection("attributes",attrs.serialize()));done(store.save(lease,state));
+          if(control){done(control->retire());}
+          attrs=dictionary(state.document().find("attributes"));conversions="l";for(const auto& row:attrs.find("BiglyBTC.compactConversion")->children){if(integer(row.find("index"),-1)!=static_cast<std::int64_t>(slot.index)){conversions+=encoded(row);}}
+          put(attrs,"BiglyBTC.compactConversion",conversions+'e');done(state.replaceSection("attributes",attrs.serialize()));done(store.save(lease,state));slot.expanding=false;
+          io=take(storage::OriginalFileIo::open(mappedDescriptor.get(),slot.geometry,slot.kind,std::nullopt,{},false,false,static_cast<unsigned>(slot.identity.st_nlink)));
+        } else if(slot.kind==storage::OriginalStorageKind::ReorderedCompact&&!slot.skipped) {
+          done(io.setReorderedKind(storage::OriginalStorageKind::Reordered));slot.kind=storage::OriginalStorageKind::Reordered;
+          auto attrs=dictionary(state.document().find("attributes"));std::string stores="l";const auto* old=attrs.find("storetypes");
+          for(std::size_t i=0;i<slots.size();++i){stores+=i==slot.index?"1:R":encoded(old->children[i]);}put(attrs,"storetypes",stores+'e');done(state.replaceSection("attributes",attrs.serialize()));done(store.save(lease,state));
+        }
+        std::function<std::expected<void,Error>()> validate;
+        if(control&&slot.kind!=storage::OriginalStorageKind::Linear){validate=[control]() -> std::expected<void,Error> {auto checked=control->load();if(!checked){return std::unexpected(checked.error());}return {};};}
+        mappedFiles[slot.index].emplace(OriginalDiskFile{std::move(mappedDescriptor),std::move(io),std::move(validate)});
       }
       params.renamed_files[lt::file_index_t{static_cast<int>(slot.index)}]=slot.actual.string();
     }
+    for(std::size_t i=0;i<claimPlan.values.size();++i){const auto& id=slots[claimPlan.indices[i]].identity;claimPlan.values[i].device=static_cast<std::uint64_t>(id.st_dev);claimPlan.values[i].inode=static_cast<std::uint64_t>(id.st_ino);}
     auto result=std::make_unique<Impl>(hash,saved,std::move(store),std::move(state),std::move(layout),std::move(params),save,
-      std::move(slots),std::move(pending),profile.st_dev,profile.st_ino);
+      std::move(slots),std::move(pending),std::move(claimPlan.values),profile.st_dev,profile.st_ino);
     result->queue=queue;
+    if(mapped){result->mapped=std::make_shared<OriginalDiskFiles>(info,std::move(mappedFiles));}
     return ManagedStorage(std::move(result));
   } catch (const Failure& error) { return std::unexpected(error.error); }
   catch (const std::exception&) { return std::unexpected(Error{ErrorCode::Io,"Managed storage preparation failed; prepared state may require recheck"}); }
@@ -443,6 +601,7 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
   try {
     require(impl_!=nullptr,"Managed storage was moved or released",ErrorCode::Conflict); auto& owner=*impl_;
     require(!owner.attempted,"Managed admission checkpoint already attempted",ErrorCode::Conflict);
+    if(owner.mapped){if(const auto error=owner.mapped->failure()){throw Failure{*error};}done(owner.mapped->flush());}
     struct stat profile{}; require(lease.valid()&&::fstat(lease.directoryHandle(),&profile)==0&&profile.st_dev==owner.profileDevice&&profile.st_ino==owner.profileInode,
       "Managed checkpoint requires its original held lease",ErrorCode::UnsafePath);
     require(verified.size()==static_cast<std::size_t>(owner.params.ti->num_pieces())&&std::ranges::all_of(verified,[](auto value) { return value<=1; })
@@ -484,6 +643,7 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       }
       require(counts[index]>=0&&counts[index]<=file.bytes&&counts[index]<=std::numeric_limits<std::int64_t>::max()-total,"Verified file accounting overflows",ErrorCode::InvalidFormat); total+=counts[index];
     }
+    if(owner.mapped){std::vector<std::uint8_t> completeFiles(owner.slots.size());for(const auto& slot:owner.slots){completeFiles[slot.index]=!slot.padding&&counts[slot.index]==slot.bytes;}done(owner.mapped->finishComplete(completeFiles));}
     bool allocated=true;
     for (auto& slot:owner.slots) {
       if (slot.padding) { continue; } struct stat named{},opened{},parent{};
@@ -491,9 +651,9 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       require(actualParent.get()>=0&&::fstat(actualParent.get(),&parent)==0,"Managed parent path disappeared",ErrorCode::Conflict);
       struct stat heldParent{}; require(::fstat(slot.parent.get(),&heldParent)==0&&heldParent.st_dev==parent.st_dev&&heldParent.st_ino==parent.st_ino,"Managed parent identity changed",ErrorCode::Conflict);
       require(::fstat(slot.data.get(),&opened)==0&&::fstatat(slot.parent.get(),slot.actual.filename().c_str(),&named,AT_SYMLINK_NOFOLLOW)==0
-        &&sameFile(slot.identity,opened)&&sameFile(opened,named)&&opened.st_uid==::geteuid()&&opened.st_size>=0&&opened.st_size<=slot.bytes
-        &&(!complete||opened.st_size==slot.bytes),"Managed payload identity/size changed",ErrorCode::Conflict);
-      require(verifiedEnds[slot.index]<=opened.st_size,"Verified checkpoint exceeds actual file extent",ErrorCode::Conflict);
+        &&sameFile(slot.identity,opened)&&sameFile(opened,named)&&opened.st_uid==::geteuid()&&opened.st_size>=0&&static_cast<std::uint64_t>(opened.st_size)<=take(storage::originalMaximumPhysicalSize(slot.geometry,slot.kind))
+        &&(owner.mapped||!complete||opened.st_size==slot.bytes),"Managed payload identity/size changed",ErrorCode::Conflict);
+      require(owner.mapped||verifiedEnds[slot.index]<=opened.st_size,"Verified checkpoint exceeds actual file extent",ErrorCode::Conflict);
       allocated=allocated&&opened.st_size==slot.bytes; sync(slot.data.get());
     }
     put(entry,"downloaded",intValue(previousReceived+received)); put(entry,"uploaded",intValue(previousSent+sent)); put(entry,"completedbytes",intValue(total));
@@ -509,14 +669,18 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
     }
     owner.attempted=true;
     writeProgress(owner.state,counts,verified.size(),complete); done(owner.store.save(lease,owner.state));
-    if (complete) {
+    const bool completedFiles=!owner.pending.empty()||std::ranges::any_of(owner.slots,[&](const auto& slot){return !slot.padding&&counts[slot.index]==slot.bytes;});
+    if (completedFiles) {
       auto attributes=dictionary(owner.state.document().find("attributes")); const auto suffix=attributes.find("incompfilesuffix")?text(attributes.find("incompfilesuffix")):std::string{};
+      const auto prefix=attributes.find("dnd_pfx")?text(attributes.find("dnd_pfx")):std::string{};
       std::set<std::size_t> known; for (const auto& item:owner.pending) { known.insert(item.index); }
       for (const auto& slot:owner.slots) {
-        if (slot.padding||known.contains(slot.index)) { continue; } const auto name=slot.actual.filename().string();
+        if (slot.padding||counts[slot.index]!=slot.bytes||known.contains(slot.index)) { continue; } const auto name=slot.actual.filename().string();
         if (!suffix.empty()&&name.size()>suffix.size()&&name.ends_with(suffix)) {
-          auto final=slot.actual; final.replace_filename(name.substr(0,name.size()-suffix.size()));
-          require(safeManagedRelative(final),"Unsafe completed filename",ErrorCode::UnsafePath);
+          auto newName=name.substr(0,name.size()-suffix.size());
+          if(!slot.skipped&&!prefix.empty()&&newName.starts_with(prefix)){newName.erase(0,prefix.size());}
+          auto final=slot.actual; final.replace_filename(newName);
+          require(!newName.empty()&&safeManagedPhysical(final)&&final.filename()!=".git"&&!newName.starts_with(".BiglyBTC"),"Unsafe completed filename",ErrorCode::UnsafePath);
           require(slot.identity.st_dev<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max())&&slot.identity.st_ino<=static_cast<std::uint64_t>(std::numeric_limits<std::int64_t>::max()),"Payload identity exceeds completion journal range");
           owner.pending.push_back({slot.index,slot.actual,final,slot.identity.st_dev,slot.identity.st_ino});
         }
@@ -533,7 +697,7 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       writeLinks(owner.state,owner.slots,owner.save,true); done(owner.store.save(lease,owner.state));
     }
     done(inventory.save(lease));
-    if (complete) {
+    if (completedFiles) {
       for (const auto& item:owner.pending) {
         if (!item.linked) { continue; } const auto& slot=owner.slots[item.index]; struct stat old{};
         if (::fstatat(slot.parent.get(),item.source.filename().c_str(),&old,AT_SYMLINK_NOFOLLOW)==0) {

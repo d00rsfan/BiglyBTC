@@ -9,6 +9,7 @@
 #include <memory>
 #include <mutex>
 #include <set>
+#include <map>
 #include <string>
 
 namespace biglybtc::engine::detail {
@@ -16,6 +17,8 @@ namespace biglybtc::engine::detail {
 // Owner-chosen virtual save directories only; registration is mandatory BEFORE
 // add_torrent. No filesystem access, metadata parsing or engine creation here.
 // Reservations last for the policy/session lifetime and are never recycled.
+class OriginalDiskFiles;
+
 class MetadataDiskPolicy final {
 public:
   static constexpr std::size_t MaximumMetadataPaths = 1024;
@@ -26,9 +29,13 @@ public:
   // uncertain metadata path to real storage. Ordinary admission must reject any
   // reserved directory, so selected payload cannot enter the discard backend.
   bool isMetadataPath(const std::filesystem::path&) const;
+  std::expected<void,storage::Error> registerOriginalPath(const std::filesystem::path&,std::shared_ptr<OriginalDiskFiles>);
+  bool isOriginalPath(const std::filesystem::path&) const;
+  std::shared_ptr<OriginalDiskFiles> originalFiles(const std::filesystem::path&) const;
 private:
   mutable std::mutex mutex_;
   std::set<std::string, std::less<>> paths_;
+  std::map<std::string,std::weak_ptr<OriginalDiskFiles>,std::less<>> originals_;
 };
 
 // One disk_interface in the SAME LT session: registered paths use stock disabled

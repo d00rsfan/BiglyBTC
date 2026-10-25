@@ -42,3 +42,5 @@ target_sources(biglybtc_local_engine PRIVATE torrent_creator.cpp)
 find_package(OpenSSL REQUIRED COMPONENTS Crypto)
 target_sources(biglybtc_profile PRIVATE ../adapters/file_operations.cpp ../adapters/file_operation_io.cpp)
 target_link_libraries(biglybtc_profile PRIVATE OpenSSL::Crypto)
+
+target_sources(biglybtc_local_engine PRIVATE original_disk_io.cpp original_control.cpp)

@@ -44,6 +44,16 @@ int main(int argc, char** argv) {
   check(!compat::originalLayout(document(list(file("a", "9223372036854775807") + file("b", "1")))), "Offset overflow rejected");
   check(!compat::originalLayout(document("d4:name1:a6:lengthi1e12:piece lengthi0ee")), "Zero piece geometry rejected");
   check(!compat::originalLayout(document("d4:name1:a6:lengthi-1e12:piece lengthi16384ee")), "Negative file size rejected");
+  for (const std::int64_t piece : {64LL*1024*1024,128LL*1024*1024,256LL*1024*1024}) {
+    auto large=document("d4:name1:a6:lengthi"+std::to_string(piece+7)+"e12:piece lengthi"+std::to_string(piece)+"ee");
+    const auto original=large.serialize();const auto layout=compat::originalLayout(large);
+    check(layout&&layout->pieceLength==piece&&layout->bytes==piece+7,"Original 64/128/256 MiB geometry is supported without payload allocation");
+    check(large.serialize()==original,"Large geometry preserves raw original metadata");
+    auto padded=document("d4:name6:bundle12:piece lengthi"+std::to_string(piece)+"e9:file treed1:ad0:d6:lengthi1eee1:bd0:d6:lengthi1eeeee");
+    const auto geometry=compat::originalLayout(padded);
+    check(geometry&&geometry->files.size()==3&&geometry->files[1].padding&&geometry->files[1].bytes==piece-1&&geometry->files[2].offset==piece,"Large v2 synthetic padding uses checked original offsets");
+  }
+  check(!compat::originalLayout(document("d4:name1:a6:lengthi1e12:piece lengthi268435457ee")),"Above original 256 MiB supported boundary still rejected");
   if (argc > 1) {
     check(argc == 4, "Pass the three generated original metadata variants");
     for (int i = 1; i < argc; ++i) {
