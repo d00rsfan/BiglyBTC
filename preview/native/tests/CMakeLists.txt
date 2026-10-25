@@ -1424,3 +1424,48 @@ if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIM
     biglybtc_local_engine biglybtc_profile LibtorrentRasterbar::torrent-rasterbar Qt6::Core)
   target_compile_options(biglybtc-storage-defaults-handoff-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
+
+# Add the staged new source to preview/native/tests; existing managed target stays.
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-storage-fileops-handoff-driver storage_fileops_handoff_driver.cpp)
+  target_link_libraries(biglybtc-storage-fileops-handoff-driver PRIVATE biglybtc_profile Qt6::Core)
+  target_compile_options(biglybtc-storage-fileops-handoff-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+# Deliberately no add_test: run.py owns the cross-process Java/native sequence.
+
+add_executable(biglybtc-linear-to-compact-tests linear_to_compact_tests.cpp)
+target_link_libraries(biglybtc-linear-to-compact-tests PRIVATE biglybtc_profile OpenSSL::Crypto)
+target_compile_options(biglybtc-linear-to-compact-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_link_options(biglybtc-linear-to-compact-tests PRIVATE LINKER:--wrap=pwrite LINKER:--wrap=ftruncate LINKER:--wrap=fsync)
+add_test(NAME original-linear-to-compact COMMAND biglybtc-linear-to-compact-tests)
+set_tests_properties(original-linear-to-compact PROPERTIES TIMEOUT 120)
+
+# Unexecuted source registration, after the L-to-C primitive is adopted.
+# Existing biglybtc-storage-handoff-driver is reused unchanged by run.py.
+if(BIGLYBTC_LOCAL_ENGINE)
+  add_executable(biglybtc-linear-to-compact-handoff-driver linear_to_compact_handoff_driver.cpp)
+  target_link_libraries(biglybtc-linear-to-compact-handoff-driver PRIVATE biglybtc_profile OpenSSL::Crypto)
+  target_compile_options(biglybtc-linear-to-compact-handoff-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+# No new CTest row: root runs the finite original/native coordinator once.
+
+# Include inside native/tests after existing desktop/engine targets.
+if(BIGLYBTC_DESKTOP)
+  add_executable(biglybtc-file-compaction-ui-tests file_compaction_ui_tests.cpp)
+  set_target_properties(biglybtc-file-compaction-ui-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-file-compaction-ui-tests PRIVATE biglybtc_ui Qt6::Test)
+  target_compile_options(biglybtc-file-compaction-ui-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME file-compaction-ui COMMAND biglybtc-file-compaction-ui-tests)
+  set_tests_properties(file-compaction-ui PROPERTIES TIMEOUT 120 LABELS "unit;ui;files"
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()
+if(BIGLYBTC_DESKTOP AND BIGLYBTC_LOCAL_ENGINE AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-file-compaction-bridge-tests file_compaction_bridge_tests.cpp)
+  set_target_properties(biglybtc-file-compaction-bridge-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-file-compaction-bridge-tests PRIVATE biglybtc_desktop_host
+    biglybtc_local_engine biglybtc_profile LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+  target_compile_options(biglybtc-file-compaction-bridge-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME file-compaction-worker COMMAND biglybtc-file-compaction-bridge-tests)
+  set_tests_properties(file-compaction-worker PROPERTIES TIMEOUT 120 LABELS "unit;ui;files;loopback"
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()

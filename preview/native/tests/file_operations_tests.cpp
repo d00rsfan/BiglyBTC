@@ -1,4 +1,5 @@
 #include "file_operations.hpp"
+#include "file_policy_commands.hpp"
 #include "encoded_document.hpp"
 #include "file_operation_io.hpp"
 #include <openssl/evp.h>
@@ -10,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include <type_traits>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -19,7 +21,7 @@ namespace st=biglybtc::storage;
 namespace core=biglybtc::core;
 namespace {
 void check(bool value,const char* why){if(!value){throw std::runtime_error(why);}}
-template<class T>T take(std::expected<T,st::Error>&& value){if(!value){throw std::runtime_error(value.error().message);}return std::move(*value);}
+template<class T>T take(std::expected<T,st::Error>&& value){if(!value){throw std::runtime_error(value.error().message);}if constexpr(!std::is_void_v<T>){return std::move(*value);}}
 std::string b(std::string_view value){return std::to_string(value.size())+':'+std::string(value);}
 core::Document doc(std::string bytes){auto out=core::Document::parse(std::move(bytes),st::compatibleConfigLimits());check(out.has_value(),"parse fixture");return std::move(*out);}
 void put(core::Document& d,std::string_view key,std::string value){check(d.replaceValue(key,std::move(value)).has_value(),"edit fixture");}
@@ -189,10 +191,96 @@ void pendingReorderedCompletionGuards(){
   const auto cleared=[](){std::string map(4,'\0');map+=std::string(4,static_cast<char>(0xff));return "d3:leni5e4:nexti1e6:pieces"+b(map)+b("BiglyBTC.reorderedCompletion")+"dee";};
   {Fixture f;attributes(f,"l1:Re");const auto c=control(f,0,true);write(c,cleared());write(c.string()+".bak",redo("d7:versioni1ee"));auto p=f.plan(st::FileOperationKind::RemoveKeepData);const auto accept=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false));take(st::applyFileOperation(f.lease,std::move(p),accept));check(read(f.selected.files[0])=="hello"&&!fs::exists(c)&&!fs::exists(c.string()+".bak"),"valid cleared primary permits obsolete pending backup and exact cleanup");}
   {Fixture f;attributes(f,"l1:Re");const auto c=control(f,0,true);write(c,"opaque malformed primary");write(c.string()+".bak",redo("d7:versioni1ee"));auto result=st::prepareFileOperation(f.lease,{f.selected.hash,st::FileOperationKind::RemoveKeepData,{}});check(!result&&result.error().message.find("reordered completion")!=std::string::npos&&read(f.selected.files[0])=="hello","malformed primary cannot authorize pending backup transport");}
-  {Fixture f(true,true);attributes(f,"l1:L1:Re");const auto c=control(f,1,true);std::string map(8,'\0');map+=std::string(8,static_cast<char>(0xff));write(c,"d3:leni10e4:nexti1e6:pieces"+b(map)+b("BiglyBTC.reorderedCompletion")+"dee");write(c.string()+".bak",redo("d7:versioni1ee"));auto result=st::prepareFileOperation(f.lease,{f.selected.hash,st::FileOperationKind::RemoveKeepData,{}});check(!result&&result.error().message.find("reordered completion")!=std::string::npos&&read(f.selected.files[1])=="world!tail","invalid duplicate map cannot supersede pending backup even with cleared native key");}
+  {Fixture f(true,true);attributes(f,"l1:L1:Re");const auto c=control(f,1,true);std::string map(8,'\0');map+=std::string(4,static_cast<char>(0xff));write(c,"d3:leni10e4:nexti1e6:pieces"+b(map)+b("BiglyBTC.reorderedCompletion")+"dee");write(c.string()+".bak",redo("d7:versioni1ee"));auto result=st::prepareFileOperation(f.lease,{f.selected.hash,st::FileOperationKind::RemoveKeepData,{}});check(!result&&result.error().message.find("reordered completion")!=std::string::npos&&read(f.selected.files[1])=="world!tail","invalid duplicate map cannot supersede pending backup even with cleared native key");}
   for(const bool recovery:{false,true}){Fixture f;attributes(f,"l1:Re");const auto c=control(f,0,true);write(c,cleared());auto p=f.plan(st::FileOperationKind::RemoveDeleteData);const auto accept=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,true));
     if(recovery){interruptAt=st::FileOperationStage::JournalSynced;interruptArmed=true;check(!st::applyFileOperation(f.lease,std::move(p),accept,interrupt)&&st::hasPendingFileOperation(f.lease),"accepted pre-effect removal journal retained");write(c,redo("d7:versioni1ee"));auto result=st::recoverFileOperation(f.lease);check(!result&&result.error().message.find("reordered completion")!=std::string::npos&&read(f.selected.files[0])=="hello"&&fs::exists(f.selected.state)&&st::hasPendingFileOperation(f.lease),"recovery independently refuses newly pending native redo before effects");}
     else{write(c,redo("d7:versioni1ee"));auto result=st::applyFileOperation(f.lease,std::move(p),accept);check(!result&&result.error().message.find("reordered completion")!=std::string::npos&&read(f.selected.files[0])=="hello"&&!st::hasPendingFileOperation(f.lease),"apply revalidates redo before creating operation journal");}
+  }
+}
+
+void selectionPoliciesMoveAndRecover(){
+  const auto setDnd=[](Fixture& f){
+    auto state=doc(read(f.selected.state)),attrs=doc(*core::encodeValue(*state.find("attributes")));
+    put(attrs,"dnd_sf",b("dnd"));put(attrs,"dnd_pfx",b("skip_"));put(attrs,"incompfilesuffix",b(".part"));
+    put(state,"attributes",attrs.serialize());write(f.selected.state,state.serialize());
+  };
+  {
+    Fixture f;setDnd(f);const auto old=f.selected.files[0],dnd=old.parent_path()/"dnd/skip_file.bin.part";
+    take(st::setFilePolicies(f.lease,f.selected.hash,std::vector<biglybtc::compat::FilePolicy>{{true,0}}));
+    check(!fs::exists(old)&&read(dnd)=="hello"&&!st::hasPendingFileOperation(f.lease),"Skip moves authenticated incomplete bytes into original DND subfolder");
+    auto state=doc(read(f.selected.state));const auto* attrs=state.find("attributes");
+    check(attrs->find("storetypes")->children[0].bytes=="L"&&attrs->find("opaque.state")
+        &&attrs->find("filelinks2")->children[0].bytes.ends_with(dnd.string()),"Plain skip retains linear storage, unknown attributes and exact physical link");
+    take(st::setFilePolicies(f.lease,f.selected.hash,std::vector<biglybtc::compat::FilePolicy>{{false,0}}));
+    const auto restored=old.parent_path()/"skip_file.bin.part";
+    check(!fs::exists(dnd)&&read(restored)=="hello"&&!fs::exists(old),"Unskip restores parent while retaining name; completion alone removes DND prefix/suffix");
+  }
+  {
+    Fixture f(true);auto state=doc(read(f.selected.state)),attrs=doc(*core::encodeValue(*state.find("attributes")));
+    const auto alternate=f.area.root/"alternate";put(attrs,"dnd_al",b(alternate.string()));put(state,"attributes",attrs.serialize());write(f.selected.state,state.serialize());
+    const auto first=read(f.selected.files[0]),second=read(f.selected.files[1]);
+    take(st::setFilePolicies(f.lease,f.selected.hash,std::vector<biglybtc::compat::FilePolicy>{{false,0},{true,0}}));
+    const auto target=alternate/f.selected.files[1].filename();
+    check(read(f.selected.files[0])==first&&read(target)==second&&!fs::exists(f.selected.files[1]),"Alternate DND moves only selected actual file, preserving sibling payload");
+    take(st::setFilePolicies(f.lease,f.selected.hash,std::vector<biglybtc::compat::FilePolicy>{{false,0},{false,0}}));
+    check(read(f.selected.files[1])==second&&!fs::exists(target),"Unskip restores alternate DND payload using exact original file parent");
+  }
+  for(const auto point:{st::FileOperationStage::DestinationPublished,st::FileOperationStage::StatePublished,
+      st::FileOperationStage::InventoryPublished,st::FileOperationStage::SourceRemoved}){
+    Fixture f;setDnd(f);auto other=record(f.profile,f.area.root/"other","survivor.bin",false);f.inventory(other.row);
+    auto inventory=doc(read(f.profile/"downloads.config"));const auto original=*core::encodeValue(inventory.find("downloads")->children[0]);
+    auto p=take(st::prepareFileOperation(f.lease,{f.selected.hash,st::FileOperationKind::SetFilePolicies,{},"d1:01:0e",original}));
+    auto confirmation=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false));
+    interruptAt=point;interruptArmed=true;check(!st::applyFileOperation(f.lease,std::move(p),confirmation,interrupt)
+        &&st::hasPendingFileOperation(f.lease),"Selection interruption keeps exact existing recovery journal");
+    inventory=doc(read(f.profile/"downloads.config"));auto survivor=doc(*core::encodeValue(inventory.find("downloads")->children[1]));
+    put(survivor,"downloaded","i97e");put(inventory,"downloads","l"+*core::encodeValue(inventory.find("downloads")->children[0])+survivor.serialize()+'e');
+    write(f.profile/"downloads.config",inventory.serialize());
+    auto recovered=take(st::recoverFileOperation(f.lease));const auto target=f.selected.files[0].parent_path()/"dnd/skip_file.bin.part";
+    check(recovered&&recovered->kind==st::FileOperationKind::SetFilePolicies&&read(target)=="hello"
+        &&!fs::exists(f.selected.files[0])&&!st::hasPendingFileOperation(f.lease),"DND recovery settles exact moved bytes without duplicate movement");
+    const auto after=doc(read(f.profile/"downloads.config"));auto selected=biglybtc::compat::originalFilePolicy(after.find("downloads")->children[0],1);
+    check(selected&&selected->front().skipped&&after.find("downloads")->children[1].find("downloaded")->integer==97
+        &&read(other.files[0])==other.values[0],"Selection sparse recovery preserves unrelated checkpoint and survivor payload");
+  }
+}
+
+void selectionCollisionAndStaleSource(){
+  {
+    Fixture f;attributes(f,"l1:Ce");write(f.selected.files[0],"x");const auto marker=control(f,0);write(marker,"d7:versioni0e6:lengthi5ee");
+    auto state=doc(read(f.selected.state)),attrs=doc(*core::encodeValue(*state.find("attributes")));put(attrs,"dnd_sf",b("dnd"));put(state,"attributes",attrs.serialize());write(f.selected.state,state.serialize());
+    const auto before=read(f.selected.state),raw=read(f.profile/"downloads.config");auto inventory=doc(raw);
+    auto p=take(st::prepareFileOperation(f.lease,{f.selected.hash,st::FileOperationKind::SetFilePolicies,{},"d1:01:0e",*core::encodeValue(inventory.find("downloads")->children[0])}));
+    auto accepted=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false));interruptAt=st::FileOperationStage::DestinationPublished;interruptArmed=true;
+    check(!st::applyFileOperation(f.lease,std::move(p),accepted,interrupt),"nonlinear selection interrupted with control inventory retained");
+    check(fs::remove(marker),"owned control removed to test recovery conflict");auto recovered=st::recoverFileOperation(f.lease);
+    check(!recovered&&recovered.error().code==st::ErrorCode::Conflict&&st::hasPendingFileOperation(f.lease)
+        &&read(f.selected.state)==before&&read(f.profile/"downloads.config")==raw&&read(f.selected.files[0])=="x",
+        "Selection recovery never uses removal's absent-control shortcut");
+  }
+  {
+    Fixture f;auto state=doc(read(f.selected.state)),attrs=doc(*core::encodeValue(*state.find("attributes")));
+    put(attrs,"dnd_sf",b("dnd"));put(state,"attributes",attrs.serialize());write(f.selected.state,state.serialize());
+    const auto target=f.selected.files[0].parent_path()/"dnd/file.bin";write(target,"other");
+    take(st::setFilePolicies(f.lease,f.selected.hash,std::vector<biglybtc::compat::FilePolicy>{{true,0}}));
+    check(read(target)=="other"&&read(f.selected.files[0])=="hello","Occupied DND destination is never overwritten; original source stays put");
+  }
+  {
+    Fixture f;auto inventory=doc(read(f.profile/"downloads.config"));const auto original=*core::encodeValue(inventory.find("downloads")->children[0]);
+    auto changed=doc(original);put(changed,"position","i9e");put(inventory,"downloads","l"+changed.serialize()+'e');write(f.profile/"downloads.config",inventory.serialize());
+    const auto before=read(f.selected.state),raw=read(f.profile/"downloads.config");
+    auto result=st::prepareFileOperation(f.lease,{f.selected.hash,st::FileOperationKind::SetFilePolicies,{},"d1:01:0e",original});
+    check(!result&&result.error().code==st::ErrorCode::Conflict&&read(f.selected.state)==before
+        &&read(f.profile/"downloads.config")==raw&&read(f.selected.files[0])=="hello"&&!st::hasPendingFileOperation(f.lease),
+        "Stale selected-row source rejects before state, policy or payload changes");
+  }
+  {
+    Fixture f;auto state=doc(read(f.selected.state)),attrs=doc(*core::encodeValue(*state.find("attributes")));
+    put(attrs,"dnd_sf",b("../outside"));put(state,"attributes",attrs.serialize());write(f.selected.state,state.serialize());
+    const auto before=read(f.selected.state),raw=read(f.profile/"downloads.config");
+    auto result=st::setFilePolicies(f.lease,f.selected.hash,std::vector<biglybtc::compat::FilePolicy>{{true,0}});
+    check(!result&&read(f.selected.state)==before&&read(f.profile/"downloads.config")==raw&&read(f.selected.files[0])=="hello"
+        &&!st::hasPendingFileOperation(f.lease),"DND path traversal never becomes relocation authority");
   }
 }
 
@@ -202,4 +290,4 @@ void realCopyBranch(){
 }
 extern "C" int __real_linkat(int,const char*,int,const char*,int);
 extern "C" int __wrap_linkat(int a,const char* x,int b,const char* y,int flags){struct stat from{},to{};if(forceCopy&&std::string_view(x)=="file.bin"&&std::string_view(y)=="file.bin"&&::fstat(a,&from)==0&&::fstat(b,&to)==0&&from.st_dev==copyFromDev&&from.st_ino==copyFromIno&&to.st_dev==copyToDev&&to.st_ino==copyToIno){++copyHits;errno=EXDEV;return -1;}return __real_linkat(a,x,b,y,flags);}
-int main(){try{keepAndDelete();relocationRecoveryPreservesBothUntilPublication();relinkAndScope();protectionAndConflicts();realCopyBranch();nonlinearControlsAndRecovery();nonlinearBoundaryRefusals();authenticatedExternalLinks();legacyRootsAndDefaultStoreRecovery();pendingReorderedCompletionGuards();std::cout<<"ten generated file-operation families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+int main(){try{selectionPoliciesMoveAndRecover();selectionCollisionAndStaleSource();keepAndDelete();relocationRecoveryPreservesBothUntilPublication();relinkAndScope();protectionAndConflicts();realCopyBranch();nonlinearControlsAndRecovery();nonlinearBoundaryRefusals();authenticatedExternalLinks();legacyRootsAndDefaultStoreRecovery();pendingReorderedCompletionGuards();std::cout<<"ten generated file-operation families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

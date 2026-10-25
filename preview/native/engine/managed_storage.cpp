@@ -1,5 +1,6 @@
 #include "biglybtc/original_file_links.hpp"
 #include "managed_storage.hpp"
+#include "linear_to_compact.hpp"
 #include "original_disk_io.hpp"
 #include "original_control.hpp"
 #include "original_storage_defaults.hpp"
@@ -416,6 +417,7 @@ std::span<const ManagedPayloadClaim> ManagedStorage::claims() const noexcept { r
 
 std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::ProfileLease& lease,const core::TorrentHash& hash,const NetworkPolicy& policy,std::span<const ManagedPayloadClaim> claimed) {
   try {
+    require(!storage::hasPendingOriginalCompaction(lease),"Recover pending explicit compaction with all profile handles retired before admission",ErrorCode::Conflict);
     require(claimed.size()<=MaximumManagedPayloadClaims,"Retained payload claim bound exceeded",ErrorCode::Unsupported);
     struct stat profile{}; require(lease.valid()&&::fstat(lease.directoryHandle(),&profile)==0,"Managed storage requires a valid held lease",ErrorCode::UnsafePath);
     auto inventory=take(storage::ConfigFile::load(lease,"downloads.config"));

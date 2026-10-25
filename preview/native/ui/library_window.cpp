@@ -184,6 +184,11 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
       dispatchFilePolicy(priority, skipped);
     });
   }
+  fileCompaction_ = new QAction(tr("Do not download and reclaim space…"), this);
+  fileCompaction_->setObjectName(QStringLiteral("files-reclaim-space"));
+  fileCompaction_->setEnabled(false);
+  fileCompaction_->setToolTip(tr("Select one linear file. Stop all torrents and metadata downloads, then refresh file details. Boundary data needed by other files is kept."));
+  connect(fileCompaction_, &QAction::triggered, this, &LibraryWindow::dispatchFileCompaction);
   filesTable_->setAlternatingRowColors(true);
   filesTable_->verticalHeader()->hide();
   filesTable_->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
@@ -1477,6 +1482,7 @@ void LibraryWindow::updateDownloadActions() {
   const bool startAll = downloadTargets(core::DownloadAction::Start, true).has_value();
   const bool stopAll = downloadTargets(core::DownloadAction::Stop, true).has_value();
   const bool filesEditable = filePolicySelection().has_value();
+  const bool canCompact = filePolicySelection(true).has_value();
   const bool importsAllowed = canImport();
   // Publish only from this queued entry point. A QAction::changed observer may
   // delete/rebind the Window; no old selection/model caller resumes afterward.
@@ -1503,6 +1509,8 @@ void LibraryWindow::updateDownloadActions() {
     if (item) { item->setEnabled(filesEditable); }
     if (!current()) { return; }
   }
+  if (fileCompaction_) { fileCompaction_->setEnabled(canCompact); }
+  if (!current()) { return; }
   if (openTorrent_) { openTorrent_->setEnabled(importsAllowed); }
   if (!current()) { return; }
   if (openMagnet_) { openMagnet_->setEnabled(importsAllowed); }
@@ -1512,20 +1520,22 @@ void LibraryWindow::updateDownloadActions() {
   renderedDownloadRevision_ = revision;
 }
 
-std::optional<LibraryWindow::FilePolicySelection> LibraryWindow::filePolicySelection() const {
+std::optional<LibraryWindow::FilePolicySelection> LibraryWindow::filePolicySelection(bool forCompaction) const {
   if (busy_ || closing_ || offlinePreview_ || updating_ || mainTabs_->currentWidget() != torrentsPage_
       || detailTabs_->currentIndex() != 1) { return std::nullopt; }
   const auto target = selected();
   const auto source = filesModel_->presentation();
-  if (!target || !model_->accepts(*target) || !source || !source->canEdit || source->target != *target
+  if (!target || !model_->accepts(*target) || !source || !(forCompaction ? source->canCompact : source->canEdit) || source->target != *target
       || filesModel_->target() != target) { return std::nullopt; }
   const auto rows = filesTable_->selectionModel()->selectedRows(0);
-  if (rows.isEmpty()) { return std::nullopt; }
+  if (rows.isEmpty() || (forCompaction && rows.size() != 1)) { return std::nullopt; }
   FileIndices indices;
   indices.reserve(static_cast<std::size_t>(rows.size()));
   for (const auto& row : rows) {
     const auto sourceRow = filesProxy_->mapToSource(row);
-    if (!sourceRow.isValid() || !filesModel_->editableAt(sourceRow.row())) { return std::nullopt; }
+    if (!sourceRow.isValid() || sourceRow.row() < 0 || static_cast<std::size_t>(sourceRow.row()) >= source->items.size()) { return std::nullopt; }
+    const auto& file = source->items[static_cast<std::size_t>(sourceRow.row())];
+    if (file.padding || (forCompaction ? !file.canCompact : !filesModel_->editableAt(sourceRow.row()))) { return std::nullopt; }
     const auto original = filesModel_->originalIndex(sourceRow.row());
     if (!original) { return std::nullopt; }
     indices.push_back(*original);
@@ -1547,6 +1557,33 @@ void LibraryWindow::dispatchFilePolicy(int priority, bool skipped) {
   if (guard) { guard->downloadDispatching_ = false; }
 }
 
+void LibraryWindow::dispatchFileCompaction() {
+  if (downloadDispatching_ || renderedDownloadRevision_ != downloadActionRevision_) { return; }
+  const auto selection = filePolicySelection(true);
+  if (!selection) { return; }
+  const auto found = std::ranges::find(selection->source->items, selection->indices.front(), &FileItem::index);
+  if (found == selection->source->items.end()) { return; }
+  downloadDispatching_ = true;
+  QPointer<LibraryWindow> guard(this);
+  QPointer<QMessageBox> dialog = new QMessageBox(QMessageBox::Warning, tr("Reclaim file space"),
+      tr("Stop downloading this file and discard its interior data?\n\n%1\n\nOnly boundary data needed by adjacent files is kept. Discarded data must be downloaded again if you select the file later.").arg(found->path),
+      QMessageBox::Yes | QMessageBox::Cancel, this);
+  dialog->setObjectName(QStringLiteral("files-reclaim-confirmation"));
+  dialog->setTextFormat(Qt::PlainText);
+  dialog->setDefaultButton(QMessageBox::Cancel);
+  dialog->setEscapeButton(QMessageBox::Cancel);
+  const auto answer = dialog->exec();
+  if (!guard) { return; }
+  if (dialog) { dialog->deleteLater(); }
+  // A nested dialog event may replace the profile, selection or immutable file
+  // frame. Confirmation authorizes only the exact original index shown above.
+  if (answer == QMessageBox::Yes && filePolicySelection(true) == selection
+      && renderedDownloadRevision_ == downloadActionRevision_) {
+    emit fileCompactionRequested(selection->target, selection->indices.front());
+  }
+  if (guard) { guard->downloadDispatching_ = false; }
+}
+
 void LibraryWindow::filePopup(const QPoint& point) {
   if (fileMenuOpen_) { return; }
   const auto index = filesTable_->indexAt(point);
@@ -1557,11 +1594,14 @@ void LibraryWindow::filePopup(const QPoint& point) {
   // Retain only the already owned immutable file frame and exact original IDs.
   // New details, a new Target or selection changes invalidate this menu intent.
   fileMenuSelection_ = filePolicySelection();
+  if (!fileMenuSelection_) { fileMenuSelection_ = filePolicySelection(true); }
   fileMenuOpen_ = true;
   queueDownloadActions();
   QPointer<QMenu> menu(new QMenu(this));
   menu->setObjectName(QStringLiteral("files-priority-context"));
   for (const auto& item : filePolicyActions_) { if (item) { menu->addAction(item.data()); } }
+  menu->addSeparator();
+  if (fileCompaction_) { menu->addAction(fileCompaction_.data()); }
   menu->exec(filesTable_->viewport()->mapToGlobal(point));
   if (!guard) { return; }
   if (menu) { menu->deleteLater(); }

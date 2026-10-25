@@ -33,12 +33,16 @@ struct FileItem {
   int priority;
   bool skipped;
   bool padding;
+  // Explicit space reclamation only; never implied by ordinary Skip.
+  bool canCompact = false;
 };
 struct FileDetails {
   Target target;
   std::vector<FileItem> items;
-  // Host grants editing only after the target has no retained engine handle.
+  // Host authorizes a serialized retire/edit/readmit command.
   bool canEdit = false;
+  // True only while this profile has no retained or uncertain torrent handles.
+  bool canCompact = false;
 };
 using FilePresentation = std::shared_ptr<const FileDetails>;
 struct SavedSelectedValues {

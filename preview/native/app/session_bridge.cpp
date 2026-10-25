@@ -1,5 +1,7 @@
 #include "torrent_intake.hpp"
 #include "file_operations.hpp"
+#include "linear_to_compact.hpp"
+#include "original_storage_defaults.hpp"
 #include "torrent_creator.hpp"
 #include <thread>
 #include "magnet_intake.hpp"
@@ -364,6 +366,24 @@ struct SessionBridge::Host {
     if (target.generation != revision || !currentHashes.contains(target.hash.toStdString())) {
       throw Failure{{storage::ErrorCode::Conflict, "This download selection is stale; refresh the library"}};
     }
+  }
+  bool compactionReady() const {
+    if (fileRecoveryRequired || storage::hasPendingFileOperation(lease)
+        || storage::hasPendingOriginalCompaction(lease)) { return false; }
+    if (!engine) { return true; } // Offline/unbound: no engine was created.
+    // managedAvailable also rejects registered legacy calls and poisoned/closed
+    // owners. An empty status vector alone is not a lifetime certificate.
+    if (!engine->managedAvailable()) { return false; }
+    const auto observed = engine->latest();
+    if (!observed || observed->state != engine::AccountingState::Idle) { return false; }
+    for (const auto& item : engine->managedDownloads()) {
+      if (item.retained || item.failure || item.phase != engine::ManagedPhase::Stopped) { return false; }
+    }
+    for (const auto& item : engine->pendingMagnets()) {
+      if (item.retained || item.failure || item.phase == engine::MagnetPhase::Resolving
+          || item.phase == engine::MagnetPhase::Retiring) { return false; }
+    }
+    return true;
   }
   void readMagnets() {
     auto read = engine::readPendingMagnets(lease, networkPolicy);
@@ -800,6 +820,7 @@ bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeer
   return dispatch([this, profile = std::move(profile), ownedPeerPort](std::stop_token stop) {
     if (host_) { throw Failure{{storage::ErrorCode::Conflict, "A profile is already open"}}; }
     auto lease = take(storage::ProfileLease::acquire(profile));
+    static_cast<void>(take(storage::recoverOriginalCompaction(lease)));
     static_cast<void>(take(storage::recoverFileOperation(lease)));
     static_cast<void>(take(storage::recoverTorrentIntake(lease)));
     const auto session = reserveColumnLayoutSession();
@@ -827,6 +848,7 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
     auto lease = take(storage::ProfileLease::acquire(profile));
     host_ = std::make_unique<Host>(profile, 0, std::move(lease), reserveColumnLayoutSession());
     host_->normalNetwork = true;
+    static_cast<void>(take(storage::recoverOriginalCompaction(host_->lease)));
     static_cast<void>(take(storage::recoverFileOperation(host_->lease)));
     static_cast<void>(take(storage::recoverTorrentIntake(host_->lease)));
     auto inventory = storage::ConfigFile::load(host_->lease, "downloads.config");
@@ -860,7 +882,7 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
     if (!host_ || !host_->engine || !host_->lastSnapshot) {
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
-    if (host_->fileRecoveryRequired) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
+    if (host_->fileRecoveryRequired || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
     if (take(storage::recoverTorrentIntake(host_->lease))) {
       throw Failure{{storage::ErrorCode::Conflict, "Recovered a pending torrent import; library refreshed"}};
     }
@@ -974,7 +996,7 @@ bool SessionBridge::torrentImport(QString metadata, QString destination, bool st
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
     checkpoint(stop);
-    if (host_->fileRecoveryRequired) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
+    if (host_->fileRecoveryRequired || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
     static_cast<void>(take(storage::recoverTorrentIntake(host_->lease)));
     const auto hash = take(storage::importTorrent(host_->lease,
         std::filesystem::path(metadata.toUtf8().toStdString()),
@@ -999,7 +1021,7 @@ bool SessionBridge::magnetImport(QString uri, QString destination) {
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
     checkpoint(stop);
-    if (host_->fileRecoveryRequired) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
+    if (host_->fileRecoveryRequired || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
     static_cast<void>(take(storage::recoverTorrentIntake(host_->lease)));
     const auto intent = take(engine::parseMagnetIntent(uri.toUtf8().toStdString(),
         std::filesystem::path(destination.toUtf8().toStdString()), false, host_->networkPolicy));
@@ -1035,17 +1057,12 @@ bool SessionBridge::filePolicy(ui::Target target, ui::FileIndices selected, int 
     if (!host_ || !host_->engine || !host_->engine->managedAvailable()) {
       throw Failure{{storage::ErrorCode::Unsupported, "No managed engine is available"}};
     }
-    if (host_->fileRecoveryRequired) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
+    if (host_->fileRecoveryRequired || storage::hasPendingOriginalCompaction(host_->lease)) { throw Failure{{storage::ErrorCode::Conflict, "Restart to recover the interrupted file operation before changing the profile"}}; }
     if (take(storage::recoverTorrentIntake(host_->lease))) {
       throw Failure{{storage::ErrorCode::Conflict, "Recovered a pending torrent import; library refreshed"}};
     }
     host_->accepts(target);
     const auto hash = identity(target);
-    for (const auto& live : host_->engine->managedDownloads()) {
-      if (live.hash == hash && live.retained) {
-        throw Failure{{storage::ErrorCode::Conflict, "Stop the torrent before changing its file selection"}};
-      }
-    }
     const auto files = take(engine::queryTorrent(host_->lease, hash));
     std::vector<compat::FilePolicy> policies;
     policies.reserve(files.entries.size());
@@ -1058,12 +1075,100 @@ bool SessionBridge::filePolicy(ui::Target target, ui::FileIndices selected, int 
       }
       policies[static_cast<std::size_t>(index)] = {skipped, skipped ? 0 : priority};
     }
+    // Validate every requested preference before retiring the exact admission.
+    std::set<std::int32_t> ranks;
+    for(const auto& policy:policies){
+      if(policy.priority==std::numeric_limits<std::int32_t>::min()){
+        throw Failure{{storage::ErrorCode::Unsupported,"Priority cannot round trip through original encoding"}};
+      }
+      if(!policy.skipped){ranks.insert(policy.priority);}
+    }
+    if(ranks.size()>7){throw Failure{{storage::ErrorCode::Unsupported,"At most seven distinct file priorities are supported"}};}
+    bool readmit=false,paused=false,force=false,queued=false;std::uint64_t oldAdmission=0;
+    {
+      const auto active=host_->engine->managedDownloads();const auto found=std::ranges::find(active,hash,&engine::ManagedDownloadStatus::hash);
+      if(found!=active.end()){
+        if(found->failure){throw Failure{*found->failure};}
+        if(found->phase==engine::ManagedPhase::Stopping){throw Failure{{storage::ErrorCode::Busy,"Torrent retirement is still pending"}};}
+        readmit=found->retained;paused=found->manuallyPaused;force=found->forceStart;oldAdmission=found->admission;
+      }
+      const auto original=take(storage::readLibraryView(host_->lease));
+      for(const auto& row:original.items){if(row.saved.hash&&*row.saved.hash==hash){force=row.saved.forceStart;queued=row.saved.startup==core::StartupState::Queued;}}
+      for(const auto& pause:original.pauses){if(pause.hash==hash){paused=true;}}
+    }
+    if(readmit){
+      take(host_->engine->stopManaged(hash));const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds{6};
+      for(;;){
+        checkpoint(stop);const auto active=host_->engine->managedDownloads();const auto found=std::ranges::find(active,hash,&engine::ManagedDownloadStatus::hash);
+        if(found==active.end()){throw Failure{{storage::ErrorCode::Conflict,"File-selection admission disappeared during retirement"}};}
+        if(found->failure){throw Failure{*found->failure};}
+        if(!found->retained){take(host_->engine->forgetManaged(hash));break;}
+        if(std::chrono::steady_clock::now()>=deadline){throw Failure{{storage::ErrorCode::Busy,"Torrent files are still retained; file selection was not changed"}};}
+        if(!host_->engine->poll()){throw Failure{{storage::ErrorCode::Io,"Cannot certify file-selection retirement"}};}
+        std::this_thread::sleep_for(std::chrono::milliseconds{20});
+      }
+    }
     checkpoint(stop);
-    auto saved = storage::setFilePolicies(host_->lease, hash, policies);
-    if (!saved) { throw Failure{saved.error()}; }
+    auto changed=storage::setFilePolicies(host_->lease,hash,policies);
+    if(!changed){host_->fileRecoveryRequired=storage::hasPendingFileOperation(host_->lease)||storage::hasPendingOriginalCompaction(host_->lease);throw Failure{changed.error()};}
+    host_->filePlan.reset();host_->filePlanPacket.reset();
+    if(readmit){
+      auto admitted=host_->engine->startManaged(host_->lease,{hash,host_->peerPort,force,queued,paused});
+      if(!admitted){host_->admissionFailures.insert_or_assign(hash.hex(),admitted.error());throw Failure{{admitted.error().code,"File selection saved; torrent could not restart: "+admitted.error().message}};}
+      if(paused&&oldAdmission&&host_->scheduler){
+        const auto active=host_->engine->managedDownloads();const auto found=std::ranges::find(active,hash,&engine::ManagedDownloadStatus::hash);
+        if(found==active.end()||!found->retained||!found->manuallyPaused){throw Failure{{storage::ErrorCode::Conflict,"File selection saved; scheduler pause could not be rebound"}};}
+        take(host_->scheduler->rebindOwnedPause(host_->lease,hash,oldAdmission,found->admission,host_->manualRevisions[hash.hex()]));
+      }
+      host_->admissionFailures.erase(hash.hex());host_->lastManagedPhases.erase(hash.hex());
+    }
     ready(host_->query({}), tr("File selection saved"));
   });
 }
+bool SessionBridge::compactFile(ui::Target target, int originalIndex) {
+  if (profileClosed_ || originalIndex < 0) { return false; }
+  return dispatch([this, target = std::move(target), originalIndex](std::stop_token stop) {
+    if (!host_) { throw Failure{{storage::ErrorCode::Missing, "No profile is open"}}; }
+    host_->accepts(target);
+    if (host_->engine && !host_->engine->poll()) {
+      throw Failure{{storage::ErrorCode::Io, "The engine cannot confirm safe idle storage; close the profile before reclaiming space"}};
+    }
+    if (!host_->compactionReady()) {
+      throw Failure{{storage::ErrorCode::Busy, "Stop all torrents and metadata downloads, wait for retirement, then refresh file details before reclaiming space"}};
+    }
+    const auto hash = identity(target);
+    const auto files = take(engine::queryTorrent(host_->lease, hash));
+    if (static_cast<std::size_t>(originalIndex) >= files.entries.size()
+        || files.entries[static_cast<std::size_t>(originalIndex)].index != originalIndex
+        || files.entries[static_cast<std::size_t>(originalIndex)].padding) {
+      throw Failure{{storage::ErrorCode::Conflict, "This file selection is stale or includes padding"}};
+    }
+    checkpoint(stop);
+    // These records can still own authenticated ManagedStorage descriptors even
+    // after LT weak-expiration. forgetManaged checks actual flush/removal proof.
+    // Never stop/restart a torrent, revoke a scheduler pause or infer a seal here.
+    if (host_->engine) {
+      const auto retired = host_->engine->managedDownloads();
+      for (const auto& item : retired) { take(host_->engine->forgetManaged(item.hash)); }
+    }
+    host_->accepts(target);
+    if (!host_->compactionReady()) { throw Failure{{storage::ErrorCode::Conflict, "Torrent retirement is not available for space reclamation"}}; }
+    auto result = storage::compactOriginalFile(host_->lease, hash, static_cast<std::size_t>(originalIndex), stop);
+    host_->fileRecoveryRequired = storage::hasPendingFileOperation(host_->lease)
+        || storage::hasPendingOriginalCompaction(host_->lease);
+    host_->filePlan.reset(); host_->filePlanPacket.reset();
+    if (!result) {
+      const auto message = host_->fileRecoveryRequired
+          ? tr("Space reclamation did not finish. Restart to recover it before using these files. %1").arg(text(result.error().message))
+          : tr("Space reclamation did not finish. The file may remain set to Do not download. %1").arg(text(result.error().message));
+      ready(host_->query({}), message); // Publish any accepted Skip, including cancellation after it.
+      return;
+    }
+    ready(host_->query({}), tr("File set to Do not download; %1 bytes reclaimed. Boundary data was kept.")
+        .arg(static_cast<qulonglong>(result->previousPhysicalBytes - result->physicalBytes)));
+  });
+}
+
 bool SessionBridge::refresh() {
   if (profileClosed_) { return false; }
   return dispatch([this](std::stop_token stop) {
@@ -1636,15 +1741,37 @@ bool SessionBridge::details(ui::Target target) {
     host_->known.insert_or_assign(target.hash.toStdString(), Host::Known{name, value.bytes});
     auto files = std::make_shared<ui::FileDetails>();
     files->target = target;
-    files->canEdit = host_->engine && host_->engine->managedAvailable();
+    files->canEdit = host_->engine && host_->engine->managedAvailable() && !host_->fileRecoveryRequired && !storage::hasPendingOriginalCompaction(host_->lease);
     if (host_->engine) {
       for (const auto& active : host_->engine->managedDownloads()) {
-        if (active.hash == identity(target) && active.retained) { files->canEdit = false; }
+        if (active.hash == identity(target) && (active.failure || active.phase==engine::ManagedPhase::Stopping)) { files->canEdit = false; }
+      }
+    }
+    files->canCompact = host_->compactionReady();
+    std::vector<bool> compactable(value.entries.size(), false);
+    if (files->canCompact) {
+      // Read-only source/default resolution; the mutating primitive repeats all
+      // geometry/control/path/alias checks under this same worker-held lease.
+      auto store = take(storage::TorrentStateStore::open(host_->lease));
+      const auto state = take(store.load(host_->lease, identity(target)));
+      const auto layout = compat::originalLayout(state.document());
+      const auto* attributes = state.document().find("attributes");
+      const auto empty = core::Document::parse("de");
+      if (layout && empty) {
+        const auto kinds = storage::resolveOriginalStorageTypes(host_->lease, identity(target), *layout,
+            attributes ? *attributes : empty->root());
+        if (kinds && !kinds->unsupportedConversion && kinds->actual.size() == compactable.size()) {
+          for (std::size_t index = 0; index < compactable.size(); ++index) {
+            compactable[index] = kinds->actual[index] == storage::OriginalStorageKind::Linear
+                && kinds->requested[index] == storage::OriginalStorageKind::Linear;
+          }
+        }
       }
     }
     files->items.reserve(value.entries.size());
     for (const auto& file : value.entries) {
-      files->items.push_back({file.index, text(file.path), file.bytes, file.priority, file.skipped, file.padding});
+      files->items.push_back({file.index, text(file.path), file.bytes, file.priority, file.skipped, file.padding,
+          !file.padding && compactable[static_cast<std::size_t>(file.index)]});
     }
     QMetaObject::invokeMethod(this, [this, result = ui::Details{target, name, value.bytes, std::move(files)}] {
       QPointer<SessionBridge> guard(this);
@@ -2517,7 +2644,7 @@ bool SessionBridge::saveScheduler(ui::SchedulerSubmission value) {
 void SessionBridge::tickScheduler() noexcept {
   if(!host_||!host_->engine){return;}
   try{
-    if(host_->fileRecoveryRequired){return;}
+    if(host_->fileRecoveryRequired||storage::hasPendingOriginalCompaction(host_->lease)){return;}
     ensureScheduler();if(!host_->scheduler){return;}
     if(!host_->scheduler->snapshot().settings.enabled&&host_->schedulerPaused.empty()&&!host_->schedulerRestoreDefaults){return;}
     const auto now=std::chrono::steady_clock::now();

@@ -188,7 +188,7 @@ std::expected<OriginalReadResult,Error> OriginalFileIo::read(std::uint64_t offse
   p.check();if(p.form.compact&&!p.expanded&&offset+output.size()>p.state.length){p.state.length=offset+output.size();p.dirty=true;}return result;
 });}
 std::expected<void,Error> OriginalFileIo::write(std::uint64_t offset,std::span<const std::byte> input){return guarded([&]()->std::expected<void,Error>{auto& p=*impl_;Impl::Call call(p);p.check();p.range(offset,input.size());const int flags=::fcntl(p.fd,F_GETFL);require(flags>=0&&(flags&O_ACCMODE)!=O_RDONLY,ErrorCode::Io,"Original payload is not writable");
-  struct Part{std::uint64_t physical;std::size_t input,length;};std::vector<Part> parts;std::optional<State> next;std::size_t used=0;
+  struct Part{std::uint64_t logical,physical;std::size_t input,length;};std::vector<Part> parts;std::optional<State> next;std::optional<std::uint64_t> tailSource;std::size_t used=0;
   while(used<input.size()){
     const auto at=offset+used;std::uint64_t n=input.size()-used,physical=at;bool discard=false;
     if(p.form.compact&&!p.expanded){if(at<p.form.first){n=std::min(n,p.form.first-at);}else if(at<p.form.tailStart){n=std::min(n,p.form.tailStart-at);discard=true;}else{physical=p.form.first+at-p.form.tailStart;}}
@@ -196,15 +196,49 @@ std::expected<void,Error> OriginalFileIo::write(std::uint64_t offset,std::span<c
       // Existing slots need no map copy. A first allocation creates one private
       // working state, still fully planned before any payload mutation.
       if(!next){next.emplace(p.state);}require(next->next<p.form.count,ErrorCode::InvalidFormat,"Original allocation map is exhausted");slot=static_cast<std::int32_t>(next->next++);next->map[index]=slot;
+      if(static_cast<std::uint64_t>(slot)==p.form.count-1&&piece!=p.form.count-1&&p.state.map.back()>0){
+        // The old tail remains readable until its copied preimage and new map
+        // are durable. The final physical slot was not referenced by old map.
+        tailSource=static_cast<std::uint64_t>(p.state.map.back());next->map.back()=slot;
+        slot=static_cast<std::int32_t>(*tailSource);next->map[index]=slot;
+      }
     }physical=p.physical(static_cast<std::uint64_t>(slot))+at-p.start(piece);}
-    if(!discard){parts.push_back({physical,used,static_cast<std::size_t>(n)});}used+=static_cast<std::size_t>(n);
+    if(!discard){parts.push_back({at,physical,used,static_cast<std::size_t>(n)});}used+=static_cast<std::size_t>(n);
   }
   const auto length=std::max(p.state.length,offset+input.size());if(next){next->length=length;require(bool(p.publisher),ErrorCode::Missing,"Allocation requires durable original control publisher");static_cast<void>(p.encode(*next,p.kind));}
+  std::uint64_t availableTail=0;std::vector<std::byte> scratch;
+  if(tailSource){
+    const auto eof=static_cast<std::uint64_t>(p.observed.st_size),source=p.physical(*tailSource),target=p.physical(p.form.count-1);
+    availableTail=std::min(p.form.tail,eof>source?eof-source:0);
+    // Moving retained bytes across EOF must not make another old allocated
+    // piece's absent suffix appear present. Such a damaged/incomplete extent
+    // needs an explicit missing-data repair rather than this optimization.
+    if(availableTail&&target+availableTail>eof){for(std::size_t piece=0;piece<p.state.map.size();++piece){const auto slot=p.state.map[piece];if(slot>=0&&piece+1<p.state.map.size()){require(p.physical(static_cast<std::uint64_t>(slot))+p.size(piece)<=eof,ErrorCode::Conflict,"Tail allocation would hide another original piece's missing EOF bytes");}}}
+    scratch.resize(static_cast<std::size_t>(std::min<std::uint64_t>(availableTail,64*1024)));
+    // Re-resolve every planned fragment after the allocation permutation;
+    // a request may also contain a later fragment of the retained tail.
+    for(auto& part:parts){const auto piece=p.pieceAt(part.logical);part.physical=p.physical(static_cast<std::uint64_t>(next->map[static_cast<std::size_t>(piece)]))+part.logical-p.start(piece);}
+  }
   // Fresh nonlinear files need their original marker before any payload IO.
   // open itself remains read-only; a crash cannot reinterpret an unmapped
   // append as an ordinary linear prefix.
   if(p.controls()&&!p.raw){p.sync();p.publish(p.state,p.kind);}
+  if(tailSource){
+    try{
+      const auto source=p.physical(*tailSource),target=p.physical(p.form.count-1);std::uint64_t copied=0;
+      while(copied<availableTail){
+        p.check();const auto count=static_cast<std::size_t>(std::min<std::uint64_t>(scratch.size(),availableTail-copied));
+        require(p.preadAt(source+copied,std::span<std::byte>(scratch).first(count))==count,ErrorCode::Io,"Cannot read retained original tail preimage");p.check();
+        p.pwriteAt(target+copied,std::span<const std::byte>(scratch).first(count));copied+=count;
+      }
+      // An unpublished earlier append may have left orphan bytes. They must
+      // not become a fake available suffix of the relocated logical tail.
+      if(static_cast<std::uint64_t>(p.observed.st_size)>target+availableTail){p.truncate(target+availableTail);}
+      p.sync();p.publish(*next,p.kind);p.state=std::move(*next);next.reset();p.check();
+    }catch(...){p.broken=true;throw;}
+  }
   for(const auto& part:parts){p.pwriteAt(part.physical,input.subspan(part.input,part.length));}
+  if(tailSource){p.sync();}
   if(next){p.sync();p.publish(*next,p.kind);p.state=std::move(*next);}else{if(p.controls()){p.dirty=p.dirty||length!=p.state.length;}p.state.length=length;}
   if(!p.form.compact&&!p.form.reordered){p.state.length=static_cast<std::uint64_t>(p.observed.st_size);}return {};
 });}
@@ -212,6 +246,16 @@ std::expected<void,Error> OriginalFileIo::setLength(std::uint64_t length){return
 std::expected<bool,Error> OriginalFileIo::pieceComplete(std::uint64_t global,std::span<const std::byte> fragment){return guarded([&]()->std::expected<bool,Error>{auto& p=*impl_;Impl::Call call(p);p.check();require(p.geometry.pieceBytes!=0,ErrorCode::InvalidFormat,"Piece completion requires nonzero geometry piece size");const auto first=p.geometry.torrentOffset/p.geometry.pieceBytes;require(global>=first,ErrorCode::InvalidFormat,"Completed piece precedes file");if(p.form.reordered){const auto piece=global-first;require(piece<p.form.count&&fragment.size()==p.size(piece)&&p.state.map[static_cast<std::size_t>(piece)]>=0,ErrorCode::InvalidFormat,"Completed fragment does not match allocated original piece");}return false;});}
 std::expected<void,Error> OriginalFileIo::flush(){return guarded([&]()->std::expected<void,Error>{auto& p=*impl_;Impl::Call call(p);p.check();p.sync();if(p.controls()&&(p.dirty||!p.raw)){p.publish(p.state,p.kind);}return {};});}
 std::expected<void,Error> OriginalFileIo::recover(){return guarded([&]()->std::expected<void,Error>{auto& p=*impl_;Impl::Call call(p);p.check(true);try{p.finishReordered(true);}catch(...){p.broken=true;throw;}return {};});}
+std::expected<bool,Error> OriginalFileIo::finishAllocatedReordered(){return guarded([&]()->std::expected<bool,Error>{
+  auto& p=*impl_;Impl::Call call(p);p.check();
+  if(!p.form.reordered||static_cast<std::uint64_t>(p.observed.st_size)<=p.geometry.fileBytes
+      ||p.state.length!=p.geometry.fileBytes||p.state.next!=p.form.count
+      ||std::ranges::find(p.state.map,-1)!=p.state.map.end()){return false;}
+  for(std::size_t piece=0;piece<p.state.map.size();++piece){
+    if(p.physical(static_cast<std::uint64_t>(p.state.map[piece]))+p.size(piece)>static_cast<std::uint64_t>(p.observed.st_size)){return false;}
+  }
+  try{p.finishReordered(false);}catch(...){p.broken=true;throw;}return true;
+});}
 std::expected<void,Error> OriginalFileIo::finishCompleteReordered(){return guarded([&]()->std::expected<void,Error>{auto& p=*impl_;Impl::Call call(p);p.check(true);try{p.finishReordered(false);}catch(...){p.broken=true;throw;}return {};});}
 std::expected<void,Error> OriginalFileIo::convertToLinear(){return guarded([&]()->std::expected<void,Error>{auto& p=*impl_;Impl::Call call(p);p.check();require(p.kind==Kind::Compact&&!p.expanded,ErrorCode::Unsupported,"Only compact edge storage expands directly to linear");
   if(p.form.compact&&p.form.tail&&p.form.tailStart!=p.form.first){

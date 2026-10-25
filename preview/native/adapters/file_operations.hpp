@@ -9,12 +9,16 @@
 #include <vector>
 
 namespace biglybtc::storage {
-enum class FileOperationKind { RemoveKeepData, RemoveDeleteData, Relocate, Relink };
+enum class FileOperationKind { RemoveKeepData, RemoveDeleteData, Relocate, Relink, SetFilePolicies };
 struct FileOperationRequest {
   core::TorrentHash hash;
   FileOperationKind kind = FileOperationKind::RemoveKeepData;
   // Parent save directory. Existing save_file/name remains unchanged.
   std::optional<std::filesystem::path> destinationParent{};
+  // Internal selection transaction only: bounded original file_priorities_c.
+  // No GUI paths or arbitrary selected-row replacement are accepted here.
+  std::optional<std::string> selectionPolicyEncoding{};
+  std::optional<std::string> expectedSelectionEntry{};
 };
 struct FileOperationEntry {
   std::size_t index = 0;

@@ -33,7 +33,7 @@ void compactEdgesAndUnknown(){
   Area a;Store store(a.fd);store.current="d6:lengthi0e7:versioni0e6:opaqueli7e3:rawee";auto io=take(st::OriginalFileIo::open(a.fd,{3,50,16},st::OriginalStorageKind::Compact,store.current,store.publisher()));check(store.calls==0&&physical(a.fd).empty(),"open is read only");std::string data;for(int i=0;i<50;++i){data+=static_cast<char>('A'+i%26);}done(io.write(0,asBytes(data)));check(physical(a.fd)==data.substr(0,13)+data.substr(45),"compact stores first and last fragments only");st::OriginalReadResult facts;const auto got=read(io,0,50,&facts);check(got.substr(0,13)==data.substr(0,13)&&got.substr(45)==data.substr(45)&&facts.missing==std::vector<st::OriginalMissingRange>{{13,32}},"compact missing middle explicit");done(io.flush());auto ctl=biglybtc::core::Document::parse(*store.current);check(ctl&&ctl->find("length")->integer==50&&ctl->find("opaque"),"compact controls retain unknown bytes");done(io.setLength(9));done(io.flush());check(physical(a.fd).size()==18&&io.length()==9,"compact virtual length does not truncate edges");
 }
 void arbitraryReorderedMaps(){
-  for(const auto kind:{st::OriginalStorageKind::Reordered,st::OriginalStorageKind::ReorderedCompact}){Area a;Store store(a.fd);auto io=take(st::OriginalFileIo::open(a.fd,geometry,kind,{},store.publisher()));check(store.calls==0,"new reorder open publishes nothing");done(io.write(45,asBytes(std::string(15,'D'))));check(store.calls==2&&store.sizes[0]==0&&store.sizes[1]==28,"original marker precedes data and map follows real data");st::OriginalReadResult gap;read(io,13,16,&gap);check(gap.missing==std::vector<st::OriginalMissingRange>{{13,16}},"unallocated original piece is missing");done(io.write(13,asBytes(std::string(16,'B'))));done(io.write(29,asBytes(std::string(16,'C'))));done(io.write(0,asBytes(std::string(13,'A'))));done(io.flush());auto ctl=biglybtc::core::Document::parse(*store.current);check(ctl&&ctl->find("st")->integer==static_cast<int>(kind)&&ctl->find("pieces")->bytes==mapBytes({0,2,3,1}),"append-only noncanonical original permutation");const auto publications=store.calls;const auto unchangedControl=*store.current;done(io.write(8,asBytes(std::string(20,'Z'))));check(read(io,8,20)==std::string(20,'Z')&&store.calls==publications&&*store.current==unchangedControl,"allocated cross-piece overwrite retains map/publication policy");done(io.write(8,asBytes(std::string(5,'A')+std::string(15,'B'))));check(store.calls==publications&&*store.current==unchangedControl,"restored allocated writes publish no new slots");const auto before=physical(a.fd),control=*store.current;check(!take(io.pieceComplete(3,asBytes(std::string(15,'D'))))&&before==physical(a.fd)&&control==*store.current,"completion does not perform crash-unsafe slot swap");auto reopened=take(st::OriginalFileIo::open(a.fd,geometry,kind,store.current,store.publisher()));check(read(reopened,0,60)==std::string(13,'A')+std::string(16,'B')+std::string(16,'C')+std::string(15,'D'),"reopened original map resolves all pieces");}
+  for(const auto kind:{st::OriginalStorageKind::Reordered,st::OriginalStorageKind::ReorderedCompact}){Area a;Store store(a.fd);auto io=take(st::OriginalFileIo::open(a.fd,geometry,kind,{},store.publisher()));check(store.calls==0,"new reorder open publishes nothing");done(io.write(45,asBytes(std::string(15,'D'))));check(store.calls==2&&store.sizes[0]==0&&store.sizes[1]==28,"original marker precedes data and map follows real data");st::OriginalReadResult gap;read(io,13,16,&gap);check(gap.missing==std::vector<st::OriginalMissingRange>{{13,16}},"unallocated original piece is missing");done(io.write(13,asBytes(std::string(16,'B'))));done(io.write(29,asBytes(std::string(16,'C'))));done(io.write(0,asBytes(std::string(13,'A'))));done(io.flush());auto ctl=biglybtc::core::Document::parse(*store.current);check(ctl&&ctl->find("st")->integer==static_cast<int>(kind)&&ctl->find("pieces")->bytes==mapBytes({0,2,1,3}),"final allocation relocates retained tail before reusing its old slot");const auto publications=store.calls;const auto unchangedControl=*store.current;done(io.write(8,asBytes(std::string(20,'Z'))));check(read(io,8,20)==std::string(20,'Z')&&store.calls==publications&&*store.current==unchangedControl,"allocated cross-piece overwrite retains map/publication policy");done(io.write(8,asBytes(std::string(5,'A')+std::string(15,'B'))));check(store.calls==publications&&*store.current==unchangedControl,"restored allocated writes publish no new slots");const auto before=physical(a.fd),control=*store.current;check(!take(io.pieceComplete(3,asBytes(std::string(15,'D'))))&&before==physical(a.fd)&&control==*store.current,"completion does not perform crash-unsafe slot swap");auto reopened=take(st::OriginalFileIo::open(a.fd,geometry,kind,store.current,store.publisher()));check(read(reopened,0,60)==std::string(13,'A')+std::string(16,'B')+std::string(16,'C')+std::string(15,'D'),"reopened original map resolves all pieces");}
 }
 void virtualLengthsAndShortMarker(){
   Area a;Store store(a.fd);auto io=take(st::OriginalFileIo::open(a.fd,geometry,st::OriginalStorageKind::Reordered,{},store.publisher()));done(io.setLength(60));check(physical(a.fd).empty(),"reorder allocation virtual only");done(io.flush());check(store.current&&io.length()==60,"virtual length durable in original control");auto reopened=take(st::OriginalFileIo::open(a.fd,geometry,st::OriginalStorageKind::Reordered,store.current,store.publisher()));st::OriginalReadResult facts;read(reopened,0,60,&facts);check(facts.missing==std::vector<st::OriginalMissingRange>{{0,60}},"virtual length does not fabricate pieces");
@@ -72,7 +72,7 @@ void largePieceBoundaries(){
       auto io=take(st::OriginalFileIo::open(a.fd,g,kind,{},store.publisher()));
       done(io.write(2ULL*piece+13,asBytes("TAIL123")));
       st::OriginalReadResult absent;read(io,13,8,&absent);check(absent.missing==std::vector<st::OriginalMissingRange>{{13,8}},"large unallocated middle is unknown rather than present zeros");
-      if(!compact){done(io.write(piece+13,asBytes("MIDDLE7")));}
+      if(!compact){done(io.write(piece+13,asBytes("MIDDLE7")));done(io.write(2ULL*piece+12,asBytes("E")));}
       done(io.write(11,asBytes("ABCD")));done(io.flush());
       auto reopened=take(st::OriginalFileIo::open(a.fd,g,kind,store.current,store.publisher()));
       check(read(reopened,2ULL*piece+13,7)=="TAIL123","large final fragment survives exact original reopen");
@@ -122,11 +122,12 @@ std::string completeBytes(std::size_t count){std::string result(count,'\0');for(
 st::OriginalFileIo completeOutOfOrder(Area& a,Store& store,st::OriginalStorageKind kind,st::OriginalFileGeometry g,const std::string& expected){
   const auto first=std::min<std::uint64_t>(g.fileBytes,g.pieceBytes-g.torrentOffset%g.pieceBytes);
   const auto count=1+(g.torrentOffset%g.pieceBytes+g.fileBytes-1)/g.pieceBytes;
-  std::vector<int> map(static_cast<std::size_t>(count),-1);map[0]=0;
-  store.current="d2:st"+std::string(kind==st::OriginalStorageKind::Reordered?"i3e":"i4e")+"3:leni0e4:nexti1e6:pieces"+std::to_string(map.size()*4)+":"+mapBytes(map)+"6:opaqueli7e3:rawee";
-  auto io=take(st::OriginalFileIo::open(a.fd,g,kind,store.current,store.publisher()));
-  auto writePiece=[&](std::uint64_t piece){const auto start=piece?first+(piece-1)*g.pieceBytes:0;const auto bytes=std::min<std::uint64_t>(piece?g.pieceBytes:first,g.fileBytes-start);done(io.write(start,asBytes(std::string_view(expected).substr(static_cast<std::size_t>(start),static_cast<std::size_t>(bytes)))));};
-  for(std::uint64_t piece=0;piece+2<count;++piece){writePiece(piece);}writePiece(count-1);writePiece(count-2);done(io.flush());return io;
+  // Authored inherited original map: test the normalizer independently of
+  // the safer native allocator, which now avoids this oversized permutation.
+  std::vector<int> map(static_cast<std::size_t>(count));for(std::size_t i=0;i<map.size();++i){map[i]=static_cast<int>(i);}std::swap(map[map.size()-2],map.back());
+  for(std::size_t piece=0;piece<map.size();++piece){const auto logical=piece?first+(piece-1)*g.pieceBytes:0;const auto physical=piece?first+(static_cast<std::uint64_t>(map[piece])-1)*g.pieceBytes:0;const auto bytes=static_cast<std::size_t>(std::min<std::uint64_t>(piece?g.pieceBytes:first,g.fileBytes-logical));check(::pwrite(a.fd,expected.data()+logical,bytes,static_cast<off_t>(physical))==static_cast<ssize_t>(bytes),"seed actual inherited reordered physical fragment");}
+  store.current="d2:st"+std::string(kind==st::OriginalStorageKind::Reordered?"i3e":"i4e")+"3:leni"+std::to_string(g.fileBytes)+"e4:nexti"+std::to_string(count)+"e6:pieces"+std::to_string(map.size()*4)+":"+mapBytes(map)+"6:opaqueli7e3:rawee";
+  return take(st::OriginalFileIo::open(a.fd,g,kind,store.current,store.publisher()));
 }
 void completeReorderedTail(){
   for(const auto kind:{st::OriginalStorageKind::Reordered,st::OriginalStorageKind::ReorderedCompact}){
@@ -145,9 +146,23 @@ void completeReorderedTail(){
   }
   // Other full-piece permutations need no canonicalization: just move the
   // short last logical piece to the final physical slot.
-  Area a;Store store(a.fd);auto io=take(st::OriginalFileIo::open(a.fd,geometry,st::OriginalStorageKind::Reordered,{},store.publisher()));
-  done(io.write(45,asBytes(std::string(15,'D'))));done(io.write(13,asBytes(std::string(16,'B'))));done(io.write(29,asBytes(std::string(16,'C'))));done(io.write(0,asBytes(std::string(13,'A'))));done(io.flush());done(io.finishCompleteReordered());
+  Area a;Store store(a.fd);seedPacked(a.fd,std::string(13,'A')+std::string(15,'D')+std::string(1,'x')+std::string(16,'B')+std::string(16,'C'));
+  store.current="d2:sti3e3:leni60e4:nexti4e6:pieces16:"+mapBytes({0,2,3,1})+"e";
+  auto io=take(st::OriginalFileIo::open(a.fd,geometry,st::OriginalStorageKind::Reordered,store.current,store.publisher()));done(io.finishCompleteReordered());
   auto final=biglybtc::core::Document::parse(*store.current);check(final&&final->find("pieces")->bytes==mapBytes({0,2,1,3})&&read(io,0,60)==std::string(13,'A')+std::string(16,'B')+std::string(16,'C')+std::string(15,'D'),"unrelated full-piece permutations remain compatible and exact");
+}
+void unverifiedAllocatedHandoff(){
+  // These bytes intentionally carry no hash/verified-piece certificate.
+  for(const auto kind:{st::OriginalStorageKind::Reordered,st::OriginalStorageKind::ReorderedCompact}){
+    Area a;Store store(a.fd);const auto corrupt=std::string(60,'!');auto io=completeOutOfOrder(a,store,kind,geometry,corrupt);
+    check(take(io.finishAllocatedReordered()),"unverified but physically complete allocation normalizes");
+    check(read(io,0,60)==corrupt&&physical(a.fd).size()==60,"normalization preserves even failed-hash bytes without asserting verification");
+    check(!take(io.finishAllocatedReordered()),"already normalized allocation has no further effects");
+    Area b;Store missing(b.fd);const st::OriginalFileGeometry shortGeometry{3,50,16};seedPacked(b.fd,std::string(53,'?'));missing.current="d2:sti"+std::to_string(static_cast<int>(kind))+"e3:leni50e4:nexti4e6:pieces16:"+mapBytes({0,2,3,1})+"e";
+    auto shortIo=take(st::OriginalFileIo::open(b.fd,shortGeometry,kind,missing.current,missing.publisher()));const auto bytes=physical(b.fd);const auto control=missing.current;st::OriginalReadResult prior;read(shortIo,0,50,&prior);
+    check(!take(shortIo.finishAllocatedReordered()),"EOF-short allocated interior is not normalized");st::OriginalReadResult after;read(shortIo,0,50,&after);
+    check(physical(b.fd)==bytes&&missing.current==control&&prior.missing==after.missing,"declined normalization preserves exact bytes/map/missing ranges");
+  }
 }
 void completeReorderedFailureReplay(){
   const auto expected=completeBytes(60);
@@ -175,6 +190,62 @@ void completeReorderedFailureReplay(){
     check(read(reopened,0,expected.size())==expected&&physical(a.fd).size()==expected.size(),"truncate replay uses already durable corrected map and preserves all data");
   }
 }
+std::string allocationControl(st::OriginalStorageKind kind,st::OriginalFileGeometry g,const std::vector<int>& map){return "d2:sti"+std::to_string(static_cast<int>(kind))+"e3:leni"+std::to_string(g.fileBytes)+"e4:nexti"+std::to_string(map.size()-1)+"e6:pieces"+std::to_string(map.size()*4)+":"+mapBytes(map)+"6:opaqueli7e3:rawee";}
+void finalAllocationKeepsTailPreimage(){
+  for(const auto kind:{st::OriginalStorageKind::Reordered,st::OriginalStorageKind::ReorderedCompact}){
+    for(const unsigned available:{0U,5U,15U}){
+      Area a;Store store(a.fd);seedPacked(a.fd,std::string(13,'A')+std::string(16,'B')+std::string(available,'D'));
+      store.current=allocationControl(kind,geometry,{0,1,-1,2});const auto ordinary=store.publisher();bool beforeCallerWrite=false;
+      auto publisher=[&](const auto& expected,std::string_view replacement)->std::expected<void,st::Error>{
+        const auto next=biglybtc::core::Document::parse(std::string(replacement));check(next&&next->find("pieces")->bytes==mapBytes({0,1,2,3}),"new final map is original compatible");
+        check(physicalRange(a.fd,0,29+available)==std::string(13,'A')+std::string(16,'B')+std::string(available,'D'),"tail preimage remains unchanged until durable map callback");
+        if(available){check(physicalRange(a.fd,45,available)==std::string(available,'D'),"tail preimage is copied before new map callback");}
+        beforeCallerWrite=true;return ordinary(expected,replacement);
+      };
+      auto io=take(st::OriginalFileIo::open(a.fd,geometry,kind,store.current,publisher));CopyProbe probe(a.fd);done(io.write(29,asBytes(std::string(16,'C'))));probe.stop();
+      check(beforeCallerWrite&&store.calls==1&&copyWriteCalls==(available?2U:1U),"exact map-before-input ordering and no invented absent-tail copy");
+      auto reopened=take(st::OriginalFileIo::open(a.fd,geometry,kind,store.current,store.publisher()));st::OriginalReadResult facts;const auto tail=read(reopened,45,15,&facts);
+      const std::vector<st::OriginalMissingRange> missing=available<15?std::vector<st::OriginalMissingRange>{{45+available,15-available}}:std::vector<st::OriginalMissingRange>{};
+      check(tail.substr(0,available)==std::string(available,'D')&&facts.missing==missing&&read(reopened,0,45)==std::string(13,'A')+std::string(16,'B')+std::string(16,'C'),"old tail actual bytes and exact missing suffix survive original map reopen");
+      check(physical(a.fd).size()==45+available,"partial final slot has no fabricated available suffix");
+    }
+    // A single ascending write can allocate its final free piece and later
+    // overwrite the retained tail. Both planned offsets must use the new map.
+    Area a;Store store(a.fd);seedPacked(a.fd,std::string(13,'A')+std::string(16,'B')+std::string(15,'D'));
+    store.current=allocationControl(kind,geometry,{0,1,-1,2});auto io=take(st::OriginalFileIo::open(a.fd,geometry,kind,store.current,store.publisher()));done(io.write(29,asBytes(std::string(16,'C')+std::string(15,'E'))));
+    check(read(io,0,60)==std::string(13,'A')+std::string(16,'B')+std::string(16,'C')+std::string(15,'E')&&physical(a.fd).size()==60,"same-request later tail fragment is replanned after map permutation");
+  }
+  // A stale unpublished allocation cannot make its orphan suffix tail data.
+  Area orphan;Store orphanStore(orphan.fd);seedPacked(orphan.fd,std::string(13,'A')+std::string(16,'B')+std::string(15,'D')+std::string(17,'X'));orphanStore.current=allocationControl(st::OriginalStorageKind::Reordered,geometry,{0,1,-1,2});
+  auto clean=take(st::OriginalFileIo::open(orphan.fd,geometry,st::OriginalStorageKind::Reordered,orphanStore.current,orphanStore.publisher()));done(clean.write(29,asBytes(std::string(16,'C'))));check(read(clean,45,15)==std::string(15,'D')&&physical(orphan.fd).size()==60,"only unreferenced final-slot orphan bytes are truncated before map publication");
+  // Moving across another old mapped piece's EOF would hide its missing data.
+  Area shortFile;Store shortStore(shortFile.fd);seedPacked(shortFile.fd,std::string(13,'A')+std::string(15,'D')+"x"+std::string(5,'B'));shortStore.current=allocationControl(st::OriginalStorageKind::Reordered,geometry,{0,2,-1,1});const auto before=physical(shortFile.fd),control=*shortStore.current;
+  auto blocked=take(st::OriginalFileIo::open(shortFile.fd,geometry,st::OriginalStorageKind::Reordered,shortStore.current,shortStore.publisher()));const auto failed=blocked.write(29,asBytes(std::string(16,'C')));
+  check(!failed&&failed.error().code==st::ErrorCode::Conflict&&physical(shortFile.fd)==before&&shortStore.current==control&&shortStore.calls==0,"another EOF-short allocated piece is diagnosed before all payload/control effects");
+}
+void finalAllocationFailureOutcomes(){
+  for(const bool after:{false,true}){
+    for(const unsigned which:{1U,2U}){
+      Area a;Store store(a.fd);seedPacked(a.fd,std::string(13,'A')+std::string(16,'B')+std::string(15,'D'));store.current=allocationControl(st::OriginalStorageKind::Reordered,geometry,{0,1,-1,2});
+      auto io=take(st::OriginalFileIo::open(a.fd,geometry,st::OriginalStorageKind::Reordered,store.current,store.publisher()));CopyProbe probe(a.fd,which,after);const auto failed=io.write(29,asBytes(std::string(16,'C')));probe.stop();
+      check(!failed&&io.recoveryPending()&&!io.flush()&&copyWriteCalls==which,"actual selected preimage/input write failure fences original object");
+      auto reopened=take(st::OriginalFileIo::open(a.fd,geometry,st::OriginalStorageKind::Reordered,store.current,store.publisher()));check(read(reopened,45,15)==std::string(15,'D'),"actual old/new map both retain original tail after reported failed write");
+      if(which==1){st::OriginalReadResult missing;read(reopened,29,16,&missing);check(missing.missing==std::vector<st::OriginalMissingRange>{{29,16}},"prepublication copy failure leaves new piece unallocated");}
+      done(reopened.write(29,asBytes(std::string(16,'C'))));check(read(reopened,0,60)==std::string(13,'A')+std::string(16,'B')+std::string(16,'C')+std::string(15,'D'),"explicit reopened retry preserves retained bytes without redo journal");
+    }
+    Area a;Store store(a.fd);seedPacked(a.fd,std::string(13,'A')+std::string(16,'B')+std::string(15,'D'));store.current=allocationControl(st::OriginalStorageKind::Reordered,geometry,{0,1,-1,2});store.failureCall=1;store.failureAfter=after;
+    auto io=take(st::OriginalFileIo::open(a.fd,geometry,st::OriginalStorageKind::Reordered,store.current,store.publisher()));const auto failed=io.write(29,asBytes(std::string(16,'C')));check(!failed&&io.recoveryPending()&&!io.flush(),"uncertain preimage-map publication fences old object");store.failureCall=0;
+    auto reopened=take(st::OriginalFileIo::open(a.fd,geometry,st::OriginalStorageKind::Reordered,store.current,store.publisher()));check(read(reopened,45,15)==std::string(15,'D'),"both durable publication outcomes preserve exact retained tail");done(reopened.write(29,asBytes(std::string(16,'C'))));check(read(reopened,29,16)==std::string(16,'C')&&read(reopened,45,15)==std::string(15,'D'),"reopen discovers actual map before retrying input");
+  }
+}
+void finalAllocationStreamsCapturedEof(){
+  constexpr std::size_t chunk=64*1024;constexpr std::uint32_t piece=1024*1024;const st::OriginalFileGeometry g{piece-13,13ULL+piece+3*chunk+5,piece};
+  Area a;Store store(a.fd);const std::string old=std::string(13,'A')+std::string(2*chunk+7,'D');seedPacked(a.fd,old);store.current=allocationControl(st::OriginalStorageKind::Reordered,g,{0,-1,1});
+  auto io=take(st::OriginalFileIo::open(a.fd,g,st::OriginalStorageKind::Reordered,store.current,store.publisher()));CopyProbe probe(a.fd);done(io.write(13,asBytes("C")));probe.stop();
+  check(copyReadCalls==3&&copyWriteCalls==4&&copyReadMaximum<=chunk&&copyWriteMaximum<=chunk,"tail preimage uses only three captured-EOF chunks plus actual caller byte");
+  check(physicalRange(a.fd,14,old.size()-14)==old.substr(14),"copy and input never destroy unrelated old preimage bytes");
+  st::OriginalReadResult facts;const auto got=read(io,13ULL+piece,3*chunk+5,&facts);check(got.substr(0,2*chunk+7)==std::string(2*chunk+7,'D')&&facts.missing==std::vector<st::OriginalMissingRange>{{13ULL+piece+2*chunk+7,chunk-2}},"self-extension never enlarges the captured actual tail or fills its EOF suffix");
+}
 void reorderedTypeOnly(){Area a;Store store(a.fd);auto io=take(st::OriginalFileIo::open(a.fd,geometry,st::OriginalStorageKind::ReorderedCompact,{},store.publisher()));done(io.write(45,asBytes(std::string(15,'D'))));const auto before=physical(a.fd);auto old=biglybtc::core::Document::parse(*store.current);const auto map=std::string(old->find("pieces")->bytes);done(io.setReorderedKind(st::OriginalStorageKind::Reordered));auto now=biglybtc::core::Document::parse(*store.current);check(now&&now->find("st")->integer==3&&now->find("pieces")->bytes==map&&before==physical(a.fd),"RC to R preserves exact physical bytes/map");}
 }
 extern "C" ssize_t __real_pread(int,void*,std::size_t,off_t);
@@ -183,4 +254,4 @@ extern "C" ssize_t __wrap_pread(int fd,void* buffer,std::size_t bytes,off_t offs
 extern "C" ssize_t __wrap_pwrite(int fd,const void* buffer,std::size_t bytes,off_t offset){if(fd==copyFd){++copyWriteCalls;copyWriteMaximum=std::max(copyWriteMaximum,bytes);if(copyFailWrite&&copyWriteCalls==copyFailWrite){if(copyFailAfter){const auto actual=__real_pwrite(fd,buffer,bytes,offset);if(actual<0){return actual;}}errno=EIO;return -1;}}return __real_pwrite(fd,buffer,bytes,offset);}
 extern "C" int __real_ftruncate(int,off_t);
 extern "C" int __wrap_ftruncate(int fd,off_t length){if(failResize&&fd==resizeFd){++resizeHits;if(failResizeAfter){const int actual=__real_ftruncate(fd,length);if(actual<0){return actual;}}errno=EIO;return -1;}return __real_ftruncate(fd,length);}
-int main(){try{boundsAndLinear();compactEdgesAndUnknown();arbitraryReorderedMaps();virtualLengthsAndShortMarker();publicationFailuresKeepJavaMap();recoveryAndStrictControls();conversionKeepsCompactPrefix();reorderedTypeOnly();largePieceBoundaries();largeSparseCompactConversion();streamedConversionFailureReplay();completeReorderedTail();completeReorderedFailureReplay();std::cout<<"thirteen original physical IO families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+int main(){try{boundsAndLinear();compactEdgesAndUnknown();arbitraryReorderedMaps();virtualLengthsAndShortMarker();publicationFailuresKeepJavaMap();recoveryAndStrictControls();conversionKeepsCompactPrefix();reorderedTypeOnly();largePieceBoundaries();largeSparseCompactConversion();streamedConversionFailureReplay();completeReorderedTail();completeReorderedFailureReplay();unverifiedAllocatedHandoff();finalAllocationKeepsTailPreimage();finalAllocationFailureOutcomes();finalAllocationStreamsCapturedEof();std::cout<<"seventeen original physical IO families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

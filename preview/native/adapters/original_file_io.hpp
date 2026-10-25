@@ -60,7 +60,11 @@ public:
   // means no physical normalization was performed. No crash-unsafe swap.
   std::expected<bool,Error> pieceComplete(std::uint64_t,std::span<const std::byte>);
   std::expected<void,Error> flush();
-  // Allocation is append-only and data-synced before atomic map publication.
+  // New slots are data-synced before atomic map publication. A final-slot
+  // allocation first preserves a previously allocated short tail in the new
+  // slot and publishes that map before reusing its old slot for caller data.
+  // Missing tail bytes stay missing; another pre-existing EOF-short mapped
+  // piece is refused when this move would hide its missing suffix.
   // On uncertain publisher failure, reload actual control and reopen first.
   std::expected<void,Error> recover();
   // After exact engine retirement and actual full-file verification only.
@@ -68,6 +72,9 @@ public:
   // gate accepts the file. Interrupted chunk redo requires native recover()
   // before any use; original resume must remain invalid until success.
   std::expected<void,Error> finishCompleteReordered();
+  // Stopped handoff: normalize physically complete allocation even when hashes
+  // failed. Does not certify data; incomplete physical ranges remain untouched.
+  std::expected<bool,Error> finishAllocatedReordered();
   // Caller invalidates resume before conversion, then publishes original L
   // storetype and retires old compact control only AFTER this returns. Until
   // then packed prefix/tail remain intact for the original compact reader.

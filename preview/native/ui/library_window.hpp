@@ -149,6 +149,7 @@ signals:
   void continueRequested(biglybtc::ui::Target);
   void downloadActionRequested(biglybtc::ui::DownloadTargets, biglybtc::core::DownloadAction);
   void filePolicyRequested(biglybtc::ui::Target, biglybtc::ui::FileIndices, int priority, bool skipped);
+  void fileCompactionRequested(biglybtc::ui::Target, int originalIndex);
   void detailsRequested(biglybtc::ui::Target);
   void cancelRequested();
   void sessionCloseRequested();
@@ -173,7 +174,8 @@ private:
     FilePresentation source;
     bool operator==(const FilePolicySelection&) const = default;
   };
-  std::optional<FilePolicySelection> filePolicySelection() const;
+  std::optional<FilePolicySelection> filePolicySelection(bool forCompaction = false) const;
+  void dispatchFileCompaction();
   void dispatchFilePolicy(int priority, bool skipped);
   void filePopup(const QPoint&);
   bool canImport() const;
@@ -337,6 +339,7 @@ private:
   QPointer<QAction> openTorrent_;
   QPointer<QAction> openMagnet_;
   std::array<QPointer<QAction>, 4> filePolicyActions_;
+  QPointer<QAction> fileCompaction_;
   bool fileMenuOpen_ = false;
   std::optional<FilePolicySelection> fileMenuSelection_;
   std::optional<Target> detailsRequestedFor_;

@@ -1,4 +1,6 @@
 #include "file_policy_commands.hpp"
+#include "linear_to_compact.hpp"
+#include "file_operations.hpp"
 #include "torrent_state.hpp"
 #include "biglybtc/torrent_layout.hpp"
 #include <algorithm>
@@ -15,6 +17,7 @@ std::string bytes(std::string_view value) { return std::to_string(value.size())+
 }
 std::expected<void,Error> setFilePolicies(const ProfileLease& lease,const core::TorrentHash& hash,
     std::span<const compat::FilePolicy> policies) {
+  if(hasPendingOriginalCompaction(lease)){return bad(ErrorCode::Conflict,"Recover pending explicit compaction before editing file preferences");}
   auto config=ConfigFile::load(lease,"downloads.config"); if(!config) { return std::unexpected(config.error()); }
   auto library=core::readLibrary(config->document());
   if(!library || !library->issues.empty()) { return bad(ErrorCode::InvalidFormat,"Invalid download inventory"); }
@@ -52,15 +55,29 @@ std::expected<void,Error> setFilePolicies(const ProfileLease& lease,const core::
   if(!entry->replaceValue("file_priorities_c",encoded)) { return bad(ErrorCode::InvalidFormat,"Cannot encode original file priorities"); }
   const auto checked=compat::originalFilePolicy(entry->root(),policies.size());
   if(!checked || !std::ranges::equal(*checked,policies)) { return bad(ErrorCode::InvalidFormat,"File priorities did not round trip"); }
-  if(library->legacyMap) {
-    if(!config->document().replaceValue(*selected->legacyKey,entry->serialize())) { return bad(ErrorCode::InvalidFormat,"Cannot edit legacy file priorities"); }
-  } else {
-    std::string list="l";
-    for(std::size_t i=0;i<rows->children.size();++i) { list+=i==selected->sourceIndex?entry->serialize():raw(config->document(),rows->children[i]); }
-    if(!config->document().replaceValue("downloads",list+'e')) { return bad(ErrorCode::InvalidFormat,"Cannot edit file priorities"); }
+  bool skipChanged=false;
+  for(std::size_t i=0;i<policies.size();++i){skipChanged=skipChanged||(*before)[i].skipped!=policies[i].skipped;}
+  if(!skipChanged){
+    // Priority-only changes keep the existing bounded metadata transaction;
+    // no physical path planning or stricter DND file-count bound is needed.
+    if(library->legacyMap){
+      if(!config->document().replaceValue(*selected->legacyKey,entry->serialize())){return bad(ErrorCode::InvalidFormat,"Cannot edit legacy file priorities");}
+    }else{
+      std::string list="l";
+      for(std::size_t i=0;i<rows->children.size();++i){list+=i==selected->sourceIndex?entry->serialize():raw(config->document(),rows->children[i]);}
+      if(!config->document().replaceValue("downloads",list+'e')){return bad(ErrorCode::InvalidFormat,"Cannot edit file priorities");}
+    }
+    auto prepared=store->beginUpdate(lease,hash);if(!prepared){return std::unexpected(prepared.error());}
+    return config->save(lease);
   }
-  // Invalidation is safe even if later publication fails; no payload is opened.
-  auto prepared=store->beginUpdate(lease,hash); if(!prepared) { return std::unexpected(prepared.error()); }
-  return config->save(lease);
+  // The existing durable file-operation transaction owns cache invalidation,
+  // DND moves, original links, state/backup publication and sparse recovery.
+  auto plan=prepareFileOperation(lease,{hash,FileOperationKind::SetFilePolicies,{},encoded,raw(config->document(),node)});
+  if(!plan){return std::unexpected(plan.error());}
+  auto accepted=confirmFileOperation(*plan,plan->preview().approvalScopeDigest,false);
+  if(!accepted){return std::unexpected(accepted.error());}
+  auto result=applyFileOperation(lease,std::move(*plan),*accepted);
+  if(!result){return std::unexpected(result.error());}
+  return {};
 }
 }

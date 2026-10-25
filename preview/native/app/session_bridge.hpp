@@ -51,6 +51,7 @@ public:
   bool torrentImport(QString metadata, QString destination, bool start);
   bool magnetImport(QString uri, QString destination);
   bool filePolicy(ui::Target, ui::FileIndices, int priority, bool skipped);
+  bool compactFile(ui::Target, int originalIndex);
   bool loadScheduler(ui::SchedulerRequest);
   bool saveScheduler(ui::SchedulerSubmission);
   bool loadOptions(ui::OptionsRequest);

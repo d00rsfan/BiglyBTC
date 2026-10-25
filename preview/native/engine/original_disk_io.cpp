@@ -342,8 +342,10 @@ std::expected<void, storage::Error> OriginalDiskFiles::finishComplete(std::span<
   if (complete.size()!=files_.size() || std::ranges::any_of(complete,[](auto value){return value>1;})) {
     return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Invalid actual complete-file checkpoint"});
   }
-  for (std::size_t i=0;i<files_.size();++i) { if (complete[i]&&files_[i]) {
-    auto result=files_[i]->io.finishCompleteReordered();
+  for (std::size_t i=0;i<files_.size();++i) { if (files_[i]) {
+    std::expected<void,storage::Error> result;
+    if(complete[i]){result=files_[i]->io.finishCompleteReordered();}
+    else{const auto normalized=files_[i]->io.finishAllocatedReordered();if(!normalized){result=std::unexpected(normalized.error());}}
     if (result&&files_[i]->validateControl) { result=files_[i]->validateControl(); }
     if (!result) { failure_=result.error();return result; }
   } }

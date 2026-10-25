@@ -3,6 +3,7 @@
 #include "owned_engine_fixture.hpp"
 #include "persistent_api_faults.hpp"
 #include "profile.hpp"
+#include "biglybtc/file_policy.hpp"
 
 #include <QApplication>
 #include <QPointer>
@@ -247,6 +248,59 @@ private slots:
     QVERIFY(bridge.closeSession()); QTRY_COMPARE_WITH_TIMEOUT(closed.count(), 1, 15000);
     QVERIFY(closed.first().at(1).toBool()); QVERIFY(closed.first().at(2).toBool());
     auto released = storage::ProfileLease::acquire(single.native()); QVERIFY(released);
+  }
+
+  void activeFileSelectionRetiresAndReadmitsWithoutChangingManualIntent() {
+    test::OwnedEngineFixture single(false, true), multi(true, true);
+    appendMultifile(single,multi);MixedPartialPeer peer(single,multi);
+    auto state=parse(test::read(single.stateFile));auto attrs=core::Document::parse(encoded(*state.find("attributes")));
+    QVERIFY(attrs);QVERIFY(attrs->replaceValue("dnd_sf","3:dnd"));
+    QVERIFY(attrs->replaceValue("dnd_pfx","5:skip_"));QVERIFY(attrs->replaceValue("incompfilesuffix","5:.part"));
+    QVERIFY(state.replaceValue("attributes",attrs->serialize()));test::write(single.stateFile,QByteArray::fromStdString(state.serialize()));
+    QTRY_VERIFY_WITH_TIMEOUT(peer.ready(),30000);
+    ui::LibraryWindow window;app::SessionBridge bridge;wire(window,bridge);
+    QSignalSpy snapshots(&bridge,&app::SessionBridge::snapshotReady),telemetry(&bridge,&app::SessionBridge::progressReady);
+    QSignalSpy closed(&bridge,&app::SessionBridge::sessionClosed),details(&bridge,&app::SessionBridge::detailsReady);
+    QVERIFY(bridge.open(single.native(),peer.port()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots),30000);
+    auto revision=latest(snapshots)->revision;QVERIFY(bridge.refresh());
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots)->revision>revision,5000);
+    revision=latest(snapshots)->revision;
+    QVERIFY(bridge.downloadAction({target(snapshots,*single.hash),target(snapshots,*multi.hash)},Action::Start));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots)->revision>revision,10000);
+    const auto first=hashText(*single.hash),second=hashText(*multi.hash);
+    QTRY_VERIFY_WITH_TIMEOUT(completed(telemetry,first)>0&&completed(telemetry,second)>0,30000);
+    QVERIFY(bridge.details(target(snapshots,*single.hash)));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!details.isEmpty(),5000);
+    const auto shown=qvariant_cast<ui::Details>(details.last().at(0));QVERIFY(shown.files&&shown.files->canEdit);
+    revision=latest(snapshots)->revision;const auto prior=target(snapshots,*single.hash);
+    QVERIFY(bridge.filePolicy(prior,{0},0,false));QVERIFY(bridge.busy());QVERIFY(!bridge.filePolicy(prior,{0},0,true));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots)->revision>revision,15000);
+    auto intent=saved(single);QVERIFY(row(intent,*single.hash).downloaded&&*row(intent,*single.hash).downloaded>0);
+    QCOMPARE(row(intent,*single.hash).startup,core::StartupState::Waiting);
+    QVERIFY(item(latest(snapshots),second).state!=QStringLiteral("Stopped"));
+    auto document=parse(test::read(inventoryPath(single)));auto policy=compat::originalFilePolicy(document.find("downloads")->children[0],1);
+    QVERIFY(policy&&!policy->front().skipped&&policy->front().priority==0);
+    const auto before=test::read(inventoryPath(single));revision=latest(snapshots)->revision;
+    QVERIFY(bridge.filePolicy(prior,{0},0,true));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots)->revision>revision,5000);
+    QCOMPARE(test::read(inventoryPath(single)),before); // Prior target cannot retire the replacement admission.
+    revision=latest(snapshots)->revision;QVERIFY(bridge.downloadAction({target(snapshots,*single.hash)},Action::Pause));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots)->revision>revision,5000);
+    QTRY_COMPARE_WITH_TIMEOUT(item(latest(snapshots),first).state,QStringLiteral("Paused"),5000);
+    revision=latest(snapshots)->revision;QVERIFY(bridge.filePolicy(target(snapshots,*single.hash),{0},0,true));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&latest(snapshots)->revision>revision,15000);
+    QTRY_COMPARE_WITH_TIMEOUT(item(latest(snapshots),first).state,QStringLiteral("Paused"),10000);
+    intent=saved(single);QVERIFY(std::ranges::any_of(intent.paused,[&](const auto& value){return value.hash==*single.hash;}));
+    QCOMPARE(row(intent,*single.hash).startup,core::StartupState::Stopped);
+    const auto old=single.payload+'/'+single.files.front().relative;
+    const auto moved=QFileInfo(old).absolutePath()+QStringLiteral("/dnd/skip_")+QFileInfo(old).fileName()+QStringLiteral(".part");
+    QVERIFY(!QFileInfo::exists(old));QVERIFY(QFileInfo::exists(moved));
+    auto afterState=parse(test::read(single.stateFile));const auto* links=afterState.find("attributes")->find("filelinks2");
+    QVERIFY(links&&links->children.size()==1&&links->children[0].bytes.ends_with(moved.toStdString()));
+    QVERIFY(item(latest(snapshots),second).state!=QStringLiteral("Stopped"));
+    QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);
+    QVERIFY(closed.first().at(1).toBool());QVERIFY(closed.first().at(2).toBool());
+    auto lease=storage::ProfileLease::acquire(single.native());QVERIFY(lease);
   }
 
   void mixedTargetsRouteSavedIntentAndActualProgressIndependently() {
