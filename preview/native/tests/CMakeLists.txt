@@ -1742,7 +1742,7 @@ if(BIGLYBTC_LOCAL_ENGINE AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "
       "${PROJECT_BINARY_DIR}/engine/runtime-binding")
     target_compile_options(biglybtc-provider-next-runtime-deployment-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
     target_link_options(biglybtc-provider-next-runtime-deployment-driver PRIVATE
-      "LINKER:--wrap=open" "LINKER:--wrap=fstat" "LINKER:--wrap=read")
+      "LINKER:--wrap=open" "LINKER:--wrap=fstat" "LINKER:--wrap=read" "LINKER:--wrap=__read_chk")
     add_test(NAME provider-next-runtime-deployment COMMAND "${Python3_EXECUTABLE}" -B
       "${CMAKE_CURRENT_SOURCE_DIR}/runtime_deployment_tests.py"
       --driver "$<TARGET_FILE:biglybtc-provider-next-runtime-deployment-driver>"

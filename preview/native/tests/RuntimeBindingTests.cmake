@@ -31,7 +31,7 @@ else()
     "${PROJECT_BINARY_DIR}/engine/runtime-binding")
   target_compile_options(biglybtc-runtime-negative-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
   target_link_options(biglybtc-runtime-negative-driver PRIVATE
-    "LINKER:--wrap=open" "LINKER:--wrap=fstat" "LINKER:--wrap=read")
+    "LINKER:--wrap=open" "LINKER:--wrap=fstat" "LINKER:--wrap=read" "LINKER:--wrap=__read_chk")
   foreach(_biglybtc_fault open inode content fifo)
     add_test(NAME persistent-runtime-reject-${_biglybtc_fault}
       COMMAND biglybtc-runtime-negative-driver "${_biglybtc_fault}")

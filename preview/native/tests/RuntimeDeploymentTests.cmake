@@ -26,7 +26,7 @@ if(NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
     "${PROJECT_SOURCE_DIR}/engine" "${PROJECT_BINARY_DIR}/engine/runtime-binding")
   target_compile_options(biglybtc-runtime-deployment-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
   target_link_options(biglybtc-runtime-deployment-driver PRIVATE
-    "LINKER:--wrap=open" "LINKER:--wrap=fstat" "LINKER:--wrap=read")
+    "LINKER:--wrap=open" "LINKER:--wrap=fstat" "LINKER:--wrap=read" "LINKER:--wrap=__read_chk")
   set(_biglybtc_deployment_controls)
   if(_biglybtc_deployment_mode STREQUAL "source" OR _biglybtc_deployment_mode STREQUAL "selected")
     if(NOT TARGET biglybtc-runtime-interposition-driver OR "${_biglybtc_runtime_preload}" STREQUAL "")

@@ -55,6 +55,7 @@ struct Restore {
 extern "C" int __real_open(const char*, int, ...);
 extern "C" int __real_fstat(int, struct stat*);
 extern "C" ssize_t __real_read(int, void*, size_t);
+extern "C" ssize_t __real___read_chk(int, void*, size_t, size_t);
 extern "C" int __wrap_open(const char* path, int flags, ...) {
   mode_t mode = 0;
   if (flags & O_CREAT) {
@@ -83,6 +84,16 @@ extern "C" int __wrap_fstat(int fd, struct stat* info) {
 }
 extern "C" ssize_t __wrap_read(int fd, void* bytes, size_t count) {
   const auto result = __real_read(fd, bytes, count);
+  if (armed && result > 0 && fd == descriptor) {
+    readBytes += static_cast<std::size_t>(result);
+    if (fault == "content" && !injected) { static_cast<unsigned char*>(bytes)[0] ^= 1; ++injected; }
+  }
+  return result;
+}
+
+// Preserve libc fortify bounds before applying the existing owned test seam.
+extern "C" ssize_t __wrap___read_chk(int fd, void* bytes, size_t count, size_t bound) {
+  const auto result = __real___read_chk(fd, bytes, count, bound);
   if (armed && result > 0 && fd == descriptor) {
     readBytes += static_cast<std::size_t>(result);
     if (fault == "content" && !injected) { static_cast<unsigned char*>(bytes)[0] ^= 1; ++injected; }
