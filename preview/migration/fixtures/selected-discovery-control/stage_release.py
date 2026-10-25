@@ -9,7 +9,7 @@ import re
 import subprocess
 import sys
 
-SPEC_SHA256 = '0ac35c7e2f501441bb57d6c6e04a3796d1efa4f260a393b386e6d619730e058d'
+SPEC_SHA256 = 'c396e38089eb298530e7bb31bb78d279eb6a2d06fbeb8bd0a671df5c801ecc30'
 
 
 def need(ok, why):
