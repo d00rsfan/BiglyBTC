@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "native_source": "471ebb75fc66fefb0208b0d086a934b68aced84b",
+  "source_commit_receipt": "chapter-fortified-fix-commit.json",
+  "source_push_receipt": "chapter-current-source-push.json",
+  "lanes": {
+    "gcc": {
+      "original": "chapter-next-gcc-tests-r1",
+      "focused": "chapter-fortified-gcc-tests-r1"
+    },
+    "clang": {
+      "original": "chapter-next-clang-tests-r1",
+      "focused": "chapter-fortified-clang-tests-r1"
+    },
+    "sanitizers": {
+      "original": "chapter-next-san-tests-r1",
+      "focused": "chapter-fortified-san-tests-r1"
+    }
+  },
+  "additional_receipts": [
+    "chapter-private-portable-r3/run-r1/verification/result.json",
+    "chapter-rate-trace-root-r1.json",
+    "chapter-hosted-471-status-r1.json"
+  ],
+  "implementation_source": "c8afff5311e4ff650b17d09651e3db440a0c93e8",
+  "implementation_commit_receipt": "chapter-current-source-commit.json"
+}

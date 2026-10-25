@@ -33,3 +33,11 @@ that does not depend on the answer. This chapter does not start tags/history,
 search/RSS, sharing/tracker, storage-layout or public-swarm chapters.
 
 Qualification: [review](../evidence/20261024-queue-seeding-scheduling/REVIEW.md) and [receipts](../evidence/20261024-queue-seeding-scheduling/verification.json). No next chapter started.
+
+## Bounded compatibility-provider followup (2026-10-25)
+
+Current bounded compatibility-provider milestone is qualified: implementation `c8afff5311e4ff650b17d09651e3db440a0c93e8`, test-only qualification followup `471ebb75fc66fefb0208b0d086a934b68aced84b`. Effective GCC/Clang/leak-enabled ASan-UBSan lanes each credit38 original unaffected PASS +2 focused followup PASS =40; no full40 rerun or identical full-snapshot claim. Actual original observations: priority8, probes14, nonlinear corners2, rate arithmetic23; packaging preflight7. Private b0e/3342 candidate passes13 smoke Qt rows,28 captures,5 positive cohorts and11 deployment controls. It remains private-only and unpromoted; published dist deefcbe remains unchanged. No full CF closure, new causal/DHT/public-wire, bound target ETA, native SOCKS4a/USERID admission or imported Scheduler recovery is claimed. All CF01–CF08 remain open.
+
+Latest explicit user boundary: finish this current milestone, then exactly two further milestones in the same compatibility chapter—verified native SOCKS4a/USERID admission and imported-original Scheduler pause recovery—then STOP. Both are pending. No next chapter is authorized. This boundary supersedes older open-ended continuation text preserved below as history.
+
+[Task](P08-01-compatibility-providers.md).

@@ -1,5 +1,14 @@
 # Open compatibility work after the everyday torrent preview
 
+Current bounded compatibility-provider milestone is qualified: implementation `c8afff5311e4ff650b17d09651e3db440a0c93e8`, test-only qualification followup `471ebb75fc66fefb0208b0d086a934b68aced84b`. Effective GCC/Clang/leak-enabled ASan-UBSan lanes each credit38 original unaffected PASS +2 focused followup PASS =40; no full40 rerun or identical full-snapshot claim. Actual original observations: priority8, probes14, nonlinear corners2, rate arithmetic23; packaging preflight7. Private b0e/3342 candidate passes13 smoke Qt rows,28 captures,5 positive cohorts and11 deployment controls. It remains private-only and unpromoted; published dist deefcbe remains unchanged. No full CF closure, new causal/DHT/public-wire, bound target ETA, native SOCKS4a/USERID admission or imported Scheduler recovery is claimed. All CF01–CF08 remain open.
+
+Latest explicit user boundary: finish this current milestone, then exactly two further milestones in the same compatibility chapter—verified native SOCKS4a/USERID admission and imported-original Scheduler pause recovery—then STOP. Both are pending. No next chapter is authorized. This boundary supersedes older open-ended continuation text preserved below as history.
+
+[Current completion](../evidence/20261025-compatibility-providers/completion.json).
+
+## Historical records
+
+
 Bounded source `4f948e042df9467310a5752d4343b07915673f84` now qualifies original-selected v2/hybrid
 identity, generated handoffs, exact selected provider, bind/interface, ordinary
 flexible queue slots, pre-add file choices and creator variants.
@@ -30,7 +39,7 @@ Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
   stopped L→C, allocated tails and actual nonlinear Moves additionally qualify
   at `2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5`.
   [Workflow evidence](../evidence/20261025-storage-workflows/REVIEW.md).
-  Unsupported EOF-short/other corners keep this item open.
+  The current bounded source qualifies the tested short-tail reordered/reordered-compact corners; other layouts/corners keep this item open.
 - [ ] **CF-02 — v2/hybrid profile interoperability (P03/P11).** Extend actual
   partial/complete Java/native/Java reload checks beyond the two qualified v1
   cases. Cover full identities, alternate hybrid identities and broader original
@@ -44,9 +53,7 @@ Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
   P08-01 now qualifies ordinary deterministic ranks/FP/ignore/limits/minimums,
   persistent manual queue authority, compatible settings and Speed Scheduler
   editor/rate/pause integration. See [review](../evidence/20261024-queue-seeding-scheduling/REVIEW.md).
-  Still implement/qualify lightweight/reserved/flexible slots, active speed/ETA
-  probes, external/tag-specific FP/limits, disk-latency/smoothed-rate/stale-rank/
-  file-priority observations and new-seed/group saved-position normalization.
+  Ordinary file-priority facts, active speed-probe states and a global rate hook now qualify in the current bounded batch. Still qualify external/tag/lightweight providers, independently sourced target smoothed ETA, disk-latency/stale-rank inputs and new-seed/group saved-position normalization.
   Retain exact tracker announce/scrape/self-exclusion, original duration rounding,
   extreme share-ratio overflow projection and within-cycle bandwidth differences.
   Add supported inherited-pause/interrupted-intent recovery and its editor;
@@ -62,7 +69,7 @@ Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
   ordinary keep/delete/move/relink, v1 file/directory creation, compatible intent,
   retirement/recheck, confirmed recovery, actual original reload and dialogs.
   [Review](../evidence/20261024-library-file-operations/REVIEW.md).
-  Still implement bulk operations, archive-deletion controls, advanced/virtual/
+  Sequential reviewed per-item bulk operations now qualify in the current bounded batch. Still implement archive-deletion controls, advanced/virtual/
   multi-source and256MiB original creation options, wider repair UX, and
   supported linked/nonlinear/shared/merge/overwrite storage workflows.
   CF-01/CF-02 retain wider layouts and v2/hybrid qualification. Preserve explicit

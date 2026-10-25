@@ -1,0 +1,26 @@
+{
+  "original_before_sha256": {
+    "migration/upstreams.lock.json": "484f164917a42d9d36745ca6db0f3960f92a5254e5ca5e3df089b2b9ec0cdb37",
+    "MIGRATION_PLAN.md": "7acff3917c6dc42cd37431b84c9c62138d9d000e2637fda90ae2291991295428",
+    "migration/STATE.md": "b301fae91f280ceb5cdb8f638276e1b6fb1504be0346964866f8301bd681ece7",
+    "migration/tasks/COMPATIBILITY-FOLLOWUPS.md": "9486a68c52296bd2dcba02b0d70bf132ee0f5e0e7bad98cf1dab5faf7fef74eb",
+    "migration/tasks/P08-01-queue-seeding-scheduling.md": "fe570c4be271db97b21ee425351cfa02477c75f42233222e5bd8053c83910a66"
+  },
+  "new_original_paths": [
+    "migration/tasks/P08-01-compatibility-providers.md",
+    "migration/updates/compatibility.providers/20261025.md"
+  ],
+  "native_before_sha256": {
+    "migration/upstreams.lock.json": "484f164917a42d9d36745ca6db0f3960f92a5254e5ca5e3df089b2b9ec0cdb37",
+    "MIGRATION_PLAN.md": "7acff3917c6dc42cd37431b84c9c62138d9d000e2637fda90ae2291991295428",
+    "migration/STATE.md": "b301fae91f280ceb5cdb8f638276e1b6fb1504be0346964866f8301bd681ece7",
+    "migration/tasks/COMPATIBILITY-FOLLOWUPS.md": "9486a68c52296bd2dcba02b0d70bf132ee0f5e0e7bad98cf1dab5faf7fef74eb",
+    "migration/tasks/P08-01-queue-seeding-scheduling.md": "fe570c4be271db97b21ee425351cfa02477c75f42233222e5bd8053c83910a66",
+    "migration/tasks/P08-01-compatibility-providers.md": null,
+    "migration/updates/compatibility.providers/20261025.md": null,
+    "README.md": "026be2ec06ca00f34efd13fcb7642b7abee3cc8875c75435842857d955f799a3"
+  },
+  "evidence_verification_sha256": "3300d588cf4462b95bcc5f37cb0f06aa34f81770870dee9e1241ef309f30eaf7",
+  "private_result_sha256": "e8095f361603ded6e699c8d468a798344fde5f4aea0012679589bee52bad5075",
+  "provider_patch_sha256": "f2b784a9800bdf079ad738ca8b354efe527b6bad0b0c8151974315da406a5051"
+}

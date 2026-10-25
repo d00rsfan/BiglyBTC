@@ -1,0 +1,98 @@
+{
+  "status": "PRIVATE_B0E_RUNTIME_QUALIFIED_NOT_PROMOTED",
+  "source": "471ebb75fc66fefb0208b0d086a934b68aced84b",
+  "candidate": "/home/yurii/Java/BiglyBT/build/storage-20261025/chapter-private-portable-r3/run-r1/candidate",
+  "manifest_sha256": "8425a51b7c7712e767520dc8cdb2eba2e7afa42c8d764d1bc68475674a97b2e5",
+  "files": 118,
+  "previous_dist_manifest_sha256": "deefcbe40681c1cd2d7352869be399d4e75d5d935a691bdc921fba11db71b221",
+  "source_map_sha256": "645eb683898a15cf1565d5e45a2e0d57a0b486cb5fe1273d32dc3139db89218b",
+  "provider_sha256": "b0e55bfbdc2be5dc2ebbefc953837d64c9e5151b0305332335071e37b6956937",
+  "provider_manifest_sha256": "3342ec8ae72ecafa4a1b887e664d0d066fffce4f7d864b0b130ca903be953a3a",
+  "cohort": [
+    {
+      "name": "provider-payload-counter",
+      "status": "PASS",
+      "qt_rows": 5
+    },
+    {
+      "name": "selected-swarm-admission",
+      "status": "PASS",
+      "qt_rows": 17
+    },
+    {
+      "name": "persistent-native-peer-session",
+      "status": "PASS",
+      "qt_rows": 12
+    },
+    {
+      "name": "managed-download",
+      "status": "PASS",
+      "qt_rows": 8
+    },
+    {
+      "name": "managed-combined-protocol",
+      "status": "PASS",
+      "qt_rows": 4
+    },
+    {
+      "name": "provider-next-runtime-deployment",
+      "status": "PASS",
+      "cases": 11,
+      "receipt_sha256": "b19c95f05ebb6fde2ed5b17e34c24cb13df9c545dace3d8749d5316a61f7b2d1"
+    }
+  ],
+  "distribution_scope": "private-qualification-only",
+  "shipping_approved": false,
+  "causal_qualified": false,
+  "packaged_aliases": 6,
+  "deployment_copy_origin": "/home/yurii/Java/BiglyBT/build/storage-20261025/provider-next/install/lib/libtorrent-rasterbar.so.2.0.12",
+  "deployment_copy_origin_equals_packaged_by_full_sha256": true,
+  "no_packaged_mutation_claim_from_deployment_controls": true,
+  "dht_public_wire_or_full_cf_closure_credit": false,
+  "gcc_matrix_receipt_sha256": "a6a2f3a778d56acbd8ee6179e9ab63c980d149b77840d5a34c53d936f4627ec1",
+  "focused_receipt_sha256": "2d903180891ca8e20b69fd06a4b4b3174e378676b1f63a6276910615c34f5f83",
+  "implementation_source": "c8afff5311e4ff650b17d09651e3db440a0c93e8",
+  "matrix_credit": "38 original+c8a production +2 focused471; no whole40 rerun",
+  "production_bytes_identical": true,
+  "full_source_snapshots_identical": false,
+  "smoke_qt_rows": 13,
+  "captures": {
+    "statistics-history-month-preview.png": "275318ab88c4c8f193ffb6f412e140229d84c784a292fd098cad36270f09af02",
+    "statistics-history-copy-preview.png": "278f489116c8fbfc30ad15b2b4d6cffce61109c1701c8b81f31253c9cb29fe45",
+    "statistics-history-keyboard-preview.png": "278f489116c8fbfc30ad15b2b4d6cffce61109c1701c8b81f31253c9cb29fe45",
+    "statistics-history-dht-preview.png": "d4d420aeb67a45e14d477018a5564d2593642cbe1f3fff64a16b1cc92e975063",
+    "statistics-history-protocol-preview.png": "852ac90d97880810b1024ba3156a23d9af380f486e798ad4b9af5cddb9cec55b",
+    "statistics-navigation-new-session-preview.png": "e5137f106f8e03c27fcdef56750c84378d646e62c2c2cab6a3c18bdf5a8e7b19",
+    "statistics-navigation-reopened-preview.png": "3f920d5e649a1709626a39b60ca410f55ff3b4b44cc89d8bfa7c94d2a85f3eee",
+    "statistics-history-week-missing-preview.png": "973da38d1c6c294eaf853a6d3b4b1a1ae46b34cd5863bb4ecbe169c353ccd620",
+    "statistics-history-week-hourly-missing-preview.png": "9ea2aa205d1fc608ae95a5ed79320443214104de767e516390e97e2ba3a1fb25",
+    "statistics-history-week-preview.png": "70042ff9deff29ba239e98f1b820f9f0e75e7be3c50f1afeef79800cf4c79d79",
+    "statistics-history-week-hourly-preview.png": "3f920d5e649a1709626a39b60ca410f55ff3b4b44cc89d8bfa7c94d2a85f3eee",
+    "statistics-history-missing-preview.png": "d8f46c011306a6ea0c2b7d4fcdf29166a87f57c09d2255913a686d4d9cd52a08",
+    "statistics-history-preview.png": "508bbbce9f2352dba4751bc056cae294a4e5dd6536007a9b126e23623b07f24f",
+    "statistics-section-9-preview.png": "1536ff351f211fe9a6d3bb55688177b742017b98ede0f6391400a125e9f2bb6b",
+    "statistics-section-8-preview.png": "dd93ec646cc23ceea705bfe7ab3fc9ac793e10fa0292e801023fb5a053876438",
+    "statistics-section-7-preview.png": "207c8fad759d7215d96ea995a2540aab57132259cb7a875773970fafb23c8446",
+    "statistics-section-6-preview.png": "d62cd2ee8888ae156253b44d6e6e9ebf78f2a08ae886f70b4a420ed3aef46ee9",
+    "statistics-section-5-preview.png": "af2560935dc0a71bda0478c11ab63cb79897694be4459ab1133ebf32fd333f92",
+    "statistics-section-4-preview.png": "c08db90bae4bf271dd3c6c8caf38958ac5384bbdd78d2252a813542d9c76dec8",
+    "statistics-section-3-preview.png": "be9484e7cfa39068cade12acfceb3a44e2a7689fe89c528f65955e6b6c643bf0",
+    "statistics-section-2-preview.png": "07794fbd4be90f6c89e84b32fc612293f20d546abe88eacc716b67dbf1b19f23",
+    "statistics-capacity-preview.png": "1972e079671d6be417c7bed9a08a50036bac28ede8f02b2874c28f7293d303dc",
+    "statistics-transfers-preview.png": "8ee1893a80bdc0d53d7846b67db391abd942e001d3bef31e0342d9d2781a4b8c",
+    "statistics-activity-preview.png": "43a205afbd0ee09c34ba3ef2c7e334e37ac316d3d7e7968dc9454a58ece31fde",
+    "my-shares-preview.png": "03ae720f3b82320fa5a05089e85ba85aafec8fb6efb369f6f5b2bbc52f1b9cdd",
+    "my-tracker-preview.png": "112bfbc8432048f36b483077af24218f6e299307ec8a60de991ac21d04321fbb",
+    "saved-selected-preview.png": "4479f58c81148d091e940898149b64ba97a9672c0754cb3f2f870066e81883c7",
+    "classic-preview.png": "af95e42763b034dba10820cb9b32eb278d2f6754e9a2256d1fa92a73d78e7196"
+  },
+  "all_elf_rpaths": 50,
+  "runtime_files": 86,
+  "runtime_unchanged": 80,
+  "test_binaries_frozen_before_root_head_release": true,
+  "build_jobs": 1,
+  "nice": 5,
+  "promoted": false,
+  "system_installation": false,
+  "original_profile_or_process_access": false
+}

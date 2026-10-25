@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_METADATA_FINALIZER_NOT_EXECUTED",
+  "implementation_source": "c8afff5311e4ff650b17d09651e3db440a0c93e8",
+  "qualified_source": "471ebb75fc66fefb0208b0d086a934b68aced84b",
+  "before_sha256": {
+    "migration/upstreams.lock.json": "484f164917a42d9d36745ca6db0f3960f92a5254e5ca5e3df089b2b9ec0cdb37",
+    "MIGRATION_PLAN.md": "7acff3917c6dc42cd37431b84c9c62138d9d000e2637fda90ae2291991295428",
+    "migration/STATE.md": "b301fae91f280ceb5cdb8f638276e1b6fb1504be0346964866f8301bd681ece7",
+    "migration/tasks/COMPATIBILITY-FOLLOWUPS.md": "9486a68c52296bd2dcba02b0d70bf132ee0f5e0e7bad98cf1dab5faf7fef74eb",
+    "migration/tasks/P08-01-queue-seeding-scheduling.md": "fe570c4be271db97b21ee425351cfa02477c75f42233222e5bd8053c83910a66"
+  },
+  "source_sha256": {
+    "current-tracking-finalizer/ADOPTION.md": "9272126b77d30ad68d35c1681bd14dd3bd342d5d3010990c77a318851280d5f1",
+    "current-tracking-finalizer/before.json": "9bd4d3547d3b67a7ff87274ae85b4ef0f7e6324f66e0c06ed604946f42826e99",
+    "current-tracking-finalizer/export.py": "d20d68e7caff796231ab332abfdee1269991191f444c471c25c9afbf5d2eaefb",
+    "current-tracking-finalizer/finalize.py": "0a149e5076e8c50482f8687880dbb32429571924b5f81f2d8fa8333fc274f12e"
+  },
+  "native_before_sha256": {
+    "migration/upstreams.lock.json": "484f164917a42d9d36745ca6db0f3960f92a5254e5ca5e3df089b2b9ec0cdb37",
+    "MIGRATION_PLAN.md": "7acff3917c6dc42cd37431b84c9c62138d9d000e2637fda90ae2291991295428",
+    "migration/STATE.md": "b301fae91f280ceb5cdb8f638276e1b6fb1504be0346964866f8301bd681ece7",
+    "migration/tasks/COMPATIBILITY-FOLLOWUPS.md": "9486a68c52296bd2dcba02b0d70bf132ee0f5e0e7bad98cf1dab5faf7fef74eb",
+    "migration/tasks/P08-01-queue-seeding-scheduling.md": "fe570c4be271db97b21ee425351cfa02477c75f42233222e5bd8053c83910a66",
+    "migration/tasks/P08-01-compatibility-providers.md": null,
+    "migration/updates/compatibility.providers/20261025.md": null,
+    "README.md": "026be2ec06ca00f34efd13fcb7642b7abee3cc8875c75435842857d955f799a3"
+  },
+  "actual_retention_verification_sha256": "3300d588cf4462b95bcc5f37cb0f06aa34f81770870dee9e1241ef309f30eaf7",
+  "actual_private_result_sha256": "e8095f361603ded6e699c8d468a798344fde5f4aea0012679589bee52bad5075",
+  "component_count": 8,
+  "source_baselines_states_and_targets_preserved": true,
+  "external_dependency_mode": "Append private b0e/3342/3fcd; all old records/notices unchanged",
+  "source_only_checks": [
+    "Python AST parse only; no recipe import/execution",
+    "JSON parsed",
+    "All3 checklist replacement anchors unique;8 CF parents remain unchecked",
+    "All8 component IDs exist; target/source lists not edited",
+    "Native README prepared append-only; original Java README untouched"
+  ],
+  "actual_metadata_or_native_or_git_write": false,
+  "next_two_pending_then_stop": true
+}

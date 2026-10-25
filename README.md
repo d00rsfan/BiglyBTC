@@ -124,3 +124,6 @@ destination. The portable build offers `./BiglyBTC --profile ABSOLUTE_PROFILE`;
 its separate offline preview still generates sample data. The bounded implementation
 and failure/repair evidence are in [the workflow record](migration/evidence/torrent-workflows-20261024/README.md).
 Full original engine/plugin parity and public-swarm performance remain in progress.
+
+
+Bounded compatibility-provider followup (2026-10-25): implementation `c8afff5311e4ff650b17d09651e3db440a0c93e8`, test-only qualified source `471ebb75fc66fefb0208b0d086a934b68aced84b`. Ordinary queue/file-priority/probe/rate facts, sequential bulk file operations, local rating editing, nonlinear-tail corners and optional combined counters are qualified in [the current record](migration/evidence/20261025-compatibility-providers/completion.json). Effective40 local suites per compiler are a38+2 results union. The b0e runtime candidate remains private-only/unpromoted; no new causal/full-CF claim. Verified native SOCKS4a/USERID and imported Scheduler recovery are the two pending milestones in this same chapter, then STOP.

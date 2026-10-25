@@ -1,0 +1,12 @@
+{
+  "files_sha256": {
+    ".gitattributes": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da",
+    "REVIEW.md": "dfa2e1058fc00026e404c5ea31ef2b3b6e20f8eabd2b0e1fafb76d3da005d13b",
+    "private-provider-manifest.json": "3342ec8ae72ecafa4a1b887e664d0d066fffce4f7d864b0b130ca903be953a3a",
+    "qualified-source-map.json.gz": "15bc48e3844c010fa51c16863e56a1b07076a830788bc27e98258e4a9c8ceada",
+    "retained-inputs.tar.gz": "f812172455f2f91282f8e8724e496b93484cbc5908156c57e1e4bc1c052571ad",
+    "root-completion.json": "e2733cfe2a83d2ec4c586b615b0778c5d8581b3be2fcb4a09c37beadafaaaf53",
+    "verification.json": "3300d588cf4462b95bcc5f37cb0f06aa34f81770870dee9e1241ef309f30eaf7"
+  },
+  "full_member_map": "retained-inputs.tar.gz:MEMBERS.json"
+}

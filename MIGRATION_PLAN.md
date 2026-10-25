@@ -1,5 +1,14 @@
 # Whole Solution C++ Migration Plan
 
+Current bounded compatibility-provider milestone is qualified: implementation `c8afff5311e4ff650b17d09651e3db440a0c93e8`, test-only qualification followup `471ebb75fc66fefb0208b0d086a934b68aced84b`. Effective GCC/Clang/leak-enabled ASan-UBSan lanes each credit38 original unaffected PASS +2 focused followup PASS =40; no full40 rerun or identical full-snapshot claim. Actual original observations: priority8, probes14, nonlinear corners2, rate arithmetic23; packaging preflight7. Private b0e/3342 candidate passes13 smoke Qt rows,28 captures,5 positive cohorts and11 deployment controls. It remains private-only and unpromoted; published dist deefcbe remains unchanged. No full CF closure, new causal/DHT/public-wire, bound target ETA, native SOCKS4a/USERID admission or imported Scheduler recovery is claimed. All CF01–CF08 remain open.
+
+Latest explicit user boundary: finish this current milestone, then exactly two further milestones in the same compatibility chapter—verified native SOCKS4a/USERID admission and imported-original Scheduler pause recovery—then STOP. Both are pending. No next chapter is authorized. This boundary supersedes older open-ended continuation text preserved below as history.
+
+[Completion](migration/evidence/20261025-compatibility-providers/completion.json).
+
+## Historical records
+
+
 Latest qualified/published identity/provider/workflow source: `4f948e042df9467310a5752d4343b07915673f84`.
 Three31-suite compiler/sanitizer lanes, runtime9, actual Java/owned wire,
 private portable, isolated hosted discovery and exact-source hosted167+13smoke/SDK2

@@ -1,0 +1,17 @@
+{
+  "status": "PASS",
+  "source_commit": "471ebb75fc66fefb0208b0d086a934b68aced84b",
+  "run": {
+    "conclusion": "success",
+    "databaseId": 40207734754,
+    "headSha": "471ebb75fc66fefb0208b0d086a934b68aced84b",
+    "status": "completed",
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40207734754"
+  },
+  "actual_ctest_total_matches": [
+    2
+  ],
+  "log_raw_bytes": 30848,
+  "log_raw_sha256": "cb4d32e2f9bafd39c714bc4b31171892a8dec2f5d62ebb768b4fed9f1be1ed86",
+  "log_gzip_sha256": "ccf8158e9a724ceebe6b151f476aead3519e4a1e7c2f22e0aefe0b7841910e91"
+}

@@ -1,0 +1,41 @@
+{
+  "status": "BOUNDED_CURRENT_CHAPTER_QUALIFIED_PRIVATE_NOT_PROMOTED",
+  "implementation_source": "c8afff5311e4ff650b17d09651e3db440a0c93e8",
+  "qualified_source": "471ebb75fc66fefb0208b0d086a934b68aced84b",
+  "effective_suites_per_lane": 40,
+  "credit": "38 unaffected original +2 focused471; no whole40 rerun",
+  "private_smoke_qt_rows": 13,
+  "private_capture_count": 28,
+  "private_positive_cohorts": 5,
+  "private_deployment_cases": 11,
+  "private_manifest_sha256": "8425a51b7c7712e767520dc8cdb2eba2e7afa42c8d764d1bc68475674a97b2e5",
+  "private_result_sha256": "e8095f361603ded6e699c8d468a798344fde5f4aea0012679589bee52bad5075",
+  "retention_verification_sha256": "3300d588cf4462b95bcc5f37cb0f06aa34f81770870dee9e1241ef309f30eaf7",
+  "hosted_status_snapshot": {
+    "source_commit": "471ebb75fc66fefb0208b0d086a934b68aced84b",
+    "runs": [
+      {
+        "conclusion": "success",
+        "databaseId": 40207734754,
+        "headSha": "471ebb75fc66fefb0208b0d086a934b68aced84b",
+        "name": "Native plugin SDK contract",
+        "status": "completed"
+      },
+      {
+        "conclusion": "",
+        "databaseId": 40207734709,
+        "headSha": "471ebb75fc66fefb0208b0d086a934b68aced84b",
+        "name": "Native desktop preview unit and smoke tests",
+        "status": "in_progress"
+      }
+    ]
+  },
+  "hosted_private_runtime_or_extra_local_credit": false,
+  "all_CF01_CF08_open": true,
+  "next_two_pending": [
+    "Verified native SOCKS4a/USERID admission",
+    "Imported-original Scheduler pause recovery"
+  ],
+  "stop_after_next_two": true,
+  "new_causal_or_target_ETA_or_public_DHT_or_shipping_approval": false
+}

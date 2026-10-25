@@ -1,0 +1,778 @@
+{
+  "schema": 1,
+  "status": "LOCAL_BOUNDED_CHAPTER_QUALIFIED_SOURCE_PUSHED",
+  "native_source": "471ebb75fc66fefb0208b0d086a934b68aced84b",
+  "implementation_source": "c8afff5311e4ff650b17d09651e3db440a0c93e8",
+  "full_matrix_rerun": false,
+  "result_union": "c8a unaffected38 +471 focused2 per lane",
+  "full_source_snapshots_identical": false,
+  "production_bytes_identical": true,
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "prior_basis": "../20261025-v2-workflows/verification.json",
+  "matrix": {
+    "gcc": {
+      "suites": 40,
+      "original_unaffected_credit": 38,
+      "focused_latest_credit": 2,
+      "original_case": "chapter-next-gcc-tests-r1",
+      "focused_case": "chapter-fortified-gcc-tests-r1",
+      "original_exit": 0,
+      "focused_exit": 0,
+      "original_seconds": 138.98,
+      "focused_seconds": 2.14,
+      "latest_actual_results": {
+        "application-settings": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "bounded-rating-data": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "bounded-rating-local-policy": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "desktop-model-and-lifecycle": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "file-operation-sequence": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "file-operations": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "file-operations-host": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "library-action-ui": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "local-rating-host-ui": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "local-rating-wiring": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "managed-combined-counter-domain": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "managed-combined-protocol": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "managed-download": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "managed-queue": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "managed-seeding": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "network-binding": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "network-binding-owner": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "network-policy": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "network-proxy-owner": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "original-physical-file-io": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "original-rating-data": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "original-rating-local-policy": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-manifest-negatives": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-fifo": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-inode": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-mapped-interposition": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-open": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-preload": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-same-version-distro": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-source-bound": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "provider-next-runtime-inputs": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "provider-payload-counter": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "queue-download-probes": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "queue-file-priority": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "queue-policy": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "queue-rate-providers": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "queue-slots": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "selected-swarm-admission": {
+          "passed": true,
+          "case": "chapter-next-gcc-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-content": {
+          "passed": true,
+          "case": "chapter-fortified-gcc-tests-r1",
+          "source": "471ebb75fc66fefb0208b0d086a934b68aced84b"
+        },
+        "provider-next-runtime-deployment": {
+          "passed": true,
+          "case": "chapter-fortified-gcc-tests-r1",
+          "source": "471ebb75fc66fefb0208b0d086a934b68aced84b"
+        }
+      },
+      "original_inputs_sha256": {
+        "chapter-next-gcc-tests-r1-receipt.json": "a6a2f3a778d56acbd8ee6179e9ab63c980d149b77840d5a34c53d936f4627ec1",
+        "chapter-next-gcc-tests-r1-source.json": "35f72c94f3cd00666270736b93f5143a33fceae2fd08eca0c1efa5f108f6fce1",
+        "chapter-next-gcc-tests-r1.xml": "5ccc68ae0aaa5d07fbf288708889d4016245504a7f5f1e25c435de76e20ec234",
+        "chapter-next-gcc-tests-r1.log": "9e90876e4bdf7a2118f7ecc3f435b43a6deef4917e4696812ddecf0cce08e373"
+      },
+      "focused_inputs_sha256": {
+        "chapter-fortified-gcc-tests-r1-receipt.json": "2d903180891ca8e20b69fd06a4b4b3174e378676b1f63a6276910615c34f5f83",
+        "chapter-fortified-gcc-tests-r1-source.json": "645eb683898a15cf1565d5e45a2e0d57a0b486cb5fe1273d32dc3139db89218b",
+        "chapter-fortified-gcc-tests-r1.xml": "044bf6a25341fd3bbfd4765237cb24ab37751dcc0e729c0cb6e32d491ccdfc62",
+        "chapter-fortified-gcc-tests-r1.log": "c26034f2bd0f8d6585c65f230d9056a31a84ac62ab6d4baeb2ef9bccc928dd0f"
+      },
+      "full_source_snapshots_identical": false,
+      "all_production_and_provider_bytes_identical": true,
+      "exact_test_only_changed_paths": [
+        "preview/native/tests/CMakeLists.txt",
+        "preview/native/tests/RuntimeBindingTests.cmake",
+        "preview/native/tests/RuntimeDeploymentTests.cmake",
+        "preview/native/tests/persistent_runtime_negative_driver.cpp",
+        "preview/native/tests/runtime_deployment_driver.cpp"
+      ]
+    },
+    "clang": {
+      "suites": 40,
+      "original_unaffected_credit": 38,
+      "focused_latest_credit": 2,
+      "original_case": "chapter-next-clang-tests-r1",
+      "focused_case": "chapter-fortified-clang-tests-r1",
+      "original_exit": 0,
+      "focused_exit": 0,
+      "original_seconds": 147.71,
+      "focused_seconds": 2.22,
+      "latest_actual_results": {
+        "application-settings": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "bounded-rating-data": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "bounded-rating-local-policy": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "desktop-model-and-lifecycle": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "file-operation-sequence": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "file-operations": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "file-operations-host": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "library-action-ui": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "local-rating-host-ui": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "local-rating-wiring": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "managed-combined-counter-domain": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "managed-combined-protocol": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "managed-download": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "managed-queue": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "managed-seeding": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "network-binding": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "network-binding-owner": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "network-policy": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "network-proxy-owner": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "original-physical-file-io": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "original-rating-data": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "original-rating-local-policy": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-manifest-negatives": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-fifo": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-inode": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-mapped-interposition": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-open": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-preload": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-same-version-distro": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-source-bound": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "provider-next-runtime-inputs": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "provider-payload-counter": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "queue-download-probes": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "queue-file-priority": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "queue-policy": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "queue-rate-providers": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "queue-slots": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "selected-swarm-admission": {
+          "passed": true,
+          "case": "chapter-next-clang-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-content": {
+          "passed": true,
+          "case": "chapter-fortified-clang-tests-r1",
+          "source": "471ebb75fc66fefb0208b0d086a934b68aced84b"
+        },
+        "provider-next-runtime-deployment": {
+          "passed": true,
+          "case": "chapter-fortified-clang-tests-r1",
+          "source": "471ebb75fc66fefb0208b0d086a934b68aced84b"
+        }
+      },
+      "original_inputs_sha256": {
+        "chapter-next-clang-tests-r1-receipt.json": "2f4fa41640191d201c4ae6047cd98c087f73a7ae0ee26a7ddc2cfd4d79dbf057",
+        "chapter-next-clang-tests-r1-source.json": "35f72c94f3cd00666270736b93f5143a33fceae2fd08eca0c1efa5f108f6fce1",
+        "chapter-next-clang-tests-r1.xml": "e29046bcfec5972fb4c7b40cd1fedc736b0e2f8e0868d69ab89d819fe2ecdb89",
+        "chapter-next-clang-tests-r1.log": "4b2cac09ce968ff76518913c4718815cb570126205f4f5a5d6f25f01260aa29b"
+      },
+      "focused_inputs_sha256": {
+        "chapter-fortified-clang-tests-r1-receipt.json": "0a50176de6dc77ec03c69c653dc0c346ee1f4da8b540a6a8de6df0ff82e080e8",
+        "chapter-fortified-clang-tests-r1-source.json": "645eb683898a15cf1565d5e45a2e0d57a0b486cb5fe1273d32dc3139db89218b",
+        "chapter-fortified-clang-tests-r1.xml": "1f138a32e5f78fbe5a2d5699669152f1b172b14f029990aa3e7d4c11f2d2b352",
+        "chapter-fortified-clang-tests-r1.log": "4f5d330df3a0d112a9ac227b6cca38931c9dfb2ed2a819752094b7887d389eba"
+      },
+      "full_source_snapshots_identical": false,
+      "all_production_and_provider_bytes_identical": true,
+      "exact_test_only_changed_paths": [
+        "preview/native/tests/CMakeLists.txt",
+        "preview/native/tests/RuntimeBindingTests.cmake",
+        "preview/native/tests/RuntimeDeploymentTests.cmake",
+        "preview/native/tests/persistent_runtime_negative_driver.cpp",
+        "preview/native/tests/runtime_deployment_driver.cpp"
+      ]
+    },
+    "sanitizers": {
+      "suites": 40,
+      "original_unaffected_credit": 38,
+      "focused_latest_credit": 2,
+      "original_case": "chapter-next-san-tests-r1",
+      "focused_case": "chapter-fortified-san-tests-r1",
+      "original_exit": 8,
+      "focused_exit": 0,
+      "original_seconds": 161.27,
+      "focused_seconds": 2.4,
+      "latest_actual_results": {
+        "application-settings": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "bounded-rating-data": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "bounded-rating-local-policy": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "desktop-model-and-lifecycle": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "file-operation-sequence": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "file-operations": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "file-operations-host": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "library-action-ui": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "local-rating-host-ui": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "local-rating-wiring": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "managed-combined-counter-domain": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "managed-combined-protocol": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "managed-download": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "managed-queue": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "managed-seeding": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "network-binding": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "network-binding-owner": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "network-policy": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "network-proxy-owner": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "original-physical-file-io": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "original-rating-data": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "original-rating-local-policy": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-manifest-negatives": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-fifo": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-inode": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-mapped-interposition": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-open": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-preload": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-same-version-distro": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-source-bound": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "provider-next-runtime-inputs": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "provider-payload-counter": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "queue-download-probes": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "queue-file-priority": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "queue-policy": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "queue-rate-providers": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "queue-slots": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "selected-swarm-admission": {
+          "passed": true,
+          "case": "chapter-next-san-tests-r1",
+          "source": "c8afff5311e4ff650b17d09651e3db440a0c93e8"
+        },
+        "persistent-runtime-reject-content": {
+          "passed": true,
+          "case": "chapter-fortified-san-tests-r1",
+          "source": "471ebb75fc66fefb0208b0d086a934b68aced84b"
+        },
+        "provider-next-runtime-deployment": {
+          "passed": true,
+          "case": "chapter-fortified-san-tests-r1",
+          "source": "471ebb75fc66fefb0208b0d086a934b68aced84b"
+        }
+      },
+      "original_inputs_sha256": {
+        "chapter-next-san-tests-r1-receipt.json": "efd7efde2a67e81434552c42a33b7cb03a8bfa8b7723edcfcd7e4f90e5ea9dc5",
+        "chapter-next-san-tests-r1-source.json": "35f72c94f3cd00666270736b93f5143a33fceae2fd08eca0c1efa5f108f6fce1",
+        "chapter-next-san-tests-r1.xml": "afd020bc0f10d918494ce0db100a1df9d50035490f079f56cb957edb41c13887",
+        "chapter-next-san-tests-r1.log": "e8c61c931ad50abb77eb4fc46fbde33c3f00c817e89a6dc821db75d449a42317"
+      },
+      "focused_inputs_sha256": {
+        "chapter-fortified-san-tests-r1-receipt.json": "d3bcc2790663649a619a699b50368f7ee13a9ad0c808fbd901a4bb42a118e6bc",
+        "chapter-fortified-san-tests-r1-source.json": "645eb683898a15cf1565d5e45a2e0d57a0b486cb5fe1273d32dc3139db89218b",
+        "chapter-fortified-san-tests-r1.xml": "a45d5a7488fc1e23c716a303af2284fd06590d4cd9ad704477d69dc2500a297c",
+        "chapter-fortified-san-tests-r1.log": "8e19164f891cc546d21de7a5e574e585a851e93127c65daa8926a3cf6c3208b5"
+      },
+      "full_source_snapshots_identical": false,
+      "all_production_and_provider_bytes_identical": true,
+      "exact_test_only_changed_paths": [
+        "preview/native/tests/CMakeLists.txt",
+        "preview/native/tests/RuntimeBindingTests.cmake",
+        "preview/native/tests/RuntimeDeploymentTests.cmake",
+        "preview/native/tests/persistent_runtime_negative_driver.cpp",
+        "preview/native/tests/runtime_deployment_driver.cpp"
+      ]
+    }
+  },
+  "actual_original_observations": {
+    "priority_frames": 2,
+    "priority_scalars": 8,
+    "probe_cases": 7,
+    "probe_comparisons": 14,
+    "nonlinear_corners": 2,
+    "rate_observations": 23,
+    "evidence_sha256": {
+      "chapter-original-plan/run-r1/failure.json": "1666944f220c72fc1f3dedd2066b901592bccd38bffac124cec8cc73139f8bd2",
+      "chapter-original-plan/amendments/corner-classpath/run-r2/result.json": "90773de382e6bfd72bcd7bc47a61667e61b87ad6e04204e923d72268e5155082",
+      "next-queue/rate-providers/oracle/run-r1/observations.json": "fe73b82267094556eddf88ce35f870ccdfbbd4c8660e1b5ae2849ce441a70636"
+    },
+    "limits": [
+      "Priority: actual READY/policy/calculation, not scheduler parity.",
+      "Probes: selected original DLR/ETA getter method frames only.",
+      "Corners: actual raw FMFile bytes, not GM progress.",
+      "Rates: retained average + selected method bodies in authored containers; no bound target ETA or whole peer/plugin/timer equality."
+    ]
+  },
+  "private_provider": {
+    "scope": "PRIVATE_SOURCE_BOUND_QUALIFICATION_ONLY",
+    "artifact_sha256": "b0e55bfbdc2be5dc2ebbefc953837d64c9e5151b0305332335071e37b6956937",
+    "artifact_bytes": 9085072,
+    "manifest_sha256": "3342ec8ae72ecafa4a1b887e664d0d066fffce4f7d864b0b130ca903be953a3a",
+    "record_sha256": "3fcd415424d71e6082022f8be6bb1a75036a0fbf3b228228813e1a4cee1ffdca",
+    "source_leaves": 1074,
+    "selected_leaves": 451,
+    "installed_leaves": 285,
+    "required_exports": 12,
+    "portable_preflight_cases": 7,
+    "portable_preflight_sha256": "d676e0d7cc29ee2a6f4edfa0898ad142abfd038b484c8838978a223d2b722460",
+    "new_causal_credit": false,
+    "shipping_approval": false,
+    "native_socks4a_admission_qualified_by_this_chapter": false
+  },
+  "retained_archive": {
+    "path": "retained-inputs.tar.gz",
+    "sha256": "f812172455f2f91282f8e8724e496b93484cbc5908156c57e1e4bc1c052571ad",
+    "bytes": 7558501,
+    "input_members": 1032,
+    "uncompressed_input_bytes": 22053469,
+    "member_manifest": "MEMBERS.json",
+    "member_manifest_sha256": "0c5b934e31ec4ad222dede7798e133c8b7ac0dad535aebfd85f57268ea49589b"
+  },
+  "excluded_inputs": {
+    "compiled_or_archive": 0,
+    "symlink_or_special": 0
+  },
+  "source_map_sha256": "ed68ccdfe62afbf4401cd6a490cf77d99f24e7d7d8c1e55538aa18d4c1ff02c7",
+  "source_map_entries": 873,
+  "hosted_qualification_claim": false,
+  "portable_promotion_claim": false,
+  "whole_compatibility_complete": false,
+  "target_eta_bound": false,
+  "native_socks4a_or_imported_scheduler_claim": false,
+  "sanitizer_scope": "Native ASan/UBSan/leaks; provider remains uninstrumented. No inherited causal-counter certification is renewed.",
+  "source_receipts_sha256": {
+    "compatibility-evidence-r3/completion-r2.json": "e2733cfe2a83d2ec4c586b615b0778c5d8581b3be2fcb4a09c37beadafaaaf53",
+    "chapter-fortified-fix-commit.json": "d3f4ae8be2ef7148f63b1dd60174cffe1c86a0d5d439dce484aac6f6eb514141",
+    "chapter-current-source-commit.json": "49168c730c53ff3fc1e5b344496caea948c437a444cdb14725416009255bbb0a",
+    "chapter-current-source-push.json": "c3c9226ecc96aa191839c3b542225b3c2c74e0bcb166a095eaaaa7b69142fcaf"
+  }
+}
