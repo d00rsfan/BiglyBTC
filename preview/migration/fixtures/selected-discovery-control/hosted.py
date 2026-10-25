@@ -21,6 +21,13 @@ CATALOG_SHA256 = 'cfd847973aa36c3325495feca36b2cfa59a2b0a022f8b8e12ddf524ee66455
 CHAPTER = '/home/yurii/Java/BiglyBT/build/storage-20261025'
 CAPSULE_SHA = 'f5c55c2dde4bba885f4e3fa1dbc81e3659e49880c0856797eba156703d692b2f'
 PROVIDER_SHA = 'e74def09b2257a266786b8ddb116382d300716687bf26bbe57072f5ff90e8737'
+PROVIDER_IMAGE_SHA = 'd367afd6499859c5a57d66bddd352a977ff76c7fb76b5925302c2c9008c7ddbd'
+PROVIDER_IMAGE = Path(CHAPTER) / 'provider-candidate/install/lib/libtorrent-rasterbar.so.2.0.12'
+# Exactly the two original LT install aliases, in target-first creation order.
+RESTORED_ALIASES = {
+    str(PROVIDER_IMAGE.with_name('libtorrent-rasterbar.so.2.0')).lstrip('/'): 'libtorrent-rasterbar.so.2.0.12',
+    str(PROVIDER_IMAGE.with_name('libtorrent-rasterbar.so')).lstrip('/'): 'libtorrent-rasterbar.so.2.0',
+}
 
 
 def need(ok, why):
@@ -30,6 +37,33 @@ def need(ok, why):
 
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def reviewed_aliases(value):
+    need(value['aliases_dereferenced_as_identical_regular_files'] == sorted(RESTORED_ALIASES),
+         'only the exact two catalog-pinned LT SONAME aliases may be restored')
+    for name in (*RESTORED_ALIASES, str(PROVIDER_IMAGE).lstrip('/')):
+        need(value['members_sha256'].get(name) == PROVIDER_IMAGE_SHA,
+             'alias/target bytes differ from the exact reviewed provider')
+    need(value['runner_options']['artifact'] == str(PROVIDER_IMAGE)
+         and value['runner_options']['artifact-sha256'] == PROVIDER_IMAGE_SHA,
+         'alias target differs from the actual runtime artifact')
+
+
+def verify_restored_aliases(value):
+    reviewed_aliases(value)
+    need(PROVIDER_IMAGE.is_file() and not PROVIDER_IMAGE.is_symlink()
+         and PROVIDER_IMAGE.resolve(strict=True) == PROVIDER_IMAGE
+         and digest(PROVIDER_IMAGE) == PROVIDER_IMAGE_SHA, 'changed/noncanonical provider target')
+    target = PROVIDER_IMAGE.stat()
+    for name, link_text in RESTORED_ALIASES.items():
+        path = Path('/') / name
+        need(path.is_symlink() and os.readlink(path) == link_text
+             and path.parent.resolve(strict=True) == PROVIDER_IMAGE.parent
+             and path.resolve(strict=True) == PROVIDER_IMAGE, 'changed/nonexact LT SONAME alias')
+        actual = path.stat()
+        need((actual.st_dev, actual.st_ino) == (target.st_dev, target.st_ino)
+             and digest(path) == value['members_sha256'][name], 'LT alias does not identify the exact provider')
 
 
 def catalog(path):
@@ -63,6 +97,7 @@ def catalog(path):
         need(root.startswith(('/home/yurii/Java/BiglyBT/build/', '/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/',
                               '/tmp/biglybtc-deps/', '/tmp/biglybtc-toolchains/'))
              and '..' not in Path(root).parts, 'restore root outside reviewed owned artifact areas')
+    reviewed_aliases(value)
     return value
 
 
@@ -97,17 +132,30 @@ def restore(bundle, value):
         need(target.resolve() == target and not target.exists() and not target.is_symlink(), 'restore destination exists/aliases')
     with zipfile.ZipFile(bundle) as archive:
         for row in archive.infolist():
+            if row.filename in RESTORED_ALIASES:
+                continue  # ZIP bytes already verified; restore the original link identity below.
             target = Path('/') / row.filename
             target.parent.mkdir(parents=True, exist_ok=True)
             with target.open('xb') as stream:
                 stream.write(archive.read(row))
             os.chmod(target, 0o755 if (row.external_attr >> 16) & 0o111 else 0o644)
+    need(PROVIDER_IMAGE.is_file() and not PROVIDER_IMAGE.is_symlink()
+         and PROVIDER_IMAGE.resolve(strict=True) == PROVIDER_IMAGE
+         and digest(PROVIDER_IMAGE) == PROVIDER_IMAGE_SHA, 'changed canonical alias target')
+    for name, link_text in RESTORED_ALIASES.items():
+        target = Path('/') / name
+        need(not target.exists() and not target.is_symlink(), 'alias destination already exists')
+        os.symlink(link_text, target)  # No overwrite, no caller-selected link or target.
+    verify_restored_aliases(value)
 
 
 def execute(value):
     need(os.geteuid() == 0, 'hosted fixture runs through standard runner sudo')
+    verify_restored_aliases(value)
     for name, pin in value['members_sha256'].items():
         path = Path('/') / name
+        if name in RESTORED_ALIASES:
+            continue  # Exact link text, canonical inode and bytes were verified above.
         need(path.is_file() and not path.is_symlink() and path.resolve(strict=True) == path
              and digest(path) == pin, 'restored qualification input differs')
     options = value['runner_options']
