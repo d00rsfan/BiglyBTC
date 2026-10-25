@@ -68,6 +68,16 @@ std::int32_t javaInt(double value) {
   return static_cast<std::int32_t>(value);
 }
 }
+std::expected<std::u16string, Error> decodeAttributeText(std::string_view bytes) {
+  if (bytes.size() > maximumBytes) { return std::unexpected(Error::Limit); }
+  return javaUtf8(bytes);
+}
+std::expected<std::string, Error> encodeAttributeText(std::u16string_view text) {
+  if (text.size() > maximumBytes) { return std::unexpected(Error::Limit); }
+  auto bytes = utf8(text);
+  if (bytes.size() > maximumBytes) { return std::unexpected(Error::Limit); }
+  return bytes;
+}
 RatingData RatingData::create(std::int32_t score, Text nick, Text comment) {
   return {std::min(5, score), std::move(nick), std::move(comment)};
 }

@@ -390,6 +390,7 @@ struct ManagedStorage::Impl {
   std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge;
   core::SavedDownload captured;
   ManagedQueueMetadata queue;
+  std::vector<compat::FilePolicy> filePolicies;
   storage::TorrentStateStore store;
   storage::TorrentStateFile state;
   compat::OriginalLayout layout;
@@ -419,6 +420,11 @@ lt::add_torrent_params ManagedStorage::parameters() const { return impl_?impl_->
 const ManagedQueueMetadata& ManagedStorage::queueMetadata() const { return impl_->queue; }
 std::int64_t ManagedStorage::originalBytes() const noexcept { return impl_?impl_->layout.bytes:0; }
 bool ManagedStorage::originalProgressRequiresPieces() const noexcept { return impl_&&impl_->progressFromPieces; }
+std::expected<core::QueueFilePriorityStats,core::QueueFilePriorityError> ManagedStorage::filePriorityStatistics(
+    std::span<const std::uint8_t> pieces) const noexcept {
+  if(!impl_) return std::unexpected(core::QueueFilePriorityError::Geometry);
+  return core::queueFilePriorityStatistics(impl_->layout,impl_->filePolicies,pieces);
+}
 std::expected<std::int64_t,Error> ManagedStorage::verifiedOriginalBytes(std::span<const std::uint8_t> pieces) const {
   if(!impl_) return std::unexpected(Error{ErrorCode::Conflict,"Managed storage was moved or released"});
   return biglybtc::engine::detail::verifiedOriginalBytes(impl_->layout.bytes,impl_->layout.pieceLength,pieces);
@@ -484,7 +490,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     const auto storageDefaults=take(storage::resolveOriginalStorageTypes(lease,hash,layout,attributes.root()));
     require(!storageDefaults.unsupportedConversion,"Original policy requires unsupported cross-family storage conversion");
     done(storage::applyOriginalStorageDefaults(attributes,storageDefaults,true));
-    const auto parsedPolicy=compat::originalFilePolicy(row,layout.files.size()); require(parsedPolicy.has_value(),"Invalid original managed file priorities",ErrorCode::InvalidFormat);
+    auto parsedPolicy=compat::originalFilePolicy(row,layout.files.size()); require(parsedPolicy.has_value(),"Invalid original managed file priorities",ErrorCode::InvalidFormat);
     auto pending=journals(attributes.root(),layout.multifile,layout.files.size()); const fs::path save(saved.saveDirectory);
     require(save.is_absolute()&&save.lexically_normal()==save,"Managed save directory must be absolute and normalized",ErrorCode::UnsafePath);
     const auto profilePath=fs::read_symlink(fs::path("/proc/self/fd")/std::to_string(lease.directoryHandle())).lexically_normal();
@@ -613,7 +619,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     for(std::size_t i=0;i<claimPlan.values.size();++i){const auto& id=slots[claimPlan.indices[i]].identity;claimPlan.values[i].device=static_cast<std::uint64_t>(id.st_dev);claimPlan.values[i].inode=static_cast<std::uint64_t>(id.st_ino);}
     auto result=std::make_unique<Impl>(hash,std::move(identity),saved,std::move(store),std::move(state),std::move(layout),std::move(params),save,
       std::move(slots),std::move(pending),std::move(claimPlan.values),profile.st_dev,profile.st_ino);
-    result->queue=queue; result->swarmBridge=std::move(swarmBridge);
+    result->queue=queue; result->swarmBridge=std::move(swarmBridge); result->filePolicies=std::move(*parsedPolicy);
     if(mapped){result->mapped=std::make_shared<OriginalDiskFiles>(info,std::move(mappedFiles));}
     return ManagedStorage(std::move(result));
   } catch (const Failure& error) { return std::unexpected(error.error); }

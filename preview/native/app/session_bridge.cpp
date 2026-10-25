@@ -12,6 +12,7 @@
 #include "application_settings.hpp"
 #include "scheduler_service.hpp"
 #include "torrent_state.hpp"
+#include "../adapters/local_rating.hpp"
 #include <QDateTime>
 #include "../engine/live_settings.hpp"
 #include "owned_azureus_service.hpp"
@@ -270,6 +271,8 @@ struct SessionBridge::Host {
   QString intakeDefault;
   bool intakeDefaultLoaded = false;
 
+  std::optional<ui::LocalRatingRequest> ratingRequest;
+  std::array<std::uint8_t,32> ratingRevision{};
   std::optional<storage::PreparedFileOperation> filePlan;
   ui::FileOperationPlanPresentation filePlanPacket;
   bool fileRecoveryRequired = false;
@@ -613,6 +616,10 @@ struct SessionBridge::Host {
 
 SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, AzureusServiceFactory azureusFactory, SchedulerFactory schedulerFactory)
     : QObject(parent), countryProviderFactory_(std::move(factory)), azureusServiceFactory_(std::move(azureusFactory)), schedulerFactory_(std::move(schedulerFactory)) {
+  qRegisterMetaType<ui::LocalRatingRequest>();
+  qRegisterMetaType<ui::LocalRatingSubmission>();
+  qRegisterMetaType<ui::LocalRatingPresentation>();
+  qRegisterMetaType<ui::LocalRatingSavePresentation>();
   qRegisterMetaType<ui::SchedulerRequest>();
   qRegisterMetaType<ui::SchedulerSubmission>();
   qRegisterMetaType<ui::SchedulerPresentation>();
@@ -2505,6 +2512,8 @@ QString optionDefaultPath(const storage::ApplicationSettingsSnapshot& snapshot) 
   return {};
 }
 }
+
+#include "local_rating_bridge.inc"
 
 bool SessionBridge::loadOptions(ui::OptionsRequest request) {
   if (profileClosed_ || !request.session || !request.request || request.session != publishedColumnLayoutSession_) { return false; }

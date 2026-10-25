@@ -2,8 +2,28 @@
 void LibraryWindow::openFileOperation(FileOperation operation) {
   QPointer<LibraryWindow> guard(this);
   if(busy_||closing_||offlinePreview_||!columnSession_){return;}
-  const auto targets=selectedDownloadTargets();if(!targets||targets->size()!=1){setMessage(tr("Select one torrent for this operation"));return;}
+  if(fileOperationSequence_&&fileOperationSequence_->active()){
+    const QPointer<FileOperationDialog> dialog(fileOperationSequence_->dialog());if(dialog){dialog->show();if(!guard||!dialog){return;}dialog->raise();}return;
+  }
+  const auto targets=selectedDownloadTargets();if(!targets||targets->empty()||targets->size()>MaximumFileOperationSequence){setMessage(tr("Select between 1 and %1 torrents for this operation").arg(MaximumFileOperationSequence));return;}
   if(fileOperationDialog_){const auto dialog=fileOperationDialog_;dialog->show();if(!guard||!dialog){return;}dialog->raise();if(!guard||!dialog){return;}dialog->activateWindow();return;}
+  if(targets->size()>1){
+    if(fileOperationSequence_){const auto previous=fileOperationSequence_;previous->invalidateSession();if(!guard){return;}previous->deleteLater();}
+    auto* sequence=new FileOperationSequence(this);fileOperationSequence_=sequence;const QPointer<FileOperationSequence> expected(sequence);
+    connect(sequence,&FileOperationSequence::planRequested,this,[this,expected](FileOperationRequest request){
+      if(!expected||fileOperationSequence_!=expected){return;}if(busy_||closing_||request.session!=columnSession_){rejectFileOperationRequest(request);return;}emit fileOperationPlanRequested(std::move(request));
+    });
+    connect(sequence,&FileOperationSequence::executeRequested,this,[this,expected](FileOperationSubmission value){
+      if(!expected||fileOperationSequence_!=expected||!value.plan){return;}if(busy_||closing_||value.plan->request.session!=columnSession_){rejectFileOperationSubmission(value);return;}emit fileOperationExecuteRequested(std::move(value));
+    });
+    connect(sequence,&FileOperationSequence::cancelRequested,this,&LibraryWindow::fileOperationCancelRequested);
+    connect(sequence,&FileOperationSequence::finished,this,[this,expected](FileOperationSequencePresentation report){
+      if(!expected||fileOperationSequence_!=expected||!report||closing_||report->session!=columnSession_){return;}emit fileOperationSequenceFinished(std::move(report));
+    });
+    QStringList names;for(const auto& target:*targets){const auto row=model_->rowFor(target.hash);names<<model_->data(model_->index(row,0),Qt::DisplayRole).toString();}
+    if(!sequence->begin(columnSession_,operation,*targets,std::move(names))){sequence->deleteLater();setMessage(tr("The selected torrent list changed. Select it again."));return;}
+    sequence->setBusy(busy_);return;
+  }
   auto* dialog=new FileOperationDialog(this);dialog->setAttribute(Qt::WA_DeleteOnClose);fileOperationDialog_=dialog;
   const QPointer<FileOperationDialog> expected(dialog);
   connect(dialog,&FileOperationDialog::planRequested,this,[this,expected](FileOperationRequest request){
@@ -39,10 +59,12 @@ void LibraryWindow::openTorrentCreation() {
   dialog->show();if(!guard||!expected){return;}dialog->raise();if(!guard||!expected){return;}dialog->activateWindow();
 }
 void LibraryWindow::setFileOperationPlan(FileOperationPlanPresentation packet) {
+  if(fileOperationSequence_&&fileOperationSequence_->active()){if(packet&&!closing_&&packet->request.session==columnSession_){fileOperationSequence_->setPlan(packet);}return;}
   if(!packet||closing_||packet->request.session!=columnSession_||!fileOperationDialog_){return;}
   const auto dialog=fileOperationDialog_;QPointer<LibraryWindow> guard(this);const bool accepted=dialog->setPlan(packet);if(!guard){return;}if(accepted&&activeFileOperation_&&*activeFileOperation_==packet->request){activeFileOperation_.reset();}
 }
 void LibraryWindow::setFileOperationResult(FileOperationResultPresentation packet) {
+  if(fileOperationSequence_&&fileOperationSequence_->active()){if(packet&&!closing_&&packet->request.session==columnSession_){fileOperationSequence_->setResult(packet);}return;}
   if(!packet||closing_||packet->request.session!=columnSession_||!fileOperationDialog_){return;}
   const auto dialog=fileOperationDialog_;QPointer<LibraryWindow> guard(this);const bool accepted=dialog->setResult(packet);if(!guard){return;}if(accepted&&activeFileOperation_&&*activeFileOperation_==packet->request){activeFileOperation_.reset();}
 }

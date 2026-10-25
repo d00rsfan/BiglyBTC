@@ -8,10 +8,14 @@
 #include <optional>
 #include <span>
 #include <string>
+#include <string_view>
 #include <vector>
 namespace biglybtc::plugins::rating {
 enum class Error { InvalidBencode, InvalidHash, Limit, NullNick, NullComment, OriginalIntegerEncoding };
 using Text = std::optional<std::u16string>;
+// Existing Java UTF-8 replacement semantics, shared by persisted string attributes.
+std::expected<std::u16string, Error> decodeAttributeText(std::string_view);
+std::expected<std::string, Error> encodeAttributeText(std::u16string_view);
 // UTF-16 retains the Java model, including NULs and unpaired surrogate inputs.
 struct RatingData {
   std::int32_t score = 0;

@@ -154,12 +154,18 @@ void validate(const NetworkPolicy& p) {
       Code::InvalidConfiguration, "mode");
   require(p.listenPort >= 0 && p.listenPort <= 65535 && !p.bindAddresses.empty()
       && p.bindAddresses.size() <= MaximumResolvedNetworkBinds, Code::InvalidConfiguration, "Bind IP");
+  bool wildcardBind = false, explicitBind = false;
   for (const auto& address : p.bindAddresses) {
     const auto selected = parseNetworkBindSelector(address);
     require(selected && selected->canonical == address, Code::InvalidConfiguration, "Bind IP");
     require(p.ipv6 || selected->family != NetworkBindFamily::V6, Code::Unsupported, "IPV6 Enable Support");
     require(!p.enforceBind || !selected->wildcard, Code::Unsupported, "Enforce Bind IP wildcard");
+    wildcardBind |= selected->wildcard; explicitBind |= !selected->wildcard;
   }
+  // LT's one outgoing-interface allowlist cannot represent a wildcard for one
+  // family together with an exact restriction for another. Do not silently
+  // discard an explicit choice or pass a wildcard as a literal allowed IP.
+  require(!wildcardBind || !explicitBind, Code::Unsupported, "mixed wildcard and explicit Bind IP");
   require(p.uploadBytesPerSecond >= 0 && p.downloadBytesPerSecond >= 0 && p.seedingUploadBytesPerSecond >= 0,
       Code::InvalidConfiguration, "rate limits");
   const auto& proxy = p.proxy;
@@ -176,6 +182,9 @@ void validate(const NetworkPolicy& p) {
         && printable(proxy.username) && printable(proxy.password)
         && (!proxy.username.empty() || proxy.password.empty()), Code::InvalidConfiguration, "proxy");
     if (proxy.kind == NetworkProxyKind::Socks4) {
+      // The current qualified LT socket factory does not forward SOCKS4 USERID.
+      // Never admit a configured identity and silently send an empty identity.
+      require(proxy.username.empty(), Code::Unsupported, "SOCKS4 USERID");
       require(!proxy.remoteDns && proxy.password.empty() && !p.ipv6, Code::Unsupported, "SOCKS4 routing");
     }
     if (proxy.kind != NetworkProxyKind::Socks5) {
@@ -346,7 +355,13 @@ std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(
       p.proxy = dataProxy ? std::move(data) : std::move(tracker);
       p.proxy.peers = dataProxy;
       p.proxy.trackers = trackerProxy;
-      p.proxy.remoteDns = c.boolean("Proxy.SOCKS.Tracker.DNS.Disable", true);
+      const bool trackerRemoteDns = c.boolean("Proxy.SOCKS.Tracker.DNS.Disable", true);
+      // This original switch gates TRACKER DNS only (AENameServiceJava12).
+      // Data-only SOCKS4 consumes numeric peer endpoints; its valid original
+      // route must not be rejected by an unrelated tracker-default preference.
+      // Explicit SOCKS4 remote-DNS requests remain unsupported by validate().
+      p.proxy.remoteDns = p.proxy.kind == NetworkProxyKind::Socks4 && !trackerProxy
+          ? false : trackerRemoteDns;
       // Peer-proxied sessions have no direct incoming listener in LT.
       if (dataProxy) { p.incomingTcp = false; p.incomingUtp = false; }
     }
@@ -371,10 +386,16 @@ std::expected<libtorrent::settings_pack, NetworkPolicyError> makeNetworkSettings
     for (const auto& address : p.bindAddresses) {
       const auto selected = parseNetworkBindSelector(address);
       require(selected && selected->numeric, Code::Unsupported, "Bind IP needs worker resolution");
-      if (!listen.empty()) { listen += ','; outgoing += ','; }
+      if (!listen.empty()) { listen += ','; }
       listen += address.find(':') == std::string::npos ? address : '[' + address + ']';
       listen += ':' + std::to_string(p.listenPort);
-      outgoing += address;
+      // Empty means unrestricted in LT. A literal 0.0.0.0/:: is instead checked
+      // against the actual local IP after CONNECT and rejects every real source.
+      // Explicit numeric/interface-derived addresses retain the exact allowlist.
+      if (!selected->wildcard) {
+        if (!outgoing.empty()) { outgoing += ','; }
+        outgoing += address;
+      }
     }
     result.set_str(Settings::listen_interfaces, listen);
     result.set_str(Settings::outgoing_interfaces, outgoing);

@@ -69,7 +69,7 @@ int main() {
       CHECK(!p.lsd && !p.upnp && !p.natpmp);
       const auto settings = engine::makeNetworkSettings(p);
       CHECK(settings && settings->get_str(Settings::listen_interfaces) == "0.0.0.0:6881");
-      CHECK(settings->get_str(Settings::outgoing_interfaces) == "0.0.0.0");
+      CHECK(settings->get_str(Settings::outgoing_interfaces).empty());
       CHECK(settings->get_bool(Settings::enable_dht));
       CHECK(settings->get_str(Settings::dht_bootstrap_nodes) == "dht.libtorrent.org:25401");
       CHECK(settings->get_int(Settings::proxy_type) == Settings::none);
@@ -101,6 +101,34 @@ int main() {
       rejected(disabled, Code::Unsupported);
       auto duplicate = config({{"Bind IP", bytes("127.0.0.1;127.0.0.1")}});
       rejected(duplicate, Code::InvalidConfiguration);
+    });
+    run("wildcard listen is not an outgoing literal interface restriction", [] {
+      for (const auto& bind : {std::string{}, std::string{"   "}, std::string{"0.0.0.0"}}) {
+        auto document = config({{"Bind IP", bytes(bind)}}); const auto original = document.originalBytes();
+        const auto policy = normal(&document); const auto settings = engine::makeNetworkSettings(policy);
+        CHECK(settings && settings->get_str(Settings::listen_interfaces) == "0.0.0.0:6881");
+        CHECK(settings->get_str(Settings::outgoing_interfaces).empty());
+        CHECK(document.serialize() == original);
+      }
+      auto dual = config({{"IPV6 Enable Support", integer(1)}});
+      const auto dualSettings = engine::makeNetworkSettings(normal(&dual));
+      CHECK(dualSettings && dualSettings->get_str(Settings::listen_interfaces) == "0.0.0.0:6881,[::]:6881"
+          && dualSettings->get_str(Settings::outgoing_interfaces).empty());
+      auto bothAny = config({{"IPV6 Enable Support", integer(1)}, {"Bind IP", bytes("0.0.0.0;::")}});
+      const auto bothSettings = engine::makeNetworkSettings(normal(&bothAny));
+      CHECK(bothSettings && bothSettings->get_str(Settings::outgoing_interfaces).empty());
+      auto strict = config({{"Bind IP", bytes("127.0.0.1;::1")}, {"IPV6 Enable Support", integer(1)}, {"Enforce Bind IP", integer(1)}});
+      const auto strictSettings = engine::makeNetworkSettings(normal(&strict));
+      CHECK(strictSettings && strictSettings->get_str(Settings::outgoing_interfaces) == "127.0.0.1,::1");
+      CHECK(strictSettings->get_str(Settings::listen_interfaces) == "127.0.0.1:6881,[::1]:6881");
+      for (const auto& bind : {"0.0.0.0;127.0.0.1", "0.0.0.0;::1", "::;127.0.0.1"}) {
+        auto mixed = config({{"Bind IP", bytes(bind)}, {"IPV6 Enable Support", integer(1)}}); const auto original = mixed.originalBytes();
+        const auto rejected = engine::readNetworkPolicy(&mixed, {engine::NetworkMode::Normal});
+        CHECK(!rejected && rejected.error().code == Code::Unsupported && rejected.error().field == "mixed wildcard and explicit Bind IP");
+        CHECK(mixed.serialize() == original);
+      }
+      auto enforced = config({{"Bind IP", bytes("0.0.0.0")}, {"Enforce Bind IP", integer(1)}});
+      CHECK(!engine::readNetworkPolicy(&enforced, {engine::NetworkMode::Normal}));
     });
     run("independent transport switches and unsupported split listeners", [] {
       auto document = config({{"TCP.Listen.Port.Enable", integer(0)}, {"peercontrol.udp.public.enable", integer(0)}});
@@ -150,6 +178,29 @@ int main() {
       CHECK(settings->get_bool(Settings::proxy_hostnames) && settings->get_bool(Settings::proxy_peer_connections)
           && settings->get_bool(Settings::proxy_tracker_connections));
       CHECK(!settings->get_bool(Settings::enable_incoming_tcp));
+    });
+    run("SOCKS4 configured USERID cannot be silently ignored", [] {
+      auto document = config({{"Proxy.Data.Enable", integer(1)}, {"Proxy.Data.SOCKS.version", bytes("V4")},
+          {"Proxy.Host", bytes("127.0.0.1")}, {"Proxy.Port", bytes("1080")},
+          {"Proxy.Username", bytes("<none>")}, {"peercontrol.udp.public.enable", integer(0)},
+          {"Server Enable UDP", integer(0)}, {"Peer Source Selection Default.DHT", integer(0)}});
+      const auto original = document.originalBytes();
+      auto policy = engine::readNetworkPolicy(&document, {engine::NetworkMode::Normal});
+      CHECK(policy && policy->proxy.kind == engine::NetworkProxyKind::Socks4 && policy->proxy.username.empty());
+      CHECK(!policy->proxy.remoteDns && !policy->incomingTcp && !policy->incomingUtp);
+      const auto settings = engine::makeNetworkSettings(*policy);
+      CHECK(settings && settings->get_int(Settings::proxy_type) == Settings::socks4
+          && settings->get_str(Settings::proxy_username).empty() && !settings->get_bool(Settings::proxy_hostnames));
+      CHECK(document.serialize() == original);
+      CHECK(document.replaceValue("Proxy.Username", bytes("literal-private-user")));
+      const auto rejectedPolicy = engine::readNetworkPolicy(&document, {engine::NetworkMode::Normal});
+      CHECK(!rejectedPolicy && rejectedPolicy.error().code == Code::Unsupported
+          && rejectedPolicy.error().field == "SOCKS4 USERID");
+      policy->proxy.username = "literal-private-user";
+      CHECK(!engine::validateNetworkPolicy(*policy) && !engine::makeNetworkSettings(*policy));
+      CHECK(rejectedPolicy.error().field.find("literal-private-user") == std::string::npos);
+      CHECK(document.replaceValue("Proxy.Data.SOCKS.version", bytes("V4a")));
+      CHECK(!engine::readNetworkPolicy(&document, {engine::NetworkMode::Normal}));
     });
     run("tracker-only HTTP proxy retains explicitly direct peers", [] {
       auto document = config({{"Enable.Proxy", integer(1)}, {"Proxy.Host", bytes("127.0.0.1")},

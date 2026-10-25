@@ -10,6 +10,8 @@ import tempfile
 
 C35 = "c35f1b0408508c019f002c438d70dd361a55be20286ded56711efd6bba2424e3"
 SELECTED = "d367afd6499859c5a57d66bddd352a977ff76c7fb76b5925302c2c9008c7ddbd"
+NEXT_MANIFEST = "3342ec8ae72ecafa4a1b887e664d0d066fffce4f7d864b0b130ca903be953a3a"
+NEXT_IMAGE = "b0e55bfbdc2be5dc2ebbefc953837d64c9e5151b0305332335071e37b6956937"
 INSTRUMENTED = {"3bb4f7666c002f4bdb0e303aebd235c6a39850f82813600c3a08a888f1a3f89d",
                 "60ac6edd933f028f63f67f5f567066aefe069cda0693fe7c987448412fd444a3"}
 
@@ -27,7 +29,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--driver", type=Path, required=True)
     parser.add_argument("--provider", type=Path, required=True)
-    parser.add_argument("--mode", choices=("source", "selected", "strict"), required=True)
+    parser.add_argument("--mode", choices=("source", "selected", "provider-next", "strict"), required=True)
+    parser.add_argument("--manifest", type=Path)
     parser.add_argument("--alternate", type=Path)
     parser.add_argument("--interposition-driver", type=Path)
     parser.add_argument("--preload")
@@ -41,6 +44,15 @@ def main():
         if (original_sha != SELECTED or provider.stat().st_size != 9072560
                 or not args.alternate or not args.interposition_driver or not args.preload):
             raise ValueError("Selected relocation requires exact d367 and existing rejection controls")
+    elif args.mode == "provider-next":
+        if (len(NEXT_MANIFEST) != 64 or not args.manifest or digest(args.manifest) != NEXT_MANIFEST
+                or original_sha != NEXT_IMAGE or provider.stat().st_size != 9085072
+                or not args.alternate or not args.interposition_driver or not args.preload):
+            raise ValueError("UNAPPROVED next provider or missing exact relocation rejection controls")
+        declared = json.loads(args.manifest.read_bytes())
+        if (Path(declared["artifact"]).resolve(strict=True) != provider
+                or declared["artifact_sha256"] != NEXT_IMAGE or declared["artifact_bytes"] != 9085072):
+            raise ValueError("Next-provider relocation input differs from the exact manifest")
     elif original_sha not in INSTRUMENTED:
         raise ValueError("Strict relocation test requires an exact retained instrumented image")
     root = Path(tempfile.mkdtemp(prefix="biglybtc-runtime-deploy-results-", dir="/tmp"))

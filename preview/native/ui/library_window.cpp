@@ -4,6 +4,7 @@
 #include "library_window.hpp"
 #include "options_dialog.hpp"
 #include "scheduler_dialog.hpp"
+#include "local_rating_dialog.hpp"
 #include "classic_filter.hpp"
 #include "classic_columns.hpp"
 #include "statistics_page.hpp"
@@ -336,6 +337,10 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     auto* item=torrent->addAction(operationNames[index]);item->setObjectName(operationIds[index]);item->setEnabled(false);
     fileOperationActions_[index]=item;connect(item,&QAction::triggered,this,[this,index]{openFileOperation(static_cast<FileOperation>(index));});
   }
+  localRatingAction_=torrent->addAction(tr("My rating…"));
+  localRatingAction_->setObjectName(QStringLiteral("classic-my-rating"));
+  localRatingAction_->setEnabled(false);
+  connect(localRatingAction_,&QAction::triggered,this,&LibraryWindow::openLocalRating);
   fileOperationActions_[0]->setShortcut(QKeySequence(QStringLiteral("Delete")));
   toolbar->addAction(fileOperationActions_[0]);
   createTorrentAction_=file->addAction(tr("Create Torrent…"));createTorrentAction_->setObjectName(QStringLiteral("classic-create-torrent"));
@@ -1035,6 +1040,9 @@ void LibraryWindow::beginColumnLayoutSession(quint64 session) {
   if (closing_ || session == 0 || session <= columnSession_) { return; }
   QPointer<LibraryWindow> guard(this);
   columnSession_ = session;
+  localRatingIdentity_.reset();localRatingLoading_=false;localRatingSaving_=false;
+  if(localRatingDialog_){localRatingDialog_->reject();if(!guard){return;}}
+  if(fileOperationSequence_){fileOperationSequence_->invalidateSession();if(!guard){return;}}
   activeFileOperation_.reset();activeTorrentCreation_.reset();
   if(fileOperationDialog_){const auto dialog=fileOperationDialog_;dialog->invalidateSession();if(!guard){return;}if(dialog){dialog->close();}if(!guard){return;}}
   if(torrentCreationDialog_){const auto dialog=torrentCreationDialog_;dialog->invalidateSession();if(!guard){return;}if(dialog){dialog->close();}if(!guard){return;}}
@@ -1353,12 +1361,13 @@ void LibraryWindow::updateActions() {
       && columnSaveRequest_ != std::numeric_limits<quint64>::max());
   reloadColumns_->setEnabled(!closing_ && columnSession_ != 0 && columnRequest_ != std::numeric_limits<quint64>::max());
   const auto fileTargets=selectedDownloadTargets();
-  const bool fileActionsAllowed=!closing_&&!busy_&&!offlinePreview_&&columnSession_&&fileTargets&&fileTargets->size()==1;
+  const bool fileActionsAllowed=!closing_&&!busy_&&!offlinePreview_&&columnSession_&&fileTargets&&!fileTargets->empty()&&fileTargets->size()<=MaximumFileOperationSequence;
   for(const auto& action:fileOperationActions_){if(action){action->setEnabled(fileActionsAllowed);}}
   if(createTorrentAction_){createTorrentAction_->setEnabled(!closing_&&!busy_&&!offlinePreview_&&columnSession_);}
   if (schedulerAction_) { schedulerAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }
   if (optionsAction_) { optionsAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }
   queueDownloadActions();
+  if(localRatingAction_){localRatingAction_->setEnabled(fileActionsAllowed&&fileTargets->size()==1);}
 }
 std::optional<DownloadTargets> LibraryWindow::selectedDownloadTargets() const {
   if (mainTabs_->currentWidget() != torrentsPage_) { return std::nullopt; }
@@ -1798,6 +1807,7 @@ void LibraryWindow::setPresentation(const Presentation& snapshot) {
   QPointer<LibraryWindow> guard(this);
   selectionChanged();
   if (guard) { updateCounts(); }
+  if(guard&&fileOperationSequence_){fileOperationSequence_->setPresentation(snapshot);}
 }
 void LibraryWindow::setTelemetry(const Telemetry& update) {
   QPointer<LibraryWindow> guard(this);
@@ -1850,6 +1860,7 @@ void LibraryWindow::setBusy(bool value) {
   if(intakeDialog_){intakeDialog_->setBusy(value);}if(!optionsGuard){return;}
   if(!value&&activeIntakePreview_){rejectTorrentIntake(*activeIntakePreview_);if(!optionsGuard){return;}}
   if(!value&&activeIntakeSubmission_){rejectTorrentIntakeSubmission(*activeIntakeSubmission_);if(!optionsGuard){return;}}
+  if(fileOperationSequence_){fileOperationSequence_->setBusy(value);}if(!optionsGuard){return;}
   if(fileOperationDialog_){fileOperationDialog_->setBusy(value);}if(!optionsGuard){return;}
   if(torrentCreationDialog_){torrentCreationDialog_->setBusy(value);}if(!optionsGuard){return;}
   if(!value&&activeFileOperation_&&fileOperationDialog_&&fileOperationDialog_->pending()){
@@ -1864,6 +1875,8 @@ void LibraryWindow::setBusy(bool value) {
   if (optionsDialog_) { optionsDialog_->setBusy(value); }
   if (!optionsGuard) { return; }
   if (!value) {
+    if(localRatingIdentity_&&localRatingLoading_){rejectLocalRatingRequest(*localRatingIdentity_);if(!optionsGuard){return;}}
+    if(localRatingIdentity_&&localRatingSaving_){LocalRatingSubmission unknown;unknown.identity=*localRatingIdentity_;rejectLocalRatingSave(unknown);if(!optionsGuard){return;}}
     if (activeSchedulerLoad_) { rejectSchedulerRequest(*activeSchedulerLoad_); }
     if (!optionsGuard) { return; }
     if (activeSchedulerSave_) { rejectSchedulerSave(*activeSchedulerSave_); }
@@ -1937,7 +1950,9 @@ void LibraryWindow::setBusy(bool value) {
 }
 void LibraryWindow::closeEvent(QCloseEvent* event) {
   QPointer<LibraryWindow> optionsGuard(this);
+  if(localRatingDialog_&&localRatingDialog_->isVisible()){localRatingDialog_->reject();if(!optionsGuard){return;}}
   if(intakeDialog_&&intakeDialog_->isVisible()&&!intakeDialog_->close()){event->ignore();return;}if(!optionsGuard){return;}
+  if(fileOperationSequence_&&!fileOperationSequence_->closeForOwner()){event->ignore();return;}if(!optionsGuard){return;}
   if(fileOperationDialog_&&fileOperationDialog_->isVisible()&&!fileOperationDialog_->close()){event->ignore();return;}if(!optionsGuard){return;}
   if(torrentCreationDialog_&&torrentCreationDialog_->isVisible()&&!torrentCreationDialog_->close()){event->ignore();return;}if(!optionsGuard){return;}
   if (schedulerDialog_ && schedulerDialog_->isVisible() && !schedulerDialog_->close()) { event->ignore(); return; }
@@ -1993,6 +2008,7 @@ void LibraryWindow::popup(QTableView* table, const QPoint& point) {
   menu->addSeparator();
   menu->addAction(startStop_.data());
   menu->addAction(pauseResume_.data());
+  if(localRatingAction_){menu->addAction(localRatingAction_);}
   for(const auto& action:fileOperationActions_){if(action){menu->addAction(action);}}
   menu->addSeparator();
   menu->addAction(continue_);
@@ -2007,6 +2023,8 @@ void LibraryWindow::popup(QTableView* table, const QPoint& point) {
   contextTarget_.reset();
   updateActions();
 }
+
+#include "local_rating_window.inc"
 
 void LibraryWindow::openOptions() {
   if (closing_ || !columnSession_) { return; }

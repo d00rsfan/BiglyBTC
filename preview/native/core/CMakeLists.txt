@@ -55,3 +55,10 @@ target_sources(biglybtc_core PRIVATE src/saved_speed_map.cpp src/passive_speed_m
 target_sources(biglybtc_core PRIVATE src/queue_policy.cpp)
 
 target_sources(biglybtc_core PRIVATE src/queue_slots.cpp)
+
+target_sources(biglybtc_core PRIVATE src/queue_file_priority.cpp)
+
+# Root merges into existing core/CMakeLists.txt.
+target_sources(biglybtc_core PRIVATE src/queue_download_probe.cpp)
+
+target_sources(biglybtc_core PRIVATE src/queue_rate_providers.cpp)

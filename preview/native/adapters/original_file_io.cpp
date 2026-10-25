@@ -188,7 +188,7 @@ std::expected<OriginalReadResult,Error> OriginalFileIo::read(std::uint64_t offse
   p.check();if(p.form.compact&&!p.expanded&&offset+output.size()>p.state.length){p.state.length=offset+output.size();p.dirty=true;}return result;
 });}
 std::expected<void,Error> OriginalFileIo::write(std::uint64_t offset,std::span<const std::byte> input){return guarded([&]()->std::expected<void,Error>{auto& p=*impl_;Impl::Call call(p);p.check();p.range(offset,input.size());const int flags=::fcntl(p.fd,F_GETFL);require(flags>=0&&(flags&O_ACCMODE)!=O_RDONLY,ErrorCode::Io,"Original payload is not writable");
-  struct Part{std::uint64_t logical,physical;std::size_t input,length;};std::vector<Part> parts;std::optional<State> next;std::optional<std::uint64_t> tailSource;std::size_t used=0;
+  struct Part{std::uint64_t logical,physical;std::size_t input,length;};std::vector<Part> parts;std::optional<State> next;std::optional<std::uint64_t> tailSource,tailNewPiece;std::optional<Part> eofRepair;std::size_t used=0;
   while(used<input.size()){
     const auto at=offset+used;std::uint64_t n=input.size()-used,physical=at;bool discard=false;
     if(p.form.compact&&!p.expanded){if(at<p.form.first){n=std::min(n,p.form.first-at);}else if(at<p.form.tailStart){n=std::min(n,p.form.tailStart-at);discard=true;}else{physical=p.form.first+at-p.form.tailStart;}}
@@ -199,7 +199,7 @@ std::expected<void,Error> OriginalFileIo::write(std::uint64_t offset,std::span<c
       if(static_cast<std::uint64_t>(slot)==p.form.count-1&&piece!=p.form.count-1&&p.state.map.back()>0){
         // The old tail remains readable until its copied preimage and new map
         // are durable. The final physical slot was not referenced by old map.
-        tailSource=static_cast<std::uint64_t>(p.state.map.back());next->map.back()=slot;
+        tailSource=static_cast<std::uint64_t>(p.state.map.back());tailNewPiece=piece;next->map.back()=slot;
         slot=static_cast<std::int32_t>(*tailSource);next->map[index]=slot;
       }
     }physical=p.physical(static_cast<std::uint64_t>(slot))+at-p.start(piece);}
@@ -210,10 +210,22 @@ std::expected<void,Error> OriginalFileIo::write(std::uint64_t offset,std::span<c
   if(tailSource){
     const auto eof=static_cast<std::uint64_t>(p.observed.st_size),source=p.physical(*tailSource),target=p.physical(p.form.count-1);
     availableTail=std::min(p.form.tail,eof>source?eof-source:0);
-    // Moving retained bytes across EOF must not make another old allocated
-    // piece's absent suffix appear present. Such a damaged/incomplete extent
-    // needs an explicit missing-data repair rather than this optimization.
-    if(availableTail&&target+availableTail>eof){for(std::size_t piece=0;piece<p.state.map.size();++piece){const auto slot=p.state.map[piece];if(slot>=0&&piece+1<p.state.map.size()){require(p.physical(static_cast<std::uint64_t>(slot))+p.size(piece)<=eof,ErrorCode::Conflict,"Tail allocation would hide another original piece's missing EOF bytes");}}}
+    // Java processes ascending logical fragments before allocating the later
+    // piece. Permit that same supplied-data repair, never a fabricated zero
+    // suffix exposed by extending EOF during the tail copy.
+    if(availableTail&&target+availableTail>eof){
+      for(std::size_t piece=0;piece+1<p.state.map.size();++piece){
+        const auto slot=p.state.map[piece];if(slot<0){continue;}
+        const auto start=p.physical(static_cast<std::uint64_t>(slot)),end=start+p.size(piece);
+        if(end<=eof){continue;}
+        const auto logical=p.start(piece)+(eof>=start?eof-start:0),count=end-eof;
+        require(!eofRepair&&tailNewPiece&&piece<*tailNewPiece&&start<=eof
+            &&static_cast<std::uint64_t>(slot)+1==p.state.next&&offset<=logical
+            &&logical-offset<=input.size()&&count<=input.size()-(logical-offset),
+            ErrorCode::Conflict,"Tail allocation would hide another original piece's missing EOF bytes");
+        eofRepair=Part{logical,eof,static_cast<std::size_t>(logical-offset),static_cast<std::size_t>(count)};
+      }
+    }
     scratch.resize(static_cast<std::size_t>(std::min<std::uint64_t>(availableTail,64*1024)));
     // Re-resolve every planned fragment after the allocation permutation;
     // a request may also contain a later fragment of the retained tail.
@@ -225,6 +237,16 @@ std::expected<void,Error> OriginalFileIo::write(std::uint64_t offset,std::span<c
   if(p.controls()&&!p.raw){p.sync();p.publish(p.state,p.kind);}
   if(tailSource){
     try{
+      if(eofRepair){
+        // Every extension begins at actual EOF and consists solely of caller
+        // bytes. A partial/error outcome cannot expose an invented old suffix.
+        std::size_t copied=0;
+        while(copied<eofRepair->length){
+          p.check();const auto count=std::min<std::size_t>(64*1024,eofRepair->length-copied);
+          p.pwriteAt(eofRepair->physical+copied,input.subspan(eofRepair->input+copied,count));copied+=count;
+        }
+        p.sync();
+      }
       const auto source=p.physical(*tailSource),target=p.physical(p.form.count-1);std::uint64_t copied=0;
       while(copied<availableTail){
         p.check();const auto count=static_cast<std::size_t>(std::min<std::uint64_t>(scratch.size(),availableTail-copied));

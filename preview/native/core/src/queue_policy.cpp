@@ -75,7 +75,9 @@ void validatePolicy(const QueuePolicy& p) {
       ||p.timedMinimumWithPeersSeconds<0||p.timedMinimumWithPeersSeconds>MaxSeconds
       ||p.timedMaximumWithPeersSeconds<0||p.timedMaximumWithPeersSeconds>MaxSeconds
       ||p.firstPrioritySeedMinutes<0||p.firstPrioritySeedMinutes>Max/60
-      ||p.firstPriorityActiveMinutes<0||p.firstPriorityActiveMinutes>Max/60){fail(Code::InvalidConfiguration,"queue duration");}
+      ||p.firstPriorityActiveMinutes<0||p.firstPriorityActiveMinutes>Max/60
+      ||p.downloadProbeSeconds<0||p.downloadProbeSeconds>MaxSeconds
+      ||p.downloadProbeRetestMinutes<0||p.downloadProbeRetestMinutes>Max/60000){fail(Code::InvalidConfiguration,"queue duration");}
 }
 bool absentOrNonnegative(const std::optional<std::int64_t>& x){return !x||*x>=0;}
 void validateFacts(std::span<const QueueTorrentFacts> facts,const QueueContext& c) {
@@ -85,7 +87,7 @@ void validateFacts(std::span<const QueueTorrentFacts> facts,const QueueContext& 
       ||!absentOrNonnegative(c.downloadBytesPerSecond)||!absentOrNonnegative(c.smoothedUploadBytesPerSecond)){
     fail(Code::InvalidFacts,"queue clock/rates");
   }
-  std::set<std::uint64_t> tokens;
+  std::set<std::uint64_t> tokens; unsigned activeProbes=0;
   for(const auto& f:facts){
     if(!f.token||!f.position||f.position>static_cast<std::uint32_t>(Max)||!tokens.insert(f.token).second||static_cast<unsigned>(f.state)>8){fail(Code::InvalidFacts,"queue identity/state");}
     if((f.shareRatio&&*f.shareRatio< -1)||(f.minimumShareRatio&&*f.minimumShareRatio<0)
@@ -104,6 +106,14 @@ void validateFacts(std::span<const QueueTorrentFacts> facts,const QueueContext& 
     }
     if(m.timedMinimumMillis<0){fail(Code::InvalidFacts,"queue timed minimum");}
     if(f.filePriority&&f.filePriority->size()!=4){fail(Code::InvalidFacts,"file priority stats");}
+    if(f.downloadProbe){const auto& probe=*f.downloadProbe;
+      if(probe.token!=f.token||static_cast<unsigned>(probe.scope)>2
+          ||(probe.bytesPerSecond&&*probe.bytesPerSecond<0)||(probe.etaSeconds&&*probe.etaSeconds<0)
+          ||(probe.active&&(++activeProbes>1||f.complete||f.forceStart||f.manuallyPaused||!f.controllable||f.moving
+              ||(f.state!=QueueTorrentState::Queued&&f.state!=QueueTorrentState::Downloading)))){
+        fail(Code::InvalidFacts,"download probe identity/state");
+      }
+    }
     if(f.remainingBytes&&f.sizeBytes&&*f.remainingBytes>*f.sizeBytes){fail(Code::InvalidFacts,"remaining bytes");}
     if(f.secondsDownloading&&f.secondsSeeding&&*f.secondsDownloading>std::numeric_limits<std::int64_t>::max()-*f.secondsSeeding){
       fail(Code::InvalidFacts,"elapsed total");
@@ -280,6 +290,9 @@ std::expected<QueuePolicy,QueuePolicyError> readQueuePolicy(const Document* docu
     INT(maximumActiveWhenSeeding,"StartStopManager_iMaxActiveTorrentsWhenSeeding");
     p.rankMode=static_cast<QueueRankMode>(r.integer("StartStopManager_iRankType",1,4));
     p.downloadOrder=static_cast<QueueDownloadOrder>(r.integer("StartStopManager_Downloading_iSortType",0,8));
+    p.downloadProbeSeconds=r.integer("StartStopManager_Downloading_iTestTimeSecs",120,MaxSeconds);
+    p.downloadProbeRetestMinutes=r.integer("StartStopManager_Downloading_iRetestTimeMins",30,Max/60000);
+    BOOL(downloadProbeActive,"StartStopManager_Downloading_bTestActive");
     BOOL(preferLargerSwarms,"StartStopManager_bPreferLargerSwarms");
     INT(seedCountFallback,"StartStopManager_iRankTypeSeedFallback");INT(minimumPeersToBoostNoSeeds,"StartStopManager_iMinPeersToBoostNoSeeds");
     INT(minimumDownloadBytesPerSecond,"StartStopManager_iMinSpeedForActiveDL");INT(minimumSeedBytesPerSecond,"StartStopManager_iMinSpeedForActiveSeeding");
@@ -334,7 +347,19 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
     std::vector<bool> fixed(facts.size(),false);
     std::vector<std::size_t> order(facts.size());std::iota(order.begin(),order.end(),std::size_t{0});
     if(p.lightSeedingEnabled&&p.reservedLightSeedSlots>0){plan.unavailableInputs|=4;}
-    if(p.downloadOrder==QueueDownloadOrder::Speed||p.downloadOrder==QueueDownloadOrder::Eta){plan.unavailableInputs|=16;}
+    const bool probing=p.downloadOrder==QueueDownloadOrder::Speed||p.downloadOrder==QueueDownloadOrder::Eta;
+    bool activeProbe=false;
+    if(probing){
+      if(c.downloadProbeUnavailable){plan.unavailableInputs|=16;}
+      for(const auto& f:facts){
+        if(f.complete||f.manuallyPaused||f.forceStart||!f.controllable||f.moving){continue;}
+        if(f.downloadProbe){
+          activeProbe|=f.downloadProbe->active;
+          if(f.downloadProbe->scope==QueueProbeScope::NativePayload
+              ||(p.downloadOrder==QueueDownloadOrder::Eta&&!f.downloadProbe->etaSeconds)){plan.unavailableInputs|=16;}
+        }else{plan.unavailableInputs|=16;}
+      }
+    }
     bool seedsMayStart=p.rankMode==QueueRankMode::None||p.rankMode==QueueRankMode::Timed||c.nowMillis-c.ownerStartedMillis>90000;
     bool allScraped=true;
     std::int64_t forceSeeds=0,forceSeedsNonFP=0,firstSeeds=0,heldSeeds=0,preparedDownloads=0;
@@ -407,6 +432,20 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
         if(c.nowMillis-c.ownerStartedMillis>=30000){
           int compare=0;
           switch(p.downloadOrder){
+            case QueueDownloadOrder::Speed:case QueueDownloadOrder::Eta:{
+              const bool ax=x.downloadProbe&&x.downloadProbe->active,ay=y.downloadProbe&&y.downloadProbe->active;
+              if(ax!=ay){compare=ax?-1:1;break;}
+              if(p.downloadOrder==QueueDownloadOrder::Speed){
+                const auto vx=x.downloadProbe?x.downloadProbe->bytesPerSecond:std::optional<std::int32_t>{};
+                const auto vy=y.downloadProbe?y.downloadProbe->bytesPerSecond:std::optional<std::int32_t>{};
+                if(vx.value_or(-1)!=vy.value_or(-1)){compare=vx.value_or(-1)>vy.value_or(-1)?-1:1;}
+              }else{
+                const auto vx=x.downloadProbe?x.downloadProbe->etaSeconds:std::optional<std::int64_t>{};
+                const auto vy=y.downloadProbe?y.downloadProbe->etaSeconds:std::optional<std::int64_t>{};
+                if(vx.value_or(-1)!=vy.value_or(-1)){compare=vx.value_or(-1)<vy.value_or(-1)?-1:1;}
+              }
+              break;
+            }
             case QueueDownloadOrder::Seeds:case QueueDownloadOrder::ReverseSeeds:
               if(swarms[a].observed&&swarms[b].observed){
                 const auto sx=swarms[a].seeds,sy=swarms[b].seeds;
@@ -423,7 +462,7 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
                 for(const auto n:{1U,3U}){if((*x.filePriority)[n]!=(*y.filePriority)[n]){compare=(*x.filePriority)[n]>(*y.filePriority)[n]?-1:1;break;}}
               }else{plan.unavailableInputs|=2;if(x.filePriority.has_value()!=y.filePriority.has_value()){compare=x.filePriority?-1:1;}}
               break;
-            default:break; // Dynamic original speed/ETA probing is unavailable.
+            default:break;
           }
           if(compare){return compare<0;}
         }
@@ -449,7 +488,8 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
     }
     const auto infinity=static_cast<std::int64_t>(MaximumQueueTorrents)*4;
     const auto minDownloads=p.linkMinimumDownloads?p.maximumDownloads:p.minimumDownloads;
-    auto dlLimit=p.maximumDownloads==0?infinity:static_cast<std::int64_t>(p.maximumDownloads);
+    const auto configuredDownloads=static_cast<std::int64_t>(p.maximumDownloads)+(activeProbe?1:0);
+    auto dlLimit=p.maximumDownloads==0?infinity:configuredDownloads;
     if(maximumActive>0&&p.maximumDownloads>0){dlLimit=std::min(dlLimit,std::max<std::int64_t>(0,maximumActive-firstSeeds-forceSeedsNonFP));}
     dlLimit=std::max(dlLimit,static_cast<std::int64_t>(minDownloads));
     auto downloads=preparedDownloads;

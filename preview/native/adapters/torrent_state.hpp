@@ -30,6 +30,8 @@ private:
   std::optional<std::string> original_;
   bool backup_;
   bool prepared_ = false;
+  bool attributesOnly_ = false;
+  std::optional<std::string> attributeCache_;
   std::uint64_t device_;
   std::uint64_t inode_;
 };
@@ -43,6 +45,10 @@ public:
   TorrentStateStore& operator=(const TorrentStateStore&) = delete;
   ~TorrentStateStore();
   std::expected<TorrentStateFile, Error> load(const ProfileLease& lease, const core::TorrentHash& hash) const;
+  // Read-only authoritative cached-attribute projection. Saving this snapshot
+  // changes only attributes, retaining primary resume/info bytes. No payload IO.
+  std::expected<TorrentStateFile, Error> loadAttributes(const ProfileLease&, const core::TorrentHash&) const;
+  std::expected<void, Error> saveAttributes(const ProfileLease&, TorrentStateFile&, std::string encodedAttributes) const;
   // Hydrate/remove this entry from the global cache, then durably mark all its
   // pieces for recheck before permitting payload allocation/writes.
   std::expected<TorrentStateFile, Error> beginUpdate(const ProfileLease& lease, const core::TorrentHash& hash) const;

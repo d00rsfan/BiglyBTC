@@ -2,6 +2,7 @@
 #include "biglybtc/library.hpp"
 #include "biglybtc/queue_policy.hpp"
 #include "profile.hpp"
+#include <array>
 #include <cstdint>
 #include <optional>
 #include <string>
@@ -23,6 +24,10 @@ struct ManagedDownloadStatus {
   bool firstPriority = false;
   std::uint32_t unavailableQueueInputs = 0;
   bool forceStart = false, manuallyPaused = false;
+  // Last accepted checked original-file observation, never a persisted guess.
+  std::optional<std::array<std::int32_t,4>> queueFilePriority{};
+  // Optional exact last-accepted admission prefix; not a final/retired receipt.
+  std::optional<std::int64_t> combinedReceived{}, combinedSent{};
 };
 enum class MagnetPhase { Resolving, Retiring, Imported, Failed, Cancelled };
 struct PendingMagnetStatus {

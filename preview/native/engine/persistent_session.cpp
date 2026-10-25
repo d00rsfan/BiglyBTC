@@ -13,6 +13,7 @@
 #include <libtorrent/write_resume_data.hpp>
 #include "network_policy.hpp"
 #include "network_binding.hpp"
+#include "biglybtc/queue_rate_providers.hpp"
 #include <libtorrent/torrent_status.hpp>
 #include <map>
 
@@ -70,6 +71,9 @@ struct PersistentSession::Impl {
     bool manualPaused = false, forceStart = false, stop = false;
     bool policyHeld = false, completedTransition = false, completionHandled = false;
     core::QueueActivityMemory activity;
+    std::optional<core::QueueFilePriorityStats> filePriority;
+    std::optional<std::int64_t> queueObservedMillis;
+    std::optional<core::QueueProbeScope> probeScope;
     std::optional<Clock::time_point> runningSince, seedingSince;
     std::optional<lt::time_point> trackerRunningSince, trackerSeedingSince;
     std::int64_t secondsDownloading = 0, secondsSeeding = 0;
@@ -113,6 +117,10 @@ struct PersistentSession::Impl {
   std::optional<NetworkBinding> networkBinding;
   std::optional<LiveQueueLimits> liveQueueLimits;
   std::optional<core::QueuePolicy> queuePolicy;
+  core::QueueDownloadProbes downloadProbes;
+  core::QueueGlobalReceiveAverage queueGlobalAverage;
+  std::optional<std::int32_t> queueGlobalReceiveKiB;
+  std::optional<std::int64_t> queueGlobalObservedMillis;
   bool appliedSeedingOnly = false;
   struct Magnet {
     std::unique_ptr<OperationToken> token;
@@ -260,6 +268,18 @@ struct PersistentSession::Impl {
     }
     ++responses;
     lastStatistics = *accepted; // Fixed primitive retention precedes all sinks.
+    // Optional queue arithmetic consumes this SAME accepted combined peer sample.
+    // It never posts/pops, reads a clock, changes the counter seal, or substitutes
+    // an instantaneous payload rate. OwnerCombined is explicitly native scope.
+    if (origin <= std::numeric_limits<std::int64_t>::max() - now) {
+      const auto stamp = (origin + now) / 1000000;
+      queueGlobalReceiveKiB = queueGlobalAverage.observe(
+          {{identity.engineEpoch, responses, stamp}, core::QueueRateScope::OwnerCombined, value.received});
+      queueGlobalObservedMillis = stamp;
+    } else {
+      queueGlobalAverage = {};
+      queueGlobalReceiveKiB.reset(); queueGlobalObservedMillis.reset();
+    }
     // Optional copying cannot alter retained peer counters or their response/fence state.
     // Optional catalog copies run at 1Hz; essential peer accounting above
     // retains every accepted response at its independent higher cadence.
@@ -568,14 +588,24 @@ struct PersistentSession::Impl {
   void sampleManaged(Managed& value, bool pieces = false) {
     if (!value.handle.is_valid() || value.removing) { return; }
     const bool originalProgress=value.storage.originalProgressRequiresPieces();
-    const bool needPieces=pieces||originalProgress;
+    const bool priorityObservation=queuePolicy&&queuePolicy->downloadOrder==core::QueueDownloadOrder::FilePriority;
+    const bool needPieces=pieces||originalProgress||priorityObservation;
+    value.filePriority.reset();value.status.queueFilePriority.reset();
+    value.status.combinedReceived.reset();value.status.combinedSent.reset();
     lt::torrent_status sample;
     detail::ManagedPayloadCounters::Sample actual;
     for (int attempt = 0; attempt < 4; ++attempt) {
       const auto epoch = value.payloadCounters->epoch();
       if (!epoch) { break; }
       sample = value.handle.status(needPieces ? lt::torrent_handle::query_pieces : lt::status_flags_t{});
-      actual = value.payloadCounters->combine(*epoch, sample.total_payload_download, sample.total_payload_upload);
+      std::optional<detail::ManagedPayloadCounters::Protocol> protocol;
+      if(sample.total_payload_download>=0&&sample.total_payload_upload>=0
+          &&sample.total_download>=sample.total_payload_download&&sample.total_upload>=sample.total_payload_upload){
+        // Exact same accepted synchronous status and reset epoch, no extra call.
+        protocol=detail::ManagedPayloadCounters::Protocol{sample.total_download-sample.total_payload_download,
+            sample.total_upload-sample.total_payload_upload};
+      }
+      actual = value.payloadCounters->combine(*epoch, sample.total_payload_download, sample.total_payload_upload, protocol);
       if (actual.state != detail::ManagedPayloadCounters::Read::Retry) { break; }
     }
     if (actual.state != detail::ManagedPayloadCounters::Read::Accepted) {
@@ -590,6 +620,8 @@ struct PersistentSession::Impl {
     value.status.bytes = value.storage.originalBytes();
     value.status.received = actual.received;
     value.status.sent = actual.sent;
+    value.status.combinedReceived=actual.combinedReceived;value.status.combinedSent=actual.combinedSent;
+    if(!value.probeScope){value.probeScope=actual.combinedReceived?core::QueueProbeScope::NativeCombined:core::QueueProbeScope::NativePayload;}
     value.status.downloadRate = sample.download_payload_rate;
     value.status.uploadRate = sample.upload_payload_rate;
     value.status.pieces = sample.num_pieces;
@@ -597,6 +629,7 @@ struct PersistentSession::Impl {
     value.badPayloadBytes = std::max<std::int64_t>(0, sample.total_failed_bytes)
         + std::max<std::int64_t>(0, sample.total_redundant_bytes);
     const auto now = Clock::now();
+    value.queueObservedMillis=std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
     const bool transferring = !(sample.flags & lt::torrent_flags::paused)
         && sample.state != lt::torrent_status::checking_files
         && sample.state != lt::torrent_status::checking_resume_data && !value.stop;
@@ -630,6 +663,10 @@ struct PersistentSession::Impl {
       for (int i = 0; i < sample.pieces.size() && i < value.status.totalPieces; ++i) {
         value.verified[static_cast<std::size_t>(i)] = sample.pieces[lt::piece_index_t{i}] ? 1 : 0;
       }
+    }
+    if(priorityObservation&&value.status.checked&&sample.pieces.size()==value.status.totalPieces) {
+      const auto priority=value.storage.filePriorityStatistics(value.verified);
+      if(priority) {value.filePriority=*priority;value.status.queueFilePriority=*priority;} // Missing/malformed observation grants no invented stats.
     }
     if(originalProgress) {
       const auto projected=value.storage.verifiedOriginalBytes(value.verified);
@@ -724,6 +761,7 @@ struct PersistentSession::Impl {
       item.sizeBytes = value.status.bytes; item.remainingBytes = value.remainingBytes;
       if (value.status.downloadRate > 0) { item.etaSeconds = value.remainingBytes / value.status.downloadRate; }
       item.activity = value.activity;
+      if(value.filePriority) {item.filePriority.emplace(value.filePriority->begin(),value.filePriority->end());}
       upload += value.status.uploadRate; download += value.status.downloadRate;
       any = true; onlySeeds = onlySeeds && item.complete;
       targets.emplace(item.token, entry.get());
@@ -731,6 +769,48 @@ struct PersistentSession::Impl {
     }
     context.uploadBytesPerSecond = upload; context.downloadBytesPerSecond = download;
     context.seedingOnly = any && onlySeeds && !magnetActive();
+    core::QueueProbeConfig probeConfig;
+    probeConfig.enabled=queuePolicy->downloadOrder==core::QueueDownloadOrder::Speed
+        ||queuePolicy->downloadOrder==core::QueueDownloadOrder::Eta;
+    probeConfig.testSeconds=queuePolicy->downloadProbeSeconds;
+    probeConfig.retestMinutes=queuePolicy->downloadProbeRetestMinutes;
+    probeConfig.testActive=queuePolicy->downloadProbeActive;
+    if(probeConfig.enabled){
+      std::vector<core::QueueProbeInput> probeInputs;probeInputs.reserve(facts.size());
+      for(const auto& fact:facts){
+        const auto& value=*targets.at(fact.token);
+        core::QueueProbeInput input;input.token=fact.token;input.position=fact.position;
+        if(!fact.complete&&!fact.forceStart&&!fact.manuallyPaused&&fact.controllable&&!fact.moving){
+          if(fact.state==core::QueueTorrentState::Queued){input.state=core::QueueProbeState::Queued;}
+          else if(fact.state==core::QueueTorrentState::Downloading){input.state=core::QueueProbeState::Downloading;}
+        }
+        input.scope=value.probeScope.value_or(core::QueueProbeScope::NativePayload);
+        if(value.queueObservedMillis){
+          if(input.scope==core::QueueProbeScope::NativeCombined){
+            if(value.status.combinedReceived){input.receivedBytes=value.status.combinedReceived;input.observedMillis=value.queueObservedMillis;}
+            else if(input.state!=core::QueueProbeState::Other){context.downloadProbeUnavailable=true;}
+          }else{input.receivedBytes=value.status.received;input.observedMillis=value.queueObservedMillis;}
+        }
+        // The existing instant remaining/rate ETA is NOT original smoothed ETA.
+        probeInputs.push_back(input);
+      }
+      const auto limit=context.downloadLimitBytesPerSecond;
+      core::QueueProbeContext probeContext{context.nowMillis,context.ownerStartedMillis,
+          limit/1024+(limit%1024!=0),{}};
+      // Retain the source1500ms/ten-slot arithmetic over actual owner observations.
+      // Variable native delivery is not original timer/global-scope parity.
+      // Missing, failed, future or stale input leaves the capped gate unavailable.
+      if (!counterFailure && queueGlobalReceiveKiB && queueGlobalObservedMillis
+          && context.nowMillis >= *queueGlobalObservedMillis
+          && context.nowMillis - *queueGlobalObservedMillis <= core::QueueGlobalReceiveAverage::MaximumGapMillis) {
+        probeContext.averagedDownloadKiB = *queueGlobalReceiveKiB;
+      }
+      const auto probes=downloadProbes.observe(probeConfig,probeInputs,probeContext);
+      if(probes){
+        context.downloadProbeUnavailable=context.downloadProbeUnavailable||probes->unavailable;
+        for(std::size_t i=0;i<facts.size();++i){facts[i].downloadProbe=probes->observations[i];}
+      }else{downloadProbes.cancel();context.downloadProbeUnavailable=true;}
+    }else{downloadProbes.cancel();}
     auto plan = core::evaluateQueue(*queuePolicy, facts, context);
     if (!plan) {
       for (auto& [key, value] : managed) {

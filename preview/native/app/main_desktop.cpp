@@ -1,3 +1,4 @@
+#include <QPointer>
 #include "library_window.hpp"
 #include "session_bridge.hpp"
 #include "country_provider_binding.hpp"
@@ -86,6 +87,16 @@ int main(int argc, char** argv) {
     biglybtc::app::SessionBridge bridge(nullptr, std::move(countryFactory), {}, std::move(schedulerFactory));
     using Window = biglybtc::ui::LibraryWindow;
     using Bridge = biglybtc::app::SessionBridge;
+    QObject::connect(&bridge,&Bridge::localRatingReady,&window,&Window::setLocalRating);
+    QObject::connect(&bridge,&Bridge::localRatingSaved,&window,&Window::setLocalRatingSaved);
+    QObject::connect(&window,&Window::localRatingRequested,&bridge,
+      [owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::LocalRatingRequest request){
+        if(owner&&view&&!owner->loadLocalRating(request)&&view){view->rejectLocalRatingRequest(request);}
+      });
+    QObject::connect(&window,&Window::localRatingSaveRequested,&bridge,
+      [owner=QPointer<Bridge>(&bridge),view=QPointer<Window>(&window)](biglybtc::ui::LocalRatingSubmission value){
+        if(owner&&view&&!owner->saveLocalRating(value)&&view){view->rejectLocalRatingSave(value);}
+      });
     QObject::connect(&bridge,&Bridge::schedulerReady,&window,&Window::setScheduler);
     QObject::connect(&bridge,&Bridge::schedulerSaved,&window,&Window::setSchedulerSaved);
     QObject::connect(&window,&Window::schedulerRequested,&bridge,[&](biglybtc::ui::SchedulerRequest request){

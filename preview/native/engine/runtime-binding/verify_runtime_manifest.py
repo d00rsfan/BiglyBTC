@@ -17,6 +17,7 @@ RECORD_SHA = "436931d4c6b87274c60b89877afedc19e06485bc4f04d120a3ab3e1889abfc66"
 UPSTREAM = "740a0b9aeabe00e762cc0efe4a0f27593db2550b"
 # Replaced with ONE exact actual manifest SHA only after a separately reviewed build.
 PROVIDER_MANIFEST_SHA = "e74def09b2257a266786b8ddb116382d300716687bf26bbe57072f5ff90e8737"
+NEXT_PROVIDER_MANIFEST_SHA = "3342ec8ae72ecafa4a1b887e664d0d066fffce4f7d864b0b130ca903be953a3a"
 MANIFEST_KEYS = {"schema", "purpose", "causal_qualified", "source_build_record",
                  "source_build_record_sha256", "source_root", "build_root",
                  "install_root", "artifact", "artifact_sha256", "artifact_bytes"}
@@ -70,6 +71,19 @@ def verify_map(record, key, root, count):
 def inspect(manifest_path, imported_library, imported_include):
     manifest_path = regular(manifest_path)
     manifest_sha = digest(manifest_path)
+    # Separate exact next-provider proposal. Placeholder cannot admit a digest.
+    if manifest_sha == NEXT_PROVIDER_MANIFEST_SHA:
+        import importlib.util
+        import sys
+        from types import SimpleNamespace
+        sys.dont_write_bytecode = True
+        spec = importlib.util.spec_from_file_location("biglybtc_next_provider_runtime",
+            Path(__file__).with_name("verify_provider_next_runtime.py"))
+        provider = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(provider)
+        common = SimpleNamespace(fail=fail, digest=digest, regular=regular,
+            canonical_directory=canonical_directory, verify_map=verify_map, MANIFEST_KEYS=MANIFEST_KEYS)
+        return provider.inspect(manifest_path, imported_library, imported_include, common)
     # Additional exact provider lane. This template cannot admit any candidate.
     if manifest_sha == PROVIDER_MANIFEST_SHA:
         import importlib.util
@@ -197,6 +211,14 @@ def main():
               "}\n")
     # All validation precedes generated outputs. CMake stops on any exception.
     args.header.write_text(header)
+    if manifest_sha == NEXT_PROVIDER_MANIFEST_SHA:
+        args.receipt.write_text(json.dumps({"manifest_sha256": manifest_sha,
+            "artifact_sha256": manifest["artifact_sha256"], "artifact": manifest["artifact"],
+            "source_files": 451, "full_source_files": 1074, "build_rules": 13,
+            "bundled_inputs": 16, "installed_files": 285, "sdk_headers": 276, "build_files": 4,
+            "causal_qualified": False, "purpose": "source-bound-qualification-only",
+            "provider_counter_swarm_socks_candidate": True}, indent=2) + "\n")
+        return
     if manifest_sha == PROVIDER_MANIFEST_SHA:
         args.receipt.write_text(json.dumps({"manifest_sha256": manifest_sha,
             "artifact_sha256": manifest["artifact_sha256"], "artifact": manifest["artifact"],

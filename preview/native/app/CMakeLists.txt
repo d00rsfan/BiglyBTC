@@ -124,3 +124,21 @@ if(BIGLYBTC_DESKTOP)
   install(FILES "${biglybtc_scheduler_source}/LICENSE" "${biglybtc_scheduler_source}/NOTICE.md"
     "${biglybtc_scheduler_source}/SOURCE_PROVENANCE.json" DESTINATION share/doc/biglybtc-experimental/SpeedScheduler)
 endif()
+
+if(BIGLYBTC_DESKTOP)
+  # Root adoption fragment; no existing CMake file is overwritten by this capsule.
+  # Include after profile/plugin/UI targets are declared in a desktop build.
+  find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+  add_library(biglybtc_local_rating_profile STATIC
+    "${PROJECT_SOURCE_DIR}/adapters/local_rating.cpp")
+  target_include_directories(biglybtc_local_rating_profile PUBLIC "${PROJECT_SOURCE_DIR}/adapters")
+  target_link_libraries(biglybtc_local_rating_profile PUBLIC biglybtc_profile biglybtc_rating_data PRIVATE OpenSSL::Crypto)
+  target_compile_features(biglybtc_local_rating_profile PUBLIC cxx_std_23)
+  target_compile_options(biglybtc_local_rating_profile PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+  # Adopt after the rating64e Targets.cmake library/UI sources and bulk d569 files.
+  if(NOT TARGET biglybtc_local_rating_profile)
+    message(FATAL_ERROR "Adopt the exact local rating host library before wiring")
+  endif()
+  target_link_libraries(biglybtc_desktop_host PRIVATE biglybtc_local_rating_profile)
+endif()

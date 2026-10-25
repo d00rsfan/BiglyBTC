@@ -2,6 +2,7 @@
 
 #include "biglybtc/bencode.hpp"
 #include "biglybtc/queue_slots.hpp"
+#include "biglybtc/queue_download_probe.hpp"
 
 #include <cstdint>
 #include <expected>
@@ -47,6 +48,9 @@ struct QueuePolicy {
   // Flexible slots are actual global transition headroom, not a larger quota.
   bool lightSeedingEnabled = true;
   std::int32_t reservedLightSeedSlots = 4, flexibleSeedSlots = 5;
+  // Original ordinary speed/ETA test controls; native payload scope is explicit.
+  std::int32_t downloadProbeSeconds = 120, downloadProbeRetestMinutes = 30;
+  bool downloadProbeActive = false;
   bool operator==(const QueuePolicy&) const = default;
 };
 enum class QueuePolicyErrorCode { InvalidConfiguration, InvalidFacts, Limit, Memory, Unsupported };
@@ -89,6 +93,7 @@ struct QueueTorrentFacts {
   std::optional<std::vector<std::int64_t>> filePriority;
   std::int32_t staleRankOffset = 0;
   QueueActivityMemory activity;
+  std::optional<QueueProbeObservation> downloadProbe{};
 };
 struct QueueContext {
   std::int64_t nowMillis = 0, ownerStartedMillis = 0;
@@ -96,6 +101,7 @@ struct QueueContext {
   std::optional<std::int64_t> uploadBytesPerSecond, downloadBytesPerSecond;
   std::optional<std::int64_t> smoothedUploadBytesPerSecond;
   std::int64_t uploadLimitBytesPerSecond = 0, downloadLimitBytesPerSecond = 0;
+  bool downloadProbeUnavailable = false;
 };
 enum class QueueAction { Preserve, Run, Queue };
 enum class QueueReason {
@@ -118,7 +124,8 @@ struct QueuePlan {
   std::vector<QueueDecision> decisions; // Input order; stable tokens bind effects.
   // Provider facts missing: effects remain conservative, diagnostic bits nonzero.
   // bit0 unknown swarm, bit1 missing ratio/time/rate, bit2 light slots unavailable,
-  // bit3 disk latency unavailable, bit4 dynamic speed/ETA probe unavailable.
+  // bit3 disk latency unavailable; bit4 missing probe/ETA/combined-byte or
+  // configured-bandwidth smoothing inputs (payload-scoped probes stay explicit).
   std::uint32_t unavailableInputs = 0;
   std::optional<QueueSlotBudget> seedSlots; // Last planned current/global guard; no synthetic light owners.
 };

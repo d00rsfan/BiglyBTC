@@ -63,8 +63,9 @@ public:
   // New slots are data-synced before atomic map publication. A final-slot
   // allocation first preserves a previously allocated short tail in the new
   // slot and publishes that map before reusing its old slot for caller data.
-  // Missing tail bytes stay missing; another pre-existing EOF-short mapped
-  // piece is refused when this move would hide its missing suffix.
+  // Missing tail bytes stay missing. A preceding highest allocated EOF-short
+  // piece is repaired first only when this same ascending write supplies its
+  // entire missing suffix; otherwise hiding that suffix is refused unchanged.
   // On uncertain publisher failure, reload actual control and reopen first.
   std::expected<void,Error> recover();
   // After exact engine retirement and actual full-file verification only.

@@ -1,5 +1,6 @@
 #include "persistent_session.hpp"
 #include "library_commands.hpp"
+#include "file_policy_commands.hpp"
 #include "owned_engine_fixture.hpp"
 
 #include <QtTest>
@@ -233,6 +234,56 @@ private slots:
     QCOMPARE(integer(finalRow,"forceStart"),std::int64_t{0});
     QVERIFY(finalRow.find("opaque.queue"));
     QCOMPARE(encoded(*finalRow.find("opaque.queue")),encoded(*oldRow.find("opaque.queue")));QVERIFY(fixture.intact());
+  }
+  void actualOriginalFilePriorityProviderPreservesStartupAndManualHold() {
+    test::OwnedEngineFixture single(false,true),multi(true,true);
+    QTRY_VERIFY_WITH_TIMEOUT(single.ready()&&multi.ready(),30000);
+    merge(single,multi);
+    edit(single,*single.hash,{{"position","i2e"},{"opaque.priority","li7e4:keepe"}});
+    edit(single,*multi.hash,{{"position","i1e"},{"opaque.priority","li9e4:keepe"}});
+    auto lease=held(single);
+    const std::array<compat::FilePolicy,1> normal{{{false,0}}};
+    const std::array<compat::FilePolicy,2> high{{{false,2},{false,2}}};
+    QVERIFY(storage::setFilePolicies(lease,*single.hash,normal));
+    QVERIFY(storage::setFilePolicies(lease,*multi.hash,high));
+    auto service=owner();auto settings=policy(1,1);settings.downloadOrder=core::QueueDownloadOrder::FilePriority;
+    QVERIFY(service->configureQueuePolicy(settings));
+    // Original sorting waits 30 seconds. Exercise the actual observation
+    // provider and manual hold without sleeping or bypassing that gate; the
+    // pure test proves priority overrides position after the exact boundary.
+    QVERIFY(service->startManaged(lease,{.hash=*multi.hash,.ownedLoopbackPeerPort=multi.port()}));
+    QVERIFY(service->startManaged(lease,{.hash=*single.hash,.ownedLoopbackPeerPort=single.port()}));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{
+      const auto poll=service->poll();const auto a=status(*service,*single.hash),b=status(*service,*multi.hash);
+      return poll&&a&&b&&!a->failure&&!b->failure&&a->checked&&b->checked
+          &&a->queueFilePriority&&b->queueFilePriority
+          &&(*a->queueFilePriority)[0]==0&&(*a->queueFilePriority)[1]==0
+          &&(*a->queueFilePriority)[2]==0&&(*a->queueFilePriority)[3]==0
+          &&(*b->queueFilePriority)[0]==2&&(*b->queueFilePriority)[1]==2
+          &&(*b->queueFilePriority)[2]==4&&(*b->queueFilePriority)[3]>=2
+          &&a->phase==Phase::Queued&&b->phase==Phase::Downloading&&b->received>0;
+    })(),30000);
+    const auto waiting=status(*service,*single.hash);QVERIFY(waiting);
+    QCOMPARE(waiting->received,std::int64_t{0});
+    QVERIFY(service->pauseManaged(*multi.hash,true));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{
+      const auto poll=service->poll();const auto a=status(*service,*single.hash),b=status(*service,*multi.hash);
+      return poll&&a&&b&&!a->failure&&!b->failure&&b->phase==Phase::Paused&&b->manuallyPaused
+          &&a->phase==Phase::Downloading&&a->received>0;
+    })(),30000);
+    const auto closed=service->close(std::chrono::steady_clock::now()+5s);
+    QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&closed.retirement.peerCounters);
+    QVERIFY(!closed.checkpointFailure);
+    const auto inventory=parsed(test::read(single.profile+QStringLiteral("/downloads.config")));
+    const auto& first=entry(inventory,*single.hash);const auto& second=entry(inventory,*multi.hash);
+    QVERIFY(first.find("opaque.priority")&&second.find("opaque.priority"));
+    QCOMPARE(encoded(*first.find("opaque.priority")),std::string("li7e4:keepe"));
+    QCOMPARE(encoded(*second.find("opaque.priority")),std::string("li9e4:keepe"));
+    const auto savedFirst=compat::originalFilePolicy(first,1),savedSecond=compat::originalFilePolicy(second,2);
+    QVERIFY(savedFirst&&savedSecond);QCOMPARE((*savedFirst)[0].priority,0);
+    QCOMPARE((*savedSecond)[0].priority,2);QCOMPARE((*savedSecond)[1].priority,2);
+    QVERIFY(!(*savedFirst)[0].skipped&&!(*savedSecond)[0].skipped&&!(*savedSecond)[1].skipped);
+    QVERIFY(single.intact(false));
   }
 };
 QTEST_GUILESS_MAIN(ManagedQueueTests)

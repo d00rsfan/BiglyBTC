@@ -1,7 +1,9 @@
 #pragma once
 #include "file_operation_presentation.hpp"
+#include "file_operation_sequence.hpp"
 #include "options_presentation.hpp"
 #include "scheduler_presentation.hpp"
+#include "local_rating_presentation.hpp"
 
 #include "native_session_presentation.hpp"
 #include "native_activity_presentation.hpp"
@@ -46,6 +48,7 @@ class FileOperationDialog;
 class TorrentCreationDialog;
 class OptionsDialog;
 class SchedulerDialog;
+class LocalRatingDialog;
 class ClassicColumns;
 class StatisticsPage;
 class EngineActivityHistory;
@@ -104,6 +107,10 @@ public:
   void beginColumnLayoutSession(quint64 session);
   void setColumnLayouts(ColumnLayoutsPresentation);
   void setColumnLayoutSaved(ColumnLayoutSavePresentation);
+  void setLocalRating(LocalRatingPresentation);
+  void setLocalRatingSaved(LocalRatingSavePresentation);
+  void rejectLocalRatingRequest(const LocalRatingRequest&);
+  void rejectLocalRatingSave(const LocalRatingSubmission&);
   void setScheduler(SchedulerPresentation);
   void setSchedulerSaved(SchedulerSavePresentation);
   void rejectSchedulerRequest(SchedulerRequest);
@@ -131,11 +138,14 @@ public:
   bool submitTorrentImport(QString metadata, QString destination, bool start);
   bool submitMagnetImport(QString uri, QString destination);
 signals:
+  void fileOperationSequenceFinished(biglybtc::ui::FileOperationSequencePresentation);
   void fileOperationPlanRequested(biglybtc::ui::FileOperationRequest);
   void fileOperationExecuteRequested(biglybtc::ui::FileOperationSubmission);
   void fileOperationCancelRequested(biglybtc::ui::FileOperationRequest);
   void torrentCreateRequested(biglybtc::ui::TorrentCreationRequest);
   void torrentCreateCancelRequested(biglybtc::ui::TorrentCreationRequest);
+  void localRatingRequested(biglybtc::ui::LocalRatingRequest);
+  void localRatingSaveRequested(biglybtc::ui::LocalRatingSubmission);
   void schedulerRequested(biglybtc::ui::SchedulerRequest);
   void schedulerSaveRequested(biglybtc::ui::SchedulerSubmission);
   void optionsRequested(biglybtc::ui::OptionsRequest);
@@ -219,6 +229,7 @@ private:
   void openFileOperation(FileOperation);
   void openTorrentCreation();
   QPointer<FileOperationDialog> fileOperationDialog_;
+  QPointer<FileOperationSequence> fileOperationSequence_;
   QPointer<TorrentCreationDialog> torrentCreationDialog_;
   std::array<QPointer<QAction>,4> fileOperationActions_;
   QPointer<QAction> createTorrentAction_;
@@ -226,6 +237,12 @@ private:
   bool fileOperationExecuting_ = false;
   std::optional<TorrentCreationRequest> activeTorrentCreation_;
   quint64 creationDialogRevision_ = 0;
+  void openLocalRating();
+  QPointer<LocalRatingDialog> localRatingDialog_;
+  QPointer<QAction> localRatingAction_;
+  std::optional<LocalRatingRequest> localRatingIdentity_;
+  quint64 localRatingRequest_=0;
+  bool localRatingLoading_=false, localRatingSaving_=false;
   void openOptions();
   void openScheduler();
   void queueScheduler();

@@ -246,6 +246,60 @@ void finalAllocationStreamsCapturedEof(){
   check(physicalRange(a.fd,14,old.size()-14)==old.substr(14),"copy and input never destroy unrelated old preimage bytes");
   st::OriginalReadResult facts;const auto got=read(io,13ULL+piece,3*chunk+5,&facts);check(got.substr(0,2*chunk+7)==std::string(2*chunk+7,'D')&&facts.missing==std::vector<st::OriginalMissingRange>{{13ULL+piece+2*chunk+7,chunk-2}},"self-extension never enlarges the captured actual tail or fills its EOF suffix");
 }
+// Actual EOF-short prefixes; no resume bitmap or verified data is invented.
+void eofShortCoveredAscendingWrite(){
+  for(const auto kind:{st::OriginalStorageKind::Reordered,st::OriginalStorageKind::ReorderedCompact}){
+    for(const unsigned available:{0U,5U,15U}){
+      Area a;Store store(a.fd);seedPacked(a.fd,std::string(13,'A')+std::string(15,'D')+"x"+std::string(available,'B'));
+      store.current=allocationControl(kind,geometry,{0,2,-1,1});const auto ordinary=store.publisher();bool exactBeforeMap=false;
+      auto publisher=[&](const auto& expected,std::string_view replacement)->std::expected<void,st::Error>{
+        check(physicalRange(a.fd,29,16)==std::string(16,'B'),"old EOF-short slot is filled only by actual supplied suffix before map");
+        check(physicalRange(a.fd,13,15)==std::string(15,'D')&&physicalRange(a.fd,45,15)==std::string(15,'D'),"old tail and copied preimage both precede map publication");
+        const auto next=biglybtc::core::Document::parse(std::string(replacement));check(next&&next->find("pieces")->bytes==mapBytes({0,2,1,3}),"source-ordered repair retains ordinary final-tail map");exactBeforeMap=true;return ordinary(expected,replacement);
+      };
+      auto io=take(st::OriginalFileIo::open(a.fd,geometry,kind,store.current,publisher));st::OriginalReadResult prior;read(io,13,16,&prior);
+      check(prior.missing==std::vector<st::OriginalMissingRange>{{13+available,16-available}},"real short allocated prefix has exact EOF-missing suffix");
+      done(io.write(13+available,asBytes(std::string(16-available,'B')+std::string(16,'C'))));done(io.flush());
+      check(exactBeforeMap&&store.calls==1&&physical(a.fd).size()==60,"one original map publication follows genuine repair and tail preimage sync");
+      auto reopened=take(st::OriginalFileIo::open(a.fd,geometry,kind,store.current,store.publisher()));st::OriginalReadResult after;
+      check(read(reopened,0,60,&after)==std::string(13,'A')+std::string(16,'B')+std::string(16,'C')+std::string(15,'D')&&after.complete(),"old prefixes and actual supplied data survive original-map reopen");
+      auto control=biglybtc::core::Document::parse(*store.current);check(control&&control->find("opaque")&&control->find("opaque")->children.size()==2,"unknown original control retained");
+    }
+    // Covering a later logical suffix does not authorize changing source order.
+    Area later;Store laterStore(later.fd);seedPacked(later.fd,std::string(13,'A')+std::string(15,'D')+"x"+std::string(5,'C'));laterStore.current=allocationControl(kind,geometry,{0,-1,2,1});
+    auto io=take(st::OriginalFileIo::open(later.fd,geometry,kind,laterStore.current,laterStore.publisher()));const auto before=physical(later.fd),old=*laterStore.current;
+    const auto rejected=io.write(13,asBytes(std::string(16,'B')+std::string(16,'C')));
+    check(!rejected&&rejected.error().code==st::ErrorCode::Conflict&&before==physical(later.fd)&&old==laterStore.current&&laterStore.calls==0,"later suffix cannot be silently reordered before an earlier allocation");
+    // An explicit real suffix write followed by allocation remains supported.
+    done(io.write(34,asBytes(std::string(11,'C'))));done(io.write(13,asBytes(std::string(16,'B'))));
+    check(read(io,0,60)==std::string(13,'A')+std::string(16,'B')+std::string(16,'C')+std::string(15,'D'),"separate actual repair then allocation preserves logical bytes");
+  }
+}
+void eofShortCoveredFailurePrefix(){
+  const auto final=std::string(13,'A')+std::string(16,'B')+std::string(16,'C')+std::string(15,'D');
+  for(const bool after:{false,true}){
+    for(unsigned which=1;which<=4;++which){
+      Area a;Store store(a.fd);seedPacked(a.fd,std::string(13,'A')+std::string(15,'D')+"x"+std::string(5,'B'));store.current=allocationControl(st::OriginalStorageKind::Reordered,geometry,{0,2,-1,1});
+      auto io=take(st::OriginalFileIo::open(a.fd,geometry,st::OriginalStorageKind::Reordered,store.current,store.publisher()));CopyProbe probe(a.fd,which,after);const auto failed=io.write(18,asBytes(std::string(11,'B')+std::string(16,'C')));probe.stop();
+      check(!failed&&io.recoveryPending()&&!io.flush()&&copyWriteCalls==which,"before/after repair, preimage and input writes fence failed object");
+      auto reopened=take(st::OriginalFileIo::open(a.fd,geometry,st::OriginalStorageKind::Reordered,store.current,store.publisher()));st::OriginalReadResult observed;const auto prefix=read(reopened,13,16,&observed);
+      const bool repaired=which>1||after;
+      check(prefix.substr(0,repaired?16:5)==std::string(repaired?16:5,'B')&&observed.missing==(repaired?std::vector<st::OriginalMissingRange>{}:std::vector<st::OriginalMissingRange>{{18,11}}),"failed extension exposes only genuinely supplied old-slot bytes, never zero-filled old suffix");
+      check(read(reopened,45,15)==std::string(15,'D'),"retained tail survives every actual failed write outcome");
+      done(reopened.write(18,asBytes(std::string(11,'B')+std::string(16,'C'))));check(read(reopened,0,60)==final&&physical(a.fd).size()==60,"explicit control reopen can safely retry actual input");
+    }
+    Area a;Store store(a.fd);seedPacked(a.fd,std::string(13,'A')+std::string(15,'D')+"x"+std::string(5,'B'));store.current=allocationControl(st::OriginalStorageKind::ReorderedCompact,geometry,{0,2,-1,1});store.failureCall=1;store.failureAfter=after;
+    auto io=take(st::OriginalFileIo::open(a.fd,geometry,st::OriginalStorageKind::ReorderedCompact,store.current,store.publisher()));check(!io.write(18,asBytes(std::string(11,'B')+std::string(16,'C')))&&io.recoveryPending(),"before/after map CAS failure fences repaired object");store.failureCall=0;
+    auto reopened=take(st::OriginalFileIo::open(a.fd,geometry,st::OriginalStorageKind::ReorderedCompact,store.current,store.publisher()));check(read(reopened,13,16)==std::string(16,'B')&&read(reopened,45,15)==std::string(15,'D'),"both durable old/new maps retain actual repair and tail after publication failure");done(reopened.write(18,asBytes(std::string(11,'B')+std::string(16,'C'))));check(read(reopened,0,60)==final,"reopen-selected actual control resolves uncertain publisher outcome");
+  }
+}
+void eofShortCoveredBoundedChunks(){
+  constexpr std::uint32_t piece=256*1024;const st::OriginalFileGeometry g{piece-13,13ULL+2ULL*piece+15,piece};
+  Area a;Store store(a.fd);check(::pwrite(a.fd,std::string(13,'A').data(),13,0)==13&&::pwrite(a.fd,std::string(15,'D').data(),15,13)==15&&::pwrite(a.fd,std::string(7,'B').data(),7,13+piece)==7,"sparse actual EOF-short last allocated slot");store.current=allocationControl(st::OriginalStorageKind::Reordered,g,{0,2,-1,1});const auto ordinary=store.publisher();bool bounded=false;
+  auto publisher=[&](const auto& expected,std::string_view replacement)->std::expected<void,st::Error>{check(copyWriteCalls==5&&copyWriteMaximum<=64*1024&&copyReadMaximum<=64*1024,"four actual repair chunks and one real tail-copy chunk precede map");bounded=true;return ordinary(expected,replacement);};
+  auto io=take(st::OriginalFileIo::open(a.fd,g,st::OriginalStorageKind::Reordered,store.current,publisher));CopyProbe probe(a.fd);done(io.write(20,asBytes(std::string(piece-7,'B')+std::string(piece,'C'))));probe.stop();
+  check(bounded&&physical(a.fd).size()==g.fileBytes&&read(io,0,static_cast<std::size_t>(g.fileBytes))==std::string(13,'A')+std::string(piece,'B')+std::string(piece,'C')+std::string(15,'D'),"bounded source-ordered EOF repair keeps exact sparse geometry and bytes");
+}
 void reorderedTypeOnly(){Area a;Store store(a.fd);auto io=take(st::OriginalFileIo::open(a.fd,geometry,st::OriginalStorageKind::ReorderedCompact,{},store.publisher()));done(io.write(45,asBytes(std::string(15,'D'))));const auto before=physical(a.fd);auto old=biglybtc::core::Document::parse(*store.current);const auto map=std::string(old->find("pieces")->bytes);done(io.setReorderedKind(st::OriginalStorageKind::Reordered));auto now=biglybtc::core::Document::parse(*store.current);check(now&&now->find("st")->integer==3&&now->find("pieces")->bytes==map&&before==physical(a.fd),"RC to R preserves exact physical bytes/map");}
 }
 extern "C" ssize_t __real_pread(int,void*,std::size_t,off_t);
@@ -254,4 +308,4 @@ extern "C" ssize_t __wrap_pread(int fd,void* buffer,std::size_t bytes,off_t offs
 extern "C" ssize_t __wrap_pwrite(int fd,const void* buffer,std::size_t bytes,off_t offset){if(fd==copyFd){++copyWriteCalls;copyWriteMaximum=std::max(copyWriteMaximum,bytes);if(copyFailWrite&&copyWriteCalls==copyFailWrite){if(copyFailAfter){const auto actual=__real_pwrite(fd,buffer,bytes,offset);if(actual<0){return actual;}}errno=EIO;return -1;}}return __real_pwrite(fd,buffer,bytes,offset);}
 extern "C" int __real_ftruncate(int,off_t);
 extern "C" int __wrap_ftruncate(int fd,off_t length){if(failResize&&fd==resizeFd){++resizeHits;if(failResizeAfter){const int actual=__real_ftruncate(fd,length);if(actual<0){return actual;}}errno=EIO;return -1;}return __real_ftruncate(fd,length);}
-int main(){try{boundsAndLinear();compactEdgesAndUnknown();arbitraryReorderedMaps();virtualLengthsAndShortMarker();publicationFailuresKeepJavaMap();recoveryAndStrictControls();conversionKeepsCompactPrefix();reorderedTypeOnly();largePieceBoundaries();largeSparseCompactConversion();streamedConversionFailureReplay();completeReorderedTail();completeReorderedFailureReplay();unverifiedAllocatedHandoff();finalAllocationKeepsTailPreimage();finalAllocationFailureOutcomes();finalAllocationStreamsCapturedEof();std::cout<<"seventeen original physical IO families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+int main(){try{boundsAndLinear();compactEdgesAndUnknown();arbitraryReorderedMaps();virtualLengthsAndShortMarker();publicationFailuresKeepJavaMap();recoveryAndStrictControls();conversionKeepsCompactPrefix();reorderedTypeOnly();largePieceBoundaries();largeSparseCompactConversion();streamedConversionFailureReplay();completeReorderedTail();completeReorderedFailureReplay();unverifiedAllocatedHandoff();finalAllocationKeepsTailPreimage();finalAllocationFailureOutcomes();finalAllocationStreamsCapturedEof();eofShortCoveredAscendingWrite();eofShortCoveredFailurePrefix();eofShortCoveredBoundedChunks();std::cout<<"twenty original physical IO families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

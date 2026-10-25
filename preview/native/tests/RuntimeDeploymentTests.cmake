@@ -10,6 +10,11 @@ if(NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
   elseif(_biglybtc_deployment_manifest STREQUAL "28374ad5900f04c533a13afe90e81a7332f8a62b52db30adb0ed4dfe2fbce8ee"
       OR _biglybtc_deployment_manifest STREQUAL "37ce74d783fe42e42f09415ffd4358f330d5849803ef1064cb5abab7f89c5abc")
     set(_biglybtc_deployment_mode strict)
+  elseif(_biglybtc_deployment_manifest STREQUAL "3342ec8ae72ecafa4a1b887e664d0d066fffce4f7d864b0b130ca903be953a3a")
+    # Exact private next-provider fixtures are registered below by the separate
+    # provider-next-runtime-deployment block, including all rejection controls.
+    # Configure-time manifest/source/image verification has already succeeded.
+    return()
   else()
     message(FATAL_ERROR "Runtime deployment fixtures require an explicitly reviewed provider cohort")
   endif()

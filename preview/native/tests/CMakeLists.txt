@@ -1572,7 +1572,11 @@ if(BIGLYBTC_PAYLOAD_COUNTER_TEST_LANE STREQUAL "Qualified")
     biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test ${CMAKE_DL_LIBS})
   target_link_options(biglybtc-selected-swarm-admission-tests PRIVATE "LINKER:--wrap=dlsym")
   target_compile_options(biglybtc-selected-swarm-admission-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
-  add_test(NAME selected-swarm-admission COMMAND biglybtc-selected-swarm-admission-tests)
+  if(BIGLYBTC_EXPECT_COMBINED_COUNTERS STREQUAL "1")
+    add_test(NAME selected-swarm-admission COMMAND biglybtc-selected-swarm-admission-tests)
+  else()
+    add_test(NAME selected-swarm-admission COMMAND biglybtc-selected-swarm-admission-tests selectedFlagsAreActualImmutableSessionIndices missingPinOrWrongFullIdentityLeavesParametersUnchanged originalSelectedHybridManagedAdmissionKeepsManualPause missingForeignAndBadMarkersFailBeforeManagedStorage)
+  endif()
   set_tests_properties(selected-swarm-admission PROPERTIES TIMEOUT 120 LABELS "unit;qualified-provider;original-identity")
 endif()
 
@@ -1592,4 +1596,162 @@ if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND BIGLYBTC_PAYLOAD_COUNTER_TEST_
   target_link_libraries(biglybtc-selected-hybrid-handoff-driver PRIVATE
     biglybtc_local_engine biglybtc_profile LibtorrentRasterbar::torrent-rasterbar Qt6::Core)
   target_compile_options(biglybtc-selected-hybrid-handoff-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+endif()
+
+# Root merges this fragment; no shared/native CMake was edited by the author.
+# Core.cmake belongs in core/CMakeLists; the rest belongs in tests/CMakeLists.
+add_executable(biglybtc-queue-file-priority-tests queue_file_priority_tests.cpp)
+target_link_libraries(biglybtc-queue-file-priority-tests PRIVATE biglybtc_core)
+target_compile_options(biglybtc-queue-file-priority-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME queue-file-priority COMMAND biglybtc-queue-file-priority-tests)
+set_tests_properties(queue-file-priority PROPERTIES TIMEOUT 30 LABELS "unit;queue")
+# Optional actual-Java trace replay, run only with its observed stdout argument.
+add_executable(biglybtc-queue-file-priority-replay queue_file_priority_replay.cpp)
+target_link_libraries(biglybtc-queue-file-priority-replay PRIVATE biglybtc_core)
+target_compile_options(biglybtc-queue-file-priority-replay PRIVATE -Wall -Wextra -Wpedantic -Werror)
+# Existing managed-queue test target gains one actual owned transfer method;
+# its runtime guard, registration and deadline remain unchanged.
+
+# Root merges into tests/CMakeLists.txt; author did not alter shared CMake.
+add_executable(biglybtc-queue-download-probe-tests queue_download_probe_tests.cpp)
+target_link_libraries(biglybtc-queue-download-probe-tests PRIVATE biglybtc_core)
+target_compile_options(biglybtc-queue-download-probe-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME queue-download-probes COMMAND biglybtc-queue-download-probe-tests)
+set_tests_properties(queue-download-probes PROPERTIES TIMEOUT 30 LABELS "unit;queue")
+
+# Optional replay of actual retained original-class outputs, not a second oracle.
+add_executable(biglybtc-queue-download-probe-replay queue_download_probe_replay.cpp)
+target_link_libraries(biglybtc-queue-download-probe-replay PRIVATE biglybtc_core)
+target_compile_options(biglybtc-queue-download-probe-replay PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+# Merge into tests/CMakeLists only after adopting the two source paths.
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP
+    AND BIGLYBTC_PAYLOAD_COUNTER_TEST_LANE STREQUAL "Qualified"
+    AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  find_package(Qt6 6.12.0 EXACT REQUIRED COMPONENTS Network Test)
+  add_executable(biglybtc-network-proxy-owner-tests network_proxy_owner_tests.cpp)
+  set_target_properties(biglybtc-network-proxy-owner-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-network-proxy-owner-tests PRIVATE biglybtc_local_engine biglybtc_profile
+    LibtorrentRasterbar::torrent-rasterbar Qt6::Core Qt6::Network Qt6::Test)
+  target_compile_options(biglybtc-network-proxy-owner-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME network-proxy-owner COMMAND biglybtc-network-proxy-owner-tests)
+  set_tests_properties(network-proxy-owner PROPERTIES TIMEOUT 180 LABELS "unit;network;loopback;qualified-runtime")
+endif()
+
+# Append in tests/CMakeLists.txt. These generated-profile worker cases are
+# offline (port0), so no runtime-bound owner gate or substitute skips are used.
+if(BIGLYBTC_DESKTOP AND BIGLYBTC_LOCAL_ENGINE)
+  add_executable(biglybtc-file-operation-sequence-tests file_operation_sequence_tests.cpp)
+  set_target_properties(biglybtc-file-operation-sequence-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-file-operation-sequence-tests PRIVATE
+    biglybtc_desktop_host biglybtc_profile Qt6::Test LibtorrentRasterbar::torrent-rasterbar)
+  target_compile_options(biglybtc-file-operation-sequence-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME file-operation-sequence COMMAND biglybtc-file-operation-sequence-tests)
+  set_tests_properties(file-operation-sequence PROPERTIES TIMEOUT 120
+    LABELS "unit;ui;integration;fileops" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()
+
+if(BIGLYBTC_DESKTOP AND BIGLYBTC_LOCAL_ENGINE)
+  add_executable(biglybtc-local-rating-tests "${PROJECT_SOURCE_DIR}/tests/local_rating_tests.cpp")
+  set_target_properties(biglybtc-local-rating-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-local-rating-tests PRIVATE
+    biglybtc_ui biglybtc_local_rating_profile OpenSSL::Crypto ZLIB::ZLIB Qt6::Test)
+  target_compile_options(biglybtc-local-rating-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME local-rating-host-ui COMMAND biglybtc-local-rating-tests)
+  set_tests_properties(local-rating-host-ui PROPERTIES TIMEOUT 120 LABELS unit
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+
+  add_executable(biglybtc-local-rating-wiring-tests
+    "${PROJECT_SOURCE_DIR}/tests/local_rating_wiring_tests.cpp")
+  set_target_properties(biglybtc-local-rating-wiring-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-local-rating-wiring-tests PRIVATE
+    biglybtc_desktop_host biglybtc_local_rating_profile Qt6::Test)
+  target_compile_options(biglybtc-local-rating-wiring-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME local-rating-wiring COMMAND biglybtc-local-rating-wiring-tests)
+  set_tests_properties(local-rating-wiring PROPERTIES TIMEOUT 120 LABELS unit
+    ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()
+
+# Explicit test expectation only; runtime authority remains the exact catalog.
+set(BIGLYBTC_EXPECT_COMBINED_COUNTERS "0" CACHE STRING "Expected optional counter ABI for the selected test provider (0 or 1)")
+set_property(CACHE BIGLYBTC_EXPECT_COMBINED_COUNTERS PROPERTY STRINGS 0 1)
+if(NOT BIGLYBTC_EXPECT_COMBINED_COUNTERS MATCHES "^[01]$")
+  message(FATAL_ERROR "BIGLYBTC_EXPECT_COMBINED_COUNTERS must be 0 or 1")
+endif()
+# App tests only. Root merges this fragment; no shared/native CMake edit here.
+if(BIGLYBTC_LOCAL_ENGINE)
+  add_executable(biglybtc-managed-combined-counter-tests managed_combined_counter_tests.cpp)
+  target_link_libraries(biglybtc-managed-combined-counter-tests PRIVATE biglybtc_core LibtorrentRasterbar::torrent-rasterbar)
+  target_compile_options(biglybtc-managed-combined-counter-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME managed-combined-counter-domain COMMAND biglybtc-managed-combined-counter-tests)
+  set_tests_properties(managed-combined-counter-domain PROPERTIES TIMEOUT 30 LABELS "unit;queue;counters")
+endif()
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-managed-combined-protocol-tests managed_combined_protocol_tests.cpp)
+  set_target_properties(biglybtc-managed-combined-protocol-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-managed-combined-protocol-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+  target_compile_options(biglybtc-managed-combined-protocol-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME managed-combined-protocol COMMAND biglybtc-managed-combined-protocol-tests)
+  # Root enables this V2-positive registration only with the independently
+  # approved future provider. Legacy d367 qualification uses explicit value0.
+  set_tests_properties(managed-combined-protocol PROPERTIES TIMEOUT 180
+      ENVIRONMENT "BIGLYBTC_EXPECT_COMBINED_COUNTERS=${BIGLYBTC_EXPECT_COMBINED_COUNTERS}" LABELS "unit;queue;counters;loopback")
+endif()
+
+# Provider upstream test/CMakeLists already globs test_*.cpp, so a fresh
+# configure adds target test_biglybtc_traffic_counters. No rule-file edit.
+
+
+
+add_executable(biglybtc-queue-rate-provider-tests queue_rate_provider_tests.cpp)
+target_link_libraries(biglybtc-queue-rate-provider-tests PRIVATE biglybtc_core)
+target_compile_options(biglybtc-queue-rate-provider-tests PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+add_test(NAME queue-rate-providers COMMAND biglybtc-queue-rate-provider-tests)
+set_tests_properties(queue-rate-providers PROPERTIES TIMEOUT 30 LABELS "unit;queue")
+add_executable(biglybtc-queue-rate-provider-replay queue_rate_provider_replay.cpp)
+target_link_libraries(biglybtc-queue-rate-provider-replay PRIVATE biglybtc_core)
+target_compile_options(biglybtc-queue-rate-provider-replay PRIVATE -Wall -Wextra -Wpedantic -Werror -ffp-contract=off)
+# Replay requires actual original stdout/inputs through oracle/run_trace.py; no CTest registration.
+
+if(TARGET biglybtc-selected-swarm-admission-tests)
+# Existing Qualified target ONLY, after its original --wrap=dlsym option.
+# No new executable, rows outside this suite, timeout or approval lane.
+target_link_options(biglybtc-selected-swarm-admission-tests PRIVATE
+  "LINKER:--wrap=dlopen" "LINKER:--wrap=dlclose")
+
+endif()
+
+# Append after existing RuntimeBindingTests.cmake in the private bound lane.
+# This non-digest cannot select anything until root's exact approval amendment.
+if(BIGLYBTC_LOCAL_ENGINE AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  file(SHA256 "${BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST}" _biglybtc_next_provider_manifest)
+  if(_biglybtc_next_provider_manifest STREQUAL "3342ec8ae72ecafa4a1b887e664d0d066fffce4f7d864b0b130ca903be953a3a")
+    if(NOT TARGET biglybtc-runtime-interposition-driver OR NOT TARGET biglybtc-runtime-interposer
+        OR NOT EXISTS "${BIGLYBTC_PERSISTENT_NEGATIVE_LT_LIBRARY}")
+      message(FATAL_ERROR "Next-provider qualification requires all existing runtime rejection fixtures")
+    endif()
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    add_test(NAME provider-next-runtime-inputs COMMAND "${Python3_EXECUTABLE}" -B
+      "${CMAKE_CURRENT_SOURCE_DIR}/provider_next_runtime_inputs_tests.py")
+    set_tests_properties(provider-next-runtime-inputs PROPERTIES TIMEOUT 120
+      LABELS "unit;qualified-provider;source-binding" ENVIRONMENT "PYTHONDONTWRITEBYTECODE=1")
+    add_executable(biglybtc-provider-next-runtime-deployment-driver runtime_deployment_driver.cpp)
+    target_link_libraries(biglybtc-provider-next-runtime-deployment-driver PRIVATE
+      biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar ${CMAKE_DL_LIBS})
+    target_include_directories(biglybtc-provider-next-runtime-deployment-driver PRIVATE
+      "${PROJECT_BINARY_DIR}/engine/runtime-binding")
+    target_compile_options(biglybtc-provider-next-runtime-deployment-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    target_link_options(biglybtc-provider-next-runtime-deployment-driver PRIVATE
+      "LINKER:--wrap=open" "LINKER:--wrap=fstat" "LINKER:--wrap=read")
+    add_test(NAME provider-next-runtime-deployment COMMAND "${Python3_EXECUTABLE}" -B
+      "${CMAKE_CURRENT_SOURCE_DIR}/runtime_deployment_tests.py"
+      --driver "$<TARGET_FILE:biglybtc-provider-next-runtime-deployment-driver>"
+      --provider "/home/yurii/Java/BiglyBT/build/storage-20261025/provider-next/install/lib/libtorrent-rasterbar.so.2.0.12"
+      --manifest "${BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST}" --mode provider-next
+      --alternate "${BIGLYBTC_PERSISTENT_NEGATIVE_LT_LIBRARY}"
+      --interposition-driver "$<TARGET_FILE:biglybtc-runtime-interposition-driver>"
+      --preload "${_biglybtc_runtime_preload}")
+    set_tests_properties(provider-next-runtime-deployment PROPERTIES TIMEOUT 180
+      LABELS "unit;qualified-provider;runtime-binding" ENVIRONMENT "PYTHONDONTWRITEBYTECODE=1")
+  endif()
 endif()

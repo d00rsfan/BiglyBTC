@@ -1,6 +1,7 @@
 #pragma once
 
 #include "biglybtc/library.hpp"
+#include "biglybtc/queue_file_priority.hpp"
 #include "profile.hpp"
 #include "original_torrent_identity.hpp"
 
@@ -51,6 +52,8 @@ public:
   std::shared_ptr<OriginalDiskFiles> mappedFiles() const;
   std::int64_t originalBytes() const noexcept;
   bool originalProgressRequiresPieces() const noexcept;
+  std::expected<core::QueueFilePriorityStats,core::QueueFilePriorityError> filePriorityStatistics(
+      std::span<const std::uint8_t>) const noexcept;
   std::expected<std::int64_t,storage::Error> verifiedOriginalBytes(std::span<const std::uint8_t>) const;
   std::span<const ManagedPayloadClaim> claims() const noexcept;
   const storage::OriginalTorrentIdentity& identity() const;

@@ -269,6 +269,106 @@ std::expected<void, Error> TorrentStateStore::removeCachedEntry(TorrentStateFile
   return replace(active_, "cache.dat", *raw, *encoded, **raw, nullptr);
 }
 
+// Attribute-only edits share the existing resilient state/cache publication
+// primitive, without invoking recheck on the primary. All existing payload
+// preparation/save methods remain unchanged.
+std::expected<TorrentStateFile, Error> TorrentStateStore::loadAttributes(
+    const ProfileLease& lease, const core::TorrentHash& hash) const {
+  auto state = load(lease, hash);
+  if (!state) { return std::unexpected(state.error()); }
+  auto raw = readFile(active_, "cache.dat", compatibleConfigLimits().inputBytes);
+  if (!raw) { return std::unexpected(raw.error()); }
+  state->attributeCache_ = *raw;
+  if (*raw) {
+    auto cache = EncodedDocument::parse(**raw, compatibleConfigLimits());
+    if (!cache || !cache->compressed()) { return error(ErrorCode::InvalidFormat, "Resolve the invalid state cache before editing attributes"); }
+    if (const auto* entries = cache->document().find("state")) {
+      if (entries->type != core::Node::Type::List) { return error(ErrorCode::InvalidFormat, "Invalid original state-cache list"); }
+      const auto bytes = hash.bytes();
+      const std::string_view key(reinterpret_cast<const char*>(bytes.data()), bytes.size());
+      const core::Node* selected = nullptr;
+      for (const auto& entry : entries->children) {
+        const auto* identity = entry.find("hash");
+        if (identity && identity->type == core::Node::Type::Bytes && identity->bytes == key) { selected = &entry; }
+      }
+      if (selected) {
+        for (auto [from, to] : {std::pair{"attributes", "attributes"}, {"azp", "azureus_properties"}, {"azpp", "azureus_private_properties"}}) {
+          if (const auto* value = selected->find(from)) {
+            if (value->type != core::Node::Type::Dictionary) { return error(ErrorCode::InvalidFormat, "Invalid cached state properties"); }
+            const auto& source = cache->document().originalBytes();
+            if (!state->document_.replaceValue(to, source.substr(value->begin, value->end - value->begin))) {
+              return error(ErrorCode::InvalidFormat, "Cached attributes exceed edit limits");
+            }
+          }
+        }
+      }
+    }
+  }
+  state->attributesOnly_ = true;
+  return std::move(*state);
+}
+
+std::expected<void, Error> TorrentStateStore::saveAttributes(const ProfileLease& lease,
+    TorrentStateFile& state, std::string encodedAttributes) const {
+  auto valid = validate(lease);
+  if (!valid) { return valid; }
+  if (!state.attributesOnly_ || state.prepared_ || state.device_ != activeDevice_ || state.inode_ != activeInode_) {
+    return error(ErrorCode::Conflict, "Fresh attributes-only snapshot required");
+  }
+  auto attributes = core::Document::parse(encodedAttributes, compatibleConfigLimits());
+  if (!attributes || attributes->root().type != core::Node::Type::Dictionary) {
+    return error(ErrorCode::InvalidFormat, "Attributes must be a bounded dictionary");
+  }
+  auto changed = state.document_;
+  if (!changed.replaceValue("attributes", std::move(encodedAttributes))) {
+    return error(ErrorCode::InvalidFormat, "Attributes exceed edit limits");
+  }
+  auto current = readFile(active_, state.hash_.hex() + ".dat", compatibleConfigLimits().inputBytes);
+  auto cacheBytes = readFile(active_, "cache.dat", compatibleConfigLimits().inputBytes);
+  if (!current) { return std::unexpected(current.error()); }
+  if (!cacheBytes) { return std::unexpected(cacheBytes.error()); }
+  if (*current != state.original_ || *cacheBytes != state.attributeCache_) {
+    return error(ErrorCode::Conflict, "Original state or cache changed since reading attributes");
+  }
+  std::optional<std::string> replacementCache;
+  if (*cacheBytes) {
+    auto cache = EncodedDocument::parse(**cacheBytes, compatibleConfigLimits());
+    if (!cache || !cache->compressed()) { return error(ErrorCode::InvalidFormat, "Invalid original state cache"); }
+    if (const auto* entries = cache->document().find("state")) {
+      if (entries->type != core::Node::Type::List) { return error(ErrorCode::InvalidFormat, "Invalid original state-cache list"); }
+      const auto bytes = state.hash_.bytes();
+      const std::string_view key(reinterpret_cast<const char*>(bytes.data()), bytes.size());
+      bool selected = false;
+      std::string retained = "l";
+      const auto& source = cache->document().originalBytes();
+      for (const auto& entry : entries->children) {
+        const auto* identity = entry.find("hash");
+        if (identity && identity->type == core::Node::Type::Bytes && identity->bytes == key) { selected = true; }
+        else { retained += source.substr(entry.begin, entry.end - entry.begin); }
+      }
+      if (selected) {
+        retained += 'e';
+        if (!cache->replaceValue("state", std::move(retained))) { return error(ErrorCode::InvalidFormat, "Cached attributes exceed edit limits"); }
+        auto encoded = cache->serialize();
+        if (!encoded) { return error(ErrorCode::InvalidFormat, "Cannot encode original state cache"); }
+        replacementCache = std::move(*encoded);
+      }
+    }
+  }
+  if (replacementCache) {
+    // First persist the authoritative old cache view. A crash before dropping
+    // that entry still leaves a matching primary. Then publish the local edit.
+    auto saved = saveInternal(state, nullptr);
+    if (!saved) { return saved; }
+    saved = replace(active_, "cache.dat", state.attributeCache_, *replacementCache, *state.attributeCache_, nullptr);
+    if (!saved) { return saved; }
+    state.attributeCache_ = std::move(replacementCache);
+  }
+  state.document_ = std::move(changed);
+  state.attributesOnly_ = false; // Never silently repeat a partly published edit.
+  return saveInternal(state, nullptr);
+}
+
 std::expected<TorrentStateFile, Error> TorrentStateStore::beginUpdate(const ProfileLease& lease, const core::TorrentHash& hash) const {
   auto state = load(lease, hash);
   if (!state) { return std::unexpected(state.error()); }

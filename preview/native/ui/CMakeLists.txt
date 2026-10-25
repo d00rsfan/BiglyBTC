@@ -51,3 +51,14 @@ target_sources(biglybtc_ui PRIVATE file_operation_presentation.hpp file_operatio
 
 target_sources(biglybtc_ui PRIVATE torrent_intake_presentation.hpp
   torrent_intake_dialog.hpp torrent_intake_dialog.cpp)
+
+# Append first block in ui/CMakeLists.txt (AUTOMOC already enabled).
+if(BIGLYBTC_DESKTOP)
+  target_sources(biglybtc_ui PRIVATE
+    file_operation_sequence.hpp
+    file_operation_sequence.cpp)
+endif()
+
+target_sources(biglybtc_ui PRIVATE
+  "${PROJECT_SOURCE_DIR}/ui/local_rating_dialog.cpp"
+  "${PROJECT_SOURCE_DIR}/ui/local_rating_dialog.hpp")

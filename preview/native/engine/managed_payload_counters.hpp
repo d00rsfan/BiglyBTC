@@ -18,10 +18,20 @@ namespace biglybtc::engine::detail {
 class ManagedPayloadCounters final {
 public:
   struct Epoch { std::uint64_t number = 0; };
+  struct Protocol { std::int64_t received = 0, sent = 0; };
   enum class Read { Accepted, Retry, Failed };
-  struct Sample { Read state = Read::Failed; std::int64_t received = 0, sent = 0; };
-  void installed() noexcept { installed_.store(true, std::memory_order_release); }
+  struct Sample {
+    Read state = Read::Failed;
+    std::int64_t received = 0, sent = 0;
+    std::optional<std::int64_t> combinedReceived{}, combinedSent{};
+  };
+  void installed(bool combined = false) noexcept {
+    combinedKnown_.store(combined, std::memory_order_release);
+    installed_.store(true, std::memory_order_release);
+  }
   void fail() noexcept { failed_.store(true, std::memory_order_release); }
+  // Optional traffic uncertainty must not poison safe payload checkpointing.
+  void combinedUnavailable() noexcept { combinedKnown_.store(false, std::memory_order_release); }
   std::optional<Epoch> epoch() const noexcept {
     try {
       std::lock_guard lock(mutex_);
@@ -29,21 +39,26 @@ public:
       return Epoch{epoch_};
     } catch (...) { failed_.store(true, std::memory_order_release); return {}; }
   }
-  // LT thread, immediately before the qualified source resets m_stat. This is
-  // the FINAL raw epoch read, not a previously polled prefix or tick estimate.
-  void seal(std::int64_t received, std::int64_t sent) noexcept {
+  // Old callers/old provider: identical essential payload continuity and no
+  // authority over protocol. All four channels seal under ONE reset epoch lock.
+  void seal(std::int64_t received, std::int64_t sent) noexcept { seal(received, sent, {}); }
+  void seal(std::int64_t received, std::int64_t sent, std::optional<Protocol> protocol) noexcept {
     try {
       std::lock_guard lock(mutex_);
       if (failed_.load(std::memory_order_acquire)) { return; }
       if (!fits(receivedBase_, received) || !fits(sentBase_, sent)
           || receivedBase_ + received < publishedReceived_ || sentBase_ + sent < publishedSent_
           || epoch_ == std::numeric_limits<std::uint64_t>::max()) { fail(); return; }
+      static_cast<void>(traffic(protocol, receivedBase_ + received, sentBase_ + sent, true));
       receivedBase_ += received; sentBase_ += sent; ++epoch_;
     } catch (...) { fail(); }
   }
-  // Worker: epoch was read BEFORE the existing synchronous handle.status().
-  // A callback crossing that read requires another actual status, never a guess.
+  // Worker epoch is captured BEFORE the existing synchronous status() read.
   Sample combine(Epoch before, std::int64_t received, std::int64_t sent) noexcept {
+    return combine(before, received, sent, {});
+  }
+  Sample combine(Epoch before, std::int64_t received, std::int64_t sent,
+      std::optional<Protocol> protocol) noexcept {
     try {
       std::lock_guard lock(mutex_);
       if (!installed_.load(std::memory_order_acquire) || failed_.load(std::memory_order_acquire)) { return {}; }
@@ -53,19 +68,42 @@ public:
         fail(); return {};
       }
       publishedReceived_ = receivedBase_ + received; publishedSent_ = sentBase_ + sent;
-      return {Read::Accepted, publishedReceived_, publishedSent_};
+      Sample result{Read::Accepted, publishedReceived_, publishedSent_};
+      if (const auto combined = traffic(protocol, publishedReceived_, publishedSent_, false)) {
+        result.combinedReceived = combined->received; result.combinedSent = combined->sent;
+      }
+      return result;
     } catch (...) { fail(); return {}; }
   }
 private:
   static bool fits(std::int64_t base, std::int64_t value) noexcept {
     return value >= 0 && value <= std::numeric_limits<std::int64_t>::max() - base;
   }
+  // Caller already holds mutex_. Missing/regressing/overflowing protocol
+  // irreversibly withdraws this admission's optional combined-byte authority.
+  std::optional<Protocol> traffic(std::optional<Protocol> raw,
+      std::int64_t payloadReceived, std::int64_t payloadSent, bool sealing) noexcept {
+    if (!combinedKnown_.load(std::memory_order_acquire)) { return {}; }
+    if (!raw || !fits(protocolReceivedBase_, raw->received) || !fits(protocolSentBase_, raw->sent)) {
+      combinedUnavailable(); return {};
+    }
+    const auto received = protocolReceivedBase_ + raw->received, sent = protocolSentBase_ + raw->sent;
+    if (received < publishedProtocolReceived_ || sent < publishedProtocolSent_
+        || !fits(payloadReceived, received) || !fits(payloadSent, sent)) {
+      combinedUnavailable(); return {};
+    }
+    if (sealing) { protocolReceivedBase_ = received; protocolSentBase_ = sent; }
+    else { publishedProtocolReceived_ = received; publishedProtocolSent_ = sent; }
+    return Protocol{payloadReceived + received, payloadSent + sent};
+  }
   mutable std::mutex mutex_;
   mutable std::atomic_bool failed_{false};
-  std::atomic_bool installed_{false};
+  std::atomic_bool installed_{false}, combinedKnown_{false};
   std::uint64_t epoch_ = 0;
   std::int64_t receivedBase_ = 0, sentBase_ = 0;
   std::int64_t publishedReceived_ = 0, publishedSent_ = 0;
+  std::int64_t protocolReceivedBase_ = 0, protocolSentBase_ = 0;
+  std::int64_t publishedProtocolReceived_ = 0, publishedProtocolSent_ = 0;
 };
 
 // Immutable pin to the approved provider's raw-counter AND selected-swarm ABI.

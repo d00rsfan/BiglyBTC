@@ -2,6 +2,7 @@
 #include "file_operation_presentation.hpp"
 #include "options_presentation.hpp"
 #include "scheduler_presentation.hpp"
+#include "local_rating_presentation.hpp"
 #include "torrent_intake_presentation.hpp"
 
 #include "biglybtc/executor.hpp"
@@ -55,6 +56,8 @@ public:
   bool magnetImport(QString uri, QString destination);
   bool filePolicy(ui::Target, ui::FileIndices, int priority, bool skipped);
   bool compactFile(ui::Target, int originalIndex);
+  bool loadLocalRating(ui::LocalRatingRequest);
+  bool saveLocalRating(ui::LocalRatingSubmission);
   bool loadScheduler(ui::SchedulerRequest);
   bool saveScheduler(ui::SchedulerSubmission);
   bool loadOptions(ui::OptionsRequest);
@@ -88,6 +91,8 @@ signals:
   void torrentCreated(biglybtc::ui::TorrentCreationResultPresentation);
   void torrentIntakeReady(biglybtc::ui::TorrentIntakePresentation);
   void torrentIntakeFinished(biglybtc::ui::TorrentIntakeResultPresentation);
+  void localRatingReady(biglybtc::ui::LocalRatingPresentation);
+  void localRatingSaved(biglybtc::ui::LocalRatingSavePresentation);
   void schedulerReady(biglybtc::ui::SchedulerPresentation);
   void schedulerSaved(biglybtc::ui::SchedulerSavePresentation);
   void optionsReady(biglybtc::ui::OptionsPresentation);
