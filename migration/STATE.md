@@ -1,5 +1,9 @@
 # BiglyBTC migration state
 
+Compatibility batch6 qualifies optional top-level save-name editing at native `c3501e2037e35727af4c684afee2f905fd56c905`: five affected suites pass in each GCC, Clang and leak-enabled ASan/UBSan lane. Eight generated native imports reload through one actual original Java Core to READY with matching absolute paths, titles, file indices, selected bytes and unchanged payload inodes.
+[Batch6 review](updates/compatibility.providers/20261027-batch6.md). All CF parents remain open.
+
+
 Compatibility batch5 is qualified at native `5361bbc55d4f5eefafb344bb16c04e107b245dd8`: twelve affected suites pass in GCC, Clang and leak-enabled ASan/UBSan at the same source. Actual original KOI8-R filename getters match227 cases/681 lines plus256 byte classifications. Actual original tracker mutations match44 cases across v1, v2 and both hybrid selections.
 
 [Batch5 review](updates/compatibility.providers/20261026-batch5.md). Continue remaining work autonomously.

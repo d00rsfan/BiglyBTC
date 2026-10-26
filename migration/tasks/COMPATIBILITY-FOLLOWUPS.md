@@ -1,5 +1,9 @@
 # Open compatibility work after the everyday torrent preview
 
+Compatibility batch6 qualifies optional top-level save-name editing at native `c3501e2037e35727af4c684afee2f905fd56c905`: five affected suites pass in each GCC, Clang and leak-enabled ASan/UBSan lane. Eight generated native imports reload through one actual original Java Core to READY with matching absolute paths, titles, file indices, selected bytes and unchanged payload inodes.
+[Batch6 review](../updates/compatibility.providers/20261027-batch6.md). All CF parents remain open.
+
+
 Compatibility batch5 is qualified at native `5361bbc55d4f5eefafb344bb16c04e107b245dd8`: twelve affected suites pass in GCC, Clang and leak-enabled ASan/UBSan at the same source. Actual original KOI8-R filename getters match227 cases/681 lines plus256 byte classifications. Actual original tracker mutations match44 cases across v1, v2 and both hybrid selections.
 [Batch5 review](../updates/compatibility.providers/20261026-batch5.md). All CF parents remain open; previous STOP boundaries below are historical.
 
@@ -87,7 +91,7 @@ Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
   per-file/options controls and supported priority changes during active work.
   Qualify saved original priorities, selected completion and actual payload IO.
   Active priority/Skip controls now qualify at `2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5`;
-  bounded pre-add choices additionally qualify at the source above. Batch4 qualifies byte-rate limits, sequential preference, explicit Queued75/Stopped/Forced intent and exact recovery/default preservation. Batch5 additionally qualifies atomic general Paused import and all four real GUI modes with recovery/offline nonadmission. Batch5 also qualifies literal tracker-tier replacement/clear, original primary retention, byte-preserving absent intent, durable replay and guarded Qt notifications; unavailable editor projections preserve old untouched imports. Seeding/allocated, rename/network and wider tracker features remain open; top-level save-name editing is next.
+  bounded pre-add choices additionally qualify at the source above. Batch4 qualifies byte-rate limits, sequential preference, explicit Queued75/Stopped/Forced intent and exact recovery/default preservation. Batch5 additionally qualifies atomic general Paused import and all four real GUI modes with recovery/offline nonadmission. Batch5 also qualifies literal tracker-tier replacement/clear, original primary retention, byte-preserving absent intent, durable replay and guarded Qt notifications; unavailable editor projections preserve old untouched imports. Batch6 qualifies optional safe top-level save-name editing, original single/multifile title rules, strict absent-target/disjointness checks, journal/recovery and eight actual original READY mappings with unchanged payload bytes/inodes. Existing custom-root reuse requires authenticated preview support. Seeding/allocated, per-file renames, network and wider tracker features remain open.
 - [ ] **CF-06 — Remaining original library/file families (P03/P04/P08).**
   [P03-08](P03-08-library-file-operations.md) now qualifies single selected
   ordinary keep/delete/move/relink, v1 file/directory creation, compatible intent,

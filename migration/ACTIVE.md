@@ -1,9 +1,9 @@
-# Active migration work — 2026-10-26
+# Active migration work — 2026-10-27
 
-Compatibility batch5 is qualified at native `5361bbc55d4f5eefafb344bb16c04e107b245dd8`: twelve affected suites pass in GCC, Clang and leak-enabled ASan/UBSan at the same source. Actual original KOI8-R filename getters match227 cases/681 lines plus256 byte classifications. Actual original tracker mutations match44 cases across v1, v2 and both hybrid selections.
+Compatibility batch6 qualifies optional top-level save-name editing at native `c3501e2037e35727af4c684afee2f905fd56c905`: five affected suites pass in each GCC, Clang and leak-enabled ASan/UBSan lane. Eight generated native imports reload through one actual original Java Core to READY with matching absolute paths, titles, file indices, selected bytes and unchanged payload inodes.
 
-Paused import now commits original Stopped70 and general pause ownership atomically, without engine admission. The dialog offers Queued/Stopped/Paused/Forced. KOI8-R v1 names preserve raw metadata identity and actual mapped payload behavior. IBM866 remains refused pending its profile-dependent original decoder registry.
+The import dialog now offers a guarded save-name field. Absent intent retains old callers and journals; custom names require an absent, disjoint target. Original single/multifile display-name rules, raw metadata identity, unknown fields and durable recovery remain intact. Existing renamed-root reuse still needs authenticated preview support.
 
-[Batch5 evidence](evidence/20261026-compatibility-batch5/verification.json). All CF01–CF08 remain open; retained runtime/protocol proofs and the qualified dist are unchanged.
+[Batch6 evidence](evidence/20261027-compatibility-batch6/verification.json). All CF01–CF08 remain open; prior runtime/protocol qualifications, provider baselines and dist remain unchanged.
 
-Continue top-level save-name editing and remaining [compatibility work](tasks/COMPATIBILITY-FOLLOWUPS.md) autonomously. Previous STOP boundaries are historical. Durable state: `build/compatibility-20261026/checkpoint.json`. Native main only; at most three compiler jobs. Batch related checks. Preserve the running original, its real profile/payloads/ordinary HEAD/index; no system installation.
+Continue remaining [compatibility work](tasks/COMPATIBILITY-FOLLOWUPS.md) autonomously, including reducing repeated file-operation reads while preserving ownership/content and recovery checks. Previous STOP boundaries are historical. Durable state: `build/compatibility-20261026/checkpoint.json`. Native main only; at most three compiler jobs. Batch related checks. Preserve the running original, real profile/payloads and ordinary HEAD/index; no system installation.

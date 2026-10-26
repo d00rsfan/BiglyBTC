@@ -1,0 +1,112 @@
+{
+  "status": "VERIFIED_SCOPED_ACTUAL_BATCH6_RESULTS",
+  "qualified_source": "c3501e2037e35727af4c684afee2f905fd56c905",
+  "matrix": {
+    "gcc": {
+      "actual_suites": 5,
+      "build_seconds": 607.98,
+      "test_seconds": 22.05,
+      "qt_totals": [
+        [
+          21,
+          0,
+          0
+        ],
+        [
+          12,
+          0,
+          0
+        ]
+      ],
+      "executable_sha256": {
+        "torrent-intake": "009ab248b1b7e85957460b26daec6bf3a5fb63cd2e2d2fb2136f45aed80c551b",
+        "torrent-intake-file-options": "4984a2659a7ec83392bb245a1a78c65ffce2ac1ba6fe7391ce0bff4e428e67fc",
+        "torrent-intake-file-options-ui": "f679b3a69744e2c85dba2602b33c1eb9dde723ba277563bd524fb3e197e1f1e0",
+        "torrent-intake-file-options-worker": "8d255f5e7fdfa073f35d48a5fca9c8d8a6c8d3956876818f03f2a5c4838a6a70",
+        "managed-storage": "3de4deef45e6d9b03d529643de377c4055e0f60fb5197bd2b60a04659edff342"
+      },
+      "verbose_suite_sha256": {
+        "managed-storage": "ff92fb83c8524d9706cd2a7d9d2eaaa8ad73b71f0ea20130ec7e1f331c962df6",
+        "torrent-intake": "063296f66f58db227ffdbf6532dd8fc16e44fe1695dd5890e8c6fa49a4930de3",
+        "torrent-intake-file-options": "d9114ffbe38f76f1a484ca0394ca9b52bf3a5b3664336adb6036be294b7b3d7e",
+        "torrent-intake-file-options-ui": "77d46fac53fbbdffb87897203ded92fd61ad0413094e0e96199b3a9c585f9a82",
+        "torrent-intake-file-options-worker": "0dba49e8afacb615f9b7df85629c577b9f712b128ff02d6399cbc661393ffea6"
+      }
+    },
+    "clang": {
+      "actual_suites": 5,
+      "build_seconds": 601.66,
+      "test_seconds": 23.88,
+      "qt_totals": [
+        [
+          21,
+          0,
+          0
+        ],
+        [
+          12,
+          0,
+          0
+        ]
+      ],
+      "executable_sha256": {
+        "torrent-intake": "f0abb0a159489ab7579d69a537bb450e5d51ab7540a2890171788878966f31a7",
+        "torrent-intake-file-options": "e32ed5cd8011d971e1054203078f4bdf900635ade595c1e670d4041cbff6558a",
+        "torrent-intake-file-options-ui": "d247e9cecfedb01303b60c92c99476da7325b3e3f38edea39f61ac19c425215e",
+        "torrent-intake-file-options-worker": "e8913697147f886b30343f79c5d4d5aa8779c223b08181d10ae5924e34dc5a0b",
+        "managed-storage": "ca36283f288b8a6f76663224dec8aa5caebd712da092ff1ae89f94600bf9e3ec"
+      },
+      "verbose_suite_sha256": {
+        "managed-storage": "8974e10b5c0db678de93ce7b353d44e9837d1fcc5d40c7b9082e689d475b14d5",
+        "torrent-intake": "67a2d748e5c0f2e0fa894fa79e19b3d324e3454d52f57bec8a77904e014036cb",
+        "torrent-intake-file-options": "a416e4b80e40f142ede76fc271f57eb97491ea223d53f02f72ef84246747c723",
+        "torrent-intake-file-options-ui": "a77acaa344f68ca50f6629269bfbf9bf0d66a8213676d8b36f7f421ec80b241f",
+        "torrent-intake-file-options-worker": "5a0fddaedecf56110e6c3d6bfe22427773a20242a16cb91589002ed3f0235a81"
+      }
+    },
+    "san": {
+      "actual_suites": 5,
+      "build_seconds": 817.62,
+      "test_seconds": 25.5,
+      "qt_totals": [
+        [
+          21,
+          0,
+          0
+        ],
+        [
+          12,
+          0,
+          0
+        ]
+      ],
+      "executable_sha256": {
+        "torrent-intake": "f305d5e139423be86b9a42b16dff35b7346cb51fb3547b8e4885016d654b8481",
+        "torrent-intake-file-options": "89622f5538dd9d87b33a5e1680d4424442cfdeb09eaceb66e2ca99eb36b8e69a",
+        "torrent-intake-file-options-ui": "24bbc69cedbcd1a4450fc4e13f010bdab5721f016a99b0378a03d87193a9e3d1",
+        "torrent-intake-file-options-worker": "26239385074357cec8e2627563970b23d263d93d0c2220ee25a254a24ac17946",
+        "managed-storage": "56a23b35ba66dbcebfc10a3cf2559928bdb5325eb3527e91956d7230b35741ca"
+      },
+      "verbose_suite_sha256": {
+        "managed-storage": "0b6d0894abe78279ee35f5624322dff05f99653b761f4d288320627674a31968",
+        "torrent-intake": "203305d5f155085e868c34a121adb01e7a98533d2241e885a88acf4be249e968",
+        "torrent-intake-file-options": "0e91fc53f670e155b2fbaccc8a836b5ab584cdd9457f8ff3f3acc1017e61d5da",
+        "torrent-intake-file-options-ui": "0856695079ba9a958132e976cd3d59578e29998a7ec18414862fde80cbd6353e",
+        "torrent-intake-file-options-worker": "1a0b41c129efc04eae30fb4895b3c94e57d4ad0322c0d6c54337f4ec99515563"
+      }
+    }
+  },
+  "source_commits": [
+    "c3501e2037e35727af4c684afee2f905fd56c905"
+  ],
+  "tracked_source_files": 900,
+  "original_save_name": {
+    "cases": 8,
+    "ready_managers": 8,
+    "receipt_sha256": "443335ceed1ba7f4a120787feecdb6756ca60e4fc526349d64b2f84d55f119f1"
+  },
+  "capture_sha256": "93456dee6b5416588322b7cee9f0ec0952978d0b875962bf6a761279a8bdee31",
+  "dist_promoted": false,
+  "cf_parents_closed": [],
+  "raw_archive_sha256": "6721a9b5abc7ccb35ccd0f34a017e51f69f35b61dccd4568c2fab3b1c622d1be"
+}
