@@ -3,6 +3,7 @@
 #include "biglybtc/library.hpp"
 #include "biglybtc/file_policy.hpp"
 #include "biglybtc/torrent_intake_options.hpp"
+#include "biglybtc/torrent_intake_trackers.hpp"
 #include "biglybtc/torrent_layout.hpp"
 #include "profile.hpp"
 #include "original_torrent_identity.hpp"
@@ -36,6 +37,7 @@ class TorrentIntakeMetadata final {
 public:
   const core::TorrentHash& hash() const noexcept;
   const compat::OriginalLayout& layout() const noexcept;
+  const std::optional<core::TorrentIntakeTrackerFields>& trackers() const noexcept;
   const std::filesystem::path& source() const noexcept;
 private:
   struct Data;
@@ -44,7 +46,7 @@ private:
   friend std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(const std::filesystem::path&, std::stop_token);
   friend std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
       const TorrentIntakeMetadata&, const std::filesystem::path&, bool, std::span<const compat::FilePolicy>,
-      void (*)(TorrentIntakeStage), bool, std::stop_token, core::TorrentIntakeLimits, bool, bool, bool);
+      void (*)(TorrentIntakeStage), bool, std::stop_token, core::TorrentIntakeLimits, bool, bool, bool, std::optional<core::TorrentIntakeTrackerTiers>);
 };
 std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(
     const std::filesystem::path&, std::stop_token = {});
@@ -66,7 +68,14 @@ std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(
 std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
     const TorrentIntakeMetadata&, const std::filesystem::path& destination, bool stopped,
     std::span<const compat::FilePolicy>, void (*observer)(TorrentIntakeStage) = nullptr,
-    bool forceStart = false, std::stop_token = {}, core::TorrentIntakeLimits = {}, bool sequentialDownload = false, bool queued = false, bool paused = false);
+    bool forceStart = false, std::stop_token = {}, core::TorrentIntakeLimits = {}, bool sequentialDownload = false, bool queued = false, bool paused = false, std::optional<core::TorrentIntakeTrackerTiers> trackers = std::nullopt);
+
+// Literal pre-add override: absent leaves source bytes untouched; present empty
+// stores the original decentralized marker. Only outer announce fields change;
+// raw info/full selected identity and every other source value are preserved.
+// Pure bounded helper shared by intake and the retained-original replay driver.
+std::expected<std::string,Error> rewriteTorrentIntakeTrackers(std::string_view metadata,
+    const std::optional<core::TorrentIntakeTrackerTiers>&);
 
 // Explicit stopped companion, matching original hybrid "run as other version"
 // identity shape. Source row/state/cache/control bytes remain unchanged. No

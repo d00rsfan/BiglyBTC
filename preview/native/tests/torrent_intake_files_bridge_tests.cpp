@@ -36,6 +36,23 @@ private slots:
     auto owner=engine::PersistentSession::create({1,2,3});QVERIFY2(owner.has_value(),"This actual-owner cohort requires an approved source-bound runtime; no skip");
     const auto closed=(*owner)->close(std::chrono::steady_clock::now()+std::chrono::seconds{5});QVERIFY(closed.sessionJoined);
   }
+  void offlineTrackerOverrideCommitsBeforeResultWithoutChangingOriginalMetadata_data(){QTest::addColumn<bool>("clear");QTest::newRow("explicit-tiers")<<false;QTest::newRow("explicit-clear")<<true;}
+  void offlineTrackerOverrideCommitsBeforeResultWithoutChangingOriginalMetadata(){
+    QFETCH(bool,clear);test::selected_swarm::Fixture fixture(false);const auto profile=QString::fromStdString((fixture.root/"tracker-intake-profile").string());emptyProfile(profile);
+    const auto source=test::selected_swarm::read(fixture.input);const auto destination=QString::fromStdString((fixture.root/"absent-trackers-payload").string());app::SessionBridge bridge;
+    QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),reads(&bridge,&app::SessionBridge::torrentIntakeReady),writes(&bridge,&app::SessionBridge::torrentIntakeFinished),native(&bridge,&app::SessionBridge::nativeSessionReady),closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.open(profile.toStdString(),0));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty(),10000);const auto session=sessions[0][0].toULongLong();
+    QVERIFY(bridge.previewTorrentIntake({session,1,QString::fromStdString(fixture.input.string())}));QTRY_COMPARE_WITH_TIMEOUT(reads.size(),1,10000);QTRY_VERIFY(!bridge.busy());const auto files=preview(reads);QVERIFY2(ui::validTorrentIntake(files),qPrintable(files->failure));
+    std::vector<compat::FilePolicy> selected;for(const auto& file:files->files){selected.push_back({file.padding,0});}
+    ui::TorrentIntakeSubmission accepted{session,files->source.request,files->revision,destination,false,selected};accepted.trackers=clear?core::TorrentIntakeTrackerTiers{}:core::TorrentIntakeTrackerTiers{{"https://first.invalid/a"},{"udp://127.0.0.1:9/a","https://last.invalid/a"}};
+    auto stale=accepted;++stale.revision;QVERIFY(bridge.importTorrentFiles(stale));QTRY_COMPARE_WITH_TIMEOUT(writes.size(),1,10000);QVERIFY(!result(writes)->imported);QVERIFY(document(profile+QStringLiteral("/downloads.config")).find("downloads")->children.empty());QTRY_VERIFY(!bridge.busy());
+    const auto expected=storage::rewriteTorrentIntakeTrackers(source,accepted.trackers);QVERIFY(expected);bool committedAtResult=false;
+    connect(&bridge,&app::SessionBridge::torrentIntakeFinished,this,[&](const ui::TorrentIntakeResultPresentation& result){if(!result->imported){return;}const auto saved=document(profile+QStringLiteral("/downloads.config"));committedAtResult=saved.find("downloads")->children.size()==1&&test::read(profile+QStringLiteral("/torrents/")+files->hash+QStringLiteral(".torrent")).toStdString()==*expected;});
+    QVERIFY(bridge.importTorrentFiles(accepted));QTRY_COMPARE_WITH_TIMEOUT(writes.size(),2,10000);QVERIFY2(result(writes)->imported,qPrintable(result(writes)->failure));QVERIFY(!result(writes)->started);QVERIFY(committedAtResult);QCOMPARE(native.size(),0);QVERIFY(!QFile::exists(destination));QCOMPARE(test::selected_swarm::read(fixture.input),source);
+    const auto archive=document(profile+QStringLiteral("/torrents/")+files->hash+QStringLiteral(".torrent"));const auto state=document(profile+QStringLiteral("/active/")+files->hash+QStringLiteral(".dat"));
+    const auto rawInfo=storage::originalTorrentInfoSubject(archive);const auto stateInfo=storage::originalTorrentInfoSubject(state);QVERIFY(rawInfo&&stateInfo);QCOMPARE(std::string(*rawInfo),fixture.rawInfo);QCOMPARE(std::string(*stateInfo),fixture.rawInfo);
+    QTRY_VERIFY(!bridge.busy());QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,10000);QVERIFY(closed[0][1].toBool()&&closed[0][2].toBool());auto lease=storage::ProfileLease::acquire(profile.toStdString());QVERIFY(lease);QVERIFY(fixture.untouched());
+  }
   void actualHostCreatesOnlyStoppedCompanionFromFreshSourceTarget() {
     test::selected_swarm::Fixture source(false);const auto original=source.initialState;
     source.lease.reset();

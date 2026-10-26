@@ -8,8 +8,10 @@
 #include <QPixmap>
 #include <QItemSelectionModel>
 #include <QLineEdit>
+#include <QLabel>
 #include <QPointer>
 #include <QPushButton>
+#include <QPlainTextEdit>
 #include <QSignalSpy>
 #include <QSpinBox>
 #include <QTableView>
@@ -39,6 +41,55 @@ class TorrentIntakeDialogTests final:public QObject {
   Q_OBJECT
 private slots:
   void initTestCase(){QCOMPARE(QGuiApplication::platformName(),QStringLiteral("offscreen"));QApplication::setQuitOnLastWindowClosed(false);}
+  void trackerDraftPreservesDefaultAndExplicitTiersOrClearAcrossFailure() {
+    ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();
+    QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested),writes(&dialog,&ui::TorrentIntakeDialog::submitted);
+    auto* load=dialog.findChild<QPushButton*>(QStringLiteral("import-load-files"));QTRY_VERIFY(load->isEnabled());load->click();
+    auto source=std::make_shared<ui::TorrentIntakePacket>(*packet(request(reads)));
+    source->trackers=core::TorrentIntakeTrackerFields{"http://keep.invalid/announce",{{"https://other.invalid/a"}}};dialog.setPreview(source);
+    auto* table=dialog.findChild<QTableView*>(QStringLiteral("import-file-table"));QVERIFY(table);QTRY_COMPARE(table->model()->rowCount(),3);
+    auto* edit=dialog.findChild<QCheckBox*>(QStringLiteral("import-edit-trackers"));auto* text=dialog.findChild<QPlainTextEdit*>(QStringLiteral("import-trackers"));auto* add=dialog.findChild<QPushButton*>(QStringLiteral("import-confirm"));QVERIFY(edit&&text&&add);
+    QTRY_VERIFY(add->isEnabled());QVERIFY(!edit->isChecked());QVERIFY(text->isReadOnly());QCOMPARE(text->toPlainText(),QStringLiteral("http://keep.invalid/announce\n\nhttps://other.invalid/a"));
+    add->click();QCOMPARE(writes.size(),1);QVERIFY(!submission(writes).trackers);dialog.rejectSubmission(submission(writes));QTRY_VERIFY(add->isEnabled());
+    edit->setChecked(true);text->setPlainText(QStringLiteral("https://new.invalid/a\nhttps://new.invalid/a\n\nudp://127.0.0.1:9/a"));QTRY_VERIFY(add->isEnabled());add->click();QCOMPARE(writes.size(),2);
+    const core::TorrentIntakeTrackerTiers expected{{"https://new.invalid/a","https://new.invalid/a"},{"udp://127.0.0.1:9/a"}};
+    QVERIFY(submission(writes).trackers&&*submission(writes).trackers==expected);const auto draft=text->toPlainText();
+    auto failure=std::make_shared<ui::TorrentIntakeResultPacket>();const auto sent=submission(writes);failure->session=sent.session;failure->request=sent.request;failure->revision=sent.revision;failure->failure=QStringLiteral("Owned inventory conflict");dialog.setResult(failure);
+    QTRY_VERIFY(add->isEnabled());QVERIFY(edit->isChecked());QCOMPARE(text->toPlainText(),draft);
+    const auto capture=qEnvironmentVariable("BIGLYBTC_CAPTURE_DIR");if(!capture.isEmpty()){QDir directory(capture);QVERIFY(directory.mkpath(QStringLiteral(".")));QVERIFY(dialog.grab().save(directory.filePath(QStringLiteral("torrent-intake-tracker-tiers.png"))));}
+    text->clear();QTRY_VERIFY(add->isEnabled());add->click();QCOMPARE(writes.size(),3);QVERIFY(submission(writes).trackers&&submission(writes).trackers->empty());
+    dialog.rejectSubmission(submission(writes));QTRY_VERIFY(add->isEnabled());edit->setChecked(false);QTRY_VERIFY(add->isEnabled());add->click();QCOMPARE(writes.size(),4);QVERIFY(!submission(writes).trackers);
+  }
+  void unrepresentableSourceTrackersRemainImportableButNeverBecomeEditableEmpty() {
+    ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();
+    QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested),writes(&dialog,&ui::TorrentIntakeDialog::submitted);
+    auto* load=dialog.findChild<QPushButton*>(QStringLiteral("import-load-files"));QTRY_VERIFY(load->isEnabled());load->click();
+    auto source=std::make_shared<ui::TorrentIntakePacket>(*packet(request(reads)));source->trackers.reset();QVERIFY(ui::validTorrentIntake(source));dialog.setPreview(source);
+    auto* table=dialog.findChild<QTableView*>(QStringLiteral("import-file-table"));QVERIFY(table);QTRY_COMPARE(table->model()->rowCount(),3);
+    auto* edit=dialog.findChild<QCheckBox*>(QStringLiteral("import-edit-trackers"));auto* text=dialog.findChild<QPlainTextEdit*>(QStringLiteral("import-trackers"));auto* add=dialog.findChild<QPushButton*>(QStringLiteral("import-confirm"));QVERIFY(edit&&text&&add);
+    QTRY_VERIFY(add->isEnabled());QVERIFY(!edit->isEnabled());QVERIFY(!text->isEnabled());QVERIFY(text->isReadOnly());
+    QVERIFY(dialog.findChild<QLabel*>(QStringLiteral("import-file-status"))->text().contains(QStringLiteral("kept unchanged")));
+    add->click();QCOMPARE(writes.size(),1);QVERIFY(!submission(writes).trackers);dialog.rejectSubmission(submission(writes));QTRY_VERIFY(add->isEnabled());
+    edit->setChecked(true);QTRY_VERIFY(!add->isEnabled());dialog.accept();QCOMPARE(writes.size(),1); // Programmatic misuse cannot grant edit authority.
+  }
+  void malformedTrackerDraftAndDeletedEditorCannotSubmit() {
+    ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested),writes(&dialog,&ui::TorrentIntakeDialog::submitted);
+    auto* load=dialog.findChild<QPushButton*>(QStringLiteral("import-load-files"));QTRY_VERIFY(load->isEnabled());load->click();dialog.setPreview(packet(request(reads)));
+    auto* edit=dialog.findChild<QCheckBox*>(QStringLiteral("import-edit-trackers"));auto* text=dialog.findChild<QPlainTextEdit*>(QStringLiteral("import-trackers"));auto* add=dialog.findChild<QPushButton*>(QStringLiteral("import-confirm"));QVERIFY(edit&&text&&add);QTRY_VERIFY(add->isEnabled());edit->setChecked(true);
+    for(const auto& value:{QStringLiteral("file:///tmp/wrong"),QStringLiteral("http://bad host/a"),QString(65537,u'x')}){text->setPlainText(value);QTRY_VERIFY(!add->isEnabled());dialog.accept();QCOMPARE(writes.size(),0);}
+    text->setPlainText(QStringLiteral("https://valid.invalid/a"));QTRY_VERIFY(add->isEnabled());delete text;dialog.accept();QCOMPARE(writes.size(),0);QCoreApplication::processEvents();QCOMPARE(writes.size(),0);
+  }
+  void trackerPrefillAndProfileResetYieldToReentrantBindingOrDeletion() {
+    ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested),writes(&dialog,&ui::TorrentIntakeDialog::submitted);
+    auto* load=dialog.findChild<QPushButton*>(QStringLiteral("import-load-files"));QTRY_VERIFY(load->isEnabled());load->click();
+    auto source=std::make_shared<ui::TorrentIntakePacket>(*packet(request(reads)));source->trackers->announce="https://old.invalid/a";
+    auto* text=dialog.findChild<QPlainTextEdit*>(QStringLiteral("import-trackers"));QVERIFY(text);bool rebound=false;
+    auto connection=connect(text,&QPlainTextEdit::textChanged,&dialog,[&]{if(!rebound){rebound=true;QVERIFY(dialog.beginSession(78));}});
+    dialog.setPreview(source);QVERIFY(rebound);QVERIFY(!dialog.preview());QVERIFY(text->toPlainText().isEmpty());dialog.accept();QCOMPARE(writes.size(),0);disconnect(connection);
+    QPointer<ui::TorrentIntakeDialog> deleted=new ui::TorrentIntakeDialog;QVERIFY(deleted->beginSession(90));inputs(*deleted);deleted->show();QSignalSpy reads2(deleted.data(),&ui::TorrentIntakeDialog::previewRequested);
+    auto* load2=deleted->findChild<QPushButton*>(QStringLiteral("import-load-files"));QTRY_VERIFY(load2->isEnabled());load2->click();auto source2=std::make_shared<ui::TorrentIntakePacket>(*packet(request(reads2)));source2->trackers->announce="https://old.invalid/a";
+    auto* text2=deleted->findChild<QPlainTextEdit*>(QStringLiteral("import-trackers"));connect(text2,&QPlainTextEdit::textChanged,this,[&]{delete deleted.data();});deleted->setPreview(source2);QVERIFY(deleted.isNull());QCoreApplication::processEvents();
+  }
   void sparseWantedChoicesPaddingAndFailedCommitRetainDraft() {
     ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();
     QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested),writes(&dialog,&ui::TorrentIntakeDialog::submitted);
@@ -138,6 +189,22 @@ private slots:
     ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));auto* mode=dialog.findChild<QComboBox*>(QStringLiteral("import-start-mode"));auto* destination=dialog.findChild<QLineEdit*>(QStringLiteral("import-destination"));QVERIFY(mode&&destination);mode->setCurrentIndex(mode->findData(static_cast<int>(ui::TorrentIntakeStartMode::Forced)));bool rebound=false;
     connect(mode,&QComboBox::currentIndexChanged,&dialog,[&](int index){if(index==0){rebound=dialog.beginSession(79);}});
     QVERIFY(!dialog.beginSession(78,QStringLiteral("/old78")));QVERIFY(rebound);QVERIFY(destination->text().isEmpty());QVERIFY(!dialog.beginSession(78));
+  }
+  void startModeResetForwardsExactOrderAndPreservesBlockedState(){
+    ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));auto* mode=dialog.findChild<QComboBox*>(QStringLiteral("import-start-mode"));QVERIFY(mode);
+    mode->setCurrentIndex(mode->findData(static_cast<int>(ui::TorrentIntakeStartMode::Paused)));QStringList notifications;
+    connect(mode,&QComboBox::currentIndexChanged,this,[&](int index){notifications.push_back(QStringLiteral("index:%1").arg(index));});
+    connect(mode,&QComboBox::currentTextChanged,this,[&](const QString& text){notifications.push_back(QStringLiteral("text:")+text);});
+    QVERIFY(dialog.beginSession(78));QCOMPARE(notifications,QStringList({QStringLiteral("index:0"),QStringLiteral("text:Queued")}));QVERIFY(!mode->signalsBlocked());
+    mode->blockSignals(true);mode->setCurrentIndex(mode->findData(static_cast<int>(ui::TorrentIntakeStartMode::Paused)));QVERIFY(dialog.beginSession(79));QVERIFY(mode->signalsBlocked());QCOMPARE(notifications.size(),2);
+  }
+  void startModeForwardedTextMayRebindOrDeleteOwnerAndIndexMayDeleteChild(){
+    ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));auto* mode=dialog.findChild<QComboBox*>(QStringLiteral("import-start-mode"));QVERIFY(mode);mode->setCurrentIndex(mode->findData(static_cast<int>(ui::TorrentIntakeStartMode::Paused)));
+    bool rebound=false;connect(mode,&QComboBox::currentTextChanged,&dialog,[&](const QString&){rebound=dialog.beginSession(79);});QVERIFY(!dialog.beginSession(78,QStringLiteral("/old78")));QVERIFY(rebound);QVERIFY(dialog.findChild<QLineEdit*>(QStringLiteral("import-destination"))->text().isEmpty());
+    QPointer<ui::TorrentIntakeDialog> deleted=new ui::TorrentIntakeDialog;QVERIFY(deleted->beginSession(90));auto* mode2=deleted->findChild<QComboBox*>(QStringLiteral("import-start-mode"));QVERIFY(mode2);mode2->setCurrentIndex(mode2->findData(static_cast<int>(ui::TorrentIntakeStartMode::Paused)));
+    connect(mode2,&QComboBox::currentTextChanged,this,[&](const QString&){delete deleted.data();});QVERIFY(!deleted->beginSession(91));QVERIFY(deleted.isNull());
+    ui::TorrentIntakeDialog child;QVERIFY(child.beginSession(100));QPointer<QComboBox> mode3=child.findChild<QComboBox*>(QStringLiteral("import-start-mode"));QVERIFY(mode3);mode3->setCurrentIndex(mode3->findData(static_cast<int>(ui::TorrentIntakeStartMode::Paused)));
+    connect(mode3.data(),&QComboBox::currentIndexChanged,this,[&](int){delete mode3.data();});QVERIFY(!child.beginSession(101));QVERIFY(mode3.isNull());
   }
   void forcedStartResetAndChildDeletionCannotDispatch(){
     QPointer<ui::TorrentIntakeDialog> dialog=new ui::TorrentIntakeDialog;QVERIFY(dialog->beginSession(77));auto* mode=dialog->findChild<QComboBox*>(QStringLiteral("import-start-mode"));QVERIFY(mode);mode->setCurrentIndex(mode->findData(static_cast<int>(ui::TorrentIntakeStartMode::Paused)));

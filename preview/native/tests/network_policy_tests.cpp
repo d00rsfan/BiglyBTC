@@ -59,6 +59,23 @@ std::shared_ptr<lt::torrent_info> metadata(bool privateTorrent = false) {
 
 int main() {
   try {
+    run("saved decentralized marker never becomes a tracker or enables discovery", [] {
+      const std::string url="dht://0123456789ABCDEF0123456789ABCDEF01234567.dht/announce";
+      const std::string source="d8:announce"+bytes(url)+"4:infod6:lengthi1e4:name1:x12:piece lengthi16384e6:pieces20:"+std::string(20,'h')+"ee";
+      lt::error_code error;auto parsed=std::make_shared<lt::torrent_info>(source.data(),static_cast<int>(source.size()),error);
+      CHECK(!error&&parsed->is_valid()&&parsed->trackers().empty());
+      auto disabled=config({{"Plugin.DHT.dht.enabled",integer(0)}});const auto policy=normal(&disabled);
+      lt::add_torrent_params params;params.ti=parsed;params.flags|=lt::torrent_flags::disable_pex|lt::torrent_flags::disable_lsd;
+      CHECK(engine::applyTorrentNetworkPolicy(policy,{},params));CHECK(params.trackers.empty());
+      CHECK((params.flags & lt::torrent_flags::disable_dht)&&(params.flags & lt::torrent_flags::disable_pex)&&(params.flags & lt::torrent_flags::disable_lsd));
+      const auto isolated=engine::readNetworkPolicy(nullptr);CHECK(isolated);
+      lt::add_torrent_params isolatedParams;isolatedParams.ti=parsed;
+      CHECK(engine::applyTorrentNetworkPolicy(*isolated,{},isolatedParams));CHECK(isolatedParams.trackers.empty());
+      CHECK(isolatedParams.flags & lt::torrent_flags::disable_dht);CHECK(isolatedParams.flags & lt::torrent_flags::disable_pex);CHECK(isolatedParams.flags & lt::torrent_flags::disable_lsd);
+      auto privateInfo=metadata(true);lt::add_torrent_params privateParams;privateParams.ti=privateInfo;
+      CHECK(engine::applyTorrentNetworkPolicy(normal(),{},privateParams));CHECK(privateParams.flags & lt::torrent_flags::disable_dht);
+      CHECK(privateParams.flags & lt::torrent_flags::disable_pex);CHECK(privateParams.flags & lt::torrent_flags::disable_lsd);
+    });
     run("pinned defaults and explicit public permission", [] {
       const auto isolated = engine::readNetworkPolicy(nullptr);
       CHECK(isolated && isolated->mode == engine::NetworkMode::IsolatedLoopback);

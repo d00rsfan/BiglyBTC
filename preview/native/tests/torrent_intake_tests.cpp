@@ -123,7 +123,19 @@ void editStateAtPublished(Stage stage) {
 }
 } // namespace
 
-int main() {
+int main(int argc,char** argv) {
+  if(argc==5&&std::string_view(argv[1])=="--project-trackers"){
+    try{
+      const auto request=document(argv[3]);const auto* node=request.find("trackers");
+      CHECK(request.root().type==core::Node::Type::Dictionary&&request.root().children.size()==(node?2U:0U));
+      std::optional<core::TorrentIntakeTrackerTiers> tiers;
+      if(node){tiers=core::decodeTorrentIntakeTrackerTiers(*node);CHECK(tiers);}
+      const auto source=read(argv[2]);const auto projected=storage::rewriteTorrentIntakeTrackers(source,tiers);
+      CHECK(projected);CHECK(!fs::exists(argv[4]));write(argv[4],*projected);
+      std::cout<<"PASS production tracker projection; retained source input; no engine or network\n";return 0;
+    }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}
+  }
+  if(argc!=1){std::cerr<<"Expected no arguments or --project-trackers INPUT REQUEST OUTPUT\n";return 2;}
   try {
     run("single and multifile import creates only compatible metadata", [] {
       for (const bool multi : {false, true}) {

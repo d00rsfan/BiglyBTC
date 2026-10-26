@@ -1,6 +1,7 @@
 #include "torrent_intake.hpp"
 #include "library_commands.hpp"
 #include "biglybtc/saved_dnd.hpp"
+#include <libtorrent/torrent_info.hpp>
 #include <algorithm>
 #include <array>
 #include <filesystem>
@@ -75,8 +76,105 @@ void verify(Area& area,const core::TorrentHash& hash,std::string_view kinds,std:
   check(!storage::hasPendingTorrentIntake(*area.lease),"Commit journal retired");
 }
 }
+
+namespace {
+std::string encodedTiers(const core::TorrentIntakeTrackerTiers& tiers){
+  std::string value="l";for(const auto& tier:tiers){value+='l';for(const auto& url:tier){value+=b(url);}value+='e';}return value+'e';
+}
+std::string withTrackers(std::string primary,const core::TorrentIntakeTrackerTiers& tiers){
+  auto source=parse(metadata());check(source.replaceValue("announce",b(primary)).has_value(),"Source primary");
+  check(source.replaceValue("announce-list",encodedTiers(tiers)).has_value(),"Source tiers");return source.serialize();
+}
+std::string rawValue(const core::Document& source,const char* key){const auto* node=source.find(key);check(node,"Raw field present");return source.originalBytes().substr(node->begin,node->end-node->begin);}
+void trackerOptions(){
+  using Tiers=core::TorrentIntakeTrackerTiers;
+  const std::string keep="http://keep.invalid:81/announce",x="https://other.invalid/announce",y="udp://127.0.0.1:9/announce";
+  const auto source=withTrackers(keep,{{keep},{y}});const auto original=parse(source);
+  // Previously accepted metadata must retain the old no-edit path even when a
+  // bounded ASCII editor cannot represent its exact original tracker fields.
+  for(int kind=0;kind<7;++kind){
+    Area area;auto input=parse(source);
+    if(kind==0){check(input.replaceValue("announce-list",encodedTiers(Tiers(17,{x}))).has_value(),"Large original tier set");}
+    if(kind==1){check(input.replaceValue("announce-list",encodedTiers(Tiers{std::vector<std::string>(65,x)})).has_value(),"Large original URL count");}
+    if(kind==2){check(input.replaceValue("announce",b("https://original.invalid/"+std::string(2049,'x'))).has_value(),"Long original primary URL");}
+    if(kind==3){check(input.replaceValue("announce-list",encodedTiers({{"https://original.invalid/\xd1\x8f"}})).has_value(),"Unicode original URL bytes");}
+    if(kind==4){check(input.replaceValue("announce-list","3:raw").has_value(),"Ignored opaque original tracker-list type");}
+    if(kind==5){check(input.replaceValue("announce-list",encodedTiers(Tiers{std::vector<std::string>(64,"https://original.invalid/"+std::string(1500,'x'))})).has_value(),"Large original tracker byte budget");}
+    if(kind==6){check(input.replaceValue("announce","i7e").has_value(),"Ignored opaque original primary type");}
+    const auto bytes=input.serialize();write(area.input,bytes);const auto prepared=take(storage::inspectTorrentIntake(area.input));
+    check(!prepared.trackers(),"Original projection explicitly unavailable; never silently empty/truncated");area.untouched();
+    check(take(storage::rewriteTorrentIntakeTrackers(bytes,std::nullopt))==bytes,"Pure absent edit does not parse or reject old tracker fields");
+    const auto hash=take(storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed));
+    check(read(area.profile/"torrents"/(hash.hex()+".torrent"))==bytes&&read(area.input)==bytes,"Real untouched import preserves every original archive/source byte");
+    check(!fs::exists(area.destination),"Unavailable tracker editor has no payload effects");verify(area,hash,"LCLC",mixed);
+    for(const Tiers& override:std::vector<Tiers>{{},{{x},{y}}}){
+      const auto replacement=take(storage::rewriteTorrentIntakeTrackers(bytes,override));const auto projected=parse(replacement);
+      check(rawValue(projected,"info")==rawValue(input,"info"),"Explicit bounded backend replacement keeps raw info despite unsupported old tiers");
+      check(override.empty()?!projected.find("announce-list"):rawValue(projected,"announce-list")==encodedTiers(override),"Old unrepresentable fields do not block explicit bounded clear/replacement");
+    }
+  }
+
+  const auto absent=take(storage::rewriteTorrentIntakeTrackers(source,std::nullopt));check(absent==source,"Absent override preserves every source byte");
+  struct Case{Tiers input;std::string primary;Tiers stored;};
+  const std::vector<Case> cases{{{},"",{}},{{{},{}},"",{}},{{{x}},x,{}},{{{x,x}},x,{{x,x}}},
+      {{{x},{keep,y}},keep,{{x},{keep,y}}},{{{x},{y}},x,{{x},{y}}},{{{},{x},{},{y},{}},x,{{x},{y}}}};
+  for(const auto& value:cases){
+    Area area;write(area.input,source);const auto prepared=take(storage::inspectTorrentIntake(area.input));
+    check(prepared.trackers()==core::TorrentIntakeTrackerFields{keep,{{keep},{y}}},"Sealed preview owns exact source tracker fields");
+    auto marker=prepared.hash().hex();for(auto& c:marker){if(c>='a'&&c<='f'){c=static_cast<char>(c-'a'+'A');}}
+    const auto expected=value.primary.empty()?"dht://"+marker+".dht/announce":value.primary;
+    const auto pure=take(storage::rewriteTorrentIntakeTrackers(source,value.input));const auto projected=parse(pure);
+    check(projected.find("announce")->bytes==expected,"Original primary/singleton/selected-hash marker rule");
+    check(value.stored.empty()?!projected.find("announce-list"):rawValue(projected,"announce-list")==encodedTiers(value.stored),"Original tier filtering and duplicate retention");
+    const auto hash=take(storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,nullptr,false,{}, {},false,false,false,value.input));
+    verify(area,hash,"LCLC",mixed);const auto archive=read(area.profile/"torrents"/(hash.hex()+".torrent"));const auto state=parse(read(area.profile/"active"/(hash.hex()+".dat")));
+    check(archive==pure&&read(area.input)==source,"Actual archive uses accepted edit without rewriting source");
+    check(rawValue(state,"info")==rawValue(original,"info")&&rawValue(projected,"info")==rawValue(original,"info"),"Tracker editing cannot rewrite raw info");
+    check(rawValue(projected,"attributes")==rawValue(original,"attributes"),"Pure edit retains unknown source subtree verbatim");
+    if(value.primary.empty()){
+      libtorrent::error_code error;libtorrent::torrent_info parsed(pure.data(),static_cast<int>(pure.size()),error);
+      check(!error&&parsed.is_valid()&&parsed.trackers().empty(),"Saved original DHT marker is not an LT tracker request");
+    }
+    check(!fs::exists(area.destination),"Tracker editing has no payload effects");
+  }
+  {
+    Area area;write(area.input,source);const auto prepared=take(storage::inspectTorrentIntake(area.input));const auto hash=take(storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed));
+    check(read(area.profile/"torrents"/(hash.hex()+".torrent"))==source&&read(area.input)==source,"Default real intake preserves source archive byte-exact");
+  }
+  std::vector<Tiers> bad{{{"file:///tmp/wrong"}},{{"trackerlist:http://other.invalid/a"}},{{"http://bad host/a"}},{{"udp://localhost/a"}},{{"http://localhost:0/a"}},{{"http://localhost:65536/a"}},{{"http://localhost:999999999999999999999999999999/a"}},{{"http://[broken::ip]/a"}},{{"http://-invalid/a"}},{{"http://bad..name/a"}},{{"http://localhost/a\\b"}}};
+  bad.push_back(Tiers(17,{x}));bad.push_back(Tiers{std::vector<std::string>(65,x)});
+  bad.push_back({{"http://localhost/"+std::string(2048,'x')}});bad.push_back(Tiers{std::vector<std::string>(64,"http://localhost/"+std::string(1500,'x'))});
+  for(const auto& value:bad){Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));const auto result=storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,nullptr,false,{}, {},false,false,false,value);check(!result&&result.error().code==storage::ErrorCode::InvalidFormat,"Invalid/bounded literal tracker override refuses before any effects");area.untouched();}
+  for(const auto stage:{storage::TorrentIntakeStage::JournalSynced,storage::TorrentIntakeStage::StatePublished,storage::TorrentIntakeStage::ArchivePublished,storage::TorrentIntakeStage::InventoryPublished}){
+    for(const Tiers& tiers:std::vector<Tiers>{{},{{x},{keep,y}}}){
+      Area area;write(area.input,source);const auto prepared=take(storage::inspectTorrentIntake(area.input));interrupted=stage;
+      check(!storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,interrupt,false,{}, {},false,false,true,tiers),"Interrupt accepted paused + tracker override");
+      const auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));check(journal.find("metadata")->bytes==source,"Journal retains original source bytes, not edited archive");
+      check(rawValue(parse(rawValue(journal,"fileOptions")),"trackers")==encodedTiers(tiers),"Journal retains absent-versus-empty typed tracker override");
+      area.reopen();const auto recovered=take(storage::recoverTorrentIntake(*area.lease));check(recovered&&*recovered==prepared.hash(),"Exact identity after tracker replay");
+      check(read(area.profile/"torrents"/(recovered->hex()+".torrent"))==take(storage::rewriteTorrentIntakeTrackers(source,tiers)),"Every durable stage replays exact tracker edit");
+      const auto inventory=core::readLibrary(parse(read(area.profile/"downloads.config")));check(inventory&&inventory->paused.size()==1&&inventory->paused[0].hash==*recovered,"Tracker replay preserves atomic paused intent");
+      check(read(area.input)==source&&!fs::exists(area.destination),"Recovery cannot rewrite source or allocate payload");
+    }
+  }
+  for(const auto& broken:std::vector<std::string>{"3:bad","l3:bade","ll0:ee",encodedTiers({{"file:///tmp/wrong"}})}){
+    Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));interrupted=storage::TorrentIntakeStage::JournalSynced;
+    check(!storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,interrupt,false,{}, {},false,false,false,Tiers{{x}}),"Freeze accepted tracker journal");
+    auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));auto options=parse(rawValue(journal,"fileOptions"));
+    check(options.replaceValue("trackers",broken).has_value(),"Own malformed tracker recovery input");check(journal.replaceValue("fileOptions",options.serialize()).has_value(),"Retain other accepted journal authority");write(area.profile/"BiglyBTC.torrent-import",journal.serialize());
+    const auto before=read(area.profile/"downloads.config");area.reopen();check(!storage::recoverTorrentIntake(*area.lease),"Malformed tracker replay refuses");
+    check(read(area.profile/"downloads.config")==before&&!fs::exists(area.profile/"active")&&storage::hasPendingTorrentIntake(*area.lease),"Bad replay keeps intent and inventory without effects");
+  }
+  {
+    Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));write(area.input,source);const auto result=storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,nullptr,false,{}, {},false,false,false,Tiers{{x}});
+    check(!result&&result.error().code==storage::ErrorCode::Conflict,"Tracker edits never bypass original preview source CAS");area.untouched();
+  }
+}
+}
+
 int main(){
   try{
+    trackerOptions();
     for(const auto flags:std::array<std::int64_t,5>{0,1,8192,std::numeric_limits<std::int64_t>::min(),std::numeric_limits<std::int64_t>::max()}){
       for(const bool sequential:{false,true}){
         Area area;write(area.input,metadataWithFlags("i"+std::to_string(flags)+'e'));

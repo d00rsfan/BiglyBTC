@@ -1102,7 +1102,7 @@ bool SessionBridge::previewTorrentIntake(ui::TorrentIntakeRequest request) {
       auto value=take(storage::inspectTorrentIntake(std::filesystem::path(request.metadata.toUtf8().toStdString()),stop));
       if(value.layout().files.size()>ui::MaximumIntakePreviewFiles){throw Failure{{storage::ErrorCode::Unsupported,"This torrent has too many files for the preview editor"}};}
       if(host_->intakePreviewRevision==std::numeric_limits<quint64>::max()){throw Failure{{storage::ErrorCode::Conflict,"File preview revisions are exhausted"}};}
-      packet->revision=++host_->intakePreviewRevision;packet->hash=text(value.hash().hex());packet->name=text(value.layout().name);
+      packet->revision=++host_->intakePreviewRevision;packet->hash=text(value.hash().hex());packet->name=text(value.layout().name);packet->trackers=value.trackers();
       for(std::size_t n=0;n<value.layout().files.size();++n){
         const auto& file=value.layout().files[n];packet->files.push_back({static_cast<int>(n),text(file.path),file.bytes,file.padding});
       }
@@ -1133,6 +1133,7 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
         throw Failure{{storage::ErrorCode::Conflict,"Restart to finish pending storage recovery before importing"}};
       }
       if(!core::validTorrentIntakeLimits(submission.limits)){throw Failure{{storage::ErrorCode::InvalidFormat,"Per-torrent limits must be between zero and INT32_MAX bytes/s"}};}
+      if(submission.trackers&&!core::validTorrentIntakeTrackerTiers(*submission.trackers)){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid tracker tier override"}};}
       const auto& layout=host_->intakeMetadata->layout();
       if(submission.files.size()!=layout.files.size()){throw Failure{{storage::ErrorCode::Conflict,"File choices do not match the loaded torrent"}};}
       bool selected=false;
@@ -1149,7 +1150,7 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
       if(start&&(!host_->engine||!host_->engine->managedAvailable())){throw Failure{{storage::ErrorCode::Unsupported,"The engine is unavailable; add this torrent stopped instead"}};}
       checkpoint(stop); // No payload/network work happens before the explicit commit.
       const auto hash=take(storage::importTorrentWithFileOptions(host_->lease,*host_->intakeMetadata,
-          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,stop,submission.limits,submission.sequentialDownload,queued,paused));
+          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,stop,submission.limits,submission.sequentialDownload,queued,paused,submission.trackers));
       result->imported=true;result->hash=text(hash.hex());host_->intakeMetadata.reset();
       const auto details=engine::queryTorrent(host_->lease,hash);
       if(details){host_->known.insert_or_assign(hash.hex(),Host::Known{text(details->name),details->bytes});}

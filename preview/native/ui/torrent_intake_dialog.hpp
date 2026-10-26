@@ -2,7 +2,7 @@
 #include "torrent_intake_presentation.hpp"
 #include <QDialog>
 #include <QPointer>
-class QLineEdit;class QCheckBox;class QLabel;class QPushButton;class QTableView;class QComboBox;class QSpinBox;
+class QPlainTextEdit;class QLineEdit;class QCheckBox;class QLabel;class QPushButton;class QTableView;class QComboBox;class QSpinBox;
 namespace biglybtc::ui {
 class IntakeFileModel;
 class TorrentIntakeDialog final:public QDialog {
@@ -26,6 +26,8 @@ signals:
   void previewCancelled(biglybtc::ui::TorrentIntakeRequest);
 private:
   void requestPreview();
+  bool resetTrackerDraft();
+  bool setTrackerDraftText(const QString&);
   void schedule();
   void render();
   quint64 session_=0,nextRequest_=0,revision_=0;
@@ -34,7 +36,8 @@ private:
   TorrentIntakePresentation preview_;
   QString failure_;
   QPointer<QLineEdit> source_,destination_;
-  QPointer<QCheckBox> sequential_;
+  QPointer<QCheckBox> sequential_,editTrackers_;
+  QPointer<QPlainTextEdit> trackers_;
   QPointer<QLabel> status_;
   QPointer<QPushButton> load_,add_;
   QPointer<QComboBox> priority_,startMode_;
