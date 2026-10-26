@@ -1,0 +1,160 @@
+{
+  "status": "VERIFIED_SCOPED_ACTUAL_BATCH8_RESULTS",
+  "qualified_source": "663cd8e9f387c8540976153c70238d1ef7869126",
+  "matrix": {
+    "gcc": {
+      "qualified_source": "663cd8e9f387c8540976153c70238d1ef7869126",
+      "actual_suites": 13,
+      "build_receipt": "batch8-gcc-build-r2",
+      "test_receipt": "batch8-gcc-tests-r3",
+      "build_seconds": 185.53,
+      "test_seconds": 144.81,
+      "executable_sha256": {
+        "original-disk-io": "f445ba34a90d72ad7c5ec743e9379e7a656599d1d78fb46daf66376041edaa3d",
+        "managed-storage": "844183074c426c45572cf3db579780ee5887ee92fb3698cf6e8f7967c3db2963",
+        "managed-download": "1f183381ef766e4d6f58b3bce3517e80e1a850c01b9736e37c2b5d02efbfe99a",
+        "managed-queue": "c8f8b81ce2fe68c430d13e50fd062010e4aaa31a33105eb06f9e719616a02cba",
+        "managed-seeding": "16598a20c376dfea4d7606b33350acb5bea9a2ca0ba5192a93c04e41fb410d69",
+        "managed-library-command-routing": "249f9960184c95abab59eadd1182250ed1c914d7e0fd3fd533d7e6df041a23ac",
+        "torrent-intake": "40a0d114265cf4d14f20d55a4f7f9dabb4ce5098504c011751a3c879e369151a",
+        "torrent-intake-file-options": "325c6ce100aee9ca8823625e0c17510d9c81e47e102455d3384f1b328d0f398e",
+        "torrent-intake-file-options-ui": "b6e778d96d9730d974504856ec2c41fbc017ca866298fd29c1f9e6d4c69e28ea",
+        "torrent-intake-file-options-worker": "ae4227b754532cb15b916eabe99dd769b82c29f3d1215b687fb4ebe19d969cdc",
+        "scheduler-host": "918d6ada5f53218f12c05daf9a0f4f00ec6cdd9b186728bb31acec3a42e020b8",
+        "scheduler-host-engine": "218a5034c7affb0ed4f2c924bde88213be8cff24ff75ffadf923b3bcd62c9a1a",
+        "scheduler-imported-integration": "04f96c047ca4744fbc2e0024d145627dacc8299564ec1e902fcf48a4e87e8637"
+      },
+      "verbose_suite_sha256": {
+        "managed-download": "900eb5a393b25247a61a887f8de774b73c503cf3f1a2e3e471fd6e10679750e8",
+        "managed-storage": "c18a699f14f67ded2108558bf68254af8c1e29bc36fca20bd945c359851991fc",
+        "torrent-intake": "063296f66f58db227ffdbf6532dd8fc16e44fe1695dd5890e8c6fa49a4930de3",
+        "managed-seeding": "5f1d9bbdaedf1eef1b9f269d1194d3c8f3eb3fb0ed016f7e1e51619c0340b2a0",
+        "managed-library-command-routing": "b68c24169cf9441ecbcc008ddceb606412db8c8c8e7634afe80f98e49fd63aed",
+        "managed-queue": "003489d8c451bdc42996c96aa2a557db381a422dc4ea984b633681e0c1dabc29",
+        "scheduler-host": "e7bbd45458105437747870c176a2cfbb1b50dd7b83d4d3fe370373f5bd154238",
+        "scheduler-host-engine": "66b4e807b9d51de55a47340662286dbe8445e41123920650a559b160eb5bc708",
+        "original-disk-io": "e0e15e97fd375ae8ddda05f4a7444a799893cf3bc4462b55c1fa3e5551f8a1aa",
+        "torrent-intake-file-options": "d9114ffbe38f76f1a484ca0394ca9b52bf3a5b3664336adb6036be294b7b3d7e",
+        "torrent-intake-file-options-ui": "0fdab968271679dd5cb031846d5446bb691779eb0c90b00be5b545cf8f52efc2",
+        "torrent-intake-file-options-worker": "9cf268f2961ae28bb9d7f0b50e4e3b375f91ece7fb4991f938d9f99aebad42a8",
+        "scheduler-imported-integration": "08ee318ed5d3f0747600ada009049f8648944d382c43b9155acfef56aac51d5b"
+      }
+    },
+    "clang": {
+      "qualified_source": "663cd8e9f387c8540976153c70238d1ef7869126",
+      "actual_suites": 13,
+      "build_receipt": "batch8-clang-build-r2",
+      "test_receipt": "batch8-clang-tests-r2",
+      "build_seconds": 538.59,
+      "test_seconds": 150.98,
+      "executable_sha256": {
+        "original-disk-io": "0ab79ad6a0405650dfec1349f9f5c99bfa2931893b601423b0b8e60ea0fc371f",
+        "managed-storage": "3d8b890c4583c08fc8e72c4527c68d31a6645197f9f817f80a9644174057a459",
+        "managed-download": "1d2840a4e9c03215de8a1324b9ae36badec51789bdbbce612531fd43fa641900",
+        "managed-queue": "bb39292ebe9dda02275592f1a4173a58f6ddfa08c7b2e2b365177d72396423f3",
+        "managed-seeding": "35aad5c4d09824e7bdc8dc68746054778484ad3e4997e414902f4f342349d20b",
+        "managed-library-command-routing": "f394eaf60c4356edd6a814ad7c06114351c578f263325ae65fb49a3ff3ed016c",
+        "torrent-intake": "878c48de17a668821ec6b8420ae50f13245a9447d766e9f48a6263460cf58b8b",
+        "torrent-intake-file-options": "bc4ac2e55043e2c0acd5baf376c46bd77393075378f8987311cad23094eccb7b",
+        "torrent-intake-file-options-ui": "06acfe5984c3ccaa67bf20c230f4bffec23385a3c8b3eaf480ee03707be4976d",
+        "torrent-intake-file-options-worker": "7ba1572e92cd8317dd9743c798454fc867611ba60eb4215f90672e9bcd5af89a",
+        "scheduler-host": "c88c1319e8ffeddc6a21a06217a1062b74d3496c7a3ad206f92f43a560667963",
+        "scheduler-host-engine": "20dce1a41f22ad68bc6c8623ef75b22778f7670c8cd90d7bebdac73c34d24b61",
+        "scheduler-imported-integration": "2f535389077338f1fe6b2700062d1c2ccdfd4c8ba6e0705ff04ef68a0557fa7d"
+      },
+      "verbose_suite_sha256": {
+        "managed-download": "ac0d1c57af5d3a1a975079a2ea4d6d5971e7f220f5d74e77a692cf41a269a81f",
+        "managed-storage": "2bbf3f813bddbf45ff075573e9ae3aa8f91a97a3d0dc8257cf220a4befd99783",
+        "torrent-intake": "67a2d748e5c0f2e0fa894fa79e19b3d324e3454d52f57bec8a77904e014036cb",
+        "managed-seeding": "322ec5cbae1574bec2e1157dae2300ee8aac5cca1bee1d40671998bbadbb4c06",
+        "managed-library-command-routing": "b50d39b40446390b50a028c05872d1cc7b3daeb3b321341530ef0d125c65e3fc",
+        "managed-queue": "35dd4f36960ea133d5090fb2728dde8827ca969a9c78573323b38a3131185b7c",
+        "scheduler-host": "6f304c9494abd80d79dce54226c33a53c9e7b47e18c700520715f4cedd1ef286",
+        "scheduler-host-engine": "77837c844c14f8838c98069a3df0d5f386cafc1de419374605b8bec94de66ca7",
+        "original-disk-io": "4a96d3ce922bcba1de0b92208aa6b3d3d584dc28170247becc41043af0fd06c3",
+        "torrent-intake-file-options": "a416e4b80e40f142ede76fc271f57eb97491ea223d53f02f72ef84246747c723",
+        "torrent-intake-file-options-ui": "ab5b10f2fb7088aa92d3e3e490b7c124c408511cb9b392f1bfc985f540369cf5",
+        "torrent-intake-file-options-worker": "2f04dde6a5c954e710c892075ad66b8e9489fa5f8cea4458b3da075198ea15c8",
+        "scheduler-imported-integration": "eedd540be6440116b7a17944feab30e99214511cde76aa667f4ff1092eb13a0f"
+      }
+    },
+    "san": {
+      "qualified_source": "663cd8e9f387c8540976153c70238d1ef7869126",
+      "actual_suites": 13,
+      "build_receipt": "batch8-san-build-r2",
+      "test_receipt": "batch8-san-tests-r2",
+      "build_seconds": 949.85,
+      "test_seconds": 164.34,
+      "executable_sha256": {
+        "original-disk-io": "7c28d30be74d9156d19bd99f73755240f91f3ddb91c415f2d0eaed898d63da38",
+        "managed-storage": "8f377c49a4a7851260d20acd1bb1715932d23c997b6dca1f4a6a3c6672b905d8",
+        "managed-download": "9074078739ff3f5da8f2a09b6e57d1374d6f904cd52918a27fc870e49c889783",
+        "managed-queue": "333dcbbf54ce79b252f00395e9bb356f9856ff5dd630dabf558c1c25eea94de5",
+        "managed-seeding": "333d3c69d04dc19cba42fdaf6ebc31c6a72f5705834b02a9d45106e4dff97bd3",
+        "managed-library-command-routing": "7807842e1b8e99a441ac1fe98d1b299f7e4c32594a372bf69cb57e91aeaa0278",
+        "torrent-intake": "e8b3c07cde535b05056a42cca6ff92cc6f356086c1b38bdda9b0094f9e785ba2",
+        "torrent-intake-file-options": "138f55919c6b49e273fc65429427f36fc6af5519ea76cacd0a0f116828dd1747",
+        "torrent-intake-file-options-ui": "d6270bb85557bbd6264732707c8143b6432791fc977630f20445934eeab4f07f",
+        "torrent-intake-file-options-worker": "a5abe6b0d2203f58c71b5ca1113c342c6aa443afc35d2776ba6e9bf878bfbe70",
+        "scheduler-host": "5b2bc4f4fee59a7b72a56590b3d21f45699273d94c59a5d8fd9f3ddefa69a58c",
+        "scheduler-host-engine": "475b006153a850a466afab3e4033b46843a90859051126491433002b29e7c4ce",
+        "scheduler-imported-integration": "f6aa81b2f5f078f63f59fe346d3a964f0e1465a42a66d87fc25aa8c85f678077"
+      },
+      "verbose_suite_sha256": {
+        "managed-download": "cff04c63180f6eb8bf581572f05cdfe1b280958ced8c83577cb4c82c4a3dfaea",
+        "managed-storage": "8205b3c8e55e48a1c64bc6165df20d886ffb70eec2a5617fcf808e51ff3361ce",
+        "torrent-intake": "203305d5f155085e868c34a121adb01e7a98533d2241e885a88acf4be249e968",
+        "managed-seeding": "42f61b9063256fac779e25dc9652a9d4261da4166166bb43d0de0f82d1af221d",
+        "managed-library-command-routing": "b1beda24bf23bf67e934fd97a136ac1ff9f6eca5e48aefc0909e47b26a46eb0f",
+        "managed-queue": "c6e48579776e2f66593a87c5d6fcb8436ca3d7ab3cfc92048526d2a4db962377",
+        "scheduler-host": "98a953e143eb3776cf92592c48f2c9fb986bb88fdd066a301b34408b46c4eaa3",
+        "scheduler-host-engine": "3ea18bba45ac18a29b1e87414115999469b631add696df24cbc05243b342b6df",
+        "original-disk-io": "b1822265d60d38341f54438c917364dd0b825c3da638c933d89203299b1d210c",
+        "torrent-intake-file-options": "0e91fc53f670e155b2fbaccc8a836b5ab584cdd9457f8ff3f3acc1017e61d5da",
+        "torrent-intake-file-options-ui": "c2433df7e07f055e0dc0d608f94fbeaa654cc1b8ae4a598e9573e3bacde37e15",
+        "torrent-intake-file-options-worker": "33019700da5824eb4b7b25ae15402434249bb02d2f5225c1e96bc3fb743894ac",
+        "scheduler-imported-integration": "174b701b78fda3c7e392bd87407d943be08b073cdf680569313d28f49163fac5"
+      }
+    }
+  },
+  "source_commits": [
+    "86fae89dd8bfa6ce20267b45fcaedd7ff676c4f6",
+    "663cd8e9f387c8540976153c70238d1ef7869126"
+  ],
+  "tracked_source_files": 903,
+  "original_verified_seeding": {
+    "cases": 4,
+    "original_processes": 4,
+    "receipt_sha256": "1fa33cccd05ea1d1b33853e1f1e08b8e51bee35a533cf02fc9247e956cb6fa2d"
+  },
+  "capture_sha256": "0cc32df505032729cabcf461c6ad7e651fa662cf41f185c8952a97ac7cad92cd",
+  "visual_validation": {
+    "commit": "7eb537c87a4ad1e3bcc5ec5d44aae934d17b9ca2",
+    "product_source": "663cd8e9f387c8540976153c70238d1ef7869126",
+    "production_unchanged": true,
+    "actual_suites": 1,
+    "build_receipt": "batch8-visual-gcc-build",
+    "test_receipt": "batch8-visual-gcc-tests",
+    "build_seconds": 23.95,
+    "test_seconds": 0.96,
+    "source_manifest_sha256": "986715dffa29b5a5e90038c6ca5e61f15ddde49c65677921c8f6a54f3351b73b",
+    "executable_sha256": "d5a32b17550c15c69a5346a82741029e0dc92c73ed409d461c4c7ee9a378fadd",
+    "application_binaries_sha256": {
+      "build/persistent-peer-accounting-20261021/bound-gcc/app/BiglyBTC": "c90755cf9573a897186cd6e00bdb88ba0a7cd143b6e7136752310b58eb3416cb"
+    },
+    "capture_sha256": "0cc32df505032729cabcf461c6ad7e651fa662cf41f185c8952a97ac7cad92cd",
+    "superseded_capture_sha256": "45635234884315afcd5801dc15aa6061578710c85fc42a627302da50317da7c1"
+  },
+  "environment_recovery": {
+    "probe_sha256": "8b6e24ec8be2e20d5b539e71aba352210f382c08fb5b12acab9cff3ae79789e2",
+    "recovery_sha256": "1dc6e70bb5b98fa6fb617bce45ebe15fc8400a44f462b53ecaed1cd8c50f1e23",
+    "preserved_cache_files": 230
+  },
+  "uncredited_attempts": {
+    "batch8-gcc-build": 1,
+    "batch8-gcc-tests-r2": 8
+  },
+  "dist_promoted": false,
+  "cf_parents_closed": [],
+  "raw_archive_sha256": "53a58b1c3453eae8f6cfb55c46add5d2e28d0da0451b668164021dc9a3e0f5c7"
+}

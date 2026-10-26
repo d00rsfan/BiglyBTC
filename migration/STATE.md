@@ -1,5 +1,9 @@
 # BiglyBTC migration state
 
+Compatibility batch8 qualifies verified existing-data seeding at native `663cd8e9f387c8540976153c70238d1ef7869126`: thirteen affected suites pass in each GCC, Clang and leak-enabled ASan/UBSan lane. Four actual native producer profiles are independently reloaded by original Java Core: complete single/multifile, corrupt single and stopped single. Complete native cases transfer to a real loopback receiver.
+[Batch8 review](updates/compatibility.providers/20261027-batch8.md). All CF parents remain open. Current user boundary: exactly two additional milestones in this section after batch8, then STOP; no next chapter.
+
+
 Compatibility batch7 qualifies bounded file-operation receipt reuse at native `dad74e36931da36a90de2c65aed0130e6fae26f6`: three affected suites pass in each GCC, Clang and leak-enabled ASan/UBSan lane. Nine actual unequal-size/sparse payload-read cases and two cold-recovery cases per lane retain strict content checks, journal order and descriptor cleanup.
 [Batch7 review](updates/compatibility.providers/20261027-batch7.md). All CF parents remain open.
 
