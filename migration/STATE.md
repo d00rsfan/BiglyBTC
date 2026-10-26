@@ -1,5 +1,9 @@
 # BiglyBTC migration state
 
+Compatibility batch7 qualifies bounded file-operation receipt reuse at native `dad74e36931da36a90de2c65aed0130e6fae26f6`: three affected suites pass in each GCC, Clang and leak-enabled ASan/UBSan lane. Nine actual unequal-size/sparse payload-read cases and two cold-recovery cases per lane retain strict content checks, journal order and descriptor cleanup.
+[Batch7 review](updates/compatibility.providers/20261027-batch7.md). All CF parents remain open.
+
+
 Compatibility batch6 qualifies optional top-level save-name editing at native `c3501e2037e35727af4c684afee2f905fd56c905`: five affected suites pass in each GCC, Clang and leak-enabled ASan/UBSan lane. Eight generated native imports reload through one actual original Java Core to READY with matching absolute paths, titles, file indices, selected bytes and unchanged payload inodes.
 [Batch6 review](updates/compatibility.providers/20261027-batch6.md). All CF parents remain open.
 

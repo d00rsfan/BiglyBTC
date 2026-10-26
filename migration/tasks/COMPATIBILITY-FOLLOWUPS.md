@@ -1,5 +1,9 @@
 # Open compatibility work after the everyday torrent preview
 
+Compatibility batch7 qualifies bounded file-operation receipt reuse at native `dad74e36931da36a90de2c65aed0130e6fae26f6`: three affected suites pass in each GCC, Clang and leak-enabled ASan/UBSan lane. Nine actual unequal-size/sparse payload-read cases and two cold-recovery cases per lane retain strict content checks, journal order and descriptor cleanup.
+[Batch7 review](../updates/compatibility.providers/20261027-batch7.md). All CF parents remain open.
+
+
 Compatibility batch6 qualifies optional top-level save-name editing at native `c3501e2037e35727af4c684afee2f905fd56c905`: five affected suites pass in each GCC, Clang and leak-enabled ASan/UBSan lane. Eight generated native imports reload through one actual original Java Core to READY with matching absolute paths, titles, file indices, selected bytes and unchanged payload inodes.
 [Batch6 review](../updates/compatibility.providers/20261027-batch6.md). All CF parents remain open.
 
@@ -109,9 +113,7 @@ Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
 - [ ] **CF-08 — Wider runtime and performance qualification (P04/P11 and final
   qualification).** Supplement offscreen evidence with Linux compositor/scaling
   checks, applicable public-swarm interoperability and comparable CPU/memory
-  measurements. Profile/optimize the current full-payload identity-validation
-  reads in move/relink/delete, including same-filesystem hardlink moves, without
-  weakening confirmed ownership or crash recovery. The supported public payload ABI now removes the vptr exception in the new
+  measurements. Batch7 qualifies reverse pre-journal validation with the unchanged eight-FD content/ctime proof, reducing cache thrashing for larger move/relink/delete scopes while retaining mutation and recovery order. Actual 9/17-file and sparse13 read counters plus cold recovery are recorded; wider workloads, copy/scratch interleaving, CPU/memory and device IO profiling remain open. The supported public payload ABI now removes the vptr exception in the new
   provider lane. Broader provider/client and performance evidence remains open. Retain and diagnose the batch3 unchanged-source sanitizer flakes (Scheduler single-torrent rate application and SOCKS5 redirected-webseed destination): both passed a focused replay, but their cause is unestablished; failed logs remain in the batch3 review/evidence.
 
 The compatibility target remains opening the same original configuration and

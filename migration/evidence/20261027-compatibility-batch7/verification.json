@@ -1,0 +1,221 @@
+{
+  "status": "VERIFIED_SCOPED_ACTUAL_BATCH7_RESULTS",
+  "qualified_source": "dad74e36931da36a90de2c65aed0130e6fae26f6",
+  "matrix": {
+    "gcc": {
+      "actual_suites": 3,
+      "build_seconds": 137.91,
+      "test_seconds": 33.2,
+      "returned_read_bytes": [
+        {
+          "kind": 3,
+          "files": 9,
+          "present": 9,
+          "bytes": 202
+        },
+        {
+          "kind": 3,
+          "files": 17,
+          "present": 17,
+          "bytes": 914
+        },
+        {
+          "kind": 3,
+          "files": 17,
+          "present": 13,
+          "bytes": 642
+        },
+        {
+          "kind": 1,
+          "files": 9,
+          "present": 9,
+          "bytes": 202
+        },
+        {
+          "kind": 1,
+          "files": 17,
+          "present": 17,
+          "bytes": 914
+        },
+        {
+          "kind": 1,
+          "files": 17,
+          "present": 13,
+          "bytes": 642
+        },
+        {
+          "kind": 2,
+          "files": 9,
+          "present": 9,
+          "bytes": 373
+        },
+        {
+          "kind": 2,
+          "files": 17,
+          "present": 17,
+          "bytes": 1441
+        },
+        {
+          "kind": 2,
+          "files": 17,
+          "present": 13,
+          "bytes": 1054
+        }
+      ],
+      "cold_recovery_bytes": {
+        "0": 1054,
+        "1": 1054
+      },
+      "executable_sha256": {
+        "file-operations": "6789e2570a8e90a05d159255d09f3c068ba8007dac08021501cf1ca370e2dd88",
+        "file-operations-host": "e73d17cef1103ef3b2ab12653aea194191bd41c8be19647582c27a6a201608aa",
+        "file-operation-sequence": "af05e360dcf9f783d388219a18e2b5545bc5703bf69573f3c8c10527af70fd09"
+      }
+    },
+    "clang": {
+      "actual_suites": 3,
+      "build_seconds": 139.5,
+      "test_seconds": 33.2,
+      "returned_read_bytes": [
+        {
+          "kind": 3,
+          "files": 9,
+          "present": 9,
+          "bytes": 202
+        },
+        {
+          "kind": 3,
+          "files": 17,
+          "present": 17,
+          "bytes": 914
+        },
+        {
+          "kind": 3,
+          "files": 17,
+          "present": 13,
+          "bytes": 642
+        },
+        {
+          "kind": 1,
+          "files": 9,
+          "present": 9,
+          "bytes": 202
+        },
+        {
+          "kind": 1,
+          "files": 17,
+          "present": 17,
+          "bytes": 914
+        },
+        {
+          "kind": 1,
+          "files": 17,
+          "present": 13,
+          "bytes": 642
+        },
+        {
+          "kind": 2,
+          "files": 9,
+          "present": 9,
+          "bytes": 373
+        },
+        {
+          "kind": 2,
+          "files": 17,
+          "present": 17,
+          "bytes": 1441
+        },
+        {
+          "kind": 2,
+          "files": 17,
+          "present": 13,
+          "bytes": 1054
+        }
+      ],
+      "cold_recovery_bytes": {
+        "0": 1054,
+        "1": 1054
+      },
+      "executable_sha256": {
+        "file-operations": "12a447c1d9640a36c1e9c0dd8cdc34632b7c86d5dc215876a5e16f4e72c103b7",
+        "file-operations-host": "75025cc895a6f68ac7138e4c6c80c236e4452e644877adc8790da864d7e75806",
+        "file-operation-sequence": "ff0dd81c16e7914b8db06624d3bdb97acf04e75886bc99db2f6bec79d622496d"
+      }
+    },
+    "san": {
+      "actual_suites": 3,
+      "build_seconds": 207.75,
+      "test_seconds": 44.82,
+      "returned_read_bytes": [
+        {
+          "kind": 3,
+          "files": 9,
+          "present": 9,
+          "bytes": 202
+        },
+        {
+          "kind": 3,
+          "files": 17,
+          "present": 17,
+          "bytes": 914
+        },
+        {
+          "kind": 3,
+          "files": 17,
+          "present": 13,
+          "bytes": 642
+        },
+        {
+          "kind": 1,
+          "files": 9,
+          "present": 9,
+          "bytes": 202
+        },
+        {
+          "kind": 1,
+          "files": 17,
+          "present": 17,
+          "bytes": 914
+        },
+        {
+          "kind": 1,
+          "files": 17,
+          "present": 13,
+          "bytes": 642
+        },
+        {
+          "kind": 2,
+          "files": 9,
+          "present": 9,
+          "bytes": 373
+        },
+        {
+          "kind": 2,
+          "files": 17,
+          "present": 17,
+          "bytes": 1441
+        },
+        {
+          "kind": 2,
+          "files": 17,
+          "present": 13,
+          "bytes": 1054
+        }
+      ],
+      "cold_recovery_bytes": {
+        "0": 1054,
+        "1": 1054
+      },
+      "executable_sha256": {
+        "file-operations": "c58c9af08514543bcb66ce290488c3c93021cc6237c691d5abd1fa867b3c3fd9",
+        "file-operations-host": "edba5e76ba51359b43a5f96386f80aca1560dc537c37948bffa5609f55a710e9",
+        "file-operation-sequence": "9afbe08b2bf5f5daefc8739667e518961fab8e9dedf4571f66457e55c0fc17e9"
+      }
+    }
+  },
+  "measurement": "Returned userspace-read bytes for watched actual payload inodes; not disk traffic or CPU time. Prior traversal comparisons are source-derived predictions, not measured before/after benchmarks.",
+  "original_runtime_rerun": false,
+  "dist_promoted": false,
+  "cf_parents_closed": [],
+  "raw_archive_sha256": "31837981dc6e7a7fb961d2dada9035a612166de7250d4d4ee13d1318ea4b770f"
+}
