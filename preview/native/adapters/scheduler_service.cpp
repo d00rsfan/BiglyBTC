@@ -4,6 +4,7 @@
 #include "ownership_file.hpp"
 #include "biglybtc/scheduler.h"
 #include <algorithm>
+#include <array>
 #include <bit>
 #include <charconv>
 #include <climits>
@@ -146,6 +147,34 @@ bool intentFor(std::string_view bytes,const core::TorrentHash& hash) {
   return bytes.starts_with("BiglyBTC Scheduler intent 1\n"+hash.hex()+"\n")
       ||bytes.starts_with("BiglyBTC Scheduler imported intent 1\n"+hash.hex()+"\n");
 }
+std::optional<SchedulerInterruptedAction> decodedIntent(std::string_view bytes) {
+  const auto identity=bytes;
+  std::array<std::string_view,5> fields;
+  for(auto& field:fields){const auto end=bytes.find('\n');if(end==bytes.npos){return {};}
+    field=bytes.substr(0,end);bytes.remove_prefix(end+1);}
+  if(!bytes.empty()){return {};}
+  const bool imported=fields[0]=="BiglyBTC Scheduler imported intent 1";
+  if(!imported&&fields[0]!="BiglyBTC Scheduler intent 1"){return {};}
+  if(fields[1].size()!=40&&fields[1].size()!=64){return {};}
+  std::string raw(fields[1].size()/2,'\0');
+  for(std::size_t i=0;i<raw.size();++i){unsigned value=0;const auto* start=fields[1].data()+i*2;
+    const auto converted=std::from_chars(start,start+2,value,16);
+    if(converted.ec!=std::errc{}||converted.ptr!=start+2){return {};}raw[i]=static_cast<char>(value);}
+  auto hash=core::TorrentHash::parse(raw);if(!hash||hash->hex()!=fields[1]){return {};}
+  std::array<std::uint64_t,3> numbers{};
+  for(std::size_t i=0;i<numbers.size();++i){const auto text=fields[i+2];
+    const auto value=std::from_chars(text.data(),text.data()+text.size(),numbers[i]);
+    if(value.ec!=std::errc{}||value.ptr!=text.data()+text.size()||std::to_string(numbers[i])!=text){return {};}}
+  if(!numbers[0]||numbers[2]>static_cast<unsigned>(scheduler::ActionKind::SetStopReason)
+      ||(imported&&numbers[2]==static_cast<unsigned>(scheduler::ActionKind::Pause))){return {};}
+  return SchedulerInterruptedAction{*hash,static_cast<scheduler::ActionKind>(numbers[2]),imported,std::string(identity)};
+}
+void noTemporary(int parent,const std::string& name) {
+  struct stat info{};
+  if(::fstatat(parent,name.c_str(),&info,AT_SYMLINK_NOFOLLOW)==0){
+    fail(ErrorCode::Conflict,"Unsettled scheduler temporary requires separate file recovery");}
+  if(errno!=ENOENT){io("Cannot inspect scheduler recovery temporary");}
+}
 }
 struct SchedulerService::Impl {
   plugins::Module module;
@@ -191,6 +220,7 @@ struct SchedulerService::Impl {
   void invalidatePlans(){issued.reset();planInputs.clear();consumed.clear();importedIssued.reset();importedConsumed.clear();}
   void warning(){
     snapshot.interruptedAction=intent.bytes.has_value()||poisoned;
+    snapshot.interrupted=intent.bytes?decodedIntent(*intent.bytes):std::nullopt;
     snapshot.inheritedOwnershipUnverified=inheritedRecords;
     if(snapshot.interruptedAction){snapshot.diagnostic="An interrupted scheduler action requires review. Automatic actions are suspended.";}
     else if(snapshot.inheritedOwnershipUnverified&&snapshot.diagnostic.empty()){
@@ -214,7 +244,7 @@ std::expected<std::unique_ptr<SchedulerService>,Error> SchedulerService::open(co
 std::expected<void,Error> SchedulerService::reload(const ProfileLease& lease,std::stop_token stop) {
   return guarded([&]()->std::expected<void,Error>{
     auto& p=*impl_;p.held(lease);checkStop(stop);
-    if(p.pending||p.importedPending){fail(ErrorCode::Busy,"Cannot reload while scheduler action is awaiting acknowledgement");}
+    if((p.pending||p.importedPending)&&!p.poisoned){fail(ErrorCode::Busy,"Cannot reload while scheduler action is awaiting acknowledgement");}
     auto cfg=configuration(lease);auto plugins=directory(lease.directoryHandle(),"plugins",true);
     const auto leaf=locate(plugins.get(),cfg.document);auto data=plugins.get()<0?detail::Descriptor(-1):directory(plugins.get(),leaf.c_str(),true);
     auto xml=data.get()<0?Raw{}:read(data.get(),XmlName,XmlMaximum);
@@ -375,6 +405,61 @@ std::expected<void,Error> SchedulerService::acknowledgeRates(std::uint64_t plan,
     if(!p.issued->uploadKiB||uploadApplied){p.nonDefaultUpload=p.issued->nonDefaultUpload;}
     if(!p.issued->downloadKiB||downloadApplied){p.nonDefaultDownload=p.issued->nonDefaultDownload;}
     if((!p.issued->uploadKiB||uploadApplied)&&(!p.issued->downloadKiB||downloadApplied)){p.restoreDefaults=false;}return {};
+  });
+}
+std::expected<void,Error> SchedulerService::settleInterrupted(const ProfileLease& lease,
+    std::uint64_t revision,const core::TorrentHash& hash,std::string_view journalIdentity,std::stop_token stop) {
+  return guarded([&]()->std::expected<void,Error>{
+    auto& p=*impl_;p.held(lease);checkStop(stop);
+    const auto intent=p.intent.bytes?decodedIntent(*p.intent.bytes):std::nullopt;
+    if(revision!=p.snapshot.revision||!intent||intent->hash!=hash||intent->identity!=journalIdentity||p.data.get()<0){
+      fail(ErrorCode::Conflict,"Interrupted scheduler action changed; reload before reviewing");}
+    if(((p.pending||p.importedPending)&&!p.poisoned)||p.importedRevocationLost){
+      fail(ErrorCode::Busy,"Scheduler acknowledgement is still active or manual revocation was lost");}
+    // Verified explicit review revokes in-memory authority even if later file
+    // cleanup fails. It never acknowledges or retries an engine effect.
+    p.authority.erase(hash.hex());p.invalidatePlans();
+    try{p.importedRevoked.insert(hash.hex());}
+    catch(...){p.importedRevocationLost=true;p.poisoned=true;p.warning();throw;}
+    // Validate every source before durable revocation. Existing staged writes
+    // are never guessed, adopted, deleted, or retried by this operation.
+    const auto cfg=configuration(lease);
+    if(cfg.raw.bytes!=p.config.bytes||(cfg.raw.bytes&&!same(cfg.raw.identity,p.config.identity))){
+      fail(ErrorCode::Conflict,"Scheduler configuration changed before settlement");}
+    unchanged(p.data.get(),XmlName,p.xml,XmlMaximum);
+    unchanged(p.data.get(),OwnershipName,p.ownership,scheduler::OwnershipFile::MaximumBytes);
+    unchanged(p.data.get(),IntentName,p.intent,IntentMaximum);
+    for(const auto* name:{XmlName,OwnershipName,IntentName}){noTemporary(p.data.get(),std::string(name)+".BiglyBTC.saving");}
+    noTemporary(lease.directoryHandle(),"biglybt.config.saving");
+    noTemporary(lease.directoryHandle(),"biglybt.config.bak.saving");
+    const auto canonical=scheduler::originalOwnershipHash(hashBytes(hash));
+    if(!canonical){fail(ErrorCode::InvalidFormat,"Invalid interrupted scheduler hash");}
+    std::string retained;retained.reserve(p.snapshot.ownershipBytes.size());
+    const auto& source=p.snapshot.ownershipBytes;
+    for(std::size_t pos=0;pos<source.size();){
+      const auto separator=source.find_first_of("\r\n",pos);const auto end=separator==source.npos?source.size():separator;
+      auto after=end;if(after<source.size()){++after;if(source[end]=='\r'&&after<source.size()&&source[after]=='\n'){++after;}}
+      auto first=pos,last=end;while(first<last&&static_cast<unsigned char>(source[first])<=32){++first;}
+      while(last>first&&static_cast<unsigned char>(source[last-1])<=32){--last;}
+      if(std::string_view(source).substr(first,last-first)!=*canonical){retained.append(source,pos,after-pos);}pos=after;
+    }
+    checkStop(stop);
+    // Explicit review has the same conservative in-memory priority as a manual
+    // command, even if the following durable cleanup fails.
+    p.advance();
+    try{
+      if(retained!=source){p.ownership=replace(p.data.get(),OwnershipName,p.ownership,retained,scheduler::OwnershipFile::MaximumBytes);
+        p.snapshot.ownershipBytes=std::move(retained);}
+      // Also complete a prior config-parent publication fence before accepting
+      // these reviewed sources. Failure still retains the exact intent barrier.
+      if(::fsync(lease.directoryHandle())!=0){io("Cannot sync reviewed scheduler configuration directory");}
+      // Permission is durable before removing its uncertainty barrier. A crash
+      // between these writes retains the journal and can only repeat revocation.
+      remove(p.data.get(),IntentName,p.intent,IntentMaximum);p.intent={};
+      p.pending.reset();p.importedPending.reset();
+      p.poisoned=false;if(p.snapshot.ownershipBytes.empty()){p.inheritedRecords=false;}
+      p.snapshot.diagnostic.clear();p.warning();return {};
+    }catch(...){p.poisoned=true;p.warning();throw;}
   });
 }
 std::expected<void,Error> SchedulerService::revokeForManual(const ProfileLease& lease,const core::TorrentHash& hash) {

@@ -145,6 +145,42 @@ private slots:
     const auto config=sh::document(test::read(f.profile+"/biglybt.config"));QVERIFY(config.find("opaque.imported.fixture")&&config.find("opaque.imported.fixture")->bytes=="preserved");
     if(!retained.isEmpty()){auto object=QJsonDocument::fromJson(sh::read(retained)).object();object["joined"]=true;sh::write(retained,QJsonDocument(object).toJson());}
   }
+  void explicitJournalReviewKeepsActualOwnedSessionAndSavedPauseWithoutReplay(){
+    test::OwnedEngineFixture f(false);prepare(f,false);sh::ApprovedModule module;
+    {
+      auto held=storage::ProfileLease::acquire(f.native());QVERIFY(held);auto service=module.factory()(*held);QVERIFY(service);
+      storage::ImportedSchedulerTarget target;target.hash=*f.hash;target.libraryRevision=37;target.paused=true;target.complete=false;
+      const auto plan=service->evaluateImported(*held,{0,1},std::span(&target,1));QVERIFY(plan);QCOMPARE(plan->actions.size(),std::size_t{1});
+      QVERIFY(service->beginImportedAction(*held,plan->actions[0],target));
+      // Real journal produced before its effect; no success/engine receipt is
+      // fabricated. The next owner must treat the durable outcome as unknown.
+    }
+    const auto before=sh::read(f.profile+"/downloads.config");QTRY_VERIFY_WITH_TIMEOUT(f.ready(),15000);
+    app::SessionBridge bridge(nullptr,{},{},module.factory());
+    QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady),sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),
+        observations(&bridge,&app::SessionBridge::nativeSessionReady),reads(&bridge,&app::SessionBridge::schedulerReady),
+        writes(&bridge,&app::SessionBridge::schedulerSaved),closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.open(f.native(),f.port()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty()&&row(rows,*f.hash),15000);
+    QTRY_VERIFY_WITH_TIMEOUT(!observations.empty(),15000);QCOMPARE(row(rows,*f.hash)->state,QStringLiteral("Paused"));
+    const auto session=sessions.first()[0].toULongLong();QVERIFY(bridge.loadScheduler({session,601}));
+    QTRY_COMPARE_WITH_TIMEOUT(reads.size(),1,10000);QTRY_VERIFY(!bridge.busy());const auto packet=sh::last(reads);
+    QVERIFY(packet&&packet->snapshot&&packet->snapshot->interrupted);QVERIFY(packet->snapshot->interrupted->imported);
+    auto review=sh::submission(packet,602);review.settleInterruptedHash=QString::fromStdString(f.hash->hex());
+    review.settleInterruptedIdentity=packet->snapshot->interrupted->identity;
+    QVERIFY(bridge.saveScheduler(review));QTRY_COMPARE_WITH_TIMEOUT(writes.size(),1,10000);QTRY_VERIFY(!bridge.busy());
+    const auto result=sh::saved(writes);QVERIFY2(result&&result->saved,qPrintable(result?result->failure:QStringLiteral("No result")));
+    QVERIFY(result->settlement&&result->settlement->settled);QVERIFY(!result->snapshot->snapshot->interruptedAction);
+    QCOMPARE(sh::read(f.profile+"/downloads.config"),before);QCOMPARE(row(rows,*f.hash)->state,QStringLiteral("Paused"));
+    QCOMPARE(sh::read(sh::schedulerFile(f.profile,"PausedTorrents.conf")),QByteArray("opaque survivor\r\n"));
+    QVERIFY(!QFile::exists(sh::schedulerFile(f.profile,"BiglyBTC.scheduler-intent")));
+    // Explicit normal re-evaluation must not re-import the reviewed permission.
+    auto next=sh::submission(result->snapshot,603);QVERIFY(bridge.saveScheduler(next));
+    QTRY_COMPARE_WITH_TIMEOUT(writes.size(),2,10000);QTRY_VERIFY(!bridge.busy());QVERIFY(sh::saved(writes)->saved);
+    QCOMPARE(sh::read(f.profile+"/downloads.config"),before);
+    QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,15000);QVERIFY(closed.first()[1].toBool());QVERIFY(closed.first()[2].toBool());
+    auto held=storage::ProfileLease::acquire(f.native());QVERIFY(held);const auto saved=storage::readLibraryView(*held);QVERIFY(saved);
+    QCOMPARE(saved->pauses.size(),std::size_t{1});QCOMPARE(saved->pauses[0].hash,*f.hash);
+  }
   void manualCommandBeforeLazySchedulerLoadCannotBeReimported_data(){
     QTest::addColumn<int>("action");
     QTest::newRow("stop-before-load")<<static_cast<int>(core::DownloadAction::Stop);

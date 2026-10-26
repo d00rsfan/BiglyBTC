@@ -43,6 +43,13 @@ bool valid(const schedule::Schedule& s) {
 }
 bool valid(const SchedulerPresentation& p) {
   if (!p||!p->session||!p->request||!p->revision||!p->snapshot) { return false; }
+  if(p->snapshot->interrupted){
+    const auto& row=*p->snapshot->interrupted;
+    if(!p->snapshot->interruptedAction||row.identity.isEmpty()||row.identity.size()>1024||(row.hash.size()!=40&&row.hash.size()!=64)
+        ||!std::ranges::all_of(row.hash,[](QChar c){const auto value=c.unicode();return (value>=u'0'&&value<=u'9')||(value>=u'A'&&value<=u'F');})
+        ||(row.action!=QStringLiteral("Pause")&&row.action!=QStringLiteral("Resume")
+            &&row.action!=QStringLiteral("Start")&&row.action!=QStringLiteral("Stop reason"))){return false;}
+  }
   const auto& c=p->snapshot->configuration;
   return valid(p->snapshot->preferences)&&c.defaultUpload>=0&&c.defaultUpload<=MaximumRate
       &&c.defaultDownload>=0&&c.defaultDownload<=MaximumRate&&c.schedules.size()<=schedule::MaximumSchedules
@@ -54,13 +61,14 @@ struct SchedulerDialog::Impl {
   quint64 session=0, highest=0, request=0, active=0, serial=0, controlsSerial=0;
   bool busy=false, loading=false, saving=false, rendering=false, changed=false, closeAfterSave=false, loadWanted=false;
   SchedulerPresentation baseline;
+  std::optional<QString> pendingSettlement;
   std::vector<std::optional<std::size_t>> sources;
   std::vector<std::array<QPointer<QWidget>,11>> rowControls;
   QPointer<QTableWidget> table;
   QPointer<QCheckBox> enabled,tags,forced,enforce;
   QPointer<QSpinBox> poll,upload,download;
-  QPointer<QLabel> status;
-  QPointer<QPushButton> apply,ok,cancel,reload,add,remove;
+  QPointer<QLabel> status,recoveryStatus;
+  QPointer<QPushButton> apply,ok,cancel,reload,add,remove,recover;
   QPointer<QMessageBox> question;
   struct Guard {
     QPointer<SchedulerDialog> self; const Impl* owner; quint64 expected,session,request;
@@ -97,6 +105,7 @@ struct SchedulerDialog::Impl {
     if(apply){apply->setEnabled(editable&&changed);}if(!current()){return false;}
     if(ok){ok->setEnabled(editable);}if(!current()){return false;}
     if(cancel){cancel->setEnabled(!saving);}if(!current()){return false;}
+    if(recover){recover->setEnabled(editable&&!changed&&baseline->snapshot->interrupted.has_value());}if(!current()){return false;}
     if(reload){reload->setEnabled(session&&!busy&&!loading&&!saving&&!changed);}
     return current();
   }
@@ -201,6 +210,12 @@ struct SchedulerDialog::Impl {
     for(const auto& object:objects){if(object){blocked.push_back(std::make_unique<SafeSignalBlock>(object));}}
     if(!table||!upload||!download||!enforce){return false;}
     const auto retained=baseline;
+    if(recoveryStatus){
+      const auto& row=retained->snapshot->interrupted;
+      recoveryStatus->setText(row?QStringLiteral("Interrupted %1 for %2. Its outcome is unknown.").arg(row->action,row->hash)
+          :retained->snapshot->interruptedAction?QStringLiteral("The interrupted record cannot be identified safely. Automatic actions remain suspended."):QString{});
+      if(!alive.current()){return false;}
+    }
     table->setRowCount(0);if(!alive.current()||!table){return false;}sources.clear();rowControls.clear();
     if(!setPreferences(retained->snapshot->preferences)||!alive.current()){return false;}
     const auto& c=retained->snapshot->configuration;
@@ -222,6 +237,27 @@ struct SchedulerDialog::Impl {
     }
     closeAfterSave=close;saving=true;active=++request;value->request=active;
     const auto alive=guard();if(!controls()||!alive.current()){return;}emit q->saveRequested(std::move(*value));
+  }
+  void settle() {
+    if(!baseline||!baseline->snapshot->interrupted||changed||busy||loading||saving||rendering||question){return;}
+    const auto retained=baseline;const auto alive=guard();
+    auto* prompt=new QMessageBox(QMessageBox::Warning,QStringLiteral("Review interrupted action"),
+        QStringLiteral("Keep the torrent's current state and forget this interrupted action?\n\nScheduler permission for this torrent will be removed. This does not retry the action or confirm that it succeeded. Normal future schedules still apply."),
+        QMessageBox::Ok|QMessageBox::Cancel,q);
+    prompt->setObjectName(QStringLiteral("scheduler-recovery-confirmation"));question=prompt;prompt->setAttribute(Qt::WA_DeleteOnClose);
+    QObject::connect(prompt,&QMessageBox::finished,q,[alive,retained](int result){
+      if(!alive.current()){return;}auto& p=*alive.self->impl_;p.question.clear();
+      if(result!=QMessageBox::Ok||p.baseline!=retained||p.changed||p.busy||p.loading||p.saving){return;}
+      auto value=p.submission();if(!value){p.text(QStringLiteral("A schedule control is unavailable; reload before reviewing."));return;}
+      if(p.request==std::numeric_limits<quint64>::max()||!p.advance()){return;}
+      p.saving=true;p.closeAfterSave=false;p.active=++p.request;
+      p.pendingSettlement=retained->snapshot->interrupted->hash;
+      value->request=p.active;value->settleInterruptedHash=p.pendingSettlement;
+      value->settleInterruptedIdentity=retained->snapshot->interrupted->identity;
+      const auto expected=p.guard();if(!p.controls()||!expected.current()){return;}
+      emit expected.self->saveRequested(std::move(*value));
+    });
+    prompt->open();
   }
   void close() {
     if (saving) {return;}
@@ -267,6 +303,10 @@ SchedulerDialog::SchedulerDialog(QWidget* parent):QDialog(parent),impl_(std::mak
     }
   });
   impl_->status=new QLabel(this);impl_->status->setWordWrap(true);impl_->status->setTextFormat(Qt::PlainText);impl_->status->setObjectName(QStringLiteral("scheduler-status"));layout->addWidget(impl_->status);
+  impl_->recoveryStatus=new QLabel(this);impl_->recoveryStatus->setWordWrap(true);impl_->recoveryStatus->setTextFormat(Qt::PlainText);
+  impl_->recoveryStatus->setObjectName(QStringLiteral("scheduler-recovery-status"));layout->addWidget(impl_->recoveryStatus);
+  impl_->recover=new QPushButton(QStringLiteral("Review interrupted action…"),this);impl_->recover->setObjectName(QStringLiteral("scheduler-recover"));
+  layout->addWidget(impl_->recover);connect(impl_->recover,&QPushButton::clicked,this,[this]{impl_->settle();});
   auto* buttons=new QDialogButtonBox(QDialogButtonBox::Apply|QDialogButtonBox::Ok|QDialogButtonBox::Cancel,this);impl_->apply=buttons->button(QDialogButtonBox::Apply);impl_->ok=buttons->button(QDialogButtonBox::Ok);impl_->cancel=buttons->button(QDialogButtonBox::Cancel);
   impl_->reload=buttons->addButton(QStringLiteral("Reload"),QDialogButtonBox::ResetRole);impl_->apply->setObjectName(QStringLiteral("scheduler-apply"));impl_->ok->setObjectName(QStringLiteral("scheduler-ok"));impl_->reload->setObjectName(QStringLiteral("scheduler-reload"));
   connect(impl_->apply,&QPushButton::clicked,this,[this]{impl_->save(false);});connect(impl_->ok,&QPushButton::clicked,this,&SchedulerDialog::accept);connect(impl_->cancel,&QPushButton::clicked,this,&SchedulerDialog::reject);
@@ -285,6 +325,7 @@ void SchedulerDialog::invalidateSession() {
   const QPointer<SchedulerDialog> self(this);impl_->advance();const auto alive=impl_->guard();
   impl_->session=0;impl_->baseline.reset();impl_->changed=false;impl_->loadWanted=false;impl_->rendering=false;
   impl_->loading=impl_->saving=impl_->closeAfterSave=false;
+  impl_->pendingSettlement.reset();
   const auto prompt=impl_->question;impl_->question.clear();if(prompt){prompt->close();}
   if(self&&alive.current()){self->impl_->controls();}
 }
@@ -305,6 +346,17 @@ bool SchedulerDialog::setSnapshot(SchedulerPresentation packet) {
 bool SchedulerDialog::setSaveResult(SchedulerSavePresentation packet) {
   if(!packet||!impl_->saving||!impl_->baseline||packet->session!=impl_->session||packet->request!=impl_->active||packet->revision!=impl_->baseline->revision){return false;}
   const bool fresh=valid(packet->snapshot)&&packet->snapshot->session==impl_->session&&packet->snapshot->request==impl_->active&&packet->snapshot->revision>=impl_->baseline->revision;
+  if(impl_->pendingSettlement){
+    const auto hash=*impl_->pendingSettlement;
+    if(packet->settlement&&packet->settlement->hash!=hash){return false;}
+    if(packet->saved&&(!fresh||!packet->settlement||!packet->settlement->settled||packet->snapshot->snapshot->interruptedAction)){return false;}
+    if(packet->settlement&&packet->settlement->settled&&!packet->saved){return false;}
+    impl_->saving=false;impl_->pendingSettlement.reset();const QPointer<SchedulerDialog> self(this);
+    if(fresh&&(!impl_->render(packet->snapshot)||!self)){return false;}
+    const auto message=packet->saved?QStringLiteral("Interrupted action forgotten. Torrent state was not changed.")
+        :packet->failure.isEmpty()?QStringLiteral("Review failed; the interrupted action remains unresolved."):packet->failure;
+    if(!self||!impl_->text(message)||!self){return false;}return impl_->controls();
+  }
   if((packet->saved||packet->schedulesSaved)&&!fresh){return false;}
   const auto desired=impl_->preferences();if(!desired){return false;}
   const bool close=impl_->closeAfterSave;impl_->saving=false;impl_->closeAfterSave=false;

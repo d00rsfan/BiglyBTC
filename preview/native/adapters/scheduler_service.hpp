@@ -28,6 +28,12 @@ struct SchedulerSettingsChanges {
   std::optional<int> pollMilliseconds{};
 };
 struct SchedulerScheduleUpdate { std::size_t sourceIndex; scheduler::Schedule value; };
+struct SchedulerInterruptedAction {
+  core::TorrentHash hash;
+  scheduler::ActionKind kind;
+  bool imported = false;
+  std::string identity; // Exact bounded native journal, opaque to callers.
+};
 struct SchedulerXmlChanges {
   struct Defaults { int upload = 0, download = 0; bool enforce = true; };
   std::optional<Defaults> defaults{};
@@ -45,6 +51,9 @@ struct SchedulerSnapshot {
   bool interruptedAction = false;
   bool inheritedOwnershipUnverified = false;
   std::string diagnostic;
+  // Present only for a strictly decoded native journal. Unknown journals still
+  // suspend scheduling, but are never offered as a guessed recovery target.
+  std::optional<SchedulerInterruptedAction> interrupted{};
 };
 struct SchedulerTorrent {
   std::uint64_t token = 0, manualRevision = 0;
@@ -121,6 +130,11 @@ public:
       const SchedulerTorrent& current, std::stop_token = {});
   std::expected<void, Error> finishAction(const ProfileLease&, const SchedulerAction&, SchedulerActionResult);
   std::expected<void, Error> acknowledgeRates(std::uint64_t plan, bool uploadApplied, bool downloadApplied);
+  // Explicit user settlement, NOT an engine acknowledgement or retry. Preserve
+  // the current saved/live torrent state, revoke its permission, then durably
+  // remove only this exact journal. Unknown formats/temporary files reject.
+  std::expected<void, Error> settleInterrupted(const ProfileLease&, std::uint64_t revision,
+      const core::TorrentHash&, std::string_view journalIdentity, std::stop_token = {});
   // ImportedOriginal permission follows Java's persisted hash semantics. It
   // never enters the separate acknowledged NativeCurrent authority map.
   std::expected<ImportedSchedulerPlan, Error> evaluateImported(const ProfileLease&,

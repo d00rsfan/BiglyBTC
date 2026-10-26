@@ -12,11 +12,17 @@ struct SchedulerPreferences {
   int pollMilliseconds=10000;
   bool operator==(const SchedulerPreferences&) const = default;
 };
+struct SchedulerInterruptedAction {
+  QString hash, action;
+  bool imported=false;
+  QString identity; // Opaque bounded source token; never displayed.
+};
 struct SchedulerValues {
   SchedulerPreferences preferences;
   schedule::Configuration configuration;
   bool hasSavedSchedules=false, inheritedOwnershipUnverified=false, interruptedAction=false;
   QString directory, diagnostic;
+  std::optional<SchedulerInterruptedAction> interrupted{};
 };
 struct SchedulerPacket {
   quint64 session=0, request=0, revision=0;
@@ -31,12 +37,17 @@ struct SchedulerSubmission {
   int defaultUpload=0, defaultDownload=0;
   bool enforceDefaults=true;
   std::vector<SchedulerEditedSchedule> schedules;
+  // A separate explicit operation; cannot be combined with schedule edits.
+  std::optional<QString> settleInterruptedHash{};
+  QString settleInterruptedIdentity{};
 };
+struct SchedulerSettlementResult { QString hash; bool settled=false; QString failure; };
 struct SchedulerSavePacket {
   quint64 session=0, request=0, revision=0;
   bool saved=false, schedulesSaved=false;
   SchedulerPresentation snapshot;
   QString failure;
+  std::optional<SchedulerSettlementResult> settlement{};
 };
 using SchedulerSavePresentation=std::shared_ptr<const SchedulerSavePacket>;
 } // namespace biglybtc::ui

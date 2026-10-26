@@ -6,6 +6,7 @@
 #include <QEvent>
 #include <QFileInfo>
 #include <QLabel>
+#include <QMessageBox>
 #include <QHeaderView>
 #include <QPointer>
 #include <QPixmap>
@@ -20,7 +21,7 @@
 
 using namespace biglybtc::ui;
 namespace {
-bool captureScheduler(QWidget& widget) {
+bool captureScheduler(QWidget& widget,const char* leaf="speed-scheduler-preview.png") {
   const auto requested=qgetenv("BIGLYBTC_SCHEDULER_CAPTURE_DIRECTORY");
   if(requested.isEmpty()){return true;}
   const QFileInfo directory(QString::fromLocal8Bit(requested));
@@ -28,7 +29,7 @@ bool captureScheduler(QWidget& widget) {
       ||directory.ownerId()!=static_cast<uint>(::geteuid())
       ||!(directory.permissions()&QFileDevice::WriteOwner)){return false;}
   const auto canonical=directory.canonicalFilePath();if(canonical.isEmpty()){return false;}
-  const auto destination=QDir(canonical).filePath(QStringLiteral("speed-scheduler-preview.png"));
+  const auto destination=QDir(canonical).filePath(QString::fromLatin1(leaf));
   if(QFileInfo(destination).isSymLink()){return false;}
   const QPointer<QWidget> alive(&widget);QApplication::processEvents();
   return alive&&alive->grab().save(destination,"PNG");
@@ -46,6 +47,12 @@ SchedulerPresentation packet(SchedulerRequest request, quint64 revision=1,
   values->configuration.schedules.push_back(std::move(item));
   values->hasSavedSchedules=true;
   return std::make_shared<const SchedulerPacket>(SchedulerPacket{request.session,request.request,revision,std::move(values),{}});
+}
+SchedulerPresentation interrupted(SchedulerRequest request,quint64 revision=1) {
+  auto out=std::make_shared<SchedulerPacket>(*packet(request,revision));
+  auto values=std::make_shared<SchedulerValues>(*out->snapshot);values->interruptedAction=true;
+  values->interrupted=SchedulerInterruptedAction{QString(40,QChar('A')),QStringLiteral("Resume"),true,QStringLiteral("synthetic bounded journal identity")};
+  out->snapshot=std::move(values);return out;
 }
 SchedulerSavePresentation saved(const SchedulerSubmission& request, bool complete,
     bool xmlSaved, SchedulerPresentation snapshot, QString failure={}) {
@@ -186,6 +193,63 @@ private slots:
     QVERIFY(dialog.setSnapshot(packet(fresh,1,false,37)));
     QCOMPARE(dialog.findChild<QSpinBox*>("scheduler-default-upload")->value(),37);
     QVERIFY(!dialog.findChild<QCheckBox*>("scheduler-enabled")->isChecked());QVERIFY(!dialog.dirty());
+  }
+  void explicitRecoveryRequiresConfirmationAndMatchingPerTorrentResult() {
+    SchedulerDialog dialog;QSignalSpy reads(&dialog,&SchedulerDialog::loadRequested),writes(&dialog,&SchedulerDialog::saveRequested);
+    QVERIFY(dialog.beginSession(1));dialog.show();QTRY_COMPARE(reads.count(),1);
+    const auto first=reads.first()[0].value<SchedulerRequest>();QVERIFY(dialog.setSnapshot(interrupted(first,8)));
+    auto* recover=dialog.findChild<QPushButton*>("scheduler-recover");QVERIFY(recover&&recover->isEnabled());
+    auto* status=dialog.findChild<QLabel*>("scheduler-recovery-status");QVERIFY(status);QCOMPARE(status->textFormat(),Qt::PlainText);
+    QVERIFY(status->text().contains(QString(40,QChar('A'))));QVERIFY(status->text().contains("unknown"));
+    QVERIFY(captureScheduler(dialog,"speed-scheduler-recovery-preview.png"));
+    recover->click();auto* prompt=dialog.findChild<QMessageBox*>("scheduler-recovery-confirmation");QVERIFY(prompt);
+    prompt->done(QMessageBox::Cancel);QCOMPARE(writes.count(),0);QVERIFY(!dialog.pending());
+    recover->click();prompt=dialog.findChild<QMessageBox*>("scheduler-recovery-confirmation");
+    // The previous prompt is deferred-deleted; select the currently visible one.
+    for(auto* candidate:dialog.findChildren<QMessageBox*>("scheduler-recovery-confirmation")){if(candidate->isVisible()){prompt=candidate;}}
+    QVERIFY(prompt&&prompt->isVisible());prompt->done(QMessageBox::Ok);
+    QCOMPARE(writes.count(),1);QVERIFY(dialog.pending());QVERIFY(!recover->isEnabled());
+    const auto request=writes.first()[0].value<SchedulerSubmission>();QVERIFY(request.settleInterruptedHash);
+    QCOMPARE(*request.settleInterruptedHash,QString(40,QChar('A')));QCOMPARE(request.revision,quint64(8));QVERIFY(!dialog.dirty());
+    auto wrong=std::make_shared<SchedulerSavePacket>(*saved(request,true,false,packet({1,request.request},9)));
+    wrong->settlement=SchedulerSettlementResult{QString(40,QChar('B')),true,{}};
+    QVERIFY(!dialog.setSaveResult(wrong));QVERIFY(dialog.pending());
+    auto failed=std::make_shared<SchedulerSavePacket>(*saved(request,false,false,interrupted({1,request.request},9),QStringLiteral("Owned source changed")));
+    failed->settlement=SchedulerSettlementResult{*request.settleInterruptedHash,false,failed->failure};
+    QVERIFY(dialog.setSaveResult(failed));QVERIFY(!dialog.pending());QVERIFY(recover->isEnabled());
+    QCOMPARE(dialog.findChild<QLabel*>("scheduler-status")->text(),QStringLiteral("Owned source changed"));
+    recover->click();prompt=nullptr;for(auto* candidate:dialog.findChildren<QMessageBox*>("scheduler-recovery-confirmation")){if(candidate->isVisible()){prompt=candidate;}}
+    QVERIFY(prompt);prompt->done(QMessageBox::Ok);QCOMPARE(writes.count(),2);
+    const auto next=writes.last()[0].value<SchedulerSubmission>();QCOMPARE(next.revision,quint64(9));
+    QVERIFY(!dialog.setSaveResult(failed));QVERIFY(dialog.pending());
+    auto complete=std::make_shared<SchedulerSavePacket>(*saved(next,true,false,packet({1,next.request},10)));
+    complete->settlement=SchedulerSettlementResult{*next.settleInterruptedHash,true,{}};
+    QVERIFY(dialog.setSaveResult(complete));QVERIFY(!dialog.pending());QVERIFY(!dialog.dirty());QVERIFY(!recover->isEnabled());
+    QVERIFY(dialog.findChild<QLabel*>("scheduler-status")->text().contains("Torrent state was not changed"));
+  }
+  void unknownJournalAndDirtyDraftDoNotOfferSettlementAndProfileSwitchCancelsConfirmation() {
+    SchedulerDialog dialog;QSignalSpy reads(&dialog,&SchedulerDialog::loadRequested),writes(&dialog,&SchedulerDialog::saveRequested);
+    QVERIFY(dialog.beginSession(1));dialog.show();QTRY_COMPARE(reads.count(),1);
+    auto unknown=std::make_shared<SchedulerPacket>(*packet(reads.first()[0].value<SchedulerRequest>()));
+    auto values=std::make_shared<SchedulerValues>(*unknown->snapshot);values->interruptedAction=true;unknown->snapshot=values;
+    QVERIFY(dialog.setSnapshot(unknown));auto* recover=dialog.findChild<QPushButton*>("scheduler-recover");QVERIFY(recover&&!recover->isEnabled());
+    QVERIFY(dialog.beginSession(2));QTRY_COMPARE(reads.count(),2);
+    QVERIFY(dialog.setSnapshot(interrupted(reads.last()[0].value<SchedulerRequest>())));
+    auto* upload=dialog.findChild<QSpinBox*>("scheduler-default-upload");QVERIFY(upload);upload->setValue(18);
+    QVERIFY(dialog.dirty());QVERIFY(!recover->isEnabled());QCOMPARE(writes.count(),0);
+    QVERIFY(dialog.beginSession(3));QTRY_COMPARE(reads.count(),3);QVERIFY(dialog.setSnapshot(interrupted(reads.last()[0].value<SchedulerRequest>())));
+    recover->click();QPointer<QMessageBox> prompt=dialog.findChild<QMessageBox*>("scheduler-recovery-confirmation");QVERIFY(prompt);
+    QVERIFY(dialog.beginSession(4));if(prompt){prompt->done(QMessageBox::Ok);}QCOMPARE(writes.count(),0);
+    QTRY_COMPARE(reads.count(),4);QVERIFY(dialog.pending());
+  }
+  void directRecoveryReceiverMayDeleteDialog() {
+    QPointer<SchedulerDialog> dialog=new SchedulerDialog;QSignalSpy reads(dialog,&SchedulerDialog::loadRequested);
+    QVERIFY(dialog->beginSession(1));dialog->show();QTRY_COMPARE(reads.count(),1);
+    QVERIFY(dialog->setSnapshot(interrupted(reads.first()[0].value<SchedulerRequest>())));
+    connect(dialog,&SchedulerDialog::saveRequested,this,[&](SchedulerSubmission value){QVERIFY(value.settleInterruptedHash);delete dialog.data();});
+    dialog->findChild<QPushButton*>("scheduler-recover")->click();
+    QPointer<QMessageBox> prompt=dialog->findChild<QMessageBox*>("scheduler-recovery-confirmation");QVERIFY(prompt);
+    prompt->done(QMessageBox::Ok);QVERIFY(dialog.isNull());
   }
   void deletedRowControlRefusesSaveAndKeepsDirtyDraft() {
     SchedulerDialog dialog;QSignalSpy reads(&dialog,&SchedulerDialog::loadRequested);

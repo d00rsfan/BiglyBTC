@@ -2712,6 +2712,13 @@ ui::SchedulerPresentation schedulerPacket(const storage::SchedulerSnapshot& sour
   values->inheritedOwnershipUnverified=source.inheritedOwnershipUnverified;
   values->interruptedAction=source.interruptedAction;
   values->directory=text(source.directoryLeaf);values->diagnostic=text(source.diagnostic);
+  if(source.interrupted){
+    const auto kind=source.interrupted->kind;
+    const auto action=kind==storage::scheduler::ActionKind::Pause?QStringLiteral("Pause")
+        :kind==storage::scheduler::ActionKind::Resume?QStringLiteral("Resume")
+        :kind==storage::scheduler::ActionKind::Restart?QStringLiteral("Start"):QStringLiteral("Stop reason");
+    values->interrupted=ui::SchedulerInterruptedAction{text(source.interrupted->hash.hex()),action,source.interrupted->imported,text(source.interrupted->identity)};
+  }
   auto result=std::make_shared<ui::SchedulerPacket>();result->session=session;result->request=request;
   result->revision=source.revision;result->snapshot=std::move(values);return result;
 }
@@ -2779,6 +2786,22 @@ bool SessionBridge::saveScheduler(ui::SchedulerSubmission value) {
       if(value.preferences.pollMilliseconds!=current.settings.pollMilliseconds){settings.pollMilliseconds=value.preferences.pollMilliseconds;}
       // Both edits are validated before the first write. There is no cross-file
       // atomicity claim: schedules commit first; settings failure is explicit.
+      if(value.settleInterruptedHash){
+        if(writeXml||settings.enabled||settings.useTags||settings.overrideForced||settings.pollMilliseconds
+            ||!current.interrupted||text(current.interrupted->hash.hex())!=*value.settleInterruptedHash
+            ||text(current.interrupted->identity)!=value.settleInterruptedIdentity){
+          throw Failure{{storage::ErrorCode::Conflict,"Review the current interrupted action separately from schedule edits"}};
+        }
+        const auto hash=current.interrupted->hash;
+        auto& manual=host_->manualRevisions[hash.hex()];
+        if(manual==std::numeric_limits<std::uint64_t>::max()){throw Failure{{storage::ErrorCode::Conflict,"Manual action revision exhausted"}};}
+        ++manual;host_->schedulerPaused.erase(hash.hex());
+        static_cast<void>(take(host_->scheduler->settleInterrupted(host_->lease,value.revision,hash,value.settleInterruptedIdentity.toStdString(),stop)));
+        result->settlement=ui::SchedulerSettlementResult{*value.settleInterruptedHash,true,{}};
+        result->saved=true;host_->schedulerLastTick.reset();
+        // Explicit settlement does not run a policy tick or change a torrent.
+        // Future ordinary ticks retain their existing admission/manual fences.
+      }else{
       if(writeXml){static_cast<void>(take(storage::patchSchedulerXml(current.originalXml,xml)));}
       if(writeXml){static_cast<void>(take(host_->scheduler->saveSchedules(host_->lease,current.revision,xml,stop)));result->schedulesSaved=true;}
       static_cast<void>(take(host_->scheduler->saveSettings(host_->lease,host_->scheduler->snapshot().revision,settings,
@@ -2787,12 +2810,17 @@ bool SessionBridge::saveScheduler(ui::SchedulerSubmission value) {
       // Live policy application is independent of the confirmed save result.
       // Its diagnostics are retained; a failed tick never rolls back a save.
       tickScheduler();
+      }
       // A successful rate publication reloads the scheduler's configuration CAS
       // and advances its editor revision. Return the final snapshot, not a stale
       // packet constructed before that tick.
       result->snapshot=schedulerPacket(host_->scheduler->snapshot(),value.session,value.request);
     }catch(const Failure& error){
       result->failure=text(error.error.message);
+      if(value.settleInterruptedHash){
+        result->settlement=ui::SchedulerSettlementResult{*value.settleInterruptedHash,false,result->failure};
+        result->snapshot=schedulerPacket(host_->scheduler->snapshot(),value.session,value.request);
+      }
       if(result->schedulesSaved){result->failure=tr("Schedules saved; settings were not saved: %1").arg(result->failure);
         result->snapshot=schedulerPacket(host_->scheduler->snapshot(),value.session,value.request);}
     }

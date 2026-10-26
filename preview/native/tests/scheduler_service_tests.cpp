@@ -155,6 +155,68 @@ void pausedAdmissionRebind(const fs::path& module){
   done(service->reload(f.lease));
   check(!take(service->rebindOwnedPause(f.lease,item.hash,item.token,item.token+1,item.manualRevision)),"reload of changed legacy source cannot recreate authority");
 }
+void reviewedInterruptionKeepsStateAndRevokesDuplicates(const fs::path& module){
+  Fixture f(module);f.original();auto service=f.open();auto item=torrent();
+  const auto dir=f.profile/"plugins"/"SpeedScheduler";const auto journal=dir/"BiglyBTC.scheduler-intent";
+  const auto own=dir/"PausedTorrents.conf";
+  const auto encoded=policy::originalOwnershipHash({reinterpret_cast<const std::uint8_t*>(item.hash.bytes().data()),item.hash.bytes().size()});
+  check(bool(encoded),"source ownership encoding");
+  write(own,*encoded+"\r\nopaque survivor\r\n "+*encoded+" \n");done(service->reload(f.lease));
+  auto plan=take(service->evaluate({0,5},std::span(&item,1),7,9));
+  done(service->beginAction(f.lease,plan.actions.front(),item));
+  check(!service->finishAction(f.lease,plan.actions.front(),st::SchedulerActionResult::Indeterminate),"real service retains uncertain acknowledgement");
+  done(service->reload(f.lease));check(service->snapshot().interrupted&&service->snapshot().interrupted->hash==item.hash,"strict typed native journal after reload");
+  const auto revision=service->snapshot().revision;const auto bytes=read(journal),permission=read(own);
+  const auto xml=read(dir/"SavedSchedules.xml"),cfg=read(f.profile/"biglybt.config");
+  check(!service->settleInterrupted(f.lease,revision-1,item.hash,bytes),"stale recovery rejected");
+  check(!service->settleInterrupted(f.lease,revision,item.hash,bytes+"0"),"different same-hash journal token rejected");
+  std::stop_source cancelled;cancelled.request_stop();check(!service->settleInterrupted(f.lease,revision,item.hash,bytes,cancelled.get_token()),"cancel before mutation");
+  check(read(journal)==bytes&&read(own)==permission,"rejected review leaves exact sources");
+  write(dir/"PausedTorrents.conf.BiglyBTC.saving","uncertain prior output");
+  check(!service->settleInterrupted(f.lease,revision,item.hash,bytes),"pending temporary cannot be silently adopted");
+  check(read(journal)==bytes&&read(own)==permission,"temporary refusal keeps intent and permission");
+  fs::remove(dir/"PausedTorrents.conf.BiglyBTC.saving");
+  done(service->settleInterrupted(f.lease,revision,item.hash,bytes));
+  check(!fs::exists(journal)&&read(own)=="opaque survivor\r\n","all target duplicates revoked with foreign bytes exact");
+  check(read(dir/"SavedSchedules.xml")==xml&&read(f.profile/"biglybt.config")==cfg,"review changes no original schedule/config");
+  check(!service->snapshot().interruptedAction&&!service->snapshot().interrupted&&service->snapshot().revision>revision,"only durable settlement publishes resolution");
+  check(!service->finishAction(f.lease,plan.actions.front(),st::SchedulerActionResult::Succeeded),"old callback cannot acknowledge reviewed action");
+  item.paused=true;item.state=policy::TorrentState::Stopped;
+  done(service->saveSettings(f.lease,service->snapshot().revision,{.enabled=false}));
+  auto next=take(service->evaluate({0,5},std::span(&item,1),17,19));check(next.actions.empty(),"settlement never mints current-session resume authority");
+}
+void importedAndUnknownJournalReview(const fs::path& module){
+  Fixture f(module);f.original();const auto dir=f.profile/"plugins"/"SpeedScheduler";
+  const auto journal=dir/"BiglyBTC.scheduler-intent",own=dir/"PausedTorrents.conf";const auto item=torrent();
+  const auto encoded=policy::originalOwnershipHash({reinterpret_cast<const std::uint8_t*>(item.hash.bytes().data()),item.hash.bytes().size()});check(bool(encoded),"imported hash encoding");
+  // Literal native journal fixture, not a fabricated original/engine receipt.
+  const auto bytes="BiglyBTC Scheduler imported intent 1\n"+item.hash.hex()+"\n11\n0\n1\n";
+  write(journal,bytes);write(own,*encoded+"\nforeign permission text\n");auto service=f.open();
+  check(service->snapshot().interrupted&&service->snapshot().interrupted->imported,"recognized imported source is distinct");
+  write(f.profile/"biglybt.config",config("SpeedScheduler",false));
+  check(!service->settleInterrupted(f.lease,service->snapshot().revision,item.hash,bytes),"whole config CAS before recovery mutation");
+  check(read(journal)==bytes&&read(own)==*encoded+"\nforeign permission text\n","external config conflict cannot consume permission");
+  done(service->reload(f.lease));done(service->settleInterrupted(f.lease,service->snapshot().revision,item.hash,bytes));
+  check(read(own)=="foreign permission text\n"&&!fs::exists(journal),"imported permission discarded without inferred success");
+  const auto future="BiglyBTC Scheduler imported intent 2\n"+item.hash.hex()+"\n11\n0\n1\n";
+  write(journal,future);done(service->reload(f.lease));
+  check(service->snapshot().interruptedAction&&!service->snapshot().interrupted,"future journal is unavailable, not guessed");
+  check(!service->settleInterrupted(f.lease,service->snapshot().revision,item.hash,bytes),"unknown version cannot be removed by reviewed hash");
+  check(read(journal)==future&&read(own)=="foreign permission text\n","unknown source remains byte exact");
+}
+void permissionFirstRecoveryCanBeReviewedAgain(const fs::path& module){
+  Fixture f(module);f.original();const auto dir=f.profile/"plugins"/"SpeedScheduler";const auto item=torrent();
+  // Durable state after permission publication but before intent unlink. No
+  // success receipt or engine state is invented by this restart fixture.
+  write(dir/"PausedTorrents.conf","foreign survivor\r\n");
+  write(dir/"BiglyBTC.scheduler-intent","BiglyBTC Scheduler intent 1\n"+item.hash.hex()+"\n71\n3\n0\n");
+  auto service=f.open();const auto revision=service->snapshot().revision;const auto bytes=read(dir/"BiglyBTC.scheduler-intent");
+  struct stat before{},after{};check(::stat((dir/"PausedTorrents.conf").c_str(),&before)==0,"inspect already-revoked permission");
+  done(service->settleInterrupted(f.lease,revision,item.hash,bytes));
+  check(::stat((dir/"PausedTorrents.conf").c_str(),&after)==0&&before.st_dev==after.st_dev&&before.st_ino==after.st_ino,"already-revoked permission not rewritten");
+  check(read(dir/"PausedTorrents.conf")=="foreign survivor\r\n"&&!fs::exists(dir/"BiglyBTC.scheduler-intent"),"explicit restart review only completes cleanup");
+  check(!service->settleInterrupted(f.lease,revision,item.hash,bytes),"completed settlement is not replayed");
+}
 void unsafeAndAuthentication(const fs::path& module){
   Fixture world(module);world.original();fs::permissions(world.profile/"plugins",fs::perms::all);
   const auto denied=st::loadApprovedSchedulerService(world.lease,world.module,world.approved);
@@ -169,7 +231,7 @@ void unsafeAndAuthentication(const fs::path& module){
 }
 int main(int argc,char** argv){
   try{check(argc==2,"usage: scheduler-service-tests approved-module.so");const auto module=fs::absolute(argv[1]);
-    losslessXml();resolutionAndSparseConfig(module);creationAndCancellation(module);actualModuleAndOwnership(module);interruptionAndManualPriority(module);pausedAdmissionRebind(module);unsafeAndAuthentication(module);
-    std::cout<<"scheduler service: seven owned-fixture families passed\n";return 0;
+    losslessXml();resolutionAndSparseConfig(module);creationAndCancellation(module);actualModuleAndOwnership(module);interruptionAndManualPriority(module);pausedAdmissionRebind(module);reviewedInterruptionKeepsStateAndRevokesDuplicates(module);importedAndUnknownJournalReview(module);permissionFirstRecoveryCanBeReviewedAgain(module);unsafeAndAuthentication(module);
+    std::cout<<"scheduler service: ten owned-fixture families passed\n";return 0;
   }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}
 }
