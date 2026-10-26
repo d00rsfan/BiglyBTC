@@ -8,7 +8,9 @@
 #include "managed_storage.hpp"
 #include "library_commands.hpp"
 #include "magnet_intake.hpp"
+#include "torrent_intake.hpp"
 #include "metadata_disk_router.hpp"
+#include "original_disk_io.hpp"
 #include <libtorrent/session_params.hpp>
 #include <libtorrent/write_resume_data.hpp>
 #include "network_policy.hpp"
@@ -74,6 +76,8 @@ struct PersistentSession::Impl {
     std::optional<core::QueueFilePriorityStats> filePriority;
     std::optional<std::int64_t> queueObservedMillis;
     std::optional<core::QueueProbeScope> probeScope;
+    std::unique_ptr<core::QueueTargetEta> targetEta;
+    std::uint64_t targetStatisticsSequence=0;
     std::optional<Clock::time_point> runningSince, seedingSince;
     std::optional<lt::time_point> trackerRunningSince, trackerSeedingSince;
     std::int64_t secondsDownloading = 0, secondsSeeding = 0;
@@ -117,6 +121,7 @@ struct PersistentSession::Impl {
   std::optional<NetworkBinding> networkBinding;
   std::optional<LiveQueueLimits> liveQueueLimits;
   std::optional<core::QueuePolicy> queuePolicy;
+  int targetSmoothingSeconds=30;
   core::QueueDownloadProbes downloadProbes;
   core::QueueGlobalReceiveAverage queueGlobalAverage;
   std::optional<std::int32_t> queueGlobalReceiveKiB;
@@ -461,7 +466,10 @@ struct PersistentSession::Impl {
     session.reset();
     for (auto& [key, entry] : managed) {
       static_cast<void>(key); entry->status.retained = false;
+      entry->status.diskReadLatencyMillis.reset();entry->status.diskWriteLatencyMillis.reset();
+      entry->status.staleRankOffset.reset();
       entry->status.phase = ManagedPhase::Failed;
+      entry->status.queueTargetStatistics.reset(); entry->targetEta.reset();
       entry->status.failure = storage::Error{storage::ErrorCode::Io,
           "Engine owner joined after failure; original pieces require recheck"};
     }
@@ -586,12 +594,17 @@ struct PersistentSession::Impl {
     return false;
   }
   void sampleManaged(Managed& value, bool pieces = false) {
-    if (!value.handle.is_valid() || value.removing) { return; }
+    value.status.diskReadLatencyMillis.reset();value.status.diskWriteLatencyMillis.reset();
+    value.status.staleRankOffset.reset();
+    if (!value.handle.is_valid() || value.removing) {
+      value.status.queueTargetStatistics.reset(); value.targetEta.reset(); return;
+    }
     const bool originalProgress=value.storage.originalProgressRequiresPieces();
     const bool priorityObservation=queuePolicy&&queuePolicy->downloadOrder==core::QueueDownloadOrder::FilePriority;
     const bool needPieces=pieces||originalProgress||priorityObservation;
     value.filePriority.reset();value.status.queueFilePriority.reset();
     value.status.combinedReceived.reset();value.status.combinedSent.reset();
+    value.status.queueTargetStatistics.reset();
     lt::torrent_status sample;
     detail::ManagedPayloadCounters::Sample actual;
     for (int attempt = 0; attempt < 4; ++attempt) {
@@ -630,9 +643,32 @@ struct PersistentSession::Impl {
         + std::max<std::int64_t>(0, sample.total_redundant_bytes);
     const auto now = Clock::now();
     value.queueObservedMillis=std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+    if(!value.stop&&!value.status.failure){
+      if(const auto mapped=value.storage.mappedFiles()){
+        // Same accepted target-status pipeline, matching retained descriptor
+        // owner. A later completion race is unavailable until a future sample.
+        const auto latency=mapped->diskLatency().snapshot(*value.queueObservedMillis);
+        value.status.diskReadLatencyMillis=latency.readMillis;
+        value.status.diskWriteLatencyMillis=latency.writeMillis;
+      }
+    }
     const bool transferring = !(sample.flags & lt::torrent_flags::paused)
         && sample.state != lt::torrent_status::checking_files
         && sample.state != lt::torrent_status::checking_resume_data && !value.stop;
+    // Reuse this SAME accepted payload status. Optional target statistics may
+    // neither issue a status query nor fail transfer/accounting/retirement.
+    if(queuePolicy&&queuePolicy->downloadOrder==core::QueueDownloadOrder::Eta&&transferring
+        &&!sample.is_finished&&sample.total_wanted>=0&&sample.total_wanted_done>=0
+        &&sample.total_wanted_done<=sample.total_wanted
+        &&value.targetStatisticsSequence!=std::numeric_limits<std::uint64_t>::max()){
+      try{
+        if(!value.targetEta){value.targetEta=std::make_unique<core::QueueTargetEta>();}
+        const auto observed=value.targetEta->observe({value.status.admission,++value.targetStatisticsSequence,
+            *value.queueObservedMillis,value.status.received,value.remainingBytes,{},targetSmoothingSeconds});
+        if(observed){value.status.queueTargetStatistics=*observed;}
+        else{value.targetEta.reset();}
+      }catch(...){value.targetEta.reset();}
+    }else{value.targetEta.reset();}
     if (transferring) {
       if (!value.runningSince) { value.runningSince = now; value.trackerRunningSince = lt::clock_type::now(); }
       if (sample.is_finished && !value.seedingSince) { value.seedingSince = now; value.trackerSeedingSince = lt::clock_type::now(); }
@@ -685,6 +721,9 @@ struct PersistentSession::Impl {
     else { value.status.phase = sample.is_finished ? ManagedPhase::Seeding : ManagedPhase::Downloading; }
   }
   void requestStop(Managed& value) {
+    value.status.queueTargetStatistics.reset(); value.targetEta.reset();
+    value.status.diskReadLatencyMillis.reset();value.status.diskWriteLatencyMillis.reset();
+    value.status.staleRankOffset.reset();
     if (value.stop || !value.handle.is_valid()) { return; }
     value.stop = true;
     value.status.phase = ManagedPhase::Stopping;
@@ -761,6 +800,9 @@ struct PersistentSession::Impl {
       item.sizeBytes = value.status.bytes; item.remainingBytes = value.remainingBytes;
       if (value.status.downloadRate > 0) { item.etaSeconds = value.remainingBytes / value.status.downloadRate; }
       item.activity = value.activity;
+      item.diskReadLatencyMillis=value.status.diskReadLatencyMillis;
+      item.diskWriteLatencyMillis=value.status.diskWriteLatencyMillis;
+      item.sourceStaleTiming=true;
       if(value.filePriority) {item.filePriority.emplace(value.filePriority->begin(),value.filePriority->end());}
       upload += value.status.uploadRate; download += value.status.downloadRate;
       any = true; onlySeeds = onlySeeds && item.complete;
@@ -791,7 +833,15 @@ struct PersistentSession::Impl {
             else if(input.state!=core::QueueProbeState::Other){context.downloadProbeUnavailable=true;}
           }else{input.receivedBytes=value.status.received;input.observedMillis=value.queueObservedMillis;}
         }
-        // The existing instant remaining/rate ETA is NOT original smoothed ETA.
+        // Independent configured payload smoothing; the old instant-rate ETA
+        // is deliberately never used as a substitute. Native selected bytes
+        // are an explicit counterpart to original peer/disk max-remaining.
+        if(value.status.queueTargetStatistics){
+          const auto& observed=*value.status.queueTargetStatistics;
+          if(observed.admission==fact.token&&value.queueObservedMillis
+              &&observed.observedMillis==*value.queueObservedMillis
+              &&observed.etaSeconds&&*observed.etaSeconds>=0){input.smoothedEtaSeconds=observed.etaSeconds;}
+        }
         probeInputs.push_back(input);
       }
       const auto limit=context.downloadLimitBytesPerSecond;
@@ -828,6 +878,7 @@ struct PersistentSession::Impl {
         auto& value = *found->second;
         if (!value.handle.is_valid() || value.stop || value.removing || value.status.failure) { continue; }
         value.activity = decision.activity;
+        value.status.staleRankOffset=decision.staleRankOffset;
         value.status.queueReason = decision.reason;
         value.status.seedingRank = decision.seedingRank;
         value.status.firstPriority = decision.firstPriority;
@@ -876,6 +927,9 @@ struct PersistentSession::Impl {
           if (!saved) { value.status.failure = saved.error(); }
         }
         value.status.retained = false;
+        value.status.queueTargetStatistics.reset(); value.targetEta.reset();
+        value.status.diskReadLatencyMillis.reset();value.status.diskWriteLatencyMillis.reset();
+        value.status.staleRankOffset.reset();
         value.status.phase = value.status.failure ? ManagedPhase::Failed : ManagedPhase::Stopped;
         value.status.downloadRate = 0; value.status.uploadRate = 0;
         value.removing = false;
@@ -1204,7 +1258,7 @@ std::expected<LiveSettingsResult, storage::Error> PersistentSession::applyLiveSe
         "Live settings application failed; saved preferences remain and the owner may require restart"});
   }
 }
-std::expected<void, storage::Error> PersistentSession::configureQueuePolicy(const core::QueuePolicy& policy) {
+std::expected<void, storage::Error> PersistentSession::configureQueuePolicy(const core::QueuePolicy& policy,int configuredSmoothingSeconds) {
   if (!managedAvailable() || impl_->call) {
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Queue policy is unavailable"});
   }
@@ -1212,6 +1266,12 @@ std::expected<void, storage::Error> PersistentSession::configureQueuePolicy(cons
   if (!validated) { return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,
       "Invalid queue policy: " + validated.error().key}); }
   impl_->queuePolicy = policy;
+  if (policy.downloadOrder != core::QueueDownloadOrder::Eta) {
+    for (auto& [key, value] : impl_->managed) {
+      static_cast<void>(key); value->status.queueTargetStatistics.reset(); value->targetEta.reset();
+    }
+  }
+  impl_->targetSmoothingSeconds=core::sourceSmoothingPolicy(configuredSmoothingSeconds).windowSeconds;
   if (impl_->session) {
     lt::settings_pack settings;
     settings.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::tracker
@@ -1407,6 +1467,29 @@ std::expected<void, storage::Error> PersistentSession::forgetManaged(const core:
   impl_->managed.erase(found); // Releases ManagedStorage's path/file descriptors.
   if (removePeerHints) { impl_->importPeers.erase(hash.hex()); }
   return {};
+}
+std::expected<core::TorrentHash,storage::Error> PersistentSession::createHybridCompanion(
+    storage::ProfileLease& lease,const core::TorrentHash& source,storage::OriginalSelectedHash target,std::stop_token stop) {
+  if(!managedAvailable()||impl_->call||impl_->closingAdmission){
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Hybrid companion owner is unavailable"});
+  }
+  if(source.bytes().size()!=20||(target!=storage::OriginalSelectedHash::V1&&target!=storage::OriginalSelectedHash::V2)){
+    return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Invalid original hybrid source/target identity"});
+  }
+  if(stop.stop_requested()){return std::unexpected(storage::Error{storage::ErrorCode::Cancelled,"Hybrid companion cancelled"});}
+  try {
+    impl_->bind(lease);
+    // This existing path checks actual handle removal, flush/checkpoint result,
+    // retained flag and failure before releasing old payload descriptors.
+    const auto forgotten=forgetManaged(source);
+    if(!forgotten){return std::unexpected(forgotten.error());}
+    impl_->call=true;
+    struct Reset {Impl& value;~Reset(){value.call=false;}} reset{*impl_};
+    std::vector<storage::OriginalTorrentIdentity> retained;
+    for(const auto& [key,value]:impl_->managed){(void)key;retained.push_back(value->storage.identity());}
+    return storage::importHybridAlias(lease,source,target,retained,nullptr,stop);
+  }catch(const detail::Failure& failure){return std::unexpected(failure.error);}
+  catch(...){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Hybrid companion failed; inspect pending import before retry"});}
 }
 std::optional<unsigned short> PersistentSession::tcpListenPort() const noexcept {
   if (!impl_->onWorker() || !impl_->session || impl_->closed || impl_->poisoned

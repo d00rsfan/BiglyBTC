@@ -79,6 +79,89 @@ void duplicateAliasesAndMalformedSelectors(){
   }
   for(const auto* selector:{"1:x","le"}){Area a;write(a.input,metainfo(true,std::string(selector)));const auto result=storage::importTorrent(*a.lease,a.input,a.destination,true);check(!result&&result.error().code==Code::InvalidFormat,"malformed known selector is never silently defaulted");a.noMutation();}
 }
+storage::TorrentIntakeStage aliasStopStage=storage::TorrentIntakeStage::JournalSynced;
+void aliasInterrupted(storage::TorrentIntakeStage stage){if(stage==aliasStopStage){throw std::runtime_error("owned alias fault after publication stage");}}
+void stoppedHybridCompanionPreservesOriginalAuthority(){
+  for(const bool sourceV2:{false,true}){
+    Area a;const auto from=a.importMetadata(metainfo(true,sourceV2?"i1e":"i0e"));
+    auto original=doc(read(a.state(from)));auto attrs=doc(encoded(*original.find("attributes")));
+    put(attrs,"future.alias","d3:raw"+b(std::string("\0\xffQ",3))+"e");put(original,"attributes",attrs.serialize());write(a.state(from),original.serialize());
+    const auto cache=gzip("d5:stateld4:hash"+b(hashBytes(from))+"10:attributes"+attrs.serialize()+"eee");
+    write(a.profile/"active/cache.dat",cache);
+    fs::create_directory(a.profile/"active"/from.hex());write(a.profile/"active"/from.hex()/"foreign-plugin-leaf","preserve");
+    const auto before=read(a.state(from)),inventory=doc(read(a.profile/"downloads.config"));
+    const auto first=encoded(inventory.find("downloads")->children[0]);
+    const auto to=take(storage::importHybridAlias(*a.lease,from,sourceV2?storage::OriginalSelectedHash::V1:storage::OriginalSelectedHash::V2,{}));
+    check(to!=from&&a.library().downloads.size()==2,"explicit companion adds one unique other selected key");
+    check(read(a.state(from))==before&&read(a.profile/"active/cache.dat")==cache,"source state and complete authoritative cache remain byte exact");
+    check(read(a.profile/"active"/from.hex()/"foreign-plugin-leaf")=="preserve","no foreign control recursion");
+    const auto after=doc(read(a.profile/"downloads.config"));check(encoded(after.find("downloads")->children[0])==first,"original row/counters/intent bytes stay exact");
+    const auto selected=doc(read(a.state(to)));const auto oldIdentity=identity(before),newIdentity=identity(selected.serialize());
+    check(take(storage::compareOriginalTorrentIdentities(oldIdentity,newIdentity))==storage::OriginalIdentityRelation::AlternateSelected,
+        "both aliases retain complete identical v1/v2 evidence");
+    check(take(storage::originalTorrentInfoSubject(original))==take(storage::originalTorrentInfoSubject(selected))
+        &&selected.find("future.root")&&selected.find("attributes")->find("future.alias"),"raw info and unknown source properties survive counterpart creation");
+    check(a.library().downloads[1].startup==core::StartupState::Stopped&&a.library().downloads[1].downloaded==0
+        &&a.library().downloads[1].uploaded==0,"new selected identity is stopped with its own fresh accounting");
+    check(selected.find("resume")->find("data")->find("valid")->integer==0,"companion never trusts verification for a different selected identity");
+    const auto bytes=read(a.profile/"downloads.config");const auto again=storage::importHybridAlias(*a.lease,from,sourceV2?storage::OriginalSelectedHash::V1:storage::OriginalSelectedHash::V2,{});
+    check(!again&&read(a.profile/"downloads.config")==bytes&&!storage::hasPendingTorrentIntake(*a.lease),"duplicate other key is rejected before publication");
+  }
+}
+void hybridAliasRejectsRetainedLinkedNonlinearAndManualUnsafeSources(){
+  for(int mode=0;mode<5;++mode){
+    Area a;const auto from=a.importMetadata(metainfo(true));
+    auto state=doc(read(a.state(from)));auto attrs=doc(encoded(*state.find("attributes")));
+    if(mode==1){put(attrs,"storetypes","l1:Ce");}
+    if(mode==2){put(attrs,"filelinks2","l"+b("0\nignored-from\n"+(a.root/"outside").string())+'e');}
+    if(mode==3){auto inventory=doc(read(a.profile/"downloads.config"));auto row=doc(encoded(inventory.find("downloads")->children[0]));
+      put(row,"forceStart","i1e");put(inventory,"downloads","l"+row.serialize()+'e');write(a.profile/"downloads.config",inventory.serialize());}
+    if(mode==4){fs::create_directory(a.profile/"active"/from.hex());write(a.profile/"active"/from.hex()/"fmfile0.dat.2","opaque original control");}
+    put(state,"attributes",attrs.serialize());write(a.state(from),state.serialize());
+    const auto before=read(a.state(from)),inventory=read(a.profile/"downloads.config");
+    std::vector<storage::OriginalTorrentIdentity> retained;if(mode==0){retained.push_back(identity(state.serialize()));}
+    const auto denied=storage::importHybridAlias(*a.lease,from,storage::OriginalSelectedHash::V2,retained);
+    check(!denied&&read(a.state(from))==before&&read(a.profile/"downloads.config")==inventory
+        &&!storage::hasPendingTorrentIntake(*a.lease)&&!fs::exists(a.destination),"retained/link/type/manual/control refusal precedes all effects");
+  }
+}
+void hybridAliasRefusesOriginalUnloadableEmptyHybridV2() {
+  for(const bool emptyFirst:{false,true}){
+    Area a;const std::string data(16384,'x');const auto root=lt::hasher256(data.data(),static_cast<int>(data.size())).final().to_string();
+    const auto piece=lt::hasher(data.data(),static_cast<int>(data.size())).final().to_string();
+    const std::string empty=emptyFirst?"a-empty":"z-empty",real=emptyFirst?"z-data":"a-data";
+    const auto emptyLeaf=b(empty)+"d0:d6:lengthi0eee";
+    const auto realLeaf=b(real)+"d0:d6:lengthi16384e11:pieces root"+b(root)+"ee";
+    const auto emptyFile="d6:lengthi0e4:pathl"+b(empty)+"ee";
+    const auto realFile="d6:lengthi16384e4:pathl"+b(real)+"ee";
+    const auto info="d9:file treed"+(emptyFirst?emptyLeaf+realLeaf:realLeaf+emptyLeaf)
+        +"e5:filesl"+(emptyFirst?emptyFile+realFile:realFile+emptyFile)
+        +"e12:meta versioni2e4:name6:bundle12:piece lengthi16384e6:pieces"+b(piece)+"e";
+    const auto from=a.importMetadata("d4:info"+info+"e");
+    const auto before=read(a.state(from)),inventory=read(a.profile/"downloads.config");
+    const auto denied=storage::importHybridAlias(*a.lease,from,storage::OriginalSelectedHash::V2,{});
+    check(!denied&&denied.error().code==Code::Unsupported,"actual original empty hybrid V2 reload boundary is explicit");
+    check(read(a.state(from))==before&&read(a.profile/"downloads.config")==inventory
+        &&!storage::hasPendingTorrentIntake(*a.lease)&&!fs::exists(a.destination),"empty hybrid refusal has no metadata, inventory or payload effects");
+  }
+}
+void hybridAliasRecoveryRetainsSourceProofAndOldJournalCompatibility(){
+  for(const auto stage:{storage::TorrentIntakeStage::JournalSynced,storage::TorrentIntakeStage::StatePublished,
+      storage::TorrentIntakeStage::ArchivePublished,storage::TorrentIntakeStage::InventoryPublished}){
+    Area a;const auto from=a.importMetadata(metainfo(true));const auto source=read(a.state(from));aliasStopStage=stage;
+    const auto interrupted=storage::importHybridAlias(*a.lease,from,storage::OriginalSelectedHash::V2,{},aliasInterrupted);
+    check(!interrupted&&storage::hasPendingTorrentIntake(*a.lease),"actual alias stage fault keeps exact intake journal");
+    check(read(a.state(from))==source,"interrupted publication never mutates old state");
+    if(stage==storage::TorrentIntakeStage::JournalSynced){
+      write(a.state(from),source+"changed");const auto refused=storage::recoverTorrentIntake(*a.lease);
+      check(!refused&&a.library().downloads.size()==1,"source CAS change blocks recovery before new library row");
+      write(a.state(from),source);
+    }
+    const auto recovered=take(storage::recoverTorrentIntake(*a.lease));
+    check(recovered&&a.library().downloads.size()==2&&!storage::hasPendingTorrentIntake(*a.lease),"matching source proof recovers unique stopped companion");
+    check(read(a.state(from))==source&&!fs::exists(a.destination),"recovery preserves source bytes and never accesses payload");
+  }
+}
 void explicit32AndRetainedIdentity(){
   Area a;const auto input=metainfo(false);const auto expected=identity(input);check(expected.full.v2.has_value(),"actual v2 evidence");const auto key=a.importMetadata(input);auto first=std::make_optional(take(Owner::prepare(*a.lease,key,{})));
   const auto full=core::TorrentHash::parse(std::string_view(reinterpret_cast<const char*>(expected.full.v2->data()),32));check(full.has_value(),"actual explicit32 key");a.explicitFull32(key,*full);
@@ -205,4 +288,4 @@ void projectionRejectsNonTailDifferences() {
 }
 
 }
-int main(){try{check(std::setlocale(LC_CTYPE, "")!=nullptr,"Initialize actual filesystem character locale");std::cerr<<"CASE syntheticTailUsesOnlyEnginePadSlot\n";syntheticTailUsesOnlyEnginePadSlot();++families;std::cerr<<"CASE mappedPayloadExternalMutationStillFailsClosed\n";mappedPayloadExternalMutationStillFailsClosed();++families;std::cerr<<"CASE projectionRejectsNonTailDifferences\n";projectionRejectsNonTailDifferences();++families;std::cerr<<"CASE originalJavaOrderAndPaddedProgress\n";originalJavaOrderAndPaddedProgress();++families;std::cerr<<"CASE canonicalExternalTreeCannotReindexOriginalGeometry\n";canonicalExternalTreeCannotReindexOriginalGeometry();++families;std::cerr<<"CASE selectedImportAndOfflineOperations\n";selectedImportAndOfflineOperations();++families;std::cerr<<"CASE duplicateAliasesAndMalformedSelectors\n";duplicateAliasesAndMalformedSelectors();++families;std::cerr<<"CASE explicit32AndRetainedIdentity\n";explicit32AndRetainedIdentity();++families;std::cerr<<"CASE cachedSelectionAndRecovery\n";cachedSelectionAndRecovery();++families;std::cerr<<"CASE rawSubjectBinding\n";rawSubjectBinding();++families;std::cout<<"PASS "<<families<<" original-identity caller families, "<<assertions<<" assertions; generated data and actual LT/OpenSSL digests, no engine activation or Java equality credit\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+int main(){try{check(std::setlocale(LC_CTYPE, "")!=nullptr,"Initialize actual filesystem character locale");std::cerr<<"CASE syntheticTailUsesOnlyEnginePadSlot\n";syntheticTailUsesOnlyEnginePadSlot();++families;std::cerr<<"CASE mappedPayloadExternalMutationStillFailsClosed\n";mappedPayloadExternalMutationStillFailsClosed();++families;std::cerr<<"CASE projectionRejectsNonTailDifferences\n";projectionRejectsNonTailDifferences();++families;std::cerr<<"CASE originalJavaOrderAndPaddedProgress\n";originalJavaOrderAndPaddedProgress();++families;std::cerr<<"CASE canonicalExternalTreeCannotReindexOriginalGeometry\n";canonicalExternalTreeCannotReindexOriginalGeometry();++families;std::cerr<<"CASE selectedImportAndOfflineOperations\n";selectedImportAndOfflineOperations();++families;std::cerr<<"CASE duplicateAliasesAndMalformedSelectors\n";duplicateAliasesAndMalformedSelectors();++families;std::cerr<<"CASE stoppedHybridCompanionPreservesOriginalAuthority\n";stoppedHybridCompanionPreservesOriginalAuthority();++families;std::cerr<<"CASE hybridAliasRejectsRetainedLinkedNonlinearAndManualUnsafeSources\n";hybridAliasRejectsRetainedLinkedNonlinearAndManualUnsafeSources();++families;std::cerr<<"CASE hybridAliasRefusesOriginalUnloadableEmptyHybridV2\n";hybridAliasRefusesOriginalUnloadableEmptyHybridV2();++families;std::cerr<<"CASE hybridAliasRecoveryRetainsSourceProofAndOldJournalCompatibility\n";hybridAliasRecoveryRetainsSourceProofAndOldJournalCompatibility();++families;std::cerr<<"CASE explicit32AndRetainedIdentity\n";explicit32AndRetainedIdentity();++families;std::cerr<<"CASE cachedSelectionAndRecovery\n";cachedSelectionAndRecovery();++families;std::cerr<<"CASE rawSubjectBinding\n";rawSubjectBinding();++families;std::cout<<"PASS "<<families<<" original-identity caller families, "<<assertions<<" assertions; generated data and actual LT/OpenSSL digests, no engine activation or Java equality credit\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

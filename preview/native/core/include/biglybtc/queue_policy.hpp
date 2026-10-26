@@ -3,6 +3,7 @@
 #include "biglybtc/bencode.hpp"
 #include "biglybtc/queue_slots.hpp"
 #include "biglybtc/queue_download_probe.hpp"
+#include "biglybtc/queue_target_statistics.hpp"
 
 #include <cstdint>
 #include <expected>
@@ -67,6 +68,7 @@ struct QueueActivityMemory {
   std::optional<std::int64_t> downloadHighLatencyMillis, seedHighLatencyMillis;
   std::optional<std::int64_t> lastObservationMillis;
   std::int64_t timedMinimumMillis = 0;
+  QueueStaleSeedTiming staleTiming;
   bool operator==(const QueueActivityMemory&) const = default;
 };
 enum class QueueTorrentState { Queued, Waiting, Preparing, Checking, Downloading, Seeding, Stopping, Stopped, Failed };
@@ -94,6 +96,9 @@ struct QueueTorrentFacts {
   std::int32_t staleRankOffset = 0;
   QueueActivityMemory activity;
   std::optional<QueueProbeObservation> downloadProbe{};
+  // Opt in only for an actual admission with measured disk facts. Missing
+  // required inputs withdraw stale-rank authority rather than imply zero age.
+  bool sourceStaleTiming = false;
 };
 struct QueueContext {
   std::int64_t nowMillis = 0, ownerStartedMillis = 0;
@@ -119,6 +124,7 @@ struct QueueDecision {
   bool activelyDownloading = false, activelySeeding = false, activityKnown = true;
   bool clearForceStart = false, moveNewSeedToTop = false;
   QueueActivityMemory activity;
+  std::optional<std::int32_t> staleRankOffset{};
 };
 struct QueuePlan {
   std::vector<QueueDecision> decisions; // Input order; stable tokens bind effects.
@@ -126,6 +132,7 @@ struct QueuePlan {
   // bit0 unknown swarm, bit1 missing ratio/time/rate, bit2 light slots unavailable,
   // bit3 disk latency unavailable; bit4 missing probe/ETA/combined-byte or
   // configured-bandwidth smoothing inputs (payload-scoped probes stay explicit).
+  // bit6 missing authoritative source stale-rank timing facts.
   std::uint32_t unavailableInputs = 0;
   std::optional<QueueSlotBudget> seedSlots; // Last planned current/global guard; no synthetic light owners.
 };

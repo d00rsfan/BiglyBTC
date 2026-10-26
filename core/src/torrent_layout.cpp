@@ -18,6 +18,41 @@ std::int64_t integer(const Node* value) {
   require(value && value->type == Node::Type::Integer && value->integer >= 0, "Expected a nonnegative metadata integer");
   return value->integer;
 }
+enum class NameEncoding { Utf8, Latin1 };
+struct NamePolicy { NameEncoding encoding; bool utf8Keys; };
+NamePolicy names(const core::Document& document,const Node& info) {
+  const auto* field=document.find("encoding");
+  const auto original=field?text(field):std::string{};
+  auto normalized=original;
+  std::erase_if(normalized,[](unsigned char c){return c=='-'||c=='_'||c==' ';});
+  std::ranges::transform(normalized,normalized.begin(),[](unsigned char c){return c>='A'&&c<='Z'?static_cast<char>(c+32):static_cast<char>(c);});
+  auto lower=original;
+  std::ranges::transform(lower,lower.begin(),[](unsigned char c){return c>='A'&&c<='Z'?static_cast<char>(c+32):static_cast<char>(c);});
+  const bool latin1=lower=="iso-8859-1"; // Explicit original canonical charset only.
+  require(!field||normalized=="utf8"||normalized=="utf8keys"||latin1,
+      "This original filename encoding needs its qualified codec adapter");
+  require(!latin1||!info.find("file tree"),"Legacy encoded v2/hybrid names require separate original qualification");
+  // Exact cb8 global UTF8-key predicate: name plus every v1 path, and only
+  // absent encoding, the exact saved sentinel, or case-insensitive UTF-8.
+  bool use=info.find("name.utf-8")&&(!field||original=="utf8 keys"||lower=="utf-8");
+  if(const auto* files=info.find("files")){
+    require(files->type==Node::Type::List,"Original file list has invalid type");
+    if(use){for(const auto& file:files->children){use=use&&file.find("path.utf-8");}}
+  }
+  return {latin1?NameEncoding::Latin1:NameEncoding::Utf8,use};
+}
+std::string decoded(const Node* node,NameEncoding encoding) {
+  const auto value=text(node);
+  if(encoding==NameEncoding::Utf8){return value;}
+  // ISO-8859-1 is a total one-byte Java charset: each byte is its scalar.
+  // Filesystem component safety and expanded byte limits are checked later.
+  std::string result;result.reserve(value.size()*2);
+  for(const unsigned char c:value){
+    if(c<0x80){result+=static_cast<char>(c);}
+    else{result+=static_cast<char>(0xc0|(c>>6));result+=static_cast<char>(0x80|(c&0x3f));}
+  }
+  return result;
+}
 std::u16string utf16(std::string_view value) {
   std::u16string result;
   for (std::size_t i = 0; i < value.size();) {
@@ -98,8 +133,9 @@ std::expected<OriginalLayout, LayoutError> originalLayout(const core::Document& 
   try {
     const auto* info = document.find("info");
     require(info && info->type == Node::Type::Dictionary, "Original metadata has no info dictionary");
-    const auto* name = info->find("name.utf-8");
-    OriginalLayout result{component(text(name ? name : info->find("name"))), false,
+    const auto policy=names(document,*info);
+    const auto* name = policy.utf8Keys?info->find("name.utf-8"):info->find("name");
+    OriginalLayout result{component(decoded(name,policy.utf8Keys?NameEncoding::Utf8:policy.encoding)), false,
         integer(info->find("piece length")), 0, {}};
     require(result.pieceLength > 0 && result.pieceLength <= OriginalMaximumPieceLength, "Unqualified original piece length");
     if (const auto* files = info->find("files")) {
@@ -107,15 +143,14 @@ std::expected<OriginalLayout, LayoutError> originalLayout(const core::Document& 
       result.multifile = true;
       for (const auto& file : files->children) {
         require(file.type == Node::Type::Dictionary && !file.find("symlink path"), "Invalid or symbolic original file entry");
-        const auto* components = file.find("path.utf-8");
-        if (!components) { components = file.find("path"); }
+        const auto* components = file.find(policy.utf8Keys?"path.utf-8":"path");
         require(components && components->type == Node::Type::List && !components->children.empty(), "Original file has no component list");
         std::string path;
         for (const auto& part : components->children) {
           require(part.type == Node::Type::Bytes && path.size() + part.bytes.size() + 1 <= 4096,
               "Original relative path exceeds its limit");
           if (!path.empty()) { path += '/'; }
-          path += component(text(&part));
+          path += component(decoded(&part,policy.utf8Keys?NameEncoding::Utf8:policy.encoding));
         }
         bool padding = false;
         if (const auto* flags = file.find("attr")) {

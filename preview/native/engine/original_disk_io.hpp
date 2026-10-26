@@ -1,6 +1,7 @@
 #pragma once
 
 #include "file_io.hpp"
+#include "disk_latency.hpp"
 #include "original_file_io.hpp"
 #include <libtorrent/disk_interface.hpp>
 #include <libtorrent/io_context.hpp>
@@ -34,11 +35,14 @@ public:
   std::expected<void, storage::Error> finishComplete(std::span<const std::uint8_t>);
   std::optional<storage::Error> failure() const;
   void recordFailure();
+  DiskLatency& diskLatency() noexcept { return diskLatency_; }
+  const DiskLatency& diskLatency() const noexcept { return diskLatency_; }
 private:
   std::shared_ptr<libtorrent::torrent_info> metadata_;
   std::vector<std::optional<OriginalDiskFile>> files_;
   std::optional<storage::Error> failure_;
   std::atomic_bool failedException_ = false;
+  DiskLatency diskLatency_;
 };
 
 // Caller provides the path registry lookup; an expired reserved admission must

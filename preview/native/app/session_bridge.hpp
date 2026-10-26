@@ -51,6 +51,7 @@ public:
   bool openNormal(std::filesystem::path profile);
   bool downloadAction(ui::DownloadTargets, core::DownloadAction);
   bool torrentImport(QString metadata, QString destination, bool start);
+  bool createHybridCompanion(ui::Target source, bool selectV2);
   bool previewTorrentIntake(ui::TorrentIntakeRequest);
   bool importTorrentFiles(ui::TorrentIntakeSubmission);
   bool magnetImport(QString uri, QString destination);

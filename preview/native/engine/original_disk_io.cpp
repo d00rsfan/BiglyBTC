@@ -32,6 +32,10 @@ public:
   void free_disk_buffer(char* data) override { std::free(data); }
 };
 ReadAllocator readAllocator;
+struct LatencySubmission {
+  DiskLatency& latency;std::uint64_t token;bool submitted=false;
+  ~LatencySubmission(){if(!submitted){latency.finish(token,false);}}
+};
 
 class OriginalDisk final : public lt::disk_interface {
   struct Slot {
@@ -59,10 +63,13 @@ public:
   void async_read(lt::storage_index_t index, const lt::peer_request& request,
       std::function<void(lt::disk_buffer_holder, const lt::storage_error&)> handler, lt::disk_job_flags_t) override {
     const auto slot = at(index);
-    auto failed = [this, slot, handler]() mutable {
+    const auto latencyToken=slot.files->diskLatency().begin(DiskIoAxis::Read);
+    LatencySubmission latencySubmission{slot.files->diskLatency(),latencyToken};
+    auto failed = [this, slot, handler, latencyToken]() mutable {
+      slot.files->diskLatency().finish(latencyToken,false);
       boost::asio::post(context_, [slot, handler = std::move(handler)]() mutable { handler({}, diskError(lt::operation_t::file_read)); });
     };
-    enqueue(slot, [this, slot, request, handler = std::move(handler)]() mutable {
+    enqueue(slot, [this, slot, request, handler = std::move(handler), latencyToken]() mutable {
       lt::storage_error error;
       std::unique_ptr<char,decltype(&std::free)> data(nullptr,std::free);
       if (!validRequest(*slot.files, request)) { error = diskError(lt::operation_t::file_read, EINVAL); }
@@ -71,10 +78,12 @@ public:
         if (!data) { error = diskError(lt::operation_t::file_read, ENOMEM); }
         else { error = translated(slot.files->read(offset(*slot.files, request), {data.get(), static_cast<std::size_t>(request.length)}), lt::operation_t::file_read); }
       }
+      slot.files->diskLatency().finish(latencyToken,!error.ec);
       if(error.ec){data.reset();}
       lt::disk_buffer_holder buffer(readAllocator, data.release(), error.ec ? 0 : request.length);
       boost::asio::post(context_, [slot, handler = std::move(handler), buffer = std::move(buffer), error]() mutable { handler(std::move(buffer), error); });
     }, std::move(failed));
+    latencySubmission.submitted=true;
   }
   bool async_write(lt::storage_index_t index, const lt::peer_request& request, const char* data,
       std::shared_ptr<lt::disk_observer> observer, std::function<void(const lt::storage_error&)> handler, lt::disk_job_flags_t) override {
@@ -86,21 +95,26 @@ public:
       slot.files->recordFailure();
       boost::asio::post(context_,[slot,handler=std::move(handler)]{handler(diskError(lt::operation_t::file_write,ENOBUFS));});return false;
     }
+    const auto latencyToken=slot.files->diskLatency().begin(DiskIoAxis::Write);
+    LatencySubmission latencySubmission{slot.files->diskLatency(),latencyToken};
     // LT releases its input when this call returns; retain an owned block.
     std::vector<char> copy(data, data + request.length);
     const auto bytes = copy.size(); queuedBytes_ += bytes;
     const bool full = queuedBytes_ >= HighWater;
     if (full && observer) { observers_.insert(observer); }
-    auto failed = [this, slot, handler, bytes]() mutable {
+    auto failed = [this, slot, handler, bytes, latencyToken]() mutable {
+      slot.files->diskLatency().finish(latencyToken,false);
       boost::asio::post(context_, [this, slot, handler = std::move(handler), bytes]() mutable { queuedBytes_ -= bytes; handler(diskError(lt::operation_t::file_write)); notifyWriters(); });
     };
-    enqueue(slot, [this, slot, request, handler = std::move(handler), copy = std::move(copy), bytes]() mutable {
+    enqueue(slot, [this, slot, request, handler = std::move(handler), copy = std::move(copy), bytes, latencyToken]() mutable {
       const auto error = translated(slot.files->write(offset(*slot.files, request), copy), lt::operation_t::file_write);
+      slot.files->diskLatency().finish(latencyToken,!error.ec);
       boost::asio::post(context_, [this, slot, handler = std::move(handler), error, bytes] {
         queuedBytes_ -= bytes; handler(error);
         notifyWriters();
       });
     }, std::move(failed));
+    latencySubmission.submitted=true;
     return full;
   }
   void async_hash(lt::storage_index_t index, lt::piece_index_t piece, lt::span<lt::sha256_hash> hashes,

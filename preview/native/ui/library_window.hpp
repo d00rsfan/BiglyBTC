@@ -167,6 +167,7 @@ signals:
   void columnLayoutSaveRequested(biglybtc::ui::ColumnLayoutSaveSubmission);
   void continueRequested(biglybtc::ui::Target);
   void downloadActionRequested(biglybtc::ui::DownloadTargets, biglybtc::core::DownloadAction);
+  void hybridCompanionRequested(biglybtc::ui::Target source, bool selectV2);
   void filePolicyRequested(biglybtc::ui::Target, biglybtc::ui::FileIndices, int priority, bool skipped);
   void fileCompactionRequested(biglybtc::ui::Target, int originalIndex);
   void detailsRequested(biglybtc::ui::Target);
@@ -237,6 +238,8 @@ private:
   bool fileOperationExecuting_ = false;
   std::optional<TorrentCreationRequest> activeTorrentCreation_;
   quint64 creationDialogRevision_ = 0;
+  void requestHybridCompanion(bool selectV2);
+  std::array<QPointer<QAction>,2> hybridCompanionActions_{};
   void openLocalRating();
   QPointer<LocalRatingDialog> localRatingDialog_;
   QPointer<QAction> localRatingAction_;

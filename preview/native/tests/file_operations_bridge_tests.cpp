@@ -50,7 +50,7 @@ ui::FileOperationRequest request(const QSignalSpy& rows,quint64 session,quint64 
 ui::FileOperationPlanPresentation prepared(const QSignalSpy& spy){return spy.empty()?ui::FileOperationPlanPresentation{}:qvariant_cast<ui::FileOperationPlanPresentation>(spy.last()[0]);}
 ui::FileOperationResultPresentation finished(const QSignalSpy& spy){return spy.empty()?ui::FileOperationResultPresentation{}:qvariant_cast<ui::FileOperationResultPresentation>(spy.last()[0]);}
 ui::TorrentCreationResultPresentation created(const QSignalSpy& spy){return spy.empty()?ui::TorrentCreationResultPresentation{}:qvariant_cast<ui::TorrentCreationResultPresentation>(spy.last()[0]);}
-ui::FileOperationSubmission copied(ui::FileOperationPlanPresentation plan,bool confirm=false){return {std::make_shared<const ui::FileOperationPlanPacket>(*plan),confirm};}
+ui::FileOperationSubmission copied(ui::FileOperationPlanPresentation plan,bool confirm=false){return {std::make_shared<const ui::FileOperationPlanPacket>(*plan),confirm,plan->deleteTorrentFile};}
 void sameInode(const QString& path,const struct stat& before) {
  struct stat after{};test::require(::lstat(path.toStdString().c_str(),&after)==0&&S_ISREG(after.st_mode)&&after.st_dev==before.st_dev&&after.st_ino==before.st_ino,"Owned payload inode changed unexpectedly");
 }
@@ -118,6 +118,23 @@ private slots:
   const auto inventoryBefore=test::read(f.profile+"/downloads.config");QVERIFY(bridge.executeFileOperation(copied(prepared(plans),false)));QTRY_COMPARE_WITH_TIMEOUT(results.count(),2,10000);QTRY_VERIFY(!bridge.busy());QVERIFY(!finished(results)->completed);QCOMPARE(test::read(f.profile+"/downloads.config"),inventoryBefore);QCOMPARE(test::read(newPath),bytes);
   QVERIFY(bridge.prepareFileOperation(request(rows,session,72,*f.hash,ui::FileOperation::RemoveDeleteData)));QTRY_COMPARE_WITH_TIMEOUT(plans.count(),3,10000);QTRY_VERIFY(!bridge.busy());QVERIFY(bridge.executeFileOperation(copied(prepared(plans),true)));QTRY_COMPARE_WITH_TIMEOUT(results.count(),3,10000);QTRY_VERIFY(!bridge.busy());QVERIFY2(finished(results)->completed,qPrintable(finished(results)->failure));
   QVERIFY(!QFileInfo::exists(newPath));QCOMPARE(test::read(oldPath),bytes);QVERIFY(inventory(f).downloads.empty());QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,10000);auto lease=storage::ProfileLease::acquire(f.native());QVERIFY(lease);
+ }
+ void archivePreferenceFromHeldProfile_data(){QTest::addColumn<int>("preference");QTest::newRow("original-default")<<-1;QTest::newRow("saved-keep")<<0;QTest::newRow("saved-nonzero")<<2;}
+ void archivePreferenceFromHeldProfile(){
+  QFETCH(int,preference);test::OwnedEngineFixture f(false);const auto archive=f.root.path()+QStringLiteral("/saved.torrent");test::write(archive,test::read(f.stateFile));
+  const auto nativePath=archive.toUtf8().toStdString();edit(f,{{"state","i70e"},{"torrent",std::to_string(nativePath.size())+':'+nativePath}});
+  if(preference>=0){auto config=parse("de");test::require(config.replaceValue("def.deletetorrent","i"+std::to_string(preference)+'e').has_value(),"archive setting");test::require(config.replaceValue("opaque.options","li7e3:rawe").has_value(),"unknown setting");test::write(f.profile+"/biglybt.config",QByteArray::fromStdString(config.serialize()));}
+  const auto payload=test::read(f.payload+'/'+f.files[0].relative),metadata=test::read(archive);
+  app::SessionBridge bridge;QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady),sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),plans(&bridge,&app::SessionBridge::fileOperationPrepared),results(&bridge,&app::SessionBridge::fileOperationFinished),closed(&bridge,&app::SessionBridge::sessionClosed);
+  QVERIFY(bridge.open(f.native(),0));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty()&&latest(rows),10000);const auto session=sessions[0][0].toULongLong();
+  QVERIFY(bridge.prepareFileOperation(request(rows,session,401,*f.hash,ui::FileOperation::RemoveKeepData)));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&prepared(plans),10000);
+  const auto plan=prepared(plans);QVERIFY2(plan->failure.isEmpty(),qPrintable(plan->failure));QCOMPARE(plan->deleteTorrentFile,preference!=0);QCOMPARE(plan->archivePath,preference!=0?archive:QString{});
+  if(plan->deleteTorrentFile){QVERIFY(bridge.executeFileOperation({plan,false,false}));QTRY_COMPARE_WITH_TIMEOUT(results.count(),1,10000);QTRY_VERIFY(!bridge.busy());QVERIFY(!finished(results)->completed);QCOMPARE(test::read(archive),metadata);QVERIFY(!inventory(f).downloads.empty());
+    QVERIFY(bridge.prepareFileOperation(request(rows,session,402,*f.hash,ui::FileOperation::RemoveKeepData)));QTRY_COMPARE_WITH_TIMEOUT(plans.count(),2,10000);QTRY_VERIFY(!bridge.busy());}
+  const auto previousResults=results.count();QVERIFY(bridge.executeFileOperation(copied(prepared(plans))));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&results.count()>previousResults,10000);QVERIFY2(finished(results)->completed,qPrintable(finished(results)->failure));
+  QCOMPARE(test::read(f.payload+'/'+f.files[0].relative),payload);QCOMPARE(QFileInfo::exists(archive),preference==0);if(preference==0){QCOMPARE(test::read(archive),metadata);}
+  if(preference<0){QVERIFY(!QFileInfo::exists(f.profile+"/biglybt.config"));}
+  QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,10000);
  }
  void changedDisplayedScopeAndStaleTargetRejectBeforeAnyMutation() {
   test::OwnedEngineFixture f(false);edit(f,{{"state","i70e"}});const auto inventoryBefore=test::read(f.profile+"/downloads.config"),stateBefore=test::read(f.stateFile),payloadBefore=test::read(f.payload+'/'+f.files[0].relative);

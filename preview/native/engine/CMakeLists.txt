@@ -46,3 +46,5 @@ target_sources(biglybtc_local_engine PRIVATE network_binding.cpp)
 
 # Verified optional SOCKS4 capability, retained for the current owner.
 target_sources(biglybtc_local_engine PRIVATE network_proxy_capability.cpp)
+
+target_sources(biglybtc_local_engine PRIVATE disk_latency.cpp)

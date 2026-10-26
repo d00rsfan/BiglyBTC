@@ -83,6 +83,30 @@ private slots:
     qRegisterMetaType<Action>();
   }
 
+  void hybridCompanionUsesFreshSingleTargetAndRemainsPassive() {
+    ui::LibraryWindow window;window.setPresentation(sample(91,{0,0,0,0}));window.beginColumnLayoutSession(901);window.show();
+    QVERIFY(selectRows(window,{0}));auto* useV2=action(window,"classic-hybrid-v2");QVERIFY(useV2);
+    QSignalSpy requests(&window,&ui::LibraryWindow::hybridCompanionRequested);QTRY_VERIFY(useV2->isEnabled());
+    const auto capture=qEnvironmentVariable("BIGLYBTC_HYBRID_MENU_CAPTURE");
+    if(!capture.isEmpty()) {
+      auto* menu=qobject_cast<QMenu*>(useV2->parent());QVERIFY(menu);
+      menu->show();QCoreApplication::processEvents();QVERIFY(menu->grab().save(capture));menu->hide();
+    }
+    useV2->trigger();QCOMPARE(requests.size(),1);QCOMPARE(qvariant_cast<ui::Target>(requests.first()[0]),targets(window,{0}).front());QVERIFY(requests.first()[1].toBool());
+    window.setBusy(true);QVERIFY(forceTrigger(useV2));QCOMPARE(requests.size(),1);
+    window.setBusy(false);QVERIFY(selectRows(window,{0,1}));QVERIFY(forceTrigger(useV2));QCOMPARE(requests.size(),1);
+    QVERIFY(selectRows(window,{1}));window.setPresentation(sample(92,{0,0,0,0}));
+    useV2->trigger();QCOMPARE(requests.size(),2);QCOMPARE(qvariant_cast<ui::Target>(requests.last()[0]).generation,quint64{92});
+  }
+  void hybridCompanionDirectReceiverMayDeleteWindow() {
+    QPointer<ui::LibraryWindow> window=new ui::LibraryWindow;
+    window->setPresentation(sample(93,{0,0,0,0}));window->beginColumnLayoutSession(903);window->show();QVERIFY(selectRows(*window,{0}));
+    auto* useV1=action(*window,"classic-hybrid-v1");QVERIFY(useV1);QTRY_VERIFY(useV1->isEnabled());
+    unsigned calls=0;connect(window,&ui::LibraryWindow::hybridCompanionRequested,this,[&](ui::Target target,bool v2){
+      ++calls;QCOMPARE(target.generation,quint64{93});QVERIFY(!v2);delete window.data();
+    });
+    useV1->trigger();QVERIFY(window.isNull());QCOMPARE(calls,1U);
+  }
   void eachCommandRoutesWholeSelection_data() {
     QTest::addColumn<int>("ordinal");
     QTest::addColumn<QByteArray>("id");

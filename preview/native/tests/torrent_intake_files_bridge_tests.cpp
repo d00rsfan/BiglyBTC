@@ -1,5 +1,6 @@
 #include "session_bridge.hpp"
 #include "owned_engine_fixture.hpp"
+#include "selected_swarm_fixture.hpp"
 #include "persistent_session.hpp"
 #include "torrent_intake.hpp"
 #include "biglybtc/file_policy.hpp"
@@ -34,6 +35,38 @@ private slots:
     QCOMPARE(QGuiApplication::platformName(),QStringLiteral("offscreen"));QApplication::setQuitOnLastWindowClosed(false);
     auto owner=engine::PersistentSession::create({1,2,3});QVERIFY2(owner.has_value(),"This actual-owner cohort requires an approved source-bound runtime; no skip");
     const auto closed=(*owner)->close(std::chrono::steady_clock::now()+std::chrono::seconds{5});QVERIFY(closed.sessionJoined);
+  }
+  void actualHostCreatesOnlyStoppedCompanionFromFreshSourceTarget() {
+    test::selected_swarm::Fixture source(false);const auto original=source.initialState;
+    source.lease.reset();
+    // Only the existing owned-loopback policy token is needed: neither stopped
+    // source nor companion is admitted to a transfer or offered to this peer.
+    test::OwnedEngineFixture ownedPeer(false);QTRY_VERIFY_WITH_TIMEOUT(ownedPeer.ready(),30000);
+    app::SessionBridge bridge;QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady),failures(&bridge,&app::SessionBridge::failed);
+    QSignalSpy closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.open(source.profile,ownedPeer.port()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!rows.empty(),10000);
+    auto current=qvariant_cast<ui::Presentation>(rows.last()[0]);QVERIFY(current&&current->items.size()==1);
+    const ui::Target target{QString::fromStdString(source.key->hex()),current->revision};
+    auto stale=target;++stale.generation;QVERIFY(bridge.createHybridCompanion(stale,true));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!failures.empty(),10000);
+    QCOMPARE(test::selected_swarm::read(source.profile/"downloads.config"),source.initialInventory);
+    QVERIFY(!std::filesystem::exists(source.destination));
+    QVERIFY(bridge.createHybridCompanion(target,true));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&qvariant_cast<ui::Presentation>(rows.last()[0])
+        &&qvariant_cast<ui::Presentation>(rows.last()[0])->items.size()==2,10000);
+    current=qvariant_cast<ui::Presentation>(rows.last()[0]);
+    QCOMPARE(test::selected_swarm::read(source.state),original);QVERIFY(!std::filesystem::exists(source.destination));
+    const auto inventory=document(QString::fromStdString((source.profile/"downloads.config").string()));
+    const auto saved=core::readLibrary(inventory);QVERIFY(saved&&saved->issues.empty()&&saved->downloads.size()==2);
+    QVERIFY(saved->downloads[0].hash==source.key&&saved->downloads[1].hash!=source.key);
+    QCOMPARE(saved->downloads[1].startup,core::StartupState::Stopped);
+    const auto failureCount=failures.size();const ui::Target fresh{target.hash,current->revision};
+    const auto beforeDuplicate=test::selected_swarm::read(source.profile/"downloads.config");
+    QVERIFY(bridge.createHybridCompanion(fresh,true));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&failures.size()>failureCount,10000);
+    QCOMPARE(test::selected_swarm::read(source.profile/"downloads.config"),beforeDuplicate);
+    QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,15000);
+    QVERIFY(closed[0][1].toBool()&&closed[0][2].toBool());
+    auto reacquired=storage::ProfileLease::acquire(source.profile);QVERIFY(reacquired);QVERIFY(!std::filesystem::exists(source.destination));
   }
   void selectedFileTransfersOnlyAfterOriginalChoicesHaveCommitted() {
     test::OwnedEngineFixture fixture(true);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);

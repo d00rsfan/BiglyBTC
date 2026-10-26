@@ -191,7 +191,8 @@ std::int64_t timedMinimum(const QueuePolicy& p,const QueueTorrentFacts& f,const 
 std::int32_t jint(std::uint32_t n){return std::bit_cast<std::int32_t>(n);}
 std::int64_t jlong(std::uint64_t n){return std::bit_cast<std::int64_t>(n);}
 std::int32_t rank(const QueuePolicy& p,const QueueTorrentFacts& f,const QueueContext&,const Swarm& s,
-    const Truth fp,QueueReason& reason,std::int64_t timeMinimum) {
+    const Truth fp,QueueReason& reason,std::int64_t timeMinimum,
+    std::int32_t staleOffset,bool& clearStaleOffset) {
   if(!f.complete){return jint(1000000000U+(10000U-f.position));}
   if(!fp.value&&fp.known){
     const auto maxRatio=f.maximumShareRatio&&*f.maximumShareRatio>0?*f.maximumShareRatio:p.ignoreShareRatio;
@@ -241,10 +242,13 @@ std::int32_t rank(const QueuePolicy& p,const QueueTorrentFacts& f,const QueueCon
       result=static_cast<std::int32_t>(99999.0F/(plus*plus));
     }
   }
-  if(f.staleRankOffset>0&&result>f.staleRankOffset){result-=f.staleRankOffset;}
+  if(staleOffset>0){
+    if(result>staleOffset){result-=staleOffset;}
+    else{clearStaleOffset=true;}
+  }
   return result<0?1:result;
 }
-struct Activity {bool value=false,known=true;};
+struct Activity {bool value=false,known=true,thresholdBranch=false;};
 Activity active(const QueuePolicy& p,const QueueTorrentFacts& f,const QueueContext& c,const Swarm& s,
     const Truth fp,QueueActivityMemory& m,bool seed) {
   const auto state=seed?QueueTorrentState::Seeding:QueueTorrentState::Downloading;
@@ -259,13 +263,17 @@ Activity active(const QueuePolicy& p,const QueueTorrentFacts& f,const QueueConte
   if(!rate){return {previous,false};}
   bool candidate=*rate>=(seed?p.minimumSeedBytesPerSecond:p.minimumDownloadBytesPerSecond);
   const auto latency=seed?f.diskReadLatencyMillis:f.diskWriteLatencyMillis;
-  if(latency&&*latency>2500){high=c.nowMillis;candidate=true;}
-  else if(high){if(c.nowMillis-*high<=60000){candidate=true;}else{high.reset();}}
+  // Original downloading checks write latency only at a low rate; seeding
+  // checks read latency unconditionally. Preserve that deliberate asymmetry.
+  if(seed||!candidate){
+    if(latency&&*latency>2500){high=c.nowMillis;candidate=true;}
+    else if(high){if(c.nowMillis-*high<=60000){candidate=true;}else{high.reset();}}
+  }
   if(candidate!=previous){
     if(!change){change=c.nowMillis;}
     if(c.nowMillis-*change>=10000){previous=candidate;}
   }else{change.reset();}
-  return {previous,true};
+  return {previous,true,true};
 }
 bool stopped(const QueueTorrentFacts& f){return f.state==QueueTorrentState::Stopped||f.state==QueueTorrentState::Stopping||f.state==QueueTorrentState::Failed;}
 bool waiting(const QueueTorrentFacts& f){return f.state==QueueTorrentState::Waiting||f.state==QueueTorrentState::Preparing||f.state==QueueTorrentState::Checking;}
@@ -388,7 +396,27 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
       if(p.rankMode==QueueRankMode::Timed&&p.timedMinimumWithPeersSeconds>0&&f.connectedLeechers&&*f.connectedLeechers>0){
         d.activity.timedMinimumMillis=minimum;
       }
-      d.seedingRank=rank(p,f,c,s,fp,d.reason,minimum);
+      auto staleOffset=f.staleRankOffset;
+      if(f.sourceStaleTiming){
+        // This is per-admission accepted activity. No session/global disk
+        // counter or guessed mmap latency can certify an inactive interval.
+        const bool known=d.activityKnown&&f.runningMillis.has_value()
+            &&f.diskReadLatencyMillis.has_value()&&f.diskWriteLatencyMillis.has_value()
+            &&(!p.autoStartZeroPeers||s.observed)
+            &&(p.rankMode!=QueueRankMode::Timed||fp.known);
+        const auto stale=d.activity.staleTiming.observe({c.nowMillis,known,
+            f.state==QueueTorrentState::Seeding,seed.thresholdBranch,
+            f.activity.seeding,d.activity.seeding});
+        staleOffset=0;
+        if(stale&&stale->has_value()){
+          d.staleRankOffset=**stale;staleOffset=**stale;
+        }else{plan.unavailableInputs|=64;}
+      }
+      bool clearStaleOffset=false;
+      d.seedingRank=rank(p,f,c,s,fp,d.reason,minimum,staleOffset,clearStaleOffset);
+      if(f.sourceStaleTiming&&clearStaleOffset){
+        d.activity.staleTiming.clearAppliedOffset();d.staleRankOffset=0;
+      }
       d.clearForceStart=f.newlyCompleted&&f.forceStart&&!p.retainForceStartOnComplete;
       d.moveNewSeedToTop=f.newlyCompleted&&p.newSeedsMoveTop;
       if(f.manuallyPaused){d.reason=QueueReason::ManualPause;fixed[i]=true;continue;}

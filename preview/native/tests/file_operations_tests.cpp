@@ -302,6 +302,109 @@ void selectionCollisionAndStaleSource(){
   }
 }
 
+st::PreparedFileOperation archivePlan(Fixture& f,st::FileOperationKind kind){
+  st::FileOperationRequest request{f.selected.hash,kind,{}};request.deleteTorrentFile=true;
+  return take(st::prepareFileOperation(f.lease,request));
+}
+void archiveControlsAndRecovery(){
+  {
+    Fixture f;check(take(st::torrentArchiveDeletionPreference(f.lease)),"original archive preference defaults true without materializing config");
+    check(!fs::exists(f.profile/"biglybt.config"),"archive preference read is sparse/read-only");
+    for(const std::int64_t value:{0LL,1LL,2LL,-1LL,4294967296LL,-4294967296LL}){auto config=doc("de");put(config,"def.deletetorrent","i"+std::to_string(value)+'e');put(config,"opaque.preference","li7e3:rawe");write(f.profile/"biglybt.config",config.serialize());
+      const auto before=read(f.profile/"biglybt.config");check(take(st::torrentArchiveDeletionPreference(f.lease))==(static_cast<std::uint32_t>(value)!=0)&&read(f.profile/"biglybt.config")==before,"original Boolean preference uses exact Long.intValue nonzero semantics");}
+    auto config=doc("de");put(config,"def.deletetorrent","3:bad");write(f.profile/"biglybt.config",config.serialize());
+    check(!st::torrentArchiveDeletionPreference(f.lease)&&read(f.profile/"biglybt.config")==config.serialize(),"malformed preference remains explicit and unmodified");
+  }
+  for(const auto kind:{st::FileOperationKind::RemoveKeepData,st::FileOperationKind::RemoveDeleteData}){
+    Fixture f;const auto backup=fs::path(f.selected.archive.string()+".bak");write(backup,f.selected.metadata);const auto archive=read(f.selected.archive),payload=read(f.selected.files[0]);auto p=archivePlan(f,kind);
+    check(p.preview().torrentArchive&&p.preview().torrentArchive->path==f.selected.archive&&p.preview().torrentArchive->present&&!p.preview().torrentArchive->internalState,"review exposes exact separate archive metadata");
+    check(!st::confirmFileOperation(p,p.preview().approvalScopeDigest,true),"archive deletion requires its own reviewed confirmation even with payload permission");
+    const auto confirmation=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,kind==st::FileOperationKind::RemoveDeleteData,true));
+    const auto result=take(st::applyFileOperation(f.lease,std::move(p),confirmation));
+    check(result.torrentArchiveDeleted&&!fs::exists(f.selected.archive)&&!fs::exists(backup)&&!fs::exists(f.selected.state)&&!st::hasPendingFileOperation(f.lease),"requested archive deletion follows durable state cleanup");
+    check(kind==st::FileOperationKind::RemoveDeleteData?!fs::exists(f.selected.files[0]):read(f.selected.files[0])==payload,"archive choice is independent of payload removal choice");
+    check(!archive.empty(),"archive fixture contains actual original metadata");
+  }
+  {
+    Fixture f;auto first=archivePlan(f,st::FileOperationKind::RemoveKeepData);const auto scope=first.preview().approvalScopeDigest;
+    auto changed=doc(read(f.selected.archive));put(changed,"opaque.archive","7:changed");write(f.selected.archive,changed.serialize());
+    const auto confirmation=take(st::confirmFileOperation(first,scope,false,true));const auto inventory=read(f.profile/"downloads.config");
+    const auto rejected=st::applyFileOperation(f.lease,std::move(first),confirmation);
+    check(!rejected&&read(f.profile/"downloads.config")==inventory&&fs::exists(f.selected.state)&&!st::hasPendingFileOperation(f.lease),"archive raw/stat CAS refuses changed opaque metadata before effects");
+    auto fresh=archivePlan(f,st::FileOperationKind::RemoveKeepData);check(fresh.preview().approvalScopeDigest!=scope&&!st::confirmFileOperation(fresh,scope,false,true),"archive raw bytes belong to reviewed approval, not just infohash");
+  }
+  {
+    Fixture f;fs::remove(f.selected.archive);auto p=archivePlan(f,st::FileOperationKind::RemoveKeepData);
+    check(p.preview().torrentArchive&&!p.preview().torrentArchive->present,"missing saved archive is explicitly reviewed as absent");
+    const auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false,true));write(f.selected.archive,f.selected.metadata);
+    check(!st::applyFileOperation(f.lease,std::move(p),c)&&fs::exists(f.selected.state)&&fs::exists(f.selected.archive)&&!st::hasPendingFileOperation(f.lease),"new archive cannot be deleted under missing-file approval");
+  }
+  {
+    Fixture f;const auto other=record(f.profile,f.area.root/"other","survivor.bin",false);auto row=doc(other.row);put(row,"torrent",b(f.selected.archive.string()));f.inventory(row.serialize());
+    st::FileOperationRequest request{f.selected.hash,st::FileOperationKind::RemoveKeepData,{}};request.deleteTorrentFile=true;
+    check(!st::prepareFileOperation(f.lease,request)&&fs::exists(f.selected.archive)&&fs::exists(other.state)&&!st::hasPendingFileOperation(f.lease),"shared library archive reference refuses before deletion");
+  }
+  for(const bool recover:{false,true}){
+    Fixture f;const auto other=record(f.profile,f.area.root/"other","survivor.bin",false);
+    const auto protectedBackup=fs::path(other.archive.string()+".bak");write(protectedBackup,f.selected.metadata);
+    auto selectedRow=doc(f.selected.row);put(selectedRow,"torrent",b(protectedBackup.string()));
+    f.selected.row=selectedRow.serialize();f.selected.archive=protectedBackup;
+    if(!recover){
+      f.inventory(other.row);const auto before=read(f.profile/"downloads.config");
+      st::FileOperationRequest request{f.selected.hash,st::FileOperationKind::RemoveKeepData,{}};request.deleteTorrentFile=true;
+      const auto rejected=st::prepareFileOperation(f.lease,request);
+      check(!rejected&&rejected.error().code==st::ErrorCode::Conflict&&rejected.error().message=="Torrent archive is referenced by another library item"
+          &&read(f.profile/"downloads.config")==before&&read(protectedBackup)==f.selected.metadata
+          &&fs::exists(f.selected.state)&&fs::exists(other.state)&&!st::hasPendingFileOperation(f.lease),"another library archive backup is protected at preview before any effects");
+    }else{
+      f.inventory();auto p=archivePlan(f,st::FileOperationKind::RemoveKeepData);
+      const auto confirmation=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false,true));
+      interruptAt=st::FileOperationStage::JournalSynced;interruptArmed=true;
+      check(!st::applyFileOperation(f.lease,std::move(p),confirmation,interrupt)&&!interruptArmed&&st::hasPendingFileOperation(f.lease),"backup-reference recovery has an actual durable pre-effect journal");
+      f.inventory(other.row);const auto before=read(f.profile/"downloads.config");
+      const auto rejected=st::recoverFileOperation(f.lease);
+      check(!rejected&&rejected.error().code==st::ErrorCode::Conflict&&rejected.error().message=="Torrent archive is referenced by another library item"
+          &&read(f.profile/"downloads.config")==before&&read(protectedBackup)==f.selected.metadata
+          &&fs::exists(f.selected.state)&&fs::exists(other.state)&&st::hasPendingFileOperation(f.lease),"recovery rechecks newly added backup references before sparse publication or archive deletion");
+    }
+    check(read(f.selected.files[0])=="hello"&&read(other.files[0])==other.values[0]&&read(other.archive)==other.metadata,"backup reference refusal preserves selected and survivor payload/archive bytes");
+  }
+  {
+    Fixture f;auto p=archivePlan(f,st::FileOperationKind::RemoveKeepData);const auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false,true));
+    const auto backup=fs::path(f.selected.archive.string()+".bak");write(backup,f.selected.metadata);
+    check(!st::applyFileOperation(f.lease,std::move(p),c)&&fs::exists(f.selected.archive)&&fs::exists(backup)&&fs::exists(f.selected.state)&&!st::hasPendingFileOperation(f.lease),"previously absent backup cannot be deleted without a new review");
+  }
+  {
+    Fixture f;const auto other=record(f.profile,f.area.root/"other","different.bin",false);write(f.selected.archive,other.metadata);
+    st::FileOperationRequest request{f.selected.hash,st::FileOperationKind::RemoveKeepData,{}};request.deleteTorrentFile=true;
+    check(!st::prepareFileOperation(f.lease,request)&&fs::exists(f.selected.state)&&!st::hasPendingFileOperation(f.lease),"archive must match actual selected full info identity");
+  }
+  for(const bool link:{false,true}){
+    Fixture f;const auto alias=f.area.root/"alias";if(link){fs::create_hard_link(f.selected.archive,alias);}else{fs::rename(f.selected.archive,alias);fs::create_symlink(alias,f.selected.archive);}
+    st::FileOperationRequest request{f.selected.hash,st::FileOperationKind::RemoveKeepData,{}};request.deleteTorrentFile=true;
+    check(!st::prepareFileOperation(f.lease,request)&&fs::exists(f.selected.state)&&fs::exists(alias),"archive symlinks and hardlinks do not grant delete authority");
+  }
+  {
+    Fixture f;auto row=doc(f.selected.row);put(row,"torrent",b(f.selected.state.string()));f.selected.row=row.serialize();f.inventory();
+    auto p=archivePlan(f,st::FileOperationKind::RemoveKeepData);check(p.preview().torrentArchive->internalState,"exact selected internal metadata is coalesced with state cleanup");
+    const auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false,true));take(st::applyFileOperation(f.lease,std::move(p),c));
+    check(!fs::exists(f.selected.state)&&fs::exists(f.selected.archive)&&read(f.selected.files[0])=="hello","coalescing never deletes an unrelated separate archive or payload");
+  }
+  for(const auto point:{st::FileOperationStage::JournalSynced,st::FileOperationStage::StateRemoved,st::FileOperationStage::ArchiveFileRemoved,st::FileOperationStage::ArchiveRemoved}){
+    Fixture f;const auto backup=fs::path(f.selected.archive.string()+".bak");write(backup,f.selected.metadata);auto p=archivePlan(f,st::FileOperationKind::RemoveKeepData);const auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false,true));
+    interruptAt=point;interruptArmed=true;check(!st::applyFileOperation(f.lease,std::move(p),c,interrupt)&&!interruptArmed&&st::hasPendingFileOperation(f.lease),"archive transaction interruption keeps exact durable journal");
+    check(fs::exists(f.selected.archive)==(point!=st::FileOperationStage::ArchiveFileRemoved&&point!=st::FileOperationStage::ArchiveRemoved)&&fs::exists(backup)==(point!=st::FileOperationStage::ArchiveRemoved),"archive is removed only at its final acknowledged stage");
+    const auto recovered=take(st::recoverFileOperation(f.lease));check(recovered&&recovered->recovered&&!fs::exists(f.selected.archive)&&!fs::exists(backup)&&!fs::exists(f.selected.state)
+        &&read(f.selected.files[0])=="hello"&&!st::hasPendingFileOperation(f.lease),"recovery revalidates and finishes archive deletion idempotently");
+  }
+  {
+    Fixture f;auto p=archivePlan(f,st::FileOperationKind::RemoveKeepData);const auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false,true));
+    interruptAt=st::FileOperationStage::JournalSynced;interruptArmed=true;check(!st::applyFileOperation(f.lease,std::move(p),c,interrupt),"archive conflict recovery fixture");
+    auto changed=doc(read(f.selected.archive));put(changed,"opaque.replacement","3:new");write(f.selected.archive,changed.serialize());
+    check(!st::recoverFileOperation(f.lease)&&read(f.selected.archive)==changed.serialize()&&fs::exists(f.selected.state)&&st::hasPendingFileOperation(f.lease),"recovery never deletes changed archive or mutates state before archive CAS");
+  }
+}
+
 fs::path mutationPath;struct stat mutationBefore{};
 st::FileOperationStage mutationStage=st::FileOperationStage::Completed;bool mutationArmed=false;
 void mutateWithRestoredMtime(st::FileOperationStage stage){
@@ -432,4 +535,20 @@ extern "C" ssize_t __wrap_read(int fd,void* data,std::size_t bytes){const auto c
 extern "C" ssize_t __wrap___read_chk(int fd,void* data,std::size_t bytes,std::size_t bound){const auto count=__real___read_chk(fd,data,bytes,bound);countRead(fd,count);return count;}
 extern "C" int __real_linkat(int,const char*,int,const char*,int);
 extern "C" int __wrap_linkat(int a,const char* x,int b,const char* y,int flags){struct stat from{},to{};if(forceCopy&&std::string_view(x)=="file.bin"&&std::string_view(y)=="file.bin"&&::fstat(a,&from)==0&&::fstat(b,&to)==0&&from.st_dev==copyFromDev&&from.st_ino==copyFromIno&&to.st_dev==copyToDev&&to.st_ino==copyToIno){++copyHits;errno=EXDEV;return -1;}return __real_linkat(a,x,b,y,flags);}
-int main(){try{digestReceiptsEndWithApply();payloadDigestWorkAndInterference();selectionPoliciesMoveAndRecover();selectionCollisionAndStaleSource();keepAndDelete();relocationRecoveryPreservesBothUntilPublication();relinkAndScope();protectionAndConflicts();realCopyBranch();nonlinearControlsAndRecovery();nonlinearBoundaryRefusals();authenticatedExternalLinks();legacyRootsAndDefaultStoreRecovery();pendingReorderedCompletionGuards();std::cout<<"ten generated file-operation families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+void canonicalLatin1MoveUsesActualDecodedLeaves() {
+  Fixture f(true);auto state=doc(f.selected.metadata);auto info=doc(take(core::encodeValue(*state.find("info"),st::compatibleConfigLimits()).transform_error([](auto){return st::Error{st::ErrorCode::InvalidFormat,"fixture encode"};})));
+  const std::string first("na\xefve.bin",9),second("caf\xe9.bin",8);
+  put(info,"files","ld6:lengthi5e4:pathl"+b(first)+"eed6:lengthi6e4:pathl"+b(second)+"eee");
+  put(info,"name",b(std::string("caf\xe9",4)));const auto rawInfo=info.serialize();const auto old=f.selected.state;
+  f.selected.hash=*core::TorrentHash::parse(sha1(rawInfo));f.selected.state=f.profile/"active"/(f.selected.hash.hex()+".dat");
+  put(state,"info",rawInfo);put(state,"encoding",b("ISO-8859-1"));f.selected.metadata=state.serialize();write(f.selected.state,f.selected.metadata);write(f.selected.archive,f.selected.metadata);
+  auto row=doc(f.selected.row);put(row,"torrent_hash",b(sha1(rawInfo)));f.selected.row=row.serialize();f.inventory();check(fs::remove(old),"Remove obsolete generated identity");
+  const std::array<std::string,2> names{"na\xc3\xafve.bin","caf\xc3\xa9.bin"};
+  for(std::size_t i=0;i<names.size();++i){const auto renamed=f.source/"bundle"/names[i];fs::rename(f.selected.files[i],renamed);f.selected.files[i]=renamed;}
+  auto plan=f.plan(st::FileOperationKind::Relocate);check(plan.preview().presentFiles==2,"Original decoded Unicode payload leaves found");
+  const auto confirmed=take(st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,false));take(st::applyFileOperation(f.lease,std::move(plan),confirmed));
+  for(std::size_t i=0;i<names.size();++i){check(!fs::exists(f.selected.files[i])&&read(f.destination/"bundle"/names[i])==f.selected.values[i],"Move follows decoded actual leaf without interpreting raw Latin1 as filesystem bytes");}
+  const auto after=doc(read(f.selected.state));check(after.find("encoding")->bytes=="ISO-8859-1"&&take(core::encodeValue(*after.find("info"),st::compatibleConfigLimits()).transform_error([](auto){return st::Error{st::ErrorCode::InvalidFormat,"fixture encode"};}))==rawInfo,"Move keeps raw info identity and original charset");
+  check(after.find("attributes")->find("opaque.state"),"Move retains unrelated original state");
+}
+int main(){try{canonicalLatin1MoveUsesActualDecodedLeaves();archiveControlsAndRecovery();digestReceiptsEndWithApply();payloadDigestWorkAndInterference();selectionPoliciesMoveAndRecover();selectionCollisionAndStaleSource();keepAndDelete();relocationRecoveryPreservesBothUntilPublication();relinkAndScope();protectionAndConflicts();realCopyBranch();nonlinearControlsAndRecovery();nonlinearBoundaryRefusals();authenticatedExternalLinks();legacyRootsAndDefaultStoreRecovery();pendingReorderedCompletionGuards();std::cout<<"ten generated file-operation families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

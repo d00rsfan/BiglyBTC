@@ -2079,7 +2079,7 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
     auto queues = core::readQueuePolicy(config ? &config->document() : nullptr);
     if (!queues) { throw Failure{{storage::ErrorCode::InvalidFormat,
         "Invalid queue setting: " + queues.error().key}}; }
-    auto configuredQueue = (*owner)->configureQueuePolicy(*queues);
+    auto configuredQueue = (*owner)->configureQueuePolicy(*queues,configuredSourceSmoothing(config ? &config->document() : nullptr).windowSeconds);
     if (!configuredQueue) { throw Failure{configuredQueue.error()}; }
     auto applied = (*owner)->configureNetwork(*policy);
     if (!applied) { throw Failure{applied.error()}; }
@@ -2665,7 +2665,7 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
                 auto applied = host_->engine->applyLiveSettings(*policy, queues);
                 if (applied) {
                   host_->networkPolicy = std::move(planned->effectivePolicy);
-                  const auto queued = host_->engine->configureQueuePolicy(*queuePolicy);
+                  const auto queued = host_->engine->configureQueuePolicy(*queuePolicy,configuredSourceSmoothing(&prepared->document()).windowSeconds);
                   if (!queued) { applied = std::unexpected(queued.error()); }
 
                 }
@@ -2971,5 +2971,6 @@ void SessionBridge::tickScheduler() noexcept {
   }
 }
 
+#include "hybrid_alias_bridge.inc"
 #include "file_operations_bridge.inc"
 } // namespace biglybtc::app

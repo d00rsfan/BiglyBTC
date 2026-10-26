@@ -159,6 +159,40 @@ int main(){try{
     p.maximumDownloads=0;r=plan(p,std::array{a,b,c});for(const auto& d:r.decisions){CHECK(d.action==QueueAction::Run);}
     p.maximumDownloads=2;p.linkMinimumDownloads=true;r=plan(p,std::array{a,b,c});CHECK(r.decisions[2].action==QueueAction::Run);
   });
+  run("mapped source stale timing uses measured latency and loses authority across gaps",[]{
+    auto p=read();auto f=seed();f.sourceStaleTiming=true;f.state=QueueTorrentState::Seeding;
+    f.runningMillis=100000;f.activity.seeding=true;
+    auto d=decide(p,f,context(60000));CHECK(d.activelySeeding&&d.staleRankOffset==0);f.activity=d.activity;
+    d=decide(p,f,context(70000));CHECK(!d.activelySeeding&&d.staleRankOffset==1&&d.seedingRank==63998);f.activity=d.activity;
+    d=decide(p,f,context(130000));CHECK(d.staleRankOffset==1&&d.seedingRank==63998);f.activity=d.activity;
+    d=decide(p,f,context(130001));CHECK(d.staleRankOffset==2&&d.seedingRank==63997);f.activity=d.activity;
+    f.diskReadLatencyMillis.reset();auto r=plan(p,std::span(&f,1),context(190002));d=r.decisions.front();
+    CHECK(!d.staleRankOffset&&(r.unavailableInputs&8U)&&(r.unavailableInputs&64U));
+    CHECK(d.seedingRank==63999);f.activity=d.activity;
+    f.diskReadLatencyMillis=0;d=decide(p,f,context(190003));CHECK(!d.staleRankOffset);f.activity=d.activity;
+    f.uploadBytesPerSecond=512;d=decide(p,f,context(190004));CHECK(!d.staleRankOffset);f.activity=d.activity;
+    d=decide(p,f,context(200004));CHECK(d.activelySeeding&&d.staleRankOffset==0);f.activity=d.activity;
+    f.uploadBytesPerSecond=0;d=decide(p,f,context(200005));f.activity=d.activity;
+    d=decide(p,f,context(210005));CHECK(!d.activelySeeding&&d.staleRankOffset==1);
+    // A genuinely new admission has no inherited activity/stale clock.
+    f.activity={};f.token=2;d=decide(p,f,context(210006));CHECK(d.staleRankOffset==0);
+  });
+  run("source stale rank feedback and fast-rate latency branch are exact",[]{
+    auto p=read();auto f=seed();f.sourceStaleTiming=true;f.state=QueueTorrentState::Seeding;
+    f.runningMillis=100000;f.activity.seeding=true;f.activity.seedChangeMillis=0;
+    // Explicit controlled monotone facts exercise the original refresh epoch0
+    // and rank<=offset reset, without waiting days or inventing executor delay.
+    auto d=decide(p,f,context(4000000000LL));CHECK(d.seedingRank==63999&&d.staleRankOffset==0);
+    auto down=download();down.state=QueueTorrentState::Downloading;down.runningMillis=100000;
+    down.activity.downloading=true;down.downloadBytesPerSecond=512;down.diskWriteLatencyMillis=9000;
+    d=decide(p,down,context(100000));CHECK(d.activelyDownloading&&!d.activity.downloadHighLatencyMillis);down.activity=d.activity;
+    down.downloadBytesPerSecond=0;down.diskWriteLatencyMillis=0;
+    d=decide(p,down,context(100001));down.activity=d.activity;
+    d=decide(p,down,context(110001));CHECK(!d.activelyDownloading); // No invented60s recovery from the fast tick.
+    auto up=seed();up.state=QueueTorrentState::Seeding;up.runningMillis=100000;
+    up.activity.seeding=true;up.uploadBytesPerSecond=512;up.diskReadLatencyMillis=9000;
+    d=decide(p,up,context(100000));CHECK(d.activity.seedHighLatencyMillis==100000); // Seeding's original branch is unconditional.
+  });
   run("actual rate grace hysteresis exact boundaries and latency recovery",[]{
     auto p=read();auto f=download();f.state=QueueTorrentState::Downloading;f.runningMillis=30000;
     const auto initial=decide(p,f,context());CHECK(initial.activelyDownloading);f.activity=initial.activity;

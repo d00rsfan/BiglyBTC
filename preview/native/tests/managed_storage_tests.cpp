@@ -122,6 +122,78 @@ void test(std::string_view name,const std::function<void()>& body) { body(); ++f
 }
 int main() {
  try {
+  test("original-canonical-latin1-paths-preserve-raw-identity-and-checkpoint",[] {
+    Fixture f(true);const auto oldPath=f.profile/"active"/(f.hash.hex()+".dat");
+    auto metadata=f.state();auto info=core::Document::parse(f.info);require(info.has_value(),"Latin1 original info");
+    const std::string first("na\xefve.bin",9),second("caf\xe9.bin",8);
+    const auto entries="ld6:lengthi20000e4:pathl"+b(first)+"eed6:lengthi12768e4:pathl"+b(second)+"eee";
+    require(info->replaceValue("files",entries).has_value()&&info->replaceValue("name",b(std::string("caf\xe9",4))).has_value(),"Original Latin1 values");
+    f.info=info->serialize();f.hash=*core::TorrentHash::parse(libtorrent::hasher(f.info.data(),static_cast<int>(f.info.size())).final().to_string());
+    require(metadata.replaceValue("info",f.info).has_value()&&metadata.replaceValue("encoding",b("ISO-8859-1")).has_value(),"Selected original charset");
+    f.stateBytes=metadata.serialize();write(f.profile/"active"/(f.hash.hex()+".dat"),f.stateBytes);write(f.profile/"downloads.config",f.inventory());
+    require(fs::remove(oldPath),"Remove obsolete generated hash state");
+    const auto a=f.save/"renamed-root"/"na\xc3\xafve.bin",z=f.save/"renamed-root"/"caf\xc3\xa9.bin";
+    write(a,std::string_view(f.body).substr(0,20000));write(z,std::string_view(f.body).substr(20000));
+    struct stat before{};require(::lstat(a.c_str(),&before)==0,"Actual UTF8 filesystem inode");
+    auto owner=f.prepare();const auto params=owner.parameters();
+    const auto subject=params.ti->info_section();
+    require(std::string_view(subject.data(),static_cast<std::size_t>(subject.size()))==f.info
+        &&params.ti->info_hashes().has_v1()&&!params.ti->info_hashes().has_v2()
+        &&params.ti->info_hashes().v1.to_string()==libtorrent::hasher(f.info.data(),static_cast<int>(f.info.size())).final().to_string(),
+        "Runtime codec projection retains complete original raw info and v1 hash");
+    require(params.renamed_files.at(libtorrent::file_index_t{0})==(fs::path("renamed-root")/"na\xc3\xafve.bin").string()
+        &&params.renamed_files.at(libtorrent::file_index_t{1})==(fs::path("renamed-root")/"caf\xc3\xa9.bin").string(),"Real backend receives original decoded relative paths");
+    checkpoint(owner,f,{1,1},true);
+    const auto saved=f.state();require(saved.find("encoding")->bytes=="ISO-8859-1"&&encode(*saved.find("info"))==f.info,"Checkpoint keeps raw legacy metadata and selected codec");
+    require(saved.find("attributes")->find("unknown")&&read(a)+read(z)==f.body,"Unknown state and actual supplied payload preserved");
+    struct stat after{};require(::lstat(a.c_str(),&after)==0&&after.st_dev==before.st_dev&&after.st_ino==before.st_ino,"Preparation/checkpoint never substitutes decoded file inode");
+    require(!fs::exists(f.path(0))&&!fs::exists(f.path(1)),"No accidental basic-name payload files created");
+  });
+  test("original-global-utf8-key-fallback-is-authenticated-before-runtime-names",[] {
+    for(const int mode:{0,1,2}){
+      Fixture f(true);const auto old=f.profile/"active"/(f.hash.hex()+".dat");
+      auto metadata=f.state();auto info=core::Document::parse(f.info);require(info.has_value(),"Global override info");
+      auto first=core::Document::parse(encode(info->find("files")->children[0]));
+      auto second=core::Document::parse(encode(info->find("files")->children[1]));
+      require(first&&second&&first->replaceValue("path.utf-8","l"+b("wrong-first.bin")+'e').has_value(),"First per-file override");
+      if(mode!=1){require(second->replaceValue("path.utf-8","l"+b("wrong-second.bin")+'e').has_value(),"Second per-file override");}
+      require(info->replaceValue("files","l"+first->serialize()+second->serialize()+'e').has_value(),"Original indexed file list");
+      if(mode!=2){require(info->replaceValue("name.utf-8",b("wrong-root")).has_value(),"Original root override");}
+      // mode0: explicit Latin1 ignores all overrides; mode1: missing one path
+      // disables ALL overrides; mode2: paths alone cannot enable root override.
+      if(mode==0){require(metadata.replaceValue("encoding",b("ISO-8859-1")).has_value(),"Explicit original legacy codec");}
+      f.info=info->serialize();f.hash=*core::TorrentHash::parse(libtorrent::hasher(f.info.data(),static_cast<int>(f.info.size())).final().to_string());
+      require(metadata.replaceValue("info",f.info).has_value(),"Original override raw info");f.stateBytes=metadata.serialize();
+      write(f.profile/"active"/(f.hash.hex()+".dat"),f.stateBytes);write(f.profile/"downloads.config",f.inventory());require(fs::remove(old),"Retire old fixture identity");
+      f.fullPayload();const auto inventory=f.saved();const auto unknown=encode(*row(inventory).find("private_row_value"));
+      auto owner=f.prepare();const auto params=owner.parameters();const auto subject=params.ti->info_section();
+      require(std::string_view(subject.data(),static_cast<std::size_t>(subject.size()))==f.info&&params.ti->info_hashes().has_v1()&&!params.ti->info_hashes().has_v2(),"Global fallback preserves original hashed bytes");
+      require(params.ti->files().file_path(libtorrent::file_index_t{0})=="bundle/a.bin"
+          &&params.ti->files().file_path(libtorrent::file_index_t{1})=="bundle/b.bin"
+          &&params.renamed_files.at(libtorrent::file_index_t{0})=="renamed-root/a.bin"
+          &&params.renamed_files.at(libtorrent::file_index_t{1})=="renamed-root/b.bin", "All original indices and backend paths use one accepted global policy");
+      checkpoint(owner,f,{1,1},true);const auto after=f.state();const auto saved=f.saved();
+      require(encode(*after.find("info"))==f.info&&after.find("attributes")->find("unknown")
+          &&encode(*row(saved).find("private_row_value"))==unknown&&read(f.path(0))+read(f.path(1))==f.body
+          &&!fs::exists(f.save/"wrong-root")&&!fs::exists(f.save/"renamed-root/wrong-first.bin"),"Checkpoint preserves raw info/unknowns and only actual original payload paths");
+    }
+  });
+  test("filename-projection-never-admits-changed-identity-or-legacy-v2",[] {
+    {
+      Fixture f(true);auto metadata=f.state();auto info=core::Document::parse(f.info);require(info.has_value(),"Wrong identity fixture");
+      require(info->replaceValue("name.utf-8",b("other-root")).has_value()&&metadata.replaceValue("info",info->serialize()).has_value(),"Changed original info under old saved hash");
+      write(f.profile/"active"/(f.hash.hex()+".dat"),metadata.serialize());deniedPrepare(f,Code::Conflict);require(!fs::exists(f.save),"Identity refusal precedes payload effects");
+    }
+    {
+      Fixture f;f.pureV2(true);auto metadata=f.state();require(metadata.replaceValue("encoding",b("ISO-8859-1")).has_value(),"Legacy v2 fixture");
+      write(f.profile/"active"/(f.hash.hex()+".dat"),metadata.serialize());deniedPrepare(f,Code::InvalidFormat);require(!fs::exists(f.save),"No v2 legacy name projection or payload effects");
+    }
+  });
+  test("unported-filename-charset-refuses-before-original-state-and-payload-effects",[] {
+    Fixture f;auto metadata=f.state();require(metadata.replaceValue("encoding",b("windows-1251")).has_value(),"Explicit unported charset");
+    write(f.profile/"active"/(f.hash.hex()+".dat"),metadata.serialize());deniedPrepare(f,Code::InvalidFormat);
+    require(!fs::exists(f.save),"No payload preparation on unsupported original charset");
+  });
   // Insert in managed_storage_tests.cpp main alongside existing test(...).
   test("negative-original-links-use-authenticated-target-and-original-base",[] {
     Fixture f;

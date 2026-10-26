@@ -341,6 +341,15 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   localRatingAction_->setObjectName(QStringLiteral("classic-my-rating"));
   localRatingAction_->setEnabled(false);
   connect(localRatingAction_,&QAction::triggered,this,&LibraryWindow::openLocalRating);
+  auto* hybridMenu=torrent->addMenu(tr("Add hybrid companion (stopped)"));
+  hybridMenu->setObjectName(QStringLiteral("classic-hybrid-companion"));
+  for(int index=0;index<2;++index){
+    auto* action=hybridMenu->addAction(index?tr("Use v2 identity"):tr("Use v1 identity"));
+    action->setObjectName(index?QStringLiteral("classic-hybrid-v2"):QStringLiteral("classic-hybrid-v1"));
+    action->setToolTip(tr("For a stopped, unlinked linear hybrid. The worker validates full identities and releases only certified retired storage. Adds a stopped companion; data is preserved."));
+    action->setEnabled(false);hybridCompanionActions_[static_cast<std::size_t>(index)]=action;
+    connect(action,&QAction::triggered,this,[this,index]{requestHybridCompanion(index!=0);});
+  }
   fileOperationActions_[0]->setShortcut(QKeySequence(QStringLiteral("Delete")));
   toolbar->addAction(fileOperationActions_[0]);
   createTorrentAction_=file->addAction(tr("Create Torrent…"));createTorrentAction_->setObjectName(QStringLiteral("classic-create-torrent"));
@@ -1367,7 +1376,13 @@ void LibraryWindow::updateActions() {
   if (schedulerAction_) { schedulerAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }
   if (optionsAction_) { optionsAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }
   queueDownloadActions();
+  QPointer<LibraryWindow> guard(this);
   if(localRatingAction_){localRatingAction_->setEnabled(fileActionsAllowed&&fileTargets->size()==1);}
+  if(!guard){return;}
+  for(const auto& action:hybridCompanionActions_){if(action){
+    action->setEnabled(fileActionsAllowed&&fileTargets->size()==1);
+    if(!guard){return;}
+  }}
 }
 std::optional<DownloadTargets> LibraryWindow::selectedDownloadTargets() const {
   if (mainTabs_->currentWidget() != torrentsPage_) { return std::nullopt; }
@@ -2138,3 +2153,11 @@ void LibraryWindow::setIntakeDefaults(quint64 session, QString directory) {
 
 #include "file_operations_window.inc"
 } // namespace biglybtc::ui
+
+void biglybtc::ui::LibraryWindow::requestHybridCompanion(bool selectV2) {
+  if(busy_||closing_||offlinePreview_||!columnSession_||updating_){return;}
+  const auto targets=selectedDownloadTargets();
+  if(!targets||targets->size()!=1||!model_->accepts(targets->front())){return;}
+  const auto source=targets->front();
+  emit hybridCompanionRequested(source,selectV2); // Last receiver access; direct slots may delete/rebind.
+}

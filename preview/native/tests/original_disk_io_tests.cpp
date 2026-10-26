@@ -76,6 +76,65 @@ QByteArray actual(const QString& path){QFile file(path);require(file.open(QIODev
 class OriginalDiskIoTests final:public QObject {
   Q_OBJECT
 private slots:
+  void measuredAdmissionLatencyIncludesActualExecutorQueueAndKeepsOwnersSeparate(){
+    QTemporaryDir area,otherArea;QVERIFY(area.isValid()&&otherArea.isValid());
+    auto gate=std::make_shared<Gate>();const std::string block(16384,'L');
+    Bundle bundle(area.path(),v1({{"latency.bin",std::string(65536,'L')}}),{Kind::Reordered},gate);
+    Bundle other(otherArea.path(),v1({{"other.bin",std::string(16384,'O')}}),{Kind::Linear});
+    auto policy=std::make_shared<ed::MetadataDiskPolicy>();
+    QVERIFY(policy->registerOriginalPath(bundle.route,bundle.files));QVERIFY(policy->registerOriginalPath(other.route,other.files));
+    Disk disk(policy);auto holder=disk.backend->new_torrent(bundle.parameters(),{});
+    auto otherHolder=disk.backend->new_torrent(other.parameters(),{});ReleaseOnExit release{gate};
+    const auto fresh=bundle.files->diskLatency().snapshot(ed::DiskLatency::nowMillis());
+    QCOMPARE(fresh.readMillis,std::optional<std::int64_t>{0});QCOMPARE(fresh.writeMillis,std::optional<std::int64_t>{0});
+    bool wrote=false,read=false,failed=false;QByteArray returned;
+    disk.backend->async_write(holder,{lt::piece_index_t{0},0,16384},block.data(),{},[&](const auto& error){failed|=bool(error.ec);wrote=true;});
+    QVERIFY(gate->wait()); // Real executor is inside the actual control publisher.
+    disk.backend->async_read(holder,{lt::piece_index_t{0},0,16384},[&](lt::disk_buffer_holder data,const lt::storage_error& error){
+      failed|=bool(error.ec)||!data;if(data){returned=QByteArray(data.data(),16384);}read=true;
+    });
+    const auto held=bundle.files->diskLatency().snapshot(ed::DiskLatency::nowMillis());
+    QCOMPARE(held.pendingReads,std::size_t{1});QCOMPARE(held.pendingWrites,std::size_t{1});
+    QCOMPARE(held.completedReads,std::uint64_t{0});QCOMPARE(held.completedWrites,std::uint64_t{0});
+    QVERIFY(held.readMillis&&held.writeMillis&&!held.measurementLost);QVERIFY(!wrote&&!read);
+    const auto independent=other.files->diskLatency().snapshot(ed::DiskLatency::nowMillis());
+    QCOMPARE(independent.pendingReads,std::size_t{0});QCOMPARE(independent.pendingWrites,std::size_t{0});
+    QCOMPARE(independent.readMillis,std::optional<std::int64_t>{0});QCOMPARE(independent.writeMillis,std::optional<std::int64_t>{0});
+    gate->release();QTRY_VERIFY_WITH_TIMEOUT((disk.pump(),wrote&&read),5000);QVERIFY(!failed);
+    QCOMPARE(returned,QByteArray::fromStdString(block));
+    const auto completed=bundle.files->diskLatency().snapshot(ed::DiskLatency::nowMillis());
+    QCOMPARE(completed.pendingReads,std::size_t{0});QCOMPARE(completed.pendingWrites,std::size_t{0});
+    QCOMPARE(completed.completedReads,std::uint64_t{1});QCOMPARE(completed.completedWrites,std::uint64_t{1});
+    QVERIFY(completed.readMillis&&*completed.readMillis>=*held.readMillis);
+    QVERIFY(completed.writeMillis&&*completed.writeMillis>=*held.writeMillis);
+    // A failed request removes its pending age but does not replace the last
+    // successful latency, exactly as the original reader callback does.
+    bool rejected=false;lt::storage_error readError;
+    disk.backend->async_read(holder,{lt::piece_index_t{0},0,0},[&](lt::disk_buffer_holder,const lt::storage_error& error){readError=error;rejected=true;});
+    QTRY_VERIFY_WITH_TIMEOUT((disk.pump(),rejected),5000);QVERIFY(readError.ec);
+    const auto afterFailure=bundle.files->diskLatency().snapshot(ed::DiskLatency::nowMillis());
+    QCOMPARE(afterFailure.completedReads,completed.completedReads);QCOMPARE(afterFailure.readMillis,completed.readMillis);
+    QCOMPARE(afterFailure.pendingReads,std::size_t{0});QVERIFY(!afterFailure.measurementLost);
+  }
+  void latencyLossIsBoundedStickyAndNewAdmissionStartsFresh(){
+    // Explicit ledger-bound policy fixture; this does not issue 65k disk jobs.
+    ed::DiskLatency ledger;std::vector<std::uint64_t> tokens;tokens.reserve(ed::DiskLatency::MaximumPending);
+    for(std::size_t i=0;i<ed::DiskLatency::MaximumPending;++i){const auto token=ledger.begin(ed::DiskIoAxis::Read);QVERIFY(token);tokens.push_back(token);}
+    QCOMPARE(ledger.begin(ed::DiskIoAxis::Write),std::uint64_t{0});
+    auto lost=ledger.snapshot(ed::DiskLatency::nowMillis());QVERIFY(lost.measurementLost);QVERIFY(!lost.readMillis&&!lost.writeMillis);
+    QCOMPARE(lost.pendingReads,ed::DiskLatency::MaximumPending);QCOMPARE(lost.pendingWrites,std::size_t{0});
+    for(const auto token:tokens){ledger.finish(token,false);}
+    lost=ledger.snapshot(ed::DiskLatency::nowMillis());QVERIFY(lost.measurementLost&&!lost.readMillis&&!lost.writeMillis);
+    QCOMPARE(lost.pendingReads,std::size_t{0});QCOMPARE(lost.completedReads,std::uint64_t{0});
+    ed::DiskLatency fresh;const auto known=fresh.snapshot(ed::DiskLatency::nowMillis());
+    QVERIFY(!known.measurementLost);QCOMPARE(known.readMillis,std::optional<std::int64_t>{0});QCOMPARE(known.writeMillis,std::optional<std::int64_t>{0});
+    const auto token=fresh.begin(ed::DiskIoAxis::Write);QVERIFY(token);
+    const auto past=fresh.snapshot(-1);QVERIFY(!past.readMillis&&!past.writeMillis&&!past.measurementLost);
+    fresh.finish(token,true);const auto completed=fresh.snapshot(ed::DiskLatency::nowMillis());
+    QCOMPARE(completed.completedWrites,std::uint64_t{1});QVERIFY(completed.writeMillis&&!completed.measurementLost);
+    fresh.finish(token,true);const auto duplicate=fresh.snapshot(ed::DiskLatency::nowMillis());
+    QVERIFY(duplicate.measurementLost&&!duplicate.readMillis&&!duplicate.writeMillis);
+  }
   void actualCrossFilePaddingReadsWritesAndSha1(){
     QTemporaryDir area;QVERIFY(area.isValid());const std::vector<File> specs{{"a.bin",std::string(8192,'A')},{"padding",std::string(4096,'\0'),true},{"b.bin",std::string(8192,'B')}};auto metadata=v1(specs);Bundle bundle(area.path(),metadata,{Kind::Linear,Kind::Linear,Kind::Linear});QVERIFY(metadata->files().pad_file_at(lt::file_index_t{1}));auto policy=std::make_shared<ed::MetadataDiskPolicy>();QVERIFY(policy->registerOriginalPath(bundle.route,bundle.files));Disk disk(policy);auto holder=disk.backend->new_torrent(bundle.parameters(),{});
     const std::string expected=std::string(8192,'A')+std::string(4096,'\0')+std::string(8192,'B');auto first=expected.substr(0,16384);std::fill(first.begin()+8192,first.begin()+12288,'Q');const auto tail=expected.substr(16384);int written=0;bool failed=false;

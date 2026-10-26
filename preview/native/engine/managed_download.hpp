@@ -1,6 +1,7 @@
 #pragma once
 #include "biglybtc/library.hpp"
 #include "biglybtc/queue_policy.hpp"
+#include "biglybtc/queue_target_statistics.hpp"
 #include "profile.hpp"
 #include <array>
 #include <cstdint>
@@ -28,6 +29,10 @@ struct ManagedDownloadStatus {
   std::optional<std::array<std::int32_t,4>> queueFilePriority{};
   // Optional exact last-accepted admission prefix; not a final/retired receipt.
   std::optional<std::int64_t> combinedReceived{}, combinedSent{};
+  std::optional<core::QueueTargetStatistics> queueTargetStatistics{};
+  // Current mapped-admission request latency; absent for stock mmap/lost facts.
+  std::optional<std::int64_t> diskReadLatencyMillis{},diskWriteLatencyMillis{};
+  std::optional<std::int32_t> staleRankOffset{};
 };
 enum class MagnetPhase { Resolving, Retiring, Imported, Failed, Cancelled };
 struct PendingMagnetStatus {

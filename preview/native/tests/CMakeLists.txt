@@ -1781,3 +1781,18 @@ endif()
 # Keep existing --wrap=linkat and every assertion/TIMEOUT unchanged.
 target_link_options(biglybtc-file-operations-tests PRIVATE
   "LINKER:--wrap=read" "LINKER:--wrap=__read_chk")
+
+# Root merges at the existing targets; this file is a recipe, not auto-included.
+# core/CMakeLists.txt:
+# target_sources(biglybtc_core PRIVATE src/queue_target_statistics.cpp)
+# tests/CMakeLists.txt (both targets use only the existing Core dependency):
+add_executable(biglybtc-queue-target-statistics-tests queue_target_statistics_tests.cpp)
+target_link_libraries(biglybtc-queue-target-statistics-tests PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-queue-target-statistics-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME queue-target-statistics COMMAND biglybtc-queue-target-statistics-tests)
+set_tests_properties(queue-target-statistics PROPERTIES TIMEOUT 30 LABELS "unit;queue")
+add_executable(biglybtc-queue-target-statistics-replay queue_target_statistics_replay.cpp)
+target_link_libraries(biglybtc-queue-target-statistics-replay PRIVATE BiglyBTC::Core)
+target_compile_options(biglybtc-queue-target-statistics-replay PRIVATE -Wall -Wextra -Wpedantic -Werror)
+# The existing managed-queue Qt target gains one actual owner method; its
+# source-bound runtime/module gates and deadlines remain unchanged.

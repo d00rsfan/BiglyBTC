@@ -1,6 +1,7 @@
 #include "biglybtc/original_file_links.hpp"
 #include "biglybtc/file_policy.hpp"
 #include "file_operations.hpp"
+#include "application_settings.hpp"
 #include "linear_to_compact.hpp"
 #include "original_torrent_identity.hpp"
 #include "file_operation_io.hpp"
@@ -51,6 +52,7 @@ void ownedPayload(const struct stat& stamp,std::int64_t maximum){require(stamp.s
 struct Edit {fs::path path;Raw before;std::optional<std::string> after;FileOperationStage stage;};
 // Control files belong to profile state, never to payload previews or moves.
 struct Control {fs::path path;Raw before;};
+struct Archive {fs::path path;Raw before;bool internalState=false;Raw backup;};
 struct Payload {FileOperationEntry view;std::optional<struct stat> source,destination;std::string sha256;std::optional<struct stat> temporary;};
 struct Plan {
   FileOperationPreview preview;
@@ -60,6 +62,7 @@ struct Plan {
   std::vector<Control> controls;
   std::vector<OriginalFileGeometry> controlGeometry;
   std::vector<Edit> edits;
+  std::optional<Archive> archive;
   std::string scopeSelection;
   bool attempted=false,journalCreated=false;
   PayloadDigestCache payloadDigests; // Empty on decode; at most eight pinned fds.
@@ -75,6 +78,12 @@ std::string canonical(const Plan& p,bool stable){
     rows+=row.serialize();}put(d,"files",rows+'e');
   if(!p.controls.empty()){std::string controls="l";for(const auto& c:p.controls){auto item=parse("de",MaximumJournal);put(item,"path",b(c.path.string()));if(!stable&&c.before.bytes){put(item,"before",b(*c.before.bytes));put(item,"stamp",stampText(*c.before.stamp));}controls+=item.serialize();}put(d,"controls",controls+'e');}
   if(!stable){std::string edits="l";for(const auto& e:p.edits){auto item=parse("de",MaximumJournal);put(item,"path",b(e.path.string()));put(item,"stage",number(static_cast<int>(e.stage)));if(e.before.bytes){put(item,"before",b(*e.before.bytes));put(item,"stamp",stampText(*e.before.stamp));}if(e.after){put(item,"after",b(*e.after));}edits+=item.serialize();}put(d,"edits",edits+'e');}
+  if(p.archive){const auto& a=*p.archive;auto row=parse("de",MaximumJournal);put(row,"path",b(a.path.string()));put(row,"internal",number(a.internalState));
+    // Selected internal state already has exact execution CAS below; legitimate
+    // retirement checkpoints must not change the visible archive choice.
+    if(stable&&!a.internalState&&a.before.stamp){put(row,"dev",b(std::to_string(a.before.stamp->st_dev)));put(row,"ino",b(std::to_string(a.before.stamp->st_ino)));put(row,"sha256",b(digest(*a.before.bytes)));}
+    if(!stable&&a.before.bytes){put(row,"before",b(*a.before.bytes));put(row,"stamp",stampText(*a.before.stamp));}
+    if(!a.internalState){auto backup=parse("de",MaximumJournal);if(a.backup.bytes){if(stable){put(backup,"dev",b(std::to_string(a.backup.stamp->st_dev)));put(backup,"ino",b(std::to_string(a.backup.stamp->st_ino)));put(backup,"sha256",b(digest(*a.backup.bytes)));}else{put(backup,"before",b(*a.backup.bytes));put(backup,"stamp",stampText(*a.backup.stamp));}}put(row,"backup",backup.serialize());}put(d,"archive",row.serialize());}
   return d.serialize();
 }
 std::string journal(const Plan& p){
@@ -95,6 +104,38 @@ void hashMatches(const EncodedDocument& doc,const core::TorrentHash& hash){
   const auto matched=validateOriginalTorrentKey(*identity,hash,true);require(matched.has_value(),matched?ErrorCode::Io:matched.error().code,matched?"Original saved identity":matched.error().message.c_str());
 }
 EncodedDocument envelope(const Raw& raw){require(raw.bytes.has_value(),ErrorCode::Missing,"Selected active metadata is absent");auto doc=EncodedDocument::parse(*raw.bytes,limits());require(doc&&doc->document().root().type==Node::Type::Dictionary,ErrorCode::InvalidFormat,"Invalid original active metadata");return std::move(*doc);}
+void archiveShape(const Plan& p,const Archive& a){
+  pathShape(a.path);const auto active=p.profile/"active"/(p.preview.hash.hex()+".dat");
+  require(a.internalState==(a.path==active||a.path==fs::path(active.string()+".bak")),ErrorCode::UnsafePath,"Archive internal-state alias changed");
+  require(p.preview.kind==FileOperationKind::RemoveKeepData||p.preview.kind==FileOperationKind::RemoveDeleteData,ErrorCode::Unsupported,"Archive deletion is available only when removing a torrent");
+  if(!a.internalState){
+    require(!within(a.path,p.profile)||(!within(a.path,p.profile/"active")&&a.path.extension()==".torrent"),ErrorCode::UnsafePath,"Archive aliases protected profile data");
+    require(!intersects(a.path,p.preview.sourceRoot),ErrorCode::UnsafePath,"Archive aliases the selected payload root");
+  }
+  const auto metadata=[&](const Raw& raw){if(raw.bytes){require(raw.stamp&&raw.stamp->st_nlink==1&&raw.stamp->st_size==static_cast<std::int64_t>(raw.bytes->size()),ErrorCode::UnsafePath,"Archive must be private owned single-link metadata");hashMatches(envelope(raw),p.preview.hash);}};
+  metadata(a.before);metadata(a.backup);
+  require(!a.internalState||!a.backup.bytes,ErrorCode::InvalidFormat,"Internal archive cannot add an unreviewed backup");
+}
+void checkArchive(const Archive& a,bool recovered){
+  const auto one=[&](const fs::path& path,const Raw& before){const auto current=read(path,MaximumDocument);if(current.bytes){check(path,before,MaximumDocument);}else{require(recovered||!before.bytes,ErrorCode::Conflict,"Reviewed torrent archive disappeared");}};
+  one(a.path,a.before);if(!a.internalState){one(fs::path(a.path.string()+".bak"),a.backup);}
+}
+void archiveReference(const Plan& p,const core::SavedDownload& other){
+  if(!p.archive){return;}const auto& a=*p.archive;const fs::path primary(other.torrentFile);
+  // Original archive deletion owns both the named metadata and its exact .bak.
+  // Neither may become another torrent's reviewed deletion scope, even if the
+  // backup was absent when that other library record was loaded.
+  for(const auto& path:{primary,fs::path(primary.string()+".bak")}){
+    pathShape(path);
+    require(path!=a.path&&(a.internalState||path!=fs::path(a.path.string()+".bak")),ErrorCode::Conflict,"Torrent archive is referenced by another library item");
+    const auto stamp=inspect(path);require(!stamp||((!a.before.stamp||!identity(*stamp,*a.before.stamp))&&(!a.backup.stamp||!identity(*stamp,*a.backup.stamp))),ErrorCode::Conflict,"Torrent archive inode is shared by another library item");
+  }
+}
+void archivePayload(const Plan& p,const fs::path& path){
+  if(!p.archive||p.archive->internalState){return;}const auto& a=*p.archive;
+  require(!intersects(a.path,path)&&!intersects(fs::path(a.path.string()+".bak"),path),ErrorCode::UnsafePath,"Torrent archive aliases payload data");
+  const auto stamp=inspect(path);require(!stamp||((!a.before.stamp||!identity(*stamp,*a.before.stamp))&&(!a.backup.stamp||!identity(*stamp,*a.backup.stamp))),ErrorCode::UnsafePath,"Torrent archive inode aliases payload data");
+}
 void hydrate(EncodedDocument& state,const Node* cached){
   if(!cached){return;}for(const auto& [from,to]:{std::pair{"attributes","attributes"},{"azp","azureus_properties"},{"azpp","azureus_private_properties"}}){if(const auto* n=cached->find(from)){require(n->type==Node::Type::Dictionary&&state.replaceValue(to,encoded(*n)).has_value(),ErrorCode::InvalidFormat,"Cannot hydrate original cached state");}}
 }
@@ -382,13 +423,17 @@ Plan prepare(const ProfileLease& lease,const FileOperationRequest& request,std::
     p.files.push_back(std::move(f));
   }
   if(request.kind==FileOperationKind::Relink){require(p.preview.presentFiles!=0,ErrorCode::Missing,"Relink destination has no original payload files");}
+  if(request.deleteTorrentFile){p.archive=Archive{fs::path(rawSaved.torrentFile),{},false,{}};auto& archive=*p.archive;
+    archive.internalState=archive.path==statePath||archive.path==fs::path(statePath.string()+".bak");archive.before=read(archive.path,MaximumDocument);if(!archive.internalState){archive.backup=read(fs::path(archive.path.string()+".bak"),MaximumDocument);}archiveShape(p,archive);
+    for(const auto& file:p.files){archivePayload(p,file.view.source);}
+    p.preview.torrentArchive=FileOperationArchive{archive.path,archive.before.bytes?static_cast<std::uint64_t>(archive.before.bytes->size()):0,archive.before.bytes.has_value(),archive.internalState};if(!archive.internalState){p.preview.torrentArchiveBackup=FileOperationArchive{fs::path(archive.path.string()+".bak"),archive.backup.bytes?static_cast<std::uint64_t>(archive.backup.bytes->size()):0,archive.backup.bytes.has_value(),false};}}
   // No accidental shared data: inspect every other saved root and supported
   // explicit physical map, including identical inode aliases.
-  if(request.kind!=FileOperationKind::RemoveKeepData){for(const auto& other:library.downloads){
-    if(other.hash&&*other.hash==request.hash){continue;}checkpoint(stop);require(other.hash.has_value(),ErrorCode::Unsupported,"Cannot prove independence from another unresolved library mapping");
+  if(request.kind!=FileOperationKind::RemoveKeepData||p.archive){for(const auto& other:library.downloads){
+    if(other.hash&&*other.hash==request.hash){continue;}archiveReference(p,other);checkpoint(stop);require(other.hash.has_value(),ErrorCode::Unsupported,"Cannot prove independence from another unresolved library mapping");
     auto otherRaw=read(p.profile/"active"/(other.hash->hex()+".dat"),MaximumDocument);auto otherState=envelope(otherRaw);hydrate(otherState,cacheEntry(cache?&*cache:nullptr,*other.hash));hashMatches(otherState,*other.hash);auto otherLayout=compat::originalLayout(otherState.document(),MaximumFiles);require(otherLayout.has_value(),ErrorCode::Unsupported,"Another library payload map is unsupported");auto otherAttrs=section(otherState.document().find("attributes"));auto otherRoot=resolveOriginalSaveRoot(other,*otherLayout);require(otherRoot.has_value(),ErrorCode::Unsupported,"Another original save root is unresolved");const fs::path absoluteRoot=fs::path(otherRoot->saveDirectory)/ *otherRoot->saveFile;require(!intersects(absoluteRoot,p.preview.sourceRoot)&&(!moving(request.kind)||!intersects(absoluteRoot,p.preview.targetRoot)),ErrorCode::Conflict,"Payload roots overlap another library torrent");
     auto otherDefaults=resolveOriginalStorageTypes(lease,*other.hash,*otherLayout,otherAttrs.root());require(otherDefaults.has_value()&&applyOriginalStorageDefaults(otherAttrs,*otherDefaults,true).has_value(),ErrorCode::Unsupported,"Another original physical map is unresolved");auto otherPaths=mapping(*otherRoot,*otherLayout,otherAttrs.root());
-    for(const auto& path:otherPaths){for(const auto& selected:p.files){require(!intersects(path,selected.view.source)&&(selected.view.destination.empty()||!intersects(path,selected.view.destination)),ErrorCode::Conflict,"Payload path is shared by another torrent");}if(auto info=inspect(path)){require(!inodes.contains({info->st_dev,info->st_ino}),ErrorCode::Conflict,"Payload inode belongs to another torrent");}}
+    for(const auto& path:otherPaths){archivePayload(p,path);for(const auto& selected:p.files){require(!intersects(path,selected.view.source)&&(selected.view.destination.empty()||!intersects(path,selected.view.destination)),ErrorCode::Conflict,"Payload path is shared by another torrent");}if(auto info=inspect(path)){require(!inodes.contains({info->st_dev,info->st_ino}),ErrorCode::Conflict,"Payload inode belongs to another torrent");}}
   }}
   if(request.kind!=FileOperationKind::RemoveKeepData){for(const auto& row:library.downloads){const fs::path archive(row.torrentFile);pathShape(archive);for(const auto& f:p.files){require(f.view.source!=archive&&(f.view.destination.empty()||f.view.destination!=archive),ErrorCode::UnsafePath,"Payload operation aliases a retained torrent archive");}}}
   const auto& selectedRow=inventoryRow(inventory,*saved);auto updatedRow=parse(encoded(selectedRow));std::string selection;
@@ -478,6 +523,7 @@ void publishEdit(const Plan& p,const Edit& edit){
 }
 FileOperationResult execute(const ProfileLease& lease,Plan& p,bool recovered,void(*observer)(FileOperationStage)){
   profileIdentity(lease,p);targetIdentity(p);checkControls(p,recovered);const auto notify=[&](FileOperationStage stage){if(observer){observer(stage);}};
+  if(p.archive&&!p.archive->internalState){checkArchive(*p.archive,recovered);}
   if(relocating(p.preview.kind)){for(auto& f:p.files){readyDestination(p,f);if(f.source){notify(FileOperationStage::DestinationPublished);}}}
   if(p.preview.kind==FileOperationKind::Relink){for(const auto& f:p.files){const auto now=inspect(f.view.destination);require(bool(now)==bool(f.destination)&&(!now||(identity(*now,*f.destination)&&p.payloadDigests.digest(f.view.destination,*f.destination)==f.sha256)),ErrorCode::Conflict,"Relink target changed after confirmation");}}
   for(const auto& e:p.edits){if(e.after){publishEdit(p,e);notify(e.stage);}}
@@ -485,6 +531,7 @@ FileOperationResult execute(const ProfileLease& lease,Plan& p,bool recovered,voi
   if(relocating(p.preview.kind)||p.preview.kind==FileOperationKind::RemoveDeleteData){for(const auto& f:p.files){if(!f.source){continue;}const auto now=inspect(f.view.source);if(now){require(identity(*now,*f.source)&&p.payloadDigests.digest(f.view.source,*f.source)==f.sha256,ErrorCode::Conflict,"Source changed before final removal");erase(f.view.source,*now);}if(relocating(p.preview.kind)){++result.filesMoved;}else{++result.filesDeleted;}notify(FileOperationStage::SourceRemoved);}}
   for(const auto& e:p.edits){if(!e.after){const auto current=read(e.path,MaximumDocument);if(current.bytes){require(current.bytes==e.before.bytes&&current.stamp&&e.before.stamp&&unchanged(*current.stamp,*e.before.stamp),ErrorCode::Conflict,"Active cleanup source changed");erase(e.path,*current.stamp);}notify(FileOperationStage::StateRemoved);}}
   if(!moving(p.preview.kind)){for(const auto& c:p.controls){const auto current=read(c.path,MaximumDocument);if(current.bytes){require(current.bytes==c.before.bytes&&current.stamp&&c.before.stamp&&unchanged(*current.stamp,*c.before.stamp),ErrorCode::Conflict,"Original control changed before removal");erase(c.path,*current.stamp);}notify(FileOperationStage::StateRemoved);}}
+  if(p.archive){const auto& a=*p.archive;if(!a.internalState){const auto remove=[&](const fs::path& path,const Raw& before){const auto current=read(path,MaximumDocument);if(current.bytes){check(path,before,MaximumDocument);erase(path,*current.stamp);result.torrentArchiveDeleted=true;notify(FileOperationStage::ArchiveFileRemoved);}};remove(a.path,a.before);remove(fs::path(a.path.string()+".bak"),a.backup);}notify(FileOperationStage::ArchiveRemoved);}
   const auto raw=read(p.profile/JournalName,MaximumJournal);require(raw.stamp.has_value(),ErrorCode::Conflict,"File-operation journal disappeared");erase(p.profile/JournalName,*raw.stamp);notify(FileOperationStage::Completed);return result;
 }
 }
@@ -492,12 +539,12 @@ namespace {
 core::TorrentHash decodeHash(std::string_view hex){require(hex.size()==40||hex.size()==64,ErrorCode::InvalidFormat,"Invalid journal torrent identity");std::string raw;raw.reserve(hex.size()/2);for(std::size_t i=0;i<hex.size();i+=2){unsigned value=0;const auto parsed=std::from_chars(hex.data()+i,hex.data()+i+2,value,16);require(parsed.ec==std::errc{}&&parsed.ptr==hex.data()+i+2,ErrorCode::InvalidFormat,"Invalid journal hash digits");raw+=static_cast<char>(value);}auto key=core::TorrentHash::parse(raw);require(key.has_value(),ErrorCode::InvalidFormat,"Invalid journal hash");return *key;}
 bool digestShape(std::string_view value){return value.size()==64&&std::ranges::all_of(value,[](char c){return(c>='0'&&c<='9')||(c>='a'&&c<='f');});}
 void validateCurrentIndependence(const ProfileLease& lease,const Plan& p){
-  if(p.preview.kind==FileOperationKind::RemoveKeepData){return;}
+  if(p.preview.kind==FileOperationKind::RemoveKeepData&&!p.archive){return;}
   const auto raw=read(p.profile/"downloads.config",MaximumDocument);require(raw.bytes.has_value(),ErrorCode::Conflict,"Recovery inventory disappeared");auto doc=parse(*raw.bytes);auto library=parsedInventory(doc);auto cache=cacheDocument(read(p.profile/"active/cache.dat",MaximumDocument));
-  for(const auto& other:library.downloads){if(other.hash&&*other.hash==p.preview.hash){continue;}
+  for(const auto& other:library.downloads){if(other.hash&&*other.hash==p.preview.hash){continue;}archiveReference(p,other);
     require(other.hash.has_value(),ErrorCode::Unsupported,"Another recovery payload mapping is unresolved");
     auto state=envelope(read(p.profile/"active"/(other.hash->hex()+".dat"),MaximumDocument));hydrate(state,cacheEntry(cache?&*cache:nullptr,*other.hash));hashMatches(state,*other.hash);auto layout=compat::originalLayout(state.document(),MaximumFiles);require(layout.has_value(),ErrorCode::Unsupported,"Another recovery file layout is unsupported");auto attrs=section(state.document().find("attributes"));auto root=resolveOriginalSaveRoot(other,*layout);require(root.has_value(),ErrorCode::Unsupported,"Another recovery save root is unresolved");const auto absolute=fs::path(root->saveDirectory)/ *root->saveFile;require(!intersects(absolute,p.preview.sourceRoot)&&(p.preview.targetRoot.empty()||!intersects(absolute,p.preview.targetRoot)),ErrorCode::Conflict,"Another torrent now overlaps operation scope");auto defaults=resolveOriginalStorageTypes(lease,*other.hash,*layout,attrs.root());require(defaults.has_value()&&applyOriginalStorageDefaults(attrs,*defaults,true).has_value(),ErrorCode::Unsupported,"Another recovery physical map is unresolved");auto paths=mapping(*root,*layout,attrs.root());
-    for(const auto& path:paths){const auto actual=inspect(path);for(const auto& f:p.files){require(!intersects(path,f.view.source)&&(f.view.destination.empty()||!intersects(path,f.view.destination)),ErrorCode::Conflict,"Another torrent now shares a selected path");if(actual){require((!f.source||!identity(*actual,*f.source))&&(!f.destination||!identity(*actual,*f.destination))&&(!f.temporary||!identity(*actual,*f.temporary)),ErrorCode::Conflict,"Another torrent now shares selected inode");}}}
+    for(const auto& path:paths){archivePayload(p,path);const auto actual=inspect(path);for(const auto& f:p.files){require(!intersects(path,f.view.source)&&(f.view.destination.empty()||!intersects(path,f.view.destination)),ErrorCode::Conflict,"Another torrent now shares a selected path");if(actual){require((!f.source||!identity(*actual,*f.source))&&(!f.destination||!identity(*actual,*f.destination))&&(!f.temporary||!identity(*actual,*f.temporary)),ErrorCode::Conflict,"Another torrent now shares selected inode");}}}
   }
 }
 Plan decode(const Raw& journalRaw){
@@ -511,12 +558,14 @@ Plan decode(const Raw& journalRaw){
     f.sha256=text(runtime.children[i].find("sha"));if((f.source&&p.preview.kind!=FileOperationKind::RemoveKeepData)||(f.destination&&p.preview.kind==FileOperationKind::Relink)){require(digestShape(f.sha256),ErrorCode::InvalidFormat,"Missing recovery content digest");}if(const auto* t=runtime.children[i].find("temp")){f.temporary=readStamp(*t);require(f.temporary->st_nlink==1,ErrorCode::InvalidFormat,"Recovery scratch must have one link");}p.files.push_back(std::move(f));
   }
   if(const auto* controls=d.find("controls")){require(controls->type==Node::Type::List&&controls->children.size()<=MaximumFiles*4,ErrorCode::InvalidFormat,"Invalid recovery control count");std::set<fs::path> seen;for(const auto& n:controls->children){Control c;c.path=text(n.find("path"));pathShape(c.path);require(seen.insert(c.path).second,ErrorCode::InvalidFormat,"Duplicate recovery control");if(const auto* before=n.find("before")){c.before.bytes=text(before);c.before.stamp=readStamp(field(n,"stamp",Node::Type::Dictionary));require(c.before.stamp->st_nlink==1&&c.before.stamp->st_size==static_cast<std::int64_t>(c.before.bytes->size())&&c.before.bytes->size()<=MaximumDocument,ErrorCode::InvalidFormat,"Invalid recovery control stamp");}p.controls.push_back(std::move(c));}}
+  if(const auto* node=d.find("archive")){require(node->type==Node::Type::Dictionary,ErrorCode::InvalidFormat,"Invalid archive journal");Archive a;a.path=text(node->find("path"));const auto internal=integer(node->find("internal"));require(internal==0||internal==1,ErrorCode::InvalidFormat,"Invalid archive kind");a.internalState=internal!=0;
+    if(const auto* bytes=node->find("before")){a.before.bytes=text(bytes);a.before.stamp=readStamp(field(*node,"stamp",Node::Type::Dictionary));}if(!a.internalState){const auto& backup=field(*node,"backup",Node::Type::Dictionary);if(const auto* bytes=backup.find("before")){a.backup.bytes=text(bytes);a.backup.stamp=readStamp(field(backup,"stamp",Node::Type::Dictionary));}}p.archive=std::move(a);archiveShape(p,*p.archive);}
   const auto& edits=field(d.root(),"edits",Node::Type::List);require(edits.children.size()>=2&&edits.children.size()<=5,ErrorCode::InvalidFormat,"Invalid recovery document count");std::set<fs::path> names;const auto active=p.profile/"active"/(p.preview.hash.hex()+".dat");
   for(const auto& n:edits.children){Edit e;e.path=text(n.find("path"));pathShape(e.path);const bool cache=e.path==p.profile/"active/cache.dat",inventory=e.path==p.profile/"downloads.config",state=e.path==active||e.path==fs::path(active.string()+".bak");require((cache||inventory||state)&&names.insert(e.path).second,ErrorCode::UnsafePath,"Recovery document is not an exact fixed owned path");if(const auto* before=n.find("before")){e.before.bytes=text(before);e.before.stamp=readStamp(field(n,"stamp",Node::Type::Dictionary));require(e.before.stamp->st_nlink==1,ErrorCode::InvalidFormat,"Recovery document is linked");}if(const auto* after=n.find("after")){e.after=text(after);}const auto stage=integer(n.find("stage"));e.stage=static_cast<FileOperationStage>(stage);require((cache&&e.after&&e.stage==FileOperationStage::CachePublished)||(inventory&&e.after&&e.stage==FileOperationStage::InventoryPublished)||(state&&((moving(p.preview.kind)&&e.after&&e.stage==FileOperationStage::StatePublished)||(!moving(p.preview.kind)&&!e.after&&e.stage==FileOperationStage::StateRemoved))),ErrorCode::InvalidFormat,"Invalid recovery document stage");p.edits.push_back(std::move(e));}
   require(names.contains(active)&&names.contains(p.profile/"downloads.config"),ErrorCode::InvalidFormat,"Recovery lacks target state/inventory");require(digest(canonical(p,false))==p.preview.executionCasDigest&&digest(canonical(p,true))==p.preview.approvalScopeDigest,ErrorCode::InvalidFormat,"Recovery scope/execution binding mismatch");
   const auto stateEdit=std::ranges::find(p.edits,active,&Edit::path);auto state=envelope(stateEdit->before);const auto cache=std::ranges::find(p.edits,p.profile/"active/cache.dat",&Edit::path);auto cacheDoc=cache==p.edits.end()?std::optional<EncodedDocument>{}:cacheDocument(cache->before);hydrate(state,cacheEntry(cacheDoc?&*cacheDoc:nullptr,p.preview.hash));hashMatches(state,p.preview.hash);
   const auto inventory=std::ranges::find(p.edits,p.profile/"downloads.config",&Edit::path);require(inventory->before.bytes.has_value(),ErrorCode::InvalidFormat,"Recovery original inventory missing");auto inv=parse(*inventory->before.bytes);auto library=parsedInventory(inv);std::optional<core::SavedDownload> selected;for(const auto& row:library.downloads){if(row.hash&&*row.hash==p.preview.hash){require(!selected,ErrorCode::InvalidFormat,"Duplicate recovery target");selected=row;}}
-  require(selected.has_value(),ErrorCode::InvalidFormat,"Recovery original target is missing");auto layout=compat::originalLayout(state.document(),MaximumFiles);require(layout.has_value(),ErrorCode::Unsupported,"Unsupported recovery original layout");auto restored=restoreOriginalSaveRoot(*selected,*layout,p.preview.sourceRoot);require(restored.has_value(),ErrorCode::InvalidFormat,"Recovery root differs from original path choices");selected=std::move(*restored);require(!moving(p.preview.kind)||p.preview.targetRoot==p.destinationParent/ *selected->saveFile,ErrorCode::InvalidFormat,"Recovery destination root changed");auto attrs=section(state.document().find("attributes"));restoreStorageProjection(attrs,p,*layout);const auto map=mapping(*selected,*layout,attrs.root());const auto suffix=attrs.find("incompfilesuffix")?text(attrs.find("incompfilesuffix")):std::string{};
+  require(selected.has_value(),ErrorCode::InvalidFormat,"Recovery original target is missing");if(p.archive){require(p.archive->path==fs::path(selected->torrentFile),ErrorCode::UnsafePath,"Recovery archive differs from the selected original record");}auto layout=compat::originalLayout(state.document(),MaximumFiles);require(layout.has_value(),ErrorCode::Unsupported,"Unsupported recovery original layout");auto restored=restoreOriginalSaveRoot(*selected,*layout,p.preview.sourceRoot);require(restored.has_value(),ErrorCode::InvalidFormat,"Recovery root differs from original path choices");selected=std::move(*restored);require(!moving(p.preview.kind)||p.preview.targetRoot==p.destinationParent/ *selected->saveFile,ErrorCode::InvalidFormat,"Recovery destination root changed");auto attrs=section(state.document().find("attributes"));restoreStorageProjection(attrs,p,*layout);const auto map=mapping(*selected,*layout,attrs.root());const auto suffix=attrs.find("incompfilesuffix")?text(attrs.find("incompfilesuffix")):std::string{};
   std::vector<compat::FilePolicy> previousPolicy,nextPolicy;
   if(selecting(p.preview.kind)){
     previousPolicy=selectionPolicies(inventoryRow(inv,*selected),*layout,false);
@@ -527,7 +576,7 @@ Plan decode(const Raw& journalRaw){
     require(chosen&&encoded(inventoryRow(after,*chosen))==changed.serialize(),ErrorCode::InvalidFormat,"Selection recovery changed unrelated selected-row fields");
   }
   if(p.preview.kind==FileOperationKind::RemoveDeleteData){if(const auto* flags=attrs.find("flags")){require(flags->type==Node::Type::Integer&&(flags->integer&0x40)==0,ErrorCode::Unsupported,"Original flags prohibit payload deletion");}}
-  for(const auto& f:p.files){require(f.view.index<layout->files.size()&&!layout->files[f.view.index].padding&&f.view.logicalBytes==layout->files[f.view.index].bytes,ErrorCode::InvalidFormat,"Recovery file geometry changed");payloadPath(f.view.source,p.profile);const auto expected=map[f.view.index];const auto base=fs::path(selected->saveDirectory)/(layout->multifile?fs::path(*selected->saveFile)/layout->files[f.view.index].path:fs::path(*selected->saveFile));require(f.view.source==expected||(expected==base&&!suffix.empty()&&f.view.source==fs::path(base.string()+suffix)),ErrorCode::UnsafePath,"Recovery source differs from original file mapping");if(moving(p.preview.kind)){require(f.view.destination==(selecting(p.preview.kind)?selectionDestination(*selected,*layout,attrs.root(),f.view.index,f.view.source,previousPolicy[f.view.index],nextPolicy[f.view.index]):relocatedPath(*selected,*layout,f.view.index,f.view.source,p.destinationParent,suffix)),ErrorCode::UnsafePath,"Recovery destination differs from approved mapping");if(selecting(p.preview.kind)){selectionTargetIndependent(f.view.destination,f.view.index,map,*selected,*layout,suffix);}}}
+  for(const auto& f:p.files){archivePayload(p,f.view.source);require(f.view.index<layout->files.size()&&!layout->files[f.view.index].padding&&f.view.logicalBytes==layout->files[f.view.index].bytes,ErrorCode::InvalidFormat,"Recovery file geometry changed");payloadPath(f.view.source,p.profile);const auto expected=map[f.view.index];const auto base=fs::path(selected->saveDirectory)/(layout->multifile?fs::path(*selected->saveFile)/layout->files[f.view.index].path:fs::path(*selected->saveFile));require(f.view.source==expected||(expected==base&&!suffix.empty()&&f.view.source==fs::path(base.string()+suffix)),ErrorCode::UnsafePath,"Recovery source differs from original file mapping");if(moving(p.preview.kind)){require(f.view.destination==(selecting(p.preview.kind)?selectionDestination(*selected,*layout,attrs.root(),f.view.index,f.view.source,previousPolicy[f.view.index],nextPolicy[f.view.index]):relocatedPath(*selected,*layout,f.view.index,f.view.source,p.destinationParent,suffix)),ErrorCode::UnsafePath,"Recovery destination differs from approved mapping");if(selecting(p.preview.kind)){selectionTargetIndependent(f.view.destination,f.view.index,map,*selected,*layout,suffix);}}}
   if(!p.controls.empty()){const auto expected=controlPaths(p.profile,p.preview.hash,layout->files.size());require(expected.size()==p.controls.size(),ErrorCode::InvalidFormat,"Recovery control inventory changed");for(std::size_t i=0;i<expected.size();++i){require(expected[i]==p.controls[i].path,ErrorCode::UnsafePath,"Recovery control is not an exact original indexed state leaf");}}else{for(std::size_t i=0;i<layout->files.size();++i){require(storageKind(attrs.root(),i,layout->files.size())==OriginalStorageKind::Linear,ErrorCode::InvalidFormat,"Legacy journal cannot omit nonlinear control inventory");}}
   captureControlGeometry(p,*layout);validateCompletionControls(p.controls,p.controlGeometry);
   for(const auto& f:p.files){const auto maximum=physicalMaximum(*layout,attrs.root(),f.view.index);if(f.source){ownedPayload(*f.source,maximum);}if(f.destination){ownedPayload(*f.destination,maximum);}}
@@ -541,17 +590,22 @@ PreparedFileOperation& PreparedFileOperation::operator=(PreparedFileOperation&&)
 PreparedFileOperation::~PreparedFileOperation()=default;
 const FileOperationPreview& PreparedFileOperation::preview()const noexcept{return impl_->plan.preview;}
 std::expected<PreparedFileOperation,Error> prepareFileOperation(const ProfileLease& lease,const FileOperationRequest& request,std::stop_token stop){return guarded([&]()->std::expected<PreparedFileOperation,Error>{require(!hasPendingOriginalCompaction(lease),ErrorCode::Conflict,"Recover pending explicit compaction before file operations");return PreparedFileOperation(std::make_unique<PreparedFileOperation::Impl>(prepare(lease,request,stop)));});}
-std::expected<FileOperationConfirmation,Error> confirmFileOperation(const PreparedFileOperation& p,std::string_view accepted,bool deleteConfirmed){return guarded([&]()->std::expected<FileOperationConfirmation,Error>{require(accepted==p.preview().approvalScopeDigest,ErrorCode::Conflict,"File-operation approved scope changed");require(p.preview().kind!=FileOperationKind::RemoveDeleteData||deleteConfirmed,ErrorCode::Conflict,"Explicit payload deletion confirmation is required");return FileOperationConfirmation{std::string(accepted),deleteConfirmed};});}
+std::expected<FileOperationConfirmation,Error> confirmFileOperation(const PreparedFileOperation& p,std::string_view accepted,bool deleteConfirmed,bool archiveConfirmed){return guarded([&]()->std::expected<FileOperationConfirmation,Error>{require(accepted==p.preview().approvalScopeDigest,ErrorCode::Conflict,"File-operation approved scope changed");require(p.preview().kind!=FileOperationKind::RemoveDeleteData||deleteConfirmed,ErrorCode::Conflict,"Explicit payload deletion confirmation is required");require(!p.preview().torrentArchive||archiveConfirmed,ErrorCode::Conflict,"Explicit reviewed torrent archive confirmation is required");return FileOperationConfirmation{std::string(accepted),deleteConfirmed,archiveConfirmed};});}
 std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease& lease,PreparedFileOperation&& prepared,const FileOperationConfirmation& confirmation,void(*observer)(FileOperationStage),std::stop_token stop){
   return guarded([&]()->std::expected<FileOperationResult,Error>{require(!hasPendingOriginalCompaction(lease),ErrorCode::Conflict,"Recover pending explicit compaction before applying file operations");require(bool(prepared.impl_),ErrorCode::Conflict,"Prepared file operation was moved/consumed");auto& p=prepared.impl_->plan;
     // The rvalue reference does not destroy the caller's prepared object. Drop
     // every transient pinned fd on success and exception, leaving its attempted
     // state/journal/retry semantics unchanged.
     struct ClearDigests {PayloadDigestCache& cache;~ClearDigests(){cache.clear();}} clearDigests{p.payloadDigests};
-    checkpoint(stop);require(!p.attempted&&confirmation.approvalScopeDigest==p.preview.approvalScopeDigest&&(p.preview.kind!=FileOperationKind::RemoveDeleteData||confirmation.deleteConfirmed),ErrorCode::Conflict,"File-operation confirmation is stale or missing");profileIdentity(lease,p);targetIdentity(p);require(!hasPendingFileOperation(lease),ErrorCode::Conflict,"Existing file operation needs recovery");
-    checkControls(p);for(const auto& e:p.edits){check(e.path,e.before,MaximumDocument);}for(auto& f:p.files){checkpoint(stop);const auto& expected=p.preview.kind==FileOperationKind::Relink?f.destination:f.source;const auto& path=p.preview.kind==FileOperationKind::Relink?f.view.destination:f.view.source;const auto now=inspect(path);require(bool(now)==bool(expected)&&(!now||unchanged(*now,*expected)),ErrorCode::Conflict,"Payload changed after preparation");if(expected&&p.preview.kind!=FileOperationKind::RemoveKeepData){f.sha256=p.payloadDigests.digest(path,*expected,stop);}}
+    checkpoint(stop);require(!p.attempted&&confirmation.approvalScopeDigest==p.preview.approvalScopeDigest&&(p.preview.kind!=FileOperationKind::RemoveDeleteData||confirmation.deleteConfirmed)&&(!p.archive||confirmation.archiveConfirmed),ErrorCode::Conflict,"File-operation confirmation is stale or missing");profileIdentity(lease,p);targetIdentity(p);require(!hasPendingFileOperation(lease),ErrorCode::Conflict,"Existing file operation needs recovery");
+    if(p.archive){checkArchive(*p.archive,false);}checkControls(p);for(const auto& e:p.edits){check(e.path,e.before,MaximumDocument);}for(auto& f:p.files){checkpoint(stop);const auto& expected=p.preview.kind==FileOperationKind::Relink?f.destination:f.source;const auto& path=p.preview.kind==FileOperationKind::Relink?f.view.destination:f.view.source;const auto now=inspect(path);require(bool(now)==bool(expected)&&(!now||unchanged(*now,*expected)),ErrorCode::Conflict,"Payload changed after preparation");if(expected&&p.preview.kind!=FileOperationKind::RemoveKeepData){f.sha256=p.payloadDigests.digest(path,*expected,stop);}}
     checkpoint(stop);p.attempted=true;saveJournal(p);if(observer){observer(FileOperationStage::JournalSynced);}return execute(lease,p,false,observer);
   });
+}
+std::expected<bool,Error> torrentArchiveDeletionPreference(const ProfileLease& lease,std::stop_token stop){
+  const auto settings=readApplicationSettings(lease,stop);if(!settings){return std::unexpected(settings.error());}
+  const auto* value=settings->source?settings->source->find("def.deletetorrent"):nullptr;
+  if(!value){return true;}if(value->type!=Node::Type::Integer){return std::unexpected(Error{ErrorCode::InvalidFormat,"Invalid setting: def.deletetorrent"});}return static_cast<std::uint32_t>(value->integer)!=0;
 }
 bool hasPendingFileOperation(const ProfileLease& lease) noexcept {
   try{const auto profile=fs::path(profilePath(lease));return inspect(profile/JournalName).has_value()||inspect(profile/(std::string(JournalName)+".BiglyBTC.fileop-saving")).has_value();}catch(...){return true;}

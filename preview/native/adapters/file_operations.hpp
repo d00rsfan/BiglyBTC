@@ -19,6 +19,7 @@ struct FileOperationRequest {
   // No GUI paths or arbitrary selected-row replacement are accepted here.
   std::optional<std::string> selectionPolicyEncoding{};
   std::optional<std::string> expectedSelectionEntry{};
+  bool deleteTorrentFile=false; // Explicit reviewed choice; old callers preserve separate archive.
 };
 struct FileOperationEntry {
   std::size_t index = 0;
@@ -26,6 +27,11 @@ struct FileOperationEntry {
   std::int64_t logicalBytes = 0, actualBytes = 0;
   bool present = false;
   std::uint64_t device = 0, inode = 0;
+};
+struct FileOperationArchive {
+  std::filesystem::path path;
+  std::uint64_t bytes=0;
+  bool present=false,internalState=false;
 };
 struct FileOperationPreview {
   FileOperationKind kind = FileOperationKind::RemoveKeepData;
@@ -36,17 +42,21 @@ struct FileOperationPreview {
   std::vector<FileOperationEntry> files;
   std::uint64_t presentFiles = 0, missingFiles = 0, presentBytes = 0;
   bool crossDevice = false, requiresRecheck = false;
+  std::optional<FileOperationArchive> torrentArchive;
+  std::optional<FileOperationArchive> torrentArchiveBackup;
 };
 struct FileOperationConfirmation {
   std::string approvalScopeDigest;
   bool deleteConfirmed = false;
+  bool archiveConfirmed = false;
 };
-enum class FileOperationStage { JournalSynced, DestinationPublished, CachePublished, StatePublished, InventoryPublished, SourceRemoved, StateRemoved, Completed };
+enum class FileOperationStage { JournalSynced, DestinationPublished, CachePublished, StatePublished, InventoryPublished, SourceRemoved, StateRemoved, Completed, ArchiveRemoved, ArchiveFileRemoved };
 struct FileOperationResult {
   FileOperationKind kind;
   core::TorrentHash hash;
   std::uint64_t filesMoved = 0, filesDeleted = 0;
   bool recovered = false;
+  bool torrentArchiveDeleted=false;
 };
 class PreparedFileOperation final {
 public:
@@ -70,12 +80,16 @@ private:
 std::expected<PreparedFileOperation,Error> prepareFileOperation(
     const ProfileLease&,const FileOperationRequest&,std::stop_token = {});
 std::expected<FileOperationConfirmation,Error> confirmFileOperation(
-    const PreparedFileOperation&,std::string_view acceptedApprovalScopeDigest,bool deleteConfirmed);
+    const PreparedFileOperation&,std::string_view acceptedApprovalScopeDigest,bool deleteConfirmed,
+    bool archiveConfirmed=false);
 // Borrowed lease; caller guarantees no retained handle and no concurrent profile
 // work. Cancellation is observed before the first durable journal only. Errors
 // after mutation require explicit recovery; never retry a consumed plan.
 std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease&,PreparedFileOperation&&,
     const FileOperationConfirmation&,void(*observer)(FileOperationStage) = nullptr,std::stop_token = {});
+// Original default true; Boolean tests the low32 integer from held biglybt.config. Read-only;
+// malformed values/errors remain explicit, never materialized or overwritten.
+std::expected<bool,Error> torrentArchiveDeletionPreference(const ProfileLease&,std::stop_token = {});
 bool hasPendingFileOperation(const ProfileLease&) noexcept;
 std::expected<std::optional<FileOperationResult>,Error> recoverFileOperation(
     const ProfileLease&,void(*observer)(FileOperationStage) = nullptr);

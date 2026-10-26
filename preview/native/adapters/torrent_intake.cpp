@@ -4,6 +4,7 @@
 #include "file_io.hpp"
 #include "file_operation_io.hpp"
 #include "original_storage_defaults.hpp"
+#include "biglybtc/original_file_links.hpp"
 
 #include "biglybtc/state_cache.hpp"
 #include "biglybtc/torrent_layout.hpp"
@@ -278,6 +279,7 @@ IntakeFileOptions fileOptions(const ProfileLease& lease,const MetadataSubject& s
   }
   validateFileOptions(source,result);checkCompactAbsence(source.layout,result,destination);return result;
 }
+#include "hybrid_alias_intake.inc"
 struct Plan {
   core::TorrentHash hash;
   std::string metadata, destination, profile, state, inventory;
@@ -285,9 +287,10 @@ struct Plan {
   bool stopped, forceStart;
   mode_t inventoryMode;
   std::optional<IntakeFileOptions> options;
+  std::optional<HybridAliasSource> alias;
 };
 Plan plan(std::string metadata, std::string destination, std::string profile,
-    std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart, std::optional<IntakeFileOptions> options = {}) {
+    std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart, std::optional<IntakeFileOptions> options = {}, std::optional<HybridAliasSource> alias = {}) {
   auto subject=metadataSubject(metadata);auto& torrent=subject.torrent;auto* original=&subject.layout;
   const auto hash=std::optional{subject.hash};const auto key=hash->bytes();
   const auto* digest=reinterpret_cast<const char*>(key.data());
@@ -304,15 +307,18 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   require(downloads && downloads->type == Node::Type::List, ErrorCode::Unsupported, "Intake requires current list-form inventory");
   auto saved = core::readLibrary(inventory);
   require(saved && saved->issues.empty() && saved->downloads.size() < 100000, ErrorCode::InvalidFormat, "Invalid original download inventory");
+  if(alias){validateHybridAlias(*alias,subject,inventory,destination);}
   std::set<std::string> identities;
   std::int64_t position = 0;
   for (const auto& entry : saved->downloads) {
     require(entry.hash && identities.insert(entry.hash->hex()).second, ErrorCode::Conflict, "Inventory has missing or duplicate torrent identity");
-    require(!knownAlias(*entry.hash), ErrorCode::Conflict, "Torrent or a conflicting full-hash alias is already in the saved inventory");
+    require(!knownAlias(*entry.hash)||(alias&&*entry.hash==alias->hash), ErrorCode::Conflict,
+        "Torrent or a conflicting full-hash alias is already in the saved inventory");
     if (entry.position) { position = std::max(position, *entry.position); }
   }
   for (const auto& paused : saved->paused) {
-    require(!knownAlias(paused.hash), ErrorCode::Conflict, "An existing pause record already owns the imported/full-hash alias");
+    require(!knownAlias(paused.hash)||(alias&&paused.hash==alias->hash), ErrorCode::Conflict,
+        "An existing pause record already owns the imported/full-hash alias");
   }
   require(position < std::numeric_limits<std::int64_t>::max(), ErrorCode::InvalidFormat, "Inventory position overflow");
   const auto archive = profile + "/torrents/" + hash->hex() + ".torrent";
@@ -340,7 +346,7 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   for (std::size_t n = 0; n < original->files.size(); ++n) { stores += options ? "1:"+std::string(1,options->stores[n]) : "1:L"; }
   if(options&&options->reorderMinimumMiB){put(attributes,"reordermb",i(*options->reorderMinimumMiB));}
   put(attributes, "storetypes", stores + 'e');
-  put(attributes, "networks", "l6:Publice");
+  if(!alias){put(attributes, "networks", "l6:Publice");}
   put(attributes, "resumecomplete", "i1e");
   put(attributes, "filedownloaded", "de");
   if(options){
@@ -370,11 +376,12 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   auto after = inventory.serialize();
   auto state = torrent.serialize();
   require(after.size() <= MaximumInventory && state.size() <= MaximumInventory, ErrorCode::InvalidFormat, "Intake outputs exceed limits");
+  if(alias){metadata=state;} // Alternate archive also requires fresh verification; source stays untouched.
   auto verify = core::readLibrary(parse(after));
   require(verify && verify->issues.empty() && verify->downloads.size() == saved->downloads.size() + 1,
       ErrorCode::InvalidFormat, "New inventory failed its original reader");
   return {*hash, std::move(metadata), std::move(destination), std::move(profile), std::move(state), std::move(after),
-      std::move(before), std::move(oldBackup), stopped, forceStart, static_cast<mode_t>(mode & 0777),std::move(options)};
+      std::move(before), std::move(oldBackup), stopped, forceStart, static_cast<mode_t>(mode & 0777),std::move(options),std::move(alias)};
 }
 std::string journalBytes(const Plan& p) {
   std::string optionalOptions;
@@ -382,6 +389,12 @@ std::string journalBytes(const Plan& p) {
     std::string value="d"+b("policy")+b(p.options->policy)+b("stores")+b(p.options->stores);
     if(p.options->reorderMinimumMiB){value+=b("reordermb")+i(*p.options->reorderMinimumMiB);}
     optionalOptions=b("fileOptions")+value+'e';
+  }
+  if(p.alias){
+    const auto& a=*p.alias;
+    optionalOptions+=b("hybridAlias")+"d"+b("hash")+b(hashBytes(a.hash))+b("state")+b(a.state)
+        +b("cache_present")+i(a.cache?1:0)+b("cache")+b(a.cache.value_or(""))
+        +b("sdev")+i(a.stateDevice)+b("sino")+i(a.stateInode)+b("cdev")+i(a.cacheDevice)+b("cino")+i(a.cacheInode)+'e';
   }
   return "d" + b("version") + "i1e" + b("metadata") + b(p.metadata) + b("destination") + b(p.destination)
       + b("profile") + b(p.profile) + b("stopped") + i(p.stopped ? 1 : 0) + b("mode") + i(p.inventoryMode)
@@ -402,7 +415,8 @@ Plan readJournal(std::string bytes, const std::string& profile) {
   uniqueKeys(document.root());
   const auto* force = document.find("forceStart");
   const auto* optionsNode=document.find("fileOptions");
-  require(document.root().children.size()==20+(force?2U:0U)+(optionsNode?2U:0U)
+  const auto* aliasNode=document.find("hybridAlias");
+  require(document.root().children.size()==20+(force?2U:0U)+(optionsNode?2U:0U)+(aliasNode?2U:0U)
       && integer(document.find("version")) == 1,
       ErrorCode::Unsupported, "Unknown intake journal version or fields");
   const auto before = integer(document.find("before_present"));
@@ -426,9 +440,22 @@ Plan readJournal(std::string bytes, const std::string& profile) {
     options=IntakeFileOptions{text(optionsNode->find("policy")),text(optionsNode->find("stores")),
         reorder?std::optional{integer(reorder)}:std::nullopt};
   }
+  std::optional<HybridAliasSource> alias;
+  if(aliasNode){
+    require(aliasNode->type==Node::Type::Dictionary&&aliasNode->children.size()==16,ErrorCode::InvalidFormat,"Invalid hybrid alias journal");
+    const auto hash=core::TorrentHash::parse(text(aliasNode->find("hash")));
+    const auto cached=integer(aliasNode->find("cache_present"));
+    const auto cache=text(aliasNode->find("cache"));
+    require(hash&&hash->bytes().size()==20&&(cached==0||cached==1)&&(cached||cache.empty()),ErrorCode::InvalidFormat,"Invalid hybrid source identity/cache");
+    const auto sdev=integer(aliasNode->find("sdev")),sino=integer(aliasNode->find("sino"));
+    const auto cdev=integer(aliasNode->find("cdev")),cino=integer(aliasNode->find("cino"));
+    require(sdev>=0&&sino>0&&cdev>=0&&cino>=0&&(cached?(cino>0):(cino==0&&cdev==0)),ErrorCode::InvalidFormat,"Invalid hybrid source inode");
+    alias=HybridAliasSource{*hash,text(aliasNode->find("state")),cached?std::optional{cache}:std::nullopt,
+        static_cast<std::uint64_t>(sdev),static_cast<std::uint64_t>(sino),static_cast<std::uint64_t>(cdev),static_cast<std::uint64_t>(cino)};
+  }
   return plan(text(document.find("metadata")), std::move(destination), profile,
       before ? std::optional{std::move(old)} : std::nullopt,
-      backup ? std::optional{std::move(bak)} : std::nullopt, stopped == 1, static_cast<mode_t>(mode), forceStart == 1,std::move(options));
+      backup ? std::optional{std::move(bak)} : std::nullopt, stopped == 1, static_cast<mode_t>(mode), forceStart == 1,std::move(options),std::move(alias));
 }
 struct Stage { Descriptor fd; struct stat info{}; };
 Stage stage(int root, const std::string& name, std::string_view data, mode_t mode) {
@@ -498,6 +525,7 @@ void apply(ProfileLease& lease, const Plan& p, std::string_view journal, void (*
   const int root = lease.directoryHandle();
   require(profilePath(lease) == p.profile, ErrorCode::Conflict, "Profile moved during intake");
   inventoryCurrent(root, p);
+  if(p.alias){hybridSourceCurrent(root,*p.alias);}
   if(p.options){const auto source=metadataSubject(p.metadata);checkCompactAbsence(source.layout,*p.options,p.destination);}
   auto active = childDirectory(root, "active", true);
   auto archive = childDirectory(root, "torrents", true);
@@ -515,6 +543,7 @@ void apply(ProfileLease& lease, const Plan& p, std::string_view journal, void (*
       ErrorCode::Conflict, "Published intake artifacts changed before inventory admission");
   require(profilePath(lease) == p.profile, ErrorCode::Conflict, "Profile moved during intake");
   inventoryCurrent(root, p);
+  if(p.alias){hybridSourceCurrent(root,*p.alias);}
   if(p.options){const auto source=metadataSubject(p.metadata);checkCompactAbsence(source.layout,*p.options,p.destination);}
   auto current = read(root, "downloads.config", MaximumInventory);
   if (contents(current) != std::optional{p.inventory}) {
@@ -551,6 +580,33 @@ void cacheAbsent(int root, const core::TorrentHash& hash) {
   require(cache && cache->issues.empty() && !cache->torrents.contains(hash.hex()),
       ErrorCode::Conflict, "Existing cached identity conflicts with new intake");
 }
+core::TorrentHash commitIntakePlan(ProfileLease& lease,Plan& p,void(*observer)(TorrentIntakeStage),std::stop_token stop) {
+  const int root=lease.directoryHandle();
+  auto active = childDirectory(root, "active", false);
+    auto archive = childDirectory(root, "torrents", false);
+    if (active.get() >= 0) {
+      for (const auto& suffix : {".dat", ".dat.bak", ".dat.saving", ".dat.bak.saving", ".dat.import"}) {
+        absent(active.get(), p.hash.hex() + suffix);
+      }
+    }
+    if (archive.get() >= 0) {
+      for (const auto& suffix : {".torrent", ".torrent.import", ".torrent.bak", ".torrent.saving"}) {
+        absent(archive.get(), p.hash.hex() + suffix);
+      }
+    }
+    cacheAbsent(root, p.hash);
+    if(p.alias){hybridSourceCurrent(root,*p.alias);}
+    const auto journal = journalBytes(p);
+    require(journal.size() <= MaximumJournal, ErrorCode::InvalidFormat, "Intake journal exceeds its bounded limit");
+    require(!stop.stop_requested(),ErrorCode::Cancelled,"Torrent import cancelled before commit");
+    auto fd = stage(root, JournalSaving, journal, 0600);
+    verifyStage(root, JournalSaving, fd);
+    inventoryCurrent(root, p);
+    move(root, JournalSaving, Journal, RENAME_NOREPLACE);
+    notify(observer, TorrentIntakeStage::JournalSynced);
+    apply(lease, p, journal, observer);
+    return p.hash;
+}
 } // namespace
 
 static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
@@ -575,29 +631,7 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     require(before || !backup, ErrorCode::Conflict, "Resolve missing inventory primary before intake");
     auto p = plan(std::move(source->bytes), destination.native(), profile, contents(before), contents(backup),
         stopped, before ? before->info.st_mode : 0600, forceStart,std::move(options));
-    auto active = childDirectory(root, "active", false);
-    auto archive = childDirectory(root, "torrents", false);
-    if (active.get() >= 0) {
-      for (const auto& suffix : {".dat", ".dat.bak", ".dat.saving", ".dat.bak.saving", ".dat.import"}) {
-        absent(active.get(), p.hash.hex() + suffix);
-      }
-    }
-    if (archive.get() >= 0) {
-      for (const auto& suffix : {".torrent", ".torrent.import", ".torrent.bak", ".torrent.saving"}) {
-        absent(archive.get(), p.hash.hex() + suffix);
-      }
-    }
-    cacheAbsent(root, p.hash);
-    const auto journal = journalBytes(p);
-    require(journal.size() <= MaximumJournal, ErrorCode::InvalidFormat, "Intake journal exceeds its bounded limit");
-    require(!stop.stop_requested(),ErrorCode::Cancelled,"Torrent import cancelled before commit");
-    auto fd = stage(root, JournalSaving, journal, 0600);
-    verifyStage(root, JournalSaving, fd);
-    inventoryCurrent(root, p);
-    move(root, JournalSaving, Journal, RENAME_NOREPLACE);
-    notify(observer, TorrentIntakeStage::JournalSynced);
-    apply(lease, p, journal, observer);
-    return p.hash;
+    return commitIntakePlan(lease,p,observer,stop);
   } catch (const Failure& failure) { return std::unexpected(failure.error); }
   catch (const std::exception&) { return std::unexpected(Error{ErrorCode::Io, "Torrent intake failed; inspect pending journal before retry"}); }
 }
@@ -629,6 +663,60 @@ std::expected<core::TorrentHash,Error> importTorrentWithFileOptions(ProfileLease
     const TorrentIntakeMetadata& metadata,const fs::path& destination,bool stopped,
     std::span<const compat::FilePolicy> policies,void(*observer)(TorrentIntakeStage),bool forceStart,std::stop_token stop) {
   return importImpl(lease,metadata.data_->path,destination,stopped,observer,forceStart,policies,&metadata.data_->input,stop);
+}
+
+std::expected<core::TorrentHash,Error> importHybridAlias(ProfileLease& lease,const core::TorrentHash& from,
+    OriginalSelectedHash target,std::span<const OriginalTorrentIdentity> retained,
+    void(*observer)(TorrentIntakeStage),std::stop_token stop) {
+  try {
+    require(!stop.stop_requested(),ErrorCode::Cancelled,"Hybrid alias cancelled before commit");
+    require(target==OriginalSelectedHash::V1||target==OriginalSelectedHash::V2,ErrorCode::InvalidFormat,"Invalid hybrid target version");
+    require(from.bytes().size()==20&&retained.size()<=100000,ErrorCode::InvalidFormat,"Bounded original hybrid source required");
+    const auto profile=profilePath(lease);const int root=lease.directoryHandle();
+    for(const auto* leaf:{Journal,JournalSaving,InventorySaving,BackupSaving,"downloads.config.saving",
+        "BiglyBTC.file-operation","BiglyBTC.file-operation.saving"}){absent(root,leaf);}
+    auto active=childDirectory(root,"active",false);
+    require(active.get()>=0,ErrorCode::Missing,"Original hybrid state directory unavailable");
+    for(const auto* suffix:{".dat.saving",".dat.bak.saving"}){absent(active.get(),from.hex()+suffix);}
+    for(const auto* leaf:{"cache.dat.saving","cache.dat.bak.saving"}){absent(active.get(),leaf);}
+    const auto state=read(active.get(),from.hex()+".dat",MaximumMetadata);
+    require(state.has_value(),ErrorCode::Missing,"Original hybrid source state unavailable");
+    const auto cached=read(active.get(),"cache.dat",MaximumInventory);
+    if(!cached){absent(active.get(),"cache.dat.bak");} // Do not bypass original resilient-cache authority.
+    const auto bounded=[](auto value){return static_cast<std::uint64_t>(value)<=static_cast<std::uint64_t>(INT64_MAX);};
+    require(bounded(state->info.st_dev)&&bounded(state->info.st_ino)
+        &&(!cached||(bounded(cached->info.st_dev)&&bounded(cached->info.st_ino))),ErrorCode::Unsupported,"Hybrid inode exceeds journal range");
+    HybridAliasSource proof{from,state->bytes,contents(cached),state->info.st_dev,state->info.st_ino,
+        cached?static_cast<std::uint64_t>(cached->info.st_dev):0,cached?static_cast<std::uint64_t>(cached->info.st_ino):0};
+    auto original=metadataSubject(hybridSourceDocument(proof).serialize());
+    require(original.identity.full.v1&&original.identity.full.v2&&original.identity.originalKey==from
+        &&original.identity.selected!=target,ErrorCode::Conflict,"Select the other version of the actual hybrid source");
+    for(const auto& entry:retained){
+      require(take(compareOriginalTorrentIdentities(original.identity,entry))==OriginalIdentityRelation::Distinct,
+          ErrorCode::Conflict,"Retire all shared hybrid identities before companion publication");
+    }
+    auto properties=section(original.torrent.find("azureus_private_properties"));
+    if(target==OriginalSelectedHash::V1){properties=withoutKey(properties,"hybrid_hash_v2");}
+    else{put(properties,"hybrid_hash_v2","i1e");}
+    put(original.torrent,"azureus_private_properties",properties.serialize());
+    auto selected=withoutKey(parse(original.torrent.serialize(),MaximumMetadata),"torrent filename");
+    const auto before=read(root,"downloads.config",MaximumInventory),backup=read(root,"downloads.config.bak",MaximumInventory);
+    require(before.has_value(),ErrorCode::Missing,"Existing hybrid inventory primary required");
+    const auto inventory=parse(before->bytes);const auto library=core::readLibrary(inventory);
+    require(library&&library->issues.empty(),ErrorCode::InvalidFormat,"Invalid hybrid source inventory");
+    const core::SavedDownload* old=nullptr;
+    for(const auto& row:library->downloads){if(row.hash&&*row.hash==from){require(!old,ErrorCode::Conflict,"Duplicate source key");old=&row;}}
+    require(old,ErrorCode::Conflict,"Original hybrid source is not in this library");
+    destinationPath(old->saveDirectory);
+    std::vector<compat::FilePolicy> policy;std::string stores;
+    for(const auto& file:original.layout.files){policy.push_back({file.padding,0});stores+='L';}
+    const auto encoded=compat::encodeOriginalFilePolicy(policy);
+    require(encoded.has_value(),ErrorCode::Unsupported,"Cannot encode explicit alias selection");
+    auto planValue=plan(selected.serialize(),old->saveDirectory,profile,contents(before),contents(backup),true,
+        before->info.st_mode,false,IntakeFileOptions{*encoded,std::move(stores),{}},std::move(proof));
+    return commitIntakePlan(lease,planValue,observer,stop);
+  }catch(const Failure& failure){return std::unexpected(failure.error);}
+  catch(const std::exception&){return std::unexpected(Error{ErrorCode::Io,"Hybrid companion publication failed; inspect pending intake"});}
 }
 
 bool hasPendingTorrentIntake(const ProfileLease& lease) noexcept {

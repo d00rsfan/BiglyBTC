@@ -3,6 +3,7 @@
 
 #include "local_session.hpp"
 #include "managed_download.hpp"
+#include "original_torrent_identity.hpp"
 #include "live_settings.hpp"
 #include "biglybtc/runtime_metrics.hpp"
 #include "biglybtc/peer_payload_ledger.hpp"
@@ -113,7 +114,7 @@ public:
   std::optional<LiveSettingsSnapshot> liveSettings() const noexcept;
   // Optional original-rule controller. Pure validation precedes activation;
   // it uses this owner's sole pump and never enables a second LT scheduler.
-  std::expected<void, storage::Error> configureQueuePolicy(const core::QueuePolicy&);
+  std::expected<void, storage::Error> configureQueuePolicy(const core::QueuePolicy&, int configuredSmoothingSeconds=30);
   std::optional<core::QueuePolicy> queuePolicy() const;
   // Worker-affine, nonblocking admission/control. The sole poll pump advances
   // checking, transfer, flush/removal and compatible checkpoints for every hash.
@@ -124,6 +125,11 @@ public:
   // Release retained path descriptors/obsolete overlay only after successful
   // flush, exact handle removal and compatible checkpoint. Owner counters stay.
   std::expected<void, storage::Error> forgetManaged(const core::TorrentHash&, bool removePeerHints = false);
+  // Uses THIS actual owner, not a caller-supplied empty retained list. Stop
+  // first; certified source retirement releases obsolete descriptors through
+  // forgetManaged. New companion remains stopped and is never auto-admitted.
+  std::expected<core::TorrentHash, storage::Error> createHybridCompanion(
+      storage::ProfileLease&, const core::TorrentHash&, storage::OriginalSelectedHash, std::stop_token = {});
   std::vector<ManagedDownloadStatus> managedDownloads() const;
   bool managedAvailable() const noexcept;
   std::optional<unsigned short> tcpListenPort() const noexcept;

@@ -228,6 +228,28 @@ private slots:
     const auto* future = saved->find("future.root"); QVERIFY(future);
     QCOMPARE(std::string(future->bytes), std::string("opaque-selected-swarm"));
   }
+  void companionRequiresActualRetirementAndOwnerSuppliesSharingProof() {
+    fixture::Fixture generated(false);
+    auto created=engine::PersistentSession::create({1901,1902,1903});QVERIFY(created);auto owner=std::move(*created);
+    QVERIFY(owner->startManaged(*generated.lease,{.hash=*generated.key,.manuallyPaused=true}));
+    QTRY_VERIFY_WITH_TIMEOUT(owner->poll().has_value()&&status(*owner,*generated.key)
+        &&status(*owner,*generated.key)->phase==engine::ManagedPhase::Paused,10000);
+    const auto before=fixture::read(generated.profile/"downloads.config");
+    const auto refused=owner->createHybridCompanion(*generated.lease,*generated.key,storage::OriginalSelectedHash::V2);
+    QVERIFY(!refused);QCOMPARE(refused.error().code,storage::ErrorCode::Conflict);
+    QCOMPARE(fixture::read(generated.profile/"downloads.config"),before);
+    QVERIFY(owner->stopManaged(*generated.key));
+    QTRY_VERIFY_WITH_TIMEOUT(owner->poll().has_value()&&status(*owner,*generated.key)
+        &&status(*owner,*generated.key)->phase==engine::ManagedPhase::Stopped&&!status(*owner,*generated.key)->retained,10000);
+    const auto counterpart=owner->createHybridCompanion(*generated.lease,*generated.key,storage::OriginalSelectedHash::V2);
+    QVERIFY2(counterpart,counterpart?"":counterpart.error().message.c_str());QVERIFY(*counterpart!=*generated.key);
+    QVERIFY(owner->startManaged(*generated.lease,{.hash=*counterpart,.manuallyPaused=true}));
+    const auto oldState=fixture::read(generated.state);
+    const auto overlap=owner->startManaged(*generated.lease,{.hash=*generated.key,.manuallyPaused=true});
+    QVERIFY(!overlap);QCOMPARE(overlap.error().code,storage::ErrorCode::Conflict);QCOMPARE(fixture::read(generated.state),oldState);
+    const auto closed=owner->close(std::chrono::steady_clock::now()+5s);
+    QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
+  }
   void optionalTrafficFaultsRetainOnlyTheProvenPayloadBridge_data() {
     QTest::addColumn<int>("mode");
     QTest::newRow("actual-v2-positive-control")<<static_cast<int>(TrafficFault::None);

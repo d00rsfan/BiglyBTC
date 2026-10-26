@@ -68,7 +68,7 @@ template<class Predicate> engine::ManagedDownloadStatus until(engine::Persistent
 int main(int argc, char** argv) {
   QCoreApplication application(argc, argv);
   if (argc != 8) {
-    std::cerr << "Usage: selected_hybrid_handoff_driver WORK_ROOT PROFILE METADATA EXPECTED OUTPUT partial|complete|layout MISSING_REAL_PIECE\n";
+    std::cerr << "Usage: selected_hybrid_handoff_driver WORK_ROOT PROFILE METADATA EXPECTED OUTPUT partial|complete|layout|alias-v1|alias-v2 MISSING_REAL_PIECE\n";
     return 1;
   }
   try {
@@ -80,7 +80,7 @@ int main(int argc, char** argv) {
     require(::lstat(root.c_str(), &rootInfo) == 0 && S_ISDIR(rootInfo.st_mode) && rootInfo.st_uid == ::geteuid()
         && (rootInfo.st_mode & 077) == 0, "Owned private test root required");
     ownedPath(root, profile, true); ownedPath(root, metadataPath, false);
-    require(mode == "partial" || mode == "complete" || mode == "layout", "Invalid managed handoff mode");
+    require(mode == "partial" || mode == "complete" || mode == "layout" || mode == "alias-v1" || mode == "alias-v2", "Invalid managed handoff mode");
     require(inside(root, output) && output.lexically_normal() == output && !fs::exists(output)
         && !fs::is_symlink(fs::symlink_status(output)), "Fresh output under owned root required");
     ownedPath(root, output.parent_path(), true);
@@ -139,6 +139,39 @@ int main(int argc, char** argv) {
         {"full_v1",hashes.has_v1()?hexFact(hashes.v1.to_string()):QStringLiteral("-")},{"full_v2",hexFact(hashes.v2.to_string())},{"total_pieces",totalPieces}};
       QFile report(text(output/"result.json"));require(report.open(QIODevice::WriteOnly|QIODevice::NewOnly),"Cannot publish layout facts");
       const auto raw=QJsonDocument(facts).toJson(QJsonDocument::Indented);require(report.write(raw)==raw.size()&&report.flush(),"Cannot write layout facts");return 0;
+    }
+    if(mode=="alias-v1"||mode=="alias-v2"){
+      auto lease=storage::ProfileLease::acquire(profile);require(lease.has_value(),"Cannot acquire actual alias profile lease");
+      auto inventory=storage::ConfigFile::load(*lease,"downloads.config");require(inventory.has_value(),"Cannot load actual original alias inventory");
+      const auto library=core::readLibrary(inventory->document());
+      require(library&&library->issues.empty()&&library->downloads.size()==1&&library->downloads.front().hash,
+          "Alias fixture requires exactly one actual original saved source");
+      const auto source=*library->downloads.front().hash;
+      require(source==exactIdentity->originalKey,"Saved source differs from actual selected raw subject");
+      const auto target=mode=="alias-v2"?storage::OriginalSelectedHash::V2:storage::OriginalSelectedHash::V1;
+      require(target!=exactIdentity->selected,"Alias fixture must select the other full hybrid identity");
+      auto created=engine::PersistentSession::create({171,172,173});
+      require(created.has_value(),"Alias fixture requires an approved source-bound real owner");auto owner=std::move(*created);
+      require(owner->configureNetwork(engine::NetworkPolicy{}).has_value()&&owner->startIdle(*lease).has_value(),
+          "Cannot initialize the actual isolated owner under the supplied lease");
+      const auto companion=owner->createHybridCompanion(*lease,source,target);
+      if(!companion){throw std::runtime_error(companion.error().message);}
+      require(owner->managedDownloads().empty(),"A passive companion must not activate any handle");
+      const auto closed=owner->close(Clock::now()+10s);
+      require(closed.sessionJoined&&closed.retirement.storageReleased&&closed.retirement.peerCounters&&!closed.checkpointFailure,
+          "Actual passive alias owner did not join/release/certify its own epoch");
+      inventory=storage::ConfigFile::load(*lease,"downloads.config");require(inventory.has_value(),"Cannot read published alias inventory");
+      const auto after=core::readLibrary(inventory->document());
+      require(after&&after->issues.empty()&&after->downloads.size()==2&&after->downloads[0].hash==source
+          &&after->downloads[1].hash==*companion&&after->downloads[1].startup==core::StartupState::Stopped,
+          "Alias publication did not retain unique source plus one stopped companion");
+      const auto hashes=metadata->info_hashes();QJsonObject facts{{"status","STOPPED_HYBRID_COMPANION"},
+          {"source",QString::fromStdString(source.hex())},{"target",QString::fromStdString(companion->hex())},
+          {"full_v1",hexFact(hashes.v1.to_string())},{"full_v2",hexFact(hashes.v2.to_string())},
+          {"session_joined",closed.sessionJoined},{"storage_released",closed.retirement.storageReleased},
+          {"payload_admitted",false}};
+      QFile report(text(output/"result.json"));require(report.open(QIODevice::WriteOnly|QIODevice::NewOnly),"Cannot publish actual alias facts");
+      const auto bytes=QJsonDocument(facts).toJson(QJsonDocument::Indented);require(report.write(bytes)==bytes.size()&&report.flush(),"Cannot write actual alias facts");return 0;
     }
     // Actual owner tests retain the exact original-to-engine range gate.
     for(std::size_t index=0;index<layout->files.size();++index){const auto& file=layout->files[index];const auto i=lt::file_index_t{static_cast<int>(index)};

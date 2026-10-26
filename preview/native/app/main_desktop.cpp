@@ -132,6 +132,7 @@ int main(int argc, char** argv) {
     QObject::connect(&bridge, &Bridge::messageReady, &window, &Window::setMessage);
     QObject::connect(&window, &Window::refreshRequested, &bridge, &Bridge::refresh);
     QObject::connect(&window, &Window::downloadActionRequested, &bridge, &Bridge::downloadAction);
+    QObject::connect(&window, &Window::hybridCompanionRequested, &bridge, &Bridge::createHybridCompanion);
     QObject::connect(&window, &Window::filePolicyRequested, &bridge, &Bridge::filePolicy);
     QObject::connect(&window, &Window::fileCompactionRequested, &bridge, &Bridge::compactFile);
     QObject::connect(&window,&Window::fileOperationPlanRequested,&bridge,[&](biglybtc::ui::FileOperationRequest r){if(!bridge.prepareFileOperation(r)){window.rejectFileOperationRequest(r);}});

@@ -1,6 +1,6 @@
 // Included after SessionBridge::Host, within biglybtc::app.
 namespace {
-storage::FileOperationRequest storageRequest(const ui::FileOperationRequest& request) {
+storage::FileOperationRequest storageRequest(const ui::FileOperationRequest& request,bool deleteArchive=false) {
   storage::FileOperationKind kind;
   switch (request.operation) {
     case ui::FileOperation::RemoveKeepData: kind=storage::FileOperationKind::RemoveKeepData;break;
@@ -11,13 +11,16 @@ storage::FileOperationRequest storageRequest(const ui::FileOperationRequest& req
   }
   storage::FileOperationRequest value{identity(request.target),kind,{}};
   if(!request.destinationParent.isEmpty()){value.destinationParent=std::filesystem::path(request.destinationParent.toUtf8().toStdString());}
-  return value;
+  value.deleteTorrentFile=deleteArchive;return value;
 }
 bool sameFilePlan(const ui::FileOperationPlanPacket& left,const ui::FileOperationPlanPacket& right) {
   return left.request==right.request&&left.approvalScopeDigest==right.approvalScopeDigest
       &&left.sourceRoot==right.sourceRoot&&left.targetRoot==right.targetRoot
       &&left.presentFiles==right.presentFiles&&left.missingFiles==right.missingFiles
       &&left.totalBytes==right.totalBytes&&left.failure==right.failure
+      &&left.deleteTorrentFile==right.deleteTorrentFile&&left.archivePath==right.archivePath
+      &&left.archiveBytes==right.archiveBytes&&left.archivePresent==right.archivePresent&&left.archiveInternalState==right.archiveInternalState
+      &&left.archiveBackupPath==right.archiveBackupPath&&left.archiveBackupBytes==right.archiveBackupBytes&&left.archiveBackupPresent==right.archiveBackupPresent
       &&std::ranges::equal(left.paths,right.paths,[](const auto& a,const auto& b){
         return a.source==b.source&&a.destination==b.destination&&a.bytes==b.bytes&&a.present==b.present;
       });
@@ -27,6 +30,8 @@ ui::FileOperationPlanPresentation filePlanPacket(const ui::FileOperationRequest&
   packet->approvalScopeDigest=text(p.approvalScopeDigest);packet->sourceRoot=QString::fromStdString(p.sourceRoot.string());packet->targetRoot=QString::fromStdString(p.targetRoot.string());
   packet->presentFiles=p.presentFiles;packet->missingFiles=p.missingFiles;packet->totalBytes=p.presentBytes;
   for(const auto& file:p.files){packet->paths.push_back({QString::fromStdString(file.source.string()),QString::fromStdString(file.destination.string()),static_cast<quint64>(std::max<std::int64_t>(0,file.actualBytes)),file.present});}
+  if(p.torrentArchive){const auto& archive=*p.torrentArchive;packet->deleteTorrentFile=true;packet->archivePath=QString::fromStdString(archive.path.string());packet->archiveBytes=archive.bytes;packet->archivePresent=archive.present;packet->archiveInternalState=archive.internalState;}
+  if(p.torrentArchiveBackup){const auto& backup=*p.torrentArchiveBackup;packet->archiveBackupPath=QString::fromStdString(backup.path.string());packet->archiveBackupBytes=backup.bytes;packet->archiveBackupPresent=backup.present;}
   return packet;
 }
 }
@@ -42,7 +47,10 @@ bool SessionBridge::prepareFileOperation(ui::FileOperationRequest request) {
       if(take(storage::recoverTorrentIntake(host_->lease))){throw Failure{{storage::ErrorCode::Conflict,"A torrent import was recovered; refresh the library"}};}
       host_->accepts(request.target);
       if(host_->pendingTargets.contains(request.target.hash.toStdString())){throw Failure{{storage::ErrorCode::Unsupported,"Metadata must be resolved before operating on torrent files"}};}
-      auto prepared=take(storage::prepareFileOperation(host_->lease,storageRequest(request),stop));
+      const bool removal=request.operation==ui::FileOperation::RemoveKeepData||request.operation==ui::FileOperation::RemoveDeleteData;
+      const bool deleteArchive=removal?(request.deleteTorrentFile?*request.deleteTorrentFile:take(storage::torrentArchiveDeletionPreference(host_->lease,stop))):false;
+      if(!removal&&request.deleteTorrentFile.value_or(false)){throw Failure{{storage::ErrorCode::Unsupported,"Archive deletion requires a removal request"}};}
+      auto prepared=take(storage::prepareFileOperation(host_->lease,storageRequest(request,deleteArchive),stop));
       result=filePlanPacket(request,prepared.preview());host_->filePlan.emplace(std::move(prepared));host_->filePlanPacket=result;
     }catch(const Failure& e){failure->failure=text(e.error.message);}
     catch(const std::exception& e){failure->failure=QString::fromUtf8(e.what());}
@@ -62,13 +70,13 @@ bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
       if(!host_||host_->columnLayoutSession!=request.session||!host_->filePlan||!host_->filePlanPacket||!sameFilePlan(*host_->filePlanPacket,*value.plan)){throw Failure{{storage::ErrorCode::Conflict,"This file-operation plan was replaced; prepare it again"}};}
       if(host_->fileRecoveryRequired){throw Failure{{storage::ErrorCode::Conflict,"Restart to recover the interrupted file operation first"}};}
       host_->accepts(request.target);
-      const auto stored=storageRequest(request);const auto approved=value.plan->approvalScopeDigest.toStdString();
-      take(storage::confirmFileOperation(*host_->filePlan,approved,value.deleteConfirmed));
+      const auto stored=storageRequest(request,value.plan->deleteTorrentFile);const auto approved=value.plan->approvalScopeDigest.toStdString();
+      take(storage::confirmFileOperation(*host_->filePlan,approved,value.deleteConfirmed,value.archiveConfirmed));
       // Revalidate user-visible scope before stopping anything. Ordinary rates,
       // counts and active-time updates do not change this approval digest.
       {
         auto before=take(storage::prepareFileOperation(host_->lease,stored,stop));
-        take(storage::confirmFileOperation(before,approved,value.deleteConfirmed));
+        take(storage::confirmFileOperation(before,approved,value.deleteConfirmed,value.archiveConfirmed));
       }
       host_->filePlan.reset();
       bool readmit=false,paused=false,force=false,queued=false;std::uint64_t oldAdmission=0;
@@ -101,7 +109,7 @@ bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
       }
       // Retirement checkpoints legitimately update saved counters/time. Bind a
       // fresh execution CAS only if the exact approved path/inode scope survives.
-      auto current=take(storage::prepareFileOperation(host_->lease,stored,stop));auto confirmed=take(storage::confirmFileOperation(current,approved,value.deleteConfirmed));
+      auto current=take(storage::prepareFileOperation(host_->lease,stored,stop));auto confirmed=take(storage::confirmFileOperation(current,approved,value.deleteConfirmed,value.archiveConfirmed));
       auto applied=storage::applyFileOperation(host_->lease,std::move(current),confirmed,nullptr,stop);
       if(!applied){host_->fileRecoveryRequired=storage::hasPendingFileOperation(host_->lease);throw Failure{applied.error()};}
       host_->filePlanPacket.reset();host_->known.erase(stored.hash.hex());host_->admissionFailures.erase(stored.hash.hex());host_->lastManagedPhases.erase(stored.hash.hex());host_->schedulerMemberships.erase(stored.hash.hex());

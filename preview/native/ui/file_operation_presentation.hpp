@@ -4,6 +4,7 @@
 #include <QMetaType>
 #include <QStringList>
 #include <memory>
+#include <optional>
 #include <vector>
 
 namespace biglybtc::ui {
@@ -14,6 +15,7 @@ struct FileOperationRequest {
   Target target;
   FileOperation operation=FileOperation::RemoveKeepData;
   QString destinationParent;
+  std::optional<bool> deleteTorrentFile{}; // null: resolve original preference in the worker.
   bool operator==(const FileOperationRequest&) const = default;
 };
 struct FileOperationPath {
@@ -31,11 +33,19 @@ struct FileOperationPlanPacket {
   std::vector<FileOperationPath> paths;
   quint64 presentFiles=0, missingFiles=0, totalBytes=0; // totalBytes = presentBytes.
   QString failure;
+  bool deleteTorrentFile=false;
+  QString archivePath;
+  quint64 archiveBytes=0;
+  bool archivePresent=false,archiveInternalState=false;
+  QString archiveBackupPath;
+  quint64 archiveBackupBytes=0;
+  bool archiveBackupPresent=false;
 };
 using FileOperationPlanPresentation=std::shared_ptr<const FileOperationPlanPacket>;
 struct FileOperationSubmission {
   FileOperationPlanPresentation plan;
   bool deleteConfirmed=false;
+  bool archiveConfirmed=false;
 };
 struct FileOperationResultPacket {
   FileOperationRequest request;

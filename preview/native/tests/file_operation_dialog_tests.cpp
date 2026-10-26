@@ -23,10 +23,10 @@ std::shared_ptr<FileOperationPlanPacket> planFor(const FileOperationRequest& req
       {QStringLiteral("/owned/source/missing"),{},0,false},{QStringLiteral("/owned/source/empty"),{},0,true}};
   plan->presentFiles=2;plan->missingFiles=1;plan->totalBytes=4096;return plan;
 }
-bool capture(QWidget& widget) {
+bool capture(QWidget& widget,const QString& filename=QStringLiteral("file-operation-preview.png")) {
   const auto root=qgetenv("BIGLYBTC_FILEOPS_CAPTURE_DIRECTORY");if(root.isEmpty()){return true;}
   const QFileInfo info(QString::fromLocal8Bit(root));if(!info.isAbsolute()||!info.isDir()||info.isSymLink()||info.ownerId()!=static_cast<uint>(::geteuid())){return false;}
-  const auto destination=QDir(info.canonicalFilePath()).filePath(QStringLiteral("file-operation-preview.png"));if(QFileInfo(destination).isSymLink()){return false;}
+  const auto destination=QDir(info.canonicalFilePath()).filePath(filename);if(QFileInfo(destination).isSymLink()){return false;}
   return widget.grab().save(destination,"PNG");
 }
 class EnabledHook final:public QObject {
@@ -54,6 +54,28 @@ private slots:
   auto* confirmation=dialog.findChild<QCheckBox*>("file-operation-confirm-delete");confirmation->setChecked(true);QVERIFY(execute->isEnabled());
   QVERIFY(capture(dialog));execute->click();QCOMPARE(writes.count(),1);const auto submitted=writes[0][0].value<FileOperationSubmission>();
   QVERIFY(submitted.deleteConfirmed);QCOMPARE(submitted.plan->approvalScopeDigest,QString(64,QChar('b')));QCOMPARE(submitted.plan->paths[0].source,QStringLiteral("/owned/source/<data>"));QVERIFY(dialog.pending());
+ }
+ void originalArchivePreferenceIsReviewedAndCheckboxChangesNeedNewPlan() {
+  FileOperationDialog dialog;QSignalSpy reads(&dialog,&FileOperationDialog::planRequested),writes(&dialog,&FileOperationDialog::executeRequested);
+  QVERIFY(dialog.beginOperation(1,7,target(),FileOperation::RemoveKeepData));dialog.show();QTRY_COMPARE(reads.count(),1);
+  const auto initial=reads[0][0].value<FileOperationRequest>();QVERIFY(!initial.deleteTorrentFile);
+  auto packet=planFor(initial);packet->deleteTorrentFile=true;packet->archivePath=QStringLiteral("/owned/archive.torrent");packet->archivePresent=true;packet->archiveBytes=300;packet->archiveBackupPath=packet->archivePath+QStringLiteral(".bak");
+  QVERIFY(dialog.setPlan(packet));auto* checkbox=dialog.findChild<QCheckBox*>("file-operation-delete-archive");QVERIFY(checkbox&&checkbox->isChecked());
+  QVERIFY(capture(dialog,QStringLiteral("file-operation-archive-preview.png")));
+  auto* table=dialog.findChild<QTableView*>("file-operation-paths");QCOMPARE(table->model()->rowCount(),5);QCOMPARE(table->model()->index(3,0).data().toString(),packet->archivePath);
+  checkbox->setChecked(false);QVERIFY(!dialog.plan());dialog.accept();QCOMPARE(writes.count(),0);QVERIFY(!dialog.setPlan(packet));
+  dialog.findChild<QPushButton*>("file-operation-review")->click();QCOMPARE(reads.count(),2);const auto explicitKeep=reads[1][0].value<FileOperationRequest>();
+  QVERIFY(explicitKeep.deleteTorrentFile.has_value());QVERIFY(!*explicitKeep.deleteTorrentFile);QVERIFY(explicitKeep.request>initial.request);
+  auto wrong=planFor(explicitKeep);wrong->deleteTorrentFile=true;wrong->archivePath=packet->archivePath;wrong->archiveBackupPath=packet->archiveBackupPath;QVERIFY(!dialog.setPlan(wrong));
+  dialog.findChild<QPushButton*>("file-operation-review")->click();QCOMPARE(reads.count(),3);const auto current=reads[2][0].value<FileOperationRequest>();QVERIFY(dialog.setPlan(planFor(current)));
+  dialog.accept();QCOMPARE(writes.count(),1);const auto value=writes[0][0].value<FileOperationSubmission>();QVERIFY(!value.archiveConfirmed);QVERIFY(!value.plan->deleteTorrentFile);
+ }
+ void archiveConfirmationUsesImmutableExactWorkerScope() {
+  FileOperationDialog dialog;QSignalSpy reads(&dialog,&FileOperationDialog::planRequested),writes(&dialog,&FileOperationDialog::executeRequested);
+  QVERIFY(dialog.beginOperation(2,4,target(),FileOperation::RemoveKeepData));dialog.show();QTRY_COMPARE(reads.count(),1);auto packet=planFor(reads[0][0].value<FileOperationRequest>());
+  packet->deleteTorrentFile=true;packet->archivePath=QStringLiteral("/owned/actual.torrent");packet->archivePresent=true;packet->archiveBytes=123;packet->archiveBackupPath=packet->archivePath+QStringLiteral(".bak");
+  QVERIFY(dialog.setPlan(packet));packet->archivePath=QStringLiteral("/unreviewed/replacement");dialog.accept();QCOMPARE(writes.count(),1);
+  const auto value=writes[0][0].value<FileOperationSubmission>();QVERIFY(value.archiveConfirmed);QVERIFY(!value.deleteConfirmed);QCOMPARE(value.plan->archivePath,QStringLiteral("/owned/actual.torrent"));
  }
  void allOperationsKeepTargetIdentityAndDestinationEditsInvalidateApproval() {
   for(auto operation:{FileOperation::RemoveKeepData,FileOperation::Relocate,FileOperation::Relink}) {

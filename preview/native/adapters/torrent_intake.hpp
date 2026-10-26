@@ -4,6 +4,7 @@
 #include "biglybtc/file_policy.hpp"
 #include "biglybtc/torrent_layout.hpp"
 #include "profile.hpp"
+#include "original_torrent_identity.hpp"
 
 #include <expected>
 #include <filesystem>
@@ -54,6 +55,18 @@ std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLeas
     const TorrentIntakeMetadata&, const std::filesystem::path& destination, bool stopped,
     std::span<const compat::FilePolicy>, void (*observer)(TorrentIntakeStage) = nullptr,
     bool forceStart = false, std::stop_token = {});
+
+// Explicit stopped companion, matching original hybrid "run as other version"
+// identity shape. Source row/state/cache/control bytes remain unchanged. No
+// payload/engine effects, implicit merge, rekey or simultaneous owner permission.
+// Caller supplies COMPLETE current-owner retained identities (no default empty
+// convenience argument); matching/shared identities reject before any effects.
+// Initial bounded support: stopped nonforced list-form source, modern save root,
+// selected/unlinked explicit linear real files with no physical control leaves.
+std::expected<core::TorrentHash, Error> importHybridAlias(ProfileLease&,
+    const core::TorrentHash& source, OriginalSelectedHash target,
+    std::span<const OriginalTorrentIdentity> retained,
+    void (*observer)(TorrentIntakeStage) = nullptr, std::stop_token = {});
 
 bool hasPendingTorrentIntake(const ProfileLease&) noexcept;
 

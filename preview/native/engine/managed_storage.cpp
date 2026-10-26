@@ -340,6 +340,52 @@ TorrentNetworkSelection networks(const Document& state, const Node& attributes) 
   }
   return result;
 }
+// Called only on this fresh, privately owned LT parse AFTER its complete raw
+// info/full hashes and selected original key have been authenticated. This
+// projects a qualified v1 filename codec, never a file/piece geometry change.
+void projectManagedV1Names(const Document& source,const storage::OriginalTorrentIdentity& identity,
+    const compat::OriginalLayout& original,lt::torrent_info& metadata) {
+  const auto* info=source.find("info");
+  if(!identity.full.v1||identity.full.v2||!info||info->find("file tree")){return;}
+  bool qualifiedNames=info->find("name.utf-8")!=nullptr;
+  if(const auto* encoding=source.find("encoding")){
+    auto name=text(encoding);
+    std::ranges::transform(name,name.begin(),[](unsigned char c){return c>='A'&&c<='Z'?static_cast<char>(c+32):static_cast<char>(c);});
+    qualifiedNames=qualifiedNames||name=="iso-8859-1";
+  }
+  if(const auto* files=info->find("files")){
+    for(const auto& file:files->children){qualifiedNames=qualifiedNames||file.find("path.utf-8")!=nullptr;}
+  }
+  if(!qualifiedNames){return;} // All unrelated metadata keeps the strict path gate.
+  const auto& files=metadata.files();
+  require(original.bytes>0&&original.pieceLength>0&&original.files.size()==static_cast<std::size_t>(metadata.num_files())
+      &&original.pieceLength==metadata.piece_length()&&original.bytes==metadata.total_size()
+      &&original.bytes/original.pieceLength+(original.bytes%original.pieceLength!=0)==metadata.num_pieces(),
+      "Original filename projection cannot change file/piece geometry",ErrorCode::Unsupported);
+  // Validate EVERY original slot before performing even a runtime-only rename.
+  std::int64_t end=0;
+  for(std::size_t i=0;i<original.files.size();++i){
+    const auto& file=original.files[i];const auto index=lt::file_index_t{static_cast<int>(i)};
+    require(file.offset==end&&file.bytes>=0&&file.bytes<=std::numeric_limits<std::int64_t>::max()-end
+        &&file.offset==files.file_offset(index)&&file.bytes==files.file_size(index)
+        &&file.padding==files.pad_file_at(index),"Original filename projection indices differ",ErrorCode::Unsupported);
+    end+=file.bytes;
+    if(!file.padding){
+      const auto path=original.multifile?fs::path(original.name)/file.path:fs::path(file.path);
+      require(safeManagedRelative(path)&&std::ranges::none_of(path.native(),[](unsigned char c){return c<0x20||c==0x7f;}),
+          "Original decoded filename needs an unqualified filesystem conversion",ErrorCode::Unsupported);
+    }
+  }
+  require(end==original.bytes,"Original filename projection byte span differs",ErrorCode::Unsupported);
+  for(std::size_t i=0;i<original.files.size();++i){
+    const auto& file=original.files[i];if(file.padding){continue;}
+    metadata.rename_file(lt::file_index_t{static_cast<int>(i)},
+        (original.multifile?fs::path(original.name)/file.path:fs::path(file.path)).string());
+  }
+  const auto after=take(storage::originalTorrentIdentityFromLibtorrent(source,metadata));
+  require(after.full==identity.full&&after.originalKey==identity.originalKey&&after.selected==identity.selected,
+      "Runtime filename projection changed original raw identity",ErrorCode::Conflict);
+}
 struct ValidatedMetadata {std::shared_ptr<lt::torrent_info> info;storage::OriginalTorrentIdentity identity;};
 ValidatedMetadata metadata(const Document& state, const core::TorrentHash& hash, const compat::OriginalLayout& layout,
     const std::shared_ptr<const ManagedPayloadCounterBridge>& swarmBridge) {
@@ -350,7 +396,8 @@ ValidatedMetadata metadata(const Document& state, const core::TorrentHash& hash,
   done(storage::validateOriginalTorrentKey(identity,hash,true)); // Existing explicit32 reader policy.
   require(!(identity.selected==storage::OriginalSelectedHash::V2&&identity.full.v1)||swarmBridge,
       "Selected-v2 hybrid requires the exact qualified swarm provider",ErrorCode::Unsupported);
-  (void)take(projectOriginalLayout(layout,*info)); // Only one authenticated synthetic pure-v2 tail is optional.
+  projectManagedV1Names(state,identity,layout,*info);
+  (void)take(projectOriginalLayout(layout,*info)); // Full strict geometry/path validation still applies.
   return {std::move(info),std::move(identity)}; // Keep original trackers/web seeds for the explicit policy filter.
 }
 std::vector<lt::download_priority_t> priorities(const std::vector<compat::FilePolicy>& policy, const compat::OriginalLayout& layout) {
@@ -471,11 +518,8 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
         }
       }
     }
-    if (const auto* encoding=source.find("encoding")) {
-      auto name=text(encoding); std::erase_if(name,[](unsigned char c) { return c=='-'||c=='_'||c==' '; });
-      std::ranges::transform(name,name.begin(),[](unsigned char c) { return c>='A'&&c<='Z'?static_cast<char>(c+32):static_cast<char>(c); });
-      require(name=="utf8"||name=="utf8keys","Legacy filename encoding requires its codec adapter");
-    }
+    // The shared original layout owns the encoding/UTF8-key policy. Keeping a
+    // separate blanket UTF8 gate here would reject qualified Latin1 profiles.
     const auto geometry=compat::originalLayout(source);
     require(geometry.has_value(),"Invalid original managed geometry",ErrorCode::InvalidFormat); auto layout=*geometry;
     auto validated=metadata(source,hash,layout,swarmBridge);auto info=std::move(validated.info);auto identity=std::move(validated.identity);

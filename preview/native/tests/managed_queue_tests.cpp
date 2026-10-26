@@ -235,6 +235,48 @@ private slots:
     QVERIFY(finalRow.find("opaque.queue"));
     QCOMPARE(encoded(*finalRow.find("opaque.queue")),encoded(*oldRow.find("opaque.queue")));QVERIFY(fixture.intact());
   }
+  void actualTargetEtaIsAdmissionOwnedAndPauseClearsCurrentAuthority() {
+    test::OwnedEngineFixture fixture(false,true);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);
+    auto lease=held(fixture);auto service=owner();auto settings=policy(1,1);settings.downloadOrder=core::QueueDownloadOrder::Eta;
+    QVERIFY(service->configureQueuePolicy(settings,119));
+    QVERIFY(service->startManaged(lease,{.hash=*fixture.hash,.ownedLoopbackPeerPort=fixture.port()}));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{
+      const auto poll=service->poll();const auto observed=status(*service,*fixture.hash);
+      return poll&&observed&&!observed->failure&&observed->phase==Phase::Downloading&&observed->received>0
+          &&observed->queueTargetStatistics&&observed->queueTargetStatistics->etaSeconds
+          &&observed->queueTargetStatistics->smoothedPayloadReceiveBytesPerSecond;
+    })(),30000);
+    const auto before=status(*service,*fixture.hash);QVERIFY(before&&before->queueTargetStatistics);
+    const auto& actual=*before->queueTargetStatistics;QCOMPARE(actual.admission,before->admission);QVERIFY(actual.sequence>1);
+    QCOMPARE(actual.smoothing.windowSeconds,119);QCOMPARE(actual.smoothing.intervalSeconds,1);
+    QVERIFY(*actual.smoothedPayloadReceiveBytesPerSecond>=0);QVERIFY(*actual.etaSeconds>0);
+    QVERIFY(service->pauseManaged(*fixture.hash,true));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=service->poll();const auto value=status(*service,*fixture.hash);
+      return poll&&value&&value->phase==Phase::Paused&&!value->queueTargetStatistics;
+    })(),15000);
+    const auto paused=status(*service,*fixture.hash);QVERIFY(paused);QCOMPARE(paused->admission,before->admission);
+    QVERIFY(service->queueManaged(*fixture.hash,false,false));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=service->poll();const auto value=status(*service,*fixture.hash);
+      return poll&&value&&value->phase==Phase::Downloading&&value->queueTargetStatistics
+          &&value->queueTargetStatistics->observedMillis>actual.observedMillis;
+    })(),15000);
+    auto position=settings;position.downloadOrder=core::QueueDownloadOrder::Position;
+    QVERIFY(service->configureQueuePolicy(position,119));
+    const auto unselected=status(*service,*fixture.hash);
+    QVERIFY(unselected&&!unselected->queueTargetStatistics); // No poll to hide stale public facts.
+    QVERIFY(service->configureQueuePolicy(settings,119));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=service->poll();const auto value=status(*service,*fixture.hash);
+      return poll&&value&&value->phase==Phase::Downloading&&value->queueTargetStatistics
+          &&value->queueTargetStatistics->observedMillis>actual.observedMillis;
+    })(),15000);
+    QVERIFY(service->stopManaged(*fixture.hash));
+    const auto stopping=status(*service,*fixture.hash);
+    QVERIFY(stopping&&stopping->phase==Phase::Stopping&&!stopping->queueTargetStatistics);
+    const auto closed=service->close(std::chrono::steady_clock::now()+5s);
+    const auto stopped=status(*service,*fixture.hash);
+    QVERIFY(stopped&&!stopped->retained&&!stopped->queueTargetStatistics);
+    QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&closed.retirement.peerCounters);QVERIFY(!closed.checkpointFailure);QVERIFY(fixture.intact());
+  }
   void actualOriginalFilePriorityProviderPreservesStartupAndManualHold() {
     test::OwnedEngineFixture single(false,true),multi(true,true);
     QTRY_VERIFY_WITH_TIMEOUT(single.ready()&&multi.ready(),30000);

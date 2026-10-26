@@ -18,6 +18,47 @@ std::string list(const std::string& entries) { return "d4:name6:bundle12:piece l
 }
 
 int main(int argc, char** argv) {
+  if(argc>=3&&std::string_view(argv[1])=="--inspect-names"){
+    check(argc==3,"Exactly one generated metadata input required");
+    std::ifstream stream(argv[2],std::ios::binary);check(static_cast<bool>(stream),"Generated name fixture unavailable");
+    const std::string bytes(std::istreambuf_iterator<char>(stream),{});check(bytes.size()<=1024*1024,"Name fixture bound");
+    auto source=core::Document::parse(bytes);check(source.has_value(),"Name fixture bencode");
+    const auto layout=compat::originalLayout(*source);check(layout.has_value(),"Name fixture original layout");
+    const auto hex=[](std::string_view value){std::string out;for(const unsigned char c:value){out+="0123456789ABCDEF"[c>>4];out+="0123456789ABCDEF"[c&15];}return out;};
+    std::cout<<"NAME\t"<<hex(layout->name)<<'\n';
+    for(std::size_t i=0;i<layout->files.size();++i){const auto& file=layout->files[i];
+      std::cout<<"FILE\t"<<i<<'\t'<<file.offset<<'\t'<<file.bytes<<'\t'<<hex(file.path)<<'\n';}
+    check(source->serialize()==bytes,"Name inspection preserves exact raw metadata");return 0;
+  }
+  {
+    const std::string latinName("caf\xe9",4),latinFile("na\xefve.bin",9);
+    const auto entry="d6:lengthi3e4:pathl"+bytes(latinFile)+"ee";
+    const auto info="d5:filesl"+entry+"e4:name"+bytes(latinName)+"12:piece lengthi16384ee";
+    const auto raw="d8:encoding10:ISO-8859-14:info"+info+'e';
+    auto source=core::Document::parse(raw);check(source.has_value(),"Latin1 literal fixture parses");
+    const auto layout=compat::originalLayout(*source);
+    check(layout&&layout->name=="caf\xc3\xa9"&&layout->files[0].path=="na\xc3\xafve.bin","Original Latin1 byte values decode to actual Unicode filesystem names");
+    check(source->serialize()==raw,"Legacy decoding does not rewrite hashed info bytes");
+    const auto legacyOverride="d8:encoding10:ISO-8859-14:infod5:filesld6:lengthi3e4:pathl"+bytes(latinFile)
+        +"e10:path.utf-8l7:ignoredeee4:name"+bytes(latinName)+"10:name.utf-87:ignored12:piece lengthi16384eee";
+    auto ignored=core::Document::parse(legacyOverride);check(ignored.has_value(),"Ignored overrides fixture parses");
+    const auto fallback=compat::originalLayout(*ignored);
+    check(fallback&&fallback->name==layout->name&&fallback->files[0].path==layout->files[0].path,"Explicit legacy encoding disables all UTF8 overrides as original does");
+    const auto mixed="d4:infod5:filesld6:lengthi1e4:pathl1:ae10:path.utf-8l1:xee"+file("b","1")
+        +"e4:name4:base10:name.utf-85:other12:piece lengthi16384eee";
+    auto partial=core::Document::parse(mixed);check(partial.has_value(),"Partial override literal parses");
+    const auto allOrNone=compat::originalLayout(*partial);
+    check(allOrNone&&allOrNone->name=="base"&&allOrNone->files[0].path=="a"&&allOrNone->files[1].path=="b","Missing one path override disables name and all other overrides");
+    const auto complete="d4:infod5:filesld6:lengthi1e4:pathl1:ae10:path.utf-8l1:xee"
+        "d6:lengthi1e4:pathl1:be10:path.utf-8l1:yee""e4:name4:base10:name.utf-85:other12:piece lengthi16384eee";
+    auto preferred=core::Document::parse(complete);check(preferred.has_value(),"Complete override literal parses");
+    const auto utf8=compat::originalLayout(*preferred);
+    check(utf8&&utf8->name=="other"&&utf8->files[0].path=="x"&&utf8->files[1].path=="y","Complete original UTF8 override set is preferred");
+    auto unknown=*source;check(unknown.replaceValue("encoding","12:windows-1251").has_value(),"Unknown charset fixture");
+    check(!compat::originalLayout(unknown),"Unported charset never silently becomes UTF8 or Latin1");
+    const auto unsafe="d8:encoding10:ISO-8859-14:infod5:filesl"+file("..","1")+"e4:name1:a12:piece lengthi16384eee";
+    const auto bad=core::Document::parse(unsafe);check(bad.has_value()&&!compat::originalLayout(*bad),"Decoded traversal still fails before mapping");
+  }
   auto simple = document("d4:name1:a6:lengthi3e12:piece lengthi16384ee");
   auto result = compat::originalLayout(simple);
   check(result && !result->multifile && result->bytes == 3 && result->files[0].path == "a", "Original simple geometry");
