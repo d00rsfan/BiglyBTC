@@ -9,6 +9,7 @@
 #include <libtorrent/biglybtc_swarm.hpp>
 #include <libtorrent/error_code.hpp>
 #include <libtorrent/peer_info.hpp>
+#include <libtorrent/peer_class.hpp>
 #include <libtorrent/pex_flags.hpp>
 #include <algorithm>
 #include <set>
@@ -66,6 +67,16 @@ lt::settings_pack selectedUtpSettings(bool ipv6) {
   settings->set_int(lt::settings_pack::alert_queue_size,20000);
   settings->set_int(lt::settings_pack::unchoke_interval,1);
   return *settings;
+}
+void selectedUtpUploadWindow(lt::session& seeder) {
+  // Loopback peers use the local class, outside the global rate limiter.
+  // Preserve every other actual class property and check the async update
+  // through the public synchronous getter before admitting the seed.
+  auto local=seeder.get_peer_class(lt::session_handle::local_peer_class_id);
+  local.upload_limit=4096;
+  seeder.set_peer_class(lt::session_handle::local_peer_class_id,local);
+  test::require(seeder.get_peer_class(lt::session_handle::local_peer_class_id).upload_limit==4096,
+      "Actual selected-uTP local peer upload limit was not applied");
 }
 std::shared_ptr<lt::torrent_info> selectedUtpMetadata(const selectedFixture::Fixture& fixture) {
   lt::error_code error;
@@ -232,7 +243,7 @@ private slots:
     const auto seedPath=fixture.root/"seed";QVERIFY(std::filesystem::create_directory(seedPath));
     selectedFixture::write(seedPath/"selected.bin",std::string(16384,'s'));
     auto settings=selectedUtpSettings(ipv6);settings.set_int(lt::settings_pack::upload_rate_limit,4096);
-    auto seeder=std::make_unique<lt::session>(settings);
+    auto seeder=std::make_unique<lt::session>(settings);selectedUtpUploadWindow(*seeder);
     auto parameters=selectedUtpParameters(metadata,seedPath);
     QVERIFY(engine::detail::selectManagedSwarm(parameters,*fixture.identity,bridge));
     lt::error_code error;const auto seed=seeder->add_torrent(std::move(parameters),error);QVERIFY(!error&&seed.is_valid());
@@ -316,6 +327,7 @@ private slots:
       selectedFixture::write(seedPath/"selected.bin",std::string(16384,'s'));
       auto settings=selectedUtpSettings(ipv6);settings.set_int(lt::settings_pack::upload_rate_limit,4096);
       auto seeder=std::make_unique<lt::session>(settings);auto receiver=std::make_unique<lt::session>(selectedUtpSettings(ipv6));
+      selectedUtpUploadWindow(*seeder);
       auto sp=selectedUtpParameters(metadata,seedPath);QVERIFY(engine::detail::selectManagedSwarm(sp,*fixture.identity,bridge));
       lt::error_code error;const auto seed=seeder->add_torrent(std::move(sp),error);QVERIFY(!error&&seed.is_valid());
       const auto receiving=receiver->add_torrent(selectedUtpParameters(metadata,fixture.destination),error);QVERIFY(!error&&receiving.is_valid());
