@@ -71,7 +71,9 @@ private slots:
     QVERIFY(closed[0][1].toBool()&&closed[0][2].toBool());
     auto reacquired=storage::ProfileLease::acquire(source.profile);QVERIFY(reacquired);QVERIFY(!std::filesystem::exists(source.destination));
   }
+  void selectedFileTransfersOnlyAfterOriginalChoicesHaveCommitted_data(){QTest::addColumn<bool>("force");QTest::newRow("ordinary-queued")<<false;QTest::newRow("force-started")<<true;}
   void selectedFileTransfersOnlyAfterOriginalChoicesHaveCommitted() {
+    QFETCH(bool,force);
     test::OwnedEngineFixture fixture(true);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);
     const auto profile=fixture.root.path()+QStringLiteral("/intake-profile");emptyProfile(profile);
     const auto sourceBefore=test::read(fixture.stateFile);const auto skippedPath=fixture.payload+'/'+fixture.files[1].relative;
@@ -93,9 +95,10 @@ private slots:
       committedAtResult=saved&&*saved==policy&&attrs->find("storetypes")->children[0].bytes=="L"
           &&attrs->find("storetypes")->children[1].bytes=="L"&&facts.skippedBytes==65536
           &&row.find("maxdl")&&row.find("maxdl")->integer==65536&&row.find("maxul")&&row.find("maxul")->integer==32768
-          &&attrs->find("flags")&&(attrs->find("flags")->integer&core::OriginalSequentialDownloadFlag);
+          &&attrs->find("flags")&&(attrs->find("flags")->integer&core::OriginalSequentialDownloadFlag)
+          &&row.find("forceStart")&&row.find("forceStart")->integer==(force?1:0)&&row.find("state")&&row.find("state")->integer==(force?0:75);
     });
-    QVERIFY(bridge.importTorrentFiles({session,files->source.request,files->revision,fixture.payload,true,policy,{65536,32768},true}));
+    QVERIFY(bridge.importTorrentFiles({session,files->source.request,files->revision,fixture.payload,true,policy,{65536,32768},true,force}));
     QTRY_COMPARE_WITH_TIMEOUT(writes.size(),1,10000);QVERIFY2(result(writes)->imported,qPrintable(result(writes)->failure));
     QVERIFY2(result(writes)->started,qPrintable(result(writes)->failure));QVERIFY(committedAtResult);
     QTRY_VERIFY_WITH_TIMEOUT(test::read(fixture.payload+'/'+fixture.files[0].relative)==fixture.files[0].expected,30000);
@@ -112,12 +115,25 @@ private slots:
     // from its persisted state; the library projection uses that optional cache.
     QVERIFY(row.find("completedbytes"));
     QCOMPARE(row.find("maxdl")->integer,std::int64_t{65536});QCOMPARE(row.find("maxul")->integer,std::int64_t{32768});
+    QCOMPARE(row.find("forceStart")->integer,std::int64_t{force?1:0});QCOMPARE(row.find("state")->integer,std::int64_t{force?0:75});
     QVERIFY(state.find("attributes")->find("flags")&&(state.find("attributes")->find("flags")->integer&core::OriginalSequentialDownloadFlag));
     const auto selected=core::projectSavedDndProgress(131072,row.find("completedbytes")->integer,core::readSavedDndFacts(state.find("attributes")));
     QCOMPARE(selected.selectedBytes,std::optional<std::int64_t>{65536});
     QVERIFY(state.find("attributes")->find("opaque.fixture"));QCOMPARE(state.find("attributes")->find("opaque.fixture")->bytes,std::string_view("\0\xffQ",3));
     QCOMPARE(test::read(skippedPath),skippedBefore);
     for(const auto& file:fixture.files){struct stat current{};QVERIFY(::stat((fixture.payload+'/'+file.relative).toStdString().c_str(),&current)==0);QCOMPARE(current.st_dev,file.before.st_dev);QCOMPARE(current.st_ino,file.before.st_ino);}
+  }
+  void explicitStoppedSubmissionSuppressesForceWithoutAnOwner(){
+    test::OwnedEngineFixture fixture(true);const auto profile=fixture.root.path()+QStringLiteral("/explicit-stopped-profile");emptyProfile(profile);
+    const auto destination=fixture.root.path()+QStringLiteral("/absent-stopped-payload");app::SessionBridge bridge;
+    QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),reads(&bridge,&app::SessionBridge::torrentIntakeReady),writes(&bridge,&app::SessionBridge::torrentIntakeFinished),native(&bridge,&app::SessionBridge::nativeSessionReady),closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.open(profile.toStdString(),0));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty(),10000);const auto session=sessions[0][0].toULongLong();
+    QVERIFY(bridge.previewTorrentIntake({session,1,fixture.stateFile}));QTRY_COMPARE_WITH_TIMEOUT(reads.size(),1,10000);QTRY_VERIFY(!bridge.busy());const auto files=preview(reads);QVERIFY(ui::validTorrentIntake(files));
+    const std::vector<compat::FilePolicy> policy(2,{false,0});QVERIFY(bridge.importTorrentFiles({session,files->source.request,files->revision,destination,false,policy,{},false,true}));
+    QTRY_COMPARE_WITH_TIMEOUT(writes.size(),1,10000);QVERIFY2(result(writes)->imported,qPrintable(result(writes)->failure));QVERIFY(!result(writes)->started);QCOMPARE(native.size(),0);QVERIFY(!QFile::exists(destination));
+    const auto inventory=document(profile+QStringLiteral("/downloads.config"));const auto& row=inventory.find("downloads")->children.at(0);
+    QCOMPARE(row.find("state")->integer,std::int64_t{70});QCOMPARE(row.find("forceStart")->integer,std::int64_t{0});QVERIFY(inventory.find("unknown"));
+    QTRY_VERIFY(!bridge.busy());QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,10000);QVERIFY(closed[0][1].toBool()&&closed[0][2].toBool());QVERIFY(!QFile::exists(destination));
   }
   void allSkippedRequestedStartPublishesStoppedWithoutPayloadOrAdmission() {
     // The metadata generator's separate seed is owned; the offline target Host
@@ -129,7 +145,7 @@ private slots:
     QVERIFY(bridge.open(profile.toStdString(),0));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty(),10000);
     const auto session=sessions[0][0].toULongLong();QVERIFY(bridge.previewTorrentIntake({session,1,fixture.stateFile}));QTRY_COMPARE_WITH_TIMEOUT(reads.size(),1,10000);QTRY_VERIFY(!bridge.busy());
     const auto files=preview(reads);QVERIFY(ui::validTorrentIntake(files));const std::vector<compat::FilePolicy> policy(2,{true,0});
-    QVERIFY(bridge.importTorrentFiles({session,files->source.request,files->revision,destination,true,policy}));QTRY_COMPARE_WITH_TIMEOUT(writes.size(),1,10000);
+    QVERIFY(bridge.importTorrentFiles({session,files->source.request,files->revision,destination,true,policy,{},false,true}));QTRY_COMPARE_WITH_TIMEOUT(writes.size(),1,10000);
     QVERIFY2(result(writes)->imported,qPrintable(result(writes)->failure));QVERIFY(!result(writes)->started);QVERIFY(!QFile::exists(destination));QCOMPARE(native.size(),0);
     const auto config=document(profile+QStringLiteral("/downloads.config"));const auto& row=config.find("downloads")->children.at(0);
     QCOMPARE(row.find("state")->integer,std::int64_t{70});QCOMPARE(row.find("forceStart")->integer,std::int64_t{0});QCOMPARE(row.find("completedbytes")->integer,std::int64_t{0});

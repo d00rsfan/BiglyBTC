@@ -34,7 +34,7 @@ private:
   TorrentIntakePresentation preview_;
   QString failure_;
   QPointer<QLineEdit> source_,destination_;
-  QPointer<QCheckBox> start_,sequential_;
+  QPointer<QCheckBox> start_,sequential_,forceStart_;
   QPointer<QLabel> status_;
   QPointer<QPushButton> load_,add_;
   QPointer<QComboBox> priority_;

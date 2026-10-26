@@ -164,6 +164,41 @@ int main(){
       check(read(area.profile/"downloads.config")==inventory&&!fs::exists(area.profile/"active")&&!fs::exists(area.profile/"torrents")&&!fs::exists(area.destination),"Invalid recovered rates preserve inventory and payload");
       check(storage::hasPendingTorrentIntake(*area.lease),"Invalid intent retained for explicit recovery");
     }
+    for(const int mode:{0,1,2,3}){
+      Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));const bool stopped=mode==0,force=mode==3,queued=mode==2;
+      const auto hash=take(storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,stopped,mixed,nullptr,force,{}, {},false,queued));
+      verify(area,hash,"LCLC",mixed);const auto config=parse(read(area.profile/"downloads.config"));const auto& row=config.find("downloads")->children.at(0);
+      check(row.find("state")->integer==(stopped?70:queued?75:0)&&row.find("forceStart")->integer==(force?1:0),"Stopped70/legacy Waiting0/explicit Queued75/forced Waiting0 are distinct");
+      check(!fs::exists(area.destination),"Start intent alone does not allocate payload");
+    }
+    for(const bool force:{false,true}){
+      Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));
+      const auto result=storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,!force,mixed,nullptr,force,{}, {},false,true);
+      check(!result&&result.error().code==storage::ErrorCode::InvalidFormat,"Queued cannot conflict with stopped or forced authority");area.untouched();
+    }
+    for(const auto stage:{storage::TorrentIntakeStage::JournalSynced,storage::TorrentIntakeStage::StatePublished,storage::TorrentIntakeStage::ArchivePublished,storage::TorrentIntakeStage::InventoryPublished}){
+      for(const int mode:{0,1,2,3}){
+        Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));interrupted=stage;
+        const bool force=mode==1,queued=mode==0||mode==3,allSkipped=mode==3;
+        const auto policy=allSkipped?std::vector<compat::FilePolicy>(4,{true,0}):mixed;
+        check(!storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,false,policy,interrupt,force,{}, {},false,queued),"Interrupt exact original start intent");
+        area.reopen();const auto recovered=take(storage::recoverTorrentIntake(*area.lease));check(recovered&&*recovered==prepared.hash(),"Recover exact start identity");
+        const auto config=parse(read(area.profile/"downloads.config"));const auto& row=config.find("downloads")->children.at(0);
+        check(row.find("state")->integer==(allSkipped?70:queued?75:0)&&row.find("forceStart")->integer==(force?1:0),"Queued/forced/legacy/all-skipped intent survives every recovery stage");
+        check(!fs::exists(area.destination),"Start intent replay cannot allocate payload");
+      }
+    }
+    for(const int mutation:{0,1,2,3}){
+      Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));interrupted=storage::TorrentIntakeStage::JournalSynced;
+      check(!storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,false,mixed,interrupt,false,{}, {},false,true),"Freeze queued intent before any publication");
+      auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));
+      if(mutation<2){check(journal.replaceValue(mutation==0?"stopped":"forceStart","i1e").has_value(),"Conflicting start authority fixture");}
+      else{const auto* node=journal.find("fileOptions");check(node,"Actual queued journal options");auto encoded=core::encodeValue(*node,storage::compatibleConfigLimits());check(encoded.has_value(),"Own original options");auto options=parse(*encoded);
+        check(options.replaceValue("queued",mutation==2?"i2e":"3:bad").has_value()&&journal.replaceValue("fileOptions",options.serialize()).has_value(),"Malformed queued type/value fixture");}
+      write(area.profile/"BiglyBTC.torrent-import",journal.serialize());const auto before=read(area.profile/"downloads.config");area.reopen();const auto recovery=storage::recoverTorrentIntake(*area.lease);
+      check(!recovery&&recovery.error().code==storage::ErrorCode::InvalidFormat,"Recovery refuses malformed/conflicting queue authority");
+      check(read(area.profile/"downloads.config")==before&&!fs::exists(area.profile/"active")&&!fs::exists(area.profile/"torrents")&&!fs::exists(area.destination)&&storage::hasPendingTorrentIntake(*area.lease),"Refusal preserves journal, metadata absence, inventory and payload");
+    }
     for(int mode=0;mode<5;++mode){
       Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));auto policy=mixed;
       if(mode==0){policy.pop_back();}if(mode==1){policy[3]={false,0};}if(mode==2){policy[0].priority=std::numeric_limits<std::int32_t>::min();}

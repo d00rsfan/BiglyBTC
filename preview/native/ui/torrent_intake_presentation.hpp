@@ -32,6 +32,7 @@ struct TorrentIntakeSubmission {
   std::vector<compat::FilePolicy> files; // Complete original-index order, padding included.
   core::TorrentIntakeLimits limits{};
   bool sequentialDownload=false;
+  bool forceStart=false;
 };
 struct TorrentIntakeResultPacket {
   quint64 session=0,request=0,revision=0;

@@ -236,6 +236,7 @@ struct IntakeFileOptions {
   std::optional<std::int64_t> reorderMinimumMiB;
   core::TorrentIntakeLimits limits{};
   bool sequentialDownload=false;
+  bool queued=false;
 };
 void validateFileOptions(const MetadataSubject& source,const IntakeFileOptions& options) {
   require(core::validTorrentIntakeLimits(options.limits),ErrorCode::InvalidFormat,"Per-torrent limits must be between zero and INT32_MAX bytes/s");
@@ -265,13 +266,13 @@ void checkCompactAbsence(const compat::OriginalLayout& layout,const IntakeFileOp
   }
 }
 IntakeFileOptions fileOptions(const ProfileLease& lease,const MetadataSubject& source,
-    const fs::path& destination,std::span<const compat::FilePolicy> values,core::TorrentIntakeLimits limits,bool sequentialDownload) {
+    const fs::path& destination,std::span<const compat::FilePolicy> values,core::TorrentIntakeLimits limits,bool sequentialDownload,bool queued) {
   require(values.size()==source.layout.files.size(),ErrorCode::InvalidFormat,"Intake selection does not match metadata");
   const auto encoded=compat::encodeOriginalFilePolicy(values);
   require(encoded.has_value(),ErrorCode::Unsupported,encoded ? "" : encoded.error().message.c_str());
   auto empty=parse("de");const auto defaults=take(resolveOriginalStorageTypes(lease,source.hash,source.layout,empty.root()));
   require(defaults.markers.empty()&&!defaults.unsupportedConversion,ErrorCode::Conflict,"Orphan original storage controls already own this import");
-  IntakeFileOptions result{*encoded,"",defaults.reorderMinimumMiB,limits,sequentialDownload};result.stores.reserve(values.size());
+  IntakeFileOptions result{*encoded,"",defaults.reorderMinimumMiB,limits,sequentialDownload,queued};result.stores.reserve(values.size());
   for(std::size_t n=0;n<values.size();++n) {
     const bool reorder=defaults.requested[n]==OriginalStorageKind::Reordered;
     if(!values[n].skipped) { result.stores+=reorder?'R':'L';continue; }
@@ -294,6 +295,7 @@ struct Plan {
 };
 Plan plan(std::string metadata, std::string destination, std::string profile,
     std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart, std::optional<IntakeFileOptions> options = {}, std::optional<HybridAliasSource> alias = {}) {
+  require(!options||!options->queued||(!stopped&&!forceStart),ErrorCode::InvalidFormat,"Queued intake conflicts with stopped/forced intent");
   auto subject=metadataSubject(metadata);auto& torrent=subject.torrent;auto* original=&subject.layout;
   const auto hash=std::optional{subject.hash};const auto key=hash->bytes();
   const auto* digest=reinterpret_cast<const char*>(key.data());
@@ -327,7 +329,7 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   const auto archive = profile + "/torrents/" + hash->hex() + ".torrent";
   std::string entry = "d" + b("torrent_hash") + b(std::string_view(digest, 20)) + b("torrent") + b(archive)
       + b("save_dir") + b(destination) + b("save_file") + b(original->name) + b("persistent") + "i1e"
-      + b("state") + i(stopped && !forceStart ? 70 : 0) + b("position") + i(position + 1)
+      + b("state") + i(stopped && !forceStart ? 70 : options&&options->queued ? 75 : 0) + b("position") + i(position + 1)
       + b("forceStart") + i(forceStart ? 1 : 0)
       + b("downloaded") + "i0e" + b("uploaded") + "i0e" + b("completedbytes") + "i0e"
       + b("maxdl") + "i0e" + b("maxul") + "i0e" + b("file_priorities") + 'l';
@@ -340,7 +342,7 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
     const auto policies=compat::originalFilePolicy(selected.root(),original->files.size());
     require(policies.has_value(),ErrorCode::InvalidFormat,"Published intake policy invalid");
     const bool allSkipped=std::ranges::all_of(*policies,[](const auto& value){return value.skipped;});
-    if(allSkipped){stopped=true;forceStart=false;put(selected,"state","i70e");put(selected,"forceStart","i0e");}
+    if(allSkipped){stopped=true;forceStart=false;options->queued=false;put(selected,"state","i70e");put(selected,"forceStart","i0e");}
     entry=selected.serialize();
   }
   std::string list = raw(inventory, *downloads);
@@ -400,6 +402,7 @@ std::string journalBytes(const Plan& p) {
     if(p.options->limits.downloadBytesPerSecond){value+=b("maxdl")+i(p.options->limits.downloadBytesPerSecond);}
     if(p.options->limits.uploadBytesPerSecond){value+=b("maxul")+i(p.options->limits.uploadBytesPerSecond);}
     if(p.options->sequentialDownload){value+=b("sequential")+"i1e";}
+    if(p.options->queued){value+=b("queued")+"i1e";}
     optionalOptions=b("fileOptions")+value+'e';
   }
   if(p.alias){
@@ -451,10 +454,12 @@ Plan readJournal(std::string bytes, const std::string& profile) {
     const auto* download=optionsNode->find("maxdl");const auto* upload=optionsNode->find("maxul");
     const auto* sequential=optionsNode->find("sequential");const auto sequentialValue=sequential?integer(sequential):0;
     require(sequentialValue==0||sequentialValue==1,ErrorCode::InvalidFormat,"Invalid sequential intake intent");
-    require(optionsNode->children.size()==4+(reorder?2U:0U)+(download?2U:0U)+(upload?2U:0U)+(sequential?2U:0U),ErrorCode::InvalidFormat,"Unexpected intake options fields");
+    const auto* queued=optionsNode->find("queued");const auto queuedValue=queued?integer(queued):0;
+    require(queuedValue==0||queuedValue==1,ErrorCode::InvalidFormat,"Invalid queued intake intent");
+    require(optionsNode->children.size()==4+(reorder?2U:0U)+(download?2U:0U)+(upload?2U:0U)+(sequential?2U:0U)+(queued?2U:0U),ErrorCode::InvalidFormat,"Unexpected intake options fields");
     options=IntakeFileOptions{text(optionsNode->find("policy")),text(optionsNode->find("stores")),
         reorder?std::optional{integer(reorder)}:std::nullopt,
-        {download?integer(download):0,upload?integer(upload):0},sequentialValue==1};
+        {download?integer(download):0,upload?integer(upload):0},sequentialValue==1,queuedValue==1};
   }
   std::optional<HybridAliasSource> alias;
   if(aliasNode){
@@ -629,10 +634,11 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     const fs::path& metadata, const fs::path& destination, bool stopped,
     void (*observer)(TorrentIntakeStage), bool forceStart,
     std::optional<std::span<const compat::FilePolicy>> policies = {},const File* expected = nullptr, std::stop_token stop = {},
-    core::TorrentIntakeLimits limits = {},bool sequentialDownload = false) {
+    core::TorrentIntakeLimits limits = {},bool sequentialDownload = false,bool queued = false) {
   try {
     require(!stop.stop_requested(),ErrorCode::Cancelled,"Torrent import cancelled before commit");
     require(core::validTorrentIntakeLimits(limits),ErrorCode::InvalidFormat,"Per-torrent limits must be between zero and INT32_MAX bytes/s");
+    require(!queued||(!stopped&&!forceStart),ErrorCode::InvalidFormat,"Queued intake conflicts with stopped/forced intent");
     const auto profile = profilePath(lease);
     const int root = lease.directoryHandle();
     for (const auto* name : {Journal, JournalSaving, InventorySaving, BackupSaving, "downloads.config.saving"}) { absent(root, name); }
@@ -643,7 +649,7 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     require(!expected||(unchanged(expected->info,source->info)&&expected->bytes==source->bytes),
         ErrorCode::Conflict,"Torrent metadata changed after file preview; load it again");
     std::optional<IntakeFileOptions> options;
-    if(policies){const auto subject=metadataSubject(source->bytes);options=fileOptions(lease,subject,destination,*policies,limits,sequentialDownload);}
+    if(policies){const auto subject=metadataSubject(source->bytes);options=fileOptions(lease,subject,destination,*policies,limits,sequentialDownload,queued);}
     const auto before = read(root, "downloads.config", MaximumInventory);
     const auto backup = read(root, "downloads.config.bak", MaximumInventory);
     require(before || !backup, ErrorCode::Conflict, "Resolve missing inventory primary before intake");
@@ -679,8 +685,8 @@ std::expected<core::TorrentHash,Error> importTorrent(ProfileLease& lease,const f
 }
 std::expected<core::TorrentHash,Error> importTorrentWithFileOptions(ProfileLease& lease,
     const TorrentIntakeMetadata& metadata,const fs::path& destination,bool stopped,
-    std::span<const compat::FilePolicy> policies,void(*observer)(TorrentIntakeStage),bool forceStart,std::stop_token stop,core::TorrentIntakeLimits limits,bool sequentialDownload) {
-  return importImpl(lease,metadata.data_->path,destination,stopped,observer,forceStart,policies,&metadata.data_->input,stop,limits,sequentialDownload);
+    std::span<const compat::FilePolicy> policies,void(*observer)(TorrentIntakeStage),bool forceStart,std::stop_token stop,core::TorrentIntakeLimits limits,bool sequentialDownload,bool queued) {
+  return importImpl(lease,metadata.data_->path,destination,stopped,observer,forceStart,policies,&metadata.data_->input,stop,limits,sequentialDownload,queued);
 }
 
 std::expected<core::TorrentHash,Error> importHybridAlias(ProfileLease& lease,const core::TorrentHash& from,

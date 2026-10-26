@@ -1143,15 +1143,17 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
         selected=selected||(!layout.files[n].padding&&!submission.files[n].skipped&&layout.files[n].bytes>0);
       }
       const bool start=submission.start&&selected;
+      const bool force=start&&submission.forceStart;const bool queued=start&&!force;
       if(start&&(!host_->engine||!host_->engine->managedAvailable())){throw Failure{{storage::ErrorCode::Unsupported,"The engine is unavailable; add this torrent stopped instead"}};}
       checkpoint(stop); // No payload/network work happens before the explicit commit.
       const auto hash=take(storage::importTorrentWithFileOptions(host_->lease,*host_->intakeMetadata,
-          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,false,stop,submission.limits,submission.sequentialDownload));
+          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,stop,submission.limits,submission.sequentialDownload,queued));
       result->imported=true;result->hash=text(hash.hex());host_->intakeMetadata.reset();
       const auto details=engine::queryTorrent(host_->lease,hash);
       if(details){host_->known.insert_or_assign(hash.hex(),Host::Known{text(details->name),details->bytes});}
       if(start){
-        const auto admitted=host_->engine->startManaged(host_->lease,{hash,host_->peerPort,false,false});
+        const auto admitted=host_->engine->startManaged(host_->lease,
+            {.hash=hash,.ownedLoopbackPeerPort=host_->peerPort,.forceStart=force,.queued=queued});
         if(admitted){result->started=true;host_->admissionFailures.erase(hash.hex());}
         else{host_->admissionFailures.insert_or_assign(hash.hex(),admitted.error());result->failure=tr("Torrent added; download could not start: %1").arg(text(admitted.error().message));}
       }

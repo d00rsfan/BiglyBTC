@@ -44,7 +44,7 @@ private:
   friend std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(const std::filesystem::path&, std::stop_token);
   friend std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
       const TorrentIntakeMetadata&, const std::filesystem::path&, bool, std::span<const compat::FilePolicy>,
-      void (*)(TorrentIntakeStage), bool, std::stop_token, core::TorrentIntakeLimits, bool);
+      void (*)(TorrentIntakeStage), bool, std::stop_token, core::TorrentIntakeLimits, bool, bool);
 };
 std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(
     const std::filesystem::path&, std::stop_token = {});
@@ -57,10 +57,13 @@ std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(
 // mutation, sampler or implicit admission is performed by the adapter.
 // Optional sequential intent sets only original attributes.flags bit0x2000;
 // false preserves existing flags, matching original intake. Old journals omit it.
+// Appended queued intent requests original STATE_QUEUED75. False retains the
+// existing Waiting0 default. Queued cannot coexist with stopped/forceStart;
+// all-skipped normalizes to Stopped/no force/no queued intent before journaling.
 std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
     const TorrentIntakeMetadata&, const std::filesystem::path& destination, bool stopped,
     std::span<const compat::FilePolicy>, void (*observer)(TorrentIntakeStage) = nullptr,
-    bool forceStart = false, std::stop_token = {}, core::TorrentIntakeLimits = {}, bool sequentialDownload = false);
+    bool forceStart = false, std::stop_token = {}, core::TorrentIntakeLimits = {}, bool sequentialDownload = false, bool queued = false);
 
 // Explicit stopped companion, matching original hybrid "run as other version"
 // identity shape. Source row/state/cache/control bytes remain unchanged. No
