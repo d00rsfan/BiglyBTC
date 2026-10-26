@@ -12,6 +12,7 @@
 #include <libtorrent/pex_flags.hpp>
 #include <algorithm>
 #include <set>
+#include <sstream>
 #include <string_view>
 #endif
 #include <QHostAddress>
@@ -85,7 +86,16 @@ std::string selectedUtpHashText(const lt::sha1_hash& hash) {
 }
 struct SelectedUtpEvidence {
   bool dropped=false,wrongRoute=false,payload=false;
-  std::set<std::string> handshakes;
+  std::set<std::string> handshakes,errors;
+  std::size_t peerCount=0;std::int64_t maximumPeerSent=0,maximumPeerReceived=0;
+  void error(std::string value){if(errors.size()<16){errors.insert(value.substr(0,256));}}
+  std::string diagnostic() const {
+    std::ostringstream text;text<<"payload="<<payload<<" dropped="<<dropped<<" wrongRoute="<<wrongRoute
+        <<" peers="<<peerCount<<" maxPeerSent="<<maximumPeerSent<<" maxPeerReceived="<<maximumPeerReceived<<" hashes=[";
+    for(const auto& hash:handshakes){text<<hash<<',';}text<<"] errors=[";
+    for(const auto& value:errors){text<<value<<"; ";}text<<"] incomingUtp="<<incomingUtp.size()<<" invalidHash="<<invalidHash.size();
+    return text.str();
+  }
   std::set<lt::tcp::endpoint> incomingUtp,invalidHash;
   void pop(lt::session& session,const lt::address& address) {
     std::vector<lt::alert*> alerts;session.pop_alerts(&alerts);
@@ -107,6 +117,7 @@ struct SelectedUtpEvidence {
             &&std::string_view(event->log_message()).find(invalid.message())!=std::string_view::npos) {
           invalidHash.insert(event->endpoint);
         }
+        if(kind=="CONNECTION_FAILED"||kind=="PEER_ERROR"){error(std::string(kind)+": "+event->log_message());}
         if(event->direction==lt::peer_log_alert::outgoing_message
             &&std::string_view(event->event_type)=="HANDSHAKE") {
           if(event->endpoint.address()!=address){wrongRoute=true;}
@@ -116,9 +127,11 @@ struct SelectedUtpEvidence {
         }
       }
       if(const auto* event=lt::alert_cast<lt::peer_error_alert>(alert)) {
+        error("peer_error: "+event->error.message());
         if(event->error==lt::errors::invalid_info_hash){invalidHash.insert(event->endpoint);}
       }
       if(const auto* event=lt::alert_cast<lt::peer_disconnected_alert>(alert)) {
+        error("peer_disconnected: "+event->error.message());
         if(event->error==lt::errors::invalid_info_hash&&event->socket_type==lt::socket_type_t::utp) {
           invalidHash.insert(event->endpoint);
         }
@@ -126,8 +139,9 @@ struct SelectedUtpEvidence {
     } // No borrowed alert, message or peer pointer survives this pop.
   }
   void peers(const lt::torrent_handle& handle,const lt::address& address) {
-    std::vector<lt::peer_info> peers;handle.get_peer_info(peers);
+    std::vector<lt::peer_info> peers;handle.get_peer_info(peers);peerCount=peers.size();
     for(const auto& peer:peers) {
+      maximumPeerSent=std::max(maximumPeerSent,peer.total_upload);maximumPeerReceived=std::max(maximumPeerReceived,peer.total_download);
       if(peer.total_upload<=0&&peer.total_download<=0){continue;}
       if(!(peer.flags & lt::peer_info::utp_socket)||peer.ip.address()!=address
           ||peer.local_endpoint.address()!=address){wrongRoute=true;}
@@ -138,6 +152,13 @@ struct SelectedUtpEvidence {
     return std::ranges::any_of(incomingUtp,[&](const auto& peer){return invalidHash.contains(peer);});
   }
 };
+std::string selectedUtpStatus(const lt::torrent_handle& handle) {
+  const auto state=handle.status();std::ostringstream text;
+  text<<"phase="<<static_cast<int>(state.state)<<" seeding="<<state.is_seeding
+      <<" paused="<<bool(state.flags & lt::torrent_flags::paused)<<" done="<<state.total_wanted_done<<'/'<<state.total_wanted
+      <<" received="<<state.total_payload_download<<" sent="<<state.total_payload_upload<<" peers="<<state.num_peers
+      <<" error="<<state.errc.message();return text.str();
+}
 bool selectedUtpPayloadHashes(const std::filesystem::path& file,const lt::torrent_info& info) {
   const auto bytes=selectedFixture::read(file);
   return bytes==std::string(16384,'s')&&info.num_pieces()==1
@@ -219,7 +240,7 @@ private slots:
     QVERIFY(seeder->find_torrent(selected).is_valid());
     QVERIFY(!seeder->find_torrent(full.get(v2?lt::protocol_version::V1:lt::protocol_version::V2)).is_valid());
     QTcpServer server;QVERIFY(server.listen(ipv6?QHostAddress::LocalHostIPv6:QHostAddress::LocalHost,0));
-    bool wrongTracker=false;unsigned requests=0;
+    bool wrongTracker=false;unsigned requests=0;std::set<std::string> trackerHashes;
     const QByteArray expectedHash(selected.data(),selected.size());
     connect(&server,&QTcpServer::newConnection,&server,[&]{while(server.hasPendingConnections()){
       auto* socket=server.nextPendingConnection();auto pending=std::make_shared<QByteArray>();
@@ -231,6 +252,7 @@ private slots:
         const auto end=at<0?-1:pending->indexOf('&',at);
         const auto space=at<0?-1:pending->indexOf(' ',at);
         const auto stop=end<0?space:space<0?end:std::min(end,space);
+        if(at>=0&&stop>=at+10&&trackerHashes.size()<8){trackerHashes.insert(QByteArray::fromPercentEncoding(pending->mid(at+10,stop-at-10)).toHex().toStdString());}
         if(!pending->startsWith("GET /announce?")||at<0||stop<at+10
             ||QByteArray::fromPercentEncoding(pending->mid(at+10,stop-at-10))!=expectedHash){
           wrongTracker=true;socket->abort();return;
@@ -260,7 +282,16 @@ private slots:
       return rows.size()==1&&rows[0].complete&&rows[0].received>0&&evidence.payload
           &&evidence.handshakes.contains(selectedUtpHashText(selected));
     };
-    QTRY_VERIFY_WITH_TIMEOUT(complete(),30000);
+    const auto diagnostic=[&]{
+      std::ostringstream text;text<<"selected="<<selectedUtpHashText(selected)<<" requests="<<requests<<" wrongTracker="<<wrongTracker;
+      text<<" trackerHashes=[";for(const auto& hash:trackerHashes){text<<hash<<',';}text<<']';
+      const auto rows=owner->managedDownloads();text<<" managedRows="<<rows.size();
+      for(const auto& row:rows){text<<" managed{complete="<<row.complete<<" checked="<<row.checked<<" selectedComplete="<<row.selectedComplete
+          <<" received="<<row.received<<" sent="<<row.sent<<" done="<<row.completed<<'/'<<row.bytes<<" phase="<<static_cast<int>(row.phase)
+          <<" retained="<<row.retained<<" failure="<<(row.failure?row.failure->message:"none")<<'}';}
+      text<<" seed{"<<selectedUtpStatus(seed)<<"} evidence{"<<evidence.diagnostic()<<'}';return QByteArray::fromStdString(text.str());
+    };
+    QTRY_VERIFY2_WITH_TIMEOUT(complete(),diagnostic().constData(),30000);
     QVERIFY(requests>0&&!wrongTracker);QVERIFY(!evidence.dropped&&!evidence.wrongRoute);
     QVERIFY(seed.info_hashes()==full);QCOMPARE(std::string(seed.torrent_file()->info_section().data(),seed.torrent_file()->info_section().size()),fixture.rawInfo);
     const auto closed=owner->close(std::chrono::steady_clock::now()+5s);
@@ -298,7 +329,10 @@ private slots:
       const auto complete=[&]{sent.pop(*seeder,address);received.pop(*receiver,address);sent.peers(seed,address);received.peers(receiving,address);
         return receiving.status().is_seeding&&sent.payload&&received.payload
             &&sent.handshakes.contains(selectedUtpHashText(selected))&&received.handshakes.contains(selectedUtpHashText(selected));};
-      QTRY_VERIFY_WITH_TIMEOUT(complete(),30000);
+      const auto diagnostic=[&]{std::ostringstream text;text<<"selected="<<selectedUtpHashText(selected)
+          <<" seed{"<<selectedUtpStatus(seed)<<"} receiver{"<<selectedUtpStatus(receiving)
+          <<"} sent{"<<sent.diagnostic()<<"} received{"<<received.diagnostic()<<'}';return QByteArray::fromStdString(text.str());};
+      QTRY_VERIFY2_WITH_TIMEOUT(complete(),diagnostic().constData(),30000);
       QVERIFY(!sent.dropped&&!received.dropped&&!sent.wrongRoute&&!received.wrongRoute);
       QVERIFY(receiving.info_hashes()==full&&seed.info_hashes()==full);
       receiver.reset();seeder.reset(); // Join both owners before reading their files/removing the fixture.
@@ -334,7 +368,10 @@ private slots:
       return accepted.actualUtpHashRefusal()&&rejected.handshakes.contains(selectedUtpHashText(hash));};
     // Requires a real accepted uTP socket and invalid_info_hash for THAT endpoint;
     // neither a timeout nor zero bytes alone can pass this rejection fixture.
-    QTRY_VERIFY_WITH_TIMEOUT(refused(),15000);
+    const auto diagnostic=[&]{std::ostringstream text;text<<"forbidden="<<selectedUtpHashText(hash)
+        <<" receiver{"<<selectedUtpStatus(receive)<<"} sender{"<<selectedUtpStatus(send)
+        <<"} accepted{"<<accepted.diagnostic()<<"} rejected{"<<rejected.diagnostic()<<'}';return QByteArray::fromStdString(text.str());};
+    QTRY_VERIFY2_WITH_TIMEOUT(refused(),diagnostic().constData(),15000);
     QVERIFY(!accepted.dropped&&!rejected.dropped&&!accepted.wrongRoute&&!rejected.wrongRoute);
     QCOMPARE(receive.status().total_payload_download,std::int64_t{0});
     QCOMPARE(send.status().total_payload_upload,std::int64_t{0});
