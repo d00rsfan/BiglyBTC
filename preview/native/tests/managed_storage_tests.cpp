@@ -95,10 +95,11 @@ struct Fixture {
     return multi?save/"renamed-root"/((index?"b.bin":"a.bin")+(incomplete?suffix:std::string{}))
       :save/("saved.bin"+(incomplete?suffix:std::string{}));
   }
-  void pureV2(bool truncated) {
-    const auto old=profile/"active"/(hash.hex()+".dat"); body=std::string(16384,'V');
+  void pureV2(bool truncated,int bytes=16384) {
+    require(bytes>0&&bytes<=16384,"Bounded one-block pure-v2 fixture");
+    const auto old=profile/"active"/(hash.hex()+".dat"); body=std::string(static_cast<std::size_t>(bytes),'V');
     const auto rootHash=libtorrent::hasher256(body.data(),static_cast<int>(body.size())).final().to_string();
-    info="d"+b("file tree")+"d"+b("original.bin")+"d"+b("")+"d"+b("length")+i(16384)+b("pieces root")+b(rootHash)+"eee"
+    info="d"+b("file tree")+"d"+b("original.bin")+"d"+b("")+"d"+b("length")+i(bytes)+b("pieces root")+b(rootHash)+"eee"
       +b("meta version")+"i2e"+b("name")+b("original.bin")+b("piece length")+i(16384)+"e";
     auto digest=libtorrent::hasher256(info.data(),static_cast<int>(info.size())).final().to_string(); if (truncated) { digest.resize(20); }
     const auto parsed=core::TorrentHash::parse(digest); require(parsed.has_value(),"fixture pure-v2 key"); hash=*parsed;
@@ -175,6 +176,22 @@ int main() {
       auto saved=owner->checkpoint(*f.lease,std::array<std::uint8_t,2>{0,0},false,0,0);require(saved.has_value(),saved?"existing-only partial checkpoint":saved.error().message);require(f.state().find("resume")->find("data")->find("valid")->integer==0,"Retirement without supplied verified pieces remains original recheck, never fake complete");
     }
     Fixture ordinary;auto owner=ordinary.prepare();require(owner.purpose()==Purpose::Download&&!owner.mappedFiles()&&fs::exists(ordinary.path()),"Absent/default purpose retains legacy linear creation and mmap route");
+  });
+  test("existing-only-pure-v2-reuses-exact-tail-projection-with-no-pad-descriptor",[] {
+    for(const bool tail:{false,true}){
+      Fixture f;f.pureV2(true,tail?7:16384);existingFixture(f);const auto source=f.state();const auto originalInfo=encode(*source.find("info"));
+      auto owner=prepareExisting(f);require(owner.has_value(),owner?"existing-only v2":owner.error().message);const auto params=owner->parameters();
+      require(params.ti->info_hashes().has_v2()&&!params.ti->info_hashes().has_v1()&&params.ti->num_files()==(tail?2:1),"Actual pure-v2 engine-only slot count");
+      require(owner->purpose()==Purpose::VerifyExistingReadOnly&&owner->mappedFiles()->access()==engine::detail::OriginalDiskAccess::ReadOnly,"V2 uses existing read-only descriptor route");
+      std::vector<char> bytes(static_cast<std::size_t>(params.ti->total_size()),'X');require(owner->mappedFiles()->read(0,bytes).has_value(),"Read actual real file and virtual engine pad");
+      require(std::string(bytes.begin(),bytes.begin()+static_cast<std::ptrdiff_t>(f.body.size()))==f.body&&std::ranges::all_of(std::span(bytes).subspan(f.body.size()),[](char byte){return byte=='\0';}),"Engine tail is zero without physical payload");
+      fs::path pad;if(tail){const auto index=libtorrent::file_index_t{1};pad=f.save/params.ti->files().file_path(index);require(params.ti->files().pad_file_at(index)&&params.file_priorities[1]==libtorrent::download_priority_t{0}&&!fs::exists(pad),"Only authenticated synthetic pad is unselected and absent");}
+      require(owner->validateExistingSnapshot().has_value()&&owner->mappedFiles()->flush().has_value(),"V2 read-only snapshots do not normalize controls");
+      const auto completed=owner->checkpoint(*f.lease,std::array<std::uint8_t,1>{1},true,0,0);require(completed.has_value(),completed?"v2 checkpoint":completed.error().message);
+      const auto state=f.state();require(encode(*state.find("info"))==originalInfo&&state.find("attributes")->find("filedownloaded")->find("downloaded")->children.size()==1
+          &&state.find("attributes")->find("filedownloaded")->find("downloaded")->children[0].integer==static_cast<std::int64_t>(f.body.size()),"Profile progress retains exactly the original real slot and raw info");
+      require(read(existingLeaf(f))==f.body&&(!tail||!fs::exists(pad)),"Checkpoint never creates virtual padding or changes real bytes");
+    }
   });
   test("existing-only-unsupported-or-incomplete-scope-refuses-before-effects",[] {
     for(int kind=0;kind<14;++kind){

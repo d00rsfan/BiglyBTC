@@ -589,15 +589,23 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     if(existingOnly){
       require(!rawSaved.legacySavePath&&rawSaved.saveFile&&*rawSaved.saveFile==layout.name,
           "Existing-only verification requires the canonical original save leaf");
-      require(static_cast<std::size_t>(info->num_files())==layout.files.size()&&std::ranges::none_of(layout.files,[](const auto& file){return file.padding;})
-          &&std::ranges::none_of(*parsedPolicy,[](const auto& file){return file.skipped;}),
-          "Existing-only verification requires all ordinary real files selected");
-      require(pending.empty()&&storageDefaults.markers.empty()&&std::ranges::all_of(storageDefaults.requested,[](auto kind){return kind==storage::OriginalStorageKind::Linear;}),
+      // metadata() already authenticated the exact original/engine projection,
+      // including its sole pure-v2 virtual trailing-pad exception. Only REAL
+      // original slots need selected linear storage and an owned descriptor.
+      for(std::size_t n=0;n<layout.files.size();++n){
+        if(layout.files[n].padding){
+          require((*parsedPolicy)[n].skipped&&(*parsedPolicy)[n].priority==0,"Existing-only padding must remain virtual and unselected");
+        }else{
+          require(!(*parsedPolicy)[n].skipped&&storageDefaults.requested[n]==storage::OriginalStorageKind::Linear,
+              "Existing-only verification requires all real files selected in linear storage");
+        }
+      }
+      require(pending.empty()&&storageDefaults.markers.empty(),
           "Existing-only verification cannot recover/convert original storage controls");
       existingOnlyAttributes(attributes.root(),layout.multifile,layout.files.size());
     }
     auto slots=plan(saved,attributes.root(),layout,*parsedPolicy,save,pending,profilePath,existingOnly);
-    if(existingOnly){for(const auto& slot:slots){require(slot.kind==storage::OriginalStorageKind::Linear&&!slot.expanding&&slot.actual==slot.base
+    if(existingOnly){for(const auto& slot:slots){if(slot.padding){continue;}require(slot.kind==storage::OriginalStorageKind::Linear&&!slot.expanding&&slot.actual==slot.base
           &&slot.data.get()>=0&&slot.identity.st_size==slot.bytes&&slot.identity.st_nlink==1,
           "Existing-only verification requires every complete original linear leaf",ErrorCode::Missing);}}
     const bool mapped=existingOnly||static_cast<std::size_t>(info->num_files())!=slots.size()||std::ranges::any_of(slots,[](const Slot& slot) {return !slot.padding&&(slot.kind!=storage::OriginalStorageKind::Linear||slot.actual.is_absolute()||slot.expanding);});

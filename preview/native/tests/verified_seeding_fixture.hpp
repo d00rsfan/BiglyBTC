@@ -3,6 +3,8 @@
 #include "torrent_intake.hpp"
 #include "verified_seeding.hpp"
 #include "persistent_session.hpp"
+#include "managed_payload_counters.hpp"
+#include "original_torrent_identity_lt.hpp"
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -40,7 +42,8 @@ inline bool verifiedSeedBytesIntact(const VerifiedSeedCase& fixture,bool corrupt
 }
 inline std::expected<core::TorrentHash,storage::Error> importVerifiedSeedCase(storage::ProfileLease& lease,const VerifiedSeedCase& fixture) {
   const auto metadata=storage::inspectTorrentIntake(fixture.metadata.toStdString());if(!metadata){return std::unexpected(metadata.error());}
-  const std::vector<compat::FilePolicy> selected(fixture.files.size(),{false,0});
+  std::vector<compat::FilePolicy> selected;
+  for(const auto& file:metadata->layout().files){selected.push_back({file.padding,0});}
   return storage::importTorrentWithFileOptions(lease,*metadata,fixture.payload.toStdString(),true,selected,nullptr,false,{}, {},false,false,false,{}, {},true);
 }
 inline std::optional<engine::ManagedDownloadStatus> verifiedStatus(engine::PersistentSession& owner,const core::TorrentHash& hash) {
@@ -62,7 +65,21 @@ inline QByteArray receiveVerifiedSeed(engine::PersistentSession& owner,const Ver
   require(!error,"Owned receiver metadata invalid");parameters.save_path=(fixture.root+"/receiver").toStdString();
   parameters.flags&=~(lt::torrent_flags::auto_managed|lt::torrent_flags::paused);
   parameters.flags|=lt::torrent_flags::disable_dht|lt::torrent_flags::disable_lsd|lt::torrent_flags::disable_pex;
+  std::optional<storage::OriginalTorrentIdentity> selected;
+  if(parameters.ti->info_hashes().has_v2()){
+    const auto source=core::Document::parse(read(fixture.metadata).toStdString(),storage::compatibleConfigLimits());
+    require(source.has_value(),"Owned receiver original metadata invalid");
+    const auto identity=storage::originalTorrentIdentityFromLibtorrent(*source,*parameters.ti);
+    require(identity.has_value(),"Owned receiver full raw identity differs");selected=*identity;
+    require(engine::detail::selectManagedSwarm(parameters,*selected,engine::detail::managedPayloadCounterBridge()),
+        "Owned receiver requires the same qualified selected-swarm module");
+  }
   auto handle=receiver.add_torrent(parameters,error);require(!error&&handle.is_valid(),"Admit owned receiver");
+  if(selected){
+    const auto full=parameters.ti->info_hashes();const bool v2=selected->selected==storage::OriginalSelectedHash::V2;
+    require(handle.info_hashes()==full&&receiver.find_torrent(full.v2).is_valid()==v2
+        &&(!full.has_v1()||receiver.find_torrent(full.v1).is_valid()==!v2),"Actual receiver is not exclusively in the selected full swarm");
+  }
   handle.connect_peer(lt::tcp::endpoint(lt::address_v4::loopback(),*port));
   const auto until=std::chrono::steady_clock::now()+std::chrono::seconds{30};
   while(std::chrono::steady_clock::now()<until&&!handle.status().is_seeding){

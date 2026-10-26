@@ -251,6 +251,22 @@ void saveNameOptions(){
 namespace {
 void uncertainSeedSave(storage::SaveStage stage){if(stage==storage::SaveStage::PrimaryRenamed){throw std::runtime_error("Actual primary already renamed");}}
 void verifiedSeedIntentCases(){
+  // Padding stays in original index order and policy, but owns no payload.
+  for(const auto stage:{storage::TorrentIntakeStage::JournalSynced,storage::TorrentIntakeStage::StatePublished,storage::TorrentIntakeStage::ArchivePublished,storage::TorrentIntakeStage::InventoryPublished}){
+    Area area;const auto source=metadata();const auto prepared=take(storage::inspectTorrentIntake(area.input));
+    const std::array<compat::FilePolicy,4> selected{{{false,0},{false,0},{false,0},{true,0}}};
+    interrupted=stage;check(!storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,selected,interrupt,false,{}, {},false,false,false,{}, {},true),"Padded verified intake retains accepted interruption");
+    area.reopen();const auto recovered=take(storage::recoverTorrentIntake(*area.lease));check(recovered.has_value(),"Recover padded verified intent");
+    const auto intent=take(storage::readVerifiedSeedIntent(*area.lease,*recovered));check(intent&&intent->state==storage::VerifiedSeedState::Pending&&intent->startup==core::StartupState::Stopped&&!intent->forceStart,"Padded recovery stays stopped and unverified");
+    const auto state=parse(read(area.profile/"active"/(recovered->hex()+".dat")));check(rawValue(state,"info")==rawValue(parse(source),"info"),"Padded recovery preserves exact raw identity");
+    check(state.find("attributes")->find("storetypes")->children[3].bytes=="C","Original pad remains absent compact/virtual, never selected L");
+    check(read(area.profile/"torrents"/(recovered->hex()+".torrent"))==source&&!fs::exists(area.destination),"Padded recovery creates no pad or real payload");
+  }
+  {Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));const auto before=read(area.profile/"downloads.config");
+    const std::array<compat::FilePolicy,4> selectedPad{{{false,0},{false,0},{false,0},{false,0}}};
+    check(!storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,selectedPad,nullptr,false,{}, {},false,false,false,{}, {},true),"Selecting virtual padding remains refused before journal");
+    check(read(area.profile/"downloads.config")==before&&!storage::hasPendingTorrentIntake(*area.lease)&&!fs::exists(area.destination),"Malformed pad authority has no effects");
+  }
   const std::string source="d10:attributesd6:future3:raw5:flagsi-9223372036854775808ee4:infod6:lengthi1e4:name8:seed.bin12:piece lengthi16384e6:pieces20:hhhhhhhhhhhhhhhhhhhhee";
   const std::array<compat::FilePolicy,1> selected{{{false,0}}};
   const auto import=[&](Area& area,void(*observer)(storage::TorrentIntakeStage)=nullptr){

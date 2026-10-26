@@ -2,6 +2,7 @@
 #include "original_disk_io.hpp"
 #include <QtTest>
 #include <QCryptographicHash>
+#include <QDir>
 #include <libtorrent/bencode.hpp>
 #include <libtorrent/disk_buffer_holder.hpp>
 #include <libtorrent/disk_interface.hpp>
@@ -21,6 +22,7 @@
 #include <optional>
 #include <stdexcept>
 #include <fcntl.h>
+#include <sys/stat.h>
 #include <unistd.h>
 namespace {
 namespace lt=libtorrent;
@@ -76,6 +78,39 @@ QByteArray actual(const QString& path){QFile file(path);require(file.open(QIODev
 class OriginalDiskIoTests final:public QObject {
   Q_OBJECT
 private slots:
+
+  void existingReadOnlyPaddingHashesZeroWithoutOpeningAbsentOrPoisonedPaths_data(){
+    QTest::addColumn<bool>("poison");QTest::newRow("absent-pad")<<false;QTest::newRow("pad-symlink-to-independent-owned-sentinel")<<true;
+  }
+  void existingReadOnlyPaddingHashesZeroWithoutOpeningAbsentOrPoisonedPaths(){
+    QFETCH(bool,poison);QTemporaryDir area,outsider;QVERIFY(area.isValid()&&outsider.isValid());
+    const std::vector<File> specs{{"a.bin",std::string(8192,'A')},{"padding",std::string(8192,'\0'),true},{"b.bin",std::string(16384,'B')}};
+    auto metadata=v1(specs);QVERIFY(metadata->files().pad_file_at(lt::file_index_t{1}));QVERIFY(QDir().mkpath(area.path()+"/bundle"));
+    const auto put=[](const QString& path,const QByteArray& bytes){QFile file(path);require(file.open(QIODevice::WriteOnly|QIODevice::NewOnly),"Create owned real/pad sentinel fixture");require(file.write(bytes)==bytes.size()&&file.flush(),"Write owned real/pad sentinel bytes");};
+    const auto sentinel=outsider.path()+"/must-not-be-used";const auto pad=area.path()+"/bundle/padding";
+    const QByteArray poisoned(8192,'P');struct stat before{};
+    if(poison){put(sentinel,poisoned);QVERIFY(::lstat(sentinel.toStdString().c_str(),&before)==0);QVERIFY(::symlink(sentinel.toStdString().c_str(),pad.toStdString().c_str())==0);}
+    std::vector<std::optional<ed::OriginalDiskFile>> entries;lt::aux::vector<lt::download_priority_t,lt::file_index_t> priorities;
+    for(int n=0;n<metadata->num_files();++n){const auto index=lt::file_index_t{n};const auto& geometry=metadata->files();
+      priorities.push_back(n==1?lt::download_priority_t{0}:lt::download_priority_t{4});if(n==1){entries.emplace_back(std::nullopt);continue;}
+      const auto path=area.path()+'/'+QString::fromStdString(geometry.file_path(index));put(path,QByteArray::fromStdString(specs[static_cast<std::size_t>(n)].data));
+      st::detail::Descriptor fd(::open(path.toStdString().c_str(),O_RDONLY|O_NOFOLLOW|O_CLOEXEC));QVERIFY(fd.get()>=0);
+      auto io=take(st::OriginalFileIo::open(fd.get(),{static_cast<std::uint64_t>(geometry.file_offset(index)),static_cast<std::uint64_t>(geometry.file_size(index)),16384},Kind::Linear,{}));
+      entries.emplace_back(ed::OriginalDiskFile{std::move(fd),std::move(io)});
+    }
+    auto files=std::make_shared<ed::OriginalDiskFiles>(metadata,std::move(entries),ed::OriginalDiskAccess::ReadOnly);
+    std::array<char,8192> virtualBytes{};std::ranges::fill(virtualBytes,'X');QVERIFY(files->read(8192,virtualBytes));QVERIFY(std::ranges::all_of(virtualBytes,[](char byte){return byte=='\0';}));
+    const auto route=(area.path()+"/never-created-route").toStdString();auto policy=std::make_shared<ed::MetadataDiskPolicy>();QVERIFY(policy->registerOriginalPath(route,files));Disk disk(policy);
+    const lt::storage_params params{metadata->files(),nullptr,route,lt::storage_mode_sparse,priorities,metadata->info_hash()};auto holder=disk.backend->new_torrent(params,{});
+    bool hashed=false;lt::sha1_hash hash;lt::storage_error failure;
+    disk.backend->async_hash(holder,lt::piece_index_t{0},{},lt::disk_interface::v1_hash|lt::disk_interface::flush_piece,[&](lt::piece_index_t,const lt::sha1_hash& observed,const lt::storage_error& error){hash=observed;failure=error;hashed=true;});
+    QTRY_VERIFY_WITH_TIMEOUT((disk.pump(),hashed),5000);QVERIFY(!failure.ec);QCOMPARE(hash.to_string(),metadata->hash_for_piece(lt::piece_index_t{0}).to_string());
+    QVERIFY(hash.to_string()!=sha1(std::string(8192,'A')+poisoned.toStdString()).toStdString());
+    QVERIFY(files->flush());const std::array<std::uint8_t,3> completed{1,0,1};QVERIFY(files->finishComplete(completed));QVERIFY(!files->failure());
+    if(poison){struct stat after{};QVERIFY(::lstat(sentinel.toStdString().c_str(),&after)==0);QCOMPARE(after.st_dev,before.st_dev);QCOMPARE(after.st_ino,before.st_ino);QCOMPARE(after.st_size,before.st_size);QCOMPARE(after.st_mtim.tv_sec,before.st_mtim.tv_sec);QCOMPARE(after.st_mtim.tv_nsec,before.st_mtim.tv_nsec);QCOMPARE(after.st_ctim.tv_sec,before.st_ctim.tv_sec);QCOMPARE(after.st_ctim.tv_nsec,before.st_ctim.tv_nsec);QCOMPARE(actual(sentinel),poisoned);QVERIFY(QFileInfo(pad).isSymLink());}
+    else{QVERIFY(!QFileInfo::exists(pad)&&!QFileInfo(pad).isSymLink());}
+    QVERIFY(!QFileInfo::exists(QString::fromStdString(route)));
+  }
 
   void existingReadOnlyDescriptorsHashActualBytesAndRejectRepairThroughDiskCallbacks_data(){QTest::addColumn<bool>("corrupt");QTest::newRow("correct-size-correct-content")<<false;QTest::newRow("correct-size-corrupt-content")<<true;}
   void existingReadOnlyDescriptorsHashActualBytesAndRejectRepairThroughDiskCallbacks(){

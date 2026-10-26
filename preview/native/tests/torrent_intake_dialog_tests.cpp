@@ -41,6 +41,18 @@ class TorrentIntakeDialogTests final:public QObject {
   Q_OBJECT
 private slots:
 
+  void verifiedSeedingIgnoresOnlyImmutablePaddingWhenRequiringEveryRealFile(){
+    ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();
+    QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested),writes(&dialog,&ui::TorrentIntakeDialog::submitted);
+    auto* load=dialog.findChild<QPushButton*>(QStringLiteral("import-load-files"));QTRY_VERIFY(load->isEnabled());load->click();dialog.setPreview(packet(request(reads)));
+    auto* table=dialog.findChild<QTableView*>(QStringLiteral("import-file-table"));QTRY_COMPARE(table->model()->rowCount(),3);
+    auto* mode=dialog.findChild<QComboBox*>(QStringLiteral("import-start-mode"));auto* add=dialog.findChild<QPushButton*>(QStringLiteral("import-confirm"));QTRY_VERIFY(add->isEnabled());
+    mode->setCurrentIndex(mode->findData(static_cast<int>(ui::TorrentIntakeStartMode::VerifySeeding)));dialog.accept();QCOMPARE(writes.size(),1);
+    const auto sent=submission(writes);QVERIFY(sent.verifyExisting&&!sent.start&&!sent.forceStart&&!sent.paused);QCOMPARE(sent.files.size(),std::size_t{3});QVERIFY(sent.files[2].skipped&&sent.files[2].priority==0);
+    dialog.rejectSubmission(sent);QTRY_VERIFY(add->isEnabled());QVERIFY(!table->model()->setData(table->model()->index(2,0),Qt::Checked,Qt::CheckStateRole));
+    QVERIFY(table->model()->setData(table->model()->index(0,0),Qt::Unchecked,Qt::CheckStateRole));dialog.accept();QCOMPARE(writes.size(),1);
+  }
+
   void verifiedSeedingModeHoldsStartAndRequiresEveryRealFile() {
     ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();
     QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested),writes(&dialog,&ui::TorrentIntakeDialog::submitted);

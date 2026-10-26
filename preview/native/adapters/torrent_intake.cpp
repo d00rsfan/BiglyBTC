@@ -272,7 +272,11 @@ void validateFileOptions(const MetadataSubject& source,const IntakeFileOptions& 
   if(options.verifyExisting){
     require(!options.saveName||*options.saveName==source.layout.name,ErrorCode::Unsupported,"Verified seeding requires the original destination name");
     require(!options.queued&&!options.paused,ErrorCode::InvalidFormat,"Verified seeding must begin stopped and unpaused");
-    for(std::size_t n=0;n<values->size();++n){require(!source.layout.files[n].padding&&!(*values)[n].skipped&&options.stores[n]=='L',ErrorCode::Unsupported,"Verified seeding requires every real file selected in linear storage");}
+    for(std::size_t n=0;n<values->size();++n){
+      // Original padding is immutable virtual data, never a physical input.
+      if(source.layout.files[n].padding){continue;}
+      require(!(*values)[n].skipped&&options.stores[n]=='L',ErrorCode::Unsupported,"Verified seeding requires every real file selected in linear storage");
+    }
   }
   require(!options.reorderMinimumMiB||(*options.reorderMinimumMiB>=INT32_MIN&&*options.reorderMinimumMiB<=INT32_MAX),
       ErrorCode::InvalidFormat,"Invalid original reorder threshold");

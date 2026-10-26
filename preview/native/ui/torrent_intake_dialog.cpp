@@ -334,9 +334,12 @@ void TorrentIntakeDialog::accept() {
   if(!validMode||mode<static_cast<int>(TorrentIntakeStartMode::Queued)||mode>static_cast<int>(TorrentIntakeStartMode::VerifySeeding)){return;}
   const bool selected=model_->selectedBytes()!=0;
   const bool verify=mode==static_cast<int>(TorrentIntakeStartMode::VerifySeeding);
-  if(verify&&(!selected||std::ranges::any_of(model_->draft,[](const auto& file){return file.skipped;})
-      ||std::ranges::any_of(preview_->files,[](const auto& file){return file.padding;})
-      ||(!saveName_->text().isEmpty()&&saveName_->text()!=preview_->name))){return;}
+  if(verify){
+    if(!selected||(!saveName_->text().isEmpty()&&saveName_->text()!=preview_->name)){return;}
+    for(std::size_t n=0;n<preview_->files.size();++n){
+      if(!preview_->files[n].padding&&model_->draft[n].skipped){return;}
+    }
+  }
   const bool force=selected&&mode==static_cast<int>(TorrentIntakeStartMode::Forced);
   const bool paused=selected&&mode==static_cast<int>(TorrentIntakeStartMode::Paused);
   const bool start=selected&&(force||mode==static_cast<int>(TorrentIntakeStartMode::Queued));
