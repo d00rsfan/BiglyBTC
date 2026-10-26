@@ -1,5 +1,11 @@
 # BiglyBTC migration state
 
+Compatibility batch4 is qualified at native `6896d528de5f33292631f39ba2db6a8369e2066e`: all12 affected suites pass at that final source in GCC, Clang and leak-enabled ASan/UBSan lanes. Actual original filename comparison passes226 cases/678 lines plus256 byte classifications. Initial GUI-fixture failures remain retained history.
+
+[Batch4 review](updates/compatibility.providers/20261026-batch4.md). Continue remaining work; previous STOP boundaries below are historical.
+
+## Prior qualified records
+
 Bounded compatibility batch3 is qualified at native `78ed6ff9c18447c210c59edf980f60332d805481`: effective36 affected suites per GCC/Clang/leak-enabled sanitizer lane. GCC retains35 initial PASS results at `9df6e722d9f3715309ff1e10ee6983989798bc6a` plus the full corrected network-binding-owner suite at the final source; each other lane is credited from its actual source-associated results. Failed uTP attempts remain failed history. This is not an identical-source full36 rerun.
 
 The scope is original completion-group positions/NewSeedsLive, optional same-image SOCKS4a webseed routing, exact private d33 runtime qualification and selected uTP evidence. Detached owned wire/discovery and selected Java fixup arithmetic have separate bounded credit. All CF01–CF08 remain open. The published dist and earlier approvals/records are unchanged; the new private candidate is not promoted.

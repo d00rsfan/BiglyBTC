@@ -122,3 +122,7 @@ runtime pass. Dist promoted with full rollback.
 
 The task remains partial for unsupported EOF-short/other layout corners; broader
 CF02–CF08 work continues. No human question.
+
+## Qualified compatibility batch4 — 2026-10-26
+
+Windows-1251 v1 root/file names and three source-proven aliases now qualify with exact raw info/hash/geometry preservation, runtime-only names and actual payload/inode/checkpoint checks. Actual original getters compare226 cases/678 lines plus256 byte classifications. Undefined0x98 fallback, other codecs, substitutions and broader storage corners remain open. [Review](../updates/compatibility.providers/20261026-batch4.md).

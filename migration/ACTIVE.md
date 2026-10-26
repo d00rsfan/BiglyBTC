@@ -1,12 +1,9 @@
 # Active migration work — 2026-10-26
 
-Bounded compatibility batch3 is qualified at native `78ed6ff9c18447c210c59edf980f60332d805481`: effective36 affected suites per GCC/Clang/leak-enabled sanitizer lane. GCC retains35 initial PASS results at `9df6e722d9f3715309ff1e10ee6983989798bc6a` plus the full corrected network-binding-owner suite at the final source; each other lane is credited from its actual source-associated results. Failed uTP attempts remain failed history. This is not an identical-source full36 rerun.
+Compatibility batch4 is qualified at native `6896d528de5f33292631f39ba2db6a8369e2066e`: all12 affected suites pass at that final source in GCC, Clang and leak-enabled ASan/UBSan lanes. Actual original filename comparison passes226 cases/678 lines plus256 byte classifications. Initial GUI-fixture failures remain retained history.
 
-The scope is original completion-group positions/NewSeedsLive, optional same-image SOCKS4a webseed routing, exact private d33 runtime qualification and selected uTP evidence. Detached owned wire/discovery and selected Java fixup arithmetic have separate bounded credit. All CF01–CF08 remain open. The published dist and earlier approvals/records are unchanged; the new private candidate is not promoted.
+This adds Windows-1251 v1 filename projection, pre-add byte-rate limits, original sequential flags, and consistent Queued75/Stopped/Forced intent through durable recovery and managed admission. All CF01–CF08 remain open. Undefined charset fallback, wider original options and performance remain separate work.
 
-Latest qualified native source: `78ed6ff9c18447c210c59edf980f60332d805481`.
-Evidence: [batch3](evidence/20261026-compatibility-batch3/verification.json); [scope](updates/compatibility.providers/20261026-batch3.md).
-Prior checkpoint: [batch2](evidence/20261026-compatibility-batch2/verification.json).
-Durable state: `build/compatibility-20261026/checkpoint.json`.
+[Batch4 evidence](evidence/20261026-compatibility-batch4/verification.json). [Prior batch3](evidence/20261026-compatibility-batch3/REVIEW.md) retains private runtime/protocol proofs and its failed attempts; no new runtime/public/causal credit or dist promotion is claimed here.
 
-Continue [remaining compatibility work](tasks/COMPATIBILITY-FOLLOWUPS.md) autonomously with batched checks. Preserve original BiglyBT, profiles, payloads and ordinary HEAD/index. Native main only; root owns adoption/publication and at most three compiler jobs. Generated owned endpoints/profiles only; no public/causal/full-client or whole-Statistics closure, promotion or system installation is implied.
+Continue paused intake and remaining [compatibility work](tasks/COMPATIBILITY-FOLLOWUPS.md) autonomously. Durable state: `build/compatibility-20261026/checkpoint.json`. Native main only; at most3 compiler jobs; batch related changes and checks. Preserve the running original, its real profile/payloads/ordinary HEAD/index and the qualified dist. No system installation.

@@ -39,3 +39,7 @@ tracked until independently qualified. No current human question.
 Final qualification: [review](../evidence/20261024-options/REVIEW.md), [receipts](../evidence/20261024-options/verification.json). No next chapter started.
 
 Final native qualification metadata: `8239f5b42c3f2f56126b7a382dc75a4bd8114607`, pushed directly to main.
+
+## Qualified compatibility batch4 — 2026-10-26
+
+The pre-add dialog now offers per-torrent KiB/s limits, sequential preference and forced start. The Host commits original byte rates/flags and Queued75 or forced/stopped state before matching owner admission. Pending/busy/profile-reentry/child-lifetime handling and old journal/API defaults qualify; other intake modes remain open. [Review](../updates/compatibility.providers/20261026-batch4.md).

@@ -1,0 +1,293 @@
+{
+  "status": "VERIFIED_SCOPED_ACTUAL_BATCH4_RESULTS",
+  "qualified_source": "6896d528de5f33292631f39ba2db6a8369e2066e",
+  "source_commits": [
+    "c83510dca67d37be1f8d58e230af549eacf7a43a",
+    "6896d528de5f33292631f39ba2db6a8369e2066e"
+  ],
+  "matrix": {
+    "gcc": {
+      "actual_suites": 12,
+      "build_seconds": 503.02,
+      "test_seconds": 30.12,
+      "per_suite": {
+        "original-torrent-geometry": {
+          "number": 27,
+          "verbose_sha256": "ec162b19d1d1de54a016d50d77960257e25f583dabf761244a8614deadd176fa",
+          "qt_totals": []
+        },
+        "network-policy": {
+          "number": 194,
+          "verbose_sha256": "42644cdcca479f8678d0fd5eb3ca93c5cec84aa726ab4b307b717e931f2b3eea",
+          "qt_totals": []
+        },
+        "managed-download": {
+          "number": 196,
+          "verbose_sha256": "55478325999160e5edc6c47f387e53eb8ecadff2352f155ba0478fc92d899893",
+          "qt_totals": [
+            [
+              8,
+              0,
+              0
+            ]
+          ]
+        },
+        "managed-storage": {
+          "number": 197,
+          "verbose_sha256": "c7a2fc1ad2de010323035605f92f5dafe795e93cf251efbe8b81ea475a23552d",
+          "qt_totals": []
+        },
+        "torrent-intake": {
+          "number": 198,
+          "verbose_sha256": "063296f66f58db227ffdbf6532dd8fc16e44fe1695dd5890e8c6fa49a4930de3",
+          "qt_totals": []
+        },
+        "magnet-intake": {
+          "number": 202,
+          "verbose_sha256": "658c15de43844c4594d9af2f88031d8bffc35f3da3da571fdec37ff73eee4b28",
+          "qt_totals": []
+        },
+        "file-operations": {
+          "number": 219,
+          "verbose_sha256": "49ec62492f854cbba4c38b69031d06003d2916ff0e36eca35ea58c2b6ccbefa0",
+          "qt_totals": []
+        },
+        "original-identity-callers": {
+          "number": 233,
+          "verbose_sha256": "b26e3b07961352f9a78b7c428e7f33942304f98c816e2bcaac6ce0fc8da129ff",
+          "qt_totals": []
+        },
+        "torrent-intake-file-options": {
+          "number": 235,
+          "verbose_sha256": "d9114ffbe38f76f1a484ca0394ca9b52bf3a5b3664336adb6036be294b7b3d7e",
+          "qt_totals": []
+        },
+        "torrent-intake-file-options-ui": {
+          "number": 236,
+          "verbose_sha256": "0b4d45de7b39829b2bf3c22f58f03e904d73d8eaf46815436d5faa74de18e157",
+          "qt_totals": [
+            [
+              13,
+              0,
+              0
+            ]
+          ]
+        },
+        "torrent-intake-file-options-worker": {
+          "number": 238,
+          "verbose_sha256": "0ba04de92d903fea1dbfdfd243031f43e9ac3b0be5b4891e288dacc5c91361cb",
+          "qt_totals": [
+            [
+              7,
+              0,
+              0
+            ]
+          ]
+        },
+        "file-operation-sequence": {
+          "number": 245,
+          "verbose_sha256": "1fd5952f642e0e0342523e47a90de300b0614f19124a788ca3fafcd519be5597",
+          "qt_totals": [
+            [
+              9,
+              0,
+              0
+            ]
+          ]
+        }
+      }
+    },
+    "clang": {
+      "actual_suites": 12,
+      "build_seconds": 502.34,
+      "test_seconds": 30.45,
+      "per_suite": {
+        "original-torrent-geometry": {
+          "number": 27,
+          "verbose_sha256": "15af05123f0c32004f389788b4b20089e289dccd9f13293b97895a2634c9ee32",
+          "qt_totals": []
+        },
+        "network-policy": {
+          "number": 194,
+          "verbose_sha256": "8c898532aee8c24c10e428508229231a253cbc3b212d2973bcfa4add5fff38f0",
+          "qt_totals": []
+        },
+        "managed-download": {
+          "number": 196,
+          "verbose_sha256": "2369632fe60491dcf35580ae17cbc0393a254f439b7e61a1cac698bb76e4e436",
+          "qt_totals": [
+            [
+              8,
+              0,
+              0
+            ]
+          ]
+        },
+        "managed-storage": {
+          "number": 197,
+          "verbose_sha256": "7bcad8b31d5e7db476334233f7b5bd469b259392dc2553f9fd9aafa20033a182",
+          "qt_totals": []
+        },
+        "torrent-intake": {
+          "number": 198,
+          "verbose_sha256": "67a2d748e5c0f2e0fa894fa79e19b3d324e3454d52f57bec8a77904e014036cb",
+          "qt_totals": []
+        },
+        "magnet-intake": {
+          "number": 202,
+          "verbose_sha256": "abc5dbad35171bd9db9ddc60bdb48ad46107b7b63296d557e92bcf75fa38b9b2",
+          "qt_totals": []
+        },
+        "file-operations": {
+          "number": 219,
+          "verbose_sha256": "dc22b4753b7ea7d129429b6cc65d9e8ebd653cb0a51ad329cc0cc69c5800056c",
+          "qt_totals": []
+        },
+        "original-identity-callers": {
+          "number": 233,
+          "verbose_sha256": "40d626a59c8323f01ae1e5101c25b73059ae7f4a17f9baecf9603ae4a1007a9f",
+          "qt_totals": []
+        },
+        "torrent-intake-file-options": {
+          "number": 235,
+          "verbose_sha256": "a416e4b80e40f142ede76fc271f57eb97491ea223d53f02f72ef84246747c723",
+          "qt_totals": []
+        },
+        "torrent-intake-file-options-ui": {
+          "number": 236,
+          "verbose_sha256": "4e0cde953239a20401ace4ce9b2870e4dc49e8faf10e8198d18686fb0a49be1c",
+          "qt_totals": [
+            [
+              13,
+              0,
+              0
+            ]
+          ]
+        },
+        "torrent-intake-file-options-worker": {
+          "number": 238,
+          "verbose_sha256": "a13a772f8034fecafd6be8fc5cfae040ccc27f8b35f4d925eba4dbc702d3e024",
+          "qt_totals": [
+            [
+              7,
+              0,
+              0
+            ]
+          ]
+        },
+        "file-operation-sequence": {
+          "number": 245,
+          "verbose_sha256": "3c08de26ef007341573f50fbe0a135f5f449a83acfec2b22e1d58899813f10d5",
+          "qt_totals": [
+            [
+              9,
+              0,
+              0
+            ]
+          ]
+        }
+      }
+    },
+    "san": {
+      "actual_suites": 12,
+      "build_seconds": 679.94,
+      "test_seconds": 32.71,
+      "per_suite": {
+        "original-torrent-geometry": {
+          "number": 27,
+          "verbose_sha256": "9240d46a6e977f080c0b504b9516e2e6ebedec4c83c3f890144e9e4b461daac0",
+          "qt_totals": []
+        },
+        "network-policy": {
+          "number": 194,
+          "verbose_sha256": "d55812d71dc919b0340b0386aba9cce1068eeb7b9ccd95844ba86b9badb77a05",
+          "qt_totals": []
+        },
+        "managed-download": {
+          "number": 196,
+          "verbose_sha256": "a4a0b80c7eeb61ebc23cb5b34b7ff3f73b099e9bf89d74872bda20ea90a43f87",
+          "qt_totals": [
+            [
+              8,
+              0,
+              0
+            ]
+          ]
+        },
+        "managed-storage": {
+          "number": 197,
+          "verbose_sha256": "beb35ce482bc67192130a91d177491cadb20024eada1e1df3e6aa4f5f9e44c7e",
+          "qt_totals": []
+        },
+        "torrent-intake": {
+          "number": 198,
+          "verbose_sha256": "203305d5f155085e868c34a121adb01e7a98533d2241e885a88acf4be249e968",
+          "qt_totals": []
+        },
+        "magnet-intake": {
+          "number": 202,
+          "verbose_sha256": "f2ba4002f60a39f451265cef13a76112462c0b5711443dcd5bd9cd9292a1b39e",
+          "qt_totals": []
+        },
+        "file-operations": {
+          "number": 219,
+          "verbose_sha256": "06f49dda2cd7e5ba8ae582f5f1bc11ae447ef35b4cfdb472b78c2dd5be557041",
+          "qt_totals": []
+        },
+        "original-identity-callers": {
+          "number": 233,
+          "verbose_sha256": "033a734f37204d143017faa4705c5750e112914e7418707658604216325f4d78",
+          "qt_totals": []
+        },
+        "torrent-intake-file-options": {
+          "number": 235,
+          "verbose_sha256": "0e91fc53f670e155b2fbaccc8a836b5ab584cdd9457f8ff3f3acc1017e61d5da",
+          "qt_totals": []
+        },
+        "torrent-intake-file-options-ui": {
+          "number": 236,
+          "verbose_sha256": "ffe844c2dfffb4b103b52b22d2970ca1c740a18dbc030d0fca2c7e671cf83003",
+          "qt_totals": [
+            [
+              13,
+              0,
+              0
+            ]
+          ]
+        },
+        "torrent-intake-file-options-worker": {
+          "number": 238,
+          "verbose_sha256": "9fe1c6e9aeabbe838d4664b71fb5348b9f6439f90ea90dfae90de307cf54d3c3",
+          "qt_totals": [
+            [
+              7,
+              0,
+              0
+            ]
+          ]
+        },
+        "file-operation-sequence": {
+          "number": 245,
+          "verbose_sha256": "6f9167aaba8b41c0f9dd3885637123e9169cca0b12479413621f2c8ef1e185b4",
+          "qt_totals": [
+            [
+              9,
+              0,
+              0
+            ]
+          ]
+        }
+      }
+    }
+  },
+  "original_filename_projection": {
+    "cases": 226,
+    "compared_lines": 678,
+    "receipt_sha256": "a7c66c026d2b05aed74a6749e9725cb5b0a4b9ca0125b19fac968f3504293a4d",
+    "same_driver_after_followup": true
+  },
+  "prior_runtime_proof": "b7fee56d7ac7180b0e9e3dd988a8db839e3efc39b92d387e4aff7f06daa31df0",
+  "dist_promoted": false,
+  "cf_parents_closed": [],
+  "raw_archive_sha256": "3ce16a1f3f895b0c21aa6d3e23afd40d3d0fddc900df29b559fb3065bcf40869"
+}

@@ -1,6 +1,7 @@
 # Open compatibility work after the everyday torrent preview
 
-Current bounded checkpoint: `78ed6ff9c18447c210c59edf980f60332d805481`; effective36 affected suites per lane, with source-associated followups and every failed attempt retained. [Batch3 scope and evidence](../updates/compatibility.providers/20261026-batch3.md). Private d33/ea82 qualification remains unpromoted; all CF01–CF08 stay open.
+Compatibility batch4 is qualified at native `6896d528de5f33292631f39ba2db6a8369e2066e`: all12 affected suites pass at that final source in GCC, Clang and leak-enabled ASan/UBSan lanes. Actual original filename comparison passes226 cases/678 lines plus256 byte classifications. Initial GUI-fixture failures remain retained history.
+[Batch4 review](../updates/compatibility.providers/20261026-batch4.md). All CF parents remain open.
 
 Current bounded checkpoint: `e24c6eb492786290a1acf87fed44442694a0d4e4`; effective32 affected suites per lane (30 initial +2 focused), with actual companions4, ETA31/124 and filename cases7. [Batch2 review](../updates/compatibility.providers/20261026-batch2.md). All CF01–CF08 remain open; retained provider/dist records and earlier failures remain unchanged.
 
@@ -56,7 +57,7 @@ Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
   at `2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5`.
   [Workflow evidence](../evidence/20261025-storage-workflows/REVIEW.md).
   The current bounded source qualifies the tested short-tail reordered/reordered-compact corners; other layouts/corners keep this item open.
-  Batch2 additionally qualifies canonical Latin1 v1 paths and original all-or-none UTF8 overrides; unknown codecs, filename substitutions and inherited EOF-short reordered repair remain open.
+  Batch2 additionally qualifies canonical Latin1 v1 paths and original all-or-none UTF8 overrides; Batch4 adds canonical Windows-1251 and its three source-proven aliases. Undefined0x98 fallback, other codecs, filename substitutions and inherited EOF-short reordered repair remain open.
 - [ ] **CF-02 — v2/hybrid profile interoperability (P03/P11).** Extend actual
   partial/complete Java/native/Java reload checks beyond the two qualified v1
   cases. Cover full identities, alternate hybrid identities and broader original
@@ -83,7 +84,7 @@ Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
   per-file/options controls and supported priority changes during active work.
   Qualify saved original priorities, selected completion and actual payload IO.
   Active priority/Skip controls now qualify at `2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5`;
-  bounded pre-add choices additionally qualify at the source above; broader options remain open.
+  bounded pre-add choices additionally qualify at the source above. Batch4 qualifies byte-rate limits, sequential preference, explicit Queued75/Stopped/Forced intent and exact recovery/default preservation. Paused, seeding/allocated, rename/tracker/network options remain open.
 - [ ] **CF-06 — Remaining original library/file families (P03/P04/P08).**
   [P03-08](P03-08-library-file-operations.md) now qualifies single selected
   ordinary keep/delete/move/relink, v1 file/directory creation, compatible intent,
@@ -104,7 +105,7 @@ Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
   measurements. Profile/optimize the current full-payload identity-validation
   reads in move/relink/delete, including same-filesystem hardlink moves, without
   weakening confirmed ownership or crash recovery. The supported public payload ABI now removes the vptr exception in the new
-  provider lane. Broader provider/client and performance evidence remains open.
+  provider lane. Broader provider/client and performance evidence remains open. Retain and diagnose the batch3 unchanged-source sanitizer flakes (Scheduler single-torrent rate application and SOCKS5 redirected-webseed destination): both passed a focused replay, but their cause is unestablished; failed logs remain in the batch3 review/evidence.
 
 The compatibility target remains opening the same original configuration and
 torrent state in either client after closing the other. Use generated isolated
