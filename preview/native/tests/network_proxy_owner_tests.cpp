@@ -106,8 +106,10 @@ public:
           *buffer += socket->readAll();
           if (buffer->size() > 16384) { failure = "webseed header bound"; socket->abort(); return; }
           if (!buffer->contains("\r\n\r\n")) return;
-          if (++requests > 32 || !buffer->startsWith("GET /sample.bin HTTP/1.1\r\n")
-              || !buffer->contains(QByteArray("Host: ") + RemoteSeedName + ':')) {
+          const auto host = QByteArray("Host: ") + RemoteSeedName;
+          const bool hostMatches = buffer->contains(host + "\r\n")
+              || buffer->contains(host + ':' + QByteArray::number(server.serverPort()) + "\r\n");
+          if (++requests > 32 || !buffer->startsWith("GET /sample.bin HTTP/1.1\r\n") || !hostMatches) {
             failure = "unplanned webseed request"; socket->abort(); return;
           }
           qint64 first = 0, last = payload.size() - 1; bool ranged = false;
