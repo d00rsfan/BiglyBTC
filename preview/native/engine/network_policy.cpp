@@ -213,7 +213,7 @@ void validate(const NetworkPolicy& p) {
   }
 }
 enum class UrlKind { Http, Https, Udp };
-UrlKind urlKind(std::string_view url, std::string_view field) {
+UrlKind urlKind(std::string_view url, std::string_view field, bool ipv6 = true) {
   require(!url.empty() && url.size() <= MaximumText && printable(url)
       && url.find(' ') == std::string_view::npos && url.find('\\') == std::string_view::npos,
       Code::InvalidConfiguration, field);
@@ -234,6 +234,7 @@ UrlKind urlKind(std::string_view url, std::string_view field) {
     host = authority.substr(1, end - 1);
     (void)numericAddress(host, field);
     require(host.find(':') != std::string_view::npos, Code::InvalidConfiguration, field);
+    require(ipv6, Code::Unsupported, "URL / IPv6 disabled");
     if (end + 1 < authority.size()) {
       require(authority[end + 1] == ':', Code::InvalidConfiguration, field);
       port = authority.substr(end + 2);
@@ -493,15 +494,21 @@ std::expected<void, NetworkPolicyError> applyTorrentNetworkPolicy(
     std::vector<int> tiers;
     for (std::size_t i = 0; i < next.trackers.size(); ++i) {
       if (isolated) { continue; }
-      const auto kind = urlKind(next.trackers[i], "tracker URL");
+      const auto kind = urlKind(next.trackers[i], "tracker URL", p.ipv6);
       if ((kind == UrlKind::Udp && !p.udpTrackers) || (kind != UrlKind::Udp && !p.httpTrackers)) { continue; }
       trackers.push_back(next.trackers[i]);
       tiers.push_back(i < next.tracker_tiers.size() ? next.tracker_tiers[i] : 0);
     }
     const auto filterSeeds = [&](auto& seeds) {
       if (isolated || !p.webSeeds || !selection.webSeeds) { seeds.clear(); return; }
+      // This pinned provider only bypasses webseed DNS for SOCKS5. Even a
+      // numeric URL can redirect to a hostname, so admitting numeric4a alone
+      // would not establish the remote-DNS guarantee. Refuse before any IO.
+      require(seeds.empty() || !p.proxy.peers || p.proxy.kind != NetworkProxyKind::Socks4a,
+          Code::Unsupported, "SOCKS4a webseed provider");
       for (const auto& seed : seeds) {
-        require(urlKind(seed, "webseed URL") != UrlKind::Udp, Code::Unsupported, "webseed URL");
+        require(urlKind(seed, "webseed URL", p.ipv6) != UrlKind::Udp,
+            Code::Unsupported, "webseed URL");
       }
     };
     filterSeeds(next.url_seeds);

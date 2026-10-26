@@ -38,10 +38,10 @@ core::Document configuration(quint16 port, bool v5, bool trackerProxy, bool reje
   auto result = core::Document::parse((raw + 'e').toStdString());
   test::require(result.has_value(), "generated proxy config"); return std::move(*result);
 }
-void trackerSource(test::OwnedEngineFixture& fixture, quint16 port, bool domain) {
+void trackerSource(test::OwnedEngineFixture& fixture, quint16 port, bool domain, const QByteArray& name = "localhost") {
   auto state = core::Document::parse(test::read(fixture.stateFile).toStdString());
   test::require(state.has_value(), "owned metainfo");
-  const auto url = QByteArray("http://") + (domain ? "localhost" : "127.0.0.1") + ':' + QByteArray::number(port) + "/announce";
+  const auto url = QByteArray("http://") + (domain ? name : QByteArray("127.0.0.1")) + ':' + QByteArray::number(port) + "/announce";
   test::require(state->replaceValue("announce", bytes(url).toStdString()).has_value(), "owned tracker URL");
   test::write(fixture.stateFile, QByteArray::fromStdString(state->serialize()));
 }
@@ -85,6 +85,56 @@ public:
     });
   }
 };
+constexpr auto RemoteSeedName = "seed.biglybtc.invalid";
+class WebSeed final : public QObject {
+public:
+  QTcpServer server{this};
+  QByteArray payload, failure;
+  unsigned requests = 0;
+  quint64 sent = 0;
+  explicit WebSeed(QByteArray value) : payload(std::move(value)) {
+    test::require(server.listen(QHostAddress::LocalHost, 0), "owned webseed listen");
+    connect(&server, &QTcpServer::newConnection, this, [this] {
+      while (server.hasPendingConnections()) {
+        auto* socket = server.nextPendingConnection();
+        if (socket->peerAddress() != QHostAddress("127.0.0.3")) {
+          failure = "webseed direct fallback"; socket->abort(); continue;
+        }
+        auto buffer = std::make_shared<QByteArray>();
+        connect(socket, &QTcpSocket::disconnected, socket, &QObject::deleteLater);
+        connect(socket, &QTcpSocket::readyRead, socket, [this, socket, buffer] {
+          *buffer += socket->readAll();
+          if (buffer->size() > 16384) { failure = "webseed header bound"; socket->abort(); return; }
+          if (!buffer->contains("\r\n\r\n")) return;
+          if (++requests > 32 || !buffer->startsWith("GET /sample.bin HTTP/1.1\r\n")
+              || !buffer->contains(QByteArray("Host: ") + RemoteSeedName + ':')) {
+            failure = "unplanned webseed request"; socket->abort(); return;
+          }
+          qint64 first = 0, last = payload.size() - 1; bool ranged = false;
+          for (const auto& line : buffer->split('\n')) {
+            if (!line.toLower().startsWith("range: bytes=")) continue;
+            const auto range = line.mid(13).trimmed(); const auto dash = range.indexOf('-');
+            if (dash <= 0) { failure = "unplanned webseed range"; socket->abort(); return; }
+            bool firstOk = false, lastOk = true;
+            first = range.first(dash).toLongLong(&firstOk);
+            if (dash >= 0 && dash + 1 < range.size()) { last = range.mid(dash + 1).toLongLong(&lastOk); }
+            if (dash <= 0 || !firstOk || !lastOk || first < 0 || last < first || last >= payload.size()) {
+              failure = "unplanned webseed range"; socket->abort(); return;
+            }
+            ranged = true;
+          }
+          const auto body = payload.mid(first, last - first + 1); sent += body.size();
+          QByteArray header = ranged ? "HTTP/1.1 206 Partial Content\r\n" : "HTTP/1.1 200 OK\r\n";
+          if (ranged) { header += "Content-Range: bytes " + QByteArray::number(first) + '-' + QByteArray::number(last)
+              + '/' + QByteArray::number(payload.size()) + "\r\n"; }
+          header += "Content-Length: " + QByteArray::number(body.size()) + "\r\nAccept-Ranges: bytes\r\nConnection: close\r\n\r\n";
+          socket->write(header + body); socket->disconnectFromHost(); buffer->clear();
+        });
+      }
+    });
+  }
+  void stopOwned() noexcept { abortOwnedSockets(server); }
+};
 class Socks final : public QObject {
   enum class Phase { Greeting, Authentication, Connect, Opening, Relay, Rejected };
   struct Channel { QPointer<QTcpSocket> client, upstream; QByteArray pending; Phase phase = Phase::Greeting; std::optional<std::size_t> route; };
@@ -103,6 +153,8 @@ public:
   const bool remoteSocks4;
   std::vector<QByteArray> socks4Users;
   const quint16 seedPort, trackerPort;
+  quint16 webSeedPort = 0;
+  QByteArray trackerName = "localhost";
   void stopOwned() noexcept { abortOwnedSockets(server); }
   Socks(bool version5, quint16 seed, quint16 tracker, QByteArray user = {}, bool remote = false)
       : v5(version5), expectedSocks4User(std::move(user)), remoteSocks4(remote), seedPort(seed), trackerPort(tracker) {
@@ -203,9 +255,10 @@ private:
       }
       socks4Users.push_back(data.mid(8, end - 8));
     }
-    const bool tracker = domain && host == "localhost" && port == trackerPort;
+    const bool tracker = domain && host == trackerName && port == trackerPort;
     const bool peer = (!domain || (!v5 && remoteSocks4)) && host == "127.0.0.2" && port == seedPort;
-    if (!tracker && !peer) { bad(channel, "unplanned proxy destination"); return; }
+    const bool webseed = v5 && domain && host == RemoteSeedName && webSeedPort && port == webSeedPort;
+    if (!tracker && !peer && !webseed) { bad(channel, "unplanned proxy destination"); return; }
     data.remove(0, consumed); channel->phase = Phase::Opening;
     auto* upstream = new QTcpSocket(channel->client); channel->upstream = upstream;
     upstream->setProxy(QNetworkProxy::NoProxy);
@@ -224,7 +277,7 @@ private:
     connect(upstream, &QTcpSocket::errorOccurred, channel->client, [this, channel](QAbstractSocket::SocketError error) {
       if (error != QAbstractSocket::RemoteHostClosedError) bad(channel, "owned proxy upstream failed");
     });
-    upstream->connectToHost(QHostAddress(tracker ? "127.0.0.1" : "127.0.0.2"), port);
+    upstream->connectToHost(QHostAddress((tracker || webseed) ? "127.0.0.1" : "127.0.0.2"), port);
   }
 };
 // Does not fabricate a successful close: the existing tests still assert the
@@ -235,9 +288,10 @@ struct OwnerExit final {
   Tracker& tracker;
   Socks& proxy;
   engine::PersistentSession& owner;
+  WebSeed* webseed = nullptr;
   bool closed = false;
   engine::CloseReceipt close() noexcept {
-    proxy.stopOwned(); tracker.stopOwned();
+    proxy.stopOwned(); tracker.stopOwned(); if (webseed) webseed->stopOwned();
     auto result = owner.close(std::chrono::steady_clock::now() + 5s);
     closed = true; return result;
   }
@@ -351,7 +405,8 @@ private slots:
     test::OwnedEngineFixture fixture(false); lt::torrent_handle seedHandle; auto seed = seeder(fixture, seedHandle);
     QTRY_VERIFY_WITH_TIMEOUT(seed->listen_port() != 0 && seedHandle.status().is_seeding, 30000);
     Tracker tracker(seed->listen_port(), v5); Socks proxy(v5, seed->listen_port(), tracker.server.serverPort());
-    trackerSource(fixture, tracker.server.serverPort(), v5);
+    if (v5) { proxy.trackerName = "tracker.biglybtc.invalid"; }
+    trackerSource(fixture, tracker.server.serverPort(), v5, proxy.trackerName);
     auto config = configuration(proxy.server.serverPort(), v5, v5);
     auto policy = engine::readNetworkPolicy(&config, {engine::NetworkMode::Normal}); QVERIFY(policy);
     policy->listenPort = 0; // Explicit owned ephemeral listener policy; never uses the original port.
@@ -374,12 +429,70 @@ private slots:
     if (v5) {
       QVERIFY(proxy.authAttempts > 0);
       QVERIFY(proxy.udpAssociatesRejected > 0);
-      QVERIFY(std::ranges::any_of(proxy.routes, [](const auto& route) { return route.host == "localhost" && route.domain; }));
+      QVERIFY(std::ranges::any_of(proxy.routes, [](const auto& route) { return route.host == "tracker.biglybtc.invalid" && route.domain; }));
     }
     const auto closed = exit.close();
     QVERIFY(closed.sessionJoined && closed.retirement.storageReleased); QVERIFY(fixture.accountingIntact());
   }
+  void actualSocks5RemoteWebSeedPayload() {
+    test::OwnedEngineFixture fixture(false);
+    WebSeed origin(fixture.files.front().expected); Tracker tracker(1, false);
+    Socks proxy(true, 0, tracker.server.serverPort()); proxy.webSeedPort = origin.server.serverPort();
+    auto state = core::Document::parse(test::read(fixture.stateFile).toStdString()); QVERIFY(state);
+    const auto url = QByteArray("http://") + RemoteSeedName + ':' + QByteArray::number(proxy.webSeedPort) + "/sample.bin";
+    QVERIFY(state->replaceValue("url-list", bytes(url).toStdString()));
+    test::write(fixture.stateFile, QByteArray::fromStdString(state->serialize()));
+    auto config = configuration(proxy.server.serverPort(), true, false);
+    const auto originalConfig = config.serialize();
+    auto policy = engine::readNetworkPolicy(&config, {engine::NetworkMode::Normal}); QVERIFY(policy);
+    policy->listenPort = 0; policy->httpTrackers = false;
+    auto lease = storage::ProfileLease::acquire(fixture.native()); QVERIFY(lease);
+    auto owner = engine::PersistentSession::create({450, 451, 1}); QVERIFY(owner);
+    OwnerExit exit{tracker, proxy, **owner, &origin};
+    QVERIFY((*owner)->configureNetwork(*policy)); QVERIFY((*owner)->startIdle(*lease));
+    QVERIFY((*owner)->startManaged(*lease, {*fixture.hash, 0, true, false}));
+    std::optional<engine::AccountingError> pollFailure;
+    const auto completed = [&] {
+      const auto polled = (*owner)->poll(); if (!polled) pollFailure = polled.error();
+      const auto rows = (*owner)->managedDownloads(); return rows.size() == 1 && rows[0].complete && rows[0].received > 0;
+    };
+    QTRY_VERIFY2_WITH_TIMEOUT(completed(), qPrintable(facts(**owner, tracker, proxy, pollFailure)
+        + QStringLiteral(" | webseed requests=%1 sent=%2 error=%3").arg(origin.requests).arg(origin.sent).arg(QString::fromLatin1(origin.failure))), 30000);
+    QVERIFY2(origin.failure.isEmpty(), origin.failure.constData()); QVERIFY2(proxy.failure.isEmpty(), proxy.failure.constData());
+    QVERIFY(origin.requests > 0 && origin.sent >= static_cast<quint64>(fixture.files.front().expected.size()));
+    QCOMPARE(tracker.requests, 0U); QVERIFY(proxy.authAttempts > 0);
+    QVERIFY(std::ranges::any_of(proxy.routes, [](const auto& route) {
+      return route.host == RemoteSeedName && route.domain && route.local == QHostAddress("127.0.0.3")
+          && route.queuedToSeed > 0 && route.queuedToClient > 0;
+    }));
+    QCOMPARE(config.serialize(), originalConfig);
+    const auto closed = exit.close(); QVERIFY(closed.sessionJoined && closed.retirement.storageReleased);
+    QVERIFY(fixture.accountingIntact());
+  }
 #if defined(__linux__) && __has_include(<libtorrent/biglybtc_socks4a.hpp>)
+  void socks4aWebSeedNamesFailBeforeAnyRoute() {
+    const auto capability = engine::verifiedSocks4Capability(); QVERIFY(capability);
+    auto config = configuration(1080, false, false);
+    QVERIFY(config.replaceValue("Proxy.Data.SOCKS.version", bytes("V4a").toStdString()));
+    const auto policy = engine::readNetworkPolicy(&config,
+        {.mode = engine::NetworkMode::Normal, .socks4Capability = capability}); QVERIFY(policy);
+    for (bool httpSeed : {false, true}) {
+      lt::add_torrent_params params;
+      auto& seeds = httpSeed ? params.http_seeds : params.url_seeds;
+      seeds = {"http://seed.biglybtc.invalid/data"};
+      const auto beforeFlags = params.flags;
+      const auto rejected = engine::applyTorrentNetworkPolicy(*policy, {}, params);
+      QVERIFY(!rejected); QCOMPARE(rejected.error().code, engine::NetworkPolicyErrorCode::Unsupported);
+      QCOMPARE(rejected.error().field, std::string("SOCKS4a webseed provider"));
+      QCOMPARE(seeds, std::vector<std::string>{"http://seed.biglybtc.invalid/data"}); QCOMPARE(params.flags, beforeFlags);
+      seeds = {"http://127.0.0.1:8080/data"};
+      QVERIFY(!engine::applyTorrentNetworkPolicy(*policy, {}, params));
+      QCOMPARE(seeds, std::vector<std::string>{"http://127.0.0.1:8080/data"});
+      seeds = {"http://seed.biglybtc.invalid/data"};
+      engine::TorrentNetworkSelection disabled; disabled.webSeeds = false;
+      QVERIFY(engine::applyTorrentNetworkPolicy(*policy, disabled, params)); QVERIFY(seeds.empty());
+    }
+  }
   void actualVerifiedSocks4IdentityAndRemoteNameRoutes_data() {
     QTest::addColumn<bool>("remote");
     QTest::newRow("qualified-numeric4-USERID") << false;

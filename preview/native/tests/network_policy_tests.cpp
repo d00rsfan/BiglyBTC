@@ -289,6 +289,21 @@ int main() {
       CHECK(params.flags & lt::torrent_flags::override_trackers);
       CHECK(params.flags & lt::torrent_flags::override_web_seeds);
     });
+    run("IPv6 literal sources require the original IPv6 permission", [] {
+      const auto ipv4 = normal();
+      for (bool tracker : {false, true}) {
+        lt::add_torrent_params params;
+        auto& urls = tracker ? params.trackers : params.url_seeds;
+        urls = {"http://[::1]:8080/data"};
+        const auto beforeFlags = params.flags;
+        const auto denied = engine::applyTorrentNetworkPolicy(ipv4, {}, params);
+        CHECK(!denied && denied.error().code == Code::Unsupported);
+        CHECK(urls == std::vector<std::string>{"http://[::1]:8080/data"} && params.flags == beforeFlags);
+        auto ipv6 = ipv4; ipv6.ipv6 = true;
+        CHECK(engine::applyTorrentNetworkPolicy(ipv6, {}, params));
+        CHECK(urls.size() == 1);
+      }
+    });
     run("private metadata and stronger resume restrictions", [] {
       auto p = normal(nullptr, true);
       lt::add_torrent_params params;
