@@ -1,5 +1,13 @@
 # BiglyBTC migration state
 
+Bounded compatibility batch2 is qualified at native `e24c6eb492786290a1acf87fed44442694a0d4e4`: effective32 affected suites per GCC/Clang/leak-enabled sanitizer lane, comprising30 unaffected initial PASS results plus2 focused fixture-correction PASS results. The two initial fixture failures remain failed history; this is not an identical-source full32 rerun. Actual original comparisons cover4 stopped opposite-selected hybrid companion cases,31 selected ETA rows/124 scalars and7 filename getter cases.
+
+This adds reviewed low32 archive/backup deletion and recovery, stopped hybrid companions without rekeying, admission-owned target ETA, measured mapped-disk latency/stale facts, and strict Latin1/global-UTF8 filename projection. All CF01–CF08 remain open. Existing provider/dist approvals and original audit baselines are unchanged; no whole Statistics, CF, runtime, portable or provider closure is claimed.
+
+[Batch2 evidence](evidence/20261026-compatibility-batch2/verification.json). Continue remaining work autonomously; older boundaries below are historical.
+
+## Previous qualified checkpoints
+
 Bounded compatibility batch1 is qualified at native `2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a`: 27 effective affected suites per GCC/Clang/leak-enabled sanitizer lane, selected individually from actual source-bound PASS rows; four actual original Java partial/complete hybrid/v2 handoffs; controlled SOCKS5 hostname webseed payload and deterministic file-operation read-work observations; Scheduler interrupted-intent recovery/editor capture. Failed case attempts remain uncredited history; successful cases completed before a different case failed are credited individually. The original empty-first hybrid and pure-V2 failures remain explicit limitations; separately named nonempty replacements supply the other two strict cases. Continue all remaining work autonomously with batched checks. All CF01–CF08 remain open. Future webseed provider remains unapproved and supplies no batch1 authority; this is no whole-client/performance/release closure.
 
 [Batch1 evidence](evidence/20261026-compatibility-batch1/verification.json).

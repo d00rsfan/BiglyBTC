@@ -1,0 +1,403 @@
+{
+  "source_registry_sha256": "18cfc48f130bdc099080becc25b16ac90e605ce2bf4c5f5551af41d75eba9dd3",
+  "components": [
+    {
+      "id": "engine.queue_policy",
+      "feature_ids": [
+        "F07.schedule_policy"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P08-01-queue-seeding-scheduling.md",
+        "migration/tasks/P08-01-compatibility-providers.md"
+      ],
+      "target_paths": [
+        "native/core/src/queue_policy.cpp",
+        "native/engine/persistent_session.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/plugin/startstoprules/defaultplugin/RankCalculatorReal.java",
+            "core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopRulesDefaultPlugin.java",
+            "core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopConfigModel.java"
+          ],
+          "source_symbols": [
+            "RankCalculatorReal",
+            "StartStopRulesDefaultPlugin"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "cda09f95bed76f3c29a514b345a70a29881dfc85",
+          "purpose": "implementation"
+        },
+        {
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation",
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "c8afff5311e4ff650b17d09651e3db440a0c93e8",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "471ebb75fc66fefb0208b0d086a934b68aced84b",
+          "purpose": "tests"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "6b44a2c21f88c32d6f94fe595d4a42877a895bc1",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "861d4f17f2454086de8ec44a9814c292ce1f41fe",
+          "purpose": "integration"
+        }
+      ],
+      "review_records": [
+        "migration/updates/queue.scheduler/20261024.md",
+        "migration/updates/torrent.compatibility/20261025.md",
+        "migration/updates/compatibility.providers/20261025.md",
+        "migration/updates/compatibility.providers/20261025-final-two.md"
+      ],
+      "evidence": [
+        "migration/tasks/P08-01-queue-seeding-scheduling.md",
+        "migration/evidence/20261024-queue-seeding-scheduling/verification.json",
+        "migration/evidence/20261024-queue-seeding-scheduling/REVIEW.md",
+        "migration/evidence/20261025-v2-workflows/verification.json",
+        "migration/evidence/20261025-compatibility-providers/completion.json",
+        "migration/evidence/20261025-proxy-scheduler/verification.json"
+      ],
+      "decision_ref": "migration/decisions/AD-001.md"
+    },
+    {
+      "id": "library.file_operations",
+      "feature_ids": [
+        "F02.file_relocation",
+        "F05.file_operation_recovery",
+        "F15.explicit_removal"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P03-08-library-file-operations.md",
+        "migration/tasks/P08-01-compatibility-providers.md"
+      ],
+      "target_paths": [
+        "native/adapters/file_operations.cpp",
+        "native/app/session_bridge.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java",
+            "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java"
+          ],
+          "source_symbols": [
+            "removeDownloadManager",
+            "moveDataFiles",
+            "setTorrentSaveDir"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "8aa48d6904c7df979f2730fa3cb4a66bb0ab8985",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "dda0654715ffa38feea15784a92bf6f00502523e",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "c0b2fbb2071b7aae302d2db24ba3c824df874d0a",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5",
+          "purpose": "implementation"
+        },
+        {
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation",
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "c8afff5311e4ff650b17d09651e3db440a0c93e8",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "471ebb75fc66fefb0208b0d086a934b68aced84b",
+          "purpose": "tests"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "db256d08e280140f64bd4e4d25ec5a26b0b9380d",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "purpose": "integration"
+        }
+      ],
+      "review_records": [
+        "migration/updates/library.file_operations/20261024.md",
+        "migration/updates/storage.original_managed_io/20261025-core.md",
+        "migration/updates/storage.original_managed_io/20261025-workflows.md",
+        "migration/updates/torrent.compatibility/20261025.md",
+        "migration/updates/compatibility.providers/20261025.md",
+        "migration/updates/compatibility.providers/20261026-batch1.md"
+      ],
+      "evidence": [
+        "migration/tasks/P03-08-library-file-operations.md",
+        "migration/evidence/20261024-library-file-operations/verification.json",
+        "migration/evidence/20261025-storage-resume/verification.json",
+        "migration/evidence/20261025-storage-workflows/verification.json",
+        "migration/evidence/20261025-v2-workflows/verification.json",
+        "migration/evidence/20261025-compatibility-providers/completion.json",
+        "migration/evidence/20261026-compatibility-batch1/verification.json"
+      ],
+      "decision_ref": "migration/decisions/AD-001.md"
+    },
+    {
+      "id": "ui.classic_file_operations",
+      "feature_ids": [
+        "F19.file_operation_workflows",
+        "F21.original_creation_dialog"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P03-08-library-file-operations.md",
+        "migration/tasks/P08-01-compatibility-providers.md"
+      ],
+      "target_paths": [
+        "native/ui/file_operation_dialog.cpp",
+        "native/ui/torrent_creation_dialog.cpp",
+        "native/ui/library_window.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "uis/src/com/biglybt/ui/swt/TorrentUtil.java",
+            "uis/src/com/biglybt/ui/swt/maketorrent/NewTorrentWizard.java"
+          ],
+          "source_symbols": [
+            "removeDownloads",
+            "NewTorrentWizard"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "8aa48d6904c7df979f2730fa3cb4a66bb0ab8985",
+          "purpose": "implementation"
+        },
+        {
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation",
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "c8afff5311e4ff650b17d09651e3db440a0c93e8",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "471ebb75fc66fefb0208b0d086a934b68aced84b",
+          "purpose": "tests"
+        }
+      ],
+      "review_records": [
+        "migration/updates/library.file_operations/20261024.md",
+        "migration/updates/torrent.compatibility/20261025.md",
+        "migration/updates/compatibility.providers/20261025.md"
+      ],
+      "evidence": [
+        "migration/tasks/P03-08-library-file-operations.md",
+        "migration/evidence/20261024-library-file-operations/verification.json",
+        "migration/evidence/20261025-v2-workflows/verification.json",
+        "migration/evidence/20261025-compatibility-providers/completion.json"
+      ],
+      "decision_ref": "migration/decisions/AD-001.md"
+    },
+    {
+      "id": "storage.original_managed_io",
+      "feature_ids": [
+        "F02.compact_map",
+        "F02.reordered_map"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P03-09-storage-resume-compatibility.md",
+        "migration/tasks/P08-01-compatibility-providers.md"
+      ],
+      "target_paths": [
+        "preview/native/adapters/original_file_io.cpp",
+        "preview/native/engine/original_disk_io.cpp",
+        "preview/native/engine/managed_storage.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/diskmanager/file/impl/FMFileAccessCompact.java",
+            "core/src/com/biglybt/core/diskmanager/file/impl/FMFileAccessPieceReorderer.java",
+            "core/src/com/biglybt/core/diskmanager/file/impl/FMFileAccessController.java"
+          ],
+          "source_symbols": [
+            "FMFileAccessCompact.read",
+            "FMFileAccessCompact.write",
+            "FMFileAccessPieceReorderer.getPieceOffset",
+            "FMFileAccessController.setStorageType"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "c0b2fbb2071b7aae302d2db24ba3c824df874d0a",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5",
+          "purpose": "implementation"
+        },
+        {
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation",
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "c8afff5311e4ff650b17d09651e3db440a0c93e8",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "471ebb75fc66fefb0208b0d086a934b68aced84b",
+          "purpose": "tests"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "a5613ed5fba8be76bec7a22d1b15c4edc09f0d01",
+          "purpose": "tests"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "purpose": "integration"
+        }
+      ],
+      "review_records": [
+        "migration/updates/storage.original_managed_io/20261025-core.md",
+        "migration/updates/storage.original_managed_io/20261025-workflows.md",
+        "migration/updates/torrent.compatibility/20261025.md",
+        "migration/updates/compatibility.providers/20261025.md",
+        "migration/updates/compatibility.providers/20261026-batch1.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261025-storage-resume/verification.json",
+        "migration/evidence/20261025-storage-workflows/verification.json",
+        "migration/evidence/20261025-v2-workflows/verification.json",
+        "migration/evidence/20261025-compatibility-providers/completion.json",
+        "migration/evidence/20261026-compatibility-batch1/verification.json"
+      ],
+      "decision_ref": null
+    },
+    {
+      "id": "formats.original_torrent_identity",
+      "feature_ids": [
+        "F01.original_file_geometry",
+        "F05.same_profile_local"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P03-10-v2-hybrid-compatibility.md"
+      ],
+      "target_paths": [
+        "preview/native/adapters/original_torrent_identity.hpp",
+        "preview/native/adapters/original_torrent_identity.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/torrent/impl/TOTorrentImpl.java",
+            "core/src/com/biglybt/core/torrent/TOTorrent.java"
+          ],
+          "source_symbols": [
+            "TOTorrentImpl.selectHybridHashType",
+            "TOTorrentImpl.getHash",
+            "TOTorrent.getEffectiveTorrentType"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "commit": "4f948e042df9467310a5752d4343b07915673f84",
+          "purpose": "implementation",
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "a5613ed5fba8be76bec7a22d1b15c4edc09f0d01",
+          "purpose": "tests"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "purpose": "integration"
+        }
+      ],
+      "review_records": [
+        "migration/updates/torrent.compatibility/20261025.md",
+        "migration/updates/compatibility.providers/20261026-batch1.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261025-v2-workflows/verification.json",
+        "migration/evidence/20261026-compatibility-batch1/verification.json"
+      ],
+      "decision_ref": null
+    }
+  ],
+  "baselines_unchanged": true,
+  "qualified_source": "e24c6eb492786290a1acf87fed44442694a0d4e4"
+}

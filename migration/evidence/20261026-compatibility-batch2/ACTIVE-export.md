@@ -1,0 +1,1 @@
+Batch2 qualified source `e24c6eb492786290a1acf87fed44442694a0d4e4`. Actual32 affected suites per lane; scoped original aliases/ETA/filename results are in verification.json. Continue remaining compatibility work. All CF parents remain open; preserved dist/provider baselines carry forward. Merge this small export into current ACTIVE; it is not a replacement for other active work.

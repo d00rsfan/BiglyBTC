@@ -1,5 +1,7 @@
 # P08-01 — Queue, seeding rules and scheduling
 
+**Batch2, 2026-10-26:** `e24c6eb492786290a1acf87fed44442694a0d4e4`. Admission-owned target ETA and measured mapped-disk latency/stale inputs qualify; unknown/stock-mmap measurements remain unavailable and new-seed/group saved-position normalization stays pending. [Scope and actual evidence](../updates/compatibility.providers/20261026-batch2.md).
+
 Bounded compatibility batch1 is qualified at native `2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a`: 27 effective affected suites per GCC/Clang/leak-enabled sanitizer lane, selected individually from actual source-bound PASS rows; four actual original Java partial/complete hybrid/v2 handoffs; controlled SOCKS5 hostname webseed payload and deterministic file-operation read-work observations; Scheduler interrupted-intent recovery/editor capture. Failed case attempts remain uncredited history; successful cases completed before a different case failed are credited individually. The original empty-first hybrid and pure-V2 failures remain explicit limitations; separately named nonempty replacements supply the other two strict cases. Continue all remaining work autonomously with batched checks. All CF01–CF08 remain open. Future webseed provider remains unapproved and supplies no batch1 authority; this is no whole-client/performance/release closure.
 
 [Batch1 evidence](../evidence/20261026-compatibility-batch1/verification.json).

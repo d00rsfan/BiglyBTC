@@ -1,5 +1,7 @@
 # P03-09 — Original storage/resume compatibility (CF-01)
 
+**Batch2, 2026-10-26:** `e24c6eb492786290a1acf87fed44442694a0d4e4`. Canonical Latin1/global-UTF8 projection and admission-specific measured mapped-disk facts are qualified; unsupported codecs, substitutions and inherited EOF-short repair remain open. [Scope and actual evidence](../updates/compatibility.providers/20261026-batch2.md).
+
 State: active 2026-10-25. User authorizes all remaining plan work; this is the
 first dependency chapter, followed by CF-02 and subsequent applicable chapters.
 Original baseline cb8c6cb9bb97916cbc7e80338a017200ffc3e71f;
