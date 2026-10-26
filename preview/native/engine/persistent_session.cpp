@@ -7,6 +7,7 @@
 #include "peer_payload_observer.hpp"
 #include "managed_storage.hpp"
 #include "library_commands.hpp"
+#include "queue_positions.hpp"
 #include "magnet_intake.hpp"
 #include "torrent_intake.hpp"
 #include "metadata_disk_router.hpp"
@@ -106,6 +107,9 @@ struct PersistentSession::Impl {
     std::optional<core::QueueSwarm> swarm;
     int connectedLeechers = 0;
     std::optional<std::uint32_t> queuePosition;
+    std::optional<bool> positionTransition;
+    std::uint64_t positionTransitionOrder=0;
+    bool positionTransitionLost=false;
     std::int64_t remainingBytes = 0, badPayloadBytes = 0;
     bool flushed = false, removing = false, removed = false;
     Clock::time_point deadline{};
@@ -122,6 +126,13 @@ struct PersistentSession::Impl {
   std::optional<LiveQueueLimits> liveQueueLimits;
   std::optional<core::QueuePolicy> queuePolicy;
   int targetSmoothingSeconds=30;
+  bool queuePositionsPending=true,queuePositionsUnavailable=true;
+  // A failed save invocation may have published its CAS. Never replay its old
+  // event in this owner. Refusals before save may retry on a new real trigger;
+  // pending=false prevents repeated reads from otherwise unchanged poll().
+  bool queuePositionsBlocked=false;
+  std::uint64_t queuePositionObservation=0;
+  std::shared_ptr<const storage::Error> queuePositionFailure;
   core::QueueDownloadProbes downloadProbes;
   core::QueueGlobalReceiveAverage queueGlobalAverage;
   std::optional<std::int32_t> queueGlobalReceiveKiB;
@@ -683,6 +694,14 @@ struct PersistentSession::Impl {
           std::chrono::duration_cast<std::chrono::seconds>(lt::clock_type::now() - sample.last_upload).count());
     }
     value.connectedLeechers = std::max(0, sample.num_peers - sample.num_seeds);
+    const bool positionChecked=sample.state!=lt::torrent_status::checking_files
+        &&sample.state!=lt::torrent_status::checking_resume_data&&sample.state!=lt::torrent_status::downloading_metadata;
+    if(value.status.checked&&positionChecked&&sample.is_finished!=value.status.selectedComplete){
+      if(value.positionTransition||queuePositionObservation==std::numeric_limits<std::uint64_t>::max()){
+        value.positionTransitionLost=true;
+      }else{value.positionTransition=sample.is_finished;value.positionTransitionOrder=++queuePositionObservation;}
+      queuePositionsPending=true;queuePositionsUnavailable=true;
+    }
     if (value.status.checked && sample.is_finished && !value.status.selectedComplete) {
       value.completedTransition = true;
     }
@@ -732,7 +751,50 @@ struct PersistentSession::Impl {
     value.handle.pause();
     value.handle.save_resume_data(lt::torrent_handle::flush_disk_cache);
   }
+  void normalizeManagedPositions() noexcept {
+    if(queuePositionsBlocked||!queuePositionsPending||!queuePolicy||!managedLease||managed.empty()){return;}
+    // Deferred checking is not an unknown=complete guess and performs no IO.
+    for(const auto& [key,value]:managed){
+      static_cast<void>(key);
+      if(!value->handle.is_valid()||!value->status.retained||!value->status.checked
+          ||value->stop||value->removing||value->status.failure){return;}
+    }
+    queuePositionsPending=false; // One attempt per actual admission/transition.
+    bool saveAttempted=false;
+    try{
+      std::vector<storage::LibraryPositionObservation> observations;
+      std::vector<Managed*> owners;owners.reserve(managed.size());
+      std::vector<std::pair<std::uint64_t,storage::LibraryGroupTransition>> ordered;
+      observations.reserve(managed.size());ordered.reserve(managed.size());
+      for(const auto& [key,value]:managed){
+        static_cast<void>(key);
+        if(value->positionTransitionLost){throw detail::Failure{{storage::ErrorCode::Unsupported,"Original group transition order was lost; reopen to normalize from saved positions"}};}
+        const auto policy=value->storage.capturedFilePolicy();
+        observations.push_back({value->status.hash,value->storage.identity(),value->storage.capturedDownload(),
+            std::vector<compat::FilePolicy>(policy.begin(),policy.end()),value->status.selectedComplete,
+            value->storage.capturedQueueMappingScope()});owners.push_back(value.get());
+        if(value->positionTransition){ordered.push_back({value->positionTransitionOrder,{value->status.hash,*value->positionTransition}});}
+      }
+      std::ranges::sort(ordered,[](const auto& a,const auto& b){return a.first<b.first;});
+      std::vector<storage::LibraryGroupTransition> transitions;transitions.reserve(ordered.size());
+      for(const auto& row:ordered){transitions.push_back(row.second);}
+      const auto normalized=storage::normalizeLibraryPositions(*managedLease,observations,transitions,queuePolicy->newSeedsMoveTop,&saveAttempted);
+      if(!normalized){throw detail::Failure{normalized.error()};}
+      // All allocations and the actual whole-inventory CAS finished before any
+      // queue rank sees these committed source positions.
+      for(std::size_t i=0;i<owners.size();++i){
+        owners[i]->queuePosition=normalized->positions[i].position;
+        owners[i]->status.queuePosition=normalized->positions[i].position;
+      }
+      for(auto& [key,value]:managed){static_cast<void>(key);value->positionTransition.reset();}
+      queuePositionsUnavailable=false;queuePositionFailure.reset();
+    }catch(const detail::Failure& failure){
+      queuePositionsBlocked=saveAttempted;queuePositionsUnavailable=true;
+      try{queuePositionFailure=std::make_shared<const storage::Error>(failure.error);}catch(...){queuePositionFailure.reset();}
+    }catch(...){queuePositionsBlocked=saveAttempted;queuePositionsUnavailable=true;queuePositionFailure.reset();}
+  }
   void applyQueue() {
+    normalizeManagedPositions();
     std::vector<core::QueueTorrentFacts> facts;
     facts.reserve(managed.size());
     std::map<std::uint64_t, Managed*> targets;
@@ -883,14 +945,14 @@ struct PersistentSession::Impl {
         value.status.seedingRank = decision.seedingRank;
         value.status.firstPriority = decision.firstPriority;
         value.status.unavailableQueueInputs = plan->unavailableInputs;
+        if(queuePositionsUnavailable){value.status.unavailableQueueInputs|=1U<<5;}
+        value.status.queuePositionFailure=queuePositionFailure;
         if (decision.clearForceStart && value.forceStart && managedLease) {
           auto saved = storage::clearLibraryForceStart(*managedLease, value.status.hash);
           if (!saved) { value.status.unavailableQueueInputs |= 0x40000000U; continue; }
           value.forceStart = false; value.status.forceStart = false;
         }
-        if (decision.moveNewSeedToTop) {
-          // Original group renumbering needs completion authority for every
-          // saved row. Do not invent it from incomplete inventory coverage.
+        if (decision.moveNewSeedToTop&&queuePositionsUnavailable) {
           value.status.unavailableQueueInputs |= 1U << 5;
         }
         if (value.completedTransition) { value.completionHandled = true; }
@@ -1266,6 +1328,7 @@ std::expected<void, storage::Error> PersistentSession::configureQueuePolicy(cons
   if (!validated) { return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,
       "Invalid queue policy: " + validated.error().key}); }
   impl_->queuePolicy = policy;
+  impl_->queuePositionsPending=true;impl_->queuePositionsUnavailable=true;
   if (policy.downloadOrder != core::QueueDownloadOrder::Eta) {
     for (auto& [key, value] : impl_->managed) {
       static_cast<void>(key); value->status.queueTargetStatistics.reset(); value->targetEta.reset();
@@ -1381,6 +1444,7 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
     catch (...) { impl_->joinPoisoned(); throw; }
     slot->second->status.retained = true;
     impl_->managedLease = &lease;
+    impl_->queuePositionsPending=true;impl_->queuePositionsUnavailable=true;
     impl_->phase = AccountingState::Active;
     if (impl_->queuePolicy || options.manuallyPaused || !options.queued || options.forceStart) { slot->second->handle.resume(); }
     // stop_when_ready atomically pauses at the end of checking, before payload
@@ -1465,6 +1529,7 @@ std::expected<void, storage::Error> PersistentSession::forgetManaged(const core:
   if (value.status.failure) { return std::unexpected(*value.status.failure); }
   impl_->managedByHandle.erase(value.handle);
   impl_->managed.erase(found); // Releases ManagedStorage's path/file descriptors.
+  impl_->queuePositionsPending=true;impl_->queuePositionsUnavailable=true;
   if (removePeerHints) { impl_->importPeers.erase(hash.hex()); }
   return {};
 }
@@ -1598,6 +1663,8 @@ std::expected<void, storage::Error> PersistentSession::reorderManaged(std::span<
     found->second->queuePosition = ++position;
     found->second->handle.queue_position_set(lt::queue_position_t{position-1});
   }
+  impl_->queuePositionsPending=true;impl_->queuePositionsUnavailable=true;
+  if(impl_->queuePolicy){impl_->normalizeManagedPositions();}
   return {};
 }
 bool PersistentSession::managedAvailable() const noexcept {

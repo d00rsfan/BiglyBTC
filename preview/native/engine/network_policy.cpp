@@ -501,11 +501,11 @@ std::expected<void, NetworkPolicyError> applyTorrentNetworkPolicy(
     }
     const auto filterSeeds = [&](auto& seeds) {
       if (isolated || !p.webSeeds || !selection.webSeeds) { seeds.clear(); return; }
-      // This pinned provider only bypasses webseed DNS for SOCKS5. Even a
-      // numeric URL can redirect to a hostname, so admitting numeric4a alone
-      // would not establish the remote-DNS guarantee. Refuse before any IO.
-      require(seeds.empty() || !p.proxy.peers || p.proxy.kind != NetworkProxyKind::Socks4a,
-          Code::Unsupported, "SOCKS4a webseed provider");
+      // Old4a providers resolve webseed names locally. Numeric URLs can
+      // redirect too: only the separately proven resolver capability admits
+      // this source family. The same pinned provider handle stays alive.
+      require(seeds.empty() || !p.proxy.peers || p.proxy.kind != NetworkProxyKind::Socks4a
+          || verifiedSocks4WebSeeds(p.socks4Capability), Code::Unsupported, "SOCKS4a webseed provider");
       for (const auto& seed : seeds) {
         require(urlKind(seed, "webseed URL", p.ipv6) != UrlKind::Udp,
             Code::Unsupported, "webseed URL");

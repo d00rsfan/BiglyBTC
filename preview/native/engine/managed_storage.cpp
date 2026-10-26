@@ -1,5 +1,6 @@
 #include "biglybtc/original_file_links.hpp"
 #include "managed_storage.hpp"
+#include "queue_positions.hpp"
 #include "managed_payload_counters.hpp"
 #include "linear_to_compact.hpp"
 #include "original_layout_projection.hpp"
@@ -438,6 +439,7 @@ struct ManagedStorage::Impl {
   core::SavedDownload captured;
   ManagedQueueMetadata queue;
   std::vector<compat::FilePolicy> filePolicies;
+  std::string queueMappingScope;
   storage::TorrentStateStore store;
   storage::TorrentStateFile state;
   compat::OriginalLayout layout;
@@ -465,6 +467,9 @@ ManagedStorage& ManagedStorage::operator=(ManagedStorage&&) noexcept=default;
 ManagedStorage::~ManagedStorage()=default;
 lt::add_torrent_params ManagedStorage::parameters() const { return impl_?impl_->params:lt::add_torrent_params{}; }
 const ManagedQueueMetadata& ManagedStorage::queueMetadata() const { return impl_->queue; }
+const core::SavedDownload& ManagedStorage::capturedDownload() const { return impl_->captured; }
+std::span<const compat::FilePolicy> ManagedStorage::capturedFilePolicy() const noexcept { return impl_->filePolicies; }
+const std::string& ManagedStorage::capturedQueueMappingScope() const noexcept { return impl_->queueMappingScope; }
 std::int64_t ManagedStorage::originalBytes() const noexcept { return impl_?impl_->layout.bytes:0; }
 bool ManagedStorage::originalProgressRequiresPieces() const noexcept { return impl_&&impl_->progressFromPieces; }
 std::expected<core::QueueFilePriorityStats,core::QueueFilePriorityError> ManagedStorage::filePriorityStatistics(
@@ -664,6 +669,9 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     auto result=std::make_unique<Impl>(hash,std::move(identity),saved,std::move(store),std::move(state),std::move(layout),std::move(params),save,
       std::move(slots),std::move(pending),std::move(claimPlan.values),profile.st_dev,profile.st_ino);
     result->queue=queue; result->swarmBridge=std::move(swarmBridge); result->filePolicies=std::move(*parsedPolicy);
+    // Capture after authoritative cache hydration, defaults and conversions;
+    // later classification cannot authorize a newly relinked physical map.
+    result->queueMappingScope=take(storage::originalQueueMappingScope(result->state.document()));
     if(mapped){result->mapped=std::make_shared<OriginalDiskFiles>(info,std::move(mappedFiles));}
     return ManagedStorage(std::move(result));
   } catch (const Failure& error) { return std::unexpected(error.error); }

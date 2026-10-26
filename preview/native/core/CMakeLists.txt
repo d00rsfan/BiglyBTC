@@ -64,3 +64,6 @@ target_sources(biglybtc_core PRIVATE src/queue_download_probe.cpp)
 target_sources(biglybtc_core PRIVATE src/queue_rate_providers.cpp)
 
 target_sources(biglybtc_core PRIVATE src/queue_target_statistics.cpp)
+
+# Original saved completion-group queue ordering.
+target_sources(biglybtc_core PRIVATE src/queue_positions.cpp)

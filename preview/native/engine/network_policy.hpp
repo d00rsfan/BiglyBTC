@@ -25,6 +25,8 @@ enum class NetworkProxyKind { None, Socks4, Socks5, Http, Socks4a };
 // policy parsing never loads/verifies a provider. Missing/old SDK stays strict.
 struct VerifiedSocks4Capability;
 std::shared_ptr<const VerifiedSocks4Capability> verifiedSocks4Capability() noexcept;
+// Additional same-image source marker required: old4a providers must not resolve webseed names locally.
+bool verifiedSocks4WebSeeds(const std::shared_ptr<const VerifiedSocks4Capability>&) noexcept;
 struct NetworkProxy {
   NetworkProxyKind kind = NetworkProxyKind::None;
   std::string host, username, password;

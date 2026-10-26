@@ -165,6 +165,15 @@ bool relocatableNextProviderArtifact() {
           == "b0e55bfbdc2be5dc2ebbefc953837d64c9e5151b0305332335071e37b6956937"
       && runtime_binding::bytes == 9085072ULL;
 }
+bool relocatableWebseedProviderArtifact() {
+  // Exact reviewed source/build/SDK manifest; all same-image export/mapping/FD
+  // identity/hash checks below still apply. No marker/version-only authority.
+  return std::string_view(runtime_binding::manifest)
+          == "ea82f78982a1428eb64067719cf30bbca7cfd09dd2abfcf8f76024f6e6ed41d5"
+      && std::string_view(runtime_binding::sha256)
+          == "d33c17c73c3c377cedd88256b0b48e472b2de55f0a95a890e2837556e1d1002a"
+      && runtime_binding::bytes == 9085128ULL;
+}
 bool hashed(int descriptor) {
   Digest context;
   if (!context.value || EVP_DigestInit_ex(context.value, EVP_sha256(), nullptr) != 1) { return false; }
@@ -201,7 +210,8 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
   if (::dlinfo(library.value, RTLD_DI_LINKMAP, &object) || !object) { return false; }
   const auto actual = canonicalPath(object->l_name);
   if (!actual || (std::string_view(actual->data()) != runtime_binding::artifact
-                  && !relocatableSourceArtifact() && !relocatableSelectedProviderArtifact() && !relocatableNextProviderArtifact())) { return false; }
+                  && !relocatableSourceArtifact() && !relocatableSelectedProviderArtifact() && !relocatableNextProviderArtifact()
+                  && !relocatableWebseedProviderArtifact())) { return false; }
   // These are ORIGINAL dynamic exports, not &method / __wrap_* references.
   // GNU --wrap test seams therefore do not misidentify the test executable as LT.
   constexpr const char* symbols[] = {

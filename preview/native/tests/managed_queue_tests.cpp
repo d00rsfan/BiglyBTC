@@ -6,6 +6,9 @@
 #include <QtTest>
 
 #include <algorithm>
+#include <atomic>
+#include <cerrno>
+#include <sys/stat.h>
 #include <array>
 #include <chrono>
 #include <cstdint>
@@ -17,6 +20,24 @@
 #include <vector>
 #include <unistd.h>
 
+namespace {
+// Test-only syscall seam. Only the exact owned profile directory is matched;
+// all real syncs execute. Fail the second directory-sync return (after primary
+// publication), never a payload/background directory. No production fault API.
+std::atomic<std::uint64_t> queueFaultDevice{0},queueFaultInode{0};
+std::atomic<int> queueFaultRemaining{0},queueFaultHits{0};
+}
+extern "C" int __real_fsync(int);
+extern "C" int __wrap_fsync(int fd){
+  const auto actual=__real_fsync(fd);if(actual!=0||queueFaultRemaining.load(std::memory_order_acquire)<=0){return actual;}
+  struct stat value{};
+  if(::fstat(fd,&value)==0&&S_ISDIR(value.st_mode)
+      &&static_cast<std::uint64_t>(value.st_dev)==queueFaultDevice.load()
+      &&static_cast<std::uint64_t>(value.st_ino)==queueFaultInode.load()){
+    if(queueFaultRemaining.fetch_sub(1,std::memory_order_acq_rel)==1){++queueFaultHits;errno=EIO;return -1;}
+  }
+  return actual;
+}
 namespace {
 using namespace biglybtc;
 using namespace std::chrono_literals;
@@ -197,8 +218,9 @@ private slots:
     const auto cleared=parsed(test::read(fixture.profile+QStringLiteral("/downloads.config")));
     const auto& oldRow=entry(before,*fixture.hash);const auto& newRow=entry(cleared,*fixture.hash);
     QCOMPARE(oldRow.children.size(),newRow.children.size());QCOMPARE(integer(newRow,"forceStart"),std::int64_t{0});
+    QCOMPARE(integer(newRow,"position"),std::int64_t{1}); // Original one-item group fixup.
     for(std::size_t i=0;i<oldRow.children.size();i+=2){
-      const auto key=oldRow.children[i].bytes;if(key=="forceStart"){continue;}
+      const auto key=oldRow.children[i].bytes;if(key=="forceStart"||key=="position"){continue;}
       const auto* actual=newRow.find(key);QVERIFY(actual);QCOMPARE(encoded(*actual),encoded(oldRow.children[i+1]));
     }
     QVERIFY(service->stopManaged(*fixture.hash));
@@ -209,7 +231,7 @@ private slots:
     QCOMPARE(integer(row,"downloaded"),std::int64_t{1000}+stopped->received);
     QCOMPARE(integer(row,"uploaded"),std::int64_t{500000}+stopped->sent);
     QVERIFY(integer(row,"secondsDownloading")>=71&&integer(row,"secondsOnlySeeding")>=83);
-    QCOMPARE(integer(row,"state"),std::int64_t{75});QCOMPARE(integer(row,"position"),std::int64_t{8});
+    QCOMPARE(integer(row,"state"),std::int64_t{75});QCOMPARE(integer(row,"position"),std::int64_t{1});
     QCOMPARE(integer(row,"forceStart"),std::int64_t{0});
     QVERIFY(row.find("opaque.queue")&&oldRow.find("opaque.queue"));
     QCOMPARE(encoded(*row.find("opaque.queue")),encoded(*oldRow.find("opaque.queue")));
@@ -234,6 +256,97 @@ private slots:
     QCOMPARE(integer(finalRow,"forceStart"),std::int64_t{0});
     QVERIFY(finalRow.find("opaque.queue"));
     QCOMPARE(encoded(*finalRow.find("opaque.queue")),encoded(*oldRow.find("opaque.queue")));QVERIFY(fixture.intact());
+  }
+  void actualNewSeedNormalizesBothSavedGroups_data(){QTest::addColumn<bool>("top");QTest::newRow("new-seed-top")<<true;QTest::newRow("new-seed-end")<<false;}
+  void actualNewSeedNormalizesBothSavedGroups(){
+    QFETCH(bool,top);
+    test::OwnedEngineFixture seed(false),download(true);
+    QTRY_VERIFY_WITH_TIMEOUT(seed.ready()&&download.ready(),30000);
+    for(const auto& file:seed.files){test::write(seed.payload+'/'+file.relative,file.expected);}
+    merge(seed,download);
+    edit(seed,*seed.hash,{{"position","i1e"},{"forceStart","i1e"},{"opaque.queue","li7e4:keepe"}});
+    edit(seed,*download.hash,{{"position","i9e"},{"opaque.queue","li9e4:keepe"}});
+    auto lease=held(seed);auto service=owner();auto p=policy(1,0);p.rankMode=core::QueueRankMode::None;
+    p.minimumSeedSeconds=0;p.minimumSeedActiveSeconds=0;p.newSeedsMoveTop=top;p.retainForceStartOnComplete=true;p.ignoreZeroPeers=false;
+    QVERIFY(service->configureQueuePolicy(p));
+    QVERIFY(service->startManaged(lease,{.hash=*seed.hash,.forceStart=true,.manuallyPaused=true}));
+    QVERIFY(service->startManaged(lease,{.hash=*download.hash,.ownedLoopbackPeerPort=download.port()}));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=service->poll();const auto a=status(*service,*seed.hash),b=status(*service,*download.hash);
+      return poll&&a&&b&&!a->failure&&!b->failure&&a->checked&&b->checked&&a->complete&&b->complete
+          &&a->queuePosition==std::optional<std::uint32_t>{top?2U:1U}&&b->queuePosition==std::optional<std::uint32_t>{top?1U:2U}
+          &&!a->queuePositionFailure&&!b->queuePositionFailure;
+    })(),30000);
+    const auto a=status(*service,*seed.hash),b=status(*service,*download.hash);QVERIFY(a&&b);
+    QVERIFY(a->manuallyPaused&&a->forceStart&&a->received==0&&b->received>0);
+    const auto saved=parsed(test::read(seed.profile+QStringLiteral("/downloads.config")));
+    QCOMPARE(integer(entry(saved,*seed.hash),"position"),std::int64_t{top?2:1});QCOMPARE(integer(entry(saved,*download.hash),"position"),std::int64_t{top?1:2});
+    QCOMPARE(integer(entry(saved,*seed.hash),"forceStart"),std::int64_t{1});
+    QCOMPARE(encoded(*entry(saved,*seed.hash).find("opaque.queue")),std::string("li7e4:keepe"));
+    QCOMPARE(encoded(*entry(saved,*download.hash).find("opaque.queue")),std::string("li9e4:keepe"));
+    const auto closed=service->close(std::chrono::steady_clock::now()+5s);
+    QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(seed.intact(false));
+    const auto final=parsed(test::read(seed.profile+QStringLiteral("/downloads.config")));
+    QCOMPARE(integer(entry(final,*seed.hash),"position"),std::int64_t{top?2:1});QCOMPARE(integer(entry(final,*download.hash),"position"),std::int64_t{top?1:2});
+  }
+  void laterAdmissionRestoresCompletePositionAuthorityWithoutReopening(){
+    test::OwnedEngineFixture first(false),second(true);QTRY_VERIFY_WITH_TIMEOUT(first.ready()&&second.ready(),30000);merge(first,second);
+    edit(first,*first.hash,{{"position","i3e"}});edit(first,*second.hash,{{"position","i8e"}});
+    auto lease=held(first);auto service=owner();auto p=policy(1,0);p.rankMode=core::QueueRankMode::None;
+    QVERIFY(service->configureQueuePolicy(p));QVERIFY(service->startManaged(lease,{.hash=*first.hash,.manuallyPaused=true}));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=service->poll();const auto value=status(*service,*first.hash);
+      return poll&&value&&value->checked&&value->queuePositionFailure;
+    })(),30000);
+    const auto incomplete=status(*service,*first.hash);QVERIFY(incomplete&&!incomplete->failure);
+    QCOMPARE(incomplete->queuePositionFailure->code,storage::ErrorCode::Unsupported);
+    const auto unchanged=test::read(first.profile+QStringLiteral("/downloads.config"));
+    for(int i=0;i<3;++i){QVERIFY(service->poll());const auto current=status(*service,*first.hash);QVERIFY(current&&current->queuePositionFailure==incomplete->queuePositionFailure);}
+    QCOMPARE(test::read(first.profile+QStringLiteral("/downloads.config")),unchanged);
+    QVERIFY(service->startManaged(lease,{.hash=*second.hash,.manuallyPaused=true}));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=service->poll();const auto a=status(*service,*first.hash),b=status(*service,*second.hash);
+      return poll&&a&&b&&a->checked&&b->checked&&!a->failure&&!b->failure&&!a->queuePositionFailure&&!b->queuePositionFailure
+          &&a->queuePosition==std::optional<std::uint32_t>{1}&&b->queuePosition==std::optional<std::uint32_t>{2};
+    })(),30000);
+    const auto a=status(*service,*first.hash),b=status(*service,*second.hash);QVERIFY(a&&b&&a->manuallyPaused&&b->manuallyPaused&&a->received==0&&b->received==0);
+    const auto normalized=parsed(test::read(first.profile+QStringLiteral("/downloads.config")));
+    QCOMPARE(integer(entry(normalized,*first.hash),"position"),std::int64_t{1});QCOMPARE(integer(entry(normalized,*second.hash),"position"),std::int64_t{2});
+    const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(first.intact(false));
+  }
+  void uncertainPublishedGroupTransitionNeverReplaysInSameOwner(){
+    test::OwnedEngineFixture seed(false),download(true);QTRY_VERIFY_WITH_TIMEOUT(seed.ready()&&download.ready(),30000);
+    for(const auto& file:seed.files){test::write(seed.payload+'/'+file.relative,file.expected);}merge(seed,download);
+    edit(seed,*seed.hash,{{"position","i1e"},{"forceStart","i1e"}});edit(seed,*download.hash,{{"position","i1e"}});
+    auto lease=held(seed);auto service=owner();auto p=policy(1,0);p.rankMode=core::QueueRankMode::None;
+    p.minimumSeedSeconds=0;p.minimumSeedActiveSeconds=0;p.newSeedsMoveTop=true;p.retainForceStartOnComplete=true;p.ignoreZeroPeers=false;
+    QVERIFY(service->configureQueuePolicy(p));
+    QVERIFY(service->startManaged(lease,{.hash=*seed.hash,.forceStart=true,.manuallyPaused=true}));
+    QVERIFY(service->startManaged(lease,{.hash=*download.hash,.ownedLoopbackPeerPort=download.port(),.manuallyPaused=true}));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=service->poll();const auto a=status(*service,*seed.hash),b=status(*service,*download.hash);
+      return poll&&a&&b&&a->checked&&b->checked&&a->complete&&!b->complete&&!a->queuePositionFailure&&!b->queuePositionFailure;
+    })(),30000);
+    struct stat profile{};QVERIFY(::fstat(lease.directoryHandle(),&profile)==0);
+    queueFaultDevice=static_cast<std::uint64_t>(profile.st_dev);queueFaultInode=static_cast<std::uint64_t>(profile.st_ino);queueFaultHits=0;queueFaultRemaining.store(2,std::memory_order_release);
+    struct Disarm{~Disarm(){queueFaultRemaining=0;}} disarm;
+    QVERIFY(service->pauseManaged(*download.hash,false));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=service->poll();const auto a=status(*service,*seed.hash),b=status(*service,*download.hash);
+      return poll&&a&&b&&b->complete&&b->received>0&&a->queuePositionFailure&&b->queuePositionFailure;
+    })(),30000);
+    QCOMPARE(queueFaultHits.load(),1);const auto failed=status(*service,*download.hash);QVERIFY(failed&&failed->queuePositionFailure);
+    QCOMPARE(failed->queuePositionFailure->code,storage::ErrorCode::Io);
+    QVERIFY(failed->queuePositionFailure->message.find("replacement already occurred")!=std::string::npos);
+    const auto published=parsed(test::read(seed.profile+QStringLiteral("/downloads.config")));
+    QCOMPARE(integer(entry(published,*seed.hash),"position"),std::int64_t{2});QCOMPARE(integer(entry(published,*download.hash),"position"),std::int64_t{1});
+    // Subsequent explicit manual order is a new source decision. The uncertain
+    // old completion event cannot overwrite it via configure/reorder triggers.
+    edit(seed,*seed.hash,{{"position","i1e"}});edit(seed,*download.hash,{{"position","i2e"}});
+    const auto manuallyOrdered=test::read(seed.profile+QStringLiteral("/downloads.config"));
+    QVERIFY(service->configureQueuePolicy(p));const std::array<core::TorrentHash,2> order{*seed.hash,*download.hash};QVERIFY(service->reorderManaged(order));QVERIFY(service->poll());
+    QCOMPARE(test::read(seed.profile+QStringLiteral("/downloads.config")),manuallyOrdered);
+    const auto retained=status(*service,*download.hash);QVERIFY(retained&&retained->queuePositionFailure==failed->queuePositionFailure);
+    QVERIFY((retained->unavailableQueueInputs&(1U<<5))!=0);
+    queueFaultRemaining=0;
+    const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
+    const auto final=parsed(test::read(seed.profile+QStringLiteral("/downloads.config")));
+    QCOMPARE(integer(entry(final,*seed.hash),"position"),std::int64_t{1});QCOMPARE(integer(entry(final,*download.hash),"position"),std::int64_t{2});QVERIFY(seed.intact(false));
   }
   void actualTargetEtaIsAdmissionOwnedAndPauseClearsCurrentAuthority() {
     test::OwnedEngineFixture fixture(false,true);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);

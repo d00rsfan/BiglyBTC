@@ -48,3 +48,6 @@ target_sources(biglybtc_local_engine PRIVATE network_binding.cpp)
 target_sources(biglybtc_local_engine PRIVATE network_proxy_capability.cpp)
 
 target_sources(biglybtc_local_engine PRIVATE disk_latency.cpp)
+
+# Original saved group-position normalization under profile authority.
+target_sources(biglybtc_profile PRIVATE ../adapters/queue_positions.cpp)

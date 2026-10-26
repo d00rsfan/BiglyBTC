@@ -1095,6 +1095,10 @@ endif()
 
 add_executable(biglybtc-library-commands-tests library_commands_tests.cpp)
 target_link_libraries(biglybtc-library-commands-tests PRIVATE biglybtc_profile)
+if(TARGET biglybtc_local_engine)
+  target_compile_definitions(biglybtc-library-commands-tests PRIVATE BIGLYBTC_HAVE_QUEUE_POSITIONS=1)
+  target_link_libraries(biglybtc-library-commands-tests PRIVATE OpenSSL::Crypto)
+endif()
 target_compile_options(biglybtc-library-commands-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
 add_test(NAME library-commands COMMAND biglybtc-library-commands-tests)
 
@@ -1282,6 +1286,7 @@ if(BIGLYBTC_DESKTOP)
     set_target_properties(biglybtc-managed-queue-tests PROPERTIES AUTOMOC ON)
     target_link_libraries(biglybtc-managed-queue-tests PRIVATE biglybtc_local_engine biglybtc_profile Qt6::Test LibtorrentRasterbar::torrent-rasterbar)
     target_compile_options(biglybtc-managed-queue-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+    target_link_options(biglybtc-managed-queue-tests PRIVATE "LINKER:--wrap=fsync")
     add_test(NAME managed-queue COMMAND biglybtc-managed-queue-tests)
     set_tests_properties(managed-queue PROPERTIES LABELS "unit;queue;runtime-bound" TIMEOUT 180 ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
   endif()
@@ -1796,3 +1801,12 @@ target_link_libraries(biglybtc-queue-target-statistics-replay PRIVATE BiglyBTC::
 target_compile_options(biglybtc-queue-target-statistics-replay PRIVATE -Wall -Wextra -Wpedantic -Werror)
 # The existing managed-queue Qt target gains one actual owner method; its
 # source-bound runtime/module gates and deadlines remain unchanged.
+
+# Root merges into preview/native/tests/CMakeLists.txt after the existing runtime
+# interposition, preload and deployment fixture targets have been registered.
+include("${CMAKE_CURRENT_SOURCE_DIR}/ProviderWebseedRuntimeTests.cmake")
+# Existing source/default/strict/selected/next provider registrations stay exact.
+# New focused qualification after review/adoption:
+# provider-webseed-runtime-inputs; provider-webseed-runtime-deployment;
+# network-proxy-capability (+ new same-image/foreign-only webseed cases),
+# network-proxy-owner (+ actual redirects/refusals), existing managed/owner tests.

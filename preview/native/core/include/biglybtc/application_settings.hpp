@@ -151,7 +151,7 @@ inline constexpr std::array Catalog{
   boolean(PreventNewSeedsAtUploadLimit,Seeding,"StartStopManager_bStartNoMoreSeedsWhenUpLimitMet","Do not start seeds at upload limit",false,A::Live,""),
   integer(UploadLimitSlack,Seeding,"StartStopManager_bStartNoMoreSeedsWhenUpLimitMetSlack","Upload-limit threshold",95,0,std::numeric_limits<int>::max(),A::Live,""),
   boolean(UploadLimitSlackIsPercent,Seeding,"StartStopManager_bStartNoMoreSeedsWhenUpLimitMetPercent","Upload threshold is a percentage",true,A::Live,""),
-  boolean(NewSeedsMoveTop,Queue,"StartStopManager_bNewSeedsMoveTop","Move newly completed seeds to top",true,A::OriginalOnly,"Saved for Java; native completion-group normalization remains pending."),
+  boolean(NewSeedsMoveTop,Queue,"StartStopManager_bNewSeedsMoveTop","Move newly completed seeds to top",true,A::Live,"Applied when every saved completion group has a current checked owner; otherwise positions remain unchanged and unavailable."),
   boolean(RetainForceStartOnComplete,Queue,"StartStopManager_bRetainForceStartWhenComplete","Keep force-start after completion",false,A::Live,"Transition intent only; worker persists original force/pool ordering before engine effects."),
   boolean(LightSeedingEnabled,Seeding,"Enable Light Seeding","Light seeding",true,A::OriginalOnly,"Queued lightweight tracker/activation service is unavailable; this saved setting is preserved for the original client."),
   integer(ReservedLightSeedSlots,Seeding,"Light Seed Slots Reserved","Reserved light-seed slots",4,0,std::numeric_limits<int>::max(),A::OriginalOnly,"Queued lightweight tracker/activation service is unavailable; this saved setting is preserved for the original client."),

@@ -1,4 +1,10 @@
 #include "library_commands.hpp"
+#include "biglybtc/queue_positions.hpp"
+#ifdef BIGLYBTC_HAVE_QUEUE_POSITIONS
+#include "queue_positions.hpp"
+#include <zlib.h>
+#include <openssl/evp.h>
+#endif
 
 #include <array>
 #include <cerrno>
@@ -115,8 +121,135 @@ void denied(Area& area, char target, Action action, Code code, std::span<const s
 void test(std::string_view name, const std::function<void()>& body) { body(); ++families; std::cout << "case " << name << '\n'; }
 }
 
+#ifdef BIGLYBTC_HAVE_QUEUE_POSITIONS
+struct PositionRecord {core::TorrentHash hash;storage::OriginalTorrentIdentity identity;core::SavedDownload admitted;std::string row;bool complete;std::string mappingScope;};
+std::string positionDigest(std::string_view bytes){
+  std::array<unsigned char,EVP_MAX_MD_SIZE> out{};unsigned size=0;
+  require(EVP_Digest(bytes.data(),bytes.size(),out.data(),&size,EVP_sha1(),nullptr)==1&&size==20,"Actual original fixture SHA1");
+  return {reinterpret_cast<const char*>(out.data()),size};
+}
+PositionRecord positionRecord(Area& area,char label,std::optional<std::int64_t> position,bool complete){
+  const std::string info="d6:lengthi1e4:name1:"+std::string(1,label)+"12:piece lengthi16384e6:pieces"+b(positionDigest(std::string(1,label)))+'e';
+  const auto rawHash=positionDigest(info);const auto key=core::TorrentHash::parse(rawHash);require(key.has_value(),"Actual position identity");
+  auto source=core::Document::parse("d4:info"+info+"6:opaqueli7e3:rawee",storage::compatibleConfigLimits());require(source.has_value(),"Original position state");
+  storage::OriginalFullInfoHashes full;full.v1.emplace();std::copy_n(reinterpret_cast<const std::byte*>(rawHash.data()),20,full.v1->begin());
+  const auto subject=storage::originalTorrentInfoSubject(*source);require(subject.has_value(),"Pristine original position info");
+  const auto identity=storage::selectOriginalTorrentIdentity(*source,{*subject,full});require(identity.has_value(),"Full original position proof");
+  std::filesystem::create_directories(area.root/"active");area.write("active/"+key->hex()+".dat",source->serialize());
+  auto row=core::Document::parse(entry(label,70,1,position));require(row.has_value()&&row->replaceValue("torrent_hash",b(rawHash)).has_value(),"Actual original inventory hash");
+  const auto encoded=row->serialize();const auto document=core::Document::parse(inventory(encoded));
+  require(document.has_value(),"Actual position library source");const auto saved=core::readLibrary(*document);require(saved&&saved->downloads.size()==1,"Actual admitted mapping");
+  const auto scope=storage::originalQueueMappingScope(*source);require(scope.has_value(),"Captured original physical mapping");
+  return {*key,*identity,saved->downloads[0],encoded,complete,*scope};
+}
+std::string positionGzip(std::string_view value){
+  z_stream stream{};require(::deflateInit2(&stream,Z_DEFAULT_COMPRESSION,Z_DEFLATED,31,8,Z_DEFAULT_STRATEGY)==Z_OK,"Initialize actual original cache gzip");
+  struct End{z_stream& stream;~End(){::deflateEnd(&stream);}} end{stream};
+  stream.next_in=reinterpret_cast<Bytef*>(const_cast<char*>(value.data()));stream.avail_in=static_cast<uInt>(value.size());
+  std::array<char,4096> buffer{};std::string output;int result=Z_OK;
+  while(result==Z_OK){stream.next_out=reinterpret_cast<Bytef*>(buffer.data());stream.avail_out=buffer.size();result=::deflate(&stream,Z_FINISH);output.append(buffer.data(),buffer.size()-stream.avail_out);}
+  require(result==Z_STREAM_END,"Encode actual original state cache");return output;
+}
+std::vector<storage::LibraryPositionObservation> positionFacts(std::initializer_list<PositionRecord> records){
+  std::vector<storage::LibraryPositionObservation> facts;for(const auto& row:records){facts.push_back({row.hash,row.identity,row.admitted,{{false,0}},row.complete,row.mappingScope});}return facts;
+}
+#endif
 int main() {
   try {
+    test("original-group-position-defaults-gaps-and-explicit-transitions",[] {
+      using Input=core::QueuePositionInput;using Event=core::QueuePositionTransition;
+      const std::array<Input,4> missing{{{1,{},false},{2,{},true},{3,{},false},{4,{},true}}};
+      auto fixed=core::normalizeQueuePositions(missing);require(fixed&&*fixed==std::vector<std::uint32_t>({1,1,2,2}),"Missing original positions append to their own group");
+      const auto trace=[](std::string_view name,const std::vector<std::uint32_t>& values){std::cout<<"OBS\t"<<name<<'\t';for(std::size_t i=0;i<values.size();++i){if(i){std::cout<<',';}std::cout<<values[i];}std::cout<<'\n';};
+      trace("missing",*fixed);
+      const std::array<Input,3> gaps{{{1,9,false},{2,3,false},{3,1,true}}};
+      fixed=core::normalizeQueuePositions(gaps);require(fixed&&*fixed==std::vector<std::uint32_t>({2,1,1}),"Source independent group gap fixup");trace("gaps",*fixed);
+
+      const std::array<Input,3> changed{{{1,1,true},{2,9,true},{3,7,false}}};
+      const std::array<Event,1> top{{{2,true,true}}},end{{{2,true,false}}};
+      fixed=core::normalizeQueuePositions(changed,top);require(fixed&&*fixed==std::vector<std::uint32_t>({2,1,1}),"Actual new seed top shifts seed group and fixes incomplete gap");
+      fixed=core::normalizeQueuePositions(changed,end);require(fixed&&*fixed==std::vector<std::uint32_t>({1,2,1}),"Actual new seed end retains source seed ordering");
+      const std::array<Input,2> reversed{{{1,7,false},{2,2,false}}};const std::array<Event,1> back{{{1,false,false}}};
+      fixed=core::normalizeQueuePositions(reversed,back);require(fixed&&*fixed==std::vector<std::uint32_t>({2,1}),"Original reverse-completion default appends to downloads");
+      const std::array<Input,2> narrowed{{{1,4294967298LL,false},{2,0,false}}};
+      fixed=core::normalizeQueuePositions(narrowed);require(fixed&&*fixed==std::vector<std::uint32_t>({2,1}),"Original Long.intValue and zero position fixup retained");trace("int-wrap",*fixed);
+      const std::array<Input,3> simultaneous{{{1,1,true},{2,2,true},{3,1,true}}};const std::array<Event,2> accepted{{{2,true,true},{3,true,true}}};
+      fixed=core::normalizeQueuePositions(simultaneous,accepted);require(fixed&&*fixed==std::vector<std::uint32_t>({3,2,1}),"Explicit accepted completion observation order is retained");
+      const std::array<Input,2> ambiguous{{{1,1,false},{2,1,false}}};require(!core::normalizeQueuePositions(ambiguous),"Unproven original non-strict same-pool tie is not guessed");
+      const std::array<Input,2> overflow{{{1,std::numeric_limits<std::int32_t>::min(),false},{2,std::numeric_limits<std::int32_t>::max(),false}}};require(!core::normalizeQueuePositions(overflow),"Original comparator subtraction overflow domain refuses");
+    });
+#ifdef BIGLYBTC_HAVE_QUEUE_POSITIONS
+    test("authenticated-group-position-sparse-save-and-noop",[] {
+      Area area;const auto a=positionRecord(area,'a',9,false),b=positionRecord(area,'b',3,false),c=positionRecord(area,'c',{},true);
+      area.write("downloads.config",inventory(a.row+b.row+c.row,"l"+pause('p',true,77,"6:opaqueli3ee")+'e'));area.acquire();
+      const auto opaque=rawRoot(area,"opaque"),pauses=rawRoot(area,"pause_data");
+      const auto facts=positionFacts({c,a,b});const auto result=storage::normalizeLibraryPositions(*area.lease,facts);
+      require(result&&result->changed&&result->positions.size()==3&&result->positions[0].hash==c.hash&&result->positions[0].position==1
+          &&result->positions[1].hash==a.hash&&result->positions[1].position==2&&result->positions[2].position==1,"All rows normalized, result bound to observation order");
+      require(rawRoot(area,"opaque")==opaque&&rawRoot(area,"pause_data")==pauses,"Unrelated raw metadata/pause ownership unchanged");
+      const auto saved=area.saved();for(const auto& row:saved.downloads){require(row.forceStart&&row.startup==core::StartupState::Stopped,"Position-only save cannot change force or stopped intent");}
+      const auto before=stamp(area);const auto repeated=storage::normalizeLibraryPositions(*area.lease,facts);require(repeated&&!repeated->changed,"Already normalized inventory no-op");unchanged(area,before);
+      const std::array<storage::LibraryGroupTransition,1> transition{{{a.hash,true}}};
+      auto current=positionFacts({a,b,c});current[0].complete=true;
+      const auto moved=storage::normalizeLibraryPositions(*area.lease,current,transition,true);require(moved&&moved->changed&&moved->positions[0].position==1&&moved->positions[1].position==1&&moved->positions[2].position==2,"Checked source transition updates both completion groups");
+      require(rawRoot(area,"opaque")==opaque&&rawRoot(area,"pause_data")==pauses,"New seed never changes original pause/unknown values");
+    });
+    test("position-groups-bind-authoritative-physical-map-not-unrelated-attributes",[] {
+      Area area;const auto a=positionRecord(area,'a',1,false);area.write("downloads.config",inventory(a.row));area.acquire();
+      const auto facts=positionFacts({a});const auto before=stamp(area);const auto statePath="active/"+a.hash.hex()+".dat";const auto original=area.read(statePath);
+      const std::array<std::pair<std::string_view,std::string>,8> changes{{
+        {"filelinks2","l"+::b("0\n/unopened/payload/a\n/unopened/other/a")+'e'}, {"storetypes","l1:Ce"},
+        {"incompfilesuffix",::b(".az!")},{"dnd_pfx",::b("x")},{"dnd_sf",::b("dnd")},{"dnd_al",::b("/unopened/other")},
+        {"BiglyBTC.completion","de"},{"BiglyBTC.compactConversion","le"}}};
+      for(const auto& [key,value]:changes){
+        auto state=core::Document::parse(original,storage::compatibleConfigLimits());require(state&&state->replaceValue("attributes","d"+::b(key)+value+'e'),"Change only one mapping attribute");
+        area.write(statePath,state->serialize());const auto result=storage::normalizeLibraryPositions(*area.lease,facts);
+        require(!result&&result.error().code==Code::Conflict,"Old checked data cannot classify a changed physical map");unchanged(area,before);
+      }
+      area.write(statePath,original);
+      // LAST cache entry is authoritative even if the primary is unchanged.
+      const auto rawHash=a.hash.bytes();const std::string hashValue(reinterpret_cast<const char*>(rawHash.data()),rawHash.size());
+      const auto cached="d4:hash"+::b(hashValue)+"10:attributesd10:filelinks2l"+::b("0\n/unopened/payload/a\n/unopened/other/a")+"eee";
+      area.write("active/cache.dat",positionGzip("d5:statel"+cached+cached+"ee"));
+      auto result=storage::normalizeLibraryPositions(*area.lease,facts);require(!result&&result.error().code==Code::Conflict,"Cached mapping cannot reuse primary-only checked authority");unchanged(area,before);
+      // A later matching entry replaces earlier mapping and may carry unrelated
+      // unknown/counter data. Those values are outside the captured map scope.
+      const auto unrelated="d4:hash"+::b(hashValue)+"10:attributesd10:opaque.mapli9e4:keepe10:downloadedi123eee";
+      area.write("active/cache.dat",positionGzip("d5:statel"+cached+unrelated+"ee"));
+      const auto cacheBytes=area.read("active/cache.dat");result=storage::normalizeLibraryPositions(*area.lease,facts);
+      require(result&&!result->changed,"Last cached unrelated attributes do not invalidate unchanged mapping");unchanged(area,before);
+      require(area.read(statePath)==original&&area.read("active/cache.dat")==cacheBytes,"Read-only authority checks preserve all original state/cache bytes");
+      const auto badSelector="d4:hash"+::b(hashValue)+"4:azppd14:hybrid_hash_v2"+::b("wrong")+"ee";
+      area.write("active/cache.dat",positionGzip("d5:statel"+badSelector+"ee"));
+      result=storage::normalizeLibraryPositions(*area.lease,facts);
+      require(!result&&result.error().code==Code::InvalidFormat,"Authoritative cached selected-identity properties cannot be ignored");unchanged(area,before);
+    });
+    test("position-save-attempt-authority-distinguishes-coverage-noop-and-save",[] {
+      Area area;const auto a=positionRecord(area,'a',8,false),other=positionRecord(area,'b',3,false);
+      area.write("downloads.config",inventory(a.row+other.row));area.acquire();const auto before=stamp(area);
+      bool attempted=true;const auto partial=positionFacts({a});
+      auto result=storage::normalizeLibraryPositions(*area.lease,partial,{},true,&attempted);
+      require(!result&&result.error().code==Code::Unsupported&&!attempted,"Incomplete coverage is explicitly before publication");unchanged(area,before);
+      const auto full=positionFacts({a,other});attempted=false;
+      result=storage::normalizeLibraryPositions(*area.lease,full,{},true,&attempted);
+      require(result&&result->changed&&attempted&&result->positions[0].position==2&&result->positions[1].position==1,"Later complete authority publishes correct independent group positions");
+      const auto normalized=stamp(area);attempted=true;result=storage::normalizeLibraryPositions(*area.lease,full,{},true,&attempted);
+      require(result&&!result->changed&&!attempted,"No-op resets publication-attempt authority too");unchanged(area,normalized);
+    });
+    test("position-normalization-refuses-unproven-identity-coverage-and-publication",[] {
+      Area area;const auto a=positionRecord(area,'a',8,false),b=positionRecord(area,'b',1,true);area.write("downloads.config",inventory(a.row+b.row));area.acquire();
+      const auto before=stamp(area);auto facts=positionFacts({a});auto result=storage::normalizeLibraryPositions(*area.lease,facts);require(!result&&result.error().code==Code::Unsupported,"Missing completion group refuses");unchanged(area,before);
+      facts=positionFacts({a,b});facts[0].identity=b.identity;result=storage::normalizeLibraryPositions(*area.lease,facts);require(!result&&result.error().code==Code::Conflict,"Different full raw identity refuses");unchanged(area,before);
+      facts=positionFacts({a,b});facts[0].admitted.saveDirectory="/changed/unowned";
+      result=storage::normalizeLibraryPositions(*area.lease,facts);require(!result&&result.error().code==Code::Conflict,"Old checked payload cannot classify a changed saved mapping");unchanged(area,before);
+      facts=positionFacts({a,b});facts[0].policy[0].skipped=true;
+      result=storage::normalizeLibraryPositions(*area.lease,facts);require(!result&&result.error().code==Code::Conflict,"Different selected-file policy cannot reuse checked group authority");unchanged(area,before);
+      facts=positionFacts({a,b});area.write("biglybt.config","d"+::b("StartStopManager_bAutoReposition")+"i1e"+::b("StartStopManager_iRankType")+"i1ee");
+      result=storage::normalizeLibraryPositions(*area.lease,facts);require(!result&&result.error().code==Code::Unsupported,"Unqualified ranked/provider group ordering is not guessed");unchanged(area,before);
+      area.write("biglybt.config","de");
+      facts=positionFacts({a,b});area.write("downloads.config.saving","foreign");result=storage::normalizeLibraryPositions(*area.lease,facts);require(!result,"Existing unpublished source cannot be overwritten");unchanged(area,before);require(area.read("downloads.config.saving")=="foreign","Original failure leaves foreign saving untouched");
+    });
+#endif
     test("start-stop-force-with-opaque-preservation",[] {
       Area area; const auto other = entry('b',75,0,2); area.write("downloads.config",inventory(entry('a')+other)); area.acquire();
       const auto opaque = rawRoot(area,"opaque"); const auto unaffected = rawRow(area,'b');

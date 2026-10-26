@@ -35,7 +35,7 @@ int main(int argc, char** argv) {
     std::cout << "capability=0 default-or-old-provider-denied=1 no-owner-created=1\n";
     return 0;
   }
-  if (mode == "present") {
+  if (mode == "present" || mode == "present-webseed") {
     auto pin = biglybtc::engine::detail::managedPayloadCounterRuntimePin(true);
     if (!pin) { return 3; }
     void* own = ::dlsym(pin.get(), "biglybtc_socks4a_abi_v1");
@@ -46,8 +46,27 @@ int main(int argc, char** argv) {
         || !provider.dli_fbase || marker.dli_fbase != provider.dli_fbase
         || reinterpret_cast<Marker>(own)() != 1) { return 4; }
     const auto capability = biglybtc::engine::verifiedSocks4Capability();
-    if (!capability) { return 5; }
+    if (!capability || engine::verifiedSocks4WebSeeds(capability) != (mode == "present-webseed")) { return 5; }
     std::cout << "full-eleven-export-proof=1 marker-same-image=1 capability=1 no-owner-created=1\n";
+    return 0;
+  }
+  if (mode == "foreign-webseed") {
+    const auto* preload = std::getenv("LD_PRELOAD");
+    if (!preload || !*preload || engine::verifiedSocks4Capability()) { return 12; }
+    if (::unsetenv("LD_PRELOAD") || std::getenv("LD_PRELOAD")) { return 13; }
+    auto pin = engine::detail::managedPayloadCounterRuntimePin(true);
+    if (!pin) { return 14; }
+    void* own = ::dlsym(pin.get(), "biglybtc_socks4a_webseed_abi_v1");
+    void* foreign = ::dlsym(RTLD_DEFAULT, "biglybtc_socks4a_webseed_abi_v1");
+    void* calls = ::dlsym(RTLD_DEFAULT, "biglybtc_foreign_webseed_marker_calls");
+    Dl_info a{}, b{};
+    if (!own || !foreign || !calls || own == foreign || !::dladdr(own, &a) || !::dladdr(foreign, &b)
+        || !a.dli_fbase || !b.dli_fbase || a.dli_fbase == b.dli_fbase
+        || reinterpret_cast<Marker>(own)() != 1 || reinterpret_cast<Marker>(calls)() != 0) { return 15; }
+    const auto capability = engine::verifiedSocks4Capability();
+    if (!capability || engine::verifiedSocks4WebSeeds(capability)
+        || reinterpret_cast<Marker>(calls)() != 0) { return 16; }
+    std::cout << "full-eleven-export-proof=1 base4a-capability=1 foreign-webseed-image=1 webseed-capability=0 foreign-not-invoked-by-guard=1 no-owner-created=1\n";
     return 0;
   }
   if (mode != "foreign") { return 6; }

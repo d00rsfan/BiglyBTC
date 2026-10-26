@@ -1,6 +1,7 @@
 #pragma once
 
 #include "biglybtc/library.hpp"
+#include "biglybtc/file_policy.hpp"
 #include "biglybtc/queue_file_priority.hpp"
 #include "profile.hpp"
 #include "original_torrent_identity.hpp"
@@ -11,6 +12,7 @@
 #include <filesystem>
 #include <vector>
 #include <span>
+#include <string>
 
 namespace biglybtc::engine {
 struct NetworkPolicy;
@@ -49,6 +51,10 @@ public:
   ~ManagedStorage();
   libtorrent::add_torrent_params parameters() const;
   const ManagedQueueMetadata& queueMetadata() const;
+  // Captured original mapping for passive same-admission group authority.
+  const core::SavedDownload& capturedDownload() const;
+  std::span<const compat::FilePolicy> capturedFilePolicy() const noexcept;
+  const std::string& capturedQueueMappingScope() const noexcept;
   std::shared_ptr<OriginalDiskFiles> mappedFiles() const;
   std::int64_t originalBytes() const noexcept;
   bool originalProgressRequiresPieces() const noexcept;

@@ -6,6 +6,7 @@
 #include <array>
 #include <cstdint>
 #include <optional>
+#include <memory>
 #include <string>
 #include <vector>
 namespace biglybtc::engine {
@@ -33,6 +34,9 @@ struct ManagedDownloadStatus {
   // Current mapped-admission request latency; absent for stock mmap/lost facts.
   std::optional<std::int64_t> diskReadLatencyMillis{},diskWriteLatencyMillis{};
   std::optional<std::int32_t> staleRankOffset{};
+  // Last committed original completion-group position, not LT queue index.
+  std::optional<std::uint32_t> queuePosition{};
+  std::shared_ptr<const storage::Error> queuePositionFailure{};
 };
 enum class MagnetPhase { Resolving, Retiring, Imported, Failed, Cancelled };
 struct PendingMagnetStatus {
