@@ -1,5 +1,7 @@
 # Open compatibility work after the everyday torrent preview
 
+Current bounded checkpoint: `78ed6ff9c18447c210c59edf980f60332d805481`; effective36 affected suites per lane, with source-associated followups and every failed attempt retained. [Batch3 scope and evidence](../updates/compatibility.providers/20261026-batch3.md). Private d33/ea82 qualification remains unpromoted; all CF01–CF08 stay open.
+
 Current bounded checkpoint: `e24c6eb492786290a1acf87fed44442694a0d4e4`; effective32 affected suites per lane (30 initial +2 focused), with actual companions4, ETA31/124 and filename cases7. [Batch2 review](../updates/compatibility.providers/20261026-batch2.md). All CF01–CF08 remain open; retained provider/dist records and earlier failures remain unchanged.
 
 Bounded compatibility batch1 is qualified at native `2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a`: 27 effective affected suites per GCC/Clang/leak-enabled sanitizer lane, selected individually from actual source-bound PASS rows; four actual original Java partial/complete hybrid/v2 handoffs; controlled SOCKS5 hostname webseed payload and deterministic file-operation read-work observations; Scheduler interrupted-intent recovery/editor capture. Failed case attempts remain uncredited history; successful cases completed before a different case failed are credited individually. The original empty-first hybrid and pure-V2 failures remain explicit limitations; separately named nonempty replacements supply the other two strict cases. Continue all remaining work autonomously with batched checks. All CF01–CF08 remain open. Future webseed provider remains unapproved and supplies no batch1 authority; this is no whole-client/performance/release closure.
@@ -60,16 +62,17 @@ Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
   cases. Cover full identities, alternate hybrid identities and broader original
   profile options without losing unknown fields or payload progress.
   Batch2 adds explicit stopped opposite-selected hybrid companions with unchanged raw/full source identity and four actual original comparisons; no in-place rekey or concurrent shared-payload admission is claimed.
+  Batch3 adds actual selected V1/V2 uTP IPv4/IPv6 payload/hash/endpoint proof, separate raw Both paths and actual opposite-swarm refusals; detached wire/discovery and selected Java fixup arithmetic remain separately scoped.
 - [ ] **CF-03 — Network settings and routes (P04/P07/P11).** Complete original
   bind/interface/proxy behavior and its settings UI; qualify applicable TCP/uTP,
   IPv6, DHT/PEX, web-seed and private-torrent paths. Verify route/DNS behavior and
-  failure isolation against controlled endpoints. Tor/I2P depend on their P07
+  failure isolation against controlled endpoints. Batch3 adds optional same-image SOCKS4a webseed direct/redirect/refusal routes and actual selected uTP IPv4/IPv6 proof on the exact private provider; broader routing remains open. Tor/I2P depend on their P07
   integrations. Translation alone does not establish runtime compatibility.
 - [ ] **CF-04 — Remaining queue/seeding providers and Scheduler recovery (P08).**
   P08-01 now qualifies ordinary deterministic ranks/FP/ignore/limits/minimums,
   persistent manual queue authority, compatible settings and Speed Scheduler
   editor/rate/pause integration. See [review](../evidence/20261024-queue-seeding-scheduling/REVIEW.md).
-  Ordinary file-priority facts, active speed-probe states and global rate hooks remain qualified. Batch2 adds admission-owned target ETA and measured mapped-disk latency/stale facts with explicit missing/reset handling. Stock mmap latency stays unavailable; native remaining bytes are the selected-engine counterpart, not whole Java peer/disk equivalence. External/tag/lightweight providers and new-seed/group saved-position normalization remain open.
+  Ordinary file-priority facts, active speed-probe states and global rate hooks remain qualified. Batch2 adds admission-owned target ETA and measured mapped-disk latency/stale facts with explicit missing/reset handling. Stock mmap latency stays unavailable; native remaining bytes are the selected-engine counterpart, not whole Java peer/disk equivalence. Batch3 qualifies bounded original complete/incomplete-group position normalization and NewSeedsLive with full source/state/cache/mapping/selection authority and save-attempt no-replay fencing. External/tag/lightweight and broader ranked-provider behavior remain open.
   Retain exact tracker announce/scrape/self-exclusion, original duration rounding,
   extreme share-ratio overflow projection and within-cycle bandwidth differences.
   Explicit imported/current-session pause permissions and interrupted-intent

@@ -1,0 +1,1889 @@
+{
+  "schema": 1,
+  "status": "VERIFIED_SCOPED_ACTUAL_BATCH3_RESULTS",
+  "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+  "source_commits": [
+    "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+    "6c8b22d58647539cc37876690b7b117aa56119e2",
+    "450547b3120b7f6d68106567c9e55b9078c0c27f",
+    "78ed6ff9c18447c210c59edf980f60332d805481"
+  ],
+  "composition_sha256": "b7c694ab8a40005a1a9ac6b73064e2e8b69f484362dd9d0e4fb00bb593e517a6",
+  "actual_planned_suites": 36,
+  "matrix": {
+    "gcc": {
+      "actual_suites": 36,
+      "configure": {
+        "root_receipt_sha256": "52451e6af4906384fcb138da812abdc1a692ba9ffb4d7064edfa0ece50bd599c",
+        "cache_sha256": "09e25e048262e3b432ffed5d6e54715416179ff565117335caf63a4d55353c68",
+        "binding_receipt_sha256": "ac6d04d6380d1d92dcf62046917d850a0f2161c9a3b6f8270b03b155bfa35330",
+        "source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a"
+      },
+      "per_suite": {
+        "persistent-native-peer-session": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 117,
+          "full_verbose_sha256": "656538aead683462d975326b66d378f4936d7c774ebbcc96307deb9bd37e54ff",
+          "semantic_sha256": "6fee2805ae500ceccec31e12eea30fc086a01df7ffc80e4548ea409b76fd03f1",
+          "qt_totals": [
+            {
+              "passed": 12,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "persistent-runtime-source-bound": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 121,
+          "full_verbose_sha256": "00e4d29623fcf752a5153d16e4b74fad40ddc0a98a940433eaeef9d2673791e1",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "persistent-runtime-manifest-negatives": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 122,
+          "full_verbose_sha256": "fce04a12f982b184739fdca1ba80d90917947a4953e0b9fce8d3862fa486d9d8",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-open": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 123,
+          "full_verbose_sha256": "29ff0c8529eda26db3d56f8969893192bb5289e4ca0786e9f14fd4a6cca008b3",
+          "semantic_sha256": "90d6ceeb46cea9aede5e9bd61732fdff6098d7d98c52af00766a4066ee6cdbc6",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-inode": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 124,
+          "full_verbose_sha256": "b261bfe772ac8cf9d4eec39d5ff7494f9a9d7d499d5ab826a2a2f389a0533aaa",
+          "semantic_sha256": "90d6ceeb46cea9aede5e9bd61732fdff6098d7d98c52af00766a4066ee6cdbc6",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-content": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 125,
+          "full_verbose_sha256": "4eb6e5d8191e718ab8165aa6c0719cde8951230a5bb1eff681745ab36fc711cb",
+          "semantic_sha256": "90d6ceeb46cea9aede5e9bd61732fdff6098d7d98c52af00766a4066ee6cdbc6",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-fifo": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 126,
+          "full_verbose_sha256": "584aa1d9b708694114a506d9b77ca461b4216448e5516f615b57aa9f579672de",
+          "semantic_sha256": "90d6ceeb46cea9aede5e9bd61732fdff6098d7d98c52af00766a4066ee6cdbc6",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-preload": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 127,
+          "full_verbose_sha256": "02328f46d6bc8418f01056194681280d5c30ff9fcbe547736657d77866bb3d41",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-mapped-interposition": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 128,
+          "full_verbose_sha256": "8886a0e06b0e83a7d7070820623920b929316b0c6b24d189ed8fbf66439d299e",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-same-version-distro": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 129,
+          "full_verbose_sha256": "51695c863868903fb37c82361b3c2b3a0bc6193b75d18121d63e6230840211ed",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "library-commands": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 192,
+          "full_verbose_sha256": "c473dcf01ae7cc148a7623ae65fc2584c7ccaada8f93803db265ba49f22cb8dc",
+          "semantic_sha256": "3785426b8de7f90bb4f1e9f127d5a981455ce49d737c060f1f67a7dec4e66792",
+          "qt_totals": []
+        },
+        "library-action-ui": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 193,
+          "full_verbose_sha256": "db750f02be00628419f3ef15a0b52880e1ff18d6aeecbabb8139d8127feeedb5",
+          "semantic_sha256": "f42e2c1431beeb6f0c91609d2d716823ee6bc376f25a297a8c69268f4fd55f3c",
+          "qt_totals": [
+            {
+              "passed": 24,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "network-policy": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 194,
+          "full_verbose_sha256": "42644cdcca479f8678d0fd5eb3ca93c5cec84aa726ab4b307b717e931f2b3eea",
+          "semantic_sha256": "798a3d180f0b48311aa4251e51c447a0147a5c4759335a82a90269afaf8c3665",
+          "qt_totals": []
+        },
+        "managed-download": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 196,
+          "full_verbose_sha256": "08ae9c5e8fc2d66df03ebbd425bbed1627e53f164d588fd87c439ae5d3fb50c2",
+          "semantic_sha256": "0e5bb62407183975949268fcacb7163da9ac2118e33cb3ec7c146b23d154a529",
+          "qt_totals": [
+            {
+              "passed": 8,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "managed-storage": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 197,
+          "full_verbose_sha256": "c9064aad8ec0000cee93a898114344ca88cc4d97bacc6fb81b495a57fb7199f6",
+          "semantic_sha256": "54cb74aedfe6d0e501148fec5ccfe05268603ea890974d4bd9a74664f2c9b325",
+          "qt_totals": []
+        },
+        "managed-seeding": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 204,
+          "full_verbose_sha256": "7291da511909160413166c3bcb4f77c406aaff28cc7a9694d83f7ea9bebd28e3",
+          "semantic_sha256": "ce56c07850aacc5a7ee61621a66acea18c08d19c0e15843f99d284b78bc8c900",
+          "qt_totals": [
+            {
+              "passed": 6,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "managed-library-command-routing": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 206,
+          "full_verbose_sha256": "978583f859ba5921b82c767d99327220bf1caaadbd01664a3b95ce494ff4f784",
+          "semantic_sha256": "df754b2eeb14d7cb822654446269051e2bd547fa9a1ac65fde82742f3f8d302b",
+          "qt_totals": [
+            {
+              "passed": 12,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "application-settings": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 208,
+          "full_verbose_sha256": "391937d5e99d03bf2f69bad64dfc2b2294d1121a5aa593a98da424fc7511c8ed",
+          "semantic_sha256": "d74e5cddbea35a8d5e399cb2496f2ebb5d553ccd7551b08513c13b8b28449792",
+          "qt_totals": []
+        },
+        "options-host": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 210,
+          "full_verbose_sha256": "69fb9cf7798e4dad337b4b5385b11fa022dcf8e02e7780d4d9f5c6131e3df99a",
+          "semantic_sha256": "0b64f79838226ae66d19ad42c49d42b2c357be3f4653ccc10a617d148cbd675b",
+          "qt_totals": [
+            {
+              "passed": 7,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "managed-queue": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 215,
+          "full_verbose_sha256": "344715e535b707837415d241d7ae32ef2d90798e203ccd3605c6848fbd6cd249",
+          "semantic_sha256": "f623133f13651803dc6f1ab9c92e3f0513725ab6554339a7ef4410efde146170",
+          "qt_totals": [
+            {
+              "passed": 11,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "scheduler-host-engine": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 217,
+          "full_verbose_sha256": "026875c5e1022f668d80e909b97b7f95e45fe7c8b049929eb9f26857cef12bbf",
+          "semantic_sha256": "5ee479a74cbb874be47c1471a3727b88134ad9149ab9de102ea5ba821beec3bc",
+          "qt_totals": [
+            {
+              "passed": 5,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "file-operations-host": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 222,
+          "full_verbose_sha256": "20c1a0c6e4788430a2c38782d9c2d536e2c550d20e3a982b0e4cc2786bc6ed34",
+          "semantic_sha256": "6dc41dc16a870e9270e71780c067696e8484bd227383d1893b8fb33d8cf870af",
+          "qt_totals": [
+            {
+              "passed": 12,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "network-binding": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 234,
+          "full_verbose_sha256": "cdcd13a9684f1d348a7e32f83ea76ded27566dfdd725eb85bbec391a312a1866",
+          "semantic_sha256": "547891b102521382b5e208168301b195ada94f0f75280f8f02c9806ab14cb300",
+          "qt_totals": []
+        },
+        "provider-payload-counter": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 239,
+          "full_verbose_sha256": "bf8e8cf9b855233935ff282c2adc9537ee7ecd0bf50e66142f1813d66df1b6bf",
+          "semantic_sha256": "06dcddc888e1832c49ecd84fa4a1ccb2efca9f104fb08f224db8d9ebc71a6cbe",
+          "qt_totals": [
+            {
+              "passed": 5,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "provider-runtime-inputs": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 240,
+          "full_verbose_sha256": "0560d73f656f0ff3f907a2cc8cdb01a5854379173c5d2287ba09e66ee440ba5c",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "selected-swarm-admission": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 241,
+          "full_verbose_sha256": "3a6a22c7cbcb0cc5dcb82c75231abd786971010841fbe8207a1bcb520955051d",
+          "semantic_sha256": "543f6e997af952db5e14ad88a562003a4e50e41577b063739cd2f426e5beb3d2",
+          "qt_totals": [
+            {
+              "passed": 18,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "network-proxy-owner": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 244,
+          "full_verbose_sha256": "f38edbb9d2d06306ef289b5769c77d77bfa2f14a386876d1dcac1bc66bb581b9",
+          "semantic_sha256": "0181d13e3fa3abff9c877e7bd6053cbd63563cfa37567cf19c02609839052cd7",
+          "qt_totals": [
+            {
+              "passed": 15,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "file-operation-sequence": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 245,
+          "full_verbose_sha256": "efbf6c329a39049dee6e032bd68ff378771fd78d830bde247fa1a34006370eaf",
+          "semantic_sha256": "7565fca5a67c722181f5bb15e0f2428db0ab8abbe662c1ac61fc5849ce4d9f09",
+          "qt_totals": [
+            {
+              "passed": 9,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "managed-combined-protocol": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 249,
+          "full_verbose_sha256": "4c874e1170dc5d81f55e38adcf71e516105394c809587b651e538d88ed72c6a4",
+          "semantic_sha256": "a55ee4a36a11c32f570e42a442c2958dc0c3b9b08ee66ec27279e3e72faa579b",
+          "qt_totals": [
+            {
+              "passed": 4,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "network-proxy-capability-present-webseed": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 251,
+          "full_verbose_sha256": "783520f848cc069bee1ccabe124e3078abd2c7431d197aafa07b63391efe4ca0",
+          "semantic_sha256": "f9c996a683d9c3051cc1665cb7a85b66c764a351375359cc2e586b2fb68ba6de",
+          "qt_totals": []
+        },
+        "network-proxy-capability-foreign-marker": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 252,
+          "full_verbose_sha256": "03efff499baf201d3a986cf607ec225dad72c39f68bb0cec97b4aed4b8ba0912",
+          "semantic_sha256": "5799ea247e366f981ed35d5b841218b4fa890b643f449b20e898407494018361",
+          "qt_totals": []
+        },
+        "network-proxy-capability-foreign-webseed-marker": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 253,
+          "full_verbose_sha256": "b4aa22cac7b2e074d0293fc88a834452f8923cee94bc3c7401e273deb1252fe9",
+          "semantic_sha256": "e54f3a7853db35e2c83921e3f013f5acd7c11f215419e330d0954b271cb6edea",
+          "qt_totals": []
+        },
+        "scheduler-imported-integration": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 254,
+          "full_verbose_sha256": "e3520296795b9df4349bf789835cf4ba7f7f9eff53710550a1d383eab144be5a",
+          "semantic_sha256": "0a13ab37acfb248630eb8e1a390dc144047821343d301c595af05af6edefad4e",
+          "qt_totals": [
+            {
+              "passed": 12,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "provider-webseed-runtime-inputs": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 256,
+          "full_verbose_sha256": "6e5f25957dccd89a386a39b8bcabd44589055df57604b0df70166228731bbbdd",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "provider-webseed-runtime-deployment": {
+          "case": "batch3-gcc-tests-r1",
+          "tested_source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [
+            "6c8b22d58647539cc37876690b7b117aa56119e2",
+            "450547b3120b7f6d68106567c9e55b9078c0c27f",
+            "78ed6ff9c18447c210c59edf980f60332d805481"
+          ],
+          "number": 257,
+          "full_verbose_sha256": "a29a6c6a9a565fb6a64b0a886782a646c0194ea5f356154e6879a9c8da2ada1f",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "network-binding-owner": {
+          "case": "batch3-gcc-tests-r3",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 237,
+          "full_verbose_sha256": "8d274bc334428a28f4a04450fb069cca77212ab3bd77721223856ab39ad63548",
+          "semantic_sha256": "77033fde95167ec4c95b10d4c7b7ade485ca3e856c6b96d41b185de871edb703",
+          "qt_totals": [
+            {
+              "passed": 18,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        }
+      },
+      "builds": [
+        {
+          "case": "batch3-gcc-build-r1",
+          "source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "exit": 0,
+          "seconds": 701.59,
+          "receipt_sha256": "4be96cf4b02a88a0cc737aaa4115b7a9e146d06420e6c1bffb4a88f0bc88f150",
+          "source_map_sha256": "306720db4e86f7224cb95e10782fa4b53a03ddb3ceea5e604b07ad3ccd9261db",
+          "log_sha256": "fbb2f365528d8d15b5639017741771e4249f43f7d3b5d863b2388fd4c71cd03c",
+          "targets": [
+            "biglybtc-network-policy-tests",
+            "biglybtc-network-binding-tests",
+            "biglybtc-network-binding-owner-tests",
+            "biglybtc-network-proxy-owner-tests",
+            "biglybtc-provider-payload-counter-tests",
+            "biglybtc-selected-swarm-admission-tests",
+            "biglybtc-persistent-session-tests",
+            "biglybtc-managed-download-tests",
+            "biglybtc-managed-combined-protocol-tests",
+            "biglybtc-provider-webseed-runtime-deployment-driver",
+            "biglybtc-runtime-binding-driver",
+            "biglybtc-runtime-negative-driver",
+            "biglybtc-runtime-interposition-driver",
+            "biglybtc-runtime-interposer",
+            "biglybtc-network-proxy-capability-tests",
+            "biglybtc-network-proxy-foreign-marker",
+            "biglybtc-network-proxy-foreign-webseed-marker",
+            "biglybtc-application-settings-tests",
+            "biglybtc-library-commands-tests",
+            "biglybtc-library-commands-bridge-tests",
+            "biglybtc-managed-queue-tests",
+            "biglybtc-managed-storage-tests",
+            "biglybtc-managed-seeding-tests",
+            "biglybtc-scheduler-host-engine-tests",
+            "biglybtc-scheduler-imported-integration-tests",
+            "biglybtc-file-operations-host-tests",
+            "biglybtc-file-operation-sequence-tests",
+            "biglybtc-options-host-tests",
+            "biglybtc-library-action-ui-tests",
+            "BiglyBTC",
+            "BiglyBTC-headless",
+            "biglybtc-preview-smoke"
+          ]
+        },
+        {
+          "case": "batch3-gcc-build-r3",
+          "source_commit": "450547b3120b7f6d68106567c9e55b9078c0c27f",
+          "exit": 0,
+          "seconds": 27.19,
+          "receipt_sha256": "58688e1bb0e87e8a71aa313ff1d5cc54efbbe2589601f363e9ff3ba00001aa04",
+          "source_map_sha256": "4a74d1077a12dd359a4940af7483cec7ec3ac3660fa12f6c9585d2d147b2eb5d",
+          "log_sha256": "322f04ceb46c49e04e0866af3528ba854f743d931d0acaeb5886e378c7ae1d86",
+          "targets": [
+            "biglybtc-network-policy-tests",
+            "biglybtc-network-binding-tests",
+            "biglybtc-network-binding-owner-tests",
+            "biglybtc-network-proxy-owner-tests",
+            "biglybtc-provider-payload-counter-tests",
+            "biglybtc-selected-swarm-admission-tests",
+            "biglybtc-persistent-session-tests",
+            "biglybtc-managed-download-tests",
+            "biglybtc-managed-combined-protocol-tests",
+            "biglybtc-provider-webseed-runtime-deployment-driver",
+            "biglybtc-runtime-binding-driver",
+            "biglybtc-runtime-negative-driver",
+            "biglybtc-runtime-interposition-driver",
+            "biglybtc-runtime-interposer",
+            "biglybtc-network-proxy-capability-tests",
+            "biglybtc-network-proxy-foreign-marker",
+            "biglybtc-network-proxy-foreign-webseed-marker",
+            "biglybtc-application-settings-tests",
+            "biglybtc-library-commands-tests",
+            "biglybtc-library-commands-bridge-tests",
+            "biglybtc-managed-queue-tests",
+            "biglybtc-managed-storage-tests",
+            "biglybtc-managed-seeding-tests",
+            "biglybtc-scheduler-host-engine-tests",
+            "biglybtc-scheduler-imported-integration-tests",
+            "biglybtc-file-operations-host-tests",
+            "biglybtc-file-operation-sequence-tests",
+            "biglybtc-options-host-tests",
+            "biglybtc-library-action-ui-tests",
+            "BiglyBTC",
+            "BiglyBTC-headless",
+            "biglybtc-preview-smoke"
+          ]
+        },
+        {
+          "case": "batch3-gcc-build-r4",
+          "source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "exit": 0,
+          "seconds": 26.14,
+          "receipt_sha256": "45921a59728dc81ab9319843cbe7276ec870463a7f416788b38535cb654f5300",
+          "source_map_sha256": "2f1b18201792161014f06486964e00f2399f0be00bfbed878c246121bda327ad",
+          "log_sha256": "202f96c79084215cd1a153b8367aeb4c7c719ba00639d723849ba1460d9b24ca",
+          "targets": [
+            "biglybtc-network-policy-tests",
+            "biglybtc-network-binding-tests",
+            "biglybtc-network-binding-owner-tests",
+            "biglybtc-network-proxy-owner-tests",
+            "biglybtc-provider-payload-counter-tests",
+            "biglybtc-selected-swarm-admission-tests",
+            "biglybtc-persistent-session-tests",
+            "biglybtc-managed-download-tests",
+            "biglybtc-managed-combined-protocol-tests",
+            "biglybtc-provider-webseed-runtime-deployment-driver",
+            "biglybtc-runtime-binding-driver",
+            "biglybtc-runtime-negative-driver",
+            "biglybtc-runtime-interposition-driver",
+            "biglybtc-runtime-interposer",
+            "biglybtc-network-proxy-capability-tests",
+            "biglybtc-network-proxy-foreign-marker",
+            "biglybtc-network-proxy-foreign-webseed-marker",
+            "biglybtc-application-settings-tests",
+            "biglybtc-library-commands-tests",
+            "biglybtc-library-commands-bridge-tests",
+            "biglybtc-managed-queue-tests",
+            "biglybtc-managed-storage-tests",
+            "biglybtc-managed-seeding-tests",
+            "biglybtc-scheduler-host-engine-tests",
+            "biglybtc-scheduler-imported-integration-tests",
+            "biglybtc-file-operations-host-tests",
+            "biglybtc-file-operation-sequence-tests",
+            "biglybtc-options-host-tests",
+            "biglybtc-library-action-ui-tests",
+            "BiglyBTC",
+            "BiglyBTC-headless",
+            "biglybtc-preview-smoke"
+          ]
+        }
+      ],
+      "case_history": [
+        {
+          "case": "batch3-gcc-tests-r1",
+          "source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a",
+          "exit": 8,
+          "seconds": 552.47,
+          "receipt_sha256": "50a5a0083179c9d725c32a79fb6ed47bb1408ef5050d072929109f82342bac6b",
+          "source_map_sha256": "306720db4e86f7224cb95e10782fa4b53a03ddb3ceea5e604b07ad3ccd9261db",
+          "log_sha256": "f0282b23db09e8fe7c5c8694d8856bcc555de9f21165aa38d53157a73fa77aeb",
+          "xml_sha256": "4c38b12cbb5886aea259ac0cdb19b76ff0f7583ab8eb393c688f8f010923248b",
+          "passed_suites": 35,
+          "uncredited_suites": [
+            "network-binding-owner"
+          ]
+        },
+        {
+          "case": "batch3-gcc-tests-r2",
+          "source_commit": "450547b3120b7f6d68106567c9e55b9078c0c27f",
+          "exit": 8,
+          "seconds": 300.14,
+          "receipt_sha256": "8ddabb2fb2d32e5b32c6ae2e959369ca3ea24bd85debdb9f31f528b289f7d0e9",
+          "source_map_sha256": "4a74d1077a12dd359a4940af7483cec7ec3ac3660fa12f6c9585d2d147b2eb5d",
+          "log_sha256": "844a23a9351d400b13a91190d98f2c0bdf66554aa6d2d475d4983562e6b7b2f7",
+          "xml_sha256": "138c964964f8d498802ca8efc771368901aaffdddb2a438208323e2f1012b49b",
+          "passed_suites": 0,
+          "uncredited_suites": [
+            "network-binding-owner"
+          ]
+        },
+        {
+          "case": "batch3-gcc-tests-r3",
+          "source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "exit": 0,
+          "seconds": 195.66,
+          "receipt_sha256": "0875888a06bd50d82267f83be1e6c4027f2ec765de59e8ba929ae7a755a9af3d",
+          "source_map_sha256": "2f1b18201792161014f06486964e00f2399f0be00bfbed878c246121bda327ad",
+          "log_sha256": "3ebc990886c8f4ed0b26f81a10d17a380aba18867ec339bb89b1f65aa416aca7",
+          "xml_sha256": "250e443b1bc685ba374add2fcebc45117d9f764e20828a25f7714df175cfce5e",
+          "passed_suites": 1,
+          "uncredited_suites": []
+        }
+      ]
+    },
+    "clang": {
+      "actual_suites": 36,
+      "configure": {
+        "root_receipt_sha256": "8047357c996f7031b9eb0f7cf5f1d11c8e8e099a4ad48dabeb6d1d7379759e64",
+        "cache_sha256": "c4b0447d56791633d26fab90afdf2876a07f717c82f6c0b9a08310113d34c47c",
+        "binding_receipt_sha256": "ac6d04d6380d1d92dcf62046917d850a0f2161c9a3b6f8270b03b155bfa35330",
+        "source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a"
+      },
+      "per_suite": {
+        "persistent-native-peer-session": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 117,
+          "full_verbose_sha256": "2dcc4d88f10833761d1aa21bb348bda541c36b80af02db582bc961dfd491677d",
+          "semantic_sha256": "6fee2805ae500ceccec31e12eea30fc086a01df7ffc80e4548ea409b76fd03f1",
+          "qt_totals": [
+            {
+              "passed": 12,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "persistent-runtime-source-bound": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 121,
+          "full_verbose_sha256": "9b767a030c43512b803ea557bc8da443b4ad1a7746364a3d8c4e2d5bec140d17",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "persistent-runtime-manifest-negatives": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 122,
+          "full_verbose_sha256": "d3a0ae01d06a77030fd7a4606ba119ab5c5003a751b721ecb4442678cb880c6b",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-open": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 123,
+          "full_verbose_sha256": "30eff2b51be08ed206b3646bec1112b33a91bc7f2fc46fd5a90aeb94cf09cbc6",
+          "semantic_sha256": "90d6ceeb46cea9aede5e9bd61732fdff6098d7d98c52af00766a4066ee6cdbc6",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-inode": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 124,
+          "full_verbose_sha256": "655e3f70981c9e33627e76bbed569f0a3e5d27fadfd3ca4cf392f52aa1bd05d6",
+          "semantic_sha256": "90d6ceeb46cea9aede5e9bd61732fdff6098d7d98c52af00766a4066ee6cdbc6",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-content": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 125,
+          "full_verbose_sha256": "7522ff0bdef5008a36cc9be0698d972e3806a16d74114b73bd8791f180b68539",
+          "semantic_sha256": "90d6ceeb46cea9aede5e9bd61732fdff6098d7d98c52af00766a4066ee6cdbc6",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-fifo": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 126,
+          "full_verbose_sha256": "01d47c8c30bbff0acb950438d72c76ab27321c4172efb23da77ff6a2716aac80",
+          "semantic_sha256": "90d6ceeb46cea9aede5e9bd61732fdff6098d7d98c52af00766a4066ee6cdbc6",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-preload": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 127,
+          "full_verbose_sha256": "7fdd7ca984b600ba0e18d42f328baadb2e60d7e48f529145fe9744675ca3bbe6",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-mapped-interposition": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 128,
+          "full_verbose_sha256": "77d5f82093a190aadfc898df875a9c9d169e459d4e420f0d8ca5c332e3e09aea",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-same-version-distro": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 129,
+          "full_verbose_sha256": "9dc12ae4093cd018df91ceb241f2f1218cf9bd27949c9315ffae5c0ad0d13f14",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "library-commands": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 192,
+          "full_verbose_sha256": "10cfc801b1ef8760cbef8320c36f36c1637d155009020e35c65e9fea6387fe4c",
+          "semantic_sha256": "3785426b8de7f90bb4f1e9f127d5a981455ce49d737c060f1f67a7dec4e66792",
+          "qt_totals": []
+        },
+        "library-action-ui": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 193,
+          "full_verbose_sha256": "53a17029ddd243256819cf07d731df2ccdf270517109f1af182fa2dde9fc0292",
+          "semantic_sha256": "f42e2c1431beeb6f0c91609d2d716823ee6bc376f25a297a8c69268f4fd55f3c",
+          "qt_totals": [
+            {
+              "passed": 24,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "network-policy": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 194,
+          "full_verbose_sha256": "8c898532aee8c24c10e428508229231a253cbc3b212d2973bcfa4add5fff38f0",
+          "semantic_sha256": "798a3d180f0b48311aa4251e51c447a0147a5c4759335a82a90269afaf8c3665",
+          "qt_totals": []
+        },
+        "managed-download": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 196,
+          "full_verbose_sha256": "4faa4e3fb201daa4d66b6923cccd7e0eeda5ffbcbfd9992685ed7f17676d7aea",
+          "semantic_sha256": "0e5bb62407183975949268fcacb7163da9ac2118e33cb3ec7c146b23d154a529",
+          "qt_totals": [
+            {
+              "passed": 8,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "managed-storage": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 197,
+          "full_verbose_sha256": "42d5b562d78665960a07b185ad75d5394b5bd259cc5395f5bcc0b23ab86e113e",
+          "semantic_sha256": "54cb74aedfe6d0e501148fec5ccfe05268603ea890974d4bd9a74664f2c9b325",
+          "qt_totals": []
+        },
+        "managed-seeding": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 204,
+          "full_verbose_sha256": "3f9adf4ab9bec1885f72ce315c17132fa889b67ac518fabc3bc5e4fd1d3a7be0",
+          "semantic_sha256": "ce56c07850aacc5a7ee61621a66acea18c08d19c0e15843f99d284b78bc8c900",
+          "qt_totals": [
+            {
+              "passed": 6,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "managed-library-command-routing": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 206,
+          "full_verbose_sha256": "d7a5810e2b2b2d6986d85a4d90cd01ce6571ed39c3caa2aa796ab77e3b362189",
+          "semantic_sha256": "df754b2eeb14d7cb822654446269051e2bd547fa9a1ac65fde82742f3f8d302b",
+          "qt_totals": [
+            {
+              "passed": 12,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "application-settings": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 208,
+          "full_verbose_sha256": "3744f088cf1b7f1982aaa2f21294a9ae2d5907ec82f13fbf27747bc4d1f7fc98",
+          "semantic_sha256": "d74e5cddbea35a8d5e399cb2496f2ebb5d553ccd7551b08513c13b8b28449792",
+          "qt_totals": []
+        },
+        "options-host": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 210,
+          "full_verbose_sha256": "fa3fbe9fbe2098b28e95a29f0b4637d419c0e84cfef2bfd0979c572fb8bea314",
+          "semantic_sha256": "0b64f79838226ae66d19ad42c49d42b2c357be3f4653ccc10a617d148cbd675b",
+          "qt_totals": [
+            {
+              "passed": 7,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "managed-queue": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 215,
+          "full_verbose_sha256": "4a09e35c9928dce514f67096ccc0b22877cacdfeb72a977e84a3402ed7465c27",
+          "semantic_sha256": "f623133f13651803dc6f1ab9c92e3f0513725ab6554339a7ef4410efde146170",
+          "qt_totals": [
+            {
+              "passed": 11,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "scheduler-host-engine": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 217,
+          "full_verbose_sha256": "15cf86089c5df905254b4c43b91d8906681d221423a2407d6ceed55f71ce6ec2",
+          "semantic_sha256": "5ee479a74cbb874be47c1471a3727b88134ad9149ab9de102ea5ba821beec3bc",
+          "qt_totals": [
+            {
+              "passed": 5,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "file-operations-host": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 222,
+          "full_verbose_sha256": "4a45a88fd266a325b0b454409b62caa45887dde2d28098a240bf62dc983d9721",
+          "semantic_sha256": "6dc41dc16a870e9270e71780c067696e8484bd227383d1893b8fb33d8cf870af",
+          "qt_totals": [
+            {
+              "passed": 12,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "network-binding": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 234,
+          "full_verbose_sha256": "b4efa2622b51a4149b1b07d0bdcb6c04ad5e6591219ded7c5075ca03d1349952",
+          "semantic_sha256": "547891b102521382b5e208168301b195ada94f0f75280f8f02c9806ab14cb300",
+          "qt_totals": []
+        },
+        "network-binding-owner": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 237,
+          "full_verbose_sha256": "d34d04f43640fdd49c6cc28718a8e0d682f3ec3cc0f958e179a4344ae9d26e9a",
+          "semantic_sha256": "77033fde95167ec4c95b10d4c7b7ade485ca3e856c6b96d41b185de871edb703",
+          "qt_totals": [
+            {
+              "passed": 18,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "provider-payload-counter": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 239,
+          "full_verbose_sha256": "e28ccb5bc2fc2e97d4154032709972f2b4919e0cc2d2059e24f0608e4a42b70f",
+          "semantic_sha256": "06dcddc888e1832c49ecd84fa4a1ccb2efca9f104fb08f224db8d9ebc71a6cbe",
+          "qt_totals": [
+            {
+              "passed": 5,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "provider-runtime-inputs": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 240,
+          "full_verbose_sha256": "344748e26e94d4c3459b49accb2096e2c3108c8a69ee1632f9915f6cc6741323",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "selected-swarm-admission": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 241,
+          "full_verbose_sha256": "7ad112917d7bce23fa87d7b5e1b642cf8ed652d9fc86e888c55d42651801f44c",
+          "semantic_sha256": "543f6e997af952db5e14ad88a562003a4e50e41577b063739cd2f426e5beb3d2",
+          "qt_totals": [
+            {
+              "passed": 18,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "network-proxy-owner": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 244,
+          "full_verbose_sha256": "69e97d4605f2b3c277a40c3026b418eb677f71c95711577ae027d5e4ddac6379",
+          "semantic_sha256": "0181d13e3fa3abff9c877e7bd6053cbd63563cfa37567cf19c02609839052cd7",
+          "qt_totals": [
+            {
+              "passed": 15,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "file-operation-sequence": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 245,
+          "full_verbose_sha256": "031254521dc87a0bda5c776f6ed488460f43bf9d40889ff3dc2facc9a5155723",
+          "semantic_sha256": "7565fca5a67c722181f5bb15e0f2428db0ab8abbe662c1ac61fc5849ce4d9f09",
+          "qt_totals": [
+            {
+              "passed": 9,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "managed-combined-protocol": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 249,
+          "full_verbose_sha256": "9a87902853305728ba2dd28dd3a7430490b9af6d4140f77cb2c0132448af4438",
+          "semantic_sha256": "a55ee4a36a11c32f570e42a442c2958dc0c3b9b08ee66ec27279e3e72faa579b",
+          "qt_totals": [
+            {
+              "passed": 4,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "network-proxy-capability-present-webseed": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 251,
+          "full_verbose_sha256": "d6d7068f3183b49120e5a315fe23570b5f0934a431b1047e6ab26063fa13af38",
+          "semantic_sha256": "f9c996a683d9c3051cc1665cb7a85b66c764a351375359cc2e586b2fb68ba6de",
+          "qt_totals": []
+        },
+        "network-proxy-capability-foreign-marker": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 252,
+          "full_verbose_sha256": "d61b5f6ee01274a9809a83f3d9a203a6b9b1b3368db5f50792c5d3481b0a5845",
+          "semantic_sha256": "5799ea247e366f981ed35d5b841218b4fa890b643f449b20e898407494018361",
+          "qt_totals": []
+        },
+        "network-proxy-capability-foreign-webseed-marker": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 253,
+          "full_verbose_sha256": "d7c4ed1a7e5de5debd582506c4aeb23e7cb9d4f43d640ae09223c8ebdd22bbcb",
+          "semantic_sha256": "e54f3a7853db35e2c83921e3f013f5acd7c11f215419e330d0954b271cb6edea",
+          "qt_totals": []
+        },
+        "scheduler-imported-integration": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 254,
+          "full_verbose_sha256": "b0beafe72d031585b49987279a98d9237d7b7ef4e86ca4ca49df22f52947f81e",
+          "semantic_sha256": "0a13ab37acfb248630eb8e1a390dc144047821343d301c595af05af6edefad4e",
+          "qt_totals": [
+            {
+              "passed": 12,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "provider-webseed-runtime-inputs": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 256,
+          "full_verbose_sha256": "8c3387a5ae65afbe755da3e897b2868d3d85d82b09a7e5570c7bbbaea80af89b",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "provider-webseed-runtime-deployment": {
+          "case": "batch3-clang-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 257,
+          "full_verbose_sha256": "94000d0f39ceec464652026703e1965f1a69d0bb445768a570f6ab8b0317be05",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        }
+      },
+      "builds": [
+        {
+          "case": "batch3-clang-build-r1",
+          "source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "exit": 0,
+          "seconds": 1012.61,
+          "receipt_sha256": "bff6b693525f16ba75a510d346f5906b3dd11b8bbdd2529d1e9b9c969d6b9222",
+          "source_map_sha256": "2f1b18201792161014f06486964e00f2399f0be00bfbed878c246121bda327ad",
+          "log_sha256": "a1ad0d41d1b44ff5118c5267a041017d2cb30c5a28a751431db619fe02d82168",
+          "targets": [
+            "biglybtc-network-policy-tests",
+            "biglybtc-network-binding-tests",
+            "biglybtc-network-binding-owner-tests",
+            "biglybtc-network-proxy-owner-tests",
+            "biglybtc-provider-payload-counter-tests",
+            "biglybtc-selected-swarm-admission-tests",
+            "biglybtc-persistent-session-tests",
+            "biglybtc-managed-download-tests",
+            "biglybtc-managed-combined-protocol-tests",
+            "biglybtc-provider-webseed-runtime-deployment-driver",
+            "biglybtc-runtime-binding-driver",
+            "biglybtc-runtime-negative-driver",
+            "biglybtc-runtime-interposition-driver",
+            "biglybtc-runtime-interposer",
+            "biglybtc-network-proxy-capability-tests",
+            "biglybtc-network-proxy-foreign-marker",
+            "biglybtc-network-proxy-foreign-webseed-marker",
+            "biglybtc-application-settings-tests",
+            "biglybtc-library-commands-tests",
+            "biglybtc-library-commands-bridge-tests",
+            "biglybtc-managed-queue-tests",
+            "biglybtc-managed-storage-tests",
+            "biglybtc-managed-seeding-tests",
+            "biglybtc-scheduler-host-engine-tests",
+            "biglybtc-scheduler-imported-integration-tests",
+            "biglybtc-file-operations-host-tests",
+            "biglybtc-file-operation-sequence-tests",
+            "biglybtc-options-host-tests",
+            "biglybtc-library-action-ui-tests",
+            "BiglyBTC",
+            "BiglyBTC-headless"
+          ]
+        }
+      ],
+      "case_history": [
+        {
+          "case": "batch3-clang-tests-r1",
+          "source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "exit": 0,
+          "seconds": 445.5,
+          "receipt_sha256": "f138c08aa09aa07fec2608f0e870846ab3c4694dff2aa32a4e7699fdf3544805",
+          "source_map_sha256": "2f1b18201792161014f06486964e00f2399f0be00bfbed878c246121bda327ad",
+          "log_sha256": "bd09e77751b319a9d5c5180cc94281d34f75839b19315b2bc3aac01ceadca27b",
+          "xml_sha256": "a653f075ac515bc0329d0a85878c4458d974d797fe23dff5fcad6755f995df59",
+          "passed_suites": 36,
+          "uncredited_suites": []
+        }
+      ]
+    },
+    "sanitizers": {
+      "actual_suites": 36,
+      "configure": {
+        "root_receipt_sha256": "aa0884fa3a90e4d6e6decd3cd9d4b8ce9688157acaaa472037f1377fb22a256c",
+        "cache_sha256": "b875cd00d4e4a70ab279ed65a3dda77934851ee7de44eed5e5e52545d41c5fc5",
+        "binding_receipt_sha256": "ac6d04d6380d1d92dcf62046917d850a0f2161c9a3b6f8270b03b155bfa35330",
+        "source_commit": "9df6e722d9f3715309ff1e10ee6983989798bc6a"
+      },
+      "per_suite": {
+        "persistent-native-peer-session": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 117,
+          "full_verbose_sha256": "e4024bd0aabeb3636543a674d6895de4fcf332099e288081d283c4204bf95cb0",
+          "semantic_sha256": "6fee2805ae500ceccec31e12eea30fc086a01df7ffc80e4548ea409b76fd03f1",
+          "qt_totals": [
+            {
+              "passed": 12,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "persistent-runtime-source-bound": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 121,
+          "full_verbose_sha256": "125c6b39e6759dadcf3103f4650f128fc2854aa8dabcd99c946957557b6896d9",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "persistent-runtime-manifest-negatives": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 122,
+          "full_verbose_sha256": "8bdca095fe59cd37bb24b256ed710a64d4674c5ee1a083207cb7d41eccd42a73",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-open": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 123,
+          "full_verbose_sha256": "bd3542270d68bf5153862ed25e10272561a9ec27401d7ac3bc053fca234b8d74",
+          "semantic_sha256": "90d6ceeb46cea9aede5e9bd61732fdff6098d7d98c52af00766a4066ee6cdbc6",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-inode": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 124,
+          "full_verbose_sha256": "69f729ce4639c03c7892b57071a196366c14784df547e9365e93d6ba6c20750f",
+          "semantic_sha256": "90d6ceeb46cea9aede5e9bd61732fdff6098d7d98c52af00766a4066ee6cdbc6",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-content": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 125,
+          "full_verbose_sha256": "c843ba8ca13e88a2bf537e93de0cf5dbbe871d8c9a743d74ed12c19972a7d47e",
+          "semantic_sha256": "90d6ceeb46cea9aede5e9bd61732fdff6098d7d98c52af00766a4066ee6cdbc6",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-fifo": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 126,
+          "full_verbose_sha256": "c3ceec0e04591eced4dc2ea370549ff46bde6d98e61f39589a563b109e660c20",
+          "semantic_sha256": "90d6ceeb46cea9aede5e9bd61732fdff6098d7d98c52af00766a4066ee6cdbc6",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-preload": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 127,
+          "full_verbose_sha256": "00c5c4aef6b1044448d680440912a0db6515b4974942e4f0409f9c3c813e641e",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-mapped-interposition": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 128,
+          "full_verbose_sha256": "e8a0b59ed31b4d304feea8ceb581d339f2cfaad6a2384c5958be5904f29a47fc",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "persistent-runtime-reject-same-version-distro": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 129,
+          "full_verbose_sha256": "6ca71343b77010262160aca9b3e76fb110ce1dfd25c35405a3caf9c749eadb49",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "library-commands": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 192,
+          "full_verbose_sha256": "c45e9fd190a68895fa8da6c0bd12e528b3fe0507ef2181d9b05b40416c557682",
+          "semantic_sha256": "3785426b8de7f90bb4f1e9f127d5a981455ce49d737c060f1f67a7dec4e66792",
+          "qt_totals": []
+        },
+        "library-action-ui": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 193,
+          "full_verbose_sha256": "5574cd0ac6b44c168a3b2c5ffc099e2fce69dd6076a5afbe58465ca76450a270",
+          "semantic_sha256": "f42e2c1431beeb6f0c91609d2d716823ee6bc376f25a297a8c69268f4fd55f3c",
+          "qt_totals": [
+            {
+              "passed": 24,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "network-policy": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 194,
+          "full_verbose_sha256": "d55812d71dc919b0340b0386aba9cce1068eeb7b9ccd95844ba86b9badb77a05",
+          "semantic_sha256": "798a3d180f0b48311aa4251e51c447a0147a5c4759335a82a90269afaf8c3665",
+          "qt_totals": []
+        },
+        "managed-download": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 196,
+          "full_verbose_sha256": "236d37472891eb878cbec8440bbed417a96523f5697c5a383e38d60369ee432f",
+          "semantic_sha256": "0e5bb62407183975949268fcacb7163da9ac2118e33cb3ec7c146b23d154a529",
+          "qt_totals": [
+            {
+              "passed": 8,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "managed-storage": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 197,
+          "full_verbose_sha256": "a9536a7b47a642a1ce1533225afe6c5cb7a7c8a5623cd614c6634c6bc6319252",
+          "semantic_sha256": "54cb74aedfe6d0e501148fec5ccfe05268603ea890974d4bd9a74664f2c9b325",
+          "qt_totals": []
+        },
+        "managed-seeding": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 204,
+          "full_verbose_sha256": "a1cb287efcca67d912eb1d30dba334c92b9c20d1f0b23f9fba41972c3f99dc2c",
+          "semantic_sha256": "ce56c07850aacc5a7ee61621a66acea18c08d19c0e15843f99d284b78bc8c900",
+          "qt_totals": [
+            {
+              "passed": 6,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "managed-library-command-routing": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 206,
+          "full_verbose_sha256": "087e46a901ddfdbead7b9e267da72b9033cb8aee4842b0224fd85fcf6947c426",
+          "semantic_sha256": "df754b2eeb14d7cb822654446269051e2bd547fa9a1ac65fde82742f3f8d302b",
+          "qt_totals": [
+            {
+              "passed": 12,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "application-settings": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 208,
+          "full_verbose_sha256": "02c538f7bd17d5c3861adc096987af5c5956ead0e5236ce9969367102def9f52",
+          "semantic_sha256": "d74e5cddbea35a8d5e399cb2496f2ebb5d553ccd7551b08513c13b8b28449792",
+          "qt_totals": []
+        },
+        "options-host": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 210,
+          "full_verbose_sha256": "f303d6edabb9577a6e0789da4954eab5875b8cfef4acec6ff9e69a32710f33a3",
+          "semantic_sha256": "0b64f79838226ae66d19ad42c49d42b2c357be3f4653ccc10a617d148cbd675b",
+          "qt_totals": [
+            {
+              "passed": 7,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "managed-queue": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 215,
+          "full_verbose_sha256": "347124f5ae14d32e14548b69cc6ae4f4a70af3faee7791f387b878a30687a9a0",
+          "semantic_sha256": "f623133f13651803dc6f1ab9c92e3f0513725ab6554339a7ef4410efde146170",
+          "qt_totals": [
+            {
+              "passed": 11,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "file-operations-host": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 222,
+          "full_verbose_sha256": "efc6e945bee2c23b127c55ac14a699631e75c9ae61be45744c9ceccc653c77e9",
+          "semantic_sha256": "6dc41dc16a870e9270e71780c067696e8484bd227383d1893b8fb33d8cf870af",
+          "qt_totals": [
+            {
+              "passed": 12,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "network-binding": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 234,
+          "full_verbose_sha256": "2abcb1de95ec7a0cef3d1e5b37be247cc44d5dacc4af588560382459ef1efe72",
+          "semantic_sha256": "547891b102521382b5e208168301b195ada94f0f75280f8f02c9806ab14cb300",
+          "qt_totals": []
+        },
+        "network-binding-owner": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 237,
+          "full_verbose_sha256": "f389d05fb403d9140856453c0bb0a66b4589ef13af5d68cd7aa9992d3bb29f4c",
+          "semantic_sha256": "77033fde95167ec4c95b10d4c7b7ade485ca3e856c6b96d41b185de871edb703",
+          "qt_totals": [
+            {
+              "passed": 18,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "provider-payload-counter": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 239,
+          "full_verbose_sha256": "b13bac8aa8254d72267a01df7b34b1b318ddc1ced433698221bf3d0ad5cb7f89",
+          "semantic_sha256": "06dcddc888e1832c49ecd84fa4a1ccb2efca9f104fb08f224db8d9ebc71a6cbe",
+          "qt_totals": [
+            {
+              "passed": 5,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "provider-runtime-inputs": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 240,
+          "full_verbose_sha256": "050e4b0867a299c28fc4ba647a949d1f9730d705a84731cc8cbd1a3c701b3640",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "selected-swarm-admission": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 241,
+          "full_verbose_sha256": "154acae1cf3630e332a1f77e170c1438c46b1de558dafe1a5eba29c603529e66",
+          "semantic_sha256": "543f6e997af952db5e14ad88a562003a4e50e41577b063739cd2f426e5beb3d2",
+          "qt_totals": [
+            {
+              "passed": 18,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "file-operation-sequence": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 245,
+          "full_verbose_sha256": "0ff6d619760e3863fae7c353f739254c9ee54f4f0acb587ba076381aa54db682",
+          "semantic_sha256": "7565fca5a67c722181f5bb15e0f2428db0ab8abbe662c1ac61fc5849ce4d9f09",
+          "qt_totals": [
+            {
+              "passed": 9,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "managed-combined-protocol": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 249,
+          "full_verbose_sha256": "850667c6b24b34686221b252a31c9014a08e96c0b29a974a155780bac761bf38",
+          "semantic_sha256": "a55ee4a36a11c32f570e42a442c2958dc0c3b9b08ee66ec27279e3e72faa579b",
+          "qt_totals": [
+            {
+              "passed": 4,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "network-proxy-capability-present-webseed": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 251,
+          "full_verbose_sha256": "f676d06cc3d3d8d76b89cbd84ec00e634c7eef628eb356b890039b6829374e74",
+          "semantic_sha256": "f9c996a683d9c3051cc1665cb7a85b66c764a351375359cc2e586b2fb68ba6de",
+          "qt_totals": []
+        },
+        "network-proxy-capability-foreign-marker": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 252,
+          "full_verbose_sha256": "f0c85e31ffb749722d5822916141b6841323b9c727f9707b2564ebad90bf6000",
+          "semantic_sha256": "5799ea247e366f981ed35d5b841218b4fa890b643f449b20e898407494018361",
+          "qt_totals": []
+        },
+        "network-proxy-capability-foreign-webseed-marker": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 253,
+          "full_verbose_sha256": "016687cd99a89c91bc4e825954bc66c29ff3623eeb0d6f3d9f303d587c8a0083",
+          "semantic_sha256": "e54f3a7853db35e2c83921e3f013f5acd7c11f215419e330d0954b271cb6edea",
+          "qt_totals": []
+        },
+        "scheduler-imported-integration": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 254,
+          "full_verbose_sha256": "ddbe3327ead927c6b57f4bca63c10a0919fdcf9408d346b27d425dee140277c8",
+          "semantic_sha256": "0a13ab37acfb248630eb8e1a390dc144047821343d301c595af05af6edefad4e",
+          "qt_totals": [
+            {
+              "passed": 12,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "provider-webseed-runtime-inputs": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 256,
+          "full_verbose_sha256": "69b64a35d08e828b212f2b8f2bdd1fd6dc2567c2b23be8924078bafd1eb8e1b4",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "provider-webseed-runtime-deployment": {
+          "case": "batch3-san-tests-r1",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 257,
+          "full_verbose_sha256": "1783b6366c38626e6f4e0acc7878fd04a0cb123e7d22178d7cc573184da824dd",
+          "semantic_sha256": "917c023996e6a2bf1e4f4bad5873c6eed36e30d8cea516b936c58165485eec8a",
+          "qt_totals": []
+        },
+        "scheduler-host-engine": {
+          "case": "batch3-san-tests-r2",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 217,
+          "full_verbose_sha256": "557b0567da3c327adc97976f01716920cc12d4ed4a7ae1a060e3fdf521f809b4",
+          "semantic_sha256": "5ee479a74cbb874be47c1471a3727b88134ad9149ab9de102ea5ba821beec3bc",
+          "qt_totals": [
+            {
+              "passed": 5,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        },
+        "network-proxy-owner": {
+          "case": "batch3-san-tests-r2",
+          "tested_source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "qualified_source": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "unaffected_later_commits": [],
+          "number": 244,
+          "full_verbose_sha256": "640e597728bc80292fc69d22d4e53fdf0bb530ae4b5cd0b8b6d2640afc8ece7e",
+          "semantic_sha256": "0181d13e3fa3abff9c877e7bd6053cbd63563cfa37567cf19c02609839052cd7",
+          "qt_totals": [
+            {
+              "passed": 15,
+              "failed": 0,
+              "skipped": 0
+            }
+          ]
+        }
+      },
+      "builds": [
+        {
+          "case": "batch3-san-build-r1",
+          "source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "exit": 0,
+          "seconds": 1629.7,
+          "receipt_sha256": "44b4cf624018a068f1b2d6c9a60c5d6326c45b85b0952ab5985d77e42ea6618e",
+          "source_map_sha256": "2f1b18201792161014f06486964e00f2399f0be00bfbed878c246121bda327ad",
+          "log_sha256": "8086c9b0f3e82f9f13255ef2e1671e3f8ab914e59fd88dea32ced1eb634dcbd2",
+          "targets": [
+            "biglybtc-network-policy-tests",
+            "biglybtc-network-binding-tests",
+            "biglybtc-network-binding-owner-tests",
+            "biglybtc-network-proxy-owner-tests",
+            "biglybtc-provider-payload-counter-tests",
+            "biglybtc-selected-swarm-admission-tests",
+            "biglybtc-persistent-session-tests",
+            "biglybtc-managed-download-tests",
+            "biglybtc-managed-combined-protocol-tests",
+            "biglybtc-provider-webseed-runtime-deployment-driver",
+            "biglybtc-runtime-binding-driver",
+            "biglybtc-runtime-negative-driver",
+            "biglybtc-runtime-interposition-driver",
+            "biglybtc-runtime-interposer",
+            "biglybtc-network-proxy-capability-tests",
+            "biglybtc-network-proxy-foreign-marker",
+            "biglybtc-network-proxy-foreign-webseed-marker",
+            "biglybtc-application-settings-tests",
+            "biglybtc-library-commands-tests",
+            "biglybtc-library-commands-bridge-tests",
+            "biglybtc-managed-queue-tests",
+            "biglybtc-managed-storage-tests",
+            "biglybtc-managed-seeding-tests",
+            "biglybtc-scheduler-host-engine-tests",
+            "biglybtc-scheduler-imported-integration-tests",
+            "biglybtc-file-operations-host-tests",
+            "biglybtc-file-operation-sequence-tests",
+            "biglybtc-options-host-tests",
+            "biglybtc-library-action-ui-tests",
+            "BiglyBTC",
+            "BiglyBTC-headless"
+          ]
+        }
+      ],
+      "case_history": [
+        {
+          "case": "batch3-san-tests-r1",
+          "source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "exit": 8,
+          "seconds": 497.95,
+          "receipt_sha256": "19fd01b8281f99008f0e22f2989aed2f84e798333ab5dd667fa94e86355c4f2a",
+          "source_map_sha256": "2f1b18201792161014f06486964e00f2399f0be00bfbed878c246121bda327ad",
+          "log_sha256": "697cd91626f0c16e5a972ecd74d3ecda82aaa1b30cbb898bca7508667e874422",
+          "xml_sha256": "e35892447321c9a80159391952e58bb498a14f44c7c47e38ccc551b5707dcc72",
+          "passed_suites": 34,
+          "uncredited_suites": [
+            "scheduler-host-engine",
+            "network-proxy-owner"
+          ]
+        },
+        {
+          "case": "batch3-san-tests-r2",
+          "source_commit": "78ed6ff9c18447c210c59edf980f60332d805481",
+          "exit": 0,
+          "seconds": 50.95,
+          "receipt_sha256": "67c52f51d2ce408a0bcc986343aa068ab4bc118a179bf7eccd53cca226db0deb",
+          "source_map_sha256": "2f1b18201792161014f06486964e00f2399f0be00bfbed878c246121bda327ad",
+          "log_sha256": "f059bedbb1585662cd97ffe9bae522f9b0ce3fc304cca95351230a34dae2f6bd",
+          "xml_sha256": "0f8d0a0f90199313f07052bd8966a6de246b8307a17f1eb3c0519978c101d452",
+          "passed_suites": 2,
+          "uncredited_suites": []
+        }
+      ]
+    }
+  },
+  "protocols": {
+    "wire": {
+      "cases": 6,
+      "handshakes": 96,
+      "negative_gates": 3,
+      "receipt_sha256": "001e7d0cce0b31c9f49eed905f2881fa14ec8429ad9f756a9bad8f4126517a53"
+    },
+    "discovery": {
+      "modes": 3,
+      "successful_wrapper_exit": 0,
+      "failed_sudo_wrapper_exit": 1,
+      "selected_handshakes": 4,
+      "wrong_source_replies": 8,
+      "receipt_sha256": "172beff6caded7ba13dfe49f8bac725a484a20b0f46c6c097ae558952cd477fb"
+    }
+  },
+  "portable": {
+    "status": "PRIVATE_RUNTIME_QUALIFIED_NOT_PROMOTED",
+    "source": "78ed6ff9c18447c210c59edf980f60332d805481",
+    "receipt_sha256": "4946d068cc96515908c6abc2016c7e1f61e185268ad4e59bc77587b5e47e6bc3",
+    "manifest_sha256": "3325b24b4db201d25c83d80cd3a056e5d77bb252c9f7e253da29aa99a9487aae"
+  },
+  "whole_cf_parity": false,
+  "cf_parents_closed": [],
+  "original_java_credit": false,
+  "causal_or_public_network_credit": false,
+  "dist_promotion": false,
+  "raw_archive_sha256": "8eab6016b77d3990680af83c382ab9cf683d467535b78c483a56918f886d55b9",
+  "archive_members_sha256": "fc01770849fb612ff72bb67315b787c2ae6dac71a334da5a2c83b78af8bdc744"
+}
