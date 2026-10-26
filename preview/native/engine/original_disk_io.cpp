@@ -9,6 +9,8 @@
 #include <array>
 #include <condition_variable>
 #include <cstdlib>
+#include <fcntl.h>
+#include <sys/stat.h>
 #include <deque>
 #include <mutex>
 #include <set>
@@ -292,8 +294,14 @@ private:
 } // namespace
 
 OriginalDiskFiles::OriginalDiskFiles(std::shared_ptr<lt::torrent_info> metadata,
-    std::vector<std::optional<OriginalDiskFile>> files) : metadata_(std::move(metadata)), files_(std::move(files)) {
+    std::vector<std::optional<OriginalDiskFile>> files,OriginalDiskAccess access) : access_(access),metadata_(std::move(metadata)), files_(std::move(files)) {
   if (!metadata_ || files_.size() != static_cast<std::size_t>(metadata_->num_files())) { throw std::invalid_argument("Original storage file count differs"); }
+  if(access_!=OriginalDiskAccess::ReadWrite&&access_!=OriginalDiskAccess::ReadOnly){throw std::invalid_argument("Unknown original disk access policy");}
+  if(access_==OriginalDiskAccess::ReadOnly){for(int n=0;n<metadata_->num_files();++n){const auto index=lt::file_index_t{n};if(metadata_->files().pad_file_at(index)){continue;}const auto& file=files_[static_cast<std::size_t>(n)];struct stat stamp{};const int flags=file?::fcntl(file->descriptor.get(),F_GETFL):-1;
+    if(!file||flags<0||(flags&O_ACCMODE)!=O_RDONLY
+        ||::fstat(file->descriptor.get(),&stamp)!=0||!S_ISREG(stamp.st_mode)||stamp.st_uid!=::geteuid()||stamp.st_nlink!=1||stamp.st_size!=metadata_->files().file_size(index)){
+      throw std::invalid_argument("Read-only original storage requires complete owned read-only descriptors");}
+  }}
 }
 bool OriginalDiskFiles::matches(const lt::storage_params& params) const {
   const auto& files = metadata_->files();
@@ -317,8 +325,10 @@ std::expected<void, storage::Error> OriginalDiskFiles::read(std::uint64_t offset
     if (files.pad_file_at(index)) { std::ranges::fill(part, '\0'); }
     else {
       auto& file = files_.at(static_cast<int>(index)); if (!file) { return std::unexpected(missing()); }
+      if(access_==OriginalDiskAccess::ReadOnly&&file->validateControl){const auto proof=file->validateControl();if(!proof){return std::unexpected(proof.error());}}
       const auto result = file->io.read(within, std::as_writable_bytes(part));
       if (!result) { return std::unexpected(result.error()); } if (!result->complete()) { return std::unexpected(missing()); }
+      if(access_==OriginalDiskAccess::ReadOnly&&file->validateControl){const auto proof=file->validateControl();if(!proof){return std::unexpected(proof.error());}}
     }
     done += static_cast<std::size_t>(length); offset += length;
   }
@@ -326,6 +336,7 @@ std::expected<void, storage::Error> OriginalDiskFiles::read(std::uint64_t offset
 }
 std::expected<void, storage::Error> OriginalDiskFiles::write(std::uint64_t offset, std::span<const char> input) {
   if (const auto error=failure()) { return std::unexpected(*error); }
+  if(access_==OriginalDiskAccess::ReadOnly){failure_=storage::Error{storage::ErrorCode::Unsupported,"Existing-only payload cannot be created, repaired or written"};return std::unexpected(*failure_);}
   if (offset > static_cast<std::uint64_t>(metadata_->total_size()) || input.size() > static_cast<std::uint64_t>(metadata_->total_size()) - offset) { return std::unexpected(missing()); }
   const auto& files = metadata_->files(); std::size_t done = 0;
   while (done < input.size()) {
@@ -345,7 +356,7 @@ std::expected<void, storage::Error> OriginalDiskFiles::write(std::uint64_t offse
 std::expected<void, storage::Error> OriginalDiskFiles::flush() {
   if (const auto error=failure()) { return std::unexpected(*error); }
   for (auto& file : files_) { if (file) {
-    auto result = file->io.flush();
+    auto result = access_==OriginalDiskAccess::ReadOnly?std::expected<void,storage::Error>{}:file->io.flush();
     if(result&&file->validateControl){result=file->validateControl();}
     if (!result) { failure_ = result.error(); return result; }
   } }
@@ -358,8 +369,10 @@ std::expected<void, storage::Error> OriginalDiskFiles::finishComplete(std::span<
   }
   for (std::size_t i=0;i<files_.size();++i) { if (files_[i]) {
     std::expected<void,storage::Error> result;
-    if(complete[i]){result=files_[i]->io.finishCompleteReordered();}
-    else{const auto normalized=files_[i]->io.finishAllocatedReordered();if(!normalized){result=std::unexpected(normalized.error());}}
+    if(access_!=OriginalDiskAccess::ReadOnly){
+      if(complete[i]){result=files_[i]->io.finishCompleteReordered();}
+      else{const auto normalized=files_[i]->io.finishAllocatedReordered();if(!normalized){result=std::unexpected(normalized.error());}}
+    }
     if (result&&files_[i]->validateControl) { result=files_[i]->validateControl(); }
     if (!result) { failure_=result.error();return result; }
   } }

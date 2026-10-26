@@ -1,4 +1,8 @@
 #include "torrent_intake.hpp"
+#include "verified_seeding.hpp"
+#include "queue_positions.hpp"
+#include "file_operations.hpp"
+#include "linear_to_compact.hpp"
 #include "original_torrent_identity_lt.hpp"
 #include "encoded_document.hpp"
 #include "file_io.hpp"
@@ -244,6 +248,7 @@ struct IntakeFileOptions {
   bool paused=false;
   std::optional<core::TorrentIntakeTrackerTiers> trackers;
   std::optional<std::string> saveName;
+  bool verifyExisting=false;
 };
 const std::string& effectiveSaveName(const compat::OriginalLayout& layout,const IntakeFileOptions& options) {
   return options.saveName?*options.saveName:layout.name;
@@ -264,6 +269,11 @@ void validateFileOptions(const MetadataSubject& source,const IntakeFileOptions& 
     require(value.skipped||(kind=='L'||kind=='R'),ErrorCode::InvalidFormat,"Selected file cannot use compact storage");
     require(kind!='R'||!value.skipped,ErrorCode::InvalidFormat,"Skipped reordered file needs explicit X or existing linear data");
   }
+  if(options.verifyExisting){
+    require(!options.saveName||*options.saveName==source.layout.name,ErrorCode::Unsupported,"Verified seeding requires the original destination name");
+    require(!options.queued&&!options.paused,ErrorCode::InvalidFormat,"Verified seeding must begin stopped and unpaused");
+    for(std::size_t n=0;n<values->size();++n){require(!source.layout.files[n].padding&&!(*values)[n].skipped&&options.stores[n]=='L',ErrorCode::Unsupported,"Verified seeding requires every real file selected in linear storage");}
+  }
   require(!options.reorderMinimumMiB||(*options.reorderMinimumMiB>=INT32_MIN&&*options.reorderMinimumMiB<=INT32_MAX),
       ErrorCode::InvalidFormat,"Invalid original reorder threshold");
 }
@@ -278,14 +288,14 @@ void checkCompactAbsence(const compat::OriginalLayout& layout,const IntakeFileOp
   }
 }
 IntakeFileOptions fileOptions(const ProfileLease& lease,const MetadataSubject& source,
-    const fs::path& destination,std::span<const compat::FilePolicy> values,core::TorrentIntakeLimits limits,bool sequentialDownload,bool queued,bool paused,std::optional<core::TorrentIntakeTrackerTiers> trackers,std::optional<std::string> saveName) {
+    const fs::path& destination,std::span<const compat::FilePolicy> values,core::TorrentIntakeLimits limits,bool sequentialDownload,bool queued,bool paused,std::optional<core::TorrentIntakeTrackerTiers> trackers,std::optional<std::string> saveName,bool verifyExisting) {
   require(!saveName||core::validTorrentIntakeSaveName(*saveName),ErrorCode::UnsafePath,"Save name must be one safe UTF8 filename component");
   require(values.size()==source.layout.files.size(),ErrorCode::InvalidFormat,"Intake selection does not match metadata");
   const auto encoded=compat::encodeOriginalFilePolicy(values);
   require(encoded.has_value(),ErrorCode::Unsupported,encoded ? "" : encoded.error().message.c_str());
   auto empty=parse("de");const auto defaults=take(resolveOriginalStorageTypes(lease,source.hash,source.layout,empty.root()));
   require(defaults.markers.empty()&&!defaults.unsupportedConversion,ErrorCode::Conflict,"Orphan original storage controls already own this import");
-  IntakeFileOptions result{*encoded,"",defaults.reorderMinimumMiB,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName)};result.stores.reserve(values.size());
+  IntakeFileOptions result{*encoded,"",defaults.reorderMinimumMiB,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting};result.stores.reserve(values.size());
   for(std::size_t n=0;n<values.size();++n) {
     const bool reorder=defaults.requested[n]==OriginalStorageKind::Reordered;
     if(!values[n].skipped) { result.stores+=reorder?'R':'L';continue; }
@@ -393,6 +403,7 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
     std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart, std::optional<IntakeFileOptions> options = {}, std::optional<HybridAliasSource> alias = {}) {
   require(!options||!options->queued||(!stopped&&!forceStart),ErrorCode::InvalidFormat,"Queued intake conflicts with stopped/forced intent");
   require(!options||!options->paused||(stopped&&!forceStart&&!options->queued),ErrorCode::InvalidFormat,"Paused intake requires stopped/unforced/nonqueued intent");
+  require(!options||!options->verifyExisting||(stopped&&!forceStart),ErrorCode::InvalidFormat,"Verified seeding requires stopped/unforced intake");
   auto subject=metadataSubject(metadata);auto& torrent=subject.torrent;auto* original=&subject.layout;
   const auto hash=std::optional{subject.hash};const auto key=hash->bytes();
   const auto* digest=reinterpret_cast<const char*>(key.data());
@@ -442,6 +453,7 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
     require(policies.has_value(),ErrorCode::InvalidFormat,"Published intake policy invalid");
     const bool allSkipped=std::ranges::all_of(*policies,[](const auto& value){return value.skipped;});
     if(allSkipped){stopped=true;forceStart=false;options->queued=false;options->paused=false;put(selected,"state","i70e");put(selected,"forceStart","i0e");}
+    if(options->verifyExisting){put(selected,VerifiedSeedKey,"i1e");}
     entry=selected.serialize();
   }
   std::string list = raw(inventory, *downloads);
@@ -463,7 +475,9 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
       &&(!original->multifile||original->files.size()!=1)){
     put(attributes,"displayname",b(*options->saveName));
   } // One-entry multifile root-only rename is not original manual file rename.
-  if(options&&options->sequentialDownload){put(attributes,"flags",i(*flags|core::OriginalSequentialDownloadFlag));}
+  if(options&&(options->sequentialDownload||options->verifyExisting)){put(attributes,"flags",i(*flags
+      |(options->sequentialDownload?core::OriginalSequentialDownloadFlag:0)
+      |(options->verifyExisting?std::int64_t{0x8}:0)));}
   std::string stores = "l";
   for (std::size_t n = 0; n < original->files.size(); ++n) { stores += options ? "1:"+std::string(1,options->stores[n]) : "1:L"; }
   if(options&&options->reorderMinimumMiB){put(attributes,"reordermb",i(*options->reorderMinimumMiB));}
@@ -520,6 +534,7 @@ std::string journalBytes(const Plan& p) {
     if(p.options->sequentialDownload){value+=b("sequential")+"i1e";}
     if(p.options->queued){value+=b("queued")+"i1e";}
     if(p.options->paused){value+=b("paused")+"i1e";}
+    if(p.options->verifyExisting){value+=b("verifiedSeed")+"i1e";}
     if(p.options->saveName){value+=b("saveName")+b(*p.options->saveName);}
     if(p.options->trackers){
       value+=b("trackers")+'l';for(const auto& tier:*p.options->trackers){value+='l';for(const auto& url:tier){value+=b(url);}value+='e';}value+='e';
@@ -579,14 +594,16 @@ Plan readJournal(std::string bytes, const std::string& profile) {
     require(queuedValue==0||queuedValue==1,ErrorCode::InvalidFormat,"Invalid queued intake intent");
     const auto* paused=optionsNode->find("paused");const auto pausedValue=paused?integer(paused):0;
     require(pausedValue==0||pausedValue==1,ErrorCode::InvalidFormat,"Invalid paused intake intent");
+    const auto* verified=optionsNode->find("verifiedSeed");
+    require(!verified||integer(verified)==1,ErrorCode::InvalidFormat,"Invalid verified-seeding journal intent");
     const auto* saveName=optionsNode->find("saveName");
     const auto* trackers=optionsNode->find("trackers");
     std::optional<core::TorrentIntakeTrackerTiers> override;
     if(trackers){override=core::decodeTorrentIntakeTrackerTiers(*trackers);require(override.has_value(),ErrorCode::InvalidFormat,"Invalid tracker override journal");}
-    require(optionsNode->children.size()==4+(reorder?2U:0U)+(download?2U:0U)+(upload?2U:0U)+(sequential?2U:0U)+(queued?2U:0U)+(paused?2U:0U)+(trackers?2U:0U)+(saveName?2U:0U),ErrorCode::InvalidFormat,"Unexpected intake options fields");
+    require(optionsNode->children.size()==4+(reorder?2U:0U)+(download?2U:0U)+(upload?2U:0U)+(sequential?2U:0U)+(queued?2U:0U)+(paused?2U:0U)+(trackers?2U:0U)+(saveName?2U:0U)+(verified?2U:0U),ErrorCode::InvalidFormat,"Unexpected intake options fields");
     options=IntakeFileOptions{text(optionsNode->find("policy")),text(optionsNode->find("stores")),
         reorder?std::optional{integer(reorder)}:std::nullopt,
-        {download?integer(download):0,upload?integer(upload):0},sequentialValue==1,queuedValue==1,pausedValue==1,std::move(override),saveName?std::optional{text(saveName)}:std::nullopt};
+        {download?integer(download):0,upload?integer(upload):0},sequentialValue==1,queuedValue==1,pausedValue==1,std::move(override),saveName?std::optional{text(saveName)}:std::nullopt,verified!=nullptr};
   }
   std::optional<HybridAliasSource> alias;
   if(aliasNode){
@@ -821,13 +838,14 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     const fs::path& metadata, const fs::path& destination, bool stopped,
     void (*observer)(TorrentIntakeStage), bool forceStart,
     std::optional<std::span<const compat::FilePolicy>> policies = {},const File* expected = nullptr, std::stop_token stop = {},
-    core::TorrentIntakeLimits limits = {},bool sequentialDownload = false,bool queued = false,bool paused = false,std::optional<core::TorrentIntakeTrackerTiers> trackers = {},std::optional<std::string> saveName = {}) {
+    core::TorrentIntakeLimits limits = {},bool sequentialDownload = false,bool queued = false,bool paused = false,std::optional<core::TorrentIntakeTrackerTiers> trackers = {},std::optional<std::string> saveName = {},bool verifyExisting = false) {
   try {
     require(!stop.stop_requested(),ErrorCode::Cancelled,"Torrent import cancelled before commit");
     require(!saveName||core::validTorrentIntakeSaveName(*saveName),ErrorCode::UnsafePath,"Save name must be one safe UTF8 filename component");
     require(!trackers||core::validTorrentIntakeTrackerTiers(*trackers),ErrorCode::InvalidFormat,"Invalid tracker override");
     require(core::validTorrentIntakeLimits(limits),ErrorCode::InvalidFormat,"Per-torrent limits must be between zero and INT32_MAX bytes/s");
     require(!queued||(!stopped&&!forceStart),ErrorCode::InvalidFormat,"Queued intake conflicts with stopped/forced intent");
+    require(!verifyExisting||(stopped&&!forceStart&&!queued&&!paused),ErrorCode::InvalidFormat,"Verified seeding requires stopped/unforced/unpaused intake");
     require(!paused||(stopped&&!forceStart&&!queued),ErrorCode::InvalidFormat,"Paused intake requires stopped/unforced/nonqueued intent");
     const auto profile = profilePath(lease);
     const int root = lease.directoryHandle();
@@ -839,7 +857,7 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     require(!expected||(unchanged(expected->info,source->info)&&expected->bytes==source->bytes),
         ErrorCode::Conflict,"Torrent metadata changed after file preview; load it again");
     std::optional<IntakeFileOptions> options;
-    if(policies){const auto subject=metadataSubject(source->bytes);options=fileOptions(lease,subject,destination,*policies,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName));}
+    if(policies){const auto subject=metadataSubject(source->bytes);options=fileOptions(lease,subject,destination,*policies,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting);}
     const auto before = read(root, "downloads.config", MaximumInventory);
     const auto backup = read(root, "downloads.config.bak", MaximumInventory);
     require(before || !backup, ErrorCode::Conflict, "Resolve missing inventory primary before intake");
@@ -876,8 +894,8 @@ std::expected<core::TorrentHash,Error> importTorrent(ProfileLease& lease,const f
 }
 std::expected<core::TorrentHash,Error> importTorrentWithFileOptions(ProfileLease& lease,
     const TorrentIntakeMetadata& metadata,const fs::path& destination,bool stopped,
-    std::span<const compat::FilePolicy> policies,void(*observer)(TorrentIntakeStage),bool forceStart,std::stop_token stop,core::TorrentIntakeLimits limits,bool sequentialDownload,bool queued,bool paused,std::optional<core::TorrentIntakeTrackerTiers> trackers,std::optional<std::string> saveName) {
-  return importImpl(lease,metadata.data_->path,destination,stopped,observer,forceStart,policies,&metadata.data_->input,stop,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName));
+    std::span<const compat::FilePolicy> policies,void(*observer)(TorrentIntakeStage),bool forceStart,std::stop_token stop,core::TorrentIntakeLimits limits,bool sequentialDownload,bool queued,bool paused,std::optional<core::TorrentIntakeTrackerTiers> trackers,std::optional<std::string> saveName,bool verifyExisting) {
+  return importImpl(lease,metadata.data_->path,destination,stopped,observer,forceStart,policies,&metadata.data_->input,stop,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting);
 }
 
 std::expected<std::string,Error> rewriteTorrentIntakeTrackers(std::string_view metadata,
@@ -968,4 +986,5 @@ std::expected<std::optional<core::TorrentHash>, Error> recoverTorrentIntake(
   } catch (const Failure& failure) { return std::unexpected(failure.error); }
   catch (const std::exception&) { return std::unexpected(Error{ErrorCode::Io, "Torrent intake recovery failed; journal retained"}); }
 }
+#include "verified_seeding.inc"
 } // namespace biglybtc::storage

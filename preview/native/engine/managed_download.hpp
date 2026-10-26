@@ -4,6 +4,7 @@
 #include "biglybtc/queue_target_statistics.hpp"
 #include "profile.hpp"
 #include <array>
+#include <chrono>
 #include <cstdint>
 #include <optional>
 #include <memory>
@@ -11,6 +12,7 @@
 #include <vector>
 namespace biglybtc::engine {
 enum class ManagedPhase { Checking, Queued, Downloading, Seeding, Paused, Stopping, Stopped, Failed };
+enum class VerifiedSeedingPhase { None, Checking, Released, Cancelled, Failed };
 struct ManagedDownloadStatus {
   core::TorrentHash hash;
   std::uint64_t admission = 0;
@@ -37,6 +39,8 @@ struct ManagedDownloadStatus {
   // Last committed original completion-group position, not LT queue index.
   std::optional<std::uint32_t> queuePosition{};
   std::shared_ptr<const storage::Error> queuePositionFailure{};
+  VerifiedSeedingPhase verifiedSeeding=VerifiedSeedingPhase::None;
+  bool verificationHeld=false;
 };
 enum class MagnetPhase { Resolving, Retiring, Imported, Failed, Cancelled };
 struct PendingMagnetStatus {
@@ -54,5 +58,8 @@ struct ManagedDownloadOptions {
   bool queued = false;
   // Queue-policy admission: verify under stop_when_ready, then retain pause.
   bool manuallyPaused = false;
+  bool verifyExisting = false;
+  // A caller-supplied real monotone deadline; absent uses five minutes.
+  std::optional<std::chrono::steady_clock::time_point> verificationDeadline{};
 };
 } // namespace biglybtc::engine

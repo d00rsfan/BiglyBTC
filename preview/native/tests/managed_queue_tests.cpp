@@ -2,6 +2,7 @@
 #include "library_commands.hpp"
 #include "file_policy_commands.hpp"
 #include "owned_engine_fixture.hpp"
+#include "verified_seeding_fixture.hpp"
 
 #include <QtTest>
 
@@ -121,6 +122,24 @@ core::QueuePolicy policy(int downloads,int active) {
 class ManagedQueueTests final:public QObject {
   Q_OBJECT
 private slots:
+
+  void verifiedSeedActualPostPrimaryFailureCannotReleaseOrReplay(){
+    QTemporaryDir directory;QVERIFY(directory.isValid());const auto fixture=test::prepareVerifiedSeedCase(directory.path()+"/owned",false);
+    auto lease=storage::ProfileLease::acquire(fixture.profile.toStdString());QVERIFY(lease);QVERIFY(test::importVerifiedSeedCase(*lease,fixture));auto service=owner();
+    QVERIFY(service->startManaged(*lease,{.hash=fixture.hash,.verifyExisting=true}));
+    struct ResetFault{~ResetFault(){queueFaultRemaining=0;}} resetFault;
+    struct stat profile{};QVERIFY(::fstat(lease->directoryHandle(),&profile)==0);queueFaultDevice=profile.st_dev;queueFaultInode=profile.st_ino;queueFaultHits=0;queueFaultRemaining=2;
+    // Same existing owned fsync wrapper: real sync executes, then fail after
+    // the primary rename. No payload/global operation is faulted.
+    QTRY_VERIFY_WITH_TIMEOUT(service->poll().has_value()&&[&]{const auto current=test::verifiedStatus(*service,fixture.hash);return current&&current->verifiedSeeding==engine::VerifiedSeedingPhase::Failed;}(),30000);
+    queueFaultRemaining=0;QCOMPARE(queueFaultHits.load(),1);
+    const auto current=test::verifiedStatus(*service,fixture.hash);QVERIFY(current&&current->failure&&!current->verificationHeld);QCOMPARE(current->received,std::int64_t{0});QCOMPARE(current->sent,std::int64_t{0});
+    const auto actual=storage::readVerifiedSeedIntent(*lease,fixture.hash);QVERIFY(actual&&*actual);QCOMPARE((*actual)->state,storage::VerifiedSeedState::Released);
+    const auto published=test::read(fixture.profile+"/downloads.config");
+    for(int n=0;n<3;++n){QVERIFY(service->poll());QCOMPARE(test::read(fixture.profile+"/downloads.config"),published);QCOMPARE(test::verifiedStatus(*service,fixture.hash)->verifiedSeeding,engine::VerifiedSeedingPhase::Failed);}
+    const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined);QVERIFY(test::verifiedSeedBytesIntact(fixture));
+    QCOMPARE(test::read(fixture.profile+"/downloads.config"),published);
+  }
   void limitsPauseResumeAndForceUseRealRetainedHandles_data() {
     QTest::addColumn<int>("maximumDownloads");QTest::addColumn<int>("maximumActive");
     QTest::newRow("download-cap")<<1<<0;

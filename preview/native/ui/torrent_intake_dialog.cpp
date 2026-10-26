@@ -150,6 +150,7 @@ TorrentIntakeDialog::TorrentIntakeDialog(QWidget* parent):QDialog(parent) {
   startMode_->addItem(tr("Stopped"),static_cast<int>(TorrentIntakeStartMode::Stopped));
   startMode_->addItem(tr("Paused"),static_cast<int>(TorrentIntakeStartMode::Paused));
   startMode_->addItem(tr("Forced"),static_cast<int>(TorrentIntakeStartMode::Forced));
+  startMode_->addItem(tr("Verify existing data, then seed"),static_cast<int>(TorrentIntakeStartMode::VerifySeeding));
   startMode_->setToolTip(tr("Queued follows queue rules. Paused waits for Resume. Forced bypasses ordinary queue limits."));
   auto* startRow=new QFormLayout;startRow->addRow(tr("Start mode:"),startMode_);layout->addLayout(startRow);
   connect(startMode_,&QComboBox::currentIndexChanged,this,[this]{++revision_;schedule();});
@@ -322,6 +323,7 @@ void TorrentIntakeDialog::render() {
         ?tr("No files selected. The torrent will be added stopped.")
         :tr("%1 bytes selected. Existing files are checked before downloading.").arg(model_->selectedBytes());
   }
+  if(startMode_->currentData().toInt()==static_cast<int>(TorrentIntakeStartMode::VerifySeeding)){status+=tr("\nRequires all existing original-named linear files. Read-only verification never downloads or repairs missing data. Seeding starts only after every piece passes.");}
   if(frame&&!frame->trackers){status+=tr("\nOriginal tracker fields are kept unchanged; this editor cannot represent their format or size.");}
   status_->setText(status.left(4096));
 }
@@ -329,8 +331,12 @@ void TorrentIntakeDialog::accept() {
   if(!session_||busy_||pending()||!source_||!destination_||!startMode_||!model_||!preview_||!downloadLimit_||!uploadLimit_||!sequential_||!editTrackers_||!trackers_||!saveName_
       ||model_->source!=preview_||preview_->source.metadata!=source_->text()||!path(destination_->text())||!saveName(saveName_->text())){return;}
   bool validMode=false;const auto mode=startMode_->currentData().toInt(&validMode);
-  if(!validMode||mode<static_cast<int>(TorrentIntakeStartMode::Queued)||mode>static_cast<int>(TorrentIntakeStartMode::Forced)){return;}
+  if(!validMode||mode<static_cast<int>(TorrentIntakeStartMode::Queued)||mode>static_cast<int>(TorrentIntakeStartMode::VerifySeeding)){return;}
   const bool selected=model_->selectedBytes()!=0;
+  const bool verify=mode==static_cast<int>(TorrentIntakeStartMode::VerifySeeding);
+  if(verify&&(!selected||std::ranges::any_of(model_->draft,[](const auto& file){return file.skipped;})
+      ||std::ranges::any_of(preview_->files,[](const auto& file){return file.padding;})
+      ||(!saveName_->text().isEmpty()&&saveName_->text()!=preview_->name))){return;}
   const bool force=selected&&mode==static_cast<int>(TorrentIntakeStartMode::Forced);
   const bool paused=selected&&mode==static_cast<int>(TorrentIntakeStartMode::Paused);
   const bool start=selected&&(force||mode==static_cast<int>(TorrentIntakeStartMode::Queued));
@@ -338,7 +344,7 @@ void TorrentIntakeDialog::accept() {
   if(editTrackers_->isChecked()){if(!preview_->trackers){return;}trackers.emplace();if(!trackerDraft(trackers_->toPlainText(),*trackers)){return;}}
   std::optional<QString> name;if(!saveName_->text().isEmpty()){name=saveName_->text();}
   TorrentIntakeSubmission submission{session_,request_.request,preview_->revision,destination_->text(),start,model_->draft,
-      {static_cast<std::int64_t>(downloadLimit_->value())*1024,static_cast<std::int64_t>(uploadLimit_->value())*1024},sequential_->isChecked(),force,paused,std::move(trackers),std::move(name)};
+      {static_cast<std::int64_t>(downloadLimit_->value())*1024,static_cast<std::int64_t>(uploadLimit_->value())*1024},sequential_->isChecked(),force,paused,std::move(trackers),std::move(name),verify};
   committing_=true;failure_.clear();++revision_;schedule();emit submitted(std::move(submission));
 }
 void TorrentIntakeDialog::reject() {

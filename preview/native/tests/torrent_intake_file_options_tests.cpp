@@ -1,4 +1,5 @@
 #include "torrent_intake.hpp"
+#include "verified_seeding.hpp"
 #include "library_commands.hpp"
 #include "biglybtc/saved_dnd.hpp"
 #include <libtorrent/torrent_info.hpp>
@@ -247,8 +248,49 @@ void saveNameOptions(){
 }
 
 } // namespace
+namespace {
+void uncertainSeedSave(storage::SaveStage stage){if(stage==storage::SaveStage::PrimaryRenamed){throw std::runtime_error("Actual primary already renamed");}}
+void verifiedSeedIntentCases(){
+  const std::string source="d10:attributesd6:future3:raw5:flagsi-9223372036854775808ee4:infod6:lengthi1e4:name8:seed.bin12:piece lengthi16384e6:pieces20:hhhhhhhhhhhhhhhhhhhhee";
+  const std::array<compat::FilePolicy,1> selected{{{false,0}}};
+  const auto import=[&](Area& area,void(*observer)(storage::TorrentIntakeStage)=nullptr){
+    write(area.input,source);const auto metadata=take(storage::inspectTorrentIntake(area.input));
+    return storage::importTorrentWithFileOptions(*area.lease,metadata,area.destination,true,selected,observer,false,{}, {},false,false,false,{}, {},true);
+  };
+  for(const auto stage:{storage::TorrentIntakeStage::JournalSynced,storage::TorrentIntakeStage::StatePublished,storage::TorrentIntakeStage::ArchivePublished,storage::TorrentIntakeStage::InventoryPublished}){
+    Area area;interrupted=stage;check(!import(area,interrupt),"Verified intent accepts actual durable interruption");area.reopen();
+    const auto recovered=take(storage::recoverTorrentIntake(*area.lease));check(recovered.has_value(),"Recover verified stopped intake");
+    const auto intent=take(storage::readVerifiedSeedIntent(*area.lease,*recovered));check(intent&&intent->state==storage::VerifiedSeedState::Pending&&intent->startup==core::StartupState::Stopped&&!intent->forceStart&&!intent->paused,"Recovery remains stopped/unforced/unpaused, never assumed seeding");
+    const auto state=parse(read(area.profile/"active"/(recovered->hex()+".dat")));check(core::originalDownloadFlags(state.find("attributes"))==std::optional<std::int64_t>{INT64_MIN|8},"Original move flag set before prepare, unknown signed bits preserved");
+    check(read(area.profile/"torrents"/(recovered->hex()+".torrent"))==source&&!fs::exists(area.destination),"Archive raw bytes retained, no payload allocation");
+    const auto prior=read(area.profile/"downloads.config");
+    check(!storage::publishVerifiedSeed(*area.lease,*intent,uncertainSeedSave),"Failure after actual primary publication remains uncertain");
+    const auto published=take(storage::readVerifiedSeedIntent(*area.lease,*recovered));check(published&&published->state==storage::VerifiedSeedState::Released&&published->startup==core::StartupState::Queued,"Actual primary contains queued75 but no invented successful acknowledgement");
+    const auto after=read(area.profile/"downloads.config");check(after!=prior,"Actual row publication occurred");
+    check(!storage::publishVerifiedSeed(*area.lease,*intent)&&read(area.profile/"downloads.config")==after,"Stale stopped intent cannot replay publication");
+    check(take(storage::readVerifiedSeedIntent(*area.lease,*recovered))->row==published->row,"Opaque target and unrelated original data survive");
+    check(storage::resetVerifiedSeedForRetry(*area.lease,*recovered).has_value(),"Explicit retry resets only saved intent");
+    check(take(storage::readVerifiedSeedIntent(*area.lease,*recovered))->startup==core::StartupState::Stopped,"Retry never exposes queued before actual verification");
+  }
+  {Area area;write(area.input,source);const auto metadata=take(storage::inspectTorrentIntake(area.input));
+    const auto ordinary=take(storage::importTorrentWithFileOptions(*area.lease,metadata,area.destination,true,selected));
+    check(!take(storage::readVerifiedSeedIntent(*area.lease,ordinary)),"Old absent argument has no intent");
+    auto doc=parse(read(area.profile/"downloads.config"));const auto row=rawValue(doc,"downloads");
+    auto legacy=parse("d3:old"+row.substr(1,row.size()-2)+'e');write(area.profile/"downloads.config",legacy.serialize());
+    check(!take(storage::readVerifiedSeedIntent(*area.lease,ordinary)),"Absent marker preserves legacy-map admission");
+    write(area.profile/"downloads.config.bak",legacy.serialize());write(area.profile/"downloads.config","broken");
+    check(!take(storage::readVerifiedSeedIntent(*area.lease,ordinary)),"Absent marker preserves Backup recovery policy");
+  }
+  {Area area;write(area.input,source);const auto metadata=take(storage::inspectTorrentIntake(area.input));
+    const auto before=read(area.profile/"downloads.config");
+    check(!storage::importTorrentWithFileOptions(*area.lease,metadata,area.destination,false,selected,nullptr,false,{}, {},false,true,false,{}, {},true),"Verified/queued conflict before journal");
+    check(read(area.profile/"downloads.config")==before&&!storage::hasPendingTorrentIntake(*area.lease),"Conflicting request has no effects");
+  }
+}
+}
 int main(){
   try{
+    verifiedSeedIntentCases();
     saveNameOptions();
     trackerOptions();
     for(const auto flags:std::array<std::int64_t,5>{0,1,8192,std::numeric_limits<std::int64_t>::min(),std::numeric_limits<std::int64_t>::max()}){

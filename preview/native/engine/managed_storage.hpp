@@ -35,6 +35,11 @@ struct ManagedQueueMetadata {
   std::optional<std::int32_t> minimumShareRatio, maximumShareRatio;
 };
 
+// Storage prerequisite only: the future owner must independently hold checking
+// until actual all-piece verification and fresh saved-intent CAS. This is not
+// seed_mode, verified resume, permission to auto-resume or an engine admission.
+enum class ManagedStoragePurpose { Download, VerifyExistingReadOnly };
+
 // Owns authenticated payload descriptors/state for ONE managed admission. The
 // caller retains the same profile lease for preparation, engine use and save.
 class ManagedStorage final {
@@ -43,13 +48,18 @@ public:
       const storage::ProfileLease&,const core::TorrentHash&,const NetworkPolicy&,
       std::span<const ManagedPayloadClaim> claimed={},
       std::span<const storage::OriginalTorrentIdentity> retainedIdentities={},
-      std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge={});
+      std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge={},
+      ManagedStoragePurpose purpose=ManagedStoragePurpose::Download);
   ManagedStorage(ManagedStorage&&) noexcept;
   ManagedStorage& operator=(ManagedStorage&&) noexcept;
   ManagedStorage(const ManagedStorage&) = delete;
   ManagedStorage& operator=(const ManagedStorage&) = delete;
   ~ManagedStorage();
   libtorrent::add_torrent_params parameters() const;
+  ManagedStoragePurpose purpose() const noexcept;
+  // Owner-thread pure named-fd snapshot check, safe alongside read-only disk
+  // jobs. No codec/failure-cache access, queue release or verified-piece proof.
+  std::expected<void,storage::Error> validateExistingSnapshot() const;
   const ManagedQueueMetadata& queueMetadata() const;
   // Captured original mapping for passive same-admission group authority.
   const core::SavedDownload& capturedDownload() const;

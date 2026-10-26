@@ -131,6 +131,8 @@ public:
   std::expected<core::TorrentHash, storage::Error> createHybridCompanion(
       storage::ProfileLease&, const core::TorrentHash&, storage::OriginalSelectedHash, std::stop_token = {});
   std::vector<ManagedDownloadStatus> managedDownloads() const;
+  // Last accepted bits for diagnostics only; copies never grant release.
+  std::vector<std::uint8_t> verifiedSeedPieces(const core::TorrentHash&) const;
   bool managedAvailable() const noexcept;
   std::optional<unsigned short> tcpListenPort() const noexcept;
   // Already-persisted original pending intent. Metadata uses a non-filesystem

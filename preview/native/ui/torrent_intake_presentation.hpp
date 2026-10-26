@@ -27,7 +27,7 @@ struct TorrentIntakePacket {
   std::optional<core::TorrentIntakeTrackerFields> trackers=core::TorrentIntakeTrackerFields{}; // nullopt: source cannot be edited; preserve it.
 };
 using TorrentIntakePresentation=std::shared_ptr<const TorrentIntakePacket>;
-enum class TorrentIntakeStartMode { Queued, Stopped, Paused, Forced };
+enum class TorrentIntakeStartMode { Queued, Stopped, Paused, Forced, VerifySeeding };
 struct TorrentIntakeSubmission {
   quint64 session=0,request=0,revision=0;
   QString destination;
@@ -39,11 +39,13 @@ struct TorrentIntakeSubmission {
   bool paused=false;
   std::optional<core::TorrentIntakeTrackerTiers> trackers=std::nullopt; // Absent preserves raw source.
   std::optional<QString> saveName=std::nullopt; // One destination leaf, never info.name.
+  bool verifyExisting=false; // Actual full check before any seeding; never seed_mode.
 };
 struct TorrentIntakeResultPacket {
   quint64 session=0,request=0,revision=0;
   bool imported=false,started=false;
   QString hash,failure;
+  bool verificationPending=false;
 };
 using TorrentIntakeResultPresentation=std::shared_ptr<const TorrentIntakeResultPacket>;
 inline bool validTorrentIntake(const TorrentIntakePresentation& packet) {

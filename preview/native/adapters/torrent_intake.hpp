@@ -46,7 +46,7 @@ private:
   friend std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(const std::filesystem::path&, std::stop_token);
   friend std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
       const TorrentIntakeMetadata&, const std::filesystem::path&, bool, std::span<const compat::FilePolicy>,
-      void (*)(TorrentIntakeStage), bool, std::stop_token, core::TorrentIntakeLimits, bool, bool, bool, std::optional<core::TorrentIntakeTrackerTiers>, std::optional<std::string>);
+      void (*)(TorrentIntakeStage), bool, std::stop_token, core::TorrentIntakeLimits, bool, bool, bool, std::optional<core::TorrentIntakeTrackerTiers>, std::optional<std::string>, bool);
 };
 std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(
     const std::filesystem::path&, std::stop_token = {});
@@ -68,7 +68,7 @@ std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(
 std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
     const TorrentIntakeMetadata&, const std::filesystem::path& destination, bool stopped,
     std::span<const compat::FilePolicy>, void (*observer)(TorrentIntakeStage) = nullptr,
-    bool forceStart = false, std::stop_token = {}, core::TorrentIntakeLimits = {}, bool sequentialDownload = false, bool queued = false, bool paused = false, std::optional<core::TorrentIntakeTrackerTiers> trackers = std::nullopt, std::optional<std::string> saveName = std::nullopt);
+    bool forceStart = false, std::stop_token = {}, core::TorrentIntakeLimits = {}, bool sequentialDownload = false, bool queued = false, bool paused = false, std::optional<core::TorrentIntakeTrackerTiers> trackers = std::nullopt, std::optional<std::string> saveName = std::nullopt, bool verifyExisting = false);
 
 // Optional saveName changes only the saved destination leaf. Missing retains
 // old defaults; restoring layout.name clears manual rename intent. Changed

@@ -113,6 +113,7 @@ struct Fixture {
   core::Document state() const { auto parsed=core::Document::parse(read(profile/"active"/(hash.hex()+".dat")),storage::compatibleConfigLimits()); require(parsed.has_value(),"fixture state readback"); return std::move(*parsed); }
   core::Document saved() const { auto parsed=core::Document::parse(read(profile/"downloads.config"),storage::compatibleConfigLimits()); require(parsed.has_value(),"fixture inventory readback"); return std::move(*parsed); }
 };
+
 void deniedPrepare(Fixture& fixture,Code code) {
   const auto state=read(fixture.profile/"active"/(fixture.hash.hex()+".dat")); const auto inventory=read(fixture.profile/"downloads.config");
   auto result=Storage::prepare(*fixture.lease,fixture.hash,{}); require(!result&&result.error().code==code,"prepare refusal code");
@@ -122,6 +123,16 @@ void checkpoint(Storage& owner,Fixture& fixture,std::array<std::uint8_t,2> piece
   auto saved=owner.checkpoint(*fixture.lease,pieces,complete,received,sent); require(saved.has_value(),saved?"checkpoint":saved.error().message);
 }
 const core::Node& row(const core::Document& doc) { const auto* list=doc.find("downloads"); require(list&&list->children.size()==1,"fixture single inventory row"); return list->children[0]; }
+using Purpose=engine::detail::ManagedStoragePurpose;
+fs::path existingLeaf(const Fixture& f,std::size_t index=0){return f.multi?f.save/"bundle"/(index?"b.bin":"a.bin"):f.save/"original.bin";}
+void existingFixture(Fixture& f,bool payload=true){
+  auto inventory=f.saved();auto first=core::Document::parse(encode(row(inventory)));require(first.has_value(),"Original existing-only row");require(first->replaceValue("save_file",b(f.multi?"bundle":"original.bin")).has_value()&&inventory.replaceValue("downloads","l"+first->serialize()+'e').has_value(),"Existing-only original canonical root");write(f.profile/"downloads.config",inventory.serialize());
+  if(payload){if(f.multi){write(existingLeaf(f,0),std::string_view(f.body).substr(0,20000));write(existingLeaf(f,1),std::string_view(f.body).substr(20000));}else{write(existingLeaf(f),f.body);}}
+}
+auto prepareExisting(Fixture& f,std::span<const engine::detail::ManagedPayloadClaim> claimed={}){return Storage::prepare(*f.lease,f.hash,{},claimed,{}, {},Purpose::VerifyExistingReadOnly);}
+void existingAttribute(Fixture& f,std::string_view key,std::string value){auto state=f.state();auto attrs=core::Document::parse(encode(*state.find("attributes")));require(attrs.has_value()&&attrs->replaceValue(key,std::move(value)).has_value()&&state.replaceValue("attributes",attrs->serialize()).has_value(),"Existing-only negative attribute");write(f.profile/"active"/(f.hash.hex()+".dat"),state.serialize());}
+
+
 void test(std::string_view name,const std::function<void()>& body) { body(); ++families; std::cout<<"case "<<name<<'\n'; }
 }
 int main() {
@@ -147,6 +158,48 @@ int main() {
       require(!fs::exists(path(0,true))&&fs::exists(path(0,false))&&!fs::exists(destination/(multi?"bundle":"original.bin")),"Completion durably renames chosen paths only");
       auto owner=Storage::prepare(*lease,f.hash,{});require(owner.has_value(),owner?"reopen":owner.error().message);require(owner->parameters().renamed_files.at(libtorrent::file_index_t{0})==path(0,false).lexically_relative(destination).string(),"Reopened real mapping does not append suffix twice");
       auto state=core::Document::parse(read(profile/"active"/(f.hash.hex()+".dat")),storage::compatibleConfigLimits());require(state&&encode(*state->find("info"))==f.info&&state->find("attributes")->find("displayname")->bytes==leaf,"Exact original raw identity and manual name survive completion");require(read(path(0,false))+(multi?read(path(1,false)):std::string{})==f.body,"Actual named payload bytes remain complete");
+    }
+  });
+
+  test("existing-only-complete-linear-preparation-is-read-only-and-still-unverified",[] {
+    for(const bool multi:{false,true}){
+      Fixture f(multi);existingFixture(f);std::vector<struct stat> before(multi?2:1);for(std::size_t i=0;i<before.size();++i){require(::stat(existingLeaf(f,i).c_str(),&before[i])==0,"Actual complete existing leaf");}
+      auto owner=prepareExisting(f);require(owner.has_value(),owner?"existing-only prepare":owner.error().message);require(owner->purpose()==Purpose::VerifyExistingReadOnly&&owner->mappedFiles()&&owner->mappedFiles()->access()==engine::detail::OriginalDiskAccess::ReadOnly,"Linear existing-only always uses immutable descriptor route");
+      const auto params=owner->parameters();require(bool(params.flags&libtorrent::torrent_flags::paused)&&!bool(params.flags&libtorrent::torrent_flags::auto_managed)&&!bool(params.flags&libtorrent::torrent_flags::seed_mode),"Storage never releases queue or assumes piece hashes");const auto prepared=f.state();const auto* resume=prepared.find("resume")->find("data");require(resume->find("valid")->integer==0&&resume->find("resume data")->bytes==std::string(2,'\2'),"Existing size/source complete bits cannot mint verified resume; all original pieces require recheck");
+      std::vector<char> actual(f.body.size());require(owner->mappedFiles()->read(0,actual).has_value()&&std::string(actual.begin(),actual.end())==f.body,"Actual authenticated read-only cross-file descriptor bytes");require(owner->mappedFiles()->flush().has_value()&&owner->validateExistingSnapshot().has_value(),"Read-only flush and owner snapshot validate without mutable codec publication");
+      for(std::size_t i=0;i<before.size();++i){struct stat after{};require(::stat(existingLeaf(f,i).c_str(),&after)==0&&after.st_dev==before[i].st_dev&&after.st_ino==before[i].st_ino&&after.st_size==before[i].st_size&&after.st_mtim.tv_sec==before[i].st_mtim.tv_sec&&after.st_mtim.tv_nsec==before[i].st_mtim.tv_nsec&&after.st_ctim.tv_sec==before[i].st_ctim.tv_sec&&after.st_ctim.tv_nsec==before[i].st_ctim.tv_nsec,"Preparation/read/flush never creates, replaces, truncates or changes payload timestamps");}
+      require(f.state().find("attributes")->find("unknown")&&row(f.saved()).find("private_row_value"),"Original unknown state/row preserved");
+      // Utility checkpoint receives explicit caller observations only; actual
+      // same-admission LT all-piece authority is intentionally a later owner task.
+      const std::array<storage::OriginalTorrentIdentity,1> retained{owner->identity()};const auto beforeRetained=read(f.profile/"active"/(f.hash.hex()+".dat"));const auto duplicate=Storage::prepare(*f.lease,f.hash,{}, {},retained,{},Purpose::VerifyExistingReadOnly);require(!duplicate&&duplicate.error().code==Code::Conflict&&read(f.profile/"active"/(f.hash.hex()+".dat"))==beforeRetained,"Existing-only cannot bypass an actual retained full-identity claim");
+      auto saved=owner->checkpoint(*f.lease,std::array<std::uint8_t,2>{0,0},false,0,0);require(saved.has_value(),saved?"existing-only partial checkpoint":saved.error().message);require(f.state().find("resume")->find("data")->find("valid")->integer==0,"Retirement without supplied verified pieces remains original recheck, never fake complete");
+    }
+    Fixture ordinary;auto owner=ordinary.prepare();require(owner.purpose()==Purpose::Download&&!owner.mappedFiles()&&fs::exists(ordinary.path()),"Absent/default purpose retains legacy linear creation and mmap route");
+  });
+  test("existing-only-unsupported-or-incomplete-scope-refuses-before-effects",[] {
+    for(int kind=0;kind<14;++kind){
+      Fixture f(true);existingFixture(f,kind!=0);std::array<engine::detail::ManagedPayloadClaim,1> claims{};
+      if(kind==1){require(fs::remove(existingLeaf(f,1)),"Missing existing sibling");}
+      if(kind==2){write(existingLeaf(f),std::string(19999,'A'));}
+      if(kind==3){write(existingLeaf(f),std::string(20001,'A'));}
+      if(kind==4){const auto external=f.root/"external-unchanged";write(external,std::string(20000,'A'));require(fs::remove(existingLeaf(f)),"Replace owned test leaf with symlink");fs::create_symlink(external,existingLeaf(f));}
+      if(kind==5){const auto moved=f.root/"real-parent";fs::rename(f.save,moved);fs::create_directory_symlink(moved,f.save);}
+      if(kind==6){fs::create_hard_link(existingLeaf(f),f.root/"unapproved-alias");}
+      if(kind==7){auto inventory=f.saved();auto selected=core::Document::parse(encode(row(inventory)));require(selected&&selected->replaceValue("file_priorities","li0ei1ee").has_value()&&inventory.replaceValue("downloads","l"+selected->serialize()+'e').has_value(),"Skipped existing file fixture");write(f.profile/"downloads.config",inventory.serialize());}
+      if(kind==8){existingAttribute(f,"storetypes","l1:R1:Le");}
+      if(kind==9){auto inventory=f.saved();auto selected=core::Document::parse(encode(row(inventory)));require(selected&&selected->replaceValue("save_file",b("custom-root")).has_value()&&inventory.replaceValue("downloads","l"+selected->serialize()+'e').has_value(),"Renamed existing root is outside first contract");write(f.profile/"downloads.config",inventory.serialize());}
+      if(kind==10){existingAttribute(f,"filelinks2","l"+b("0\n"+existingLeaf(f).string()+"\n"+(f.root/"external").string())+'e');}
+      if(kind==11){existingAttribute(f,"incompfilesuffix",b(".part"));}
+      if(kind==12){struct stat stamp{};require(::stat(existingLeaf(f).c_str(),&stamp)==0,"Pending completion identity");auto item=core::Document::parse("de");require(item.has_value(),"Pending completion item");for(const auto& [key,value]:std::array<std::pair<std::string,std::string>,5>{{{"index","i0e"},{"source",b("bundle/a.bin")},{"target",b("bundle/a.done")},{"device",i(stamp.st_dev)},{"inode",i(stamp.st_ino)}}}){require(item->replaceValue(key,value).has_value(),"Pending original completion field");}existingAttribute(f,"BiglyBTC.completion","d7:versioni2e5:filesl"+item->serialize()+"ee");}
+      if(kind==13){claims[0]={existingLeaf(f),0,0};}
+      const auto state=read(f.profile/"active"/(f.hash.hex()+".dat"));const auto inventory=read(f.profile/"downloads.config");const auto result=prepareExisting(f,kind==13?std::span<const engine::detail::ManagedPayloadClaim>(claims):std::span<const engine::detail::ManagedPayloadClaim>{});require(!result,"Missing/short/oversized/symlink/alias/skipped/nonlinear/renamed/linked/suffix/pending/retained scope refuses");require(read(f.profile/"active"/(f.hash.hex()+".dat"))==state&&read(f.profile/"downloads.config")==inventory,"All rejected scope leaves original state/inventory bytes before beginUpdate");require(!fs::exists(f.profile/"active"/f.hash.hex()),"Refusal creates no control directory");if(kind==0){require(!fs::exists(f.save),"Missing full payload creates no parent or file");}if(kind==1){require(!fs::exists(existingLeaf(f,1)),"Missing sibling is not repaired");}if(kind==2){require(fs::file_size(existingLeaf(f))==19999,"Short leaf is not extended");}if(kind==3){require(fs::file_size(existingLeaf(f))==20001,"Oversized leaf is not truncated");}if(kind==4){require(read(f.root/"external-unchanged")==std::string(20000,'A')&&fs::is_symlink(existingLeaf(f)),"Symlink target and link retained");}if(kind==6){require(fs::equivalent(existingLeaf(f),f.root/"unapproved-alias"),"Unrecognized hardlink remains unmodified");}
+    }
+  });
+  test("existing-only-read-and-checkpoint-refuse-late-replacement-or-content-change",[] {
+    for(const bool replacement:{false,true}){
+      Fixture f;existingFixture(f);auto owner=prepareExisting(f);require(owner.has_value(),"Actual existing-only descriptor owner");const auto prepared=read(f.profile/"active"/(f.hash.hex()+".dat"));const auto path=existingLeaf(f);struct stat before{};require(::stat(path.c_str(),&before)==0,"Original existing leaf stat");
+      if(replacement){fs::rename(path,f.root/"retained-original");write(path,f.body);}else{auto changed=f.body;changed[0]='!';write(path,changed);const struct timespec times[]{before.st_atim,before.st_mtim};require(::utimensat(AT_FDCWD,path.c_str(),times,0)==0,"Restore mtime for actual content-change negative");}
+      const auto bytes=read(path);std::array<char,1> output{};require(!owner->validateExistingSnapshot()&&!owner->mappedFiles()->read(0,output),"Named inode/ctime proof refuses late change before reading actual payload");require(!owner->checkpoint(*f.lease,std::array<std::uint8_t,2>{1,1},true,0,0),"External changes cannot publish supplied verified resume");require(read(path)==bytes&&read(f.profile/"active"/(f.hash.hex()+".dat"))==prepared,"Refusal never repairs/replaces changed payload or saves complete state");
     }
   });
   test("original-canonical-latin1-paths-preserve-raw-identity-and-checkpoint",[] {

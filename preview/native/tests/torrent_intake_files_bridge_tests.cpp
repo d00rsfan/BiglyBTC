@@ -3,6 +3,7 @@
 #include "selected_swarm_fixture.hpp"
 #include "persistent_session.hpp"
 #include "torrent_intake.hpp"
+#include "verified_seeding_fixture.hpp"
 #include "biglybtc/file_policy.hpp"
 #include "biglybtc/saved_dnd.hpp"
 #include <QApplication>
@@ -31,6 +32,26 @@ void emptyProfile(const QString& profile) {
 class TorrentIntakeFilesBridgeTests final:public QObject {
   Q_OBJECT
 private slots:
+
+  void actualVerifiedIntakeCommitsStoppedBeforeOwnerChecksAndNeverDownloads_data(){QTest::addColumn<bool>("corrupt");QTest::newRow("complete")<<false;QTest::newRow("corrupt")<<true;}
+  void actualVerifiedIntakeCommitsStoppedBeforeOwnerChecksAndNeverDownloads(){
+    QFETCH(bool,corrupt);QTemporaryDir directory;QVERIFY(directory.isValid());const auto fixture=test::prepareVerifiedSeedCase(directory.path()+"/owned",false,corrupt);
+    // This independent seed supplies only a real owned numeric startup endpoint;
+    // verified admission deliberately does NOT inherit/connect that shortcut.
+    test::OwnedEngineFixture endpoint(false);QTRY_VERIFY_WITH_TIMEOUT(endpoint.ready(),30000);
+    app::SessionBridge bridge;QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),reads(&bridge,&app::SessionBridge::torrentIntakeReady),writes(&bridge,&app::SessionBridge::torrentIntakeFinished),closed(&bridge,&app::SessionBridge::sessionClosed),rows(&bridge,&app::SessionBridge::snapshotReady);
+    QVERIFY(bridge.open(fixture.profile.toStdString(),endpoint.port()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty(),10000);
+    const auto session=sessions[0][0].toULongLong();QVERIFY(bridge.previewTorrentIntake({session,1,fixture.metadata}));QTRY_COMPARE_WITH_TIMEOUT(reads.size(),1,10000);QTRY_VERIFY(!bridge.busy());
+    const auto frame=preview(reads);QVERIFY(ui::validTorrentIntake(frame));ui::TorrentIntakeSubmission submission;submission.session=session;submission.request=1;submission.revision=frame->revision;submission.destination=fixture.payload;submission.start=false;submission.files={{false,0}};submission.verifyExisting=true;
+    QVERIFY(bridge.importTorrentFiles(submission));QTRY_COMPARE_WITH_TIMEOUT(writes.size(),1,10000);QTRY_VERIFY(!bridge.busy());const auto imported=result(writes);QVERIFY(imported&&imported->imported&&imported->verificationPending&&!imported->started);
+    const auto statePath=fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat";
+    QTRY_VERIFY_WITH_TIMEOUT([&]{const auto inventory=document(fixture.profile+"/downloads.config");const auto* marker=inventory.find("downloads")->children[0].find(storage::VerifiedSeedKey);return marker&&marker->integer==(corrupt?1:2);}(),30000);
+    if(corrupt){QTRY_VERIFY_WITH_TIMEOUT([&]{if(rows.empty()){return false;}const auto packet=qvariant_cast<ui::Presentation>(rows.last()[0]);return packet&&!packet->items.empty()&&packet->items[0].state==QStringLiteral("Error");}(),30000);}
+    QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,10000);QTRY_VERIFY(!bridge.busy());QVERIFY(test::verifiedSeedBytesIntact(fixture,corrupt));
+    auto lease=storage::ProfileLease::acquire(fixture.profile.toStdString());QVERIFY(lease);const auto saved=storage::readVerifiedSeedIntent(*lease,fixture.hash);QVERIFY(saved&&*saved);QCOMPARE((*saved)->startup,corrupt?core::StartupState::Stopped:core::StartupState::Queued);QVERIFY(!(*saved)->forceStart);
+    const auto state=document(statePath);const auto flags=core::originalDownloadFlags(state.find("attributes"));QVERIFY(flags&&(*flags&8)&&!(*flags&1));
+    QVERIFY(!rows.empty());
+  }
   void initTestCase() {
     QCOMPARE(QGuiApplication::platformName(),QStringLiteral("offscreen"));QApplication::setQuitOnLastWindowClosed(false);
     auto owner=engine::PersistentSession::create({1,2,3});QVERIFY2(owner.has_value(),"This actual-owner cohort requires an approved source-bound runtime; no skip");

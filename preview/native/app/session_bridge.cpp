@@ -1,4 +1,5 @@
 #include "torrent_intake.hpp"
+#include "verified_seeding.hpp"
 #include "file_operations.hpp"
 #include "linear_to_compact.hpp"
 #include "original_storage_defaults.hpp"
@@ -285,6 +286,31 @@ struct SessionBridge::Host {
   QString schedulerFailure, schedulerPublishedFailure;
   std::map<std::string,std::uint64_t> manualRevisions;
   std::set<std::string> schedulerPaused;
+  bool verifiedSeedIntentsLoaded=false;
+  std::set<std::string> verifiedSeedPending;
+  void loadVerifiedSeedIntents() {
+    if(verifiedSeedIntentsLoaded){return;}
+    const auto file=take(storage::ConfigFile::load(lease,"downloads.config"));
+    if(const auto* rows=file.document().find("downloads");rows&&rows->type==core::Node::Type::List){
+      for(const auto& row:rows->children){if(const auto* marker=row.find(storage::VerifiedSeedKey)){
+        const auto* id=row.find("torrent_hash");
+        if(marker->type!=core::Node::Type::Integer||(marker->integer!=1&&marker->integer!=2)
+            ||!id||id->type!=core::Node::Type::Bytes){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid saved verified-seeding intent"}};}
+        const auto hash=core::TorrentHash::parse(id->bytes);if(!hash){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid verified-seeding identity"}};}
+        verifiedSeedPending.insert(hash->hex());
+      }}
+    }
+    verifiedSeedIntentsLoaded=true;
+  }
+  bool verifiedSeedBlocked(const std::string& key,const std::vector<engine::ManagedDownloadStatus>& active) {
+    loadVerifiedSeedIntents();
+    for(const auto& item:active){if(item.hash.hex()==key&&item.verifiedSeeding!=engine::VerifiedSeedingPhase::None){
+      if(item.verifiedSeeding==engine::VerifiedSeedingPhase::Released&&!item.failure&&item.retained){verifiedSeedPending.erase(key);}
+      else{verifiedSeedPending.insert(key);}
+      return item.verificationHeld||verifiedSeedPending.contains(key);
+    }}
+    return verifiedSeedPending.contains(key);
+  }
   struct SchedulerMembership { bool available=false; std::vector<std::string> names; };
   std::map<std::string,SchedulerMembership> schedulerMemberships;
   SchedulerMembership schedulerMembership(const core::TorrentHash& hash) {
@@ -346,6 +372,7 @@ struct SessionBridge::Host {
     for(const auto& row:source.items){
       if(!row.saved.hash||!row.saved.persistent){continue;}
       const auto& hash=*row.saved.hash;const auto key=hash.hex();
+      if(verifiedSeedBlocked(key,active)){continue;}
       if(!unique.insert(key).second){throw Failure{{storage::ErrorCode::Conflict,"Ambiguous imported Scheduler library target"}};}
       // A manual command may precede lazy module creation. Its current-Host
       // revocation remains authoritative even without a service to clean up.
@@ -404,6 +431,7 @@ struct SessionBridge::Host {
     for(const auto& row:saved.items){
       if(!row.saved.hash||!row.saved.persistent){continue;}
       const auto& hash=*row.saved.hash;const auto key=hash.hex();
+      if(verifiedSeedBlocked(key,active)){continue;}
       if(!unique.insert(key).second){throw Failure{{storage::ErrorCode::Conflict,"Ambiguous scheduler torrent identity"}};}
       const auto found=live.find(key);
       // No inferred completion or synthetic admission for saved-only/unchecked
@@ -522,6 +550,7 @@ struct SessionBridge::Host {
     readMagnets();
   }
   ui::Presentation query(std::stop_token stop) {
+    loadVerifiedSeedIntents();
     checkpoint(stop);
     auto source = take(storage::readLibraryView(lease));
     readMagnets();
@@ -1001,6 +1030,18 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
       hashes.push_back(std::move(hash));
     }
     QStringList failures;
+    // Withdraw EVERY accepted selected ticket before the first target's IO.
+    // A failure for A must not leave selected B authorized to auto-publish.
+    std::set<std::string> cancelledVerification;
+    const auto admissions=host_->engine->managedDownloads();
+    for(const auto& hash:hashes){if(std::ranges::any_of(admissions,[&](const auto& item){return item.hash==hash&&item.verificationHeld;})){
+      cancelledVerification.insert(hash.hex());
+    }}
+    for(const auto& hash:hashes){if(cancelledVerification.contains(hash.hex())){
+      const auto cancelled=host_->engine->stopManaged(hash);
+      if(!cancelled){failures.push_back(text(cancelled.error().message));}
+    }}
+    host_->verifiedSeedPending.insert(cancelledVerification.begin(),cancelledVerification.end());
     for (const auto& hash : hashes) {
       checkpoint(stop);
       if (const auto pending = pendingSelection.find(hash.hex()); pending != pendingSelection.end()) {
@@ -1021,13 +1062,34 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
         } else { host_->admissionFailures.erase(hash.hex()); }
         continue;
       }
-      if(static_cast<unsigned>(action)<=static_cast<unsigned>(core::DownloadAction::ForceStart)){
+      auto beforeControl=host_->engine->managedDownloads();
+      const bool wasChecking=cancelledVerification.contains(hash.hex());
+      const bool manual=static_cast<unsigned>(action)<=static_cast<unsigned>(core::DownloadAction::ForceStart)||wasChecking;
+      if(manual){
         auto& revision=host_->manualRevisions[hash.hex()];
         if(revision==std::numeric_limits<std::uint64_t>::max()){throw Failure{{storage::ErrorCode::Conflict,"Manual action revision exhausted"}};}
         ++revision;host_->schedulerPaused.erase(hash.hex());
         if(host_->scheduler){
           const auto revoked=host_->scheduler->revokeForManual(host_->lease,hash);
           if(!revoked){failures.push_back(tr("Scheduler ownership was revoked; cleanup needs attention: %1").arg(text(revoked.error().message)));}
+        }
+      }
+      const auto seedIntent=take(storage::readVerifiedSeedIntent(host_->lease,hash));
+      const bool releasedActive=std::ranges::any_of(beforeControl,[&](const auto& item){return item.hash==hash&&item.retained
+          &&item.verifiedSeeding==engine::VerifiedSeedingPhase::Released&&!item.failure;});
+      if(seedIntent&&!releasedActive&&manual&&(action==core::DownloadAction::Start||action==core::DownloadAction::Resume
+          ||action==core::DownloadAction::Queue||action==core::DownloadAction::ForceStart)){
+        host_->verifiedSeedPending.insert(hash.hex());
+        if(wasChecking||action==core::DownloadAction::Queue||action==core::DownloadAction::ForceStart){
+          failures.push_back(tr("Verification was kept stopped. Use Start after retirement to verify existing data again."));continue;
+        }
+        const auto live=std::ranges::find_if(beforeControl,[&](const auto& item){return item.hash==hash&&item.retained;});
+        if(live==beforeControl.end()){
+          const auto reset=storage::resetVerifiedSeedForRetry(host_->lease,hash);
+          if(!reset){failures.push_back(text(reset.error().message));continue;}
+          const auto retry=host_->engine->startManaged(host_->lease,{.hash=hash,.verifyExisting=true});
+          if(!retry){host_->admissionFailures.insert_or_assign(hash.hex(),retry.error());failures.push_back(text(retry.error().message));}
+          continue;
         }
       }
       auto changed = storage::applyLibraryCommand(host_->lease, hash, action, host_->movePools);
@@ -1145,22 +1207,26 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
         }
         selected=selected||(!layout.files[n].padding&&!submission.files[n].skipped&&layout.files[n].bytes>0);
       }
+      if(submission.verifyExisting&&(submission.start||submission.forceStart||submission.paused||!selected)){
+        throw Failure{{storage::ErrorCode::InvalidFormat,"Verified seeding starts stopped, without force or pause"}};
+      }
       const bool paused=selected&&submission.paused;
       if(paused&&(submission.start||submission.forceStart)){throw Failure{{storage::ErrorCode::InvalidFormat,"Paused import conflicts with start/force intent"}};}
       const bool start=submission.start&&selected&&!paused;
       const bool force=start&&submission.forceStart;const bool queued=start&&!force;
-      if(start&&(!host_->engine||!host_->engine->managedAvailable())){throw Failure{{storage::ErrorCode::Unsupported,"The engine is unavailable; add this torrent stopped instead"}};}
+      if((start||submission.verifyExisting)&&(!host_->engine||!host_->engine->managedAvailable())){throw Failure{{storage::ErrorCode::Unsupported,"The engine is unavailable; add this torrent stopped instead"}};}
       checkpoint(stop); // No payload/network work happens before the explicit commit.
       const auto hash=take(storage::importTorrentWithFileOptions(host_->lease,*host_->intakeMetadata,
-          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,stop,submission.limits,submission.sequentialDownload,queued,paused,submission.trackers,std::move(saveName)));
+          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,stop,submission.limits,submission.sequentialDownload,queued,paused,submission.trackers,std::move(saveName),submission.verifyExisting));
       result->imported=true;result->hash=text(hash.hex());host_->intakeMetadata.reset();
       const auto details=engine::queryTorrent(host_->lease,hash);
       if(details){host_->known.insert_or_assign(hash.hex(),Host::Known{text(details->displayName&&!details->displayName->empty()?*details->displayName:details->name),details->bytes});}
-      if(start){
+      if(start||submission.verifyExisting){
+        if(submission.verifyExisting){host_->verifiedSeedPending.insert(hash.hex());}
         const auto admitted=host_->engine->startManaged(host_->lease,
-            {.hash=hash,.ownedLoopbackPeerPort=host_->peerPort,.forceStart=force,.queued=queued});
-        if(admitted){result->started=true;host_->admissionFailures.erase(hash.hex());}
-        else{host_->admissionFailures.insert_or_assign(hash.hex(),admitted.error());result->failure=tr("Torrent added; download could not start: %1").arg(text(admitted.error().message));}
+            {.hash=hash,.ownedLoopbackPeerPort=submission.verifyExisting?0:host_->peerPort,.forceStart=force,.queued=queued,.verifyExisting=submission.verifyExisting});
+        if(admitted){result->started=!submission.verifyExisting;result->verificationPending=submission.verifyExisting;host_->admissionFailures.erase(hash.hex());}
+        else{host_->admissionFailures.insert_or_assign(hash.hex(),admitted.error());result->failure=(submission.verifyExisting?tr("Torrent added stopped; existing-data verification could not start: %1"):tr("Torrent added; download could not start: %1")).arg(text(admitted.error().message));}
       }
     }catch(const Failure& error){result->failure=text(error.error.message);}
     catch(const std::exception&){result->failure=tr("Torrent import did not finish; inspect recovery status before retrying");}
@@ -1169,7 +1235,7 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
     QMetaObject::invokeMethod(this,[this,packet]{
       if(!profileClosed_&&packet->session==publishedColumnLayoutSession_){emit torrentIntakeFinished(packet);}
     },Qt::QueuedConnection);
-    if(host_){ready(host_->query({}),result->failure.isEmpty()?tr("Torrent added with the selected file choices"):result->failure);}
+    if(host_){ready(host_->query({}),result->failure.isEmpty()?(result->verificationPending?tr("Torrent added stopped; checking existing data before seeding"):tr("Torrent added with the selected file choices")):result->failure);}
     else{failed(result->failure);}
   });
 }

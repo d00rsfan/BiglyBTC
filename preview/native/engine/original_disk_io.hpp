@@ -13,9 +13,11 @@
 
 namespace biglybtc::engine::detail {
 
+enum class OriginalDiskAccess { ReadWrite, ReadOnly };
 struct OriginalDiskFile {
   storage::detail::Descriptor descriptor;
   storage::OriginalFileIo io;
+  // Control proof, or immutable named-payload proof for existing-only storage.
   std::function<std::expected<void,storage::Error>()> validateControl = {};
 };
 
@@ -25,7 +27,9 @@ struct OriginalDiskFile {
 class OriginalDiskFiles final {
 public:
   OriginalDiskFiles(std::shared_ptr<libtorrent::torrent_info>,
-      std::vector<std::optional<OriginalDiskFile>>);
+      std::vector<std::optional<OriginalDiskFile>>,
+      OriginalDiskAccess access=OriginalDiskAccess::ReadWrite);
+  OriginalDiskAccess access() const noexcept { return access_; }
   const libtorrent::torrent_info& metadata() const { return *metadata_; }
   bool matches(const libtorrent::storage_params&) const;
   std::expected<void, storage::Error> read(std::uint64_t, std::span<char>);
@@ -38,6 +42,7 @@ public:
   DiskLatency& diskLatency() noexcept { return diskLatency_; }
   const DiskLatency& diskLatency() const noexcept { return diskLatency_; }
 private:
+  const OriginalDiskAccess access_;
   std::shared_ptr<libtorrent::torrent_info> metadata_;
   std::vector<std::optional<OriginalDiskFile>> files_;
   std::optional<storage::Error> failure_;
