@@ -1,0 +1,119 @@
+{
+  "status": "VERIFIED_SCOPED_ACTUAL_BATCH5_RESULTS",
+  "qualified_source": "5361bbc55d4f5eefafb344bb16c04e107b245dd8",
+  "matrix": {
+    "gcc": {
+      "actual_suites": 12,
+      "build_seconds": 284.75,
+      "test_seconds": 30.97,
+      "qt_totals": [
+        [
+          8,
+          0,
+          0
+        ],
+        [
+          19,
+          0,
+          0
+        ],
+        [
+          10,
+          0,
+          0
+        ],
+        [
+          9,
+          0,
+          0
+        ]
+      ],
+      "initial_failed_history": {
+        "source": "d430a2d8e91599574988cbb03a268b93f4b4776c",
+        "failed_suite": "torrent-intake-file-options-ui",
+        "credited_in_final_count": false
+      }
+    },
+    "clang": {
+      "actual_suites": 12,
+      "build_seconds": 303.2,
+      "test_seconds": 32.92,
+      "qt_totals": [
+        [
+          8,
+          0,
+          0
+        ],
+        [
+          19,
+          0,
+          0
+        ],
+        [
+          10,
+          0,
+          0
+        ],
+        [
+          9,
+          0,
+          0
+        ]
+      ],
+      "initial_failed_history": {
+        "source": "d430a2d8e91599574988cbb03a268b93f4b4776c",
+        "failed_suite": "torrent-intake-file-options-ui",
+        "credited_in_final_count": false
+      }
+    },
+    "san": {
+      "actual_suites": 12,
+      "build_seconds": 423.65,
+      "test_seconds": 36.35,
+      "qt_totals": [
+        [
+          8,
+          0,
+          0
+        ],
+        [
+          19,
+          0,
+          0
+        ],
+        [
+          10,
+          0,
+          0
+        ],
+        [
+          9,
+          0,
+          0
+        ]
+      ],
+      "initial_failed_history": {
+        "source": "d430a2d8e91599574988cbb03a268b93f4b4776c",
+        "failed_suite": "torrent-intake-file-options-ui",
+        "credited_in_final_count": false
+      }
+    }
+  },
+  "source_commits": [
+    "d430a2d8e91599574988cbb03a268b93f4b4776c",
+    "161ab72e4e2309e1ac71925115cfb29cf2b6b111",
+    "5361bbc55d4f5eefafb344bb16c04e107b245dd8"
+  ],
+  "original_filename_projection": {
+    "cases": 227,
+    "compared_lines": 681,
+    "receipt_sha256": "5bfff7b1b96ad069241e6519f598c2a1879288791d7b1d4e762e0b2945afef19"
+  },
+  "original_tracker_projection": {
+    "cases": 44,
+    "receipt_sha256": "35b6af531cdaf7049f0246cf687026013b12ae8b41db8fd86073025236f20ec1"
+  },
+  "dist_promoted": false,
+  "cf_parents_closed": [],
+  "raw_archive_sha256": "c4715bc3454d0b3be8d8c69c06273f64773b11c5a080173c005465e5629a3d20"
+}

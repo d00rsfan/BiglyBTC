@@ -1,5 +1,8 @@
 # Open compatibility work after the everyday torrent preview
 
+Compatibility batch5 is qualified at native `5361bbc55d4f5eefafb344bb16c04e107b245dd8`: twelve affected suites pass in GCC, Clang and leak-enabled ASan/UBSan at the same source. Actual original KOI8-R filename getters match227 cases/681 lines plus256 byte classifications. Actual original tracker mutations match44 cases across v1, v2 and both hybrid selections.
+[Batch5 review](../updates/compatibility.providers/20261026-batch5.md). All CF parents remain open; previous STOP boundaries below are historical.
+
 Compatibility batch4 is qualified at native `6896d528de5f33292631f39ba2db6a8369e2066e`: all12 affected suites pass at that final source in GCC, Clang and leak-enabled ASan/UBSan lanes. Actual original filename comparison passes226 cases/678 lines plus256 byte classifications. Initial GUI-fixture failures remain retained history.
 [Batch4 review](../updates/compatibility.providers/20261026-batch4.md). All CF parents remain open.
 
@@ -57,7 +60,7 @@ Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
   at `2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5`.
   [Workflow evidence](../evidence/20261025-storage-workflows/REVIEW.md).
   The current bounded source qualifies the tested short-tail reordered/reordered-compact corners; other layouts/corners keep this item open.
-  Batch2 additionally qualifies canonical Latin1 v1 paths and original all-or-none UTF8 overrides; Batch4 adds canonical Windows-1251 and its three source-proven aliases. Undefined0x98 fallback, other codecs, filename substitutions and inherited EOF-short reordered repair remain open.
+  Batch2 additionally qualifies canonical Latin1 v1 paths and original all-or-none UTF8 overrides; Batch4 adds canonical Windows-1251 and its three source-proven aliases. Batch5 adds canonical KOI8-R and three source-proven aliases with actual default-registry observations. IBM866 requires File.Decoder.ShowAll and remains refused; undefined0x98 fallback, other codecs, filename substitutions and inherited EOF-short reordered repair remain open.
 - [ ] **CF-02 — v2/hybrid profile interoperability (P03/P11).** Extend actual
   partial/complete Java/native/Java reload checks beyond the two qualified v1
   cases. Cover full identities, alternate hybrid identities and broader original
@@ -84,7 +87,7 @@ Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
   per-file/options controls and supported priority changes during active work.
   Qualify saved original priorities, selected completion and actual payload IO.
   Active priority/Skip controls now qualify at `2b982ac35f8458f98b194cc4ac0d2ee9adbc36d5`;
-  bounded pre-add choices additionally qualify at the source above. Batch4 qualifies byte-rate limits, sequential preference, explicit Queued75/Stopped/Forced intent and exact recovery/default preservation. Paused, seeding/allocated, rename/tracker/network options remain open.
+  bounded pre-add choices additionally qualify at the source above. Batch4 qualifies byte-rate limits, sequential preference, explicit Queued75/Stopped/Forced intent and exact recovery/default preservation. Batch5 additionally qualifies atomic general Paused import and all four real GUI modes with recovery/offline nonadmission. Batch5 also qualifies literal tracker-tier replacement/clear, original primary retention, byte-preserving absent intent, durable replay and guarded Qt notifications; unavailable editor projections preserve old untouched imports. Seeding/allocated, rename/network and wider tracker features remain open; top-level save-name editing is next.
 - [ ] **CF-06 — Remaining original library/file families (P03/P04/P08).**
   [P03-08](P03-08-library-file-operations.md) now qualifies single selected
   ordinary keep/delete/move/relink, v1 file/directory creation, compatible intent,

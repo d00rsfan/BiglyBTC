@@ -1,5 +1,11 @@
 # BiglyBTC migration state
 
+Compatibility batch5 is qualified at native `5361bbc55d4f5eefafb344bb16c04e107b245dd8`: twelve affected suites pass in GCC, Clang and leak-enabled ASan/UBSan at the same source. Actual original KOI8-R filename getters match227 cases/681 lines plus256 byte classifications. Actual original tracker mutations match44 cases across v1, v2 and both hybrid selections.
+
+[Batch5 review](updates/compatibility.providers/20261026-batch5.md). Continue remaining work autonomously.
+
+## Prior qualified records
+
 Compatibility batch4 is qualified at native `6896d528de5f33292631f39ba2db6a8369e2066e`: all12 affected suites pass at that final source in GCC, Clang and leak-enabled ASan/UBSan lanes. Actual original filename comparison passes226 cases/678 lines plus256 byte classifications. Initial GUI-fixture failures remain retained history.
 
 [Batch4 review](updates/compatibility.providers/20261026-batch4.md). Continue remaining work; previous STOP boundaries below are historical.
