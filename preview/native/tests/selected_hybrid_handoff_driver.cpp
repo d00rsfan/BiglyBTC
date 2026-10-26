@@ -17,6 +17,7 @@
 #include <QJsonArray>
 
 #include <algorithm>
+#include <bit>
 #include <chrono>
 #include <charconv>
 #include <cstring>
@@ -92,7 +93,8 @@ int main(int argc, char** argv) {
     const auto metadataBytes = test::read(text(metadataPath));
     auto document = core::Document::parse(metadataBytes.toStdString()); require(document.has_value(), "Cannot parse generated metadata");
     auto layout = compat::originalLayout(*document); require(layout.has_value(), "Invalid original generated geometry");
-    require(layout->bytes>0&&layout->bytes<=4*1024*1024&&layout->pieceLength==16384&&layout->files.size()<=32,
+    require(layout->bytes>0&&layout->bytes<=4*1024*1024&&layout->pieceLength>=16384&&layout->pieceLength<=1024*1024
+        &&std::has_single_bit(static_cast<std::uint64_t>(layout->pieceLength))&&layout->files.size()<=32,
         "This bounded handoff covers small actual generated v2/hybrid metadata");
     ownedPath(root, expected, layout->multifile);
     lt::error_code error;
@@ -101,7 +103,7 @@ int main(int argc, char** argv) {
         "Actual bounded v2/hybrid fixture metadata required");
     const auto exactIdentity=storage::originalTorrentIdentityFromLibtorrent(*document,*metadata);
     require(exactIdentity.has_value(),"Actual LT hashes do not bind to exact original raw info");
-    require(exactIdentity->full.v1&&exactIdentity->full.v2,"This focused extension requires an actual full hybrid");
+    require(exactIdentity->full.v2.has_value(),"This bounded handoff requires actual v2 or hybrid full identity");
     auto swarmBridge=engine::detail::managedPayloadCounterBridge();
     require(swarmBridge&&lt::biglybtc_swarm_mask_abi_v1()==1,
         "Selected handoff requires the exact approved counter/swarm module before fixture payload effects");
@@ -170,7 +172,7 @@ int main(int argc, char** argv) {
     const auto seedHandle = seed->add_torrent(seedOptions, error);
     require(!error && seedHandle.is_valid(), "Cannot admit owned seed");
     const auto full=metadata->info_hashes();
-    const bool seedV1=seed->find_torrent(full.v1).is_valid(),seedV2=seed->find_torrent(full.v2).is_valid();
+    const bool seedV1=full.has_v1()&&seed->find_torrent(full.v1).is_valid(),seedV2=seed->find_torrent(full.v2).is_valid();
     require(seedV1==!useV2&&seedV2==useV2&&(seedHandle.status().flags & lt::biglybtc_swarm_mask)==selectedMask,
         "Actual owned seed indices are not exclusively selected");
     require(seedHandle.info_hashes()==full,"Selected seed lost the full hybrid metadata identity");
@@ -217,7 +219,7 @@ int main(int argc, char** argv) {
       require(engine::detail::selectManagedSwarm(receive,*exactIdentity,swarmBridge),
           "Cannot bind retained receiver to the selected full identity");
       auto receiver=leecher.add_torrent(receive,error);require(!error&&receiver.is_valid(),"Cannot admit actual owned leecher");
-      receiverV1=leecher.find_torrent(full.v1).is_valid();receiverV2=leecher.find_torrent(full.v2).is_valid();
+      receiverV1=full.has_v1()&&leecher.find_torrent(full.v1).is_valid();receiverV2=leecher.find_torrent(full.v2).is_valid();
       require(*receiverV1==!useV2&&*receiverV2==useV2&&(receiver.status().flags & lt::biglybtc_swarm_mask)==selectedMask,
           "Actual retained receiver indices are not exclusively selected");
       require(receiver.info_hashes()==full,"Selected receiver lost the full hybrid metadata identity");
