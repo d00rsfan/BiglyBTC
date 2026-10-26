@@ -34,10 +34,10 @@ private:
   TorrentIntakePresentation preview_;
   QString failure_;
   QPointer<QLineEdit> source_,destination_;
-  QPointer<QCheckBox> start_,sequential_,forceStart_;
+  QPointer<QCheckBox> sequential_;
   QPointer<QLabel> status_;
   QPointer<QPushButton> load_,add_;
-  QPointer<QComboBox> priority_;
+  QPointer<QComboBox> priority_,startMode_;
   QPointer<QSpinBox> downloadLimit_,uploadLimit_;
   QPointer<QTableView> table_;
   QPointer<IntakeFileModel> model_;

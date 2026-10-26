@@ -353,7 +353,8 @@ void projectManagedV1Names(const Document& source,const storage::OriginalTorrent
   if(const auto* encoding=source.find("encoding")){
     auto name=text(encoding);
     std::ranges::transform(name,name.begin(),[](unsigned char c){return c>='A'&&c<='Z'?static_cast<char>(c+32):static_cast<char>(c);});
-    qualifiedNames=qualifiedNames||name=="iso-8859-1"||name=="windows-1251"||name=="cp1251"||name=="cp5347"||name=="ansi-1251";
+    qualifiedNames=qualifiedNames||name=="iso-8859-1"||name=="windows-1251"||name=="cp1251"||name=="cp5347"||name=="ansi-1251"
+        ||name=="koi8-r"||name=="koi8_r"||name=="koi8"||name=="cskoi8r";
   }
   if(const auto* files=info->find("files")){
     for(const auto& file:files->children){qualifiedNames=qualifiedNames||file.find("path.utf-8")!=nullptr;}

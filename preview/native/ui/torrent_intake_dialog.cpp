@@ -114,11 +114,14 @@ TorrentIntakeDialog::TorrentIntakeDialog(QWidget* parent):QDialog(parent) {
   priority_->addItem(tr("Normal"),0);priority_->addItem(tr("High"),1);priority_->addItem(tr("Low"),-1);
   auto* applyPriority=new QPushButton(tr("Set priority"),this);applyPriority->setObjectName(QStringLiteral("import-apply-priority"));
   priorities->addWidget(priority_);priorities->addWidget(applyPriority);priorities->addStretch();layout->addLayout(priorities);
-  start_=new QCheckBox(tr("Start download"),this);start_->setObjectName(QStringLiteral("import-start"));start_->setChecked(true);layout->addWidget(start_);
-  forceStart_=new QCheckBox(tr("Force start"),this);forceStart_->setObjectName(QStringLiteral("import-force-start"));
-  forceStart_->setAccessibleName(tr("Force start torrent"));forceStart_->setToolTip(tr("Start even when ordinary queue rules would wait."));layout->addWidget(forceStart_);
-  connect(forceStart_,&QCheckBox::toggled,this,[this]{++revision_;schedule();});
-  connect(start_,&QCheckBox::toggled,this,[this]{++revision_;schedule();});
+  startMode_=new QComboBox(this);startMode_->setObjectName(QStringLiteral("import-start-mode"));startMode_->setAccessibleName(tr("Start mode"));
+  startMode_->addItem(tr("Queued"),static_cast<int>(TorrentIntakeStartMode::Queued));
+  startMode_->addItem(tr("Stopped"),static_cast<int>(TorrentIntakeStartMode::Stopped));
+  startMode_->addItem(tr("Paused"),static_cast<int>(TorrentIntakeStartMode::Paused));
+  startMode_->addItem(tr("Forced"),static_cast<int>(TorrentIntakeStartMode::Forced));
+  startMode_->setToolTip(tr("Queued follows queue rules. Paused waits for Resume. Forced bypasses ordinary queue limits."));
+  auto* startRow=new QFormLayout;startRow->addRow(tr("Start mode:"),startMode_);layout->addLayout(startRow);
+  connect(startMode_,&QComboBox::currentIndexChanged,this,[this]{++revision_;schedule();});
   sequential_=new QCheckBox(tr("Download pieces in order"),this);sequential_->setObjectName(QStringLiteral("import-sequential"));
   sequential_->setAccessibleName(tr("Sequential download"));sequential_->setToolTip(tr("Request pieces in order. Existing saved torrent preferences are kept."));
   layout->addWidget(sequential_);connect(sequential_,&QCheckBox::toggled,this,[this]{++revision_;schedule();});
@@ -164,7 +167,7 @@ bool TorrentIntakeDialog::beginSession(quint64 session,QString directory) {
     if(downloadLimit_){downloadLimit_->setValue(0);}if(!current()){return false;}
     if(uploadLimit_){uploadLimit_->setValue(0);}if(!current()){return false;}
     if(sequential_){sequential_->setChecked(false);}if(!current()){return false;}
-    if(forceStart_){forceStart_->setChecked(false);}if(!current()){return false;}
+    if(startMode_){startMode_->setCurrentIndex(0);}if(!current()){return false;}
   }
   if(destination_&&destination_->text().isEmpty()){destination_->setText(directory);}
   if(!current()){return false;}schedule();return true;
@@ -209,13 +212,12 @@ void TorrentIntakeDialog::render() {
   const auto revision=revision_;const auto frame=preview_;QPointer<TorrentIntakeDialog> guard(this);
   const auto current=[&]{return guard&&revision_==revision&&preview_==frame;};
   if(model_&&model_->source!=frame){model_->apply(frame);if(!current()){return;}}
-  if(!source_||!destination_||!start_||!status_||!load_||!add_||!table_||!model_||!priority_||!downloadLimit_||!uploadLimit_||!sequential_||!forceStart_){return;}
+  if(!source_||!destination_||!startMode_||!status_||!load_||!add_||!table_||!model_||!priority_||!downloadLimit_||!uploadLimit_||!sequential_){return;}
   source_->setEnabled(!busy_&&!pending());if(!current()||!source_){return;}
   destination_->setEnabled(!busy_&&!committing_);if(!current()||!destination_){return;}
   table_->setEnabled(!busy_&&!pending());if(!current()||!table_){return;}
   priority_->setEnabled(!busy_&&!pending()&&bool(frame));if(!current()||!priority_){return;}
-  start_->setEnabled(!busy_&&!pending()&&(!frame||model_->selectedBytes()!=0));if(!current()||!start_){return;}
-  forceStart_->setEnabled(session_&&!busy_&&!pending()&&frame&&model_->selectedBytes()!=0&&start_->isChecked());if(!current()||!forceStart_){return;}
+  startMode_->setEnabled(!busy_&&!pending()&&(!frame||model_->selectedBytes()!=0));if(!current()||!startMode_){return;}
   sequential_->setEnabled(!busy_&&!pending());if(!current()||!sequential_){return;}
   downloadLimit_->setEnabled(!busy_&&!pending());if(!current()||!downloadLimit_){return;}
   uploadLimit_->setEnabled(!busy_&&!pending());if(!current()||!uploadLimit_){return;}
@@ -232,11 +234,16 @@ void TorrentIntakeDialog::render() {
   status_->setText(status.left(4096));
 }
 void TorrentIntakeDialog::accept() {
-  if(!session_||busy_||pending()||!source_||!destination_||!start_||!model_||!preview_||!downloadLimit_||!uploadLimit_||!sequential_||!forceStart_
+  if(!session_||busy_||pending()||!source_||!destination_||!startMode_||!model_||!preview_||!downloadLimit_||!uploadLimit_||!sequential_
       ||model_->source!=preview_||preview_->source.metadata!=source_->text()||!path(destination_->text())){return;}
-  TorrentIntakeSubmission submission{session_,request_.request,preview_->revision,destination_->text(),
-      start_->isChecked()&&model_->selectedBytes()!=0,model_->draft,
-      {static_cast<std::int64_t>(downloadLimit_->value())*1024,static_cast<std::int64_t>(uploadLimit_->value())*1024},sequential_->isChecked(),start_->isChecked()&&model_->selectedBytes()!=0&&forceStart_->isChecked()};
+  bool validMode=false;const auto mode=startMode_->currentData().toInt(&validMode);
+  if(!validMode||mode<static_cast<int>(TorrentIntakeStartMode::Queued)||mode>static_cast<int>(TorrentIntakeStartMode::Forced)){return;}
+  const bool selected=model_->selectedBytes()!=0;
+  const bool force=selected&&mode==static_cast<int>(TorrentIntakeStartMode::Forced);
+  const bool paused=selected&&mode==static_cast<int>(TorrentIntakeStartMode::Paused);
+  const bool start=selected&&(force||mode==static_cast<int>(TorrentIntakeStartMode::Queued));
+  TorrentIntakeSubmission submission{session_,request_.request,preview_->revision,destination_->text(),start,model_->draft,
+      {static_cast<std::int64_t>(downloadLimit_->value())*1024,static_cast<std::int64_t>(uploadLimit_->value())*1024},sequential_->isChecked(),force,paused};
   committing_=true;failure_.clear();++revision_;schedule();emit submitted(std::move(submission));
 }
 void TorrentIntakeDialog::reject() {

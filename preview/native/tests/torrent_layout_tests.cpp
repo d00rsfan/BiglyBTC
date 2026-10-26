@@ -1,6 +1,8 @@
 #include "biglybtc/torrent_layout.hpp"
 
 #include <cstdlib>
+#include <array>
+#include <utility>
 #include <fstream>
 #include <iostream>
 
@@ -54,7 +56,7 @@ int main(int argc, char** argv) {
     auto preferred=core::Document::parse(complete);check(preferred.has_value(),"Complete override literal parses");
     const auto utf8=compat::originalLayout(*preferred);
     check(utf8&&utf8->name=="other"&&utf8->files[0].path=="x"&&utf8->files[1].path=="y","Complete original UTF8 override set is preferred");
-    auto unknown=*source;check(unknown.replaceValue("encoding","6:koi8-r").has_value(),"Unknown charset fixture");
+    auto unknown=*source;check(unknown.replaceValue("encoding","12:windows-1252").has_value(),"Unknown charset fixture");
     check(!compat::originalLayout(unknown),"Unported charset never silently becomes UTF8 or Latin1");
     const auto unsafe="d8:encoding10:ISO-8859-14:infod5:filesl"+file("..","1")+"e4:name1:a12:piece lengthi16384eee";
     const auto bad=core::Document::parse(unsafe);check(bad.has_value()&&!compat::originalLayout(*bad),"Decoded traversal still fails before mapping");
@@ -78,12 +80,32 @@ int main(int argc, char** argv) {
       check(source.replaceValue("encoding",bytes("windows-1251")).has_value(),"Unsafe codec fixture");
       check(!compat::originalLayout(source),"Undefined/control/separator byte cannot become a substituted filesystem name");
     }
-    for(const auto* alias:{"windows1251","windows_1251","cp-1251","koi8-r"}){
+    for(const auto* alias:{"windows1251","windows_1251","cp-1251","koi8-u"}){
       auto source=document(list(file("safe","1")));check(source.replaceValue("encoding",bytes(alias)).has_value(),"Unqualified alias fixture");
       check(!compat::originalLayout(source),"Only source-proven aliases are admitted");
     }
     auto v2=document("d4:name1:a12:piece lengthi16384e9:file treed1:ad0:d6:lengthi1eeeee");
     check(v2.replaceValue("encoding",bytes("windows-1251")).has_value()&&!compat::originalLayout(v2),"Legacy codec never relaxes v2 UTF8 metadata");
+  }
+  {
+    for(const auto encoding:std::array<std::string_view,4>{"KOI8-R","koi8_r","koi8","cskoi8r"}){
+      const auto root=std::string("\xd0\xc1\xd0\xcb\xc1",5);
+      const auto leaf=std::string("\xc6\xc1\xca\xcc.bin",8);
+      for(const bool overrides:{false,true}){
+        const auto first="d6:lengthi3e4:pathl"+bytes(leaf)+"e"+(overrides?"10:path.utf-8l9:wrong.bine":"")+'e';
+        auto source=document("d5:filesl"+first+file("ascii.bin","5")+"e4:name"+bytes(root)+(overrides?"10:name.utf-85:wrong":"")+"12:piece lengthi16384ee");
+        check(source.replaceValue("encoding",bytes(encoding)).has_value(),"Original declared Cyrillic codec");const auto raw=source.serialize();const auto layout=compat::originalLayout(source);
+        check(layout&&layout->name=="папка"&&layout->files.size()==2&&layout->files[0].path=="файл.bin"&&layout->files[1].path=="ascii.bin"&&layout->files[1].offset==3&&layout->bytes==8,"Exact Cyrillic table and global legacy-overrides policy");
+        check(source.serialize()==raw,"Cyrillic layout never rewrites source/raw info");
+      }
+    }
+    for(const auto* encoding:{"KOI8-R"}){
+      for(const unsigned value:{0U,31U,47U,92U,127U}){auto source=document(list(file("a"+std::string(1,static_cast<char>(value))+"z","1")));check(source.replaceValue("encoding",bytes(encoding)).has_value()&&!compat::originalLayout(source),"Unsafe Cyrillic codec input remains refused");}
+      auto v2=document("d4:name1:a12:piece lengthi16384e9:file treed1:ad0:d6:lengthi1eeeee");check(v2.replaceValue("encoding",bytes(encoding)).has_value()&&!compat::originalLayout(v2),"Cyrillic codec cannot relax v2 UTF8");
+    }
+    // IBM866 is not in the original manual registry; ShowAll defaults false.
+    for(const auto* encoding:{"IBM866","cp866","ibm866","ibm-866","866","csIBM866"}){auto source=document(list(file("ascii","1")));const auto before=source.serialize();check(source.replaceValue("encoding",bytes(encoding)).has_value(),"Deferred codec fixture");const auto raw=source.serialize();check(!compat::originalLayout(source)&&source.serialize()==raw&&raw!=before,"IBM866 remains unsupported without original registry context");}
+    for(const auto* unqualified:{"koi8r","koi8 r","cp-866","ibm_866","KOI8-U"}){auto source=document(list(file("ascii","1")));check(source.replaceValue("encoding",bytes(unqualified)).has_value()&&!compat::originalLayout(source),"No guessed legacy aliases");}
   }
   auto simple = document("d4:name1:a6:lengthi3e12:piece lengthi16384ee");
   auto result = compat::originalLayout(simple);

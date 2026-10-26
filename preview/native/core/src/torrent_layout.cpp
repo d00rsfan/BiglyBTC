@@ -19,7 +19,7 @@ std::int64_t integer(const Node* value) {
   require(value && value->type == Node::Type::Integer && value->integer >= 0, "Expected a nonnegative metadata integer");
   return value->integer;
 }
-enum class NameEncoding { Utf8, Latin1, Windows1251 };
+enum class NameEncoding { Utf8, Latin1, Windows1251, Koi8R };
 struct NamePolicy { NameEncoding encoding; bool utf8Keys; };
 NamePolicy names(const core::Document& document,const Node& info) {
   const auto* field=document.find("encoding");
@@ -33,9 +33,10 @@ NamePolicy names(const core::Document& document,const Node& info) {
   // Exact Java17 MS1251 canonical name and its source-declared aliases;
   // no punctuation stripping or guessed aliases for legacy codecs.
   const bool windows1251=lower=="windows-1251"||lower=="cp1251"||lower=="cp5347"||lower=="ansi-1251";
-  require(!field||normalized=="utf8"||normalized=="utf8keys"||latin1||windows1251,
+  const bool koi8r=lower=="koi8-r"||lower=="koi8_r"||lower=="koi8"||lower=="cskoi8r";
+  require(!field||normalized=="utf8"||normalized=="utf8keys"||latin1||windows1251||koi8r,
       "This original filename encoding needs its qualified codec adapter");
-  require(!(latin1||windows1251)||!info.find("file tree"),"Legacy encoded v2/hybrid names require separate original qualification");
+  require(!(latin1||windows1251||koi8r)||!info.find("file tree"),"Legacy encoded v2/hybrid names require separate original qualification");
   // Exact cb8 global UTF8-key predicate: name plus every v1 path, and only
   // absent encoding, the exact saved sentinel, or case-insensitive UTF-8.
   bool use=info.find("name.utf-8")&&(!field||original=="utf8 keys"||lower=="utf-8");
@@ -43,11 +44,43 @@ NamePolicy names(const core::Document& document,const Node& info) {
     require(files->type==Node::Type::List,"Original file list has invalid type");
     if(use){for(const auto& file:files->children){use=use&&file.find("path.utf-8");}}
   }
-  return {windows1251?NameEncoding::Windows1251:latin1?NameEncoding::Latin1:NameEncoding::Utf8,use};
+  return {koi8r?NameEncoding::Koi8R:windows1251?NameEncoding::Windows1251:latin1?NameEncoding::Latin1:NameEncoding::Utf8,use};
 }
 std::string decoded(const Node* node,NameEncoding encoding) {
   const auto value=text(node);
   if(encoding==NameEncoding::Utf8){return value;}
+  if(encoding==NameEncoding::Koi8R){
+    // Exact OpenJDK17 KOI8-R table, explicitly registered by cb8 LocaleUtil.
+    // ASCII is invariant; unsafe filesystem input still refuses.
+    static constexpr std::array<std::uint16_t,128> koi8r{
+        0x2500,0x2502,0x250c,0x2510,0x2514,0x2518,0x251c,0x2524,
+        0x252c,0x2534,0x253c,0x2580,0x2584,0x2588,0x258c,0x2590,
+        0x2591,0x2592,0x2593,0x2320,0x25a0,0x2219,0x221a,0x2248,
+        0x2264,0x2265,0x00a0,0x2321,0x00b0,0x00b2,0x00b7,0x00f7,
+        0x2550,0x2551,0x2552,0x0451,0x2553,0x2554,0x2555,0x2556,
+        0x2557,0x2558,0x2559,0x255a,0x255b,0x255c,0x255d,0x255e,
+        0x255f,0x2560,0x2561,0x0401,0x2562,0x2563,0x2564,0x2565,
+        0x2566,0x2567,0x2568,0x2569,0x256a,0x256b,0x256c,0x00a9,
+        0x044e,0x0430,0x0431,0x0446,0x0434,0x0435,0x0444,0x0433,
+        0x0445,0x0438,0x0439,0x043a,0x043b,0x043c,0x043d,0x043e,
+        0x043f,0x044f,0x0440,0x0441,0x0442,0x0443,0x0436,0x0432,
+        0x044c,0x044b,0x0437,0x0448,0x044d,0x0449,0x0447,0x044a,
+        0x042e,0x0410,0x0411,0x0426,0x0414,0x0415,0x0424,0x0413,
+        0x0425,0x0418,0x0419,0x041a,0x041b,0x041c,0x041d,0x041e,
+        0x041f,0x042f,0x0420,0x0421,0x0422,0x0423,0x0416,0x0412,
+        0x042c,0x042b,0x0417,0x0428,0x042d,0x0429,0x0427,0x042a
+    };
+    std::string result;result.reserve(value.size()*3);
+    for(const unsigned char c:value){
+      require(c>=0x20&&c!=0x7f,"Unsafe legacy Cyrillic filename byte");
+      const std::uint16_t code=c<0x80?c:koi8r[c-0x80];
+      require(code!=0&&code!=0xfffd,"Undefined legacy Cyrillic filename byte");
+      if(code<0x80){result+=static_cast<char>(code);}
+      else if(code<0x800){result+=static_cast<char>(0xc0|(code>>6));result+=static_cast<char>(0x80|(code&0x3f));}
+      else{result+=static_cast<char>(0xe0|(code>>12));result+=static_cast<char>(0x80|((code>>6)&0x3f));result+=static_cast<char>(0x80|(code&0x3f));}
+    }
+    return result;
+  }
   if(encoding==NameEncoding::Windows1251){
     // Single-byte Windows-1251 mapping, source-bound to OpenJDK17 MS1251.
     // 0x98 is UNMAPPABLE; never replace it or take Java's UTF8 fallback.

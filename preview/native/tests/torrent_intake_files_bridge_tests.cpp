@@ -135,6 +135,28 @@ private slots:
     QCOMPARE(row.find("state")->integer,std::int64_t{70});QCOMPARE(row.find("forceStart")->integer,std::int64_t{0});QVERIFY(inventory.find("unknown"));
     QTRY_VERIFY(!bridge.busy());QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,10000);QVERIFY(closed[0][1].toBool()&&closed[0][2].toBool());QVERIFY(!QFile::exists(destination));
   }
+  void pausedSubmissionCommitsOriginalPauseAtomicallyWithoutAnOwner(){
+    // Metadata/identity fixture only: no seed session, tracker or peer is started.
+    test::selected_swarm::Fixture fixture(false);const auto profile=QString::fromStdString((fixture.root/"paused-intake-profile").string());emptyProfile(profile);
+    const auto destination=QString::fromStdString((fixture.root/"absent-paused-payload").string());app::SessionBridge bridge;
+    QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),reads(&bridge,&app::SessionBridge::torrentIntakeReady),writes(&bridge,&app::SessionBridge::torrentIntakeFinished),native(&bridge,&app::SessionBridge::nativeSessionReady),closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.open(profile.toStdString(),0));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty(),10000);const auto session=sessions[0][0].toULongLong();
+    QVERIFY(bridge.previewTorrentIntake({session,1,QString::fromStdString(fixture.input.string())}));QTRY_COMPARE_WITH_TIMEOUT(reads.size(),1,10000);QTRY_VERIFY(!bridge.busy());const auto files=preview(reads);QVERIFY(ui::validTorrentIntake(files));
+    const std::vector<compat::FilePolicy> policy{{false,0}};ui::TorrentIntakeSubmission accepted{session,files->source.request,files->revision,destination,false,policy,{},false,false,true};
+    const auto beforeInventory=test::read(profile+QStringLiteral("/downloads.config"));
+    auto conflict=accepted;conflict.start=true;QVERIFY(bridge.importTorrentFiles(conflict));QTRY_COMPARE_WITH_TIMEOUT(writes.size(),1,10000);QVERIFY(!result(writes)->imported);QTRY_VERIFY(!bridge.busy());
+    const auto unchanged=document(profile+QStringLiteral("/downloads.config"));QVERIFY(unchanged.find("downloads")->children.empty());QVERIFY(!unchanged.find("pause_data"));QVERIFY(!QFile::exists(destination));QCOMPARE(test::read(profile+QStringLiteral("/downloads.config")),beforeInventory);QVERIFY(!QFile::exists(profile+QStringLiteral("/active/")+files->hash+QStringLiteral(".dat")));
+    bool committedAtResult=false;
+    connect(&bridge,&app::SessionBridge::torrentIntakeFinished,this,[&](const ui::TorrentIntakeResultPresentation& packet){
+      if(!packet->imported){return;}const auto config=document(profile+QStringLiteral("/downloads.config"));const auto saved=core::readLibrary(config);
+      committedAtResult=saved&&saved->issues.empty()&&saved->downloads.size()==1&&saved->downloads[0].originalState==70&&!saved->downloads[0].forceStart
+          &&saved->paused.size()==1&&saved->paused[0].hash==*fixture.key&&!saved->paused[0].forceStart&&saved->paused[0].owner==1;
+    });
+    QVERIFY(bridge.importTorrentFiles(accepted));QTRY_COMPARE_WITH_TIMEOUT(writes.size(),2,10000);QVERIFY2(result(writes)->imported,qPrintable(result(writes)->failure));QVERIFY(!result(writes)->started);QVERIFY(committedAtResult);QCOMPARE(native.size(),0);QVERIFY(!QFile::exists(destination));
+    const auto config=document(profile+QStringLiteral("/downloads.config"));QVERIFY(config.find("unknown"));QCOMPARE(config.find("pause_data")->children.size(),std::size_t{1});
+    QTRY_VERIFY(!bridge.busy());QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,10000);QVERIFY(closed[0][1].toBool()&&closed[0][2].toBool());
+    auto reacquired=storage::ProfileLease::acquire(profile.toStdString());QVERIFY(reacquired);QVERIFY(!QFile::exists(destination));QVERIFY(fixture.untouched());
+  }
   void allSkippedRequestedStartPublishesStoppedWithoutPayloadOrAdmission() {
     // The metadata generator's separate seed is owned; the offline target Host
     // has port0 and cannot create an owner or request any peer data.

@@ -120,30 +120,33 @@ private slots:
   }
   void forcedStartRequiresSelectedStartAndKeepsFailedDraft(){
     ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested),writes(&dialog,&ui::TorrentIntakeDialog::submitted);
-    auto* force=dialog.findChild<QCheckBox*>(QStringLiteral("import-force-start"));auto* start=dialog.findChild<QCheckBox*>(QStringLiteral("import-start"));QVERIFY(force&&start&&!force->isChecked());
+    auto* mode=dialog.findChild<QComboBox*>(QStringLiteral("import-start-mode"));QVERIFY(mode);QCOMPARE(mode->count(),4);QCOMPARE(mode->currentData().toInt(),static_cast<int>(ui::TorrentIntakeStartMode::Queued));
+    QVERIFY(!dialog.findChild<QCheckBox*>(QStringLiteral("import-start")));QVERIFY(!dialog.findChild<QCheckBox*>(QStringLiteral("import-force-start")));
     auto* load=dialog.findChild<QPushButton*>(QStringLiteral("import-load-files"));QTRY_VERIFY(load->isEnabled());load->click();dialog.setPreview(packet(request(reads)));
-    auto* publishedTable=dialog.findChild<QTableView*>(QStringLiteral("import-file-table"));QVERIFY(publishedTable);QTRY_COMPARE(publishedTable->model()->rowCount(),3);QTRY_VERIFY(force->isEnabled());
-    dialog.accept();QCOMPARE(writes.size(),1);QVERIFY(submission(writes).start&&!submission(writes).forceStart);dialog.rejectSubmission(submission(writes));QTRY_VERIFY(force->isEnabled());
-    force->setChecked(true);dialog.accept();QCOMPARE(writes.size(),2);const auto forced=submission(writes);QVERIFY(forced.start&&forced.forceStart);dialog.rejectSubmission(forced);QTRY_VERIFY(force->isEnabled());QVERIFY(force->isChecked());
-    start->setChecked(false);QTRY_VERIFY(!force->isEnabled());dialog.accept();QCOMPARE(writes.size(),3);const auto stopped=submission(writes);QVERIFY(!stopped.start&&!stopped.forceStart);dialog.rejectSubmission(stopped);
-    start->setChecked(true);QTRY_VERIFY(force->isEnabled());dialog.setBusy(true);QTRY_VERIFY(!force->isEnabled());dialog.accept();QCOMPARE(writes.size(),3);dialog.setBusy(false);QTRY_VERIFY(force->isEnabled());
+    auto* publishedTable=dialog.findChild<QTableView*>(QStringLiteral("import-file-table"));QVERIFY(publishedTable);QTRY_COMPARE(publishedTable->model()->rowCount(),3);QTRY_VERIFY(mode->isEnabled());
+    dialog.accept();QCOMPARE(writes.size(),1);QVERIFY(submission(writes).start&&!submission(writes).forceStart&&!submission(writes).paused);dialog.rejectSubmission(submission(writes));QTRY_VERIFY(mode->isEnabled());
+    mode->setCurrentIndex(mode->findData(static_cast<int>(ui::TorrentIntakeStartMode::Forced)));dialog.accept();QCOMPARE(writes.size(),2);const auto forced=submission(writes);QVERIFY(forced.start&&forced.forceStart&&!forced.paused);dialog.rejectSubmission(forced);QTRY_VERIFY(mode->isEnabled());QCOMPARE(mode->currentData().toInt(),static_cast<int>(ui::TorrentIntakeStartMode::Forced));
+    mode->setCurrentIndex(mode->findData(static_cast<int>(ui::TorrentIntakeStartMode::Stopped)));dialog.accept();QCOMPARE(writes.size(),3);const auto stopped=submission(writes);QVERIFY(!stopped.start&&!stopped.forceStart&&!stopped.paused);dialog.rejectSubmission(stopped);
+    mode->setCurrentIndex(mode->findData(static_cast<int>(ui::TorrentIntakeStartMode::Paused)));dialog.accept();QCOMPARE(writes.size(),4);const auto paused=submission(writes);QVERIFY(!paused.start&&!paused.forceStart&&paused.paused);dialog.rejectSubmission(paused);QCOMPARE(mode->currentData().toInt(),static_cast<int>(ui::TorrentIntakeStartMode::Paused));
+    dialog.setBusy(true);QTRY_VERIFY(!mode->isEnabled());dialog.accept();QCOMPARE(writes.size(),4);dialog.setBusy(false);QTRY_VERIFY(mode->isEnabled());
+    mode->addItem(QStringLiteral("Unsupported test mode"),999);mode->setCurrentIndex(4);dialog.accept();QCOMPARE(writes.size(),4);mode->setCurrentIndex(mode->findData(static_cast<int>(ui::TorrentIntakeStartMode::Paused)));
     auto* table=dialog.findChild<QTableView*>(QStringLiteral("import-file-table"));QVERIFY(table);for(int index:{0,1}){QVERIFY(table->model()->setData(table->model()->index(index,0),Qt::Unchecked,Qt::CheckStateRole));}
-    QTRY_VERIFY(!force->isEnabled());dialog.accept();QCOMPARE(writes.size(),4);const auto skipped=submission(writes);QVERIFY(!skipped.start&&!skipped.forceStart);dialog.rejectSubmission(skipped);
-    QVERIFY(dialog.beginSession(78));QVERIFY(!force->isChecked());QVERIFY(!dialog.preview());dialog.accept();QCOMPARE(writes.size(),4);
+    QTRY_VERIFY(!mode->isEnabled());dialog.accept();QCOMPARE(writes.size(),5);const auto skipped=submission(writes);QVERIFY(!skipped.start&&!skipped.forceStart&&!skipped.paused);dialog.rejectSubmission(skipped);
+    QVERIFY(dialog.beginSession(78));QCOMPARE(mode->currentData().toInt(),static_cast<int>(ui::TorrentIntakeStartMode::Queued));QVERIFY(!dialog.preview());dialog.accept();QCOMPARE(writes.size(),5);
   }
   void forcedStartResetCannotWriteIntoOvertakingProfile(){
-    ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));auto* force=dialog.findChild<QCheckBox*>(QStringLiteral("import-force-start"));auto* destination=dialog.findChild<QLineEdit*>(QStringLiteral("import-destination"));QVERIFY(force&&destination);force->setChecked(true);bool rebound=false;
-    connect(force,&QCheckBox::toggled,&dialog,[&](bool checked){if(!checked){rebound=dialog.beginSession(79);}});
+    ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));auto* mode=dialog.findChild<QComboBox*>(QStringLiteral("import-start-mode"));auto* destination=dialog.findChild<QLineEdit*>(QStringLiteral("import-destination"));QVERIFY(mode&&destination);mode->setCurrentIndex(mode->findData(static_cast<int>(ui::TorrentIntakeStartMode::Forced)));bool rebound=false;
+    connect(mode,&QComboBox::currentIndexChanged,&dialog,[&](int index){if(index==0){rebound=dialog.beginSession(79);}});
     QVERIFY(!dialog.beginSession(78,QStringLiteral("/old78")));QVERIFY(rebound);QVERIFY(destination->text().isEmpty());QVERIFY(!dialog.beginSession(78));
   }
   void forcedStartResetAndChildDeletionCannotDispatch(){
-    QPointer<ui::TorrentIntakeDialog> dialog=new ui::TorrentIntakeDialog;QVERIFY(dialog->beginSession(77));auto* force=dialog->findChild<QCheckBox*>(QStringLiteral("import-force-start"));QVERIFY(force);force->setChecked(true);
-    connect(force,&QCheckBox::toggled,force,[&]{delete dialog.data();});QVERIFY(!dialog->beginSession(78));QVERIFY(dialog.isNull());
+    QPointer<ui::TorrentIntakeDialog> dialog=new ui::TorrentIntakeDialog;QVERIFY(dialog->beginSession(77));auto* mode=dialog->findChild<QComboBox*>(QStringLiteral("import-start-mode"));QVERIFY(mode);mode->setCurrentIndex(mode->findData(static_cast<int>(ui::TorrentIntakeStartMode::Paused)));
+    connect(mode,&QComboBox::currentIndexChanged,mode,[&]{delete dialog.data();});QVERIFY(!dialog->beginSession(78));QVERIFY(dialog.isNull());
     ui::TorrentIntakeDialog intact;QVERIFY(intact.beginSession(80));inputs(intact);intact.show();QSignalSpy reads(&intact,&ui::TorrentIntakeDialog::previewRequested),writes(&intact,&ui::TorrentIntakeDialog::submitted);
     auto* load=intact.findChild<QPushButton*>(QStringLiteral("import-load-files"));QTRY_VERIFY(load->isEnabled());load->click();intact.setPreview(packet(request(reads)));
     auto* table=intact.findChild<QTableView*>(QStringLiteral("import-file-table"));QVERIFY(table);QTRY_COMPARE(table->model()->rowCount(),3);
     auto* add=intact.findChild<QPushButton*>(QStringLiteral("import-confirm"));QTRY_VERIFY(add->isEnabled());
-    delete intact.findChild<QCheckBox*>(QStringLiteral("import-force-start"));intact.accept();QCOMPARE(writes.size(),0);QCoreApplication::processEvents();QCOMPARE(writes.size(),0);
+    delete intact.findChild<QComboBox*>(QStringLiteral("import-start-mode"));intact.accept();QCOMPARE(writes.size(),0);QCoreApplication::processEvents();QCOMPARE(writes.size(),0);
   }
   void staleSourcesMalformedIndicesAndCancelledPreviewsCannotSubmit() {
     ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();

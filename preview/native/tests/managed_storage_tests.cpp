@@ -190,6 +190,31 @@ int main() {
     }
     {Fixture f;f.pureV2(true);auto metadata=f.state();require(metadata.replaceValue("encoding",b("windows-1251")).has_value(),"V2 codec guard");write(f.profile/"active"/(f.hash.hex()+".dat"),metadata.serialize());deniedPrepare(f,Code::InvalidFormat);require(!fs::exists(f.save),"No legacy v2 projection");}
   });
+  test("koi8r-original-paths-retain-raw-hashes-owned-slots-and-checkpoints",[] {
+    for(const auto encoding:std::array<std::string_view,4>{"KOI8-R","koi8_r","koi8","cskoi8r"}){
+      for(const bool overrides:{false,true}){
+        Fixture f(true);const auto old=f.profile/"active"/(f.hash.hex()+".dat");auto metadata=f.state();auto info=core::Document::parse(f.info);require(info.has_value(),"Actual Cyrillic v1 info");
+        const auto first=std::string("\xc6\xc1\xca\xcc.bin",8),second=std::string("\xd4\xc5\xd3\xd4.bin",8);
+        const auto root=std::string("\xd0\xc1\xd0\xcb\xc1",5);
+        const auto firstRow="d6:lengthi20000e4:pathl"+b(first)+"e"+(overrides?"10:path.utf-8l15:wrong-first.bine":"")+'e';
+        require(info->replaceValue("files","l"+firstRow+"d6:lengthi12768e4:pathl"+b(second)+"eee").has_value()&&info->replaceValue("name",b(root)).has_value(),"Actual raw original names");
+        if(overrides){require(info->replaceValue("name.utf-8",b("wrong-root")).has_value(),"Ignored partial UTF8 root");}
+        f.info=info->serialize();f.hash=*core::TorrentHash::parse(libtorrent::hasher(f.info.data(),static_cast<int>(f.info.size())).final().to_string());
+        require(metadata.replaceValue("info",f.info).has_value()&&metadata.replaceValue("encoding",b(encoding)).has_value(),"Explicit original charset identity");
+        f.stateBytes=metadata.serialize();write(f.profile/"active"/(f.hash.hex()+".dat"),f.stateBytes);write(f.profile/"downloads.config",f.inventory());require(fs::remove(old),"Retire previous fixture hash");
+        const auto a=f.save/"renamed-root"/"файл.bin",z=f.save/"renamed-root"/"тест.bin";write(a,std::string_view(f.body).substr(0,20000));write(z,std::string_view(f.body).substr(20000));struct stat before{};require(::lstat(a.c_str(),&before)==0,"Actual decoded file identity");
+        auto owner=f.prepare();const auto params=owner.parameters();const auto subject=params.ti->info_section();
+        require(std::string_view(subject.data(),static_cast<std::size_t>(subject.size()))==f.info&&params.ti->info_hashes().has_v1()&&!params.ti->info_hashes().has_v2()&&params.ti->info_hashes().v1.to_string()==libtorrent::hasher(f.info.data(),static_cast<int>(f.info.size())).final().to_string(),"Original full raw info and v1 hash remain exact");
+        require(params.renamed_files.at(libtorrent::file_index_t{0})==(fs::path("renamed-root")/"файл.bin").string()&&params.renamed_files.at(libtorrent::file_index_t{1})==(fs::path("renamed-root")/"тест.bin").string(),"Same original indices reach actual backend names");
+        checkpoint(owner,f,{1,1},true);const auto after=f.state();require(after.find("encoding")->bytes==encoding&&encode(*after.find("info"))==f.info&&after.find("attributes")->find("unknown")&&read(a)+read(z)==f.body,"Checkpoint retains codec/raw info/unknowns/actual payload");
+        struct stat current{};require(::lstat(a.c_str(),&current)==0&&current.st_dev==before.st_dev&&current.st_ino==before.st_ino&&!fs::exists(f.path(0))&&!fs::exists(f.path(1))&&!fs::exists(f.save/"wrong-root"),"No payload substitution/sanitized/override paths");
+      }
+    }
+    for(const auto* encoding:{"KOI8-R"}){Fixture f;f.pureV2(true);auto source=f.state();require(source.replaceValue("encoding",b(encoding)).has_value(),"Legacy v2 explicit codec");write(f.profile/"active"/(f.hash.hex()+".dat"),source.serialize());deniedPrepare(f,Code::InvalidFormat);require(!fs::exists(f.save),"No legacy v2 runtime path projection");}
+  });
+  test("ibm866-default-original-registry-context-remains-unsupported-without-effects",[] {
+    for(const auto* encoding:{"IBM866","cp866","ibm866","ibm-866","866","csIBM866"}){Fixture f;auto source=f.state();require(source.replaceValue("encoding",b(encoding)).has_value(),"Deferred original decoder fixture");write(f.profile/"active"/(f.hash.hex()+".dat"),source.serialize());deniedPrepare(f,Code::InvalidFormat);require(!fs::exists(f.save),"Deferred decoder refusal precedes payload effects");}
+  });
   test("original-global-utf8-key-fallback-is-authenticated-before-runtime-names",[] {
     for(const int mode:{0,1,2}){
       Fixture f(true);const auto old=f.profile/"active"/(f.hash.hex()+".dat");
@@ -231,7 +256,7 @@ int main() {
     }
   });
   test("unported-filename-charset-refuses-before-original-state-and-payload-effects",[] {
-    Fixture f;auto metadata=f.state();require(metadata.replaceValue("encoding",b("KOI8-R")).has_value(),"Explicit unported charset");
+    Fixture f;auto metadata=f.state();require(metadata.replaceValue("encoding",b("KOI8-U")).has_value(),"Explicit unported charset");
     write(f.profile/"active"/(f.hash.hex()+".dat"),metadata.serialize());deniedPrepare(f,Code::InvalidFormat);
     require(!fs::exists(f.save),"No payload preparation on unsupported original charset");
   });

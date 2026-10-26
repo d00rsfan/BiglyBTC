@@ -1,4 +1,5 @@
 #include "torrent_intake.hpp"
+#include "library_commands.hpp"
 #include "biglybtc/saved_dnd.hpp"
 #include <algorithm>
 #include <array>
@@ -31,6 +32,10 @@ std::string metadata(){
 std::string metadataWithFlags(std::string encoded) {
   auto source=parse(metadata());auto attrs=parse("d6:future3:raw10:parametersd6:futurei7ee5:flags"+encoded+'e');
   check(source.replaceValue("attributes",attrs.serialize()).has_value(),"Own original flag metadata");return source.serialize();
+}
+std::string pauseBytes(const core::Document& document){
+  const auto* value=document.find("pause_data");check(value,"Saved original pause list exists");
+  return document.originalBytes().substr(value->begin,value->end-value->begin);
 }
 struct Area {
   fs::path root,profile,input,destination;std::optional<storage::ProfileLease> lease;
@@ -100,7 +105,7 @@ int main(){
     {
       Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));interrupted=storage::TorrentIntakeStage::JournalSynced;
       check(!storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,interrupt),"Default old intake journal");
-      const auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));check(!journal.find("fileOptions")->find("sequential"),"Default API omits new optional journal field");
+      const auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));check(!journal.find("fileOptions")->find("sequential")&&!journal.find("fileOptions")->find("paused"),"Default API omits new optional journal fields");
       area.reopen();const auto hash=take(storage::recoverTorrentIntake(*area.lease));check(hash.has_value(),"Old absent sequential field recovers");
       const auto state=parse(read(area.profile/"active"/(hash->hex()+".dat")));check(!state.find("attributes")->find("flags"),"Default old state does not materialize flags");
     }
@@ -163,6 +168,60 @@ int main(){
       check(!recovered&&recovered.error().code==storage::ErrorCode::InvalidFormat,"Malformed/negative/overflowed recovered rate refuses before publication");
       check(read(area.profile/"downloads.config")==inventory&&!fs::exists(area.profile/"active")&&!fs::exists(area.profile/"torrents")&&!fs::exists(area.destination),"Invalid recovered rates preserve inventory and payload");
       check(storage::hasPendingTorrentIntake(*area.lease),"Invalid intent retained for explicit recovery");
+    }
+    {
+      Area direct,qualified;
+      const auto previous="l"+b(std::string(20,'Q'))+"d4:hash"+b(std::string(20,'R'))+"5:forcei1e5:owneri44e6:future3:rawee";
+      for(auto* area:{&direct,&qualified}){auto before=parse(read(area->profile/"downloads.config"));check(before.replaceValue("pause_data",previous).has_value(),"Existing legacy/unknown pause rows");write(area->profile/"downloads.config",before.serialize());}
+      const auto prepared=take(storage::inspectTorrentIntake(direct.input));const auto reference=take(storage::inspectTorrentIntake(qualified.input));
+      const auto hash=take(storage::importTorrentWithFileOptions(*direct.lease,prepared,direct.destination,true,mixed,nullptr,false,{}, {},false,false,true));
+      const auto other=take(storage::importTorrentWithFileOptions(*qualified.lease,reference,qualified.destination,true,mixed));check(hash==other,"Same generated original identity");
+      const auto command=take(storage::applyLibraryCommand(*qualified.lease,other,core::DownloadAction::Pause));check(command.pauseAfter&&command.pauseAfter->owner==1&&!command.pauseAfter->forceStart,"Qualified original general pause helper");
+      const auto after=parse(read(direct.profile/"downloads.config"));const auto expected=parse(read(qualified.profile/"downloads.config"));
+      check(pauseBytes(after)==pauseBytes(expected),"Pre-add pause encoding byte-exact to qualified Pause helper");
+      check(pauseBytes(after).starts_with(previous.substr(0,previous.size()-1)),"Unknown and legacy pause rows retained verbatim");
+      const auto library=core::readLibrary(after);check(library&&library->issues.empty()&&library->paused.size()==3,"Shared original pause reader admits new general pause");
+      const auto& row=after.find("downloads")->children.at(0);check(row.find("state")->integer==70&&row.find("forceStart")->integer==0,"Paused saved row is unforced Stopped70");
+      verify(direct,hash,"LCLC",mixed);check(!fs::exists(direct.destination),"Paused import has no payload effects");
+    }
+    for(const auto stage:{storage::TorrentIntakeStage::JournalSynced,storage::TorrentIntakeStage::StatePublished,storage::TorrentIntakeStage::ArchivePublished,storage::TorrentIntakeStage::InventoryPublished}){
+      for(const bool allSkipped:{false,true}){
+        Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));interrupted=stage;
+        const auto policy=allSkipped?std::vector<compat::FilePolicy>(4,{true,0}):mixed;
+        check(!storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,policy,interrupt,false,{}, {},false,false,true),"Interrupt atomic pre-add pause");
+        const auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));check(bool(journal.find("fileOptions")->find("paused"))==!allSkipped,"All skipped removes pause intent before durable journal");
+        area.reopen();const auto hash=take(storage::recoverTorrentIntake(*area.lease));check(hash&&*hash==prepared.hash(),"Replay exact paused identity");
+        const auto config=parse(read(area.profile/"downloads.config"));const auto saved=core::readLibrary(config);check(saved&&saved->issues.empty()&&saved->paused.size()==(allSkipped?0U:1U),"Pause survives every stage; all skipped remains ordinary stopped");
+        check(!allSkipped||!config.find("pause_data"),"All skipped never fabricates an empty pause list");
+        if(!allSkipped){check(saved->paused[0].hash==*hash&&!saved->paused[0].forceStart&&saved->paused[0].owner==1,"Exact original pause fields survive replay");}
+        verify(area,*hash,allSkipped?"CCCC":"LCLC",policy);check(!fs::exists(area.destination),"Paused replay cannot allocate payload");
+      }
+    }
+    for(int conflict=0;conflict<3;++conflict){
+      Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));
+      const auto refused=storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,conflict!=0,mixed,nullptr,conflict==1,{}, {},false,conflict==2,true);
+      check(!refused&&refused.error().code==storage::ErrorCode::InvalidFormat,"Paused rejects running/forced/queued conflicts before effects");area.untouched();
+    }
+    for(int mutation=0;mutation<6;++mutation){
+      Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));interrupted=storage::TorrentIntakeStage::JournalSynced;
+      check(!storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,interrupt,false,{}, {},false,false,true),"Freeze accepted paused authority");
+      auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));
+      if(mutation<2){check(journal.replaceValue(mutation==0?"stopped":"forceStart",mutation==0?"i0e":"i1e").has_value(),"Conflicting paused source flags");}
+      else{auto value=core::encodeValue(*journal.find("fileOptions"),storage::compatibleConfigLimits());check(bool(value),"Accepted pause options");auto options=parse(std::move(*value));
+        check(options.replaceValue(mutation==2?"queued":"paused",mutation==2?"i1e":mutation==3?"i2e":mutation==4?"i-1e":"3:bad").has_value(),"Invalid paused recovery field");check(journal.replaceValue("fileOptions",options.serialize()).has_value(),"Retain other accepted intent");}
+      write(area.profile/"BiglyBTC.torrent-import",journal.serialize());const auto before=read(area.profile/"downloads.config");area.reopen();const auto refused=storage::recoverTorrentIntake(*area.lease);
+      check(!refused&&refused.error().code==storage::ErrorCode::InvalidFormat,"Malformed/conflicting pause recovery refuses");check(read(area.profile/"downloads.config")==before&&!fs::exists(area.profile/"active")&&!fs::exists(area.destination)&&storage::hasPendingTorrentIntake(*area.lease),"Pause refusal preserves old inventory/no payload and retained intent");
+    }
+    {
+      Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));interrupted=storage::TorrentIntakeStage::JournalSynced;
+      check(!storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,interrupt,false,{}, {},false,false,true),"Freeze paused full-inventory CAS");
+      auto edited=parse(read(area.profile/"downloads.config"));check(edited.replaceValue("future","i88e").has_value(),"Independent original inventory edit");write(area.profile/"downloads.config",edited.serialize());const auto before=read(area.profile/"downloads.config");
+      area.reopen();const auto refused=storage::recoverTorrentIntake(*area.lease);check(!refused&&refused.error().code==storage::ErrorCode::Conflict,"Changed whole inventory blocks atomic paused publication");check(read(area.profile/"downloads.config")==before&&!fs::exists(area.profile/"active"),"Conflicting CAS never adds a later pause write");
+    }
+    {
+      Area area;interrupted=storage::TorrentIntakeStage::JournalSynced;check(!storage::importTorrent(*area.lease,area.input,area.destination,true,interrupt),"Freeze legacy default intake");
+      const auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));check(!journal.find("fileOptions"),"Legacy accepted journal has no new optional intent");
+      area.reopen();const auto hash=take(storage::recoverTorrentIntake(*area.lease));check(hash.has_value(),"Legacy accepted journal recovers");const auto config=parse(read(area.profile/"downloads.config"));check(!config.find("pause_data"),"Legacy default does not materialize pause data");
     }
     for(const int mode:{0,1,2,3}){
       Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));const bool stopped=mode==0,force=mode==3,queued=mode==2;

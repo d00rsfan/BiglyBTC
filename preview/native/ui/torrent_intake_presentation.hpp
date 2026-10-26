@@ -25,6 +25,7 @@ struct TorrentIntakePacket {
   QString failure;
 };
 using TorrentIntakePresentation=std::shared_ptr<const TorrentIntakePacket>;
+enum class TorrentIntakeStartMode { Queued, Stopped, Paused, Forced };
 struct TorrentIntakeSubmission {
   quint64 session=0,request=0,revision=0;
   QString destination;
@@ -33,6 +34,7 @@ struct TorrentIntakeSubmission {
   core::TorrentIntakeLimits limits{};
   bool sequentialDownload=false;
   bool forceStart=false;
+  bool paused=false;
 };
 struct TorrentIntakeResultPacket {
   quint64 session=0,request=0,revision=0;
