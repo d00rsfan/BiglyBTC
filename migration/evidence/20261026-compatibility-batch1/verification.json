@@ -1,0 +1,1134 @@
+{
+  "status": "PASS_BOUNDED_BATCH1",
+  "source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+  "candidate": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+  "components": {
+    "fileops": "db256d08e280140f64bd4e4d25ec5a26b0b9380d",
+    "network": "6d2a20a6ceb59601afe86104fdbcb0c85e0130e5",
+    "hybrid": "a5613ed5fba8be76bec7a22d1b15c4edc09f0d01",
+    "scheduler": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed"
+  },
+  "transitions": [
+    {
+      "parent": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+      "source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+      "kind": "tests_only",
+      "affected_suites": [
+        "network-proxy-owner"
+      ],
+      "same_production_graph": true,
+      "paths_sha256": {
+        "preview/native/tests/network_proxy_owner_tests.cpp": "0764001e7a26b0c258dd6b56221573d86dc438223def686899d9a1bcab1a479c"
+      },
+      "impact_review_sha256": "a1cc7ca2b3de93420b109a59d6d826b34a859a9f44a76cbbc7a43da130935874"
+    }
+  ],
+  "matrix": {
+    "gcc": {
+      "suites": 27,
+      "per_suite": {
+        "network-policy": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "managed-download": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "managed-storage": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "metadata-disk-router": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "managed-seeding": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "options-host": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "engine-live-settings": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "scheduler-service": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "managed-queue": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "scheduler-host": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "scheduler-host-engine": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "file-operations": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "file-operation-dialog": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "file-operations-host": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "original-storage-controls": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "original-torrent-identity": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "original-identity-callers": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "network-binding": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "network-binding-owner": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "selected-swarm-admission": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "file-operation-sequence": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "managed-combined-protocol": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "network-proxy-capability-present": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "network-proxy-capability-foreign-marker": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "scheduler-imported-integration": {
+          "case": "batch1-gcc-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "scheduler-dialog": {
+          "case": "batch1-gcc-scheduler-capture-r2",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "network-proxy-owner": {
+          "case": "batch1-gcc-webseed-tests-r2",
+          "tested_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "source_manifest_sha256": "9f2b250320524174c512d5142ca96b6eeadd1762f55de3b25489156f3f9f8e13",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": []
+        }
+      },
+      "cases": [
+        {
+          "case": "batch1-gcc-tests-r1",
+          "seconds": 269.84,
+          "source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "commit_association": "exact committed source-map equality after separately pinned ignored generated input",
+          "ambient_generated_sha256": {
+            "preview/native/packaging/__pycache__/preview.cpython-314.pyc": "98f7793942e6eaa89afa6ec928371be15ef4f16ed6a254e7d3572fdaeaf4ce20"
+          },
+          "passed": [
+            "engine-live-settings",
+            "file-operation-dialog",
+            "file-operation-sequence",
+            "file-operations",
+            "file-operations-host",
+            "managed-combined-protocol",
+            "managed-download",
+            "managed-queue",
+            "managed-seeding",
+            "managed-storage",
+            "metadata-disk-router",
+            "network-binding",
+            "network-binding-owner",
+            "network-policy",
+            "network-proxy-capability-foreign-marker",
+            "network-proxy-capability-present",
+            "options-host",
+            "original-identity-callers",
+            "original-storage-controls",
+            "original-torrent-identity",
+            "scheduler-host",
+            "scheduler-host-engine",
+            "scheduler-imported-integration",
+            "scheduler-service",
+            "selected-swarm-admission"
+          ],
+          "uncredited": [
+            "network-proxy-owner",
+            "scheduler-dialog"
+          ],
+          "inputs_sha256": {
+            "batch1-gcc-tests-r1-receipt.json": "ee9f45e9ffecafd91db81437cabee56a0b8f13038f40ddf54caaec454e044d65",
+            "batch1-gcc-tests-r1-source.json": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+            "batch1-gcc-tests-r1.xml": "f600eecbbd105ce211c71e0c551d6c8e66c68df2e5d6f065357d1d6a795d4ab2",
+            "batch1-gcc-tests-r1.log": "28fbd438c84e39c4fe18886b059660337e295d637bfd72227d2fc2c1c65d6560"
+          }
+        },
+        {
+          "case": "batch1-gcc-scheduler-capture-r2",
+          "seconds": 1.23,
+          "source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "commit_association": "exact committed source-map equality after separately pinned ignored generated input",
+          "ambient_generated_sha256": {
+            "preview/native/packaging/__pycache__/preview.cpython-314.pyc": "98f7793942e6eaa89afa6ec928371be15ef4f16ed6a254e7d3572fdaeaf4ce20"
+          },
+          "passed": [
+            "scheduler-dialog"
+          ],
+          "uncredited": [],
+          "inputs_sha256": {
+            "batch1-gcc-scheduler-capture-r2-receipt.json": "d15904a6cdd54347ce5654d0d5b4e6642f27c724a6348b72d32e026ee797fd0e",
+            "batch1-gcc-scheduler-capture-r2-source.json": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+            "batch1-gcc-scheduler-capture-r2.xml": "9ed4ac62ed46bfda1cbfb57a95a71634332db232f1d408aa54ffff98ae174d95",
+            "batch1-gcc-scheduler-capture-r2.log": "55185971c77b2be580563efd0e0b0b736bd455ba8acde7a0642c2b4d44efde82"
+          }
+        },
+        {
+          "case": "batch1-gcc-webseed-tests-r2",
+          "seconds": 23.35,
+          "source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "source_manifest_sha256": "9f2b250320524174c512d5142ca96b6eeadd1762f55de3b25489156f3f9f8e13",
+          "commit_association": "exact committed source-map equality after separately pinned ignored generated input",
+          "ambient_generated_sha256": {
+            "preview/native/packaging/__pycache__/preview.cpython-314.pyc": "98f7793942e6eaa89afa6ec928371be15ef4f16ed6a254e7d3572fdaeaf4ce20"
+          },
+          "passed": [
+            "network-proxy-owner"
+          ],
+          "uncredited": [],
+          "inputs_sha256": {
+            "batch1-gcc-webseed-tests-r2-receipt.json": "8e014b0570d1f9009b79393ab9f16a2539ea69e4973d3c792478d76928cdc2a6",
+            "batch1-gcc-webseed-tests-r2-source.json": "9f2b250320524174c512d5142ca96b6eeadd1762f55de3b25489156f3f9f8e13",
+            "batch1-gcc-webseed-tests-r2.xml": "4affa325e8baa75ba4bf90590f970fe4dfa912489ac40a91939c18259fdf92f0",
+            "batch1-gcc-webseed-tests-r2.log": "9bc9e650786d151ac0263f349fb0afff9f940961a99ee58854f90177a75bcfe2"
+          }
+        }
+      ],
+      "build_cases": [
+        "batch1-gcc-build-r1",
+        "batch1-gcc-webseed-build-r2"
+      ]
+    },
+    "clang": {
+      "suites": 27,
+      "per_suite": {
+        "network-policy": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "managed-download": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "managed-storage": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "metadata-disk-router": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "managed-seeding": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "options-host": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "engine-live-settings": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "scheduler-service": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "scheduler-dialog": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "managed-queue": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "scheduler-host": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "scheduler-host-engine": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "file-operations": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "file-operation-dialog": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "file-operations-host": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "original-storage-controls": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "original-torrent-identity": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "original-identity-callers": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "network-binding": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "network-binding-owner": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "selected-swarm-admission": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "file-operation-sequence": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "managed-combined-protocol": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "network-proxy-capability-present": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "network-proxy-capability-foreign-marker": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "scheduler-imported-integration": {
+          "case": "batch1-clang-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "network-proxy-owner": {
+          "case": "batch1-clang-webseed-tests-r2",
+          "tested_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "source_manifest_sha256": "9f2b250320524174c512d5142ca96b6eeadd1762f55de3b25489156f3f9f8e13",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": []
+        }
+      },
+      "cases": [
+        {
+          "case": "batch1-clang-tests-r1",
+          "seconds": 271.16,
+          "source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "commit_association": "exact committed source-map equality after separately pinned ignored generated input",
+          "ambient_generated_sha256": {
+            "preview/native/packaging/__pycache__/preview.cpython-314.pyc": "98f7793942e6eaa89afa6ec928371be15ef4f16ed6a254e7d3572fdaeaf4ce20"
+          },
+          "passed": [
+            "engine-live-settings",
+            "file-operation-dialog",
+            "file-operation-sequence",
+            "file-operations",
+            "file-operations-host",
+            "managed-combined-protocol",
+            "managed-download",
+            "managed-queue",
+            "managed-seeding",
+            "managed-storage",
+            "metadata-disk-router",
+            "network-binding",
+            "network-binding-owner",
+            "network-policy",
+            "network-proxy-capability-foreign-marker",
+            "network-proxy-capability-present",
+            "options-host",
+            "original-identity-callers",
+            "original-storage-controls",
+            "original-torrent-identity",
+            "scheduler-dialog",
+            "scheduler-host",
+            "scheduler-host-engine",
+            "scheduler-imported-integration",
+            "scheduler-service",
+            "selected-swarm-admission"
+          ],
+          "uncredited": [
+            "network-proxy-owner"
+          ],
+          "inputs_sha256": {
+            "batch1-clang-tests-r1-receipt.json": "0b66668dd771aacd033e28387f7749d161c431b7a2b680e8ae226178a2620b2d",
+            "batch1-clang-tests-r1-source.json": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+            "batch1-clang-tests-r1.xml": "b12c35c35a251d7bb090d2879daec7f985e2b203bac355ec91dfc1f0874a5153",
+            "batch1-clang-tests-r1.log": "85dadcd86aa40d86e5eaef7cb1b8a862e5d329f32f9859d094d2021da72e9784"
+          }
+        },
+        {
+          "case": "batch1-clang-webseed-tests-r2",
+          "seconds": 22.29,
+          "source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "source_manifest_sha256": "9f2b250320524174c512d5142ca96b6eeadd1762f55de3b25489156f3f9f8e13",
+          "commit_association": "exact committed source-map equality after separately pinned ignored generated input",
+          "ambient_generated_sha256": {
+            "preview/native/packaging/__pycache__/preview.cpython-314.pyc": "98f7793942e6eaa89afa6ec928371be15ef4f16ed6a254e7d3572fdaeaf4ce20"
+          },
+          "passed": [
+            "network-proxy-owner"
+          ],
+          "uncredited": [],
+          "inputs_sha256": {
+            "batch1-clang-webseed-tests-r2-receipt.json": "2a6dcaa4af41d6670bb4979305d32a3cd82b3705e68dc70c6c501e8cb5becaa5",
+            "batch1-clang-webseed-tests-r2-source.json": "9f2b250320524174c512d5142ca96b6eeadd1762f55de3b25489156f3f9f8e13",
+            "batch1-clang-webseed-tests-r2.xml": "3b00c286933221ee935b52a9328bfad937ded9df0af45c9aa429eb37207c7265",
+            "batch1-clang-webseed-tests-r2.log": "5f655727b12752ca480b42732220c07d5731891104ad94eb814723658ab3f992"
+          }
+        }
+      ],
+      "build_cases": [
+        "batch1-clang-build-r1",
+        "batch1-clang-webseed-build-r2"
+      ]
+    },
+    "sanitizers": {
+      "suites": 27,
+      "per_suite": {
+        "network-policy": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "managed-download": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "managed-storage": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "metadata-disk-router": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "managed-seeding": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "options-host": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "engine-live-settings": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "scheduler-service": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "scheduler-dialog": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "managed-queue": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "scheduler-host": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "scheduler-host-engine": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "file-operations": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "file-operation-dialog": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "file-operations-host": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "original-storage-controls": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "original-torrent-identity": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "original-identity-callers": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "network-binding": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "network-binding-owner": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "selected-swarm-admission": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "file-operation-sequence": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "managed-combined-protocol": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "network-proxy-capability-present": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "network-proxy-capability-foreign-marker": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "scheduler-imported-integration": {
+          "case": "batch1-san-tests-r1",
+          "tested_source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": [
+            "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a"
+          ]
+        },
+        "network-proxy-owner": {
+          "case": "batch1-san-webseed-tests-r2",
+          "tested_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "source_manifest_sha256": "9f2b250320524174c512d5142ca96b6eeadd1762f55de3b25489156f3f9f8e13",
+          "qualification_source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "unaffected_transitions": []
+        }
+      },
+      "cases": [
+        {
+          "case": "batch1-san-tests-r1",
+          "seconds": 296.79,
+          "source_commit": "699835f1fe9a5ba0b699dd7e06db2dc6aac9f9ed",
+          "source_manifest_sha256": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+          "commit_association": "exact committed source-map equality after separately pinned ignored generated input",
+          "ambient_generated_sha256": {
+            "preview/native/packaging/__pycache__/preview.cpython-314.pyc": "98f7793942e6eaa89afa6ec928371be15ef4f16ed6a254e7d3572fdaeaf4ce20"
+          },
+          "passed": [
+            "engine-live-settings",
+            "file-operation-dialog",
+            "file-operation-sequence",
+            "file-operations",
+            "file-operations-host",
+            "managed-combined-protocol",
+            "managed-download",
+            "managed-queue",
+            "managed-seeding",
+            "managed-storage",
+            "metadata-disk-router",
+            "network-binding",
+            "network-binding-owner",
+            "network-policy",
+            "network-proxy-capability-foreign-marker",
+            "network-proxy-capability-present",
+            "options-host",
+            "original-identity-callers",
+            "original-storage-controls",
+            "original-torrent-identity",
+            "scheduler-dialog",
+            "scheduler-host",
+            "scheduler-host-engine",
+            "scheduler-imported-integration",
+            "scheduler-service",
+            "selected-swarm-admission"
+          ],
+          "uncredited": [
+            "network-proxy-owner"
+          ],
+          "inputs_sha256": {
+            "batch1-san-tests-r1-receipt.json": "e9fb82d0a4373d10d2fb86febcc4df418868f19d68cca52657dc39f327a2755c",
+            "batch1-san-tests-r1-source.json": "a8c1e484ea85713d9f9d32ae9f7a7ff5975d6daf7f0d4f79a49ad3094841e12c",
+            "batch1-san-tests-r1.xml": "5628b7ed139d544afaae937ae5c06c460aae16439dde6f0546af4bc4ace59cce",
+            "batch1-san-tests-r1.log": "705c25ca958e52e4021c20659a429a88879498f11ea3adc827ea89bf5c3d5fe3"
+          }
+        },
+        {
+          "case": "batch1-san-webseed-tests-r2",
+          "seconds": 22.74,
+          "source_commit": "2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a",
+          "source_manifest_sha256": "9f2b250320524174c512d5142ca96b6eeadd1762f55de3b25489156f3f9f8e13",
+          "commit_association": "exact committed source-map equality after separately pinned ignored generated input",
+          "ambient_generated_sha256": {
+            "preview/native/packaging/__pycache__/preview.cpython-314.pyc": "98f7793942e6eaa89afa6ec928371be15ef4f16ed6a254e7d3572fdaeaf4ce20"
+          },
+          "passed": [
+            "network-proxy-owner"
+          ],
+          "uncredited": [],
+          "inputs_sha256": {
+            "batch1-san-webseed-tests-r2-receipt.json": "0bb7a0040113f14f114541c428b2a56d81403980c0cf0ce001e65eedb47299ff",
+            "batch1-san-webseed-tests-r2-source.json": "9f2b250320524174c512d5142ca96b6eeadd1762f55de3b25489156f3f9f8e13",
+            "batch1-san-webseed-tests-r2.xml": "f7f5a2035926b14f6bbdb0a7aacf2c83c78fc1d89df48e9c65063fb07f83a9ae",
+            "batch1-san-webseed-tests-r2.log": "3bd569ec3afd2df2db1c75b4044e52649414e05381bce3323e012cd636a715db"
+          }
+        }
+      ],
+      "build_cases": [
+        "batch1-san-build-r1",
+        "batch1-san-webseed-build-r2"
+      ]
+    }
+  },
+  "actual_hybrid_cases": 4,
+  "actual_hybrid_case_names": [
+    "ordered-hybrid-v1-32k",
+    "ordered-hybrid-v2-nonempty-32k",
+    "ordered-v2-nonempty-64k",
+    "tail-v2-32k"
+  ],
+  "hybrid_case_credit": {
+    "tail-v2-32k": {
+      "attempt": "hybrid-interop/runs/run-r1",
+      "recipe_manifest_sha256": "d6aeaca5d6c415dd671180700487aa04d6f7408c4c19df9e2d2f2e7bb4474277",
+      "strict_partial_and_complete": true
+    },
+    "ordered-hybrid-v1-32k": {
+      "attempt": "hybrid-interop/runs/run-r1",
+      "recipe_manifest_sha256": "d6aeaca5d6c415dd671180700487aa04d6f7408c4c19df9e2d2f2e7bb4474277",
+      "strict_partial_and_complete": true
+    },
+    "ordered-hybrid-v2-nonempty-32k": {
+      "attempt": "hybrid-interop/amendments/original-empty-first/runs/run-r1",
+      "recipe_manifest_sha256": "663f8745ac3aff90243778401a40161f249cc42f93469fa00e5e77bd071e6d62",
+      "strict_partial_and_complete": true
+    },
+    "ordered-v2-nonempty-64k": {
+      "attempt": "hybrid-interop/amendments/original-empty-checker/runs/run-r1",
+      "recipe_manifest_sha256": "3b6b01fd360afe1830c9481e436e7cfeee4333972968eedda7da651771e98c4a",
+      "strict_partial_and_complete": true
+    }
+  },
+  "hybrid_uncredited_original_failures": {
+    "ordered-hybrid-v2-32k": "Actual original empty-first hybrid load failed before native handoff.",
+    "ordered-v2-64k": "Actual original empty-first pure-V2 recheck bitmap differed before native; later strict case uses separately named nonempty files."
+  },
+  "hybrid_attempts": [
+    {
+      "path": "hybrid-interop/runs/run-r1",
+      "sha256": "b98b7286a972639f25bf39bc5f4868518fb4e7d755aef5cd946eb081a46f2cbf",
+      "wrapper_receipt": "batch1-hybrid-oracle-r1-receipt.json",
+      "wrapper_sha256": "2580d6760fbfd8d0710d9e5236d64fd71f0515b15cf3614f135263231ce7622d",
+      "status": "FAIL",
+      "error": "ValueError('Actual command failed; raw logs retained: ordered-hybrid-v2-32k-baseline')",
+      "recipe_manifest_sha256": "d6aeaca5d6c415dd671180700487aa04d6f7408c4c19df9e2d2f2e7bb4474277",
+      "requested_cases": [
+        "tail-v2-32k",
+        "ordered-hybrid-v1-32k",
+        "ordered-hybrid-v2-32k",
+        "ordered-v2-64k"
+      ],
+      "completed_strict_cases": [
+        "tail-v2-32k",
+        "ordered-hybrid-v1-32k"
+      ],
+      "uncredited_cases": [
+        "ordered-hybrid-v2-32k",
+        "ordered-v2-64k"
+      ],
+      "failed_commands": [
+        "ordered-hybrid-v2-32k-baseline"
+      ],
+      "native_driver_sha256": "3cad8500fdd335ff5a35746cc8585d9fe536c440719f3d1782340805fb118570"
+    },
+    {
+      "path": "hybrid-interop/amendments/original-empty-first/runs/run-r1",
+      "sha256": "182ea192557cbd8d6717a9fa9428cdcb69895ec95adb4f7af1645e226a475d8d",
+      "wrapper_receipt": "batch1-hybrid-oracle-r2-receipt.json",
+      "wrapper_sha256": "c345f8b7c2e385854c06ada367f26ce778977d420ab991c2c7d18d503acc60c1",
+      "status": "FAIL",
+      "error": "ValueError('Strict actual Java identity/intent/counters/rechecked pieces mismatch')",
+      "recipe_manifest_sha256": "663f8745ac3aff90243778401a40161f249cc42f93469fa00e5e77bd071e6d62",
+      "requested_cases": [
+        "ordered-hybrid-v2-nonempty-32k",
+        "ordered-v2-64k"
+      ],
+      "completed_strict_cases": [
+        "ordered-hybrid-v2-nonempty-32k"
+      ],
+      "uncredited_cases": [
+        "ordered-v2-64k"
+      ],
+      "failed_commands": [],
+      "native_driver_sha256": "3cad8500fdd335ff5a35746cc8585d9fe536c440719f3d1782340805fb118570"
+    },
+    {
+      "path": "hybrid-interop/amendments/original-empty-checker/runs/run-r1",
+      "sha256": "2f6860bf2e54d028aefd41c606fb932b9f6957d13b21a3b87e60a946f603bca0",
+      "wrapper_receipt": "batch1-hybrid-oracle-r3-receipt.json",
+      "wrapper_sha256": "496ac290ecfe84421b719066d4f222d414484dfafa1b5b52e71e83c6e42befb0",
+      "status": "PASS_ACTUAL_BROADER_V2_HYBRID_HANDOFF",
+      "error": null,
+      "recipe_manifest_sha256": "3b6b01fd360afe1830c9481e436e7cfeee4333972968eedda7da651771e98c4a",
+      "requested_cases": [
+        "ordered-v2-nonempty-64k"
+      ],
+      "completed_strict_cases": [
+        "ordered-v2-nonempty-64k"
+      ],
+      "uncredited_cases": [],
+      "failed_commands": [],
+      "native_driver_sha256": "3cad8500fdd335ff5a35746cc8585d9fe536c440719f3d1782340805fb118570"
+    }
+  ],
+  "recovery_capture": {
+    "path": "captures/batch1-gcc/speed-scheduler-recovery-preview.png",
+    "sha256": "5ba7a0e4075bc9e6e68653da782419e26c86fb0cddabf5252fc30c188aa028c2",
+    "bytes": 69111,
+    "width": 1240,
+    "height": 650
+  },
+  "observed_payload_read_work": [
+    "payload-work same-device-move source=10 bytes for 5-byte payload (previous schedule15)",
+    "payload-work relink target=5 bytes (previous schedule10)",
+    "payload-work delete source=5 bytes (previous schedule10)",
+    "payload-work copy source=10 bytes (previous source schedule25; separate scratch5 retained)"
+  ],
+  "controlled_socks5_hostname_webseed_payload": true,
+  "future_provider_webseed_authority": false,
+  "all_CF_parents_open": true,
+  "continue_all_remaining": true,
+  "ambient_generated_inputs_sha256": {
+    "preview/native/packaging/__pycache__/preview.cpython-314.pyc": "98f7793942e6eaa89afa6ec928371be15ef4f16ed6a254e7d3572fdaeaf4ce20"
+  },
+  "committed_native_source_leaves": 880,
+  "retention": {
+    "path": "retained-inputs.tar.gz",
+    "sha256": "e0f71ab6ad53b16ceaf3fd5084cf6c2bbf0dc5a76e82dea39c632a46b31cbd51",
+    "bytes": 1430455,
+    "members": 377,
+    "member_manifest_sha256": "7f82496c46ed344a9efcc4b8641125e02ceb501357ada44db2bce96b49290f1c"
+  }
+}
