@@ -51,7 +51,15 @@ private slots:
     QTRY_VERIFY(add->isEnabled());mode->setCurrentIndex(mode->findData(static_cast<int>(ui::TorrentIntakeStartMode::VerifySeeding)));
     dialog.accept();QCOMPARE(writes.size(),1);const auto sent=submission(writes);QVERIFY(sent.verifyExisting&&!sent.start&&!sent.forceStart&&!sent.paused);
     dialog.rejectSubmission(sent);QTRY_VERIFY(add->isEnabled());QCOMPARE(mode->currentData().toInt(),static_cast<int>(ui::TorrentIntakeStartMode::VerifySeeding));
-    const auto capture=qEnvironmentVariable("BIGLYBTC_CAPTURE_DIR");if(!capture.isEmpty()){QDir output(capture);QVERIFY(output.mkpath("."));QTRY_VERIFY(dialog.findChild<QLabel*>(QStringLiteral("import-file-status"))->text().contains(QStringLiteral("Read-only")));QVERIFY(dialog.grab().save(output.filePath(QStringLiteral("torrent-intake-verified-seeding.png"))));}
+    QPointer<QLabel> status=dialog.findChild<QLabel*>(QStringLiteral("import-file-status"));QPointer<QPushButton> confirm=add;
+    QTRY_VERIFY(status&&status->text().contains(QStringLiteral("Read-only")));
+    // render() publishes text before Qt processes the resulting LayoutRequest.
+    // Wait for the wrapped text to fit above the buttons at the unchanged size.
+    QTRY_VERIFY(status&&confirm&&status->heightForWidth(status->width())>0
+        &&status->height()>=status->heightForWidth(status->width())
+        &&dialog.rect().contains(status->geometry())
+        &&status->geometry().bottom()<confirm->mapTo(&dialog,QPoint(0,0)).y());
+    const auto capture=qEnvironmentVariable("BIGLYBTC_CAPTURE_DIR");if(!capture.isEmpty()){QDir output(capture);QVERIFY(output.mkpath("."));QVERIFY(dialog.grab().save(output.filePath(QStringLiteral("torrent-intake-verified-seeding.png"))));}
     QVERIFY(table->model()->setData(table->model()->index(0,0),Qt::Unchecked,Qt::CheckStateRole));dialog.accept();QCOMPARE(writes.size(),1);
     QVERIFY(dialog.beginSession(78));QCOMPARE(mode->currentData().toInt(),static_cast<int>(ui::TorrentIntakeStartMode::Queued));QVERIFY(!dialog.preview());
   }
