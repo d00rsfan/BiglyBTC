@@ -13,7 +13,6 @@
 #include <libtorrent/pex_flags.hpp>
 #include <algorithm>
 #include <set>
-#include <sstream>
 #include <string_view>
 #endif
 #include <QHostAddress>
@@ -25,6 +24,7 @@
 #include <chrono>
 #include <cerrno>
 #include <memory>
+#include <sstream>
 namespace {
 using namespace biglybtc;
 namespace lt=libtorrent;
@@ -52,6 +52,44 @@ QByteArray compactPeer(bool ipv6,unsigned short port){
 }
 #if __has_include(<libtorrent/biglybtc_swarm.hpp>)
 namespace selectedFixture = test::selected_swarm;
+std::string selectedUtpPayload() {
+  std::string bytes;bytes.reserve(4*16384);
+  for(int piece=0;piece<4;++piece){bytes.append(16384,static_cast<char>('s'+piece));}
+  return bytes;
+}
+struct SelectedUtpFixture {
+  std::filesystem::path root,profile,input,destination,state;
+  std::optional<storage::ProfileLease> lease;
+  std::optional<core::TorrentHash> key;
+  std::optional<storage::OriginalTorrentIdentity> identity;
+  std::string source,rawInfo;
+  explicit SelectedUtpFixture(bool v2) {
+    char pattern[]="/tmp/biglybtc-selected-utp-XXXXXX";
+    const auto* made=::mkdtemp(pattern);selectedFixture::require(made,"Cannot create selected-uTP fixture");root=made;
+    profile=root/"profile";input=root/"input.torrent";destination=root/"payload";
+    selectedFixture::require(::mkdir(profile.c_str(),0700)==0,"Cannot create selected-uTP profile");
+    lease.emplace(selectedFixture::take(storage::ProfileLease::acquire(profile)));
+    const auto payload=selectedUtpPayload();lt::file_storage files;files.add_file("selected.bin",static_cast<std::int64_t>(payload.size()));
+    lt::create_torrent creator(files,16384);
+    for(int piece=0;piece<4;++piece){
+      const auto* bytes=payload.data()+piece*16384;
+      creator.set_hash(lt::piece_index_t{piece},lt::hasher(bytes,16384).final());
+      creator.set_hash2(lt::file_index_t{0},lt::piece_index_t::diff_type{piece},lt::hasher256(bytes,16384).final());
+    }
+    auto entry=creator.generate();entry["azureus_private_properties"]["hybrid_hash_v2"]=v2?1:0;
+    entry["future.root"]="opaque-selected-utp";std::vector<char> bytes;lt::bencode(std::back_inserter(bytes),entry);
+    source.assign(bytes.begin(),bytes.end());selectedFixture::write(input,source);
+    auto parsed=core::Document::parse(source,storage::compatibleConfigLimits());selectedFixture::require(bool(parsed),"Generated selected-uTP bencode");
+    lt::error_code error;lt::torrent_info metadata(lt::span<const char>(source.data(),source.size()),error,lt::from_span);
+    selectedFixture::require(!error&&metadata.num_pieces()==4,"Generated four-piece hybrid rejected");
+    identity.emplace(selectedFixture::take(storage::originalTorrentIdentityFromLibtorrent(*parsed,metadata)));
+    rawInfo=std::string(selectedFixture::take(storage::originalTorrentInfoSubject(*parsed)));
+    key.emplace(selectedFixture::take(storage::importTorrent(*lease,input,destination,true)));
+    selectedFixture::require(*key==identity->originalKey,"Selected-uTP intake changed selected identity");
+    state=profile/"active"/(key->hex()+".dat");selectedFixture::require(!std::filesystem::exists(destination),"Selected-uTP payload prepared too early");
+  }
+  ~SelectedUtpFixture(){lease.reset();std::error_code ignored;std::filesystem::remove_all(root,ignored);}
+};
 // The exact qualified provider is required before creating any new session.
 // Old SDKs retain their existing route tests; no selected-uTP row is skipped.
 lt::settings_pack selectedUtpSettings(bool ipv6) {
@@ -78,7 +116,7 @@ void selectedUtpUploadWindow(lt::session& seeder) {
   test::require(seeder.get_peer_class(lt::session_handle::local_peer_class_id).upload_limit==4096,
       "Actual selected-uTP local peer upload limit was not applied");
 }
-std::shared_ptr<lt::torrent_info> selectedUtpMetadata(const selectedFixture::Fixture& fixture) {
+std::shared_ptr<lt::torrent_info> selectedUtpMetadata(const SelectedUtpFixture& fixture) {
   lt::error_code error;
   auto info=std::make_shared<lt::torrent_info>(lt::span<const char>(fixture.source.data(),fixture.source.size()),error,lt::from_span);
   test::require(!error&&info->info_hashes().has_v1()&&info->info_hashes().has_v2(),"Actual generated hybrid required");
@@ -172,9 +210,18 @@ std::string selectedUtpStatus(const lt::torrent_handle& handle) {
 }
 bool selectedUtpPayloadHashes(const std::filesystem::path& file,const lt::torrent_info& info) {
   const auto bytes=selectedFixture::read(file);
-  return bytes==std::string(16384,'s')&&info.num_pieces()==1
-      &&lt::hasher(bytes.data(),static_cast<int>(bytes.size())).final()==info.hash_for_piece(lt::piece_index_t{0})
-      &&lt::hasher256(bytes.data(),static_cast<int>(bytes.size())).final()==info.files().root(lt::file_index_t{0});
+  if(bytes!=selectedUtpPayload()||info.num_pieces()!=4||info.piece_length()!=16384){return false;}
+  std::array<lt::sha256_hash,4> leaves;
+  for(int piece=0;piece<4;++piece){
+    const auto* data=bytes.data()+piece*16384;
+    if(lt::hasher(data,16384).final()!=info.hash_for_piece(lt::piece_index_t{piece})){return false;}
+    leaves[static_cast<std::size_t>(piece)]=lt::hasher256(data,16384).final();
+  }
+  const auto parent=[](const lt::sha256_hash& left,const lt::sha256_hash& right){
+    lt::hasher256 hash;hash.update(left.data(),left.size());hash.update(right.data(),right.size());return hash.final();
+  };
+  // Independent balanced four-leaf Merkle reduction, using actual file bytes.
+  return parent(parent(leaves[0],leaves[1]),parent(leaves[2],leaves[3]))==info.files().root(lt::file_index_t{0});
 }
 #endif
 }
@@ -221,7 +268,16 @@ private slots:
     const auto endpoint=ipv6?"::1":"127.0.0.1";QCOMPARE(actual->outgoingInterfaces,std::string(endpoint));QVERIFY(!actual->dht&&!actual->localDiscovery&&!actual->upnp&&!actual->natpmp);
     QVERIFY((*owner)->startManaged(*lease,{*fixture.hash,0,true,false}));
     const auto completed=[&]{static_cast<void>((*owner)->poll());const auto rows=(*owner)->managedDownloads();return rows.size()==1&&rows[0].complete&&rows[0].received>0;};
-    QTRY_VERIFY_WITH_TIMEOUT(completed(),30000);QVERIFY(requests>0);QVERIFY(!wrongRoute);
+    const auto diagnostic=[&]{
+      std::ostringstream text;text<<"requests="<<requests<<" wrongRoute="<<wrongRoute;
+      const auto rows=(*owner)->managedDownloads();text<<" managedRows="<<rows.size();
+      for(const auto& row:rows){text<<" managed{complete="<<row.complete<<" checked="<<row.checked<<" received="<<row.received
+          <<" done="<<row.completed<<'/'<<row.bytes<<" phase="<<static_cast<int>(row.phase)<<" failure="<<(row.failure?row.failure->message:"none")<<'}';}
+      const auto status=handle.status();text<<" seed{phase="<<static_cast<int>(status.state)<<" seeding="<<status.is_seeding
+          <<" sent="<<status.total_payload_upload<<" peers="<<status.num_peers<<" error="<<status.errc.message()<<'}';
+      return QByteArray::fromStdString(text.str());
+    };
+    QTRY_VERIFY2_WITH_TIMEOUT(completed(),diagnostic().constData(),30000);QVERIFY(requests>0);QVERIFY(!wrongRoute);
     const auto closed=(*owner)->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased);QVERIFY(fixture.intact());
   }
 #if __has_include(<libtorrent/biglybtc_swarm.hpp>)
@@ -237,11 +293,11 @@ private slots:
     const auto bridge=engine::detail::managedPayloadCounterBridge();
     QVERIFY2(bridge,"Exact full selected-swarm provider proof required, never skip/fallback");
     QCOMPARE(lt::biglybtc_swarm_mask_abi_v1(),1U);
-    selectedFixture::Fixture fixture(v2);auto metadata=selectedUtpMetadata(fixture);
+    SelectedUtpFixture fixture(v2);auto metadata=selectedUtpMetadata(fixture);
     const auto full=metadata->info_hashes();const auto selected=full.get(v2?lt::protocol_version::V2:lt::protocol_version::V1);
     const auto address=lt::make_address(ipv6?"::1":"127.0.0.1");
     const auto seedPath=fixture.root/"seed";QVERIFY(std::filesystem::create_directory(seedPath));
-    selectedFixture::write(seedPath/"selected.bin",std::string(16384,'s'));
+    selectedFixture::write(seedPath/"selected.bin",selectedUtpPayload());
     auto settings=selectedUtpSettings(ipv6);settings.set_int(lt::settings_pack::upload_rate_limit,4096);
     auto seeder=std::make_unique<lt::session>(settings);selectedUtpUploadWindow(*seeder);
     auto parameters=selectedUtpParameters(metadata,seedPath);
@@ -320,11 +376,11 @@ private slots:
     // Both is upstream/default provider behavior, not an original saved-profile
     // selection. Exercise its actual v1 AND v2 paths in separate owned pairs.
     for(const bool v2:{false,true}){
-      selectedFixture::Fixture fixture(v2);auto metadata=selectedUtpMetadata(fixture);const auto full=metadata->info_hashes();
+      SelectedUtpFixture fixture(v2);auto metadata=selectedUtpMetadata(fixture);const auto full=metadata->info_hashes();
       const auto selected=full.get(v2?lt::protocol_version::V2:lt::protocol_version::V1);
       const auto address=lt::make_address(ipv6?"::1":"127.0.0.1");
       const auto seedPath=fixture.root/"seed";QVERIFY(std::filesystem::create_directory(seedPath));
-      selectedFixture::write(seedPath/"selected.bin",std::string(16384,'s'));
+      selectedFixture::write(seedPath/"selected.bin",selectedUtpPayload());
       auto settings=selectedUtpSettings(ipv6);settings.set_int(lt::settings_pack::upload_rate_limit,4096);
       auto seeder=std::make_unique<lt::session>(settings);auto receiver=std::make_unique<lt::session>(selectedUtpSettings(ipv6));
       selectedUtpUploadWindow(*seeder);
@@ -355,12 +411,12 @@ private slots:
   void oppositeSelectedSwarmUtpIsActuallyRejected_data(){selectedHybridUtpOwnerRoutes_data();}
   void oppositeSelectedSwarmUtpIsActuallyRejected(){
     QFETCH(bool,ipv6);QFETCH(bool,v2);const auto bridge=engine::detail::managedPayloadCounterBridge();QVERIFY(bridge);
-    selectedFixture::Fixture allowed(v2),forbidden(!v2);
+    SelectedUtpFixture allowed(v2),forbidden(!v2);
     auto info=selectedUtpMetadata(allowed);auto other=selectedUtpMetadata(forbidden);
     QVERIFY(info->info_hashes()==other->info_hashes()); // Only original selected identity differs.
     const auto address=lt::make_address(ipv6?"::1":"127.0.0.1");
     const auto seedPath=forbidden.root/"seed";QVERIFY(std::filesystem::create_directory(seedPath));
-    selectedFixture::write(seedPath/"selected.bin",std::string(16384,'s'));
+    selectedFixture::write(seedPath/"selected.bin",selectedUtpPayload());
     auto receiver=std::make_unique<lt::session>(selectedUtpSettings(ipv6));
     auto sender=std::make_unique<lt::session>(selectedUtpSettings(ipv6));
     auto rp=selectedUtpParameters(info,allowed.destination),sp=selectedUtpParameters(other,seedPath);
@@ -389,7 +445,7 @@ private slots:
     QCOMPARE(send.status().total_payload_upload,std::int64_t{0});
     receiver.reset();sender.reset();
     if(std::filesystem::exists(allowed.destination/"selected.bin")){
-      const auto bytes=selectedFixture::read(allowed.destination/"selected.bin");QVERIFY(bytes!=std::string(16384,'s'));
+      const auto bytes=selectedFixture::read(allowed.destination/"selected.bin");QVERIFY(bytes!=selectedUtpPayload());
     }
     qInfo("Actual forbidden opposite swarm rejected by invalid_info_hash on uTP IPv%d; no payload",ipv6?6:4);
   }
