@@ -1776,3 +1776,8 @@ if(BIGLYBTC_DESKTOP AND TARGET biglybtc_local_engine AND NOT BIGLYBTC_PERSISTENT
   target_compile_options(biglybtc-scheduler-imported-handoff-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
   add_dependencies(biglybtc-scheduler-imported-handoff-driver biglybtc_scheduler_module)
 endif()
+
+# Append to the existing biglybtc-file-operations-tests registration only.
+# Keep existing --wrap=linkat and every assertion/TIMEOUT unchanged.
+target_link_options(biglybtc-file-operations-tests PRIVATE
+  "LINKER:--wrap=read" "LINKER:--wrap=__read_chk")

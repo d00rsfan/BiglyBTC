@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <array>
 #include <cerrno>
+#include <charconv>
+#include <dirent.h>
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
@@ -44,6 +46,22 @@ struct Fixture{Area area;fs::path profile,source,destination;Record selected;st:
 // Actual source and destination bytes use real filesystem IO. Only the link
 // syscall result is injected, to deterministically exercise the EXDEV copy path.
 bool forceCopy=false;dev_t copyFromDev=0,copyToDev=0;ino_t copyFromIno=0,copyToIno=0;unsigned copyHits=0;
+// Actual payload reads, identified by opened dev/inode, including fortified
+// libc calls. Profile/journal reads are excluded; no synthetic byte estimates.
+struct ReadCounter {dev_t device=0;ino_t inode=0;std::uint64_t bytes=0;};
+std::array<ReadCounter,16> readCounters{};std::size_t watchedReads=0;
+bool countingReads=false,readCounterFailed=false;
+std::size_t watchReads(const fs::path& path){
+  struct stat stamp{};check(::stat(path.c_str(),&stamp)==0&&watchedReads<readCounters.size(),"read counter fixture identity");
+  const auto index=watchedReads++;readCounters[index]={stamp.st_dev,stamp.st_ino,0};return index;
+}
+void resetReads(){countingReads=false;readCounters={};watchedReads=0;readCounterFailed=false;}
+void countRead(int fd,ssize_t count){
+  if(!countingReads||count<=0){return;}struct stat held{};
+  if(::fstat(fd,&held)!=0){readCounterFailed=true;return;}
+  for(std::size_t i=0;i<watchedReads;++i){if(held.st_dev==readCounters[i].device&&held.st_ino==readCounters[i].inode){readCounters[i].bytes+=static_cast<std::uint64_t>(count);}}
+}
+std::uint64_t reads(std::size_t index){check(!readCounterFailed,"actual read accounting failed");return readCounters[index].bytes;}
 st::FileOperationStage interruptAt=st::FileOperationStage::Completed;bool interruptArmed=false;
 void interrupt(st::FileOperationStage stage){if(interruptArmed&&stage==interruptAt){interruptArmed=false;throw std::runtime_error("injected stage interruption");}}
 std::string hashBytes(const core::TorrentHash& hash){const auto bytes=hash.bytes();return {reinterpret_cast<const char*>(bytes.data()),bytes.size()};}
@@ -284,10 +302,134 @@ void selectionCollisionAndStaleSource(){
   }
 }
 
+fs::path mutationPath;struct stat mutationBefore{};
+st::FileOperationStage mutationStage=st::FileOperationStage::Completed;bool mutationArmed=false;
+void mutateWithRestoredMtime(st::FileOperationStage stage){
+  if(!mutationArmed||stage!=mutationStage){return;}mutationArmed=false;
+  write(mutationPath,"HELLO");
+  const struct timespec times[]{mutationBefore.st_atim,mutationBefore.st_mtim};
+  check(::utimensat(AT_FDCWD,mutationPath.c_str(),times,0)==0,"restore actual source mtime");
+  struct stat now{};check(::stat(mutationPath.c_str(),&now)==0&&st::fileop::identity(now,mutationBefore)
+      &&now.st_size==mutationBefore.st_size&&now.st_mtim.tv_sec==mutationBefore.st_mtim.tv_sec
+      &&now.st_mtim.tv_nsec==mutationBefore.st_mtim.tv_nsec
+      &&(now.st_ctim.tv_sec!=mutationBefore.st_ctim.tv_sec||now.st_ctim.tv_nsec!=mutationBefore.st_ctim.tv_nsec),
+      "negative fixture must really preserve inode/size/mtime while changing ctime");
+}
+std::size_t payloadDescriptors(const struct stat& identity){
+  // Count this owned inode only, not unrelated process descriptors or temporary
+  // directory streams. This also works after a successful unlink of its name.
+  std::size_t count=0;DIR* entries=::opendir("/proc/self/fd");check(entries,"open owned process descriptor inventory");
+  while(const auto* entry=::readdir(entries)){
+    const std::string_view name=entry->d_name;int fd=-1;
+    const auto parsed=std::from_chars(name.data(),name.data()+name.size(),fd);
+    if(parsed.ec!=std::errc{}||parsed.ptr!=name.data()+name.size()){continue;}
+    struct stat held{};if(::fstat(fd,&held)==0&&st::fileop::identity(held,identity)){++count;}
+  }
+  check(::closedir(entries)==0,"close descriptor inventory");return count;
+}
+void digestReceiptsEndWithApply(){
+  for(const bool fail:{false,true}){
+    Fixture f;struct stat identity{};check(::stat(f.selected.files[0].c_str(),&identity)==0,"receipt-lifetime payload identity");
+    auto prepared=f.plan(st::FileOperationKind::Relocate);const auto confirmation=take(st::confirmFileOperation(prepared,prepared.preview().approvalScopeDigest,false));
+    const auto baseline=payloadDescriptors(identity);
+    interruptAt=st::FileOperationStage::JournalSynced;interruptArmed=fail;
+    const auto result=st::applyFileOperation(f.lease,std::move(prepared),confirmation,interrupt);
+    check(bool(result)!=fail&&!interruptArmed,"actual successful/failed apply completed the intended path");
+    check(prepared.preview().hash==f.selected.hash,"caller still retains the attempted prepared object");
+    check(payloadDescriptors(identity)==baseline,"apply releases all transient digest descriptors before returning while prepared lives");
+    check(st::hasPendingFileOperation(f.lease)==fail,"receipt cleanup does not alter durable recovery state");
+    if(fail){const auto recovered=take(st::recoverFileOperation(f.lease));check(recovered&&recovered->recovered,"failed apply still recovers independently");}
+    check(read(f.destination/"file.bin")=="hello"&&!fs::exists(f.selected.files[0])
+        &&payloadDescriptors(identity)==baseline,"successful/recovered move preserves data and no caller-owned receipt fd");
+  }
+}
+void payloadDigestWorkAndInterference(){
+  {
+    Fixture f;auto p=f.plan(st::FileOperationKind::Relocate);const auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false));
+    resetReads();const auto source=watchReads(f.selected.files[0]);countingReads=true;
+    const auto result=take(st::applyFileOperation(f.lease,std::move(p),c));countingReads=false;
+    check(result.filesMoved==1&&reads(source)==10&&read(f.destination/"file.bin")=="hello"&&!fs::exists(f.selected.files[0]),
+        "same-device move hashes once before link, then rehashes after link ctime transition");
+    std::cout<<"payload-work same-device-move source="<<reads(source)<<" bytes for 5-byte payload (previous schedule15)\n";
+  }
+  {
+    Fixture f;write(f.destination/"file.bin","other");auto p=f.plan(st::FileOperationKind::Relink);const auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false));
+    resetReads();const auto source=watchReads(f.selected.files[0]),target=watchReads(f.destination/"file.bin");countingReads=true;
+    take(st::applyFileOperation(f.lease,std::move(p),c));countingReads=false;
+    check(reads(source)==0&&reads(target)==5&&read(f.selected.files[0])=="hello"&&read(f.destination/"file.bin")=="other",
+        "unchanged relink hashes actual destination exactly once, never old source");
+    std::cout<<"payload-work relink target="<<reads(target)<<" bytes (previous schedule10)\n";
+  }
+  {
+    Fixture f;auto p=f.plan(st::FileOperationKind::RemoveDeleteData);
+    check(!st::confirmFileOperation(p,p.preview().approvalScopeDigest,false),"optimized delete still requires explicit confirmation");
+    const auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,true));
+    resetReads();const auto source=watchReads(f.selected.files[0]);countingReads=true;
+    const auto result=take(st::applyFileOperation(f.lease,std::move(p),c));countingReads=false;
+    check(result.filesDeleted==1&&reads(source)==5&&!fs::exists(f.selected.files[0])&&!st::hasPendingFileOperation(f.lease),
+        "unchanged delete uses same pinned full-stat proof, one actual hash");
+    std::cout<<"payload-work delete source="<<reads(source)<<" bytes (previous schedule10)\n";
+  }
+  {
+    Fixture f;struct stat from{},to{};check(::stat(f.source.c_str(),&from)==0&&::stat(f.destination.c_str(),&to)==0,"copy work directories");
+    copyFromDev=from.st_dev;copyFromIno=from.st_ino;copyToDev=to.st_dev;copyToIno=to.st_ino;copyHits=0;
+    auto p=f.plan(st::FileOperationKind::Relocate);const auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false));
+    resetReads();const auto source=watchReads(f.selected.files[0]);countingReads=true;forceCopy=true;
+    auto result=st::applyFileOperation(f.lease,std::move(p),c);forceCopy=false;countingReads=false;take(std::move(result));
+    check(copyHits==1&&reads(source)==10&&read(f.destination/"file.bin")=="hello"&&!fs::exists(f.selected.files[0]),
+        "copy still reads real source for transfer and independently validates scratch; redundant source hashes absent");
+    std::cout<<"payload-work copy source="<<reads(source)<<" bytes (previous source schedule25; separate scratch5 retained)\n";
+  }
+  for(const auto point:{st::FileOperationStage::JournalSynced,st::FileOperationStage::DestinationPublished}){
+    Fixture f;auto p=f.plan(st::FileOperationKind::Relocate);const auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false));
+    interruptAt=point;interruptArmed=true;check(!st::applyFileOperation(f.lease,std::move(p),c,interrupt)&&st::hasPendingFileOperation(f.lease),"work fixture interrupts actual durable move");
+    resetReads();const auto source=watchReads(f.selected.files[0]);countingReads=true;
+    const auto recovered=take(st::recoverFileOperation(f.lease));countingReads=false;
+    check(recovered&&recovered->recovered&&recovered->filesMoved==1&&reads(source)==(point==st::FileOperationStage::JournalSynced?10u:5u)
+        &&read(f.destination/"file.bin")=="hello"&&!fs::exists(f.selected.files[0]),
+        "recovery starts with no cached authority and rehashes actual named bytes before reuse");
+  }
+  for(const auto point:{st::FileOperationStage::JournalSynced,st::FileOperationStage::DestinationPublished}){
+    Fixture f;auto p=f.plan(st::FileOperationKind::Relocate);const auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false));
+    mutationPath=f.selected.files[0];check(::stat(mutationPath.c_str(),&mutationBefore)==0,"mutation source stamp");mutationStage=point;mutationArmed=true;
+    resetReads();const auto source=watchReads(f.selected.files[0]);countingReads=true;
+    const auto rejected=st::applyFileOperation(f.lease,std::move(p),c,mutateWithRestoredMtime);countingReads=false;
+    check(!rejected&&rejected.error().code==st::ErrorCode::Conflict&&!mutationArmed&&reads(source)==10
+        &&read(f.selected.files[0])=="HELLO"&&st::hasPendingFileOperation(f.lease),
+        "same inode/length/restored mtime cannot hide changed ctime/content before link or final removal");
+    check(fs::exists(f.destination/"file.bin")== (point==st::FileOperationStage::DestinationPublished),"refusal does not create an unapproved destination");
+    check(!st::recoverFileOperation(f.lease)&&read(f.selected.files[0])=="HELLO","new recovery proof also refuses the changed bytes");
+  }
+  {
+    Fixture f;auto p=f.plan(st::FileOperationKind::RemoveDeleteData);const auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,true));
+    const auto inventory=read(f.profile/"downloads.config"),state=read(f.selected.state);auto changed=doc(inventory);put(changed,"opaque","7:changed");write(f.profile/"downloads.config",changed.serialize());
+    resetReads();const auto source=watchReads(f.selected.files[0]);countingReads=true;const auto rejected=st::applyFileOperation(f.lease,std::move(p),c);countingReads=false;
+    check(!rejected&&reads(source)==0&&read(f.selected.files[0])=="hello"&&read(f.selected.state)==state&&!st::hasPendingFileOperation(f.lease),
+        "whole-document CAS still refuses before payload hash/journal/delete");
+  }
+  {
+    Area area;st::fileop::PayloadDigestCache cache;std::array<struct stat,st::fileop::PayloadDigestCache::Capacity+1> stamps{};
+    resetReads();
+    for(std::size_t i=0;i<stamps.size();++i){const auto path=area.root/std::to_string(i);write(path,"hello");check(::stat(path.c_str(),&stamps[i])==0,"bounded cache fixture");watchReads(path);}
+    countingReads=true;std::string original;
+    for(std::size_t i=0;i<stamps.size();++i){const auto value=cache.digest(area.root/std::to_string(i),stamps[i]);if(i==0){original=value;}check(value==original,"actual equal-content cache fixture");}
+    check(cache.digest(area.root/"0",stamps[0])==original,"evicted receipt still rehashes exact original data");countingReads=false;
+    check(reads(0)==10,"ninth live receipt evicts oldest pinned descriptor and requires real rehash");
+    fs::rename(area.root/"0",area.root/"old");write(area.root/"0","hello");bool refused=false;
+    try{static_cast<void>(cache.digest(area.root/"0",stamps[0]));}catch(const st::fileop::Failure& error){refused=error.error.code==st::ErrorCode::Conflict;}
+    check(refused&&read(area.root/"old")=="hello","equal-content pathname replacement cannot borrow retained inode proof");
+  }
+  resetReads();
+}
+
 void realCopyBranch(){
   Fixture f;struct stat from{},to{};check(::stat(f.source.c_str(),&from)==0&&::stat(f.destination.c_str(),&to)==0,"copy fixture dirs");copyFromDev=from.st_dev;copyFromIno=from.st_ino;copyToDev=to.st_dev;copyToIno=to.st_ino;copyHits=0;forceCopy=true;auto p=f.plan(st::FileOperationKind::Relocate);auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false));auto result=st::applyFileOperation(f.lease,std::move(p),c);forceCopy=false;take(std::move(result));check(copyHits>0&&read(f.destination/"file.bin")=="hello"&&!fs::exists(f.source/"file.bin"),"EXDEV fallback copies actual bytes and removes source only after publication");
 }
 }
+extern "C" ssize_t __real_read(int,void*,std::size_t);
+extern "C" ssize_t __real___read_chk(int,void*,std::size_t,std::size_t);
+extern "C" ssize_t __wrap_read(int fd,void* data,std::size_t bytes){const auto count=__real_read(fd,data,bytes);countRead(fd,count);return count;}
+extern "C" ssize_t __wrap___read_chk(int fd,void* data,std::size_t bytes,std::size_t bound){const auto count=__real___read_chk(fd,data,bytes,bound);countRead(fd,count);return count;}
 extern "C" int __real_linkat(int,const char*,int,const char*,int);
 extern "C" int __wrap_linkat(int a,const char* x,int b,const char* y,int flags){struct stat from{},to{};if(forceCopy&&std::string_view(x)=="file.bin"&&std::string_view(y)=="file.bin"&&::fstat(a,&from)==0&&::fstat(b,&to)==0&&from.st_dev==copyFromDev&&from.st_ino==copyFromIno&&to.st_dev==copyToDev&&to.st_ino==copyToIno){++copyHits;errno=EXDEV;return -1;}return __real_linkat(a,x,b,y,flags);}
-int main(){try{selectionPoliciesMoveAndRecover();selectionCollisionAndStaleSource();keepAndDelete();relocationRecoveryPreservesBothUntilPublication();relinkAndScope();protectionAndConflicts();realCopyBranch();nonlinearControlsAndRecovery();nonlinearBoundaryRefusals();authenticatedExternalLinks();legacyRootsAndDefaultStoreRecovery();pendingReorderedCompletionGuards();std::cout<<"ten generated file-operation families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+int main(){try{digestReceiptsEndWithApply();payloadDigestWorkAndInterference();selectionPoliciesMoveAndRecover();selectionCollisionAndStaleSource();keepAndDelete();relocationRecoveryPreservesBothUntilPublication();relinkAndScope();protectionAndConflicts();realCopyBranch();nonlinearControlsAndRecovery();nonlinearBoundaryRefusals();authenticatedExternalLinks();legacyRootsAndDefaultStoreRecovery();pendingReorderedCompletionGuards();std::cout<<"ten generated file-operation families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

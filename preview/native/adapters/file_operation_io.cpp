@@ -67,9 +67,26 @@ Md start(){Md md(EVP_MD_CTX_new(),EVP_MD_CTX_free);require(md&&EVP_DigestInit_ex
 std::string end(Md& md){std::array<unsigned char,EVP_MAX_MD_SIZE> raw{};unsigned size=0;require(EVP_DigestFinal_ex(md.get(),raw.data(),&size)==1&&size==32,ErrorCode::Io,"Cannot finish file-operation digest");constexpr char h[]="0123456789abcdef";std::string out(64,'0');for(std::size_t i=0;i<32;++i){out[i*2]=h[raw[i]>>4];out[i*2+1]=h[raw[i]&15];}return out;}
 }
 std::string digest(std::string_view bytes){auto md=start();require(EVP_DigestUpdate(md.get(),bytes.data(),bytes.size())==1,ErrorCode::Io,"Cannot hash file-operation scope");return end(md);}
-std::string digestFile(const fs::path& path,const struct stat& expected,std::stop_token stop){
+namespace {
+PayloadDigest readPayloadDigest(const fs::path& path,const struct stat& expected,std::stop_token stop){
   const auto before=inspect(path);require(before&&identity(*before,expected)&&before->st_size==expected.st_size&&before->st_mtim.tv_sec==expected.st_mtim.tv_sec&&before->st_mtim.tv_nsec==expected.st_mtim.tv_nsec,ErrorCode::Conflict,"Payload changed before hashing");auto parent=directory(path.parent_path());Fd file(::openat(parent.get(),path.filename().c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));struct stat opened{};require(file.get()>=0&&::fstat(file.get(),&opened)==0&&unchanged(*before,opened),ErrorCode::Conflict,"Payload changed before open");auto md=start();std::array<char,65536> bytes{};std::uint64_t total=0;
   for(;;){require(!stop.stop_requested(),ErrorCode::Cancelled,"File operation cancelled before journal");auto n=::read(file.get(),bytes.data(),bytes.size());if(n<0&&errno==EINTR){continue;}require(n>=0,ErrorCode::Io,"Cannot read payload for file operation");if(!n){break;}total+=static_cast<std::uint64_t>(n);require(total<=static_cast<std::uint64_t>(expected.st_size),ErrorCode::Conflict,"Payload grew during hash");require(EVP_DigestUpdate(md.get(),bytes.data(),static_cast<std::size_t>(n))==1,ErrorCode::Io,"Cannot hash payload");}
-  const auto after=inspect(path);struct stat fdAfter{};require(after&&::fstat(file.get(),&fdAfter)==0&&unchanged(opened,*after)&&unchanged(opened,fdAfter)&&total==static_cast<std::uint64_t>(expected.st_size),ErrorCode::Conflict,"Payload changed while hashing");return end(md);
+  const auto after=inspect(path);struct stat fdAfter{};require(after&&::fstat(file.get(),&fdAfter)==0&&unchanged(opened,*after)&&unchanged(opened,fdAfter)&&total==static_cast<std::uint64_t>(expected.st_size),ErrorCode::Conflict,"Payload changed while hashing");return {std::move(file),fdAfter,end(md)};
+}
+}
+std::string digestFile(const fs::path& path,const struct stat& expected,std::stop_token stop){
+  return readPayloadDigest(path,expected,stop).sha256;
+}
+std::string PayloadDigestCache::digest(const fs::path& path,const struct stat& expected,std::stop_token stop){
+  require(!stop.stop_requested(),ErrorCode::Cancelled,"File operation cancelled before journal");
+  const auto named=inspect(path);
+  require(named&&identity(*named,expected)&&named->st_size==expected.st_size&&named->st_mtim.tv_sec==expected.st_mtim.tv_sec&&named->st_mtim.tv_nsec==expected.st_mtim.tv_nsec,ErrorCode::Conflict,"Payload changed before hashing");
+  for(const auto& proof:proofs_){
+    if(!proof||!unchanged(*named,proof->stamp)){continue;}
+    struct stat held{};const auto after=inspect(path);
+    if(::fstat(proof->descriptor.get(),&held)==0&&after&&unchanged(proof->stamp,held)&&unchanged(proof->stamp,*after)){return proof->sha256;}
+  }
+  auto proof=readPayloadDigest(path,expected,stop);auto result=proof.sha256;
+  proofs_[next_]=std::move(proof);next_=(next_+1)%Capacity;return result;
 }
 }
