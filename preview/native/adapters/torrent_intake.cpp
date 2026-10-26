@@ -417,8 +417,8 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
         "An existing pause record already owns the imported/full-hash alias");
   }
   require(position < std::numeric_limits<std::int64_t>::max(), ErrorCode::InvalidFormat, "Inventory position overflow");
-  const auto archive = profile + "/torrents/" + hash->hex() + ".torrent";
-  std::string entry = "d" + b("torrent_hash") + b(std::string_view(digest, 20)) + b("torrent") + b(archive)
+  const auto archivePath = profile + "/torrents/" + hash->hex() + ".torrent";
+  std::string entry = "d" + b("torrent_hash") + b(std::string_view(digest, 20)) + b("torrent") + b(archivePath)
       + b("save_dir") + b(destination) + b("save_file") + b(original->name) + b("persistent") + "i1e"
       + b("state") + i(stopped && !forceStart ? 70 : options&&options->queued ? 75 : 0) + b("position") + i(position + 1)
       + b("forceStart") + i(forceStart ? 1 : 0)
