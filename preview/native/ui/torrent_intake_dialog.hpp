@@ -2,7 +2,7 @@
 #include "torrent_intake_presentation.hpp"
 #include <QDialog>
 #include <QPointer>
-class QLineEdit;class QCheckBox;class QLabel;class QPushButton;class QTableView;class QComboBox;
+class QLineEdit;class QCheckBox;class QLabel;class QPushButton;class QTableView;class QComboBox;class QSpinBox;
 namespace biglybtc::ui {
 class IntakeFileModel;
 class TorrentIntakeDialog final:public QDialog {
@@ -34,10 +34,11 @@ private:
   TorrentIntakePresentation preview_;
   QString failure_;
   QPointer<QLineEdit> source_,destination_;
-  QPointer<QCheckBox> start_;
+  QPointer<QCheckBox> start_,sequential_;
   QPointer<QLabel> status_;
   QPointer<QPushButton> load_,add_;
   QPointer<QComboBox> priority_;
+  QPointer<QSpinBox> downloadLimit_,uploadLimit_;
   QPointer<QTableView> table_;
   QPointer<IntakeFileModel> model_;
 };

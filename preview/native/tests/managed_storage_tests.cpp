@@ -16,6 +16,7 @@
 #include <functional>
 #include <iostream>
 #include <limits>
+#include "biglybtc/torrent_intake_options.hpp"
 #include <optional>
 #include <stdexcept>
 #include <string>
@@ -156,6 +157,39 @@ int main() {
     struct stat after{};require(::lstat(a.c_str(),&after)==0&&after.st_dev==before.st_dev&&after.st_ino==before.st_ino,"Preparation/checkpoint never substitutes decoded file inode");
     require(!fs::exists(f.path(0))&&!fs::exists(f.path(1)),"No accidental basic-name payload files created");
   });
+  test("windows1251-v1-paths-use-authenticated-runtime-projection-and-exact-original-checkpoint",[] {
+    for(const auto* encoding:{"windows-1251","cp1251","cp5347","ansi-1251"}){
+      for(const bool overrides:{false,true}){
+      Fixture f(true);const auto old=f.profile/"active"/(f.hash.hex()+".dat");auto metadata=f.state();auto info=core::Document::parse(f.info);require(info.has_value(),"Actual cp1251 info");
+      const std::string first("\xf4\xe0\xe9\xeb.bin",8),second("\xf2\xe5\xf1\xf2.bin",8);
+      const auto firstRow="d6:lengthi20000e4:pathl"+b(first)+"e"+(overrides?"10:path.utf-8l15:wrong-first.bine":"")+'e';
+      const auto entries="l"+firstRow+"d6:lengthi12768e4:pathl"+b(second)+"eee";
+      require(info->replaceValue("files",entries).has_value()&&info->replaceValue("name",b(std::string("\xef\xe0\xef\xea\xe0",5))).has_value(),"Original Windows-1251 raw names");
+      if(overrides){require(info->replaceValue("name.utf-8",b("wrong-root")).has_value(),"Original partial UTF8 override set");}
+      f.info=info->serialize();f.hash=*core::TorrentHash::parse(libtorrent::hasher(f.info.data(),static_cast<int>(f.info.size())).final().to_string());
+      require(metadata.replaceValue("info",f.info).has_value()&&metadata.replaceValue("encoding",b(encoding)).has_value(),"Explicit original Windows codec");
+      f.stateBytes=metadata.serialize();write(f.profile/"active"/(f.hash.hex()+".dat"),f.stateBytes);write(f.profile/"downloads.config",f.inventory());require(fs::remove(old),"Remove obsolete raw info key");
+      const auto a=f.save/"renamed-root"/"файл.bin",z=f.save/"renamed-root"/"тест.bin";write(a,std::string_view(f.body).substr(0,20000));write(z,std::string_view(f.body).substr(20000));
+      struct stat before{};require(::lstat(a.c_str(),&before)==0,"Actual decoded cp1251 inode");auto owner=f.prepare();const auto params=owner.parameters();const auto subject=params.ti->info_section();
+      require(std::string_view(subject.data(),static_cast<std::size_t>(subject.size()))==f.info&&params.ti->info_hashes().has_v1()&&!params.ti->info_hashes().has_v2()
+          &&params.ti->info_hashes().v1.to_string()==libtorrent::hasher(f.info.data(),static_cast<int>(f.info.size())).final().to_string(),"Complete actual raw info/hash stays exact after runtime filename projection");
+      require(params.renamed_files.at(libtorrent::file_index_t{0})==(fs::path("renamed-root")/"файл.bin").string()
+          &&params.renamed_files.at(libtorrent::file_index_t{1})==(fs::path("renamed-root")/"тест.bin").string(),"Backend owns exact original decoded indexed slots");
+      checkpoint(owner,f,{1,1},true);const auto after=f.state();
+      require(after.find("encoding")->bytes==encoding&&encode(*after.find("info"))==f.info&&after.find("attributes")->find("unknown")&&read(a)+read(z)==f.body,"Checkpoint preserves codec, raw info, unknown state and actual payload");
+      struct stat current{};require(::lstat(a.c_str(),&current)==0&&current.st_dev==before.st_dev&&current.st_ino==before.st_ino,"No decoded payload inode substitution");
+      require(!fs::exists(f.path(0))&&!fs::exists(f.path(1))&&!fs::exists(f.save/"wrong-root")&&!fs::exists(f.save/"renamed-root/wrong-first.bin"),"No sanitized/basic/override aliases created");
+      }
+    }
+    for(const unsigned value:{0x98U,0x1fU}){
+      Fixture f;auto metadata=f.state();auto info=core::Document::parse(f.info);require(info.has_value(),"Undefined-byte raw info fixture");
+      require(info->replaceValue("name",b("a"+std::string(1,static_cast<char>(value))+"z")).has_value(),"Explicit undefined/control input");
+      f.info=info->serialize();f.hash=*core::TorrentHash::parse(libtorrent::hasher(f.info.data(),static_cast<int>(f.info.size())).final().to_string());
+      require(metadata.replaceValue("info",f.info).has_value()&&metadata.replaceValue("encoding",b("windows-1251")).has_value(),"Bind rejected codec input to actual hash");
+      write(f.profile/"active"/(f.hash.hex()+".dat"),metadata.serialize());write(f.profile/"downloads.config",f.inventory());deniedPrepare(f,Code::InvalidFormat);require(!fs::exists(f.save),"Codec refusal precedes payload/state effects");
+    }
+    {Fixture f;f.pureV2(true);auto metadata=f.state();require(metadata.replaceValue("encoding",b("windows-1251")).has_value(),"V2 codec guard");write(f.profile/"active"/(f.hash.hex()+".dat"),metadata.serialize());deniedPrepare(f,Code::InvalidFormat);require(!fs::exists(f.save),"No legacy v2 projection");}
+  });
   test("original-global-utf8-key-fallback-is-authenticated-before-runtime-names",[] {
     for(const int mode:{0,1,2}){
       Fixture f(true);const auto old=f.profile/"active"/(f.hash.hex()+".dat");
@@ -197,7 +231,7 @@ int main() {
     }
   });
   test("unported-filename-charset-refuses-before-original-state-and-payload-effects",[] {
-    Fixture f;auto metadata=f.state();require(metadata.replaceValue("encoding",b("windows-1251")).has_value(),"Explicit unported charset");
+    Fixture f;auto metadata=f.state();require(metadata.replaceValue("encoding",b("KOI8-R")).has_value(),"Explicit unported charset");
     write(f.profile/"active"/(f.hash.hex()+".dat"),metadata.serialize());deniedPrepare(f,Code::InvalidFormat);
     require(!fs::exists(f.save),"No payload preparation on unsupported original charset");
   });
@@ -229,6 +263,37 @@ int main() {
     require(bool(params.flags&libtorrent::torrent_flags::paused)&&!bool(params.flags&libtorrent::torrent_flags::auto_managed),"owner explicitly controls start");
     require(params.trackers.empty(),"isolated policy removes tracker without any request");
     auto state=f.state(); const auto* data=state.find("resume")->find("data"); require(data->find("valid")->integer==0&&data->find("resume data")->bytes==std::string(2,'\2'),"prepared original RECHECK durable");
+  });
+  test("original-sequential-flags-project-before-admission-and-survive-checkpoint",[] {
+    for(const auto& value:std::array<std::string,7>{"","i0e","i1e","i8192e","i8193e","i-9223372036854767616e","i9223372036854775807e"}){
+      Fixture f;auto source=f.state();auto attrs=core::Document::parse(encode(*source.find("attributes")),storage::compatibleConfigLimits());require(bool(attrs),"Own flags attributes");
+      if(!value.empty()){require(attrs->replaceValue("flags",value).has_value(),"Original signed flags edit");}
+      require(source.replaceValue("attributes",attrs->serialize()).has_value(),"Own flags state");write(f.profile/"active"/(f.hash.hex()+".dat"),source.serialize());
+      const auto flags=core::originalDownloadFlags(source.find("attributes"));require(flags.has_value(),"Valid signed original flags");
+      auto owner=f.prepare();const auto params=owner.parameters();
+      require(bool(params.flags&libtorrent::torrent_flags::sequential_download)==bool(*flags&core::OriginalSequentialDownloadFlag),"Exact original bit projects to native sequential flag");
+      checkpoint(owner,f,{0,0},false);const auto after=f.state();require(core::originalDownloadFlags(after.find("attributes"))==flags,"Checkpoint preserves every saved flags bit");
+      require(after.find("attributes")->find("unknown"),"Other original attributes retained");
+      if(value.empty()){require(!after.find("attributes")->find("flags"),"Missing flags stay absent");}
+    }
+    for(const auto* value:{"3:bad","le","de"}){
+      Fixture f;auto source=f.state();auto attrs=core::Document::parse(encode(*source.find("attributes")),storage::compatibleConfigLimits());require(bool(attrs),"Own malformed attributes");
+      require(attrs->replaceValue("flags",value).has_value()&&source.replaceValue("attributes",attrs->serialize()).has_value(),"Own malformed flags state");
+      write(f.profile/"active"/(f.hash.hex()+".dat"),source.serialize());deniedPrepare(f,Code::InvalidFormat);require(!fs::exists(f.save),"Malformed flags refuse before payload writes");
+    }
+    const auto duplicate=core::Document::parse("d5:flagsi0e5:flagsi8192ee");require(!duplicate&&duplicate.error().code=="duplicate_key","Duplicate original flags refuse in the shared parser, never first-wins");
+  });
+  test("per-torrent-intake-byte-limits-reach-actual-admission-parameters",[] {
+    for(const auto& limits:std::array<std::pair<std::int64_t,std::int64_t>,3>{{{0,0},{65536,32768},{2147483647,2147483647}}}){
+      Fixture f;auto source=f.saved();auto selected=core::Document::parse(encode(row(source)),storage::compatibleConfigLimits());require(selected.has_value(),"Own actual rate row");
+      require(selected->replaceValue("maxdl",i(limits.first)).has_value()&&selected->replaceValue("maxul",i(limits.second)).has_value(),"Original rate row edit");
+      require(source.replaceValue("downloads","l"+selected->serialize()+'e').has_value(),"Replace actual rate row");write(f.profile/"downloads.config",source.serialize());
+      auto owner=f.prepare();const auto params=owner.parameters();
+      require(params.download_limit==(limits.first?limits.first:-1)&&params.upload_limit==(limits.second?limits.second:-1),"Exact actual LT admission limits, zero maps to LT unlimited");
+      checkpoint(owner,f,{0,0},false);const auto after=f.saved();
+      require(row(after).find("maxdl")->integer==limits.first&&row(after).find("maxul")->integer==limits.second,"Checkpoint retains exact rate choices");
+      require(encode(*row(after).find("private_row_value"))==encode(*row(source).find("private_row_value")),"Unrelated original row remains raw-preserved");
+    }
   });
   test("partial-piece-progress-and-fresh-command-preservation",[] {
     Fixture f; auto owner=f.prepare(); write(f.path(),std::string_view(f.body).substr(0,16384));

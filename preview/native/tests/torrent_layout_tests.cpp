@@ -54,10 +54,36 @@ int main(int argc, char** argv) {
     auto preferred=core::Document::parse(complete);check(preferred.has_value(),"Complete override literal parses");
     const auto utf8=compat::originalLayout(*preferred);
     check(utf8&&utf8->name=="other"&&utf8->files[0].path=="x"&&utf8->files[1].path=="y","Complete original UTF8 override set is preferred");
-    auto unknown=*source;check(unknown.replaceValue("encoding","12:windows-1251").has_value(),"Unknown charset fixture");
+    auto unknown=*source;check(unknown.replaceValue("encoding","6:koi8-r").has_value(),"Unknown charset fixture");
     check(!compat::originalLayout(unknown),"Unported charset never silently becomes UTF8 or Latin1");
     const auto unsafe="d8:encoding10:ISO-8859-14:infod5:filesl"+file("..","1")+"e4:name1:a12:piece lengthi16384eee";
     const auto bad=core::Document::parse(unsafe);check(bad.has_value()&&!compat::originalLayout(*bad),"Decoded traversal still fails before mapping");
+  }
+  {
+    const std::string root("\xef\xe0\xef\xea\xe0",5),leaf("\xf4\xe0\xe9\xeb.bin",8);
+    for(const auto* alias:{"windows-1251","WINDOWS-1251","cp1251","cp5347","ansi-1251"}){
+      for(const int overrides:{0,1,2}){
+        const auto first="d6:lengthi3e4:pathl"+bytes(leaf)+"e"+(overrides?"10:path.utf-8l9:wrong.bine":"")+'e';
+        const auto second=file("plain.bin","5");
+        const auto info="d5:filesl"+first+second+"e4:name"+bytes(root)+(overrides==2?"10:name.utf-85:wrong":"")+"12:piece lengthi16384ee";
+        const auto raw="d8:encoding"+bytes(alias)+"4:info"+info+'e';auto source=core::Document::parse(raw);check(source.has_value(),"Windows-1251 original format fixture");
+        const auto decoded=compat::originalLayout(*source);
+        check(decoded&&decoded->name=="папка"&&decoded->files.size()==2&&decoded->files[0].path=="файл.bin"&&decoded->files[1].path=="plain.bin"
+            &&decoded->files[1].offset==3&&decoded->bytes==8,"Explicit Windows-1251 ignores UTF8 keys globally and preserves original indices/geometry");
+        check(source->serialize()==raw,"Windows-1251 projection never rewrites hashed raw metadata");
+      }
+    }
+    for(const unsigned value:{0U,10U,31U,47U,92U,127U,152U}){
+      const auto bad="a"+std::string(1,static_cast<char>(value))+"z";auto source=document(list(file(bad,"1")));
+      check(source.replaceValue("encoding",bytes("windows-1251")).has_value(),"Unsafe codec fixture");
+      check(!compat::originalLayout(source),"Undefined/control/separator byte cannot become a substituted filesystem name");
+    }
+    for(const auto* alias:{"windows1251","windows_1251","cp-1251","koi8-r"}){
+      auto source=document(list(file("safe","1")));check(source.replaceValue("encoding",bytes(alias)).has_value(),"Unqualified alias fixture");
+      check(!compat::originalLayout(source),"Only source-proven aliases are admitted");
+    }
+    auto v2=document("d4:name1:a12:piece lengthi16384e9:file treed1:ad0:d6:lengthi1eeeee");
+    check(v2.replaceValue("encoding",bytes("windows-1251")).has_value()&&!compat::originalLayout(v2),"Legacy codec never relaxes v2 UTF8 metadata");
   }
   auto simple = document("d4:name1:a6:lengthi3e12:piece lengthi16384ee");
   auto result = compat::originalLayout(simple);

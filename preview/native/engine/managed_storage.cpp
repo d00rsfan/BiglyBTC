@@ -13,6 +13,7 @@
 #include "torrent_state.hpp"
 #include "encoded_document.hpp"
 #include "biglybtc/file_policy.hpp"
+#include "biglybtc/torrent_intake_options.hpp"
 #include "biglybtc/torrent_layout.hpp"
 
 #include <libtorrent/torrent_info.hpp>
@@ -352,7 +353,7 @@ void projectManagedV1Names(const Document& source,const storage::OriginalTorrent
   if(const auto* encoding=source.find("encoding")){
     auto name=text(encoding);
     std::ranges::transform(name,name.begin(),[](unsigned char c){return c>='A'&&c<='Z'?static_cast<char>(c+32):static_cast<char>(c);});
-    qualifiedNames=qualifiedNames||name=="iso-8859-1";
+    qualifiedNames=qualifiedNames||name=="iso-8859-1"||name=="windows-1251"||name=="cp1251"||name=="cp5347"||name=="ansi-1251";
   }
   if(const auto* files=info->find("files")){
     for(const auto& file:files->children){qualifiedNames=qualifiedNames||file.find("path.utf-8")!=nullptr;}
@@ -511,6 +512,8 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     require(saved.downloaded.value_or(0)>=0&&saved.uploaded.value_or(0)>=0,"Negative saved cumulative transfer counters",ErrorCode::InvalidFormat);
     auto store=take(storage::TorrentStateStore::open(lease)); auto original=take(store.load(lease,hash));
     const auto source=authoritative(lease,original);
+    const auto flags=core::originalDownloadFlags(source.find("attributes"));
+    require(flags.has_value(),"Invalid original download flags",ErrorCode::InvalidFormat);
     if (const auto* attributes=source.find("attributes")) {
       if (const auto* parameters=attributes->find("parameters")) {
         for (const auto& [key,target] : {std::pair{"sr.min",&queue.minimumShareRatio},{"sr.max",&queue.maximumShareRatio}}) {
@@ -529,6 +532,8 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     require(geometry.has_value(),"Invalid original managed geometry",ErrorCode::InvalidFormat); auto layout=*geometry;
     auto validated=metadata(source,hash,layout,swarmBridge);auto info=std::move(validated.info);auto identity=std::move(validated.identity);
     lt::add_torrent_params params; params.ti=info;
+    if(*flags&core::OriginalSequentialDownloadFlag){params.flags|=lt::torrent_flags::sequential_download;}
+    else{params.flags&=~lt::torrent_flags::sequential_download;}
     if(swarmBridge) {
       require(selectManagedSwarm(params,identity,swarmBridge),
           "Selected swarm requires the same exact counter/provider module",ErrorCode::Unsupported);
@@ -570,6 +575,8 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     // All unsupported geometry/mapping/policy decisions precede state ownership
     // and payload mutation. beginUpdate hydrates the same last cached sections.
     auto state=take(store.beginUpdate(lease,hash)); auto actual=dictionary(state.document().find("attributes"));
+    require(core::originalDownloadFlags(state.document().find("attributes"))==flags,
+        "Original sequential flags changed during preparation",ErrorCode::Conflict);
     const auto actualIdentity=take(storage::originalTorrentIdentityFromLibtorrent(state.document(),*info));done(storage::validateOriginalTorrentKey(actualIdentity,hash,true));
     require(take(storage::compareOriginalTorrentIdentities(identity,actualIdentity))==storage::OriginalIdentityRelation::SameSelected,"Authoritative original selected identity changed during preparation",ErrorCode::Conflict);
     const auto recheckedDefaults=take(storage::resolveOriginalStorageTypes(lease,hash,layout,actual.root()));

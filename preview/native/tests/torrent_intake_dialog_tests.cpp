@@ -3,11 +3,15 @@
 #include <QAction>
 #include <QApplication>
 #include <QComboBox>
+#include <QCheckBox>
+#include <QDir>
+#include <QPixmap>
 #include <QItemSelectionModel>
 #include <QLineEdit>
 #include <QPointer>
 #include <QPushButton>
 #include <QSignalSpy>
+#include <QSpinBox>
 #include <QTableView>
 #include <QtTest>
 #include <memory>
@@ -59,6 +63,58 @@ private slots:
     auto success=std::make_shared<ui::TorrentIntakeResultPacket>(*failed);success->imported=true;success->failure.clear();dialog.setResult(success);
     QCOMPARE(dialog.result(),int(QDialog::Accepted));QVERIFY(!dialog.pending());
     QCOMPARE(source->files[1].bytes,qint64{200}); // Immutable preview was not edited to manufacture the choices.
+  }
+  void perTorrentLimitsAreExactRetainedDraftAndResetOnNewProfile(){
+    ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();
+    QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested),writes(&dialog,&ui::TorrentIntakeDialog::submitted);
+    auto* down=dialog.findChild<QSpinBox*>(QStringLiteral("import-download-limit"));auto* up=dialog.findChild<QSpinBox*>(QStringLiteral("import-upload-limit"));QVERIFY(down&&up);
+    QCOMPARE(down->value(),0);QCOMPARE(up->value(),0);QCOMPARE(down->maximum(),static_cast<int>(core::MaximumTorrentIntakeRate/1024));
+    auto* load=dialog.findChild<QPushButton*>(QStringLiteral("import-load-files"));QTRY_VERIFY(load->isEnabled());load->click();dialog.setPreview(packet(request(reads)));
+    auto* add=dialog.findChild<QPushButton*>(QStringLiteral("import-confirm"));QTRY_VERIFY(add->isEnabled());down->setValue(47);up->setValue(23);
+    add->click();QCOMPARE(writes.size(),1);const auto sent=submission(writes);
+    QCOMPARE(sent.limits.downloadBytesPerSecond,std::int64_t{48128});QCOMPARE(sent.limits.uploadBytesPerSecond,std::int64_t{23552});
+    QTRY_VERIFY(!down->isEnabled()&&!up->isEnabled());
+    dialog.rejectSubmission(sent);QTRY_VERIFY(down->isEnabled()&&up->isEnabled());QCOMPARE(down->value(),47);QCOMPARE(up->value(),23);
+    dialog.setBusy(true);QTRY_VERIFY(!down->isEnabled()&&!up->isEnabled());dialog.accept();QCOMPARE(writes.size(),1);
+    dialog.setBusy(false);QTRY_VERIFY(down->isEnabled()&&up->isEnabled());down->setValue(0);up->setValue(0);dialog.accept();QCOMPARE(writes.size(),2);
+    const auto unlimited=submission(writes);QVERIFY(unlimited.limits==core::TorrentIntakeLimits{});dialog.rejectSubmission(unlimited);
+    down->setValue(7);up->setValue(9);QVERIFY(dialog.beginSession(78));QCOMPARE(down->value(),0);QCOMPARE(up->value(),0);QVERIFY(!dialog.preview());
+    dialog.accept();QCOMPARE(writes.size(),2);
+  }
+  void sequentialIntentHasDefaultDraftBusyAndProfileLifetime() {
+    ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();
+    QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested),writes(&dialog,&ui::TorrentIntakeDialog::submitted);
+    auto* sequential=dialog.findChild<QCheckBox*>(QStringLiteral("import-sequential"));QVERIFY(sequential);QVERIFY(!sequential->isChecked());
+    auto* load=dialog.findChild<QPushButton*>(QStringLiteral("import-load-files"));QTRY_VERIFY(load->isEnabled());load->click();dialog.setPreview(packet(request(reads)));
+    auto* add=dialog.findChild<QPushButton*>(QStringLiteral("import-confirm"));QTRY_VERIFY(add->isEnabled());sequential->setChecked(true);
+    auto* down=dialog.findChild<QSpinBox*>(QStringLiteral("import-download-limit"));auto* up=dialog.findChild<QSpinBox*>(QStringLiteral("import-upload-limit"));QVERIFY(down&&up);
+    down->setValue(47);up->setValue(23);QCoreApplication::processEvents();
+    const auto capture=qEnvironmentVariable("BIGLYBTC_CAPTURE_DIR");
+    if(!capture.isEmpty()){QDir directory(capture);QVERIFY(directory.mkpath(QStringLiteral(".")));QVERIFY(dialog.grab().save(directory.filePath(QStringLiteral("torrent-intake-sequential-limits.png"))));}
+    dialog.setBusy(true);QTRY_VERIFY(!sequential->isEnabled());dialog.accept();QCOMPARE(writes.size(),0);
+    dialog.setBusy(false);QTRY_VERIFY(sequential->isEnabled());dialog.accept();QCOMPARE(writes.size(),1);const auto sent=submission(writes);QVERIFY(sent.sequentialDownload);
+    QCOMPARE(sent.limits.downloadBytesPerSecond,std::int64_t{48128});QCOMPARE(sent.limits.uploadBytesPerSecond,std::int64_t{23552});
+    QTRY_VERIFY(!sequential->isEnabled());dialog.rejectSubmission(sent);QTRY_VERIFY(sequential->isEnabled());QVERIFY(sequential->isChecked());
+    sequential->setChecked(false);dialog.accept();QCOMPARE(writes.size(),2);const auto ordinary=submission(writes);QVERIFY(!ordinary.sequentialDownload);dialog.rejectSubmission(ordinary);
+    sequential->setChecked(true);QVERIFY(dialog.beginSession(78));QVERIFY(!sequential->isChecked());QVERIFY(!dialog.preview());
+    dialog.accept();QCOMPARE(writes.size(),2);
+  }
+  void sequentialProfileResetCannotPrefillAnOvertakingProfile() {
+    ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));
+    auto* sequential=dialog.findChild<QCheckBox*>(QStringLiteral("import-sequential"));auto* destination=dialog.findChild<QLineEdit*>(QStringLiteral("import-destination"));
+    QVERIFY(sequential&&destination);QVERIFY(destination->text().isEmpty());sequential->setChecked(true);bool rebound=false;
+    connect(sequential,&QCheckBox::toggled,&dialog,[&](bool checked){if(!checked){rebound=dialog.beginSession(79);}});
+    QVERIFY(!dialog.beginSession(78,QStringLiteral("/old78")));QVERIFY(rebound);QVERIFY(destination->text().isEmpty());
+    QVERIFY(!dialog.beginSession(78)); // The actual newer session remains bound.
+    dialog.findChild<QLineEdit*>(QStringLiteral("import-source"))->setText(QStringLiteral("/tmp/biglybtc-profile79.torrent"));dialog.show();
+    QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested);auto* load=dialog.findChild<QPushButton*>(QStringLiteral("import-load-files"));
+    QTRY_VERIFY(load->isEnabled());load->click();QCOMPARE(reads.size(),1);QCOMPARE(request(reads).session,quint64{79});QVERIFY(destination->text().isEmpty());
+  }
+  void sequentialProfileResetAllowsDeletionFromToggledCallback() {
+    QPointer<ui::TorrentIntakeDialog> dialog=new ui::TorrentIntakeDialog;QVERIFY(dialog->beginSession(77));
+    auto* sequential=dialog->findChild<QCheckBox*>(QStringLiteral("import-sequential"));QVERIFY(sequential);sequential->setChecked(true);
+    connect(sequential,&QCheckBox::toggled,sequential,[&]{delete dialog.data();});
+    QVERIFY(!dialog->beginSession(78));QVERIFY(dialog.isNull());
   }
   void staleSourcesMalformedIndicesAndCancelledPreviewsCannotSubmit() {
     ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();

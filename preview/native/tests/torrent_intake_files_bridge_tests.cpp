@@ -91,9 +91,11 @@ private slots:
       const auto saved=compat::originalFilePolicy(row,2);const auto state=document(profile+QStringLiteral("/active/")+files->hash+QStringLiteral(".dat"));
       const auto* attrs=state.find("attributes");const auto facts=core::readSavedDndFacts(attrs);
       committedAtResult=saved&&*saved==policy&&attrs->find("storetypes")->children[0].bytes=="L"
-          &&attrs->find("storetypes")->children[1].bytes=="L"&&facts.skippedBytes==65536;
+          &&attrs->find("storetypes")->children[1].bytes=="L"&&facts.skippedBytes==65536
+          &&row.find("maxdl")&&row.find("maxdl")->integer==65536&&row.find("maxul")&&row.find("maxul")->integer==32768
+          &&attrs->find("flags")&&(attrs->find("flags")->integer&core::OriginalSequentialDownloadFlag);
     });
-    QVERIFY(bridge.importTorrentFiles({session,files->source.request,files->revision,fixture.payload,true,policy}));
+    QVERIFY(bridge.importTorrentFiles({session,files->source.request,files->revision,fixture.payload,true,policy,{65536,32768},true}));
     QTRY_COMPARE_WITH_TIMEOUT(writes.size(),1,10000);QVERIFY2(result(writes)->imported,qPrintable(result(writes)->failure));
     QVERIFY2(result(writes)->started,qPrintable(result(writes)->failure));QVERIFY(committedAtResult);
     QTRY_VERIFY_WITH_TIMEOUT(test::read(fixture.payload+'/'+fixture.files[0].relative)==fixture.files[0].expected,30000);
@@ -109,6 +111,8 @@ private slots:
     // This fresh profile has no original cache.dat. Check the selected size
     // from its persisted state; the library projection uses that optional cache.
     QVERIFY(row.find("completedbytes"));
+    QCOMPARE(row.find("maxdl")->integer,std::int64_t{65536});QCOMPARE(row.find("maxul")->integer,std::int64_t{32768});
+    QVERIFY(state.find("attributes")->find("flags")&&(state.find("attributes")->find("flags")->integer&core::OriginalSequentialDownloadFlag));
     const auto selected=core::projectSavedDndProgress(131072,row.find("completedbytes")->integer,core::readSavedDndFacts(state.find("attributes")));
     QCOMPARE(selected.selectedBytes,std::optional<std::int64_t>{65536});
     QVERIFY(state.find("attributes")->find("opaque.fixture"));QCOMPARE(state.find("attributes")->find("opaque.fixture")->bytes,std::string_view("\0\xffQ",3));

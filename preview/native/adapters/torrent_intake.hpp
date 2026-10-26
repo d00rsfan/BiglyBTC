@@ -2,6 +2,7 @@
 
 #include "biglybtc/library.hpp"
 #include "biglybtc/file_policy.hpp"
+#include "biglybtc/torrent_intake_options.hpp"
 #include "biglybtc/torrent_layout.hpp"
 #include "profile.hpp"
 #include "original_torrent_identity.hpp"
@@ -43,7 +44,7 @@ private:
   friend std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(const std::filesystem::path&, std::stop_token);
   friend std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
       const TorrentIntakeMetadata&, const std::filesystem::path&, bool, std::span<const compat::FilePolicy>,
-      void (*)(TorrentIntakeStage), bool, std::stop_token);
+      void (*)(TorrentIntakeStage), bool, std::stop_token, core::TorrentIntakeLimits, bool);
 };
 std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(
     const std::filesystem::path&, std::stop_token = {});
@@ -51,10 +52,15 @@ std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(
 // All skipped => Stopped/no force, with no payload allocation. New journal option
 // records retain original priority/storage choices through every recovery stage.
 // Existing skipped leaves stay L; absent skipped leaves use source C/X policy.
+// Appended default-zero limits are original byte rates, validated before effects
+// and retained through the same durable file-options journal/recovery. No live
+// mutation, sampler or implicit admission is performed by the adapter.
+// Optional sequential intent sets only original attributes.flags bit0x2000;
+// false preserves existing flags, matching original intake. Old journals omit it.
 std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
     const TorrentIntakeMetadata&, const std::filesystem::path& destination, bool stopped,
     std::span<const compat::FilePolicy>, void (*observer)(TorrentIntakeStage) = nullptr,
-    bool forceStart = false, std::stop_token = {});
+    bool forceStart = false, std::stop_token = {}, core::TorrentIntakeLimits = {}, bool sequentialDownload = false);
 
 // Explicit stopped companion, matching original hybrid "run as other version"
 // identity shape. Source row/state/cache/control bytes remain unchanged. No

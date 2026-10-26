@@ -1,5 +1,6 @@
 #pragma once
 #include "biglybtc/file_policy.hpp"
+#include "biglybtc/torrent_intake_options.hpp"
 #include <QMetaType>
 #include <QString>
 #include <memory>
@@ -29,6 +30,8 @@ struct TorrentIntakeSubmission {
   QString destination;
   bool start=true;
   std::vector<compat::FilePolicy> files; // Complete original-index order, padding included.
+  core::TorrentIntakeLimits limits{};
+  bool sequentialDownload=false;
 };
 struct TorrentIntakeResultPacket {
   quint64 session=0,request=0,revision=0;

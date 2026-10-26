@@ -1,6 +1,7 @@
 #include "biglybtc/torrent_layout.hpp"
 
 #include <algorithm>
+#include <array>
 #include <limits>
 #include <set>
 
@@ -18,7 +19,7 @@ std::int64_t integer(const Node* value) {
   require(value && value->type == Node::Type::Integer && value->integer >= 0, "Expected a nonnegative metadata integer");
   return value->integer;
 }
-enum class NameEncoding { Utf8, Latin1 };
+enum class NameEncoding { Utf8, Latin1, Windows1251 };
 struct NamePolicy { NameEncoding encoding; bool utf8Keys; };
 NamePolicy names(const core::Document& document,const Node& info) {
   const auto* field=document.find("encoding");
@@ -29,9 +30,12 @@ NamePolicy names(const core::Document& document,const Node& info) {
   auto lower=original;
   std::ranges::transform(lower,lower.begin(),[](unsigned char c){return c>='A'&&c<='Z'?static_cast<char>(c+32):static_cast<char>(c);});
   const bool latin1=lower=="iso-8859-1"; // Explicit original canonical charset only.
-  require(!field||normalized=="utf8"||normalized=="utf8keys"||latin1,
+  // Exact Java17 MS1251 canonical name and its source-declared aliases;
+  // no punctuation stripping or guessed aliases for legacy codecs.
+  const bool windows1251=lower=="windows-1251"||lower=="cp1251"||lower=="cp5347"||lower=="ansi-1251";
+  require(!field||normalized=="utf8"||normalized=="utf8keys"||latin1||windows1251,
       "This original filename encoding needs its qualified codec adapter");
-  require(!latin1||!info.find("file tree"),"Legacy encoded v2/hybrid names require separate original qualification");
+  require(!(latin1||windows1251)||!info.find("file tree"),"Legacy encoded v2/hybrid names require separate original qualification");
   // Exact cb8 global UTF8-key predicate: name plus every v1 path, and only
   // absent encoding, the exact saved sentinel, or case-insensitive UTF-8.
   bool use=info.find("name.utf-8")&&(!field||original=="utf8 keys"||lower=="utf-8");
@@ -39,11 +43,36 @@ NamePolicy names(const core::Document& document,const Node& info) {
     require(files->type==Node::Type::List,"Original file list has invalid type");
     if(use){for(const auto& file:files->children){use=use&&file.find("path.utf-8");}}
   }
-  return {latin1?NameEncoding::Latin1:NameEncoding::Utf8,use};
+  return {windows1251?NameEncoding::Windows1251:latin1?NameEncoding::Latin1:NameEncoding::Utf8,use};
 }
 std::string decoded(const Node* node,NameEncoding encoding) {
   const auto value=text(node);
   if(encoding==NameEncoding::Utf8){return value;}
+  if(encoding==NameEncoding::Windows1251){
+    // Single-byte Windows-1251 mapping, source-bound to OpenJDK17 MS1251.
+    // 0x98 is UNMAPPABLE; never replace it or take Java's UTF8 fallback.
+    // 0xc0..0xff are the contiguous Cyrillic U+0410..U+044F block.
+    static constexpr std::array<std::uint16_t,64> extended{
+        0x0402,0x0403,0x201a,0x0453,0x201e,0x2026,0x2020,0x2021,
+        0x20ac,0x2030,0x0409,0x2039,0x040a,0x040c,0x040b,0x040f,
+        0x0452,0x2018,0x2019,0x201c,0x201d,0x2022,0x2013,0x2014,
+        0x0000,0x2122,0x0459,0x203a,0x045a,0x045c,0x045b,0x045f,
+        0x00a0,0x040e,0x045e,0x0408,0x00a4,0x0490,0x00a6,0x00a7,
+        0x0401,0x00a9,0x0404,0x00ab,0x00ac,0x00ad,0x00ae,0x0407,
+        0x00b0,0x00b1,0x0406,0x0456,0x0491,0x00b5,0x00b6,0x00b7,
+        0x0451,0x2116,0x0454,0x00bb,0x0458,0x0405,0x0455,0x0457
+    };
+    std::string result;result.reserve(value.size()*3);
+    for(const unsigned char c:value){
+      require(c>=0x20&&c!=0x7f,"Unsafe Windows-1251 filename byte");
+      const std::uint16_t code=c<0x80?c:c>=0xc0?static_cast<std::uint16_t>(0x0410+c-0xc0):extended[c-0x80];
+      require(code!=0,"Undefined Windows-1251 filename byte");
+      if(code<0x80){result+=static_cast<char>(code);}
+      else if(code<0x800){result+=static_cast<char>(0xc0|(code>>6));result+=static_cast<char>(0x80|(code&0x3f));}
+      else{result+=static_cast<char>(0xe0|(code>>12));result+=static_cast<char>(0x80|((code>>6)&0x3f));result+=static_cast<char>(0x80|(code&0x3f));}
+    }
+    return result;
+  }
   // ISO-8859-1 is a total one-byte Java charset: each byte is its scalar.
   // Filesystem component safety and expanded byte limits are checked later.
   std::string result;result.reserve(value.size()*2);

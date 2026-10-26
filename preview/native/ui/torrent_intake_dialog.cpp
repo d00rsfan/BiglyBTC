@@ -12,6 +12,7 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
+#include <QSpinBox>
 #include <QTableView>
 #include <QVBoxLayout>
 #include <algorithm>
@@ -114,6 +115,18 @@ TorrentIntakeDialog::TorrentIntakeDialog(QWidget* parent):QDialog(parent) {
   auto* applyPriority=new QPushButton(tr("Set priority"),this);applyPriority->setObjectName(QStringLiteral("import-apply-priority"));
   priorities->addWidget(priority_);priorities->addWidget(applyPriority);priorities->addStretch();layout->addLayout(priorities);
   start_=new QCheckBox(tr("Start download"),this);start_->setObjectName(QStringLiteral("import-start"));start_->setChecked(true);layout->addWidget(start_);
+  sequential_=new QCheckBox(tr("Download pieces in order"),this);sequential_->setObjectName(QStringLiteral("import-sequential"));
+  sequential_->setAccessibleName(tr("Sequential download"));sequential_->setToolTip(tr("Request pieces in order. Existing saved torrent preferences are kept."));
+  layout->addWidget(sequential_);connect(sequential_,&QCheckBox::toggled,this,[this]{++revision_;schedule();});
+  auto* limits=new QFormLayout;
+  const auto rate=[this](const QString& name){
+    auto* box=new QSpinBox(this);box->setObjectName(name);box->setRange(0,static_cast<int>(core::MaximumTorrentIntakeRate/1024));
+    box->setSuffix(tr(" KiB/s"));box->setSpecialValueText(tr("Unlimited"));box->setToolTip(tr("This torrent only. 1 KiB = 1024 bytes; zero is unlimited."));
+    connect(box,&QSpinBox::valueChanged,this,[this]{++revision_;schedule();});return box;
+  };
+  downloadLimit_=rate(QStringLiteral("import-download-limit"));uploadLimit_=rate(QStringLiteral("import-upload-limit"));
+  downloadLimit_->setAccessibleName(tr("Torrent download limit"));uploadLimit_->setAccessibleName(tr("Torrent upload limit"));
+  limits->addRow(tr("Download limit:"),downloadLimit_);limits->addRow(tr("Upload limit:"),uploadLimit_);layout->addLayout(limits);
   status_=new QLabel(this);status_->setObjectName(QStringLiteral("import-file-status"));status_->setTextFormat(Qt::PlainText);status_->setWordWrap(true);layout->addWidget(status_);
   auto* buttons=new QDialogButtonBox(QDialogButtonBox::Open|QDialogButtonBox::Cancel,this);add_=buttons->button(QDialogButtonBox::Open);add_->setObjectName(QStringLiteral("import-confirm"));layout->addWidget(buttons);
   connect(buttons,&QDialogButtonBox::accepted,this,&TorrentIntakeDialog::accept);connect(buttons,&QDialogButtonBox::rejected,this,&TorrentIntakeDialog::reject);
@@ -140,10 +153,16 @@ TorrentIntakeDialog::TorrentIntakeDialog(QWidget* parent):QDialog(parent) {
 }
 bool TorrentIntakeDialog::beginSession(quint64 session,QString directory) {
   if(!session||session<session_||committing_){return false;}
-  if(session!=session_){session_=session;request_={};preview_.reset();loading_=false;failure_.clear();++revision_;}
   QPointer<TorrentIntakeDialog> guard(this);
+  const auto current=[&]{return guard&&session_==session;};
+  if(session!=session_){
+    session_=session;request_={};preview_.reset();loading_=false;failure_.clear();++revision_;
+    if(downloadLimit_){downloadLimit_->setValue(0);}if(!current()){return false;}
+    if(uploadLimit_){uploadLimit_->setValue(0);}if(!current()){return false;}
+    if(sequential_){sequential_->setChecked(false);}if(!current()){return false;}
+  }
   if(destination_&&destination_->text().isEmpty()){destination_->setText(directory);}
-  if(!guard){return false;}schedule();return true;
+  if(!current()){return false;}schedule();return true;
 }
 void TorrentIntakeDialog::invalidateSession() {
   session_=0;loading_=false;committing_=false;request_={};preview_.reset();failure_.clear();++revision_;
@@ -185,12 +204,15 @@ void TorrentIntakeDialog::render() {
   const auto revision=revision_;const auto frame=preview_;QPointer<TorrentIntakeDialog> guard(this);
   const auto current=[&]{return guard&&revision_==revision&&preview_==frame;};
   if(model_&&model_->source!=frame){model_->apply(frame);if(!current()){return;}}
-  if(!source_||!destination_||!start_||!status_||!load_||!add_||!table_||!model_||!priority_){return;}
+  if(!source_||!destination_||!start_||!status_||!load_||!add_||!table_||!model_||!priority_||!downloadLimit_||!uploadLimit_||!sequential_){return;}
   source_->setEnabled(!busy_&&!pending());if(!current()||!source_){return;}
   destination_->setEnabled(!busy_&&!committing_);if(!current()||!destination_){return;}
   table_->setEnabled(!busy_&&!pending());if(!current()||!table_){return;}
   priority_->setEnabled(!busy_&&!pending()&&bool(frame));if(!current()||!priority_){return;}
   start_->setEnabled(!busy_&&!pending()&&(!frame||model_->selectedBytes()!=0));if(!current()||!start_){return;}
+  sequential_->setEnabled(!busy_&&!pending());if(!current()||!sequential_){return;}
+  downloadLimit_->setEnabled(!busy_&&!pending());if(!current()||!downloadLimit_){return;}
+  uploadLimit_->setEnabled(!busy_&&!pending());if(!current()||!uploadLimit_){return;}
   load_->setEnabled(session_&&!busy_&&!pending()&&metadataPath(source_->text())&&nextRequest_!=std::numeric_limits<quint64>::max());if(!current()||!load_){return;}
   const bool valid=frame&&model_->source==frame&&frame->source.metadata==source_->text();
   add_->setEnabled(session_&&!busy_&&!pending()&&valid&&path(destination_->text()));if(!current()||!add_){return;}
@@ -204,10 +226,11 @@ void TorrentIntakeDialog::render() {
   status_->setText(status.left(4096));
 }
 void TorrentIntakeDialog::accept() {
-  if(!session_||busy_||pending()||!source_||!destination_||!start_||!model_||!preview_
+  if(!session_||busy_||pending()||!source_||!destination_||!start_||!model_||!preview_||!downloadLimit_||!uploadLimit_||!sequential_
       ||model_->source!=preview_||preview_->source.metadata!=source_->text()||!path(destination_->text())){return;}
   TorrentIntakeSubmission submission{session_,request_.request,preview_->revision,destination_->text(),
-      start_->isChecked()&&model_->selectedBytes()!=0,model_->draft};
+      start_->isChecked()&&model_->selectedBytes()!=0,model_->draft,
+      {static_cast<std::int64_t>(downloadLimit_->value())*1024,static_cast<std::int64_t>(uploadLimit_->value())*1024},sequential_->isChecked()};
   committing_=true;failure_.clear();++revision_;schedule();emit submitted(std::move(submission));
 }
 void TorrentIntakeDialog::reject() {

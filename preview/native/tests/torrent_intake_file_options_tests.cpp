@@ -28,6 +28,10 @@ std::string metadata(){
   return "d10:attributesd6:future3:raw10:parametersd6:futurei7eee4:infod5:files"+files+
       "4:name6:bundle12:piece lengthi16384e6:pieces"+b(std::string(20,'h'))+"ee";
 }
+std::string metadataWithFlags(std::string encoded) {
+  auto source=parse(metadata());auto attrs=parse("d6:future3:raw10:parametersd6:futurei7ee5:flags"+encoded+'e');
+  check(source.replaceValue("attributes",attrs.serialize()).has_value(),"Own original flag metadata");return source.serialize();
+}
 struct Area {
   fs::path root,profile,input,destination;std::optional<storage::ProfileLease> lease;
   Area(){
@@ -68,6 +72,38 @@ void verify(Area& area,const core::TorrentHash& hash,std::string_view kinds,std:
 }
 int main(){
   try{
+    for(const auto flags:std::array<std::int64_t,5>{0,1,8192,std::numeric_limits<std::int64_t>::min(),std::numeric_limits<std::int64_t>::max()}){
+      for(const bool sequential:{false,true}){
+        Area area;write(area.input,metadataWithFlags("i"+std::to_string(flags)+'e'));
+        const auto prepared=take(storage::inspectTorrentIntake(area.input));
+        const auto hash=take(storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,nullptr,false,{}, {},sequential));
+        verify(area,hash,"LCLC",mixed);const auto state=parse(read(area.profile/"active"/(hash.hex()+".dat")));
+        const auto expected=flags|(sequential?core::OriginalSequentialDownloadFlag:0);
+        check(core::originalDownloadFlags(state.find("attributes"))==std::optional<std::int64_t>{expected},"Sequential sets only its original bit; unknown signed bits survive");
+      }
+    }
+    for(const auto* encoded:{"3:bad","le","de"}){
+      Area area;write(area.input,metadataWithFlags(encoded));const auto prepared=take(storage::inspectTorrentIntake(area.input));
+      const auto refused=storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,nullptr,false,{}, {},true);
+      check(!refused&&refused.error().code==storage::ErrorCode::InvalidFormat,"Malformed saved flags refuse before commit");area.untouched();
+    }
+    for(const auto* encoded:{"i-1e","i2e","3:bad","le"}){
+      Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));interrupted=storage::TorrentIntakeStage::JournalSynced;
+      check(!storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,interrupt,false,{}, {},true),"Freeze actual sequential intent");
+      auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));auto bytes=core::encodeValue(*journal.find("fileOptions"),storage::compatibleConfigLimits());check(bool(bytes),"Accepted journal options");
+      auto options=parse(std::move(*bytes));check(options.replaceValue("sequential",encoded).has_value(),"Own malformed sequential journal");
+      check(journal.replaceValue("fileOptions",options.serialize()).has_value(),"Keep other journal authority");write(area.profile/"BiglyBTC.torrent-import",journal.serialize());
+      const auto before=read(area.profile/"downloads.config");area.reopen();const auto recovered=storage::recoverTorrentIntake(*area.lease);
+      check(!recovered&&recovered.error().code==storage::ErrorCode::InvalidFormat,"Malformed/nonboolean sequential replay refuses");
+      check(read(area.profile/"downloads.config")==before&&!fs::exists(area.profile/"active")&&!fs::exists(area.destination)&&storage::hasPendingTorrentIntake(*area.lease),"Invalid intent retained without publication or payload");
+    }
+    {
+      Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));interrupted=storage::TorrentIntakeStage::JournalSynced;
+      check(!storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,interrupt),"Default old intake journal");
+      const auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));check(!journal.find("fileOptions")->find("sequential"),"Default API omits new optional journal field");
+      area.reopen();const auto hash=take(storage::recoverTorrentIntake(*area.lease));check(hash.has_value(),"Old absent sequential field recovers");
+      const auto state=parse(read(area.profile/"active"/(hash->hex()+".dat")));check(!state.find("attributes")->find("flags"),"Default old state does not materialize flags");
+    }
     {
       Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));area.untouched();
       check(prepared.layout().files.size()==4&&prepared.layout().files[3].padding,"Actual validated metadata/padding");
@@ -94,6 +130,40 @@ int main(){
       const auto config=parse(read(area.profile/"downloads.config"));const auto& row=config.find("downloads")->children[0];
       check(row.find("state")->integer==70&&row.find("forceStart")->integer==0,"All skipped cannot auto-start/force");
     }
+    for(const auto& limits:std::array<core::TorrentIntakeLimits,4>{{{65536,32768},{0,4096},{8192,0},{core::MaximumTorrentIntakeRate,core::MaximumTorrentIntakeRate}}}){
+      Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));
+      const auto hash=take(storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,nullptr,false,{},limits));
+      verify(area,hash,"LCLC",mixed);const auto config=parse(read(area.profile/"downloads.config"));const auto& row=config.find("downloads")->children.at(0);
+      check(row.find("maxdl")->integer==limits.downloadBytesPerSecond&&row.find("maxul")->integer==limits.uploadBytesPerSecond,"Exact original per-torrent byte rates committed");
+      check(!fs::exists(area.destination),"Rate choices cannot allocate payload");
+    }
+    for(const auto& limits:std::array<core::TorrentIntakeLimits,4>{{{-1,0},{0,-1},{core::MaximumTorrentIntakeRate+1,0},{0,core::MaximumTorrentIntakeRate+1}}}){
+      Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));
+      const auto result=storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,nullptr,false,{},limits);
+      check(!result&&result.error().code==storage::ErrorCode::InvalidFormat,"Disabled/overflowed rate refuses before commit");area.untouched();
+    }
+    {
+      Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));interrupted=storage::TorrentIntakeStage::JournalSynced;
+      check(!storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,interrupt),"Freeze backward-compatible default rate journal");
+      const auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));const auto* options=journal.find("fileOptions");
+      check(options&&!options->find("maxdl")&&!options->find("maxul"),"Unlimited defaults add no journal fields");
+      area.reopen();const auto recovered=take(storage::recoverTorrentIntake(*area.lease));check(recovered.has_value(),"Existing default journal remains recoverable");
+      const auto saved=parse(read(area.profile/"downloads.config"));const auto& row=saved.find("downloads")->children.at(0);
+      check(row.find("maxdl")->integer==0&&row.find("maxul")->integer==0,"Absent original rate fields default to unlimited");
+    }
+    for(const auto& value:{std::string("i-1e"),std::string("i2147483648e"),std::string("3:bad")}){
+      Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));interrupted=storage::TorrentIntakeStage::JournalSynced;
+      check(!storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,interrupt,false,{}, {8192,16384}),"Freeze actual rate intent for recovery validation");
+      auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));const auto* sourceOptions=journal.find("fileOptions");check(sourceOptions,"Actual rate options journal exists");
+      auto encodedOptions=core::encodeValue(*sourceOptions,storage::compatibleConfigLimits());check(encodedOptions.has_value(),"Encode actual accepted rate intent");
+      auto options=core::Document::parse(std::move(*encodedOptions),storage::compatibleConfigLimits());
+      check(options&&options->replaceValue("maxdl",value).has_value(),"Own malformed rate field");
+      check(journal.replaceValue("fileOptions",options->serialize()).has_value(),"Preserve all other journal authority");write(area.profile/"BiglyBTC.torrent-import",journal.serialize());
+      const auto inventory=read(area.profile/"downloads.config");area.reopen();const auto recovered=storage::recoverTorrentIntake(*area.lease);
+      check(!recovered&&recovered.error().code==storage::ErrorCode::InvalidFormat,"Malformed/negative/overflowed recovered rate refuses before publication");
+      check(read(area.profile/"downloads.config")==inventory&&!fs::exists(area.profile/"active")&&!fs::exists(area.profile/"torrents")&&!fs::exists(area.destination),"Invalid recovered rates preserve inventory and payload");
+      check(storage::hasPendingTorrentIntake(*area.lease),"Invalid intent retained for explicit recovery");
+    }
     for(int mode=0;mode<5;++mode){
       Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));auto policy=mixed;
       if(mode==0){policy.pop_back();}if(mode==1){policy[3]={false,0};}if(mode==2){policy[0].priority=std::numeric_limits<std::int32_t>::min();}
@@ -112,11 +182,14 @@ int main(){
     }
     for(const auto stage:{storage::TorrentIntakeStage::JournalSynced,storage::TorrentIntakeStage::StatePublished,storage::TorrentIntakeStage::ArchivePublished,storage::TorrentIntakeStage::InventoryPublished}){
       Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));const auto hash=prepared.hash();interrupted=stage;
-      check(!storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,interrupt),"Interrupt actual durable stage");
+      check(!storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,interrupt,false,{}, {7168,13312},true),"Interrupt actual durable stage");
       check(storage::hasPendingTorrentIntake(*area.lease),"Accepted options remain journalled");
       area.reopen();const auto recovered=take(storage::recoverTorrentIntake(*area.lease));
       check(recovered&&*recovered==hash,"Fresh held lease recovers exact options");
       verify(area,hash,"LCLC",mixed);check(!fs::exists(area.root/"new"),"Recovery never allocates payload");
+      const auto saved=parse(read(area.profile/"downloads.config"));const auto& row=saved.find("downloads")->children.at(0);
+      check(row.find("maxdl")->integer==7168&&row.find("maxul")->integer==13312,"Exact accepted rates survive every interrupted durable stage");
+      const auto state=parse(read(area.profile/"active"/(hash.hex()+".dat")));check(core::originalDownloadFlags(state.find("attributes"))==std::optional<std::int64_t>{8192},"Exact sequential intent survives every interrupted durable stage");
     }
     {
       Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));interrupted=storage::TorrentIntakeStage::JournalSynced;
