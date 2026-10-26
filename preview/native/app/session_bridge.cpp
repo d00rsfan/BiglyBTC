@@ -1224,7 +1224,7 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
       if(start||submission.verifyExisting){
         if(submission.verifyExisting){host_->verifiedSeedPending.insert(hash.hex());}
         const auto admitted=host_->engine->startManaged(host_->lease,
-            {.hash=hash,.ownedLoopbackPeerPort=submission.verifyExisting?0:host_->peerPort,.forceStart=force,.queued=queued,.verifyExisting=submission.verifyExisting});
+            {.hash=hash,.ownedLoopbackPeerPort=submission.verifyExisting?std::uint16_t{0}:host_->peerPort,.forceStart=force,.queued=queued,.verifyExisting=submission.verifyExisting});
         if(admitted){result->started=!submission.verifyExisting;result->verificationPending=submission.verifyExisting;host_->admissionFailures.erase(hash.hex());}
         else{host_->admissionFailures.insert_or_assign(hash.hex(),admitted.error());result->failure=(submission.verifyExisting?tr("Torrent added stopped; existing-data verification could not start: %1"):tr("Torrent added; download could not start: %1")).arg(text(admitted.error().message));}
       }
