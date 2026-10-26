@@ -27,6 +27,7 @@ signals:
 private:
   void requestPreview();
   bool resetTrackerDraft();
+  bool setSaveNameText(const QString&);
   bool setTrackerDraftText(const QString&);
   void schedule();
   void render();
@@ -35,7 +36,7 @@ private:
   TorrentIntakeRequest request_;
   TorrentIntakePresentation preview_;
   QString failure_;
-  QPointer<QLineEdit> source_,destination_;
+  QPointer<QLineEdit> source_,destination_,saveName_;
   QPointer<QCheckBox> sequential_,editTrackers_;
   QPointer<QPlainTextEdit> trackers_;
   QPointer<QLabel> status_;

@@ -38,6 +38,7 @@ struct TorrentIntakeSubmission {
   bool forceStart=false;
   bool paused=false;
   std::optional<core::TorrentIntakeTrackerTiers> trackers=std::nullopt; // Absent preserves raw source.
+  std::optional<QString> saveName=std::nullopt; // One destination leaf, never info.name.
 };
 struct TorrentIntakeResultPacket {
   quint64 session=0,request=0,revision=0;

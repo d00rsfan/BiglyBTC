@@ -40,6 +40,29 @@ void empty(ui::LibraryWindow& window) {
 class TorrentIntakeDialogTests final:public QObject {
   Q_OBJECT
 private slots:
+
+  void saveNameDraftPreservesDefaultAndCustomLeafAcrossFailure() {
+    ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();
+    QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested),writes(&dialog,&ui::TorrentIntakeDialog::submitted);
+    auto* name=dialog.findChild<QLineEdit*>(QStringLiteral("import-save-name"));auto* load=dialog.findChild<QPushButton*>(QStringLiteral("import-load-files"));QVERIFY(name&&load);
+    QTRY_VERIFY(load->isEnabled());load->click();dialog.setPreview(packet(request(reads)));auto* table=dialog.findChild<QTableView*>(QStringLiteral("import-file-table"));QVERIFY(table);QTRY_COMPARE(table->model()->rowCount(),3);
+    auto* add=dialog.findChild<QPushButton*>(QStringLiteral("import-confirm"));QVERIFY(add);QTRY_VERIFY(name->isEnabled()&&add->isEnabled());QVERIFY(name->text().isEmpty());QCOMPARE(name->placeholderText(),QStringLiteral("bundle"));
+    dialog.accept();QCOMPARE(writes.size(),1);QVERIFY(!submission(writes).saveName);dialog.rejectSubmission(submission(writes));QTRY_VERIFY(name->isEnabled());
+    const auto custom=QString::fromUtf8("saved-\xd0\xbf\xd0\xb0\xd0\xbf\xd0\xba\xd0\xb0");name->setText(custom);QTRY_VERIFY(add->isEnabled());dialog.accept();QCOMPARE(writes.size(),2);const auto sent=submission(writes);QVERIFY(sent.saveName&&*sent.saveName==custom);QTRY_VERIFY(!name->isEnabled());
+    auto failed=std::make_shared<ui::TorrentIntakeResultPacket>();failed->session=sent.session;failed->request=sent.request;failed->revision=sent.revision;failed->failure=QStringLiteral("Owned destination conflict");dialog.setResult(failed);QTRY_VERIFY(name->isEnabled());QCOMPARE(name->text(),custom);
+    const auto capture=qEnvironmentVariable("BIGLYBTC_CAPTURE_DIR");if(!capture.isEmpty()){QDir directory(capture);QVERIFY(directory.mkpath(QStringLiteral(".")));QVERIFY(dialog.grab().save(directory.filePath(QStringLiteral("torrent-intake-save-name.png"))));}
+    for(const auto& invalid:{QStringLiteral("../escape"),QStringLiteral("part\\leaf"),QStringLiteral(".BiglyBTC.control"),QStringLiteral("   "),QString(128,QChar(0x044f))}){name->setText(invalid);QTRY_VERIFY(!add->isEnabled());dialog.accept();QCOMPARE(writes.size(),2);}
+    name->setText(QStringLiteral("bundle"));QTRY_VERIFY(add->isEnabled());dialog.setBusy(true);QTRY_VERIFY(!name->isEnabled());dialog.accept();QCOMPARE(writes.size(),2);dialog.setBusy(false);QTRY_VERIFY(name->isEnabled());dialog.accept();QCOMPARE(writes.size(),3);QVERIFY(submission(writes).saveName&&*submission(writes).saveName==QStringLiteral("bundle"));dialog.rejectSubmission(submission(writes));
+    QVERIFY(dialog.beginSession(78));QVERIFY(name->text().isEmpty());QVERIFY(!dialog.preview());dialog.accept();QCOMPARE(writes.size(),3);
+  }
+  void saveNameResetYieldsToRebindDeletionAndMissingChild() {
+    ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));auto* name=dialog.findChild<QLineEdit*>(QStringLiteral("import-save-name"));auto* destination=dialog.findChild<QLineEdit*>(QStringLiteral("import-destination"));QVERIFY(name&&destination);name->setText(QStringLiteral("old-name"));bool rebound=false;
+    connect(name,&QLineEdit::textChanged,&dialog,[&](const QString& text){if(text.isEmpty()&&!rebound){rebound=true;QVERIFY(dialog.beginSession(79));}});
+    QVERIFY(!dialog.beginSession(78,QStringLiteral("/old78")));QVERIFY(rebound);QVERIFY(name->text().isEmpty());QVERIFY(destination->text().isEmpty());QVERIFY(!dialog.beginSession(78));
+    QPointer<ui::TorrentIntakeDialog> deleted=new ui::TorrentIntakeDialog;QVERIFY(deleted->beginSession(90));auto* text=deleted->findChild<QLineEdit*>(QStringLiteral("import-save-name"));text->setText(QStringLiteral("old"));connect(text,&QLineEdit::textChanged,this,[&]{delete deleted.data();});QVERIFY(!deleted->beginSession(91));QVERIFY(deleted.isNull());QCoreApplication::processEvents();
+    ui::TorrentIntakeDialog intact;QVERIFY(intact.beginSession(101));inputs(intact);intact.show();QSignalSpy reads(&intact,&ui::TorrentIntakeDialog::previewRequested),writes(&intact,&ui::TorrentIntakeDialog::submitted);auto* load=intact.findChild<QPushButton*>(QStringLiteral("import-load-files"));QTRY_VERIFY(load->isEnabled());load->click();intact.setPreview(packet(request(reads)));auto* table=intact.findChild<QTableView*>(QStringLiteral("import-file-table"));QVERIFY(table);QTRY_COMPARE(table->model()->rowCount(),3);auto* add=intact.findChild<QPushButton*>(QStringLiteral("import-confirm"));QTRY_VERIFY(add->isEnabled());
+    delete intact.findChild<QLineEdit*>(QStringLiteral("import-save-name"));intact.accept();QCOMPARE(writes.size(),0);QCoreApplication::processEvents();QCOMPARE(writes.size(),0);
+  }
   void initTestCase(){QCOMPARE(QGuiApplication::platformName(),QStringLiteral("offscreen"));QApplication::setQuitOnLastWindowClosed(false);}
   void trackerDraftPreservesDefaultAndExplicitTiersOrClearAcrossFailure() {
     ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();

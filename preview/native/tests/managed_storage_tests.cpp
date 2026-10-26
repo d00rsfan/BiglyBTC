@@ -1,4 +1,5 @@
 #include "managed_storage.hpp"
+#include "torrent_intake.hpp"
 #include "original_disk_io.hpp"
 #include "network_policy.hpp"
 #include "torrent_state.hpp"
@@ -130,6 +131,24 @@ int main() {
   std::erase(filesystemEncoding,'-');
   std::ranges::transform(filesystemEncoding,filesystemEncoding.begin(),[](unsigned char c){return c>='A'&&c<='Z'?static_cast<char>(c+32):static_cast<char>(c);});
   require(filesystemEncoding=="utf8","Actual generated Unicode fixtures require an installed UTF8 locale");
+
+  test("actual-intake-save-name-drives-descriptors-suffix-and-completion",[] {
+    for(const bool multi:{false,true}){
+      Fixture f(multi,false,".part");const auto profile=f.root/"custom-import-profile",destination=f.root/"custom-import-payload";fs::create_directories(profile);write(profile/"downloads.config","d9:downloadsle6:futurei7ee");
+      auto lease=storage::ProfileLease::acquire(profile);require(lease.has_value(),"New held import profile");const auto source=storage::inspectTorrentIntake(f.profile/"active"/(f.hash.hex()+".dat"));require(source.has_value(),"Actual sealed original source");
+      const std::string leaf=multi?"chosen-root":"chosen.bin";std::vector<compat::FilePolicy> policy(source->layout().files.size(),{false,0});
+      const auto imported=storage::importTorrentWithFileOptions(*lease,*source,destination,true,policy,nullptr,false,{}, {},false,false,false,{},leaf);require(imported&&*imported==f.hash,"Actual intake saves chosen root without changing identity");
+      const auto path=[&](std::size_t n,bool incomplete){return multi?destination/leaf/((n?"b.bin":"a.bin")+(incomplete?f.suffix:std::string{})):destination/(leaf+(incomplete?f.suffix:std::string{}));};
+      {auto owner=Storage::prepare(*lease,f.hash,{});require(owner.has_value(),owner?"prepare":owner.error().message);const auto params=owner->parameters();
+        for(std::size_t n=0;n<source->layout().files.size();++n){require(params.renamed_files.at(libtorrent::file_index_t{static_cast<int>(n)})==path(n,true).lexically_relative(destination).string()&&fs::exists(path(n,true)),"Actual authenticated descriptor uses chosen root plus one incomplete suffix");}
+        if(multi){write(path(0,true),std::string_view(f.body).substr(0,20000));write(path(1,true),std::string_view(f.body).substr(20000));}else{write(path(0,true),f.body);}
+        const auto checkpoint=owner->checkpoint(*lease,std::array<std::uint8_t,2>{1,1},true,32768,0);require(checkpoint.has_value(),checkpoint?"checkpoint":checkpoint.error().message);
+      }
+      require(!fs::exists(path(0,true))&&fs::exists(path(0,false))&&!fs::exists(destination/(multi?"bundle":"original.bin")),"Completion durably renames chosen paths only");
+      auto owner=Storage::prepare(*lease,f.hash,{});require(owner.has_value(),owner?"reopen":owner.error().message);require(owner->parameters().renamed_files.at(libtorrent::file_index_t{0})==path(0,false).lexically_relative(destination).string(),"Reopened real mapping does not append suffix twice");
+      auto state=core::Document::parse(read(profile/"active"/(f.hash.hex()+".dat")),storage::compatibleConfigLimits());require(state&&encode(*state->find("info"))==f.info&&state->find("attributes")->find("displayname")->bytes==leaf,"Exact original raw identity and manual name survive completion");require(read(path(0,false))+(multi?read(path(1,false)):std::string{})==f.body,"Actual named payload bytes remain complete");
+    }
+  });
   test("original-canonical-latin1-paths-preserve-raw-identity-and-checkpoint",[] {
     Fixture f(true);const auto oldPath=f.profile/"active"/(f.hash.hex()+".dat");
     auto metadata=f.state();auto info=core::Document::parse(f.info);require(info.has_value(),"Latin1 original info");

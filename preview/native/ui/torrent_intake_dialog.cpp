@@ -27,6 +27,10 @@ bool path(const QString& value) {
   return !value.trimmed().isEmpty()&&value.size()<=4096&&!value.contains(QChar(u'\0'))&&QDir::isAbsolutePath(value);
 }
 bool metadataPath(const QString& value){return path(value)&&value.endsWith(QStringLiteral(".torrent"),Qt::CaseInsensitive);}
+bool saveName(const QString& value) {
+  if(value.isEmpty()){return true;}const auto bytes=value.toUtf8();
+  return QString::fromUtf8(bytes)==value&&core::validTorrentIntakeSaveName(std::string_view(bytes.constData(),static_cast<std::size_t>(bytes.size())));
+}
 bool trackerDraft(const QString& text,core::TorrentIntakeTrackerTiers& result) {
   if(text.size()>static_cast<qsizetype>(core::MaximumIntakeTrackerBytes)){return false;}
   std::vector<std::string> tier;
@@ -125,7 +129,11 @@ TorrentIntakeDialog::TorrentIntakeDialog(QWidget* parent):QDialog(parent) {
   destination_=new QLineEdit(destinationRow);destination_->setObjectName(QStringLiteral("import-destination"));destination_->setMaxLength(4096);destination_->setAccessibleName(tr("Download directory"));
   auto* destinationBrowse=new QPushButton(tr("Browse…"),destinationRow);destinationBrowse->setObjectName(QStringLiteral("import-browse-destination"));
   destinationLayout->addWidget(destination_,1);destinationLayout->addWidget(destinationBrowse);
-  form->addRow(tr("Download directory:"),destinationRow);layout->addLayout(form);
+  form->addRow(tr("Download directory:"),destinationRow);
+  saveName_=new QLineEdit(this);saveName_->setObjectName(QStringLiteral("import-save-name"));saveName_->setMaxLength(255);saveName_->setAccessibleName(tr("Destination file or folder name"));
+  saveName_->setPlaceholderText(tr("Original torrent name"));saveName_->setToolTip(tr("Leave empty to keep the original name. One file name or top-level folder name only. Existing renamed targets are not overwritten."));
+  form->addRow(tr("Save as:"),saveName_);layout->addLayout(form);
+  connect(saveName_,&QLineEdit::textChanged,this,[this]{++revision_;schedule();});
   table_=new QTableView(this);table_->setObjectName(QStringLiteral("import-file-table"));table_->setAccessibleName(tr("Files to download"));
   model_=new IntakeFileModel(this);table_->setModel(model_);table_->setSelectionBehavior(QAbstractItemView::SelectRows);
   table_->setSelectionMode(QAbstractItemView::ExtendedSelection);table_->setAlternatingRowColors(true);table_->verticalHeader()->hide();
@@ -213,6 +221,7 @@ bool TorrentIntakeDialog::beginSession(quint64 session,QString directory) {
     if(!current()){return false;}
     if(editTrackers_){editTrackers_->setChecked(false);}if(!current()){return false;}
     if(!setTrackerDraftText({})||!current()){return false;}
+    if(!setSaveNameText({})||!current()){return false;}
   }
   if(destination_&&destination_->text().isEmpty()){destination_->setText(directory);}
   if(!current()){return false;}schedule();return true;
@@ -234,7 +243,15 @@ void TorrentIntakeDialog::setPreview(TorrentIntakePresentation packet) {
   loading_=false;++revision_;
   if(!validTorrentIntake(packet)){preview_.reset();failure_=packet->failure.isEmpty()?tr("The torrent file list could not be loaded."):packet->failure;}
   else{preview_=std::make_shared<const TorrentIntakePacket>(*packet);failure_.clear();}
-  if(!resetTrackerDraft()){return;}schedule();
+  if(!setSaveNameText({})||!resetTrackerDraft()){return;}schedule();
+}
+bool TorrentIntakeDialog::setSaveNameText(const QString& value) {
+  const auto session=session_;const auto frame=preview_;QPointer<TorrentIntakeDialog> guard(this);QPointer<QLineEdit> editor=saveName_;
+  if(!editor){return false;}const bool changed=editor->text()!=value,wasBlocked=editor->signalsBlocked();if(!changed){return true;}
+  {QSignalBlocker blocked(editor.data());editor->setText(value);if(!editor){blocked.dismiss();}}
+  const auto same=[&]{return guard&&session_==session&&preview_==frame&&editor&&saveName_==editor&&editor->text()==value;};
+  if(!same()){return false;}const auto revision=revision_;
+  if(!wasBlocked){emit editor->textChanged(value);if(!same()||revision_!=revision+1){return false;}}return same();
 }
 bool TorrentIntakeDialog::setTrackerDraftText(const QString& value) {
   const auto session=session_;const auto frame=preview_;QPointer<TorrentIntakeDialog> guard(this);QPointer<QPlainTextEdit> editor=trackers_;
@@ -273,11 +290,14 @@ void TorrentIntakeDialog::schedule() {
 void TorrentIntakeDialog::render() {
   const auto revision=revision_;const auto frame=preview_;QPointer<TorrentIntakeDialog> guard(this);
   const auto current=[&]{return guard&&revision_==revision&&preview_==frame&&source_&&destination_&&startMode_
-      &&status_&&load_&&add_&&table_&&model_&&priority_&&downloadLimit_&&uploadLimit_&&sequential_&&editTrackers_&&trackers_;};
+      &&status_&&load_&&add_&&table_&&model_&&priority_&&downloadLimit_&&uploadLimit_&&sequential_&&editTrackers_&&trackers_&&saveName_;};
   if(model_&&model_->source!=frame){model_->apply(frame);if(!current()){return;}}
-  if(!source_||!destination_||!startMode_||!status_||!load_||!add_||!table_||!model_||!priority_||!downloadLimit_||!uploadLimit_||!sequential_||!editTrackers_||!trackers_){return;}
+  if(!source_||!destination_||!startMode_||!status_||!load_||!add_||!table_||!model_||!priority_||!downloadLimit_||!uploadLimit_||!sequential_||!editTrackers_||!trackers_||!saveName_){return;}
   source_->setEnabled(!busy_&&!pending());if(!current()||!source_){return;}
   destination_->setEnabled(!busy_&&!committing_);if(!current()||!destination_){return;}
+  saveName_->setEnabled(!busy_&&!pending()&&bool(frame));if(!current()){return;}
+  saveName_->setPlaceholderText(frame?frame->name:tr("Original torrent name"));if(!current()){return;}
+  const bool validName=saveName(saveName_->text());
   table_->setEnabled(!busy_&&!pending());if(!current()||!table_){return;}
   priority_->setEnabled(!busy_&&!pending()&&bool(frame));if(!current()||!priority_){return;}
   startMode_->setEnabled(!busy_&&!pending()&&(!frame||model_->selectedBytes()!=0));if(!current()||!startMode_){return;}
@@ -292,10 +312,11 @@ void TorrentIntakeDialog::render() {
   const bool validTrackers=!editTrackers_->isChecked()||(canEditTrackers&&trackerDraft(trackers_->toPlainText(),trackerValues));
   load_->setEnabled(session_&&!busy_&&!pending()&&metadataPath(source_->text())&&nextRequest_!=std::numeric_limits<quint64>::max());if(!current()||!load_){return;}
   const bool valid=frame&&model_->source==frame&&frame->source.metadata==source_->text();
-  add_->setEnabled(session_&&!busy_&&!pending()&&valid&&validTrackers&&path(destination_->text()));if(!current()||!add_){return;}
+  add_->setEnabled(session_&&!busy_&&!pending()&&valid&&validTrackers&&validName&&path(destination_->text()));if(!current()||!add_){return;}
   QString status=failure_;
   if(status.isEmpty()){
-    status=!validTrackers?tr("Enter valid HTTP, HTTPS or UDP tracker URLs (up to 16 tiers and 64 URLs).")
+    status=!validName?tr("Enter one safe file or folder name, up to 255 UTF8 bytes.")
+        :!validTrackers?tr("Enter valid HTTP, HTTPS or UDP tracker URLs (up to 16 tiers and 64 URLs).")
         :loading_?tr("Loading torrent files…"):committing_?tr("Adding torrent…")
         :!frame?tr("Choose a torrent file and load its files."):model_->selectedBytes()==0
         ?tr("No files selected. The torrent will be added stopped.")
@@ -305,8 +326,8 @@ void TorrentIntakeDialog::render() {
   status_->setText(status.left(4096));
 }
 void TorrentIntakeDialog::accept() {
-  if(!session_||busy_||pending()||!source_||!destination_||!startMode_||!model_||!preview_||!downloadLimit_||!uploadLimit_||!sequential_||!editTrackers_||!trackers_
-      ||model_->source!=preview_||preview_->source.metadata!=source_->text()||!path(destination_->text())){return;}
+  if(!session_||busy_||pending()||!source_||!destination_||!startMode_||!model_||!preview_||!downloadLimit_||!uploadLimit_||!sequential_||!editTrackers_||!trackers_||!saveName_
+      ||model_->source!=preview_||preview_->source.metadata!=source_->text()||!path(destination_->text())||!saveName(saveName_->text())){return;}
   bool validMode=false;const auto mode=startMode_->currentData().toInt(&validMode);
   if(!validMode||mode<static_cast<int>(TorrentIntakeStartMode::Queued)||mode>static_cast<int>(TorrentIntakeStartMode::Forced)){return;}
   const bool selected=model_->selectedBytes()!=0;
@@ -315,8 +336,9 @@ void TorrentIntakeDialog::accept() {
   const bool start=selected&&(force||mode==static_cast<int>(TorrentIntakeStartMode::Queued));
   std::optional<core::TorrentIntakeTrackerTiers> trackers;
   if(editTrackers_->isChecked()){if(!preview_->trackers){return;}trackers.emplace();if(!trackerDraft(trackers_->toPlainText(),*trackers)){return;}}
+  std::optional<QString> name;if(!saveName_->text().isEmpty()){name=saveName_->text();}
   TorrentIntakeSubmission submission{session_,request_.request,preview_->revision,destination_->text(),start,model_->draft,
-      {static_cast<std::int64_t>(downloadLimit_->value())*1024,static_cast<std::int64_t>(uploadLimit_->value())*1024},sequential_->isChecked(),force,paused,std::move(trackers)};
+      {static_cast<std::int64_t>(downloadLimit_->value())*1024,static_cast<std::int64_t>(uploadLimit_->value())*1024},sequential_->isChecked(),force,paused,std::move(trackers),std::move(name)};
   committing_=true;failure_.clear();++revision_;schedule();emit submitted(std::move(submission));
 }
 void TorrentIntakeDialog::reject() {

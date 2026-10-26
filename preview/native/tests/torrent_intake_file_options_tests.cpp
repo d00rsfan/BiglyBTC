@@ -172,8 +172,84 @@ void trackerOptions(){
 }
 }
 
+
+namespace {
+std::string namedMetadata(int kind){
+  auto source=parse(metadata());
+  check(source.replaceValue("attributes","d11:displayname14:retained-title6:future3:raw10:parametersd6:futurei7eee").has_value(),"Retained source title");
+  if(kind!=0){
+    const std::string info=kind==1?"d6:lengthi100e4:name6:single12:piece lengthi16384e6:pieces"+b(std::string(20,'s'))+'e'
+        :"d5:filesld6:lengthi100e4:pathl9:first.bineee4:name6:bundle12:piece lengthi16384e6:pieces"+b(std::string(20,'o'))+'e';
+    check(source.replaceValue("info",info).has_value(),"Exact single/one-entry-multi metadata");
+  }
+  return source.serialize();
+}
+auto namedImport(Area& area,const storage::TorrentIntakeMetadata& prepared,std::optional<std::string> name,
+    void(*observer)(storage::TorrentIntakeStage)=nullptr){
+  std::vector<compat::FilePolicy> policy;for(const auto& file:prepared.layout().files){policy.push_back({file.padding,0});}
+  return storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,policy,observer,false,{}, {},false,false,false,{},std::move(name));
+}
+void saveNameOptions(){
+  const std::string custom="chosen-\xd0\xbf\xd0\xb0\xd0\xbf\xd0\xba\xd0\xb0";
+  for(int kind=0;kind<3;++kind){for(int choice=0;choice<3;++choice){
+    Area area;const auto original=namedMetadata(kind);write(area.input,original);const auto prepared=take(storage::inspectTorrentIntake(area.input));
+    const auto name=choice==0?std::optional<std::string>{}:std::optional<std::string>{choice==1?prepared.layout().name:custom};
+    const auto hash=take(namedImport(area,prepared,name));const auto inventory=parse(read(area.profile/"downloads.config"));const auto& row=inventory.find("downloads")->children.at(0);
+    check(row.find("save_file")->bytes==(choice==2?custom:prepared.layout().name)&&row.find("state")->integer==70&&!row.find("forceStart")->integer,"Only actual saved root/name changes");
+    const auto state=parse(read(area.profile/"active"/(hash.hex()+".dat")));const auto* attrs=state.find("attributes");
+    check(attrs->find("displayname")->bytes==(choice==2&&kind!=2?custom:"retained-title"),"Exact original manual title rule incl one-entry-multi exception");
+    const auto* links=attrs->find("filelinks2");check(links&&links->type==core::Node::Type::List&&links->children.empty(),"No synthesized links; original intake publishes explicit empty list");
+    check(attrs->find("future")&&attrs->find("future")->bytes=="raw","Independent opaque source field remains intact");
+    check(read(area.profile/"torrents"/(hash.hex()+".torrent"))==original&&read(area.input)==original,"Archive and input metadata are byte-identical");
+    check(rawValue(state,"info")==rawValue(parse(original),"info")&&!fs::exists(area.destination),"Raw full identity and no payload allocation");
+  }}
+  for(const auto& name:std::vector<std::string>{"",".","..","../escape","part/leaf","part\\leaf",".git",".BiglyBTC.reserved","   ",std::string("bad\0name",8),"bad\nname",std::string("\xc0\xaf",2),std::string(256,'x')}){
+    Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));check(!namedImport(area,prepared,name),"Unsafe/custom names refuse before effects");area.untouched();check(!fs::exists(area.root/"new"),"Refusal cannot create payload ancestors");
+  }
+  for(int kind=0;kind<3;++kind){
+    Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));const auto chosen=area.destination/"chosen";
+    if(kind==0){write(chosen,"owned data");}else if(kind==1){fs::create_directories(chosen);}else{fs::create_directories(area.destination);fs::create_symlink(area.root/"absent",chosen);}
+    check(!namedImport(area,prepared,std::string("chosen")),"Existing file/directory/symlink cannot be reused under a changed leaf");area.untouched();
+    if(kind==0){check(read(chosen)=="owned data","No-clobber preserves existing bytes");}if(kind==2){check(fs::is_symlink(chosen),"No-clobber retains link identity");}
+  }
+  { Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));write(area.destination/"bundle/skip.bin","old unverified data");
+    const auto hash=take(storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,nullptr,false,{}, {},false,false,false,{},std::string("chosen")));
+    const auto state=parse(read(area.profile/"active"/(hash.hex()+".dat")));check(state.find("attributes")->find("storetypes")->children[1].bytes=="C","Skipped-file absence uses effective leaf, not old metadata root");check(read(area.destination/"bundle/skip.bin")=="old unverified data"&&!fs::exists(area.destination/"chosen"),"Physical checks never touch old metadata-root bytes"); }
+
+  for(const bool reserved:{false,true}){
+    Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));area.destination=reserved?area.root/".git"/"payload":area.profile/"payload";
+    check(!namedImport(area,prepared,std::string("chosen")),"Changed leaf cannot enter profile or reserved directory");area.untouched();check(!fs::exists(area.destination),"No unsafe ancestors created");
+  }
+  for(const auto stage:{storage::TorrentIntakeStage::JournalSynced,storage::TorrentIntakeStage::StatePublished,storage::TorrentIntakeStage::ArchivePublished,storage::TorrentIntakeStage::InventoryPublished}){
+    Area area;write(area.input,namedMetadata(0));const auto prepared=take(storage::inspectTorrentIntake(area.input));interrupted=stage;
+    check(!storage::importTorrentWithFileOptions(*area.lease,prepared,area.destination,true,mixed,interrupt,false,{}, {7168,13312},true,false,true,core::TorrentIntakeTrackerTiers{},custom),"Interrupt accepted custom root with all other intents");
+    area.reopen();const auto recovered=take(storage::recoverTorrentIntake(*area.lease));check(recovered&&*recovered==prepared.hash(),"Fresh lease recovers exact custom-name identity");
+    const auto inventory=parse(read(area.profile/"downloads.config"));const auto& row=inventory.find("downloads")->children.at(0);const auto state=parse(read(area.profile/"active"/(prepared.hash().hex()+".dat")));
+    check(row.find("save_file")->bytes==custom&&row.find("maxdl")->integer==7168&&row.find("maxul")->integer==13312&&inventory.find("pause_data"),"Name/paused/rates are one recovered publication");
+    check(state.find("attributes")->find("displayname")->bytes==custom&&core::originalDownloadFlags(state.find("attributes"))==std::optional<std::int64_t>{8192},"Title and flags survive every durable stage");check(!storage::hasPendingTorrentIntake(*area.lease)&&!fs::exists(area.destination),"Recovery retires journal without payload IO");
+  }
+  { Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));interrupted=storage::TorrentIntakeStage::JournalSynced;
+    check(!namedImport(area,prepared,std::string("chosen"),interrupt),"Accepted custom-root journal");write(area.destination/"chosen/first.bin","appeared after preview");const auto before=read(area.profile/"downloads.config");area.reopen();
+    check(!storage::recoverTorrentIntake(*area.lease),"Fresh recovery rechecks complete no-clobber root even for selected files");check(read(area.destination/"chosen/first.bin")=="appeared after preview"&&read(area.profile/"downloads.config")==before&&storage::hasPendingTorrentIntake(*area.lease),"Failed recovery retains data, inventory and accepted intent"); }
+  for(const auto& encoded:std::vector<std::string>{"0:",b("../wrong"),"i7e","le"}){
+    Area area;const auto prepared=take(storage::inspectTorrentIntake(area.input));interrupted=storage::TorrentIntakeStage::JournalSynced;check(!namedImport(area,prepared,custom,interrupt),"Accepted name before malformed replay");
+    auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));const auto* value=journal.find("fileOptions");check(value,"Real journal options");auto options=parse(core::encodeValue(*value,storage::compatibleConfigLimits()).value());check(options.replaceValue("saveName",encoded).has_value()&&journal.replaceValue("fileOptions",options.serialize()).has_value(),"Malformed save-name journal fixture");write(area.profile/"BiglyBTC.torrent-import",journal.serialize());area.reopen();
+    check(!storage::recoverTorrentIntake(*area.lease)&&!fs::exists(area.profile/"active")&&!fs::exists(area.profile/"torrents")&&!fs::exists(area.destination),"Wrong/unsafe journal leaf cannot publish anything");
+  }
+  for(const bool external:{false,true}){
+    Area area;const auto existing=take(storage::inspectTorrentIntake(area.input));take(namedImport(area,existing,std::nullopt));
+    const auto chosen=area.destination/"chosen";auto inventory=parse(read(area.profile/"downloads.config"));auto old=parse(core::encodeValue(inventory.find("downloads")->children[0],storage::compatibleConfigLimits()).value());
+    if(!external){check(old.replaceValue("save_file",b("chosen")).has_value()&&inventory.replaceValue("downloads","l"+old.serialize()+'e').has_value(),"Existing future root ownership");write(area.profile/"downloads.config",inventory.serialize());}
+    else{auto state=parse(read(area.profile/"active"/(existing.hash().hex()+".dat")));auto attrs=parse(core::encodeValue(*state.find("attributes"),storage::compatibleConfigLimits()).value());const auto link="0\n"+(area.destination/"bundle/first.bin").string()+"\n"+(chosen/"linked.bin").string();check(attrs.replaceValue("filelinks2","l"+b(link)+'e').has_value()&&state.replaceValue("attributes",attrs.serialize()).has_value(),"Existing explicit external link owns new root");write(area.profile/"active"/(existing.hash().hex()+".dat"),state.serialize());}
+    auto input=parse(metadata());auto info=parse(rawValue(input,"info"));check(info.replaceValue("name",b("other-source")).has_value()&&input.replaceValue("info",info.serialize()).has_value(),"Different actual torrent identity");write(area.input,input.serialize());const auto prepared=take(storage::inspectTorrentIntake(area.input));const auto before=read(area.profile/"downloads.config");
+    check(!namedImport(area,prepared,std::string("chosen"))&&read(area.profile/"downloads.config")==before&&!fs::exists(chosen),"Another saved/linked mapping claims absent chosen root; reject before mutation");
+  }
+}
+
+} // namespace
 int main(){
   try{
+    saveNameOptions();
     trackerOptions();
     for(const auto flags:std::array<std::int64_t,5>{0,1,8192,std::numeric_limits<std::int64_t>::min(),std::numeric_limits<std::int64_t>::max()}){
       for(const bool sequential:{false,true}){

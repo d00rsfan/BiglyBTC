@@ -124,6 +124,17 @@ void editStateAtPublished(Stage stage) {
 } // namespace
 
 int main(int argc,char** argv) {
+  if(argc==6&&std::string_view(argv[1])=="--prepare-save-name"){
+    try{
+      const auto request=document(argv[5]);const auto* node=request.find("saveName");
+      CHECK(request.root().type==core::Node::Type::Dictionary&&request.root().children.size()==(node?2U:0U));
+      std::optional<std::string> name;if(node){CHECK(node->type==core::Node::Type::Bytes);name=node->bytes;}
+      auto lease=storage::ProfileLease::acquire(argv[3]);CHECK(lease);const auto source=storage::inspectTorrentIntake(argv[2]);CHECK(source);
+      std::vector<compat::FilePolicy> policy;for(const auto& file:source->layout().files){policy.push_back({file.padding,0});}
+      const auto result=storage::importTorrentWithFileOptions(*lease,*source,argv[4],true,policy,nullptr,false,{}, {},false,false,false,std::nullopt,std::move(name));CHECK(result);
+      std::cout<<result->hex()<<'\n';return 0;
+    }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}
+  }
   if(argc==5&&std::string_view(argv[1])=="--project-trackers"){
     try{
       const auto request=document(argv[3]);const auto* node=request.find("trackers");
@@ -135,7 +146,7 @@ int main(int argc,char** argv) {
       std::cout<<"PASS production tracker projection; retained source input; no engine or network\n";return 0;
     }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}
   }
-  if(argc!=1){std::cerr<<"Expected no arguments or --project-trackers INPUT REQUEST OUTPUT\n";return 2;}
+  if(argc!=1){std::cerr<<"Expected no arguments, --project-trackers INPUT REQUEST OUTPUT, or --prepare-save-name METADATA PROFILE DESTINATION REQUEST\n";return 2;}
   try {
     run("single and multifile import creates only compatible metadata", [] {
       for (const bool multi : {false, true}) {
