@@ -49,7 +49,7 @@ bool forceCopy=false;dev_t copyFromDev=0,copyToDev=0;ino_t copyFromIno=0,copyToI
 // Actual payload reads, identified by opened dev/inode, including fortified
 // libc calls. Profile/journal reads are excluded; no synthetic byte estimates.
 struct ReadCounter {dev_t device=0;ino_t inode=0;std::uint64_t bytes=0;};
-std::array<ReadCounter,16> readCounters{};std::size_t watchedReads=0;
+std::array<ReadCounter,64> readCounters{};std::size_t watchedReads=0;
 bool countingReads=false,readCounterFailed=false;
 std::size_t watchReads(const fs::path& path){
   struct stat stamp{};check(::stat(path.c_str(),&stamp)==0&&watchedReads<readCounters.size(),"read counter fixture identity");
@@ -525,6 +525,94 @@ void payloadDigestWorkAndInterference(){
   resetReads();
 }
 
+
+// More files than the unchanged eight receipt descriptors. This fixture uses
+// real distinct inodes and unequal lengths, with deliberately nonlexical names;
+// profile/control/journal IO never contributes to the existing inode counters.
+struct ManyPayloads {
+  Area area;fs::path profile=area.root/"profile",source=area.root/"source",destination=area.root/"destination";
+  std::vector<fs::path> files,targets;std::vector<std::string> values,targetValues;std::vector<bool> present;
+  core::TorrentHash hash;std::optional<st::ProfileLease> lease;fs::path state;
+  ManyPayloads(std::size_t count,bool sparse,st::FileOperationKind kind){
+    std::string entries="l",all;fs::create_directories(destination);
+    for(std::size_t i=0;i<count;++i){
+      const auto leaf="leaf-"+std::to_string((i*7)%count)+'-'+std::to_string(i)+".bin";
+      values.emplace_back(7+3*i,static_cast<char>('A'+i));targetValues.emplace_back(7+3*i,static_cast<char>('a'+i));all+=values.back();
+      files.push_back(source/"bundle"/leaf);targets.push_back(destination/"bundle"/leaf);
+      present.push_back(!sparse||(i!=0&&i!=4&&i!=9&&i!=16));
+      entries+="d6:lengthi"+std::to_string(values.back().size())+"e4:pathl"+b(leaf)+"ee";
+      // Relink validates destination content, and leaves every source alone.
+      if(kind==st::FileOperationKind::Relink||present.back()){write(files.back(),values.back());}
+      if(kind==st::FileOperationKind::Relink&&present.back()){write(targets.back(),targetValues.back());}
+    }
+    std::string pieces;for(std::size_t i=0;i<all.size();i+=4){pieces+=sha1(std::string_view(all).substr(i,std::min<std::size_t>(4,all.size()-i)));}
+    const auto info="d5:files"+entries+"e4:name6:bundle12:piece lengthi4e6:pieces"+b(pieces)+'e';hash=take(core::TorrentHash::parse(sha1(info)).transform_error([](auto){return st::Error{st::ErrorCode::InvalidFormat,"Many-file fixture identity"};}));
+    state=profile/"active"/(hash.hex()+".dat");std::string stores="l",priorities="l";for(std::size_t i=0;i<count;++i){stores+="1:L";priorities+="i1e";}
+    write(state,"d4:info"+info+"10:attributesd10:storetypes"+stores+"e14:resumecompletei2e12:opaque.stateli7e3:raweee");
+    const auto archive=area.root/"retained.torrent";write(archive,read(state));
+    write(profile/"downloads.config","d9:downloadsld12:torrent_hash"+b(sha1(info))+"7:torrent"+b(archive.string())+"8:save_dir"+b(source.string())+"9:save_file6:bundle5:statei70e10:forceStarti0e15:file_priorities"+priorities+"e10:opaque.rowd4:keep3:raweee6:opaque3:rawe");
+    lease.emplace(take(st::ProfileLease::acquire(profile)));
+  }
+  st::PreparedFileOperation plan(st::FileOperationKind kind){return take(st::prepareFileOperation(*lease,{hash,kind,kind==st::FileOperationKind::Relink||kind==st::FileOperationKind::Relocate?std::optional<fs::path>{destination}:std::nullopt}));}
+};
+struct ManyTrace {
+  ManyPayloads& fixture;st::FileOperationKind kind;
+  std::vector<struct stat> identities;std::vector<std::size_t> presentIndices;
+  std::vector<st::FileOperationStage> stages;std::size_t destinations=0,removed=0;std::string scope,cas;
+  std::optional<std::size_t> mutateIndex{};bool mutated=false,stopAfterJournal=false,stopAfterDestination=false;
+  explicit ManyTrace(ManyPayloads& f,st::FileOperationKind k):fixture(f),kind(k){for(std::size_t i=0;i<f.files.size();++i){if(!f.present[i]){continue;}presentIndices.push_back(i);struct stat stamp{};const auto& path=k==st::FileOperationKind::Relink?f.targets[i]:f.files[i];check(::stat(path.c_str(),&stamp)==0,"Many-file actual watched inode");identities.push_back(stamp);check(payloadDescriptors(stamp)==0,"Fixture starts without retained payload descriptors");}}
+  void noDescriptors()const{for(const auto& stamp:identities){check(payloadDescriptors(stamp)==0,"Attempted caller/fresh recovery retains no digest descriptor after return");}}
+  void bytesIntact()const{for(std::size_t i=0;i<fixture.files.size();++i){if(kind==st::FileOperationKind::Relink){check(read(fixture.files[i])==fixture.values[i],"Relink preserves every source byte");if(fixture.present[i]){check(read(fixture.targets[i])==fixture.targetValues[i],"Relink retains actual selected target bytes");}else{check(!fs::exists(fixture.targets[i]),"Relink cannot invent missing target");}}else if(kind==st::FileOperationKind::Relocate){check(!fs::exists(fixture.files[i]),"Move removes each present source and does not create missing sources");if(fixture.present[i]){check(read(fixture.targets[i])==fixture.values[i],"Move preserves every actual original payload byte");}else{check(!fs::exists(fixture.targets[i]),"Move cannot invent a missing source");}}else{check(!fs::exists(fixture.files[i]),"Delete removes only the original listed present leaves");}}}
+};
+ManyTrace* manyTrace=nullptr;
+struct ObserveMany {ManyTrace& trace;explicit ObserveMany(ManyTrace& value):trace(value){check(!manyTrace,"Single owned observer");manyTrace=&trace;}~ObserveMany(){manyTrace=nullptr;countingReads=false;}};
+void observeMany(st::FileOperationStage stage){
+  auto& trace=*manyTrace;auto& f=trace.fixture;trace.stages.push_back(stage);
+  if(stage==st::FileOperationStage::JournalSynced){
+    const auto outer=doc(read(f.profile/"BiglyBTC.file-operation"));const auto* bytes=outer.find("payload");check(bytes&&bytes->type==core::Node::Type::Bytes,"Actual durable journal payload");const auto journal=doc(std::string(bytes->bytes));if(!trace.scope.empty()){check(journal.find("scope")->bytes==trace.scope&&journal.find("cas")->bytes==trace.cas,"Actual journal preserves accepted approval and execution CAS");}const auto* rows=journal.find("files");const auto* runtime=journal.find("runtime");
+    check(rows&&runtime&&rows->children.size()==f.files.size()&&runtime->children.size()==f.files.size(),"Journal retains original bounded file vector");
+    for(std::size_t i=0;i<f.files.size();++i){const auto& row=rows->children[i];check(row.find("i")->integer==static_cast<std::int64_t>(i)&&row.find("s")->bytes==f.files[i].string(),"Journal indices and source paths keep original order");const auto* hash=runtime->children[i].find("sha");check(hash&&hash->bytes==(f.present[i]?st::fileop::digest(trace.kind==st::FileOperationKind::Relink?f.targetValues[i]:f.values[i]):std::string{}),"Journal digest stays attached to the actual original index");}
+    std::size_t retained=0;for(const auto& stamp:trace.identities){retained+=payloadDescriptors(stamp);}check(retained<=8,"Pre-journal proof retains no more than unchanged eight payload descriptors");
+    if(trace.mutateIndex){const auto index=*trace.mutateIndex;const auto& path=trace.kind==st::FileOperationKind::Relink?f.targets[index]:f.files[index];struct stat before{};check(::stat(path.c_str(),&before)==0,"Mutation actual identity");auto changed=trace.kind==st::FileOperationKind::Relink?f.targetValues[index]:f.values[index];changed[0]='!';write(path,changed);const struct timespec times[]{before.st_atim,before.st_mtim};check(::utimensat(AT_FDCWD,path.c_str(),times,0)==0,"Restore actual mtime after callback mutation");struct stat after{};check(::stat(path.c_str(),&after)==0&&st::fileop::identity(before,after)&&before.st_size==after.st_size&&before.st_mtim.tv_sec==after.st_mtim.tv_sec&&before.st_mtim.tv_nsec==after.st_mtim.tv_nsec&&(before.st_ctim.tv_sec!=after.st_ctim.tv_sec||before.st_ctim.tv_nsec!=after.st_ctim.tv_nsec),"Callback really changes ctime/content while keeping inode/size/mtime");trace.mutated=true;}
+    if(trace.stopAfterJournal){throw std::runtime_error("Owned many-file durable interruption");}
+  }
+  if(stage==st::FileOperationStage::DestinationPublished){check(trace.destinations<trace.presentIndices.size(),"No invented destination notification");const auto index=trace.presentIndices[trace.destinations++];check(fs::exists(f.targets[index]),"Destination notifications remain forward and follow actual publication");for(std::size_t n=trace.destinations;n<trace.presentIndices.size();++n){check(!fs::exists(f.targets[trace.presentIndices[n]]),"Later destinations are not published early");}if(trace.stopAfterDestination){throw std::runtime_error("Owned first-destination interruption");}}
+  if(stage==st::FileOperationStage::SourceRemoved){check(trace.removed<trace.presentIndices.size(),"No invented source removal notification");const auto index=trace.presentIndices[trace.removed++];check(!fs::exists(f.files[index]),"Source removal notification follows original forward leaf");for(std::size_t n=trace.removed;n<trace.presentIndices.size();++n){check(fs::exists(f.files[trace.presentIndices[n]]),"Later sources remain until their original mutation turn");}}
+}
+void manyPayloadDigestTraversal(){
+  for(const auto kind:{st::FileOperationKind::Relink,st::FileOperationKind::RemoveDeleteData,st::FileOperationKind::Relocate}){for(int shape=0;shape<3;++shape){
+    const std::size_t count=shape==0?9:17;const bool sparse=shape==2;ManyPayloads f(count,sparse,kind);auto p=f.plan(kind);const auto scope=p.preview().approvalScopeDigest,cas=p.preview().executionCasDigest;ManyTrace trace(f,kind);trace.scope=scope;trace.cas=cas;ObserveMany observed(trace);
+    check(p.preview().presentFiles==trace.presentIndices.size()&&p.preview().missingFiles==count-trace.presentIndices.size(),"Exact present subset in original index order");
+    const auto c=take(st::confirmFileOperation(p,scope,kind==st::FileOperationKind::RemoveDeleteData));check(p.preview().approvalScopeDigest==scope&&p.preview().executionCasDigest==cas,"Confirmation cannot reorder or alter approval/CAS");
+    const auto foreign=f.source/"bundle"/"foreign.keep";write(foreign,"foreign data");resetReads();std::vector<std::size_t> watched;for(const auto index:trace.presentIndices){watched.push_back(watchReads(kind==st::FileOperationKind::Relink?f.targets[index]:f.files[index]));}std::vector<std::size_t> oldSources;if(kind==st::FileOperationKind::Relink){for(const auto& path:f.files){oldSources.push_back(watchReads(path));}}
+    countingReads=true;const auto result=take(st::applyFileOperation(*f.lease,std::move(p),c,observeMany));countingReads=false;
+    std::uint64_t total=0;for(std::size_t rank=0;rank<watched.size();++rank){const auto index=trace.presentIndices[rank];const auto copies=(kind==st::FileOperationKind::Relocate?2u:1u)+(rank>=8?1u:0u);const auto actual=reads(watched[rank]);check(actual==copies*f.values[index].size(),"Actual per-inode reads match retained-prefix/tail expectation without skipping content proofs");total+=actual;}for(const auto index:oldSources){check(reads(index)==0,"Relink never hashes old source payload");}
+    // Independent literal sums for 7+3*i bytes (9/17 files; sparse omits0,4,9,16).
+    const auto expected=kind==st::FileOperationKind::Relocate?std::array<std::uint64_t,3>{373,1441,1054}[shape]:std::array<std::uint64_t,3>{202,914,642}[shape];check(total==expected,"Observed unequal-size total must match literal fixture expectation");
+    check(result.filesMoved==(kind==st::FileOperationKind::Relocate?trace.presentIndices.size():0)&&result.filesDeleted==(kind==st::FileOperationKind::RemoveDeleteData?trace.presentIndices.size():0),"Exact effects do not include missing or unlisted leaves");check(!st::hasPendingFileOperation(*f.lease)&&trace.stages.front()==st::FileOperationStage::JournalSynced&&trace.stages.back()==st::FileOperationStage::Completed,"Durable journal/notification endpoints unchanged");check(trace.destinations==(kind==st::FileOperationKind::Relocate?trace.presentIndices.size():0)&&trace.removed==(kind==st::FileOperationKind::Relink?0:trace.presentIndices.size()),"Original forward mutation/notification counts unchanged");trace.noDescriptors();check(p.preview().hash==f.hash,"Attempted caller remains alive without receipts");trace.bytesIntact();check(read(foreign)=="foreign data","Foreign unlisted data never removed");
+    const auto inventory=doc(read(f.profile/"downloads.config"));check(inventory.find("opaque")->bytes=="raw","Unknown inventory retained");if(kind!=st::FileOperationKind::RemoveDeleteData){check(doc(read(f.state)).find("attributes")->find("opaque.state"),"Unknown state retained");}
+    std::cout<<"payload-work many kind="<<static_cast<int>(kind)<<" files="<<count<<" present="<<trace.presentIndices.size()<<" returned-read-bytes="<<total<<"\n";
+  }}
+
+  for(const bool changedDocument:{false,true}){
+    ManyPayloads f(17,false,st::FileOperationKind::RemoveDeleteData);auto p=f.plan(st::FileOperationKind::RemoveDeleteData);auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,true));ManyTrace trace(f,st::FileOperationKind::RemoveDeleteData);
+    if(changedDocument){auto inventory=doc(read(f.profile/"downloads.config"));put(inventory,"opaque","7:changed");write(f.profile/"downloads.config",inventory.serialize());}else{c.deleteConfirmed=false;}
+    resetReads();std::vector<std::size_t> watched;for(const auto& path:f.files){watched.push_back(watchReads(path));}countingReads=true;const auto failed=st::applyFileOperation(*f.lease,std::move(p),c);countingReads=false;
+    check(!failed&&failed.error().code==st::ErrorCode::Conflict&&!st::hasPendingFileOperation(*f.lease),"Rejected confirmation/document CAS precedes all many-file hashing and journal effects");for(const auto index:watched){check(reads(index)==0,"Refusal must perform zero observed payload reads");}for(std::size_t i=0;i<f.files.size();++i){check(read(f.files[i])==f.values[i],"Pre-journal refusal preserves all17 source leaves");}trace.noDescriptors();
+  }
+  for(const auto kind:{st::FileOperationKind::Relink,st::FileOperationKind::RemoveDeleteData,st::FileOperationKind::Relocate}){for(const std::size_t index:{0u,16u}){
+    ManyPayloads f(17,false,kind);auto p=f.plan(kind);const auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,kind==st::FileOperationKind::RemoveDeleteData));ManyTrace trace(f,kind);trace.mutateIndex=index;ObserveMany observed(trace);
+    const auto failed=st::applyFileOperation(*f.lease,std::move(p),c,observeMany);check(!failed&&failed.error().code==st::ErrorCode::Conflict&&trace.mutated&&st::hasPendingFileOperation(*f.lease),"Retained-prefix and evicted-tail callback changes both refuse accepted content mismatch");trace.noDescriptors();const auto& path=kind==st::FileOperationKind::Relink?f.targets[index]:f.files[index];auto changed=kind==st::FileOperationKind::Relink?f.targetValues[index]:f.values[index];changed[0]='!';check(read(path)==changed,"Refusal never deletes or replaces changed callback data");check(!st::recoverFileOperation(*f.lease)&&read(path)==changed,"Fresh cold recovery independently refuses changed actual content");trace.noDescriptors();
+  }}
+  for(const bool afterDestination:{false,true}){
+    ManyPayloads f(17,false,st::FileOperationKind::Relocate);auto p=f.plan(st::FileOperationKind::Relocate);const auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false));ManyTrace trace(f,st::FileOperationKind::Relocate);trace.stopAfterJournal=!afterDestination;trace.stopAfterDestination=afterDestination;ObserveMany observed(trace);
+    check(!st::applyFileOperation(*f.lease,std::move(p),c,observeMany)&&st::hasPendingFileOperation(*f.lease),"Many-file actual durable interruption");trace.noDescriptors();check(p.preview().hash==f.hash,"Failed attempted plan still owned by caller");resetReads();std::vector<std::size_t> watched;for(const auto& path:f.files){watched.push_back(watchReads(path));}countingReads=true;const auto result=take(st::recoverFileOperation(*f.lease));countingReads=false;
+    check(result&&result->recovered&&result->filesMoved==17&&!st::hasPendingFileOperation(*f.lease),"Fresh recovery completes exact original many-file scope");std::uint64_t total=0;for(std::size_t i=0;i<watched.size();++i){const auto actual=reads(watched[i]);check(actual==2*f.values[i].size(),"Recovery proves cold actual named content before reuse and post-link unlink");total+=actual;}check(total==1054,"Cold recovery actual unequal-size total");trace.noDescriptors();trace.bytesIntact();
+    std::cout<<"payload-work many cold-recovery after-destination="<<afterDestination<<" files=17 returned-read-bytes="<<total<<"\n";
+  }
+  resetReads();
+}
+
 void realCopyBranch(){
   Fixture f;struct stat from{},to{};check(::stat(f.source.c_str(),&from)==0&&::stat(f.destination.c_str(),&to)==0,"copy fixture dirs");copyFromDev=from.st_dev;copyFromIno=from.st_ino;copyToDev=to.st_dev;copyToIno=to.st_ino;copyHits=0;forceCopy=true;auto p=f.plan(st::FileOperationKind::Relocate);auto c=take(st::confirmFileOperation(p,p.preview().approvalScopeDigest,false));auto result=st::applyFileOperation(f.lease,std::move(p),c);forceCopy=false;take(std::move(result));check(copyHits>0&&read(f.destination/"file.bin")=="hello"&&!fs::exists(f.source/"file.bin"),"EXDEV fallback copies actual bytes and removes source only after publication");
 }
@@ -551,4 +639,4 @@ void canonicalLatin1MoveUsesActualDecodedLeaves() {
   const auto after=doc(read(f.selected.state));check(after.find("encoding")->bytes=="ISO-8859-1"&&take(core::encodeValue(*after.find("info"),st::compatibleConfigLimits()).transform_error([](auto){return st::Error{st::ErrorCode::InvalidFormat,"fixture encode"};}))==rawInfo,"Move keeps raw info identity and original charset");
   check(after.find("attributes")->find("opaque.state"),"Move retains unrelated original state");
 }
-int main(){try{canonicalLatin1MoveUsesActualDecodedLeaves();archiveControlsAndRecovery();digestReceiptsEndWithApply();payloadDigestWorkAndInterference();selectionPoliciesMoveAndRecover();selectionCollisionAndStaleSource();keepAndDelete();relocationRecoveryPreservesBothUntilPublication();relinkAndScope();protectionAndConflicts();realCopyBranch();nonlinearControlsAndRecovery();nonlinearBoundaryRefusals();authenticatedExternalLinks();legacyRootsAndDefaultStoreRecovery();pendingReorderedCompletionGuards();std::cout<<"ten generated file-operation families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+int main(){try{manyPayloadDigestTraversal();canonicalLatin1MoveUsesActualDecodedLeaves();archiveControlsAndRecovery();digestReceiptsEndWithApply();payloadDigestWorkAndInterference();selectionPoliciesMoveAndRecover();selectionCollisionAndStaleSource();keepAndDelete();relocationRecoveryPreservesBothUntilPublication();relinkAndScope();protectionAndConflicts();realCopyBranch();nonlinearControlsAndRecovery();nonlinearBoundaryRefusals();authenticatedExternalLinks();legacyRootsAndDefaultStoreRecovery();pendingReorderedCompletionGuards();std::cout<<"ten generated file-operation families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
