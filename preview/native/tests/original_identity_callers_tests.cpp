@@ -89,7 +89,8 @@ void stoppedHybridCompanionPreservesOriginalAuthority(){
     const auto cache=gzip("d5:stateld4:hash"+b(hashBytes(from))+"10:attributes"+attrs.serialize()+"eee");
     write(a.profile/"active/cache.dat",cache);
     fs::create_directory(a.profile/"active"/from.hex());write(a.profile/"active"/from.hex()/"foreign-plugin-leaf","preserve");
-    const auto before=read(a.state(from)),inventory=doc(read(a.profile/"downloads.config"));
+    const auto before=read(a.state(from));
+    const auto inventory=doc(read(a.profile/"downloads.config"));
     const auto first=encoded(inventory.find("downloads")->children[0]);
     const auto to=take(storage::importHybridAlias(*a.lease,from,sourceV2?storage::OriginalSelectedHash::V1:storage::OriginalSelectedHash::V2,{}));
     check(to!=from&&a.library().downloads.size()==2,"explicit companion adds one unique other selected key");

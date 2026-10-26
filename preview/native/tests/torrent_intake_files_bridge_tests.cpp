@@ -42,16 +42,19 @@ private slots:
     // Only the existing owned-loopback policy token is needed: neither stopped
     // source nor companion is admitted to a transfer or offered to this peer.
     test::OwnedEngineFixture ownedPeer(false);QTRY_VERIFY_WITH_TIMEOUT(ownedPeer.ready(),30000);
-    app::SessionBridge bridge;QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady),failures(&bridge,&app::SessionBridge::failed);
+    app::SessionBridge bridge;QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady),messages(&bridge,&app::SessionBridge::messageReady);
     QSignalSpy closed(&bridge,&app::SessionBridge::sessionClosed);
     QVERIFY(bridge.open(source.profile,ownedPeer.port()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!rows.empty(),10000);
     auto current=qvariant_cast<ui::Presentation>(rows.last()[0]);QVERIFY(current&&current->items.size()==1);
     const ui::Target target{QString::fromStdString(source.key->hex()),current->revision};
-    auto stale=target;++stale.generation;QVERIFY(bridge.createHybridCompanion(stale,true));
-    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!failures.empty(),10000);
+    const auto beforeStale=messages.size();auto stale=target;++stale.generation;QVERIFY(bridge.createHybridCompanion(stale,true));
+    QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&messages.size()>beforeStale,10000);
+    QVERIFY(messages.last()[0].toString().contains(QStringLiteral("selection is stale")));
     QCOMPARE(test::selected_swarm::read(source.profile/"downloads.config"),source.initialInventory);
     QVERIFY(!std::filesystem::exists(source.destination));
-    QVERIFY(bridge.createHybridCompanion(target,true));
+    current=qvariant_cast<ui::Presentation>(rows.last()[0]);QVERIFY(current&&current->items.size()==1);
+    const ui::Target refreshed{target.hash,current->revision};
+    QVERIFY(bridge.createHybridCompanion(refreshed,true));
     QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&qvariant_cast<ui::Presentation>(rows.last()[0])
         &&qvariant_cast<ui::Presentation>(rows.last()[0])->items.size()==2,10000);
     current=qvariant_cast<ui::Presentation>(rows.last()[0]);
@@ -60,9 +63,9 @@ private slots:
     const auto saved=core::readLibrary(inventory);QVERIFY(saved&&saved->issues.empty()&&saved->downloads.size()==2);
     QVERIFY(saved->downloads[0].hash==source.key&&saved->downloads[1].hash!=source.key);
     QCOMPARE(saved->downloads[1].startup,core::StartupState::Stopped);
-    const auto failureCount=failures.size();const ui::Target fresh{target.hash,current->revision};
+    const auto failureCount=messages.size();const ui::Target fresh{target.hash,current->revision};
     const auto beforeDuplicate=test::selected_swarm::read(source.profile/"downloads.config");
-    QVERIFY(bridge.createHybridCompanion(fresh,true));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&failures.size()>failureCount,10000);
+    QVERIFY(bridge.createHybridCompanion(fresh,true));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&messages.size()>failureCount,10000);
     QCOMPARE(test::selected_swarm::read(source.profile/"downloads.config"),beforeDuplicate);
     QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,15000);
     QVERIFY(closed[0][1].toBool()&&closed[0][2].toBool());
