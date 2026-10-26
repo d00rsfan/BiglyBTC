@@ -8,6 +8,8 @@
 #include <algorithm>
 #include <array>
 #include <cerrno>
+#include <clocale>
+#include <langinfo.h>
 #include <cstdlib>
 #include <fcntl.h>
 #include <filesystem>
@@ -122,6 +124,11 @@ void test(std::string_view name,const std::function<void()>& body) { body(); ++f
 }
 int main() {
  try {
+  require(std::setlocale(LC_CTYPE, "")!=nullptr,"Initialize actual filesystem character locale");
+  std::string filesystemEncoding(::nl_langinfo(CODESET));
+  std::erase(filesystemEncoding,'-');
+  std::ranges::transform(filesystemEncoding,filesystemEncoding.begin(),[](unsigned char c){return c>='A'&&c<='Z'?static_cast<char>(c+32):static_cast<char>(c);});
+  require(filesystemEncoding=="utf8","Actual generated Unicode fixtures require an installed UTF8 locale");
   test("original-canonical-latin1-paths-preserve-raw-identity-and-checkpoint",[] {
     Fixture f(true);const auto oldPath=f.profile/"active"/(f.hash.hex()+".dat");
     auto metadata=f.state();auto info=core::Document::parse(f.info);require(info.has_value(),"Latin1 original info");

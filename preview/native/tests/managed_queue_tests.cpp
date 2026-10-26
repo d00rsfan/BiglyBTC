@@ -237,12 +237,14 @@ private slots:
   }
   void actualTargetEtaIsAdmissionOwnedAndPauseClearsCurrentAuthority() {
     test::OwnedEngineFixture fixture(false,true);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);
+    const auto originalState=parsed(test::read(fixture.stateFile));
     auto lease=held(fixture);auto service=owner();auto settings=policy(1,1);settings.downloadOrder=core::QueueDownloadOrder::Eta;
     QVERIFY(service->configureQueuePolicy(settings,119));
     QVERIFY(service->startManaged(lease,{.hash=*fixture.hash,.ownedLoopbackPeerPort=fixture.port()}));
     QTRY_VERIFY_WITH_TIMEOUT(([&]{
       const auto poll=service->poll();const auto observed=status(*service,*fixture.hash);
       return poll&&observed&&!observed->failure&&observed->phase==Phase::Downloading&&observed->received>0
+          &&observed->pieces>0&&!observed->complete
           &&observed->queueTargetStatistics&&observed->queueTargetStatistics->etaSeconds
           &&observed->queueTargetStatistics->smoothedPayloadReceiveBytesPerSecond;
     })(),30000);
@@ -275,7 +277,43 @@ private slots:
     const auto closed=service->close(std::chrono::steady_clock::now()+5s);
     const auto stopped=status(*service,*fixture.hash);
     QVERIFY(stopped&&!stopped->retained&&!stopped->queueTargetStatistics);
-    QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&closed.retirement.peerCounters);QVERIFY(!closed.checkpointFailure);QVERIFY(fixture.intact());
+    QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&closed.retirement.peerCounters);QVERIFY(!closed.checkpointFailure);
+    QVERIFY(!stopped->failure&&stopped->phase==Phase::Stopped&&stopped->checked);
+    QVERIFY(!stopped->complete&&!stopped->selectedComplete);
+    constexpr int PieceBytes=16384;
+    QCOMPARE(stopped->totalPieces,test::OwnedEngineFixture::PayloadBytes/PieceBytes);
+    QVERIFY(stopped->pieces>0&&stopped->pieces<stopped->totalPieces);
+    QVERIFY(stopped->received>=before->received&&stopped->sent>=before->sent);
+    const auto verified=static_cast<std::int64_t>(stopped->pieces)*PieceBytes;
+    QVERIFY(stopped->received>=verified);
+    QVERIFY(closed.retirement.peerCounters->counters().payloadReceived>=stopped->received);
+    QVERIFY(closed.retirement.peerCounters->counters().payloadSent>=stopped->sent);
+    const auto saved=parsed(test::read(fixture.profile+QStringLiteral("/downloads.config")));
+    const auto& row=entry(saved,*fixture.hash);
+    QCOMPARE(integer(row,"downloaded"),stopped->received);QCOMPARE(integer(row,"uploaded"),stopped->sent);
+    QCOMPARE(integer(row,"completedbytes"),verified);
+    const auto state=parsed(test::read(fixture.stateFile));
+    const auto* resume=state.find("resume");QVERIFY(resume);
+    const auto* data=resume->find("data");QVERIFY(data);
+    QCOMPARE(integer(*data,"valid"),std::int64_t{0});
+    const auto* flags=data->find("resume data");QVERIFY(flags&&flags->type==core::Node::Type::Bytes);
+    QCOMPARE(std::string(flags->bytes),std::string(static_cast<std::size_t>(stopped->totalPieces),'\2'));
+    QVERIFY(state.find("opaque.fixture")&&originalState.find("opaque.fixture"));
+    QCOMPARE(encoded(*state.find("opaque.fixture")),encoded(*originalState.find("opaque.fixture")));
+    // This peer deliberately lacks the final piece. Verify actual received
+    // blocks, not completion that the fixture can never supply. A good block
+    // awaiting verification is permitted without claiming it as saved progress.
+    QCOMPARE(fixture.files.size(),std::size_t{1});
+    const auto& file=fixture.files.front();const auto payload=test::read(fixture.payload+'/'+file.relative);
+    QCOMPARE(payload.size(),file.expected.size());int goodPieces=0;
+    for(int i=0;i<stopped->totalPieces;++i){
+      const auto block=payload.mid(i*PieceBytes,PieceBytes);
+      if(block==file.expected.mid(i*PieceBytes,PieceBytes)){++goodPieces;}
+      else{QCOMPARE(block,QByteArray(PieceBytes,'\0'));}
+    }
+    QVERIFY(goodPieces>=stopped->pieces);
+    QCOMPARE(payload.last(PieceBytes),QByteArray(PieceBytes,'\0'));
+    QVERIFY(fixture.intact(false)); // Original statistics, dev/inode and no temporary saves remain exact.
   }
   void actualOriginalFilePriorityProviderPreservesStartupAndManualHold() {
     test::OwnedEngineFixture single(false,true),multi(true,true);
