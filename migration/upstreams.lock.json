@@ -6809,6 +6809,26 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "663cd8e9f387c8540976153c70238d1ef7869126",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "2c431324bb8fca9f4cc6b97e620305a4d1f2b15d",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "767e1dcf00f9054553c97fd2db254c8b5df0b471",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "3db31281fbba59f75b926ad9a30d68804a2a23a7",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "a2f050e27779c3b949db6f144f978ae0cc542a44",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -6821,7 +6841,8 @@
         "migration/updates/compatibility.providers/20261026-batch4.md",
         "migration/updates/compatibility.providers/20261026-batch5.md",
         "migration/updates/compatibility.providers/20261027-batch6.md",
-        "migration/updates/compatibility.providers/20261027-batch8.md"
+        "migration/updates/compatibility.providers/20261027-batch8.md",
+        "migration/updates/compatibility.providers/20261027-batch9.md"
       ],
       "evidence": [
         "migration/evidence/20261025-storage-resume/verification.json",
@@ -6833,7 +6854,8 @@
         "migration/evidence/20261026-compatibility-batch4/verification.json",
         "migration/evidence/20261026-compatibility-batch5/verification.json",
         "migration/evidence/20261027-compatibility-batch6/verification.json",
-        "migration/evidence/20261027-compatibility-batch8/verification.json"
+        "migration/evidence/20261027-compatibility-batch8/verification.json",
+        "migration/evidence/20261027-compatibility-batch9/verification.json"
       ],
       "decision_ref": null
     },
@@ -7147,7 +7169,8 @@
         "migration/evidence/20261026-compatibility-batch4/verification.json",
         "migration/evidence/20261026-compatibility-batch5/verification.json",
         "migration/evidence/20261027-compatibility-batch6/verification.json",
-        "migration/evidence/20261027-compatibility-batch8/verification.json"
+        "migration/evidence/20261027-compatibility-batch8/verification.json",
+        "migration/evidence/20261027-compatibility-batch9/verification.json"
       ],
       "feature_ids": [
         "F02.original_file_priorities"
@@ -7203,6 +7226,26 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "7eb537c87a4ad1e3bcc5ec5d44aae934d17b9ca2",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "2c431324bb8fca9f4cc6b97e620305a4d1f2b15d",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "767e1dcf00f9054553c97fd2db254c8b5df0b471",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "3db31281fbba59f75b926ad9a30d68804a2a23a7",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "a2f050e27779c3b949db6f144f978ae0cc542a44",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -7210,7 +7253,8 @@
         "migration/updates/compatibility.providers/20261026-batch4.md",
         "migration/updates/compatibility.providers/20261026-batch5.md",
         "migration/updates/compatibility.providers/20261027-batch6.md",
-        "migration/updates/compatibility.providers/20261027-batch8.md"
+        "migration/updates/compatibility.providers/20261027-batch8.md",
+        "migration/updates/compatibility.providers/20261027-batch9.md"
       ],
       "source_coverage": [
         {

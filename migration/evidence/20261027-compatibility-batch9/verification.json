@@ -1,0 +1,172 @@
+{
+  "status": "VERIFIED_SCOPED_ACTUAL_BATCH9_RESULTS",
+  "qualified_source": "a2f050e27779c3b949db6f144f978ae0cc542a44",
+  "source_commits": [
+    "2c431324bb8fca9f4cc6b97e620305a4d1f2b15d",
+    "767e1dcf00f9054553c97fd2db254c8b5df0b471",
+    "3db31281fbba59f75b926ad9a30d68804a2a23a7",
+    "a2f050e27779c3b949db6f144f978ae0cc542a44"
+  ],
+  "matrix": {
+    "gcc": {
+      "actual_suites": 9,
+      "qualified_source": "a2f050e27779c3b949db6f144f978ae0cc542a44",
+      "build_receipt": "batch9-r4-gcc-build",
+      "test_receipt": "batch9-r4-gcc-tests",
+      "build_seconds": 27.66,
+      "test_seconds": 99.97,
+      "executable_sha256": {
+        "original-disk-io": "9d529af014a78adeaa1cc3ec53563541efa284557468819fc9732826b1190a98",
+        "managed-storage": "0913ac8a6f7ac14a1aa726372599cdcc3a6736486dbe9d5e0f8e8a9ded19a2ed",
+        "managed-download": "cf387ddfeccf90fb025716568165a4752acafa04fc0a6ed93ffaac7c0fc76380",
+        "managed-queue": "0a6aaeec39ba3e6583b1be7cb9254d6b5e1fb9bd95dda1181d85fee721ad82ac",
+        "managed-seeding": "a9e9062bb21281eb40e57875c6450308ab123486055f8deba10c5bf0e87da4b4",
+        "torrent-intake": "39bf9319c165edfe4f08c46a7f4f8977546bc96de176774695585e820680a9aa",
+        "torrent-intake-file-options": "adaab4759130b6427b58b5446b9acd0fe8988bdbdef46d1ac9b2f150d11bc49a",
+        "torrent-intake-file-options-ui": "94908b1d3c34cec127ade4a4d1ee78f1b82374542ad3e2f536e1c9923a77cb79",
+        "torrent-intake-file-options-worker": "bad782060a35f746b35be4d0607e1a380f1fef565cd8d4b97952ac2c17335328"
+      },
+      "verbose_suite_sha256": {
+        "managed-download": "babdacfbbd0485d4fd9a616b837f6a914029edcfd66bc8ed6587b19c219ca07a",
+        "managed-storage": "8633b56e9325a19d2a0782f2c4a1a9d8a51c73c92b09f263e39dba1ac624bc9e",
+        "torrent-intake": "063296f66f58db227ffdbf6532dd8fc16e44fe1695dd5890e8c6fa49a4930de3",
+        "managed-seeding": "e4412356ccb982ac4f8f46f887caa390f422da9ddda97aaedda40d46992d0ba8",
+        "managed-queue": "560e975168eb0f5f467edf96c14d417a150c958826cbd14d58406db8bc20435d",
+        "original-disk-io": "296e3170b32d864ada62b10479e3c6c796509c98e60bbdfea38bf1a195a4656b",
+        "torrent-intake-file-options": "d9114ffbe38f76f1a484ca0394ca9b52bf3a5b3664336adb6036be294b7b3d7e",
+        "torrent-intake-file-options-ui": "654f94f2c7ad873428f4eab1cdf0baa6a2d4aa94f387e54f5447c06398e8f53a",
+        "torrent-intake-file-options-worker": "65b522fe432db9318f5cea0a4d8a0428a8f765ad57b35e0f828f7d1810b1d111"
+      }
+    },
+    "clang": {
+      "actual_suites": 9,
+      "qualified_source": "a2f050e27779c3b949db6f144f978ae0cc542a44",
+      "build_receipt": "batch9-r4-clang-build",
+      "test_receipt": "batch9-r4-clang-tests",
+      "build_seconds": 30.21,
+      "test_seconds": 101.57,
+      "executable_sha256": {
+        "original-disk-io": "25081476e6e8ad8cd2b44e4711e69c973abf09dc3ef94c177d48e1d1ccf42a92",
+        "managed-storage": "5fd08db76a468995339aa82a3de5dfd96b0884d51d68dff4db208dd1f677a2d2",
+        "managed-download": "7d89f423265c357ab7e126e2842a0fb34383b8bd6d48cbd1c02ef52934ef3f1a",
+        "managed-queue": "3e5cc68e1f06b57a2d289631efc857247f78b63917c7767f939ddc4d3f84d87f",
+        "managed-seeding": "ee4203aef0b13a8075aef89f7e461baca0d2e3560b836550861dedb630039d4c",
+        "torrent-intake": "fe5a6ed7735996ad832b8c559116ca740d9a5782de68e67525d90ff79de87bd0",
+        "torrent-intake-file-options": "3056177a18ba3c29cb902706c4987c562329a0a2ca85d4713fca18b190d8b8d9",
+        "torrent-intake-file-options-ui": "6443549bf3431d262ca773403e89f43770ad3fdb51ebff82476a186d94e540ea",
+        "torrent-intake-file-options-worker": "95e244e4fa96339c2843082ff28c941e3e108976ba5b4babf67d410c4d4d0b1f"
+      },
+      "verbose_suite_sha256": {
+        "managed-download": "5c0c20e0af652cb743c8058dba3a7728d1d21b73351b0ff4f5aaf538a493be10",
+        "managed-storage": "8bb826476c4ba590fcb84f5c441e2c51a642ba609a810926a04ce245e53c9ad0",
+        "torrent-intake": "67a2d748e5c0f2e0fa894fa79e19b3d324e3454d52f57bec8a77904e014036cb",
+        "managed-seeding": "30efce7addc433c35362f5e6887dc77a28cd4ca2cf92a8a5b623551496cddb59",
+        "managed-queue": "9b05d9e970f0ae8284ad9f67a67c858e554e48e2831fd9ff6162acdbb1756418",
+        "original-disk-io": "647befbddd3006a05c720f3f385d0e04e793987dfe2de255c1f4f8e617af35c3",
+        "torrent-intake-file-options": "a416e4b80e40f142ede76fc271f57eb97491ea223d53f02f72ef84246747c723",
+        "torrent-intake-file-options-ui": "def8031118e8878fe0667bb7a098f7d815767050012d580d8a5c939fe21be70a",
+        "torrent-intake-file-options-worker": "c7cc104e74dcad6c20da1db04a80c8414072aa94c68d7e3832a3287c63b2338d"
+      }
+    },
+    "san": {
+      "actual_suites": 9,
+      "qualified_source": "a2f050e27779c3b949db6f144f978ae0cc542a44",
+      "build_receipt": "batch9-r4-san-build",
+      "test_receipt": "batch9-r4-san-tests",
+      "build_seconds": 50.84,
+      "test_seconds": 107.94,
+      "executable_sha256": {
+        "original-disk-io": "8970e956c4d27c16556ede2ffcea35035ab180a639dad67ffe580b711c6edfb8",
+        "managed-storage": "cd2dc95a731f4948f176115cc1a7b46f500cf684359551e4d2bb610aa1f1b3bd",
+        "managed-download": "892591054aca9ab4b02991771a65221158a66f1d3e8ab2161f80cec628ca4260",
+        "managed-queue": "d09f2189c676005b6d17c0d5a5669f6149e3f2de1d00c08e3f88ab7476e0a728",
+        "managed-seeding": "dc7f0a560153c36b4ceb85453b2f47a001103cafc7e004e5ad61477481f1d4c4",
+        "torrent-intake": "74d0582108225e1bbe16df66273b560f110e6f5d75dd65e19a805599fd5c747a",
+        "torrent-intake-file-options": "8431e29f5bd399196892b1608208dece698b33fa4e4e5d5c9dc46301683af193",
+        "torrent-intake-file-options-ui": "988f4ec80ac27250af1ecb19967e28a2a2556bfd35d4d0ce45948a7c9a67dcb7",
+        "torrent-intake-file-options-worker": "c74dba3ca52eaebf36da999c318b1ce58ac3e900a3da95c0913169b2e4ba4574"
+      },
+      "verbose_suite_sha256": {
+        "managed-download": "c754c54edb41e5b1a6e0c56a40e248fac6fb5b53b1bae5a4aee29f3c9d6486bf",
+        "managed-storage": "585d5809bf5f8cca782d5a3e2ba9c63c00ae04824cc6e9f1691e2c790a2ae39f",
+        "torrent-intake": "203305d5f155085e868c34a121adb01e7a98533d2241e885a88acf4be249e968",
+        "managed-seeding": "d0bd5d33d47750aca08fc85f8752225de50720ba1ee18dbfaf4e8151658c4189",
+        "managed-queue": "2e771ab619ed8208db7c4039d19c3101e2990be4406998fad359382db5a527ea",
+        "original-disk-io": "e6b0bea50ead5cc7fdba07a838e44837d244ab72643612a859fc3f0d23ac21a4",
+        "torrent-intake-file-options": "0e91fc53f670e155b2fbaccc8a836b5ab584cdd9457f8ff3f3acc1017e61d5da",
+        "torrent-intake-file-options-ui": "be2dbfc7c19138b88508fdd2a0b87dd66dc5ad162410daf87c1ebe3563b9bc3a",
+        "torrent-intake-file-options-worker": "e2db5615f8a0c9a1f3658b2cd611cd3c898f172551c3c5e2ca738827b3f7072a"
+      }
+    }
+  },
+  "original_interop": {
+    "cases": 5,
+    "receipt_sha256": "a3e329dcdfa1a1deb2ce67b31c9ce0a31a3622fcc1d44e1c91e8fa72e6511931",
+    "status": "PASS_ACTUAL_VERSIONED_VERIFIED_SEED_ORIGINAL_READY",
+    "source_commit": "3db31281fbba59f75b926ad9a30d68804a2a23a7",
+    "production_and_producer_unchanged": true
+  },
+  "uncredited_attempts": {
+    "batch9-gcc-tests": 8,
+    "batch9-r2-clang-tests": 8,
+    "batch9-r3-san-tests-r2": 8
+  },
+  "execution_interruption": {
+    "observed_orchestrator_exit": 143,
+    "cause": "unestablished",
+    "partial_test_pass_credit": false,
+    "receipt_sha256": "98b32e2b487143ebef353fe48b809cc0424fb153ee8536682d78abc0d683b162"
+  },
+  "historical_r2_matrix": {
+    "gcc": {
+      "source": "767e1dcf00f9054553c97fd2db254c8b5df0b471",
+      "test_exit": 0,
+      "actual_suites_passed": 9,
+      "failed_suite": null,
+      "reused_for_final_credit": false
+    },
+    "clang": {
+      "source": "767e1dcf00f9054553c97fd2db254c8b5df0b471",
+      "test_exit": 8,
+      "actual_suites_passed": 8,
+      "failed_suite": "torrent-intake-file-options-worker",
+      "reused_for_final_credit": false
+    },
+    "san": {
+      "source": "767e1dcf00f9054553c97fd2db254c8b5df0b471",
+      "test_exit": 0,
+      "actual_suites_passed": 9,
+      "failed_suite": null,
+      "reused_for_final_credit": false
+    }
+  },
+  "historical_r3_matrix": {
+    "gcc": {
+      "source": "3db31281fbba59f75b926ad9a30d68804a2a23a7",
+      "test_exit": 0,
+      "actual_suites_passed": 9,
+      "failed_suite": null,
+      "reused_for_final_matrix": false
+    },
+    "clang": {
+      "source": "3db31281fbba59f75b926ad9a30d68804a2a23a7",
+      "test_exit": 0,
+      "actual_suites_passed": 9,
+      "failed_suite": null,
+      "reused_for_final_matrix": false
+    },
+    "san": {
+      "source": "3db31281fbba59f75b926ad9a30d68804a2a23a7",
+      "test_exit": 8,
+      "actual_suites_passed": 8,
+      "failed_suite": "torrent-intake-file-options-worker",
+      "reused_for_final_matrix": false
+    }
+  },
+  "historical_r2_original_cases": 5,
+  "debugger_diagnostics_are_test_pass": false,
+  "capture_sha256": "0cc32df505032729cabcf461c6ad7e651fa662cf41f185c8952a97ac7cad92cd",
+  "dist_promoted": false,
+  "cf_parents_closed": [],
+  "raw_archive_sha256": "565a3649247c61e2a51846fcd055bee460e217ba686af9ae5d563a693d8ab14b"
+}

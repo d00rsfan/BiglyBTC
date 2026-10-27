@@ -1,5 +1,8 @@
 # Open compatibility work after the everyday torrent preview
 
+Versioned and padded verified existing-data seeding at native `a2f050e27779c3b949db6f144f978ae0cc542a44`: gcc 9 suites, clang 9 suites, san 9 suites pass; 5 new actual original-client cases are recorded. [Review](../updates/compatibility.providers/20261027-batch9.md). Exactly one authorized milestone remains in this compatibility section: authenticated existing custom save roots (batch10). Complete it, then STOP. Do not start the next chapter. All CF parents stay open.
+
+
 Compatibility batch8 qualifies verified existing-data seeding at native `663cd8e9f387c8540976153c70238d1ef7869126`: thirteen affected suites pass in each GCC, Clang and leak-enabled ASan/UBSan lane. Four actual native producer profiles are independently reloaded by original Java Core: complete single/multifile, corrupt single and stopped single. Complete native cases transfer to a real loopback receiver.
 [Batch8 review](../updates/compatibility.providers/20261027-batch8.md). All CF parents remain open. Current user boundary: exactly two additional milestones in this section after batch8, then STOP; no next chapter.
 
