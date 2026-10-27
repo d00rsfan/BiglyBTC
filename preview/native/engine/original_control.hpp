@@ -15,6 +15,10 @@ public:
       const storage::ProfileLease&, std::string hash, std::size_t index,
       storage::OriginalStorageKind, bool create);
   std::expected<std::optional<std::string>, storage::Error> load() const;
+  // Same authenticated candidates; exact map/geometry validator may select the
+  // valid backup without publishing, recovering or replacing either candidate.
+  std::expected<std::optional<std::string>, storage::Error> loadValidated(
+      storage::OriginalFileGeometry) const;
   storage::OriginalControlPublisher publisher();
   std::expected<void, storage::Error> retire();
 private:

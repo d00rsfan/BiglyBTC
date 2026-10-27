@@ -13,7 +13,7 @@
 
 namespace biglybtc::engine::detail {
 
-enum class OriginalDiskAccess { ReadWrite, ReadOnly };
+enum class OriginalDiskAccess { ReadWrite, ReadOnly, SelectedReadOnly };
 struct OriginalDiskFile {
   storage::detail::Descriptor descriptor;
   storage::OriginalFileIo io;
@@ -32,7 +32,10 @@ public:
   OriginalDiskAccess access() const noexcept { return access_; }
   const libtorrent::torrent_info& metadata() const { return *metadata_; }
   bool matches(const libtorrent::storage_params&) const;
-  std::expected<void, storage::Error> read(std::uint64_t, std::span<char>);
+  // Optional worker-only failure index is exact for the failing real fragment.
+  // Missing/partial reads are errors, never hashable zero-filled data.
+  std::expected<void, storage::Error> read(std::uint64_t, std::span<char>,
+      libtorrent::file_index_t* failedFile=nullptr);
   std::expected<void, storage::Error> write(std::uint64_t, std::span<const char>);
   std::expected<void, storage::Error> flush();
   // Called only after retirement with actual per-file verified completeness.

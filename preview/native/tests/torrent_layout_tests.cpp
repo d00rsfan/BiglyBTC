@@ -1,4 +1,5 @@
 #include "biglybtc/torrent_layout.hpp"
+#include "biglybtc/existing_piece_goal.hpp"
 
 #include <cstdlib>
 #include <array>
@@ -25,6 +26,22 @@ int main(int argc, char** argv) {
     std::string line;while(std::getline(std::cin,line)){check(line.size()%2==0&&line.size()<=8192,"Bounded hex decoder fixture");std::string raw;for(std::size_t n=0;n<line.size();n+=2){raw+=static_cast<char>((nibble(line[n])<<4)|nibble(line[n+1]));}
       const auto result=compat::originalDecodeFilenameBytes(raw,argv[2],argc==4&&std::string_view(argv[3])=="show-all");if(!result){std::cout<<"ERROR\n";}else{for(const unsigned char c:*result){std::cout<<"0123456789abcdef"[c>>4]<<"0123456789abcdef"[c&15];}std::cout<<'\n';}}
     return 0;
+  }
+  {
+    compat::OriginalLayout layout{"selected",true,16384,65536,{{"left",0,8192,false},{"dnd",8192,49152,false},{"right",57344,8192,false}}};
+    const std::array<compat::FilePolicy,3> policy{{{false,0},{true,0},{false,0}}};
+    const auto selected=core::existingPieceGoal(layout,policy,core::ExistingVerificationGoal::SelectedFiles,4);
+    check(selected&&*selected==std::vector<std::uint8_t>({1,0,0,1}),"Selected boundary pieces need authentic DND edge bytes; interior gaps remain outside goal");
+    const auto full=core::existingPieceGoal(layout,policy,core::ExistingVerificationGoal::FullTorrent,4);
+    check(full&&*full==std::vector<std::uint8_t>({1,1,1,1}),"Full verification never becomes a selected-files goal");
+    const std::array<std::uint8_t,4> actual{1,0,0,1},missingBoundary{1,1,1,0},malformed{1,2,0,1};
+    check(core::satisfiesExistingPieceGoal(*selected,actual)&&!core::satisfiesExistingPieceGoal(*full,actual)
+        &&!core::satisfiesExistingPieceGoal(*selected,missingBoundary)&&!core::satisfiesExistingPieceGoal(*selected,malformed)
+        &&!core::satisfiesExistingPieceGoal(*selected,std::span<const std::uint8_t>(actual).first(3)),"Only one complete binary observed bitfield can satisfy the exact required mask");
+    auto none=policy;for(auto& file:none){file.skipped=true;}
+    check(!core::existingPieceGoal(layout,none,core::ExistingVerificationGoal::SelectedFiles,4),"No selected bytes is not a fabricated verification success");
+    check(!core::existingPieceGoal(layout,policy,core::ExistingVerificationGoal::SelectedFiles,3),"Engine piece count must match exact authenticated layout");
+    layout.files[1].offset=8193;check(!core::existingPieceGoal(layout,policy,core::ExistingVerificationGoal::SelectedFiles,4),"Shifted file geometry cannot mint a needed-piece domain");
   }
   if(argc==4&&std::string_view(argv[1])=="--inspect-linux-names"){
     const auto read=[](const char* path,std::size_t limit){std::ifstream stream(path,std::ios::binary);check(static_cast<bool>(stream),"Owned filename fixture unavailable");std::string value(std::istreambuf_iterator<char>(stream),{});check(value.size()<=limit,"Owned filename fixture bound");return value;};
@@ -114,10 +131,10 @@ int main(int argc, char** argv) {
         check(source->serialize()==raw,"Windows-1251 projection never rewrites hashed raw metadata");
       }
     }
-    for(const unsigned value:{0U,10U,47U,92U}){
+    for(const unsigned value:{0U,10U,31U,47U,92U,127U}){
       const auto bad="a"+std::string(1,static_cast<char>(value))+"z";auto source=document(list(file(bad,"1")));
       check(source.replaceValue("encoding",bytes("windows-1251")).has_value(),"Unsafe codec fixture");
-      check(!compat::originalLayout(source),"Unsafe NUL/newline/separator bytes remain refused");
+      check(!compat::originalLayout(source),"Existing filesystem control/separator refusals remain distinct from raw decoder output");
     }
     for(const auto* alias:{"windows1251","windows_1251","cp-1251","koi8-u"}){
       auto source=document(list(file("safe","1")));check(source.replaceValue("encoding",bytes(alias)).has_value(),"Unqualified alias fixture");

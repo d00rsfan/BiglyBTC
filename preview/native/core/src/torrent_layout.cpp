@@ -48,8 +48,11 @@ NamePolicy names(const core::Document& document,const Node& info,bool showAll=fa
   }
   return {original=="Fallback"?NameEncoding::Fallback:manual?static_cast<NameEncoding>(16+*manual):koi8r?NameEncoding::Koi8R:windows1251?NameEncoding::Windows1251:latin1?NameEncoding::Latin1:field?NameEncoding::Utf8Replacement:NameEncoding::Utf8,use};
 }
-std::string decoded(const Node* node,NameEncoding encoding) {
+std::string decoded(const Node* node,NameEncoding encoding,bool filesystemComponent=true) {
   const auto value=text(node);
+  if(filesystemComponent&&(encoding==NameEncoding::Koi8R||encoding==NameEncoding::Windows1251)){
+    require(std::ranges::none_of(value,[](unsigned char c){return c<0x20||c==0x7f;}),"Unsafe original Cyrillic filesystem component");
+  }
   if(encoding==NameEncoding::Fallback){
     std::string result;result.reserve(value.size()*3);
     for(const unsigned char c:value){
@@ -96,7 +99,7 @@ std::string decoded(const Node* node,NameEncoding encoding) {
   }
   if(encoding==NameEncoding::Windows1251){
     // Single-byte Windows-1251 mapping, source-bound to OpenJDK17 MS1251.
-    // 0x98 is UNMAPPABLE; never replace it or take Java's UTF8 fallback.
+    // 0x98 is unmappable: Java uses whole-input UTF8 replacement then.
     // 0xc0..0xff are the contiguous Cyrillic U+0410..U+044F block.
     static constexpr std::array<std::uint16_t,64> extended{
         0x0402,0x0403,0x201a,0x0453,0x201e,0x2026,0x2020,0x2021,
@@ -295,7 +298,7 @@ std::expected<std::string,LayoutError> originalDecodeFilenameBytes(std::string_v
     require(value.size()<=4096&&encoding.size()<=128,"Original decoder input exceeds bound");
     const auto doc=core::Document::parse("d8:encoding"+std::to_string(encoding.size())+":"+std::string(encoding)+"4:infodee");
     require(doc.has_value(),"Invalid original decoder name");const auto policy=names(*doc,*doc->find("info"),showAll);
-    Node node{Node::Type::Bytes};node.bytes=value;return decoded(&node,policy.encoding);
+    Node node{Node::Type::Bytes};node.bytes=value;return decoded(&node,policy.encoding,false);
   }catch(const Failure& error){return std::unexpected(LayoutError{error.message});}
 }
 std::expected<std::string,LayoutError> originalFilenameComponent(std::string_view decoded,std::string_view conversions){

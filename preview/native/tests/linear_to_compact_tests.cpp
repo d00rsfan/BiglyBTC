@@ -195,8 +195,14 @@ extern "C" int __wrap_fsync(int fd){
   }
   if(fault==Fault::Sync&&targetFd(fd)){++hits;fault=Fault::None;errno=EIO;return -1;}return __real_fsync(fd);}
 
+
+void compactionContextCannotChangeBetweenAcceptanceAndReplay(){
+  Fixture f;write(f.profile/"biglybt.config","d20:File.Decoder.ShowAlli1ee");interruptAt=st::OriginalCompactionStage::JournalSynced;interruptArmed=true;check(!st::compactOriginalFile(f.lease,f.hash,1,{},interrupt),"Own actual compaction context journal");const auto before=read(f.target());write(f.profile/"biglybt.config","d20:File.Decoder.ShowAlli0ee");check(!st::recoverOriginalCompaction(f.lease)&&read(f.target())==before&&st::hasPendingOriginalCompaction(f.lease),"Changed registry capability cannot reinterpret accepted compaction");write(f.profile/"biglybt.config","d20:File.Decoder.ShowAlli1ee");check(take(st::recoverOriginalCompaction(f.lease)).has_value(),"Restored exact context replays");verify(f);
+}
+
 int main(){
   try{
+    compactionContextCannotChangeBetweenAcceptanceAndReplay();
     convertedFilenameCompactionRecoversExactPolicy();
     exactPackAndResume();std::cout<<"PASS exact original compact edges and conservative resume\n";
     interruptedStages();std::cout<<"PASS all durable stages reopen\n";

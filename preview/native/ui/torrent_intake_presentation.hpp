@@ -1,6 +1,7 @@
 #pragma once
 #include "biglybtc/file_policy.hpp"
 #include "biglybtc/torrent_intake_options.hpp"
+#include "biglybtc/existing_piece_goal.hpp"
 #include "biglybtc/torrent_intake_trackers.hpp"
 #include <QMetaType>
 #include <QString>
@@ -27,9 +28,10 @@ struct TorrentIntakePacket {
   std::optional<core::TorrentIntakeTrackerFields> trackers=core::TorrentIntakeTrackerFields{}; // nullopt: source cannot be edited; preserve it.
   core::TorrentIntakeFileDestinations initialDestinations{};
   bool multifile=true;
+  bool decoderShowAll=false; // Worker-derived sealed context, never a UI setting.
 };
 using TorrentIntakePresentation=std::shared_ptr<const TorrentIntakePacket>;
-enum class TorrentIntakeStartMode { Queued, Stopped, Paused, Forced, VerifySeeding };
+enum class TorrentIntakeStartMode { Queued, Stopped, Paused, Forced, VerifySeeding, VerifySelected };
 struct TorrentIntakeSubmission {
   quint64 session=0,request=0,revision=0;
   QString destination;
@@ -43,6 +45,8 @@ struct TorrentIntakeSubmission {
   std::optional<QString> saveName=std::nullopt; // One destination leaf, never info.name.
   bool verifyExisting=false; // Actual full check before any seeding; never seed_mode.
   std::optional<core::TorrentIntakeFileDestinations> fileDestinations=std::nullopt;
+  core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent;
+  bool decoderShowAll=false;
 };
 struct TorrentIntakeResultPacket {
   quint64 session=0,request=0,revision=0;

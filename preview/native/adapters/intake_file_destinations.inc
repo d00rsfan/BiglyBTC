@@ -54,9 +54,10 @@ core::TorrentIntakeFileDestinations decodeFileDestinations(const Node& list) {
 // Transaction-only observation. This never becomes an engine/RO grant. Missing
 // components are recorded at their first authenticated boundary, not created.
 template<class T> std::int64_t destinationStatNumber(T value){require(std::in_range<std::int64_t>(value),ErrorCode::Unsupported,"Destination stat exceeds signed journal bound");return static_cast<std::int64_t>(value);}
-std::string intakeDestinationSnapshot(const MetadataSubject& subject,std::span<const fs::path> paths){
+std::string intakeDestinationSnapshot(const MetadataSubject& subject,std::span<const fs::path> paths,std::span<const std::uint64_t> maxima={}){
   try{
     require(paths.size()==subject.layout.files.size(),ErrorCode::InvalidFormat,"Destination snapshot differs from original indices");
+    require(maxima.empty()||maxima.size()==paths.size(),ErrorCode::InvalidFormat,"Destination physical bound count differs");
     std::map<std::string,std::pair<std::int64_t,std::int64_t>,std::less<>> directories;std::string records="l";
     for(std::size_t index=0;index<paths.size();++index){const auto& path=paths[index];if(subject.layout.files[index].padding){require(path.empty(),ErrorCode::InvalidFormat,"Virtual padding cannot have a destination snapshot");continue;}pathShape(path);
       Descriptor current(::open("/",O_RDONLY|O_DIRECTORY|O_CLOEXEC));struct stat root{};require(current.get()>=0&&::fstat(current.get(),&root)==0,ErrorCode::Io,"Cannot inspect destination root");
@@ -74,7 +75,7 @@ std::string intakeDestinationSnapshot(const MetadataSubject& subject,std::span<c
         struct stat named{};
         if(::fstatat(current.get(),path.filename().c_str(),&named,AT_SYMLINK_NOFOLLOW)!=0){require(errno==ENOENT&&last.st_uid==::geteuid(),ErrorCode::UnsafePath,"Missing destination is not authorized by its parent");observation="d7:missing"+b(path.string())+'e';}
         else{
-          require(S_ISREG(named.st_mode)&&named.st_uid==::geteuid()&&named.st_nlink==1&&named.st_size>=0&&named.st_size<=subject.layout.files[index].bytes,ErrorCode::UnsafePath,"Existing indexed target is not safe ordinary data");
+          require(S_ISREG(named.st_mode)&&named.st_uid==::geteuid()&&named.st_nlink==1&&named.st_size>=0&&static_cast<std::uint64_t>(named.st_size)<=(maxima.empty()?static_cast<std::uint64_t>(subject.layout.files[index].bytes):maxima[index]),ErrorCode::UnsafePath,"Existing indexed target is not safe ordinary data");
           Descriptor file(::openat(current.get(),path.filename().c_str(),O_RDONLY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));struct stat held{},again{};
           require(file.get()>=0&&::fstat(file.get(),&held)==0&&::fstatat(current.get(),path.filename().c_str(),&again,AT_SYMLINK_NOFOLLOW)==0&&fileop::unchanged(held,named)&&fileop::unchanged(again,named),ErrorCode::Conflict,"Destination leaf changed while observing");
           observation="d5:stampl"+i(destinationStatNumber(held.st_dev))+i(destinationStatNumber(held.st_ino))+i(destinationStatNumber(held.st_size))+i(destinationStatNumber(held.st_mode))+i(destinationStatNumber(held.st_uid))+i(destinationStatNumber(held.st_nlink))+i(destinationStatNumber(held.st_mtim.tv_sec))+i(destinationStatNumber(held.st_mtim.tv_nsec))+i(destinationStatNumber(held.st_ctim.tv_sec))+i(destinationStatNumber(held.st_ctim.tv_nsec))+"ee";

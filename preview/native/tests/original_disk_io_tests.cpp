@@ -121,6 +121,31 @@ class OriginalDiskIoTests final:public QObject {
   Q_OBJECT
 private slots:
 
+  void selectedMissingRangesCarryRealFileAndCannotVerifyEvenAdvertisedZeroHash(){
+    QTemporaryDir area;QVERIFY(area.isValid());lt::entry info;info["name"]="missing.bin";info["length"]=16384;info["piece length"]=16384;info["pieces"]=std::string(20,'\0');auto metadata=parse(info);
+    std::vector<std::optional<ed::OriginalDiskFile>> entries(static_cast<std::size_t>(metadata->num_files()));auto files=std::make_shared<ed::OriginalDiskFiles>(metadata,std::move(entries),ed::OriginalDiskAccess::SelectedReadOnly);
+    const auto route=(area.path()+"/never-created").toStdString();auto policy=std::make_shared<ed::MetadataDiskPolicy>();QVERIFY(policy->registerOriginalPath(route,files));Disk disk(policy);lt::aux::vector<lt::download_priority_t,lt::file_index_t> priorities;priorities.push_back(lt::download_priority_t{0});const lt::storage_params params{metadata->files(),nullptr,route,lt::storage_mode_sparse,priorities,metadata->info_hash()};auto holder=disk.backend->new_torrent(params,{});
+    bool called=false;lt::sha1_hash hash;lt::storage_error error;disk.backend->async_hash(holder,lt::piece_index_t{0},{},lt::disk_interface::v1_hash,[&](lt::piece_index_t,const lt::sha1_hash& actual,const lt::storage_error& failure){hash=actual;error=failure;called=true;});QTRY_VERIFY_WITH_TIMEOUT((disk.pump(),called),5000);
+    QCOMPARE(error.ec.value(),ENOENT);QCOMPARE(static_cast<int>(error.file()),0);QVERIFY(hash!=metadata->hash_for_piece(lt::piece_index_t{0}));QVERIFY(!files->failure());QVERIFY(!QFileInfo::exists(QString::fromStdString(route)));holder.reset();
+  }
+
+  void selectedCompactEdgesHashAuthenticBoundaryPiecesAndKeepInteriorUnverified(){
+    QTemporaryDir area;QVERIFY(area.isValid());const std::string left(8192,'A'),dnd(49152,'d'),right(8192,'B'),body=left+dnd+right;
+    auto metadata=v1({{"left.bin",left},{"dnd.bin",dnd,false,Kind::Compact},{"right.bin",right}});Bundle generated(area.path(),metadata,{Kind::Linear,Kind::Compact,Kind::Linear});QVERIFY(generated.files->write(0,std::span<const char>(body.data(),body.size())));QVERIFY(generated.files->flush());
+    const auto before0=actual(generated.physical[0]),before1=actual(generated.physical[1]),before2=actual(generated.physical[2]);QCOMPARE(before1.size(),16384);const auto controls=generated.stores[1]->current;QVERIFY(controls);generated.files.reset();
+    std::vector<std::optional<ed::OriginalDiskFile>> entries;
+    for(int n=0;n<metadata->num_files();++n){const auto index=lt::file_index_t{n};st::detail::Descriptor fd(::open(generated.physical[static_cast<std::size_t>(n)].toStdString().c_str(),O_RDONLY|O_NOFOLLOW|O_CLOEXEC));QVERIFY(fd.get()>=0);struct stat before{};QVERIFY(::fstat(fd.get(),&before)==0);const int borrowed=fd.get();const auto path=generated.physical[static_cast<std::size_t>(n)].toStdString();
+      auto io=take(st::OriginalFileIo::open(fd.get(),{static_cast<std::uint64_t>(metadata->files().file_offset(index)),static_cast<std::uint64_t>(metadata->files().file_size(index)),16384},n==1?Kind::Compact:Kind::Linear,n==1?controls:std::nullopt));
+      entries.emplace_back(ed::OriginalDiskFile{std::move(fd),std::move(io),[borrowed,path,before]() -> std::expected<void,st::Error>{struct stat held{},named{};if(::fstat(borrowed,&held)!=0||::lstat(path.c_str(),&named)!=0||held.st_dev!=before.st_dev||held.st_ino!=before.st_ino||named.st_dev!=before.st_dev||named.st_ino!=before.st_ino||held.st_size!=before.st_size||named.st_size!=before.st_size||held.st_ctim.tv_sec!=before.st_ctim.tv_sec||held.st_ctim.tv_nsec!=before.st_ctim.tv_nsec){return std::unexpected(st::Error{st::ErrorCode::Conflict,"Actual test input changed"});}return {};}});
+    }
+    auto files=std::make_shared<ed::OriginalDiskFiles>(metadata,std::move(entries),ed::OriginalDiskAccess::SelectedReadOnly);auto policy=std::make_shared<ed::MetadataDiskPolicy>();QVERIFY(policy->registerOriginalPath(generated.route,files));Disk disk(policy);auto holder=disk.backend->new_torrent(generated.parameters(),{});
+    std::array<lt::storage_error,4> errors;std::array<lt::sha1_hash,4> hashes;int called=0;
+    for(int n=0;n<4;++n){disk.backend->async_hash(holder,lt::piece_index_t{n},{},lt::disk_interface::v1_hash|lt::disk_interface::flush_piece,[&,n](lt::piece_index_t,const lt::sha1_hash& hash,const lt::storage_error& error){hashes[static_cast<std::size_t>(n)]=hash;errors[static_cast<std::size_t>(n)]=error;++called;});}QTRY_VERIFY_WITH_TIMEOUT((disk.pump(),called==4),5000);
+    for(int n:{0,3}){QVERIFY(!errors[static_cast<std::size_t>(n)].ec);QCOMPARE(hashes[static_cast<std::size_t>(n)].to_string(),metadata->hash_for_piece(lt::piece_index_t{n}).to_string());}
+    for(int n:{1,2}){QCOMPARE(errors[static_cast<std::size_t>(n)].ec.value(),ENOENT);QCOMPARE(static_cast<int>(errors[static_cast<std::size_t>(n)].file()),1);QVERIFY(hashes[static_cast<std::size_t>(n)]!=metadata->hash_for_piece(lt::piece_index_t{n}));}
+    QVERIFY(files->flush());const std::array<std::uint8_t,3> complete{1,0,1};QVERIFY(files->finishComplete(complete));QVERIFY(!files->failure());QCOMPARE(actual(generated.physical[0]),before0);QCOMPARE(actual(generated.physical[1]),before1);QCOMPARE(actual(generated.physical[2]),before2);QVERIFY(generated.stores[1]->current.has_value());QCOMPARE(*generated.stores[1]->current,*controls);holder.reset();
+  }
+
   void abortWithoutLazyOriginalWorkerReleasesItsContextWork(){
     lt::io_context context;auto backend=ed::originalDiskConstructor(context,[](const std::string&){return std::shared_ptr<ed::OriginalDiskFiles>{};});
     backend->abort(false);QCOMPARE(context.poll(),std::size_t{0});QVERIFY(context.stopped());backend->abort(true);

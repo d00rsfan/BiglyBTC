@@ -176,6 +176,7 @@ struct Plan {
   std::vector<Edit> controls, state, inventory;
   std::vector<Guard> guards;
   std::optional<std::string> filenameConversions;
+  std::optional<bool> decoderShowAll;
   std::uint64_t packed() const { return prefix+tail; }
 };
 std::string encodeEdits(const std::vector<Edit>& edits) {
@@ -191,7 +192,8 @@ std::string metadata(const Plan& p) {
     {"hash",b(p.hash.hex())},{"index",i(p.index)},{"oldLength",i(p.oldLength)},
     {"prefix",i(p.prefix)},{"tailStart",i(p.tailStart)},{"tail",i(p.tail)},{"prefixHash",b(p.prefixHash)},
     {"controls",encodeEdits(p.controls)},{"state",encodeEdits(p.state)},{"inventory",encodeEdits(p.inventory)},{"guards",guards+'e'}});
-  if(p.filenameConversions){auto document=parse(result);put(document,"filenameConversions",b(*p.filenameConversions));result=document.serialize();}return result;
+  if(p.filenameConversions){auto document=parse(result);put(document,"filenameConversions",b(*p.filenameConversions));result=document.serialize();}
+  if(p.decoderShowAll){auto document=parse(result);put(document,"decoderShowAll",i(*p.decoderShowAll?1:0));result=document.serialize();}return result;
 }
 std::vector<Edit> decodeEdits(const Node& root, std::string_view key, const fs::path& profile) {
   const auto& list = field(root, key, Node::Type::List); require(list.children.size() <= 2, ErrorCode::InvalidFormat, "Too many compaction edits");
@@ -217,6 +219,8 @@ Plan decode(const core::Document& d) {
   auto id=core::TorrentHash::parse(raw); require(id&&id->hex()==hex, ErrorCode::InvalidFormat, "Invalid or noncanonical compaction identity");
   std::size_t conversionFields=0;for(std::size_t n=0;n<root.children.size();n+=2){conversionFields+=root.children[n].bytes=="filenameConversions";}require(conversionFields<=1,ErrorCode::InvalidFormat,"Duplicate compaction filename policy");
   Plan p{};if(root.find("filenameConversions")){p.filenameConversions=text(root,"filenameConversions");require(p.filenameConversions->size()<=16384,ErrorCode::InvalidFormat,"Oversized compaction filename policy");}
+  std::size_t decoderFields=0;for(std::size_t n=0;n<root.children.size();n+=2){decoderFields+=root.children[n].bytes=="decoderShowAll";}require(decoderFields<=1,ErrorCode::InvalidFormat,"Duplicate compaction decoder context");
+  if(root.find("decoderShowAll")){const auto value=number(root,"decoderShowAll");require(value<=1&&p.filenameConversions.has_value(),ErrorCode::InvalidFormat,"Invalid compaction decoder context");p.decoderShowAll=value==1;}
   p.profile=text(root,"profile");p.source=text(root,"source");p.hash=*id;
   pathShape(p.profile); pathShape(p.source); p.index=number(root,"index");
   p.profileDevice=number(root,"profileDevice"); p.profileInode=number(root,"profileInode");
@@ -381,8 +385,9 @@ std::string projectInventory(std::string before,const core::TorrentHash& hash,st
 }
 Plan prepare(const ProfileLease& lease,const core::TorrentHash& hash,std::size_t index,std::stop_token stop){
   cancelled(stop);require(!hasPendingOriginalCompaction(lease)&&!hasPendingFileOperation(lease),ErrorCode::Conflict,"Resolve pending storage transaction before compaction");
+  const auto filenameContext=take(readOriginalFilenameContext(lease));
   const auto qualified=take(prepareFileOperation(lease,{hash,FileOperationKind::RemoveKeepData,{}},stop));static_cast<void>(qualified);
-  const auto profile=fs::path(profilePath(lease));auto store=take(TorrentStateStore::open(lease));auto state=take(store.load(lease,hash));auto layout=readOriginalLayout(lease,state.document());
+  const auto profile=fs::path(profilePath(lease));auto store=take(TorrentStateStore::open(lease));auto state=take(store.load(lease,hash));auto layout=compat::originalLayout(state.document(),100000,filenameContext.conversions,filenameContext.decoderShowAll);
   require(layout&&layout->files.size()<=10000&&index<layout->files.size()&&!layout->files[index].padding,ErrorCode::InvalidFormat,"Compaction file index is not an ordinary metadata file");
   auto attrs=section(state.document().find("attributes"));auto defaults=take(resolveOriginalStorageTypes(lease,hash,*layout,attrs.root()));
   require(!defaults.unsupportedConversion&&defaults.requested[index]==OriginalStorageKind::Linear&&defaults.actual[index]==OriginalStorageKind::Linear,ErrorCode::Unsupported,"Explicit compaction accepts only resolved linear storage");
@@ -390,7 +395,7 @@ Plan prepare(const ProfileLease& lease,const core::TorrentHash& hash,std::size_t
   auto library=core::readLibrary(config.document());require(library&&library->issues.empty(),ErrorCode::InvalidFormat,"Invalid original download inventory");const auto saved=selected(*library,hash);
   auto requested=compat::originalFilePolicy(row(config.document(),saved,library->legacyMap),layout->files.size());require(requested.has_value(),ErrorCode::InvalidFormat,"Invalid original compaction selection");
   (*requested)[index]={true,0};for(std::size_t j=0;j<requested->size();++j){if(layout->files[j].padding){(*requested)[j]={true,0};}}
-  cancelled(stop);done(setFilePolicies(lease,hash,*requested)); // An accepted Skip can remain on any subsequent failure.
+  cancelled(stop);require(take(readOriginalFilenameContext(lease))==filenameContext,ErrorCode::Conflict,"Compaction filename context changed before accepted Skip");done(setFilePolicies(lease,hash,*requested)); // An accepted Skip can remain on any subsequent failure.
   state=take(store.beginUpdate(lease,hash)); // Hydrates/removes cache; durably invalidates original resume BEFORE journal/data.
   config=take(ConfigFile::load(lease,"downloads.config"));library=core::readLibrary(config.document());require(library&&library->issues.empty(),ErrorCode::InvalidFormat,"Inventory changed during compaction preparation");const auto current=selected(*library,hash);
   const auto currentRow=encoded(row(config.document(),current,library->legacyMap));
@@ -418,7 +423,7 @@ Plan prepare(const ProfileLease& lease,const core::TorrentHash& hash,std::size_t
     inspected+=other.preview().files.size();require(inspected<=100000,ErrorCode::Unsupported,"Compaction all-library path proof exceeds bound");
     for(const auto& mapped:other.preview().files){require(!intersects(payload->source,mapped.source),ErrorCode::Conflict,"Compaction source aliases another original file map");}
   }
-  Plan p{};p.filenameConversions=take(readOriginalFilenameConversions(lease));p.profile=profile;p.source=payload->source;p.hash=hash;p.index=index;
+  Plan p{};p.filenameConversions=filenameContext.conversions;p.decoderShowAll=filenameContext.decoderShowAll;p.profile=profile;p.source=payload->source;p.hash=hash;p.index=index;
   struct stat profileStat{};require(::fstat(lease.directoryHandle(),&profileStat)==0,ErrorCode::Io,"Cannot bind compaction profile");p.profileDevice=profileStat.st_dev;p.profileInode=profileStat.st_ino;
   p.present=payload->present;p.sourceDevice=payload->device;p.sourceInode=payload->inode;p.oldLength=static_cast<std::uint64_t>(payload->actualBytes);
   const auto& file=layout->files[index];const auto shape=edges({static_cast<std::uint64_t>(file.offset),static_cast<std::uint64_t>(file.bytes),static_cast<std::uint32_t>(layout->pieceLength)});
@@ -442,6 +447,7 @@ Plan prepare(const ProfileLease& lease,const core::TorrentHash& hash,std::size_t
   }}
   for(const auto* name:{"biglybt.config","biglybt.config.bak","azureus.config","azureus.config.bak"}){const auto path=profile/name;const auto bytes=read(path,MaximumDocument);p.guards.push_back({path,bytes.bytes?std::optional<std::string>(digest(*bytes.bytes)):std::nullopt});checkTemporaryAbsence(path);}
   checkTemporaryAbsence(primary);checkTemporaryAbsence(configPath);
+  require(take(readOriginalFilenameContext(lease))==filenameContext,ErrorCode::Conflict,"Compaction filename context changed during preparation");
   require(metadata(p).size()<=MaximumMetadata,ErrorCode::Unsupported,"Compaction snapshots exceed bounded transaction metadata");cancelled(stop);return p;
 }
 void validateIntent(const ProfileLease& lease,const Plan& p){
@@ -453,9 +459,10 @@ void validateIntent(const ProfileLease& lease,const Plan& p){
   std::array<unsigned char,EVP_MAX_MD_SIZE> digestBytes{};unsigned size=0;const auto key=p.hash.bytes();
   require(EVP_Digest(infoBytes.data(),infoBytes.size(),digestBytes.data(),&size,key.size()==20&&info->find("pieces")?EVP_sha1():EVP_sha256(),nullptr)==1
     && size>=key.size()&&std::equal(key.begin(),key.end(),reinterpret_cast<const std::byte*>(digestBytes.data())),ErrorCode::InvalidFormat,"Frozen metadata does not match compaction hash");
-  const auto currentConversions=take(readOriginalFilenameConversions(lease));
+  const auto currentContext=take(readOriginalFilenameContext(lease));const auto& currentConversions=currentContext.conversions;
+  if(p.decoderShowAll){require(*p.decoderShowAll==currentContext.decoderShowAll,ErrorCode::Conflict,"Compaction decoder context changed since approval");}
   if(p.filenameConversions){require(*p.filenameConversions==currentConversions,ErrorCode::Conflict,"Compaction filename policy changed since approval");}
-  const auto layout=p.filenameConversions?compat::originalLayout(source->document(),10000,*p.filenameConversions):compat::originalLayout(source->document(),10000);
+  const auto layout=p.filenameConversions?compat::originalLayout(source->document(),10000,*p.filenameConversions,p.decoderShowAll.value_or(false)):compat::originalLayout(source->document(),10000);
   require(layout&&p.index<layout->files.size()&&!layout->files[p.index].padding,ErrorCode::InvalidFormat,"Frozen compaction layout/index invalid");
   if(!p.filenameConversions){const auto converted=take(readOriginalLayout(lease,source->document(),10000));require(layout->name==converted.name&&std::ranges::equal(layout->files,converted.files,[](const auto& a,const auto& b){return a.path==b.path;}),ErrorCode::Unsupported,"Legacy compaction names need explicit review before conversion");}
   const auto& file=layout->files[p.index];const auto geometry=edges({static_cast<std::uint64_t>(file.offset),static_cast<std::uint64_t>(file.bytes),static_cast<std::uint32_t>(layout->pieceLength)});
@@ -499,7 +506,7 @@ void validateIntent(const ProfileLease& lease,const Plan& p){
     if(cached){for(const auto& entry:cached->children){const auto* keyNode=entry.find("hash");const auto bytes=other.hash->bytes();
       if(keyNode&&keyNode->type==Node::Type::Bytes&&keyNode->bytes==std::string_view(reinterpret_cast<const char*>(bytes.data()),bytes.size())){cachedEntry=&entry;}}}
     if(cachedEntry){if(const auto* properties=cachedEntry->find("attributes")){otherAttrs=section(properties);}}
-    const auto otherLayout=compat::originalLayout(otherState->document(),10000,currentConversions);require(otherLayout.has_value(),ErrorCode::Unsupported,"Other original layout unsupported during replay");
+    const auto otherLayout=compat::originalLayout(otherState->document(),10000,currentConversions,currentContext.decoderShowAll);require(otherLayout.has_value(),ErrorCode::Unsupported,"Other original layout unsupported during replay");
     inspected+=otherLayout->files.size();require(inspected<=100000,ErrorCode::Unsupported,"Compaction replay ownership bound");
     const auto otherSaved=take(resolveOriginalSaveRoot(other,*otherLayout));const auto otherRoot=fs::path(otherSaved.saveDirectory)/ *otherSaved.saveFile;
     require(!within(otherRoot,selectedRoot)&&!within(selectedRoot,otherRoot),ErrorCode::Conflict,"Another torrent overlaps compaction root");

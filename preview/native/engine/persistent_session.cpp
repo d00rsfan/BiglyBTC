@@ -1044,9 +1044,13 @@ struct PersistentSession::Impl {
     if(!value.status.checked){return;}
     // Every bit comes from sampleManaged's SAME accepted status/counter epoch;
     // seeding alone, saved completion, file size and progress counts never certify.
-    if(!value.status.complete||!value.seedPiecesExact||value.verified.size()!=static_cast<std::size_t>(value.status.totalPieces)
-        ||value.verified.empty()||!std::ranges::all_of(value.verified,[](auto bit){return bit==1;})){
-      fail({storage::ErrorCode::Conflict,"Existing data did not verify completely; no download or repair was started"});return;
+    const bool selected=value.seedIntent&&value.seedIntent->goal==core::ExistingVerificationGoal::SelectedFiles;
+    const bool fullProof=value.status.complete&&value.seedPiecesExact&&value.verified.size()==static_cast<std::size_t>(value.status.totalPieces)
+        &&!value.verified.empty()&&std::ranges::all_of(value.verified,[](auto bit){return bit==1;});
+    const bool selectedProof=selected&&value.seedPiecesExact&&value.verified.size()==static_cast<std::size_t>(value.status.totalPieces)
+        &&core::satisfiesExistingPieceGoal(value.storage.existingVerificationPieces(),value.verified);
+    if(selected?!selectedProof:!fullProof){
+      fail({storage::ErrorCode::Conflict,selected?"Selected existing pieces did not verify; no download or repair was started":"Existing data did not verify completely; no download or repair was started"});return;
     }
     value.seedAttempted=true; // No poll replay, including a failed/uncertain CAS.
     const auto fresh=value.storage.validateExistingSnapshot();
@@ -1551,7 +1555,7 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
       detail::require(flags&&(*flags&0x8),"Verified seeding requires the original completion-move flag before preparation",storage::ErrorCode::Conflict);
     }
     auto storage = detail::take(detail::ManagedStorage::prepare(lease, options.hash, *impl_->network,claimed,retainedIdentities,payloadBridge,
-        intent?detail::ManagedStoragePurpose::VerifyExistingReadOnly:detail::ManagedStoragePurpose::Download));
+        intent?(intent->goal==core::ExistingVerificationGoal::SelectedFiles?detail::ManagedStoragePurpose::VerifySelectedReadOnly:detail::ManagedStoragePurpose::VerifyExistingReadOnly):detail::ManagedStoragePurpose::Download));
     // A certified same-hash restart replaces its own old claim only after the
     // new read-only collision gate and complete preparation succeeded.
     if(previous!=impl_->managed.end()){impl_->managedByHandle.erase(previous->second->handle);impl_->managed.erase(previous);}

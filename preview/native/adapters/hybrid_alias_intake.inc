@@ -46,8 +46,8 @@ core::Document hybridSourceDocument(const HybridAliasSource& source) {
   return parse(document.serialize(),MaximumMetadata);
 }
 void validateHybridAlias(const HybridAliasSource& source,const MetadataSubject& target,
-    const core::Document& inventory,const std::string& destination,std::optional<std::string_view> conversions={}) {
-  const auto old=metadataSubject(hybridSourceDocument(source).serialize(),conversions);
+    const core::Document& inventory,const std::string& destination,std::optional<std::string_view> conversions={},bool decoderShowAll=false) {
+  const auto old=metadataSubject(hybridSourceDocument(source).serialize(),conversions,decoderShowAll);
   require(old.identity.full.v1&&old.identity.full.v2&&source.hash==old.identity.originalKey
       &&take(compareOriginalTorrentIdentities(old.identity,target.identity))==OriginalIdentityRelation::AlternateSelected,
       ErrorCode::Conflict,"Alias must select the other identity of exactly one full hybrid");
@@ -98,7 +98,7 @@ void validateHybridAlias(const HybridAliasSource& source,const MetadataSubject& 
     }
   }
 }
-void hybridSourceCurrent(int root,const HybridAliasSource& source) {
+void hybridSourceCurrent(int root,const HybridAliasSource& source,std::optional<std::string_view> conversions={},bool decoderShowAll=false) {
   auto active=childDirectory(root,"active",false);
   require(active.get()>=0,ErrorCode::Conflict,"Hybrid source state directory disappeared");
   const auto current=read(active.get(),source.hash.hex()+".dat",MaximumMetadata);
@@ -110,7 +110,7 @@ void hybridSourceCurrent(int root,const HybridAliasSource& source) {
       ErrorCode::Conflict,"Hybrid source cache changed before publication");
   auto controls=childDirectory(active.get(),source.hash.hex().c_str(),false);
   if(controls.get()>=0){
-    const auto old=metadataSubject(hybridSourceDocument(source).serialize());
+    const auto old=metadataSubject(hybridSourceDocument(source).serialize(),conversions,decoderShowAll);
     for(std::size_t n=0;n<old.layout.files.size();++n){if(!old.layout.files[n].padding){
       for(const auto* marker:{".dat",".dat.2"}){
         const auto leaf="fmfile"+std::to_string(n)+marker;

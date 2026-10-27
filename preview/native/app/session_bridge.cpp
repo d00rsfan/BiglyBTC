@@ -1173,11 +1173,12 @@ bool SessionBridge::previewTorrentIntake(ui::TorrentIntakeRequest request) {
       if(!host_||request.session!=host_->columnLayoutSession){throw Failure{{storage::ErrorCode::Conflict,"The profile changed; load the torrent again"}};}
       if(host_->intakeRequest&&request.request<=host_->intakeRequest->request){throw Failure{{storage::ErrorCode::Conflict,"This file preview request is stale"}};}
       host_->intakeRequest=request;host_->intakeMetadata.reset();
-      const auto filenameConversions=take(storage::readOriginalFilenameConversions(host_->lease));
-      auto value=take(storage::inspectTorrentIntake(std::filesystem::path(request.metadata.toUtf8().toStdString()),stop,filenameConversions));
+      const auto filenameContext=take(storage::readOriginalFilenameContext(host_->lease));
+      auto value=take(storage::inspectTorrentIntake(std::filesystem::path(request.metadata.toUtf8().toStdString()),stop,filenameContext.conversions,filenameContext.decoderShowAll));
+      if(take(storage::readOriginalFilenameContext(host_->lease))!=filenameContext){throw Failure{{storage::ErrorCode::Conflict,"Filename context changed during file preview; load it again"}};}
       if(value.layout().files.size()>ui::MaximumIntakePreviewFiles){throw Failure{{storage::ErrorCode::Unsupported,"This torrent has too many files for the preview editor"}};}
       if(host_->intakePreviewRevision==std::numeric_limits<quint64>::max()){throw Failure{{storage::ErrorCode::Conflict,"File preview revisions are exhausted"}};}
-      packet->revision=++host_->intakePreviewRevision;packet->hash=text(value.hash().hex());packet->name=text(value.layout().name);packet->trackers=value.trackers();packet->initialDestinations=value.initialDestinations();packet->multifile=value.layout().multifile;
+      packet->revision=++host_->intakePreviewRevision;packet->hash=text(value.hash().hex());packet->name=text(value.layout().name);packet->trackers=value.trackers();packet->initialDestinations=value.initialDestinations();packet->multifile=value.layout().multifile;packet->decoderShowAll=value.decoderShowAll();
       for(std::size_t n=0;n<value.layout().files.size();++n){
         const auto& file=value.layout().files[n];packet->files.push_back({static_cast<int>(n),text(file.path),file.bytes,file.padding});
       }
@@ -1211,6 +1212,7 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
       if(submission.trackers&&!core::validTorrentIntakeTrackerTiers(*submission.trackers)){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid tracker tier override"}};}
       std::optional<std::string> saveName;
       if(submission.saveName){saveName=submission.saveName->toUtf8().toStdString();if(QString::fromUtf8(saveName->data(),static_cast<qsizetype>(saveName->size()))!=*submission.saveName||!core::validTorrentIntakeSaveName(*saveName)){throw Failure{{storage::ErrorCode::UnsafePath,"Save name must be one safe UTF8 filename component"}};}}
+      if(submission.decoderShowAll!=host_->intakeMetadata->decoderShowAll()){throw Failure{{storage::ErrorCode::Conflict,"The file preview decoder context is stale"}};}
       const auto& layout=host_->intakeMetadata->layout();
       if(submission.files.size()!=layout.files.size()){throw Failure{{storage::ErrorCode::Conflict,"File choices do not match the loaded torrent"}};}
       bool selected=false;
@@ -1230,7 +1232,7 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
       if((start||submission.verifyExisting)&&(!host_->engine||!host_->engine->managedAvailable())){throw Failure{{storage::ErrorCode::Unsupported,"The engine is unavailable; add this torrent stopped instead"}};}
       checkpoint(stop); // No payload/network work happens before the explicit commit.
       const auto hash=take(storage::importTorrentWithFileOptions(host_->lease,*host_->intakeMetadata,
-          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,stop,submission.limits,submission.sequentialDownload,queued,paused,submission.trackers,std::move(saveName),submission.verifyExisting,std::move(submission.fileDestinations)));
+          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,stop,submission.limits,submission.sequentialDownload,queued,paused,submission.trackers,std::move(saveName),submission.verifyExisting,std::move(submission.fileDestinations),submission.goal));
       result->imported=true;result->hash=text(hash.hex());host_->intakeMetadata.reset();
       const auto details=engine::queryTorrent(host_->lease,hash);
       if(details){host_->known.insert_or_assign(hash.hex(),Host::Known{text(details->displayName&&!details->displayName->empty()?*details->displayName:details->name),details->bytes});}

@@ -2,6 +2,7 @@
 
 #include "biglybtc/library.hpp"
 #include "biglybtc/file_policy.hpp"
+#include "biglybtc/existing_piece_goal.hpp"
 #include "biglybtc/queue_file_priority.hpp"
 #include "profile.hpp"
 #include "original_torrent_identity.hpp"
@@ -47,7 +48,7 @@ struct ManagedQueueMetadata {
 // Storage prerequisite only: the future owner must independently hold checking
 // until actual all-piece verification and fresh saved-intent CAS. This is not
 // seed_mode, verified resume, permission to auto-resume or an engine admission.
-enum class ManagedStoragePurpose { Download, VerifyExistingReadOnly };
+enum class ManagedStoragePurpose { Download, VerifyExistingReadOnly, VerifySelectedReadOnly };
 
 // Owns authenticated payload descriptors/state for ONE managed admission. The
 // caller retains the same profile lease for preparation, engine use and save.
@@ -66,6 +67,8 @@ public:
   ~ManagedStorage();
   libtorrent::add_torrent_params parameters() const;
   ManagedStoragePurpose purpose() const noexcept;
+  // Immutable NEED mask, never observed/verified data. Full stays all pieces.
+  std::span<const std::uint8_t> existingVerificationPieces() const noexcept;
   // Owner-thread pure named-fd snapshot check, safe alongside read-only disk
   // jobs. No codec/failure-cache access, queue release or verified-piece proof.
   std::expected<void,storage::Error> validateExistingSnapshot() const;

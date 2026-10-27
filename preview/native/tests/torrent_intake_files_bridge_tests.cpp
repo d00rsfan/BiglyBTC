@@ -33,6 +33,23 @@ class TorrentIntakeFilesBridgeTests final:public QObject {
   Q_OBJECT
 private slots:
 
+  void offlineDecoderCapabilityIsSealedByHeldProfileAndComparedBeforeCommit(){
+    QTemporaryDir directory;QVERIFY(directory.isValid());const auto profile=directory.path()+QStringLiteral("/decoder-profile");emptyProfile(profile);const auto input=directory.path()+QStringLiteral("/source.torrent"),destination=directory.path()+QStringLiteral("/absent-data");
+    // Structurally valid stopped v1 metadata only; no fabricated seed/progress.
+    QByteArray metadata("d8:encoding6:IBM8664:infod6:lengthi1e4:name1:");metadata+=char(0x80);metadata+="12:piece lengthi16384e6:pieces20:";metadata+=QByteArray(20,'h');metadata+="ee";test::write(input,metadata);
+    app::SessionBridge bridge;QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),reads(&bridge,&app::SessionBridge::torrentIntakeReady),writes(&bridge,&app::SessionBridge::torrentIntakeFinished),native(&bridge,&app::SessionBridge::nativeSessionReady),closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.open(profile.toStdString(),0));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty(),10000);const auto session=sessions[0][0].toULongLong();
+    QVERIFY(bridge.previewTorrentIntake({session,1,input}));QTRY_COMPARE_WITH_TIMEOUT(reads.size(),1,10000);QTRY_VERIFY(!bridge.busy());QVERIFY(!ui::validTorrentIntake(preview(reads)));QVERIFY(!QFile::exists(profile+QStringLiteral("/biglybt.config")));
+    test::write(profile+QStringLiteral("/biglybt.config"),"d20:File.Decoder.ShowAlli1e7:unknown3:rawe");QVERIFY(bridge.previewTorrentIntake({session,2,input}));QTRY_COMPARE_WITH_TIMEOUT(reads.size(),2,10000);QTRY_VERIFY(!bridge.busy());const auto frame=preview(reads);QVERIFY2(ui::validTorrentIntake(frame),qPrintable(frame->failure));QVERIFY(frame->decoderShowAll);QCOMPARE(frame->name,QString::fromUtf8("А"));
+    ui::TorrentIntakeSubmission accepted{session,frame->source.request,frame->revision,destination,false,{{false,0}}};
+    QVERIFY(bridge.importTorrentFiles(accepted));QTRY_COMPARE_WITH_TIMEOUT(writes.size(),1,10000);QTRY_VERIFY(!bridge.busy());QVERIFY(!result(writes)->imported); // A client cannot omit/change the sealed worker fact.
+    const auto inventory=test::read(profile+QStringLiteral("/downloads.config"));accepted.decoderShowAll=frame->decoderShowAll;test::write(profile+QStringLiteral("/biglybt.config"),"d20:File.Decoder.ShowAlli0e7:unknown3:rawe");
+    QVERIFY(bridge.importTorrentFiles(accepted));QTRY_COMPARE_WITH_TIMEOUT(writes.size(),2,10000);QTRY_VERIFY(!bridge.busy());QVERIFY(!result(writes)->imported);QCOMPARE(test::read(profile+QStringLiteral("/downloads.config")),inventory);QVERIFY(!QFile::exists(profile+QStringLiteral("/active")));QVERIFY(!QFile::exists(profile+QStringLiteral("/BiglyBTC.torrent-import")));QVERIFY(!QFile::exists(destination));
+    test::write(profile+QStringLiteral("/biglybt.config"),"d20:File.Decoder.ShowAlli1e7:unknown3:rawe");QVERIFY(bridge.importTorrentFiles(accepted));QTRY_COMPARE_WITH_TIMEOUT(writes.size(),3,10000);QTRY_VERIFY(!bridge.busy());QVERIFY2(result(writes)->imported,qPrintable(result(writes)->failure));QVERIFY(!result(writes)->started);QCOMPARE(native.size(),0);QVERIFY(!QFile::exists(destination));QCOMPARE(test::read(input),metadata);QCOMPARE(test::read(profile+QStringLiteral("/torrents/")+frame->hash+QStringLiteral(".torrent")),metadata);
+    const auto source=document(input),saved=document(profile+QStringLiteral("/active/")+frame->hash+QStringLiteral(".dat"));const auto rawInfo=storage::originalTorrentInfoSubject(source),savedInfo=storage::originalTorrentInfoSubject(saved);QVERIFY(rawInfo&&savedInfo);QCOMPARE(std::string(*rawInfo),std::string(*savedInfo));QVERIFY(document(profile+QStringLiteral("/biglybt.config")).find("unknown"));
+    QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,10000);QVERIFY(closed[0][1].toBool()&&closed[0][2].toBool());
+  }
+
   void actualVerifiedIntakeCommitsStoppedBeforeOwnerChecksAndNeverDownloads_data(){QTest::addColumn<bool>("corrupt");QTest::newRow("complete")<<false;QTest::newRow("corrupt")<<true;}
   void actualVerifiedIntakeCommitsStoppedBeforeOwnerChecksAndNeverDownloads(){
     QFETCH(bool,corrupt);QTemporaryDir directory;QVERIFY(directory.isValid());const auto fixture=test::prepareVerifiedSeedCase(directory.path()+"/owned",false,corrupt);

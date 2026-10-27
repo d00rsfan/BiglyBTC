@@ -6,6 +6,7 @@
 #include "versioned_verified_seeding_fixture.hpp"
 #include "custom_verified_seeding_fixture.hpp"
 #include "linked_verified_seeding_fixture.hpp"
+#include "selected_verified_seeding_fixture.hpp"
 #include "original_filename_policy.hpp"
 #include "library_commands.hpp"
 #include <QCoreApplication>
@@ -111,6 +112,24 @@ std::int64_t integer(const core::Node& node, std::string_view key) {
 class ManagedDownloadTests final : public QObject {
   Q_OBJECT
 private slots:
+
+  void actualSelectedReadOnlyOwnerKeepsMissingPiecesUnverifiedAndServesOnlyRealNeededData_data(){
+    QTest::addColumn<QString>("kind");QTest::addColumn<bool>("corrupt");for(const auto* kind:{"linear-missing","compact-edges","reordered-edges","reordered-compact-edges","v2-missing"}){QTest::newRow(kind)<<QString::fromLatin1(kind)<<false;}QTest::newRow("corrupt-needed-piece")<<QStringLiteral("compact-edges")<<true;
+  }
+  void actualSelectedReadOnlyOwnerKeepsMissingPiecesUnverifiedAndServesOnlyRealNeededData(){
+    QFETCH(QString,kind);QFETCH(bool,corrupt);QTemporaryDir area;QVERIFY(area.isValid());const auto fixture=test::prepareSelectedSeedCase(area.path()+"/owned",kind,corrupt);auto lease=storage::ProfileLease::acquire(fixture.value.profile.toStdString());QVERIFY(lease);
+    const auto imported=test::importSelectedSeedCase(*lease,fixture);QVERIFY2(imported,imported?"":imported.error().message.c_str());auto service=owner();const auto admitted=service->startManaged(*lease,{.hash=fixture.value.hash,.verifyExisting=true});QVERIFY2(admitted,admitted?"":admitted.error().message.c_str());QVERIFY(test::spinVerified(*service,fixture.value.hash));const auto actual=status(*service,fixture.value.hash);QVERIFY(actual);QCOMPARE(actual->received,std::int64_t{0});QVERIFY(!actual->complete);
+    const auto bits=service->verifiedSeedPieces(fixture.value.hash);
+    if(corrupt){QCOMPARE(actual->verifiedSeeding,engine::VerifiedSeedingPhase::Failed);QVERIFY(actual->failure);QVERIFY((!core::satisfiesExistingPieceGoal(std::array<std::uint8_t,4>{1,0,0,1},bits)));}
+    else{QVERIFY2(!actual->failure,actual->failure?actual->failure->message.c_str():"");QCOMPARE(actual->verifiedSeeding,engine::VerifiedSeedingPhase::Released);QVERIFY(actual->checked&&actual->selectedComplete);QCOMPARE(bits,std::vector<std::uint8_t>({1,0,0,1}));QVERIFY(!test::receiveSelectedSeed(*service,fixture).isEmpty());QTRY_VERIFY_WITH_TIMEOUT(service->poll().has_value()&&status(*service,fixture.value.hash)->sent>0,5000);}
+    const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(test::selectedSnapshotsIntact(fixture));const auto intent=storage::readVerifiedSeedIntent(*lease,fixture.value.hash);QVERIFY(intent&&*intent);QCOMPARE((*intent)->goal,core::ExistingVerificationGoal::SelectedFiles);QCOMPARE((*intent)->state,corrupt?storage::VerifiedSeedState::Pending:storage::VerifiedSeedState::Released);QCOMPARE((*intent)->startup,corrupt?core::StartupState::Stopped:core::StartupState::Queued);
+    const auto state=parse(test::read(fixture.value.profile+"/active/"+QString::fromStdString(fixture.value.hash.hex())+".dat"));const auto source=parse(test::read(fixture.value.metadata));QCOMPARE(encoded(*state.find("info")),encoded(*source.find("info")));QCOMPARE(state.find("opaque.fixture")->bytes,std::string_view("\0\xffQ",3));QCOMPARE(state.find("attributes")->find("opaque.fixture")->bytes,std::string_view("\0\xffQ",3));QCOMPARE(test::read(fixture.value.profile+"/torrents/"+QString::fromStdString(fixture.value.hash.hex())+".torrent"),test::read(fixture.value.metadata));
+  }
+
+  void selectedScopeRejectsReplacedControlAndNeededMissingBoundaryBeforeRelease(){
+    for(const bool replaceControl:{false,true}){QTemporaryDir area;QVERIFY(area.isValid());const auto fixture=test::prepareSelectedSeedCase(area.path()+"/owned",QStringLiteral("compact-edges"));auto lease=storage::ProfileLease::acquire(fixture.value.profile.toStdString());QVERIFY(lease);QVERIFY(test::importSelectedSeedCase(*lease,fixture));const auto path=replaceControl?fixture.controls.front().first:fixture.value.payload+'/'+fixture.value.files[1].relative;const auto raw=test::read(path);QVERIFY(QFile::rename(path,path+".retained"));if(replaceControl){test::write(path,raw);}
+      const auto before=test::read(fixture.value.profile+"/downloads.config");auto service=owner();QVERIFY(!service->startManaged(*lease,{.hash=fixture.value.hash,.verifyExisting=true}));QVERIFY(service->managedDownloads().empty());QCOMPARE(test::read(fixture.value.profile+"/downloads.config"),before);const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased);QCOMPARE(test::read(path+".retained"),raw);if(!replaceControl){QVERIFY(!QFileInfo::exists(path));}}
+  }
 
   void actualLinkedExistingOwnerChecksAndServesOnlyApprovedIndices_data(){
     QTest::addColumn<QString>("kind");QTest::addColumn<bool>("corrupt");for(const auto* kind:{"single","multi","one-multi","v2-tail"}){QTest::newRow(kind)<<QString::fromLatin1(kind)<<false;}QTest::newRow("linked-corrupt")<<QStringLiteral("multi")<<true;
@@ -590,6 +609,18 @@ int prepareLinkedVerifiedSeedReceipt(const QString& root,const QString& kind,con
     test::write(root+"/native-receipt.json",QJsonDocument(result).toJson(QJsonDocument::Indented));return 0;
   }catch(const std::exception& error){qCritical("%s",error.what());return 1;}
 }
+int prepareSelectedVerifiedSeedReceipt(const QString& root,const QString& kind,const QString& outcome){
+  try{
+    test::require(outcome=="complete"||outcome=="corrupt"||outcome=="stopped","Unknown selected verification outcome");const auto fixture=test::prepareSelectedSeedCase(root,kind,outcome=="corrupt");auto lease=storage::ProfileLease::acquire(fixture.value.profile.toStdString());test::require(lease.has_value(),"Own selected profile lease");const auto imported=test::importSelectedSeedCase(*lease,fixture);test::require(imported.has_value(),imported?"":imported.error().message.c_str());auto service=owner();test::require(service->startManaged(*lease,{.hash=fixture.value.hash,.verifyExisting=true}).has_value(),"Actual selected RO admission");
+    if(outcome=="stopped"){test::require(service->stopManaged(fixture.value.hash).has_value(),"Actual selected cancellation");}else{test::require(test::spinVerified(*service,fixture.value.hash),"Actual selected verification deadline");}
+    auto actual=test::verifiedStatus(*service,fixture.value.hash);test::require(actual.has_value(),"Actual selected observation");const bool released=actual->verifiedSeeding==engine::VerifiedSeedingPhase::Released;test::require(released==(outcome=="complete")&&!actual->complete,"Actual selected/full outcome differs");const auto bits=service->verifiedSeedPieces(fixture.value.hash);QByteArray receiver;if(released){test::require(bits==std::vector<std::uint8_t>({1,0,0,1}),"Exact same accepted selected bitmap");receiver=test::receiveSelectedSeed(*service,fixture);test::require(service->poll().has_value(),"Actual selected upload observation");actual=test::verifiedStatus(*service,fixture.value.hash);test::require(actual&&actual->sent>0,"Actual selected upload bytes");}
+    const auto closed=service->close(std::chrono::steady_clock::now()+5s);test::require(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure,"Actual selected joined close/fence");test::require(test::selectedSnapshotsIntact(fixture),"Selected RO payload/control mutated");const auto saved=storage::readVerifiedSeedIntent(*lease,fixture.value.hash);test::require(saved&&saved->has_value()&&(*saved)->goal==core::ExistingVerificationGoal::SelectedFiles,"Actual typed selected saved intent");
+    const auto source=parse(test::read(fixture.value.metadata));const auto layout=storage::readOriginalLayout(*lease,source);test::require(layout.has_value(),"Actual selected layout");lt::error_code error;const lt::torrent_info metadata(fixture.value.metadata.toStdString(),error);test::require(!error,"Actual selected receiver metadata");const auto identity=storage::originalTorrentIdentityFromLibtorrent(source,metadata);test::require(identity.has_value(),"Actual selected/full identity");const auto full=metadata.info_hashes();const auto hex=[](const auto& hash){return QString::fromLatin1(QByteArray::fromStdString(hash.to_string()).toHex().toUpper());};QJsonArray files,controls,verified,required;for(auto bit:bits){verified.push_back(static_cast<int>(bit));}for(int bit:{1,0,0,1}){required.push_back(bit);}
+    for(std::size_t n=0;n<fixture.value.files.size();++n){const auto& file=fixture.value.files[n];const auto path=fixture.value.payload+'/'+file.relative;QJsonObject value{{"index",static_cast<int>(n)},{"path",path},{"logicalBytes",QString::number(file.expected.size())},{"skipped",fixture.policy[n].skipped},{"kind",static_cast<int>(fixture.kinds[n])},{"present",fixture.physical[n].has_value()},{"expectedLogicalSha256",QString::fromLatin1(QCryptographicHash::hash(file.expected,QCryptographicHash::Sha256).toHex())}};if(fixture.physical[n]){struct stat info{};test::require(::lstat(path.toStdString().c_str(),&info)==0,"Actual selected final inode");value.insert("bytes",QString::number(info.st_size));value.insert("dev",QString::number(info.st_dev));value.insert("ino",QString::number(info.st_ino));value.insert("sha256",QString::fromLatin1(QCryptographicHash::hash(test::read(path),QCryptographicHash::Sha256).toHex()));}files.push_back(value);}
+    for(const auto& [path,raw]:fixture.controls){controls.push_back(QJsonObject{{"path",path},{"sha256",QString::fromLatin1(QCryptographicHash::hash(raw,QCryptographicHash::Sha256).toHex())}});}
+    const QJsonObject result{{"schema",5},{"status","ACTUAL_NATIVE_VERIFIED_SEED_CASE"},{"kind",kind},{"outcome",outcome},{"profile",fixture.value.profile},{"metadata",fixture.value.metadata},{"payloadRoot",fixture.value.payload},{"hash",QString::fromStdString(fixture.value.hash.hex())},{"fullV1",full.has_v1()?hex(full.v1):QStringLiteral("-")},{"fullV2",full.has_v2()?hex(full.v2):QStringLiteral("-")},{"selectedVersion",identity->selected==storage::OriginalSelectedHash::V2?2:1},{"goal",1},{"requiredPieces",required},{"verifiedPieces",verified},{"admission",QString::number(actual->admission)},{"released",released},{"phase",static_cast<int>(actual->verifiedSeeding)},{"fullComplete",actual->complete},{"selectedComplete",actual->selectedComplete},{"totalPieces",actual->totalPieces},{"received",QString::number(actual->received)},{"sent",QString::number(actual->sent)},{"receiverCompleted",!receiver.isEmpty()},{"receiverSha256",QString::fromLatin1(receiver)},{"marker",(*saved)->state==storage::VerifiedSeedState::Released?2:1},{"forceStart",(*saved)->forceStart},{"sessionJoined",closed.sessionJoined},{"storageReleased",closed.retirement.storageReleased},{"files",files},{"controls",controls},{"state",fixture.value.profile+"/active/"+QString::fromStdString(fixture.value.hash.hex())+".dat"},{"archive",fixture.value.profile+"/torrents/"+QString::fromStdString(fixture.value.hash.hex())+".torrent"}};test::write(root+"/native-receipt.json",QJsonDocument(result).toJson(QJsonDocument::Indented));return 0;
+  }catch(const std::exception& error){qCritical("%s",error.what());return 1;}
+}
 int prepareCustomVerifiedSeedReceipt(const QString& root,const QString& kind,const QString& outcome){
   try{
     test::require(outcome=="complete"||outcome=="corrupt"||outcome=="stopped","Unknown custom verified outcome");
@@ -671,6 +702,9 @@ int main(int argc,char** argv){
   }
   if(argc==5&&QString::fromLocal8Bit(argv[1])==QStringLiteral("--prepare-linked-verified-seed")){
     const auto kind=QString::fromLocal8Bit(argv[3]);if(kind!="single"&&kind!="multi"&&kind!="one-multi"&&kind!="v2-tail"){return 2;}return prepareLinkedVerifiedSeedReceipt(QString::fromLocal8Bit(argv[2]),kind,QString::fromLocal8Bit(argv[4]));
+  }
+  if(argc==5&&QString::fromLocal8Bit(argv[1])==QStringLiteral("--prepare-selected-verified-seed")){
+    return prepareSelectedVerifiedSeedReceipt(QString::fromLocal8Bit(argv[2]),QString::fromLocal8Bit(argv[3]),QString::fromLocal8Bit(argv[4]));
   }
   ManagedDownloadTests tests;return QTest::qExec(&tests,argc,argv);
 }

@@ -16,6 +16,11 @@ VerifiedSeedState seedState(const Node& row) {
   require(marker->type==Node::Type::Integer&&(marker->integer==1||marker->integer==2),ErrorCode::InvalidFormat,"Invalid verified-seeding intent");
   return marker->integer==1?VerifiedSeedState::Pending:VerifiedSeedState::Released;
 }
+core::ExistingVerificationGoal seedGoal(const Node& row){
+  const auto* goal=row.find(VerifiedSeedGoalKey);if(!goal){return core::ExistingVerificationGoal::FullTorrent;}
+  require(goal->type==Node::Type::Integer&&(goal->integer==0||goal->integer==1),ErrorCode::InvalidFormat,"Invalid existing verification goal");
+  return goal->integer==1?core::ExistingVerificationGoal::SelectedFiles:core::ExistingVerificationGoal::FullTorrent;
+}
 void replaceSeedRow(core::Document& doc,const SeedRow& before,std::string value) {
   const auto* rows=doc.find("downloads");std::string list="l";
   for(std::size_t n=0;n<rows->children.size();++n){list+=n==before.saved.sourceIndex?value:raw(doc,rows->children[n]);}
@@ -39,7 +44,7 @@ std::expected<std::optional<VerifiedSeedIntent>,Error> readVerifiedSeedIntent(
     require(file.recoverySource()==RecoverySource::Primary,ErrorCode::Conflict,"Resolve inventory recovery before verified seeding");
     const auto row=seedRow(file.document(),hash);const auto state=seedState(*row.node);
     if(state==VerifiedSeedState::None){return std::nullopt;}
-    return std::optional{VerifiedSeedIntent{hash,state,raw(file.document(),*row.node),row.paused,row.saved.forceStart,row.saved.startup}};
+    return std::optional{VerifiedSeedIntent{hash,state,raw(file.document(),*row.node),row.paused,row.saved.forceStart,row.saved.startup,seedGoal(*row.node)}};
   }catch(const Failure& failure){return std::unexpected(failure.error);}
   catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot read verified-seeding intent"});}
 }
@@ -86,7 +91,7 @@ std::expected<void,Error> publishVerifiedSeed(const ProfileLease& lease,const Ve
     auto file=take(ConfigFile::load(lease,"downloads.config"));
     require(file.recoverySource()==RecoverySource::Primary,ErrorCode::Conflict,"Resolve inventory recovery before seeding");
     const auto row=seedRow(file.document(),intent.hash);const auto state=seedState(*row.node);
-    require(state==intent.state&&raw(file.document(),*row.node)==intent.row&&row.paused==intent.paused,
+    require(state==intent.state&&seedGoal(*row.node)==intent.goal&&raw(file.document(),*row.node)==intent.row&&row.paused==intent.paused,
         ErrorCode::Conflict,"Saved intent changed during verification; explicit retry required");
     require((state==VerifiedSeedState::Pending&&row.saved.startup==core::StartupState::Stopped&&!row.paused&&!row.saved.forceStart)
         ||state==VerifiedSeedState::Released,ErrorCode::Conflict,"No current verification intent");

@@ -3,6 +3,7 @@
 #include "biglybtc/library.hpp"
 #include "biglybtc/file_policy.hpp"
 #include "biglybtc/torrent_intake_options.hpp"
+#include "biglybtc/existing_piece_goal.hpp"
 #include "biglybtc/torrent_intake_trackers.hpp"
 #include "biglybtc/torrent_layout.hpp"
 #include "profile.hpp"
@@ -40,21 +41,22 @@ public:
   const std::optional<core::TorrentIntakeTrackerFields>& trackers() const noexcept;
   const core::TorrentIntakeFileDestinations& initialDestinations() const noexcept;
   const std::string& filenameConversions() const noexcept;
+  bool decoderShowAll() const noexcept;
   const std::filesystem::path& source() const noexcept;
 private:
   struct Data;
   std::shared_ptr<const Data> data_;
   explicit TorrentIntakeMetadata(std::shared_ptr<const Data>);
-  friend std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(const std::filesystem::path&, std::stop_token,std::string);
+  friend std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(const std::filesystem::path&, std::stop_token,std::string,bool);
   friend std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
       const TorrentIntakeMetadata&, const std::filesystem::path&, bool, std::span<const compat::FilePolicy>,
-      void (*)(TorrentIntakeStage), bool, std::stop_token, core::TorrentIntakeLimits, bool, bool, bool, std::optional<core::TorrentIntakeTrackerTiers>, std::optional<std::string>, bool, std::optional<core::TorrentIntakeFileDestinations>);
+      void (*)(TorrentIntakeStage), bool, std::stop_token, core::TorrentIntakeLimits, bool, bool, bool, std::optional<core::TorrentIntakeTrackerTiers>, std::optional<std::string>, bool, std::optional<core::TorrentIntakeFileDestinations>, core::ExistingVerificationGoal);
 };
 std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(
     const std::filesystem::path&, std::stop_token = {},
-    std::string filenameConversions=std::string(compat::OriginalDefaultFilenameConversions));
-// Worker previews supply readOriginalFilenameConversions under the same sole
-// lease. The sealed policy is rechecked at import; this argument grants no
+    std::string filenameConversions=std::string(compat::OriginalDefaultFilenameConversions),bool decoderShowAll=false);
+// Worker previews supply readOriginalFilenameContext under the same sole
+// lease. Both sealed settings are rechecked at import; these arguments grant no
 // filesystem authority and never changes raw metadata/full torrent identities.
 // Full original-index vector, including immutable skipped padding entries.
 // All skipped => Stopped/no force, with no payload allocation. New journal option
@@ -74,7 +76,7 @@ std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(
 std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
     const TorrentIntakeMetadata&, const std::filesystem::path& destination, bool stopped,
     std::span<const compat::FilePolicy>, void (*observer)(TorrentIntakeStage) = nullptr,
-    bool forceStart = false, std::stop_token = {}, core::TorrentIntakeLimits = {}, bool sequentialDownload = false, bool queued = false, bool paused = false, std::optional<core::TorrentIntakeTrackerTiers> trackers = std::nullopt, std::optional<std::string> saveName = std::nullopt, bool verifyExisting = false, std::optional<core::TorrentIntakeFileDestinations> fileDestinations = std::nullopt);
+    bool forceStart = false, std::stop_token = {}, core::TorrentIntakeLimits = {}, bool sequentialDownload = false, bool queued = false, bool paused = false, std::optional<core::TorrentIntakeTrackerTiers> trackers = std::nullopt, std::optional<std::string> saveName = std::nullopt, bool verifyExisting = false, std::optional<core::TorrentIntakeFileDestinations> fileDestinations = std::nullopt, core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent);
 
 // Optional saveName changes only the saved destination leaf. Missing retains
 // old defaults; restoring layout.name clears manual rename intent. Changed

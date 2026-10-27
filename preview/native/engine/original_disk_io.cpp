@@ -79,7 +79,7 @@ public:
       else {
         data.reset(static_cast<char*>(std::malloc(static_cast<std::size_t>(request.length))));
         if (!data) { error = diskError(lt::operation_t::file_read, ENOMEM); }
-        else { error = translated(slot.files->read(offset(*slot.files, request), {data.get(), static_cast<std::size_t>(request.length)}), lt::operation_t::file_read); }
+        else { lt::file_index_t failedFile{-1};error = translated(slot.files->read(offset(*slot.files, request), {data.get(), static_cast<std::size_t>(request.length)},&failedFile), lt::operation_t::file_read);if(error.ec&&static_cast<int>(failedFile)>=0){error.file(failedFile);} }
       }
       slot.files->diskLatency().finish(latencyToken,!error.ec);
       if(error.ec){data.reset();}
@@ -140,14 +140,23 @@ public:
           for (int start = 0; start < std::max(size1, size2) && !error.ec; start += lt::default_block_size) {
             const int length1 = std::clamp(size1 - start, 0, lt::default_block_size), length2 = std::clamp(size2 - start, 0, lt::default_block_size);
             const int length = std::max(length1, length2);
+            lt::file_index_t failedFile{-1};
             error = translated(slot.files->read(static_cast<std::uint64_t>(static_cast<int>(piece)) * files.piece_length() + start,
-                std::span<char>(block).first(static_cast<std::size_t>(length))), lt::operation_t::file_read);
+                std::span<char>(block).first(static_cast<std::size_t>(length)),&failedFile), lt::operation_t::file_read);
+            if(error.ec&&static_cast<int>(failedFile)>=0){error.file(failedFile);}
             if (!error.ec) {
               if (length1) { h.update({block.data(), length1}); }
               if (length2) { hashes[start / lt::default_block_size] = lt::hasher256(lt::span<const char>(block.data(), length2)).final(); }
             }
           }
           if (!error.ec && v1) { result = h.final(); }
+          else if(error.ec&&v1){
+            // LT still compares the v1 result after a nonfatal ENOENT/EOF.
+            // Even untrusted metainfo advertising an all-zero hash cannot
+            // turn an unreadable piece into a verified bit.
+            result=slot.files->metadata().hash_for_piece(piece);result[0]^=0xff;
+          }
+          if(error.ec){std::fill(hashes.begin(),hashes.end(),lt::sha256_hash{});}
           if (!error.ec && bool(flags & flush_piece)) { error = translated(slot.files->flush(), lt::operation_t::file_write); }
         }
       }
@@ -166,8 +175,10 @@ public:
           || start >= files.piece_size2(piece)) { error = diskError(lt::operation_t::file_read, EINVAL); }
       else {
         std::array<char, lt::default_block_size> block{}; const int length = std::min(lt::default_block_size, files.piece_size2(piece) - start);
+        lt::file_index_t failedFile{-1};
         error = translated(slot.files->read(static_cast<std::uint64_t>(static_cast<int>(piece)) * files.piece_length() + start,
-            std::span<char>(block).first(static_cast<std::size_t>(length))), lt::operation_t::file_read);
+            std::span<char>(block).first(static_cast<std::size_t>(length)),&failedFile), lt::operation_t::file_read);
+        if(error.ec&&static_cast<int>(failedFile)>=0){error.file(failedFile);}
         if (!error.ec) { result = lt::hasher256(lt::span<const char>(block.data(), length)).final(); }
         if (!error.ec && bool(flags & flush_piece)) { error = translated(slot.files->flush(), lt::operation_t::file_write); }
       }
@@ -310,11 +321,20 @@ private:
 OriginalDiskFiles::OriginalDiskFiles(std::shared_ptr<lt::torrent_info> metadata,
     std::vector<std::optional<OriginalDiskFile>> files,OriginalDiskAccess access) : access_(access),metadata_(std::move(metadata)), files_(std::move(files)) {
   if (!metadata_ || files_.size() != static_cast<std::size_t>(metadata_->num_files())) { throw std::invalid_argument("Original storage file count differs"); }
-  if(access_!=OriginalDiskAccess::ReadWrite&&access_!=OriginalDiskAccess::ReadOnly){throw std::invalid_argument("Unknown original disk access policy");}
+  if(access_!=OriginalDiskAccess::ReadWrite&&access_!=OriginalDiskAccess::ReadOnly&&access_!=OriginalDiskAccess::SelectedReadOnly){throw std::invalid_argument("Unknown original disk access policy");}
   if(access_==OriginalDiskAccess::ReadOnly){for(int n=0;n<metadata_->num_files();++n){const auto index=lt::file_index_t{n};if(metadata_->files().pad_file_at(index)){continue;}const auto& file=files_[static_cast<std::size_t>(n)];struct stat stamp{};const int flags=file?::fcntl(file->descriptor.get(),F_GETFL):-1;
     if(!file||flags<0||(flags&O_ACCMODE)!=O_RDONLY
         ||::fstat(file->descriptor.get(),&stamp)!=0||!S_ISREG(stamp.st_mode)||stamp.st_uid!=::geteuid()||stamp.st_nlink!=1||stamp.st_size!=metadata_->files().file_size(index)){
       throw std::invalid_argument("Read-only original storage requires complete owned read-only descriptors");}
+  }}
+  if(access_==OriginalDiskAccess::SelectedReadOnly){for(int n=0;n<metadata_->num_files();++n){
+    const auto index=lt::file_index_t{n};if(metadata_->files().pad_file_at(index)){continue;}
+    const auto& file=files_[static_cast<std::size_t>(n)];if(!file){continue;}struct stat stamp{};
+    const int flags=::fcntl(file->descriptor.get(),F_GETFL);
+    if(flags<0||(flags&O_ACCMODE)!=O_RDONLY||!file->validateControl
+        ||::fstat(file->descriptor.get(),&stamp)!=0||!S_ISREG(stamp.st_mode)
+        ||stamp.st_uid!=::geteuid()||stamp.st_nlink!=1||stamp.st_size<0){
+      throw std::invalid_argument("Selected read-only storage requires authenticated owned O_RDONLY leaves");}
   }}
 }
 bool OriginalDiskFiles::matches(const lt::storage_params& params) const {
@@ -327,7 +347,8 @@ bool OriginalDiskFiles::matches(const lt::storage_params& params) const {
   }
   return true;
 }
-std::expected<void, storage::Error> OriginalDiskFiles::read(std::uint64_t offset, std::span<char> output) {
+std::expected<void, storage::Error> OriginalDiskFiles::read(std::uint64_t offset, std::span<char> output,lt::file_index_t* failedFile) {
+  if(failedFile){*failedFile=lt::file_index_t{-1};}
   if (offset > static_cast<std::uint64_t>(metadata_->total_size()) || output.size() > static_cast<std::uint64_t>(metadata_->total_size()) - offset) { return std::unexpected(missing()); }
   const auto& files = metadata_->files(); std::size_t done = 0;
   while (done < output.size()) {
@@ -338,19 +359,21 @@ std::expected<void, storage::Error> OriginalDiskFiles::read(std::uint64_t offset
     auto part = output.subspan(done, static_cast<std::size_t>(length));
     if (files.pad_file_at(index)) { std::ranges::fill(part, '\0'); }
     else {
+      if(failedFile){*failedFile=index;}
       auto& file = files_.at(static_cast<int>(index)); if (!file) { return std::unexpected(missing()); }
-      if(access_==OriginalDiskAccess::ReadOnly&&file->validateControl){const auto proof=file->validateControl();if(!proof){return std::unexpected(proof.error());}}
+      if(access_!=OriginalDiskAccess::ReadWrite&&file->validateControl){const auto proof=file->validateControl();if(!proof){return std::unexpected(proof.error());}}
       const auto result = file->io.read(within, std::as_writable_bytes(part));
       if (!result) { return std::unexpected(result.error()); } if (!result->complete()) { return std::unexpected(missing()); }
-      if(access_==OriginalDiskAccess::ReadOnly&&file->validateControl){const auto proof=file->validateControl();if(!proof){return std::unexpected(proof.error());}}
+      if(access_!=OriginalDiskAccess::ReadWrite&&file->validateControl){const auto proof=file->validateControl();if(!proof){return std::unexpected(proof.error());}}
     }
     done += static_cast<std::size_t>(length); offset += length;
   }
+  if(failedFile){*failedFile=lt::file_index_t{-1};}
   return {};
 }
 std::expected<void, storage::Error> OriginalDiskFiles::write(std::uint64_t offset, std::span<const char> input) {
   if (const auto error=failure()) { return std::unexpected(*error); }
-  if(access_==OriginalDiskAccess::ReadOnly){failure_=storage::Error{storage::ErrorCode::Unsupported,"Existing-only payload cannot be created, repaired or written"};return std::unexpected(*failure_);}
+  if(access_!=OriginalDiskAccess::ReadWrite){failure_=storage::Error{storage::ErrorCode::Unsupported,"Existing-only payload cannot be created, repaired or written"};return std::unexpected(*failure_);}
   if (offset > static_cast<std::uint64_t>(metadata_->total_size()) || input.size() > static_cast<std::uint64_t>(metadata_->total_size()) - offset) { return std::unexpected(missing()); }
   const auto& files = metadata_->files(); std::size_t done = 0;
   while (done < input.size()) {
@@ -370,7 +393,7 @@ std::expected<void, storage::Error> OriginalDiskFiles::write(std::uint64_t offse
 std::expected<void, storage::Error> OriginalDiskFiles::flush() {
   if (const auto error=failure()) { return std::unexpected(*error); }
   for (auto& file : files_) { if (file) {
-    auto result = access_==OriginalDiskAccess::ReadOnly?std::expected<void,storage::Error>{}:file->io.flush();
+    auto result = access_!=OriginalDiskAccess::ReadWrite?std::expected<void,storage::Error>{}:file->io.flush();
     if(result&&file->validateControl){result=file->validateControl();}
     if (!result) { failure_ = result.error(); return result; }
   } }
@@ -383,7 +406,7 @@ std::expected<void, storage::Error> OriginalDiskFiles::finishComplete(std::span<
   }
   for (std::size_t i=0;i<files_.size();++i) { if (files_[i]) {
     std::expected<void,storage::Error> result;
-    if(access_!=OriginalDiskAccess::ReadOnly){
+    if(access_==OriginalDiskAccess::ReadWrite){
       if(complete[i]){result=files_[i]->io.finishCompleteReordered();}
       else{const auto normalized=files_[i]->io.finishAllocatedReordered();if(!normalized){result=std::unexpected(normalized.error());}}
     }

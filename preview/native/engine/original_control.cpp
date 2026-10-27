@@ -136,6 +136,15 @@ std::expected<std::optional<std::string>, Error> OriginalControl::load() const {
     checkDirectories();noSaving(directory_.get(),leaf_);auto candidates=readCandidates(directory_.get(),leaf_,kind_);checkObserved(stamp(candidates.primary),stamp(candidates.backup));checkDirectories();checkCandidates(directory_.get(),leaf_,candidates);auto result=selected(candidates);remember(stamp(candidates.primary),stamp(candidates.backup));return result;
   });
 }
+std::expected<std::optional<std::string>, Error> OriginalControl::loadValidated(storage::OriginalFileGeometry geometry) const {
+  return guarded([&]()->std::expected<std::optional<std::string>,Error>{
+    const std::unique_lock lock(mutex_,std::try_to_lock);require(lock.owns_lock(),"Concurrent/reentrant original control operation",ErrorCode::Busy);
+    checkDirectories();noSaving(directory_.get(),leaf_);auto candidates=readCandidates(directory_.get(),leaf_,kind_);checkObserved(stamp(candidates.primary),stamp(candidates.backup));
+    candidates.primaryValid=candidates.primary.bytes&&storage::OriginalFileIo::validateControl(geometry,kind_,*candidates.primary.bytes).has_value();
+    candidates.backupValid=candidates.backup.bytes&&storage::OriginalFileIo::validateControl(geometry,kind_,*candidates.backup.bytes).has_value();
+    checkDirectories();checkCandidates(directory_.get(),leaf_,candidates);auto result=selected(candidates);remember(stamp(candidates.primary),stamp(candidates.backup));return result;
+  });
+}
 storage::OriginalControlPublisher OriginalControl::publisher() {
   return [self=shared_from_this()](const auto& expected,auto replacement){return self->publish(expected,replacement);};
 }
