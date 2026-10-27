@@ -15,6 +15,7 @@
 #include <memory>
 #include <mutex>
 #include <optional>
+#include <sstream>
 #include <utility>
 #include <vector>
 
@@ -207,9 +208,21 @@ private slots:
     const auto rawHash=fixture.hash->bytes();std::string payload;for(const auto& file:fixture.files){payload+=file.expected.toStdString();}
     auto lease=storage::ProfileLease::acquire(fixture.native());QVERIFY(lease);auto made=engine::PersistentSession::create({1901,1902,1903});QVERIFY(made);auto owner=std::move(*made);
     QVERIFY(owner->startManaged(*lease,{.hash=*fixture.hash,.forceStart=true}));
-    QTRY_VERIFY_WITH_TIMEOUT(owner->tcpListenPort().has_value()&&*owner->tcpListenPort()!=0,10000);
+    const auto admitted=status(*owner,*fixture.hash);QVERIFY(admitted&&admitted->admission>0);const auto admissionBeforeWire=admitted->admission;
+    const auto ownerDiagnostic=[&]{const auto value=status(*owner,*fixture.hash);std::ostringstream out;out<<"hash="<<fixture.hash->hex()<<" expectedAdmission="<<admissionBeforeWire;
+      if(value){out<<" admission="<<value->admission<<" phase="<<static_cast<int>(value->phase)<<" checked="<<value->checked<<" retained="<<value->retained<<" received="<<value->received;
+        out<<" discarded="<<(value->discardedBytes?std::to_string(*value->discardedBytes):"unknown")<<" failed="<<(value->hashFailedBytes?std::to_string(*value->hashFailedBytes):"unknown");if(value->failure){out<<" ownerFailure="<<value->failure->message;}}
+      else{out<<" ownerStatus=absent";}return out.str();};
+    // A listening session can still contain a checking torrent. LT rejects an
+    // incoming handshake outside downloading state before sending its response.
+    QTRY_VERIFY2_WITH_TIMEOUT(([&]{const auto poll=owner->poll();const auto value=status(*owner,*fixture.hash);return poll&&value&&!value->failure&&value->admission==admissionBeforeWire&&value->retained&&value->checked&&value->phase==engine::ManagedPhase::Downloading&&owner->tcpListenPort().has_value()&&*owner->tcpListenPort()!=0;})(),ownerDiagnostic().c_str(),10000);
     test::OwnedBadPayloadPeer peer(std::string_view(reinterpret_cast<const char*>(rawHash.data()),rawHash.size()),8,std::move(payload),*owner->tcpListenPort());
-    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=owner->poll();const auto value=status(*owner,*fixture.hash);return poll&&value&&!value->failure&&value->discardedBytes&&value->hashFailedBytes&&*value->discardedBytes>=16384&&*value->hashFailedBytes>=16384;})(),30000);
+    const auto actualBadCounters=[&]{const auto poll=owner->poll();const auto value=status(*owner,*fixture.hash);return poll&&value&&!value->failure&&value->discardedBytes&&value->hashFailedBytes&&*value->discardedBytes>=16384&&*value->hashFailedBytes>=16384;};
+    const auto wireDiagnostic=[&]{return ownerDiagnostic()+" peer{"+peer.diagnostic()+"}";};
+    // Terminal fixture failure ends the wait, then the SAME original positive
+    // counter predicate must still pass. An EOF can never count as success.
+    QTRY_VERIFY2_WITH_TIMEOUT(actualBadCounters()||!peer.failure().empty(),wireDiagnostic().c_str(),30000);
+    QVERIFY2(actualBadCounters(),wireDiagnostic().c_str());
     const auto before=status(*owner,*fixture.hash);QVERIFY(before&&before->received>=32768);QVERIFY2(peer.actualWork(),peer.failure().c_str());
     QVERIFY(owner->pauseManaged(*fixture.hash,true));QTRY_VERIFY_WITH_TIMEOUT(owner->poll().has_value()&&isPhase(*owner,*fixture.hash,engine::ManagedPhase::Paused),10000);
     QVERIFY(owner->pauseManaged(*fixture.hash,false));

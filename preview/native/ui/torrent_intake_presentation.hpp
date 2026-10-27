@@ -31,7 +31,7 @@ struct TorrentIntakePacket {
   bool decoderShowAll=false; // Worker-derived sealed context, never a UI setting.
 };
 using TorrentIntakePresentation=std::shared_ptr<const TorrentIntakePacket>;
-enum class TorrentIntakeStartMode { Queued, Stopped, Paused, Forced, VerifySeeding, VerifySelected };
+enum class TorrentIntakeStartMode { Queued, Stopped, Paused, Forced, VerifySeeding, VerifySelected, AllocateStopped, AllocatePaused };
 struct TorrentIntakeSubmission {
   quint64 session=0,request=0,revision=0;
   QString destination;
@@ -47,12 +47,14 @@ struct TorrentIntakeSubmission {
   std::optional<core::TorrentIntakeFileDestinations> fileDestinations=std::nullopt;
   core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent;
   bool decoderShowAll=false;
+  core::TorrentAllocationMode allocation=core::TorrentAllocationMode::None;
 };
 struct TorrentIntakeResultPacket {
   quint64 session=0,request=0,revision=0;
   bool imported=false,started=false;
   QString hash,failure;
   bool verificationPending=false;
+  bool allocationPending=false;
 };
 using TorrentIntakeResultPresentation=std::shared_ptr<const TorrentIntakeResultPacket>;
 inline bool validTorrentIntake(const TorrentIntakePresentation& packet) {

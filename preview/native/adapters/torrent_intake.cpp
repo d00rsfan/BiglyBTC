@@ -1,5 +1,6 @@
 #include "torrent_intake.hpp"
 #include "verified_seeding.hpp"
+#include "allocation_intent.hpp"
 #include "verified_existing_scope.hpp"
 #include "selected_existing_scope.hpp"
 #include "biglybtc/existing_piece_goal.hpp"
@@ -261,11 +262,16 @@ struct IntakeFileOptions {
   std::optional<std::string> destinationSnapshot{};
   core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent;
   std::optional<std::string> selectedScope{};
+  core::TorrentAllocationMode allocation=core::TorrentAllocationMode::None;
 };
 const std::string& effectiveSaveName(const compat::OriginalLayout& layout,const IntakeFileOptions& options) {
   return options.saveName?*options.saveName:layout.name;
 }
 void validateFileOptions(const MetadataSubject& source,const IntakeFileOptions& options) {
+  require(core::validTorrentAllocationMode(options.allocation),ErrorCode::InvalidFormat,"Invalid allocation mode");
+  const bool allocating=options.allocation!=core::TorrentAllocationMode::None;
+  require(!allocating||options.destinations.empty(),ErrorCode::Unsupported,"Allocation requires canonical file destinations");
+  require(!allocating||(!options.verifyExisting&&!options.queued&&!options.paused&&options.goal==core::ExistingVerificationGoal::FullTorrent),ErrorCode::InvalidFormat,"Allocation requires stopped ordinary intent");
   require(!options.saveName||core::validTorrentIntakeSaveName(*options.saveName),ErrorCode::UnsafePath,"Save name must be one safe UTF8 filename component");
   require(!options.trackers||core::validTorrentIntakeTrackerTiers(*options.trackers),ErrorCode::InvalidFormat,"Invalid tracker tier override");
   require(core::validTorrentIntakeLimits(options.limits),ErrorCode::InvalidFormat,"Per-torrent limits must be between zero and INT32_MAX bytes/s");
@@ -278,6 +284,7 @@ void validateFileOptions(const MetadataSubject& source,const IntakeFileOptions& 
     const auto& value=(*values)[n];const auto kind=options.stores[n];
     require(kind=='L'||kind=='C'||kind=='R'||kind=='X',ErrorCode::InvalidFormat,"Invalid intake storage kind");
     require(!source.layout.files[n].padding||(value.skipped&&value.priority==0),ErrorCode::Unsupported,"Padding cannot be selected");
+    require(!allocating||source.layout.files[n].padding||(!value.skipped&&kind=='L'),ErrorCode::Unsupported,"Allocation requires every real file selected in linear storage");
     require(value.skipped||(options.verifyExisting&&options.goal==core::ExistingVerificationGoal::SelectedFiles)||(kind=='L'||kind=='R'),ErrorCode::InvalidFormat,"Selected file cannot use compact storage");
     require(kind!='R'||!value.skipped||(options.verifyExisting&&options.goal==core::ExistingVerificationGoal::SelectedFiles),ErrorCode::InvalidFormat,"Skipped reordered file needs explicit X or existing linear data");
   }
@@ -297,7 +304,7 @@ void validateFileOptions(const MetadataSubject& source,const IntakeFileOptions& 
   if(options.selectedScope){auto value=parse(*options.selectedScope);require(SelectedExistingScope::decode(value.root()).has_value(),ErrorCode::InvalidFormat,"Invalid selected scope encoding");}
   require(options.verifyExisting||!options.existingScope,ErrorCode::InvalidFormat,"Ordinary intake cannot acquire existing-root authority");
   require(core::validTorrentIntakeFileDestinations(options.destinations),ErrorCode::InvalidFormat,"Invalid file destination vector");
-  require((!options.verifyExisting&&!options.destinations.empty())==options.destinationSnapshot.has_value(),ErrorCode::InvalidFormat,"Ordinary indexed targets require their transaction observation");
+  require((!options.verifyExisting&&(!options.destinations.empty()||allocating))==options.destinationSnapshot.has_value(),ErrorCode::InvalidFormat,"Ordinary indexed targets require their transaction observation");
   if(options.destinationSnapshot){require(options.destinationSnapshot->size()==64&&std::ranges::all_of(*options.destinationSnapshot,[](char c){return(c>='0'&&c<='9')||(c>='a'&&c<='f');}),ErrorCode::InvalidFormat,"Invalid destination snapshot digest");}
   for(const auto& value:options.destinations){require(value.index<source.layout.files.size()&&!source.layout.files[value.index].padding,ErrorCode::InvalidFormat,"File destination requires a real original index");}
   require(!options.reorderMinimumMiB||(*options.reorderMinimumMiB>=INT32_MIN&&*options.reorderMinimumMiB<=INT32_MAX),
@@ -314,7 +321,7 @@ void checkCompactAbsence(const compat::OriginalLayout& layout,const IntakeFileOp
   }
 }
 IntakeFileOptions fileOptions(const ProfileLease& lease,const MetadataSubject& source,
-    const fs::path& destination,std::span<const compat::FilePolicy> values,core::TorrentIntakeLimits limits,bool sequentialDownload,bool queued,bool paused,std::optional<core::TorrentIntakeTrackerTiers> trackers,std::optional<std::string> saveName,bool verifyExisting,core::TorrentIntakeFileDestinations destinations,std::string_view conversions,core::ExistingVerificationGoal goal) {
+    const fs::path& destination,std::span<const compat::FilePolicy> values,core::TorrentIntakeLimits limits,bool sequentialDownload,bool queued,bool paused,std::optional<core::TorrentIntakeTrackerTiers> trackers,std::optional<std::string> saveName,bool verifyExisting,core::TorrentIntakeFileDestinations destinations,std::string_view conversions,core::ExistingVerificationGoal goal,core::TorrentAllocationMode allocation) {
   require(!saveName||core::validTorrentIntakeSaveName(*saveName),ErrorCode::UnsafePath,"Save name must be one safe UTF8 filename component");
   require(values.size()==source.layout.files.size(),ErrorCode::InvalidFormat,"Intake selection does not match metadata");
   const auto encoded=compat::encodeOriginalFilePolicy(values);
@@ -322,7 +329,7 @@ IntakeFileOptions fileOptions(const ProfileLease& lease,const MetadataSubject& s
   auto empty=parse("de");const bool selectedGoal=verifyExisting&&goal==core::ExistingVerificationGoal::SelectedFiles;
   const auto* inherited=source.torrent.find("attributes");const auto defaults=take(resolveOriginalStorageTypes(lease,source.hash,source.layout,selectedGoal&&inherited?*inherited:empty.root()));
   require(selectedGoal||(defaults.markers.empty()&&!defaults.unsupportedConversion),ErrorCode::Conflict,"Orphan original storage controls already own this import");
-  IntakeFileOptions result{*encoded,"",defaults.reorderMinimumMiB,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting};result.goal=goal;result.destinations=std::move(destinations);const auto paths=physicalIntakePaths(source.layout,destination,effectiveSaveName(source.layout,result),result.destinations,conversions);result.stores.reserve(values.size());
+  IntakeFileOptions result{*encoded,"",defaults.reorderMinimumMiB,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting};result.goal=goal;result.allocation=allocation;result.destinations=std::move(destinations);const auto paths=physicalIntakePaths(source.layout,destination,effectiveSaveName(source.layout,result),result.destinations,conversions);result.stores.reserve(values.size());
   for(std::size_t n=0;n<values.size();++n) {
     const bool reorder=defaults.requested[n]==OriginalStorageKind::Reordered;
     if(selectedGoal&&!source.layout.files[n].padding){
@@ -332,7 +339,12 @@ IntakeFileOptions fileOptions(const ProfileLease& lease,const MetadataSubject& s
     const auto present=inspectPayload(paths[n]);
     result.stores+=present?'L':reorder?'X':'C'; // Never convert/reclaim existing data.
   }
-  if(!verifyExisting&&!result.destinations.empty()){result.destinationSnapshot=intakeDestinationSnapshot(source,paths);}
+  if(allocation!=core::TorrentAllocationMode::None){
+    const auto flags=core::originalDownloadFlags(source.torrent.find("attributes"));
+    require(flags&&((*flags&(0x200|0x4000))==0),ErrorCode::Unsupported,"Original flags disable stop after allocation");
+    for(std::size_t n=0;n<paths.size();++n){if(source.layout.files[n].padding){continue;}const auto present=inspectPayload(paths[n]);require(!present||(present->st_size==source.layout.files[n].bytes&&present->st_nlink==1&&present->st_uid==::geteuid()),ErrorCode::Unsupported,"Allocation refuses unreviewed short or shared existing data");}
+  }
+  if(!verifyExisting&&(!result.destinations.empty()||allocation!=core::TorrentAllocationMode::None)){result.destinationSnapshot=intakeDestinationSnapshot(source,paths);}
   if(verifyExisting&&!selectedGoal&&(effectiveSaveName(source.layout,result)!=source.layout.name||!result.destinations.empty())){
     const auto scope=take(VerifiedExistingScope::capture(lease,source.torrent,source.layout,source.identity,destination,effectiveSaveName(source.layout,result),result.destinations.empty()?std::span<const fs::path>{}:std::span<const fs::path>{paths}));result.existingScope=scope.encoded();
   }
@@ -439,6 +451,7 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
     std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart, std::optional<IntakeFileOptions> options = {}, std::optional<HybridAliasSource> alias = {},std::optional<std::string> filenameConversions={},std::optional<bool> decoderShowAll={}) {
   require(!options||!options->queued||(!stopped&&!forceStart),ErrorCode::InvalidFormat,"Queued intake conflicts with stopped/forced intent");
   require(!options||!options->paused||(stopped&&!forceStart&&!options->queued),ErrorCode::InvalidFormat,"Paused intake requires stopped/unforced/nonqueued intent");
+  require(!options||options->allocation==core::TorrentAllocationMode::None||(stopped&&!forceStart),ErrorCode::InvalidFormat,"Allocation intake must remain safely stopped and unforced");
   require(!options||!options->verifyExisting||(stopped&&!forceStart),ErrorCode::InvalidFormat,"Verified seeding requires stopped/unforced intake");
   auto subject=metadataSubject(metadata,filenameConversions?std::optional<std::string_view>{*filenameConversions}:std::nullopt,decoderShowAll.value_or(false));auto& torrent=subject.torrent;auto* original=&subject.layout;
   const auto hash=std::optional{subject.hash};const auto key=hash->bytes();
@@ -492,6 +505,7 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
     const bool allSkipped=std::ranges::all_of(*policies,[](const auto& value){return value.skipped;});
     if(allSkipped){stopped=true;forceStart=false;options->queued=false;options->paused=false;put(selected,"state","i70e");put(selected,"forceStart","i0e");}
     if(options->verifyExisting){put(selected,VerifiedSeedKey,"i1e");}
+    if(options->allocation!=core::TorrentAllocationMode::None){put(selected,AllocationModeKey,i(static_cast<int>(options->allocation)));put(selected,AllocationStateKey,"i1e");put(selected,AllocationSnapshotKey,b(*options->destinationSnapshot));put(selected,"allocated","i0e");}
     if(options->existingScope){put(selected,VerifiedExistingScopeKey,*options->existingScope);}
     if(options->goal==core::ExistingVerificationGoal::SelectedFiles){put(selected,VerifiedSeedGoalKey,"i1e");put(selected,VerifiedSelectedScopeKey,*options->selectedScope);}
     entry=selected.serialize();
@@ -511,6 +525,7 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   const auto flags=core::originalDownloadFlags(torrent.find("attributes"));
   require(flags.has_value(),ErrorCode::InvalidFormat,"Invalid original download flags");
   auto attributes = section(torrent.find("attributes"));
+  if(options&&options->allocation!=core::TorrentAllocationMode::None){put(attributes,"fas","i2e");}
   if(options&&original->files.size()==1&&!options->destinations.empty()
       &&fs::path(options->destinations.front().path).filename().string()!=fs::path(original->files[0].path).filename().string()){
     put(attributes,"displayname",b(fs::path(options->destinations.front().path).filename().string()));
@@ -582,6 +597,7 @@ std::string journalBytes(const Plan& p) {
     if(p.options->sequentialDownload){value+=b("sequential")+"i1e";}
     if(p.options->queued){value+=b("queued")+"i1e";}
     if(p.options->paused){value+=b("paused")+"i1e";}
+    if(p.options->allocation!=core::TorrentAllocationMode::None){value+=b("allocation")+i(static_cast<int>(p.options->allocation));}
     if(p.options->verifyExisting){value+=b("verifiedSeed")+"i1e";}
     if(p.options->saveName){value+=b("saveName")+b(*p.options->saveName);}
     if(p.options->existingScope){value+=b("existingScope")+*p.options->existingScope;}
@@ -653,6 +669,8 @@ Plan readJournal(std::string bytes, const std::string& profile,const ProfileLeas
     require(queuedValue==0||queuedValue==1,ErrorCode::InvalidFormat,"Invalid queued intake intent");
     const auto* paused=optionsNode->find("paused");const auto pausedValue=paused?integer(paused):0;
     require(pausedValue==0||pausedValue==1,ErrorCode::InvalidFormat,"Invalid paused intake intent");
+    const auto* allocation=optionsNode->find("allocation");
+    require(!allocation||(integer(allocation)==5||integer(allocation)==6),ErrorCode::InvalidFormat,"Invalid allocation journal intent");
     const auto* verified=optionsNode->find("verifiedSeed");
     require(!verified||integer(verified)==1,ErrorCode::InvalidFormat,"Invalid verified-seeding journal intent");
     const auto* saveName=optionsNode->find("saveName");
@@ -665,7 +683,7 @@ Plan readJournal(std::string bytes, const std::string& profile,const ProfileLeas
     const auto* trackers=optionsNode->find("trackers");
     std::optional<core::TorrentIntakeTrackerTiers> override;
     if(trackers){override=core::decodeTorrentIntakeTrackerTiers(*trackers);require(override.has_value(),ErrorCode::InvalidFormat,"Invalid tracker override journal");}
-    require(optionsNode->children.size()==4+(reorder?2U:0U)+(download?2U:0U)+(upload?2U:0U)+(sequential?2U:0U)+(queued?2U:0U)+(paused?2U:0U)+(trackers?2U:0U)+(saveName?2U:0U)+(verified?2U:0U)+(existing?2U:0U)+(destinations?2U:0U)+(destinationSnapshot?2U:0U)+(goal?2U:0U)+(selectedScope?2U:0U),ErrorCode::InvalidFormat,"Unexpected intake options fields");
+    require(optionsNode->children.size()==4+(reorder?2U:0U)+(download?2U:0U)+(upload?2U:0U)+(sequential?2U:0U)+(queued?2U:0U)+(paused?2U:0U)+(trackers?2U:0U)+(saveName?2U:0U)+(verified?2U:0U)+(existing?2U:0U)+(destinations?2U:0U)+(destinationSnapshot?2U:0U)+(goal?2U:0U)+(selectedScope?2U:0U)+(allocation?2U:0U),ErrorCode::InvalidFormat,"Unexpected intake options fields");
     options=IntakeFileOptions{text(optionsNode->find("policy")),text(optionsNode->find("stores")),
         reorder?std::optional{integer(reorder)}:std::nullopt,
         {download?integer(download):0,upload?integer(upload):0},sequentialValue==1,queuedValue==1,pausedValue==1,std::move(override),saveName?std::optional{text(saveName)}:std::nullopt,verified!=nullptr};
@@ -673,6 +691,7 @@ Plan readJournal(std::string bytes, const std::string& profile,const ProfileLeas
     if(destinations){options->destinations=decodeFileDestinations(*destinations);}
     if(destinationSnapshot){options->destinationSnapshot=text(destinationSnapshot);}
     options->goal=goal?core::ExistingVerificationGoal::SelectedFiles:core::ExistingVerificationGoal::FullTorrent;
+    options->allocation=allocation?static_cast<core::TorrentAllocationMode>(integer(allocation)):core::TorrentAllocationMode::None;
     if(selectedScope){options->selectedScope=take(SelectedExistingScope::decode(*selectedScope)).encoded();}
   }
   std::optional<HybridAliasSource> alias;
@@ -767,13 +786,14 @@ void checkSaveNameScope(const ProfileLease& lease,const Plan& p) {
   const auto subject=metadataSubject(p.metadata,p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt,p.decoderShowAll.value_or(false));const auto& leaf=effectiveSaveName(subject.layout,*p.options);
   const bool renamed=leaf!=subject.layout.name,linked=!p.options->destinations.empty();
   const bool selectedGoal=p.options->goal==core::ExistingVerificationGoal::SelectedFiles;
-  if(!renamed&&!linked&&!selectedGoal){return;}
+  const bool allocating=p.options->allocation!=core::TorrentAllocationMode::None;
+  if(!renamed&&!linked&&!selectedGoal&&!allocating){return;}
   const auto policy=p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt;
   const auto paths=physicalIntakePaths(subject.layout,p.destination,leaf,p.options->destinations,policy);
   if(p.options->destinationSnapshot){require(intakeDestinationSnapshot(subject,paths)==*p.options->destinationSnapshot,ErrorCode::Conflict,"Approved indexed destination observations changed");}
   std::set<std::string,std::less<>> reviewed;
   if(renamed){reviewed.insert((fs::path(p.destination)/leaf).string());}
-  if(linked||selectedGoal){for(const auto& path:paths){if(!path.empty()){reviewed.insert(path.string());}}}
+  if(linked||selectedGoal||allocating){for(const auto& path:paths){if(!path.empty()){reviewed.insert(path.string());}}}
   const auto intersectsReviewed=[&](const fs::path& path){
     for(auto ancestor=path;!ancestor.empty();ancestor=ancestor.parent_path()){
       if(reviewed.contains(ancestor.string())){return true;}if(ancestor==ancestor.root_path()){break;}
@@ -952,8 +972,9 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     const fs::path& metadata, const fs::path& destination, bool stopped,
     void (*observer)(TorrentIntakeStage), bool forceStart,
     std::optional<std::span<const compat::FilePolicy>> policies = {},const File* expected = nullptr, std::stop_token stop = {},
-    core::TorrentIntakeLimits limits = {},bool sequentialDownload = false,bool queued = false,bool paused = false,std::optional<core::TorrentIntakeTrackerTiers> trackers = {},std::optional<std::string> saveName = {},bool verifyExisting = false,const std::string* expectedConversions=nullptr,std::optional<core::TorrentIntakeFileDestinations> fileDestinations={},core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent,const bool* expectedDecoderShowAll=nullptr) {
+    core::TorrentIntakeLimits limits = {},bool sequentialDownload = false,bool queued = false,bool paused = false,std::optional<core::TorrentIntakeTrackerTiers> trackers = {},std::optional<std::string> saveName = {},bool verifyExisting = false,const std::string* expectedConversions=nullptr,std::optional<core::TorrentIntakeFileDestinations> fileDestinations={},core::ExistingVerificationGoal goal=core::ExistingVerificationGoal::FullTorrent,const bool* expectedDecoderShowAll=nullptr,core::TorrentAllocationMode allocation=core::TorrentAllocationMode::None) {
   try {
+    require(core::validTorrentAllocationMode(allocation)&& (allocation==core::TorrentAllocationMode::None||(stopped&&!forceStart&&!queued&&!paused&&!verifyExisting&&policies.has_value())),ErrorCode::InvalidFormat,"Allocation requires explicit selected stopped/unforced intent");
     require((goal==core::ExistingVerificationGoal::FullTorrent||goal==core::ExistingVerificationGoal::SelectedFiles)&&(verifyExisting||goal==core::ExistingVerificationGoal::FullTorrent),ErrorCode::InvalidFormat,"Invalid existing verification goal");
     require(!stop.stop_requested(),ErrorCode::Cancelled,"Torrent import cancelled before commit");
     require(!saveName||core::validTorrentIntakeSaveName(*saveName),ErrorCode::UnsafePath,"Save name must be one safe UTF8 filename component");
@@ -987,7 +1008,7 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     std::vector<compat::FilePolicy> defaultPolicies;
     if(!policies&&!targets.empty()){for(const auto& file:subject.layout.files){defaultPolicies.push_back({file.padding,0});}policies=std::span<const compat::FilePolicy>{defaultPolicies};}
     std::optional<IntakeFileOptions> options;
-    if(policies){options=fileOptions(lease,subject,effectiveDestination,*policies,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting,std::move(targets),conversions,goal);}
+    if(policies){options=fileOptions(lease,subject,effectiveDestination,*policies,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting,std::move(targets),conversions,goal,allocation);}
     const auto before = read(root, "downloads.config", MaximumInventory);
     const auto backup = read(root, "downloads.config.bak", MaximumInventory);
     require(before || !backup, ErrorCode::Conflict, "Resolve missing inventory primary before intake");
@@ -1028,8 +1049,8 @@ std::expected<core::TorrentHash,Error> importTorrent(ProfileLease& lease,const f
 }
 std::expected<core::TorrentHash,Error> importTorrentWithFileOptions(ProfileLease& lease,
     const TorrentIntakeMetadata& metadata,const fs::path& destination,bool stopped,
-    std::span<const compat::FilePolicy> policies,void(*observer)(TorrentIntakeStage),bool forceStart,std::stop_token stop,core::TorrentIntakeLimits limits,bool sequentialDownload,bool queued,bool paused,std::optional<core::TorrentIntakeTrackerTiers> trackers,std::optional<std::string> saveName,bool verifyExisting,std::optional<core::TorrentIntakeFileDestinations> fileDestinations,core::ExistingVerificationGoal goal) {
-  return importImpl(lease,metadata.data_->path,destination,stopped,observer,forceStart,policies,&metadata.data_->input,stop,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting,&metadata.data_->filenameConversions,std::move(fileDestinations),goal,&metadata.data_->decoderShowAll);
+    std::span<const compat::FilePolicy> policies,void(*observer)(TorrentIntakeStage),bool forceStart,std::stop_token stop,core::TorrentIntakeLimits limits,bool sequentialDownload,bool queued,bool paused,std::optional<core::TorrentIntakeTrackerTiers> trackers,std::optional<std::string> saveName,bool verifyExisting,std::optional<core::TorrentIntakeFileDestinations> fileDestinations,core::ExistingVerificationGoal goal,core::TorrentAllocationMode allocation) {
+  return importImpl(lease,metadata.data_->path,destination,stopped,observer,forceStart,policies,&metadata.data_->input,stop,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting,&metadata.data_->filenameConversions,std::move(fileDestinations),goal,&metadata.data_->decoderShowAll,allocation);
 }
 
 std::expected<std::string,Error> rewriteTorrentIntakeTrackers(std::string_view metadata,
@@ -1124,4 +1145,5 @@ std::expected<std::optional<core::TorrentHash>, Error> recoverTorrentIntake(
 #include "verified_existing_scope.inc"
 #include "selected_existing_scope.inc"
 #include "verified_seeding.inc"
+#include "allocation_intent.inc"
 } // namespace biglybtc::storage

@@ -2,6 +2,7 @@
 #include "verified_seeding_fixture.hpp"
 #include "selected_existing_scope.hpp"
 #include "original_file_io.hpp"
+#include "file_io.hpp"
 #include <libtorrent/bencode.hpp>
 #include <fcntl.h>
 #include <array>

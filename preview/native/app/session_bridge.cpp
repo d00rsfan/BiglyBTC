@@ -1,6 +1,7 @@
 #include "original_filename_policy.hpp"
 #include "torrent_intake.hpp"
 #include "verified_seeding.hpp"
+#include "allocation_intent.hpp"
 #include "file_operations.hpp"
 #include "linear_to_compact.hpp"
 #include "original_storage_defaults.hpp"
@@ -163,6 +164,7 @@ ui::SavedServiceResult<Snapshot> savedResult(std::expected<View, storage::Error>
 }
 QString managedState(engine::ManagedPhase state) {
   switch (state) {
+    case engine::ManagedPhase::Allocating: return SessionBridge::tr("Allocating");
     case engine::ManagedPhase::Checking: return SessionBridge::tr("Checking");
     case engine::ManagedPhase::Queued: return SessionBridge::tr("Queued");
     case engine::ManagedPhase::Downloading: return SessionBridge::tr("Downloading");
@@ -209,7 +211,7 @@ struct SessionBridge::Host {
   bool pendingSourceCurrent = false;
   std::map<std::string, std::uint64_t> reportedMagnetAdmissions;
   using ManagedStamp = std::tuple<engine::ManagedPhase, std::optional<core::QueueReason>,
-      bool, std::uint32_t, bool>;
+      bool, std::uint32_t, bool, std::int64_t, bool>;
   std::map<std::string, ManagedStamp> lastManagedPhases;
   std::map<std::string, storage::Error> admissionFailures;
   std::vector<storage::LibraryCompletionPool> movePools;
@@ -290,6 +292,7 @@ struct SessionBridge::Host {
   std::set<std::string> schedulerPaused;
   bool verifiedSeedIntentsLoaded=false;
   std::set<std::string> verifiedSeedPending;
+  std::map<std::string,core::TorrentAllocationMode> allocationPending;
   void loadVerifiedSeedIntents() {
     if(verifiedSeedIntentsLoaded){return;}
     const auto file=take(storage::ConfigFile::load(lease,"downloads.config"));
@@ -302,10 +305,21 @@ struct SessionBridge::Host {
         verifiedSeedPending.insert(hash->hex());
       }}
     }
+    if(const auto* rows=file.document().find("downloads");rows&&rows->type==core::Node::Type::List){for(const auto& row:rows->children){
+      if(row.find(storage::AllocationModeKey)||row.find(storage::AllocationStateKey)){const auto* id=row.find("torrent_hash");if(!id||id->type!=core::Node::Type::Bytes){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid allocation identity"}};}
+        const auto hash=core::TorrentHash::parse(id->bytes);if(!hash){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid allocation identity"}};}
+        const auto intent=take(storage::readAllocationIntent(lease,*hash));if(intent&&intent->state!=storage::AllocationState::Complete){allocationPending.insert_or_assign(hash->hex(),intent->mode);}
+      }
+    }}
     verifiedSeedIntentsLoaded=true;
   }
   bool verifiedSeedBlocked(const std::string& key,const std::vector<engine::ManagedDownloadStatus>& active) {
     loadVerifiedSeedIntents();
+    for(const auto& item:active){if(item.hash.hex()==key&&item.allocationMode!=core::TorrentAllocationMode::None){
+      if(item.allocationComplete&&!item.failure){allocationPending.erase(key);}else{allocationPending.insert_or_assign(key,item.allocationMode);}
+      if(item.retained||allocationPending.contains(key)){return true;}
+    }}
+    if(allocationPending.contains(key)){return true;}
     for(const auto& item:active){if(item.hash.hex()==key&&item.verifiedSeeding!=engine::VerifiedSeedingPhase::None){
       if(item.verifiedSeeding==engine::VerifiedSeedingPhase::Released&&!item.failure&&item.retained){verifiedSeedPending.erase(key);}
       else{verifiedSeedPending.insert(key);}
@@ -628,6 +642,8 @@ struct SessionBridge::Host {
       quint16 actions = 0;
       const auto active = live.find(hash);
       const bool retained = active != live.end() && active->second.retained;
+      loadVerifiedSeedIntents();
+      if(active!=live.end()&&active->second.allocationMode!=core::TorrentAllocationMode::None){if(active->second.allocationComplete&&!active->second.failure){allocationPending.erase(hash);}else{allocationPending.insert_or_assign(hash,active->second.allocationMode);}}
       if (active != live.end() && active->second.totalPieces > 0) {
         size = active->second.bytes; // Actual admitted metadata survives handle retirement.
         known.insert_or_assign(hash, Known{name, size});
@@ -670,6 +686,11 @@ struct SessionBridge::Host {
           actions |= actionBit(core::DownloadAction::MoveTop) | actionBit(core::DownloadAction::MoveUp)
               | actionBit(core::DownloadAction::MoveDown) | actionBit(core::DownloadAction::MoveBottom);
         }
+      }
+      if(allocationPending.contains(hash)){
+        actions=0;if(unique&&saved.persistent&&engine&&engine->managedAvailable()){if(active==live.end()||!active->second.failure){actions=actionBit(retained?core::DownloadAction::Stop:core::DownloadAction::Start);}}
+        if(retained&&active->second.phase==engine::ManagedPhase::Allocating){state=tr("Allocating %1 / %2 bytes").arg(active->second.allocationBytes).arg(active->second.allocationTotalBytes);}
+        else if(!retained&&!admissionFailures.contains(hash)&&(active==live.end()||!active->second.failure)){state=tr("Allocation pending — use Start to retry");}
       }
       auto completed = saved.completedBytes && *saved.completedBytes >= 0 ? saved.completedBytes : std::nullopt;
       if (retained) { completed = active->second.completed; size = active->second.bytes; }
@@ -792,7 +813,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
           bool changed = current.size() != host_->lastManagedPhases.size();
           for (const auto& item : current) {
             const Host::ManagedStamp stamp{item.phase,item.queueReason,
-                item.firstPriority,item.unavailableQueueInputs,item.forceStart};
+                item.firstPriority,item.unavailableQueueInputs,item.forceStart,item.allocationBytes,item.allocationComplete};
             auto [prior, added] = host_->lastManagedPhases.emplace(item.hash.hex(), stamp);
             changed = changed || added || prior->second != stamp;
             prior->second = stamp;
@@ -963,12 +984,15 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
   return dispatch([this, profile = std::move(profile)](std::stop_token stop) {
     if (host_) { throw Failure{{storage::ErrorCode::Conflict, "A profile is already open"}}; }
     auto lease = take(storage::ProfileLease::acquire(profile));
+    static_cast<void>(take(storage::recoverOriginalCompaction(lease)));
+    const bool reviewOnly=recoverOrReviewReplacement(lease);
+    if(!reviewOnly){static_cast<void>(take(storage::recoverTorrentIntake(lease)));}
+    // Do not let dispatch's repairable-policy fallback publish an ordinary Host
+    // after storage recovery failed. Only a validated review gets a read-only Host.
     host_ = std::make_unique<Host>(profile, 0, std::move(lease), reserveColumnLayoutSession());
     host_->normalNetwork = true;
-    static_cast<void>(take(storage::recoverOriginalCompaction(host_->lease)));
-    host_->replacementReviewOnly=recoverOrReviewReplacement(host_->lease);host_->fileRecoveryRequired=host_->replacementReviewOnly;
-    if(host_->replacementReviewOnly){ready(host_->query(stop),tr("Profile opened read-only. Select the torrent and review its interrupted file replacement. The uncertain directory will be kept."));return;}
-    static_cast<void>(take(storage::recoverTorrentIntake(host_->lease)));
+    host_->replacementReviewOnly=reviewOnly;host_->fileRecoveryRequired=reviewOnly;
+    if(reviewOnly){ready(host_->query(stop),tr("Profile opened read-only. Select the torrent and review its interrupted file replacement. The uncertain directory will be kept."));return;}
     auto inventory = storage::ConfigFile::load(host_->lease, "downloads.config");
     if (!inventory && inventory.error().code == storage::ErrorCode::Missing) {
       static_cast<void>(take(storage::ConfigFile::createMissing(host_->lease, "downloads.config", "d9:downloadslee")));
@@ -1044,12 +1068,13 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
     QStringList failures;
     // Withdraw EVERY accepted selected ticket before the first target's IO.
     // A failure for A must not leave selected B authorized to auto-publish.
-    std::set<std::string> cancelledVerification;
+    std::set<std::string> cancelledVerification,cancelledAllocation;
     const auto admissions=host_->engine->managedDownloads();
     for(const auto& hash:hashes){if(std::ranges::any_of(admissions,[&](const auto& item){return item.hash==hash&&item.verificationHeld;})){
       cancelledVerification.insert(hash.hex());
     }}
-    for(const auto& hash:hashes){if(cancelledVerification.contains(hash.hex())){
+    for(const auto& hash:hashes){if(std::ranges::any_of(admissions,[&](const auto& item){return item.hash==hash&&item.retained&&item.allocationMode!=core::TorrentAllocationMode::None;})){cancelledAllocation.insert(hash.hex());}}
+    for(const auto& hash:hashes){if(cancelledVerification.contains(hash.hex())||cancelledAllocation.contains(hash.hex())){
       const auto cancelled=host_->engine->stopManaged(hash);
       if(!cancelled){failures.push_back(text(cancelled.error().message));}
     }}
@@ -1085,6 +1110,16 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
           const auto revoked=host_->scheduler->revokeForManual(host_->lease,hash);
           if(!revoked){failures.push_back(tr("Scheduler ownership was revoked; cleanup needs attention: %1").arg(text(revoked.error().message)));}
         }
+      }
+      const auto allocation=take(storage::readAllocationIntent(host_->lease,hash));
+      if(allocation&&allocation->state!=storage::AllocationState::Complete){
+        const bool active=std::ranges::any_of(beforeControl,[&](const auto& item){return item.hash==hash&&item.retained;});
+        std::expected<void,storage::Error> controlled;
+        if(action==core::DownloadAction::Start&&!active){controlled=host_->engine->startManaged(host_->lease,{.hash=hash,.allocationMode=allocation->mode});}
+        else if(action==core::DownloadAction::Stop){controlled=host_->engine->stopManaged(hash);}
+        else{controlled=std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Allocation remains stopped; use Start to retry or Stop to cancel"});}
+        if(!controlled){host_->admissionFailures.insert_or_assign(hash.hex(),controlled.error());failures.push_back(text(controlled.error().message));}else{host_->admissionFailures.erase(hash.hex());}
+        continue;
       }
       const auto seedIntent=take(storage::readVerifiedSeedIntent(host_->lease,hash));
       const bool releasedActive=std::ranges::any_of(beforeControl,[&](const auto& item){return item.hash==hash&&item.retained
@@ -1225,23 +1260,27 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
       if(submission.verifyExisting&&(submission.start||submission.forceStart||submission.paused||!selected)){
         throw Failure{{storage::ErrorCode::InvalidFormat,"Verified seeding starts stopped, without force or pause"}};
       }
+      if(!core::validTorrentAllocationMode(submission.allocation)){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid allocation mode"}};}
+      const bool allocating=submission.allocation!=core::TorrentAllocationMode::None;
+      if(allocating&&(submission.start||submission.forceStart||submission.paused||submission.verifyExisting||!selected)){throw Failure{{storage::ErrorCode::InvalidFormat,"Allocation requires stopped/unforced all-selected intent"}};}
       const bool paused=selected&&submission.paused;
       if(paused&&(submission.start||submission.forceStart)){throw Failure{{storage::ErrorCode::InvalidFormat,"Paused import conflicts with start/force intent"}};}
       const bool start=submission.start&&selected&&!paused;
       const bool force=start&&submission.forceStart;const bool queued=start&&!force;
-      if((start||submission.verifyExisting)&&(!host_->engine||!host_->engine->managedAvailable())){throw Failure{{storage::ErrorCode::Unsupported,"The engine is unavailable; add this torrent stopped instead"}};}
+      if((start||submission.verifyExisting||allocating)&&(!host_->engine||!host_->engine->managedAvailable())){throw Failure{{storage::ErrorCode::Unsupported,"The engine is unavailable; add this torrent stopped instead"}};}
       checkpoint(stop); // No payload/network work happens before the explicit commit.
       const auto hash=take(storage::importTorrentWithFileOptions(host_->lease,*host_->intakeMetadata,
-          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,stop,submission.limits,submission.sequentialDownload,queued,paused,submission.trackers,std::move(saveName),submission.verifyExisting,std::move(submission.fileDestinations),submission.goal));
+          std::filesystem::path(submission.destination.toUtf8().toStdString()),!start,submission.files,nullptr,force,stop,submission.limits,submission.sequentialDownload,queued,paused,submission.trackers,std::move(saveName),submission.verifyExisting,std::move(submission.fileDestinations),submission.goal,submission.allocation));
       result->imported=true;result->hash=text(hash.hex());host_->intakeMetadata.reset();
       const auto details=engine::queryTorrent(host_->lease,hash);
       if(details){host_->known.insert_or_assign(hash.hex(),Host::Known{text(details->displayName&&!details->displayName->empty()?*details->displayName:details->name),details->bytes});}
-      if(start||submission.verifyExisting){
+      if(start||submission.verifyExisting||allocating){
+        if(allocating){host_->allocationPending.insert_or_assign(hash.hex(),submission.allocation);}
         if(submission.verifyExisting){host_->verifiedSeedPending.insert(hash.hex());}
         const auto admitted=host_->engine->startManaged(host_->lease,
-            {.hash=hash,.ownedLoopbackPeerPort=submission.verifyExisting?std::uint16_t{0}:host_->peerPort,.forceStart=force,.queued=queued,.verifyExisting=submission.verifyExisting});
-        if(admitted){result->started=!submission.verifyExisting;result->verificationPending=submission.verifyExisting;host_->admissionFailures.erase(hash.hex());}
-        else{host_->admissionFailures.insert_or_assign(hash.hex(),admitted.error());result->failure=(submission.verifyExisting?tr("Torrent added stopped; existing-data verification could not start: %1"):tr("Torrent added; download could not start: %1")).arg(text(admitted.error().message));}
+            {.hash=hash,.ownedLoopbackPeerPort=(submission.verifyExisting||allocating)?std::uint16_t{0}:host_->peerPort,.forceStart=force,.queued=queued,.verifyExisting=submission.verifyExisting,.allocationMode=submission.allocation});
+        if(admitted){result->started=!submission.verifyExisting&&!allocating;result->verificationPending=submission.verifyExisting;result->allocationPending=allocating;host_->admissionFailures.erase(hash.hex());}
+        else{host_->admissionFailures.insert_or_assign(hash.hex(),admitted.error());result->failure=(allocating?tr("Torrent added stopped; allocation could not start: %1"):submission.verifyExisting?tr("Torrent added stopped; existing-data verification could not start: %1"):tr("Torrent added; download could not start: %1")).arg(text(admitted.error().message));}
       }
     }catch(const Failure& error){result->failure=text(error.error.message);}
     catch(const std::exception&){result->failure=tr("Torrent import did not finish; inspect recovery status before retrying");}
@@ -1250,7 +1289,7 @@ bool SessionBridge::importTorrentFiles(ui::TorrentIntakeSubmission submission) {
     QMetaObject::invokeMethod(this,[this,packet]{
       if(!profileClosed_&&packet->session==publishedColumnLayoutSession_){emit torrentIntakeFinished(packet);}
     },Qt::QueuedConnection);
-    if(host_){ready(host_->query({}),result->failure.isEmpty()?(result->verificationPending?tr("Torrent added stopped; checking existing data before seeding"):tr("Torrent added with the selected file choices")):result->failure);}
+    if(host_){ready(host_->query({}),result->failure.isEmpty()?(result->allocationPending?tr("Torrent added stopped; allocating new files without downloading"):result->verificationPending?tr("Torrent added stopped; checking existing data before seeding"):tr("Torrent added with the selected file choices")):result->failure);}
     else{failed(result->failure);}
   });
 }

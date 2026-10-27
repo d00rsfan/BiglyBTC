@@ -4,6 +4,7 @@
 #include "biglybtc/queue_target_statistics.hpp"
 #include "biglybtc/queue_observations.hpp"
 #include "profile.hpp"
+#include "biglybtc/torrent_intake_options.hpp"
 #include <array>
 #include <chrono>
 #include <cstdint>
@@ -12,7 +13,7 @@
 #include <string>
 #include <vector>
 namespace biglybtc::engine {
-enum class ManagedPhase { Checking, Queued, Downloading, Seeding, Paused, Stopping, Stopped, Failed };
+enum class ManagedPhase { Checking, Queued, Downloading, Seeding, Paused, Stopping, Stopped, Failed, Allocating };
 enum class VerifiedSeedingPhase { None, Checking, Released, Cancelled, Failed };
 struct ManagedDownloadStatus {
   core::TorrentHash hash;
@@ -49,6 +50,9 @@ struct ManagedDownloadStatus {
   std::optional<std::int64_t> queueSmoothedPayloadUploadRate{};
   // Exact admission prefixes under the same accepted payload reset epoch.
   std::optional<std::int64_t> discardedBytes{}, hashFailedBytes{};
+  core::TorrentAllocationMode allocationMode=core::TorrentAllocationMode::None;
+  std::int64_t allocationBytes=0,allocationTotalBytes=0;
+  bool allocationComplete=false;
 };
 enum class MagnetPhase { Resolving, Retiring, Imported, Failed, Cancelled };
 struct PendingMagnetStatus {
@@ -69,5 +73,6 @@ struct ManagedDownloadOptions {
   bool verifyExisting = false;
   // A caller-supplied real monotone deadline; absent uses five minutes.
   std::optional<std::chrono::steady_clock::time_point> verificationDeadline{};
+  core::TorrentAllocationMode allocationMode=core::TorrentAllocationMode::None;
 };
 } // namespace biglybtc::engine

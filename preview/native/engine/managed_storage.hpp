@@ -5,6 +5,7 @@
 #include "biglybtc/existing_piece_goal.hpp"
 #include "biglybtc/queue_file_priority.hpp"
 #include "profile.hpp"
+#include "biglybtc/torrent_intake_options.hpp"
 #include "original_torrent_identity.hpp"
 
 #include <libtorrent/add_torrent_params.hpp>
@@ -48,7 +49,8 @@ struct ManagedQueueMetadata {
 // Storage prerequisite only: the future owner must independently hold checking
 // until actual all-piece verification and fresh saved-intent CAS. This is not
 // seed_mode, verified resume, permission to auto-resume or an engine admission.
-enum class ManagedStoragePurpose { Download, VerifyExistingReadOnly, VerifySelectedReadOnly };
+enum class ManagedStoragePurpose { Download, VerifyExistingReadOnly, VerifySelectedReadOnly, AllocateOnly };
+struct ManagedAllocationProgress { std::int64_t completedBytes=0,totalBytes=0;bool complete=false; };
 
 // Owns authenticated payload descriptors/state for ONE managed admission. The
 // caller retains the same profile lease for preparation, engine use and save.
@@ -72,6 +74,11 @@ public:
   // Owner-thread pure named-fd snapshot check, safe alongside read-only disk
   // jobs. No codec/failure-cache access, queue release or verified-piece proof.
   std::expected<void,storage::Error> validateExistingSnapshot() const;
+  // Existing worker only, bounded real zero/read work. No LT handle or piece
+  // authority; read-only purposes reject these entry points before any IO.
+  ManagedAllocationProgress allocationProgress() const noexcept;
+  std::expected<ManagedAllocationProgress,storage::Error> advanceAllocation(std::size_t byteBudget=4*1024*1024);
+  std::expected<void,storage::Error> settleAllocation(const storage::ProfileLease&,bool successful);
   const ManagedQueueMetadata& queueMetadata() const;
   // Captured original mapping for passive same-admission group authority.
   const core::SavedDownload& capturedDownload() const;
@@ -97,6 +104,7 @@ public:
       std::optional<ManagedBadPayloadBytes> badPayloadBytes = {},
       bool badPayloadComplete = true);
 private:
+  std::expected<void,storage::Error> beginAllocation(const storage::ProfileLease&);
   struct Impl;
   explicit ManagedStorage(std::unique_ptr<Impl>);
   std::unique_ptr<Impl> impl_;

@@ -1,5 +1,6 @@
 #include "persistent_session_support.hpp"
 #include "verified_seeding.hpp"
+#include "allocation_intent.hpp"
 #include "torrent_state.hpp"
 #include <libtorrent/announce_entry.hpp>
 #include "managed_payload_counters.hpp"
@@ -130,6 +131,8 @@ struct PersistentSession::Impl {
     Clock::time_point deadline{};
     std::vector<std::uint8_t> verified;
     std::optional<storage::VerifiedSeedIntent> seedIntent;
+    std::optional<storage::AllocationIntent> allocationIntent;
+    bool allocationAttempted=false;
     bool seedAttempted=false,seedPiecesExact=false;
     Clock::time_point seedDeadline{};
     lt::add_torrent_params seedNetwork;
@@ -481,7 +484,11 @@ struct PersistentSession::Impl {
     // destruction, and no joined tail is relabeled as a final counter sample.
     session.reset();
     for (auto& [key, entry] : managed) {
-      static_cast<void>(key); entry->status.retained = false;
+      static_cast<void>(key);
+      if(entry->allocationIntent&&entry->status.retained&&!entry->allocationAttempted&&managedLease){
+        entry->allocationAttempted=true;static_cast<void>(entry->storage.settleAllocation(*managedLease,false));
+      }
+      entry->status.retained = false;
       if(entry->mmapLatency){entry->mmapLatency->retire();}
       entry->queueSource={};entry->smoothedUpload.reset();entry->sendSmoothing.reset();entry->sendFirstMillis.reset();
       entry->status.queueSourceFacts.reset();entry->status.queueSmoothedPayloadUploadRate.reset();entry->status.queueIdleUploadSeconds.reset();entry->idleUploadSeconds.reset();entry->idleUploadKnown=false;
@@ -613,7 +620,7 @@ struct PersistentSession::Impl {
   bool managedActive() const noexcept {
     for (const auto& [key, entry] : managed) {
       static_cast<void>(key);
-      if (entry->handle.is_valid() || (entry->removing && !entry->removed)) { return true; }
+      if ((entry->allocationIntent&&entry->status.retained)||entry->handle.is_valid() || (entry->removing && !entry->removed)) { return true; }
     }
     return false;
   }
@@ -803,6 +810,7 @@ struct PersistentSession::Impl {
     else { value.status.phase = sample.is_finished ? ManagedPhase::Seeding : ManagedPhase::Downloading; }
   }
   void requestStop(Managed& value) {
+    if(value.allocationIntent&&value.status.retained){value.stop=true;value.status.phase=ManagedPhase::Stopping;return;}
     if(value.mmapLatency){value.mmapLatency->retire();}
     value.queueSource={};value.smoothedUpload.reset();value.sendSmoothing.reset();value.sendFirstMillis.reset();
     value.status.queueSourceFacts.reset();value.status.queueSmoothedPayloadUploadRate.reset();value.status.queueIdleUploadSeconds.reset();value.idleUploadSeconds.reset();value.idleUploadKnown=false;
@@ -821,6 +829,7 @@ struct PersistentSession::Impl {
   }
   void normalizeManagedPositions() noexcept {
     if(queuePositionsBlocked||!queuePositionsPending||!queuePolicy||!managedLease||managed.empty()){return;}
+    for(const auto& [key,value]:managed){(void)key;if(value->allocationIntent&&value->status.retained){return;}}
     // Deferred checking is not an unknown=complete guess and performs no IO.
     for(const auto& [key,value]:managed){
       static_cast<void>(key);
@@ -1083,10 +1092,13 @@ struct PersistentSession::Impl {
     else if(!queuePolicy){value.handle.resume();} // Otherwise the existing queue owns admission.
   }
 
+  #include "managed_allocation_owner.inc"
+
   void advanceManaged() {
     for (auto& [key, entry] : managed) {
       static_cast<void>(key);
       auto& value = *entry;
+      if(value.allocationIntent){advanceAllocation(value);continue;}
       sampleManaged(value);
       try{advanceVerifiedSeed(value);}
       catch(...){value.status.failure=storage::Error{storage::ErrorCode::Io,"Verified-seeding release did not finish; explicit recovery required"};requestStop(value);value.status.phase=ManagedPhase::Failed;}
@@ -1157,11 +1169,12 @@ struct PersistentSession::Impl {
     try {
       for (auto& [key, entry] : managed) { static_cast<void>(key); requestStop(*entry); }
       while (managedActive() && Clock::now() < deadline && !removalLost) {
-        static_cast<void>(pop());
+        if(session){static_cast<void>(pop());}
         advanceManaged();
         if (managedActive()) { std::this_thread::sleep_for(20ms); }
       }
       if (managedActive() || removalLost) { return false; }
+      for(const auto& [key,entry]:managed){(void)key;if(entry->allocationIntent&&entry->status.failure){return false;}}
       return true;
     } catch (...) { return false; }
   }
@@ -1275,6 +1288,7 @@ struct PersistentSession::Impl {
     RetirementReceipt result{operation, false, {}, {}};
     operationSink = {}; operationBaseline.reset(); // Before any cleanup/publish.
     if (!session) {
+      if(!retireManaged(deadline)){result.accountingFailure=AccountingError::StorageFenceLost;joinPoisoned();return finishRetirement(result);}
       result.storageReleased = !poisoned;
       if (poisoned) { result.accountingFailure = AccountingError::OwnerResetRequired; }
       return finishRetirement(result);
@@ -1505,6 +1519,7 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
       [](const auto& row){return row.second->status.retained||row.second->removing;})) >= core::MaximumQueueTorrents) {
     return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Original-rule queue capacity exceeded"});
   }
+  if(!core::validTorrentAllocationMode(options.allocationMode)){return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Invalid managed allocation mode"});}
   const auto key = options.hash.hex();
   const auto previous=impl_->managed.find(key);
   if(previous!=impl_->managed.end()) {
@@ -1538,6 +1553,11 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
       claimed.insert(claimed.end(),claims.begin(),claims.end());
       retainedIdentities.push_back(row->storage.identity());
     }
+    const auto allocation=detail::take(storage::readAllocationIntent(lease,options.hash));
+    const bool allocating=options.allocationMode!=core::TorrentAllocationMode::None;
+    detail::require(!allocating||(allocation&&allocation->state!=storage::AllocationState::Complete&&allocation->mode==options.allocationMode
+        &&!options.verifyExisting&&!options.forceStart&&!options.queued&&!options.manuallyPaused&&!options.ownedLoopbackPeerPort),"Allocation requires its exact stopped/unforced durable intent",storage::ErrorCode::Conflict);
+    detail::require(allocating||!allocation||allocation->state==storage::AllocationState::Complete,"Pending allocation requires an explicit allocation retry",storage::ErrorCode::Conflict);
     const auto intent=detail::take(storage::readVerifiedSeedIntent(lease,options.hash));
     detail::require(!options.verifyExisting||intent.has_value(),"No durable verified-seeding intent",storage::ErrorCode::Conflict);
     if(intent){
@@ -1555,12 +1575,19 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
       detail::require(flags&&(*flags&0x8),"Verified seeding requires the original completion-move flag before preparation",storage::ErrorCode::Conflict);
     }
     auto storage = detail::take(detail::ManagedStorage::prepare(lease, options.hash, *impl_->network,claimed,retainedIdentities,payloadBridge,
-        intent?(intent->goal==core::ExistingVerificationGoal::SelectedFiles?detail::ManagedStoragePurpose::VerifySelectedReadOnly:detail::ManagedStoragePurpose::VerifyExistingReadOnly):detail::ManagedStoragePurpose::Download));
+        allocating?detail::ManagedStoragePurpose::AllocateOnly:intent?(intent->goal==core::ExistingVerificationGoal::SelectedFiles?detail::ManagedStoragePurpose::VerifySelectedReadOnly:detail::ManagedStoragePurpose::VerifyExistingReadOnly):detail::ManagedStoragePurpose::Download));
     // A certified same-hash restart replaces its own old claim only after the
     // new read-only collision gate and complete preparation succeeded.
     if(previous!=impl_->managed.end()){impl_->managedByHandle.erase(previous->second->handle);impl_->managed.erase(previous);}
-    impl_->ensureSession();
+    if(!allocating){impl_->ensureSession();}
     auto value = std::make_unique<Impl::Managed>(++impl_->operation, std::move(storage), options.hash);
+    if(allocating){
+      value->allocationIntent=allocation;value->status.allocationMode=options.allocationMode;value->status.phase=ManagedPhase::Allocating;value->status.retained=true;
+      const auto progress=value->storage.allocationProgress();value->status.allocationBytes=progress.completedBytes;value->status.allocationTotalBytes=progress.totalBytes;
+      value->status.bytes=value->storage.parameters().ti->total_size();value->status.totalPieces=value->storage.parameters().ti->num_pieces();
+      const auto [slot,inserted]=impl_->managed.emplace(key,std::move(value));detail::require(inserted,"Duplicate allocation admission",storage::ErrorCode::Conflict);
+      impl_->managedLease=&lease;impl_->phase=AccountingState::Active;impl_->publish();impl_->call=false;return {};
+    }
     value->seedIntent=intent;
     if(intent){value->status.verificationHeld=true;value->status.verifiedSeeding=VerifiedSeedingPhase::Checking;
       value->seedDeadline=options.verificationDeadline.value_or(Clock::now()+std::chrono::minutes{5});}
@@ -1920,16 +1947,16 @@ std::expected<void, AccountingError> PersistentSession::poll() {
   if (impl_->call) { return std::unexpected(AccountingError::ActiveOperation); }
   if (impl_->closed) { return std::unexpected(AccountingError::Closing); }
   if (impl_->poisoned) { return std::unexpected(AccountingError::OwnerResetRequired); }
-  if (!impl_->session) { return {}; } // create() alone and offline opening stay lazy.
+  if (!impl_->session&&!impl_->managedActive()) { return {}; } // Allocation remains independent of LT/network startup.
   impl_->call = true;
   try {
-    static_cast<void>(impl_->pop());
+    if(impl_->session){static_cast<void>(impl_->pop());}
     impl_->advanceManaged();
-    impl_->advanceMagnets();
+    if(impl_->session){impl_->advanceMagnets();}
     if (impl_->transferError || impl_->removalLost) {
       impl_->counterError(AccountingError::Engine);
       impl_->joinPoisoned();
-    } else { impl_->post(false); }
+    } else if(impl_->session) { impl_->post(false); }
   } catch (...) { impl_->counterError(AccountingError::Engine); }
   // An idle failure has no later operation-phase publication. Advance the
   // immutable status once, retaining the last actual sample and its timestamp.

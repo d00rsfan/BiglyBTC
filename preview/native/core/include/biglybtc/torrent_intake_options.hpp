@@ -7,6 +7,13 @@
 #include <string>
 #include <vector>
 namespace biglybtc::core {
+// Original TorrentOpenOptions modes5/6. Native pending rows remain STOP70
+// until actual durable allocation completes; None preserves every old caller.
+enum class TorrentAllocationMode { None=0,Stopped=5,Paused=6 };
+inline constexpr bool validTorrentAllocationMode(TorrentAllocationMode value) noexcept {
+  return value==TorrentAllocationMode::None||value==TorrentAllocationMode::Stopped||value==TorrentAllocationMode::Paused;
+}
+
 // Original downloads.config maxdl/maxul byte rates. Zero is unlimited; negative
 // original disabled values are deliberately outside this pre-add control.
 inline constexpr std::int64_t MaximumTorrentIntakeRate=std::numeric_limits<std::int32_t>::max();

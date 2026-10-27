@@ -1,4 +1,6 @@
 #include "persistent_session.hpp"
+#include "allocation_fixture.hpp"
+#include "managed_storage.hpp"
 #include "managed_payload_counters.hpp"
 #include <limits>
 #include "owned_engine_fixture.hpp"
@@ -113,6 +115,35 @@ class ManagedDownloadTests final : public QObject {
   Q_OBJECT
 private slots:
 
+  void allocateOnlyUsesExistingPollWithoutNetworkOrVerifiedProgress_data(){QTest::addColumn<bool>("multi");QTest::addColumn<bool>("paused");QTest::newRow("single-stop")<<false<<false;QTest::newRow("single-pause")<<false<<true;QTest::newRow("multi-stop")<<true<<false;QTest::newRow("multi-pause")<<true<<true;}
+  void allocateOnlyUsesExistingPollWithoutNetworkOrVerifiedProgress(){
+    QFETCH(bool,multi);QFETCH(bool,paused);test::allocation::Fixture f(multi);const auto mode=paused?core::TorrentAllocationMode::Paused:core::TorrentAllocationMode::Stopped;const auto imported=f.import(mode);QVERIFY2(imported.has_value(),imported?"":imported.error().message.c_str());
+    auto service=owner();QVERIFY(!service->tcpListenPort());QVERIFY(!service->startManaged(*f.lease,{.hash=f.hash}));QVERIFY(service->startManaged(*f.lease,{.hash=f.hash,.allocationMode=mode}));
+    const auto first=status(*service,f.hash);QVERIFY(first&&first->retained&&first->phase==Phase::Allocating);QVERIFY(!first->checked&&!first->complete&&first->pieces==0);QCOMPARE(first->received,std::int64_t{0});QCOMPARE(first->sent,std::int64_t{0});
+    QVERIFY(!service->queueManaged(f.hash,true,false));QVERIFY(!service->pauseManaged(f.hash,false));QVERIFY(!service->tcpListenPort());
+    QVERIFY(service->poll());const auto step=status(*service,f.hash);QVERIFY(step&&step->retained&&step->allocationBytes>0&&step->allocationBytes<step->allocationTotalBytes);QVERIFY(!service->tcpListenPort());
+    QTRY_VERIFY_WITH_TIMEOUT(service->poll().has_value()&&phase(*service,f.hash,Phase::Stopped),10000);const auto done=status(*service,f.hash);QVERIFY(done&&!done->failure&&!done->retained&&done->allocationComplete);QCOMPARE(done->allocationBytes,f.bytes());QVERIFY(!done->checked&&!done->complete&&!done->selectedComplete&&done->pieces==0);QCOMPARE(done->received,std::int64_t{0});QCOMPARE(done->sent,std::int64_t{0});QVERIFY(!service->tcpListenPort());QVERIFY(f.zeroes());
+    const auto saved=f.saved();QCOMPARE(f.row(saved).find("state")->integer,std::int64_t{70});QCOMPARE(f.row(saved).find("allocated")->integer,std::int64_t{1});const auto* pauses=saved.find("pause_data");QCOMPARE(bool(pauses&&!pauses->children.empty()),paused);
+    const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(f.zeroes());
+  }
+  void allocationStopCloseAndReopenKeepSafeStoppedIntent(){
+    test::allocation::Fixture f(true);QVERIFY(f.import(core::TorrentAllocationMode::Paused));auto service=owner();QVERIFY(service->startManaged(*f.lease,{.hash=f.hash,.allocationMode=core::TorrentAllocationMode::Paused}));QVERIFY(service->poll());QVERIFY(status(*service,f.hash)->allocationBytes>0);QVERIFY(service->stopManaged(f.hash));QVERIFY(service->poll());
+    const auto stopped=status(*service,f.hash);QVERIFY(stopped&&!stopped->retained&&!stopped->allocationComplete&&!stopped->failure);QCOMPARE(stopped->phase,Phase::Stopped);QVERIFY(!std::filesystem::exists(f.path(1))); // untouched new second leaf is removed; completed first leaf may remain.
+    const auto cancelled=storage::readAllocationIntent(*f.lease,f.hash);QVERIFY(cancelled&&*cancelled);QCOMPARE((*cancelled)->state,storage::AllocationState::Cancelled);QVERIFY(!f.saved().find("pause_data"));
+    const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased);service.reset();
+    auto reopened=owner();QVERIFY(!reopened->startManaged(*f.lease,{.hash=f.hash}));QVERIFY(reopened->startManaged(*f.lease,{.hash=f.hash,.allocationMode=core::TorrentAllocationMode::Paused}));QTRY_VERIFY_WITH_TIMEOUT(reopened->poll().has_value()&&phase(*reopened,f.hash,Phase::Stopped),10000);QVERIFY(status(*reopened,f.hash)->allocationComplete);QVERIFY(f.zeroes());QVERIFY(!reopened->tcpListenPort());
+    QVERIFY(reopened->close(std::chrono::steady_clock::now()+5s).retirement.storageReleased);
+    test::allocation::Fixture closing;QVERIFY(closing.import(core::TorrentAllocationMode::Stopped));auto closeOwner=owner();QVERIFY(closeOwner->startManaged(*closing.lease,{.hash=closing.hash,.allocationMode=core::TorrentAllocationMode::Stopped}));const auto receipt=closeOwner->close(std::chrono::steady_clock::now()+5s);QVERIFY(receipt.sessionJoined&&receipt.retirement.storageReleased);QVERIFY(!std::filesystem::exists(closing.path()));const auto intent=storage::readAllocationIntent(*closing.lease,closing.hash);QVERIFY(intent&&*intent&&(*intent)->state==storage::AllocationState::Cancelled);
+  }
+
+
+  void allocationOwnerRetainsNonzeroReplayDataOnFailureAndEarlyCancel_data(){QTest::addColumn<bool>("cancel");QTest::newRow("read-failure")<<false;QTest::newRow("cancel-before-read")<<true;}
+  void allocationOwnerRetainsNonzeroReplayDataOnFailureAndEarlyCancel(){
+    QFETCH(bool,cancel);test::allocation::Fixture f;QVERIFY(f.import(core::TorrentAllocationMode::Stopped));
+    {auto prepared=engine::detail::ManagedStorage::prepare(*f.lease,f.hash,{}, {}, {}, {},engine::detail::ManagedStoragePurpose::AllocateOnly);QVERIFY(prepared);QVERIFY(prepared->advanceAllocation(4096));}
+    {std::fstream file(f.path(),std::ios::binary|std::ios::in|std::ios::out);file.put('X');file.close();QVERIFY(!file.fail());}
+    struct stat before{},after{};QVERIFY(::stat(f.path().c_str(),&before)==0);const auto data=test::allocation::read(f.path());auto service=owner();QVERIFY(service->startManaged(*f.lease,{.hash=f.hash,.allocationMode=core::TorrentAllocationMode::Stopped}));if(cancel){QVERIFY(service->stopManaged(f.hash));}QVERIFY(service->poll());const auto failed=status(*service,f.hash);QVERIFY(failed&&failed->failure&&!failed->allocationComplete&&!failed->retained);QVERIFY(::stat(f.path().c_str(),&after)==0);QCOMPARE(before.st_ino,after.st_ino);QCOMPARE(test::allocation::read(f.path()),data);QVERIFY(!service->tcpListenPort());const auto saved=f.saved();QCOMPARE(f.row(saved).find("state")->integer,std::int64_t{70});QVERIFY(f.row(saved).find(storage::AllocationStateKey)->integer!=2);
+  }
   void actualSelectedReadOnlyOwnerKeepsMissingPiecesUnverifiedAndServesOnlyRealNeededData_data(){
     QTest::addColumn<QString>("kind");QTest::addColumn<bool>("corrupt");for(const auto* kind:{"linear-missing","compact-edges","reordered-edges","reordered-compact-edges","v2-missing"}){QTest::newRow(kind)<<QString::fromLatin1(kind)<<false;}QTest::newRow("corrupt-needed-piece")<<QStringLiteral("compact-edges")<<true;
   }
@@ -685,8 +716,28 @@ int prepareVerifiedSeedReceipt(const QString& root,bool multi,const QString& out
   }catch(const std::exception& error){qCritical("%s",error.what());return 1;}
 }
 }
+namespace {
+int prepareAllocatedProfile(const QString& root,const QString& kind){
+  try{
+    const auto mode=kind==QStringLiteral("paused")?core::TorrentAllocationMode::Paused:core::TorrentAllocationMode::Stopped;
+    test::allocation::Fixture f(false,std::filesystem::path(root.toStdString()));test::require(f.import(mode).has_value(),"Actual allocation oracle import failed");auto service=owner();test::require(!service->tcpListenPort()&&service->startManaged(*f.lease,{.hash=f.hash,.allocationMode=mode}).has_value(),"Actual allocation-only admission failed");
+    const auto deadline=std::chrono::steady_clock::now()+10s;
+    while(std::chrono::steady_clock::now()<deadline){test::require(service->poll().has_value(),"Allocation oracle poll failed");const auto current=status(*service,f.hash);if(current&&current->phase==Phase::Stopped){break;}}
+    const auto actual=status(*service,f.hash);test::require(actual&&actual->allocationComplete&&!actual->failure&&!actual->retained&&!actual->complete&&!actual->checked&&actual->received==0&&actual->sent==0&&actual->pieces==0&&!service->tcpListenPort()&&f.zeroes(),"Actual allocation-only final state differs");
+    const auto closed=service->close(std::chrono::steady_clock::now()+5s);test::require(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure,"Allocation oracle owner did not retire");
+    const auto saved=f.saved();const auto& row=f.row(saved);test::require(row.find("state")->integer==70&&row.find("allocated")->integer==1&&row.find("completedbytes")->integer==0&&bool(saved.find("pause_data"))==(mode==core::TorrentAllocationMode::Paused),"Actual allocation saved intent differs");
+    QJsonArray files;for(std::size_t n=0;n<f.sizes.size();++n){const auto path=f.path(n);struct stat stat{};test::require(::lstat(path.c_str(),&stat)==0&&S_ISREG(stat.st_mode)&&stat.st_nlink==1,"Actual allocation leaf identity missing");const auto data=test::allocation::read(path);QJsonObject file;file.insert("path",QString::fromStdString(path.string()));file.insert("bytes",QString::number(static_cast<qlonglong>(stat.st_size)));file.insert("sha256",QString::fromLatin1(QCryptographicHash::hash(QByteArray::fromStdString(data),QCryptographicHash::Sha256).toHex()));file.insert("dev",QString::number(static_cast<qulonglong>(stat.st_dev)));file.insert("ino",QString::number(static_cast<qulonglong>(stat.st_ino)));files.push_back(file);}
+    QJsonObject result;result.insert("schema",1);result.insert("profile",QString::fromStdString(f.profile.string()));result.insert("metadata",QString::fromStdString(f.metadata.string()));result.insert("state",QString::fromStdString((f.profile/"active"/(f.hash.hex()+".dat")).string()));result.insert("archive",QString::fromStdString((f.profile/"torrents"/(f.hash.hex()+".torrent")).string()));result.insert("hash",QString::fromStdString(f.hash.hex()));result.insert("mode",static_cast<int>(mode));result.insert("sessionJoined",closed.sessionJoined);result.insert("storageReleased",closed.retirement.storageReleased);result.insert("allocationComplete",actual->allocationComplete);result.insert("files",files);
+    test::write(root+"/native-receipt.json",QJsonDocument(result).toJson(QJsonDocument::Indented));return 0;
+  }catch(const std::exception& error){qCritical("%s",error.what());return 1;}
+}
+}
+
 int main(int argc,char** argv){
   QCoreApplication application(argc,argv);
+  if(argc==4&&QString::fromLocal8Bit(argv[1])==QStringLiteral("--prepare-allocated-profile")){
+    const auto mode=QString::fromLocal8Bit(argv[3]);if(mode!="stopped"&&mode!="paused"){return 2;}return prepareAllocatedProfile(QString::fromLocal8Bit(argv[2]),mode);
+  }
   if(argc==5&&QString::fromLocal8Bit(argv[1])==QStringLiteral("--prepare-verified-seed")){
     const auto kind=QString::fromLocal8Bit(argv[3]);if(kind!="single"&&kind!="multi"){return 2;}
     return prepareVerifiedSeedReceipt(QString::fromLocal8Bit(argv[2]),kind=="multi",QString::fromLocal8Bit(argv[4]));

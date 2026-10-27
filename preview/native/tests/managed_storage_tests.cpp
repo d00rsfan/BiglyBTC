@@ -1,4 +1,7 @@
 #include "managed_storage.hpp"
+#include "allocation_fixture.hpp"
+#include <csignal>
+#include <sys/resource.h>
 #include "torrent_intake.hpp"
 #include "verified_existing_scope.hpp"
 #include "original_torrent_identity_lt.hpp"
@@ -136,6 +139,8 @@ auto prepareExisting(Fixture& f,std::span<const engine::detail::ManagedPayloadCl
 void existingAttribute(Fixture& f,std::string_view key,std::string value){auto state=f.state();auto attrs=core::Document::parse(encode(*state.find("attributes")));require(attrs.has_value()&&attrs->replaceValue(key,std::move(value)).has_value()&&state.replaceValue("attributes",attrs->serialize()).has_value(),"Existing-only negative attribute");write(f.profile/"active"/(f.hash.hex()+".dat"),state.serialize());}
 
 
+storage::TorrentIntakeStage allocationCrash=storage::TorrentIntakeStage::JournalSynced;
+void interruptAllocationIntake(storage::TorrentIntakeStage stage){if(stage==allocationCrash){throw std::runtime_error("Owned allocation intake interruption");}}
 void test(std::string_view name,const std::function<void()>& body) { body(); ++families; std::cout<<"case "<<name<<'\n'; }
 }
 int main() {
@@ -331,7 +336,20 @@ int main() {
       require(!fs::exists(f.path(0))&&!fs::exists(f.path(1))&&!fs::exists(f.save/"wrong-root")&&!fs::exists(f.save/"renamed-root/wrong-first.bin"),"No sanitized/basic/override aliases created");
       }
     }
-    for(const unsigned value:{0x98U,0x1fU}){
+    {
+      // LocaleUtilDecoderReal.decodeString falls back for the WHOLE input when
+      // MS1251 cannot decode0x98; the production decoder already qualifies this.
+      Fixture f;const auto old=f.profile/"active"/(f.hash.hex()+".dat");auto metadata=f.state();auto info=core::Document::parse(f.info);require(info.has_value(),"Undefined-byte original info");
+      const std::string rawName("a\x98z",3),decodedName="a\xef\xbf\xbdz";
+      require(info->replaceValue("name",b(rawName)).has_value(),"Actual undefined MS1251 name bytes");f.info=info->serialize();f.hash=*core::TorrentHash::parse(libtorrent::hasher(f.info.data(),static_cast<int>(f.info.size())).final().to_string());
+      require(metadata.replaceValue("info",f.info).has_value()&&metadata.replaceValue("encoding",b("windows-1251")).has_value(),"Bind whole-input fallback to exact original identity");f.stateBytes=metadata.serialize();write(f.profile/"active"/(f.hash.hex()+".dat"),f.stateBytes);write(f.profile/"downloads.config",f.inventory());require(fs::remove(old),"Retire old fixture identity");f.fullPayload();
+      struct stat before{},after{};require(::lstat(f.path().c_str(),&before)==0,"Owned fallback payload inode");auto owner=f.prepare();const auto params=owner.parameters();const auto raw=params.ti->info_section();
+      require(std::string_view(raw.data(),static_cast<std::size_t>(raw.size()))==f.info&&params.ti->info_hashes().has_v1()&&!params.ti->info_hashes().has_v2()&&params.ti->info_hashes().v1.to_string()==libtorrent::hasher(f.info.data(),static_cast<int>(f.info.size())).final().to_string(),"Fallback names never rewrite original raw info/full v1 hash");
+      require(params.ti->files().file_path(libtorrent::file_index_t{0})==decodedName&&params.renamed_files.at(libtorrent::file_index_t{0})=="saved.bin","Authenticated fallback projection retains distinct original/saved names");checkpoint(owner,f,{1,1},true);const auto saved=f.state();
+      require(encode(*saved.find("info"))==f.info&&saved.find("encoding")->bytes=="windows-1251"&&saved.find("attributes")->find("unknown")&&read(f.path())==f.body,"Fallback checkpoint preserves raw undefined byte, unknown metadata and real payload");
+      require(::lstat(f.path().c_str(),&after)==0&&before.st_dev==after.st_dev&&before.st_ino==after.st_ino&&!fs::exists(f.save/decodedName),"Fallback does not substitute payload inode or create raw-name alias");
+    }
+    for(const unsigned value:{0x1fU}){
       Fixture f;auto metadata=f.state();auto info=core::Document::parse(f.info);require(info.has_value(),"Undefined-byte raw info fixture");
       require(info->replaceValue("name",b("a"+std::string(1,static_cast<char>(value))+"z")).has_value(),"Explicit undefined/control input");
       f.info=info->serialize();f.hash=*core::TorrentHash::parse(libtorrent::hasher(f.info.data(),static_cast<int>(f.info.size())).final().to_string());
@@ -835,6 +853,107 @@ int main() {
     const auto control=f.profile/"active"/f.hash.hex()/"fmfile0.dat";write(control,"d7:versioni0e6:lengthi20000ee");
     auto owner=f.prepare();require(owner.mappedFiles()!=nullptr&&fs::file_size(f.path(0))==20000&&!fs::exists(control),"default L expands actual C even for skipped file");
     const auto bytes=read(f.path(0));require(bytes.substr(16384)==std::string(3616,'A'),"actual compact edge is relocated to original linear tail");require(f.state().find("attributes")->find("storetypes")->children[0].bytes=="L","postconversion type is durable L");checkpoint(owner,f,{0,0},false);
+  });
+
+
+  test("allocation accepted intent survives each intake boundary without unsafe queued startup",[] {
+    for(const auto stage:{storage::TorrentIntakeStage::JournalSynced,storage::TorrentIntakeStage::StatePublished,storage::TorrentIntakeStage::ArchivePublished,storage::TorrentIntakeStage::InventoryPublished}){
+      biglybtc::test::allocation::Fixture f;allocationCrash=stage;require(!f.import(core::TorrentAllocationMode::Paused,interruptAllocationIntake),"Intentional allocation journal interruption");require(storage::hasPendingTorrentIntake(*f.lease),"Accepted allocation journal retained");
+      f.lease.reset();auto held=storage::ProfileLease::acquire(f.profile);require(held.has_value(),"Fresh allocation recovery lease");f.lease.emplace(std::move(*held));const auto recovered=storage::recoverTorrentIntake(*f.lease);require(recovered&&*recovered&&**recovered==f.hash,"Fresh exact allocation journal replay");
+      const auto intent=storage::readAllocationIntent(*f.lease,f.hash);require(intent&&*intent&&(*intent)->mode==core::TorrentAllocationMode::Paused&&(*intent)->state==storage::AllocationState::Pending,"Recovered original allocation mode");const auto saved=f.saved();require(f.row(saved).find("state")->integer==70&&!saved.find("pause_data")&&!fs::exists(f.path()),"Recovery remains stopped/unpaused and performs no allocation");
+      const auto source=core::Document::parse(biglybtc::test::allocation::read(f.metadata));require(source.has_value(),"Original source parse");const auto current=f.state();const auto before=storage::originalTorrentInfoSubject(*source),after=storage::originalTorrentInfoSubject(current);require(before&&after&&*before==*after,"Recovery retains exact raw info hash subject");
+      auto owner=Storage::prepare(*f.lease,f.hash,{}, {}, {}, {},engine::detail::ManagedStoragePurpose::AllocateOnly);require(owner.has_value(),"Recovered explicit allocation starts only typed");while(!owner->allocationProgress().complete){require(owner->advanceAllocation().has_value(),"Recovered actual zero writes");}require(owner->settleAllocation(*f.lease,true).has_value()&&f.zeroes(),"Recovered original pause follows genuine durable work");
+    }
+    biglybtc::test::allocation::Fixture old;require(old.import(core::TorrentAllocationMode::None).has_value(),"Legacy default API import");const auto legacy=storage::readAllocationIntent(*old.lease,old.hash);require(legacy&&!*legacy&&!old.state().find("attributes")->find("fas"),"Absent old/default mode stays legacy without materialized allocation");
+    biglybtc::test::allocation::Fixture bad;const auto raw=biglybtc::test::allocation::read(bad.profile/"downloads.config");require(!bad.import(static_cast<core::TorrentAllocationMode>(7)),"Unknown allocation ordinal rejected");require(biglybtc::test::allocation::read(bad.profile/"downloads.config")==raw&&!storage::hasPendingTorrentIntake(*bad.lease)&&!fs::exists(bad.path()),"Bad mode has no journal/payload/publication effects");
+  });
+  test("allocation writes actual zeroes but never verifies pieces or transfers",[] {
+    using Mode=core::TorrentAllocationMode;
+    for(const bool multi:{false,true}){for(const auto mode:{Mode::Stopped,Mode::Paused}){
+      biglybtc::test::allocation::Fixture f(multi);const auto imported=f.import(mode);require(imported&&*imported==f.hash,"Actual allocation intake");
+      auto before=f.saved();require(f.row(before).find("state")->integer==70&&!f.row(before).find("forceStart")->integer,"Pending original intent safely stopped");
+      auto prepared=Storage::prepare(*f.lease,f.hash,{}, {}, {}, {},engine::detail::ManagedStoragePurpose::AllocateOnly);require(prepared.has_value(),prepared?"allocation prepare":prepared.error().message);
+      require(prepared->purpose()==engine::detail::ManagedStoragePurpose::AllocateOnly&&!prepared->mappedFiles(),"Allocation has no read-only/download backend");
+      const auto first=prepared->advanceAllocation(65536);require(first&&first->completedBytes>0&&first->completedBytes<first->totalBytes,"Actual bounded zero write progress");
+      std::vector<std::uint8_t> fake(static_cast<std::size_t>(prepared->parameters().ti->num_pieces()),1);
+      require(!prepared->checkpoint(*f.lease,fake,true,0,0),"Allocation cannot promote zeroes into verified progress");
+      while(!prepared->allocationProgress().complete){const auto step=prepared->advanceAllocation(256*1024);require(step.has_value(),"Bounded real allocation steps");}
+      require(f.zeroes(),"All actual allocated bytes are zero");require(prepared->settleAllocation(*f.lease,true).has_value(),"Durable actual allocation settlement");
+      const auto saved=f.saved();const auto& row=f.row(saved);require(row.find("state")->integer==70&&row.find("allocated")->integer==1&&row.find(storage::AllocationStateKey)->integer==2,"Final original STOP70 allocated flag");
+      require(row.find("downloaded")->integer==0&&row.find("uploaded")->integer==0&&row.find("completedbytes")->integer==0&&saved.find("opaque"),"No fabricated transfer/completion and unknown inventory preserved");
+      const auto* pauses=saved.find("pause_data");require((pauses&&!pauses->children.empty())==(mode==Mode::Paused),"Original pause only after actual successful allocation");
+      const auto state=f.state();const auto* attrs=state.find("attributes");require(attrs&&attrs->find("fas")->integer==2&&attrs->find("opaque")&&state.find("opaque.source"),"Original fas2 and unknown source fields survive");
+      const auto* data=state.find("resume")->find("data");require(data->find("valid")->integer==0&&std::ranges::all_of(data->find("resume data")->bytes,[](char c){return c==2;}),"Actual zero allocation remains entirely RECHECK");
+      require(!prepared->settleAllocation(*f.lease,true),"Settled allocation never republishes");
+    }}
+  });
+  test("interrupted new zero prefixes replay under exact inode and remain cancellable",[] {
+    biglybtc::test::allocation::Fixture f(true);require(f.import(core::TorrentAllocationMode::Paused).has_value(),"Replay allocation import");
+    struct stat inode{};{
+      auto prepared=Storage::prepare(*f.lease,f.hash,{}, {}, {}, {},engine::detail::ManagedStoragePurpose::AllocateOnly);require(prepared.has_value(),"Replay first preparation");
+      const auto step=prepared->advanceAllocation(65536);require(step&&step->completedBytes==65536,"Durable journal precedes partial actual zeroes");require(::stat(f.path().c_str(),&inode)==0,"Partial inode captured");
+    }
+    auto replay=Storage::prepare(*f.lease,f.hash,{}, {}, {}, {},engine::detail::ManagedStoragePurpose::AllocateOnly);require(replay.has_value(),replay?"replay":replay.error().message);
+    const auto resumed=replay->advanceAllocation(32768);require(resumed&&resumed->completedBytes==32768,"Replay authenticates original zero prefix before appending");
+    struct stat after{};require(::stat(f.path().c_str(),&after)==0&&after.st_ino==inode.st_ino&&after.st_size==inode.st_size,"Prefix replay preserves actual original inode/extent");
+    const auto authenticated=replay->advanceAllocation(32768);require(authenticated&&authenticated->completedBytes==65536&&fs::file_size(f.path())==65536,"Entire interrupted prefix authenticated without appending");
+    require(replay->settleAllocation(*f.lease,false).has_value(),"Explicit cancellation settled");require(!fs::exists(f.path())&&!fs::exists(f.path(1)),"Only incomplete newly-created files are removed");
+    const auto saved=f.saved();require(f.row(saved).find("state")->integer==70&&f.row(saved).find(storage::AllocationStateKey)->integer==3&&!saved.find("pause_data"),"Cancel remains STOP70 without successful pause");
+    replay=std::unexpected(storage::Error{Code::Cancelled,"Fixture releases cancelled descriptors"});
+    auto retried=Storage::prepare(*f.lease,f.hash,{}, {}, {}, {},engine::detail::ManagedStoragePurpose::AllocateOnly);require(retried.has_value(),"Cancelled original new-file scope explicitly retries");
+    require(retried->settleAllocation(*f.lease,false).has_value(),"Zero-byte retry cancellation");
+  });
+  test("allocation refuses unreviewed short data replaced inodes and nonzero replay",[] {
+    {
+      biglybtc::test::allocation::Fixture f;biglybtc::test::allocation::write(f.path(),"valuable-prefix");const auto before=biglybtc::test::allocation::read(f.path());
+      const auto result=f.import(core::TorrentAllocationMode::Stopped);require(!result&&biglybtc::test::allocation::read(f.path())==before,"Unreviewed short file is never zeroed or truncated");
+    }
+    for(const bool replace:{false,true}){
+      biglybtc::test::allocation::Fixture f;require(f.import(core::TorrentAllocationMode::Stopped).has_value(),"Negative replay import");
+      {auto prepared=Storage::prepare(*f.lease,f.hash,{}, {}, {}, {},engine::detail::ManagedStoragePurpose::AllocateOnly);require(prepared.has_value(),"Negative replay prepare");require(prepared->advanceAllocation(4096).has_value(),"Negative replay actual prefix");}
+      if(replace){fs::rename(f.path(),f.root/"retained-original");biglybtc::test::allocation::write(f.path(),std::string(4096,'\0'));}
+      else{std::fstream file(f.path(),std::ios::binary|std::ios::in|std::ios::out);file.put('X');file.close();}
+      const auto before=biglybtc::test::allocation::read(f.path());auto result=Storage::prepare(*f.lease,f.hash,{}, {}, {}, {},engine::detail::ManagedStoragePurpose::AllocateOnly);
+      if(replace){require(!result,"Replaced inode cannot acquire replay authority");}else{require(result.has_value(),"Same inode may only be inspected");require(!result->advanceAllocation(4096)&&!result->settleAllocation(*f.lease,false),"Nonzero interrupted prefix never appends overwrites or deletes on cleanup");}
+      require(biglybtc::test::allocation::read(f.path())==before,"Rejected source bytes unchanged");
+    }
+  });
+
+  test("allocation preserves full preexisting leaves counters and rejects changed row CAS",[] {
+    biglybtc::test::allocation::Fixture f;const auto data=std::string(static_cast<std::size_t>(f.sizes[0]),'Q');biglybtc::test::allocation::write(f.path(),data);struct stat before{},after{};require(::stat(f.path().c_str(),&before)==0,"Full preexisting allocation source");
+    require(f.import(core::TorrentAllocationMode::Stopped).has_value(),"Full preexisting original import");
+    auto inventory=f.saved();auto entry=core::Document::parse(encode(f.row(inventory)));require(entry.has_value(),"Retained counters row");
+    for(const auto& [key,value]:{std::pair{"downloaded",9},std::pair{"uploaded",11},std::pair{"discarded",7},std::pair{"hashfailbytes",13}}){require(entry->replaceValue(key,i(value)).has_value(),"Captured original lifetime values");}
+    require(inventory.replaceValue("downloads","l"+entry->serialize()+'e').has_value(),"Retained allocation row");biglybtc::test::allocation::write(f.profile/"downloads.config",inventory.serialize());
+    auto prepared=Storage::prepare(*f.lease,f.hash,{}, {}, {}, {},engine::detail::ManagedStoragePurpose::AllocateOnly);require(prepared.has_value(),"Full preexisting allocation preparation");
+    const auto step=prepared->advanceAllocation(4096);require(step&&step->complete,"Full preexisting allocation needs no zero writes");
+    require(::stat(f.path().c_str(),&after)==0&&before.st_ino==after.st_ino&&before.st_mtim.tv_sec==after.st_mtim.tv_sec&&before.st_mtim.tv_nsec==after.st_mtim.tv_nsec&&before.st_ctim.tv_sec==after.st_ctim.tv_sec&&before.st_ctim.tv_nsec==after.st_ctim.tv_nsec&&biglybtc::test::allocation::read(f.path())==data,"Full preexisting bytes and exact inode timestamps untouched");
+    require(prepared->settleAllocation(*f.lease,true).has_value(),"Full preexisting settlement");const auto saved=f.saved();for(const auto& [key,value]:{std::pair{"downloaded",9},std::pair{"uploaded",11},std::pair{"discarded",7},std::pair{"hashfailbytes",13}}){require(f.row(saved).find(key)->integer==value,"Allocation never rewrites captured lifetime counters");}
+    biglybtc::test::allocation::Fixture changed;require(changed.import(core::TorrentAllocationMode::Stopped).has_value(),"CAS fixture intake");auto owner=Storage::prepare(*changed.lease,changed.hash,{}, {}, {}, {},engine::detail::ManagedStoragePurpose::AllocateOnly);require(owner.has_value(),"CAS fixture preparation");while(!owner->allocationProgress().complete){require(owner->advanceAllocation().has_value(),"CAS fixture work");}
+    auto current=changed.saved();auto row=core::Document::parse(encode(changed.row(current)));require(row&&row->replaceValue("unknown.external","i23e").has_value()&&current.replaceValue("downloads","l"+row->serialize()+'e').has_value(),"Actual row changed before settlement");biglybtc::test::allocation::write(changed.profile/"downloads.config",current.serialize());const auto raw=biglybtc::test::allocation::read(changed.profile/"downloads.config");
+    require(!owner->settleAllocation(*changed.lease,true)&&biglybtc::test::allocation::read(changed.profile/"downloads.config")==raw,"Whole exact row CAS preserves external field and pending stop");
+  });
+
+  test("allocation ancestor replay binds every directory and preserves unrelated state",[] {
+    for(const bool reopen:{false,true}){
+      biglybtc::test::allocation::Fixture f;f.payload=f.root/"ancestor"/"leaf";require(f.import(core::TorrentAllocationMode::Stopped).has_value(),"Nested ancestor allocation import");
+      auto prepared=Storage::prepare(*f.lease,f.hash,{}, {}, {}, {},engine::detail::ManagedStoragePurpose::AllocateOnly);require(prepared.has_value(),"Nested allocation prepare");require(prepared->advanceAllocation(4096).has_value(),"Nested actual partial data");
+      const auto leaf=f.payload,old=f.root/"retained-leaf";fs::rename(leaf,old);fs::rename(f.root/"ancestor",f.root/"old-ancestor");fs::create_directory(f.root/"ancestor");fs::rename(old,leaf);
+      const auto bytes=biglybtc::test::allocation::read(f.path());
+      if(reopen){prepared=std::unexpected(storage::Error{Code::Cancelled,"Release fixture descriptors"});prepared=Storage::prepare(*f.lease,f.hash,{}, {}, {}, {},engine::detail::ManagedStoragePurpose::AllocateOnly);require(!prepared,"Higher ancestor replacement refuses replay despite same leaf inode");}
+      else{require(!prepared->advanceAllocation(4096)&&!prepared->settleAllocation(*f.lease,false),"Higher ancestor replacement withdraws active write and cleanup authority");}
+      require(biglybtc::test::allocation::read(f.path())==bytes,"Higher-ancestor refusal retains all original leaf bytes");
+    }
+    biglybtc::test::allocation::Fixture f;require(f.import(core::TorrentAllocationMode::Stopped).has_value(),"Attribute CAS import");auto prepared=Storage::prepare(*f.lease,f.hash,{}, {}, {}, {},engine::detail::ManagedStoragePurpose::AllocateOnly);require(prepared.has_value(),"Attribute CAS preparation");while(!prepared->allocationProgress().complete){require(prepared->advanceAllocation().has_value(),"Attribute CAS actual work");}
+    auto state=f.state();auto attrs=core::Document::parse(encode(*state.find("attributes")));require(attrs&&attrs->replaceValue("unrelated.external","li19e3:rawe").has_value()&&state.replaceValue("attributes",attrs->serialize()).has_value(),"External unknown attribute edit");const auto statePath=f.profile/"active"/(f.hash.hex()+".dat");biglybtc::test::allocation::write(statePath,state.serialize());const auto raw=biglybtc::test::allocation::read(statePath);
+    require(!prepared->settleAllocation(*f.lease,true)&&biglybtc::test::allocation::read(statePath)==raw,"Complete fresh attribute projection refuses stale overwrite");
+  });
+  test("allocation actual write failure leaves no false completion and safe cancel",[] {
+    biglybtc::test::allocation::Fixture f;require(f.import(core::TorrentAllocationMode::Stopped).has_value(),"IO failure import");auto prepared=Storage::prepare(*f.lease,f.hash,{}, {}, {}, {},engine::detail::ManagedStoragePurpose::AllocateOnly);require(prepared.has_value(),"IO failure prepare");
+    struct Limit {struct rlimit prior{};decltype(std::signal(SIGXFSZ,SIG_IGN)) handler;Limit():handler(std::signal(SIGXFSZ,SIG_IGN)){require(::getrlimit(RLIMIT_FSIZE,&prior)==0,"Capture owned test limit");auto limit=prior;limit.rlim_cur=0;require(::setrlimit(RLIMIT_FSIZE,&limit)==0,"Apply owned write refusal");}~Limit(){::setrlimit(RLIMIT_FSIZE,&prior);std::signal(SIGXFSZ,handler);}};
+    std::expected<engine::detail::ManagedAllocationProgress,storage::Error> failed;{Limit limit;failed=prepared->advanceAllocation(4096);}
+    require(!failed&&failed.error().code==Code::Io&&fs::file_size(f.path())==0,"Real pwrite failure has no invented work bytes");
+    require(prepared->settleAllocation(*f.lease,false).has_value()&&!fs::exists(f.path()),"Failed new empty file is explicitly cancelled after limit restored");
   });
   std::cout<<"PASS "<<families<<" managed-storage families; "<<assertions<<" assertions; generated profiles and files only; no engine activation or Java-runtime equality credit\n";
   return 0;

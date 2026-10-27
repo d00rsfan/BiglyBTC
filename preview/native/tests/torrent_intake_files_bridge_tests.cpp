@@ -1,4 +1,7 @@
 #include "session_bridge.hpp"
+#include "allocation_fixture.hpp"
+#include <QTcpServer>
+#include <QHostAddress>
 #include "owned_engine_fixture.hpp"
 #include "selected_swarm_fixture.hpp"
 #include "persistent_session.hpp"
@@ -32,6 +35,19 @@ void emptyProfile(const QString& profile) {
 class TorrentIntakeFilesBridgeTests final:public QObject {
   Q_OBJECT
 private slots:
+
+  void actualAllocationIntakeRoutesModesWithoutConnectingOrInventingCompletion_data(){QTest::addColumn<bool>("paused");QTest::newRow("allocate-stop")<<false;QTest::newRow("allocate-pause")<<true;}
+  void actualAllocationIntakeRoutesModesWithoutConnectingOrInventingCompletion(){
+    QFETCH(bool,paused);test::allocation::Fixture f;f.lease.reset();QTcpServer outsider;QVERIFY(outsider.listen(QHostAddress::LocalHost,0));
+    app::SessionBridge bridge;QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),reads(&bridge,&app::SessionBridge::torrentIntakeReady),writes(&bridge,&app::SessionBridge::torrentIntakeFinished),closed(&bridge,&app::SessionBridge::sessionClosed);
+    QVERIFY(bridge.open(f.profile,outsider.serverPort()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty(),10000);const auto session=sessions[0][0].toULongLong();
+    QVERIFY(bridge.previewTorrentIntake({session,1,QString::fromStdString(f.metadata.string())}));QTRY_COMPARE_WITH_TIMEOUT(reads.size(),1,10000);QTRY_VERIFY(!bridge.busy());const auto frame=preview(reads);QVERIFY2(ui::validTorrentIntake(frame),qPrintable(frame->failure));
+    ui::TorrentIntakeSubmission submitted;submitted.session=session;submitted.request=1;submitted.revision=frame->revision;submitted.destination=QString::fromStdString(f.payload.string());submitted.start=false;submitted.files={{false,0}};submitted.decoderShowAll=frame->decoderShowAll;submitted.allocation=paused?core::TorrentAllocationMode::Paused:core::TorrentAllocationMode::Stopped;
+    QVERIFY(bridge.importTorrentFiles(submitted));QTRY_COMPARE_WITH_TIMEOUT(writes.size(),1,10000);QTRY_VERIFY(!bridge.busy());const auto added=result(writes);QVERIFY2(added&&added->imported&&added->allocationPending&&!added->started&&!added->verificationPending,qPrintable(added->failure));
+    QTRY_VERIFY_WITH_TIMEOUT([&]{QFile raw(QString::fromStdString((f.profile/"downloads.config").string()));if(!raw.open(QIODevice::ReadOnly)){return false;}const auto value=core::Document::parse(raw.readAll().toStdString(),storage::compatibleConfigLimits());if(!value){return false;}const auto* rows=value->find("downloads");if(!rows||rows->children.size()!=1){return false;}const auto* marker=rows->children[0].find(storage::AllocationStateKey);return marker&&marker->type==core::Node::Type::Integer&&marker->integer==2;}(),10000);
+    QVERIFY(!outsider.hasPendingConnections());QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,10000);QVERIFY(closed[0][1].toBool()&&closed[0][2].toBool());
+    auto held=storage::ProfileLease::acquire(f.profile);QVERIFY(held);f.lease.emplace(std::move(*held));const auto saved=f.saved();const auto& row=f.row(saved);QCOMPARE(row.find("state")->integer,std::int64_t{70});QCOMPARE(row.find("allocated")->integer,std::int64_t{1});QCOMPARE(row.find("downloaded")->integer,std::int64_t{0});QCOMPARE(row.find("uploaded")->integer,std::int64_t{0});QCOMPARE(row.find("completedbytes")->integer,std::int64_t{0});QCOMPARE(bool(saved.find("pause_data")),paused);QVERIFY(f.zeroes());QVERIFY(!outsider.hasPendingConnections());
+  }
 
   void offlineDecoderCapabilityIsSealedByHeldProfileAndComparedBeforeCommit(){
     QTemporaryDir directory;QVERIFY(directory.isValid());const auto profile=directory.path()+QStringLiteral("/decoder-profile");emptyProfile(profile);const auto input=directory.path()+QStringLiteral("/source.torrent"),destination=directory.path()+QStringLiteral("/absent-data");

@@ -70,6 +70,19 @@ ui::TorrentCreationRequest creation(const test::OwnedEngineFixture& f,quint64 se
 class FileOperationsBridgeTests final:public QObject {
  Q_OBJECT
 private slots:
+
+ void invalidPendingRecoveryCannotPublishOrRetainWritableProfile_data(){QTest::addColumn<bool>("normal");QTest::newRow("owned-loopback-open")<<false;QTest::newRow("ordinary-open-no-admission")<<true;}
+ void invalidPendingRecoveryCannotPublishOrRetainWritableProfile(){
+  QFETCH(bool,normal);test::OwnedEngineFixture f(false);const auto source=f.payload+'/'+f.files[0].relative;const auto bytes=test::read(source);const auto occupied=f.root.path()+QStringLiteral("/occupied-refusal.bin");test::write(occupied,"prior");QString uncertain;
+  {auto lease=storage::ProfileLease::acquire(f.native());QVERIFY(lease);storage::FileOperationRequest value{*f.hash,storage::FileOperationKind::ReplaceFile,{}};value.fileIndex=0;value.fileDestination=occupied.toStdString();auto plan=storage::prepareFileOperation(*lease,value);QVERIFY(plan);uncertain=QString::fromStdString(plan->preview().replacement->path.parent_path().string());const auto accepted=storage::confirmFileOperation(*plan,plan->preview().approvalScopeDigest,true);QVERIFY(accepted);interruptedDirectory=uncertain;QVERIFY(!storage::applyFileOperation(*lease,std::move(*plan),*accepted,interruptUnsealedReplacement));}
+  edit(f,{{"downloaded","i17e"}}); // Valid saved library, changed exact accepted preimage: review must refuse.
+  const auto inventoryBytes=test::read(f.profile+"/downloads.config"),stateBytes=test::read(f.stateFile),journalBytes=test::read(f.profile+"/BiglyBTC.file-operation");
+  {auto lease=storage::ProfileLease::acquire(f.native());QVERIFY(lease);QVERIFY(!storage::recoverFileOperation(*lease));QVERIFY(!storage::prepareInterruptedReplacementReview(*lease));}
+  app::SessionBridge bridge;QSignalSpy sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),rows(&bridge,&app::SessionBridge::snapshotReady),native(&bridge,&app::SessionBridge::nativeSessionReady),messages(&bridge,&app::SessionBridge::messageReady),closed(&bridge,&app::SessionBridge::sessionClosed);
+  QVERIFY(normal?bridge.openNormal(f.native()):bridge.open(f.native(),f.port()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!messages.empty(),10000);QCOMPARE(sessions.count(),0);QCOMPARE(rows.count(),0);QCOMPARE(native.count(),0);QCOMPARE(test::read(source),bytes);QCOMPARE(test::read(occupied),QByteArray("prior"));QCOMPARE(test::read(uncertain+"/unknown"),QByteArray("preserved"));QCOMPARE(test::read(f.profile+"/downloads.config"),inventoryBytes);QCOMPARE(test::read(f.stateFile),stateBytes);QCOMPARE(test::read(f.profile+"/BiglyBTC.file-operation"),journalBytes);
+  {auto released=storage::ProfileLease::acquire(f.native());QVERIFY(released);} // Failure left no partial Host owning the lease.
+  QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,10000);QVERIFY(closed[0][1].toBool()&&closed[0][2].toBool());
+ }
  void unsealedReplacementReopensReadOnlyRequiresFreshConsentAndKeepsUnknownDirectory_data(){QTest::addColumn<bool>("normal");QTest::newRow("owned-loopback-open")<<false;QTest::newRow("ordinary-open-no-admission")<<true;}
  void unsealedReplacementReopensReadOnlyRequiresFreshConsentAndKeepsUnknownDirectory(){
   QFETCH(bool,normal);test::OwnedEngineFixture f(false);edit(f,{{"state","i75e"}});const auto source=f.payload+'/'+f.files[0].relative;const auto bytes=test::read(source);const auto target=f.root.path()+QStringLiteral("/occupied.bin");test::write(target,"prior");QString uncertain;
@@ -77,7 +90,7 @@ private slots:
     auto lease=storage::ProfileLease::acquire(f.native());QVERIFY(lease);storage::FileOperationRequest value{*f.hash,storage::FileOperationKind::ReplaceFile,{}};value.fileIndex=0;value.fileDestination=target.toStdString();auto plan=storage::prepareFileOperation(*lease,value);QVERIFY(plan);uncertain=QString::fromStdString(plan->preview().replacement->path.parent_path().string());const auto accepted=storage::confirmFileOperation(*plan,plan->preview().approvalScopeDigest,true);QVERIFY(accepted);
     // The observer only simulates the exact unsealed mkdir crash interval; all
     // actual source/target/control/document bytes remain the original preimages.
-    interruptedDirectory=uncertain;const auto failed=storage::applyFileOperation(*lease,std::move(*plan),*accepted,interruptUnsealedReplacement);QVERIFY(!failed);QVERIFY(!storage::recoverFileOperation(*lease));
+    interruptedDirectory=uncertain;const auto failed=storage::applyFileOperation(*lease,std::move(*plan),*accepted,interruptUnsealedReplacement);QVERIFY(!failed);QVERIFY(!storage::recoverFileOperation(*lease));const auto review=storage::prepareInterruptedReplacementReview(*lease);QVERIFY2(review.has_value(),review?"":review.error().message.c_str());
   }
   const auto beforeInventory=test::read(f.profile+"/downloads.config"),beforeState=test::read(f.stateFile);app::SessionBridge bridge;
   QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady),sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),native(&bridge,&app::SessionBridge::nativeSessionReady),plans(&bridge,&app::SessionBridge::fileOperationPrepared),results(&bridge,&app::SessionBridge::fileOperationFinished),closed(&bridge,&app::SessionBridge::sessionClosed);
