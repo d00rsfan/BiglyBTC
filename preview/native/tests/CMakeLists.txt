@@ -1816,3 +1816,5 @@ add_executable(biglybtc-queue-facts-replay queue_facts_replay.cpp)
 target_link_libraries(biglybtc-queue-facts-replay PRIVATE biglybtc_core)
 target_compile_features(biglybtc-queue-facts-replay PRIVATE cxx_std_23)
 target_compile_options(biglybtc-queue-facts-replay PRIVATE -Wall -Wextra -Wpedantic -Werror)
+
+include("${CMAKE_CURRENT_SOURCE_DIR}/ProviderQueueRuntimeTests.cmake")

@@ -31,7 +31,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--driver", type=Path, required=True)
     parser.add_argument("--provider", type=Path, required=True)
-    parser.add_argument("--mode", choices=("source", "selected", "provider-next", "webseed", "strict"), required=True)
+    parser.add_argument("--mode", choices=("source", "selected", "provider-next", "webseed", "queue", "strict"), required=True)
     parser.add_argument("--manifest", type=Path)
     parser.add_argument("--alternate", type=Path)
     parser.add_argument("--interposition-driver", type=Path)
@@ -64,6 +64,15 @@ def main():
         if (Path(declared["artifact"]).resolve(strict=True) != provider
                 or declared["artifact_sha256"] != WEBSEED_IMAGE or declared["artifact_bytes"] != 9085128):
             raise ValueError("Webseed relocation input differs from the exact manifest")
+    elif args.mode == "queue":
+        if (not args.manifest or digest(args.manifest) != "f95542706a3b7324c6f2589d90d51a4374c92e7e245319b156f044aeec76a1d8"
+                or original_sha != "7449ec6f503f4b8da26e61f4c0926ca414774f6b859405439eec2ebe227fbd9e" or provider.stat().st_size != 9085816
+                or not args.alternate or not args.interposition_driver or not args.preload):
+            raise ValueError("Queue observer relocation requires exact source/image and all rejection controls")
+        declared = json.loads(args.manifest.read_bytes())
+        if (Path(declared["artifact"]).resolve(strict=True) != provider
+                or declared["artifact_sha256"] != original_sha or declared["artifact_bytes"] != provider.stat().st_size):
+            raise ValueError("Queue observer relocation differs from the reviewed manifest")
     elif original_sha not in INSTRUMENTED:
         raise ValueError("Strict relocation test requires an exact retained instrumented image")
     root = Path(tempfile.mkdtemp(prefix="biglybtc-runtime-deploy-results-", dir="/tmp"))

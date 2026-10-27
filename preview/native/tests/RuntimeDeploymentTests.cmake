@@ -12,7 +12,8 @@ if(NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
     set(_biglybtc_deployment_mode strict)
   elseif(_biglybtc_deployment_manifest STREQUAL "3342ec8ae72ecafa4a1b887e664d0d066fffce4f7d864b0b130ca903be953a3a"
       # Separate exact webseed fixture registration retains all old rejections.
-      OR _biglybtc_deployment_manifest STREQUAL "ea82f78982a1428eb64067719cf30bbca7cfd09dd2abfcf8f76024f6e6ed41d5")
+      OR _biglybtc_deployment_manifest STREQUAL "ea82f78982a1428eb64067719cf30bbca7cfd09dd2abfcf8f76024f6e6ed41d5"
+      OR _biglybtc_deployment_manifest STREQUAL "f95542706a3b7324c6f2589d90d51a4374c92e7e245319b156f044aeec76a1d8")
     # Exact private next-provider fixtures are registered below by the separate
     # provider-next-runtime-deployment block, including all rejection controls.
     # Configure-time manifest/source/image verification has already succeeded.
