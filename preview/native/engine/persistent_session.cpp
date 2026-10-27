@@ -3,6 +3,7 @@
 #include "torrent_state.hpp"
 #include <libtorrent/announce_entry.hpp>
 #include "managed_payload_counters.hpp"
+#include "managed_queue_observations.hpp"
 #include "tracker_statistics_sampler.hpp"
 #include "persistent_runtime_guard.hpp"
 #include "runtime_metrics_sampler.hpp"
@@ -19,6 +20,7 @@
 #include <libtorrent/write_resume_data.hpp>
 #include "network_policy.hpp"
 #include "network_binding.hpp"
+#include "network_peer_classes.hpp"
 #include "biglybtc/queue_rate_providers.hpp"
 #include <libtorrent/torrent_status.hpp>
 #include <map>
@@ -82,6 +84,7 @@ struct PersistentSession::Impl {
     std::optional<core::QueueProbeScope> probeScope;
     std::unique_ptr<core::QueueTargetEta> targetEta;
     std::uint64_t targetStatisticsSequence=0;
+    std::shared_ptr<detail::ManagedQueueObservations> queueObservations;
     std::optional<Clock::time_point> runningSince, seedingSince;
     std::optional<lt::time_point> trackerRunningSince, trackerSeedingSince;
     std::int64_t secondsDownloading = 0, secondsSeeding = 0;
@@ -109,6 +112,10 @@ struct PersistentSession::Impl {
     std::optional<std::int64_t> idleUploadSeconds;
     std::optional<core::QueueSwarm> swarm;
     int connectedLeechers = 0;
+    core::QueueObservedFacts queueSource;
+    std::unique_ptr<core::QueueSendRateSmoothing> sendSmoothing;
+    std::optional<std::int64_t> sendFirstMillis,smoothedUpload;
+    std::uint64_t sendSequence=0;
     std::optional<std::uint32_t> queuePosition;
     std::optional<bool> positionTransition;
     std::uint64_t positionTransitionOrder=0;
@@ -144,6 +151,8 @@ struct PersistentSession::Impl {
   core::QueueGlobalReceiveAverage queueGlobalAverage;
   std::optional<std::int32_t> queueGlobalReceiveKiB;
   std::optional<std::int64_t> queueGlobalObservedMillis;
+  core::QueueSendRateSmoothing queueGlobalSend;
+  std::optional<std::int64_t> queueGlobalSendRate;
   bool appliedSeedingOnly = false;
   struct Magnet {
     std::unique_ptr<OperationToken> token;
@@ -299,9 +308,13 @@ struct PersistentSession::Impl {
       queueGlobalReceiveKiB = queueGlobalAverage.observe(
           {{identity.engineEpoch, responses, stamp}, core::QueueRateScope::OwnerCombined, value.received});
       queueGlobalObservedMillis = stamp;
+      const auto ticks=(stamp-origin/1000000)/1000;
+      queueGlobalSendRate=ticks<=std::numeric_limits<std::int32_t>::max()
+          ?queueGlobalSend.observe({{identity.engineEpoch,responses,stamp},core::QueueRateScope::OwnerCombined,value.sent},
+              static_cast<std::int32_t>(ticks),targetSmoothingSeconds):std::optional<std::int64_t>{};
     } else {
       queueGlobalAverage = {};
-      queueGlobalReceiveKiB.reset(); queueGlobalObservedMillis.reset();
+      queueGlobalReceiveKiB.reset(); queueGlobalObservedMillis.reset();queueGlobalSend={};queueGlobalSendRate.reset();
     }
     // Optional copying cannot alter retained peer counters or their response/fence state.
     // Optional catalog copies run at 1Hz; essential peer accounting above
@@ -399,26 +412,6 @@ struct PersistentSession::Impl {
       if (const auto* resumed = lt::alert_cast<lt::torrent_resumed_alert>(alert)) {
         value.advanceTimeline(resumed->timestamp()); value.timelinePaused=false;
       }
-      if (queuePolicy) {
-        if (const auto* scrape = lt::alert_cast<lt::scrape_reply_alert>(alert);
-            scrape && scrape->complete>=0 && scrape->incomplete>=0) {
-          int seeds=scrape->complete, peers=scrape->incomplete;
-          if(value.status.phase==ManagedPhase::Seeding&&value.trackerSeedingSince
-              &&scrape->timestamp()>*value.trackerSeedingSince&&seeds>0){--seeds;}
-          if(value.status.phase==ManagedPhase::Downloading&&value.trackerRunningSince
-              &&scrape->timestamp()>*value.trackerRunningSince&&peers>0){--peers;}
-          value.swarm=core::QueueSwarm{seeds,peers,true};
-        }
-        if (const auto* announce = lt::alert_cast<lt::tracker_reply_alert>(alert);
-            announce && value.handle.is_valid() && !value.stop) {
-          const auto observed=value.handle.status(lt::status_flags_t{});
-          if(observed.num_complete>=0&&observed.num_incomplete>=0){
-            // Announce fallback in the original does not subtract self. These
-            // are observed tracker totals; connected peers are a separate input.
-            value.swarm=core::QueueSwarm{observed.num_complete,observed.num_incomplete,true};
-          }
-        }
-      }
       if (const auto* removed = lt::alert_cast<lt::torrent_removed_alert>(alert);
           removed && removed->userdata.get<OperationToken>()==value.token.get()) {
         value.advanceTimeline(removed->timestamp());value.timelinePaused=true;value.removed=true;
@@ -484,6 +477,8 @@ struct PersistentSession::Impl {
     session.reset();
     for (auto& [key, entry] : managed) {
       static_cast<void>(key); entry->status.retained = false;
+      entry->queueSource={};entry->smoothedUpload.reset();entry->sendSmoothing.reset();entry->sendFirstMillis.reset();
+      entry->status.queueSourceFacts.reset();entry->status.queueSmoothedPayloadUploadRate.reset();
       entry->status.diskReadLatencyMillis.reset();entry->status.diskWriteLatencyMillis.reset();
       entry->status.staleRankOffset.reset();
       if(entry->status.verificationHeld){entry->status.verificationHeld=false;entry->seedAttempted=true;entry->status.verifiedSeeding=VerifiedSeedingPhase::Failed;}
@@ -549,6 +544,10 @@ struct PersistentSession::Impl {
         parameters.disk_io_constructor = detail::metadataDiskConstructor(diskPolicy);
         session = std::make_unique<lt::session>(std::move(parameters));
         session->pause();
+        auto classes = makeNetworkPeerClassFilter(network.value_or(NetworkPolicy{}));
+        detail::require(classes.has_value(), "Configured LAN rate classes are unavailable");
+        session->set_peer_class_filter(*classes);
+        applyNetworkLanRates(*session, network.value_or(NetworkPolicy{}));
         rateLimits = detail::readEffectiveRateLimits(*session); // Optional read, never applies settings.
         phase = AccountingState::Idle;
         mapCounters();
@@ -613,10 +612,11 @@ struct PersistentSession::Impl {
     return false;
   }
   void sampleManaged(Managed& value, bool pieces = false) {
+    value.queueSource={};value.smoothedUpload.reset();value.status.queueSourceFacts.reset();value.status.queueSmoothedPayloadUploadRate.reset();
     value.status.diskReadLatencyMillis.reset();value.status.diskWriteLatencyMillis.reset();
     value.status.staleRankOffset.reset();
     if (!value.handle.is_valid() || value.removing) {
-      value.status.queueTargetStatistics.reset(); value.targetEta.reset(); return;
+      value.status.queueTargetStatistics.reset(); value.targetEta.reset();value.sendSmoothing.reset();value.sendFirstMillis.reset(); return;
     }
     const bool originalProgress=value.storage.originalProgressRequiresPieces();
     const bool priorityObservation=queuePolicy&&queuePolicy->downloadOrder==core::QueueDownloadOrder::FilePriority;
@@ -662,8 +662,8 @@ struct PersistentSession::Impl {
     value.status.uploadRate = sample.upload_payload_rate;
     value.status.pieces = sample.num_pieces;
     value.remainingBytes = std::max<std::int64_t>(0, sample.total_wanted - sample.total_wanted_done);
-    value.badPayloadBytes = std::max<std::int64_t>(0, sample.total_failed_bytes)
-        + std::max<std::int64_t>(0, sample.total_redundant_bytes);
+    value.badPayloadBytes = core::sourceQueueSum(std::max<std::int64_t>(0,sample.total_failed_bytes),
+        std::max<std::int64_t>(0,sample.total_redundant_bytes));
     const auto now = Clock::now();
     value.queueObservedMillis=std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
     if(!value.stop&&!value.status.failure){
@@ -678,6 +678,21 @@ struct PersistentSession::Impl {
     const bool transferring = !(sample.flags & lt::torrent_flags::paused)
         && sample.state != lt::torrent_status::checking_files
         && sample.state != lt::torrent_status::checking_resume_data && !value.stop;
+    if(value.queueObservations){value.queueSource=value.queueObservations->facts(*value.queueObservedMillis);}
+    if(queuePolicy&&transferring&&!value.status.failure&&value.sendSequence!=std::numeric_limits<std::uint64_t>::max()){
+      try {
+        if(!value.sendSmoothing){value.sendSmoothing=std::make_unique<core::QueueSendRateSmoothing>();value.sendFirstMillis=*value.queueObservedMillis;}
+        const auto ticks=(*value.queueObservedMillis-*value.sendFirstMillis)/1000;
+        if(ticks<=std::numeric_limits<std::int32_t>::max()){
+          value.smoothedUpload=value.sendSmoothing->observe({{value.status.admission,++value.sendSequence,*value.queueObservedMillis},
+              core::QueueRateScope::TargetPayload,value.status.sent},static_cast<std::int32_t>(ticks),targetSmoothingSeconds);
+        }
+      }catch(...){value.sendSmoothing.reset();value.sendFirstMillis.reset();}
+    }else{value.sendSmoothing.reset();value.sendFirstMillis.reset();}
+    if(!value.stop&&!value.status.failure){
+      if(value.queueSource.durations||value.queueSource.swarm){value.status.queueSourceFacts=value.queueSource;}
+      value.status.queueSmoothedPayloadUploadRate=value.smoothedUpload;
+    }
     // Reuse this SAME accepted payload status. Optional target statistics may
     // neither issue a status query nor fail transfer/accounting/retirement.
     if(queuePolicy&&queuePolicy->downloadOrder==core::QueueDownloadOrder::Eta&&transferring
@@ -701,6 +716,7 @@ struct PersistentSession::Impl {
     // peer-manager download/seeding time, so use actual state/pause alert
     // timestamps retained by this owner's sole pump instead.
     value.projectTimeline(lt::clock_type::now());
+    if(value.queueSource.durations){value.secondsDownloading=value.queueSource.durations->downloading;value.secondsSeeding=value.queueSource.durations->seeding;}
     if (sample.last_upload.time_since_epoch().count() > 0) {
       value.idleUploadSeconds = std::max<std::int64_t>(0,
           std::chrono::duration_cast<std::chrono::seconds>(lt::clock_type::now() - sample.last_upload).count());
@@ -753,6 +769,8 @@ struct PersistentSession::Impl {
     else { value.status.phase = sample.is_finished ? ManagedPhase::Seeding : ManagedPhase::Downloading; }
   }
   void requestStop(Managed& value) {
+    value.queueSource={};value.smoothedUpload.reset();value.sendSmoothing.reset();value.sendFirstMillis.reset();
+    value.status.queueSourceFacts.reset();value.status.queueSmoothedPayloadUploadRate.reset();
     value.status.queueTargetStatistics.reset(); value.targetEta.reset();
     value.status.diskReadLatencyMillis.reset();value.status.diskWriteLatencyMillis.reset();
     value.status.staleRankOffset.reset();
@@ -849,28 +867,19 @@ struct PersistentSession::Impl {
       // admission counters are checked before addition; never wrap a rank input.
       if (value.status.received <= std::numeric_limits<std::int64_t>::max() - saved.downloaded
           && value.status.sent <= std::numeric_limits<std::int64_t>::max() - saved.uploaded) {
-        auto received = saved.downloaded + value.status.received;
-        received -= std::min(received, saved.discarded);
-        received -= std::min(received, saved.hashFailed);
-        received -= std::min(received, value.badPayloadBytes);
-        const auto sent = saved.uploaded + value.status.sent;
-        if (received <= 0) { item.shareRatio = -1; }
-        else {
-          const auto ratio = static_cast<long double>(sent) * 1000 / received;
-          item.shareRatio = static_cast<std::int32_t>(std::min<long double>(ratio,
-              std::numeric_limits<std::int32_t>::max()));
-        }
+        item.shareRatio=core::sourceQueueShareRatio(saved.downloaded+value.status.received,
+            saved.uploaded+value.status.sent,core::sourceQueueSum(saved.discarded,value.badPayloadBytes),saved.hashFailed);
       }
-      if (value.secondsDownloading <= std::numeric_limits<std::int64_t>::max() - saved.secondsDownloading) {
-        item.secondsDownloading = saved.secondsDownloading + value.secondsDownloading;
-      }
-      if (value.secondsSeeding <= std::numeric_limits<std::int64_t>::max() - saved.secondsSeeding) {
-        item.secondsSeeding = saved.secondsSeeding + value.secondsSeeding;
+      if(const auto durations=value.queueSource.durations){
+        const auto downloaded=core::sourceQueueSum(saved.secondsDownloading,durations->downloading);
+        const auto seeded=core::sourceQueueSum(saved.secondsSeeding,durations->seeding);
+        item.secondsDownloading=downloaded;item.secondsSeeding=seeded;
       }
       item.secondsSinceLastUpload = value.idleUploadSeconds;
-      item.runningMillis = value.runningSince ? millis(now - *value.runningSince) : 0;
-      item.seedingMillis = value.seedingSince ? millis(now - *value.seedingSince) : 0;
-      item.swarm = value.swarm;
+      item.runningMillis=value.queueSource.runningMillis;
+      item.seedingMillis=value.queueSource.seedingMillis;
+      if(const auto source=value.queueSource.swarm){item.swarm=core::QueueSwarm{source->seeds,source->peers,source->success,source->startupSuccess};}
+      item.smoothedUploadBytesPerSecond=value.smoothedUpload;
       item.connectedLeechers = value.connectedLeechers;
       item.downloadBytesPerSecond = value.status.downloadRate;
       item.uploadBytesPerSecond = value.status.uploadRate;
@@ -888,6 +897,10 @@ struct PersistentSession::Impl {
     }
     context.uploadBytesPerSecond = upload; context.downloadBytesPerSecond = download;
     context.seedingOnly = any && onlySeeds && !magnetActive();
+    if(!counterFailure&&queueGlobalObservedMillis&&context.nowMillis>=*queueGlobalObservedMillis
+        &&context.nowMillis-*queueGlobalObservedMillis<=core::QueueGlobalReceiveAverage::MaximumGapMillis){
+      context.smoothedUploadBytesPerSecond=queueGlobalSendRate;
+    }
     core::QueueProbeConfig probeConfig;
     probeConfig.enabled=queuePolicy->downloadOrder==core::QueueDownloadOrder::Speed
         ||queuePolicy->downloadOrder==core::QueueDownloadOrder::Eta;
@@ -1046,11 +1059,17 @@ struct PersistentSession::Impl {
         }
         if (!value.status.failure && managedLease) {
           value.projectTimeline(lt::clock_type::now());
+          // No clock-domain translation or guessed end stamp: the actual
+          // stopped callback has settled the monotone source epoch already.
+          if(value.queueObservations){if(const auto times=value.queueObservations->settledDurations()){
+            value.secondsDownloading=times->downloading;value.secondsSeeding=times->seeding;}}
           auto saved = value.storage.checkpoint(*managedLease, value.verified, value.status.complete,
               value.status.received, value.status.sent, value.secondsDownloading, value.secondsSeeding);
           if (!saved) { value.status.failure = saved.error(); }
         }
         value.status.retained = false;
+        value.queueSource={};value.smoothedUpload.reset();value.sendSmoothing.reset();value.sendFirstMillis.reset();
+        value.status.queueSourceFacts.reset();value.status.queueSmoothedPayloadUploadRate.reset();
         value.status.queueTargetStatistics.reset(); value.targetEta.reset();
         value.status.diskReadLatencyMillis.reset();value.status.diskWriteLatencyMillis.reset();
         value.status.staleRankOffset.reset();
@@ -1331,6 +1350,12 @@ std::optional<LiveSettingsSnapshot> PersistentSession::liveSettings() const noex
     value.activeSeeds = actual.get_int(lt::settings_pack::active_seeds);
     value.activeLimit = actual.get_int(lt::settings_pack::active_limit);
     value.countSlowTorrents = !actual.get_bool(lt::settings_pack::dont_count_slow_torrents);
+    const auto local = impl_->session->get_peer_class(lt::session_handle::local_peer_class_id);
+    value.lanUpload = core::effectiveSessionRateLimit(local.upload_limit);
+    value.lanDownload = core::effectiveSessionRateLimit(local.download_limit);
+    const auto classes = impl_->session->get_peer_class_filter();
+    value.separateLanClass = (classes.access(lt::make_address("127.0.0.1"))
+        & (1U << static_cast<unsigned>(lt::session_handle::local_peer_class_id))) != 0;
     value.listenInterfaces = actual.get_str(lt::settings_pack::listen_interfaces);
     value.outgoingInterfaces = actual.get_str(lt::settings_pack::outgoing_interfaces);
     if (value.listenInterfaces.size() > 4096 || value.outgoingInterfaces.size() > 4096) { return {}; }
@@ -1357,7 +1382,10 @@ std::expected<LiveSettingsResult, storage::Error> PersistentSession::applyLiveSe
     const LiveSettingsResult result{plan->restartFields, bool(impl_->session)};
     // Only the narrow pack reaches LT, and only after Host's successful save.
     // get_settings below is the same network-thread FIFO barrier after apply.
-    if (impl_->session) { impl_->session->apply_settings(*settings); }
+    if (impl_->session) {
+      impl_->session->apply_settings(*settings);
+      applyNetworkLanRates(*impl_->session, plan->effectivePolicy);
+    }
     impl_->network = std::move(plan->effectivePolicy);
     impl_->liveQueueLimits = plan->queues;
     if (!impl_->session) { return result; }
@@ -1365,6 +1393,8 @@ std::expected<LiveSettingsResult, storage::Error> PersistentSession::applyLiveSe
     const auto expectedUpload = core::effectiveSessionRateLimit(settings->get_int(lt::settings_pack::upload_rate_limit));
     const auto expectedDownload = core::effectiveSessionRateLimit(settings->get_int(lt::settings_pack::download_rate_limit));
     const bool confirmed = actual && actual->rateLimits.upload == expectedUpload && actual->rateLimits.download == expectedDownload
+        && actual->lanUpload == core::effectiveSessionRateLimit(networkLanRate(impl_->network->lanUploadBytesPerSecond))
+        && actual->lanDownload == core::effectiveSessionRateLimit(networkLanRate(impl_->network->lanDownloadBytesPerSecond))
         && (!impl_->liveQueueLimits || (actual->activeDownloads == settings->get_int(lt::settings_pack::active_downloads)
             && actual->activeLimit == settings->get_int(lt::settings_pack::active_limit)
             && actual->activeSeeds == -1 && actual->countSlowTorrents));
@@ -1396,7 +1426,12 @@ std::expected<void, storage::Error> PersistentSession::configureQueuePolicy(cons
       static_cast<void>(key); value->status.queueTargetStatistics.reset(); value->targetEta.reset();
     }
   }
-  impl_->targetSmoothingSeconds=core::sourceSmoothingPolicy(configuredSmoothingSeconds).windowSeconds;
+  const auto smoothing=core::sourceSmoothingPolicy(configuredSmoothingSeconds).windowSeconds;
+  if(impl_->targetSmoothingSeconds!=smoothing){
+    impl_->queueGlobalSend={};impl_->queueGlobalSendRate.reset();
+    for(auto& [key,value]:impl_->managed){static_cast<void>(key);value->sendSmoothing.reset();value->sendFirstMillis.reset();value->smoothedUpload.reset();}
+  }
+  impl_->targetSmoothingSeconds=smoothing;
   if (impl_->session) {
     lt::settings_pack settings;
     settings.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::tracker
@@ -1513,7 +1548,15 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
       parameters.flags&=~lt::torrent_flags::seed_mode;
     }
     parameters.userdata = value->token.get();
-    detail::require(detail::attachManagedPayloadCounters(parameters, value->payloadCounters, payloadBridge),
+    try {
+      value->queueObservations=std::make_shared<detail::ManagedQueueObservations>(
+          value->storage.identity().selected==storage::OriginalSelectedHash::V1?1u:2u);
+      const auto& metadata=value->storage.queueMetadata();
+      value->queueObservations->trackerOrder(metadata.trackerOrder);
+      value->queueObservations->restore(metadata.aggregateScrapeCache?std::optional<std::string_view>{*metadata.aggregateScrapeCache}:std::nullopt,
+          metadata.legacyScrapeCache);
+    }catch(...){value->queueObservations.reset();} // Optional policy facts cannot fail storage admission.
+    detail::require(detail::attachManagedPayloadCounters(parameters, value->payloadCounters, payloadBridge,value->queueObservations),
         "Exact managed transfer counters require the approved source ABI", storage::ErrorCode::Unsupported);
     detail::attachPeerPayloadObserver(parameters, impl_->peerPayloadLedger, impl_->operation);
     parameters.flags |= lt::torrent_flags::paused | lt::torrent_flags::duplicate_is_error;

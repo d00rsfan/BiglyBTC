@@ -57,7 +57,7 @@ else()
   endif()
   find_package(Python3 REQUIRED COMPONENTS Interpreter)
   execute_process(COMMAND "${Python3_EXECUTABLE}"
-    "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_webseed.py"
+    "${CMAKE_CURRENT_LIST_DIR}/verify_runtime_manifest_queue.py"
     --manifest "${BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST}"
     --library "${_biglybtc_locations}" --include "${_biglybtc_lt_include}"
     --header "${_biglybtc_binding_header}"

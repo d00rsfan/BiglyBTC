@@ -1,4 +1,5 @@
 #include "biglybtc/queue_policy.hpp"
+#include "biglybtc/queue_observations.hpp"
 
 #include <algorithm>
 #include <array>
@@ -90,12 +91,12 @@ void validateFacts(std::span<const QueueTorrentFacts> facts,const QueueContext& 
   std::set<std::uint64_t> tokens; unsigned activeProbes=0;
   for(const auto& f:facts){
     if(!f.token||!f.position||f.position>static_cast<std::uint32_t>(Max)||!tokens.insert(f.token).second||static_cast<unsigned>(f.state)>8){fail(Code::InvalidFacts,"queue identity/state");}
-    if((f.shareRatio&&*f.shareRatio< -1)||(f.minimumShareRatio&&*f.minimumShareRatio<0)
+    if((f.minimumShareRatio&&*f.minimumShareRatio<0)
         ||(f.maximumShareRatio&&*f.maximumShareRatio<0)||f.staleRankOffset<0
         ||(f.swarm&&(f.swarm->seeds<0||f.swarm->peers<0))||(f.connectedLeechers&&*f.connectedLeechers<0)){
       fail(Code::InvalidFacts,"queue ratio/swarm");
     }
-    for(const auto& x:{f.secondsDownloading,f.secondsSeeding,f.secondsSinceLastUpload,f.runningMillis,f.seedingMillis,
+    for(const auto& x:{f.secondsSinceLastUpload,f.runningMillis,f.seedingMillis,
         f.secondsSinceLastActive,f.downloadBytesPerSecond,f.uploadBytesPerSecond,f.smoothedUploadBytesPerSecond,
         f.diskReadLatencyMillis,f.diskWriteLatencyMillis,f.sizeBytes,f.remainingBytes,f.etaSeconds}){
       if(!absentOrNonnegative(x)){fail(Code::InvalidFacts,"queue observation");}
@@ -115,15 +116,12 @@ void validateFacts(std::span<const QueueTorrentFacts> facts,const QueueContext& 
       }
     }
     if(f.remainingBytes&&f.sizeBytes&&*f.remainingBytes>*f.sizeBytes){fail(Code::InvalidFacts,"remaining bytes");}
-    if(f.secondsDownloading&&f.secondsSeeding&&*f.secondsDownloading>std::numeric_limits<std::int64_t>::max()-*f.secondsSeeding){
-      fail(Code::InvalidFacts,"elapsed total");
-    }
   }
 }
-struct Swarm { std::int32_t seeds=0,peers=0;bool observed=false,valid=false,rankValid=false; };
+struct Swarm { std::int32_t seeds=0,peers=0;bool observed=false,valid=false,rankValid=false,startupSuccess=false; };
 Swarm swarm(const QueuePolicy& p,const QueueTorrentFacts& f) {
   if(!f.swarm){return {};}
-  Swarm s{f.swarm->seeds,f.swarm->peers,true,f.swarm->valid,false};
+  Swarm s{f.swarm->seeds,f.swarm->peers,true,f.swarm->valid,false,f.swarm->startupSuccess.value_or(f.swarm->valid)};
   if(p.peersAsFullCopy>0&&s.seeds>=p.fakeFullCopySeedStart){
     const auto augmented=static_cast<std::int64_t>(s.seeds)+s.peers/p.peersAsFullCopy;
     if(augmented>Max){fail(Code::InvalidFacts,"fake full-copy seed count");}
@@ -147,12 +145,16 @@ Truth firstPriority(const QueuePolicy& p,const QueueTorrentFacts& f,const Swarm&
   const auto add=[&](Truth t){if(!t.known){unknown=true;}else{any|=t.value;all&=t.value;}};
   const auto minimum=f.minimumShareRatio&&*f.minimumShareRatio>0?*f.minimumShareRatio:p.firstPriorityShareRatio;
   add(f.shareRatio?Truth{*f.shareRatio!=-1&&*f.shareRatio<minimum,true}:Truth{false,false});
-  if(p.firstPrioritySeedMinutes>0){add(f.secondsSeeding?Truth{*f.secondsSeeding<60LL*p.firstPrioritySeedMinutes,true}:Truth{false,false});}
+  if(p.firstPrioritySeedMinutes>0){
+    if(!f.secondsSeeding){add({false,false});}
+    else if(*f.secondsSeeding>=0){add({*f.secondsSeeding<60LL*p.firstPrioritySeedMinutes,true});}
+    // A known negative original result skips this criterion, not unknown.
+  }
   if(p.firstPriorityActiveMinutes>0){
     if(!f.secondsSeeding||!f.secondsDownloading){add({false,false});}
     else {
-      const auto limit=60LL*p.firstPriorityActiveMinutes;
-      add({*f.secondsSeeding<limit&&*f.secondsDownloading<limit-*f.secondsSeeding,true});
+      const auto active=sourceQueueSum(*f.secondsSeeding,*f.secondsDownloading);
+      if(active>=0){add({active<60LL*p.firstPriorityActiveMinutes,true});}
     }
   }
   if(p.firstPriorityMode==QueueFirstPriorityMode::Any){return any?Truth{true,true}:Truth{false,!unknown};}
@@ -427,8 +429,10 @@ std::expected<QueuePlan,QueuePolicyError> evaluateQueue(const QueuePolicy& p,
         continue;
       }
       if(f.complete){
-        allScraped&=s.valid;
-        if((s.valid&&s.seeds==0)||fp.value||(d.seedingRank>0&&c.nowMillis-c.ownerStartedMillis>20000)){seedsMayStart=true;}
+        allScraped&=s.startupSuccess;
+        if((s.startupSuccess&&s.seeds==0)||fp.value||(d.seedingRank>0
+            &&(f.state==QueueTorrentState::Queued||f.state==QueueTorrentState::Waiting)
+            &&c.nowMillis-c.ownerStartedMillis>20000)){seedsMayStart=true;}
         if(fp.value&&!(f.state==QueueTorrentState::Seeding&&d.activityKnown&&!d.activelySeeding)){++firstSeeds;}
       }
       if(f.forceStart&&!d.clearForceStart){

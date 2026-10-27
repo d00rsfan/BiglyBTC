@@ -46,8 +46,8 @@ core::Document hybridSourceDocument(const HybridAliasSource& source) {
   return parse(document.serialize(),MaximumMetadata);
 }
 void validateHybridAlias(const HybridAliasSource& source,const MetadataSubject& target,
-    const core::Document& inventory,const std::string& destination) {
-  const auto old=metadataSubject(hybridSourceDocument(source).serialize());
+    const core::Document& inventory,const std::string& destination,std::optional<std::string_view> conversions={}) {
+  const auto old=metadataSubject(hybridSourceDocument(source).serialize(),conversions);
   require(old.identity.full.v1&&old.identity.full.v2&&source.hash==old.identity.originalKey
       &&take(compareOriginalTorrentIdentities(old.identity,target.identity))==OriginalIdentityRelation::AlternateSelected,
       ErrorCode::Conflict,"Alias must select the other identity of exactly one full hybrid");

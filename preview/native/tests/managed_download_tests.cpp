@@ -5,6 +5,7 @@
 #include "verified_seeding_fixture.hpp"
 #include "versioned_verified_seeding_fixture.hpp"
 #include "custom_verified_seeding_fixture.hpp"
+#include "original_filename_policy.hpp"
 #include "library_commands.hpp"
 #include <QCoreApplication>
 #include <QJsonDocument>
@@ -109,6 +110,17 @@ std::int64_t integer(const core::Node& node, std::string_view key) {
 class ManagedDownloadTests final : public QObject {
   Q_OBJECT
 private slots:
+
+  void actualConvertedFilenameOwnerRetainsRawIdentityAndUploads_data(){QTest::addColumn<bool>("configured");QTest::newRow("original-default-quote")<<false;QTest::newRow("configured-quote")<<true;}
+  void actualConvertedFilenameOwnerRetainsRawIdentityAndUploads(){
+    QFETCH(bool,configured);QTemporaryDir directory;QVERIFY(directory.isValid());auto fixture=test::prepareVerifiedSeedCase(directory.path()+"/owned",true);auto source=parse(test::read(fixture.metadata));auto info=core::Document::parse(encoded(*source.find("info")));QVERIFY(info);
+    auto first=core::Document::parse(encoded(info->find("files")->children[0]));QVERIFY(first);QVERIFY(first->replaceValue("path","l15:first\"quote.bine"));std::string files="l"+first->serialize();for(std::size_t n=1;n<info->find("files")->children.size();++n){files+=encoded(info->find("files")->children[n]);}QVERIFY(info->replaceValue("files",files+'e'));QVERIFY(source.replaceValue("info",info->serialize()));test::write(fixture.metadata,QByteArray::fromStdString(source.serialize()));
+    const QString physical=configured?QStringLiteral("bundle/firstQquote.bin"):QStringLiteral("bundle/first'quote.bin");QVERIFY(QFile::rename(fixture.payload+'/'+fixture.files[0].relative,fixture.payload+'/'+physical));fixture.files[0].relative=physical;QVERIFY(::stat((fixture.payload+'/'+physical).toStdString().c_str(),&fixture.files[0].before)==0);
+    if(configured){test::write(fixture.profile+"/biglybt.config","d26:File.Character.Conversions3:\"=Qe");}
+    auto lease=storage::ProfileLease::acquire(fixture.profile.toStdString());QVERIFY(lease);const auto conversions=storage::readOriginalFilenameConversions(*lease);QVERIFY(conversions);const auto preview=storage::inspectTorrentIntake(fixture.metadata.toStdString(),{},*conversions);QVERIFY(preview);fixture.hash=preview->hash();const auto policies=test::versionedFilePolicies(*preview);
+    QVERIFY(storage::importTorrentWithFileOptions(*lease,*preview,fixture.payload.toStdString(),true,policies,nullptr,false,{}, {},false,false,false,{}, {},true));auto service=owner();QVERIFY(service->startManaged(*lease,{.hash=fixture.hash,.verifyExisting=true}));QVERIFY(test::spinVerified(*service,fixture.hash));const auto actual=status(*service,fixture.hash);QVERIFY(actual&&actual->verifiedSeeding==engine::VerifiedSeedingPhase::Released&&!actual->failure);QCOMPARE(actual->received,std::int64_t{0});
+    QVERIFY(!test::receiveCustomVerifiedSeed(*service,fixture).isEmpty());const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(test::versionedRealSnapshotsIntact(fixture));QVERIFY(!QFileInfo::exists(fixture.payload+"/bundle/first\"quote.bin"));const auto state=parse(test::read(fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat"));QCOMPARE(encoded(*state.find("info")),encoded(*source.find("info")));QCOMPARE(test::read(fixture.profile+"/torrents/"+QString::fromStdString(fixture.hash.hex())+".torrent"),test::read(fixture.metadata));
+  }
 
   void customExistingOwnerChecksAndServesOnlyApprovedRoot_data(){
     QTest::addColumn<QString>("kind");for(const auto* kind:{"single","multi","one-multi","v2-tail"}){QTest::newRow(kind)<<QString::fromLatin1(kind);}

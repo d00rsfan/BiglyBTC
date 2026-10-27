@@ -13,4 +13,7 @@ bool managedPayloadCounterRuntimeQualified() noexcept;
 // combined=true DEMANDS two additional original exports from this SAME fully
 // source/artifact/hash/mapping-bound object. It never bypasses any admission.
 std::shared_ptr<void> managedPayloadCounterRuntimePin(bool combined = false) noexcept;
+// Existing complete proof plus both versioned queue observer exports from the
+// SAME pinned image. No new source/artifact admission follows this declaration.
+std::shared_ptr<void> managedQueueObserverRuntimePin() noexcept;
 }

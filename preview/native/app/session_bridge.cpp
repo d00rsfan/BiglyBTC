@@ -1,3 +1,4 @@
+#include "original_filename_policy.hpp"
 #include "torrent_intake.hpp"
 #include "verified_seeding.hpp"
 #include "file_operations.hpp"
@@ -1161,7 +1162,8 @@ bool SessionBridge::previewTorrentIntake(ui::TorrentIntakeRequest request) {
       if(!host_||request.session!=host_->columnLayoutSession){throw Failure{{storage::ErrorCode::Conflict,"The profile changed; load the torrent again"}};}
       if(host_->intakeRequest&&request.request<=host_->intakeRequest->request){throw Failure{{storage::ErrorCode::Conflict,"This file preview request is stale"}};}
       host_->intakeRequest=request;host_->intakeMetadata.reset();
-      auto value=take(storage::inspectTorrentIntake(std::filesystem::path(request.metadata.toUtf8().toStdString()),stop));
+      const auto filenameConversions=take(storage::readOriginalFilenameConversions(host_->lease));
+      auto value=take(storage::inspectTorrentIntake(std::filesystem::path(request.metadata.toUtf8().toStdString()),stop,filenameConversions));
       if(value.layout().files.size()>ui::MaximumIntakePreviewFiles){throw Failure{{storage::ErrorCode::Unsupported,"This torrent has too many files for the preview editor"}};}
       if(host_->intakePreviewRevision==std::numeric_limits<quint64>::max()){throw Failure{{storage::ErrorCode::Conflict,"File preview revisions are exhausted"}};}
       packet->revision=++host_->intakePreviewRevision;packet->hash=text(value.hash().hex());packet->name=text(value.layout().name);packet->trackers=value.trackers();
@@ -1980,7 +1982,7 @@ bool SessionBridge::details(ui::Target target) {
       // geometry/control/path/alias checks under this same worker-held lease.
       auto store = take(storage::TorrentStateStore::open(host_->lease));
       const auto state = take(store.load(host_->lease, identity(target)));
-      const auto layout = compat::originalLayout(state.document());
+      const auto layout = storage::readOriginalLayout(host_->lease,state.document());
       const auto* attributes = state.document().find("attributes");
       const auto empty = core::Document::parse("de");
       if (layout && empty) {

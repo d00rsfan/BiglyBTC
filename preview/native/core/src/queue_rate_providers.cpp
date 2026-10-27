@@ -105,6 +105,17 @@ std::optional<std::int64_t> QueuePayloadRateSmoothing::observe(const QueueRateSa
   return *rate;
 }
 
+std::optional<std::int64_t> QueueSendRateSmoothing::observe(const QueueRateSample& sample,
+    std::int32_t tick,int configured) noexcept {
+  if(!combined(sample.scope)&&!payload(sample.scope)){*this={};return {};}
+  if(scope_&&*scope_!=sample.scope){average_={};}
+  scope_=sample.scope;auto value=sample;
+  // Arithmetic is channel-independent; this private adapter never relabels
+  // externally published scope or passes payload as a combined fallback.
+  value.scope=QueueRateScope::TargetPayload;
+  return average_.observe(value,tick,configured);
+}
+
 std::optional<std::int64_t> QueueSmoothedEta::observe(const QueueEtaSample& sample) noexcept {
   if (previous_ && stale(*previous_, sample.stamp)) { return {}; }
   if (!valid(sample.stamp) || sample.wallMillis < 0 || !sample.peerRemaining || !sample.diskRemainingExcludingDnd

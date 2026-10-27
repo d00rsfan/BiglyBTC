@@ -44,6 +44,37 @@ void routesEqual(const engine::LiveSettingsSnapshot& before, const engine::LiveS
 class EngineLiveSettingsTests final : public QObject {
   Q_OBJECT
 private slots:
+  void originalLanRateClassesAreAppliedAndSafeLimitsRemainLive() {
+    test::OwnedEngineFixture fixture(false); auto lease = held(fixture); auto service = owner();
+    engine::NetworkPolicy policy; policy.mode = engine::NetworkMode::Normal;
+    policy.lanRates = true; policy.lanUploadBytesPerSecond = 17408; policy.lanDownloadBytesPerSecond = 23552;
+    policy.uploadBytesPerSecond = 1024; policy.downloadBytesPerSecond = 2048;
+    QVERIFY(service->configureNetwork(policy)); QVERIFY(service->startIdle(lease));
+    const auto initial = service->liveSettings(); QVERIFY(initial); QVERIFY(initial->separateLanClass);
+    QCOMPARE(initial->lanUpload, core::effectiveSessionRateLimit(17408));
+    QCOMPARE(initial->lanDownload, core::effectiveSessionRateLimit(23552));
+    QCOMPARE(initial->rateLimits.upload, core::effectiveSessionRateLimit(1024));
+    auto desired = policy; desired.lanRates = false;
+    desired.lanUploadBytesPerSecond = 3072; desired.lanDownloadBytesPerSecond = 8192;
+    const auto changed = service->applyLiveSettings(desired); QVERIFY(changed);
+    QCOMPARE(changed->restartFields, static_cast<std::uint32_t>(engine::LiveRestartField::LanClassification));
+    const auto actual = service->liveSettings(); QVERIFY(actual); QVERIFY(actual->separateLanClass);
+    QCOMPARE(actual->lanUpload, core::effectiveSessionRateLimit(3072));
+    QCOMPARE(actual->lanDownload, core::effectiveSessionRateLimit(8192));
+    routesEqual(*initial, *actual);
+    const auto closed = service->close(std::chrono::steady_clock::now() + 5s);
+    QVERIFY(closed.sessionJoined && closed.retirement.storageReleased);
+  }
+  void disabledLanRatesDoNotInheritLibtorrentsUnlimitedLocalClass() {
+    test::OwnedEngineFixture fixture(false); auto lease = held(fixture); auto service = owner();
+    engine::NetworkPolicy policy; policy.mode = engine::NetworkMode::Normal;
+    policy.uploadBytesPerSecond = 1024; policy.downloadBytesPerSecond = 2048;
+    QVERIFY(service->configureNetwork(policy)); QVERIFY(service->startIdle(lease));
+    const auto actual = service->liveSettings(); QVERIFY(actual); QVERIFY(!actual->separateLanClass);
+    QCOMPARE(actual->rateLimits.upload, core::effectiveSessionRateLimit(1024));
+    const auto closed = service->close(std::chrono::steady_clock::now() + 5s);
+    QVERIFY(closed.sessionJoined && closed.retirement.storageReleased);
+  }
   void purePlanPreservesAllActiveRoutingAndEmitsOnlyNarrowKeys() {
     engine::NetworkPolicy active, desired;
     desired.mode = engine::NetworkMode::Normal;

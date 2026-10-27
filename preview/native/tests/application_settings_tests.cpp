@@ -68,7 +68,7 @@ extern "C" int __wrap_fsync(int fd) {
 int main() {
   try {
     run("catalog original literals and field constraints",[]{
-      CHECK(core::applicationSettingsCatalog().size()==101);
+      CHECK(core::applicationSettingsCatalog().size()==103);
       for(const auto& item:core::applicationSettingsCatalog()) {
         CHECK(core::applicationSetting(item.id)==&item); CHECK(!item.key.empty()&&!item.label.empty());
         const auto value=core::applicationSettingDefault(item); if(value){CHECK(core::validApplicationSettingValue(item,*value));}
@@ -82,7 +82,7 @@ int main() {
       CHECK(!core::applicationSetting(static_cast<Id>(999)));
     });
     run("missing and explicit default no-op never materialize config",[]{
-      Area area;const auto snapshot=area.snapshot();CHECK(snapshot.missing());CHECK(snapshot.fields.size()==101);
+      Area area;const auto snapshot=area.snapshot();CHECK(snapshot.missing());CHECK(snapshot.fields.size()==103);
       CHECK(field(snapshot,Id::UploadLimit).state==State::Defaulted);
       CHECK(field(snapshot,Id::DefaultSavePath).state==State::UnavailableDefault);
       const auto desired=prepare(snapshot,{{Id::UploadLimit,std::int64_t{0}},{Id::TcpEnabled,true}});CHECK(!desired.changed());

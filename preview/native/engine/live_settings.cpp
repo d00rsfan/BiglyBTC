@@ -43,6 +43,9 @@ std::expected<LiveSettingsPlan, storage::Error> prepareLiveSettings(const Networ
     difference(active.requireEncryption != requested.requireEncryption, LiveRestartField::Encryption);
     difference(active.httpTrackers != requested.httpTrackers || active.udpTrackers != requested.udpTrackers
         || active.pex != requested.pex || active.webSeeds != requested.webSeeds, LiveRestartField::TorrentSources);
+    difference(active.lanRates != requested.lanRates, LiveRestartField::LanClassification);
+    result.effectivePolicy.lanUploadBytesPerSecond = requested.lanUploadBytesPerSecond;
+    result.effectivePolicy.lanDownloadBytesPerSecond = requested.lanDownloadBytesPerSecond;
     result.effectivePolicy.uploadBytesPerSecond = requested.uploadBytesPerSecond;
     result.effectivePolicy.downloadBytesPerSecond = requested.downloadBytesPerSecond;
     result.effectivePolicy.seedingUploadBytesPerSecond = requested.seedingUploadBytesPerSecond;

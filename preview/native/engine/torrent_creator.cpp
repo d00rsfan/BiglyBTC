@@ -8,6 +8,8 @@
 #include <libtorrent/hasher.hpp>
 #include <libtorrent/torrent_info.hpp>
 #include <libtorrent/version.hpp>
+#include <openssl/evp.h>
+#include <openssl/provider.h>
 
 #include <algorithm>
 #include <array>
@@ -321,6 +323,21 @@ void validateOptions(const CreateOptions& options) {
       || options.trackerTiers.size() > CreateMaximumTrackerTiers) {
     fail(CreateErrorCode::Options, options.output, "Invalid comment or tracker tiers");
   }
+  if (options.sourceTag.size() > 16384 || !utf8(options.sourceTag,true)) {
+    fail(CreateErrorCode::Options,options.output,"Invalid source tag");
+  }
+  if(options.extraHashes && options.format==CreateFormat::V2) {
+    fail(CreateErrorCode::Options,options.output,"Original extra hashes require V1 or hybrid");
+  }
+  if(options.urlSeeds.size()+options.httpSeeds.size()>64) fail(CreateErrorCode::Options,options.output,"Too many web seeds");
+  for(const auto* seeds:{&options.urlSeeds,&options.httpSeeds}) for(const auto& url:*seeds) {
+    const auto scheme=url.starts_with("http://")?7u:url.starts_with("https://")?8u:0u;
+    const auto end=url.find_first_of("/?#",scheme);
+    if(!scheme||url.size()>2048||url.size()<=scheme||(end!=url.npos&&end==scheme)||!utf8(url)
+        ||std::any_of(url.begin(),url.end(),[](unsigned char c){return c<=0x20||c==0x7f;})) {
+      fail(CreateErrorCode::Options,options.output,"Web seed must be a bounded HTTP(S) URL with an authority");
+    }
+  }
   std::size_t count = 0;
   for (const auto& tier : options.trackerTiers) {
     if (tier.empty()) { fail(CreateErrorCode::Options, options.output, "Tracker tiers must not be empty"); }
@@ -343,8 +360,139 @@ std::uint32_t pieceSize(std::uint64_t total, std::uint32_t requested) {
   while (size < 4194304 && total / size > 2048) { size *= 2; }
   return size;
 }
-void hashFiles(int root, const Inventory& inventory, lt::create_torrent& torrent,
-    const Operation& operation, std::uint32_t size, std::size_t pieces) {
+struct V1PieceHashes {
+  std::vector<lt::sha1_hash> values;
+  explicit V1PieceHashes(std::size_t count) : values(count) {}
+  void set_hash(lt::piece_index_t index, const lt::sha1_hash& hash) {
+    values.at(static_cast<std::size_t>(static_cast<int>(index))) = hash;
+  }
+};
+
+lt::entry generateLargeV1(const Inventory& inventory, const std::string& name,
+    const CreateOptions& options, const V1PieceHashes& hashes) {
+  lt::entry entry(lt::entry::dictionary_t);
+  entry["created by"] = "BiglyBTC";
+  if (!options.comment.empty()) { entry["comment"] = options.comment; }
+  if (!options.trackerTiers.empty()) {
+    entry["announce"] = options.trackerTiers.front().front();
+    std::size_t total = 0;
+    for (const auto& tier : options.trackerTiers) { total += tier.size(); }
+    if (total > 1) {
+      for (const auto& tier : options.trackerTiers) {
+        lt::entry::list_type values;
+        for (const auto& url : tier) { values.emplace_back(url); }
+        entry["announce-list"].list().emplace_back(std::move(values));
+      }
+    }
+  }
+  auto& info = entry["info"];
+  info["name"] = name;
+  info["piece length"] = static_cast<int>(options.pieceSize);
+  if (options.privateTorrent) { info["private"] = 1; }
+  if (inventory.directory) {
+    for (const auto& file : inventory.files) {
+      lt::entry item(lt::entry::dictionary_t);
+      item["length"] = file.observed.size;
+      std::string_view remaining(file.relative);
+      for (;;) {
+        const auto slash = remaining.find('/');
+        item["path"].list().emplace_back(std::string(remaining.substr(0, slash)));
+        if (slash == std::string_view::npos) { break; }
+        remaining.remove_prefix(slash + 1);
+      }
+      info["files"].list().emplace_back(std::move(item));
+    }
+  } else { info["length"] = static_cast<std::int64_t>(inventory.total); }
+  std::string pieces;
+  pieces.reserve(hashes.values.size() * 20);
+  for (const auto& hash : hashes.values) { pieces.append(hash.data(), 20); }
+  info["pieces"] = std::move(pieces);
+  return entry;
+}
+
+// MD4 is used only for the source-defined optional ED2K metadata. Its legacy
+// provider lives in a private OpenSSL context; ordinary process policy is untouched.
+class Ed2k {
+  static constexpr std::size_t Block=0x947000;
+  struct ContextDelete {void operator()(OSSL_LIB_CTX* p)const{OSSL_LIB_CTX_free(p);}};
+  struct ProviderDelete {void operator()(OSSL_PROVIDER* p)const{OSSL_PROVIDER_unload(p);}};
+  struct MethodDelete {void operator()(EVP_MD* p)const{EVP_MD_free(p);}};
+  struct DigestDelete {void operator()(EVP_MD_CTX* p)const{EVP_MD_CTX_free(p);}};
+  std::unique_ptr<OSSL_LIB_CTX,ContextDelete> context_{OSSL_LIB_CTX_new()};
+  std::unique_ptr<OSSL_PROVIDER,ProviderDelete> provider_;
+  std::unique_ptr<EVP_MD,MethodDelete> method_;
+  std::unique_ptr<EVP_MD_CTX,DigestDelete> chunk_{EVP_MD_CTX_new()},blocks_{EVP_MD_CTX_new()};
+  std::size_t bytes_=0;bool multiple_=false;
+  static void require(bool ok){if(!ok) fail(CreateErrorCode::Generator,{},"Optional ED2K digest unavailable");}
+  std::array<unsigned char,16> finalChunk(){
+    std::array<unsigned char,16> digest{};unsigned length=0;
+    require(EVP_DigestFinal_ex(chunk_.get(),digest.data(),&length)==1&&length==digest.size());
+    return digest;
+  }
+  void appendChunk(){
+    const auto digest=finalChunk();require(EVP_DigestUpdate(blocks_.get(),digest.data(),digest.size())==1);
+    require(EVP_DigestInit_ex(chunk_.get(),method_.get(),nullptr)==1);bytes_=0;multiple_=true;
+  }
+public:
+  Ed2k(){
+    require(bool(context_)&&bool(chunk_)&&bool(blocks_));
+    provider_.reset(OSSL_PROVIDER_load(context_.get(),"legacy"));require(bool(provider_));
+    method_.reset(EVP_MD_fetch(context_.get(),"MD4","provider=legacy"));require(bool(method_));
+    require(EVP_DigestInit_ex(chunk_.get(),method_.get(),nullptr)==1
+        &&EVP_DigestInit_ex(blocks_.get(),method_.get(),nullptr)==1);
+  }
+  void update(const char* data,std::size_t count){
+    while(count){
+      if(bytes_==Block) appendChunk();
+      const auto n=std::min(count,Block-bytes_);
+      require(EVP_DigestUpdate(chunk_.get(),data,n)==1);data+=n;count-=n;bytes_+=n;
+    }
+  }
+  std::string final(){
+    // Original ED2KHasher appends MD4(empty) at every exact positive boundary.
+    if(bytes_==Block){appendChunk();const auto empty=finalChunk();require(EVP_DigestUpdate(blocks_.get(),empty.data(),empty.size())==1);}
+    else if(multiple_){const auto tail=finalChunk();require(EVP_DigestUpdate(blocks_.get(),tail.data(),tail.size())==1);}
+    else {const auto digest=finalChunk();return {reinterpret_cast<const char*>(digest.data()),digest.size()};}
+    std::array<unsigned char,16> digest{};unsigned length=0;
+    require(EVP_DigestFinal_ex(blocks_.get(),digest.data(),&length)==1&&length==digest.size());
+    return {reinterpret_cast<const char*>(digest.data()),digest.size()};
+  }
+};
+class ExtraHashes {
+  lt::hasher overallSha1_;
+  Ed2k overallEd2k_;
+  std::unique_ptr<lt::hasher> fileSha1_;
+  std::unique_ptr<Ed2k> fileEd2k_;
+  std::map<std::string,std::pair<std::string,std::string>> files_;
+public:
+  void begin(){fileSha1_=std::make_unique<lt::hasher>();fileEd2k_=std::make_unique<Ed2k>();}
+  void overall(const char* data,std::size_t bytes){overallSha1_.update(data,static_cast<int>(bytes));overallEd2k_.update(data,bytes);}
+  void file(const char* data,std::size_t bytes){fileSha1_->update(data,static_cast<int>(bytes));fileEd2k_->update(data,bytes);}
+  void end(const std::string& relative){files_.emplace(relative,std::pair{fileSha1_->final().to_string(),fileEd2k_->final()});fileSha1_.reset();fileEd2k_.reset();}
+  void apply(lt::entry& entry,bool directory,const std::string& name){
+    auto& info=entry["info"];info["sha1"]=overallSha1_.final().to_string();info["ed2k"]=overallEd2k_.final();
+    if(!directory) return;
+    for(auto& file:info["files"].list()) {
+      const auto attr=file.dict().find("attr");if(attr!=file.dict().end()&&attr->second.string().find('p')!=std::string::npos) continue;
+      std::string relative;
+      for(const auto& part:file["path"].list()){if(!relative.empty()) relative+='/';relative+=part.string();}
+      const auto found=files_.find(relative);
+      if(found==files_.end()) fail(CreateErrorCode::Generator,name,"Extra hash file projection changed");
+      file["sha1"]=found->second.first;file["ed2k"]=found->second.second;files_.erase(found);
+    }
+    if(!files_.empty()) fail(CreateErrorCode::Generator,name,"Extra hash file omitted");
+  }
+};
+void applyCreationMetadata(lt::entry& entry,const CreateOptions& options){
+  if(!options.sourceTag.empty()) entry["info"]["source"]=options.sourceTag;
+  for(const auto& url:options.urlSeeds) entry["url-list"].list().emplace_back(url);
+  for(const auto& url:options.httpSeeds) entry["httpseeds"].list().emplace_back(url);
+  if(options.dhtBackup) entry["azureus_properties"]["dht_backup_enable"]=*options.dhtBackup?1:0;
+}
+
+template<class PieceSink>
+void hashFiles(int root, const Inventory& inventory, PieceSink& torrent,
+    const Operation& operation, std::uint32_t size, std::size_t pieces, ExtraHashes* extra) {
   std::array<char, 65536> buffer{};
   lt::hasher hash;
   std::uint64_t completed = 0;
@@ -355,6 +503,7 @@ void hashFiles(int root, const Inventory& inventory, lt::create_torrent& torrent
     const auto path = operation.options.source / file.relative;
     auto input = openRelative(root, file.relative, path);
     if (!same(file.observed, describe(input.get(), path))) { fail(CreateErrorCode::Changed, path, "Source changed before hashing"); }
+    if(extra) extra->begin();
     std::uint64_t offset = 0;
     while (offset < static_cast<std::uint64_t>(file.observed.size)) {
       operation.cancelled();
@@ -366,6 +515,7 @@ void hashFiles(int root, const Inventory& inventory, lt::create_torrent& torrent
       if (read < 0) { fail(CreateErrorCode::Read, path, "Source read failed", errno); }
       if (read == 0) { fail(CreateErrorCode::Changed, path, "Source was truncated during hashing"); }
       hash.update(buffer.data(), static_cast<int>(read));
+      if(extra){extra->overall(buffer.data(),static_cast<std::size_t>(read));extra->file(buffer.data(),static_cast<std::size_t>(read));}
       const auto amount = static_cast<std::uint32_t>(read);
       inPiece += amount; offset += amount; completed += amount;
       if (inPiece == size) {
@@ -375,13 +525,14 @@ void hashFiles(int root, const Inventory& inventory, lt::create_torrent& torrent
       operation.publish({CreateStage::Hashing, completed, inventory.total, inventory.files.size(), index, pieces});
     }
     if (!same(file.observed, describe(input.get(), path))) { fail(CreateErrorCode::Changed, path, "Source changed while hashing"); }
+    if(extra) extra->end(file.relative);
   }
   if (inPiece != 0) { torrent.set_hash(lt::piece_index_t{static_cast<int>(index++)}, hash.final()); }
   if (index != pieces || completed != inventory.total) { fail(CreateErrorCode::Generator, operation.options.source, "Piece accounting mismatch"); }
 }
 
 void hashMerkleFiles(int root,const Inventory& inventory,lt::create_torrent& torrent,
-    const Operation& operation,std::uint32_t size,std::size_t pieces,const std::string& sourceName) {
+    const Operation& operation,std::uint32_t size,std::size_t pieces,const std::string& sourceName,ExtraHashes* extra) {
   constexpr std::size_t Block=16384;
   std::array<char,Block> buffer{},zeros{};
   std::map<std::string,const Entry*> originals;
@@ -394,6 +545,7 @@ void hashMerkleFiles(int root,const Inventory& inventory,lt::create_torrent& tor
   lt::hasher v1Hash;std::uint32_t inPiece=0;std::size_t pieceIndex=0;
   std::uint64_t completed=0,logical=0;
   auto feed=[&](const char* data,std::size_t bytes) {
+    if(extra) extra->overall(data,bytes);
     while(bytes) {
       const auto count=std::min<std::size_t>(bytes,size-inPiece);
       if(v1) v1Hash.update(data,static_cast<int>(count));
@@ -422,6 +574,7 @@ void hashMerkleFiles(int root,const Inventory& inventory,lt::create_torrent& tor
     auto input=openRelative(root,file.relative,path);
     if(!same(file.observed,describe(input.get(),path))) fail(CreateErrorCode::Changed,path,"Source changed before Merkle hashing");
     std::vector<lt::sha256_hash> leaves;leaves.reserve(size/Block);
+    if(extra) extra->begin();
     std::int64_t offset=0;int filePiece=0;
     while(offset<length) {
       operation.cancelled();const auto wanted=static_cast<std::size_t>(std::min<std::int64_t>(Block,length-offset));
@@ -433,6 +586,7 @@ void hashMerkleFiles(int root,const Inventory& inventory,lt::create_torrent& tor
         if(count==0) fail(CreateErrorCode::Changed,path,"Source truncated during Merkle hashing");
         filled+=static_cast<std::size_t>(count);
       }
+      if(extra) extra->file(buffer.data(),wanted);
       leaves.push_back(lt::hasher256(buffer.data(),static_cast<int>(wanted)).final());
       feed(buffer.data(),wanted);offset+=static_cast<std::int64_t>(wanted);completed+=wanted;
       if(leaves.size()==size/Block||offset==length) {
@@ -451,6 +605,7 @@ void hashMerkleFiles(int root,const Inventory& inventory,lt::create_torrent& tor
       operation.publish({CreateStage::Hashing,completed,inventory.total,inventory.files.size(),pieceIndex,pieces});
     }
     if(!same(file.observed,describe(input.get(),path))) fail(CreateErrorCode::Changed,path,"Source changed while Merkle hashing");
+    if(extra) extra->end(file.relative);
   }
   if(inPiece) {
     if(v1) torrent.set_hash(lt::piece_index_t{static_cast<int>(pieceIndex)},v1Hash.final());
@@ -581,32 +736,46 @@ std::expected<CreateResult, CreateError> createTorrent(const CreateOptions& subm
       const auto name = inventory.directory ? sourceParent.leaf + '/' + file.relative : sourceParent.leaf;
       files.add_file(name, file.observed.size);
     }
-    const auto flags=options.format==CreateFormat::V1?lt::create_torrent::v1_only
-        :options.format==CreateFormat::V2?lt::create_torrent::v2_only:lt::create_flags_t{};
-    lt::create_torrent torrent(files,static_cast<int>(size),flags);
-    if(options.format==CreateFormat::Hybrid&&files.pad_file_at(lt::file_index_t{files.num_files()-1})) {
-      // New, unhashed generator inventory only. Original hybrid pads before
-      // following files, not after a final nonempty leaf. Keep real empty slots.
-      files.remove_tail_padding();
-      files.set_num_pieces(static_cast<int>(files.total_size()/size+(files.total_size()%size!=0)));
+    std::unique_ptr<ExtraHashes> extra;
+    if(options.extraHashes) extra=std::make_unique<ExtraHashes>();
+    std::size_t generatedPieces = pieces;
+    lt::entry entry;
+    if (options.format == CreateFormat::V1 && size == 268435456U) {
+      // Preserve the source-defined original final v1 choice without raising
+      // LT's constructor ceiling or allocating a piece-sized hashing buffer.
+      V1PieceHashes hashes(pieces);
+      hashFiles(source.get(), inventory, hashes, operation, size, pieces, extra.get());
+      entry = generateLargeV1(inventory, sourceParent.leaf, options, hashes);
+    } else {
+      const auto flags=options.format==CreateFormat::V1?lt::create_torrent::v1_only
+          :options.format==CreateFormat::V2?lt::create_torrent::v2_only:lt::create_flags_t{};
+      lt::create_torrent torrent(files,static_cast<int>(size),flags);
+      if(options.format==CreateFormat::Hybrid&&files.pad_file_at(lt::file_index_t{files.num_files()-1})) {
+        // New, unhashed generator inventory only. Original hybrid pads before
+        // following files, not after a final nonempty leaf. Keep real empty slots.
+        files.remove_tail_padding();
+        files.set_num_pieces(static_cast<int>(files.total_size()/size+(files.total_size()%size!=0)));
+      }
+      generatedPieces=static_cast<std::size_t>(torrent.num_pieces());
+      if(generatedPieces>CreateMaximumPieces) fail(CreateErrorCode::Limit,options.source,"Padded piece count limit exceeded; choose a larger piece size");
+      if(generatedPieces==0||files.num_files()>static_cast<int>(2*CreateMaximumFiles)
+          ||(options.format==CreateFormat::V1&&(files.num_files()!=static_cast<int>(inventory.files.size())
+            ||files.total_size()!=static_cast<std::int64_t>(inventory.total)||generatedPieces!=pieces))) {
+        fail(CreateErrorCode::Generator,options.source,"Generator changed source layout or exceeded padded-piece bounds");
+      }
+      torrent.set_creation_date(0);
+      torrent.set_creator("BiglyBTC");
+      torrent.set_comment(options.comment.c_str());
+      torrent.set_priv(options.privateTorrent);
+      for (std::size_t tier = 0; tier < options.trackerTiers.size(); ++tier) {
+        for (const auto& url : options.trackerTiers[tier]) { torrent.add_tracker(url, static_cast<int>(tier)); }
+      }
+      if(options.format==CreateFormat::V1) hashFiles(source.get(),inventory,torrent,operation,size,pieces,extra.get());
+      else hashMerkleFiles(source.get(),inventory,torrent,operation,size,generatedPieces,sourceParent.leaf,extra.get());
+      entry = torrent.generate();
     }
-    const auto generatedPieces=static_cast<std::size_t>(torrent.num_pieces());
-    if(generatedPieces>CreateMaximumPieces) fail(CreateErrorCode::Limit,options.source,"Padded piece count limit exceeded; choose a larger piece size");
-    if(generatedPieces==0||files.num_files()>static_cast<int>(2*CreateMaximumFiles)
-        ||(options.format==CreateFormat::V1&&(files.num_files()!=static_cast<int>(inventory.files.size())
-          ||files.total_size()!=static_cast<std::int64_t>(inventory.total)||generatedPieces!=pieces))) {
-      fail(CreateErrorCode::Generator,options.source,"Generator changed source layout or exceeded padded-piece bounds");
-    }
-    torrent.set_creation_date(0);
-    torrent.set_creator("BiglyBTC");
-    torrent.set_comment(options.comment.c_str());
-    torrent.set_priv(options.privateTorrent);
-    for (std::size_t tier = 0; tier < options.trackerTiers.size(); ++tier) {
-      for (const auto& url : options.trackerTiers[tier]) { torrent.add_tracker(url, static_cast<int>(tier)); }
-    }
-    if(options.format==CreateFormat::V1) hashFiles(source.get(),inventory,torrent,operation,size,pieces);
-    else hashMerkleFiles(source.get(),inventory,torrent,operation,size,generatedPieces,sourceParent.leaf);
-    const auto entry = torrent.generate();
+    applyCreationMetadata(entry,options);
+    if(extra) extra->apply(entry,inventory.directory,sourceParent.leaf);
     std::vector<char> bytes;
     lt::bencode(std::back_inserter(bytes), entry);
     if (bytes.size() > MaximumMetadataBytes) { fail(CreateErrorCode::Limit, options.output, "Generated metadata limit exceeded"); }

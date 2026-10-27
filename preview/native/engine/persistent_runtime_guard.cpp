@@ -174,6 +174,13 @@ bool relocatableWebseedProviderArtifact() {
           == "d33c17c73c3c377cedd88256b0b48e472b2de55f0a95a890e2837556e1d1002a"
       && runtime_binding::bytes == 9085128ULL;
 }
+bool relocatableQueueProviderArtifact() {
+  // Root reviewed complete source/SDK plus actual observer and old capabilities.
+  // Same-image export, executable mapping, FD and full digest checks still apply.
+  return std::string_view(runtime_binding::manifest) == "f95542706a3b7324c6f2589d90d51a4374c92e7e245319b156f044aeec76a1d8"
+      && std::string_view(runtime_binding::sha256) == "7449ec6f503f4b8da26e61f4c0926ca414774f6b859405439eec2ebe227fbd9e"
+      && runtime_binding::bytes == 9085816ULL;
+}
 bool hashed(int descriptor) {
   Digest context;
   if (!context.value || EVP_DigestInit_ex(context.value, EVP_sha256(), nullptr) != 1) { return false; }
@@ -198,7 +205,7 @@ bool hashed(int descriptor) {
   return std::string_view(encoded.data(), encoded.size()) == runtime_binding::sha256;
 }
 bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* retainedPin = nullptr,
-    bool combinedCounters = false) {
+    bool combinedCounters = false, bool queueObserver = false) {
   const char* preload = std::getenv("LD_PRELOAD");
   const char* audit = std::getenv("LD_AUDIT");
   if ((preload && *preload) || (audit && *audit)) { return false; }
@@ -211,7 +218,7 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
   const auto actual = canonicalPath(object->l_name);
   if (!actual || (std::string_view(actual->data()) != runtime_binding::artifact
                   && !relocatableSourceArtifact() && !relocatableSelectedProviderArtifact() && !relocatableNextProviderArtifact()
-                  && !relocatableWebseedProviderArtifact())) { return false; }
+                  && !relocatableWebseedProviderArtifact() && !relocatableQueueProviderArtifact())) { return false; }
   // These are ORIGINAL dynamic exports, not &method / __wrap_* references.
   // GNU --wrap test seams therefore do not misidentify the test executable as LT.
   constexpr const char* symbols[] = {
@@ -223,10 +230,11 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
       "_ZN10libtorrent14session_handle14remove_torrentERKNS_14torrent_handleENS_5flags13bitfield_flagIhNS_16remove_flags_tagEvEE",
       "biglybtc_payload_counter_abi_v1", "biglybtc_read_payload_counters_v1",
       "biglybtc_swarm_mask_abi_v1",
-      "biglybtc_traffic_counter_abi_v2", "biglybtc_read_traffic_counters_v2"};
-  const std::size_t required = combinedCounters ? 11 : counterBridge ? 9 : 6;
-  std::array<std::uintptr_t, 11> addresses{};
-  std::array<Mapping, 11> beforeMappings{};
+      "biglybtc_traffic_counter_abi_v2", "biglybtc_read_traffic_counters_v2",
+      "biglybtc_queue_observer_abi_v1", "biglybtc_attach_queue_observer_v1"};
+  const std::size_t required = queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
+  std::array<std::uintptr_t, 13> addresses{};
+  std::array<Mapping, 13> beforeMappings{};
   std::size_t at = 0;
   for (; at < required; ++at) {
     const auto* name = symbols[at];
@@ -293,6 +301,14 @@ std::shared_ptr<void> managedPayloadCounterRuntimePin(bool combined) noexcept {
   } catch (...) { return {}; }
 #else
   static_cast<void>(combined); return {}; // Default build does not open a provider to manufacture approval.
+#endif
+}
+std::shared_ptr<void> managedQueueObserverRuntimePin() noexcept {
+#if BIGLYBTC_PERSISTENT_RUNTIME_BOUND
+  try {std::shared_ptr<void> pin;if(!checkLoadedProvider(true,&pin,true,true)){return {};}return pin;}
+  catch(...){return {};}
+#else
+  return {};
 #endif
 }
 bool managedPayloadCounterRuntimeQualified() noexcept {

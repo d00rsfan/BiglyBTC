@@ -1,5 +1,5 @@
 // Included within biglybtc::ui after LibraryWindow's other methods.
-void LibraryWindow::openFileOperation(FileOperation operation) {
+void LibraryWindow::openFileOperation(FileOperation operation,int originalIndex,QString destination) {
   QPointer<LibraryWindow> guard(this);
   if(busy_||closing_||offlinePreview_||!columnSession_){return;}
   if(fileOperationSequence_&&fileOperationSequence_->active()){
@@ -7,6 +7,7 @@ void LibraryWindow::openFileOperation(FileOperation operation) {
   }
   const auto targets=selectedDownloadTargets();if(!targets||targets->empty()||targets->size()>MaximumFileOperationSequence){setMessage(tr("Select between 1 and %1 torrents for this operation").arg(MaximumFileOperationSequence));return;}
   if(fileOperationDialog_){const auto dialog=fileOperationDialog_;dialog->show();if(!guard||!dialog){return;}dialog->raise();if(!guard||!dialog){return;}dialog->activateWindow();return;}
+  if(originalIndex>=0&&targets->size()!=1){return;}
   if(targets->size()>1){
     if(fileOperationSequence_){const auto previous=fileOperationSequence_;previous->invalidateSession();if(!guard){return;}previous->deleteLater();}
     auto* sequence=new FileOperationSequence(this);fileOperationSequence_=sequence;const QPointer<FileOperationSequence> expected(sequence);
@@ -37,9 +38,16 @@ void LibraryWindow::openFileOperation(FileOperation operation) {
     emit fileOperationExecuteRequested(std::move(value));
   });
   connect(dialog,&FileOperationDialog::cancelRequested,this,&LibraryWindow::fileOperationCancelRequested);
-  const bool began=dialog->beginOperation(columnSession_,targets->front().generation,targets->front(),operation);if(!guard||!expected){return;}
+  const bool began=dialog->beginOperation(columnSession_,targets->front().generation,targets->front(),operation,std::move(destination),originalIndex);if(!guard||!expected){return;}
   if(!began){dialog->deleteLater();return;}
   dialog->show();if(!guard||!expected){return;}dialog->raise();if(!guard||!expected){return;}dialog->activateWindow();
+}
+void LibraryWindow::openFileMapping(FileOperation operation) {
+  if(downloadDispatching_||renderedDownloadRevision_!=downloadActionRevision_){return;}
+  const auto selection=filePolicySelection();if(!selection||selection->indices.size()!=1){return;}
+  // The popup retains this exact immutable file frame and original index. No
+  // selection/model row is consulted after a modal picker or worker dispatch.
+  openFileOperation(operation,selection->indices.front());
 }
 void LibraryWindow::openTorrentCreation() {
   QPointer<LibraryWindow> guard(this);

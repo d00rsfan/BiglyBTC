@@ -1,3 +1,4 @@
+#include "original_filename_policy.hpp"
 #include "local_session.hpp"
 #include "local_support.hpp"
 #include "target_traffic.hpp"
@@ -523,7 +524,7 @@ std::expected<TorrentDetails, Error> queryTorrent(const storage::ProfileLease& l
     const auto* entries = inventory.document().find("downloads");
     const auto& entry = library->legacyMap ? inventory.document().root().children.at(selected->sourceIndex * 2 + 1)
         : entries->children.at(selected->sourceIndex);
-    auto geometry = compat::originalLayout(state.document());
+    auto geometry = storage::readOriginalLayout(lease,state.document());
     require(geometry.has_value(), geometry ? "" : geometry.error().message, ErrorCode::InvalidFormat);
     auto policy = compat::originalFilePolicy(entry, geometry->files.size());
     require(policy.has_value(), policy ? "" : policy.error().message, ErrorCode::InvalidFormat);

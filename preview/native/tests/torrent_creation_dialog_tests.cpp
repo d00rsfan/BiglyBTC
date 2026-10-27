@@ -42,13 +42,20 @@ private slots:
  void explicitV1OptionsAndOriginalPieceChoicesArePreserved() {
   TorrentCreationDialog dialog;QSignalSpy requests(&dialog,&TorrentCreationDialog::createRequested);
   QVERIFY(dialog.beginSession(8,4));dialog.show();fill(dialog);QCOMPARE(requests.count(),0);
-  auto* piece=dialog.findChild<QComboBox*>("torrent-creation-piece-size");QVERIFY(piece);QCOMPARE(piece->count(),21);QCOMPARE(piece->currentData().toULongLong(),quint64(0));
-  QCOMPARE(piece->itemData(2).toULongLong(),quint64(49152));QCOMPARE(piece->itemData(20).toULongLong(),quint64(134217728));
+  auto* piece=dialog.findChild<QComboBox*>("torrent-creation-piece-size");QVERIFY(piece);QCOMPARE(piece->count(),22);QCOMPARE(piece->currentData().toULongLong(),quint64(0));
+  QCOMPARE(piece->itemData(2).toULongLong(),quint64(49152));QCOMPARE(piece->itemData(20).toULongLong(),quint64(134217728));QCOMPARE(piece->itemData(21).toULongLong(),quint64(268435456));
   auto* import=dialog.findChild<QCheckBox*>("torrent-creation-import");QVERIFY(!import->isChecked());
   dialog.findChild<QComboBox*>("torrent-creation-source-kind")->setCurrentIndex(1);piece->setCurrentIndex(2);
   dialog.findChild<QPlainTextEdit*>("torrent-creation-trackers")->setPlainText(QStringLiteral("https://tracker.invalid/announce\nudp://127.0.0.1:1234/announce\n\nhttp://other.invalid/a,b"));
   dialog.findChild<QCheckBox*>("torrent-creation-private")->setChecked(true);dialog.findChild<QPlainTextEdit*>("torrent-creation-comment")->setPlainText(QStringLiteral("<owned π>"));
+  dialog.findChild<QLineEdit*>("torrent-creation-source-tag")->setText(QStringLiteral("owned π"));
+  dialog.findChild<QPlainTextEdit*>("torrent-creation-url-seeds")->setPlainText(QStringLiteral("https://seed.invalid/data"));
+  dialog.findChild<QPlainTextEdit*>("torrent-creation-http-seeds")->setPlainText(QStringLiteral("http://seed.invalid/script"));
+  dialog.findChild<QCheckBox*>("torrent-creation-dht-backup")->setChecked(false);
+  dialog.findChild<QCheckBox*>("torrent-creation-extra-hashes")->setChecked(true);
   QVERIFY(capture(dialog));dialog.accept();QCOMPARE(requests.count(),1);const auto request=requests[0][0].value<TorrentCreationRequest>();
+  QCOMPARE(request.options.sourceTag,QStringLiteral("owned π"));QVERIFY(request.options.extraHashes);QVERIFY(!request.options.dhtBackup);
+  QCOMPARE(request.options.urlSeeds,QStringList{QStringLiteral("https://seed.invalid/data")});QCOMPARE(request.options.httpSeeds,QStringList{QStringLiteral("http://seed.invalid/script")});
   QCOMPARE(request.session,quint64(8));QCOMPARE(request.revision,quint64(4));QVERIFY(request.request>0);QCOMPARE(request.options.sourceKind,TorrentCreationSource::Directory);
   QCOMPARE(request.options.pieceSize,quint64(49152));QVERIFY(request.options.privateTorrent);QVERIFY(!request.options.importAfterCreation);
   QCOMPARE(request.options.trackerTiers.size(),std::size_t(2));QCOMPARE(request.options.trackerTiers[0].size(),2);QCOMPARE(request.options.trackerTiers[1][0],QStringLiteral("http://other.invalid/a,b"));QCOMPARE(request.options.comment,QStringLiteral("<owned π>"));QVERIFY(dialog.pending());
@@ -56,7 +63,7 @@ private slots:
  void explicitFormatsExposeOnlyCompatiblePieceSizesAndKeepV1Default() {
   TorrentCreationDialog dialog;QSignalSpy requests(&dialog,&TorrentCreationDialog::createRequested);QVERIFY(dialog.beginSession(1,1));fill(dialog);
   auto* format=dialog.findChild<QComboBox*>("torrent-creation-format");auto* piece=dialog.findChild<QComboBox*>("torrent-creation-piece-size");
-  QVERIFY(format&&piece);QCOMPARE(format->currentIndex(),0);QCOMPARE(piece->count(),21);piece->setCurrentIndex(2);
+  QVERIFY(format&&piece);QCOMPARE(format->currentIndex(),0);QCOMPARE(piece->count(),22);piece->setCurrentIndex(2);
   format->setCurrentIndex(1);QCoreApplication::processEvents();QCOMPARE(piece->count(),15);QCOMPARE(piece->currentData().toULongLong(),quint64(0));
   QCOMPARE(piece->itemData(1).toULongLong(),quint64(16384));
   for(int i=1;i<piece->count();++i){const auto n=piece->itemData(i).toULongLong();QVERIFY(n>=16384&&n<=134217728&&(n&(n-1))==0);}
@@ -65,7 +72,7 @@ private slots:
   QVERIFY(dialog.setResult(result(first,false,false,QStringLiteral("retry"))));format->setCurrentIndex(2);QCoreApplication::processEvents();
   dialog.accept();QCOMPARE(requests.count(),2);QCOMPARE(requests[1][0].value<TorrentCreationRequest>().options.format,TorrentCreationFormat::Hybrid);
   const auto second=requests[1][0].value<TorrentCreationRequest>();QVERIFY(dialog.setResult(result(second,false,false,QStringLiteral("retry"))));
-  format->setCurrentIndex(0);QCoreApplication::processEvents();QCOMPARE(piece->count(),21);QCOMPARE(piece->currentData().toULongLong(),quint64(0));
+  format->setCurrentIndex(0);QCoreApplication::processEvents();QCOMPARE(piece->count(),22);QCOMPARE(piece->currentData().toULongLong(),quint64(0));
  }
  void invalidFormatAndSparseQueuedChangesDoNotDispatchInvalidOptions() {
   TorrentCreationDialog dialog;QSignalSpy requests(&dialog,&TorrentCreationDialog::createRequested);QVERIFY(dialog.beginSession(1,1));fill(dialog);

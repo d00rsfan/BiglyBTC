@@ -1,3 +1,4 @@
+#include "original_filename_policy.hpp"
 #include "magnet_intake.hpp"
 #include "../adapters/file_io.hpp"
 #include "../adapters/torrent_intake.hpp"
@@ -528,7 +529,7 @@ std::expected<core::TorrentHash, Error> completePendingMagnet(storage::ProfileLe
     require(intent.requested.has_v1() || !info->info_hashes().has_v1(), Code::Unsupported,
         "A v2-only magnet resolving hybrid metadata needs alternate-hybrid identity intake");
     auto doc = document(bytes, MaximumMetadata);
-    const auto layout = compat::originalLayout(doc);
+    const auto layout = storage::readOriginalLayout(lease,doc);
     require(layout.has_value() && !doc.find("info")->find("hash-override"), Code::InvalidFormat, "Unqualified actual magnet file layout");
     auto params = parameters(intent, network); params.ti = info;
     params.flags &= ~(libtorrent::torrent_flags::override_trackers | libtorrent::torrent_flags::override_web_seeds);

@@ -1,4 +1,5 @@
 #include "../engine/network_policy.hpp"
+#include "../engine/network_peer_classes.hpp"
 
 #include <libtorrent/address.hpp>
 #include <libtorrent/torrent_info.hpp>
@@ -57,8 +58,20 @@ std::shared_ptr<lt::torrent_info> metadata(bool privateTorrent = false) {
 }
 } // namespace
 
-int main() {
+int main(int argc, char** argv) {
   try {
+    if (argc >= 2 && std::string_view(argv[1]) == "--classify-lan") {
+      CHECK(argc > 2 && argc <= 258);
+      const auto filter = engine::makeNetworkPeerClassFilter(normal()); CHECK(filter);
+      constexpr unsigned local = 1U << static_cast<unsigned>(lt::session_handle::local_peer_class_id);
+      for (int i = 2; i < argc; ++i) {
+        const auto address = lt::make_address(argv[i]);
+        std::cout << argv[i] << '\t' << ((filter->access(address) & local) ? 1 : 0)
+            << '\t' << engine::javaProxyNumericAddress(address) << '\n';
+      }
+      return 0;
+    }
+
     run("saved decentralized marker never becomes a tracker or enables discovery", [] {
       const std::string url="dht://0123456789ABCDEF0123456789ABCDEF01234567.dht/announce";
       const std::string source="d8:announce"+bytes(url)+"4:infod6:lengthi1e4:name1:x12:piece lengthi16384e6:pieces20:"+std::string(20,'h')+"ee";
@@ -100,6 +113,48 @@ int main() {
       CHECK(p.uploadBytesPerSecond == 17408);
       CHECK(document.serialize() == original && document.originalBytes() == original);
       CHECK(document.find("opaque")->type == core::Node::Type::Dictionary);
+    });
+    run("original separate LAN limits and exact well-known classification", [] {
+      auto document = config({{"LAN Speed Enabled", integer(1)},
+          {"Max LAN Upload Speed KBs", integer(17)}, {"Max LAN Download Speed KBs", integer(23)},
+          {"Max Upload Speed KBs", integer(1)}});
+      const auto before = document.serialize(); const auto policy = normal(&document);
+      CHECK(policy.lanRates && normal().lanRates);
+      CHECK(policy.lanUploadBytesPerSecond == 17408 && policy.lanDownloadBytesPerSecond == 23552);
+      CHECK(policy.uploadBytesPerSecond == 1024 && document.serialize() == before);
+      const auto filter = engine::makeNetworkPeerClassFilter(policy); CHECK(filter);
+      constexpr unsigned local = 1U << static_cast<unsigned>(lt::session_handle::local_peer_class_id);
+      constexpr unsigned global = 1U << static_cast<unsigned>(lt::session_handle::global_peer_class_id);
+      for (const char* address : {"10.0.0.0", "10.255.255.255", "172.16.0.0", "172.31.255.255",
+          "192.168.0.0", "169.254.255.255", "127.255.255.254", "::1", "fe80::1", "febf::1",
+          "fec0::1", "feff::1", "::ffff:10.1.2.3", "::ffff:127.0.0.1"}) {
+        CHECK(filter->access(lt::make_address(address)) == local);
+      }
+      for (const char* address : {"9.255.255.255", "11.0.0.0", "172.15.255.255", "172.32.0.0",
+          "192.167.255.255", "169.253.255.255", "128.0.0.0", "::", "fc00::1", "fdff::1",
+          "fe7f::1", "2001:db8::1", "::ffff:203.0.113.1"}) {
+        CHECK(filter->access(lt::make_address(address)) == global);
+      }
+      auto disabled = policy; disabled.lanRates = false;
+      const auto unified = engine::makeNetworkPeerClassFilter(disabled); CHECK(unified);
+      CHECK(unified->access(lt::make_address("127.0.0.1")) == global);
+      CHECK(unified->access(lt::make_address("10.0.0.1")) == global);
+      auto isolated = engine::readNetworkPolicy(nullptr); CHECK(isolated && !isolated->lanRates);
+      const auto privateClass = engine::makeNetworkPeerClassFilter(*isolated); CHECK(privateClass);
+      CHECK(privateClass->access(lt::make_address("127.0.0.1")) == global);
+      auto proxied = policy; proxied.bindAddresses = {"0.0.0.0"};
+      proxied.proxy = {engine::NetworkProxyKind::Socks5, "127.0.0.1", {}, {}, 1080, true, false, true};
+      const auto proxyFilter = engine::makeNetworkPeerClassFilter(proxied); CHECK(proxyFilter);
+      CHECK(proxyFilter->access(lt::make_address("127.0.0.1")) == global);
+      CHECK(proxyFilter->access(lt::make_address("127.0.0.2")) == local);
+      proxied.ipv6 = true; proxied.bindAddresses = {"0.0.0.0", "::"}; proxied.proxy.host = "::1";
+      const auto compressed = engine::makeNetworkPeerClassFilter(proxied); CHECK(compressed);
+      CHECK(compressed->access(lt::make_address("::1")) == local);
+      proxied.proxy.host = "0:0:0:0:0:0:0:1";
+      const auto expanded = engine::makeNetworkPeerClassFilter(proxied); CHECK(expanded);
+      CHECK(expanded->access(lt::make_address("::1")) == global);
+      auto invalid = policy; invalid.lanUploadBytesPerSecond = -1;
+      CHECK(!engine::makeNetworkPeerClassFilter(invalid));
     });
     run("numeric dual-stack and strict binding", [] {
       auto document = config({{"Bind IP", bytes(" 127.0.0.1 ; 2001:0DB8::1 ")}, {"IPV6 Enable Support", integer(1)}});

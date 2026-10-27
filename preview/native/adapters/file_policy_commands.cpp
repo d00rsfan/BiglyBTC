@@ -1,3 +1,4 @@
+#include "original_filename_policy.hpp"
 #include "file_policy_commands.hpp"
 #include "linear_to_compact.hpp"
 #include "file_operations.hpp"
@@ -29,7 +30,7 @@ std::expected<void,Error> setFilePolicies(const ProfileLease& lease,const core::
   if(!selected || !selected->persistent) { return bad(ErrorCode::Missing,"Persistent download not found"); }
   auto store=TorrentStateStore::open(lease); if(!store) { return std::unexpected(store.error()); }
   auto state=store->load(lease,hash); if(!state) { return std::unexpected(state.error()); }
-  auto layout=compat::originalLayout(state->document());
+  auto layout=readOriginalLayout(lease,state->document());
   if(!layout || policies.size()!=layout->files.size()) { return bad(ErrorCode::InvalidFormat,"File selection does not match metadata"); }
   for(std::size_t i=0;i<policies.size();++i) {
     if(layout->files[i].padding && !policies[i].skipped) { return bad(ErrorCode::Unsupported,"Padding files cannot be selected"); }

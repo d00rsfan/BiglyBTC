@@ -1,16 +1,23 @@
 // Included after SessionBridge::Host, within biglybtc::app.
 namespace {
-storage::FileOperationRequest storageRequest(const ui::FileOperationRequest& request,bool deleteArchive=false) {
+storage::FileOperationRequest storageRequest(const ui::FileOperationRequest& request,bool deleteArchive=false,bool recycle=false) {
   storage::FileOperationKind kind;
   switch (request.operation) {
     case ui::FileOperation::RemoveKeepData: kind=storage::FileOperationKind::RemoveKeepData;break;
-    case ui::FileOperation::RemoveDeleteData: kind=storage::FileOperationKind::RemoveDeleteData;break;
+    case ui::FileOperation::RemoveDeleteData: kind=recycle?storage::FileOperationKind::RemoveRecycleData:storage::FileOperationKind::RemoveDeleteData;break;
     case ui::FileOperation::Relocate: kind=storage::FileOperationKind::Relocate;break;
     case ui::FileOperation::Relink: kind=storage::FileOperationKind::Relink;break;
+    case ui::FileOperation::MoveFile: kind=storage::FileOperationKind::MoveFile;break;
+    case ui::FileOperation::RetargetFile: kind=storage::FileOperationKind::RetargetFile;break;
+    case ui::FileOperation::RevertFile: kind=storage::FileOperationKind::RevertFile;break;
     default: throw Failure{{storage::ErrorCode::Unsupported,"Unknown file operation"}};
   }
   storage::FileOperationRequest value{identity(request.target),kind,{}};
-  if(!request.destinationParent.isEmpty()){value.destinationParent=std::filesystem::path(request.destinationParent.toUtf8().toStdString());}
+  const bool file=request.operation>=ui::FileOperation::MoveFile&&request.operation<=ui::FileOperation::RevertFile;
+  if(file){if(request.originalIndex<0){throw Failure{{storage::ErrorCode::InvalidFormat,"Missing original file index"}};}value.fileIndex=static_cast<std::size_t>(request.originalIndex);
+    if(request.operation!=ui::FileOperation::RevertFile){value.fileDestination=std::filesystem::path(request.destinationParent.toUtf8().toStdString());}}
+  else{if(request.originalIndex!=-1){throw Failure{{storage::ErrorCode::InvalidFormat,"Unexpected original file index"}};}if(!request.destinationParent.isEmpty()){value.destinationParent=std::filesystem::path(request.destinationParent.toUtf8().toStdString());}}
+  if(recycle){value.trashRoot=take(storage::linuxHomeTrashRoot());}
   value.deleteTorrentFile=deleteArchive;return value;
 }
 bool sameFilePlan(const ui::FileOperationPlanPacket& left,const ui::FileOperationPlanPacket& right) {
@@ -18,7 +25,7 @@ bool sameFilePlan(const ui::FileOperationPlanPacket& left,const ui::FileOperatio
       &&left.sourceRoot==right.sourceRoot&&left.targetRoot==right.targetRoot
       &&left.presentFiles==right.presentFiles&&left.missingFiles==right.missingFiles
       &&left.totalBytes==right.totalBytes&&left.failure==right.failure
-      &&left.deleteTorrentFile==right.deleteTorrentFile&&left.archivePath==right.archivePath
+      &&left.deleteTorrentFile==right.deleteTorrentFile&&left.recyclePayload==right.recyclePayload&&left.archivePath==right.archivePath
       &&left.archiveBytes==right.archiveBytes&&left.archivePresent==right.archivePresent&&left.archiveInternalState==right.archiveInternalState
       &&left.archiveBackupPath==right.archiveBackupPath&&left.archiveBackupBytes==right.archiveBackupBytes&&left.archiveBackupPresent==right.archiveBackupPresent
       &&std::ranges::equal(left.paths,right.paths,[](const auto& a,const auto& b){
@@ -28,6 +35,7 @@ bool sameFilePlan(const ui::FileOperationPlanPacket& left,const ui::FileOperatio
 ui::FileOperationPlanPresentation filePlanPacket(const ui::FileOperationRequest& request,const storage::FileOperationPreview& p) {
   auto packet=std::make_shared<ui::FileOperationPlanPacket>();packet->request=request;
   packet->approvalScopeDigest=text(p.approvalScopeDigest);packet->sourceRoot=QString::fromStdString(p.sourceRoot.string());packet->targetRoot=QString::fromStdString(p.targetRoot.string());
+  packet->recyclePayload=p.kind==storage::FileOperationKind::RemoveRecycleData;
   packet->presentFiles=p.presentFiles;packet->missingFiles=p.missingFiles;packet->totalBytes=p.presentBytes;
   for(const auto& file:p.files){packet->paths.push_back({QString::fromStdString(file.source.string()),QString::fromStdString(file.destination.string()),static_cast<quint64>(std::max<std::int64_t>(0,file.actualBytes)),file.present});}
   if(p.torrentArchive){const auto& archive=*p.torrentArchive;packet->deleteTorrentFile=true;packet->archivePath=QString::fromStdString(archive.path.string());packet->archiveBytes=archive.bytes;packet->archivePresent=archive.present;packet->archiveInternalState=archive.internalState;}
@@ -48,9 +56,12 @@ bool SessionBridge::prepareFileOperation(ui::FileOperationRequest request) {
       host_->accepts(request.target);
       if(host_->pendingTargets.contains(request.target.hash.toStdString())){throw Failure{{storage::ErrorCode::Unsupported,"Metadata must be resolved before operating on torrent files"}};}
       const bool removal=request.operation==ui::FileOperation::RemoveKeepData||request.operation==ui::FileOperation::RemoveDeleteData;
+      if(request.operation>=ui::FileOperation::MoveFile){const auto held=take(storage::readVerifiedSeedIntent(host_->lease,identity(request.target)));if(held){throw Failure{{storage::ErrorCode::Unsupported,"Per-file edits of verified-existing seeds need a new approved read-only scope; no data was changed"}};}}
       const bool deleteArchive=removal?(request.deleteTorrentFile?*request.deleteTorrentFile:take(storage::torrentArchiveDeletionPreference(host_->lease,stop))):false;
       if(!removal&&request.deleteTorrentFile.value_or(false)){throw Failure{{storage::ErrorCode::Unsupported,"Archive deletion requires a removal request"}};}
-      auto prepared=take(storage::prepareFileOperation(host_->lease,storageRequest(request,deleteArchive),stop));
+      const bool recycle=request.operation==ui::FileOperation::RemoveDeleteData?(request.recyclePayload?*request.recyclePayload:take(storage::payloadRecyclePreference(host_->lease,stop))):false;
+      if(request.operation!=ui::FileOperation::RemoveDeleteData&&request.recyclePayload.value_or(false)){throw Failure{{storage::ErrorCode::InvalidFormat,"Recycling belongs only to data removal"}};}
+      auto prepared=take(storage::prepareFileOperation(host_->lease,storageRequest(request,deleteArchive,recycle),stop));
       result=filePlanPacket(request,prepared.preview());host_->filePlan.emplace(std::move(prepared));host_->filePlanPacket=result;
     }catch(const Failure& e){failure->failure=text(e.error.message);}
     catch(const std::exception& e){failure->failure=QString::fromUtf8(e.what());}
@@ -70,7 +81,7 @@ bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
       if(!host_||host_->columnLayoutSession!=request.session||!host_->filePlan||!host_->filePlanPacket||!sameFilePlan(*host_->filePlanPacket,*value.plan)){throw Failure{{storage::ErrorCode::Conflict,"This file-operation plan was replaced; prepare it again"}};}
       if(host_->fileRecoveryRequired){throw Failure{{storage::ErrorCode::Conflict,"Restart to recover the interrupted file operation first"}};}
       host_->accepts(request.target);
-      const auto stored=storageRequest(request,value.plan->deleteTorrentFile);const auto approved=value.plan->approvalScopeDigest.toStdString();
+      const auto stored=storageRequest(request,value.plan->deleteTorrentFile,value.plan->recyclePayload);const auto approved=value.plan->approvalScopeDigest.toStdString();
       take(storage::confirmFileOperation(*host_->filePlan,approved,value.deleteConfirmed,value.archiveConfirmed));
       // Revalidate user-visible scope before stopping anything. Ordinary rates,
       // counts and active-time updates do not change this approval digest.
@@ -158,6 +169,10 @@ bool SessionBridge::createTorrent(ui::TorrentCreationRequest request) {
       }
       options.pieceSize=static_cast<std::uint32_t>(request.options.pieceSize);options.privateTorrent=request.options.privateTorrent;options.comment=request.options.comment.toUtf8().toStdString();
       for(const auto& tier:request.options.trackerTiers){std::vector<std::string> urls;for(const auto& url:tier){urls.push_back(url.toUtf8().toStdString());}options.trackerTiers.push_back(std::move(urls));}
+      options.sourceTag=request.options.sourceTag.toUtf8().toStdString();
+      for(const auto& url:request.options.urlSeeds) options.urlSeeds.push_back(url.toUtf8().toStdString());
+      for(const auto& url:request.options.httpSeeds) options.httpSeeds.push_back(url.toUtf8().toStdString());
+      options.dhtBackup=request.options.dhtBackup;options.extraHashes=request.options.extraHashes;
       std::uint64_t sequence=0;std::optional<std::pair<std::uint64_t,std::uint64_t>> last;
       auto created=engine::createTorrent(options,[this,&request,&sequence,&last](const engine::CreateProgress& p){
         const auto progress=std::pair{p.completedBytes,p.totalBytes};if(last&&*last==progress){return;}last=progress;

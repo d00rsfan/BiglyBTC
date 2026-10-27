@@ -639,4 +639,72 @@ void canonicalLatin1MoveUsesActualDecodedLeaves() {
   const auto after=doc(read(f.selected.state));check(after.find("encoding")->bytes=="ISO-8859-1"&&take(core::encodeValue(*after.find("info"),st::compatibleConfigLimits()).transform_error([](auto){return st::Error{st::ErrorCode::InvalidFormat,"fixture encode"};}))==rawInfo,"Move keeps raw info identity and original charset");
   check(after.find("attributes")->find("opaque.state"),"Move retains unrelated original state");
 }
-int main(){try{manyPayloadDigestTraversal();canonicalLatin1MoveUsesActualDecodedLeaves();archiveControlsAndRecovery();digestReceiptsEndWithApply();payloadDigestWorkAndInterference();selectionPoliciesMoveAndRecover();selectionCollisionAndStaleSource();keepAndDelete();relocationRecoveryPreservesBothUntilPublication();relinkAndScope();protectionAndConflicts();realCopyBranch();nonlinearControlsAndRecovery();nonlinearBoundaryRefusals();authenticatedExternalLinks();legacyRootsAndDefaultStoreRecovery();pendingReorderedCompletionGuards();std::cout<<"ten generated file-operation families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}
+void individualFileMappingsAndRevert(){
+  Fixture f(true);const auto inventory=read(f.profile/"downloads.config"),rawInfo=std::string(*core::encodeValue(*doc(read(f.selected.state)).find("info")));
+  // Mapping never rewrites the hashed subject, priorities, force or saved root.
+  const auto first=f.selected.files[0],second=f.selected.files[1],renamed=f.destination/"renamed.bin";
+  st::FileOperationRequest move{f.selected.hash,st::FileOperationKind::MoveFile,{}};move.fileIndex=0;move.fileDestination=renamed;
+  auto plan=take(st::prepareFileOperation(f.lease,move));check(plan.preview().files.size()==1&&plan.preview().files[0].index==0&&read(f.profile/"downloads.config")==inventory,"one-file preparation preserves exact inventory");
+  const auto accepted=take(st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,false));take(st::applyFileOperation(f.lease,std::move(plan),accepted));
+  check(read(renamed)=="hello"&&!fs::exists(first)&&read(second)=="world!"&&read(f.profile/"downloads.config")==inventory,"move only one original file; original row unchanged");
+  auto state=doc(read(f.selected.state));const auto* links=state.find("attributes")->find("filelinks2");check(links&&links->children.size()==1&&links->children[0].bytes=="0\n"+first.string()+"\n"+renamed.string(),"original indexed link points from canonical to new file");
+  check(*core::encodeValue(*state.find("info"))==rawInfo&&state.find("attributes")->find("opaque.state"),"raw info and opaque state survive per-file movement");
+  const auto existing=f.destination/"existing.bin";write(existing,"broken");st::FileOperationRequest target{f.selected.hash,st::FileOperationKind::RetargetFile,{}};target.fileIndex=1;target.fileDestination=existing;
+  auto retarget=take(st::prepareFileOperation(f.lease,target));const auto allowed=take(st::confirmFileOperation(retarget,retarget.preview().approvalScopeDigest,false));take(st::applyFileOperation(f.lease,std::move(retarget),allowed));
+  state=doc(read(f.selected.state));check(read(second)=="world!"&&read(existing)=="broken"&&state.find("attributes")->find("filelinks2")->children.size()==2,"retarget keeps old bytes and maps existing untrusted content");
+  const auto* resume=state.find("resume")->find("data");check(resume->find("valid")->integer==0&&std::ranges::all_of(resume->find("resume data")->bytes,[](char c){return c==2;}),"retarget invalidates all original piece proof instead of trusting size");
+  st::FileOperationRequest revert{f.selected.hash,st::FileOperationKind::RevertFile,{}};revert.fileIndex=0;
+  auto back=take(st::prepareFileOperation(f.lease,revert));const auto consent=take(st::confirmFileOperation(back,back.preview().approvalScopeDigest,false));take(st::applyFileOperation(f.lease,std::move(back),consent));
+  state=doc(read(f.selected.state));check(read(first)=="hello"&&!fs::exists(renamed)&&state.find("attributes")->find("filelinks2")->children.size()==1,"revert restores original bytes and removes only selected link");
+  revert.fileIndex=1;check(!st::prepareFileOperation(f.lease,revert)&&read(second)=="world!"&&read(existing)=="broken","revert never overwrites the original extant file");
+}
+void individualFileMappingRecoveryAndRefusals(){
+  for(const auto stage:{st::FileOperationStage::JournalSynced,st::FileOperationStage::DestinationPublished,st::FileOperationStage::StatePublished,st::FileOperationStage::InventoryPublished,st::FileOperationStage::SourceRemoved}){
+    Fixture f(true);const auto before=read(f.profile/"downloads.config");const auto destination=f.destination/"new.bin";
+    st::FileOperationRequest request{f.selected.hash,st::FileOperationKind::MoveFile,{}};request.fileIndex=1;request.fileDestination=destination;
+    auto plan=take(st::prepareFileOperation(f.lease,request));const auto consent=take(st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,false));interruptAt=stage;interruptArmed=true;
+    check(!st::applyFileOperation(f.lease,std::move(plan),consent,interrupt)&&st::hasPendingFileOperation(f.lease),"per-file interrupted transaction remains explicit");
+    const auto recovered=take(st::recoverFileOperation(f.lease));check(recovered&&recovered->filesMoved==1&&read(destination)=="world!"&&read(f.selected.files[0])=="hello"&&!fs::exists(f.selected.files[1])&&read(f.profile/"downloads.config")==before,"one-file recovery preserves sibling and saved intent");
+  }
+  Fixture f(true);st::FileOperationRequest request{f.selected.hash,st::FileOperationKind::MoveFile,{}};request.fileIndex=0;request.fileDestination=f.selected.files[1];
+  const auto inventory=read(f.profile/"downloads.config"),state=read(f.selected.state);check(!st::prepareFileOperation(f.lease,request),"same torrent destination collision refused");
+  request.fileIndex=10000;request.fileDestination=f.destination/"new.bin";check(!st::prepareFileOperation(f.lease,request),"out-of-range index refused");
+  request.fileIndex=0;fs::create_symlink(f.selected.files[1],*request.fileDestination);check(!st::prepareFileOperation(f.lease,request),"symlink destination refused");fs::remove(*request.fileDestination);
+  auto plan=take(st::prepareFileOperation(f.lease,request));const auto consent=take(st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,false));write(f.selected.files[0],"other");check(!st::applyFileOperation(f.lease,std::move(plan),consent)&&!st::hasPendingFileOperation(f.lease),"stale bytes refuse before journal");
+  check(read(f.profile/"downloads.config")==inventory&&read(f.selected.state)==state&&read(f.selected.files[1])=="world!","all failed mappings preserve saved/other data");
+}
+void ownedTrashPublicationAndRecovery(){
+  {Fixture f;check(take(st::payloadRecyclePreference(f.lease))&&!fs::exists(f.profile/"biglybt.config"),"original recycle default true stays sparse");
+    for(const std::int64_t value:{0LL,1LL,-1LL,4294967296LL}){auto config=doc("de");put(config,"Move Deleted Data To Recycle Bin","i"+std::to_string(value)+'e');write(f.profile/"biglybt.config",config.serialize());check(take(st::payloadRecyclePreference(f.lease))==(static_cast<std::uint32_t>(value)!=0)&&read(f.profile/"biglybt.config")==config.serialize(),"recycle preference preserves Java low32 semantics and unknown config");}}
+  for(const auto stage:{st::FileOperationStage::JournalSynced,st::FileOperationStage::DestinationPublished,st::FileOperationStage::TrashInfoPublished,st::FileOperationStage::InventoryPublished,st::FileOperationStage::SourceRemoved}){
+    Fixture f(true);const auto trash=f.area.root/"data/Trash";write(f.source/"bundle/foreign","foreign");st::FileOperationRequest request{f.selected.hash,st::FileOperationKind::RemoveRecycleData,{}};request.trashRoot=trash;
+    auto plan=take(st::prepareFileOperation(f.lease,request));check(!fs::exists(trash)&&plan.preview().files.size()==2,"trash preparation does not create directories or move payload");
+    const auto files=plan.preview().files;check(!st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,false),"recycling still requires explicit data consent");const auto consent=take(st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,true));interruptAt=stage;interruptArmed=true;
+    check(!st::applyFileOperation(f.lease,std::move(plan),consent,interrupt)&&st::hasPendingFileOperation(f.lease),"recycle interruption leaves durable confirmed intent");
+    const auto result=take(st::recoverFileOperation(f.lease));check(result&&result->filesRecycled==2&&result->filesDeleted==0&&read(f.source/"bundle/foreign")=="foreign","recovery recycles only named leaves with no permanent fallback");
+    for(const auto& file:files){check(!fs::exists(file.source)&&read(file.destination)==f.selected.values[file.index],"trash retains exact actual payload bytes");const auto info=read(trash/"info"/(file.destination.filename().string()+".trashinfo"));check(info.starts_with("[Trash Info]\nPath="+file.source.string()+"\nDeletionDate=")&&info.back()=='\n',"recoverable info retains exact original path and actual deletion date");}
+    check(!fs::exists(f.selected.state)&&fs::exists(f.selected.archive)&&doc(read(f.profile/"downloads.config")).find("downloads")->children.empty()&&!st::hasPendingFileOperation(f.lease),"recycle retains archive and finishes original inventory/state cleanup");
+  }
+  {Fixture f;const auto trash=f.area.root/"Trash";fs::create_directory(trash);check(::chmod(trash.c_str(),0755)==0,"set unowned-mode fixture");st::FileOperationRequest request{f.selected.hash,st::FileOperationKind::RemoveRecycleData,{}};request.trashRoot=trash;
+    check(!st::prepareFileOperation(f.lease,request)&&read(f.selected.files[0])=="hello"&&!st::hasPendingFileOperation(f.lease),"nonprivate trash refuses before mutation");}
+}
+
+fs::path swapTrashFiles,retainedTrashFiles;bool swapTrashArmed=false;
+void swapTrashDirectory(st::FileOperationStage stage){if(swapTrashArmed&&stage==st::FileOperationStage::InventoryPublished){swapTrashArmed=false;fs::rename(swapTrashFiles,retainedTrashFiles);fs::create_directory(swapTrashFiles);check(::chmod(swapTrashFiles.c_str(),0700)==0,"private replacement trash fixture");}}
+void trashDirectoryReplacementNeverFallsBackToDelete(){
+  Fixture f;const auto trash=f.area.root/"Trash";st::FileOperationRequest request{f.selected.hash,st::FileOperationKind::RemoveRecycleData,{}};request.trashRoot=trash;
+  auto plan=take(st::prepareFileOperation(f.lease,request));const auto destination=plan.preview().files[0].destination;const auto consent=take(st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,true));swapTrashFiles=trash/"files";retainedTrashFiles=trash/"held-files";swapTrashArmed=true;
+  const auto failed=st::applyFileOperation(f.lease,std::move(plan),consent,swapTrashDirectory);check(!failed&&failed.error().code==st::ErrorCode::Conflict&&st::hasPendingFileOperation(f.lease),"published trash identity mismatch retains explicit recovery");
+  check(read(f.selected.files[0])=="hello"&&read(retainedTrashFiles/destination.filename())=="hello"&&fs::is_empty(swapTrashFiles),"uncertain recycle keeps both source and actual copied data; never permanent fallback");
+  check(!st::recoverFileOperation(f.lease)&&read(f.selected.files[0])=="hello","cold recovery independently refuses replaced trash directory");
+  check(fs::remove(swapTrashFiles),"remove exact empty owned replacement");fs::rename(retainedTrashFiles,swapTrashFiles);const auto result=take(st::recoverFileOperation(f.lease));check(result&&result->filesRecycled==1&&read(destination)=="hello"&&!fs::exists(f.selected.files[0]),"restored exact directory permits idempotent original recycle intent");
+}
+void perFileNonlinearMoveKeepsControlAndRetargetRefuses(){
+  Fixture f;attributes(f,"l1:Ce");const auto marker=control(f,0);const std::string bytes="d7:versioni0e6:lengthi5ee";write(marker,bytes);
+  st::FileOperationRequest request{f.selected.hash,st::FileOperationKind::MoveFile,{}};request.fileIndex=0;request.fileDestination=f.destination/"packed.bin";
+  auto plan=take(st::prepareFileOperation(f.lease,request));const auto consent=take(st::confirmFileOperation(plan,plan.preview().approvalScopeDigest,false));take(st::applyFileOperation(f.lease,std::move(plan),consent));
+  check(read(*request.fileDestination)=="hello"&&read(marker)==bytes&&doc(read(f.selected.state)).find("attributes")->find("storetypes")->children[0].bytes=="C","per-file move preserves real compact physical bytes and indexed controls without relabeling");
+  write(f.destination/"other.bin","hello");request.kind=st::FileOperationKind::RetargetFile;request.fileDestination=f.destination/"other.bin";const auto before=read(f.selected.state);
+  check(!st::prepareFileOperation(f.lease,request)&&read(f.selected.state)==before&&read(marker)==bytes,"existing-data retarget does not reuse unrelated nonlinear maps");
+}
+int main(){try{trashDirectoryReplacementNeverFallsBackToDelete();perFileNonlinearMoveKeepsControlAndRetargetRefuses();individualFileMappingsAndRevert();individualFileMappingRecoveryAndRefusals();ownedTrashPublicationAndRecovery();manyPayloadDigestTraversal();canonicalLatin1MoveUsesActualDecodedLeaves();archiveControlsAndRecovery();digestReceiptsEndWithApply();payloadDigestWorkAndInterference();selectionPoliciesMoveAndRecover();selectionCollisionAndStaleSource();keepAndDelete();relocationRecoveryPreservesBothUntilPublication();relinkAndScope();protectionAndConflicts();realCopyBranch();nonlinearControlsAndRecovery();nonlinearBoundaryRefusals();authenticatedExternalLinks();legacyRootsAndDefaultStoreRecovery();pendingReorderedCompletionGuards();std::cout<<"ten generated file-operation families passed\n";return 0;}catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

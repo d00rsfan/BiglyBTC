@@ -166,7 +166,8 @@ void validate(const NetworkPolicy& p) {
   // family together with an exact restriction for another. Do not silently
   // discard an explicit choice or pass a wildcard as a literal allowed IP.
   require(!wildcardBind || !explicitBind, Code::Unsupported, "mixed wildcard and explicit Bind IP");
-  require(p.uploadBytesPerSecond >= 0 && p.downloadBytesPerSecond >= 0 && p.seedingUploadBytesPerSecond >= 0,
+  require(p.uploadBytesPerSecond >= 0 && p.downloadBytesPerSecond >= 0 && p.seedingUploadBytesPerSecond >= 0
+      && p.lanUploadBytesPerSecond >= 0 && p.lanDownloadBytesPerSecond >= 0,
       Code::InvalidConfiguration, "rate limits");
   const auto& proxy = p.proxy;
   require(proxy.kind == NetworkProxyKind::None || proxy.kind == NetworkProxyKind::Socks4
@@ -325,7 +326,9 @@ std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(
     p.downloadBytesPerSecond = c.rate("Max Download Speed KBs");
     p.seedingUploadBytesPerSecond = c.rate("Max Upload Speed Seeding KBs");
     p.seedingOnlyUpload = c.boolean("enable.seedingonly.upload.rate", false);
-    require(!c.boolean("LAN Speed Enabled", false), Code::Unsupported, "LAN Speed Enabled");
+    p.lanRates = c.boolean("LAN Speed Enabled", true);
+    p.lanUploadBytesPerSecond = c.rate("Max LAN Upload Speed KBs");
+    p.lanDownloadBytesPerSecond = c.rate("Max LAN Download Speed KBs");
     require(!c.boolean("Auto Upload Speed Enabled", false)
         && !c.boolean("Auto Upload Speed Seeding Enabled", false), Code::Unsupported, "Auto Upload Speed Enabled");
     p.requireEncryption = c.boolean("network.transport.encrypted.require", false);

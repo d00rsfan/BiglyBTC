@@ -43,13 +43,17 @@ private:
   struct Data;
   std::shared_ptr<const Data> data_;
   explicit TorrentIntakeMetadata(std::shared_ptr<const Data>);
-  friend std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(const std::filesystem::path&, std::stop_token);
+  friend std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(const std::filesystem::path&, std::stop_token,std::string);
   friend std::expected<core::TorrentHash, Error> importTorrentWithFileOptions(ProfileLease&,
       const TorrentIntakeMetadata&, const std::filesystem::path&, bool, std::span<const compat::FilePolicy>,
       void (*)(TorrentIntakeStage), bool, std::stop_token, core::TorrentIntakeLimits, bool, bool, bool, std::optional<core::TorrentIntakeTrackerTiers>, std::optional<std::string>, bool);
 };
 std::expected<TorrentIntakeMetadata, Error> inspectTorrentIntake(
-    const std::filesystem::path&, std::stop_token = {});
+    const std::filesystem::path&, std::stop_token = {},
+    std::string filenameConversions=std::string(compat::OriginalDefaultFilenameConversions));
+// Worker previews supply readOriginalFilenameConversions under the same sole
+// lease. The sealed policy is rechecked at import; this argument grants no
+// filesystem authority and never changes raw metadata/full torrent identities.
 // Full original-index vector, including immutable skipped padding entries.
 // All skipped => Stopped/no force, with no payload allocation. New journal option
 // records retain original priority/storage choices through every recovery stage.

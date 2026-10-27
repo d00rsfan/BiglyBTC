@@ -1,4 +1,5 @@
 #include "managed_payload_counters.hpp"
+#include "managed_queue_observations.hpp"
 #include "persistent_runtime_guard.hpp"
 #include "original_torrent_identity.hpp"
 
@@ -27,6 +28,13 @@
 #define BIGLYBTC_SUPPORTED_TRAFFIC_COUNTERS 0
 #endif
 
+#if BIGLYBTC_SUPPORTED_PAYLOAD_COUNTERS && __has_include(<libtorrent/biglybtc_queue_observer.hpp>)
+#include <libtorrent/biglybtc_queue_observer.hpp>
+#define BIGLYBTC_SUPPORTED_QUEUE_OBSERVER 1
+#else
+#define BIGLYBTC_SUPPORTED_QUEUE_OBSERVER 0
+#endif
+
 namespace biglybtc::engine::detail {
 static_assert(LIBTORRENT_VERSION_NUM == 20012,
     "Managed raw reset boundaries require the reviewed LT2.0.12 source");
@@ -39,6 +47,9 @@ struct ManagedPayloadCounterBridge final {
 #if BIGLYBTC_SUPPORTED_TRAFFIC_COUNTERS
   decltype(&libtorrent::biglybtc_read_traffic_counters_v2) readTraffic = nullptr;
 #endif
+#if BIGLYBTC_SUPPORTED_QUEUE_OBSERVER
+  decltype(&libtorrent::biglybtc_attach_queue_observer_v1) attachQueue = nullptr;
+#endif
 #endif
 };
 
@@ -46,11 +57,25 @@ std::shared_ptr<const ManagedPayloadCounterBridge> managedPayloadCounterBridge()
 #if BIGLYBTC_SUPPORTED_PAYLOAD_COUNTERS
   try {
     std::shared_ptr<void> library;
+#if BIGLYBTC_SUPPORTED_QUEUE_OBSERVER
+    decltype(&libtorrent::biglybtc_attach_queue_observer_v1) attachQueue=nullptr;
+    // Full THIRTEEN-export same-image source/artifact proof; never marker-only.
+    auto queuePin=managedQueueObserverRuntimePin();
+    if(queuePin){
+      const auto abi=reinterpret_cast<decltype(&libtorrent::biglybtc_queue_observer_abi_v1)>(::dlsym(queuePin.get(),"biglybtc_queue_observer_abi_v1"));
+      const auto attach=reinterpret_cast<decltype(attachQueue)>(::dlsym(queuePin.get(),"biglybtc_attach_queue_observer_v1"));
+      if(abi&&attach&&abi()==1
+          &&reinterpret_cast<void*>(abi)==::dlsym(RTLD_DEFAULT,"biglybtc_queue_observer_abi_v1")
+          &&reinterpret_cast<void*>(attach)==::dlsym(RTLD_DEFAULT,"biglybtc_attach_queue_observer_v1")){
+        library=std::move(queuePin);attachQueue=attach;
+      }
+    }
+#endif
 #if BIGLYBTC_SUPPORTED_TRAFFIC_COUNTERS
     decltype(&libtorrent::biglybtc_read_traffic_counters_v2) traffic = nullptr;
     // Optional V2 requires the complete ELEVEN-export source/artifact/mapping
     // proof and transfers that SAME held object. A header/marker never grants it.
-    auto extended = managedPayloadCounterRuntimePin(true);
+    auto extended = library ? library : managedPayloadCounterRuntimePin(true);
     if (extended) {
       const auto abi = reinterpret_cast<decltype(&libtorrent::biglybtc_traffic_counter_abi_v2)>(
           ::dlsym(extended.get(), "biglybtc_traffic_counter_abi_v2"));
@@ -62,6 +87,9 @@ std::shared_ptr<const ManagedPayloadCounterBridge> managedPayloadCounterBridge()
         library = std::move(extended); traffic = read;
       }
     }
+#endif
+#if BIGLYBTC_SUPPORTED_QUEUE_OBSERVER && BIGLYBTC_SUPPORTED_TRAFFIC_COUNTERS
+    if(!traffic){attachQueue=nullptr;}
 #endif
     // Old approved providers still require the full existing NINE-export
     // proof, with its own retained lifetime pin. No combined authority follows.
@@ -79,6 +107,9 @@ std::shared_ptr<const ManagedPayloadCounterBridge> managedPayloadCounterBridge()
         || reinterpret_cast<void*>(swarm) != ::dlsym(RTLD_DEFAULT, "biglybtc_swarm_mask_abi_v1")) { return {}; }
     auto bridge = std::make_shared<ManagedPayloadCounterBridge>();
     bridge->library = std::move(library);bridge->read = read;bridge->swarm = swarm;
+#if BIGLYBTC_SUPPORTED_QUEUE_OBSERVER
+    bridge->attachQueue=attachQueue;
+#endif
 #if BIGLYBTC_SUPPORTED_TRAFFIC_COUNTERS
     bridge->readTraffic = traffic;
 #endif
@@ -118,18 +149,46 @@ bool selectManagedSwarm(libtorrent::add_torrent_params& parameters,
 #endif
 }
 
+#if BIGLYBTC_SUPPORTED_QUEUE_OBSERVER
+class ManagedQueueSink final:public libtorrent::BiglybtcQueueObserverV1 {
+public:
+  ManagedQueueSink(std::shared_ptr<ManagedQueueObservations> state,std::shared_ptr<const ManagedPayloadCounterBridge> bridge)
+      :state_(std::move(state)),bridge_(std::move(bridge)){}
+  void observe(const libtorrent::BiglybtcQueueEventV1& event) noexcept override {
+    core::QueueObservation value;value.sequence=event.sequence;value.request=event.request;
+    value.observedNanos=event.observed_nanoseconds;value.requestStartedNanos=event.request_started_nanoseconds;
+    value.observedWallMillis=event.observed_wall_milliseconds;value.requestStartedWallMillis=event.request_started_wall_milliseconds;
+    value.seeds=event.seeds;value.peers=event.peers;value.protocol=event.protocol;
+    value.kind=static_cast<core::QueueObservationKind>(event.kind);value.tracker=event.tracker_sha256;state_->observe(value);
+  }
+private:
+  std::shared_ptr<ManagedQueueObservations> state_;
+  std::shared_ptr<const ManagedPayloadCounterBridge> bridge_; //same exact DSO remains pinned
+};
+#endif
 #if BIGLYBTC_SUPPORTED_PAYLOAD_COUNTERS
 class ManagedPayloadPlugin final : public libtorrent::torrent_plugin {
 public:
   ManagedPayloadPlugin(libtorrent::torrent_handle handle,
       std::shared_ptr<ManagedPayloadCounters> counters,
-      std::shared_ptr<const ManagedPayloadCounterBridge> bridge)
+      std::shared_ptr<const ManagedPayloadCounterBridge> bridge,
+      std::shared_ptr<ManagedQueueObservations> queue)
       : handle_(std::move(handle)), counters_(std::move(counters)), bridge_(std::move(bridge)) {
     bool combined = false;
 #if BIGLYBTC_SUPPORTED_TRAFFIC_COUNTERS
     combined = bridge_ && bridge_->readTraffic;
 #endif
     counters_->installed(combined);
+#if BIGLYBTC_SUPPORTED_QUEUE_OBSERVER
+    if(queue&&bridge_->attachQueue){
+      try {
+        std::shared_ptr<libtorrent::BiglybtcQueueObserverV1> sink=std::make_shared<ManagedQueueSink>(queue,bridge_);
+        if(bridge_->attachQueue(&handle_,&sink)==static_cast<std::uint32_t>(libtorrent::BiglybtcQueueObserverStatusV1::Accepted)){queue->installed();}
+      }catch(...){/* Optional queue facts never change transfer/storage success. */}
+    }
+#else
+    static_cast<void>(queue);
+#endif
   }
   bool on_pause() noexcept override { paused_ = true; return false; }
   bool on_resume() noexcept override {
@@ -186,21 +245,22 @@ private:
 
 bool attachManagedPayloadCounters(libtorrent::add_torrent_params& parameters,
     const std::shared_ptr<ManagedPayloadCounters>& counters,
-    std::shared_ptr<const ManagedPayloadCounterBridge> bridge) noexcept {
+    std::shared_ptr<const ManagedPayloadCounterBridge> bridge,
+    std::shared_ptr<ManagedQueueObservations> queue) noexcept {
   if (!counters) { return false; }
 #if BIGLYBTC_SUPPORTED_PAYLOAD_COUNTERS
   if (!bridge || !bridge->read) { counters->fail(); return false; }
   try {
-    parameters.extensions.push_back([counters, bridge = std::move(bridge)](
+    parameters.extensions.push_back([counters, bridge = std::move(bridge),queue=std::move(queue)](
         const libtorrent::torrent_handle& handle, libtorrent::client_data_t)
         -> std::shared_ptr<libtorrent::torrent_plugin> {
-      try { return std::make_shared<ManagedPayloadPlugin>(handle, counters, bridge); }
+      try { return std::make_shared<ManagedPayloadPlugin>(handle, counters, bridge,queue); }
       catch (...) { counters->fail(); return {}; }
     });
     return true;
   } catch (...) { counters->fail(); return false; }
 #else
-  static_cast<void>(parameters); static_cast<void>(bridge);
+  static_cast<void>(parameters); static_cast<void>(bridge);static_cast<void>(queue);
   counters->fail(); return false;
 #endif
 }

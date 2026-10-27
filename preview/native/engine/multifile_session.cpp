@@ -1,3 +1,4 @@
+#include "original_filename_policy.hpp"
 #include "multifile_session.hpp"
 #include "local_support.hpp"
 #include "target_traffic.hpp"
@@ -185,7 +186,7 @@ void finalState(storage::TorrentStateFile& state, const compat::OriginalLayout& 
 LocalReport run(const storage::ProfileLease& lease, const LocalOptions& options, const core::SavedDownload& saved,
     storage::ConfigFile& inventory, storage::TorrentStateStore& store, storage::TorrentStateFile& original,
     const std::shared_ptr<lt::torrent_info>& info, const SavedPolicy& policy, PersistentSession* owner) {
-  const auto geometry = compat::originalLayout(original.document());
+  const auto geometry = storage::readOriginalLayout(lease,original.document());
   require(geometry.has_value(), geometry ? "" : geometry.error().message);
   const auto& layout = *geometry;
   require(layout.multifile && layout.files.size() == static_cast<std::size_t>(info->num_files())

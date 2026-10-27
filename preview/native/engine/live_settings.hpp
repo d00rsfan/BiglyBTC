@@ -21,7 +21,7 @@ struct LiveQueueLimits {
 };
 enum class LiveRestartField : std::uint32_t {
   Mode = 1, Transports = 2, Binding = 4, Proxy = 8,
-  Discovery = 16, Encryption = 32, TorrentSources = 64
+  Discovery = 16, Encryption = 32, TorrentSources = 64, LanClassification = 128
 };
 struct LiveSettingsPlan {
   // Active routes plus ONLY the desired safe rate fields. Worker-private value;
@@ -51,6 +51,8 @@ struct LiveSettingsSnapshot {
   core::SessionRateLimits rateLimits;
   int activeDownloads = 0, activeSeeds = 0, activeLimit = 0;
   bool countSlowTorrents = false;
+  core::EffectiveRateLimit lanUpload, lanDownload;
+  bool separateLanClass = false;
   std::string listenInterfaces, outgoingInterfaces;
   int proxyType = 0;
   bool dht = false, localDiscovery = false, upnp = false, natpmp = false;

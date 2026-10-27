@@ -1,4 +1,5 @@
 #include "torrent_intake.hpp"
+#include "original_filename_policy.hpp"
 #include "verified_seeding.hpp"
 #include "verified_existing_scope.hpp"
 #include "original_torrent_identity_lt.hpp"
@@ -268,6 +269,29 @@ void scopeInterference(storage::TorrentIntakeStage stage){
   else{const auto bytes=read(scopeLeaf);fs::rename(scopeLeaf,scopeLeaf.string()+".old");write(scopeLeaf,bytes);}
   throw std::runtime_error("Owned scope callback interruption");
 }
+std::string quotedMetadata(){
+  auto source=parse(namedMetadata(2));auto info=parse(rawValue(source,"info"));check(info.replaceValue("name",b("b\"undle")).has_value()&&info.replaceValue("files","ld6:lengthi100e4:pathl"+b("a\"b.bin")+"eee").has_value()&&source.replaceValue("info",info.serialize()).has_value(),"Owned quoted original source");return source.serialize();
+}
+std::string omitFilenameConversions(const core::Document& journal){
+  std::string result="d";for(std::size_t n=0;n<journal.root().children.size();n+=2){const auto& key=journal.root().children[n];if(key.bytes=="filenameConversions"){continue;}const auto value=core::encodeValue(journal.root().children[n+1],storage::compatibleConfigLimits());check(value.has_value(),"Retain exact old accepted journal field");result+=b(key.bytes)+*value;}return result+'e';
+}
+void filenameConversionOptions(){
+  for(const auto invalid:{"d26:File.Character.Conversionsi1ee","d26:File.Character.Conversions0:26:File.Character.Conversions0:e"}){Area area;const auto sealed=take(storage::inspectTorrentIntake(area.input));write(area.profile/"biglybt.config",invalid);check(!storage::readOriginalFilenameConversions(*area.lease)&&!namedImport(area,sealed,{}),"Malformed/duplicate policy cannot acquire filename authority");area.untouched();}
+  for(const bool configured:{false,true}){
+    Area area;const auto original=quotedMetadata();write(area.input,original);const std::string conversion=configured?"\"=Q":"\"='";
+    if(configured){write(area.profile/"biglybt.config","d26:File.Character.Conversions"+b(conversion)+'e');}
+    const auto policy=take(storage::readOriginalFilenameConversions(*area.lease));check(policy==conversion,"Actual held original filename policy");const auto sealed=take(storage::inspectTorrentIntake(area.input,{},policy));check(sealed.layout().name==(configured?"bQundle":"b'undle")&&sealed.layout().files[0].path==(configured?"aQb.bin":"a'b.bin"),"Preview shows exact held projection");
+    const auto hash=take(namedImport(area,sealed,{}));const auto saved=parse(read(area.profile/"downloads.config"));const auto& row=saved.find("downloads")->children[0];check(row.find("save_file")->bytes==sealed.layout().name,"Intake saves projected original root");const auto state=parse(read(area.profile/"active"/(hash.hex()+".dat")));check(rawValue(state,"info")==rawValue(parse(original),"info")&&read(area.profile/"torrents"/(hash.hex()+".torrent"))==original&&!fs::exists(area.destination),"Filename policy never rewrites hashes/archive or creates payload");
+  }
+  {Area area;write(area.input,quotedMetadata());const auto sealed=take(storage::inspectTorrentIntake(area.input));write(area.profile/"biglybt.config","d26:File.Character.Conversions3:\"=Qe");check(!namedImport(area,sealed,{})&&!storage::hasPendingTorrentIntake(*area.lease),"Policy changed after preview refuses before journal");area.untouched();}
+  for(const auto stage:{storage::TorrentIntakeStage::JournalSynced,storage::TorrentIntakeStage::StatePublished,storage::TorrentIntakeStage::ArchivePublished,storage::TorrentIntakeStage::InventoryPublished}){
+    Area area;write(area.input,quotedMetadata());const auto sealed=take(storage::inspectTorrentIntake(area.input));interrupted=stage;check(!namedImport(area,sealed,{},interrupt),"Accepted policy journal interrupted");const auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));check(journal.find("filenameConversions")&&journal.find("filenameConversions")->bytes=="\"='","Exact policy owned in journal");area.reopen();check(take(storage::recoverTorrentIntake(*area.lease)).has_value(),"Each unchanged policy stage replays");
+  }
+  {Area area;write(area.input,quotedMetadata());const auto sealed=take(storage::inspectTorrentIntake(area.input));interrupted=storage::TorrentIntakeStage::JournalSynced;check(!namedImport(area,sealed,{},interrupt),"Freeze original policy before change");const auto before=read(area.profile/"downloads.config");write(area.profile/"biglybt.config","d26:File.Character.Conversions3:\"=Qe");area.reopen();check(!storage::recoverTorrentIntake(*area.lease)&&read(area.profile/"downloads.config")==before&&!fs::exists(area.profile/"active")&&storage::hasPendingTorrentIntake(*area.lease),"Changed policy never reinterprets accepted paths");}
+  {Area area;const auto sealed=take(storage::inspectTorrentIntake(area.input));interrupted=storage::TorrentIntakeStage::JournalSynced;check(!namedImport(area,sealed,{},interrupt),"Freeze unchanged old journal semantics");const auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));write(area.profile/"BiglyBTC.torrent-import",omitFilenameConversions(journal));area.reopen();check(take(storage::recoverTorrentIntake(*area.lease)).has_value(),"Old absent policy journal replays exact unchanged names");}
+  {Area area;write(area.input,quotedMetadata());write(area.profile/"biglybt.config","d26:File.Character.Conversions0:e");const auto sealed=take(storage::inspectTorrentIntake(area.input,{},""));interrupted=storage::TorrentIntakeStage::JournalSynced;check(!namedImport(area,sealed,{},interrupt),"Freeze legacy raw quoted intent");const auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));write(area.profile/"BiglyBTC.torrent-import",omitFilenameConversions(journal));check(fs::remove(area.profile/"biglybt.config"),"Restore actual default filename policy");const auto before=read(area.profile/"downloads.config");area.reopen();const auto refused=storage::recoverTorrentIntake(*area.lease);check(!refused&&refused.error().code==storage::ErrorCode::Unsupported&&read(area.profile/"downloads.config")==before&&!fs::exists(area.profile/"active")&&storage::hasPendingTorrentIntake(*area.lease),"Old policy-less journal is retained rather than renamed/reinterpreted");}
+  {Area area;auto source=parse(quotedMetadata());auto info=parse(rawValue(source,"info"));check(info.replaceValue("files","ld6:lengthi100e4:pathl3:a/beee").has_value()&&source.replaceValue("info",info.serialize()).has_value(),"Linux slash original component");write(area.input,source.serialize());const auto sealed=take(storage::inspectTorrentIntake(area.input));std::vector<compat::FilePolicy> policies(sealed.layout().files.size());const auto hash=take(storage::importTorrentWithFileOptions(*area.lease,sealed,area.destination,true,policies,nullptr,false,{}, {},false,false,false,core::TorrentIntakeTrackerTiers{}));const auto state=parse(read(area.profile/"active"/(hash.hex()+".dat")));check(sealed.layout().files[0].path=="a b"&&rawValue(state,"info")==rawValue(source,"info")&&!fs::exists(area.destination),"Explicit tracker clear retains Linux filename projection and exact raw info");}
+}
 void customExistingScopes(){
   for(const int kind:{0,1,2}){
     Area area;const auto source=namedMetadata(kind);write(area.input,source);const auto sealed=take(storage::inspectTorrentIntake(area.input));placeCustom(area,sealed,"chosen");
@@ -373,6 +397,7 @@ void verifiedSeedIntentCases(){
 }
 int main(){
   try{
+    filenameConversionOptions();
     customExistingScopes();
     verifiedSeedIntentCases();
     saveNameOptions();

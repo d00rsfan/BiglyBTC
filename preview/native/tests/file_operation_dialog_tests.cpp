@@ -40,6 +40,32 @@ class FileOperationDialogTests final:public QObject {
  Q_OBJECT
 private slots:
  void initTestCase(){qRegisterMetaType<FileOperationRequest>();qRegisterMetaType<FileOperationSubmission>();}
+ void oneFileRequestBindsOriginalIndexAndRefusesStalePlan() {
+  FileOperationDialog dialog;QSignalSpy reads(&dialog,&FileOperationDialog::planRequested),writes(&dialog,&FileOperationDialog::executeRequested);
+  QVERIFY(!dialog.beginOperation(5,1,target(),FileOperation::MoveFile,QStringLiteral("/owned/new.bin")));
+  QVERIFY(dialog.beginOperation(5,1,target(),FileOperation::MoveFile,QStringLiteral("/owned/new.bin"),7));dialog.show();QTRY_COMPARE(reads.count(),1);
+  const auto request=reads.last()[0].value<FileOperationRequest>();QCOMPARE(request.originalIndex,7);QCOMPARE(request.destinationParent,QStringLiteral("/owned/new.bin"));QVERIFY(request.deleteTorrentFile&&!*request.deleteTorrentFile);
+  auto packet=planFor(request);packet->paths.resize(1);packet->paths[0].destination=request.destinationParent;packet->presentFiles=1;packet->missingFiles=0;QVERIFY(dialog.setPlan(packet));
+  auto* destination=dialog.findChild<QLineEdit*>("file-operation-destination");QVERIFY(destination);destination->setText(QStringLiteral("/owned/other.bin"));QVERIFY(!dialog.plan());QVERIFY(!dialog.setPlan(packet));dialog.accept();QCOMPARE(writes.count(),0);
+  dialog.findChild<QPushButton*>("file-operation-review")->click();QCOMPARE(reads.count(),2);auto next=reads.last()[0].value<FileOperationRequest>();QCOMPARE(next.originalIndex,7);QVERIFY(next.request>request.request);
+  auto actual=planFor(next);actual->paths.resize(1);actual->paths[0].destination=next.destinationParent;actual->presentFiles=1;actual->missingFiles=0;QVERIFY(dialog.setPlan(actual));QVERIFY(capture(dialog,QStringLiteral("file-operation-rename-preview.png")));dialog.accept();QCOMPARE(writes.count(),1);QCOMPARE(writes[0][0].value<FileOperationSubmission>().plan->request,next);
+ }
+ void recycleDefaultIsShownAndPermanentChoiceRequiresNewConsent() {
+  FileOperationDialog dialog;QSignalSpy reads(&dialog,&FileOperationDialog::planRequested),writes(&dialog,&FileOperationDialog::executeRequested);
+  QVERIFY(dialog.beginOperation(9,1,target(),FileOperation::RemoveDeleteData));dialog.show();QTRY_COMPARE(reads.count(),1);
+  auto packet=planFor(reads[0][0].value<FileOperationRequest>());packet->recyclePayload=true;packet->targetRoot=QStringLiteral("/owned/Trash/files");packet->paths[0].destination=QStringLiteral("/owned/Trash/files/a");packet->paths[2].destination=QStringLiteral("/owned/Trash/files/empty");QVERIFY(!packet->request.recyclePayload);QVERIFY(dialog.setPlan(packet));
+  auto* recycle=dialog.findChild<QCheckBox*>("file-operation-recycle");auto* consent=dialog.findChild<QCheckBox*>("file-operation-confirm-delete");QVERIFY(recycle&&consent);QVERIFY(recycle->isChecked());QVERIFY(consent->text().contains("Trash"));dialog.accept();QCOMPARE(writes.count(),0);
+  consent->setChecked(true);recycle->setChecked(false);QVERIFY(!dialog.plan());QVERIFY(!consent->isChecked());dialog.accept();QCOMPARE(writes.count(),0);
+  dialog.findChild<QPushButton*>("file-operation-review")->click();QCOMPARE(reads.count(),2);const auto current=reads[1][0].value<FileOperationRequest>();QVERIFY(current.recyclePayload&&!*current.recyclePayload);
+  auto wrong=planFor(current);wrong->recyclePayload=true;QVERIFY(!dialog.setPlan(wrong));dialog.findChild<QPushButton*>("file-operation-review")->click();QCOMPARE(reads.count(),3);
+  auto permanent=planFor(reads[2][0].value<FileOperationRequest>());QVERIFY(dialog.setPlan(permanent));QVERIFY(consent->text().contains("permanently"));QVERIFY(capture(dialog,QStringLiteral("file-operation-recycle-choice.png")));consent->setChecked(true);dialog.accept();QCOMPARE(writes.count(),1);QVERIFY(!writes[0][0].value<FileOperationSubmission>().plan->recyclePayload);
+ }
+ void deletedPerFileDestinationCannotSubmitAndRevertNeedsNoPicker() {
+  FileOperationDialog dialog;QSignalSpy reads(&dialog,&FileOperationDialog::planRequested),writes(&dialog,&FileOperationDialog::executeRequested);
+  QVERIFY(dialog.beginOperation(12,1,target(),FileOperation::RevertFile,{},0));dialog.show();QTRY_COMPARE(reads.count(),1);const auto request=reads[0][0].value<FileOperationRequest>();QVERIFY(request.destinationParent.isEmpty());QCOMPARE(request.originalIndex,0);
+  auto packet=planFor(request);packet->paths.resize(1);packet->paths[0].destination=QStringLiteral("/owned/original.bin");packet->presentFiles=1;packet->missingFiles=0;QVERIFY(dialog.setPlan(packet));
+  delete dialog.findChild<QLineEdit*>("file-operation-destination");dialog.accept();QCOMPARE(writes.count(),0);dialog.invalidateSession();QVERIFY(!dialog.setPlan(packet));
+ }
  void exactOwnedPlanAndExplicitDeleteConfirmation() {
   FileOperationDialog dialog;QSignalSpy reads(&dialog,&FileOperationDialog::planRequested),writes(&dialog,&FileOperationDialog::executeRequested);
   QVERIFY(dialog.beginOperation(1,7,target(),FileOperation::RemoveDeleteData));QCOMPARE(reads.count(),0);

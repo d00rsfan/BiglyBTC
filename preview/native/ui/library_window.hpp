@@ -227,7 +227,8 @@ private:
   void refreshColumnLayouts(bool initial = false);
   void queueColumnLayouts();
   void saveColumnLayout();
-  void openFileOperation(FileOperation);
+  void openFileOperation(FileOperation,int originalIndex=-1,QString destination={});
+  void openFileMapping(FileOperation);
   void openTorrentCreation();
   QPointer<FileOperationDialog> fileOperationDialog_;
   QPointer<FileOperationSequence> fileOperationSequence_;
@@ -370,6 +371,7 @@ private:
   QPointer<QAction> openMagnet_;
   std::array<QPointer<QAction>, 4> filePolicyActions_;
   QPointer<QAction> fileCompaction_;
+  std::array<QPointer<QAction>,3> filePathActions_;
   bool fileMenuOpen_ = false;
   std::optional<FilePolicySelection> fileMenuSelection_;
   std::optional<Target> detailsRequestedFor_;

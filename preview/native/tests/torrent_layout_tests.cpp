@@ -20,6 +20,28 @@ std::string list(const std::string& entries) { return "d4:name6:bundle12:piece l
 }
 
 int main(int argc, char** argv) {
+  if(argc==4&&std::string_view(argv[1])=="--inspect-linux-names"){
+    const auto read=[](const char* path,std::size_t limit){std::ifstream stream(path,std::ios::binary);check(static_cast<bool>(stream),"Owned filename fixture unavailable");std::string value(std::istreambuf_iterator<char>(stream),{});check(value.size()<=limit,"Owned filename fixture bound");return value;};
+    const auto raw=read(argv[2],1024*1024),conversions=read(argv[3],16384);const auto source=core::Document::parse(raw);check(source.has_value(),"Filename fixture bencode");const auto layout=compat::originalLayout(*source,100000,conversions);check(layout.has_value(),layout?"":layout.error().message.c_str());
+    const auto hex=[](std::string_view value){std::string out;for(const unsigned char c:value){out+="0123456789ABCDEF"[c>>4];out+="0123456789ABCDEF"[c&15];}return out;};std::cout<<"NAME\t"<<hex(layout->name)<<'\n';
+    for(std::size_t n=0;n<layout->files.size();++n){const auto& file=layout->files[n];std::cout<<"FILE\t"<<n<<'\t'<<file.offset<<'\t'<<file.bytes<<'\t'<<hex(file.path)<<'\n';}check(source->serialize()==raw,"Filename inspection cannot rewrite metadata");return 0;
+  }
+  {
+    const std::array<std::array<std::string_view,3>,9> cases{{
+      {{"a\"b.bin","\"='","a'b.bin"}},{{"a\"b.bin","","a\"b.bin"}},{{"ab","a=b,b=c","bc"}},{{"a","a=b,a=c","c"}},
+      {{"a"," a:b , ignored ,a=x","x"}},{{"a/b\rc\nd","","a b c d"}},{{"quote","\"='","quote"}},{{"a","\xf0\x9f\x98\x80=x","a"}},{{"x","x=\xc3\xa9","\xc3\xa9"}}
+    }};
+    for(const auto& row:cases){const auto result=compat::originalFilenameComponent(row[0],row[1]);check(result&&*result==row[2],"Exact original UTF16/trim/nonchained Linux conversion");}
+    for(const auto& row:std::array<std::array<std::string_view,2>,4>{{{{"a","a=."}},{{"a","a=\\"}},{{"a",std::string_view("a=\0",3)}},{{"a",std::string_view("a=\xff",3)}}}}){check(!compat::originalFilenameComponent(row[0],row[1]),"Unsafe/invalid configured output remains refused");}
+    const auto source=document(list(file("a\"b.bin","1")));const auto raw=source.serialize();const auto legacy=compat::originalLayout(source);const auto converted=compat::originalLayout(source,100000,compat::OriginalDefaultFilenameConversions);
+    check(legacy&&legacy->files[0].path=="a\"b.bin"&&converted&&converted->files[0].path=="a'b.bin"&&converted->filenameConverted&&source.serialize()==raw,"Old raw projection and explicit original conversion are distinct; info unchanged");
+    check(!compat::originalLayout(document(list(file("a\"b.bin","1")+file("a'b.bin","1"))),100000,compat::OriginalDefaultFilenameConversions),"Conversion collisions refuse before filesystem authority");
+    check(!compat::originalLayout(document("d5:filesld6:lengthi1e4:pathl1:aee" "d6:lengthi1e4:pathl1:x1:yeee4:name4:root12:piece lengthi16384ee"),100000,"x=a"),"A converted file cannot become another file's parent");
+    check(!compat::originalLayout(document(list(file("a","1")+file("a-foo","1")+"d6:lengthi1e4:pathl1:x1:bee")),100000,"x=a"),"Every converted ancestor is checked even when a-foo sorts between a and a/b");
+    for(const auto reserved:{".git",".BiglyBTC.reserved"}){check(!compat::originalFilenameComponent(reserved,""),"Reserved native component is never payload authority");}
+    const auto tree=document("d9:file treed1:Ad0:d6:lengthi1eee1:Bd0:d6:lengthi1eeee12:meta versioni2e4:name4:root12:piece lengthi16384ee");
+    const auto order=compat::originalLayout(tree,100000,"A=Z,B=Y");check(order&&order->files.front().path=="Z"&&order->files.back().path=="Y","Original raw UTF16/index order precedes path transformation");
+  }
   if(argc>=3&&std::string_view(argv[1])=="--inspect-names"){
     check(argc==3,"Exactly one generated metadata input required");
     std::ifstream stream(argv[2],std::ios::binary);check(static_cast<bool>(stream),"Generated name fixture unavailable");

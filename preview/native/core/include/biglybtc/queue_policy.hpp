@@ -72,7 +72,12 @@ struct QueueActivityMemory {
   bool operator==(const QueueActivityMemory&) const = default;
 };
 enum class QueueTorrentState { Queued, Waiting, Preparing, Checking, Downloading, Seeding, Stopping, Stopped, Failed };
-struct QueueSwarm { std::int32_t seeds = 0, peers = 0; bool valid = false; };
+struct QueueSwarm {
+  std::int32_t seeds = 0, peers = 0; bool valid = false;
+  // Actual original AggregateScrapeResult returns RT_SUCCESS even when its
+  // counts are still unknown. Kept distinct from last rank-success authority.
+  std::optional<bool> startupSuccess{};
+};
 struct QueueTorrentFacts {
   std::uint64_t token = 0; // Unique nonzero worker identity, never an array index.
   std::uint32_t position = 1;
@@ -81,7 +86,7 @@ struct QueueTorrentFacts {
   bool forceStart = false, manuallyPaused = false, moving = false, newlyCompleted = false;
   // Optional original external FP authority; never inferred from tag membership.
   bool externallyFirstPriority = false, externallyNotFirstPriority = false;
-  std::optional<std::int32_t> shareRatio; // Thousandths; -1 is original infinity.
+  std::optional<std::int32_t> shareRatio; //Java int; −1 infinity, other negatives can be wrapped source arithmetic.
   std::optional<std::int32_t> minimumShareRatio, maximumShareRatio;
   std::optional<std::int64_t> secondsDownloading, secondsSeeding, secondsSinceLastUpload;
   std::optional<std::int64_t> runningMillis, seedingMillis, secondsSinceLastActive;

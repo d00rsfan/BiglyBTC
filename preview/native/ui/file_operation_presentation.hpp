@@ -9,13 +9,15 @@
 
 namespace biglybtc::ui {
 
-enum class FileOperation { RemoveKeepData, RemoveDeleteData, Relocate, Relink };
+enum class FileOperation { RemoveKeepData, RemoveDeleteData, Relocate, Relink, MoveFile, RetargetFile, RevertFile };
 struct FileOperationRequest {
   quint64 session=0, request=0, revision=0;
   Target target;
   FileOperation operation=FileOperation::RemoveKeepData;
   QString destinationParent;
   std::optional<bool> deleteTorrentFile{}; // null: resolve original preference in the worker.
+  int originalIndex=-1; // Only one-file operations accept an original nonpad index.
+  std::optional<bool> recyclePayload{}; // null: worker resolves original preference.
   bool operator==(const FileOperationRequest&) const = default;
 };
 struct FileOperationPath {
@@ -40,6 +42,7 @@ struct FileOperationPlanPacket {
   QString archiveBackupPath;
   quint64 archiveBackupBytes=0;
   bool archiveBackupPresent=false;
+  bool recyclePayload=false;
 };
 using FileOperationPlanPresentation=std::shared_ptr<const FileOperationPlanPacket>;
 struct FileOperationSubmission {
@@ -71,6 +74,9 @@ struct TorrentCreationOptions {
   QString comment;
   bool importAfterCreation=false; // Explicit request; creation alone never imports.
   TorrentCreationFormat format=TorrentCreationFormat::V1;
+  QString sourceTag;
+  QStringList urlSeeds,httpSeeds;
+  bool dhtBackup=true,extraHashes=false;
 };
 struct TorrentCreationRequest {
   quint64 session=0, request=0, revision=0;

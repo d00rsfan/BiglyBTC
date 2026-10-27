@@ -1,4 +1,5 @@
 #include "original_storage_defaults.hpp"
+#include "original_filename_policy.hpp"
 #include "file_io.hpp"
 
 #include <algorithm>
@@ -243,4 +244,5 @@ std::expected<void,Error> applyOriginalStorageDefaults(core::Document& attribute
     return {};
   });
 }
+#include "original_filename_policy.inc"
 } // namespace biglybtc::storage

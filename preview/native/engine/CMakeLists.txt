@@ -34,7 +34,8 @@ target_link_libraries(biglybtc_local_engine PRIVATE ${CMAKE_DL_LIBS})
 target_sources(biglybtc_local_engine PRIVATE live_settings.cpp live_settings.hpp)
 
 target_sources(biglybtc_local_engine PRIVATE torrent_creator.cpp)
-find_package(OpenSSL REQUIRED COMPONENTS Crypto)
+find_package(OpenSSL 3.0 REQUIRED COMPONENTS Crypto)
+target_link_libraries(biglybtc_local_engine PRIVATE OpenSSL::Crypto)
 target_sources(biglybtc_profile PRIVATE ../adapters/file_operations.cpp ../adapters/file_operation_io.cpp)
 target_link_libraries(biglybtc_profile PRIVATE OpenSSL::Crypto)
 

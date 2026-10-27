@@ -93,6 +93,38 @@ void expect(const std::expected<CreateResult, CreateError>& result, CreateErrorC
 } // namespace
 int main() {
   try {
+    run("original source, webseed and DHT metadata remain in their exact dictionaries", [] {
+      Area area;write(area.source(),"a");auto options=area.options();options.sourceTag="owned π";
+      options.urlSeeds={"https://seeds.invalid/payload"};options.httpSeeds={"http://seeds.invalid/script"};options.dhtBackup=false;options.extraHashes=true;
+      const auto result=createTorrent(options);CHECK(result);auto document=biglybtc::core::Document::parse(read(area.output()));CHECK(document);
+      const auto* info=document->find("info");CHECK(info&&info->find("source")&&info->find("sha1")&&info->find("ed2k"));
+      CHECK(info->find("source")->bytes==options.sourceTag);
+      CHECK(info->find("sha1")->bytes==lt::hasher("a",1).final().to_string());
+      const std::string expected="\xbd\xe5\x2c\xb3\x1d\xe3\x3e\x46\x24\x5e\x05\xfb\xdb\xd6\xfb\x24";
+      CHECK(info->find("ed2k")->bytes==expected);
+      CHECK(document->find("url-list")->children[0].bytes==options.urlSeeds[0]);
+      CHECK(document->find("httpseeds")->children[0].bytes==options.httpSeeds[0]);
+      CHECK(document->find("azureus_properties")->find("dht_backup_enable")->integer==0);
+      auto without=options;without.output=area.root/"without.torrent";without.urlSeeds.clear();without.httpSeeds.clear();without.dhtBackup=true;
+      const auto outside=createTorrent(without);CHECK(outside&&outside->selectedHash==result->selectedHash);
+      without.output=area.root/"tag.torrent";without.sourceTag="another";const auto changed=createTorrent(without);CHECK(changed&&changed->selectedHash!=result->selectedHash);
+      without.output=area.root/"invalid.torrent";without.format=CreateFormat::V2;expect(createTorrent(without),CreateErrorCode::Options);CHECK(!fs::exists(without.output));
+      without.format=CreateFormat::V1;without.httpSeeds={"file:///no"};expect(createTorrent(without),CreateErrorCode::Options);CHECK(!fs::exists(without.output));
+    });
+    run("original extra hashes include actual empty leaves and hybrid virtual padding", [] {
+      for(const auto format:{CreateFormat::V1,CreateFormat::Hybrid}) {
+        Area area;const auto source=area.root/"bundle";fs::create_directory(source);write(source/"a","a");write(source/"b","");write(source/"c","b");
+        auto options=area.options();options.source=source;options.format=format;options.pieceSize=32768;options.extraHashes=true;
+        const auto result=createTorrent(options);CHECK(result);auto document=biglybtc::core::Document::parse(read(area.output()));CHECK(document);
+        const auto* info=document->find("info");CHECK(info&&info->find("sha1")&&info->find("ed2k"));
+        std::string stream="a";if(format==CreateFormat::Hybrid) stream.resize(32768,'\0');stream+='b';
+        CHECK(info->find("sha1")->bytes==lt::hasher(stream.data(),static_cast<int>(stream.size())).final().to_string());
+        const auto* files=info->find("files");CHECK(files);std::size_t real=0;
+        for(const auto& file:files->children){const auto* attr=file.find("attr");if(attr&&attr->bytes.find('p')!=std::string::npos) continue;
+          CHECK(file.find("sha1")&&file.find("ed2k"));if(file.find("length")->integer==0){CHECK(file.find("sha1")->bytes==lt::hasher().final().to_string());CHECK(file.find("ed2k")->bytes==std::string("\x31\xd6\xcf\xe0\xd1\x6a\xe9\x31\xb7\x3c\x59\xd7\xe0\xc0\x89\xc0",16));}++real;
+        }CHECK(real==3);
+      }
+    });
     run("explicit v2 and hybrid retain actual full hashes and authenticated tail projection", [] {
       for(const auto format:{CreateFormat::V2,CreateFormat::Hybrid}) {
         Area area;const auto bytes=data(77003);write(area.source(),bytes);auto options=area.options();options.format=format;
@@ -207,6 +239,37 @@ int main() {
       options = area.options(); const auto boundary = createTorrent(options);
       CHECK(boundary && boundary->pieceSize == 32768 && boundary->pieceCount == 2049);
     });
+    run("original256MiB pieces stream across an actual sparse boundary", [] {
+      constexpr std::uint32_t size = 268435456U;
+      Area area; write(area.source(), "payload");
+      const int fd = ::open(area.source().c_str(), O_WRONLY | O_CLOEXEC | O_NOFOLLOW);
+      CHECK(fd >= 0 && ::ftruncate(fd, static_cast<off_t>(size) + 17) == 0 && ::close(fd) == 0);
+      struct stat before{}, after{}; CHECK(::stat(area.source().c_str(), &before) == 0);
+      auto options = area.options(); options.pieceSize = size;
+      std::uint64_t observed = 0;
+      const auto result = createTorrent(options, [&](const CreateProgress& progress) {
+        if (progress.stage == CreateStage::Hashing) {
+          CHECK(progress.completedBytes >= observed); observed = progress.completedBytes;
+          CHECK(observed <= static_cast<std::uint64_t>(size) + 17);
+        }
+      });
+      CHECK(result && result->pieceCount == 2 && result->pieceSize == size);
+      CHECK(observed == static_cast<std::uint64_t>(size) + 17);
+      const auto info = load(area.output()); CHECK(info.piece_length() == static_cast<int>(size));
+      lt::hasher first; first.update("payload", 7);
+      const std::array<char, 65536> zeros{};
+      std::uint32_t remaining = size - 7;
+      while (remaining) {
+        const auto chunk = std::min<std::uint32_t>(remaining, zeros.size());
+        first.update(zeros.data(), static_cast<int>(chunk)); remaining -= chunk;
+      }
+      CHECK(info.hash_for_piece(lt::piece_index_t{0}) == first.final());
+      CHECK(info.hash_for_piece(lt::piece_index_t{1}) == lt::hasher(zeros.data(), 17).final());
+      CHECK(::stat(area.source().c_str(), &after) == 0);
+      CHECK(before.st_dev == after.st_dev && before.st_ino == after.st_ino && before.st_size == after.st_size);
+      CHECK(before.st_mtim.tv_sec == after.st_mtim.tv_sec && before.st_mtim.tv_nsec == after.st_mtim.tv_nsec);
+      CHECK(before.st_ctim.tv_sec == after.st_ctim.tv_sec && before.st_ctim.tv_nsec == after.st_ctim.tv_nsec);
+    });
     run("existing output and racing publication never replace data", [] {
       Area area; write(area.source(), data(90000)); write(area.output(), "existing output");
       expect(createTorrent(area.options()), CreateErrorCode::Conflict); CHECK(read(area.output()) == "existing output");
@@ -279,7 +342,7 @@ int main() {
     });
     run("piece count depth and option bounds reject without publication", [] {
       Area area; write(area.source(), "payload"); auto options = area.options();
-      for (const auto size : {1u, 16384u, 268435456u}) { options.pieceSize = size; expect(createTorrent(options), CreateErrorCode::Options); }
+      for (const auto size : {1u, 16384u, 536870912u}) { options.pieceSize = size; expect(createTorrent(options), CreateErrorCode::Options); }
       options = area.options(); options.comment = std::string(CreateMaximumCommentBytes + 1, 'x'); expect(createTorrent(options), CreateErrorCode::Options);
       options = area.options(); options.trackerTiers = {{}}; expect(createTorrent(options), CreateErrorCode::Options);
       options.trackerTiers = {{"file:///tmp/tracker"}}; expect(createTorrent(options), CreateErrorCode::Options);

@@ -33,6 +33,9 @@ struct ManagedQueueMetadata {
   std::int64_t position = 1, downloaded = 0, uploaded = 0, discarded = 0, hashFailed = 0;
   std::int64_t secondsDownloading = 0, secondsSeeding = 0;
   std::optional<std::int32_t> minimumShareRatio, maximumShareRatio;
+  std::optional<std::string> aggregateScrapeCache;
+  std::optional<std::int64_t> legacyScrapeCache;
+  std::optional<std::vector<std::array<unsigned char,32>>> trackerOrder;
 };
 
 // Storage prerequisite only: the future owner must independently hold checking

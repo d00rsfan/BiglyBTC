@@ -3,6 +3,8 @@
 #include "file_policy_commands.hpp"
 #include "owned_engine_fixture.hpp"
 #include "verified_seeding_fixture.hpp"
+#include "managed_queue_observations.hpp"
+#include <thread>
 
 #include <QtTest>
 
@@ -122,6 +124,39 @@ core::QueuePolicy policy(int downloads,int active) {
 class ManagedQueueTests final:public QObject {
   Q_OBJECT
 private slots:
+
+  void actualObserverQueueHasBoundedNonblockingProducerAndWorkerOnlyDrain(){
+    engine::detail::ManagedQueueObservations observations(1);observations.installed();
+    std::thread producer([&]{core::QueueObservation event;event.kind=core::QueueObservationKind::StartedDownload;event.sequence=1;event.observedNanos=1000000000;event.observedWallMillis=100000;observations.observe(event);});
+    producer.join();const auto first=observations.facts(2000);QVERIFY(first.durations);QCOMPARE(first.durations->downloading,std::int64_t{1});
+    std::atomic<bool> foreignHadFacts{false};std::thread foreignReader([&]{foreignHadFacts=observations.facts(2000).durations.has_value();});foreignReader.join();QVERIFY(!foreignHadFacts.load());
+    QVERIFY(observations.facts(2000).durations); // A rejected reader cannot consume the source stream.
+    std::thread overflow([&]{core::QueueObservation event;event.kind=core::QueueObservationKind::Finished;event.observedNanos=2000000000;event.observedWallMillis=101000;
+      for(std::uint64_t i=0;i<=engine::detail::ManagedQueueObservations::Capacity;++i){event.sequence=i+2;observations.observe(event);}});
+    overflow.join();QVERIFY(!observations.facts(2000).durations);QVERIFY(!observations.settledDurations());
+  }
+
+  void actualProviderLifecycleAndPayloadSendSmoothingRetireAndReopenIndependently_data(){QTest::addColumn<bool>("multi");QTest::newRow("single")<<false;QTest::newRow("multi")<<true;}
+  void actualProviderLifecycleAndPayloadSendSmoothingRetireAndReopenIndependently(){
+    QFETCH(bool,multi);test::OwnedEngineFixture fixture(multi);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);
+    auto lease=held(fixture);auto service=owner();auto p=policy(1,2);p.rankMode=core::QueueRankMode::None;p.minimumSeedSeconds=0;p.minimumSeedActiveSeconds=0;p.ignoreZeroPeers=false;p.firstPriorityIgnoreZeroPeers=false;
+    QVERIFY(service->configureQueuePolicy(p));QVERIFY(service->startManaged(lease,{.hash=*fixture.hash,.ownedLoopbackPeerPort=fixture.port()}));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=service->poll();const auto current=status(*service,*fixture.hash);return poll&&current&&!current->failure&&current->complete&&current->retained&&current->queueSourceFacts&&current->queueSourceFacts->durations;})(),30000);
+    const auto before=status(*service,*fixture.hash);QVERIFY(before&&before->queueSourceFacts);QVERIFY(before->received>0);const auto admission=before->admission;
+    test::VerifiedSeedCase actual{fixture.root.path(),fixture.profile,fixture.payload,fixture.stateFile,*fixture.hash,fixture.files};
+    // The receiver validates actual bytes from THIS listener/owner; no invented
+    // upload values or replayed protocol samples can satisfy the source rate.
+    QVERIFY(!test::receiveVerifiedSeed(*service,actual).isEmpty());
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=service->poll();const auto current=status(*service,*fixture.hash);return poll&&current&&!current->failure&&current->admission==admission&&current->sent>before->sent&&current->queueSmoothedPayloadUploadRate&&*current->queueSmoothedPayloadUploadRate>0;})(),5000);
+    QVERIFY(service->stopManaged(*fixture.hash));
+    const auto stopping=status(*service,*fixture.hash);QVERIFY(stopping&&!stopping->queueSourceFacts&&!stopping->queueSmoothedPayloadUploadRate);
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=service->poll();const auto current=status(*service,*fixture.hash);return poll&&current&&!current->failure&&!current->retained&&current->phase==Phase::Stopped;})(),10000);
+    const auto retired=status(*service,*fixture.hash);QVERIFY(retired&&!retired->queueSourceFacts&&!retired->queueSmoothedPayloadUploadRate);
+    QVERIFY(service->startManaged(lease,{.hash=*fixture.hash}));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=service->poll();const auto current=status(*service,*fixture.hash);return poll&&current&&!current->failure&&current->admission>admission&&current->complete&&current->queueSmoothedPayloadUploadRate;})(),10000);
+    const auto fresh=status(*service,*fixture.hash);QVERIFY(fresh&&fresh->queueSourceFacts&&fresh->queueSourceFacts->durations);QCOMPARE(fresh->sent,std::int64_t{0});QCOMPARE(*fresh->queueSmoothedPayloadUploadRate,std::int64_t{0});
+    const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(fixture.intact());
+  }
 
   void verifiedSeedActualPostPrimaryFailureCannotReleaseOrReplay(){
     QTemporaryDir directory;QVERIFY(directory.isValid());const auto fixture=test::prepareVerifiedSeedCase(directory.path()+"/owned",false);

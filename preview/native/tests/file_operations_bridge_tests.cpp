@@ -45,7 +45,7 @@ qint64 completed(const QSignalSpy& spy,const core::TorrentHash& hash) {
  qint64 result=0;for(const auto& arguments:spy){const auto update=qvariant_cast<ui::Telemetry>(arguments[0]);if(update.target.hash==QString::fromStdString(hash.hex())){result=std::max(result,update.completed);}}return result;
 }
 ui::FileOperationRequest request(const QSignalSpy& rows,quint64 session,quint64 id,const core::TorrentHash& hash,ui::FileOperation operation,QString destination={}) {
- const auto selected=target(rows,hash);return {session,id,selected.generation,selected,operation,std::move(destination)};
+ const auto selected=target(rows,hash);ui::FileOperationRequest out{session,id,selected.generation,selected,operation,std::move(destination)};out.recyclePayload=false;return out;
 }
 ui::FileOperationPlanPresentation prepared(const QSignalSpy& spy){return spy.empty()?ui::FileOperationPlanPresentation{}:qvariant_cast<ui::FileOperationPlanPresentation>(spy.last()[0]);}
 ui::FileOperationResultPresentation finished(const QSignalSpy& spy){return spy.empty()?ui::FileOperationResultPresentation{}:qvariant_cast<ui::FileOperationResultPresentation>(spy.last()[0]);}
@@ -66,6 +66,34 @@ ui::TorrentCreationRequest creation(const test::OwnedEngineFixture& f,quint64 se
 class FileOperationsBridgeTests final:public QObject {
  Q_OBJECT
 private slots:
+ void actualPausedAdmissionMovesOneFileAndRechecksWithoutChangingIntent() {
+  test::OwnedEngineFixture f(true);edit(f,{{"state","i70e"},{"maxdl","i8192e"}});QTRY_VERIFY_WITH_TIMEOUT(f.ready(),30000);
+  const auto destination=f.root.path()+QStringLiteral("/per-file");QVERIFY(QDir().mkpath(destination));const auto moved=destination+QStringLiteral("/chosen.bin");
+  app::SessionBridge bridge;QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady),sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),traffic(&bridge,&app::SessionBridge::progressReady),plans(&bridge,&app::SessionBridge::fileOperationPrepared),results(&bridge,&app::SessionBridge::fileOperationFinished),closed(&bridge,&app::SessionBridge::sessionClosed);
+  QVERIFY(bridge.open(f.native(),f.port()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty()&&latest(rows),30000);QVERIFY(bridge.downloadAction({target(rows,*f.hash)},core::DownloadAction::Start));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy(),10000);QTRY_VERIFY_WITH_TIMEOUT(completed(traffic,*f.hash)==test::OwnedEngineFixture::PayloadBytes,30000);
+  QVERIFY(bridge.downloadAction({target(rows,*f.hash)},core::DownloadAction::Pause));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&item(rows,*f.hash)&&item(rows,*f.hash)->state==QStringLiteral("Paused"),10000);
+  const auto original=f.payload+'/'+f.files[0].relative;const auto bytes=test::read(original);const auto sibling=f.payload+'/'+f.files.back().relative;const auto siblingBytes=test::read(sibling);const auto saved=inventory(f).downloads[0];
+  auto value=request(rows,sessions[0][0].toULongLong(),180,*f.hash,ui::FileOperation::MoveFile,moved);value.originalIndex=0;
+  QVERIFY(bridge.prepareFileOperation(value));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&prepared(plans),10000);QVERIFY2(prepared(plans)->failure.isEmpty(),qPrintable(prepared(plans)->failure));QCOMPARE(prepared(plans)->paths.size(),std::size_t(1));
+  QVERIFY(bridge.executeFileOperation(copied(prepared(plans))));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished(results),15000);QVERIFY2(finished(results)->completed,qPrintable(finished(results)->failure));QVERIFY2(finished(results)->failure.isEmpty(),qPrintable(finished(results)->failure));
+  QCOMPARE(test::read(moved),bytes);QVERIFY(!QFileInfo::exists(original));QCOMPARE(test::read(sibling),siblingBytes);sameInode(moved,f.files[0].before);
+  const auto current=inventory(f);QCOMPARE(current.downloads[0].saveDirectory,saved.saveDirectory);QCOMPARE(current.downloads[0].saveFile,saved.saveFile);QCOMPARE(current.downloads[0].forceStart,saved.forceStart);QCOMPARE(current.paused.size(),std::size_t(1));QCOMPARE(current.paused[0].hash,*f.hash);QTRY_VERIFY_WITH_TIMEOUT(item(rows,*f.hash)&&item(rows,*f.hash)->state==QStringLiteral("Paused"),10000);
+  const auto state=parse(test::read(f.stateFile));const auto* links=state.find("attributes")->find("filelinks2");QVERIFY(links);QVERIFY(std::ranges::any_of(links->children,[&](const core::Node& n){return n.type==core::Node::Type::Bytes&&n.bytes.ends_with(moved.toStdString());}));QCOMPARE(state.find("resume")->find("data")->find("valid")->integer,std::int64_t(0));
+  QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,15000);QVERIFY(closed[0][1].toBool());QVERIFY(closed[0][2].toBool());QVERIFY(storage::ProfileLease::acquire(f.native()));
+ }
+ void originalRecycleDefaultUsesOnlyGeneratedTrashAndRequiresConfirmation() {
+  test::OwnedEngineFixture f(false);edit(f,{{"state","i70e"}});const auto data=f.root.path()+QStringLiteral("/xdg-data");QVERIFY(QDir().mkpath(data));
+  struct Environment {QByteArray previous=qgetenv("XDG_DATA_HOME");bool present=qEnvironmentVariableIsSet("XDG_DATA_HOME");~Environment(){if(present){qputenv("XDG_DATA_HOME",previous);}else{qunsetenv("XDG_DATA_HOME");}}} environment;
+  QVERIFY(qputenv("XDG_DATA_HOME",data.toUtf8()));const auto source=f.payload+'/'+f.files[0].relative;const auto bytes=test::read(source);
+  app::SessionBridge bridge;QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady),sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),plans(&bridge,&app::SessionBridge::fileOperationPrepared),results(&bridge,&app::SessionBridge::fileOperationFinished),closed(&bridge,&app::SessionBridge::sessionClosed);
+  QVERIFY(bridge.open(f.native(),0));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty()&&latest(rows),10000);
+  auto value=request(rows,sessions[0][0].toULongLong(),190,*f.hash,ui::FileOperation::RemoveDeleteData);value.deleteTorrentFile=false;value.recyclePayload.reset();
+  QVERIFY(bridge.prepareFileOperation(value));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&prepared(plans),10000);QVERIFY2(prepared(plans)->failure.isEmpty(),qPrintable(prepared(plans)->failure));QVERIFY(prepared(plans)->recyclePayload);QVERIFY(!QFileInfo::exists(data+QStringLiteral("/Trash")));QCOMPARE(prepared(plans)->paths.size(),std::size_t(1));const auto trashData=prepared(plans)->paths[0].destination;QVERIFY(trashData.startsWith(data+QStringLiteral("/Trash/files/")));
+  QVERIFY(bridge.executeFileOperation(copied(prepared(plans),false)));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished(results),10000);QVERIFY(!finished(results)->completed);QCOMPARE(test::read(source),bytes);QVERIFY(!QFileInfo::exists(data+QStringLiteral("/Trash")));
+  value=request(rows,sessions[0][0].toULongLong(),191,*f.hash,ui::FileOperation::RemoveDeleteData);value.deleteTorrentFile=false;value.recyclePayload.reset();plans.clear();results.clear();QVERIFY(bridge.prepareFileOperation(value));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&prepared(plans),10000);QVERIFY(prepared(plans)->failure.isEmpty());QVERIFY(bridge.executeFileOperation(copied(prepared(plans),true)));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished(results),10000);QVERIFY2(finished(results)->completed,qPrintable(finished(results)->failure));QCOMPARE(test::read(trashData),bytes);QVERIFY(!QFileInfo::exists(source));
+  const auto info=data+QStringLiteral("/Trash/info/")+QFileInfo(trashData).fileName()+QStringLiteral(".trashinfo");QVERIFY(test::read(info).startsWith("[Trash Info]\nPath="));QVERIFY(inventory(f).downloads.empty());
+  QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,10000);QVERIFY(closed[0][1].toBool());QVERIFY(closed[0][2].toBool());QVERIFY(storage::ProfileLease::acquire(f.native()));
+ }
  void initTestCase() {
   QCOMPARE(QGuiApplication::platformName(),QStringLiteral("offscreen"));QApplication::setQuitOnLastWindowClosed(false);
   auto owner=engine::PersistentSession::create({801,802,803});QVERIFY2(owner.has_value(),"File-operation real-owner cohort requires approved source runtime; no skip");

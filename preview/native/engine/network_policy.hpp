@@ -61,6 +61,9 @@ struct NetworkPolicy {
   int uploadBytesPerSecond = 0, downloadBytesPerSecond = 0;
   int seedingUploadBytesPerSecond = 0;
   bool seedingOnlyUpload = false;
+  // Original LAN rates are a separate peer class, not an extra global cap.
+  bool lanRates = false;
+  int lanUploadBytesPerSecond = 0, lanDownloadBytesPerSecond = 0;
   // Retains verified provider lifetime; no caller boolean or version allowlist.
   std::shared_ptr<const VerifiedSocks4Capability> socks4Capability{};
 };

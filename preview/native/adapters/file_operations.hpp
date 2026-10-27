@@ -1,6 +1,7 @@
 #pragma once
 #include "profile.hpp"
 #include "biglybtc/library.hpp"
+#include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <memory>
@@ -9,7 +10,7 @@
 #include <vector>
 
 namespace biglybtc::storage {
-enum class FileOperationKind { RemoveKeepData, RemoveDeleteData, Relocate, Relink, SetFilePolicies };
+enum class FileOperationKind { RemoveKeepData, RemoveDeleteData, Relocate, Relink, SetFilePolicies, MoveFile, RetargetFile, RevertFile, RemoveRecycleData };
 struct FileOperationRequest {
   core::TorrentHash hash;
   FileOperationKind kind = FileOperationKind::RemoveKeepData;
@@ -20,6 +21,15 @@ struct FileOperationRequest {
   std::optional<std::string> selectionPolicyEncoding{};
   std::optional<std::string> expectedSelectionEntry{};
   bool deleteTorrentFile=false; // Explicit reviewed choice; old callers preserve separate archive.
+  // One ORIGINAL non-padding index. MoveFile requires an absent destination;
+  // RetargetFile keeps the old bytes and checks the existing destination again.
+  // RevertFile MOVES the linked bytes back to the original path, removing the
+  // old linked source only after publication. It never overwrites a leaf.
+  std::optional<std::size_t> fileIndex{};
+  std::optional<std::filesystem::path> fileDestination{};
+  // Trusted worker-owned Linux home-trash root. Only RemoveRecycleData accepts
+  // this input; GUI supplies only the recycle choice, never a trash pathname.
+  std::optional<std::filesystem::path> trashRoot{};
 };
 struct FileOperationEntry {
   std::size_t index = 0;
@@ -50,13 +60,14 @@ struct FileOperationConfirmation {
   bool deleteConfirmed = false;
   bool archiveConfirmed = false;
 };
-enum class FileOperationStage { JournalSynced, DestinationPublished, CachePublished, StatePublished, InventoryPublished, SourceRemoved, StateRemoved, Completed, ArchiveRemoved, ArchiveFileRemoved };
+enum class FileOperationStage { JournalSynced, DestinationPublished, CachePublished, StatePublished, InventoryPublished, SourceRemoved, StateRemoved, Completed, ArchiveRemoved, ArchiveFileRemoved, TrashInfoPublished };
 struct FileOperationResult {
   FileOperationKind kind;
   core::TorrentHash hash;
   std::uint64_t filesMoved = 0, filesDeleted = 0;
   bool recovered = false;
   bool torrentArchiveDeleted=false;
+  std::uint64_t filesRecycled=0;
 };
 class PreparedFileOperation final {
 public:
@@ -90,6 +101,10 @@ std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease&,
 // Original default true; Boolean tests the low32 integer from held biglybt.config. Read-only;
 // malformed values/errors remain explicit, never materialized or overwritten.
 std::expected<bool,Error> torrentArchiveDeletionPreference(const ProfileLease&,std::stop_token = {});
+// Original preference defaults true and uses Java Long.intValue Boolean
+// semantics. Reading neither materializes a default nor creates a trash folder.
+std::expected<bool,Error> payloadRecyclePreference(const ProfileLease&,std::stop_token = {});
+std::expected<std::filesystem::path,Error> linuxHomeTrashRoot();
 bool hasPendingFileOperation(const ProfileLease&) noexcept;
 std::expected<std::optional<FileOperationResult>,Error> recoverFileOperation(
     const ProfileLease&,void(*observer)(FileOperationStage) = nullptr);

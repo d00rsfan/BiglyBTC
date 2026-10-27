@@ -2,6 +2,7 @@
 #include "biglybtc/library.hpp"
 #include "biglybtc/queue_policy.hpp"
 #include "biglybtc/queue_target_statistics.hpp"
+#include "biglybtc/queue_observations.hpp"
 #include "profile.hpp"
 #include <array>
 #include <chrono>
@@ -41,6 +42,10 @@ struct ManagedDownloadStatus {
   std::shared_ptr<const storage::Error> queuePositionFailure{};
   VerifiedSeedingPhase verifiedSeeding=VerifiedSeedingPhase::None;
   bool verificationHeld=false;
+  // Exact current admission/provider facts, unavailable without its retained
+  // same-image observer. These are neither global nor retired final receipts.
+  std::optional<core::QueueObservedFacts> queueSourceFacts{};
+  std::optional<std::int64_t> queueSmoothedPayloadUploadRate{};
 };
 enum class MagnetPhase { Resolving, Retiring, Imported, Failed, Cancelled };
 struct PendingMagnetStatus {

@@ -1810,3 +1810,9 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/ProviderWebseedRuntimeTests.cmake")
 # provider-webseed-runtime-inputs; provider-webseed-runtime-deployment;
 # network-proxy-capability (+ new same-image/foreign-only webseed cases),
 # network-proxy-owner (+ actual redirects/refusals), existing managed/owner tests.
+
+# Source arithmetic replay for independent original-bytecode comparison.
+add_executable(biglybtc-queue-facts-replay queue_facts_replay.cpp)
+target_link_libraries(biglybtc-queue-facts-replay PRIVATE biglybtc_core)
+target_compile_features(biglybtc-queue-facts-replay PRIVATE cxx_std_23)
+target_compile_options(biglybtc-queue-facts-replay PRIVATE -Wall -Wextra -Wpedantic -Werror)

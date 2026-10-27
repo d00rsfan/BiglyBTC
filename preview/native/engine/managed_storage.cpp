@@ -9,6 +9,7 @@
 #include "original_disk_io.hpp"
 #include "original_control.hpp"
 #include "original_storage_defaults.hpp"
+#include "original_filename_policy.hpp"
 #include "local_support.hpp"
 #include "network_policy.hpp"
 #include "torrent_state.hpp"
@@ -18,6 +19,8 @@
 #include "biglybtc/torrent_layout.hpp"
 
 #include <libtorrent/torrent_info.hpp>
+#include <libtorrent/hasher.hpp>
+#include "biglybtc/torrent_intake_trackers.hpp"
 #include <algorithm>
 #include <cerrno>
 #include <charconv>
@@ -427,7 +430,23 @@ ValidatedMetadata metadata(const Document& state, const core::TorrentHash& hash,
   done(storage::validateOriginalTorrentKey(identity,hash,true)); // Existing explicit32 reader policy.
   require(!(identity.selected==storage::OriginalSelectedHash::V2&&identity.full.v1)||swarmBridge,
       "Selected-v2 hybrid requires the exact qualified swarm provider",ErrorCode::Unsupported);
-  projectManagedV1Names(state,identity,layout,*info);
+  if(layout.filenameConverted){
+    // Conversion is derived from THIS authenticated raw source and saved
+    // policy. A private metadata copy changes names only; the unchanged shared
+    // projection then proves EVERY slot/count/offset/size/pad/piece before the
+    // copy can become the admission metadata. No global geometry exception.
+    require(layout.files.size()<=static_cast<std::size_t>(info->num_files()),"Filename conversion file count differs",ErrorCode::Conflict);
+    auto projected=std::make_shared<lt::torrent_info>(*info);
+    for(std::size_t n=0;n<layout.files.size();++n){const auto& file=layout.files[n];if(file.padding){continue;}
+      const auto path=layout.multifile?fs::path(layout.name)/file.path:fs::path(file.path);
+      require(safeManagedRelative(path)&&std::ranges::none_of(path.native(),[](unsigned char c){return c<0x20||c==0x7f;}),"Converted filename requires separate filesystem policy",ErrorCode::UnsafePath);
+      projected->rename_file(lt::file_index_t{static_cast<int>(n)},path.string());
+    }
+    (void)take(projectOriginalLayout(layout,*projected));
+    const auto after=take(storage::originalTorrentIdentityFromLibtorrent(state,*projected));require(after.full==identity.full&&after.originalKey==identity.originalKey&&after.selected==identity.selected,
+        "Filename conversion changed raw torrent identity",ErrorCode::Conflict);
+    info=std::move(projected);
+  }else{projectManagedV1Names(state,identity,layout,*info);}
   (void)take(projectOriginalLayout(layout,*info)); // Full strict geometry/path validation still applies.
   return {std::move(info),std::move(identity)}; // Keep original trackers/web seeds for the explicit policy filter.
 }
@@ -555,6 +574,8 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     const auto flags=core::originalDownloadFlags(source.find("attributes"));
     require(flags.has_value(),"Invalid original download flags",ErrorCode::InvalidFormat);
     if (const auto* attributes=source.find("attributes")) {
+      if(const auto* aggregate=attributes->find("agsc");aggregate&&aggregate->type==core::Node::Type::Bytes&&aggregate->bytes.size()<=128){queue.aggregateScrapeCache=std::string(aggregate->bytes);}
+      if(const auto* legacy=attributes->find("scrapecache");legacy&&legacy->type==core::Node::Type::Integer){queue.legacyScrapeCache=legacy->integer;}
       if (const auto* parameters=attributes->find("parameters")) {
         for (const auto& [key,target] : {std::pair{"sr.min",&queue.minimumShareRatio},{"sr.max",&queue.maximumShareRatio}}) {
           if (const auto* value=parameters->find(key)) {
@@ -566,9 +587,29 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
         }
       }
     }
+    // Original getGoodTrackerScrapeResponses iterates stored sets in order;
+    // equal-count ties must not acquire network-arrival ordering instead.
+    try {
+      std::vector<std::string> urls;bool valid=true,hasSets=false;
+      if(const auto* groups=source.find("announce-list")){
+        const auto tiers=core::decodeTorrentIntakeTrackerTiers(*groups);
+        if(!tiers){valid=false;}else{hasSets=!tiers->empty();for(const auto& tier:*tiers){for(const auto& url:tier){urls.push_back(url);}}}
+      }
+      if(valid&&!hasSets){
+        if(const auto* primary=source.find("announce")){
+          if(primary->type!=core::Node::Type::Bytes||primary->bytes.size()>core::MaximumIntakeTrackerUrlBytes){valid=false;}
+          else if(!primary->bytes.empty()){urls.emplace_back(primary->bytes);}
+        }
+      }
+      if(valid&&urls.size()<=64){
+        queue.trackerOrder.emplace();
+        for(const auto& url:urls){const auto digest=lt::hasher256(lt::span<const char>(url.data(),url.size())).final();
+          std::array<unsigned char,32> key{};std::copy(digest.begin(),digest.end(),key.begin());queue.trackerOrder->push_back(key);}
+      }
+    }catch(...){queue.trackerOrder.reset();} // Optional provider state cannot fail storage.
     // The shared original layout owns the encoding/UTF8-key policy. Keeping a
     // separate blanket UTF8 gate here would reject qualified Latin1 profiles.
-    const auto geometry=compat::originalLayout(source);
+    const auto geometry=storage::readOriginalLayout(lease,source);
     require(geometry.has_value(),"Invalid original managed geometry",ErrorCode::InvalidFormat); auto layout=*geometry;
     auto validated=metadata(source,hash,layout,swarmBridge);auto info=std::move(validated.info);auto identity=std::move(validated.identity);
     lt::add_torrent_params params; params.ti=info;

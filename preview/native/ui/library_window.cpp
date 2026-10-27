@@ -191,6 +191,10 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   fileCompaction_->setEnabled(false);
   fileCompaction_->setToolTip(tr("Select one linear file. Stop all torrents and metadata downloads, then refresh file details. Boundary data needed by other files is kept."));
   connect(fileCompaction_, &QAction::triggered, this, &LibraryWindow::dispatchFileCompaction);
+  const std::array<QString,3> filePathNames{tr("Rename or move file…"),tr("Use an existing file and recheck…"),tr("Restore original file path…")};
+  const std::array<QString,3> filePathIds{QStringLiteral("files-rename"),QStringLiteral("files-retarget"),QStringLiteral("files-revert")};
+  for(std::size_t n=0;n<filePathActions_.size();++n){auto* action=new QAction(filePathNames[n],this);action->setObjectName(filePathIds[n]);action->setEnabled(false);filePathActions_[n]=action;
+    connect(action,&QAction::triggered,this,[this,n]{openFileMapping(static_cast<FileOperation>(static_cast<unsigned>(FileOperation::MoveFile)+n));});}
   filesTable_->setAlternatingRowColors(true);
   filesTable_->verticalHeader()->hide();
   filesTable_->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
@@ -1510,6 +1514,7 @@ void LibraryWindow::updateDownloadActions() {
   const bool stopAll = downloadTargets(core::DownloadAction::Stop, true).has_value();
   const bool filesEditable = filePolicySelection().has_value();
   const bool canCompact = filePolicySelection(true).has_value();
+  const auto filePathSelection=filePolicySelection();const bool canMapFile=columnSession_&&filePathSelection&&filePathSelection->indices.size()==1;
   const bool importsAllowed = canImport();
   // Publish only from this queued entry point. A QAction::changed observer may
   // delete/rebind the Window; no old selection/model caller resumes afterward.
@@ -1536,6 +1541,7 @@ void LibraryWindow::updateDownloadActions() {
     if (item) { item->setEnabled(filesEditable); }
     if (!current()) { return; }
   }
+  for(const auto& action:filePathActions_){if(action){action->setEnabled(canMapFile);}if(!current()){return;}}
   if (fileCompaction_) { fileCompaction_->setEnabled(canCompact); }
   if (!current()) { return; }
   if (openTorrent_) { openTorrent_->setEnabled(importsAllowed); }
@@ -1629,6 +1635,7 @@ void LibraryWindow::filePopup(const QPoint& point) {
   for (const auto& item : filePolicyActions_) { if (item) { menu->addAction(item.data()); } }
   menu->addSeparator();
   if (fileCompaction_) { menu->addAction(fileCompaction_.data()); }
+  menu->addSeparator();for(const auto& action:filePathActions_){if(action){menu->addAction(action.data());}}
   menu->exec(filesTable_->viewport()->mapToGlobal(point));
   if (!guard) { return; }
   if (menu) { menu->deleteLater(); }

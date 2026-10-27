@@ -9,6 +9,7 @@
 #include "file_io.hpp"
 #include "file_operation_io.hpp"
 #include "original_storage_defaults.hpp"
+#include "original_filename_policy.hpp"
 #include "torrent_state.hpp"
 #include "biglybtc/original_file_links.hpp"
 
@@ -214,14 +215,14 @@ struct MetadataSubject {
 };
 // Shared by old direct import and the new preview. CF02 identity caller patches
 // belong in this single subject validation function, not in file-option logic.
-MetadataSubject metadataSubject(std::string_view metadata) {
+MetadataSubject metadataSubject(std::string_view metadata,std::optional<std::string_view> conversions={}) {
   auto torrent = parse(std::string(metadata), MaximumMetadata);
   uniqueKeys(torrent.root());
   const auto* info = torrent.find("info");
   require(info && info->type == Node::Type::Dictionary && !info->find("hash-override"),
       ErrorCode::Unsupported, "Metadata-pending/hash-override torrents require their magnet intake");
   (void)take(originalTorrentInfoOrder(torrent)); // Exact raw Java UTF-16 tree order; qualified provider retains raw info.
-  auto original = compat::originalLayout(torrent);
+  auto original = conversions?compat::originalLayout(torrent,100000,*conversions):compat::originalLayout(torrent);
   require(original.has_value(), ErrorCode::InvalidFormat, "Unsafe or unsupported original file layout");
   libtorrent::load_torrent_limits limits;
   limits.max_buffer_size = static_cast<int>(MaximumMetadata);
@@ -370,7 +371,7 @@ void literalTracker(std::string_view url) {
     require(!port.empty()&&parsed.ec==std::errc{}&&parsed.ptr==port.data()+port.size()&&value>=1&&value<=65535,ErrorCode::InvalidFormat,"Invalid tracker port");
   }
 }
-void applyTrackers(MetadataSubject& subject,const core::TorrentIntakeTrackerTiers& incoming) {
+void applyTrackers(MetadataSubject& subject,const core::TorrentIntakeTrackerTiers& incoming,std::optional<std::string_view> conversions={}) {
   require(core::validTorrentIntakeTrackerTiers(incoming),ErrorCode::InvalidFormat,"Invalid tracker tiers or literal URL");
   // Override rules need only the old primary, never a bounded interpretation
   // of old tier fields. A requested replacement/clear can remove those fields.
@@ -395,7 +396,7 @@ void applyTrackers(MetadataSubject& subject,const core::TorrentIntakeTrackerTier
   if(!tiers.empty()){
     std::string list="l";for(const auto& tier:tiers){list+='l';for(const auto& url:tier){list+=b(url);}list+='e';}put(edited,"announce-list",list+'e');
   }
-  auto checked=metadataSubject(edited.serialize());
+  auto checked=metadataSubject(edited.serialize(),conversions);
   require(take(originalTorrentInfoSubject(checked.torrent))==info&&checked.identity.full==subject.identity.full
       &&checked.hash==subject.hash&&checked.identity.selected==subject.identity.selected,ErrorCode::Conflict,"Tracker edit changed torrent identity");
   subject.torrent=std::move(checked.torrent);
@@ -408,13 +409,14 @@ struct Plan {
   mode_t inventoryMode;
   std::optional<IntakeFileOptions> options;
   std::optional<HybridAliasSource> alias;
+  std::optional<std::string> filenameConversions;
 };
 Plan plan(std::string metadata, std::string destination, std::string profile,
-    std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart, std::optional<IntakeFileOptions> options = {}, std::optional<HybridAliasSource> alias = {}) {
+    std::optional<std::string> before, std::optional<std::string> oldBackup, bool stopped, mode_t mode, bool forceStart, std::optional<IntakeFileOptions> options = {}, std::optional<HybridAliasSource> alias = {},std::optional<std::string> filenameConversions={}) {
   require(!options||!options->queued||(!stopped&&!forceStart),ErrorCode::InvalidFormat,"Queued intake conflicts with stopped/forced intent");
   require(!options||!options->paused||(stopped&&!forceStart&&!options->queued),ErrorCode::InvalidFormat,"Paused intake requires stopped/unforced/nonqueued intent");
   require(!options||!options->verifyExisting||(stopped&&!forceStart),ErrorCode::InvalidFormat,"Verified seeding requires stopped/unforced intake");
-  auto subject=metadataSubject(metadata);auto& torrent=subject.torrent;auto* original=&subject.layout;
+  auto subject=metadataSubject(metadata,filenameConversions?std::optional<std::string_view>{*filenameConversions}:std::nullopt);auto& torrent=subject.torrent;auto* original=&subject.layout;
   const auto hash=std::optional{subject.hash};const auto key=hash->bytes();
   const auto* digest=reinterpret_cast<const char*>(key.data());
   const auto& identity=subject.identity;
@@ -426,13 +428,13 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   };
   if(options){validateFileOptions(subject,*options);checkCompactAbsence(*original,*options,destination);}
   auto archive=metadata;
-  if(options&&options->trackers){applyTrackers(subject,*options->trackers);archive=subject.torrent.serialize();}
+  if(options&&options->trackers){applyTrackers(subject,*options->trackers,filenameConversions?std::optional<std::string_view>{*filenameConversions}:std::nullopt);archive=subject.torrent.serialize();}
   auto inventory = parse(before.value_or("d9:downloadslee"));
   const auto* downloads = inventory.find("downloads");
   require(downloads && downloads->type == Node::Type::List, ErrorCode::Unsupported, "Intake requires current list-form inventory");
   auto saved = core::readLibrary(inventory);
   require(saved && saved->issues.empty() && saved->downloads.size() < 100000, ErrorCode::InvalidFormat, "Invalid original download inventory");
-  if(alias){validateHybridAlias(*alias,subject,inventory,destination);}
+  if(alias){validateHybridAlias(*alias,subject,inventory,destination,filenameConversions?std::optional<std::string_view>{*filenameConversions}:std::nullopt);}
   std::set<std::string> identities;
   std::int64_t position = 0;
   for (const auto& entry : saved->downloads) {
@@ -532,7 +534,7 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
   require((pause!=verify->paused.end())==paused&&verify->paused.size()==saved->paused.size()+(paused?1U:0U)
       &&(!paused||(!pause->forceStart&&pause->owner==1)),ErrorCode::InvalidFormat,"New paused intent failed its original reader");
   return {*hash, std::move(metadata), std::move(archive), std::move(destination), std::move(profile), std::move(state), std::move(after),
-      std::move(before), std::move(oldBackup), stopped, forceStart, static_cast<mode_t>(mode & 0777),std::move(options),std::move(alias)};
+      std::move(before), std::move(oldBackup), stopped, forceStart, static_cast<mode_t>(mode & 0777),std::move(options),std::move(alias),std::move(filenameConversions)};
 }
 std::string journalBytes(const Plan& p) {
   std::string optionalOptions;
@@ -553,6 +555,7 @@ std::string journalBytes(const Plan& p) {
     }
     optionalOptions=b("fileOptions")+value+'e';
   }
+  if(p.filenameConversions){optionalOptions+=b("filenameConversions")+b(*p.filenameConversions);}
   if(p.alias){
     const auto& a=*p.alias;
     optionalOptions+=b("hybridAlias")+"d"+b("hash")+b(hashBytes(a.hash))+b("state")+b(a.state)
@@ -580,7 +583,9 @@ Plan readJournal(std::string bytes, const std::string& profile,const ProfileLeas
   const auto* force = document.find("forceStart");
   const auto* optionsNode=document.find("fileOptions");
   const auto* aliasNode=document.find("hybridAlias");
-  require(document.root().children.size()==20+(force?2U:0U)+(optionsNode?2U:0U)+(aliasNode?2U:0U)
+  const auto* conversionsNode=document.find("filenameConversions");
+  std::optional<std::string> conversions;if(conversionsNode){conversions=text(conversionsNode);const auto current=take(readOriginalFilenameConversions(lease));require(*conversions==current,ErrorCode::Conflict,"Filename conversion policy changed since intake acceptance");}
+  require(document.root().children.size()==20+(force?2U:0U)+(optionsNode?2U:0U)+(aliasNode?2U:0U)+(conversionsNode?2U:0U)
       && integer(document.find("version")) == 1,
       ErrorCode::Unsupported, "Unknown intake journal version or fields");
   const auto before = integer(document.find("before_present"));
@@ -635,7 +640,13 @@ Plan readJournal(std::string bytes, const std::string& profile,const ProfileLeas
   }
   auto result=plan(text(document.find("metadata")), std::move(destination), profile,
       before ? std::optional{std::move(old)} : std::nullopt,
-      backup ? std::optional{std::move(bak)} : std::nullopt, stopped == 1, static_cast<mode_t>(mode), forceStart == 1,std::move(options),std::move(alias));
+      backup ? std::optional{std::move(bak)} : std::nullopt, stopped == 1, static_cast<mode_t>(mode), forceStart == 1,std::move(options),std::move(alias),std::move(conversions));
+  if(!result.filenameConversions){
+    const auto current=take(readOriginalFilenameConversions(lease));const auto original=metadataSubject(result.metadata);const auto projected=metadataSubject(result.metadata,current);
+    require(original.layout.name==projected.layout.name&&original.layout.files.size()==projected.layout.files.size()
+        &&std::ranges::equal(original.layout.files,projected.layout.files,[](const auto& a,const auto& b){return a.path==b.path;}),
+        ErrorCode::Unsupported,"Legacy accepted intake names require explicit review before filename conversion");
+  }
   checkSaveNameScope(lease,result);return result;
 }
 struct Stage { Descriptor fd; struct stat info{}; };
@@ -699,8 +710,9 @@ bool intersectsSaveName(const fs::path& a,const fs::path& b) {
   return within(a,b)||within(b,a);
 }
 void checkSaveNameScope(const ProfileLease& lease,const Plan& p) {
+  if(p.filenameConversions){require(take(readOriginalFilenameConversions(lease))==*p.filenameConversions,ErrorCode::Conflict,"Filename conversion policy changed since intake acceptance");}
   if(!p.options||!p.options->saveName){return;}
-  const auto subject=metadataSubject(p.metadata);const auto& leaf=effectiveSaveName(subject.layout,*p.options);
+  const auto subject=metadataSubject(p.metadata,p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt);const auto& leaf=effectiveSaveName(subject.layout,*p.options);
   if(leaf==subject.layout.name){return;} // Original mapping/reuse; no manual rename intent.
   const auto chosen=fs::path(p.destination)/leaf;pathShape(chosen);
   require(!intersectsSaveName(chosen,fs::path(p.profile)),ErrorCode::UnsafePath,"Renamed payload cannot overlap the held profile");
@@ -730,6 +742,7 @@ void checkSaveNameScope(const ProfileLease& lease,const Plan& p) {
       for(const auto& entry:entries->children){const auto* hash=entry.find("hash");if(!hash){continue;}const auto key=core::TorrentHash::parse(hash->bytes);require(key.has_value(),ErrorCode::InvalidFormat,"Invalid cached mapping identity");cached.insert_or_assign(key->hex(),&entry);}
     }
   }
+  const auto conversion=take(readOriginalFilenameConversions(lease));
   std::size_t files=0;
   for(const auto& saved:inventory.downloads){
     require(saved.hash.has_value(),ErrorCode::Unsupported,"Cannot prove independence from a saved mapping without its hash");
@@ -742,7 +755,7 @@ void checkSaveNameScope(const ProfileLease& lease,const Plan& p) {
     std::string metadata="d4:info"+std::string(take(originalTorrentInfoSubject(state.document())));
     if(const auto* encoding=state.document().find("encoding")){metadata+=b("encoding")+raw(state.document(),*encoding);}
     if(properties){const auto encoded=core::encodeValue(*properties,compatibleConfigLimits());require(encoded.has_value(),ErrorCode::InvalidFormat,"Invalid original identity properties");metadata+=b("azureus_private_properties")+*encoded;}
-    const auto other=metadataSubject(metadata+'e');const auto match=validateOriginalTorrentKey(other.identity,*saved.hash,true);require(match.has_value(),ErrorCode::Conflict,"Other saved mapping differs from its authenticated torrent identity");
+    const auto other=metadataSubject(metadata+'e',conversion);const auto match=validateOriginalTorrentKey(other.identity,*saved.hash,true);require(match.has_value(),ErrorCode::Conflict,"Other saved mapping differs from its authenticated torrent identity");
     require(other.layout.files.size()<=100000-files,ErrorCode::Unsupported,"Saved mapping claims exceed the save-name validation budget");files+=other.layout.files.size();
     const auto resolved=take(resolveOriginalSaveRoot(saved,other.layout));const auto root=fs::path(resolved.saveDirectory)/ *resolved.saveFile;
     require(!intersectsSaveName(chosen,root),ErrorCode::Conflict,"Chosen save name overlaps another saved payload root");
@@ -768,7 +781,7 @@ void apply(ProfileLease& lease, const Plan& p, std::string_view journal, void (*
   inventoryCurrent(root, p);
   checkSaveNameScope(lease,p);
   if(p.alias){hybridSourceCurrent(root,*p.alias);}
-  if(p.options){const auto source=metadataSubject(p.metadata);checkCompactAbsence(source.layout,*p.options,p.destination);}
+  if(p.options){const auto source=metadataSubject(p.metadata,p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt);checkCompactAbsence(source.layout,*p.options,p.destination);}
   auto active = childDirectory(root, "active", true);
   auto archive = childDirectory(root, "torrents", true);
   const auto stateName = p.hash.hex() + ".dat";
@@ -787,7 +800,7 @@ void apply(ProfileLease& lease, const Plan& p, std::string_view journal, void (*
   inventoryCurrent(root, p);
   checkSaveNameScope(lease,p);
   if(p.alias){hybridSourceCurrent(root,*p.alias);}
-  if(p.options){const auto source=metadataSubject(p.metadata);checkCompactAbsence(source.layout,*p.options,p.destination);}
+  if(p.options){const auto source=metadataSubject(p.metadata,p.filenameConversions?std::optional<std::string_view>{*p.filenameConversions}:std::nullopt);checkCompactAbsence(source.layout,*p.options,p.destination);}
   auto current = read(root, "downloads.config", MaximumInventory);
   if (contents(current) != std::optional{p.inventory}) {
     if (p.before) {
@@ -857,7 +870,7 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     const fs::path& metadata, const fs::path& destination, bool stopped,
     void (*observer)(TorrentIntakeStage), bool forceStart,
     std::optional<std::span<const compat::FilePolicy>> policies = {},const File* expected = nullptr, std::stop_token stop = {},
-    core::TorrentIntakeLimits limits = {},bool sequentialDownload = false,bool queued = false,bool paused = false,std::optional<core::TorrentIntakeTrackerTiers> trackers = {},std::optional<std::string> saveName = {},bool verifyExisting = false) {
+    core::TorrentIntakeLimits limits = {},bool sequentialDownload = false,bool queued = false,bool paused = false,std::optional<core::TorrentIntakeTrackerTiers> trackers = {},std::optional<std::string> saveName = {},bool verifyExisting = false,const std::string* expectedConversions=nullptr) {
   try {
     require(!stop.stop_requested(),ErrorCode::Cancelled,"Torrent import cancelled before commit");
     require(!saveName||core::validTorrentIntakeSaveName(*saveName),ErrorCode::UnsafePath,"Save name must be one safe UTF8 filename component");
@@ -875,35 +888,37 @@ static std::expected<core::TorrentHash, Error> importImpl(ProfileLease& lease,
     require(source.has_value(), ErrorCode::Missing, "Torrent metadata file is missing");
     require(!expected||(unchanged(expected->info,source->info)&&expected->bytes==source->bytes),
         ErrorCode::Conflict,"Torrent metadata changed after file preview; load it again");
+    const auto conversions=take(readOriginalFilenameConversions(lease));
+    require(!expectedConversions||*expectedConversions==conversions,ErrorCode::Conflict,"Filename conversion policy changed after file preview; load it again");
     std::optional<IntakeFileOptions> options;
-    if(policies){const auto subject=metadataSubject(source->bytes);options=fileOptions(lease,subject,destination,*policies,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting);}
+    if(policies){const auto subject=metadataSubject(source->bytes,conversions);options=fileOptions(lease,subject,destination,*policies,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting);}
     const auto before = read(root, "downloads.config", MaximumInventory);
     const auto backup = read(root, "downloads.config.bak", MaximumInventory);
     require(before || !backup, ErrorCode::Conflict, "Resolve missing inventory primary before intake");
     auto p = plan(std::move(source->bytes), destination.native(), profile, contents(before), contents(backup),
-        stopped, before ? before->info.st_mode : 0600, forceStart,std::move(options));
+        stopped, before ? before->info.st_mode : 0600, forceStart,std::move(options),{},conversions);
     return commitIntakePlan(lease,p,observer,stop);
   } catch (const Failure& failure) { return std::unexpected(failure.error); }
   catch (const std::exception&) { return std::unexpected(Error{ErrorCode::Io, "Torrent intake failed; inspect pending journal before retry"}); }
 }
 
 struct TorrentIntakeMetadata::Data {
-  fs::path path;File input;compat::OriginalLayout layout;core::TorrentHash hash;std::optional<core::TorrentIntakeTrackerFields> trackers;
+  fs::path path;File input;compat::OriginalLayout layout;core::TorrentHash hash;std::optional<core::TorrentIntakeTrackerFields> trackers;std::string filenameConversions;
 };
 TorrentIntakeMetadata::TorrentIntakeMetadata(std::shared_ptr<const Data> data):data_(std::move(data)){}
 const core::TorrentHash& TorrentIntakeMetadata::hash()const noexcept{return data_->hash;}
 const compat::OriginalLayout& TorrentIntakeMetadata::layout()const noexcept{return data_->layout;}
 const fs::path& TorrentIntakeMetadata::source()const noexcept{return data_->path;}
 const std::optional<core::TorrentIntakeTrackerFields>& TorrentIntakeMetadata::trackers()const noexcept{return data_->trackers;}
-std::expected<TorrentIntakeMetadata,Error> inspectTorrentIntake(const fs::path& path,std::stop_token stop) {
+std::expected<TorrentIntakeMetadata,Error> inspectTorrentIntake(const fs::path& path,std::stop_token stop,std::string conversions) {
   try {
     require(!stop.stop_requested(),ErrorCode::Cancelled,"Torrent preview cancelled");pathShape(path);
     auto parent=directory(path.parent_path());auto input=read(parent.get(),path.filename().native(),MaximumMetadata);
     require(input.has_value(),ErrorCode::Missing,"Torrent metadata file is missing");
-    auto subject=metadataSubject(input->bytes);
+    auto subject=metadataSubject(input->bytes,conversions);
     require(!stop.stop_requested(),ErrorCode::Cancelled,"Torrent preview cancelled");
     return TorrentIntakeMetadata(std::make_shared<const TorrentIntakeMetadata::Data>(
-        TorrentIntakeMetadata::Data{path,std::move(*input),std::move(subject.layout),subject.hash,trackerFields(subject.torrent)}));
+        TorrentIntakeMetadata::Data{path,std::move(*input),std::move(subject.layout),subject.hash,trackerFields(subject.torrent),std::move(conversions)}));
   } catch(const Failure& failure){return std::unexpected(failure.error);}
   catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot inspect torrent metadata"});}
 }
@@ -914,7 +929,7 @@ std::expected<core::TorrentHash,Error> importTorrent(ProfileLease& lease,const f
 std::expected<core::TorrentHash,Error> importTorrentWithFileOptions(ProfileLease& lease,
     const TorrentIntakeMetadata& metadata,const fs::path& destination,bool stopped,
     std::span<const compat::FilePolicy> policies,void(*observer)(TorrentIntakeStage),bool forceStart,std::stop_token stop,core::TorrentIntakeLimits limits,bool sequentialDownload,bool queued,bool paused,std::optional<core::TorrentIntakeTrackerTiers> trackers,std::optional<std::string> saveName,bool verifyExisting) {
-  return importImpl(lease,metadata.data_->path,destination,stopped,observer,forceStart,policies,&metadata.data_->input,stop,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting);
+  return importImpl(lease,metadata.data_->path,destination,stopped,observer,forceStart,policies,&metadata.data_->input,stop,limits,sequentialDownload,queued,paused,std::move(trackers),std::move(saveName),verifyExisting,&metadata.data_->filenameConversions);
 }
 
 std::expected<std::string,Error> rewriteTorrentIntakeTrackers(std::string_view metadata,
@@ -949,7 +964,8 @@ std::expected<core::TorrentHash,Error> importHybridAlias(ProfileLease& lease,con
         &&(!cached||(bounded(cached->info.st_dev)&&bounded(cached->info.st_ino))),ErrorCode::Unsupported,"Hybrid inode exceeds journal range");
     HybridAliasSource proof{from,state->bytes,contents(cached),state->info.st_dev,state->info.st_ino,
         cached?static_cast<std::uint64_t>(cached->info.st_dev):0,cached?static_cast<std::uint64_t>(cached->info.st_ino):0};
-    auto original=metadataSubject(hybridSourceDocument(proof).serialize());
+    const auto conversions=take(readOriginalFilenameConversions(lease));
+    auto original=metadataSubject(hybridSourceDocument(proof).serialize(),conversions);
     require(original.identity.full.v1&&original.identity.full.v2&&original.identity.originalKey==from
         &&original.identity.selected!=target,ErrorCode::Conflict,"Select the other version of the actual hybrid source");
     for(const auto& entry:retained){
@@ -974,7 +990,7 @@ std::expected<core::TorrentHash,Error> importHybridAlias(ProfileLease& lease,con
     const auto encoded=compat::encodeOriginalFilePolicy(policy);
     require(encoded.has_value(),ErrorCode::Unsupported,"Cannot encode explicit alias selection");
     auto planValue=plan(selected.serialize(),old->saveDirectory,profile,contents(before),contents(backup),true,
-        before->info.st_mode,false,IntakeFileOptions{*encoded,std::move(stores),{}, {},false,false,false,{},{}},std::move(proof));
+        before->info.st_mode,false,IntakeFileOptions{*encoded,std::move(stores),{}, {},false,false,false,{},{}},std::move(proof),conversions);
     return commitIntakePlan(lease,planValue,observer,stop);
   }catch(const Failure& failure){return std::unexpected(failure.error);}
   catch(const std::exception&){return std::unexpected(Error{ErrorCode::Io,"Hybrid companion publication failed; inspect pending intake"});}

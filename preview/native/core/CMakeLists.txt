@@ -52,7 +52,7 @@ target_sources(biglybtc_core PRIVATE src/saved_speed_manager.cpp)
 
 target_sources(biglybtc_core PRIVATE src/saved_speed_map.cpp src/passive_speed_mapper.cpp)
 
-target_sources(biglybtc_core PRIVATE src/queue_policy.cpp)
+target_sources(biglybtc_core PRIVATE src/queue_policy.cpp src/queue_observations.cpp)
 
 target_sources(biglybtc_core PRIVATE src/queue_slots.cpp)
 

@@ -94,6 +94,18 @@ void smoothingGapsAndBounds() {
   need(!source.observe(sample(4, 6000, 1000000, QueueRateScope::TargetPayload), 6), "No gap-byte burst");
   need(!source.observe(sample(5, 7000, 999999, QueueRateScope::TargetPayload), 7), "Counter correction unavailable");
 }
+void sendChannelsKeepActualGlobalCombinedAndTargetPayloadOwnership() {
+  QueueSendRateSmoothing global,target;
+  need(!global.observe(sample(1,0,10000,QueueRateScope::OwnerCombined),0),"Actual combined send baseline");
+  need(!target.observe(sample(1,0,9000,QueueRateScope::TargetPayload,9),0),"Independent target payload baseline");
+  need(global.observe(sample(2,1000,16000,QueueRateScope::OwnerCombined),1)==0,"Current source bucket excluded");
+  need(target.observe(sample(2,1000,12000,QueueRateScope::TargetPayload,9),1)==0,"Target current bucket excluded");
+  need(global.observe(sample(3,2000,22000,QueueRateScope::OwnerCombined),2)==200,"Actual combined send source average");
+  need(target.observe(sample(3,2000,15000,QueueRateScope::TargetPayload,9),2)==100,"Actual payload send source average");
+  auto absent=sample(4,3000,0,QueueRateScope::TargetPayload,9);absent.receivedBytes.reset();need(!target.observe(absent,3),"Missing send is unknown");
+  need(!target.observe(sample(5,4000,1000000,QueueRateScope::TargetPayload,10),4),"Reopened admission cannot inherit rate or gap bytes");
+  need(!global.observe(sample(4,3000,30000,QueueRateScope::TargetPayload),3),"Scope switch rebaselines rather than reusing global authority");
+}
 void etaSourceRemainingCacheAndZeroRate() {
   QueueSmoothedEta source;
   need(source.observe(eta(1, 0, 1000, 10000, 9000, 100)) == 100, "Max of actual remaining facts");
@@ -125,7 +137,7 @@ int main() {
   try {
     for (auto method : {globalSourceWarmupAndNominalConversion, globalBoundedHistoryAndExtremes,
         globalUnknownScopeResetAndStale, globalDiscontinuities, payloadUsesSourceWindowAndNotInstantRate,
-        smoothingOldIntervalAndPendingDelta, smoothingGapsAndBounds, etaSourceRemainingCacheAndZeroRate,
+        smoothingOldIntervalAndPendingDelta, smoothingGapsAndBounds, sendChannelsKeepActualGlobalCombinedAndTargetPayloadOwnership, etaSourceRemainingCacheAndZeroRate,
         etaUnknownCompletionAndExtremes}) { method(); ++families; }
     std::cout << "PASS " << families << " queue-rate-provider families; " << assertions
               << " assertions; explicit primitives only, no sampler or whole-scheduler equality\n";

@@ -109,6 +109,7 @@ private:
 // Immutable pin to the approved provider's raw-counter AND selected-swarm ABI.
 // Resolve BEFORE preparing payload storage; absent/stock/unbound is unsupported.
 // The pin is retained by the installed factory/plugin for its full lifetime.
+class ManagedQueueObservations;
 struct ManagedPayloadCounterBridge;
 std::shared_ptr<const ManagedPayloadCounterBridge> managedPayloadCounterBridge() noexcept;
 // Before any state/payload effects, use a raw-info-validated full identity to
@@ -120,5 +121,6 @@ bool selectManagedSwarm(libtorrent::add_torrent_params&,
     const std::shared_ptr<const ManagedPayloadCounterBridge>&) noexcept;
 bool attachManagedPayloadCounters(libtorrent::add_torrent_params&,
     const std::shared_ptr<ManagedPayloadCounters>&,
-    std::shared_ptr<const ManagedPayloadCounterBridge>) noexcept;
+    std::shared_ptr<const ManagedPayloadCounterBridge>,
+    std::shared_ptr<ManagedQueueObservations> = {}) noexcept;
 } // namespace biglybtc::engine::detail

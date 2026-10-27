@@ -90,6 +90,21 @@ void verify(Fixture& f){
   check(std::equal(out.begin(),out.begin()+13312,reinterpret_cast<const std::byte*>(f.contents[1].data()))&&std::equal(out.begin()+29696,out.end(),reinterpret_cast<const std::byte*>(f.contents[1].data()+29696)),"independent codec reads first/tail at original logical positions");
   ::close(fd);check(!st::hasPendingOriginalCompaction(f.lease),"successful compaction retired its journal");
 }
+fs::path convertedCompactionFixture(Fixture& f,bool configured){
+  auto state=doc(read(f.state));const auto* rawInfo=state.find("info");auto encodedInfo=core::encodeValue(*rawInfo,st::compatibleConfigLimits());check(encodedInfo.has_value(),"Own named compaction info");auto info=doc(*encodedInfo);std::string files="l";
+  for(std::size_t j=0;j<info.find("files")->children.size();++j){auto encoded=core::encodeValue(info.find("files")->children[j],st::compatibleConfigLimits());check(encoded.has_value(),"Own compaction file");auto item=doc(*encoded);if(j==1){put(item,"path","l5:1\"bine");}files+=item.serialize();}put(info,"files",files+'e');put(state,"info",info.serialize());
+  const auto old=f.state;f.hash=*core::TorrentHash::parse(sha1(info.serialize()));f.state=f.profile/"active"/(f.hash.hex()+".dat");f.control=f.profile/"active"/f.hash.hex()/"fmfile1.dat";write(f.state,state.serialize());check(fs::remove(old),"Retire obsolete generated source hash");write(f.area.root/"archive.torrent",state.serialize());
+  auto inventory=doc(read(f.profile/"downloads.config"));auto encoded=core::encodeValue(inventory.find("downloads")->children[0],st::compatibleConfigLimits());check(encoded.has_value(),"Own named compaction row");auto row=doc(*encoded);put(row,"torrent_hash",b(sha1(info.serialize())));put(inventory,"downloads","l"+row.serialize()+'e');write(f.profile/"downloads.config",inventory.serialize());
+  if(configured){write(f.profile/"biglybt.config","d26:File.Character.Conversions3:\"=Qe");}
+  const auto target=f.source/(configured?"1Qbin":"1'bin");fs::rename(f.target(),target);return target;
+}
+void convertedFilenameCompactionRecoversExactPolicy(){
+  for(const bool configured:{false,true}){for(const auto stage:{st::OriginalCompactionStage::JournalSynced,st::OriginalCompactionStage::PayloadSynced,st::OriginalCompactionStage::ControlPublished,st::OriginalCompactionStage::StatePublished,st::OriginalCompactionStage::InventoryPublished}){
+    Fixture f;const auto target=convertedCompactionFixture(f,configured);const auto sourceInfo=core::encodeValue(*doc(read(f.state)).find("info"),st::compatibleConfigLimits());check(sourceInfo.has_value(),"Own exact quoted source info");interruptAt=stage;interruptArmed=true;check(!st::compactOriginalFile(f.lease,f.hash,1,{},interrupt)&&st::hasPendingOriginalCompaction(f.lease),"Accepted converted compaction interrupted");
+    {auto release=std::move(f.lease);static_cast<void>(release);}f.lease=take(st::ProfileLease::acquire(f.profile));check(take(st::recoverOriginalCompaction(f.lease)).has_value(),"Unchanged named policy recovers every durable stage");check(read(target)==f.expected()&&!fs::exists(f.source/"1\"bin"),"Only exact converted physical file was compacted");auto after=doc(read(f.state));check(core::encodeValue(*after.find("info"),st::compatibleConfigLimits())==sourceInfo&&after.find("attributes")->find("storetypes")->children[1].bytes=="C","Raw hash subject/original index survive named compaction");
+  }}
+  {Fixture f;const auto target=convertedCompactionFixture(f,false);interruptAt=st::OriginalCompactionStage::JournalSynced;interruptArmed=true;check(!st::compactOriginalFile(f.lease,f.hash,1,{},interrupt),"Pending converted scope");const auto before=read(target);write(f.profile/"biglybt.config","d26:File.Character.Conversions3:\"=Xe");check(!st::recoverOriginalCompaction(f.lease)&&read(target)==before&&st::hasPendingOriginalCompaction(f.lease),"Config change refuses before payload packing");}
+}
 void exactPackAndResume(){Fixture f;const auto result=take(st::compactOriginalFile(f.lease,f.hash,1));check(result.previousPhysicalBytes==40000&&result.physicalBytes==23616&&!result.recovered,"actual compact result");verify(f);}
 void interruptedStages(){
   for(const auto stage:{st::OriginalCompactionStage::JournalSynced,st::OriginalCompactionStage::PayloadSynced,st::OriginalCompactionStage::ControlPublished,st::OriginalCompactionStage::StatePublished,st::OriginalCompactionStage::InventoryPublished}){
@@ -182,6 +197,7 @@ extern "C" int __wrap_fsync(int fd){
 
 int main(){
   try{
+    convertedFilenameCompactionRecoversExactPolicy();
     exactPackAndResume();std::cout<<"PASS exact original compact edges and conservative resume\n";
     interruptedStages();std::cout<<"PASS all durable stages reopen\n";
     failedPayloadIoReopens();std::cout<<"PASS actual short-write truncation sync failures\n";

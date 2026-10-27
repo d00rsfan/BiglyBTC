@@ -1,4 +1,5 @@
 #include "library_window.hpp"
+#include "file_operation_dialog.hpp"
 
 #include <QAction>
 #include <QApplication>
@@ -72,6 +73,24 @@ private slots:
     QCOMPARE(QGuiApplication::platformName(), QStringLiteral("offscreen"));
     QApplication::setQuitOnLastWindowClosed(false);
     qRegisterMetaType<ui::FileIndices>();
+  }
+  void originalFilePathActionRoutesOneIndexAndDropsOldProfile() {
+    ui::LibraryWindow window;window.beginColumnLayoutSession(1);const auto target=prepare(window);QVERIFY(selectFiles(window,{7}));
+    auto* revert=action(window,"files-revert");QVERIFY(revert);QTRY_VERIFY(revert->isEnabled());
+    QSignalSpy reads(&window,&ui::LibraryWindow::fileOperationPlanRequested),writes(&window,&ui::LibraryWindow::fileOperationExecuteRequested);
+    revert->trigger();QTRY_COMPARE(reads.count(),1);const auto request=reads[0][0].value<ui::FileOperationRequest>();
+    QCOMPARE(request.target,target);QCOMPARE(request.originalIndex,7);QCOMPARE(request.operation,ui::FileOperation::RevertFile);QVERIFY(request.destinationParent.isEmpty());
+    auto packet=std::make_shared<ui::FileOperationPlanPacket>();packet->request=request;packet->approvalScopeDigest=QString(64,QLatin1Char('b'));packet->sourceRoot=QStringLiteral("/owned/bundle");packet->targetRoot=packet->sourceRoot;
+    packet->paths={{QStringLiteral("/owned/linked.bin"),QStringLiteral("/owned/bundle/zeta.bin"),40,true}};packet->presentFiles=1;packet->totalBytes=40;
+    window.beginColumnLayoutSession(2);window.setFileOperationPlan(packet);QCOMPARE(writes.count(),0);
+    for(auto* dialog:window.findChildren<ui::FileOperationDialog*>()){dialog->accept();}QCOMPARE(writes.count(),0);
+  }
+  void pathActionsRefuseMultiPaddingBusyAndReplacedFrames() {
+    ui::LibraryWindow window;window.beginColumnLayoutSession(3);const auto target=prepare(window);QVERIFY(selectFiles(window,{7,2}));
+    auto* move=action(window,"files-rename");QVERIFY(move);QTRY_VERIFY(!move->isEnabled());QSignalSpy reads(&window,&ui::LibraryWindow::fileOperationPlanRequested);QVERIFY(forced(move));QCOMPARE(reads.count(),0);
+    QVERIFY(selectFiles(window,{2}));QTRY_VERIFY(move->isEnabled());window.setBusy(true);QVERIFY(forced(move));QCOMPARE(reads.count(),0);window.setBusy(false);
+    window.setPresentation(library(2));QVERIFY(forced(move));QCOMPARE(reads.count(),0);
+    window.setDetails({target,QStringLiteral("stale"),100,files(target)});QVERIFY(forced(move));QCOMPARE(reads.count(),0);
   }
   void selectedOriginalIndicesRoute_data() {
     QTest::addColumn<QByteArray>("id"); QTest::addColumn<int>("priority"); QTest::addColumn<bool>("skipped");

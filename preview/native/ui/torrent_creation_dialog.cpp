@@ -12,6 +12,7 @@
 #include <QPointer>
 #include <QProgressBar>
 #include <QSignalBlocker>
+#include <QScrollArea>
 #include <QMetaObject>
 #include <QPushButton>
 #include <QUrl>
@@ -25,8 +26,8 @@
 namespace biglybtc::ui {
 namespace {
 // Preserve every original v1 choice; BEP52 formats allow only powers of two.
-constexpr std::array<quint64,20> PieceSizes{32768,49152,65536,98304,131072,196608,262144,393216,
-    524288,786432,1048576,1572864,2097152,3145728,4194304,8388608,16777216,33554432,67108864,134217728};
+constexpr std::array<quint64,21> PieceSizes{32768,49152,65536,98304,131072,196608,262144,393216,
+    524288,786432,1048576,1572864,2097152,3145728,4194304,8388608,16777216,33554432,67108864,134217728,268435456};
 constexpr std::array<quint64,14> MerklePieceSizes{16384,32768,65536,131072,262144,524288,1048576,2097152,4194304,
     8388608,16777216,33554432,67108864,134217728};
 constexpr quint64 MaximumBytes=quint64{1}<<44;
@@ -49,9 +50,9 @@ struct TorrentCreationDialog::Impl {
   TorrentCreationRequest active;
   QString publishedOutput;
   QPointer<QComboBox> kind,piece,format;
-  QPointer<QLineEdit> source,output;
-  QPointer<QPlainTextEdit> trackers,comment;
-  QPointer<QCheckBox> privateTorrent,import;
+  QPointer<QLineEdit> source,output,sourceTag;
+  QPointer<QPlainTextEdit> trackers,comment,urlSeeds,httpSeeds;
+  QPointer<QCheckBox> privateTorrent,import,dhtBackup,extraHashes;
   QPointer<QPushButton> sourceBrowse,outputBrowse,create,cancel;
   QPointer<QProgressBar> progress;
   QPointer<QLabel> status;
@@ -62,7 +63,7 @@ struct TorrentCreationDialog::Impl {
   bool text(const QString& value){const auto alive=guard();if(status){status->setText(value);}return alive.current();}
   bool controls(){
     const auto alive=guard();const bool editable=session&&!busy&&!working;
-    const std::vector<QPointer<QWidget>> fields{kind.data(),piece.data(),format.data(),source.data(),output.data(),trackers.data(),comment.data(),privateTorrent.data(),import.data(),sourceBrowse.data(),outputBrowse.data()};
+    const std::vector<QPointer<QWidget>> fields{kind.data(),piece.data(),format.data(),source.data(),output.data(),trackers.data(),comment.data(),privateTorrent.data(),import.data(),sourceTag.data(),urlSeeds.data(),httpSeeds.data(),dhtBackup.data(),extraHashes.data(),sourceBrowse.data(),outputBrowse.data()};
     for(const auto& field:fields){if(field){field->setEnabled(editable);}if(!alive.current()){return false;}}
     if(create){create->setEnabled(editable&&output&&(publishedOutput.isEmpty()||output->text()!=publishedOutput));}if(!alive.current()){return false;}
     if(cancel){cancel->setEnabled(!closing);}return alive.current();
@@ -78,12 +79,27 @@ struct TorrentCreationDialog::Impl {
     const auto index=piece->findData(QVariant::fromValue(selected));piece->setCurrentIndex(index>=0?index:0);return valid();
   }
   std::optional<TorrentCreationOptions> options()const {
-    if(!kind||!piece||!format||!source||!output||!trackers||!comment||!privateTorrent||!import
+    if(!kind||!piece||!format||!source||!output||!trackers||!comment||!privateTorrent||!import||!sourceTag||!urlSeeds||!httpSeeds||!dhtBackup||!extraHashes
         ||kind->currentIndex()<0||kind->currentIndex()>1||piece->currentIndex()<0||format->currentIndex()<0||format->currentIndex()>2
         ||!path(source->text())||!path(output->text())||comment->toPlainText().toUtf8().size()>16384){return {};}
     TorrentCreationOptions value;value.sourceKind=static_cast<TorrentCreationSource>(kind->currentIndex());value.source=source->text();value.output=output->text();
     value.format=static_cast<TorrentCreationFormat>(format->currentIndex());
     value.pieceSize=piece->currentData().toULongLong();value.privateTorrent=privateTorrent->isChecked();value.comment=comment->toPlainText();value.importAfterCreation=import->isChecked();
+    value.sourceTag=sourceTag->text();value.dhtBackup=dhtBackup->isChecked();
+    value.extraHashes=extraHashes->isChecked()&&value.format!=TorrentCreationFormat::V2;
+    if(value.sourceTag.toUtf8().size()>16384||value.sourceTag.contains(QChar::Null)) return {};
+    std::size_t seedCount=0;
+    for(const auto& pair:{std::pair{urlSeeds.data(),&value.urlSeeds},std::pair{httpSeeds.data(),&value.httpSeeds}}) {
+      if(pair.first->toPlainText().size()>131072) return {};
+      for(const auto& raw:pair.first->toPlainText().split(QChar('\n'))) {
+        const auto text=raw.trimmed();if(text.isEmpty()) continue;
+        const QUrl url(text,QUrl::StrictMode);
+        if(++seedCount>64||text.toUtf8().size()>2048||!url.isValid()||url.host().isEmpty()
+            ||(url.scheme()!=QStringLiteral("http")&&url.scheme()!=QStringLiteral("https"))) return {};
+        for(const auto c:text) if(c.isSpace()||c.unicode()<32||c.unicode()==127) return {};
+        pair.second->push_back(text);
+      }
+    }
     const auto choices=value.format==TorrentCreationFormat::V1?std::span<const quint64>(PieceSizes):std::span<const quint64>(MerklePieceSizes);
     if(value.pieceSize&&std::find(choices.begin(),choices.end(),value.pieceSize)==choices.end()){return {};}
     if(trackers->toPlainText().size()>131072){return {};}
@@ -127,7 +143,16 @@ TorrentCreationDialog::TorrentCreationDialog(QWidget* parent):QDialog(parent),im
   impl_->trackers=new QPlainTextEdit(this);impl_->trackers->setObjectName(QStringLiteral("torrent-creation-trackers"));impl_->trackers->setPlaceholderText(QStringLiteral("One tracker URL per line. Separate tiers with a blank line."));impl_->trackers->setMaximumHeight(130);form->addRow(QStringLiteral("Tracker tiers"),impl_->trackers);
   impl_->privateTorrent=new QCheckBox(QStringLiteral("Private torrent"),this);impl_->privateTorrent->setObjectName(QStringLiteral("torrent-creation-private"));form->addRow(QString{},impl_->privateTorrent);
   impl_->comment=new QPlainTextEdit(this);impl_->comment->setObjectName(QStringLiteral("torrent-creation-comment"));impl_->comment->setMaximumHeight(90);form->addRow(QStringLiteral("Comment"),impl_->comment);
-  impl_->import=new QCheckBox(QStringLiteral("Add to My Torrents (stopped) after successful creation"),this);impl_->import->setObjectName(QStringLiteral("torrent-creation-import"));form->addRow(QString{},impl_->import);layout->addLayout(form);
+  impl_->sourceTag=new QLineEdit(this);impl_->sourceTag->setObjectName(QStringLiteral("torrent-creation-source-tag"));impl_->sourceTag->setMaxLength(16384);form->addRow(QStringLiteral("Source tag"),impl_->sourceTag);
+  for(const auto& pair:{std::pair{&impl_->urlSeeds,QStringLiteral("URL seeds")},std::pair{&impl_->httpSeeds,QStringLiteral("HTTP seeds")}}) {
+    *pair.first=new QPlainTextEdit(this);(*pair.first)->setMaximumHeight(70);
+    (*pair.first)->setObjectName(pair.first==&impl_->urlSeeds?QStringLiteral("torrent-creation-url-seeds"):QStringLiteral("torrent-creation-http-seeds"));
+    (*pair.first)->setPlaceholderText(QStringLiteral("One HTTP(S) URL per line"));form->addRow(pair.second,*pair.first);
+  }
+  impl_->dhtBackup=new QCheckBox(QStringLiteral("Permit DHT backup"),this);impl_->dhtBackup->setObjectName(QStringLiteral("torrent-creation-dht-backup"));impl_->dhtBackup->setChecked(true);form->addRow(QString{},impl_->dhtBackup);
+  impl_->extraHashes=new QCheckBox(QStringLiteral("Include SHA1 and ED2K hashes (V1 / hybrid)"),this);impl_->extraHashes->setObjectName(QStringLiteral("torrent-creation-extra-hashes"));form->addRow(QString{},impl_->extraHashes);
+  impl_->import=new QCheckBox(QStringLiteral("Add to My Torrents (stopped) after successful creation"),this);impl_->import->setObjectName(QStringLiteral("torrent-creation-import"));form->addRow(QString{},impl_->import);auto* fields=new QWidget(this);fields->setLayout(form);
+  auto* scroll=new QScrollArea(this);scroll->setWidgetResizable(true);scroll->setFrameShape(QFrame::NoFrame);scroll->setWidget(fields);layout->addWidget(scroll);
   auto* note=new QLabel(QStringLiteral("Creates the selected torrent format without modifying source data. Existing output files are never overwritten."),this);note->setTextFormat(Qt::PlainText);note->setWordWrap(true);layout->addWidget(note);
   impl_->progress=new QProgressBar(this);impl_->progress->setObjectName(QStringLiteral("torrent-creation-progress"));impl_->progress->setRange(0,10000);impl_->progress->setValue(0);impl_->progress->setTextVisible(false);layout->addWidget(impl_->progress);
   impl_->status=new QLabel(this);impl_->status->setObjectName(QStringLiteral("torrent-creation-status"));impl_->status->setTextFormat(Qt::PlainText);impl_->status->setWordWrap(true);layout->addWidget(impl_->status);

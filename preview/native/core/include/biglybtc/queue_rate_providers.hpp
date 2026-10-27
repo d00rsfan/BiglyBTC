@@ -53,6 +53,17 @@ private:
   std::int32_t lastTick_ = 0;
 };
 
+// Same source old-interval/config/average arithmetic for an independently
+// observed send stream. Global scope is combined; target scope is payload.
+class QueueSendRateSmoothing final {
+public:
+  std::optional<std::int64_t> observe(const QueueRateSample&,std::int32_t tickCount,
+      int configuredSeconds=30) noexcept;
+private:
+  std::optional<QueueRateScope> scope_;
+  QueuePayloadRateSmoothing average_;
+};
+
 struct QueueEtaSample {
   QueueRateStamp stamp;
   std::int64_t wallMillis = 0;

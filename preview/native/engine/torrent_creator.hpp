@@ -15,13 +15,13 @@
 
 namespace biglybtc::engine {
 
-// Original v1 wizard sizes supported by the qualified generator (LT rejects
-// the original final 256 MiB choice). Zero selects the original computed rule:
+// Original v1 wizard choices; 256 MiB uses the same bounded streaming hasher
+// and an explicit v1 metadata writer. Zero selects the original computed rule:
 // first power of two from 32 KiB..4 MiB with floor(bytes / size) <= 2048.
-inline constexpr std::array<std::uint32_t, 20> CreatePieceSizes{
+inline constexpr std::array<std::uint32_t, 21> CreatePieceSizes{
     32768, 49152, 65536, 98304, 131072, 196608, 262144, 393216,
     524288, 786432, 1048576, 1572864, 2097152, 3145728, 4194304,
-    8388608, 16777216, 33554432, 67108864, 134217728};
+    8388608, 16777216, 33554432, 67108864, 134217728, 268435456};
 inline constexpr std::size_t CreateMaximumFiles = 8192;
 inline constexpr std::size_t CreateMaximumDirectories = 2048;
 inline constexpr std::size_t CreateMaximumDepth = 64;
@@ -48,6 +48,11 @@ struct CreateOptions {
   bool privateTorrent = false;
   std::string comment;
   CreateFormat format = CreateFormat::V1; // Appended; legacy calls remain v1.
+  std::string sourceTag; // Original info.source; changes the torrent identity.
+  std::vector<std::string> urlSeeds, httpSeeds; // Original url-list/httpseeds, outside info.
+  std::optional<bool> dhtBackup; // Omitted preserves the original default (enabled).
+  bool extraHashes = false; // Original overall/per-file SHA1 and ED2K for v1/hybrid.
+
 };
 
 enum class CreateStage { Scanning, Hashing, Validating, Publishing };

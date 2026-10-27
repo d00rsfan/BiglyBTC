@@ -4,6 +4,7 @@
 #include <array>
 #include <limits>
 #include <set>
+#include <optional>
 
 namespace biglybtc::compat {
 namespace {
@@ -142,11 +143,44 @@ std::u16string utf16(std::string_view value) {
   }
   return result;
 }
-std::string component(std::string value) {
+struct FilenameConversion { std::vector<std::pair<char16_t,char16_t>> rows; };
+FilenameConversion filenameConversion(std::string_view encoded) {
+  require(encoded.size()<=16384,"Original filename conversion policy exceeds its bound");
+  const auto input=utf16(encoded);FilenameConversion result;
+  std::size_t start=0;
+  while(start<=input.size()){
+    auto end=input.find(u',',start);if(end==std::u16string::npos){end=input.size();}
+    auto first=start,last=end;while(first<last&&input[first]<=0x20){++first;}while(last>first&&input[last-1]<=0x20){--last;}
+    // Java String.length/trim, not Unicode scalar count or whitespace classes.
+    // The middle character is intentionally not validated by the original.
+    if(last-first==3){require(result.rows.size()<4096,"Original filename conversion row bound");result.rows.emplace_back(input[first],input[first+2]);}
+    if(end==input.size()){break;}start=end+1;
+  }
+  return result;
+}
+std::string convertedFilename(std::string_view value,const FilenameConversion& policy){
+  auto units=utf16(value);
+  for(auto& unit:units){const auto original=unit;
+    for(const auto& [from,to]:policy.rows){if(original==from){unit=to;}} // Last matching row; never chained.
+    if(unit==u'/'||unit==u'\r'||unit==u'\n'){unit=u' ';} // Exact Linux branch.
+  }
+  std::string result;result.reserve(value.size());
+  for(std::size_t n=0;n<units.size();++n){std::uint32_t code=units[n];
+    if(code>=0xd800&&code<=0xdbff){require(n+1<units.size()&&units[n+1]>=0xdc00&&units[n+1]<=0xdfff,"Filename conversion produced an unpaired surrogate");code=0x10000+((code-0xd800)<<10)+(units[++n]-0xdc00);}
+    else{require(code<0xdc00||code>0xdfff,"Filename conversion produced an unpaired surrogate");}
+    if(code<0x80){result+=static_cast<char>(code);}else if(code<0x800){result+=static_cast<char>(0xc0|(code>>6));result+=static_cast<char>(0x80|(code&63));}
+    else if(code<0x10000){result+=static_cast<char>(0xe0|(code>>12));result+=static_cast<char>(0x80|((code>>6)&63));result+=static_cast<char>(0x80|(code&63));}
+    else{result+=static_cast<char>(0xf0|(code>>18));result+=static_cast<char>(0x80|((code>>12)&63));result+=static_cast<char>(0x80|((code>>6)&63));result+=static_cast<char>(0x80|(code&63));}
+  }
+  return result;
+}
+std::string component(std::string value,const FilenameConversion* policy=nullptr,bool* changed=nullptr) {
+  if(policy){auto converted=convertedFilename(value,*policy);if(changed&&converted!=value){*changed=true;}value=std::move(converted);}
   require(!value.empty() && value.size() <= 255 && value != "." && value != ".."
       && value.find_first_of(std::string("/\\\n\0", 4)) == std::string::npos,
       "Unsafe or unqualified original path component");
   utf16(value);
+  if(policy){require(value!=".git"&&!value.starts_with(".BiglyBTC"),"Converted path overlaps reserved native storage");}
   return value;
 }
 void append(OriginalLayout& result, std::string path, std::int64_t size, bool padding, std::size_t limit) {
@@ -157,7 +191,7 @@ void append(OriginalLayout& result, std::string path, std::int64_t size, bool pa
   result.bytes += size;
 }
 void tree(OriginalLayout& result, const Node& node, const std::string& path,
-    std::size_t limit, std::size_t depth, std::size_t& pads) {
+    std::size_t limit, std::size_t depth, std::size_t& pads,const FilenameConversion* policy) {
   require(node.type == Node::Type::Dictionary && depth <= 128, "Invalid or overdeep v2 file tree");
   std::vector<std::pair<std::u16string, std::size_t>> order;
   for (std::size_t i = 0; i < node.children.size(); i += 2) {
@@ -184,21 +218,24 @@ void tree(OriginalLayout& result, const Node& node, const std::string& path,
       }
       append(result, path, integer(child.find("length")), false, limit);
     } else {
-      const auto part = component(std::string(name));
-      tree(result, child, path.empty() ? part : path + '/' + part, limit, depth + 1, pads);
+      const auto part = component(std::string(name),policy,&result.filenameConverted);
+      tree(result, child, path.empty() ? part : path + '/' + part, limit, depth + 1, pads,policy);
     }
   }
 }
 }
 
-std::expected<OriginalLayout, LayoutError> originalLayout(const core::Document& document, std::size_t maximumFiles) {
+static std::expected<OriginalLayout, LayoutError> originalLayoutImpl(const core::Document& document, std::size_t maximumFiles,std::optional<std::string_view> conversions) {
+  std::optional<FilenameConversion> conversion;
   try {
+    if(conversions){conversion=filenameConversion(*conversions);}
+    const auto* conversionPolicy=conversion?&*conversion:nullptr;bool nameChanged=false;
     const auto* info = document.find("info");
     require(info && info->type == Node::Type::Dictionary, "Original metadata has no info dictionary");
     const auto policy=names(document,*info);
     const auto* name = policy.utf8Keys?info->find("name.utf-8"):info->find("name");
-    OriginalLayout result{component(decoded(name,policy.utf8Keys?NameEncoding::Utf8:policy.encoding)), false,
-        integer(info->find("piece length")), 0, {}};
+    OriginalLayout result{component(decoded(name,policy.utf8Keys?NameEncoding::Utf8:policy.encoding),conversionPolicy,&nameChanged), false,
+        integer(info->find("piece length")), 0, {},nameChanged};
     require(result.pieceLength > 0 && result.pieceLength <= OriginalMaximumPieceLength, "Unqualified original piece length");
     if (const auto* files = info->find("files")) {
       require(files->type == Node::Type::List && !files->children.empty(), "Invalid original v1 file list");
@@ -212,7 +249,7 @@ std::expected<OriginalLayout, LayoutError> originalLayout(const core::Document& 
           require(part.type == Node::Type::Bytes && path.size() + part.bytes.size() + 1 <= 4096,
               "Original relative path exceeds its limit");
           if (!path.empty()) { path += '/'; }
-          path += component(decoded(&part,policy.utf8Keys?NameEncoding::Utf8:policy.encoding));
+          path += component(decoded(&part,policy.utf8Keys?NameEncoding::Utf8:policy.encoding),conversionPolicy,&result.filenameConverted);
         }
         bool padding = false;
         if (const auto* flags = file.find("attr")) {
@@ -226,7 +263,7 @@ std::expected<OriginalLayout, LayoutError> originalLayout(const core::Document& 
       append(result, result.name, integer(size), false, maximumFiles);
     } else if (const auto* files = info->find("file tree")) {
       std::size_t pads = 0;
-      tree(result, *files, {}, maximumFiles, 0, pads);
+      tree(result, *files, {}, maximumFiles, 0, pads,conversionPolicy);
       require(!result.files.empty(), "Original v2 file tree is empty");
       result.multifile = result.files.size() != 1 || result.files[0].path != result.name;
     } else { throw Failure{"Original metadata has no file layout"}; }
@@ -235,7 +272,13 @@ std::expected<OriginalLayout, LayoutError> originalLayout(const core::Document& 
     for (const auto& file : result.files) {
       require(file.padding || physical.insert(file.path).second, "Two original data files alias the same relative path");
     }
+    if(conversionPolicy){for(const auto& path:physical){for(auto slash=path.find('/');slash!=std::string::npos;slash=path.find('/',slash+1)){require(!physical.contains(path.substr(0,slash)),"Converted file is also another file's parent");}}}
     return result;
   } catch (const Failure& failure) { return std::unexpected(LayoutError{failure.message}); }
+}
+std::expected<OriginalLayout,LayoutError> originalLayout(const core::Document& document,std::size_t maximumFiles){return originalLayoutImpl(document,maximumFiles,{});}
+std::expected<OriginalLayout,LayoutError> originalLayout(const core::Document& document,std::size_t maximumFiles,std::string_view conversions){return originalLayoutImpl(document,maximumFiles,conversions);}
+std::expected<std::string,LayoutError> originalFilenameComponent(std::string_view decoded,std::string_view conversions){
+  try{const auto policy=filenameConversion(conversions);return component(std::string(decoded),&policy);}catch(const Failure& failure){return std::unexpected(LayoutError{failure.message});}
 }
 } // namespace biglybtc::compat

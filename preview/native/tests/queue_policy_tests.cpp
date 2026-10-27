@@ -1,4 +1,5 @@
 #include "biglybtc/queue_policy.hpp"
+#include "biglybtc/queue_observations.hpp"
 
 #include <array>
 #include <cstdint>
@@ -279,6 +280,77 @@ int main(){try{
     std::vector<QueueTorrentFacts> many(MaximumQueueTorrents+1);const auto limited=evaluateQueue(p,many,context());
     CHECK(!limited&&limited.error().code==QueuePolicyErrorCode::Limit);
     p.rankMode=static_cast<QueueRankMode>(99);CHECK(!evaluateQueue(p,std::span(&f,1),context()));
+  });
+  run("actual source share ratio wraps long then narrows int without floating clamp",[]{
+    CHECK(sourceQueueShareRatio(1000,1250,0,0)==1250);
+    CHECK(sourceQueueShareRatio(100,1,100,0)==-1);
+    CHECK(sourceQueueShareRatio(1,std::numeric_limits<std::int64_t>::max(),0,0)==-1000);
+    CHECK(sourceQueueShareRatio(2,std::numeric_limits<std::int64_t>::max(),0,0)==-500);
+    CHECK(sourceQueueShareRatio(1,2147484,0,0)==std::numeric_limits<std::int32_t>::max());
+    CHECK(sourceQueueShareRatio(std::numeric_limits<std::int64_t>::max(),1,
+        std::numeric_limits<std::int64_t>::max(),1)==-1);
+    auto f=seed();f.shareRatio=-500;CHECK(decide(read(),f).firstPriority);
+  });
+  run("source lifecycle floors each actual peer epoch and resets seed time on unfinish",[]{
+    QueueOwnerObservations source(1);std::uint64_t sequence=0;
+    const auto send=[&](QueueObservationKind kind,std::int64_t millis){QueueObservation e;e.sequence=++sequence;e.observedNanos=millis*1000000;e.observedWallMillis=100000+millis;e.kind=kind;return source.observe(e);};
+    CHECK(send(QueueObservationKind::StartedDownload,1001));CHECK(send(QueueObservationKind::Finished,2500));
+    auto f=source.facts(3999);CHECK(f.durations&&f.durations->downloading==1&&f.durations->seeding==1);
+    CHECK(send(QueueObservationKind::Stopped,3999));CHECK(send(QueueObservationKind::StartedDownload,4500));CHECK(send(QueueObservationKind::Stopped,4999));
+    f=source.facts(5000);CHECK(f.durations&&f.durations->downloading==1&&f.durations->seeding==1);
+    CHECK(send(QueueObservationKind::StartedDownload,6000));CHECK(send(QueueObservationKind::Finished,6999));CHECK(send(QueueObservationKind::Unfinished,7000));
+    f=source.facts(7999);CHECK(f.durations&&f.durations->downloading==2&&f.durations->seeding==1);
+    CHECK(!send(QueueObservationKind::Lost,8000));CHECK(!source.facts(8000).durations&&!source.facts(8000).swarm);
+  });
+  run("retained scrape and announce choose each field with exact request-start wall source",[]{
+    QueueOwnerObservations source(1);std::array<unsigned char,32> key{};key[0]=1;CHECK(source.trackerOrder(std::span(&key,1)));
+    std::uint64_t sequence=0;
+    const auto send=[&](QueueObservationKind kind,int seeds,int peers,std::int64_t start){QueueObservation e;e.sequence=++sequence;e.observedNanos=(1000+static_cast<std::int64_t>(sequence))*1000000;e.observedWallMillis=200000+static_cast<std::int64_t>(sequence);e.kind=kind;e.seeds=seeds;e.peers=peers;
+      if(static_cast<unsigned>(kind)>=6){e.protocol=1;e.request=sequence;e.requestStartedNanos=1000000;e.requestStartedWallMillis=start;e.tracker=key;}return source.observe(e);};
+    CHECK(send(QueueObservationKind::StartedSeed,-1,-1,0));CHECK(send(QueueObservationKind::Announce,7,9,200002));
+    CHECK(send(QueueObservationKind::Scrape,1,0,200002));auto f=source.facts(2000);CHECK(f.swarm&&f.swarm->seeds==7&&f.swarm->peers==9&&f.swarm->success);
+    CHECK(send(QueueObservationKind::Scrape,1,0,200001));f=source.facts(2000);CHECK(f.swarm&&f.swarm->seeds==1&&f.swarm->peers==9);
+    CHECK(send(QueueObservationKind::Scrape,4,6,200002));CHECK(send(QueueObservationKind::Announce,70,90,200002));f=source.facts(2000);CHECK(f.swarm&&f.swarm->seeds==3&&f.swarm->peers==6);
+    CHECK(send(QueueObservationKind::Scrape,1,0,200002));CHECK(send(QueueObservationKind::AnnounceFailed,-1,-1,200002));f=source.facts(2000);CHECK(f.swarm&&f.swarm->seeds==0&&f.swarm->peers==0&&f.swarm->success);
+  });
+  run("original configured order owns equal-count scrape ties not reply arrival order",[]{
+    QueueOwnerObservations source(2);std::array<std::array<unsigned char,32>,2> keys{};keys[0][0]=1;keys[1][0]=2;CHECK(source.trackerOrder(keys));
+    QueueObservation e;e.sequence=1;e.observedNanos=1000000000;e.observedWallMillis=200000;e.kind=QueueObservationKind::StartedSeed;CHECK(source.observe(e));
+    e.kind=QueueObservationKind::Scrape;e.protocol=2;e.seeds=4;e.peers=7;e.requestStartedNanos=1000000;e.requestStartedWallMillis=200001;e.tracker=keys[1];e.request=1;e.sequence=2;e.observedNanos=1100000000;CHECK(source.observe(e));
+    e.tracker=keys[0];e.request=2;e.sequence=3;e.observedNanos=1200000000;e.requestStartedWallMillis=199999;CHECK(source.observe(e));
+    const auto f=source.facts(2000);CHECK(f.swarm&&f.swarm->seeds==4&&f.swarm->peers==7);
+    e.protocol=1;e.sequence=4;e.request=3;e.seeds=999;e.observedNanos=1300000000;CHECK(source.observe(e));CHECK(source.facts(2000).swarm->seeds==4);
+  });
+  run("original aggregate cache and startup-success remain distinct from actual network success",[]{
+    QueueOwnerObservations source(1);CHECK(source.trackerOrder({}));CHECK(source.restoreAggregate("1,2,3"));
+    QueueObservation e;e.sequence=1;e.observedNanos=1000000000;e.observedWallMillis=200000;e.kind=QueueObservationKind::StartedSeed;CHECK(source.observe(e));
+    auto f=source.facts(2000);CHECK(f.swarm&&f.swarm->seeds==2&&f.swarm->peers==3&&f.swarm->success&&f.swarm->startupSuccess);
+    QueueOwnerObservations legacy(1);legacy.restoreLegacy((std::int64_t{5}<<32)|7);f=legacy.facts(2000);CHECK(f.swarm&&f.swarm->seeds==0&&f.swarm->peers==0&&f.swarm->success);
+    QueueOwnerObservations empty(1);f=empty.facts(2000);CHECK(f.swarm&&!f.swarm->success&&f.swarm->startupSuccess);
+    auto torrent=seed();torrent.swarm=QueueSwarm{0,0,false,true};auto c=context(1000);CHECK(decide(read(),torrent,c).reason!=QueueReason::WaitingForScrape);
+  });
+  run("duplicate finished keeps first source epoch and late scrape keeps request start",[]{
+    QueueOwnerObservations source(1);std::array<unsigned char,32> key{};key[0]=7;
+    CHECK(source.trackerOrder(std::span(&key,1)));
+    QueueObservation e;e.sequence=1;e.observedNanos=1000000000;e.observedWallMillis=100000;e.kind=QueueObservationKind::StartedDownload;CHECK(source.observe(e));
+    e.sequence=2;e.observedNanos=2000000000;e.observedWallMillis=101000;e.kind=QueueObservationKind::Finished;CHECK(source.observe(e));
+    e.sequence=3;e.observedNanos=3000000000;e.observedWallMillis=102000;CHECK(source.observe(e));
+    const auto active=source.facts(3500);CHECK(active.durations&&active.durations->downloading==1&&active.durations->seeding==1);
+    CHECK(active.seedingMillis==1500);
+    e.sequence=4;e.observedNanos=4000000000;e.observedWallMillis=103000;e.kind=QueueObservationKind::Stopped;CHECK(source.observe(e));
+    e.sequence=5;e.observedNanos=5000000000;e.observedWallMillis=104000;e.kind=QueueObservationKind::Scrape;
+    e.protocol=1;e.request=11;e.requestStartedNanos=1500000000;e.requestStartedWallMillis=100500;e.seeds=3;e.peers=4;e.tracker=key;CHECK(source.observe(e));
+    const auto stopped=source.facts(5000);CHECK(stopped.durations&&stopped.durations->downloading==1&&stopped.durations->seeding==2);
+    CHECK(stopped.swarm&&stopped.swarm->seeds==3&&stopped.swarm->peers==4);
+    CHECK(!stopped.runningMillis&&!stopped.seedingMillis);
+  });
+  run("wrapped original elapsed remains known and skipped rather than missing",[]{
+    auto p=read();p.firstPriorityShareRatio=0;p.firstPrioritySeedMinutes=1;p.firstPriorityActiveMinutes=1;
+    auto f=seed();f.secondsDownloading=std::numeric_limits<std::int64_t>::max();f.secondsSeeding=1;
+    p.firstPriorityMode=QueueFirstPriorityMode::Any;CHECK(decide(p,f).firstPriority);
+    f.secondsSeeding=-2;f.secondsDownloading=-1;CHECK(!decide(p,f).firstPriority);
+    p.firstPriorityMode=QueueFirstPriorityMode::All;f.shareRatio=-500;CHECK(decide(p,f).firstPriority);
+    f.secondsSeeding.reset();CHECK(!decide(p,f).firstPriority);
   });
   std::cout<<families<<" queue-policy families, "<<assertions<<" assertions passed\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

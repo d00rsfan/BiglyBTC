@@ -10,7 +10,7 @@ public:
   explicit FileOperationDialog(QWidget* parent=nullptr);
   ~FileOperationDialog() override;
   bool beginOperation(quint64 session,quint64 revision,Target,FileOperation,
-      QString destinationParent={});
+      QString destinationParent={}, int originalIndex=-1);
   void invalidateSession();
   bool pending() const noexcept;
   FileOperationPlanPresentation plan() const;
