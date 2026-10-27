@@ -45,7 +45,16 @@ private slots:
     const auto frame=preview(reads);QVERIFY(ui::validTorrentIntake(frame));ui::TorrentIntakeSubmission submission;submission.session=session;submission.request=1;submission.revision=frame->revision;submission.destination=fixture.payload;submission.start=false;submission.files={{false,0}};submission.verifyExisting=true;
     QVERIFY(bridge.importTorrentFiles(submission));QTRY_COMPARE_WITH_TIMEOUT(writes.size(),1,10000);QTRY_VERIFY(!bridge.busy());const auto imported=result(writes);QVERIFY(imported&&imported->imported&&imported->verificationPending&&!imported->started);
     const auto statePath=fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat";
-    QTRY_VERIFY_WITH_TIMEOUT([&]{const auto inventory=document(fixture.profile+"/downloads.config");const auto* marker=inventory.find("downloads")->children[0].find(storage::VerifiedSeedKey);return marker&&marker->integer==(corrupt?1:2);}(),30000);
+    QTRY_VERIFY_WITH_TIMEOUT([&]{
+      // ConfigFile rotates the primary to .bak before publishing .saving. This
+      // external observer retries that gap; the leased post-close checks below
+      // still require the exact final saved intent and completion flags.
+      QFile file(fixture.profile+"/downloads.config");if(!file.open(QIODevice::ReadOnly)){return false;}
+      const auto inventory=core::Document::parse(file.readAll().toStdString(),storage::compatibleConfigLimits());if(!inventory){return false;}
+      const auto* downloads=inventory->find("downloads");if(!downloads||downloads->type!=core::Node::Type::List||downloads->children.size()!=1){return false;}
+      const auto* marker=downloads->children[0].find(storage::VerifiedSeedKey);
+      return marker&&marker->type==core::Node::Type::Integer&&marker->integer==(corrupt?1:2);
+    }(),30000);
     if(corrupt){QTRY_VERIFY_WITH_TIMEOUT([&]{if(rows.empty()){return false;}const auto packet=qvariant_cast<ui::Presentation>(rows.last()[0]);return packet&&!packet->items.empty()&&packet->items[0].state==QStringLiteral("Error");}(),30000);}
     QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.size(),1,10000);QTRY_VERIFY(!bridge.busy());QVERIFY(test::verifiedSeedBytesIntact(fixture,corrupt));
     auto lease=storage::ProfileLease::acquire(fixture.profile.toStdString());QVERIFY(lease);const auto saved=storage::readVerifiedSeedIntent(*lease,fixture.hash);QVERIFY(saved&&*saved);QCOMPARE((*saved)->startup,corrupt?core::StartupState::Stopped:core::StartupState::Queued);QVERIFY(!(*saved)->forceStart);
