@@ -5,6 +5,7 @@
 #include <libtorrent/hasher.hpp>
 #include <libtorrent/peer_request.hpp>
 #include <boost/asio/post.hpp>
+#include <boost/asio/executor_work_guard.hpp>
 #include <algorithm>
 #include <array>
 #include <condition_variable>
@@ -50,7 +51,7 @@ class OriginalDisk final : public lt::disk_interface {
   static constexpr std::size_t MaximumJobs = 65536;
 public:
   OriginalDisk(lt::io_context& context, OriginalDiskLookup lookup)
-      : context_(context), lookup_(std::move(lookup)) {}
+      : context_(context), work_(boost::asio::make_work_guard(context)), lookup_(std::move(lookup)) {}
   ~OriginalDisk() override { abort(true); }
   lt::storage_holder new_torrent(const lt::storage_params& params, const std::shared_ptr<void>& owner) override {
     auto files = lookup_(params.path);
@@ -225,6 +226,9 @@ public:
   void abort(bool wait) override {
     { const std::lock_guard lock(mutex_); stopping_ = true; }
     ready_.notify_one();
+    // No lazy worker means nobody has taken the constructor's guard. Release
+    // it here so ordinary/mmap-only sessions can finish their network loop.
+    if (!worker_.joinable()) { work_.reset(); }
     if (wait && worker_.joinable()) { worker_.join(); }
   }
   void submit_jobs() override { ready_.notify_one(); }
@@ -273,14 +277,24 @@ private:
     ready_.notify_one();
   }
   void run() {
+    // LT abort_stage2 releases its session guard after abort(false). Keep its
+    // network loop alive until ALL disk jobs and their final ownership
+    // retirement have been posted to the network context. A thread-start
+    // failure leaves work_ in the constructor so abort() can release it.
+    [[maybe_unused]] auto work = std::move(work_);
     for (;;) {
       std::function<void()> job;
       { std::unique_lock lock(mutex_); ready_.wait(lock, [this] { return stopping_ || !jobs_.empty(); });
         if (jobs_.empty()) { return; } job = std::move(jobs_.front()); jobs_.pop_front(); }
       job();
+      // Success may already have run concurrently. The consumed wrapper still
+      // owns Slot and success/failure callback copies, so retire those captures
+      // on the context too; never invoke the consumed job a second time.
+      boost::asio::post(context_, [finished = std::move(job)]() mutable { finished = {}; });
     }
   }
   lt::io_context& context_;
+  boost::asio::executor_work_guard<lt::io_context::executor_type> work_;
   OriginalDiskLookup lookup_;
   std::vector<Slot> slots_;
   std::size_t queuedBytes_ = 0;

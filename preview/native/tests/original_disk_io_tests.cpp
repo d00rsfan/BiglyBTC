@@ -1,6 +1,7 @@
 #include "metadata_disk_router.hpp"
 #include "original_disk_io.hpp"
 #include <QtTest>
+#include <boost/asio/executor_work_guard.hpp>
 #include <QCryptographicHash>
 #include <QDir>
 #include <libtorrent/bencode.hpp>
@@ -21,6 +22,7 @@
 #include <mutex>
 #include <optional>
 #include <stdexcept>
+#include <thread>
 #include <fcntl.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -47,6 +49,46 @@ struct Gate {
   void release(){const std::lock_guard lock(mutex);released=true;condition.notify_all();}
 };
 struct ReleaseOnExit{std::shared_ptr<Gate> gate;~ReleaseOnExit(){if(gate){gate->release();}}};
+// A failed assertion against the old backend must still release the real disk
+// gate and destroy its callbacks while their context and captured state live.
+struct DrainDiskOnExit {
+  std::shared_ptr<Gate> gate;lt::disk_interface& backend;lt::io_context& context;bool settled=false;
+  ~DrainDiskOnExit(){if(!settled){gate->release();backend.abort(true);context.restart();context.poll();}}
+};
+struct ConcurrentReleaseState {
+  std::mutex mutex;std::condition_variable condition;
+  const std::thread::id testThread=std::this_thread::get_id();
+  std::thread::id networkThread,callbackThread,releasedThread;
+  bool started=false,armed=false,called=false,networkCaptureReleased=false,released=false,waitTimedOut=false;
+  unsigned wrongThreadCaptureDestructions=0;
+};
+struct ConcurrentOwner {
+  std::shared_ptr<ConcurrentReleaseState> state;
+  ~ConcurrentOwner(){const std::lock_guard lock(state->mutex);state->releasedThread=std::this_thread::get_id();state->released=true;state->condition.notify_all();}
+};
+// Force old worker-side copies to outlive the primary network callback copy.
+// This observes real std::function destruction, not an invented disk callback.
+struct EarlyCompletion {
+  std::shared_ptr<ConcurrentOwner> owner;std::shared_ptr<ConcurrentReleaseState> state;
+  void operator()()const{const std::lock_guard lock(state->mutex);state->callbackThread=std::this_thread::get_id();state->called=true;state->condition.notify_all();}
+  ~EarlyCompletion(){
+    if(!owner){return;}bool network=false;
+    {
+      std::unique_lock lock(state->mutex);const auto thread=std::this_thread::get_id();network=state->armed&&thread==state->networkThread;
+      if(state->armed&&thread!=state->testThread&&thread!=state->networkThread){
+        ++state->wrongThreadCaptureDestructions;
+        if(!state->condition.wait_for(lock,std::chrono::seconds(5),[&]{return state->networkCaptureReleased;})){state->waitTimedOut=true;}
+      }
+    }
+    owner.reset(); // The signal below certifies that this actual copy released.
+    if(network){const std::lock_guard lock(state->mutex);state->networkCaptureReleased=true;state->condition.notify_all();}
+  }
+};
+struct DrainRunningDiskOnExit {
+  std::shared_ptr<Gate> gate;lt::disk_interface& backend;
+  boost::asio::executor_work_guard<lt::io_context::executor_type>& runnerWork;std::thread& runner;
+  ~DrainRunningDiskOnExit(){gate->release();backend.abort(true);runnerWork.reset();if(runner.joinable()){runner.join();}}
+};
 // Explicit test-only publisher policy faults/gates. Payload and all asynchronous
 // disk jobs are real; this does not qualify profile-file CAS durability.
 struct Store {
@@ -78,6 +120,67 @@ QByteArray actual(const QString& path){QFile file(path);require(file.open(QIODev
 class OriginalDiskIoTests final:public QObject {
   Q_OBJECT
 private slots:
+
+  void abortWithoutLazyOriginalWorkerReleasesItsContextWork(){
+    lt::io_context context;auto backend=ed::originalDiskConstructor(context,[](const std::string&){return std::shared_ptr<ed::OriginalDiskFiles>{};});
+    backend->abort(false);QCOMPARE(context.poll(),std::size_t{0});QVERIFY(context.stopped());backend->abort(true);
+  }
+  void delayedReadOnlyBarrierKeepsNetworkContextAliveThroughAbortAndCaptureRelease(){
+    QTemporaryDir area;QVERIFY(area.isValid());const std::string body(16384,'G');auto metadata=v1({{"existing.bin",body}});
+    const auto path=area.path()+"/existing.bin";QFile payload(path);QVERIFY(payload.open(QIODevice::WriteOnly|QIODevice::NewOnly));QCOMPARE(payload.write(body.data(),static_cast<qint64>(body.size())),static_cast<qint64>(body.size()));payload.close();
+    auto gate=std::make_shared<Gate>();st::detail::Descriptor fd(::open(path.toStdString().c_str(),O_RDONLY|O_NOFOLLOW|O_CLOEXEC));QVERIFY(fd.get()>=0);
+    auto io=take(st::OriginalFileIo::open(fd.get(),{0,16384,16384},Kind::Linear,{}));std::vector<std::optional<ed::OriginalDiskFile>> entries;
+    entries.emplace_back(ed::OriginalDiskFile{std::move(fd),std::move(io),[gate]() -> std::expected<void,st::Error> {gate->hold();return {};}});
+    auto files=std::make_shared<ed::OriginalDiskFiles>(metadata,std::move(entries),ed::OriginalDiskAccess::ReadOnly);std::weak_ptr<ed::OriginalDiskFiles> weakFiles=files;
+    const auto networkThread=std::this_thread::get_id();std::thread::id callbackThread,releasedThread;bool called=false,released=false;
+    struct CompletionOwner {bool& released;std::thread::id& thread;CompletionOwner(bool& value,std::thread::id& id):released(value),thread(id){}~CompletionOwner(){thread=std::this_thread::get_id();released=true;}};
+    auto owner=std::make_shared<CompletionOwner>(released,releasedThread);std::weak_ptr<CompletionOwner> weakOwner=owner;
+    lt::io_context context;auto backend=ed::originalDiskConstructor(context,[weakFiles](const std::string&){return weakFiles.lock();});
+    lt::aux::vector<lt::download_priority_t,lt::file_index_t> priorities;priorities.push_back(lt::download_priority_t{4});
+    const auto route=(area.path()+"/virtual-never-created").toStdString();const lt::storage_params params{metadata->files(),nullptr,route,lt::storage_mode_sparse,priorities,metadata->info_hash()};auto holder=backend->new_torrent(params,owner);
+    DrainDiskOnExit cleanup{gate,*backend,context};
+    backend->async_stop_torrent(holder,[capture=owner,&called,&callbackThread]{static_cast<void>(capture);callbackThread=std::this_thread::get_id();called=true;});
+    QVERIFY(gate->wait());holder.reset();owner.reset();files.reset();backend->abort(false);
+    // No stock backend/timer/Qt pump/restart can mask missing context work.
+    // With the old code this exact empty-queue poll sets stopped() to true.
+    QCOMPARE(context.poll(),std::size_t{0});QVERIFY(!context.stopped());QVERIFY(!called&&!weakOwner.expired()&&!weakFiles.expired());
+    gate->release();backend->abort(true);QVERIFY(!context.stopped());QVERIFY(!called&&!weakOwner.expired()&&!weakFiles.expired());
+    QCOMPARE(context.run(),std::size_t{2});QVERIFY(called&&released&&weakOwner.expired()&&weakFiles.expired());QVERIFY(callbackThread==networkThread);QVERIFY(releasedThread==networkThread);
+    QCOMPARE(actual(path),QByteArray::fromStdString(body));QVERIFY(!QFileInfo::exists(QString::fromStdString(route)));cleanup.settled=true;
+  }
+
+  void runningContextRetiresConsumedBarrierCopiesAndLastOwnerOnNetworkThread(){
+    QTemporaryDir area;QVERIFY(area.isValid());const std::string body(16384,'N');auto metadata=v1({{"existing.bin",body}});
+    const auto path=area.path()+"/existing.bin";QFile payload(path);QVERIFY(payload.open(QIODevice::WriteOnly|QIODevice::NewOnly));QCOMPARE(payload.write(body.data(),static_cast<qint64>(body.size())),static_cast<qint64>(body.size()));payload.close();
+    auto gate=std::make_shared<Gate>();st::detail::Descriptor fd(::open(path.toStdString().c_str(),O_RDONLY|O_NOFOLLOW|O_CLOEXEC));QVERIFY(fd.get()>=0);
+    auto io=take(st::OriginalFileIo::open(fd.get(),{0,16384,16384},Kind::Linear,{}));std::vector<std::optional<ed::OriginalDiskFile>> entries;
+    entries.emplace_back(ed::OriginalDiskFile{std::move(fd),std::move(io),[gate]() -> std::expected<void,st::Error> {gate->hold();return {};}});
+    auto files=std::make_shared<ed::OriginalDiskFiles>(metadata,std::move(entries),ed::OriginalDiskAccess::ReadOnly);std::weak_ptr<ed::OriginalDiskFiles> weakFiles=files;
+    auto state=std::make_shared<ConcurrentReleaseState>();auto owner=std::make_shared<ConcurrentOwner>();owner->state=state;std::weak_ptr<ConcurrentOwner> weakOwner=owner;
+    lt::io_context context;auto backend=ed::originalDiskConstructor(context,[weakFiles](const std::string&){return weakFiles.lock();});
+    // Isolate capture-thread ownership from the separate no-work-guard test.
+    // This runner really executes completions concurrently with the disk job.
+    auto runnerWork=boost::asio::make_work_guard(context);
+    std::thread runner([&]{
+      {const std::lock_guard lock(state->mutex);state->networkThread=std::this_thread::get_id();state->started=true;state->condition.notify_all();}
+      context.run();
+    });
+    DrainRunningDiskOnExit cleanup{gate,*backend,runnerWork,runner};
+    {std::unique_lock lock(state->mutex);QVERIFY(state->condition.wait_for(lock,std::chrono::seconds(5),[&]{return state->started;}));}
+    lt::aux::vector<lt::download_priority_t,lt::file_index_t> priorities;priorities.push_back(lt::download_priority_t{4});
+    const auto route=(area.path()+"/virtual-never-created").toStdString();const lt::storage_params params{metadata->files(),nullptr,route,lt::storage_mode_sparse,priorities,metadata->info_hash()};auto holder=backend->new_torrent(params,owner);
+    backend->async_stop_torrent(holder,EarlyCompletion{owner,state});
+    QVERIFY(gate->wait());holder.reset();owner.reset();files.reset();
+    {const std::lock_guard lock(state->mutex);state->armed=true;}
+    backend->abort(false);gate->release();
+    {
+      std::unique_lock lock(state->mutex);QVERIFY(state->condition.wait_for(lock,std::chrono::seconds(5),[&]{return state->released;}));
+      QVERIFY(state->called&&state->networkCaptureReleased&&!state->waitTimedOut);
+      QCOMPARE(state->wrongThreadCaptureDestructions,0U);QVERIFY(state->callbackThread==state->networkThread);QVERIFY(state->releasedThread==state->networkThread);
+    }
+    backend->abort(true);runnerWork.reset();runner.join();
+    QVERIFY(weakOwner.expired()&&weakFiles.expired());QVERIFY(context.stopped());QCOMPARE(actual(path),QByteArray::fromStdString(body));QVERIFY(!QFileInfo::exists(QString::fromStdString(route)));
+  }
 
   void existingReadOnlyPaddingHashesZeroWithoutOpeningAbsentOrPoisonedPaths_data(){
     QTest::addColumn<bool>("poison");QTest::newRow("absent-pad")<<false;QTest::newRow("pad-symlink-to-independent-owned-sentinel")<<true;
