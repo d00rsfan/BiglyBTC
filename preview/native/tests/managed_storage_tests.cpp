@@ -141,7 +141,7 @@ void existingAttribute(Fixture& f,std::string_view key,std::string value){auto s
 
 storage::TorrentIntakeStage allocationCrash=storage::TorrentIntakeStage::JournalSynced;
 void interruptAllocationIntake(storage::TorrentIntakeStage stage){if(stage==allocationCrash){throw std::runtime_error("Owned allocation intake interruption");}}
-void test(std::string_view name,const std::function<void()>& body) { body(); ++families; std::cout<<"case "<<name<<'\n'; }
+void runCase(std::string_view name,const std::function<void()>& body) { body(); ++families; std::cout<<"case "<<name<<'\n'; }
 }
 int main() {
  try {
@@ -151,7 +151,7 @@ int main() {
   std::ranges::transform(filesystemEncoding,filesystemEncoding.begin(),[](unsigned char c){return c>='A'&&c<='Z'?static_cast<char>(c+32):static_cast<char>(c);});
   require(filesystemEncoding=="utf8","Actual generated Unicode fixtures require an installed UTF8 locale");
 
-  test("exact-bad-byte-checkpoint-preserves-unknowns-and-sparse-zero",[]{
+  runCase("exact-bad-byte-checkpoint-preserves-unknowns-and-sparse-zero",[]{
     Fixture f;f.fullPayload();
     auto source=f.saved();auto selected=core::Document::parse(encode(row(source)));require(selected.has_value(),"Bad-byte selected row");
     require(selected->replaceValue("discarded",i(100)).has_value()&&selected->replaceValue("hashfailbytes",i(200)).has_value()
@@ -165,7 +165,7 @@ int main() {
     Fixture fresh;auto owner=fresh.prepare();require(owner.checkpoint(*fresh.lease,std::array<std::uint8_t,2>{0,0},false,0,0,0,0,{},engine::detail::ManagedBadPayloadBytes{0,0}).has_value(),"Fresh exact0 checkpoint");
     current=fresh.saved();require(!row(current).find("discarded")&&!row(current).find("hashfailbytes")&&!row(current).find("BiglyBTC.badPayloadCountersLost"),"Exact0 leaves original absent defaults absent");
   });
-  test("unknown-bad-tail-persists-loss-without-erasing-saved-counters",[]{
+  runCase("unknown-bad-tail-persists-loss-without-erasing-saved-counters",[]{
     Fixture f;auto source=f.saved();auto selected=core::Document::parse(encode(row(source)));require(selected.has_value(),"Loss selected row");
     require(selected->replaceValue("discarded",i(100)).has_value()&&selected->replaceValue("hashfailbytes",i(200)).has_value()&&source.replaceValue("downloads","l"+selected->serialize()+'e').has_value(),"Loss saved prefix");write(f.profile/"downloads.config",source.serialize());
     {auto owner=f.prepare();require(owner.checkpoint(*f.lease,std::array<std::uint8_t,2>{0,0},false,1000,0,0,0,{},engine::detail::ManagedBadPayloadBytes{23,17},false).has_value(),"Retain a known prefix with uncertain later tail");}
@@ -175,7 +175,7 @@ int main() {
     Fixture unavailable;{auto owner=unavailable.prepare();checkpoint(owner,unavailable,{0,0},false,1000,0);}
     const auto unknown=unavailable.saved();require(!row(unknown).find("discarded")&&!row(unknown).find("hashfailbytes")&&row(unknown).find("BiglyBTC.badPayloadCountersLost")->integer==1,"Absent observer records loss without fabricating zero bad-byte fields");
   });
-  test("bad-counter-CAS-refuses-before-profile-progress-write",[]{
+  runCase("bad-counter-CAS-refuses-before-profile-progress-write",[]{
     for(const bool loss:{false,true}){
       Fixture f;auto owner=f.prepare();auto changed=f.saved();auto selected=core::Document::parse(encode(row(changed)));require(selected.has_value(),"CAS selected row");
       require(selected->replaceValue(loss?"BiglyBTC.badPayloadCountersLost":"discarded",i(1)).has_value()&&changed.replaceValue("downloads","l"+selected->serialize()+'e').has_value(),"Concurrent source change");write(f.profile/"downloads.config",changed.serialize());
@@ -185,7 +185,7 @@ int main() {
     }
   });
 
-  test("actual-intake-save-name-drives-descriptors-suffix-and-completion",[] {
+  runCase("actual-intake-save-name-drives-descriptors-suffix-and-completion",[] {
     for(const bool multi:{false,true}){
       Fixture f(multi,false,".part");const auto profile=f.root/"custom-import-profile",destination=f.root/"custom-import-payload";fs::create_directories(profile);write(profile/"downloads.config","d9:downloadsle6:futurei7ee");
       auto lease=storage::ProfileLease::acquire(profile);require(lease.has_value(),"New held import profile");const auto source=storage::inspectTorrentIntake(f.profile/"active"/(f.hash.hex()+".dat"));require(source.has_value(),"Actual sealed original source");
@@ -203,7 +203,7 @@ int main() {
     }
   });
 
-  test("custom-existing-approved-descriptors-remain-read-only-and-reject-new-authority",[] {
+  runCase("custom-existing-approved-descriptors-remain-read-only-and-reject-new-authority",[] {
     for(const bool multi:{false,true}){
       Fixture f(multi);f.fullPayload();const auto source=f.state();const auto layout=compat::originalLayout(source);require(layout.has_value(),"Exact custom original layout");
       libtorrent::error_code error;const libtorrent::torrent_info metadata((f.profile/"active"/(f.hash.hex()+".dat")).string(),error);require(!error,"Actual custom metainfo");
@@ -220,7 +220,7 @@ int main() {
       require(!owner->checkpoint(*f.lease,std::array<std::uint8_t,2>{1,1},true,0,0)&&read(f.profile/"active"/(f.hash.hex()+".dat"))==prepared&&read(leaf)==original,"Late replacement cannot publish complete state or repair payload");
     }
   });
-  test("custom-existing-rechecks-every-ancestor-not-only-last-parent",[] {
+  runCase("custom-existing-rechecks-every-ancestor-not-only-last-parent",[] {
     Fixture f(true);f.fullPayload();const auto source=f.state();const auto layout=compat::originalLayout(source);require(layout.has_value(),"Custom directory layout");
     libtorrent::error_code error;const libtorrent::torrent_info metadata((f.profile/"active"/(f.hash.hex()+".dat")).string(),error);require(!error,"Actual custom directory metainfo");const auto identity=storage::originalTorrentIdentityFromLibtorrent(source,metadata);require(identity.has_value(),"Actual directory identity");
     const auto scope=storage::VerifiedExistingScope::capture(*f.lease,source,*layout,*identity,f.save,"renamed-root");require(scope.has_value(),"Capture ancestor chain");auto inventory=f.saved();auto selected=core::Document::parse(encode(row(inventory)));require(selected&&selected->replaceValue(storage::VerifiedExistingScopeKey,scope->encoded()).has_value()&&inventory.replaceValue("downloads","l"+selected->serialize()+'e').has_value(),"Save ancestor snapshot");write(f.profile/"downloads.config",inventory.serialize());auto owner=prepareExisting(f);require(owner.has_value(),"Bind approved directory chain");
@@ -228,7 +228,7 @@ int main() {
     std::array<char,1> byte{};require(!owner->validateExistingSnapshot()&&!owner->mappedFiles()->read(0,byte)&&!owner->mappedFiles()->flush(),"Same real-file and immediate-parent inodes cannot hide replaced ancestor");require(!owner->checkpoint(*f.lease,std::array<std::uint8_t,2>{1,1},true,0,0)&&read(f.profile/"active"/(f.hash.hex()+".dat"))==prepared,"Changed ancestor never gains checkpoint authority");
   });
 
-  test("existing-only-complete-linear-preparation-is-read-only-and-still-unverified",[] {
+  runCase("existing-only-complete-linear-preparation-is-read-only-and-still-unverified",[] {
     for(const bool multi:{false,true}){
       Fixture f(multi);existingFixture(f);std::vector<struct stat> before(multi?2:1);for(std::size_t i=0;i<before.size();++i){require(::stat(existingLeaf(f,i).c_str(),&before[i])==0,"Actual complete existing leaf");}
       auto owner=prepareExisting(f);require(owner.has_value(),owner?"existing-only prepare":owner.error().message);require(owner->purpose()==Purpose::VerifyExistingReadOnly&&owner->mappedFiles()&&owner->mappedFiles()->access()==engine::detail::OriginalDiskAccess::ReadOnly,"Linear existing-only always uses immutable descriptor route");
@@ -243,7 +243,7 @@ int main() {
     }
     Fixture ordinary;auto owner=ordinary.prepare();require(owner.purpose()==Purpose::Download&&!owner.mappedFiles()&&fs::exists(ordinary.path()),"Absent/default purpose retains legacy linear creation and mmap route");
   });
-  test("existing-only-pure-v2-reuses-exact-tail-projection-with-no-pad-descriptor",[] {
+  runCase("existing-only-pure-v2-reuses-exact-tail-projection-with-no-pad-descriptor",[] {
     for(const bool tail:{false,true}){
       Fixture f;f.pureV2(true,tail?7:16384);existingFixture(f);const auto source=f.state();const auto originalInfo=encode(*source.find("info"));
       auto owner=prepareExisting(f);require(owner.has_value(),owner?"existing-only v2":owner.error().message);const auto params=owner->parameters();
@@ -259,7 +259,7 @@ int main() {
       require(read(existingLeaf(f))==f.body&&(!tail||!fs::exists(pad)),"Checkpoint never creates virtual padding or changes real bytes");
     }
   });
-  test("existing-only-unsupported-or-incomplete-scope-refuses-before-effects",[] {
+  runCase("existing-only-unsupported-or-incomplete-scope-refuses-before-effects",[] {
     for(int kind=0;kind<14;++kind){
       Fixture f(true);existingFixture(f,kind!=0);std::array<engine::detail::ManagedPayloadClaim,1> claims{};
       if(kind==1){require(fs::remove(existingLeaf(f,1)),"Missing existing sibling");}
@@ -278,14 +278,14 @@ int main() {
       const auto state=read(f.profile/"active"/(f.hash.hex()+".dat"));const auto inventory=read(f.profile/"downloads.config");const auto result=prepareExisting(f,kind==13?std::span<const engine::detail::ManagedPayloadClaim>(claims):std::span<const engine::detail::ManagedPayloadClaim>{});require(!result,"Missing/short/oversized/symlink/alias/skipped/nonlinear/renamed/linked/suffix/pending/retained scope refuses");require(read(f.profile/"active"/(f.hash.hex()+".dat"))==state&&read(f.profile/"downloads.config")==inventory,"All rejected scope leaves original state/inventory bytes before beginUpdate");require(!fs::exists(f.profile/"active"/f.hash.hex()),"Refusal creates no control directory");if(kind==0){require(!fs::exists(f.save),"Missing full payload creates no parent or file");}if(kind==1){require(!fs::exists(existingLeaf(f,1)),"Missing sibling is not repaired");}if(kind==2){require(fs::file_size(existingLeaf(f))==19999,"Short leaf is not extended");}if(kind==3){require(fs::file_size(existingLeaf(f))==20001,"Oversized leaf is not truncated");}if(kind==4){require(read(f.root/"external-unchanged")==std::string(20000,'A')&&fs::is_symlink(existingLeaf(f)),"Symlink target and link retained");}if(kind==6){require(fs::equivalent(existingLeaf(f),f.root/"unapproved-alias"),"Unrecognized hardlink remains unmodified");}
     }
   });
-  test("existing-only-read-and-checkpoint-refuse-late-replacement-or-content-change",[] {
+  runCase("existing-only-read-and-checkpoint-refuse-late-replacement-or-content-change",[] {
     for(const bool replacement:{false,true}){
       Fixture f;existingFixture(f);auto owner=prepareExisting(f);require(owner.has_value(),"Actual existing-only descriptor owner");const auto prepared=read(f.profile/"active"/(f.hash.hex()+".dat"));const auto path=existingLeaf(f);struct stat before{};require(::stat(path.c_str(),&before)==0,"Original existing leaf stat");
       if(replacement){fs::rename(path,f.root/"retained-original");write(path,f.body);}else{auto changed=f.body;changed[0]='!';write(path,changed);const struct timespec times[]{before.st_atim,before.st_mtim};require(::utimensat(AT_FDCWD,path.c_str(),times,0)==0,"Restore mtime for actual content-change negative");}
       const auto bytes=read(path);std::array<char,1> output{};require(!owner->validateExistingSnapshot()&&!owner->mappedFiles()->read(0,output),"Named inode/ctime proof refuses late change before reading actual payload");require(!owner->checkpoint(*f.lease,std::array<std::uint8_t,2>{1,1},true,0,0),"External changes cannot publish supplied verified resume");require(read(path)==bytes&&read(f.profile/"active"/(f.hash.hex()+".dat"))==prepared,"Refusal never repairs/replaces changed payload or saves complete state");
     }
   });
-  test("original-canonical-latin1-paths-preserve-raw-identity-and-checkpoint",[] {
+  runCase("original-canonical-latin1-paths-preserve-raw-identity-and-checkpoint",[] {
     Fixture f(true);const auto oldPath=f.profile/"active"/(f.hash.hex()+".dat");
     auto metadata=f.state();auto info=core::Document::parse(f.info);require(info.has_value(),"Latin1 original info");
     const std::string first("na\xefve.bin",9),second("caf\xe9.bin",8);
@@ -312,7 +312,7 @@ int main() {
     struct stat after{};require(::lstat(a.c_str(),&after)==0&&after.st_dev==before.st_dev&&after.st_ino==before.st_ino,"Preparation/checkpoint never substitutes decoded file inode");
     require(!fs::exists(f.path(0))&&!fs::exists(f.path(1)),"No accidental basic-name payload files created");
   });
-  test("windows1251-v1-paths-use-authenticated-runtime-projection-and-exact-original-checkpoint",[] {
+  runCase("windows1251-v1-paths-use-authenticated-runtime-projection-and-exact-original-checkpoint",[] {
     for(const auto* encoding:{"windows-1251","cp1251","cp5347","ansi-1251"}){
       for(const bool overrides:{false,true}){
       Fixture f(true);const auto old=f.profile/"active"/(f.hash.hex()+".dat");auto metadata=f.state();auto info=core::Document::parse(f.info);require(info.has_value(),"Actual cp1251 info");
@@ -358,7 +358,7 @@ int main() {
     }
     {Fixture f;f.pureV2(true);auto metadata=f.state();require(metadata.replaceValue("encoding",b("windows-1251")).has_value(),"V2 codec guard");write(f.profile/"active"/(f.hash.hex()+".dat"),metadata.serialize());deniedPrepare(f,Code::InvalidFormat);require(!fs::exists(f.save),"No legacy v2 projection");}
   });
-  test("koi8r-original-paths-retain-raw-hashes-owned-slots-and-checkpoints",[] {
+  runCase("koi8r-original-paths-retain-raw-hashes-owned-slots-and-checkpoints",[] {
     for(const auto encoding:std::array<std::string_view,4>{"KOI8-R","koi8_r","koi8","cskoi8r"}){
       for(const bool overrides:{false,true}){
         Fixture f(true);const auto old=f.profile/"active"/(f.hash.hex()+".dat");auto metadata=f.state();auto info=core::Document::parse(f.info);require(info.has_value(),"Actual Cyrillic v1 info");
@@ -380,10 +380,10 @@ int main() {
     }
     for(const auto* encoding:{"KOI8-R"}){Fixture f;f.pureV2(true);auto source=f.state();require(source.replaceValue("encoding",b(encoding)).has_value(),"Legacy v2 explicit codec");write(f.profile/"active"/(f.hash.hex()+".dat"),source.serialize());deniedPrepare(f,Code::InvalidFormat);require(!fs::exists(f.save),"No legacy v2 runtime path projection");}
   });
-  test("ibm866-default-original-registry-context-remains-unsupported-without-effects",[] {
+  runCase("ibm866-default-original-registry-context-remains-unsupported-without-effects",[] {
     for(const auto* encoding:{"IBM866","cp866","ibm866","ibm-866","866","csIBM866"}){Fixture f;auto source=f.state();require(source.replaceValue("encoding",b(encoding)).has_value(),"Deferred original decoder fixture");write(f.profile/"active"/(f.hash.hex()+".dat"),source.serialize());deniedPrepare(f,Code::InvalidFormat);require(!fs::exists(f.save),"Deferred decoder refusal precedes payload effects");}
   });
-  test("original-global-utf8-key-fallback-is-authenticated-before-runtime-names",[] {
+  runCase("original-global-utf8-key-fallback-is-authenticated-before-runtime-names",[] {
     for(const int mode:{0,1,2}){
       Fixture f(true);const auto old=f.profile/"active"/(f.hash.hex()+".dat");
       auto metadata=f.state();auto info=core::Document::parse(f.info);require(info.has_value(),"Global override info");
@@ -412,7 +412,7 @@ int main() {
           &&!fs::exists(f.save/"wrong-root")&&!fs::exists(f.save/"renamed-root/wrong-first.bin"),"Checkpoint preserves raw info/unknowns and only actual original payload paths");
     }
   });
-  test("filename-projection-never-admits-changed-identity-or-legacy-v2",[] {
+  runCase("filename-projection-never-admits-changed-identity-or-legacy-v2",[] {
     {
       Fixture f(true);auto metadata=f.state();auto info=core::Document::parse(f.info);require(info.has_value(),"Wrong identity fixture");
       require(info->replaceValue("name.utf-8",b("other-root")).has_value()&&metadata.replaceValue("info",info->serialize()).has_value(),"Changed original info under old saved hash");
@@ -423,13 +423,13 @@ int main() {
       write(f.profile/"active"/(f.hash.hex()+".dat"),metadata.serialize());deniedPrepare(f,Code::InvalidFormat);require(!fs::exists(f.save),"No v2 legacy name projection or payload effects");
     }
   });
-  test("unported-filename-charset-refuses-before-original-state-and-payload-effects",[] {
+  runCase("unported-filename-charset-refuses-before-original-state-and-payload-effects",[] {
     Fixture f;auto metadata=f.state();require(metadata.replaceValue("encoding",b("KOI8-U")).has_value(),"Explicit unported charset");
     write(f.profile/"active"/(f.hash.hex()+".dat"),metadata.serialize());deniedPrepare(f,Code::InvalidFormat);
     require(!fs::exists(f.save),"No payload preparation on unsupported original charset");
   });
   // Insert in managed_storage_tests.cpp main alongside existing test(...).
-  test("negative-original-links-use-authenticated-target-and-original-base",[] {
+  runCase("negative-original-links-use-authenticated-target-and-original-base",[] {
     Fixture f;
     auto state=f.state(); auto attrs=core::Document::parse(encode(*state.find("attributes")));
     require(attrs.has_value(),"negative-link attributes");
@@ -448,7 +448,7 @@ int main() {
     require(!fs::exists(f.path())&&!fs::exists(f.root/"never-followed"),"negative migration never scans or creates fallback paths");
   });
 
-  test("new-independent-payload-root-and-filtered-parameters",[] {
+  runCase("new-independent-payload-root-and-filtered-parameters",[] {
     Fixture f; auto owner=f.prepare(); const auto params=owner.parameters();
     require(fs::exists(f.path())&&fs::file_size(f.path())==0,"missing linear payload created, no fabricated length");
     require(params.save_path==f.save.string()&&params.renamed_files.at(libtorrent::file_index_t{0})=="saved.bin","saved filename mapping preserved");
@@ -457,7 +457,7 @@ int main() {
     require(params.trackers.empty(),"isolated policy removes tracker without any request");
     auto state=f.state(); const auto* data=state.find("resume")->find("data"); require(data->find("valid")->integer==0&&data->find("resume data")->bytes==std::string(2,'\2'),"prepared original RECHECK durable");
   });
-  test("original-sequential-flags-project-before-admission-and-survive-checkpoint",[] {
+  runCase("original-sequential-flags-project-before-admission-and-survive-checkpoint",[] {
     for(const auto& value:std::array<std::string,7>{"","i0e","i1e","i8192e","i8193e","i-9223372036854767616e","i9223372036854775807e"}){
       Fixture f;auto source=f.state();auto attrs=core::Document::parse(encode(*source.find("attributes")),storage::compatibleConfigLimits());require(bool(attrs),"Own flags attributes");
       if(!value.empty()){require(attrs->replaceValue("flags",value).has_value(),"Original signed flags edit");}
@@ -476,7 +476,7 @@ int main() {
     }
     const auto duplicate=core::Document::parse("d5:flagsi0e5:flagsi8192ee");require(!duplicate&&duplicate.error().code=="duplicate_key","Duplicate original flags refuse in the shared parser, never first-wins");
   });
-  test("per-torrent-intake-byte-limits-reach-actual-admission-parameters",[] {
+  runCase("per-torrent-intake-byte-limits-reach-actual-admission-parameters",[] {
     for(const auto& limits:std::array<std::pair<std::int64_t,std::int64_t>,3>{{{0,0},{65536,32768},{2147483647,2147483647}}}){
       Fixture f;auto source=f.saved();auto selected=core::Document::parse(encode(row(source)),storage::compatibleConfigLimits());require(selected.has_value(),"Own actual rate row");
       require(selected->replaceValue("maxdl",i(limits.first)).has_value()&&selected->replaceValue("maxul",i(limits.second)).has_value(),"Original rate row edit");
@@ -488,7 +488,7 @@ int main() {
       require(encode(*row(after).find("private_row_value"))==encode(*row(source).find("private_row_value")),"Unrelated original row remains raw-preserved");
     }
   });
-  test("partial-piece-progress-and-fresh-command-preservation",[] {
+  runCase("partial-piece-progress-and-fresh-command-preservation",[] {
     Fixture f; auto owner=f.prepare(); write(f.path(),std::string_view(f.body).substr(0,16384));
     write(f.profile/"downloads.config",f.inventory(75,1,17,9,11,true)); checkpoint(owner,f,{1,0},false,5,7);
     auto inventory=f.saved(); const auto& item=row(inventory);
@@ -501,7 +501,7 @@ int main() {
     require(attrs->find("filedownloaded")->find("downloaded")->children[0].integer==16384,"verified linear file bytes");
     auto twice=owner.checkpoint(*f.lease,std::array<std::uint8_t,2>{1,0},false,5,7); require(!twice&&twice.error().code==Code::Conflict,"one checkpoint per admission");
   });
-  test("skipped-linear-sparse-file-and-boundary-piece-counts",[] {
+  runCase("skipped-linear-sparse-file-and-boundary-piece-counts",[] {
     Fixture f(true,true); auto owner=f.prepare(); auto params=owner.parameters();
     require(params.file_priorities[0]==libtorrent::download_priority_t{4}&&params.file_priorities[1]==libtorrent::download_priority_t{0},"skipped is separate priority0");
     require(fs::file_size(f.path(0))==0&&fs::file_size(f.path(1))==12768,"skipped file allocated linearly rather than LT partfile");
@@ -510,7 +510,7 @@ int main() {
     require(row(f.saved()).find("completedbytes")->integer==16384,"partial total includes only verified bytes");
     require(!fs::exists(f.save/".parts"),"fixture has no synthetic partfile");
   });
-  test("single-completion-suffix-and-unknown-state-fields",[] {
+  runCase("single-completion-suffix-and-unknown-state-fields",[] {
     Fixture f(false,false,".part"); auto owner=f.prepare(); require(fs::exists(f.path())&&!fs::exists(f.path(0,false)),"incomplete mapping published before allocation");
     f.fullPayload(); checkpoint(owner,f,{1,1},true,7,2);
     require(fs::exists(f.path(0,false))&&!fs::exists(f.path()),"journal completes single rename without deleting data");
@@ -519,19 +519,19 @@ int main() {
     require(encode(*attrs->find("unknown"))=="li-7e3:keye","unknown original state value preserved");
     require(state.find("resume")->find("data")->find("resume data")->bytes==std::string(2,'\1'),"only actual all-piece completion is marked done");
   });
-  test("multifile-completion-renames-only-owned-actual-paths",[] {
+  runCase("multifile-completion-renames-only-owned-actual-paths",[] {
     Fixture f(true,false,".part"); auto owner=f.prepare(); f.fullPayload(); checkpoint(owner,f,{1,1},true,12,4);
     require(!fs::exists(f.path(0))&&!fs::exists(f.path(1))&&fs::exists(f.path(0,false))&&fs::exists(f.path(1,false)),"multifile final mappings");
     require(read(f.path(0,false))+read(f.path(1,false))==f.body,"multifile bytes exact");
     auto state=f.state(); const auto* counts=state.find("attributes")->find("filedownloaded")->find("downloaded");
     require(counts->children[0].integer==20000&&counts->children[1].integer==12768,"whole-files completion only after all pieces");
   });
-  test("completed-target-collision-retains-incomplete-source",[] {
+  runCase("completed-target-collision-retains-incomplete-source",[] {
     Fixture f(false,false,".part"); auto owner=f.prepare(); f.fullPayload(); write(f.path(0,false),"foreign target");
     checkpoint(owner,f,{1,1},true); require(read(f.path(0,false))=="foreign target"&&read(f.path())==f.body,"completion never overwrites unrelated target");
     auto state=f.state(); const auto* links=state.find("attributes")->find("filelinks2"); require(links->children.size()==1&&links->children[0].bytes.ends_with("saved.bin.part"),"retained complete source remains original-readable");
   });
-  test("existing-single-journal-and-recognized-hardlink-recovery",[] {
+  runCase("existing-single-journal-and-recognized-hardlink-recovery",[] {
     Fixture f(false,false,".part"); f.fullPayload(); require(::link(f.path().c_str(),f.path(0,false).c_str())==0,"owned recovery aliases");
     struct stat info{}; require(::lstat(f.path().c_str(),&info)==0,"fixture journal identity"); auto state=f.state();
     auto attrs=core::Document::parse(encode(*state.find("attributes"))); require(attrs.has_value(),"fixture attributes");
@@ -541,7 +541,7 @@ int main() {
     require(state.replaceValue("attributes",attrs->serialize()).has_value(),"fixture state edit"); write(f.profile/"active"/(f.hash.hex()+".dat"),state.serialize());
     auto owner=f.prepare(); checkpoint(owner,f,{1,1},true); require(!fs::exists(f.path())&&read(f.path(0,false))==f.body,"existing journal recovered idempotently");
   });
-  test("unsafe-links-storetypes-oversize-and-symlinks-fail-before-state",[] {
+  runCase("unsafe-links-storetypes-oversize-and-symlinks-fail-before-state",[] {
     { Fixture f(false,false,{},"l1:Ze"); deniedPrepare(f,Code::Unsupported); require(!fs::exists(f.save),"unsupported storage creates no payload directory"); }
     { Fixture f; write(f.path(),std::string(32769,'X')); deniedPrepare(f,Code::UnsafePath); require(fs::file_size(f.path())==32769,"oversized bytes not truncated"); }
     { Fixture f; fs::create_directories(f.path().parent_path()); write(f.root/"foreign","untouched"); require(::symlink((f.root/"foreign").c_str(),f.path().c_str())==0,"fixture symlink"); deniedPrepare(f,Code::UnsafePath); require(read(f.root/"foreign")=="untouched","symlink target untouched"); }
@@ -550,7 +550,7 @@ int main() {
       const auto link="0\n"+f.path().string()+"\n"+(f.profile/"forbidden.bin").string(); require(attrs->replaceValue("filelinks2","l"+b(link)+"e").has_value(),"fixture external link");
       require(state.replaceValue("attributes",attrs->serialize()).has_value(),"fixture linked state"); write(f.profile/"active"/(f.hash.hex()+".dat"),state.serialize()); deniedPrepare(f,Code::UnsafePath); }
   });
-  test("selected-compact-expands-with-original-storetype-and-no-stale-control",[] {
+  runCase("selected-compact-expands-with-original-storetype-and-no-stale-control",[] {
     Fixture f(false,false,{},"l1:Ce");auto owner=f.prepare();require(owner.mappedFiles()!=nullptr,"compact admission uses original disk owner");
     const auto state=f.state();require(state.find("attributes")->find("storetypes")->children[0].bytes=="L","selected compact original conversion");
     require(!fs::exists(f.profile/"active"/f.hash.hex()/"fmfile0.dat"),"compact marker retired before linear writes");
@@ -558,7 +558,7 @@ int main() {
     require(owner.mappedFiles()->write(0,std::span<const char>(f.body)).has_value(),"mapped write after compact selection");
     require(owner.mappedFiles()->flush().has_value(),"mapped data durable");checkpoint(owner,f,{1,1},true);require(read(f.path(0,false))==f.body,"selected compact completed data intact");
   });
-  test("external-explicit-link-uses-owned-descriptor-with-original-path-preserved",[] {
+  runCase("external-explicit-link-uses-owned-descriptor-with-original-path-preserved",[] {
     Fixture f;auto state=f.state();auto attrs=core::Document::parse(encode(*state.find("attributes")));require(attrs.has_value(),"external fixture attributes");
     const auto external=f.root/"external.bin";write(external,f.body);const auto link="0\n"+f.path().string()+"\n"+external.string();
     require(attrs->replaceValue("filelinks2","l"+b(link)+"e").has_value(),"external fixture link");require(state.replaceValue("attributes",attrs->serialize()).has_value(),"external state edit");write(f.profile/"active"/(f.hash.hex()+".dat"),state.serialize());
@@ -568,7 +568,7 @@ int main() {
 // Insert these two families inside the existing managed_storage_tests.cpp main
 // try block. Reuses Fixture/b/i/read/write/checkpoint; no new target or harness.
 // Snapshot phases model durable boundaries, not power-loss or fault injection.
-  test("compact-conversion-replays-original-edges-at-each-durable-boundary",[] {
+  runCase("compact-conversion-replays-original-edges-at-each-durable-boundary",[] {
     // File0 has 20000 bytes at torrent offset0. Original compact storage keeps
     // just its final3616-byte fragment, which shares real piece1 with file1.
     // Four snapshots: intent before expansion; expanded while C; L before
@@ -626,7 +626,7 @@ int main() {
       require(resumed.find("resume")->find("data")->find("valid")->integer==0,"reopen still requires actual hash checks");
     }
   });
-  test("compact-conversion-refuses-replaced-journal-inode-before-any-mutation",[] {
+  runCase("compact-conversion-refuses-replaced-journal-inode-before-any-mutation",[] {
     Fixture f(true,false,{},"l1:C1:Le");
     write(f.path(0),std::string(3616,'A')); write(f.path(1),std::string_view(f.body).substr(20000));
     struct stat original{}; require(::lstat(f.path(0).c_str(),&original)==0,"old journal inode exists");
@@ -654,7 +654,7 @@ int main() {
         "rejected replay does not alter state/control/current or adjacent payload");
     require(read(retired)==std::string(3616,'A'),"original unmatched inode also stays untouched");
   });
-  test("unchanged-reordered-map-still-authenticates-control-at-checkpoint",[] {
+  runCase("unchanged-reordered-map-still-authenticates-control-at-checkpoint",[] {
     // This short reordered fixture uses source-linear data but still has its
     // original .dat.2 format marker. No new allocation or map edit is needed.
     Fixture f(false,false,{},"l1:Re"); f.fullPayload(); auto owner=f.prepare();
@@ -673,7 +673,7 @@ int main() {
     require(read(f.profile/"active"/(f.hash.hex()+".dat"))==stateBefore&&read(f.profile/"downloads.config")==inventoryBefore,
         "uncertain original control prevents progress/checkpoint publication");
   });
-  test("external-file-completion-is-per-file-and-applies-original-dnd-prefix-rule",[] {
+  runCase("external-file-completion-is-per-file-and-applies-original-dnd-prefix-rule",[] {
     // Normal completion, replay of an actual two-name v4 intent, and DND
     // completion retaining its collision-prevention prefix. Piece0 stays
     // unverified; real fixture piece1 wholly completes only the second file.
@@ -720,7 +720,7 @@ int main() {
 
 // Insert inside the existing managed_storage_tests.cpp main try block, before
 // its final PASS output. Reuses the real generated Fixture, no engine/network.
-  test("retained-current-path-rejected-before-compact-state-or-data-effects",[] {
+  runCase("retained-current-path-rejected-before-compact-state-or-data-effects",[] {
     Fixture f(false,false,{},"l1:Ce");write(f.path(),"");
     const auto statePath=f.profile/"active"/(f.hash.hex()+".dat");
     const auto stateBefore=read(statePath),inventoryBefore=read(f.profile/"downloads.config");
@@ -732,7 +732,7 @@ int main() {
     require(read(statePath)==stateBefore&&read(f.profile/"downloads.config")==inventoryBefore,"collision leaves all original state and inventory bytes unchanged");
     require(!fs::exists(statePath.string()+".bak")&&!fs::exists(f.profile/"active"/f.hash.hex())&&!fs::exists(f.profile/"active"/"cache.dat"),"collision creates no control, cache, or state backup");
   });
-  test("retained-inode-rejected-despite-distinct-reserved-path",[] {
+  runCase("retained-inode-rejected-despite-distinct-reserved-path",[] {
     Fixture f;f.fullPayload();struct stat actual{};require(::lstat(f.path().c_str(),&actual)==0,"real inode for separate claim name");
     const auto statePath=f.profile/"active"/(f.hash.hex()+".dat");
     const auto stateBefore=read(statePath),inventoryBefore=read(f.profile/"downloads.config");
@@ -743,7 +743,7 @@ int main() {
     require(!denied&&denied.error().code==Code::Conflict,"known retained inode cannot be admitted through another name");
     require(read(f.path())==f.body&&read(statePath)==stateBefore&&read(f.profile/"downloads.config")==inventoryBefore,"inode conflict preserves actual data and original documents");
   });
-  test("future-completion-and-parent-child-claims-block-before-creation",[] {
+  runCase("future-completion-and-parent-child-claims-block-before-creation",[] {
     for(const int scenario:{0,1,2}) {
       Fixture f(false,false,scenario==0?".part":"");
       const auto statePath=f.profile/"active"/(f.hash.hex()+".dat");
@@ -756,7 +756,7 @@ int main() {
       require(read(statePath)==stateBefore&&read(f.profile/"downloads.config")==inventoryBefore,"future collision precedes state ownership and writes");
     }
   });
-  test("disjoint-real-owner-claims-and-combined-bound",[] {
+  runCase("disjoint-real-owner-claims-and-combined-bound",[] {
     Fixture a(false,false,".part");auto owner=a.prepare();
     require(owner.claims().size()==2,"actual incomplete and forecast complete paths are both retained");
     struct stat actual{};require(::lstat(a.path().c_str(),&actual)==0,"retained owner real file");
@@ -775,18 +775,18 @@ int main() {
     require(!fs::exists(c.save)&&read(statePath)==before,"aggregate bound fails before payload or state effects");
   });
 
-  test("authoritative-cache-policy-is-preflighted-without-mutation",[] {
+  runCase("authoritative-cache-policy-is-preflighted-without-mutation",[] {
     Fixture f; auto attrs=core::Document::parse(f.attrs); require(attrs.has_value(),"fixture cache attributes"); require(attrs->replaceValue("networks","l3:I2Pe").has_value(),"fixture cache network");
     const auto hash=f.hash.bytes(); const std::string raw(reinterpret_cast<const char*>(hash.data()),hash.size());
     const auto bytes=gzip("d"+b("state")+"ld"+b("hash")+b(raw)+b("attributes")+attrs->serialize()+"eee"); write(f.profile/"active"/"cache.dat",bytes);
     deniedPrepare(f,Code::Unsupported); require(read(f.profile/"active"/"cache.dat")==bytes&&!fs::exists(f.save),"cache and payload untouched on policy refusal");
   });
-  test("policy-permitted-trackers-retained-without-engine-start",[] {
+  runCase("policy-permitted-trackers-retained-without-engine-start",[] {
     Fixture f; engine::NetworkPolicyOptions options; options.mode=engine::NetworkMode::Normal;
     auto configured=engine::readNetworkPolicy(nullptr,options); require(configured.has_value(),"pure normal policy"); configured->httpTrackers=true;
     auto owner=f.prepare(*configured); const auto params=owner.parameters(); require(params.trackers.size()==1&&params.trackers[0]=="http://127.0.0.1:1234/announce","allowed actual metadata tracker retained");
   });
-  test("invalid-checkpoints-never-publish-complete-flags",[] {
+  runCase("invalid-checkpoints-never-publish-complete-flags",[] {
     Fixture f; auto owner=f.prepare(); const auto before=read(f.profile/"active"/(f.hash.hex()+".dat"));
     for (const auto bits: {std::array<std::uint8_t,2>{1,0},std::array<std::uint8_t,2>{2,1}}) {
       auto result=owner.checkpoint(*f.lease,bits,true,0,0); require(!result&&result.error().code==Code::InvalidFormat,"allComplete requires every actual piece");
@@ -797,19 +797,19 @@ int main() {
     require(read(f.profile/"active"/(f.hash.hex()+".dat"))==before,"invalid checkpoints leave prepared state exact");
     checkpoint(owner,f,{0,0},false); // Prevalidation failures do not consume the one safe attempt.
   });
-  test("verified-late-piece-needs-actual-file-extent",[] {
+  runCase("verified-late-piece-needs-actual-file-extent",[] {
     Fixture f; auto owner=f.prepare(); write(f.path(),std::string_view(f.body).substr(0,16384)); const auto before=read(f.profile/"active"/(f.hash.hex()+".dat"));
     auto result=owner.checkpoint(*f.lease,std::array<std::uint8_t,2>{0,1},false,0,0);
     require(!result&&result.error().code==Code::Conflict,"verified count alone cannot certify nonexistent late extent");
     require(read(f.profile/"active"/(f.hash.hex()+".dat"))==before,"extent refusal leaves RECHECK");
   });
-  test("payload-replacement-and-cumulative-rebase-refuse",[] {
+  runCase("payload-replacement-and-cumulative-rebase-refuse",[] {
     { Fixture f; auto owner=f.prepare(); require(::unlink(f.path().c_str())==0,"fixture remove named inode"); write(f.path(),f.body);
       auto result=owner.checkpoint(*f.lease,std::array<std::uint8_t,2>{1,1},true,0,0); require(!result&&result.error().code==Code::Conflict,"different named inode rejected"); }
     { Fixture f; auto owner=f.prepare(); write(f.profile/"downloads.config",f.inventory(75,0,1,100,11));
       auto result=owner.checkpoint(*f.lease,std::array<std::uint8_t,2>{0,0},false,1,0); require(!result&&result.error().code==Code::Conflict,"concurrent cumulative counter is not overwritten/rebased"); }
   });
-  test("original-pure-v2-truncated-and-explicit-full-keys",[] {
+  runCase("original-pure-v2-truncated-and-explicit-full-keys",[] {
     for (const bool truncated:{true,false}) {
       Fixture f; f.pureV2(truncated); auto owner=f.prepare(); const auto params=owner.parameters();
       require(params.ti->info_hashes().has_v2()&&!params.ti->info_hashes().has_v1(),"actual pure-v2 metadata retained");
@@ -818,13 +818,13 @@ int main() {
       auto state=f.state(); require(state.find("attributes")->find("filedownloaded")->find("downloaded")->children[0].integer==16384,"pure-v2 exact linear bytes");
     }
   });
-  test("wrong-profile-and-moved-storage-refuse",[] {
+  runCase("wrong-profile-and-moved-storage-refuse",[] {
     Fixture f; auto owner=f.prepare(); Fixture other; auto result=owner.checkpoint(*other.lease,std::array<std::uint8_t,2>{0,0},false,0,0);
     require(!result&&result.error().code==Code::UnsafePath,"different held lease rejected"); auto moved=std::move(owner);
     auto old=owner.checkpoint(*f.lease,std::array<std::uint8_t,2>{0,0},false,0,0); require(!old&&old.error().code==Code::Conflict,"moved owner rejected");
     checkpoint(moved,f,{0,0},false);
   });
-  test("legacy-path-roots-are-captured-before-payload-creation",[] {
+  runCase("legacy-path-roots-are-captured-before-payload-creation",[] {
     for(const bool legacyKey:{true,false}) {
       Fixture f;f.fullPayload();auto inventory=f.saved();const auto& original=row(inventory);std::string migrated="d";
       for(std::size_t i=0;i<original.children.size();i+=2){const auto& key=original.children[i];if(key.bytes=="save_dir"||key.bytes=="save_file"){continue;}migrated+=encode(key)+encode(original.children[i+1]);}
@@ -839,7 +839,7 @@ int main() {
     auto owner=f.prepare();require(owner.parameters().save_path==path.string()&&fs::exists(path/"bundle/a.bin"),"missing directory whose name matches metadata is captured as parent");auto current=f.saved();require(row(current).find("save_dir")->bytes==path.string()&&row(current).find("save_file")->bytes=="bundle","new parent existence cannot reinterpret legacy root on restart");
     checkpoint(owner,f,{0,0},false);
   });
-  test("missing-store-types-use-held-original-reorder-defaults",[] {
+  runCase("missing-store-types-use-held-original-reorder-defaults",[] {
     for(const bool reorder:{false,true}) {
       Fixture f;auto state=f.state();auto attrs=core::Document::parse("de");require(attrs.has_value(),"default attributes");require(attrs->replaceValue("opaque.default","li-3e3:rawe").has_value(),"default unknown attribute");require(state.replaceValue("attributes",attrs->serialize()).has_value(),"missing store types");write(f.profile/"active"/(f.hash.hex()+".dat"),state.serialize());
       write(f.profile/"biglybt.config",std::string("d")+b("Enable reorder storage mode")+(reorder?"i1e":"i0e")+b("Reorder storage mode min MB")+"i0ee");
@@ -848,7 +848,7 @@ int main() {
       checkpoint(owner,f,{0,0},false);
     }
   });
-  test("missing-types-never-treat-compact-control-as-linear",[] {
+  runCase("missing-types-never-treat-compact-control-as-linear",[] {
     Fixture f(true,true);auto inventory=f.saved();auto first=core::Document::parse(encode(row(inventory)));require(first&&first->replaceValue("file_priorities","li0ei1ee").has_value(),"first compact file explicitly skipped");require(inventory.replaceValue("downloads","l"+first->serialize()+'e').has_value(),"skipped compact row");write(f.profile/"downloads.config",inventory.serialize());write(f.path(0),std::string(3616,'A'));write(f.path(1),std::string_view(f.body).substr(20000));auto state=f.state();auto attrs=core::Document::parse("de");require(attrs.has_value(),"compact default attrs");require(state.replaceValue("attributes",attrs->serialize()).has_value(),"compact missing stores");write(f.profile/"active"/(f.hash.hex()+".dat"),state.serialize());
     const auto control=f.profile/"active"/f.hash.hex()/"fmfile0.dat";write(control,"d7:versioni0e6:lengthi20000ee");
     auto owner=f.prepare();require(owner.mappedFiles()!=nullptr&&fs::file_size(f.path(0))==20000&&!fs::exists(control),"default L expands actual C even for skipped file");
@@ -856,7 +856,7 @@ int main() {
   });
 
 
-  test("allocation accepted intent survives each intake boundary without unsafe queued startup",[] {
+  runCase("allocation accepted intent survives each intake boundary without unsafe queued startup",[] {
     for(const auto stage:{storage::TorrentIntakeStage::JournalSynced,storage::TorrentIntakeStage::StatePublished,storage::TorrentIntakeStage::ArchivePublished,storage::TorrentIntakeStage::InventoryPublished}){
       biglybtc::test::allocation::Fixture f;allocationCrash=stage;require(!f.import(core::TorrentAllocationMode::Paused,interruptAllocationIntake),"Intentional allocation journal interruption");require(storage::hasPendingTorrentIntake(*f.lease),"Accepted allocation journal retained");
       f.lease.reset();auto held=storage::ProfileLease::acquire(f.profile);require(held.has_value(),"Fresh allocation recovery lease");f.lease.emplace(std::move(*held));const auto recovered=storage::recoverTorrentIntake(*f.lease);require(recovered&&*recovered&&**recovered==f.hash,"Fresh exact allocation journal replay");
@@ -867,7 +867,7 @@ int main() {
     biglybtc::test::allocation::Fixture old;require(old.import(core::TorrentAllocationMode::None).has_value(),"Legacy default API import");const auto legacy=storage::readAllocationIntent(*old.lease,old.hash);require(legacy&&!*legacy&&!old.state().find("attributes")->find("fas"),"Absent old/default mode stays legacy without materialized allocation");
     biglybtc::test::allocation::Fixture bad;const auto raw=biglybtc::test::allocation::read(bad.profile/"downloads.config");require(!bad.import(static_cast<core::TorrentAllocationMode>(7)),"Unknown allocation ordinal rejected");require(biglybtc::test::allocation::read(bad.profile/"downloads.config")==raw&&!storage::hasPendingTorrentIntake(*bad.lease)&&!fs::exists(bad.path()),"Bad mode has no journal/payload/publication effects");
   });
-  test("allocation writes actual zeroes but never verifies pieces or transfers",[] {
+  runCase("allocation writes actual zeroes but never verifies pieces or transfers",[] {
     using Mode=core::TorrentAllocationMode;
     for(const bool multi:{false,true}){for(const auto mode:{Mode::Stopped,Mode::Paused}){
       biglybtc::test::allocation::Fixture f(multi);const auto imported=f.import(mode);require(imported&&*imported==f.hash,"Actual allocation intake");
@@ -887,7 +887,7 @@ int main() {
       require(!prepared->settleAllocation(*f.lease,true),"Settled allocation never republishes");
     }}
   });
-  test("interrupted new zero prefixes replay under exact inode and remain cancellable",[] {
+  runCase("interrupted new zero prefixes replay under exact inode and remain cancellable",[] {
     biglybtc::test::allocation::Fixture f(true);require(f.import(core::TorrentAllocationMode::Paused).has_value(),"Replay allocation import");
     struct stat inode{};{
       auto prepared=Storage::prepare(*f.lease,f.hash,{}, {}, {}, {},engine::detail::ManagedStoragePurpose::AllocateOnly);require(prepared.has_value(),"Replay first preparation");
@@ -903,7 +903,7 @@ int main() {
     auto retried=Storage::prepare(*f.lease,f.hash,{}, {}, {}, {},engine::detail::ManagedStoragePurpose::AllocateOnly);require(retried.has_value(),"Cancelled original new-file scope explicitly retries");
     require(retried->settleAllocation(*f.lease,false).has_value(),"Zero-byte retry cancellation");
   });
-  test("allocation refuses unreviewed short data replaced inodes and nonzero replay",[] {
+  runCase("allocation refuses unreviewed short data replaced inodes and nonzero replay",[] {
     {
       biglybtc::test::allocation::Fixture f;biglybtc::test::allocation::write(f.path(),"valuable-prefix");const auto before=biglybtc::test::allocation::read(f.path());
       const auto result=f.import(core::TorrentAllocationMode::Stopped);require(!result&&biglybtc::test::allocation::read(f.path())==before,"Unreviewed short file is never zeroed or truncated");
@@ -919,7 +919,7 @@ int main() {
     }
   });
 
-  test("allocation preserves full preexisting leaves counters and rejects changed row CAS",[] {
+  runCase("allocation preserves full preexisting leaves counters and rejects changed row CAS",[] {
     biglybtc::test::allocation::Fixture f;const auto data=std::string(static_cast<std::size_t>(f.sizes[0]),'Q');biglybtc::test::allocation::write(f.path(),data);struct stat before{},after{};require(::stat(f.path().c_str(),&before)==0,"Full preexisting allocation source");
     require(f.import(core::TorrentAllocationMode::Stopped).has_value(),"Full preexisting original import");
     auto inventory=f.saved();auto entry=core::Document::parse(encode(f.row(inventory)));require(entry.has_value(),"Retained counters row");
@@ -934,7 +934,7 @@ int main() {
     require(!owner->settleAllocation(*changed.lease,true)&&biglybtc::test::allocation::read(changed.profile/"downloads.config")==raw,"Whole exact row CAS preserves external field and pending stop");
   });
 
-  test("allocation ancestor replay binds every directory and preserves unrelated state",[] {
+  runCase("allocation ancestor replay binds every directory and preserves unrelated state",[] {
     for(const bool reopen:{false,true}){
       biglybtc::test::allocation::Fixture f;f.payload=f.root/"ancestor"/"leaf";require(f.import(core::TorrentAllocationMode::Stopped).has_value(),"Nested ancestor allocation import");
       auto prepared=Storage::prepare(*f.lease,f.hash,{}, {}, {}, {},engine::detail::ManagedStoragePurpose::AllocateOnly);require(prepared.has_value(),"Nested allocation prepare");require(prepared->advanceAllocation(4096).has_value(),"Nested actual partial data");
@@ -948,7 +948,7 @@ int main() {
     auto state=f.state();auto attrs=core::Document::parse(encode(*state.find("attributes")));require(attrs&&attrs->replaceValue("unrelated.external","li19e3:rawe").has_value()&&state.replaceValue("attributes",attrs->serialize()).has_value(),"External unknown attribute edit");const auto statePath=f.profile/"active"/(f.hash.hex()+".dat");biglybtc::test::allocation::write(statePath,state.serialize());const auto raw=biglybtc::test::allocation::read(statePath);
     require(!prepared->settleAllocation(*f.lease,true)&&biglybtc::test::allocation::read(statePath)==raw,"Complete fresh attribute projection refuses stale overwrite");
   });
-  test("allocation actual write failure leaves no false completion and safe cancel",[] {
+  runCase("allocation actual write failure leaves no false completion and safe cancel",[] {
     biglybtc::test::allocation::Fixture f;require(f.import(core::TorrentAllocationMode::Stopped).has_value(),"IO failure import");auto prepared=Storage::prepare(*f.lease,f.hash,{}, {}, {}, {},engine::detail::ManagedStoragePurpose::AllocateOnly);require(prepared.has_value(),"IO failure prepare");
     struct Limit {struct rlimit prior{};decltype(std::signal(SIGXFSZ,SIG_IGN)) handler;Limit():handler(std::signal(SIGXFSZ,SIG_IGN)){require(::getrlimit(RLIMIT_FSIZE,&prior)==0,"Capture owned test limit");auto limit=prior;limit.rlim_cur=0;require(::setrlimit(RLIMIT_FSIZE,&limit)==0,"Apply owned write refusal");}~Limit(){::setrlimit(RLIMIT_FSIZE,&prior);std::signal(SIGXFSZ,handler);}};
     std::expected<engine::detail::ManagedAllocationProgress,storage::Error> failed;{Limit limit;failed=prepared->advanceAllocation(4096);}
