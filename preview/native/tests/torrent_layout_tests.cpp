@@ -34,6 +34,9 @@ int main(int argc, char** argv) {
   }
   {
     const auto replacement=compat::originalDecodeFilenameBytes(std::string("a\x98z",3),"windows-1251");check(replacement&&*replacement=="a\xef\xbf\xbdz","Undefined legacy byte falls back to whole-input Java UTF8 replacement");
+    const auto fallback=compat::originalDecodeFilenameBytes(std::string("ABC\xff .bin",9),"Fallback");check(fallback&&*fallback=="ABC_FF_20.bin","Exact source fallback escapes and original case");
+    const auto boundary=compat::originalDecodeFilenameBytes(std::string(64,'A'),"Fallback");check(boundary&&*boundary==std::string(64,'A'),"Original unconditional64 lower bound");
+    check(!compat::originalDecodeFilenameBytes(std::string(65,'A'),"Fallback")&&!compat::originalDecodeFilenameBytes("ascii","fallback"),"No invented long-name history or case-guessed fallback registration");
     const auto thai=compat::originalDecodeFilenameBytes(std::string("\xa1",1),"TIS-620");check(thai&&*thai=="ก","Source-registered Thai scalar");
     check(!compat::originalDecodeFilenameBytes("ascii","IBM866"),"ShowAll-only decoder stays unregistered without held capability");
     const auto dos=compat::originalDecodeFilenameBytes(std::string("\x80",1),"IBM866",true);check(dos&&*dos=="А","Explicit ShowAll DOS Cyrillic mapping");

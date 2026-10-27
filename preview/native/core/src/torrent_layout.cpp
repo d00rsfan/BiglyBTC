@@ -22,7 +22,7 @@ std::int64_t integer(const Node* value) {
   return value->integer;
 }
 #include "original_charset.inc"
-enum class NameEncoding : unsigned { Utf8, Latin1, Windows1251, Koi8R, Utf8Replacement };
+enum class NameEncoding : unsigned { Utf8, Latin1, Windows1251, Koi8R, Utf8Replacement, Fallback };
 struct NamePolicy { NameEncoding encoding; bool utf8Keys; };
 NamePolicy names(const core::Document& document,const Node& info,bool showAll=false) {
   const auto* field=document.find("encoding");
@@ -36,9 +36,9 @@ NamePolicy names(const core::Document& document,const Node& info,bool showAll=fa
   const bool windows1251=lower=="windows-1251"||lower=="cp1251"||lower=="cp5347"||lower=="ansi-1251";
   const bool koi8r=lower=="koi8-r"||lower=="koi8_r"||lower=="koi8"||lower=="cskoi8r";
   const auto manual=charsetIndex(original,showAll);
-  require(!field||manual||original=="utf8 keys"||lower=="utf-8"||lower=="utf8"||lower=="unicode-1-1-utf-8"||latin1||windows1251||koi8r,
+  require(!field||original=="Fallback"||manual||original=="utf8 keys"||lower=="utf-8"||lower=="utf8"||lower=="unicode-1-1-utf-8"||latin1||windows1251||koi8r,
       "This original filename encoding needs its qualified codec adapter");
-  require(!(latin1||windows1251||koi8r||manual)||!info.find("file tree"),"Legacy encoded v2/hybrid names require separate original qualification");
+  require(!(latin1||windows1251||koi8r||manual||original=="Fallback")||!info.find("file tree"),"Legacy encoded v2/hybrid names require separate original qualification");
   // Exact cb8 global UTF8-key predicate: name plus every v1 path, and only
   // absent encoding, the exact saved sentinel, or case-insensitive UTF-8.
   bool use=info.find("name.utf-8")&&(!field||original=="utf8 keys"||lower=="utf-8");
@@ -46,10 +46,20 @@ NamePolicy names(const core::Document& document,const Node& info,bool showAll=fa
     require(files->type==Node::Type::List,"Original file list has invalid type");
     if(use){for(const auto& file:files->children){use=use&&file.find("path.utf-8");}}
   }
-  return {manual?static_cast<NameEncoding>(16+*manual):koi8r?NameEncoding::Koi8R:windows1251?NameEncoding::Windows1251:latin1?NameEncoding::Latin1:field?NameEncoding::Utf8Replacement:NameEncoding::Utf8,use};
+  return {original=="Fallback"?NameEncoding::Fallback:manual?static_cast<NameEncoding>(16+*manual):koi8r?NameEncoding::Koi8R:windows1251?NameEncoding::Windows1251:latin1?NameEncoding::Latin1:field?NameEncoding::Utf8Replacement:NameEncoding::Utf8,use};
 }
 std::string decoded(const Node* node,NameEncoding encoding) {
   const auto value=text(node);
+  if(encoding==NameEncoding::Fallback){
+    std::string result;result.reserve(value.size()*3);
+    for(const unsigned char c:value){
+      if((c>='a'&&c<='z')||(c>='A'&&c<='Z')||(c>='0'&&c<='9')||c=='_'||c=='-'||c=='.'){result+=static_cast<char>(c);}
+      else{result+='_';result+="0123456789ABCDEF"[c>>4];result+="0123456789ABCDEF"[c&15];}
+    }
+    // Original max_ok_name_length starts at64 and only increases. Longer
+    // output depends on process history and filesystem probes, never NAME_MAX.
+    require(result.size()<=64,"Long original Fallback names need authenticated decoder-session context");return result;
+  }
   if(static_cast<unsigned>(encoding)>=16){return charsetDecode(value,static_cast<unsigned>(encoding)-16);}
   if(encoding==NameEncoding::Utf8Replacement){return charsetUtf8(value);}
   if(encoding==NameEncoding::Utf8){return value;}
@@ -285,7 +295,7 @@ std::expected<std::string,LayoutError> originalDecodeFilenameBytes(std::string_v
     require(value.size()<=4096&&encoding.size()<=128,"Original decoder input exceeds bound");
     const auto doc=core::Document::parse("d8:encoding"+std::to_string(encoding.size())+":"+std::string(encoding)+"4:infodee");
     require(doc.has_value(),"Invalid original decoder name");const auto policy=names(*doc,*doc->find("info"),showAll);
-    Node node;node.type=Node::Type::Bytes;node.bytes=value;return decoded(&node,policy.encoding);
+    Node node{Node::Type::Bytes};node.bytes=value;return decoded(&node,policy.encoding);
   }catch(const Failure& error){return std::unexpected(LayoutError{error.message});}
 }
 std::expected<std::string,LayoutError> originalFilenameComponent(std::string_view decoded,std::string_view conversions){
