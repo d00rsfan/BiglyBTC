@@ -371,7 +371,7 @@ private:
   QPointer<QAction> openMagnet_;
   std::array<QPointer<QAction>, 4> filePolicyActions_;
   QPointer<QAction> fileCompaction_;
-  std::array<QPointer<QAction>,3> filePathActions_;
+  std::array<QPointer<QAction>,4> filePathActions_;
   bool fileMenuOpen_ = false;
   std::optional<FilePolicySelection> fileMenuSelection_;
   std::optional<Target> detailsRequestedFor_;

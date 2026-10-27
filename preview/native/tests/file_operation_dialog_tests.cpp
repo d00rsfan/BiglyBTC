@@ -40,6 +40,14 @@ class FileOperationDialogTests final:public QObject {
  Q_OBJECT
 private slots:
  void initTestCase(){qRegisterMetaType<FileOperationRequest>();qRegisterMetaType<FileOperationSubmission>();}
+ void explicitReplacementShowsRetainedPreimageAndRequiresFreshConsent() {
+  FileOperationDialog dialog;QSignalSpy reads(&dialog,&FileOperationDialog::planRequested),writes(&dialog,&FileOperationDialog::executeRequested);
+  QVERIFY(dialog.beginOperation(21,1,target(),FileOperation::ReplaceFile,QStringLiteral("/owned/occupied.bin"),2));dialog.show();QTRY_COMPARE(reads.count(),1);const auto request=reads[0][0].value<FileOperationRequest>();
+  auto packet=planFor(request);packet->paths.resize(1);packet->paths[0].destination=request.destinationParent;packet->presentFiles=1;packet->missingFiles=0;packet->retainedPreimage=QStringLiteral("/owned/.BiglyBTC.replaced.reviewed/data");packet->priorDestinationBytes=9000;packet->priorDestinationSha256=QString(64,QChar('d'));
+  QVERIFY(dialog.setPlan(packet));auto* table=dialog.findChild<QTableView*>("file-operation-paths");QTRY_COMPARE(table->model()->rowCount(),2);auto* confirm=dialog.findChild<QCheckBox*>("file-operation-confirm-delete");QVERIFY(confirm->isVisible()&&confirm->text().contains("prior bytes"));QVERIFY(dialog.findChild<QLabel*>("file-operation-summary")->text().contains(packet->priorDestinationSha256));
+  dialog.accept();QCOMPARE(writes.count(),0);confirm->setChecked(true);dialog.findChild<QLineEdit*>("file-operation-destination")->setText(QStringLiteral("/owned/other.bin"));dialog.accept();QCOMPARE(writes.count(),0);QVERIFY(!confirm->isChecked());
+  dialog.findChild<QPushButton*>("file-operation-review")->click();QCOMPARE(reads.count(),2);auto next=std::make_shared<FileOperationPlanPacket>(*packet);next->request=reads[1][0].value<FileOperationRequest>();next->paths[0].destination=next->request.destinationParent;QVERIFY(dialog.setPlan(next));QTRY_COMPARE(table->model()->rowCount(),2);QVERIFY(capture(dialog,QStringLiteral("file-operation-replacement-preview.png")));confirm->setChecked(true);dialog.accept();QCOMPARE(writes.count(),1);QVERIFY(writes[0][0].value<FileOperationSubmission>().deleteConfirmed);
+ }
  void oneFileRequestBindsOriginalIndexAndRefusesStalePlan() {
   FileOperationDialog dialog;QSignalSpy reads(&dialog,&FileOperationDialog::planRequested),writes(&dialog,&FileOperationDialog::executeRequested);
   QVERIFY(!dialog.beginOperation(5,1,target(),FileOperation::MoveFile,QStringLiteral("/owned/new.bin")));

@@ -63,23 +63,26 @@ public:
   explicit IntakeFileModel(QObject* parent):QAbstractTableModel(parent){}
   TorrentIntakePresentation source;
   std::vector<compat::FilePolicy> draft;
+  std::vector<std::optional<std::string>> destinations;bool destinationsEdited=false;
   void apply(TorrentIntakePresentation value) {
     QPointer<IntakeFileModel> guard(this);beginResetModel();if(!guard){return;}
-    source=std::move(value);draft.clear();
-    if(source){for(const auto& row:source->files){draft.push_back({row.padding,0});}}
+    source=std::move(value);draft.clear();destinations.clear();destinationsEdited=false;
+    if(source){for(const auto& row:source->files){draft.push_back({row.padding,0});destinations.emplace_back();}for(const auto& value:source->initialDestinations){destinations[value.index]=value.path;}}
     endResetModel();
   }
   int rowCount(const QModelIndex& parent={})const override{return parent.isValid()||!source?0:static_cast<int>(source->files.size());}
-  int columnCount(const QModelIndex& parent={})const override{return parent.isValid()?0:4;}
+  int columnCount(const QModelIndex& parent={})const override{return parent.isValid()?0:5;}
   QVariant headerData(int section,Qt::Orientation direction,int role)const override {
-    if(direction!=Qt::Horizontal||role!=Qt::DisplayRole||section<0||section>=4){return {};}
-    const QStringList labels{tr("Download"),tr("Path"),tr("Size (bytes)"),tr("Priority")};return labels[section];
+    if(direction!=Qt::Horizontal||role!=Qt::DisplayRole||section<0||section>=5){return {};}
+    const QStringList labels{tr("Download"),tr("Path"),tr("Size (bytes)"),tr("Priority"),tr("File destination")};return labels[section];
   }
   QVariant data(const QModelIndex& at,int role)const override {
-    if(!at.isValid()||at.row()<0||at.row()>=rowCount()||at.column()<0||at.column()>=4){return {};}
+    if(!at.isValid()||at.row()<0||at.row()>=rowCount()||at.column()<0||at.column()>=5){return {};}
     const auto n=static_cast<std::size_t>(at.row());const auto& row=source->files[n];
     if(role==Qt::UserRole+1){return row.index;}
     if(at.column()==0&&role==Qt::CheckStateRole){return draft[n].skipped?Qt::Unchecked:Qt::Checked;}
+    if(at.column()==4&&(role==Qt::DisplayRole||role==Qt::EditRole||role==Qt::AccessibleTextRole)){return destinations[n]?QString::fromUtf8(destinations[n]->data(),static_cast<qsizetype>(destinations[n]->size())):role==Qt::EditRole?QString{}:tr("Original path");}
+    if(at.column()==4&&role==Qt::ToolTipRole){return tr("Absolute file path; empty restores the original path. The original filename conversion rules apply to the final name. This does not move existing files.");}
     if(role!=Qt::DisplayRole&&role!=Qt::AccessibleTextRole){return {};}
     switch(at.column()){
       case 0:return row.padding?tr("Padding"):QString{};
@@ -93,9 +96,16 @@ public:
     if(!at.isValid()||at.row()<0||at.row()>=rowCount()){return Qt::NoItemFlags;}
     auto result=Qt::ItemIsEnabled|Qt::ItemIsSelectable;
     if(at.column()==0&&!source->files[static_cast<std::size_t>(at.row())].padding){result|=Qt::ItemIsUserCheckable;}
+    if(at.column()==4&&!source->files[static_cast<std::size_t>(at.row())].padding){result|=Qt::ItemIsEditable;}
     return result;
   }
   bool setData(const QModelIndex& at,const QVariant& value,int role)override {
+    if(role==Qt::EditRole&&at.column()==4&&at.row()>=0&&at.row()<rowCount()&&!source->files[static_cast<std::size_t>(at.row())].padding){
+      const auto text=value.toString();const auto utf8=text.toUtf8();if(QString::fromUtf8(utf8)!=text||(!text.isEmpty()&&!core::validTorrentIntakeFilePath(std::string_view(utf8.constData(),static_cast<std::size_t>(utf8.size()))))){return false;}
+      const auto n=static_cast<std::size_t>(at.row());const auto candidate=text.isEmpty()?std::optional<std::string>{}:std::optional{utf8.toStdString()};core::TorrentIntakeFileDestinations bounded;
+      for(std::size_t k=0;k<destinations.size();++k){const auto& path=k==n?candidate:destinations[k];if(path){bounded.push_back({static_cast<std::uint32_t>(k),*path});}}
+      if(!core::validTorrentIntakeFileDestinations(bounded)){return false;}destinations[n]=candidate;destinationsEdited=true;emit dataChanged(index(at.row(),4),index(at.row(),4));return true;
+    }
     if(role!=Qt::CheckStateRole||at.column()!=0||at.row()<0||at.row()>=rowCount()
         ||source->files[static_cast<std::size_t>(at.row())].padding
         ||(value.toInt()!=Qt::Checked&&value.toInt()!=Qt::Unchecked)){return false;}
@@ -109,6 +119,9 @@ public:
       const auto n=static_cast<std::size_t>(at.row());
       if(!source->files[n].padding&&!draft[n].skipped){draft[n].priority=value;first=std::min(first,at.row());last=std::max(last,at.row());}}
     if(last>=0){emit dataChanged(index(first,3),index(last,3));}
+  }
+  std::optional<core::TorrentIntakeFileDestinations> targetDraft()const {
+    if(!destinationsEdited){return std::nullopt;}core::TorrentIntakeFileDestinations result;for(std::size_t n=0;n<destinations.size();++n){if(destinations[n]){result.push_back({static_cast<std::uint32_t>(n),*destinations[n]});}}return result;
   }
   qint64 selectedBytes()const {
     qint64 result=0;if(!source){return result;}
@@ -138,6 +151,7 @@ TorrentIntakeDialog::TorrentIntakeDialog(QWidget* parent):QDialog(parent) {
   model_=new IntakeFileModel(this);table_->setModel(model_);table_->setSelectionBehavior(QAbstractItemView::SelectRows);
   table_->setSelectionMode(QAbstractItemView::ExtendedSelection);table_->setAlternatingRowColors(true);table_->verticalHeader()->hide();
   table_->horizontalHeader()->setSectionResizeMode(1,QHeaderView::Stretch);
+  table_->horizontalHeader()->setSectionResizeMode(4,QHeaderView::Stretch);
   for(int column:{0,2,3}){table_->horizontalHeader()->setSectionResizeMode(column,QHeaderView::ResizeToContents);}
   layout->addWidget(table_,1);
   auto* priorities=new QHBoxLayout;priorities->addWidget(new QLabel(tr("Selected files:"),this));
@@ -323,12 +337,12 @@ void TorrentIntakeDialog::render() {
         ?tr("No files selected. The torrent will be added stopped.")
         :tr("%1 bytes selected. Existing files are checked before downloading.").arg(model_->selectedBytes());
   }
-  if(startMode_->currentData().toInt()==static_cast<int>(TorrentIntakeStartMode::VerifySeeding)){status+=tr("\nRequires all selected existing linear files at the chosen name. Read-only verification never downloads or repairs missing data. Seeding starts only after every piece passes.");}
+  if(startMode_->currentData().toInt()==static_cast<int>(TorrentIntakeStartMode::VerifySeeding)){status+=tr("\nRequires every real file selected with complete existing linear data at its reviewed destination. Read-only verification never downloads or repairs missing data. Seeding starts only after every piece passes.");}
   if(frame&&!frame->trackers){status+=tr("\nOriginal tracker fields are kept unchanged; this editor cannot represent their format or size.");}
   status_->setText(status.left(4096));
 }
 void TorrentIntakeDialog::accept() {
-  if(!session_||busy_||pending()||!source_||!destination_||!startMode_||!model_||!preview_||!downloadLimit_||!uploadLimit_||!sequential_||!editTrackers_||!trackers_||!saveName_
+  if(!session_||busy_||pending()||!source_||!destination_||!startMode_||!table_||!model_||!preview_||!downloadLimit_||!uploadLimit_||!sequential_||!editTrackers_||!trackers_||!saveName_
       ||model_->source!=preview_||preview_->source.metadata!=source_->text()||!path(destination_->text())||!saveName(saveName_->text())){return;}
   bool validMode=false;const auto mode=startMode_->currentData().toInt(&validMode);
   if(!validMode||mode<static_cast<int>(TorrentIntakeStartMode::Queued)||mode>static_cast<int>(TorrentIntakeStartMode::VerifySeeding)){return;}
@@ -347,7 +361,7 @@ void TorrentIntakeDialog::accept() {
   if(editTrackers_->isChecked()){if(!preview_->trackers){return;}trackers.emplace();if(!trackerDraft(trackers_->toPlainText(),*trackers)){return;}}
   std::optional<QString> name;if(!saveName_->text().isEmpty()){name=saveName_->text();}
   TorrentIntakeSubmission submission{session_,request_.request,preview_->revision,destination_->text(),start,model_->draft,
-      {static_cast<std::int64_t>(downloadLimit_->value())*1024,static_cast<std::int64_t>(uploadLimit_->value())*1024},sequential_->isChecked(),force,paused,std::move(trackers),std::move(name),verify};
+      {static_cast<std::int64_t>(downloadLimit_->value())*1024,static_cast<std::int64_t>(uploadLimit_->value())*1024},sequential_->isChecked(),force,paused,std::move(trackers),std::move(name),verify,model_->targetDraft()};
   committing_=true;failure_.clear();++revision_;schedule();emit submitted(std::move(submission));
 }
 void TorrentIntakeDialog::reject() {

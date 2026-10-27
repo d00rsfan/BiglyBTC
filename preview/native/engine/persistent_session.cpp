@@ -112,6 +112,8 @@ struct PersistentSession::Impl {
       secondsSeeding=std::chrono::duration_cast<std::chrono::seconds>(seeding).count();
     }
     std::optional<std::int64_t> idleUploadSeconds;
+    core::QueueIdleUploadAge idleUpload;bool idleUploadKnown=false;std::uint64_t idleSequence=0;
+    std::optional<std::pair<std::int32_t,std::int64_t>> idleCheckpoint;
     std::optional<core::QueueSwarm> swarm;
     int connectedLeechers = 0;
     core::QueueObservedFacts queueSource;
@@ -132,7 +134,7 @@ struct PersistentSession::Impl {
     lt::add_torrent_params seedNetwork;
     Managed(std::uint64_t id, detail::ManagedStorage files, const core::TorrentHash& hash)
         : token(std::make_unique<OperationToken>(OperationToken{id})), storage(std::move(files)),
-          status{.hash = hash, .admission = id} {}
+          status{.hash = hash, .admission = id} {idleUpload=core::QueueIdleUploadAge(storage.queueMetadata().secondsSinceUpload);}
   };
   std::map<std::string, std::unique_ptr<Managed>> managed;
   std::map<lt::torrent_handle, Managed*> managedByHandle;
@@ -481,7 +483,7 @@ struct PersistentSession::Impl {
       static_cast<void>(key); entry->status.retained = false;
       if(entry->mmapLatency){entry->mmapLatency->retire();}
       entry->queueSource={};entry->smoothedUpload.reset();entry->sendSmoothing.reset();entry->sendFirstMillis.reset();
-      entry->status.queueSourceFacts.reset();entry->status.queueSmoothedPayloadUploadRate.reset();
+      entry->status.queueSourceFacts.reset();entry->status.queueSmoothedPayloadUploadRate.reset();entry->status.queueIdleUploadSeconds.reset();entry->idleUploadSeconds.reset();entry->idleUploadKnown=false;
       entry->status.diskReadLatencyMillis.reset();entry->status.diskWriteLatencyMillis.reset();
       entry->status.staleRankOffset.reset();
       if(entry->status.verificationHeld){entry->status.verificationHeld=false;entry->seedAttempted=true;entry->status.verifiedSeeding=VerifiedSeedingPhase::Failed;}
@@ -615,7 +617,7 @@ struct PersistentSession::Impl {
     return false;
   }
   void sampleManaged(Managed& value, bool pieces = false) {
-    value.queueSource={};value.smoothedUpload.reset();value.status.queueSourceFacts.reset();value.status.queueSmoothedPayloadUploadRate.reset();
+    value.queueSource={};value.smoothedUpload.reset();value.status.queueSourceFacts.reset();value.status.queueSmoothedPayloadUploadRate.reset();value.status.queueIdleUploadSeconds.reset();value.idleUploadSeconds.reset();value.idleUploadKnown=false;
     value.status.diskReadLatencyMillis.reset();value.status.diskWriteLatencyMillis.reset();
     value.status.staleRankOffset.reset();
     if (!value.handle.is_valid() || value.removing) {
@@ -722,11 +724,26 @@ struct PersistentSession::Impl {
     // LT active_duration includes verification time. Original counters track
     // peer-manager download/seeding time, so use actual state/pause alert
     // timestamps retained by this owner's sole pump instead.
-    value.projectTimeline(lt::clock_type::now());
+    const auto wallNow=lt::clock_type::now(); // Original idle is wall-based; duration source stays steady.
+    value.projectTimeline(wallNow);
     if(value.queueSource.durations){value.secondsDownloading=value.queueSource.durations->downloading;value.secondsSeeding=value.queueSource.durations->seeding;}
-    if (sample.last_upload.time_since_epoch().count() > 0) {
-      value.idleUploadSeconds = std::max<std::int64_t>(0,
-          std::chrono::duration_cast<std::chrono::seconds>(lt::clock_type::now() - sample.last_upload).count());
+    value.idleUploadSeconds.reset();value.idleUploadKnown=false;value.idleCheckpoint.reset();
+    if(value.queueSource.idleEpoch&&value.idleSequence!=std::numeric_limits<std::uint64_t>::max()){
+      core::QueueIdleUploadSample idle;idle.admission=value.status.admission;idle.sequence=++value.idleSequence;
+      idle.epoch=*value.queueSource.idleEpoch;
+      idle.nowWallMillis=std::chrono::duration_cast<std::chrono::milliseconds>(wallNow.time_since_epoch()).count();
+      idle.rawPayloadSent=sample.total_payload_upload;idle.cumulativePayloadSent=actual.sent;
+      if(sample.last_upload.time_since_epoch().count()!=0){
+        idle.lastPayloadWallMillis=std::chrono::duration_cast<std::chrono::milliseconds>(sample.last_upload.time_since_epoch()).count();
+      }
+      const auto observed=value.idleUpload.observe(idle);value.idleUploadKnown=observed.known;
+      if(observed.known&&idle.epoch.stoppedWallMillis&&(sample.flags & lt::torrent_flags::paused)){
+        value.idleCheckpoint=std::pair{observed.seconds,actual.sent};
+      }
+      if(observed.known){
+        if(observed.seconds>=0){value.idleUploadSeconds=observed.seconds;}
+        if(!value.stop&&!value.status.failure){value.status.queueIdleUploadSeconds=observed.seconds;}
+      }
     }
     value.connectedLeechers = std::max(0, sample.num_peers - sample.num_seeds);
     const bool positionChecked=sample.state!=lt::torrent_status::checking_files
@@ -778,7 +795,7 @@ struct PersistentSession::Impl {
   void requestStop(Managed& value) {
     if(value.mmapLatency){value.mmapLatency->retire();}
     value.queueSource={};value.smoothedUpload.reset();value.sendSmoothing.reset();value.sendFirstMillis.reset();
-    value.status.queueSourceFacts.reset();value.status.queueSmoothedPayloadUploadRate.reset();
+    value.status.queueSourceFacts.reset();value.status.queueSmoothedPayloadUploadRate.reset();value.status.queueIdleUploadSeconds.reset();value.idleUploadSeconds.reset();value.idleUploadKnown=false;
     value.status.queueTargetStatistics.reset(); value.targetEta.reset();
     value.status.diskReadLatencyMillis.reset();value.status.diskWriteLatencyMillis.reset();
     value.status.staleRankOffset.reset();
@@ -883,7 +900,7 @@ struct PersistentSession::Impl {
         const auto seeded=core::sourceQueueSum(saved.secondsSeeding,durations->seeding);
         item.secondsDownloading=downloaded;item.secondsSeeding=seeded;
       }
-      item.secondsSinceLastUpload = value.idleUploadSeconds;
+      item.secondsSinceLastUpload = value.idleUploadSeconds;item.idleUploadSourceKnown=value.idleUploadKnown;
       item.runningMillis=value.queueSource.runningMillis;
       item.seedingMillis=value.queueSource.seedingMillis;
       if(const auto source=value.queueSource.swarm){item.swarm=core::QueueSwarm{source->seeds,source->peers,source->success,source->startupSuccess};}
@@ -1072,13 +1089,15 @@ struct PersistentSession::Impl {
           if(value.queueObservations){if(const auto times=value.queueObservations->settledDurations()){
             value.secondsDownloading=times->downloading;value.secondsSeeding=times->seeding;}}
           auto saved = value.storage.checkpoint(*managedLease, value.verified, value.status.complete,
-              value.status.received, value.status.sent, value.secondsDownloading, value.secondsSeeding);
+              value.status.received, value.status.sent, value.secondsDownloading, value.secondsSeeding,
+              value.idleCheckpoint&&value.idleCheckpoint->second==value.status.sent
+                  ?std::optional<std::int32_t>{value.idleCheckpoint->first}:std::nullopt);
           if (!saved) { value.status.failure = saved.error(); }
         }
         value.status.retained = false;
         if(value.mmapLatency){value.mmapLatency->retire();}
         value.queueSource={};value.smoothedUpload.reset();value.sendSmoothing.reset();value.sendFirstMillis.reset();
-        value.status.queueSourceFacts.reset();value.status.queueSmoothedPayloadUploadRate.reset();
+        value.status.queueSourceFacts.reset();value.status.queueSmoothedPayloadUploadRate.reset();value.status.queueIdleUploadSeconds.reset();value.idleUploadSeconds.reset();value.idleUploadKnown=false;
         value.status.queueTargetStatistics.reset(); value.targetEta.reset();
         value.status.diskReadLatencyMillis.reset();value.status.diskWriteLatencyMillis.reset();
         value.status.staleRankOffset.reset();

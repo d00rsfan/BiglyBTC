@@ -52,6 +52,9 @@ struct CreateOptions {
   std::vector<std::string> urlSeeds, httpSeeds; // Original url-list/httpseeds, outside info.
   std::optional<bool> dhtBackup; // Omitted preserves the original default (enabled).
   bool extraHashes = false; // Original overall/per-file SHA1 and ED2K for v1/hybrid.
+  // Explicit original BYO file_map descriptor; default file/directory API unchanged.
+  bool layoutDescriptor = false;
+  std::string filenameConversions = "\"='"; // Worker supplies held original policy.
 
 };
 

@@ -39,6 +39,13 @@ class TorrentCreationDialogTests final:public QObject {
  Q_OBJECT
 private slots:
  void initTestCase(){qRegisterMetaType<TorrentCreationRequest>();}
+ void virtualDescriptorIsExplicitAndRetainsTaggedOptionsWithoutIO() {
+  TorrentCreationDialog dialog;QSignalSpy requests(&dialog,&TorrentCreationDialog::createRequested);QVERIFY(dialog.beginSession(12,5));fill(dialog);
+  auto* kind=dialog.findChild<QComboBox*>("torrent-creation-source-kind");QVERIFY(kind);QCOMPARE(kind->count(),3);QCOMPARE(kind->currentIndex(),0);kind->setCurrentIndex(2);
+  dialog.findChild<QLineEdit*>("torrent-creation-source")->setText(QStringLiteral("/owned/layout.bencode"));dialog.accept();QCOMPARE(requests.count(),1);const auto request=requests[0][0].value<TorrentCreationRequest>();
+  QCOMPARE(request.session,quint64(12));QCOMPARE(request.options.sourceKind,TorrentCreationSource::LayoutDescriptor);QCOMPARE(request.options.source,QStringLiteral("/owned/layout.bencode"));QVERIFY(dialog.pending());QVERIFY(dialog.setResult(result(request,false,false,QStringLiteral("invalid mapping"))));QCOMPARE(kind->currentIndex(),2);
+  dialog.invalidateSession();dialog.accept();QCOMPARE(requests.count(),1);
+ }
  void explicitV1OptionsAndOriginalPieceChoicesArePreserved() {
   TorrentCreationDialog dialog;QSignalSpy requests(&dialog,&TorrentCreationDialog::createRequested);
   QVERIFY(dialog.beginSession(8,4));dialog.show();fill(dialog);QCOMPARE(requests.count(),0);

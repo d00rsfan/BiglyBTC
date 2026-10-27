@@ -25,6 +25,8 @@ struct TorrentIntakePacket {
   std::vector<TorrentIntakeFile> files;
   QString failure;
   std::optional<core::TorrentIntakeTrackerFields> trackers=core::TorrentIntakeTrackerFields{}; // nullopt: source cannot be edited; preserve it.
+  core::TorrentIntakeFileDestinations initialDestinations{};
+  bool multifile=true;
 };
 using TorrentIntakePresentation=std::shared_ptr<const TorrentIntakePacket>;
 enum class TorrentIntakeStartMode { Queued, Stopped, Paused, Forced, VerifySeeding };
@@ -40,6 +42,7 @@ struct TorrentIntakeSubmission {
   std::optional<core::TorrentIntakeTrackerTiers> trackers=std::nullopt; // Absent preserves raw source.
   std::optional<QString> saveName=std::nullopt; // One destination leaf, never info.name.
   bool verifyExisting=false; // Actual full check before any seeding; never seed_mode.
+  std::optional<core::TorrentIntakeFileDestinations> fileDestinations=std::nullopt;
 };
 struct TorrentIntakeResultPacket {
   quint64 session=0,request=0,revision=0;
@@ -53,6 +56,8 @@ inline bool validTorrentIntake(const TorrentIntakePresentation& packet) {
       ||!packet->failure.isEmpty()||(packet->trackers&&!core::boundedTorrentIntakeTrackers(*packet->trackers))||packet->files.empty()||packet->files.size()>MaximumIntakePreviewFiles
       ||(packet->hash.size()!=40&&packet->hash.size()!=64)||packet->name.isEmpty()||packet->name.size()>4096){return false;}
   for(const auto c:packet->hash){if(!((c>=u'0'&&c<=u'9')||(c>=u'a'&&c<=u'f')||(c>=u'A'&&c<=u'F'))){return false;}}
+  if(!core::validTorrentIntakeFileDestinations(packet->initialDestinations)){return false;}
+  for(const auto& target:packet->initialDestinations){if(target.index>=packet->files.size()||packet->files[target.index].padding){return false;}}
   qsizetype total=0;qint64 totalBytes=0;
   for(std::size_t n=0;n<packet->files.size();++n){
     const auto& file=packet->files[n];

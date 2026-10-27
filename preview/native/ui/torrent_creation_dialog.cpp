@@ -80,7 +80,7 @@ struct TorrentCreationDialog::Impl {
   }
   std::optional<TorrentCreationOptions> options()const {
     if(!kind||!piece||!format||!source||!output||!trackers||!comment||!privateTorrent||!import||!sourceTag||!urlSeeds||!httpSeeds||!dhtBackup||!extraHashes
-        ||kind->currentIndex()<0||kind->currentIndex()>1||piece->currentIndex()<0||format->currentIndex()<0||format->currentIndex()>2
+        ||kind->currentIndex()<0||kind->currentIndex()>2||piece->currentIndex()<0||format->currentIndex()<0||format->currentIndex()>2
         ||!path(source->text())||!path(output->text())||comment->toPlainText().toUtf8().size()>16384){return {};}
     TorrentCreationOptions value;value.sourceKind=static_cast<TorrentCreationSource>(kind->currentIndex());value.source=source->text();value.output=output->text();
     value.format=static_cast<TorrentCreationFormat>(format->currentIndex());
@@ -129,7 +129,7 @@ struct TorrentCreationDialog::Impl {
 TorrentCreationDialog::TorrentCreationDialog(QWidget* parent):QDialog(parent),impl_(std::make_unique<Impl>()) {
   impl_->q=this;setObjectName(QStringLiteral("torrent-creation-dialog"));setWindowTitle(QStringLiteral("Create torrent"));resize(760,630);
   auto* layout=new QVBoxLayout(this);auto* form=new QFormLayout;
-  impl_->kind=new QComboBox(this);impl_->kind->setObjectName(QStringLiteral("torrent-creation-source-kind"));impl_->kind->addItems({QStringLiteral("Single file"),QStringLiteral("Directory")});form->addRow(QStringLiteral("Source type"),impl_->kind);
+  impl_->kind=new QComboBox(this);impl_->kind->setObjectName(QStringLiteral("torrent-creation-source-kind"));impl_->kind->addItems({QStringLiteral("Single file"),QStringLiteral("Directory"),QStringLiteral("Layout descriptor (multiple sources)")});form->addRow(QStringLiteral("Source type"),impl_->kind);
   auto fileRow=[&](const QString& name,QPointer<QLineEdit>& field,QPointer<QPushButton>& button){
     auto* row=new QWidget(this);auto* line=new QHBoxLayout(row);line->setContentsMargins(0,0,0,0);field=new QLineEdit(row);field->setObjectName(name);field->setMaxLength(32768);
     button=new QPushButton(QStringLiteral("Browse…"),row);button->setObjectName(name+QStringLiteral("-browse"));line->addWidget(field);line->addWidget(button);return row;

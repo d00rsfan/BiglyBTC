@@ -32,7 +32,8 @@ int main(int argc, char** argv) {
       {{"a"," a:b , ignored ,a=x","x"}},{{"a/b\rc\nd","","a b c d"}},{{"quote","\"='","quote"}},{{"a","\xf0\x9f\x98\x80=x","a"}},{{"x","x=\xc3\xa9","\xc3\xa9"}}
     }};
     for(const auto& row:cases){const auto result=compat::originalFilenameComponent(row[0],row[1]);check(result&&*result==row[2],"Exact original UTF16/trim/nonchained Linux conversion");}
-    for(const auto& row:std::array<std::array<std::string_view,2>,4>{{{{"a","a=."}},{{"a","a=\\"}},{{"a",std::string_view("a=\0",3)}},{{"a",std::string_view("a=\xff",3)}}}}){check(!compat::originalFilenameComponent(row[0],row[1]),"Unsafe/invalid configured output remains refused");}
+    for(const auto& row:std::array<std::array<std::string_view,2>,3>{{{{"a","a=."}},{{"a","a=\\"}},{{"a",std::string_view("a=\xff",3)}}}}){check(!compat::originalFilenameComponent(row[0],row[1]),"Unsafe/invalid configured output remains refused");}
+    const auto trimmedNul=compat::originalFilenameComponent("a",std::string_view("a=\0",3));check(trimmedNul&&*trimmedNul=="a","Original Java trim removes trailing NUL so a two-unit mapping row is ignored");
     const auto source=document(list(file("a\"b.bin","1")));const auto raw=source.serialize();const auto legacy=compat::originalLayout(source);const auto converted=compat::originalLayout(source,100000,compat::OriginalDefaultFilenameConversions);
     check(legacy&&legacy->files[0].path=="a\"b.bin"&&converted&&converted->files[0].path=="a'b.bin"&&converted->filenameConverted&&source.serialize()==raw,"Old raw projection and explicit original conversion are distinct; info unchanged");
     check(!compat::originalLayout(document(list(file("a\"b.bin","1")+file("a'b.bin","1"))),100000,compat::OriginalDefaultFilenameConversions),"Conversion collisions refuse before filesystem authority");

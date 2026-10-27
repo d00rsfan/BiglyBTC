@@ -52,3 +52,6 @@ target_sources(biglybtc_local_engine PRIVATE disk_latency.cpp)
 
 # Original saved group-position normalization under profile authority.
 target_sources(biglybtc_profile PRIVATE ../adapters/queue_positions.cpp)
+
+# Original descriptor linkage >=100 leaves uses its source-defined gzip envelope.
+target_link_libraries(biglybtc_local_engine PRIVATE ZLIB::ZLIB)

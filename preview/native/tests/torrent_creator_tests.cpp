@@ -1,6 +1,7 @@
 #include "../engine/torrent_creator.hpp"
 #include "../engine/original_layout_projection.hpp"
 #include "original_torrent_identity_lt.hpp"
+#include "encoded_document.hpp"
 
 #include <libtorrent/hasher.hpp>
 #include <libtorrent/torrent_info.hpp>
@@ -90,9 +91,61 @@ void verifyPieces(const lt::torrent_info& info, const std::string& stream) {
 void expect(const std::expected<CreateResult, CreateError>& result, CreateErrorCode code) {
   CHECK(!result && result.error().code == code);
 }
+std::string descriptor(const std::vector<std::pair<std::vector<std::string>,fs::path>>& entries){
+  const auto b=[](std::string_view value){return std::to_string(value.size())+':'+std::string(value);};
+  std::string bytes="d8:file_mapl";for(const auto& [logical,target]:entries){bytes+="d12:logical_pathl";for(const auto& part:logical) bytes+=b(part);bytes+="e6:target"+b(target.string())+'e';}return bytes+"ee";
+}
 } // namespace
 int main() {
   try {
+    run("virtual known-key duplicates refuse before target IO and divergent UTF16 order stays unavailable", [] {
+      Area area;auto options=area.options();options.layoutDescriptor=true;const auto missing=area.root/"missing";
+      const auto b=[](std::string_view value){return std::to_string(value.size())+':'+std::string(value);};
+      const std::string entry="d12:logical_pathl4:roote6:target"+b(missing.string())+'e';
+      const std::vector<std::string> invalid{
+        "d8:file_mapl"+entry+"e8:file_mapl"+entry+"ee",
+        "d8:file_mapl"+entry+"d12:logical_pathl4:roote6:target"+b(missing.string())+"6:target"+b(missing.string())+"eee",
+        "d8:file_mapl"+entry+"d12:logical_pathl4:roote12:logical_pathl4:roote6:target"+b(missing.string())+"eee"};
+      for(const auto& raw:invalid){write(area.source(),raw);expect(createTorrent(options),CreateErrorCode::Options);area.cleanOutput();CHECK(!fs::exists(missing));}
+      const auto first=area.root/"first",second=area.root/"second";write(first,"a");write(second,"b");write(area.source(),descriptor({{{"root","\xf0\x90\x80\x80"},first},{{"root","\xee\x80\x80"},second}}));
+      expect(createTorrent(options),CreateErrorCode::Options);area.cleanOutput();CHECK(read(first)=="a"&&read(second)=="b");
+    });
+    run("original single virtual file retains logical name and authenticated physical linkage", [] {
+      Area area;const auto physical=area.root/"physical-name.bin";const auto bytes=data(40003);write(physical,bytes);
+      const auto raw=descriptor({{{"logical-name.bin"},physical}});write(area.source(),raw);
+      struct stat before{},after{};CHECK(::stat(physical.c_str(),&before)==0);auto options=area.options();options.layoutDescriptor=true;
+      const auto result=createTorrent(options);CHECK(result&&result->fileCount==1);const auto info=load(area.output());verifyPieces(info,bytes);CHECK(info.name()=="logical-name.bin");
+      auto document=biglybtc::core::Document::parse(read(area.output()));CHECK(document);const auto* links=document->find("azureus_private_properties")->find("initial_linkage");CHECK(links&&links->children.size()==2&&links->find("0")->bytes==physical.string());
+      CHECK(read(area.source())==raw&&read(physical)==bytes&&::stat(physical.c_str(),&after)==0&&before.st_ino==after.st_ino&&before.st_size==after.st_size);
+    });
+    run("merged virtual directories and physical files preserve actual empty and pad indices", [] {
+      for(const auto format:{CreateFormat::V1,CreateFormat::V2,CreateFormat::Hybrid}){
+        Area area;const auto directory=area.root/"physical-dir";fs::create_directory(directory);write(directory/"a.bin","a");write(directory/"empty.bin","");const auto separate=area.root/"other.bin";write(separate,"bc");
+        const auto raw=descriptor({{{"bundle","folder"},directory},{{"bundle","tail.bin"},separate}});write(area.source(),raw);auto options=area.options();options.layoutDescriptor=true;options.format=format;options.pieceSize=32768;
+        const auto result=createTorrent(options);CHECK(result&&result->fileCount==3&&result->totalBytes==3);auto document=biglybtc::core::Document::parse(read(area.output()));CHECK(document);
+        const auto layout=biglybtc::compat::originalLayout(*document);CHECK(layout&&layout->name=="bundle"&&layout->multifile);const auto* links=document->find("azureus_private_properties")->find("initial_linkage");CHECK(links&&links->children.size()==6);
+        for(std::size_t i=0;i<layout->files.size();++i){const auto& file=layout->files[i];const auto* target=links->find(std::to_string(i));if(file.padding){CHECK(!target);continue;}CHECK(target);const auto expected=file.path=="folder/a.bin"?directory/"a.bin":file.path=="folder/empty.bin"?directory/"empty.bin":separate;CHECK(target->bytes==expected.string());}
+        CHECK(read(area.source())==raw&&read(separate)=="bc"&&read(directory/"a.bin")=="a"&&fs::file_size(directory/"empty.bin")==0);
+      }
+    });
+    run("one hundred original mapped leaves use actual gzip initial_linkage2", [] {
+      Area area;const auto physical=area.root/"physical";fs::create_directory(physical);for(unsigned i=0;i<100;++i) write(physical/("file-"+std::to_string(i)),"x");write(area.source(),descriptor({{{"logical"},physical}}));auto options=area.options();options.layoutDescriptor=true;
+      const auto result=createTorrent(options);CHECK(result&&result->fileCount==100);auto document=biglybtc::core::Document::parse(read(area.output()));CHECK(document);const auto* properties=document->find("azureus_private_properties");CHECK(properties&&!properties->find("initial_linkage"));const auto* compressed=properties->find("initial_linkage2");CHECK(compressed&&compressed->bytes.starts_with(std::string_view("\x1f\x8b",2)));
+      const auto restored=biglybtc::storage::EncodedDocument::parse(std::string(compressed->bytes));CHECK(restored&&restored->document().root().children.size()==200);CHECK(restored->document().find("0"));
+    });
+    run("virtual collisions symlinks conversion collisions stale descriptors and source changes fail closed", [] {
+      Area area;const auto first=area.root/"first",second=area.root/"second";write(first,"a");write(second,"b");auto options=area.options();options.layoutDescriptor=true;
+      for(const auto& entries:std::vector<std::vector<std::pair<std::vector<std::string>,fs::path>>>{
+          {{{"root","a"},first},{{"root","a"},second}},
+          {{{"root","a"},first},{{"root","x"},second},{{"root","a","child"},second}},
+          {{{"one","a"},first},{{"two","b"},second}}}){
+        write(area.source(),descriptor(entries));expect(createTorrent(options),CreateErrorCode::Options);area.cleanOutput();
+      }
+      options.filenameConversions="a=x,b=x";write(area.source(),descriptor({{{"root","a"},first},{{"root","b"},second}}));expect(createTorrent(options),CreateErrorCode::Options);area.cleanOutput();options.filenameConversions="\"='";
+      fs::create_symlink(first,area.root/"link");write(area.source(),descriptor({{{"logical"},area.root/"link"}}));expect(createTorrent(options),CreateErrorCode::UnsafeSource);area.cleanOutput();
+      const auto valid=descriptor({{{"logical"},first}});write(area.source(),valid);bool changed=false;const auto stale=createTorrent(options,[&](const CreateProgress& p){if(!changed&&p.stage==CreateStage::Publishing){changed=true;write(area.source(),valid+" ");}});CHECK(changed);expect(stale,CreateErrorCode::Changed);area.cleanOutput();
+      write(area.source(),valid);changed=false;const auto dataChanged=createTorrent(options,[&](const CreateProgress& p){if(!changed&&p.stage==CreateStage::Hashing&&p.completedBytes){changed=true;write(first,"z");}});CHECK(changed);expect(dataChanged,CreateErrorCode::Changed);area.cleanOutput();CHECK(read(second)=="b");
+    });
     run("original source, webseed and DHT metadata remain in their exact dictionaries", [] {
       Area area;write(area.source(),"a");auto options=area.options();options.sourceTag="owned π";
       options.urlSeeds={"https://seeds.invalid/payload"};options.httpSeeds={"http://seeds.invalid/script"};options.dhtBackup=false;options.extraHashes=true;

@@ -16,7 +16,8 @@ bool payload(QueueRateScope scope) noexcept {
   return scope == QueueRateScope::OriginalPayload || scope == QueueRateScope::TargetPayload;
 }
 bool gap(const QueueRateStamp& before, const QueueRateStamp& after) noexcept {
-  return after.monotonicMillis <= before.monotonicMillis
+  // A newer accepted sequence may share a millisecond; this is not a gap.
+  return after.monotonicMillis < before.monotonicMillis
       || after.monotonicMillis - before.monotonicMillis > QueueGlobalReceiveAverage::MaximumGapMillis;
 }
 bool stale(const QueueRateStamp& before, const QueueRateStamp& after) noexcept {

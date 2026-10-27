@@ -104,6 +104,7 @@ struct QueueTorrentFacts {
   // Opt in only for an actual admission with measured disk facts. Missing
   // required inputs withdraw stale-rank authority rather than imply zero age.
   bool sourceStaleTiming = false;
+  bool idleUploadSourceKnown=true; // Appended legacy default; owner supplies actual availability.
 };
 struct QueueContext {
   std::int64_t nowMillis = 0, ownerStartedMillis = 0;

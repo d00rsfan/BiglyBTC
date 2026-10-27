@@ -191,8 +191,8 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
   fileCompaction_->setEnabled(false);
   fileCompaction_->setToolTip(tr("Select one linear file. Stop all torrents and metadata downloads, then refresh file details. Boundary data needed by other files is kept."));
   connect(fileCompaction_, &QAction::triggered, this, &LibraryWindow::dispatchFileCompaction);
-  const std::array<QString,3> filePathNames{tr("Rename or move file…"),tr("Use an existing file and recheck…"),tr("Restore original file path…")};
-  const std::array<QString,3> filePathIds{QStringLiteral("files-rename"),QStringLiteral("files-retarget"),QStringLiteral("files-revert")};
+  const std::array<QString,4> filePathNames{tr("Rename or move file…"),tr("Use an existing file and recheck…"),tr("Move back to original file path…"),tr("Replace destination and retain prior file…")};
+  const std::array<QString,4> filePathIds{QStringLiteral("files-rename"),QStringLiteral("files-retarget"),QStringLiteral("files-revert"),QStringLiteral("files-replace")};
   for(std::size_t n=0;n<filePathActions_.size();++n){auto* action=new QAction(filePathNames[n],this);action->setObjectName(filePathIds[n]);action->setEnabled(false);filePathActions_[n]=action;
     connect(action,&QAction::triggered,this,[this,n]{openFileMapping(static_cast<FileOperation>(static_cast<unsigned>(FileOperation::MoveFile)+n));});}
   filesTable_->setAlternatingRowColors(true);

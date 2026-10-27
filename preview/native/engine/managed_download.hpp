@@ -45,6 +45,7 @@ struct ManagedDownloadStatus {
   // Exact current admission/provider facts, unavailable without its retained
   // same-image observer. These are neither global nor retired final receipts.
   std::optional<core::QueueObservedFacts> queueSourceFacts{};
+  std::optional<std::int32_t> queueIdleUploadSeconds{}; // Signed known-negative differs from unavailable.
   std::optional<std::int64_t> queueSmoothedPayloadUploadRate{};
 };
 enum class MagnetPhase { Resolving, Retiring, Imported, Failed, Cancelled };

@@ -28,8 +28,35 @@ struct QueueObservedSwarm {
   std::int32_t seeds=0,peers=0;
   bool success=false,startupSuccess=true;
 };
+struct QueueIdleEpoch {
+  std::uint64_t number=0;
+  std::int64_t startedWallMillis=0;
+  std::optional<std::int64_t> stoppedWallMillis;
+};
+struct QueueIdleUploadSample {
+  std::uint64_t admission=0,sequence=0;
+  QueueIdleEpoch epoch;
+  std::int64_t nowWallMillis=0,rawPayloadSent=0,cumulativePayloadSent=0;
+  std::optional<std::int64_t> lastPayloadWallMillis;
+};
+struct QueueIdleUploadValue {bool known=false;std::int32_t seconds=-1;};
+// Original wall/int32 idle arithmetic, independently of steady durations.
+// A missed epoch with prior activity cannot acquire invented carryover.
+std::int32_t sourceQueuePeerIdleSeconds(std::int64_t nowWallMillis,std::int32_t& lastSentSeconds) noexcept;
+class QueueIdleUploadAge final {
+public:
+  explicit QueueIdleUploadAge(std::int32_t saved=-1) noexcept:base_(saved){}
+  QueueIdleUploadValue observe(const QueueIdleUploadSample&) noexcept;
+private:
+  std::uint64_t admission_=0,sequence_=0,epoch_=0;
+  std::int64_t cumulative_=0,raw_=0;
+  std::int32_t base_=-1,lastSentSeconds_=0;
+  std::optional<std::int64_t> sourceLastSent_;
+  bool baseKnown_=true,stopped_=false,lost_=false;
+};
 struct QueueObservedFacts {
   std::optional<QueueObservedSwarm> swarm;
+  std::optional<QueueIdleEpoch> idleEpoch;
   std::optional<QueueObservedDurations> durations;
   std::optional<std::int64_t> runningMillis,seedingMillis;
 };
@@ -60,5 +87,6 @@ private:
   std::int64_t lastMillis_=0,downloadBase_=0,seedBase_=0;
   std::optional<std::int64_t> started_,seedStarted_;
   std::optional<std::int64_t> startedWall_,seedStartedWall_;
+  std::optional<QueueIdleEpoch> idleEpoch_;
 };
 }

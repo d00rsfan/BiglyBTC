@@ -10,6 +10,7 @@
 #include <libtorrent/version.hpp>
 #include <openssl/evp.h>
 #include <openssl/provider.h>
+#include <zlib.h>
 
 #include <algorithm>
 #include <array>
@@ -165,7 +166,7 @@ Descriptor openChild(int parent, const std::string& name, const fs::path& path) 
   return value;
 }
 
-struct Entry { std::string relative; Stamp observed; };
+struct Entry { std::string relative; Stamp observed; fs::path physical{}; std::optional<Stamp> physicalParent{}; };
 struct DirectoryCloser { void operator()(DIR* value) const noexcept { if (value) { ::closedir(value); } } };
 struct Inventory {
   Stamp root;
@@ -173,6 +174,8 @@ struct Inventory {
   std::vector<Entry> files;
   std::vector<Entry> directories;
   std::uint64_t total = 0;
+  std::string logicalName{};
+  std::vector<Entry> origins{};
 };
 struct Operation {
   const CreateOptions& options;
@@ -268,17 +271,21 @@ Inventory scan(int root, const Operation& operation) {
 void validateInventory(const Inventory& before, const Inventory& after, const fs::path& path) {
   if (!same(before.root, after.root) || before.directory != after.directory
       || before.total != after.total || before.files.size() != after.files.size()
-      || before.directories.size() != after.directories.size()) {
+      || before.directories.size() != after.directories.size()
+      || before.logicalName != after.logicalName || before.origins.size() != after.origins.size()) {
     fail(CreateErrorCode::Changed, path, "Source inventory changed during hashing");
   }
   const auto compare = [&](const std::vector<Entry>& a, const std::vector<Entry>& b) {
     for (std::size_t index = 0; index < a.size(); ++index) {
-      if (a[index].relative != b[index].relative || !same(a[index].observed, b[index].observed)) {
+      if (a[index].relative != b[index].relative || a[index].physical != b[index].physical
+          || bool(a[index].physicalParent)!=bool(b[index].physicalParent)
+          || (a[index].physicalParent&&!sameIdentity(*a[index].physicalParent,*b[index].physicalParent))
+          || !same(a[index].observed, b[index].observed)) {
         fail(CreateErrorCode::Changed, path / a[index].relative, "Source file or directory changed during hashing");
       }
     }
   };
-  compare(before.files, after.files); compare(before.directories, after.directories);
+  compare(before.files, after.files); compare(before.directories, after.directories);compare(before.origins,after.origins);
 }
 Descriptor openRelative(int root, const std::string& relative, const fs::path& path) {
   Descriptor current(::fcntl(root, F_DUPFD_CLOEXEC, 0));
@@ -297,6 +304,9 @@ Descriptor openRelative(int root, const std::string& relative, const fs::path& p
   }
   return current;
 }
+
+#include "virtual_creator.inc"
+
 void rejectOutputWithinSource(int outputParent, const Stamp& source, const fs::path& path) {
   Descriptor current(::fcntl(outputParent, F_DUPFD_CLOEXEC, 0));
   if (current.get() < 0) { fail(CreateErrorCode::Write, path, "Cannot inspect output ancestry", errno); }
@@ -500,8 +510,8 @@ void hashFiles(int root, const Inventory& inventory, PieceSink& torrent,
   std::size_t index = 0;
   operation.publish({CreateStage::Hashing, 0, inventory.total, inventory.files.size(), 0, pieces});
   for (const auto& file : inventory.files) {
-    const auto path = operation.options.source / file.relative;
-    auto input = openRelative(root, file.relative, path);
+    const auto path = file.physical.empty()?operation.options.source / file.relative:file.physical;
+    auto input = openEntry(root,file,path);
     if (!same(file.observed, describe(input.get(), path))) { fail(CreateErrorCode::Changed, path, "Source changed before hashing"); }
     if(extra) extra->begin();
     std::uint64_t offset = 0;
@@ -570,8 +580,8 @@ void hashMerkleFiles(int root,const Inventory& inventory,lt::create_torrent& tor
     if(found==originals.end()||!visited.insert(found->first).second||found->second->observed.size!=length) {
       fail(CreateErrorCode::Generator,operation.options.source,"Generator changed original real-file identity");
     }
-    const auto& file=*found->second;const auto path=operation.options.source/file.relative;
-    auto input=openRelative(root,file.relative,path);
+    const auto& file=*found->second;const auto path=file.physical.empty()?operation.options.source/file.relative:file.physical;
+    auto input=openEntry(root,file,path);
     if(!same(file.observed,describe(input.get(),path))) fail(CreateErrorCode::Changed,path,"Source changed before Merkle hashing");
     std::vector<lt::sha256_hash> leaves;leaves.reserve(size/Block);
     if(extra) extra->begin();
@@ -717,12 +727,15 @@ std::expected<CreateResult, CreateError> createTorrent(const CreateOptions& subm
     operation.publish({CreateStage::Scanning, 0, 0, 0, 0, 0});
     auto sourceParent = openParent(options.source);
     auto source = openChild(sourceParent.directory.get(), sourceParent.leaf, options.source);
-    const auto inventory = scan(source.get(), operation);
+    const auto inventory = options.layoutDescriptor?scanDescriptor(source.get(),operation):scan(source.get(), operation);
+    const auto& sourceName=options.layoutDescriptor?inventory.logicalName:sourceParent.leaf;
     if (inventory.files.empty() || inventory.total == 0) {
       fail(CreateErrorCode::Empty, options.source, "Source files have zero total length");
     }
     auto outputParent = openParent(options.output);
-    if (inventory.directory) { rejectOutputWithinSource(outputParent.directory.get(), inventory.root, options.output); }
+    if (options.layoutDescriptor) {
+      for(const auto& origin:inventory.origins) if(S_ISDIR(origin.observed.mode)) rejectOutputWithinSource(outputParent.directory.get(),origin.observed,options.output);
+    } else if (inventory.directory) { rejectOutputWithinSource(outputParent.directory.get(), inventory.root, options.output); }
     struct stat existing{};
     if (::fstatat(outputParent.directory.get(), outputParent.leaf.c_str(), &existing, AT_SYMLINK_NOFOLLOW) == 0) {
       fail(CreateErrorCode::Conflict, options.output, "Output already exists");
@@ -733,7 +746,7 @@ std::expected<CreateResult, CreateError> createTorrent(const CreateOptions& subm
     if (pieces > CreateMaximumPieces) { fail(CreateErrorCode::Limit, options.source, "Piece count limit exceeded; choose a larger piece size"); }
     lt::file_storage files;
     for (const auto& file : inventory.files) {
-      const auto name = inventory.directory ? sourceParent.leaf + '/' + file.relative : sourceParent.leaf;
+      const auto name = inventory.directory ? sourceName + '/' + file.relative : sourceName;
       files.add_file(name, file.observed.size);
     }
     std::unique_ptr<ExtraHashes> extra;
@@ -745,7 +758,7 @@ std::expected<CreateResult, CreateError> createTorrent(const CreateOptions& subm
       // LT's constructor ceiling or allocating a piece-sized hashing buffer.
       V1PieceHashes hashes(pieces);
       hashFiles(source.get(), inventory, hashes, operation, size, pieces, extra.get());
-      entry = generateLargeV1(inventory, sourceParent.leaf, options, hashes);
+      entry = generateLargeV1(inventory, sourceName, options, hashes);
     } else {
       const auto flags=options.format==CreateFormat::V1?lt::create_torrent::v1_only
           :options.format==CreateFormat::V2?lt::create_torrent::v2_only:lt::create_flags_t{};
@@ -771,11 +784,12 @@ std::expected<CreateResult, CreateError> createTorrent(const CreateOptions& subm
         for (const auto& url : options.trackerTiers[tier]) { torrent.add_tracker(url, static_cast<int>(tier)); }
       }
       if(options.format==CreateFormat::V1) hashFiles(source.get(),inventory,torrent,operation,size,pieces,extra.get());
-      else hashMerkleFiles(source.get(),inventory,torrent,operation,size,generatedPieces,sourceParent.leaf,extra.get());
+      else hashMerkleFiles(source.get(),inventory,torrent,operation,size,generatedPieces,sourceName,extra.get());
       entry = torrent.generate();
     }
     applyCreationMetadata(entry,options);
-    if(extra) extra->apply(entry,inventory.directory,sourceParent.leaf);
+    if(extra) extra->apply(entry,inventory.directory,sourceName);
+    if(options.layoutDescriptor) applyInitialLinkage(entry,inventory,sourceName);
     std::vector<char> bytes;
     lt::bencode(std::back_inserter(bytes), entry);
     if (bytes.size() > MaximumMetadataBytes) { fail(CreateErrorCode::Limit, options.output, "Generated metadata limit exceeded"); }
@@ -791,7 +805,7 @@ std::expected<CreateResult, CreateError> createTorrent(const CreateOptions& subm
     if(!document||!storage::originalTorrentInfoOrder(*document)) fail(CreateErrorCode::Generator,options.output,"Generated original key order is unsupported");
     validateOriginalGeometry(*document,parsed,expectV2,options.output);
     std::map<std::string,std::int64_t> expectedFiles;
-    for(const auto& file:inventory.files) expectedFiles.emplace(inventory.directory?sourceParent.leaf+'/'+file.relative:sourceParent.leaf,file.observed.size);
+    for(const auto& file:inventory.files) expectedFiles.emplace(inventory.directory?sourceName+'/'+file.relative:sourceName,file.observed.size);
     std::size_t realFiles=0;
     for(const auto index:parsed.files().file_range()) {
       if(parsed.files().pad_file_at(index)) continue;
@@ -820,7 +834,8 @@ std::expected<CreateResult, CreateError> createTorrent(const CreateOptions& subm
       fail(CreateErrorCode::Changed, options.source, "Source parent identity changed");
     }
     auto currentSource = openChild(currentSourceParent.directory.get(), currentSourceParent.leaf, options.source);
-    validateInventory(inventory, scan(currentSource.get(), operation), options.source);
+    if(options.layoutDescriptor&&!same(inventory.root,describe(currentSource.get(),options.source))) fail(CreateErrorCode::Changed,options.source,"Layout descriptor changed before publication");
+    validateInventory(inventory, options.layoutDescriptor?scanDescriptor(currentSource.get(),operation):scan(currentSource.get(), operation), options.source);
     auto currentOutputParent = openDirectory(outputParent.path);
     if (!sameIdentity(outputParent.identity, describe(currentOutputParent.get(), outputParent.path))) {
       fail(CreateErrorCode::Changed, options.output, "Output parent identity changed");

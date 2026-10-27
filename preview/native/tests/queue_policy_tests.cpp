@@ -360,5 +360,42 @@ int main(){try{
       const auto observed=source.facts(2000);CHECK(observed.swarm&&observed.swarm->seeds==2&&observed.swarm->peers==3);
     }
   });
+  run("idle age preserves saved carryover and known never-upload sentinel",[]{
+    QueueIdleUploadSample sample;sample.admission=1;sample.sequence=1;sample.epoch={1,100000,{}};sample.nowWallMillis=105900;
+    QueueIdleUploadAge saved(10);auto first=saved.observe(sample);CHECK(first.known&&first.seconds==15);
+    sample.sequence=2;sample.nowWallMillis=106000;const auto next=saved.observe(sample);CHECK(next.known&&next.seconds==16);
+    QueueIdleUploadAge never;sample.sequence=1;const auto missing=never.observe(sample);CHECK(missing.known&&missing.seconds==-1);
+  });
+  run("actual payload idle resets backward wall time once and preserves subsequent age",[]{
+    QueueIdleUploadAge idle;QueueIdleUploadSample sample;sample.admission=1;sample.sequence=1;sample.epoch={1,100000,{}};
+    sample.nowWallMillis=106000;sample.rawPayloadSent=20;sample.cumulativePayloadSent=20;sample.lastPayloadWallMillis=104000;
+    auto value=idle.observe(sample);CHECK(value.known&&value.seconds==2);
+    sample.sequence=2;sample.nowWallMillis=103000;value=idle.observe(sample);CHECK(value.known&&value.seconds==0);
+    sample.sequence=3;sample.nowWallMillis=105000;value=idle.observe(sample);CHECK(value.known&&value.seconds==2);
+  });
+  run("accepted stop freezes actual idle and resumes known carryover without paused elapsed",[]{
+    QueueIdleUploadAge idle;QueueIdleUploadSample sample;sample.admission=1;sample.sequence=1;sample.epoch={1,100000,{}};
+    sample.nowWallMillis=105000;sample.rawPayloadSent=20;sample.cumulativePayloadSent=20;sample.lastPayloadWallMillis=104000;CHECK(idle.observe(sample).seconds==1);
+    sample.sequence=2;sample.epoch.stoppedWallMillis=106000;sample.nowWallMillis=109000;auto value=idle.observe(sample);CHECK(value.known&&value.seconds==2);
+    sample.sequence=3;sample.nowWallMillis=119000;value=idle.observe(sample);CHECK(value.known&&value.seconds==2);
+    sample.sequence=4;sample.epoch={2,120000,{}};sample.nowWallMillis=123000;sample.rawPayloadSent=0;value=idle.observe(sample);CHECK(value.known&&value.seconds==5);
+    sample.sequence=5;sample.nowWallMillis=124000;sample.rawPayloadSent=5;sample.cumulativePayloadSent=25;sample.lastPayloadWallMillis=123000;value=idle.observe(sample);CHECK(value.known&&value.seconds==1);
+  });
+  run("missed or changed stop payload stays unavailable until genuine new epoch activity",[]{
+    QueueIdleUploadAge idle(5);QueueIdleUploadSample sample;sample.admission=1;sample.sequence=1;sample.epoch={2,120000,{}};
+    sample.nowWallMillis=130000;sample.cumulativePayloadSent=20;CHECK(!idle.observe(sample).known);
+    sample.sequence=2;sample.rawPayloadSent=1;sample.cumulativePayloadSent=21;sample.lastPayloadWallMillis=129000;auto value=idle.observe(sample);CHECK(value.known&&value.seconds==1);
+    sample.sequence=3;sample.epoch.stoppedWallMillis=131000;sample.rawPayloadSent=2;sample.cumulativePayloadSent=22;sample.lastPayloadWallMillis=130000;CHECK(!idle.observe(sample).known);
+    sample.sequence=4;sample.epoch={3,140000,{}};sample.nowWallMillis=142000;sample.rawPayloadSent=0;CHECK(!idle.observe(sample).known);
+    sample.sequence=5;sample.rawPayloadSent=1;sample.cumulativePayloadSent=23;sample.lastPayloadWallMillis=141000;value=idle.observe(sample);CHECK(value.known&&value.seconds==1);
+  });
+  run("known negative idle wrap differs from unavailable source and stale samples",[]{
+    QueueIdleUploadAge idle(std::numeric_limits<std::int32_t>::max());QueueIdleUploadSample sample;sample.admission=1;sample.sequence=1;sample.epoch={1,100000,{}};sample.nowWallMillis=102000;
+    auto value=idle.observe(sample);CHECK(value.known&&value.seconds==-2147483647);
+    CHECK(!idle.observe(sample).known);sample.sequence=2;CHECK(idle.observe(sample).known);
+    auto p=read();p.firstPriorityIgnoreIdleMinutes=1;auto f=seed();f.shareRatio=1;f.secondsSeeding=10;f.secondsSinceLastUpload.reset();
+    f.idleUploadSourceKnown=true;CHECK(decide(p,f).firstPriorityKnown&&decide(p,f).firstPriority);
+    f.idleUploadSourceKnown=false;CHECK(!decide(p,f).firstPriorityKnown);
+  });
   std::cout<<families<<" queue-policy families, "<<assertions<<" assertions passed\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

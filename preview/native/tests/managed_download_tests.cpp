@@ -5,6 +5,7 @@
 #include "verified_seeding_fixture.hpp"
 #include "versioned_verified_seeding_fixture.hpp"
 #include "custom_verified_seeding_fixture.hpp"
+#include "linked_verified_seeding_fixture.hpp"
 #include "original_filename_policy.hpp"
 #include "library_commands.hpp"
 #include <QCoreApplication>
@@ -110,6 +111,21 @@ std::int64_t integer(const core::Node& node, std::string_view key) {
 class ManagedDownloadTests final : public QObject {
   Q_OBJECT
 private slots:
+
+  void actualLinkedExistingOwnerChecksAndServesOnlyApprovedIndices_data(){
+    QTest::addColumn<QString>("kind");QTest::addColumn<bool>("corrupt");for(const auto* kind:{"single","multi","one-multi","v2-tail"}){QTest::newRow(kind)<<QString::fromLatin1(kind)<<false;}QTest::newRow("linked-corrupt")<<QStringLiteral("multi")<<true;
+  }
+  void actualLinkedExistingOwnerChecksAndServesOnlyApprovedIndices(){
+    QFETCH(QString,kind);QFETCH(bool,corrupt);QTemporaryDir directory;QVERIFY(directory.isValid());auto fixture=test::prepareLinkedVerifiedSeedCase(directory.path()+"/owned",kind,corrupt);
+    auto lease=storage::ProfileLease::acquire(fixture.profile.toStdString());QVERIFY(lease);const auto imported=test::importLinkedVerifiedSeedCase(*lease,fixture,kind);QVERIFY2(imported,imported?"":imported.error().message.c_str());QCOMPARE(*imported,fixture.hash);
+    const auto saved=test::customFixtureRow(fixture.profile);const auto* scope=saved.find("downloads")->children[0].find(storage::VerifiedExistingScopeKey);QVERIFY(scope);const auto proof=storage::VerifiedExistingScope::decode(*scope);QVERIFY(proof&&proof->mapped());
+    auto service=owner();QVERIFY(service->startManaged(*lease,{.hash=fixture.hash,.verifyExisting=true}));QVERIFY(test::spinVerified(*service,fixture.hash));const auto checked=status(*service,fixture.hash);QVERIFY(checked);QCOMPARE(checked->received,std::int64_t{0});
+    if(corrupt){QCOMPARE(checked->verifiedSeeding,engine::VerifiedSeedingPhase::Failed);QVERIFY(checked->failure);}
+    else{QCOMPARE(checked->verifiedSeeding,engine::VerifiedSeedingPhase::Released);QVERIFY(!checked->failure);QVERIFY(!test::receiveCustomVerifiedSeed(*service,fixture).isEmpty());const auto sent=status(*service,fixture.hash);QVERIFY(sent&&sent->sent>0);}
+    const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(test::versionedRealSnapshotsIntact(fixture,corrupt));
+    const auto state=parse(test::read(fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat"));const auto source=parse(test::read(fixture.metadata));QCOMPARE(encoded(*state.find("info")),encoded(*source.find("info")));QCOMPARE(test::read(fixture.profile+"/torrents/"+QString::fromStdString(fixture.hash.hex())+".torrent"),test::read(fixture.metadata));
+    if(kind=="v2-tail"){QVERIFY(test::versionedPadPathsAbsent(fixture));}
+  }
 
   void actualConvertedFilenameOwnerRetainsRawIdentityAndUploads_data(){QTest::addColumn<bool>("configured");QTest::newRow("original-default-quote")<<false;QTest::newRow("configured-quote")<<true;}
   void actualConvertedFilenameOwnerRetainsRawIdentityAndUploads(){
@@ -554,6 +570,26 @@ private slots:
   }
 };
 namespace {
+int prepareLinkedVerifiedSeedReceipt(const QString& root,const QString& kind,const QString& outcome){
+  try{
+    test::require(outcome=="complete"||outcome=="corrupt"||outcome=="stopped","Unknown linked verification outcome");const auto fixture=test::prepareLinkedVerifiedSeedCase(root,kind,outcome=="corrupt");
+    auto lease=storage::ProfileLease::acquire(fixture.profile.toStdString());test::require(lease.has_value(),"Own actual linked profile");const auto imported=test::importLinkedVerifiedSeedCase(*lease,fixture,kind);test::require(imported.has_value(),imported?"":imported.error().message.c_str());
+    auto service=owner();test::require(service->startManaged(*lease,{.hash=fixture.hash,.verifyExisting=true}).has_value(),"Actual mapped read-only admission");if(outcome=="stopped"){test::require(service->stopManaged(fixture.hash).has_value(),"Actual linked cancellation");}else{test::require(test::spinVerified(*service,fixture.hash),"Actual linked verification deadline");}
+    auto actual=test::verifiedStatus(*service,fixture.hash);test::require(actual.has_value(),"Actual linked owner observation");const bool released=actual->verifiedSeeding==engine::VerifiedSeedingPhase::Released;test::require(released==(outcome=="complete"),"Unexpected linked actual outcome");const auto bits=service->verifiedSeedPieces(fixture.hash);
+    QByteArray receiverHash;if(released){receiverHash=test::receiveCustomVerifiedSeed(*service,fixture);test::require(service->poll().has_value(),"Actual linked upload sample");actual=test::verifiedStatus(*service,fixture.hash);test::require(actual&&actual->sent>0,"Actual linked upload bytes missing");}
+    const auto closed=service->close(std::chrono::steady_clock::now()+5s);test::require(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure,"Actual linked joined checkpoint failed");test::require(test::versionedRealSnapshotsIntact(fixture,outcome=="corrupt"),"Read-only linked data changed");
+    const auto saved=storage::readVerifiedSeedIntent(*lease,fixture.hash);test::require(saved&&saved->has_value(),"Actual linked saved intent");const auto state=parse(test::read(fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat"));const auto flags=core::originalDownloadFlags(state.find("attributes"));test::require(flags.has_value(),"Actual original flags");
+    const auto inventory=test::customFixtureRow(fixture.profile);const auto& row=firstEntry(inventory);test::require(row.find(storage::VerifiedExistingScopeKey),"Actual mapped scope missing");const auto scope=storage::VerifiedExistingScope::decode(*row.find(storage::VerifiedExistingScopeKey));test::require(scope&&scope->mapped(),"Actual mapped scope type");
+    const auto source=parse(test::read(fixture.metadata));const auto layout=storage::readOriginalLayout(*lease,source);test::require(layout.has_value(),"Actual linked original layout");const auto preview=storage::inspectTorrentIntake(fixture.metadata.toStdString());test::require(preview.has_value(),"Actual linked sealed source");
+    lt::error_code error;const lt::torrent_info metadata(fixture.metadata.toStdString(),error);test::require(!error,"Actual linked full metadata");const auto identity=storage::originalTorrentIdentityFromLibtorrent(source,metadata);test::require(identity.has_value(),"Actual linked selected/full identity");
+    const auto full=metadata.info_hashes();const auto hex=[](const auto& hash){return QString::fromLatin1(QByteArray::fromStdString(hash.to_string()).toHex().toUpper());};QJsonArray files,verified,originalFiles,targets;std::size_t real=0;
+    for(auto bit:bits){verified.push_back(static_cast<int>(bit));}
+    for(std::size_t n=0;n<layout->files.size();++n){const auto& file=layout->files[n];originalFiles.push_back(QJsonObject{{"index",static_cast<int>(n)},{"offset",QString::number(file.offset)},{"bytes",QString::number(file.bytes)},{"padding",file.padding},{"path",QString::fromStdString(file.path)}});if(file.padding){continue;}test::require(real<fixture.files.size(),"Actual mapped real indices");const auto path=fixture.payload+'/'+fixture.files[real++].relative;struct stat info{};test::require(::stat(path.toStdString().c_str(),&info)==0,"Actual final linked inode");files.push_back(QJsonObject{{"index",static_cast<int>(n)},{"path",path},{"bytes",QString::number(info.st_size)},{"sha256",QString::fromLatin1(QCryptographicHash::hash(test::read(path),QCryptographicHash::Sha256).toHex())},{"dev",QString::number(info.st_dev)},{"ino",QString::number(info.st_ino)}});}
+    for(const auto& value:preview->initialDestinations()){targets.push_back(QJsonObject{{"index",static_cast<int>(value.index)},{"path",QString::fromStdString(value.path)}});}
+    const QJsonObject result{{"schema",4},{"status","ACTUAL_NATIVE_VERIFIED_SEED_CASE"},{"kind",kind},{"profile",fixture.profile},{"metadata",fixture.metadata},{"payloadRoot",fixture.payload},{"saveDirectory",QString::fromUtf8(row.find("save_dir")->bytes.data(),static_cast<qsizetype>(row.find("save_dir")->bytes.size()))},{"saveName",QString::fromUtf8(row.find("save_file")->bytes.data(),static_cast<qsizetype>(row.find("save_file")->bytes.size()))},{"hash",QString::fromStdString(fixture.hash.hex())},{"fullV1",full.has_v1()?hex(full.v1):QStringLiteral("-")},{"fullV2",full.has_v2()?hex(full.v2):QStringLiteral("-")},{"selectedVersion",identity->selected==storage::OriginalSelectedHash::V2?2:1},{"admission",QString::number(actual->admission)},{"released",released},{"phase",static_cast<int>(actual->verifiedSeeding)},{"forceStart",(*saved)->forceStart},{"moveFlag",bool(*flags&8)},{"marker",(*saved)->state==storage::VerifiedSeedState::Released?2:1},{"totalPieces",actual->totalPieces},{"verifiedPieces",verified},{"received",QString::number(actual->received)},{"sent",QString::number(actual->sent)},{"receiverCompleted",!receiverHash.isEmpty()},{"receiverSha256",QString::fromLatin1(receiverHash)},{"files",files},{"originalFiles",originalFiles},{"fileDestinations",targets},{"sessionJoined",closed.sessionJoined},{"storageReleased",closed.retirement.storageReleased},{"state",fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat"},{"archive",fixture.profile+"/torrents/"+QString::fromStdString(fixture.hash.hex())+".torrent"}};
+    test::write(root+"/native-receipt.json",QJsonDocument(result).toJson(QJsonDocument::Indented));return 0;
+  }catch(const std::exception& error){qCritical("%s",error.what());return 1;}
+}
 int prepareCustomVerifiedSeedReceipt(const QString& root,const QString& kind,const QString& outcome){
   try{
     test::require(outcome=="complete"||outcome=="corrupt"||outcome=="stopped","Unknown custom verified outcome");
@@ -632,6 +668,9 @@ int main(int argc,char** argv){
   if(argc==5&&QString::fromLocal8Bit(argv[1])==QStringLiteral("--prepare-custom-verified-seed")){
     const auto kind=QString::fromLocal8Bit(argv[3]);if(kind!="single"&&kind!="multi"&&kind!="one-multi"){return 2;}
     return prepareCustomVerifiedSeedReceipt(QString::fromLocal8Bit(argv[2]),kind,QString::fromLocal8Bit(argv[4]));
+  }
+  if(argc==5&&QString::fromLocal8Bit(argv[1])==QStringLiteral("--prepare-linked-verified-seed")){
+    const auto kind=QString::fromLocal8Bit(argv[3]);if(kind!="single"&&kind!="multi"&&kind!="one-multi"&&kind!="v2-tail"){return 2;}return prepareLinkedVerifiedSeedReceipt(QString::fromLocal8Bit(argv[2]),kind,QString::fromLocal8Bit(argv[4]));
   }
   ManagedDownloadTests tests;return QTest::qExec(&tests,argc,argv);
 }

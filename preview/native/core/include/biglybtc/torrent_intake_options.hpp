@@ -4,6 +4,8 @@
 #include <optional>
 #include <limits>
 #include <string_view>
+#include <string>
+#include <vector>
 namespace biglybtc::core {
 // Original downloads.config maxdl/maxul byte rates. Zero is unlimited; negative
 // original disabled values are deliberately outside this pre-add control.
@@ -33,6 +35,33 @@ inline bool validTorrentIntakeSaveName(std::string_view value) noexcept {
     if(code<minimum||code>0x10ffff||(code>=0xd800&&code<=0xdfff)){return false;}
   }
   return visible;
+}
+// Explicit original-index destinations. Missing override inherits source
+// initial_linkage; present empty clears it. The final filename is converted by
+// the held original filename policy; an explicit parent is never rewritten.
+struct TorrentIntakeFileDestination {
+  std::uint32_t index=0;
+  std::string path;
+  bool operator==(const TorrentIntakeFileDestination&)const=default;
+};
+using TorrentIntakeFileDestinations=std::vector<TorrentIntakeFileDestination>;
+inline bool validTorrentIntakeFilePath(std::string_view value) noexcept {
+  if(value.size()<2||value.size()>4096||value.front()!='/'||value.back()=='/'){return false;}
+  std::size_t begin=1;
+  while(begin<value.size()){
+    const auto end=value.find('/',begin);
+    if(!validTorrentIntakeSaveName(value.substr(begin,end==std::string_view::npos?value.size()-begin:end-begin))){return false;}
+    if(end==std::string_view::npos){return true;}begin=end+1;
+  }
+  return false;
+}
+inline bool validTorrentIntakeFileDestinations(const TorrentIntakeFileDestinations& values) noexcept {
+  if(values.size()>4096){return false;}std::size_t bytes=0;std::uint32_t previous=0;bool first=true;
+  for(const auto& value:values){
+    if(value.index>=100000||(!first&&value.index<=previous)||!validTorrentIntakeFilePath(value.path)||value.path.size()>4*1024*1024-bytes){return false;}
+    bytes+=value.path.size();previous=value.index;first=false;
+  }
+  return true;
 }
 // DownloadManagerState.AT_FLAGS / PIF Download.FLAG_SEQUENTIAL_DOWNLOAD.
 inline constexpr std::int64_t OriginalSequentialDownloadFlag=0x00002000;

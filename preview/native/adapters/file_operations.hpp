@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace biglybtc::storage {
-enum class FileOperationKind { RemoveKeepData, RemoveDeleteData, Relocate, Relink, SetFilePolicies, MoveFile, RetargetFile, RevertFile, RemoveRecycleData };
+enum class FileOperationKind { RemoveKeepData, RemoveDeleteData, Relocate, Relink, SetFilePolicies, MoveFile, RetargetFile, RevertFile, RemoveRecycleData, ReplaceFile };
 struct FileOperationRequest {
   core::TorrentHash hash;
   FileOperationKind kind = FileOperationKind::RemoveKeepData;
@@ -43,6 +43,11 @@ struct FileOperationArchive {
   std::uint64_t bytes=0;
   bool present=false,internalState=false;
 };
+struct FileOperationPreimage {
+  std::filesystem::path path; // Exact prior destination retained after successful replacement.
+  std::uint64_t bytes=0;
+  std::string sha256;
+};
 struct FileOperationPreview {
   FileOperationKind kind = FileOperationKind::RemoveKeepData;
   core::TorrentHash hash;
@@ -54,13 +59,14 @@ struct FileOperationPreview {
   bool crossDevice = false, requiresRecheck = false;
   std::optional<FileOperationArchive> torrentArchive;
   std::optional<FileOperationArchive> torrentArchiveBackup;
+  std::optional<FileOperationPreimage> replacement;
 };
 struct FileOperationConfirmation {
   std::string approvalScopeDigest;
   bool deleteConfirmed = false;
   bool archiveConfirmed = false;
 };
-enum class FileOperationStage { JournalSynced, DestinationPublished, CachePublished, StatePublished, InventoryPublished, SourceRemoved, StateRemoved, Completed, ArchiveRemoved, ArchiveFileRemoved, TrashInfoPublished };
+enum class FileOperationStage { JournalSynced, DestinationPublished, CachePublished, StatePublished, InventoryPublished, SourceRemoved, StateRemoved, Completed, ArchiveRemoved, ArchiveFileRemoved, TrashInfoPublished, PreimageDirectorySealed, PreimagePreserved };
 struct FileOperationResult {
   FileOperationKind kind;
   core::TorrentHash hash;
@@ -68,6 +74,7 @@ struct FileOperationResult {
   bool recovered = false;
   bool torrentArchiveDeleted=false;
   std::uint64_t filesRecycled=0;
+  std::optional<std::filesystem::path> retainedPreimage{};
 };
 class PreparedFileOperation final {
 public:

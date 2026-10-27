@@ -138,6 +138,7 @@ Truth firstPriority(const QueuePolicy& p,const QueueTorrentFacts& f,const Swarm&
       &&s.seeds/s.peers>=p.firstPriorityIgnoreSeedPeerRatio){return {};}
   if(p.firstPriorityIgnoreZeroPeers&&s.valid&&s.peers==0){return {};}
   if(p.firstPriorityIgnoreIdleMinutes>0){
+    if(!f.idleUploadSourceKnown){return {false,false};}
     const auto idle=f.secondsSinceLastUpload?f.secondsSinceLastUpload:f.secondsSeeding;
     if(idle&&*idle>60LL*p.firstPriorityIgnoreIdleMinutes){return {};}
   }

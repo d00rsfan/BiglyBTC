@@ -48,13 +48,15 @@ struct VerifiedExistingScope::Data {
   std::string encoded;
   existing_scope::Dirs directories;
   std::map<std::size_t,Leaf> files;
+  bool mapped=false;
 };
 const std::string& VerifiedExistingScope::encoded() const noexcept {return data_->encoded;}
+bool VerifiedExistingScope::mapped() const noexcept {return data_->mapped;}
 std::expected<VerifiedExistingScope,Error> VerifiedExistingScope::decode(const Node& node) {
   try {
     using namespace existing_scope;
     require(node.type==Node::Type::Dictionary&&node.children.size()==20,ErrorCode::InvalidFormat,"Unknown existing scope fields");uniqueKeys(node);
-    require(integerField(node,"version")==1,ErrorCode::Unsupported,"Unknown existing scope version");
+    const auto version=integerField(node,"version");require(version==1||version==2,ErrorCode::Unsupported,"Unknown existing scope version");
     const auto swarm=integerField(node,"swarm");require(swarm==1||swarm==2,ErrorCode::InvalidFormat,"Invalid existing scope selection");
     require(field(node,"selected",Node::Type::Bytes).bytes.size()==20,ErrorCode::InvalidFormat,"Invalid existing selected identity");
     for(const auto* key:{"info","layers"}) {const auto value=field(node,key,Node::Type::Bytes).bytes;
@@ -62,7 +64,7 @@ std::expected<VerifiedExistingScope,Error> VerifiedExistingScope::decode(const N
     const auto v1=field(node,"v1",Node::Type::Bytes).bytes.size(),v2=field(node,"v2",Node::Type::Bytes).bytes.size();
     require((v1==0||v1==20)&&(v2==0||v2==32)&&(swarm==1?v1==20:v2==32),ErrorCode::InvalidFormat,"Invalid existing full identities");
     const fs::path root(field(node,"root",Node::Type::Bytes).bytes);fileop::pathShape(root);
-    auto data=std::make_shared<Data>();data->encoded=existing_scope::encoded(node);
+    auto data=std::make_shared<Data>();data->encoded=existing_scope::encoded(node);data->mapped=version==2;
     require(data->encoded.size()<=MaximumBytes,ErrorCode::Unsupported,"Existing scope exceeds journal bound");
     const auto& directories=field(node,"dirs",Node::Type::List);
     require(!directories.children.empty()&&directories.children.size()<=MaximumDirectories,ErrorCode::Unsupported,"Existing scope directory bound");
@@ -82,7 +84,7 @@ std::expected<VerifiedExistingScope,Error> VerifiedExistingScope::decode(const N
       const auto index=integerField(entry,"index");
       require(index>=0&&index<100000&&index>previousIndex&&std::in_range<std::size_t>(index),ErrorCode::InvalidFormat,"Duplicate/invalid existing file index");
       const fs::path path(field(entry,"path",Node::Type::Bytes).bytes);fileop::pathShape(path);
-      require(inside(path,root)&&paths.insert(path).second,ErrorCode::InvalidFormat,"Existing scope path is outside its root or duplicated");
+      require((version==2||inside(path,root))&&paths.insert(path).second,ErrorCode::InvalidFormat,"Existing scope path is outside its root or duplicated");
       const auto& values=field(entry,"stamp",Node::Type::List);
       require(values.children.size()==10&&std::ranges::all_of(values.children,[](const auto& v){return v.type==Node::Type::Integer;}),ErrorCode::InvalidFormat,"Invalid existing leaf stamp");
       for(const auto n:{0U,1U,2U,3U,4U,5U}) {require(values.children[n].integer>=0,ErrorCode::InvalidFormat,"Negative existing stat identity");}
@@ -97,20 +99,22 @@ std::expected<VerifiedExistingScope,Error> VerifiedExistingScope::decode(const N
 }
 std::expected<VerifiedExistingScope,Error> VerifiedExistingScope::capture(const ProfileLease& lease,
     const core::Document& source,const compat::OriginalLayout& layout,const OriginalTorrentIdentity& identity,
-    const fs::path& directory,std::string_view leaf) {
+    const fs::path& directory,std::string_view leaf,std::span<const fs::path> exactPaths) {
   try {
     using namespace existing_scope;
     require(core::validTorrentIntakeSaveName(leaf),ErrorCode::UnsafePath,"Existing scope requires a safe destination leaf");
     const auto root=directory/fs::path(leaf);fileop::pathShape(root);const fs::path profile=fileop::profilePath(lease);
     require(!inside(root,profile)&&!inside(profile,root),ErrorCode::UnsafePath,"Existing payload overlaps the held profile");
     for(const auto& part:root.relative_path()){require(part!=".git"&&!part.native().starts_with(".BiglyBTC"),ErrorCode::UnsafePath,"Existing payload overlaps reserved paths");}
-    Dirs dirs;std::string files="l";std::size_t count=0;
+    const bool mapped=!exactPaths.empty();require(!mapped||exactPaths.size()==layout.files.size(),ErrorCode::InvalidFormat,"Existing mapped scope differs from original indices");
+    Dirs dirs;std::string files="l";std::size_t count=0;std::set<fs::path> actualPaths;
     require(!layout.files.empty()&&layout.files.size()<=100000,ErrorCode::Unsupported,"Existing original file bound");
     for(std::size_t index=0;index<layout.files.size();++index) {
-      const auto& file=layout.files[index];if(file.padding){continue;}
+      const auto& file=layout.files[index];if(file.padding){require(!mapped||exactPaths[index].empty(),ErrorCode::InvalidFormat,"Virtual padding cannot have a mapped scope path");continue;}
       require(++count<=MaximumFiles&&file.bytes>=0,ErrorCode::Unsupported,"Existing real file bound");
-      const auto path=layout.multifile?root/fs::path(file.path):root;fileop::pathShape(path);
-      require(inside(path,root),ErrorCode::UnsafePath,"Existing leaf escapes its chosen root");
+      const auto path=mapped?exactPaths[index]:(layout.multifile?root/fs::path(file.path):root);fileop::pathShape(path);
+      require((mapped||inside(path,root))&&!inside(path,profile)&&!inside(profile,path)&&actualPaths.insert(path).second,ErrorCode::UnsafePath,"Existing leaf escapes or aliases its approved scope");
+      for(const auto& part:path.relative_path()){require(part!=".git"&&!part.native().starts_with(".BiglyBTC"),ErrorCode::UnsafePath,"Existing mapped leaf overlaps reserved paths");}
       auto parentFd=parent(path.parent_path(),[&](const fs::path& prefix,const struct stat& value){
         const auto identity=std::pair{number(value.st_dev),number(value.st_ino)};
         const auto [found,inserted]=dirs.emplace(prefix.string(),identity);
@@ -132,7 +136,7 @@ std::expected<VerifiedExistingScope,Error> VerifiedExistingScope::capture(const 
     auto encoded="d"+b("dirs")+directories+b("files")+files+b("info")+b(fileop::digest(rawInfo))
         +b("layers")+b(fileop::digest(layers))+b("root")+b(root.string())
         +b("selected")+b(std::string_view(reinterpret_cast<const char*>(key.data()),key.size()))
-        +b("swarm")+i(identity.selected==OriginalSelectedHash::V1?1:2)+b("v1")+b(bytes(identity.full.v1))+b("v2")+b(bytes(identity.full.v2))+b("version")+"i1ee";
+        +b("swarm")+i(identity.selected==OriginalSelectedHash::V1?1:2)+b("v1")+b(bytes(identity.full.v1))+b("v2")+b(bytes(identity.full.v2))+b("version")+i(mapped?2:1)+'e';
     require(encoded.size()<=MaximumBytes,ErrorCode::Unsupported,"Existing scope exceeds journal bound");
     auto document=parse(std::move(encoded));auto result=take(decode(document.root()));
     for(const auto& [index,file]:result.data_->files){
@@ -145,8 +149,8 @@ std::expected<VerifiedExistingScope,Error> VerifiedExistingScope::capture(const 
   catch(...){return std::unexpected(Error{ErrorCode::Io,"Cannot capture existing payload scope"});}
 }
 std::expected<void,Error> VerifiedExistingScope::validate(const ProfileLease& lease,const core::Document& source,
-    const compat::OriginalLayout& layout,const OriginalTorrentIdentity& identity,const fs::path& directory,std::string_view leaf) const {
-  const auto now=capture(lease,source,layout,identity,directory,leaf);if(!now){return std::unexpected(now.error());}
+    const compat::OriginalLayout& layout,const OriginalTorrentIdentity& identity,const fs::path& directory,std::string_view leaf,std::span<const fs::path> exactPaths) const {
+  const auto now=capture(lease,source,layout,identity,directory,leaf,exactPaths);if(!now){return std::unexpected(now.error());}
   if(now->encoded()!=encoded()){return std::unexpected(Error{ErrorCode::Conflict,"Approved existing payload subject/path/identity changed"});}return {};
 }
 std::expected<VerifiedExistingScope::Proof,Error> VerifiedExistingScope::bind(std::size_t index,const fs::path& path,int descriptor) const {

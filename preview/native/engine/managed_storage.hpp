@@ -33,6 +33,7 @@ struct ManagedQueueMetadata {
   std::int64_t position = 1, downloaded = 0, uploaded = 0, discarded = 0, hashFailed = 0;
   std::int64_t secondsDownloading = 0, secondsSeeding = 0;
   std::optional<std::int32_t> minimumShareRatio, maximumShareRatio;
+  std::int32_t secondsSinceUpload=-1;
   std::optional<std::string> aggregateScrapeCache;
   std::optional<std::int64_t> legacyScrapeCache;
   std::optional<std::vector<std::array<unsigned char,32>>> trackerOrder;
@@ -83,7 +84,8 @@ public:
   std::expected<void,storage::Error> checkpoint(const storage::ProfileLease&,
       std::span<const std::uint8_t> verifiedPieces,bool allComplete,
       std::int64_t downloaded,std::int64_t uploaded,
-      std::int64_t secondsDownloading = 0, std::int64_t secondsSeeding = 0);
+      std::int64_t secondsDownloading = 0, std::int64_t secondsSeeding = 0,
+      std::optional<std::int32_t> secondsSinceUpload = {});
 private:
   struct Impl;
   explicit ManagedStorage(std::unique_ptr<Impl>);

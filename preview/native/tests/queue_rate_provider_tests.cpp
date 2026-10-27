@@ -106,6 +106,26 @@ void sendChannelsKeepActualGlobalCombinedAndTargetPayloadOwnership() {
   need(!target.observe(sample(5,4000,1000000,QueueRateScope::TargetPayload,10),4),"Reopened admission cannot inherit rate or gap bytes");
   need(!global.observe(sample(4,3000,30000,QueueRateScope::TargetPayload),3),"Scope switch rebaselines rather than reusing global authority");
 }
+void equalMillisRetainsAcceptedHistoryAndPendingDelta() {
+  QueueSendRateSmoothing target;
+  need(!target.observe(sample(1,0,0,QueueRateScope::TargetPayload),0),"Actual send baseline");
+  need(target.observe(sample(2,1000,3000,QueueRateScope::TargetPayload),1)==0,"Current bucket excluded");
+  need(target.observe(sample(3,2000,6000,QueueRateScope::TargetPayload),2)==100,"Actual positive source rate");
+  need(target.observe(sample(4,2000,6000,QueueRateScope::TargetPayload),2)==100,"New sequence in same millisecond retains positive history");
+  need(target.observe(sample(5,2000,9000,QueueRateScope::TargetPayload),2)==100,"Same tick retains uncharged actual bytes");
+  need(!target.observe(sample(4,2000,6000,QueueRateScope::TargetPayload),2),"Stale sequence remains rejected without resetting history");
+  need(target.observe(sample(6,3000,12000,QueueRateScope::TargetPayload),3)==200,"Next genuine tick excludes its current bucket");
+  need(target.observe(sample(7,4000,12000,QueueRateScope::TargetPayload),4)==400,"Pending same-millisecond bytes are charged exactly once");
+  need(!target.observe(sample(8,3999,12000,QueueRateScope::TargetPayload),4),"Actual clock regression still withdraws history");
+  QueueGlobalReceiveAverage global;
+  need(!global.observe(sample(1,0,0)),"Actual combined baseline");
+  need(global.observe(sample(2,1500,1536))==1,"Actual combined source rate");
+  need(global.observe(sample(3,1500,3072))==1,"Equal-millisecond combined observation keeps the current rate");
+  need(global.observe(sample(4,3000,4608))==1,"Next actual combined interval includes pending bytes once");
+  QueueSmoothedEta cached;
+  need(cached.observe(eta(1,1000,1000,10000,9000,100))==100,"Actual ETA facts");
+  need(cached.observe(eta(2,1000,1000,1,1,100))==100,"Equal-millisecond accepted ETA keeps the original cache");
+}
 void etaSourceRemainingCacheAndZeroRate() {
   QueueSmoothedEta source;
   need(source.observe(eta(1, 0, 1000, 10000, 9000, 100)) == 100, "Max of actual remaining facts");
@@ -137,7 +157,7 @@ int main() {
   try {
     for (auto method : {globalSourceWarmupAndNominalConversion, globalBoundedHistoryAndExtremes,
         globalUnknownScopeResetAndStale, globalDiscontinuities, payloadUsesSourceWindowAndNotInstantRate,
-        smoothingOldIntervalAndPendingDelta, smoothingGapsAndBounds, sendChannelsKeepActualGlobalCombinedAndTargetPayloadOwnership, etaSourceRemainingCacheAndZeroRate,
+        smoothingOldIntervalAndPendingDelta, smoothingGapsAndBounds, sendChannelsKeepActualGlobalCombinedAndTargetPayloadOwnership, equalMillisRetainsAcceptedHistoryAndPendingDelta, etaSourceRemainingCacheAndZeroRate,
         etaUnknownCompletionAndExtremes}) { method(); ++families; }
     std::cout << "PASS " << families << " queue-rate-provider families; " << assertions
               << " assertions; explicit primitives only, no sampler or whole-scheduler equality\n";

@@ -51,7 +51,7 @@ QueueObservedFacts QueueOwnerObservations::facts(std::int64_t now) const noexcep
     if(seedStarted_){seed=sourceQueueSum(seed,(now-*seedStarted_)/1000);}
     result.runningMillis=now-*started_;result.seedingMillis=seedStarted_?now-*seedStarted_:0;
   }
-  result.durations=QueueObservedDurations{down,seed};
+  result.durations=QueueObservedDurations{down,seed};result.idleEpoch=idleEpoch_;
   auto seeds=0,peers=0;
   if(aggregate_){
     if(aggregate_->started>0){
@@ -85,12 +85,16 @@ bool QueueOwnerObservations::observe(const QueueObservation& event) noexcept {
   sequence_=event.sequence;lastMillis_=now;
   if(kind==QueueObservationKind::StartedDownload||kind==QueueObservationKind::StartedSeed){
     if(started_){lost_=true;return false;}
+    const auto epoch=idleEpoch_?idleEpoch_->number:0;
+    if(epoch==std::numeric_limits<std::uint64_t>::max()){lost_=true;return false;}
+    idleEpoch_=QueueIdleEpoch{epoch+1,event.observedWallMillis,{}};
     started_=now;startedWall_=event.observedWallMillis;
     if(kind==QueueObservationKind::StartedSeed){seedStarted_=now;seedStartedWall_=event.observedWallMillis;}
     else{seedStarted_.reset();seedStartedWall_.reset();}
   }else if(kind==QueueObservationKind::Finished){if(started_&&!seedStarted_){seedStarted_=now;seedStartedWall_=event.observedWallMillis;}}
   else if(kind==QueueObservationKind::Unfinished){seedStarted_.reset();seedStartedWall_.reset();}
   else if(kind==QueueObservationKind::Stopped){
+    if(started_&&idleEpoch_){idleEpoch_->stoppedWallMillis=event.observedWallMillis;}
     const auto current=facts(now);
     if(!current.durations){lost_=true;return false;}
     downloadBase_=current.durations->downloading;seedBase_=current.durations->seeding;
@@ -118,4 +122,71 @@ bool QueueOwnerObservations::observe(const QueueObservation& event) noexcept {
   }
   return true;
 }
+namespace {
+std::int32_t idleInt(std::int64_t value) noexcept {return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(value));}
+std::int32_t idleAdd(std::int32_t value,std::int64_t now,std::int64_t start) noexcept {
+  if(value<0){return value;}
+  const auto elapsed=std::bit_cast<std::int64_t>(static_cast<std::uint64_t>(now)-static_cast<std::uint64_t>(start));
+  return idleInt(sourceQueueSum(value,std::max<std::int64_t>(0,elapsed)/1000));
+}
+}
+std::int32_t sourceQueuePeerIdleSeconds(std::int64_t wall,std::int32_t& last) noexcept {
+  if(last==0){return -1;}
+  const auto now=idleInt(wall/1000);if(now<last){last=now;}
+  return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(now)-static_cast<std::uint32_t>(last));
+}
+QueueIdleUploadValue QueueIdleUploadAge::observe(const QueueIdleUploadSample& value) noexcept {
+  if(lost_||!value.admission||!value.sequence||!value.epoch.number||value.rawPayloadSent<0
+      ||value.cumulativePayloadSent<value.rawPayloadSent){return {};}
+  if(admission_&&(admission_!=value.admission||value.cumulativePayloadSent<cumulative_)){
+    lost_=true;return {};
+  }
+  if(value.sequence<=sequence_){return {};}
+  if(epoch_&&value.epoch.number<epoch_){lost_=true;return {};}
+  const bool changed=value.epoch.number!=epoch_;
+  if(changed){
+    if(epoch_){baseKnown_=stopped_&&baseKnown_&&value.epoch.number==epoch_+1;}
+    else if(value.epoch.number!=1){baseKnown_=false;}
+    sourceLastSent_.reset();lastSentSeconds_=0;stopped_=false;raw_=0;
+  }else if(value.rawPayloadSent<raw_){lost_=true;return {};}
+  if(value.epoch.number==1&&value.cumulativePayloadSent!=value.rawPayloadSent){lost_=true;return {};}
+  const auto previousRaw=raw_,previousCumulative=cumulative_;
+  const bool previouslyStopped=stopped_;
+  admission_=value.admission;sequence_=value.sequence;epoch_=value.epoch.number;
+  raw_=value.rawPayloadSent;cumulative_=value.cumulativePayloadSent;
+  const bool active=!value.epoch.stoppedWallMillis;
+  if(previouslyStopped&&!active){
+    if(previousCumulative!=cumulative_){baseKnown_=false;}
+    return baseKnown_?QueueIdleUploadValue{true,base_}:QueueIdleUploadValue{};
+  }
+  const auto finishBase=[&](std::int64_t wall)->QueueIdleUploadValue {
+    return baseKnown_?QueueIdleUploadValue{true,idleAdd(base_,wall,value.epoch.startedWallMillis)}:QueueIdleUploadValue{};
+  };
+  const auto peerIdle=[&](std::int64_t wall)->QueueIdleUploadValue {
+    if(!sourceLastSent_){return {};}
+    const auto age=sourceQueuePeerIdleSeconds(wall,lastSentSeconds_);
+    return age>=0?QueueIdleUploadValue{true,age}:finishBase(wall);
+  };
+  QueueIdleUploadValue result;
+  if(active){
+    if(raw_>0){
+      if(!value.lastPayloadWallMillis){return {};}
+      if(!sourceLastSent_||raw_>previousRaw){sourceLastSent_=value.lastPayloadWallMillis;lastSentSeconds_=idleInt(*sourceLastSent_/1000);}
+      else if(sourceLastSent_!=value.lastPayloadWallMillis){lost_=true;return {};}
+      result=peerIdle(value.nowWallMillis);
+    }else{result=finishBase(value.nowWallMillis);}
+  }else{
+    const auto stopped=*value.epoch.stoppedWallMillis;
+    // A same-epoch accepted active sample must have observed every payload byte
+    // before its actual stop. No reconstruction across a missed/reset epoch.
+    if(raw_>0){
+      if(changed||previousRaw!=raw_||previousCumulative!=cumulative_
+          ||sourceLastSent_!=value.lastPayloadWallMillis){result={};}
+      else{result=peerIdle(stopped);}
+    }else{result=finishBase(stopped);}
+    stopped_=true;baseKnown_=result.known;if(result.known){base_=result.seconds;}
+  }
+  return result;
+}
+
 }

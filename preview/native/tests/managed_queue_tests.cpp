@@ -136,13 +136,16 @@ private slots:
     QVERIFY(!test::receiveVerifiedSeed(*service,actual).isEmpty());QVERIFY(service->poll());
     const auto uploaded=status(*service,*fixture.hash);QVERIFY(uploaded&&!uploaded->failure&&uploaded->sent>0&&uploaded->admission==admission);
     QVERIFY(uploaded->diskReadLatencyMillis&&uploaded->diskWriteLatencyMillis);
+    QVERIFY(uploaded->queueIdleUploadSeconds&&*uploaded->queueIdleUploadSeconds>=0);
     QVERIFY(*uploaded->diskReadLatencyMillis>=0&&*uploaded->diskWriteLatencyMillis>=0);
-    QVERIFY(service->stopManaged(*fixture.hash));const auto stopping=status(*service,*fixture.hash);QVERIFY(stopping&&!stopping->diskReadLatencyMillis&&!stopping->diskWriteLatencyMillis);
+    QVERIFY(service->stopManaged(*fixture.hash));const auto stopping=status(*service,*fixture.hash);QVERIFY(stopping&&!stopping->diskReadLatencyMillis&&!stopping->diskWriteLatencyMillis&&!stopping->queueIdleUploadSeconds);
     QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=service->poll();const auto current=status(*service,*fixture.hash);return poll&&current&&!current->failure&&!current->retained;})(),10000);
     const auto retired=status(*service,*fixture.hash);QVERIFY(retired&&!retired->diskReadLatencyMillis&&!retired->diskWriteLatencyMillis);
+    const auto checkpointed=parsed(test::read(fixture.stateFile));const auto* attributes=checkpointed.find("attributes");QVERIFY(attributes);
+    const auto* savedIdle=attributes->find("timesinceul");QVERIFY(savedIdle&&savedIdle->type==core::Node::Type::Integer&&savedIdle->integer>=0);
     QVERIFY(service->startManaged(lease,{.hash=*fixture.hash}));
     QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=service->poll();const auto current=status(*service,*fixture.hash);return poll&&current&&!current->failure&&current->admission>admission&&current->complete&&current->diskReadLatencyMillis&&current->diskWriteLatencyMillis;})(),10000);
-    const auto fresh=status(*service,*fixture.hash);QVERIFY(fresh);QCOMPARE(fresh->sent,std::int64_t{0});QCOMPARE(*fresh->diskWriteLatencyMillis,std::int64_t{0});
+    const auto fresh=status(*service,*fixture.hash);QVERIFY(fresh);QCOMPARE(fresh->sent,std::int64_t{0});QCOMPARE(*fresh->diskWriteLatencyMillis,std::int64_t{0});QVERIFY(fresh->queueIdleUploadSeconds);QVERIFY(*fresh->queueIdleUploadSeconds>=savedIdle->integer);
     const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(fixture.intact());
   }
 

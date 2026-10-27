@@ -37,12 +37,13 @@ bool hexadecimal(const QString& value) {
 bool valid(const FileOperationRequest& value) {
   return value.session&&value.request&&value.revision&&value.target.generation
       &&(value.target.hash.size()==40||value.target.hash.size()==64)&&hexadecimal(value.target.hash)
-      &&static_cast<unsigned>(value.operation)<=6&&bounded(value.destinationParent)
+      &&static_cast<unsigned>(value.operation)<=7&&bounded(value.destinationParent)
       &&((static_cast<unsigned>(value.operation)>=4&&value.originalIndex>=0&&value.originalIndex<100000)||(static_cast<unsigned>(value.operation)<4&&value.originalIndex==-1))
       &&(value.operation==FileOperation::RemoveDeleteData||!value.recyclePayload.value_or(false))
       &&(static_cast<unsigned>(value.operation)<2||!value.deleteTorrentFile.value_or(false));
 }
-bool fileMapping(FileOperation operation){return operation>=FileOperation::MoveFile&&operation<=FileOperation::RevertFile;}
+bool fileMapping(FileOperation operation){return operation>=FileOperation::MoveFile&&operation<=FileOperation::ReplaceFile;}
+bool needsConfirmation(FileOperation operation){return operation==FileOperation::RemoveDeleteData||operation==FileOperation::ReplaceFile;}
 bool moves(FileOperation operation) { return operation==FileOperation::Relocate||operation==FileOperation::Relink||fileMapping(operation); }
 bool destinationRequired(FileOperation operation){return moves(operation)&&operation!=FileOperation::RevertFile;}
 QString title(FileOperation operation) {
@@ -53,6 +54,7 @@ QString title(FileOperation operation) {
     case FileOperation::Relink:return QStringLiteral("Locate existing torrent data");
     case FileOperation::MoveFile:return QStringLiteral("Rename or move one file");
     case FileOperation::RetargetFile:return QStringLiteral("Use an existing file and recheck");
+    case FileOperation::ReplaceFile:return QStringLiteral("Replace destination, retain prior file");
     case FileOperation::RevertFile:return QStringLiteral("Move back to original file path");
   }
   return {};
@@ -61,7 +63,9 @@ bool valid(const FileOperationPlanPacket& value) {
   if(!valid(value.request)||value.approvalScopeDigest.size()!=64||!hexadecimal(value.approvalScopeDigest)
       ||value.paths.size()>MaximumPaths||!bounded(value.sourceRoot)||!bounded(value.targetRoot)) {return false;}
   if(fileMapping(value.request.operation)&&value.paths.size()!=1){return false;}
-  if((value.request.operation==FileOperation::MoveFile||value.request.operation==FileOperation::RetargetFile)&&value.paths.front().destination!=value.request.destinationParent){return false;}
+  if((value.request.operation==FileOperation::MoveFile||value.request.operation==FileOperation::RetargetFile||value.request.operation==FileOperation::ReplaceFile)&&value.paths.front().destination!=value.request.destinationParent){return false;}
+  if(value.request.operation==FileOperation::ReplaceFile){if(value.retainedPreimage.isEmpty()||!bounded(value.retainedPreimage)||!QDir::isAbsolutePath(value.retainedPreimage)||value.priorDestinationSha256.size()!=64||!hexadecimal(value.priorDestinationSha256)){return false;}}
+  else if(!value.retainedPreimage.isEmpty()||!value.priorDestinationSha256.isEmpty()||value.priorDestinationBytes){return false;}
   if(value.recyclePayload&&value.request.operation!=FileOperation::RemoveDeleteData){return false;}
   if(value.request.recyclePayload&&*value.request.recyclePayload!=value.recyclePayload){return false;}
   if(value.request.deleteTorrentFile&&*value.request.deleteTorrentFile!=value.deleteTorrentFile){return false;}
@@ -132,8 +136,8 @@ struct FileOperationDialog::Impl {
     }
     if(recycle){recycle->setEnabled(editable&&active.operation==FileOperation::RemoveDeleteData);}if(!alive.current()){return false;}
     if(archive){archive->setEnabled(editable&&!moves(active.operation));}if(!alive.current()){return false;}
-    if(confirm){confirm->setEnabled(editable&&accepted&&active.operation==FileOperation::RemoveDeleteData);}if(!alive.current()){return false;}
-    if(execute){execute->setEnabled(editable&&accepted&&(active.operation!=FileOperation::RemoveDeleteData||(confirm&&confirm->isChecked())));}if(!alive.current()){return false;}
+    if(confirm){confirm->setEnabled(editable&&accepted&&needsConfirmation(active.operation));}if(!alive.current()){return false;}
+    if(execute){execute->setEnabled(editable&&accepted&&(!needsConfirmation(active.operation)||(confirm&&confirm->isChecked())));}if(!alive.current()){return false;}
     if(cancel){cancel->setEnabled(!closing);}return alive.current();
   }
   bool unconfirm() {
@@ -205,7 +209,7 @@ bool FileOperationDialog::beginOperation(quint64 session,quint64 revision,Target
   if(impl_->destination){const auto field=impl_->destination;const bool blocked=field->blockSignals(true);field->setText(impl_->active.destinationParent);if(field){field->blockSignals(blocked);field->setVisible(destinationRequired(operation));}}if(!alive.current()){return false;}
   if(impl_->browse){impl_->browse->setVisible(destinationRequired(operation));}if(!alive.current()){return false;}
   if(impl_->archive){const auto field=impl_->archive;const bool blocked=field->blockSignals(true);field->setChecked(false);if(field){field->blockSignals(blocked);field->setVisible(!moves(operation));}}if(!alive.current()){return false;}
-  if(impl_->confirm){impl_->confirm->setVisible(operation==FileOperation::RemoveDeleteData);}if(!alive.current()||!impl_->unconfirm()){return false;}
+  if(impl_->confirm){impl_->confirm->setVisible(needsConfirmation(operation));}if(!alive.current()||!impl_->unconfirm()){return false;}
   if(impl_->model&&!impl_->model->setPaths({})){return false;}if(!alive.current()){return false;}
   if(!impl_->text(QStringLiteral("Review the data paths before confirming."))||!impl_->controls()||!alive.current()){return false;}
   if(isVisible()){QMetaObject::invokeMethod(this,[alive]{if(alive.current()){alive.self->impl_->prepare();}},Qt::QueuedConnection);}return true;
@@ -229,12 +233,13 @@ bool FileOperationDialog::setPlan(FileOperationPlanPresentation packet) {
   }
   impl_->accepted=std::make_shared<const FileOperationPlanPacket>(*packet);const auto retained=impl_->accepted;
   impl_->recycleChoiceKnown=true;if(impl_->recycle){const auto box=impl_->recycle;const bool blocked=box->blockSignals(true);box->setChecked(retained->recyclePayload);if(box){box->blockSignals(blocked);}}if(!alive.current()){return false;}
-  if(impl_->confirm){impl_->confirm->setText(retained->recyclePayload?QStringLiteral("Move the listed data files to Trash"):QStringLiteral("Delete the listed data files permanently"));}if(!alive.current()){return false;}
+  if(impl_->confirm){impl_->confirm->setText(retained->request.operation==FileOperation::ReplaceFile?QStringLiteral("Replace the reviewed destination and retain its exact prior bytes at the listed preimage path"):retained->recyclePayload?QStringLiteral("Move the listed data files to Trash"):QStringLiteral("Delete the listed data files permanently"));}if(!alive.current()){return false;}
   impl_->archiveChoiceKnown=true;if(impl_->archive){const auto box=impl_->archive;const bool blocked=box->blockSignals(true);box->setChecked(retained->deleteTorrentFile);if(box){box->blockSignals(blocked);}}if(!alive.current()){return false;}
 
-  if(!impl_->unconfirm()){return false;}auto paths=retained->paths;if(retained->deleteTorrentFile){paths.push_back({retained->archivePath,{},retained->archiveBytes,retained->archivePresent});if(!retained->archiveBackupPath.isEmpty()){paths.push_back({retained->archiveBackupPath,{},retained->archiveBackupBytes,retained->archiveBackupPresent});}}
+  if(!impl_->unconfirm()){return false;}auto paths=retained->paths;if(!retained->retainedPreimage.isEmpty()){paths.push_back({retained->request.destinationParent,retained->retainedPreimage,retained->priorDestinationBytes,true});}if(retained->deleteTorrentFile){paths.push_back({retained->archivePath,{},retained->archiveBytes,retained->archivePresent});if(!retained->archiveBackupPath.isEmpty()){paths.push_back({retained->archiveBackupPath,{},retained->archiveBackupBytes,retained->archiveBackupPresent});}}
   if(impl_->model&&!impl_->model->setPaths(std::move(paths))){return false;}if(!alive.current()){return false;}
   if(impl_->summary){impl_->summary->setText(QStringLiteral("%1 present files · %2 missing files · %3 bytes present").arg(retained->presentFiles).arg(retained->missingFiles).arg(retained->totalBytes));}if(!alive.current()){return false;}
+  if(!retained->retainedPreimage.isEmpty()&&impl_->summary){impl_->summary->setText(QStringLiteral("Prior destination: %1 bytes\nSHA256: %2\nRetained preimage: %3").arg(retained->priorDestinationBytes).arg(retained->priorDestinationSha256,retained->retainedPreimage));}if(!alive.current()){return false;}
   if(!impl_->text(retained->archiveInternalState?QStringLiteral("Torrent metadata is internal download state, removed with the library item. Confirm the reviewed plan."):QStringLiteral("Review complete. Confirm to apply this plan."))||!impl_->controls()){return false;}return alive.current();
 }
 bool FileOperationDialog::setProgress(FileOperationProgressPresentation packet) {
@@ -245,15 +250,18 @@ bool FileOperationDialog::setProgress(FileOperationProgressPresentation packet) 
 }
 bool FileOperationDialog::setResult(FileOperationResultPresentation packet) {
   if(!packet||!impl_->executing||packet->request!=impl_->active||(packet->completed&&packet->cancelled)
-      ||(!packet->completed&&!packet->cancelled&&packet->failure.isEmpty())||!impl_->bump()){return false;}
+      ||(!packet->completed&&!packet->cancelled&&packet->failure.isEmpty())
+      ||!bounded(packet->retainedPreimage)
+      ||(packet->completed&&impl_->active.operation==FileOperation::ReplaceFile&&(!impl_->accepted||packet->retainedPreimage!=impl_->accepted->retainedPreimage))
+      ||(impl_->active.operation!=FileOperation::ReplaceFile&&!packet->retainedPreimage.isEmpty())||!impl_->bump()){return false;}
   const auto alive=impl_->guard();const bool close=impl_->closing;impl_->executing=false;impl_->accepted.reset();
-  if(!impl_->text(packet->completed?QStringLiteral("File operation completed."):packet->cancelled?QStringLiteral("File operation cancelled."):packet->failure)||!impl_->controls()||!alive.current()){return false;}
+  if(!impl_->text(packet->completed?(!packet->retainedPreimage.isEmpty()?QStringLiteral("Prior destination retained at %1").arg(packet->retainedPreimage):QStringLiteral("File operation completed.")):packet->cancelled?QStringLiteral("File operation cancelled."):packet->failure)||!impl_->controls()||!alive.current()){return false;}
   if(packet->completed||close){done(packet->completed?QDialog::Accepted:QDialog::Rejected);}return true;
 }
 void FileOperationDialog::accept() {
   if(impl_->busy||impl_->planning||impl_->executing||!impl_->accepted||!impl_->confirm||!impl_->recycle||!impl_->destination||!impl_->archive||!impl_->model
-      ||(impl_->active.operation==FileOperation::RemoveDeleteData&&!impl_->confirm->isChecked())||!impl_->bump()){return;}
-  const FileOperationSubmission value{impl_->accepted,impl_->active.operation==FileOperation::RemoveDeleteData&&impl_->confirm->isChecked(),impl_->accepted->deleteTorrentFile};
+      ||(needsConfirmation(impl_->active.operation)&&!impl_->confirm->isChecked())||!impl_->bump()){return;}
+  const FileOperationSubmission value{impl_->accepted,needsConfirmation(impl_->active.operation)&&impl_->confirm->isChecked(),impl_->accepted->deleteTorrentFile};
   impl_->executing=true;impl_->progress=impl_->completedFiles=0;const auto alive=impl_->guard();
   if(!impl_->text(QStringLiteral("Applying file operation…"))||!impl_->controls()||!alive.current()){return;}emit executeRequested(value);
 }

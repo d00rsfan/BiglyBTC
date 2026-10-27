@@ -9,11 +9,12 @@ storage::FileOperationRequest storageRequest(const ui::FileOperationRequest& req
     case ui::FileOperation::Relink: kind=storage::FileOperationKind::Relink;break;
     case ui::FileOperation::MoveFile: kind=storage::FileOperationKind::MoveFile;break;
     case ui::FileOperation::RetargetFile: kind=storage::FileOperationKind::RetargetFile;break;
+    case ui::FileOperation::ReplaceFile: kind=storage::FileOperationKind::ReplaceFile;break;
     case ui::FileOperation::RevertFile: kind=storage::FileOperationKind::RevertFile;break;
     default: throw Failure{{storage::ErrorCode::Unsupported,"Unknown file operation"}};
   }
   storage::FileOperationRequest value{identity(request.target),kind,{}};
-  const bool file=request.operation>=ui::FileOperation::MoveFile&&request.operation<=ui::FileOperation::RevertFile;
+  const bool file=request.operation>=ui::FileOperation::MoveFile&&request.operation<=ui::FileOperation::ReplaceFile;
   if(file){if(request.originalIndex<0){throw Failure{{storage::ErrorCode::InvalidFormat,"Missing original file index"}};}value.fileIndex=static_cast<std::size_t>(request.originalIndex);
     if(request.operation!=ui::FileOperation::RevertFile){value.fileDestination=std::filesystem::path(request.destinationParent.toUtf8().toStdString());}}
   else{if(request.originalIndex!=-1){throw Failure{{storage::ErrorCode::InvalidFormat,"Unexpected original file index"}};}if(!request.destinationParent.isEmpty()){value.destinationParent=std::filesystem::path(request.destinationParent.toUtf8().toStdString());}}
@@ -25,6 +26,7 @@ bool sameFilePlan(const ui::FileOperationPlanPacket& left,const ui::FileOperatio
       &&left.sourceRoot==right.sourceRoot&&left.targetRoot==right.targetRoot
       &&left.presentFiles==right.presentFiles&&left.missingFiles==right.missingFiles
       &&left.totalBytes==right.totalBytes&&left.failure==right.failure
+      &&left.retainedPreimage==right.retainedPreimage&&left.priorDestinationBytes==right.priorDestinationBytes&&left.priorDestinationSha256==right.priorDestinationSha256
       &&left.deleteTorrentFile==right.deleteTorrentFile&&left.recyclePayload==right.recyclePayload&&left.archivePath==right.archivePath
       &&left.archiveBytes==right.archiveBytes&&left.archivePresent==right.archivePresent&&left.archiveInternalState==right.archiveInternalState
       &&left.archiveBackupPath==right.archiveBackupPath&&left.archiveBackupBytes==right.archiveBackupBytes&&left.archiveBackupPresent==right.archiveBackupPresent
@@ -35,6 +37,7 @@ bool sameFilePlan(const ui::FileOperationPlanPacket& left,const ui::FileOperatio
 ui::FileOperationPlanPresentation filePlanPacket(const ui::FileOperationRequest& request,const storage::FileOperationPreview& p) {
   auto packet=std::make_shared<ui::FileOperationPlanPacket>();packet->request=request;
   packet->approvalScopeDigest=text(p.approvalScopeDigest);packet->sourceRoot=QString::fromStdString(p.sourceRoot.string());packet->targetRoot=QString::fromStdString(p.targetRoot.string());
+  if(p.replacement){packet->retainedPreimage=QString::fromStdString(p.replacement->path.string());packet->priorDestinationBytes=p.replacement->bytes;packet->priorDestinationSha256=text(p.replacement->sha256);}
   packet->recyclePayload=p.kind==storage::FileOperationKind::RemoveRecycleData;
   packet->presentFiles=p.presentFiles;packet->missingFiles=p.missingFiles;packet->totalBytes=p.presentBytes;
   for(const auto& file:p.files){packet->paths.push_back({QString::fromStdString(file.source.string()),QString::fromStdString(file.destination.string()),static_cast<quint64>(std::max<std::int64_t>(0,file.actualBytes)),file.present});}
@@ -136,13 +139,14 @@ bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
           }
         }
       }
+      if(applied->retainedPreimage){result->retainedPreimage=QString::fromStdString(applied->retainedPreimage->string());}
       result->completed=true;
     }catch(const Failure& e){result->failure=text(e.error.message);result->cancelled=e.error.code==storage::ErrorCode::Cancelled;}
     catch(const std::exception& e){result->failure=QString::fromUtf8(e.what());}
     QMetaObject::invokeMethod(this,[this,result]{
       if(result->request.session!=publishedColumnLayoutSession_){return;}guiFileOperation_.reset();emit fileOperationFinished(result);
     },Qt::QueuedConnection);
-    ready(host_?host_->query({}):ui::Presentation{},result->failure.isEmpty()?(result->completed?tr("File operation completed"):tr("File operation cancelled")):result->failure);
+    ready(host_?host_->query({}):ui::Presentation{},result->failure.isEmpty()?(result->completed?(result->retainedPreimage.isEmpty()?tr("File operation completed"):tr("File replaced; prior destination retained at %1").arg(result->retainedPreimage)):tr("File operation cancelled")):result->failure);
   });
   if(accepted){guiFileOperation_=request;}return accepted;
 }
@@ -158,7 +162,9 @@ bool SessionBridge::createTorrent(ui::TorrentCreationRequest request) {
       if(host_->fileRecoveryRequired&&request.options.importAfterCreation){throw Failure{{storage::ErrorCode::Conflict,"Recover the interrupted file operation before importing"}};}
       engine::CreateOptions options;options.source=request.options.source.toUtf8().toStdString();options.output=request.options.output.toUtf8().toStdString();
       std::error_code sourceError;const auto sourceStatus=std::filesystem::symlink_status(options.source,sourceError);
-      const bool sourceKindMatches=request.options.sourceKind==ui::TorrentCreationSource::File?std::filesystem::is_regular_file(sourceStatus):request.options.sourceKind==ui::TorrentCreationSource::Directory&&std::filesystem::is_directory(sourceStatus);
+      options.layoutDescriptor=request.options.sourceKind==ui::TorrentCreationSource::LayoutDescriptor;
+      if(options.layoutDescriptor){options.filenameConversions=take(storage::readOriginalFilenameConversions(host_->lease));}
+      const bool sourceKindMatches=(request.options.sourceKind==ui::TorrentCreationSource::File||options.layoutDescriptor)?std::filesystem::is_regular_file(sourceStatus):request.options.sourceKind==ui::TorrentCreationSource::Directory&&std::filesystem::is_directory(sourceStatus);
       if(sourceError||!sourceKindMatches){throw Failure{{storage::ErrorCode::InvalidFormat,"Selected source type does not match the file or directory"}};}
       if(request.options.pieceSize>std::numeric_limits<std::uint32_t>::max()){throw Failure{{storage::ErrorCode::InvalidFormat,"Invalid piece size"}};}
       switch(request.options.format){

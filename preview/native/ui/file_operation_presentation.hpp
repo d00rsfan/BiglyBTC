@@ -9,7 +9,7 @@
 
 namespace biglybtc::ui {
 
-enum class FileOperation { RemoveKeepData, RemoveDeleteData, Relocate, Relink, MoveFile, RetargetFile, RevertFile };
+enum class FileOperation { RemoveKeepData, RemoveDeleteData, Relocate, Relink, MoveFile, RetargetFile, RevertFile, ReplaceFile };
 struct FileOperationRequest {
   quint64 session=0, request=0, revision=0;
   Target target;
@@ -43,6 +43,8 @@ struct FileOperationPlanPacket {
   quint64 archiveBackupBytes=0;
   bool archiveBackupPresent=false;
   bool recyclePayload=false;
+  QString retainedPreimage,priorDestinationSha256;
+  quint64 priorDestinationBytes=0;
 };
 using FileOperationPlanPresentation=std::shared_ptr<const FileOperationPlanPacket>;
 struct FileOperationSubmission {
@@ -54,6 +56,7 @@ struct FileOperationResultPacket {
   FileOperationRequest request;
   bool completed=false, cancelled=false;
   QString failure;
+  QString retainedPreimage{};
 };
 using FileOperationResultPresentation=std::shared_ptr<const FileOperationResultPacket>;
 struct FileOperationProgressPacket {
@@ -63,7 +66,7 @@ struct FileOperationProgressPacket {
 };
 using FileOperationProgressPresentation=std::shared_ptr<const FileOperationProgressPacket>;
 
-enum class TorrentCreationSource { File, Directory };
+enum class TorrentCreationSource { File, Directory, LayoutDescriptor };
 enum class TorrentCreationFormat { V1, V2, Hybrid };
 struct TorrentCreationOptions {
   TorrentCreationSource sourceKind=TorrentCreationSource::File;

@@ -22,6 +22,7 @@
 #include <libtorrent/hasher.hpp>
 #include "biglybtc/torrent_intake_trackers.hpp"
 #include <algorithm>
+#include <bit>
 #include <cerrno>
 #include <charconv>
 #include <cstring>
@@ -234,10 +235,17 @@ std::function<std::expected<void,Error>()> existingPayloadProof(const Slot& slot
   const auto path=(save/slot.actual).lexically_normal();const auto expected=slot.identity;
   return [parent,path,expected,descriptor]{return validateExistingPayload(path,parent->get(),descriptor,expected);};
 }
-void existingOnlyAttributes(const Node& attributes,bool multifile,std::size_t files) {
+void existingOnlyAttributes(const Node& attributes,bool multifile,std::size_t files,bool approvedLinks=false) {
   require(journals(attributes,multifile,files).empty(),"Existing-only verification cannot complete pending payload names");
-  for(const auto* key:{"filelinks2","incompfilesuffix","dnd_pfx","dnd_sf","dnd_al","BiglyBTC.compactConversion"}){if(const auto* value=attributes.find(key)){
+  if(const auto* links=attributes.find("filelinks2")){require(links->type==Node::Type::List&&(approvedLinks||links->children.empty()),"Existing-only linked verification requires an authenticated mapped scope");}
+  for(const auto* key:{"incompfilesuffix","dnd_pfx","dnd_sf","dnd_al","BiglyBTC.compactConversion"}){if(const auto* value=attributes.find(key)){
     require((value->type==Node::Type::List&&value->children.empty())||(value->type==Node::Type::Bytes&&value->bytes.empty()),"Existing-only verification cannot redirect or complete payload paths");}}
+}
+std::vector<fs::path> existingMappedPaths(const core::SavedDownload& saved,const compat::OriginalLayout& layout,const Node& attributes,const fs::path& save) {
+  std::vector<std::string> bases;for(const auto& file:layout.files){bases.push_back((save/(layout.multifile?fs::path(*saved.saveFile)/file.path:fs::path(*saved.saveFile))).string());}
+  const auto links=compat::resolveOriginalFileLinks(attributes.find("filelinks2"),bases);require(links.has_value(),"Invalid existing mapped file links",ErrorCode::InvalidFormat);
+  std::vector<fs::path> paths(layout.files.size());for(std::size_t n=0;n<layout.files.size();++n){if(layout.files[n].padding){require(!links->byIndex[n],"Virtual padding cannot have an existing mapped target");continue;}paths[n]=links->byIndex[n]?fs::path(links->byIndex[n]->target):fs::path(bases[n]);}
+  return paths;
 }
 std::vector<Slot> plan(const core::SavedDownload& saved, const Node& attributes, const compat::OriginalLayout& layout,
     const std::vector<compat::FilePolicy>& policy, const fs::path& save, const std::vector<Journal>& pending, const fs::path& profile,bool readOnly=false) {
@@ -574,6 +582,9 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     const auto flags=core::originalDownloadFlags(source.find("attributes"));
     require(flags.has_value(),"Invalid original download flags",ErrorCode::InvalidFormat);
     if (const auto* attributes=source.find("attributes")) {
+      if(const auto* idle=attributes->find("timesinceul");idle&&idle->type==core::Node::Type::Integer){
+        queue.secondsSinceUpload=std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(idle->integer));
+      }
       if(const auto* aggregate=attributes->find("agsc");aggregate&&aggregate->type==core::Node::Type::Bytes&&aggregate->bytes.size()<=128){queue.aggregateScrapeCache=std::string(aggregate->bytes);}
       if(const auto* legacy=attributes->find("scrapecache");legacy&&legacy->type==core::Node::Type::Integer){queue.legacyScrapeCache=legacy->integer;}
       if (const auto* parameters=attributes->find("parameters")) {
@@ -633,7 +644,8 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     std::optional<storage::VerifiedExistingScope> approvedScope;
     if(existingOnly){
       if(const auto* scope=row.find(storage::VerifiedExistingScopeKey)){approvedScope=take(storage::VerifiedExistingScope::decode(*scope));
-        done(approvedScope->validate(lease,source,layout,identity,save,saved.saveFile.value_or("")));}
+        const auto paths=approvedScope->mapped()?existingMappedPaths(saved,layout,attributes.root(),save):std::vector<fs::path>{};
+        done(approvedScope->validate(lease,source,layout,identity,save,saved.saveFile.value_or(""),paths));}
       require(!rawSaved.legacySavePath&&rawSaved.saveFile&&(*rawSaved.saveFile==layout.name||approvedScope.has_value()),
           "Existing-only verification requires the canonical original save leaf");
       // metadata() already authenticated the exact original/engine projection,
@@ -649,10 +661,10 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
       }
       require(pending.empty()&&storageDefaults.markers.empty(),
           "Existing-only verification cannot recover/convert original storage controls");
-      existingOnlyAttributes(attributes.root(),layout.multifile,layout.files.size());
+      existingOnlyAttributes(attributes.root(),layout.multifile,layout.files.size(),approvedScope&&approvedScope->mapped());
     }
     auto slots=plan(saved,attributes.root(),layout,*parsedPolicy,save,pending,profilePath,existingOnly);
-    if(existingOnly){for(const auto& slot:slots){if(slot.padding){continue;}require(slot.kind==storage::OriginalStorageKind::Linear&&!slot.expanding&&slot.actual==slot.base
+    if(existingOnly){for(const auto& slot:slots){if(slot.padding){continue;}require(slot.kind==storage::OriginalStorageKind::Linear&&!slot.expanding&&(slot.actual==slot.base||(approvedScope&&approvedScope->mapped()))
           &&slot.data.get()>=0&&slot.identity.st_size==slot.bytes&&slot.identity.st_nlink==1,
           "Existing-only verification requires every complete original linear leaf",ErrorCode::Missing);}}
     const bool mapped=existingOnly||static_cast<std::size_t>(info->num_files())!=slots.size()||std::ranges::any_of(slots,[](const Slot& slot) {return !slot.padding&&(slot.kind!=storage::OriginalStorageKind::Linear||slot.actual.is_absolute()||slot.expanding);});
@@ -690,7 +702,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     require(recheckedRoot.saveDirectory==saved.saveDirectory&&recheckedRoot.saveFile==saved.saveFile,
         "Original save-root interpretation changed during preparation",ErrorCode::Conflict);
     done(storage::applyOriginalStorageDefaults(actual,storageDefaults,true));
-    if(existingOnly){existingOnlyAttributes(actual.root(),layout.multifile,layout.files.size());}
+    if(existingOnly){existingOnlyAttributes(actual.root(),layout.multifile,layout.files.size(),approvedScope&&approvedScope->mapped());}
     {
       auto check=plan(saved,actual.root(),layout,*parsedPolicy,save,journals(actual.root(),layout.multifile,layout.files.size()),profilePath,existingOnly);
       require(check.size()==slots.size(),"Managed mapping changed during preparation",ErrorCode::Conflict);
@@ -800,7 +812,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
 
 std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease& lease,std::span<const std::uint8_t> verified,
     bool complete,std::int64_t received,std::int64_t sent,
-    std::int64_t secondsDownloading,std::int64_t secondsSeeding) {
+    std::int64_t secondsDownloading,std::int64_t secondsSeeding,std::optional<std::int32_t> secondsSinceUpload) {
   try {
     require(impl_!=nullptr,"Managed storage was moved or released",ErrorCode::Conflict); auto& owner=*impl_;
     require(!owner.attempted,"Managed admission checkpoint already attempted",ErrorCode::Conflict);
@@ -872,6 +884,11 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       put(inventory.document(),"downloads",rows+'e');
     }
     owner.attempted=true;
+    if(secondsSinceUpload){
+      auto attributes=dictionary(owner.state.document().find("attributes"));
+      put(attributes,"timesinceul",intValue(*secondsSinceUpload));
+      put(owner.state.document(),"attributes",attributes.serialize());
+    }
     writeProgress(owner.state,counts,verified.size(),complete); done(owner.store.save(lease,owner.state));
     const bool completedFiles=!owner.pending.empty()||std::ranges::any_of(owner.slots,[&](const auto& slot){return !slot.padding&&counts[slot.index]==slot.bytes;});
     if (completedFiles) {

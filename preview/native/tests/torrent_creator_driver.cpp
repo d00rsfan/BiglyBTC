@@ -8,7 +8,7 @@
 // production Host/UI provides its own options; this helper never imports/runs.
 int main(int argc, char** argv) {
   using namespace biglybtc::engine;
-  if (argc != 5 && argc != 6 && argc != 7) { std::cerr << "SOURCE OUTPUT PIECE_SIZE PRIVATE(0|1) required\n"; return 2; }
+  if (argc != 5 && argc != 6 && argc != 7 && argc != 8) { std::cerr << "SOURCE OUTPUT PIECE_SIZE PRIVATE(0|1) required\n"; return 2; }
   CreateOptions options; options.source = argv[1]; options.output = argv[2];
   const std::string_view size(argv[3]);
   const auto parsed = std::from_chars(size.data(), size.data() + size.size(), options.pieceSize);
@@ -17,9 +17,12 @@ int main(int argc, char** argv) {
   options.privateTorrent = std::string_view(argv[4]) == "1";
   if(argc>=6){const std::string_view format(argv[5]);if(format=="v1") options.format=CreateFormat::V1;
     else if(format=="v2") options.format=CreateFormat::V2;else if(format=="hybrid") options.format=CreateFormat::Hybrid;else return 2;}
-  if(argc==7){if(std::string_view(argv[6])!="metadata-extras") return 2;
+  if(argc>=7){const std::string_view mode(argv[6]);if(mode!="metadata-extras"&&mode!="layout-descriptor") return 2;
+    options.layoutDescriptor=mode=="layout-descriptor";
     options.sourceTag="owned π";options.urlSeeds={"https://seeds.invalid/payload"};
-    options.httpSeeds={"http://seeds.invalid/script"};options.dhtBackup=false;options.extraHashes=true;}
+    options.httpSeeds={"http://seeds.invalid/script"};options.dhtBackup=false;
+    options.extraHashes=!(options.layoutDescriptor&&options.format==CreateFormat::V2);}
+  if(argc==8){if(std::string_view(argv[7])!="layout-descriptor") return 2;options.layoutDescriptor=true;}
   options.comment = "Creator – π";
   options.trackerTiers = {{"http://127.0.0.1:19123/announce", "udp://127.0.0.1:19124/announce"},
                          {"https://127.0.0.1:19125/announce"}};
