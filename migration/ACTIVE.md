@@ -1,13 +1,7 @@
-# Migration status — 2026-10-27
+# Migration status — STOP after current milestone
 
-Authenticated existing custom save roots at native `d2796585f5ddf6bd3bd4ae00729b3a8a8fea7a76`: gcc 9 suites, clang 9 suites, san 9 suites pass; 3 new actual original-client cases are recorded.
+Current GCC milestone completed at native `7405a61a7a605c9962cc7a630b06fef25c0a5c66`. Forty affected suites are covered by39 unchanged successful runs and one corrected actual rerun, with source/command/input/image hashes proving reuse. The compatibility chapter is unfinished; the latest user instruction is to stop after this milestone.
 
-Explicit verified-existing intake can authenticate an existing chosen save leaf. A bounded optional scope binds selected/full identity, chosen paths, directory device/inode chains and complete real-file stat snapshots. Journal/recovery, saved-row decoding and managed read-only preparation recheck that scope; actual piece verification and fresh owner proof still precede release. Ordinary renamed downloads retain no-clobber behavior. Raw metainfo, original save-file/title rules and virtual padding remain preserved.
+[Milestone review](evidence/20261027-compatibility-gcc-milestone/REVIEW.md). The original linked/selected11 and allocation2 readbacks, final Clang/ASan/UBSan lanes, and private portable/runtime/GUI qualification remain pending. The previous dist and Wayland preview fix remain in place. Creator empty-file Merkle/linkage defects are reproduced original limitations, not successful comparisons. All CF parents and wider P05–P12 dependencies remain open.
 
-The user-authorized current milestone plus two further milestones are complete. STOPPED after batch10, as requested. Do not start another milestone or the next chapter without new instructions.
-
-Authenticated custom scopes are bounded to 4,096 real files, 8,192 directories and 4MiB of serialized scope, with current-UID single-link regular leaves. Unsupported scopes fail closed. Allocated, skipped/linked/nonlinear existing-data workflows and whole-client/performance/release qualification remain open. Original Java may drop native private saved-row intent/scope when saving: absence follows the established legacy path and never creates read-only authority; retained intent with missing or changed scope refuses verification. All CF01–CF08 remain open. Evidence: [batch10](evidence/20261027-compatibility-batch10/verification.json).
-
-Native main only; three aggregate compiler jobs; existing caches/providers reused. The running original client, real profile/payloads, original ordinary HEAD/index and qualified dist are preserved. No system installation or .deb promotion. Durable checkpoint: `build/compatibility-20261026/checkpoint.json`.
-
-Follow-up bug fix, 2026-10-27: [offline-preview Wayland console workaround](updates/ui.classic_navigation_preview/20261027-wayland-console.md), native `465b8c1c7cde7738d3d530aede104fb1da641da2`. Five subprocess regressions pass; local dist launcher script updated, all other117 leaves/binaries preserved. No new migration milestone/chapter; requested stop boundary remains in force.
+Resume only on a later user instruction. Durable checkpoint: `build/compatibility-chapter-20261027/checkpoint.json`. Native main only; batch checks; at most3 aggregate compiler jobs. Preserve the running original, real profile/payloads and ordinary original HEAD/index.

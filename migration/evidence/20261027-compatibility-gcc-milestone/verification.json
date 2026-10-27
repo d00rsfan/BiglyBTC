@@ -1,0 +1,140 @@
+{
+  "status": "CURRENT_GCC_MILESTONE_COMPLETE_USER_REQUESTED_STOP",
+  "native_source": "7405a61a7a605c9962cc7a630b06fef25c0a5c66",
+  "original_source": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_commits": [
+    "a6a4dd1638ff130aea4bae7ca66ab8ec02a653f6",
+    "ad4a3aab044b3a7e1c187143656bcc065ff7ce41",
+    "de778f563392fb874ece34b8b5b5cf8b0d245144",
+    "644157e3f26e8f287e653cd76aa2dbd83cefad8e",
+    "06ebc5474d1765d3331e00eb492faf341aee67a8",
+    "76cf831a61ecc68ee72ec958bf3667945074d251",
+    "f34be1d8b414c0be2c4b16b442d721765526c383",
+    "61b97612df6aa7b99c569ff712a613cb500bdf0a",
+    "bf4348d3a681083d7b148bc65d344fae885dffac",
+    "fee3a72d85a9d6581b1320105ad06c33ae09924b",
+    "6445069cae4f010f6c463452c91f10814b476ac6",
+    "d14719ddd2714788dc8d0b66e7e6abbeac9f9aeb",
+    "7405a61a7a605c9962cc7a630b06fef25c0a5c66"
+  ],
+  "gcc": {
+    "status": "PASS_GCC40_WITH_EXPLICIT_UNCHANGED_RESULT_REUSE",
+    "source_commit": "7405a61a7a605c9962cc7a630b06fef25c0a5c66",
+    "tests": 40,
+    "actually_reexecuted_tests": [
+      "managed-download"
+    ],
+    "unchanged_passed_tests_reused": [
+      "application-settings",
+      "engine-live-settings",
+      "file-operation-dialog",
+      "file-operation-sequence",
+      "file-operations",
+      "file-operations-host",
+      "file-priority-ui",
+      "managed-combined-counter-domain",
+      "managed-queue",
+      "managed-seeding",
+      "managed-storage",
+      "metadata-disk-router",
+      "network-binding-owner",
+      "network-policy",
+      "network-proxy-capability-foreign-marker",
+      "network-proxy-capability-foreign-webseed-marker",
+      "network-proxy-capability-present-webseed",
+      "network-proxy-owner",
+      "options-host",
+      "original-disk-io",
+      "original-linear-to-compact",
+      "original-storage-controls",
+      "original-storage-defaults",
+      "original-torrent-geometry",
+      "persistent-native-peer-session",
+      "provider-payload-counter",
+      "provider-traffic-runtime-deployment",
+      "provider-traffic-runtime-inputs",
+      "queue-policy",
+      "queue-rate-providers",
+      "queue-target-statistics",
+      "scheduler-host-engine",
+      "selected-swarm-admission",
+      "torrent-creation-dialog",
+      "torrent-creator",
+      "torrent-intake",
+      "torrent-intake-file-options",
+      "torrent-intake-file-options-ui",
+      "torrent-intake-file-options-worker"
+    ],
+    "reuse_before_sha256": "9edb7a8e17e8381b1db502958358c6ef4b32f848fc6d95215ae0ed36af25372e",
+    "current_xml_sha256": "6a06fd0fb30d46641fe015f98d9b783ca97485d7f82124a39d3ed153d996e814",
+    "source_manifest_sha256": "60bb83144e06cfdca4c646ac198dce665989e3515d90e77394fee77d1de367c7",
+    "only_source_change": "preview/native/tests/managed_download_tests.cpp",
+    "all_reused_command_inputs_and_generated_binding_bytes_unchanged": true,
+    "production_unchanged_from": "d14719ddd2714788dc8d0b66e7e6abbeac9f9aeb",
+    "chapter_complete": false,
+    "user_boundary": "Finish current milestone then STOP"
+  },
+  "observations": {
+    "filename": {
+      "result": "filename-conversions/runs/run-r1/result.json",
+      "sha256": "678f256da93831ddd845ecc8012731cc2d56b5e69efbcb1e3bf107a3066c8807",
+      "status": "PASS_ACTUAL_ORIGINAL_LINUX_FILENAME_CONVERSION"
+    },
+    "lan": {
+      "result": "lan-oracle/run-r1/result.json",
+      "sha256": "772f0d9eefd086a511a8dc3f38dc09142352ba9fc5d386120c0b8b23e14ad7e9",
+      "status": "PASS"
+    },
+    "v1_file_operations": {
+      "result": "library-workflows/runs/run-r1/result.json",
+      "sha256": "b0f67dae44daca03c7ad9a63e73ad374e4e12d5c7a23c1c9ede97f978818f8b4",
+      "status": "PASS_ACTUAL_FILE_MAPPING_RECYCLE_ORIGINAL_READY"
+    },
+    "raw_decoder": {
+      "result": "decoder-oracle/amendments/bounded-fallback-helper/runs/run-r1/result.json",
+      "sha256": "e631849ed4874006c1e1c07275cbad0cb3f00334c0f63d393d2c53bded03dc84",
+      "status": "PASS_ACTUAL_ORIGINAL_DECODER_ROUNDTRIP"
+    },
+    "queue_scalars": {
+      "result": "queue-idle/oracle/amendments/interface-provider/oracle/run-r1/result.json",
+      "sha256": "16828abf18ad56a16d0eb859fb2b499d05c5b7c8d2555a97491fd1d50fb4417b",
+      "status": "PASS"
+    },
+    "versioned_file_operations": {
+      "result": "versioned-fileops/runs/run-r1/result.json",
+      "sha256": "b61db0fad3713c57b89e44610dae74850a90ed9625cc5387833e4a1c261048bf",
+      "status": "PASS_ACTUAL_VERSIONED_FILE_MAPPING_RECYCLE_ORIGINAL_READY"
+    },
+    "creator_initial": {
+      "result": "creator-virtual/runs/run-r1/result.json",
+      "sha256": "9e5ba271a4e656286bf2e8081390898f10f32780b52b10c2b2389f9466690c55",
+      "status": "FAIL"
+    },
+    "creator_remaining": {
+      "result": "creator-virtual/runs/run-r2-remaining/result.json",
+      "sha256": "af80dffebcd0be3001000c5373223834b7f1f522945e03290395682ccbca3f7f",
+      "status": "FAIL"
+    },
+    "creator_nonempty": {
+      "result": "creator-virtual/runs/run-r3-nonempty/result.json",
+      "sha256": "485d4fb8e334ce040d7297e05a94c6ff3dee78dd9af643aad5756e908b4eb028",
+      "status": "PASS_ACTUAL_ORIGINAL_CREATOR_NONEMPTY_VIRTUAL_CASES"
+    }
+  },
+  "archive_sha256": "f59fdd798996aa084637794abd7578bb308b936976de36b4e26863bb1ec936f1",
+  "archive_index_sha256": "37d5c818eb3334e55daca2eb71378e9749d22be11f7822f56da75376be8ea33e",
+  "archive_bytes": 26437267,
+  "chapter_complete": false,
+  "cf_parents_closed": [],
+  "dist_promoted": false,
+  "previous_dist_manifest_sha256": "e34ade281e7c8548c837968f7c095042d93862a4e1312f790feba464de3ba421",
+  "original_head_unchanged": true,
+  "original_index_sha256_unchanged": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "pending": [
+    "Original linked/selected11 and allocation stopped2 readback recipes",
+    "Final Clang and leak-enabled ASan/UBSan consumer qualification",
+    "Private GCC/Clang portable runtime/launcher/GUI qualification and dist promotion",
+    "Original creator empty-file Merkle/linkage defects and wider documented compatibility limits"
+  ],
+  "boundary": "Finish current milestone then STOP. Resume only on a later user instruction."
+}

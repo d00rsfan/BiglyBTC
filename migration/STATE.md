@@ -1,5 +1,9 @@
 # BiglyBTC migration state
 
+Current GCC milestone completed at native `7405a61a7a605c9962cc7a630b06fef25c0a5c66`. Forty affected suites are covered by39 unchanged successful runs and one corrected actual rerun, with source/command/input/image hashes proving reuse. The compatibility chapter is unfinished; the latest user instruction is to stop after this milestone.
+Latest boundary: **STOP now**. [Actual milestone evidence and open limits](evidence/20261027-compatibility-gcc-milestone/REVIEW.md). Next work remains original11/2 readbacks, Clang/SAN and portable/dist gates; no next chapter is authorized by this checkpoint. Previous continuation/STOP boundaries below are historical.
+
+
 Authenticated existing custom save roots at native `d2796585f5ddf6bd3bd4ae00729b3a8a8fea7a76`: gcc 9 suites, clang 9 suites, san 9 suites pass; 3 new actual original-client cases are recorded. [Review](updates/compatibility.providers/20261027-batch10.md). The user-authorized current milestone plus two further milestones are complete. STOPPED after batch10, as requested. Do not start another milestone or the next chapter without new instructions. All CF parents stay open.
 
 

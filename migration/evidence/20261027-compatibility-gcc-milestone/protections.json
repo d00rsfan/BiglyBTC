@@ -1,0 +1,10 @@
+{
+  "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "dist_manifest_sha256": "e34ade281e7c8548c837968f7c095042d93862a4e1312f790feba464de3ba421",
+  "actual_dist_leaves_checked": 118,
+  "all_dist_leaves_match_prior_manifest": true,
+  "real_profile_or_payload_selected": false,
+  "original_client_signalled_or_attached": false,
+  "user_boundary": "STOP after current GCC milestone"
+}
