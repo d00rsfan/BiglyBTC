@@ -17,6 +17,12 @@ int main(){try{
     if(line.empty()||line[0]=='#'){continue;}if(line.size()>8192||++cases>128){throw std::runtime_error("Tape bound");}
     std::vector<std::string> f;std::stringstream row(line);for(std::string field;std::getline(row,field,'\t');){f.push_back(std::move(field));}
     if(f.size()<3){throw std::runtime_error("Tape arity");}
+    if(f[0]=="I"){
+      if(f.size()!=6){throw std::runtime_error("Idle arity");}
+      auto last=static_cast<std::int32_t>(number(f[2]));
+      for(std::size_t i=3;i<6;++i){const auto field="idle"+std::to_string(i-3);output(f[1],field.c_str(),sourceQueuePeerIdleSeconds(number(f[i]),last));}
+      continue;
+    }
     if(f[0]=="R"){
       if(f.size()!=6){throw std::runtime_error("Ratio arity");}
       output(f[1],"ratio",sourceQueueShareRatio(number(f[2]),number(f[3]),number(f[4]),number(f[5])));continue;

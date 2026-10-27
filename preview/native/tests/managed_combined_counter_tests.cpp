@@ -60,6 +60,41 @@ void optionalProtocolFailureNeverPoisonsSafePayload(){
   essential.seal(99,10,Counters::Protocol{20,30});
   check(!essential.epoch(),"Essential payload regression must retain the existing fail-closed behavior");
 }
+void exactBadChannelsShareThePayloadResetEpoch(){
+  Counters value;value.installed(true,true);const auto before=epoch(value);
+  auto result=value.combine(before,1000,10,Counters::Protocol{20,30},Counters::Bad{50,100});
+  check(result.bad&&result.bad->discarded==50&&result.bad->hashFailed==100,"Exact accepted bad prefix");
+  value.seal(1200,15,Counters::Protocol{25,35},Counters::Bad{70,150});
+  result=value.combine(before,0,0,Counters::Protocol{0,0},Counters::Bad{0,0});
+  check(result.state==Counters::Read::Retry&&!result.bad,"Cross-reset status cannot publish guessed bad bytes");
+  result=value.combine(epoch(value),100,3,Counters::Protocol{2,4},Counters::Bad{7,11});
+  check(result.state==Counters::Read::Accepted&&result.received==1300&&result.sent==18
+      &&result.bad&&result.bad->discarded==77&&result.bad->hashFailed==161,"Exact pre-clear bad tails survive reset once");
+  value.seal(100,3,Counters::Protocol{2,4},Counters::Bad{7,11});
+  result=value.combine(epoch(value),0,0,Counters::Protocol{0,0},Counters::Bad{0,0});
+  check(result.bad&&result.bad->discarded==77&&result.bad->hashFailed==161,"Immediate repeated reset does not double bad bytes");
+}
+void optionalBadUnknownDoesNotEraseOtherChannelsOrRegainAuthority(){
+  Counters legacy;legacy.installed(true);
+  auto result=legacy.combine(epoch(legacy),100,10,Counters::Protocol{20,30},Counters::Bad{7,9});
+  check(result.combinedReceived==120&&!result.bad,"Status/header cannot authorize bad bytes without V3");
+  Counters missing;missing.installed(true,true);
+  result=missing.combine(epoch(missing),100,10,Counters::Protocol{20,30});
+  check(result.state==Counters::Read::Accepted&&result.combinedReceived==120&&!result.bad,"Unknown bad tail must not poison payload/protocol");
+  result=missing.combine(epoch(missing),110,11,Counters::Protocol{21,31},Counters::Bad{7,9});
+  check(result.combinedReceived==131&&!result.bad,"A later raw sample cannot repair a lost bad-byte prefix");
+  Counters regressed;regressed.installed(true,true);
+  result=regressed.combine(epoch(regressed),100,10,Counters::Protocol{20,30},Counters::Bad{7,9});
+  check(result.bad.has_value(),"Known pre-reset bad fixture");
+  regressed.seal(110,11,Counters::Protocol{21,31},Counters::Bad{6,9});
+  result=regressed.combine(epoch(regressed),1,1,Counters::Protocol{1,1},Counters::Bad{0,0});
+  check(result.state==Counters::Read::Accepted&&result.combinedReceived==133&&!result.bad
+      &&result.badPrefix&&result.badPrefix->discarded==7&&result.badPrefix->hashFailed==9,"Regressing bad tail withdraws only optional bad authority");
+  Counters overflow;overflow.installed(true,true);
+  overflow.seal(1,0,Counters::Protocol{0,0},Counters::Bad{std::numeric_limits<std::int64_t>::max(),0});
+  result=overflow.combine(epoch(overflow),1,0,Counters::Protocol{0,0},Counters::Bad{1,0});
+  check(result.state==Counters::Read::Accepted&&result.received==2&&result.combinedReceived==2&&!result.bad,"Bad accumulation overflow never wraps or fails essential bytes");
+}
 void unknownPlaceholderDoesNotPreauthorizeOrMixCounterScopes(){
   using namespace biglybtc::core;
   QueueDownloadProbes probes;QueueProbeConfig config{true,false,60,0};std::array<QueueProbeInput,2> inputs{};
@@ -76,6 +111,7 @@ void unknownPlaceholderDoesNotPreauthorizeOrMixCounterScopes(){
 }
 int main(){try{
   legacyCannotGainCombinedAuthorityFromHeaderOrStatus();sameResetEpochSealsBothChannelsAndRetriesCrossingRead();
-  optionalProtocolFailureNeverPoisonsSafePayload();unknownPlaceholderDoesNotPreauthorizeOrMixCounterScopes();
-  std::cout<<"PASS four optional combined-counter/reset/scope families\n";return 0;
+  optionalProtocolFailureNeverPoisonsSafePayload();exactBadChannelsShareThePayloadResetEpoch();
+  optionalBadUnknownDoesNotEraseOtherChannelsOrRegainAuthority();unknownPlaceholderDoesNotPreauthorizeOrMixCounterScopes();
+  std::cout<<"PASS six optional combined/bad-counter/reset/scope families\n";return 0;
 }catch(const std::exception& error){std::cerr<<error.what()<<'\n';return 1;}}

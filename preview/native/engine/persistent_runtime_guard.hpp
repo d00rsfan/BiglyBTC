@@ -16,4 +16,6 @@ std::shared_ptr<void> managedPayloadCounterRuntimePin(bool combined = false) noe
 // Existing complete proof plus both versioned queue observer exports from the
 // SAME pinned image. No new source/artifact admission follows this declaration.
 std::shared_ptr<void> managedQueueObserverRuntimePin() noexcept;
+// Optional V3 requires the complete FIFTEEN-export same-image proof.
+std::shared_ptr<void> managedExtendedTrafficRuntimePin() noexcept;
 }

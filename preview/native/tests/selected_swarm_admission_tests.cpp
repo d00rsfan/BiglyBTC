@@ -42,6 +42,7 @@ struct FaultScope final {
 enum class TrafficFault { None, Absent, ForeignMarker, ForeignReader,
     WrongMarkerAfterProof, MarkerOnly, ReaderOnly };
 thread_local TrafficFault trafficFault = TrafficFault::None;
+thread_local bool extendedTrafficFault = false;
 thread_local unsigned trafficMarkerLookups = 0, trafficReaderLookups = 0;
 thread_local unsigned wrongTrafficCalls = 0, foreignTrafficCalls = 0;
 constexpr std::array mandatorySymbols{
@@ -65,12 +66,13 @@ struct ProviderPins final {
   std::atomic<unsigned> opens{0}, closes{0}, mismatches{0};
 } providerPins;
 struct TrafficScope final {
-  explicit TrafficScope(TrafficFault value) {
+  explicit TrafficScope(TrafficFault value,bool extended=false) {
+    extendedTrafficFault=extended;
     trafficFault=value;trafficMarkerLookups=trafficReaderLookups=wrongTrafficCalls=foreignTrafficCalls=0;
     mandatoryLookups.fill(0);providerPins.object=nullptr;providerPins.live=0;
     providerPins.opens=0;providerPins.closes=0;providerPins.mismatches=0;providerPins.enabled=true;
   }
-  ~TrafficScope() { providerPins.enabled=false;trafficFault=TrafficFault::None; }
+  ~TrafficScope() { providerPins.enabled=false;trafficFault=TrafficFault::None;extendedTrafficFault=false; }
 };
 std::optional<engine::ManagedDownloadStatus> status(engine::PersistentSession& owner,
     const core::TorrentHash& key) {
@@ -90,8 +92,8 @@ extern "C" void* __wrap_dlsym(void* library, const char* name) noexcept {
       if (std::strcmp(name,mandatorySymbols[i])==0) { ++mandatoryLookups[i];break; }
     }
   }
-  const bool trafficMarker=std::strcmp(name,"biglybtc_traffic_counter_abi_v2")==0;
-  const bool trafficReader=std::strcmp(name,"biglybtc_read_traffic_counters_v2")==0;
+  const bool trafficMarker=std::strcmp(name,extendedTrafficFault?"biglybtc_traffic_counter_abi_v3":"biglybtc_traffic_counter_abi_v2")==0;
+  const bool trafficReader=std::strcmp(name,extendedTrafficFault?"biglybtc_read_traffic_counters_v3":"biglybtc_read_traffic_counters_v2")==0;
   if (providerPins.enabled.load() && (trafficMarker||trafficReader)) {
     if (trafficMarker) { ++trafficMarkerLookups; } else { ++trafficReaderLookups; }
     switch(trafficFault) {
@@ -270,7 +272,13 @@ private slots:
       auto bridge=engine::detail::managedPayloadCounterBridge();
       QVERIFY2(bridge,"Optional ABI faults must retain the real full nine-export payload proof");
       QVERIFY(trafficMarkerLookups>0);
+      #if defined(TORRENT_BIGLYBTC_EXTENDED_TRAFFIC_COUNTERS_ABI) && TORRENT_BIGLYBTC_EXTENDED_TRAFFIC_COUNTERS_ABI == 3
+      // V3 proof precedes the unchanged observer/V2/V1 fallback chain. A
+      // marker substituted only AFTER that proof keeps the same full image pin.
+      const unsigned attempts=combined||static_cast<TrafficFault>(mode)==TrafficFault::WrongMarkerAfterProof?1:4;
+#else
       const unsigned attempts=combined?1:2;
+#endif
       // The failed optional proof/marker attempt is released; exactly ONE
       // provider reference is transferred to the resulting opaque bridge.
       QCOMPARE(providerPins.opens.load(),attempts);
@@ -323,6 +331,43 @@ private slots:
     QCOMPARE(providerPins.opens.load(),providerPins.closes.load());QCOMPARE(providerPins.mismatches.load(),0u);
     QVERIFY(generated.untouched());
   }
+#if defined(TORRENT_BIGLYBTC_EXTENDED_TRAFFIC_COUNTERS_ABI) && TORRENT_BIGLYBTC_EXTENDED_TRAFFIC_COUNTERS_ABI == 3
+  void optionalV3FaultsRetainCombinedProofWithoutBadAuthority_data(){
+    QTest::addColumn<int>("mode");QTest::newRow("actual-v3-positive-control")<<static_cast<int>(TrafficFault::None);
+    QTest::newRow("v3-absent")<<static_cast<int>(TrafficFault::Absent);QTest::newRow("v3-foreign-marker")<<static_cast<int>(TrafficFault::ForeignMarker);
+    QTest::newRow("v3-foreign-reader")<<static_cast<int>(TrafficFault::ForeignReader);QTest::newRow("v3-wrong-marker-after-proof")<<static_cast<int>(TrafficFault::WrongMarkerAfterProof);
+    QTest::newRow("v3-marker-only")<<static_cast<int>(TrafficFault::MarkerOnly);QTest::newRow("v3-reader-only")<<static_cast<int>(TrafficFault::ReaderOnly);
+  }
+  void optionalV3FaultsRetainCombinedProofWithoutBadAuthority(){
+    QFETCH(int,mode);fixture::Fixture generated(true);const bool known=static_cast<TrafficFault>(mode)==TrafficFault::None;
+    TrafficScope scope(static_cast<TrafficFault>(mode),true);
+    const auto counters=std::make_shared<engine::detail::ManagedPayloadCounters>();
+    std::weak_ptr<const engine::detail::ManagedPayloadCounterBridge> retained;
+    {auto bridge=engine::detail::managedPayloadCounterBridge();QVERIFY(bridge);retained=bridge;
+      const unsigned attempts=known?1:2;QCOMPARE(providerPins.opens.load(),attempts);QCOMPARE(providerPins.live.load(),1);
+      QCOMPARE(providerPins.closes.load(),attempts-1);QCOMPARE(providerPins.mismatches.load(),0u);QCOMPARE(foreignTrafficCalls,0u);
+      for(std::size_t index=0;index<mandatorySymbols.size();++index){QCOMPARE(mandatoryLookups[index],attempts*2+(index>=6?2u:0u));}
+      if(static_cast<TrafficFault>(mode)==TrafficFault::WrongMarkerAfterProof){QCOMPARE(wrongTrafficCalls,1u);}
+      lt::add_torrent_params options;lt::error_code error;
+      options.ti=std::make_shared<lt::torrent_info>(lt::span<const char>(generated.source.data(),generated.source.size()),error,lt::from_span);
+      QVERIFY(!error);options.save_path=generated.destination.string();options.flags&=~(lt::torrent_flags::paused|lt::torrent_flags::auto_managed);
+      QVERIFY(engine::detail::selectManagedSwarm(options,*generated.identity,bridge));QVERIFY(engine::detail::attachManagedPayloadCounters(options,counters,bridge));bridge.reset();
+      {lt::session_params settings(fixture::isolated());settings.disk_io_constructor=lt::disabled_disk_io_constructor;lt::session session(std::move(settings));
+        const auto handle=session.add_torrent(std::move(options),error);QVERIFY(!error&&handle.is_valid());
+        QTRY_VERIFY_WITH_TIMEOUT(counters->epoch().has_value()&&handle.status().state!=lt::torrent_status::checking_resume_data&&handle.status().state!=lt::torrent_status::checking_files,10000);
+        const auto before=counters->epoch();QVERIFY(before);const auto actual=handle.status();
+        const auto result=counters->combine(*before,actual.total_payload_download,actual.total_payload_upload,
+            engine::detail::ManagedPayloadCounters::Protocol{actual.total_download-actual.total_payload_download,actual.total_upload-actual.total_payload_upload},
+            engine::detail::ManagedPayloadCounters::Bad{actual.total_redundant_bytes,actual.total_failed_bytes});
+        QCOMPARE(result.state,engine::detail::ManagedPayloadCounters::Read::Accepted);QVERIFY(result.combinedReceived&&result.combinedSent);
+        QCOMPARE(*result.combinedReceived,actual.total_download);QCOMPARE(*result.combinedSent,actual.total_upload);
+        QCOMPARE(result.bad.has_value(),known);if(known){QCOMPARE(result.bad->discarded,actual.total_redundant_bytes);QCOMPARE(result.bad->hashFailed,actual.total_failed_bytes);}
+        QVERIFY(!retained.expired());QCOMPARE(providerPins.live.load(),1);QCOMPARE(providerPins.opens.load(),attempts);
+      }
+    }
+    QVERIFY(retained.expired());QCOMPARE(providerPins.live.load(),0);QCOMPARE(providerPins.opens.load(),providerPins.closes.load());QCOMPARE(providerPins.mismatches.load(),0u);QVERIFY(generated.untouched());
+  }
+#endif
   void missingForeignAndBadMarkersFailBeforeManagedStorage_data() {
     QTest::addColumn<int>("mode");
     QTest::newRow("missing-marker") << static_cast<int>(Fault::Missing);

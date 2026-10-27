@@ -280,6 +280,7 @@ struct SessionBridge::Host {
   std::optional<storage::PreparedFileOperation> filePlan;
   ui::FileOperationPlanPresentation filePlanPacket;
   bool fileRecoveryRequired = false;
+  bool replacementReviewOnly = false; // No engine/services/admissions until explicit journal review succeeds.
   std::unique_ptr<storage::SchedulerService> scheduler;
   bool schedulerRestoreDefaults=false;
   bool schedulerAttempted=false, schedulerTagsLoaded=false, schedulerTagsAvailable=false;
@@ -923,15 +924,24 @@ bool SessionBridge::dispatch(std::move_only_function<void(std::stop_token)> oper
   emit busyChanged(true);
   return true;
 }
+namespace {
+bool recoverOrReviewReplacement(const storage::ProfileLease& lease){
+  const auto recovered=storage::recoverFileOperation(lease);if(recovered){return false;}
+  const auto review=storage::prepareInterruptedReplacementReview(lease);
+  if(!review){throw Failure{recovered.error()};}return true;
+}
+}
 bool SessionBridge::open(std::filesystem::path profile, unsigned short ownedPeerPort) {
   return dispatch([this, profile = std::move(profile), ownedPeerPort](std::stop_token stop) {
     if (host_) { throw Failure{{storage::ErrorCode::Conflict, "A profile is already open"}}; }
     auto lease = take(storage::ProfileLease::acquire(profile));
     static_cast<void>(take(storage::recoverOriginalCompaction(lease)));
-    static_cast<void>(take(storage::recoverFileOperation(lease)));
-    static_cast<void>(take(storage::recoverTorrentIntake(lease)));
+    const bool reviewOnly=recoverOrReviewReplacement(lease);
+    if(!reviewOnly){static_cast<void>(take(storage::recoverTorrentIntake(lease)));}
     const auto session = reserveColumnLayoutSession();
     host_ = std::make_unique<Host>(profile, ownedPeerPort, std::move(lease), session);
+    host_->fileRecoveryRequired=reviewOnly;host_->replacementReviewOnly=reviewOnly;
+    if(reviewOnly){ready(host_->query(stop),tr("Profile opened read-only. Select the torrent and review its interrupted file replacement. The uncertain directory will be kept."));return;}
     const auto snapshot = host_->query(stop); // Validate the profile before optional engine startup.
     host_->azureusEnabled = static_cast<bool>(azureusServiceFactory_);
     host_->dhtAccounting.emplace(host_->azureusEnabled);
@@ -956,7 +966,8 @@ bool SessionBridge::openNormal(std::filesystem::path profile) {
     host_ = std::make_unique<Host>(profile, 0, std::move(lease), reserveColumnLayoutSession());
     host_->normalNetwork = true;
     static_cast<void>(take(storage::recoverOriginalCompaction(host_->lease)));
-    static_cast<void>(take(storage::recoverFileOperation(host_->lease)));
+    host_->replacementReviewOnly=recoverOrReviewReplacement(host_->lease);host_->fileRecoveryRequired=host_->replacementReviewOnly;
+    if(host_->replacementReviewOnly){ready(host_->query(stop),tr("Profile opened read-only. Select the torrent and review its interrupted file replacement. The uncertain directory will be kept."));return;}
     static_cast<void>(take(storage::recoverTorrentIntake(host_->lease)));
     auto inventory = storage::ConfigFile::load(host_->lease, "downloads.config");
     if (!inventory && inventory.error().code == storage::ErrorCode::Missing) {
@@ -1921,7 +1932,7 @@ bool SessionBridge::saveColumnLayout(ui::ColumnLayoutSaveSubmission submission) 
     packet->session = session;
     packet->request = request;
     checkpoint(stop);
-    if (!host_ || host_->columnLayoutSession != session || host_->columnBaselineReadStop.stop_requested()
+    if (!host_ || host_->fileRecoveryRequired || host_->columnLayoutSession != session || host_->columnBaselineReadStop.stop_requested()
         || (!host_->columnBaselineMissing && (!host_->columnBaseline || !host_->columnBaselineSource))) {
       packet->failure = tr("Reload the saved column layout before saving");
     } else {
@@ -2064,6 +2075,7 @@ bool SessionBridge::continueDownload(ui::Target target) {
   return dispatch([this, target = std::move(target)](std::stop_token stop) {
     if (!host_) { throw Failure{{storage::ErrorCode::Missing, "No profile is open"}}; }
     host_->accepts(target);
+    if(host_->fileRecoveryRequired){throw Failure{{storage::ErrorCode::Conflict,"Profile recovery must finish before starting a transfer"}};}
     if (host_->engineOperation == std::numeric_limits<quint64>::max()) {
       throw Failure{{storage::ErrorCode::Unsupported, "Engine operation identities are exhausted"}};
     }
@@ -2132,7 +2144,7 @@ bool SessionBridge::continueDownload(ui::Target target) {
   });
 }
 void SessionBridge::initializePersistentOwner(std::stop_token stop) {
-  if (!host_ || (host_->peerPort == 0 && !host_->normalNetwork) || host_->engine) { return; }
+  if (!host_ || host_->fileRecoveryRequired || (host_->peerPort == 0 && !host_->normalNetwork) || host_->engine) { return; }
   checkpoint(stop);
   // Preserve the exact source/runtime guard and default unbound fallback.
   auto owner = engine::PersistentSession::create({1, host_->columnLayoutSession, 1});
@@ -2710,7 +2722,7 @@ bool SessionBridge::saveOptions(ui::OptionsSubmission submission) {
   return dispatch([this, submission = std::move(submission)](std::stop_token stop) {
     auto packet = std::make_shared<ui::OptionsSavePacket>();
     packet->session = submission.session; packet->request = submission.request; packet->revision = submission.revision;
-    if (!host_ || host_->columnLayoutSession != submission.session || !host_->optionsBaseline
+    if (!host_ || host_->fileRecoveryRequired || host_->columnLayoutSession != submission.session || !host_->optionsBaseline
         || host_->optionsRevision != submission.revision || host_->optionsReadStop.stop_requested()
         || host_->optionsRevision == std::numeric_limits<quint64>::max()) {
       packet->failure = tr("Reload settings before saving; this snapshot is no longer current");
@@ -2800,6 +2812,7 @@ ui::SchedulerPresentation schedulerPacket(const storage::SchedulerSnapshot& sour
 }
 }
 void SessionBridge::ensureScheduler() {
+  if(host_&&host_->fileRecoveryRequired){host_->schedulerFailure=tr("Finish file-operation recovery before opening schedules");return;}
   if(!host_||host_->schedulerAttempted){return;}host_->schedulerAttempted=true;
   if(!schedulerFactory_){host_->schedulerFailure=tr("Speed Scheduler is unavailable in this build");return;}
   try{host_->scheduler=schedulerFactory_(host_->lease);}
@@ -2833,7 +2846,7 @@ bool SessionBridge::saveScheduler(ui::SchedulerSubmission value) {
       ||value.schedules.size()>storage::scheduler::MaximumSchedules){return false;}
   return dispatch([this,value=std::move(value)](std::stop_token stop){
     auto result=std::make_shared<ui::SchedulerSavePacket>();result->session=value.session;result->request=value.request;result->revision=value.revision;
-    if(!host_||host_->columnLayoutSession!=value.session||!host_->scheduler){result->failure=tr("Reload schedules before saving");}
+    if(!host_||host_->fileRecoveryRequired||host_->columnLayoutSession!=value.session||!host_->scheduler){result->failure=tr("Reload schedules before saving");}
     else try{
       const auto& current=host_->scheduler->snapshot();
       if(current.revision!=value.revision){throw Failure{{storage::ErrorCode::Conflict,"Schedules changed; reload before saving"}};}

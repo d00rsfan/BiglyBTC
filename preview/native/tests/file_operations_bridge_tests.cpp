@@ -5,6 +5,7 @@
 #include "owned_engine_fixture.hpp"
 #include "persistent_session.hpp"
 #include "profile.hpp"
+#include "file_operations.hpp"
 #include <QAction>
 #include <QApplication>
 #include <QLabel>
@@ -20,6 +21,9 @@
 
 using namespace biglybtc;
 namespace {
+QString interruptedDirectory;
+void interruptUnsealedReplacement(storage::FileOperationStage stage){if(stage==storage::FileOperationStage::JournalSynced){test::require(QDir().mkdir(interruptedDirectory),"Create owned unsealed crash fixture");test::write(interruptedDirectory+"/unknown","preserved");throw std::runtime_error("simulated unsealed replacement interruption");}}
+
 core::Document parse(const QByteArray& raw) {
  auto document=core::Document::parse(raw.toStdString(),storage::compatibleConfigLimits());test::require(document.has_value(),"Parse owned file-operation fixture");return std::move(*document);
 }
@@ -66,6 +70,24 @@ ui::TorrentCreationRequest creation(const test::OwnedEngineFixture& f,quint64 se
 class FileOperationsBridgeTests final:public QObject {
  Q_OBJECT
 private slots:
+ void unsealedReplacementReopensReadOnlyRequiresFreshConsentAndKeepsUnknownDirectory_data(){QTest::addColumn<bool>("normal");QTest::newRow("owned-loopback-open")<<false;QTest::newRow("ordinary-open-no-admission")<<true;}
+ void unsealedReplacementReopensReadOnlyRequiresFreshConsentAndKeepsUnknownDirectory(){
+  QFETCH(bool,normal);test::OwnedEngineFixture f(false);edit(f,{{"state","i75e"}});const auto source=f.payload+'/'+f.files[0].relative;const auto bytes=test::read(source);const auto target=f.root.path()+QStringLiteral("/occupied.bin");test::write(target,"prior");QString uncertain;
+  {
+    auto lease=storage::ProfileLease::acquire(f.native());QVERIFY(lease);storage::FileOperationRequest value{*f.hash,storage::FileOperationKind::ReplaceFile,{}};value.fileIndex=0;value.fileDestination=target.toStdString();auto plan=storage::prepareFileOperation(*lease,value);QVERIFY(plan);uncertain=QString::fromStdString(plan->preview().replacement->path.parent_path().string());const auto accepted=storage::confirmFileOperation(*plan,plan->preview().approvalScopeDigest,true);QVERIFY(accepted);
+    // The observer only simulates the exact unsealed mkdir crash interval; all
+    // actual source/target/control/document bytes remain the original preimages.
+    interruptedDirectory=uncertain;const auto failed=storage::applyFileOperation(*lease,std::move(*plan),*accepted,interruptUnsealedReplacement);QVERIFY(!failed);QVERIFY(!storage::recoverFileOperation(*lease));
+  }
+  const auto beforeInventory=test::read(f.profile+"/downloads.config"),beforeState=test::read(f.stateFile);app::SessionBridge bridge;
+  QSignalSpy rows(&bridge,&app::SessionBridge::snapshotReady),sessions(&bridge,&app::SessionBridge::columnLayoutSessionReady),native(&bridge,&app::SessionBridge::nativeSessionReady),plans(&bridge,&app::SessionBridge::fileOperationPrepared),results(&bridge,&app::SessionBridge::fileOperationFinished),closed(&bridge,&app::SessionBridge::sessionClosed);
+  QVERIFY(normal?bridge.openNormal(f.native()):bridge.open(f.native(),f.port()));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&!sessions.empty()&&latest(rows),10000);QCOMPARE(native.count(),0);QCOMPARE(test::read(f.stateFile),beforeState);QCOMPARE(test::read(f.profile+"/downloads.config"),beforeInventory);
+  auto value=request(rows,sessions[0][0].toULongLong(),241,*f.hash,ui::FileOperation::ReviewReplacement);QVERIFY(bridge.prepareFileOperation(value));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&prepared(plans),10000);QVERIFY2(prepared(plans)->failure.isEmpty(),qPrintable(prepared(plans)->failure));const auto fresh=prepared(plans)->retainedPreimage;QVERIFY(!fresh.isEmpty()&&prepared(plans)->unsealedPreimageDirectory==uncertain&&!fresh.startsWith(uncertain+'/'));
+  QVERIFY(bridge.executeFileOperation(copied(prepared(plans),false)));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished(results),10000);QVERIFY(!finished(results)->completed);QCOMPARE(test::read(target),QByteArray("prior"));QCOMPARE(test::read(source),bytes);
+  value=request(rows,sessions[0][0].toULongLong(),242,*f.hash,ui::FileOperation::ReviewReplacement);plans.clear();results.clear();QVERIFY(bridge.prepareFileOperation(value));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&prepared(plans),10000);QVERIFY(prepared(plans)->failure.isEmpty());QVERIFY(bridge.executeFileOperation(copied(prepared(plans),true)));QTRY_VERIFY_WITH_TIMEOUT(!bridge.busy()&&finished(results),10000);QVERIFY2(finished(results)->completed,qPrintable(finished(results)->failure));QCOMPARE(finished(results)->retainedPreimage,fresh);QCOMPARE(test::read(fresh),QByteArray("prior"));QCOMPARE(test::read(target),bytes);QCOMPARE(test::read(uncertain+"/unknown"),QByteArray("preserved"));QVERIFY(!QFileInfo::exists(source));QCOMPARE(native.count(),0);
+  QVERIFY(bridge.closeSession());QTRY_COMPARE_WITH_TIMEOUT(closed.count(),1,10000);QVERIFY(closed[0][1].toBool());QVERIFY(closed[0][2].toBool());QVERIFY(storage::ProfileLease::acquire(f.native()));
+ }
+
  void actualPausedAdmissionMovesOneFileAndRechecksWithoutChangingIntent() {
   test::OwnedEngineFixture f(true);edit(f,{{"state","i70e"},{"maxdl","i8192e"}});QTRY_VERIFY_WITH_TIMEOUT(f.ready(),30000);
   const auto destination=f.root.path()+QStringLiteral("/per-file");QVERIFY(QDir().mkpath(destination));const auto moved=destination+QStringLiteral("/chosen.bin");

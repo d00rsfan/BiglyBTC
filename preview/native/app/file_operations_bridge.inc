@@ -26,7 +26,7 @@ bool sameFilePlan(const ui::FileOperationPlanPacket& left,const ui::FileOperatio
       &&left.sourceRoot==right.sourceRoot&&left.targetRoot==right.targetRoot
       &&left.presentFiles==right.presentFiles&&left.missingFiles==right.missingFiles
       &&left.totalBytes==right.totalBytes&&left.failure==right.failure
-      &&left.retainedPreimage==right.retainedPreimage&&left.priorDestinationBytes==right.priorDestinationBytes&&left.priorDestinationSha256==right.priorDestinationSha256
+      &&left.unsealedPreimageDirectory==right.unsealedPreimageDirectory&&left.retainedPreimage==right.retainedPreimage&&left.priorDestinationBytes==right.priorDestinationBytes&&left.priorDestinationSha256==right.priorDestinationSha256
       &&left.deleteTorrentFile==right.deleteTorrentFile&&left.recyclePayload==right.recyclePayload&&left.archivePath==right.archivePath
       &&left.archiveBytes==right.archiveBytes&&left.archivePresent==right.archivePresent&&left.archiveInternalState==right.archiveInternalState
       &&left.archiveBackupPath==right.archiveBackupPath&&left.archiveBackupBytes==right.archiveBackupBytes&&left.archiveBackupPresent==right.archiveBackupPresent
@@ -38,6 +38,7 @@ ui::FileOperationPlanPresentation filePlanPacket(const ui::FileOperationRequest&
   auto packet=std::make_shared<ui::FileOperationPlanPacket>();packet->request=request;
   packet->approvalScopeDigest=text(p.approvalScopeDigest);packet->sourceRoot=QString::fromStdString(p.sourceRoot.string());packet->targetRoot=QString::fromStdString(p.targetRoot.string());
   if(p.replacement){packet->retainedPreimage=QString::fromStdString(p.replacement->path.string());packet->priorDestinationBytes=p.replacement->bytes;packet->priorDestinationSha256=text(p.replacement->sha256);}
+  if(p.unsealedPreimageDirectory){packet->unsealedPreimageDirectory=QString::fromStdString(p.unsealedPreimageDirectory->string());}
   packet->recyclePayload=p.kind==storage::FileOperationKind::RemoveRecycleData;
   packet->presentFiles=p.presentFiles;packet->missingFiles=p.missingFiles;packet->totalBytes=p.presentBytes;
   for(const auto& file:p.files){packet->paths.push_back({QString::fromStdString(file.source.string()),QString::fromStdString(file.destination.string()),static_cast<quint64>(std::max<std::int64_t>(0,file.actualBytes)),file.present});}
@@ -54,6 +55,12 @@ bool SessionBridge::prepareFileOperation(ui::FileOperationRequest request) {
     try{
       if(!host_||host_->columnLayoutSession!=request.session){throw Failure{{storage::ErrorCode::Conflict,"This file-operation session is closed"}};}
       host_->filePlan.reset();host_->filePlanPacket.reset();
+      if(request.operation==ui::FileOperation::ReviewReplacement){
+        if(!host_->replacementReviewOnly||!host_->fileRecoveryRequired||host_->engine||host_->azureus||request.originalIndex!=-1||!request.destinationParent.isEmpty()||request.deleteTorrentFile.value_or(false)||request.recyclePayload.value_or(false)){throw Failure{{storage::ErrorCode::Conflict,"Reopen the profile read-only before reviewing an interrupted replacement"}};}
+        host_->accepts(request.target);auto prepared=take(storage::prepareInterruptedReplacementReview(host_->lease,stop));
+        if(prepared.preview().hash!=identity(request.target)){throw Failure{{storage::ErrorCode::Conflict,"Select the torrent named by the interrupted replacement"}};}
+        result=filePlanPacket(request,prepared.preview());host_->filePlan.emplace(std::move(prepared));host_->filePlanPacket=result;
+      }else{
       if(host_->fileRecoveryRequired){throw Failure{{storage::ErrorCode::Conflict,"Restart to recover the interrupted file operation before changing the profile"}};}
       if(take(storage::recoverTorrentIntake(host_->lease))){throw Failure{{storage::ErrorCode::Conflict,"A torrent import was recovered; refresh the library"}};}
       host_->accepts(request.target);
@@ -66,6 +73,7 @@ bool SessionBridge::prepareFileOperation(ui::FileOperationRequest request) {
       if(request.operation!=ui::FileOperation::RemoveDeleteData&&request.recyclePayload.value_or(false)){throw Failure{{storage::ErrorCode::InvalidFormat,"Recycling belongs only to data removal"}};}
       auto prepared=take(storage::prepareFileOperation(host_->lease,storageRequest(request,deleteArchive,recycle),stop));
       result=filePlanPacket(request,prepared.preview());host_->filePlan.emplace(std::move(prepared));host_->filePlanPacket=result;
+      }
     }catch(const Failure& e){failure->failure=text(e.error.message);}
     catch(const std::exception& e){failure->failure=QString::fromUtf8(e.what());}
     QMetaObject::invokeMethod(this,[this,result]{
@@ -82,6 +90,19 @@ bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
     const auto request=value.plan->request;auto result=std::make_shared<ui::FileOperationResultPacket>();result->request=request;
     try{
       if(!host_||host_->columnLayoutSession!=request.session||!host_->filePlan||!host_->filePlanPacket||!sameFilePlan(*host_->filePlanPacket,*value.plan)){throw Failure{{storage::ErrorCode::Conflict,"This file-operation plan was replaced; prepare it again"}};}
+      if(request.operation==ui::FileOperation::ReviewReplacement){
+        if(!host_->replacementReviewOnly||!host_->fileRecoveryRequired||host_->engine||host_->azureus){throw Failure{{storage::ErrorCode::Conflict,"Replacement review requires the read-only reopened profile"}};}
+        host_->accepts(request.target);const auto approved=value.plan->approvalScopeDigest.toStdString();
+        auto current=take(storage::prepareInterruptedReplacementReview(host_->lease,stop));
+        if(current.preview().hash!=identity(request.target)){throw Failure{{storage::ErrorCode::Conflict,"Recovery target changed"}};}
+        const auto confirmed=take(storage::confirmFileOperation(current,approved,value.deleteConfirmed,value.archiveConfirmed));host_->filePlan.reset();
+        const auto applied=storage::applyFileOperation(host_->lease,std::move(current),confirmed,nullptr,stop);
+        if(!applied){host_->fileRecoveryRequired=true;throw Failure{applied.error()};}
+        host_->filePlanPacket.reset();host_->known.erase(identity(request.target).hex());result->completed=true;
+        if(applied->retainedPreimage){result->retainedPreimage=QString::fromStdString(applied->retainedPreimage->string());}
+        // Keep this session read-only even after repair. Closing/reopening uses
+        // ordinary saved queue/pause/force intent; no hidden automatic readmission.
+      }else{
       if(host_->fileRecoveryRequired){throw Failure{{storage::ErrorCode::Conflict,"Restart to recover the interrupted file operation first"}};}
       host_->accepts(request.target);
       const auto stored=storageRequest(request,value.plan->deleteTorrentFile,value.plan->recyclePayload);const auto approved=value.plan->approvalScopeDigest.toStdString();
@@ -141,12 +162,13 @@ bool SessionBridge::executeFileOperation(ui::FileOperationSubmission value) {
       }
       if(applied->retainedPreimage){result->retainedPreimage=QString::fromStdString(applied->retainedPreimage->string());}
       result->completed=true;
+      }
     }catch(const Failure& e){result->failure=text(e.error.message);result->cancelled=e.error.code==storage::ErrorCode::Cancelled;}
     catch(const std::exception& e){result->failure=QString::fromUtf8(e.what());}
     QMetaObject::invokeMethod(this,[this,result]{
       if(result->request.session!=publishedColumnLayoutSession_){return;}guiFileOperation_.reset();emit fileOperationFinished(result);
     },Qt::QueuedConnection);
-    ready(host_?host_->query({}):ui::Presentation{},result->failure.isEmpty()?(result->completed?(result->retainedPreimage.isEmpty()?tr("File operation completed"):tr("File replaced; prior destination retained at %1").arg(result->retainedPreimage)):tr("File operation cancelled")):result->failure);
+    ready(host_?host_->query({}):ui::Presentation{},request.operation==ui::FileOperation::ReviewReplacement&&result->completed?tr("Replacement recovered. Close and reopen the profile to resume normal work. Prior destination retained at %1").arg(result->retainedPreimage):result->failure.isEmpty()?(result->completed?(result->retainedPreimage.isEmpty()?tr("File operation completed"):tr("File replaced; prior destination retained at %1").arg(result->retainedPreimage)):tr("File operation cancelled")):result->failure);
   });
   if(accepted){guiFileOperation_=request;}return accepted;
 }
@@ -159,7 +181,7 @@ bool SessionBridge::createTorrent(ui::TorrentCreationRequest request) {
     auto result=std::make_shared<ui::TorrentCreationResultPacket>();result->session=request.session;result->request=request.request;result->revision=request.revision;
     try{
       if(!host_||host_->columnLayoutSession!=request.session){throw Failure{{storage::ErrorCode::Conflict,"This creation session is closed"}};}
-      if(host_->fileRecoveryRequired&&request.options.importAfterCreation){throw Failure{{storage::ErrorCode::Conflict,"Recover the interrupted file operation before importing"}};}
+      if(host_->fileRecoveryRequired){throw Failure{{storage::ErrorCode::Conflict,"Recover the interrupted file operation before creating or importing a torrent"}};}
       engine::CreateOptions options;options.source=request.options.source.toUtf8().toStdString();options.output=request.options.output.toUtf8().toStdString();
       std::error_code sourceError;const auto sourceStatus=std::filesystem::symlink_status(options.source,sourceError);
       options.layoutDescriptor=request.options.sourceKind==ui::TorrentCreationSource::LayoutDescriptor;

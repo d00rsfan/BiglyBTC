@@ -9,7 +9,7 @@
 
 namespace biglybtc::ui {
 
-enum class FileOperation { RemoveKeepData, RemoveDeleteData, Relocate, Relink, MoveFile, RetargetFile, RevertFile, ReplaceFile };
+enum class FileOperation { RemoveKeepData, RemoveDeleteData, Relocate, Relink, MoveFile, RetargetFile, RevertFile, ReplaceFile, ReviewReplacement };
 struct FileOperationRequest {
   quint64 session=0, request=0, revision=0;
   Target target;
@@ -43,7 +43,7 @@ struct FileOperationPlanPacket {
   quint64 archiveBackupBytes=0;
   bool archiveBackupPresent=false;
   bool recyclePayload=false;
-  QString retainedPreimage,priorDestinationSha256;
+  QString retainedPreimage,priorDestinationSha256,unsealedPreimageDirectory;
   quint64 priorDestinationBytes=0;
 };
 using FileOperationPlanPresentation=std::shared_ptr<const FileOperationPlanPacket>;

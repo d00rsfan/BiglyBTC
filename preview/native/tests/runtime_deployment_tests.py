@@ -31,7 +31,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--driver", type=Path, required=True)
     parser.add_argument("--provider", type=Path, required=True)
-    parser.add_argument("--mode", choices=("source", "selected", "provider-next", "webseed", "queue", "strict"), required=True)
+    parser.add_argument("--mode", choices=("source", "selected", "provider-next", "webseed", "queue", "traffic", "strict"), required=True)
     parser.add_argument("--manifest", type=Path)
     parser.add_argument("--alternate", type=Path)
     parser.add_argument("--interposition-driver", type=Path)
@@ -73,6 +73,15 @@ def main():
         if (Path(declared["artifact"]).resolve(strict=True) != provider
                 or declared["artifact_sha256"] != original_sha or declared["artifact_bytes"] != provider.stat().st_size):
             raise ValueError("Queue observer relocation differs from the reviewed manifest")
+    elif args.mode == "traffic":
+        if (not args.manifest or digest(args.manifest) != "5901b34eeb25370106bdbf6185a80f0c86c62a837bf2e455f5619921db665760"
+                or original_sha != "98279a468e0fa5147876b6f22f8947f432c294dfc02fb50cf179fc9472b3b51f" or provider.stat().st_size != 9090088
+                or not args.alternate or not args.interposition_driver or not args.preload):
+            raise ValueError("Traffic V3 relocation requires exact source/image and all rejection controls")
+        declared = json.loads(args.manifest.read_bytes())
+        if (Path(declared["artifact"]).resolve(strict=True) != provider
+                or declared["artifact_sha256"] != original_sha or declared["artifact_bytes"] != provider.stat().st_size):
+            raise ValueError("Traffic V3 relocation differs from the reviewed manifest")
     elif original_sha not in INSTRUMENTED:
         raise ValueError("Strict relocation test requires an exact retained instrumented image")
     root = Path(tempfile.mkdtemp(prefix="biglybtc-runtime-deploy-results-", dir="/tmp"))

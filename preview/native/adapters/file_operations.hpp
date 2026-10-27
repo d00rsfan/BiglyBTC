@@ -60,6 +60,7 @@ struct FileOperationPreview {
   std::optional<FileOperationArchive> torrentArchive;
   std::optional<FileOperationArchive> torrentArchiveBackup;
   std::optional<FileOperationPreimage> replacement;
+  std::optional<std::filesystem::path> unsealedPreimageDirectory; // Left untouched by explicit recovery review.
 };
 struct FileOperationConfirmation {
   std::string approvalScopeDigest;
@@ -88,6 +89,7 @@ private:
   struct Impl;
   explicit PreparedFileOperation(std::unique_ptr<Impl>);
   std::unique_ptr<Impl> impl_;
+  friend std::expected<PreparedFileOperation,Error> prepareInterruptedReplacementReview(const ProfileLease&,std::stop_token);
   friend std::expected<PreparedFileOperation,Error> prepareFileOperation(const ProfileLease&,const FileOperationRequest&,std::stop_token);
   friend std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease&,PreparedFileOperation&&,const FileOperationConfirmation&,void(*)(FileOperationStage),std::stop_token);
 };
@@ -97,6 +99,12 @@ private:
 // exact volatile execution CAS comes from that freshly prepared plan.
 std::expected<PreparedFileOperation,Error> prepareFileOperation(
     const ProfileLease&,const FileOperationRequest&,std::stop_token = {});
+// Read-only exceptional recovery review: ONLY unsealed replacement directory,
+// exact original payload/control/document preimages, and a fresh backup name.
+// Does not adopt, inspect contents of, or delete the uncertain directory. Caller
+// must retain no engine/metadata owner, show new scope, and reconfirm before apply.
+std::expected<PreparedFileOperation,Error> prepareInterruptedReplacementReview(
+    const ProfileLease&,std::stop_token = {});
 std::expected<FileOperationConfirmation,Error> confirmFileOperation(
     const PreparedFileOperation&,std::string_view acceptedApprovalScopeDigest,bool deleteConfirmed,
     bool archiveConfirmed=false);

@@ -576,6 +576,11 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
         *target=value->integer;
       }
     }
+    if(const auto* lost=row.find("BiglyBTC.badPayloadCountersLost")){
+      require(lost->type==core::Node::Type::Integer&&(lost->integer==0||lost->integer==1),
+          "Invalid saved bad-payload uncertainty",ErrorCode::InvalidFormat);
+      queue.badPayloadCountersLost=lost->integer==1;queue.badCounterLossSource=encoded(*lost);
+    }
     require(saved.downloaded.value_or(0)>=0&&saved.uploaded.value_or(0)>=0,"Negative saved cumulative transfer counters",ErrorCode::InvalidFormat);
     auto store=take(storage::TorrentStateStore::open(lease)); auto original=take(store.load(lease,hash));
     const auto source=authoritative(lease,original);
@@ -812,7 +817,8 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
 
 std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease& lease,std::span<const std::uint8_t> verified,
     bool complete,std::int64_t received,std::int64_t sent,
-    std::int64_t secondsDownloading,std::int64_t secondsSeeding,std::optional<std::int32_t> secondsSinceUpload) {
+    std::int64_t secondsDownloading,std::int64_t secondsSeeding,std::optional<std::int32_t> secondsSinceUpload,
+    std::optional<ManagedBadPayloadBytes> badPayloadBytes,bool badPayloadComplete) {
   try {
     require(impl_!=nullptr,"Managed storage was moved or released",ErrorCode::Conflict); auto& owner=*impl_;
     require(!owner.attempted,"Managed admission checkpoint already attempted",ErrorCode::Conflict);
@@ -835,6 +841,21 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
         &&secondsSeeding<=std::numeric_limits<std::int64_t>::max()-owner.queue.secondsSeeding,
         "Managed queue elapsed times overflow",ErrorCode::InvalidFormat);
     auto entry=dictionary(&entryFor(inventory.document(),current,!inventory.document().find("downloads")));
+    std::optional<std::string> lossSource;
+    if(const auto* lost=entry.find("BiglyBTC.badPayloadCountersLost")){lossSource=encoded(*lost);}
+    require(lossSource==owner.queue.badCounterLossSource,"Saved bad-payload uncertainty changed during admission",ErrorCode::Conflict);
+    for(const auto& [key,expected]:{std::pair{"discarded",owner.queue.discarded},{"hashfailbytes",owner.queue.hashFailed}}){
+      const auto* value=entry.find(key);
+      require(value?(value->type==core::Node::Type::Integer&&value->integer==expected):expected==0,
+          "Saved bad-payload counters changed during admission",ErrorCode::Conflict);
+    }
+    if(badPayloadBytes){
+      require(badPayloadBytes->discarded>=0&&badPayloadBytes->hashFailed>=0
+          &&badPayloadBytes->discarded<=std::numeric_limits<std::int64_t>::max()-owner.queue.discarded
+          &&badPayloadBytes->hashFailed<=std::numeric_limits<std::int64_t>::max()-owner.queue.hashFailed,
+          "Managed bad-payload cumulative counters overflow",ErrorCode::InvalidFormat);
+    }
+
     for (const auto& [key,expected] : {std::pair{"secondsDownloading",owner.queue.secondsDownloading},
         {"secondsOnlySeeding",owner.queue.secondsSeeding}}) {
       if (const auto* value=entry.find(key)) {
@@ -873,6 +894,16 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
       allocated=allocated&&opened.st_size==slot.bytes; sync(slot.data.get());
     }
     put(entry,"downloaded",intValue(previousReceived+received)); put(entry,"uploaded",intValue(previousSent+sent)); put(entry,"completedbytes",intValue(total));
+    if(badPayloadBytes){
+      if(badPayloadBytes->discarded){put(entry,"discarded",intValue(owner.queue.discarded+badPayloadBytes->discarded));}
+      if(badPayloadBytes->hashFailed){put(entry,"hashfailbytes",intValue(owner.queue.hashFailed+badPayloadBytes->hashFailed));}
+    }
+    if((!badPayloadBytes||!badPayloadComplete)&&received>0){
+      // Preserve previously observed totals; unavailable tails cannot later be
+      // mistaken for a known0 admission when reopened with a newer provider.
+      put(entry,"BiglyBTC.badPayloadCountersLost","i1e");
+    }
+
     if (secondsDownloading) { put(entry,"secondsDownloading",intValue(owner.queue.secondsDownloading+secondsDownloading)); }
     if (secondsSeeding) { put(entry,"secondsOnlySeeding",intValue(owner.queue.secondsSeeding+secondsSeeding)); }
     put(entry,"allocated",allocated?"i1e":"i0e");

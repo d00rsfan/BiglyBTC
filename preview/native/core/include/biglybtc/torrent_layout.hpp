@@ -37,6 +37,11 @@ std::expected<OriginalLayout, LayoutError> originalLayout(const core::Document& 
 inline constexpr std::string_view OriginalDefaultFilenameConversions="\"='";
 std::expected<OriginalLayout, LayoutError> originalLayout(const core::Document&,
     std::size_t maximumFiles,std::string_view filenameConversions);
+// ShowAll is an explicit held-profile capability; IBM866 stays unregistered by default.
+std::expected<OriginalLayout,LayoutError> originalLayout(const core::Document&,
+    std::size_t maximumFiles,std::string_view filenameConversions,bool showAll);
+std::expected<std::string,LayoutError> originalDecodeFilenameBytes(
+    std::string_view bytes,std::string_view registeredEncoding,bool showAll=false);
 std::expected<std::string,LayoutError> originalFilenameComponent(
     std::string_view decodedUtf8,std::string_view filenameConversions=OriginalDefaultFilenameConversions);
 

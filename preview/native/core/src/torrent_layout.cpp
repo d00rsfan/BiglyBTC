@@ -5,6 +5,7 @@
 #include <limits>
 #include <set>
 #include <optional>
+#include <span>
 
 namespace biglybtc::compat {
 namespace {
@@ -20,24 +21,24 @@ std::int64_t integer(const Node* value) {
   require(value && value->type == Node::Type::Integer && value->integer >= 0, "Expected a nonnegative metadata integer");
   return value->integer;
 }
-enum class NameEncoding { Utf8, Latin1, Windows1251, Koi8R };
+#include "original_charset.inc"
+enum class NameEncoding : unsigned { Utf8, Latin1, Windows1251, Koi8R, Utf8Replacement };
 struct NamePolicy { NameEncoding encoding; bool utf8Keys; };
-NamePolicy names(const core::Document& document,const Node& info) {
+NamePolicy names(const core::Document& document,const Node& info,bool showAll=false) {
   const auto* field=document.find("encoding");
   const auto original=field?text(field):std::string{};
-  auto normalized=original;
-  std::erase_if(normalized,[](unsigned char c){return c=='-'||c=='_'||c==' ';});
-  std::ranges::transform(normalized,normalized.begin(),[](unsigned char c){return c>='A'&&c<='Z'?static_cast<char>(c+32):static_cast<char>(c);});
   auto lower=original;
   std::ranges::transform(lower,lower.begin(),[](unsigned char c){return c>='A'&&c<='Z'?static_cast<char>(c+32):static_cast<char>(c);});
-  const bool latin1=lower=="iso-8859-1"; // Explicit original canonical charset only.
+  static constexpr std::array<std::string_view,15> latinAliases{"iso-8859-1","iso-ir-100","iso_8859-1","latin1","l1","ibm819","cp819","csisolatin1","819","ibm-819","iso8859_1","iso_8859-1:1987","iso_8859_1","8859_1","iso8859-1"};
+  const bool latin1=std::ranges::find(latinAliases,lower)!=latinAliases.end(); // Explicit original canonical charset only.
   // Exact Java17 MS1251 canonical name and its source-declared aliases;
   // no punctuation stripping or guessed aliases for legacy codecs.
   const bool windows1251=lower=="windows-1251"||lower=="cp1251"||lower=="cp5347"||lower=="ansi-1251";
   const bool koi8r=lower=="koi8-r"||lower=="koi8_r"||lower=="koi8"||lower=="cskoi8r";
-  require(!field||normalized=="utf8"||normalized=="utf8keys"||latin1||windows1251||koi8r,
+  const auto manual=charsetIndex(original,showAll);
+  require(!field||manual||original=="utf8 keys"||lower=="utf-8"||lower=="utf8"||lower=="unicode-1-1-utf-8"||latin1||windows1251||koi8r,
       "This original filename encoding needs its qualified codec adapter");
-  require(!(latin1||windows1251||koi8r)||!info.find("file tree"),"Legacy encoded v2/hybrid names require separate original qualification");
+  require(!(latin1||windows1251||koi8r||manual)||!info.find("file tree"),"Legacy encoded v2/hybrid names require separate original qualification");
   // Exact cb8 global UTF8-key predicate: name plus every v1 path, and only
   // absent encoding, the exact saved sentinel, or case-insensitive UTF-8.
   bool use=info.find("name.utf-8")&&(!field||original=="utf8 keys"||lower=="utf-8");
@@ -45,10 +46,12 @@ NamePolicy names(const core::Document& document,const Node& info) {
     require(files->type==Node::Type::List,"Original file list has invalid type");
     if(use){for(const auto& file:files->children){use=use&&file.find("path.utf-8");}}
   }
-  return {koi8r?NameEncoding::Koi8R:windows1251?NameEncoding::Windows1251:latin1?NameEncoding::Latin1:NameEncoding::Utf8,use};
+  return {manual?static_cast<NameEncoding>(16+*manual):koi8r?NameEncoding::Koi8R:windows1251?NameEncoding::Windows1251:latin1?NameEncoding::Latin1:field?NameEncoding::Utf8Replacement:NameEncoding::Utf8,use};
 }
 std::string decoded(const Node* node,NameEncoding encoding) {
   const auto value=text(node);
+  if(static_cast<unsigned>(encoding)>=16){return charsetDecode(value,static_cast<unsigned>(encoding)-16);}
+  if(encoding==NameEncoding::Utf8Replacement){return charsetUtf8(value);}
   if(encoding==NameEncoding::Utf8){return value;}
   if(encoding==NameEncoding::Koi8R){
     // Exact OpenJDK17 KOI8-R table, explicitly registered by cb8 LocaleUtil.
@@ -73,9 +76,8 @@ std::string decoded(const Node* node,NameEncoding encoding) {
     };
     std::string result;result.reserve(value.size()*3);
     for(const unsigned char c:value){
-      require(c>=0x20&&c!=0x7f,"Unsafe legacy Cyrillic filename byte");
       const std::uint16_t code=c<0x80?c:koi8r[c-0x80];
-      require(code!=0&&code!=0xfffd,"Undefined legacy Cyrillic filename byte");
+      require((code!=0||c==0)&&code!=0xfffd,"Undefined legacy Cyrillic filename byte");
       if(code<0x80){result+=static_cast<char>(code);}
       else if(code<0x800){result+=static_cast<char>(0xc0|(code>>6));result+=static_cast<char>(0x80|(code&0x3f));}
       else{result+=static_cast<char>(0xe0|(code>>12));result+=static_cast<char>(0x80|((code>>6)&0x3f));result+=static_cast<char>(0x80|(code&0x3f));}
@@ -98,9 +100,8 @@ std::string decoded(const Node* node,NameEncoding encoding) {
     };
     std::string result;result.reserve(value.size()*3);
     for(const unsigned char c:value){
-      require(c>=0x20&&c!=0x7f,"Unsafe Windows-1251 filename byte");
       const std::uint16_t code=c<0x80?c:c>=0xc0?static_cast<std::uint16_t>(0x0410+c-0xc0):extended[c-0x80];
-      require(code!=0,"Undefined Windows-1251 filename byte");
+      if(code==0&&c!=0){return charsetUtf8(value);}
       if(code<0x80){result+=static_cast<char>(code);}
       else if(code<0x800){result+=static_cast<char>(0xc0|(code>>6));result+=static_cast<char>(0x80|(code&0x3f));}
       else{result+=static_cast<char>(0xe0|(code>>12));result+=static_cast<char>(0x80|((code>>6)&0x3f));result+=static_cast<char>(0x80|(code&0x3f));}
@@ -225,14 +226,14 @@ void tree(OriginalLayout& result, const Node& node, const std::string& path,
 }
 }
 
-static std::expected<OriginalLayout, LayoutError> originalLayoutImpl(const core::Document& document, std::size_t maximumFiles,std::optional<std::string_view> conversions) {
+static std::expected<OriginalLayout, LayoutError> originalLayoutImpl(const core::Document& document, std::size_t maximumFiles,std::optional<std::string_view> conversions,bool showAll=false) {
   std::optional<FilenameConversion> conversion;
   try {
     if(conversions){conversion=filenameConversion(*conversions);}
     const auto* conversionPolicy=conversion?&*conversion:nullptr;bool nameChanged=false;
     const auto* info = document.find("info");
     require(info && info->type == Node::Type::Dictionary, "Original metadata has no info dictionary");
-    const auto policy=names(document,*info);
+    const auto policy=names(document,*info,showAll);
     const auto* name = policy.utf8Keys?info->find("name.utf-8"):info->find("name");
     OriginalLayout result{component(decoded(name,policy.utf8Keys?NameEncoding::Utf8:policy.encoding),conversionPolicy,&nameChanged), false,
         integer(info->find("piece length")), 0, {},nameChanged};
@@ -278,6 +279,15 @@ static std::expected<OriginalLayout, LayoutError> originalLayoutImpl(const core:
 }
 std::expected<OriginalLayout,LayoutError> originalLayout(const core::Document& document,std::size_t maximumFiles){return originalLayoutImpl(document,maximumFiles,{});}
 std::expected<OriginalLayout,LayoutError> originalLayout(const core::Document& document,std::size_t maximumFiles,std::string_view conversions){return originalLayoutImpl(document,maximumFiles,conversions);}
+std::expected<OriginalLayout,LayoutError> originalLayout(const core::Document& document,std::size_t maximumFiles,std::string_view conversions,bool showAll){return originalLayoutImpl(document,maximumFiles,conversions,showAll);}
+std::expected<std::string,LayoutError> originalDecodeFilenameBytes(std::string_view value,std::string_view encoding,bool showAll){
+  try{
+    require(value.size()<=4096&&encoding.size()<=128,"Original decoder input exceeds bound");
+    const auto doc=core::Document::parse("d8:encoding"+std::to_string(encoding.size())+":"+std::string(encoding)+"4:infodee");
+    require(doc.has_value(),"Invalid original decoder name");const auto policy=names(*doc,*doc->find("info"),showAll);
+    Node node;node.type=Node::Type::Bytes;node.bytes=value;return decoded(&node,policy.encoding);
+  }catch(const Failure& error){return std::unexpected(LayoutError{error.message});}
+}
 std::expected<std::string,LayoutError> originalFilenameComponent(std::string_view decoded,std::string_view conversions){
   try{const auto policy=filenameConversion(conversions);return component(std::string(decoded),&policy);}catch(const Failure& failure){return std::unexpected(LayoutError{failure.message});}
 }

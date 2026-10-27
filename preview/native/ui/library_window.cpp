@@ -341,6 +341,9 @@ LibraryWindow::LibraryWindow() : model_(new LibraryModel(this)),
     auto* item=torrent->addAction(operationNames[index]);item->setObjectName(operationIds[index]);item->setEnabled(false);
     fileOperationActions_[index]=item;connect(item,&QAction::triggered,this,[this,index]{openFileOperation(static_cast<FileOperation>(index));});
   }
+  reviewReplacement_=torrent->addAction(tr("Review interrupted file replacement…"));
+  reviewReplacement_->setObjectName(QStringLiteral("classic-review-replacement"));reviewReplacement_->setEnabled(false);
+  connect(reviewReplacement_,&QAction::triggered,this,[this]{openFileOperation(FileOperation::ReviewReplacement);});
   localRatingAction_=torrent->addAction(tr("My rating…"));
   localRatingAction_->setObjectName(QStringLiteral("classic-my-rating"));
   localRatingAction_->setEnabled(false);
@@ -1376,6 +1379,7 @@ void LibraryWindow::updateActions() {
   const auto fileTargets=selectedDownloadTargets();
   const bool fileActionsAllowed=!closing_&&!busy_&&!offlinePreview_&&columnSession_&&fileTargets&&!fileTargets->empty()&&fileTargets->size()<=MaximumFileOperationSequence;
   for(const auto& action:fileOperationActions_){if(action){action->setEnabled(fileActionsAllowed);}}
+  if(reviewReplacement_){reviewReplacement_->setEnabled(fileActionsAllowed&&fileTargets->size()==1);}
   if(createTorrentAction_){createTorrentAction_->setEnabled(!closing_&&!busy_&&!offlinePreview_&&columnSession_);}
   if (schedulerAction_) { schedulerAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }
   if (optionsAction_) { optionsAction_->setEnabled(!closing_ && !busy_ && columnSession_ != 0); }

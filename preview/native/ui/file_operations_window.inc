@@ -7,7 +7,7 @@ void LibraryWindow::openFileOperation(FileOperation operation,int originalIndex,
   }
   const auto targets=selectedDownloadTargets();if(!targets||targets->empty()||targets->size()>MaximumFileOperationSequence){setMessage(tr("Select between 1 and %1 torrents for this operation").arg(MaximumFileOperationSequence));return;}
   if(fileOperationDialog_){const auto dialog=fileOperationDialog_;dialog->show();if(!guard||!dialog){return;}dialog->raise();if(!guard||!dialog){return;}dialog->activateWindow();return;}
-  if(originalIndex>=0&&targets->size()!=1){return;}
+  if((originalIndex>=0||operation==FileOperation::ReviewReplacement)&&targets->size()!=1){return;}
   if(targets->size()>1){
     if(fileOperationSequence_){const auto previous=fileOperationSequence_;previous->invalidateSession();if(!guard){return;}previous->deleteLater();}
     auto* sequence=new FileOperationSequence(this);fileOperationSequence_=sequence;const QPointer<FileOperationSequence> expected(sequence);

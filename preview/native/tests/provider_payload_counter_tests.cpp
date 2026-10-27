@@ -1,6 +1,7 @@
 #include "managed_payload_counters.hpp"
 #include "persistent_session.hpp"
 #include "owned_engine_fixture.hpp"
+#include "owned_bad_payload_peer.hpp"
 
 #include <libtorrent/biglybtc_payload_counters.hpp>
 #include <libtorrent/extensions.hpp>
@@ -199,6 +200,33 @@ private slots:
     const auto duplicate = counters->epoch(); QVERIFY(duplicate);
     QCOMPARE(duplicate->number, epoch->number);
     QVERIFY(fixture.intact(false));
+  }
+  void actualBadPayloadSurvivesPauseRetirementAndFreshAdmission_data(){QTest::addColumn<bool>("multi");QTest::newRow("single")<<false;QTest::newRow("multi")<<true;}
+  void actualBadPayloadSurvivesPauseRetirementAndFreshAdmission(){
+    QFETCH(bool,multi);test::OwnedEngineFixture fixture(multi);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);
+    const auto rawHash=fixture.hash->bytes();std::string payload;for(const auto& file:fixture.files){payload+=file.expected.toStdString();}
+    auto lease=storage::ProfileLease::acquire(fixture.native());QVERIFY(lease);auto made=engine::PersistentSession::create({1901,1902,1903});QVERIFY(made);auto owner=std::move(*made);
+    QVERIFY(owner->startManaged(*lease,{.hash=*fixture.hash,.forceStart=true}));
+    QTRY_VERIFY_WITH_TIMEOUT(owner->tcpListenPort().has_value()&&*owner->tcpListenPort()!=0,10000);
+    test::OwnedBadPayloadPeer peer(std::string_view(reinterpret_cast<const char*>(rawHash.data()),rawHash.size()),8,std::move(payload),*owner->tcpListenPort());
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=owner->poll();const auto value=status(*owner,*fixture.hash);return poll&&value&&!value->failure&&value->discardedBytes&&value->hashFailedBytes&&*value->discardedBytes>=16384&&*value->hashFailedBytes>=16384;})(),30000);
+    const auto before=status(*owner,*fixture.hash);QVERIFY(before&&before->received>=32768);QVERIFY2(peer.actualWork(),peer.failure().c_str());
+    QVERIFY(owner->pauseManaged(*fixture.hash,true));QTRY_VERIFY_WITH_TIMEOUT(owner->poll().has_value()&&isPhase(*owner,*fixture.hash,engine::ManagedPhase::Paused),10000);
+    QVERIFY(owner->pauseManaged(*fixture.hash,false));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=owner->poll();const auto value=status(*owner,*fixture.hash);return poll&&value&&!value->failure&&value->phase==engine::ManagedPhase::Downloading&&value->discardedBytes&&value->hashFailedBytes&&*value->discardedBytes>=*before->discardedBytes&&*value->hashFailedBytes>=*before->hashFailedBytes;})(),10000);
+    QVERIFY(owner->stopManaged(*fixture.hash));QTRY_VERIFY_WITH_TIMEOUT(owner->poll().has_value()&&isPhase(*owner,*fixture.hash,engine::ManagedPhase::Stopped),10000);
+    const auto stopped=status(*owner,*fixture.hash);QVERIFY(stopped&&stopped->discardedBytes&&stopped->hashFailedBytes);
+    auto saved=core::Document::parse(test::read(fixture.profile+"/downloads.config").toStdString(),storage::compatibleConfigLimits());QVERIFY(saved);
+    const auto& row=saved->find("downloads")->children.front();QVERIFY(row.find("discarded")&&row.find("hashfailbytes"));
+    QCOMPARE(row.find("discarded")->integer,*stopped->discardedBytes);QCOMPARE(row.find("hashfailbytes")->integer,*stopped->hashFailedBytes);QVERIFY(!row.find("BiglyBTC.badPayloadCountersLost"));
+    const auto discarded=row.find("discarded")->integer,failed=row.find("hashfailbytes")->integer;const auto admission=stopped->admission;
+    QVERIFY(owner->startManaged(*lease,{.hash=*fixture.hash,.forceStart=true}));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=owner->poll();const auto value=status(*owner,*fixture.hash);return poll&&value&&!value->failure&&value->admission>admission&&value->checked&&value->discardedBytes&&value->hashFailedBytes;})(),10000);
+    const auto fresh=status(*owner,*fixture.hash);QCOMPARE(*fresh->discardedBytes,std::int64_t{0});QCOMPARE(*fresh->hashFailedBytes,std::int64_t{0});
+    const auto closed=owner->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
+    saved=core::Document::parse(test::read(fixture.profile+"/downloads.config").toStdString(),storage::compatibleConfigLimits());QVERIFY(saved);const auto& reopened=saved->find("downloads")->children.front();
+    QCOMPARE(reopened.find("discarded")->integer,discarded);QCOMPARE(reopened.find("hashfailbytes")->integer,failed);QVERIFY(!reopened.find("BiglyBTC.badPayloadCountersLost"));
+    QVERIFY(peer.failure().empty());QVERIFY(test::read(fixture.profile+"/BiglyBT.statistics")==fixture.statistics);
   }
   void actualManagedPauseAndRetirementKeepCheckpointAccounting() {
     test::OwnedEngineFixture fixture(false, true);

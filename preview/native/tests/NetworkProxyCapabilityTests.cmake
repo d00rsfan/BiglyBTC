@@ -14,7 +14,8 @@ if(BIGLYBTC_LOCAL_ENGINE AND CMAKE_SYSTEM_NAME STREQUAL "Linux")
     if(_biglybtc_socks4_manifest STREQUAL "3342ec8ae72ecafa4a1b887e664d0d066fffce4f7d864b0b130ca903be953a3a")
       set(_biglybtc_socks4_expect present)
     elseif(_biglybtc_socks4_manifest STREQUAL "ea82f78982a1428eb64067719cf30bbca7cfd09dd2abfcf8f76024f6e6ed41d5"
-        OR _biglybtc_socks4_manifest STREQUAL "f95542706a3b7324c6f2589d90d51a4374c92e7e245319b156f044aeec76a1d8")
+        OR _biglybtc_socks4_manifest STREQUAL "f95542706a3b7324c6f2589d90d51a4374c92e7e245319b156f044aeec76a1d8"
+        OR _biglybtc_socks4_manifest STREQUAL "5901b34eeb25370106bdbf6185a80f0c86c62a837bf2e455f5619921db665760")
       set(_biglybtc_socks4_expect present-webseed)
       set(_biglybtc_webseed_expect TRUE)
     endif()

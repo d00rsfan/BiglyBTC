@@ -25,10 +25,10 @@ std::vector<std::uint16_t> virtualUtf16(std::string_view value){
 bool logicalUtf16Less(const Entry& a,const Entry& b){
   std::string_view x=a.relative,y=b.relative;for(;;){const auto xs=x.find('/'),ys=y.find('/');const auto xc=x.substr(0,xs),yc=y.substr(0,ys);
     if(xc!=yc){const auto u=virtualUtf16(xc),v=virtualUtf16(yc);return std::lexicographical_compare(u.begin(),u.end(),v.begin(),v.end());}
-    if(xs==x.npos||ys==y.npos) return xs==x.npos&&ys!=y.npos;x.remove_prefix(xs+1);y.remove_prefix(ys+1);}
+    if(xs==x.npos||ys==y.npos){return xs==x.npos&&ys!=y.npos;}x.remove_prefix(xs+1);y.remove_prefix(ys+1);}
 }
 std::size_t descriptorKeys(const core::Node& item,std::string_view name){
-  if(item.type!=core::Node::Type::Dictionary) return 0;std::size_t count=0;
+  if(item.type!=core::Node::Type::Dictionary){return 0;}std::size_t count=0;
   for(std::size_t i=0;i+1<item.children.size();i+=2) if(item.children[i].bytes==name) ++count;
   return count;
 }

@@ -1,6 +1,7 @@
 #include "biglybtc/original_file_links.hpp"
 #include "biglybtc/file_policy.hpp"
 #include "file_operations.hpp"
+#include "torrent_intake.hpp"
 #include "application_settings.hpp"
 #include "linear_to_compact.hpp"
 #include "original_torrent_identity.hpp"
@@ -73,6 +74,7 @@ struct Plan {
   std::optional<Replacement> replacement;
   std::optional<std::string> filenameConversions;
   std::string scopeSelection;
+  std::optional<Raw> reviewedJournal; // Memory-only exact old journal CAS; never serialized as authority.
   bool attempted=false,journalCreated=false;
   PayloadDigestCache payloadDigests; // Empty on decode; at most eight pinned fds.
 };
@@ -85,7 +87,7 @@ std::string canonical(const Plan& p,bool stable){
     if(f.source){put(row,"dev",b(std::to_string(f.source->st_dev)));put(row,"ino",b(std::to_string(f.source->st_ino)));if(!stable){put(row,"stamp",stampText(*f.source));}}
     if(f.destination){put(row,"dd",b(std::to_string(f.destination->st_dev)));put(row,"di",b(std::to_string(f.destination->st_ino)));if(!stable){put(row,"destination",stampText(*f.destination));}}
     rows+=row.serialize();}put(d,"files",rows+'e');
-  if(p.replacement){auto r=parse("de");put(r,"root",b(p.replacement->root.string()));put(r,"sha",b(p.replacement->sha256));put(r,"bytes",number(p.files.front().destination->st_size));put(d,"replacement",r.serialize());}
+  if(p.replacement){auto r=parse("de");put(r,"root",b(p.replacement->root.string()));put(r,"sha",b(p.replacement->sha256));put(r,"bytes",number(p.files.front().destination->st_size));if(p.preview.unsealedPreimageDirectory){put(r,"unsealed",b(p.preview.unsealedPreimageDirectory->string()));}put(d,"replacement",r.serialize());}
   if(p.filenameConversions){put(d,"filenameConversions",b(*p.filenameConversions));}
   if(p.trash){auto t=parse("de");put(t,"root",b(p.trash->root.string()));if(!stable){put(t,"date",b(p.trash->deletionDate));}put(d,"trash",t.serialize());}
   if(!p.controls.empty()){std::string controls="l";for(const auto& c:p.controls){auto item=parse("de",MaximumJournal);put(item,"path",b(c.path.string()));if(!stable&&c.before.bytes){put(item,"before",b(*c.before.bytes));put(item,"stamp",stampText(*c.before.stamp));}controls+=item.serialize();}put(d,"controls",controls+'e');}
@@ -236,6 +238,11 @@ std::vector<fs::path> mapping(const core::SavedDownload& saved,const compat::Ori
 namespace {
 bool selecting(FileOperationKind kind){return kind==FileOperationKind::SetFilePolicies;}
 bool fileMapping(FileOperationKind kind){return kind==FileOperationKind::MoveFile||kind==FileOperationKind::RetargetFile||kind==FileOperationKind::RevertFile||kind==FileOperationKind::ReplaceFile;}
+bool replacementRootFor(const fs::path& root,const fs::path& parent,std::string_view leaf){
+  if(root.parent_path()!=parent){return false;}const auto name=root.filename().string();if(name==leaf){return true;}
+  const auto prefix=std::string(leaf)+".retry.";if(!name.starts_with(prefix)){return false;}const auto suffix=std::string_view(name).substr(prefix.size());unsigned n=0;
+  const auto parsed=std::from_chars(suffix.data(),suffix.data()+suffix.size(),n);return parsed.ec==std::errc{}&&parsed.ptr==suffix.data()+suffix.size()&&n>=1&&n<=1024&&std::to_string(n)==suffix;
+}
 bool directoryExists(const fs::path& path){struct stat s{};if(::lstat(path.c_str(),&s)==0){return true;}require(errno==ENOENT,ErrorCode::Io,"Cannot inspect preimage directory");return false;}
 bool retargeting(FileOperationKind kind){return kind==FileOperationKind::Relink||kind==FileOperationKind::RetargetFile;}
 bool recycling(FileOperationKind kind){return kind==FileOperationKind::RemoveRecycleData;}
@@ -636,9 +643,11 @@ Plan decode(const Raw& journalRaw){
     f.sha256=text(runtime.children[i].find("sha"));if((f.source&&p.preview.kind!=FileOperationKind::RemoveKeepData)||(f.destination&&retargeting(p.preview.kind))){require(digestShape(f.sha256),ErrorCode::InvalidFormat,"Missing recovery content digest");}if(const auto* t=runtime.children[i].find("temp")){f.temporary=readStamp(*t);require(f.temporary->st_nlink==1,ErrorCode::InvalidFormat,"Recovery scratch must have one link");}p.files.push_back(std::move(f));
   }
   if(p.preview.kind==FileOperationKind::ReplaceFile){
-    const auto& replacement=field(d.root(),"replacement",Node::Type::Dictionary);require(replacement.children.size()==6&&p.files.size()==1&&p.files.front().destination&&p.files.front().source,ErrorCode::InvalidFormat,"Invalid replacement scope");
+    const auto& replacement=field(d.root(),"replacement",Node::Type::Dictionary);require((replacement.children.size()==6||replacement.children.size()==8)&&p.files.size()==1&&p.files.front().destination&&p.files.front().source,ErrorCode::InvalidFormat,"Invalid replacement scope");
     p.replacement=Replacement{text(replacement.find("root")),text(replacement.find("sha"))};const auto& f=p.files.front();const auto leaf=".BiglyBTC.replaced."+p.preview.hash.hex()+'.'+std::to_string(f.view.index)+'.'+digest(f.view.destination.string()+':'+std::to_string(f.destination->st_dev)+':'+std::to_string(f.destination->st_ino)).substr(0,16);
-    require(p.replacement->root==f.view.destination.parent_path()/leaf&&digestShape(p.replacement->sha256)&&integer(replacement.find("bytes"))==f.destination->st_size,ErrorCode::InvalidFormat,"Replacement preimage binding changed");
+    require(replacementRootFor(p.replacement->root,f.view.destination.parent_path(),leaf)&&digestShape(p.replacement->sha256)&&integer(replacement.find("bytes"))==f.destination->st_size,ErrorCode::InvalidFormat,"Replacement preimage binding changed");
+    if(const auto* abandoned=replacement.find("unsealed")){p.preview.unsealedPreimageDirectory=text(abandoned);require(replacementRootFor(*p.preview.unsealedPreimageDirectory,f.view.destination.parent_path(),leaf)&&*p.preview.unsealedPreimageDirectory!=p.replacement->root,ErrorCode::InvalidFormat,"Unsealed preimage path differs from original reservation family");}
+    require(replacement.children.size()==(p.preview.unsealedPreimageDirectory?8:6),ErrorCode::InvalidFormat,"Unknown replacement intent fields");
     if(const auto* id=d.find("preimageDirectory")){require(id->type==Node::Type::Dictionary&&id->children.size()==4,ErrorCode::InvalidFormat,"Invalid preimage directory authority");p.replacement->directoryDevice=unsignedText(id->find("dev"));p.replacement->directoryInode=unsignedText(id->find("ino"));require(p.replacement->directoryInode,ErrorCode::InvalidFormat,"Missing preimage directory identity");}
     p.preview.replacement=FileOperationPreimage{p.replacement->root/"data",static_cast<std::uint64_t>(f.destination->st_size),p.replacement->sha256};
   }else{require(!d.find("replacement")&&!d.find("preimageDirectory"),ErrorCode::InvalidFormat,"Unexpected replacement authority");}
@@ -689,6 +698,29 @@ PreparedFileOperation& PreparedFileOperation::operator=(PreparedFileOperation&&)
 PreparedFileOperation::~PreparedFileOperation()=default;
 const FileOperationPreview& PreparedFileOperation::preview()const noexcept{return impl_->plan.preview;}
 std::expected<PreparedFileOperation,Error> prepareFileOperation(const ProfileLease& lease,const FileOperationRequest& request,std::stop_token stop){return guarded([&]()->std::expected<PreparedFileOperation,Error>{require(!hasPendingOriginalCompaction(lease),ErrorCode::Conflict,"Recover pending explicit compaction before file operations");return PreparedFileOperation(std::make_unique<PreparedFileOperation::Impl>(prepare(lease,request,stop)));});}
+std::expected<PreparedFileOperation,Error> prepareInterruptedReplacementReview(const ProfileLease& lease,std::stop_token stop){
+  return guarded([&]()->std::expected<PreparedFileOperation,Error>{
+    checkpoint(stop);require(!hasPendingOriginalCompaction(lease)&&!hasPendingTorrentIntake(lease),ErrorCode::Conflict,"Another profile recovery must finish first");
+    const auto profile=fs::path(profilePath(lease));require(!inspect(profile/(std::string(JournalName)+".BiglyBTC.fileop-saving")),ErrorCode::Conflict,"Unpublished journal needs separate review");
+    auto old=read(profile/JournalName,MaximumJournal);auto p=decode(old);profileIdentity(lease,p);targetIdentity(p);validateLegacyNaming(lease,p);validateCurrentIndependence(lease,p);
+    require(p.preview.kind==FileOperationKind::ReplaceFile&&p.replacement&&!p.replacement->directoryInode&&p.files.size()==1&&!p.archive,ErrorCode::Unsupported,"Only an unsealed untouched replacement can be replanned");
+    struct stat unsealed{};require(::lstat(p.replacement->root.c_str(),&unsealed)==0&&S_ISDIR(unsealed.st_mode),ErrorCode::Conflict,"No uncertain preimage directory needs review");
+    if(p.filenameConversions){require(expectedValue(readOriginalFilenameConversions(lease))==*p.filenameConversions,ErrorCode::Conflict,"Original filename policy changed");}
+    // Exact before-only checks. Once any payload, control, or document effect
+    // has occurred, this path is unavailable; ordinary recovery stays required.
+    checkControls(p);for(const auto& e:p.edits){check(e.path,e.before,MaximumDocument);}auto& f=p.files.front();
+    require(f.source&&f.destination&&!f.temporary,ErrorCode::Conflict,"Replacement source authority is incomplete");
+    for(const auto& pair:{std::pair{f.view.source,*f.source},std::pair{f.view.destination,*f.destination}}){const auto now=inspect(pair.first);require(now&&unchanged(*now,pair.second),ErrorCode::Conflict,"Original replacement preimage changed");}
+    require(p.payloadDigests.digest(f.view.source,*f.source,stop)==f.sha256&&p.payloadDigests.digest(f.view.destination,*f.destination,stop)==p.replacement->sha256,ErrorCode::Conflict,"Original replacement bytes changed");
+    const auto abandoned=p.replacement->root;
+    const auto leaf=".BiglyBTC.replaced."+p.preview.hash.hex()+'.'+std::to_string(f.view.index)+'.'+digest(f.view.destination.string()+':'+std::to_string(f.destination->st_dev)+':'+std::to_string(f.destination->st_ino)).substr(0,16);
+    fs::path fresh;for(unsigned n=1;n<=1024;++n){const auto candidate=f.view.destination.parent_path()/(leaf+".retry."+std::to_string(n));if(!directoryExists(candidate)){fresh=candidate;break;}}
+    require(!fresh.empty(),ErrorCode::Conflict,"Fresh preimage reservation bound exhausted");p.replacement->root=fresh;p.preview.unsealedPreimageDirectory=abandoned;p.preview.replacement->path=fresh/"data";
+    f.view.present=true;f.view.actualBytes=f.source->st_size;f.view.device=f.source->st_dev;f.view.inode=f.source->st_ino;p.preview.files={f.view};p.preview.presentFiles=1;p.preview.presentBytes=f.source->st_size;p.preview.requiresRecheck=true;
+    p.preview.approvalScopeDigest=digest(canonical(p,true));p.preview.executionCasDigest=digest(canonical(p,false));p.reviewedJournal=std::move(old);p.journalCreated=false;
+    checkpoint(stop);return PreparedFileOperation(std::make_unique<PreparedFileOperation::Impl>(std::move(p)));
+  });
+}
 std::expected<FileOperationConfirmation,Error> confirmFileOperation(const PreparedFileOperation& p,std::string_view accepted,bool deleteConfirmed,bool archiveConfirmed){return guarded([&]()->std::expected<FileOperationConfirmation,Error>{require(accepted==p.preview().approvalScopeDigest,ErrorCode::Conflict,"File-operation approved scope changed");require(!(deleting(p.preview().kind)||p.preview().kind==FileOperationKind::ReplaceFile)||deleteConfirmed,ErrorCode::Conflict,"Explicit payload deletion confirmation is required");require(!p.preview().torrentArchive||archiveConfirmed,ErrorCode::Conflict,"Explicit reviewed torrent archive confirmation is required");return FileOperationConfirmation{std::string(accepted),deleteConfirmed,archiveConfirmed};});}
 std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease& lease,PreparedFileOperation&& prepared,const FileOperationConfirmation& confirmation,void(*observer)(FileOperationStage),std::stop_token stop){
   return guarded([&]()->std::expected<FileOperationResult,Error>{require(!hasPendingOriginalCompaction(lease),ErrorCode::Conflict,"Recover pending explicit compaction before applying file operations");require(bool(prepared.impl_),ErrorCode::Conflict,"Prepared file operation was moved/consumed");auto& p=prepared.impl_->plan;
@@ -696,11 +728,15 @@ std::expected<FileOperationResult,Error> applyFileOperation(const ProfileLease& 
     // every transient pinned fd on success and exception, leaving its attempted
     // state/journal/retry semantics unchanged.
     struct ClearDigests {PayloadDigestCache& cache;~ClearDigests(){cache.clear();}} clearDigests{p.payloadDigests};
-    checkpoint(stop);require(!p.attempted&&confirmation.approvalScopeDigest==p.preview.approvalScopeDigest&&(!(deleting(p.preview.kind)||p.preview.kind==FileOperationKind::ReplaceFile)||confirmation.deleteConfirmed)&&(!p.archive||confirmation.archiveConfirmed),ErrorCode::Conflict,"File-operation confirmation is stale or missing");profileIdentity(lease,p);targetIdentity(p);require(!hasPendingFileOperation(lease),ErrorCode::Conflict,"Existing file operation needs recovery");
+    checkpoint(stop);require(!p.attempted&&confirmation.approvalScopeDigest==p.preview.approvalScopeDigest&&(!(deleting(p.preview.kind)||p.preview.kind==FileOperationKind::ReplaceFile)||confirmation.deleteConfirmed)&&(!p.archive||confirmation.archiveConfirmed),ErrorCode::Conflict,"File-operation confirmation is stale or missing");profileIdentity(lease,p);targetIdentity(p);if(p.reviewedJournal){check(p.profile/JournalName,*p.reviewedJournal,MaximumJournal);require(!inspect(p.profile/(std::string(JournalName)+".BiglyBTC.fileop-saving")),ErrorCode::Conflict,"Journal publication is uncertain");validateCurrentIndependence(lease,p);}else{require(!hasPendingFileOperation(lease),ErrorCode::Conflict,"Existing file operation needs recovery");}
     if(p.filenameConversions){require(expectedValue(readOriginalFilenameConversions(lease))==*p.filenameConversions,ErrorCode::Conflict,"Original filename policy changed after preparation");}
     if(p.archive){checkArchive(*p.archive,false);}checkControls(p);for(const auto& e:p.edits){check(e.path,e.before,MaximumDocument);}for(auto it=p.files.rbegin();it!=p.files.rend();++it){auto& f=*it;checkpoint(stop);const auto& expected=retargeting(p.preview.kind)?f.destination:f.source;const auto& path=retargeting(p.preview.kind)?f.view.destination:f.view.source;const auto now=inspect(path);require(bool(now)==bool(expected)&&(!now||unchanged(*now,*expected)),ErrorCode::Conflict,"Payload changed after preparation");if(expected&&p.preview.kind!=FileOperationKind::RemoveKeepData){f.sha256=p.payloadDigests.digest(path,*expected,stop);}}
     if(p.replacement){checkReplacementBeforeJournal(p,stop);}
-    checkpoint(stop);p.attempted=true;saveJournal(p);if(observer){observer(FileOperationStage::JournalSynced);}return execute(lease,p,false,observer);
+    checkpoint(stop);p.attempted=true;if(p.reviewedJournal){
+      // Replace ONLY the exact confirmed old journal, before any new payload or
+      // profile effect. The old uncertain directory is never adopted or removed.
+      publish(p.profile/JournalName,*p.reviewedJournal,journal(p),MaximumJournal);p.reviewedJournal.reset();p.journalCreated=true;
+    }else{saveJournal(p);}if(observer){observer(FileOperationStage::JournalSynced);}return execute(lease,p,false,observer);
   });
 }
 std::expected<bool,Error> torrentArchiveDeletionPreference(const ProfileLease& lease,std::stop_token stop){

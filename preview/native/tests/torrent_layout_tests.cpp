@@ -20,11 +20,24 @@ std::string list(const std::string& entries) { return "d4:name6:bundle12:piece l
 }
 
 int main(int argc, char** argv) {
+  if((argc==3||argc==4)&&std::string_view(argv[1])=="--decode-original-filenames"){
+    const auto nibble=[](char c)->unsigned{if(c>='0'&&c<='9'){return c-'0';}if(c>='a'&&c<='f'){return c-'a'+10;}if(c>='A'&&c<='F'){return c-'A'+10;}check(false,"Invalid hex fixture");return 0;};
+    std::string line;while(std::getline(std::cin,line)){check(line.size()%2==0&&line.size()<=8192,"Bounded hex decoder fixture");std::string raw;for(std::size_t n=0;n<line.size();n+=2){raw+=static_cast<char>((nibble(line[n])<<4)|nibble(line[n+1]));}
+      const auto result=compat::originalDecodeFilenameBytes(raw,argv[2],argc==4&&std::string_view(argv[3])=="show-all");if(!result){std::cout<<"ERROR\n";}else{for(const unsigned char c:*result){std::cout<<"0123456789abcdef"[c>>4]<<"0123456789abcdef"[c&15];}std::cout<<'\n';}}
+    return 0;
+  }
   if(argc==4&&std::string_view(argv[1])=="--inspect-linux-names"){
     const auto read=[](const char* path,std::size_t limit){std::ifstream stream(path,std::ios::binary);check(static_cast<bool>(stream),"Owned filename fixture unavailable");std::string value(std::istreambuf_iterator<char>(stream),{});check(value.size()<=limit,"Owned filename fixture bound");return value;};
     const auto raw=read(argv[2],1024*1024),conversions=read(argv[3],16384);const auto source=core::Document::parse(raw);check(source.has_value(),"Filename fixture bencode");const auto layout=compat::originalLayout(*source,100000,conversions);check(layout.has_value(),layout?"":layout.error().message.c_str());
     const auto hex=[](std::string_view value){std::string out;for(const unsigned char c:value){out+="0123456789ABCDEF"[c>>4];out+="0123456789ABCDEF"[c&15];}return out;};std::cout<<"NAME\t"<<hex(layout->name)<<'\n';
     for(std::size_t n=0;n<layout->files.size();++n){const auto& file=layout->files[n];std::cout<<"FILE\t"<<n<<'\t'<<file.offset<<'\t'<<file.bytes<<'\t'<<hex(file.path)<<'\n';}check(source->serialize()==raw,"Filename inspection cannot rewrite metadata");return 0;
+  }
+  {
+    const auto replacement=compat::originalDecodeFilenameBytes(std::string("a\x98z",3),"windows-1251");check(replacement&&*replacement=="a\xef\xbf\xbdz","Undefined legacy byte falls back to whole-input Java UTF8 replacement");
+    const auto thai=compat::originalDecodeFilenameBytes(std::string("\xa1",1),"TIS-620");check(thai&&*thai=="ก","Source-registered Thai scalar");
+    check(!compat::originalDecodeFilenameBytes("ascii","IBM866"),"ShowAll-only decoder stays unregistered without held capability");
+    const auto dos=compat::originalDecodeFilenameBytes(std::string("\x80",1),"IBM866",true);check(dos&&*dos=="А","Explicit ShowAll DOS Cyrillic mapping");
+    check(!compat::originalDecodeFilenameBytes("ascii","shift jis"),"No punctuation-guessed aliases");
   }
   {
     const std::array<std::array<std::string_view,3>,9> cases{{
@@ -98,10 +111,10 @@ int main(int argc, char** argv) {
         check(source->serialize()==raw,"Windows-1251 projection never rewrites hashed raw metadata");
       }
     }
-    for(const unsigned value:{0U,10U,31U,47U,92U,127U,152U}){
+    for(const unsigned value:{0U,10U,47U,92U}){
       const auto bad="a"+std::string(1,static_cast<char>(value))+"z";auto source=document(list(file(bad,"1")));
       check(source.replaceValue("encoding",bytes("windows-1251")).has_value(),"Unsafe codec fixture");
-      check(!compat::originalLayout(source),"Undefined/control/separator byte cannot become a substituted filesystem name");
+      check(!compat::originalLayout(source),"Unsafe NUL/newline/separator bytes remain refused");
     }
     for(const auto* alias:{"windows1251","windows_1251","cp-1251","koi8-u"}){
       auto source=document(list(file("safe","1")));check(source.replaceValue("encoding",bytes(alias)).has_value(),"Unqualified alias fixture");

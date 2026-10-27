@@ -47,6 +47,8 @@ struct ManagedDownloadStatus {
   std::optional<core::QueueObservedFacts> queueSourceFacts{};
   std::optional<std::int32_t> queueIdleUploadSeconds{}; // Signed known-negative differs from unavailable.
   std::optional<std::int64_t> queueSmoothedPayloadUploadRate{};
+  // Exact admission prefixes under the same accepted payload reset epoch.
+  std::optional<std::int64_t> discardedBytes{}, hashFailedBytes{};
 };
 enum class MagnetPhase { Resolving, Retiring, Imported, Failed, Cancelled };
 struct PendingMagnetStatus {

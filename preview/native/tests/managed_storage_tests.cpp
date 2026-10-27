@@ -146,6 +146,40 @@ int main() {
   std::ranges::transform(filesystemEncoding,filesystemEncoding.begin(),[](unsigned char c){return c>='A'&&c<='Z'?static_cast<char>(c+32):static_cast<char>(c);});
   require(filesystemEncoding=="utf8","Actual generated Unicode fixtures require an installed UTF8 locale");
 
+  test("exact-bad-byte-checkpoint-preserves-unknowns-and-sparse-zero",[]{
+    Fixture f;f.fullPayload();
+    auto source=f.saved();auto selected=core::Document::parse(encode(row(source)));require(selected.has_value(),"Bad-byte selected row");
+    require(selected->replaceValue("discarded",i(100)).has_value()&&selected->replaceValue("hashfailbytes",i(200)).has_value()
+        &&source.replaceValue("downloads","l"+selected->serialize()+'e').has_value(),"Captured saved bad bytes");write(f.profile/"downloads.config",source.serialize());
+    const auto unknown=encode(*row(source).find("private_row_value"));
+    {auto owner=f.prepare();const auto saved=owner.checkpoint(*f.lease,std::array<std::uint8_t,2>{0,0},false,1000,3,0,0,{},engine::detail::ManagedBadPayloadBytes{23,17});require(saved.has_value(),"Exact bad-byte checkpoint");}
+    auto current=f.saved();require(row(current).find("discarded")->integer==123&&row(current).find("hashfailbytes")->integer==217,"Only actual admission deltas added to original totals");
+    require(!row(current).find("BiglyBTC.badPayloadCountersLost")&&encode(*row(current).find("private_row_value"))==unknown,"Known receipt does not materialize loss/defaults or rewrite unknown values");
+    {auto owner=f.prepare();require(!owner.queueMetadata().badPayloadCountersLost&&!owner.queueMetadata().badCounterLossSource,"Absent marker is distinct from retained lost history");const auto saved=owner.checkpoint(*f.lease,std::array<std::uint8_t,2>{0,0},false,0,0,0,0,{},engine::detail::ManagedBadPayloadBytes{0,0});require(saved.has_value(),"Known-zero readmission checkpoint");}
+    current=f.saved();require(row(current).find("discarded")->integer==123&&row(current).find("hashfailbytes")->integer==217,"Known0 never resets previous bad bytes");
+    Fixture fresh;auto owner=fresh.prepare();require(owner.checkpoint(*fresh.lease,std::array<std::uint8_t,2>{0,0},false,0,0,0,0,{},engine::detail::ManagedBadPayloadBytes{0,0}).has_value(),"Fresh exact0 checkpoint");
+    current=fresh.saved();require(!row(current).find("discarded")&&!row(current).find("hashfailbytes")&&!row(current).find("BiglyBTC.badPayloadCountersLost"),"Exact0 leaves original absent defaults absent");
+  });
+  test("unknown-bad-tail-persists-loss-without-erasing-saved-counters",[]{
+    Fixture f;auto source=f.saved();auto selected=core::Document::parse(encode(row(source)));require(selected.has_value(),"Loss selected row");
+    require(selected->replaceValue("discarded",i(100)).has_value()&&selected->replaceValue("hashfailbytes",i(200)).has_value()&&source.replaceValue("downloads","l"+selected->serialize()+'e').has_value(),"Loss saved prefix");write(f.profile/"downloads.config",source.serialize());
+    {auto owner=f.prepare();require(owner.checkpoint(*f.lease,std::array<std::uint8_t,2>{0,0},false,1000,0,0,0,{},engine::detail::ManagedBadPayloadBytes{23,17},false).has_value(),"Retain a known prefix with uncertain later tail");}
+    auto current=f.saved();require(row(current).find("discarded")->integer==123&&row(current).find("hashfailbytes")->integer==217&&row(current).find("BiglyBTC.badPayloadCountersLost")->integer==1,"Unknown tail preserves exact saved prefix and records uncertainty");
+    {auto owner=f.prepare();require(owner.queueMetadata().badPayloadCountersLost&&owner.queueMetadata().badCounterLossSource=="i1e","Readback distinguishes durable known-loss from absent marker");require(owner.checkpoint(*f.lease,std::array<std::uint8_t,2>{0,0},false,0,0,0,0,{},engine::detail::ManagedBadPayloadBytes{0,0}).has_value(),"New exact epoch cannot erase older lost history");}
+    require(row(f.saved()).find("BiglyBTC.badPayloadCountersLost")->integer==1,"Loss stays explicit through later known0 admission");
+    Fixture unavailable;{auto owner=unavailable.prepare();checkpoint(owner,unavailable,{0,0},false,1000,0);}
+    const auto unknown=unavailable.saved();require(!row(unknown).find("discarded")&&!row(unknown).find("hashfailbytes")&&row(unknown).find("BiglyBTC.badPayloadCountersLost")->integer==1,"Absent observer records loss without fabricating zero bad-byte fields");
+  });
+  test("bad-counter-CAS-refuses-before-profile-progress-write",[]{
+    for(const bool loss:{false,true}){
+      Fixture f;auto owner=f.prepare();auto changed=f.saved();auto selected=core::Document::parse(encode(row(changed)));require(selected.has_value(),"CAS selected row");
+      require(selected->replaceValue(loss?"BiglyBTC.badPayloadCountersLost":"discarded",i(1)).has_value()&&changed.replaceValue("downloads","l"+selected->serialize()+'e').has_value(),"Concurrent source change");write(f.profile/"downloads.config",changed.serialize());
+      const auto state=read(f.profile/"active"/(f.hash.hex()+".dat")),inventory=read(f.profile/"downloads.config");
+      const auto refused=owner.checkpoint(*f.lease,std::array<std::uint8_t,2>{0,0},false,0,0,0,0,{},engine::detail::ManagedBadPayloadBytes{0,0});
+      require(!refused&&refused.error().code==Code::Conflict&&read(f.profile/"downloads.config")==inventory&&read(f.profile/"active"/(f.hash.hex()+".dat"))==state,"Changed bad source refuses without rewriting state/inventory");
+    }
+  });
+
   test("actual-intake-save-name-drives-descriptors-suffix-and-completion",[] {
     for(const bool multi:{false,true}){
       Fixture f(multi,false,".part");const auto profile=f.root/"custom-import-profile",destination=f.root/"custom-import-payload";fs::create_directories(profile);write(profile/"downloads.config","d9:downloadsle6:futurei7ee");

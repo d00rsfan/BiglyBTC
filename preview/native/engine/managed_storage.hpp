@@ -29,6 +29,8 @@ struct ManagedPayloadClaim {
   std::uint64_t device=0,inode=0;
 };
 
+struct ManagedBadPayloadBytes { std::int64_t discarded=0,hashFailed=0; };
+
 struct ManagedQueueMetadata {
   std::int64_t position = 1, downloaded = 0, uploaded = 0, discarded = 0, hashFailed = 0;
   std::int64_t secondsDownloading = 0, secondsSeeding = 0;
@@ -37,6 +39,9 @@ struct ManagedQueueMetadata {
   std::optional<std::string> aggregateScrapeCache;
   std::optional<std::int64_t> legacyScrapeCache;
   std::optional<std::vector<std::array<unsigned char,32>>> trackerOrder;
+  // Absent loss marker is not current counter proof; an actual V3 epoch is still required.
+  bool badPayloadCountersLost=false;
+  std::optional<std::string> badCounterLossSource{};
 };
 
 // Storage prerequisite only: the future owner must independently hold checking
@@ -85,7 +90,9 @@ public:
       std::span<const std::uint8_t> verifiedPieces,bool allComplete,
       std::int64_t downloaded,std::int64_t uploaded,
       std::int64_t secondsDownloading = 0, std::int64_t secondsSeeding = 0,
-      std::optional<std::int32_t> secondsSinceUpload = {});
+      std::optional<std::int32_t> secondsSinceUpload = {},
+      std::optional<ManagedBadPayloadBytes> badPayloadBytes = {},
+      bool badPayloadComplete = true);
 private:
   struct Impl;
   explicit ManagedStorage(std::unique_ptr<Impl>);

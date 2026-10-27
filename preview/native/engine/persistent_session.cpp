@@ -124,7 +124,8 @@ struct PersistentSession::Impl {
     std::optional<bool> positionTransition;
     std::uint64_t positionTransitionOrder=0;
     bool positionTransitionLost=false;
-    std::int64_t remainingBytes = 0, badPayloadBytes = 0;
+    std::int64_t remainingBytes = 0;
+    std::optional<detail::ManagedBadPayloadBytes> badPayloadBytes;
     bool flushed = false, removing = false, removed = false;
     Clock::time_point deadline{};
     std::vector<std::uint8_t> verified;
@@ -642,7 +643,13 @@ struct PersistentSession::Impl {
         protocol=detail::ManagedPayloadCounters::Protocol{sample.total_download-sample.total_payload_download,
             sample.total_upload-sample.total_payload_upload};
       }
-      actual = value.payloadCounters->combine(*epoch, sample.total_payload_download, sample.total_payload_upload, protocol);
+      std::optional<detail::ManagedPayloadCounters::Bad> bad;
+      if(sample.total_redundant_bytes>=0&&sample.total_failed_bytes>=0
+          &&sample.total_redundant_bytes<std::numeric_limits<std::int64_t>::max()
+          &&sample.total_failed_bytes<std::numeric_limits<std::int64_t>::max()){
+        bad=detail::ManagedPayloadCounters::Bad{sample.total_redundant_bytes,sample.total_failed_bytes};
+      }
+      actual = value.payloadCounters->combine(*epoch, sample.total_payload_download, sample.total_payload_upload, protocol,bad);
       if (actual.state != detail::ManagedPayloadCounters::Read::Retry) { break; }
     }
     if (actual.state != detail::ManagedPayloadCounters::Read::Accepted) {
@@ -662,13 +669,16 @@ struct PersistentSession::Impl {
     value.status.received = actual.received;
     value.status.sent = actual.sent;
     value.status.combinedReceived=actual.combinedReceived;value.status.combinedSent=actual.combinedSent;
+    value.badPayloadBytes.reset();value.status.discardedBytes.reset();value.status.hashFailedBytes.reset();
+    if(actual.badPrefix){value.badPayloadBytes=detail::ManagedBadPayloadBytes{actual.badPrefix->discarded,actual.badPrefix->hashFailed};}
+    if(actual.bad){
+      value.status.discardedBytes=actual.bad->discarded;value.status.hashFailedBytes=actual.bad->hashFailed;
+    }
     if(!value.probeScope){value.probeScope=actual.combinedReceived?core::QueueProbeScope::NativeCombined:core::QueueProbeScope::NativePayload;}
     value.status.downloadRate = sample.download_payload_rate;
     value.status.uploadRate = sample.upload_payload_rate;
     value.status.pieces = sample.num_pieces;
     value.remainingBytes = std::max<std::int64_t>(0, sample.total_wanted - sample.total_wanted_done);
-    value.badPayloadBytes = core::sourceQueueSum(std::max<std::int64_t>(0,sample.total_failed_bytes),
-        std::max<std::int64_t>(0,sample.total_redundant_bytes));
     const auto now = Clock::now();
     value.queueObservedMillis=std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
     if(!value.stop&&!value.status.failure){
@@ -890,10 +900,14 @@ struct PersistentSession::Impl {
       item.maximumShareRatio = saved.maximumShareRatio;
       // Original share ratio uses good received data. Both saved and actual
       // admission counters are checked before addition; never wrap a rank input.
-      if (value.status.received <= std::numeric_limits<std::int64_t>::max() - saved.downloaded
-          && value.status.sent <= std::numeric_limits<std::int64_t>::max() - saved.uploaded) {
+      if (value.badPayloadBytes&&value.status.discardedBytes&&value.status.hashFailedBytes&&!saved.badPayloadCountersLost
+          &&value.status.received <= std::numeric_limits<std::int64_t>::max() - saved.downloaded
+          &&value.status.sent <= std::numeric_limits<std::int64_t>::max() - saved.uploaded
+          &&value.badPayloadBytes->discarded<=std::numeric_limits<std::int64_t>::max()-saved.discarded
+          &&value.badPayloadBytes->hashFailed<=std::numeric_limits<std::int64_t>::max()-saved.hashFailed) {
         item.shareRatio=core::sourceQueueShareRatio(saved.downloaded+value.status.received,
-            saved.uploaded+value.status.sent,core::sourceQueueSum(saved.discarded,value.badPayloadBytes),saved.hashFailed);
+            saved.uploaded+value.status.sent,saved.discarded+value.badPayloadBytes->discarded,
+            saved.hashFailed+value.badPayloadBytes->hashFailed);
       }
       if(const auto durations=value.queueSource.durations){
         const auto downloaded=core::sourceQueueSum(saved.secondsDownloading,durations->downloading);
@@ -1091,7 +1105,8 @@ struct PersistentSession::Impl {
           auto saved = value.storage.checkpoint(*managedLease, value.verified, value.status.complete,
               value.status.received, value.status.sent, value.secondsDownloading, value.secondsSeeding,
               value.idleCheckpoint&&value.idleCheckpoint->second==value.status.sent
-                  ?std::optional<std::int32_t>{value.idleCheckpoint->first}:std::nullopt);
+                  ?std::optional<std::int32_t>{value.idleCheckpoint->first}:std::nullopt,value.badPayloadBytes,
+              value.status.discardedBytes.has_value()&&value.status.hashFailedBytes.has_value());
           if (!saved) { value.status.failure = saved.error(); }
         }
         value.status.retained = false;

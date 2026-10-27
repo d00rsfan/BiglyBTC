@@ -234,6 +234,7 @@ private:
   QPointer<FileOperationSequence> fileOperationSequence_;
   QPointer<TorrentCreationDialog> torrentCreationDialog_;
   std::array<QPointer<QAction>,4> fileOperationActions_;
+  QPointer<QAction> reviewReplacement_;
   QPointer<QAction> createTorrentAction_;
   std::optional<FileOperationRequest> activeFileOperation_;
   bool fileOperationExecuting_ = false;

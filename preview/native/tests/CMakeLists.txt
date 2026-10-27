@@ -1362,7 +1362,7 @@ endif()
 
 if(BIGLYBTC_LOCAL_ENGINE)
   add_executable(biglybtc-file-operations-driver file_operations_driver.cpp)
-  target_link_libraries(biglybtc-file-operations-driver PRIVATE biglybtc_profile OpenSSL::Crypto)
+  target_link_libraries(biglybtc-file-operations-driver PRIVATE biglybtc_profile OpenSSL::Crypto biglybtc_local_engine)
   target_compile_options(biglybtc-file-operations-driver PRIVATE -Wall -Wextra -Wpedantic -Werror)
 endif()
 
@@ -1818,3 +1818,5 @@ target_compile_features(biglybtc-queue-facts-replay PRIVATE cxx_std_23)
 target_compile_options(biglybtc-queue-facts-replay PRIVATE -Wall -Wextra -Wpedantic -Werror)
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/ProviderQueueRuntimeTests.cmake")
+
+include("${CMAKE_CURRENT_SOURCE_DIR}/ProviderTrafficRuntimeTests.cmake")

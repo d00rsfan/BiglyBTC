@@ -39,6 +39,15 @@ protected:bool eventFilter(QObject* watched,QEvent* event)override {
 class FileOperationDialogTests final:public QObject {
  Q_OBJECT
 private slots:
+ void interruptedReplacementReviewShowsFreshBackupAndLeavesConsentUntransferred(){
+  FileOperationDialog dialog;QSignalSpy reads(&dialog,&FileOperationDialog::planRequested),writes(&dialog,&FileOperationDialog::executeRequested);
+  QVERIFY(dialog.beginOperation(29,1,target(),FileOperation::ReviewReplacement));dialog.show();QTRY_COMPARE(reads.count(),1);const auto request=reads[0][0].value<FileOperationRequest>();QCOMPARE(request.originalIndex,-1);QVERIFY(request.destinationParent.isEmpty());
+  auto packet=planFor(request);packet->paths.resize(1);packet->paths[0].destination=QStringLiteral("/owned/existing.bin");packet->presentFiles=1;packet->missingFiles=0;packet->retainedPreimage=QStringLiteral("/owned/.BiglyBTC.replaced.review.retry.1/data");packet->priorDestinationBytes=9;packet->priorDestinationSha256=QString(64,QChar('c'));packet->unsealedPreimageDirectory=QStringLiteral("/owned/.BiglyBTC.replaced.review");
+  QVERIFY(dialog.setPlan(packet));auto* table=dialog.findChild<QTableView*>("file-operation-paths");QTRY_COMPARE(table->model()->rowCount(),2);QCOMPARE(table->model()->index(1,0).data().toString(),packet->paths[0].destination);QCOMPARE(table->model()->index(1,1).data().toString(),packet->retainedPreimage);QVERIFY(!dialog.findChild<QLineEdit*>("file-operation-destination")->isVisible());
+  const auto summary=dialog.findChild<QLabel*>("file-operation-summary")->text();QVERIFY(summary.contains(packet->unsealedPreimageDirectory)&&summary.contains(packet->retainedPreimage)&&summary.contains("untouched"));dialog.accept();QCOMPARE(writes.count(),0);
+  dialog.findChild<QCheckBox*>("file-operation-confirm-delete")->setChecked(true);dialog.findChild<QPushButton*>("file-operation-review")->click();QTRY_COMPARE(reads.count(),2);QVERIFY(!dialog.findChild<QCheckBox*>("file-operation-confirm-delete")->isChecked());QVERIFY(!dialog.setPlan(packet));auto next=std::make_shared<FileOperationPlanPacket>(*packet);next->request=reads[1][0].value<FileOperationRequest>();QVERIFY(dialog.setPlan(next));QTRY_COMPARE(table->model()->rowCount(),2);QVERIFY(capture(dialog,QStringLiteral("file-operation-recovery-review.png")));dialog.findChild<QCheckBox*>("file-operation-confirm-delete")->setChecked(true);dialog.accept();QCOMPARE(writes.count(),1);QVERIFY(writes[0][0].value<FileOperationSubmission>().deleteConfirmed);
+ }
+
  void initTestCase(){qRegisterMetaType<FileOperationRequest>();qRegisterMetaType<FileOperationSubmission>();}
  void explicitReplacementShowsRetainedPreimageAndRequiresFreshConsent() {
   FileOperationDialog dialog;QSignalSpy reads(&dialog,&FileOperationDialog::planRequested),writes(&dialog,&FileOperationDialog::executeRequested);
