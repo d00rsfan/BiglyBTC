@@ -1,4 +1,5 @@
 #include "metadata_disk_router.hpp"
+#include "mmap_disk_latency.hpp"
 #include "owned_engine_fixture.hpp"
 
 #include <QtTest>
@@ -9,7 +10,9 @@
 #include <libtorrent/performance_counters.hpp>
 #include <libtorrent/session_params.hpp>
 
+#include <algorithm>
 #include <array>
+#include <atomic>
 #include <cstdint>
 #include <filesystem>
 #include <memory>
@@ -64,6 +67,85 @@ lt::torrent_handle add(lt::session& session, const test::OwnedEngineFixture& fix
 class MetadataDiskRouterTests final : public QObject {
   Q_OBJECT
 private slots:
+  void mmapAbortRetiresObservationWhileActualSlotAndOwnerStillExist(){
+    QTemporaryDir area;QVERIFY(area.isValid());auto policy=std::make_shared<Policy>();Geometry geometry;
+    const auto path=std::filesystem::path(area.path().toStdString())/"uncreated";
+    std::array<unsigned char,20> hash{};std::copy(geometry.hash.begin(),geometry.hash.end(),hash.begin());
+    auto observation=std::make_shared<engine::detail::MmapDiskLatency>(61);QVERIFY(policy->registerMmapLatency(path,hash,observation));
+    DirectDisk engine(policy);auto owner=std::make_shared<int>(1);std::weak_ptr<int> weakOwner=owner;
+    auto holder=engine.disk->new_torrent(geometry.parameters(path.string()),owner);owner.reset();
+    QVERIFY(observation->active()&&!weakOwner.expired());QVERIFY(observation->snapshot(engine::detail::DiskLatency::nowMillis()).readMillis);
+    engine.disk->abort(false);QVERIFY(!observation->active());QVERIFY(!weakOwner.expired());
+    const auto stopped=observation->snapshot(engine::detail::DiskLatency::nowMillis());QVERIFY(!stopped.readMillis&&!stopped.writeMillis);
+    holder.reset();QVERIFY(weakOwner.expired());QVERIFY(!std::filesystem::exists(path));
+  }
+  void mmapObservationMatchesExactHashAndPathAndClaimsOnce(){
+    QTemporaryDir area;QVERIFY(area.isValid());auto policy=std::make_shared<Policy>();
+    const auto path=std::filesystem::path(area.path().toStdString())/"exact";
+    std::array<unsigned char,20> hash{};hash[0]=1;auto different=hash;different[19]=2;
+    auto observation=std::make_shared<engine::detail::MmapDiskLatency>(17);
+    QVERIFY(policy->registerMmapLatency(path,hash,observation));
+    QVERIFY(!observation->snapshot(engine::detail::DiskLatency::nowMillis()).readMillis);
+    QVERIFY(!policy->claimMmapLatency(path.parent_path(),hash));
+    QVERIFY(!policy->claimMmapLatency(path,different));
+    QCOMPARE(policy->claimMmapLatency(path,hash),observation);
+    QVERIFY(!policy->claimMmapLatency(path,hash));
+    auto duplicate=std::make_shared<engine::detail::MmapDiskLatency>(18);
+    QVERIFY(!policy->registerMmapLatency(path,hash,duplicate));
+    observation->retire();QVERIFY(!observation->snapshot(engine::detail::DiskLatency::nowMillis()).readMillis);
+    auto next=std::make_shared<engine::detail::MmapDiskLatency>(19);
+    QVERIFY(policy->registerMmapLatency(path,hash,next));QCOMPARE(policy->claimMmapLatency(path,hash),next);
+    next->retire();next.reset();QVERIFY(!policy->claimMmapLatency(path,hash));
+    QVERIFY(!std::filesystem::exists(path));
+  }
+  void mmapActualReadWriteCallbacksAreObservedAndRetiredWithoutOwningTorrent_data(){QTest::addColumn<bool>("observe");QTest::newRow("stock-control")<<false;QTest::newRow("observed")<<true;}
+  void mmapActualReadWriteCallbacksAreObservedAndRetiredWithoutOwningTorrent(){
+    QFETCH(bool,observe);
+    QTemporaryDir area;QVERIFY(area.isValid());auto policy=std::make_shared<Policy>();Geometry geometry;
+    const auto path=std::filesystem::path(area.path().toStdString())/"payload";
+    QVERIFY(QDir().mkpath(QString::fromStdString(path.string())));
+    std::array<unsigned char,20> hash{};std::copy(geometry.hash.begin(),geometry.hash.end(),hash.begin());
+    auto observation=std::make_shared<engine::detail::MmapDiskLatency>(41);if(observe){QVERIFY(policy->registerMmapLatency(path,hash,observation));}
+    DirectDisk engine(policy);auto owner=std::make_shared<int>(1);std::weak_ptr<int> weakOwner=owner;
+    auto holder=engine.disk->new_torrent(geometry.parameters(path.string()),owner);owner.reset();
+    const lt::peer_request request{lt::piece_index_t{0},0,16384};std::array<char,16384> data{};data.fill('L');
+    int writes=0,reads=0;bool error=false,match=false;
+    engine.disk->async_write(holder,request,data.data(),{},[&](const lt::storage_error& actual){++writes;error|=bool(actual.ec);});
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{engine.disk->submit_jobs();engine.pump();return writes==1;})(),10000);
+    auto written=observation->snapshot(engine::detail::DiskLatency::nowMillis());QVERIFY(!written.measurementLost);QCOMPARE(written.completedWrites,observe?std::uint64_t{1}:std::uint64_t{0});QCOMPARE(written.writeMillis.has_value(),observe);
+    engine.disk->async_read(holder,request,[&](lt::disk_buffer_holder buffer,const lt::storage_error& actual){++reads;error|=bool(actual.ec);match=buffer&&std::equal(data.begin(),data.end(),buffer.data());});
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{engine.disk->submit_jobs();engine.pump();return reads==1;})(),10000);
+    const auto actual=observation->snapshot(engine::detail::DiskLatency::nowMillis());QVERIFY(!error&&match&&!actual.measurementLost);QCOMPARE(actual.completedReads,observe?std::uint64_t{1}:std::uint64_t{0});QCOMPARE(actual.completedWrites,observe?std::uint64_t{1}:std::uint64_t{0});
+    QCOMPARE(actual.readMillis.has_value(),observe);QCOMPARE(actual.writeMillis.has_value(),observe);QCOMPARE(writes,1);QCOMPARE(reads,1);
+    holder.reset();QCOMPARE(observation->active(),!observe);QVERIFY(weakOwner.expired());
+    if(observe){QVERIFY(!observation->snapshot(engine::detail::DiskLatency::nowMillis()).writeMillis);}
+    qInfo()<<"mmap callback work"<<(observe?"observed":"stock-control")<<"actual read bytes"<<16384<<"actual write bytes"<<16384<<"read callbacks"<<reads<<"write callbacks"<<writes;
+    QCOMPARE(test::read(QString::fromStdString((path/"payload.bin").string())),QByteArray(data.data(),static_cast<int>(data.size())));
+  }
+  void optionalCallbackCopyFailurePreservesActualWriteAndWithdrawsOnlyMeasurement(){
+    QTemporaryDir area;QVERIFY(area.isValid());auto policy=std::make_shared<Policy>();Geometry geometry;
+    const auto path=std::filesystem::path(area.path().toStdString())/"payload";QVERIFY(QDir().mkpath(QString::fromStdString(path.string())));
+    std::array<unsigned char,20> hash{};std::copy(geometry.hash.begin(),geometry.hash.end(),hash.begin());
+    auto observation=std::make_shared<engine::detail::MmapDiskLatency>(51);QVERIFY(policy->registerMmapLatency(path,hash,observation));
+    DirectDisk engine(policy);auto holder=engine.disk->new_torrent(geometry.parameters(path.string()),std::make_shared<int>(1));
+    struct State{std::atomic<bool> reject{false};int rejected=0,calls=0;bool error=false;};auto state=std::make_shared<State>();
+    struct Completion{
+      std::shared_ptr<State> state;
+      explicit Completion(std::shared_ptr<State> s):state(std::move(s)){}
+      Completion(const Completion& value):state(value.state){if(state->reject.exchange(false)){++state->rejected;throw std::bad_alloc();}}
+      Completion(Completion&&)=default;
+      void operator()(const lt::storage_error& error){++state->calls;state->error|=bool(error.ec);}
+    };
+    std::function<void(const lt::storage_error&)> handler=Completion(state);state->reject=true;
+    std::array<char,16384> data{};data.fill('F');const lt::peer_request request{lt::piece_index_t{0},0,16384};
+    engine.disk->async_write(holder,request,data.data(),{},std::move(handler));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{engine.disk->submit_jobs();engine.pump();return state->calls==1;})(),10000);
+    QCOMPARE(state->rejected,1);QCOMPARE(state->calls,1);QVERIFY(!state->error);
+    const auto lost=observation->snapshot(engine::detail::DiskLatency::nowMillis());QVERIFY(lost.measurementLost&&!lost.readMillis&&!lost.writeMillis);
+    QCOMPARE(test::read(QString::fromStdString((path/"payload.bin").string())),QByteArray(data.data(),static_cast<int>(data.size())));
+    auto dropped=std::make_shared<engine::detail::MmapDiskLatency>(52);QVERIFY(dropped->claim());auto receipt=dropped->begin(engine::detail::DiskIoAxis::Read);QVERIFY(receipt);receipt.reset();
+    QVERIFY(dropped->snapshot(engine::detail::DiskLatency::nowMillis()).measurementLost);
+  }
   void registrationIsBoundedLexicalAndIndependentOfFilesystemExistence() {
     QTemporaryDir area; QVERIFY(area.isValid());
     auto policy = std::make_shared<Policy>();

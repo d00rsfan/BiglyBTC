@@ -15,6 +15,7 @@
 #include "magnet_intake.hpp"
 #include "torrent_intake.hpp"
 #include "metadata_disk_router.hpp"
+#include "mmap_disk_latency.hpp"
 #include "original_disk_io.hpp"
 #include <libtorrent/session_params.hpp>
 #include <libtorrent/write_resume_data.hpp>
@@ -85,6 +86,7 @@ struct PersistentSession::Impl {
     std::unique_ptr<core::QueueTargetEta> targetEta;
     std::uint64_t targetStatisticsSequence=0;
     std::shared_ptr<detail::ManagedQueueObservations> queueObservations;
+    std::shared_ptr<detail::MmapDiskLatency> mmapLatency;
     std::optional<Clock::time_point> runningSince, seedingSince;
     std::optional<lt::time_point> trackerRunningSince, trackerSeedingSince;
     std::int64_t secondsDownloading = 0, secondsSeeding = 0;
@@ -477,6 +479,7 @@ struct PersistentSession::Impl {
     session.reset();
     for (auto& [key, entry] : managed) {
       static_cast<void>(key); entry->status.retained = false;
+      if(entry->mmapLatency){entry->mmapLatency->retire();}
       entry->queueSource={};entry->smoothedUpload.reset();entry->sendSmoothing.reset();entry->sendFirstMillis.reset();
       entry->status.queueSourceFacts.reset();entry->status.queueSmoothedPayloadUploadRate.reset();
       entry->status.diskReadLatencyMillis.reset();entry->status.diskWriteLatencyMillis.reset();
@@ -673,6 +676,10 @@ struct PersistentSession::Impl {
         const auto latency=mapped->diskLatency().snapshot(*value.queueObservedMillis);
         value.status.diskReadLatencyMillis=latency.readMillis;
         value.status.diskWriteLatencyMillis=latency.writeMillis;
+      }else if(value.mmapLatency&&value.mmapLatency->admission()==value.status.admission){
+        const auto latency=value.mmapLatency->snapshot(*value.queueObservedMillis);
+        value.status.diskReadLatencyMillis=latency.readMillis;
+        value.status.diskWriteLatencyMillis=latency.writeMillis;
       }
     }
     const bool transferring = !(sample.flags & lt::torrent_flags::paused)
@@ -769,6 +776,7 @@ struct PersistentSession::Impl {
     else { value.status.phase = sample.is_finished ? ManagedPhase::Seeding : ManagedPhase::Downloading; }
   }
   void requestStop(Managed& value) {
+    if(value.mmapLatency){value.mmapLatency->retire();}
     value.queueSource={};value.smoothedUpload.reset();value.sendSmoothing.reset();value.sendFirstMillis.reset();
     value.status.queueSourceFacts.reset();value.status.queueSmoothedPayloadUploadRate.reset();
     value.status.queueTargetStatistics.reset(); value.targetEta.reset();
@@ -1068,6 +1076,7 @@ struct PersistentSession::Impl {
           if (!saved) { value.status.failure = saved.error(); }
         }
         value.status.retained = false;
+        if(value.mmapLatency){value.mmapLatency->retire();}
         value.queueSource={};value.smoothedUpload.reset();value.sendSmoothing.reset();value.sendFirstMillis.reset();
         value.status.queueSourceFacts.reset();value.status.queueSmoothedPayloadUploadRate.reset();
         value.status.queueTargetStatistics.reset(); value.targetEta.reset();
@@ -1524,6 +1533,17 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
     if(const auto mapped=value->storage.mappedFiles()) {
       const auto virtualPath=std::filesystem::path(parameters.save_path)/".BiglyBTC-original-storage"/(options.hash.hex()+"-"+std::to_string(impl_->operation));
       detail::done(impl_->diskPolicy->registerOriginalPath(virtualPath,mapped));parameters.save_path=virtualPath.string();
+    }else{
+      // Optional observer is registered BEFORE add_torrent, against the SAME
+      // exact public storage_params key used by torrent::init/get_best().
+      try{
+        auto latency=std::make_shared<detail::MmapDiskLatency>(value->status.admission);
+        const auto best=parameters.ti->info_hashes().get_best();std::array<unsigned char,20> hash{};
+        std::copy(best.begin(),best.end(),hash.begin());
+        if(impl_->diskPolicy->registerMmapLatency(std::filesystem::path(parameters.save_path),hash,latency)){
+          value->mmapLatency=std::move(latency);
+        }
+      }catch(...){/* Optional observation cannot alter storage/admission success. */}
     }
     // ManagedStorage deliberately reconstructs checked original state instead
     // of restoring LT transfer totals. Never charge inherited totals twice.

@@ -352,5 +352,13 @@ int main(){try{
     p.firstPriorityMode=QueueFirstPriorityMode::All;f.shareRatio=-500;CHECK(decide(p,f).firstPriority);
     f.secondsSeeding.reset();CHECK(!decide(p,f).firstPriority);
   });
+  run("original self exclusion requires positive seed-start wall time",[]{
+    for(const auto wall:std::array<std::int64_t,2>{0,-1}){
+      QueueOwnerObservations source(1);std::array<unsigned char,32> key{};key[0]=1;CHECK(source.trackerOrder(std::span(&key,1)));
+      QueueObservation e;e.sequence=1;e.observedNanos=1000000000;e.observedWallMillis=wall;e.kind=QueueObservationKind::StartedSeed;CHECK(source.observe(e));
+      e.sequence=2;e.observedNanos=2000000000;e.observedWallMillis=1000;e.kind=QueueObservationKind::Scrape;e.protocol=1;e.request=1;e.requestStartedNanos=1;e.requestStartedWallMillis=1;e.seeds=2;e.peers=3;e.tracker=key;CHECK(source.observe(e));
+      const auto observed=source.facts(2000);CHECK(observed.swarm&&observed.swarm->seeds==2&&observed.swarm->peers==3);
+    }
+  });
   std::cout<<families<<" queue-policy families, "<<assertions<<" assertions passed\n";return 0;
 }catch(const std::exception& e){std::cerr<<e.what()<<'\n';return 1;}}

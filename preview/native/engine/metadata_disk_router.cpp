@@ -1,10 +1,12 @@
 #include "metadata_disk_router.hpp"
 #include "original_disk_io.hpp"
+#include "mmap_disk_latency.hpp"
 
 #include <libtorrent/disabled_disk_io.hpp>
 #include <libtorrent/disk_interface.hpp>
 #include <libtorrent/mmap_disk_io.hpp>
 
+#include <algorithm>
 #include <cstdint>
 #include <stdexcept>
 #include <utility>
@@ -30,6 +32,7 @@ class MetadataDiskRouter final : public lt::disk_interface {
   struct Slot {
     lt::disk_interface* backend;
     lt::storage_holder holder;
+    std::weak_ptr<MmapDiskLatency> latency;
   };
 public:
   MetadataDiskRouter(std::shared_ptr<MetadataDiskPolicy> policy, lt::io_context& context,
@@ -47,7 +50,7 @@ public:
     try { original_=originalDiskConstructor(context,[policy=policy_](const std::string& path){return policy->originalFiles(path);}); }
     catch (...) {disabled_->abort(true);real_->abort(true);throw;}
   }
-  ~MetadataDiskRouter() override = default;
+  ~MetadataDiskRouter() override {retireObservations();}
 
   lt::storage_holder new_torrent(const lt::storage_params& parameters,
       const std::shared_ptr<void>& torrent) override {
@@ -57,27 +60,53 @@ public:
     // Normalize/lookup BEFORE either backend sees the torrent. Never catch a
     // normalization/allocation failure and fall back to real file IO.
     auto* backend = policy_->isMetadataPath(std::filesystem::path(parameters.path)) ? disabled_.get() : policy_->isOriginalPath(std::filesystem::path(parameters.path)) ? original_.get() : real_.get();
+    std::shared_ptr<MmapDiskLatency> latency;
+    if(backend==real_.get()){
+      std::array<unsigned char,20> hash{};std::copy(parameters.info_hash.begin(),parameters.info_hash.end(),hash.begin());
+      latency=policy_->claimMmapLatency(std::filesystem::path(parameters.path),hash);
+    }
     auto holder = backend->new_torrent(parameters, torrent);
     if (!holder) { throw std::runtime_error("Disk backend returned no storage holder"); }
     const auto index = lt::storage_index_t{static_cast<std::uint32_t>(slots_.size())};
-    slots_.push_back({backend, std::move(holder)});
+    slots_.push_back({backend, std::move(holder),latency});
     return {index, *this};
   }
   void remove_torrent(lt::storage_index_t index) override {
     const auto offset = static_cast<std::uint32_t>(index);
     if (offset < slots_.size() && slots_[offset].holder) {
+      if(auto latency=slots_[offset].latency.lock()){latency->retire();}
       slots_[offset].holder.reset(); // Exactly one stock remove; leave a tombstone, never reuse index.
     }
   }
   void async_read(lt::storage_index_t index, const lt::peer_request& request,
       std::function<void(lt::disk_buffer_holder, const lt::storage_error&)> handler,
       lt::disk_job_flags_t flags = {}) override {
-    auto& slot = at(index); slot.backend->async_read(slot.holder, request, std::move(handler), flags);
+    auto& slot = at(index);
+    if(auto latency=slot.latency.lock();latency&&latency->active()&&handler){
+      if(auto receipt=latency->begin(DiskIoAxis::Read)){
+        std::function<void(lt::disk_buffer_holder,const lt::storage_error&)> wrapped;
+        try{wrapped=[copy=handler,receipt](lt::disk_buffer_holder buffer,const lt::storage_error& error) mutable {
+          receipt->complete(!error.ec);copy(std::move(buffer),error);
+        };}catch(...){latency->lost();} // Original handler remains untouched.
+        if(wrapped){slot.backend->async_read(slot.holder,request,std::move(wrapped),flags);return;}
+      }
+    }
+    slot.backend->async_read(slot.holder,request,std::move(handler),flags);
   }
   bool async_write(lt::storage_index_t index, const lt::peer_request& request, const char* buffer,
       std::shared_ptr<lt::disk_observer> observer, std::function<void(const lt::storage_error&)> handler,
       lt::disk_job_flags_t flags = {}) override {
-    auto& slot = at(index); return slot.backend->async_write(slot.holder, request, buffer, std::move(observer), std::move(handler), flags);
+    auto& slot = at(index);
+    if(auto latency=slot.latency.lock();latency&&latency->active()&&handler){
+      if(auto receipt=latency->begin(DiskIoAxis::Write)){
+        std::function<void(const lt::storage_error&)> wrapped;
+        try{wrapped=[copy=handler,receipt](const lt::storage_error& error) mutable {
+          receipt->complete(!error.ec);copy(error);
+        };}catch(...){latency->lost();} // Preserve original handler/buffer/observer.
+        if(wrapped){return slot.backend->async_write(slot.holder,request,buffer,std::move(observer),std::move(wrapped),flags);}
+      }
+    }
+    return slot.backend->async_write(slot.holder,request,buffer,std::move(observer),std::move(handler),flags);
   }
   void async_hash(lt::storage_index_t index, lt::piece_index_t piece, lt::span<lt::sha256_hash> hashes,
       lt::disk_job_flags_t flags, std::function<void(lt::piece_index_t, const lt::sha1_hash&, const lt::storage_error&)> handler) override {
@@ -125,10 +154,13 @@ public:
   std::vector<lt::open_file_state> get_status(lt::storage_index_t index) const override {
     const auto& slot = at(index); return slot.backend->get_status(slot.holder);
   }
-  void abort(bool wait) override { original_->abort(wait); disabled_->abort(wait); real_->abort(wait); }
+  void abort(bool wait) override { retireObservations();original_->abort(wait); disabled_->abort(wait); real_->abort(wait); }
   void submit_jobs() override { real_->submit_jobs(); disabled_->submit_jobs(); original_->submit_jobs(); }
   void settings_updated() override { real_->settings_updated(); disabled_->settings_updated(); original_->settings_updated(); }
 private:
+  void retireObservations() noexcept {
+    for(const auto& slot:slots_){if(auto latency=slot.latency.lock()){latency->retire();}}
+  }
   Slot& at(lt::storage_index_t index) {
     auto& slot = slots_.at(static_cast<std::uint32_t>(index));
     if (!slot.holder) { throw std::logic_error("Retired disk routing index"); }
@@ -173,6 +205,26 @@ std::expected<void,storage::Error> MetadataDiskPolicy::registerOriginalPath(cons
     if(originals_.size()>=MaximumStorageAdmissions){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Original storage reservation limit"});}
     originals_.emplace(key,files);return {};
   }catch(...){return std::unexpected(storage::Error{storage::ErrorCode::UnsafePath,"Invalid original storage reservation"});}
+}
+bool MetadataDiskPolicy::registerMmapLatency(const std::filesystem::path& path,const std::array<unsigned char,20>& hash,
+    const std::shared_ptr<MmapDiskLatency>& latency) noexcept {
+  if(!latency||!latency->admission()||!latency->active()){return false;}
+  try{const auto key=std::make_pair(normalized(path),hash);const std::lock_guard lock(mutex_);
+    if(paths_.contains(key.first)||originals_.contains(key.first)){latency->lost();return false;}
+    if(const auto found=latencies_.find(key);found!=latencies_.end()){
+      if(auto previous=found->second.lock();previous&&previous->active()){latency->lost();return false;}
+      found->second=latency;return true;
+    }
+    if(latencies_.size()>=MaximumStorageAdmissions){latency->lost();return false;}
+    latencies_.emplace(key,latency);return true;
+  }catch(...){latency->lost();return false;}
+}
+std::shared_ptr<MmapDiskLatency> MetadataDiskPolicy::claimMmapLatency(const std::filesystem::path& path,
+    const std::array<unsigned char,20>& hash) noexcept {
+  try{const auto key=std::make_pair(normalized(path),hash);const std::lock_guard lock(mutex_);
+    const auto found=latencies_.find(key);if(found==latencies_.end()){return {};}
+    auto value=found->second.lock();return value&&value->claim()?value:std::shared_ptr<MmapDiskLatency>{};
+  }catch(...){return {};}
 }
 bool MetadataDiskPolicy::isOriginalPath(const std::filesystem::path& path) const {const auto key=normalized(path);const std::lock_guard lock(mutex_);return originals_.contains(key);}
 std::shared_ptr<OriginalDiskFiles> MetadataDiskPolicy::originalFiles(const std::filesystem::path& path) const {

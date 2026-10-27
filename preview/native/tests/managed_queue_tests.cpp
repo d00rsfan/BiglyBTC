@@ -125,6 +125,27 @@ class ManagedQueueTests final:public QObject {
   Q_OBJECT
 private slots:
 
+  void ordinaryMmapLatencyUsesThisAdmissionAndActualPayloadCallbacks_data(){QTest::addColumn<bool>("multi");QTest::newRow("single")<<false;QTest::newRow("multi")<<true;}
+  void ordinaryMmapLatencyUsesThisAdmissionAndActualPayloadCallbacks(){
+    QFETCH(bool,multi);test::OwnedEngineFixture fixture(multi);QTRY_VERIFY_WITH_TIMEOUT(fixture.ready(),30000);
+    auto lease=held(fixture);auto service=owner();auto p=policy(1,2);p.rankMode=core::QueueRankMode::None;p.minimumSeedSeconds=0;p.minimumSeedActiveSeconds=0;p.ignoreZeroPeers=false;p.firstPriorityIgnoreZeroPeers=false;
+    QVERIFY(service->configureQueuePolicy(p));QVERIFY(service->startManaged(lease,{.hash=*fixture.hash,.ownedLoopbackPeerPort=fixture.port()}));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=service->poll();const auto current=status(*service,*fixture.hash);return poll&&current&&!current->failure&&current->complete&&current->received>0&&current->diskReadLatencyMillis&&current->diskWriteLatencyMillis;})(),30000);
+    const auto before=status(*service,*fixture.hash);QVERIFY(before);const auto admission=before->admission;
+    test::VerifiedSeedCase actual{fixture.root.path(),fixture.profile,fixture.payload,fixture.stateFile,*fixture.hash,fixture.files};
+    QVERIFY(!test::receiveVerifiedSeed(*service,actual).isEmpty());QVERIFY(service->poll());
+    const auto uploaded=status(*service,*fixture.hash);QVERIFY(uploaded&&!uploaded->failure&&uploaded->sent>0&&uploaded->admission==admission);
+    QVERIFY(uploaded->diskReadLatencyMillis&&uploaded->diskWriteLatencyMillis);
+    QVERIFY(*uploaded->diskReadLatencyMillis>=0&&*uploaded->diskWriteLatencyMillis>=0);
+    QVERIFY(service->stopManaged(*fixture.hash));const auto stopping=status(*service,*fixture.hash);QVERIFY(stopping&&!stopping->diskReadLatencyMillis&&!stopping->diskWriteLatencyMillis);
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=service->poll();const auto current=status(*service,*fixture.hash);return poll&&current&&!current->failure&&!current->retained;})(),10000);
+    const auto retired=status(*service,*fixture.hash);QVERIFY(retired&&!retired->diskReadLatencyMillis&&!retired->diskWriteLatencyMillis);
+    QVERIFY(service->startManaged(lease,{.hash=*fixture.hash}));
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{const auto poll=service->poll();const auto current=status(*service,*fixture.hash);return poll&&current&&!current->failure&&current->admission>admission&&current->complete&&current->diskReadLatencyMillis&&current->diskWriteLatencyMillis;})(),10000);
+    const auto fresh=status(*service,*fixture.hash);QVERIFY(fresh);QCOMPARE(fresh->sent,std::int64_t{0});QCOMPARE(*fresh->diskWriteLatencyMillis,std::int64_t{0});
+    const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(fixture.intact());
+  }
+
   void actualObserverQueueHasBoundedNonblockingProducerAndWorkerOnlyDrain(){
     engine::detail::ManagedQueueObservations observations(1);observations.installed();
     std::thread producer([&]{core::QueueObservation event;event.kind=core::QueueObservationKind::StartedDownload;event.sequence=1;event.observedNanos=1000000000;event.observedWallMillis=100000;observations.observe(event);});

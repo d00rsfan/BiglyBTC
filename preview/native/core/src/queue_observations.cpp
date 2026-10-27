@@ -57,7 +57,7 @@ QueueObservedFacts QueueOwnerObservations::facts(std::int64_t now) const noexcep
     if(aggregate_->started>0){
       seeds=aggregate_->seeds;peers=aggregate_->peers;
       if(started_){
-        if(seeds>0&&seedStartedWall_&&aggregate_->started>*seedStartedWall_){--seeds;}
+        if(seeds>0&&seedStartedWall_&&*seedStartedWall_>0&&aggregate_->started>*seedStartedWall_){--seeds;}
         if(peers>0&&!seedStarted_&&startedWall_&&aggregate_->started>*startedWall_){--peers;}
       }
     }
