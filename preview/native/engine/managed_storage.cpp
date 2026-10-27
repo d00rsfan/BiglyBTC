@@ -339,7 +339,7 @@ DirectoryChain existingDirectoryChain(const fs::path& path){
   Descriptor current(::open("/",O_RDONLY|O_DIRECTORY|O_CLOEXEC));struct stat root{};require(current.get()>=0&&::fstat(current.get(),&root)==0,"Cannot inspect existing directory root",ErrorCode::Io);
   DirectoryChain chain{{static_cast<std::uint64_t>(root.st_dev),static_cast<std::uint64_t>(root.st_ino)}};
   for(const auto& part:path.relative_path()){Descriptor next(::openat(current.get(),part.c_str(),O_RDONLY|O_DIRECTORY|O_NOFOLLOW|O_NONBLOCK|O_CLOEXEC));struct stat held{},named{};
-    require(next.get()>=0&&::fstat(next.get(),&held)==0&&::fstatat(current.get(),part.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&S_ISDIR(named.st_mode)&&sameFile(held,named),"Selected-existing ancestor changed",ErrorCode::Conflict);
+    require(next.get()>=0&&::fstat(next.get(),&held)==0&&::fstatat(current.get(),part.c_str(),&named,AT_SYMLINK_NOFOLLOW)==0&&S_ISDIR(held.st_mode)&&S_ISDIR(named.st_mode)&&held.st_dev==named.st_dev&&held.st_ino==named.st_ino,"Selected-existing ancestor changed",ErrorCode::Conflict);
     require(chain.size()<256,"Selected-existing ancestor depth bound",ErrorCode::Unsupported);chain.emplace_back(held.st_dev,held.st_ino);current=std::move(next);
   }return chain;
 }

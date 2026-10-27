@@ -57,6 +57,19 @@ inline bool spinVerified(engine::PersistentSession& owner,const core::TorrentHas
     QTest::qWait(10);
   }return false;
 }
+// Receiver completion is an independent network-thread event. Publish the
+// serving owner's actual accepted counter sample before a receipt reads it.
+inline void waitVerifiedUploadSample(engine::PersistentSession& owner,const core::TorrentHash& hash){
+  const auto initial=verifiedStatus(owner,hash);require(initial&&initial->retained&&!initial->failure,"Actual upload admission unavailable");const auto admission=initial->admission;
+  const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds{5};
+  for(;;){
+    require(owner.poll().has_value(),"Actual upload counter publication failed");const auto current=verifiedStatus(owner,hash);
+    require(current&&current->admission==admission&&current->retained&&!current->failure,"Actual upload admission changed before counter publication");
+    if(current->sent>0){return;}
+    if(std::chrono::steady_clock::now()>=deadline){throw std::runtime_error("Actual verified receiver completed but same-admission sent counter remained zero");}
+    QTest::qWait(10);
+  }
+}
 // Real owned receiver; only one fixture alert consumer, no tracker/discovery.
 inline QByteArray receiveVerifiedSeed(engine::PersistentSession& owner,const VerifiedSeedCase& fixture) {
   const auto port=owner.tcpListenPort();require(port.has_value()&&*port!=0,"Actual seed listener unavailable");
@@ -88,6 +101,7 @@ inline QByteArray receiveVerifiedSeed(engine::PersistentSession& owner,const Ver
   }
   require(handle.status().is_seeding,"Owned receiver did not obtain all actual pieces");
   QByteArray all;for(const auto& file:fixture.files){const auto actual=read(fixture.root+"/receiver/"+file.relative);require(actual==file.expected,"Owned receiver bytes differ");all+=actual;}
+  waitVerifiedUploadSample(owner,fixture.hash);
   return QCryptographicHash::hash(all,QCryptographicHash::Sha256).toHex();
 }
 }

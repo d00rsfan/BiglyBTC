@@ -4,6 +4,8 @@
 #include <sys/resource.h>
 #include "torrent_intake.hpp"
 #include "verified_existing_scope.hpp"
+#include "selected_existing_scope.hpp"
+#include "verified_seeding.hpp"
 #include "original_torrent_identity_lt.hpp"
 #include "original_disk_io.hpp"
 #include "network_policy.hpp"
@@ -226,6 +228,21 @@ int main() {
     const auto scope=storage::VerifiedExistingScope::capture(*f.lease,source,*layout,*identity,f.save,"renamed-root");require(scope.has_value(),"Capture ancestor chain");auto inventory=f.saved();auto selected=core::Document::parse(encode(row(inventory)));require(selected&&selected->replaceValue(storage::VerifiedExistingScopeKey,scope->encoded()).has_value()&&inventory.replaceValue("downloads","l"+selected->serialize()+'e').has_value(),"Save ancestor snapshot");write(f.profile/"downloads.config",inventory.serialize());auto owner=prepareExisting(f);require(owner.has_value(),"Bind approved directory chain");
     const auto prepared=read(f.profile/"active"/(f.hash.hex()+".dat"));const auto moved=f.save.string()+".old";fs::rename(f.save,moved);fs::create_directory(f.save);fs::rename(fs::path(moved)/"renamed-root",f.save/"renamed-root");
     std::array<char,1> byte{};require(!owner->validateExistingSnapshot()&&!owner->mappedFiles()->read(0,byte)&&!owner->mappedFiles()->flush(),"Same real-file and immediate-parent inodes cannot hide replaced ancestor");require(!owner->checkpoint(*f.lease,std::array<std::uint8_t,2>{1,1},true,0,0)&&read(f.profile/"active"/(f.hash.hex()+".dat"))==prepared,"Changed ancestor never gains checkpoint authority");
+  });
+
+  runCase("selected-existing-authenticates-directory-types-and-full-ancestor-chain",[] {
+    Fixture f(true);f.fullPayload();const auto source=f.state();const auto layout=compat::originalLayout(source);require(layout.has_value(),"Selected original directory layout");
+    libtorrent::error_code error;const libtorrent::torrent_info metadata((f.profile/"active"/(f.hash.hex()+".dat")).string(),error);require(!error,"Actual selected directory metainfo");const auto identity=storage::originalTorrentIdentityFromLibtorrent(source,metadata);require(identity.has_value(),"Actual selected raw/full identity");
+    const std::array<compat::FilePolicy,2> policies{{{false,0},{true,0}}};const std::array kinds{storage::OriginalStorageKind::Linear,storage::OriginalStorageKind::Linear};const std::array paths{f.path(0),f.path(1)};
+    const auto scope=storage::SelectedExistingScope::capture(*f.lease,source,*layout,*identity,policies,kinds,paths);require(scope.has_value(),scope?"capture":scope.error().message);const auto encoded=compat::encodeOriginalFilePolicy(policies);require(encoded.has_value(),"Exact selected policy");
+    auto inventory=f.saved();auto selected=core::Document::parse(encode(row(inventory)));require(selected&&selected->replaceValue("file_priorities_c",*encoded).has_value()&&selected->replaceValue(storage::VerifiedSeedKey,"i1e").has_value()&&selected->replaceValue(storage::VerifiedSeedGoalKey,"i1e").has_value()&&selected->replaceValue(storage::VerifiedSelectedScopeKey,scope->encoded()).has_value()&&inventory.replaceValue("downloads","l"+selected->serialize()+'e').has_value(),"Persist real typed selected authority");write(f.profile/"downloads.config",inventory.serialize());
+    auto owner=Storage::prepare(*f.lease,f.hash,{}, {}, {}, {},Purpose::VerifySelectedReadOnly);require(owner.has_value(),owner?"selected prepare":owner.error().message);require(owner->mappedFiles()&&owner->mappedFiles()->access()==engine::detail::OriginalDiskAccess::SelectedReadOnly,"Selected purpose uses authenticated read-only descriptors");
+    std::array<char,1> byte{};require(owner->mappedFiles()->read(0,byte).has_value()&&byte[0]=='A'&&owner->validateExistingSnapshot().has_value()&&owner->mappedFiles()->flush().has_value(),"Real nested directory ancestors permit authenticated payload reads");
+    write(f.save/"unrelated-sibling","Directory ctime is not ancestor identity");require(owner->validateExistingSnapshot().has_value()&&owner->mappedFiles()->read(0,byte).has_value()&&owner->mappedFiles()->flush().has_value(),"Unrelated child creation preserves exact directory inode authority");
+    const auto prepared=read(f.profile/"active"/(f.hash.hex()+".dat"));const auto moved=f.save.string()+".old";fs::rename(f.save,moved);fs::create_directory(f.save);fs::rename(fs::path(moved)/"renamed-root",f.save/"renamed-root");
+    require(!owner->validateExistingSnapshot()&&!owner->mappedFiles()->read(0,byte)&&!owner->mappedFiles()->flush(),"Same leaf and immediate-parent inodes cannot hide a replaced higher ancestor");
+    require(!owner->checkpoint(*f.lease,std::array<std::uint8_t,2>{1,1},true,0,0)&&read(f.profile/"active"/(f.hash.hex()+".dat"))==prepared,"Replaced ancestor cannot publish progress or completion");
+    const auto reopened=Storage::prepare(*f.lease,f.hash,{}, {}, {}, {},Purpose::VerifySelectedReadOnly);require(!reopened&&read(f.profile/"active"/(f.hash.hex()+".dat"))==prepared,"Reopen cannot recapture substituted ancestor authority");require(read(f.path(0))+read(f.path(1))==f.body,"All refused operations leave supplied bytes untouched");
   });
 
   runCase("existing-only-complete-linear-preparation-is-read-only-and-still-unverified",[] {
