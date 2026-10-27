@@ -1,0 +1,73 @@
+{
+  "status": "PASS_SCOPED_PREVIEW_CONSOLE_REGRESSIONS",
+  "qualified_source": "465b8c1c7cde7738d3d530aede104fb1da641da2",
+  "parent": "b821730dc473055f674e3a231943fc366c65ef83",
+  "original_source_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "qt_source": {
+    "repository": "https://github.com/qt/qtbase.git",
+    "tag": "v6.12.0",
+    "commit": "025bdad181de241e81bf853c8a2d7bf3d19261a9",
+    "source_sha256": {
+      "qwaylandtextinputv3.cpp": "8715cd9e73534b238215a2ea3b777385ac93c4f655f985c3c0f03d2abb4df0ae",
+      "qwaylandinputcontext.cpp": "c787a34e1a35aa35f3a576a639b705865e4b1ea717c4f83165b339a7322e0e98"
+    }
+  },
+  "tests": {
+    "status": "PASS",
+    "command": [
+      "python3",
+      "-B",
+      "build/wayland-textinput-20261027/work/test_preview.py"
+    ],
+    "actual_tests": 5,
+    "seconds": 0.416,
+    "observation": "Actual successful unittest tool output retained in session; not rerun or attributed to C++/Qt integration",
+    "tested_script_sha256": "794cccedccbd20d4bd0c0f44d9447f3ffe2a5703fd9995a2a424d0a427085809",
+    "tested_regression_sha256": "53573e80f4b2aab38a6475c607f91d80918a3992e848e9c5a0aac1b7b034cfd9"
+  },
+  "source_sha256": {
+    "preview/native/packaging/preview.py": "794cccedccbd20d4bd0c0f44d9447f3ffe2a5703fd9995a2a424d0a427085809",
+    "preview/native/packaging/test_preview.py": "53573e80f4b2aab38a6475c607f91d80918a3992e848e9c5a0aac1b7b034cfd9",
+    ".github/workflows/native-preview.yml": "b9e84627d6bd95a0e3d77a7f5b85f092d07d95e6d91d040fccc7af2f3f0a05bc",
+    "preview/native/packaging/README.md": "23a98e9d7b0d494c45ab7540eaea508bee62a42bf54c723946634d219f3bf71a"
+  },
+  "local_dist_patch": {
+    "status": "APPLIED_AND_VERIFIED",
+    "updated_utc": "2026-10-27T01:18:14.887390+00:00",
+    "source_commit": "465b8c1c7cde7738d3d530aede104fb1da641da2",
+    "base_manifest_sha256": "deefcbe40681c1cd2d7352869be399d4e75d5d935a691bdc921fba11db71b221",
+    "new_manifest_sha256": "e34ade281e7c8548c837968f7c095042d93862a4e1312f790feba464de3ba421",
+    "changed_files": [
+      "usr/bin/BiglyBTC-preview"
+    ],
+    "script_sha256": "794cccedccbd20d4bd0c0f44d9447f3ffe2a5703fd9995a2a424d0a427085809",
+    "leaves_verified": 118,
+    "all_other_117_leaves_unchanged": true,
+    "root_launcher_help_exit": 0,
+    "no_cpp_or_qt_binaries_modified": true,
+    "no_original_profile_or_process_access": true,
+    "beforeimages": "before/installed-preview.py and before/BUILD_MANIFEST.json"
+  },
+  "wayland_probe": {
+    "baseline": {
+      "exit": 0,
+      "stdout": "platform=wayland active=0 focus_changes=30 synthetic_ime_commit_retained=1\n",
+      "idle_disable_warnings": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "filtered": {
+      "exit": 0,
+      "stdout": "platform=wayland active=0 focus_changes=30 synthetic_ime_commit_retained=1\n",
+      "idle_disable_warnings": 0,
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "real_active_wayland_focus_reproduction": false,
+  "probe_limit": "Both generated probes connected to Wayland and retained a synthetic input-method commit, but the compositor did not focus them (active=0), so neither reproduced the reported warning. Five subprocess regressions exercise the exact user-reported messages and forwarding behavior. No actual IME/compositor focus regression claim.",
+  "normal_client_changed": false,
+  "cpp_or_qt_binaries_changed": false,
+  "original_profile_or_process_access": false,
+  "cf_parents_closed": [],
+  "new_chapter_started": false,
+  "workaround_only": true
+}

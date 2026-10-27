@@ -4376,13 +4376,19 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "8239f5b42c3f2f56126b7a382dc75a4bd8114607",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "465b8c1c7cde7738d3d530aede104fb1da641da2",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/evidence/20261018-navigation/source-contract.json",
         "migration/evidence/20261018-navigation/classic-closeability-correction.json",
         "migration/updates/engine.everyday-workflows/20261024.md",
-        "migration/updates/settings.classic_options/20261024.md"
+        "migration/updates/settings.classic_options/20261024.md",
+        "migration/updates/ui.classic_navigation_preview/20261027-wayland-console.md"
       ],
       "evidence": [
         "migration/evidence/20261018-navigation/verification.json",
@@ -4390,7 +4396,8 @@
         "migration/evidence/20261018-saved-position/verification.json",
         "migration/evidence/20261018-saved-selected/verification.json",
         "migration/evidence/20261024-torrent-workflows/verification.json",
-        "migration/evidence/20261024-options/verification.json"
+        "migration/evidence/20261024-options/verification.json",
+        "migration/evidence/20261027-wayland-preview/verification.json"
       ],
       "decision_ref": null
     },
