@@ -1,5 +1,6 @@
 #include "torrent_intake.hpp"
 #include "verified_seeding.hpp"
+#include "verified_existing_scope.hpp"
 #include "queue_positions.hpp"
 #include "file_operations.hpp"
 #include "linear_to_compact.hpp"
@@ -249,6 +250,7 @@ struct IntakeFileOptions {
   std::optional<core::TorrentIntakeTrackerTiers> trackers;
   std::optional<std::string> saveName;
   bool verifyExisting=false;
+  std::optional<std::string> existingScope{};
 };
 const std::string& effectiveSaveName(const compat::OriginalLayout& layout,const IntakeFileOptions& options) {
   return options.saveName?*options.saveName:layout.name;
@@ -270,7 +272,7 @@ void validateFileOptions(const MetadataSubject& source,const IntakeFileOptions& 
     require(kind!='R'||!value.skipped,ErrorCode::InvalidFormat,"Skipped reordered file needs explicit X or existing linear data");
   }
   if(options.verifyExisting){
-    require(!options.saveName||*options.saveName==source.layout.name,ErrorCode::Unsupported,"Verified seeding requires the original destination name");
+    require((effectiveSaveName(source.layout,options)!=source.layout.name)==options.existingScope.has_value(),ErrorCode::InvalidFormat,"Custom verified root requires its exact saved scope");
     require(!options.queued&&!options.paused,ErrorCode::InvalidFormat,"Verified seeding must begin stopped and unpaused");
     for(std::size_t n=0;n<values->size();++n){
       // Original padding is immutable virtual data, never a physical input.
@@ -278,6 +280,7 @@ void validateFileOptions(const MetadataSubject& source,const IntakeFileOptions& 
       require(!(*values)[n].skipped&&options.stores[n]=='L',ErrorCode::Unsupported,"Verified seeding requires every real file selected in linear storage");
     }
   }
+  require(options.verifyExisting||!options.existingScope,ErrorCode::InvalidFormat,"Ordinary intake cannot acquire existing-root authority");
   require(!options.reorderMinimumMiB||(*options.reorderMinimumMiB>=INT32_MIN&&*options.reorderMinimumMiB<=INT32_MAX),
       ErrorCode::InvalidFormat,"Invalid original reorder threshold");
 }
@@ -307,6 +310,9 @@ IntakeFileOptions fileOptions(const ProfileLease& lease,const MetadataSubject& s
     const auto path=destination/(source.layout.multifile?fs::path(effectiveSaveName(source.layout,result))/source.layout.files[n].path:fs::path(effectiveSaveName(source.layout,result)));
     const auto present=inspectPayload(path);
     result.stores+=present?'L':reorder?'X':'C'; // Never convert/reclaim existing data.
+  }
+  if(verifyExisting&&effectiveSaveName(source.layout,result)!=source.layout.name){
+    const auto scope=take(VerifiedExistingScope::capture(lease,source.torrent,source.layout,source.identity,destination,effectiveSaveName(source.layout,result)));result.existingScope=scope.encoded();
   }
   validateFileOptions(source,result);checkCompactAbsence(source.layout,result,destination);return result;
 }
@@ -458,6 +464,7 @@ Plan plan(std::string metadata, std::string destination, std::string profile,
     const bool allSkipped=std::ranges::all_of(*policies,[](const auto& value){return value.skipped;});
     if(allSkipped){stopped=true;forceStart=false;options->queued=false;options->paused=false;put(selected,"state","i70e");put(selected,"forceStart","i0e");}
     if(options->verifyExisting){put(selected,VerifiedSeedKey,"i1e");}
+    if(options->existingScope){put(selected,VerifiedExistingScopeKey,*options->existingScope);}
     entry=selected.serialize();
   }
   std::string list = raw(inventory, *downloads);
@@ -540,6 +547,7 @@ std::string journalBytes(const Plan& p) {
     if(p.options->paused){value+=b("paused")+"i1e";}
     if(p.options->verifyExisting){value+=b("verifiedSeed")+"i1e";}
     if(p.options->saveName){value+=b("saveName")+b(*p.options->saveName);}
+    if(p.options->existingScope){value+=b("existingScope")+*p.options->existingScope;}
     if(p.options->trackers){
       value+=b("trackers")+'l';for(const auto& tier:*p.options->trackers){value+='l';for(const auto& url:tier){value+=b(url);}value+='e';}value+='e';
     }
@@ -565,7 +573,8 @@ std::int64_t integer(const Node* value) {
   require(value && value->type == Node::Type::Integer, ErrorCode::InvalidFormat, "Invalid intake journal integer");
   return value->integer;
 }
-Plan readJournal(std::string bytes, const std::string& profile) {
+void checkSaveNameScope(const ProfileLease&,const Plan&);
+Plan readJournal(std::string bytes, const std::string& profile,const ProfileLease& lease) {
   auto document = parse(std::move(bytes), MaximumJournal);
   uniqueKeys(document.root());
   const auto* force = document.find("forceStart");
@@ -601,13 +610,15 @@ Plan readJournal(std::string bytes, const std::string& profile) {
     const auto* verified=optionsNode->find("verifiedSeed");
     require(!verified||integer(verified)==1,ErrorCode::InvalidFormat,"Invalid verified-seeding journal intent");
     const auto* saveName=optionsNode->find("saveName");
+    const auto* existing=optionsNode->find("existingScope");
     const auto* trackers=optionsNode->find("trackers");
     std::optional<core::TorrentIntakeTrackerTiers> override;
     if(trackers){override=core::decodeTorrentIntakeTrackerTiers(*trackers);require(override.has_value(),ErrorCode::InvalidFormat,"Invalid tracker override journal");}
-    require(optionsNode->children.size()==4+(reorder?2U:0U)+(download?2U:0U)+(upload?2U:0U)+(sequential?2U:0U)+(queued?2U:0U)+(paused?2U:0U)+(trackers?2U:0U)+(saveName?2U:0U)+(verified?2U:0U),ErrorCode::InvalidFormat,"Unexpected intake options fields");
+    require(optionsNode->children.size()==4+(reorder?2U:0U)+(download?2U:0U)+(upload?2U:0U)+(sequential?2U:0U)+(queued?2U:0U)+(paused?2U:0U)+(trackers?2U:0U)+(saveName?2U:0U)+(verified?2U:0U)+(existing?2U:0U),ErrorCode::InvalidFormat,"Unexpected intake options fields");
     options=IntakeFileOptions{text(optionsNode->find("policy")),text(optionsNode->find("stores")),
         reorder?std::optional{integer(reorder)}:std::nullopt,
         {download?integer(download):0,upload?integer(upload):0},sequentialValue==1,queuedValue==1,pausedValue==1,std::move(override),saveName?std::optional{text(saveName)}:std::nullopt,verified!=nullptr};
+    if(existing){options->existingScope=take(VerifiedExistingScope::decode(*existing)).encoded();}
   }
   std::optional<HybridAliasSource> alias;
   if(aliasNode){
@@ -622,9 +633,10 @@ Plan readJournal(std::string bytes, const std::string& profile) {
     alias=HybridAliasSource{*hash,text(aliasNode->find("state")),cached?std::optional{cache}:std::nullopt,
         static_cast<std::uint64_t>(sdev),static_cast<std::uint64_t>(sino),static_cast<std::uint64_t>(cdev),static_cast<std::uint64_t>(cino)};
   }
-  return plan(text(document.find("metadata")), std::move(destination), profile,
+  auto result=plan(text(document.find("metadata")), std::move(destination), profile,
       before ? std::optional{std::move(old)} : std::nullopt,
       backup ? std::optional{std::move(bak)} : std::nullopt, stopped == 1, static_cast<mode_t>(mode), forceStart == 1,std::move(options),std::move(alias));
+  checkSaveNameScope(lease,result);return result;
 }
 struct Stage { Descriptor fd; struct stat info{}; };
 Stage stage(int root, const std::string& name, std::string_view data, mode_t mode) {
@@ -697,7 +709,10 @@ void checkSaveNameScope(const ProfileLease& lease,const Plan& p) {
   }
   try{
     auto parent=fileop::directory(chosen.parent_path(),false,true);
-    if(parent.get()>=0){require(!named(parent.get(),chosen.filename().native()),ErrorCode::Conflict,"Chosen save name already exists; no payload reuse or overwrite was approved");}
+    if(p.options->existingScope){
+      const auto encoded=parse(*p.options->existingScope);const auto scope=take(VerifiedExistingScope::decode(encoded.root()));
+      const auto checked=scope.validate(lease,subject.torrent,subject.layout,subject.identity,p.destination,leaf);if(!checked){throw Failure{checked.error()};}
+    }else if(parent.get()>=0){require(!named(parent.get(),chosen.filename().native()),ErrorCode::Conflict,"Chosen save name already exists; no payload reuse or overwrite was approved");}
   }catch(const fileop::Failure& error){throw Failure{error.error};}
   const auto inventory=take([&]()->std::expected<core::LibrarySnapshot,Error>{auto source=core::readLibrary(parse(p.before.value_or("d9:downloadslee")));if(!source||!source->issues.empty()){return std::unexpected(Error{ErrorCode::InvalidFormat,"Invalid existing save-name inventory"});}return std::move(*source);}());
   if(inventory.downloads.empty()){return;}
@@ -981,14 +996,15 @@ std::expected<std::optional<core::TorrentHash>, Error> recoverTorrentIntake(
     if (!journal) {
       journal = read(root, JournalSaving, MaximumJournal);
       if (!journal) { return std::nullopt; }
-      (void)readJournal(journal->bytes, profile); // Validate before first recovery mutation.
+      (void)readJournal(journal->bytes, profile, lease); // Validate before first recovery mutation.
       move(root, JournalSaving, Journal, RENAME_NOREPLACE);
     }
-    auto p = readJournal(journal->bytes, profile);
+    auto p = readJournal(journal->bytes, profile, lease);
     apply(lease, p, journal->bytes, observer);
     return p.hash;
   } catch (const Failure& failure) { return std::unexpected(failure.error); }
   catch (const std::exception&) { return std::unexpected(Error{ErrorCode::Io, "Torrent intake recovery failed; journal retained"}); }
 }
+#include "verified_existing_scope.inc"
 #include "verified_seeding.inc"
 } // namespace biglybtc::storage

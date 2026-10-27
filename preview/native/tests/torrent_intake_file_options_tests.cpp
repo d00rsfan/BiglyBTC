@@ -1,5 +1,7 @@
 #include "torrent_intake.hpp"
 #include "verified_seeding.hpp"
+#include "verified_existing_scope.hpp"
+#include "original_torrent_identity_lt.hpp"
 #include "library_commands.hpp"
 #include "biglybtc/saved_dnd.hpp"
 #include <libtorrent/torrent_info.hpp>
@@ -250,6 +252,71 @@ void saveNameOptions(){
 } // namespace
 namespace {
 void uncertainSeedSave(storage::SaveStage stage){if(stage==storage::SaveStage::PrimaryRenamed){throw std::runtime_error("Actual primary already renamed");}}
+std::string scopeNode(const core::Node& node){auto encoded=core::encodeValue(node,storage::compatibleConfigLimits());check(encoded.has_value(),"Encode owned scope node");return *encoded;}
+void placeCustom(Area& area,const storage::TorrentIntakeMetadata& source,std::string_view leaf){
+  for(const auto& file:source.layout().files){if(file.padding){continue;}write(area.destination/(source.layout().multifile?fs::path(leaf)/file.path:fs::path(leaf)),std::string(static_cast<std::size_t>(file.bytes),'x'));}
+}
+auto customImport(Area& area,const storage::TorrentIntakeMetadata& source,void(*observer)(storage::TorrentIntakeStage)=nullptr){
+  std::vector<compat::FilePolicy> files;for(const auto& file:source.layout().files){files.push_back({file.padding,0});}
+  return storage::importTorrentWithFileOptions(*area.lease,source,area.destination,true,files,observer,false,{}, {},false,false,false,{},std::string("chosen"),true);
+}
+fs::path scopeDestination,scopeLeaf;bool replaceScopeParent=false,unrelatedScopeChange=false;
+void scopeInterference(storage::TorrentIntakeStage stage){
+  if(stage!=interrupted){return;}
+  if(unrelatedScopeChange){write(scopeDestination/"unrelated", "unrelated directory activity");}
+  else if(replaceScopeParent){const auto old=scopeDestination.string()+".old";fs::rename(scopeDestination,old);fs::create_directory(scopeDestination);fs::rename(fs::path(old)/"chosen",scopeDestination/"chosen");}
+  else{const auto bytes=read(scopeLeaf);fs::rename(scopeLeaf,scopeLeaf.string()+".old");write(scopeLeaf,bytes);}
+  throw std::runtime_error("Owned scope callback interruption");
+}
+void customExistingScopes(){
+  for(const int kind:{0,1,2}){
+    Area area;const auto source=namedMetadata(kind);write(area.input,source);const auto sealed=take(storage::inspectTorrentIntake(area.input));placeCustom(area,sealed,"chosen");
+    const auto hash=take(customImport(area,sealed));const auto inventory=parse(read(area.profile/"downloads.config"));const auto& row=inventory.find("downloads")->children[0];
+    check(row.find("state")->integer==70&&!row.find("forceStart")->integer&&row.find(storage::VerifiedSeedKey)->integer==1,"Existing renamed data remains stopped pending actual hash check");
+    const auto* scope=row.find(storage::VerifiedExistingScopeKey);check(scope,"Custom existing scope is durable beyond journal removal");const auto proof=take(storage::VerifiedExistingScope::decode(*scope));libtorrent::error_code error;const libtorrent::torrent_info engine(area.input.string(),error);check(!error,"Own source engine metadata");const auto identity=take(storage::originalTorrentIdentityFromLibtorrent(parse(source),engine));
+    check(proof.validate(*area.lease,parse(source),sealed.layout(),identity,area.destination,"chosen").has_value(),"Saved scope binds actual source and paths");
+    const auto state=parse(read(area.profile/"active"/(hash.hex()+".dat")));const auto* attrs=state.find("attributes");
+    check(attrs->find("displayname")->bytes==(kind==2?"retained-title":"chosen")&&attrs->find("filelinks2")->children.empty(),"Original manual title exception and no synthetic links");
+    check(rawValue(state,"info")==rawValue(parse(source),"info")&&read(area.profile/"torrents"/(hash.hex()+".torrent"))==source,"Raw identity/archive/unknown source untouched");
+    check(state.find("resume")->find("data")->find("valid")->integer==0,"Approved filesystem snapshot is never verified resume");
+  }
+  for(const int failure:{0,1,2,3}){
+    Area area;write(area.input,namedMetadata(1));const auto sealed=take(storage::inspectTorrentIntake(area.input));placeCustom(area,sealed,"chosen");const auto leaf=area.destination/"chosen";
+    if(failure==0){fs::remove(leaf);}if(failure==1){write(leaf,std::string(99,'x'));}if(failure==2){fs::rename(leaf,area.root/"outside");fs::create_symlink(area.root/"outside",leaf);}if(failure==3){fs::create_hard_link(leaf,area.root/"alias");}
+    check(!customImport(area,sealed),"Missing/short/symlink/hardlink data cannot acquire custom-root authority");area.untouched();
+  }
+  {Area area;const auto existing=take(storage::inspectTorrentIntake(area.input));take(namedImport(area,existing,std::string("chosen")));
+    auto source=parse(namedMetadata(1));auto info=parse(rawValue(source,"info"));check(info.replaceValue("name",b("different-source")).has_value()&&source.replaceValue("info",info.serialize()).has_value(),"Distinct custom import identity");write(area.input,source.serialize());const auto sealed=take(storage::inspectTorrentIntake(area.input));placeCustom(area,sealed,"chosen");const auto before=read(area.profile/"downloads.config");
+    check(!customImport(area,sealed)&&read(area.profile/"downloads.config")==before&&!storage::hasPendingTorrentIntake(*area.lease),"Even complete approved bytes cannot overlap another saved root");}
+  for(const bool reserved:{false,true}){Area area;write(area.input,namedMetadata(1));const auto sealed=take(storage::inspectTorrentIntake(area.input));area.destination=reserved?area.root/".git"/"payload":area.profile/"payload";placeCustom(area,sealed,"chosen");const auto original=read(area.destination/"chosen");
+    check(!customImport(area,sealed)&&read(area.destination/"chosen")==original,"Explicit existing scope cannot authorize profile or reserved payload");area.untouched();}
+  for(const auto stage:{storage::TorrentIntakeStage::JournalSynced,storage::TorrentIntakeStage::StatePublished,storage::TorrentIntakeStage::ArchivePublished,storage::TorrentIntakeStage::InventoryPublished}){
+    for(const bool parent:{false,true}){
+      Area area;write(area.input,namedMetadata(2));const auto sealed=take(storage::inspectTorrentIntake(area.input));placeCustom(area,sealed,"chosen");
+      interrupted=stage;scopeDestination=area.destination;scopeLeaf=area.destination/"chosen/first.bin";replaceScopeParent=parent;unrelatedScopeChange=false;
+      check(!customImport(area,sealed,scopeInterference),"Actual publication callback observes accepted journal");const auto inventory=read(area.profile/"downloads.config");const auto payload=read(scopeLeaf);area.reopen();
+      check(!storage::recoverTorrentIntake(*area.lease)&&storage::hasPendingTorrentIntake(*area.lease),"Replacement at every boundary cannot be recaptured as new authority");
+      check(read(area.profile/"downloads.config")==inventory&&read(scopeLeaf)==payload,"Recovery refusal leaves current inventory/data unchanged");
+    }
+    Area area;write(area.input,namedMetadata(2));const auto sealed=take(storage::inspectTorrentIntake(area.input));placeCustom(area,sealed,"chosen");interrupted=stage;
+    check(!customImport(area,sealed,interrupt),"Unchanged approved scope accepts durable interruption");const auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));
+    check(journal.find("fileOptions")->find("existingScope"),"Optional exact scope is in journal");area.reopen();check(take(storage::recoverTorrentIntake(*area.lease)).has_value(),"Each unchanged custom-root stage recovers without payload IO");
+  }
+  {Area area;write(area.input,namedMetadata(2));const auto sealed=take(storage::inspectTorrentIntake(area.input));placeCustom(area,sealed,"chosen");interrupted=storage::TorrentIntakeStage::JournalSynced;
+    scopeDestination=area.destination;scopeLeaf=area.destination/"chosen/first.bin";unrelatedScopeChange=true;check(!customImport(area,sealed,scopeInterference),"Unrelated activity during accepted journal");unrelatedScopeChange=false;area.reopen();
+    check(take(storage::recoverTorrentIntake(*area.lease)).has_value(),"Directory ctime is deliberately not payload identity");}
+  for(const int invalid:{0,1,2,3,4}){
+    Area area;write(area.input,namedMetadata(1));const auto sealed=take(storage::inspectTorrentIntake(area.input));placeCustom(area,sealed,"chosen");interrupted=storage::TorrentIntakeStage::JournalSynced;check(!customImport(area,sealed,interrupt),"Own pending scope journal");
+    auto journal=parse(read(area.profile/"BiglyBTC.torrent-import"));auto options=parse(scopeNode(*journal.find("fileOptions")));auto scope=parse(scopeNode(*options.find("existingScope")));
+    if(invalid==0){check(scope.replaceValue("version","i2e").has_value(),"Unknown scope version");}
+    if(invalid==1){const auto entry=scopeNode(scope.find("files")->children[0]);check(scope.replaceValue("files","l"+entry+entry+'e').has_value(),"Duplicate scope index");}
+    if(invalid==2){check(scope.replaceValue("info",b(std::string(64,'0'))).has_value(),"Different raw-info digest");}
+    if(invalid==3){auto entry=parse(scopeNode(scope.find("dirs")->children[0]));check(entry.replaceValue("ino","i-1e").has_value(),"Negative scope inode");std::string list="l"+entry.serialize();for(std::size_t n=1;n<scope.find("dirs")->children.size();++n){list+=scopeNode(scope.find("dirs")->children[n]);}check(scope.replaceValue("dirs",list+'e').has_value(),"No unsigned wrap authority");}
+    if(invalid==4){check(scope.replaceValue("future","i1e").has_value(),"Unknown scope key");}
+    check(options.replaceValue("existingScope",scope.serialize()).has_value()&&journal.replaceValue("fileOptions",options.serialize()).has_value(),"Persist malformed owned journal");write(area.profile/"BiglyBTC.torrent-import",journal.serialize());area.reopen();
+    check(!storage::recoverTorrentIntake(*area.lease)&&!fs::exists(area.profile/"active")&&!fs::exists(area.profile/"torrents")&&storage::hasPendingTorrentIntake(*area.lease),"Malformed/stale scope refuses before publication");
+  }
+}
 void verifiedSeedIntentCases(){
   // Padding stays in original index order and policy, but owns no payload.
   for(const auto stage:{storage::TorrentIntakeStage::JournalSynced,storage::TorrentIntakeStage::StatePublished,storage::TorrentIntakeStage::ArchivePublished,storage::TorrentIntakeStage::InventoryPublished}){
@@ -306,6 +373,7 @@ void verifiedSeedIntentCases(){
 }
 int main(){
   try{
+    customExistingScopes();
     verifiedSeedIntentCases();
     saveNameOptions();
     trackerOptions();

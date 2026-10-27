@@ -1,5 +1,7 @@
 #include "managed_storage.hpp"
 #include "torrent_intake.hpp"
+#include "verified_existing_scope.hpp"
+#include "original_torrent_identity_lt.hpp"
 #include "original_disk_io.hpp"
 #include "network_policy.hpp"
 #include "torrent_state.hpp"
@@ -160,6 +162,31 @@ int main() {
       auto owner=Storage::prepare(*lease,f.hash,{});require(owner.has_value(),owner?"reopen":owner.error().message);require(owner->parameters().renamed_files.at(libtorrent::file_index_t{0})==path(0,false).lexically_relative(destination).string(),"Reopened real mapping does not append suffix twice");
       auto state=core::Document::parse(read(profile/"active"/(f.hash.hex()+".dat")),storage::compatibleConfigLimits());require(state&&encode(*state->find("info"))==f.info&&state->find("attributes")->find("displayname")->bytes==leaf,"Exact original raw identity and manual name survive completion");require(read(path(0,false))+(multi?read(path(1,false)):std::string{})==f.body,"Actual named payload bytes remain complete");
     }
+  });
+
+  test("custom-existing-approved-descriptors-remain-read-only-and-reject-new-authority",[] {
+    for(const bool multi:{false,true}){
+      Fixture f(multi);f.fullPayload();const auto source=f.state();const auto layout=compat::originalLayout(source);require(layout.has_value(),"Exact custom original layout");
+      libtorrent::error_code error;const libtorrent::torrent_info metadata((f.profile/"active"/(f.hash.hex()+".dat")).string(),error);require(!error,"Actual custom metainfo");
+      const auto identity=storage::originalTorrentIdentityFromLibtorrent(source,metadata);require(identity.has_value(),"Actual custom full identity");
+      const auto scope=storage::VerifiedExistingScope::capture(*f.lease,source,*layout,*identity,f.save,multi?"renamed-root":"saved.bin");require(scope.has_value(),scope?"capture":scope.error().message);
+      auto inventory=f.saved();auto selected=core::Document::parse(encode(row(inventory)));require(selected&&selected->replaceValue(storage::VerifiedExistingScopeKey,scope->encoded()).has_value()&&inventory.replaceValue("downloads","l"+selected->serialize()+'e').has_value(),"Persist exact approved custom scope");write(f.profile/"downloads.config",inventory.serialize());
+      auto owner=prepareExisting(f);require(owner.has_value(),owner?"custom preparation":owner.error().message);require(owner->mappedFiles()&&owner->mappedFiles()->access()==engine::detail::OriginalDiskAccess::ReadOnly,"Custom complete data uses read-only descriptor owner");
+      std::vector<char> actual(f.body.size());require(owner->mappedFiles()->read(0,actual).has_value()&&std::string(actual.begin(),actual.end())==f.body,"Read actual custom single/multifile bytes");
+      write(f.save/"unrelated-sibling","Unrelated directory ctime is not payload identity");require(owner->validateExistingSnapshot().has_value()&&owner->mappedFiles()->flush().has_value(),"Unrelated sibling does not revoke inode chain");
+      auto denied=Storage::prepare(*f.lease,f.hash,{},owner->claims(),{}, {},Purpose::VerifyExistingReadOnly);require(!denied,"Custom scope cannot bypass live payload claim");
+      const auto prepared=read(f.profile/"active"/(f.hash.hex()+".dat"));const auto leaf=f.path();const auto original=read(leaf);
+      fs::rename(leaf,leaf.string()+".old");write(leaf,original);std::array<char,1> byte{};
+      require(!owner->validateExistingSnapshot()&&!owner->mappedFiles()->read(0,byte)&&!owner->mappedFiles()->flush(),"Approved descriptor cannot silently adopt replacement inode");
+      require(!owner->checkpoint(*f.lease,std::array<std::uint8_t,2>{1,1},true,0,0)&&read(f.profile/"active"/(f.hash.hex()+".dat"))==prepared&&read(leaf)==original,"Late replacement cannot publish complete state or repair payload");
+    }
+  });
+  test("custom-existing-rechecks-every-ancestor-not-only-last-parent",[] {
+    Fixture f(true);f.fullPayload();const auto source=f.state();const auto layout=compat::originalLayout(source);require(layout.has_value(),"Custom directory layout");
+    libtorrent::error_code error;const libtorrent::torrent_info metadata((f.profile/"active"/(f.hash.hex()+".dat")).string(),error);require(!error,"Actual custom directory metainfo");const auto identity=storage::originalTorrentIdentityFromLibtorrent(source,metadata);require(identity.has_value(),"Actual directory identity");
+    const auto scope=storage::VerifiedExistingScope::capture(*f.lease,source,*layout,*identity,f.save,"renamed-root");require(scope.has_value(),"Capture ancestor chain");auto inventory=f.saved();auto selected=core::Document::parse(encode(row(inventory)));require(selected&&selected->replaceValue(storage::VerifiedExistingScopeKey,scope->encoded()).has_value()&&inventory.replaceValue("downloads","l"+selected->serialize()+'e').has_value(),"Save ancestor snapshot");write(f.profile/"downloads.config",inventory.serialize());auto owner=prepareExisting(f);require(owner.has_value(),"Bind approved directory chain");
+    const auto prepared=read(f.profile/"active"/(f.hash.hex()+".dat"));const auto moved=f.save.string()+".old";fs::rename(f.save,moved);fs::create_directory(f.save);fs::rename(fs::path(moved)/"renamed-root",f.save/"renamed-root");
+    std::array<char,1> byte{};require(!owner->validateExistingSnapshot()&&!owner->mappedFiles()->read(0,byte)&&!owner->mappedFiles()->flush(),"Same real-file and immediate-parent inodes cannot hide replaced ancestor");require(!owner->checkpoint(*f.lease,std::array<std::uint8_t,2>{1,1},true,0,0)&&read(f.profile/"active"/(f.hash.hex()+".dat"))==prepared,"Changed ancestor never gains checkpoint authority");
   });
 
   test("existing-only-complete-linear-preparation-is-read-only-and-still-unverified",[] {

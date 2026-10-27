@@ -41,6 +41,24 @@ class TorrentIntakeDialogTests final:public QObject {
   Q_OBJECT
 private slots:
 
+  void customExistingNameKeepsVerifyIntentAcrossFailureAndRequiresLiveChild(){
+    ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();
+    QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested),writes(&dialog,&ui::TorrentIntakeDialog::submitted);
+    auto* load=dialog.findChild<QPushButton*>(QStringLiteral("import-load-files"));QTRY_VERIFY(load->isEnabled());load->click();dialog.setPreview(packet(request(reads)));
+    auto* table=dialog.findChild<QTableView*>(QStringLiteral("import-file-table"));QTRY_COMPARE(table->model()->rowCount(),3);
+    auto* name=dialog.findChild<QLineEdit*>(QStringLiteral("import-save-name"));auto* mode=dialog.findChild<QComboBox*>(QStringLiteral("import-start-mode"));auto* add=dialog.findChild<QPushButton*>(QStringLiteral("import-confirm"));QVERIFY(name&&mode&&add);
+    name->setText(QStringLiteral("existing-root"));mode->setCurrentIndex(mode->findData(static_cast<int>(ui::TorrentIntakeStartMode::VerifySeeding)));QTRY_VERIFY(add->isEnabled());dialog.accept();QCOMPARE(writes.size(),1);
+    const auto sent=submission(writes);QVERIFY(sent.verifyExisting&&!sent.start&&!sent.forceStart&&!sent.paused&&sent.saveName&&*sent.saveName==QStringLiteral("existing-root"));QVERIFY(sent.files[2].skipped);
+    dialog.rejectSubmission(sent);QTRY_VERIFY(add->isEnabled());QCOMPARE(name->text(),QStringLiteral("existing-root"));QCOMPARE(mode->currentData().toInt(),static_cast<int>(ui::TorrentIntakeStartMode::VerifySeeding));
+    QPointer<QLabel> status=dialog.findChild<QLabel*>(QStringLiteral("import-file-status"));QPointer<QPushButton> confirm=add;
+    QTRY_VERIFY(status&&confirm&&status->text().contains(QStringLiteral("Read-only"))&&status->heightForWidth(status->width())>0
+        &&status->height()>=status->heightForWidth(status->width())&&dialog.rect().contains(status->geometry())
+        &&status->geometry().bottom()<confirm->mapTo(&dialog,QPoint(0,0)).y());
+    const auto capture=qEnvironmentVariable("BIGLYBTC_CAPTURE_DIR");if(!capture.isEmpty()){QDir output(capture);QVERIFY(output.mkpath("."));QVERIFY(dialog.grab().save(output.filePath(QStringLiteral("torrent-intake-custom-existing.png"))));}
+    dialog.setBusy(true);dialog.accept();QCOMPARE(writes.size(),1);dialog.setBusy(false);QTRY_VERIFY(add->isEnabled());delete name;dialog.accept();QCOMPARE(writes.size(),1);QCoreApplication::processEvents();QCOMPARE(writes.size(),1);
+    QVERIFY(!dialog.beginSession(78));QVERIFY(!dialog.preview());dialog.accept();QCOMPARE(writes.size(),1);
+  }
+
   void verifiedSeedingIgnoresOnlyImmutablePaddingWhenRequiringEveryRealFile(){
     ui::TorrentIntakeDialog dialog;QVERIFY(dialog.beginSession(77));inputs(dialog);dialog.show();
     QSignalSpy reads(&dialog,&ui::TorrentIntakeDialog::previewRequested),writes(&dialog,&ui::TorrentIntakeDialog::submitted);

@@ -4,6 +4,7 @@
 #include "owned_engine_fixture.hpp"
 #include "verified_seeding_fixture.hpp"
 #include "versioned_verified_seeding_fixture.hpp"
+#include "custom_verified_seeding_fixture.hpp"
 #include "library_commands.hpp"
 #include <QCoreApplication>
 #include <QJsonDocument>
@@ -108,6 +109,45 @@ std::int64_t integer(const core::Node& node, std::string_view key) {
 class ManagedDownloadTests final : public QObject {
   Q_OBJECT
 private slots:
+
+  void customExistingOwnerChecksAndServesOnlyApprovedRoot_data(){
+    QTest::addColumn<QString>("kind");for(const auto* kind:{"single","multi","one-multi","v2-tail"}){QTest::newRow(kind)<<QString::fromLatin1(kind);}
+  }
+  void customExistingOwnerChecksAndServesOnlyApprovedRoot(){
+    QFETCH(QString,kind);QTemporaryDir directory;QVERIFY(directory.isValid());const auto fixture=test::prepareCustomVerifiedSeedCase(directory.path()+"/owned",kind);
+    auto lease=storage::ProfileLease::acquire(fixture.profile.toStdString());QVERIFY(lease);const auto imported=test::importCustomVerifiedSeedCase(*lease,fixture,kind);QVERIFY2(imported,imported?"":imported.error().message.c_str());QCOMPARE(*imported,fixture.hash);
+    const auto archive=fixture.profile+"/torrents/"+QString::fromStdString(fixture.hash.hex())+".torrent";QCOMPARE(test::read(archive),test::read(fixture.metadata));
+    auto service=owner();const auto admitted=service->startManaged(*lease,{.hash=fixture.hash,.verifyExisting=true});QVERIFY2(admitted,admitted?"":admitted.error().message.c_str());QVERIFY(status(*service,fixture.hash)->verificationHeld);
+    QVERIFY(!service->queueManaged(fixture.hash,true,false)&&!service->pauseManaged(fixture.hash,false));QVERIFY(test::spinVerified(*service,fixture.hash));const auto accepted=status(*service,fixture.hash);QVERIFY(accepted);
+    QVERIFY2(accepted->verifiedSeeding==engine::VerifiedSeedingPhase::Released&&!accepted->failure,accepted->failure?accepted->failure->message.c_str():"Actual custom verification did not release");
+    const auto bits=service->verifiedSeedPieces(fixture.hash);QCOMPARE(bits.size(),static_cast<std::size_t>(accepted->totalPieces));QVERIFY(!bits.empty()&&std::ranges::all_of(bits,[](auto bit){return bit==1;}));
+    QVERIFY(accepted->complete&&accepted->selectedComplete&&accepted->checked);QCOMPARE(accepted->received,std::int64_t{0});QVERIFY(test::versionedRealSnapshotsIntact(fixture));
+    QVERIFY(!test::receiveCustomVerifiedSeed(*service,fixture).isEmpty());QTRY_VERIFY_WITH_TIMEOUT(service->poll().has_value()&&status(*service,fixture.hash)->sent>0,5000);
+    QCOMPARE(status(*service,fixture.hash)->received,std::int64_t{0});const auto close=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(close.sessionJoined&&close.retirement.storageReleased&&!close.checkpointFailure);QVERIFY(test::versionedRealSnapshotsIntact(fixture));
+    const auto saved=test::customFixtureRow(fixture.profile);QVERIFY(firstEntry(saved).find(storage::VerifiedExistingScopeKey));const auto released=storage::readVerifiedSeedIntent(*lease,fixture.hash);QVERIFY(released&&*released);QCOMPARE((*released)->state,storage::VerifiedSeedState::Released);QCOMPARE((*released)->startup,core::StartupState::Queued);QVERIFY(!(*released)->forceStart);
+    const auto source=parse(test::read(fixture.metadata));const auto state=parse(test::read(fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat"));QCOMPARE(encoded(*state.find("info")),encoded(*source.find("info")));QCOMPARE(test::read(archive),test::read(fixture.metadata));
+    if(kind!="v2-tail"){QCOMPARE(state.find("attributes")->find("displayname")->bytes,kind=="one-multi"?std::string("retained-title"):test::customVerifiedLeaf(kind).toStdString());}
+    const auto layout=compat::originalLayout(source);QVERIFY(layout);QVERIFY(!QFileInfo::exists(fixture.payload+'/'+QString::fromStdString(layout->name)));
+    if(kind=="v2-tail"){QVERIFY(test::versionedPadPathsAbsent(fixture));}
+    // Retained Released intent still requires its exact approved scope; a name
+    // alone is never permission to re-enter the read-only checking lifecycle.
+    test::customRemoveRowKey(fixture.profile,storage::VerifiedExistingScopeKey);const auto before=test::read(fixture.profile+"/downloads.config");auto denied=owner();QVERIFY(!denied->startManaged(*lease,{.hash=fixture.hash}));QVERIFY(denied->managedDownloads().empty());QCOMPARE(test::read(fixture.profile+"/downloads.config"),before);const auto final=denied->close(std::chrono::steady_clock::now()+5s);QVERIFY(final.sessionJoined&&final.retirement.storageReleased);
+  }
+  void customCorruptionNeverRepairsAndAbsentOriginalMarkerDoesNotAdoptScope(){
+    for(const bool legacy:{false,true}){
+      QTemporaryDir directory;QVERIFY(directory.isValid());const auto fixture=test::prepareCustomVerifiedSeedCase(directory.path()+"/owned",QStringLiteral("single"),!legacy);
+      auto lease=storage::ProfileLease::acquire(fixture.profile.toStdString());QVERIFY(lease);QVERIFY(test::importCustomVerifiedSeedCase(*lease,fixture,QStringLiteral("single")));auto service=owner();
+      if(legacy){
+        test::customRemoveRowKey(fixture.profile,storage::VerifiedSeedKey,true);const auto absent=storage::readVerifiedSeedIntent(*lease,fixture.hash);QVERIFY(absent&&!*absent);
+        // Java's saved-row rewrite drops native-only intent. A stale malformed
+        // scope is ignored by ordinary admission, never upgraded to RO intent.
+        QVERIFY(service->startManaged(*lease,{.hash=fixture.hash}));QVERIFY(!status(*service,fixture.hash)->verificationHeld);QCOMPARE(status(*service,fixture.hash)->verifiedSeeding,engine::VerifiedSeedingPhase::None);QVERIFY(service->stopManaged(fixture.hash));
+      }else{
+        QVERIFY(service->startManaged(*lease,{.hash=fixture.hash,.verifyExisting=true}));QVERIFY(test::spinVerified(*service,fixture.hash));const auto failed=status(*service,fixture.hash);QVERIFY(failed&&failed->verifiedSeeding!=engine::VerifiedSeedingPhase::Released);QCOMPARE(failed->received,std::int64_t{0});QCOMPARE(failed->sent,std::int64_t{0});const auto pending=storage::readVerifiedSeedIntent(*lease,fixture.hash);QVERIFY(pending&&*pending);QCOMPARE((*pending)->state,storage::VerifiedSeedState::Pending);QCOMPARE((*pending)->startup,core::StartupState::Stopped);
+      }
+      const auto close=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(close.sessionJoined&&close.retirement.storageReleased);QVERIFY(test::verifiedSeedBytesIntact(fixture,!legacy));
+    }
+  }
 
   void versionedExistingSeedingChecksEveryPieceBeforeSelectedSwarmUpload_data(){
     QTest::addColumn<QString>("kind");for(const auto* kind:{"v2-aligned","v2-tail","hybrid-v1","hybrid-v2"}){QTest::newRow(kind)<<QString::fromLatin1(kind);}
@@ -502,6 +542,22 @@ private slots:
   }
 };
 namespace {
+int prepareCustomVerifiedSeedReceipt(const QString& root,const QString& kind,const QString& outcome){
+  try{
+    test::require(outcome=="complete"||outcome=="corrupt"||outcome=="stopped","Unknown custom verified outcome");
+    const auto fixture=test::prepareCustomVerifiedSeedCase(root,kind,outcome=="corrupt");auto lease=storage::ProfileLease::acquire(fixture.profile.toStdString());test::require(lease.has_value(),"Own actual custom profile");
+    const auto imported=test::importCustomVerifiedSeedCase(*lease,fixture,kind);test::require(imported.has_value(),imported?"":imported.error().message.c_str());auto service=owner();test::require(service->startManaged(*lease,{.hash=fixture.hash,.verifyExisting=true}).has_value(),"Actual approved custom RO admission");
+    if(outcome=="stopped"){test::require(service->stopManaged(fixture.hash).has_value(),"Actual custom cancellation");}else{test::require(test::spinVerified(*service,fixture.hash),"Actual custom verification deadline");}
+    auto actual=test::verifiedStatus(*service,fixture.hash);test::require(actual.has_value(),"Actual custom observation missing");const bool released=actual->verifiedSeeding==engine::VerifiedSeedingPhase::Released;test::require(released==(outcome=="complete"),"Unexpected custom actual outcome");
+    const auto bits=service->verifiedSeedPieces(fixture.hash);QByteArray receiverHash;if(released){receiverHash=test::receiveCustomVerifiedSeed(*service,fixture);test::require(service->poll().has_value(),"Actual custom upload sample");actual=test::verifiedStatus(*service,fixture.hash);test::require(actual.has_value()&&actual->sent>0,"Actual custom upload bytes missing");}
+    const auto close=service->close(std::chrono::steady_clock::now()+5s);test::require(close.sessionJoined&&close.retirement.storageReleased&&!close.checkpointFailure,"Actual custom owner retirement/checkpoint failed");test::require(test::versionedRealSnapshotsIntact(fixture,outcome=="corrupt"),"Read-only custom payload changed");
+    const auto saved=storage::readVerifiedSeedIntent(*lease,fixture.hash);test::require(saved&&saved->has_value(),"Actual custom saved intent");const auto state=parse(test::read(fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat"));const auto flags=core::originalDownloadFlags(state.find("attributes"));test::require(flags.has_value(),"Actual original custom flags");
+    const auto inventory=test::customFixtureRow(fixture.profile);test::require(firstEntry(inventory).find(storage::VerifiedExistingScopeKey)!=nullptr,"Actual custom scope was lost");
+    QJsonArray files,verified;for(auto bit:bits){verified.push_back(static_cast<int>(bit));}for(const auto& file:fixture.files){const auto path=fixture.payload+'/'+file.relative;struct stat info{};test::require(::stat(path.toStdString().c_str(),&info)==0,"Actual final custom inode");files.push_back(QJsonObject{{"path",path},{"bytes",QString::number(info.st_size)},{"sha256",QString::fromLatin1(QCryptographicHash::hash(test::read(path),QCryptographicHash::Sha256).toHex())},{"dev",QString::number(info.st_dev)},{"ino",QString::number(info.st_ino)}});}
+    const QJsonObject result{{"schema",3},{"status","ACTUAL_NATIVE_VERIFIED_SEED_CASE"},{"kind",kind},{"saveName",test::customVerifiedLeaf(kind)},{"profile",fixture.profile},{"metadata",fixture.metadata},{"payloadRoot",fixture.payload},{"hash",QString::fromStdString(fixture.hash.hex())},{"admission",QString::number(actual->admission)},{"released",released},{"phase",static_cast<int>(actual->verifiedSeeding)},{"savedStartup",static_cast<int>((*saved)->startup)},{"forceStart",(*saved)->forceStart},{"moveFlag",bool(*flags&8)},{"marker",(*saved)->state==storage::VerifiedSeedState::Released?2:1},{"totalPieces",actual->totalPieces},{"verifiedPieces",verified},{"received",QString::number(actual->received)},{"sent",QString::number(actual->sent)},{"receiverCompleted",!receiverHash.isEmpty()},{"receiverSha256",QString::fromLatin1(receiverHash)},{"files",files},{"sessionJoined",close.sessionJoined},{"storageReleased",close.retirement.storageReleased},{"state",fixture.profile+"/active/"+QString::fromStdString(fixture.hash.hex())+".dat"},{"archive",fixture.profile+"/torrents/"+QString::fromStdString(fixture.hash.hex())+".torrent"}};
+    test::write(root+"/native-receipt.json",QJsonDocument(result).toJson(QJsonDocument::Indented));return 0;
+  }catch(const std::exception& error){qCritical("%s",error.what());return 1;}
+}
 int prepareVerifiedSeedReceipt(const QString& root,bool multi,const QString& outcome,const QString& versioned={}){
   try{
     test::require(outcome=="complete"||outcome=="corrupt"||outcome=="stopped","Unknown verified-seed outcome");
@@ -560,6 +616,10 @@ int main(int argc,char** argv){
     const auto kind=QString::fromLocal8Bit(argv[3]);
     if(kind!="v2-aligned"&&kind!="v2-tail"&&kind!="hybrid-v1"&&kind!="hybrid-v2"){return 2;}
     return prepareVerifiedSeedReceipt(QString::fromLocal8Bit(argv[2]),false,QString::fromLocal8Bit(argv[4]),kind);
+  }
+  if(argc==5&&QString::fromLocal8Bit(argv[1])==QStringLiteral("--prepare-custom-verified-seed")){
+    const auto kind=QString::fromLocal8Bit(argv[3]);if(kind!="single"&&kind!="multi"&&kind!="one-multi"){return 2;}
+    return prepareCustomVerifiedSeedReceipt(QString::fromLocal8Bit(argv[2]),kind,QString::fromLocal8Bit(argv[4]));
   }
   ManagedDownloadTests tests;return QTest::qExec(&tests,argc,argv);
 }

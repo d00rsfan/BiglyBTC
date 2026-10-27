@@ -131,7 +131,7 @@ TorrentIntakeDialog::TorrentIntakeDialog(QWidget* parent):QDialog(parent) {
   destinationLayout->addWidget(destination_,1);destinationLayout->addWidget(destinationBrowse);
   form->addRow(tr("Download directory:"),destinationRow);
   saveName_=new QLineEdit(this);saveName_->setObjectName(QStringLiteral("import-save-name"));saveName_->setMaxLength(255);saveName_->setAccessibleName(tr("Destination file or folder name"));
-  saveName_->setPlaceholderText(tr("Original torrent name"));saveName_->setToolTip(tr("Leave empty to keep the original name. One file name or top-level folder name only. Existing renamed targets are not overwritten."));
+  saveName_->setPlaceholderText(tr("Original torrent name"));saveName_->setToolTip(tr("Leave empty to keep the original name. One file name or top-level folder name only. Existing renamed targets are not overwritten. Verify-existing mode can authenticate complete data at this name."));
   form->addRow(tr("Save as:"),saveName_);layout->addLayout(form);
   connect(saveName_,&QLineEdit::textChanged,this,[this]{++revision_;schedule();});
   table_=new QTableView(this);table_->setObjectName(QStringLiteral("import-file-table"));table_->setAccessibleName(tr("Files to download"));
@@ -323,7 +323,7 @@ void TorrentIntakeDialog::render() {
         ?tr("No files selected. The torrent will be added stopped.")
         :tr("%1 bytes selected. Existing files are checked before downloading.").arg(model_->selectedBytes());
   }
-  if(startMode_->currentData().toInt()==static_cast<int>(TorrentIntakeStartMode::VerifySeeding)){status+=tr("\nRequires all existing original-named linear files. Read-only verification never downloads or repairs missing data. Seeding starts only after every piece passes.");}
+  if(startMode_->currentData().toInt()==static_cast<int>(TorrentIntakeStartMode::VerifySeeding)){status+=tr("\nRequires all selected existing linear files at the chosen name. Read-only verification never downloads or repairs missing data. Seeding starts only after every piece passes.");}
   if(frame&&!frame->trackers){status+=tr("\nOriginal tracker fields are kept unchanged; this editor cannot represent their format or size.");}
   status_->setText(status.left(4096));
 }
@@ -335,7 +335,7 @@ void TorrentIntakeDialog::accept() {
   const bool selected=model_->selectedBytes()!=0;
   const bool verify=mode==static_cast<int>(TorrentIntakeStartMode::VerifySeeding);
   if(verify){
-    if(!selected||(!saveName_->text().isEmpty()&&saveName_->text()!=preview_->name)){return;}
+    if(!selected){return;}
     for(std::size_t n=0;n<preview_->files.size();++n){
       if(!preview_->files[n].padding&&model_->draft[n].skipped){return;}
     }

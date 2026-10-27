@@ -1,5 +1,6 @@
 #include "biglybtc/original_file_links.hpp"
 #include "managed_storage.hpp"
+#include "verified_existing_scope.hpp"
 #include "queue_positions.hpp"
 #include "managed_payload_counters.hpp"
 #include "linear_to_compact.hpp"
@@ -480,6 +481,7 @@ struct ManagedStorage::Impl {
   std::vector<ManagedPayloadClaim> payloadClaims;
   std::uint64_t profileDevice,profileInode;
   ManagedStoragePurpose purpose=ManagedStoragePurpose::Download;
+  std::vector<storage::VerifiedExistingScope::Proof> approvedProofs;
   bool attempted=false;
   bool progressFromPieces=false;
   Impl(core::TorrentHash key,storage::OriginalTorrentIdentity identity,core::SavedDownload selected,storage::TorrentStateStore owner,storage::TorrentStateFile source,
@@ -499,7 +501,8 @@ lt::add_torrent_params ManagedStorage::parameters() const { return impl_?impl_->
 ManagedStoragePurpose ManagedStorage::purpose() const noexcept {return impl_?impl_->purpose:ManagedStoragePurpose::Download;}
 std::expected<void,Error> ManagedStorage::validateExistingSnapshot() const {
   if(!impl_||impl_->purpose!=ManagedStoragePurpose::VerifyExistingReadOnly){return std::unexpected(Error{ErrorCode::Unsupported,"No existing-only snapshot authority"});}
-  try{for(const auto& slot:impl_->slots){if(slot.padding){continue;}const auto proof=validateExistingPayload((impl_->save/slot.actual).lexically_normal(),slot.parent.get(),slot.data.get(),slot.identity);if(!proof){return proof;}}return {};}
+  try{if(!impl_->approvedProofs.empty()){for(const auto& proof:impl_->approvedProofs){const auto checked=proof();if(!checked){return checked;}}return {};}
+    for(const auto& slot:impl_->slots){if(slot.padding){continue;}const auto proof=validateExistingPayload((impl_->save/slot.actual).lexically_normal(),slot.parent.get(),slot.data.get(),slot.identity);if(!proof){return proof;}}return {};}
   catch(const std::exception&){return std::unexpected(Error{ErrorCode::Io,"Existing-only snapshot validation failed"});}
 }
 const ManagedQueueMetadata& ManagedStorage::queueMetadata() const { return impl_->queue; }
@@ -586,8 +589,11 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     require(save.is_absolute()&&save.lexically_normal()==save,"Managed save directory must be absolute and normalized",ErrorCode::UnsafePath);
     const auto profilePath=fs::read_symlink(fs::path("/proc/self/fd")/std::to_string(lease.directoryHandle())).lexically_normal();
     require(profilePath.is_absolute(),"Cannot authenticate managed profile path",ErrorCode::UnsafePath);
+    std::optional<storage::VerifiedExistingScope> approvedScope;
     if(existingOnly){
-      require(!rawSaved.legacySavePath&&rawSaved.saveFile&&*rawSaved.saveFile==layout.name,
+      if(const auto* scope=row.find(storage::VerifiedExistingScopeKey)){approvedScope=take(storage::VerifiedExistingScope::decode(*scope));
+        done(approvedScope->validate(lease,source,layout,identity,save,saved.saveFile.value_or("")));}
+      require(!rawSaved.legacySavePath&&rawSaved.saveFile&&(*rawSaved.saveFile==layout.name||approvedScope.has_value()),
           "Existing-only verification requires the canonical original save leaf");
       // metadata() already authenticated the exact original/engine projection,
       // including its sole pure-v2 virtual trailing-pad exception. Only REAL
@@ -680,6 +686,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
         put(inventory.document(),"downloads",list+'e');}
       done(inventory.save(lease));
     }
+    std::vector<storage::VerifiedExistingScope::Proof> approvedProofs;
     std::vector<std::optional<OriginalDiskFile>> mappedFiles(static_cast<std::size_t>(info->num_files()));
     for (auto& slot:slots) {
       if (slot.padding) { continue; }
@@ -727,7 +734,10 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
           for(std::size_t i=0;i<slots.size();++i){stores+=i==slot.index?"1:R":encoded(old->children[i]);}put(attrs,"storetypes",stores+'e');done(state.replaceSection("attributes",attrs.serialize()));done(store.save(lease,state));
         }
         std::function<std::expected<void,Error>()> validate;
-        if(existingOnly){validate=existingPayloadProof(slot,save,mappedDescriptor.get());}
+        if(existingOnly){
+          if(approvedScope){validate=take(approvedScope->bind(slot.index,(save/slot.actual).lexically_normal(),mappedDescriptor.get()));approvedProofs.push_back(validate);}
+          else{validate=existingPayloadProof(slot,save,mappedDescriptor.get());}
+        }
         else if(control&&slot.kind!=storage::OriginalStorageKind::Linear){validate=[control]() -> std::expected<void,Error> {auto checked=control->load();if(!checked){return std::unexpected(checked.error());}return {};};}
         mappedFiles[slot.index].emplace(OriginalDiskFile{std::move(mappedDescriptor),std::move(io),std::move(validate)});
       }
@@ -736,6 +746,7 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
     for(std::size_t i=0;i<claimPlan.values.size();++i){const auto& id=slots[claimPlan.indices[i]].identity;claimPlan.values[i].device=static_cast<std::uint64_t>(id.st_dev);claimPlan.values[i].inode=static_cast<std::uint64_t>(id.st_ino);}
     auto result=std::make_unique<Impl>(hash,std::move(identity),saved,std::move(store),std::move(state),std::move(layout),std::move(params),save,
       std::move(slots),std::move(pending),std::move(claimPlan.values),profile.st_dev,profile.st_ino);
+    result->approvedProofs=std::move(approvedProofs);
     result->purpose=purpose; result->queue=queue; result->swarmBridge=std::move(swarmBridge); result->filePolicies=std::move(*parsedPolicy);
     // Capture after authoritative cache hydration, defaults and conversions;
     // later classification cannot authorize a newly relinked physical map.
