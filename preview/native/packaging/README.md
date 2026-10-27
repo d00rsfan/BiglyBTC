@@ -89,3 +89,23 @@ context menu **Copy selected values**, to copy the selected UTC bucket and exact
 traffic values, including Unknown. Selection enables the action; replacing the
 frame clears it. Hover and navigation do not copy. Only the normal Clipboard is
 written, with no new saved reads, file writes or configuration persistence.
+
+
+Wayland preview diagnostics
+---------------------------
+
+Qt 6.12 can repeatedly warn that `disableSurface` was called while `0x0` is
+focused when moving focus among non-text widgets. The offline preview launcher
+filters only that exact redundant diagnostic. It leaves other focus mismatches,
+protocol warnings, stdout, stderr bytes and the child exit status intact, and
+keeps Wayland and international text input enabled. This is a console workaround;
+it does not patch Qt or establish that unrelated input problems are harmless.
+Custom Qt message formats are passed through unchanged.
+
+To inspect every message, run
+`BIGLYBTC_WAYLAND_DIAGNOSTICS=1 ./BiglyBTC-preview` from the portable folder.
+`QT_FATAL_WARNINGS` also bypasses the filter so an abort diagnostic stays visible.
+The direct normal-client entry point is unchanged.
+
+Check the subprocess forwarding and diagnostic bypasses without building Qt/C++:
+`python3 -B preview/native/packaging/test_preview.py`.

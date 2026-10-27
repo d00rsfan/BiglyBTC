@@ -6,8 +6,10 @@ import datetime
 import gzip
 import hashlib
 import os
+import re
 from pathlib import Path
 import subprocess
+import sys
 import tempfile
 
 
@@ -182,6 +184,31 @@ def prepare(root):
     return profile
 
 
+# Qt 6.12's setFocusObject() calls disableSurface() for non-text widgets even
+# when no text surface is focused. Its v3 backend then warns and returns without
+# changing protocol state. Match only that redundant no-focus diagnostic:
+# https://github.com/qt/qtbase/blob/v6.12.0/src/plugins/platforms/wayland/qwaylandinputcontext.cpp
+# https://github.com/qt/qtbase/blob/v6.12.0/src/plugins/platforms/wayland/qwaylandtextinputv3.cpp
+_IDLE_WAYLAND_DISABLE = re.compile(
+    rb"qt\.qpa\.wayland\.textinput: virtual void "
+    rb"QtWaylandClient::QWaylandTextInputv3::disableSurface\(wl_surface\*\) "
+    rb"Trying to disable 0x[0-9a-fA-F]+ but 0x0 is focused\r?\n"
+)
+
+
+def run_preview(command, environment):
+    """Keep the offline preview console usable without changing text input."""
+    if (environment.get("BIGLYBTC_WAYLAND_DIAGNOSTICS") == "1"
+            or "QT_FATAL_WARNINGS" in environment):
+        return subprocess.run(command, env=environment, check=False).returncode
+    with subprocess.Popen(command, env=environment, stderr=subprocess.PIPE) as child:
+        for line in child.stderr:
+            if _IDLE_WAYLAND_DISABLE.fullmatch(line) is None:
+                sys.stderr.buffer.write(line)
+                sys.stderr.buffer.flush()
+        return child.wait()
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--prepare", type=Path, help="Create sample data in a new /tmp/biglybtc-* directory and exit")
@@ -218,8 +245,7 @@ def main():
         command = [str(executable), "--experimental-local", str(profile), "0"]
         if args.country_db is not None:
             command += ["--country-db", str(args.country_db)]
-        return subprocess.run(command,
-                              env=environment, check=False).returncode
+        return run_preview(command, environment)
 
 
 if __name__ == "__main__":

@@ -28,6 +28,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Check offline preview console forwarding
+        run: python3 -B preview/native/packaging/test_preview.py
       - name: Install pinned compiler, libtorrent and Qt 6.12.0 SDK
         shell: bash
         run: |
