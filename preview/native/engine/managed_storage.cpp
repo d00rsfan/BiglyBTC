@@ -887,7 +887,7 @@ std::expected<void,Error> ManagedStorage::checkpoint(const storage::ProfileLease
     if(secondsSinceUpload){
       auto attributes=dictionary(owner.state.document().find("attributes"));
       put(attributes,"timesinceul",intValue(*secondsSinceUpload));
-      put(owner.state.document(),"attributes",attributes.serialize());
+      done(owner.state.replaceSection("attributes",attributes.serialize()));
     }
     writeProgress(owner.state,counts,verified.size(),complete); done(owner.store.save(lease,owner.state));
     const bool completedFiles=!owner.pending.empty()||std::ranges::any_of(owner.slots,[&](const auto& slot){return !slot.padding&&counts[slot.index]==slot.bytes;});
