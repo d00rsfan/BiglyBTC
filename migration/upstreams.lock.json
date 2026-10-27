@@ -6829,6 +6829,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "a2f050e27779c3b949db6f144f978ae0cc542a44",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "d2796585f5ddf6bd3bd4ae00729b3a8a8fea7a76",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -6842,7 +6847,8 @@
         "migration/updates/compatibility.providers/20261026-batch5.md",
         "migration/updates/compatibility.providers/20261027-batch6.md",
         "migration/updates/compatibility.providers/20261027-batch8.md",
-        "migration/updates/compatibility.providers/20261027-batch9.md"
+        "migration/updates/compatibility.providers/20261027-batch9.md",
+        "migration/updates/compatibility.providers/20261027-batch10.md"
       ],
       "evidence": [
         "migration/evidence/20261025-storage-resume/verification.json",
@@ -6855,7 +6861,8 @@
         "migration/evidence/20261026-compatibility-batch5/verification.json",
         "migration/evidence/20261027-compatibility-batch6/verification.json",
         "migration/evidence/20261027-compatibility-batch8/verification.json",
-        "migration/evidence/20261027-compatibility-batch9/verification.json"
+        "migration/evidence/20261027-compatibility-batch9/verification.json",
+        "migration/evidence/20261027-compatibility-batch10/verification.json"
       ],
       "decision_ref": null
     },
@@ -7170,7 +7177,8 @@
         "migration/evidence/20261026-compatibility-batch5/verification.json",
         "migration/evidence/20261027-compatibility-batch6/verification.json",
         "migration/evidence/20261027-compatibility-batch8/verification.json",
-        "migration/evidence/20261027-compatibility-batch9/verification.json"
+        "migration/evidence/20261027-compatibility-batch9/verification.json",
+        "migration/evidence/20261027-compatibility-batch10/verification.json"
       ],
       "feature_ids": [
         "F02.original_file_priorities"
@@ -7246,6 +7254,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "a2f050e27779c3b949db6f144f978ae0cc542a44",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "d2796585f5ddf6bd3bd4ae00729b3a8a8fea7a76",
+          "purpose": "implementation"
         }
       ],
       "review_records": [
@@ -7254,7 +7267,8 @@
         "migration/updates/compatibility.providers/20261026-batch5.md",
         "migration/updates/compatibility.providers/20261027-batch6.md",
         "migration/updates/compatibility.providers/20261027-batch8.md",
-        "migration/updates/compatibility.providers/20261027-batch9.md"
+        "migration/updates/compatibility.providers/20261027-batch9.md",
+        "migration/updates/compatibility.providers/20261027-batch10.md"
       ],
       "source_coverage": [
         {

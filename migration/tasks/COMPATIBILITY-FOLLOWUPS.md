@@ -1,5 +1,8 @@
 # Open compatibility work after the everyday torrent preview
 
+Authenticated existing custom save roots at native `d2796585f5ddf6bd3bd4ae00729b3a8a8fea7a76`: gcc 9 suites, clang 9 suites, san 9 suites pass; 3 new actual original-client cases are recorded. [Review](../updates/compatibility.providers/20261027-batch10.md). The user-authorized current milestone plus two further milestones are complete. STOPPED after batch10, as requested. Do not start another milestone or the next chapter without new instructions. All CF parents stay open.
+
+
 Versioned and padded verified existing-data seeding at native `a2f050e27779c3b949db6f144f978ae0cc542a44`: gcc 9 suites, clang 9 suites, san 9 suites pass; 5 new actual original-client cases are recorded. [Review](../updates/compatibility.providers/20261027-batch9.md). Exactly one authorized milestone remains in this compatibility section: authenticated existing custom save roots (batch10). Complete it, then STOP. Do not start the next chapter. All CF parents stay open.
 
 
