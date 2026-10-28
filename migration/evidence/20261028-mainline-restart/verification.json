@@ -1,0 +1,289 @@
+{
+  "status": "PASS_BOUNDED_MAINLINE_RESTART_CHAPTER",
+  "source_commit": "75245284dcaeda99c400fe59e5b8a29bbe1babd3",
+  "lanes": {
+    "gcc": {
+      "status": "PASS",
+      "lane": "gcc",
+      "source_commit": "75245284dcaeda99c400fe59e5b8a29bbe1babd3",
+      "actual_suites": 6,
+      "suite_names": [
+        "mainline-dht",
+        "mainline-checkpoint",
+        "network-policy",
+        "managed-magnet",
+        "engine-live-settings",
+        "owned-fixture-read-diagnostic"
+      ],
+      "provider_sha256": "a5b78ccb4ee17a6773899e797d867844c8a24a45358e260b7ab65a93e2954187",
+      "binary_sha256": {
+        "biglybtc-mainline-dht-tests": "f619b066d46e7a9d151037dc965da89c2cdd17807dabf4c64b6ac00a160882b2",
+        "biglybtc-mainline-checkpoint-tests": "46fb6b7fc0693a3669168b3154ea31d8ec62fc7031f882914d92d875c50b46dc",
+        "biglybtc-network-policy-tests": "bd0798fb3770529d44fe833447465bcff656ef9b59ec857af56cdeefadbdfc12",
+        "biglybtc-managed-magnet-tests": "e73405a7493179269d9ff7c6af3ad97b1d95e0c601da741d278c04e2036ce838",
+        "biglybtc-engine-live-settings-tests": "59e5811a560c40eba25f67e21ec1c11d2638153c41893b39b70c638404ef7e59",
+        "biglybtc-owned-fixture-read-tests": "c62ac92b41eb4d4fc86ccaf75f5347e37b44de5406425cd34117b65ad4ca473f"
+      },
+      "sanitizer_environment": {}
+    },
+    "clang": {
+      "status": "PASS",
+      "lane": "clang",
+      "source_commit": "75245284dcaeda99c400fe59e5b8a29bbe1babd3",
+      "actual_suites": 4,
+      "suite_names": [
+        "mainline-dht",
+        "mainline-checkpoint",
+        "network-policy",
+        "managed-magnet"
+      ],
+      "provider_sha256": "a5b78ccb4ee17a6773899e797d867844c8a24a45358e260b7ab65a93e2954187",
+      "binary_sha256": {
+        "biglybtc-mainline-dht-tests": "1edbab2d57c6aa5f5e72f00963b9e8e382aef841de0e10c3f771db20cb4f6d32",
+        "biglybtc-mainline-checkpoint-tests": "757e6d3761ab841d9c1e2fb37cdb78e51c66e2352d84dfb0f16416d33a347c59",
+        "biglybtc-network-policy-tests": "76c2469f20a3b9c8b7e65b9c1f0fcf98976cf3e346f6c8c365aeef3ea345fc92",
+        "biglybtc-managed-magnet-tests": "41ea27615e2531c200439e69c948607fceb10dddfea29e9c80f41f361dbc7681"
+      },
+      "sanitizer_environment": {}
+    },
+    "san": {
+      "status": "PASS",
+      "lane": "san",
+      "source_commit": "75245284dcaeda99c400fe59e5b8a29bbe1babd3",
+      "actual_suites": 4,
+      "suite_names": [
+        "mainline-dht",
+        "mainline-checkpoint",
+        "network-policy",
+        "managed-magnet"
+      ],
+      "provider_sha256": "a5b78ccb4ee17a6773899e797d867844c8a24a45358e260b7ab65a93e2954187",
+      "binary_sha256": {
+        "biglybtc-mainline-dht-tests": "4251bd435dfeaf5dd324c1da499441cae0bf88ab54b6c70826e6f5661e28235c",
+        "biglybtc-mainline-checkpoint-tests": "4f45945dc9109aca4c8f15a0d3d6ad149a4553896241e8633c6960fd62468256",
+        "biglybtc-network-policy-tests": "d7e2090a92b9a6e2a3ff58db0ea16f9ec6815590f9cfa0ce0fad98644be830bd",
+        "biglybtc-managed-magnet-tests": "d4c5b55d2a044e27181b9e99489624cc561d173f4681074b24225c59d823dcff"
+      },
+      "sanitizer_environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      }
+    }
+  },
+  "private_runtime": {
+    "status": "PASS_PRIVATE_RELOCATED_RUNTIME",
+    "candidate": "/home/yurii/Java/BiglyBT/build/mainline-restart-20261028/private-runtime/candidate",
+    "manifest_sha256": "f10ee83a4c4cebb45149dcd6a27552cc82566dad1c7ae63b0e9007c6e4a44524",
+    "verified_leaves": 118,
+    "provider_sha256": "a5b78ccb4ee17a6773899e797d867844c8a24a45358e260b7ab65a93e2954187",
+    "actual_test_binaries": [
+      "biglybtc-mainline-dht-tests",
+      "biglybtc-mainline-checkpoint-tests",
+      "biglybtc-managed-magnet-tests",
+      "biglybtc-preview-smoke"
+    ],
+    "normal_usage_exit": 2,
+    "offline_preview_controlled_exit": 124,
+    "loader_init_verified": true,
+    "sample": "/tmp/biglybtc-preview-xmcf19wf",
+    "shipping_approved": false
+  },
+  "dist": {
+    "status": "PASS_PROMOTED",
+    "new_manifest_sha256": "f10ee83a4c4cebb45149dcd6a27552cc82566dad1c7ae63b0e9007c6e4a44524",
+    "previous_manifest_sha256": "985ce9fd51be4886a83cd36390e3f3bb820fe3786a9a65c4902ef2f50b6bb4ed",
+    "new_leaves": 118,
+    "previous_leaves": 118,
+    "rollback": "/home/yurii/Java/BiglyBT/build/mainline-restart-20261028/previous-published-dist-20261028-restart",
+    "installed_path": "/home/yurii/Java/BiglyBTC/dist",
+    "post_relocation_usage_exit": 2,
+    "actual_private_qt_and_provider_init": true,
+    "provider_sha256": "a5b78ccb4ee17a6773899e797d867844c8a24a45358e260b7ab65a93e2954187",
+    "shipping_approved": false
+  },
+  "hosted": {
+    "application": {
+      "conclusion": "success",
+      "headSha": "b49a9db7e1125736f48b92e09edcf29c519d5fba",
+      "jobs": [
+        {
+          "completedAt": "2026-10-28T15:29:54Z",
+          "conclusion": "success",
+          "databaseId": 122903670492,
+          "name": "preview",
+          "startedAt": "2026-10-28T15:10:06Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-10-28T15:10:07Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-10-28T15:10:06Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-28T15:10:12Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "number": 2,
+              "startedAt": "2026-10-28T15:10:07Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-28T15:10:13Z",
+              "conclusion": "success",
+              "name": "Check offline preview console forwarding",
+              "number": 3,
+              "startedAt": "2026-10-28T15:10:12Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-28T15:10:54Z",
+              "conclusion": "success",
+              "name": "Install pinned compiler, libtorrent and Qt 6.12.0 SDK",
+              "number": 4,
+              "startedAt": "2026-10-28T15:10:13Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-28T15:27:38Z",
+              "conclusion": "success",
+              "name": "Configure and build the desktop preview",
+              "number": 5,
+              "startedAt": "2026-10-28T15:10:54Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-28T15:29:44Z",
+              "conclusion": "success",
+              "name": "Run offline unit tests",
+              "number": 6,
+              "startedAt": "2026-10-28T15:27:38Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-28T15:29:51Z",
+              "conclusion": "success",
+              "name": "Run actual offline preview smoke and capture classic view",
+              "number": 7,
+              "startedAt": "2026-10-28T15:29:44Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-28T15:29:52Z",
+              "conclusion": "success",
+              "name": "Preserve test, screenshot and dependency evidence",
+              "number": 8,
+              "startedAt": "2026-10-28T15:29:51Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-28T15:29:52Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "number": 16,
+              "startedAt": "2026-10-28T15:29:52Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-28T15:29:52Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 17,
+              "startedAt": "2026-10-28T15:29:52Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40713179137/job/122903670492"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40713179137"
+    },
+    "sdk": {
+      "conclusion": "success",
+      "headSha": "75245284dcaeda99c400fe59e5b8a29bbe1babd3",
+      "jobs": [
+        {
+          "completedAt": "2026-10-28T15:21:14Z",
+          "conclusion": "success",
+          "databaseId": 122910147105,
+          "name": "sdk",
+          "startedAt": "2026-10-28T15:20:51Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-10-28T15:20:52Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-10-28T15:20:51Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-28T15:20:58Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "number": 2,
+              "startedAt": "2026-10-28T15:20:52Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-28T15:21:12Z",
+              "conclusion": "success",
+              "name": "Build and exercise C ABI and module lifecycle",
+              "number": 3,
+              "startedAt": "2026-10-28T15:20:58Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-28T15:21:12Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "number": 6,
+              "startedAt": "2026-10-28T15:21:12Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-28T15:21:12Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 7,
+              "startedAt": "2026-10-28T15:21:12Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40714995979/job/122910147105"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40714995979"
+    },
+    "latest_application": {
+      "databaseId": 40714996028,
+      "headSha": "75245284dcaeda99c400fe59e5b8a29bbe1babd3",
+      "status": "pending_or_running",
+      "conclusion": null,
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40714996028"
+    },
+    "scope": "Hosted application build and new checkpoint unit suite passed at b49a9db. Final7524528 differs only mainline_dht.cpp; this final service source passed actual local GCC/Clang/sanitizer and private relocation, but latest hosted application run is not yet credited. SDK passed at7524528.",
+    "difference_from_hosted_application": [
+      "preview/native/engine/mainline_dht.cpp"
+    ]
+  },
+  "initial_failed_runs_retained": true,
+  "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "original_live_profile_used": false,
+  "paired_source_commit": "067f434eb60323123a5e885093ab2504ab10d5f9",
+  "shipped_jar_equivalence": false,
+  "original_java_native_wire_id_equivalence": false,
+  "historic_generic_read_failure_cause": "unknown; no recurrence",
+  "shipping_approved": false,
+  "archive": {
+    "sha256": "2ed40013a8e494c89d4acd4b1293cbb31de857c685da258c060877000d8056fb",
+    "bytes": 28076,
+    "members": 57
+  }
+}

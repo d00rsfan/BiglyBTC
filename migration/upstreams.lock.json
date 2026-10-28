@@ -192,6 +192,20 @@
       "notes": [
         "Separate Mainline DHT engine source, not a second independently installed plugin."
       ]
+    },
+    {
+      "id": "mldht-paired",
+      "url": "https://github.com/the8472/mldht.git",
+      "checkout_hint": "build/reference-mirrors/mldht-paired",
+      "git_object_format": "sha1",
+      "audit_commit": "067f434eb60323123a5e885093ab2504ab10d5f9",
+      "audited_on": "2026-10-28",
+      "audit_checkout_dirty": false,
+      "notes": [
+        "Exact source referenced by wrapper 3b12515c5541ed75cfb4f795b672d4e786df9f45 POM com.github.the8472:mldht:067f434.",
+        "Durable bare mirror retains refs/pinned/wrapper-3b12515c-engine; tree27bd9fc5af237d63a7a2725f78855149ccffe8f3; strict full fsck receipt retained in task-local paired-engine-recovery.",
+        "Selected identity/cache/default methods compared with historical inspected mldht f9290cbd63805229aef418639b781696c5fa1573; whole engines differ. This establishes declared source, not shipped-JAR, Java/LT node-ID or routing equivalence."
+      ]
     }
   ],
   "components": [
@@ -7514,6 +7528,87 @@
         "migration/evidence/20261028-mainline-discovery/REVIEW.md"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
+    },
+    {
+      "id": "engine.mainline_restart_checkpoint",
+      "feature_ids": [
+        "F04"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P05-MAINLINE-DISCOVERY.md",
+        "migration/tasks/P05-02-mldht-persistence.md",
+        "migration/tasks/P05-MAINLINE-RESTART.md"
+      ],
+      "target_paths": [
+        "preview/native/adapters/mainline_checkpoint.hpp",
+        "preview/native/adapters/mainline_checkpoint.cpp",
+        "preview/native/engine/mainline_dht.hpp",
+        "preview/native/engine/mainline_dht.cpp",
+        "preview/native/engine/mainline_owner.inc",
+        "preview/native/engine/network_policy.cpp",
+        "preview/native/engine/persistent_session.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "mlDHT",
+          "source_paths": [
+            "src/lbms/plugins/mldht/azureus/MlDHTPlugin.java"
+          ],
+          "source_symbols": [
+            "MlDHTPlugin.startDHT",
+            "DHTConfiguration.isPersistingID",
+            "DHTConfiguration.getStoragePath"
+          ],
+          "baseline_commit": "3b12515c5541ed75cfb4f795b672d4e786df9f45",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "3b12515c5541ed75cfb4f795b672d4e786df9f45"
+        },
+        {
+          "upstream_id": "mldht-paired",
+          "source_paths": [
+            "src/lbms/plugins/mldht/kad/Node.java",
+            "src/lbms/plugins/mldht/kad/KBucketEntry.java",
+            "src/lbms/plugins/mldht/kad/utils/AddressUtils.java"
+          ],
+          "source_symbols": [
+            "Node.loadTable",
+            "Node.saveTable",
+            "KBucketEntry.fromBencoded",
+            "AddressUtils.unpackAddress"
+          ],
+          "baseline_commit": "067f434eb60323123a5e885093ab2504ab10d5f9",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "067f434eb60323123a5e885093ab2504ab10d5f9"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "d3f148820d723368dd974d3cef06c9915bbe8a62",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b49a9db7e1125736f48b92e09edcf29c519d5fba",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "75245284dcaeda99c400fe59e5b8a29bbe1babd3",
+          "purpose": "implementation"
+        }
+      ],
+      "review_records": [
+        "migration/updates/engine.mainline_restart_checkpoint/20261028-in-progress.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261028-mainline-restart/REVIEW.md",
+        "migration/evidence/20261028-mainline-restart/verification.json"
+      ],
+      "decision_ref": "migration/decisions/AD-004.md"
     }
   ],
   "update_reviews": [],
@@ -7579,7 +7674,7 @@
       "repository_url": "https://github.com/the8472/mldht.git",
       "source_commit": "067f434eb60323123a5e885093ab2504ab10d5f9",
       "artifacts": [],
-      "build_recipe": "Full original engine history retained as /tmp/biglybtc-deps/mldht-history (bare). Resolves wrapper abbreviated revision only; shipped artifact/fork relationship and reproducible build remain pending.",
+      "build_recipe": "Full original engine history retained as /tmp/biglybtc-deps/mldht-history (bare). Resolves wrapper abbreviated revision only; shipped artifact/fork relationship and reproducible build remain pending. Recovery followup2026-10-28: the exact declared source is now durably retained in build/reference-mirrors/mldht-paired at refs/pinned/wrapper-3b12515c-engine, tree27bd9fc5af237d63a7a2725f78855149ccffe8f3, with strict full fsck and source-method comparison. No Java engine rebuild, shipped-artifact equivalence or new distribution authority is claimed.",
       "patches": [],
       "notices": [
         "Original dependency notices still require shipped-artifact inventory; do not distribute."
@@ -8251,7 +8346,7 @@
   "unresolved_inputs": [
     {
       "id": "mldht-shipped-engine",
-      "description": "Resolve com.github.the8472:mldht:067f434 from the plugin POM to a full upstream commit and identify the engine actually shipped; reconcile the separate fork and Eclipse export inputs.",
+      "description": "Resolve com.github.the8472:mldht:067f434 from the plugin POM to a full upstream commit and identify the engine actually shipped; reconcile the separate fork and Eclipse export inputs. Resolution in part2026-10-28: full declared source067f434eb60323123a5e885093ab2504ab10d5f9 is recovered and durably retained. Actual shipped-JAR/fork/export equivalence remains unresolved; historical f929 audit and integration baselines are unchanged.",
       "phase": "P00"
     },
     {

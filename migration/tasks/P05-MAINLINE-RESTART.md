@@ -1,0 +1,7 @@
+# P05 Mainline restart and original cache warm hints
+
+Selected local development integration qualified; broader Mainline compatibility remains in progress. [Review](../evidence/20261028-mainline-restart/REVIEW.md). Continue under whole-plan autonomous authorisation. Use existing held-profile ConfigFile for optional disposable BiglyBTC-mainline.config; this stores only implementation-specific engine restart optimisation, never replaces original configuration/identity/cache. Read plugins/<actual directory>/IPv4-table.cache and IPv6-table.cache descriptor-relatively as untrusted endpoints. Original baseID and all cache bytes remain unchanged; full Java root-to-wire-ID mapping remains separate work.
+
+Pinned original core cb8c6cb9bb97916cbc7e80338a017200ffc3e71f; wrapper3b12515c5541ed75cfb4f795b672d4e786df9f45; inspected enginef9290cbd63805229aef418639b781696c5fa1573 (not falsely identified as paired067f434eb60323123a5e885093ab2504ab10d5f9). Existing immutable provider unchanged.
+
+Qualify actual service snapshot→close→restore and owned KRPC/metadata progress, native ID restoration flag, corrupted/injected state rejection, wrapper unknown-field preservation, held lease/CAS/recovery/symlink refusal, unchanged original sentinel files, and source/runtime binding. Save periodically via existing owner poll and on explicit close. Cache failure is optional diagnostic, never payload certification or route fallback. No tests against the running original or real profile.

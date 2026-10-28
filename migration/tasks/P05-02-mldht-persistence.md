@@ -24,3 +24,5 @@ Broader actual engine pairing, node-ID derivation, routing/lookup/announce/sessi
 original bind/proxy/network policies and UI integration remain required.
 
 The [Mainline discovery chapter](P05-MAINLINE-DISCOVERY.md) now qualifies independent host settings/port and owned metadata peer acquisition. Original identity/cache activation and writeback remain open; the bounded read-only codecs keep their earlier status.
+
+2026-10-28: [bounded restart qualification](P05-MAINLINE-RESTART.md) adds disposable native LT state and read-only legacy warm hints. Exact declared paired engine067f434eb60323123a5e885093ab2504ab10d5f9 is recovered durably; shipped-JAR equivalence and original Java root-to-wire identity/writeback remain open. Historical f929 baselines are unchanged.

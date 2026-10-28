@@ -1,0 +1,171 @@
+{
+  "application": {
+    "conclusion": "success",
+    "headSha": "b49a9db7e1125736f48b92e09edcf29c519d5fba",
+    "jobs": [
+      {
+        "completedAt": "2026-10-28T15:29:54Z",
+        "conclusion": "success",
+        "databaseId": 122903670492,
+        "name": "preview",
+        "startedAt": "2026-10-28T15:10:06Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-10-28T15:10:07Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-10-28T15:10:06Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:10:12Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-10-28T15:10:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:10:13Z",
+            "conclusion": "success",
+            "name": "Check offline preview console forwarding",
+            "number": 3,
+            "startedAt": "2026-10-28T15:10:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:10:54Z",
+            "conclusion": "success",
+            "name": "Install pinned compiler, libtorrent and Qt 6.12.0 SDK",
+            "number": 4,
+            "startedAt": "2026-10-28T15:10:13Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:27:38Z",
+            "conclusion": "success",
+            "name": "Configure and build the desktop preview",
+            "number": 5,
+            "startedAt": "2026-10-28T15:10:54Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:29:44Z",
+            "conclusion": "success",
+            "name": "Run offline unit tests",
+            "number": 6,
+            "startedAt": "2026-10-28T15:27:38Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:29:51Z",
+            "conclusion": "success",
+            "name": "Run actual offline preview smoke and capture classic view",
+            "number": 7,
+            "startedAt": "2026-10-28T15:29:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:29:52Z",
+            "conclusion": "success",
+            "name": "Preserve test, screenshot and dependency evidence",
+            "number": 8,
+            "startedAt": "2026-10-28T15:29:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:29:52Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 16,
+            "startedAt": "2026-10-28T15:29:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:29:52Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 17,
+            "startedAt": "2026-10-28T15:29:52Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40713179137/job/122903670492"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40713179137"
+  },
+  "sdk": {
+    "conclusion": "success",
+    "headSha": "75245284dcaeda99c400fe59e5b8a29bbe1babd3",
+    "jobs": [
+      {
+        "completedAt": "2026-10-28T15:21:14Z",
+        "conclusion": "success",
+        "databaseId": 122910147105,
+        "name": "sdk",
+        "startedAt": "2026-10-28T15:20:51Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-10-28T15:20:52Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-10-28T15:20:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:20:58Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-10-28T15:20:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:21:12Z",
+            "conclusion": "success",
+            "name": "Build and exercise C ABI and module lifecycle",
+            "number": 3,
+            "startedAt": "2026-10-28T15:20:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:21:12Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 6,
+            "startedAt": "2026-10-28T15:21:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:21:12Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 7,
+            "startedAt": "2026-10-28T15:21:12Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40714995979/job/122910147105"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40714995979"
+  },
+  "latest_application": {
+    "databaseId": 40714996028,
+    "headSha": "75245284dcaeda99c400fe59e5b8a29bbe1babd3",
+    "status": "pending_or_running",
+    "conclusion": null,
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40714996028"
+  },
+  "scope": "Hosted application build and new checkpoint unit suite passed at b49a9db. Final7524528 differs only mainline_dht.cpp; this final service source passed actual local GCC/Clang/sanitizer and private relocation, but latest hosted application run is not yet credited. SDK passed at7524528.",
+  "difference_from_hosted_application": [
+    "preview/native/engine/mainline_dht.cpp"
+  ]
+}

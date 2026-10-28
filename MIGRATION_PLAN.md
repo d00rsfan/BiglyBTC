@@ -1,6 +1,6 @@
-# Latest completed chapter: Mainline discovery and magnet peer acquisition
+# Whole-plan autonomous continuation
 
-[Bounded review](migration/evidence/20261028-mainline-discovery/REVIEW.md); [compact active state](migration/ACTIVE.md). Whole P05 and all broad follow-ups remain open; original ID/cache writeback is still pending. Historical STOP notes below are not new authorisation.
+Mainline restart passed local compiler/sanitizer/private-runtime qualification; hosted desktop CI is pending. [Current state](migration/ACTIVE.md) records the next BEP5 peer-port integration and retained boundaries. Continue through all remaining phases under the latest user instruction; earlier stop notes are historical.
 
 # Whole Solution C++ Migration Plan
 
@@ -146,7 +146,7 @@ or release gate is complete. [Execution gates](migration/EXECUTION_GATES.md)
 assigns remaining decisions and validation work; [UI qualification](migration/UI_QUALIFICATION.md)
 defines backend, popup, accessibility and resource tests.
 
-**Latest user instruction (2026-10-23):** finish Statistics autonomously. Batch related changes and focused checks to reduce token usage; continue until completion unless the user requests a pause. Previous milestone stop boundaries below are historical.
+**Latest user instruction (2026-10-28):** continue autonomously without stopping through the entire plan. Batch related implementation and focused checks to conserve tokens; retain full build output in durable files and inspect only relevant failures. Preserve the running original Java client and real profile. Earlier chapter and milestone stop boundaries below are historical.
 
 **Historical autonomous authorization:** continue the authorized work until the user says
 they have returned, using the current model and effort. Record unresolved

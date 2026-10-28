@@ -2,7 +2,7 @@
 
 Read this checklist with the main plan before selecting or closing work. Broad CF01–CF08 remain open. No item currently requires a user answer.
 
-Latest bounded chapter: [Mainline discovery](P05-MAINLINE-DISCOVERY.md), completed2026-10-28. [Review](../evidence/20261028-mainline-discovery/REVIEW.md). Independent settings/port, current eligible peer delivery and owned hash-only metadata import qualify. Original ID/cache activation, queued scrapes, proxy/public/IPv6 interoperability and performance remain open. Prior exact SOCKS late-resolver correction stays qualified. Historic generic read failure cause remains unknown; no recurrence in this chapter.
+Latest bounded chapter: [Mainline restart](P05-MAINLINE-RESTART.md), locally qualified2026-10-28; hosted source limits are explicit in [review](../evidence/20261028-mainline-restart/REVIEW.md). Native state-only restart and read-only original hints work; original Java ID mapping/writeback, peer PORT, queued scrapes, proxy/public/IPv6 and performance remain open. Peer PORT is the active next chapter. Historic generic read failure cause remains unknown; descriptive diagnostics passed.
 
 The earlier ordinary compatibility chapter remains qualified within its [recorded scope](../evidence/20261028-compatibility-chapter/REVIEW.md); historical descriptions below do not erase its later bounded expansions.
 

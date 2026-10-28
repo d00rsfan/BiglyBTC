@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "command": [
+    "python3",
+    "migration/tools/validate.py"
+  ],
+  "validator_stdout": "PASS registry: 19 sources, 99 components, 0 reviews",
+  "sources": 19,
+  "components": 99,
+  "reviews": 0
+}

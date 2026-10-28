@@ -1,0 +1,17 @@
+# Mainline restart checkpoint — in progress
+
+Implementation source `d3f148820d723368dd974d3cef06c9915bbe8a62` uses the existing exact source-bound SOCKS-lifecycle provider, whose dependency record remains unchanged. Runtime qualification of this source is pending; this record advances no first-port or integrated-through baseline. Historical Mainline discovery/identity/cache records and `f9290cbd63805229aef418639b781696c5fa1573` remain intact.
+
+The original wrapper `3b12515c5541ed75cfb4f795b672d4e786df9f45` names `com.github.the8472:mldht:067f434`. Exact paired source `067f434eb60323123a5e885093ab2504ab10d5f9` (tree `27bd9fc5af237d63a7a2725f78855149ccffe8f3`) is recovered in the durable bare mirror at `refs/pinned/wrapper-3b12515c-engine`. Recovery receipt SHA256 `317abe1cd76a35d43a475195333843faaf4553b4f75b8a16422de21cbde18e0e` and method-comparison SHA256 `760e2e964eb60f7a1df49b7e2ef25b346562237b6782750bc6e5b06cba782230` establish only source recovery/comparison:10 of11 selected methods are byte-exact with f929; packAddress only removes an unused local. Whole-engine routing, BEP42, interface and shutdown changes remain distinct. Shipped-JAR equivalence is unresolved.
+
+The new bounded behavior is an optional disposable LT DHT-only checkpoint plus read-only original routing hints. It does not import or overwrite original baseID.config, install Java-derived IDs, rewrite original routing caches/settings, or replace the original persistence schema. Native LT IDs are a distinct engine namespace. Wrapper directory binds the checkpoint and alwaysRestoreID governs native ID restoration; no Java/LT ID equivalence is claimed.
+
+Loading is read-only; the existing ConfigFile writer holds the profile lease, preserves unknown wrapper fields, CAS-checks all captured candidates and fences failed/uncertain publication. The service validates a DHT-only state envelope before LT parsing; settings/extensions cannot be injected. Bad optional state is preserved, writing disabled, and a fresh service uses the same configured routes. Legacy contacts remain untrusted numeric hints; invalid/ineligible contacts are filtered. Proxy/isolated owners never open checkpoint/cache files. Periodic/explicit-close checkpoints do not supply payload accounting or retirement authority.
+
+Limits:1MiB opaque state,4MiB wrapper,64 legacy hints,256 routing contacts,64 native node identities; owned regular single-link inputs and descriptor-relative directory checks. Linux only; direct Mainline only. Public/IPv6/proxy interoperability, actual Java identity compatibility, cache writeback, BEP42 parity and whole P05 completion remain open. The dedicated LT session has an unused TCP acceptor although peer transfers are disabled.
+
+Before publication, root must attach exact-source build/test receipts and exported recovery inputs/reviews, retaining failed attempts; fill runtime results only from actual gates. No parity, shipping qualification or new provider approval is established by this draft.
+
+## Actual bounded qualification followup
+
+Final implementation75245284dcaeda99c400fe59e5b8a29bbe1babd3 passed actual GCC6/Clang4/leak-ASan+UBSan4 suites and private Qt/provider relocation. Earlier failures and exact corrections remain retained in [review](../../evidence/20261028-mainline-restart/REVIEW.md). Hosted checkpoint/application passed atb49a9db7e1125736f48b92e09edcf29c519d5fba; final-source application followup remains explicitly separate. Broad source integration hashes remain null because original Java identity/cache parity is incomplete.
