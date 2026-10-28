@@ -7609,6 +7609,146 @@
         "migration/evidence/20261028-mainline-restart/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-004.md"
+    },
+    {
+      "id": "engine.mainline_peer_port",
+      "feature_ids": [
+        "F04"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P05-MAINLINE-PEER-PORT.md",
+        "migration/tasks/P05-MAINLINE-DISCOVERY.md"
+      ],
+      "target_paths": [
+        "preview/native/engine/mainline_owner.inc",
+        "preview/native/engine/mainline_dht.hpp",
+        "preview/native/engine/mainline_dht.cpp",
+        "preview/native/engine/persistent_session.cpp",
+        "preview/native/engine/persistent_runtime_guard.cpp",
+        "preview/native/engine/runtime-binding/verify_runtime_manifest_mainline.py",
+        "preview/native/engine/runtime-binding/provider-mainline-runtime.json",
+        "preview/native/tests/mainline_dht_tests.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/peer/impl/transport/PEPeerTransportProtocol.java"
+          ],
+          "source_symbols": [
+            "PEPeerTransportProtocol.sendMainlineDHTPort",
+            "PEPeerTransportProtocol.decodeMainlineDHTPort"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        },
+        {
+          "upstream_id": "mlDHT",
+          "source_paths": [
+            "src/lbms/plugins/mldht/azureus/MlDHTPlugin.java"
+          ],
+          "source_symbols": [
+            "MainlineDHTProvider.getDHTPort",
+            "MainlineDHTProvider.notifyOfIncomingPort"
+          ],
+          "baseline_commit": "3b12515c5541ed75cfb4f795b672d4e786df9f45",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "3b12515c5541ed75cfb4f795b672d4e786df9f45"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "d1b15d4368ec1af19d4ba6f758005fae922562c9",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "18c3e0048d381748c6a4154b3d6e9100b6ec2dda",
+          "purpose": "integration"
+        }
+      ],
+      "review_records": [
+        "migration/updates/engine.mainline_peer_port/20261028-in-progress.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261028-mainline-port/verification.json",
+        "migration/evidence/20261028-mainline-port/REVIEW.md"
+      ],
+      "decision_ref": "migration/decisions/AD-001.md"
+    },
+    {
+      "id": "transport.azureus_volatile_database",
+      "feature_ids": [
+        "F09.db_mapping"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P06-AZUREUS-VOLATILE-DATABASE.md",
+        "migration/tasks/P06-28-azureus-db-mapping.md"
+      ],
+      "target_paths": [
+        "preview/native/services/azureus_db_runtime",
+        "preview/native/services/azureus_udp/owned_transport.cpp",
+        "preview/native/tests/azureus_database_runtime_tests.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/dht/db/impl/DHTDBImpl.java",
+            "core/src/com/biglybt/core/dht/db/impl/DHTDBMapping.java",
+            "core/src/com/biglybt/core/dht/db/impl/DHTDBValueImpl.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java"
+          ],
+          "source_symbols": [
+            "DHTDBImpl.store",
+            "DHTDBImpl.get",
+            "DHTDBImpl.checkCacheExpiration",
+            "DHTDBMapping.add",
+            "DHTDBMapping.get",
+            "DHTDBValueImpl"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "243f884971c5cc4d4c2cd368e2a8d3289ffeba07",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "18c3e0048d381748c6a4154b3d6e9100b6ec2dda",
+          "purpose": "integration"
+        }
+      ],
+      "review_records": [
+        "migration/updates/transport.azureus_volatile_database/20261028-in-progress.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261028-azureus-volatile-database/verification.json",
+        "migration/evidence/20261028-azureus-volatile-database/REVIEW.md"
+      ],
+      "decision_ref": "migration/decisions/AD-001.md"
     }
   ],
   "update_reviews": [],
@@ -8334,6 +8474,31 @@
         {
           "path": "preview/migration/dependencies/libtorrent/socks-cancellation.patch",
           "sha256": "c71a6eb1388f4620e5f943e9d9b4303a336babb2f96505c7b64785df91ab4479"
+        }
+      ],
+      "notices": [
+        "migration/notices/libtorrent-2.0.12-LICENSE",
+        "migration/notices/libtorrent-2.0.12-COPYING",
+        "migration/notices/libtorrent-2.0.12-debian-copyright"
+      ]
+    },
+    {
+      "id": "bounded-engine-libtorrent-private-mainline-port",
+      "name": "Private LT per-admission Mainline PORT bridge (qualification only)",
+      "version": "2.0.12",
+      "repository_url": "https://github.com/arvidn/libtorrent.git",
+      "source_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+      "artifacts": [
+        {
+          "url": "file:///home/yurii/Java/BiglyBT/build/mainline-port-20261028/provider-candidate/install/lib/libtorrent-rasterbar.so.2.0.12",
+          "sha256": "9fbb550bbc1f877ce34ce21849deab97971f5d3eacfbc531a7b777d28a3b2eea"
+        }
+      ],
+      "build_recipe": "Exact eight-path additive child of bounded-engine-libtorrent-private-socks-lifecycle; parent source/build record 9f8d1f436f943994a117f9f33bbaf016f92bb60ab3c0cecf9e0b6f02efb3c6ee remains unchanged. Child source/build record c848411975cecc955370cf0a95790fd4659a52714b8f57ce9c82fa7e9fbf54d3, runtime manifest1267bf58a235dc6c32d9ffadab8bbd994ec81f2aa958f0cf621f8a71e4f6c84c, DSO9153448 bytes. Full1076/selected453 source leaves, installed287 including278 headers,4 build files,20 required exports; build/command/SDK evidence is pinned by the record. Private root review and catalog implementation d1b15d4368ec1af19d4ba6f758005fae922562c9; native integration, shipping, whole-client/Java parity and causal/performance qualification are not established by this entry. Existing source/provider/dependency records are preserved.",
+      "patches": [
+        {
+          "path": "migration/evidence/20261028-mainline-port/provider/mainline-port.patch",
+          "sha256": "cbf8f0d1882144efae3038b9f4c8a7b7ab9d29c09972027708bcc54b078b9e62"
         }
       ],
       "notices": [

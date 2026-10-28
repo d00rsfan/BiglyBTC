@@ -1,0 +1,1277 @@
+[
+  {
+    "path": "build/azureus-activation-20261028-review/review.json",
+    "bytes": 3635,
+    "sha256": "238ff55b1a6abae226b243c517350df58001db6745a16229148b840ad7a59506"
+  },
+  {
+    "path": "build/azureus-activation-20261028/ADOPTION.md",
+    "bytes": 3323,
+    "sha256": "c3f3e171f41b20c646666931a1bbb32a639b2b2bbae801be7222c62cfe3b7c48"
+  },
+  {
+    "path": "build/azureus-activation-20261028/PLAN.md",
+    "bytes": 2795,
+    "sha256": "25d93b52422af2c795aa1d268119bc7dc244c0c1c787a5a61befce182020ad14"
+  },
+  {
+    "path": "build/azureus-activation-20261028/amendments/move-only-config/REASON.md",
+    "bytes": 332,
+    "sha256": "070763a3f52c525d43a03ed00029a5e6811d5640a542e6e90773035debc145d0"
+  },
+  {
+    "path": "build/azureus-activation-20261028/amendments/move-only-config/before/preview/native/tests/azureus_database_runtime_tests.cpp",
+    "bytes": 13566,
+    "sha256": "9c2f701053f76fa619ae166e5509cb0a8abf5375c9f117a127d3aefc5bf7fa29"
+  },
+  {
+    "path": "build/azureus-activation-20261028/amendments/move-only-config/manifest.json",
+    "bytes": 951,
+    "sha256": "a48721f5da163862e721391e5c1f15662ea6630bb397649210f96bf1597b5f39"
+  },
+  {
+    "path": "build/azureus-activation-20261028/amendments/move-only-config/staging/preview/native/tests/azureus_database_runtime_tests.cpp",
+    "bytes": 13877,
+    "sha256": "090db8515e71e1ae2edca54707dcd4b52262d620980410bdf2d32a36217dec28"
+  },
+  {
+    "path": "build/azureus-activation-20261028/amendments/move-only-config/test.patch",
+    "bytes": 5042,
+    "sha256": "d402c9ddfb9534b3e26704d0cbd27a0b7b0b73f8b93619f0c2b32a96ca69c563"
+  },
+  {
+    "path": "build/azureus-activation-20261028/before/preview/native/services/CMakeLists.txt",
+    "bytes": 2358,
+    "sha256": "033af4622b8b23dd5ea8299e54f3ffc7652800c99838310dbd24ce56f58739ff"
+  },
+  {
+    "path": "build/azureus-activation-20261028/before/preview/native/services/azureus_udp/owned_transport.cpp",
+    "bytes": 51158,
+    "sha256": "ed432e2b1389f3479a650d2f3522f3ad8763079aa5a1d52740b311d64c397c88"
+  },
+  {
+    "path": "build/azureus-activation-20261028/before/preview/native/services/azureus_udp/owned_transport.hpp",
+    "bytes": 13443,
+    "sha256": "c1e02134181bbbdfcd2c6e2d97c135aafd21b8c37c9a0809b94652cdad335b84"
+  },
+  {
+    "path": "build/azureus-activation-20261028/before/preview/native/tests/CMakeLists.txt",
+    "bytes": 140909,
+    "sha256": "d84fc5c0e0cc7947d61f0b0b1f2aefe7fb2a32c52502985fa56518fa58e0a833"
+  },
+  {
+    "path": "build/azureus-activation-20261028/database_responder.inc",
+    "bytes": 4175,
+    "sha256": "f68d4b09b2130ff32ed146cb1e9be96097c91577816f8eee1b7445a2506f1d75"
+  },
+  {
+    "path": "build/azureus-activation-20261028/manifest.json",
+    "bytes": 6571,
+    "sha256": "3885db732310b133537816dcab3b68768b1eb03f8ea4779a5b4a0e6341ee7dd0"
+  },
+  {
+    "path": "build/azureus-activation-20261028/patches/preview/native/services/CMakeLists.txt.patch",
+    "bytes": 940,
+    "sha256": "4f915ce80491ce5dd404608857f4b5fbefacb2c42937ea07299de550136e8d80"
+  },
+  {
+    "path": "build/azureus-activation-20261028/patches/preview/native/services/azureus_udp/owned_transport.cpp.patch",
+    "bytes": 9078,
+    "sha256": "4b5b81f719b971bd469526ec6b8e935a6af96c2acdc797697a636256ec53ecaa"
+  },
+  {
+    "path": "build/azureus-activation-20261028/patches/preview/native/services/azureus_udp/owned_transport.hpp.patch",
+    "bytes": 3132,
+    "sha256": "09363dd20d53603bc526a4363f9ebf314b03a7c87c5e6dc1d4f2061078dcb411"
+  },
+  {
+    "path": "build/azureus-activation-20261028/patches/preview/native/tests/CMakeLists.txt.patch",
+    "bytes": 951,
+    "sha256": "72c10470b3dd8e387412d0c7cc814fc5754e53ba05d02f2f130961af76907936"
+  },
+  {
+    "path": "build/azureus-activation-20261028/source-adoption.json",
+    "bytes": 421,
+    "sha256": "6518e19e27a663697bc97e175adf957fcbe9c555c632438dc9d2d642d74fe511"
+  },
+  {
+    "path": "build/azureus-activation-20261028/source-pins.json",
+    "bytes": 2755,
+    "sha256": "17b9eecbdd51543ddab8e4b38c9509af7b942d74ecfed764831c974dce754011"
+  },
+  {
+    "path": "build/azureus-activation-20261028/stage_transport.py",
+    "bytes": 5842,
+    "sha256": "abb16a4532432a01cfbfe9cc7985a1e0bde96db5caa2fa13ad7d9a93375d23f0"
+  },
+  {
+    "path": "build/azureus-activation-20261028/staging/preview/native/services/CMakeLists.txt",
+    "bytes": 2608,
+    "sha256": "dda228bc282b54adf9fc2b1ae97c8676baea77d08e78730a9b0a520416c93290"
+  },
+  {
+    "path": "build/azureus-activation-20261028/staging/preview/native/services/azureus_db_mapping/mapping.cpp",
+    "bytes": 27375,
+    "sha256": "159989f9f5432dea1dde5e01b8bf7efbf5dcaebfd71eae43d82d41d97775d7ce"
+  },
+  {
+    "path": "build/azureus-activation-20261028/staging/preview/native/services/azureus_db_mapping/mapping.hpp",
+    "bytes": 6183,
+    "sha256": "eb7a43f15f97a2ae2427e685bbff29cccf8603e0d1d20e79862be353ef073b58"
+  },
+  {
+    "path": "build/azureus-activation-20261028/staging/preview/native/services/azureus_db_runtime/database.cpp",
+    "bytes": 9995,
+    "sha256": "8f7a5f15a3a69908a8fcc47bb12f992096f73476b70ba9138d32ce2c1c728d2c"
+  },
+  {
+    "path": "build/azureus-activation-20261028/staging/preview/native/services/azureus_db_runtime/database.hpp",
+    "bytes": 1924,
+    "sha256": "071bb1d418dfeddb7503f96acd166d9e268c8959e815c632378a35cc0a4cf425"
+  },
+  {
+    "path": "build/azureus-activation-20261028/staging/preview/native/services/azureus_db_value/db_value.cpp",
+    "bytes": 4488,
+    "sha256": "094fb52f5708bf9bfa978dadb41dec2016cd4e13a06c6e276ee1c4cc2fe027db"
+  },
+  {
+    "path": "build/azureus-activation-20261028/staging/preview/native/services/azureus_db_value/db_value.hpp",
+    "bytes": 3278,
+    "sha256": "dee3ba6f1752e8f0f76fbf6d00496b8395667a5bf195c1bf9dc045c3a7f509d5"
+  },
+  {
+    "path": "build/azureus-activation-20261028/staging/preview/native/services/azureus_udp/owned_transport.cpp",
+    "bytes": 56855,
+    "sha256": "b484bd5777993fe7db820a4f076ada2e10092068b005299ae437761374686610"
+  },
+  {
+    "path": "build/azureus-activation-20261028/staging/preview/native/services/azureus_udp/owned_transport.hpp",
+    "bytes": 13900,
+    "sha256": "728c6f70399a1e7d6ae50afcbeced7ba5994fa707c96a3d0ef49c42640cc5644"
+  },
+  {
+    "path": "build/azureus-activation-20261028/staging/preview/native/tests/CMakeLists.txt",
+    "bytes": 141555,
+    "sha256": "2b4ecbc6ae196f36921843ec340f9081f6e093e70a8ee1b649e252689c9c4b7b"
+  },
+  {
+    "path": "build/azureus-activation-20261028/staging/preview/native/tests/azureus_database_runtime_tests.cpp",
+    "bytes": 13566,
+    "sha256": "9c2f701053f76fa619ae166e5509cb0a8abf5375c9f117a127d3aefc5bf7fa29"
+  },
+  {
+    "path": "build/mainline-port-20261028/acceptance.json",
+    "bytes": 20913,
+    "sha256": "3a6fbede846b62ebeeb92a1b2af4ce456ad0f9ae75a54307681046707814ea6c"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/deployment-registration/ADOPTION.txt",
+    "bytes": 1087,
+    "sha256": "8f9115d2151372aac1129810a4d7d1548c48be86326d1e76c32cf50d64635a0c"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/deployment-registration/before/preview/native/tests/CMakeLists.txt",
+    "bytes": 141555,
+    "sha256": "2b4ecbc6ae196f36921843ec340f9081f6e093e70a8ee1b649e252689c9c4b7b"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/deployment-registration/before/preview/native/tests/NetworkProxyCapabilityTests.cmake",
+    "bytes": 4597,
+    "sha256": "6a8cbb5870b8aa414a9715f3118ecfcc8b3a0c8f731d88fe7037d299499f014d"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/deployment-registration/before/preview/native/tests/RuntimeDeploymentTests.cmake",
+    "bytes": 3902,
+    "sha256": "e1289dfdda5d3903b81ca5d52a13628d6a73066e1217d4ee94e067129d5755be"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/deployment-registration/before/preview/native/tests/runtime_deployment_driver.cpp",
+    "bytes": 6862,
+    "sha256": "36554a5b0c01d4472b4c33d16f0ba6711fa5da26cc5cc8214b3eea0bb588aa41"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/deployment-registration/before/preview/native/tests/runtime_deployment_tests.py",
+    "bytes": 11454,
+    "sha256": "2d246cb82d9ff41b9f165e3df1e0dc80f26eed149fae70952cb0b3333ad02965"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/deployment-registration/changes.patch",
+    "bytes": 18331,
+    "sha256": "8268dfb5b1cd6e1d75bcb81decccd8b974c07c3c25fbb59f1c505a4a16269f41"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/deployment-registration/manifest.json",
+    "bytes": 6822,
+    "sha256": "848b5012626e5959539afb09a625ca5f039b8a907386d87497139757daa8d14e"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/deployment-registration/review.json",
+    "bytes": 1148,
+    "sha256": "9510273c6155959a738a4212405e86f3fa26da14fff4d6f1e3c07723a264c611"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/deployment-registration/staging/preview/native/tests/CMakeLists.txt",
+    "bytes": 141629,
+    "sha256": "e2fe566697d7e302428600847e41e4e02120f5e3f2f2e9d5623b4a36f0302d16"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/deployment-registration/staging/preview/native/tests/NetworkProxyCapabilityTests.cmake",
+    "bytes": 4708,
+    "sha256": "a0e1b67de54bc15ac9a94536c32c329bc680613bd2251361bc35e5a442f12d77"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/deployment-registration/staging/preview/native/tests/ProviderMainlineRuntimeTests.cmake",
+    "bytes": 4370,
+    "sha256": "9b673480d6f84e248a0ae74c934ebe754e7ac803bbc07abc509506acf74e4f3b"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/deployment-registration/staging/preview/native/tests/RuntimeDeploymentTests.cmake",
+    "bytes": 4017,
+    "sha256": "abb100926b59661549fc5ec59dfeddebbb15f07775b2d5f511e866ffc81f660f"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/deployment-registration/staging/preview/native/tests/mainline_port_foreign_marker.cpp",
+    "bytes": 152,
+    "sha256": "cd1dc904988c143c2079072837f80c20aea3dbbbd2813aa5c4a0e8f8ce3f1abf"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/deployment-registration/staging/preview/native/tests/mainline_port_interposition_driver.cpp",
+    "bytes": 1608,
+    "sha256": "a626af2e94ef81d210799200d47e8f763593b90c0367b2c79cf50ee9da3d98e8"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/deployment-registration/staging/preview/native/tests/provider_mainline_runtime_inputs_tests.py",
+    "bytes": 4749,
+    "sha256": "d64f2ab7ef75183bfb3c8dc27a3eeea67d3f70c7bb7a5c557f8b19dfadf442fa"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/deployment-registration/staging/preview/native/tests/runtime_deployment_driver.cpp",
+    "bytes": 7282,
+    "sha256": "da8c29b56f62b94bec5b82d99be6b763184b234d02df6581143ab168dc1cdef8"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/deployment-registration/staging/preview/native/tests/runtime_deployment_tests.py",
+    "bytes": 12583,
+    "sha256": "ad92abf778c01e22cf1981cf608729273831bb1cd1daebc4ff59931387fcfe1b"
+  },
+  {
+    "path": "build/mainline-port-20261028/amendments/poll-result/receipt.json",
+    "bytes": 1020,
+    "sha256": "e62b1c56ec431a991f08e11df8d0662ce0988e033e83907125d7cfa593a3c971"
+  },
+  {
+    "path": "build/mainline-port-20261028/binding/amendments/reviewed-child/ADOPTION.txt",
+    "bytes": 714,
+    "sha256": "b53c5b3e031c06deea3c9af12449d79916a4579579dd0ad1aa5e4632c8aeebb6"
+  },
+  {
+    "path": "build/mainline-port-20261028/binding/amendments/reviewed-child/before/preview/migration/tools/stage_preview.py",
+    "bytes": 64351,
+    "sha256": "a4c72981128ac4d39f35e643ebbe527bd4caadab7a2fce16078e8ecf4522fbef"
+  },
+  {
+    "path": "build/mainline-port-20261028/binding/amendments/reviewed-child/before/preview/native/engine/persistent_runtime_guard.cpp",
+    "bytes": 16477,
+    "sha256": "840bb3d50432e0ebfbf09bf53b68f290954ed36d245ad57e5ac256652234741c"
+  },
+  {
+    "path": "build/mainline-port-20261028/binding/amendments/reviewed-child/before/preview/native/engine/persistent_runtime_guard.hpp",
+    "bytes": 1238,
+    "sha256": "a9a28077dee3804dcc027ae7f3709072aa6b1214128efcf80fc7404a817d0621"
+  },
+  {
+    "path": "build/mainline-port-20261028/binding/amendments/reviewed-child/before/preview/native/engine/runtime-binding/PersistentRuntimeBinding.cmake",
+    "bytes": 3711,
+    "sha256": "dbb0299dab1b208f0bfe4ec8e44e421bfe87b29da9a6af31f6c4c7d2ffcf3111"
+  },
+  {
+    "path": "build/mainline-port-20261028/binding/amendments/reviewed-child/changes.patch",
+    "bytes": 239304,
+    "sha256": "c466fef5a0278e7b9d9cf3c0f55c59f3de8c69218d1e63a9f4d08858a74a6380"
+  },
+  {
+    "path": "build/mainline-port-20261028/binding/amendments/reviewed-child/manifest.json",
+    "bytes": 7359,
+    "sha256": "7ac13bab78a860153396389dd2ebed210c6fb8b71a8d48c31965b529ad6b168d"
+  },
+  {
+    "path": "build/mainline-port-20261028/binding/amendments/reviewed-child/parent-delta.patch",
+    "bytes": 216319,
+    "sha256": "ff8c0f932b68c67c9690584a5afbebaeab786010b1b4ed1b9f0a6395232c329a"
+  },
+  {
+    "path": "build/mainline-port-20261028/binding/amendments/reviewed-child/root-provider-review.json",
+    "bytes": 1664,
+    "sha256": "c26b8417e9b5b48398018da2298d950f0ed9431db4d05f75441c6f7cb68405f0"
+  },
+  {
+    "path": "build/mainline-port-20261028/binding/amendments/reviewed-child/staging/preview/migration/tools/stage_preview.py",
+    "bytes": 74499,
+    "sha256": "5a3074d47d834f69064a3550b5f627b10df042df4f74571a2fb881abb5763a55"
+  },
+  {
+    "path": "build/mainline-port-20261028/binding/amendments/reviewed-child/staging/preview/native/engine/persistent_runtime_guard.cpp",
+    "bytes": 17545,
+    "sha256": "25f0dcd16df0ca46fca11bf8be627933ac70c547c6f3e6af898d0b8d40d0dd1a"
+  },
+  {
+    "path": "build/mainline-port-20261028/binding/amendments/reviewed-child/staging/preview/native/engine/persistent_runtime_guard.hpp",
+    "bytes": 1452,
+    "sha256": "feacd4b2b84ec8ac6c278276478df6d3062a6d1695810e5359b8032bb013e07c"
+  },
+  {
+    "path": "build/mainline-port-20261028/binding/amendments/reviewed-child/staging/preview/native/engine/runtime-binding/PersistentRuntimeBinding.cmake",
+    "bytes": 3714,
+    "sha256": "0a303a482da7656620e1745b74c6abc04386a0c86587a6b4eed1817319460cc6"
+  },
+  {
+    "path": "build/mainline-port-20261028/binding/amendments/reviewed-child/staging/preview/native/engine/runtime-binding/provider-mainline-runtime.json",
+    "bytes": 817,
+    "sha256": "1267bf58a235dc6c32d9ffadab8bbd994ec81f2aa958f0cf621f8a71e4f6c84c"
+  },
+  {
+    "path": "build/mainline-port-20261028/binding/amendments/reviewed-child/staging/preview/native/engine/runtime-binding/provider-mainline-source-build-record.json",
+    "bytes": 208860,
+    "sha256": "c848411975cecc955370cf0a95790fd4659a52714b8f57ce9c82fa7e9fbf54d3"
+  },
+  {
+    "path": "build/mainline-port-20261028/binding/amendments/reviewed-child/staging/preview/native/engine/runtime-binding/verify_runtime_manifest_mainline.py",
+    "bytes": 7468,
+    "sha256": "59aff49764d663a5d8fe949903b675688e1e99d982bfd0a6a092c15a62a3dce7"
+  },
+  {
+    "path": "build/mainline-port-20261028/checkpoint.json",
+    "bytes": 3733,
+    "sha256": "e5adb2fcc8c9c3281e06bdc9f3777f1d91a72a3440fe7dab9eab1001cb3c544c"
+  },
+  {
+    "path": "build/mainline-port-20261028/database-clang-followup/binary-before-tests.json",
+    "bytes": 206,
+    "sha256": "5b578ef2fc73979ef482c6ca95bc6b7d1eb807837c585fdc088f25f085bd687f"
+  },
+  {
+    "path": "build/mainline-port-20261028/database-clang-followup/build.log",
+    "bytes": 270,
+    "sha256": "bdfe8953048bdc075cd5f09126598385c4ee9ee5c1186135db70f589bc0483cc"
+  },
+  {
+    "path": "build/mainline-port-20261028/database-clang-followup/commands.json",
+    "bytes": 724,
+    "sha256": "ecd5e7eecc93b84db2c9950f3e56ad1c34b30d86cd80133e42a2dabc3d5c8ad4"
+  },
+  {
+    "path": "build/mainline-port-20261028/database-clang-followup/result.json",
+    "bytes": 1272,
+    "sha256": "2667fffb4bedbccb3956f1ac6b3fed22d7f78078aac4b38b0fba629baf9197ac"
+  },
+  {
+    "path": "build/mainline-port-20261028/database-clang-followup/tests.log",
+    "bytes": 405,
+    "sha256": "912b8d003d735fd2b225900d815a2848508fcfca80fa7e2c9dd8c24951ca96a3"
+  },
+  {
+    "path": "build/mainline-port-20261028/database-clang-followup/tests.xml",
+    "bytes": 1553,
+    "sha256": "0ac0f30251b67def66e3437696334317ccaa3dd0d7d4024c4bc53902821ece27"
+  },
+  {
+    "path": "build/mainline-port-20261028/database-gcc-followup/binary-before-tests.json",
+    "bytes": 206,
+    "sha256": "b0139b890577b1a6d4c46ef3ea89440fa286ce0999b900d0a13267603a66f37a"
+  },
+  {
+    "path": "build/mainline-port-20261028/database-gcc-followup/build.log",
+    "bytes": 270,
+    "sha256": "bdfe8953048bdc075cd5f09126598385c4ee9ee5c1186135db70f589bc0483cc"
+  },
+  {
+    "path": "build/mainline-port-20261028/database-gcc-followup/commands.json",
+    "bytes": 754,
+    "sha256": "420e1bec53d4c055f2521987d45423190b37d24787c9bb0ba09e3232d8ad847c"
+  },
+  {
+    "path": "build/mainline-port-20261028/database-gcc-followup/result.json",
+    "bytes": 3949,
+    "sha256": "e61e0900ffafb098bc62269772653b2f5df0f19f736ce174143f9ce7f543531f"
+  },
+  {
+    "path": "build/mainline-port-20261028/database-gcc-followup/tests.log",
+    "bytes": 421,
+    "sha256": "3f696cfbda40236f8ad93f245fec88a76298186bd7a29bf1d312c1ba089ed555"
+  },
+  {
+    "path": "build/mainline-port-20261028/database-gcc-followup/tests.xml",
+    "bytes": 1553,
+    "sha256": "c1b943754963c0b2ae0b64c80084fc2b121ffee5a3ed841573643243f4fdad32"
+  },
+  {
+    "path": "build/mainline-port-20261028/database-san-followup/binary-before-tests.json",
+    "bytes": 206,
+    "sha256": "dfe3ef0e28f6a6ed37e8ffc3e84e75df601d1c831301a5bc6cf38dfb16bcecc9"
+  },
+  {
+    "path": "build/mainline-port-20261028/database-san-followup/build.log",
+    "bytes": 270,
+    "sha256": "bdfe8953048bdc075cd5f09126598385c4ee9ee5c1186135db70f589bc0483cc"
+  },
+  {
+    "path": "build/mainline-port-20261028/database-san-followup/commands.json",
+    "bytes": 746,
+    "sha256": "534b110540d7614c796102832dad02839f380c1db29862e2014c7e2282824d1e"
+  },
+  {
+    "path": "build/mainline-port-20261028/database-san-followup/result.json",
+    "bytes": 1375,
+    "sha256": "0da615d891e85e2334dd3333e7d49d1adfb0dbc60b5cf1e3455960e6c6858063"
+  },
+  {
+    "path": "build/mainline-port-20261028/database-san-followup/tests.log",
+    "bytes": 417,
+    "sha256": "401b351444cc6bce57de397a0e1da43ce897cbbe2d98b7c703f19c61b7b827f6"
+  },
+  {
+    "path": "build/mainline-port-20261028/database-san-followup/tests.xml",
+    "bytes": 1553,
+    "sha256": "890176da63f61e9f071ba7dc1f05b655dd5808003257c6f5ecad7bbcc89c1ee4"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-clang-registered/build.log",
+    "bytes": 28706,
+    "sha256": "1e2579631c905108a248b6d4aa77ac5064b87a9aae25be9894553abf9482dc03"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-clang-registered/commands.json",
+    "bytes": 1205,
+    "sha256": "d78a5009c394f4d48462e8670b5c42d0b7269f780dd28131f5279687c9888778"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-clang-registered/configure.log",
+    "bytes": 869,
+    "sha256": "c5dd18041c5866d5d5d458f1fc025e1d8b5885283eaff61686f36eeb24d68bcc"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-clang-testfix/binary-before-tests.json",
+    "bytes": 629,
+    "sha256": "de75a4dfb0ca34add44edb7435ef5c07cca367c4ee7b547386858ee83fcbd69a"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-clang-testfix/build.log",
+    "bytes": 924,
+    "sha256": "79f581e985c47f48cbe9b47f34876ddab0b0315ac995f9825e1c3b1364e3981d"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-clang-testfix/commands.json",
+    "bytes": 1120,
+    "sha256": "aad875ae0d3993e5a0106618b50551668298d4750218ce6129214d45d5fe0381"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-clang-testfix/configuration-reuse.json",
+    "bytes": 198,
+    "sha256": "69632cc0ba28f17f94836d7f5213ec52faf3bedaefe9e07646c475c1e24df933"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-clang-testfix/tests.log",
+    "bytes": 2571,
+    "sha256": "ccf5b9b0c057030ab7da51660c55fa2567db9daff4ccc61d2ad2bfb3b7f2246a"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-clang-testfix/tests.xml",
+    "bytes": 6140,
+    "sha256": "61271c053aed0ba9505d8d6eaadddc3ac22c8e8389333c63fa67d3d208a3a6b1"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-clang/commands.json",
+    "bytes": 675,
+    "sha256": "73eb91dff9d2f98ff591b1ea6ddc5341ba2af0acc731be3e6745cf7f2abb93d7"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-clang/configure.log",
+    "bytes": 978,
+    "sha256": "5290be98f062359e596a48dcba4482318466676c805c7e6246babf1c41f0d844"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-gcc-registered/build.log",
+    "bytes": 62322,
+    "sha256": "460b497c3c0d5648177063963141417123eaefe2a5e15f60703b6b8b5846a4a0"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-gcc-registered/commands.json",
+    "bytes": 2237,
+    "sha256": "aeea9af0a3cc057697cd5f63ca86d44f4d17343619b6a790f66a5377447aa2e6"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-gcc-registered/configure.log",
+    "bytes": 885,
+    "sha256": "f0f8a59ae4b88defb670baa6d254c723cc5b4b3059dd63ab1ec81db38451d528"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-gcc-testfix/binary-before-tests.json",
+    "bytes": 2692,
+    "sha256": "724e13715e8e7b1ce84fb1ce64bb6036d171689b61521a1de823b2cf7af8df1d"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-gcc-testfix/build.log",
+    "bytes": 2717,
+    "sha256": "f6fe20da4857ce47e6ea33a10ee11187683dd3b730837914aa727ed6cd15e712"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-gcc-testfix/commands.json",
+    "bytes": 2641,
+    "sha256": "3aef64ec705c458ccc45a9d758f4fa17b6d944dd9a71e400d6746917c2d57f6a"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-gcc-testfix/configuration-reuse.json",
+    "bytes": 196,
+    "sha256": "0d72b0df49e1e189094df9c9087086602e29517b7aa5c5289411a3bba6c3b6cc"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-gcc-testfix/tests.log",
+    "bytes": 5664,
+    "sha256": "df71843e47719eaeabf146e5d89b0c83f74d333bab107a2a986d7504256c4b94"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+    "bytes": 22843,
+    "sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-gcc/commands.json",
+    "bytes": 689,
+    "sha256": "f0cba305ae48a29daca8c94ef8175d47ca9bc51e682b5d09d276d1fc142c6fe4"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-gcc/configure.log",
+    "bytes": 978,
+    "sha256": "5290be98f062359e596a48dcba4482318466676c805c7e6246babf1c41f0d844"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-san/binary-before-tests.json",
+    "bytes": 629,
+    "sha256": "46e0ae70810aee96d843cf7309bce6b302787db1f5c2247f15d111309b589e59"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-san/build.log",
+    "bytes": 8502,
+    "sha256": "8015738abb9252408857f986718fedba546831a8d826e65ac11b75bf0405cb70"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-san/commands.json",
+    "bytes": 1716,
+    "sha256": "7d1e81ccc848efccdc4c398afff12c7fec323e446f592987ab9e61d27a7a680c"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-san/configure.log",
+    "bytes": 986,
+    "sha256": "4054fcf9ba77ca9f479f1c2edd65a1355ea36293ae61205e1877f6b0aa281e97"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-san/tests.log",
+    "bytes": 2583,
+    "sha256": "100688970790aa74f394491d58cea4edf2047da33752ee4d9837886d34271b75"
+  },
+  {
+    "path": "build/mainline-port-20261028/native-san/tests.xml",
+    "bytes": 6140,
+    "sha256": "2a949a9fc07f883f7588be2baeb14b50426dc66b39b0edb5cd4344784bb52f0a"
+  },
+  {
+    "path": "build/mainline-port-20261028/owner/DESIGN.md",
+    "bytes": 3417,
+    "sha256": "d53f68ddcce87775b7902864767d18f1cbf0f005908ba4d8f687228e4731edc8"
+  },
+  {
+    "path": "build/mainline-port-20261028/owner/before/preview/native/engine/mainline_owner.inc",
+    "bytes": 9018,
+    "sha256": "98543194122c024b7b1c601c66eac3ae8bc3ce5c5495422d3520904fe13be9e2"
+  },
+  {
+    "path": "build/mainline-port-20261028/owner/before/preview/native/engine/persistent_runtime_guard.hpp",
+    "bytes": 1238,
+    "sha256": "a9a28077dee3804dcc027ae7f3709072aa6b1214128efcf80fc7404a817d0621"
+  },
+  {
+    "path": "build/mainline-port-20261028/owner/before/preview/native/engine/persistent_session.cpp",
+    "bytes": 126333,
+    "sha256": "9150b5f92c1eecf81f4abe3f501a99fa30e531c6e57857710d3319ebbd0c021e"
+  },
+  {
+    "path": "build/mainline-port-20261028/owner/before/preview/native/engine/persistent_session.hpp",
+    "bytes": 11175,
+    "sha256": "b541ec663d884d5a551ac167e5d14fcd72ed4653babeebf1465b5a9d17e6db98"
+  },
+  {
+    "path": "build/mainline-port-20261028/owner/manifest.json",
+    "bytes": 4378,
+    "sha256": "bdc823736e65a27d548f76a859f06b3d6c7d68c0f272a244f997a303b0a55cef"
+  },
+  {
+    "path": "build/mainline-port-20261028/owner/patches/mainline_owner.inc.patch",
+    "bytes": 15290,
+    "sha256": "6332dbe3494af62bbc14e6d1dc076c40efd4a2d54d19192e77e534a175e23126"
+  },
+  {
+    "path": "build/mainline-port-20261028/owner/patches/persistent_runtime_guard.hpp.patch",
+    "bytes": 835,
+    "sha256": "3bcb50d8510a02fb2bd5715bc0b8f541955d771082dd452d3053f1cc514682f9"
+  },
+  {
+    "path": "build/mainline-port-20261028/owner/patches/persistent_session.cpp.patch",
+    "bytes": 5466,
+    "sha256": "deeb89f82912587b21c018973fd58150cd98015dd4e8b92b626e37895a4683eb"
+  },
+  {
+    "path": "build/mainline-port-20261028/owner/patches/persistent_session.hpp.patch",
+    "bytes": 583,
+    "sha256": "bdae338219878f8bf1cf5cbad97710883f33ea5e45dc7b0d3016f77db0fa065d"
+  },
+  {
+    "path": "build/mainline-port-20261028/owner/port-helper.txt",
+    "bytes": 11404,
+    "sha256": "ad3dad4879455571cdddbef9e1f3f1223166145f120f44382b47586e2d8ff293"
+  },
+  {
+    "path": "build/mainline-port-20261028/owner/stage.py",
+    "bytes": 6869,
+    "sha256": "23a4f8352e9d04bb180995220ca0602a6b24c20d5a4efbde5b12710b47100698"
+  },
+  {
+    "path": "build/mainline-port-20261028/owner/staging/preview/native/engine/mainline_owner.inc",
+    "bytes": 21073,
+    "sha256": "453edd3c6ef652f5ed9ffff7fbeba6fd47077aa3f9230898d3bec3b81a8a9d2f"
+  },
+  {
+    "path": "build/mainline-port-20261028/owner/staging/preview/native/engine/persistent_runtime_guard.hpp",
+    "bytes": 1452,
+    "sha256": "feacd4b2b84ec8ac6c278276478df6d3062a6d1695810e5359b8032bb013e07c"
+  },
+  {
+    "path": "build/mainline-port-20261028/owner/staging/preview/native/engine/persistent_session.cpp",
+    "bytes": 127555,
+    "sha256": "ee3cd42d661c926fead94ed8c439d454ac252a81b74e57cea81e18c9cbe4e98b"
+  },
+  {
+    "path": "build/mainline-port-20261028/owner/staging/preview/native/engine/persistent_session.hpp",
+    "bytes": 11395,
+    "sha256": "a6ac4e3af0675eda43a3aff749ce5da01c72d355df415967fe52784bd16df77c"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/actual-loader-init.json",
+    "bytes": 2538,
+    "sha256": "2972ebf044159cb029e862af48aa7bd19e310fb96500e1b8871148fdf7f02391"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/biglybtc-azureus-database-runtime-tests.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/biglybtc-azureus-database-runtime-tests.txt",
+    "bytes": 1120,
+    "sha256": "f0e8270a047446dbffd836c40baea793864dc16fe04eaea055bc53f13888ef8b"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/biglybtc-azureus-database-runtime-tests.xml",
+    "bytes": 1595,
+    "sha256": "20bb08d5aeabd7c9dbef06bc8b81a8a9775b04ca407fd86ae06a36587e968f8e"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/biglybtc-mainline-checkpoint-tests.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/biglybtc-mainline-checkpoint-tests.txt",
+    "bytes": 2124,
+    "sha256": "390903bd414bec2764f0743676da45c7a4f4fc1976d83854dda7b79d66cf3269"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/biglybtc-mainline-checkpoint-tests.xml",
+    "bytes": 3038,
+    "sha256": "26020605e51652983240ea32d1dff58d909c7eb6c1d08133375b8586325b0626"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/biglybtc-mainline-dht-tests.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/biglybtc-mainline-dht-tests.txt",
+    "bytes": 3104,
+    "sha256": "c4397e722db3a40ca021009d1528727b7a319ede3bf710ad4b54db1255b84175"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/biglybtc-mainline-dht-tests.xml",
+    "bytes": 4538,
+    "sha256": "4779e8263a2d94f9ccf3d4fde93cae80b4ac5f602ad8269225d9f5b7ac330860"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/biglybtc-managed-magnet-tests.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/biglybtc-managed-magnet-tests.txt",
+    "bytes": 1238,
+    "sha256": "e0c9b6fffd1f0b28c8c774c19ba697222eb985bebcf81282bde4d9cfd554940f"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/biglybtc-managed-magnet-tests.xml",
+    "bytes": 1893,
+    "sha256": "26429dcb64d8ba7a9b39c98c691708375d81f333f552d98b316afa977693ec50"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/biglybtc-preview-smoke.log",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/biglybtc-preview-smoke.txt",
+    "bytes": 7093,
+    "sha256": "9d8b045dae3b4cf248a39566801d2ec2b61ab920890b459117875b463ab1fdf9"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/biglybtc-preview-smoke.xml",
+    "bytes": 5524,
+    "sha256": "727602e8d86e52ec95270da97eb9e40da3b73ef616e7c78fcea6b48ffd27ecb5"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/candidate/BUILD_MANIFEST.json",
+    "bytes": 29929,
+    "sha256": "0508794edb9c2e80582068ffa9e4ebe0d0058732d91dce1fe016ad451a54ea1f"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/commands.json",
+    "bytes": 4335,
+    "sha256": "0e31ba1aef2637bb6f3a64f4931d01542f1f83ce88680218edde6e33f2776fbf"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/normal-launcher-usage.log",
+    "bytes": 91991,
+    "sha256": "55e88a15f78044f1ad71d00dac743a83d2cb6135f222d83cccbd6e31a2f7e672"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/offline-preview-owned-stop.log",
+    "bytes": 108180,
+    "sha256": "0ea57d46de3fd03e3706e574b9e11c6d2792901ac7ae8358e8209363186ce418"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/prepare-owned-profile.log",
+    "bytes": 39,
+    "sha256": "4b2ede6e8cc648cdfb45e5d2bd064bb9f0f468e2d4489bd42acc5747a62738af"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/private-loaders.json",
+    "bytes": 3129,
+    "sha256": "4f0fdaa21d697c58ee867380921db4c35367fc22a8e0231ee1233f109a570138"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/result.json",
+    "bytes": 750,
+    "sha256": "3d00a989bbf15697cb4d3d804c3e89941d5ab50d84abd3dc5d63556416684b3a"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/stage.log",
+    "bytes": 15841,
+    "sha256": "735ed06a04008bd361465878650e7b2c17a46a48faa85533316654ba88b8ff36"
+  },
+  {
+    "path": "build/mainline-port-20261028/private-runtime/test-support.json",
+    "bytes": 145,
+    "sha256": "4853eb45b9ad72f316e6297c1ece734cfbc9795bd22efffe16bd73d435f5c85d"
+  },
+  {
+    "path": "build/mainline-port-20261028/provenance-staging/adoption-notes.txt",
+    "bytes": 536,
+    "sha256": "1f64bb63a5457ff1837a5d0ab15c086faebf94815919886d70b6dc2583cbc617"
+  },
+  {
+    "path": "build/mainline-port-20261028/provenance-staging/manifest.json",
+    "bytes": 2466,
+    "sha256": "cc05b102ffb90eaac4bfbfe26a9c6543d44f69e9238511353f3cd0a4c423db71"
+  },
+  {
+    "path": "build/mainline-port-20261028/provenance-staging/migration/decisions/proposals/mainline-peer-port-bridge.md",
+    "bytes": 1837,
+    "sha256": "4914c09e760bbc3bf6c9ac05dc85e6f1920f235c116b587c6a96c628071c0bdf"
+  },
+  {
+    "path": "build/mainline-port-20261028/provenance-staging/migration/evidence/20261028-mainline-port/provider/delta-manifest.json",
+    "bytes": 5676,
+    "sha256": "d2bdc7cb1e0173d59f2829d5cef6cc8d548d072331c88276a430ef968d938ee1"
+  },
+  {
+    "path": "build/mainline-port-20261028/provenance-staging/migration/evidence/20261028-mainline-port/provider/mainline-port.patch",
+    "bytes": 13855,
+    "sha256": "cbf8f0d1882144efae3038b9f4c8a7b7ab9d29c09972027708bcc54b078b9e62"
+  },
+  {
+    "path": "build/mainline-port-20261028/provenance-staging/migration/evidence/20261028-mainline-port/provider/source-provenance.json",
+    "bytes": 1178,
+    "sha256": "8c910c669e160c96449e15ba098dc98ff85178350fe2c6dcaa62b41dde07a0b3"
+  },
+  {
+    "path": "build/mainline-port-20261028/provenance-staging/migration/updates/engine.mainline_peer_port/20261028-in-progress.md",
+    "bytes": 2307,
+    "sha256": "9dfb48b3717fe1e024cea72ceda865aa22e5454dd1487d97ecfaa7bb1a4bb36a"
+  },
+  {
+    "path": "build/mainline-port-20261028/provenance-staging/registry-additions.json",
+    "bytes": 4794,
+    "sha256": "da29a2224461fcf8e3ef5a8d9418b77fa793b63c52eff21c4c55abd5d4cd17ef"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/build.log",
+    "bytes": 28427,
+    "sha256": "63834f5d8c6d806e002cc3372332ea7c5073620bf3d79abf77a577235425cc17"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/cancel-build-r2.log",
+    "bytes": 665,
+    "sha256": "ef0ef3c20476be271b4dff62eee413a51468b99b0a9f6b4e41f33dad0ad8a33e"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/cancel-configure-r2.log",
+    "bytes": 807,
+    "sha256": "a1afca3c41a341a6df1e603216c5d9dd40034e38c1f98bfe8ce5ed8deb4e7c9b"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/cancel-tests-r2.log",
+    "bytes": 3054,
+    "sha256": "fc5a4516ca452e75b2a6ad20467c993fe44e27b98cae22355cb3cf877bf071ac"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/cancel-tests-r2.xml",
+    "bytes": 1463,
+    "sha256": "46920c12550e7af8873a344575f1aaf6c433168d970ee8fd284b3a3ecbbe4deb"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/commands.json",
+    "bytes": 3580,
+    "sha256": "efb13b541c87d2ea7671ed12eaeb3c46002d34dc5def60fce76db477296d9fc5"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/compiler-version.txt",
+    "bytes": 300,
+    "sha256": "325aa607160ea4cc23f3fb04f3a801b16d4b19ab635ebed094f6fca82b9f7f93"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/configure.log",
+    "bytes": 5197,
+    "sha256": "44713cadcd10bff534cbad7456138ce7764a80b2cf6e90d838ee4911c0554e75"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/creation.json",
+    "bytes": 116603,
+    "sha256": "95fbd03d041782ccbb7874f8e206d533ca64f737e1960d1aeba7551aafa59bef"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/direct-outputs-r2.json",
+    "bytes": 564,
+    "sha256": "9e06c284613c066d80f93ef64d83b8eccacf7f55ccf27504a0fa88bb9a34e759"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/dynamic.txt",
+    "bytes": 1782,
+    "sha256": "30cbfe44bc3bc846f1e525452a3b45c70bf54b9d333574ccd4c60e76f3604aa4"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/effective-commands.json",
+    "bytes": 9990,
+    "sha256": "6b3ce26ae414c6a93f4b5982a24333881268613868993f615dd89305efc7e189"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/exports.txt",
+    "bytes": 472215,
+    "sha256": "cd0209e983de0e0bd01fd54b8e2c11ff9d663ea28d4d1ad6db484b39960874eb"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/install.log",
+    "bytes": 39095,
+    "sha256": "954a4babdcc9895e389f71e3e33d08bf15856679fcf411b915c224584e219ee2"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/mainline-build-r2.log",
+    "bytes": 379,
+    "sha256": "02b99045df7b9e4dbd6f9b5afdd7140ccac5b76ec22e243941bf2ef3f89f7427"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/mainline-configure-r2.log",
+    "bytes": 640,
+    "sha256": "0329e54328000ab4a6439b417c011126682633432ffa80ca9e3a419e3768fc95"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/mainline-tests-r2.log",
+    "bytes": 1325,
+    "sha256": "adf084758fb28d94a8d2db6e2afb528aeb5902199bf5be6ce5bcd71302e8c820"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/mainline-tests-r2.xml",
+    "bytes": 653,
+    "sha256": "41733859fdec48057c9381c5add84344f17fe570ee8fca7d608359fba7b2cdb3"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/network-commands-r2.json",
+    "bytes": 6785,
+    "sha256": "19e55e03b3aadaa3379649cccb458f3f609847bab912fb79f3717ef458aee554"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/network-environment-probe.json",
+    "bytes": 520,
+    "sha256": "38baf8cfb036857bb80175445f9378000824d94eef6cb80a30224251398cdb79"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/port-delta-manifest.json",
+    "bytes": 5676,
+    "sha256": "d2bdc7cb1e0173d59f2829d5cef6cc8d548d072331c88276a430ef968d938ee1"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/provider-tests.log",
+    "bytes": 501,
+    "sha256": "691480eb9dbab13d975aaf7e14eaf61fce5306cf6ce953c1fa0f0076ca16e708"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/provider-tests.xml",
+    "bytes": 3538,
+    "sha256": "55343bb62a49c513a8eafcb28bd29fd2c143e375c0c86885a100428c127b83ae"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/queue-build.log",
+    "bytes": 146,
+    "sha256": "daf65b6e3b9ddc952d3a7e1e48d2aaac2995855371712ab2dd5557a51a1a4cef"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/queue-configure.log",
+    "bytes": 637,
+    "sha256": "564635871c2f7ab08525bdd2c93859b87e03c4f2e522b558c55153772b7e1906"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/queue-tests-r2.log",
+    "bytes": 1553,
+    "sha256": "1137647b8dbd3e405ef87ed82387555ed871f9ee84ca91ec40be8d6e11ca0133"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/queue-tests-r2.xml",
+    "bytes": 703,
+    "sha256": "396cc86829162de4779bd5309ff2787ef6f98ea43e3127a9b36ae07c5ab7a5c0"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/queue-tests.log",
+    "bytes": 545,
+    "sha256": "a4d5677b0fc2646297e6559eac5dc307a0eb47081e4ecf590f903ac7a4796527"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/queue-tests.xml",
+    "bytes": 602,
+    "sha256": "506112f4d17d6a3c81247bca007935fc67599e83aa44003904320b8692d085b2"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/socks4a-build-r2.log",
+    "bytes": 362,
+    "sha256": "e5e48f7425c9633e737eaa05bf0ef499e4f7211c0710bd9177bf6c3d0331c981"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/socks4a-configure-r2.log",
+    "bytes": 743,
+    "sha256": "880bfbe4ec2a66331880b8aa1af01109186a83ca8e0bbda60dba3b05a0e5cf1f"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/socks4a-tests-r2.log",
+    "bytes": 1693,
+    "sha256": "d1425e118bae7a6172a60840f78b7334f9fd9d53bd09090e9d6906a696938117"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/socks4a-tests-r2.xml",
+    "bytes": 1087,
+    "sha256": "18b95b1e506a8c642df13f65a2438b1fde4e1042a67b434d293236594a14d886"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/source-build-record.json",
+    "bytes": 208860,
+    "sha256": "c848411975cecc955370cf0a95790fd4659a52714b8f57ce9c82fa7e9fbf54d3"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/traffic-build-r2.log",
+    "bytes": 134,
+    "sha256": "6baaee682f648b318c7ef1821a72b30352a1b5e4a864c90d88961ebefd794d5e"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/traffic-configure-r2.log",
+    "bytes": 639,
+    "sha256": "517d300ba01f443bec1c2d603e6bc7e123fb76fa03f896f035490d75e87bc187"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/traffic-tests-r2.log",
+    "bytes": 1042,
+    "sha256": "bb029c1d28eda78145434ddf89f9352dca31b34520194f65b1116e767fe51a21"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider-candidate/traffic-tests-r2.xml",
+    "bytes": 488,
+    "sha256": "e488121dfa403425c259083645c95d2e2581c4c26c0fa1c08af91575c71090fb"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/before/include/libtorrent/bt_peer_connection.hpp",
+    "bytes": 14962,
+    "sha256": "51e16cf775a2c57646676fe6e357c2edabc86cfbc2c4496c2f9acf9612d62ea7"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/before/include/libtorrent/torrent.hpp",
+    "bytes": 63906,
+    "sha256": "0d91013ded53b45cec38fd205ac1f921936aef7b045cedbacb61c0f5eb76f374"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/before/include/libtorrent/torrent_handle.hpp",
+    "bytes": 64759,
+    "sha256": "05dbbbe8658e6fca8f993dc90d9b40d06aa0fd361e3ba3694e23f7f5b04a55e3"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/before/src/bt_peer_connection.cpp",
+    "bytes": 109229,
+    "sha256": "ed20a935cfab3e48b28b5d336bb55a61979a0efa791766e2ffd84a9ec7b08a48"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/before/src/peer_connection.cpp",
+    "bytes": 205384,
+    "sha256": "96fc234b369acc736e82b13ca04565fd4f15b9a1f4aabba4fcb549c6f2ed86af"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/before/src/torrent.cpp",
+    "bytes": 368712,
+    "sha256": "84a0dee4a254852950bdad9e3ae73b8ac1b47c08d943c8fbe49e59395e4d803c"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/before/src/torrent_handle.cpp",
+    "bytes": 34522,
+    "sha256": "d2bbffe48a11227283159afa18d52b486b014bc3df9df11633839bc53a49d082"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/changes.patch",
+    "bytes": 13855,
+    "sha256": "cbf8f0d1882144efae3038b9f4c8a7b7ab9d29c09972027708bcc54b078b9e62"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/handle-exports.inc",
+    "bytes": 1655,
+    "sha256": "207fca1d4affa67e20e9ad528b760d1ec5d558b62d3a95d048375f2c55c83b0e"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/manifest.json",
+    "bytes": 5676,
+    "sha256": "d2bdc7cb1e0173d59f2829d5cef6cc8d548d072331c88276a430ef968d938ee1"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/parent.json",
+    "bytes": 1380,
+    "sha256": "dc19a1ac8f856eb93a9d006ea8196a376ff3811e5eeb20f5b889a5eb5a754e16"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/staging/include/libtorrent/biglybtc_mainline_port.hpp",
+    "bytes": 3112,
+    "sha256": "5b4c84a034e7ddc88f23adff559926de351294bed50292b298031013f9e43690"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/staging/include/libtorrent/bt_peer_connection.hpp",
+    "bytes": 15042,
+    "sha256": "6d0d72a34ccd27569640f1b11f3b0c8fcd77c79b22c79cdcb8ae6713535ca854"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/staging/include/libtorrent/torrent.hpp",
+    "bytes": 64637,
+    "sha256": "fa461dc3ee2356178a3d0a1049a916363b90bcaeb919c9aa4ac8116fbf6cdb56"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/staging/include/libtorrent/torrent_handle.hpp",
+    "bytes": 65085,
+    "sha256": "542b311f004468920c69dbf1ee7b4b3f8d12543125f1853dd52411161371b3f8"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/staging/src/bt_peer_connection.cpp",
+    "bytes": 109873,
+    "sha256": "e3cce5e9275932fde01e42e35c6e3123dc01f3b55d412779ac6ae1370b4fd3d8"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/staging/src/peer_connection.cpp",
+    "bytes": 205921,
+    "sha256": "45047f59d4931e40cdc8d8e4603de7f41f8f85ad894536368a1f7f9822de237b"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/staging/src/torrent.cpp",
+    "bytes": 372055,
+    "sha256": "de6bace39a693b872238344fa05e35435779ca57fd9cb9cc2ea9de7d306bbb3f"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/staging/src/torrent_handle.cpp",
+    "bytes": 36177,
+    "sha256": "cfbe87f9137f37ddbad346262a26bb2a9f9d2ec4ce41c2c621becc0dc7cd619a"
+  },
+  {
+    "path": "build/mainline-port-20261028/provider/torrent-methods.inc",
+    "bytes": 3343,
+    "sha256": "e1f6e3733c2aa21625b54861e7fe46f432a36859e5aa6b9f3094bab95d40ecf6"
+  },
+  {
+    "path": "build/mainline-port-20261028/publication/SPEC.md",
+    "bytes": 4499,
+    "sha256": "5a150b661e9efafacf444ec4c3ce601c122c17bb1cf788b683e370be0da5a3fb"
+  },
+  {
+    "path": "build/mainline-port-20261028/publication/baseline.json",
+    "bytes": 768,
+    "sha256": "97b3bd6b0b1f3c0796ff855627879f6372b4bcc6b59f8927dcc2112108c6ac2c"
+  },
+  {
+    "path": "build/mainline-port-20261028/publication/manifest.json",
+    "bytes": 1080,
+    "sha256": "58a3afcd499673f2c34ca12a397193fe4e676241f070efa53418e303bad7dc73"
+  },
+  {
+    "path": "build/mainline-port-20261028/publication/mapping-record-reference.json",
+    "bytes": 4337,
+    "sha256": "7e5dfbcb1eb6f8ae8f82809e4e28684bd6233521e3f357ab0f6d23522aa19c1f"
+  },
+  {
+    "path": "build/mainline-port-20261028/publication/prepare.py",
+    "bytes": 30972,
+    "sha256": "14c5bc0f5c2d52a120c4892a0442256ade1dd602c3e2ac23b8eb75ab8eebd58d"
+  },
+  {
+    "path": "build/mainline-port-20261028/qualification.json",
+    "bytes": 2789,
+    "sha256": "0246f2134d1809a898e9c83ec720a4b43280d52e9c672659a61a74080559abfa"
+  },
+  {
+    "path": "build/mainline-port-20261028/root-provider-review.json",
+    "bytes": 1664,
+    "sha256": "c26b8417e9b5b48398018da2298d950f0ed9431db4d05f75441c6f7cb68405f0"
+  },
+  {
+    "path": "build/mainline-port-20261028/run-database-followup.py",
+    "bytes": 3604,
+    "sha256": "1f640982ef9f3be3fc549b8148f2b96788fd28b7d6f15e35b0cbc8b28cb96dc8"
+  },
+  {
+    "path": "build/mainline-port-20261028/run-native.py",
+    "bytes": 5419,
+    "sha256": "10ab40e85b9e24b6200c91674bfd1d5afb79c8dea898865af33ee4c0228d0784"
+  },
+  {
+    "path": "build/mainline-port-20261028/run-portable.py",
+    "bytes": 5515,
+    "sha256": "f050b4e8f9c26138ed3e0217d2f1f20bf057e29abe5e05b6aa75871d3290393c"
+  },
+  {
+    "path": "build/mainline-port-20261028/service-independent-review/manifest.json",
+    "bytes": 200,
+    "sha256": "ad41adeeff1b89ffe7df3b615a38b990288e88f1612807f2e548f5910c198b76"
+  },
+  {
+    "path": "build/mainline-port-20261028/service/amendments/live-routing-proof/ADOPTION.md",
+    "bytes": 2254,
+    "sha256": "8a3f0af812aa7b84d515b3c1d96520c568626f531c97fae5a7e4e17eef2dddc2"
+  },
+  {
+    "path": "build/mainline-port-20261028/service/amendments/live-routing-proof/before/mainline_dht.cpp",
+    "bytes": 30094,
+    "sha256": "27d02b25fc91bafa04fbe4134dc9045ba3bfc564c940a2b309fd0750362eff7d"
+  },
+  {
+    "path": "build/mainline-port-20261028/service/amendments/live-routing-proof/before/mainline_dht.hpp",
+    "bytes": 3521,
+    "sha256": "3e0dec61692f02fd732b2fc4c0f11a91dbe09b40b458f82a7927e830a50f1b53"
+  },
+  {
+    "path": "build/mainline-port-20261028/service/amendments/live-routing-proof/mainline_dht.cpp.patch",
+    "bytes": 8850,
+    "sha256": "15a9e94edfd0d178fb382e8e5ca99a89543a3ea8d62ff27feee81381cd736c07"
+  },
+  {
+    "path": "build/mainline-port-20261028/service/amendments/live-routing-proof/mainline_dht.hpp.patch",
+    "bytes": 1414,
+    "sha256": "4107757a8ec7e503de20a69e8aea75355d343169778cd4a4cdad4a6b11af5081"
+  },
+  {
+    "path": "build/mainline-port-20261028/service/amendments/live-routing-proof/manifest.json",
+    "bytes": 2984,
+    "sha256": "0ca27d23add16ca4c5b725ca2153dc07018fcbb39afb927dbe279ab9916dd35e"
+  },
+  {
+    "path": "build/mainline-port-20261028/service/amendments/live-routing-proof/parent.patch",
+    "bytes": 5589,
+    "sha256": "b66470223e74116315358f380ca0e77c5a3fbfe285a44ec3be3206e0663039f7"
+  },
+  {
+    "path": "build/mainline-port-20261028/service/amendments/live-routing-proof/staging/engine/mainline_dht.cpp",
+    "bytes": 35593,
+    "sha256": "8e38c9b0c32b8a6d5590e96ef56e2cc773b33d52123c465125c3bd9662cc10d0"
+  },
+  {
+    "path": "build/mainline-port-20261028/service/amendments/live-routing-proof/staging/engine/mainline_dht.hpp",
+    "bytes": 4036,
+    "sha256": "f54b9a52c39b78f467ec66faf02ffc9193d668bf73e9219fe47903fe8c47d877"
+  },
+  {
+    "path": "build/mainline-port-20261028/source-adoption.json",
+    "bytes": 5442,
+    "sha256": "6920674465611e30bcb700c4678105e61c61f689015f8b14ec7845dccf124fdb"
+  },
+  {
+    "path": "build/mainline-port-20261028/source-provenance.json",
+    "bytes": 1178,
+    "sha256": "8c910c669e160c96449e15ba098dc98ff85178350fe2c6dcaa62b41dde07a0b3"
+  },
+  {
+    "path": "build/mainline-port-20261028/tests-independent-review/manifest.json",
+    "bytes": 200,
+    "sha256": "fbb30935e2cd6ec5d3d1f5b2a9226b13bcf5801c89b8a77c2b5a8e06d949f8c8"
+  },
+  {
+    "path": "build/mainline-port-20261028/tests/ADOPTION.md",
+    "bytes": 2098,
+    "sha256": "7f128ec4a2fbd1c3b7038e6a1092fd865ceb758ae5f67e2642e5fab35b0e5fd7"
+  },
+  {
+    "path": "build/mainline-port-20261028/tests/before.cpp",
+    "bytes": 40767,
+    "sha256": "3251e3d2f585be3f4795638477f2fa86eb58643f063502ea97afd3688847ac61"
+  },
+  {
+    "path": "build/mainline-port-20261028/tests/changes.patch",
+    "bytes": 28323,
+    "sha256": "832b9920ff5186a0170e2a5621831e1ac635058d742e2a617aa3ba3ab52e9312"
+  },
+  {
+    "path": "build/mainline-port-20261028/tests/cleanup-review.json",
+    "bytes": 925,
+    "sha256": "8c4fe82a239977c36aba62d13b031d3bac471b28f161e23197f9f5a716ed8888"
+  },
+  {
+    "path": "build/mainline-port-20261028/tests/manifest.json",
+    "bytes": 2572,
+    "sha256": "f43bf63c1c067bf4395d7fe55c56cffc3fcb8866cf20a044baa9174eec770afa"
+  },
+  {
+    "path": "build/mainline-port-20261028/tests/port_methods.inc",
+    "bytes": 18618,
+    "sha256": "b196a5af837a7aabd5e08715b3bae8f4dbd99d8c50bc3bc3160b9a671c9e446e"
+  },
+  {
+    "path": "build/mainline-port-20261028/tests/port_peer.inc",
+    "bytes": 4386,
+    "sha256": "da749f21647e9abbcbae22ca7039b7329ab7837558e04ed3da5beb76f905ef3c"
+  },
+  {
+    "path": "build/mainline-port-20261028/tests/staging/tests/mainline_dht_tests.cpp",
+    "bytes": 64621,
+    "sha256": "18e235dbc73cbd032f3e57d6a2dc3d51c688c612701291a368d5eb3925203fd8"
+  },
+  {
+    "path": "build/mainline-restart-20261028/hosted-current-sdk.json",
+    "bytes": 1321,
+    "sha256": "9e8e62a978ce402ea18e53bf46605fc8334eb380dfc98de3d721bb9e143a7bb2"
+  },
+  {
+    "path": "build/mainline-restart-20261028/hosted-final-source-application.json",
+    "bytes": 2237,
+    "sha256": "29e519eb41945255269f2d9469768fbb3a6c1111fdaf479849396b387f5475ea"
+  }
+]

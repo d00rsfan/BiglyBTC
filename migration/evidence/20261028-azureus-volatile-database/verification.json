@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "state": "in_progress",
+  "source_commit": "18c3e0048d381748c6a4154b3d6e9100b6ec2dda",
+  "implementation_commit": "243f884971c5cc4d4c2cd368e2a8d3289ffeba07",
+  "test_fix_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+  "shared_qualification": "migration/evidence/20261028-mainline-port/verification.json",
+  "shared_archive": "migration/evidence/20261028-mainline-port/retained-evidence.tar.gz",
+  "shared_archive_sha256": "134cf6766931fb4f0a7899ad28a0e1b0d750f19d7dfae8dbf6a3f11cb5c12fba",
+  "suite": "azureus-database-runtime",
+  "actual_lanes": {
+    "gcc": {
+      "receipt": "build/mainline-port-20261028/acceptance.json",
+      "sha256": "3a6fbede846b62ebeeb92a1b2af4ce456ad0f9ae75a54307681046707814ea6c"
+    },
+    "clang": {
+      "receipt": "build/mainline-port-20261028/acceptance.json",
+      "sha256": "3a6fbede846b62ebeeb92a1b2af4ce456ad0f9ae75a54307681046707814ea6c"
+    },
+    "san": {
+      "receipt": "build/mainline-port-20261028/acceptance.json",
+      "sha256": "3a6fbede846b62ebeeb92a1b2af4ce456ad0f9ae75a54307681046707814ea6c"
+    }
+  },
+  "private_runtime": "biglybtc-azureus-database-runtime-tests",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_subject_executed": false,
+  "shipping_approved": false,
+  "full_database_or_P06_parity": false
+}

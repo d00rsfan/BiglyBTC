@@ -1,0 +1,13 @@
+{
+  "status": "PASS_PROMOTED",
+  "new_manifest_sha256": "0508794edb9c2e80582068ffa9e4ebe0d0058732d91dce1fe016ad451a54ea1f",
+  "previous_manifest_sha256": "f10ee83a4c4cebb45149dcd6a27552cc82566dad1c7ae63b0e9007c6e4a44524",
+  "new_leaves": 118,
+  "previous_leaves": 118,
+  "rollback": "/home/yurii/Java/BiglyBT/build/mainline-port-20261028/previous-published-dist-20261028-port",
+  "installed_path": "/home/yurii/Java/BiglyBTC/dist",
+  "post_relocation_usage_exit": 2,
+  "actual_private_qt_and_provider_init": true,
+  "provider_sha256": "9fbb550bbc1f877ce34ce21849deab97971f5d3eacfbc531a7b777d28a3b2eea",
+  "shipping_approved": false
+}

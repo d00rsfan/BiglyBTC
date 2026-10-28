@@ -1693,3 +1693,7 @@ Evidence: [local](migration/evidence/20261021-persistent-peer-accounting/local-v
 [publication](migration/evidence/20261021-persistent-peer-accounting/publication.json).
 
 <!-- /persistent-peer-accounting-current -->
+
+## 2026-10-28: owned Mainline PORT and volatile Azureus DB
+
+Completed two bounded dependencies at native18c3e0048d381748c6a4154b3d6e9100b6ec2dda: actual peer PORT bootstrap/outgoing independent listener, and explicitly enabled owned-loopback volatile token STORE→DB→FIND_VALUE. Actual qualification: GCC23/Clang5/leak-enabled ASan+UBSan5 selected suites, plus relocated private Qt/provider five binaries and118manifest leaves. Only corrected P06 test expectations were rerun; unchanged successful binary/source proofs were retained explicitly. Initial configure/compile/test failures remain evidence. See migration/evidence/20261028-mainline-port/REVIEW.md and migration/evidence/20261028-azureus-volatile-database/REVIEW.md. Full phases remain open; continue queued saved-library BEP33 scrape and normal Azureus read flags/storage-key stats next under the whole-plan authorisation. BEP33 primitive GCC/Clang/SAN unit and2076 original Java comparisons already passed independently and await next source integration.

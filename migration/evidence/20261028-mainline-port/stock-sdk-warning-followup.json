@@ -1,0 +1,8 @@
+{
+  "source_commit": "e6342c828aafdab5144d22293ebd032bd09210b5",
+  "qualified_private_source": "18c3e0048d381748c6a4154b3d6e9100b6ec2dda",
+  "status": "APPLIED_DISABLED_BRANCH_BUILD_FIX_HOSTED_PENDING",
+  "manifest_sha256": "2b06d46317049b5cecd1dd806d02c229b1c8987b7e0c7b8e1f1eec76faf8cf63",
+  "provider_enabled_branch_unchanged": true,
+  "hosted_failure_run": 40721975430
+}

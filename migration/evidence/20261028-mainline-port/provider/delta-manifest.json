@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_PROVIDER_DELTA",
+  "parent": {
+    "source": "/home/yurii/Java/BiglyBT/build/network-reliability-20261028/provider-socks-lifecycle/source",
+    "record": "/home/yurii/Java/BiglyBT/build/network-reliability-20261028/provider-socks-lifecycle/source-build-record.json",
+    "record_sha256": "9f8d1f436f943994a117f9f33bbaf016f92bb60ab3c0cecf9e0b6f02efb3c6ee",
+    "files": [
+      {
+        "path": "include/libtorrent/torrent.hpp",
+        "before_sha256": "0d91013ded53b45cec38fd205ac1f921936aef7b045cedbacb61c0f5eb76f374"
+      },
+      {
+        "path": "include/libtorrent/torrent_handle.hpp",
+        "before_sha256": "05dbbbe8658e6fca8f993dc90d9b40d06aa0fd361e3ba3694e23f7f5b04a55e3"
+      },
+      {
+        "path": "include/libtorrent/bt_peer_connection.hpp",
+        "before_sha256": "51e16cf775a2c57646676fe6e357c2edabc86cfbc2c4496c2f9acf9612d62ea7"
+      },
+      {
+        "path": "src/torrent.cpp",
+        "before_sha256": "84a0dee4a254852950bdad9e3ae73b8ac1b47c08d943c8fbe49e59395e4d803c"
+      },
+      {
+        "path": "src/torrent_handle.cpp",
+        "before_sha256": "d2bbffe48a11227283159afa18d52b486b014bc3df9df11633839bc53a49d082"
+      },
+      {
+        "path": "src/bt_peer_connection.cpp",
+        "before_sha256": "ed20a935cfab3e48b28b5d336bb55a61979a0efa791766e2ffd84a9ec7b08a48"
+      },
+      {
+        "path": "src/peer_connection.cpp",
+        "before_sha256": "96fc234b369acc736e82b13ca04565fd4f15b9a1f4aabba4fcb549c6f2ed86af"
+      }
+    ]
+  },
+  "files": [
+    {
+      "path": "include/libtorrent/biglybtc_mainline_port.hpp",
+      "before_sha256": null,
+      "source_sha256": "5b4c84a034e7ddc88f23adff559926de351294bed50292b298031013f9e43690"
+    },
+    {
+      "path": "include/libtorrent/bt_peer_connection.hpp",
+      "before_sha256": "51e16cf775a2c57646676fe6e357c2edabc86cfbc2c4496c2f9acf9612d62ea7",
+      "source_sha256": "6d0d72a34ccd27569640f1b11f3b0c8fcd77c79b22c79cdcb8ae6713535ca854"
+    },
+    {
+      "path": "include/libtorrent/torrent.hpp",
+      "before_sha256": "0d91013ded53b45cec38fd205ac1f921936aef7b045cedbacb61c0f5eb76f374",
+      "source_sha256": "fa461dc3ee2356178a3d0a1049a916363b90bcaeb919c9aa4ac8116fbf6cdb56"
+    },
+    {
+      "path": "include/libtorrent/torrent_handle.hpp",
+      "before_sha256": "05dbbbe8658e6fca8f993dc90d9b40d06aa0fd361e3ba3694e23f7f5b04a55e3",
+      "source_sha256": "542b311f004468920c69dbf1ee7b4b3f8d12543125f1853dd52411161371b3f8"
+    },
+    {
+      "path": "src/bt_peer_connection.cpp",
+      "before_sha256": "ed20a935cfab3e48b28b5d336bb55a61979a0efa791766e2ffd84a9ec7b08a48",
+      "source_sha256": "e3cce5e9275932fde01e42e35c6e3123dc01f3b55d412779ac6ae1370b4fd3d8"
+    },
+    {
+      "path": "src/peer_connection.cpp",
+      "before_sha256": "96fc234b369acc736e82b13ca04565fd4f15b9a1f4aabba4fcb549c6f2ed86af",
+      "source_sha256": "45047f59d4931e40cdc8d8e4603de7f41f8f85ad894536368a1f7f9822de237b"
+    },
+    {
+      "path": "src/torrent.cpp",
+      "before_sha256": "84a0dee4a254852950bdad9e3ae73b8ac1b47c08d943c8fbe49e59395e4d803c",
+      "source_sha256": "de6bace39a693b872238344fa05e35435779ca57fd9cb9cc2ea9de7d306bbb3f"
+    },
+    {
+      "path": "src/torrent_handle.cpp",
+      "before_sha256": "d2bbffe48a11227283159afa18d52b486b014bc3df9df11633839bc53a49d082",
+      "source_sha256": "cfbe87f9137f37ddbad346262a26bb2a9f9d2ec4ce41c2c621becc0dc7cd619a"
+    }
+  ],
+  "abi_exports": [
+    "biglybtc_mainline_port_abi_v1",
+    "biglybtc_attach_mainline_port_observer_v1",
+    "biglybtc_refresh_mainline_port_v1"
+  ],
+  "native_runtime_approved": false,
+  "artifacts": {
+    "before/include/libtorrent/bt_peer_connection.hpp": "51e16cf775a2c57646676fe6e357c2edabc86cfbc2c4496c2f9acf9612d62ea7",
+    "before/include/libtorrent/torrent.hpp": "0d91013ded53b45cec38fd205ac1f921936aef7b045cedbacb61c0f5eb76f374",
+    "before/include/libtorrent/torrent_handle.hpp": "05dbbbe8658e6fca8f993dc90d9b40d06aa0fd361e3ba3694e23f7f5b04a55e3",
+    "before/src/bt_peer_connection.cpp": "ed20a935cfab3e48b28b5d336bb55a61979a0efa791766e2ffd84a9ec7b08a48",
+    "before/src/peer_connection.cpp": "96fc234b369acc736e82b13ca04565fd4f15b9a1f4aabba4fcb549c6f2ed86af",
+    "before/src/torrent.cpp": "84a0dee4a254852950bdad9e3ae73b8ac1b47c08d943c8fbe49e59395e4d803c",
+    "before/src/torrent_handle.cpp": "d2bbffe48a11227283159afa18d52b486b014bc3df9df11633839bc53a49d082",
+    "changes.patch": "cbf8f0d1882144efae3038b9f4c8a7b7ab9d29c09972027708bcc54b078b9e62",
+    "handle-exports.inc": "207fca1d4affa67e20e9ad528b760d1ec5d558b62d3a95d048375f2c55c83b0e",
+    "parent.json": "dc19a1ac8f856eb93a9d006ea8196a376ff3811e5eeb20f5b889a5eb5a754e16",
+    "staging/include/libtorrent/biglybtc_mainline_port.hpp": "5b4c84a034e7ddc88f23adff559926de351294bed50292b298031013f9e43690",
+    "staging/include/libtorrent/bt_peer_connection.hpp": "6d0d72a34ccd27569640f1b11f3b0c8fcd77c79b22c79cdcb8ae6713535ca854",
+    "staging/include/libtorrent/torrent.hpp": "fa461dc3ee2356178a3d0a1049a916363b90bcaeb919c9aa4ac8116fbf6cdb56",
+    "staging/include/libtorrent/torrent_handle.hpp": "542b311f004468920c69dbf1ee7b4b3f8d12543125f1853dd52411161371b3f8",
+    "staging/src/bt_peer_connection.cpp": "e3cce5e9275932fde01e42e35c6e3123dc01f3b55d412779ac6ae1370b4fd3d8",
+    "staging/src/peer_connection.cpp": "45047f59d4931e40cdc8d8e4603de7f41f8f85ad894536368a1f7f9822de237b",
+    "staging/src/torrent.cpp": "de6bace39a693b872238344fa05e35435779ca57fd9cb9cc2ea9de7d306bbb3f",
+    "staging/src/torrent_handle.cpp": "cfbe87f9137f37ddbad346262a26bb2a9f9d2ec4ce41c2c621becc0dc7cd619a",
+    "torrent-methods.inc": "e1f6e3733c2aa21625b54861e7fe46f432a36859e5aa6b9f3094bab95d40ecf6"
+  }
+}

@@ -1,0 +1,164 @@
+{
+  "schema": 1,
+  "status": "PASS_HOSTED_FINAL_RESTART_SOURCE",
+  "source_commit": "75245284dcaeda99c400fe59e5b8a29bbe1babd3",
+  "application": {
+    "conclusion": "success",
+    "headSha": "75245284dcaeda99c400fe59e5b8a29bbe1babd3",
+    "jobs": [
+      {
+        "completedAt": "2026-10-28T15:46:57Z",
+        "conclusion": "success",
+        "databaseId": 122915692246,
+        "name": "preview",
+        "startedAt": "2026-10-28T15:29:57Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-10-28T15:29:58Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-10-28T15:29:57Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:30:03Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-10-28T15:29:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:30:03Z",
+            "conclusion": "success",
+            "name": "Check offline preview console forwarding",
+            "number": 3,
+            "startedAt": "2026-10-28T15:30:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:31:01Z",
+            "conclusion": "success",
+            "name": "Install pinned compiler, libtorrent and Qt 6.12.0 SDK",
+            "number": 4,
+            "startedAt": "2026-10-28T15:30:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:44:45Z",
+            "conclusion": "success",
+            "name": "Configure and build the desktop preview",
+            "number": 5,
+            "startedAt": "2026-10-28T15:31:01Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:46:48Z",
+            "conclusion": "success",
+            "name": "Run offline unit tests",
+            "number": 6,
+            "startedAt": "2026-10-28T15:44:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:46:53Z",
+            "conclusion": "success",
+            "name": "Run actual offline preview smoke and capture classic view",
+            "number": 7,
+            "startedAt": "2026-10-28T15:46:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:46:55Z",
+            "conclusion": "success",
+            "name": "Preserve test, screenshot and dependency evidence",
+            "number": 8,
+            "startedAt": "2026-10-28T15:46:53Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:46:55Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 16,
+            "startedAt": "2026-10-28T15:46:55Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:46:55Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 17,
+            "startedAt": "2026-10-28T15:46:55Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40714996028/job/122915692246"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40714996028"
+  },
+  "sdk": {
+    "conclusion": "success",
+    "headSha": "75245284dcaeda99c400fe59e5b8a29bbe1babd3",
+    "jobs": [
+      {
+        "completedAt": "2026-10-28T15:21:14Z",
+        "conclusion": "success",
+        "databaseId": 122910147105,
+        "name": "sdk",
+        "startedAt": "2026-10-28T15:20:51Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-10-28T15:20:52Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-10-28T15:20:51Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:20:58Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-10-28T15:20:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:21:12Z",
+            "conclusion": "success",
+            "name": "Build and exercise C ABI and module lifecycle",
+            "number": 3,
+            "startedAt": "2026-10-28T15:20:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:21:12Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 6,
+            "startedAt": "2026-10-28T15:21:12Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T15:21:12Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 7,
+            "startedAt": "2026-10-28T15:21:12Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40714995979/job/122910147105"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40714995979"
+  },
+  "claim": "Final restart source hosted application/SDK only; not PORT/P06 or private-provider hosted credit."
+}

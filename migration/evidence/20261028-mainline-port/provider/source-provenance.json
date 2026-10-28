@@ -1,0 +1,27 @@
+{
+  "original": [
+    {
+      "repository": "/home/yurii/Java/BiglyBT",
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "path": "core/src/com/biglybt/core/peer/impl/transport/PEPeerTransportProtocol.java",
+      "source_sha256": "56d269aa533788742b61f26b5b065520f0aa720a4c30339425cf388be62367eb",
+      "lines": {
+        "sendMainlineDHTPort": "1898-1906",
+        "decodeMainlineDHTPort": "3767-3778",
+        "dispatch": "4850-4852"
+      }
+    },
+    {
+      "repository": "/home/yurii/Java/BiglyBT-plugin-mlDHT",
+      "commit": "3b12515c5541ed75cfb4f795b672d4e786df9f45",
+      "path": "src/lbms/plugins/mldht/azureus/MlDHTPlugin.java",
+      "source_sha256": "fe1011f995335ed16461f9c1aaf2c56d6abca63b79da53e29e83643f45b2965e",
+      "lines": {
+        "provider-delegation": "269-300"
+      }
+    }
+  ],
+  "libtorrent_upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "parent_record_sha256": "9f8d1f436f943994a117f9f33bbaf016f92bb60ab3c0cecf9e0b6f02efb3c6ee",
+  "scope": "BEP5 PORT bridge only; Java delegates observed public numeric peer address/advertised port to Mainline provider. No whole plugin parity or cached-node verification claim."
+}

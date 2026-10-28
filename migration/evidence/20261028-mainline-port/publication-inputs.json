@@ -1,0 +1,17 @@
+{
+  "source_commit": "18c3e0048d381748c6a4154b3d6e9100b6ec2dda",
+  "original_baseline": {
+    "schema": 1,
+    "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+    "dist_manifest_sha256": "f10ee83a4c4cebb45149dcd6a27552cc82566dad1c7ae63b0e9007c6e4a44524",
+    "metadata_before_sha256": {
+      "migration/upstreams.lock.json": "89d9e4103bf6b7dd67646292bf39ae1af995a2a02e3f7c60b54ec5ff61d7f4fb",
+      "migration/updates/engine.mainline_restart_checkpoint/20261028-in-progress.md": "b38693f75483b86d4de5e81fc055cee3c92eebf0c04e2c866817a9dfbfed86d5",
+      "migration/evidence/20261028-mainline-restart/REVIEW.md": "94b9585c262d584cc026997365e1ec3fcb90ae5f3701d7869e0b804a81342276"
+    },
+    "native_source_when_authored": "08154b547864d297dd108fbf4d9e24b463f69fc2"
+  },
+  "retained_paths": 255,
+  "dist_unchanged_not_promoted": true
+}

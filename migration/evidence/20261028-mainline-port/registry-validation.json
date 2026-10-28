@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "command": [
+    "python3",
+    "migration/tools/validate.py",
+    "--help"
+  ],
+  "exit": 0,
+  "stdout": "PASS registry: 19 sources, 101 components, 0 reviews",
+  "note": "Validator executes actual validation even with --help; this receipt retains that completed invocation without a redundant rerun."
+}

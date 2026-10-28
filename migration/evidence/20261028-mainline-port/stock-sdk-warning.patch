@@ -1,0 +1,11 @@
+--- a/preview/native/engine/mainline_owner.inc
++++ b/preview/native/engine/mainline_owner.inc
+@@ -116,6 +116,8 @@
+       return {};
+     });
+   }catch(...){queue->fail();}
++#else
++  (void)handle;
+ #endif
+ }
+ std::optional<std::pair<std::string,int>> mainlinePortEndpoint(const MainlinePortQueue::Hint& hint) const {

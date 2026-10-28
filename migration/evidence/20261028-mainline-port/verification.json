@@ -1,0 +1,334 @@
+{
+  "schema": 1,
+  "status": "PASS_BOUNDED_PORT_AND_VOLATILE_DATABASE",
+  "source_commit": "18c3e0048d381748c6a4154b3d6e9100b6ec2dda",
+  "lanes": {
+    "gcc": {
+      "receipt": "build/mainline-port-20261028/acceptance.json",
+      "sha256": "3a6fbede846b62ebeeb92a1b2af4ce456ad0f9ae75a54307681046707814ea6c",
+      "actual_suites": 23,
+      "suite_names": [
+        "azureus-database-runtime",
+        "azureus-owned-bridge",
+        "azureus-owned-service",
+        "azureus-router-binding",
+        "azureus-router-owner",
+        "engine-live-settings",
+        "mainline-checkpoint",
+        "mainline-dht",
+        "managed-magnet",
+        "network-binding-owner",
+        "network-policy",
+        "network-proxy-capability-foreign-marker",
+        "network-proxy-capability-foreign-webseed-marker",
+        "network-proxy-capability-present-webseed",
+        "network-proxy-owner",
+        "owned-ddb-binding",
+        "owned-ddb-control",
+        "owned-dht-accounting",
+        "owned-dht-bytes",
+        "owned-fixture-read-diagnostic",
+        "provider-mainline-reject-foreign-marker",
+        "provider-mainline-runtime-deployment",
+        "provider-mainline-runtime-inputs"
+      ],
+      "suite_origins": {
+        "azureus-database-runtime": {
+          "xml": "build/mainline-port-20261028/database-gcc-followup/tests.xml",
+          "xml_sha256": "c1b943754963c0b2ae0b64c80084fc2b121ffee5a3ed841573643243f4fdad32",
+          "source_commit": "18c3e0048d381748c6a4154b3d6e9100b6ec2dda",
+          "actual_case": "azureus-database-runtime"
+        },
+        "azureus-owned-bridge": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "azureus-owned-bridge"
+        },
+        "azureus-owned-service": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "azureus-owned-service"
+        },
+        "azureus-router-binding": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "azureus-router-binding"
+        },
+        "azureus-router-owner": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "azureus-router-owner"
+        },
+        "engine-live-settings": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "engine-live-settings"
+        },
+        "mainline-checkpoint": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "mainline-checkpoint"
+        },
+        "mainline-dht": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "mainline-dht"
+        },
+        "managed-magnet": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "managed-magnet"
+        },
+        "network-binding-owner": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "network-binding-owner"
+        },
+        "network-policy": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "network-policy"
+        },
+        "network-proxy-capability-foreign-marker": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "network-proxy-capability-foreign-marker"
+        },
+        "network-proxy-capability-foreign-webseed-marker": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "network-proxy-capability-foreign-webseed-marker"
+        },
+        "network-proxy-capability-present-webseed": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "network-proxy-capability-present-webseed"
+        },
+        "network-proxy-owner": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "network-proxy-owner"
+        },
+        "owned-ddb-binding": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "owned-ddb-binding"
+        },
+        "owned-ddb-control": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "owned-ddb-control"
+        },
+        "owned-dht-accounting": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "owned-dht-accounting"
+        },
+        "owned-dht-bytes": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "owned-dht-bytes"
+        },
+        "owned-fixture-read-diagnostic": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "owned-fixture-read-diagnostic"
+        },
+        "provider-mainline-reject-foreign-marker": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "provider-mainline-reject-foreign-marker"
+        },
+        "provider-mainline-runtime-deployment": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "provider-mainline-runtime-deployment"
+        },
+        "provider-mainline-runtime-inputs": {
+          "xml": "build/mainline-port-20261028/native-gcc-testfix/tests.xml",
+          "xml_sha256": "256fe64224abe802e4a9ee84588fdac3d2775a6c2e401811ae850204a2db467e",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "provider-mainline-runtime-inputs"
+        }
+      },
+      "source_commit": "18c3e0048d381748c6a4154b3d6e9100b6ec2dda",
+      "prior_source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+      "scoped_replay_receipt": "build/mainline-port-20261028/database-gcc-followup/result.json",
+      "scoped_replay_sha256": "e61e0900ffafb098bc62269772653b2f5df0f19f736ce174143f9ce7f543531f",
+      "whole_initial_ctest_pass_claimed": false,
+      "sanitizer_environment": {}
+    },
+    "clang": {
+      "receipt": "build/mainline-port-20261028/acceptance.json",
+      "sha256": "3a6fbede846b62ebeeb92a1b2af4ce456ad0f9ae75a54307681046707814ea6c",
+      "actual_suites": 5,
+      "suite_names": [
+        "azureus-database-runtime",
+        "mainline-checkpoint",
+        "mainline-dht",
+        "managed-magnet",
+        "network-policy"
+      ],
+      "suite_origins": {
+        "azureus-database-runtime": {
+          "xml": "build/mainline-port-20261028/database-clang-followup/tests.xml",
+          "xml_sha256": "0ac0f30251b67def66e3437696334317ccaa3dd0d7d4024c4bc53902821ece27",
+          "source_commit": "18c3e0048d381748c6a4154b3d6e9100b6ec2dda",
+          "actual_case": "azureus-database-runtime"
+        },
+        "mainline-checkpoint": {
+          "xml": "build/mainline-port-20261028/native-clang-testfix/tests.xml",
+          "xml_sha256": "61271c053aed0ba9505d8d6eaadddc3ac22c8e8389333c63fa67d3d208a3a6b1",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "mainline-checkpoint"
+        },
+        "mainline-dht": {
+          "xml": "build/mainline-port-20261028/native-clang-testfix/tests.xml",
+          "xml_sha256": "61271c053aed0ba9505d8d6eaadddc3ac22c8e8389333c63fa67d3d208a3a6b1",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "mainline-dht"
+        },
+        "managed-magnet": {
+          "xml": "build/mainline-port-20261028/native-clang-testfix/tests.xml",
+          "xml_sha256": "61271c053aed0ba9505d8d6eaadddc3ac22c8e8389333c63fa67d3d208a3a6b1",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "managed-magnet"
+        },
+        "network-policy": {
+          "xml": "build/mainline-port-20261028/native-clang-testfix/tests.xml",
+          "xml_sha256": "61271c053aed0ba9505d8d6eaadddc3ac22c8e8389333c63fa67d3d208a3a6b1",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "network-policy"
+        }
+      },
+      "source_commit": "18c3e0048d381748c6a4154b3d6e9100b6ec2dda",
+      "prior_source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+      "scoped_replay_receipt": "build/mainline-port-20261028/database-clang-followup/result.json",
+      "scoped_replay_sha256": "2667fffb4bedbccb3956f1ac6b3fed22d7f78078aac4b38b0fba629baf9197ac",
+      "whole_initial_ctest_pass_claimed": false,
+      "sanitizer_environment": {}
+    },
+    "san": {
+      "receipt": "build/mainline-port-20261028/acceptance.json",
+      "sha256": "3a6fbede846b62ebeeb92a1b2af4ce456ad0f9ae75a54307681046707814ea6c",
+      "actual_suites": 5,
+      "suite_names": [
+        "azureus-database-runtime",
+        "mainline-checkpoint",
+        "mainline-dht",
+        "managed-magnet",
+        "network-policy"
+      ],
+      "suite_origins": {
+        "azureus-database-runtime": {
+          "xml": "build/mainline-port-20261028/database-san-followup/tests.xml",
+          "xml_sha256": "890176da63f61e9f071ba7dc1f05b655dd5808003257c6f5ecad7bbcc89c1ee4",
+          "source_commit": "18c3e0048d381748c6a4154b3d6e9100b6ec2dda",
+          "actual_case": "azureus-database-runtime"
+        },
+        "mainline-checkpoint": {
+          "xml": "build/mainline-port-20261028/native-san/tests.xml",
+          "xml_sha256": "2a949a9fc07f883f7588be2baeb14b50426dc66b39b0edb5cd4344784bb52f0a",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "mainline-checkpoint"
+        },
+        "mainline-dht": {
+          "xml": "build/mainline-port-20261028/native-san/tests.xml",
+          "xml_sha256": "2a949a9fc07f883f7588be2baeb14b50426dc66b39b0edb5cd4344784bb52f0a",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "mainline-dht"
+        },
+        "managed-magnet": {
+          "xml": "build/mainline-port-20261028/native-san/tests.xml",
+          "xml_sha256": "2a949a9fc07f883f7588be2baeb14b50426dc66b39b0edb5cd4344784bb52f0a",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "managed-magnet"
+        },
+        "network-policy": {
+          "xml": "build/mainline-port-20261028/native-san/tests.xml",
+          "xml_sha256": "2a949a9fc07f883f7588be2baeb14b50426dc66b39b0edb5cd4344784bb52f0a",
+          "source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+          "actual_case": "network-policy"
+        }
+      },
+      "source_commit": "18c3e0048d381748c6a4154b3d6e9100b6ec2dda",
+      "prior_source_commit": "08154b547864d297dd108fbf4d9e24b463f69fc2",
+      "scoped_replay_receipt": "build/mainline-port-20261028/database-san-followup/result.json",
+      "scoped_replay_sha256": "0da615d891e85e2334dd3333e7d49d1adfb0dbc60b5cf1e3455960e6c6858063",
+      "whole_initial_ctest_pass_claimed": false,
+      "sanitizer_environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      }
+    }
+  },
+  "provider_sha256": "9fbb550bbc1f877ce34ce21849deab97971f5d3eacfbc531a7b777d28a3b2eea",
+  "private_runtime_receipt": {
+    "path": "build/mainline-port-20261028/private-runtime/result.json",
+    "sha256": "3d00a989bbf15697cb4d3d804c3e89941d5ab50d84abd3dc5d63556416684b3a",
+    "result": {
+      "status": "PASS_PRIVATE_RELOCATED_RUNTIME",
+      "candidate": "/home/yurii/Java/BiglyBT/build/mainline-port-20261028/private-runtime/candidate",
+      "manifest_sha256": "0508794edb9c2e80582068ffa9e4ebe0d0058732d91dce1fe016ad451a54ea1f",
+      "verified_leaves": 118,
+      "provider_sha256": "9fbb550bbc1f877ce34ce21849deab97971f5d3eacfbc531a7b777d28a3b2eea",
+      "actual_test_binaries": [
+        "biglybtc-mainline-dht-tests",
+        "biglybtc-mainline-checkpoint-tests",
+        "biglybtc-managed-magnet-tests",
+        "biglybtc-azureus-database-runtime-tests",
+        "biglybtc-preview-smoke"
+      ],
+      "normal_usage_exit": 2,
+      "offline_preview_controlled_exit": 124,
+      "loader_init_verified": true,
+      "sample": "/tmp/biglybtc-preview-cc7sjnll",
+      "shipping_approved": false
+    }
+  },
+  "archive": {
+    "path": "migration/evidence/20261028-mainline-port/retained-evidence.tar.gz",
+    "sha256": "134cf6766931fb4f0a7899ad28a0e1b0d750f19d7dfae8dbf6a3f11cb5c12fba",
+    "bytes": 1329310,
+    "members": 255
+  },
+  "previous_failed_attempts_retained": true,
+  "whole_initial_ctest_pass_claimed": false,
+  "acceptance": {
+    "path": "build/mainline-port-20261028/acceptance.json",
+    "sha256": "3a6fbede846b62ebeeb92a1b2af4ce456ad0f9ae75a54307681046707814ea6c"
+  },
+  "upstream_commits": {
+    "BiglyBT": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "mlDHT": "3b12515c5541ed75cfb4f795b672d4e786df9f45",
+    "mldht-paired": "067f434eb60323123a5e885093ab2504ab10d5f9"
+  },
+  "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "original_live_profile_used": false,
+  "shipping_approved": false,
+  "phase_completed": false,
+  "java_runtime_parity_claimed": false,
+  "scope": "Owned IPv4/TCP PORT lifecycle plus explicit owned-loopback volatile Azureus STORE/FIND_VALUE; no public/proxy/IPv6 or full P05/P06 claim."
+}
