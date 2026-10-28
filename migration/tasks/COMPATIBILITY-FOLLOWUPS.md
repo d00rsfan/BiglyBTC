@@ -2,7 +2,7 @@
 
 Read this checklist with the main plan before selecting or closing work. Broad CF01–CF08 remain open. No item currently requires a user answer.
 
-Latest bounded chapter: [network runtime reliability](P05-NETWORK-RELIABILITY.md), completed2026-10-28. [Review](../evidence/20261028-network-reliability/REVIEW.md). The exact late-resolver zero-CONNECT path is causally reproduced and fixed; strict routing/CMD3/SDK/runtime guards pass. Native17/3/3 uses explicit successful-case reuse and focused read followups. Generic historic generated-file read failure cause stays open; precise diagnostics are now tested. Broader CF families below remain open.
+Latest bounded chapter: [Mainline discovery](P05-MAINLINE-DISCOVERY.md), completed2026-10-28. [Review](../evidence/20261028-mainline-discovery/REVIEW.md). Independent settings/port, current eligible peer delivery and owned hash-only metadata import qualify. Original ID/cache activation, queued scrapes, proxy/public/IPv6 interoperability and performance remain open. Prior exact SOCKS late-resolver correction stays qualified. Historic generic read failure cause remains unknown; no recurrence in this chapter.
 
 The earlier ordinary compatibility chapter remains qualified within its [recorded scope](../evidence/20261028-compatibility-chapter/REVIEW.md); historical descriptions below do not erase its later bounded expansions.
 

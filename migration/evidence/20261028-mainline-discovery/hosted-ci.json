@@ -1,0 +1,23 @@
+{
+  "application": {
+    "conclusion": "success",
+    "databaseId": 40692843409,
+    "headSha": "7ebca694ed5300e7e2d97a4107faae99f993ae7f",
+    "status": "completed",
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40692843409"
+  },
+  "sdk": {
+    "conclusion": "success",
+    "databaseId": 40694128120,
+    "headSha": "439a406d87c643df9ce440c18f20eb6cf3086109",
+    "status": "completed",
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40694128120"
+  },
+  "duplicate_desktop": {
+    "conclusion": "cancelled",
+    "databaseId": 40694128148,
+    "headSha": "439a406d87c643df9ce440c18f20eb6cf3086109",
+    "status": "completed",
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40694128148"
+  }
+}

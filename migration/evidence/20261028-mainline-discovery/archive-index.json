@@ -1,0 +1,217 @@
+[
+  {
+    "path": "native-gcc-r3/commands.json",
+    "bytes": 1487,
+    "sha256": "b001f24ff9a24a41713eed9f1d79c34ed16336150bfc6e8a8e032cabf5ed851f"
+  },
+  {
+    "path": "native-gcc-r3/tests.xml",
+    "bytes": 11292,
+    "sha256": "e1829f3612a4f54798735d85506cff7d5df66db24fa95b61168f96f9e30c74b7"
+  },
+  {
+    "path": "magnet-followup-gcc/commands.json",
+    "bytes": 884,
+    "sha256": "10dcf64002ee3f41fb3be1ca244865e7603f35cee86b4534ed05fbfd8be064dd"
+  },
+  {
+    "path": "magnet-followup-gcc/tests.xml",
+    "bytes": 1533,
+    "sha256": "a25ffba07f0aa35c156a91457213d7ac7bc8f67ee778df550c4a96e13fd87cb7"
+  },
+  {
+    "path": "magnet-followup-gcc/result.json",
+    "bytes": 1943,
+    "sha256": "169df0b66d8c47b8686bcdaeef6900af19ea4d68b317ba1b6aa1dd9c5ff11a71"
+  },
+  {
+    "path": "native-clang-r3/commands.json",
+    "bytes": 978,
+    "sha256": "b7e2bff7fc16155aac8cc3a0bc299167d38a5d7eaa6f18a10d0c7561d2eeae2e"
+  },
+  {
+    "path": "native-clang-r3/tests.xml",
+    "bytes": 3531,
+    "sha256": "ba48eb88cc822dba7e1a60c190d209f58374b81522848087fd14128e99976a20"
+  },
+  {
+    "path": "magnet-followup-clang/commands.json",
+    "bytes": 854,
+    "sha256": "3416ebeb856736a8118e9bb678c27ff08809ba89ac6ff39dfd22c39be3ddd24b"
+  },
+  {
+    "path": "magnet-followup-clang/tests.xml",
+    "bytes": 1533,
+    "sha256": "05850f3f477b6360d81587429134010a27947bf70ffc59ce63b4b1cccd8d09f2"
+  },
+  {
+    "path": "magnet-followup-clang/result.json",
+    "bytes": 937,
+    "sha256": "aa5477304923c6c3069ec9cb99b39310916317c3d208708f7348b3a136870f92"
+  },
+  {
+    "path": "native-san/commands.json",
+    "bytes": 1587,
+    "sha256": "e3f12e4ba7048b6e1b9ead028dcd2f087be76f4b956a2672b224b9af2d4639c9"
+  },
+  {
+    "path": "native-san/tests.xml",
+    "bytes": 3530,
+    "sha256": "5f909706dd6b141274c9b15d03a734875b90e67fb95545f1e54fa24f43a981e0"
+  },
+  {
+    "path": "magnet-followup-san/commands.json",
+    "bytes": 876,
+    "sha256": "e8b3b055e5089a37cdb5d93ba701a8550b4f2e3d254976b105be1dc1b6aa094b"
+  },
+  {
+    "path": "magnet-followup-san/tests.xml",
+    "bytes": 1533,
+    "sha256": "0ea8e24a26a2b928c9729c768615c5750c8dee0dd8661257e02dabfc377918ee"
+  },
+  {
+    "path": "magnet-followup-san/result.json",
+    "bytes": 930,
+    "sha256": "34136b3601d4c6226e0481676da068ba9f892aedb3d527c33f5a13081eefc305"
+  },
+  {
+    "path": "native-gcc/commands.json",
+    "bytes": 1500,
+    "sha256": "a3822ce735444f0ebb437786c410d89c73401abbcef74b0956a4a352e139a202"
+  },
+  {
+    "path": "native-clang/commands.json",
+    "bytes": 1117,
+    "sha256": "ce5ab72e30bac74c16260bf2ac277460413db3b851e94a905db727400ffdcd27"
+  },
+  {
+    "path": "native-gcc-r2/commands.json",
+    "bytes": 906,
+    "sha256": "5d9b95e95d60d752bd74dc477ff9e94f79fc617c7bead8d0711e191d30d012f4"
+  },
+  {
+    "path": "native-clang-r2/commands.json",
+    "bytes": 538,
+    "sha256": "db5f1c49dbc413c74bfec5ce0d37203a3562b467c151e8d2502fc48695d4a84d"
+  },
+  {
+    "path": "run-native.py",
+    "bytes": 3748,
+    "sha256": "462cecff88b12dc20148a1ec357405f53279e9e0c0b11fb4ae2c17d88e3599f3"
+  },
+  {
+    "path": "finish-tests.py",
+    "bytes": 3375,
+    "sha256": "467c20dd2b3d3eca8167de1e1b46016211947d78eae30659c66c3040195fc23e"
+  },
+  {
+    "path": "run-portable.py",
+    "bytes": 5476,
+    "sha256": "95ebc2a902efd452b82c2f33155a21220900a3065d3f7e9da1cb894cfb669472"
+  },
+  {
+    "path": "promote-dist.py",
+    "bytes": 2516,
+    "sha256": "429c98bc4102e69233640e3c1014299d36d5965c5f6c9a2f35bc8699af4d1ebd"
+  },
+  {
+    "path": "source-commit.json",
+    "bytes": 59,
+    "sha256": "f28dc9b3e4e553f6462d4bd664f3ce203b5d1357734fd3a56b514ed636614d37"
+  },
+  {
+    "path": "enum-fix-commit.json",
+    "bytes": 59,
+    "sha256": "e18b22613206160be52af4ab13912f87934d6350d6d1d117a4045d4b31a58742"
+  },
+  {
+    "path": "port-fix-commit.json",
+    "bytes": 59,
+    "sha256": "51ba9075bb692182fc59550c1ef3e4db18a6b8133f25fc6877f837750343642e"
+  },
+  {
+    "path": "fixture-correction-commit.json",
+    "bytes": 90,
+    "sha256": "acbe369d6d62a46e3c5a99cef9af8f276dcb05709db6506001881132c01fc64c"
+  },
+  {
+    "path": "source-push.json",
+    "bytes": 133,
+    "sha256": "fb6bcabccc08eeee5396c9767fc24dcab415292bc460b479bf46cd1f034f1065"
+  },
+  {
+    "path": "configure-reuse-correction.json",
+    "bytes": 368,
+    "sha256": "7356d1a15c66295855ffbef0cdff05b05025afe57a09d3bdb6b3e8bbc13a65c5"
+  },
+  {
+    "path": "hosted-duplicate-cancel.json",
+    "bytes": 727,
+    "sha256": "341eff2b1d63cad45e049792203dd4e3e9f7966a26d5a86f6c0e027106c87cb7"
+  },
+  {
+    "path": "hosted-watch-result.json",
+    "bytes": 63,
+    "sha256": "cf7f8799ebe81a4b326ddfbadaf6ebd7b95cf21d15c115eaff10b2e51172eb8a"
+  },
+  {
+    "path": "dist-promotion.json",
+    "bytes": 643,
+    "sha256": "e3c90fcb97e549ed630b4c62cd7620fd4454e5dba178fa6470c8b5125b7117ce"
+  },
+  {
+    "path": "private-runtime/commands.json",
+    "bytes": 3303,
+    "sha256": "c8c275fa6317f9bcfd72faf6dde5e0ce39da8465a9c2c0b17259ac7b64c27d06"
+  },
+  {
+    "path": "private-runtime/result.json",
+    "bytes": 666,
+    "sha256": "e0847ee46117da9804b4ccbd43e3c50af56d150bd8bc1aa508e200ec396e0f7a"
+  },
+  {
+    "path": "private-runtime/test-support.json",
+    "bytes": 145,
+    "sha256": "4853eb45b9ad72f316e6297c1ece734cfbc9795bd22efffe16bd73d435f5c85d"
+  },
+  {
+    "path": "private-runtime/private-loaders.json",
+    "bytes": 2413,
+    "sha256": "7f841b926294626e61831d2380bb30cb760c0d60912444222a141fb93f0bbec9"
+  },
+  {
+    "path": "private-runtime/actual-loader-init.json",
+    "bytes": 2633,
+    "sha256": "cb8b934b3c1f099d805106476e0fbda8f16892d113a66d3911069073c880079d"
+  },
+  {
+    "path": "private-runtime/biglybtc-mainline-dht-tests.xml",
+    "bytes": 2200,
+    "sha256": "44ffa659f5c1f130eb49d40f2191325b89be64fcade23a5bc6ba8063a549b741"
+  },
+  {
+    "path": "private-runtime/biglybtc-managed-magnet-tests.xml",
+    "bytes": 1893,
+    "sha256": "be6f8fc7f3ad5130b23afe01d1a8a91ef8169d435d7b05ee688fb45313565bcd"
+  },
+  {
+    "path": "private-runtime/biglybtc-preview-smoke.xml",
+    "bytes": 5523,
+    "sha256": "1c538b0f9e25360a1786215b62df3d16163ef4bc58df21da4049ad00be6f9817"
+  },
+  {
+    "path": "test-correction/manifest.json",
+    "bytes": 961,
+    "sha256": "6869d78887575a394253a9a8ff1a64b3953b3352e15b6d134158b1479f86fe4b"
+  },
+  {
+    "path": "test-correction/changes.patch",
+    "bytes": 4720,
+    "sha256": "ed8de657ff321e350075d288ff1ca2828ae3198527c9314a423ffba44951b8a7"
+  },
+  {
+    "path": "bounded-build-errors.txt",
+    "bytes": 778,
+    "sha256": "7052de97bf8b713c353fbdaf4c64f9a54423c0809bd9c461aed7f9438a627487"
+  }
+]

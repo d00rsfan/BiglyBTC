@@ -1,6 +1,6 @@
-# Latest completed chapter: network runtime reliability
+# Latest completed chapter: Mainline discovery and magnet peer acquisition
 
-[Bounded review](migration/evidence/20261028-network-reliability/REVIEW.md); [compact active state](migration/ACTIVE.md). All broad follow-ups remain open. Historical STOP/continuation notes below are not new authorisation.
+[Bounded review](migration/evidence/20261028-mainline-discovery/REVIEW.md); [compact active state](migration/ACTIVE.md). Whole P05 and all broad follow-ups remain open; original ID/cache writeback is still pending. Historical STOP notes below are not new authorisation.
 
 # Whole Solution C++ Migration Plan
 

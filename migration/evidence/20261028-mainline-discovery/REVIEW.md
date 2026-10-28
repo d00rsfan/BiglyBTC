@@ -1,0 +1,29 @@
+# Mainline discovery and magnet peer acquisition — bounded review
+
+The normal-network persistent owner now runs a distinct Mainline discovery service at the original mlDHT port (default49001), independently of the transfer listener and Azureus DHT. The torrent session's internal DHT and bootstrap are always disabled. The service uses the preceding immutable private provider; this chapter adds no provider patch or shipping approval.
+
+## Behaviour and sources
+
+Original core baseline `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`; wrapper `3b12515c5541ed75cfb4f795b672d4e786df9f45`; bootstrap constants from audited engine `f9290cbd63805229aef418639b781696c5fa1573`. That inspected engine is not falsely identified as the wrapper POM's paired revision `067f434eb60323123a5e885093ab2504ab10d5f9`. The replacement protocol engine remains the exact source-built libtorrent cohort from the [network reliability review](../20261028-network-reliability/REVIEW.md), upstream `740a0b9aeabe00e762cc0efe4a0f27593db2550b`.
+
+Implementation `a81dfad9fddc157171f5a89c8dafb1c35e95963f`, current enum correction `b9cc50e8477eefd3f83cd8fb08ef7c83af6c8206`, fixture port projection `7ebca694ed5300e7e2d97a4107faae99f993ae7f`, original-name fixture followup `439a406d87c643df9ce440c18f20eb6cf3086109`. These full native commits precede this provenance publication.
+
+Settings reuse the original plugin reader's directory namespace, startup flag and Java integer projection. Independent enable/family/port, backup-only and peer-bootstrap choices survive; proxy discovery is unavailable without direct fallback while unrelated torrent ownership stays usable. Source rules check Public, private metadata, original allowed/denied DHT sources, outer DHT-backup permission and mlDHT announce override. Disabled announces retain a conservative hold until queued scrapes are ported. Healthy tracker results withdraw backup-only discovery. Metadata lookup never announces.
+
+Worker-owned request/results are bounded. Actual startup gates queued requests/nodes, explicit refresh rearms wire requests, and retirement closes the service. Result delivery rechecks the current eligible handle, cancellation/pause/verification/retirement and authenticated selected original hash. Peer hints grant no storage or accounting authority. Independent source review caught refresh and source-policy defects before the first build; root and reviewers agree on the remaining boundaries below.
+
+## Actual qualification and discovered stale test
+
+GCC9 / Clang3 / leak-enabled ASan+UBSan3 are **effective suite coverage**, obtained from actual8/2/2 unchanged successes plus one focused corrected magnet-suite run per lane. Every earlier whole CTest process returned8 and remains recorded as failed; no synthetic whole-run exit0 is claimed. Successful image bytes were checked unchanged across followups. New Mainline wire/owner tests passed in every initial lane: owned KRPC lookup/token/announce, second actual query round, invalid/uncorrelated replies, forget/shutdown, route gates, original permission projection and actual hash-only magnet metadata import without tracker or explicit peer. No public swarm or actual Java network peer was used.
+
+The old single-name negative `../payload-escape.bin` became a valid safe leaf after the preceding Linux compatibility work. Original FileUtil replaces slash with space, producing exactly `.. payload-escape.bin`. The fixture now tests refusal of literal `..` and retains every negative assertion and the multifile refusal. A separate stopped-import positive proves that converted save_file, unchanged raw info/SHA1 in archive/active metadata, retired intent, no payload/escape and intact sentinel. This changes tests only; no production path check was weakened. The two initial compile failures were deprecated enum spelling and Qt integer-port narrowing; strict warnings remained enabled.
+
+Private Qt/provider staging passed the new Mainline suite, corrected magnet suite and GUI smoke, normal usage exit2, controlled offline-preview stop124 and actual private loader initialisation. The relocated distribution has118 hashed leaves, manifest `985ce9fd51be4886a83cd36390e3f3bb820fe3786a9a65c4902ef2f50b6bb4ed`; the complete prior118-leaf dist remains at the rollback path in verification.json. Original HEAD/index are unchanged; original live profile/payload were never selected.
+
+Hosted application CI passed for `7ebca694ed5300e7e2d97a4107faae99f993ae7f`; SDK CI passed for `439a406d87c643df9ce440c18f20eb6cf3086109`. The duplicate desktop run for `439a406d87c643df9ce440c18f20eb6cf3086109` was cancelled with an explicit source/target check: only managed_magnet_tests.cpp changed, and hosted configuration omits its runtime-bound target. Changed tests actually passed locally in all three lanes. No hosted run for `439a406d87c643df9ce440c18f20eb6cf3086109` is invented. See hosted-ci.json and the retained cancellation receipt; successful build logs were not read/downloaded.
+
+## Boundaries retained in the plan
+
+This closes the selected development integration, not all P05 or whole mlDHT parity. Original base ID/routing files are untouched and not restored/written by this service. Queued scrapes, automatic discovery of custom plugin-directory binding, original multihoming/ID derivation, BEP5 peer-port bootstrap bridging, Mainline byte statistics, UDP-proxy/IPv6/public-network interoperability and performance remain open. The provider still creates an unused TCP acceptor despite disabling peer TCP/uTP transfers; occupied or coincident service/transfer ports may make discovery unavailable. Azureus DHT/DDB/chatroom activation remains separate P06 work. The historic generic generated-file read failure did not recur and its cause remains unknown; descriptive open/read diagnostics passed.
+
+Evidence archive contains bounded receipts/XML/recipes/failures, not full successful compilation output, binaries, private SDKs or user data.

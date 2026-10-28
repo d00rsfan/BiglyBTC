@@ -7419,6 +7419,101 @@
       "task_records": [
         "migration/tasks/P03-07-everyday-torrent-workflows.md"
       ]
+    },
+    {
+      "id": "engine.mainline_discovery",
+      "feature_ids": [
+        "F04"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P05-MAINLINE-DISCOVERY.md",
+        "migration/tasks/P05-02-mldht-persistence.md"
+      ],
+      "target_paths": [
+        "preview/native/engine/mainline_dht.hpp",
+        "preview/native/engine/mainline_dht.cpp",
+        "preview/native/engine/mainline_owner.inc",
+        "preview/native/engine/network_policy.cpp",
+        "preview/native/engine/managed_storage.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+            "core/src/com/biglybt/pifimpl/local/PluginConfigImpl.java"
+          ],
+          "source_symbols": [
+            "DownloadManagerStateImpl.isPeerSourcePermitted",
+            "PluginConfigImpl"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        },
+        {
+          "upstream_id": "mlDHT",
+          "source_paths": [
+            "src/lbms/plugins/mldht/azureus/MlDHTPlugin.java",
+            "src/lbms/plugins/mldht/azureus/Tracker.java"
+          ],
+          "source_symbols": [
+            "MlDHTPlugin.startDHT",
+            "MlDHTPlugin.getEffectiveDownloadState",
+            "Tracker.checkDownload",
+            "Tracker.announceDownload"
+          ],
+          "baseline_commit": "3b12515c5541ed75cfb4f795b672d4e786df9f45",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "3b12515c5541ed75cfb4f795b672d4e786df9f45"
+        },
+        {
+          "upstream_id": "mldht",
+          "source_paths": [
+            "src/lbms/plugins/mldht/kad/DHTConstants.java"
+          ],
+          "source_symbols": [
+            "DHTConstants.UNRESOLVED_BOOTSTRAP_NODES"
+          ],
+          "baseline_commit": "f9290cbd63805229aef418639b781696c5fa1573",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "f9290cbd63805229aef418639b781696c5fa1573"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "a81dfad9fddc157171f5a89c8dafb1c35e95963f",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "b9cc50e8477eefd3f83cd8fb08ef7c83af6c8206",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "7ebca694ed5300e7e2d97a4107faae99f993ae7f",
+          "purpose": "tests"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "439a406d87c643df9ce440c18f20eb6cf3086109",
+          "purpose": "tests"
+        }
+      ],
+      "review_records": [
+        "migration/updates/engine.mainline_discovery/20261028.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261028-mainline-discovery/verification.json",
+        "migration/evidence/20261028-mainline-discovery/REVIEW.md"
+      ],
+      "decision_ref": "migration/decisions/AD-001.md"
     }
   ],
   "update_reviews": [],

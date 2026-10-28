@@ -1,0 +1,142 @@
+{
+  "status": "PASS_BOUNDED_MAINLINE_DISCOVERY_CHAPTER",
+  "application_test_cohort": "7ebca694ed5300e7e2d97a4107faae99f993ae7f",
+  "final_test_followup": "439a406d87c643df9ce440c18f20eb6cf3086109",
+  "native_commits": [
+    "a81dfad9fddc157171f5a89c8dafb1c35e95963f",
+    "b9cc50e8477eefd3f83cd8fb08ef7c83af6c8206",
+    "7ebca694ed5300e7e2d97a4107faae99f993ae7f",
+    "439a406d87c643df9ce440c18f20eb6cf3086109"
+  ],
+  "lanes": {
+    "gcc": {
+      "status": "PASS_WITH_EXPLICIT_UNCHANGED_SUCCESS_REUSE",
+      "lane": "gcc",
+      "application_source": "7ebca694ed5300e7e2d97a4107faae99f993ae7f",
+      "test_followup_source": "439a406d87c643df9ce440c18f20eb6cf3086109",
+      "prior_actual_process_exit": 8,
+      "prior_suites": 9,
+      "reused_successful_suites": [
+        "network-policy",
+        "managed-download",
+        "managed-storage",
+        "engine-live-settings",
+        "network-binding-owner",
+        "network-proxy-owner",
+        "owned-fixture-read-diagnostic",
+        "mainline-dht"
+      ],
+      "new_actual_suites": [
+        "managed-magnet"
+      ],
+      "effective_suites": 9,
+      "unchanged_images_sha256": {
+        "network-policy": "d816e911d13ccfc65b44782a8b8850e0faaf5a272eb62b9f5acb3161a1ee06b4",
+        "managed-download": "04c5a57196f599d24017a5b47e9362627bfbc641c1131c16e8267054d92cb94b",
+        "managed-storage": "b4666bf3ab8063bd855f7da66a2173a3fffc8adaf1616db7fdc1cdcb76c83f80",
+        "engine-live-settings": "00fb3341e0ab8ca6b401a35f07e24f77ad67af28ee82e1ce61b9c58e4b127d1a",
+        "network-binding-owner": "6b376a9f707bb7d3d60e8da041b3105b388148b3c39184bb18a2ffc70c2a223e",
+        "network-proxy-owner": "0f7c6314249819c78853a72a026ae6a18efe266de473f5cb2261d3c5e73cab9d",
+        "owned-fixture-read-diagnostic": "c62ac92b41eb4d4fc86ccaf75f5347e37b44de5406425cd34117b65ad4ca473f",
+        "mainline-dht": "5d8892efb666c9fbcfdc03ec346ac42e5b86d0ef292ac1a573b1f8f8b931b908",
+        "BiglyBTC": "479c2012b94415cfaf8da79ad50d279aad23e4cae33d3ce97e2f249804de2773",
+        "BiglyBTC-headless": "217d645ca60e3fd8a1edb822fedb6863d0192ab00b176d0568fe4a395379fb40",
+        "preview-smoke": "307ee79f8263c7ba24270179686164ba55639e91f9963936649722012f0f90aa"
+      },
+      "new_magnet_image_sha256": "586618bc516d2d8e2bbdbe85af77353eee4cabef6789ad25434b1d3bed37295a",
+      "prior_receipt": "/home/yurii/Java/BiglyBT/build/mainline-discovery-20261028/native-gcc-r3/commands.json",
+      "note": "No whole-group rerun or synthetic exit0; old failed processes remain failed"
+    },
+    "clang": {
+      "status": "PASS_WITH_EXPLICIT_UNCHANGED_SUCCESS_REUSE",
+      "lane": "clang",
+      "application_source": "7ebca694ed5300e7e2d97a4107faae99f993ae7f",
+      "test_followup_source": "439a406d87c643df9ce440c18f20eb6cf3086109",
+      "prior_actual_process_exit": 8,
+      "prior_suites": 3,
+      "reused_successful_suites": [
+        "network-policy",
+        "mainline-dht"
+      ],
+      "new_actual_suites": [
+        "managed-magnet"
+      ],
+      "effective_suites": 3,
+      "unchanged_images_sha256": {
+        "network-policy": "1659ab256fac44ade3b2726490313474e755e78fe7774e7926ed9af5ca36a4ae",
+        "mainline-dht": "cfdf6af3a87f083d56c688f336c748f1390af6af839ad96bca358e8ecf5ca086"
+      },
+      "new_magnet_image_sha256": "fd3cdd9d1e411c4954b027809cbcceeac186357947a12db82db8e9e5e4b20ed6",
+      "prior_receipt": "/home/yurii/Java/BiglyBT/build/mainline-discovery-20261028/native-clang-r3/commands.json",
+      "note": "No whole-group rerun or synthetic exit0; old failed processes remain failed"
+    },
+    "san": {
+      "status": "PASS_WITH_EXPLICIT_UNCHANGED_SUCCESS_REUSE",
+      "lane": "san",
+      "application_source": "7ebca694ed5300e7e2d97a4107faae99f993ae7f",
+      "test_followup_source": "439a406d87c643df9ce440c18f20eb6cf3086109",
+      "prior_actual_process_exit": 8,
+      "prior_suites": 3,
+      "reused_successful_suites": [
+        "network-policy",
+        "mainline-dht"
+      ],
+      "new_actual_suites": [
+        "managed-magnet"
+      ],
+      "effective_suites": 3,
+      "unchanged_images_sha256": {
+        "network-policy": "5528bb8ddfd059b893b4edbf71a269198dd9d13dcaa6d615974b446ab2f2a173",
+        "mainline-dht": "9d2c37cd596dab7e6bc08a6c9dbc0f8bc9914785c52cb81fd5a506978d1d2311"
+      },
+      "new_magnet_image_sha256": "290075118291053991c515171568aee74e6dd03ab6793580d7962af265fac708",
+      "prior_receipt": "/home/yurii/Java/BiglyBT/build/mainline-discovery-20261028/native-san/commands.json",
+      "note": "No whole-group rerun or synthetic exit0; old failed processes remain failed"
+    }
+  },
+  "private_runtime": {
+    "status": "PASS_PRIVATE_RELOCATED_RUNTIME",
+    "candidate": "/home/yurii/Java/BiglyBT/build/mainline-discovery-20261028/private-runtime/candidate",
+    "manifest_sha256": "985ce9fd51be4886a83cd36390e3f3bb820fe3786a9a65c4902ef2f50b6bb4ed",
+    "verified_leaves": 118,
+    "provider_sha256": "a5b78ccb4ee17a6773899e797d867844c8a24a45358e260b7ab65a93e2954187",
+    "actual_test_binaries": [
+      "biglybtc-mainline-dht-tests",
+      "biglybtc-managed-magnet-tests",
+      "biglybtc-preview-smoke"
+    ],
+    "normal_usage_exit": 2,
+    "offline_preview_controlled_exit": 124,
+    "loader_init_verified": true,
+    "sample": "/tmp/biglybtc-preview-294hpbti",
+    "shipping_approved": false
+  },
+  "dist": {
+    "status": "PASS_PROMOTED",
+    "new_manifest_sha256": "985ce9fd51be4886a83cd36390e3f3bb820fe3786a9a65c4902ef2f50b6bb4ed",
+    "previous_manifest_sha256": "6914e2964d448a969a8cc760eae8cb6f6f8ce7c87d1594a20a9d4606b2c683fb",
+    "new_leaves": 118,
+    "previous_leaves": 118,
+    "rollback": "/home/yurii/Java/BiglyBT/build/mainline-discovery-20261028/previous-published-dist-20261028-mainline",
+    "installed_path": "/home/yurii/Java/BiglyBTC/dist",
+    "post_relocation_usage_exit": 2,
+    "actual_private_qt_and_provider_init": true,
+    "provider_sha256": "a5b78ccb4ee17a6773899e797d867844c8a24a45358e260b7ab65a93e2954187",
+    "shipping_approved": false
+  },
+  "hosted_application_source": "7ebca694ed5300e7e2d97a4107faae99f993ae7f",
+  "hosted_sdk_source": "439a406d87c643df9ce440c18f20eb6cf3086109",
+  "hosted_duplicate_cancelled": true,
+  "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "original_live_profile_used": false,
+  "original_java_runtime_pairing": false,
+  "historic_generic_read_failure_cause": "unknown; descriptive diagnostics passed, no reproduction in this chapter",
+  "archive": {
+    "path": "retained-evidence.tar.gz",
+    "sha256": "edb3c7d66123e754f729476bd110755737fbf0204308a0a56805a4bd53ffb18b",
+    "bytes": 16016,
+    "members": 43
+  },
+  "shipping_approved": false
+}
