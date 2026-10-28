@@ -247,7 +247,7 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
       if (lt::alert_cast<lt::alerts_dropped_alert>(alert)) { return impl_->fail("Mainline DHT alerts were lost", true); }
       if (lt::alert_cast<lt::listen_failed_alert>(alert)) { return impl_->fail("Mainline DHT source binding failed"); }
       if (const auto* listening = lt::alert_cast<lt::listen_succeeded_alert>(alert)) {
-        if (listening->socket_type == lt::socket_type_t::udp) {
+        if (listening->socket_type == lt::socket_type_t::utp) {
           if (listening->port != impl_->port) { return impl_->fail("Mainline DHT listener changed port"); }
           impl_->status.listenPort = impl_->port;
           impl_->status.phase = MainlineDhtPhase::Listening;
