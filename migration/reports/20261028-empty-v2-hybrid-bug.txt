@@ -1,0 +1,20 @@
+Hi, I found two empty-file edge cases while checking BiglyBT torrent metadata compatibility on Linux with OpenJDK 17. The Java source revision was cb8c6cb9bb97916cbc7e80338a017200ffc3e71f. These were isolated API tests against the original Java classes, rather than a reproduction through the desktop UI.
+
+1. Hybrid torrent root-hash fix-up encounters a null hash tree for an empty file.
+
+A generated directory contained a-first.bin (17,001 bytes), b-empty.bin (0 bytes), and c-last.bin (50,003 bytes), using a 32,768-byte piece length. After deserialising the hybrid torrent and asking a non-empty TOTorrentFile for its root hash, the lazy fix-up logged:
+
+java.lang.NullPointerException: Cannot invoke "com.biglybt.core.torrent.impl.TOTorrentFileHashTreeImpl.getRootHash()" because the return value of "com.biglybt.core.torrent.impl.TOTorrentFileImpl.getHashTree()" is null
+    at com.biglybt.core.torrent.impl.TOTorrentCreateV2Impl.setV2FileHashes(TOTorrentCreateV2Impl.java:501)
+    at com.biglybt.core.torrent.impl.TOTorrentImpl.fixupRootHashes(TOTorrentImpl.java:217)
+    at com.biglybt.core.torrent.impl.TOTorrentFileImpl.getRootHash(TOTorrentFileImpl.java:307)
+
+The fix-up excludes pad files but also needs to handle zero-length files, which have no Merkle root/hash tree. The exception is caught around the whole fix-up loop, and the subsequent comparison of non-empty file roots fails. I also observed this with a layout-descriptor hybrid containing an empty member. Equivalent non-empty cases passed.
+
+2. Initial linkage differs for a pure-v2 layout descriptor containing an empty member.
+
+The descriptor mapped bundle/folder to a physical directory containing a.bin (17,001 bytes) and empty.bin (0 bytes), and bundle/tail.bin to a separate 50,003-byte file. TorrentUtils.getInitialLinkage() from the original descriptor-created v2 reference differed from the linkage indexed against the deserialised torrent file list. The non-empty replacement passed the same comparison.
+
+A possible place to inspect is synthetic_pad_file_count in TOTorrentCreateV2Impl: it is used by handleFile() when calling adapter.resolveFile(file_index + synthetic_pad_file_count, ...). I have confirmed the linkage mismatch, but have not yet established that this is its complete cause or reproduced it through the GUI.
+
+The checks used generated local files and an isolated profile; the live client and its downloads were untouched. I have retained the small torrent fixtures, descriptor, original helper source, command records and stderr if they would help.

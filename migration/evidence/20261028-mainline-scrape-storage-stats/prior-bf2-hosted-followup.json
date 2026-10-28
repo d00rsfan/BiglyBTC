@@ -1,0 +1,110 @@
+{
+  "scope": "Prior source only, not current cohort",
+  "records": [
+    {
+      "path": "build/mainline-port-20261028/hosted-final-source-completed.json",
+      "sha256": "a40b7ede5652e7f6a901b0fff915b246dda8b1a9a51bb0438e20837d6a1307f2",
+      "data": {
+        "conclusion": "success",
+        "databaseId": 40731610813,
+        "headSha": "bf2c1fab4c1dfb46794ced8df5a3db8ff40d8ee2",
+        "jobs": [
+          {
+            "completedAt": "2026-10-28T17:18:00Z",
+            "conclusion": "success",
+            "databaseId": 122969117420,
+            "name": "preview",
+            "startedAt": "2026-10-28T17:01:06Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-10-28T17:01:08Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-10-28T17:01:07Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-28T17:01:42Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+                "number": 2,
+                "startedAt": "2026-10-28T17:01:08Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-28T17:01:42Z",
+                "conclusion": "success",
+                "name": "Check offline preview console forwarding",
+                "number": 3,
+                "startedAt": "2026-10-28T17:01:42Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-28T17:02:49Z",
+                "conclusion": "success",
+                "name": "Install pinned compiler, libtorrent and Qt 6.12.0 SDK",
+                "number": 4,
+                "startedAt": "2026-10-28T17:01:42Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-28T17:15:44Z",
+                "conclusion": "success",
+                "name": "Configure and build the desktop preview",
+                "number": 5,
+                "startedAt": "2026-10-28T17:02:49Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-28T17:17:50Z",
+                "conclusion": "success",
+                "name": "Run offline unit tests",
+                "number": 6,
+                "startedAt": "2026-10-28T17:15:44Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-28T17:17:55Z",
+                "conclusion": "success",
+                "name": "Run actual offline preview smoke and capture classic view",
+                "number": 7,
+                "startedAt": "2026-10-28T17:17:50Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-28T17:17:57Z",
+                "conclusion": "success",
+                "name": "Preserve test, screenshot and dependency evidence",
+                "number": 8,
+                "startedAt": "2026-10-28T17:17:55Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-28T17:17:57Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+                "number": 16,
+                "startedAt": "2026-10-28T17:17:57Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-28T17:17:57Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 17,
+                "startedAt": "2026-10-28T17:17:57Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40731610813/job/122969117420"
+          }
+        ],
+        "status": "completed",
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40731610813"
+      },
+      "scope": "Prior bf2 hosted source only; no current source/private-provider hosted credit"
+    }
+  ]
+}

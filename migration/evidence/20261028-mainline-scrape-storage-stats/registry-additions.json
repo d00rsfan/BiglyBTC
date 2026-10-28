@@ -1,0 +1,142 @@
+{
+  "base_sha256": "664c70f70aa3d98fc197acce14a673e23886b56a6ca2311f68f618f690f276cd",
+  "operations": [
+    {
+      "op": "add",
+      "path": "/components/-",
+      "value": {
+        "id": "engine.mainline_queued_scrape",
+        "feature_ids": [
+          "F04"
+        ],
+        "state": "in_progress",
+        "task_records": [
+          "migration/tasks/P05-MAINLINE-QUEUED-SCRAPE.md"
+        ],
+        "target_paths": [
+          "preview/native/engine/queued_mainline_scrape.cpp",
+          "preview/native/engine/mainline_scrape_runtime.inc",
+          "preview/native/services/mainline_scrape.cpp",
+          "preview/native/ui/library_model.cpp"
+        ],
+        "source_coverage": [
+          {
+            "upstream_id": "mlDHT",
+            "source_paths": [
+              "src/lbms/plugins/mldht/azureus/Tracker.java",
+              "src/lbms/plugins/mldht/azureus/DHTScrapeResult.java"
+            ],
+            "source_symbols": [
+              "Tracker.checkDownload",
+              "Tracker.announceDownload",
+              "DHTScrapeResult"
+            ],
+            "baseline_commit": "3b12515c5541ed75cfb4f795b672d4e786df9f45",
+            "first_ported_commit": null,
+            "integrated_through_commit": null,
+            "last_reviewed_commit": "3b12515c5541ed75cfb4f795b672d4e786df9f45"
+          },
+          {
+            "upstream_id": "mldht-paired",
+            "source_paths": [
+              "src/lbms/plugins/mldht/kad/BloomFilterBEP33.java",
+              "src/lbms/plugins/mldht/kad/ScrapeResponseHandler.java"
+            ],
+            "source_symbols": [
+              "BloomFilterBEP33",
+              "ScrapeResponseHandler"
+            ],
+            "baseline_commit": "067f434eb60323123a5e885093ab2504ab10d5f9",
+            "first_ported_commit": null,
+            "integrated_through_commit": null,
+            "last_reviewed_commit": "067f434eb60323123a5e885093ab2504ab10d5f9"
+          }
+        ],
+        "native_commits": [
+          {
+            "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+            "commit": "6ce3b29007a3e7fa32572224d8ab8764f0bad71b",
+            "purpose": "implementation"
+          },
+          {
+            "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+            "commit": "ae79d7f8991e7444407462697526e0089ed42e65",
+            "purpose": "integration"
+          }
+        ],
+        "review_records": [
+          "migration/updates/engine.mainline_queued_scrape/20261028-in-progress.md"
+        ],
+        "evidence": [
+          "migration/evidence/20261028-mainline-scrape-storage-stats/verification.json",
+          "migration/evidence/20261028-mainline-scrape-storage-stats/REVIEW.md"
+        ],
+        "decision_ref": "migration/decisions/AD-001.md"
+      }
+    },
+    {
+      "op": "add",
+      "path": "/components/-",
+      "value": {
+        "id": "transport.azureus_storage_key_stats",
+        "feature_ids": [
+          "F09.db_mapping"
+        ],
+        "state": "in_progress",
+        "task_records": [
+          "migration/tasks/P06-AZUREUS-STORAGE-KEY-STATS.md"
+        ],
+        "target_paths": [
+          "preview/native/services/azureus_db_runtime/storage_stats.cpp",
+          "preview/native/services/azureus_db_runtime/database.cpp",
+          "preview/native/services/azureus_udp/owned_transport.cpp"
+        ],
+        "source_coverage": [
+          {
+            "upstream_id": "BiglyBT",
+            "source_paths": [
+              "core/src/com/biglybt/core/dht/db/impl/DHTDBMapping.java",
+              "core/src/com/biglybt/plugin/dht/impl/DHTPluginStorageManager.java",
+              "core/src/com/biglybt/core/util/bloom/impl/BloomFilterAddOnly.java"
+            ],
+            "source_symbols": [
+              "DHTDBMapping.get",
+              "DHTPluginStorageManager.serialiseStats",
+              "DHTPluginStorageManager.decodeStats",
+              "DHTPluginStorageManager.storageKey",
+              "BloomFilterAddOnly"
+            ],
+            "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+            "first_ported_commit": null,
+            "integrated_through_commit": null,
+            "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+          }
+        ],
+        "native_commits": [
+          {
+            "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+            "commit": "6ce3b29007a3e7fa32572224d8ab8764f0bad71b",
+            "purpose": "implementation"
+          },
+          {
+            "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+            "commit": "ae79d7f8991e7444407462697526e0089ed42e65",
+            "purpose": "integration"
+          }
+        ],
+        "review_records": [
+          "migration/updates/transport.azureus_storage_key_stats/20261028-in-progress.md"
+        ],
+        "evidence": [
+          "migration/evidence/20261028-mainline-scrape-storage-stats/verification.json",
+          "migration/evidence/20261028-mainline-scrape-storage-stats/REVIEW.md"
+        ],
+        "decision_ref": "migration/decisions/AD-001.md"
+      }
+    }
+  ],
+  "existing_components": 101,
+  "new_components": 103,
+  "external_dependencies": 19,
+  "existing_baselines_unchanged": true
+}

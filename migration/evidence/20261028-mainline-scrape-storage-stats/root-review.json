@@ -1,0 +1,17 @@
+{
+  "status": "ROOT_REVIEWED_PREPARED_METADATA",
+  "qualified_source": "ae79d7f8991e7444407462697526e0089ed42e65",
+  "changes_sha256": "db1c0fff9c4feca198bb320cf1d34d1a760ac0dacaad008566ecba76c0a5a841",
+  "source_paths": 15,
+  "preserved_existing_components": 101,
+  "new_components": 2,
+  "dependencies_unchanged": 19,
+  "source_baselines_unchanged": true,
+  "actual_counts": {
+    "gcc": 19,
+    "clang": 4,
+    "san": 4
+  },
+  "full_final_source_rerun_claimed": false,
+  "shipping": false
+}

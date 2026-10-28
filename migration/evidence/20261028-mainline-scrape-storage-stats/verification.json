@@ -1,0 +1,1312 @@
+{
+  "schema": 1,
+  "status": "PASS_BOUNDED_QUEUED_SCRAPE_AND_OPT_IN_STORAGE_STATS",
+  "source_commit": "ae79d7f8991e7444407462697526e0089ed42e65",
+  "implementation_commit": "6ce3b29007a3e7fa32572224d8ab8764f0bad71b",
+  "source_followups": [
+    {
+      "path": "build/mainline-scrape-20261028/source-followup-r4.json",
+      "sha256": "e7abdc3d9346403d29f1cea196fe7de2cdbcd94b52a6f5220827a73b089da7eb"
+    },
+    {
+      "path": "build/mainline-scrape-20261028/source-followup-r5.json",
+      "sha256": "fe9094558aef0a6ff96ba700104c7138133a7327ac89afab1979b516b57719c9"
+    }
+  ],
+  "source_diff_from_implementation": "M\tpreview/native/engine/mainline_dht.cpp\nM\tpreview/native/engine/mainline_dht.hpp\nM\tpreview/native/engine/mainline_scrape_runtime.inc\nM\tpreview/native/tests/CMakeLists.txt\nM\tpreview/native/tests/azureus_database_runtime_tests.cpp\nM\tpreview/native/tests/mainline_dht_tests.cpp\nA\tpreview/native/tests/mainline_queued_owner_tests.cpp\nA\tpreview/native/tests/owned_mainline_krpc.hpp\n",
+  "metadata_baseline": {
+    "path": "build/mainline-scrape-20261028/publication/metadata-baseline-r5.json",
+    "sha256": "72cc1d1679df37a5aa976d586dcedb7b8e967df4492beb92a792fae75e5a4264"
+  },
+  "lanes": {
+    "gcc": {
+      "path": "build/mainline-scrape-20261028/native-gcc-db-r5/result.json",
+      "sha256": "2bc6de1889d6e908b00869806c7e976314bd6fde06a3623d7b44b7abaad34853",
+      "status": "PASS_WITH_EXPLICIT_TEST_ONLY_REUSE",
+      "source_commit": "ae79d7f8991e7444407462697526e0089ed42e65",
+      "accepted_suites": 19,
+      "actually_executed_for_this_result": 1,
+      "actual_retested_suites": [
+        "azureus-database-runtime"
+      ],
+      "reused_passed_suites": 18,
+      "suite_names": [
+        "mainline-dht",
+        "mainline-scrape-codec",
+        "azureus-database-runtime",
+        "azureus-storage-stats",
+        "library-action-ui",
+        "managed-queue",
+        "managed-library-command-routing",
+        "persistent-native-peer-session",
+        "mainline-checkpoint",
+        "magnet-host",
+        "azureus-owned-service",
+        "azureus-owned-bridge",
+        "azureus-router-owner",
+        "azureus-router-binding",
+        "owned-ddb-control",
+        "owned-ddb-binding",
+        "owned-dht-bytes",
+        "owned-dht-accounting",
+        "mainline-queued-owner"
+      ],
+      "origins": {
+        "persistent-native-peer-session": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+          "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+          "case_name": "persistent-native-peer-session",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+          "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+          "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+          "target": "biglybtc-persistent-session-tests",
+          "image_sha256": "1be062f48f9f19cb785fb74377a52be716a1bfe9fafae0881ce944d6eec60d14"
+        },
+        "azureus-owned-service": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+          "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+          "case_name": "azureus-owned-service",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+          "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+          "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+          "target": "biglybtc-azureus-owned-service-tests",
+          "image_sha256": "5c5adbaaaf309a94b12d8904c2830614e8251e16bd876a5caf297a06bb9580ce"
+        },
+        "azureus-owned-bridge": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+          "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+          "case_name": "azureus-owned-bridge",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+          "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+          "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+          "target": "biglybtc-azureus-owned-bridge-tests",
+          "image_sha256": "fbcfa2ae322af5ac86d9705570cbd593956103217b24a2c4d0a078c907004b9f"
+        },
+        "azureus-router-binding": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+          "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+          "case_name": "azureus-router-binding",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+          "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+          "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+          "target": "biglybtc-azureus-router-binding-tests",
+          "image_sha256": "728694a855669613dac14ca229830e6ee92e7e1409f6bc9da4058a27c68bea0f"
+        },
+        "azureus-router-owner": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+          "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+          "case_name": "azureus-router-owner",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+          "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+          "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+          "target": "biglybtc-azureus-router-owner-tests",
+          "image_sha256": "5407a53877058c0638f9a1df930c9f91d7bdf32410ec5447220c36d58dd3c9fc"
+        },
+        "owned-dht-bytes": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+          "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+          "case_name": "owned-dht-bytes",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+          "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+          "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+          "target": "biglybtc-owned-dht-bytes-tests",
+          "image_sha256": "7eadfc1587aeaab694703457f7b7da90c72f760f70c5e3e0025658294a71d54b"
+        },
+        "owned-dht-accounting": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+          "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+          "case_name": "owned-dht-accounting",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+          "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+          "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+          "target": "biglybtc-owned-dht-accounting-tests",
+          "image_sha256": "fd3b71a868d64a282e11f77fb7bf262271b59b8f066e879be304fa03c4ed2fe7"
+        },
+        "owned-ddb-control": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+          "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+          "case_name": "owned-ddb-control",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+          "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+          "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+          "target": "biglybtc-owned-ddb-control-tests",
+          "image_sha256": "56d9141d310a49754471f2dce9a901512dae8a137dba9f6bc69d6cc06b90ab78"
+        },
+        "owned-ddb-binding": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+          "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+          "case_name": "owned-ddb-binding",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+          "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+          "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+          "target": "biglybtc-owned-ddb-binding-tests",
+          "image_sha256": "4d004cfb67f4129f8d48a859b4a6e090ee04e3cc260e2b3d397b3822488835dd"
+        },
+        "library-action-ui": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+          "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+          "case_name": "library-action-ui",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+          "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+          "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+          "target": "biglybtc-library-action-ui-tests",
+          "image_sha256": "32c3c0279d342f535a66b8251bed4ffb987d866298c4b514dc863c5948b7679a"
+        },
+        "managed-library-command-routing": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+          "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+          "case_name": "managed-library-command-routing",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+          "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+          "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+          "target": "biglybtc-library-commands-bridge-tests",
+          "image_sha256": "fbede6953a39c863e06bde64d93687ba8cb4c387f50344e8ce9f93eb71072690"
+        },
+        "magnet-host": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+          "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+          "case_name": "magnet-host",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+          "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+          "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+          "target": "biglybtc-magnet-host-tests",
+          "image_sha256": "fdaf6fb36051b219990b7430b115ba17cb496fc1a79dfed37fc3ed5759789610"
+        },
+        "managed-queue": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+          "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+          "case_name": "managed-queue",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+          "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+          "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+          "target": "biglybtc-managed-queue-tests",
+          "image_sha256": "d91cdf584509d87d0f2b427be70f0bb20950af29d34f5de19c8882b70c377fee"
+        },
+        "mainline-checkpoint": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+          "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+          "case_name": "mainline-checkpoint",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+          "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+          "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+          "target": "biglybtc-mainline-checkpoint-tests",
+          "image_sha256": "0596a0fecd03cdff7622d217859aede13d61e8c6258c5410e5726dee6078a6ae"
+        },
+        "azureus-database-runtime": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-db-r5/tests.xml",
+          "xml_sha256": "d937494583931e97856e496245334b48e32a509e0b988625c8d8ba85d716078b",
+          "case_name": "azureus-database-runtime",
+          "source_commit": "ae79d7f8991e7444407462697526e0089ed42e65",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-db-r5/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-db-r5/binary-before-tests.json",
+          "commands_sha256": "51a5bbe2be8e1db1687964ae19cb883d752050b04b50cb13c37ca03e2627ca51",
+          "binary_before_sha256": "9c1eb5d4878e5d0f4c42fb9fc6e176ab9b11852d6a9f2bc33a73a3f9b764992d",
+          "target": "biglybtc-azureus-database-runtime-tests",
+          "image_sha256": "b80a633161590fada729d9910ab534747758953e9837e4d04ff5fa2e91f2b43d"
+        },
+        "mainline-scrape-codec": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+          "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+          "case_name": "mainline-scrape-codec",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+          "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+          "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+          "target": "biglybtc-mainline-scrape-tests",
+          "image_sha256": "15d74a714547860b90ca88cee743aaec363bee24641acd70a9d6b7ccc0821298"
+        },
+        "azureus-storage-stats": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+          "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+          "case_name": "azureus-storage-stats",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+          "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+          "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+          "target": "biglybtc-azureus-storage-stats-tests",
+          "image_sha256": "da0994a7829f076ca91743f38da3bb767390ee037e316265b12e4462d308ffeb"
+        },
+        "mainline-queued-owner": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+          "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+          "case_name": "mainline-queued-owner",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+          "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+          "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+          "target": "biglybtc-mainline-queued-owner-tests",
+          "image_sha256": "bcd73b68e4a0dd66db956e77d389a1adbe25fcae6ef531bb14499ae0d6645834"
+        },
+        "mainline-dht": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-mainline-r4/tests.xml",
+          "xml_sha256": "e2ca0ba31acdf8a96c1f01381309133f93cb0807672f5bd7bb9028e6ae478ed5",
+          "case_name": "mainline-dht",
+          "source_commit": "915970d3f06ab15b8295dbcc93aaff1c9ff4fdfa",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-mainline-r4/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-mainline-r4/binary-before-tests.json",
+          "commands_sha256": "2bb76b786ce668bb2927b362b4b6c4fb901c72ec9eeabcd39db4928c5607e753",
+          "binary_before_sha256": "8f3d72b206d98e3ea785ac2c60ab46fb260aeef23c780fa7f172b122e90e2796",
+          "target": "biglybtc-mainline-dht-tests",
+          "image_sha256": "356f12306da560d4870fd8f956861a5c41259200d8477576eb6ccc39b165ba7b"
+        }
+      },
+      "products": {
+        "BiglyBTC": {
+          "image_sha256": "16dc6005234145decda0a53c4e9ccc2f0a58bdd2fc2ea211afdac2e8e049adeb",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5"
+        },
+        "BiglyBTC-headless": {
+          "image_sha256": "c5cede098d227a62a8c14a506d5e74f6f75dce1b12cb2f3bd43ecf3a89341a5f",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5"
+        },
+        "biglybtc-preview-smoke": {
+          "image_sha256": "18d7aee19a8f94ad8fd06275a0802f0f0a76bd00a9fad20443e76aed48fe2e0c",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5"
+        }
+      },
+      "inventory": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/inventory.json",
+      "inventory_sha256": "fdfbb6c4cea4d8d85609dda0c9c144564767dad56b25f7218c7c1a2f96e6481b",
+      "selected_scoped_xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-db-r5/tests.xml",
+      "selected_scoped_xml_sha256": "d937494583931e97856e496245334b48e32a509e0b988625c8d8ba85d716078b",
+      "prior_failed_result": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/result.json",
+      "execution_chain": [
+        {
+          "path": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/result.json",
+          "sha256": "67e2d478b339b99a14e10244cf850960dad6f342de70461588c61a31493e5715",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "status": "FAILED"
+        },
+        {
+          "path": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-mainline-r4/result.json",
+          "sha256": "2697c9f9b9194be4ecbd24ced146e609f0ecb346f95dfb109431a9aaff993311",
+          "source_commit": "915970d3f06ab15b8295dbcc93aaff1c9ff4fdfa",
+          "status": "PASS_WITH_EXPLICIT_TEST_ONLY_REUSE"
+        },
+        {
+          "path": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-db-r5/result.json",
+          "sha256": "2bc6de1889d6e908b00869806c7e976314bd6fde06a3623d7b44b7abaad34853",
+          "source_commit": "ae79d7f8991e7444407462697526e0089ed42e65",
+          "status": "PASS_WITH_EXPLICIT_TEST_ONLY_REUSE"
+        }
+      ],
+      "source_followup": {
+        "path": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/source-followup-r5.json",
+        "sha256": "fe9094558aef0a6ff96ba700104c7138133a7327ac89afab1979b516b57719c9"
+      },
+      "whole_prior_ctest_pass_claimed": false,
+      "aggregate_junit_synthesized": false,
+      "sanitizer_environment": {},
+      "images_sha256": {
+        "biglybtc-mainline-dht-tests": "356f12306da560d4870fd8f956861a5c41259200d8477576eb6ccc39b165ba7b",
+        "biglybtc-mainline-scrape-tests": "15d74a714547860b90ca88cee743aaec363bee24641acd70a9d6b7ccc0821298",
+        "biglybtc-azureus-database-runtime-tests": "b80a633161590fada729d9910ab534747758953e9837e4d04ff5fa2e91f2b43d",
+        "biglybtc-azureus-storage-stats-tests": "da0994a7829f076ca91743f38da3bb767390ee037e316265b12e4462d308ffeb",
+        "biglybtc-library-action-ui-tests": "32c3c0279d342f535a66b8251bed4ffb987d866298c4b514dc863c5948b7679a",
+        "biglybtc-managed-queue-tests": "d91cdf584509d87d0f2b427be70f0bb20950af29d34f5de19c8882b70c377fee",
+        "biglybtc-library-commands-bridge-tests": "fbede6953a39c863e06bde64d93687ba8cb4c387f50344e8ce9f93eb71072690",
+        "biglybtc-persistent-session-tests": "1be062f48f9f19cb785fb74377a52be716a1bfe9fafae0881ce944d6eec60d14",
+        "biglybtc-mainline-checkpoint-tests": "0596a0fecd03cdff7622d217859aede13d61e8c6258c5410e5726dee6078a6ae",
+        "biglybtc-magnet-host-tests": "fdaf6fb36051b219990b7430b115ba17cb496fc1a79dfed37fc3ed5759789610",
+        "biglybtc-azureus-owned-service-tests": "5c5adbaaaf309a94b12d8904c2830614e8251e16bd876a5caf297a06bb9580ce",
+        "biglybtc-azureus-owned-bridge-tests": "fbcfa2ae322af5ac86d9705570cbd593956103217b24a2c4d0a078c907004b9f",
+        "biglybtc-azureus-router-owner-tests": "5407a53877058c0638f9a1df930c9f91d7bdf32410ec5447220c36d58dd3c9fc",
+        "biglybtc-azureus-router-binding-tests": "728694a855669613dac14ca229830e6ee92e7e1409f6bc9da4058a27c68bea0f",
+        "biglybtc-owned-ddb-control-tests": "56d9141d310a49754471f2dce9a901512dae8a137dba9f6bc69d6cc06b90ab78",
+        "biglybtc-owned-ddb-binding-tests": "4d004cfb67f4129f8d48a859b4a6e090ee04e3cc260e2b3d397b3822488835dd",
+        "biglybtc-owned-dht-bytes-tests": "7eadfc1587aeaab694703457f7b7da90c72f760f70c5e3e0025658294a71d54b",
+        "biglybtc-owned-dht-accounting-tests": "fd3b71a868d64a282e11f77fb7bf262271b59b8f066e879be304fa03c4ed2fe7",
+        "biglybtc-mainline-queued-owner-tests": "bcd73b68e4a0dd66db956e77d389a1adbe25fcae6ef531bb14499ae0d6645834",
+        "BiglyBTC": "16dc6005234145decda0a53c4e9ccc2f0a58bdd2fc2ea211afdac2e8e049adeb",
+        "BiglyBTC-headless": "c5cede098d227a62a8c14a506d5e74f6f75dce1b12cb2f3bd43ecf3a89341a5f",
+        "biglybtc-preview-smoke": "18d7aee19a8f94ad8fd06275a0802f0f0a76bd00a9fad20443e76aed48fe2e0c"
+      }
+    },
+    "clang": {
+      "path": "build/mainline-scrape-20261028/native-clang-db-r5/result.json",
+      "sha256": "83d908b6bb369353b736ec5328db4101f803e411c3c4029999e013d7a57df40c",
+      "status": "PASS_WITH_EXPLICIT_TEST_ONLY_REUSE",
+      "source_commit": "ae79d7f8991e7444407462697526e0089ed42e65",
+      "accepted_suites": 4,
+      "actually_executed_for_this_result": 1,
+      "actual_retested_suites": [
+        "azureus-database-runtime"
+      ],
+      "reused_passed_suites": 3,
+      "suite_names": [
+        "mainline-dht",
+        "mainline-scrape-codec",
+        "azureus-database-runtime",
+        "azureus-storage-stats"
+      ],
+      "origins": {
+        "azureus-database-runtime": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-clang-db-r5/tests.xml",
+          "xml_sha256": "12388217f74fb0dfc730cc42b3c6d4f4d82f1a67b4f6706a017e09063254bff8",
+          "case_name": "azureus-database-runtime",
+          "source_commit": "ae79d7f8991e7444407462697526e0089ed42e65",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-clang-db-r5/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-clang-db-r5/binary-before-tests.json",
+          "commands_sha256": "285ad3f97942067cbe19de091ea424ef3aa0c4072fdd2048efd3cae70aaacd44",
+          "binary_before_sha256": "7f8e2eee17c6c21137e9377149d210ad1ff9f1f9c11be073636b8ba4d50efdfe",
+          "target": "biglybtc-azureus-database-runtime-tests",
+          "image_sha256": "ef4894bcb7928f90e8ce379de964d1bea39562fa9c38029a602aed49a44bdb03"
+        },
+        "mainline-scrape-codec": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-clang-r3/tests.xml",
+          "xml_sha256": "18c33689a8a853bb5f1a3a6be7b519a23249e2dd804ef5222ca6376d8352c11f",
+          "case_name": "mainline-scrape-codec",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-clang-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-clang-r3/binary-before-tests.json",
+          "commands_sha256": "f958f568dc5601f91dc011e33ee40a371c08d141ef9d9ce428baf5304f32be8f",
+          "binary_before_sha256": "bddfdba50e72f488704020f303957cfe5b50b74106968775c0cc19acc0712a6c",
+          "target": "biglybtc-mainline-scrape-tests",
+          "image_sha256": "2b45d6eb9a3329bca1e2d6f933abbdabb272866c687de5c88dae216ea2a9d6ea"
+        },
+        "azureus-storage-stats": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-clang-r3/tests.xml",
+          "xml_sha256": "18c33689a8a853bb5f1a3a6be7b519a23249e2dd804ef5222ca6376d8352c11f",
+          "case_name": "azureus-storage-stats",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-clang-r3/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-clang-r3/binary-before-tests.json",
+          "commands_sha256": "f958f568dc5601f91dc011e33ee40a371c08d141ef9d9ce428baf5304f32be8f",
+          "binary_before_sha256": "bddfdba50e72f488704020f303957cfe5b50b74106968775c0cc19acc0712a6c",
+          "target": "biglybtc-azureus-storage-stats-tests",
+          "image_sha256": "f776f5e0c58132c38b3bfe27e6437f157d73cfeebf3ec2e5f7713b786d7db3aa"
+        },
+        "mainline-dht": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-clang-mainline-r4/tests.xml",
+          "xml_sha256": "131c1ffc588704b6dd6e1e4b3828ee9465348241fc4066657f2a7322d64ce451",
+          "case_name": "mainline-dht",
+          "source_commit": "915970d3f06ab15b8295dbcc93aaff1c9ff4fdfa",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-clang-mainline-r4/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-clang-mainline-r4/binary-before-tests.json",
+          "commands_sha256": "c91480b003d723cb638bfb19a3da86378e69aaf6e99e1e38d9a3a7a9de739fd9",
+          "binary_before_sha256": "0ac1688819f6bd628c09f876ec4f2be0b6625a6ff1b299e3190742d3d1392fae",
+          "target": "biglybtc-mainline-dht-tests",
+          "image_sha256": "99af5755554ecf193483429e85d01747129b98ab555289ca89bc9f0052764149"
+        }
+      },
+      "products": {},
+      "inventory": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-clang-r3/inventory.json",
+      "inventory_sha256": "1ca94db15b8b660e56035299e7c7f2d576a5aac4708ca08b4810c4d515b61a82",
+      "selected_scoped_xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-clang-db-r5/tests.xml",
+      "selected_scoped_xml_sha256": "12388217f74fb0dfc730cc42b3c6d4f4d82f1a67b4f6706a017e09063254bff8",
+      "prior_failed_result": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-clang-r3/result.json",
+      "execution_chain": [
+        {
+          "path": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-clang-r3/result.json",
+          "sha256": "a9fb5abc5f17921298f37e2035e10f76b8adb5c58212726f20ae6a8078de6be6",
+          "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+          "status": "FAILED"
+        },
+        {
+          "path": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-clang-mainline-r4/result.json",
+          "sha256": "3bf58b76d90ff7cdd65e34d2b6c6002752586a8351adc5ee7a94d3f8c98a3fb1",
+          "source_commit": "915970d3f06ab15b8295dbcc93aaff1c9ff4fdfa",
+          "status": "PASS_WITH_EXPLICIT_TEST_ONLY_REUSE"
+        },
+        {
+          "path": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-clang-db-r5/result.json",
+          "sha256": "83d908b6bb369353b736ec5328db4101f803e411c3c4029999e013d7a57df40c",
+          "source_commit": "ae79d7f8991e7444407462697526e0089ed42e65",
+          "status": "PASS_WITH_EXPLICIT_TEST_ONLY_REUSE"
+        }
+      ],
+      "source_followup": {
+        "path": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/source-followup-r5.json",
+        "sha256": "fe9094558aef0a6ff96ba700104c7138133a7327ac89afab1979b516b57719c9"
+      },
+      "whole_prior_ctest_pass_claimed": false,
+      "aggregate_junit_synthesized": false,
+      "sanitizer_environment": {},
+      "images_sha256": {
+        "biglybtc-mainline-dht-tests": "99af5755554ecf193483429e85d01747129b98ab555289ca89bc9f0052764149",
+        "biglybtc-mainline-scrape-tests": "2b45d6eb9a3329bca1e2d6f933abbdabb272866c687de5c88dae216ea2a9d6ea",
+        "biglybtc-azureus-database-runtime-tests": "ef4894bcb7928f90e8ce379de964d1bea39562fa9c38029a602aed49a44bdb03",
+        "biglybtc-azureus-storage-stats-tests": "f776f5e0c58132c38b3bfe27e6437f157d73cfeebf3ec2e5f7713b786d7db3aa"
+      }
+    },
+    "san": {
+      "path": "build/mainline-scrape-20261028/native-san-db-r5/result.json",
+      "sha256": "cfa775a375a04d78bacc83a55da1dfc2f419e2053621f8a3308a7d06baff9fe8",
+      "status": "PASS_WITH_EXPLICIT_TEST_ONLY_REUSE",
+      "source_commit": "ae79d7f8991e7444407462697526e0089ed42e65",
+      "accepted_suites": 4,
+      "actually_executed_for_this_result": 1,
+      "actual_retested_suites": [
+        "azureus-database-runtime"
+      ],
+      "reused_passed_suites": 3,
+      "suite_names": [
+        "mainline-dht",
+        "mainline-scrape-codec",
+        "azureus-database-runtime",
+        "azureus-storage-stats"
+      ],
+      "origins": {
+        "mainline-dht": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-san-r4/tests.xml",
+          "xml_sha256": "0ecab8c2851b8964e0cee501f1079814a9e0adfd9808591b81da3fedbff95611",
+          "case_name": "mainline-dht",
+          "source_commit": "915970d3f06ab15b8295dbcc93aaff1c9ff4fdfa",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-san-r4/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-san-r4/binary-before-tests.json",
+          "commands_sha256": "424f89cb1bb4b1e9b73fca2ebc6a724f84a8758572934c3c123896aa4a02bafe",
+          "binary_before_sha256": "62f96b7767cb331689ae58fe4316e80d13f540f131d403ac99b77278828b164e",
+          "target": "biglybtc-mainline-dht-tests",
+          "image_sha256": "6be7dc591296c7b34b817e749507629aa0ed60c5a9daeb2087bf3b6a735d559e"
+        },
+        "mainline-scrape-codec": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-san-r4/tests.xml",
+          "xml_sha256": "0ecab8c2851b8964e0cee501f1079814a9e0adfd9808591b81da3fedbff95611",
+          "case_name": "mainline-scrape-codec",
+          "source_commit": "915970d3f06ab15b8295dbcc93aaff1c9ff4fdfa",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-san-r4/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-san-r4/binary-before-tests.json",
+          "commands_sha256": "424f89cb1bb4b1e9b73fca2ebc6a724f84a8758572934c3c123896aa4a02bafe",
+          "binary_before_sha256": "62f96b7767cb331689ae58fe4316e80d13f540f131d403ac99b77278828b164e",
+          "target": "biglybtc-mainline-scrape-tests",
+          "image_sha256": "b7b7c3d8c342144889e2221133db6bd6bb0c8f96b26c8e548983c814fac44adf"
+        },
+        "azureus-storage-stats": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-san-r4/tests.xml",
+          "xml_sha256": "0ecab8c2851b8964e0cee501f1079814a9e0adfd9808591b81da3fedbff95611",
+          "case_name": "azureus-storage-stats",
+          "source_commit": "915970d3f06ab15b8295dbcc93aaff1c9ff4fdfa",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-san-r4/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-san-r4/binary-before-tests.json",
+          "commands_sha256": "424f89cb1bb4b1e9b73fca2ebc6a724f84a8758572934c3c123896aa4a02bafe",
+          "binary_before_sha256": "62f96b7767cb331689ae58fe4316e80d13f540f131d403ac99b77278828b164e",
+          "target": "biglybtc-azureus-storage-stats-tests",
+          "image_sha256": "3a3aacae36882a9391d4b5a944be99ffe99b653c1cd764ded5c1098ccea458ad"
+        },
+        "azureus-database-runtime": {
+          "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-san-db-r5/tests.xml",
+          "xml_sha256": "b73e0a1afa897da76620c505ea886f4f160605629712f0388b98a0cfa38d3e23",
+          "case_name": "azureus-database-runtime",
+          "source_commit": "ae79d7f8991e7444407462697526e0089ed42e65",
+          "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-san-db-r5/commands.json",
+          "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-san-db-r5/binary-before-tests.json",
+          "commands_sha256": "92e26b0f3072488787070028507f57138d8d44b9652ab41534f19c5ed9cdccb1",
+          "binary_before_sha256": "0638e93380e694ce3eb108a05fcd32d2e810dc1206b8cc5b4f7aced97751d308",
+          "target": "biglybtc-azureus-database-runtime-tests",
+          "image_sha256": "4674f1b075204beeff97111dd703099e5074410c1fb758f7b35dc7faee92082f"
+        }
+      },
+      "products": {},
+      "inventory": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-san-r4/inventory.json",
+      "inventory_sha256": "41634f56da8c8e57c383e4788e190e0c31aa0b22f9e33233bba6b2f83798f40e",
+      "selected_scoped_xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-san-db-r5/tests.xml",
+      "selected_scoped_xml_sha256": "b73e0a1afa897da76620c505ea886f4f160605629712f0388b98a0cfa38d3e23",
+      "prior_failed_result": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-san-r4/result.json",
+      "execution_chain": [
+        {
+          "path": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-san-r4/result.json",
+          "sha256": "75071034f9fdb678bde5de161401c43bb22db0d9a3b9ca19c17748251c15c1e0",
+          "source_commit": "915970d3f06ab15b8295dbcc93aaff1c9ff4fdfa",
+          "status": "FAILED"
+        },
+        {
+          "path": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-san-db-r5/result.json",
+          "sha256": "cfa775a375a04d78bacc83a55da1dfc2f419e2053621f8a3308a7d06baff9fe8",
+          "source_commit": "ae79d7f8991e7444407462697526e0089ed42e65",
+          "status": "PASS_WITH_EXPLICIT_TEST_ONLY_REUSE"
+        }
+      ],
+      "source_followup": {
+        "path": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/source-followup-r5.json",
+        "sha256": "fe9094558aef0a6ff96ba700104c7138133a7327ac89afab1979b516b57719c9"
+      },
+      "whole_prior_ctest_pass_claimed": false,
+      "aggregate_junit_synthesized": false,
+      "sanitizer_environment": {
+        "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+        "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+      },
+      "images_sha256": {
+        "biglybtc-mainline-dht-tests": "6be7dc591296c7b34b817e749507629aa0ed60c5a9daeb2087bf3b6a735d559e",
+        "biglybtc-mainline-scrape-tests": "b7b7c3d8c342144889e2221133db6bd6bb0c8f96b26c8e548983c814fac44adf",
+        "biglybtc-azureus-database-runtime-tests": "4674f1b075204beeff97111dd703099e5074410c1fb758f7b35dc7faee92082f",
+        "biglybtc-azureus-storage-stats-tests": "3a3aacae36882a9391d4b5a944be99ffe99b653c1cd764ded5c1098ccea458ad"
+      }
+    }
+  },
+  "private_result": {
+    "path": "build/mainline-scrape-20261028/private-runtime-r5/result.json",
+    "sha256": "1860f92cf1738a0b325e542c4e6992f17d9ed90a30aabd91eeda039802163d06",
+    "result": {
+      "status": "PASS_PRIVATE_RELOCATED_RUNTIME",
+      "source_commit": "ae79d7f8991e7444407462697526e0089ed42e65",
+      "source_followup": {
+        "path": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/source-followup-r5.json",
+        "sha256": "fe9094558aef0a6ff96ba700104c7138133a7327ac89afab1979b516b57719c9"
+      },
+      "shipping_approved": false,
+      "candidate": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate",
+      "manifest_sha256": "c6bc07caf851c0e6c4d62867321ad56641632b79af97604d22f4ddc73ee8838c",
+      "verified_leaves": 118,
+      "provider": {
+        "binding": "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-mainline-runtime.json",
+        "binding_sha256": "1267bf58a235dc6c32d9ffadab8bbd994ec81f2aa958f0cf621f8a71e4f6c84c",
+        "artifact": "/home/yurii/Java/BiglyBT/build/mainline-port-20261028/provider-candidate/install/lib/libtorrent-rasterbar.so.2.0.12",
+        "artifact_sha256": "9fbb550bbc1f877ce34ce21849deab97971f5d3eacfbc531a7b777d28a3b2eea",
+        "record": "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-mainline-source-build-record.json",
+        "record_sha256": "c848411975cecc955370cf0a95790fd4659a52714b8f57ce9c82fa7e9fbf54d3",
+        "rebuilt": false
+      },
+      "gcc_result": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-db-r5/result.json",
+      "gcc_result_sha256": "2bc6de1889d6e908b00869806c7e976314bd6fde06a3623d7b44b7abaad34853",
+      "test_images": {
+        "biglybtc-mainline-dht-tests": {
+          "sha256": "356f12306da560d4870fd8f956861a5c41259200d8477576eb6ccc39b165ba7b",
+          "source": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-dht-tests",
+          "copy": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/owner-tests/biglybtc-mainline-dht-tests"
+        },
+        "biglybtc-mainline-scrape-tests": {
+          "sha256": "15d74a714547860b90ca88cee743aaec363bee24641acd70a9d6b7ccc0821298",
+          "source": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-scrape-tests",
+          "copy": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/owner-tests/biglybtc-mainline-scrape-tests"
+        },
+        "biglybtc-azureus-storage-stats-tests": {
+          "sha256": "da0994a7829f076ca91743f38da3bb767390ee037e316265b12e4462d308ffeb",
+          "source": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-azureus-storage-stats-tests",
+          "copy": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/owner-tests/biglybtc-azureus-storage-stats-tests"
+        },
+        "biglybtc-azureus-database-runtime-tests": {
+          "sha256": "b80a633161590fada729d9910ab534747758953e9837e4d04ff5fa2e91f2b43d",
+          "source": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-azureus-database-runtime-tests",
+          "copy": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/owner-tests/biglybtc-azureus-database-runtime-tests"
+        },
+        "biglybtc-preview-smoke": {
+          "sha256": "18d7aee19a8f94ad8fd06275a0802f0f0a76bd00a9fad20443e76aed48fe2e0c",
+          "source": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/biglybtc-preview-smoke",
+          "copy": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/owner-tests/biglybtc-preview-smoke"
+        }
+      },
+      "actual_tests": [
+        {
+          "binary": "biglybtc-mainline-dht-tests",
+          "sha256": "356f12306da560d4870fd8f956861a5c41259200d8477576eb6ccc39b165ba7b",
+          "exit": 0,
+          "mode": "QtTest",
+          "selected_methods": [
+            "queuedScrapeUsesActualLiveNodesExplicitDialectAndNeverAnnounces",
+            "heldScrapeCancellationCannotPublishIntoSameHashFreshRound"
+          ],
+          "scope": "selected-methods",
+          "testcases": 4,
+          "xml_sha256": "5594aa70f5383236a14548e54f267d49ae3179ce95cf8b755e5b9ff2adec04dc"
+        },
+        {
+          "binary": "biglybtc-mainline-scrape-tests",
+          "sha256": "15d74a714547860b90ca88cee743aaec363bee24641acd70a9d6b7ccc0821298",
+          "exit": 0,
+          "mode": "plain-unit",
+          "selected_methods": [],
+          "scope": "full-program"
+        },
+        {
+          "binary": "biglybtc-azureus-storage-stats-tests",
+          "sha256": "da0994a7829f076ca91743f38da3bb767390ee037e316265b12e4462d308ffeb",
+          "exit": 0,
+          "mode": "plain-unit",
+          "selected_methods": [],
+          "scope": "full-program"
+        },
+        {
+          "binary": "biglybtc-azureus-database-runtime-tests",
+          "sha256": "b80a633161590fada729d9910ab534747758953e9837e4d04ff5fa2e91f2b43d",
+          "exit": 0,
+          "mode": "QtTest",
+          "selected_methods": [],
+          "scope": "full-program",
+          "testcases": 13,
+          "xml_sha256": "062af553721170f9399b60fc5510e4c6257dd610a68cee6a0d4e9f808071ee59"
+        },
+        {
+          "binary": "biglybtc-preview-smoke",
+          "sha256": "18d7aee19a8f94ad8fd06275a0802f0f0a76bd00a9fad20443e76aed48fe2e0c",
+          "exit": 0,
+          "mode": "QtTest",
+          "selected_methods": [],
+          "scope": "full-program",
+          "testcases": 13,
+          "xml_sha256": "1477807fdfe841f478a844edec0cbc0844274c2aadb1d8c241550102e5ee82e0"
+        }
+      ],
+      "aliases": [
+        "usr/lib/biglybtc/lib/libtorrent-rasterbar.so",
+        "usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0",
+        "usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12",
+        "dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libtorrent-rasterbar.so",
+        "dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libtorrent-rasterbar.so.2.0",
+        "dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libtorrent-rasterbar.so.2.0.12"
+      ],
+      "loader_init_verified": true,
+      "sample": "/tmp/biglybtc-preview-1u6pcmen",
+      "distribution_scope": "private-qualification-only",
+      "published_dist_unchanged": "0508794edb9c2e80582068ffa9e4ebe0d0058732d91dce1fe016ad451a54ea1f",
+      "source_snapshot_sha256": "396489be90e40a5bc640a62ffb9df2994cc1d78000cc4753aff7192eaaa17610",
+      "prior_golden_replays_rerun": false,
+      "gcc_acceptance": {
+        "status": "PASS_WITH_EXPLICIT_TEST_ONLY_REUSE",
+        "source_commit": "ae79d7f8991e7444407462697526e0089ed42e65",
+        "accepted_suites": 19,
+        "actually_executed_for_this_result": 1,
+        "actual_retested_suites": [
+          "azureus-database-runtime"
+        ],
+        "reused_passed_suites": 18,
+        "suite_names": [
+          "mainline-dht",
+          "mainline-scrape-codec",
+          "azureus-database-runtime",
+          "azureus-storage-stats",
+          "library-action-ui",
+          "managed-queue",
+          "managed-library-command-routing",
+          "persistent-native-peer-session",
+          "mainline-checkpoint",
+          "magnet-host",
+          "azureus-owned-service",
+          "azureus-owned-bridge",
+          "azureus-router-owner",
+          "azureus-router-binding",
+          "owned-ddb-control",
+          "owned-ddb-binding",
+          "owned-dht-bytes",
+          "owned-dht-accounting",
+          "mainline-queued-owner"
+        ],
+        "origins": {
+          "persistent-native-peer-session": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+            "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+            "case_name": "persistent-native-peer-session",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+            "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+            "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+            "target": "biglybtc-persistent-session-tests",
+            "image_sha256": "1be062f48f9f19cb785fb74377a52be716a1bfe9fafae0881ce944d6eec60d14"
+          },
+          "azureus-owned-service": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+            "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+            "case_name": "azureus-owned-service",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+            "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+            "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+            "target": "biglybtc-azureus-owned-service-tests",
+            "image_sha256": "5c5adbaaaf309a94b12d8904c2830614e8251e16bd876a5caf297a06bb9580ce"
+          },
+          "azureus-owned-bridge": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+            "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+            "case_name": "azureus-owned-bridge",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+            "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+            "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+            "target": "biglybtc-azureus-owned-bridge-tests",
+            "image_sha256": "fbcfa2ae322af5ac86d9705570cbd593956103217b24a2c4d0a078c907004b9f"
+          },
+          "azureus-router-binding": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+            "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+            "case_name": "azureus-router-binding",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+            "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+            "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+            "target": "biglybtc-azureus-router-binding-tests",
+            "image_sha256": "728694a855669613dac14ca229830e6ee92e7e1409f6bc9da4058a27c68bea0f"
+          },
+          "azureus-router-owner": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+            "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+            "case_name": "azureus-router-owner",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+            "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+            "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+            "target": "biglybtc-azureus-router-owner-tests",
+            "image_sha256": "5407a53877058c0638f9a1df930c9f91d7bdf32410ec5447220c36d58dd3c9fc"
+          },
+          "owned-dht-bytes": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+            "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+            "case_name": "owned-dht-bytes",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+            "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+            "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+            "target": "biglybtc-owned-dht-bytes-tests",
+            "image_sha256": "7eadfc1587aeaab694703457f7b7da90c72f760f70c5e3e0025658294a71d54b"
+          },
+          "owned-dht-accounting": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+            "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+            "case_name": "owned-dht-accounting",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+            "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+            "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+            "target": "biglybtc-owned-dht-accounting-tests",
+            "image_sha256": "fd3b71a868d64a282e11f77fb7bf262271b59b8f066e879be304fa03c4ed2fe7"
+          },
+          "owned-ddb-control": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+            "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+            "case_name": "owned-ddb-control",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+            "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+            "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+            "target": "biglybtc-owned-ddb-control-tests",
+            "image_sha256": "56d9141d310a49754471f2dce9a901512dae8a137dba9f6bc69d6cc06b90ab78"
+          },
+          "owned-ddb-binding": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+            "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+            "case_name": "owned-ddb-binding",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+            "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+            "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+            "target": "biglybtc-owned-ddb-binding-tests",
+            "image_sha256": "4d004cfb67f4129f8d48a859b4a6e090ee04e3cc260e2b3d397b3822488835dd"
+          },
+          "library-action-ui": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+            "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+            "case_name": "library-action-ui",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+            "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+            "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+            "target": "biglybtc-library-action-ui-tests",
+            "image_sha256": "32c3c0279d342f535a66b8251bed4ffb987d866298c4b514dc863c5948b7679a"
+          },
+          "managed-library-command-routing": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+            "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+            "case_name": "managed-library-command-routing",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+            "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+            "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+            "target": "biglybtc-library-commands-bridge-tests",
+            "image_sha256": "fbede6953a39c863e06bde64d93687ba8cb4c387f50344e8ce9f93eb71072690"
+          },
+          "magnet-host": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+            "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+            "case_name": "magnet-host",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+            "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+            "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+            "target": "biglybtc-magnet-host-tests",
+            "image_sha256": "fdaf6fb36051b219990b7430b115ba17cb496fc1a79dfed37fc3ed5759789610"
+          },
+          "managed-queue": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+            "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+            "case_name": "managed-queue",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+            "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+            "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+            "target": "biglybtc-managed-queue-tests",
+            "image_sha256": "d91cdf584509d87d0f2b427be70f0bb20950af29d34f5de19c8882b70c377fee"
+          },
+          "mainline-checkpoint": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+            "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+            "case_name": "mainline-checkpoint",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+            "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+            "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+            "target": "biglybtc-mainline-checkpoint-tests",
+            "image_sha256": "0596a0fecd03cdff7622d217859aede13d61e8c6258c5410e5726dee6078a6ae"
+          },
+          "azureus-database-runtime": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-db-r5/tests.xml",
+            "xml_sha256": "d937494583931e97856e496245334b48e32a509e0b988625c8d8ba85d716078b",
+            "case_name": "azureus-database-runtime",
+            "source_commit": "ae79d7f8991e7444407462697526e0089ed42e65",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-db-r5/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-db-r5/binary-before-tests.json",
+            "commands_sha256": "51a5bbe2be8e1db1687964ae19cb883d752050b04b50cb13c37ca03e2627ca51",
+            "binary_before_sha256": "9c1eb5d4878e5d0f4c42fb9fc6e176ab9b11852d6a9f2bc33a73a3f9b764992d",
+            "target": "biglybtc-azureus-database-runtime-tests",
+            "image_sha256": "b80a633161590fada729d9910ab534747758953e9837e4d04ff5fa2e91f2b43d"
+          },
+          "mainline-scrape-codec": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+            "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+            "case_name": "mainline-scrape-codec",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+            "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+            "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+            "target": "biglybtc-mainline-scrape-tests",
+            "image_sha256": "15d74a714547860b90ca88cee743aaec363bee24641acd70a9d6b7ccc0821298"
+          },
+          "azureus-storage-stats": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+            "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+            "case_name": "azureus-storage-stats",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+            "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+            "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+            "target": "biglybtc-azureus-storage-stats-tests",
+            "image_sha256": "da0994a7829f076ca91743f38da3bb767390ee037e316265b12e4462d308ffeb"
+          },
+          "mainline-queued-owner": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/tests.xml",
+            "xml_sha256": "71c95107904837725a9ab89d33a415ea2a683228020e61919070f0e3e99cefea",
+            "case_name": "mainline-queued-owner",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/binary-before-tests.json",
+            "commands_sha256": "8d779f0bfde4a35c586c4ad69d8720457c686920df7d63cd373dcf598a0b45a2",
+            "binary_before_sha256": "81a10ec5729f47fb4a6a6dcb3c7beee852029b09467efb57e1f41f9ea5867516",
+            "target": "biglybtc-mainline-queued-owner-tests",
+            "image_sha256": "bcd73b68e4a0dd66db956e77d389a1adbe25fcae6ef531bb14499ae0d6645834"
+          },
+          "mainline-dht": {
+            "xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-mainline-r4/tests.xml",
+            "xml_sha256": "e2ca0ba31acdf8a96c1f01381309133f93cb0807672f5bd7bb9028e6ae478ed5",
+            "case_name": "mainline-dht",
+            "source_commit": "915970d3f06ab15b8295dbcc93aaff1c9ff4fdfa",
+            "commands": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-mainline-r4/commands.json",
+            "binary_before": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-mainline-r4/binary-before-tests.json",
+            "commands_sha256": "2bb76b786ce668bb2927b362b4b6c4fb901c72ec9eeabcd39db4928c5607e753",
+            "binary_before_sha256": "8f3d72b206d98e3ea785ac2c60ab46fb260aeef23c780fa7f172b122e90e2796",
+            "target": "biglybtc-mainline-dht-tests",
+            "image_sha256": "356f12306da560d4870fd8f956861a5c41259200d8477576eb6ccc39b165ba7b"
+          }
+        },
+        "products": {
+          "BiglyBTC": {
+            "image_sha256": "16dc6005234145decda0a53c4e9ccc2f0a58bdd2fc2ea211afdac2e8e049adeb",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5"
+          },
+          "BiglyBTC-headless": {
+            "image_sha256": "c5cede098d227a62a8c14a506d5e74f6f75dce1b12cb2f3bd43ecf3a89341a5f",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5"
+          },
+          "biglybtc-preview-smoke": {
+            "image_sha256": "18d7aee19a8f94ad8fd06275a0802f0f0a76bd00a9fad20443e76aed48fe2e0c",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5"
+          }
+        },
+        "inventory": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/inventory.json",
+        "inventory_sha256": "fdfbb6c4cea4d8d85609dda0c9c144564767dad56b25f7218c7c1a2f96e6481b",
+        "selected_scoped_xml": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-db-r5/tests.xml",
+        "selected_scoped_xml_sha256": "d937494583931e97856e496245334b48e32a509e0b988625c8d8ba85d716078b",
+        "prior_failed_result": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/result.json",
+        "execution_chain": [
+          {
+            "path": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-r3/result.json",
+            "sha256": "67e2d478b339b99a14e10244cf850960dad6f342de70461588c61a31493e5715",
+            "source_commit": "0ed36d5a4ea7566eae69b82b3b28c106dacc0ed5",
+            "status": "FAILED"
+          },
+          {
+            "path": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-mainline-r4/result.json",
+            "sha256": "2697c9f9b9194be4ecbd24ced146e609f0ecb346f95dfb109431a9aaff993311",
+            "source_commit": "915970d3f06ab15b8295dbcc93aaff1c9ff4fdfa",
+            "status": "PASS_WITH_EXPLICIT_TEST_ONLY_REUSE"
+          },
+          {
+            "path": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/native-gcc-db-r5/result.json",
+            "sha256": "2bc6de1889d6e908b00869806c7e976314bd6fde06a3623d7b44b7abaad34853",
+            "source_commit": "ae79d7f8991e7444407462697526e0089ed42e65",
+            "status": "PASS_WITH_EXPLICIT_TEST_ONLY_REUSE"
+          }
+        ],
+        "source_followup": {
+          "path": "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/source-followup-r5.json",
+          "sha256": "fe9094558aef0a6ff96ba700104c7138133a7327ac89afab1979b516b57719c9"
+        },
+        "whole_prior_ctest_pass_claimed": false,
+        "aggregate_junit_synthesized": false,
+        "sanitizer_environment": {}
+      },
+      "private_mainline_scope": {
+        "methods": [
+          "queuedScrapeUsesActualLiveNodesExplicitDialectAndNeverAnnounces",
+          "heldScrapeCancellationCannotPublishIntoSameHashFreshRound"
+        ],
+        "full_suite_rerun": false
+      },
+      "commands_sha256": "73aa9dd42b4824adfc861ac6ebaf0a9c60e5f6199d9a581f9f28df6b76c4666f"
+    }
+  },
+  "private_build_manifest": {
+    "scope": "Portable development client; explicit profile or generated offline preview; full migration remains unfinished",
+    "build": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+    "launch": "./BiglyBTC-preview",
+    "normal_launch": "./BiglyBTC --profile ABSOLUTE_PROFILE",
+    "dependency_package_sha256": "652765efc969fa318189e5b1f95ad3ba9eeb64d0e633e9c0faa7e35650cddf21",
+    "files_sha256": {
+      "BiglyBTC": "b4e7276b3d54704839b74d2992a9208930f8c6a1d4bfdfb04c73ed617bec6557",
+      "BiglyBTC-preview": "985f7086a7001c990e7318501f49da57137e8b767318d970c64909441ceb67f3",
+      "README.txt": "01d1b7600beefe48550cdf92e4afe526a4d996717898a2ffade001e7fa5ec5bc",
+      "dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libtorrent-rasterbar.so": "9fbb550bbc1f877ce34ce21849deab97971f5d3eacfbc531a7b777d28a3b2eea",
+      "dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libtorrent-rasterbar.so.2.0": "9fbb550bbc1f877ce34ce21849deab97971f5d3eacfbc531a7b777d28a3b2eea",
+      "dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libtorrent-rasterbar.so.2.0.12": "9fbb550bbc1f877ce34ce21849deab97971f5d3eacfbc531a7b777d28a3b2eea",
+      "dependencies/libtorrent/usr/share/doc/libtorrent-rasterbar2.0t64/AUTHORS": "1643273ab7f8a547d8fb19122de7354bf3076a9fbc8cbc78b885a66881f94a57",
+      "dependencies/libtorrent/usr/share/doc/libtorrent-rasterbar2.0t64/README.Debian": "9f858d47c3fa0c7b709b3548e1b5e0cae1e656137b3b10b607bbc62e1dcf754f",
+      "dependencies/libtorrent/usr/share/doc/libtorrent-rasterbar2.0t64/changelog.Debian.gz": "7ea66f83fbc5e8250cefa8371192b01c02a28446c8bd7b7331d461d4db4e0de2",
+      "dependencies/libtorrent/usr/share/doc/libtorrent-rasterbar2.0t64/copyright": "be3b3218a15e0745a8c128e15d266fade00222c0923e4cc85bbfc237c8909478",
+      "dependencies/libtorrent/usr/share/lintian/overrides/libtorrent-rasterbar2.0t64": "1026887af06113cb2a019e7d9b3c5ec2d05f553c551fc1f6d7bd92d1360c8f67",
+      "usr/bin/BiglyBTC": "296d20b07cc5fd508296ebf0102c97d6bc38022dd84f547b20ef930d10f37c26",
+      "usr/bin/BiglyBTC-headless": "07ff8ec088646222acbf8b9696554f5a32c73ce8203bbe41f62eb46acc94fa8b",
+      "usr/bin/BiglyBTC-preview": "794cccedccbd20d4bd0c0f44d9447f3ffe2a5703fd9995a2a424d0a427085809",
+      "usr/lib/biglybtc/bin/BiglyBTC": "4ceb6fd07088107f597a9e0fcb3dc82b860587b47d19c12864fd16d621bf202b",
+      "usr/lib/biglybtc/bin/BiglyBTC-headless": "e718c44bc81d76d52d4ea3fc648d253b823a397c5f857b1d0942ddaf949f6e17",
+      "usr/lib/biglybtc/bin/qt.conf": "ddb6cc6787a72065136b054a28b1f2ed95293c429501a370558c5cd3fa1ce55b",
+      "usr/lib/biglybtc/lib/BiglyBTC-plugin-SpeedScheduler.so": "736860113143539cc658a14219246f6d4468e64d0da6a21c21108dcf828ea5d3",
+      "usr/lib/biglybtc/lib/BiglyBTC-plugin-azlocprov.so": "dbe306d4ed1eb3e54ff52f322f285a09d00d07939bd2e271c4c75917e9d917ba",
+      "usr/lib/biglybtc/lib/libarchive.so.13": "959dcce452c258ad7016f74b33b6df688cdad8a6caa1a625b1bfbebe85b332b0",
+      "usr/lib/biglybtc/lib/libmaxminddb.so.0": "364e2e9a13ca94aec1af1932a80bdfe8428954169e051b81e05ca8229047280e",
+      "usr/lib/biglybtc/lib/libtorrent-rasterbar.so": "9fbb550bbc1f877ce34ce21849deab97971f5d3eacfbc531a7b777d28a3b2eea",
+      "usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0": "9fbb550bbc1f877ce34ce21849deab97971f5d3eacfbc531a7b777d28a3b2eea",
+      "usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12": "9fbb550bbc1f877ce34ce21849deab97971f5d3eacfbc531a7b777d28a3b2eea",
+      "usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+      "usr/lib/biglybtc/qt/lib/libQt6DBus.so.6": "678d0bf82548e35680a93615d476d79405f1d4beec4ce405236e04bc64ea14eb",
+      "usr/lib/biglybtc/qt/lib/libQt6Gui.so.6": "392cf5a2fed77ca7b861484ae0f25a2f7f54789024e79518c6c28e1ddf5b4b1a",
+      "usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+      "usr/lib/biglybtc/qt/lib/libQt6OpenGL.so.6": "8452e1c7f849a81f38fa2e99fbcd066c24902892fcfa4ce0e188f4691dc2d106",
+      "usr/lib/biglybtc/qt/lib/libQt6Svg.so.6": "ad54290bfb1929296b1662375d1902ad9810162051f51ff00bce3b2843bdbf2c",
+      "usr/lib/biglybtc/qt/lib/libQt6WaylandClient.so.6": "28423e53b5c6f6c69d50068be70467f15826027e6d965b68411e9daad30712dc",
+      "usr/lib/biglybtc/qt/lib/libQt6Widgets.so.6": "ae894c4a328a883311faf7449dcdd1ec70e6be25784e5676cb9977fe437d01c4",
+      "usr/lib/biglybtc/qt/lib/libQt6WlShellIntegration.so.6": "03b88400fcbbaeb19448b39cc1db9bd1cbc7e870ce5827eeb7254103e634549d",
+      "usr/lib/biglybtc/qt/lib/libQt6XcbQpa.so.6": "fe274149676867bb59884a3bb0aa5ae6b2365a92f1e7449ea12a4dc267a53fa3",
+      "usr/lib/biglybtc/qt/lib/libicudata.so.73": "4f182a855296cf96d39f75c9028b12765a78fe6afff3d3781d633110525b7a8b",
+      "usr/lib/biglybtc/qt/lib/libicui18n.so.73": "a18e48266e59efff3ec872d9dc5cc99b776e180b8ede57269d354e6bc6595778",
+      "usr/lib/biglybtc/qt/lib/libicuuc.so.73": "b76380b2c15c8ff8b3c94576ac98b40d34fc0a091db4a89324d72e271c7699f0",
+      "usr/lib/biglybtc/qt/plugins/iconengines/libqsvgicon.so": "5c83c91f83f7a528ad054d1031b338c21e9d7c3aca3d02bf98518ec5d89d65af",
+      "usr/lib/biglybtc/qt/plugins/imageformats/libqgif.so": "c84d1245e6824a2176079c5d72234b0a2a805b10214037b1229e8bc2c4ff62ca",
+      "usr/lib/biglybtc/qt/plugins/imageformats/libqicns.so": "36c77e14da63b8a6c2a09892240cd003fa31b4d7e0a1c1e3ff442baedf15b952",
+      "usr/lib/biglybtc/qt/plugins/imageformats/libqico.so": "9423748bb76c7a26197f7f5c437e25ce21aa3ff2717e5c6cc9c35d552b46f28e",
+      "usr/lib/biglybtc/qt/plugins/imageformats/libqjpeg.so": "aedd3e4f7a233365dcef9f016bd64f05575dd49aba69ce923fc99f214f5384ee",
+      "usr/lib/biglybtc/qt/plugins/imageformats/libqsvg.so": "b178be1a99734997111e740a54b2ac0649e66b73d51ce259f13cc6c7534861c9",
+      "usr/lib/biglybtc/qt/plugins/imageformats/libqtga.so": "b0efbd5a9c43151335f9490b0403ef0dcd7e77fbd06ecef9f16da7b4a80849c3",
+      "usr/lib/biglybtc/qt/plugins/imageformats/libqtiff.so": "4ec0307bc51f16f4812a781ab2facfdf45e06f427a103435d70ed29768808332",
+      "usr/lib/biglybtc/qt/plugins/imageformats/libqwbmp.so": "d7200eb7ab8542b4a99836c39c1f638b4f10bce171b9d0e71dd272bba5bb06d4",
+      "usr/lib/biglybtc/qt/plugins/imageformats/libqwebp.so": "4b22639fb50987b5aec000690b165d7406ee4486a11d4c02b86c8a14e321f162",
+      "usr/lib/biglybtc/qt/plugins/platforms/libqminimal.so": "65b076f7bcfcc1dfa2da0bfff3a40f6429d7b0470569d6569f8d8fe2d5314b1a",
+      "usr/lib/biglybtc/qt/plugins/platforms/libqoffscreen.so": "b03cc26de26de6e09adceaf7ab2866ebbae39d88d893e0a5032e3ea55f190a67",
+      "usr/lib/biglybtc/qt/plugins/platforms/libqwayland.so": "1ade530571b63a433d192110121a11bae023cc58d8a6e586a352936ac0d6c7c2",
+      "usr/lib/biglybtc/qt/plugins/platforms/libqxcb.so": "8611ee4e2315bcf4b38e14e2714b553e227e489a5cfaaa40b692fff9f2ac272a",
+      "usr/lib/biglybtc/qt/plugins/platformthemes/libqgtk3.so": "9a8157d6b1ae49e790f0d84b93d350616f92c97cbb3df673b3a63aa8b6351e7f",
+      "usr/lib/biglybtc/qt/plugins/platformthemes/libqxdgdesktopportal.so": "67fe302dbb46f498dc6b7fc7d1d54d5939f55635ad988b9af730c2e25a31ea4a",
+      "usr/lib/biglybtc/qt/plugins/wayland-decoration-client/libadwaita.so": "225a5289c9518ea4a61a31daf881524309ff150a57601944eed37699e079da54",
+      "usr/lib/biglybtc/qt/plugins/wayland-decoration-client/libbradient.so": "c7f7f5547ad55202de8a35dfa0765a7c67a8404dee19eb07c568ee3d64f49cc9",
+      "usr/lib/biglybtc/qt/plugins/wayland-graphics-integration-client/libdmabuf-server.so": "06de14b9f4af7f3a89f8136b21bf3178c9e7d5957496a034ea5c3cc41f1cc23a",
+      "usr/lib/biglybtc/qt/plugins/wayland-graphics-integration-client/libdrm-egl-server.so": "18e9efba44e96184c60581f13273285bf787d8f2e21231eb2f4b14a357a7dd44",
+      "usr/lib/biglybtc/qt/plugins/wayland-graphics-integration-client/libqt-plugin-wayland-egl.so": "a18ea802b7cde98dbfb0769c8ff69b1fa7cd49750078567a8462f297e30665e4",
+      "usr/lib/biglybtc/qt/plugins/wayland-graphics-integration-client/libshm-emulation-server.so": "571b172fb331e199f3c63c09d2cded3b585cd81cedeb2a15bddbb1540beb0017",
+      "usr/lib/biglybtc/qt/plugins/wayland-graphics-integration-client/libvulkan-server.so": "8d8ac1c33618dc979c50497541bd7c0f5012ed34248de5b05fc15077b7e20fac",
+      "usr/lib/biglybtc/qt/plugins/wayland-shell-integration/libfullscreen-shell-v1.so": "411e4a8b431937b0b54b7d72e1c7669c475ce91e31832808995387cd88e35306",
+      "usr/lib/biglybtc/qt/plugins/wayland-shell-integration/libivi-shell.so": "b50baea26ba1a06806086e067b247eedaa6562dfe151e56fc1a90cf00b66c9dc",
+      "usr/lib/biglybtc/qt/plugins/wayland-shell-integration/libqt-shell.so": "7b07043f423d73168b74b80a39ffe01b2e6bd091a155c2d3388e60fcaabb8772",
+      "usr/lib/biglybtc/qt/plugins/wayland-shell-integration/libwl-shell-plugin.so": "644dd3a2a0cec928f16350088d90e0fe81db3364e386c498e43e5145a769f7d7",
+      "usr/lib/biglybtc/qt/plugins/wayland-shell-integration/libxdg-shell.so": "69dee3d9eb391e4d167fb9c077a6bf2f0d7a074ce0a7d62ff6b6e34f50984f8c",
+      "usr/lib/biglybtc/qt/plugins/xcbglintegrations/libqxcb-egl-integration.so": "01088ab95461d805bd558ce9d651e07b20215958f7febf4ec099c710cfcef5e7",
+      "usr/lib/biglybtc/qt/plugins/xcbglintegrations/libqxcb-glx-integration.so": "af8bb94f80cdbed024770705f5ce1ec77cd543d379f539bd6463b26dc2ad7caa",
+      "usr/lib/biglybtc/qt/translations/qtbase_ar.qm": "e03fe68d83201543698fd7fe267dd5dfc5bfd195147e74ff2f19ac3491401263",
+      "usr/lib/biglybtc/qt/translations/qtbase_bg.qm": "e448ac9e3f16c29eb27af3012efe21052daa78fabfb34cd6dff2f69ee3bd3cdb",
+      "usr/lib/biglybtc/qt/translations/qtbase_ca.qm": "5298532fc52ffbc4e2c549f277151a61e741921c834286f7c04d3753677b6b04",
+      "usr/lib/biglybtc/qt/translations/qtbase_cs.qm": "03028b42df5479270371e4c3bdc7df2f56cbbe6dda956a2864ac6f6415861fe8",
+      "usr/lib/biglybtc/qt/translations/qtbase_da.qm": "7d1e5ca3310b54d104c19bf2abd402b38e584e87039a70e153c4a9af74b25c22",
+      "usr/lib/biglybtc/qt/translations/qtbase_de.qm": "a1483bae0385c380edad72b818ce7c2f54ba617ba4c709b2a34a76886d5b5f3d",
+      "usr/lib/biglybtc/qt/translations/qtbase_en.qm": "494ac9a2b2cb2fdeced353f4a9f898ed8dcf616e9bc667438c62681e3f7f79cf",
+      "usr/lib/biglybtc/qt/translations/qtbase_es.qm": "4ffda56ba3bb5414ab0482d1dde64a6f226e3488f6b7f3f11a150e01f53fa4c8",
+      "usr/lib/biglybtc/qt/translations/qtbase_fa.qm": "f78e59b5bdd586181a999034ba418868ed17fe9c05707fb65e523f70e92253d2",
+      "usr/lib/biglybtc/qt/translations/qtbase_fi.qm": "e47fe13713e184d07fa4495dde0c589b0e8f562e91574a3558a9363443a4fa72",
+      "usr/lib/biglybtc/qt/translations/qtbase_fr.qm": "314243a55c32679ad473fdfe48dc7d66e973ad0fc8bf2164480c58dddb50c1a7",
+      "usr/lib/biglybtc/qt/translations/qtbase_gd.qm": "63b439dd44139aa3aed54c2ebe03fa9bc77f22c14ed8fba8eff2608445bb233d",
+      "usr/lib/biglybtc/qt/translations/qtbase_he.qm": "e1ebca16afe8994356f81ca007fbdb9ddf865842010fe908923d873b687cad3f",
+      "usr/lib/biglybtc/qt/translations/qtbase_hr.qm": "bb9eec9a9a652c1340dc75eb2e749be50df00f885b3d6900dfc76799c45b244d",
+      "usr/lib/biglybtc/qt/translations/qtbase_hu.qm": "98463295539d769c8645a0b7fb95ad38454cfd0b14f36af485513f036ddbbbc6",
+      "usr/lib/biglybtc/qt/translations/qtbase_it.qm": "7808ed542a7833c4bd94ec8bdfbbca00bb4f2fe15979b9121ce3249323687300",
+      "usr/lib/biglybtc/qt/translations/qtbase_ja.qm": "2b9581c69b975f59be505b127cd3c19d403ef3d12e0e8386fb97238223e9c1df",
+      "usr/lib/biglybtc/qt/translations/qtbase_ka.qm": "e55e4b72fa620bebee5297ca59dfe2f49894a1e544f2b7485b1cfd8829289d6f",
+      "usr/lib/biglybtc/qt/translations/qtbase_kk.qm": "8bab72c453e87489d76cc7efffc57e947cbfa239dee4d6fa113f7b7b8cbd5b86",
+      "usr/lib/biglybtc/qt/translations/qtbase_ko.qm": "0179ed1b136e1cb3f583351eaa2c545ba3d83a6ee3f82c32505926a1a5f5f183",
+      "usr/lib/biglybtc/qt/translations/qtbase_lg.qm": "31c0cc4ce13b1d74fe0c19ed0b47638fb31e20c93ee08092533e884007aebfb5",
+      "usr/lib/biglybtc/qt/translations/qtbase_lv.qm": "846e047573ae40c83671c3ba7f73e27efc24b98c82701da0df9973e574178bb2",
+      "usr/lib/biglybtc/qt/translations/qtbase_nl.qm": "f61513bcdbb6ad800585f9437a95d018aab17fa12ee414aa31462ff279d8240e",
+      "usr/lib/biglybtc/qt/translations/qtbase_nn.qm": "f9f2fb7c60e7fcb38bbd3c1314ef122145594265e20b0659ff00004baab13ac7",
+      "usr/lib/biglybtc/qt/translations/qtbase_pl.qm": "3cf6b5c14d5eb0cf81e9af2066e66b3aa579a6b9b3c323ed670761f6254a8c54",
+      "usr/lib/biglybtc/qt/translations/qtbase_pt_BR.qm": "3475d61604b938d459949801a906dbd34a8ca824ade94120015d676e208da859",
+      "usr/lib/biglybtc/qt/translations/qtbase_ru.qm": "3da6605668f9178d11a838c4515478084dcfb4f9cf22f99d7a92b492db9c224b",
+      "usr/lib/biglybtc/qt/translations/qtbase_sk.qm": "d586ae2c314074cf398417fdecb40709d5478dfeb0a67c2fe60d509ee9b59ed7",
+      "usr/lib/biglybtc/qt/translations/qtbase_sv.qm": "5a2178dd2c03cc4516697f1fb0049649c9ed53f5cde6b937786733dae06aeda8",
+      "usr/lib/biglybtc/qt/translations/qtbase_tr.qm": "353fdfd7165659a49212e7a25bf91c0a71588e52c836f7496640f26782414634",
+      "usr/lib/biglybtc/qt/translations/qtbase_uk.qm": "51b8ff55b37dc5907d637a8ddda12fbe816852b0244c74eb4f0fb84867a786e0",
+      "usr/lib/biglybtc/qt/translations/qtbase_zh_CN.qm": "0481a9b92a6f0578400e960a7d5ee70217a6a450eaf7f98b7d32b8dbd0d58616",
+      "usr/lib/biglybtc/qt/translations/qtbase_zh_TW.qm": "21012b2b427f8d09d31ce9cae582ca27955b478ca3dc2ec18a3068d808638c6a",
+      "usr/share/applications/BiglyBTC-preview.desktop": "95fbceb24a0014b5c4a591d5374ea642270abf4645e4c0f527646ee5cec298c9",
+      "usr/share/doc/biglybtc-experimental/EXPERIMENTAL.txt": "f65716ef57277467d4683659fd482b59e15523767f306aec5599ba2c0fd5c9f1",
+      "usr/share/doc/biglybtc-experimental/SpeedScheduler/LICENSE": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73",
+      "usr/share/doc/biglybtc-experimental/SpeedScheduler/NOTICE.md": "931ecbb2e41cc29addd676e7f1d24f956a77e129fc24bf65de10d5ea3f73df49",
+      "usr/share/doc/biglybtc-experimental/SpeedScheduler/SOURCE_PROVENANCE.json": "6591cee7ad0b1ec4fd7bf89c07477de96092bb3744ae67083389a23253c62bff",
+      "usr/share/doc/biglybtc-experimental/copyright": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73",
+      "usr/share/doc/biglybtc-experimental/libarchive-copyright": "595719eda062573159bf7c1a144e8527c4a6fe3abc3184c80153d62f42feff4b",
+      "usr/share/doc/biglybtc-experimental/libmaxminddb-copyright": "afb560133d24605ef4d18ecd84636f0b190308fe3334a9972b5953090a428d54",
+      "usr/share/doc/biglybtc-experimental/qt/GPL-3.0-only.txt": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+      "usr/share/doc/biglybtc-experimental/qt/ICU-LICENSE.txt": "f3005e195ff74d8812cc1f182a1c446fab678d70a10e3dada497585befee5416",
+      "usr/share/doc/biglybtc-experimental/qt/LGPL-3.0-only.txt": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768",
+      "usr/share/doc/biglybtc-experimental/qt/Qt-runtime.txt": "e718ffc9e5324b52aa2f450687405b1d93e7d7b5750a7725f339cf39d8efa5ce",
+      "usr/share/doc/biglybtc-experimental/qt/qtbase-6.12.0.spdx.json": "6c21550027d570a4ed5f14632d5377c66f246973dca9038e7532f878766879c1",
+      "usr/share/doc/biglybtc-experimental/qt/qtimageformats-6.12.0.spdx.json": "e515d0921b0f293376c0514b7f1148d716862ab2b83069b5cf4a7619e2ed59b6",
+      "usr/share/doc/biglybtc-experimental/qt/qtsvg-6.12.0.spdx.json": "cd5e3c9bb49586815c2450a24643463e7c2d83e9341312e918c1e468e7c81c0a",
+      "usr/share/doc/biglybtc-experimental/qt/qttranslations-6.12.0.spdx.json": "4dab31376076448f2a0f4a62045378c2f81e170533d7b42ead0eb3424a53da54",
+      "usr/share/doc/biglybtc-experimental/qt/qtwayland-6.12.0.spdx.json": "d1e6a757b9dc2a7d21e1f9b13451bea5d19eb73ab8d500938032fe52b2a2c425",
+      "usr/share/doc/biglybtc-experimental/qt-runtime.json": "97c25b7bf5885d166ceb76c7adfa4352ee907578215eccd7135dad5e63d8be1f"
+    },
+    "loader": "\tlinux-vdso.so.1 (0x00007d2897326000)\n\tlibQt6Widgets.so.6 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/bin/../qt/lib/libQt6Widgets.so.6 (0x00007d2896200000)\n\tlibQt6Gui.so.6 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/bin/../qt/lib/libQt6Gui.so.6 (0x00007d2895600000)\n\tlibGLX.so.0 => /usr/lib/x86_64-linux-gnu/libGLX.so.0 (0x00007d28969cd000)\n\tlibOpenGL.so.0 => /usr/lib/x86_64-linux-gnu/libOpenGL.so.0 (0x00007d28961d5000)\n\tlibz.so.1 => /usr/lib/x86_64-linux-gnu/libz.so.1 (0x00007d28961b7000)\n\tlibQt6Network.so.6 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/bin/../qt/lib/libQt6Network.so.6 (0x00007d2895200000)\n\tlibQt6Core.so.6 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/bin/../qt/lib/libQt6Core.so.6 (0x00007d2894a00000)\n\tlibtorrent-rasterbar.so.2.0 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0 (0x00007d2894200000)\n\tlibcrypto.so.3 => /usr/lib/x86_64-linux-gnu/libcrypto.so.3 (0x00007d2893a00000)\n\tlibstdc++.so.6 => /usr/lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007d2893600000)\n\tlibm.so.6 => /usr/lib/x86_64-linux-gnu/libm.so.6 (0x00007d28954da000)\n\tlibgcc_s.so.1 => /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007d2896189000)\n\tlibc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x00007d2893200000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007d2897328000)\n\tlibGL.so.1 => /usr/lib/x86_64-linux-gnu/libGL.so.1 (0x00007d2895455000)\n\tlibxkbcommon.so.0 => /usr/lib/x86_64-linux-gnu/libxkbcommon.so.0 (0x00007d289612a000)\n\tlibEGL.so.1 => /usr/lib/x86_64-linux-gnu/libEGL.so.1 (0x00007d2895442000)\n\tlibX11.so.6 => /usr/lib/x86_64-linux-gnu/libX11.so.6 (0x00007d28948be000)\n\tlibglib-2.0.so.0 => /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0 (0x00007d28940a8000)\n\tlibQt6DBus.so.6 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/bin/../qt/lib/libQt6DBus.so.6 (0x00007d2893925000)\n\tlibfreetype.so.6 => /usr/lib/x86_64-linux-gnu/libfreetype.so.6 (0x00007d289352b000)\n\tlibfontconfig.so.1 => /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 (0x00007d28951ad000)\n\tlibgthread-2.0.so.0 => /usr/lib/x86_64-linux-gnu/libgthread-2.0.so.0 (0x00007d2896123000)\n\tlibGLdispatch.so.0 => /usr/lib/x86_64-linux-gnu/libGLdispatch.so.0 (0x00007d2893472000)\n\tlibzstd.so.1 => /usr/lib/x86_64-linux-gnu/libzstd.so.1 (0x00007d289313d000)\n\tlibgssapi_krb5.so.2 => /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 (0x00007d2894050000)\n\tlibbrotlidec.so.1 => /usr/lib/x86_64-linux-gnu/libbrotlidec.so.1 (0x00007d2895433000)\n\tlibbrotlicommon.so.1 => /usr/lib/x86_64-linux-gnu/libbrotlicommon.so.1 (0x00007d2895410000)\n\tlibresolv.so.2 => /usr/lib/x86_64-linux-gnu/libresolv.so.2 (0x00007d289519a000)\n\tlibicui18n.so.73 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/bin/../qt/lib/libicui18n.so.73 (0x00007d2892c00000)\n\tlibicuuc.so.73 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/bin/../qt/lib/libicuuc.so.73 (0x00007d2892800000)\n\tlibicudata.so.73 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/bin/../qt/lib/libicudata.so.73 (0x00007d2890800000)\n\tlibssl.so.3 => /usr/lib/x86_64-linux-gnu/libssl.so.3 (0x00007d289302f000)\n\tlibxcb.so.1 => /usr/lib/x86_64-linux-gnu/libxcb.so.1 (0x00007d289516f000)\n\tlibatomic.so.1 => /usr/lib/x86_64-linux-gnu/libatomic.so.1 (0x00007d2895164000)\n\tlibpcre2-8.so.0 => /usr/lib/x86_64-linux-gnu/libpcre2-8.so.0 (0x00007d2892f83000)\n\tlibdbus-1.so.3 => /usr/lib/x86_64-linux-gnu/libdbus-1.so.3 (0x00007d28938d5000)\n\tlibbz2.so.1.0 => /usr/lib/x86_64-linux-gnu/libbz2.so.1.0 (0x00007d289403b000)\n\tlibpng16.so.16 => /usr/lib/x86_64-linux-gnu/libpng16.so.16 (0x00007d2893438000)\n\tlibexpat.so.1 => /usr/lib/x86_64-linux-gnu/libexpat.so.1 (0x00007d28938a8000)\n\tlibkrb5.so.3 => /usr/lib/x86_64-linux-gnu/libkrb5.so.3 (0x00007d2892b34000)\n\tlibk5crypto.so.3 => /usr/lib/x86_64-linux-gnu/libk5crypto.so.3 (0x00007d2892f57000)\n\tlibcom_err.so.2 => /usr/lib/x86_64-linux-gnu/libcom_err.so.2 (0x00007d28948b8000)\n\tlibkrb5support.so.0 => /usr/lib/x86_64-linux-gnu/libkrb5support.so.0 (0x00007d289402e000)\n\tlibpthread.so.0 => /usr/lib/x86_64-linux-gnu/libpthread.so.0 (0x00007d289515b000)\n\tlibdl.so.2 => /usr/lib/x86_64-linux-gnu/libdl.so.2 (0x00007d2894029000)\n\tlibXau.so.6 => /usr/lib/x86_64-linux-gnu/libXau.so.6 (0x00007d2894023000)\n\tlibXdmcp.so.6 => /usr/lib/x86_64-linux-gnu/libXdmcp.so.6 (0x00007d289401b000)\n\tlibsystemd.so.0 => /usr/lib/x86_64-linux-gnu/libsystemd.so.0 (0x00007d2892a20000)\n\tlibkeyutils.so.1 => /usr/lib/x86_64-linux-gnu/libkeyutils.so.1 (0x00007d28938a1000)\n",
+    "system_installation": false,
+    "distribution_scope": "private-qualification-only",
+    "country_bundle": {
+      "artifact": "usr/lib/biglybtc/lib/BiglyBTC-plugin-azlocprov.so",
+      "sha256": "dbe306d4ed1eb3e54ff52f322f285a09d00d07939bd2e271c4c75917e9d917ba",
+      "bytes": 39456,
+      "version": "0.1.0",
+      "approval": "compiled application-owned bundle",
+      "database_included": false,
+      "loader": "\tlinux-vdso.so.1 (0x0000714ac1bc4000)\n\tlibmaxminddb.so.0 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/lib/libmaxminddb.so.0 (0x0000714ac1bab000)\n\tlibarchive.so.13 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/lib/libarchive.so.13 (0x0000714ac1ace000)\n\tlibstdc++.so.6 => /usr/lib/x86_64-linux-gnu/libstdc++.so.6 (0x0000714ac1800000)\n\tlibgcc_s.so.1 => /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 (0x0000714ac17d2000)\n\tlibc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x0000714ac1400000)\n\tlibnettle.so.8 => /usr/lib/x86_64-linux-gnu/libnettle.so.8 (0x0000714ac177b000)\n\tlibacl.so.1 => /usr/lib/x86_64-linux-gnu/libacl.so.1 (0x0000714ac1aa6000)\n\tlibzstd.so.1 => /usr/lib/x86_64-linux-gnu/libzstd.so.1 (0x0000714ac16b8000)\n\tliblz4.so.1 => /usr/lib/x86_64-linux-gnu/liblz4.so.1 (0x0000714ac168f000)\n\tlibbz2.so.1.0 => /usr/lib/x86_64-linux-gnu/libbz2.so.1.0 (0x0000714ac167a000)\n\tlibz.so.1 => /usr/lib/x86_64-linux-gnu/libz.so.1 (0x0000714ac165c000)\n\tliblzma.so.5 => /usr/lib/x86_64-linux-gnu/liblzma.so.5 (0x0000714ac1627000)\n\tlibxml2.so.16 => /usr/lib/x86_64-linux-gnu/libxml2.so.16 (0x0000714ac129d000)\n\tlibm.so.6 => /usr/lib/x86_64-linux-gnu/libm.so.6 (0x0000714ac1177000)\n\t/lib64/ld-linux-x86-64.so.2 (0x0000714ac1bc6000)\n\tlibxxhash.so.0 => /usr/lib/x86_64-linux-gnu/libxxhash.so.0 (0x0000714ac1164000)\n"
+    },
+    "libtorrent_runtime": {
+      "provider": "source-built-private-mainline-port-traffic-v3",
+      "version": "2.0.12",
+      "artifact_sha256": "9fbb550bbc1f877ce34ce21849deab97971f5d3eacfbc531a7b777d28a3b2eea",
+      "artifact_bytes": 9153448,
+      "source_input": "/home/yurii/Java/BiglyBT/build/mainline-port-20261028/provider-candidate/install/lib/libtorrent-rasterbar.so.2.0.12",
+      "upstream_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+      "source_build_record_sha256": "c848411975cecc955370cf0a95790fd4659a52714b8f57ce9c82fa7e9fbf54d3",
+      "parent_source_build_record_sha256": "9f8d1f436f943994a117f9f33bbaf016f92bb60ab3c0cecf9e0b6f02efb3c6ee",
+      "runtime_manifest_sha256": "1267bf58a235dc6c32d9ffadab8bbd994ec81f2aa958f0cf621f8a71e4f6c84c",
+      "artifact": "usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12",
+      "aliases": [
+        "usr/lib/biglybtc/lib/libtorrent-rasterbar.so",
+        "usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0",
+        "usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12",
+        "dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libtorrent-rasterbar.so",
+        "dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libtorrent-rasterbar.so.2.0",
+        "dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libtorrent-rasterbar.so.2.0.12"
+      ],
+      "instrumented": false,
+      "causal_qualified": false,
+      "shipping_approved": false,
+      "distribution_scope": "private-qualification-only",
+      "scope": "Exact private source/SDK-qualified dependency; application runtime qualification is separate",
+      "package_role": "Original Debian package metadata and notices retained; its shared objects replaced"
+    },
+    "loaders": {
+      "BiglyBTC": "\tlinux-vdso.so.1 (0x00007d2897326000)\n\tlibQt6Widgets.so.6 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/bin/../qt/lib/libQt6Widgets.so.6 (0x00007d2896200000)\n\tlibQt6Gui.so.6 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/bin/../qt/lib/libQt6Gui.so.6 (0x00007d2895600000)\n\tlibGLX.so.0 => /usr/lib/x86_64-linux-gnu/libGLX.so.0 (0x00007d28969cd000)\n\tlibOpenGL.so.0 => /usr/lib/x86_64-linux-gnu/libOpenGL.so.0 (0x00007d28961d5000)\n\tlibz.so.1 => /usr/lib/x86_64-linux-gnu/libz.so.1 (0x00007d28961b7000)\n\tlibQt6Network.so.6 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/bin/../qt/lib/libQt6Network.so.6 (0x00007d2895200000)\n\tlibQt6Core.so.6 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/bin/../qt/lib/libQt6Core.so.6 (0x00007d2894a00000)\n\tlibtorrent-rasterbar.so.2.0 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0 (0x00007d2894200000)\n\tlibcrypto.so.3 => /usr/lib/x86_64-linux-gnu/libcrypto.so.3 (0x00007d2893a00000)\n\tlibstdc++.so.6 => /usr/lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007d2893600000)\n\tlibm.so.6 => /usr/lib/x86_64-linux-gnu/libm.so.6 (0x00007d28954da000)\n\tlibgcc_s.so.1 => /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007d2896189000)\n\tlibc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x00007d2893200000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007d2897328000)\n\tlibGL.so.1 => /usr/lib/x86_64-linux-gnu/libGL.so.1 (0x00007d2895455000)\n\tlibxkbcommon.so.0 => /usr/lib/x86_64-linux-gnu/libxkbcommon.so.0 (0x00007d289612a000)\n\tlibEGL.so.1 => /usr/lib/x86_64-linux-gnu/libEGL.so.1 (0x00007d2895442000)\n\tlibX11.so.6 => /usr/lib/x86_64-linux-gnu/libX11.so.6 (0x00007d28948be000)\n\tlibglib-2.0.so.0 => /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0 (0x00007d28940a8000)\n\tlibQt6DBus.so.6 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/bin/../qt/lib/libQt6DBus.so.6 (0x00007d2893925000)\n\tlibfreetype.so.6 => /usr/lib/x86_64-linux-gnu/libfreetype.so.6 (0x00007d289352b000)\n\tlibfontconfig.so.1 => /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 (0x00007d28951ad000)\n\tlibgthread-2.0.so.0 => /usr/lib/x86_64-linux-gnu/libgthread-2.0.so.0 (0x00007d2896123000)\n\tlibGLdispatch.so.0 => /usr/lib/x86_64-linux-gnu/libGLdispatch.so.0 (0x00007d2893472000)\n\tlibzstd.so.1 => /usr/lib/x86_64-linux-gnu/libzstd.so.1 (0x00007d289313d000)\n\tlibgssapi_krb5.so.2 => /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 (0x00007d2894050000)\n\tlibbrotlidec.so.1 => /usr/lib/x86_64-linux-gnu/libbrotlidec.so.1 (0x00007d2895433000)\n\tlibbrotlicommon.so.1 => /usr/lib/x86_64-linux-gnu/libbrotlicommon.so.1 (0x00007d2895410000)\n\tlibresolv.so.2 => /usr/lib/x86_64-linux-gnu/libresolv.so.2 (0x00007d289519a000)\n\tlibicui18n.so.73 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/bin/../qt/lib/libicui18n.so.73 (0x00007d2892c00000)\n\tlibicuuc.so.73 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/bin/../qt/lib/libicuuc.so.73 (0x00007d2892800000)\n\tlibicudata.so.73 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/bin/../qt/lib/libicudata.so.73 (0x00007d2890800000)\n\tlibssl.so.3 => /usr/lib/x86_64-linux-gnu/libssl.so.3 (0x00007d289302f000)\n\tlibxcb.so.1 => /usr/lib/x86_64-linux-gnu/libxcb.so.1 (0x00007d289516f000)\n\tlibatomic.so.1 => /usr/lib/x86_64-linux-gnu/libatomic.so.1 (0x00007d2895164000)\n\tlibpcre2-8.so.0 => /usr/lib/x86_64-linux-gnu/libpcre2-8.so.0 (0x00007d2892f83000)\n\tlibdbus-1.so.3 => /usr/lib/x86_64-linux-gnu/libdbus-1.so.3 (0x00007d28938d5000)\n\tlibbz2.so.1.0 => /usr/lib/x86_64-linux-gnu/libbz2.so.1.0 (0x00007d289403b000)\n\tlibpng16.so.16 => /usr/lib/x86_64-linux-gnu/libpng16.so.16 (0x00007d2893438000)\n\tlibexpat.so.1 => /usr/lib/x86_64-linux-gnu/libexpat.so.1 (0x00007d28938a8000)\n\tlibkrb5.so.3 => /usr/lib/x86_64-linux-gnu/libkrb5.so.3 (0x00007d2892b34000)\n\tlibk5crypto.so.3 => /usr/lib/x86_64-linux-gnu/libk5crypto.so.3 (0x00007d2892f57000)\n\tlibcom_err.so.2 => /usr/lib/x86_64-linux-gnu/libcom_err.so.2 (0x00007d28948b8000)\n\tlibkrb5support.so.0 => /usr/lib/x86_64-linux-gnu/libkrb5support.so.0 (0x00007d289402e000)\n\tlibpthread.so.0 => /usr/lib/x86_64-linux-gnu/libpthread.so.0 (0x00007d289515b000)\n\tlibdl.so.2 => /usr/lib/x86_64-linux-gnu/libdl.so.2 (0x00007d2894029000)\n\tlibXau.so.6 => /usr/lib/x86_64-linux-gnu/libXau.so.6 (0x00007d2894023000)\n\tlibXdmcp.so.6 => /usr/lib/x86_64-linux-gnu/libXdmcp.so.6 (0x00007d289401b000)\n\tlibsystemd.so.0 => /usr/lib/x86_64-linux-gnu/libsystemd.so.0 (0x00007d2892a20000)\n\tlibkeyutils.so.1 => /usr/lib/x86_64-linux-gnu/libkeyutils.so.1 (0x00007d28938a1000)\n",
+      "BiglyBTC-headless": "\tlinux-vdso.so.1 (0x000070510430b000)\n\tlibtorrent-rasterbar.so.2.0 => /home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/private-runtime-r5/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0 (0x0000705103600000)\n\tlibz.so.1 => /usr/lib/x86_64-linux-gnu/libz.so.1 (0x00007051042c9000)\n\tlibcrypto.so.3 => /usr/lib/x86_64-linux-gnu/libcrypto.so.3 (0x0000705102e00000)\n\tlibstdc++.so.6 => /usr/lib/x86_64-linux-gnu/libstdc++.so.6 (0x0000705102a00000)\n\tlibm.so.6 => /usr/lib/x86_64-linux-gnu/libm.so.6 (0x0000705103cda000)\n\tlibgcc_s.so.1 => /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 (0x0000705104299000)\n\tlibc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x0000705102600000)\n\tlibssl.so.3 => /usr/lib/x86_64-linux-gnu/libssl.so.3 (0x00007051034f2000)\n\t/lib64/ld-linux-x86-64.so.2 (0x000070510430d000)\n\tlibzstd.so.1 => /usr/lib/x86_64-linux-gnu/libzstd.so.1 (0x000070510342f000)\n"
+    }
+  },
+  "private_build_manifest_sha256": "c6bc07caf851c0e6c4d62867321ad56641632b79af97604d22f4ddc73ee8838c",
+  "provider_reused": {
+    "binding": "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-mainline-runtime.json",
+    "binding_sha256": "1267bf58a235dc6c32d9ffadab8bbd994ec81f2aa958f0cf621f8a71e4f6c84c",
+    "artifact": "/home/yurii/Java/BiglyBT/build/mainline-port-20261028/provider-candidate/install/lib/libtorrent-rasterbar.so.2.0.12",
+    "artifact_sha256": "9fbb550bbc1f877ce34ce21849deab97971f5d3eacfbc531a7b777d28a3b2eea",
+    "record": "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-mainline-source-build-record.json",
+    "record_sha256": "c848411975cecc955370cf0a95790fd4659a52714b8f57ce9c82fa7e9fbf54d3",
+    "rebuilt": false
+  },
+  "prior_math": {
+    "bep33": {
+      "observations": 2076,
+      "references_sha256": "725af816393db7cbf17b27c969b38024aa4963ed0001dad492ea40bdba20377a",
+      "rerun_in_this_cohort": false,
+      "scope": "Finite standalone bloom/aggregation projection; original decoder/network/runtime delivery remain unqualified here."
+    },
+    "storage_stats": {
+      "observations": 269,
+      "references_sha256": "828dcab55985b0bba46863cb04b6ccfb84aa001ba8204d3e0c0a44c3e989291d",
+      "rerun_in_this_cohort": false,
+      "scope": "Pure storage_stats codec/Key qualification, no DB/UDP integration run"
+    }
+  },
+  "hosted_prior_source": [
+    {
+      "path": "build/mainline-port-20261028/hosted-final-source-completed.json",
+      "sha256": "a40b7ede5652e7f6a901b0fff915b246dda8b1a9a51bb0438e20837d6a1307f2",
+      "data": {
+        "conclusion": "success",
+        "databaseId": 40731610813,
+        "headSha": "bf2c1fab4c1dfb46794ced8df5a3db8ff40d8ee2",
+        "jobs": [
+          {
+            "completedAt": "2026-10-28T17:18:00Z",
+            "conclusion": "success",
+            "databaseId": 122969117420,
+            "name": "preview",
+            "startedAt": "2026-10-28T17:01:06Z",
+            "status": "completed",
+            "steps": [
+              {
+                "completedAt": "2026-10-28T17:01:08Z",
+                "conclusion": "success",
+                "name": "Set up job",
+                "number": 1,
+                "startedAt": "2026-10-28T17:01:07Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-28T17:01:42Z",
+                "conclusion": "success",
+                "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+                "number": 2,
+                "startedAt": "2026-10-28T17:01:08Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-28T17:01:42Z",
+                "conclusion": "success",
+                "name": "Check offline preview console forwarding",
+                "number": 3,
+                "startedAt": "2026-10-28T17:01:42Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-28T17:02:49Z",
+                "conclusion": "success",
+                "name": "Install pinned compiler, libtorrent and Qt 6.12.0 SDK",
+                "number": 4,
+                "startedAt": "2026-10-28T17:01:42Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-28T17:15:44Z",
+                "conclusion": "success",
+                "name": "Configure and build the desktop preview",
+                "number": 5,
+                "startedAt": "2026-10-28T17:02:49Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-28T17:17:50Z",
+                "conclusion": "success",
+                "name": "Run offline unit tests",
+                "number": 6,
+                "startedAt": "2026-10-28T17:15:44Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-28T17:17:55Z",
+                "conclusion": "success",
+                "name": "Run actual offline preview smoke and capture classic view",
+                "number": 7,
+                "startedAt": "2026-10-28T17:17:50Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-28T17:17:57Z",
+                "conclusion": "success",
+                "name": "Preserve test, screenshot and dependency evidence",
+                "number": 8,
+                "startedAt": "2026-10-28T17:17:55Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-28T17:17:57Z",
+                "conclusion": "success",
+                "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+                "number": 16,
+                "startedAt": "2026-10-28T17:17:57Z",
+                "status": "completed"
+              },
+              {
+                "completedAt": "2026-10-28T17:17:57Z",
+                "conclusion": "success",
+                "name": "Complete job",
+                "number": 17,
+                "startedAt": "2026-10-28T17:17:57Z",
+                "status": "completed"
+              }
+            ],
+            "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40731610813/job/122969117420"
+          }
+        ],
+        "status": "completed",
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40731610813"
+      },
+      "scope": "Prior bf2 hosted source only; no current source/private-provider hosted credit"
+    }
+  ],
+  "archive": {
+    "path": "migration/evidence/20261028-mainline-scrape-storage-stats/retained-evidence.tar.gz",
+    "sha256": "a1fa5eefd54bdd97eecb3912dab748ed617cbe0ca9ac3ada03656889aeb4db68",
+    "members": 484,
+    "bytes": 1335517
+  },
+  "initial_failed_attempts_retained": true,
+  "original_live_profile_used": false,
+  "full_phase_qualified": false,
+  "shipping_approved": false,
+  "new_original_replay_claimed": false
+}
