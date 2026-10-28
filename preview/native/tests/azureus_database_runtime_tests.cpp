@@ -157,7 +157,9 @@ private slots:
    QVERIFY(stored(store(first,server.endpoint(),this,*firstCookie,key,{a})));
    auto b=value(contact(second.endpoint()),"second-actual-wire",1,QDateTime::currentMSecsSinceEpoch());QVERIFY(stored(store(second,server.endpoint(),this,*secondCookie,key,{b})));
    state=server.databaseState();QVERIFY(state);QCOMPARE(state->stores,std::uint64_t{2});QCOMPARE(state->values,std::size_t{2});
-   app::AzureusServiceOptions opts;opts.enabled=true;auto lookup=app::OwnedAzureusService::create(opts);QVERIFY(lookup);QVERIFY(server.allowPeer((*lookup)->endpoint()));
+   // Original protocol55 compresses same-IP identities to port%5; owned peers need distinct IDs.
+   app::AzureusServiceOptions opts;opts.enabled=true;opts.bindAddress=QHostAddress(QStringLiteral("127.0.0.4"));auto lookup=app::OwnedAzureusService::create(opts);QVERIFY(lookup);
+   QVERIFY(contact(server.endpoint()).id!=contact((*lookup)->endpoint()).id);QVERIFY(server.allowPeer((*lookup)->endpoint()));
    const auto allowed=(*lookup)->allowPeer(server.endpoint());QVERIFY(allowed);
    QVERIFY(spin([&]{const auto observation=(*lookup)->observation();return observation.lastResult&&observation.lastResult->request==*allowed&&observation.lastResult->terminal;}));
    control::NodeId target{};std::copy(key.begin(),key.end(),target.begin());const auto request=(*lookup)->lookupValue(server.endpoint(),target);QVERIFY(request);
