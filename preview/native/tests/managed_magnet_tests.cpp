@@ -218,12 +218,16 @@ public:
   }
   unsigned short port() const { return server_.serverPort(); }
 };
+QByteArray singleRawInfo(const QByteArray& name) {
+  return "d6:lengthi16384e4:name" + QByteArray::number(name.size()) + ':' + name
+      + "12:piece lengthi16384e6:pieces20:" + QByteArray(20, 'h') + 'e';
+}
 QByteArray rawInfo(bool unsafeMulti = false) {
   const auto piece = QByteArray(20, 'h');
   if (unsafeMulti) {
     return "d5:filesld6:lengthi16384e4:pathl2:..18:payload-escape.bineee4:name6:bundle12:piece lengthi16384e6:pieces20:" + piece + 'e';
   }
-  return "d6:lengthi16384e4:name21:../payload-escape.bin12:piece lengthi16384e6:pieces20:" + piece + 'e';
+  return singleRawInfo("..");
 }
 bool noPayloadFiles(const Client& client) {
   if (QFileInfo::exists(client.payload) || QFileInfo::exists(client.root.path() + QStringLiteral("/payload-escape.bin"))) { return false; }
@@ -329,6 +333,45 @@ private slots:
     QVERIFY(remaining && remaining->size() == 1 && remaining->front().sourceEntry == pending.sourceEntry);
     const auto closed = service->close(std::chrono::steady_clock::now() + 5s);
     QVERIFY(closed.sessionJoined && closed.retirement.storageReleased); QVERIFY(client.noDownload() && noPayloadFiles(client));
+  }
+  void originalSlashNameImportsStoppedWithConvertedLeafAndUnchangedRawInfo() {
+    // Original Linux FileUtil converts '/' to space. This raw name is a
+    // compatible metadata subject, not a literal traversal payload path.
+    const auto info = singleRawInfo("../payload-escape.bin");
+    MetadataPeer peer(info, true);
+    Client client; const auto pending = client.queue(*peer.hash, peer.port(), true); auto service = owner(client);
+    QVERIFY(client.noDownload() && noPayloadFiles(client));
+    QVERIFY(service->startMagnet(*client.lease, pending, client.native()));
+    const auto initial = magnet(*service, pending.hash); QVERIFY(initial && initial->retained && initial->admission != 0);
+    QTRY_VERIFY2_WITH_TIMEOUT(pump(*service, pending.hash, MagnetPhase::Imported), magnetDiagnostic(*service, pending.hash).constData(), 30000);
+    const auto imported = magnet(*service, pending.hash); QVERIFY(imported && !imported->failure && !imported->retained);
+    QCOMPARE(imported->admission, initial->admission);
+    QVERIFY(!peer.invalid && peer.metadataReplies > 0 && peer.payloadRequests == 0);
+    QVERIFY(service->managedDownloads().empty() && noPayloadFiles(client));
+    const auto inventory = saved(client); QCOMPARE(inventory.downloads.size(), std::size_t{1});
+    const auto& row = inventory.downloads.front();
+    QVERIFY(row.hash && *row.hash == pending.hash && pending.hash == *peer.hash);
+    QVERIFY(row.saveFile); QCOMPARE(*row.saveFile, std::string(".. payload-escape.bin"));
+    QCOMPARE(row.saveDirectory, client.payload.toStdString());
+    QCOMPARE(row.startup, core::StartupState::Stopped); QVERIFY(!row.forceStart);
+    const auto rawHash = QCryptographicHash::hash(info, QCryptographicHash::Sha1);
+    const auto identity = pending.hash.bytes();
+    QCOMPARE(QByteArray(reinterpret_cast<const char*>(identity.data()), static_cast<qsizetype>(identity.size())), rawHash);
+    const auto unchangedInfo = [&](const QString& path) {
+      const auto document = parse(test::read(path)); const auto* actualInfo = document.find("info");
+      if (!actualInfo) { return false; }
+      const auto raw = QByteArray::fromStdString(document.originalBytes().substr(actualInfo->begin, actualInfo->end - actualInfo->begin));
+      return raw == info && QCryptographicHash::hash(raw, QCryptographicHash::Sha1) == rawHash;
+    };
+    QVERIFY(unchangedInfo(QString::fromStdString(row.torrentFile)));
+    QVERIFY(unchangedInfo(client.profile + QStringLiteral("/active/") + QString::fromStdString(pending.hash.hex()) + QStringLiteral(".dat")));
+    const auto remaining = engine::readPendingMagnets(*client.lease, localPolicy()); QVERIFY(remaining && remaining->empty());
+    QVERIFY(!QFileInfo::exists(client.payload + QStringLiteral("/.. payload-escape.bin")));
+    QVERIFY(!QFileInfo::exists(client.root.path() + QStringLiteral("/payload-escape.bin")));
+    QVERIFY(client.sentinelIntact());
+    const auto closed = service->close(std::chrono::steady_clock::now() + 5s);
+    QVERIFY(closed.sessionJoined && closed.retirement.storageReleased); QVERIFY(!closed.checkpointFailure);
+    QVERIFY(noPayloadFiles(client) && client.sentinelIntact()); QCOMPARE(peer.payloadRequests, 0);
   }
   void admissionsRequirePersistedIntentAndExactHeldProfile() {
     MetadataPeer peer(QByteArray("d6:lengthi16384e4:name8:held.bin12:piece lengthi16384e6:pieces20:") + QByteArray(20, 'h') + 'e', false);
