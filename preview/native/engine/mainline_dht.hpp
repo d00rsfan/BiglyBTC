@@ -15,6 +15,8 @@
 #include <utility>
 #include <vector>
 
+namespace biglybtc::storage { class OriginalMainlineIdentity; }
+
 namespace biglybtc::engine {
 
 struct MainlineDhtOptions {
@@ -30,6 +32,10 @@ struct MainlineDhtOptions {
   std::string restoredState{};
   std::vector<std::pair<std::string, int>> restoredNodes{};
   bool restoreIdentity = true;
+  // Explicit optional original-root request. Both objects are retained through
+  // actual service join; this is the SAME held lease, not a second owner.
+  std::shared_ptr<const storage::OriginalMainlineIdentity> originalIdentity{};
+  std::shared_ptr<const storage::ProfileLease> originalIdentityLease{};
 };
 struct MainlineDhtPeers {
   libtorrent::sha1_hash hash;
@@ -55,6 +61,8 @@ struct MainlineDhtStatus {
   std::uint64_t peerBootstrapProgress = 0;
   // Passive actual storage/terminal accounting, not elapsed-time estimates.
   std::size_t scrapeRetainedRounds=0,scrapePendingProbes=0,scrapeQueuedResults=0;
+  bool originalIdentityRequested=false,originalIdentityActive=false,originalIdentityJoined=false;
+  std::uint64_t originalIdentityAdoptions=0,originalIdentityRetirements=0;
 };
 
 // Worker-confined dedicated session: never owns a profile, torrent or payload.

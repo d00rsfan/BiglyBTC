@@ -79,7 +79,10 @@ bool acceptScrape(const lt::dht_direct_response_alert& response) {
       if(id&&id.string_length()==20&&lt::sha1_hash(id.string_ptr())==probe.nodeId){
         const auto encoded=body.data_section();
         auto decoded=services::mainline_scrape::decode({encoded.data(),static_cast<std::size_t>(encoded.size())},round.dialect);
-        if(decoded&&!round.aggregate.add(*decoded)){round.failed=true;finishScrape(round);}
+        // Original PeerLookupTask only forwards responses with decoded peer items;
+        // filters alone and nodes-only replies do not feed ScrapeResponseHandler.
+        if(decoded&&(round.dialect!=services::mainline_scrape::Dialect::OriginalBFse||decoded->decodedPeerItems)
+            &&!round.aggregate.add(*decoded)){round.failed=true;finishScrape(round);}
       }
     }
   }

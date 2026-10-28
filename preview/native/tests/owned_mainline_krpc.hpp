@@ -37,6 +37,7 @@ class OwnedKrpc final {
   bool noise_=false;
   QByteArray scrapeSeedKey_="BFse";
   bool scrapeZero_=false,scrapeWrongId_=false;
+  bool scrapePeerItems_=true;
   int scrapeGets_=0;
   bool dropScrapes_=false,errorScrapes_=false,duplicateScrapes_=false;
   int scrapeNoSeeds_=0;
@@ -58,8 +59,12 @@ class OwnedKrpc final {
       if(dropScrapes_){return;}
       if(errorScrapes_){send(request,dictionary({{"e",list({"i203e",string("owned scrape error")})},{"t",string(request.transaction)},{"y",string("e")}}));return;}
       const auto id=scrapeWrongId_?QByteArray(20,'W'):nodeId_;
-      const auto reply=response(request,{{"id",string(id)},{"nodes",string({})},
-          {scrapeSeedKey_,string(scrapeFilter())},{"BFpe",string(scrapeFilter())}});
+      std::map<QByteArray,QByteArray> fields{{"id",string(id)},{"nodes",string({})},
+          {scrapeSeedKey_,string(scrapeFilter())},{"BFpe",string(scrapeFilter())}};
+      // One decoded bogon item exercises the original caller gate, but supplies
+      // no permitted direct peer and never grants peer-injection authority.
+      if(scrapePeerItems_){fields["values"]=list({string(compact(1))});}
+      const auto reply=response(request,fields);
       send(request,reply);if(duplicateScrapes_){send(request,reply);}return;
     }
     const auto token=QCryptographicHash::hash(tokenKey(request),QCryptographicHash::Sha1).first(8);
@@ -164,6 +169,7 @@ public:
   void hold(const lt::sha1_hash& value) { heldHash_=hashBytes(value); }
   void release() { heldHash_.clear(); auto pending=std::move(held_); held_.clear(); for (const auto& request:pending) { answerPeers(request); } }
   void scrapeReply(QByteArray key="BFse",bool zero=false,bool wrongId=false){scrapeSeedKey_=std::move(key);scrapeZero_=zero;scrapeWrongId_=wrongId;}
+  void scrapePeerItems(bool enabled){scrapePeerItems_=enabled;}
   void scrapeNoSeeds(int value){test::require(value==0||value==1,"Invalid owned noseed expectation");scrapeNoSeeds_=value;}
   void dropScrapes(bool value){dropScrapes_=value;}
   void errorScrapes(bool value){errorScrapes_=value;}

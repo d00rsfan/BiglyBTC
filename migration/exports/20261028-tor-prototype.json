@@ -1,0 +1,26 @@
+{
+  "status": "SOURCE_EXPORT_ONLY_NOT_EXECUTED",
+  "retained_original_source_sha256": {
+    "native/services/tor_control/channel.hpp": "f6687c4e9b0cbd96ce733eede6114b5b10ce9b5e5e7854d24a7de4f8a3b85ff5",
+    "native/services/tor_control/channel.cpp": "d14762f4133f1a68c961b31706a012eda8a250bc7db46adf397efe67f06e668d",
+    "native/services/tor_control/channel_tests.cpp": "a23e37a86c4647ccbf27f8c7fd4e972b0538643d7adb5bc9ab52317a7b250cba",
+    "native/services/tor_control/ownership.hpp": "d643f1a1d646439b85810a2a3e96c123b661797d9199103500dfc92f3c44a18f",
+    "native/services/tor_control/ownership.cpp": "1c9f585833345a5075000795895b7bbe990692a220f5cff05edd5c46f845daa2",
+    "native/services/tor_control/ownership_tests.cpp": "a82426f050ba1cc616e96094a0a06ea1809b9ef0b3256580913b8d059ee84079",
+    "native/services/tor_control/ownership_source_tests.cpp": "9c33353cf5b8b28ca815ea02fa63866330fe1882afde3e69a0ce44036edcf232",
+    "native/services/tor_control/README.md": "73271c17c7e0678614cd6e709e886b11d890259f93b3dc3d716bd17627e0c8a3",
+    "migration/fixtures/tor-ownership/cases.json": "3a14ef6b9c78c6b6740cc24f6ff7f6b3e8abfb92b5f0b9c74e07f0032f329167"
+  },
+  "original_audit_repository": "/home/yurii/Java/BiglyBT",
+  "original_audit_review_ref": "fd107b7174e14a2d898e0f2a82bda3a0c926dcc3",
+  "original_java_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "aznettor_upstream": "ae8efb8d40fb38246ac1790ab5cfb11584689c4a",
+  "native_plugin_commit": "223467c0afef06bf3835ec20863c6f1ec7d79583",
+  "native_plugin_files": {
+    "CMakeLists.txt": "85f17c8ac3425c40324ef72bd31b5bc107cc47a4baa3ad98541c6dadd3e96669",
+    "safecookie.hpp": "10e6092b7d6f0476f10d9d3742ca1a81c50f7a0feb2ed21b97af0a91f5143a17",
+    "safecookie.cpp": "bddc5eaf95294a1fa4a7a6e541f7d51d0d53418b6bdae6afea7ec41230ed3901"
+  },
+  "public_native_integration_commit": null,
+  "scope": "Byte-exact channel/ownership code and retained fixture; only CMake placement changes. No runtime/process adoption, shutdown or original-profile access."
+}

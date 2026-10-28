@@ -222,7 +222,8 @@ bool hashed(int descriptor) {
   return std::string_view(encoded.data(), encoded.size()) == runtime_binding::sha256;
 }
 bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* retainedPin = nullptr,
-    bool combinedCounters = false, bool queueObserver = false, bool extendedTraffic = false, bool mainlinePort = false) {
+    bool combinedCounters = false, bool queueObserver = false, bool extendedTraffic = false, bool mainlinePort = false,
+    bool originalIdentity = false, bool trackerResponse = false) {
   const char* preload = std::getenv("LD_PRELOAD");
   const char* audit = std::getenv("LD_AUDIT");
   if ((preload && *preload) || (audit && *audit)) { return false; }
@@ -252,10 +253,12 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
       "biglybtc_traffic_counter_abi_v3", "biglybtc_read_traffic_counters_v3",
       "biglybtc_socks4a_abi_v1", "biglybtc_socks4a_webseed_abi_v1",
       "biglybtc_mainline_port_abi_v1", "biglybtc_attach_mainline_port_observer_v1",
-      "biglybtc_refresh_mainline_port_v1"};
-  const std::size_t required = mainlinePort ? 20 : extendedTraffic ? 15 : queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
-  std::array<std::uintptr_t, 20> addresses{};
-  std::array<Mapping, 20> beforeMappings{};
+      "biglybtc_refresh_mainline_port_v1",
+      "biglybtc_mainline_identity_abi_v1", "biglybtc_configure_mainline_identity_v1", "biglybtc_read_mainline_identity_v1",
+      "biglybtc_tracker_response_abi_v1", "biglybtc_attach_tracker_response_observer_v1"};
+  const std::size_t required = trackerResponse ? 25 : originalIdentity ? 23 : mainlinePort ? 20 : extendedTraffic ? 15 : queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
+  std::array<std::uintptr_t, 25> addresses{};
+  std::array<Mapping, 25> beforeMappings{};
   std::size_t at = 0;
   for (; at < required; ++at) {
     const auto* name = symbols[at];
@@ -355,3 +358,25 @@ bool managedPayloadCounterRuntimeQualified() noexcept {
   return static_cast<bool>(managedPayloadCounterRuntimePin());
 }
 } // namespace biglybtc::engine::detail
+
+namespace biglybtc::engine::detail {
+std::shared_ptr<void> mainlineIdentityRuntimePin() noexcept {
+#if BIGLYBTC_PERSISTENT_RUNTIME_BOUND
+  try {std::shared_ptr<void> pin;if(!checkLoadedProvider(true,&pin,true,true,true,true,true)){return {};}return pin;}
+  catch (...) {return {};}
+#else
+  return {};
+#endif
+}
+}
+
+namespace biglybtc::engine::detail {
+std::shared_ptr<void> managedTrackerResponseRuntimePin() noexcept {
+#if BIGLYBTC_PERSISTENT_RUNTIME_BOUND
+  try {std::shared_ptr<void> pin;if(!checkLoadedProvider(true,&pin,true,true,true,true,true,true)){return {};}return pin;}
+  catch (...) {return {};}
+#else
+  return {};
+#endif
+}
+}

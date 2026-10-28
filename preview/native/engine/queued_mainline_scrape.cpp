@@ -1,6 +1,7 @@
 #include "queued_mainline_scrape.hpp"
 #include "library_view.hpp"
 #include "managed_storage.hpp"
+#include "managed_tracker_responses.hpp"
 #include "queue_positions.hpp"
 #include "original_filename_policy.hpp"
 #include "biglybtc/saved_dnd.hpp"
@@ -46,6 +47,19 @@ bool withoutRealTracker(const core::Document& source,const core::TorrentHash& ke
       for(const auto& url:tier.children){if(!allowed(url)){return false;}}}
   }return true;
 }
+std::optional<std::string> singleConfiguredTracker(const core::Document& source){
+  std::optional<std::string> one;bool valid=true;
+  const auto take=[&](const Node& node){
+    if(node.type!=Node::Type::Bytes||node.bytes.size()>2048){valid=false;return;}
+    if(node.bytes.empty()){return;}
+    if(node.bytes.find('\0')!=std::string::npos||(!node.bytes.starts_with("http://")&&!node.bytes.starts_with("https://")&&!node.bytes.starts_with("udp://"))||(one&&*one!=node.bytes)){valid=false;return;}one=node.bytes;
+  };
+  if(const auto* primary=source.find("announce")){take(*primary);}
+  if(const auto* tiers=source.find("announce-list")){
+    if(tiers->type!=Node::Type::List||tiers->children.size()>64){return {};}
+    for(const auto& tier:tiers->children){if(tier.type!=Node::Type::List||tier.children.size()>64){return {};}for(const auto& url:tier.children){take(url);}}
+  }return valid?one:std::nullopt;
+}
 std::optional<std::string> digest(std::string_view bytes){
   std::array<unsigned char,32> out{};unsigned count=0;
   if(EVP_Digest(bytes.data(),bytes.size(),out.data(),&count,EVP_sha256(),nullptr)!=1||count!=out.size()){return {};}
@@ -70,7 +84,7 @@ readSavedMainlineScrapeTargets(const storage::ProfileLease& lease){
 }
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
 readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
-    std::span<const ManagedMainlineScrapeObservation> observations){
+    std::span<const ManagedMainlineScrapeObservation> observations,bool configuredCandidates){
   try{
     if(observations.size()>256){return error(Code::Unsupported,"Active Mainline scrape target bound");}
     std::map<std::string,const ManagedMainlineScrapeObservation*> active;
@@ -132,7 +146,14 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
         if(const auto* backup=azureus->find("dht_backup_enable");backup&&(backup->type!=Node::Type::Integer||backup->integer!=1)){continue;}
       }
       if(const auto* flags=attrs->find("flags");flags&&(flags->type!=Node::Type::Integer||(static_cast<std::uint64_t>(flags->integer)&0x200u))){continue;}
-      if(!withoutRealTracker(doc,key)){continue;} // Regular scrape authority is not guessed.
+      std::optional<std::string> configured;
+      if(!withoutRealTracker(doc,key)){
+        if(!configuredCandidates){continue;}configured=singleConfiguredTracker(doc);
+        // This returns an authenticated candidate, not network permission.
+        // The sole owner additionally requires its actual library response.
+        if(!configured||!listIncludes(attrs->find("peersources"),"Tracker",true)
+            ||listIncludes(attrs->find("peersourcesdenied"),"Tracker",false)){continue;}
+      }
       if(observation){
         const auto permitted=activeScrapeOnly(*attrs);if(!permitted){return std::unexpected(permitted.error());}
         if(!*permitted){continue;} // Normal active announce mode is not a passive scrape.
@@ -184,9 +205,12 @@ readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
         if(const auto* value=attrs->find(name)){auto encodedValue=core::encodeValue(*value,storage::compatibleConfigLimits());if(!encodedValue){return error(Code::InvalidFormat,"Scrape scope exceeds encoding bound");}append(scope,*encodedValue);}else{append(scope,"");}
       }
       if(const auto* az=doc.find("azureus_properties")){auto value=core::encodeValue(*az,storage::compatibleConfigLimits());if(!value){return error(Code::InvalidFormat,"Scrape source scope exceeds encoding bound");}append(scope,*value);}
+      if(configured){append(scope,"single-configured-tracker");append(scope,*configured);}
       if(observation){append(scope,"active-mldht-scrape");append(scope,std::to_string(observation->admission));append(scope,mapping);}
       auto hashed=digest(scope);if(!hashed){return error(Code::Io,observation?"Cannot authenticate managed Mainline scope":"Cannot authenticate saved Mainline scope");}
-      result.push_back({key,identity->full,std::move(*hashed),noSeeds,observation?observation->admission:0});
+      std::string responseKey;
+      if(configured){const auto ownerKey=detail::originalTrackerResponseKey(lease,*identity,*raw,*configured);if(!ownerKey){continue;}responseKey=*ownerKey;}
+      result.push_back({key,identity->full,std::move(*hashed),noSeeds,observation?observation->admission:0,std::move(responseKey),configured.value_or("")});
     }
     auto current=storage::ConfigFile::load(lease,"downloads.config");
     if(!current||current->recoverySource()!=storage::RecoverySource::Primary
@@ -260,6 +284,9 @@ void QueuedMainlineScrapes::revoke(const core::TorrentHash& hash)noexcept{
     if(row!=rows_.end()){rows_.erase(row);}
     if(activeKey_==key){active_.reset();activeKey_.clear();activeScope_.clear();}
   }catch(...){revokedOverflow_=true;rows_.clear();active_.reset();activeKey_.clear();activeScope_.clear();}
+}
+bool QueuedMainlineScrapes::revoked(const core::TorrentHash& hash)const noexcept{
+  try{return revokedOverflow_||revoked_.contains(hash.hex());}catch(...){return true;}
 }
 void QueuedMainlineScrapes::settled(const core::TorrentHash& hash){
   const auto key=hash.hex();revoked_.erase(key);rows_.erase(key);

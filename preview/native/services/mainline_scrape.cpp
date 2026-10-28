@@ -66,7 +66,7 @@ std::expected<Response,Error> decode(std::string_view wire,Dialect dialect){
       if(values->type!=core::Node::Type::List){return std::unexpected(Error::Invalid);}if(values->children.size()>MaximumPeers){return std::unexpected(Error::Limit);}
       carrier=carrier||!values->children.empty();
       for(const auto& value:values->children){if(value.type!=core::Node::Type::Bytes){return std::unexpected(Error::Invalid);}const auto raw=value.bytes;
-        if(raw.size()!=6&&raw.size()!=18){continue;}const auto bytes=std::span(reinterpret_cast<const std::uint8_t*>(raw.data()),raw.size());
+        if(raw.size()!=6&&raw.size()!=18){continue;}++result.decodedPeerItems;const auto bytes=std::span(reinterpret_cast<const std::uint8_t*>(raw.data()),raw.size());
         auto a=address(bytes.first(bytes.size()-2));const auto port=static_cast<std::uint16_t>((static_cast<unsigned>(bytes[bytes.size()-2])<<8)|bytes.back());
         if(a&&permittedDirect(*a,port)){result.direct.push_back(*a);}}
     }

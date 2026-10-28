@@ -113,6 +113,49 @@ private slots:
    }
    const auto read=server.databaseState();QVERIFY(read);QCOMPARE(read->reads,std::uint64_t{3});client.close();server.close();
  }
+ void originalDiversificationRequiresExplicitControlAndRealMappingEvents(){
+   namespace stats=services::azureus_storage_stats;
+   struct Inputs final:stats::DiversificationControl {
+     std::int64_t jitter=0,until=0;unsigned draws=0;bool available=true;
+     std::expected<std::int64_t,stats::Error> expiryJitterMilliseconds()noexcept override{++draws;if(!available){return std::unexpected(stats::Error::Invalid);}return jitter;}
+     std::int64_t suspendedUntilMilliseconds()const noexcept override{return until;}
+   };
+   db::Limits limits;limits.storageStats=db::StorageStatsMode::OriginalDiversification;limits.maximumEntriesPerKey=65;limits.originalRepublishMillis=3*24*60*60*1000;
+   QVERIFY(!db::Owner::create(limits));auto inputs=std::make_shared<Inputs>();limits.diversificationControl=inputs;auto owner=db::Owner::create(limits);QVERIFY(owner);Clock clock;
+   auto local=contact({QHostAddress::LocalHost,41000});QVERIFY((*owner)->bindLocal(local));const std::string key(20,'Z');
+   for(unsigned i=0;i<65;++i){auto origin=contact({QHostAddress(QStringLiteral("1.2.0.%1").arg(i)),41001});auto item=value(origin,std::string(512,'x'));item.lifeHours=0;
+     const auto added=(*owner)->store(key,origin,{&item,1},clock);QVERIFY(added);QCOMPARE(*added,static_cast<std::int8_t>(i==64?3:1));}
+   QCOMPARE(inputs->draws,1U);auto snapshot=(*owner)->snapshot();QVERIFY(snapshot);QCOMPARE(snapshot->values,std::size_t{65});QCOMPARE(snapshot->bytes,std::size_t{33280});
+   auto reader=contact({QHostAddress(QStringLiteral("1.2.1.1")),41002});const auto observed=(*owner)->read(key,reader,0,8,clock);QVERIFY(observed&&*observed);QCOMPARE((**observed).values.size(),std::size_t{1});
+   auto decoded=stats::decode((**observed).values[0].bytes);QVERIFY(decoded);QCOMPARE(decoded->value.entries,65);QCOMPARE(decoded->value.bytes,33280);QCOMPARE(decoded->value.diversification,std::int8_t{3});
+   // Stats serialiseStats lazily expires the adapter key, but source Mapping's
+   // cached wire diversification is not refreshed until its next real callback.
+   clock.now=1000+stats::DiversifyingKey::MinimumExpiry;auto boundary=(*owner)->read(key,reader,0,8,clock);QVERIFY(boundary&&*boundary);decoded=stats::decode((**boundary).values[0].bytes);QVERIFY(decoded);QCOMPARE(decoded->value.diversification,std::int8_t{3});
+   ++clock.now;auto expired=(*owner)->read(key,reader,0,8,clock);QVERIFY(expired&&*expired);QCOMPARE((**expired).diversification,std::int8_t{3});decoded=stats::decode((**expired).values[0].bytes);QVERIFY(decoded);QCOMPARE(decoded->value.diversification,std::int8_t{1});
+   const auto normal=(*owner)->read(key,reader,0,0,clock);QVERIFY(normal&&*normal);QCOMPARE((**normal).diversification,std::int8_t{1});QCOMPARE(inputs->draws,1U);
+   limits.storageStats=db::StorageStatsMode::SuspendedDiversification;limits.diversificationControl.reset();QVERIFY(!db::Owner::create(limits)); // Legacy64-entry bound retained.
+   limits.storageStats=db::StorageStatsMode::OriginalDiversification;inputs=std::make_shared<Inputs>();inputs->available=false;limits.diversificationControl=inputs;auto missing= db::Owner::create(limits);QVERIFY(missing);
+   auto item=value(reader,"uncommitted");QVERIFY(!(*missing)->store(key,reader,{&item,1},clock));snapshot=(*missing)->snapshot();QVERIFY(snapshot);QCOMPARE(snapshot->keys,std::size_t{0});QCOMPARE(snapshot->stores,std::uint64_t{0});
+ }
+ void originalFrequencyUsesActualIpBloomAndSuspensionSamples(){
+   namespace stats=services::azureus_storage_stats;
+   struct Inputs final:stats::DiversificationControl {
+     std::int64_t until=0;unsigned draws=0;
+     std::expected<std::int64_t,stats::Error> expiryJitterMilliseconds()noexcept override{++draws;return std::int64_t{0};}
+     std::int64_t suspendedUntilMilliseconds()const noexcept override{return until;}
+   };
+   db::Limits limits;limits.storageStats=db::StorageStatsMode::OriginalDiversification;auto inputs=std::make_shared<Inputs>();limits.diversificationControl=inputs;
+   auto owner=db::Owner::create(limits);QVERIFY(owner);Clock clock;auto local=contact({QHostAddress::LocalHost,41000});QVERIFY((*owner)->bindLocal(local));const std::string key(20,'F');auto item=value(local,"actual mapping");QVERIFY((*owner)->store(key,local,{&item,1},clock));
+   for(unsigned i=0;i<192;++i){clock.now=i;auto reader=contact({QHostAddress(QStringLiteral("1.2.0.%1").arg(i)),41001});auto read=(*owner)->read(key,reader,0,0,clock);QVERIFY(read&&*read);QCOMPARE((**read).diversification,std::int8_t{1});}
+   clock.now=180001;auto reader=contact({QHostAddress(QStringLiteral("8.8.8.8")),41001});auto read=(*owner)->read(key,reader,0,0,clock);QVERIFY(read&&*read);QCOMPARE((**read).diversification,std::int8_t{2});
+   const auto result=(*owner)->read(key,reader,0,8,clock);QVERIFY(result&&*result);const auto decoded=stats::decode((**result).values[0].bytes);QVERIFY(decoded);QCOMPARE(decoded->value.readsPerMinute,44);QCOMPARE(decoded->value.diversification,std::int8_t{2});QCOMPARE(inputs->draws,1U);
+   // Separate actual adapter with the same192 IPs and a genuine future wall
+   // deadline retains the measured44RPM while suppressing diversification.
+   inputs=std::make_shared<Inputs>();inputs->until=1000000;limits.diversificationControl=inputs;owner=db::Owner::create(limits);QVERIFY(owner);clock.now=1000;QVERIFY((*owner)->bindLocal(local));QVERIFY((*owner)->store(key,local,{&item,1},clock));
+   for(unsigned i=0;i<192;++i){clock.now=i;auto peer=contact({QHostAddress(QStringLiteral("1.2.0.%1").arg(i)),41001});QVERIFY((*owner)->read(key,peer,0,0,clock));}
+   clock.now=180001;read=(*owner)->read(key,reader,0,0,clock);QVERIFY(read&&*read);QCOMPARE((**read).diversification,std::int8_t{1});
+   auto stat=(*owner)->read(key,reader,0,8,clock);QVERIFY(stat&&*stat);const auto suspended=stats::decode((**stat).values[0].bytes);QVERIFY(suspended);QCOMPARE(suspended->value.readsPerMinute,44);QCOMPARE(suspended->value.diversification,std::int8_t{1});
+ }
  void borrowedClockCannotReenterFacadeMutation(){
    auto owner=db::Owner::create();QVERIFY(owner);
    struct Reentrant final:db::lifecycle::WallClock {

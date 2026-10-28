@@ -17,6 +17,62 @@ std::int32_t sourceQueueShareRatio(std::int64_t downloaded,std::int64_t uploaded
   if(ratio>std::numeric_limits<std::int32_t>::max()){return std::numeric_limits<std::int32_t>::max();}
   return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(ratio));
 }
+QueueOriginalScrapeResponse sourceQueueOriginalScrapeResponse(
+    const std::optional<QueueOriginalScrapeContent>& content) noexcept {
+  const bool valid=content&&(content->seeds!=-1||content->peers!=-1);
+  return {valid?QueueOriginalScrapeType::Success:QueueOriginalScrapeType::Error,content};
+}
+bool sourceQueueQueuedScrapeEligible(const QueueOriginalScrapeResponse& response,
+    const std::optional<std::int64_t>& ownStartedWallMillis) noexcept {
+  if(response.type==QueueOriginalScrapeType::Error){return true;}
+  return response.type==QueueOriginalScrapeType::Success&&response.content&&ownStartedWallMillis
+      &&response.content->startedWallMillis==*ownStartedWallMillis;
+}
+namespace {
+std::int32_t trackerInt(std::int64_t value) noexcept {return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(value));}
+}
+QueueOriginalScrapeResponse QueueOriginalTrackerResponse::response()const noexcept {
+  if(!known_){return {};}
+  return sourceQueueOriginalScrapeResponse(visible_?std::optional{current_}:std::nullopt);
+}
+bool QueueOriginalTrackerResponse::eligible(std::int64_t now)const noexcept {
+  return known_&&regular_&&!pending_&&now>=0&&now<nextRegular_
+      &&sourceQueueQueuedScrapeEligible(response(),ownStart_);
+}
+bool QueueOriginalTrackerResponse::regularDue(std::int64_t now)const noexcept {
+  if(pending_||now<0){return false;}
+  const auto current=response();
+  // Once a real regular/announce response is valid and is not our own backup,
+  // errors retain that validity. No further scrape is needed for this gate.
+  if(known_&&current.type==QueueOriginalScrapeType::Success
+      &&!sourceQueueQueuedScrapeEligible(current,ownStart_)){return false;}
+  return !regular_||now>=nextRegular_;
+}
+void QueueOriginalTrackerResponse::observe(const QueueTrackerTerminal& value) noexcept {
+  if(value.observedMillis<0||(value.present&~7u)){unavailable();return;}
+  const bool scrape=value.kind==QueueTrackerTerminalKind::Scrape||value.kind==QueueTrackerTerminalKind::ScrapeFailed;
+  const bool failed=value.kind==QueueTrackerTerminalKind::ScrapeFailed||value.kind==QueueTrackerTerminalKind::AnnounceFailed;
+  if(scrape){pending_=false;regular_=true;nextRegular_=value.observedMillis>INT64_MAX-600000?INT64_MAX:value.observedMillis+600000;}
+  if(failed){
+    if(!value.definitiveFailure){known_=false;return;}
+    if(scrape){error_=true;visible_=true;} // Announce failure does not change the BT scraper object.
+    return;
+  }
+  if(!value.comparable){known_=false;return;}
+  const auto seeds=(value.present&1)?trackerInt(value.complete):0;
+  const auto peers=(value.present&2)?trackerInt(value.incomplete):0;
+  const auto downloaded=(value.present&4)?trackerInt(value.downloaded):-1;
+  if(scrape){
+    if(seeds<0||peers<0||downloaded< -1){error_=true;visible_=true;return;}
+    current_={seeds,peers,value.requestStartedWallMillis};error_=false;visible_=true;known_=true;
+  }else if(value.present&&seeds>=0&&peers>=0){
+    current_={seeds,peers,value.observedWallMillis};error_=false;visible_=true;known_=true;
+  }
+}
+bool QueueOriginalTrackerResponse::publishDht(std::int32_t seeds,std::int32_t peers,std::int64_t wall) noexcept {
+  if(!known_||(!error_&&!backup_)||seeds<0||peers<0||(!seeds&&!peers)){return false;}
+  current_={seeds,peers,wall};visible_=true;error_=false;backup_=true;ownStart_=wall;return true;
+}
 bool QueueOwnerObservations::trackerOrder(std::span<const std::array<unsigned char,32>> keys) noexcept {
   if(sequence_||count_||keys.size()>MaximumTrackers){return false;}
   for(const auto& key:keys){bool duplicate=false;for(unsigned i=0;i<count_;++i){duplicate|=scrapes_[i].key==key;}
@@ -52,7 +108,7 @@ QueueObservedFacts QueueOwnerObservations::facts(std::int64_t now) const noexcep
     result.runningMillis=now-*started_;result.seedingMillis=seedStarted_?now-*seedStarted_:0;
   }
   result.durations=QueueObservedDurations{down,seed};result.idleEpoch=idleEpoch_;
-  result.lastTrackerScrape=lastTrackerScrape_;
+  result.lastTrackerScrape=lastTrackerScrape_;result.singleTrackerResponse=singleTrackerResponse_;
   auto seeds=0,peers=0;
   if(aggregate_){
     if(aggregate_->started>0){
@@ -84,6 +140,28 @@ bool QueueOwnerObservations::observe(const QueueObservation& event) noexcept {
         ||event.seeds< -1||event.peers< -1){lost_=true;return false;}
   }else if(event.protocol||event.request){lost_=true;return false;}
   sequence_=event.sequence;lastMillis_=now;
+  if(raw>=6&&raw<=9){
+    if(orderKnown_&&count_==1&&scrapes_[0].key==event.tracker){
+      if(!singleTrackerResponse_){singleTrackerResponse_=QueueSingleTrackerResponse{};}
+      auto& source=*singleTrackerResponse_;source.tracker=event.tracker;
+      source.sequence=event.sequence;source.request=event.request;source.protocol=event.protocol;
+      if(kind==QueueObservationKind::Announce&&event.seeds>=0&&event.peers>=0){
+        // Original announce parsing writes a valid scraper response when both
+        // counts are nonnegative. The callback's receive clock is the source
+        // input counterpart, not an independently observed Java wall clock.
+        source.response=sourceQueueOriginalScrapeResponse(QueueOriginalScrapeContent{
+            event.seeds,event.peers,event.observedWallMillis});
+      }else if(kind==QueueObservationKind::Scrape||kind==QueueObservationKind::Announce){
+        // Missing/explicit-1 and downloaded presence/value are indistinguishable
+        // here. Original may retain counts or create a new valid response. Once
+        // valid it stays valid, but exact counts/start cannot be reconstructed.
+        if(source.response.type!=QueueOriginalScrapeType::Success){source.response.type=QueueOriginalScrapeType::Unknown;}
+        source.response.content.reset();
+      }
+      // RequestFailed changes status/retry time, not retained response counts.
+      // Unknown is deliberately not converted to original RT_ERROR.
+    }else{singleTrackerResponse_.reset();}
+  }
   if(kind==QueueObservationKind::StartedDownload||kind==QueueObservationKind::StartedSeed){
     if(started_){lost_=true;return false;}
     const auto epoch=idleEpoch_?idleEpoch_->number:0;

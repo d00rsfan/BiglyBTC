@@ -315,6 +315,70 @@ int main(){try{
     source.lost();CHECK(!source.facts(7000).lastTrackerScrape);
     QueueOwnerObservations readmitted(1);CHECK(readmitted.trackerOrder(std::span(&tracker,1)));readmitted.restoreLegacy((std::int64_t{7}<<32)|9);CHECK(!readmitted.facts(8000).lastTrackerScrape);
   });
+  run("original single tracker response distinguishes missing unknown valid and retained errors",[]{
+    const auto absent=sourceQueueOriginalScrapeResponse({});
+    CHECK(absent.type==QueueOriginalScrapeType::Error&&!absent.content);
+    CHECK(sourceQueueQueuedScrapeEligible(absent,{}));
+    const auto invalid=sourceQueueOriginalScrapeResponse(QueueOriginalScrapeContent{-1,-1,17});
+    CHECK(invalid.type==QueueOriginalScrapeType::Error&&sourceQueueQueuedScrapeEligible(invalid,18));
+    const auto valid=sourceQueueOriginalScrapeResponse(QueueOriginalScrapeContent{0,0,17});
+    CHECK(valid.type==QueueOriginalScrapeType::Success&&!sourceQueueQueuedScrapeEligible(valid,{}));
+    CHECK(sourceQueueQueuedScrapeEligible(valid,17)&&!sourceQueueQueuedScrapeEligible(valid,18));
+    CHECK(sourceQueueOriginalScrapeResponse(QueueOriginalScrapeContent{-2,-1,17}).type==QueueOriginalScrapeType::Success); // Literal isValid, no invented nonnegative clamp.
+    CHECK(!sourceQueueQueuedScrapeEligible(QueueOriginalScrapeResponse{},-1));
+    std::array<unsigned char,32> key{};key[0]=23;QueueOwnerObservations source(1);CHECK(source.trackerOrder(std::span(&key,1)));
+    CHECK(source.restoreAggregate("3,9,8"));CHECK(!source.facts(1).singleTrackerResponse);
+    std::uint64_t sequence=0;auto now=std::int64_t{1000};
+    const auto send=[&](QueueObservationKind kind,int seeds=-1,int peers=-1,unsigned protocol=1){
+      QueueObservation e;e.sequence=++sequence;e.request=sequence;e.observedNanos=++now*1000000;e.requestStartedNanos=1;
+      e.observedWallMillis=100000+now;e.requestStartedWallMillis=100000;e.kind=kind;e.protocol=protocol;e.tracker=key;e.seeds=seeds;e.peers=peers;return source.observe(e);
+    };
+    CHECK(send(QueueObservationKind::ScrapeFailed));auto facts=source.facts(now);CHECK(facts.singleTrackerResponse);
+    CHECK(facts.singleTrackerResponse->response.type==QueueOriginalScrapeType::Unknown);
+    CHECK(!sourceQueueQueuedScrapeEligible(facts.singleTrackerResponse->response,{}));
+    CHECK(send(QueueObservationKind::Scrape,3,4));CHECK(source.facts(now).singleTrackerResponse->response.type==QueueOriginalScrapeType::Unknown); // downloaded presence/value absent from ABI.
+    CHECK(send(QueueObservationKind::Announce,5,6));facts=source.facts(now);const auto known=*facts.singleTrackerResponse;
+    CHECK(known.response.type==QueueOriginalScrapeType::Success&&known.response.content&&known.response.content->seeds==5&&known.response.content->peers==6);
+    CHECK(known.response.content->startedWallMillis==100000+now);
+    CHECK(send(QueueObservationKind::ScrapeFailed));CHECK(send(QueueObservationKind::AnnounceFailed));facts=source.facts(now);
+    CHECK(facts.singleTrackerResponse->response.type==QueueOriginalScrapeType::Success);
+    CHECK(facts.singleTrackerResponse->response.content->startedWallMillis==known.response.content->startedWallMillis);
+    CHECK(facts.singleTrackerResponse->response.content->seeds==5); // Actual failure never erases retained response.
+    CHECK(send(QueueObservationKind::Scrape,7,8));facts=source.facts(now);CHECK(facts.singleTrackerResponse->response.type==QueueOriginalScrapeType::Success&&!facts.singleTrackerResponse->response.content);
+    CHECK(!sourceQueueQueuedScrapeEligible(facts.singleTrackerResponse->response,known.response.content->startedWallMillis));
+    CHECK(send(QueueObservationKind::Announce,2,3));const auto selected=source.facts(now).singleTrackerResponse->sequence;
+    CHECK(send(QueueObservationKind::Announce,99,99,2));CHECK(source.facts(now).singleTrackerResponse->sequence==selected);
+    CHECK(send(QueueObservationKind::Announce,-1,-1));CHECK(source.facts(now).singleTrackerResponse->response.type==QueueOriginalScrapeType::Success&&!source.facts(now).singleTrackerResponse->response.content);
+    key[0]=24;CHECK(send(QueueObservationKind::ScrapeFailed));CHECK(!source.facts(now).singleTrackerResponse);
+    source.lost();CHECK(!source.facts(now).singleTrackerResponse);
+    QueueOwnerObservations readmitted(1);CHECK(readmitted.trackerOrder(std::span(&key,1)));CHECK(!readmitted.facts(now).singleTrackerResponse);
+    std::array<std::array<unsigned char,32>,2> keys{};keys[1][0]=1;QueueOwnerObservations multiple(1);CHECK(multiple.trackerOrder(keys));
+    QueueObservation e;e.kind=QueueObservationKind::Announce;e.sequence=1;e.request=1;e.observedNanos=1000000;e.requestStartedNanos=1;e.protocol=1;e.seeds=1;e.peers=2;CHECK(multiple.observe(e));CHECK(!multiple.facts(1).singleTrackerResponse);
+  });
+  run("library tracker response defaults actual terminals backups and manual lifetime match original",[]{
+    QueueOriginalTrackerResponse owner;CHECK(owner.response().type==QueueOriginalScrapeType::Error);
+    CHECK(!owner.eligible(0)&&owner.regularDue(0));CHECK(!owner.publishDht(1,2,10));
+    owner.requested();CHECK(!owner.regularDue(1)&&!owner.eligible(1));
+    QueueTrackerTerminal event;event.kind=QueueTrackerTerminalKind::ScrapeFailed;event.definitiveFailure=true;event.observedMillis=1000;
+    owner.observe(event);CHECK(owner.eligible(1000)&&!owner.regularDue(1000));CHECK(owner.response().type==QueueOriginalScrapeType::Error);
+    CHECK(owner.publishDht(2,3,5000));CHECK(owner.dhtBackup()&&owner.eligible(2000));CHECK(owner.response().type==QueueOriginalScrapeType::Success);
+    CHECK(owner.response().content->startedWallMillis==5000);CHECK(!owner.eligible(601000)&&owner.regularDue(601000));
+    owner.requested();CHECK(!owner.eligible(601000));event.observedMillis=602000;owner.observe(event);CHECK(owner.eligible(602000));
+    // Wrapper TrackedTorrent removal loses own-start equality but the shared
+    // original BT response and its counts remain. Requeue is not a null reset.
+    owner.forgetDhtAuthority();CHECK(!owner.eligible(602000));CHECK(owner.response().content->seeds==2);
+    event.observedMillis=603000;owner.observe(event);CHECK(!owner.eligible(603000));CHECK(owner.response().type==QueueOriginalScrapeType::Success);
+    QueueOriginalTrackerResponse fresh;event.kind=QueueTrackerTerminalKind::Scrape;event.comparable=true;event.definitiveFailure=false;event.present=1;event.complete=7;event.requestStartedWallMillis=6000;event.observedMillis=4000;
+    fresh.observe(event);CHECK(fresh.response().type==QueueOriginalScrapeType::Success);CHECK(fresh.response().content->seeds==7&&fresh.response().content->peers==0);CHECK(!fresh.eligible(4000));
+    event.kind=QueueTrackerTerminalKind::ScrapeFailed;event.definitiveFailure=true;event.observedMillis=5000;fresh.observe(event);CHECK(fresh.response().content->seeds==7&&!fresh.eligible(5000));
+    event.kind=QueueTrackerTerminalKind::Scrape;event.comparable=true;event.present=7;event.complete=9;event.incomplete=10;event.downloaded=-2;event.observedMillis=6000;fresh.observe(event);CHECK(fresh.response().content->seeds==7); // Invalid reply retains counts.
+    event.kind=QueueTrackerTerminalKind::Announce;event.present=4;event.downloaded=12;event.observedWallMillis=7000;event.observedMillis=7000;fresh.observe(event);CHECK(fresh.response().content->seeds==0&&fresh.response().content->peers==0); // Downloaded-only creates0/0.
+    event.present=3;event.complete=4294967296LL;event.incomplete=2;event.observedMillis=8000;fresh.observe(event);CHECK(fresh.response().content->seeds==0&&fresh.response().content->peers==2); // Java long->int.
+    event.present=0;event.observedMillis=9000;fresh.observe(event);CHECK(fresh.response().content->peers==2); // No count fields leaves response alone.
+    event.kind=QueueTrackerTerminalKind::Scrape;event.comparable=false;event.observedMillis=10000;fresh.observe(event);CHECK(fresh.response().type==QueueOriginalScrapeType::Unknown&&!fresh.eligible(10000));
+    event.kind=QueueTrackerTerminalKind::ScrapeFailed;event.definitiveFailure=true;event.observedMillis=11000;fresh.observe(event);CHECK(fresh.response().type==QueueOriginalScrapeType::Unknown); // Failure cannot repair lost lineage.
+    event.kind=QueueTrackerTerminalKind::Scrape;event.comparable=true;event.present=3;event.complete=0;event.incomplete=0;event.observedMillis=12000;fresh.observe(event);CHECK(fresh.response().type==QueueOriginalScrapeType::Success&&!fresh.eligible(12000));
+  });
   run("source lifecycle floors each actual peer epoch and resets seed time on unfinish",[]{
     QueueOwnerObservations source(1);std::uint64_t sequence=0;
     const auto send=[&](QueueObservationKind kind,std::int64_t millis){QueueObservation e;e.sequence=++sequence;e.observedNanos=millis*1000000;e.observedWallMillis=100000+millis;e.kind=kind;return source.observe(e);};

@@ -17,6 +17,18 @@ int main(){try{
     if(line.empty()||line[0]=='#'){continue;}if(line.size()>8192||++cases>128){throw std::runtime_error("Tape bound");}
     std::vector<std::string> f;std::stringstream row(line);for(std::string field;std::getline(row,field,'\t');){f.push_back(std::move(field));}
     if(f.size()<3){throw std::runtime_error("Tape arity");}
+    if(f[0]=="T"){
+      if(f.size()!=9){throw std::runtime_error("Original response arity");}
+      std::optional<QueueOriginalScrapeContent> content;
+      if(number(f[2])){content=QueueOriginalScrapeContent{static_cast<std::int32_t>(number(f[3])),static_cast<std::int32_t>(number(f[4])),number(f[5])};}
+      const auto value=sourceQueueOriginalScrapeResponse(content);
+      // f[6] is original transport status. It never determines isValid().
+      const auto own=number(f[7])?std::optional{number(f[8])}:std::nullopt;
+      output(f[1],"responseType",value.type==QueueOriginalScrapeType::Success?1:2);
+      output(f[1],"seeds",content?content->seeds:-1);output(f[1],"peers",content?content->peers:-1);
+      output(f[1],"start",content?content->startedWallMillis:-1);
+      output(f[1],"eligible",sourceQueueQueuedScrapeEligible(value,own));continue;
+    }
     if(f[0]=="I"){
       if(f.size()!=6){throw std::runtime_error("Idle arity");}
       auto last=static_cast<std::int32_t>(number(f[2]));

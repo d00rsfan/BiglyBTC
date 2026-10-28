@@ -3,18 +3,22 @@
 #pragma once
 #include "mapping.hpp"
 #include "values.hpp"
+#include "storage_diversification.hpp"
 #include <memory>
 #include <thread>
 namespace biglybtc::services::azureus_db_runtime {
 namespace mapping=azureus_db_mapping;
 namespace lifecycle=azureus_db_value;
 enum class Error {Invalid,Unsupported,Thread,Busy,Closed,Capacity,Memory,Mapping};
-enum class StorageStatsMode { Absent,SuspendedDiversification };
+enum class StorageStatsMode { Absent,SuspendedDiversification,OriginalDiversification };
 struct Limits {
   std::size_t maximumKeys=32,maximumEntriesPerKey=64;
   std::size_t payloadQuota=4*1024*1024; // Source existing bytes+4*entries, checked before expiry.
   std::int32_t originalRepublishMillis=8*60*60*1000;
   StorageStatsMode storageStats=StorageStatsMode::Absent;
+  // Required only by OriginalDiversification. Owner retains this actual control;
+  // no implicit entropy, suspension deadline, file persistence or activation.
+  std::shared_ptr<azureus_storage_stats::DiversificationControl> diversificationControl;
 };
 struct Snapshot {std::size_t keys=0,values=0,bytes=0;std::uint64_t stores=0,reads=0,expired=0;bool closed=false;};
 struct Read {std::int8_t diversification=1;std::vector<azureus_values::Value> values;};

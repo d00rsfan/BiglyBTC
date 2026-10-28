@@ -1,6 +1,19 @@
 #include "mainline_dht.hpp"
 #include "persistent_runtime_guard.hpp"
 
+#if BIGLYBTC_ORIGINAL_MLDHT_IDENTITY_READER && __has_include(<libtorrent/biglybtc_mainline_identity.hpp>)
+#define BIGLYBTC_HAS_ORIGINAL_MAINLINE_IDENTITY 1
+#include "../adapters/mainline_identity.hpp"
+#include <libtorrent/biglybtc_mainline_identity.hpp>
+#include <atomic>
+#include <dlfcn.h>
+#include <mutex>
+#include <sys/stat.h>
+#include <tuple>
+#else
+#define BIGLYBTC_HAS_ORIGINAL_MAINLINE_IDENTITY 0
+#endif
+
 #include <libtorrent/alert_types.hpp>
 #include <libtorrent/client_data.hpp>
 #include <libtorrent/entry.hpp>
@@ -266,6 +279,8 @@ lt::dht::dht_state boundedCheckpoint(const lt::dht::dht_state& state, bool ipv4,
   return result;
 }
 
+#include "mainline_original_identity.inc"
+
 } // namespace
 
 struct MainlineDhtService::Impl {
@@ -278,6 +293,8 @@ struct MainlineDhtService::Impl {
     std::uint64_t next=0,issued=0,completed=0;
   };
   const std::thread::id worker = std::this_thread::get_id();
+  // Declared before session: retained source/lease/provider survive its join.
+  std::unique_ptr<OriginalWireIdentity> originalIdentity;
   std::unique_ptr<lt::session> session;
   std::map<lt::sha1_hash, Request> requests;
   std::set<Node> nodes;
@@ -315,6 +332,7 @@ struct MainlineDhtService::Impl {
     status.observationsLost |= lost;
     requests.clear(); pendingNodes.clear(); status.activeHashes = 0;
     session.reset(); // Joins this service only; no borrowed owner or callbacks.
+    if(originalIdentity){status.originalIdentityJoined=true;(void)originalIdentity->observe(nullptr,status,true);}
     routeQueues.clear(); peerProbes.clear();
     scrapeCookies.clear();scrapeRounds.clear();completedScrapes.clear();activeScrape=0;
     return error(Code::Io, message);
@@ -379,6 +397,9 @@ std::expected<std::unique_ptr<MainlineDhtService>, storage::Error> MainlineDhtSe
       }
     }
     if (selected.bindAddresses.empty()) { return error(Code::Unsupported, "Mainline DHT has no enabled bound family"); }
+    auto original=OriginalWireIdentity::create(options,policy,impl->bindings,impl->ipv4,impl->ipv6,impl->port);
+    if(!original){return std::unexpected(original.error());}
+    impl->originalIdentity=std::move(*original);impl->status.originalIdentityRequested=bool(impl->originalIdentity);
     selected.ipv6 = impl->ipv6;
     selected.listenPort = options.port;
     selected.incomingTcp = selected.outgoingTcp = selected.incomingUtp = selected.outgoingUtp = false;
@@ -411,6 +432,7 @@ std::expected<std::unique_ptr<MainlineDhtService>, storage::Error> MainlineDhtSe
         | lt::alert_category::error | lt::alert_category::dht_operation));
     auto restored = restoredState(options, impl->ipv4, impl->ipv6, impl->bindings);
     if (!restored) { return std::unexpected(restored.error()); }
+    if(impl->originalIdentity){restored->nids.clear();} // Native cache is contacts only, never original-root authority.
     if (!restored->nodes.empty() || !restored->nodes6.empty() || !restored->nids.empty()) {
       impl->deferredStartup = impl->bootstrapPending = true;
       impl->deferredBootstrap = bootstrap;
@@ -419,10 +441,18 @@ std::expected<std::unique_ptr<MainlineDhtService>, storage::Error> MainlineDhtSe
       settings->set_bool(Settings::enable_dht, false);
       settings->set_str(Settings::dht_bootstrap_nodes, "");
     }
+    if(impl->originalIdentity){
+      impl->deferredStartup=true;impl->deferredBootstrap=bootstrap;
+      settings->set_bool(Settings::enable_dht,false);settings->set_str(Settings::dht_bootstrap_nodes,"");
+    }
     lt::session_params parameters(std::move(*settings));
     parameters.dht_state = std::move(*restored);
     parameters.extensions.clear(); // No default torrent plugins or hidden handles.
     impl->session = std::make_unique<lt::session>(std::move(parameters));
+    if(impl->originalIdentity){
+      auto installed=impl->originalIdentity->install(*impl->session);
+      if(!installed){return std::unexpected(installed.error());}
+    }
     return std::unique_ptr<MainlineDhtService>(new MainlineDhtService(std::move(impl)));
   } catch (const std::bad_alloc&) { return error(Code::Io, "Mainline DHT allocation failed"); }
   catch (...) { return error(Code::Io, "Mainline DHT startup failed"); }
@@ -489,6 +519,12 @@ std::expected<void, storage::Error> MainlineDhtService::forget(lt::sha1_hash has
 std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService::poll() {
   try {
     auto valid = impl_->check(); if (!valid) { return std::unexpected(valid.error()); }
+    if(impl_->originalIdentity){
+      auto source=impl_->originalIdentity->validate();
+      if(!source){return impl_->fail("Original Mainline identity source changed");}
+      auto observed=impl_->originalIdentity->observe(impl_->session.get(),impl_->status);
+      if(!observed){return impl_->fail("Original Mainline identity lifecycle failed",true);}
+    }
     std::vector<lt::alert*> alerts;
     impl_->session->pop_alerts(&alerts); // This is the only consumer of this session.
     std::map<lt::sha1_hash, std::vector<lt::tcp::endpoint>> results;
@@ -502,8 +538,11 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
       if (const auto* listening = lt::alert_cast<lt::listen_succeeded_alert>(alert)) {
         if (listening->socket_type == lt::socket_type_t::utp) {
           if (listening->port != impl_->port) { return impl_->fail("Mainline DHT listener changed port"); }
-          impl_->status.listenPort = impl_->port;
-          impl_->status.phase = MainlineDhtPhase::Listening;
+          if(impl_->originalIdentity){
+            if(!impl_->originalIdentity->listener(listening->address,impl_->port)){return impl_->fail("Original Mainline identity listener changed address");}
+          }else{
+            impl_->status.listenPort = impl_->port;impl_->status.phase = MainlineDhtPhase::Listening;
+          }
         }
       }
       if(const auto* response=lt::alert_cast<lt::dht_direct_response_alert>(alert)){
@@ -525,7 +564,8 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
         // contacts include replacements, so they are NOT routing proof.
         const auto state=impl_->session->session_state(lt::session_handle::save_dht_state);
         const auto local=std::ranges::find_if(state.dht_state.nids,[&](const auto& row){
-          return row.first.is_v4()==probe.endpoint.address().is_v4()&&!row.second.is_all_zeros();
+          return row.first.is_v4()==probe.endpoint.address().is_v4()
+              &&(!row.second.is_all_zeros()||(impl_->originalIdentity&&impl_->originalIdentity->localId(row.second)));
         });
         if(local==state.dht_state.nids.end()||local->second==probe.nodeId){continue;}
         auto& queue=impl_->routeQueues[local->second];
@@ -580,7 +620,9 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
         peers.push_back(peer);
       }
     }
-    if (impl_->deferredStartup && impl_->status.phase == MainlineDhtPhase::Listening) {
+    if (impl_->deferredStartup && (impl_->status.phase == MainlineDhtPhase::Listening
+        ||(impl_->originalIdentity&&impl_->originalIdentity->listenerSeen()))) {
+      if(impl_->originalIdentity){auto fresh=impl_->originalIdentity->validate();if(!fresh){return impl_->fail("Original Mainline identity changed before enable");}}
       lt::settings_pack start;
       start.set_str(lt::settings_pack::dht_bootstrap_nodes, impl_->deferredBootstrap);
       start.set_bool(lt::settings_pack::enable_dht, true);
@@ -593,6 +635,12 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
     // release a different family's restored contacts prematurely.
     if (!impl_->running) {
       impl_->running = impl_->session->is_dht_running();
+      if(impl_->originalIdentity&&impl_->running){
+        auto adopted=impl_->originalIdentity->observe(impl_->session.get(),impl_->status);
+        if(!adopted){return impl_->fail("Original Mainline identity adoption failed",true);}
+        impl_->running=impl_->status.originalIdentityActive;
+        if(impl_->running){impl_->status.listenPort=impl_->port;impl_->status.phase=MainlineDhtPhase::Listening;}
+      }
       if (impl_->running && impl_->bootstrapPending) {
         const auto initial = impl_->session->session_state(lt::session_handle::save_dht_state);
         impl_->expectedBootstraps = initial.dht_state.nids.size();
@@ -636,7 +684,8 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
         round.started=true;
         const auto state=impl_->session->session_state(lt::session_handle::save_dht_state);
         for(const auto& [address,id]:state.dht_state.nids){
-          if(id.is_all_zeros()||!enabled(address,impl_->ipv4,impl_->ipv6)){continue;}
+          if((id.is_all_zeros()&&!(impl_->originalIdentity&&impl_->originalIdentity->localId(id)))
+              ||!enabled(address,impl_->ipv4,impl_->ipv6)){continue;}
           auto& queue=impl_->routeQueues[id];
           if(queue.next==UINT64_MAX){return impl_->fail("Mainline scrape routing generation overflow",true);}
           queue.waiting.push_back({nullptr,++queue.next,&round});++round.pendingTables;
@@ -694,8 +743,10 @@ std::expected<std::string, storage::Error> MainlineDhtService::checkpoint() {
     if (!impl_->running || impl_->status.phase != MainlineDhtPhase::Listening) {
       return error(Code::Busy, "Mainline DHT checkpoint requires its running bound listener");
     }
+    if(impl_->originalIdentity){auto fresh=impl_->originalIdentity->validate();if(!fresh){return std::unexpected(fresh.error());}}
     auto parameters = impl_->session->session_state(lt::session_handle::save_dht_state);
     parameters.dht_state = boundedCheckpoint(parameters.dht_state, impl_->ipv4, impl_->ipv6, impl_->bindings);
+    if(impl_->originalIdentity){parameters.dht_state.nids.clear();}
     const auto bytes = lt::write_session_params_buf(parameters, lt::session_handle::save_dht_state);
     if (bytes.size() > MaximumStateBytes) { return error(Code::Io, "Mainline DHT checkpoint exceeded its bounded format"); }
     return std::string(bytes.begin(), bytes.end());
@@ -704,12 +755,16 @@ std::expected<std::string, storage::Error> MainlineDhtService::checkpoint() {
 
 std::expected<void, storage::Error> MainlineDhtService::close() {
   if (std::this_thread::get_id() != impl_->worker) { return error(Code::Busy, "Mainline DHT requires its owner worker"); }
-  if (impl_->status.phase == MainlineDhtPhase::Closed) { return {}; }
+  if (impl_->status.phase == MainlineDhtPhase::Closed) {
+    return impl_->originalIdentity?impl_->originalIdentity->observe(nullptr,impl_->status,true):std::expected<void,storage::Error>{};
+  }
   impl_->session.reset(); // Actual network thread retirement precedes success.
+  std::expected<void,storage::Error> retired;
+  if(impl_->originalIdentity){impl_->status.originalIdentityJoined=true;retired=impl_->originalIdentity->observe(nullptr,impl_->status,true);}
   impl_->requests.clear(); impl_->nodes.clear(); impl_->pendingNodes.clear(); impl_->routeQueues.clear(); impl_->peerProbes.clear();
   impl_->scrapeCookies.clear();impl_->scrapeRounds.clear();impl_->completedScrapes.clear();impl_->activeScrape=0;
   impl_->status.activeHashes = 0; impl_->status.listenPort = 0; impl_->status.phase = MainlineDhtPhase::Closed;
-  return {};
+  return retired;
 }
 MainlineDhtStatus MainlineDhtService::status() const noexcept {
   if (std::this_thread::get_id() != impl_->worker) {

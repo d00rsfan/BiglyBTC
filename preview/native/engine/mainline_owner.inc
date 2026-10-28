@@ -199,6 +199,16 @@ std::uint64_t mainlinePortProgress=0;
 QueuedMainlineScrapes mainlineScrapes{std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count()};
 Clock::time_point mainlineScrapeRefresh{};
 std::optional<storage::Error> mainlineScrapeFailure;
+// The ordinary library owns responses beyond a single transfer/admission.
+// No state/cache restore populates this map and no eviction resets validity.
+detail::LibraryTrackerResponses trackerResponses;
+// Stop/Pause removes the wrapper's TrackedTorrent own-start authority. The
+// core BT response itself survives; positions/reconcile only revoke RPCs.
+void forgetTrackerDhtAuthority(const core::TorrentHash& hash) noexcept {
+  try {const auto prefix=hash.hex()+":";for(auto& [key,response]:trackerResponses){
+    if(key.starts_with(prefix)){response->forgetDhtAuthority();}
+  }}catch(...){}
+}
 std::uint32_t scrapeRandom() {
   std::uint32_t value=0;
   for(unsigned attempt=0;attempt<8;++attempt){
@@ -223,7 +233,27 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> savedScrape
     if(handle==managedByHandle.end()||handle->second!=&value){continue;}
     admitted.push_back({&value.storage,value.status.admission,value.status.complete});
   }
-  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,admitted);if(!targets){return targets;}
+  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,admitted,true);if(!targets){return targets;}
+  const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();
+  std::erase_if(*targets,[&](const auto& target){
+    if(target.trackerResponseKey.empty()){return false;}
+    const auto found=trackerResponses.find(target.trackerResponseKey);
+    if(found==trackerResponses.end()||mainlineScrapes.revoked(target.hash)){return true;}
+    const auto entry=managed.find(target.hash.hex());
+    if(target.admission){
+      if(entry==managed.end()||entry->second->status.admission!=target.admission||!entry->second->trackerResponse
+          ||entry->second->trackerResponse->response!=found->second||!entry->second->trackerResponse->drain()){return true;}
+      // Exactly one request while outstanding; the existing10s owner cadence
+      // rechecks saved permissions before retrying the original600s failure
+      // interval. No new timer/sampler, tracker/rank result or peer injection.
+      if(found->second->regularDue(now)){
+        found->second->requested();entry->second->handle.scrape_tracker();
+      }
+    }
+    // A retired/unadmitted row may reuse its live library response only until
+    // a fresh regular scrape is due. No hidden torrent or stale error is made.
+    return !found->second->eligible(now);
+  });
   // Saved-only authority cannot borrow any retained/checking/failed admission.
   // Active targets above have their own immutable accepted admission stamp.
   std::erase_if(*targets,[&](const auto& target){
@@ -253,6 +283,13 @@ void advanceMainlineScrapes(Clock::time_point now) noexcept {
     const auto active=mainlineScrapes.activeTarget();
     if(fresh&&active){const auto row=std::ranges::find(*fresh,active->hash,&SavedMainlineScrapeTarget::hash);if(row!=fresh->end()){target=*row;}}
     mainlineScrapes.completed(result.round,result,target,millis,scrapeRandom());
+    if(target&&!target->trackerResponseKey.empty()){
+      const auto owner=trackerResponses.find(target->trackerResponseKey);
+      const auto estimates=mainlineScrapes.estimates();const auto accepted=std::ranges::find(estimates,result.round,&MainlineScrapeEstimate::round);
+      if(owner!=trackerResponses.end()&&accepted!=estimates.end()&&accepted->hash==target->hash&&accepted->scope==target->scope){
+        static_cast<void>(owner->second->publishDht(accepted->counts.seeds,accepted->counts.peers,accepted->startedWallMillis));
+      }
+    }
   }
   if(mainlineScrapes.checkDue(millis)){
     const auto candidate=mainlineScrapes.due(millis);

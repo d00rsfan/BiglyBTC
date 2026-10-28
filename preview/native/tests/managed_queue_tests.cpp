@@ -4,6 +4,7 @@
 #include "owned_engine_fixture.hpp"
 #include "verified_seeding_fixture.hpp"
 #include "managed_queue_observations.hpp"
+#include "managed_tracker_responses.hpp"
 #include "managed_payload_counters.hpp"
 #include <libtorrent/alert_types.hpp>
 #include <libtorrent/hasher.hpp>
@@ -138,7 +139,7 @@ class RawScrapeTracker final {
     auto escaped=target.mid(begin+10);const auto end=escaped.indexOf('&');if(end>=0){escaped.truncate(end);}
     if(QByteArray::fromPercentEncoding(escaped)!=QByteArray::fromStdString(hash_)){fail("Owned tracker received wrong selected hash");socket->abort();return;}
     QByteArray body;bool failed=false;
-    if(target.startsWith("/announce?")){++announces;body="d8:intervali3600e5:peers0:e";}
+    if(target.startsWith("/announce?")){++announces;body=announceCounts?"d8:completei5e10:incompletei6e8:intervali3600e5:peers0:e":"d8:intervali3600e5:peers0:e";}
     else if(target.startsWith("/scrape?")){
       ++scrapes;failed=errorReply;
       if(failed){body="owned scrape failure";}
@@ -148,7 +149,7 @@ class RawScrapeTracker final {
     if(socket->write(response)!=response.size()){fail("Owned tracker response write failed");}socket->disconnectFromHost();
   }
 public:
-  int announces=0,scrapes=0;bool errorReply=false;QString failure;
+  int announces=0,scrapes=0;bool errorReply=false,announceCounts=false;QString failure;
   explicit RawScrapeTracker(std::string hash):hash_(std::move(hash)){
     test::require(server_.listen(QHostAddress::LocalHost,0),"Cannot listen owned scrape tracker");
     QObject::connect(&server_,&QTcpServer::newConnection,&server_,[this]{
@@ -235,6 +236,49 @@ private slots:
     QVERIFY2(tracker.failure.isEmpty(),qPrintable(tracker.failure));QVERIFY(failed);QCOMPARE(tracker.scrapes,2);QCOMPARE(failed->kind,core::QueueScrapeTerminalKind::RequestFailed);QCOMPARE(failed->tracker,key);QVERIFY(failed->request>first->request);QCOMPARE(failed->seeds,-1);QCOMPARE(failed->peers,-1);
     const auto historical=observations->facts(now());QVERIFY(historical.swarm&&historical.swarm->success); // Error RPC is not original RT_ERROR authority.
     session.reset();QVERIFY(fixture.intact(false));
+  }
+  void actualAnnounceResponseSurvivesScrapeErrorWithoutGrantingConfiguredPermission(){
+    namespace lt=libtorrent;test::OwnedEngineFixture fixture(false);RawScrapeTracker tracker(hashBytes(*fixture.hash));tracker.announceCounts=true;
+    const auto url=tracker.url();const auto digest=lt::hasher256(lt::span<const char>(url.data(),url.size())).final();std::array<unsigned char,32> key{};std::copy(digest.begin(),digest.end(),key.begin());
+    auto observations=std::make_shared<engine::detail::ManagedQueueObservations>(1);observations->trackerOrder(std::vector<std::array<unsigned char,32>>{key});
+    // This generated loopback tracker is explicitly owned; stock SSRF permits only /announce locally.
+    auto settings=test::localSettings();settings.set_bool(lt::settings_pack::ssrf_mitigation,false);settings.set_int(lt::settings_pack::alert_mask,static_cast<int>(lt::alert_category::tracker|lt::alert_category::status|lt::alert_category::error));
+    auto session=std::make_unique<lt::session>(settings);const auto encodedMetadata=test::read(fixture.stateFile);lt::error_code error;
+    lt::add_torrent_params parameters;parameters.ti=std::make_shared<lt::torrent_info>(lt::span<const char>(encodedMetadata.constData(),encodedMetadata.size()),error,lt::from_span);QVERIFY(!error);
+    parameters.ti->clear_trackers();parameters.trackers={url};parameters.save_path=fixture.payload.toStdString();parameters.flags|=lt::torrent_flags::paused|lt::torrent_flags::disable_dht|lt::torrent_flags::disable_lsd|lt::torrent_flags::disable_pex;parameters.flags&=~lt::torrent_flags::auto_managed;
+    const auto bridge=engine::detail::managedPayloadCounterBridge();QVERIFY(bridge);auto counters=std::make_shared<engine::detail::ManagedPayloadCounters>();
+    QVERIFY(engine::detail::attachManagedPayloadCounters(parameters,counters,bridge,observations));auto handle=session->add_torrent(std::move(parameters),error);QVERIFY(!error&&handle.is_valid());handle.resume();
+    bool announced=false;const auto pump=[&]{std::vector<lt::alert*> alerts;session->pop_alerts(&alerts);for(const auto* a:alerts){const auto* reply=lt::alert_cast<lt::tracker_reply_alert>(a);if(reply&&reply->handle==handle){announced=true;}}return announced||!tracker.failure.isEmpty();};
+    const auto now=[] {return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();};
+    QTRY_VERIFY_WITH_TIMEOUT(pump(),15000);QVERIFY2(tracker.failure.isEmpty(),qPrintable(tracker.failure));QCOMPARE(tracker.announces,1);QVERIFY(!observations->facts(now()).lastTrackerScrape);
+    const auto announcedResponse=observations->facts(now()).singleTrackerResponse;QVERIFY(announcedResponse);QCOMPARE(announcedResponse->response.type,core::QueueOriginalScrapeType::Success);QVERIFY(announcedResponse->response.content);QCOMPARE(announcedResponse->response.content->seeds,5);QCOMPARE(announcedResponse->response.content->peers,6);QVERIFY(!core::sourceQueueQueuedScrapeEligible(announcedResponse->response,{}));
+    tracker.errorReply=true;handle.scrape_tracker();std::optional<core::QueueScrapeTerminal> first;
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{first=observations->facts(now()).lastTrackerScrape;return first.has_value()||!tracker.failure.isEmpty();})(),15000);
+    QVERIFY2(tracker.failure.isEmpty(),qPrintable(tracker.failure));QVERIFY(first);QCOMPARE(tracker.scrapes,1);QCOMPARE(first->kind,core::QueueScrapeTerminalKind::RequestFailed);QCOMPARE(first->tracker,key);QCOMPARE(first->protocol,1u);QCOMPARE(first->seeds,-1);QCOMPARE(first->peers,-1);QVERIFY(first->request);QVERIFY(first->requestStartedNanos>0&&first->requestStartedNanos<=first->observedNanos);
+    const auto retained=observations->facts(now()).singleTrackerResponse;QVERIFY(retained);QCOMPARE(retained->response.type,core::QueueOriginalScrapeType::Success);QVERIFY(retained->response.content);QCOMPARE(retained->response.content->startedWallMillis,announcedResponse->response.content->startedWallMillis);QCOMPARE(retained->response.content->seeds,5);
+    tracker.errorReply=false;handle.scrape_tracker();std::optional<core::QueueScrapeTerminal> failed;
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{failed=observations->facts(now()).lastTrackerScrape;return (failed&&failed->sequence>first->sequence)||!tracker.failure.isEmpty();})(),15000);
+    QVERIFY2(tracker.failure.isEmpty(),qPrintable(tracker.failure));QVERIFY(failed);QCOMPARE(tracker.scrapes,2);QCOMPARE(failed->kind,core::QueueScrapeTerminalKind::Reply);QCOMPARE(failed->tracker,key);QVERIFY(failed->request>first->request);QCOMPARE(failed->seeds,3);QCOMPARE(failed->peers,4);
+    const auto historical=observations->facts(now());QVERIFY(historical.singleTrackerResponse);QCOMPARE(historical.singleTrackerResponse->response.type,core::QueueOriginalScrapeType::Success);QVERIFY(!historical.singleTrackerResponse->response.content);QVERIFY(!core::sourceQueueQueuedScrapeEligible(historical.singleTrackerResponse->response,{})); // ABI omits downloaded validity: exact scrape content remains unavailable.
+    session.reset();QVERIFY(fixture.intact(false));
+  }
+  void trackerResponseLifetimeRetainsAcrossAdmissionsAndLossCannotResetToInitialError(){
+    test::OwnedEngineFixture fixture(false);auto lease=held(fixture);
+    auto files=engine::detail::ManagedStorage::prepare(lease,*fixture.hash,engine::NetworkPolicy{});QVERIFY(files);
+    const auto params=files->parameters();QVERIFY(params.ti);const auto section=params.ti->info_section();
+    const auto url=std::string("udp://127.0.0.1:12345/announce");const auto key=engine::detail::originalTrackerResponseKey(lease,files->identity(),{section.data(),static_cast<std::size_t>(section.size())},url);QVERIFY(key);
+    const auto other=engine::detail::originalTrackerResponseKey(lease,files->identity(),{section.data(),static_cast<std::size_t>(section.size())},"udp://127.0.0.1:12346/announce");QVERIFY(other&&*other!=*key);
+    const auto digest=engine::detail::originalTrackerUrlDigest(url);QVERIFY(digest);auto response=std::make_shared<core::QueueOriginalTrackerResponse>();
+    engine::detail::ManagedTrackerResponse first(41,1,*digest,response);first.installed=true;
+    engine::detail::ManagedTrackerResponse::Value value;value.admission=41;value.sequence=1;value.request=1;value.protocol=1;value.tracker=*digest;value.requestStartedNanos=1;value.observedNanos=1000000000;value.terminal.kind=core::QueueTrackerTerminalKind::ScrapeFailed;value.terminal.definitiveFailure=true;value.terminal.observedMillis=1000;
+    std::thread producer([&]{first.observe(value);});producer.join();QVERIFY(first.drain());QVERIFY(response->eligible(1000));QVERIFY(response->publishDht(1,2,42));
+    // Actual retirement swaps only the admission ring; library response remains.
+    engine::detail::ManagedTrackerResponse second(42,1,*digest,response);second.installed=true;QVERIFY(second.drain());QCOMPARE(response->response().content->seeds,1);QVERIFY(response->eligible(1001));
+    value.admission=42;value.sequence=1;value.request=2;value.observedNanos=2000000000;value.terminal.observedMillis=2000;second.observe(value);QVERIFY(second.drain());QCOMPARE(response->response().content->seeds,1);
+    value.sequence=3;second.observe(value);QVERIFY(!second.drain());QCOMPARE(response->response().type,core::QueueOriginalScrapeType::Unknown);QVERIFY(!response->eligible(2000));
+    engine::detail::ManagedTrackerResponse afterLoss(43,1,*digest,response);afterLoss.installed=true;value.admission=43;value.sequence=1;afterLoss.observe(value);QVERIFY(afterLoss.drain());QCOMPARE(response->response().type,core::QueueOriginalScrapeType::Unknown); // Fresh request failure cannot erase uncertainty.
+    value.sequence=2;value.request=3;value.terminal.kind=core::QueueTrackerTerminalKind::Announce;value.terminal.comparable=true;value.terminal.present=3;value.terminal.complete=5;value.terminal.incomplete=6;afterLoss.observe(value);QVERIFY(afterLoss.drain());QCOMPARE(response->response().type,core::QueueOriginalScrapeType::Success);QVERIFY(!response->eligible(2000));
+    QVERIFY(fixture.intact(false));
   }
   void actualObserverQueueHasBoundedNonblockingProducerAndWorkerOnlyDrain(){
     engine::detail::ManagedQueueObservations observations(1);observations.installed();

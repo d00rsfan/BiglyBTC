@@ -24,6 +24,8 @@ struct SavedMainlineScrapeTarget {
   std::string scope;
   bool noSeeds=false;
   std::uint64_t admission=0; // Zero is explicit saved/unadmitted queued authority.
+  std::string trackerResponseKey{}; // Empty is the established trackerless path.
+  std::string configuredTracker{};
 };
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
 readSavedMainlineScrapeTargets(const storage::ProfileLease&);
@@ -32,7 +34,7 @@ readSavedMainlineScrapeTargets(const storage::ProfileLease&);
 // row state alone can never manufacture the active branch.
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
 readCurrentMainlineScrapeTargets(const storage::ProfileLease&,
-    std::span<const ManagedMainlineScrapeObservation>);
+    std::span<const ManagedMainlineScrapeObservation>,bool configuredCandidates=false);
 // Pure injected monotone clock/random-word scheduling. No sampler or timer.
 // Initial 60..119s, repeat 1200..1799s; check cadence10s, startup100s.
 class QueuedMainlineScrapes final {
@@ -48,6 +50,7 @@ public:
   void completed(std::uint64_t,const std::optional<MainlineDhtScrape>&,
       const std::optional<SavedMainlineScrapeTarget>& fresh,std::int64_t now,std::uint32_t random);
   void revoke(const core::TorrentHash&) noexcept;
+  bool revoked(const core::TorrentHash&)const noexcept;
   void settled(const core::TorrentHash&); // Explicit freshly authenticated saved-command success.
   void unavailable() noexcept {rows_.clear();} // Failed read never clears tombstones.
   std::vector<MainlineScrapeEstimate> estimates() const;

@@ -239,6 +239,11 @@ private slots:
     QCOMPARE(test::read(saved.profile+"/downloads.config"),inventoryBefore);QCOMPARE(test::read(saved.stateFile),stateBefore);QVERIFY(saved.intact(false));
     QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),observed.contains(other,peer.serverPort())),15000);
     QCOMPARE(actual->status().announces,std::uint64_t{0});QCOMPARE(fixture.announced(wanted),0);QCOMPARE(fixture.announced(other),0);
+    // Valid Bloom filters without any decoded peer items are ignored by the
+    // original PeerLookupTask caller, independently of pure handler math.
+    replies.clear();fixture.scrapePeerItems(false);auto filtersOnly=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(filtersOnly);
+    QTRY_VERIFY_WITH_TIMEOUT(pump(),15000);QCOMPARE(replies[0].summary.responses,std::size_t{0});QCOMPARE(replies[0].summary.seeds,0);QCOMPARE(replies[0].summary.peers,0);
+    fixture.scrapePeerItems(true);
     replies.clear();fixture.scrapeReply("BFsd");auto refused=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(refused);
     QTRY_VERIFY_WITH_TIMEOUT(pump(),15000);QCOMPARE(replies[0].summary.responses,std::size_t{0});QCOMPARE(replies[0].summary.seeds,0);
     replies.clear();auto explicitLt=actual->scrape(wanted,services::mainline_scrape::Dialect::LibtorrentBFsd);QVERIFY(explicitLt);

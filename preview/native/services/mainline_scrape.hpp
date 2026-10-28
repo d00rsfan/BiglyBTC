@@ -30,6 +30,8 @@ enum class Dialect { OriginalBFse,LibtorrentBFsd };
 struct Response {
   std::optional<Bloom> seeds,peers;
   std::vector<Address> direct; // Original nonbogon addresses, deduplicated by aggregate.
+  // MessageDecoder retains6/18-byte items even when AddressUtils later calls them bogons.
+  std::size_t decodedPeerItems=0; // PeerLookupTask gates collection on this count, not direct.size().
 };
 inline constexpr std::size_t MaximumPeers=128,MaximumResponses=64;
 // Only the authenticated get_peers response BODY. Caller owns transaction,

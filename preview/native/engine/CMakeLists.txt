@@ -68,3 +68,11 @@ target_compile_features(biglybtc_mainline_scrape PUBLIC cxx_std_23)
 target_compile_options(biglybtc_mainline_scrape PRIVATE -Wall -Wextra -Wpedantic -Werror)
 target_sources(biglybtc_local_engine PRIVATE queued_mainline_scrape.cpp)
 target_link_libraries(biglybtc_local_engine PRIVATE biglybtc_mainline_scrape)
+
+# Explicit optional original-root source reader, absent on stock/default builds.
+if(TARGET biglybtc_mainline_identity)
+  target_link_libraries(biglybtc_local_engine PRIVATE biglybtc_mainline_identity)
+  target_compile_definitions(biglybtc_local_engine PRIVATE BIGLYBTC_ORIGINAL_MLDHT_IDENTITY_READER=1)
+else()
+  target_compile_definitions(biglybtc_local_engine PRIVATE BIGLYBTC_ORIGINAL_MLDHT_IDENTITY_READER=0)
+endif()

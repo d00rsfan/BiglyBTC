@@ -5,6 +5,7 @@
 #include <libtorrent/announce_entry.hpp>
 #include "managed_payload_counters.hpp"
 #include "managed_queue_observations.hpp"
+#include "managed_tracker_responses.hpp"
 #include "tracker_statistics_sampler.hpp"
 #include "persistent_runtime_guard.hpp"
 #include "runtime_metrics_sampler.hpp"
@@ -108,6 +109,7 @@ struct PersistentSession::Impl {
     std::unique_ptr<core::QueueTargetEta> targetEta;
     std::uint64_t targetStatisticsSequence=0;
     std::shared_ptr<detail::ManagedQueueObservations> queueObservations;
+    std::shared_ptr<detail::ManagedTrackerResponse> trackerResponse;
     std::shared_ptr<detail::MmapDiskLatency> mmapLatency;
     std::optional<Clock::time_point> runningSince, seedingSince;
     std::optional<lt::time_point> trackerRunningSince, trackerSeedingSince;
@@ -1130,6 +1132,7 @@ struct PersistentSession::Impl {
     for (auto& [key, entry] : managed) {
       static_cast<void>(key);
       auto& value = *entry;
+      if(value.trackerResponse){static_cast<void>(value.trackerResponse->drain());}
       if(value.allocationIntent){advanceAllocation(value);continue;}
       sampleManaged(value);
       try{advanceVerifiedSeed(value);}
@@ -1141,6 +1144,9 @@ struct PersistentSession::Impl {
         value.removing = true;
       }
       if (value.removing && value.removed && !value.handle.is_valid()) {
+        // Actual weak expiry is the last callback fence: drain final terminal
+        // updates before the admission may disappear, retain library response.
+        if(value.trackerResponse){static_cast<void>(value.trackerResponse->drain());}
         if(value.timelineLost && !value.status.failure) {
           value.status.failure=storage::Error{storage::ErrorCode::Io,"Original active-time observations were lost; saved state requires recheck"};
         }
@@ -1624,7 +1630,7 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
         allocating?detail::ManagedStoragePurpose::AllocateOnly:intent?(intent->goal==core::ExistingVerificationGoal::SelectedFiles?detail::ManagedStoragePurpose::VerifySelectedReadOnly:detail::ManagedStoragePurpose::VerifyExistingReadOnly):detail::ManagedStoragePurpose::Download));
     // A certified same-hash restart replaces its own old claim only after the
     // new read-only collision gate and complete preparation succeeded.
-    if(previous!=impl_->managed.end()){impl_->managedByHandle.erase(previous->second->handle);impl_->managed.erase(previous);}
+    if(previous!=impl_->managed.end()){if(previous->second->trackerResponse){static_cast<void>(previous->second->trackerResponse->drain());}impl_->managedByHandle.erase(previous->second->handle);impl_->managed.erase(previous);}
     if(!allocating){impl_->ensureSession();}
     auto value = std::make_unique<Impl::Managed>(++impl_->operation, std::move(storage), options.hash);
     if(allocating){
@@ -1691,6 +1697,8 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
     }catch(...){value->queueObservations.reset();} // Optional policy facts cannot fail storage admission.
     detail::require(detail::attachManagedPayloadCounters(parameters, value->payloadCounters, payloadBridge,value->queueObservations),
         "Exact managed transfer counters require the approved source ABI", storage::ErrorCode::Unsupported);
+    if(!intent){value->trackerResponse=detail::attachManagedTrackerResponse(parameters,lease,
+        value->storage.identity(),value->status.admission,impl_->trackerResponses);}
     detail::attachPeerPayloadObserver(parameters, impl_->peerPayloadLedger, impl_->operation);
     if(value->storage.mainlinePolicy().discover){value->mainlinePort=impl_->attachMainlinePort(parameters,value->status.admission,
         value->storage.identity().originalKey,value->storage.identity().selected==storage::OriginalSelectedHash::V1?1u:2u);}
@@ -1745,6 +1753,7 @@ std::expected<void, storage::Error> PersistentSession::pauseManaged(const core::
   if(value.status.verificationHeld){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Verification is held; cancel or wait for actual completion"});}
   value.manualPaused = paused;
   if (paused) {
+    impl_->forgetTrackerDhtAuthority(hash);
     if(value.mainlinePort){value.mainlinePort->advertised.store(0,std::memory_order_release);}
     value.handle.unset_flags(lt::torrent_flags::auto_managed); value.handle.pause();
     if (impl_->queuePolicy) { impl_->sampleManaged(value); }
@@ -1789,7 +1798,7 @@ std::expected<void, storage::Error> PersistentSession::stopManaged(const core::T
   }
   const auto found = impl_->managed.find(hash.hex());
   if (found == impl_->managed.end()) { return {}; }
-  try { impl_->requestStop(*found->second); return {}; }
+  try { impl_->forgetTrackerDhtAuthority(hash); impl_->requestStop(*found->second); return {}; }
   catch (...) { return std::unexpected(storage::Error{storage::ErrorCode::Io, "Cannot request torrent flush"}); }
 }
 std::expected<void, storage::Error> PersistentSession::forgetManaged(const core::TorrentHash& hash, bool removePeerHints) {

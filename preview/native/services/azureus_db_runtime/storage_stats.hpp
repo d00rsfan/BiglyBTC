@@ -23,6 +23,7 @@ public:
   std::expected<void,Error> read(std::span<const std::uint8_t> rawIp,std::int64_t now)noexcept;
   Stats stats()const noexcept{return {entries_,bytes_,reads_,1};}
 private:
+  friend class DiversifyingKey; // Reuse the qualified source bloom/window without copying it.
   std::int32_t entries_=0,bytes_=0;std::int16_t reads_=0;
   std::int64_t start_=0;std::array<std::uint8_t,38> bloom_{};std::int32_t bloomEntries_=0;bool active_=false;
 };

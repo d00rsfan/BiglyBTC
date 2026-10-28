@@ -1915,3 +1915,23 @@ endif()
 if(TARGET biglybtc-managed-queue-tests)
   target_link_libraries(biglybtc-managed-queue-tests PRIVATE Qt6::Network)
 endif()
+
+# Optional source reader is explicit; stock SDK still exercises explicit denial.
+if(TARGET biglybtc_mainline_identity AND TARGET biglybtc_local_engine)
+  add_executable(biglybtc-mainline-original-wire-tests mainline_original_identity_tests.cpp)
+  set_target_properties(biglybtc-mainline-original-wire-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-mainline-original-wire-tests PRIVATE biglybtc_local_engine biglybtc_mainline_identity LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network)
+  target_compile_options(biglybtc-mainline-original-wire-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME mainline-original-wire-identity COMMAND biglybtc-mainline-original-wire-tests)
+  set_tests_properties(mainline-original-wire-identity PROPERTIES TIMEOUT 90 LABELS "network;discovery;owned;optional-provider")
+endif()
+
+# Append beside the existing real Mainline owner acceptance targets.
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-mainline-single-tracker-owner-tests mainline_single_tracker_owner_tests.cpp)
+  set_target_properties(biglybtc-mainline-single-tracker-owner-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-mainline-single-tracker-owner-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network)
+  target_compile_options(biglybtc-mainline-single-tracker-owner-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME mainline-single-tracker-owner COMMAND biglybtc-mainline-single-tracker-owner-tests)
+  set_tests_properties(mainline-single-tracker-owner PROPERTIES TIMEOUT 210 LABELS "network;discovery;owned;slow")
+endif()

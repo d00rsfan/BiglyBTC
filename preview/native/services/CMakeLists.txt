@@ -55,3 +55,17 @@ target_include_directories(biglybtc_azureus_control PUBLIC
 target_compile_features(biglybtc_azureus_control PUBLIC cxx_std_23)
 target_compile_options(biglybtc_azureus_control PRIVATE -Wall -Wextra -Wpedantic -Werror)
 set_target_properties(biglybtc_azureus_control PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
+# Opt-in volatile local diversification; no persistence or default activation.
+target_sources(biglybtc_azureus_owned_udp PRIVATE azureus_db_runtime/storage_diversification.cpp)
+
+# Early host service export; explicit optional dependency, no daemon discovery.
+option(BIGLYBTC_TOR_CONTROL "Build the owned Tor controller services" OFF)
+set(BIGLYBTC_TOR_AUTH_SOURCE_DIR "" CACHE PATH "Explicit BiglyBTC-plugin-aznettor source checkout")
+if(BIGLYBTC_TOR_CONTROL)
+  if(NOT IS_ABSOLUTE "${BIGLYBTC_TOR_AUTH_SOURCE_DIR}" OR NOT EXISTS "${BIGLYBTC_TOR_AUTH_SOURCE_DIR}/safecookie.hpp")
+    message(FATAL_ERROR "Tor control requires explicit qualified aznettor source")
+  endif()
+  add_subdirectory("${BIGLYBTC_TOR_AUTH_SOURCE_DIR}" "tor-auth" EXCLUDE_FROM_ALL)
+  add_subdirectory(tor_control)
+endif()

@@ -46,17 +46,18 @@ void codecAndNumerical(){
 }
 void dialectAndDecoder(){
  const std::string raw(256,'\xff');const auto se=body("5:nodes0:4:BFpe"+bytes(raw)+"4:BFse"+bytes(raw));
- require(decode(se).has_value(),"original dialect");require(!decode(se,Dialect::LibtorrentBFsd),"wrong explicit dialect");
+ require(decode(se).has_value()&&decode(se)->decodedPeerItems==0,"original filters alone have no decoded peer items");require(!decode(se,Dialect::LibtorrentBFsd),"wrong explicit dialect");
  const auto sd=body("5:nodes0:4:BFsd"+bytes(raw));require(decode(sd,Dialect::LibtorrentBFsd).has_value()&&!decode(sd),"libtorrent alias explicit only");
  require(!decode(body("5:nodes0:4:BFse"+bytes(raw)+"4:BFsd"+bytes(raw)),Dialect::LibtorrentBFsd),"mixed dialect ambiguous even equal");
  require(!decode(body("5:nodes0:4:BFpe255:"+std::string(255,'x'))),"malformed filter");
  require(!decode(body())&&!decode(body("6:valuesle")),"filters/empty values alone not a source carrier");
- require(decode(body("6:valuesl1:xe")).has_value(),"nonempty invalid-length values still supplies source carrier");
+ const auto invalidItems=decode(body("6:valuesl1:xe"));require(invalidItems&&invalidItems->decodedPeerItems==0,"invalid-length values do not pass original caller gate");
+ const auto bogonItem=decode(body("6:valuesl6:"+unhex("7f0000010001")+"e"));require(bogonItem&&bogonItem->decodedPeerItems==1&&bogonItem->direct.empty(),"decoded bogon item passes caller gate but supplies no direct peer");
  require(!decode(body("5:nodes1:x"))&&!decode(body("5:nodes0:6:valuesi1e")),"node geometry and values type");
  require(!decode(body("5:nodes0:5:nodes0:")),"duplicate keys refused");
  require(!decode(std::string(16385,'x')),"wire bound");
  auto direct=decode(body("5:nodes0:6:valuesl6:"+unhex("080808081ae1")+"6:"+unhex("080808081ae2")+"6:"+unhex("7f0000011ae1")+"e"));
- require(direct.has_value()&&direct->direct.size()==2,"ports filter before address dedup");
+ require(direct.has_value()&&direct->direct.size()==2&&direct->decodedPeerItems==3,"decode count precedes bogon/port filtering and address dedup");
  Aggregate a;require(a.add(*direct).has_value(),"direct aggregate");auto first=a.finish();require(first&&first->direct==1&&first->peers==1,"addresses not ports");
 }
 void boundedTerminalAggregation(){
