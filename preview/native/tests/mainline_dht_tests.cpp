@@ -48,7 +48,6 @@ QByteArray gzipOwned(const QByteArray& input){
   const auto rc=::deflate(&stream,Z_FINISH);const auto size=stream.total_out;::deflateEnd(&stream);
   test::require(rc==Z_STREAM_END,"Owned cache gzip finish");output.resize(static_cast<qsizetype>(size));return output;
 }
-QByteArray hashBytes(const lt::sha1_hash& hash) { return QByteArray(hash.data(), 20); }
 lt::sha1_hash hash(char value) { const QByteArray raw(20,value); return lt::sha1_hash(raw.constData()); }
 const core::Node* field(const core::Node& value, std::string_view key, core::Node::Type type) {
   const auto* found=value.find(key); return found && found->type==type ? found : nullptr;
