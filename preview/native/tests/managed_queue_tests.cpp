@@ -217,7 +217,8 @@ private slots:
     namespace lt=libtorrent;test::OwnedEngineFixture fixture(false);RawScrapeTracker tracker(hashBytes(*fixture.hash));
     const auto url=tracker.url();const auto digest=lt::hasher256(lt::span<const char>(url.data(),url.size())).final();std::array<unsigned char,32> key{};std::copy(digest.begin(),digest.end(),key.begin());
     auto observations=std::make_shared<engine::detail::ManagedQueueObservations>(1);observations->trackerOrder(std::vector<std::array<unsigned char,32>>{key});
-    auto settings=test::localSettings();settings.set_int(lt::settings_pack::alert_mask,static_cast<int>(lt::alert_category::tracker|lt::alert_category::status|lt::alert_category::error));
+    // This generated loopback tracker is explicitly owned; stock SSRF permits only /announce locally.
+    auto settings=test::localSettings();settings.set_bool(lt::settings_pack::ssrf_mitigation,false);settings.set_int(lt::settings_pack::alert_mask,static_cast<int>(lt::alert_category::tracker|lt::alert_category::status|lt::alert_category::error));
     auto session=std::make_unique<lt::session>(settings);const auto encodedMetadata=test::read(fixture.stateFile);lt::error_code error;
     lt::add_torrent_params parameters;parameters.ti=std::make_shared<lt::torrent_info>(lt::span<const char>(encodedMetadata.constData(),encodedMetadata.size()),error,lt::from_span);QVERIFY(!error);
     parameters.ti->clear_trackers();parameters.trackers={url};parameters.save_path=fixture.payload.toStdString();parameters.flags|=lt::torrent_flags::paused|lt::torrent_flags::disable_dht|lt::torrent_flags::disable_lsd|lt::torrent_flags::disable_pex;parameters.flags&=~lt::torrent_flags::auto_managed;
