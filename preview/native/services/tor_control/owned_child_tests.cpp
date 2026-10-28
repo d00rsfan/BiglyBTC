@@ -142,6 +142,55 @@ private slots:
     QCOMPARE(read(cookie),QByteArray(32,'r'));
     QCOMPARE(read(cookie+QStringLiteral(".kept")).size(),32);
   }
+  void authenticatedResetMayRepublishOnlyTheSamePrivateEndpointOnce() {
+    Fixture fixture("reset-republish"); QVERIFY(fixture.ready);
+    const auto options = fixture.options(); OwnedTorChild child;
+    QSignalSpy ready(&child,&OwnedTorChild::ready), failed(&child,&OwnedTorChild::failed);
+    QVERIFY(child.start(options)); QTRY_COMPARE_WITH_TIMEOUT(ready.count(),1,5000);
+    QVERIFY(child.sourceCurrent()); QCOMPARE(failed.count(),0);
+    const auto audit = QJsonDocument::fromJson(read(options.workingDirectory+QStringLiteral("/child-audit.json"))).object();
+    QVERIFY(audit["old_port_inode"].toInteger() > 0);
+    QVERIFY(audit["new_port_inode"].toInteger() != audit["old_port_inode"].toInteger());
+    QCOMPARE(audit["commands"].toArray(),QJsonArray({"AUTHCHALLENGE","AUTHENTICATE","TAKEOWNERSHIP","RESETCONF __OwningControllerProcess","GETINFO version"}));
+    const auto path = options.workingDirectory+QStringLiteral("/control.port");
+    const auto selected = read(path); const auto pid = child.processId();
+    QCOMPARE(selected,QByteArray("PORT=127.0.0.1:")+QByteArray::number(child.controlPort())+'\n');
+    // No reconciliation after Ready, even for byte-identical replacement.
+    QVERIFY(QFile::rename(path,path+QStringLiteral(".retained"))); QVERIFY(write(path,selected));
+    QVERIFY(!child.sourceCurrent()); QTRY_COMPARE_WITH_TIMEOUT(failed.count(),1,5000);
+    QVERIFY(child.joined()); QVERIFY(reaped(pid)); QCOMPARE(child.state(),OwnedTorChild::State::Failed);
+    QCOMPARE(ready.count(),1); QCOMPARE(read(path),selected);
+  }
+  void authenticatedResetCannotRefreshOtherAuthorityOrUnsafePort_data() {
+    QTest::addColumn<QByteArray>("mode");
+    for (const auto* mode : {"reset-bad-port","reset-cookie","reset-config","reset-symlink-port",
+        "reset-hardlink-port","reset-fifo-port","reset-public-port","reset-ancestor"}) {
+      QTest::newRow(mode) << QByteArray(mode);
+    }
+  }
+  void authenticatedResetCannotRefreshOtherAuthorityOrUnsafePort() {
+    QFETCH(QByteArray,mode); Fixture fixture(mode); QVERIFY(fixture.ready);
+    const auto outsider = fixture.root.path()+QStringLiteral("/outsider-port");
+    QVERIFY(write(outsider,"unselected-discovery-sentinel\n"));
+    struct stat before{}; QVERIFY(!::lstat(QFile::encodeName(outsider).constData(),&before));
+    auto options = fixture.options();
+    if (mode == "reset-ancestor") {
+      const auto ancestor = fixture.root.path()+QStringLiteral("/ancestor");
+      QVERIFY(QDir().mkdir(ancestor));
+      QVERIFY(QFile::setPermissions(ancestor,QFile::ReadOwner|QFile::WriteOwner|QFile::ExeOwner));
+      options.workingDirectory = ancestor+QStringLiteral("/run");
+    }
+    OwnedTorChild child; QSignalSpy ready(&child,&OwnedTorChild::ready), failed(&child,&OwnedTorChild::failed);
+    QVERIFY(child.start(options)); QTRY_COMPARE_WITH_TIMEOUT(failed.count(),1,5000);
+    QCOMPARE(ready.count(),0); QVERIFY(child.joined()); QVERIFY(reaped(child.processId()));
+    QCOMPARE(child.state(),OwnedTorChild::State::Failed);
+    QCOMPARE(failed.at(0).at(0).toString(),QStringLiteral("Owned Tor authority changed during authentication"));
+    const auto audit = QJsonDocument::fromJson(read(options.workingDirectory+QStringLiteral("/child-audit.json"))).object();
+    QCOMPARE(audit["commands"].toArray(),QJsonArray({"AUTHCHALLENGE","AUTHENTICATE","TAKEOWNERSHIP","RESETCONF __OwningControllerProcess","GETINFO version"}));
+    QCOMPARE(read(outsider),QByteArray("unselected-discovery-sentinel\n"));
+    struct stat after{}; QVERIFY(!::lstat(QFile::encodeName(outsider).constData(),&after));
+    QCOMPARE(after.st_dev,before.st_dev); QCOMPARE(after.st_ino,before.st_ino); QCOMPARE(after.st_size,before.st_size);
+  }
   void preexistingRootAndSymlinkExecutableAreRefusedWithoutSpawn() {
     Fixture fixture; QVERIFY(fixture.ready);
     auto options = fixture.options(); QVERIFY(QDir().mkdir(options.workingDirectory));

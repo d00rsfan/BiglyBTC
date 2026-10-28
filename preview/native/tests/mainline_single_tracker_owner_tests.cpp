@@ -181,12 +181,29 @@ private slots:
     QVERIFY2(failure.isEmpty(),qPrintable(failure));
     const auto badAdmission=bad->managedDownloads()[0].admission,goodAdmission=good->managedDownloads()[0].admission;
     QVERIFY(badAdmission);QVERIFY(goodAdmission);
-    QTRY_VERIFY_WITH_TIMEOUT(([&]{
-      if(!pump()){return true;}const auto status=good->managedDownloads();
-      if(status.size()!=1||!status[0].queueSourceFacts||!status[0].queueSourceFacts->singleTrackerResponse){return false;}
-      const auto& response=status[0].queueSourceFacts->singleTrackerResponse->response;
-      return response.type==core::QueueOriginalScrapeType::Success&&response.content&&response.content->seeds==5&&response.content->peers==6;
-    }()),5000);
+    const auto describeResponse=[](const std::optional<core::QueueOriginalScrapeResponse>& value){
+      if(!value){return QStringLiteral("absent");}
+      QString result=QStringLiteral("type=%1").arg(static_cast<int>(value->type));
+      if(value->content){result+=QStringLiteral(" seeds=%1 peers=%2").arg(value->content->seeds).arg(value->content->peers);}
+      else{result+=QStringLiteral(" content=absent");}return result;
+    };
+    const auto healthyDiagnostic=[&]{
+      const auto status=good->managedDownloads();std::optional<core::QueueOriginalScrapeResponse> legacy;
+      if(status.size()==1&&status[0].queueSourceFacts&&status[0].queueSourceFacts->singleTrackerResponse){legacy=status[0].queueSourceFacts->singleTrackerResponse->response;}
+      return QStringLiteral("healthy UDP connect=%1 announce=%2 scrape=%3 phase=%4 retained=[%5] legacy96=[%6] failure=[%7]")
+          .arg(healthyTracker.connects).arg(healthyTracker.announces).arg(healthyTracker.scrapes)
+          .arg(status.size()==1?static_cast<int>(status[0].phase):-1)
+          .arg(describeResponse(good->managedTrackerResponse(*healthy.hash,goodAdmission)))
+          .arg(describeResponse(legacy)).arg(failure);
+    };
+    // The old96 callback deliberately cannot retain exact scrape contents.
+    // Assert the SAME rich library response used by the configured-target gate.
+    QTRY_VERIFY2_WITH_TIMEOUT(([&]{
+      if(!pump()){return true;}const auto response=good->managedTrackerResponse(*healthy.hash,goodAdmission);
+      return response&&response->type==core::QueueOriginalScrapeType::Success&&response->content
+          &&response->content->seeds==5&&response->content->peers==6;
+    }()),qPrintable(healthyDiagnostic()),5000);
+    QVERIFY(!good->managedTrackerResponse(*healthy.hash,goodAdmission+1));
     QVERIFY2(failure.isEmpty(),qPrintable(failure));
     QTRY_VERIFY_WITH_TIMEOUT(([&]{return !pump()||!bad->mainlineScrapeEstimates().empty();}()),135000);
     QVERIFY2(failure.isEmpty(),qPrintable(failure));QVERIFY2(elapsed.elapsed()>=99999,"Production startup barrier was bypassed");
@@ -204,8 +221,10 @@ private slots:
     }
     QCOMPARE(bad->managedDownloads()[0].admission,badAdmission);QCOMPARE(good->managedDownloads()[0].admission,goodAdmission);QVERIFY(!peer.hasPendingConnections());
     QVERIFY(bad->pauseManaged(*failed.hash,true));QVERIFY(bad->mainlineScrapeEstimates().empty());QVERIFY(good->stopManaged(*healthy.hash));
+    QVERIFY(!good->managedTrackerResponse(*healthy.hash,goodAdmission));
     const auto ca=bad->close(std::chrono::steady_clock::now()+10s),cb=good->close(std::chrono::steady_clock::now()+10s);
     QVERIFY(ca.sessionJoined&&ca.retirement.storageReleased&&!ca.checkpointFailure);QVERIFY(cb.sessionJoined&&cb.retirement.storageReleased&&!cb.checkpointFailure);
+    QVERIFY(!bad->managedTrackerResponse(*failed.hash,badAdmission));QVERIFY(!good->managedTrackerResponse(*healthy.hash,goodAdmission));
     QCOMPARE(test::read(failed.payload+"/sample.bin"),failedPayload);QCOMPARE(test::read(healthy.payload+"/sample.bin"),healthyPayload);
     QCOMPARE(rawInfo(failed.stateFile),failedInfo);QCOMPARE(rawInfo(healthy.stateFile),healthyInfo);QVERIFY(failed.accountingIntact(false));QVERIFY(healthy.accountingIntact(false));
     qInfo("actual configured UDP: failed announces=%d scrapes=%d, healthy announces=%d scrapes=%d, DHT=%d/%d",

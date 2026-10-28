@@ -1972,6 +1972,18 @@ std::vector<ManagedDownloadStatus> PersistentSession::managedDownloads() const {
   for (const auto& [key, value] : impl_->managed) { static_cast<void>(key); result.push_back(value->status); }
   return result;
 }
+std::optional<core::QueueOriginalScrapeResponse> PersistentSession::managedTrackerResponse(
+    const core::TorrentHash& hash, std::uint64_t admission) const {
+  if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->closingAdmission||!admission){return {};}
+  const auto found=impl_->managed.find(hash.hex());if(found==impl_->managed.end()){return {};}
+  const auto& value=*found->second;
+  if(value.status.admission!=admission||!value.token||value.token->number!=admission||(value.trackerResponse&&value.trackerResponse->admission!=admission)
+      ||!value.status.retained||value.status.failure||value.stop||value.removing
+      ||!value.handle.is_valid()||!value.trackerResponse
+      ||!value.trackerResponse->installed.load(std::memory_order_acquire)
+      ||value.trackerResponse->lost.load(std::memory_order_acquire)){return {};}
+  return value.trackerResponse->response->response(); // Existing poll owns every terminal drain.
+}
 std::expected<void, AccountingError> PersistentSession::setObservationSink(ApplicationObservationSink sink) {
   if (!impl_->onWorker()) { return std::unexpected(AccountingError::WrongThread); }
   if (impl_->call) { return std::unexpected(AccountingError::ActiveOperation); }

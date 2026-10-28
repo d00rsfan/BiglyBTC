@@ -8,6 +8,7 @@
 #include <thread>
 #include <algorithm>
 #include <limits>
+#include <set>
 #include <utility>
 namespace {
 using namespace biglybtc;
@@ -123,8 +124,15 @@ private slots:
    db::Limits limits;limits.storageStats=db::StorageStatsMode::OriginalDiversification;limits.maximumEntriesPerKey=65;limits.originalRepublishMillis=3*24*60*60*1000;
    QVERIFY(!db::Owner::create(limits));auto inputs=std::make_shared<Inputs>();limits.diversificationControl=inputs;auto owner=db::Owner::create(limits);QVERIFY(owner);Clock clock;
    auto local=contact({QHostAddress::LocalHost,41000});QVERIFY((*owner)->bindLocal(local));const std::string key(20,'Z');
-   for(unsigned i=0;i<65;++i){auto origin=contact({QHostAddress(QStringLiteral("1.2.0.%1").arg(i)),41001});auto item=value(origin,std::string(512,'x'));item.lifeHours=0;
+   // Protocol55 applies original restricted-ID3: varying only the final IP
+   // octet at one port yields25 identities. Vary the unmodded second octet
+   // so these are65 genuinely distinct mapping originators, not replacements.
+   std::set<decltype(local.id)> origins;
+   for(unsigned i=0;i<65;++i){auto origin=contact({QHostAddress(QStringLiteral("1.%1.0.1").arg(i)),41001});
+     QVERIFY2(origins.insert(origin.id).second,"Diversification fixture requires a new actual origin ID");
+     auto item=value(origin,std::string(512,'x'));item.lifeHours=0;
      const auto added=(*owner)->store(key,origin,{&item,1},clock);QVERIFY(added);QCOMPARE(*added,static_cast<std::int8_t>(i==64?3:1));}
+   QCOMPARE(origins.size(),std::size_t{65});
    QCOMPARE(inputs->draws,1U);auto snapshot=(*owner)->snapshot();QVERIFY(snapshot);QCOMPARE(snapshot->values,std::size_t{65});QCOMPARE(snapshot->bytes,std::size_t{33280});
    auto reader=contact({QHostAddress(QStringLiteral("1.2.1.1")),41002});const auto observed=(*owner)->read(key,reader,0,8,clock);QVERIFY(observed&&*observed);QCOMPARE((**observed).values.size(),std::size_t{1});
    auto decoded=stats::decode((**observed).values[0].bytes);QVERIFY(decoded);QCOMPARE(decoded->value.entries,65);QCOMPARE(decoded->value.bytes,33280);QCOMPARE(decoded->value.diversification,std::int8_t{3});

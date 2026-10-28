@@ -215,6 +215,18 @@ struct OwnedTorChild::Impl {
   bool baseCurrent() const { return directoriesCurrent() && executable.current() && config.current(); }
   bool alive() const { return !reaped && pid > 0 && process.state() == QProcess::Running && process.processId() == pid; }
   bool sourceCurrent() const { return alive() && baseCurrent() && cookie.current() && portFile.current(); }
+  bool reconcileAuthenticatedPort(const QByteArray& selectedBytes) {
+    // RESETCONF republishes ControlPortWriteToFile in real Tor. Only after the
+    // SAME authenticated ownership handshake may this discovery leaf change;
+    // cookie, executable, config, directory chain and actual child stay pinned.
+    if (!alive() || !baseCurrent() || !cookie.current()) { return false; }
+    File published; QByteArray bytes;
+    if (readFile(chain.back().fd.value,"control.port",1,128,published,bytes) != Read::Ready
+        || bytes != selectedBytes || !alive() || !baseCurrent() || !cookie.current()
+        || !published.current()) { return false; }
+    portFile = std::move(published);
+    return sourceCurrent(); // All future checks retain exact full-stat authority.
+  }
   bool prepare() {
     if (!absolute(options.executable) || !absolute(options.workingDirectory)) { return false; }
     // Pin the executable itself. Execution uses this FD, not a later pathname lookup.
@@ -318,9 +330,11 @@ struct OwnedTorChild::Impl {
     }
     handshake = std::make_unique<OwnershipHandshake>(q);
     const auto at = generation;
-    QObject::connect(handshake.get(),&OwnershipHandshake::ready,q,[this,at]{
+    QObject::connect(handshake.get(),&OwnershipHandshake::ready,q,[this,at,selectedPortBytes=portBytes]{
       if (at != generation || state != State::Authenticating) { return; }
-      if (Clock::now() >= expires || !sourceCurrent()) { stopWithFailure(QStringLiteral("Owned Tor authority changed during authentication")); return; }
+      if (Clock::now() >= expires || !reconcileAuthenticatedPort(selectedPortBytes) || Clock::now() >= expires) {
+        stopWithFailure(QStringLiteral("Owned Tor authority changed during authentication")); return;
+      }
       version = handshake->rawVersionInfo(); deadline.stop();
       const auto unavailable = watcher.addPaths({options.workingDirectory,options.workingDirectory+QStringLiteral("/data"),
           options.workingDirectory+QStringLiteral("/torrc"),options.workingDirectory+QStringLiteral("/control.port"),

@@ -155,6 +155,10 @@ public:
   std::expected<core::TorrentHash, storage::Error> createHybridCompanion(
       storage::ProfileLease&, const core::TorrentHash&, storage::OriginalSelectedHash, std::stop_token = {});
   std::vector<ManagedDownloadStatus> managedDownloads() const;
+  // Passive worker-only copy of the current rich library response. No RPC,
+  // callback draining, status query or new permission; exact admission required.
+  std::optional<core::QueueOriginalScrapeResponse> managedTrackerResponse(
+      const core::TorrentHash&, std::uint64_t admission) const;
   // Last accepted bits for diagnostics only; copies never grant release.
   std::vector<std::uint8_t> verifiedSeedPieces(const core::TorrentHash&) const;
   bool managedAvailable() const noexcept;
