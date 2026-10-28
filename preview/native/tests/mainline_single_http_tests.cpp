@@ -45,7 +45,7 @@ struct Certificate {
         &&X509_gmtime_adj(X509_getm_notBefore(cert.get()),-60)&&X509_gmtime_adj(X509_getm_notAfter(cert.get()),86400)
         &&X509_set_pubkey(cert.get(),privateKey.get())==1,"Cannot prepare owned TLS certificate");
     auto* subject=X509_get_subject_name(cert.get());test::require(X509_NAME_add_entry_by_txt(subject,"CN",MBSTRING_ASC,reinterpret_cast<const unsigned char*>("localhost"),-1,-1,0)==1&&X509_set_issuer_name(cert.get(),subject)==1,"Cannot set owned TLS subject");
-    for(const auto item:{std::pair{NID_subject_alt_name,"DNS:localhost"},std::pair{NID_basic_constraints,"critical,CA:TRUE"},std::pair{NID_key_usage,"critical,digitalSignature,keyCertSign"},std::pair{NID_ext_key_usage,"serverAuth"}}){
+    for(const auto& item:{std::pair{NID_subject_alt_name,"DNS:localhost"},std::pair{NID_basic_constraints,"critical,CA:TRUE"},std::pair{NID_key_usage,"critical,digitalSignature,keyCertSign"},std::pair{NID_ext_key_usage,"serverAuth"}}){
       auto* extension=X509V3_EXT_conf_nid(nullptr,nullptr,item.first,const_cast<char*>(item.second));test::require(extension&&X509_add_ext(cert.get(),extension,-1)==1,"Cannot add owned TLS extension");X509_EXTENSION_free(extension);
     }
     test::require(X509_sign(cert.get(),privateKey.get(),EVP_sha256())>0,"Cannot sign owned TLS certificate");
