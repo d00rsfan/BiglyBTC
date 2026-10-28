@@ -1,0 +1,107 @@
+{
+  "verdict": "PASS_SOURCE_REVIEW_NO_V2_CATALOG_ADMISSION_BLOCKER",
+  "scope": "Independent full source/delta review of root-authored v2 composition/build/catalog recipes and generated admission branch; actual trees verified by read/hash only",
+  "independence_limit": "Reviewer authored the ordering/trace hook amendment and original runtime guard. Their implementation correctness is excluded from independent credit here; exact binding to the separately Codec-reviewed frozen amendment is checked.",
+  "pins_sha256": {
+    "stage_instrumented_catalog_v2.py": "df8abbe3cff228978350e89522398443f8fe11d73bdfa293537ffc389453f458",
+    "prepare_causal_v2.py": "7988eb41a40096690005d166069ba0ec3e0b0edcb111313bc91de3a52c24ebc0",
+    "build_causal_runtime_v2.py": "f08f9d0f891b01a4fd77d3159c00d43c54b23a410dd1d1c0ec8adbb9626fc290",
+    "review-both-hold-order-codec.json": "d54c6f7e81c6722d8ddbd3036536ad279e2e37effa0eb194fc2a65d97f599964",
+    "causal-fixtures-v2/manifest.json": "e9233edf660ff2ce461277b9a1dbd5eb3377c5dc52f2a8ef05a20557dfbbfd36",
+    "instrumented-catalog-v2/manifest.json": "5d28405f86ec48fd512355a9eeff8adb0fe5344a3a7cfa9d460a1dfbe27392b3",
+    "instrumented-catalog-v2-static-review-facts.json": "e7fd4a1b17a879403864d0e0d516be91ca8f8d41730149cfc15d77affc0697f3",
+    "instrumented-catalog-v2/staging/engine/runtime-binding/verify_runtime_manifest.py": "8dd7d9c6894d6fe5f8139657e700e94c4854638e67a72169821ef60dc40c42d9",
+    "instrumented-catalog-v2/staging/engine/runtime-binding/instrumented-source-build-record-v2.json": "c2a18c7d10684fd5b943e5e2d167e57d7417b3d1fddc0d641904386d41e47b91",
+    "instrumented-catalog-v2/staging/engine/runtime-binding/instrumented-runtime-v2.json": "37ce74d783fe42e42f09415ffd4358f330d5849803ef1064cb5abab7f89c5abc",
+    "instrumented-catalog-v2/staging/engine/runtime-binding/verify_instrumented_runtime_v2.py": "0fd0b83d3bb30539dfa9d1e260a5ebd1b100514e28cae33a22695c9fdeb9cbb8",
+    "instrumented-catalog-v2/staging/engine/runtime-binding/causal-overlay-manifest-v2.json": "e9233edf660ff2ce461277b9a1dbd5eb3377c5dc52f2a8ef05a20557dfbbfd36",
+    "instrumented-catalog-v2/staging/tests/persistent_causal_tests.cpp": "2fabc8f39d068aef17eaec7aa4d118d492f9d0b4d9a7b83e23849daa6870f612",
+    "instrumented-catalog-v2/staging/tests/persistent_actual_alert_tests.cpp": "88a740d986a998ac44c17967f8d919ccd916e2c631b354e0486d7ef9c7144982",
+    "instrumented-catalog-v2/staging/tests/CausalQualificationTests.cmake": "0777e90d066138f84e6ebd3c5f3f91bcac4666d2b909bea9ada26508948e1ce2"
+  },
+  "facts": {
+    "status": "PASS_READ_HASH_AST_ONLY",
+    "catalog_sha256": "5d28405f86ec48fd512355a9eeff8adb0fe5344a3a7cfa9d460a1dfbe27392b3",
+    "maps_v2_verified": {
+      "source_sha256": 446,
+      "source_build_rules_sha256": 14,
+      "bundled_dependency_sha256": 16,
+      "source_inputs_sha256": 1070,
+      "installed_sha256": 283,
+      "build_files_sha256": 5
+    },
+    "maps_v1_verified": {
+      "source_sha256": 446,
+      "source_build_rules_sha256": 14,
+      "bundled_dependency_sha256": 16,
+      "source_inputs_sha256": 1070,
+      "installed_sha256": 283,
+      "build_files_sha256": 5
+    },
+    "source_full_leaf_set_exact": true,
+    "source_symlinks": 0,
+    "compiled_source_entries": 168,
+    "all_compiled_sources_owned_and_test_macro": true,
+    "hook_translation_units": 1,
+    "declared_patch_applied_in_memory_exact": 7,
+    "source_delta_against_parent": {
+      "modified": 5,
+      "new": 2
+    },
+    "v2_vs_v1_compiled_source_changes": [
+      "src/biglybtc_causal_test.cpp"
+    ],
+    "v2_vs_v1_build_rule_changes": [],
+    "new_branch_removal_recovers_exact_v1_main": true,
+    "v2_helper_reversing_only_5_fixed_substitutions_recovers_exact_v1": true,
+    "policy_init_and_cmake_each_one_literal_only": true,
+    "runtime_manifest_sha256": "37ce74d783fe42e42f09415ffd4358f330d5849803ef1064cb5abab7f89c5abc",
+    "v2_image_sha256": "60ac6edd933f028f63f67f5f567066aefe069cda0693fe7c987448412fd444a3",
+    "v2_image_bytes": 8774224,
+    "v1_image_sha256": "3bb4f7666c002f4bdb0e303aebd235c6a39850f82813600c3a08a888f1a3f89d",
+    "v1_all_source_build_install_maps_retained": true,
+    "recorded_configure_build_install_exit_codes": [
+      0,
+      0,
+      0
+    ],
+    "reviewer_execution": {
+      "configure": false,
+      "loader": false,
+      "owner": false,
+      "build": false,
+      "target_import": false,
+      "native_or_git_mutation": false
+    }
+  },
+  "findings": [],
+  "binding_assessment": [
+    "New branch requires exact manifest 37ce74d7 before explicit module-file loading; existing approved/base/v1 catalog entries and complete old branch remain byte-exact. sys.dont_write_bytecode precedes helper execution; SimpleNamespace avoids sys.modules-dependent import assumptions.",
+    "New helper recovers the complete reviewed v1 helper by reversing only fixed manifest/record/overlay digests and the two v2 record filenames; no caller trust flag, release/version fallback, or bypass is added.",
+    "Actual record c2a18c7d binds parent 436931 and overlay e9233edf. All 446 source files, 14 build rules, 16 bundled files, 1,070 full source leaves, 283 installed files and 5 build records match actual owned v2 paths. The unified patch reconstructs all 7 declared overlay sources in memory; all 5 modified preimages match parent and both new files are explicit.",
+    "Only src/biglybtc_causal_test.cpp changes between actual v1 and v2 compiled-source maps. Root CMake append and install-hook-header fragment are unchanged from actual v1; root/v2 recipe differs from prior builder only in the exact new namespace and manifest.",
+    "All 168 recorded compile commands select owned v2 sources, /usr/bin/g++-16 and the test-only macro. The hook TU is present exactly once. Recorded configure/build/install exit0 is inspected evidence, not a reviewer execution or independent reproduction.",
+    "Actual image 60ac6edd is 8,774,224 bytes and matches source/build/install/runtime manifests. Canonical imported image/include requirements remain strict. V1 image 3bb4f766 and all v1 source/build/install/record/module maps remain byte-exact.",
+    "Causal test source is exact frozen 2fabc8f3. Actual-alert policy changes only expected build identity v1 to v2; CausalQualificationTests.cmake changes only its exact provider manifest gate. Test names, assertions, waits/deadlines, labels, ordinary owner admission and no-skip behavior are retained.",
+    "All new records remain qualification-only with causal_qualified false. Catalog admission is not callback-fence success, global/final accounting, persistence/writer authority, or future milestone adoption."
+  ],
+  "pending_execution_gates": [
+    "Root explicit adoption and dedicated v2 configure negatives under owned no-concurrency mutation/restore fence, including final positive and full-map restoration",
+    "Actual v2 loaded-image/owner admission and ordinary/fault/close/callback/policy cohorts; new combined case requires positive DiskHeld before SocketHeld, both occupied before release, then both real completions before owner return/join",
+    "Retain v1 failure records and v2 raw ledger outcomes; no deadline increase, skipped fixture or source-only causal pass credit"
+  ],
+  "reviewer_execution": {
+    "build": false,
+    "configure": false,
+    "operational_import": false,
+    "loader_or_owner": false,
+    "java": false,
+    "git_mutation": false,
+    "native_source_mutation": false
+  },
+  "limits": [
+    "This review reads source, maps and retained command records. It does not execute validators, compiler, loader, owner or subject tests.",
+    "Exact source-built provenance is not reproducible-build proof or protection against malicious in-process mutation.",
+    "Current P04-29 only; frozen future UI capsules were not adopted or changed."
+  ]
+}

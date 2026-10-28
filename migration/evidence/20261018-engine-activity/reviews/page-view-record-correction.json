@@ -1,0 +1,7 @@
+{
+  "schema": 1,
+  "prior_review": "page-view.json",
+  "prior_sha256": "7d80d90e467709b778e4691f86a0385c042ee28596ce252dcaf690c6f6e3c2af",
+  "correction": "The final checks prose says16 capsule artifacts; actual verified count is15, already correctly stored in author_artifacts_verified. No source/test/runtime conclusion changes; original review preserved.",
+  "actual_capsule_artifacts_verified": 15
+}

@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "milestone": "P04-22",
+  "original_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_parent": "42b45749abd481014486a33844520c5d670b534b",
+  "original_sources": {
+    "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java": {
+      "git_blob": "b02e0bbb331bdf6c517387ba999284af7fb53cf2",
+      "sha256": "caf9b2db52ea7fc48248131f75d59466157a6578045c32bb9db0c3a4b763b648",
+      "bytes": 8385,
+      "lines": 312,
+      "image": "migration/evidence/20261020-statistics-navigation/original/uis/src/com/biglybt/ui/swt/views/stats/StatsView.java"
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java": {
+      "git_blob": "0cfe7a202d8ff27da9500435ea9bd659a1de6ba5",
+      "sha256": "0c2b304c022013d0797732049c51deb23a7af976f74b0d47f22156d8da097103",
+      "bytes": 76096,
+      "lines": 2871,
+      "image": "migration/evidence/20261020-statistics-navigation/original/uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java"
+    }
+  },
+  "original_facts": [
+    "StatsView constructs a TabbedMDI and a String data source selects an entry by ID; TYPE_CREATE prevents destroy-on-deactivate and TYPE_DESTROY disposes the parent/update thread.",
+    "TransferStatsView stores its selected History span/offset as view fields and uses the span combo and previous/next controls to change navigation."
+  ],
+  "native_scope": [
+    "A bounded native adaptation: remember only scalar navigation on closing the Qt tab within one profile session. Do not claim original SWT/MDI persistence equality.",
+    "Recreate widgets and perform existing fresh saved reads; retain no widgets/results/history cache in the navigation value.",
+    "Clear closed-tab memory on accepted session advancement; keep existing visible-page reset semantics and all accounting/worker/reader behavior."
+  ],
+  "unchanged_behavior_files_verified": 221,
+  "new_java_execution": false,
+  "new_java_equality_credit": false,
+  "limits": [
+    "No original Java execution, live-profile switching, resource-performance or full-client parity is established."
+  ],
+  "source_ranges": "source-ranges.json",
+  "source_ranges_sha256": "0ee53a9d9b69e4f4622429a31b55ad5de626742597c21d424471de0b239bf842"
+}

@@ -1,0 +1,66 @@
+{
+  "status": "PASS_INDEPENDENT_SOURCE_REVIEW_NO_EXECUTION",
+  "component": "P04-13 Bridge save/baseline/cancellation and public read/save DTO integration",
+  "reviewer": "error_codec; integration author root. Reviewer-authored new core codec is context only, separately independently reviewed by error_oracle.",
+  "reviewed_source_sha256": {
+    "preview/native/app/session_bridge.hpp": "b33167ca52aef52eb16cf3e38587e9bcb10721e1d0be866c09a02312fcfc2c8d",
+    "preview/native/app/session_bridge.cpp": "674112f9f4cc97cd9d2b69bc5af5617d20d82a8d337614649ff05d0779a9d11e",
+    "preview/native/ui/column_layout_presentation.hpp": "7dd6edd9a8584525e3dab2dab9ed1fe44727e2d0600e356d06a7e1cc5286aa81",
+    "preview/native/ui/library_window.hpp": "ea8ba25020774136ccf8e6edfcc306fffb54f8f399b26a536a8e36278c397ecf",
+    "preview/native/ui/library_window.cpp": "10f6f967e3975994c4173c1dc707b127fed3ce26627ccf475db13ec7a4330bce",
+    "preview/native/adapters/column_layout_view.hpp": "887b251c8da97b2f18d7eeea3b7295eedc2f543057e9d8c33b4cdcc6e403a575",
+    "preview/native/adapters/column_layout_view.cpp": "a774163aa5a62d25100d8ba7bf4e11d4704119743e604fa48a7db49b1bd322b4"
+  },
+  "owned_core_frozen_context_sha256": {
+    "preview/native/core/include/biglybtc/classic_preferences.hpp": "8bbdc3b3de6bdc2f0ddecc92079d3bd4edea8d1a93ad0b1ada7b325b51780565",
+    "preview/native/core/src/classic_preferences.cpp": "394c7f79fdfbce6d733615da29e8aaea668b55a7c470b2428d4a22185c38f5f9",
+    "preview/native/tests/classic_preferences_tests.cpp": "a9eed9c8d301c67928862b0f5e59a7ed7b86a7a82e11ec4c3884ce32fae37298"
+  },
+  "blocking_findings": [],
+  "reviewed_properties": [
+    {
+      "area": "Session and input admission",
+      "evidence": "Bridge save requires nonnull packet/preferences, nonzero matching GUI-published Host session and nonzero request; validates exact bounded native preferences before making an owned const copy for the worker. Worker independently checks the same actual Host session and held baseline. Window capture/save uses a separate monotonic request counter, captures pane revisions and retains one active save; read/save queues mutually guard active commands. Ordinary library revision does not authorize or retarget a save."
+    },
+    {
+      "area": "Held byte baseline",
+      "evidence": "Host alone owns pristine baseline/source on its existing worker. Optional layout read clears prior baseline before IO, stores only the successful owned raw source and actual source enum. Missing/failed reads never fabricate a baseline. Save adapter requires Primary baseline and fresh Primary load, exact complete raw byte equality and pristine source consistency; recovery/Missing/external byte changes fail before writing. Success returns preallocated pristine baseline, used for later exact-byte saves. Save error clears Host baseline/source, requiring explicit reload."
+    },
+    {
+      "area": "Original raw preservation and scope",
+      "evidence": "Only native preference key is passed to the pure writer; no canonical original column key, file geometry, torrent value, model revision or transfer action is written. Root original table/plugin raw preservation is delegated to the newly independently reviewed pure codec plus qualified Document/ConfigFile boundaries. Only fixed tables.config uses held lease; no new profile discovery/lease/path chase/network/thread."
+    },
+    {
+      "area": "Cancellation and actual-effect reporting",
+      "evidence": "Stop checked before worker operation and by adapter through preparation/pre-save; prepared success Document parse/shared ownership is allocated before ConfigFile::save. Once synchronous save begins, no adapter/Bridge post-save cancellation checkpoint converts a real commit into Cancelled. Bridge save callback always publishes actual saved/failure packet, including after stop. If Executor skips an accepted cancelled command, existing no-posted monitor releases busy without inventing a successful save; Window clears active save and asks reload."
+    },
+    {
+      "area": "QObject/public callback lifetime",
+      "evidence": "Save packet emitted while busy remains true, rejecting direct command reentry; QPointer tested immediately after signal before monitor/busy access. Busyfalse is last emission in the save callback. Optional read similarly rechecks queued stop/session, guards callback deletion and remains busy through packet delivery. No GUI widget or borrowed capture crosses to worker; QObject-bound queued delivery cannot run after receiver destruction. Destruction cancels/joins worker before Host/lease fields by existing member order."
+    },
+    {
+      "area": "Read/private preference precedence and defensive DTOs",
+      "evidence": "Ready Window packets require valid source enum, nonnull snapshot/raw source and validateClassicPreferences when private data is present. Native preferences select full private layout; absent preferences retain source-derived whitelist import. Matching session/request required before consuming active request; stale packets cannot consume current one. Per-pane edit revisions/current-request guard retain later local edits and stop direct callback reentry/deletion. UI never reparses source data or invents original Java equivalence."
+    },
+    {
+      "area": "Save acknowledgement and local edits",
+      "evidence": "Matching save packet clears only its active save. Successful acknowledgement compares captured/current pane revisions to distinguish saved current layout from earlier saved layout with newer unsaved edits. It does not apply saved headers or retarget selection/details. Failed/no-packet outcomes disable saving until reload; successful actual result permits the new worker baseline. Rejected/unconnected request is released without latching. Close/deferred-close and independent service/read queues retain existing busy/cancellation behavior."
+    }
+  ],
+  "qualification_limits": [
+    "Full source/hash review only. Reviewer performed no compiler/preprocessor, selected target evaluation, GUI/native/test/process/JVM/profile/network or file-save execution. No actual result credited here.",
+    "Existing owner-thread API precondition applies; no cross-thread concurrent GUI facade mutation claim. Memory/Qt delivery failure does not prove publication under allocation failure; a missing result remains an explicit reload-required failure, not an unchanged-file promise.",
+    "ConfigFile remains a cooperative held-directory byte-conflict check with existing recovery/error stages, not primary-inode CAS, multi-file transaction or stronger durability. Errors after rename can imply replacement occurred.",
+    "Private native preferences do not claim original registered-column/layout/comparator application, Java manager runtime retention, whole-root reset survival or canonical-column writing. Original Java normal-save semantic roundtrip remains a separate source/runtime gate.",
+    "Root owns actual unit/Qt/sanitizer/generated-profile/end-to-end qualification and publication; this PASS does not assert those executions."
+  ],
+  "actual_reviewer_execution": {
+    "compiler": false,
+    "native_or_Qt_tests": false,
+    "JVM": false,
+    "process_fixture": false,
+    "profile_IO": false,
+    "config_write": false
+  },
+  "production_mutations_by_reviewer": "None during this integration review; own three new codec/test files remain frozen."
+}

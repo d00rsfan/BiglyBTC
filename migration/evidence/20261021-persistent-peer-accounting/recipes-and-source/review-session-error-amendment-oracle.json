@@ -1,0 +1,46 @@
+{
+  "status": "PASS_SOURCE_ONLY_DELTA_NO_RUNTIME_CERTIFICATION",
+  "finding": "PS-A1",
+  "prior_blocked_report_preserved": true,
+  "candidate_adopted": false,
+  "inputs_sha256": {
+    "build/statistics-completion-20261021/next-accounting/review-implementation-oracle.md": "67a1549b2f82beff5a160f3fdf18100c6218c64d6992568f32649eea5bb9d145",
+    "build/statistics-completion-20261021/next-accounting/review-implementation-oracle-pins.json": "faad56d30979f4c22c6ca82db806453e518b281dd2eb0232476d934a3b8751c4",
+    "build/statistics-completion-20261021/next-accounting/implementation/manifest.json": "a6d937f283471f20d2d5b8b1b6c098eb687c1926299b0a5cc0b461a33a1975f7",
+    "build/statistics-completion-20261021/next-accounting/implementation-amendments/session-error/manifest.json": "92a61053fafb2678c6589e42b5617edf5ee8b664e122400c2e18e2bd0a4d6470",
+    "build/statistics-completion-20261021/next-accounting/implementation-amendments/session-error/before.cpp": "26c72df9f647af6be0025b4b6bb1750faa6c9dbd788ff9d64a7017631279c93e",
+    "build/statistics-completion-20261021/next-accounting/implementation-amendments/session-error/persistent_session.cpp": "974f1dcbe4f963ed49e21222c83a19ace4479f3fd99d4f2787b6dc5bfac524fa",
+    "build/statistics-completion-20261021/next-accounting/implementation-amendments/session-error/session-error.patch": "8734f34488cf9c9b6e2aa3af865ac66fe17b275a635ee8f8fe48537e8abf3f4c",
+    "/tmp/biglybtc-deps/libtorrent-2.0.12-release/libtorrent-2.0.12/include/libtorrent/alert_types.hpp": "15ce77c102b456465db6c119d15bbb6b74792ba684aa386669b3d6d748442897",
+    "/tmp/biglybtc-deps/libtorrent-2.0.12-release/libtorrent-2.0.12/src/session_handle.cpp": "4982bbac9aa578949623ee62781b124900b75c95ca99d5fb1adc410ef728b74e",
+    "/tmp/biglybtc-deps/libtorrent-2.0.12-release/libtorrent-2.0.12/src/session_impl.cpp": "e33778939a03634f7ca588752f924afcdf790ac48ddd2a127af71e00f34d1c65"
+  },
+  "static_validation": {
+    "candidate_before_is_exact_frozen_cpp": true,
+    "all_8_frozen_sources_match_manifest": true,
+    "exactly_two_additions_in_pop": true,
+    "reversing_both_complete_additions_recovers_entire_frozen_cpp": true,
+    "independent_unified_diff_matches_author_patch": true
+  },
+  "conclusions": [
+    "Observed and dropped session_error_alert (LT type90) set transferError and removalLost and retain Engine as the first counter failure if none was already retained.",
+    "Classification occurs in the first alert pass; any stats response in the same pop is suppressed by sticky counterFailure before retain/publication.",
+    "Active pump throws before transfer completion; retirement detects uncertainty and aborts/joins without a settled receipt. Preparation refuses admission after this error; idle poll poisons/joins, preventing later reuse.",
+    "This conservative classification is appropriate because queued LT method exceptions and wrap/accept errors share this unattributed serious global alert. Outstanding statistics work does not establish attribution.",
+    "Direct attributable post() exceptions and metric/response failures retain their unchanged statistics-only behavior; optional sink failures remain distinct.",
+    "No other functions, legacy integration, tests, public API, deadlines or source-bound LT context were changed by this candidate."
+  ],
+  "required_qualification": [
+    "Observed actual session_error_alert and dropped-type90 classification, including a same-pop statistics response; no success publication or settled receipt.",
+    "Failure during preparation, active transfer, retirement and idle polling must prevent admission/reuse and reach the existing abort/join outcome.",
+    "A separately attributable direct statistics-request failure must continue to permit safe transfer while withholding certification.",
+    "All independently required pending-callback, old-response, mapping/drop/fence and failed-admission causal fixtures from the preserved full review remain pending; this delta supplies zero runtime credit."
+  ],
+  "remaining_source_blockers_in_this_delta": [],
+  "executed_subjects": 0,
+  "imports_of_author_or_target_tools": 0,
+  "compiler_runs": 0,
+  "native_runs": 0,
+  "native_mutations": 0,
+  "git_mutations": 0
+}

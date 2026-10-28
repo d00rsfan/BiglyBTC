@@ -1,0 +1,32 @@
+{
+  "status": "passed",
+  "native_implementation_commit": "5073f29e81752be5b6cef9ceabddd9e919eaae72",
+  "native_driver_sha256": "4366a0d62b18ef9430df0cda02068b601af2cd1730f4b5d21c07c7f6977a0909",
+  "shim_source_sha256": "1c9ddeedadfa8a231b40983ff0506a5e2c2f113d5156bd1864fb9e9185e85c66",
+  "harness_sha256": "bfbaa321ce18b685fd957e1d7c777222e1a5e4bed346dac95d7d711e90c362e8",
+  "shim_sha256": "f97ee3a56e8e884afb6e7af87dd20cb0f6236c757475d31487e63244d149959d",
+  "work": "/tmp/biglybtc-replaced-saving-7awro9ot",
+  "committed_files_sha256_device_inode": {
+    "biglybt.config": [
+      "b072d02798ba4530c0e0d173a85332ab1bb0dae4f65f114942b1b10ffed33159",
+      46,
+      383549
+    ],
+    "biglybt.config.bak": [
+      "e5691d378608807b0e0a55e13a1b7469a76a54f15a3d1c355b49aa9b52185521",
+      46,
+      383550
+    ]
+  },
+  "assertions": [
+    "Actual16-byte write then pathname replacement before the reported error",
+    "Foreign recovery bytes survive inode-mismatch rollback guard",
+    "Original primary/backup bytes/inodes intact",
+    "Native reopens original settings",
+    "LD_PRELOAD and fault pathname exist only in the disposable child environment"
+  ],
+  "limitations": [
+    "Injected ENOSPC in a test interposer, not a real full disk",
+    "GCC Linux control-path test only; broader uncooperative-writer races/filesystem fault matrix remain open"
+  ]
+}

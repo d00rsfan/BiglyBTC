@@ -1,0 +1,12 @@
+{
+  "source_hashes_match": true,
+  "files": 24,
+  "original_cases_per_compiler": 828,
+  "original_lookups_per_compiler": 40824,
+  "wrapper_regressions": 804,
+  "compilers": [
+    "gcc16",
+    "clang24",
+    "clang24-asan-ubsan-lsan"
+  ]
+}

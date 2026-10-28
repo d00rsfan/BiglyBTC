@@ -1,0 +1,271 @@
+{
+  "schema": 1,
+  "verdict": "PASS source-only; no concrete blocker",
+  "parent_reported_public_source_commit": "5fc34b588713112b126f3cebdfc891020301a281",
+  "commit_verification_boundary": "No Git invocation by this reviewer. Exact installed working bytes are pinned; parent owns committed Git-blob verification and actual publication evidence.",
+  "subject_sha256": {
+    "preview/docs/engine-statistics-contract.json": "c5b6d7b90698e874450330d7332da3be4519348fbe3d2c165e930e4a267a441c",
+    "preview/README.md": "1bca5b879ed43114104b08b9a03f7a1a72ba72df29dc47577778e45316b0f9a0",
+    ".github/workflows/native-preview.yml": "76131d7a1f2c081fb87b7448535ab622de8001858f6d855971f124d6688b6b3e"
+  },
+  "independence": "Independent review of root-authored public documentation/workflow. Reviewer-authored DTO/Page implementation is context only, excluded from independent subject credit.",
+  "checks": [
+    {
+      "id": "PUBLIC-ES-1",
+      "result": "PASS",
+      "claim": "Four runtime-resolved cumulative metric domains",
+      "detail": "The exact names net.recv_bytes/net.sent_bytes/net.recv_payload_bytes/net.sent_payload_bytes, counter-type/distinct-index/span checks match SessionStatisticsSampler. Combined peer payload+protocol is never double-counted; derived protocol uses safe raw-total differences. IP/tracker/DHT/app-wide domains remain explicitly excluded."
+    },
+    {
+      "id": "PUBLIC-ES-2",
+      "result": "PASS",
+      "claim": "Observation clock and exact interval arithmetic",
+      "detail": "The core admits nonnegative strict steady samples, preserves rejection state/priority, uses elapsed since first acceptance, and derives six exact floored last-interval rates through checked uint64 arithmetic without compiler-specific wide types. Any unrepresentable rate removes the whole optional rate group without inventing zero or resetting totals. Sampler reads native steady_clock rather than LT alert timestamps."
+    },
+    {
+      "id": "PUBLIC-ES-3",
+      "result": "PASS",
+      "claim": "Optional sampler boundaries",
+      "detail": "One outstanding request plus forced-next boolean enforces bounded posting; all three existing waits in both layouts pass the same popped batch. No extra final wait, pop consumer or sampling timer is introduced. Metric/clock/bounds/observer errors disable only observation. The contract expressly excludes arbitrary blocking/destructive observer guarantees."
+    },
+    {
+      "id": "PUBLIC-ES-4",
+      "result": "PASS",
+      "claim": "Lifecycle, latest-operation cache and truthful UI scope",
+      "detail": "Preparing is separately queued intent; Observed can coalesce; Ended retains only actual last observations. Window admits a fresh real model target once and stores only the latest packet, resets on new operation/profile, and reopens the actual cached measurement. Contract/README explicitly exclude app-wide sessions, Java smoothing, persistent global history, exhaustive teardown totals and broad parity/performance."
+    },
+    {
+      "id": "PUBLIC-ES-5",
+      "result": "PASS",
+      "claim": "Capture workflow",
+      "detail": "The workflow creates a fresh 0700 engine-captures folder before CTest, exports the exact optional fixture variable, and the two successful generated loopback rows capture actual Window grabs to absent engine-single.png/engine-multifile.png. The existing always() artifact includes the entire evidence directory, so captures and failure logs survive failed later steps. Ordinary offline port0 smoke and its six existing captures remain separate."
+    },
+    {
+      "id": "PUBLIC-ES-6",
+      "result": "PASS",
+      "claim": "Public identities and path hygiene",
+      "detail": "All 8 original source SHA256s and Git blob content hashes, 19 selected release-source SHA256/size pairs, 9 installed header pairs and exact archive SHA256 independently match the public contract. The full recorded source identity is explicitly separated from the generated version-header marker. No developer home path/private source-root path/file URI appears in the three public subjects."
+    },
+    {
+      "id": "PUBLIC-ES-7",
+      "result": "PASS",
+      "claim": "Qualification wording",
+      "detail": "Source pins and workflow presence do not assert an already completed hosted run; the public contract explicitly grants no runtime/equality/performance credit. README distinguishes supported native/unit checks from unavailable Java-backed integration and leaves full client/switching/history/smoothing work unfinished."
+    }
+  ],
+  "scope_clarifications": [
+    "The workflow step label offline unit tests means no external peer/public network during tests; the selected unit set intentionally includes generated owned-loopback engine tests via owned-engine-statistics-window-worker.",
+    "Sampling cannot change transfer success is read with the contract bounded owner-thread observer precondition and exception-isolation semantics; it is not a guarantee for malicious blocking/destructive callback code.",
+    "Public Git blob fields were checked as content identities by computing canonical blob hashes; no new original commit ancestry or source-folder Git proof is claimed.",
+    "This review reads the archive hash and selected extracted release members/installed headers; existing recorded extraction/member-provenance remains separate prior evidence.",
+    "No original Java runtime equality, global-domain equivalence, full feature completion, screenshot visual approval or performance result is inferred."
+  ],
+  "source_pin_verification": {
+    "original": [
+      {
+        "path": "core/src/com/biglybt/core/global/GlobalManagerStats.java",
+        "sha256": "e93c2aff9071ea0be53e61c2c78ff9534b23a1bd647a7a94b6a32f1bbb801558",
+        "git_blob_content_hash": "5edcc5dc9827f0f3a4cfc2787b0087a87d1029c2"
+      },
+      {
+        "path": "core/src/com/biglybt/core/global/impl/GlobalManagerStatsImpl.java",
+        "sha256": "124c0cf19f7c99dc5a72b9d9f4bc99a0da942f0c3a7c2dc37cd1acd12e86c7c3",
+        "git_blob_content_hash": "a247b2ee87abdc97c8e1b980ada9be3e6c85e31f"
+      },
+      {
+        "path": "core/src/com/biglybt/core/stats/transfer/GeneralStats.java",
+        "sha256": "4c4cd0df178265c76ba4da78b3ca79f23d4f3bf2a2b663fe67f3647a1735bd8b",
+        "git_blob_content_hash": "4a4573d3bf6f7639a76c4cc12fe9567f491a2e38"
+      },
+      {
+        "path": "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java",
+        "sha256": "14a6ecbee076ac3fa991db8d618af9faab83e1b6b4ea52e1f71eb2b2d7ea240f",
+        "git_blob_content_hash": "ac2a37822729b721aed9367b77d88450b826ec45"
+      },
+      {
+        "path": "core/src/com/biglybt/core/util/Average.java",
+        "sha256": "490fc2ac31e6b740a9c4afe370f6efb73b8d5209e63d48e39d5a715cb7e02e75",
+        "git_blob_content_hash": "9ba2b07dbd0cf53adc04d416e66b8aace8b0afe3"
+      },
+      {
+        "path": "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java",
+        "sha256": "caf9b2db52ea7fc48248131f75d59466157a6578045c32bb9db0c3a4b763b648",
+        "git_blob_content_hash": "b02e0bbb331bdf6c517387ba999284af7fb53cf2"
+      },
+      {
+        "path": "uis/src/com/biglybt/ui/swt/views/stats/ActivityView.java",
+        "sha256": "5ed9705c122842319eea84339a783a498cc03fc338d9637ff4772887fd73fcd2",
+        "git_blob_content_hash": "805df9f17c887034129858a27517ed488a79e215"
+      },
+      {
+        "path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+        "sha256": "0c2b304c022013d0797732049c51deb23a7af976f74b0d47f22156d8da097103",
+        "git_blob_content_hash": "0cfe7a202d8ff27da9500435ea9bd659a1de6ba5"
+      }
+    ],
+    "libtorrent_release_members": [
+      {
+        "path": "include/libtorrent/version.hpp",
+        "sha256": "78facdac8e2d843d1c7aaf3ea39c3f6fd9c8af8c00934a4ec14f928b0c5a0c81",
+        "bytes": 2687
+      },
+      {
+        "path": "include/libtorrent/session_stats.hpp",
+        "sha256": "50f24276b7ba33ecbd09613a168a2d1646ad5b8fe580fd4e91f3636c7d767ef1",
+        "bytes": 3114
+      },
+      {
+        "path": "include/libtorrent/performance_counters.hpp",
+        "sha256": "41a1b2f2678ad605ee0022c298bece06095be6a991457b026545eac9f9005af2",
+        "bytes": 13638
+      },
+      {
+        "path": "include/libtorrent/session_handle.hpp",
+        "sha256": "66055aa158d65f70972a2a19927d4cf7bc7e3ef223a69e3b825353a270757798",
+        "bytes": 48691
+      },
+      {
+        "path": "include/libtorrent/alert_types.hpp",
+        "sha256": "15ce77c102b456465db6c119d15bbb6b74792ba684aa386669b3d6d748442897",
+        "bytes": 111193
+      },
+      {
+        "path": "include/libtorrent/alert.hpp",
+        "sha256": "57b7b46958f52f9882ad230e921441f46e40fac8a659173d6d2da1a4c32a222d",
+        "bytes": 13244
+      },
+      {
+        "path": "include/libtorrent/time.hpp",
+        "sha256": "a21e3756ecc26f662ccf7889234d971dd9490cff60c6ff5bdade2ec2f9972749",
+        "bytes": 3301
+      },
+      {
+        "path": "include/libtorrent/torrent_status.hpp",
+        "sha256": "8d536cd124ed6b4b124db781fc75a6bf6e645db9622f05e4e24f6dd98ec33db4",
+        "bytes": 25265
+      },
+      {
+        "path": "include/libtorrent/stat.hpp",
+        "sha256": "1458d8cc96f226f862e197568d4ea5850402b9f8e19e1fdafb45f9eb4279019b",
+        "bytes": 8201
+      },
+      {
+        "path": "src/session_stats.cpp",
+        "sha256": "cd71bfbcdf53304921700d1989c5fea8575b5ebc630c061ae309eae71cd3f937",
+        "bytes": 22814
+      },
+      {
+        "path": "src/session_handle.cpp",
+        "sha256": "4982bbac9aa578949623ee62781b124900b75c95ca99d5fb1adc410ef728b74e",
+        "bytes": 37529
+      },
+      {
+        "path": "src/session_impl.cpp",
+        "sha256": "e33778939a03634f7ca588752f924afcdf790ac48ddd2a127af71e00f34d1c65",
+        "bytes": 224090
+      },
+      {
+        "path": "src/alert.cpp",
+        "sha256": "750ccc0d3a62ffd6e2dbce1d9930556bc9613ec3b10a40825bb28bc863179773",
+        "bytes": 89515
+      },
+      {
+        "path": "src/performance_counters.cpp",
+        "sha256": "867f5ccd8f8ddf121fb202027bb612f7c9e7b07a01395d1ce9e2cbebdb7a65b3",
+        "bytes": 5487
+      },
+      {
+        "path": "src/stat.cpp",
+        "sha256": "7dc9b2b214396ef3e400907031df69b166e00d4639ce940a00712f1573d5d642",
+        "bytes": 1890
+      },
+      {
+        "path": "src/torrent.cpp",
+        "sha256": "d0b8d64c54583cb9287d20aaf5ea5bc2e85cbf0caa5d5c9df42f40c77187d185",
+        "bytes": 364420
+      },
+      {
+        "path": "src/tracker_manager.cpp",
+        "sha256": "8c8ebd4a76603cc6a9eca4d17177078092a4cf7d7532e5e53fa2bb36f9ad235c",
+        "bytes": 15133
+      },
+      {
+        "path": "src/kademlia/dht_tracker.cpp",
+        "sha256": "d3711a78e50dbbfd37fb0a501fbe13e9f7ef2b7b5fba6735095ff05aa2225bcc",
+        "bytes": 22721
+      },
+      {
+        "path": "docs/manual.rst",
+        "sha256": "941b5b482ed4ad7ad7e89619931999626e87d895af06f8635be8fe02a0cd4a09",
+        "bytes": 64512
+      }
+    ],
+    "installed_headers": [
+      {
+        "path": "include/libtorrent/version.hpp",
+        "sha256": "78facdac8e2d843d1c7aaf3ea39c3f6fd9c8af8c00934a4ec14f928b0c5a0c81"
+      },
+      {
+        "path": "include/libtorrent/session_stats.hpp",
+        "sha256": "50f24276b7ba33ecbd09613a168a2d1646ad5b8fe580fd4e91f3636c7d767ef1"
+      },
+      {
+        "path": "include/libtorrent/performance_counters.hpp",
+        "sha256": "41a1b2f2678ad605ee0022c298bece06095be6a991457b026545eac9f9005af2"
+      },
+      {
+        "path": "include/libtorrent/session_handle.hpp",
+        "sha256": "66055aa158d65f70972a2a19927d4cf7bc7e3ef223a69e3b825353a270757798"
+      },
+      {
+        "path": "include/libtorrent/alert_types.hpp",
+        "sha256": "15ce77c102b456465db6c119d15bbb6b74792ba684aa386669b3d6d748442897"
+      },
+      {
+        "path": "include/libtorrent/alert.hpp",
+        "sha256": "57b7b46958f52f9882ad230e921441f46e40fac8a659173d6d2da1a4c32a222d"
+      },
+      {
+        "path": "include/libtorrent/time.hpp",
+        "sha256": "a21e3756ecc26f662ccf7889234d971dd9490cff60c6ff5bdade2ec2f9972749"
+      },
+      {
+        "path": "include/libtorrent/torrent_status.hpp",
+        "sha256": "8d536cd124ed6b4b124db781fc75a6bf6e645db9622f05e4e24f6dd98ec33db4"
+      },
+      {
+        "path": "include/libtorrent/stat.hpp",
+        "sha256": "1458d8cc96f226f862e197568d4ea5850402b9f8e19e1fdafb45f9eb4279019b"
+      }
+    ],
+    "archive_sha256": "fa0168f5c2b510105ce4e215f5863c80597112b99fc4f30514de2a6ea84da1b5",
+    "private_source_audit_sha256": "bb36ee7a70e8059f7ef29b46e376524b12bd60358e3ccce90f27d15f7122ba7e"
+  },
+  "context_sha256": {
+    "preview/native/core/include/biglybtc/engine_statistics.hpp": "f5946fd72b06312dd4772bbfb7f4c84ebbfcff53971b737e8ba7cda4902678f9",
+    "preview/native/core/src/engine_statistics.cpp": "77f4214794a6eb942f6732614dac55905d72ea91433c3b7158cc8095f78dd90d",
+    "preview/native/engine/engine_statistics_sampler.hpp": "689355ba82df086033944edb37f2a6a877d7471bd2e2f73dadc6124b7f094089",
+    "preview/native/engine/engine_statistics_sampler.cpp": "8185293d7e20a7de009d431fcd6d4f4fbded469118e201f3d94bbaf420a44604",
+    "preview/native/engine/local_session.hpp": "68b9c9f4baccc8e7ee9c4c33b4534855fdf75082003bd591ca84aca6d9643270",
+    "preview/native/engine/local_session.cpp": "4d7d7fd631cb48d712585f02e29d5541a3883d39a3d6f54b6234ba3bab93b132",
+    "preview/native/engine/multifile_session.cpp": "d300d6c23c90d73c4c0c610e310a0827d3a19403ec6bbc2785e9ebaaff92044f",
+    "preview/native/engine/local_support.hpp": "a553d4f4c0c82bd2606be258619daaef33c578884c8e59f5916b8a34c4bedc16",
+    "preview/native/app/session_bridge.hpp": "2dd37ae64b3fcc8569f52b8668784289bf3cf2b660a74e24fa172933075c9cf1",
+    "preview/native/app/session_bridge.cpp": "5858d71a4f3b1494d54250cf52edb116271f6fa84956a6f3d48fea22b909eea0",
+    "preview/native/ui/library_window.hpp": "ef543fb88d905c6967baa820f4a9d89f666b059bbf6e4cd0b9391b74a926f6e7",
+    "preview/native/ui/library_window.cpp": "d4a4d5b0e1d459b64fcd3e7c231cf6d6e9f1d59e6397bdb5fcfdc1f6450c3e00",
+    "preview/native/tests/CMakeLists.txt": "d27fbc54084c2e2f61cc9ba8a536276f73df44b92f9dbe3614b631bf206b3ca2",
+    "preview/native/tests/engine_statistics_integration_tests.cpp": "51ea4c4e6634738342638080977a38b5ab1ffc232093c1c1098af70d4c84e060",
+    "preview/native/tests/owned_engine_fixture.hpp": "799b00c13c45dfd9f8edc0e3e89deff616eb872497a67ced52935aca53330cfa"
+  },
+  "executed": {
+    "source_or_workflow_subjects": 0,
+    "builds": 0,
+    "tests": 0,
+    "apps": 0,
+    "Git": 0,
+    "network": 0,
+    "profiles": 0
+  },
+  "capsule": "build/statistics-engine-20261018/public-contract-review"
+}

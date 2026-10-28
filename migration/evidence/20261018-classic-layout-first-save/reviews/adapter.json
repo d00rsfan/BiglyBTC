@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "status": "PASS-independent-source-review-no-blocker",
+  "reviewer": "root",
+  "independence": "error_oracle authored adapter and its generated tests; root authored separate Bridge/Window and integration tests, excluded from this independent review credit.",
+  "native_parent": "2501968f62d4ec7e70b093c2186a31fcf2ede518",
+  "source_sha256": {
+    "preview/native/adapters/column_layout_view.cpp": "a7d3e205d846814d14c71b1e21e94999e6420147f5f184cbe7ececbe77939581",
+    "preview/native/adapters/column_layout_view.hpp": "59e6f64f85eb75b9a58f69100370c32a774540ac9b46f61427dd6ca29f2709af",
+    "preview/native/tests/classic_preferences_create_view_tests.cpp": "f3594599b7f69d60e6c749a78647362290fbaa508a2041c896547e2f5483a5b8"
+  },
+  "checks": [
+    "Borrow held valid lease and use only fixed tables.config; no caller filename or profile lease acquisition.",
+    "Pure validate/write into parsed empty dictionary, bounded serialize/reparse and shared immutable success baseline all precede createMissing. Existing Java canonical table records are not invented.",
+    "Pre-stop and final pretransaction cancellation checks; return actual create outcome with moved original Error and no post-transaction cancellation or success allocation.",
+    "Successful baseline is pristine and works through ordinary Primary saver; 38 generated cases cover no-save overwrite, all3 candidate leaves with7pathname types, invalid preferences, moved lease, late cancellation, late Primary and truthful postpublish synchronization failure.",
+    "Existing read/save bodies remain unchanged; private schema, original fallback and default limits retain P04-13 qualification."
+  ],
+  "blocking_findings": [],
+  "runtime_credit": "Source review only; actual root qualification recorded separately."
+}

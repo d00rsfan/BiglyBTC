@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "scope": "Read-only fixed tables.config held-profile reader; no UI/startup/writer",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_parent": "5bf0a30160c52c51d8efce279cac758948adfff2",
+  "source_sha256": {
+    "preview/README.md": "71cf568d550aed03d21bf41a534dd6fbc8a51724aa8a101ae742d56c7b895cb9",
+    "preview/docs/classic-column-layout-reader-contract.json": "8af99355dc97f165b6d7fab7d2b806f0243f98f46aaaf2155237c2f3cf8183b7",
+    "preview/native/adapters/CMakeLists.txt": "b32ab9f7254ca70a33c644dfa5461e2697565055058d286fc4c8a496a629252e",
+    "preview/native/adapters/column_layout_view.hpp": "eee7b06a10d3b8ebddbecad07c50344b09953d0273bfc0b0129692cc23cb96ea",
+    "preview/native/adapters/column_layout_view.cpp": "d4bc7a9008acd645de68a80c2ecfa8bed2e18deb1272e4c802c0e5e70396288e",
+    "preview/native/tests/CMakeLists.txt": "68a36880791f1bc14ff418252f66466d5bc2bd42f9cc49e5d7b6d75e8bbdbd8e",
+    "preview/native/tests/column_layout_view_tests.cpp": "e283f5dacacf20725d249add26424e7bb0d7885b512a6224167b869dcfc232df"
+  },
+  "focused_lanes": {
+    "gcc16-release": {
+      "cases": 53,
+      "assertions": 6894
+    },
+    "clang24-release": {
+      "cases": 53,
+      "assertions": 6894
+    },
+    "gcc16-debug-asan-ubsan": {
+      "cases": 53,
+      "assertions": 6894
+    }
+  },
+  "sanitizers": "detect_leaks=1:halt_on_error=1;UBSAN halt_on_error=1",
+  "full_native_units_passed": 36,
+  "skipped": 0,
+  "normal_profile_access": false,
+  "processes_signaled": false,
+  "fixture_bytes_and_metadata_preserved": true,
+  "java_runtime_equality_credit": 0,
+  "ui_layout_application_credit": 0,
+  "reviews": [
+    "migration/evidence/20261018-navigation/classic-column-layout-adapter-source-review.json",
+    "migration/evidence/20261018-navigation/classic-column-layout-adapter-tests-review.json"
+  ],
+  "evidence_sha256": {
+    "gcc-tests.log": "a56986f3bd5e143c64a3c0a9d9b705cf0e6b03f2d0d2b3c2a0d69fd36837483f",
+    "sanitized-build.log": "f570e66045583b2757e5daad06d29f0aac36e38374f0584ed0f06fbdf4b376a2",
+    "gcc-focused-LastTest.log": "5339c97d2b15fd415500d11a6a30ef83d3017337d66f025f9f2cb447440d5783",
+    "gcc-full-build.log": "b4e1fe6c53a7621266079fe2e8fe22391ef62e61d1c901e65293f9547fb3ae62",
+    "gcc-build.log": "9ca0cd5eec33fbe53b6996cda271c86941a0337ae149250bc710c51f30e6c2e5",
+    "clang-build.log": "c0b06f9d649499482c68b0e624014c7e4975143903d3a29f62b07189dd49a4cf",
+    "sanitized-tests.xml": "9d5bdf93666339094e113477dd085a0f4b6ad34d15aa35d3b660be4c6c201357",
+    "gcc-full-unit.xml": "da96a1b1172b81e46371b8c5db0f3a384fbbd78a52cdd27a2c6ac38ef22228ae",
+    "clang-tests.log": "a7d232ebe3e88fd3dc8dbabd37b2ff05ce77a52440aa3452c4640cfa2f972a2a",
+    "gcc-full-unit.log": "297ba38af120cd17f4d715c40ad6daa47202175c1316f1edb8daa84bb7b81a89",
+    "gcc-full-LastTest.log": "7bad717c58a81bf0930debdc70a3a0460cbc294a4087902a48b0aee6b2cf7451",
+    "clang-tests.xml": "1ade285eee8fcc81474708292abe8341acb38986f58e21bf62988e76d596ca41",
+    "sanitized-focused-LastTest.log": "2246f6f8c02b5c7fd0618bddde7bd27a79d6177fcc9abe195555e6c2b47cbdda",
+    "gcc-tests.xml": "7a6eea8dfca266bef12296e951c46cdda89a4043f2b8c968f1b4064b92dc015d",
+    "clang-focused-LastTest.log": "7a0a283e7ef62dc3bf7ac44e7f2a3dcff18948319f16c2549a2efb5dbfc4dfa4",
+    ".gitignore": "e027cf8ebf80d6dcdacced8a4dbd1c440e2436fb1868ec851db4061cb67bb787",
+    "sanitized-tests.log": "180aad43ae00bc38b76e6e4f2b5b6635e1cb31ddc0697f90d99ffd4831354fb4"
+  }
+}

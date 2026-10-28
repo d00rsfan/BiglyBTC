@@ -1,0 +1,9 @@
+# Initial bounded multifile review
+
+Reviewer: Codex, self review only, 2026-10-17. Native implementation: `9c1ab4828116590d9cfe8933615eddebd387e7a0` in this repository. Upstream https://github.com/BiglySoftware/BiglyBT.git, baseline/candidate `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`; no previously verified integrated A exists.
+
+Scope: generated v1/v2/hybrid original multifile linear profiles, original Java file indices/UTF16 ordering/virtual pads, nested Unicode and empty files, retained physical identities, incomplete links, flush/completion and version2 rename intent. Full37 GCC tests and extra v2 post-flush stages2/4/5 pass; Java opens before recovery and after it. See [matrix](../../evidence/P03-03/gcc-full-37-multifile-results.json), [capsule](../../evidence/P03-03/gcc-build-capsule.json) and P03-03 crash reports.
+
+Persistence/behavior disposition: preserve info/unknown data, global settings and physical inodes; publish completion only after verified flush; keep original aliases until state/inventory commit; never overwrite a foreign collision target. Pure-v2 original recheck8/9 with a trailing empty file is reproduced without native execution. Saving legitimate flushed verification before rename avoids the tested window. An earlier interruption or backup-only recheck retains that original limitation; initial failed evidence is retained, not relabeled.
+
+Pending required coverage: skipped/compact/reordered/relocated/legacy-codec files, broader filesystem faults and races, persistent sessions, many torrents, network privacy/protocol parity and non-Linux platforms. Clang/sanitizer matrices are running against frozen source inputs. No independent reviewer or complete initial parity review. Component remains implemented/unverified; first_ported/integrated hashes remain null. No deferred feature is accepted as retired.

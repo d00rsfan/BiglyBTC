@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "milestone": "P04-20",
+  "status": "PASS: independent static review; identified inherited-evidence identity gap corrected, no remaining blocker",
+  "reviewer": "error_driver",
+  "scope": "Completion evidence producer and hosted verifier, not pending execution results or the reviewer-authored documentation finalizer.",
+  "reviewed_sources_sha256": {
+    "build/history-charts-20261020/finalize_evidence.py": "ba65256275f05e9e814ef47254e611d45e6bbab37441100be0abfa0cf5cc0205",
+    "build/history-charts-20261020/verify_hosted.py": "06b9e56cf2255d6fa49c7cfbb6bf88b16978c2236619a5079875aaacfdb0285d"
+  },
+  "inputs_sha256": {
+    "migration/evidence/20261020-history-charts/baseline.json": "324bf3166ab804e109859d0ef84325ae8c18e7742b0f82764a74215c48e962a3",
+    "migration/evidence/20261020-history-charts/unchanged-behavior-baseline.json": "645940ac533999d2918159a6d0980fb01f6028be3c5c5fcacbb2d7c10c95e9b7",
+    "migration/evidence/20261020-history-charts/source-audit.json": "0e54adde9c404f8378d21812cb4b50f427e6c32b1385daeee77ed16de4253926",
+    "migration/evidence/20261020-history-charts/source-ranges.json": "b5eba3c36101dc66f41ad9a88df46f1393657539664bd6a1e4e8c3d0ab607845",
+    "migration/evidence/20261020-history-week/local-verification.json": "1e7d27d0a7b54ad6fa5c0af0aecaead743fbb98b56b75ec25bcf35959b7854ba",
+    "migration/evidence/20261019-saved-history/java-oracle.json": "ec86d97c987d823f05a7cfe945c224aac255306847a220350917dadf4af5d75a",
+    "migration/evidence/20261019-saved-history/java-execution.json": "8f74586290b3772bad72e722e103c6d8f5a5af2c1c20bb8d83a01462bc588d9c",
+    "migration/evidence/20261019-saved-history/query.stdout": "72ef5198898fef0a1fa7ea5221751b1d6ddbde674ce0be83e75f38586a096bbc",
+    "migration/evidence/20261020-history-week/java-oracle.json": "a69fedd1140a31eda78420d5c1be618268328a217867ae67565e1f45a820d5f7",
+    "migration/evidence/20261020-history-week/java-execution.json": "5ec158ff62e3cdb0790ab0b3acbdf68dc1a5ce55e56f7e16d7a1d7e57538ddc5",
+    "migration/evidence/20261020-history-week/query.stdout": "ad9e2da44b29dcb6e9b4baaf76022a573fd0fd546d7f6de97a54eac33d457975"
+  },
+  "finding_history": [
+    {
+      "id": "HC-EF1",
+      "initial_source_sha256": "630e14bc399b67ae8f43b351dd93a4b9cb47a5a9b32aa256603065032df4e59f",
+      "finding": "The first compact producer recomputed inherited receipt digests but did not compare them to a frozen identity. That recorded an observation rather than enforcing the stated immutable chain.",
+      "resolution": "Root added equality to the pre-frozen oracle receipt SHA, exact425/525 queries, prior scalar counts and fixed expected.tsv map; it also compares oracle, execution and raw query stdout bytes against the actual immutable private-parent Git blobs. All six fixed blobs and both baselines were read-only verified by this reviewer.",
+      "fixed_source_sha256": "ba65256275f05e9e814ef47254e611d45e6bbab37441100be0abfa0cf5cc0205",
+      "status": "resolved"
+    }
+  ],
+  "checks": [
+    "Complete current producer and hosted verifier read. ast.parse passed without importing or evaluating operational scripts.",
+    "Qualified source is a full actual commit with complete working/prequalification/commit blob map checks; source count remains dynamic. Original HEAD/index checked before and after capture.",
+    "All63 unchanged accounting, reader, worker, DTO, old test and fixture paths are matched to current bytes and both native-parent/current-source Git blobs by the producer. Reviewer rehashed all63 current paths unchanged.",
+    "Exact same-lane prior61/12/15 names plus the three new named units give64/15/18; XML and LastTest sets/markers reject failures/errors/skips/duplicates.",
+    "Three new Qt totals come from completed qualification-counts and are matched to their own CTest sections; no author-planned totals are substituted. Retained Daily34/12, Week38/12, Page92 and other fixed cohorts stay scoped.",
+    "Old2550 and new3150 scalar marker checks remain separate and require positive actual assertion counts. Inherited425/525 original queries retain actual source/stdout/fixture provenance. No Java oracle rerun or chart equality is credited.",
+    "Hosted verifier binds exact completed source/workflow identities, artifact API ID/size/digest, actual ZIP and extracted tree before inspecting64 unique units and14 exact PNGs. ZIP path/type/duplicate/symlink checks remain intact.",
+    "Hosted new counts and renderer-only/no-new-Java flags fit producer consumers. Unsupported hosted original-Java fixture/runtime execution facts are not required or invented.",
+    "Three local scales retain10 offline+2engine+2activity captures each42 total, with existing8/4/4 Qt scopes. Dist103-file maps and complete distinct rollback verify;82 private runtime bytes and full installed ELF/RUNPATH replay remain exact.",
+    "Completion records are written only after admission and evidence copying. Public limitations distinguish fixed24/7 signed payload buckets, unknown gaps, unchanged accounting and nontransactional daily reads from original rolling/pixel scaling and global-owner behavior."
+  ],
+  "static_data_observations": {
+    "unchanged_behavior_files": 63,
+    "old_actual_queries": 425,
+    "old_actual_scalars": 2550,
+    "week_actual_queries": 525,
+    "week_actual_scalars": 3150,
+    "private_parent": "028b319961b4f412d8b41a69f92ce720774582a9",
+    "six_inherited_private_git_blobs_byte_equal": true,
+    "chart_counts": "Deferred to actual qualification; no numeric result asserted by this review."
+  },
+  "blockers": [],
+  "limits": [
+    "This is a static review of scripts. Actual local/hosted qualification, dist promotion and publication remain root-executed and receipt-gated.",
+    "Reviewer authored the prior Java corpus and unchanged baseline; this report independently reviews other authors/root completion script logic, not its own oracle correctness.",
+    "Private initial staged-byte/ref verification is a separate required operation; these scripts do not themselves publish the private checkpoint.",
+    "No renderer, native implementation, Java runtime or GUI behavior was executed or qualified by this review."
+  ],
+  "activities": {
+    "target_import_or_selected_evaluation": false,
+    "finalizers_executed": false,
+    "builds": false,
+    "java_or_native_runs": false,
+    "git_mutations": false,
+    "read_only_git_show_of_exact_six_private_blobs": true,
+    "shared_document_or_native_source_edits": false
+  }
+}

@@ -1,0 +1,151 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "milestone": "P04-19",
+  "reviewer": "error_driver",
+  "status": "PASS: independent static review of evidence finalizer and hosted verifier; no blocker found",
+  "reviewed_sources": {
+    "build/history-week-20261020/finalize_evidence.py": "33096c4a4371e4e5a505b0aea9de5c29098544a19750f6ced7c66f61029ca1aa",
+    "build/history-week-20261020/verify_hosted.py": "d5f1608134225fa0ffdefe90cf466fbdd1a38bb83f727d97f30c1546bfcd7f59"
+  },
+  "source_inputs_sha256": {
+    "build/history-week-20261020/finalize_evidence.py": "33096c4a4371e4e5a505b0aea9de5c29098544a19750f6ced7c66f61029ca1aa",
+    "build/history-week-20261020/verify_hosted.py": "d5f1608134225fa0ffdefe90cf466fbdd1a38bb83f727d97f30c1546bfcd7f59",
+    "build/history-week-20261020/commit_source.py": "dedc88da911ccf217228682f1eaff1836984bf454c2a516a5b08bc15604b245d",
+    "build/history-week-20261020/contract.md": "79884ec4be3ae982d5b1ba41cd220a0e7d516b307ec990361d92763614b70286",
+    "build/history-week-20261020/finalizer-spacing/before.py": "00821a2af7e08c2f446c356f12f07f1bbb355eb07bb302b314dfbeedb667b609",
+    "build/history-week-20261020/finalizer-spacing/revision.json": "117b5f09f49d1864e19eadf315d52e0eafe4ad0c44d30a80afab28774aed87f0",
+    "migration/evidence/20261020-history-week/baseline.json": "1d43c6738465dcb191c2b068f6312ad063df9cdd58740a5e297904c14ad7c0f9",
+    "migration/evidence/20261020-history-week/java-oracle.json": "a69fedd1140a31eda78420d5c1be618268328a217867ae67565e1f45a820d5f7",
+    "migration/evidence/20261020-history-week/java-execution.json": "5ec158ff62e3cdb0790ab0b3acbdf68dc1a5ce55e56f7e16d7a1d7e57538ddc5",
+    "migration/evidence/20261020-history-week/oracle-source-manifest.json": "e2d1daf530599ea5728c217bdcb7a9f0b7fe3c02755868753a387c853eb00519",
+    "migration/evidence/20261020-history-week/source-audit.json": "39a64d8c65f433d69ae98c43336dbf499834d7077f9a908143ff7003282084d4",
+    "migration/evidence/20261020-history-week/source-ranges.json": "f7cf41b3f33ffc1a5b9bd4a6d83788baaae0ffc82368d4f2ca5e20a314155a51",
+    "migration/evidence/20261019-saved-history/java-oracle.json": "ec86d97c987d823f05a7cfe945c224aac255306847a220350917dadf4af5d75a",
+    "migration/evidence/20261019-saved-history/java-execution.json": "8f74586290b3772bad72e722e103c6d8f5a5af2c1c20bb8d83a01462bc588d9c",
+    "migration/evidence/20261019-saved-history/oracle-source-manifest.json": "81803932956b98cbc3294b650a33bf5511ebd169093eaf36830bfde72fbe06b0",
+    "migration/evidence/20261019-saved-history/baseline.json": "664e32828509d41c5d46f4fb81efb381a75211d1fd813861d11752fd352041ad",
+    "migration/evidence/20261019-saved-history/local-verification.json": "3e993b4b2dab28912e5d356c6d55082af69b08ba62633e9232a49a0362a5ed99",
+    "migration/evidence/20261020-history-week/java-version.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "migration/evidence/20261019-saved-history/java-version.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "migration/evidence/20261020-history-week/java-version.stderr": "e55b949b4794157555eb56fdc97fd948533bd2580523ab9188cfdcf10dee4e22",
+    "migration/evidence/20261019-saved-history/java-version.stderr": "e55b949b4794157555eb56fdc97fd948533bd2580523ab9188cfdcf10dee4e22",
+    "migration/evidence/20261020-history-week/javac-version.stdout": "72d0dd22cae7d8322d11ddc6616ef41085b81cea643fd49fb31ec205b92d4010",
+    "migration/evidence/20261019-saved-history/javac-version.stdout": "72d0dd22cae7d8322d11ddc6616ef41085b81cea643fd49fb31ec205b92d4010",
+    "migration/evidence/20261020-history-week/javac-version.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "migration/evidence/20261019-saved-history/javac-version.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "migration/evidence/20261020-history-week/compile.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "migration/evidence/20261019-saved-history/compile.stdout": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "migration/evidence/20261020-history-week/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "migration/evidence/20261019-saved-history/compile.stderr": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "migration/evidence/20261020-history-week/query.stdout": "ad9e2da44b29dcb6e9b4baaf76022a573fd0fd546d7f6de97a54eac33d457975",
+    "migration/evidence/20261019-saved-history/query.stdout": "72ef5198898fef0a1fa7ea5221751b1d6ddbde674ce0be83e75f38586a096bbc",
+    "migration/evidence/20261020-history-week/query.stderr": "cfe7ce33ae77bfe3453044f99e6b93e684899aab0932ce726fddf3af4f4d3b6b",
+    "migration/evidence/20261019-saved-history/query.stderr": "3a4d7a2fb981d9afad4a1efd81199c6a6c7bd7df3dbc4a50b5bfe652244a59fa"
+  },
+  "consumer_binding_sha256": {
+    "/home/yurii/Java/BiglyBTC/preview/native/tests/history_week_view_tests.cpp": "e718497088be5838386d062f2944f4e086a79004ff40a1080fbfb06bbccf5079"
+  },
+  "independence": {
+    "finalize_evidence_author": "error_codec",
+    "hosted_verifier_author": "error_oracle",
+    "reviewer_did_not_author_reviewed_scripts": true,
+    "reviewer_authored_new_java_oracle": true,
+    "scope": "Independent review of the two completion scripts against frozen oracle evidence; this is not an independent re-review of the reviewer-authored Java oracle or native implementation."
+  },
+  "method": [
+    "Read both complete script bodies and their emitted receipt/public field schemas.",
+    "Parsed scripts with ast.parse without importing, evaluating selected target statements or executing them.",
+    "Compared actual frozen JSON keys, source/class maps, raw command-log digests, public fixture maps and TSV slot metadata.",
+    "Read native corpus-consumer body to corroborate the reader marker and independent day/hour scalar mapping; no native execution.",
+    "Verified earlier finalizer 00821a source differs only by the two preserved human-readable string-spacing edits recorded by its author."
+  ],
+  "checked": {
+    "old_corpus": {
+      "fixture_data_files": 17,
+      "public_files_byte_identical": 21,
+      "actual_original_java_queries": 425,
+      "scalar_comparisons": 2550,
+      "expected_tsv_sha256": "72ef5198898fef0a1fa7ea5221751b1d6ddbde674ce0be83e75f38586a096bbc",
+      "finding": "Prior receipt, actual raw output, source/class inventory and current/source-commit fixture checks retain their original meanings. The prior comparisons are not relabeled as new seven-day comparisons."
+    },
+    "new_corpus": {
+      "profiles": 3,
+      "member_days": 21,
+      "present_files": 18,
+      "missing_files": 3,
+      "public_files_byte_identical": 22,
+      "actual_original_java_queries": 525,
+      "scalar_comparisons": 3150,
+      "actual_file_reads": 450,
+      "expected_tsv_sha256": "ad9e2da44b29dcb6e9b4baaf76022a573fd0fd546d7f6de97a54eac33d457975",
+      "fixture_manifest_sha256": "0990f669114c03a4206ea7300a03fbea5d62b7d8deb80c9b0ef4a934c436d691",
+      "raw_stdout_equals_frozen_tsv": true,
+      "all_seven_chronological_dates_per_case": true,
+      "all_25_day_hour_slots_per_date_unique_and_complete": true,
+      "six_signed_int64_fields_per_query": true,
+      "subject_units": 19,
+      "compiled_classes": 32,
+      "reused_dependency_classes_byte_identical": 30,
+      "finding": "The script checks actual command successes/log digests, before/after input identity, all supplied leaves, full public fixture hashes and immutable source-commit blobs. No expected-output algorithm or weekly sum is introduced."
+    },
+    "local_and_hosted": {
+      "required_hosted_fields_all_produced": true,
+      "actual_count_receipt_keys": [
+        "history_ui_qt_rows",
+        "history_window_qt_rows",
+        "history_week_ui_qt_rows",
+        "history_week_window_qt_rows"
+      ],
+      "retained_daily_row_counts": [
+        34,
+        12
+      ],
+      "finding": "New UI/worker totals come from the actual count receipt and are matched to exact LastTest sections; old totals remain fixed. Hosted 525/3150 fields mean frozen Java rows compared by native tests. java_oracle_execution_in_hosted is explicitly false, with an explanatory query-scope field. Profile/member/file-read/runtime facts are local-only; unsupported hosted Java fixture/query/runtime fields are not required."
+    },
+    "qualification_admission": {
+      "lane_cohorts": {
+        "gcc": 61,
+        "clang": 12,
+        "sanitized": 15
+      },
+      "retained_same_lane_cohorts": {
+        "gcc": 57,
+        "clang": 8,
+        "sanitized": 11
+      },
+      "finding": "Both scripts require unique exact test sets, zero failures/errors/skips, and scoped plain/Qt markers. Local command records must contain configure/build/tests success. Hosted success binds both workflow heads, artifact API identity/digest/size, actual ZIP and exact extracted-tree bytes before publishing its receipt. ZIP rejects unsafe/noncanonical/duplicate/symlink/nonregular members."
+    },
+    "scope": {
+      "whole_week_queries": 0,
+      "whole_week_totals": 0,
+      "multi_file_transactional_snapshot": false,
+      "finding": "Public/local limitations explicitly separate seven independent UTC daily files from the original multi-file Date-range query, rolling/calendar week behavior, clock clamp, cache/writer/global owner/UI parity. Unknown-to-zero mapping is confined to scalar comparison; native presence, errors, counts, safety and cancellation receive no Java equality credit."
+    },
+    "completion_bookkeeping": {
+      "captures_per_scale": 14,
+      "three_scale_captures": 42,
+      "hosted_captures": 14,
+      "dist_files": 103,
+      "unchanged_runtime_files": 82,
+      "finding": "The new paths, native/private parents, actual source maps, PNG sets, distinct rollback and installed-RPATH full-byte proof are guarded. Original HEAD/index is checked before and after evidence copying. Success receipts are emitted after all admission/copy checks, with dynamic actual source count and no guessed native/private completion commit."
+    }
+  },
+  "blockers": [],
+  "limits": [
+    "No operational finalizer, hosted verifier, build, test, compiler, Java oracle or native subject was executed during this review.",
+    "The review does not assert that pending local/hosted qualification or publication succeeded; actual receipt admission remains root work.",
+    "The scripts consume trusted frozen root/author evidence. This review does not turn per-file observations into an atomic seven-file snapshot, a hostile-writer security proof, or a global history parity claim.",
+    "Final private staged-byte verification and ref publication are outside these two scripts and must retain the separately required raw * -text and complete pre-ref byte checks."
+  ],
+  "execution_during_review": {
+    "target_imports": false,
+    "selected_target_evaluation": false,
+    "operational_script_runs": false,
+    "builds": false,
+    "native_or_java_subject_runs": false,
+    "git_mutations": false,
+    "native_source_mutations": false
+  },
+  "reviewed_sources_unchanged_before_report": true
+}

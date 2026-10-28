@@ -1,0 +1,37 @@
+{
+  "upstream_commit": "c9ab8f7cd62b2874f7385772992c0288a224e85d",
+  "source_path": "com/aelitis/azureus/plugins/xmwebui/XMWebUIPlugin.java",
+  "source_sha256": "5336f4a540d1e84fd9e470db10031af925f268bd0f64c74884bcb24f13a72931",
+  "exact_method_sha256": "df024fb0da003838b66ad10d3b61ba5cdb30e14177650e97f4aecc65117bbd06",
+  "harness_sha256": "0471ce39f4a5819bc1162fef297a8f2121fea84a9fd443be6a4f65915636a027",
+  "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+  "helper_class_sha256": {
+    "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd",
+    "RpcIdentityOracle$DownloadStub.class": "edd87f543e8f7a4298701c06907136ef55bc5d440389f0147085ca7c2e46611c",
+    "RpcIdentityOracle$Host.class": "b66550b21837594809ad64fe58ecf96dc28d6fa4264add739656532f9826b539",
+    "RpcIdentityOracle$PluginConfig.class": "3414a52fb3b2f923574b16f933040d968edca67224af4fd557bd0a5a7d48eec6",
+    "RpcIdentityOracle$PluginInterface.class": "9eba9743b9a42864b80202aa1376b783ed88151afb3f9041c02a16def3278e7c",
+    "RpcIdentityOracle.class": "018c6d665d4828a7e6f9f22d20844ef0b280738989204ccaf854ff08d3a964d0"
+  },
+  "commands_sha256": "b3dc03639bf10f6b18fee7daa31878f657c6a4d589c9f306c2e332768ac00edb",
+  "expected_sha256": "7a7ab6e27fb72cf6a1b1295ca6e4dc19d051e18948a8eae5798cab5d89e3d021",
+  "observations": 828,
+  "lookups": 40824,
+  "work": "/tmp/biglybtc-rpc-identity-oracle-8mtl36ks",
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+    "-XX:ActiveProcessorCount=2",
+    "-Djava.security.manager=ReferenceFence",
+    "-Dbiglybtc.test.root=/tmp/biglybtc-rpc-identity-oracle-8mtl36ks",
+    "-Duser.home=/tmp/biglybtc-rpc-identity-oracle-8mtl36ks",
+    "-Dazureus.config.path=/tmp/biglybtc-rpc-identity-oracle-8mtl36ks/profile",
+    "-cp",
+    "/tmp/biglybtc-rpc-identity-oracle-8mtl36ks/classes:/tmp/biglybtc-oracle/classes",
+    "RpcIdentityOracle",
+    "/tmp/biglybtc-rpc-identity-oracle-8mtl36ks/commands.jsonl"
+  ],
+  "scope": "Exact original getID; supplied ordered stub list and in-memory full64 attribute/counter host, ordered setter trace; no real download/plugin/core initialization, persistence, profile or network"
+}

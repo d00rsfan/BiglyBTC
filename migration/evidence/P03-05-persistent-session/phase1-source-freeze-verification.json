@@ -1,0 +1,39 @@
+{
+  "status": "phase1-original-source-frozen",
+  "native_implementation_or_comparison": false,
+  "source_fixture_manifest_sha256": "6e60e51825488fce6e5717e90a4414c7eec908e383665be7a5f8dd5b0ce72b33",
+  "source_reference_sha256": "b2e8e316a6a5cc860f2082686c1639a6077810adbd538d252d75deadc1711ccc",
+  "helper_classes": 17,
+  "persistent_compile_files": 46,
+  "groups": {
+    "export-semantic": {
+      "observations": 2353,
+      "source_exceptions": 0
+    },
+    "pause-semantic": {
+      "observations": 10657,
+      "source_exceptions": 0
+    },
+    "callback-order": {
+      "observations": 198,
+      "source_exceptions": 0
+    },
+    "getter-fault": {
+      "observations": 634,
+      "source_exceptions": 61
+    },
+    "alias-policy": {
+      "observations": 95,
+      "source_exceptions": 0
+    },
+    "provider-boundary": {
+      "observations": 131,
+      "source_exceptions": 6
+    }
+  },
+  "observations": 14068,
+  "source_exceptions": 67,
+  "source_body_count": 6,
+  "harness_sha256": "8c75ae7e74580221619348d23a7bb867faf1782ab51fb1207124d7b98fe61f3a",
+  "scope": "Exact source export/individual pause intentions; no ordinary manager/controller/disk/profile execution. Completion/close/RDResume/native owner remain pending."
+}

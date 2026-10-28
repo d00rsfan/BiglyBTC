@@ -1,0 +1,37 @@
+{
+  "upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_files_verified_against_actual_git": {
+    "core/src/com/biglybt/core/global/GlobalManagerStats.java": {
+      "sha256": "e93c2aff9071ea0be53e61c2c78ff9534b23a1bd647a7a94b6a32f1bbb801558",
+      "git_blob": "5edcc5dc9827f0f3a4cfc2787b0087a87d1029c2"
+    },
+    "core/src/com/biglybt/core/global/impl/GlobalManagerStatsImpl.java": {
+      "sha256": "124c0cf19f7c99dc5a72b9d9f4bc99a0da942f0c3a7c2dc37cd1acd12e86c7c3",
+      "git_blob": "a247b2ee87abdc97c8e1b980ada9be3e6c85e31f"
+    },
+    "core/src/com/biglybt/core/stats/transfer/GeneralStats.java": {
+      "sha256": "4c4cd0df178265c76ba4da78b3ca79f23d4f3bf2a2b663fe67f3647a1735bd8b",
+      "git_blob": "4a4573d3bf6f7639a76c4cc12fe9567f491a2e38"
+    },
+    "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java": {
+      "sha256": "14a6ecbee076ac3fa991db8d618af9faab83e1b6b4ea52e1f71eb2b2d7ea240f",
+      "git_blob": "ac2a37822729b721aed9367b77d88450b826ec45"
+    },
+    "core/src/com/biglybt/core/util/Average.java": {
+      "sha256": "490fc2ac31e6b740a9c4afe370f6efb73b8d5209e63d48e39d5a715cb7e02e75",
+      "git_blob": "9ba2b07dbd0cf53adc04d416e66b8aace8b0afe3"
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java": {
+      "sha256": "caf9b2db52ea7fc48248131f75d59466157a6578045c32bb9db0c3a4b763b648",
+      "git_blob": "b02e0bbb331bdf6c517387ba999284af7fb53cf2"
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/ActivityView.java": {
+      "sha256": "5ed9705c122842319eea84339a783a498cc03fc338d9637ff4772887fd73fcd2",
+      "git_blob": "805df9f17c887034129858a27517ed488a79e215"
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java": {
+      "sha256": "0c2b304c022013d0797732049c51deb23a7af976f74b0d47f22156d8da097103",
+      "git_blob": "0cfe7a202d8ff27da9500435ea9bd659a1de6ba5"
+    }
+  }
+}

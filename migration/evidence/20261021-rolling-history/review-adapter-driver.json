@@ -1,0 +1,73 @@
+{
+  "status": "PASS_SOURCE_REVIEW_NO_BLOCKER",
+  "reviewer": "error_driver; independent of adapter/tests/CLI author; own GUI excluded",
+  "scope": "Full installed held-lease range adapter header/source, full reader test and full thin CLI, with core planner/accumulator and existing day reader/profile/file-IO source context.",
+  "source_sha256": {
+    "preview/native/adapters/history_range_view.hpp": "7875370883b5a012a338e399ad5581f285c4be9c8863731a410c8a52bfbd894e",
+    "preview/native/adapters/history_range_view.cpp": "178f4df4918a28b6e36adc7d6700f4c1c16b8abd105ea1a4dbb8271b44bd90f2",
+    "preview/native/tests/history_range_reader_tests.cpp": "4dccc269e7d8d782af3136dfe1966936c7774ed0aaf5944e184f49682c197b99",
+    "preview/native/tests/history_range_query_driver.cpp": "5325e74aff866b4bced166ca898433f2555f52283b0303b237dd063ab042d99f"
+  },
+  "context_sha256": {
+    "preview/native/adapters/history_view.hpp": "0e4d06bb785b3a4e4595059b338d42b12d9e27fec3c8cdb958f7905d3bf45235",
+    "preview/native/adapters/history_view.cpp": "7a36a9307b6b8cee95169d77bbfe727ce183711d3c08034142363792a337b10c",
+    "preview/native/adapters/file_io.hpp": "8d0fc78f8b6fd62932c8ff07fcbcd8203d6bac0ca2255d86bb849c4b1b413cb6",
+    "preview/native/adapters/file_io.cpp": "a3fd490e8e49b8d066f27205ab25636ac51c5e0715bf5c25f169e877da17f89c",
+    "preview/native/adapters/profile.hpp": "0e7bb950e4d66e2fdf88b2733cb00d149e8b17ea805348300327af8418649831",
+    "preview/native/adapters/profile.cpp": "38c0838d5aae673304ce9dade42cae18bf9607d54d4480949617dcc1c5dafbd9",
+    "preview/native/tests/history_view_tests.cpp": "62b95183ef6ded3af3a08d9506762b24df3b4892e4355f114aeb6d49752208fc",
+    "preview/native/tests/history_week_view_tests.cpp": "e718497088be5838386d062f2944f4e086a79004ff40a1080fbfb06bbccf5079",
+    "preview/native/core/include/biglybtc/saved_history_range.hpp": "0999229cce0ec4d064df3cb9cde5acc2818428840c7dd4bd85d0722bb509a018",
+    "preview/native/core/src/saved_history_range.cpp": "fa35a434abc867bea811f3af056d8564535d92e41a590caf27fd06ab08c74a72",
+    "preview/native/tests/CMakeLists.txt": "d35d83b9d04acb21ba37421a843602f84d6c5185a5f52c088635c297c61f896a",
+    "preview/native/adapters/CMakeLists.txt": "1da5e1602cbd4769c8b16010634ad8f8c5e7ad7e6d3a25fc428ce1a7a2f12f3c"
+  },
+  "capsule_manifest_sha256": "d663913272119141476803f4ee8a170ece63b4460d98fe66c62e3c765ec2d8e4",
+  "contract_sha256": "0cd89591df1d1941800622bd2d58851fc603676bd2946eaf22689651f090c15d",
+  "capsule_source_artifact_and_old_context_maps_verified": true,
+  "findings": [],
+  "assessment": [
+    "The adapter borrows exactly one valid held lease and uses its directory descriptor. Fixed stats/YYYY/MM/DD.dat names are generated only from the admitted plan. It acquires no additional lease, reads no clock/cache/config/payload-derived path and performs no write.",
+    "Selected directories are inspected without following symlinks, require owned physical directory type, open with O_DIRECTORY|O_NOFOLLOW, and compare initial named/opened/current identities. Relevant symlinks, regular-file directory substitutes and FIFOs are rejected before content access.",
+    "Selected day files require owned regular type, open O_NOFOLLOW|O_NONBLOCK, compare named versus opened dev/inode/uid/mode/nlink/size/mtime/ctime, enforce 1MiB before allocating, and retain that exact descriptor through strict parse and final fd/path identity checks. Ancestor names and the held root are checked before publication; replacements/truncation observed by these checks fail.",
+    "All inventory has fixed three-level recursion and constant descriptor depth; every non-dot entry, including inert/cache/non-date names, consumes the 65536-entry count. Only exact valid years/months/DD.dat dates are followed. Relevant date paths must be physical owned directories/regular leaves; scan errors, stop, changed identities/timestamps, future-only first date or excessive final plan fail. The core independently bounds actual selected dates/buckets before data accumulation.",
+    "One <=1MiB string and one bounded record vector are read/parsed at a time. Records move into append, never accumulate all input files. Early file/parser/arithmetic/limit/allocation failure returns unexpected; the partially filled local accumulator is destroyed. finish is called only after every planned date and final root/cancellation checks.",
+    "Stop is checked around directory/file reads, each content-read iteration, parser, append, inventory iteration and final publication. A stop observed alongside injected EIO has cancellation precedence. Missing, present empty/header-only and observed zero remain distinct.",
+    "The 16 source test families have substantive independent signed six-field, inclusive-whole/exclusive-bucket, filename-spill, coverage and ownership assertions. Read wrappers call __real_read first and arm only matching generated dev/inode. Replacement/truncation/month-swap cases assert both fired and mutationOk; middle-file cancellation asserts the second selected file was read. readdir mutation/cancel/IO wrappers match the real directory descriptor; the flood seam feeds inert names to the actual production entry counter, with exact cap and cap+1 outcomes.",
+    "Tests create only explicitly owned /tmp/biglybtc-history-range-tests-* fixtures, hold leases before preservation stamps, compare bytes/dev/inode/mode/nlink/size/mtime/ctime and avoid atime claims. Unsafe-target sentinels remain unchanged; parsed output outlives the lease. CMake enables only target-private read/readdir wrappers on this test; the CLI has no such substitutions.",
+    "The CLI parses exact explicit period/offset/now arguments, obtains one requested lease, invokes the actual range API once and prints returned primitives/optionals. It mirrors no accounting arithmetic, invokes no Java, has no implicit profile or now, and prints unknown six-tuples as dashes. Output begins only after a complete successful API result."
+  ],
+  "review_limits": [
+    "Source-only review: no compiler, native/Qt/Java execution, profile access, operational-script import/evaluation, Git command or network. Actual 16-family results belong to root qualification; no author-reported execution adopted as reviewer execution.",
+    "Individual file/path checks and All inventory are not a transactional multi-file snapshot and cannot exclude every unobserved same-user race. This is explicitly stated by the API and source capsule.",
+    "The inventory flood uses a synthetic readdir provider; it proves the production count gate, not a physical directory containing 65537 distinct files. Memory failure is source-mapped to Io, not exhaustively allocation-fault injected here.",
+    "The comparison CLI expects its caller to choose generated profiles; it has no generated-path authorization fence. ProfileLease::acquire can create/use the ordinary .azlock, so adapter data-read-only scope does not mean the entire CLI performs zero filesystem writes.",
+    "No new Java equality or whole Statistics/global accounting/runtime parity credit is claimed."
+  ],
+  "reader_source_families": [
+    "missing-paths-remain-unknown-with-no-side-effects",
+    "present-owning-values-and-no-unrelated-reads-or-writes",
+    "present-empty-header-and-observed-zero-remain-distinct",
+    "inclusive-whole-end-is-not-summed-from-buckets",
+    "filename-bucket-membership-remains-independent",
+    "invalid-request-and-moved-lease-reject-before-path-use",
+    "unsafe-selected-paths-never-followed-or-blocked",
+    "strict-record-version-and-size-errors-return-no-prefix",
+    "cancellation-and-io-after-genuine-selected-read",
+    "fd-path-replacement-truncation-and-directory-replacement",
+    "all-earliest-filename-unknown-empty-and-inert-nondates",
+    "all-relevant-symlink-special-and-future-paths-reject",
+    "all-inventory-entry-bound-is-exact-and-ignores-no-counts",
+    "inventory-cancel-io-and-directory-swap-fail-whole-query",
+    "middle-file-cancel-and-unsafe-path-never-publish-earlier-prefix",
+    "all-oversized-date-range-fails-before-any-file-prefix"
+  ],
+  "execution": {
+    "compiler": false,
+    "native_or_Qt": false,
+    "Java": false,
+    "Git": false,
+    "operational_script_import": false,
+    "native_source_edit": false
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "build_sha256": "1d887c8de263cdf72efd30c4ea6c7fa9b4cb988f56c43d0396715936f62f65d6",
+  "installed_sha256": "814db70ec50d93010c62a38d1e5374e384033092f82ef1aeb5e599bb8bca1a8e",
+  "replayed_install_sha256": "814db70ec50d93010c62a38d1e5374e384033092f82ef1aeb5e599bb8bca1a8e",
+  "old_runpath": "/opt/Qt/6.12.0/gcc_64/lib:/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/lib/x86_64-linux-gnu:",
+  "new_runpath": "$ORIGIN/../qt/lib",
+  "cmake_install_script_sha256": "7d481d255b0e1fdd912a88504e8780549460588b7ca7957579c2416a997790c2",
+  "complete_bytes_match_after_exact_rpath_change": true
+}

@@ -1,0 +1,81 @@
+{
+  "schema": 1,
+  "milestone": "P04-22",
+  "status": "PASS source-only independent Window production review",
+  "reviewer": "error_codec",
+  "author": "error_driver",
+  "blockers": [],
+  "subject_sha256": {
+    "preview/native/ui/library_window.hpp": "e4c09d49e2eac724bedc76324172093279ba7adfd13295708369d1d4de479be1",
+    "preview/native/ui/library_window.cpp": "2b85d44913d6797c18bd601cf3e6bca4e7c5b418021b7682679b8f8cdaae1b72"
+  },
+  "subject_manifest_sha256": "db2560c9a037107c871092ae9bc69157626d6a216a04261aeb01415b47ddcad6",
+  "contract_sha256": "0935232eaddf4bc9f51443ce1ec83e6b2c266c40976bd9ac7cfc5cbd7ff26d25",
+  "interface_context_sha256": {
+    "preview/native/ui/statistics_navigation.hpp": "c702b5f3d82fc5243b43fbacf8a3ffb0679e1950db4e5909d1c34da986e11ad5"
+  },
+  "independence": "Reviewer authored Page-side implementation; independent credit applies only to these two driver-authored Window files and their integration delta.",
+  "verification": {
+    "all_declared_artifact_hashes_verified": true,
+    "before_images_match_declared_pins": true,
+    "three_changed_definitions": {
+      "showStatistics": {
+        "before_sha256": "ea244c85cc01a69c1ecf3b37fba52ca0be0d3ac5ddd2296d7060e9ed637d8c48",
+        "after_sha256": "5a003e35d4dee8bc2b7cd5fe7f3d2939e8020f0031fb01eb5ade04851993f9ac"
+      },
+      "closePage": {
+        "before_sha256": "7e41e1c10537bf1d85a34ab3fbe7b5980736c074fc751f2ad036bb3797e992c8",
+        "after_sha256": "06be9df89077e127f321248b87f2303fee5422e5f2b75fa6868a9926bd0e9b35"
+      },
+      "beginColumnLayoutSession": {
+        "before_sha256": "7aa0f0ff0947c2edefba3aad60f1ccf3cfd5fa22412155923ed14005fbe6fca0",
+        "after_sha256": "2fe61bec69ae562de8f154a34e8a3492c52cc6d00278f80e5a523fd7e26956d0"
+      }
+    },
+    "unchanged_definition_count": 45,
+    "entire_cpp_outside_three_definitions_byte_identical": true,
+    "header_has_only_value_include_and_scalar_record": true,
+    "old_tests_verified": 85,
+    "worker_and_accounting_files_verified": 10,
+    "root_retained_source_files_verified": 221
+  },
+  "findings": [
+    {
+      "topic": "owned scalar capture and invalid state",
+      "assessment": "PASS",
+      "detail": "Statistics close captures validated optional navigation before clearing the Page pointer/pending requests or removing the tab. Current nonzero columnSession tags a plain scalar record; zero or invalid all-or-none capture clears older memory. No widget, packet or source data is retained."
+    },
+    {
+      "topic": "same-session fresh restore",
+      "assessment": "PASS",
+      "detail": "Only fresh Page creation consults memory, and only for the current matching nonzero session. Existing open Page reuse is unchanged. Initial choices enter the constructor before Window signal wiring and tab insertion; the new Page has no old saved result and uses existing fresh lazy reads."
+    },
+    {
+      "topic": "profile advancement and reentry order",
+      "assessment": "PASS",
+      "detail": "The existing closing/zero/duplicate/older-session gate precedes every change. Accepted advancement sets the session and clears remembered navigation before shared packet release, optional-column refresh or outward callbacks. Existing visible-Page reset behavior remains exact. A close subsequently performed in the new session may record that Page current choices, as specified."
+    },
+    {
+      "topic": "close/reopen and stale work",
+      "assessment": "PASS",
+      "detail": "Old active request intentionally remains governed by unchanged Page QPointer/session/request/date/kind fences while pending work is discarded on close. Fresh reopened requests cannot be satisfied by old Page replies, including before deferred old-widget deletion. Existing busy-false failure/requeue and close/cancel behavior are unchanged."
+    },
+    {
+      "topic": "lifetime and callbacks",
+      "assessment": "PASS",
+      "detail": "New navigation() only reads owned scalar controls and validates dates; it emits no signals. Capture has Window/Page/session identity checks before subsequent writes. removeTab and existing show/reset/focus paths retain QPointer checks around actual callbacks. Constructor accessibility/allocation behavior is the pre-existing broader boundary; no new global accessibility or OOM recovery guarantee is claimed."
+    }
+  ],
+  "scope_limits": [
+    "Source review only; runtime new-tab lazy-read and worker behavior remain root test gates.",
+    "No filesystem/configuration/history writes, engine/accounting changes, new Java execution/equality, or cross-window/application persistence.",
+    "Own Page source is interface context, not independently reviewed by this reviewer."
+  ],
+  "execution": {
+    "builds": 0,
+    "tests": 0,
+    "native_or_java_processes": 0,
+    "git_commands": 0,
+    "production_edits": 0
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "files": {
+    "core/src/com/biglybt/core/stats/transfer/LongTermStats.java": {
+      "sha256": "f1a4bfaa8d15e8b0f9318a2af1653a854f9969bc09b80f4e9bd3c48afb62e1bf",
+      "lines": 110
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java": {
+      "sha256": "0c2b304c022013d0797732049c51deb23a7af976f74b0d47f22156d8da097103",
+      "lines": 2871
+    }
+  },
+  "component": "statistics.history_keyboard",
+  "findings": [
+    "Keyboard inspection is a Qt usability adaptation of the already-qualified immutable saved chart facts.",
+    "No original SWT keyboard/rendering equality or new Java execution is claimed.",
+    "All six original counter ordering and prior2550/3150 scalar observations remain unchanged."
+  ],
+  "first_ported_commit": null,
+  "integrated_through_commit": null
+}

@@ -1,0 +1,149 @@
+{
+  "builds": [
+    {
+      "compiler": "gcc",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-xmwebui",
+          "-B",
+          "/tmp/biglybtc-rpc-identities-qualified-gcc",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS=",
+          "-DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-rpc-identities-qualified-gcc",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-rpc-identities-qualified-gcc",
+          "--output-on-failure"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-rpc-identities-qualified-gcc/biglybtc-rpc-identity-driver": "6e064d61fd159d750b10aaa82fe17a28137b2c33f0f5ebd40c262a01d7c3748e",
+        "/tmp/biglybtc-rpc-identities-qualified-gcc/biglybtc-rpc-identity-bounds-tests": "f1f0a8075387e1e5288e07b5001acc582329512c59eb44314f05e3e7a6f27a28",
+        "/tmp/biglybtc-rpc-identities-qualified-gcc/libbiglybtc_rpc_identities.a": "c427f217f74caaa085709791c3262c2dd2af83e97d50591641c3beff8ce60f57",
+        "/tmp/biglybtc-rpc-identities-qualified-gcc/biglybtc-rpc-contract-driver": "1e759058cd9cb6bd2a07bb1049cf032a2740e94bab9f54201988a352f315e253"
+      }
+    },
+    {
+      "compiler": "clang",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-xmwebui",
+          "-B",
+          "/tmp/biglybtc-rpc-identities-qualified-clang",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16",
+          "-DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-rpc-identities-qualified-clang",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-rpc-identities-qualified-clang",
+          "--output-on-failure"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-rpc-identities-qualified-clang/biglybtc-rpc-identity-driver": "9d69edc4e4f5b3a3f51de5b86b261b4e90191b5b26c1094c593e62e70a815486",
+        "/tmp/biglybtc-rpc-identities-qualified-clang/biglybtc-rpc-identity-bounds-tests": "2c39ffc05ee3f9e6a4b491e9ea0430ee1bc4810bcadd0cb6f1e1d24167302c55",
+        "/tmp/biglybtc-rpc-identities-qualified-clang/libbiglybtc_rpc_identities.a": "0a028021e67cba07744ef94cfb650711c09aa45e77aaf027a264e025c4083339",
+        "/tmp/biglybtc-rpc-identities-qualified-clang/biglybtc-rpc-contract-driver": "6aa720e623a076e0e202f0cb228ef6a3f51993085c8d8459f84e55aef03cad81"
+      }
+    },
+    {
+      "compiler": "asan",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-xmwebui",
+          "-B",
+          "/tmp/biglybtc-rpc-identities-qualified-asan",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Debug",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer",
+          "-DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-rpc-identities-qualified-asan",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-rpc-identities-qualified-asan",
+          "--output-on-failure"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-rpc-identities-qualified-asan/biglybtc-rpc-identity-driver": "f71b638c70c3f3e71ec380c5108233959fde5f44a5220bda48f17872d9454034",
+        "/tmp/biglybtc-rpc-identities-qualified-asan/biglybtc-rpc-identity-bounds-tests": "04f105126f11f93ecd0931f0aee13feaa392ad20b8d0c9aeee119972e0b43c93",
+        "/tmp/biglybtc-rpc-identities-qualified-asan/libbiglybtc_rpc_identities.a": "c173d1ca0d5d781cafc4fdff655f2ece04c12c2621d47198210833318bab4820",
+        "/tmp/biglybtc-rpc-identities-qualified-asan/biglybtc-rpc-contract-driver": "d1b8eae29fd939546f12625fca93ded09ba27883d99325a892077485976a53e3"
+      }
+    }
+  ],
+  "source_sha256": {
+    "migration/fixtures/rpc-contract/.gitattributes": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da",
+    "migration/fixtures/rpc-contract/commands.jsonl": "2df6b5aff547f0a394bfec845518055bfaa30ce7e8674ad0c9aa544fabc4f977",
+    "migration/fixtures/rpc-contract/expected.jsonl": "a2cc7f196548502df683b23550677e55649004d2c65204463056f00bb6fa947d",
+    "migration/fixtures/rpc-contract/manifest.json": "54d168f3acb1fe8d22659e978364d7c94ff84d434bbd1b79bba178149dce48f3",
+    "migration/fixtures/rpc-identities/.gitattributes": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da",
+    "migration/fixtures/rpc-identities/commands.jsonl": "b3dc03639bf10f6b18fee7daa31878f657c6a4d589c9f306c2e332768ac00edb",
+    "migration/fixtures/rpc-identities/expected.jsonl": "7a7ab6e27fb72cf6a1b1295ca6e4dc19d051e18948a8eae5798cab5d89e3d021",
+    "migration/fixtures/rpc-identities/manifest.json": "d68a0608609934cf22c6be0f7a0218b7f4e449ab38721a9a520a24fc6ae0e104",
+    "migration/tools/rpc_identity_matrix.py": "2bd6c845dabae5106944ada838db2438b930405dcdb831414f46fe30a60fc46e",
+    "migration/tools/rpc_identity_oracle.py": "6aaa8cf36871d3cc51120ba1e931757ce3725bd66e91108c8f6657e0b47afdf9",
+    "native/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "native/plugins/BiglyBTC-plugin-xmwebui/CMakeLists.txt": "f934ded10b5ea8dd4a2afb62c990ce9c4793cbc2bdf488cf44549edadede35f1",
+    "native/plugins/BiglyBTC-plugin-xmwebui/COPYING": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6",
+    "native/plugins/BiglyBTC-plugin-xmwebui/README.md": "6e71b73965f4659aed0f0391eebe59cdbdf02d754717d6a0470144abaaacd800",
+    "native/plugins/BiglyBTC-plugin-xmwebui/bounds_test.cpp": "941d90b6ebbe255e2823dfee8f849083957ba12c841f415363c5db34f062abb2",
+    "native/plugins/BiglyBTC-plugin-xmwebui/contract_driver.cpp": "e73e996d84297d86dc05ae6125b45f638a9c2d22c68c2a837b21b48433e015ba",
+    "native/plugins/BiglyBTC-plugin-xmwebui/fixture_test.py": "0a3176bc0cbd46b109cbb5979f6af99641f8ed55eaf33756270f8b4a12054bdd",
+    "native/plugins/BiglyBTC-plugin-xmwebui/identity_bounds_test.cpp": "cf190e6a3296f058d69b724ddc6445e16a61e0931b0c1f8d48e4ad894bc4575d",
+    "native/plugins/BiglyBTC-plugin-xmwebui/identity_driver.cpp": "f711e2bb9a171f6e74361634afae9127bd48d4ab420be8a62e2fd0288d01154a",
+    "native/plugins/BiglyBTC-plugin-xmwebui/identity_fixture_test.py": "732e66b1d5e8febea0129b73798ec9fd15570393f4910495a1ca9daa0e3e901a",
+    "native/plugins/BiglyBTC-plugin-xmwebui/rpc_contract.cpp": "0a7389c1e128c35e2e7100e15fd90465d99934c4f1a0d494a631a1fd7b0193ef",
+    "native/plugins/BiglyBTC-plugin-xmwebui/rpc_contract.hpp": "4b8997482e320a187ec5d952d547a63f35290ecfd0819c493cd2740d50629bd2",
+    "native/plugins/BiglyBTC-plugin-xmwebui/rpc_identities.cpp": "9d35b31c5bc360e021fb6d6e64d44f4700d7780eeb4f2139d0e17213ae7d24be",
+    "native/plugins/BiglyBTC-plugin-xmwebui/rpc_identities.hpp": "c16e847b853a2d03944b70091121602beee1fb05cc7b9673b75378b980a9965d"
+  },
+  "qt_core_sha256": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+  "scope": "828 original ID traces/40824 lookups plus804 original RPC-envelope observations; preview/apply ownership, move,100000-torrent bounds; no config/state writes, HTTP, profile or network"
+}

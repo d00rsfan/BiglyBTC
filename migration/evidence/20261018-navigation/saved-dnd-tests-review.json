@@ -1,0 +1,167 @@
+{
+  "schema": 1,
+  "status": "PASS_INDEPENDENT_TEST_SOURCE_REVIEW_NO_BLOCKER",
+  "subject": "Saved DND tests against source-derived mathematics and explicit native admission policy",
+  "source": {
+    "path": "/home/yurii/Java/BiglyBTC/preview/native/tests/saved_dnd_tests.cpp",
+    "sha256": "74c42fce39cc823a597e77b9f0d55b3f03f9f8f0436895b425703380a1a937f5",
+    "lines": 409
+  },
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "dependencies": [
+    {
+      "path": "migration/evidence/20261018-navigation/saved-dnd-math-review.json",
+      "sha256": "9a51ed571449487a651d0a80169943df593fba628beca178b712282ea8cc433f"
+    },
+    {
+      "path": "migration/evidence/20261018-navigation/saved-dnd-implementation-review.json",
+      "sha256": "11fbe606d85331208545b17a9b52208fe51f3499b42ce961b6f3b0cfe20b729c"
+    }
+  ],
+  "independence": "Tests authored by error_driver, production by error_codec; reviewer independently traced original formulas. Expectations checked from source/accepted domain, not fitted by executing production or an extracted Java/C++ probe.",
+  "planned_cases": 61,
+  "static_case_expansion": [
+    {
+      "group": "Default and raw-presence distinctions",
+      "cases": 4
+    },
+    {
+      "group": "Negative K recovery boundary",
+      "cases": 3
+    },
+    {
+      "group": "Normal metrics and binary32/int64 boundaries",
+      "cases": 11
+    },
+    {
+      "group": "Selected size without C",
+      "cases": 1
+    },
+    {
+      "group": "S0 independent of missing/invalid C/B",
+      "cases": 2
+    },
+    {
+      "group": "K>T native rejection",
+      "cases": 1
+    },
+    {
+      "group": "Unresolved/missing/nonpositive total",
+      "cases": 4
+    },
+    {
+      "group": "Invalid C",
+      "cases": 4
+    },
+    {
+      "group": "Invalid B",
+      "cases": 4
+    },
+    {
+      "group": "Cross-inconsistent counters",
+      "cases": 2
+    },
+    {
+      "group": "Absent F/empty parameters versus explicit0",
+      "cases": 2
+    },
+    {
+      "group": "Low/high/sign F truth table",
+      "cases": 8
+    },
+    {
+      "group": "F2 full-complete override by full remaining",
+      "cases": 1
+    },
+    {
+      "group": "F1/F3 flag-only with no T/C",
+      "cases": 1
+    },
+    {
+      "group": "Malformed attributes/parameters/K/B/F dependency isolation",
+      "cases": 5
+    },
+    {
+      "group": "Owned facts after source destruction/edit",
+      "cases": 1
+    },
+    {
+      "group": "Cache integration, old errors/caps, last-accepted ownership and byte preservation",
+      "cases": 7
+    }
+  ],
+  "checks": [
+    {
+      "id": "DND-T1",
+      "result": "PASS",
+      "finding": "Missing attributes produces unknown/no manufactured defaults. Empty valid attributes records separate absent raw fields with K default\u22121/B default0 tags. MissingB and storedB0 have equal admitted metrics but distinct raw/default provenance. Explicit negativeK (including INT64_MIN) retains raw value and is unresolved rather than0; independent flags survive."
+    },
+    {
+      "id": "DND-T2",
+      "result": "PASS",
+      "finding": "Normal metric rows independently satisfy S=T\u2212K, Q=(T\u2212C)\u2212(K\u2212B) in the admitted range. Quarter0/25, partial40/60 and312.5\u2192312/666.66\u2192666 expectations use selected-byte arithmetic, not full received totals. F3 is a literal independent cached fact, deliberately not reconciled from the metric row."
+    },
+    {
+      "id": "DND-T3",
+      "result": "PASS",
+      "finding": "Exact binary32 discriminator: 16777217=2^24+1 converts to16777216 under normal nearest/even binary32; C=8388608=2^23 remains exact; selected numerator/denominator\u21920.5 then1000f\u2192500. Double8388608/16777217*1000 lies strictly below500 and truncates499. The expected500 therefore detects an accidental double formula."
+    },
+    {
+      "id": "DND-T4",
+      "result": "PASS",
+      "finding": "Residual discriminator: T=16777217, C=16777216, Q=1 gives equal f32 numerator/denominator\u2192raw1000; original remaining>0 correction yields999. INT64_MAX complete/unstarted rows independently exercise large finite conversions without overflow. No wrapped malformed-input equality is asserted."
+    },
+    {
+      "id": "DND-T5",
+      "result": "PASS",
+      "finding": "S alone remains available without C. S0 Done1000 survives both missingC+malformedB and negativeC+negativeB while Q stays unknown. T missing/zero/negative and K>T do not fabricate zero-size metrics. F3 candidates survive independently; signed integer extremes are explicitly rejected at the agreed native-policy boundary."
+    },
+    {
+      "id": "DND-T6",
+      "result": "PASS",
+      "finding": "C/B negative, above totals and INT64_MIN/MAX rows keep S and unknown dependent Q/positive-S Done. Cross cases C<B and C\u2212B>S are within each independent scalar range, so they meaningfully test cross-consistency rather than merely earlier range branches. Those are native unknown rules, labelled separately from original unchecked malformed arithmetic."
+    },
+    {
+      "id": "DND-T7",
+      "result": "PASS",
+      "finding": "F missing and empty parameter map remain unknown even with Done1000; explicitF0 has knownfalse bit facts and knowntrue full-complete candidates. F0/F1/F2/F3 rows, high/sign bits, F2 full-complete and F1/F3 with no T/C test exact no-DiskManager controller semantics. Optional<bool> comparisons against bool require presence, so knownfalse is not confused with absent."
+    },
+    {
+      "id": "DND-T8",
+      "result": "PASS",
+      "finding": "Malformed map/parameter/K/B/F rows independently test dependency isolation and retained type diagnostics. Numeric text is not parsed. Wrong parameter/F keeps valid numeric metrics; wrong byte counter does not erase valid cached flags. No original exception/default recovery equivalence is claimed."
+    },
+    {
+      "id": "DND-T9",
+      "result": "PASS",
+      "finding": "Facts helper returns primitive values after Document destruction. Edited-source test proves old owned facts remain20/0/3 while re-extraction observes changedK90 and stricter cross-inconsistent metrics. Cache helper similarly destroys source before asserting owned row fields. Before/after serialize checks preserve unknown binary keys and input bytes."
+    },
+    {
+      "id": "DND-T10",
+      "result": "PASS",
+      "finding": "Cache rows cover absentattributes, missingparams, malformednewfields, malformedparams softissues, original attributes/displayname hardissues, last accepted duplicate overriding both metadata/facts with a later rejectedrow not replacing it, and entry cap before identitycoalescing plus namecap. Expectations preserve actual old parser semantics rather than weakening validation."
+    },
+    {
+      "id": "DND-T11",
+      "result": "PASS",
+      "finding": "All cases use generated bounded bencoded in-memory documents; source has no profile/file/network, Java startup, helper invocation or live engine. No environment-dependent skip/return77 gates. run increments completed cases only after success; exceptions reach failure exit1. Static corpus expands61 cases; execution results/assertion count remain pending and are not inferred here."
+    }
+  ],
+  "blockers": [],
+  "coverage_limits": [
+    "No actual original Java runtime or source/native differential equality. Source-derived mathematical expectations and native policy tests are the stated scope.",
+    "No public assumedComplete, READY/transient live disk, pane/config/UI, metadata suppression, per-file downloaded, cache fixup/recovery/write or whole-client credit. Those broader requirements remain OPEN.",
+    "No dedicated runtime allocator or floating-environment fault injector: no-allocation and ordinary floating assumptions are separately established by source review and parent build/runtime gates.",
+    "Defensive private ArithmeticOverflow branches are structurally excluded by accepted normal bounds; the test does not fabricate reachability or claim all original wrapped-invalid behavior."
+  ],
+  "test_execution_by_reviewer": 0,
+  "build_execution_by_reviewer": 0,
+  "Java_runtime_equality_credit": 0,
+  "integrity": {
+    "test_source_before_after_equal": true,
+    "four_reviewed_production_hashes_unchanged": true,
+    "original19_source_hashes_unchanged": true,
+    "historical_reviews_preserved": true,
+    "production_or_test_edits_by_reviewer": 0
+  }
+}

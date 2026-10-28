@@ -1,0 +1,64 @@
+{
+  "status": "PASS-source-only-no-blocking-finding",
+  "reviewer": "error_oracle; independent of core author",
+  "source_sha256": {
+    "core/include/biglybtc/classic_preferences.hpp": "8bbdc3b3de6bdc2f0ddecc92079d3bd4edea8d1a93ad0b1ada7b325b51780565",
+    "core/src/classic_preferences.cpp": "394c7f79fdfbce6d733615da29e8aaea668b55a7c470b2428d4a22185c38f5f9",
+    "tests/classic_preferences_tests.cpp": "a9eed9c8d301c67928862b0f5e59a7ed7b86a7a82e11ec4c3884ce32fae37298",
+    "core/include/biglybtc/bencode.hpp": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+    "core/src/bencode.cpp": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08"
+  },
+  "files_fully_read": [
+    "core/include/biglybtc/classic_preferences.hpp",
+    "core/src/classic_preferences.cpp",
+    "tests/classic_preferences_tests.cpp",
+    "core/include/biglybtc/bencode.hpp",
+    "core/src/bencode.cpp"
+  ],
+  "test_named_cases": 27,
+  "named_cases": [
+    "fixed13IDcatalog",
+    "missingIsNotDefaults",
+    "bothPanesAll13RoundtripOwned",
+    "allHiddenAndWidthEndpoints",
+    "repeatWriteNeedsPristineExceptIdenticalNoop",
+    "strictDTOValidationAndRollback",
+    "unknownNamespaceAlwaysBlocksEvenWithV1",
+    "unrelatedSimilarRootNameIsOpaque",
+    "wrongRootAndPrivateType",
+    "privateVersionAndRequiredKeys",
+    "unknownPrivateFieldsAtEveryDictionary",
+    "missingOrWrongPaneFields",
+    "columnSetMustBeExactAndTyped",
+    "strictBooleanAndWidthIntegers",
+    "nameWidthIsUnsupportedAndOtherWidthRequired",
+    "orderIs13UniqueKnownByteIds",
+    "sortRequiresKnownIdAndLiteralBoolean",
+    "duplicateDictionaryKeysRemainParserRejection",
+    "privateByteCapExactAndExcess",
+    "privateNodeAndDepthCaps",
+    "wholeBytesCapAndWriteOverflow",
+    "wholeNodeCapAndWriteOverflow",
+    "wholeDepthCap",
+    "inheritedLowerEditQuotasRollback",
+    "editedDocumentRejected",
+    "hostileViewsAndShapeNeverDereferenced",
+    "originalSubtreesAndRootOrderByteExact"
+  ],
+  "checks": {
+    "untrusted_tree_preflight": "Fixed65frames and100000node budget before raw bytes dereferenced; children shape/type/origin/change/span validated; private subtree measured before schema reads.",
+    "raw_tree_provenance": "Fresh normal-quota parse, complete node/type/span/integer/children equality and byte-view pointer+length identity compare; no relational comparison or dereference of supplied forged view.",
+    "closed_private_schema": "Exact13catalogue, strict0/1 booleans, unique full order/known sort, Name width absent, other widths16..8192; unknown namespace prefixes/privatefields/version/columns reject rather than authorize overwrite.",
+    "quotas": "Whole4MiB/100000/depth64 and private32KiB/1024/depth8, including keys; output accounting checked before candidate edit; existing Document inherited lower quotas retained by candidate copy/replaceValue.",
+    "commit_and_ownership": "All fallible parsing/encoding/copies before noexcept Document move-assignment; owned strings in read DTO, immutable backing origins in edit tree. Rejected writes leave supplied Document intact.",
+    "opaque_preservation": "Only native rootvalue insertion/replacement; existing original key/value encodings and relative order reused exactly by Document::serialize, including unknown plugin/binary data.",
+    "tests": "27finite memory-only cases exercise schema/defaultabsence/bounds/ownership/hostileviews/editrollback and byte-exact opaque insertion+replacement. Boundary cases using invalid private fields test measurement then schema error priority, not valid extendedschema."
+  },
+  "limitations": [
+    "No compiler/preprocessor/native/Java/test execution by reviewer.",
+    "No filesystem/lease/CAS/recovery/durability or Java reserialization claim from pure codec tests.",
+    "No allocator-fault injection or global memory/OOM guarantee.",
+    "Author-owned Qt controller files are outside this independent core review."
+  ],
+  "subject_files_changed_by_review": false
+}

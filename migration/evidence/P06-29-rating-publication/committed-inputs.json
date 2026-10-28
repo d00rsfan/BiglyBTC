@@ -1,0 +1,408 @@
+{
+  "implementation_commit": "d4d539e761e136c9916a9305c2f8fff48e5061f8",
+  "qualified_input_count": 100,
+  "qualified_source_to_git_blob": {
+    "migration/fixtures/rating-publication/progress.json": {
+      "committed_path": "migration/fixtures/rating-publication/progress.json",
+      "sha256": "008d0b37a752578289b25496fbc099a5b8a6008059ce4ea08b8298899dce3607"
+    },
+    "migration/fixtures/rating-publication/manifest.json": {
+      "committed_path": "migration/fixtures/rating-publication/manifest.json",
+      "sha256": "88c89f6c60f8488cc6164da13d477a560784c99232a5abdc1afda6d91fe4c162"
+    },
+    "migration/fixtures/rating-publication/removal-stop/source-stdout.txt": {
+      "committed_path": "migration/fixtures/rating-publication/removal-stop/source-stdout.txt",
+      "sha256": "719879d27110221181775d1ede222e2d41bbded1cfb66d8ba2eb13f3afa08d92"
+    },
+    "migration/fixtures/rating-publication/removal-stop/commands.txt": {
+      "committed_path": "migration/fixtures/rating-publication/removal-stop/commands.txt",
+      "sha256": "cb273253417561b2f38254d13e26b6ed9958dfa278e2fe3545941026f29a1ab5"
+    },
+    "migration/fixtures/rating-publication/removal-stop/expected.txt": {
+      "committed_path": "migration/fixtures/rating-publication/removal-stop/expected.txt",
+      "sha256": "719879d27110221181775d1ede222e2d41bbded1cfb66d8ba2eb13f3afa08d92"
+    },
+    "migration/fixtures/rating-publication/removal-stop/source-stderr.txt": {
+      "committed_path": "migration/fixtures/rating-publication/removal-stop/source-stderr.txt",
+      "sha256": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189"
+    },
+    "migration/fixtures/rating-publication/completion-timer/source-stdout.txt": {
+      "committed_path": "migration/fixtures/rating-publication/completion-timer/source-stdout.txt",
+      "sha256": "127a92832c7cb4cf097884e55f1a2167307bcae9032f525600696a2b3c460a6e"
+    },
+    "migration/fixtures/rating-publication/completion-timer/commands.txt": {
+      "committed_path": "migration/fixtures/rating-publication/completion-timer/commands.txt",
+      "sha256": "7f77c7888559ce6994a079c19c26af9f090701c78b5403009f0b0e9963be8f89"
+    },
+    "migration/fixtures/rating-publication/completion-timer/expected.txt": {
+      "committed_path": "migration/fixtures/rating-publication/completion-timer/expected.txt",
+      "sha256": "127a92832c7cb4cf097884e55f1a2167307bcae9032f525600696a2b3c460a6e"
+    },
+    "migration/fixtures/rating-publication/completion-timer/source-stderr.txt": {
+      "committed_path": "migration/fixtures/rating-publication/completion-timer/source-stderr.txt",
+      "sha256": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189"
+    },
+    "migration/fixtures/rating-publication/callback-contract/source-stdout.txt": {
+      "committed_path": "migration/fixtures/rating-publication/callback-contract/source-stdout.txt",
+      "sha256": "a7445f7c8fea6e7dee435d3847331a95d0d85fa900c1ad6861403ee9d58e1ed6"
+    },
+    "migration/fixtures/rating-publication/callback-contract/commands.txt": {
+      "committed_path": "migration/fixtures/rating-publication/callback-contract/commands.txt",
+      "sha256": "bce9e7b44eb6a727024d515499b6297c69a5838afa6a8ae0c51a8b5ee730165f"
+    },
+    "migration/fixtures/rating-publication/callback-contract/expected.txt": {
+      "committed_path": "migration/fixtures/rating-publication/callback-contract/expected.txt",
+      "sha256": "a7445f7c8fea6e7dee435d3847331a95d0d85fa900c1ad6861403ee9d58e1ed6"
+    },
+    "migration/fixtures/rating-publication/callback-contract/source-stderr.txt": {
+      "committed_path": "migration/fixtures/rating-publication/callback-contract/source-stderr.txt",
+      "sha256": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189"
+    },
+    "migration/fixtures/rating-publication/queue-dispatch/source-stdout.txt": {
+      "committed_path": "migration/fixtures/rating-publication/queue-dispatch/source-stdout.txt",
+      "sha256": "af91bb143af32e2a002c840923d4e744903fa97083d4f738a5a3734effcaa3f8"
+    },
+    "migration/fixtures/rating-publication/queue-dispatch/commands.txt": {
+      "committed_path": "migration/fixtures/rating-publication/queue-dispatch/commands.txt",
+      "sha256": "827cc26aef93c0830e71a32fb3ca345bd061781f2b1c5394932ebfbc7a693f49"
+    },
+    "migration/fixtures/rating-publication/queue-dispatch/expected.txt": {
+      "committed_path": "migration/fixtures/rating-publication/queue-dispatch/expected.txt",
+      "sha256": "af91bb143af32e2a002c840923d4e744903fa97083d4f738a5a3734effcaa3f8"
+    },
+    "migration/fixtures/rating-publication/queue-dispatch/source-stderr.txt": {
+      "committed_path": "migration/fixtures/rating-publication/queue-dispatch/source-stderr.txt",
+      "sha256": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189"
+    },
+    "migration/fixtures/rating-publication/boundary-fault/source-stdout.txt": {
+      "committed_path": "migration/fixtures/rating-publication/boundary-fault/source-stdout.txt",
+      "sha256": "767dc89a391d0907db41ac0fa5153c0ef39f48c1801430eadfea30839d094a9e"
+    },
+    "migration/fixtures/rating-publication/boundary-fault/commands.txt": {
+      "committed_path": "migration/fixtures/rating-publication/boundary-fault/commands.txt",
+      "sha256": "922993b9b057ed8db34dc96f55f6eab611ee083bdcd77fa90bfbe16f7d521e14"
+    },
+    "migration/fixtures/rating-publication/boundary-fault/expected.txt": {
+      "committed_path": "migration/fixtures/rating-publication/boundary-fault/expected.txt",
+      "sha256": "767dc89a391d0907db41ac0fa5153c0ef39f48c1801430eadfea30839d094a9e"
+    },
+    "migration/fixtures/rating-publication/boundary-fault/source-stderr.txt": {
+      "committed_path": "migration/fixtures/rating-publication/boundary-fault/source-stderr.txt",
+      "sha256": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189"
+    },
+    "build/recovery/active-drafts/rating-publication/v2/RatingPublicationOracle.java.in": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/RatingPublicationOracle.java.in",
+      "sha256": "52314c3c25d2af7fe09c624e32973aa84bdfbde9cd2703ae95617134583dd833"
+    },
+    "build/recovery/active-drafts/rating-publication/v2/rating_publication_oracle.py": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/rating_publication_oracle.py",
+      "sha256": "c792a3071c79f8cfe0e11c63fa735c1bf729aead287f6b87456588d3463703ed"
+    },
+    "build/recovery/active-drafts/rating-publication/v2/rating_publication_plan.py": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/rating_publication_plan.py",
+      "sha256": "39afd5b9b1143329a9d8552b9517df29edf56f51587cd10662a38f5f3e63d622"
+    },
+    "build/recovery/active-drafts/rating-publication/v2/source_tools.py": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/source_tools.py",
+      "sha256": "b7318e74d618c2db2cab165c3a64b61f1736edf1470c89a53809623fdad5c955"
+    },
+    "build/recovery/active-drafts/rating-publication/v2/source-audit.json": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/source-audit.json",
+      "sha256": "e8e53bbdf9fdf4042ef1a2ce29b5a15fc220912c9ec9a9ff7c80c3e352586b62"
+    },
+    "build/recovery/active-drafts/rating-publication/v2/baseline.json": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/baseline.json",
+      "sha256": "baf7d2b29877d7e79e479f503df9ee47f4a9542c17aa95f5e9f2789946b791fd"
+    },
+    "build/recovery/active-drafts/rating-publication/v2/plan.md": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/plan.md",
+      "sha256": "71bec934e99b12eea80948bf42d7fea710202c520ab6411d1d233afbd949aafe"
+    },
+    "build/recovery/active-drafts/rating-publication/v2/planned/boundary-fault.txt": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/planned/boundary-fault.txt",
+      "sha256": "922993b9b057ed8db34dc96f55f6eab611ee083bdcd77fa90bfbe16f7d521e14"
+    },
+    "build/recovery/active-drafts/rating-publication/v2/planned/callback-contract.txt": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/planned/callback-contract.txt",
+      "sha256": "bce9e7b44eb6a727024d515499b6297c69a5838afa6a8ae0c51a8b5ee730165f"
+    },
+    "build/recovery/active-drafts/rating-publication/v2/planned/completion-timer.txt": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/planned/completion-timer.txt",
+      "sha256": "7f77c7888559ce6994a079c19c26af9f090701c78b5403009f0b0e9963be8f89"
+    },
+    "build/recovery/active-drafts/rating-publication/v2/planned/plan.json": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/planned/plan.json",
+      "sha256": "c0720b12cb25f4b0e707d99a67ab0794298e5ded2af5aacc3b5987d989e43c24"
+    },
+    "build/recovery/active-drafts/rating-publication/v2/planned/queue-dispatch.txt": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/planned/queue-dispatch.txt",
+      "sha256": "827cc26aef93c0830e71a32fb3ca345bd061781f2b1c5394932ebfbc7a693f49"
+    },
+    "build/recovery/active-drafts/rating-publication/v2/planned/removal-stop.txt": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/planned/removal-stop.txt",
+      "sha256": "cb273253417561b2f38254d13e26b6ed9958dfa278e2fe3545941026f29a1ab5"
+    },
+    "migration/fixtures/java/ReferenceFence.java": {
+      "committed_path": "migration/fixtures/java/ReferenceFence.java",
+      "sha256": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933"
+    },
+    "migration/evidence/P00-04/reference-fence.json": {
+      "committed_path": "migration/evidence/P00-04/reference-fence.json",
+      "sha256": "0c35e6bb2212e681ed4be8ecc65c50e35d7e191701bee59c9e139f2fbcb17302"
+    },
+    "migration/evidence/P06-04-rating-data/matrix.json": {
+      "committed_path": "migration/evidence/P06-04-rating-data/matrix.json",
+      "sha256": "a52765b0fc30085a6675fe3c5aebe35d1aba27e05736ccdeced897892b03e018"
+    },
+    "migration/evidence/P06-06-rating-local/matrix.json": {
+      "committed_path": "migration/evidence/P06-06-rating-local/matrix.json",
+      "sha256": "4e84763c9956b40d245b09668191b432075f8bdc16acbb8360401df271565cb8"
+    },
+    "migration/fixtures/rating-data/commands.txt": {
+      "committed_path": "migration/fixtures/rating-data/commands.txt",
+      "sha256": "db3e186aa8732f554fe45648f8c70b1915057145dd12493b3336b5ffc7905919"
+    },
+    "migration/fixtures/rating-data/expected.txt": {
+      "committed_path": "migration/fixtures/rating-data/expected.txt",
+      "sha256": "e17460cae22483868685a15d47a47e551d128714153ad60bf3ac1e5595884f04"
+    },
+    "migration/fixtures/rating-data/manifest.json": {
+      "committed_path": "migration/fixtures/rating-data/manifest.json",
+      "sha256": "15b053e883add4e9fcfcbd942e6b59d6d9b397055ebf1b72b9404539325ba79b"
+    },
+    "migration/fixtures/rating-local/commands.txt": {
+      "committed_path": "migration/fixtures/rating-local/commands.txt",
+      "sha256": "ecc190391ca0d61c34105151b7f607896082bcf2f29ccacc9c27c437b1228697"
+    },
+    "migration/fixtures/rating-local/digit-zeroes.txt": {
+      "committed_path": "migration/fixtures/rating-local/digit-zeroes.txt",
+      "sha256": "bbbe2b6c847a90702a6b37ab63d445dcee1a0daa4132d33af3f87f94e8944dfa"
+    },
+    "migration/fixtures/rating-local/expected.txt": {
+      "committed_path": "migration/fixtures/rating-local/expected.txt",
+      "sha256": "71af01ae1c4e5496f1e3449b09609d6d262df2de93926ef7e1a20261c452bfed"
+    },
+    "migration/fixtures/rating-local/manifest.json": {
+      "committed_path": "migration/fixtures/rating-local/manifest.json",
+      "sha256": "a925ba5d0983bc20e0653bc2648e10cd45886e896379d09ef250735e498f57ea"
+    },
+    "migration/fixtures/rating-local/runtime.txt": {
+      "committed_path": "migration/fixtures/rating-local/runtime.txt",
+      "sha256": "a3bdaf447261e3dfc0e8663de929b21a5708f56222d3f5e5424f92b917aaeba2"
+    },
+    "migration/tools/rating_data_oracle.py": {
+      "committed_path": "migration/tools/rating_data_oracle.py",
+      "sha256": "28cf385a3f23c09ef5d826369527571e8cff3b238de139ad33bea11d100757c5"
+    },
+    "migration/tools/rating_local_oracle.py": {
+      "committed_path": "migration/tools/rating_local_oracle.py",
+      "sha256": "10404093050960b50ab29a2c5eca20d9f9d2b64290bc12dec095f35f544d65c1"
+    },
+    "native/plugins/BiglyBTC-plugin-azrating/CMakeLists.txt": {
+      "committed_path": "native/plugins/BiglyBTC-plugin-azrating/CMakeLists.txt",
+      "sha256": "48433386273b9e925cc4b80faf1ed631f2dc974ba23bede50ee1cbc96d1a6558"
+    },
+    "native/plugins/BiglyBTC-plugin-azrating/COPYING": {
+      "committed_path": "native/plugins/BiglyBTC-plugin-azrating/COPYING",
+      "sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6"
+    },
+    "native/plugins/BiglyBTC-plugin-azrating/README.md": {
+      "committed_path": "native/plugins/BiglyBTC-plugin-azrating/README.md",
+      "sha256": "7faab0376135593181ce61f671e677879bc0910f2376c98392f6d471e0ecc9fa"
+    },
+    "native/plugins/BiglyBTC-plugin-azrating/bounds_test.cpp": {
+      "committed_path": "native/plugins/BiglyBTC-plugin-azrating/bounds_test.cpp",
+      "sha256": "f583acdd72fa17c76e2aa83577a7c5e059f77ad542626ba9c027d65fce95851f"
+    },
+    "native/plugins/BiglyBTC-plugin-azrating/fixture_test.py": {
+      "committed_path": "native/plugins/BiglyBTC-plugin-azrating/fixture_test.py",
+      "sha256": "a9cf68d51de499d9e5ce348ddf7b5a920333c598849a189e14224a1226998998"
+    },
+    "native/plugins/BiglyBTC-plugin-azrating/local_bounds_test.cpp": {
+      "committed_path": "native/plugins/BiglyBTC-plugin-azrating/local_bounds_test.cpp",
+      "sha256": "d5c1485a107ef0aa69c10ed4f5940db0e220a2536c0992ca4a82021f3c947b53"
+    },
+    "native/plugins/BiglyBTC-plugin-azrating/local_driver.cpp": {
+      "committed_path": "native/plugins/BiglyBTC-plugin-azrating/local_driver.cpp",
+      "sha256": "489616a8c83188b7f521d445253801eafb91f064b5ed45b8921059f967901b6c"
+    },
+    "native/plugins/BiglyBTC-plugin-azrating/local_fixture_test.py": {
+      "committed_path": "native/plugins/BiglyBTC-plugin-azrating/local_fixture_test.py",
+      "sha256": "8bd9137ec272243e7f61891c87d4f36d06bed80968a9ff38c7f18e558d76b804"
+    },
+    "native/plugins/BiglyBTC-plugin-azrating/local_rating.cpp": {
+      "committed_path": "native/plugins/BiglyBTC-plugin-azrating/local_rating.cpp",
+      "sha256": "baa6682bbac733889c5b47c80667cacd191c83e6a372b46c66c4b03d129f50b2"
+    },
+    "native/plugins/BiglyBTC-plugin-azrating/local_rating.hpp": {
+      "committed_path": "native/plugins/BiglyBTC-plugin-azrating/local_rating.hpp",
+      "sha256": "17b2d6739d0f1e5e2594185dd948448ed4584e0890b679213501ec45506a49f3"
+    },
+    "native/plugins/BiglyBTC-plugin-azrating/rating_data.cpp": {
+      "committed_path": "native/plugins/BiglyBTC-plugin-azrating/rating_data.cpp",
+      "sha256": "9cc52433ca85c6edab960f5fe7fcf5c7fa319f15dad5fc6f5bd3ac9f92031896"
+    },
+    "native/plugins/BiglyBTC-plugin-azrating/rating_data.hpp": {
+      "committed_path": "native/plugins/BiglyBTC-plugin-azrating/rating_data.hpp",
+      "sha256": "912589da9cf1bea24c927a90013bf332b023f4c5cb158e28dbe0a493f6f87058"
+    },
+    "native/plugins/BiglyBTC-plugin-azrating/rating_driver.cpp": {
+      "committed_path": "native/plugins/BiglyBTC-plugin-azrating/rating_driver.cpp",
+      "sha256": "64637e0fdd5091c2e8aaeedcf9f2a948634105e2b4f104e3ebd66459313a13ee"
+    },
+    "migration/fixtures/java/RatingPublicationOracle.java.in": {
+      "committed_path": "migration/fixtures/java/RatingPublicationOracle.java.in",
+      "sha256": "52314c3c25d2af7fe09c624e32973aa84bdfbde9cd2703ae95617134583dd833"
+    },
+    "migration/tools/rating_publication_oracle.py": {
+      "committed_path": "migration/tools/rating_publication_oracle.py",
+      "sha256": "ca341bf5197476e6b9fc9020345a75bcb341841dec5c49f7752c123ba6c3d7ce"
+    },
+    "migration/tools/rating_publication_fixtures.py": {
+      "committed_path": "migration/tools/rating_publication_fixtures.py",
+      "sha256": "0537470d740e36edee24653b2ca1b3629621ac1a146af191d0ecd869766792af"
+    },
+    "migration/tools/rating_publication_source_scan.py": {
+      "committed_path": "migration/tools/rating_publication_source_scan.py",
+      "sha256": "b7318e74d618c2db2cab165c3a64b61f1736edf1470c89a53809623fdad5c955"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/source-audit.json": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/source-audit.json",
+      "sha256": "e8e53bbdf9fdf4042ef1a2ce29b5a15fc220912c9ec9a9ff7c80c3e352586b62"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/baseline.json": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/baseline.json",
+      "sha256": "baf7d2b29877d7e79e479f503df9ee47f4a9542c17aa95f5e9f2789946b791fd"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/plan.md": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/plan.md",
+      "sha256": "71bec934e99b12eea80948bf42d7fea710202c520ab6411d1d233afbd949aafe"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/planned/boundary-fault.txt": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/planned/boundary-fault.txt",
+      "sha256": "922993b9b057ed8db34dc96f55f6eab611ee083bdcd77fa90bfbe16f7d521e14"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/planned/callback-contract.txt": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/planned/callback-contract.txt",
+      "sha256": "bce9e7b44eb6a727024d515499b6297c69a5838afa6a8ae0c51a8b5ee730165f"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/planned/completion-timer.txt": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/planned/completion-timer.txt",
+      "sha256": "7f77c7888559ce6994a079c19c26af9f090701c78b5403009f0b0e9963be8f89"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/planned/plan.json": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/planned/plan.json",
+      "sha256": "c0720b12cb25f4b0e707d99a67ab0794298e5ded2af5aacc3b5987d989e43c24"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/planned/queue-dispatch.txt": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/planned/queue-dispatch.txt",
+      "sha256": "827cc26aef93c0830e71a32fb3ca345bd061781f2b1c5394932ebfbc7a693f49"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/planned/removal-stop.txt": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/planned/removal-stop.txt",
+      "sha256": "cb273253417561b2f38254d13e26b6ed9958dfa278e2fe3545941026f29a1ab5"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/azrating/com/aelitis/azureus/plugins/rating/RatingPlugin.java": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/azrating/com/aelitis/azureus/plugins/rating/RatingPlugin.java",
+      "sha256": "451ff160d70e0885ef5dea837bd06da0c16563d089a6126fec79ca3277223f91"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/azrating/com/aelitis/azureus/plugins/rating/updater/CompletionListener.java": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/azrating/com/aelitis/azureus/plugins/rating/updater/CompletionListener.java",
+      "sha256": "d2dfe35f4c4f434085d83a2509d89c8027ab7e1306640314bf0c030bb10527b9"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/azrating/com/aelitis/azureus/plugins/rating/updater/RatingsUpdater.java": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/azrating/com/aelitis/azureus/plugins/rating/updater/RatingsUpdater.java",
+      "sha256": "a5a74e1ccfdc81eefb3b30e8cd12a7c51f420d7e77936c9a2044e8853a299ba6"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/biglybt/core/src/com/biglybt/core/util/AERunnable.java": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/biglybt/core/src/com/biglybt/core/util/AERunnable.java",
+      "sha256": "0475b3c481ee8007cf5b77f9996d19f2e18b71a1155159fb673b12e2b295780a"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/biglybt/core/src/com/biglybt/core/util/AsyncDispatcher.java": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/biglybt/core/src/com/biglybt/core/util/AsyncDispatcher.java",
+      "sha256": "6812e4f72536cf9457f02b1e205ea425abe7e094cf0220f6cfa5a52d467aba29"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/biglybt/core/src/com/biglybt/core/util/RandomUtils.java": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/biglybt/core/src/com/biglybt/core/util/RandomUtils.java",
+      "sha256": "770fd2f307dd2bf859d8d33ee38aaf990285399e2e41ca1b92e74e7790efeee8"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/biglybt/core/src/com/biglybt/core/util/SimpleTimer.java": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/biglybt/core/src/com/biglybt/core/util/SimpleTimer.java",
+      "sha256": "edcb355440e4a04d7383549524802bf043b77cd612ff05ff482aa378e07a6b20"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/biglybt/core/src/com/biglybt/core/util/SystemTime.java": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/biglybt/core/src/com/biglybt/core/util/SystemTime.java",
+      "sha256": "d57063696e281cc005e5b146a8f863a2ca52180696a98b473ff8566851f97353"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/biglybt/core/src/com/biglybt/core/util/Timer.java": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/biglybt/core/src/com/biglybt/core/util/Timer.java",
+      "sha256": "5de8bcb18e2f067879fca8116a99d6c4b6e292d7c1ab8856e8b25a97da194dc9"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/biglybt/core/src/com/biglybt/pif/download/Download.java": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/biglybt/core/src/com/biglybt/pif/download/Download.java",
+      "sha256": "3e6484279df6215385591a0f7f297920fe234fb9e9baf7a57a0ba09d86a2e74e"
+    },
+    "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/biglybt/core/src/com/biglybt/pifimpl/local/download/DownloadImpl.java": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/source-draft/pinned-source/biglybt/core/src/com/biglybt/pifimpl/local/download/DownloadImpl.java",
+      "sha256": "83d6c7140d01f26b82389da036253d5dd52ba71867b9faf54b75ad132236de29"
+    },
+    "migration/evidence/P06-29-rating-publication/class-relocation-proof.json": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/class-relocation-proof.json",
+      "sha256": "d2a15592439eb82933a60883bacb7fc9a29a2123ecffcf3bf986e233209af9cc"
+    },
+    "native/services/rating_publication/CMakeLists.txt": {
+      "committed_path": "native/services/rating_publication/CMakeLists.txt",
+      "sha256": "2c9b502a5b5a337b006911985c5f36f881dd53e5b9de305abe67a2335edd41e9"
+    },
+    "native/services/rating_publication/README.md": {
+      "committed_path": "native/services/rating_publication/README.md",
+      "sha256": "43669d38110b019df65e68f260e23fc843700289ea52ea2f1aacd053c36f4d15"
+    },
+    "native/services/rating_publication/publication_bounds_test.cpp": {
+      "committed_path": "native/services/rating_publication/publication_bounds_test.cpp",
+      "sha256": "d32b9f27636272026d1c716e4b7b5aaf7181ab153d00f0f8f833a714e488b9fd"
+    },
+    "native/services/rating_publication/publication_driver.cpp": {
+      "committed_path": "native/services/rating_publication/publication_driver.cpp",
+      "sha256": "3897c80385f979bbec6152637a326e050f5a4d9912ae24a6e94f14837cceb52e"
+    },
+    "native/services/rating_publication/publication_driver_bounds_test.py": {
+      "committed_path": "native/services/rating_publication/publication_driver_bounds_test.py",
+      "sha256": "3339b18820c2a950da30a1d1ab2ca6d928b15b7b05e5696417551aeb4e630c86"
+    },
+    "native/services/rating_publication/publication_fixture_test.py": {
+      "committed_path": "native/services/rating_publication/publication_fixture_test.py",
+      "sha256": "4e072605bd44dedd43dc710b93c0509b816f132d6c79c126bede8aefaa16320f"
+    },
+    "native/services/rating_publication/publication_policy.cpp": {
+      "committed_path": "native/services/rating_publication/publication_policy.cpp",
+      "sha256": "253f6e79010abc1a6241855f975f8ecce83c62049f3cfc868b2896b16e324797"
+    },
+    "native/services/rating_publication/publication_policy.hpp": {
+      "committed_path": "native/services/rating_publication/publication_policy.hpp",
+      "sha256": "1e5acf964d9569a4d55e95988afb8811219f52ef1422f3a5ce34f7694bab74cd"
+    },
+    "migration/evidence/P06-29-rating-publication/development/source-tools-relocation/native-baseline-pins.json": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/development/source-tools-relocation/native-baseline-pins.json",
+      "sha256": "1e14f9a6b3c92cfe2f24fba10fbc6c0497fc41f78202ee86aded1a1901465119"
+    },
+    "migration/evidence/P06-29-rating-publication/development/source-tools-relocation/reviewed-native-draft.json": {
+      "committed_path": "migration/evidence/P06-29-rating-publication/development/source-tools-relocation/reviewed-native-draft.json",
+      "sha256": "76190be46f2f00c2def5423b48403272b5402efe44014e8f5bb3abe429d8a224"
+    },
+    "native/cmake/Toolchain.cmake": {
+      "committed_path": "native/cmake/Toolchain.cmake",
+      "sha256": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564"
+    },
+    "migration/tools/rating_publication_matrix.py": {
+      "committed_path": "migration/tools/rating_publication_matrix.py",
+      "sha256": "e760ec2a80a2235596dc5e73882fc3390978ac14053492da1d6aa9a729764bf0"
+    },
+    "migration/consumers/rating_publication/CMakeLists.txt": {
+      "committed_path": "migration/consumers/rating_publication/CMakeLists.txt",
+      "sha256": "4e854b38325f77ca1529c39b7c62e5227ec39e63e1a1b63f95d8d647bf0c2af3"
+    }
+  },
+  "archive_equivalent_inputs": 13,
+  "scope": "87 inputs verified at original paths;13 historical ignored helper inputs verified at exact existing source-draft Git archives. No ignored build path claimed committed."
+}

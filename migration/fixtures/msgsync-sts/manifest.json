@@ -1,0 +1,71 @@
+{
+  "reference": {
+    "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "source_sha256": {
+      "core/src/com/biglybt/core/security/impl/CryptoSTSEngineImpl.java": "a00b89fe42a7cf5c4ef2b40277c694c9cc6a1e6fe2e5f16d32f6e57609db8bf0",
+      "core/src/com/biglybt/core/security/CryptoECCUtils.java": "c728534c2216f254da74878a48cd571bfe9769071128f52befcbeb4be3e9230e",
+      "core/src/org/gudy/bouncycastle/jce/provider/JCEECDHKeyAgreement.java": "cdba14da99120e3d5be3c2163e95550777fec9e7c42d1638b5e4bf270d04da87",
+      "core/src/org/gudy/bouncycastle/math/ec/ECPoint.java": "8adcb9370f13f173b65f46a9cc157a8610ee8ba7ccc584e01a4a0e6e593355cd",
+      "core/src/org/gudy/bouncycastle/math/ec/ECCurve.java": "a4b36b16aeb2d241c74d18ae89f3ff6633a8ff4acb9ef4a4696a9f22e3a9b9da"
+    },
+    "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+    "helper_source_sha256": {
+      "migration/fixtures/java/StsOracle.java": "8e56a367c79c33c3e2aad23d825c1905bdb2a028b8b49a0b6a7885d2e48f3bca",
+      "migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933"
+    },
+    "helper_class_sha256": {
+      "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd",
+      "StsOracle.class": "86b38bb0fec1643da13f94dc08053b0ecd90c082e48ae667da432c46fc718eea",
+      "StsOracle$Peer.class": "3d4f33d57012a77f7ba360a4ac5de647af8f85722f418cb6a5e5d895d17bc064"
+    },
+    "compile_command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "-J-XX:ActiveProcessorCount=2",
+      "--release",
+      "8",
+      "-encoding",
+      "UTF-8",
+      "-cp",
+      "/tmp/biglybtc-oracle/classes",
+      "-d",
+      "/tmp/biglybtc-sts-reference-t2j6iw2x/classes",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/StsOracle.java",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java"
+    ],
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-sts-reference-t2j6iw2x",
+      "-Duser.home=/tmp/biglybtc-sts-reference-t2j6iw2x",
+      "-Dazureus.config.path=/tmp/biglybtc-sts-reference-t2j6iw2x/profile",
+      "-cp",
+      "/tmp/biglybtc-sts-reference-t2j6iw2x/classes:/tmp/biglybtc-oracle/classes",
+      "StsOracle"
+    ],
+    "work": "/tmp/biglybtc-sts-reference-t2j6iw2x",
+    "scope": "Actual unchanged pure CryptoSTSEngineImpl with generated identities and frozen vendored BC provider; helper reflection only opens its constructor. No normal manager/plugin/profile startup or network."
+  },
+  "cases": 313,
+  "observations": 1033,
+  "integer_cases": 225,
+  "original_mutual_handshakes": 32,
+  "original_secret_length_counts": {
+    "25": 18,
+    "24": 14
+  },
+  "files_sha256": {
+    "commands.txt": "0f84d9cb3b616e53ec4f9b0e7bdae166fe75ca89922ad9852262539bdda78a4f",
+    "expected.txt": "d7ba6b174aaeeeb711df456db112c4b96b1b958aeefaae31f17b410ecff2f2a5",
+    "test-identity.json": "d604ec2d922d1d8e2646a248eb68595d4abf8548490474f38e551ea089dfb61b",
+    "integers.json": "b9830577eb93d6bbf16ec0a6dff8b25ff979886955320747708cad64e816e5e4"
+  },
+  "oracle_source_sha256": "913d3317e8377850bf194622fb427158870443f1e7f46a7eb9b564e2e4f3bf20",
+  "scope": "Actual original STS input frames, cursor/partial public-key/derived-state observations and phase failures. Fixed publicly known test identities; fresh original ephemeral keys. Auth frames replayed into fresh independent sessions are intentionally invalid. Positive mutual auth is checked in32 complete Java/Java handshakes; native interop remains required."
+}

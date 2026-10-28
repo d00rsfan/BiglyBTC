@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "milestone": "P04-21",
+  "reviewer": "error_driver",
+  "status": "PASS: independent static operational-source review; execution remains root-owned",
+  "reviewed_operational_helpers": 15,
+  "source_sha256": {
+    "build/history-hourly-20261020/focused.py": "bdcfd6a81bc0e7a86538421ed1f9e3d7e5aa66009327d4b09c834d90bb90014d",
+    "build/history-hourly-20261020/qualify.py": "04de1423f53e0d891cb03aee920014fcb7c9e1b2fdbd83ad9d63510e0f368bf1",
+    "build/history-hourly-20261020/record_toolchains.py": "2943a156be07f2370c5873398449620d9c00efe8b4630401d195afab4d87f056",
+    "build/history-hourly-20261020/commit_source.py": "eea2ed1ffdb6a3d7eae6b9914ee6a6a1e5ee8df56eea0bb6a449993cf8b0feb6",
+    "build/history-hourly-20261020/run_visuals.py": "9342d5a490a9561b8d8ff0e80e925c253f149bcd8391b29f360e24791641a776",
+    "build/history-hourly-20261020/run_smoke_scales.py": "94700bffed5279bc4061ce46d2a75596be09b1966ea59566e97f8993de07e9c6",
+    "build/history-hourly-20261020/collect_hosted.py": "68310f7673e55f4ace4647ebc47a00af658be13337541d55403b09002f25dbbb",
+    "build/history-hourly-20261020/verify_hosted.py": "bd09c645495925b4226d5c99ef652fcae6c1eb8dfb427964bf45a534d9efdf57",
+    "build/history-hourly-20261020/promote_dist.py": "8e136740875cf42e9a19f1e8d3f08e63b21225e2984be83c7c29827aa53eba25",
+    "build/history-hourly-20261020/verify_dist.py": "17118f389d826a91ed41cbad9c612cbbd9b6b7e51096d7f472cda284dc0f7548",
+    "build/history-hourly-20261020/publish.py": "3f8cbcd76107efe4bb2fb4b781839f54a89fd3d5528ecd480b59159761611ab4",
+    "build/history-hourly-20261020/collect_metadata_ci.py": "b260dd50260fab5225a0d9de27f4cbfe380f1523127473772896dadba5e39878",
+    "build/history-hourly-20261020/checkpoint_history_hourly.py": "d245d156d2a557c7245e4f5338fc1d53c0124e0fbe6738f169a1f3d6b8720ea7",
+    "build/history-hourly-20261020/checkpoint_milestone.py": "d0671037b6a8cad093048015b3359ef3698a364e509997561c29644330124ec9",
+    "build/history-hourly-20261020/verify_private_checkpoint.py": "196a43f39fb705ce26a6728e68d2993edd78f3097a0c58ed331c9a2d4326b055"
+  },
+  "supporting_authoring_or_orchestration_source_sha256": {
+    "build/history-hourly-20261020/finish_milestone.py": "4a1533e07ff16231c423a509e24a32a60b14882f32a21b885505dd9fff48419d",
+    "build/history-hourly-20261020/prepare_finish.py": "1f5031c2ca8e41e26ec9a9501cf85fc849e207515cb6a208f83784b8ef296ea2",
+    "build/history-hourly-20261020/prepare_finalizer.py": "c4f32be2ddab9635c4e1457dc6ac068138f7b0831ddc0470affe6d5801e74873",
+    "build/history-hourly-20261020/wire_root.py": "189dbb23f4af4933bfbc4e3c266dc9acc76bd8094d4287ac96703fa8959b0777"
+  },
+  "generic_checkpoint_source_sha256": "209d8da4eb017bb4d166871bdc36144d6ffa984ab8674e1b69d2a4bf930ce8ef",
+  "baseline_sha256": "1616329a920468e4078499dd12c35ae39a81916327f508556de2c1825032ae9c",
+  "native_parent": "775f84222031c1f43ee96e76c53fff0a5ef1e225",
+  "private_parent": "e78c6e77c171c6fd067cbe4b8c180ef1a384ad09",
+  "checks": [
+    "All 15 operational helpers were read completely. The new namespace, parent, metadata filename and tag consistently identify history-hourly-20261020/P04-21. No old P04-20 output or rollback directory is overwritten.",
+    "Focused and three qualification lanes preserve old exact cohorts and add saved-history-hourly-resolution. GCC uses full unit label; Clang16 and sanitizer19 remain explicit exact regex cohorts. Werror/caps/deadlines/leak policy are retained. This review does not claim those commands were run.",
+    "Source commit admits twelve actual focused XML units without skips, reads their section-specific Qt totals, freezes every changed/new source SHA, requires parent/main/authorized SSH origin and an empty initial native index, then verifies actual committed blobs before the authorized push. Its hourly22 gate is a fixed supported scope check following root-reported actual22, not a new guessed execution credit.",
+    "Collectors bind desktop and SDK runs to the actual source SHA, require completed success, and retain actual artifact API/run identity, archive bytes and digest. Hosted verifier checks canonical regular ZIP members, exact extracted file/hash equality, XML plus section-bound raw logs, all64 prior unit names plus one new, unchanged original scalar comparison markers, sixteen exact PNG names, and zero hosted Java rerun credit. Success receipt is written after checks.",
+    "Visual recipes retain all earlier offline/engine/activity cases, add hourly ready/missing only, and use generated /tmp/biglybtc-preview-* profiles with port-disabled offline fixture and existing owned-loopback test methods. New output roots are milestone-specific; no original profile path is selected and no process-signaling command is introduced.",
+    "Dist promotion checks current source, prior exact manifest and full old file hashes, creates a new staged full tree, installs reviewed desktop outputs there, requires unchanged103-file set and82 runtime hashes, proves installed binary equality after exact independent CMake RPATH transformation and checks private loader resolution. Complete old dist moves to unique previous-dist; failed second rename restores it. Final verification rechecks the promoted loader without transfer launch.",
+    "Metadata publication admits only the new milestone JSON on the current qualified source tip, gates65/16/19 and48/16 captures, commits/tag-pushes the exact milestone name and verifies remote branch/tag object and peeled target. Metadata SDK CI is separately bound to metadata; source desktop qualification is not relabeled as metadata desktop execution.",
+    "Private wrapper retains the original generic native/fixture verification and uses only alternate index. Before write-tree/commit/ref advancement it requires raw * -text, stages only nine shared paths plus new evidence, renormalizes that evidence, forbids symlinks, admits the exact staged path set/modes, hashes every staged blob against current working bytes, verifies every evidence inventory member and rechecks original HEAD/index. Generic ref update is compare-and-swap against exact private parent.",
+    "Post-checkpoint verifier checks actual commit parent and every required shared/evidence Git blob plus complete nonself inventory against raw working bytes; it outputs only to ignored build. No self/future private commit hash is embedded in evidence.",
+    "Bounded finish orchestration requires seven independent PASS reviews, all three successful lane command receipts, exact-source hosted65/16 success and seven successful visual commands before no-work rebuild, dist verification, evidence finalization and publication. Metadata CI, documentation execution and final private checkpoint remain explicit separate root steps."
+  ],
+  "counts": {
+    "new_unit": "saved-history-hourly-resolution",
+    "expected_cohorts": {
+      "gcc": 65,
+      "clang": 16,
+      "sanitized": 19
+    },
+    "retained_previous_cohorts": {
+      "gcc": 64,
+      "clang": 15,
+      "sanitized": 18
+    },
+    "new_qt_rows": "Bound to actual section totals; source/hosted helper fixed scope22 is now root-observed, while final receipts/docs read the count field.",
+    "local_captures": 48,
+    "hosted_captures": 16,
+    "dist_files": 103,
+    "unchanged_runtime_files": 82
+  },
+  "export_template": {
+    "path": "migration/publication/preview/native-preview.yml",
+    "sha256": "73f1394ff287bce982cf424e09d4ad805b5b83a7b7c7c95f8fc84591afd2468e",
+    "byte_identical_to_native_workflow": true
+  },
+  "blockers": [],
+  "limits": [
+    "Source-only review. No operational script was imported, evaluated or executed; no compiler/native/Java/GUI/network/Git mutation or promotion/publication was performed by this reviewer.",
+    "The recipes are root-owned ordered one-shot operations for clean expected starting state. mkdir/copytree/new rollback assertions intentionally fail rather than merge earlier attempts. Preserve failed attempts and use reviewed fresh namespaces instead of blindly rerunning mutating steps.",
+    "prepare_finish.py, prepare_finalizer.py and wire_root.py are preserved initial source-authoring generators, not approved rerun steps over final corrected sources. In particular wire_root.py represents the initial synchronous smoke additions; amended preview_smoke.cpp is separately reviewed and must not be regenerated from that historical recipe.",
+    "Raw-byte identity verification assumes no concurrent source/evidence edits during the final root freeze. There is no claim of a filesystem-wide atomic snapshot or protection against arbitrary concurrent external mutation.",
+    "This review does not substitute for the separate evidence-finalizer review or actual qualification/capture/publication/private-commit receipts."
+  ],
+  "execution": {
+    "source_read_and_ast_parse_only": true,
+    "operational_imports_or_execution": false,
+    "builds_or_native_or_java": false,
+    "git_mutations": false,
+    "source_edits": false
+  }
+}

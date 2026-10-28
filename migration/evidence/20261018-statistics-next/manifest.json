@@ -1,0 +1,29 @@
+{
+  "status": "FROZEN_SOURCE_AUDIT_AND_RECOMMENDATION_ONLY",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_context_initial_HEAD": "2501968f62d4ec7e70b093c2186a31fcf2ede518",
+  "native_context_final_HEAD": "8efe56e4c0a4c46b8cdcb51035364db938494bb5",
+  "files_sha256": {
+    "source-pins.json": "666018d13c674419efe0ee7d3b7e1dbfadea36c6be37bdf8a57ffcff4e32cb40",
+    "audit.json": "a4d5bece16ee013b6dd1b2b9b3f711732b8fe5fede7fbe861c6fb55dd9075ea3",
+    "proposal.md": "c53918efd673fc7883221c4ddcb0e1958f7fb1ae8c8a013090edae82a928ebad"
+  },
+  "validation": {
+    "original_committed_blob_and_working_file_equality_checked": 35,
+    "final_original_working_hashes_checked": 35,
+    "final_native_working_and_committed_hashes_checked": 18,
+    "selected_complete_original_methods_pinned": 58,
+    "saved_long_fields_unique": 13,
+    "JSON_documents_valid": true,
+    "all_declared_source_inputs_unchanged": true
+  },
+  "execution_credit": {
+    "Java": 0,
+    "native_build_or_test": 0,
+    "GUI_or_client": 0,
+    "profile_or_payload_IO": 0,
+    "network": 0,
+    "Git_or_index_mutation": 0
+  },
+  "changes": "Only the four new audit artifacts in this directory; no native, task, shared plan or source-code changes."
+}

@@ -1,0 +1,13 @@
+{
+  "status": "PASS independent complete root source-only review",
+  "source_sha256": {
+    "keyboard_smoke_method.cpp": "5fa1c808b7e474d2fbad546d9245b90116386b38b6e49c74396b7c8112b7837c"
+  },
+  "findings": [
+    "Complete131-line additive method read; one actual generated-profile Bridge/port0, all168 DHT fields compare directly to packet facts.",
+    "Real keyboard events cover unknown End/clamping and known caption; no additional reads, fresh Page/read after close and12 original presence/bytes retained.",
+    "Removing inserted method reproduces exact earlier complete smoke; all prior8 behaviors remain unchanged."
+  ],
+  "blockers": [],
+  "execution_credit": false
+}

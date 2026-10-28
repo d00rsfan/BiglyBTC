@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "milestone": "P04-21",
+  "reviewer": "error_driver",
+  "status": "PASS: independent amended-source review; initial reviews/failures preserved, root rerun required",
+  "parent": "775f84222031c1f43ee96e76c53fff0a5ef1e225",
+  "sources_sha256": {
+    "preview/native/tests/CMakeLists.txt": "cd54d2b314d72be2b56e2110453f46152ba102171d278913179e384d16448022",
+    "preview/native/packaging/preview_smoke.cpp": "138c2aecf4b0997d4129728810d6f75004cba8b7267aeef67cf6c23d2f624fe6",
+    ".github/workflows/native-preview.yml": "73f1394ff287bce982cf424e09d4ad805b5b83a7b7c7c95f8fc84591afd2468e",
+    "preview/README.md": "d4686d72fcc741eae06372768d45e29c94f1ffc95cc9928f28fda4781d7eacd6"
+  },
+  "parent_git_blob_content_sha256": {
+    "preview/native/tests/CMakeLists.txt": "c5b5fc271d42d7c02954c226265dfa33c90fb2511562e01a824ba78604372a8d",
+    "preview/native/packaging/preview_smoke.cpp": "d44b0cce5e4ec13b6569895ef73cf8f37c7fe13cf6c442e5df239fe3aa344c5d",
+    ".github/workflows/native-preview.yml": "c2438933157795b4e5b1ac1df63190b577149f5b3b69c142e93449c37d16b80b",
+    "preview/README.md": "e56337ef9a3befed91f937a84eec0de0b1a20488372492f71d6376a41067c08b"
+  },
+  "prior_independent_test_contract_review": {
+    "path": "migration/evidence/20261020-history-hourly/reviews/tests-contract.json",
+    "sha256": "dba99f0842adb4600f525c21641637a0a97849236b35e70ed6ab3f3e81e921e7"
+  },
+  "checks": [
+    "All four diffs read against the actual immutable native-parent Git blobs. All old source lines remain an ordered subsequence; no existing test assertions, test methods, data, timeout, build flag, workflow step or capture copy was removed.",
+    "CMake adds exactly one new AUTOMOC executable and CTest saved-history-hourly-resolution, linked to actual biglybtc_ui and Qt6::Test with strict warnings/Werror,120s, offscreen and unit/UI/history labels. All earlier targets remain registered.",
+    "Existing eight-row smoke gains assertions within the existing real generated-profile seven-day method. It tests default daily resolution and unchanged initial request count, switches to hourly, compares all168 identities/payload optionals/rawvalues to the actual accepted worker snapshot, retains exact packet and7x8 table, and requires no extra read.",
+    "Hourly ready capture is saved before switching back to Daily totals for the retained ready capture. The later real missing range switches to168 unknown buckets, checks no additional worker response beyond the existing second read and unchanged table, saves its new missing capture, then switches back for the retained missing capture.",
+    "No generator/profile/accounting source changes are introduced. The new PNG writes are only under the existing owned generated smoke output root. Existing lifetime, config/payload read-only and network/profile boundaries remain unchanged.",
+    "Hosted workflow only appends two exact hourly ready/missing PNG copies. Existing build/test flags, official action pins, source/provenance behavior and all14 prior capture names/copies remain intact; new intended capture count is16.",
+    "README only appends a concise rendering-choice explanation: fixed selected UTC168 hours, daily totals default/table retained, zero/gaps/rawsigned bytes, no rereads and no original rolling-query parity claim."
+  ],
+  "counts_scope": {
+    "new_units": 1,
+    "expected_completed_cohorts": {
+      "gcc": 65,
+      "clang": 16,
+      "sanitized": 19
+    },
+    "new_qt_rows": "Observed by root after execution, not asserted here.",
+    "offline_smoke_rows_unchanged": 8,
+    "captures_per_scale_expected": 16,
+    "three_scale_captures_expected": 48,
+    "hosted_captures_expected": 16
+  },
+  "blockers": [],
+  "limits": [
+    "Source-only delta review; no actual smoke, compiler, CI or PNG execution/visual success is claimed.",
+    "Earlier reviews remain immutable. Root must retain exact final hashes when recording actual source and qualification."
+  ],
+  "execution": {
+    "builds": false,
+    "native_or_java_runs": false,
+    "source_edits": false,
+    "git_mutations": false,
+    "read_only_git_show_of_exact_four_parent_blobs": true,
+    "amended_subject_execution_by_reviewer": false
+  },
+  "review_revision": 2,
+  "previous_review": {
+    "path": "migration/evidence/20261020-history-hourly/diagnostics/initial-tests-wiring.json",
+    "sha256": "0aa696d3dde4ddaa9ed67f6b17ec7f5473717461a328d79406c986025e147838",
+    "scope": "Preserved initial-source static review; subsequent actual qualification exposed the Qt sender-tail boundary and raster fringe."
+  },
+  "amendment": {
+    "before_smoke_sha256": "4e65ba4ae89048d8c1f735d502e1e914cc299460ca7be6ed83dde15531b8acd3",
+    "after_smoke_sha256": "138c2aecf4b0997d4129728810d6f75004cba8b7267aeef67cf6c23d2f624fe6",
+    "scope": "Only four mode-delivery checks gain/replace same expected-value assertions with bounded1000ms QTRY waits. All original record/value/read-count/table/capture assertions remain.",
+    "export_template": "migration/publication/preview/native-preview.yml",
+    "export_template_sha256": "73f1394ff287bce982cf424e09d4ad805b5b83a7b7c7c95f8fc84591afd2468e",
+    "native_workflow_sha256": "73f1394ff287bce982cf424e09d4ad805b5b83a7b7c7c95f8fc84591afd2468e",
+    "template_byte_identical_to_native_workflow": true,
+    "diagnostic_smoke_amendment_receipt_sha256": "359c671993cb37cb195cba714f42fa081c27f78bd9801e6edc8e8cd9d3337db8",
+    "note": "The initial mistaken template destination was retained only in ignored build; the active publication template now mirrors the exact reviewed hosted capture workflow."
+  }
+}

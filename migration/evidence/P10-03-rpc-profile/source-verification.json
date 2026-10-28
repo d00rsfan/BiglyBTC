@@ -1,0 +1,7 @@
+{
+  "status": "passed",
+  "native_review_commit": "c83830c13672aa269cf5ec0989f11e4cc090af6e",
+  "original_core_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "tested_source_files": 482,
+  "scope": "Every qualified source/fixture blob matches immutable review commit bytes; no registration, writable provider, live profile or complete plugin parity claim"
+}

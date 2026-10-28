@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "repository": "https://github.com/d00rsfan/BiglyBTC",
+  "source_commit": "b0c7f259bca2043df4fb1297e3440f2e5eb1a270",
+  "metadata_commit": "01973075251a3078f45973318fb841422ff25f7c",
+  "tag": "milestone-persistent-peer-accounting-20261021",
+  "tag_object": "dab160402c8dc0d9c04ad3eba46ea01e78ea66f5",
+  "tag_target": "01973075251a3078f45973318fb841422ff25f7c",
+  "remote_identity_verified": true,
+  "dist_manifest_sha256": "fc3c012766af59d689d501ed139ee87327fac9091a829a77bd28200b214777b9",
+  "source_files_verified": 53,
+  "full_statistics_complete": false,
+  "stop_after_this_milestone": true,
+  "original_profile_access": false,
+  "original_processes_signaled": false
+}

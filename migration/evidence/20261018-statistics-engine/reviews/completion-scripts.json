@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "scope": "P04-16 completion scripts, source-only review; actual target scripts not invoked",
+  "verdict": "Source review complete; hosted recipe correction drafted for root review, private-parent guard recommended",
+  "reviewed_sha256": {
+    "build/statistics-engine-20261018/finalize_evidence.py": "98418182cb4893468048c7bdc0f5c30f0ecd8f8cebbbbf330608343624c2f622",
+    "build/statistics-engine-20261018/verify_hosted.py": "db7dbd656870a0d3bf74ecb893227fd292e56e81e83a938ee9fa8eedfa0b9af3",
+    "build/statistics-engine-20261018/promote_dist.py": "745abaacdbded631126332830e85725d1cf3877ba48a2eea6aa81406485b93ce",
+    "build/statistics-engine-20261018/publish.py": "e97a85d3f0d6c4eecb2fd0c70cee0071cef201b5e7092d87c8aaa559ad7d8860",
+    "build/statistics-engine-20261018/verify_private_checkpoint.py": "a9f10a91d4508fbcd976e289bb372b8cff88a279fc7d651cf7242e9a2b31ca51",
+    "build/statistics-engine-20261018/finalize_docs.py": "4e917ec7b35fb1df99869a926859b67e3d02a3fc2fc43406086b434a48795059"
+  },
+  "source_commit": "5fc34b588713112b126f3cebdfc891020301a281",
+  "source_files_current_hash_checked": 28,
+  "qualification_counts_checked": {
+    "gcc": 50,
+    "clang": 3,
+    "sanitized": 9,
+    "page_qt_rows": 92,
+    "owned_engine_qt_rows": 12,
+    "baseline_gcc_unique": 48
+  },
+  "actual_archive_read_only_inspection": {
+    "sha256": "5a0c61cebf689e6a67af7a9b643ffbcb151503e2004f412ef669929a3d8066bd",
+    "bytes": 809711,
+    "zip_files": 29,
+    "extracted_files": 29,
+    "all_paths_and_bytes_equal": true,
+    "duplicate_files": false,
+    "unsafe_paths": false
+  },
+  "findings": [
+    {
+      "id": "CE-1",
+      "file": "verify_hosted.py",
+      "lines": [
+        25,
+        27,
+        28,
+        29,
+        30
+      ],
+      "issue": "Successful hosted receipt is first written before archive checks; downstream finalizer accepts fields from this premature version.",
+      "repair": "Publish only once after run/artifact/API/actual ZIP/tree bindings and evidence copies complete.",
+      "status": "Draft verify_hosted_reviewed.py supplied to root; not executed or adopted by reviewer"
+    },
+    {
+      "id": "CE-2",
+      "file": "verify_hosted.py",
+      "lines": [
+        8,
+        28
+      ],
+      "issue": "ZIP digest proof does not itself bind the separately inspected extracted file tree to those ZIP bytes.",
+      "repair": "Hash every actual ZIP member and extracted relative file; require exact map equality and matching artifact id/run/head/size/digest.",
+      "status": "Independent actual byte inspection passes; same checks added to unexecuted draft"
+    },
+    {
+      "id": "CE-3",
+      "file": "verify_private_checkpoint.py",
+      "lines": [
+        9,
+        13,
+        18
+      ],
+      "issue": "Receipt parent is checked, but actual commit parent list is not independently checked.",
+      "repair": "Before blob comparison require actual commit parent list to equal the single baseline private parent.",
+      "status": "Recommended to root; no target change by reviewer"
+    }
+  ],
+  "nonblocking_guard_suggestion": {
+    "file": "publish.py",
+    "suggestion": "Assert main branch and exact authorized origin before commit/tag/push, in addition to existing exact source/status and final remote identity checks."
+  },
+  "checked_semantics": [
+    "No accidental old Statistics evidence output prefix; retained P04-15 GCC baseline and smoke recipes are explicitly historical inputs.",
+    "Final docs exact anchors exist, source/native parent identities and 28/50-3-9/92-12 schema agree.",
+    "Broad Java source coverage remains null while bounded native component becomes implemented; no full GlobalManagerStats/OverallStats parity claim.",
+    "Dist prior manifest and unchanged 82 runtime objects are checked, exact build-to-installed RPATH transformation compares complete ELF bytes.",
+    "Prior whole dist remains retained; post-promotion checks do not promise automatic rollback after successful rename.",
+    "Original HEAD/index checks appear in local finalization and checkpoint verification; publication writes only native metadata/tag.",
+    "All final local qualification/publication/checkpoint receipts still require root execution; missing future receipts are not test failures."
+  ],
+  "new_draft": {
+    "path": "build/statistics-engine-20261018/verify_hosted_reviewed.py",
+    "sha256": "db7dbd656870a0d3bf74ecb893227fd292e56e81e83a938ee9fa8eedfa0b9af3",
+    "own_authoring_not_independent_credit": true,
+    "ast_parse_only": true,
+    "success_receipt_writes": 1,
+    "executed": false,
+    "required_downstream_guards": [
+      "archive_verification.actual_zip_sha256_verified is true",
+      "archive_verification.api_run_and_source_verified is true",
+      "archive_verification.zip_tree_hashes_equal is true",
+      "archive_verification.zip_files_verified == len(artifact_files_sha256) == 29"
+    ]
+  },
+  "execution": {
+    "target_imports": 0,
+    "target_script_invocations": 0,
+    "git_commands": 0,
+    "compiler_build_test_commands": 0,
+    "native_or_gui_process_launches": 0,
+    "remote_actions": 0,
+    "shared_or_production_edits": 0,
+    "only_authoring": "ignored build draft and this review"
+  }
+}

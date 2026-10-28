@@ -1,0 +1,13 @@
+{
+  "commit": "015241e1ea32c6fa8b0f191718efb9f6983aee02",
+  "recovered_exact_inputs": [
+    {
+      "path": "migration/fixtures/mldht-identity/crlf.input",
+      "sha256": "6bc5a8864477cc0998d32e4c72d1031047f0f3207af28ed09b82d5f7e930baeb"
+    },
+    {
+      "path": "migration/fixtures/scheduler-ownership/crlf-and-unknown/input.conf",
+      "sha256": "77f5522adb1c2bb8a0d1c9d3094a793073f37629f237d7750b1eedd5d26aac3a"
+    }
+  ]
+}

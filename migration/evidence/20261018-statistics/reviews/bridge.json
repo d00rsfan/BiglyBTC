@@ -1,0 +1,95 @@
+{
+  "verdict": "PASS_SOURCE_REVIEW_NO_BLOCKING_FINDING",
+  "reviewer": "error_codec",
+  "scope": "Independent review of root-authored Statistics SessionBridge integration and oracle-authored immutable DTO only. Reviewer-authored saved_statistics core excluded from independent implementation credit; reader covered separately by storage.json.",
+  "subject_sha256": {
+    "app/session_bridge.hpp": "9c53a5a49420ff11037ac72496a5c7c9d83982dc10261fa510123e04a1a65175",
+    "app/session_bridge.cpp": "4bbdb23e54096d170bb38189960044647fe702ca791ac331b256a4972ee314b4",
+    "ui/statistics_presentation.hpp": "57d027756285b3619187b4fe907cab8ce9624205043eef49e3dcb78ae0c09ef8"
+  },
+  "baseline_native_commit": "8127336eada41e5795d6fdadaa42eea0ff555ec1",
+  "baseline_source_sha256": {
+    "app/session_bridge.hpp": "b33167ca52aef52eb16cf3e38587e9bcb10721e1d0be866c09a02312fcfc2c8d",
+    "app/session_bridge.cpp": "301135e3c4ebd67884028db1d639978c96da7e6bfb2bdb41d2c9c5cb52eef33c"
+  },
+  "new_statistics_method_sha256": "33ea9bc635760bd592ddda72edfee067cec86cc0430e4f894e3fe360a8cb93c8",
+  "existing_method_preservation": "Removing only new statistics() and its include/metatype registration yields byte-exact baseline cpp; removing DTO include/API/signal yields byte-exact baseline hpp.",
+  "dependency_context_sha256": {
+    "adapters/statistics_view.hpp": "bfe21dc7989e315945fd51b35721904bcf9d52186a50007a9d6c09c322d4e125",
+    "adapters/statistics_view.cpp": "76f55675813481121b523e461d960ad315125151581ed66932bd0bfb3dc897a1",
+    "core/include/biglybtc/saved_statistics.hpp": "c3e1c4adee063466bae0034571b42c9a4c291c72687eebbc2dc2c33a2cd529c3",
+    "core/src/saved_statistics.cpp": "e6f4db1e06a993dbce1739a52f053dc9b0e201a89d1ba440100dfd081e355cd3",
+    "core/include/biglybtc/executor.hpp": "0d99cc28102acb980070efc9a72f8e0686ecf94dc43bb81198694245c6b72777",
+    "core/src/executor.cpp": "b886692587ef8c5efc269ea3735f2b64f3432a255b8a1bd57b357627bc3da77a"
+  },
+  "contract_sha256": {
+    "migration/tasks/P04-15-classic-statistics.md": "46bcb26a1a43649749543445f4f37a5f01b7ca2c0511305b8055618d50a4ce44",
+    "migration/evidence/20261018-statistics-next/manifest.json": "92dbafa6e3275bab32cf74d4a514ec7dcd07f501f991e615b162d5de0f8f2f5f",
+    "migration/evidence/20261018-statistics/reviews/storage.json": "c76e66e8fab7c8ecd381cc8f3199594e8b1b665349bd28a782d117359567c6bc"
+  },
+  "checks": [
+    {
+      "id": "ST-B1",
+      "result": "PASS",
+      "subject": "Admission/host identity",
+      "detail": "statistics(session,request) rejects zero or unpublished/foreign session before dispatch. Existing busy gate rejects direct reentry. Worker captures both IDs by value and verifies immutable Host columnLayoutSession before reading; sharing the existing per-Host session identity does not borrow library revision or page address."
+    },
+    {
+      "id": "ST-B2",
+      "result": "PASS",
+      "subject": "Worker ownership/read-only boundary",
+      "detail": "Only fixed reader readSavedStatisticsView(host_->lease,stop) runs on the existing worker and held lease. No acquire, query, cache/baseline assignment, revision mutation, writer, network or new thread in the added method. The method uses dispatch(...,false), so optional statistics read cancellation/failure never recovers a library snapshot or increments torrent revision."
+    },
+    {
+      "id": "ST-B3",
+      "result": "PASS",
+      "subject": "States/provenance/immutable packet",
+      "detail": "Packet defaults Failed. Read errors produce a bounded failure string; explicit Cancelled propagates. Missing creates only Missing. Ready requires a recognized Primary/Backup/Saving source and loaded optional snapshot, moved into shared_ptr<const SavedStatistics>; its fresh core source remains owned. All storage source cases are explicitly mapped, with no invented Primary fallback. IDs/state/source/snapshot/failure are plain owned Qt-side fields and const shared packet is metatype-registered."
+    },
+    {
+      "id": "ST-B4",
+      "result": "PASS",
+      "subject": "Queued cancellation/staleness",
+      "detail": "Stop checks precede and follow reader and precede enqueue. GUI receiver-bound invokeMethod captures stop and immutable packet, rechecks stop plus published session before emitting any statistics result. Cancelled/stale queued packet releases busy without result; optional cancellation message is only after a live QPointer check. Page/request generation admission remains the Window/page responsibility; Bridge does not retain raw page pointers."
+    },
+    {
+      "id": "ST-B5",
+      "result": "PASS",
+      "subject": "Direct signal deletion/reentry safety",
+      "detail": "busy_ remains true while emitting statisticsReady, preventing direct result slots from replacing current_ or dispatching a command midcompletion. QPointer is constructed before any emission; a result slot deleting Bridge returns immediately. Normal callback stops monitor and sets busy false only after result, then emits its final signal with no subsequent member access. Cancel/stale branch checks QPointer after busyChanged before optional message. QObject-bound queued invocation is removed on receiver destruction."
+    },
+    {
+      "id": "ST-B6",
+      "result": "PASS",
+      "subject": "Executor/destruction boundary",
+      "detail": "Added worker capture uses existing Bridge lifetime: destructor cancels current and requests shutdown; last-declared Executor is destroyed/joined before Host/lease/tickets/mutex and QObject base. No new callback backpointer, cross-thread GUI field mutation or independent owner process is introduced. Public methods retain the existing GUI-owner-thread calling precondition."
+    },
+    {
+      "id": "ST-B7",
+      "result": "PASS",
+      "subject": "No regression delta outside new API",
+      "detail": "Exact baseline reconstruction confirms old open/query/refresh/details/progress/saved services/column read/save/dispatch/cancel and their signal order unchanged. Statistics registration adds no file/manager action at construction. Existing session publication while busy permits the Window to queue later optional reads without direct reentry."
+    }
+  ],
+  "downstream_requirements": [
+    "Window/page must validate nonnull packet, exact live session/request and state/source/snapshot/failure consistency; Bridge output is well formed but public synthetic DTOs remain untrusted.",
+    "Result arrives before busy=false; absent/cancelled/failed-dispatch completion must release only matching active Statistics generation and preserve newer pending work.",
+    "No current/session/global protocol/history semantics follow from saved values; view must preserve unknown/type/negative provenance and source units."
+  ],
+  "limitations": [
+    "Source-only review, no compilation, moc generation, test execution, GUI event loop, queued-cancellation or deletion runtime proof by this reviewer.",
+    "Underlying allocation/error text and QObject scheduling behavior retain existing contracts. No allocator-exhaustion no-throw or arbitrary non-GUI-thread public calling guarantee.",
+    "This report does not independently review own core implementation, entire Executor, current Window or complete original Java/client statistics."
+  ],
+  "execution": {
+    "source_and_hash_inspection_only": true,
+    "Git_read_only_baseline": true,
+    "target_imports_or_selected_definition_evaluation": 0,
+    "compilers": 0,
+    "native_or_Java_runs": 0,
+    "GUI_or_profile_IO": 0,
+    "network": 0,
+    "Git_or_index_mutation": 0,
+    "production_source_changes": 0
+  }
+}

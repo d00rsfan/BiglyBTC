@@ -1,0 +1,31 @@
+{
+  "upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "ranges": [
+    {
+      "upstream_path": "core/src/com/biglybt/core/util/TimeFormatter.java",
+      "first_line": 40,
+      "last_line": 58,
+      "source_sha256": "0076bf6d6205e01dee097f6d43b6ade84b7b2cb7b84db6c4d1c6d0511e8ea898",
+      "range_sha256": "38f932f794a7b431b5d68f99bf47f9b1f4d9f7e27ecc8060d94bef5732430f65",
+      "purpose": "Original month span is fixed30days"
+    },
+    {
+      "upstream_path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+      "first_line": 2509,
+      "last_line": 2539,
+      "source_sha256": "0c2b304c022013d0797732049c51deb23a7af976f74b0d47f22156d8da097103",
+      "range_sha256": "6c4ecd99fcc4f2ae01c5bebcfa8b3c789f4bf45cd8e8ec636e71adaecea9b412",
+      "purpose": "Original month useshourly resolution; native30dailyview is deliberately narrower"
+    },
+    {
+      "upstream_path": "core/src/com/biglybt/core/stats/transfer/LongTermStats.java",
+      "first_line": 28,
+      "last_line": 39,
+      "source_sha256": "f1a4bfaa8d15e8b0f9318a2af1653a854f9969bc09b80f4e9bd3c48afb62e1bf",
+      "range_sha256": "7a3a6d3c1b7890e2a7724d79f84f0cbadbb138da00d7473a7b7b71c7786f4240",
+      "purpose": "Original six counterindices"
+    }
+  ],
+  "Java_execution": false,
+  "Java_UI_equality_credit": false
+}

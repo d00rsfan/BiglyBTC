@@ -1,0 +1,34 @@
+{
+  "status": "passed",
+  "native_implementation_commit": "5073f29e81752be5b6cef9ceabddd9e919eaae72",
+  "actual_failure_cases": 12,
+  "successful_later_saves": 6,
+  "reports": [
+    {
+      "compiler": "gcc",
+      "report": "migration/evidence/P02-04/final-gcc-write-retries.json",
+      "report_sha256": "debd0e752824d1b839102edd9942d8ab32c7e6c26df43bab46417a30b39cd864",
+      "build_capsule": "migration/evidence/P02-04/gcc-write-retry-build-capsule.json",
+      "build_capsule_sha256": "06543c82866d303536de1e14d59cd1f426e685a280599f844275784a9eb6190d"
+    },
+    {
+      "compiler": "clang",
+      "report": "migration/evidence/P02-04/final-clang-write-retries.json",
+      "report_sha256": "bb5b0ceceadaad94b1008b231c3cc0decef44f63e084034638a71a43b9acd6bd",
+      "build_capsule": "migration/evidence/P02-04/clang-write-retry-build-capsule.json",
+      "build_capsule_sha256": "4d658931a6a119172d3d3fc4b0b01445b017018371237498590121b581e00023"
+    },
+    {
+      "compiler": "asan",
+      "report": "migration/evidence/P02-04/final-asan-write-retries.json",
+      "report_sha256": "4a08fa6cd710bde1daeeaeaebc40c790da8ebebde82bd5187356de7d94984fdf",
+      "build_capsule": "migration/evidence/P02-04/asan-write-retry-build-capsule.json",
+      "build_capsule_sha256": "cbdc000a3ea5b0d04e5a0019662bb16a3594c6c48963350fcfb51f2f49f78ed5"
+    }
+  ],
+  "limitations": [
+    "Crash/fsync/rename/disk-full/recovery-resolution gates remain open",
+    "Only owned reported-write partial files are rolled back; abrupt children retain recovery files",
+    "Abrupt children cannot run sanitizer finalization; normal exits retain leak checks"
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "status": "source-only-frozen",
+  "native_implementation_or_comparison": false,
+  "source_fixture_manifest_sha256": "4a0661490209034f05051387e7ede65e7ec27b46a131d18af75e60115a17c87c",
+  "source_reference_sha256": "5972d619fe251369e2f00cb5015c46f2a38f175d3d012adf0be0f49253629491",
+  "helper_class_count": 20,
+  "parent_helper_classes_unchanged": 11,
+  "persistent_reference_files": 65,
+  "groups": {
+    "semantic": {
+      "observations": 2745,
+      "expected_source_exceptions": 0
+    },
+    "callback-fault": {
+      "observations": 603,
+      "expected_source_exceptions": 2
+    },
+    "iterator-destroy": {
+      "observations": 219,
+      "expected_source_exceptions": 5
+    },
+    "alias-policy": {
+      "observations": 412,
+      "expected_source_exceptions": 0
+    },
+    "getter-contract": {
+      "observations": 336,
+      "expected_source_exceptions": 24
+    },
+    "diagnostic": {
+      "observations": 85,
+      "expected_source_exceptions": 4
+    },
+    "key-getters": {
+      "observations": 380,
+      "expected_source_exceptions": 0
+    },
+    "short-key-contract": {
+      "observations": 846,
+      "expected_source_exceptions": 0
+    }
+  },
+  "total": 5626,
+  "source_method_count": 40,
+  "harness_sha256": "3110859f649f62d163bb93a36772671f193d451ee644cf259da306bb11351a9a"
+}

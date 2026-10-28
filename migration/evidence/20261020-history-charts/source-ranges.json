@@ -1,0 +1,38 @@
+{
+  "ui.createHistoryPanel": {
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+    "first_line": 2242,
+    "last_line": 2482,
+    "sha256": "e3e4150fde303fcbc4f49173a29ff7091bc68326f42d1a5710e7f7aed174bd8a",
+    "bytes": 5558,
+    "scope": "Complete createHistoryPanel signature/body",
+    "raw_line_endings_preserved": true
+  },
+  "ui.refreshHistory": {
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+    "first_line": 2489,
+    "last_line": 2697,
+    "sha256": "5158f82ef054f2b06af4c7c4b163fd60d9acaf6c3dd8e3404e91e1d9e8b6d22b",
+    "bytes": 4561,
+    "scope": "Complete refreshHistory signature/body",
+    "raw_line_endings_preserved": true
+  },
+  "ui.totalUsageWrapper": {
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+    "first_line": 2699,
+    "last_line": 2719,
+    "sha256": "5c6a46b4239dd3ba93cedbade9b14fdcadefd8d002f04746cc393516434c3921",
+    "bytes": 471,
+    "scope": "Complete getTotalUsageInPeriod wrapper signature/body",
+    "raw_line_endings_preserved": true
+  },
+  "interface.counterOrderAndPeriodConstants": {
+    "path": "core/src/com/biglybt/core/stats/transfer/LongTermStats.java",
+    "first_line": 28,
+    "last_line": 47,
+    "sha256": "245e097479334af729e0f9e96008670cfa022ade31bc323c18c35d401c7f43f1",
+    "bytes": 810,
+    "scope": "Complete counter and period constant groups",
+    "raw_line_endings_preserved": true
+  }
+}

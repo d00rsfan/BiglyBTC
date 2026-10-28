@@ -1,0 +1,114 @@
+{
+  "schema": 1,
+  "milestone": "P04-18",
+  "reviewer": "independent error_driver native source review",
+  "created_utc": "2026-10-18T22:18:55.960377+00:00",
+  "verdict": "PASS — no source blocker found",
+  "scope": "Six codec-authored parser/held-reader/test files, existing file/lease primitives and actual CTest fixture binding; source-only review, no native/JVM build or subject execution in this review.",
+  "independence": "Reviewer authored and froze the genuine Java oracle before inspecting this native implementation. This review is independent of codec native authorship; it does not independently requalify its own oracle providers or revise any Java expectations.",
+  "original_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_parent": "9d6023fca3b322dfbe5d92d1666b7f2120cd7752",
+  "reviewed_files_sha256": {
+    "preview/native/core/include/biglybtc/saved_history.hpp": "799e17e75dc5916b2bce548bc2d5499068169ae406cd00556d76ab90c8315516",
+    "preview/native/core/src/saved_history.cpp": "49c004362813fc6cc39f82fd2e2e64ba8016ec20493ae955653de51b914fd267",
+    "preview/native/adapters/history_view.hpp": "0e4d06bb785b3a4e4595059b338d42b12d9e27fec3c8cdb958f7905d3bf45235",
+    "preview/native/adapters/history_view.cpp": "7a36a9307b6b8cee95169d77bbfe727ce183711d3c08034142363792a337b10c",
+    "preview/native/tests/saved_history_tests.cpp": "ed2e169695699867884d982a9404452a25a7db00f2f51cba91819861670476b2",
+    "preview/native/tests/history_view_tests.cpp": "62b95183ef6ded3af3a08d9506762b24df3b4892e4355f114aeb6d49752208fc"
+  },
+  "reviewed_files_match_author_manifest": true,
+  "author_manifest": {
+    "path": "build/saved-history-20261019/source/manifest.json",
+    "sha256": "f889b42d843e7676805179703eae4b05035953a7fbbc6b70c15f2121d324e8d4"
+  },
+  "context_sha256": {
+    "preview/native/adapters/file_io.hpp": "8d0fc78f8b6fd62932c8ff07fcbcd8203d6bac0ca2255d86bb849c4b1b413cb6",
+    "preview/native/adapters/file_io.cpp": "a3fd490e8e49b8d066f27205ab25636ac51c5e0715bf5c25f169e877da17f89c",
+    "preview/native/adapters/profile.hpp": "0e7bb950e4d66e2fdf88b2733cb00d149e8b17ea805348300327af8418649831",
+    "preview/native/adapters/profile.cpp": "38c0838d5aae673304ce9dade42cae18bf9607d54d4480949617dcc1c5dafbd9",
+    "preview/native/tests/CMakeLists.txt": "606556ac341bfd8818469703ab829d4ace8cbcb8dfa4084e05b6c354022281bb",
+    "preview/native/core/CMakeLists.txt": "f3d58ab562c51964ee9509cd40e20d1c4c0bf930a76c117df0599274da9c43c9",
+    "preview/native/adapters/CMakeLists.txt": "97506a3a823852ce462efa9fac94236c334a01b8a6143e86b07e5349bca5fd59"
+  },
+  "shared_contract_sha256": "ed79813cc1ff3da053c4087ecce38c2b613538fcb7d8a360e5bbc156fbb23d32",
+  "source_evidence_sha256": {
+    "migration/evidence/20261019-saved-history/source-audit.json": "c723873c0f2ab318cc5c26771bddbebdf36c43a677bb309f4b400ec2ba5b27e0",
+    "migration/evidence/20261019-saved-history/source-ranges.json": "50e668e4a095a492a6e37c5b2a6ad2b65b25759b12e4c30834a88fa4ce946e93",
+    "migration/evidence/20261019-saved-history/java-oracle.json": "ec86d97c987d823f05a7cfe945c224aac255306847a220350917dadf4af5d75a",
+    "migration/evidence/20261019-saved-history/java-execution.json": "8f74586290b3772bad72e722e103c6d8f5a5af2c1c20bb8d83a01462bc588d9c",
+    "migration/evidence/20261019-saved-history/oracle-source-manifest.json": "81803932956b98cbc3294b650a33bf5511ebd169093eaf36830bfde72fbe06b0"
+  },
+  "blockers": [],
+  "checks": [
+    {
+      "area": "Actual Java semantics",
+      "result": "PASS",
+      "evidence": "Compared original complete Date/Date/RecordAccepter reader lines646–948 with the native branch flow. Baseline fields are parsed but ignored; s<=0 deactivates the positive anchor; valid delta/e before a positive anchor has no observation; anchored delta/e advances one reconstructed minute, e recorded time does not replace it and e does not clear it. Multiple starts reset, duplicate minutes add. Six field order matches LongTermStats constants."
+    },
+    {
+      "area": "Explicit native strictness",
+      "result": "PASS",
+      "evidence": "Exact6/9 fields, VERSION1, ASCII signed decimal +/- and leading zeros, LF/CRLF/complete EOF, no bareCR,1MiB/8192nonblank/512-byte line bounds. Every record is validated including inactive/outside-day records. No malformed partial success. These are explicit differences from Java permissive skipping, ignored version/end-time parsing and unchecked arithmetic."
+    },
+    {
+      "area": "Signed arithmetic and dates",
+      "result": "PASS",
+      "evidence": "from_chars range classification is checked; add guards compute only representable max-positive/min-negative thresholds before addition. Local hourly/daily copies are committed only after all six checked sums; a failure discards the entire return value. s/e minute bounds are the truncating int64/60000 interval; reconstructed increment rejects MaximumMinute before stepping. Gregorian year1970..9999 keeps chrono day/minute products far inside int64. No borrowed input remains."
+    },
+    {
+      "area": "Unknown and selected-day semantics",
+      "result": "PASS",
+      "evidence": "Empty/header-only/inactive files keep totals and all hours absent. An actual zero delta creates a present zero row and observation. Reconstructed selected-day interval is half-open and hour allocation is UTC; outside-day anchored records are validated/countable but not summed. Cancel returns no partial day."
+    },
+    {
+      "area": "Held reader and safety",
+      "result": "PASS",
+      "evidence": "Valid held lease and date are required. Exact stats/YYYY/MM/DD.dat only; no directory scan, cache.dat, recovery, writer, mkdir or second lease. Directory openat uses O_DIRECTORY|O_NOFOLLOW|O_CLOEXEC and compares named/opened identities. Selected regular leaf pre/post device/inode/size/mtime/ctime plus existing opened-file size/mtime checks detect observed changes. Missing component differs from present empty. Descriptor RAII preserves caller lease and owns only opened child fds."
+    },
+    {
+      "area": "Cancellation and errors",
+      "result": "PASS",
+      "evidence": "Stop checks surround directory opening, bounded read, pure parse and publication; stop after an actual read wins over simultaneous read error. Invalid date/format/overflow/limits map InvalidFormat; unsupported version maps Unsupported; unsafe/raw IO is propagated; bad_alloc maps Io. No claim of syscall interruption or global allocation-free error construction."
+    },
+    {
+      "area": "Core tests",
+      "result": "PASS",
+      "evidence": "21 named families include independent hand vectors for all six fields, positive gate, e reconstruction/retention, overlapping starts/hour boundaries/rollover, signed/plus/zero forms, presence vs unknown, ownership after input destruction, malformed/outside-day validation, int64 extrema and per-counter/cross-hour overflow, timestamp bounds and step limit, exact byte/line/record limits and prestop. Frozen oracle argv is mandatory, not optionally skipped."
+    },
+    {
+      "area": "Reader tests",
+      "result": "PASS",
+      "evidence": "11 named families expand generated private profiles: each missing path component/no creation; empty/header present; owned/copy/move result after lease release; exact padded date; no .bak/.saving/cache/neighbor use; moved lease and date rejection; directory/leaf symlink, regular/directory wrong shapes and FIFO fail safely. Test-private --wrap=read first invokes real read and matches exact owned dev/inode, then deterministically requests stop/IO or replaces/truncates leaf/month. Byte/inode/mode/nlink/mtime/ctime checks ignore atime appropriately. Cleanup is limited to explicitly created names."
+    },
+    {
+      "area": "Fixture provenance and consumer",
+      "result": "PASS",
+      "evidence": "All21 public files match the earlier frozen oracle receipt;17 data files match per-file manifest hashes. expected.tsv bytes equal preserved actual Java query.stdout. Its425 rows cover day plus24hours for each exact basename/date,2550 signed scalars. Consumer requires11 fields, bounded date/hour and leaf name, unique hourly slots and all25 slots per encountered fixture. CTest passes literal source fixtures/saved-history directory; linked core target uses actual saved_history.cpp. Reader target links profile with target-private --wrap=read. Both CTests remain120s."
+    }
+  ],
+  "fixture_binding": {
+    "directory": "preview/native/tests/fixtures/saved-history",
+    "files": 21,
+    "data_files": 17,
+    "rows": 425,
+    "scalar_comparisons_planned": 2550,
+    "manifest_sha256": "26126241ca9f86bdbe9052cb06600ebde7775f4b2f185d195ce2f5983f200da3",
+    "expected_tsv_sha256": "72ef5198898fef0a1fa7ea5221751b1d6ddbde674ce0be83e75f38586a096bbc",
+    "preserved_actual_java_stdout_sha256": "72ef5198898fef0a1fa7ea5221751b1d6ddbde674ce0be83e75f38586a096bbc",
+    "all_public_file_hashes_match_frozen_oracle": true,
+    "expected_values_revised": false,
+    "native_subject_executed_by_reviewer": false,
+    "presence_mapping": "Only scalar comparison maps native absent optional to Java returned zero. Native presence, observations, outside-day counts and strict errors receive zero Java equality credit.",
+    "qualification_caveat": "The consumer does not self-hash the corpus or hardcode17files/425rows. This review pins the full exact corpus; final qualification must retain that identity and report the actual2550 comparisons."
+  },
+  "limits": [
+    "Source PASS is not a compiler, sanitizer, native execution, UI or full-client parity result; root owns actual qualification.",
+    "Original Java Date reader clamps a future end time to now even when caches are disabled. Oracle dates are past the fixed2030 provider clock; native pure full-day projection has no clock and future/current-future-minute equality is not established.",
+    "Filesystem checks are separate observations, not a transaction against hostile swap-and-restore races or a promise that a held profile pathname can never be renamed. No extra uid/nlink rejection is invented for old regular history files.",
+    "Cancellation is cooperative at stated coarse boundaries; it does not interrupt blocking syscalls. Pure parser has no allocation; storage Error/string/read buffer allocation is not a global OOM guarantee.",
+    "No original writer/cache/global history service, persistent history writer, source UI graph/span behavior or original live profile was run by this review."
+  ],
+  "subject_mutations": false,
+  "target_imports_or_execution": false,
+  "hash_recheck_before_review_publication": true
+}

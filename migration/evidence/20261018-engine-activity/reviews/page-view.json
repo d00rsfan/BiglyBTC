@@ -1,0 +1,83 @@
+{
+  "schema": 1,
+  "milestone": "P04-17",
+  "verdict": "PASS source-only; no concrete UI/Page blocker",
+  "reviewer": "error_driver",
+  "author": "error_oracle",
+  "independence": "Reviewer authored only the source audit/public contract and prior sampler, not these View/Page/test changes. History was independently reviewed separately; no own implementation credit.",
+  "native_source_baseline": "5fc34b588713112b126f3cebdfc891020301a281",
+  "native_metadata_baseline": "30569e2631427003a4a92e7edee3572a3b34e740",
+  "author_freeze": "build/engine-activity-20261018/view/source-freeze.json",
+  "author_freeze_sha256": "225756434843ddf2fd424dac41a1810d03d97b290272332e0ee5c877057db46d",
+  "source_sha256": {
+    "preview/native/ui/engine_activity_view.hpp": "58d5007738e2a38d644eabb75eac48e5dbdd1037afff5ab693f075d82bc8977d",
+    "preview/native/ui/engine_activity_view.cpp": "fd9088609eaba5df01cb68022129f61d87ffd684a3aae789e60014593715464f",
+    "preview/native/ui/statistics_page.hpp": "4ce83c66cc462a56ac80784b3a5a8657eace3e4a213b54edfa49f234910b5b25",
+    "preview/native/ui/statistics_page.cpp": "8108f303273bf93848de87ba4b632c156c8cc23f554997591c77b58df247affc",
+    "preview/native/tests/engine_activity_view_tests.cpp": "210755b74b15e84b854821989e9b88d4138e6467228e39f172bb948f811ed522"
+  },
+  "dependency_sha256": {
+    "preview/native/ui/engine_activity_presentation.hpp": "e45ba4e1f5e929d3921545a6b8cad300238737d205f75707defb3c6dbb4479a5",
+    "preview/native/ui/engine_activity_history.hpp": "6361476296ad8f0aa1d320b5f96f7fb84356557fef402c01c03036fe8e295844",
+    "preview/native/ui/engine_activity_history.cpp": "5920ea01804bbc5dc1f96c71d549c0e5abd8fe3cda581c1ea817358d1aaa95a6",
+    "preview/native/ui/engine_statistics_presentation.hpp": "2b1270182e459b2b93aa3376f80b8bcb52500b51486dca0e93820684479db67d",
+    "preview/native/core/include/biglybtc/engine_statistics.hpp": "f5946fd72b06312dd4772bbfb7f4c84ebbfcff53971b737e8ba7cda4902678f9"
+  },
+  "author_artifacts_verified": 15,
+  "unchanged_original_page_test_sha256": "1e793ae37ee7b8042f7940e54c358bb58373651bc60ec7deb5e23de76e55900e",
+  "unchanged_complete_page_ranges_sha256": {
+    "ActivityPlot": "c0593b76f56b86a9187471ed4a388dcc0ee56b1a01fc1f75a71ed242fcee2aa6",
+    "setEngineStatistics": "f02dfdec6631b45af2f35c967bc833eb715fbbba0819dcaebc9c901561e640c4",
+    "refreshEngine": "63ca9f2a48935b35b8936f47e3491a4c8cc7667b2a03876d8531b720852d6340",
+    "clearActivity": "cc83ab3dd0b35f1f75001b90ba183eae76f37c56179b2d1b1ee0f74049b79dbe",
+    "recordPayload": "4b0c418a7118948114634d36f3c90e72571a89d6f27879768c5e4d374849f0a2",
+    "setPresentation": "b5cc668941e0b1ca76109f3d340dc90d109310757e5dd461e6e3bcf571a6f43e",
+    "setFailed": "6167503ee9fceb4b031aa88825750e69f95fed6e5408e6a2b192b2fb476f2bd2",
+    "writeFacts": "b560fb4cc151eeecbe4fde4ae26239034329b3e6bb787a8c9c22faed2839e185",
+    "emptyFacts": "8995ac6a8f812799d2e3024b52b85d477bd498cd2306a6071bb3991eeb76be8e",
+    "accepts": "c68f75d468af52ebc6a4f5bb46dd9e4029efc109d30a43c1bed7ee0f00fb2328",
+    "showEvent": "3897fbd3dee024c616f8a663fe0be8bf77fe70b59d7b0fb944fe49f701b45fe9",
+    "eventFilter": "a03750f8ec911a773df31528aeeba321773d6a9507cb39ec8330474b0f14c598"
+  },
+  "checks": [
+    "Statistics top tabs remain Activity0/Transfers1. Activity nests Payload0(default) and Engine traffic1; prior payload IDs/data ring and saved/engine counter functions remain unchanged. Only nested visibility/refresh admission and new independent frame forwarding are added.",
+    "Page beginRequest rejects invalid/stale request identity first, installs accepted session/request before graph clear, clears engine/payload on actual profile transition, and checks QPointer/session/request after synchronous graph clear. Same-profile saved refresh retains graph.",
+    "setEngineActivity binds the exact immutable History-factory latest packet through existing setEngineStatistics, then checks Page lifetime and exact engine_ pointer after all synchronous counter-render reentry before graph forwarding. Wrong-profile, newer-operation or deleted Page cannot receive trailing stale frame.",
+    "View standalone admission rejects lower profile and stale/same-run duplicate/postterminal packets, allows higher profile or higher operation frames, and clear relinquishes binding. Page supplies the authoritative expected profile gate; standalone View is not a service/profile capability.",
+    "Latest six labels copy all EngineRates fields independently, including gap1 separately floored protocol components; absent latest rates render Unavailable even when prior actual points remain. Name/status/labels are PlainText and scope excludes global/IP/tracker/DHT/history.",
+    "Charts consume only private-factory immutable spans bounded600, copy six supplied values by direction, choose actual maximum without integer addition, and subtract ordered nonnegative elapsed time before qreal conversion. Difference stays0..INT64_MAX; stack run600 and int conversion<=600 are bounded.",
+    "connectedToPrevious false flushes each existing run; isolated points use drawPoint and connected runs use drawPolyline. No missing-rate point, inferred zero, terminal tail, index-as-time or extrapolation is inserted. Protocol/combined/payload are separate overlay series, not summed.",
+    "Known0 rates remain actual points at axis baseline; empty charts show an explicit unavailable/no-samples message. Zero axis ticks are scale labels, not fabricated observations. Large absolute times with tiny relative span retain resolution through subtraction first.",
+    "Hidden/minimized updates change shared owned C++ frames only; no QLabel write or chart update request occurs until visible refresh. Child showEvent and queued window-state callbacks render newest cache. No clock, sampling/animation timer, thread, filesystem/profile/network or transfer mutation is introduced.",
+    "View text/tooltip delivery guards own lifetime, exact frame and saturating revision before/after Qt writes. Reentrant higher operation/clear and direct deletion stop old remaining writes; chart repaint requests are similarly lifetime/intent guarded.",
+    "All frozen5 live files, dependencies5, artifact images/patches16, original whole92-row Page test and12 complete old Page/class ranges independently hash-verified; no original Page test assertion/fixture/deadline change."
+  ],
+  "test_review": {
+    "behavior_methods": 22,
+    "expanded_behavior_rows_planned": 23,
+    "qt_rows_planned": 25,
+    "coverage": [
+      "Actual Qt raster samples detect all3series in both receive/send chart middle columns; same endpoints with an explicit unknown gap have no middle colored pixels. This would fail ignored connectivity or omitted series.",
+      "Near-INT64_MAX times differing2ns produce a real middle stroke, detecting conversion-before-subtraction collapse.",
+      "Known-zero versus unknown, first observation, latest-unknown with retained points, terminal dedup and independent protocol floor components.",
+      "Actual600-point shared factory frame survives History destruction; stale/duplicate/new profile/op reset, hidden/minimized no labels/paints until show.",
+      "Synchronous ToolTipChange providers install newer operation/clear/delete View; profile-change/delete Page during counter admission verifies post-render pointer/lifetime guard.",
+      "Nested Payload default/IDs and independently updated old payload cache; saved refresh preserves graph while new profile clears and rejects prior frame."
+    ],
+    "limits": [
+      "All new fixtures are generated primitive DTOs fed through real History; no real LT sample, original Java equality, complete original graph parity or compositor acceptance credit.",
+      "Raster tolerance checks meaningful strokes/gaps for fixed offscreen sizing, not pixel-identical cross-platform rendering. Actual builds, root real loopback graphs and three-scale/hosted evidence remain separate.",
+      "No allocator-fault or hard RSS claim; shared supplied packets must remain immutable for their lifetime."
+    ]
+  },
+  "findings": [],
+  "execution": {
+    "compiler": false,
+    "qt_tests": false,
+    "java": false,
+    "target_import": false,
+    "native_process": false,
+    "profile": false,
+    "network": false
+  }
+}

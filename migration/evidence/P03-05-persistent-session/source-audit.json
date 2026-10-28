@@ -1,0 +1,1015 @@
+{
+  "status": "Read-only persistent-session source audit and proposal; no implementation or runtime qualification",
+  "BiglyBT_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "libtorrent_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "libtorrent_source_root": "/tmp/biglybtc-deps/libtorrent-2.0.12-release/libtorrent-2.0.12",
+  "native_worktree_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "BiglyBT_files": {
+    "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java": {
+      "sha256": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39",
+      "git_blob_sha1": "f992aecdc28168d656c322512434ff1cbaf95c02",
+      "bytes": 144403
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java": {
+      "sha256": "a88937664cb90354be6600448a63684b6a7b5c9e7906a9425b9f5a4758afbeda",
+      "git_blob_sha1": "99617ee6753153c8af1598fc17cf28ed7631319b",
+      "bytes": 183839
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerController.java": {
+      "sha256": "b22ccde4addada902b8bac14c2177e7496b9329304c534d6ed2fdde9dbdc8860",
+      "git_blob_sha1": "e575894d6a17d3dcbdd0af857e08445025b24f49",
+      "bytes": 89343
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java": {
+      "sha256": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a",
+      "git_blob_sha1": "12c9b2e45ab7fa3a9839672087ec207ef83d9e35",
+      "bytes": 107520
+    },
+    "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java": {
+      "sha256": "3b2eb44625911187e3058b7363b96b7ee813a9bf8051de54fada0f1ccc3243c7",
+      "git_blob_sha1": "73350c54c291c03b2fafe54b5f7618d31fabab8e",
+      "bytes": 37856
+    },
+    "core/src/com/biglybt/core/disk/impl/resume/RDResumeHandler.java": {
+      "sha256": "dd63d0d6944ab73d7c29d6c190258b9cf2b6552d80972644188edab1b87882bc",
+      "git_blob_sha1": "b70c1267d2878adbcb2c5ddcb2f392de5349a786",
+      "bytes": 36254
+    },
+    "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java": {
+      "sha256": "6755b950c548c5a7d153b9aef2c1024c7c5c79d5880fd858f3bac4261adcdf8c",
+      "git_blob_sha1": "0612105280e1489fc628d155bd12c7606ac0e0c3",
+      "bytes": 127577
+    },
+    "core/src/com/biglybt/core/peer/impl/control/PEPeerControlImpl.java": {
+      "sha256": "b306689754d6feb7f7597adb092c0f9e86885a45e65c7ac8733eeceb9a66288e",
+      "git_blob_sha1": "fffed159d7bb22c1d1c8c2cdcf60da2739aaa018",
+      "bytes": 192494
+    },
+    "core/src/com/biglybt/core/impl/CoreImpl.java": {
+      "sha256": "871ac9f1276d9e52789fc0b01128b1c077800099746bba8b9c2dd10f8a649f01",
+      "git_blob_sha1": "5461d463e58885e581c6c6cd99ec3fb25615e03c",
+      "bytes": 80354
+    },
+    "core/src/com/biglybt/core/util/LinkFileMap.java": {
+      "sha256": "360e9acb5ff349e4e507487af847111d00c9ccc5e8d5e2f0053d02ead649abed",
+      "git_blob_sha1": "7c44007f711e902ac0807e7eb69d18782bf48058",
+      "bytes": 7775
+    },
+    "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java": {
+      "sha256": "821229517d374be10b95b4c2b623e3f25b356bf6d29724067933d943f719bcef",
+      "git_blob_sha1": "a9766d0fd5dea49342d7c59b62c8d4278f596c91",
+      "bytes": 76554
+    },
+    "core/src/com/biglybt/core/util/HashWrapper.java": {
+      "sha256": "cc768d652317b2e19a749db727e899f3a419c87cf2134536ffe4a6ae995b3cea",
+      "git_blob_sha1": "6167f370e9c4ae3bf92c44c7957a10979ba94c91",
+      "bytes": 1882
+    },
+    "core/src/com/biglybt/core/util/AEMonitor.java": {
+      "sha256": "10732da79c2ca2b92d0103036ccac23f0751a3141f0a770f5df24ea44aa96276",
+      "git_blob_sha1": "d1d317cb1bc766b72ce3a7967df9b1a884768114",
+      "bytes": 1814
+    },
+    "core/src/com/biglybt/core/util/SystemTime.java": {
+      "sha256": "d57063696e281cc005e5b146a8f863a2ca52180696a98b473ff8566851f97353",
+      "git_blob_sha1": "684948cfbb4a20fbecaec4614d2c24a33d2de27e",
+      "bytes": 18062
+    },
+    "core/src/com/biglybt/core/download/DownloadManager.java": {
+      "sha256": "cfa73bb4c32801fa98565e163cbf7100a24240c790c25cdf2c4ce265402538a6",
+      "git_blob_sha1": "1ab44517eb0da5ff5d0bb46fa9b8bbd90275f959",
+      "bytes": 24669
+    },
+    "core/src/com/biglybt/core/global/GlobalManager.java": {
+      "sha256": "70ea189d521a3ccdcd89014d81019dbd4964a462738a1efb2da9c9cc16ee46c0",
+      "git_blob_sha1": "3d580c76c809d263caad47291d30f35d1b8a1410",
+      "bytes": 14754
+    },
+    "core/src/com/biglybt/core/download/DownloadManagerState.java": {
+      "sha256": "9bd11377c6abe2f4cf1e0cb10cc42032917679216fccb12fbb43a239a13a2867",
+      "git_blob_sha1": "0257df6b197c2e3ac1e0baa11083c6078d197445",
+      "bytes": 17477
+    },
+    "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java": {
+      "sha256": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194",
+      "git_blob_sha1": "72d5cccf803da692911b9a0e56777262138d6e00",
+      "bytes": 45598
+    },
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopConfigModel.java": {
+      "sha256": "3c46e88ab04ee8afeba60a6fd02a7c293be15ec4f382f54922402fe1234afe55",
+      "git_blob_sha1": "f6b665e72d7e29e4585ec3c8d27b73a03a2cb29e",
+      "bytes": 28459
+    }
+  },
+  "BiglyBT_selected_original_methods": {
+    "GlobalManagerImpl.stopGlobalManager(GlobalMangerProgressListener listener)": {
+      "name": "stopGlobalManager",
+      "arguments": "GlobalMangerProgressListener listener",
+      "signature": "@Override\n  public void\n  stopGlobalManager(\n\t  GlobalMangerProgressListener\tlistener )",
+      "declaration_start_line": 2140,
+      "body_start_line": 2144,
+      "body_end_line": 2229,
+      "body_sha256": "36db778d3d70f5232370a0577023d116593b0d01b5c13051802396945f5debfc",
+      "body": "{\n\t synchronized( managers_lock ){\n\n\t\t  if ( isStopping ){\n\n\t\t\t  return;\n\t\t  }\n\n\t\t  isStopping\t= true;\n\t  }\n\n\t  stats.save();\n\n\t  informDestroyInitiated( listener );\n\n\t  if ( host_support != null ){\n\t\t  host_support.destroy();\n\t  }\n\n\t  torrent_folder_watcher.destroy();\n\n\t  // kick off a non-daemon task. This will ensure that we hang around\n\t  // for at least LINGER_PERIOD to run other non-daemon tasks such as writing\n\t  // torrent resume data...\n\n\t  try{\n\t\t  NonDaemonTaskRunner.run(\n\t\t\t\t  new NonDaemonTask()\n\t\t\t\t  {\n\t\t\t\t\t  @Override\n\t\t\t\t\t  public Object\n\t\t\t\t\t  run()\n\t\t\t\t\t  {\n\t\t\t\t\t\t  return( null );\n\t\t\t\t\t  }\n\n\t\t\t\t\t  @Override\n\t\t\t\t\t  public String\n\t\t\t\t\t  getName()\n\t\t\t\t\t  {\n\t\t\t\t\t\t  return( \"Stopping global manager\" );\n\t\t\t\t\t  }\n\t\t\t\t  });\n\t  }catch( Throwable e ){\n\t\t  Debug.printStackTrace( e );\n\t  }\n\n\t  checker.stopIt();\n\n\t  if ( COConfigurationManager.getBooleanParameter(\"Pause Downloads On Exit\" )){\n\n\t\t  pauseDownloadsInternal( true, true, PS_GENERAL );\n\n\t\t  // do this before save-downloads so paused state gets saved\n\n\t\t  stopAllDownloads( true, new GlobalMangerProgressListener.GlobalMangerProgressAdapter( listener, 0, 49 ));\n\n\t\t  saveDownloads( false, new GlobalMangerProgressListener.GlobalMangerProgressAdapter( listener, 50, 100 ) );\n\n\t  }else{\n\n\t\t  saveDownloads( false, new GlobalMangerProgressListener.GlobalMangerProgressAdapter( listener, 0, 49 ) );\n\n\t\t  stopAllDownloads( true, new GlobalMangerProgressListener.GlobalMangerProgressAdapter( listener, 50, 100 ) );\n\t  }\n\n\t  if ( stats_writer != null ){\n\n\t\t  stats_writer.destroy();\n\t  }\n\n\t  // Disable DNS Mods lookup while shutting down\n\t  TorrentUtils.temporarilyDisableDNSHandling();\n\t  DownloadManagerStateFactory.saveGlobalStateCache();\n\n\t  synchronized( managers_lock ){\n\n\t\t  managers_list_cow\t= new DownloadManager[0];\n\n\t\t  manager_id_set.clear();\n\t\t  \n\t\t  manager_hash_map.clear();\n\t  }\n\n\t  informDestroyed();\n  }"
+    },
+    "GlobalManagerImpl.stopAllDownloads()": {
+      "name": "stopAllDownloads",
+      "arguments": "",
+      "signature": "@Override\n  public void stopAllDownloads()",
+      "declaration_start_line": 2231,
+      "body_start_line": 2232,
+      "body_end_line": 2251,
+      "body_sha256": "bbe881848f6e776826ef071717c692eac9b1e200c0a93a98d04fb86164dbd906",
+      "body": "{\n\t  try{\n\t\t  NonDaemonTaskRunner.run(\n\t\t\tnew NonDaemonTask(){\n\t\t\t\t\n\t\t\t\t@Override\n\t\t\t\tpublic Object run() throws Throwable{\n\t\t\t\t\t  stopAllDownloads(false, new GlobalMangerProgressListener.GlobalMangerProgressAdapter());\n\t\t\t\t\t  return( null );\n\t\t\t\t}\n\t\t\t\t\n\t\t\t\t@Override\n\t\t\t\tpublic String getName(){\n\t\t\t\t\treturn( \"Manual 'stop all downloads'\");\n\t\t\t\t}\n\t\t\t});\n\t  }catch( Throwable e ){\n\t\t  Debug.out( e );\n\t  }\n  }"
+    },
+    "GlobalManagerImpl.stopAllDownloads(boolean for_close, GlobalMangerProgressListener listener)": {
+      "name": "stopAllDownloads",
+      "arguments": "boolean for_close, GlobalMangerProgressListener listener",
+      "signature": "protected void stopAllDownloads(boolean for_close, GlobalMangerProgressListener listener )",
+      "declaration_start_line": 2253,
+      "body_start_line": 2253,
+      "body_end_line": 2301,
+      "body_sha256": "db24455ca0486abd31cda76138fe5c17be8ed10a6b49985a4863bdf77fd85589",
+      "body": "{\n\n\tif ( for_close ){\n\t\tif (progress_listener != null){\n\t\t\t  progress_listener.reportCurrentTask(MessageText.getString(\"splash.unloadingTorrents\"));\n\t\t}\n\t}\n\n\tlong\tlastListenerUpdate = 0;\n\n\tList<DownloadManager> managers = sortForStop();\n\n\tint nbDownloads = managers.size();\n\n\tString prefix = MessageText.getString( \"label.stopping.downloads\" );\n\t\n    for ( int i=0;i<nbDownloads;i++){\n\n      DownloadManager manager = managers.get(i);\n\n      long\tnow = SystemTime.getCurrentTime();\n\n\t  if(progress_listener != null &&  now - lastListenerUpdate > 100) {\n\t\t  lastListenerUpdate = now;\n\n\t\t  int\tcurrentDownload = i+1;\n\n\t\t  progress_listener.reportPercent(100 * currentDownload / nbDownloads);\n\t\t  progress_listener.reportCurrentTask(MessageText.getString(\"splash.unloadingTorrent\")\n\t\t\t\t  + \" \" + currentDownload + \" \"\n\t\t\t\t  + MessageText.getString(\"splash.of\") + \" \" + nbDownloads\n\t\t\t\t  + \" : \" + manager.getTorrentFileName());\n\t  }\n\n      int state = manager.getState();\n\n      if( state != DownloadManager.STATE_STOPPED &&\n          state != DownloadManager.STATE_STOPPING ) {\n\n    \tlistener.reportCurrentTask( prefix + \": \" + manager.getDisplayName());;\n    \t  \n        manager.stopIt( for_close?DownloadManager.STATE_CLOSED:DownloadManager.STATE_STOPPED, false, false );\n        \n        listener.reportPercent((i*100)/nbDownloads );\n      }\n    }\n    \n    listener.reportPercent( 100 );\n  }"
+    },
+    "GlobalManagerImpl.pauseDownload(DownloadManager manager, boolean only_if_active)": {
+      "name": "pauseDownload",
+      "arguments": "DownloadManager manager, boolean only_if_active",
+      "signature": "@Override\n  public boolean\n  pauseDownload(\n\tDownloadManager\tmanager,\n\tboolean\t\t\tonly_if_active )",
+      "declaration_start_line": 2337,
+      "body_start_line": 2342,
+      "body_end_line": 2408,
+      "body_sha256": "0f47cdfcc35e976d91ede9784652a0c9784b7e8fc2625ab6c0570561069051c5",
+      "body": "{\n\t  if ( manager.getTorrent() == null ) {\n\n\t\t  return( false );\n\t  }\n\t  \n\t  if ( manager.isPaused()){\n\t\t  \n\t\t  if ( only_if_active ){\n\t\t\t  \n\t\t\t  return( false );\n\t\t  }\n\t\t  \n\t\t  return( true );\n\t  }\n\n\t  int state = manager.getState();\n\n\t  if ( \t// state != DownloadManager.STATE_STOPPED &&\tdecided to allow pausing of stopped torrents\n\t\t\tstate != DownloadManager.STATE_ERROR &&\n\t\t\tstate != DownloadManager.STATE_STOPPING ) {\n\n\t\t  if ( state == DownloadManager.STATE_STOPPED && only_if_active ){\n\t\t\t  \n\t\t\t  return( false );\n\t\t  }\n\t\t  \n\t      try{\n\n\t    \t  HashWrapper\twrapper = manager.getTorrent().getHashWrapper();\n\n\t    \t  boolean\tforced = manager.isForceStart();\n\n\t    \t  \t// add first so anyone picking up the ->stopped transition see it is paused\n\n\t    \t  try{\n\t    \t\t  paused_state_mon.enter();\n\n\t    \t\t  paused_state.put( wrapper, new PauseState( forced, PS_GENERAL ));\n\n\t    \t  }finally{\n\n\t    \t\t  paused_state_mon.exit();\n\t    \t  }\n\n\t    \t  if ( state != DownloadManager.STATE_STOPPED ){\n\t    \t  \n\t    \t\t  manager.stopIt( DownloadManager.STATE_STOPPED, false, false );\n\t    \t\t  \n\t    \t  }else{\n\t    \t\t  \n\t    \t\t  if ( ds_tagger != null ){\n\t    \t\t\t  \n\t    \t\t\t  ds_tagger.stateChanged( manager, DownloadManager.STATE_STOPPED );\n\t    \t\t  }\n\t    \t  }\n\t    \t  \n\t    \t  return( true );\n\n\t      }catch( TOTorrentException e ){\n\n\t    \t  Debug.printStackTrace( e );\n\t      }\n      }\n\n\t  return( false );\n  }"
+    },
+    "GlobalManagerImpl.stopPausedDownload(DownloadManager dm)": {
+      "name": "stopPausedDownload",
+      "arguments": "DownloadManager dm",
+      "signature": "@Override\n  public boolean \n  stopPausedDownload(\n\t\tDownloadManager dm )",
+      "declaration_start_line": 2410,
+      "body_start_line": 2414,
+      "body_end_line": 2460,
+      "body_sha256": "914f9734869750c67c1b21851d16532079f3351a6118cdedda8f7b1d04aa4e1f",
+      "body": "{\n\t  TOTorrent torrent = dm.getTorrent();\n\t  \n\t  if ( torrent == null ){\n\t\t  \n\t\t  return( false );\n\t  }\n\t  \n\t  boolean state_changed = false;\n\t  \n\t  try {\n\t\t  paused_state_mon.enter();\n\n\t\t  HashWrapper hw = torrent.getHashWrapper();\n\t\t \n\t\t  if ( paused_state.containsKey( hw )){\n\t\t\t  \n\t\t\t  DownloadManager this_manager = getDownloadManager( hw );\n\t\n\t\t\t  if ( this_manager == dm ){\n\t\t\t\t\t  \n\t\t\t\t  paused_state.remove( hw );\n\t\n\t\t\t\t  state_changed = true;\n\t\t\t\t\t  \n\t\t\t\t  return( true );\n\t\t\t  }\n\t\t  }\n\t  }catch( Throwable e ){\n\t\t  \n\t\t  return( false );\n\t\t  \n\t  }finally{\n\n\t\t  paused_state_mon.exit();\n\t\t  \n\t\t  if ( state_changed ){\n\t\t\t  \n\t\t\t  if ( ds_tagger != null ){\n\t\t\t\t  \n\t\t\t\t  ds_tagger.stateChanged( dm, DownloadManager.STATE_STOPPED );\n\t\t\t  }\n\t\t  }\n\t  }\n\t  \n\t  return( false );\n  }"
+    },
+    "GlobalManagerImpl.isPaused(DownloadManager manager)": {
+      "name": "isPaused",
+      "arguments": "DownloadManager manager",
+      "signature": "@Override\n\tpublic boolean\n\tisPaused(\n\t\tDownloadManager\tmanager )",
+      "declaration_start_line": 2619,
+      "body_start_line": 2623,
+      "body_end_line": 2656,
+      "body_sha256": "33dc40964a9841aaf7f519a4d8e7008dc2355e738de27dbf22dd103334ec6af2",
+      "body": "{\n\t\tTOTorrent torrent = manager.getTorrent();\n\t\t\n\t\ttry {\n\t\t\tpaused_state_mon.enter();\n\n\t\t\tif ( torrent == null || paused_state.isEmpty()){\n\n\t\t\t\treturn( false );\n\t\t\t}\n\n\t\t\tHashWrapper hw =  torrent.getHashWrapper();\n\t\t\t\t\t\t\n\t\t    if ( paused_state.containsKey( hw )){\n\n\t\t        DownloadManager this_manager = getDownloadManager( hw );\n\n\t\t        if ( this_manager == manager ){\n\n\t\t        \treturn( true );\n\t\t        }\n\t\t    }\n\n\t\t    return( false );\n\n\t\t}catch( Throwable e ){\n\t\t\t\n\t\t\treturn( false );\n\t\t\t\n\t\t}finally{\n\n\t\t\tpaused_state_mon.exit();\n\t\t}\n\t}"
+    },
+    "GlobalManagerImpl.resumeDownload(DownloadManager manager)": {
+      "name": "resumeDownload",
+      "arguments": "DownloadManager manager",
+      "signature": "@Override\n  public void\n  resumeDownload(\n\tDownloadManager\tmanager )",
+      "declaration_start_line": 2681,
+      "body_start_line": 2685,
+      "body_end_line": 2739,
+      "body_sha256": "d251419151765f99ddb73463b6e75bd4e818df808a100f0fe901c9f5ea85b346",
+      "body": "{\n\tboolean\tresume_ok \t= false;\n\tboolean force\t\t= false;\n\n    TOTorrent torrent = manager.getTorrent();\n\n    if ( torrent == null ){\n    \t\n    \treturn;\n    }\n    \n    try {\n    \tpaused_state_mon.enter();\n\n    \tHashWrapper hw = torrent.getHashWrapper();\n\n    \tPauseState ps = paused_state.get( hw );\n\n    \tif ( ps != null ){\n\n    \t\tforce = ps.force_start;\n\n    \t\tDownloadManager this_manager = getDownloadManager( hw );\n\n    \t\tif ( this_manager == manager ){\n\n    \t\t\tresume_ok\t= true;\n\n    \t\t\tpaused_state.remove( hw );\n    \t\t}\n    \t}\n\t}catch( Throwable e ){\n\t\t\n\t\treturn;\n\t\t\n\t}finally{\n\n\t\tpaused_state_mon.exit();\n   \t}\n\n\tif ( resume_ok ){\n\n\t\tif ( manager.getState() == DownloadManager.STATE_STOPPED ) {\n\n\t\t\tif ( force ){\n\n        \t\tmanager.setForceStart(true);\n\n        \t}else{\n\n        \t\tmanager.stopIt( DownloadManager.STATE_QUEUED, false, false );\n        \t}\n        }\n\t}\n  }"
+    },
+    "GlobalManagerImpl.resumingDownload(DownloadManager manager)": {
+      "name": "resumingDownload",
+      "arguments": "DownloadManager manager",
+      "signature": "@Override\n  public boolean\n  resumingDownload(\n\t DownloadManager manager)",
+      "declaration_start_line": 2741,
+      "body_start_line": 2745,
+      "body_end_line": 2778,
+      "body_sha256": "e3522b665eaee04af5368be4733627ab07e05b5fe67d04e4ab5dc1ef762bff1d",
+      "body": "{\n\t  TOTorrent torrent = manager.getTorrent();\n\n\t  if ( torrent == null ){\n\t\t  \n\t\t  return( false );\n\t  }\n\t\ttry {\n\t\t\tpaused_state_mon.enter();\n\n\t\t\tHashWrapper\thw = torrent.getHashWrapper();\n\t\t\t\n\t\t\tif ( paused_state.containsKey( hw )){\n\n\t\t        DownloadManager this_manager = getDownloadManager( hw );\n\n\t\t        if ( this_manager == manager ){\n\n\t\t        \tPauseState ps = paused_state.remove( hw );\n\n\t\t        \treturn( ps != null && ps.force_start );\n\t\t        }\n\t\t    }\n\t\t}catch( Throwable e ){\n\t\t\t\n\t\t\treturn( false );\n\t\t\t\n\t\t}finally{\n\n\t\t\tpaused_state_mon.exit();\n\t   \t}\n\n\t\treturn( false );\n  }"
+    },
+    "GlobalManagerImpl.sortForStop()": {
+      "name": "sortForStop",
+      "arguments": "",
+      "signature": "private List<DownloadManager>\n  \tsortForStop()",
+      "declaration_start_line": 2891,
+      "body_start_line": 2893,
+      "body_end_line": 2923,
+      "body_sha256": "684e9845b27567521c3735b74a4fe72353b74cab042effdf924a9cc1ccc77181",
+      "body": "{\n  \t\tList<DownloadManager>\tmanagers = new ArrayList<>( getDownloadManagers());\n\n  \t\tCollections.sort(\n  \t\t\tmanagers,\n  \t\t\tnew Comparator<DownloadManager>()\n  \t\t\t{\n  \t\t\t\t@Override\n\t\t\t\t  public int\n  \t\t\t\tcompare(\n  \t\t\t\t\tDownloadManager o1,\n  \t\t\t\t\tDownloadManager o2)\n  \t\t\t\t{\n  \t\t\t\t\tint s1 = o1.getState();\n  \t\t\t\t\tint s2 = o2.getState();\n\n  \t\t\t\t\tif ( s2 == DownloadManager.STATE_QUEUED ){\n\n  \t\t\t\t\t\treturn( 1 );\n\n  \t\t\t\t\t}else if ( s1 == DownloadManager.STATE_QUEUED ){\n\n  \t\t\t\t\t\treturn( -1 );\n  \t\t\t\t\t}\n\n  \t\t\t\t\treturn( 0 );\n  \t\t\t\t}\n  \t\t\t});\n\n  \t\treturn( managers );\n\t}"
+    },
+    "GlobalManagerImpl.loadDownloads()": {
+      "name": "loadDownloads",
+      "arguments": "",
+      "signature": "void loadDownloads()",
+      "declaration_start_line": 2925,
+      "body_start_line": 2926,
+      "body_end_line": 3096,
+      "body_sha256": "64b96d5171d84518425d8a807066500dc08d0eae2a02ce97ea0e6abddea4cbd5",
+      "body": "{\n\t  if (this.cripple_downloads_config) {\n\t\t  loadingComplete = true;\n\t\t  loadingSem.releaseForever();\n\t\t  return;\n\t  }\n\n\t  boolean pause_active = COConfigurationManager.getBooleanParameter( \"Pause Downloads On Start After Resume\", false );\n\n\t  if ( pause_active ){\n\t\t  \n\t\t  COConfigurationManager.removeParameter( \"Pause Downloads On Start After Resume\" );\n\t\t  \n\t\t  COConfigurationManager.setParameter( \"br.restore.autopause\", true );\n\t  }\n\n\n\t  try{\n\t\t  DownloadManagerStateFactory.loadGlobalStateCache();\n\n\t\t  int triggerOnCount = 2;\n\t\t  ArrayList<DownloadManager> downloadsAdded = new ArrayList<>();\n\t\t  lastListenerUpdate = 0;\n\t\t  try{\n\t\t\t  if (progress_listener != null){\n\t\t\t\t  progress_listener.reportCurrentTask(MessageText.getString(\"splash.loadingTorrents\"));\n\t\t\t  }\n\n\t\t\t  Map map = FileUtil.readResilientConfigFile(\"downloads.config\");\n\n\t\t\t  ArrayList pause_data = (ArrayList)map.get( \"pause_data\" );\n\n\t\t\t  boolean debug = Boolean.getBoolean(\"debug\");\n\n\t\t\t  Iterator iter = null;\n\t\t\t  //v2.0.3.0+ vs older mode\n\t\t\t  List downloads = (List) map.get(\"downloads\");\n\t\t\t  int nbDownloads;\n\t\t\t  if (downloads == null) {\n\t\t\t\t  //No downloads entry, then use the old way\n\t\t\t\t  iter = map.values().iterator();\n\t\t\t\t  nbDownloads = map.size();\n\t\t\t  }\n\t\t\t  else {\n\t\t\t\t  //New way, downloads stored in a list\n\t\t\t\t  iter = downloads.iterator();\n\t\t\t\t  nbDownloads = downloads.size();\n\t\t\t  }\n\t\t\t  int currentDownload = 0;\n\t\t\t  while (iter.hasNext()) {\n\t\t\t\t  currentDownload++;\n\t\t\t\t  Map mDownload = (Map) iter.next();\n\n\t\t\t\t  if ( pause_active ){\n\t\t\t\t\t  \n\t\t\t\t\t  try{\n\t\t\t\t\t\t  int \t\tstate \t= ((Number)mDownload.get( \"state\" )).intValue();\n\t\t\t\t\t\t  boolean \tfs \t\t= ((Number)mDownload.get( \"forceStart\" )).intValue() != 0;\n\t\t\t\t\t\t  \n\t\t\t\t\t\t  if ( state != DownloadManager.STATE_STOPPED ){\n\t\t\t\t\t\t\t  \n\t\t\t\t\t\t\t  mDownload.put( \"state\", new Long( DownloadManager.STATE_STOPPED ));\n\t\t\t\t\t\t\t  mDownload.remove( \"forceStart\" );\n\t\t\t\t\t\t\t  \n\t\t\t\t\t\t\t  byte[] key = (byte[])mDownload.get( \"torrent_hash\" );\n\t\t\t\t\t\t\t  \n\t\t\t\t\t\t\t  if ( pause_data == null ){\n\t\t\t\t\t\t\t\t  \n\t\t\t\t\t\t\t\t  pause_data = new ArrayList();\n\t\t\t\t\t\t\t  }\n\t\t\t\t\t\t\t  \n\t\t\t\t\t\t\t  Map m = new HashMap();\n\t\t\t\t\t\t\t  \n\t\t\t\t\t\t\t  m.put( \"hash\", key );\n\t\t\t\t\t\t\t  m.put( \"force\", new Long( fs?1:0 ));\n\t\t\t\t\t\t\t  \n\t\t\t\t\t\t\t  pause_data.add( m );\n\t\t\t\t\t\t  }\n\t\t\t\t\t\t  \n\t\t\t\t\t  }catch( Throwable e ){\n\t\t\t\t\t\t  Debug.printStackTrace( e );\n\t\t\t\t\t  }\n\t\t\t\t  }\n\t\t\t\t  DownloadManager dm =\n\t\t\t\t\t  loadDownload(\n\t\t\t\t\t\t\t  mDownload,\n\t\t\t\t\t\t\t  currentDownload,\n\t\t\t\t\t\t\t  nbDownloads,\n\t\t\t\t\t\t\t  progress_listener,\n\t\t\t\t\t\t\t  debug );\n\n\t\t\t\t  if ( dm != null ){\n\n\t\t\t\t\t  downloadsAdded.add(dm);\n\n\t\t\t\t\t  if (downloadsAdded.size() >= triggerOnCount) {\n\t\t\t\t\t\t  triggerOnCount *= 2;\n\t\t\t\t\t\t  triggerAddListener(downloadsAdded);\n\t\t\t\t\t\t  downloadsAdded.clear();\n\t\t\t\t\t  }\n\t\t\t\t  }\n\t\t\t  }\n\n\t\t\t  // This is set to true by default, but once the downloads have been loaded, we have no reason to ever\n\t\t\t  // to do this check again - we only want to do it once to upgrade the state of existing downloads\n\t\t\t  // created before this code was around.\n\t\t\t  COConfigurationManager.setParameter(\"Set Completion Flag For Completed Downloads On Start\", false);\n\n\t\t\t  //load pause/resume state\n\t\t\t  if( pause_data != null ) {\n\t\t\t\t  try {  paused_state_mon.enter();\n\t\t\t\t\t  for( int i=0; i < pause_data.size(); i++ ) {\n\t\t\t\t\t\t  Object\tpd = pause_data.get(i);\n\t\n\t\t\t\t\t\t  byte[]\t\tkey;\n\t\t\t\t\t\t  boolean\t\tforce;\n\t\t\t\t\t\t  int\t\t\towner = PS_GENERAL;\n\t\t\t\t\t\t  \n\t\t\t\t\t\t  if ( pd instanceof byte[]){\n\t\t\t\t\t\t\t  // old style, migration purposes\n\t\t\t\t\t\t\t  key \t= (byte[])pause_data.get( i );\n\t\t\t\t\t\t\t  force\t= false;\n\t\t\t\t\t\t  }else{\n\t\t\t\t\t\t\t  Map\tm = (Map)pd;\n\t\n\t\t\t\t\t\t\t  key \t= (byte[])m.get(\"hash\");\n\t\t\t\t\t\t\t  force \t= ((Long)m.get(\"force\")).intValue() == 1;\n\t\t\t\t\t\t\t  \n\t\t\t\t\t\t\t  Long l_owner = (Long)m.get( \"owner\" );\n\t\t\t\t\t\t\t  \n\t\t\t\t\t\t\t  if ( l_owner != null ){\n\t\t\t\t\t\t\t\t  owner = l_owner.intValue();\n\t\t\t\t\t\t\t  }\n\t\t\t\t\t\t  }\n\t\t\t\t\t\t  \n\t\t\t\t\t\t  HashWrapper hw = new HashWrapper( key );\n\t\t\t\t\t\t  \n\t\t\t\t\t\t  PauseState ps = new PauseState(force, owner);\n\t\t\t\t\t\t  \n\t\t\t\t\t\t  paused_state.put( hw, ps );\n\t\t\t\t\t\t  \n\t\t\t\t\t\t  paused_state_initial.put( hw, ps );\n\t\t\t\t\t  }\n\t\t\t\t  }finally{\n\t\t\t\t\t  paused_state_mon.exit();  \n\t\t\t\t  }\n\t\t\t  }\n\n\n\t\t\t  // Someone could have mucked with the config file and set weird positions,\n\t\t\t  // so fix them up.\n\t\t\t  fixUpDownloadManagerPositions();\n\t\t\t  Logger.log(new LogEvent(LOGID, \"Loaded \" + managers_list_cow.length + \" torrents\"));\n\n\t\t  }catch( Throwable e ){\n\t\t\t  // there's been problems with corrupted download files stopping AZ from starting\n\t\t\t  // added this to try and prevent such foolishness\n\n\t\t\t  Debug.printStackTrace( e );\n\t\t  } finally {\n\t\t\t  loadingComplete = true;\n\t\t\t  triggerAddListener(downloadsAdded);\n\n\t\t\t  loadingSem.releaseForever();\n\t\t  }\n\n\t  }finally{\n\n\t\t  DownloadManagerStateFactory.discardGlobalStateCache();\n\t  }\n  }"
+    },
+    "GlobalManagerImpl.saveDownloads(boolean interim, GlobalMangerProgressListener listener_maybe_null)": {
+      "name": "saveDownloads",
+      "arguments": "boolean interim, GlobalMangerProgressListener listener_maybe_null",
+      "signature": "protected void\n  saveDownloads(\n\tboolean\t\t\t\t\t\t\tinterim,\n\tGlobalMangerProgressListener \tlistener_maybe_null  )",
+      "declaration_start_line": 3123,
+      "body_start_line": 3127,
+      "body_end_line": 3211,
+      "body_sha256": "986fa6bcf92b96f59df381bf750386ad5766a1dd255b312ea6ef76cb6ec993f1",
+      "body": "{\n\t  if (!loadingComplete) {\n\n\t\t  return;\n\t  }\n\n\t  needsSavingCozStateChanged \t= 0;\n\n\t  if (this.cripple_downloads_config) {\n\t\t  return;\n\t  }\n\n\t  synchronized( managers_lock ){\n\n\t\t  DownloadManager[]\tmanagers_temp = managers_list_cow.clone();\n\n\t\t  Arrays.sort(\n\t\t\t\t  managers_temp,\n\t\t\t\t  new Comparator<DownloadManager>()\n\t\t\t\t  {\n\t\t\t\t\t  @Override\n\t\t\t\t\t  public final int\n\t\t\t\t\t  compare(DownloadManager a, DownloadManager b) {\n\t\t\t\t\t\t  return ( a.getPosition() - b.getPosition());\n\t\t\t\t\t  }\n\t\t\t\t  });\n\n\t\t  managers_list_cow = managers_temp;\n\n\t\t  if (Logger.isEnabled()){\n\t\t\t  Logger.log(new LogEvent(LOGID, \"Saving Download List (\"\t+ managers_temp.length + \" items)\"));\n\t\t  }\n\n\t\t  Map map = new HashMap();\n\n\t\t  int nbDownloads = managers_temp.length;\n\n\t\t  List<Map> list = new ArrayList<>(nbDownloads);\n\n\t\t  String prefix = MessageText.getString( \"label.saving.downloads\" );\n\t\t  \n\t\t  for ( int i=0;i<nbDownloads;i++){\n\t\t\t  \n\t\t\t  DownloadManager dm = managers_temp[i];\n\n\t\t\t  if ( listener_maybe_null != null ){\n\t\t\t\t\n\t\t\t\t  listener_maybe_null.reportCurrentTask( prefix + \": \" + dm.getDisplayName());\n\t\t\t\t  \n\t\t\t\t  listener_maybe_null.reportPercent((i*100)/nbDownloads );\n\t\t\t  }\n\t\t\t  \n\t\t\t  Map dmMap = exportDownloadStateToMapSupport( dm, true, interim );\n\n\t\t\t  list.add(dmMap);\n\t\t  }\n\n\t\t  map.put(\"downloads\", list);\n\n\t\t  //save pause/resume state\n\t\t  try {  paused_state_mon.enter();\n\t\t\t  if( !paused_state.isEmpty() ) {\n\t\t\t\t  ArrayList pause_data = new ArrayList();\n\t\t\t\t  for ( Map.Entry<HashWrapper,PauseState> entry: paused_state.entrySet()){\n\t\n\t\t\t\t\t  HashWrapper \thash \t= entry.getKey();\n\t\t\t\t\t  PauseState\tps\t\t= entry.getValue();\n\t\n\t\t\t\t\t  Map\tm = new HashMap();\n\t\n\t\t\t\t\t  m.put( \"hash\", hash.getHash());\n\t\t\t\t\t  m.put( \"force\", new Long(ps.force_start?1:0));\n\t\t\t\t\t  m.put( \"owner\", new Long(ps.owner));\n\t\n\t\t\t\t\t  pause_data.add( m );\n\t\t\t\t  }\n\t\t\t\t  map.put( \"pause_data\", pause_data );\n\t\t\t  }\n\t\t  }\n\t\t  finally {  paused_state_mon.exit();  }\n\n\n\t\t  FileUtil.writeResilientConfigFile(\"downloads.config\", map );\n\t  }\n  }"
+    },
+    "GlobalManagerImpl.exportDownloadStateToMapSupport(DownloadManager dm, boolean internal_export, boolean interim)": {
+      "name": "exportDownloadStateToMapSupport",
+      "arguments": "DownloadManager dm, boolean internal_export, boolean interim",
+      "signature": "private Map\n  exportDownloadStateToMapSupport(\n\tDownloadManager \tdm,\n\tboolean\t\t\t\tinternal_export,\n\tboolean\t\t\t\tinterim )",
+      "declaration_start_line": 3435,
+      "body_start_line": 3440,
+      "body_end_line": 3557,
+      "body_sha256": "1935f111c920ab8919f63e358a821e377a911d082ed6dbdacdb13089c563ed98",
+      "body": "{\n\t  DownloadManagerStats dm_stats = dm.getStats();\n\t  Map<String, Object> dmMap = new HashMap<>();\n\t  TOTorrent\ttorrent = dm.getTorrent();\n\n\t  if ( torrent != null ){\n\t\t  try{\n\t\t\t  dmMap.put( \"torrent_hash\", torrent.getHash());\n\n\t\t  }catch( TOTorrentException e ){\n\n\t\t\t  Debug.printStackTrace(e);\n\t\t  }\n\t  }\n\n\t  File\tsave_loc = dm.getAbsoluteSaveLocation();\n\t  dmMap.put(\"persistent\", new Long(dm.isPersistent()?1:0));\n\t  dmMap.put(\"torrent\", dm.getTorrentFileName());\n\t  dmMap.put(\"save_dir\", save_loc.getParent());\n\t  dmMap.put(\"save_file\", save_loc.getName());\n\n\t  dmMap.put(\"maxdl\", new Long( dm_stats.getDownloadRateLimitBytesPerSecond() ));\n\t  dmMap.put(\"maxul\", new Long( dm_stats.getUploadRateLimitBytesPerSecond() ));\n\n\t  int state = dm.getState();\n\n\t  if (state == DownloadManager.STATE_ERROR ){\n\n\t\t  // torrents in error state always come back stopped\n\t\t  // well, since 2203_B11 we remember the error state across restarts so we can continue\n\t\t  // attempting restarts\n\n\t\t  int errorType = dm.getErrorType();\n\n\t\t  if ( errorType != DownloadManager.ET_NONE ){\n\t\t\t  dmMap.put( \"errorType\", errorType );\n\t\t\t  dmMap.put( \"errorFlags\", dm.getErrorFlags());\n\t\t\t  \n\t\t\t  String errorDetails = dm.getErrorDetails();\n\t\t\t  \n\t\t\t  if ( errorDetails != null && !errorDetails.isEmpty()){\n\t\t\t\t  dmMap.put( \"errorDetails\", errorDetails );\n\t\t\t  }\n\t\t  }\n\t\t  \n\t\t  state = DownloadManager.STATE_STOPPED;\t// keep stopped rather than error state for the moment for backwards compatibility\n\n\t  }else if (\tdm.getAssumedComplete() && !dm.isForceStart() &&\n\t\t\t  state != DownloadManager.STATE_STOPPED) {\n\n\t\t  state = DownloadManager.STATE_QUEUED;\n\n\t  }else if (\tstate != DownloadManager.STATE_STOPPED &&\n\t\t\t  state != DownloadManager.STATE_QUEUED &&\n\t\t\t  state != DownloadManager.STATE_WAITING){\n\n\t\t  state = DownloadManager.STATE_WAITING;\n\n\t  }\n\n\t  dmMap.put(\"state\", new Long(state));\n\n\t  if ( internal_export ){\n\t\t  \n\t\t  dmMap.put(\"position\", new Long(dm.getPosition()));\n\t  }\n\t  \n\t  dmMap.put(\"downloaded\", new Long(dm_stats.getTotalDataBytesReceived()));\n\t  dmMap.put(\"uploaded\", new Long(dm_stats.getTotalDataBytesSent()));\n\t  dmMap.put(\"completedbytes\", new Long(dm_stats.getDownloadCompletedBytes()));\n\t  dmMap.put(\"discarded\", new Long(dm_stats.getDiscarded()));\n\t  dmMap.put(\"hashfailbytes\", new Long(dm_stats.getHashFailBytes()));\n\t  dmMap.put(\"forceStart\", new Long(dm.isForceStart() && (dm.getState() != DownloadManager.STATE_CHECKING) ? 1 : 0));\n\t  dmMap.put(\"secondsDownloading\", new Long(dm_stats.getSecondsDownloading()));\n\t  dmMap.put(\"secondsOnlySeeding\", new Long(dm_stats.getSecondsOnlySeeding()));\n\n\t  // although this has been migrated, keep storing it to allow regression for a while\n\t  dmMap.put(\"uploads\", new Long(dm.getMaxUploads()));\n\n\t  dmMap.put(\"creationTime\", new Long( dm.getCreationTime()));\n\n\t  //save file priorities\n\n\t  dm.saveDownload( interim );\n\n\t  List file_priorities = (List)dm.getUserData( \"file_priorities\" );\n\t  if ( file_priorities != null ) {\n\t  \tint count = file_priorities.size();\n\t  \tMap<String, String> map_file_priorities = new HashMap<>();\n\t  \tLong priority = (Long) file_priorities.get(0);\n\t  \tint posStart = 0;\n\t  \tint posEnd = 0;\n\t  \twhile (posStart < count) {\n\t  \t\tpriority = (Long) file_priorities.get(posStart);\n\t  \t\twhile (posEnd + 1 < count && (Long) file_priorities.get(posEnd + 1) == priority) {\n\t  \t\t\tposEnd++;\n\t  \t\t}\n\t  \t\tString key = priority.toString();\n\t  \t\tString val = map_file_priorities.get(key);\n\t  \t\tif (val == null) {\n\t  \t\t\tval = \"\" + posStart;\n\t  \t\t} else {\n\t  \t\t\tval += \",\" + posStart;\n\t  \t\t}\n\t  \t\tif (posStart != posEnd) {\n\t  \t\t\t val += \"-\" + posEnd;\n\t  \t\t}\n\t  \t\tmap_file_priorities.put(key, val);\n\t  \t\tposStart = posEnd + 1;\n\t  \t}\n\t  \t//dmMap.put( \"file_priorities\" , file_priorities );\n\t  \tdmMap.put( \"file_priorities_c\" , map_file_priorities );\n\t  }\n\n\t  dmMap.put( \"allocated\", new Long(dm.isDataAlreadyAllocated() ? 1 : 0 ) );\n\n\t  return( dmMap );\n  }"
+    },
+    "DownloadManagerImpl.saveResumeData()": {
+      "name": "saveResumeData",
+      "arguments": "",
+      "signature": "@Override\n\tpublic void\n\tsaveResumeData()",
+      "declaration_start_line": 2398,
+      "body_start_line": 2401,
+      "body_end_line": 2419,
+      "body_sha256": "4e17fe0f80beb19a23d40182d6b7d2797ace3371a3593299d48c9f89235d3038",
+      "body": "{\n\t\tif ( getState() == STATE_DOWNLOADING) {\n\n\t\t\ttry{\n\t\t\t\tgetDiskManager().saveResumeData( true );\n\n\t\t\t}catch( Exception e ){\n\n\t\t\t\tsetFailed( \"Resume data save fails\", e );\n\t\t\t}\n\t\t}\n\n\t\t// we don't want to update the torrent if we're seeding\n\n\t\tif ( !assumedComplete  ){\n\n\t\t\tdownload_manager_state.save( true );\t// always in interim save\n\t\t}\n\t}"
+    },
+    "DownloadManagerImpl.setStateWaiting()": {
+      "name": "setStateWaiting",
+      "arguments": "",
+      "signature": "@Override\n\tpublic void\n\tsetStateWaiting()",
+      "declaration_start_line": 2857,
+      "body_start_line": 2860,
+      "body_end_line": 2869,
+      "body_sha256": "f81f35f7f66ce2ea21071b5599eafccdccee76f71ca96c9507aefe20a3991abb",
+      "body": "{\n\t\tif ( checkResuming()){\n\t\t\t\n\t\t\tsetForceStart( true );\n\t\t\t\n\t\t}else{\n\n\t\t\tcontroller.setStateWaiting();\n\t\t}\n\t}"
+    },
+    "DownloadManagerImpl.setStateQueued()": {
+      "name": "setStateQueued",
+      "arguments": "",
+      "signature": "@Override\n\tpublic void\n  \tsetStateQueued()",
+      "declaration_start_line": 2877,
+      "body_start_line": 2880,
+      "body_end_line": 2889,
+      "body_sha256": "4b9a2cc69e99765382cf1d1590b0162c7a2de426d340fcafb5e1c475b60774cd",
+      "body": "{\n  \t\tif ( checkResuming()){\n  \t\t\t\n  \t\t\tsetForceStart( true );\n  \t\t\t\n  \t\t}else{\n\n  \t\t\tcontroller.setStateQueued();\n  \t\t}\n  \t}"
+    },
+    "DownloadManagerImpl.startDownload()": {
+      "name": "startDownload",
+      "arguments": "",
+      "signature": "@Override\n\t  public void\n  \tstartDownload()",
+      "declaration_start_line": 3037,
+      "body_start_line": 3040,
+      "body_end_line": 3044,
+      "body_sha256": "bbe68e539ecb623dbb04853f457392e97a4681e6015635197cb7448944b14d57",
+      "body": "{\n  \t\tmessage_mode = -1;\t// reset it here\n\n \t\tcontroller.startDownload( getTrackerClient() );\n  \t}"
+    },
+    "DownloadManagerImpl.stopIt(int state_after_stopping, boolean remove_torrent, boolean remove_data)": {
+      "name": "stopIt",
+      "arguments": "int state_after_stopping, boolean remove_torrent, boolean remove_data",
+      "signature": "@Override\n\tpublic void\n\tstopIt(\n\t\tint \t\tstate_after_stopping,\n\t\tboolean \tremove_torrent,\n\t\tboolean \tremove_data)",
+      "declaration_start_line": 3046,
+      "body_start_line": 3052,
+      "body_end_line": 3054,
+      "body_sha256": "6a45e7b4be6887cc6ab59bb6f76f30f254d69b0c41b5c22f91c9b51fb38988c4",
+      "body": "{\n\t\tstopIt( state_after_stopping, remove_torrent, remove_data, false );\n\t}"
+    },
+    "DownloadManagerImpl.stopIt(int state_after_stopping, boolean remove_torrent, boolean remove_data, boolean for_removal)": {
+      "name": "stopIt",
+      "arguments": "int state_after_stopping, boolean remove_torrent, boolean remove_data, boolean for_removal",
+      "signature": "@Override\n\tpublic void\n\tstopIt(\n\t\tint \t\tstate_after_stopping,\n\t\tboolean \tremove_torrent,\n\t\tboolean\t\tremove_data,\n\t\tboolean\t\tfor_removal )",
+      "declaration_start_line": 3086,
+      "body_start_line": 3093,
+      "body_end_line": 3146,
+      "body_sha256": "92b82bee533f89fd2726cdea26446f564da38df8bfd53f288dbdf08f8d01b9ab",
+      "body": "{\n\t\tif ( for_removal ){\n\n\t\t\tremoving = true;\n\t\t\t\n\t\t}else{\n\t\t\t\n\t\t\tif ( download_manager_state.getFlag( DownloadManagerState.FLAG_METADATA_DOWNLOAD )){\n\t\t\t\t\n\t\t\t\tif ( state_after_stopping == DownloadManager.STATE_STOPPED ){\n\t\t\t\t\t\n\t\t\t\t\ttry{\n\t\t\t\t\t\tFileUtil.log( \"stopDownloadManager: stopping magnet\" + ByteFormatter.encodeString( torrent.getHash()), new Exception());\n\t\t\t\t\t\t\n\t\t\t\t\t}catch( Throwable e ){\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\n\t\ttry {\n\t\t\tboolean closing = state_after_stopping == DownloadManager.STATE_CLOSED;\n\t\t\t\n\t\t\tint curState = getState();\n\t\t\t\n\t\t\tboolean alreadyStopped = \tcurState == STATE_STOPPED ||\n\t\t\t\t\t\t\t\t\t\tcurState == STATE_STOPPING || \n\t\t\t\t\t\t\t\t\t\tcurState == STATE_ERROR;\n\t\t\t\n\t\t\tboolean skipSetTimeStopped = alreadyStopped\t|| (closing && curState == STATE_QUEUED);\n\n\t\t\tif ( alreadyStopped ){\n\t\t\t\t\n\t\t\t\tresume_time = 0;\n\t\t\t}\n\t\t\t\n\t\t\tif (!skipSetTimeStopped) {\n\t\t\t\tdownload_manager_state.setLongAttribute(\n\t\t\t\t\t\tDownloadManagerState.AT_TIME_STOPPED, SystemTime.getCurrentTime());\n\t\t\t}\n\n\t\t\tcontroller.stopIt(state_after_stopping, remove_torrent, remove_data,for_removal );\n\n\t\t\t\n\t\t} finally {\n\n\t\t\tif ( state_after_stopping != STATE_CLOSED ){\n\t\t\t\n\t\t\t\t\t// closing down, don't bother with this as it can cause the state to be written again\n\t\t\t\t\n\t\t\t\tdownload_manager_state.setActive(false);\n\t\t\t}\n\t\t}\n\t}"
+    },
+    "DownloadManagerImpl.pause(boolean only_if_active)": {
+      "name": "pause",
+      "arguments": "boolean only_if_active",
+      "signature": "@Override\n\tpublic boolean\n\tpause(\n\t\tboolean\t\tonly_if_active )",
+      "declaration_start_line": 3154,
+      "body_start_line": 3158,
+      "body_end_line": 3160,
+      "body_sha256": "64c0570dc6caa0e03b65e23cea9e4fece0ab890889f7d47c60e51203b0a3b074",
+      "body": "{\n\t\treturn( globalManager.pauseDownload( this, only_if_active ));\n\t}"
+    },
+    "DownloadManagerImpl.pause(boolean only_if_active, long _resume_time)": {
+      "name": "pause",
+      "arguments": "boolean only_if_active, long _resume_time",
+      "signature": "@Override\n\tpublic boolean\n\tpause(\n\t\tboolean\t\tonly_if_active,\n\t\tlong\t\t_resume_time )",
+      "declaration_start_line": 3162,
+      "body_start_line": 3167,
+      "body_end_line": 3198,
+      "body_sha256": "7a3e03841985ed098cc6f9f4f1598c1ef4598ed2b1bef111db65bcab8cb2cc0e",
+      "body": "{\n\t\t\t// obviously we should manage the timer+resumption but it works as it is at the moment...\n\n\t\tif ( isPaused()){\n\t\t\t\n\t\t\tif ( only_if_active ){\n\t\t\t\t\n\t\t\t\treturn( false );\n\t\t\t}\n\t\t\t\n\t\t\tresume_time = _resume_time;\n\t\t\t\n\t\t\treturn( true );\n\t\t\t\n\t\t}else{\n\t\t\n\t\t\tint curState = getState();\n\t\t\t\n\t\t\tif ( curState == STATE_STOPPED ){\n\t\t\t\t\n\t\t\t\tresume_time = _resume_time;\n\t\t\t\t\n\t\t\t}else{\n\n\t\t\t\t// we're not yet in a stopped state so indicate this with a negative value - it'll be corrected when the download stops\n\n\t\t\t\tresume_time\t= -_resume_time;\n\t\t\t}\n\t\t\t\n\t\t\treturn( globalManager.pauseDownload( this, only_if_active ));\n\t\t}\n\t}"
+    },
+    "DownloadManagerImpl.stopPausedDownload()": {
+      "name": "stopPausedDownload",
+      "arguments": "",
+      "signature": "@Override\n\tpublic boolean \n\tstopPausedDownload()",
+      "declaration_start_line": 3215,
+      "body_start_line": 3218,
+      "body_end_line": 3236,
+      "body_sha256": "7f05435a047269d5ac24313fbd608ee0fdc1ce16aec57fc883f390d12992e191",
+      "body": "{\n\t\tif ( globalManager.stopPausedDownload( this )){\n\t\t\t\n\t\t\tresume_time = 0;\n\t\t\t  \n\t\t\tsetStopReason( null );\n\t\t\t\n\t\t\t\t// this is needed so that listeners get a chance to notice the change (toolbar state for stop button needs\n\t\t\t\t// to go from enabled (when paused) to disabled (when stopped)\n\t\t\t\n\t\t\tlisteners.dispatch( LDT_STATECHANGED, new Object[]{ this, new Integer( getState() )});\n\t\t\t\n\t\t\treturn( true );\n\t\t\t\n\t\t}else{\n\t\t\t\n\t\t\treturn( false );\n\t\t}\n\t}"
+    },
+    "DownloadManagerImpl.isPaused()": {
+      "name": "isPaused",
+      "arguments": "",
+      "signature": "@Override\n\tpublic boolean\n\tisPaused()",
+      "declaration_start_line": 3238,
+      "body_start_line": 3241,
+      "body_end_line": 3243,
+      "body_sha256": "1a782000782614fb4f0136d1e1ed5bce9156f9f801e38c6091b5b651e04ad452",
+      "body": "{\n\t\treturn( globalManager.isPaused( this ));\n\t}"
+    },
+    "DownloadManagerImpl.resume()": {
+      "name": "resume",
+      "arguments": "",
+      "signature": "@Override\n\tpublic void\n\tresume()",
+      "declaration_start_line": 3245,
+      "body_start_line": 3248,
+      "body_end_line": 3250,
+      "body_sha256": "1c2c945bad4c875f035f3c25067c05beec06bc845932051d0309d2541645dc5b",
+      "body": "{\n\t\tglobalManager.resumeDownload( this );\n\t}"
+    },
+    "DownloadManagerImpl.resume(int target_state)": {
+      "name": "resume",
+      "arguments": "int target_state",
+      "signature": "@Override\n\tpublic boolean \n\tresume(\n\t\tint target_state)",
+      "declaration_start_line": 3252,
+      "body_start_line": 3256,
+      "body_end_line": 3331,
+      "body_sha256": "b7cb796d8eb04cf80b3e4bf1259223750ceea798854e7d7f18c543255cdbda56",
+      "body": "{\n\t\tresume();\n\t\t\n\t\tif (\ttarget_state != DownloadManager.STATE_DOWNLOADING && \n\t\t\t\ttarget_state != DownloadManager.STATE_SEEDING ){\n\t\t\t\n\t\t\t\t// sanitize target state \n\t\t\t\n\t\t\ttarget_state = DownloadManager.STATE_QUEUED;\n\t\t}\n\t\t\n\t\tlong quit_at = SystemTime.getMonotonousTime() + 2500;\n\t\t\t\n\t\tboolean\tis_queued = false;\n\t\t\n\t\t\t// give it some time to get back to where it was\n\t\t\n\t\twhile( true ){\n\t\t\t\n\t\t\tint current_state = getState();\n\t\t\t\n\t\t\tif ( current_state == target_state ){\n\t\t\t\t\n\t\t\t\treturn( true );\n\t\t\t}\n\t\t\t\n\t\t\tlong now = SystemTime.getMonotonousTime();\n\n\t\t\tif ( current_state == DownloadManager.STATE_QUEUED ){\n\t\t\t\t\n\t\t\t\t\t// queued can be transitionary so give it a chance to transit\n\t\t\t\t\n\t\t\t\tif ( !is_queued ){\n\t\t\t\t\t\n\t\t\t\t\tis_queued = true;\n\t\t\t\t\t\n\t\t\t\t\tquit_at = now + 5*1000;\n\t\t\t\t}\n\t\t\t}else{\n\t\t\t\t\n\t\t\t\tis_queued = false;\n\t\t\t}\n\n\t\t\tif ( \tcurrent_state == DownloadManager.STATE_STOPPED || \n\t\t\t\t\tcurrent_state == DownloadManager.STATE_ERROR ||\n\t\t\t\t\tcurrent_state == DownloadManager.STATE_DOWNLOADING ||\n\t\t\t\t\tcurrent_state == DownloadManager.STATE_SEEDING ){\n\n\t\t\t\t// not making any allocation progress or completed\n\n\t\t\t\treturn( false );\n\t\t\t}\n\t\t\t\t\t\t\t\t\n\t\t\tif ( \tcurrent_state == DownloadManager.STATE_ALLOCATING || \n\t\t\t\t\tcurrent_state == DownloadManager.STATE_CHECKING ){\n\t\t\t\n\t\t\t\t\t// making progress, hang around\n\t\t\t\t\n\t\t\t\tquit_at = now + 10*1000;\n\t\t\t}\n\t\t\t\n\t\t\tif ( now > quit_at ){\n\t\t\t\t\n\t\t\t\tDebug.out( \"Gave up waiting for resume target state to be achieved (current=\" + current_state + \",target=\" + target_state + \")\" );\n\t\t\t\t\n\t\t\t\treturn( false );\n\t\t\t}\n\t\n\t\t\ttry{\n\t\t\t\tThread.sleep(100);\n\t\t\t\t\n\t\t\t}catch( Throwable e ){\n\t\t\t\t\n\t\t\t}\n\t\t}\n\t}"
+    },
+    "DownloadManagerImpl.downloadEnded(boolean never_downloaded)": {
+      "name": "downloadEnded",
+      "arguments": "boolean never_downloaded",
+      "signature": "protected void\n\tdownloadEnded(\n\t\tboolean\tnever_downloaded )",
+      "declaration_start_line": 4995,
+      "body_start_line": 4998,
+      "body_end_line": 5025,
+      "body_sha256": "629d12a55ba4b9f544ae6310077b757d29edfb89b860a49d576675fed1ee08fa",
+      "body": "{\n\t    if ( !never_downloaded ){\n\n\t    \tsetAssumedComplete(true);\n\n\t    \tinformDownloadEnded();\n\t    }\n\n\t    TRTrackerAnnouncer\ttc = getTrackerClient();\n\n\t    if ( tc != null ){\n\n\t    \tDiskManager\tdm = getDiskManager();\n\n\t    \t\t// only report \"complete\" if we really are complete, not a dnd completion event\n\n\t    \tboolean globalMask = COConfigurationManager.getBooleanParameter( ConfigKeys.Transfer.BCFG_PEERCONTROL_HIDE_PIECE );\n\t    \t\n\t    \tBoolean dmMask = download_manager_state.getOptionalBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP_OPTIONAL );\n\t    \t\n\t    \tboolean mask = dmMask==null?globalMask:dmMask;\n\t    \t\n\t    \tif ( dm != null && dm.getRemaining() == 0 && !mask ){\n\n\t    \t\ttc.complete( never_downloaded );\n\t    \t}\n\t    }\n\t}"
+    },
+    "DownloadManagerImpl.destroy(boolean is_duplicate)": {
+      "name": "destroy",
+      "arguments": "boolean is_duplicate",
+      "signature": "@Override\n\tpublic void\n\tdestroy(\n\t\tboolean\tis_duplicate )",
+      "declaration_start_line": 8047,
+      "body_start_line": 8051,
+      "body_end_line": 8113,
+      "body_sha256": "db0374533b467364c0ffa549007ca97cc5fbdbcb5c6d9cd3a47b150578aa47e1",
+      "body": "{\n\t\tdestroyed\t= true;\n\n\t\tif ( is_duplicate ){\n\n\t\t\t\t// minimal tear-down\n\n\t\t\tcontroller.destroy();\n\n\t\t}else{\n\n\t\t\ttry{\n\t\t\t\t\t// Data files don't exist, so we just don't do anything.\n\t\t    \tif (!FileUtil.exists( getSaveLocation())) {return;}\n\n\t\t    \tDiskManager dm = this.getDiskManager();\n\t\t    \tif (dm != null) {\n\t\t    \t\tdm.downloadRemoved();\n\t\t    \t\treturn;\n\t\t    \t}\n\n\t\t    \tSaveLocationChange move_details;\n\t\t    \tmove_details = DownloadManagerMoveHandler.onRemoval(this);\n\t\t    \tif (move_details == null) {\n\t\t    \t\treturn;\n\t\t    \t}\n\n\t\t    \tboolean can_move_torrent = move_details.hasTorrentChange();\n\n\t\t    \ttry {\n\t\t    \t\tif (move_details.hasDownloadChange()) {\n\t\t    \t\t\tthis.moveDataFiles(move_details.download_location, move_details.download_name);\n\t\t    \t\t}\n\t\t    \t}\n\t\t    \tcatch (Exception e) {\n\t\t    \t\tcan_move_torrent = false;\n\t\t    \t\tLogger.log(new LogAlert(this, true,\n\t\t\t\t\t\t\t\"Problem moving files to removed download directory\", e));\n\t\t    \t}\n\n\t\t    \t// This code will silently fail if the torrent file doesn't exist.\n\t\t    \tif (can_move_torrent) {\n\t\t  \t\t    try {\n\t\t\t    \t\tthis.moveTorrentFile(move_details.torrent_location, move_details.torrent_name);\n\t\t\t    \t}\n\t\t\t    \tcatch (Exception e) {\n\t\t\t    \t\tLogger.log(new LogAlert(this, true,\n\t\t\t    \t\t\t\t\"Problem moving torrent to removed download directory\", e));\n\t\t\t    \t}\n\t\t    \t}\n\t\t\t}finally{\n\n\t\t\t\tclearFileLinks();\n\n\t\t\t\tcontroller.destroy();\n\t\t\t\t\n\t\t\t\tif ( torrent != null ){\n\t\t\t\t\n\t\t\t\t\tall_trackers.unregisterTorrent( torrent );\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}"
+    },
+    "DownloadManagerController.startDownload(TRTrackerAnnouncer tracker_client)": {
+      "name": "startDownload",
+      "arguments": "TRTrackerAnnouncer tracker_client",
+      "signature": "public void\n\tstartDownload(\n\t\tTRTrackerAnnouncer\ttracker_client )",
+      "declaration_start_line": 327,
+      "body_start_line": 330,
+      "body_end_line": 800,
+      "body_sha256": "5487f42756001f8e8ce41a64b75052457c2589b13799ba4ef2c1dda01db4b173",
+      "body": "{\n\t\tDiskManager\tdm;\n\n\t\ttry{\n\t\t\tcontrol_mon.enter();\n\t\t\t\n\t\t\tif (download_manager.isDestroyed()) {\n\t\t\t\tif (Logger.isEnabled()) {\n\t\t\t\t\tLogger.log(new LogEvent(this, LogIDs.CORE, LogEvent.LT_ERROR,\n\t\t\t\t\t\t\t\"startDownload() after manager is destroyed\"));\n\t\t\t\t}\n\t\t\t\treturn;\n\t\t\t}\n\n\t\t\tif ( getState() != DownloadManager.STATE_READY ){\n\n\t\t\t\tDebug.out( \"DownloadManagerController::startDownload state must be ready, \" + getState());\n\n\t\t\t\tsetFailed( \"Inconsistent download state: startDownload, state = \" + getState());\n\n\t\t\t\treturn;\n\t\t\t}\n\n\t \t\tif ( tracker_client == null ){\n\n\t  \t\t\tDebug.out( \"DownloadManagerController:startDownload: tracker_client is null\" );\n\n\t  \t\t\t\t// one day we should really do a proper state machine for this. In the meantime...\n\t  \t\t\t\t// probably caused by a \"stop\" during initialisation, I've reproduced it once or twice\n\t  \t\t\t\t// in my life... Tidy things up so we don't sit here in a READ state that can't\n\t  \t\t\t\t// be started.\n\n\t  \t\t\tstopIt( DownloadManager.STATE_STOPPED, false, false, false );\n\n\t  \t\t\treturn;\n\t  \t\t}\n\n\t\t\tif ( peer_manager != null ){\n\n\t\t\t\tDebug.out( \"DownloadManagerController::startDownload: peer manager not null\" );\n\n\t\t\t\t\t// try and continue....\n\n\t\t\t\tpeer_manager.stopAll();\n\n\t\t\t\tSimpleTimer.removeTickReceiver( this );\n\n\t\t\t\tDownloadManagerRateController.removePeerManager( peer_manager );\n\n\t\t\t\tpeer_manager\t= null;\n\t\t\t\t\t\t\t\t\n\t\t\t\tdownload_manager_state.removeListener(\n\t\t\t\t\t\tdm_attribute_listener,\n\t\t\t\t\t\tDownloadManagerState.AT_FLAGS,\n\t\t\t\t\t\tDownloadManagerStateAttributeListener.WRITTEN );\n\t\t\t\t\n\t\t\t\tdownload_manager_state.removeListener(\n\t\t\t\t\t\tdm_attribute_listener,\n\t\t\t\t\t\tDownloadManagerState.AT_MASK_DL_COMP_OPTIONAL,\n\t\t\t\t\t\tDownloadManagerStateAttributeListener.WRITTEN );\n\n\t\t\t\tdm_attribute_listener = null;\n\t\t\t}\n\n\t\t\tdm\t= getDiskManager();\n\n\t\t\tif ( dm == null ){\n\n\t\t\t\tDebug.out( \"DownloadManagerController::startDownload: disk manager is null\" );\n\n\t\t\t\treturn;\n\t\t\t}\n\n\t\t\tsetState( DownloadManager.STATE_DOWNLOADING, false );\n\n\t\t}finally{\n\n\t\t\tcontrol_mon.exit();\n\n\t\t}\n\n\t\tcacheNetworks();\n\n\t\t\t// make sure it is started before making it \"visible\"\n\n\t\tfinal PEPeerManager temp = PEPeerManagerFactory.create( tracker_client.getPeerId(), this, dm );\n\n\t\tdownload_manager.informWillBeStarted( temp );\n\n\t\tif (Logger.isEnabled()){\n\t\t\t\n\t\t\tLogger.log(\n\t\t\t\t\tnew LogEvent(\n\t\t\t\t\t\tthis, \n\t\t\t\t\t\tLogIDs.CORE, \n\t\t\t\t\t\t\"Started - state=\" + getState() +\n\t\t\t\t\t\t\t\" reason=\" + download_manager.getStartReason()));\n\t\t\t\n\t\t\tdownload_manager.setStartReason( null );\n\t\t}\n\t\t\n\t\ttemp.start();\n\n\t\t   //The connection to the tracker\n\n\t\ttracker_client.setAnnounceDataProvider(\n\t    \t\tnew TRTrackerAnnouncerDataProvider()\n\t    \t\t{\n\t    \t\t\tfinal private PEPeerManagerStats\tpm_stats = temp.getStats();\n\n\t    \t\t\tprivate long\tlast_reported_total_received;\n\t    \t\t\tprivate long\tlast_reported_total_received_data;\n\t    \t\t\tprivate long\tlast_reported_total_received_discard;\n\t    \t\t\tprivate long\tlast_reported_total_received_failed;\n\n\t    \t\t\t@Override\n\t\t\t\t    public String\n\t\t\t\t\tgetName()\n\t    \t\t\t{\n\t    \t\t\t\treturn( getDisplayName());\n\t    \t\t\t}\n\n\t    \t\t\t@Override\n\t\t\t\t    public long\n\t    \t\t\tgetTotalSent()\n\t    \t\t\t{\n\t    \t\t\t\treturn( tracker_stats_exclude_lan?pm_stats.getTotalDataBytesSentNoLan():pm_stats.getTotalDataBytesSent());\n\t    \t\t\t}\n\n\t    \t\t\t@Override\n\t\t\t\t    public long\n\t    \t\t\tgetTotalReceived()\n\t    \t\t\t{\n\t    \t\t\t\tlong received \t= tracker_stats_exclude_lan?pm_stats.getTotalDataBytesReceivedNoLan():pm_stats.getTotalDataBytesReceived();\n\t    \t\t\t\tlong discarded \t= pm_stats.getTotalDiscarded();\n\t    \t\t\t\tlong failed\t\t= pm_stats.getTotalHashFailBytes();\n\n\t    \t\t\t\tlong verified = received - ( discarded + failed );\n\n\t    \t\t\t\tverified -= temp.getHiddenBytes();\n\n\t    \t\t\t\t\t// ensure we don't go backwards. due to lack of atomicity of updates and possible\n\t    \t\t\t\t\t// miscounting somewhere we have seen this occur\n\n\t    \t\t\t\tif ( verified < last_reported_total_received ){\n\n\t    \t\t\t\t\tverified = last_reported_total_received;\n\n\t    \t\t\t\t\t\t// use -1 as indicator that we've reported this event\n\n\t    \t\t\t\t\tif ( last_reported_total_received_data != -1 ){\n\n\t    \t\t\t\t\t\t/*\n\t    \t\t\t\t\t\tDebug.out(\n\t    \t\t\t\t\t\t\t\tgetDisplayName() + \": decrease in overall downloaded - \" +\n\t    \t\t\t\t\t\t\t\t\"data=\" + received + \"/\" + last_reported_total_received_data +\n\t    \t\t\t\t\t\t\t\t\",discard=\" + discarded + \"/\" + last_reported_total_received_discard +\n\t    \t\t\t\t\t\t\t\t\",fail=\" + failed + \"/\" + last_reported_total_received_failed );\n\t    \t\t\t\t\t\t*/\n\n\t    \t\t\t\t\t\tlast_reported_total_received_data = -1;\n\t    \t\t\t\t\t}\n\t    \t\t\t\t}else{\n\n\t    \t\t\t\t\tlast_reported_total_received = verified;\n\n\t    \t\t\t\t\tlast_reported_total_received_data\t\t= received;\n\t    \t\t\t\t\tlast_reported_total_received_discard\t= discarded;\n\t    \t\t\t\t\tlast_reported_total_received_failed\t\t= failed;\n\t    \t\t\t\t}\n\n\t    \t\t\t\treturn( verified < 0?0:verified );\n\t    \t\t\t}\n\n\t    \t\t\t@Override\n\t\t\t\t    public long\n\t    \t\t\tgetRemaining()\n\t    \t\t\t{\n\t    \t\t\t\treturn( Math.max( temp.getRemaining(), temp.getHiddenBytes()));\n\t    \t\t\t}\n\n\t    \t\t\t@Override\n\t\t\t\t    public long\n\t    \t\t\tgetFailedHashCheck()\n\t    \t\t\t{\n\t    \t\t\t\treturn( pm_stats.getTotalHashFailBytes());\n\t    \t\t\t}\n\n\t\t\t\t\t@Override\n\t\t\t\t\tpublic String\n\t\t\t\t\tgetExtensions()\n\t\t\t\t\t{\n\t\t\t\t\t\treturn( getTrackerClientExtensions());\n\t\t\t\t\t}\n\n\t\t\t\t\t@Override\n\t\t\t\t\tpublic int\n\t\t\t\t\tgetMaxNewConnectionsAllowed( String network )\n\t\t\t\t\t{\n\t\t\t\t\t\tint num = temp.getMaxNewConnectionsAllowed( network );\n\t\t\t\t\t\t\n\t\t\t\t\t\t\t// if we have a download with 0 peers and we're at the connection limit then ask for a few to try and get it started\n\t\t\t\t\t\t\t// if by the time we connect to a peer we are still at the limit the then connection will be declined anyway\n\t\t\t\t\t\t\n\t\t\t\t\t\tif ( num < 5 && getConnectedConnectionCount() == 0 && getPendingConnectionCount() < 5 ){\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\tnum = 5;\n\t\t\t\t\t\t}\n\t\t\t\t\t\t\n\t\t\t\t\t\treturn( num );\n\t\t\t\t\t}\n\n\t\t\t\t\t@Override\n\t\t\t\t\tpublic int\n\t\t\t\t\tgetPendingConnectionCount()\n\t\t\t\t\t{\n\t\t\t\t\t\treturn( temp.getPendingPeerCount());\n\t\t\t\t\t}\n\n\t\t\t\t\t@Override\n\t\t\t\t\tpublic int\n\t\t\t\t\tgetConnectedConnectionCount()\n\t\t\t\t\t{\n\t\t\t\t\t\treturn( temp.getNbPeers() + temp.getNbSeeds());\n\t\t\t\t\t}\n\n\t\t\t\t\t@Override\n\t\t\t\t\tpublic long\n\t\t\t\t\tgetUploadSpeedKBSec(\n\t\t\t\t\t\tboolean estimate )\n\t\t\t\t\t{\n\t\t\t\t\t\tlong\tcurrent_local = stats.getDataSendRate();\n\n\t\t\t\t\t\tif ( estimate ){\n\n\t\t\t\t\t\t\t\t// see if we have an old value from previous stop/start\n\n\t\t\t\t\t\t\tcurrent_local = data_send_rate_at_close;\n\n\t\t\t\t\t\t\tif ( current_local == 0 ){\n\n\t\t\t\t\t\t\t\tlong current_global \t= global_stats.getDataSendRate();\n\n\t\t\t\t\t\t\t\tlong\told_global\t\t= global_stats.getDataSendRateAtClose();\n\n\t\t\t\t\t\t\t\tif ( current_global < old_global ){\n\n\t\t\t\t\t\t\t\t\tcurrent_global = old_global;\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\tList managers = download_manager.getGlobalManager().getDownloadManagers();\n\n\t\t\t\t\t\t\t\tint\tnum_dls = 0;\n\n\t\t\t\t\t\t\t\t\t// be optimistic and share out the bytes between non-seeds\n\n\t\t\t\t\t\t\t\tfor (int i=0;i<managers.size();i++){\n\n\t\t\t\t\t\t\t\t\tDownloadManager\tdm = (DownloadManager)managers.get(i);\n\n\t\t\t\t\t\t\t\t\tif ( dm.getStats().getDownloadCompleted( false ) == 1000 ){\n\n\t\t\t\t\t\t\t\t\t\tcontinue;\n\t\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\t\tint\tstate = dm.getState();\n\n\t\t\t\t\t\t\t\t\tif ( \tstate != DownloadManager.STATE_ERROR &&\n\t\t\t\t\t\t\t\t\t\t\tstate != DownloadManager.STATE_STOPPING &&\n\t\t\t\t\t\t\t\t\t\t\tstate != DownloadManager.STATE_STOPPED ){\n\n\t\t\t\t\t\t\t\t\t\tnum_dls++;\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\tif ( num_dls == 0 ){\n\n\t\t\t\t\t\t\t\t\tcurrent_local = current_global;\n\t\t\t\t\t\t\t\t}else{\n\n\t\t\t\t\t\t\t\t\tcurrent_local = current_global/num_dls;\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\treturn((int)((current_local+1023)/1024 ));\n\t\t\t\t\t}\n\t\t\t\t\t\n\t    \t\t\tpublic int\n\t    \t\t\tgetTCPListeningPortNumber()\n\t    \t\t\t{\n\t    \t\t\t\treturn( DownloadManagerController.this.getTCPListeningPortNumber());\n\t    \t\t\t}\n\n\t\t\t\t\t@Override\n\t\t\t\t\tpublic int\n\t\t\t\t\tgetCryptoLevel()\n\t\t\t\t\t{\n\t\t\t\t\t\treturn( download_manager.getCryptoLevel());\n\t\t\t\t\t}\n\n\t\t\t\t\t@Override\n\t\t\t\t\tpublic void\n\t\t\t\t\tsetPeerSources(\n\t\t\t\t\t\tString[]\tallowed_sources )\n\t\t\t\t\t{\n\t\t\t\t\t\tString[]\tsources = PEPeerSource.PS_SOURCES;\n\n\t\t\t\t\t\tfor (int i=0;i<sources.length;i++){\n\n\t\t\t\t\t\t\tString\ts = sources[i];\n\n\t\t\t\t\t\t\tboolean\tok = false;\n\n\t\t\t\t\t\t\tfor (int j=0;j<allowed_sources.length;j++){\n\n\t\t\t\t\t\t\t\tif ( s.equals( allowed_sources[j] )){\n\n\t\t\t\t\t\t\t\t\tok = true;\n\n\t\t\t\t\t\t\t\t\tbreak;\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\tif ( !ok ){\n\n\t\t\t\t\t\t\t\tdownload_manager_state.setPeerSourcePermitted( s, false );\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\n\t\t\t\t\t\tPEPeerManager pm = getPeerManager();\n\n\t\t\t\t\t\tif ( pm != null ){\n\n\t\t\t\t\t\t\tSet<String>\tallowed = new HashSet<>();\n\n\t\t\t\t\t\t\tallowed.addAll( Arrays.asList( allowed_sources ));\n\n\t\t\t\t\t\t\tIterator<PEPeer> it = pm.getPeers().iterator();\n\n\t\t\t\t\t\t\twhile( it.hasNext()){\n\n\t\t\t\t\t\t\t\tPEPeer peer = it.next();\n\n\t\t\t\t\t\t\t\tif ( !allowed.contains( peer.getPeerSource())){\n\n\t\t\t\t\t\t\t\t\tpm.removePeer( peer, \"Peer source not permitted\", Transport.CR_STOPPED_OR_REMOVED );\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\n\t\t\t\t\t@Override\n\t\t\t\t\tpublic boolean\n\t\t\t\t\tisPeerSourceEnabled(\n\t\t\t\t\t\tString\t\tpeer_source )\n\t\t\t\t\t{\n\t\t\t\t\t\treturn( DownloadManagerController.this.isPeerSourceEnabled( peer_source ));\n\t\t\t\t\t}\n\t    \t\t});\n\n\n\t\tList<Object[]>\tlimiters;\n\n\t\ttry{\n\t\t\tcontrol_mon.enter();\n\n\t\t\tpeer_manager = temp;\n\t\t\t\n\t\t\tif ( dm_attribute_listener != null ) {\n\t\t\t\t\n\t\t\t\tdownload_manager_state.removeListener(\n\t\t\t\t\t\tdm_attribute_listener,\n\t\t\t\t\t\tDownloadManagerState.AT_FLAGS,\n\t\t\t\t\t\tDownloadManagerStateAttributeListener.WRITTEN );\n\t\t\t\t\n\t\t\t\tdownload_manager_state.removeListener(\n\t\t\t\t\t\tdm_attribute_listener,\n\t\t\t\t\t\tDownloadManagerState.AT_MASK_DL_COMP_OPTIONAL,\n\t\t\t\t\t\tDownloadManagerStateAttributeListener.WRITTEN );\n\t\t\t}\n\t\t\t\n\t\t\tdm_attribute_listener = new DownloadManagerStateAttributeListener(){\n\t\t\t\t\n\t\t\t\tboolean\tdid_set;\n\t\t\t\t\n\t\t\t\t@Override\n\t\t\t\tpublic void \n\t\t\t\tattributeEventOccurred(\n\t\t\t\t\tDownloadManager download, \n\t\t\t\t\tString attribute, \n\t\t\t\t\tint event_type)\n\t\t\t\t{\n\t\t\t\t\t\n\t\t\t\t\t\t// this fires on any flag change so make sure we only clear the seq flag if we set it\n\t\t\t\t\t\t// otherwise this interferes with other seq settings\n\t\t\t\t\t\n\t\t\t\t\tboolean seq = download_manager_state.getFlag( DownloadManagerState.FLAG_SEQUENTIAL_DOWNLOAD );\n\t\t\t\t\t\n\t\t\t\t\tPiecePicker pp = temp.getPiecePicker();\n\t\t\t\t\t\n\t\t\t\t\tif ( seq ){\n\t\t\t\t\t\t\n\t\t\t\t\t\tif ( pp.getSequentialInfo() == 0 ){\n\t\t\t\t\t\t\n\t\t\t\t\t\t\tpp.setSequentialAscendingFrom( 0 );\n\t\t\t\t\t\t\n\t\t\t\t\t\t\tdid_set = true;\n\t\t\t\t\t\t}\n\t\t\t\t\t\t\n\t\t\t\t\t}else{\n\t\t\t\t\t\t\n\t\t\t\t\t\tif ( did_set ){\n\t\t\t\t\t\t\n\t\t\t\t\t\t\tpp.clearSequential();\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\tBoolean mask = download_manager_state.getOptionalBooleanAttribute(DownloadManagerState.AT_MASK_DL_COMP_OPTIONAL );\n\n\t\t\t\t\ttemp.setMaskDownloadCompletion( mask );\n\t\t\t\t}\n\t\t\t};\n\t\t\t\n\t\t\tdownload_manager_state.addListener(\n\t\t\t\t\tdm_attribute_listener,\n\t\t\t\t\tDownloadManagerState.AT_FLAGS,\n\t\t\t\t\tDownloadManagerStateAttributeListener.WRITTEN );\n\t\t\t\n\t\t\tdownload_manager_state.addListener(\n\t\t\t\t\tdm_attribute_listener,\n\t\t\t\t\tDownloadManagerState.AT_MASK_DL_COMP_OPTIONAL,\n\t\t\t\t\tDownloadManagerStateAttributeListener.WRITTEN );\n\n\t\t\tdm_attribute_listener.attributeEventOccurred( null, null, -1 );\t// set initial state\n\t\t\t\n\t\t\tDownloadManagerRateController.addPeerManager( peer_manager );\n\n\t\t\tSimpleTimer.addTickReceiver( this );\n\n\t\t\tsynchronized( external_rate_limiters_cow_lock ){\n\t\t\t\n\t\t\t\tlimiters = external_rate_limiters_cow;\n\t\t\t}\n\n\t\t}finally{\n\n\t\t\tcontrol_mon.exit();\n\t\t}\n\n\t\tif ( limiters != null ){\n\n\t\t\tfor (int i=0;i<limiters.size();i++){\n\n\t\t\t\tObject[]\tentry = limiters.get(i);\n\n\t\t\t\ttemp.addRateLimiter((LimitedRateGroup)entry[0],((Boolean)entry[1]).booleanValue());\n\t\t\t}\n\t\t}\n\n\t\t// Inform only after peer_manager.start(), because it\n\t\t// may have switched it to STATE_SEEDING (in which case we don't need to\n\t\t// inform).\n\n\t\tif (getState() == DownloadManager.STATE_DOWNLOADING) {\n\n\t\t\tdownload_manager.informStateChanged();\n\t\t}\n\n\t\tdownload_manager.informStarted( temp );\n\t}"
+    },
+    "DownloadManagerController.stopIt(int _stateAfterStopping, final boolean remove_torrent, final boolean remove_data, final boolean for_removal)": {
+      "name": "stopIt",
+      "arguments": "int _stateAfterStopping, final boolean remove_torrent, final boolean remove_data, final boolean for_removal",
+      "signature": "public void\n\tstopIt(\n\t\tint \t\t\t\t_stateAfterStopping,\n\t\tfinal boolean \t\tremove_torrent,\n\t\tfinal boolean \t\tremove_data,\n\t\tfinal boolean\t\tfor_removal )",
+      "declaration_start_line": 1001,
+      "body_start_line": 1007,
+      "body_end_line": 1242,
+      "body_sha256": "f095333a977d07db5609e2d48cebb3765167917db175452edd607ba6bebd0744",
+      "body": "{\n\t\tlong\tcurrent_up = stats.getDataSendRate();\n\n\t\tif ( current_up != 0 ){\n\n\t\t\tdata_send_rate_at_close = current_up;\n\t\t}\n\n\t\tboolean closing = _stateAfterStopping == DownloadManager.STATE_CLOSED;\n\n\t\tif ( closing ){\n\n\t\t\t_stateAfterStopping = DownloadManager.STATE_STOPPED;\n\t\t}\n\n\t\tfinal int stateAfterStopping\t= _stateAfterStopping;\n\n\t\ttry{\n\t\t\tcontrol_mon.enter();\n\n\t\t\tint\tstate = getState();\n\n\t\t\tif ( \t( state == DownloadManager.STATE_STOPPED || state == DownloadManager.STATE_ERROR ) && \n\t\t\t\t\tgetDiskManager() == null ){\n\n\t\t\t\t//already in stopped state, just do removals if necessary\n\n\t\t\t\tif ( stateAfterStopping !=  DownloadManager.STATE_ERROR && state == DownloadManager.STATE_ERROR ){\n\t\t\t\t\n\t\t\t\t\t\t// explicitly stopping an error download clears this stuff out\n\t\t\t\t\t\n\t\t\t\t\terrorType\t= DownloadManager.ET_NONE;\n\t\t\t\t\terrorDetail\t= \"\";\n\t\t\t\t\terrorFlags\t= 0;\n\t\t\t\t}\n\t\t\t\t\n\t\t\t\tif( remove_data ){\n\n\t\t\t\t\tdownload_manager.deleteDataFiles();\n\n\t\t\t\t}else{\n\n\t\t\t\t\tif ( for_removal && COConfigurationManager.getBooleanParameter( \"Delete Partial Files On Library Removal\") ){\n\n\t\t\t\t\t\tdownload_manager.deletePartialDataFiles();\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\tif( remove_torrent ){\n\n\t\t\t\t\tdownload_manager.deleteTorrentFile();\n\t\t\t\t}\n\n\t\t\t\tdownload_manager.informStopped( null, stateAfterStopping==DownloadManager.STATE_QUEUED );\n\n\t\t\t\tsetState( _stateAfterStopping, false );\n\n\t\t\t\treturn;\n\t\t\t}\n\n\n\t\t\tif ( state == DownloadManager.STATE_STOPPING){\n\n\t\t\t\treturn;\n\t\t\t}\n\n\t\t\tsetSubState( _stateAfterStopping );\n\n\t\t\tsetState( DownloadManager.STATE_STOPPING, false );\n\n\t\t\tNonDaemonTaskRunner.run(\n\t\t\t\tnew NonDaemonTask()\n\t\t\t\t{\n\t\t\t\t\t@Override\n\t\t\t\t\tpublic Object\n\t\t\t\t\trun()\n\t\t\t\t\t{\n\t\t\t\t\t\ttry{\n\t\t\t\t\t\t\tif ( peer_manager != null ){\n\n\t\t\t\t\t\t\t\tpeer_manager.stopAll();\n\n\t\t\t\t\t\t\t\tstats.saveSessionTotals();\n\n\t\t\t\t\t\t\t\tdownload_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_LAST_ACTIVE_TIME, SystemTime.getCurrentTime());\n\n\t\t\t\t\t\t\t\tSimpleTimer.removeTickReceiver( DownloadManagerController.this );\n\n\t\t\t\t\t\t\t\tDownloadManagerRateController.removePeerManager( peer_manager );\n\n\t\t\t\t\t\t\t\tdownload_manager_state.removeListener(\n\t\t\t\t\t\t\t\t\t\tdm_attribute_listener,\n\t\t\t\t\t\t\t\t\t\tDownloadManagerState.AT_FLAGS,\n\t\t\t\t\t\t\t\t\t\tDownloadManagerStateAttributeListener.WRITTEN );\n\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\tdownload_manager_state.removeListener(\n\t\t\t\t\t\t\t\t\t\tdm_attribute_listener,\n\t\t\t\t\t\t\t\t\t\tDownloadManagerState.AT_MASK_DL_COMP_OPTIONAL,\n\t\t\t\t\t\t\t\t\t\tDownloadManagerStateAttributeListener.WRITTEN );\n\n\t\t\t\t\t\t\t\tdm_attribute_listener = null;\n\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t// do this even if null as it also triggers tracker actions\n\n\t\t\t\t\t\t\tdownload_manager.informStopped( peer_manager, stateAfterStopping==DownloadManager.STATE_QUEUED );\n\n\t\t\t\t\t\t\tpeer_manager\t= null;\n\n\t\t\t\t\t\t\tDiskManager\tdm = getDiskManager();\n\n\t\t\t\t\t\t\tif ( dm != null ){\n\n\t\t\t\t\t\t\t\tboolean went_async = dm.stop( closing );\n\n\t\t\t\t\t\t\t\tif ( went_async ){\n\n\t\t\t\t\t\t\t\t\ttry {\n\t\t\t\t\t\t\t\t\t\tint\twait_count = 0;\n\t\n\t\t\t\t\t\t\t\t\t\t// Delay by 10ms, hoping for really short stop\n\t\t\t\t\t\t\t\t\t\tThread.sleep(10);\n\t\n\t\t\t\t\t\t\t\t\t\twhile( !dm.isStopped()){\n\t\n\t\t\t\t\t\t\t\t\t\t\twait_count++;\n\t\n\t\t\t\t\t\t\t\t\t\t\tif ( wait_count > 2*60*10 ){\n\t\n\t\t\t\t\t\t\t\t\t\t\t\tDebug.out( \"Download stop took too long to complete\" );\n\t\n\t\t\t\t\t\t\t\t\t\t\t\tbreak;\n\t\n\t\t\t\t\t\t\t\t\t\t\t}else if ( wait_count % 200 == 0 ){\n\t\n\t\t\t\t\t\t\t\t\t\t\t\tDebug.out( \"Waiting for download to stop - elapsed=\" + wait_count + \" sec\" );\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\n\t\t\t\t\t\t\t\t\t\t\tThread.sleep(100);\n\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t}catch( Throwable e ) {\n\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t\tDebug.out( e );\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\tstats.setCompleted(stats.getCompleted());\n\t\t\t\t\t\t\t\tstats.recalcDownloadCompleteBytes();\n\n\t\t\t\t\t\t\t\t// we don't want to update the torrent if we're seeding\n\n\t\t\t\t\t\t\t\tif ( !download_manager.getAssumedComplete()){\n\t\t\t\t\t\t\t\t\tdownload_manager_state.save(false);\n\t\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t\tsetDiskManager( null, null );\n\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t}finally{\n\n\t\t\t\t\t\t\tforce_start = false;\n\n\t\t\t\t\t\t\tif( remove_data ){\n\n\t\t\t\t\t\t\t\tdownload_manager.deleteDataFiles();\n\n\t\t\t\t\t\t\t}else{\n\n\t\t\t\t\t\t\t\tif ( for_removal && COConfigurationManager.getBooleanParameter( \"Delete Partial Files On Library Removal\") ){\n\n\t\t\t\t\t\t\t\t\tdownload_manager.deletePartialDataFiles();\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\tif( remove_torrent ){\n\n\t\t\t\t\t\t\t\tdownload_manager.deleteTorrentFile();\n\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\tList<ExternalSeedPeer> to_remove = new ArrayList<>();\n\n\t\t\t\t\t\t\tsynchronized( http_seeds ){\n\n\t\t\t\t\t\t\t\tto_remove.addAll( http_seeds );\n\n\t\t\t\t\t\t\t\thttp_seeds.clear();\n\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\tfor ( ExternalSeedPeer peer: to_remove ){\n\n\t\t\t\t\t\t\t\tpeer.remove();\n\t\t\t\t\t\t\t}\n\n\t\t\t\t\t\t\t// only update the state if things haven't gone wrong\n\n\t\t\t\t\t\t\tif ( getState() == DownloadManager.STATE_STOPPING ){\n\n\t\t\t\t\t\t\t\tsetState( stateAfterStopping, true );\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t}\n\t\t\t\t\t\t\n\t\t\t\t\t\treturn( null );\n\t\t\t\t\t}\n\n\t\t\t\t\t@Override\n\t\t\t\t\tpublic String\n\t\t\t\t\tgetName()\n\t\t\t\t\t{\n\t\t\t\t\t\treturn( \"Stopping '\" + getDisplayName() + \"'\" );\n\t\t\t\t\t}\n\n\t\t\t\t});\n\n\n\n\t\t}catch( Throwable e ){\n\n\t\t\tDebug.printStackTrace( e );\n\n\t\t}finally{\n\n\t\t\tcontrol_mon.exit();\n\n\t\t\tLogger.log(\n\t\t\t\tnew LogEvent(\n\t\t\t\t\tthis, \n\t\t\t\t\tLogIDs.CORE, \n\t\t\t\t\t\"Stopped - state=\" + getState() +\n\t\t\t\t\t\t\" reason=\" + download_manager.getStopReason() + \"/\" + download_manager.getQueueReason() +\n\t\t\t\t\t\t\", error=\" + getErrorType() + \"/\" + getErrorDetail() + \"/\" + getErrorFlags()));\n\t\t\t\n\t\t\tdownload_manager.setQueueReason( null );\n\n\t\t\tdownload_manager.informStateChanged();\n\t\t}\n\t}"
+    },
+    "DownloadManagerController.setStateWaiting()": {
+      "name": "setStateWaiting",
+      "arguments": "",
+      "signature": "protected void\n\tsetStateWaiting()",
+      "declaration_start_line": 1244,
+      "body_start_line": 1246,
+      "body_end_line": 1248,
+      "body_sha256": "57d2e72b6b8c55c33a53f254a9e856148083e6bb9a03c2effad6ccd223107c4d",
+      "body": "{\n\t\tsetState(DownloadManager.STATE_WAITING, true );\n\t}"
+    },
+    "DownloadManagerController.setStateFinishing()": {
+      "name": "setStateFinishing",
+      "arguments": "",
+      "signature": "@Override\n\t  public void\n  \tsetStateFinishing()",
+      "declaration_start_line": 1250,
+      "body_start_line": 1253,
+      "body_end_line": 1255,
+      "body_sha256": "837f0e15d0afc7835b75adda4485107fcabbf56437f63d8189846ef5c40ab9ca",
+      "body": "{\n  \t\tsetState(DownloadManager.STATE_FINISHING, true);\n  \t}"
+    },
+    "DownloadManagerController.setStateDownloading()": {
+      "name": "setStateDownloading",
+      "arguments": "",
+      "signature": "public void\n\tsetStateDownloading()",
+      "declaration_start_line": 1257,
+      "body_start_line": 1259,
+      "body_end_line": 1266,
+      "body_sha256": "6acf942bbbfe11749bb5b6b9977f844e14cb6aee9925f5b0c3664cceaa0c4532",
+      "body": "{\n\t\tif (getState() == DownloadManager.STATE_SEEDING) {\n\t\t\tsetState(DownloadManager.STATE_DOWNLOADING, true);\n\t\t} else if (getState() != DownloadManager.STATE_DOWNLOADING) {\n\t\t\tLogger.log(new LogEvent(this, LogIDs.CORE, LogEvent.LT_WARNING,\n\t\t\t\t\t\"Trying to set state to downloading when state is not seeding\"));\n\t\t}\n\t}"
+    },
+    "DownloadManagerController.setStateSeeding(boolean never_downloaded)": {
+      "name": "setStateSeeding",
+      "arguments": "boolean never_downloaded",
+      "signature": "@Override\n\tpublic void\n  \tsetStateSeeding(\n  \t\tboolean\tnever_downloaded )",
+      "declaration_start_line": 1269,
+      "body_start_line": 1273,
+      "body_end_line": 1293,
+      "body_sha256": "c52d7bbb72d3670d5c003c1842fd9e17108ff51db8e7fd42444e35c4d6213b81",
+      "body": "{\n\t\t// should already be finishing, but make sure (if it already is, there\n\t\t// won't be a trigger)\n  \t\t\n\t\tsetStateFinishing();\n\n\t\tdownload_manager.downloadEnded(never_downloaded);\n\n\t\tsetState( DownloadManager.STATE_SEEDING, true);\n\t\t\n\t\tif ( !never_downloaded ){\n\t\t\t\n\t    \tif ( !COConfigurationManager.getBooleanParameter( \"StartStopManager_bRetainForceStartWhenComplete\" )){\n\t\n\t    \t\tif (isForceStart()){\n\t\n\t\t    \t\tsetForceStart(false);\n\t    \t\t}\n\t    \t}\n\t\t}\n\t}"
+    },
+    "DownloadManagerController.setStateQueued()": {
+      "name": "setStateQueued",
+      "arguments": "",
+      "signature": "protected void\n  \tsetStateQueued()",
+      "declaration_start_line": 1301,
+      "body_start_line": 1303,
+      "body_end_line": 1305,
+      "body_sha256": "a791930ed771599d6ed6cd5087a1363dc064723bc9127a72e1eda38f066984b4",
+      "body": "{\n  \t\tsetState(DownloadManager.STATE_QUEUED, true);\n  \t}"
+    },
+    "DownloadManagerController.getState()": {
+      "name": "getState",
+      "arguments": "",
+      "signature": "public int\n  \tgetState()",
+      "declaration_start_line": 1307,
+      "body_start_line": 1309,
+      "body_end_line": 1357,
+      "body_sha256": "d4ec221c4bd47210669a32fb53eecef141752ac57be837c53bacab27675f2640",
+      "body": "{\n  \t\tif ( state_set_by_method != DownloadManager.STATE_INITIALIZED ){\n\n  \t\t\treturn( state_set_by_method );\n  \t\t}\n\n  \t\t\t// we don't want to synchronize here as there are potential deadlock problems\n  \t\t\t// regarding the DownloadManager::addListener call invoking this method while\n  \t\t\t// holding the listeners monitor.\n  \t\t\t//\n  \t\tDiskManager\tdm = getDiskManager();\n\n\t  \tif ( dm == null){\n\n\t  \t\treturn DownloadManager.STATE_INITIALIZED;\n\t  \t}\n\n  \t\tint diskManagerState = dm.getState();\n\n\t\tif (diskManagerState == DiskManager.INITIALIZING){\n\n\t\t\treturn DownloadManager.STATE_INITIALIZED;\n\n\t\t}else if (diskManagerState == DiskManager.ALLOCATING){\n\n\t\t\treturn DownloadManager.STATE_ALLOCATING;\n\n\t\t}else if (diskManagerState == DiskManager.CHECKING){\n\n\t\t\treturn DownloadManager.STATE_CHECKING;\n\n\t\t}else if (diskManagerState == DiskManager.READY){\n\n\t\t\treturn DownloadManager.STATE_READY;\n\n\t\t}else if (diskManagerState == DiskManager.FAULTY){\n\n\t\t\tif ( dm.getErrorType() == DiskManager.ET_STOP_DURING_INIT ){\n\t\t\t\t\n\t\t\t\treturn DownloadManager.STATE_STOPPED;\n\t\t\t\t\n\t\t\t}else{\n\t\t\t\n\t\t\t\treturn DownloadManager.STATE_ERROR;\n\t\t\t}\n\t\t}\n\n\t\treturn DownloadManager.STATE_ERROR;\n  \t}"
+    },
+    "DownloadManagerController.getSubState()": {
+      "name": "getSubState",
+      "arguments": "",
+      "signature": "protected int\n  \tgetSubState()",
+      "declaration_start_line": 1359,
+      "body_start_line": 1361,
+      "body_end_line": 1369,
+      "body_sha256": "7e91ba3c720e4af8598daf5da244fa026e354334765884f1d488ea8b6f6fff26",
+      "body": "{\n\t\tif ( state_set_by_method == DownloadManager.STATE_STOPPING ){\n\n\t\t\treturn( substate );\n\t\t}else{\n\n\t\t\treturn( getState());\n\t\t}\n  \t}"
+    },
+    "DownloadManagerController.setSubState(int ss)": {
+      "name": "setSubState",
+      "arguments": "int ss",
+      "signature": "private void\n\tsetSubState(\n\t\tint\tss )",
+      "declaration_start_line": 1371,
+      "body_start_line": 1374,
+      "body_end_line": 1376,
+      "body_sha256": "c7842c2465dd8d481b04a02a99997e5114a8637e13cb5f7a49a35aa8df2f31dc",
+      "body": "{\n\t\tsubstate\t= ss;\n\t}"
+    },
+    "DownloadManagerController.setState(int _state, boolean _inform_changed)": {
+      "name": "setState",
+      "arguments": "int _state, boolean _inform_changed",
+      "signature": "void\n  \tsetState(\n  \t\tint \t\t_state,\n  \t\tboolean\t\t_inform_changed )",
+      "declaration_start_line": 1383,
+      "body_start_line": 1387,
+      "body_end_line": 1473,
+      "body_sha256": "aceb939cd883538962aefdf93a3c13d800a2c6a1f53751a369f823ac8b5c9d11",
+      "body": "{\n  \t\t\t// we bring this call out of the monitor block to prevent a potential deadlock whereby we chain\n  \t\t\t// state_mon -> control_mon (there exist numerous dependencies control_mon -> state_mon...\n\n  \t\tboolean\tcall_filesExist\t= false;\n\n   \t\ttry{\n  \t\t\tstate_mon.enter();\n\n\t  \t\tint\told_state = state_set_by_method;\n\n\t\t\t// note: there is a DIFFERENCE between the state held on the DownloadManager and\n\t\t    // that reported via getState as getState incorporated DiskManager states when\n\t\t    // the DownloadManager is INITIALIZED\n\t\t  \t//System.out.println( \"DM:setState - \" + _state );\n\n\t  \t\tif ( old_state != _state ){\n\n\t  \t\t\tstate_set_by_method = _state;\n\n\t  \t\t\tif ( state_set_by_method != DownloadManager.STATE_QUEUED ){\n\n\t  \t\t\t\t\t// only maintain this while queued\n\n\t  \t\t\t\tactivation_bloom = null;\n\n\t  \t\t\t\tif ( \tstate_set_by_method == DownloadManager.STATE_STOPPED ||\n\t  \t\t\t\t\t\tstate_set_by_method == DownloadManager.STATE_DOWNLOADING ||\n\t  \t\t\t\t\t\tstate_set_by_method == DownloadManager.STATE_SEEDING ){\n\n\t  \t\t\t\t\t\t// don't need this anymore once stopped or active\n\t  \t\t\t\t\t\n\t  \t\t\t\t\tactivation_count = 0;\n\t  \t\t\t\t}\n\t  \t\t\t}\n\n\t  \t\t\tif (state_set_by_method == DownloadManager.STATE_QUEUED ){\n\n\n\t  \t\t\t\t// don't pick up errors regarding missing data while queued.\n\t  \t\t\t\t// We'll do that when the torrent starts.  Saves time at startup\n\t  \t\t\t\t// pick up any errors regarding missing data for queued SEEDING torrents\n//\t  \t\t\t\tif (  download_manager.getAssumedComplete()){\n//\n//\t  \t\t\t\t\tcall_filesExist\t= true;\n//\t  \t\t\t\t}\n\n\t  \t\t\t}else if ( state_set_by_method == DownloadManager.STATE_ERROR ){\n\n\t\t      \t\t// the process of attempting to start the torrent may have left some empty\n\t\t      \t\t// directories created, some users take exception to this.\n\t\t      \t\t// the most straight forward way of remedying this is to delete such empty\n\t\t      \t\t// folders here\n\n\t  \t\t\t\tTOTorrent\ttorrent = download_manager.getTorrent();\n\n\t  \t\t\t\tif ( torrent != null && !torrent.isSimpleTorrent()){\n\n\t  \t\t\t\t\tFile\tsave_dir_file\t= download_manager.getAbsoluteSaveLocation();\n\n\t  \t\t\t\t\tif ( save_dir_file != null && FileUtil.exists( save_dir_file ) && save_dir_file.isDirectory()){\n\n\t  \t\t\t\t\t\tTorrentUtils.recursiveEmptyDirDelete( save_dir_file, false );\n\t  \t\t\t\t\t}\n\t  \t\t\t\t}\n\t  \t\t\t}\n\t  \t\t\t\n\t  \t\t\tif ( old_state == DownloadManager.STATE_STOPPED ){\n\t  \t\t\t\t\n\t  \t\t\t\tdownload_manager.setStopReason( null );\n\t  \t\t\t}\n\t  \t\t}\n  \t\t}finally{\n\n  \t\t\tstate_mon.exit();\n  \t\t}\n\n  \t\tif ( call_filesExist ){\n\n  \t\t\tfilesExist( true, false );\n  \t\t}\n\n  \t\tif ( _inform_changed ){\n\n  \t\t\tdownload_manager.informStateChanged();\n  \t\t}\n  \t}"
+    },
+    "DownloadManagerStateImpl.loadGlobalStateCache()": {
+      "name": "loadGlobalStateCache",
+      "arguments": "",
+      "signature": "public static void\n\tloadGlobalStateCache()",
+      "declaration_start_line": 640,
+      "body_start_line": 642,
+      "body_end_line": 682,
+      "body_sha256": "ca0145858c8aba0b4eb6aa02a2821a12c26bac45242c251cf04b23b91fbc1a88",
+      "body": "{\n\t\tFile file = getGlobalStateFile();\n\n\t\tif ( !file.canRead()){\n\n\t\t\treturn;\n\t\t}\n\n\t\ttry( \tFileInputStream fis = FileUtil.newFileInputStream( file );\n\t\t\t\tBufferedInputStream is = new BufferedInputStream( new GZIPInputStream( fis ))){\n\n\t\t\ttry{\n\n\t\t\t\tMap\tmap = BDecoder.decode( is );\n\n\t\t\t\tList\tcache = (List)map.get( \"state\" );\n\n\t\t\t\tif ( cache != null ){\n\n\t\t\t\t\tfor (int i=0;i<cache.size();i++){\n\n\t\t\t\t\t\tMap\tentry = (Map)cache.get(i);\n\n\t\t\t\t\t\tbyte[]\thash = (byte[])entry.get( \"hash\" );\n\n\t\t\t\t\t\tif ( hash != null ){\n\n\t\t\t\t\t\t\tglobal_state_cache.put( new HashWrapper( hash ), entry );\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t}catch( IOException e){\n\n\t\t\t\tDebug.printStackTrace( e );\n\t\t\t}\n\t\t}catch( Throwable e ){\n\n\t\t\tDebug.printStackTrace( e );\n\t\t}\n\t}"
+    },
+    "DownloadManagerStateImpl.saveGlobalStateCache()": {
+      "name": "saveGlobalStateCache",
+      "arguments": "",
+      "signature": "public static void\n\tsaveGlobalStateCache()",
+      "declaration_start_line": 684,
+      "body_start_line": 686,
+      "body_end_line": 748,
+      "body_sha256": "6a1b588166ba844e900a4458694853f1239de4a18bc0f9000bb7f0c751f8248c",
+      "body": "{\n\t\ttry{\n\t\t\tclass_mon.enter();\n\n\t\t\tSUPPRESS_FIXUP_ERRORS = true;\t// closing\n\t\t\t\n\t\t\tMap\tmap = new HashMap();\n\n\t\t\tList\tcache = new ArrayList();\n\n\t\t\tmap.put( \"state\", cache );\n\n\t\t\tIterator\tit = state_map.values().iterator();\n\n\t\t\twhile( it.hasNext()){\n\n\t\t\t\tDownloadManagerState dms = (DownloadManagerState)it.next();\n\n\t\t\t\tDownloadManager dm = dms.getDownloadManager();\n\n\t\t\t\tif ( dm != null && dm.isPersistent()){\n\n\t\t\t\t\ttry{\n\t\t\t\t\t\tMap\tstate = CachedStateWrapper.export( dms );\n\n\t\t\t\t\t\tcache.add( state );\n\n\t\t\t\t\t}catch( Throwable e ){\n\n\t\t\t\t\t\tDebug.printStackTrace( e );\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tGZIPOutputStream\tos = new GZIPOutputStream( FileUtil.newFileOutputStream( getGlobalStateFile()));\n\n\t\t\ttry{\n\n\t\t\t\tos.write( BEncoder.encode( map ));\n\n\t\t\t\tos.close();\n\n\t\t\t}catch( IOException e ){\n\n\t\t\t\tDebug.printStackTrace( e );\n\n\t\t\t\ttry{\n\t\t\t\t\tos.close();\n\n\t\t\t\t}catch( IOException f ){\n\n\t\t\t\t}\n\t\t\t}\n\t\t}catch( Throwable e ){\n\n\t\t\tDebug.printStackTrace( e );\n\n\t\t}finally{\n\n\t\t\tclass_mon.exit();\n\n\t\t}\n\t}"
+    },
+    "DownloadManagerStateImpl.getResumeData()": {
+      "name": "getResumeData",
+      "arguments": "",
+      "signature": "@Override\n\tpublic Map\n\tgetResumeData()",
+      "declaration_start_line": 1077,
+      "body_start_line": 1080,
+      "body_end_line": 1090,
+      "body_sha256": "d71b3edeec43b6294584fc60dfd42f0d2612ea3634b1a2039656de87ddba8829",
+      "body": "{\n\t\ttry{\n\t\t\tthis_mon.enter();\n\n\t\t\treturn( torrent.getAdditionalMapProperty(RESUME_KEY));\n\n\t\t}finally{\n\n\t\t\tthis_mon.exit();\n\t\t}\n\t}"
+    },
+    "DownloadManagerStateImpl.setResumeData(Map new_data)": {
+      "name": "setResumeData",
+      "arguments": "Map new_data",
+      "signature": "@Override\n\tpublic void\n\tsetResumeData(\n\t\tMap\tnew_data )",
+      "declaration_start_line": 1099,
+      "body_start_line": 1103,
+      "body_end_line": 1220,
+      "body_sha256": "07c369cf726fe914865f1681551ddbd9657bf8518d98960d572c409b05438df4",
+      "body": "{\n\t\tboolean changed = false;\n\n\t\ttry{\n\t\t\tthis_mon.enter();\n\n\t\t\t// System.out.println( \"setting download state/resume data for '\" + new String(torrent.getName()));\n\t\t\t\n\t\t\tMap existing_data = torrent.getAdditionalMapProperty(RESUME_KEY  );\n\t\t\t\n\t\t\tboolean existing_was_valid = existing_data != null && DiskManagerFactory.isTorrentResumeDataValid( this );\n\t\t\t\n\t\t\tlong new_resume_state;\n\t\t\t\n\t\t\tif ( new_data == null ){\n\n\t\t\t\tnew_resume_state = 1;\n\t\t\t\t\t\t\t\t\n\t\t\t\tif ( existing_data != null ){\n\t\t\t\t\n\t\t\t\t\ttorrent.removeAdditionalProperty( RESUME_KEY );\n\n\t\t\t\t\tchanged = true;\n\t\t\t\t}\n\t\t\t}else{\n\n\t\t\t\tchanged = !BEncoder.mapsAreIdentical( existing_data, new_data );\n\n\t\t\t\ttorrent.setAdditionalMapProperty( RESUME_KEY, new_data );\n\t\t\t\t\n\t\t\t\tboolean complete = DiskManagerFactory.isTorrentResumeDataComplete( this );\n\n\t\t\t\tnew_resume_state = complete?2:1;\n\t\t\t}\n\t\t\t\n\t\t\tif ( getLongAttribute( AT_RESUME_STATE ) != new_resume_state ){\n\t\t\t\t\n\t\t\t\tsetLongAttribute( AT_RESUME_STATE, new_resume_state );\n\t\t\t\t\n\t\t\t\tchanged = true;\n\t\t\t}\n\n\t\t\tif ( changed ){\n\t\t\t\n\t\t\t\tif ( existing_was_valid ){\n\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\tMap history = torrent.getAdditionalMapProperty( RESUME_HISTORY_KEY  );\n\t\t\t\t\t\n\t\t\t\t\tList<Long>\th_dates;\n\t\t\t\t\tList<Map>\th_resumes;\n\t\t\t\t\t\n\t\t\t\t\tif ( history == null ){\n\t\t\t\t\t\t\n\t\t\t\t\t\thistory = new HashMap();\n\t\t\t\t\t\t\n\t\t\t\t\t\th_dates \t= new ArrayList<>();\n\t\t\t\t\t\th_resumes\t= new ArrayList<>();\n\t\t\t\t\t\t\n\t\t\t\t\t\thistory.put( \"dates\", h_dates );\n\t\t\t\t\t\t\n\t\t\t\t\t\thistory.put( \"resumes\", h_resumes );\n\t\t\t\t\t\t\n\t\t\t\t\t}else{\n\t\t\t\t\t\t\n\t\t\t\t\t\th_dates\t\t= (List<Long>)history.get( \"dates\" );\n\t\t\t\t\t\t\n\t\t\t\t\t\th_resumes\t = (List<Map>)history.get( \"resumes\" );\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\tboolean found = false;\n\t\t\t\t\t\n\t\t\t\t\tfor ( Map m: h_resumes ){\n\t\t\t\t\t\t\n\t\t\t\t\t\tif ( BEncoder.mapsAreIdentical( existing_data, m )){\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\tfound = true;\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\tbreak;\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\tif ( !found ){\n\t\t\t\t\t\t\n\t\t\t\t\t\th_dates.add( SystemTime.getCurrentTime());\n\t\t\t\t\t\t\n\t\t\t\t\t\th_resumes.add( existing_data );\n\t\t\t\t\t\t\n\t\t\t\t\t\tif ( h_dates.size() > 3 ){\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\th_dates.remove( 0 );\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\th_resumes.remove( 0 );\n\t\t\t\t\t\t}\n\t\t\t\t\t\t\n\t\t\t\t\t\ttorrent.setAdditionalMapProperty( RESUME_HISTORY_KEY, history  );\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t\t\n\t\t\t\tsetDirty( false );\n\t\t\t}\n\n\t\t}finally{\n\n\t\t\tthis_mon.exit();\n\t\t}\n\n\t\t\t// we need to ensure this is persisted now as it has implications regarding crash restarts etc\n\n\t\tif ( disable_interim_saves && !changed ){\n\t\t\t\n\t\t\t\t// to be honest if the data hasn't changed I'm not sure why we need a save at all here but for the moment\n\t\t\t\t// I'll disable it if the user has already opted in to reducing writes\n\t\t\t\n\t\t}else{\n\t\t\n\t\t\tsaveSupport(false,false);\n\t\t}\n\t}"
+    },
+    "DownloadManagerStateImpl.save(boolean interim)": {
+      "name": "save",
+      "arguments": "boolean interim",
+      "signature": "@Override\n\tpublic void\n\tsave( \n\t\tboolean interim )",
+      "declaration_start_line": 1412,
+      "body_start_line": 1416,
+      "body_end_line": 1418,
+      "body_sha256": "dfc636b06d527fc8b1ecdde879a576efe8c9bcbd2d757b2b8d856c7401ffdfb1",
+      "body": "{\n\t\tsaveSupport( interim, false );\n\t}"
+    },
+    "DownloadManagerStateImpl.saveSupport(boolean interim, boolean force)": {
+      "name": "saveSupport",
+      "arguments": "boolean interim, boolean force",
+      "signature": "protected void\n\tsaveSupport( \n\t\tboolean interim, \n\t\tboolean force )",
+      "declaration_start_line": 1420,
+      "body_start_line": 1424,
+      "body_end_line": 1506,
+      "body_sha256": "530ba664c785a34eca6fea187a42c3f1168d59ddddb4428a232ad04c79dcf91b",
+      "body": "{\n\t\tif ( !force ){\n\t\t\t\n\t\t\tif ( supressWrites > 0 ){\n\t\n\t\t\t\treturn;\n\t\t\t}\n\t\t\t\n\t\t\tif ( interim && disable_interim_saves ){\n\t\t\t\t\n\t\t\t\treturn;\n\t\t\t}\n\t\t}\n\t\t\n\t\t//boolean soon = write_required_soon;\n\t\t//long some = write_required_sometime;\n\n \t\tboolean do_write;\n\n\t\ttry{\n\t\t\tthis_mon.enter();\n\n\t\t\tif ( write_required_soon ){\n\t\t\t\t\n\t\t\t\tdo_write = true;\n\t\t\t\t\n\t\t\t}else if ( write_required_sometime != -1 ){\n\t\t\t\t\t\n\t\t\t\tif ( interim ){\n\t\t\t\t\n\t\t\t\t\t\t// avoid all the 'sometime' writes ending up being done on closedown\n\t\t\t\t\t\n\t\t\t\t\tdo_write = SystemTime.getMonotonousTime() - write_required_sometime > 5*60*1000;\n\t\t\t\t\n\t\t\t\t}else{\n\t\t\t\t\t\n\t\t\t\t\tdo_write = true;\n\t\t\t\t}\n\t\t\t}else{\n\t\t\t\t\n\t\t\t\tdo_write = false;\n\t\t\t}\n\t\t\t\n\t\t\tif ( do_write ){\n\t\t\t\n\t\t\t\twrite_required_soon \t= false;\n\t\t\t\twrite_required_sometime\t= -1;\n\t\t\t}\n\t\t}finally{\n\n\t\t\tthis_mon.exit();\n\t\t}\n\n\t\tif ( do_write ){\n\n\t\t\ttry{\n\t\t\t\t\n\t\t\t\t//Debug.out( \"writing download state for '\" + new String(torrent.getName()) + \", interim=\" + interim + \", soon/some=\" + soon + \"/\" + some );\n\n\t\t\t\tif (Logger.isEnabled())\n\t\t\t\t\tLogger.log(new LogEvent(torrent, LOGID, \"Saving state for download '\"\n\t\t\t\t\t\t\t+ TorrentUtils.getLocalisedName(torrent) + \"'\"));\n\n\t\t\t\t/*\n\t\t\t\tif ( save_log != null ){\n\t\t\t\t\t\n\t\t\t\t\tsave_log.log( TorrentUtils.getLocalisedName(torrent) + \": \" + Debug.getCompressedStackTrace());\n\t\t\t\t}\n\t\t\t\t*/\n\t\t\t\t\n\t\t\t\ttorrent.setAdditionalMapProperty( ATTRIBUTE_KEY, attributes );\n\n\t\t\t\tTorrentUtils.writeToFile(torrent, true);\n\n\t\t\t}catch ( Throwable e ){\n\t\t\t\t\n\t\t\t\tLogger.log(new LogEvent(torrent, LOGID, \"Saving state\", e));\n\t\t\t}\n\t\t}else{\n\n\t\t\t// System.out.println( \"not writing download state for '\" + new String(torrent.getName()));\n\t\t}\n\t}"
+    },
+    "DownloadManagerStatsImpl.getDownloadCompletedBytes()": {
+      "name": "getDownloadCompletedBytes",
+      "arguments": "",
+      "signature": "@Override\n\tpublic long getDownloadCompletedBytes()",
+      "declaration_start_line": 380,
+      "body_start_line": 381,
+      "body_end_line": 384,
+      "body_sha256": "62c4ac764c4647893f53865b9db1b7efb177f1ab99d4f7f9e35594d363d4f969",
+      "body": "{\n\t\trecalcDownloadCompleteBytes();\n\t\treturn saved_completed_download_bytes;\n\t}"
+    },
+    "DownloadManagerStatsImpl.getTotalDataBytesReceived()": {
+      "name": "getTotalDataBytesReceived",
+      "arguments": "",
+      "signature": "@Override\n\tpublic long\n\tgetTotalDataBytesReceived()",
+      "declaration_start_line": 439,
+      "body_start_line": 442,
+      "body_end_line": 449,
+      "body_sha256": "bd2ae51770f1a78a2242b2467682c795ca719f276bcd867b2ddf11deec5f885a",
+      "body": "{\n\t\tPEPeerManager\tpm = download_manager.getPeerManager();\n\n\t\tif (pm != null) {\n\t\t\treturn saved_data_bytes_downloaded + pm.getStats().getTotalDataBytesReceived();\n\t\t}\n\t\treturn(saved_data_bytes_downloaded);\n\t}"
+    },
+    "DownloadManagerStatsImpl.getTotalDataBytesSent()": {
+      "name": "getTotalDataBytesSent",
+      "arguments": "",
+      "signature": "@Override\n\tpublic long\n\tgetTotalDataBytesSent()",
+      "declaration_start_line": 545,
+      "body_start_line": 548,
+      "body_end_line": 556,
+      "body_sha256": "6be0340771c5a114731af9bb29a3a33f59be46d056a1e85bee999982c5ef8673",
+      "body": "{\n\t\tPEPeerManager\tpm = download_manager.getPeerManager();\n\n\t\tif (pm != null) {\n\t\t\treturn saved_data_bytes_uploaded + pm.getStats().getTotalDataBytesSent();\n\t\t}\n\n\t\treturn( saved_data_bytes_uploaded );\n\t}"
+    },
+    "DownloadManagerStatsImpl.getSecondsOnlySeeding()": {
+      "name": "getSecondsOnlySeeding",
+      "arguments": "",
+      "signature": "@Override\n\tpublic long\n\tgetSecondsOnlySeeding()",
+      "declaration_start_line": 1010,
+      "body_start_line": 1013,
+      "body_end_line": 1020,
+      "body_sha256": "f0f9312b0aff2d108629d3952ffa1c2a999cfc7e5eb5f382cda21d6341cc713e",
+      "body": "{\n\t  long lTimeStarted = getTimeStartedSeeding( true );\n\t  if (lTimeStarted >= 0) {\n\t    return saved_SecondsOnlySeeding +\n\t           ((SystemTime.getMonotonousTime() - lTimeStarted) / 1000);\n\t  }\n\t  return saved_SecondsOnlySeeding;\n\t}"
+    },
+    "DownloadManagerStatsImpl.saveSessionTotals()": {
+      "name": "saveSessionTotals",
+      "arguments": "",
+      "signature": "protected void\n\tsaveSessionTotals()",
+      "declaration_start_line": 1470,
+      "body_start_line": 1472,
+      "body_end_line": 1509,
+      "body_sha256": "5e10c03c753e60c8c216b898eb8cdd54575bee0c2562b9404782b43ca05b16cd",
+      "body": "{\n\t\tcheckShareRatioProgress();\n\t\t\n\t\t  \t// re-base the totals from current totals and session totals\n\n\t\tsaved_data_bytes_downloaded \t= getTotalDataBytesReceived();\n\t\tsaved_data_bytes_uploaded\t\t= getTotalDataBytesSent();\n\n\t\tsaved_protocol_bytes_downloaded = getTotalProtocolBytesReceived();\n\t\tsaved_protocol_bytes_uploaded\t= getTotalProtocolBytesSent();\n\n\t\tsaved_discarded\t\t\t\t= getDiscarded();\n\t\tsaved_hashfails\t\t\t\t= getHashFailBytes();\n\n\t\tsaved_SecondsDownloading \t\t= getSecondsDownloading();\n\t\tsaved_SecondsOnlySeeding\t\t= getSecondsOnlySeeding();\n\n\t\tsaved_SecondsSinceDownload\t\t= getTimeSinceLastDataReceivedInSeconds();\n\t\tsaved_SecondsSinceUpload\t\t= getTimeSinceLastDataSentInSeconds();\n\n\t\tsession_SecondsSinceDownload\t\t= getTimeSinceLastDataReceivedInSeconds( true );\n\t\tsession_SecondsSinceUpload\t\t= getTimeSinceLastDataSentInSeconds( true );\n\t\t\n\t\tsaved_peak_receive_rate\t\t\t= getPeakDataReceiveRate();\n\t\tsaved_peak_send_rate\t\t\t= getPeakDataSendRate();\n\n\t\tDownloadManagerState state = download_manager.getDownloadState();\n\n\t\tstate.setIntAttribute( DownloadManagerState.AT_TIME_SINCE_DOWNLOAD, saved_SecondsSinceDownload );\n\t\tstate.setIntAttribute( DownloadManagerState.AT_TIME_SINCE_UPLOAD, saved_SecondsSinceUpload );\n\n\t\tstate.setLongAttribute( DownloadManagerState.AT_AVAIL_BAD_TIME, getAvailWentBadTime());\n\n\t\tstate.setLongAttribute( DownloadManagerState.AT_PEAK_RECEIVE_RATE, saved_peak_receive_rate );\n\t\tstate.setLongAttribute( DownloadManagerState.AT_PEAK_SEND_RATE, saved_peak_send_rate );\n\t\t\n\t\tsaveTrackerStats();\n\t}"
+    },
+    "DownloadManagerStatsImpl.restoreSessionTotals(long _saved_data_bytes_downloaded, long _saved_data_bytes_uploaded, long _saved_discarded, long _saved_hashfails, long _saved_SecondsDownloading, long _saved_SecondsOnlySeeding)": {
+      "name": "restoreSessionTotals",
+      "arguments": "long _saved_data_bytes_downloaded, long _saved_data_bytes_uploaded, long _saved_discarded, long _saved_hashfails, long _saved_SecondsDownloading, long _saved_SecondsOnlySeeding",
+      "signature": "@Override\n\tpublic void\n\trestoreSessionTotals(\n\t\tlong\t\t_saved_data_bytes_downloaded,\n\t\tlong\t\t_saved_data_bytes_uploaded,\n\t\tlong\t\t_saved_discarded,\n\t\tlong\t\t_saved_hashfails,\n\t\tlong\t\t_saved_SecondsDownloading,\n\t\tlong\t\t_saved_SecondsOnlySeeding )",
+      "declaration_start_line": 1520,
+      "body_start_line": 1529,
+      "body_end_line": 1562,
+      "body_sha256": "24fb17c091ebc7a843fff0d54d82ee639d3579daa87dac8b033d0be117ed51ce",
+      "body": "{\n\t\tsaved_data_bytes_downloaded\t= _saved_data_bytes_downloaded;\n\t\tsaved_data_bytes_uploaded\t= _saved_data_bytes_uploaded;\n\t\tsaved_discarded\t\t\t\t= _saved_discarded;\n\t\tsaved_hashfails\t\t\t\t= _saved_hashfails;\n\t\tsaved_SecondsDownloading\t= _saved_SecondsDownloading;\n\t\tsaved_SecondsOnlySeeding\t= _saved_SecondsOnlySeeding;\n\n\t\tsession_start_data_bytes_downloaded\t= saved_data_bytes_downloaded;\n\t\tsession_start_data_bytes_uploaded\t= _saved_data_bytes_uploaded;\n\n\t\tDownloadManagerState state = download_manager.getDownloadState();\n\n\t\tsaved_SecondsSinceDownload\t= state.getIntAttribute( DownloadManagerState.AT_TIME_SINCE_DOWNLOAD );\n\t\tsaved_SecondsSinceUpload\t= state.getIntAttribute( DownloadManagerState.AT_TIME_SINCE_UPLOAD );\n\t\t\n\t\tsaved_peak_receive_rate\t\t= state.getLongAttribute( DownloadManagerState.AT_PEAK_RECEIVE_RATE );\n\t\tsaved_peak_send_rate\t\t= state.getLongAttribute( DownloadManagerState.AT_PEAK_SEND_RATE );\n\n\t\t/*\n\t\t * 24/06/2024. going to assume that this bug has long since been fixed and any potential recovery \n\t\t * performed. It is causing cache-fixups on restart for downloads that legitimately have 0 completed data\n\t\tif (saved_data_bytes_downloaded > 0 && saved_completed_download_bytes == 0) {\n\t\t\t// Bug where 0 is stored in config for torrent's saved_completed_download_bytes\n\t\t\t// when there's actually completed data.  Force a recalc on next request\n\t\t\tsaved_completed_download_bytes = -1;\n\t\t}\n\t\t*/\n\t\t\n\t\tsaved_skipped_file_set_size = state.getLongAttribute( DownloadManagerState.AT_SKIPPED_FILESET_SIZE );\n\t\tsaved_skipped_but_downloaded = state.getLongAttribute( DownloadManagerState.AT_SKIPPED_BUT_DOWNLOADED );\n\t\t\n\t\tloadTrackerStats();\n\t}"
+    },
+    "RDResumeHandler.stop(boolean closing)": {
+      "name": "stop",
+      "arguments": "boolean closing",
+      "signature": "public void\n\tstop(\n\t\tboolean\tclosing )",
+      "declaration_start_line": 132,
+      "body_start_line": 135,
+      "body_end_line": 139,
+      "body_sha256": "b8d42f26806b705980a2c193e207d29efd3209b6469919bf117cef9d52b85f66",
+      "body": "{\n\t\tstopped_for_close\t= stopped_for_close | closing;\t// can get in here > once during close\n\n\t\tstopped\t\t\t\t= true;\n\t}"
+    },
+    "RDResumeHandler.saveResumeData(boolean interim_save)": {
+      "name": "saveResumeData",
+      "arguments": "boolean interim_save",
+      "signature": "public void\n\tsaveResumeData(\n\t\tboolean interim_save ) \t// data is marked as \"invalid\" if this is true to enable checking on pieces on crash restart\n\n\t\tthrows Exception",
+      "declaration_start_line": 812,
+      "body_start_line": 817,
+      "body_end_line": 988,
+      "body_sha256": "260f698f39fc1f36aafd5112918d58acb2835d39351e52a6ef277ad57a313018",
+      "body": "{\n\t\tif ( check_in_progress && interim_save ){\n\n\t\t\t\t// while we are rechecking it is important that an interim save doesn't come\n\t\t\t\t// along and overwrite the persisted resume data. This is because should we crash\n\t\t\t\t// while rechecking we need the persisted state to be unchanged so that on\n\t\t\t\t// restart the rechecking occurs again\n\n\t\t\t\t// a non-interim save means that the user has decided to stop the  download (or some\n\t\t\t\t// other such significant event) so we just persist the current state\n\n\t\t\treturn;\n\t\t}\n\n\t\t\t// if file caching is enabled then this is an important time to ensure that the cache is\n\t\t\t// flushed as we are going to record details about the accuracy of written data.\n\t\t\t// First build the resume map from the data (as updates can still be goin on)\n\t\t\t// Then, flush the cache. This means that on a successful flush the built resume\n\t\t\t// data matches at least the valid state of the data\n\t\t\t// Then update the torrent\n\n\t\tDiskManagerFileInfo[]\tfiles = disk_manager.getFiles();\n\n\t\t/*\n\t\tif ( !use_fast_resume ){\n\n\t\t\t\t// flush cache even if resume disable as this is a good point to ensure that data\n\t\t\t\t// is persisted anyway\n\n\t\t\tfor (int i=0;i<files.length;i++){\n\n\t\t\t\tfiles[i].flushCache();\n\t\t\t}\n\n\t\t\treturn;\n\t\t}\n\t\t*/\n\t\t\n\t\tboolean\twas_complete = isTorrentResumeDataComplete( disk_manager.getDownloadManager().getDownloadState());\n\n\t\tif ( was_complete && check_interrupted ){\n\t\t\n\t\t\t\t// piece completion state not usable, stick with the previous state of affairs\n\t\t\t\n\t\t\treturn;\n\t\t}\n\t\t\n\t\tDiskManagerPiece[] pieces\t= disk_manager.getPieces();\n\n\t\t\t//build the piece byte[]\n\n\t\tbyte[] resume_pieces = new byte[pieces.length];\n\n\t\tfor (int i = 0; i < resume_pieces.length; i++) {\n\n\t\t\tDiskManagerPiece piece = pieces[i];\n\n\t\t\t\t// if we are terminating due to az closure and this has interrupted a recheck then\n\t\t\t\t// make sure that the recheck continues appropriately on restart\n\n\t\t\tif ( stopped_for_close && check_interrupted && i >= check_position ){\n\n\t\t\t\tresume_pieces[i] = PIECE_RECHECK_REQUIRED;\n\n\t\t\t}else if ( piece.isDone()){\n\n\t\t\t\tresume_pieces[i] = PIECE_DONE;\n\n\t\t  \t}else if ( piece.getNbWritten() > 0 ){\n\n\t\t  \t\tresume_pieces[i] = PIECE_STARTED;\n\n\t\t  \t}else{\n\n\t\t\t\tresume_pieces[i] = PIECE_NOT_DONE;\n\t\t  \t}\n\t\t}\n\n\t\tMap\tresume_data = new HashMap();\n\n\t\tresume_data.put( \"resume data\", resume_pieces );\n\n\t\tMap partialPieces = new HashMap();\n\n\t\tfor (int i = 0; i < pieces.length; i++) {\n\n\t\t\tDiskManagerPiece piece = pieces[i];\n\n\t\t\t\t// save the partial pieces for any pieces that have not yet been completed\n\t\t\t\t// and are in-progress (i.e. have at least one block downloaded)\n\n\t\t\tboolean[] written = piece.getWritten();\n\n\t\t\tif (( !piece.isDone()) && piece.getNbWritten() > 0 && written != null ){\n\n\t\t\t\tboolean\tall_written = true;\n\n\t\t\t\tfor (int j = 0; j < written.length; j++) {\n\n\t\t\t\t\tif ( !written[j] ){\n\n\t\t\t\t\t\tall_written = false;\n\n\t\t\t\t\t\tbreak;\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\tif ( all_written ){\n\n\t\t\t\t\t\t// just mark the entire piece for recheck as we've stopped the torrent at the\n\t\t\t\t\t\t// point where a check-piece was, or was about to be, scheduled\n\n\t\t\t\t\tresume_pieces[ i ] = PIECE_RECHECK_REQUIRED;\n\n\t\t\t\t}else{\n\n\t\t\t\t\tList blocks = new ArrayList();\n\n\t\t\t\t\tfor (int j = 0; j < written.length; j++) {\n\n\t\t\t\t\t\tif (written[j]){\n\n\t\t\t\t\t\t\tblocks.add(new Long(j));\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\n\t\t\t\t\tpartialPieces.put(\"\" + i, blocks);\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\n\t\tresume_data.put(\"blocks\", partialPieces);\n\n\t\tlong lValid;\n\n\t\tif ( check_interrupted ){\n\n\t\t\t\t// set validity to what it was before the check started\n\n\t\t\tlValid = check_resume_was_valid?1:0;\n\n\t\t}else if ( interim_save ){\n\n\t\t\t\t// set invalid so that not-done pieces get rechecked on startup\n\n\t\t\tlValid = 0;\n\n\t\t}else{\n\n\t\t\tlValid = 1;\n\t\t}\n\n\t\tresume_data.put(\"valid\", new Long(lValid));\n\n\t\tfor (int i=0;i<files.length;i++){\n\n\t\t\tfiles[i].flushCache();\n\t\t}\n\n\t  \t\t// OK, we've got valid resume data and flushed the cache\n\n\t\tboolean\tis_complete = isTorrentResumeDataComplete( pieces.length, resume_data );\n\n\t\tif ( was_complete && is_complete ){\n\n\t  \t\t// no change, no point in writing\n\n\t\t}else{\n\n\t\t\tsaveResumeData( resume_data );\n\t\t}\n\t}"
+    },
+    "RDResumeHandler.saveResumeData(Map resume_data)": {
+      "name": "saveResumeData",
+      "arguments": "Map resume_data",
+      "signature": "private void\n\tsaveResumeData(\n\t\tMap\t\tresume_data )",
+      "declaration_start_line": 996,
+      "body_start_line": 999,
+      "body_end_line": 1001,
+      "body_sha256": "21ee35e91feced2c405e90443c2ee425b5e86990e09012f58e6bf77e935befbb",
+      "body": "{\n\t\tsaveResumeData( disk_manager.getDownloadManager().getDownloadState(), resume_data );\n\t}"
+    },
+    "RDResumeHandler.saveResumeData(DownloadManagerState download_manager_state, Map resume_data)": {
+      "name": "saveResumeData",
+      "arguments": "DownloadManagerState download_manager_state, Map resume_data",
+      "signature": "private static void\n\tsaveResumeData(\n\t\tDownloadManagerState\t\tdownload_manager_state,\n\t\tMap\t\t\t\t\t\t\tresume_data )",
+      "declaration_start_line": 1036,
+      "body_start_line": 1040,
+      "body_end_line": 1046,
+      "body_sha256": "838cece0ed6b068f2cc88791816a1e48ed29666229cb943c25f47541833fc2c2",
+      "body": "{\n\t\tMap\tresume_map = new HashMap();\n\n\t\tresume_map.put( \"data\", resume_data );\n\n\t\tdownload_manager_state.setResumeData( resume_map );\n\t}"
+    },
+    "RDResumeHandler.isTorrentResumeDataComplete(DownloadManagerState dms)": {
+      "name": "isTorrentResumeDataComplete",
+      "arguments": "DownloadManagerState dms",
+      "signature": "public static boolean\n\tisTorrentResumeDataComplete(\n\t\tDownloadManagerState\t\t\tdms )",
+      "declaration_start_line": 1340,
+      "body_start_line": 1343,
+      "body_end_line": 1349,
+      "body_sha256": "2c71342a91065ee747c3a39a8816846f06470a0f92040453b41f2a2bbb9a2b64",
+      "body": "{\n\t\t\t// backwards compatibility, resume data key is the dir\n\n\t\tMap\tresume_data = getResumeData( dms );\n\n\t\treturn( isTorrentResumeDataComplete( dms.getTorrent().getNumberOfPieces(), resume_data ));\n\t}"
+    },
+    "RDResumeHandler.isTorrentResumeDataComplete(int piece_count, Map resume_data)": {
+      "name": "isTorrentResumeDataComplete",
+      "arguments": "int piece_count, Map resume_data",
+      "signature": "private static boolean\n\tisTorrentResumeDataComplete(\n\t\tint\t\t\tpiece_count,\n\t\tMap\t\t\tresume_data )",
+      "declaration_start_line": 1369,
+      "body_start_line": 1373,
+      "body_end_line": 1409,
+      "body_sha256": "58e70dae48b7d620d61dd9d6c48920935f62ee488614616ff89de6010c611b55",
+      "body": "{\n\t\ttry{\n\t\t\tif ( resume_data != null ){\n\n\t\t\t\tbyte[] \tpieces \t= (byte[])resume_data.get(\"resume data\");\n\t\t\t\tMap\t\tblocks\t= (Map)resume_data.get(\"blocks\");\n\t\t\t\tboolean\tvalid\t= ((Long)resume_data.get(\"valid\")).intValue() == 1;\n\n\t\t\t\t\t// any partial pieced -> not complete\n\n\t\t\t\tif ( blocks == null || blocks.size() > 0 ){\n\n\t\t\t\t\treturn( false );\n\t\t\t\t}\n\n\t\t\t\tif ( valid && pieces != null && pieces.length == piece_count ){\n\n\t\t\t\t\tfor (int i=0;i<pieces.length;i++){\n\n\t\t\t\t\t\tif ( pieces[i] != PIECE_DONE ){\n\n\t\t\t\t\t\t\t\t// missing piece or recheck outstanding\n\n\t\t\t\t\t\t\treturn( false );\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\n\t\t\t\t\treturn( true );\n\t\t\t\t}\n\t\t\t}\n\t\t}catch( Throwable e ){\n\n\t\t\tDebug.printStackTrace( e );\n\t\t}\n\n\t\treturn( false );\n\t}"
+    },
+    "DiskManagerImpl.stop(boolean closing)": {
+      "name": "stop",
+      "arguments": "boolean closing",
+      "signature": "@Override\n    public boolean\n    stop(\n    \tboolean\tclosing )",
+      "declaration_start_line": 678,
+      "body_start_line": 682,
+      "body_end_line": 789,
+      "body_sha256": "ed6bd8f91346ca6613f37fd6c6f5ca70d68b38840edc4fbda541266ed4477295",
+      "body": "{\n        try{\n        \tif ( move_in_progress ){\n\n        \t\tDebug.out( \"stop called while move in progress!\" );\n        \t}\n\n            start_stop_mon.enter();\n\n            if ( !started ){\n\n                return( false );\n            }\n\n                // we need to be careful if we're still starting up as this may be\n                // a re-entrant \"stop\" caused by a faulty state being reported during\n                // startup. Defer the actual stop until starting is complete\n\n            if ( starting ){\n\n                stopping    = true;\n\n                    // we can however safely stop things at this point - this is important\n                    // to interrupt an alloc/recheck process that might be holding up the start\n                    // operation\n\n                checker.stop();\n\n                writer.stop();\n\n                reader.stop();\n\n                resume_handler.stop( closing );\n\n                \t// at least save the current stats to download state  - they'll be persisted later\n                \t// when the \"real\" stop gets through\n\n                saveState( false );\n\n                return( true );\n            }\n\n            started     = false;\n\n            stopping    = false;\n\n        }finally{\n\n            start_stop_mon.exit();\n        }\n\n        started_sem.reserve();\n\n        checker.stop();\n\n        writer.stop();\n\n        reader.stop();\n\n        resume_handler.stop( closing );\n\n        if ( files != null ){\n\n            for (int i = 0; i < files.length; i++){\n\n                try{\n                    if (files[i] != null) {\n\n                        files[i].getCacheFile().close();\n                    }\n                }catch ( Throwable e ){\n\n                    setFailed( DiskManager.ET_OTHER, \"File close fails\", e, switched_to_upload_only );\n                }\n            }\n        }\n\n        DownloadManagerState state = download_manager.getDownloadState();\n        \n        try{\n        \t\t// saving resume data might well save the state, however we're going to\n        \t\t// save the state below anyway \n        \t\n        \tstate.suppressStateSave( true );\n        \n\t        if ( getState() == DiskManager.READY || ( getState() == DiskManager.FAULTY && errorType == ET_STOP_DURING_INIT )){\n\t\n\t            try{\n\t\n\t                saveResumeData( false );\n\t\n\t            }catch( Exception e ){\n\t\n\t                setFailed( DiskManager.ET_OTHER, \"Resume data save fails\", e, switched_to_upload_only );\n\t            }\n\t        }\n        }finally{\n        \t\n        \tstate.suppressStateSave( false );\n        }\n        \n        saveState( false );\n\n        // can't be used after a stop so we might as well clear down the listeners\n        listeners.clear();\n\n        return( false );\n    }"
+    },
+    "DiskManagerImpl.setPieceDone(DiskManagerPieceImpl dmPiece, boolean done)": {
+      "name": "setPieceDone",
+      "arguments": "DiskManagerPieceImpl dmPiece, boolean done",
+      "signature": "@Override\n    public void\n    setPieceDone(\n        DiskManagerPieceImpl    dmPiece,\n        boolean                 done )",
+      "declaration_start_line": 1869,
+      "body_start_line": 1874,
+      "body_end_line": 2099,
+      "body_sha256": "6e21bba3a71f414656183a55f705f7520ce3c8e47846d6d6ac6c97ce80b22b82",
+      "body": "{\n        int piece_number =dmPiece.getPieceNumber();\n        int piece_length =dmPiece.getLength();\n        \n        synchronized( file_piece_lock ){\n\t        try{\n\t\n\t            if ( dmPiece.isDone() != done ){\n\t            \t\n\t                dmPiece.setDoneSupport(done);\n\t\n\t                if (done){\n\t                \n\t                \tavailability.set( piece_number );\n\t                \t\n\t                    remaining -=piece_length;\n\t                    \n\t                }else{\n\t                \t\n\t                \tavailability.unset( piece_number );\n\t                \t\n\t                    remaining +=piece_length;\n\t                }\n\t                \n\t                DMPieceList piece_list = getPieceList( piece_number );\n\t\n\t                for (int i =0; i <piece_list.size(); i++){\n\t\n\t                    DMPieceMapEntry piece_map_entry =piece_list.get(i);\n\t\n\t                    DiskManagerFileInfoImpl this_file = (DiskManagerFileInfoImpl)piece_map_entry.getFile();\n\t\n\t                    long file_length =this_file.getLength();\n\t\n\t                    long file_done =this_file.getDownloaded();\n\t\n\t                    long file_done_before =file_done;\n\t\n\t                    if (done){\n\t                    \t\n\t                        file_done +=piece_map_entry.getLength();\n\t                        \n\t                    }else{\n\t                    \t\n\t                        file_done -=piece_map_entry.getLength();\n\t                    }\n\t                    \n\t                    if (file_done <0){\n\t                    \t\n\t                        Debug.out(\"piece map entry length negative\");\n\t\n\t                        file_done = 0;\n\t\n\t                    }else if (file_done >file_length){\n\t                    \t\n\t                        Debug.out(\"piece map entry length too large\");\n\t\n\t                        file_done =file_length;\n\t                    }\n\t\n\t                    if ( this_file.isSkipped()){\n\t                    \t\n\t                        skipped_but_downloaded +=(file_done -file_done_before);\n\t                    }\n\t\n\t                    this_file.setDownloaded(file_done);\n\t\n\t                    \t// change file modes based on whether or not the file is complete or not\n\t\n\t                    if ( file_done == file_length ){\n\t\n\t                    \ttry{\n\t                      \t\tDownloadManagerState state = download_manager.getDownloadState();\n\t\n\t                    \t\ttry{\n\t\n\t\t                    \t\tString suffix = state.getAttribute( DownloadManagerState.AT_INCOMP_FILE_SUFFIX );\n\t\n\t\t                    \t\tif ( suffix != null && suffix.length() > 0 ){\n\t\n\t\t\t\t\t\t\t\t\t\tString prefix = state.getAttribute( DownloadManagerState.AT_DND_PREFIX );\n\t\n\t\t\t\t\t\t\t\t\t\tif ( prefix == null ){\n\t\n\t\t\t\t\t\t\t\t\t\t\tprefix = \"\";\n\t\t\t\t\t\t\t\t\t\t}\n\t\n\t\t                    \t\t\tFile base_file = this_file.getFile( false );\n\t\n\t\t                    \t\t\tint\tfile_index = this_file.getIndex();\n\t\n\t\t                    \t\t\tFile link = state.getFileLink( file_index );\n\t\n\t\t                    \t\t\tif ( link != null ){\n\t\n\t\t                    \t\t\t\tString\tname = link.getName();\n\t\n\t\t                    \t\t\t\tif ( name.endsWith( suffix ) && name.length() > suffix.length()){\n\t\n\t\t                    \t\t\t\t\tString\tnew_name = name.substring( 0, name.length() - suffix.length());\n\t\n\t\t                    \t\t\t\t\tif ( !this_file.isSkipped()){\n\t\n\t\t                    \t\t\t\t\t\t\t// retain prefix for dnd files as it is there to prevent clashes\n\t\n\t\t\t                    \t\t\t\t\tif ( prefix.length() > 0 && new_name.startsWith( prefix )){\n\t\n\t\t\t                    \t\t\t\t\t\tnew_name = new_name.substring( prefix.length());\n\t\t\t                    \t\t\t\t\t}\n\t\t                    \t\t\t\t\t}\n\t\n\t\t                    \t\t\t\t\tFile new_file = FileUtil.newFile( link.getParentFile(), new_name );\n\t\n\t\t                    \t\t\t\t\tif ( !FileUtil.exists( new_file )){\n\t\n\t\t                    \t\t\t\t\t\tthis_file.renameFile( new_name );\n\t\n\t\t                    \t\t\t\t\t\tif ( base_file.equals( new_file )){\n\t\n\t\t                    \t\t\t\t\t\t\tstate.setFileLink( file_index, base_file, null );\n\t\n\t\t                    \t\t\t\t\t\t}else{\n\t\n\t\t                    \t\t\t\t\t\t\tstate.setFileLink( file_index, base_file, new_file );\n\t\t                    \t\t\t\t\t\t}\n\t\t                    \t\t\t\t\t}\n\t\t                    \t\t\t\t}\n\t\t                    \t\t\t}else{\n\t\n\t\t                    \t\t\t\t\t/* bit nasty this but I (parg) spent a while trying to find an alternative solution to this and gave up\n\t\t                    \t\t\t\t\t * With simple torrents, if a 'file-move' operation is performed while incomplete with a suffix defined then\n\t\t                    \t\t\t\t\t * the actual save location gets updated and the link information lost as a result (it is as if the user went and\n\t\t                    \t\t\t\t\t * moved the file to another one that happened to end in the suffix). Detect this situation and do the best we\n\t\t                    \t\t\t\t\t * can to remove the auto-added suffix\n\t\t                    \t\t\t\t\t */\n\t\n\t\t                    \t\t\t\tif ( this_file.getTorrentFile().getTorrent().isSimpleTorrent()){\n\t\n\t\t                    \t\t\t\t\tFile save_location = download_manager.getSaveLocation();\n\t\n\t\t                    \t\t\t\t\tString\tname = save_location.getName();\n\t\n\t\t\t                    \t\t\t\tif ( name.endsWith( suffix ) && name.length() > suffix.length()){\n\t\n\t\t\t                    \t\t\t\t\tString\tnew_name = name.substring( 0, name.length() - suffix.length());\n\t\n\t\t\t                    \t\t\t\t\tif ( !this_file.isSkipped()){\n\t\n\t\t\t                    \t\t\t\t\t\t\t// retain prefix for dnd files as it is there to prevent clashes\n\t\n\t\t\t\t                    \t\t\t\t\tif ( prefix.length() > 0 && new_name.startsWith( prefix )){\n\t\n\t\t\t\t                    \t\t\t\t\t\tnew_name = new_name.substring( prefix.length());\n\t\t\t\t                    \t\t\t\t\t}\n\t\t\t                    \t\t\t\t\t}\n\t\n\t\t\t                    \t\t\t\t\tFile new_file = FileUtil.newFile( save_location.getParentFile(), new_name );\n\t\n\t\t\t                    \t\t\t\t\tif ( !FileUtil.exists( new_file )){\n\t\n\t\t\t                    \t\t\t\t\t\tthis_file.renameFile( new_name );\n\t\n\t\t\t                    \t\t\t\t\t\tif ( save_location.equals( new_file )){\n\t\n\t\t\t                    \t\t\t\t\t\t\tstate.setFileLink( 0, save_location, null );\n\t\n\t\t\t                    \t\t\t\t\t\t}else{\n\t\n\t\t\t                    \t\t\t\t\t\t\tstate.setFileLink( 0, save_location, new_file );\n\t\t\t                    \t\t\t\t\t\t}\n\t\t\t                    \t\t\t\t\t}\n\t\t\t                    \t\t\t\t}\n\t\t                    \t\t\t\t}\n\t\t                    \t\t\t}\n\t\t                    \t\t}\n\t                    \t\t}finally{\n\t\n\t                             \tif ( this_file.getAccessMode() == DiskManagerFileInfo.WRITE ){\n\t\n\t                               \t\tthis_file.setAccessMode( DiskManagerFileInfo.READ );\n\t                               \t}\n\t\n\t                             \t\t// only record completion during normal downloading, not rechecking etc\n\t\n\t                             \tif ( getState() == READY ){\n\t\n\t                             \t\tstate.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_FILE_COMPLETED_TIME, SystemTime.getCurrentTime());\n\t                             \t\t\n\t    \t                    \t\tlisteners.dispatch( LDT_FILE_COMPLETED, new Object[]{ DiskManagerImpl.this, this_file });\n\t                             \t}\n\t                    \t\t}\n\t                        }catch ( Throwable e ){\n\t\n\t                            setFailed( this_file.getCacheFile().exists()?DiskManager.ET_WRITE_ERROR:DiskManager.ET_FILE_MISSING, \"Disk access error\", e, false );\n\t\n\t                            Debug.printStackTrace(e);\n\t                        }\n\t\n\t                        // note - we don't set the access mode to write if incomplete as we may\n\t                        // be rechecking a file and during this process the \"file_done\" amount\n\t                        // will not be file_length until the end. If the file is read-only then\n\t                        // changing to write will cause trouble!\n\t                      }\n\t                }\n\t\n\t                if ( getState() == READY ){\n\t\n\t                \t\t// don't start firing these until we're ready otherwise we send notifications\n\t                \t\t// for complete pieces during initialisation\n\t\n\t                \tlisteners.dispatch( LDT_PIECE_DONE_CHANGED, new Object[]{ DiskManagerImpl.this, dmPiece });\n\t                }\n\t            }\n\t        }finally{\n\t        \t\n\t        \tremaining_excluding_dnd = ( remaining - ( skipped_file_set_size - skipped_but_downloaded ));\n\t        \t\n            \tif ( remaining_excluding_dnd < 0 ){\n            \t\t\n            \t\tDebug.out( \"remaining_excluding_dnd went negative\" );\n            \t\t\n            \t\tremaining_excluding_dnd = 0;\n            \t}\n\t        }\n        }\n    }"
+    },
+    "DiskManagerImpl.saveResumeData(boolean interim_save)": {
+      "name": "saveResumeData",
+      "arguments": "boolean interim_save",
+      "signature": "@Override\n    public void\n    saveResumeData(\n        boolean interim_save )\n\n        throws Exception",
+      "declaration_start_line": 2756,
+      "body_start_line": 2762,
+      "body_end_line": 2775,
+      "body_sha256": "da4dd03de3cdbcb9d030f6841c785c6e248922c1adc3a31fcad02f341c34ed06",
+      "body": "{\n    \ttry{\n    \t\tresume_handler.saveResumeData( interim_save );\n    \t\t\n    \t}catch( Exception e ){\n    \t\t\n    \t\tif ( interim_save && canFailureBeIgnored( e )){\n    \t\t\t\n    \t\t\treturn;\n    \t\t}\n    \t\t\n    \t\tthrow( e );\n    \t}\n    }"
+    },
+    "DiskManagerImpl.downloadEnded(boolean start_of_day)": {
+      "name": "downloadEnded",
+      "arguments": "boolean start_of_day",
+      "signature": "@Override\n    public DownloadEndedProgress \n    downloadEnded(\n    \tboolean start_of_day )",
+      "declaration_start_line": 2777,
+      "body_start_line": 2781,
+      "body_end_line": 2790,
+      "body_sha256": "0ee9b29dfdf2021121eeb4c24e0e5c96b88d111eb1146a30325e162ebd844bb7",
+      "body": "{\n        DownloadEndedProgressImpl progress = new DownloadEndedProgressImpl();\n\n        AEThread2.createAndStartDaemon( \"DownloadEnded\", ()->{\n        \t\n        \t\tmoveDownloadFilesWhenEndedOrRemoved( false, true, progress, start_of_day );\n        \t});\n        \n        return( progress );\n    }"
+    },
+    "PEPeerControlImpl.checkFinished(final boolean start_of_day)": {
+      "name": "checkFinished",
+      "arguments": "final boolean start_of_day",
+      "signature": "private void checkFinished(final boolean start_of_day)",
+      "declaration_start_line": 2131,
+      "body_start_line": 2131,
+      "body_end_line": 2217,
+      "body_sha256": "b3e2c6d04b4ac3c450ac1e7733d4177a68d90eaa9b8c735b655c548b2ce285d1",
+      "body": "{\n\t\tfinal boolean all_pieces_done = disk_mgr.getRemainingExcludingDND() == 0;\n\n\t\tif ( all_pieces_done ){\n\n\t\t\tseeding_mode = true;\n\n\t\t\tnbBytesRemaining = 0;\n\n\t\t\tprefer_udp_bloom = null;\n\n\t\t\tpiecePicker.clearEndGameChunks();\n\n\t\t\tif ( !start_of_day ){\n\t\t\t\t\n\t\t\t\tadapter.setStateFinishing();\n\t\t\t}\n\t\t\t\n\t\t\t_timeFinished_mono = SystemTime.getMonotonousTime();\n\t\t\t\n\t\t\t\t// remove previous snubbing\n\t\t\t\n\t\t\tfor ( PEPeerTransport pc: peer_transports_cow ){\n\t\t\t\t\n\t\t\t\tpc.setSnubbed( false );\n\t\t\t}\n\t\t\t\n\t\t\tsetNbPeersSnubbed(0);\n\n\t\t\t_timeStartedSeeding = SystemTime.getCurrentTime();\n\t\t\t_timeStartedSeeding_mono = SystemTime.getMonotonousTime();\n\n\t\t\ttry{\n\t\t\t\tdisk_mgr.saveResumeData(false);\n\n\t\t\t}catch(Throwable e){\n\t\t\t\t\n\t\t\t\tDebug.out(\"Failed to save resume data\", e);\n\t\t\t}\n\n\t\t\t\t// NOTE: setStateSeeding has the side effect of marking the download as complete (calls setAssumedComplete)\n\t\t\t\t// which needs to be done BEFORE informing the disk manager that the download has ended as this processes\n\t\t\t\t// the 'move on complete' actions which will fail if assumedComplete isn't true\n\t\t\t\n\t\t\tadapter.setStateSeeding(start_of_day);\n\n\t\t\t\t// this will kick off any async move operations if needed\n\t\t\t\n\t\t\tboolean checkPieces = COConfigurationManager.getBooleanParameter(ConfigKeys.File.BCFG_CHECK_PIECES_ON_COMPLETION);\n\n\t\t\tboolean checkBeforeMove\t= COConfigurationManager.getBooleanParameter(ConfigKeys.File.BCFG_CHECK_PIECES_ON_COMPLETION_BEFORE_MOVE);\n\t\t\t\n\t\t\tif ( !checkBeforeMove ){\n\t\t\t\t\n\t\t\t\tfinish_in_progress = disk_mgr.downloadEnded( start_of_day );\n\t\t\t}\n\t\t\n\t\t\t\t// re-check all pieces to make sure they are not corrupt, but only if we weren't\n\t\t\t\t// already complete\n\t\t\t\t// this is low priority so do it after the move - we want to move to complete quickly to\n\t\t\t\t// minimise the chance of something messing with it\n\t\t\t\n\t\t\t\t// UNLESS user explicitly wants this :) The might if the move is to a network drive and \n\t\t\t\t// they don't want the recheck running over the network after the move but would rather have\n\t\t\t\t// it done locally first and then moved\n\t\t\t\n\t\t\tif ( checkPieces && !start_of_day ){\n\t\t\t\t\n\t\t\t\tDiskManagerCheckRequest req = disk_mgr.createCheckRequest(-1, new Integer(CHECK_REASON_COMPLETE));\n\t\t\t\t\n\t\t\t\t\t// this call is guaranteed to register the recheck operation with the operation scheduler\n\t\t\t\t\t// before returning and therefore it will be in the queue before any potential move\n\t\t\t\t\t// operation is added in downloadEnded\n\t\t\t\t\n\t\t\t\tdisk_mgr.enqueueCompleteRecheckRequest(req, this);\n\t\t\t}\n\t\t\t\n\t\t\tif ( checkBeforeMove ){\n\t\t\t\t\n\t\t\t\tfinish_in_progress = disk_mgr.downloadEnded( start_of_day );\n\t\t\t}\n\n\t\t}else{\n\n\t\t\tseeding_mode = false;\n\t\t}\n\t}"
+    },
+    "PEPeerControlImpl.checkCompletionState()": {
+      "name": "checkCompletionState",
+      "arguments": "",
+      "signature": "protected void checkCompletionState()",
+      "declaration_start_line": 2219,
+      "body_start_line": 2219,
+      "body_end_line": 2268,
+      "body_sha256": "55345946d41cf3591f6f9f5065b32f894e8a0a45a7baa0bd3402d5873ea15893",
+      "body": "{\n\t\tif(mainloop_loop_count % MAINLOOP_ONE_SECOND_INTERVAL != 0){\n\n\t\t\treturn;\n\t\t}\n\n\t\tboolean dm_done = disk_mgr.getRemainingExcludingDND() == 0;\n\n\t\tif(seeding_mode){\n\n\t\t\tif(!dm_done){\n\n\t\t\t\tseeding_mode = false;\n\n\t\t\t\t_timeStartedSeeding = -1;\n\t\t\t\t_timeStartedSeeding_mono = -1;\n\t\t\t\t_timeFinished_mono = 0;\n\n\t\t\t\tsynchronized( outbound_ignore_addresses ){\n\n\t\t\t\t\tIterator<Integer> it =  outbound_ignore_addresses.values().iterator();\n\t\t\t\t\t\n\t\t\t\t\twhile( it.hasNext()){\n\t\t\t\t\t\t\n\t\t\t\t\t\tint rc = it.next();\n\t\t\t\t\t\t\n\t\t\t\t\t\tif ( rc == Transport.CR_NOT_INTERESTED_UPLOAD_ONLY || rc == Transport.CR_UPLOAD_TO_UPLOAD ){\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\tit.remove();\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\tLogger.log(new LogEvent(disk_mgr.getTorrent(), LOGID, \"Turning off seeding mode for PEPeerManager\"));\n\t\t\t}\n\n\t\t}else{\n\n\t\t\tif(dm_done){\n\n\t\t\t\tcheckFinished(false);\n\n\t\t\t\tif(seeding_mode){\n\n\t\t\t\t\tLogger.log(new LogEvent(disk_mgr.getTorrent(), LOGID, \"Turning on seeding mode for PEPeerManager\"));\n\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}"
+    },
+    "CoreImpl.getLockFile()": {
+      "name": "getLockFile",
+      "arguments": "",
+      "signature": "@Override\n\tpublic File\n\tgetLockFile()",
+      "declaration_start_line": 895,
+      "body_start_line": 898,
+      "body_end_line": 900,
+      "body_sha256": "d2f08a3d466f4b9fdeba6ca7fbd84591ed40bb9497e2e33f97156003052ee225",
+      "body": "{\n\t\treturn( FileUtil.newFile(SystemProperties.getUserPath(), \".azlock\" ));\n\t}"
+    },
+    "CoreImpl.canStart(int max_wait_secs)": {
+      "name": "canStart",
+      "arguments": "int max_wait_secs",
+      "signature": "@Override\n\tpublic boolean\n\tcanStart(\n\t\tint\tmax_wait_secs )",
+      "declaration_start_line": 906,
+      "body_start_line": 910,
+      "body_end_line": 950,
+      "body_sha256": "f6e5bee6d14af1a5c62c6b6902286470f89f53a8db01c680487af4cc33b82036",
+      "body": "{\n\t\tif ( System.getProperty(SystemProperties.SYSPROP_INSTANCE_LOCK_DISABLE, \"0\" ).equals( \"1\" )){\n\n\t\t\treturn( true );\n\t\t}\n\n\t\tsynchronized( this ){\n\n\t\t\tif ( file_lock != null ){\n\n\t\t\t\treturn( true );\n\t\t\t}\n\n\t\t\tFile lock_file = getLockFile();\n\n\t\t\ttry{\n\t\t\t\tRandomAccessFile raf = new RandomAccessFile( lock_file, \"rw\" );\n\n\t\t\t\tFileChannel channel = raf.getChannel();\n\n\t\t\t\tfor ( int i=0;i<max_wait_secs;i++ ){\n\n\t\t\t\t\tfile_lock = channel.tryLock();\n\n\t\t\t\t\tif ( file_lock != null ){\n\n\t\t\t\t\t\treturn( true );\n\t\t\t\t\t}\n\n\t\t\t\t\ttry{\n\t\t\t\t\t\tThread.sleep( 1000 );\n\n\t\t\t\t\t}catch( Throwable e ){\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}catch( Throwable e ){\n\t\t\t}\n\n\t\t\treturn( false );\n\t\t}\n\t}"
+    },
+    "DiskManagerUtil.storeFilePriorities(DownloadManager download_manager, DiskManagerFileInfo[] files)": {
+      "name": "storeFilePriorities",
+      "arguments": "DownloadManager download_manager, DiskManagerFileInfo[] files",
+      "signature": "protected static void\n\tstoreFilePriorities(\n\t\tDownloadManager         download_manager,\n\t\tDiskManagerFileInfo[]   files )",
+      "declaration_start_line": 1587,
+      "body_start_line": 1591,
+      "body_end_line": 1649,
+      "body_sha256": "e56960da377b2086dbeefb2ee24a92af8a88306ae9c53679d57b9d255841c3a2",
+      "body": "{\n\t\tif ( files == null ) return;\n\t\t// bit confusing this: priorities are stored as\n\t\t// >= 1   : priority, 1 = high, 2 = higher etc\n\t\t// 0      : skipped\n\t\t// -1     : normal priority\n\t\t// <= -2  : negative priority , so -2 -> priority -1, -3 -> priority -2 etc\n\n\t\tList file_priorities = new ArrayList(files.length);\n\t\tboolean all_normal = true;\n\t\tfor (int i=0; i < files.length; i++) {\n\t\t\tDiskManagerFileInfo file = files[i];\n\t\t\tif (file == null) return;\n\t\t\tboolean skipped = file.isSkipped();\n\t\t\tint priority = file.getPriority();\n\t\t\tint value;\n\t\t\tif ( skipped ){\n\t\t\t\tvalue = 0;\n\t\t\t}else if ( priority > 0 ){\n\t\t\t\tvalue = priority;\n\t\t\t}else{\n\t\t\t\tvalue = priority - 1;\n\t\t\t\tif ( value > 0 ){\n\t\t\t\t\tvalue = Integer.MIN_VALUE;\n\t\t\t\t}\n\t\t\t}\n\t\t\tif ( all_normal && value != -1 ){\n\t\t\t\tall_normal = false;\n\t\t\t}\n\t\t\tfile_priorities.add( i, Long.valueOf(value));\n\t\t}\n\n\t   download_manager.setUserData( \"file_priorities\", all_normal?null:file_priorities );\n\n\t   \t\t// for whatever reason we don't set the skipped file stats here if we have a REAL set of\n\t   \t\t// file info (maybe because the code tries to maintain its own active version of these values)\n\n\t   if (files.length > 0 && !(files[0] instanceof DiskManagerFileInfoImpl)) {\n\n\t       long skipped_file_set_size   = 0;\n\t       long skipped_but_downloaded  = 0;\n\n\t       for (int i=0;i<files.length;i++){\n\n\t           DiskManagerFileInfo file = files[i];\n\n\t           if ( file.isSkipped()){\n\n\t               skipped_file_set_size   += file.getLength();\n\t               skipped_but_downloaded  += file.getDownloaded();\n\t           }\n\t       }\n\n\t       DownloadManagerStats stats = download_manager.getStats();\n\t       if (stats instanceof DownloadManagerStatsImpl) {\n\t       \t((DownloadManagerStatsImpl) stats).setSkippedFileStats(skipped_file_set_size, skipped_but_downloaded);\n\t       }\n\t   }\n\t}"
+    },
+    "DiskManagerUtil.loadFilePriorities(DownloadManager download_manager, DiskManagerFileInfoSet fileSet)": {
+      "name": "loadFilePriorities",
+      "arguments": "DownloadManager download_manager, DiskManagerFileInfoSet fileSet",
+      "signature": "static void\n\tloadFilePriorities(\n\t\tDownloadManager         \tdownload_manager,\n\t\tDiskManagerFileInfoSet   \tfileSet )",
+      "declaration_start_line": 1651,
+      "body_start_line": 1655,
+      "body_end_line": 1700,
+      "body_sha256": "2d952eacc78f7fe5449375e83c12c6eaeee1e073448610d163defbea9d963f08",
+      "body": "{\n\t\t//  TODO: remove this try/catch.  should only be needed for those upgrading from previous snapshot\n\t\ttry {\n\t\t\tDiskManagerFileInfo[] files = fileSet.getFiles();\n\n\t\t\tif ( files == null ) return;\n\t\t\tList file_priorities = (List)download_manager.getUserData( \"file_priorities\" );\n\t\t\tif ( file_priorities == null ) return;\n\n\t\t\tboolean[] toSkip = new boolean[files.length];\n\t\t\tint[] prio = new int[files.length];\n\n\t\t\tboolean all_normal = true;\n\t\t\tfor (int i=0; i < files.length; i++) {\n\t\t\t\tDiskManagerFileInfo file = files[i];\n\t\t\t\tif (file == null) return;\n\t\t\t\ttry {\n  \t\t\t\tint priority = ((Long)file_priorities.get( i )).intValue();\n  \t\t\t\tif ( all_normal && priority != -1 ){\n  \t\t\t\t\tall_normal = false;\n  \t\t\t\t}\n  \t\t\t\tif ( priority == 0 ){\n  \t\t\t\t\ttoSkip[i] = true;\n  \t\t\t\t}else{\n  \t\t\t\t\tif ( priority < 0 ){\n  \t\t\t\t\t\tpriority++;\n  \t\t\t\t\t}\n  \t\t\t\t\tprio[i] = priority;\n  \t\t\t\t}\n\t\t\t\t} catch (Throwable t2) {\n\t\t\t\t\tDebug.printStackTrace(t2);\n\t\t\t\t}\n\t\t\t}\n\n\t\t\tif ( all_normal ){\n\t\t\t\t\t// TODO: remove this logic sometime after 4.0 as only for migration\n\t\t\t\tdownload_manager.setUserData( \"file_priorities\", null );\n\t\t\t\t\n\t\t\t}else{\n\t\t\t\t\n\t\t\t\tfileSet.load( prio, toSkip );\n\t\t\t}\n\t\t}\n\t\t\n\t\tcatch (Throwable t) {Debug.printStackTrace( t );}\n\t}"
+    }
+  },
+  "selected_method_names_not_found": {
+    "DiskManagerImpl": [
+      "stopSupport"
+    ]
+  },
+  "libtorrent_files_verified_against_qualified_source_record": {
+    "include/libtorrent/session.hpp": {
+      "sha256": "c7c4c90e5001a35270deb99909df93b7641b99ffffed6d83e258931ee4502576",
+      "git_blob_sha1": "38ca9a6cbc3c0cf3756bcd8c6ad795d7b6fe1d26",
+      "bytes": 13103
+    },
+    "include/libtorrent/session_handle.hpp": {
+      "sha256": "66055aa158d65f70972a2a19927d4cf7bc7e3ef223a69e3b825353a270757798",
+      "git_blob_sha1": "9622f5781f3d8544920102b8d5313d56726c9d51",
+      "bytes": 48691
+    },
+    "include/libtorrent/torrent_handle.hpp": {
+      "sha256": "97638a77492f9c9a11e40e82eeb522dd9bab0e3a1ff6596be0594bcaa8ce8019",
+      "git_blob_sha1": "88a763049e31ac563252085304bf70d682453395",
+      "bytes": 64107
+    },
+    "include/libtorrent/alert_types.hpp": {
+      "sha256": "15ce77c102b456465db6c119d15bbb6b74792ba684aa386669b3d6d748442897",
+      "git_blob_sha1": "0a6a0fb781f81f3c6378965327956228085765df",
+      "bytes": 111193
+    },
+    "include/libtorrent/add_torrent_params.hpp": {
+      "sha256": "adbf6a96820dfac58873697e9cf4c486006d3f724e858d43f67cd02200b0bb6d",
+      "git_blob_sha1": "db5ffb8b864c584befb253045a5314467f57f758",
+      "bytes": 17938
+    },
+    "src/torrent.cpp": {
+      "sha256": "d0b8d64c54583cb9287d20aaf5ea5bc2e85cbf0caa5d5c9df42f40c77187d185",
+      "git_blob_sha1": "22a616b0dc6fc305541252aa4fd7ec3c452a71c6",
+      "bytes": 364420
+    },
+    "src/session.cpp": {
+      "sha256": "b1dd04081d4059af82a293d8fdc5d5a42612631d3a66ad30cb582397a62ab1b7",
+      "git_blob_sha1": "db43896ae8c37ae5fca49c53361249335438988a",
+      "bytes": 18046
+    },
+    "src/mmap_disk_io.cpp": {
+      "sha256": "e28fdbb4f9eec4f7808098051987a5f9beab1fca1be3e5d0b628fb73c4ae1410",
+      "git_blob_sha1": "c1254e45471c48153382e901c6f4da88ea1939ae",
+      "bytes": 60217
+    },
+    "src/posix_disk_io.cpp": {
+      "sha256": "4eced31ddff500eafa0dd9796150cd123413facba1021d07056764ae2c8487ea",
+      "git_blob_sha1": "99a74a44a0475f8f7b6c319c386c910e1854fa59",
+      "bytes": 13965
+    },
+    "src/session_impl.cpp": {
+      "sha256": "e33778939a03634f7ca588752f924afcdf790ac48ddd2a127af71e00f34d1c65",
+      "git_blob_sha1": "6f017e6cd4efff35a7ea4d0577e37b98686b4bb8",
+      "bytes": 224090
+    }
+  },
+  "libtorrent_selected_original_methods": {
+    "torrent::save_resume_data": {
+      "body_sha256": "f07e9265a3b51b3b5bccbb853eed3be8fb1cd3c3da28891971afb44bd4452a0b",
+      "body_start_line": 9500,
+      "body_end_line": 9544,
+      "body": "{\n\t\tTORRENT_ASSERT(is_single_thread());\n\t\tINVARIANT_CHECK;\n\n\t\tif (m_abort)\n\t\t{\n\t\t\talerts().emplace_alert<save_resume_data_failed_alert>(get_handle()\n\t\t\t\t, errors::torrent_removed);\n\t\t\treturn;\n\t\t}\n\n\t\tauto conditions = flags & (\n\t\t\ttorrent_handle::only_if_modified\n\t\t\t| torrent_handle::if_counters_changed\n\t\t\t| torrent_handle::if_download_progress\n\t\t\t| torrent_handle::if_config_changed\n\t\t\t| torrent_handle::if_state_changed\n\t\t\t| torrent_handle::if_metadata_changed\n\t\t\t);\n\n\t\tif (conditions && !(m_need_save_resume_data & conditions))\n\t\t{\n\t\t\t// if conditions were specified, but none of those conditions are\n\t\t\t// met (i.e. none of them have been updated since last\n\t\t\t// save_resume_data()), we don't save it.\n\t\t\talerts().emplace_alert<save_resume_data_failed_alert>(get_handle()\n\t\t\t\t, errors::resume_data_not_modified);\n\t\t\treturn;\n\t\t}\n\n\t\tm_need_save_resume_data = resume_data_flags_t{};\n\t\tstate_updated();\n\n\t\tif ((flags & torrent_handle::flush_disk_cache) && m_storage)\n\t\t{\n\t\t\tm_ses.disk_thread().async_release_files(m_storage);\n\t\t\tm_ses.deferred_submit_jobs();\n\t\t}\n\n\t\tstate_updated();\n\n\t\tadd_torrent_params atp;\n\t\twrite_resume_data(flags, atp);\n\t\talerts().emplace_alert<save_resume_data_alert>(std::move(atp), get_handle());\n\t}"
+    },
+    "torrent::flush_cache": {
+      "body_sha256": "c39332bd2fbdabf28bb2fb0c39bc0cf7d7b204d2bcfbd4c448398d74ca010b6b",
+      "body_start_line": 9571,
+      "body_end_line": 9583,
+      "body": "{\n\t\tTORRENT_ASSERT(is_single_thread());\n\n\t\t// storage may be nullptr during shutdown\n\t\tif (!m_storage)\n\t\t{\n\t\t\tTORRENT_ASSERT(m_abort);\n\t\t\treturn;\n\t\t}\n\t\tm_ses.disk_thread().async_release_files(m_storage\n\t\t\t, std::bind(&torrent::on_cache_flushed, shared_from_this(), true));\n\t\tm_ses.deferred_submit_jobs();\n\t}"
+    },
+    "torrent::on_cache_flushed": {
+      "body_sha256": "2af7e3a4debd3387903966094f6bd3af8b7905df9f59beadf5bfdb259bc12890",
+      "body_start_line": 9586,
+      "body_end_line": 9593,
+      "body": "{\n\t\tTORRENT_ASSERT(is_single_thread());\n\n\t\tif (m_ses.is_aborted()) return;\n\n\t\tif (manually_triggered || alerts().should_post<cache_flushed_alert>())\n\t\t\talerts().emplace_alert<cache_flushed_alert>(get_handle());\n\t}"
+    },
+    "torrent::on_torrent_paused": {
+      "body_sha256": "f89c565598d7a41499111c8eb41e0a64cc65c08a9ccfbd1fec42e9bbff6e84df",
+      "body_start_line": 5138,
+      "body_end_line": 5143,
+      "body": "{\n\t\tTORRENT_ASSERT(is_single_thread());\n\n\t\tif (alerts().should_post<torrent_paused_alert>())\n\t\t\talerts().emplace_alert<torrent_paused_alert>(get_handle());\n\t}"
+    },
+    "torrent::on_torrent_aborted": {
+      "body_sha256": "1a1fb8663e2604f1b5628c1eab33dff728bd929f5d4963135ac0b3d6f3fecdbe",
+      "body_start_line": 9597,
+      "body_end_line": 9606,
+      "body": "{\n\t\tTORRENT_ASSERT(is_single_thread());\n\n\t\t// there should be no more disk activity for this torrent now, we can\n\t\t// release the disk io handle\n\t\tm_storage.reset();\n\n\t\talerts().emplace_alert<torrent_removed_alert>(get_handle()\n\t\t\t, info_hash(), get_userdata());\n\t}"
+    },
+    "torrent::pause": {
+      "body_sha256": "a4bda228a0074cc8b9ea5a788857206140b36810263e22fab19839571293ff39",
+      "body_start_line": 9614,
+      "body_end_line": 9625,
+      "body": "{\n\t\tTORRENT_ASSERT(is_single_thread());\n\t\tINVARIANT_CHECK;\n\n\t\tif (!m_paused)\n\t\t{\n\t\t\t// we need to save this new state\n\t\t\tset_need_save_resume(torrent_handle::if_state_changed);\n\t\t}\n\n\t\tset_paused(true, flags);\n\t}"
+    },
+    "torrent::do_pause": {
+      "body_sha256": "b665f52d3fcb1e894e693be1c2a4202da064de716ffcb45dc767d0c2a003eea3",
+      "body_start_line": 9628,
+      "body_end_line": 9754,
+      "body": "{\n\t\tTORRENT_ASSERT(is_single_thread());\n\t\tif (!is_paused()) return;\n\n\t\t// this torrent may be about to consider itself inactive. If so, we want\n\t\t// to prevent it from doing so, since it's being paused unconditionally\n\t\t// now. An illustrative example of this is a torrent that completes\n\t\t// downloading when active_seeds = 0. It completes, it gets paused and it\n\t\t// should not come back to life again.\n\t\tif (m_pending_active_change)\n\t\t{\n\t\t\tm_inactivity_timer.cancel();\n\t\t}\n\n#ifndef TORRENT_DISABLE_EXTENSIONS\n\t\tfor (auto& ext : m_extensions)\n\t\t{\n\t\t\tif (ext->on_pause()) return;\n\t\t}\n#endif\n\n\t\tm_connect_boost_counter\n\t\t\t= static_cast<std::uint8_t>(settings().get_int(settings_pack::torrent_connect_boost));\n\t\tm_inactive = false;\n\n\t\tupdate_state_list();\n\t\tupdate_want_tick();\n\n\t\t// do_paused() may be called twice, if the first time is to enter\n\t\t// graceful pause, and the second time proper pause. We can only update\n\t\t// these timers once, otherwise they'll be inflated\n\t\tif (!was_paused)\n\t\t{\n\t\t\tconst time_point now = aux::time_now();\n\n\t\t\tm_active_time +=\n\t\t\t\tduration_cast<seconds32>(now - m_started);\n\n\t\t\tif (is_seed()) m_seeding_time +=\n\t\t\t\tduration_cast<seconds32>(now - m_became_seed);\n\n\t\t\tif (is_finished()) m_finished_time +=\n\t\t\t\tduration_cast<seconds32>(now - m_became_finished);\n\t\t}\n\n\t\tm_announce_to_dht = false;\n\t\tm_announce_to_trackers = false;\n\t\tm_announce_to_lsd = false;\n\n\t\tstate_updated();\n\t\tupdate_want_peers();\n\t\tupdate_want_scrape();\n\t\tupdate_gauge();\n\t\tupdate_state_list();\n\n#ifndef TORRENT_DISABLE_LOGGING\n\t\tlog_to_all_peers(\"pausing\");\n#endif\n\n\t\t// when checking and being paused in graceful pause mode, we\n\t\t// post the paused alert when the last outstanding disk job completes\n\t\tif (m_state == torrent_status::checking_files)\n\t\t{\n\t\t\tif (m_checking_piece == m_num_checked_pieces)\n\t\t\t{\n\t\t\t\tif (alerts().should_post<torrent_paused_alert>())\n\t\t\t\t\talerts().emplace_alert<torrent_paused_alert>(get_handle());\n\t\t\t}\n\t\t\tdisconnect_all(errors::torrent_paused, operation_t::bittorrent);\n\t\t\treturn;\n\t\t}\n\n\t\tif (!m_graceful_pause_mode)\n\t\t{\n\t\t\t// this will make the storage close all\n\t\t\t// files and flush all cached data\n\t\t\tif (m_storage)\n\t\t\t{\n\t\t\t\t// the torrent_paused alert will be posted from on_torrent_paused\n\t\t\t\tm_ses.disk_thread().async_stop_torrent(m_storage\n\t\t\t\t\t, [self = shared_from_this()] { self->on_torrent_paused(); });\n\t\t\t\tm_ses.deferred_submit_jobs();\n\t\t\t}\n\t\t\telse\n\t\t\t{\n\t\t\t\tif (alerts().should_post<torrent_paused_alert>())\n\t\t\t\t\talerts().emplace_alert<torrent_paused_alert>(get_handle());\n\t\t\t}\n\n\t\t\tdisconnect_all(errors::torrent_paused, operation_t::bittorrent);\n\t\t}\n\t\telse\n\t\t{\n\t\t\t// disconnect all peers with no outstanding data to receive\n\t\t\t// and choke all remaining peers to prevent responding to new\n\t\t\t// requests\n\t\t\tfor (auto p : m_connections)\n\t\t\t{\n\t\t\t\tTORRENT_INCREMENT(m_iterating_connections);\n\t\t\t\tTORRENT_ASSERT(p->associated_torrent().lock().get() == this);\n\n\t\t\t\tif (p->is_disconnecting()) continue;\n\n\t\t\t\tif (p->outstanding_bytes() > 0)\n\t\t\t\t{\n#ifndef TORRENT_DISABLE_LOGGING\n\t\t\t\t\tp->peer_log(peer_log_alert::info, \"CHOKING_PEER\", \"torrent graceful paused\");\n#endif\n\t\t\t\t\t// remove any un-sent requests from the queue\n\t\t\t\t\tp->clear_request_queue();\n\t\t\t\t\t// don't accept new requests from the peer\n\t\t\t\t\tp->choke_this_peer();\n\t\t\t\t\tcontinue;\n\t\t\t\t}\n\n\t\t\t\t// since we're currently in graceful pause mode, the last peer to\n\t\t\t\t// disconnect (assuming all peers end up begin disconnected here)\n\t\t\t\t// will post the torrent_paused_alert\n#ifndef TORRENT_DISABLE_LOGGING\n\t\t\t\tp->peer_log(peer_log_alert::info, \"CLOSING_CONNECTION\", \"torrent_paused\");\n#endif\n\t\t\t\tp->disconnect(errors::torrent_paused, operation_t::bittorrent);\n\t\t\t}\n\t\t}\n\n\t\tstop_announcing();\n\t}"
+    },
+    "torrent::rename_file": {
+      "body_sha256": "bbda949c2d9fa7c3588e503cb3cc9142a59efd39b5f4ec291d42ea31d27de5e5",
+      "body_start_line": 8749,
+      "body_end_line": 8769,
+      "body": "{\n\t\tINVARIANT_CHECK;\n\n\t\tfile_storage const& fs = m_torrent_file->files();\n\t\tTORRENT_ASSERT(index >= file_index_t(0));\n\t\tTORRENT_ASSERT(index < fs.end_file());\n\t\tTORRENT_UNUSED(fs);\n\n\t\t// storage may be nullptr during shutdown\n\t\tif (!m_storage)\n\t\t{\n\t\t\tif (alerts().should_post<file_rename_failed_alert>())\n\t\t\t\talerts().emplace_alert<file_rename_failed_alert>(get_handle()\n\t\t\t\t\t, index, errors::session_is_closing);\n\t\t\treturn;\n\t\t}\n\n\t\tm_ses.disk_thread().async_rename_file(m_storage, index, std::move(name)\n\t\t\t, std::bind(&torrent::on_file_renamed, shared_from_this(), _1, _2, _3));\n\t\tm_ses.deferred_submit_jobs();\n\t}"
+    },
+    "torrent::abort": {
+      "body_sha256": "b18abb089c9d6fd6113ab7cf7399120b40ab2b340d1de72120b95a5a12cb6aed",
+      "body_start_line": 4929,
+      "body_end_line": 5015,
+      "body": "{\n\t\tTORRENT_ASSERT(is_single_thread());\n\n\t\tif (m_abort) return;\n\n\t\tm_abort = true;\n\t\tupdate_want_peers();\n\t\tupdate_want_tick();\n\t\tupdate_want_scrape();\n\t\tupdate_gauge();\n\t\tstop_announcing();\n\n\t\t// remove from download queue\n\t\tm_ses.set_queue_position(this, queue_position_t{-1});\n\n\t\tif (m_peer_class > peer_class_t{0})\n\t\t{\n\t\t\tremove_class(m_ses.peer_classes(), m_peer_class);\n\t\t\tm_ses.peer_classes().decref(m_peer_class);\n\t\t\tm_peer_class = peer_class_t{0};\n\t\t}\n\n\t\tm_inactivity_timer.cancel();\n\n#ifndef TORRENT_DISABLE_LOGGING\n\t\tlog_to_all_peers(\"aborting\");\n#endif\n\n\t\t// disconnect all peers and close all\n\t\t// files belonging to the torrents\n\t\tdisconnect_all(errors::torrent_aborted, operation_t::bittorrent);\n\n\t\t// make sure to destruct the peers immediately\n\t\ton_remove_peers();\n\t\tTORRENT_ASSERT(m_connections.empty());\n\n\t\t// post a message to the main thread to destruct\n\t\t// the torrent object from there\n\t\tif (m_storage)\n\t\t{\n\t\t\ttry {\n\t\t\t\tm_ses.disk_thread().async_stop_torrent(m_storage\n\t\t\t\t\t, std::bind(&torrent::on_torrent_aborted, shared_from_this()));\n\t\t\t}\n\t\t\tcatch (std::exception const& e)\n\t\t\t{\n\t\t\t\tTORRENT_UNUSED(e);\n\t\t\t\tm_storage.reset();\n#ifndef TORRENT_DISABLE_LOGGING\n\t\t\t\tdebug_log(\"Failed to flush disk cache: %s\", e.what());\n#endif\n\t\t\t\t// clients may rely on this alert to be posted, so it's probably a\n\t\t\t\t// good idea to post it here, even though we failed\n\t\t\t\t// TODO: 3 should this alert have an error code in it?\n\t\t\t\tif (alerts().should_post<cache_flushed_alert>())\n\t\t\t\t\talerts().emplace_alert<cache_flushed_alert>(get_handle());\n\t\t\t}\n\t\t\tm_ses.deferred_submit_jobs();\n\t\t}\n\t\telse\n\t\t{\n\t\t\tif (alerts().should_post<cache_flushed_alert>())\n\t\t\t\talerts().emplace_alert<cache_flushed_alert>(get_handle());\n\t\t\talerts().emplace_alert<torrent_removed_alert>(get_handle()\n\t\t\t\t, info_hash(), get_userdata());\n\t\t}\n\n\t\t// TODO: 2 abort lookups this torrent has made via the\n\t\t// session host resolver interface\n\n\t\tif (!m_apply_ip_filter)\n\t\t{\n\t\t\tinc_stats_counter(counters::non_filter_torrents, -1);\n\t\t\tm_apply_ip_filter = true;\n\t\t}\n\n\t\tm_paused = false;\n\t\tm_auto_managed = false;\n\t\tupdate_state_list();\n\t\tfor (torrent_list_index_t i{}; i != m_links.end_index(); ++i)\n\t\t{\n\t\t\tif (!m_links[i].in_list()) continue;\n\t\t\tm_links[i].unlink(m_ses.torrent_list(i), i);\n\t\t}\n\t\t// don't re-add this torrent to the state-update list\n\t\tm_state_subscription = false;\n\t}"
+    }
+  },
+  "native_current_files": {
+    "native/app/session_bridge.hpp": {
+      "sha256": "e7312e57494c9106a20f55ccde826e483d904902a720def65fbb19669c96bb45",
+      "git_blob_sha1": "ceba9cd1c1bc933bd5dc70725d16219aa33d6ec1",
+      "bytes": 1450
+    },
+    "native/app/session_bridge.cpp": {
+      "sha256": "c9d8145e15602b2b0c2b0ed58ce04786905f2e021caeca85f64fddd4528c0e3e",
+      "git_blob_sha1": "78e014e86428cb758ddaf019fe96d7fcdca34a34",
+      "bytes": 11648
+    },
+    "native/app/main.cpp": {
+      "sha256": "f01b44655983ac1647c2784a31eadfc4663e38a397608d67a0255daee5a9ccff",
+      "git_blob_sha1": "f0a4970dd7f9c7b6c77c0805345ccca4e5f846eb",
+      "bytes": 3051
+    },
+    "native/app/main_desktop.cpp": {
+      "sha256": "1d303e9a2d25aa7b76a363f7c59ae19a5f6211732fe4901f6c214436afd76fa9",
+      "git_blob_sha1": "c38e41e77dbd870270f381eb9754b2dedb012418",
+      "bytes": 2813
+    },
+    "native/engine/local_session.hpp": {
+      "sha256": "3ac5e56321e5202a27cc542c0d8ca9daa6a8354d7a2c1b6293b7e3fdda3caa4b",
+      "git_blob_sha1": "b9cda8f74f4a83f71c7415ddf704ca5a7b06912a",
+      "bytes": 1816
+    },
+    "native/engine/local_session.cpp": {
+      "sha256": "5a74426229f890480d7cb062d0a11aaaf74c51ced5d1ed713b758f0a9f5eef9d",
+      "git_blob_sha1": "e9b39b56690c8156d985358cc5da7a0e9830bbf1",
+      "bytes": 27878
+    },
+    "native/engine/multifile_session.hpp": {
+      "sha256": "fdc94f4b83c03b224ae9bcd00939ee5ae89a99da52a42c9ea3ee7c4be2eb3fa7",
+      "git_blob_sha1": "37998d3f0ecb4c0839f31ef66e1620a42c1062e6",
+      "bytes": 573
+    },
+    "native/engine/multifile_session.cpp": {
+      "sha256": "ab09eb93faf057e69068f5467e535d753b68887be0a82d7970532a11331bf57a",
+      "git_blob_sha1": "c13dcb4ec30df2017d1225267261e09d43ab20b9",
+      "bytes": 22873
+    },
+    "native/engine/local_support.hpp": {
+      "sha256": "c8e4bf6a1df817359ba6c27a76b3307025e90b404d67eacb0f9b21482e08b22b",
+      "git_blob_sha1": "d6d3fc99bb403a2a4cdbee881c9eb6abb408640c",
+      "bytes": 2179
+    },
+    "native/engine/CMakeLists.txt": {
+      "sha256": "ee58a160b63acccdf5fc31139e8dce64e0c7c27115bec9bf9a406a7a0a593058",
+      "git_blob_sha1": "cc32acb08bf6c5d12fc089f7f97da23c3eb7f595",
+      "bytes": 501
+    },
+    "native/adapters/profile.hpp": {
+      "sha256": "e91ff37048e02b87a4d6f97d774fe3e33b491febd0b2ec55d3dedbbf20dd60ff",
+      "git_blob_sha1": "7594d248eddb981d1463b89df1d49839651dafd7",
+      "bytes": 2489
+    },
+    "native/adapters/profile.cpp": {
+      "sha256": "f31f99cf73484c0c4fb058a6fc9e3937ecd74412f5ae794c775c0a7e8c4b91ee",
+      "git_blob_sha1": "7104c1aceac28fe57f70d06930d44733d96ee551",
+      "bytes": 7492
+    },
+    "native/adapters/torrent_state.hpp": {
+      "sha256": "947bb4933bbfe11d1e7162e0f1d039ff25feb3ad59f0227a2fb4b52f770318c6",
+      "git_blob_sha1": "37a0040383586324fd1cc3808bb37a70aa1fd862",
+      "bytes": 2974
+    },
+    "native/adapters/torrent_state.cpp": {
+      "sha256": "215f3e4ad1483615543529af0cbfc557645706f2536048126438b9399d3df0f7",
+      "git_blob_sha1": "dbaa0b47fa85990c3bce733f8deed03f8fca6406",
+      "bytes": 14877
+    },
+    "native/adapters/file_io.hpp": {
+      "sha256": "41b14236290a65b52f75d56f076857a1ffd037f9bd823f1f9afef98c82a9cd37",
+      "git_blob_sha1": "d3c5943ff61707c9c3c24a4ad912ded4f90da293",
+      "bytes": 765
+    },
+    "native/adapters/file_io.cpp": {
+      "sha256": "c55df3bfa6531534819a798351a5320365e1081d774f466fe4342bffa54793b9",
+      "git_blob_sha1": "37c74a5d4cfef571335468776c2a112974643e90",
+      "bytes": 4109
+    },
+    "native/adapters/library_view.hpp": {
+      "sha256": "43877d12f340bdd43cb1df1b98eddf6b39c89b7ec51d63de3b572ba9d4b5a82e",
+      "git_blob_sha1": "68edbc945c5047491a8e3dc4a24db29246bc6304",
+      "bytes": 991
+    },
+    "native/adapters/library_view.cpp": {
+      "sha256": "a9aa1e0f6ccde4a7b4990f2340da1dd3472d372441b1389805e5d16ef1b229d4",
+      "git_blob_sha1": "a245ebeedbc659214a33da1d33801a3435dde5be",
+      "bytes": 2590
+    },
+    "native/core/include/biglybtc/library.hpp": {
+      "sha256": "8ad4e7f5346300fdc03c6318d629b6185874d35109511ca445609639b7168875",
+      "git_blob_sha1": "9eae63582317528f8b2b046c5275ccb7e442c2f3",
+      "bytes": 1823
+    },
+    "native/core/src/library.cpp": {
+      "sha256": "3ba21404a77e0e3c9e23cbf267be130609598ed6646693df7c4f656306895348",
+      "git_blob_sha1": "3465fff582d5c17c4a3f37760710260c644c7a50",
+      "bytes": 6670
+    },
+    "native/core/include/biglybtc/executor.hpp": {
+      "sha256": "d2afcc590573e64bce376aadc42051198353e4c79c5f69f8a2452ab5a7d3d8bc",
+      "git_blob_sha1": "d69aa95a3e94443fcb51c5e8c151ee1e7d0d48ab",
+      "bytes": 2006
+    },
+    "native/core/src/executor.cpp": {
+      "sha256": "bd3adadaec6e4f48c0ffbb8ffc77e2c67c15296302105a73e984f58e4e8d7613",
+      "git_blob_sha1": "de8a45d864fa7403a383217fd65f8cd36d6946c2",
+      "bytes": 3022
+    },
+    "native/ui/library_window.cpp": {
+      "sha256": "ba56ab883d128a52ea7d1fca45e65f76ca9c5cb98bff926c06b643d459531975",
+      "git_blob_sha1": "e95b5b179dc24f0664bfa7d56a7681140864a015",
+      "bytes": 10172
+    },
+    "native/ui/library_model.hpp": {
+      "sha256": "f1e7df442132741c18862bb36b034806a566d99ad78e51cf642602d35f489955",
+      "git_blob_sha1": "377a0a48b951aebc7e1911593fb6982a233d69d9",
+      "bytes": 2395
+    },
+    "native/ui/library_model.cpp": {
+      "sha256": "222eb04ecddc60b4003dfae392e876ca28f5449f120537346902dc4ad8d1b0c9",
+      "git_blob_sha1": "0bb14cc4215d4b6da631e7757339baadcc1ce559",
+      "bytes": 5477
+    }
+  },
+  "continuation_and_planning_inputs_sha256": {
+    "MIGRATION_PLAN.md": "ef82a24f8ced3cc83dc0fa325099918406a8635d6130145e5c0e067ca3342896",
+    "migration/STATE.md": "13830417422ba7b356158bc588414f7d2078461bef9cbf6d9da95ce288ddc2cc",
+    "migration/QUESTIONS.md": "66f3fed6e6fd07d0e0ae04046c4cd0218c35887f5923e63fec87b507598364b6",
+    "migration/upstreams.lock.json": "adf1ef7cbe3909d5a049d1c2001fd009e719b94b2edc23625b56d501c2b15961",
+    "migration/decisions/AD-001.md": "f1e345a14dfdf35bc38ca1b3b46491307a964f53a977aabd2d544429874d6757",
+    "migration/decisions/AD-004.md": "99d8fb0af0d952108feb98cd5853f22b4dc80cb9c52599548f3663d3e7c8f7fc",
+    "migration/tasks/P03-01-local-session.md": "f123df8bcc7b5885adc617c06b3a56c4f0382593e8a339c9d2060cba5ec6188e",
+    "migration/tasks/P03-02-local-crashes.md": "a5c69aba000b30917633463980fcefafa65e84a891f6b9dde2da4747edf58d21",
+    "migration/tasks/P03-03-multifile-linear.md": "b53ba5fb269b788447e3e3cc97cf918a4f418c1c69833c506b83a20bd0c17b20",
+    "migration/tasks/P03-04-file-policy.md": "e21f07487a42d9a7e7d3c223f3770c2aadb63cb770b312ab9456ca432615f714",
+    "migration/evidence/P01-02/gcc16-source-build.json": "436931d4c6b87274c60b89877afedc19e06485bc4f04d120a3ab3e1889abfc66",
+    "migration/evidence/P01-02/final-gcc16-source-runtime.json": "de46f5b9005728ade36176448a4f043cc9a71ead019ca8afa9f7142a87619ff1"
+  },
+  "parser_dependency_sha256": "4d2478a27efe68b18997b239fe4b1f24a5a69638b51a3eccb9d8345fa530bbe4",
+  "source_compiler_JVM_native_test_network_profile_execution": false,
+  "running_Java_interference": false,
+  "production_edits": "Only parent-authorized migration/STATE.md continuation instruction; no production code edits",
+  "claims": "No new source observations, native equality, engine release selection, full P03 completion or performance evidence"
+}

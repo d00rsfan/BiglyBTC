@@ -1,0 +1,115 @@
+{
+  "schema": 1,
+  "verdict": "PASS source-only; no concrete blocker in the reviewed root-authored wiring",
+  "baseline_commit": "e9eef6cbf633207ae4b44691147e5ece4f5b03be",
+  "source_sha256": {
+    "preview/native/app/session_bridge.hpp": {
+      "before_sha256": "9c53a5a49420ff11037ac72496a5c7c9d83982dc10261fa510123e04a1a65175",
+      "after_sha256": "2dd37ae64b3fcc8569f52b8668784289bf3cf2b660a74e24fa172933075c9cf1"
+    },
+    "preview/native/app/session_bridge.cpp": {
+      "before_sha256": "4bbdb23e54096d170bb38189960044647fe702ca791ac331b256a4972ee314b4",
+      "after_sha256": "1bf37191d2761ce153fb1689a03e081c5bef53b811ddcc7de475c7185ad1fd2f"
+    },
+    "preview/native/ui/library_window.hpp": {
+      "before_sha256": "6a1b36fddee2dc88330157c3521f0c07f1c5cf5b8d3b0c9a173d4a74f8dd7279",
+      "after_sha256": "ef543fb88d905c6967baa820f4a9d89f666b059bbf6e4cd0b9391b74a926f6e7"
+    },
+    "preview/native/ui/library_window.cpp": {
+      "before_sha256": "bd5d55056e1fbb3ee5228284c7f4dc7d3ff06ce2ab7abf292991a31819404909",
+      "after_sha256": "d4a4d5b0e1d459b64fcd3e7c231cf6d6e9f1d59e6397bdb5fcfdc1f6450c3e00"
+    },
+    "preview/native/app/main_desktop.cpp": {
+      "before_sha256": "99d1dc531eb020c619a5c0b73805828dbe3e1326457e926591aa5973c2ab88ca",
+      "after_sha256": "b409ed2b0a75212247fa84b9e98c5ee527d32d845050098797751d44a660f139"
+    },
+    "preview/native/packaging/preview_smoke.cpp": {
+      "before_sha256": "cc433e748d32439bf58711094e3b96c102aa1ea903dff9b0718ae67b9185f8ff",
+      "after_sha256": "fa6d14ed3da3dbed2efb9250d742598f89ed13e5092199078ecfa552c7b7f0d0"
+    }
+  },
+  "independence": "Reviewer authored engine_statistics_presentation.hpp and StatisticsPage. Those subjects are dependencies only, explicitly excluded from this independent review. This review covers root-authored Bridge/Window/desktop/smoke changes.",
+  "references": {
+    "engine_packet_dispatch": {
+      "path": "preview/native/app/session_bridge.cpp",
+      "line": 504
+    },
+    "owned_continue_operation": {
+      "path": "preview/native/app/session_bridge.cpp",
+      "line": 528
+    },
+    "window_admission": {
+      "path": "preview/native/ui/library_window.cpp",
+      "line": 481
+    },
+    "window_reopen": {
+      "path": "preview/native/ui/library_window.cpp",
+      "line": 408
+    },
+    "new_session_reset": {
+      "path": "preview/native/ui/library_window.cpp",
+      "line": 583
+    }
+  },
+  "findings": [],
+  "reviewed_behaviors": [
+    "Host.engineOperation is worker-owned, allocated after real Host target admission and guarded against identity exhaustion. The existing GUI-published nonzero Host session is copied into packets; the worker does not read GUI session state.",
+    "Preparing precedes invocation of the existing synchronous continueLocal operation. The packet and statistics callback remain within that worker stack. The sampler polls the owned alert batch synchronously and stores no callback beyond the owned transfer lifetime.",
+    "Preparing/Ended boundaries each receive a separate context-bound queued GUI invocation. Observed updates share one bounded latest slot under the existing mutex; extraction and flag reset occur before emitting and the mutex is never held through a Qt slot.",
+    "All new Bridge signal emissions are the final object-using action in their callback. Context destruction discards queued invocations; Executor is the last member and joins before Host, tickets, mutex or QObject context destruction. New payloads use owned immutable copies.",
+    "Cancellation/error inside continueLocal queues Ended(false) retaining any actual last sample before existing error recovery; success queues Ended(true) before the existing library refresh. Telemetry is actual past observation, not discarded merely because cancellation has since been requested.",
+    "Window admits only model-accepted fresh Preparing targets; later same-run observations and terminal updates intentionally survive the existing final library generation change. The unchanged LibraryModel/Activity admission path remains separate.",
+    "Window normalizes omitted terminal samples only for the identical session/operation/target, caches the owned packet before Page delivery, and makes no trailing object access after that potentially reentrant call.",
+    "Closing the Statistics tab drops that Page/pending saved request without clearing the independent latest engine cache. Reopening first creates its current saved-statistics session/request, then forwards the actual cached engine packet. New Host-session publication clears Window cache and begins a fresh Page session.",
+    "Desktop and preview smoke receive the same added Bridge-to-Window engine-statistics connection. Their generated-profile/owned-port admission remains byte-identical.",
+    "No statistics-file write, mark/reset, profile promotion, transfer-start action, timer, or new storage mutation is added by this wiring. The pre-existing explicit continueLocal operation retains its pre-existing payload/config completion writes; this is not a read-only claim about the transfer itself.",
+    "The sampler implementation invokes its owned callback only inside synchronous owner-thread poll(); it catches optional callback failures and retains the callback until ordinary owner-thread destruction. The Bridge stack packet therefore outlives every callback use."
+  ],
+  "static_checks": {
+    "unchanged_bridge_method_spans": [
+      "ready",
+      "failed",
+      "dispatch",
+      "open",
+      "refresh",
+      "savedServices",
+      "statistics",
+      "columnLayouts",
+      "saveColumnLayout",
+      "details",
+      "progress"
+    ],
+    "desktop_and_smoke_only_one_connection_added_each": true,
+    "before_after_saved": "/home/yurii/Java/BiglyBT/build/statistics-engine-20261018/root-wiring-review",
+    "test_or_build_execution_by_reviewer": false
+  },
+  "runtime_requirements_not_claimed": [
+    "Actual owned-loopback transfer and real alert metrics with Preparing/Observed/Ended ordering and measured totals/rates.",
+    "Cancelled/failing operation and stalled-GUI coalescing with truthful retained terminal measurements.",
+    "Real Window model-generation admission, cached close/reopen, new-run clearing and fresh-session reset.",
+    "Direct signal/Page rendering deletion and reentry under actual Qt and sanitizers."
+  ],
+  "limits": [
+    "No app-wide/global/history or exact-final-engine accounting claim; a terminal snapshot is last observed.",
+    "No new broad out-of-memory or arbitrary throwing-observer guarantee. The inherited command allocation/error policies are unchanged.",
+    "Bridge supports one Host per instance and does not implement live profile replacement.",
+    "Independent static review is not runtime qualification, full original Java equality, or a review of the reviewer-authored DTO/Page implementation."
+  ],
+  "context_sha256": {
+    "preview/native/ui/engine_statistics_presentation.hpp": "2b1270182e459b2b93aa3376f80b8bcb52500b51486dca0e93820684479db67d",
+    "preview/native/ui/statistics_page.hpp": "c43190406354f1f24708a1e5407525c6879a1c6680a15d5b1bf3e71fe72daf2e",
+    "preview/native/ui/statistics_page.cpp": "f65d150e73265426a7020b89a7793f387b8f5b978808d9d1f3d8757b3e512a02",
+    "preview/native/engine/engine_statistics_sampler.hpp": "689355ba82df086033944edb37f2a6a877d7471bd2e2f73dadc6124b7f094089",
+    "preview/native/engine/local_session.hpp": "68b9c9f4baccc8e7ee9c4c33b4534855fdf75082003bd591ca84aca6d9643270",
+    "preview/native/engine/local_session.cpp": "4d7d7fd631cb48d712585f02e29d5541a3883d39a3d6f54b6234ba3bab93b132",
+    "preview/native/core/src/executor.cpp": "b886692587ef8c5efc269ea3735f2b64f3432a255b8a1bd57b357627bc3da77a",
+    "preview/native/engine/engine_statistics_sampler.cpp": "8185293d7e20a7de009d431fcd6d4f4fbded469118e201f3d94bbaf420a44604"
+  },
+  "executed": {
+    "compilers": 0,
+    "tests": 0,
+    "native_apps": 0,
+    "profiles": 0,
+    "network": 0
+  }
+}

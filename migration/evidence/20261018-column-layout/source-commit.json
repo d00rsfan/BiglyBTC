@@ -1,0 +1,16 @@
+{
+  "commit": "5bf0a30160c52c51d8efce279cac758948adfff2",
+  "parent": "0e96f6a5d8f6922791ab0655dc93b13e163366af",
+  "paths": [
+    "preview/README.md",
+    "preview/docs/classic-column-layout-contract.json",
+    "preview/docs/classic-column-persistence-source.json",
+    "preview/native/core/CMakeLists.txt",
+    "preview/native/core/include/biglybtc/column_layout.hpp",
+    "preview/native/core/src/column_layout.cpp",
+    "preview/native/tests/CMakeLists.txt",
+    "preview/native/tests/column_layout_tests.cpp"
+  ],
+  "committed_bytes_verified": true,
+  "adapter_work_excluded": true
+}

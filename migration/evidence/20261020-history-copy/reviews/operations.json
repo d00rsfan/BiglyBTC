@@ -1,0 +1,164 @@
+{
+  "schema": 1,
+  "milestone": "P04-25",
+  "status": "PASS: actual generated operational source independently reviewed; no runtime qualification credit",
+  "reviewer": "error_codec",
+  "blockers": [],
+  "generator_review": {
+    "original_path": "build/statistics-next-two-20261020/reviews-copy-ops-generator.json",
+    "preserved_path": "migration/evidence/20261020-history-copy/reviews/operations-generator.json",
+    "sha256": "34bc18dff801f1f983aa8594d3d9d8de1a0cbcb0ea54045262e2f43a9535fed2",
+    "original_unchanged": true,
+    "generator_sha256": "4742ab55f6514f8c2abd2dfe8dd3ec6fa85c458f87910a130abf5337c7848247",
+    "generator_capsule_manifest_sha256": "292808a80b2af04274eae036bfded5c8f8d91dc17a3a7bbe6ed6717054145cc3"
+  },
+  "actual_recipe_preparation": {
+    "path": "build/history-copy-20261020/recipe-preparation.json",
+    "sha256": "f8b0d8cfa4c648bd31f37f907f0a66243d239c57c88547680488022efcb29a9d",
+    "all17_generated_hashes_match_receipt": true,
+    "all17_original_template_hashes_match_review": true,
+    "all17_generated_scripts_AST_parsed_without_import": true,
+    "complete_normalized_before_after_diffs_reviewed": true,
+    "only_reviewed74_anchor_changes_plus_namespace_and_actual_baseline_substitutions": true
+  },
+  "operational_helper_sha256": {
+    "qualify.py": "f55623c2f88183fd1c607ee038a42d939730552d7741066066eebf048d867e63",
+    "run_smoke_scales.py": "c8f4da40cb3251279b9e69c6435df9350243f3e68338c7ca2d8533be60ed8464",
+    "run_visuals.py": "08b7f0623e6ab84d8813d36015f08402402cda96a5142b5f729112ea266e6602",
+    "record_toolchains.py": "9780959f6a7e31972cf8592c1665871d505263b18c74f105feb131887ab8f7ce",
+    "collect_hosted.py": "b35e7088c1bd279d4af0042bf7445186a670bbfd1bdc62abc78508cd089a5d50",
+    "collect_metadata_ci.py": "b72dcc54cdf7634c157860ac230e2e8a247bce1f26712b66f63151f08b68481f",
+    "commit_source.py": "c14529be0f2f9fe415bfa619cfa56a3b03b08ac399662569eb21cbdb7f2648b5",
+    "finalize_evidence.py": "6723701b7c45b90756d511ba3709150cff8630586cd2c13ef726d006f9887c64",
+    "verify_hosted.py": "2a4918d05036d994c460b856f5d9dbf6dfd8fd76f6caba923d39a4e68be1d85c",
+    "promote_dist.py": "c8b55c2c2269787b35ec77440c850b53dc0338c25fe2544d506b6d3956529266",
+    "verify_dist.py": "c57b3c5d3aa69d354520ad5e907c98600c5dc0c5347509f73817d5fb73b83a97",
+    "publish.py": "2e2663ee6f53fe6c51626f477dc7846666ec4bd0ddd9e41aea830f9d3ffaabeb",
+    "finish_milestone.py": "f67b36ca3acd04b27d9233b4515b7d8ee5bf557996eb00e01e42631263cc8096",
+    "checkpoint_history_copy.py": "246550a033a8884f1c5eb132b6ade1042de4a86c5dfcf0a9dc765a8284f63103",
+    "checkpoint_milestone.py": "fb652c307f917c52df947c3c2f6832a00247fc0866e6ee5ef23769fb66d43fd4",
+    "verify_private_checkpoint.py": "a499fdbc7083b5dbeb738d2552a1fc7863acef19d7d1960460e7d2d4538fdb60",
+    "record_visual_review.py": "24041e6210dfd340f44a2bd14541d4b04230c134ecf822eee3cbff2983e4031f"
+  },
+  "docs_helper": {
+    "path": "build/history-copy-20261020/finalize_docs.py",
+    "sha256": "685fd093f52820b732f701fa06d08969fe574dc07efd96cdc7b1a5f14085a515",
+    "unchanged_from_generator_review": true,
+    "literal_AST_reader_producer_schema_compatible": true,
+    "local_producer_literal_keys": 107,
+    "hosted_producer_literal_keys": 63,
+    "retained_fixed_doc_metrics": 28,
+    "new_copy_rows": "history_copy_qt_rows read from completed actual qualification-counts.json, positive exact int"
+  },
+  "actual_baseline": {
+    "schema": 1,
+    "date": "2026-10-20",
+    "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+    "native_parent": "05d460afde14e9a3510fe2f6d823422fe4edd642",
+    "private_parent": "219a199f85732caa206dc723988d4345db9cc596",
+    "previous_source_commit": "07219078bf3c5b3ed1cca7e701dcbdfeda8e687d",
+    "previous_tag": "milestone-history-keyboard-20261020",
+    "previous_dist_manifest_sha256": "4059fe8db68c5583cd5349ec0a1f98928888653370238eecf0517a9f3b9cfd31",
+    "scope": "P04-25, third of three authorized milestones: explicit copying of selected saved History values"
+  },
+  "bound_inputs": {
+    "baseline_sha256": "f89e1b7d8577c723eb035a6434998e05784c986b96ceb30bcff4434a814e4bcd",
+    "unchanged_behavior_baseline_sha256": "27ed4f45d5348ee1ce0cf0fa2fa560dd294c1f22ca1dbdebe9a0c0fc24ad4a44",
+    "qualification_inputs_sha256": "db5196d563c843335c380415e441e68e3a9d4c4d3bbbe5b628b2510ca8cbc1f4",
+    "phase2_publication_sha256": "4efd7287d8b5e12a961c530786f6aeefb63967f514a2ac3dfe95bbbf77056853",
+    "phase2_verification_sha256": "c83661256ed0e56f0e8f0a99bfaea3189738f1659ce3edb74c57af438d674914",
+    "phase2_private_verification_sha256": "9969bd0cd0ef89b1636b64356c9cb2ac31b4845b3a53edf9ef68519841a932d6",
+    "current_original_index_matches_baseline": true
+  },
+  "source_sha256": {
+    ".github/workflows/native-preview.yml": "7288b8c5db0d7ebaf78c460f64d330945b67d5e0822e7f85655b9758e873e856",
+    "preview/native/packaging/README.md": "24f4305a37e144412714d86d3b56b1901780edc9d21f1342f76f3d16b3dc0b63",
+    "preview/native/packaging/preview_smoke.cpp": "3705af5f74f03d29fd83cee72f4c5ee75c9020902da4e9ed33537ac6d16f75c9",
+    "preview/native/tests/CMakeLists.txt": "3cb556a21720f1045f2d01b319ff220310b05e467ecbdf9d6a77fdeb09c794cc",
+    "preview/native/tests/history_copy_tests.cpp": "52571378bef5d50b8abff98601843578052072b9f784804cb1a53c4d79567b5d",
+    "preview/native/ui/saved_history_plot.cpp": "dcaae6c5d9fc4df60e8b0475c67f5d8349d6ab0586b5c078715c6b3e7dc8229c"
+  },
+  "source_files_verified": 6,
+  "unchanged_behavior_files_verified": 243,
+  "findings": [
+    {
+      "id": "COPY-OPS-1",
+      "result": "PASS",
+      "detail": "Actual native metadata parent05d460af, private parent219a199f and qualified source07219078 match the completed phase-two publication/local/private receipts and preparation hashes. Previous tag/dist and original cb8/index baseline are preserved."
+    },
+    {
+      "id": "COPY-OPS-2",
+      "result": "PASS",
+      "detail": "All original241 guard entries remain byte-identical. Exactly two additions bind the qualified plot header and actual focus-corrected keyboard test from the phase-two source map. All243 current retained raw files and the six installed qualification-source files were independently hashed. No source/guard overlap or guard rebase."
+    },
+    {
+      "id": "COPY-OPS-3",
+      "result": "PASS",
+      "detail": "Every actual generated helper matches its receipt hash and reviewed template delta. All substantive and namespace-only changes match the reviewed transformations. AST parsing did not import or execute helpers. The original generator review is preserved byte-for-byte."
+    },
+    {
+      "id": "COPY-OPS-4",
+      "result": "PASS",
+      "detail": "GCC71/Clang22/sanitizer25 retain exact predecessor70/21/24 sets plus saved-history-copy. Actual per-section Copy rows are dynamic; retained keyboard17 and all earlier Qt/accounting markers remain. GCC plus three scaled smokes gates source publication; full three-lane and hosted qualification still gates completion/metadata/tag."
+    },
+    {
+      "id": "COPY-OPS-5",
+      "result": "PASS",
+      "detail": "Twelve smoke rows and18 offline+4 engine/graph captures produce22 per scale/66 local/22 hosted. ZIP run/API artifact ID/source/digest/size, canonical paths/types and complete extracted-tree byte equality remain unchanged. The actual archive file count is recorded rather than guessed."
+    },
+    {
+      "id": "COPY-OPS-6",
+      "result": "PASS",
+      "detail": "Local and hosted producers agree with docs: renderer_only=false, keyboard_navigation_only=false, copy_selection_only=true, clipboard_mode_only=true, automatic_clipboard_writes=false. New Java execution/equality and broad advancement remain false; original2550/3150 evidence remains bound to its historical receipts/namespaces."
+    },
+    {
+      "id": "COPY-OPS-7",
+      "result": "PASS",
+      "detail": "103-file dist,82 unchanged runtime files, exact prior manifest/whole rollback, full-byte RPATH replay and loader/no-work checks remain intact. Checkpoints retain all three task cards, original HEAD/index guards, alternate index, complete raw staged-byte validation before ref advancement, actual expected parent and complete post-ref verification."
+    },
+    {
+      "id": "COPY-OPS-8",
+      "result": "PASS",
+      "detail": "Driver docs685fd093 uses all actual producer fields and the same six-file source scope,243 retained inputs,28 fixed retained metric values, Copy dynamic rows, completion identities and third/final-request state. No field-name/schema mismatch was found."
+    }
+  ],
+  "scope": {
+    "prior_suites": {
+      "gcc": 70,
+      "clang": 21,
+      "sanitized": 24
+    },
+    "new_suites": {
+      "gcc": 71,
+      "clang": 22,
+      "sanitized": 25
+    },
+    "new_unit": "saved-history-copy",
+    "target": "biglybtc-history-copy-tests",
+    "source_files": 6,
+    "retained_guards": 243,
+    "smoke_rows": 12,
+    "captures_per_scale": 22,
+    "three_scale_captures": 66,
+    "hosted_captures": 22,
+    "dist_files": 103,
+    "private_runtime_files_unchanged": 82,
+    "keyboard_qt_rows": 17,
+    "copy_qt_rows": "actual receipt pending, never guessed",
+    "requested_milestones": 3
+  },
+  "limitations": [
+    "This is independent source/hash/AST and receipt-consistency review. The reviewer did not execute the generator, any operational helper or target, build, compiler, test, Git command or network client.",
+    "Root performed generation. This review grants no Copy runtime, hosted, publication, dist or private-checkpoint success; those actual outcomes remain separately gated.",
+    "No real system-clipboard/compositor or full-client/original Java UI equality claim is established. Arbitrary deletion from Qt-internal ActionChanged event filters remains outside the reviewed signal-callback seam."
+  ],
+  "execution": {
+    "reviewer_source_hash_AST_reads_only": true,
+    "reviewer_generated_helpers": false,
+    "reviewer_executed_helpers": false,
+    "reviewer_builds_native_JVM_tests_Git_network": false,
+    "native_or_shared_docs_modified": false,
+    "runtime_qualification_credit": false
+  }
+}

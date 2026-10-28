@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "native_parent": "11dd37171a68c9de8bdae662cc2daf630f363120",
+  "private_parent": "679a7b4af30ee9ca6bbba9b81f438028f8c88c6b",
+  "previous_source_commit": "f7d979801773934d481155019b18319b64beff96",
+  "previous_tag": "milestone-statistics-navigation-20261020",
+  "previous_dist_manifest_sha256": "9cce10053fa0e4ca171e59ad2db621b5f0dc837de6f02d81528c1de465769445",
+  "scope": "P04-23 first of exactly two requested milestones: saved History traffic selection"
+}

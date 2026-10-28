@@ -1,0 +1,12 @@
+{
+  "source_hashes_match": true,
+  "files": 49,
+  "original_observations_per_compiler": 952,
+  "old_settings_regressions": 90,
+  "routing_cache_regressions": 64,
+  "compilers": [
+    "gcc16",
+    "clang24",
+    "clang24-asan-ubsan-lsan"
+  ]
+}

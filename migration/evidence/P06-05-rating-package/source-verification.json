@@ -1,0 +1,25 @@
+{
+  "status": "passed",
+  "native_review_commit": "6b2c2d831cb3bedf4887f5f1493a29c97f264f85",
+  "qualified_files": 34,
+  "public_committed_blob_checks": [
+    {
+      "repository": "https://github.com/d00rsfan/BiglyBTC",
+      "public_commit": "499466856913d4d7d5e73d2a143c845864c7b44d",
+      "local_review_commit": "6b2c2d831cb3bedf4887f5f1493a29c97f264f85",
+      "verified_files": 35,
+      "provenance_sha256": "33ff5d8da2c6ca4dae835809ec101753d3036625f6ae27e7852787af07bd57ea",
+      "ci_enabled": false,
+      "local_clone": "/tmp/biglybtc-public-source-only/BiglyBTC"
+    },
+    {
+      "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-azrating",
+      "public_commit": "940d3c15bfc2dc8085e6b544181e6f77a37854f8",
+      "local_review_commit": "6b2c2d831cb3bedf4887f5f1493a29c97f264f85",
+      "verified_files": 15,
+      "provenance_sha256": "80c9987c05bb07d0676474b748ebe39467b0842c9eaa75cd8020d5bb739c0094",
+      "ci_enabled": false,
+      "local_clone": "/tmp/biglybtc-public-rating"
+    }
+  ]
+}

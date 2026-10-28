@@ -1,0 +1,17 @@
+{
+  "scope": "Independent static root review of completion gates and receipt bindings; no runtime credit",
+  "files_sha256": {
+    "finalize_evidence.py": "9ee8be888f096bc5c90a03b86152aae18e46a52b5623d940c2b06322bc203685",
+    "verify_hosted.py": "735278ece580bd33d0fef96b4f9d4e5059ff7ef2d6fd7b58d0710eddf542c6ff",
+    "finalize_docs.py": "fbc67c29540f3055f383930aa15ca565fde35567c76c9bad1ee48a32c8cf72b9"
+  },
+  "findings": [
+    "Gates exact source blobs, prior53-name cohort retained, actual57/8/11 lanes and section-specific Qt totals",
+    "Genuine Java17 execution is scoped to17 supplied fixtures,425 queries and2550 scalar totals; strict native policy remains separate",
+    "Host artifact verifies actual API source/run/digest ZIP and exact extracted bytes,57 unique passing units and12 captures",
+    "Preserves complete103-file rollback and82 runtime byte identities plus exact installed RUNPATH replay",
+    "Root caught docs hosted schema mismatch for two Java-only counts; corrected draft checks those counts through local/oracle receipts only",
+    "Final generated prose received spacing edits; executable gates/counts/anchors and hosted schema correction retained"
+  ],
+  "result": "PASS static review; all completion scripts remain gated on actual future receipts"
+}

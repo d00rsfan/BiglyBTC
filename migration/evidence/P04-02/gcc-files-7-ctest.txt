@@ -1,0 +1,28 @@
+Test project /tmp/biglybtc-desktop-gcc
+    Start  9: owned-peer-readiness
+1/7 Test  #9: owned-peer-readiness .............   Passed    0.44 sec
+    Start 29: desktop-model-and-lifecycle
+2/7 Test #29: desktop-model-and-lifecycle ......   Passed    1.76 sec
+    Start 30: desktop-files-model
+3/7 Test #30: desktop-files-model ..............   Passed    0.81 sec
+    Start 31: desktop-readonly-files-1
+4/7 Test #31: desktop-readonly-files-1 .........   Passed   52.36 sec
+    Start 32: desktop-readonly-files-3
+5/7 Test #32: desktop-readonly-files-3 .........   Passed   81.66 sec
+    Start 33: desktop-readonly-files-2
+6/7 Test #33: desktop-readonly-files-2 .........   Passed   74.55 sec
+    Start 34: desktop-readonly-paused-files
+7/7 Test #34: desktop-readonly-paused-files ....   Passed   72.13 sec
+
+100% tests passed, 0 tests failed out of 7
+
+Label Time Summary:
+files          = 281.52 sec*proc (5 tests)
+fixtures       =   0.44 sec*proc (1 test)
+integration    = 280.71 sec*proc (4 tests)
+loopback       = 280.71 sec*proc (4 tests)
+read-only      = 280.71 sec*proc (4 tests)
+ui             = 283.28 sec*proc (6 tests)
+unit           =   3.01 sec*proc (3 tests)
+
+Total Test time (real) = 283.74 sec

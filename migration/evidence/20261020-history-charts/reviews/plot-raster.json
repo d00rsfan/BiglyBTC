@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "milestone": "P04-20",
+  "reviewer": "error_driver",
+  "status": "PASS: combined candidate is a justified raster-fixture correction plus additive HC-T1 coverage; no production change",
+  "candidate_sha256": {
+    "build/history-charts-20261020/plot-raster-amendment/before.cpp": "ff7b24f2c46639b6f008aab2e0c51e20d5626086e5253f6a56e7332cc063f836",
+    "build/history-charts-20261020/plot-raster-amendment/candidate.cpp": "406932105a972d62267af2d44a6980acffa814e11bd205510db9a7422e874cce",
+    "build/history-charts-20261020/plot-raster-amendment/candidate.patch": "3b25e584dde13683f59703863b2062dae6d12b2f480707b9cb3d1f09cb0bfebe",
+    "build/history-charts-20261020/plot-raster-amendment/manifest.json": "d059295a483d89d6525c5837327c651cc7e1c9f84665c3def3c2082b836c06dc"
+  },
+  "preserved_review_sha256": {
+    "migration/evidence/20261020-history-charts/reviews/plot.json": "23000c7901afbc774d3e9c14fc0d6675cb617b4b4482343bdccc887945c0defd",
+    "migration/evidence/20261020-history-charts/reviews/plot-midpoint.json": "43e28bac54a21070bc9ce57812bb887f1fda2e994bb4c71b93297f415817632d"
+  },
+  "diagnosis_sha256": {
+    "migration/evidence/20261020-history-charts/diagnostics/commands.json": "ca13a02668813d10fe42e667d57a0fc6df38cf57e0aef61aa751b15f92596c2d",
+    "migration/evidence/20261020-history-charts/diagnostics/diagnosis.json": "343d996d8dc9ad09f5145cfaff5ad912f1e3cb7ffff0b9aed4d80c70d9f0c5d1",
+    "migration/evidence/20261020-history-charts/diagnostics/grayscale-commands.json": "564461b3c0ef98b8598e4c20b303696272ce6aa569bf9200ff8e0a8023e9bb40",
+    "migration/evidence/20261020-history-charts/diagnostics/grayscale-compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "migration/evidence/20261020-history-charts/diagnostics/grayscale-probe.cpp": "7150732461a3e3881830ee493c2ed02ee032eb2c0ac4a0ee912dfea7f85e34f1",
+    "migration/evidence/20261020-history-charts/diagnostics/grayscale.log": "4e0d6e89009eb52e6f3eaad7b0c0b4bffcfc078b9e77a191673d7cd90580775f",
+    "migration/evidence/20261020-history-charts/diagnostics/grayscale.png": "9fd125fcdb51220197cfef208368bd89dc946b7a15c60112fe6c6ba000621ac3",
+    "migration/evidence/20261020-history-charts/diagnostics/original-probe.cpp": "ba0bed90ff2e12117b4fda0a2b06fefeab75efee314a62ecadc28753159756f4",
+    "migration/evidence/20261020-history-charts/diagnostics/probe-compile.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "migration/evidence/20261020-history-charts/diagnostics/probe.log": "1186fd7642101687e2a3df6a48d6411ee250647251b7e9a58222c86feeb2d4a3",
+    "migration/evidence/20261020-history-charts/diagnostics/unknown.png": "257040bc44610fe1596b72e4e23c93752e5421c76eb81b34025b6b8856e72c43"
+  },
+  "archived_initial_failure_sha256": {
+    "build/history-charts-20261020/attempts/initial-colored-text/focused-tests.xml": "2290ef4818f1569650934a30eca4552b9cb41cf20286048f394862511da5b647",
+    "build/history-charts-20261020/attempts/initial-colored-text/focused-LastTest.log": "d1e845ae1a11670fccb192ee49093a64c90459b2775ab618b9df9efa5bebfd39",
+    "build/history-charts-20261020/attempts/initial-colored-text/focused-commands.json": "ac4e43ae4dc962eb814f658f3469ffefae560086d9a2e7122cd003c1527f8ce4",
+    "build/history-charts-20261020/attempts/initial-colored-text/clang-tests.xml": "1f61a33ddd4193d32969f86c0c984daf0a61d8ca545ab3021e33c1690d57a23c",
+    "build/history-charts-20261020/attempts/initial-colored-text/clang-LastTest.log": "74f31297b6973a761212b9dc810351893726ff46b1dd7ed82655fd5e1f18e00c",
+    "build/history-charts-20261020/attempts/initial-colored-text/clang-commands.json": "db23663f0fbbfbeae9e734a4afc73eb9e137bcdb5b4493a555a00bb718054c86"
+  },
+  "actual_initial_failure_observations": {
+    "focused": {
+      "total_units_observed": 11,
+      "failed_units": [
+        "saved-history-plot-widget"
+      ],
+      "widget_rows_passed": 12,
+      "widget_rows_failed": 1,
+      "widget_rows_skipped": 0
+    },
+    "clang": {
+      "total_units_observed": 15,
+      "failed_units": [
+        "saved-history-plot-widget"
+      ],
+      "widget_rows_passed": 12,
+      "widget_rows_failed": 1,
+      "widget_rows_skipped": 0
+    }
+  },
+  "checks": [
+    "Complete combined candidate and patch read. Removing only the explicit QFont include and two-line show-helper setup/comment exactly recovers the separately reviewed e5adba2c midpoint candidate. That candidate already preserves every original assertion/data/method and adds only segment-interior probes.",
+    "No color classifier thresholds, full-area zero assertions, positive-presence checks, method/data row counts or deadlines are relaxed. Production header/CPP and data tests remain byte-identical to the initial source freeze.",
+    "The font strategy is confined to the generated widget-test show helper. It prevents black glyph LCD fringes from impersonating the two trace colors; it neither suppresses colored data pens/markers nor changes source bucket facts.",
+    "Both preserved root diagnostic sources use the same production renderer, unknown frame, dimensions, pixel classifiers and explicit no-known-bucket failure check. Their only differences are the QFont include and NoSubpixelAntialias setup.",
+    "Root diagnostic raw logs report blue255/orange192 with bounds314,114..487,126 centered on the empty-label glyphs versus0/0 with grayscale glyphs, at the same52,48,696,142 plot area. Reviewer viewed unknown.png, showing the centered black no-observations text with no data traces. All diagnostic inventory hashes match.",
+    "Archived focused and Clang XML/LastTest records each fail only saved-history-plot-widget; the same unknown-image row reports255 blue-classified pixels while all other12 widget rows pass. These initial failures remain history and provide no success credit to the changed candidate.",
+    "The unchanged midpoint amendment still proves actual interior connecting strokes for both directions and exact absence across the unknown bucket. Controlled grayscale text removes a demonstrated classifier confound without weakening that proof.",
+    "Native widget source remains ff7b24 during review; installation and actual complete reruns remain root work. Initial plot and midpoint review files are not overwritten."
+  ],
+  "finding_resolution": {
+    "raster_fixture_issue": "Diagnosed black-text LCD subpixel color classification; source-only candidate accepted for root installation and requalification.",
+    "HC-T1": "Additive reviewed midpoint checks retained.",
+    "production_change_required": false
+  },
+  "blockers": [],
+  "limits": [
+    "Static source/evidence review only. The reviewer did not rerun diagnostic probes, builds, Qt/raster tests, Java or native subjects.",
+    "The archived initial failures and diagnostic0/0 do not qualify the final candidate; root must rebuild and execute it under the required compiler/sanitizer lanes.",
+    "This fixture controls glyph rendering for color-isolated tests; final application visuals still use their normal fonts and independent real captures."
+  ],
+  "execution": {
+    "target_import_or_selected_evaluation": false,
+    "builds": false,
+    "diagnostic_or_widget_runs": false,
+    "production_or_native_test_source_edits": false,
+    "git_mutations": false
+  }
+}

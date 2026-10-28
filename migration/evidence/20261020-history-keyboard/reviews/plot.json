@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "milestone": "P04-24",
+  "reviewer": "error_driver",
+  "status": "PASS: independent complete staged keyboard plot source review; root installation and qualification remain pending",
+  "scope": "Keyboard inspection only; P04-23 consumer author is independent of Codec keyboard implementation",
+  "manifest_sha256": "2eb2606111f001fcd6ea275bbbbb5836a532a097fe7ca4273882e06f37da0530",
+  "capsule_sha256": "3f6cafece1da304095969fd2b0cf520f434f4e11fb6241ad82f776a55ce96dd3",
+  "source_sha256": {
+    "preview/native/ui/saved_history_plot.hpp": "7eaae22cfd941109ca105b63572807dcb725751abf3561f2bfa2a1a0972b87ff",
+    "preview/native/ui/saved_history_plot.cpp": "23668c79a63719a1f7ab93c13e88d4a71b4f324819153edf9d1ef9189ad632de"
+  },
+  "before_source_sha256": {
+    "preview/native/ui/saved_history_plot.hpp": "4d61602d74475896ec57956a5df15c96ed0db82dcf67bc2cc449b7e82af9309e",
+    "preview/native/ui/saved_history_plot.cpp": "f148e539426c76ca6e4a5c4b275a6c21d67c0a9be5c0ecda58d6573fe82b1fdd"
+  },
+  "source_contract_sha256": "d3a137b3b5221c81f7a6cbef75b86b7857bcc09d2dfa56c79e9d6a0e77409cdb",
+  "artifact_files_verified": 11,
+  "native_plot_still_exact_p04_23_before_images": true,
+  "unchanged_full_definitions_sha256": {
+    "QString dateText(": "91f9b5d1830c6f7037f9671a630d141593fc434b37b19025df9e5d360042b96a",
+    "QString amount(": "24f852bab41e687eb5c01514613da4283b64cc5f58d36068e0ca0bcdd5be388a",
+    "QString trafficName(": "5729660730839503a58f3ef1b771062220181083ca7988d63a5bfa786d3b65fc",
+    "QString trafficNoun(": "15e45fbc4d8b686cc34ddb1083225c01e42caab326d10a8f023c673e3c5932e8",
+    "std::array<std::size_t, 2> counterIndices(": "a6bc2963eb0b0467601aac70ea120f22cf414b73313da9e10b8eed6a14b3063f",
+    "std::array<QString, 2> seriesNames(": "2b0324098b3122c8760c0c8f3857f21ee90962352a4b649d35b03be93ca9bfa4",
+    "QString description(": "1c6fcc74cff2185703c26e77ce97d98bf007d1d886e26c354475eba96240fc77",
+    "QString summary(": "82b6cdb91f5fad62921bc0f35d021ba0b9732ac6d32ec7a6531fea66d004ce1c",
+    "SavedHistoryPlotFrame::SavedHistoryPlotFrame(": "4d0574b556a36b13a671324ff482f867b260b27e7ed079930332eadeb35b0264",
+    "void SavedHistoryPlotFrame::finish(": "a2486b69a91d4555e04eeb94b8842c0758781a6e6089534ea01328729bcf837a",
+    "SavedHistoryPlotPresentation savedHistoryDayPlot(": "7cd4e2640915938baf4940487db7e2b4ff91cd39cc0450cf2cba74219fcb89b0",
+    "SavedHistoryPlotPresentation savedHistoryWeekPlot(": "83de253f06b3336040add6ef911bc8154d3e369c9b27512951eb0cdb93c00ab8",
+    "SavedHistoryPlotPresentation savedHistoryWeekHourlyPlot(": "38b35134a0802de12d97c4bc584d60e2c5a4cc3c042170346d0def6c7379d09a",
+    "QString SavedHistoryPlotFrame::bucketLabel(": "336c7a374c3354556797b1115d5b9da84d95e48bd426b6909f382750a601cb49",
+    "QString SavedHistoryPlotFrame::bucketToolTip(": "a892508fbab00e1fb326f7833b0e9b0693bdeadbe289358db0d7ce5e58bb4e8a",
+    "std::optional<QPointF> SavedHistoryPlotFrame::point(": "a5bf8fa1a3d7ba3b8584e67307cb66a2f541401cf1b99a67a5d8b5c916345901",
+    "QSize SavedHistoryPlot::sizeHint(": "4aef280416d2ff1874290fd04e0abe297d3d4629c9fb94e079dd9f1df626659a",
+    "void SavedHistoryPlot::mouseMoveEvent(": "99bc2057619056ada702220b25975e4deab87cce948d4d54c4f73e29a9bec2ba",
+    "bool SavedHistoryPlot::event(": "9c097008b8a222bd1e10762c87351b665effcec46697e15a7ab6d65391df4015"
+  },
+  "exact_patch_regeneration": true,
+  "checks": [
+    "All frozen header/CPP, complete patch, author notes, manifest/capsule and exact P04-23 before images read. Every declared artifact rehashed; regenerated unified patch equals the frozen patch.19 complete original definitions are independently lexed byte-identical, including all factories, counter selection, bound/date validation, labels, exact signed tooltips and finite coordinate math.",
+    "StrongFocus is added without changing source ownership. Key handler accepts only unmodified Left/Right/Home/End while visible, nonminimized, focused and bound to a frame. Other keys/modifiers/inactive states delegate to QWidget. The event is accepted before any tooltip/accessibility publication; no receiver member is touched after selectBucket returns, allowing direct callback deletion.",
+    "Frame construction is private and all retained factories produce exactly24/7/168 nonempty buckets. First Left/Right/Home selects0, End selects last, subsequent arrows clamp without wrapping or skipping unknowns. Selection is scalar optional<size_t>; no old packet/widget/source DTO is added. Each accepted new frame resets selection before outward properties.",
+    "Keyboard narration uses the unchanged bucketToolTip: exact full UTC date/hour or daily date, chosen Payload/Protocol/DHT names and signed int64 values, with Unknown distinct from0. Full tooltip and accessible description remain unelided; visible caption only flattens/elides that same text. No sum, rate, narrowing or independent expected-value arithmetic is introduced.",
+    "Every accepted frame/key mutation advances a checked uint64 interaction revision; exhaustion refuses further mutations rather than reuse. selectBucket validates the index, computes text from a retained immutable frame, then rechecks QPointer+frame+revision before committing. Tooltip is published before accessible description with a post-publication current() check, so direct deletion, frame replacement or nested keyboard mutation on the same frame prevents older follow-up writes.",
+    "replace computes new strings before mutation, then admits QPointer+old frame+old interaction revision and increments once. After assigning frame/resetting selection it rechecks exact new frame+revision after AccessibleName, AccessibleDescription and ToolTip properties. All three public setters also capture/recheck revision around factory/source lifetime, preserving nested same-frame key changes as well as replacement/deletion.",
+    "Mouse tooltip computation now checks the interaction revision before and after ToolTipChange. Existing mouseMove/event entry definitions remain exact and avoid further QWidget dispatch if a property callback supersedes or destroys the receiver. Hover remains independent: it does not move the keyboard selection or change its retained accessible description/caption.",
+    "Focus in/out copy QPointer/frame/revision before delegating to QWidget and only repaint if still current afterward. Losing focus retains selection/description/caption but hides the selection guide/outlines; no focus handler changes data or invokes readers. Style focus rectangle and local repaint are the only additions.",
+    "Painting retains the immutable frame and selected scalar locally. With no selection the chart rectangle remains exact; a selected caption reserves24 additional bottom pixels. X-guide is computed over the bounded bucket index even for unknown values. Only existing frame.point results get known-point outlines, so unknowns gain no Y point and existing gaps/series are not filled. Full signed finite coordinate code is unchanged.",
+    "No timer, IO/read request, new worker/signal/lease, saved state, clipboard update or original Java runtime is introduced. This stage does not implement later P04-25 Copy. Public selectedBucket getter exposes bounded scalar state only."
+  ],
+  "blockers": [],
+  "qualification_gates": [
+    "Actual offscreen tests must exercise all three frame sizes/traffic choices, unknown/knownzero/fullsigned captions, key bounds/focus/hidden/minimized delegation and replacement reset against these installed hashes.",
+    "Actual ToolTipChange and QAccessible property callbacks must exercise deletion, frame replacement and nested keys on the same immutable frame; source checks alone do not establish platform callback delivery or screen-reader acceptance.",
+    "Qt6.12 changed-only accessibility notification is an existing dependency behavior cited by the author, not a new reviewer runtime observation. No synthetic accessibility event or real compositor/screen-reader acceptance is credited.",
+    "Root must preserve P04-23 behavior/accounting/fixtures, qualify the separately frozen new tests and actual smoke/captures, and bind final source/metadata/rollback evidence before declaring P04-24 complete. The full request continues to P04-25."
+  ],
+  "scope_limits": [
+    "Review covers application-controlled ordinary Qt widgets/styles and the explicit tooltip/accessibility/reentry boundaries. It does not establish immunity to arbitrary user-supplied Qt translation/style/plugin callbacks during painting or Qt internal implementation behavior.",
+    "No compiler, preprocessor, target definition evaluation/import, native/Qt/Java/mock/test/GUI execution, Git command/mutation or native edit occurred."
+  ],
+  "execution": {
+    "source_hash_lexical_read_only": true,
+    "target_execution": false,
+    "native_installation": false,
+    "builds_tests": false,
+    "git_commands": false,
+    "clipboard_or_original_profile_access": false
+  }
+}

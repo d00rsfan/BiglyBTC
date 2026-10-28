@@ -1,0 +1,18 @@
+{
+  "reviewer": "root",
+  "source_commit": "9db774659334daa2dbabd81762c819c108eb43b2",
+  "method": "Actual local view_image inspection of two source-bound hosted offscreen PNGs",
+  "files_sha256": {
+    "statistics-history-preview.png": "20c8650ca31d25af095112871f8b63c5c699d066fc995a0bd2b9da55c978f20e",
+    "statistics-history-missing-preview.png": "341e73c89f75b5ccefb641c9852829c2ab3b5d33884ae0d13374e9d90bf9bc01"
+  },
+  "observations": [
+    "UTC date, previous/next and explicit refresh controls visible",
+    "Ready day exposes six named counter columns and payload totals",
+    "Known zero remains distinct from em-dash unknown hours",
+    "Missing date has explicit missing-file status and no invented totals",
+    "Hourly table scrolls within retained classic Statistics tab"
+  ],
+  "result": "PASS bounded offscreen visual review; local three-scale captures still pending",
+  "manual_compositor_acceptance": false
+}

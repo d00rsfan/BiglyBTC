@@ -1,0 +1,71 @@
+{
+  "status": "passed",
+  "source_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+  "torrent_type": 3,
+  "profile": "/tmp/biglybtc-multifile-case-5800cdcacf014fbf86fddabaddc900d3/java-3/profile",
+  "same_profile_at_every_stage": true,
+  "crash_stage": 4,
+  "java_before_recovery": true,
+  "native_binary_sha256": "640df7cdf9c6d2db6ce5dc8b1a5261064adc249a5b784efb7fb2037a59ff85dc",
+  "native_binary_kind": "native headless executable",
+  "original_policy_preserved": true,
+  "custom_priorities": false,
+  "peer_binary_sha256": "3cafe3c434457bf846bcd8c4352a07ba89b29cb08e17e701307f0c323539b117",
+  "physical_files": {
+    "01-first.bin": "0a04099770b4d0fabe7d259a1e5d10014d8e7eda9871cb78451cc6a1639eaac2",
+    "nested/03-empty.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "nested/02-\u05e9\u0628.bin": "2c5c9c098f61f4e3a879e27371f16ed25a6c0cd28463eeaab2f9a780eee71f71"
+  },
+  "profile_after_java_sha256": {
+    "biglybt.config.bak": "31a4a9e98eedea4402eb904d12c5e4c1148d20596596a572775079b4e545da40",
+    "biglybt.config": "31a4a9e98eedea4402eb904d12c5e4c1148d20596596a572775079b4e545da40",
+    "alltrackers.config": "8c8f5c99726f3feb296ba232da0ae6ea16de5b4d14a4b159c7fda1815fd23fb7",
+    "alltrackers.config.bak": "cfe139ae066de17e9604a3710f6ba6a9bbdd18d0ced7e8977aa310debaf3d675",
+    "downloads.config.bak": "22cdee69a62e5c6648cd19006d1c69b5c8cd20c4d75f84501918713a90a7e2cd",
+    "BiglyBT.statistics": "1796ac4c750e4abedb9a7ef4e3575c834842890f03a72567e6bc0fd1b6dc7a1f",
+    "BiglyBT.statistics.bak": "ec36e794601636f87f49c7e872042bf77701d8d6ba6468fc9afd7c3e71a68194",
+    "ipfilter.cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "downloads.config": "22cdee69a62e5c6648cd19006d1c69b5c8cd20c4d75f84501918713a90a7e2cd",
+    "dlhistorya.config": "e8f699fe424704833f7ea930c6dc50545964f3fbffa4ae3b12ace4f4ce1d5fc0",
+    "dlhistorya.config.bak": "0867979bb2646382071ab56217d78b2605fde81424022609f76f1cb6ad619aa6",
+    "tag.config": "2020da2940bb97780d1e76d79c5abd80fe91aee3995efe2691299751db352689",
+    "tag.config.bak": "61602f9da011c43ae0e1d0aa8f5e3a41532dae2431055839e5c681d9b634dbc8",
+    ".azlock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "exported_params.properties": "31a3d5db2f824eb2c1cd16a6b3b5be000875dbb27224727ba4ff971355f8d1c7",
+    ".certs": "9a17d084940e9954ae268ad8b3aae9f0f7c3df2cd17e97441763f8c6cc7e6d1d",
+    ".keystore": "09754edeef3ef6906c67e7ed4d41d9c32bdd840f10f45748b215d050fe198db8",
+    "active/cache.dat": "4d3e1963048cc220a193bdba046f9d7da66517082dc11e5ec0bad936d780848e",
+    "active/F569E1D9A053C64CEEE2C6EAA0D9BFA0789389A6.dat": "9c37bb2534e38b7357552e5cc90d8d1928db3b6d08f0c1d29b8ec5d98cedb443",
+    "active/F569E1D9A053C64CEEE2C6EAA0D9BFA0789389A6.dat.bak": "257a7b24c0da4aa3c7f31b5941d9dbacff8802b44d73922f126a577ccf3bf116",
+    "active/cache.dat.bak": "7b3ce90d2e1b6c9581fe6452c7b66a7473688ce956aca5745f289037a7bb913e",
+    "net/pm_default.dat": "3c7a374b954b5d31eed1be79aef2dedabf8e0b3859925c4092e19a74029a0a08",
+    "logs/DiskOps_1.log": "ef2dc6262fb3869cb3769d8774f40d01509421a736e40658a21a629f280941e8",
+    "logs/Swarm Merge_1.log": "8d44eccf4216763af45d666ea8e1307f100237e117100f13593c079663352448",
+    "logs/alerts_1.log": "b57e04bc5bceeb4c6b8049f08e9c7feab45effd547a8ae6e2495305f44294a8b",
+    "logs/seltrace_1.log": "190a53c6889d7eb53b27d80831051f26ad23494ca30ce924937896dce148c79e",
+    "logs/debug_1.log": "1e4de0312b537d7a9060780c44277a516d2e4687f95f7df572aa75f6595073ff",
+    "plugins/azupnpav/plugin.properties": "fea54f28ebac68f1f17f87a71e8df8a9bdad5dbfe4d4b866e29cefafc52769f8",
+    "stats/2026/10/17.dat": "72190632f87a956ba6398520d30b9ca78607cf155c21d5b972171e27e25ba630"
+  },
+  "logs": [
+    "/tmp/biglybtc-multifile-case-5800cdcacf014fbf86fddabaddc900d3/java-3/native-multifile.log",
+    "/tmp/biglybtc-multifile-case-5800cdcacf014fbf86fddabaddc900d3/java-3/interrupted-java.log",
+    "/tmp/biglybtc-multifile-case-5800cdcacf014fbf86fddabaddc900d3/java-3/native-multifile-recovery.log",
+    "/tmp/biglybtc-multifile-case-5800cdcacf014fbf86fddabaddc900d3/java-3/final-java.log"
+  ],
+  "elapsed_seconds": 57.762531134299934,
+  "assertions": [
+    "original profile/paths/inodes",
+    "nested Unicode and zero-length files",
+    "original virtual pad accounting without physical pad files",
+    "same info and unknown plugin data",
+    "global settings unchanged by native",
+    "original Java verifies all completed files/pieces"
+  ],
+  "limitations": [
+    "Generated default-priority linear local workload only",
+    "Other storage/policy/platform/charset and full-client gates remain open"
+  ]
+}

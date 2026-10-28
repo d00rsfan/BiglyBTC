@@ -1,0 +1,22 @@
+{
+  "review": "Root independent History UI, model, Page and regression source inspection",
+  "source_only": true,
+  "source_sha256": {
+    "preview/native/ui/history_presentation.hpp": "fee2b17a249857d4db0f576e7c6a25e98ef7887e82ec76ba7229b44a9d493d3f",
+    "preview/native/ui/history_view.hpp": "109065cbacb4273eda55b462ffd8340b3528862198788f622066e9044cbaa578",
+    "preview/native/ui/history_view.cpp": "6d9b342088c3ba932b0b9327b224699e11444bddd3fa95f4398ace565afc6745",
+    "preview/native/ui/statistics_page.hpp": "823ab436760d580cbef9caf22c776044da683cf0754cc7d34898f30e2ad1fbee",
+    "preview/native/ui/statistics_page.cpp": "3b910b6aa6aec4aa6a84862ee2e55d77fa85ab658e47306f4be5f1a94cd759d7",
+    "preview/native/tests/history_view_ui_tests.cpp": "2b62d2edb7cc1da2b68d21c7316d4c623a1575b312eeafdfef5e2a06f4c7433e"
+  },
+  "findings": [
+    "Primitive immutable frame binding by session/request/date; strict state consistency and signed exact values",
+    "Fixed 24x7 noneditable model; unknown QVariant/em dash distinct from observed zero",
+    "Hidden/minimized packet changes cache without model/label writes; latest show/restore renders with lifetime/reentry guards",
+    "Lazy read gap for hidden date selection was corrected before tests; explicit two-case regression coverage",
+    "Date-dependent hidden-return test now derives a different selection; no assertions removed",
+    "Only unused qtDate helper removed after strict initial GCC error; no warning flags relaxed",
+    "Existing Page92 source byte-identical; additions preserve default Activity/Payload, saved totals and engine views"
+  ],
+  "runtime_credit": false
+}

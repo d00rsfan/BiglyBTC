@@ -1,0 +1,84 @@
+{
+  "status": "LOCAL_GCC_CLANG_SANITIZER_PORTABLE_PASS_HOSTED_PENDING",
+  "native_source_commit": "ede540798e690175204196c0cd40196ecaee7fdf",
+  "native_parent": "a22006f43450fdeeca7766e2fd293b095d323d10",
+  "source_inputs": 16,
+  "source_inputs_sha256": "880af89a2ec8998361e3c68a6959a03a9fb0c7c8d30d2debe77e3870153269db",
+  "all_source_git_blobs_match": true,
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "libtorrent_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "private_runtime_sha256": "c35f1b0408508c019f002c438d70dd361a55be20286ded56711efd6bba2424e3",
+  "private_checkpoint_parent": "bf59dc9370d5e23fc243d479a31093bab03b774d",
+  "gcc": {
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0,
+    "elapsed_seconds": 254.2,
+    "new_startup_seconds": 18.57,
+    "exact_test_names": [
+      "statistics-page-behavior",
+      "statistics-navigation-window-worker",
+      "statistics-window-worker",
+      "persistent-native-peer-session",
+      "persistent-native-session-window-worker",
+      "persistent-native-peer-faults",
+      "persistent-native-session-close-faults",
+      "native-session-ui",
+      "native-session-statistics",
+      "native-session-statistics-worker",
+      "overall-accounting-window-worker",
+      "runtime-metrics-view",
+      "startup-statistics-worker"
+    ]
+  },
+  "secondary": {
+    "status": "passed",
+    "planned_exact_test_names": [
+      "runtime-metrics-view",
+      "native-session-statistics",
+      "native-session-statistics-worker",
+      "overall-accounting-window-worker",
+      "persistent-native-peer-faults",
+      "persistent-native-session-close-faults",
+      "startup-statistics-worker"
+    ],
+    "clang_passed": 7,
+    "sanitizer_passed": 7,
+    "unchanged_full_gcc_cohort_not_repeated": true,
+    "skipped": 0,
+    "detect_leaks": true,
+    "clang_seconds": 175.9,
+    "sanitizer_seconds": 184.0
+  },
+  "hosted": {
+    "status": "desktop_dependency_setup_pending",
+    "desktop_run": 39853834527,
+    "sdk_run": 39853834624,
+    "sdk_conclusion": "success"
+  },
+  "portable_candidate": {
+    "passed_smoke_rows": 13,
+    "passed_actual_worker_suites": 1,
+    "captures": 19,
+    "files": 107,
+    "manifest_sha256": "5cd432917443fea87d21705143ad85669d61cd528d10845fba1f4f6cf2392cbe",
+    "promoted": false
+  },
+  "full_statistics_complete": false,
+  "new_test_or_subject_execution_by_documentation_agent": false,
+  "original_live_profile_process_payload_access": false,
+  "screenshot_scope": "Native-session source/v2 capture omits Overall wiring; actual startup/private-worker/main wiring validate Overall.",
+  "unadopted_capsules": [
+    "manual Tag parser",
+    "passive per-peer ledger"
+  ],
+  "sanitizer_build_interruption": {
+    "initial_runner_exit": 143,
+    "initial_log_final_step": "37/37",
+    "initial_pass_claimed": false,
+    "cause": "unproven",
+    "cached_completion_exit": 0,
+    "cached_completion_seconds": 0.1,
+    "cached_completion_work": "none"
+  }
+}

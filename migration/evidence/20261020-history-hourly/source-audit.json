@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "milestone": "P04-21",
+  "status": "Complete source-only audit; no runtime or new Java equality credit",
+  "original_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_parent": "775f84222031c1f43ee96e76c53fff0a5ef1e225",
+  "private_parent": "e78c6e77c171c6fd067cbe4b8c180ef1a384ad09",
+  "original_sources": {
+    "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java": {
+      "git_blob": "0cfe7a202d8ff27da9500435ea9bd659a1de6ba5",
+      "sha256": "0c2b304c022013d0797732049c51deb23a7af976f74b0d47f22156d8da097103",
+      "bytes": 76096,
+      "lines": 2871,
+      "image": "migration/evidence/20261020-history-hourly/original/uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java"
+    },
+    "core/src/com/biglybt/core/util/TimeFormatter.java": {
+      "git_blob": "4809f0f1028875d82ddc2fc4f4d2502a273eef55",
+      "sha256": "0076bf6d6205e01dee097f6d43b6ade84b7b2cb7b84db6c4d1c6d0511e8ea898",
+      "bytes": 14486,
+      "lines": 615,
+      "image": "migration/evidence/20261020-history-hourly/original/core/src/com/biglybt/core/util/TimeFormatter.java"
+    },
+    "core/src/com/biglybt/core/stats/transfer/LongTermStats.java": {
+      "git_blob": "a369578b191cf4ead71a32e15b5592dcfa06212c",
+      "sha256": "f1a4bfaa8d15e8b0f9318a2af1653a854f9969bc09b80f4e9bd3c48afb62e1bf",
+      "bytes": 2666,
+      "lines": 110,
+      "image": "migration/evidence/20261020-history-hourly/original/core/src/com/biglybt/core/stats/transfer/LongTermStats.java"
+    }
+  },
+  "source_ranges": "source-ranges.json",
+  "source_ranges_sha256": "0cc54584b07df0e4e92b354e9bdae8fe7b93ce757057231cef377c9356536ceb",
+  "unchanged_behavior_baseline": "unchanged-behavior-baseline.json",
+  "unchanged_behavior_baseline_sha256": "4f46d1b4a32b3a7b326a8c5566ed7a4a84f5fe6f2df06d1eee842459cc11f857",
+  "original_facts": [
+    {
+      "ranges": [
+        "ui.refreshHistory",
+        "util.timeUnits"
+      ],
+      "fact": "TS_WEEK selects period_suffix TS_HOUR. TIME_SUFFIXES_2_MULT maps a week to7*24*60*60seconds and an hour to60*60seconds, so entries=span/period is168 for that original selected span."
+    },
+    {
+      "ranges": [
+        "ui.createHistoryPanel",
+        "ui.refreshHistory"
+      ],
+      "fact": "The original selected week is a current-clock interval: SystemTime current time plus period offset, rounded up to an hourly boundary, then minus the7-day span. It is not seven UTC calendar files ending at the end of a selected date. A weekday/time offset is permitted by the original panel."
+    },
+    {
+      "ranges": [
+        "ui.refreshHistory",
+        "interface.counterAndPeriodConstants"
+      ],
+      "fact": "Each period independently invokes the original Date reader, selecting payload download3 and upload1. It separately queries overall-period totals. Pixel-width chunks can accumulate zero-width hourly buckets or repeat a value across multiple pixels; display data is power-of-two scaled then int-converted."
+    },
+    {
+      "ranges": [
+        "ui.createHistoryPanel"
+      ],
+      "fact": "Original time labels use default-zone SimpleDateFormat (dd HH:mm for TS_WEEK); two payload colors, legend hover/visibility, monitor-width buffer and byte formatter are panel presentation choices, not the new fixed UTC axis contract."
+    }
+  ],
+  "deliberate_native_scope": [
+    "Append a WeekHourly renderer mode consuming exactly seven already accepted UTC daily snapshots. Map bucket24*dayIndex+hour directly to days[dayIndex].snapshot.hours[hour], download3/upload1, without sums/divisions, clock reads or file requests.",
+    "Both selected UTC modes retain the same seven-row daily table. Daily totals remains default; mode is an in-memory graph preference preserved only for that View lifetime.",
+    "Every point retains explicit UTC date and hour0..23. Unknown hours/day snapshots are gaps; knownzero and signed extrema remain actual scalar facts. Only adjacent known hour buckets connect, including genuine hour23-to-next-day-hour0 adjacency, with no bridge through a missing bucket.",
+    "Reuse copied immutable scalar frames and finite signed geometry. Sparse date+hour ticks must distinguish days; full exact bucket labels/tooltips remain independent of width.",
+    "Mode changes preserve date/session/request/accepted snapshot and emit no reads; hidden/minimized changes defer chart facts, tooltips and model mutation. Reentry/deletion admission stays guarded.",
+    "Original rolling/hour-rounding/current-clock/local-zone/pixel-merging/global-owner/cache/writer semantics remain excluded. A fixed selected168-hour display does not establish original week graph or whole-period-total equality."
+  ],
+  "prior_equality": {
+    "retained_daily_scalars": 2550,
+    "retained_independent_member_scalars": 3150,
+    "new_java_execution": false,
+    "new_java_equality_credit": false,
+    "accounting_changed": false,
+    "new_expected_algorithm_or_outputs": false
+  },
+  "limits": [
+    "This audit does not approve forthcoming mutable production/tests; independent frozen-source reviews remain separate.",
+    "No Java, native, original client/profile, compiler, preprocessor, GUI or network operation was run.",
+    "Only fixed committed Git reads and source/hash data inspection were used; original HEAD/index and source were not mutated."
+  ]
+}

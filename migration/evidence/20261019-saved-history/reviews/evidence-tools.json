@@ -1,0 +1,46 @@
+{
+  "status": "PASS_source_review",
+  "scope": "Independent read-only complete source review of root finalizer/hosted verifier; no import or execution of either subject, no build/Git/Java/native/network execution.",
+  "subject_sha256": {
+    "finalize_evidence.py": "9ee8be888f096bc5c90a03b86152aae18e46a52b5623d940c2b06322bc203685",
+    "verify_hosted.py": "735278ece580bd33d0fef96b4f9d4e5059ff7ef2d6fd7b58d0710eddf542c6ff"
+  },
+  "context_sha256": {
+    "java-oracle.json": "ec86d97c987d823f05a7cfe945c224aac255306847a220350917dadf4af5d75a",
+    "java-execution.json": "8f74586290b3772bad72e722e103c6d8f5a5af2c1c20bb8d83a01462bc588d9c",
+    "oracle-source-manifest.json": "81803932956b98cbc3294b650a33bf5511ebd169093eaf36830bfde72fbe06b0",
+    "fixture_manifest": "26126241ca9f86bdbe9052cb06600ebde7775f4b2f185d195ce2f5983f200da3",
+    "expected_tsv": "72ef5198898fef0a1fa7ea5221751b1d6ddbde674ce0be83e75f38586a096bbc",
+    "native_comparison_test": "ed2e169695699867884d982a9404452a25a7db00f2f51cba91819861670476b2",
+    "collect_hosted_recipe": "219f750a117d19655c901bab8767ea46322fea8d1f876b7cfb21a99eb50ef893",
+    "qualification_recipe": "0c5f9cb9821cead49e81a441b82e0013401d5e8631ccff9749683d868d4ce2bd",
+    "visual_recipe": "cfac15b72defc3610fbd7cebc3118baec0f079d9117070d274a7fe09abdb834b",
+    "distribution_recipe": "be99a4c650cd75667a569cea8d1c1a1c4f15a8367595a24b8eaad8c74e5e3a05"
+  },
+  "schemas": {
+    "java_execution": "Actual4completed0exitcommands,source19/class32 maps match frozen manifest and current durable copies;17before/afterfixture metadata maps equal;8raw log digests checked.",
+    "query_binding": "Raw actualJavaquery.stdout equals frozen expected.tsv72ef5198;425rows\u00d76=2550scalars;17unique files, each whole day plus24hours; all17fixture bytes checked against Java supplied metadata/public map.",
+    "original_subject": "Current complete original LongTermStatsBase source matches manifest1f9e0967; finalizer additionally requires immutable cb8Gitblob equality. This review did not invokeGit.",
+    "native_binding": "Real native test requires explicit fixture argv/TSV, parses each sourcefixture and compares actual six totals/day/hour; absent nativeoptional mapped0 only for scalarcomparison. No presence or error equality credited.",
+    "hosted_archive": "Collector schema matches verifier: artifact id/size/digest/source/run, exactghartifactwrapper, canonicalZIPmembers, no symlinks/special files, fullZIP\u2194extractedbyte map. Receipt publishes actual keys consumed by finalizer.",
+    "cohorts": "Exact prior53GCCnames+4new=57;focusedClang8;sanitizer11. XMLnoerror/failure/skip +exactLastTestsections +per-suiteQt totals and plainCPPmarkers.",
+    "visuals": "8offline+2realcounter+2realactivity captures at each of3scales=36local;12hosted separately. No manualcompositor/graphparity credit.",
+    "cross_file_counts": "34HistoryUIQtrows,12HistoryWindowQtrows,21projectioncases,11readerfamilies; actual assertion counts observed from scoped log markers. Reader case counts distinct from suite counts.",
+    "dist": "103installedfiles/82unchangedruntimefiles and fullbyteRPATHreplay/rollback fields match producer schemas; exactsourcecommit bindings required before publication."
+  },
+  "claim_limits": [
+    "Genuine originalJavaDate-reader equality limited to2550valid supplied scalar totals.",
+    "NoJavaUI/writer/cache/sessionmanager/runtime-global behavior, presence/count, malformed/overflow or current/future-clock clamp equality.",
+    "Verify_hosted executes native comparisons against frozen Java outputs; it does not claim another hosted Java run.",
+    "This review validates source/schema and existing oracle bindings only. Local lane/hosted/dist receipts are still future inputs to these gated tools; no successful tool or complete milestone execution credited here."
+  ],
+  "known_pending_inputs_at_review": [
+    "Native source-commit.json",
+    "qualification-counts.json",
+    "Final local57/8/11receipts",
+    "Hosted completed-run/archive receipts",
+    "Promoted dist receipt"
+  ],
+  "findings": [],
+  "tool_execution_by_reviewer": false
+}

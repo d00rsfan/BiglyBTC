@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "source_commit": "ba03f2c6a080f856c0d8808b2b4239846dd27733",
+  "runs": [
+    {
+      "id": 39130607531,
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39130607531",
+      "conclusion": "success"
+    },
+    {
+      "id": 39130607432,
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39130607432",
+      "conclusion": "success"
+    }
+  ],
+  "native_units_passed": 42,
+  "skipped": 0,
+  "codec_cases": 27,
+  "storage_cases": 43,
+  "new_qt_header_rows": 27,
+  "new_qt_window_worker_rows": 12,
+  "actual_smoke_rows": 4,
+  "captures_retained": 4,
+  "artifact_files_hashed": 25,
+  "artifact_file_manifest_sha256": "13bd0ad4ffc69052f3ef7b52f0492a75dea6eee8441f1496969da7ca89253b97",
+  "full_client_migration_credit": false
+}

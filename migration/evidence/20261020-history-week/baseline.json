@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "native_parent": "fe09d1c9430a5a3c684d34be97a6661d08704c72",
+  "private_parent": "ac1d95f97b2dfeec2110d790549ffb8b16a038ef",
+  "previous_dist_manifest_sha256": "3e9cac217002984615942bb8542594962750d6cddde0274d8a855bb1da67478c",
+  "previous_source_commit": "9db774659334daa2dbabd81762c819c108eb43b2",
+  "previous_tag": "milestone-saved-history-20261019",
+  "scope": "One seven-date overview of independent original daily saved-history reads; no combined weekly total or rolling graph"
+}

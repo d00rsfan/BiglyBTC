@@ -1,0 +1,51 @@
+{
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_sha256": {
+    "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a",
+    "core/src/com/biglybt/core/torrent/impl/TOTorrentImpl.java": "a3a688ca2fc2e91b36c660270d6a72bc3b5f423bd694c4b58ad21958d32e6499",
+    "core/src/com/biglybt/pifimpl/local/torrent/TorrentManagerImpl.java": "b0f24b55501f661b84adf9fb80f3a061dbfb1d8da1d874bb1538be437ed99c84",
+    "core/src/com/biglybt/core/config/impl/ConfigurationManager.java": "2627f71f0dd69b2cee577331ad6ce05fd230d47df816b592d07236c9b759bc82"
+  },
+  "method_sha256": {
+    "STATE": "084c597ddcd03d280960a59145e92e959e25d56a90e975d31ca3ac913ce14060",
+    "PRIMARY": "2fbfe95f20c696789f35a63f824af570dd05dca5166c1eb9bd6c0206245ffb1c",
+    "CACHE": "27a23baccc6f32f682beda8b97bcc1b8f33972de4eecc899c7b41bed5e49186e",
+    "RAW": "f5ce20ec2c58dd9a972d178482aa2fc19bc9ad9d74065d9c85473050fd4c5d4d",
+    "LONG": "3742587a1606008e87733fc42cf1fabbea18747afa7834ab682865f9e30886bf",
+    "PREFIX": "91382900a6c87a64f55f7a650ca0c52511fbebf99fa5f4834b2df31c3057d287"
+  },
+  "harness_sha256": "393e96574955783ec82b30d36556d383188b65d2ec93a1242aed18cc687fafc2",
+  "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+  "helper_class_sha256": {
+    "PluginAttributesOracle$Cached.class": "836584d9934c3bbd43ace2bcf51a3cfa14be88a1d886baa1ecfc1c541a1f976b",
+    "PluginAttributesOracle$Config.class": "71ec7f414295feac6dbeb0d4ca7535794d978285faecaca91916d2ca6b28ca0d",
+    "PluginAttributesOracle$Debug.class": "7d3d30c4d2984f8ec36ae0ba8de6e347454bdc9adf3a8cbc6707b386c0903b23",
+    "PluginAttributesOracle$Monitor.class": "2c8d7bbadc4e4ff3bd8492f08099d747dc6d28716345450efe48a63bd12237db",
+    "PluginAttributesOracle$PluginInterface.class": "1428ee3181c37868838e4c107a44e29cb10df358d3fc0d465be9c877a44057b2",
+    "PluginAttributesOracle$Primary.class": "d769e44a3d8de85aaaccb0f7c1764db61bbf5df0fb4b131c1b56a0b556aea03a",
+    "PluginAttributesOracle$State.class": "f75d9df9bebabcb5a568cd2499060146ea7ba8447c4ffbbcbabf641cdbe31941",
+    "PluginAttributesOracle$TorrentUtils.class": "b2b8037a2d5e5229e4a62dc4d11efc5fec46e307e8fb0d50edb0f92d8cab36d2",
+    "PluginAttributesOracle.class": "c6205842c66d12198a4d27ce5588981225efa530143c8d4ad563b9dee2eba986",
+    "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd"
+  },
+  "commands_sha256": "268911e39b7254e45b8c76a47f84670249d8f17def20fa35f763b38814c5a2d1",
+  "expected_sha256": "2c7539cc4f1b4bb65456320ce78eecbb0fc8933773c839b42518acffb198ec08",
+  "observations": 952,
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+    "-XX:ActiveProcessorCount=2",
+    "-Djava.security.manager=ReferenceFence",
+    "-Dbiglybtc.test.root=/tmp/biglybtc-plugin-attributes-oracle-6zeaz1wx",
+    "-Duser.home=/tmp/biglybtc-plugin-attributes-oracle-6zeaz1wx",
+    "-Dazureus.config.path=/tmp/biglybtc-plugin-attributes-oracle-6zeaz1wx/profile",
+    "-cp",
+    "/tmp/biglybtc-plugin-attributes-oracle-6zeaz1wx/classes:/tmp/biglybtc-oracle/classes",
+    "PluginAttributesOracle",
+    "/tmp/biglybtc-plugin-attributes-oracle-6zeaz1wx"
+  ],
+  "work": "/tmp/biglybtc-plugin-attributes-oracle-6zeaz1wx",
+  "scope": "Exact original cached/primary map and Long getters/prefix statement; supplied maps/defaults/monitors, original bencode, UTF8/legacy ISO keys; no normal core/plugin startup, profile or network"
+}

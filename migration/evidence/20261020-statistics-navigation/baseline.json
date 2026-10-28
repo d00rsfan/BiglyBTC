@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "native_parent": "42b45749abd481014486a33844520c5d670b534b",
+  "private_parent": "bcee2bb8ccb671240c25d3f2b7716017ecc89d94",
+  "previous_source_commit": "c35ca6e2470aa8f154ec7676e61734c012725283",
+  "previous_tag": "milestone-history-hourly-20261020",
+  "previous_dist_manifest_sha256": "dc27b140c9dbf914a9336179e440454b4ef260a76ee0ad459ea9f2c99d5ba6b4",
+  "scope": "Exactly one P04-22: session-scoped in-memory Statistics navigation retained across tab closure, without retaining widgets or saved result packets."
+}

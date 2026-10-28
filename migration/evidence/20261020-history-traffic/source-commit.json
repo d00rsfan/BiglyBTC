@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "source_commit": "1b08cceee82df9d29f1b35719a6ac24f2c6c2bc1",
+  "native_parent": "11dd37171a68c9de8bdae662cc2daf630f363120",
+  "source_commit_parent": "11dd37171a68c9de8bdae662cc2daf630f363120",
+  "source_files_verified": 15,
+  "source_sha256": {
+    ".github/workflows/native-preview.yml": "1c3d0f3e497afcb0e97f83b1f6626df055a8969aceb38a0f07465442cfad9109",
+    "preview/native/packaging/README.md": "af207d203acae59c48e4095cd563e505446e58868c2b3445afc3bf35e835613f",
+    "preview/native/packaging/preview_smoke.cpp": "6df1da71dea455fd64f86c40f6df0b03db63913717f94477443758efa5453940",
+    "preview/native/tests/CMakeLists.txt": "2ed44f858e82db779b70fbf0b9f499f74e0d6bd8668da82303dcf6cabc3c1338",
+    "preview/native/tests/history_traffic_tests.cpp": "2f167f6b2dcf0d7104dae0e98b862b20c79a458e2b0eb40e9a703c6ad073b2ce",
+    "preview/native/tests/history_traffic_view_tests.cpp": "73d1593bf1d96ea77b136b01ad5d447179954003b85dc57488ef4c2cc178dcb8",
+    "preview/native/ui/history_view.cpp": "88f0c5feaae55442dacefb264f54c93c08a72a5cb24c1646063b51be28fbac9c",
+    "preview/native/ui/history_view.hpp": "4d0003b6020169b59a0e194e0abb34c10ad4abe165db318dc9684224f3c00f2d",
+    "preview/native/ui/history_week_view.cpp": "fb57304086deb24bed1cea791456e33ca363417af8e29723ca57f80c5e6d1800",
+    "preview/native/ui/history_week_view.hpp": "8613aee6f0c3171655a7112ffcccc576016c038c056f2864dfc9ceede079ab6a",
+    "preview/native/ui/saved_history_plot.cpp": "f148e539426c76ca6e4a5c4b275a6c21d67c0a9be5c0ecda58d6573fe82b1fdd",
+    "preview/native/ui/saved_history_plot.hpp": "4d61602d74475896ec57956a5df15c96ed0db82dcf67bc2cc449b7e82af9309e",
+    "preview/native/ui/saved_history_traffic.hpp": "ec35b38d7f7fc0b9cc41b4fded4a5b5a247de76959b65ad80cc28cf195576caf",
+    "preview/native/ui/statistics_navigation.hpp": "806fd6bc8682a8ecae5785ce8b82d841288effdda666861456949dc142ebea5b",
+    "preview/native/ui/statistics_page.cpp": "83a4a2a442491565ae9f4236efbba6f6100b3dcc3af466b077d4978cbb311891"
+  },
+  "qualification_at_source_publication": "GCC69 and all three scaled smokes passed; Clang/sanitizer/hosted success remains mandatory for dist, metadata and tag."
+}

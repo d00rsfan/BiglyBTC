@@ -1,0 +1,95 @@
+{
+  "schema": 1,
+  "source_commit": "b0c7f259bca2043df4fb1297e3440f2e5eb1a270",
+  "promotion_receipt_sha256": "86d1ff562f0f4b2f486098e5a185af90e517f168436c227b93cf3d4938d79041",
+  "manifest_sha256": "fc3c012766af59d689d501ed139ee87327fac9091a829a77bd28200b214777b9",
+  "files_verified": 103,
+  "runtime_files_byte_identical": 82,
+  "default_unbound": true,
+  "portable_persistent_owner_enabled": false,
+  "loaders": {
+    "BiglyBTC": {
+      "log": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/publication/verification/promoted-loader-BiglyBTC.log",
+      "sha256": "6d50266e3dd05da1e17c5b669c7c120cddc2f8a4a13c8ef2ae14fe019e375265",
+      "runpath": "$ORIGIN/../qt/lib"
+    },
+    "BiglyBTC-headless": {
+      "log": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/publication/verification/promoted-loader-BiglyBTC-headless.log",
+      "sha256": "9a14c54f7b23a07c3fe3777c9341ca2b578a8d929e17ddadd3af11e5984a6c9b",
+      "runpath": "$ORIGIN/../qt/lib"
+    }
+  },
+  "cli_checks": [
+    {
+      "name": "launcher-help",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/dist/BiglyBTC-preview",
+        "--help"
+      ],
+      "exit_code": 0,
+      "expected_exit_code": 0,
+      "log_sha256": "a7fe26e4460bd39bb31583a5cc734271bb0d1a6edfa6063b52ba6a20be677c53"
+    },
+    {
+      "name": "gui-usage",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/bin/BiglyBTC"
+      ],
+      "exit_code": 2,
+      "expected_exit_code": 2,
+      "log_sha256": "566c687d8bedf3475e540598cb142b031e9938d80a78963dd9754970a863c602"
+    },
+    {
+      "name": "headless-usage",
+      "argv": [
+        "/home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/bin/BiglyBTC-headless"
+      ],
+      "exit_code": 2,
+      "expected_exit_code": 2,
+      "log_sha256": "75a1799c9abe1e76bb2b4979f16500ebf050676e548d57f5c9c43ef675172b9f"
+    }
+  ],
+  "offscreen_smoke": {
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/desktop/biglybtc-preview-smoke",
+      "-o",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/publication/verification/preview-smoke.xml,junitxml",
+      "-o",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/publication/verification/preview-smoke.log,txt"
+    ],
+    "exit_code": 0,
+    "generated_root": "/tmp/biglybtc-preview-08012796cbb34f16985463e1bd66ee93",
+    "executable_sha256": "c31e25bbb86ee01f810b8babd3a00a8cfc2e0a9e376f126052c8faacf3c79d2d",
+    "rows": 13,
+    "skipped": 0,
+    "xml_sha256": "c9549a0d811458876f2164ada43b3c89316f14ce34789674a3ce0b0ca770463d",
+    "capture_sha256": {
+      "classic-preview.png": "24323291844b570aa83430b3cc8ff508135f74d01cee2bbd869f0c8354329b08",
+      "my-tracker-preview.png": "314c5d2f1084b99c454a6e51c5ca46a512d0cb60f3c6a0afd75f4098fb3a7a3b",
+      "my-shares-preview.png": "497d463911f6920393041cd4ce13421aa21ddf5ebb79f8042b3687497874fb9f",
+      "saved-selected-preview.png": "9da1e93280d2efdd704a14e9e6cc4756cbb686c75e37d2ef73e34d4e9d224e0b",
+      "statistics-activity-preview.png": "814f2fc334574c088c6a1945cdcc62cb6647bd1be06600d6c4a2f3ef2ae6d9b9",
+      "statistics-transfers-preview.png": "63a3cd7c5288fafed0e3d4e1e0e4724e1c146ea06fad1093100aaddb92351d8e",
+      "statistics-history-preview.png": "fe963a64b2480afb68cbf0c77a43a9252dcb818e19a9430767711e50c5abe2c8",
+      "statistics-history-missing-preview.png": "35d41efb76914fbe184da9338c600aaeb2e8d3eaac467e9eccc6cf0ab955622a",
+      "statistics-history-week-preview.png": "a0fe709f4ee1fde54dcf7ada4cf1441f277651b2a89c59dad2e75ebfad296b16",
+      "statistics-history-week-missing-preview.png": "4a1b3eaab590889e181da96301a8257740134c6695bd59fc0e34c59523dd0184",
+      "statistics-history-week-hourly-preview.png": "65f89f54e222806e9e5626f341aa148540eef71731e4d34f3b4844a082654a3b",
+      "statistics-history-week-hourly-missing-preview.png": "ffba77f9c3b2a4b1cbdcbe979518bb1b0edc6d0f3a5fcd92d35368f045c35c32",
+      "statistics-navigation-reopened-preview.png": "65f89f54e222806e9e5626f341aa148540eef71731e4d34f3b4844a082654a3b",
+      "statistics-navigation-new-session-preview.png": "27de310b8d7718766ac1fd19413f6c258b6960d8e303ae7a2e7573d25148021e",
+      "statistics-history-protocol-preview.png": "cda9b6719569743a3d74146e557759ddf958cbd05aa61de10226153d88f31ed2",
+      "statistics-history-dht-preview.png": "10cc39107ec5ded915a0a3149acf6de0be7a16e4a0e67f7be5f2ea5b0f2d510d",
+      "statistics-history-keyboard-preview.png": "f2480e527b74e0418ccecb3af8e913f5fb3bd08900daf2c40979b607f142ad90",
+      "statistics-history-copy-preview.png": "f2480e527b74e0418ccecb3af8e913f5fb3bd08900daf2c40979b607f142ad90",
+      "statistics-history-month-preview.png": "431f3997af2c0d27474cf9c7036954a05e4abe9084f887ea590c9e96f6cbc624"
+    },
+    "scope": "Existing source-built full UI smoke with promoted private Qt/LT and owned generated profile"
+  },
+  "installed_main_interaction_claim": false,
+  "real_compositor_acceptance": false,
+  "new_session_widgets": false,
+  "transfer_or_persistent_owner_test": false,
+  "system_installation": false,
+  "external_processes_signaled": false
+}

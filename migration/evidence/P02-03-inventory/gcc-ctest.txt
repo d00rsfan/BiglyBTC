@@ -1,0 +1,37 @@
+Start testing: Oct 17 03:28 IDT
+----------------------------------------------------------
+2/8 Testing: saved-library-inventory
+2/8 Test: saved-library-inventory
+Command: "/tmp/biglybtc-native-gcc/tests/biglybtc-library-tests"
+Directory: /tmp/biglybtc-native-gcc/tests
+"saved-library-inventory" start time: Oct 17 03:28 IDT
+Output:
+----------------------------------------------------------
+PASS original/legacy inventory, owned paths/hashes, normalized startup, force/pause owners, issues and bounds
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"saved-library-inventory" end time: Oct 17 03:28 IDT
+"saved-library-inventory" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/8 Testing: java-saved-library-inventory
+6/8 Test: java-saved-library-inventory
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/library_interop.py" "--driver" "/tmp/biglybtc-native-gcc/tests/biglybtc-library-driver"
+Directory: /tmp/biglybtc-native-gcc/tests
+"java-saved-library-inventory" start time: Oct 17 03:28 IDT
+Output:
+----------------------------------------------------------
+PASS original Java v1 inventory, identities, counters and all profile bytes retained
+PASS original Java v2 inventory, identities, counters and all profile bytes retained
+PASS original Java hybrid inventory, identities, counters and all profile bytes retained
+<end of output>
+Test time =   0.51 sec
+----------------------------------------------------------
+Test Passed.
+"java-saved-library-inventory" end time: Oct 17 03:28 IDT
+"java-saved-library-inventory" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 17 03:28 IDT

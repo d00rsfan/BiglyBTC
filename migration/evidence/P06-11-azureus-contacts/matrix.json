@@ -1,0 +1,244 @@
+{
+  "source_sha256": {
+    "migration/fixtures/azureus-contacts/commands.txt": "59ba8605db62d17455be2089107f39daacdaf22632406c98b1f27bc433271874",
+    "migration/fixtures/azureus-contacts/emitted.json": "962117e1d710d6917f61068909a80adef2b874a29346474c9b877fdb6463e356",
+    "migration/fixtures/azureus-contacts/expected.txt": "da9912925a778e4bb1d99e7adae61d6e46cbf51e30ee37e5263538425cb8dd30",
+    "migration/fixtures/azureus-contacts/manifest.json": "4ce01b4a997f119f44d4f13af171341831d8c76d7ef76f0920a7724632e96762",
+    "migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+    "migration/tools/azureus_contacts_fixtures.py": "70e690fb4002b49412b497d49ee4c188e818ab3afabfd7cd2aa588e1929c07d4",
+    "migration/tools/azureus_contacts_matrix.py": "d8c63950e13b1fa43bac59b948f096404ac7fb10f59b902cd8bda58337ca8b3c",
+    "migration/tools/azureus_contacts_oracle.py": "9aef5aa83e4a5ff0bdd9b0f6382c989183d67732339d864d81085e3d77e7671a",
+    "migration/tools/azureus_contacts_readback.py": "9741c1b7c3d804cbef7734a2cb6c7e98587ed457e53b9d5f83bdbf022c6c7b92",
+    "migration/tools/azureus_headers_oracle.py": "70c333becbc3f88949f31f89cf29625572d4ac0c07cdba19c9bb1424112f5f02",
+    "migration/tools/mldht_identity_oracle.py": "9775c25bc03d4b28c3444ca5633b0952234241adcbcf60f6a75676f5e163810e",
+    "migration/tools/oracle.py": "8eb1cc4758ba78b4679b05b553ed8f6b7c1c1abe1745b8b1f5357ae681f0710f",
+    "native/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "native/services/azureus_contacts/CMakeLists.txt": "630dbfa820490787eba31bf757c6cdd950439ca97ab6904375a618f074865d08",
+    "native/services/azureus_contacts/README.md": "46a5ef52aa3f3a556aa967148376d9081720bf51fd346d9e7a61a83f37d81b14",
+    "native/services/azureus_contacts/contact_bounds_test.cpp": "1160208cf248160ac1f08e0a93ff0e1ab2875038214b4eac3859fb5b56a6c40c",
+    "native/services/azureus_contacts/contact_driver.cpp": "cb76c879ca52775455c658c399c52d1f14447106bc3face7330a1899d483383e",
+    "native/services/azureus_contacts/contact_fixture_test.py": "edf8dce99c1b606f7b2c1c6946630239b886a6e634ee4c7bcc4f3282cb002184",
+    "native/services/azureus_contacts/contacts.cpp": "027ffb6e9033ec293df004afde2b275d3e041d5a8a99a9eb59f6335ace6e3087",
+    "native/services/azureus_contacts/contacts.hpp": "3bdb8b0c8f3c8292b6fe499b200fc648964cb8f0aa2d1680fcf603b7aee43701"
+  },
+  "reference": {
+    "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "source_sha256": {
+      "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPUtils.java": "d852f590ca0df5361061e598be2087787ea588201f23d2fb7f826cfd62d4694b",
+      "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportAlternativeContactImpl.java": "c3a44f32ef2368f502fc9294a9ce7dd669e81b46b38d6179136981202e55372a",
+      "core/src/com/biglybt/core/dht/transport/DHTTransportAlternativeContact.java": "717fc22cb122929e525b04ae335b465f7501316699bc3ab1bce34a703b2fd0ee",
+      "core/src/com/biglybt/core/util/BEncoder.java": "27f8a104b355bc8f79a3ff8fbb36efe0a34636add267ba212dad0638ab5c1fbe",
+      "core/src/com/biglybt/core/util/BDecoder.java": "5029ac337c81ae9232b3462e4237744de459c1a305c99d2507e8600bcbec5a1e"
+    },
+    "method_sha256": {
+      "CONTACT_CREATE": "4ab4929303c99f937f429f001d756ad82073712484547cf0adb8a04f645c5964",
+      "NETWORK": "090d5cf2f8ccb4ebb1affc7a836094567a227489975b9fd3e43f8e221330f3b1",
+      "VERSION": "71828d6bf16f9da5ff2f74b63615918aecc6fea2670d0ebcfe20930cfb009b4d",
+      "ID": "7aa51b52a273e7bd787b211d65b70f0e1ccec774d72eab63cc96d9d264f41efd",
+      "SEEN": "28e603a6ef278d3ea144e04f4eea28ab8a1cd94efaee4139a17ca71feaaa6dbd",
+      "AGE": "5da316a5b953f63746da5615a41e47343b41dad5a2bf206a410a8de956ed0df6",
+      "WRITE": "c3cf1e09e65e97da4553235d276458eeef1bce9a27d3f3e0d955e9fdbf8cc0c9",
+      "READ": "c87e9247e47e2fd79059491e40adb120455e08c9a5dda5cec3825ff2267bd755",
+      "WRITES": "e9486bd45fa605f0aff0a5a532db12eb055c41e3a5187fdc74eb9322d67a2715",
+      "READS": "b0376afe4f3c4bce3c7ba6b60995ae12eb58ed573ed564d9f42bdab8709bbfe7",
+      "LENGTH_WRITE": "83bc004bef0f80fa30033315b80869d53461aafa090e5029f22d569d47abb252",
+      "LENGTH_READ": "85fe541eb0a2712bbaf1b45a677a81f71295a100cc72b4ec1a3a2f9126a4d3ce",
+      "BYTES_READ": "12acc90bc7c36e5ba7492927cde1e2b20928244d8aec8863cd7c7f051faf3c6e",
+      "BYTES_WRITE": "899492a7e96ab0a5a72a6911a0550f115342ba701f5c92d0a5594ecaad64c44c",
+      "BYTES_WRITE_SLICE": "32c94eef3d6f43f9eec1005bccfa3ed8b7b536843774f4b2dc8c3b57cc18e9c2"
+    },
+    "harness_sha256": "b596fe933fdb6120c24e500532edcb0e34e256af2217e8152529ad9594a78beb",
+    "helper_class_sha256": {
+      "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd",
+      "AzureusContactsOracle.class": "8e93cacce8ee80614ad3610c31e8e94b105aeced533fcb4f81108d6ca7343d92",
+      "AzureusContactsOracle$1.class": "cb452c21f467324c293866d5504525cb6add0ca89f2d50279e1a448c376f69eb",
+      "AzureusContactsOracle$DHTTransportAlternativeContactImpl.class": "6390e3d88be555593e36cd4909e230488e143c828549037708aa2eaec76565f3",
+      "AzureusContactsOracle$DHTTransportAlternativeContact.class": "6d1329f0461b2240e392104a8be1dd2c887ecfaf09dc21bc52fb58aa0b41f229",
+      "AzureusContactsOracle$Debug.class": "01a9d4a84f260144efbc3b020a0a3ef1e91a090a050f8fb08a81c3418dd936fb",
+      "AzureusContactsOracle$DHTTransportException.class": "b28d45452dce8cc60d4fab589767b64e2da963a3ef7b64f7ecc2e849f48aae88",
+      "AzureusContactsOracle$SystemTime.class": "0766525a3e85934499ee7f4062a05b91487685e9ee707fc0ee02a4899a632d78"
+    },
+    "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+    "compile_command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "-J-XX:ActiveProcessorCount=2",
+      "--release",
+      "8",
+      "-encoding",
+      "UTF-8",
+      "-cp",
+      "/tmp/biglybtc-azureus-contacts-oracle-getpurek/classes:/tmp/biglybtc-oracle/classes",
+      "-d",
+      "/tmp/biglybtc-azureus-contacts-oracle-getpurek/classes",
+      "/tmp/biglybtc-azureus-contacts-oracle-getpurek/source/AzureusContactsOracle.java",
+      "/tmp/biglybtc-azureus-contacts-oracle-getpurek/source/ReferenceFence.java"
+    ],
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "-Xmx256m",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-azureus-contacts-oracle-getpurek",
+      "-Duser.home=/tmp/biglybtc-azureus-contacts-oracle-getpurek",
+      "-Dazureus.config.path=/tmp/biglybtc-azureus-contacts-oracle-getpurek/profile",
+      "-cp",
+      "/tmp/biglybtc-azureus-contacts-oracle-getpurek/classes:/tmp/biglybtc-oracle/classes",
+      "AzureusContactsOracle"
+    ],
+    "work": "/tmp/biglybtc-azureus-contacts-oracle-getpurek",
+    "scope": "Exact original array/contact/length/byte-array/constructor/getter bodies with supplied clock and original frozen BEncoder/BDecoder for generated outgoing maps. Raw incoming properties stay opaque; lazy projection uncalled. No normal manager/core/config/plugin, network/DNS or live profile."
+  },
+  "builds": [
+    {
+      "compiler": "gcc",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/services/azureus_contacts",
+          "-B",
+          "/tmp/biglybtc-azureus-contacts-qualified-gcc",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS="
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-azureus-contacts-qualified-gcc",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-azureus-contacts-qualified-gcc",
+          "--output-on-failure",
+          "-j1"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/azureus_contacts_readback.py",
+          "--driver",
+          "/tmp/biglybtc-azureus-contacts-qualified-gcc/biglybtc-azureus-contact-driver",
+          "--reference",
+          "/tmp/biglybtc-azureus-contacts-oracle-getpurek/reference.json",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-11-azureus-contacts/gcc-readback.json"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-azureus-contacts-qualified-gcc/biglybtc-azureus-contact-driver": "215d4e48c43308cdaf5578699b08c0761cc357a2fda0ec9eb58db2eb7663242f",
+        "/tmp/biglybtc-azureus-contacts-qualified-gcc/biglybtc-azureus-contact-bounds-tests": "e88ae8aa6e9384ce88eb6f3e518e56f6abc8f000ff1ec96106dc8d721b895527",
+        "/tmp/biglybtc-azureus-contacts-qualified-gcc/libbiglybtc_azureus_contacts.a": "f25d19f16de087d7cb6f2df839484a921a1ac3006b5b838c3eea2101f556b3df"
+      }
+    },
+    {
+      "compiler": "clang",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/services/azureus_contacts",
+          "-B",
+          "/tmp/biglybtc-azureus-contacts-qualified-clang",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-azureus-contacts-qualified-clang",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-azureus-contacts-qualified-clang",
+          "--output-on-failure",
+          "-j1"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/azureus_contacts_readback.py",
+          "--driver",
+          "/tmp/biglybtc-azureus-contacts-qualified-clang/biglybtc-azureus-contact-driver",
+          "--reference",
+          "/tmp/biglybtc-azureus-contacts-oracle-getpurek/reference.json",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-11-azureus-contacts/clang-readback.json"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-azureus-contacts-qualified-clang/biglybtc-azureus-contact-driver": "accbd9acaadfd4c1ba48bd3363e57382b845840b63861b375b5554379c7c0982",
+        "/tmp/biglybtc-azureus-contacts-qualified-clang/biglybtc-azureus-contact-bounds-tests": "921f15ff4f1e0814bcf3c5b4d9787d720541429907914da9c5c64ea7f2d23ce7",
+        "/tmp/biglybtc-azureus-contacts-qualified-clang/libbiglybtc_azureus_contacts.a": "c99e73130f7a9336bf1a7df7445fe7fb990d137919f0b5c21f40b7a4487eba73"
+      }
+    },
+    {
+      "compiler": "asan",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/services/azureus_contacts",
+          "-B",
+          "/tmp/biglybtc-azureus-contacts-qualified-asan",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Debug",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-azureus-contacts-qualified-asan",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-azureus-contacts-qualified-asan",
+          "--output-on-failure",
+          "-j1"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/azureus_contacts_readback.py",
+          "--driver",
+          "/tmp/biglybtc-azureus-contacts-qualified-asan/biglybtc-azureus-contact-driver",
+          "--reference",
+          "/tmp/biglybtc-azureus-contacts-oracle-getpurek/reference.json",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-11-azureus-contacts/asan-readback.json"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-azureus-contacts-qualified-asan/biglybtc-azureus-contact-driver": "c6ac6a9feb3183dadd8a856507ebc4650fab2b03b92c3f6c5ff04ed9db87a343",
+        "/tmp/biglybtc-azureus-contacts-qualified-asan/biglybtc-azureus-contact-bounds-tests": "374add3f357c4eb2328ada154bdf05da6c7459ad7732e1932813af52b0848b08",
+        "/tmp/biglybtc-azureus-contacts-qualified-asan/libbiglybtc_azureus_contacts.a": "145cb9eb60ca577bfc977edcae86487905d5c9b79b5723a14a2b40a659789637"
+      }
+    }
+  ],
+  "scope": "5636 original observations, native bounds/ownership/padding and2506 original encoder comparisons/2509 Java readbacks per compiler. Supplied clock and original outgoing BEncoder maps; incoming properties opaque, no lazy projection/runtime activation."
+}

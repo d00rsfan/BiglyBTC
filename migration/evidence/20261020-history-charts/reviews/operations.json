@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "milestone": "P04-20",
+  "reviewer": "error_driver",
+  "status": "PASS: independent static operations review; no blocker found",
+  "reviewed_sources_sha256": {
+    "build/history-charts-20261020/commit_source.py": "ae274d7117f725443c85576fa1ce82b4a99693c21445f430ea20a850110cfe3d",
+    "build/history-charts-20261020/promote_dist.py": "e1e71de3f8ce485dfb1a6abd84f9715f00608da8726b2d5b7ccabf1a060951da",
+    "build/history-charts-20261020/publish.py": "b3dc0425fbc8871b8afe39e1f602dd156a6e873439148253c7c1f099470f4105",
+    "build/history-charts-20261020/checkpoint_history_charts.py": "3b448c83d2847f61a52bad189bde567a1ac13fc1906dfea940fe2fc8583ced8c",
+    "build/history-charts-20261020/checkpoint_milestone.py": "d7980d17d334f0fdb0d510d3247b235ca652424ad40a35fd1407a4d78ca2bf13",
+    "build/history-charts-20261020/verify_private_checkpoint.py": "b178ff78c7a72ebb5c8275289dbac88fa3d25e1800f72eddf18dbe6b5616b87f"
+  },
+  "context_sha256": {
+    "migration/tools/checkpoint.py": "209d8da4eb017bb4d166871bdc36144d6ffa984ab8674e1b69d2a4bf930ce8ef",
+    "build/history-charts-20261020/verify_dist.py": "c992071c8a0294807e91420e835335bda040f8e0e07cf1d292ab71a0d06dd2b5",
+    "migration/evidence/20261020-history-charts/baseline.json": "324bf3166ab804e109859d0ef84325ae8c18e7742b0f82764a74215c48e962a3"
+  },
+  "checks": [
+    "All six complete requested scripts read and ast.parse checked without execution/import. Generic checkpoint.py and separate portable-loader verifier read as context.",
+    "Native source parent94bf, private parent028b, source namespace/tag/metadata history-charts-20261020 are correct. Native scripts operate only the authorized durable BiglyBTC sibling and exact SSH origin/main. No original checkout/index mutations or original remote publication are requested.",
+    "Source commit requires exact11 focused units, all passed/no skip; retained Daily34/12 and Week38/12 totals plus three positive dynamic chart totals are captured from actual LastTest sections. Source map is complete changed/untracked regular source, actual commit blobs are verified before push. Future full64/15/18 qualification remains required before completion metadata.",
+    "Portable promotion checks old manifest bytes, distinct absent new stage/rollback, equal installed file set and82 unchanged runtime bytes. It changes only the owned staged install, proves full binary equality after exact RUNPATH replay, validates private loader paths and retains the entire old dist by rename; install failure precedes promotion, second-rename failure attempts restoring the old path.",
+    "Public metadata publication requires one sole new milestone JSON, actual64/15/18 local success and42/14 captures; exact tag/remote head/tag-object/peeled-target identities are re-read before success receipt. Prior source/tag and other repositories are not rewritten.",
+    "Private checkpoint coordinator first checks actual qualification/publication source,64/15/18 and42/14, validates original HEAD/index, runs existing migration validator, freezes complete new evidence inventory, and writes private command/message/output only under ignored new build namespace.",
+    "Wrapper installs a narrow9-shared-path plus new evidence subtree scope into the existing alternate-index checkpoint helper. The initial index is read from exact private parent; scoped -text is required, new evidence is renormalized, symlinks/nonregular/unresolved entries are rejected, complete staged-path set and changed-path allowlist are checked.",
+    "Before write-tree/commit-tree/update-ref, every staged blob is cat-file hashed against actual working bytes, inventory set/content checked, and original frozen HEAD/index checked again. Existing native/golden filter checks also remain in force. The helper additionally checks original HEAD/index immediately before and after the final expected-parent update-ref.",
+    "Post-checkpoint verifier requires the actual one-parent commit/receipt parent028b, reads all required committed blobs, checks every working byte plus inventory and frozen original HEAD/index, and writes its receipt outside evidence to avoid a self-hash inventory cycle.",
+    "Both private scripts use the same exact9 shared paths. Scoped raw-byte guards cover the entire new evidence tree before the first ref update; this is not a conditional recovery after normalized bytes have already been committed."
+  ],
+  "fixed_scope": {
+    "native_parent": "94bf1cb1c17ea7979bc56ae21e9837605689f6a1",
+    "private_parent": "028b319961b4f412d8b41a69f92ce720774582a9",
+    "public_milestone": "milestones/history-charts-20261020.json",
+    "tag": "milestone-history-charts-20261020",
+    "full_test_cohorts": {
+      "gcc": 64,
+      "clang": 15,
+      "sanitized": 18
+    },
+    "three_scale_captures": 42,
+    "hosted_captures": 14,
+    "dist_files_required_by_final_admission": 103,
+    "unchanged_runtime_files": 82,
+    "shared_paths": [
+      ".gitignore",
+      "MIGRATION_PLAN.md",
+      "migration/STATE.md",
+      "migration/FEATURE_MATRIX.md",
+      "migration/PREVIEW.md",
+      "migration/RECOVERY.md",
+      "migration/upstreams.lock.json",
+      "migration/tasks/P04-20-saved-history-charts.md",
+      "migration/publication/preview/native-preview.yml"
+    ]
+  },
+  "nonblocking_notes": [
+    "The runpy library namespace string history_week_checkpoint_library is inherited but only names the non-main library execution; it does not select old parents, paths, scopes or outputs. No functional change is needed.",
+    "Source-only review grants no actual build/publication/promotion/checkpoint credit. All root operations must still run with ordinary Python assertion checks enabled and with the reviewed unchanged sources.",
+    "The pre-ref wrapper assumes root holds the source/evidence write freeze while taking the checkpoint; it does not claim an atomic filesystem snapshot against unrelated external writers.",
+    "Existing source/tag/dist receipts are consumed rather than rerunning builds or Java. No new Java runtime/chart equality credit is introduced."
+  ],
+  "blockers": [],
+  "execution": {
+    "operational_scripts_imported_or_run": false,
+    "selected_target_evaluation": false,
+    "native_or_java_execution": false,
+    "builds": false,
+    "git_mutations": false,
+    "shared_or_native_source_edits": false
+  }
+}

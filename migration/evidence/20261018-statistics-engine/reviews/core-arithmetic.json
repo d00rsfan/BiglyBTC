@@ -1,0 +1,61 @@
+{
+  "schema": 1,
+  "status": "PASS-independent-source-review-no-blocker",
+  "reviewer": "error_driver",
+  "independence": "Codec authored all3core/testfiles. Reviewer authored separate privateengine sampler; own sampler receives zero independentcredit here.",
+  "source_sha256": {
+    "preview/native/core/include/biglybtc/engine_statistics.hpp": "f5946fd72b06312dd4772bbfb7f4c84ebbfcff53971b737e8ba7cda4902678f9",
+    "preview/native/core/src/engine_statistics.cpp": "77f4214794a6eb942f6732614dac55905d72ea91433c3b7158cc8095f78dd90d",
+    "preview/native/tests/engine_statistics_tests.cpp": "1f6d1400d0120a4c659df1b974a08bd54f5ea61c875818a9d5a86feb0ff9a1e7"
+  },
+  "planned_named_test_groups": 22,
+  "independent_vector_count": 512,
+  "blocking_findings": [],
+  "checks": [
+    {
+      "area": "Primitive/domain/order",
+      "result": "4rawint64 counters must be nonnegative and each combined>=payload. 2protocol totals derived onlyafterrawadmission, with safesubtraction. Time must be nonnegative and strictlyincrease afterfirst. Errorpriority counters/time/regression exact; all4raw and2derived totals monotone. Everyrejection precedes previous_ mutation, while acceptedrateoverflow advancesactual counters/time."
+    },
+    {
+      "area": "Timestamp/delta arithmetic",
+      "result": "Firstaccepted observation setsfirstTime and returnselapsed0/norates; subsequentelapsed now-firstTime andinterval now-previousTime lie0..INT64_MAX because admitted0<=first<=previous<now<=MAX. All raw/protocol differences between admittednondecreasing0..MAX values are nonnegative<=MAX. Rates describeprevious actualinterval, not accumulatedtotalelapsed or owner/applicationuptime."
+    },
+    {
+      "area": "Exactoverflow-safe rateproof",
+      "result": "For delta/divisor=q,r with divisor>0, rate=q*1e9+floor(r*1e9/divisor). q checkedagainstMAX/1e9 beforemultiply; base<=MAX, finalfraction checkedagainstMAX-base beforeaddition. fractionalRate processes30bits of1e9 with binaryquotient/remainder recurrence. Before eachdouble/add remainder<divisor<=MAX, so eachuint64temporary<=2*MAX-2=2^64-4 fits. Quotientprefix<1e9; no signedoverflow/widecompilerextension/floatingpoint/saturation. Anyoneunrepresentablecomponent omits entire6rate group withoutdiscardingvalidsnapshot."
+    },
+    {
+      "area": "Validatorfloor shape",
+      "result": "Rawdomain andelapsed checked. Presentrates requireelapsed>0 andeverycomponentnonnegative. Direction check uses safe combined-payload remainder, then protocol<=remainder andremaininggap<=1: exactlyfloor(x+y)-floor(x)-floor(y) in0..1. No componentaddition can overflow. This validatesstructure, not rawcounter/rateprovenance orprevioussample consistency, asheaderstates."
+    },
+    {
+      "area": "Ownership/noheap",
+      "result": "Publicsnapshots, accumulatorObservation,6elementarrays, optional/expectedpayloads containonlyfixedprimitives. No allocation/IO/clock/dependencyonQt/LT or borrowedviews exists inproductionmath. Snapshot/copyaccumulators ownindependent state. noexcept declarations matchfixedtype operations and enumerrors."
+    },
+    {
+      "area": "Independent testoracle",
+      "result": "Decimalreference appends9zeros to exactinteger text then longdivides with decimalcomparison/subtraction, using no productionbinaryquotient/remainder formula or floating/wide arithmetic. It firstcompares normalizedquotienttoMAX, so later signeddecimalconstruction stayssafe. Seeded512vectors use boundedraw/payload/timestamp generation whose additions/moduli remainadmitted. The expected6floorsandwholegroupoverflowstatus compareagainstactualpublicaccumulator."
+    },
+    {
+      "area": "Meaningful boundary/regression tests",
+      "result": "Read complete testsource: first/nonzeroorigin/0rates/previousinterval, fractionalroundinggap, MAXproductfitafterdivision, MAXtime/counters, overflowthenacceptednextbaseline, exactratefitboundary, everynegativefield, combined<payload, negative/equal/backwardtime, everyraw andbothprotocolregressions, fixedpriority withnoMutation, copiedsnapshots/accumulators/newowner, validatornegative/time/componentoverflow/gap1versus2 andindependentvectors. No mirroredcounterdecoder or Java/LT runtimecredit."
+    }
+  ],
+  "scope": [
+    "ONE owned LT peer payload+protocolsession, not IP/tracker/DHT orallclientglobal/lifetime totals.",
+    "First sample unavailable rates differ from fabricated zero; later realunchangedcounters can legitimatelyyieldknown0.",
+    "Overflowrates remainunavailable with validtotals; no wrapping/saturation or implicitnewowner stitching."
+  ],
+  "limits": [
+    "Source-onlyreview; exactarithmetic proof is inspected reasoning, not executing512vectors or compiler/sanitizerqualification. Root owns actualbuilds/tests.",
+    "Validator deliberatelycannot proveorigin or temporal relationship of a standaloneforgedsnapshot; actualsampler/worker ownership remains separate."
+  ],
+  "execution": {
+    "target_import_or_selected_eval": 0,
+    "compiler_or_preprocessor": 0,
+    "native_tests": 0,
+    "Java_or_profile_or_network": 0,
+    "Git": 0,
+    "subject_edits": 0
+  }
+}

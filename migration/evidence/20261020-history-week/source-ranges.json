@@ -1,0 +1,154 @@
+{
+  "base.constructor": {
+    "path": "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsBase.java",
+    "first_line": 121,
+    "last_line": 172,
+    "sha256": "a55ac4c56e80426b48c41328004a5399c522e471838c41db114c499ea9bfa056",
+    "bytes": 1003,
+    "range": "complete signature/body or named whole nested type; exact original bytes/CRLF preserved"
+  },
+  "base.sessionStartComplete": {
+    "path": "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsBase.java",
+    "first_line": 177,
+    "last_line": 204,
+    "sha256": "cfe7cccc92d3b295bc292671ff1859a6c8591df91badcb145de165eb676d9237",
+    "bytes": 510,
+    "range": "complete signature/body or named whole nested type; exact original bytes/CRLF preserved"
+  },
+  "base.sessionEnd": {
+    "path": "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsBase.java",
+    "first_line": 206,
+    "last_line": 227,
+    "sha256": "b30f1a3ca034b2841d5551e8787bb9166984121fae11e36d9471753472f916d7",
+    "bytes": 250,
+    "range": "complete signature/body or named whole nested type; exact original bytes/CRLF preserved"
+  },
+  "base.write": {
+    "path": "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsBase.java",
+    "first_line": 243,
+    "last_line": 463,
+    "sha256": "21e0c55b64018829e600cef657bb643e3b18b9f8575ac5db87508cf8f5c8a512",
+    "bytes": 4271,
+    "range": "complete signature/body or named whole nested type; exact original bytes/CRLF preserved"
+  },
+  "base.dateReaderActualOracle": {
+    "path": "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsBase.java",
+    "first_line": 646,
+    "last_line": 948,
+    "sha256": "5d283c3d3618a9a0f5e4df4d893b3bb9781b15e3a4efca656096937b368248b8",
+    "bytes": 7019,
+    "range": "complete signature/body or named whole nested type; exact original bytes/CRLF preserved"
+  },
+  "base.periodReaderNotExecuted": {
+    "path": "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsBase.java",
+    "first_line": 960,
+    "last_line": 1068,
+    "sha256": "cf88528781a85dcb5843c2d7132b66400816b2ea2ee0f798dd22777b480d9b4c",
+    "bytes": 2667,
+    "range": "complete signature/body or named whole nested type; exact original bytes/CRLF preserved"
+  },
+  "base.currentRateNotExecuted": {
+    "path": "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsBase.java",
+    "first_line": 1071,
+    "last_line": 1082,
+    "sha256": "e15274414386754af28dc4524c220ea06c6dc9beefdea1fbbd91906f1c849943",
+    "bytes": 238,
+    "range": "complete signature/body or named whole nested type; exact original bytes/CRLF preserved"
+  },
+  "base.DayCacheNotExecuted": {
+    "path": "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsBase.java",
+    "first_line": 1153,
+    "last_line": 1217,
+    "sha256": "ea05a03f1e8537b7119b84a4d11ca2f457229c19041fa4ad843ee477965a3283",
+    "bytes": 1129,
+    "range": "complete signature/body or named whole nested type; exact original bytes/CRLF preserved"
+  },
+  "base.MonthCacheNotExecuted": {
+    "path": "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsBase.java",
+    "first_line": 1219,
+    "last_line": 1395,
+    "sha256": "cd99a2317cb6e3d6217bb4dd2977a3ba89b466634bfde44e77c2ec6f478bddc0",
+    "bytes": 2979,
+    "range": "complete signature/body or named whole nested type; exact original bytes/CRLF preserved"
+  },
+  "impl.constructor": {
+    "path": "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsImpl.java",
+    "first_line": 64,
+    "last_line": 124,
+    "sha256": "09113d033bb988fbecd2fa2a56c232cb27bda12a7f9f563530f250acb60e292b",
+    "bytes": 1137,
+    "range": "complete signature/body or named whole nested type; exact original bytes/CRLF preserved"
+  },
+  "impl.sessionStart": {
+    "path": "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsImpl.java",
+    "first_line": 169,
+    "last_line": 235,
+    "sha256": "35adffb29291250a58a8622dc5d5c17811aa71bbe3bde7e377161fd487595cf6",
+    "bytes": 1514,
+    "range": "complete signature/body or named whole nested type; exact original bytes/CRLF preserved"
+  },
+  "impl.updateStats": {
+    "path": "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsImpl.java",
+    "first_line": 238,
+    "last_line": 272,
+    "sha256": "c3d22fbf822fa89f8cceb49d4d6cc0c6245bf9cb33a0924a905e9e4995e8f2dd",
+    "bytes": 986,
+    "range": "complete signature/body or named whole nested type; exact original bytes/CRLF preserved"
+  },
+  "impl.getNewFileSessionStats": {
+    "path": "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsImpl.java",
+    "first_line": 275,
+    "last_line": 297,
+    "sha256": "c11832355ab821a0e635da1544079685bb8bd807da3fd96576e8ccf49764b191",
+    "bytes": 614,
+    "range": "complete signature/body or named whole nested type; exact original bytes/CRLF preserved"
+  },
+  "ui.createHistoryPanel": {
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+    "first_line": 2242,
+    "last_line": 2482,
+    "sha256": "e3e4150fde303fcbc4f49173a29ff7091bc68326f42d1a5710e7f7aed174bd8a",
+    "bytes": 5558,
+    "range": "complete signature/body or named whole nested type; exact original bytes/CRLF preserved"
+  },
+  "ui.refreshHistory": {
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+    "first_line": 2489,
+    "last_line": 2697,
+    "sha256": "5158f82ef054f2b06af4c7c4b163fd60d9acaf6c3dd8e3404e91e1d9e8b6d22b",
+    "bytes": 4561,
+    "range": "complete signature/body or named whole nested type; exact original bytes/CRLF preserved"
+  },
+  "ui.totalUsageWrapper": {
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+    "first_line": 2699,
+    "last_line": 2719,
+    "sha256": "5c6a46b4239dd3ba93cedbade9b14fdcadefd8d002f04746cc393516434c3921",
+    "bytes": 471,
+    "range": "complete signature/body or named whole nested type; exact original bytes/CRLF preserved"
+  },
+  "wrapper.helperInterface": {
+    "path": "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsWrapper.java",
+    "first_line": 171,
+    "last_line": 177,
+    "sha256": "ed86ddfd52b5453fceb13c30a71c30f3380d313393b52743f8158fee70f9874b",
+    "bytes": 116,
+    "range": "complete signature/body or named whole nested type; exact original bytes/CRLF preserved"
+  },
+  "interface.complete": {
+    "path": "core/src/com/biglybt/core/stats/transfer/LongTermStats.java",
+    "first_line": 25,
+    "last_line": 110,
+    "sha256": "ff244872b218b7a20e4624c9cf3b514c4649c1ff0bce5b110b93079b6e140d3d",
+    "bytes": 1760,
+    "range": "Whole actual interface, including six counter constants/order, period constants, RecordAccepter and method signatures"
+  },
+  "util.timeSuffixUnitsAndWeekMultiplier": {
+    "path": "core/src/com/biglybt/core/util/TimeFormatter.java",
+    "first_line": 36,
+    "last_line": 49,
+    "sha256": "c8b53985740bed83eba3f3afa2c86a7bbc2ade9bdafe8b486d6f668df12e3fc9",
+    "bytes": 695,
+    "range": "Complete named unit/index/multiplier constant group; whole immutable original file retained separately; not compiled or initialized."
+  }
+}

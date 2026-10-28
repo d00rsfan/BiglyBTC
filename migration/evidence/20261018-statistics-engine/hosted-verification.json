@@ -1,0 +1,238 @@
+{
+  "schema": 1,
+  "source_commit": "5fc34b588713112b126f3cebdfc891020301a281",
+  "hosted": {
+    "desktop": {
+      "conclusion": "success",
+      "databaseId": 39144813366,
+      "headSha": "5fc34b588713112b126f3cebdfc891020301a281",
+      "jobs": [
+        {
+          "completedAt": "2026-10-18T16:29:09Z",
+          "conclusion": "success",
+          "databaseId": 117726395238,
+          "name": "preview",
+          "startedAt": "2026-10-18T16:24:01Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-10-18T16:24:02Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-10-18T16:24:02Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:24:03Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "number": 2,
+              "startedAt": "2026-10-18T16:24:02Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:24:47Z",
+              "conclusion": "success",
+              "name": "Install pinned compiler, libtorrent and Qt 6.12.0 SDK",
+              "number": 3,
+              "startedAt": "2026-10-18T16:24:03Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:28:20Z",
+              "conclusion": "success",
+              "name": "Configure and build the desktop preview",
+              "number": 4,
+              "startedAt": "2026-10-18T16:24:47Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:29:04Z",
+              "conclusion": "success",
+              "name": "Run offline unit tests",
+              "number": 5,
+              "startedAt": "2026-10-18T16:28:20Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:29:06Z",
+              "conclusion": "success",
+              "name": "Run actual offline preview smoke and capture classic view",
+              "number": 6,
+              "startedAt": "2026-10-18T16:29:04Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:29:06Z",
+              "conclusion": "success",
+              "name": "Preserve test, screenshot and dependency evidence",
+              "number": 7,
+              "startedAt": "2026-10-18T16:29:06Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:29:07Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "number": 14,
+              "startedAt": "2026-10-18T16:29:06Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:29:07Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 15,
+              "startedAt": "2026-10-18T16:29:07Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39144813366/job/117726395238"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39144813366",
+      "workflowName": "Native desktop preview unit and smoke tests"
+    },
+    "sdk": {
+      "conclusion": "success",
+      "databaseId": 39144813345,
+      "headSha": "5fc34b588713112b126f3cebdfc891020301a281",
+      "jobs": [
+        {
+          "completedAt": "2026-10-18T16:24:12Z",
+          "conclusion": "success",
+          "databaseId": 117726394952,
+          "name": "sdk",
+          "startedAt": "2026-10-18T16:24:00Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-10-18T16:24:02Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-10-18T16:24:01Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:24:03Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "number": 2,
+              "startedAt": "2026-10-18T16:24:02Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:24:09Z",
+              "conclusion": "success",
+              "name": "Build and exercise C ABI and module lifecycle",
+              "number": 3,
+              "startedAt": "2026-10-18T16:24:03Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:24:09Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "number": 6,
+              "startedAt": "2026-10-18T16:24:09Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-18T16:24:09Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 7,
+              "startedAt": "2026-10-18T16:24:09Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39144813345/job/117726394952"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39144813345",
+      "workflowName": "Native plugin SDK contract"
+    }
+  },
+  "independent_artifact_inspection": true,
+  "native_units_passed": 50,
+  "skipped": 0,
+  "statistics_projection_cases": 25,
+  "statistics_reader_cases": 61,
+  "statistics_page_qt_rows": 92,
+  "statistics_window_worker_qt_rows": 20,
+  "owned_engine_window_worker_qt_rows": 12,
+  "arithmetic_cases": 22,
+  "arithmetic_assertions": 3719,
+  "independent_rational_vectors": 512,
+  "actual_smoke_qt_rows": 6,
+  "captures": 8,
+  "artifact_files_sha256": {
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-build/CMakeCache.txt": "92cab4b2d9f9a7bea256b933f84aaa81b6f57388b3b2071944e52dccdb6bc090",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-build/CTestTestfile.cmake": "066fcb1b7f073504cd8ae2d5a2a9a353c12bd25dc619cb7b9612f07f8cfa93d2",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-build/Testing/Temporary/CTestCostData.txt": "e7726749234838abf59fef9094f3a06557d2bdf67bb98e3095d6f3ece71d353c",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-build/Testing/Temporary/LastTest.log": "4ca702161eb5ff5297434ff740764ad55f7e33f2dae964815a519869bb633537",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-build/qt-runtime.json": "3f603998203dd059447924448f1b20937de1ad99da96d3770af0165be50de574",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-dependencies/bootstrap.log": "c9849fed976d7433dfc2cbf21f6f8386d994b9f4d21c0a4ee4b956812a5e438f",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-dependencies/compiler.txt": "325aa607160ea4cc23f3fb04f3a801b16d4b19ab635ebed094f6fca82b9f7f93",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-dependencies/github.env": "f41df066b7e2b377e53ed93d41914c7225d46c399a1d6f3bb2721b94af6bf35b",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-dependencies/installed-packages.tsv": "1b3933b010e170a3e14ecd7cc8dfc52dcbd8cae7b2c38f321965ed302185d194",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-dependencies/python-packages.txt": "5087af7b9024b674c7d464b976747625609b9e648ef4c4102762c41191dec053",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-dependencies/qt-Updates-after.xml": "615f617ad82e9c9b50e339ce19eb340901919ea29386a93843be236cb77ca5a7",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-dependencies/qt-Updates.xml": "615f617ad82e9c9b50e339ce19eb340901919ea29386a93843be236cb77ca5a7",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-dependencies/qt-archives-SHA256SUMS": "e0e760ff303066796d942f0c160fde94eedd518699dc4a2aed2e8196c0e74967",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-dependencies/requested-packages.txt": "333054189259c0ad05f0abe89cd00486a28d39d09da838d653ff202b60813af7",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-evidence/build.log": "0e28d06a668f5d0237281ce28ec4a2ca693feb140b35d992ebf4dcbb802f1e1c",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-evidence/classic-preview.png": "7cf64f30d45a22fef1e5de903d0b9abc1c536bd221949a30922fea61551f0b22",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-evidence/configure.log": "a9c850074764acad08b112af110d3d087ae5f377587cfd3770296871b4930d89",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-evidence/engine-captures/engine-multifile.png": "71ff979bf4a03d3b6bfc7e2ea77ee3f675c64c51a5810f8df43f210dc3ee0b2e",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-evidence/engine-captures/engine-single.png": "c138567bdc72cc49f16b03f3361170ceb2d5a894a976cfd42e632958134d3846",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-evidence/my-shares-preview.png": "26eb6224271e6f97beb6564df8cd746fba0d428f5dc7c38d3ba084442772f2b9",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-evidence/my-tracker-preview.png": "4dfbc25e498f8ab5ffd7e9d92b8c00fd938dd8bf747943fe7f7926296b0e1a23",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-evidence/preview-smoke.txt": "b5d69293ffc64f4fbe057bb6344cf1f6e028ae07674fe3f3ad07e1fb6b4a0a4b",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-evidence/sample-preparation.log": "17e9004c817713d82693fd2a83759155e12a580aeaf74d45477729e2fd3a8ffc",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-evidence/sample-root.txt": "384344855cedd11d7cd1ec8f9becc01bd4917dea2e055d77e821029ef766af51",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-evidence/saved-selected-preview.png": "43d9ebd3a31aeab800e5f16fb006aa67a87ec3fb05e9a49326c7bdb6b55be8de",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-evidence/statistics-activity-preview.png": "82635aea3f5b5e0dec3c20611a9c81ff5ec014d3cd8d30c7ca9d1753dcf14427",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-evidence/statistics-transfers-preview.png": "84ebdd077250f3f3947003b6e19d9a29c4bda69e50fb9f692ee2a968da8c789e",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-evidence/unit-tests.log": "2435ed501120b029dbf07c63f438bdabbcbb88755de5ae0ba49f30602cc911d0",
+    "native-preview-ubuntu-26.04-gcc/biglybtc-preview-ci-evidence/unit-tests.xml": "2b8ef2c2d8c9211541f762d554f2908173a024039ba7038a8f8631cf1b008acf"
+  },
+  "large_dependency_xml_archived_in_build_only": true,
+  "artifact_metadata": [
+    {
+      "id": 12143341215,
+      "node_id": "MDg6QXJ0aWZhY3QxMjE0MzM0MTIxNQ==",
+      "name": "native-preview-ubuntu-26.04-gcc",
+      "size_in_bytes": 809711,
+      "url": "https://api.github.com/repos/d00rsfan/BiglyBTC/actions/artifacts/12143341215",
+      "archive_download_url": "https://api.github.com/repos/d00rsfan/BiglyBTC/actions/artifacts/12143341215/zip",
+      "expired": false,
+      "digest": "sha256:5a0c61cebf689e6a67af7a9b643ffbcb151503e2004f412ef669929a3d8066bd",
+      "created_at": "2026-10-18T16:29:06Z",
+      "updated_at": "2026-10-18T16:29:06Z",
+      "expires_at": "2026-10-25T16:29:06Z",
+      "workflow_run": {
+        "id": 39144813366,
+        "repository_id": 1423081006,
+        "head_repository_id": 1423081006,
+        "head_branch": "main",
+        "head_sha": "5fc34b588713112b126f3cebdfc891020301a281"
+      }
+    }
+  ],
+  "archive_verification": {
+    "artifact_id": 12143341215,
+    "sha256": "5a0c61cebf689e6a67af7a9b643ffbcb151503e2004f412ef669929a3d8066bd",
+    "matches_hosted_api_digest": true,
+    "archive_bytes": 809711,
+    "actual_zip_sha256_verified": true,
+    "api_run_and_source_verified": true,
+    "zip_tree_hashes_equal": true,
+    "zip_files_verified": 29,
+    "artifact_name_wrapper": "native-preview-ubuntu-26.04-gcc"
+  }
+}

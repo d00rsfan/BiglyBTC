@@ -1,0 +1,62 @@
+{
+  "schema": 1,
+  "status": "source-only PASS; no blocking finding",
+  "original_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_parent": "fe09d1c9430a5a3c684d34be97a6661d08704c72",
+  "source_sha256": {
+    "preview/native/ui/library_window.hpp": "a999ac0110b6c6a2b4b32c2eaf0942afcdbcaa0728128d718933f67a719c51dc",
+    "preview/native/ui/library_window.cpp": "2e434357c6e060e2b88fefaa440708a6e211ec8e2942310dc5020f155a98c5bf",
+    "preview/native/app/session_bridge.hpp": "4d93b65679bf11fb19df95130edd2c75151c7b9cdf4e0c173fe3666f7be9cdb1",
+    "preview/native/app/session_bridge.cpp": "036cd510b605e293947230f144ee622620bdb2fd26fa4a537424f08a79eedb9b",
+    "preview/native/app/main_desktop.cpp": "68e9a8edbc61e0126c42f9a03c7a74ce360dc1006d4be2c10e14ce6eb7b5884f",
+    "preview/native/ui/history_week_presentation.hpp": "ba27ac7248f1690a14252eb82d4d35beb5e8a93544476de4010641a47527c7c8",
+    "preview/native/tests/history_week_integration_tests.cpp": "1c95593fd990318bd0c628ce18f38e30404748847dc127513aa8d6348b51663f"
+  },
+  "context_sha256": {
+    "build/history-week-20261020/wire_week.py": "836d4371e68e32333bd65fd0a2ebfc03d3d5cb3e1b74c17b22db7347ab0b5edd",
+    "build/history-week-20261020/contract.md": "79884ec4be3ae982d5b1ba41cd220a0e7d516b307ec990361d92763614b70286"
+  },
+  "scope": "Independent root Window/Bridge/main additive week integration and new integration tests; own core/adapter/tests excluded from independent credit",
+  "checks": [
+    "One active optional Statistics slot; saved totals keep independent pending work, daily/week share latest date/mode slot and monotonic historyRequest counter.",
+    "Daily rejects active week; week requires explicit kind,session,request,endingDate before clearing active work. Saved totals reject every history kind. Current page identity/session and inner view generations independently gate mutation.",
+    "Pending saved totals preserve priority. Direct rejection/no busy packet and busyfalse/no-result fail only matching active kind; later pending work remains. QTimer dispatch is QObject-bound and active state installs before emitting.",
+    "Worker uses existing private Host held lease and exact week adapter. Cancellation checkpoints surround read/allocation/publication, GUI callback rechecks stop/session, packet publishes with busy held and QPointer deletion guard before subsequent member access.",
+    "Optional dispatch uses recoverLibrarySnapshot=false; read/parse/cancel failures cannot query saved Library or increment snapshot revision. No new thread/lease/network or history writes.",
+    "New profile clears active/pending work and resets both views before refreshing selected mode. Statistics close discards pending work without cancelling unrelated active work; old page pointer cannot retarget reopened page.",
+    "F5 prioritizes selected7days thenDaily else saved totals; permanent saved-total Refresh remains independently routed. Main production connects matching typed signal/slots.",
+    "Root test profiles are QTemporaryDir generated, expected raw histories are parser-derived fixtures, Bridge stack lifetime ends before Window/profile. No live client/profile or payload/network fixtures.",
+    "Integration assertions cover actual seven-row missing/empty/zero, immutable old frame after refresh, unchanged daily/tab/filter state, kind/date rejection, pending coalescing and saved-total priority, close/reopen/new-session rejection, direct callback busy/reentry, immediate queued cancel and Window deletion.",
+    "Literal inverse recipe changes recover all five previous qualified source hashes exactly; no target recipe was imported or evaluated."
+  ],
+  "inverse_recipe_prior_source_sha256": {
+    "preview/native/ui/library_window.hpp": "149aa2d059c9cfe402515d2a7799011ab6c541257cd8921f309fac40341eb433",
+    "preview/native/ui/library_window.cpp": "e588cc03386713ab7c2a5b98c13df6f20a9d2f83e92d879790ab7604f5a9cf0d",
+    "preview/native/app/session_bridge.hpp": "649301e41f9414f7196efdd4cfdf0c8d4b46a65d9d964db1218a2ce7c7ddb91b",
+    "preview/native/app/session_bridge.cpp": "634d9c9b1fd6cbd5f5c17424dc801a70905e46e0b5a57644588c602cea6667de",
+    "preview/native/app/main_desktop.cpp": "c795f84043ad43f6900d0bdd84a0e00bbd98bdb6cc8cfa00958f33b49ca26e31"
+  },
+  "test_slots": [
+    "put",
+    "initTestCase",
+    "realWeekLoadsLazilyAndF5KeepsDailyAndFavoriteStateIndependent",
+    "directBridgeValidatesRangeAndKeepsTheWorkerBusyThroughDelivery",
+    "missingMiddleFailureAndUnsafePathDoNotReviseLibrary_data",
+    "missingMiddleFailureAndUnsafePathDoNotReviseLibrary",
+    "pendingDateAndModeCoalesceWithoutDroppingSavedTotalsOrAcceptingWrongKinds",
+    "closeReopenRejectsOldPageWithoutCancelingTheOwnedRead",
+    "profileChangeClearsBothViewsAndRejectsTheOldWeekSession",
+    "canceledDeliveryNeverPublishesAWeekOrRefreshesTheLibrary",
+    "deletingTheWindowDuringWeekDispatchIsSafe"
+  ],
+  "planned_qt_rows": 12,
+  "blockers": [],
+  "scope_precision": [
+    "Cancellation row covers direct GUI cancellation before queued packet publication; deterministic mid-file read cancellation is separately authored in adapter tests, not runtime-credited here.",
+    "Profile change row is Window session replacement with synthetic packets, not an independently executed second real Bridge Host/profile switch.",
+    "Window deletion during request dispatch is covered; this new suite does not independently claim Bridge deletion during week publication.",
+    "Input integrity helper binds bytes/device/inode and absence of selected day backup/saving files; it does not claim full metadata or directory inventory equality."
+  ],
+  "reviewer_target_import_build_native_java_gui_or_mock_execution": false,
+  "reviewer_git_mutation_or_native_source_edit": false
+}

@@ -1,0 +1,44 @@
+{
+  "schema": 1,
+  "status": "PASS independent prose-only operations amendment; no runtime credit",
+  "reviewer": "error_codec",
+  "blockers": [],
+  "base_review_path": "migration/evidence/20261020-history-month-backend/reviews/operations.json",
+  "base_review_sha256": "e69f320309717ed9a2840f282afa50d8fcee2674321763ce3412a7b4bd8612b1",
+  "before_sha256": "ef43f6d9e572f8c7d7832e38fd76d51059aa8737a9db9d72bf2aa5819c67e60b",
+  "after_sha256": "28a683fb791df904f935528718ee8474cd3a7105a3a0113386603ea32b3fb24f",
+  "changed_helper": "finalize_evidence.py",
+  "operational_helper_sha256": {
+    "qualify.py": "789ca568ca0906482d95f598dd31961c345d7446a8784d688dce5b0c30745aa5",
+    "run_smoke_scales.py": "c8f4da40cb3251279b9e69c6435df9350243f3e68338c7ca2d8533be60ed8464",
+    "run_visuals.py": "894529a3ef858f145aa151a1cf0f909417f4cc3fc8a6357a00855caf9e2aa42b",
+    "record_toolchains.py": "635ea818c28fee8785eea71abdfc3f6eb56ccebfedce9ce7cf1bd87dc7ebd3ef",
+    "collect_hosted.py": "538e9e40333a3635a2e2d10bd09d203eab1c82897a16afe993052021a4fd849a",
+    "collect_metadata_ci.py": "27a48fc027f5f2b71170f8b8be945c2b1ee6e0b2ee42ae659eab5bfce34cdb6e",
+    "commit_source.py": "2a63f753dffd0ae7fa571f3b019eb27ab88fc194380631cc4d4147916d529277",
+    "finalize_evidence.py": "28a683fb791df904f935528718ee8474cd3a7105a3a0113386603ea32b3fb24f",
+    "verify_hosted.py": "e81fc1469855b7d56f1b9a2ce8d0c61f06115f261bafaf2261cb1b64ba335450",
+    "promote_dist.py": "f7152350f4ae947dc908aebcb0b1a0796b2eb550ae1df94485cd34d4b49f4866",
+    "verify_dist.py": "52c4852af012db3a2138e6ac9d488b24ff35b7e22df1ecb641a43744bc291bb1",
+    "publish.py": "550f85d0eab4e084aa45e1ad140f3267c7536a94132597e4252445805ea4bc91",
+    "finish_milestone.py": "6e1687eb29b42ed0b5da4db3e0843a22c03bf778b849f41f618b356111865e83",
+    "checkpoint_history_month_backend.py": "16643c37292803c03683ca4a4dcdb218483a9f1343936215462bfc2705526bea",
+    "checkpoint_milestone.py": "6a9b296f23e8b50fd83321ba4b8db04e198425611fb22f92f1ca126dc9fd32a3",
+    "verify_private_checkpoint.py": "799bd82aa361a19df7f6adb3269d91d7ef00d265609ba4649f3b3024cc908375",
+    "record_visual_review.py": "c38f5b449f705f95474386562c0fad3a0ef449342f582ee95e082f6b335650cb"
+  },
+  "preparation_receipt_sha256": "c9ab061f0f095ebbbaaba765e390516845e43a4a1efa56fe486364a15f0cd5de",
+  "root_amendment_sha256": "6e9082a62715f87a8a22c96b3e402cc521b7e7b64496184668f2cd07dc529fd1",
+  "findings": [
+    "Only the first limitations string and one explanatory comment changed. Restoring that one literal yields complete AST identity; all16 other helpers remain byte-exact.",
+    "New prose correctly describes a fixed30 sequential held-lease facade, no partial success/multi-file transaction/aggregate/scan/cache/writer, and distinguishes inherited explicit Copy behavior.",
+    "Every assertion, source/cohort/count/hosted/archive/dist/checkpoint gate is unchanged. Original operations receipt and beforeimage are preserved."
+  ],
+  "old_limitation": "Copy writes only the explicit selected immutable UTC/traffic/download/upload text to Clipboard. Navigation, hover and frame changes never copy automatically. No file/configuration/history write, new reader, worker or timer. Actual compositor/system-clipboard acceptance remains open.",
+  "new_limitation": "The new fixed30 facade borrows one held profile lease and reads thirty independent daily records sequentially. It publishes no partial success and creates no multi-file transaction, aggregate, directory scan, cache or writer. Existing Copy remains an explicit immutable selected-value action; compositor acceptance remains open.",
+  "execution": {
+    "source_hash_AST_only": true,
+    "helpers_executed": false,
+    "builds_tests_Git_native_JVM_network": false
+  }
+}

@@ -1,0 +1,46 @@
+{
+  "status": "PASS",
+  "scope": "Independent source-only review of root-authored preview generator/smoke additions; no generator, compiler, app, or test execution.",
+  "reviewer_independence": "Reviewer authored HistoryView/Page, not generator, smoke, or their authoring recipe. Own UI is integration context only.",
+  "parent_native_metadata": "9d6023fca3b322dfbe5d92d1666b7f2120cd7752",
+  "source_sha256": {
+    "preview/native/packaging/preview.py": "60eab084a7174b2948c198b4007a6debaaf6212496aac4677ee1f37bd2e37f46",
+    "preview/native/packaging/preview_smoke.cpp": "e4be66c1d35105ca755a6ec5131fb889a766f1a74e23cec7ac3664d2e3761fdd"
+  },
+  "parent_git_blob_sha256": {
+    "preview/native/packaging/preview.py": "78e6d1e95e9c946601da9432943b6894898638a1835516d8ca9116dbb99d9c00",
+    "preview/native/packaging/preview_smoke.cpp": "fa6d14ed3da3dbed2efb9250d742598f89ed13e5092199078ecfa552c7b7f0d0"
+  },
+  "authoring_recipe_sha256": "af522699eb89b75150ba119bfcc8c4149455d099ff7ab13303092b4b5807e24b",
+  "checks": {
+    "python_ast_parses_without_execution": true,
+    "existing_generator_functions_ast_exact": [
+      "encode",
+      "validate_root",
+      "main"
+    ],
+    "existing_prepare_body_exact_after_removing_one_additive_date_loop": true,
+    "all_earlier_smoke_method_bytes_preserved": true,
+    "smoke_old_wire_preserved_with_only_two_history_connections": true,
+    "format": "Each day14records:4positiveVERSION1startbaselines,8delta/eobservations,1zerohourstart,1zeroobservation. s baselines excluded; delta/e advance one minute each.",
+    "observation_count": 9,
+    "daily_six_counter_totals": [
+      16896,
+      1081344,
+      33792,
+      17301504,
+      2112,
+      4224
+    ],
+    "payload_download_total": 17301504,
+    "zero_unknown": "hour02 observed zero; hour03 lacks observations, rendered unknown. No synthetic zero for missing dates.",
+    "scope_safety": "Only fresh generated preview/profile/stats/YYYY/MM/DD.dat for fixed2024-01-02 and current UTC. No original profile, scanner, history writer service, or network initiation added.",
+    "lazy_integration": "Fixed date selected before activating Transfers>History, then actual wired worker awaited; explicit missing date changes afterward.",
+    "read_only_assertions": "Loaded file and BiglyBT.statistics bytes preserved; no history .bak/.saving; no extra overall statistics or library snapshot request.",
+    "captures": "Ready and missing capture paths under exact generated /tmp/biglybtc-preview-* root; existing-file refusal. Actual visual/render/scale results remain root-owned."
+  },
+  "findings": [],
+  "executed_tests_by_reviewer": 0,
+  "historical_authoring_note": "Root reported initial exact insertion-anchor authoring failure and guarded idempotent completion; it involved no build/test attempt. This review pins final installed source, not that intermediate recipe outcome.",
+  "review_checker_note": "Initial mechanical smoke removal retained one extra blank line before class end; corrected removal matches parent bytes exactly. No target/source defect or execution involved."
+}

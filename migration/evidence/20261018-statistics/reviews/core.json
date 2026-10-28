@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "status": "PASS-independent-source-review-no-blocker",
+  "reviewer": "error_driver",
+  "independence": "Codec authored these3newcore/testfiles. Reviewer authored separate fixed-leaf reader and tests; those owned files receive zero independent credit in this report.",
+  "source_sha256": {
+    "preview/native/core/include/biglybtc/saved_statistics.hpp": "c3e1c4adee063466bae0034571b42c9a4c291c72687eebbc2dc2c33a2cd529c3",
+    "preview/native/core/src/saved_statistics.cpp": "e6f4db1e06a993dbce1739a52f053dc9b0e201a89d1ba440100dfd081e355cd3",
+    "preview/native/tests/saved_statistics_tests.cpp": "e2b577560e1fff2f3ccd9b1b3f793047645a5118ac437974cec3d00d83392176"
+  },
+  "original_source": {
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "path": "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java",
+    "sha256": "14a6ecbee076ac3fa991db8d618af9faab83e1b6b4ea52e1f71eb2b2d7ea240f",
+    "working_bytes_equal_committed_blob": true,
+    "read_contracts": [
+      "validateAndLoadValues",
+      "getLong",
+      "getDownloadedBytes(boolean)",
+      "getUploadedBytes(boolean)",
+      "getTotalUpTime(boolean)",
+      "updateStats saved overallMap fields"
+    ]
+  },
+  "unchanged_codec_context_sha256": {
+    "preview/native/core/include/biglybtc/bencode.hpp": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+    "preview/native/core/src/bencode.cpp": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08"
+  },
+  "blocking_findings": [],
+  "checks": [
+    {
+      "area": "Exact13rawfacts",
+      "result": "Header enum/keyarray matches all13 original Long fields and both original load/save bodies. Each native integer is copied as int64 without narrowing, summing protocol/data/DHT, sanitizing negative values or changing mark/uptime units."
+    },
+    {
+      "area": "Absence/type/schema",
+      "result": "Missing all succeeds hasAllfalse; present empty all hasAlltrue. Missing scalar remains absent with invalidTypefalse; any noninteger affects only its own invalidType and does not default zero. Root nondictionary/parse errors are InvalidDocument; complete wrong all is distinct InvalidAll. This explicitly differs from Java getLong default0 and preserves native read provenance."
+    },
+    {
+      "area": "Bounds/errorseparation",
+      "result": "4MiB is checked before copying string_view; unchanged Document parser bounds actual nodes including keys at100000 and root-zero depth64, rejects duplicatekeys/trailing/noncanonical/out-of-int64 syntax. Input/string/node/depth errorcodes map Limit; other parse failures map InvalidDocument. Allocations in parse and make_shared are inside bad_alloc catch, mapping Memory. No storage, clocks, manager initialization or caller-tree reads occur."
+    },
+    {
+      "area": "Ownership/unknownraw",
+      "result": "Copies caller bytes into independent immutable Document source; Node borrowed bytes remain backed by its shared immutable string after Document move. Snapshot copies share immutable source; primitivefacts independent. Unknown binary fields, dictionary traversal order and original serialized bytes survive without rewrite. get uses array.at for invalid enum bounds."
+    },
+    {
+      "area": "Since-mark arithmetic",
+      "result": "Missing or negative operands return unknown. For0<=baseline<=total<=INT64_MAX subtraction cannot overflow. Baseline>total returns0/clampedtrue without subtraction or source mutation. mark_time is deliberately not an operand, matching original getter independence. No actual Java long-wrap/negative-domain equality or original in-memory baseline mutation is claimed."
+    },
+    {
+      "area": "Meaningful test source",
+      "result": "Read all25named generated cases. Distinct13key values/enum mapping, signed min/max/stored0, independent invalid/missing fields, unknownbinary/unsorted/nestedraw, copy/move/inputoverwrite, wrongroot/all, noncanonical/overflow/duplicate syntax, exact/+1input/node/depth, stringcap, since-markmissing/negative/MAX/clamp/time0/rawpreservation all exercise actual public functions with explicit expected values. No mirrored decoder, nativeexpectedrowfitting, profiles or Java execution."
+    }
+  ],
+  "nonblocking_limits": [
+    "The public out-of-range enum accessor is source-safe through array.at; the new test source does not include a direct forged-enum row.",
+    "Memory error mapping is source-inspected; no deterministic allocator-failure injection or global OOM guarantee was executed or inferred.",
+    "These are saved scalar facts and admitted pure derivations, not current rates/global-session counters/history/save timestamps, whole statistics-service behavior or whole-client parity."
+  ],
+  "runtime_credit": {
+    "compiler_or_preprocessor": 0,
+    "native_or_tests": 0,
+    "Java": 0,
+    "profile_or_process_fixture": 0,
+    "network": 0
+  },
+  "source_edits_by_reviewer": false
+}

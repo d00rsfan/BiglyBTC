@@ -1,0 +1,36 @@
+{
+  "upstream_commit": "ae8efb8d40fb38246ac1790ab5cfb11584689c4a",
+  "source_path": "org/parg/azureus/plugins/networks/tor/TorPlugin.java",
+  "source_sha256": "b4d560691d64a200e46222cb9e1f74b2ce90f4e3df9b737ad8a7f2a67d708776",
+  "exact_block_sha256": "503144db974be173c7b8d425d382a899323e80d4be9bf1f763715c6def09f90f",
+  "harness_sha256": "40551c870d0bb3d060ff59dbe1bf37a5d3c22da9a402a4202b5e213dfe52af9f",
+  "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+  "helper_class_sha256": {
+    "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd",
+    "TorAuthOracle$Connection.class": "c0458ca854048f034f2090176ddf99f5f8b1d90202562e15e8c76479bb5e5b32",
+    "TorAuthOracle$Constants.class": "7047d454baf6014ff3dd3a1062ed70a619a46d96803f5fc3346c653f3e7c031c",
+    "TorAuthOracle$FileUtil.class": "0aecfdceb654317440117193485d9e129690c53b9dda370647680599ceac0490",
+    "TorAuthOracle.class": "fde26d8eab92652368ffe6863190cd9b461b28a5c0d931b6a2b72a7988da54dd"
+  },
+  "commands_sha256": "154413c94b10862e4d6b522b12dee5bcd3a79c5492904fbf6300dd8070f923e6",
+  "expected_sha256": "426d8d9eaac7cb1581ee6b3731efd8406f309d5db58d39f330aeeca85c470520",
+  "observations": 1024,
+  "valid": 384,
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+    "-XX:ActiveProcessorCount=2",
+    "-Djava.security.manager=ReferenceFence",
+    "-Dbiglybtc.test.root=/tmp/biglybtc-tor-auth-oracle-sd2zox7u",
+    "-Duser.home=/tmp/biglybtc-tor-auth-oracle-sd2zox7u",
+    "-Dazureus.config.path=/tmp/biglybtc-tor-auth-oracle-sd2zox7u/profile",
+    "-cp",
+    "/tmp/biglybtc-tor-auth-oracle-sd2zox7u/classes:/tmp/biglybtc-oracle/classes",
+    "TorAuthOracle",
+    "/tmp/biglybtc-tor-auth-oracle-sd2zox7u/commands.txt"
+  ],
+  "work": "/tmp/biglybtc-tor-auth-oracle-sd2zox7u",
+  "scope": "Exact original SAFECOOKIE block, supplied FileUtil cookie/nonce/transcript and constants; no socket/file reads, process, normal plugin/core startup or timers"
+}

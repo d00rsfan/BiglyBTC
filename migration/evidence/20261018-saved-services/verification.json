@@ -1,0 +1,86 @@
+{
+  "recorded_utc": "2026-10-18T09:00:48.019289+00:00",
+  "scope": "Pure saved-config projections and held-profile read-only adapters; no UI/menu/service integration credit",
+  "native_repository": "https://github.com/d00rsfan/BiglyBTC",
+  "native_commit": "3d4f86d3f891675238be05ebbad8202c99cd6817",
+  "upstream_repository": "https://github.com/BiglySoftware/BiglyBT",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "pushed": true,
+  "native_full_units_passed": 27,
+  "native_full_units_failed": 0,
+  "projection_cases": 19,
+  "projection_assertions": 422,
+  "adapter_cases": 44,
+  "adapter_assertions": 4118,
+  "reader_variants_passed": [
+    "GCC16 Release",
+    "Clang24 Release",
+    "GCC16 Debug ASan/UBSan/LSan"
+  ],
+  "reader_unit_tests_per_variant": 2,
+  "source_equality_credit": 0,
+  "hosted_result": "success",
+  "reviews": [
+    "../20261018-navigation/saved-services-review.json",
+    "../20261018-navigation/saved-service-view-review.json",
+    "../20261018-navigation/saved-service-pages-review.json"
+  ],
+  "source_files_sha256_at_commit": {
+    "preview/README.md": "a63dc79e5cbea52f3d3537bfa1eccb4d35fffd41b21f60bb5662b98b9c943180",
+    "preview/docs/saved-hosting-sharing-source.json": "fdd2fb2218af99cabbb654386f554ff1c1d0faacb6ccbb4e4873d3ee23c30f0d",
+    "preview/migration/fixtures/saved-services/README.md": "3d71203cba4cb10a40127600a83736344f65b0500ab65a8f9333d7110a13d510",
+    "preview/migration/fixtures/saved-services/manifest.json": "6db38ddcc4e9a2afdc2dc27a0c1350ded0bbe56e90d0348ddac61b3bce2a1dc6",
+    "preview/migration/fixtures/saved-services/missing-lists.benc": "2d680fdaa82c73c103eac6403fadda429d15ae225608ed99d7d0b6d200322ada",
+    "preview/migration/fixtures/saved-services/sharing-empty.benc": "2ccf63e900b3d164416e0c627e2a44426773d153da631d1b70e72d2978f737bd",
+    "preview/migration/fixtures/saved-services/sharing-malformed-rows.benc": "2632c63085cd1951eb01cb49653aa6c4a4c7ee836827a960a47a0e1dfcca49a0",
+    "preview/migration/fixtures/saved-services/sharing-mixed.benc": "e9bff237fc685d0624ef469c3f516e8e8042d976cce76c6b4853b4ccbf81e22a",
+    "preview/migration/fixtures/saved-services/tracker-empty.benc": "b2fa8200b1a4198e6e08243c0a7c88aa93df3586137941cb2065f7db5348a70e",
+    "preview/migration/fixtures/saved-services/tracker-malformed-rows.benc": "65605344d620e11526bbf9ae7acc1491f80ea8b57eccf8fdd0a2cd4d194baf89",
+    "preview/migration/fixtures/saved-services/tracker-mixed.benc": "9463772aca050c8eee9db6fb0ac820638db1da2ce9ed52edeca4e027e6251b82",
+    "preview/native/adapters/CMakeLists.txt": "e75a0dbe74b3acefe6b513af852111e8512ab9f9489e66155bf0cc6371b4137e",
+    "preview/native/adapters/saved_service_view.cpp": "4cedc6fcf9bc89628e66d633cbea70249e9e71d151a85d184fdf3ad4cadbb887",
+    "preview/native/adapters/saved_service_view.hpp": "2363d3548dcd3d7da5fcc9263d479dfc0548fbcd8c5ab0d1d7d75eb2d92b26a6",
+    "preview/native/core/CMakeLists.txt": "d94b308df41a60c20481c401afe2be4f93a002f3567e14c3d05b8af4b4f1b878",
+    "preview/native/core/include/biglybtc/saved_services.hpp": "c7ed179ad9d6f3b278e04b47b2889d5ab36db035ff37f4619efae909ad730b75",
+    "preview/native/core/src/saved_services.cpp": "e855a95c76eb2c797f270c9cbd5cbb1531708353108cc636dd739a950797afcb",
+    "preview/native/tests/CMakeLists.txt": "b428167d8bf3c8c0a28e270e516d7029b37b5fae5705949e79eb0532419defee",
+    "preview/native/tests/saved_service_view_tests.cpp": "c0ff6ed414fa6f0eb3871cb4ae4102b7c4348c38d96d99d1601a42643d8b88fa",
+    "preview/native/tests/saved_services_tests.cpp": "8085ef79f82dfd8314f35238801b7be890166638a31bd4b505b425943b79acad"
+  },
+  "no_normal_profile_or_running_java_access": true,
+  "ui_followup": "Standalone page-model source d5ba39d326b3f08d9f77c00f4446ecf3102a5f83 pushed: 28 full native units and 20 Qt page rows pass locally and hosted. Window/Bridge integration in progress; not included in this reader milestone.",
+  "limitations": [
+    "Synthetic original-format fixtures, no original manager/runtime equality",
+    "Native caps and malformed-record policy differ from full service restoration",
+    "Duplicate dictionary keys still rejected by existing codec",
+    "No write compatibility/service startup/profile/performance parity"
+  ],
+  "hosted_runs": [
+    {
+      "id": 39112270935,
+      "kind": "desktop",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39112270935",
+      "native_commit": "3d4f86d3f891675238be05ebbad8202c99cd6817",
+      "unit_tests_passed": 27
+    },
+    {
+      "id": 39112270992,
+      "kind": "sdk",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39112270992",
+      "native_commit": "3d4f86d3f891675238be05ebbad8202c99cd6817"
+    },
+    {
+      "id": 39113014625,
+      "kind": "desktop",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39113014625",
+      "native_commit": "d5ba39d326b3f08d9f77c00f4446ecf3102a5f83",
+      "unit_tests_passed": 28
+    },
+    {
+      "id": 39113014652,
+      "kind": "sdk",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39113014652",
+      "native_commit": "d5ba39d326b3f08d9f77c00f4446ecf3102a5f83"
+    }
+  ]
+}

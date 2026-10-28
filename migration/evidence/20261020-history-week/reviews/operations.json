@@ -1,0 +1,51 @@
+{
+  "status": "PASS_source_only_after_narrow_correction",
+  "scope": "Independent complete static read of five root operational recipes plus inherited checkpoint helper; no imports or execution of subjects, no build/Git/native/profile/network operations.",
+  "subject_sha256": {
+    "checkpoint_history_week.py": "b52df003f6c3438563116ae9664da122eca427bb81bbf717308c1994e6d92187",
+    "checkpoint_milestone.py": "87bab8edbe97aa9d779c3bbc1f20edbcc1367fda4f53891ac7f292ed73c9c239",
+    "verify_private_checkpoint.py": "88b0094e62177012e2d78d2acda7828b87124be786727e436ea4602ced522e7d",
+    "promote_dist.py": "27240124cf75dd4149246086be5a22a8ce15bf5cf48d51b77d20a75d99804193",
+    "publish.py": "134a0f83634b3ba5b5b79f758318a96418448ae140dfac8698effe88d19446fc"
+  },
+  "context_sha256": {
+    "checkpoint_helper": "209d8da4eb017bb4d166871bdc36144d6ffa984ab8674e1b69d2a4bf930ce8ef",
+    "baseline": "1d43c6738465dcb191c2b068f6312ad063df9cdd58740a5e297904c14ad7c0f9",
+    "evidence_attributes": "5d5bf5644f1b7d58972268143aba3b3d4365b5689c1058f73e4e573c8eabbf91"
+  },
+  "checks": {
+    "pre_ref_raw_bytes": "Only9explicitsharedpaths+new milestone evidence staged through isolated index read-tree of frozenac1parent. Inherited native/fixture raw check retained; newevidence renormalized under*-text. Every scoped stage0regularGitblob batched/readasactualbytes, SHA256compared toworkingrawbytes; exactstagedset+changedpathsubset+completeinventory checked BEFORE write-tree/commit-tree/update-ref.",
+    "original_identity": "Corrected verify checks frozenoriginalHEAD/index atstart+end. Inherited helper stillchecks captured originalHEAD/index before CASupdate-ref andafter; originaluserindex isneverusedforstaging. Frozenexpectedprivateparent enforced by caller+helperCAS; no checkout/originalremote push.",
+    "checkpoint_completion": "Validator mustpass beforeinventory. Postcommit verifier requires exactparent, completeactualtreeblobs9shared+allnew evidence, currentrawSHAandinventory. Countsderivedfromsets, not guessed. Metadata/resultsoutignored untilrootfinalinventory; no further evidencewrites aftercheckpoint.",
+    "shared_paths": [
+      ".gitignore",
+      "MIGRATION_PLAN.md",
+      "migration/STATE.md",
+      "migration/FEATURE_MATRIX.md",
+      "migration/PREVIEW.md",
+      "migration/RECOVERY.md",
+      "migration/upstreams.lock.json",
+      "migration/tasks/P04-19-saved-history-week.md",
+      "migration/publication/preview/native-preview.yml"
+    ],
+    "distribution": "Verifies everypreviousmanifestfile andbaseline manifestSHA beforecopy. Installs onlyfresh stagedprefix; exactsame103fileset+82runtimebytehashes required. Reproduces actualCMakeRUNPATH transform on separatebuildELFcopy, compares allbytes, verifiesloader beforepromotion. Olddist renamed to completerollback; secondrename exception attemptsrestore; completeoldtree retained aftersuccess. No systeminstall/process signals.",
+    "publication": "ExactnativeHEAD=qualifiedsource,mainbranch,approvedorigin andsingleuntrackedmetadatafile required; adds only milestones/history-week-20261020.json. Requires61/12/15pass+42local/14hosted records. Annotatedmilestone-history-week-20261020 tag andmetadata pushed; exactremotehead/tagobject/peeledtarget checked before publicationreceipt. Sourceidentity remains explicitdistinctfrommetadatacommit.",
+    "claim_scope": "Recipes rely on priorqualified local/hosted/source receipts. No recipeexecution or completion credit granted by thisreview; scripts do not broaden Java/window/whole-week equality claims."
+  },
+  "closed_findings": [
+    {
+      "id": "OPS-BASELINE-1",
+      "before_sha256": "6348ae3dba188c21efa6ed012e4fee15b7f8e0b81a3c571ee1305eeb14bce654",
+      "correction_receipt_sha256": "001d80dc014898f341510d7a94ac2b8486befe43806c960887e9d04ed3982807",
+      "issue": "Outerbaselinecheck preceded validator/inventory; helper couldcapture a laterdifferentoriginalHEAD/index andadvanceprivate ref beforepostverifierrejects.",
+      "resolution": "Added assert_original_baseline(environment) beforeandafter overriddenverify. ExactpriorverifyAST retained after removingonly2newcalls; newhelper readsfrozenHEAD/index directly. Inherited later relativeidentitychecks close remaining preparationgap.",
+      "status": "closed_source_review"
+    }
+  ],
+  "limitations": [
+    "No crash-atomic two-directory-swap guarantee or additional dist durability barrier is claimed. Complete rollback is retained and normal secondrename failures restore when destinationabsent.",
+    "Publication receipt is withheld on failed push/remote verification; a partial networkpush may require explicit recovery, not fabricatedsuccess."
+  ],
+  "executed_by_reviewer": false,
+  "remaining_blockers": []
+}

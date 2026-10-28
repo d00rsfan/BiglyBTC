@@ -1,0 +1,106 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "state": "pass_source_review_only",
+  "blockers": [],
+  "scope": "Independent review of the pure saved tracker/share projection core; no IO/UI/manager integration or runtime qualification credit.",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_repository": "/home/yurii/Java/BiglyBTC",
+  "native_files_sha256": {
+    "preview/native/core/include/biglybtc/saved_services.hpp": "c7ed179ad9d6f3b278e04b47b2889d5ab36db035ff37f4619efae909ad730b75",
+    "preview/native/core/src/saved_services.cpp": "e855a95c76eb2c797f270c9cbd5cbb1531708353108cc636dd739a950797afcb",
+    "preview/native/core/include/biglybtc/bencode.hpp": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+    "preview/native/core/src/bencode.cpp": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08"
+  },
+  "source_audit": {
+    "path": "migration/evidence/20261018-navigation/persisted-hosting-sharing-audit.json",
+    "sha256": "fdd2fb2218af99cabbb654386f554ff1c1d0faacb6ccbb4e4873d3ee23c30f0d",
+    "source_files": 23,
+    "checks": "All23 working source bytes match the audit and independently read pinned Git blobs; full Git blob IDs and SHA256 maps are retained in the unchanged audit."
+  },
+  "checks": [
+    {
+      "subject": "Document ownership and edits",
+      "native_lines": "saved_services.cpp:23-37,262,288; bencode.cpp:227-296",
+      "result": "PASS",
+      "detail": "Whole-tree validation rejects changed nodes and replacement origins before projection. Same-value no-op edits remain unchanged. The private Document copy clones owned Node vectors and shares only immutable raw backing; projected text and binary are owned strings. Caller destruction/ordinary later edits cannot mutate the returned source tree. No filesystem or source serialization is invoked."
+    },
+    {
+      "subject": "Bounds and failure effects",
+      "native_lines": "saved_services.hpp:10-19; saved_services.cpp:14-37,81-83,103-120,143-149,264-265,290-291",
+      "result": "PASS",
+      "detail": "Only reductions from input/string4MiB,100000nodes,depth64,10000rows,1MiB copied text/binary,65536bytes/field and100000issues are accepted. The entire source tree including unknown data is rechecked. Each text charge precedes its copy; row cap precedes reserve; issue cap precedes append. Limit/edited/root/list/allocation failures return typed errors, with no partial-success snapshot. These are structural native policies, not original Java format limits or a global RSS guarantee."
+    },
+    {
+      "subject": "Tracker default and status semantics",
+      "native_lines": "saved_services.cpp:158-185",
+      "upstream_symbols": "TRHostConfigImpl.loadConfig/recoverStats; TRHostTorrent status constants",
+      "result": "PASS",
+      "detail": "Absent persistent/passive produce true/false; malformed present types stay unknown with issues. Present flags use full signed64 equality to1. Status retains both raw64 and exact Java low32 signed interpretation, including zero and wrap extremes. Raw Failed0 is not rewritten into service-recovery Stopped1. Unknown status is diagnosed. Missing date and optional counters remain absent rather than fabricating wall time or activated counter defaults."
+    },
+    {
+      "subject": "Tracker backup versus active ownership",
+      "native_lines": "saved_services.cpp:162-174",
+      "result": "PASS",
+      "detail": "Present false persistent yields StatsBackup; true yields PersistentHost; unknown yields no disposition. This is saved-data classification only. Backup rows are not deleted/collapsed or activated. Backup timestamps and all malformed/raw rows remain inspectable; classification is not proof that a live tracker exists."
+    },
+    {
+      "subject": "Sharing field meanings and low32 type",
+      "native_lines": "saved_services.cpp:198-235",
+      "upstream_symbols": "ShareManagerImpl.deserialiseResource; ShareResourceImpl.isPersistent; ShareResourceFileOrDirImpl; ShareResourceDirContentsImpl; ShareItemImpl.deserialiseItem",
+      "result": "PASS",
+      "detail": "Raw64 type plus signed low32 preserve original dispatch inputs. Known1/2/3 are explicit; unknown stays diagnosed rather than emulating original fallback to directory contents. Recursive uses full64 exactly1. File/dir fingerprints are opaque filesystem fingerprints, never torrent infohashes; cache paths remain inert. Category and tagUID text are projected without attribute/tag managers, scans or metadata joins. Missing properties mean persistent=false; malformed property dictionaries/types remain unknown."
+    },
+    {
+      "subject": "UTF8, Latin1 and malformed text",
+      "native_lines": "saved_services.cpp:47-73,122-134,174,208-235",
+      "result": "PASS",
+      "detail": "UTF8 rejects overlong sequences, bad continuations, surrogates, values beyond U+10FFFF and truncation. Binary text bytes survive unchanged with encoding and embedded-NUL diagnostics. Tracker torrent_file is explicitly Latin1. Share persistent accepts normal case-insensitive ASCII true; invalid UTF8/NUL is unknown rather than Java replacement-decoding to a boolean. This deliberate malformed-input diagnostic policy is not claimed as exact original manager behavior."
+    },
+    {
+      "subject": "Unknown fields, personal data and raw preservation",
+      "native_lines": "saved_services.hpp:86-100; saved_services.cpp:23-37,262,288",
+      "result": "PASS",
+      "detail": "Unknown nested dictionaries/types, unprojected fields and per_key remain only in the owned raw source. No writer, log, path resolution or personal-key projection exists here. Future UI must not dump source documents/personal keys. Duplicate dictionary keys are rejected by unchanged core parser rather than claimed as preserved original duplicates."
+    },
+    {
+      "subject": "Duplicate records and borrowed identity lifetime",
+      "native_lines": "saved_services.cpp:250-260,276-286",
+      "result": "PASS",
+      "detail": "Every list position, including malformed entries, gets a retained sourceIndex. Later byte-identical hash/path records receive a duplicate issue without collapse or deletion. Reserve of the complete capped list precedes all insertions; strings are inserted into the temporary string_view set only after moving into their final reserved records, so both SSO and heap storage stay stable. The set dies before returning/moving the result. Invalid-UTF8 path identity remains raw bytes, not Java replacement-decoded string equality."
+    },
+    {
+      "subject": "Missing, empty and malformed root/list",
+      "native_lines": "saved_services.cpp:32-37,143-149,247-248,273-274",
+      "result": "PASS",
+      "detail": "Missing records list is a successful source-owned snapshot with listPresent=false and a root Missing issue; valid empty list has listPresent=true. Non-dictionary root and present non-list are distinct typed failures. A future IO adapter must separately report absent file, invalid bytes and read failures."
+    },
+    {
+      "subject": "Purity and API boundary",
+      "native_lines": "saved_services.cpp:1-294",
+      "result": "PASS",
+      "detail": "Production source reads supplied immutable documents only. No clock, ordinary Java manager/provider, cache access, directory scan, service start, network, file write or backup recovery appears. Pure projection cannot establish current tracker/share health, active service state, date/name metadata not present in the saved fields or full restore/serialization compatibility."
+    }
+  ],
+  "integration_requirements": [
+    "Consume only an owned, allowlisted, bounded readonly profile load and retain Primary/Backup/Saving provenance; do not call original recovery writers.",
+    "Render invalid text and NUL safely; keep paths inert, personal raw fields undisplayed and generated-fixture data separate from the live profile.",
+    "Label saved tracker/share rows as persisted/offline; distinguish StatsBackup, missing list, malformed rows and valid empty data.",
+    "Exercise cap edges, defaults/raw-zero/low32 extremes, malformed types/UTF8, duplicate SSO/long paths and source lifetime/ordinary edits in the separate generated native tests. This report does not assert those tests ran."
+  ],
+  "validation": {
+    "performed": [
+      "Complete source reads of both stable projection files and the relevant unchanged bencode parser/edit/ownership code",
+      "Pinned original source/audit reads and exact23-file Git blob/current-byte comparisons",
+      "Stable input hashes checked again before report publication"
+    ],
+    "not_performed": [
+      "No compilation or tests",
+      "No Java/helper/native/application launch",
+      "No live profile/file/cache/port/process inspection",
+      "No source-runtime differential equality or full manager restore proof"
+    ],
+    "source_equality_credit": 0
+  },
+  "write_coordination": "Written after parent checkpoint78adcfda6356ea2b60f4a19d7ab5840177e1fcab completed; no production/test/CMake/shared-plan edits."
+}

@@ -1,0 +1,58 @@
+{
+  "schema": 1,
+  "status": "PASS_source_only",
+  "blockers": [],
+  "subject_sha256": {
+    "build/history-week-20261020/finalize_docs.py": "3fcaf3e09fbbcace7ee9018c7310f60f5b937245512dbbee8c1f5bb4e846eea7",
+    "build/history-week-20261020/history-week-contract.json": "93b4ea56192ea68a4fc27e264dd1fb8332b361ed03bdd452bbbe00a312fa51bf",
+    "build/history-week-20261020/finalize_evidence.py": "33096c4a4371e4e5a505b0aea9de5c29098544a19750f6ced7c66f61029ca1aa",
+    "build/history-week-20261020/verify_hosted.py": "d5f1608134225fa0ffdefe90cf466fbdd1a38bb83f727d97f30c1546bfcd7f59",
+    "build/history-week-20261020/publish.py": "134a0f83634b3ba5b5b79f758318a96418448ae140dfac8698effe88d19446fc",
+    "build/history-week-20261020/commit_source.py": "dedc88da911ccf217228682f1eaff1836984bf454c2a516a5b08bc15604b245d",
+    "build/history-week-20261020/contract.md": "79884ec4be3ae982d5b1ba41cd220a0e7d516b307ec990361d92763614b70286",
+    "migration/evidence/20261020-history-week/java-oracle.json": "a69fedd1140a31eda78420d5c1be618268328a217867ae67565e1f45a820d5f7",
+    "migration/evidence/20261020-history-week/oracle-source-manifest.json": "e2d1daf530599ea5728c217bdcb7a9f0b7fe3c02755868753a387c853eb00519"
+  },
+  "installed_public_contract_sha256": "93b4ea56192ea68a4fc27e264dd1fb8332b361ed03bdd452bbbe00a312fa51bf",
+  "planned_write_targets": [
+    "migration/tasks/P04-19-saved-history-week.md",
+    "migration/STATE.md",
+    "migration/FEATURE_MATRIX.md",
+    "migration/upstreams.lock.json",
+    "migration/PREVIEW.md",
+    "migration/RECOVERY.md",
+    "MIGRATION_PLAN.md"
+  ],
+  "observed_current_document_sha256": {
+    "migration/tasks/P04-19-saved-history-week.md": "de231a847f8eb209c9b9b53b7834fd47a55e5ea5b1dac27f71d52d166f927786",
+    "migration/STATE.md": "63950c927cbcd26a099a087ab908e584a9bd50d45d186a068e90b36b2827aa86",
+    "migration/FEATURE_MATRIX.md": "c136bda60804703e0d7aa3d8c94e6db6bd2db1dbbbbc2d358a6bf9d67b6917f3",
+    "migration/upstreams.lock.json": "aa154e34e67a8b0108966ad20e43d0dc05a2bab43a576f19ab1cd15006ad16a2",
+    "migration/PREVIEW.md": "a1b8741dd998fe223e1d2e7beb447f49ae17129ee52991d8d884cb77aca21b6e",
+    "migration/RECOVERY.md": "9b8bc9c7a1219e85cb9fba832686e6aeede2eaab47c661c50414d1bd61a8eb6d",
+    "MIGRATION_PLAN.md": "3b842dc3b399558804eaac7a78ecf3c7106cf0e1361c4bc5b3fddc322d541543"
+  },
+  "checks": [
+    "Seven target documents only; all gates and all transformations prepare before the first completion-document write. Script imports no process/Git facility and never writes native source, old tasks/evidence or .git/index.",
+    "Exact baseline/upstream/native/private full identities and source/publication/hosted/dist receipts bind one implementation source, with metadata/tag object and tag target validation. No private future/self hash invented.",
+    "61/12/15 exact test sets retain previous57/8/11 plus only four named week suites. All17 local count keys and15 supported hosted count keys exist in producer AST schemas; Java runtime/query execution is not fabricated in hosted CI.",
+    "Counts retain original daily21/11/425/2550/34/12 and old Page92/Stats20/Engine12/Graph7; new date9/reader12/525/3150/UI38/Window12 plus42local/14hosted captures are gated before claims.",
+    "Only statistics.saved_history_week component transitions to implemented with F20.saved_history_week; all broad first_ported/integrated fields must remain null. Existing components, upstream baselines and older task/evidence records are preserved.",
+    "Current document anchors uniquely exist; latest STATE/PREVIEW/RECOVERY summaries are intentionally replaced while prior milestone details remain in earlier tasks/registry/evidence and explicit historical references. MIGRATION_PLAN receives a scoped block.",
+    "Public contract matches the installed exact draft bytes and genuine oracle source/hash/counts/TSV/manifest; positive anchors, reconstructed minutes, unused baselines, daily spill clipping and six signed counters match frozen source policy.",
+    "Claims explicitly distinguish missing/empty/unknown/zero, independent per-day native/Java comparisons, strict malformed/overflow differences, one held lease, no partial publication, sequential nontransactional reads and unported whole-period/rolling/cache/writer/global behavior.",
+    "Artifact names align: milestones/history-week-20261020.json, milestone-history-week-20261020, evidence/20261020-history-week and build/history-week-20261020. Prior saved-history-20261019 rollback/evidence remain historical, no alias.",
+    "Dist103/82, RPATH equality and complete rollback are prerequisites. Original index hash is rechecked; original HEAD/index runtime claims depend on local finalizer and subsequent root checkpoint verification, not new independent execution by this source reviewer."
+  ],
+  "schema_check": {
+    "local_count_keys": 17,
+    "hosted_count_keys": 15,
+    "unknown_fields_in_local": [],
+    "unknown_fields_in_hosted": []
+  },
+  "scope_precision": [
+    "This review permits conditional completion prose only after all required actual receipts pass. It does not execute documentation transformations or grant qualification/publication credit.",
+    "The top summaries compact older milestone details but do not mutate their immutable source/fixture/evidence identities or broaden integrated original coverage."
+  ],
+  "reviewer_import_target_execution_build_git_or_native_edit": false
+}

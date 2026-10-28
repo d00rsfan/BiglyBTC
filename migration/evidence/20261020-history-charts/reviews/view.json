@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "milestone": "P04-20",
+  "reviewer": "error_driver",
+  "status": "PASS: independent static View integration, tests and public contract review; no blocker found",
+  "sources_sha256": {
+    "preview/native/ui/history_view.hpp": "630d338494acd3a860ea690f0795bf0498a8b69aba399f657440f4f712ce1583",
+    "preview/native/ui/history_view.cpp": "5036248a34cd7194f18be72cf723dc02a681f650d41ecd9450a21a2105fa44e9",
+    "preview/native/ui/history_week_view.hpp": "77be4bc9a23ccb1d7334b5c75f5abc01c6d266e995a7f34662a651a7c43bd68f",
+    "preview/native/ui/history_week_view.cpp": "d5cd24203169ccb188988fe7663dedf515f8374dfe29cd35eff2135bef54d2b3",
+    "preview/native/tests/saved_history_chart_view_tests.cpp": "b658c04de48dfc5192d9344f1320a063bf4f1aab70981a982efed2023c954c5a",
+    "preview/docs/history-charts-contract.json": "9870ce18e6eb9083e7475b82024d78f237f81bc7ba0cfb186f3e3adb978ecb3d"
+  },
+  "author_capsule": {
+    "path": "migration/evidence/20261020-history-charts/ui/source-freeze.json",
+    "sha256": "9164c74f389051847d4d6356e276ceb88b07677eba5472c42706928c6600802b"
+  },
+  "context_sha256": {
+    "build/history-charts-20261020/contract.md": "eb912a4def9729f15136ac7d8013033bcbb40e5c056c2bb4044cf609bae93c60",
+    "build/history-charts-20261020/ui/preserved-inputs.json": "411a9ae8ee780cc07ee57440ea0d6d709d7c2b21015cc0832736da999726b540",
+    "migration/evidence/20261020-history-charts/source-audit.json": "0e54adde9c404f8378d21812cb4b50f427e6c32b1385daeee77ed16de4253926"
+  },
+  "production_checks": [
+    "All six installed owned files and exact four-file delta read. Reversing only forward declarations/private pointers, .cpp includes/chart construction/guarded setters and the permitted Daily footer change restores all four prior View files byte-for-byte.",
+    "Charts are created as owned children and placed above unchanged24x7 and7x8 models/tables. Header forward declarations avoid a new transitive plot include. Old model roles, arithmetic, read signals, date controls, binding/admission and lazy methods remain byte-identical.",
+    "Only existing refresh reaches plot setters, after the original dirty/visible/not-minimized guard. Pending/missing/failed/reset/date changes pass null while retaining the exact selected identity. Accepted Ready snapshots alone provide known chart facts.",
+    "Chart update precedes model notification. Existing QPointer/revision/current visibility checks run immediately after a setter; direct tooltip/accessibility reentry or owning-view/page deletion stops older work before model writes. Nested newer revision keeps its own frame/model state.",
+    "Hidden/minimized delivery changes the accepted immutable packet only; no plot facts/tooltip/model update occurs before activation. Existing show/state queues retry the original guarded refresh and preserve read-request coalescing.",
+    "No new clock, reader, file IO, timer, worker, lease, accounting or network path is introduced. The existing constructor UTC-date initialization is unchanged.",
+    "Public JSON uses correct payload indices3/1, signed64 byte buckets, fixed UTC24/7 identity, unknown gaps/observedzero/adjacent connectivity, and original width/clock/local-zone differences. Both prior TSV hashes and2550/3150 scopes remain exact; new Java runtime/equality credit remains zero."
+  ],
+  "test_review": {
+    "behavioral_methods_planned": 20,
+    "qt_rows_planned": 22,
+    "executed_by_reviewer": false,
+    "source_methods": [
+      "chartsPrecedeRetainedTablesAndAreInitiallyUnknown",
+      "dailyChartCopiesOnlyPayloadHoursAndKeepsZeroGapsSignedValues",
+      "weekChartMatchesDailyRowsWithoutAnyAggregate",
+      "chartIsCurrentWhenDailyModelNotifiesObservers",
+      "chartIsCurrentWhenWeeklyModelNotifiesObservers",
+      "pendingMissingFailedAndProfileResetClearDailyChart",
+      "missingEmptyAndFailedWeekNeverBecomeZeroLines",
+      "newSelectedDatesReplacePlotIdentityWithUnknownBuckets",
+      "staleSessionRequestAndDateCannotReplaceEitherPlot",
+      "hiddenDailyDefersPlotFactsTooltipAndTableUpdates",
+      "hiddenWeekDefersPlotFactsTooltipAndTableUpdates",
+      "minimizedDailyDefersPlotThenRestoreShowsLatestUnknown",
+      "minimizedWeekDefersPlotThenRestoreShowsLatestUnknown",
+      "plotTooltipReentryPreservesNewDailyFrameAndStopsOldModelWrite",
+      "plotTooltipReentryPreservesNewWeekFrameAndStopsOldModelWrite",
+      "plotTooltipCanDeleteDailyOwnerBeforeTableUpdate",
+      "plotTooltipCanDeleteWeeklyOwnerBeforeTableUpdate",
+      "hiddenDailyAndVisibleWeekStayIndependentWithoutExtraRequests",
+      "plotTooltipCanDeleteWholeStatisticsPage",
+      "narrowViewRetainsTablesAndFiniteFullSignedGeometry"
+    ],
+    "meaningful_checks": [
+      "Parser-backed hand-shaped valid records select payload fields independently from deliberately different protocol/DHT counters.",
+      "Daily unknown/zero/negative hours and weekly missing/empty/header-only/zero/signed independent totals are compared to both raw facts and existing table roles.",
+      "Model-notification observers require charts already match current data.",
+      "Pending/failure/new date/session and stale session/request/date are checked for both modes.",
+      "Hidden and minimized tests require unchanged prior frame/tooltip and no model notifications, then require latest facts on activation.",
+      "Synchronous tooltip hooks replace with a newer request/frame and assert exactly the newer table write; separate hooks delete either owning View or whole StatisticsPage.",
+      "Daily/week Page activation proves independent frames and zero extra read signals after accepted data.",
+      "Narrow-view full signed-int64 extrema require finite in-bounds point coordinates, bounded plot height and retained table rows."
+    ]
+  },
+  "preservation": {
+    "old_input_guards_verified": 102,
+    "all_63_independent_behavior_baseline_paths_unchanged": true,
+    "all_old_tests_unchanged": true,
+    "old_model_and_admission_bodies_exact": true
+  },
+  "blockers": [],
+  "limits": [
+    "Source review does not assert actual22 Qt rows or rendering success; root executes all compiler/sanitizer/widget/capture qualification.",
+    "Exact complete pixel rendering, visual usability at all scales and direct plot implementation are covered by separate plot review and actual captures.",
+    "Snapshots are immutable GUI-thread deliveries; this integration is not a concurrent producer/mutable-alias API.",
+    "Review does not grant additional Java chart/runtime, global history or transactional file-snapshot equality."
+  ],
+  "execution": {
+    "builds": false,
+    "tests_or_native_runs": false,
+    "java_runs": false,
+    "target_import_or_selected_evaluation": false,
+    "source_edits": false
+  }
+}

@@ -1,0 +1,26 @@
+{
+  "local_review_commit": "4ea971c87cdaf5f2c792e220c4dd66643af41a14",
+  "repositories": [
+    {
+      "name": "BiglyBTC-plugin-aznettor",
+      "url": "https://github.com/d00rsfan/BiglyBTC-plugin-aznettor",
+      "public_commit": "517fbef9c0d4c35468b78e18a18db82e3ba6bdbc",
+      "initial_commit": "5a146096624a31fe4b454bb4649b5151a0ebedc5",
+      "local_clone": "/tmp/biglybtc-public-second-wave/BiglyBTC-plugin-aznettor",
+      "files_verified_against_committed_blobs": 15,
+      "ci_enabled": false,
+      "provenance_sha256": "1e731516c771c4a4d619efcf084b8becd7b4c98f2f059862f23be6ac65cf3b4e"
+    },
+    {
+      "name": "BiglyBTC-plugin-azmsgsync",
+      "url": "https://github.com/d00rsfan/BiglyBTC-plugin-azmsgsync",
+      "public_commit": "fe9c9151b148707ad3d5bb0d12ad2cb59a87c0f8",
+      "initial_commit": "3d77401e1094f867b54c36d44158e4438b533a3a",
+      "local_clone": "/tmp/biglybtc-public-second-wave/BiglyBTC-plugin-azmsgsync",
+      "files_verified_against_committed_blobs": 16,
+      "ci_enabled": false,
+      "provenance_sha256": "c1fb744ef06d780dccc56c2356a4d434547895094d12b64e9089ff71b3cf4696"
+    }
+  ],
+  "scope": "Source-only bounded Tor proof and message-envelope foundations; inactive ci/ recipes, no binary/catalogue release, no full plugin or app parity claim"
+}

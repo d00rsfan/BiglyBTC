@@ -1,0 +1,110 @@
+{
+  "schema": 1,
+  "milestone": "P04-25",
+  "reviewer": "error_codec",
+  "authors": {
+    "production": "error_driver",
+    "tests": "error_oracle"
+  },
+  "status": "PASS independent source-only frozen Copy implementation and test review",
+  "blockers": [],
+  "production_manifest_sha256": "ce00514f47a30630c11f9a97db254d3e83f5bed4a8f60a4e684b5e6a1909c41b",
+  "production_capsule_sha256": "7737ec3ab7323a5a77eb980cf7252260cdd0a7673ce079645dcdeee8721cfe2c",
+  "test_manifest_sha256": "76c5b7ddd9513135f21d58feb8ce9259862b2eccbce1f8983a8dc48cbe9a70af",
+  "source_sha256": {
+    "build/statistics-next-two-20261020/source-copy/frozen/saved_history_plot.cpp": "dcaae6c5d9fc4df60e8b0475c67f5d8349d6ab0586b5c078715c6b3e7dc8229c",
+    "build/statistics-next-two-20261020/source-copy/frozen/saved_history_plot.hpp": "7eaae22cfd941109ca105b63572807dcb725751abf3561f2bfa2a1a0972b87ff",
+    "build/statistics-next-two-20261020/tests-copy/history_copy_tests.cpp": "5d0ebfeb604f257b18a857ddb9cc6c9d0865567e09ec2919a2c5abd40309ea9d"
+  },
+  "contract_sha256": "edf2e63ec8d9b704b1cdfbd5f6b28c4f62765692f0414292bfcde0b8b8cff29d",
+  "verified_artifacts": {
+    "production": {
+      "author-notes.md": "fe1f38cbf5c0300a39b303db814066994048efbada34d24bf1471cd0424a060d",
+      "before/saved_history_plot.cpp": "23668c79a63719a1f7ab93c13e88d4a71b4f324819153edf9d1ef9189ad632de",
+      "before/saved_history_plot.hpp": "7eaae22cfd941109ca105b63572807dcb725751abf3561f2bfa2a1a0972b87ff",
+      "before-sha256.json": "2eb2606111f001fcd6ea275bbbbb5836a532a097fe7ca4273882e06f37da0530",
+      "draft-history/before-name-reentry-fix.cpp": "a9ed405c2154fec481e7e03b5b21ad92338d142da40b764031332664912d7c81",
+      "draft-history/source-self-review.json": "3673d694bf5d576019d9ddf177ad3336d060450fd98179f0c9348eca6a01434b",
+      "frozen/saved_history_plot.cpp": "dcaae6c5d9fc4df60e8b0475c67f5d8349d6ab0586b5c078715c6b3e7dc8229c",
+      "frozen/saved_history_plot.hpp": "7eaae22cfd941109ca105b63572807dcb725751abf3561f2bfa2a1a0972b87ff",
+      "implementation.patch": "33ab569b3aac03496ae8b46072671793a7e216fbd66f56ce1e249387e71fb9f4",
+      "manifest.json": "ce00514f47a30630c11f9a97db254d3e83f5bed4a8f60a4e684b5e6a1909c41b",
+      "static-checks.json": "7e9eefbafddb19ee3791c106d8a9d54166ce82a2ced18eccdb9136ee89cccde2"
+    },
+    "test_capsule": {
+      "manifest.json": "76c5b7ddd9513135f21d58feb8ce9259862b2eccbce1f8983a8dc48cbe9a70af",
+      "history_copy_tests.cpp": "5d0ebfeb604f257b18a857ddb9cc6c9d0865567e09ec2919a2c5abd40309ea9d",
+      "before-inputs.json": "c9eda29db3e5d985d2b252c46a1e4d5c0c1996d017bf61eb22c8668dbc4e508a",
+      "static-checks.json": "7a5e65838365d6a17eb06ef3b8a5b28caa9e8f720a796f3c5c6d20be296900f6",
+      "new-file.patch": "ff02e7873870f3a58da86ca66435de040cb6dd49cd6e696394095664bbd53421",
+      "plan.json": "724635f7c8cca0ab664a60f6543c60faf593e8a71aea85a6fb5a6731501bc6e8",
+      "freeze_source.py": "cb4e66218cd143e95bd6cfb6fd8742eeb863f69d10e6767ac5629f0d55f94a97"
+    }
+  },
+  "static_checks": {
+    "all_declared_production_artifacts_verified": 11,
+    "all_declared_test_hashes_verified": true,
+    "before_guard_files_hash_verified": 198,
+    "public_header_byte_exact_P04_24": true,
+    "P04_24_before_cpp_byte_exact": true,
+    "old_full_definitions_verified_unchanged": 29,
+    "changed_definitions": [
+      "SavedHistoryPlot::SavedHistoryPlot(",
+      "void SavedHistoryPlot::replace(",
+      "void SavedHistoryPlot::selectBucket("
+    ],
+    "CPP_header_test_delimiters_balanced": true,
+    "test_source_slot_inventory_verified": 18,
+    "target_definitions_imported_or_evaluated": false,
+    "native_Copy_source_not_installed": true
+  },
+  "assessments": [
+    {
+      "topic": "ownership and explicit command scope",
+      "status": "PASS",
+      "detail": "One direct child QAction, stable saved-history-copy-selection ID, translated label, QKeySequence::Copy with WidgetShortcut, ActionsContextMenu and initially disabled state follow the contract. Receiver-context connection cannot outlive the plot. Only its explicit trigger lambda writes Clipboard; startup, hover, navigation, focus and frame setters never call it. No Selection/FindBuffer publication, HTML, filesystem/network/config/history IO, timers, workers or retained source DTO are added. The unchanged frame stores bounded scalar facts."
+    },
+    {
+      "topic": "exact selected facts",
+      "status": "PASS",
+      "detail": "The handler captures immutable frame, revision and selected optional index. Missing/out-of-range selection returns even on direct public signal invocation. Text is generated from that frame bucketToolTip, rather than mutable QWidget hover text. Full UTC day/hour, selected traffic and signed/zero/Unknown values therefore use the existing exact formatter; there is no alternate sum/rate/coercion algorithm."
+    },
+    {
+      "topic": "signal reentry and deletion",
+      "status": "PASS within declared seam",
+      "detail": "QPointer/frame/revision/selection are checked after text creation and clipboard acquisition immediately before one setText(text, Clipboard). No receiver work follows that setter, allowing clipboard callbacks to select, replace, copy again or delete without stale continuation. Selection/replacement commit state before enabling/disabling the action, then guard after QAction changed notifications. Same-frame nested keys invalidate older work. The canonical-name repair correctly covers a key reentered from replacement disabling before the new frame name was published, with another guard after accessibility publication."
+    },
+    {
+      "topic": "independent tests and fixture safety",
+      "status": "PASS source-only",
+      "detail": "Nine shape/traffic combinations use actual QAction activation and standard Qt shortcuts, separate literal UTC and six-counter expectations, unknown/zero and INT64 extremes. Disabled direct triggered-signal calls test beyond QAction filtering. Tests require offscreen before clipboard setup, restore owned MIME snapshots with RAII for each supported mode, disclose unsupported modes, and assert Clipboard-only notifications/plain text. Actual changed-signal hooks are one-shot and destroyed before clipboard restoration. Destructive key observers send only one KeyPress, avoiding a stale QTest KeyRelease. No unsafe thread/process fixture or copied Copy implementation is used."
+    },
+    {
+      "topic": "preserved boundaries",
+      "status": "PASS",
+      "detail": "Only constructor, replace and selectBucket differ from frozen P04-24; 29 full definitions including factories, signed math, key/focus/hover/paint remain exact. Header is unchanged. Parent source/test capsules are context, not qualified actual-parent credit. Before installation root must finish P04-24 and compare the actual final production before images, and bind the separately retained focus-fixture amendment rather than silently rebaselining its old e98 historical test context."
+    }
+  ],
+  "scope_precision": {
+    "notification_seam": "QAction::changed/enabledChanged and QClipboard::changed callbacks, plus existing guarded widget tooltip/accessibility publications.",
+    "external_Qt_boundary": "No universal claim for arbitrary immediate owner/action deletion from a QEvent::ActionChanged event filter. Official Qt6.12 QActionPrivate::sendDataChanged sends that event before emitting changed without an intervening lifetime guard; such Qt-event deletion is distinct from these signal-based regression seams.",
+    "primary_Qt_source": "https://github.com/qt/qtbase/blob/v6.12.0/src/gui/kernel/qaction.cpp#L69-L76",
+    "actual_compositor_system_clipboard_screen_reader_acceptance": false
+  },
+  "nonblocking_test_followup": {
+    "finding": "Existing tests do not explicitly copy while the QWidget tooltip points at another hovered bucket. Production correctly uses selected immutable facts; a future toolTip()-based mutant could otherwise escape that distinction.",
+    "root_decision": "Root authorized a separately staged tests-copy-hover amendment after this historical frozen review. Original76c5/5d0e capsule remains unchanged; same methods/keys/deadlines and existing exact expectations are retained. The amendment is not credited as reviewed or executed by this receipt."
+  },
+  "execution": {
+    "compiler_preprocessor": 0,
+    "Qt_or_native_execution": 0,
+    "tests": 0,
+    "JVM": 0,
+    "Git_commands": 0,
+    "native_edits": 0,
+    "frozen_capsule_edits": 0,
+    "target_imports_or_selected_body_evaluations": 0
+  },
+  "observed_Qt_rows": null,
+  "actual_qualification_credit": false
+}

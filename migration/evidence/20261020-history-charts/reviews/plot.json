@@ -1,0 +1,119 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "milestone": "P04-20",
+  "reviewer": "error_driver",
+  "status": "PASS: independent static plot API, implementation and test review; no production blocker found",
+  "reviewed_sources_sha256": {
+    "preview/native/ui/saved_history_plot.hpp": "7358b1d6a900f3ae787b83aab1b2889138ff2ffdb328171fd1be93b858bc50fd",
+    "preview/native/ui/saved_history_plot.cpp": "725b2aea935e3a5d5ed74acf1526be289105f139f66ab85cf54b29f7c99f0b56",
+    "preview/native/tests/saved_history_plot_tests.cpp": "918ac3e3c3da7242f58a88df674a4f0bc45f0d28e41dd850903e77e1c8fbf738",
+    "preview/native/tests/saved_history_plot_widget_tests.cpp": "ff7b24f2c46639b6f008aab2e0c51e20d5626086e5253f6a56e7332cc063f836"
+  },
+  "author_capsule": {
+    "path": "build/history-charts-20261020/source/manifest.json",
+    "sha256": "a516de085753a98969488a2d96ea12fcacdf26980d792a764d07e3ec660bfc2f"
+  },
+  "context_sha256": {
+    "build/history-charts-20261020/contract.md": "eb912a4def9729f15136ac7d8013033bcbb40e5c056c2bb4044cf609bae93c60",
+    "migration/evidence/20261020-history-charts/source-audit.json": "0e54adde9c404f8378d21812cb4b50f427e6c32b1385daeee77ed16de4253926",
+    "migration/evidence/20261020-history-charts/unchanged-behavior-baseline.json": "645940ac533999d2918159a6d0980fb01f6028be3c5c5fcacbb2d7c10c95e9b7"
+  },
+  "production_checks": [
+    "Entire final header/CPP and both tests read. Installed header/CPP/data tests are byte-identical to the stable staged sources read before installation. All63 accounting/reader/worker/DTO/old-test/fixture baseline files remain unchanged.",
+    "Factories bound presentation to24 hourly or7 daily scalar buckets. They select only download index3 and upload index1; no sums/rates/interpolation or new observations are computed. Null/mismatched snapshots yield unknown buckets for the validated selected identity. Week row and inner snapshot date consistency prevents mislabelled facts.",
+    "Frames copy scalar optionals and dates into private fixed storage and retain no caller snapshot or mutable alias. Shared immutable frame handles outlive source DTOs/widgets. Factories reject invalid dates/ranges; immutable frame constructors ensure valid fixed counts, preventing point divisor/count underflow.",
+    "Minimum/maximum include0 and both signed directions. Full signed-int64 extrema are converted before range subtraction. There is no signed subtraction/abs overflow, and invalid/nonfinite/degenerate rectangles or unknown/out-of-range buckets have no coordinates. Paint uses the same point helper.",
+    "Actual zero produces a real center-axis marker under a display-only -1..1 geometry, without adding unknown observations. All-unknown frames draw an explicit no-observations message and no colored sample trace. Only immediate known predecessor/current pairs connect, and every actual point has a marker.",
+    "Plot keeps byte-unit period/accessibility descriptions, exact signed decimal/UTC bucket tooltips, distinct blue solid versus orange dashed directions and sparse nonoverlapping tick labels. Fixed180..260 height preserves room for tables; narrow invalid chart areas return without unsafe coordinate use.",
+    "Setters guard factory/destructor reentry using QPointer plus prior frame identity, then replacement publishes one immutable token. Every direct accessibility/tooltip notification is followed by token/QPointer validation, so deletion or nested newer replacement prevents stale writes/update. Hover and QHelpEvent paths similarly stop before further object access after a notification changes ownership/frame.",
+    "Widget owns no child worker or external widget. No new IO, timer, thread, clock, network setting, accounting, history writer/cache or original-profile path exists. Hidden/minimized paint returns; View-level fact/tooltip/model deferral is separately reviewed."
+  ],
+  "test_review": {
+    "source_methods": {
+      "preview/native/tests/saved_history_plot_tests.cpp": [
+        "missingDayHasTwentyFourUnknownUTCLabels",
+        "missingWeekHasSevenDatesAcrossLeapBoundary",
+        "dayCopiesOnlyHourlyPayloadFieldsWithoutTotalsOrOtherCounters",
+        "weekCopiesIndependentDailyTotalsNotHourlyValuesOrAWeekSum",
+        "presentEmptyAndMissingRemainGapsWhileKnownZeroHasPoints",
+        "boundsAlwaysIncludeZeroAndBothDirections_data",
+        "boundsAlwaysIncludeZeroAndBothDirections",
+        "fullSignedDomainUsesFiniteCoordinatesWithoutIntegerOverflow",
+        "zeroGeometryNeverCreatesUnknownObservations",
+        "invalidCoordinatesAndIndicesHaveNoPoint",
+        "frameOwnsCopiedDayFactsAfterMutationAndDestruction",
+        "frameOwnsCopiedWeekFactsAndOldFramesStayImmutable",
+        "mismatchedDayAndWeekDatesDoNotPlotMislabelledData",
+        "invalidRequestedDatesCannotCreateAFrame",
+        "labelsAreExactUTCAndIgnoreDisplayLocale"
+      ],
+      "preview/native/tests/saved_history_plot_widget_tests.cpp": [
+        "initTestCase",
+        "boundedHeightAndUnknownFramesNeverInventVisibleSamples",
+        "adjacentKnownPointsConnectAndUnknownBucketBreaksBothTraces",
+        "isolatedKnownAndActualZeroHaveVisibleMarkers",
+        "fullSignedExtremesAndNarrowWidthsRenderSafely",
+        "hoveringEveryBucketSelectsExactPlainValuesAndUnknowns",
+        "newUnknownFrameClearsOldHoveredValueAndInvalidRequestDoesNotRetarget",
+        "nestedToolTipReplacementKeepsNewerFrameAndAccessibility",
+        "toolTipCallbackCanDeletePlotDuringSetter",
+        "accessibilityCallbackCannotResumeAnOlderSetter_data",
+        "accessibilityCallbackCannotResumeAnOlderSetter",
+        "parentDestructionOwnsPlotAndImmutableFrameOutlivesWidgets"
+      ]
+    },
+    "actual_qt_rows": "Not asserted by static review; root records actual counts.",
+    "data_checks": [
+      "Closed expected24/7 identities across a leap boundary and out-of-domain dates.",
+      "Deliberately different nonpayload counters and daily/hourly totals prove correct domains without a new accounting algorithm.",
+      "Missing/present-empty/zero and signed extrema; exact endpoint coordinates and raw INT64_MIN/MAX tooltip strings.",
+      "Four hard-coded positive/negative/mixed/zero bound vectors and invalid/nonfinite rectangle/index cases.",
+      "Source mutation/destruction weak_ptr checks prove copied ownership; old/new frames stay independently immutable.",
+      "Mismatched outer/row/inner dates fail closed as unknown; locale change keeps exact UTC digits."
+    ],
+    "widget_checks": [
+      "Actual QImage pixel inspections exclude legend area, distinguish both series colors, require no sample colors for unknown frames and no gap-bridging colors, and require visible isolated/zero markers.",
+      "Widths1/40/120/760 and signed extrema require actual raster creation plus finite coordinates when the plot area is valid.",
+      "Real mouse move events visit every daily/weekly bucket and require exact plain tooltip text; unknown replacement removes stale hovered values.",
+      "Direct ToolTipChange callbacks install a newer frame or delete the plot, preserving final frame/name/tooltip or QPointer null.",
+      "Actual QAccessible update handler tests two NameChanged callback outcomes (newer frame and owner deletion), requires it fired, and restores handler/activity state.",
+      "Parent destruction deletes the child plot while a copied immutable presentation remains usable."
+    ]
+  },
+  "nonblocking_coverage_notes": [
+    {
+      "id": "HC-T1",
+      "scope": "Positive raster connection coverage",
+      "finding": "The current adjacentKnownPointsConnectAndUnknownBucketBreaksBothTraces positive pixel probe is centered on known bucket5, so its marker can satisfy the probe even if all connection lines were omitted. The negative gap probe does detect an erroneous4-to6 bridge, and source inspection confirms the implementation draws only adjacent lines.",
+      "suggested_followup": "An additive raster probe at the midpoint between known buckets4 and5, with no point marker there, would independently prove a connecting stroke; compare the same region against the4/6 gap frame. Preserve existing checks/thresholds.",
+      "root_notified": true,
+      "production_blocker": false
+    }
+  ],
+  "preservation": {
+    "unchanged_behavior_files_verified": 63,
+    "old_java_scalar_comparisons_retained_separately": [
+      2550,
+      3150
+    ],
+    "new_java_execution": false,
+    "new_java_equality_credit": false
+  },
+  "blockers": [],
+  "limits": [
+    "This is independent source review, with no builds, Qt/native test execution or Java execution. Root actual GCC/Clang/leak-enabled sanitizer and capture qualification is still required.",
+    "Rendering finite coordinates does not make all64-bit values visually distinguishable at finite pixel resolution; raw facts/tooltips retain exact integers.",
+    "The presentation factories are bounded scalar projectors, not full semantic validators of arbitrary synthetic SavedHistoryDay consistency; the existing View admission validates actual delivered DTO shapes.",
+    "Snapshot access assumes immutable serialized GUI ownership as documented; no concurrent mutable-alias or global OOM guarantee is claimed.",
+    "Original rolling/current-clock/pixel-merged graph, complete manager/UI runtime and weekly aggregate parity remain excluded."
+  ],
+  "activities": {
+    "source_edits": false,
+    "builds": false,
+    "target_import_or_selected_evaluation": false,
+    "native_tests_or_raster_runs": false,
+    "java_runs": false,
+    "git_mutations": false
+  }
+}

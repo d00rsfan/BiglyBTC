@@ -1,0 +1,77 @@
+Start testing: Oct 17 03:55 IDT
+----------------------------------------------------------
+3/9 Testing: structured-document-edits
+3/9 Test: structured-document-edits
+Command: "/tmp/biglybtc-native-gcc/tests/biglybtc-document-edit-tests"
+Directory: /tmp/biglybtc-native-gcc/tests
+"structured-document-edits" start time: Oct 17 03:55 IDT
+Output:
+----------------------------------------------------------
+PASS structured insertion/replacement, nested splicing, source ownership, unknown/info bytes and edit quotas
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"structured-document-edits" end time: Oct 17 03:55 IDT
+"structured-document-edits" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/9 Testing: compressed-state-envelope
+4/9 Test: compressed-state-envelope
+Command: "/tmp/biglybtc-native-gcc/tests/biglybtc-codec-tests"
+Directory: /tmp/biglybtc-native-gcc/tests
+"compressed-state-envelope" start time: Oct 17 03:55 IDT
+Output:
+----------------------------------------------------------
+PASS plain/gzip identity, binary edits, copy lifetime, CRC/truncation, quotas and concatenated members
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"compressed-state-envelope" end time: Oct 17 03:55 IDT
+"compressed-state-envelope" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/9 Testing: torrent-state-java-interop
+6/9 Test: torrent-state-java-interop
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/torrent_state_tests.py" "--driver" "/tmp/biglybtc-native-gcc/tests/biglybtc-torrent-state-driver"
+Directory: /tmp/biglybtc-native-gcc/tests
+"torrent-state-java-interop" start time: Oct 17 03:55 IDT
+Output:
+----------------------------------------------------------
+Note: /home/yurii/Java/BiglyBT/migration/fixtures/java/CacheFixtureOracle.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+PASS original Java reads every native save/crash/backup/cache checkpoint
+PASS cache hydration, unrelated/unknown data, stale/cross-profile/symlink protection and immutable info
+<end of output>
+Test time =  45.84 sec
+----------------------------------------------------------
+Test Passed.
+"torrent-state-java-interop" end time: Oct 17 03:55 IDT
+"torrent-state-java-interop" time elapsed: 00:00:45
+----------------------------------------------------------
+
+9/9 Testing: profile-java-interop
+9/9 Test: profile-java-interop
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/profile_tests.py" "--driver" "/tmp/biglybtc-native-gcc/tests/biglybtc-profile-driver"
+Directory: /tmp/biglybtc-native-gcc/tests
+"profile-java-interop" start time: Oct 17 03:55 IDT
+Output:
+----------------------------------------------------------
+PASS hold-lock conflicts with Java and native; death releases lock
+PASS duplicate-lock conflicts with Java and native; death releases lock
+PASS Java lock excludes native; release permits native
+PASS compatible save/recovery at normal
+PASS compatible save/recovery at temp
+PASS compatible save/recovery at backup
+PASS compatible save/recovery at primary
+PASS traversal, stale input, exclusive saving and symlink protection
+<end of output>
+Test time =  47.91 sec
+----------------------------------------------------------
+Test Passed.
+"profile-java-interop" end time: Oct 17 03:56 IDT
+"profile-java-interop" time elapsed: 00:00:47
+----------------------------------------------------------
+
+End testing: Oct 17 03:56 IDT

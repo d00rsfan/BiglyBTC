@@ -1,0 +1,159 @@
+{
+  "scope": "Inert actual original BDecoder/BEncoder normal-map codec, interning explicitly disabled; no manager/full save or reset runtime equality",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "frozen_core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+  "generated_work": "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8",
+  "results": [
+    {
+      "variant": 0,
+      "native_sha256": "196edb98b1ff0ddc93fad436c8c2a8f1dac345f99271cfa41361b5aeade153da",
+      "java_sha256": "708a486d7f079a46749ac79a7103b8dadb5c62ae0f7a3890bcd1a02dd6325c2d",
+      "native_match": true,
+      "forbidden_initializations": []
+    },
+    {
+      "variant": 1,
+      "native_sha256": "0edfa07f70bc51bc1d6d67c022db6834ed1dfa09eb6171f2404d0c137f0dbec4",
+      "java_sha256": "1300b324a54bef39b1b8c9a3fc0ebcb1e5c22c70fcfccaa126962334e5e597ea",
+      "native_match": true,
+      "forbidden_initializations": []
+    },
+    {
+      "variant": 2,
+      "native_sha256": "e6a7532fc2abff220c65d9f0197e2456f58a710ba022ebefdbca7b2e6b624c04",
+      "java_sha256": "1fa4ed6d54715ec605a3c28791ce10f3188df4849e30048ba9a02cd64e58f154",
+      "native_match": true,
+      "forbidden_initializations": []
+    }
+  ],
+  "commands": [
+    [
+      "/usr/bin/g++-16",
+      "-std=c++23",
+      "-Wall",
+      "-Wextra",
+      "-Wpedantic",
+      "-Werror",
+      "-I/home/yurii/Java/BiglyBTC/preview/native/core/include",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/codec_roundtrip_probe.cpp",
+      "/home/yurii/Java/BiglyBTC/build/classic-layout-persistence-20261018/core-gcc/libbiglybtc_core.a",
+      "-pthread",
+      "-o",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/probe"
+    ],
+    [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "--release",
+      "8",
+      "-cp",
+      "/tmp/biglybtc-oracle/classes",
+      "-d",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/classes",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/ClassicPreferencesMapOracle.java",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/ReferenceFence.java"
+    ],
+    [
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/probe",
+      "write",
+      "0",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/native-0.input"
+    ],
+    [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-Xlog:class+init=info:file=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/class-init-0.log",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8",
+      "-Dbiglybtc.test.ports=",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/tmp",
+      "-Duser.home=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/prefs",
+      "-cp",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/classes:/tmp/biglybtc-oracle/classes",
+      "ClassicPreferencesMapOracle",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/native-0.input",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/java-0.output"
+    ],
+    [
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/probe",
+      "read",
+      "0",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/java-0.output"
+    ],
+    [
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/probe",
+      "write",
+      "1",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/native-1.input"
+    ],
+    [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-Xlog:class+init=info:file=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/class-init-1.log",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8",
+      "-Dbiglybtc.test.ports=",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/tmp",
+      "-Duser.home=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/prefs",
+      "-cp",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/classes:/tmp/biglybtc-oracle/classes",
+      "ClassicPreferencesMapOracle",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/native-1.input",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/java-1.output"
+    ],
+    [
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/probe",
+      "read",
+      "1",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/java-1.output"
+    ],
+    [
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/probe",
+      "write",
+      "2",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/native-2.input"
+    ],
+    [
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-Xlog:class+init=info:file=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/class-init-2.log",
+      "-XX:ActiveProcessorCount=2",
+      "--add-opens=java.base/java.net=ALL-UNNAMED",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8",
+      "-Dbiglybtc.test.ports=",
+      "-Dazureus.security.manager.install=0",
+      "-Dazureus.loadplugins=0",
+      "-Dazureus.skipSWTcheck=1",
+      "-Dazureus.config.path=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/profile",
+      "-Dazureus.install.path=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/install",
+      "-Djava.io.tmpdir=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/tmp",
+      "-Duser.home=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/home",
+      "-Djava.util.prefs.userRoot=/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/prefs",
+      "-cp",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/classes:/tmp/biglybtc-oracle/classes",
+      "ClassicPreferencesMapOracle",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/native-2.input",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/java-2.output"
+    ],
+    [
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/probe",
+      "read",
+      "2",
+      "/tmp/biglybtc-classic-preferences-codec-0b1086bdd3604b18ab6dd44997da94a8/java-2.output"
+    ]
+  ],
+  "original_profile_used": false
+}

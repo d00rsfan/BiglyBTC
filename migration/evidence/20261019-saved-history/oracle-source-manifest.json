@@ -1,0 +1,124 @@
+{
+  "schema": 1,
+  "sources": {
+    "HistoryOracle.java": {
+      "sha256": "3e25a174349b6416241707cf44d2760bf3eb34ed95c1bca02205fb858da6b70d",
+      "role": "driver/subclass, no copied reader algorithm"
+    },
+    "com/biglybt/core/config/COConfigurationManager.java": {
+      "sha256": "56bf2763f1f47b075defbd185fd6e6749eb197a4d442416700607e67397f56e4",
+      "role": "explicit inert or owned-file provider stub"
+    },
+    "com/biglybt/core/config/ParameterListener.java": {
+      "sha256": "1004b91dd3461a738e266ad43552e5a041efd084cbec506454241aea5911a23c",
+      "role": "explicit inert or owned-file provider stub"
+    },
+    "com/biglybt/core/stats/transfer/LongTermStats.java": {
+      "sha256": "f1a4bfaa8d15e8b0f9318a2af1653a854f9969bc09b80f4e9bd3c48afb62e1bf",
+      "role": "complete actual committed subject/interface"
+    },
+    "com/biglybt/core/stats/transfer/LongTermStatsListener.java": {
+      "sha256": "212cf7beb50619e90575f86ceb1357d59e43c69806f00fc18e3406cee8afc258",
+      "role": "complete actual committed subject/interface"
+    },
+    "com/biglybt/core/stats/transfer/impl/LongTermStatsBase.java": {
+      "sha256": "1f9e0967309777ad4c19be9ee123351c9a21755337a0d48fa52dd3752de5ca7f",
+      "role": "complete actual committed subject/interface"
+    },
+    "com/biglybt/core/stats/transfer/impl/LongTermStatsWrapper.java": {
+      "sha256": "7b512564c93cbe9f7b59c1ae7c0aff2212c587508575901761a1c9ceadc9a788",
+      "role": "stub outer wrapper carrying actual helper interface only"
+    },
+    "com/biglybt/core/util/AERunnable.java": {
+      "sha256": "a8eab90ccc2031135d5991ef3fe2328b00e3551a9d298d44e4dd97f2059bc9f2",
+      "role": "explicit inert or owned-file provider stub"
+    },
+    "com/biglybt/core/util/AsyncDispatcher.java": {
+      "sha256": "8e890b2c74135d559f5d6195762fc085a0b8c0b4fb580d123fa19b3d1a62d30a",
+      "role": "explicit inert or owned-file provider stub"
+    },
+    "com/biglybt/core/util/CopyOnWriteList.java": {
+      "sha256": "dbf0f549b2fcca5eb2d7ff340f3b62cbf17a98402da97eeb6b0f352e56664359",
+      "role": "explicit inert or owned-file provider stub"
+    },
+    "com/biglybt/core/util/Debug.java": {
+      "sha256": "9b0ee42483e0acc8c2bc2e91dbdb1f50fef60f5e7152db16583d74db40af320c",
+      "role": "explicit inert or owned-file provider stub"
+    },
+    "com/biglybt/core/util/FileUtil.java": {
+      "sha256": "e3eb07f652d742aaeb27373ecfd1fa97c31c567229b18c12bde14ac4d06d8d3f",
+      "role": "explicit inert or owned-file provider stub"
+    },
+    "com/biglybt/core/util/SimpleTimer.java": {
+      "sha256": "fd7dc2cd2f1f96585ded4329fcc18eda7a66c3e1ae1181767a6fb9a3bbe275dc",
+      "role": "explicit inert or owned-file provider stub"
+    },
+    "com/biglybt/core/util/SystemTime.java": {
+      "sha256": "6e4b911f0c79fe3b00f05f492a94567647e32cf470df8e33a9588055f4f1b8bd",
+      "role": "explicit inert or owned-file provider stub"
+    },
+    "com/biglybt/core/util/TimerEvent.java": {
+      "sha256": "25e27cb9903943580a65ff14d159962113883188d6576ce0e9c5b8a243a4f91a",
+      "role": "explicit inert or owned-file provider stub"
+    },
+    "com/biglybt/core/util/TimerEventPerformer.java": {
+      "sha256": "05442c05f475d480ad64ab0ae9ec6ed409ca9162694d9e160ed6bd6619d4d1cc",
+      "role": "explicit inert or owned-file provider stub"
+    },
+    "com/biglybt/core/util/TimerEventPeriodic.java": {
+      "sha256": "70eb440a3693be15a6466572f18ee54c5d0fb0e9e1b16e4c5a1c4f5ba7414ab9",
+      "role": "explicit inert or owned-file provider stub"
+    },
+    "com/biglybt/core/util/average/Average.java": {
+      "sha256": "c9b896eda56e43a292fce66d1057f02f62c96ea134045f9ea8f1a5588b457a47",
+      "role": "explicit inert or owned-file provider stub"
+    },
+    "com/biglybt/core/util/average/AverageFactory.java": {
+      "sha256": "a108f211c04f98b4d89382883235c97c8c4d3f100175562bce30768775d8444d",
+      "role": "explicit inert or owned-file provider stub"
+    }
+  },
+  "class_sha256": {
+    "HistoryOracle$Reader.class": "a619eba020851afdb27fa8a1f6eb4faeb352e568b876d0068c5f237b7d7da1d1",
+    "HistoryOracle.class": "42f96c26b4fe82ac55a91527087588335ad79148db5aad786ed85cc085e9a5e2",
+    "com/biglybt/core/config/COConfigurationManager.class": "5fac5177b1eb1a594fce99545827fb22fe3565f5b5711cefd43134b6be474335",
+    "com/biglybt/core/config/ParameterListener.class": "d168f9e72d091adc143660e65df268ff7bb7d107f5039b66c519cce34c08404e",
+    "com/biglybt/core/stats/transfer/LongTermStats$GenericStatsSource.class": "004d18a191fc852828f5d61934d9cc4e3359619964ba8b52b0d54b7bce457aac",
+    "com/biglybt/core/stats/transfer/LongTermStats$RecordAccepter.class": "a38a96f3445dd96f8a8f7e993eae3e8d289f92e8e12a4d7d255cf30440a3a097",
+    "com/biglybt/core/stats/transfer/LongTermStats.class": "dacd76addb6d9496583e927a5f210dd478f87de556976746f6eb430c061cec2f",
+    "com/biglybt/core/stats/transfer/LongTermStatsListener.class": "fec206ab46e8a61d054fd3fa0b7662eff58155875f3fdaa98c9101a6ea834b44",
+    "com/biglybt/core/stats/transfer/impl/LongTermStatsBase$1.class": "f2602fb81ae3ad0149a36521ed6f55684b94839735feaba8254ea36723538d92",
+    "com/biglybt/core/stats/transfer/impl/LongTermStatsBase$2.class": "2ffd4661d68bb3abaee4a87b91c3c63d07c0fd04d5bb8621d2be1f349c82a846",
+    "com/biglybt/core/stats/transfer/impl/LongTermStatsBase$3.class": "b0aba6735cd73b8016a6957d72a433108fa2f9c5ddb5cc9a676d376603f1a8a3",
+    "com/biglybt/core/stats/transfer/impl/LongTermStatsBase$4.class": "12e8d6b7513e29a5653946e4974ca798892b5e3e77b9934c72c5bbd9d5a46104",
+    "com/biglybt/core/stats/transfer/impl/LongTermStatsBase$5.class": "1375a14a2e2ecc45ea1fc9ce27e7233fed81954ff36b4cf6a73306aa5e809d60",
+    "com/biglybt/core/stats/transfer/impl/LongTermStatsBase$6.class": "4554d7ff768e2205612c3b190f5ecb1e36b06a7e1312e63f01159500b1bbf020",
+    "com/biglybt/core/stats/transfer/impl/LongTermStatsBase$DayCache.class": "8b42c51c0b78b2931f9e0a2fd131e4bf06628d48c419e109bc66c906931ed3d2",
+    "com/biglybt/core/stats/transfer/impl/LongTermStatsBase$MonthCache.class": "8e7fe34f2242a3cd5781fa5499e73dc80a1c3fd6613400f90fc449fe2f30b366",
+    "com/biglybt/core/stats/transfer/impl/LongTermStatsBase.class": "771c70f04ab4ea66ff4db1764a916638642d26ebe7bfe7ac2c8c7b5e0df82470",
+    "com/biglybt/core/stats/transfer/impl/LongTermStatsWrapper$LongTermStatsWrapperHelper.class": "371d3776c6447ebf2e018b17f68cc77dfa3959ff3712d904217cb584144b4887",
+    "com/biglybt/core/stats/transfer/impl/LongTermStatsWrapper.class": "4ee072a333d701dbcbed73cba521eded431cf484c85c2293110d7bba2e313864",
+    "com/biglybt/core/util/AERunnable.class": "366431969dfedb4d9033335e09a4f193c71dd64c8ce6499864a935d0efa65cd6",
+    "com/biglybt/core/util/AsyncDispatcher.class": "609a77cefa0501470f327bb882b947db1c8e6ba2d88bae5d40075965104eaf0a",
+    "com/biglybt/core/util/CopyOnWriteList.class": "178878cce1f4095b2146d943fecf54155b0122fe3f7e56ff94c9809481c18a33",
+    "com/biglybt/core/util/Debug.class": "1a9382196a7b978c13d070ead61ff60263c60d4c96632ff20688159dcdcc3fd8",
+    "com/biglybt/core/util/FileUtil.class": "050f01b934ad46974652b72e2dd49ee079e621800ce0ff0b6cd6422d7776f992",
+    "com/biglybt/core/util/SimpleTimer.class": "c7b672b71b8f6b4780375680a075d9102a1ba9ac4a84550fc7a1b022eae31b9a",
+    "com/biglybt/core/util/SystemTime.class": "dec185c209ea79ce332ee56c5fb0a9f27aabd3b100e93756598e531698c3a8e5",
+    "com/biglybt/core/util/TimerEvent.class": "4f4fcd7e76baa7147c04c8ca4b58ceed04fded369198d8bb81150f7d8da7c0f2",
+    "com/biglybt/core/util/TimerEventPerformer.class": "31fcdf6de4de29aca98637c592447691b949bb5bb0d64c473dcdee30587003ef",
+    "com/biglybt/core/util/TimerEventPeriodic.class": "c3ffe7b0430befa26717ceefdd912020927774dc3f8f42d468d12261f734d90b",
+    "com/biglybt/core/util/average/Average.class": "3b5ea4c5a69196b05497a3447425e1e049ef935ef4bda8ffcebd9976244b2ec9",
+    "com/biglybt/core/util/average/AverageFactory$1.class": "db4d0190f3ad5c872de733860f64a85f0f6cc1b91b2a7a9507279e0bf7275c70",
+    "com/biglybt/core/util/average/AverageFactory.class": "249a38291016b4193f6a720fca0403595364e6368b904f3f2d347cf860d372dc"
+  },
+  "compile_classpath": "Only generated source19 units and generated class directory; no original build output/Maven/classpath",
+  "stub_policy": {
+    "config": "Only constructor listener registration allowed/nonfiring; config getters/period overload fail.",
+    "async_timer_writer_cache": "Fail on activation; no originalCore/global manager/dependency initialization.",
+    "Average": "Six inert constructor values; update/getAverage fail, irrelevant to Date reader.",
+    "FileUtil": "Actual FileInputStream confined to physical generated root and DD.dat leaves; all output/cache/delete calls fail.",
+    "SystemTime": "Fixed2030-01-01UTC; all selected fixture dates earlier.",
+    "subclass": "super(6);stats_dir=owned supplied directory; abstract writer/session hooks fail if activated."
+  }
+}

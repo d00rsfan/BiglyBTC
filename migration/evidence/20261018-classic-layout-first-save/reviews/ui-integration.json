@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "status": "PASS-independent-source-review-no-blocker",
+  "reviewer": "error_driver",
+  "independence": "Root authored Window/integration/smoke changes. Reviewer authored separate lowlevel ConfigFile create tests; those tests are excluded from independent review credit here. Earlier P04-13 adapter authoring is context only.",
+  "native_parent": "2501968f62d4ec7e70b093c2186a31fcf2ede518",
+  "source_sha256": {
+    "preview/native/ui/library_window.hpp": "ea8ba25020774136ccf8e6edfcc306fffb54f8f399b26a536a8e36278c397ecf",
+    "preview/native/ui/library_window.cpp": "ce4812638f26fd46aeaa85546219ae5da653364fd7d6c4648d916ccccc47c500",
+    "preview/native/tests/classic_preferences_integration_tests.cpp": "89dea2b82ee601bc97c1a5cbb25b5cd5c75cd19a67eba09f0f69ee5f6da19384",
+    "preview/native/packaging/preview_smoke.cpp": "fef6cc6db731c6b326ad60c24c572d08052d0b256ab074f74ae03f47fb38fcde"
+  },
+  "context_sha256": {
+    "preview/native/app/session_bridge.cpp": "301135e3c4ebd67884028db1d639978c96da7e6bfb2bdb41d2c9c5cb52eef33c",
+    "preview/native/ui/column_layout_presentation.hpp": "7dd6edd9a8584525e3dab2dab9ed1fe44727e2d0600e356d06a7e1cc5286aa81",
+    "preview/native/adapters/column_layout_view.hpp": "59e6f64f85eb75b9a58f69100370c32a774540ac9b46f61427dd6ca29f2709af",
+    "preview/native/adapters/column_layout_view.cpp": "a7d3e205d846814d14c71b1e21e94999e6420147f5f184cbe7ececbe77939581"
+  },
+  "preservation_receipt": {
+    "path": "build/classic-layout-first-save-20261018/reviews/ui-preservation-static-checks.json",
+    "sha256": "de94a9400d9c4f9e3bd6b296a95d71222d8e27e807decd9a2540c464d12c969e"
+  },
+  "blocking_findings": [],
+  "checks": [
+    {
+      "area": "Missing admission and no automatic creation",
+      "result": "Window consumes only exact active session/request, clears admission before classifying, and admits Missing only without source, snapshot, private preferences or failure. It creates no default Document and emits no save while reading, applying, refreshing, resetting or closing. Existing explicit QAction/capture path is unchanged."
+    },
+    {
+      "area": "Recovery/malformed distinctions",
+      "result": "Ready continues to require owned source, valid enum and private schema; only Primary permits save. Backup/Saving/Failed/incomplete Missing never become fresh-create admission. Bridge actual worker baseline remains the authority and retains cancelled-read stop token; a forged GUI Missing cannot bypass it."
+    },
+    {
+      "area": "Save capture/newer local edits",
+      "result": "Existing owned capture includes both pane preferences and edit revisions; acknowledgement changes availability/message only. No geometry is reapplied from acknowledgement. New first-save test edits width328 to401 after capture, verifies stored328/current401, then explicit second save and restart restore401. Filter and library snapshot/read counts are checked."
+    },
+    {
+      "area": "Conflict/retry/lifetime",
+      "result": "New parameterized tests introduce each exact candidate after Missing, verify failed save preserves foreign bytes and disables UI retry, verify direct Bridge reuse fails after candidate removal, then require explicit reload before successful retry. Cancel-in-read-result test exercises retained cancellation authority; existing stale ACK, rejected-save queue, deletion and busy-held result tests are byte-preserved."
+    },
+    {
+      "area": "No inherited test weakening",
+      "result": "Window header is byte-identical. Window implementation differs only in Missing branch. Integration and smoke each have one contiguous insertion; all original bytes, test assertions and deadlines remain exact. Static diff whitespace check passed."
+    },
+    {
+      "area": "Precise generated smoke",
+      "result": "New smoke uses new first-save-profile beneath the fenced /tmp/biglybtc-preview-* sample parent, creates only explicit empty original-format downloads.config, waits for actual held-lease Missing result, asserts no tables/bak before Save, then actual save/no backup/no saving and fresh Bridge restart with both widths restored. Model stays empty; no payload/network/profile outside generated root."
+    }
+  ],
+  "limits": [
+    "Source/hash/byte comparison only; no compiler, Qt/native tests, process fixture, JVM, normal-profile, filesystem transaction or network execution by reviewer. Root actual qualification remains separate.",
+    "New smoke proves generated session restart behavior when executed; source review itself is zero runtime credit. No Java whole-client, original table-settings, scheduler, physical durability or arbitrary pathname-race parity claim.",
+    "UI Missing provenance is not a security token; worker held-session baseline and storage candidate/no-replace checks remain necessary.",
+    "Post-publication sync failure may mean actual Primary already exists; failure disables retry until reload and does not claim rollback."
+  ]
+}

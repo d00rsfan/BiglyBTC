@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "status": "FROZEN API/design candidate; no implementation/execution credit",
+  "observed_at_utc": "2026-10-18T10:42:12.959486+00:00",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_task_baseline_commit": "03e31e5ce260e1327e63cca63d22d8d5984ceae9",
+  "native_observed_head": "0e96f6a5d8f6922791ab0655dc93b13e163366af",
+  "baseline_note": "Coordinator advanced HEAD during source-only drafting; all four native core context files remain byte-identical to task baseline. No assumption that HEAD must stay at task baseline.",
+  "artifacts_sha256": {
+    "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/column_layout.hpp": "1d4d1c06efd71ef2ab026364eb15f434d4b8647d15f8ae31852052f63a996d39",
+    "migration/evidence/20261018-navigation/classic-column-projection-design.md": "b556cf736095ee573c9902ee6883b3c6fb4a1d25b7f39a27203160f20fd2cc3a"
+  },
+  "context_sha256": {
+    "migration/evidence/20261018-navigation/classic-column-persistence-audit.json": "474b6bc5bfca4a2798b89024075267acc20128f3e1784e6efff38434b3216b64",
+    "migration/evidence/20261018-navigation/classic-column-persistence-proposal.md": "0f18f7e79ac140d634c2e2d529f91d18378976715322a80a1e94e5974e9d0879",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/bencode.hpp": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/src/bencode.cpp": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/saved_services.hpp": "c7ed179ad9d6f3b278e04b47b2889d5ab36db035ff37f4619efae909ad730b75",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/src/saved_services.cpp": "e855a95c76eb2c797f270c9cbd5cbb1531708353108cc636dd739a950797afcb"
+  },
+  "native_changes": [
+    "preview/native/core/include/biglybtc/column_layout.hpp (new declarations/comments only)"
+  ],
+  "scope": {
+    "cpp_implementation": false,
+    "build_or_native_execution": false,
+    "java_execution": false,
+    "profile_io": false,
+    "adapter_ui_or_writer": false,
+    "cmake_tests_or_fixtures_changes": false
+  },
+  "routine_choices": "Fresh bounded owned reparse after bounded iterative input preflight, raw/tree consistency, requested facts only, no per-field Missing issue, exact source sort/legacy provenance and raw source retained once.",
+  "authoring_note": "Initial baseline-equals-current-HEAD assertion failed after design write, before pin record write. No target execution/source mutation; final record verifies actual core context equality rather than rejecting coordinator checkpoint."
+}

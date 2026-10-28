@@ -1,0 +1,958 @@
+{
+  "status": "passed",
+  "started_at_utc": "2026-10-17T22:16:36.037310+00:00",
+  "source_sha256": {
+    "native/core/include/biglybtc/executor.hpp": "0d99cc28102acb980070efc9a72f8e0686ecf94dc43bb81198694245c6b72777",
+    "native/core/src/executor.cpp": "b886692587ef8c5efc269ea3735f2b64f3432a255b8a1bd57b357627bc3da77a",
+    "native/tests/executor_tests.cpp": "039cd9a55aae2b9ef9381f420622530d23c610e5bdf44d8d30e9dc8fa7824a0d",
+    "native/tests/executor_finalizer_tests.cpp": "14b024235761416b11a005ebba10033bb2963c41ec7748487e78a7aa8f5bdaf6",
+    "native/tests/executor_startup_failure_tests.cpp": "4b14e9dafe83b339ccbe714c1aac31e84c3875102f001d7000b4ce3fdcfd2458",
+    "native/core/CMakeLists.txt": "bd0e3c00533497d4ad524bb4ff82adf26e1f353a24a6f7b5c5ff53cf94a64d09",
+    "native/tests/CMakeLists.txt": "2b6c01e50b03e320ae86436befa0df1e6dc87844876e72d6f8cc6df23041716a",
+    "native/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "native/app/session_bridge.cpp": "c9d8145e15602b2b0c2b0ed58ce04786905f2e021caeca85f64fddd4528c0e3e",
+    "native/app/session_bridge.hpp": "e7312e57494c9106a20f55ccde826e483d904902a720def65fbb19669c96bb45",
+    "migration/consumers/executor_finalizer/CMakeLists.txt": "4ffbcb055e0bc5f552848e79d354ebfc07b129d568332732da00f97f2d259a64",
+    "migration/tools/executor_finalizer_matrix.py": "5da8d7ac59cf847b1161a87007b90aa4b7e6e2c2d2bf668dd5592bb6c6d0e426",
+    "migration/evidence/P02-08-executor-finalizer/native-draft.json": "4c46f61dfdc117028551ee3db3886e562ebdc7178b69689d4acdfa3cbff8640c",
+    "migration/evidence/P02-08-executor-finalizer/startup-source-proof.json": "fb42cbdc0bd02d1a358027ad3bce7735f0513e1753d0dd71083355071b3dcf0c",
+    "native/tests/executor_startup_allocation.hpp": "bf019c709db4f96773e19621a2dea26eae966d1f33997efb652d6beb6b44f3ee",
+    "native/tests/executor_startup_allocation.cpp": "06b16614a4f44dc721df9339174af89381113bf93fd061a3c1e589ec7c45619f",
+    "migration/evidence/P02-08-executor-finalizer/qualification-native-inputs.json": "b41c98e3f0b7d18b166891ade0b89a9950575f804de83e0299af851ef57ec1cd",
+    "migration/evidence/P02-08-executor-finalizer/before/native/tests/executor_tests.cpp": "41b8ac27f40d257a199e03d48865cd32a7a8f91b5a655a7f94a2a1f7c5ac9ea4",
+    "migration/evidence/P02-08-executor-finalizer/startup-wrap-proof.json": "71383e6be225b5e9e14610f5bdd093338665c807bd97d4cb33d214a1ed2b7764"
+  },
+  "runtime_sha256": {
+    "/usr/bin/cmake": "6e1dccda39845415d68eabb934c598998949c99ec4668625d571aee1827b05c7",
+    "/usr/bin/ctest": "2cf8308ae2235efcae86a2eba443444f33ab611193a84092de33ec16836f5f17",
+    "/usr/bin/ninja": "91e9548850cda2799facfdaa7abe33f9e978832f85e98212255708a7bbe437f2",
+    "/usr/bin/ldd": "8b85fafd8313f5e55058f543a66d3826adcd11e073c697f9d0208755378e2054",
+    "/usr/bin/nice": "48893b0fb21436b54619db80486e83ef39dfccaf1aefe83dfa00c02d6146e8c0",
+    "/usr/bin/git": "5516c9f362c29376ab9a499a33082f9f611941d8c75930c880e30ad109e39c9a",
+    "/usr/bin/nm": "f04262bf48192a7cbb78a17ca49ae03f8930b0372bd0115576f957b2e2a57a01",
+    "/usr/bin/g++-16": "ca3bb855e752ea0b36544ef684e542fcf04273d8c229b1a96a9c160587e41c62",
+    "/usr/lib/llvm-24/bin/clang++": "f283b32b557e7598ca569f3097088e7406c1d81377085b06853f5259c5460ed9",
+    "/usr/bin/python3.14": "52e0a13e60a981d8c4b6478be2ba5176f69da07948a056bf49cf6f077e30cb41",
+    "/usr/include/c++/16/thread": "c59f7680bc553ca56c5ee2481f65bb8e29aa6407a72aad8ef3de2cc2cc9e867e",
+    "/usr/include/c++/16/stop_token": "0ccf6f1f48966a8098e7cb440b07db6459ba83210126381d3d01e831772d4371",
+    "/usr/include/c++/16/bits/mofunc_impl.h": "2b0ebaca49ba42929c0cee4b7133674554f4faef2d5267d0e4abbd85d824267f",
+    "/usr/lib/llvm-24/lib/clang/24/lib/linux/libclang_rt.tsan_cxx-x86_64.a": "b2505d92ef87453c4c4aed7d0008ccd786d43c98f5d04398ff5cd49989dcd2f4",
+    "/usr/bin/x86_64-linux-gnu-ld.bfd": "97f48d93b8b076a92d2809ec29dcb17f0f37c8827358f832255e2ed22fef6075",
+    "/usr/lib/llvm-24/lib/clang/24/lib/linux/libclang_rt.tsan-x86_64.a": "d8f542eb00b2b70bbba604f02f6f9d26b9d2eeb6160870d456fec08884b7842b",
+    "/usr/lib/llvm-24/lib/clang/24/lib/linux/libclang_rt.asan-x86_64.a": "090e463d470cc04355bd34c84780d85b2215c91f69f62166587e84f75078c5a9",
+    "/usr/lib/llvm-24/lib/clang/24/lib/linux/libclang_rt.asan_cxx-x86_64.a": "8dd30948d3a43826d3c793c217d17569fe38a6c6fb0a6bffa4bd112a2eea7958",
+    "/lib64/ld-linux-x86-64.so.2": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+    "/usr/lib/x86_64-linux-gnu/libc.so.6": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+    "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1": "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+    "/usr/lib/x86_64-linux-gnu/libm.so.6": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+    "/usr/lib/x86_64-linux-gnu/libstdc++.so.6": "5bb0d21308f123b6ad46c6f35b42cedfcb8d6d439a53aa3dae04d880aaffdde3",
+    "/usr/lib/x86_64-linux-gnu/libresolv.so.2": "6b99ecf94bcb81732ed1e81615084a5cfe7383eb89ce83106fa51077409ce609"
+  },
+  "original_git_state": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_path": "/home/yurii/Java/BiglyBT/.git/index",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "builds": [
+    {
+      "compiler": "gcc",
+      "status": "passed",
+      "build_root": "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-gcc",
+      "commands": [
+        {
+          "kind": "configure",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/cmake",
+            "-S",
+            "/home/yurii/Java/BiglyBT/migration/consumers/executor_finalizer",
+            "-B",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-gcc",
+            "-G",
+            "Ninja",
+            "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DCMAKE_CXX_FLAGS=",
+            "-DBIGLYBTC_SOURCE_ROOT=/home/yurii/Java/BiglyBT",
+            "-DCMAKE_MAKE_PROGRAM=/usr/bin/ninja",
+            "-DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF",
+            "-DCMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY=OFF"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-gcc-0-configure.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:16:37.603733+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:16:41.964181+00:00",
+          "log_sha256": "f1517eb335025bbc4e476af947ca9b0974627a2aca6bc5860fa37962fef866ed"
+        },
+        {
+          "kind": "build",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/cmake",
+            "--build",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-gcc",
+            "-j2"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-gcc-1-build.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:16:44.194241+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:17:48.492341+00:00",
+          "log_sha256": "2341d99e2568ea3b796930604e90789b9a9d6c25d61357bdddb46ddec5434051"
+        },
+        {
+          "kind": "linkage",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/ldd",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-gcc/biglybtc-executor-original-tests"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-gcc-2-linkage.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:17:51.085521+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:17:51.210402+00:00",
+          "log_sha256": "44a4291cec7d6446e0fd0db1b7a900a53093af11f3b1ef32d9e7800b0e4bb009"
+        },
+        {
+          "kind": "linkage",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/ldd",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-gcc/biglybtc-executor-finalizer-tests"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-gcc-3-linkage.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:17:55.335936+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:17:55.458499+00:00",
+          "log_sha256": "eefe81ab2303713154892fe40158c513fe55217c9f46dce257424cd2e603014a"
+        },
+        {
+          "kind": "linkage",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/ldd",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-gcc/biglybtc-executor-startup-failure-tests"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-gcc-4-linkage.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:18:01.180340+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:18:01.257761+00:00",
+          "log_sha256": "9a46a479da721fc6e7082f9929b2a6c1d5fc321768dddcbc60efecd17933f5fb"
+        },
+        {
+          "kind": "allocation-symbols",
+          "command": [
+            "/usr/bin/nm",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-gcc/biglybtc-executor-startup-failure-tests"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-gcc-5-allocation-symbols.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:18:04.854153+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:18:05.079150+00:00",
+          "log_sha256": "24339f0e422eed8dd59d8660e4aa3f742c54517407b386050d15efa64070b79b"
+        },
+        {
+          "kind": "ctest",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/ctest",
+            "--test-dir",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-gcc",
+            "--output-on-failure",
+            "-j1"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-gcc-6-ctest.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:18:08.244464+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:18:08.466454+00:00",
+          "log_sha256": "76dc4ab016b5ccd7666dddc7aeb745456ea151a21d2a013d177350bbe3984436"
+        }
+      ],
+      "persistent_runtime_snapshots": [
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-gcc",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-gcc/command-00-configure",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-gcc",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-gcc/command-01-build",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-gcc",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-gcc/command-02-linkage",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-gcc",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-gcc/command-03-linkage",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-gcc",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-gcc/command-04-linkage",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-gcc",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-gcc/command-05-allocation-symbols",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-gcc",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-gcc/command-06-ctest",
+          "status": "passed",
+          "files_sha256": {}
+        }
+      ],
+      "cmake_cache_sha256": "44df87b62f6c0d1165f054eb4d6199b8f86aa81ed671a3406013957aeeb20b98",
+      "binary_sha256": {
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-gcc/biglybtc-executor-original-tests": "21c85fe03697ea7026266f31e8bae656ba84ec3eaa4573f978364f8b6b0e3cfb",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-gcc/biglybtc-executor-finalizer-tests": "dc3afff876c31ddc3a36e6f5b25d7fb7ffef499209a6017228191320c73c4041",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-gcc/biglybtc-executor-startup-failure-tests": "38adbb785d15a623d34ac37725aafd78f2d26f2d84c417a6c6b745cb5f5df765",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-gcc/libbiglybtc_executor_finalizer.a": "a76f4542fec792ecb0224c3d24abf7fc7f7e0e9c138aca4c8b25beb4548efc91"
+      },
+      "runtime_linkage": {
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-gcc/biglybtc-executor-original-tests": {
+          "/lib64/ld-linux-x86-64.so.2": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+          "/usr/lib/x86_64-linux-gnu/libc.so.6": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+          "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1": "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+          "/usr/lib/x86_64-linux-gnu/libm.so.6": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+          "/usr/lib/x86_64-linux-gnu/libstdc++.so.6": "5bb0d21308f123b6ad46c6f35b42cedfcb8d6d439a53aa3dae04d880aaffdde3"
+        },
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-gcc/biglybtc-executor-finalizer-tests": {
+          "/lib64/ld-linux-x86-64.so.2": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+          "/usr/lib/x86_64-linux-gnu/libc.so.6": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+          "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1": "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+          "/usr/lib/x86_64-linux-gnu/libm.so.6": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+          "/usr/lib/x86_64-linux-gnu/libstdc++.so.6": "5bb0d21308f123b6ad46c6f35b42cedfcb8d6d439a53aa3dae04d880aaffdde3"
+        },
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-gcc/biglybtc-executor-startup-failure-tests": {
+          "/lib64/ld-linux-x86-64.so.2": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+          "/usr/lib/x86_64-linux-gnu/libc.so.6": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+          "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1": "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+          "/usr/lib/x86_64-linux-gnu/libm.so.6": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+          "/usr/lib/x86_64-linux-gnu/libstdc++.so.6": "5bb0d21308f123b6ad46c6f35b42cedfcb8d6d439a53aa3dae04d880aaffdde3"
+        }
+      },
+      "ctest_log_sha256": "48096807017a072d2b965d980981ab41e63528dd892c2b19ce15753d2ce82b1b",
+      "ctest_rows": 3,
+      "new_native_cases": 7,
+      "finished_at_utc": "2026-10-17T22:18:09.616609+00:00"
+    },
+    {
+      "compiler": "clang",
+      "status": "passed",
+      "build_root": "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-clang",
+      "commands": [
+        {
+          "kind": "configure",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/cmake",
+            "-S",
+            "/home/yurii/Java/BiglyBT/migration/consumers/executor_finalizer",
+            "-B",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-clang",
+            "-G",
+            "Ninja",
+            "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16",
+            "-DBIGLYBTC_SOURCE_ROOT=/home/yurii/Java/BiglyBT",
+            "-DCMAKE_MAKE_PROGRAM=/usr/bin/ninja",
+            "-DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF",
+            "-DCMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY=OFF"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-clang-0-configure.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:18:10.598394+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:18:14.454426+00:00",
+          "log_sha256": "2c4a8977b0baa5592fdea2f095734f70e219e2e967e70aec15a0df4c64961fe9"
+        },
+        {
+          "kind": "build",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/cmake",
+            "--build",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-clang",
+            "-j2"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-clang-1-build.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:18:16.985610+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:19:43.847658+00:00",
+          "log_sha256": "cef5cbf3c5640d1a3d8d0b8f1fef4d45c3d33578c05af71eec582e91b2dd383d"
+        },
+        {
+          "kind": "linkage",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/ldd",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-clang/biglybtc-executor-original-tests"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-clang-2-linkage.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:19:47.158629+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:19:47.296128+00:00",
+          "log_sha256": "192d7e551db45587c85efbdc0a3fc2a01f6a49041d0db86a22a6172caea634b1"
+        },
+        {
+          "kind": "linkage",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/ldd",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-clang/biglybtc-executor-finalizer-tests"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-clang-3-linkage.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:19:53.217786+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:19:53.289240+00:00",
+          "log_sha256": "111c369c4296c39174d2b3f5c1434b911c5d040afc6de4d23ca5308257ec21c0"
+        },
+        {
+          "kind": "linkage",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/ldd",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-clang/biglybtc-executor-startup-failure-tests"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-clang-4-linkage.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:19:58.470424+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:19:58.595110+00:00",
+          "log_sha256": "9e7c6c25a9474a0dfab6ff4f9b6b2888cf65a39adf5d5e026930f3c3b1c12c69"
+        },
+        {
+          "kind": "allocation-symbols",
+          "command": [
+            "/usr/bin/nm",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-clang/biglybtc-executor-startup-failure-tests"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-clang-5-allocation-symbols.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:20:05.277163+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:20:05.830204+00:00",
+          "log_sha256": "d227b76b4357170c653f04ac62091cab4a4eba96743113348f6414764d11f478"
+        },
+        {
+          "kind": "ctest",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/ctest",
+            "--test-dir",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-clang",
+            "--output-on-failure",
+            "-j1"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-clang-6-ctest.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:20:09.591229+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:20:09.762003+00:00",
+          "log_sha256": "541814ea9aa29b7ac18f9bc54d0a874be70c86ce732b5d9f537d49e969a8c507"
+        }
+      ],
+      "persistent_runtime_snapshots": [
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-clang",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-clang/command-00-configure",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-clang",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-clang/command-01-build",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-clang",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-clang/command-02-linkage",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-clang",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-clang/command-03-linkage",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-clang",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-clang/command-04-linkage",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-clang",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-clang/command-05-allocation-symbols",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-clang",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-clang/command-06-ctest",
+          "status": "passed",
+          "files_sha256": {}
+        }
+      ],
+      "cmake_cache_sha256": "313c5d0fa0485709a0d5a72cbe7bd02c62078b46dd70592e48cd2bca1cde9744",
+      "binary_sha256": {
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-clang/biglybtc-executor-original-tests": "607480016b10f62d5963d3b366d175e01b7873a0431e2f3cdd71d34121e788f7",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-clang/biglybtc-executor-finalizer-tests": "3ffab18080bf8bd488b1b3c0f407636552d8a782b0e32b834bc9d0430faefc64",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-clang/biglybtc-executor-startup-failure-tests": "7f979679c105d89a4f7b893942a00fda4759a71991f53eca73b5168cf4f35058",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-clang/libbiglybtc_executor_finalizer.a": "6b17261afe36b64e8fc96aed868cc362fd168c8d2025868a8ee74c605842fff9"
+      },
+      "runtime_linkage": {
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-clang/biglybtc-executor-original-tests": {
+          "/lib64/ld-linux-x86-64.so.2": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+          "/usr/lib/x86_64-linux-gnu/libc.so.6": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+          "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1": "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+          "/usr/lib/x86_64-linux-gnu/libm.so.6": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+          "/usr/lib/x86_64-linux-gnu/libstdc++.so.6": "5bb0d21308f123b6ad46c6f35b42cedfcb8d6d439a53aa3dae04d880aaffdde3"
+        },
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-clang/biglybtc-executor-finalizer-tests": {
+          "/lib64/ld-linux-x86-64.so.2": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+          "/usr/lib/x86_64-linux-gnu/libc.so.6": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+          "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1": "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+          "/usr/lib/x86_64-linux-gnu/libm.so.6": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+          "/usr/lib/x86_64-linux-gnu/libstdc++.so.6": "5bb0d21308f123b6ad46c6f35b42cedfcb8d6d439a53aa3dae04d880aaffdde3"
+        },
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-clang/biglybtc-executor-startup-failure-tests": {
+          "/lib64/ld-linux-x86-64.so.2": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+          "/usr/lib/x86_64-linux-gnu/libc.so.6": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+          "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1": "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+          "/usr/lib/x86_64-linux-gnu/libm.so.6": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+          "/usr/lib/x86_64-linux-gnu/libstdc++.so.6": "5bb0d21308f123b6ad46c6f35b42cedfcb8d6d439a53aa3dae04d880aaffdde3"
+        }
+      },
+      "ctest_log_sha256": "a83c1b4554e6cb5236ec69c55f211a447923ce2ed93bfeda08e09a16b5d92deb",
+      "ctest_rows": 3,
+      "new_native_cases": 7,
+      "finished_at_utc": "2026-10-17T22:20:12.598239+00:00"
+    },
+    {
+      "compiler": "asan",
+      "status": "passed",
+      "build_root": "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-asan",
+      "commands": [
+        {
+          "kind": "configure",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/cmake",
+            "-S",
+            "/home/yurii/Java/BiglyBT/migration/consumers/executor_finalizer",
+            "-B",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-asan",
+            "-G",
+            "Ninja",
+            "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+            "-DCMAKE_BUILD_TYPE=Debug",
+            "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer",
+            "-DBIGLYBTC_SOURCE_ROOT=/home/yurii/Java/BiglyBT",
+            "-DCMAKE_MAKE_PROGRAM=/usr/bin/ninja",
+            "-DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF",
+            "-DCMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY=OFF"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-asan-0-configure.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:20:14.350952+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:20:26.137844+00:00",
+          "log_sha256": "529430461e8b6affb4a1726692f1f6c6cdfe1ee57441dff8c44cf912826117b6"
+        },
+        {
+          "kind": "build",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/cmake",
+            "--build",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-asan",
+            "-j2"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-asan-1-build.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:20:29.914135+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:21:56.459848+00:00",
+          "log_sha256": "cef5cbf3c5640d1a3d8d0b8f1fef4d45c3d33578c05af71eec582e91b2dd383d"
+        },
+        {
+          "kind": "linkage",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/ldd",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-asan/biglybtc-executor-original-tests"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-asan-2-linkage.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:21:59.987323+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:22:00.111081+00:00",
+          "log_sha256": "9fba30296fbd589de06910d2dd0ee21fbd3432b9041ae0cd237dbda3d39bb3dc"
+        },
+        {
+          "kind": "linkage",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/ldd",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-asan/biglybtc-executor-finalizer-tests"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-asan-3-linkage.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:22:02.614846+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:22:02.682630+00:00",
+          "log_sha256": "784e2c20459099db717fa7f04abafdf249a42aaa8378b319ffc72ffd6d2518a4"
+        },
+        {
+          "kind": "linkage",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/ldd",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-asan/biglybtc-executor-startup-failure-tests"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-asan-4-linkage.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:22:05.719782+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:22:05.854226+00:00",
+          "log_sha256": "556b41b1fc959bd8737694c854349ce5259b325d0fb981b4b0ea8b900eb854f4"
+        },
+        {
+          "kind": "allocation-symbols",
+          "command": [
+            "/usr/bin/nm",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-asan/biglybtc-executor-startup-failure-tests"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-asan-5-allocation-symbols.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:22:11.038370+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:22:12.284091+00:00",
+          "log_sha256": "df232e34830c3c390b63e433659a0519cfdadabb23e46a9cbf96132c1f813449"
+        },
+        {
+          "kind": "ctest",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/ctest",
+            "--test-dir",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-asan",
+            "--output-on-failure",
+            "-j1"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-asan-6-ctest.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:22:16.021811+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:22:16.598016+00:00",
+          "log_sha256": "f8a1dffe866726a7b0f80589d3bf51ca010e0143a8f25e4e134d3ba5aa492d30"
+        }
+      ],
+      "persistent_runtime_snapshots": [
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-asan",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-asan/command-00-configure",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-asan",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-asan/command-01-build",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-asan",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-asan/command-02-linkage",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-asan",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-asan/command-03-linkage",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-asan",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-asan/command-04-linkage",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-asan",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-asan/command-05-allocation-symbols",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-asan",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-asan/command-06-ctest",
+          "status": "passed",
+          "files_sha256": {}
+        }
+      ],
+      "cmake_cache_sha256": "07f8e771cd95b64457568925c96f6466bc26fa88c9d5f381280c5973ca29c130",
+      "binary_sha256": {
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-asan/biglybtc-executor-original-tests": "2f6f84490fd48263ac57b9ab8c747cee77fbb49f520a31e416027521db6d4bc6",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-asan/biglybtc-executor-finalizer-tests": "7bdc28f1c26931f7f1a228b1a532aecd0c3d935d809539dafe92da137509c898",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-asan/biglybtc-executor-startup-failure-tests": "7dc53a9ebcbdba8f71a186d3a9d1c9e956b12fda4b0b4753a219b34f3fee05f8",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-asan/libbiglybtc_executor_finalizer.a": "e15e6eb77182aa79a3c38f8ff2b9f92e4005d1b16939117aee1c830c54513375"
+      },
+      "runtime_linkage": {
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-asan/biglybtc-executor-original-tests": {
+          "/lib64/ld-linux-x86-64.so.2": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+          "/usr/lib/x86_64-linux-gnu/libc.so.6": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+          "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1": "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+          "/usr/lib/x86_64-linux-gnu/libm.so.6": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+          "/usr/lib/x86_64-linux-gnu/libresolv.so.2": "6b99ecf94bcb81732ed1e81615084a5cfe7383eb89ce83106fa51077409ce609",
+          "/usr/lib/x86_64-linux-gnu/libstdc++.so.6": "5bb0d21308f123b6ad46c6f35b42cedfcb8d6d439a53aa3dae04d880aaffdde3"
+        },
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-asan/biglybtc-executor-finalizer-tests": {
+          "/lib64/ld-linux-x86-64.so.2": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+          "/usr/lib/x86_64-linux-gnu/libc.so.6": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+          "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1": "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+          "/usr/lib/x86_64-linux-gnu/libm.so.6": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+          "/usr/lib/x86_64-linux-gnu/libresolv.so.2": "6b99ecf94bcb81732ed1e81615084a5cfe7383eb89ce83106fa51077409ce609",
+          "/usr/lib/x86_64-linux-gnu/libstdc++.so.6": "5bb0d21308f123b6ad46c6f35b42cedfcb8d6d439a53aa3dae04d880aaffdde3"
+        },
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-asan/biglybtc-executor-startup-failure-tests": {
+          "/lib64/ld-linux-x86-64.so.2": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+          "/usr/lib/x86_64-linux-gnu/libc.so.6": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+          "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1": "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+          "/usr/lib/x86_64-linux-gnu/libm.so.6": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+          "/usr/lib/x86_64-linux-gnu/libresolv.so.2": "6b99ecf94bcb81732ed1e81615084a5cfe7383eb89ce83106fa51077409ce609",
+          "/usr/lib/x86_64-linux-gnu/libstdc++.so.6": "5bb0d21308f123b6ad46c6f35b42cedfcb8d6d439a53aa3dae04d880aaffdde3"
+        }
+      },
+      "ctest_log_sha256": "86a5990d3b92cac182a9b95b3dc229bfb1faabbdc09c646f1adb15e5ef861e66",
+      "ctest_rows": 3,
+      "new_native_cases": 7,
+      "finished_at_utc": "2026-10-17T22:22:18.579072+00:00"
+    },
+    {
+      "compiler": "tsan",
+      "status": "passed",
+      "build_root": "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-tsan",
+      "commands": [
+        {
+          "kind": "configure",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/cmake",
+            "-S",
+            "/home/yurii/Java/BiglyBT/migration/consumers/executor_finalizer",
+            "-B",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-tsan",
+            "-G",
+            "Ninja",
+            "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+            "-DCMAKE_BUILD_TYPE=Debug",
+            "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=thread -fno-omit-frame-pointer",
+            "-DBIGLYBTC_SOURCE_ROOT=/home/yurii/Java/BiglyBT",
+            "-DCMAKE_MAKE_PROGRAM=/usr/bin/ninja",
+            "-DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF",
+            "-DCMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY=OFF"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-tsan-0-configure.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:22:19.983435+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:22:26.102898+00:00",
+          "log_sha256": "22da8aa3f8ebc7825fd7b05e165cb3a8155dc85986ac1cfc4e737ec26d01f965"
+        },
+        {
+          "kind": "build",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/cmake",
+            "--build",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-tsan",
+            "-j2"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-tsan-1-build.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:22:28.083147+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:23:49.044942+00:00",
+          "log_sha256": "7b7f2a62783396a6f3bf8ee557dd9159d1b1ed7de1da34d6d413fa19f930145c"
+        },
+        {
+          "kind": "linkage",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/ldd",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-tsan/biglybtc-executor-original-tests"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-tsan-2-linkage.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:23:51.634410+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:23:51.707402+00:00",
+          "log_sha256": "49763c748c3572428aa67161e1d850f6d7053e36b997df62c31344a1cb24f29f"
+        },
+        {
+          "kind": "linkage",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/ldd",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-tsan/biglybtc-executor-finalizer-tests"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-tsan-3-linkage.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:23:54.467806+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:23:54.503156+00:00",
+          "log_sha256": "c1879b4dd1deb615b1eda1c92a715d1adbd71d72272070349dd6cd5c133d3cdb"
+        },
+        {
+          "kind": "linkage",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/ldd",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-tsan/biglybtc-executor-startup-failure-tests"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-tsan-4-linkage.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:23:58.759181+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:23:58.883058+00:00",
+          "log_sha256": "7143689e2ed691d446496dc8ab8eb85474711019488ed203d787ffc979901677"
+        },
+        {
+          "kind": "allocation-symbols",
+          "command": [
+            "/usr/bin/nm",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-tsan/biglybtc-executor-startup-failure-tests"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-tsan-5-allocation-symbols.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:24:02.600211+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:24:02.871614+00:00",
+          "log_sha256": "e2044ed5415df179929022c5163e4423585b39804b27dc85ba142bf7250d47f9"
+        },
+        {
+          "kind": "ctest",
+          "command": [
+            "/usr/bin/nice",
+            "-n",
+            "5",
+            "/usr/bin/ctest",
+            "--test-dir",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-tsan",
+            "--output-on-failure",
+            "-j1"
+          ],
+          "log": "migration/evidence/P02-08-executor-finalizer/matrix-v4-tsan-6-ctest.txt",
+          "status": "passed",
+          "started_at_utc": "2026-10-17T22:24:05.406641+00:00",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T22:24:05.931838+00:00",
+          "log_sha256": "f8910fda5042c4a7a7a7cbc7b4080e8acd3803069de7ce897db01e9df0418b40"
+        }
+      ],
+      "persistent_runtime_snapshots": [
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-tsan",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-tsan/command-00-configure",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-tsan",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-tsan/command-01-build",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-tsan",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-tsan/command-02-linkage",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-tsan",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-tsan/command-03-linkage",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-tsan",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-tsan/command-04-linkage",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-tsan",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-tsan/command-05-allocation-symbols",
+          "status": "passed",
+          "files_sha256": {}
+        },
+        {
+          "original": "/tmp/biglybtc-executor-finalizer-matrix-v4-tsan",
+          "copy": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/executor-finalizer-v4-tsan/command-06-ctest",
+          "status": "passed",
+          "files_sha256": {}
+        }
+      ],
+      "cmake_cache_sha256": "aa7847f2f3ac57359737283cab77293bd6061a1a23f691f9a981fcb32b28a137",
+      "binary_sha256": {
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-tsan/biglybtc-executor-original-tests": "181aec652306fd5a2073cf10c9e0cf52ba382550ba7bf1cfa4b47c005951ce84",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-tsan/biglybtc-executor-finalizer-tests": "22500d273824cdc0327abbfcb852ebaed303ba52040d18940e44edb0dbc94d46",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-tsan/biglybtc-executor-startup-failure-tests": "bf313d0edcea9cf68207abc10cc2cf94949786b28638971ca318d342c1f50ea8",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-tsan/libbiglybtc_executor_finalizer.a": "6cbf16073fc27a61ef237a732d15888674ffc376c50fe8845c345691a67f78c8"
+      },
+      "runtime_linkage": {
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-tsan/biglybtc-executor-original-tests": {
+          "/lib64/ld-linux-x86-64.so.2": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+          "/usr/lib/x86_64-linux-gnu/libc.so.6": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+          "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1": "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+          "/usr/lib/x86_64-linux-gnu/libm.so.6": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+          "/usr/lib/x86_64-linux-gnu/libresolv.so.2": "6b99ecf94bcb81732ed1e81615084a5cfe7383eb89ce83106fa51077409ce609",
+          "/usr/lib/x86_64-linux-gnu/libstdc++.so.6": "5bb0d21308f123b6ad46c6f35b42cedfcb8d6d439a53aa3dae04d880aaffdde3"
+        },
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-tsan/biglybtc-executor-finalizer-tests": {
+          "/lib64/ld-linux-x86-64.so.2": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+          "/usr/lib/x86_64-linux-gnu/libc.so.6": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+          "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1": "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+          "/usr/lib/x86_64-linux-gnu/libm.so.6": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+          "/usr/lib/x86_64-linux-gnu/libresolv.so.2": "6b99ecf94bcb81732ed1e81615084a5cfe7383eb89ce83106fa51077409ce609",
+          "/usr/lib/x86_64-linux-gnu/libstdc++.so.6": "5bb0d21308f123b6ad46c6f35b42cedfcb8d6d439a53aa3dae04d880aaffdde3"
+        },
+        "/home/yurii/Java/BiglyBT/build/biglybtc-executor-finalizer-qualified-v4-tsan/biglybtc-executor-startup-failure-tests": {
+          "/lib64/ld-linux-x86-64.so.2": "bda779ea9e9ad234f60315477d7cfd0bdde861cd8ddd9df8cdaf62f18c4cec14",
+          "/usr/lib/x86_64-linux-gnu/libc.so.6": "85e64f97e348786a8fb4d9f3d52fec289e2fb86bba20f0731dfe61990525e0f7",
+          "/usr/lib/x86_64-linux-gnu/libgcc_s.so.1": "9d339ecb409578d6a5d587e6c537a8f9589b8a13fefba30d167433a4b5758bee",
+          "/usr/lib/x86_64-linux-gnu/libm.so.6": "1c488db6f4fe8cecb72456bc018de000b7a9b539c2994864b0416b5e8371b3d8",
+          "/usr/lib/x86_64-linux-gnu/libresolv.so.2": "6b99ecf94bcb81732ed1e81615084a5cfe7383eb89ce83106fa51077409ce609",
+          "/usr/lib/x86_64-linux-gnu/libstdc++.so.6": "5bb0d21308f123b6ad46c6f35b42cedfcb8d6d439a53aa3dae04d880aaffdde3"
+        }
+      },
+      "ctest_log_sha256": "736eed2e0e4e91fa62342af583b80decf7b59842a16c3cbe409853e8df97837a",
+      "ctest_rows": 3,
+      "new_native_cases": 7,
+      "finished_at_utc": "2026-10-17T22:24:06.994096+00:00"
+    }
+  ],
+  "tests": [
+    "bounded-executor",
+    "executor-owner-finalizer",
+    "executor-startup-rollback"
+  ],
+  "native_only_cases": 7,
+  "Java_equality_credit": 0,
+  "prequalification_revision": {
+    "reason": "TSan provides strong ordinary new/delete symbols. Replace dedicated-test global replacements with GNU ld --wrap=_Znwm forwarding every successful allocation to the runtime.",
+    "observed_failure": "V3 passed GCC/Clang/ASAN3/3 each; TSan failed only linking startup injector before CTest.",
+    "failed_v3_report": "migration/evidence/P02-08-executor-finalizer/matrix-v3-in-progress.json",
+    "failed_v3_report_sha256": "85df41396c367b669d52ad26f6fd11a49e76a2861b3267db0dd6b93aaceab49a",
+    "preserved_capsule": "migration/evidence/P02-08-executor-finalizer/development/before-sanitizer-allocator-wrap",
+    "previous_revision": {
+      "reason": "Retain the new test stop_callback registration until its callback actually completes. The later condition_variable stop callback can wake the worker before the earlier callback is invoked; scope exit could legally unregister it. No assertion or production change.",
+      "observed_failure": "Clang aggregate owner-finalizer assertion; particular failing boolean was not separately instrumented. Source race is independently established.",
+      "failed_v2_report": "migration/evidence/P02-08-executor-finalizer/matrix-v2-in-progress.json",
+      "failed_v2_report_sha256": "83912d3f697f9fe5d4829fff5746ce5f1f7d26f7392fda1e372f15595c611ae1",
+      "preserved_capsule": "migration/evidence/P02-08-executor-finalizer/development/before-callback-lifetime-gate",
+      "previous_revision": {
+        "reason": "Separate dedicated test allocation replacement into its own translation unit after strict GCC16 mismatched-new-delete error. All checks/strict flags retained; production and original tests unchanged.",
+        "first_failed_report": "migration/evidence/P02-08-executor-finalizer/matrix-in-progress.json",
+        "first_failed_report_sha256": "7bacaa65a6c5856341dcb814e89dc5650bf6d18c0001514ddb43c40dc76661ce",
+        "preserved_capsule": "migration/evidence/P02-08-executor-finalizer/development/before-startup-allocation-split",
+        "new_run": "four fresh v2 compiler lanes; no reuse of first failed build",
+        "old_author_manifest_sha256": "4c46f61dfdc117028551ee3db3886e562ebdc7178b69689d4acdfa3cbff8640c"
+      },
+      "new_run": "four fresh v3 lanes, same strict flags/deadlines/assertions and leak/race checks",
+      "source_header": "/usr/include/c++/16/stop_token",
+      "source_header_sha256": "0ccf6f1f48966a8098e7cb440b07db6459ba83210126381d3d01e831772d4371",
+      "source_contract": "_M_request_stop unlocks while a callback runs, explicitly permitting other registrations to be removed. _M_remove_callback removes a still-listed callback without invoking it; no execution guarantee survives registration destruction.",
+      "legacy_test_gate": {
+        "reason": "The unchanged legacy shutdownAndReentrantStop had the same legal callback unregister race. Gate its registration lifetime before the first V3 run; every original assertion is retained and one wait assertion added.",
+        "original_source_sha256": "41b8ac27f40d257a199e03d48865cd32a7a8f91b5a655a7f94a2a1f7c5ac9ea4",
+        "revised_source_sha256": "039cd9a55aae2b9ef9381f420622530d23c610e5bdf44d8d30e9dc8fa7824a0d",
+        "original_archived_path": "migration/evidence/P02-08-executor-finalizer/before/native/tests/executor_tests.cpp",
+        "observed_legacy_failure": false,
+        "root_accepts_explicit_test_byte_change_after_source_evidence": true
+      }
+    },
+    "new_run": "Four fresh V4 lanes; every assertion, strict flag, deadline, leak and race check retained."
+  },
+  "scope": "Executor foundation only. No persistent engine, graceful Close, storage barrier, reserved admission or profile activation.",
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1:allow_addr2line=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "TSAN_OPTIONS": "halt_on_error=1:allow_addr2line=1"
+  },
+  "updated_at_utc": "2026-10-17T22:24:08.520500+00:00",
+  "finished_at_utc": "2026-10-17T22:24:08.520432+00:00"
+}

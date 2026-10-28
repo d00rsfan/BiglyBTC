@@ -1,0 +1,64 @@
+{
+  "status": "passed",
+  "source_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+  "torrent_type": 1,
+  "profile": "/tmp/biglybtc-multifile-java/java-1/profile",
+  "same_profile_at_every_stage": true,
+  "crash_stage": null,
+  "java_before_recovery": false,
+  "native_binary_sha256": "139123ab09e4bd11405564b27495d2e0b9abe458d0017540b1a0c475308c16b4",
+  "peer_binary_sha256": "af095bbb4b40ecfbbfa64696d22b8842ff4d27b8cf63f809f4c3b0b1ca260a16",
+  "physical_files": {
+    "01-first.bin": "0a04099770b4d0fabe7d259a1e5d10014d8e7eda9871cb78451cc6a1639eaac2",
+    "nested/03-empty.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "nested/02-\u05e9\u0628.bin": "2c5c9c098f61f4e3a879e27371f16ed25a6c0cd28463eeaab2f9a780eee71f71"
+  },
+  "profile_after_java_sha256": {
+    "biglybt.config.bak": "dc22efde1ec0bcdbf046e9ad2ed29e41b2585b784414fb3a05599464ec25f471",
+    "biglybt.config": "dc22efde1ec0bcdbf046e9ad2ed29e41b2585b784414fb3a05599464ec25f471",
+    "alltrackers.config": "e01785c17214ceedc9615cd11228d026e04bd2a4b53860899ae96392d3195595",
+    "alltrackers.config.bak": "2f11805af37b444e0352245caf6340ab90615f0d5eaa0501ba2ec0d67ab61d65",
+    "downloads.config": "88fe2437684d3ef61ea6d741a93c5d0efcd1c816a915aa1e38bbe09a1ba08848",
+    "downloads.config.bak": "822e4fda35c7c357a8d6db6e358fc63a2bde601ea4e7ef794471838d0c3c5ce4",
+    "BiglyBT.statistics": "b0957ce64cd0b79b9ce10c3c74ee1b1f82d8329f7bd792bbfbe5410b839cf016",
+    "BiglyBT.statistics.bak": "bd02c008664099f88fcb3fae49ee27f3695c7ec5f6cb943820ac953065c75c8e",
+    "ipfilter.cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    ".lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "tag.config": "2020da2940bb97780d1e76d79c5abd80fe91aee3995efe2691299751db352689",
+    "dlhistorya.config": "a406856130f830fd5f178bd6f53c289d02902b3d804fbad5317daf2e7081f2bb",
+    ".azlock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "exported_params.properties": "31a3d5db2f824eb2c1cd16a6b3b5be000875dbb27224727ba4ff971355f8d1c7",
+    ".certs": "9a17d084940e9954ae268ad8b3aae9f0f7c3df2cd17e97441763f8c6cc7e6d1d",
+    ".keystore": "09754edeef3ef6906c67e7ed4d41d9c32bdd840f10f45748b215d050fe198db8",
+    "active/cache.dat": "0e14c03618074a6bbae935bb90093fa700e118cf92f0ba0b951cdc49ca229aed",
+    "active/FB0FE084BF2D622B633F6542DADF120F718693B7.dat": "147deeb440ab2b71205b50d5ceed635dbb07ed5e1e30c0cd9cb0d5cafa559160",
+    "active/FB0FE084BF2D622B633F6542DADF120F718693B7.dat.bak": "c7ee4d2f0dd78db02d93bca96274d391078b445d3ab9884ba77607db11807ec1",
+    "active/cache.dat.bak": "c3a6054c9acb43752286c7db3f091997f7ed949bb8b6bf96a7706d576283ed72",
+    "net/pm_default.dat": "3c7a374b954b5d31eed1be79aef2dedabf8e0b3859925c4092e19a74029a0a08",
+    "logs/Swarm Merge_1.log": "f31610be98622b2792d2059345fff4a19fc90d4cc17eb3dfbceacf3324939b05",
+    "logs/DiskOps_1.log": "d91c2cfa4277fc00c5bed4eee3fdb49e963dd25d54f811b11353100d24da5b4a",
+    "logs/alerts_1.log": "882bb54f5472c1e8d4d51d0aa9fd10dda69f0699d0508f34ea1896c3cffbe339",
+    "logs/seltrace_1.log": "c9edca215fde02f5d71cf8a9dae7911e14aa77d327f80cb5483d5d734aafad57",
+    "logs/debug_1.log": "e3851e1d7c1aba352be591c9d98a01da2f2d858c16a0897560d5eb5a7ce8915b",
+    "plugins/azupnpav/plugin.properties": "fea54f28ebac68f1f17f87a71e8df8a9bdad5dbfe4d4b866e29cefafc52769f8",
+    "stats/2026/10/17.dat": "20e3d251ccf381787e6c901186ddc690af78545342e6e8c63a5b29bcc4b844b3"
+  },
+  "logs": [
+    "/tmp/biglybtc-multifile-java/java-1/native-multifile.log",
+    "/tmp/biglybtc-multifile-java/java-1/final-java.log"
+  ],
+  "elapsed_seconds": 9.820306107401848,
+  "assertions": [
+    "original profile/paths/inodes",
+    "nested Unicode and zero-length files",
+    "original virtual pad accounting without physical pad files",
+    "same info and unknown plugin data",
+    "global settings unchanged by native",
+    "original Java verifies all completed files/pieces"
+  ],
+  "limitations": [
+    "Generated default-priority linear local workload only",
+    "Other storage/policy/platform/charset and full-client gates remain open"
+  ]
+}

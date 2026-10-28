@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "state": "pass_source_review_only",
+  "blockers": [],
+  "scope": "Independent source review of saved_service_view adapters and their existing profile/file reader dependencies; no runtime/test or full-profile qualification credit.",
+  "native_repository": "/home/yurii/Java/BiglyBTC",
+  "source_files_sha256": {
+    "preview/native/adapters/saved_service_view.hpp": "2363d3548dcd3d7da5fcc9263d479dfc0548fbcd8c5ab0d1d7d75eb2d92b26a6",
+    "preview/native/adapters/saved_service_view.cpp": "4cedc6fcf9bc89628e66d633cbea70249e9e71d151a85d184fdf3ad4cadbb887",
+    "preview/native/adapters/profile.hpp": "e91ff37048e02b87a4d6f97d774fe3e33b491febd0b2ec55d3dedbbf20dd60ff",
+    "preview/native/adapters/profile.cpp": "f31f99cf73484c0c4fb058a6fc9e3937ecd74412f5ae794c775c0a7e8c4b91ee",
+    "preview/native/adapters/file_io.hpp": "41b14236290a65b52f75d56f076857a1ffd037f9bd823f1f9afef98c82a9cd37",
+    "preview/native/adapters/file_io.cpp": "c55df3bfa6531534819a798351a5320365e1081d774f466fe4342bffa54793b9",
+    "preview/native/core/include/biglybtc/saved_services.hpp": "c7ed179ad9d6f3b278e04b47b2889d5ab36db035ff37f4619efae909ad730b75",
+    "preview/native/core/src/saved_services.cpp": "e855a95c76eb2c797f270c9cbd5cbb1531708353108cc636dd739a950797afcb"
+  },
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "projection_review": {
+    "path": "migration/evidence/20261018-navigation/saved-services-review.json",
+    "sha256": "4b32378ab261fe798c996115fddcc19e5858a7c3e98f6eb072e61afba8f99f47"
+  },
+  "checks": [
+    {
+      "subject": "Missing ambiguity",
+      "lines": "saved_service_view.cpp:29-43,53-62; profile.cpp:100-124",
+      "result": "PASS",
+      "detail": "The existing ConfigFile loader can return Missing when primary is absent but recovery candidates are malformed. The adapter does not accept that result alone: it checks exactly primary/.bak/.saving through the bounded reader. True missing requires all three absent; a present candidate yields InvalidFormat rather than an empty service. Errors and requested cancellation propagate. Confirmation can stop after the first present/error result because absence has already been disproved."
+    },
+    {
+      "subject": "Recovery choice and provenance",
+      "lines": "profile.cpp:96-124; saved_service_view.cpp:51,69-70",
+      "result": "PASS",
+      "detail": "No recovery logic is duplicated or broadened. Complete primary wins; absent primary tries saving then backup; malformed primary tries backup then saving. A present primary/candidate read error propagates rather than being silently skipped. Successful snapshot retains exact Primary/Backup/Saving choice. A complete but semantically malformed projection is not silently replaced with another file."
+    },
+    {
+      "subject": "Held lease, allowlist and file safety",
+      "lines": "saved_service_view.cpp:35-38,51,79-87; profile.cpp:88-95; file_io.cpp:41-73",
+      "result": "PASS",
+      "detail": "Public entry points bind literal tracker.config or sharing.config only. No lease acquisition occurs. Existing lease validity and directory fd are checked by ConfigFile. Candidate reads use directory-relative openat with O_RDONLY/O_CLOEXEC/O_NOFOLLOW/O_NONBLOCK, require regular files and enforce the size cap before allocating. No source-supplied field is used as a pathname. Symlink/special-file/read-change errors remain failures. No scans, metadata joins or cache/path chasing are called."
+    },
+    {
+      "subject": "Bounded input/projection and ownership",
+      "lines": "saved_service_view.cpp:37-38,51,65-70,81-87",
+      "result": "PASS",
+      "detail": "Both loading and absence confirmation explicitly use core::Limits{} (4MiB input/string,100000nodes,depth64), rather than the broader192MiB compatible config limits. The reviewed pure projection then enforces its own capped rows/fields/text/issues and owns a private immutable source tree/raw backing, so returned data survives ConfigFile destruction. The two optional fields are set together on success; true missing has neither."
+    },
+    {
+      "subject": "Cancellation and error effects",
+      "lines": "saved_service_view.cpp:13-26,35-43,49-74",
+      "result": "PASS",
+      "detail": "Stop is checked before and after ConfigFile::load, around every confirmation read and before returning missing, and after projection before publication. Existing IO/unsafe/conflict/format errors propagate; projection limits map to Unsupported, malformed roots/lists/edited documents to InvalidFormat and allocation failure to Io. A requested stop takes precedence when checked. No half-built snapshot is returned."
+    },
+    {
+      "subject": "Readonly boundary",
+      "lines": "saved_service_view.cpp:1-90; profile.cpp:88-125; file_io.cpp:41-74",
+      "result": "PASS",
+      "detail": "The adapter invokes only load/read/projection operations; it never calls ConfigFile::save, writeExclusive, lease acquire, ordinary Java managers or service startup. It performs no file creation/rename/unlink, directory scan, clock, network access or payload/cache dereference. The caller remains responsible for holding a valid lease throughout this synchronous call."
+    }
+  ],
+  "limits_and_honest_boundaries": [
+    "Cancellation surrounds ConfigFile::load as one operation; that existing loader can read and parse up to three bounded files before the next stop check. It does not interrupt a blocking read or parser mid-operation.",
+    "Separate candidate reads are not an atomic transaction against external changes. Missing means all three were individually observed absent; it does not establish simultaneous absence.",
+    "Existing file reader detects size/mtime changes on its opened descriptor, not every possible concurrent path replacement or same-size metadata-preserving edit; no stronger guarantee is added here.",
+    "These functions report saved/offline records and recovery provenance. They establish no live tracker/share state, full manager restore behavior, write compatibility, service startup or permission to open saved paths."
+  ],
+  "separate_generated_tests_to_confirm": [
+    "All absent versus empty valid list versus absent primary with malformed backup/saving; a present empty file must not become Missing.",
+    "Exact primary/backup/saving preference and propagation of symlink, special-file, oversize and read failures without writes.",
+    "Already requested cancellation, invalid/moved lease, successful ownership after local ConfigFile destruction and unchanged unknown raw source bytes.",
+    "Default core input cap rather than broad compatibleConfigLimits; malformed semantic root/list/field and projection-limit error mappings."
+  ],
+  "validation": {
+    "performed": [
+      "Complete reads of new adapter header/source and existing profile/file_io header/source",
+      "Read unchanged prior core source review and checked stable input SHA256 values before/after inspection"
+    ],
+    "not_performed": [
+      "No builds, tests or target imports",
+      "No live profile/filesystem probes, app/process/port inspection",
+      "No Java/native/service execution or manager equivalence comparison"
+    ],
+    "source_runtime_equality_credit": 0
+  },
+  "changed_files": "Only this new review JSON; no production, tests, CMake, plan or prior evidence changes."
+}

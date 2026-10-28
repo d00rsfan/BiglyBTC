@@ -1,0 +1,115 @@
+{
+  "status": "PASS_INDEPENDENT_SOURCE_REVIEW_NO_EXECUTION_OR_PUBLICATION",
+  "component": "Minimal SpeedScheduler public native source export and hosted compatibility template, including exact sibling/SSH/raw-byte followup",
+  "reviewer": "error_codec, independent of source author error_driver",
+  "authority": {
+    "proposal": {
+      "path": "build/navigation-20261018/scheduler-export-proposal/proposal.md",
+      "sha256": "c1f45327af41b9ee28ca266ad93a4637e0337e7f095633d124fa091fb884b147"
+    },
+    "original_plugin_repository": "https://github.com/BiglySoftware/BiglyBT-plugin-SpeedScheduler",
+    "original_plugin_commit": "1ee6a53dae017696d2f0002e4a0d74f5a9476af5",
+    "original_biglybt_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "SDK_public_commit": "eefbd205ca0940ad4868ee07989b2d42be1a99dc",
+    "license_authorization": "Existing user/root authorization for public native source and attribution accepted; no new permission gate inferred from the upstream absence of a top-level license."
+  },
+  "frozen_inputs": {
+    "original_manifest": {
+      "path": "build/navigation-20261018/scheduler-export-source/manifest.json",
+      "sha256": "5045444453ed07a1b4736a292145490f3f12a54cab6d4bd5c2cfe9fa36db86b8"
+    },
+    "followup_manifest": {
+      "path": "build/navigation-20261018/scheduler-export-source-v2/manifest.json",
+      "sha256": "0945d5ecbfab86890a208e4866b40e147f8d5984946b16e3a969a653e2af6b24"
+    },
+    "original_patch_sha256": "331395ad264440affb5e5d1e4f8492e13af4f57cba166713992dd96fdccc07f6",
+    "followup_patch_sha256": "8038fdfee407396455e31ee4d27f2299dbdb8c3c947212c297b70ee40b29d973",
+    "source_sha256": {
+      "native/plugins/BiglyBTC-plugin-SpeedScheduler/CMakeLists.txt": "a9ebfaf53e645b946d9fb3571699f9808cd375a80c5235ca612602e60b1b92e9",
+      "native/plugins/BiglyBTC-plugin-SpeedScheduler/fixture_test.py": "5547caa4b189bf6f5a33a3d2f52235a3f4948dd98d6ee04c7c33c3ebe22013ec",
+      "native/plugins/BiglyBTC-plugin-SpeedScheduler/tick_fixture_test.py": "6024c98b4f2b41b60ccb1d5acb61a07f91dddff09198dc97a6bbf85fcb7be3c7",
+      "native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_fixture_test.py": "0ccf1eff56ae04e33ca52ec18d80e529213d712f06127278df85c16bf1ed5286",
+      "native/plugins/BiglyBTC-plugin-SpeedScheduler/module_fixture_test.py": "e540d7e70c76985bb8b06515b564b8c5eb42cc53ef03bbf56bd0d1c1bd748cca",
+      "migration/tools/export_plugin_sources.py": "ccfb9ba9c83ac690849c4031b64d4ff294a57a61e1cddf3e38f79487f9b4e311",
+      "migration/publication/scheduler-hosted-build.yml": "2014c656bc391d24bd7154e5ecd3326d61f2c7cca72b03ba761fc5cfcad28526",
+      "native/plugins/BiglyBTC-plugin-SpeedScheduler/NOTICE.md": "931ecbb2e41cc29addd676e7f1d24f956a77e129fc24bf65de10d5ea3f73df49",
+      "migration/tools/verify_source_export.py": "a57a1253bcfc10be3ec3f806c486373e2e9736d4557514ac04f90b6ee193a2d3",
+      "native/plugins/BiglyBTC-plugin-SpeedScheduler/.gitattributes": "71d291c28b1e6e722a2d6eb24c952e1464a7297c74c434bb9ca256d7384d73c7"
+    },
+    "unchanged_protected_files": 93,
+    "original_artifact_files_verified": 18,
+    "followup_artifact_files_verified": 23
+  },
+  "blocking_findings": [],
+  "independent_checks": [
+    {
+      "area": "Exact fixture contracts and path-only changes",
+      "result": "All74 fixture members and all manifest-declared input/expected hashes independently verified. Four replay ASTs become exact old ASTs after removing only local/root assignments; all hashes, byte comparisons, argv,45-second subprocess timeouts and expected output logic unchanged. Module and tick both consume one tick-fixtures tree; no duplicated original-case credit."
+    },
+    {
+      "area": "CMake and six-suite preservation",
+      "result": "Only local-versus-monorepo Toolchain selection changes; entire body from find_package(Qt6 onward is exact. Local exported cmake/Toolchain.cmake wins; monorepo fallback now fails rather than silently bypassing strict compiler/stdlib checks if missing. Qt Core6.12.0 EXACT, C++23, warnings-as-errors, moduleON, all6 tests and60/180/120/180/60/120 deadlines unchanged."
+    },
+    {
+      "area": "Original exporter safeguards",
+      "result": "Removing only scheduler map/branch/provenance additions yields exact original exporter AST. Followup AST yields exact V1 after undoing only destination gate/prose. Immutable review commit check, corresponding fixed repository prefix, expectedHEAD, .git-directory requirement, authorized HTTPS.git/SSH.git origin, previous full exported-file hashes and active-CI protection remain. Tree copier accepts committed regular files only and rejects key material as before."
+    },
+    {
+      "area": "Durable sibling and read-only verifier gates",
+      "result": "Exporter permits resolved exact ROOT.parent/repository for the requested kind or the unchanged generated/tmp fence. Verifier admits only nine fixed known sibling names then requires exact manifest correspondence; accepted origins are only that d00rsfan repository HTTPS.git or SSH.git. Existing clean-tree, complete committed regular-file set, every committed-blob hash, byte-identical non-symlink working files and provenance checks remain intact. No arbitrary HOME subtree or alternate remote owner is newly admitted."
+    },
+    {
+      "area": "SDK closure",
+      "result": "Read-only Git inspection at eefbd205 independently compared all13 corresponding SDK files against current native SDK, including CMake, API/host/scheduler headers, host.cpp and both C ABI/module-lifecycle tests. Scheduler header SHA54675a9fffa63923111c037cf5b4711d548a614e4e0760edb1c3bf990f97fc46; PluginAPI and PluginHost package exports present. No BiglyBTC::Core package or application tree required."
+    },
+    {
+      "area": "Hosted workflow",
+      "result": "Read full92-line template. Standardubuntu26.04, readonly contents, official action commit pins, max-parallel1/fail-fastfalse, SDK fullcommit placeholder used both checkout and HEAD assertion, unchanged qt-core bootstrap32af91ec, GCCRelease and ASAN+UBSAN Debug with leak detection. Consistent C/C++ SDK instrumentation, C++ module instrumentation,2 separate SDK tests then unfiltered6 scheduler tests, -j2/nice5 builds, ordinary-priorityCTest. pipefail preserves failing configure/build/CTest status. Always artifact step retains logs/JUnit/cache/compile commands/bootstrap/source and successful binary hashes without Qt download archives."
+    },
+    {
+      "area": "Raw-byte preservation",
+      "result": "Plugin root .gitattributes is exported automatically by existing tree copier and included in files_sha256; exact anchored /fixtures/**, /tick-fixtures/**, /ownership-fixtures/** -text rules protect all74 data files. Current CRLF ownership input is113bytes/SHA77f5522adb1c2bb8a0d1c9d3094a793073f37629f237d7750b1eedd5d26aac3a. Old110-byte normalized Git snapshot remains historical and is not accepted as current frozen fixture."
+    },
+    {
+      "area": "Attribution/scope",
+      "result": "NOTICE and SOURCE_PROVENANCE distinguish original plugin1ee6, corecb8, actual future native review commit and separate SDK pin. Native GPL notice is not presented as an invented upstream grant. No original Java/JAR/assets/user configuration copied. Module returns caller-owned commands; physical pause persistence, actual engine/service enablement, catalogue/binary release and whole-client compatibility remain open. README publication-pending wording remains historical until root records actual publication."
+    }
+  ],
+  "fixture_inventory": [
+    {
+      "source": "migration/fixtures/speedscheduler",
+      "export_target": "fixtures",
+      "files": 9,
+      "cases": 4,
+      "manifest_sha256": "6b681e71d8f1eeb48a0d6d5c37cca7a398e88ed65652e569f4d51b04492e781f",
+      "supplied_torrent_states": null
+    },
+    {
+      "source": "migration/fixtures/scheduler-ticks",
+      "export_target": "tick-fixtures",
+      "files": 34,
+      "cases": 11,
+      "manifest_sha256": "c83e6b4090ec01a256674dcacbc97e7f4b33790c601f6576172bc5e1412c972d",
+      "supplied_torrent_states": 6336
+    },
+    {
+      "source": "migration/fixtures/scheduler-ownership",
+      "export_target": "ownership-fixtures",
+      "files": 31,
+      "cases": 10,
+      "manifest_sha256": "382efcaeb5ddbd161079ec813cf89ff782d5bf45590a659baf33eb8fc04a307a",
+      "supplied_torrent_states": null
+    }
+  ],
+  "pending_root_acceptance": [
+    "Create/review an actual immutable source commit containing these exact native/tool/workflow inputs and all74 raw fixture bytes; independently verify committed CRLF113, not only working-tree bytes.",
+    "Recheck actual authorized destination HEAD/origin, preserve current public work, export from the reviewed immutable commit with SDK eefbd205, and run committed-blob verifier using normal non-optimized Python before any push.",
+    "Actual clean exported configure/build and GitHub-hosted GCC/ASAN six-suite results, job URLs/artifacts/public heads remain unexecuted by this reviewer and must be recorded by root. No source-only PASS is execution or publication credit."
+  ],
+  "limitations": [
+    "Only source/hash/AST inspection and read-only local Git SDK blob queries performed; no target import/default/export/clone/compiler/test/JVM/GUI/profile/network/commit/push/index operation.",
+    "APT/Python transitive packages and actual Qt archive digests are recorded by existing bootstrap, not claimed as a completely frozen OS/Python snapshot. Pinned unavailable packages or changed Qt metadata fail rather than silently downgrade.",
+    "Legacy replay subprocess lifecycle behavior is preserved unchanged; this bounded hosted export review does not qualify a new process-cleanup wrapper or broaden original fixture equivalence."
+  ],
+  "preservation": "Original504544 freeze/history untouched; seven V1 sources remain exact in V2 and all93 protected inputs remain exact. Reviewer wrote only this distinct review."
+}

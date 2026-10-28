@@ -1,0 +1,86 @@
+{
+  "status": "PASS_INDEPENDENT_SOURCE_REVIEW_NO_TEST_EXECUTION",
+  "component": "P04-12 classic saved-layout UI import and real Bridge test source",
+  "reviewer": "error_codec; independent of test author error_oracle. Reviewer authored UI production and does not award independent production review credit here.",
+  "authority": {
+    "original_biglybt_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "proposal": {
+      "path": "migration/evidence/20261018-navigation/classic-column-layout-import-proposal.md",
+      "sha256": "c79b33b0708db00c7f1e3835c94d777fc56b761cf5538b908fabe39939859783"
+    },
+    "pre_authoring_test_plan": {
+      "path": "build/navigation-20261018/classic-layout-import-tests/plan.json",
+      "sha256": "885939fd24aebe78fa2d6df463ce89c21e4e467525cd66e83f8554c28a6f9dfb"
+    }
+  },
+  "reviewed_tests_sha256": {
+    "preview/native/tests/classic_layout_import_tests.cpp": "6d9976445b849ba36539835068d828fe647de6b05658b73224e47f6766c6a5b6",
+    "preview/native/tests/classic_layout_bridge_tests.cpp": "e12946c979fdf1b491b5e7c2bb0baa2ffb7d9d22a0fc04057d72cefd3647788c"
+  },
+  "static_row_inventory": {
+    "import_behavior_methods": 28,
+    "import_expected_Qt_rows_including_init_cleanup": 30,
+    "bridge_behavior_rows": 14,
+    "bridge_expected_Qt_rows_including_init_cleanup": 16,
+    "counts_are_source_inventory_not_execution_results": true
+  },
+  "current_production_context_sha256": {
+    "preview/native/ui/classic_columns.hpp": "03617c8ead50014fb24dfff7fce871f2f14cc88e135b93c509cc0e84c3e73fe7",
+    "preview/native/ui/classic_columns.cpp": "91ca50a44a162032f3ea090d328228bc96d1d6e1716294150d72bc3090be5c53",
+    "preview/native/ui/library_window.hpp": "dee0185015986a8073d53698e330ca70588ed019223713794cb45dd17401a985",
+    "preview/native/ui/library_window.cpp": "ed2d59cf03b15b7a93521ade53cf148442ca5a6b15bbeb3394fc7c0d1cdf3e66",
+    "preview/native/ui/column_layout_presentation.hpp": "447fed4086b0551601d324f42dd5de39eda2eb51ee476ab63343a6d02238cf83",
+    "preview/native/app/session_bridge.hpp": "5044106852db60f4b4d10873576acfa24b2107dba7f3c422976ecbdf9a5a4209",
+    "preview/native/app/session_bridge.cpp": "07daab4bffaf61e83fa603eaabf7bc048c3f8aa3ec123e84ed64f8b5a2fce00e",
+    "preview/native/core/include/biglybtc/column_layout.hpp": "1d4d1c06efd71ef2ab026364eb15f434d4b8647d15f8ae31852052f63a996d39",
+    "preview/native/core/src/column_layout.cpp": "b55620a54cbdc243c8eccade512b19905d1efe819a4efb0db39bb435a325dd25"
+  },
+  "preserved_prior_test_revision": {
+    "path": "/home/yurii/Java/BiglyBT/build/navigation-20261018/classic-layout-import-tests/before-root-predicate-lifetime-addendum/classic_layout_import_tests.cpp",
+    "sha256": "6152485bbac7c6f61e07bc28adb0a29cb442bd889d5a9b9e35f453cb36abd47f",
+    "prior_method_definitions_unchanged": 26,
+    "new_behavior_methods": [
+      "directPredicateDeletionCannotResumeApplication",
+      "directPredicateResetCannotAuthorizeStaleApplication",
+      "failedDispatchWithoutBusyOrPacketReleasesItsRequest"
+    ]
+  },
+  "blocking_findings": [],
+  "reviewed_properties": [
+    {
+      "area": "Layout admission and native Qt effects",
+      "evidence": "Exact six IDs and case/NUL/invalid-byte exclusions, independent visibility/width/order, 16..8192 boundaries with actual Qt minimum, Name Stretch preservation, duplicate/negative positions, current-singleton sort versus unsupported forms. Assertions inspect real header properties/proxy UserRole numeric order, not an inline copy of the planner."
+    },
+    {
+      "area": "Ownership and application scope",
+      "evidence": "UI fixtures invoke the real bounded core Document parser/projector; source-less and oversized forged DTO cases are explicitly native defensive policy. Model identity/reset spy, selected Target, literal filter, supplied owned Files details and retained off-tab widget assertions distinguish header application from model/backend actions."
+    },
+    {
+      "area": "Local edits and request authority",
+      "evidence": "Before/after-request edits, no-op Reset, pane independence, explicit reload, model revision independence, stale/zero packets, coalesced latest request, cancelled/no-packet release, new sessions and rejected unconnected dispatch bind actual public Window requests and exact nonzero IDs. Request helpers wait on event delivery rather than arbitrary sleeps."
+    },
+    {
+      "area": "Synchronous deletion and reentry",
+      "evidence": "Direct header deletion stops later-pane observations, Reset during imported resize preserves the newer entire-pane baseline, reentrant reload obtains a newer request, and direct request-slot deletion uses QPointer. New borrowed-predicate tests reset/delete then return true and assert failure plus unchanged/newer revision or destroyed owners. Test code does not dereference the deleted Window/controller after return; sanitizer validation of the Qt call stack is a separate execution gate."
+    },
+    {
+      "area": "Actual Bridge/held lease boundary",
+      "evidence": "Six generated profile dispositions use actual SessionBridge open/worker/readColumnLayoutsView: Primary, Backup after invalid Primary, Saving, confirmed Missing, malformed recovery Failed, loaded-empty Ready. UI thread, busy-held result and initial session-before-library ordering are observed; direct result reentry is rejected. Repeated positive request IDs are deliberately echoed by Bridge; Window owns monotonic request authority."
+    },
+    {
+      "area": "Cancellation and lifetime determinism",
+      "evidence": "Cancellation is requested immediately after admission with no intervening GUI event delivery, so the test exercises either worker checkpoint or queued callback stop guard without timing assumptions. Next request must still work. Bridge deletion from packet/session/busy-release slots verifies no trailing publication, owned snapshot survival and held-lease reacquisition."
+    },
+    {
+      "area": "Fixture isolation and read-only evidence",
+      "evidence": "Bridge uses unique explicitly named QTemporaryDir profiles under /tmp, exclusive generated writes, empty synthetic downloads.config and port0; no existing profile or Java is accessed. Persistent bytes, dev/inode/mode/uid/gid/nlink/size/mtime/ctime of declared candidates/paths are compared after open; atime is intentionally excluded. Setup/open lock creation is outside the layout-read-only comparison, so the test does not falsely claim profile-open creates no files."
+    }
+  ],
+  "coverage_limits": [
+    "No reviewer compiler, preprocessor, native/Qt test, GUI/process launch, profile IO, Java or network access. Only source/hash/lexical inspection and writing this review were performed.",
+    "Declared native layout-only and Bridge read-only tests; no original Java geometry, registry/default application, row-comparator or config-writer equality credit.",
+    "Timing/performance, unlisted filesystem paths, exhaustive allocation failures, uint64 counter-exhaustion injection and all malformed forged DTO permutations are not established by these rows.",
+    "Actual passed/failed Qt counts and leak-enabled sanitizer results belong to root execution evidence; this review does not convert source expectations into a run result."
+  ],
+  "reviewer_static_authoring_note": "Initial inventory assertion included the fixture helper write() as a test method; corrected by lexically restricting the count to each test QObject class before this report was written. No target was imported or executed."
+}

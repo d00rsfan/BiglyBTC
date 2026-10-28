@@ -1,0 +1,313 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_AUDIT_COMPLETE; implementation and runtime qualification separately pending",
+  "component": "ui.engine_activity_graphs",
+  "original_repository": "https://github.com/BiglySoftware/BiglyBT.git",
+  "original_upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_repository": "https://github.com/d00rsfan/BiglyBTC.git",
+  "native_source_baseline": "5fc34b588713112b126f3cebdfc891020301a281",
+  "native_metadata_baseline": "30569e2631427003a4a92e7edee3572a3b34e740",
+  "identity_method": "Read-only git show COMMIT:path plus git rev-parse COMMIT:path; raw bytes SHA256; no Git mutation, source execution, target import or original application/profile access. Native metadata bytes independently checked against source commit for all11 files.",
+  "original_source": {
+    "uis/src/com/biglybt/ui/swt/views/stats/ActivityView.java": {
+      "git_blob": "805df9f17c887034129858a27517ed488a79e215",
+      "sha256": "5ed9705c122842319eea84339a783a498cc03fc338d9637ff4772887fd73fcd2",
+      "bytes": 7143,
+      "lines": 231
+    },
+    "uis/src/com/biglybt/ui/swt/components/graphics/SpeedGraphic.java": {
+      "git_blob": "afc3c3798200ca290951b959457d2d119ae35bcd",
+      "sha256": "661cbfb64c8f931ee921a97429cc5f67a238ccc7abd08e9f4ab4fc26f4486bb5",
+      "bytes": 14782,
+      "lines": 606
+    },
+    "uis/src/com/biglybt/ui/swt/components/graphics/MultiPlotGraphic.java": {
+      "git_blob": "4fb3bdd19e9e8c469dd40787fbed461be817a9c5",
+      "sha256": "e3ef1da1f4e25b667540a1efddc18d4b01e906b36717ad7a424e826a032643f1",
+      "bytes": 21897,
+      "lines": 1092
+    },
+    "uis/src/com/biglybt/ui/swt/components/graphics/ValueSource.java": {
+      "git_blob": "fe76f4292d50ac72fa82f1a8f5b73e967475b52b",
+      "sha256": "bfba1e8510aad11e9edd0cf7f2d24e9bea3f0da7b9d46f97f78398c941034756",
+      "bytes": 1610,
+      "lines": 55
+    },
+    "uis/src/com/biglybt/ui/swt/components/graphics/ScaledGraphic.java": {
+      "git_blob": "4202024311ed4abec99152ac5ec49b26ade39a41",
+      "sha256": "5ef74b760e92e7d6778cc6ed27f8bf9ec9dc8ee9a28e2ccabdd03ec4223ce166",
+      "bytes": 3510,
+      "lines": 118
+    },
+    "uis/src/com/biglybt/ui/swt/components/graphics/Scale.java": {
+      "git_blob": "4e39fb75a2a13140116280f9537bf902bc745693",
+      "sha256": "76e375f421acaae76c5d06a401bd66799dec397ba827ad603a1b511264d107e5",
+      "bytes": 4778,
+      "lines": 211
+    },
+    "uis/src/com/biglybt/ui/swt/components/graphics/BackGroundGraphic.java": {
+      "git_blob": "e0fd712623ed45f644281080f86143362f320ad6",
+      "sha256": "fb878820522aadd67a1b5fa6d81f0ec9050f0970ffa9a4994887fff2eb148368",
+      "bytes": 5379,
+      "lines": 183
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java": {
+      "git_blob": "b02e0bbb331bdf6c517387ba999284af7fb53cf2",
+      "sha256": "caf9b2db52ea7fc48248131f75d59466157a6578045c32bb9db0c3a4b763b648",
+      "bytes": 8385,
+      "lines": 312
+    },
+    "core/src/com/biglybt/core/global/impl/GlobalManagerStatsImpl.java": {
+      "git_blob": "a247b2ee87abdc97c8e1b980ada9be3e6c85e31f",
+      "sha256": "124c0cf19f7c99dc5a72b9d9f4bc99a0da942f0c3a7c2dc37cd1acd12e86c7c3",
+      "bytes": 37548,
+      "lines": 1654
+    },
+    "core/src/com/biglybt/core/util/Average.java": {
+      "git_blob": "9ba2b07dbd0cf53adc04d416e66b8aace8b0afe3",
+      "sha256": "490fc2ac31e6b740a9c4afe370f6efb73b8d5209e63d48e39d5a715cb7e02e75",
+      "bytes": 7422,
+      "lines": 265
+    }
+  },
+  "native_source": {
+    "preview/native/core/include/biglybtc/engine_statistics.hpp": {
+      "git_blob": "3ade6872720c82010aa5820b978cc85648eb2f73",
+      "sha256": "f5946fd72b06312dd4772bbfb7f4c84ebbfcff53971b737e8ba7cda4902678f9",
+      "bytes": 2587,
+      "lines": 64,
+      "metadata_bytes_identical": true
+    },
+    "preview/native/core/src/engine_statistics.cpp": {
+      "git_blob": "1f4411cf4a71d29d485af6b661e58c9b6d787a71",
+      "sha256": "77f4214794a6eb942f6732614dac55905d72ea91433c3b7158cc8095f78dd90d",
+      "bytes": 4406,
+      "lines": 99,
+      "metadata_bytes_identical": true
+    },
+    "preview/native/engine/engine_statistics_sampler.hpp": {
+      "git_blob": "0a222daf4413542d5be909b0edfa08a2563489dd",
+      "sha256": "689355ba82df086033944edb37f2a6a877d7471bd2e2f73dadc6124b7f094089",
+      "bytes": 2002,
+      "lines": 50,
+      "metadata_bytes_identical": true
+    },
+    "preview/native/engine/engine_statistics_sampler.cpp": {
+      "git_blob": "0cfd256e675035f77e72410b775a211d2a38ccea",
+      "sha256": "8185293d7e20a7de009d431fcd6d4f4fbded469118e201f3d94bbaf420a44604",
+      "bytes": 5390,
+      "lines": 127,
+      "metadata_bytes_identical": true
+    },
+    "preview/native/ui/engine_statistics_presentation.hpp": {
+      "git_blob": "52cdfddf24ba8e2516e57df92291fccb65f84875",
+      "sha256": "2b1270182e459b2b93aa3376f80b8bcb52500b51486dca0e93820684479db67d",
+      "bytes": 3705,
+      "lines": 78,
+      "metadata_bytes_identical": true
+    },
+    "preview/native/ui/statistics_page.hpp": {
+      "git_blob": "36f2d55fa6e43fde89f7e77734f5f17206675750",
+      "sha256": "c43190406354f1f24708a1e5407525c6879a1c6680a15d5b1bf3e71fe72daf2e",
+      "bytes": 2882,
+      "lines": 87,
+      "metadata_bytes_identical": true
+    },
+    "preview/native/ui/statistics_page.cpp": {
+      "git_blob": "dd9e163066d93faab83fb074e607b7961085887c",
+      "sha256": "f65d150e73265426a7020b89a7793f387b8f5b978808d9d1f3d8757b3e512a02",
+      "bytes": 26124,
+      "lines": 400,
+      "metadata_bytes_identical": true
+    },
+    "preview/native/ui/library_window.hpp": {
+      "git_blob": "ca56893f9a9b22ee46787e02ff29121eb5a3971e",
+      "sha256": "ef543fb88d905c6967baa820f4a9d89f666b059bbf6e4cd0b9391b74a926f6e7",
+      "bytes": 5814,
+      "lines": 175,
+      "metadata_bytes_identical": true
+    },
+    "preview/native/ui/library_window.cpp": {
+      "git_blob": "d2b106a85098be1af75eaba12c3915c0734ee011",
+      "sha256": "d4a4d5b0e1d459b64fcd3e7c231cf6d6e9f1d59e6397bdb5fcfdc1f6450c3e00",
+      "bytes": 49521,
+      "lines": 1042,
+      "metadata_bytes_identical": true
+    },
+    "preview/native/app/session_bridge.hpp": {
+      "git_blob": "3c379cf13836da5f5add42a05f3951d7ea213052",
+      "sha256": "2dd37ae64b3fcc8569f52b8668784289bf3cf2b660a74e24fa172933075c9cf1",
+      "bytes": 2552,
+      "lines": 69,
+      "metadata_bytes_identical": true
+    },
+    "preview/native/app/session_bridge.cpp": {
+      "git_blob": "e271a992c724ad6a0f6d85d40e4bf809fc9c7ed0",
+      "sha256": "5858d71a4f3b1494d54250cf52edb116271f6fa84956a6f3d48fea22b909eea0",
+      "bytes": 27214,
+      "lines": 578,
+      "metadata_bytes_identical": true
+    }
+  },
+  "selected_ranges_file": "selected-ranges.json",
+  "selected_ranges_sha256": "ff541677d50d882c08255e86bbe0093be3cd1f34ce1305e3acfd9b4df1e0212c",
+  "selected_complete_ranges": 48,
+  "facts": [
+    {
+      "id": "J1",
+      "source": [
+        "activity.constructor",
+        "activity.periodicUpdate"
+      ],
+      "fact": "ActivityView constructs two SpeedGraphic instances and obtains the running Core GlobalManager/GlobalManagerStats through a CoreRunningListener. It directly uses SpeedGraphic, not MultiPlotGraphic. Its periodic feed is application/global statistics, not a selected torrent or an operation session."
+    },
+    {
+      "id": "J2",
+      "source": [
+        "activity.periodicUpdate"
+      ],
+      "fact": "Download feed is dataReceive+protocolReceive, protocolReceive, configured maxDownloadKB*KinB, and totalSwarmsPeerRate(true,false) narrowed to int. Upload uses dataSend+protocolSend, protocolSend, active upload limit*KinB, and the same swarm-peer value. These four slots feed combined fill, protocol overlay, limit and swarm indicators."
+    },
+    {
+      "id": "J3",
+      "source": [
+        "stats.UpdateThread",
+        "stats.initialize",
+        "stats.delete",
+        "activity.eventOccurred"
+      ],
+      "fact": "StatsView starts a daemon UpdateThread, triggers EVENT_PERIODIC_UPDATE on each existing entry and sleeps1000ms per turn; periodic Activity insertion is distinct from refresh/paint. View destroy stops that loop. This audit does not instantiate a Core, manager, thread, widget or configuration."
+    },
+    {
+      "id": "J4",
+      "source": [
+        "global.getDataReceiveRate",
+        "global.getProtocolReceiveRate",
+        "global.getDataSendRate",
+        "global.getProtocolSendRate",
+        "average.constructor",
+        "average.update",
+        "average.getAverage",
+        "average.getSum",
+        "average.effectiveTime"
+      ],
+      "fact": "The four GlobalManagerStatsImpl speed fields use Average.getInstance(1000,10). The getters read those averages (protocol getters narrow to int). Average stores time buckets using stepped monotonic time, clears expired bucket positions, sums the completed slots and divides by period10. This is not the native inter-observation floor rate."
+    },
+    {
+      "id": "J5",
+      "source": [
+        "speed.addLongsValue",
+        "speed.refresh",
+        "speed.drawChart",
+        "speed.computeAverage"
+      ],
+      "fact": "SpeedGraphic defaults to2000 ring entries; addLongsValue writes supplied long series, records integer monotonous seconds since first insertion, and advances the ring under AEMonitor. Refresh may grow capacity in1000-entry increments with canvas width. Draw uses one column per history index, combined/protocol vertical fill, limit/other connected indicators, secondary trimming at twice primary maximum and an11-entry centered primary visual mean. That mean is a separate layer from the global ten-second Average."
+    },
+    {
+      "id": "J6",
+      "source": [
+        "activity.initialize",
+        "activity.parameterChanged",
+        "activity.delete",
+        "speed.addMenuItems",
+        "speed.parameterChanged",
+        "speed.dispose"
+      ],
+      "fact": "Activity has separate download/upload canvases and legend entries for peer average/achieved/overhead/limit/swarm/trimmed. Stats Graph Dividers selects60-pixel dividers. Graphics Update throttles redraw. A Clear history menu clears ring values and startTime, and dispose releases image resources/listeners. These original configuration/menu/legend behaviors are not claimed for P04-17."
+    },
+    {
+      "id": "J7",
+      "source": [
+        "multiplot.constructor",
+        "multiplot.init",
+        "multiplot.getHistory",
+        "multiplot.setActive",
+        "multiplot.addIntsValue",
+        "multiplot.getAverage",
+        "multiplot.refresh",
+        "multiplot.drawChart",
+        "multiplot.dispose"
+      ],
+      "fact": "MultiPlotGraphic is adjacent context: int-valued ValueSources, default2000 or caller-sized ring, optional supplied history/times, oldest-to-newest getHistory and bounded getAverage; active mode creates a SimpleTimer sampling event (default1000ms), reads sources and appends. Width may grow capacity in100-entry increments. Styles include invisible/bold/dotted/trimmable series; draw supports time labels and stepped/connected segments. dispose(true) can keep sampling/history after canvas disposal. None is evidence that ActivityView uses this timer or that native has persistent history."
+    },
+    {
+      "id": "N1",
+      "source": [
+        "native.payloadRecord",
+        "native.payloadRefresh"
+      ],
+      "fact": "The5fc baseline payload Activity is Page-owned fixed600 arrival-time samples, QElapsedTimer, independently copied down/up payload rates and a target-change reset; paints actual-arrival polylines and explicit scope labels without a sampler/timer. Window forwards accepted payload only while the Page exists. P04-17 must preserve this existing payload path as the first/default nested tab."
+    },
+    {
+      "id": "N2",
+      "source": [
+        "native.windowEngine",
+        "native.windowStatisticsOpen",
+        "native.windowNewSession",
+        "native.pageEngine",
+        "native.bridgeEngineDelivery"
+      ],
+      "fact": "The5fc Window retains only the latest immutable engine packet; opening a fresh Page replays that one packet, profile session reset clears it, and Ended may retain an omitted sample only within the same session/op/target. Bridge coalesces Observed notifications; Preparing/Ended lifecycle notifications are separate. Sequence gaps are therefore possible and cannot be silently joined by a new graph."
+    },
+    {
+      "id": "N3",
+      "source": [
+        "native.pageEngine"
+      ],
+      "fact": "The5fc packet admission validates nonzero identities/state/sample shape, order/target and cumulative counter/protocol/elapsed monotonicity. Equal-time Ended requires complete sample equality. Core rates are separately floored from each actual combined/payload/protocol delta; combined rate minus payload rate can differ from the supplied protocol rate by1 B/s. Plot all six provided rates directly."
+    }
+  ],
+  "deliberate_scope_differences": [
+    {
+      "subject": "scope",
+      "original": "Global manager receive/send plus protocol, limits and swarm peers.",
+      "p04_17": "One existing experimental operation/session; no original global manager, IP/tracker/DHT totals or other transfer aggregation."
+    },
+    {
+      "subject": "rate window",
+      "original": "1000ms-bucket ten-second global Average; SpeedGraphic adds11-entry visual smoothing.",
+      "p04_17": "Exact existing P04-16 floor(delta*1e9/observed steady interval), no extra rate derivation or smoothing equality."
+    },
+    {
+      "subject": "X axis",
+      "original": "Pixel/history-index placement; SpeedGraphic stores integer ages and reconstructs displayed wall-clock labels; MultiPlot may use timer cadence or explicit times.",
+      "p04_17": "Actual nonnegative engine elapsed nanoseconds, converted only for drawing; no fixed-cadence invented timestamps or wall-clock history."
+    },
+    {
+      "subject": "gaps",
+      "original": "No immutable packet sequence/optional-rate model in selected Activity/SpeedGraphic path; graph storage starts as zero-filled arrays.",
+      "p04_17": "First/unknown rates produce no synthetic point or zero. Known zero is a genuine point. Missing-rate observation and skipped packet sequence break connectivity."
+    },
+    {
+      "subject": "retention",
+      "original": "SpeedGraphic2000 default with width growth, lifetime owned by graphic; MultiPlot has separate supplied/retained-history facilities.",
+      "p04_17": "At most600 actual rate points in Window-owned bounded history, even with Page absent; same-operation close/reopen retains, new op/profile clears, no disk history."
+    },
+    {
+      "subject": "terminal",
+      "original": "No P04-16 Preparing/Observed/Ended identity protocol.",
+      "p04_17": "Repeated/missing same-operation Ended sample deduplicates; a newer actual Ended rate sample is one standalone point; no tail extrapolation or exhaustive-final totals."
+    },
+    {
+      "subject": "rendering/services",
+      "original": "SWT images/monitor/configuration callbacks, periodic update thread, global scales/legends/limit/swarm and optional MultiPlot timer.",
+      "p04_17": "Two Qt engine charts with copied combined/payload/protocol rates, explicit legend and unavailable states. No new sampler, backend consumer, timer/thread, profile read/write, original configuration settings or persistent service."
+    }
+  ],
+  "execution_credit": {
+    "java": 0,
+    "native": 0,
+    "graph_runtime": 0,
+    "semantic_equality": 0
+  },
+  "pending_gates": [
+    "Independent frozen History+tests source review",
+    "Independent frozen View/Page+tests source review",
+    "Root compilation/generated tests/actual loopback and three-scale captures/hosted qualification before implementation milestone claims"
+  ],
+  "limitations": [
+    "Source observations and deliberate API scope only; no original drawing-output equality.",
+    "Scale/ScaledGraphic/BackGroundGraphic and ValueSource pinned as rendering/context dependencies, not promised native ports.",
+    "No source-helper/oracle/manager initialization needed for this graph milestone."
+  ]
+}

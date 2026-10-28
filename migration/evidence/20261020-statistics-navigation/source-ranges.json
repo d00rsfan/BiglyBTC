@@ -1,0 +1,23 @@
+{
+  "original_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "ranges": {
+    "stats.tabbedNavigation": {
+      "path": "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java",
+      "start": 107,
+      "end": 135,
+      "sha256": "2f76706edb8af9306b8ca24d88fc175585fe283960974bfe0d004a902a99041a"
+    },
+    "stats.lifecycleAndDataSource": {
+      "path": "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java",
+      "start": 250,
+      "end": 312,
+      "sha256": "4f9fc797d3a6abeec61802daead15029880e50ab5b64218dda0b834cf4f7dc1b"
+    },
+    "transfer.historySelection": {
+      "path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+      "start": 2231,
+      "end": 2320,
+      "sha256": "425ad0f8a8d1929e4087a53a8fbbeb03bd98ad90aacd93c117485fa57a4fd225"
+    }
+  }
+}

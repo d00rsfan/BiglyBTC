@@ -1,0 +1,291 @@
+{
+  "scope": "synthetic packaging only; no native runtime qualification",
+  "checks": [
+    "developer RPATH present in build and absent from both packaged ELFs",
+    "reject missing contact",
+    "reject missing desktop",
+    "reject missing qt-version",
+    "reject missing prefix",
+    "ordinary build has no CPack configuration",
+    "reject archive with bundled-library",
+    "reject archive with profile",
+    "reject archive with postinst",
+    "reject archive with dependencies",
+    "reject archive with developer-rpath",
+    "four payload files, automatic libc/C++ dependencies, explicit Qt minimum",
+    "CPack rejects unpackaged external runtime instead of ignoring its metadata"
+  ],
+  "commands": [
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/tmp/biglybtc-packaging-mgmqf0_h/source",
+        "-B",
+        "/tmp/biglybtc-packaging-mgmqf0_h/build",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DBIGLYBTC_BUNDLE_QT=OFF",
+        "-DBIGLYBTC_DEB=ON",
+        "-DBIGLYBTC_BUNDLE_QT=OFF",
+        "-DBIGLYBTC_DEB_CONTACT=Packaging Fixture <fixture@example.invalid>"
+      ],
+      "returncode": 0,
+      "output": "-- The CXX compiler identification is GNU 16.0.1\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /usr/local/bin/c++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Found Python3: /usr/bin/python3 (found version \"3.14.4\") found components: Interpreter\n-- Configuring done (0.5s)\n-- Generating done (0.0s)\n-- Build files have been written to: /tmp/biglybtc-packaging-mgmqf0_h/build\n"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/tmp/biglybtc-packaging-mgmqf0_h/build",
+        "--parallel",
+        "2"
+      ],
+      "returncode": 0,
+      "output": "[ 25%] Building CXX object CMakeFiles/BiglyBTC.dir/main.cpp.o\n[ 50%] Building CXX object CMakeFiles/BiglyBTC-headless.dir/main.cpp.o\n[ 75%] Linking CXX executable BiglyBTC-headless\n[100%] Linking CXX executable BiglyBTC\n[100%] Built target BiglyBTC\n[100%] Built target BiglyBTC-headless\n"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cpack",
+        "--config",
+        "/tmp/biglybtc-packaging-mgmqf0_h/build/CPackConfig.cmake",
+        "-B",
+        "/tmp/biglybtc-packaging-mgmqf0_h/packages"
+      ],
+      "returncode": 0,
+      "output": "CPack: Create package using DEB\nCPack: Install projects\nCPack: - Run preinstall target for: BiglyBTC\nCPack: - Install project: BiglyBTC []\nCPack: Create package\nCPack: - package: /tmp/biglybtc-packaging-mgmqf0_h/packages/biglybtc-experimental_0.1.0~dev_amd64_system-qt.deb generated.\nCPackDeb: - Generating dependency list\n"
+    },
+    {
+      "argv": [
+        "dpkg-deb",
+        "--raw-extract",
+        "/tmp/biglybtc-packaging-mgmqf0_h/packages/biglybtc-experimental_0.1.0~dev_amd64_system-qt.deb",
+        "/tmp/biglybtc-packaging-mgmqf0_h/extracted"
+      ],
+      "returncode": 0,
+      "output": ""
+    },
+    {
+      "argv": [
+        "readelf",
+        "--dynamic",
+        "/tmp/biglybtc-packaging-mgmqf0_h/build/BiglyBTC"
+      ],
+      "returncode": 0,
+      "output": "\nDynamic section at offset 0x2da8 contains 29 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libstdc++.so.6]\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x000000000000001d (RUNPATH)            Library runpath: [/tmp/biglybtc-synthetic-sdk:]\n 0x000000000000000c (INIT)               0x1000\n 0x000000000000000d (FINI)               0x117c\n 0x0000000000000019 (INIT_ARRAY)         0x3d98\n 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)\n 0x000000000000001a (FINI_ARRAY)         0x3da0\n 0x000000000000001c (FINI_ARRAYSZ)       8 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x390\n 0x0000000000000005 (STRTAB)             0x490\n 0x0000000000000006 (SYMTAB)             0x3b8\n 0x000000000000000a (STRSZ)              338 (bytes)\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000015 (DEBUG)              0x0\n 0x0000000000000003 (PLTGOT)             0x3fb8\n 0x0000000000000002 (PLTRELSZ)           24 (bytes)\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000017 (JMPREL)             0x740\n 0x0000000000000007 (RELA)               0x668\n 0x0000000000000008 (RELASZ)             216 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000000000001e (FLAGS)              BIND_NOW\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW PIE\n 0x000000006ffffffe (VERNEED)            0x5f8\n 0x000000006fffffff (VERNEEDNUM)         2\n 0x000000006ffffff0 (VERSYM)             0x5e2\n 0x000000006ffffff9 (RELACOUNT)          3\n 0x0000000000000000 (NULL)               0x0\n"
+    },
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/tmp/biglybtc-packaging-mgmqf0_h/source",
+        "-B",
+        "/tmp/biglybtc-packaging-mgmqf0_h/missing-contact",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DBIGLYBTC_BUNDLE_QT=OFF",
+        "-DBIGLYBTC_DEB=ON"
+      ],
+      "returncode": 1,
+      "output": "-- The CXX compiler identification is GNU 16.0.1\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /usr/local/bin/c++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring incomplete, errors occurred!\nCMake Error at /home/yurii/Java/BiglyBT/native/packaging/Debian.cmake:15 (message):\n  Set BIGLYBTC_DEB_CONTACT to the actual maintainer name and email\nCall Stack (most recent call first):\n  CMakeLists.txt:16 (include)\n\n\n"
+    },
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/tmp/biglybtc-packaging-mgmqf0_h/source",
+        "-B",
+        "/tmp/biglybtc-packaging-mgmqf0_h/missing-desktop",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DBIGLYBTC_BUNDLE_QT=OFF",
+        "-DBIGLYBTC_DEB=ON",
+        "-DBIGLYBTC_DESKTOP=OFF"
+      ],
+      "returncode": 1,
+      "output": "-- The CXX compiler identification is GNU 16.0.1\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /usr/local/bin/c++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring incomplete, errors occurred!\nCMake Error at /home/yurii/Java/BiglyBT/native/packaging/Debian.cmake:11 (message):\n  DEB packaging requires the experimental desktop and headless targets\nCall Stack (most recent call first):\n  CMakeLists.txt:16 (include)\n\n\n"
+    },
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/tmp/biglybtc-packaging-mgmqf0_h/source",
+        "-B",
+        "/tmp/biglybtc-packaging-mgmqf0_h/missing-qt-version",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DBIGLYBTC_BUNDLE_QT=OFF",
+        "-DBIGLYBTC_DEB=ON",
+        "-DBIGLYBTC_DEB_CONTACT=Fixture <fixture@example.invalid>",
+        "-DBIGLYBTC_QT_RUNTIME_VERSION="
+      ],
+      "returncode": 1,
+      "output": "-- The CXX compiler identification is GNU 16.0.1\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /usr/local/bin/c++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring incomplete, errors occurred!\nCMake Error at /home/yurii/Java/BiglyBT/native/packaging/Debian.cmake:18 (message):\n  DEB packaging needs the configured Qt Core runtime version\nCall Stack (most recent call first):\n  CMakeLists.txt:16 (include)\n\n\n"
+    },
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/tmp/biglybtc-packaging-mgmqf0_h/source",
+        "-B",
+        "/tmp/biglybtc-packaging-mgmqf0_h/missing-prefix",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DBIGLYBTC_BUNDLE_QT=OFF",
+        "-DBIGLYBTC_DEB=ON",
+        "-DBIGLYBTC_DEB_CONTACT=Fixture <fixture@example.invalid>",
+        "-DCMAKE_INSTALL_PREFIX=/usr/local"
+      ],
+      "returncode": 1,
+      "output": "-- The CXX compiler identification is GNU 16.0.1\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /usr/local/bin/c++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring incomplete, errors occurred!\nCMake Error at /home/yurii/Java/BiglyBT/native/packaging/Debian.cmake:32 (message):\n  The experimental DEB layout requires CMAKE_INSTALL_PREFIX=/usr\nCall Stack (most recent call first):\n  CMakeLists.txt:16 (include)\n\n\n"
+    },
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/tmp/biglybtc-packaging-mgmqf0_h/source",
+        "-B",
+        "/tmp/biglybtc-packaging-mgmqf0_h/disabled",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DBIGLYBTC_BUNDLE_QT=OFF"
+      ],
+      "returncode": 0,
+      "output": "-- The CXX compiler identification is GNU 16.0.1\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /usr/local/bin/c++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Configuring done (0.3s)\n-- Generating done (0.0s)\n-- Build files have been written to: /tmp/biglybtc-packaging-mgmqf0_h/disabled\nCMake Warning:\n  Manually-specified variables were not used by the project:\n\n    BIGLYBTC_BUNDLE_QT\n\n\n"
+    },
+    {
+      "argv": [
+        "dpkg-deb",
+        "--build",
+        "--root-owner-group",
+        "/tmp/biglybtc-packaging-mgmqf0_h/changed-bundled-library",
+        "/tmp/biglybtc-packaging-mgmqf0_h/bundled-library.deb"
+      ],
+      "returncode": 0,
+      "output": "dpkg-deb: building package 'biglybtc-experimental' in '/tmp/biglybtc-packaging-mgmqf0_h/bundled-library.deb'.\n"
+    },
+    {
+      "argv": [
+        "dpkg-deb",
+        "--build",
+        "--root-owner-group",
+        "/tmp/biglybtc-packaging-mgmqf0_h/changed-profile",
+        "/tmp/biglybtc-packaging-mgmqf0_h/profile.deb"
+      ],
+      "returncode": 0,
+      "output": "dpkg-deb: building package 'biglybtc-experimental' in '/tmp/biglybtc-packaging-mgmqf0_h/profile.deb'.\n"
+    },
+    {
+      "argv": [
+        "dpkg-deb",
+        "--build",
+        "--root-owner-group",
+        "/tmp/biglybtc-packaging-mgmqf0_h/changed-postinst",
+        "/tmp/biglybtc-packaging-mgmqf0_h/postinst.deb"
+      ],
+      "returncode": 0,
+      "output": "dpkg-deb: building package 'biglybtc-experimental' in '/tmp/biglybtc-packaging-mgmqf0_h/postinst.deb'.\n"
+    },
+    {
+      "argv": [
+        "dpkg-deb",
+        "--build",
+        "--root-owner-group",
+        "/tmp/biglybtc-packaging-mgmqf0_h/changed-dependencies",
+        "/tmp/biglybtc-packaging-mgmqf0_h/dependencies.deb"
+      ],
+      "returncode": 0,
+      "output": "dpkg-deb: building package 'biglybtc-experimental' in '/tmp/biglybtc-packaging-mgmqf0_h/dependencies.deb'.\n"
+    },
+    {
+      "argv": [
+        "dpkg-deb",
+        "--build",
+        "--root-owner-group",
+        "/tmp/biglybtc-packaging-mgmqf0_h/changed-developer-rpath",
+        "/tmp/biglybtc-packaging-mgmqf0_h/developer-rpath.deb"
+      ],
+      "returncode": 0,
+      "output": "dpkg-deb: building package 'biglybtc-experimental' in '/tmp/biglybtc-packaging-mgmqf0_h/developer-rpath.deb'.\n"
+    },
+    {
+      "argv": [
+        "cmake",
+        "-S",
+        "/tmp/biglybtc-packaging-mgmqf0_h/source",
+        "-B",
+        "/tmp/biglybtc-packaging-mgmqf0_h/unknown-runtime",
+        "-DCMAKE_BUILD_TYPE=Release",
+        "-DBIGLYBTC_BUNDLE_QT=OFF",
+        "-DBIGLYBTC_DEB=ON",
+        "-DUNKNOWN_RUNTIME=ON",
+        "-DBIGLYBTC_DEB_CONTACT=Packaging Fixture <fixture@example.invalid>"
+      ],
+      "returncode": 0,
+      "output": "-- The CXX compiler identification is GNU 16.0.1\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /usr/local/bin/c++ - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Found Python3: /usr/bin/python3 (found version \"3.14.4\") found components: Interpreter\n-- Configuring done (0.4s)\n-- Generating done (0.0s)\n-- Build files have been written to: /tmp/biglybtc-packaging-mgmqf0_h/unknown-runtime\n"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/tmp/biglybtc-packaging-mgmqf0_h/unknown-runtime",
+        "--parallel",
+        "2"
+      ],
+      "returncode": 0,
+      "output": "[ 33%] Building CXX object CMakeFiles/BiglyBTC-headless.dir/main.cpp.o\n[ 33%] Building CXX object CMakeFiles/biglybtc-unowned.dir/unowned.cpp.o\n[ 50%] Linking CXX shared library libbiglybtc-unowned.so\n[ 50%] Built target biglybtc-unowned\n[ 66%] Building CXX object CMakeFiles/BiglyBTC.dir/main.cpp.o\n[ 83%] Linking CXX executable BiglyBTC-headless\n[ 83%] Built target BiglyBTC-headless\n[100%] Linking CXX executable BiglyBTC\n[100%] Built target BiglyBTC\n"
+    },
+    {
+      "argv": [
+        "nice",
+        "-n",
+        "5",
+        "cpack",
+        "--config",
+        "/tmp/biglybtc-packaging-mgmqf0_h/unknown-runtime/CPackConfig.cmake",
+        "-B",
+        "/tmp/biglybtc-packaging-mgmqf0_h/unknown-runtime-packages"
+      ],
+      "returncode": 1,
+      "output": "CPack: Create package using DEB\nCPack: Install projects\nCPack: - Run preinstall target for: BiglyBTC\nCPack: - Install project: BiglyBTC []\nCPack: Create package\nCPackDeb: - Generating dependency list\nCMake Error at /usr/share/cmake-4.2/Modules/Internal/CPack/CPackDeb.cmake:432 (message):\n  CPackDeb: dpkg-shlibdeps: 'dpkg-shlibdeps: error: no dependency information\n  found for\n  /tmp/biglybtc-packaging-mgmqf0_h/unknown-runtime/libbiglybtc-unowned.so.1\n  (used by ./usr/bin/BiglyBTC)\n\n  ';\n\n  executed command:\n  '/tmp/biglybtc-packaging-mgmqf0_h/unknown-runtime/biglybtc-dpkg-shlibdeps\n  -l/tmp/biglybtc-packaging-mgmqf0_h/unknown-runtime --ignore-missing-info -O\n  ./usr/bin/BiglyBTC;./usr/bin/BiglyBTC-headless';\n\n  found files: './usr/share/doc/biglybtc-experimental/copyright: ASCII text\n\n  ';\n\n  files info: './usr/bin/BiglyBTC: ELF 64-bit LSB pie executable, x86-64,\n  version 1 (SYSV), dynamically linked, interpreter\n  /lib64/ld-linux-x86-64.so.2,\n  BuildID[sha1]=842b22c255438069f1cbe4f92094dabeb79b66e5, for GNU/Linux\n  3.2.0, stripped\n\n  ;./usr/bin/BiglyBTC-headless: ELF 64-bit LSB pie executable, x86-64,\n  version 1 (SYSV), dynamically linked, interpreter\n  /lib64/ld-linux-x86-64.so.2,\n  BuildID[sha1]=58921ff74442a4a8193caf2908953b4f18bab094, for GNU/Linux\n  3.2.0, stripped\n\n  ;./usr/share/doc/biglybtc-experimental/EXPERIMENTAL.txt: ASCII text\n\n  ;./usr/share/doc/biglybtc-experimental/copyright: ASCII text\n\n  ';\n\n  binary files: './usr/bin/BiglyBTC;./usr/bin/BiglyBTC-headless'\nCall Stack (most recent call first):\n  /usr/share/cmake-4.2/Modules/Internal/CPack/CPackDeb.cmake:885 (cpack_deb_prepare_package_vars)\n\n\nCPack Error: Error while execution CPackDeb.cmake\nCPack Error: Problem compressing the directory\nCPack Error: Error when generating package: biglybtc-experimental\n"
+    }
+  ],
+  "package": {
+    "scope": "experimental packaging contract, not runtime or install qualification",
+    "package_sha256": "fe53dd4b80cfe770c8df9c18ce0be6d861eb4d3478533c3b245b54e28c4b76ba",
+    "bytes": 9580,
+    "control": {
+      "Package": "biglybtc-experimental",
+      "Version": "0.1.0~dev",
+      "Architecture": "amd64",
+      "Depends": "libqt6core6t64 (>= 6.12.0), libqt6gui6 (>= 6.12.0), libqt6widgets6 (>= 6.12.0), qt6-qpa-plugins (>= 6.12.0), libc6 (>= 2.34), libstdc++6 (>= 13.1)",
+      "Recommends": "qt6-wayland (>= 6.12.0)"
+    },
+    "payload_sha256": {
+      "usr/bin/BiglyBTC": "9855c5768f726ba3d0087ee821a321b84621aa78cc847f2ffc30b540624f7d36",
+      "usr/bin/BiglyBTC-headless": "9855c5768f726ba3d0087ee821a321b84621aa78cc847f2ffc30b540624f7d36",
+      "usr/share/doc/biglybtc-experimental/EXPERIMENTAL.txt": "f65716ef57277467d4683659fd482b59e15523767f306aec5599ba2c0fd5c9f1",
+      "usr/share/doc/biglybtc-experimental/copyright": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73"
+    },
+    "needed": {
+      "usr/bin/BiglyBTC": [
+        "libstdc++.so.6",
+        "libc.so.6"
+      ],
+      "usr/bin/BiglyBTC-headless": [
+        "libstdc++.so.6",
+        "libc.so.6"
+      ]
+    },
+    "variant": "system-qt",
+    "bundled_dependencies": [],
+    "installed_or_executed": false
+  },
+  "work": "/tmp/biglybtc-packaging-mgmqf0_h",
+  "success": true,
+  "tests": 6,
+  "installed_or_executed": false
+}

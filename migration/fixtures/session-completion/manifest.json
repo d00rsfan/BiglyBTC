@@ -1,0 +1,220 @@
+{
+  "status": "source-frozen-before-native-comparison",
+  "reference": {
+    "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "source_audit_sha256": "76358854aae101de2ea4d9196d5e664c6bc4b5263a418d2ecf5b8ba461e4a17e",
+    "work": "/tmp/biglybtc-completion-oracle-kdi7glyr",
+    "persistent_work": "/home/yurii/Java/BiglyBT/build/recovery/generated-references/biglybtc-completion-oracle-kdi7glyr",
+    "persistent_compile_attempt": "/home/yurii/Java/BiglyBT/build/recovery/generated-references/biglybtc-completion-oracle-kdi7glyr",
+    "source_sha256": {
+      "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39",
+      "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java": "a88937664cb90354be6600448a63684b6a7b5c9e7906a9425b9f5a4758afbeda",
+      "core/src/com/biglybt/core/download/impl/DownloadManagerController.java": "b22ccde4addada902b8bac14c2177e7496b9329304c534d6ed2fdde9dbdc8860",
+      "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a",
+      "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java": "3b2eb44625911187e3058b7363b96b7ee813a9bf8051de54fada0f1ccc3243c7",
+      "core/src/com/biglybt/core/disk/impl/resume/RDResumeHandler.java": "dd63d0d6944ab73d7c29d6c190258b9cf2b6552d80972644188edab1b87882bc",
+      "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java": "6755b950c548c5a7d153b9aef2c1024c7c5c79d5880fd858f3bac4261adcdf8c",
+      "core/src/com/biglybt/core/peer/impl/control/PEPeerControlImpl.java": "b306689754d6feb7f7597adb092c0f9e86885a45e65c7ac8733eeceb9a66288e",
+      "core/src/com/biglybt/core/impl/CoreImpl.java": "871ac9f1276d9e52789fc0b01128b1c077800099746bba8b9c2dd10f8a649f01",
+      "core/src/com/biglybt/core/util/LinkFileMap.java": "360e9acb5ff349e4e507487af847111d00c9ccc5e8d5e2f0053d02ead649abed",
+      "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java": "821229517d374be10b95b4c2b623e3f25b356bf6d29724067933d943f719bcef",
+      "core/src/com/biglybt/core/util/HashWrapper.java": "cc768d652317b2e19a749db727e899f3a419c87cf2134536ffe4a6ae995b3cea",
+      "core/src/com/biglybt/core/util/AEMonitor.java": "10732da79c2ca2b92d0103036ccac23f0751a3141f0a770f5df24ea44aa96276",
+      "core/src/com/biglybt/core/util/SystemTime.java": "d57063696e281cc005e5b146a8f863a2ca52180696a98b473ff8566851f97353",
+      "core/src/com/biglybt/core/download/DownloadManager.java": "cfa73bb4c32801fa98565e163cbf7100a24240c790c25cdf2c4ce265402538a6",
+      "core/src/com/biglybt/core/global/GlobalManager.java": "70ea189d521a3ccdcd89014d81019dbd4964a462738a1efb2da9c9cc16ee46c0",
+      "core/src/com/biglybt/core/download/DownloadManagerState.java": "9bd11377c6abe2f4cf1e0cb10cc42032917679216fccb12fbb43a239a13a2867",
+      "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194",
+      "core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopConfigModel.java": "3c46e88ab04ee8afeba60a6fd02a7c293be15ec4f382f54922402fe1234afe55",
+      "core/src/com/biglybt/core/config/ConfigKeys.java": "29779ff4bd0f04e021cdafd91f7b50dcf870a0ed81405288e4553d3c6c092b21",
+      "core/src/com/biglybt/core/disk/DiskManager.java": "f4f90a96208101e683727485fd1b04da8f4d41e4fc9c8d50381efb1e7e37f2f8",
+      "core/src/com/biglybt/core/peer/impl/transport/PEPeerTransportProtocol.java": "56d269aa533788742b61f26b5b065520f0aa720a4c30339425cf388be62367eb"
+    },
+    "exact_fragment_sha256": {
+      "CONTROLLER_SEED": "f4f479ed0a7a65413bcd51807dba3ec47403bfd0f5cbd3a82c20a05bba0e26e0",
+      "FORCE_PREDICATE": "5397840fc03c2b5399e550e4a12a80b8263c2c55439ea59b43bcb50d577b1c04",
+      "CHECK_FINISHED": "e96a2152b1710066209f15eda14ebdc0ad11cbdb5aa46c765b906d6d57292a2f",
+      "SNUBBED_SETTER": "28d87b9f8dfc5e07c028823d26d84ec74687f476814ff18246f75031d17beae3",
+      "STATE_CONSTANTS": "a03a65a4553104eb3ba9db4feff3aa2274ac44e6ce28b40a451d14f17913b206",
+      "CONFIG_KEYS": "a99cc7033f49eb7f9e9f0acc56ca422eaeae9e875f0da978d98ea27af90036e2",
+      "CHECK_CONSTANT": "4c5440d54eed48bc9a4297ee20c2650a9256e9fca48642f4db4c74c296db6dcc",
+      "PROGRESS_INTERFACE": "a448f710787187be2618151b413bde5bf057ac1893bf86949a2ba39621d3428c"
+    },
+    "original_method_sha256": {
+      "DownloadManagerController.setStateSeeding": "c52d7bbb72d3670d5c003c1842fd9e17108ff51db8e7fd42444e35c4d6213b81",
+      "DownloadManagerController.isForceStart": "9a64f6064d277bed3f6b2c94ebc2199b243630f6072eb27ec12e134a7df792b4",
+      "PEPeerControlImpl.checkFinished": "b3e2c6d04b4ac3c450ac1e7733d4177a68d90eaa9b8c735b655c548b2ce285d1",
+      "PEPeerControlImpl.setNbPeersSnubbed": "9ced42f34f9f6830c562066769c45a899176a7ce82631190ba483cec06bee16e"
+    },
+    "adapted_method_sha256": {
+      "DownloadManagerController.setStateSeeding": "c52d7bbb72d3670d5c003c1842fd9e17108ff51db8e7fd42444e35c4d6213b81",
+      "DownloadManagerController.isForceStart": "9a64f6064d277bed3f6b2c94ebc2199b243630f6072eb27ec12e134a7df792b4",
+      "PEPeerControlImpl.checkFinished": "b3e2c6d04b4ac3c450ac1e7733d4177a68d90eaa9b8c735b655c548b2ce285d1",
+      "PEPeerControlImpl.setNbPeersSnubbed": "9ced42f34f9f6830c562066769c45a899176a7ce82631190ba483cec06bee16e"
+    },
+    "harness_sha256": "e9dca56d934a945313012d426425fe97ff3af12b21f3cc352b529b987d6f3f47",
+    "helper_class_sha256": {
+      "CompletionOracle$Adapter.class": "45eda3a05425deb716199adbf61edc5c2944bf5f39948be8320ddf69755e7361",
+      "CompletionOracle$COConfigurationManager.class": "a443acd5c8cd9c69f7fbe60c767ac48ad098e86c6df4f9d419bd321d7ecf4bca",
+      "CompletionOracle$ConfigKeys$File.class": "9b908cdad2514c6e781ae10127acb983e686a9469d93fe3270335996813ae126",
+      "CompletionOracle$ConfigKeys.class": "0f9c2617df396706991b791f1096a7694f7a684d6594f7a20cba27a9f3c96973",
+      "CompletionOracle$ControllerContract.class": "99bfb80eeb7b8dfaf1948bb024b2059a782476d5b15928ed4b6c5f8bcca4262f",
+      "CompletionOracle$Debug.class": "cfeab0f20611f697276d91f43296fe25524d370db33684945ee08935debe1c30",
+      "CompletionOracle$Disk.class": "85e24d124d4129f82d13f5689cb1e54597640127dd0a834cf49cbbb2f401d62e",
+      "CompletionOracle$DiskManagerCheckRequest.class": "303e4840dc22d1c06a257667641a3467cd990c5b124f61af25637870887d29b6",
+      "CompletionOracle$DownloadEndedProgress.class": "96970438123386fd564d1b4ffa0f084f900c61921a84ff46960f5ae67201dead",
+      "CompletionOracle$DownloadManager.class": "03c373431ac9fb38a5dfcc2258be997081aa5a043f8bba3180fbf37ef810fe9e",
+      "CompletionOracle$DownloadManagerController.class": "74b4ec622f0dae627936dc9baf45aa05130b2fccad9701856042c70e65240acc",
+      "CompletionOracle$Fault.class": "17f695ceadaea04e9c99127a79180c8c5cd0a2d86f119d32479e33e1ba533060",
+      "CompletionOracle$PEPeerControlImpl.class": "23091a507304a53b6411ed37e3f35cf02930f28422efe900e4b1197b40123247",
+      "CompletionOracle$PEPeerTransport.class": "0de56ce82e8c5cc5c22a7d14a5662cdbcfe3b8a9dac395ce470f44a6854cd643",
+      "CompletionOracle$PiecePicker.class": "5397c2e4bf7d5a5a3893027a6ff38cdc98fd0a27e033cdc1e53b3d166c156932",
+      "CompletionOracle$Progress.class": "eaa96422e0b5337699b3fa967d97b63422f9fa2e8f6c944d6abec98800bcf77f",
+      "CompletionOracle$ScriptFailure.class": "9514b25152b14c2999f5df5a9f80133365ff1cbc7e7b9408a5aa5dca72f0961f",
+      "CompletionOracle$SnubbedCounter.class": "db2a0261b44a460561141906a3fde46336ed930ee1b3f8f8cf3d8ffef9e4bea1",
+      "CompletionOracle$SuppliedFailure.class": "269692233c71a3ee2dc9fe2e195618b2f4c735d53bb90df5092f66d715a5aff7",
+      "CompletionOracle$SystemTime.class": "1a56c2acfa5813870096675efe06cc9a2bd3992ddce47a24bd2fee7e52a88870",
+      "CompletionOracle.class": "d1f9608d91e117d9a7c78703ab5cac795efefe9ce9e883285cfac533c523512b",
+      "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd"
+    },
+    "tool_inputs_sha256": {
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/source-audit.json": "76358854aae101de2ea4d9196d5e664c6bc4b5263a418d2ecf5b8ba461e4a17e",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/CompletionOracle.java.in": "38a67c9eb738833f8ae7622be4a0db121ec0ffbef361a338197ac9982f2848ba",
+      "/home/yurii/Java/BiglyBT/migration/tools/session_source_scan.py": "c826a5ffb83d672896f5924f3051a68b7da6cfd427361a2c3a954a830bd9198e",
+      "/home/yurii/Java/BiglyBT/migration/tools/session_completion_oracle.py": "3aff38f9a3970f8f52480513f4768622f63cebc90724c7eb3b922ff0c43bea34",
+      "/home/yurii/Java/BiglyBT/migration/tools/session_completion_fixtures.py": "338414d268ffd4e847167869413820552a898b0864f2b53ebd0bdc8f8a800d07",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/phase2-source-draft/README.md": "2a7f1ce10e19b854d66cc639c6615848a683511017cd88bad578fb18b9862f93",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/phase2-source-draft/inspection.json": "f2423932d7fd4b3b7fd55f055cea799141f051fe0b72612f1bbef36911e2abe5",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/phase2-source-draft/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P00-04/reference-fence.json": "0c35e6bb2212e681ed4be8ecc65c50e35d7e191701bee59c9e139f2fbcb17302",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java": "6755b950c548c5a7d153b9aef2c1024c7c5c79d5880fd858f3bac4261adcdf8c",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java": "821229517d374be10b95b4c2b623e3f25b356bf6d29724067933d943f719bcef",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/core/disk/impl/resume/RDResumeHandler.java": "dd63d0d6944ab73d7c29d6c190258b9cf2b6552d80972644188edab1b87882bc",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/core/download/DownloadManager.java": "cfa73bb4c32801fa98565e163cbf7100a24240c790c25cdf2c4ce265402538a6",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/core/download/DownloadManagerState.java": "9bd11377c6abe2f4cf1e0cb10cc42032917679216fccb12fbb43a239a13a2867",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/core/download/impl/DownloadManagerController.java": "b22ccde4addada902b8bac14c2177e7496b9329304c534d6ed2fdde9dbdc8860",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java": "a88937664cb90354be6600448a63684b6a7b5c9e7906a9425b9f5a4758afbeda",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java": "3b2eb44625911187e3058b7363b96b7ee813a9bf8051de54fada0f1ccc3243c7",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/core/global/GlobalManager.java": "70ea189d521a3ccdcd89014d81019dbd4964a462738a1efb2da9c9cc16ee46c0",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/core/impl/CoreImpl.java": "871ac9f1276d9e52789fc0b01128b1c077800099746bba8b9c2dd10f8a649f01",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/core/peer/impl/control/PEPeerControlImpl.java": "b306689754d6feb7f7597adb092c0f9e86885a45e65c7ac8733eeceb9a66288e",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/core/util/AEMonitor.java": "10732da79c2ca2b92d0103036ccac23f0751a3141f0a770f5df24ea44aa96276",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/core/util/HashWrapper.java": "cc768d652317b2e19a749db727e899f3a419c87cf2134536ffe4a6ae995b3cea",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/core/util/LinkFileMap.java": "360e9acb5ff349e4e507487af847111d00c9ccc5e8d5e2f0053d02ead649abed",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/core/util/SystemTime.java": "d57063696e281cc005e5b146a8f863a2ca52180696a98b473ff8566851f97353",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/pinned-source/BiglyBT/core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopConfigModel.java": "3c46e88ab04ee8afeba60a6fd02a7c293be15ec4f382f54922402fe1234afe55",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/phase2-source-draft/pinned-source/core/src/com/biglybt/core/config/ConfigKeys.java": "29779ff4bd0f04e021cdafd91f7b50dcf870a0ed81405288e4553d3c6c092b21",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/phase2-source-draft/pinned-source/core/src/com/biglybt/core/disk/DiskManager.java": "f4f90a96208101e683727485fd1b04da8f4d41e4fc9c8d50381efb1e7e37f2f8",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/phase2-source-draft/pinned-source/core/src/com/biglybt/core/peer/impl/transport/PEPeerTransportProtocol.java": "56d269aa533788742b61f26b5b065520f0aa720a4c30339425cf388be62367eb",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/phase2-source-draft/planned/boundary-contract.txt": "19234e2511028823b25cf2d565a0c4e1f58d9b272a19932eacb392b018d5f9c8",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/phase2-source-draft/planned/clock-order.txt": "b7546724603161bbc329c7b5baa1f428356eb67c7d9d9825cd3be3c5ecc8dba2",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/phase2-source-draft/planned/controller-semantic.txt": "e5f77c08e29ede218dcf7a862abcc75b33d325eaf781f4c2fc26fa2f18c21bbc",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/phase2-source-draft/planned/partial-fault.txt": "2427f9e665338740bd35b23049d9b1c0eb64df464ba88fa9add55b9b24c1b643",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/phase2-source-draft/planned/peer-semantic.txt": "4aaf24363e78c15c1ae4d32be3799fd1ef588eba6d9a307d1838e2ef271e67bd",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P03-05-persistent-session/phase2-source-draft/planned/plan.json": "7bc4b12e18eff20ab2c25ead67dfda658b93ccb8a50f7f36e180e2febc4a07d7"
+    },
+    "java_launcher_compiler_sha256": {
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java": "0e72dac1212b98b6450d1b17d403680be25002d47465dbdb460d24c45cbbde3c",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac": "ef60c7cfcdbd1313151738e56754e09a4706f7d822899054281d4def617bce1d"
+    },
+    "core_on_classpath": false,
+    "compile_command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "-J-XX:ActiveProcessorCount=2",
+      "-J-Xmx256m",
+      "--release",
+      "8",
+      "-encoding",
+      "UTF-8",
+      "-classpath",
+      "/tmp/biglybtc-completion-oracle-kdi7glyr/classes",
+      "-sourcepath",
+      "/tmp/biglybtc-completion-oracle-kdi7glyr/source",
+      "-d",
+      "/tmp/biglybtc-completion-oracle-kdi7glyr/classes",
+      "/tmp/biglybtc-completion-oracle-kdi7glyr/source/CompletionOracle.java",
+      "/tmp/biglybtc-completion-oracle-kdi7glyr/source/ReferenceFence.java"
+    ],
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "-Xmx256m",
+      "-Dfile.encoding=UTF-8",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-completion-oracle-kdi7glyr",
+      "-Duser.home=/tmp/biglybtc-completion-oracle-kdi7glyr",
+      "-Dazureus.config.path=/tmp/biglybtc-completion-oracle-kdi7glyr/profile",
+      "-cp",
+      "/tmp/biglybtc-completion-oracle-kdi7glyr/classes",
+      "CompletionOracle"
+    ],
+    "class_provenance": "First actual phase2 helper class map; no compiled phase2 predecessor exists",
+    "scope": "Two exact completion bodies with scalar force predicate/snub setter and constants. Supplied clock/config/disk/adapter/peer intentions only; first actual phase2 class map. No ordinary constructors, flush/state publication/profile/network or native equality."
+  },
+  "groups": {
+    "controller-semantic": {
+      "observations": 80,
+      "scenarios": 8,
+      "files_sha256": {
+        "commands.txt": "e5f77c08e29ede218dcf7a862abcc75b33d325eaf781f4c2fc26fa2f18c21bbc",
+        "expected.txt": "b8994333d1d0bb5637b3c717f7a2dcfc79b946e81dc5fe3fdd33e787de05275f",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "b8994333d1d0bb5637b3c717f7a2dcfc79b946e81dc5fe3fdd33e787de05275f"
+      }
+    },
+    "peer-semantic": {
+      "observations": 1408,
+      "scenarios": 141,
+      "files_sha256": {
+        "commands.txt": "4aaf24363e78c15c1ae4d32be3799fd1ef588eba6d9a307d1838e2ef271e67bd",
+        "expected.txt": "a23a10aee7e031200280e1fb96972cab8a0fdbb3dfb84ced0c922105c2b2f884",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "a23a10aee7e031200280e1fb96972cab8a0fdbb3dfb84ced0c922105c2b2f884"
+      }
+    },
+    "clock-order": {
+      "observations": 176,
+      "scenarios": 16,
+      "files_sha256": {
+        "commands.txt": "b7546724603161bbc329c7b5baa1f428356eb67c7d9d9825cd3be3c5ecc8dba2",
+        "expected.txt": "f0608479761c48a0e68ba3a2dfcda90b3923ddbb6096758df25d10d268f68aa9",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "f0608479761c48a0e68ba3a2dfcda90b3923ddbb6096758df25d10d268f68aa9"
+      }
+    },
+    "partial-fault": {
+      "observations": 529,
+      "scenarios": 48,
+      "files_sha256": {
+        "commands.txt": "2427f9e665338740bd35b23049d9b1c0eb64df464ba88fa9add55b9b24c1b643",
+        "expected.txt": "b78fa5fe6276f52381d707d36de85f1e39f9f9a71f21532c04d39405f5a05894",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "b78fa5fe6276f52381d707d36de85f1e39f9f9a71f21532c04d39405f5a05894"
+      }
+    },
+    "boundary-contract": {
+      "observations": 87,
+      "scenarios": 8,
+      "files_sha256": {
+        "commands.txt": "19234e2511028823b25cf2d565a0c4e1f58d9b272a19932eacb392b018d5f9c8",
+        "expected.txt": "f7686a0f2725ee4562de2f9c8fdb2bd51fe263a296db432ce764cdcbf492c59b",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "f7686a0f2725ee4562de2f9c8fdb2bd51fe263a296db432ce764cdcbf492c59b"
+      }
+    }
+  },
+  "collector_sha256": "338414d268ffd4e847167869413820552a898b0864f2b53ebd0bdc8f8a800d07",
+  "native_comparison_performed": false,
+  "native_equivalence_assumed": false,
+  "plan_sha256": "7bc4b12e18eff20ab2c25ead67dfda658b93ccb8a50f7f36e180e2febc4a07d7"
+}

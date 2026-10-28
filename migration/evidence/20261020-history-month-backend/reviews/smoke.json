@@ -1,0 +1,12 @@
+{
+  "status": "PASS inherited unchanged smoke source independently bound",
+  "reviewer": "root",
+  "source_sha256": {
+    "preview/native/packaging/preview_smoke.cpp": "3705af5f74f03d29fd83cee72f4c5ee75c9020902da4e9ed33537ac6d16f75c9"
+  },
+  "findings": [
+    "Source equals qualifiedP25 smoke byte-for-byte; backendnotwiredintoUI yet. Every retainedbehavior andcapture remainsrequired innewactualcohorts/scaledruns."
+  ],
+  "blockers": [],
+  "execution_credit": false
+}

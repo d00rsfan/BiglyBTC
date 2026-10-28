@@ -1,0 +1,240 @@
+{
+  "schema": 1,
+  "milestone": "P04-26",
+  "status": "PASS: independent source-only operational helpers review after narrow corrections",
+  "reviewer": "error_codec",
+  "blockers": [],
+  "operational_helper_sha256": {
+    "qualify.py": "789ca568ca0906482d95f598dd31961c345d7446a8784d688dce5b0c30745aa5",
+    "run_smoke_scales.py": "c8f4da40cb3251279b9e69c6435df9350243f3e68338c7ca2d8533be60ed8464",
+    "run_visuals.py": "894529a3ef858f145aa151a1cf0f909417f4cc3fc8a6357a00855caf9e2aa42b",
+    "record_toolchains.py": "635ea818c28fee8785eea71abdfc3f6eb56ccebfedce9ce7cf1bd87dc7ebd3ef",
+    "collect_hosted.py": "538e9e40333a3635a2e2d10bd09d203eab1c82897a16afe993052021a4fd849a",
+    "collect_metadata_ci.py": "27a48fc027f5f2b71170f8b8be945c2b1ee6e0b2ee42ae659eab5bfce34cdb6e",
+    "commit_source.py": "2a63f753dffd0ae7fa571f3b019eb27ab88fc194380631cc4d4147916d529277",
+    "finalize_evidence.py": "ef43f6d9e572f8c7d7832e38fd76d51059aa8737a9db9d72bf2aa5819c67e60b",
+    "verify_hosted.py": "e81fc1469855b7d56f1b9a2ce8d0c61f06115f261bafaf2261cb1b64ba335450",
+    "promote_dist.py": "f7152350f4ae947dc908aebcb0b1a0796b2eb550ae1df94485cd34d4b49f4866",
+    "verify_dist.py": "52c4852af012db3a2138e6ac9d488b24ff35b7e22df1ecb641a43744bc291bb1",
+    "publish.py": "550f85d0eab4e084aa45e1ad140f3267c7536a94132597e4252445805ea4bc91",
+    "finish_milestone.py": "6e1687eb29b42ed0b5da4db3e0843a22c03bf778b849f41f618b356111865e83",
+    "checkpoint_history_month_backend.py": "16643c37292803c03683ca4a4dcdb218483a9f1343936215462bfc2705526bea",
+    "checkpoint_milestone.py": "6a9b296f23e8b50fd83321ba4b8db04e198425611fb22f92f1ca126dc9fd32a3",
+    "verify_private_checkpoint.py": "799bd82aa361a19df7f6adb3269d91d7ef00d265609ba4649f3b3024cc908375",
+    "record_visual_review.py": "c38f5b449f705f95474386562c0fad3a0ef449342f582ee95e082f6b335650cb"
+  },
+  "generator": {
+    "path": "build/history-thirty-next-two-20261020/prepare_backend_ops.py",
+    "sha256": "8445f68561d08b5ea6b28b5b8360e1dc5828ed07f8ca250b3fd01c1f5690c8db",
+    "role": "Authoring history only; actual generated helpers separately reviewed and pinned. Do not rerun after freeze or over installed/corrected recipes.",
+    "executed_by_reviewer": false
+  },
+  "recipe_preparation": {
+    "path": "build/history-month-backend-20261020/recipe-preparation.json",
+    "sha256": "422720ac532344d7a09250483bf2d8cacb26375e0eab3999e765c879e4feaf7f",
+    "all17_current_helper_hashes_match": true,
+    "generator_and_baseline_hashes_match": true
+  },
+  "predecessor": {
+    "review_path": "migration/evidence/20261020-history-copy/reviews/operations.json",
+    "review_sha256": "6f4e174b891e6fd8ed54490196e707156e6790a8081400fa2ad845c487222b00",
+    "all17_qualified_predecessor_template_hashes_unchanged": true,
+    "template_sha256": {
+      "qualify.py": "f55623c2f88183fd1c607ee038a42d939730552d7741066066eebf048d867e63",
+      "run_smoke_scales.py": "c8f4da40cb3251279b9e69c6435df9350243f3e68338c7ca2d8533be60ed8464",
+      "run_visuals.py": "08b7f0623e6ab84d8813d36015f08402402cda96a5142b5f729112ea266e6602",
+      "record_toolchains.py": "9780959f6a7e31972cf8592c1665871d505263b18c74f105feb131887ab8f7ce",
+      "collect_hosted.py": "b35e7088c1bd279d4af0042bf7445186a670bbfd1bdc62abc78508cd089a5d50",
+      "collect_metadata_ci.py": "b72dcc54cdf7634c157860ac230e2e8a247bce1f26712b66f63151f08b68481f",
+      "commit_source.py": "c14529be0f2f9fe415bfa619cfa56a3b03b08ac399662569eb21cbdb7f2648b5",
+      "finalize_evidence.py": "6723701b7c45b90756d511ba3709150cff8630586cd2c13ef726d006f9887c64",
+      "verify_hosted.py": "2a4918d05036d994c460b856f5d9dbf6dfd8fd76f6caba923d39a4e68be1d85c",
+      "promote_dist.py": "c8b55c2c2269787b35ec77440c850b53dc0338c25fe2544d506b6d3956529266",
+      "verify_dist.py": "c57b3c5d3aa69d354520ad5e907c98600c5dc0c5347509f73817d5fb73b83a97",
+      "publish.py": "2e2663ee6f53fe6c51626f477dc7846666ec4bd0ddd9e41aea830f9d3ffaabeb",
+      "finish_milestone.py": "f67b36ca3acd04b27d9233b4515b7d8ee5bf557996eb00e01e42631263cc8096",
+      "checkpoint_history_copy.py": "246550a033a8884f1c5eb132b6ade1042de4a86c5dfcf0a9dc765a8284f63103",
+      "checkpoint_milestone.py": "fb652c307f917c52df947c3c2f6832a00247fc0866e6ee5ef23769fb66d43fd4",
+      "verify_private_checkpoint.py": "a499fdbc7083b5dbeb738d2552a1fc7863acef19d7d1960460e7d2d4538fdb60",
+      "record_visual_review.py": "24041e6210dfd340f44a2bd14541d4b04230c134ecf822eee3cbff2983e4031f"
+    }
+  },
+  "baseline": {
+    "schema": 1,
+    "date": "2026-10-20",
+    "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+    "native_parent": "3635fe01fa0212e075af5c956740e499303980b9",
+    "private_parent": "0666c1846d86367c2ec7eb0c119382e85d79148b",
+    "previous_source_commit": "ab0ff75d81300d8d3f9e930a9bf55491c1801400",
+    "previous_tag": "milestone-history-copy-20261020",
+    "previous_dist_manifest_sha256": "b3a56ffc8d4dd98ee24b1e4d121b61348893cc701572dcfe4b19c2df5cdaa854",
+    "scope": "P04-26 first of two: fixed30 independent saved UTC daily records; read-only backend"
+  },
+  "baseline_sha256": "687a03479688658e9727f427f3e384c16b83ac58033b97b024c6f43b31186d64",
+  "unchanged_map_sha256": "2c22a8fbbb16a806ee30f92c0eec90c1c9a98e83d924566547268e0fc9b9be21",
+  "guard_continuity_sha256": "21004d0d87a86a82e1c80795a08bcf4dac29a9a9128c11b2bbae15787c0a4a82",
+  "guard_change": {
+    "old_count": 243,
+    "new_count": 246,
+    "removed_only": [
+      "preview/native/adapters/CMakeLists.txt",
+      "preview/native/core/CMakeLists.txt"
+    ],
+    "added_only": [
+      ".github/workflows/native-preview.yml",
+      "preview/native/packaging/README.md",
+      "preview/native/packaging/preview_smoke.cpp",
+      "preview/native/tests/history_copy_tests.cpp",
+      "preview/native/ui/saved_history_plot.cpp"
+    ],
+    "all_other_pairs_exact": true,
+    "additions_equal_predecessor_qualified_source_map": true,
+    "all246_current_raw_hashes_verified": true,
+    "retained_original_java_receipt_map_exact": true
+  },
+  "expected_changed_source_paths": [
+    "preview/native/adapters/CMakeLists.txt",
+    "preview/native/adapters/history_month_view.cpp",
+    "preview/native/adapters/history_month_view.hpp",
+    "preview/native/core/CMakeLists.txt",
+    "preview/native/core/include/biglybtc/saved_history_month.hpp",
+    "preview/native/core/src/saved_history_month.cpp",
+    "preview/native/tests/CMakeLists.txt",
+    "preview/native/tests/history_month_view_tests.cpp",
+    "preview/native/tests/saved_history_month_tests.cpp"
+  ],
+  "expected_changed_source_count": 9,
+  "authoring_history_v1_sha256": {
+    "finalize_evidence.py": "74ea0eb264dd8ac5bd1622a66ccc66de2901ce6066fc95d03dd64d1d56a185fd",
+    "prepare_backend_ops.py": "44549294562e3540417cc2d724dfdd7c428c03dce27e3a68c9e0b26f63d405ca",
+    "recipe-preparation.json": "05f5d04553ef0907d06646678ef82f28610f589e12322860f322b4d53b6eed0c",
+    "verify_hosted.py": "80db9b45bb8278e0c317bdedeebbac05fb058b0abd7122aa7864e8e803e3c8c1"
+  },
+  "contract": {
+    "initial_sha256": "d4acfbbd78656842afc8ec583d78f7d1f4dbd78189785578db18062ec203e367",
+    "current_sha256": "2128780c1110e2ae5b9e3c46a8758bf42dd0277e5ce2f902c4732d3ac1ede989",
+    "amendment_sha256": "4b336f18f29c6a6ea531a4b2f7f02d9ebd40ef186faff0b33f73f4f7329fb64c",
+    "provenance_correction_retained": true,
+    "chosen_native_scope": "30 independent daily records; original TS_MONTH selects720 hourly periods before pixel merge; no equality between those UI resolutions"
+  },
+  "findings": [
+    {
+      "id": "MB-OPS-1",
+      "result": "PASS",
+      "detail": "Complete generator and all17 generated sources were read; Python syntax ASTs and normalized qualified-P25 diffs were inspected without import/execution. Current preparation binds every generated hash and the actual baseline. Old qualified template hashes remain exact."
+    },
+    {
+      "id": "MB-OPS-2",
+      "result": "PASS",
+      "detail": "The nine source whitelist is exactly four new backend production files, two new plain-C++ test files and core/adapters/tests CMake files. It excludes UI/worker/smoke/fixture edits. Source publication checks current parent3635, clean staging/main/origin, actual GCC73 plus all three12-row scaled smokes/seven visual commands, source-input pins and unchanged guards; later lanes/hosted remain mandatory before completion."
+    },
+    {
+      "id": "MB-OPS-3",
+      "result": "PASS",
+      "detail": "The246-entry map is precisely prior243 minus only core/adapters CMake plus five unchanged prior Copy source files. All surviving pairs are exact; additions match actual qualified P25 source pins. Current raw bytes for all246 files verify, including unchanged daily/week implementations, old tests, UI, worker and original corpus fixtures."
+    },
+    {
+      "id": "MB-OPS-4",
+      "result": "PASS",
+      "detail": "Actual local names must be exact predecessor71/22/25 plus saved-history-month-dates and saved-history-month-reader, giving73/24/27. Static Clang selection has24 unique names and equals old22 plus the two additions; sanitizer adds the unchanged three lifecycle regressions. nice5/compiler job caps, test ordinary priority, deadlines, no-tests error and leak-enabled ASan/UBSan policy are unchanged."
+    },
+    {
+      "id": "MB-OPS-5",
+      "result": "PASS",
+      "detail": "New plain month case counts are positive bounded actual ints, not guessed Qt totals. Exact date/reader PASS regular expressions and positive observed assertion counts bind to their own LastTest sections in all local lanes and hosted. Retained Copy rows now require actual==previous==19; keyboard requires17. All old named Qt/core/2550+3150 Java comparisons remain required, with no new Java execution/equality credit."
+    },
+    {
+      "id": "MB-OPS-6",
+      "result": "PASS",
+      "detail": "There are no new UI captures for backend-only P26:12-row smoke and18 offline+four engine/graph images remain22 per scale/66 local/22 hosted. Existing smoke source is bound byte-identical to qualified P25 and is still rerun in every required cohort/scale."
+    },
+    {
+      "id": "MB-OPS-7",
+      "result": "PASS",
+      "detail": "Both producers consistently expose read_only_backend_only=true, copy_selection_only=false, clipboard_mode_only=false, renderer_only=false and automatic_clipboard_writes=false; navigation/traffic/keyboard-only and new Java flags stay false. Retained UI behavior is not credited as a new month tab, monthly aggregate, writer, global or720-hour original graph equality."
+    },
+    {
+      "id": "MB-OPS-8",
+      "result": "PASS",
+      "detail": "Hosted run/source/API artifact ID/branch/status/size/digest, actual ZIP canonical path/type/file hashing and full extracted-tree equality remain inherited unchanged. Exact previous71 names plus two new names are required. Actual archive count is observed and bound rather than guessed."
+    },
+    {
+      "id": "MB-OPS-9",
+      "result": "PASS",
+      "detail": "103-file dist and82 unchanged runtimes retain complete prior b3a56ffc rollback. Staged install, loader validation and whole-byte replay of the exact installed RPATH transformation remain unchanged, along with final no-work source verification and exact-source identity."
+    },
+    {
+      "id": "MB-OPS-10",
+      "result": "PASS",
+      "detail": "Private checkpoint keeps exact parent0666, original cb8/index baseline, alternate index, scoped raw-byte attributes/renormalization, whole staged-blob and inventory verification before ref advancement and actual commit verification afterward. New shared scope includes both P04-26/P04-27 cards; older cards remain inherited from parent, not renamed or rewritten."
+    },
+    {
+      "id": "MB-OPS-11",
+      "result": "PASS",
+      "detail": "finish_milestone retains fail-closed plot/tests/smoke/operations/visual-review gates. Root supplied plot.json as the complete independent four-file backend source review and smoke.json as inherited-byte source review. tests.json must still arrive from the independent test review before completion; absence cannot pass."
+    }
+  ],
+  "resolved_during_review": [
+    {
+      "issue": "Retained Copy case count had a positive-only guard inherited from the first introduction.",
+      "resolution": "Root changed generator and both actual finalizer/verifier to require copy_rows==previous[history_copy_qt_rows]==19; current pins verified."
+    },
+    {
+      "issue": "Private commit prose retained Clipboard-only/seven-read wording.",
+      "resolution": "Root corrected it to read-only thirty-day history and Thirty independent daily reads. No runtime gate changed."
+    },
+    {
+      "issue": "Inherited review filenames required explicit backend interpretation.",
+      "resolution": "Root added actual independent backend source plot.json and exact inherited smoke.json; independent tests receipt remains a required future completion gate, not fabricated."
+    }
+  ],
+  "reviewed_support_receipts_sha256": {
+    "plot.json": "7f1f4f16ebc802928bc770a551bf8dae5281fe508ffc29c45d9807237633c229",
+    "smoke.json": "57e60df57f4d0ae0014dd8ed55fbd2df62c28e998f2d068d76b5006c22c3905a"
+  },
+  "scope": {
+    "prior_suites": {
+      "gcc": 71,
+      "clang": 22,
+      "sanitized": 25
+    },
+    "new_suites": {
+      "gcc": 73,
+      "clang": 24,
+      "sanitized": 27
+    },
+    "new_units": [
+      "saved-history-month-dates",
+      "saved-history-month-reader"
+    ],
+    "new_month_cases": "actual saved_history_month_date_cases/saved_history_month_reader_cases, each positive int <=10000",
+    "old_copy_qt_rows": 19,
+    "old_keyboard_qt_rows": 17,
+    "smoke_qt_rows": 12,
+    "captures_per_scale": 22,
+    "local_captures": 66,
+    "hosted_captures": 22,
+    "dist_files": 103,
+    "unchanged_runtime_files": 82,
+    "source_files": 9,
+    "retained_guards": 246,
+    "requested_milestones": 2,
+    "current_milestone_number": 1
+  },
+  "limits": [
+    "This review is source/hash/AST only. No generator/helper/target, build, test, compiler, Git or network execution was performed by the reviewer.",
+    "Nine changed-source whitelist is reviewed, not a claim that actual new qualification source/commit/build outputs already exist or pass. Root must create/bind and verify those actual inputs.",
+    "Generic documentation finalizer does not exist yet and is outside this review; it must consume the actual read_only_backend_only and month count field names without future UI credit.",
+    "Source authoring generator is not a reusable source-authority bypass: any later rerun/template/source change needs explicit review of its produced helpers.",
+    "No native installation, live Java/profile/payload access, transactional multi-file snapshot, aggregate or new Java runtime/UI equality is established."
+  ],
+  "execution": {
+    "source_hash_AST_only": true,
+    "helpers_executed": false,
+    "generator_executed_by_reviewer": false,
+    "builds_tests_compiler_native_JVM_Git_network": false,
+    "native_or_shared_docs_modified": false,
+    "runtime_credit": false
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "repository": "https://github.com/d00rsfan/BiglyBTC",
+  "source_commit": "5fc34b588713112b126f3cebdfc891020301a281",
+  "metadata_commit": "30569e2631427003a4a92e7edee3572a3b34e740",
+  "tag": "milestone-engine-statistics-20261018",
+  "tag_object": "5b6471ed601609745b22b043706ce4efcb65e7ff",
+  "tag_target": "30569e2631427003a4a92e7edee3572a3b34e740",
+  "remote_identity_verified": true,
+  "source_files_verified": 28,
+  "qualification": "local-verification.json and hosted-verification.json",
+  "dist_manifest_sha256": "32aa4be0b058974b6141ee2f7f911e7077a0f17fa1d252f81eab2178a065af01",
+  "original_processes_signaled": false,
+  "original_profile_access": false
+}

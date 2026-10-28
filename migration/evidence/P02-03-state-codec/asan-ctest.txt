@@ -1,0 +1,44 @@
+Start testing: Oct 17 03:06 IDT
+----------------------------------------------------------
+2/5 Testing: compressed-state-envelope
+2/5 Test: compressed-state-envelope
+Command: "/tmp/biglybtc-native-asan/tests/biglybtc-codec-tests"
+Directory: /tmp/biglybtc-native-asan/tests
+"compressed-state-envelope" start time: Oct 17 03:06 IDT
+Output:
+----------------------------------------------------------
+PASS plain/gzip identity, binary edits, copy lifetime, CRC/truncation, quotas and concatenated members
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"compressed-state-envelope" end time: Oct 17 03:06 IDT
+"compressed-state-envelope" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/5 Testing: state-java-interop
+4/5 Test: state-java-interop
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/../../migration/tools/state_interop.py" "--driver" "/tmp/biglybtc-native-asan/tests/biglybtc-state-driver"
+Directory: /tmp/biglybtc-native-asan/tests
+"state-java-interop" start time: Oct 17 03:06 IDT
+Output:
+----------------------------------------------------------
+PASS byte-identical Java gzip biglybt.config.gz
+PASS byte-identical Java gzip generated-1.torrent.gz
+PASS byte-identical Java gzip generated-2.torrent.gz
+PASS byte-identical Java gzip generated-3.torrent.gz
+PASS DEBUG::Sat Oct 17 03:07:13 IDT 2026  BC Provider 'BC_VUZE' initialised successfully (loaded from file:/tmp/biglybtc-oracle/classes/org/gudy/bouncycastle/jce/provider/BouncyCastleProvider.class)
+DEBUG::Sat Oct 17 03:07:14 IDT 2026  Not installing security manager - disabled by system property
+PASS Java reads edited gzip config and unchanged v1/v2/hybrid torrent hashes
+PASS byte-identical operational downloads.config
+PASS byte-identical operational active/cache.dat
+PASS byte-identical operational active/7B26D19F7DC2D2F9D9F897AD851B0AB6E0D58C6C.dat
+<end of output>
+Test time =  51.33 sec
+----------------------------------------------------------
+Test Passed.
+"state-java-interop" end time: Oct 17 03:07 IDT
+"state-java-interop" time elapsed: 00:00:51
+----------------------------------------------------------
+
+End testing: Oct 17 03:07 IDT

@@ -1,0 +1,253 @@
+{
+  "schema": 1,
+  "milestone": "P04-22",
+  "reviewer": "error_codec",
+  "author": "root",
+  "status": "PASS source-only independent review including smoke amendment",
+  "blockers": [],
+  "baseline_sha256": "5a5063b709ae5dd7c7e8ac415b7759bdceae5f901bfcdbeff6d4ea1815add5a9",
+  "guard_map_sha256": "09dceea5e790a2170e4893ce5f94d991a6f7f90fd1b9e9e09544b5c7b53bb54a",
+  "unchanged_native_files_verified": 221,
+  "previous_qualified_receipt_sha256": "64fceaeb07ae14c9eea9768ae444782cb84599fcbf54fb152557c1c79ce1b6b9",
+  "predecessor_source_sha256": {
+    "build/history-hourly-20261020/qualify.py": "04de1423f53e0d891cb03aee920014fcb7c9e1b2fdbd83ad9d63510e0f368bf1",
+    "build/history-hourly-20261020/focused.py": "bdcfd6a81bc0e7a86538421ed1f9e3d7e5aa66009327d4b09c834d90bb90014d",
+    "build/history-hourly-20261020/run_smoke_scales.py": "94700bffed5279bc4061ce46d2a75596be09b1966ea59566e97f8993de07e9c6",
+    "build/history-hourly-20261020/run_visuals.py": "9342d5a490a9561b8d8ff0e80e925c253f149bcd8391b29f360e24791641a776",
+    "build/history-hourly-20261020/record_toolchains.py": "2943a156be07f2370c5873398449620d9c00efe8b4630401d195afab4d87f056",
+    "build/history-hourly-20261020/promote_dist.py": "8e136740875cf42e9a19f1e8d3f08e63b21225e2984be83c7c29827aa53eba25",
+    "build/history-hourly-20261020/verify_dist.py": "17118f389d826a91ed41cbad9c612cbbd9b6b7e51096d7f472cda284dc0f7548",
+    "build/history-hourly-20261020/collect_hosted.py": "68310f7673e55f4ace4647ebc47a00af658be13337541d55403b09002f25dbbb",
+    "build/history-hourly-20261020/collect_metadata_ci.py": "b260dd50260fab5225a0d9de27f4cbfe380f1523127473772896dadba5e39878",
+    "build/history-hourly-20261020/verify_hosted.py": "bd09c645495925b4226d5c99ef652fcae6c1eb8dfb427964bf45a534d9efdf57",
+    "build/history-hourly-20261020/commit_source.py": "eea2ed1ffdb6a3d7eae6b9914ee6a6a1e5ee8df56eea0bb6a449993cf8b0feb6",
+    "build/history-hourly-20261020/checkpoint_history_hourly.py": "d245d156d2a557c7245e4f5338fc1d53c0124e0fbe6738f169a1f3d6b8720ea7",
+    "build/history-hourly-20261020/verify_private_checkpoint.py": "196a43f39fb705ce26a6728e68d2993edd78f3097a0c58ed331c9a2d4326b055",
+    "build/history-hourly-20261020/checkpoint_milestone.py": "d0671037b6a8cad093048015b3359ef3698a364e509997561c29644330124ec9",
+    "build/history-hourly-20261020/publish.py": "3f8cbcd76107efe4bb2fb4b781839f54a89fd3d5528ecd480b59159761611ab4",
+    "build/history-hourly-20261020/finish_milestone.py": "4a1533e07ff16231c423a509e24a32a60b14882f32a21b885505dd9fff48419d",
+    "build/history-hourly-20261020/finalize_evidence.py": "9ef0f2d3ced75451649537d855052dfabb68a71752db8a269e7da479f92a4758"
+  },
+  "original_index_hash_verified": true,
+  "new_units": [
+    "statistics-navigation-page",
+    "statistics-navigation-window-worker"
+  ],
+  "cohorts": {
+    "retained": {
+      "gcc": 65,
+      "clang": 16,
+      "sanitized": 19
+    },
+    "current": {
+      "gcc": 67,
+      "clang": 18,
+      "sanitized": 21
+    }
+  },
+  "execution": {
+    "helper_or_target_imports": 0,
+    "selected_target_definition_evaluations": 0,
+    "builds": 0,
+    "tests": 0,
+    "git_commands": 0,
+    "native_edits": 0,
+    "helper_edits": 0
+  },
+  "scope_limit": "Source admission review only; no passing execution/qualification/hosted/dist/checkpoint credit. Own Page code excluded from independent production credit; docs separately assigned.",
+  "subject": "15 operational helpers plus finish and prepare authoring history",
+  "source_sha256": {
+    "build/statistics-navigation-20261020/qualify.py": "ec00cb6dda5d88ac7076ab729f2eaab27df90c67a7aceee9d670919fdb77f711",
+    "build/statistics-navigation-20261020/focused.py": "61cdcdab935d0fa8a2e43211d1c53cc224a40c4dac913576c836d7097ad6db74",
+    "build/statistics-navigation-20261020/run_smoke_scales.py": "c2584a87d107f6219f5385c3c86ff889af42976598a333c5678f63d4bbdd5ddc",
+    "build/statistics-navigation-20261020/run_visuals.py": "42749154bc81a2079b9b6b683e3a9b73bad0e06c36ce85cce16b799bfc519ef7",
+    "build/statistics-navigation-20261020/record_toolchains.py": "39bb18eba9754842fe63543abcfedef7871a547bb20ba3d97c1d0891bd614836",
+    "build/statistics-navigation-20261020/promote_dist.py": "9a8f7cd17dcc98faa3946edee84c291a508aa9e3a9d11ec839195319b13f3f88",
+    "build/statistics-navigation-20261020/verify_dist.py": "45ef7636d8f071ea6a5ffdd53d5892771644b7c37cc486d38c261d74d4f14458",
+    "build/statistics-navigation-20261020/collect_hosted.py": "c128a93a6fb29a21c4661a8e10e744a1f55ab2503ab35653139fa59747b66b74",
+    "build/statistics-navigation-20261020/collect_metadata_ci.py": "af4086f669392567372ae19663319fc9bbb69f44718d4979a0a49dd7aaf11566",
+    "build/statistics-navigation-20261020/verify_hosted.py": "a8a4feb0031c5a99d855f60a01ddeaf5a437e100562f7d5521d3fd7b689306b3",
+    "build/statistics-navigation-20261020/commit_source.py": "b1bf9c5e0b9cef78b6da475ca95a9ee3d00dadce032b3ec3276140e4c97fb253",
+    "build/statistics-navigation-20261020/checkpoint_statistics_navigation.py": "2b07d06d33b0e2f7b2a2d4af7884d54d76475463595ae6a289bc9b53a1b4e973",
+    "build/statistics-navigation-20261020/verify_private_checkpoint.py": "ea9b011b0c137234cfc0df6d9f7f0dbf4528c46764ee4eac08c2c9c942f87cbb",
+    "build/statistics-navigation-20261020/checkpoint_milestone.py": "de626422bb97c68ed1f301087e2e1279345d208553e0edcbef8bc21f2238d419",
+    "build/statistics-navigation-20261020/publish.py": "324efa87f0b3fe559d97e5123d7f19be64791800bfcaed4d5976de428881eca3",
+    "build/statistics-navigation-20261020/finish_milestone.py": "7f4723b7aa62b7643f283d0d367b86ba7f6487d5a68ceef786411709322bf261",
+    "build/statistics-navigation-20261020/prepare_operations.py": "cb9ce5e0e769c065d116659bfaa519d7ccbb617eea61309beb87e2d3c43c5a94",
+    "build/statistics-navigation-20261020/commit_source_amendment.py": "cc90669b0efd63f068723d9a61f0c8eb3572c56bf14ff19b30a716eef5b82ff9"
+  },
+  "supporting_finalizer_sha256": "3a6d0242130c59c554721b1bc68b56ee0c2a8b2f735e261fae6f4b056502c8f4",
+  "static_checks": {
+    "all18_files_ast_parsed_without_import": true,
+    "inherited_function_AST_after_namespace_normalization": {
+      "qualify.py": [
+        "run"
+      ],
+      "focused.py": [],
+      "run_smoke_scales.py": [],
+      "run_visuals.py": [
+        "run"
+      ],
+      "record_toolchains.py": [],
+      "promote_dist.py": [
+        "digest",
+        "runpath"
+      ],
+      "verify_dist.py": [],
+      "collect_hosted.py": [
+        "gh"
+      ],
+      "collect_metadata_ci.py": [],
+      "verify_hosted.py": [
+        "digest",
+        "require"
+      ],
+      "commit_source.py": [
+        "git"
+      ],
+      "checkpoint_statistics_navigation.py": [
+        "raw_git",
+        "assert_original_baseline",
+        "verify"
+      ],
+      "verify_private_checkpoint.py": [
+        "git"
+      ],
+      "checkpoint_milestone.py": [],
+      "publish.py": [
+        "git"
+      ],
+      "finish_milestone.py": [
+        "run"
+      ],
+      "finalize_evidence.py": [
+        "require",
+        "digest",
+        "read",
+        "git",
+        "cases",
+        "sections",
+        "captures",
+        "original_unchanged"
+      ]
+    },
+    "all_timeout_expressions_unchanged": true,
+    "focused_exact_tests": 14,
+    "offline_captures_per_scale": 14,
+    "engine_graph_captures_per_scale": 4,
+    "local_captures": 54,
+    "hosted_captures": 18,
+    "offline_smoke_Qt_rows": 9,
+    "checkpoint_shared_paths": [
+      ".gitignore",
+      "MIGRATION_PLAN.md",
+      "migration/STATE.md",
+      "migration/FEATURE_MATRIX.md",
+      "migration/PREVIEW.md",
+      "migration/RECOVERY.md",
+      "migration/upstreams.lock.json",
+      "migration/tasks/P04-22-statistics-navigation.md",
+      "migration/publication/preview/native-preview.yml"
+    ],
+    "amendment_commit_helper_added_to_pins": true
+  },
+  "assessments": [
+    {
+      "topic": "lanes and producer",
+      "status": "PASS",
+      "detail": "Actual JUnit/LastTest names must preserve exact old65/16/19 plus two new units, with14 focused. New Page/Window row keys derive from actual matching sections; old34/12/38/12 and19/13/22/hourly22 remain fixed. Flags, leak policy, jobs and deadlines are inherited."
+    },
+    {
+      "topic": "hosted identity/ZIP",
+      "status": "PASS",
+      "detail": "Run/source/API artifact identities, actual ZIP digest/size, canonical regular entries, exact artifact wrapper, full ZIP/extracted path+byte map equality and67 unique XML/LastTest names precede one success receipt. Previous namespace is history-hourly; all old core/accounting markers remain unchanged.18 exact captures/9smoke rows are required."
+    },
+    {
+      "topic": "dist and publication",
+      "status": "PASS",
+      "detail": "103-file/82-runtime baseline, full installed RPATH replay equality and complete rollback remain intact. Source-map commit identity and clean one-file public metadata/tag/remote gates retain their prior semantics. New public tag annotation correctly identifies Statistics navigation."
+    },
+    {
+      "topic": "raw pre-ref checkpoint",
+      "status": "PASS",
+      "detail": "Exact9 shared paths/current evidence only, bcee parent, alternate index and raw attributes are retained. All current and future inventory/shared evidence staged blobs are compared with working raw bytes before write-tree/commit-tree/first ref update; original HEAD/index and post-ref bytes are independently rechecked. Evidence count remains dynamic, avoiding omissions as reviews/receipts are added."
+    },
+    {
+      "topic": "authoring versus execution",
+      "status": "PASS with scope note",
+      "detail": "prepare_operations.py is pinned authoring history and must not regenerate corrected final helpers. finish_milestone explicitly selects actual runtime scripts. The generator retaining historical source template wording does not authorize rerunning it."
+    }
+  ],
+  "resolved_findings": [
+    {
+      "id": "OPS-1",
+      "initial": "Inherited tag annotation described the prior hourly-chart feature.",
+      "correction": "Root changed annotation to Session-scoped Statistics navigation on tab reopening; metadata/private commit prose now describes fresh scalar navigation. Current corrected hashes are pinned."
+    },
+    {
+      "id": "EF-AMEND-1",
+      "initial": "A supplied nonbaseline source_commit_parent could bypass amendment-only ancestry/pin gates if the amendment flag was false or absent.",
+      "resolution": "Root added an exact-bool flag check and a non-amended branch requiring direct_parent==baseline; fixed ded and complete16-pin amendment checks remain."
+    }
+  ],
+  "amendment_review": {
+    "scope": "Source-only narrow follow-up after corrected preview smoke expectation; no native/helper execution by reviewer.",
+    "source_baseline": "42b45749abd481014486a33844520c5d670b534b",
+    "preserved_initial_source": "ded34d2d4d0345b75d69320f98744236e7cb837a",
+    "actual_source_receipt": "f7d979801773934d481155019b18319b64beff96",
+    "direct_parent": "ded34d2d4d0345b75d69320f98744236e7cb837a",
+    "only_changed_native_path": "preview/native/packaging/preview_smoke.cpp",
+    "complete_source_map_files": 16,
+    "source_map_unchanged_files": 15,
+    "context_sha256": {
+      "migration/evidence/20261020-statistics-navigation/smoke-assertion-amendment/initial-operations.json": "dc7cefbbfc17677f850ebaba52683c5ce3fa1dd2a2ed0e233335249f3b55c096",
+      "migration/evidence/20261020-statistics-navigation/smoke-assertion-amendment/initial-evidence-finalizer.json": "58cff167dc5fb8d725a6a521b82f201f549eacf8bc4b86aef92ac2039a944a65",
+      "migration/evidence/20261020-statistics-navigation/smoke-assertion-amendment/review.json": "e3e2a0482268735b83cdd9cddc1ea4f745f95fa7cbf57dfc9f98dc0313c7d283",
+      "migration/evidence/20261020-statistics-navigation/smoke-assertion-amendment/before.cpp": "f498250efc873e5bbd4e9ebd6758ba25d0ab89d3512cf3adad3c6f90a666c947",
+      "migration/evidence/20261020-statistics-navigation/smoke-assertion-amendment/after.cpp": "d62514b8ec5fc21b5d2e3a148ff6a510367eabaade331530c2f4a797064fa6a4",
+      "/home/yurii/Java/BiglyBTC/build/statistics-navigation-20261020/attempts/initial-navigation-smoke/source-commit.json": "238700b28ee7ebf4f9a124fdd0f897a17902b42e3dc64c18b76d8c331eda4b97",
+      "/home/yurii/Java/BiglyBTC/build/statistics-navigation-20261020/source-commit.json": "e1885c62101e82dc6ebb386574c4f45fae9081ce54b229c97d0bae80f3efecb6",
+      "migration/evidence/20261020-statistics-navigation/pre-qualification-source.json": "d56ef2357c0904e36268a6f0c9a64c538c682ecd095d7e8a9bf25907e12378e7"
+    },
+    "checks": {
+      "new_helpers_AST_parsed_without_import": true,
+      "exact_original_finalizer_hash_reproduced_by_removing_only_new_guards_and_metadata": true,
+      "all_other_17_operational_sources_unchanged": true,
+      "all_16_current_source_pins_match_working_bytes": true,
+      "all_221_inherited_guards_match_working_bytes": true,
+      "original_index_baseline_hash_unchanged": true,
+      "initial_review_bytes_archived_before_update": true
+    },
+    "findings": [
+      {
+        "topic": "amendment commit helper",
+        "status": "PASS",
+        "detail": "Fixed ded HEAD/main/origin and baseline42b, one unstaged packagingcpp path/no staged or untracked changes, passed focused/scaled-smoke prerequisites, complete16 map with precisely one changed hash and221 unchanged guards precede committing. It writes both baseline and actual direct-parent identities, verifies resulting source bytes/linear range and remote tip. No production or old unit source is admitted as changed."
+      },
+      {
+        "topic": "finalizer amendment ancestry and pins",
+        "status": "PASS after root correction",
+        "detail": "Actual source first parent must match explicit source_commit_parent. Strict boolean source_amendment selects the fixed ded/two-commit-range/packaging-only path and complete16-pin checks; every other source hash must also match the immutable direct parent. Non-amended records are now required to descend directly from baseline42b. This closes the initially observed false/missing-flag route to a nonbaseline parent."
+      },
+      {
+        "topic": "retained gates and evidence",
+        "status": "PASS",
+        "detail": "Removing only the two additive ancestry/pin blocks and three ancestry metadata fields reproduces exact originally reviewed finalizer0da49ac8. Every previous lane/cohort/Qt/core/capture/hostedZIP/Java/dist/RPATH/raw-checkpoint gate therefore remains unchanged. Initial failed source/run/hosted history is not relabeled as final success; hosted admission remains tied to the final source commit."
+      },
+      {
+        "topic": "smoke expectation compatibility",
+        "status": "PASS source context",
+        "detail": "The sole smoke amendment captures the already selected Transfers navigation, asserts explicit section1 and compares complete reopened scalar choices. Removing its two added checks and restoring the old contradictory section0 expectation yields exact before bytes. Data/lifetime/file guards and all production/old unit files remain intact; actual reruns are root-owned."
+      }
+    ],
+    "resolved_guard_finding": {
+      "id": "EF-AMEND-1",
+      "initial": "A supplied nonbaseline source_commit_parent could bypass amendment-only ancestry/pin gates if the amendment flag was false or absent.",
+      "resolution": "Root added an exact-bool flag check and a non-amended branch requiring direct_parent==baseline; fixed ded and complete16-pin amendment checks remain."
+    },
+    "actual_Git_ancestry_verified_by_reviewer": false,
+    "ancestry_scope": "Reviewed the helper predicates and current immutable source receipts; root owns actual Git command execution."
+  },
+  "previous_active_review_sha256": "dc7cefbbfc17677f850ebaba52683c5ce3fa1dd2a2ed0e233335249f3b55c096",
+  "preserved_initial_review": "migration/evidence/20261020-statistics-navigation/smoke-assertion-amendment/initial-operations.json"
+}

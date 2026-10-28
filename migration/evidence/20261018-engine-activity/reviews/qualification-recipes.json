@@ -1,0 +1,23 @@
+{
+  "review": "Root inspected evidence, docs, promotion, visuals, publication and checkpoint recipes; driver independently reviewed operational scripts",
+  "syntax_parsed": 11,
+  "scripts_sha256": {
+    "collect_hosted.py": "5b95f21a49c6e212fb35cfa19baecbb8da0258be6494738f5d53f8548200444d",
+    "finalize_docs.py": "528ded884fd9cb20cdcbb4314f6fc798e32e6a9857f1d52bb943faa86daae3a8",
+    "finalize_evidence.py": "5e0cf611ccb1e9943fd417e4bee63ce9018abc0dbbf678f2a2bb47a44c90645f",
+    "promote_dist.py": "dcd37e6cc588b7b8db488cb9707ac592adc2ac4a7362bfa27cd25892ba320c22",
+    "publish.py": "ada984fc69d4b82c09bb16e2c9ca9584824500a39cc8ffdf9a8dc66d6165df1e",
+    "qualify.py": "4632826f2a8b4cb8595c3451d5e0879749f240544c062a22c4dbcdd11166ccfa",
+    "record_toolchains.py": "c26a309899a680357da61a0c7d942a3db95b4d0b76fb94141da4ec60f4e95d67",
+    "run_visuals.py": "fec3cb4edaf16c4fd89bbc7819fc2583153de0b9a5dc23931d8930f3ad9a34e7",
+    "verify_hosted.py": "5ba0019f993b718945813a9fc839deb073030d23d029d54eadfdcaf4fcc23b05",
+    "verify_private_checkpoint.py": "941ec8769da4da14a4f36a5d839d77e9a33c050b93d84c0bec8c06bfd416a53a",
+    "wire_window.py": "4d5764b48ec4e90fd5866dd6043aa3fb48393e8f406e38eb53158f031e1d8ce6"
+  },
+  "review_scope": "Preconditions and immutable source bindings; syntax and source review only, no qualification execution credited",
+  "runtime_preconditions": [
+    "Unique empty staging/rollback paths; preserve partial outputs before retry",
+    "Actual tests and hosted archive must pass before completion records",
+    "Do not stage original user index or signal original processes"
+  ]
+}

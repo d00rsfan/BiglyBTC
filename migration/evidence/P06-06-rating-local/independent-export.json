@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "build": "/tmp/biglybtc-public-rating-local-build",
+  "compiler": "/usr/bin/g++-16",
+  "ctest_rows": 4,
+  "local_original_observations": 70000,
+  "rating_original_observations": 1819,
+  "public_commit": "019c13d8916285351441f69e14cf001116a9cb58",
+  "binary_sha256": {
+    "/tmp/biglybtc-public-rating-local-build/biglybtc-rating-driver": "3912fa4d2843cc25bc6b0acbe5cff8461f8544e0f9d38be35c3d4f631f884630",
+    "/tmp/biglybtc-public-rating-local-build/biglybtc-rating-bounds-tests": "0492d929c8c1979e39fb5b812abd36eb60f6d7e147b21722c8c0e59bbd05d296",
+    "/tmp/biglybtc-public-rating-local-build/biglybtc-rating-local-driver": "aa9dfa8905278785ad9e161840e9995b96c4954799c2a9bc784acf5cb6221dfd",
+    "/tmp/biglybtc-public-rating-local-build/biglybtc-rating-local-bounds-tests": "ee52e47397cf3732820895f61a84a5e3ceacb826ef58ea3b2b432491c68111d6",
+    "/tmp/biglybtc-public-rating-local-build/libbiglybtc_rating_data.a": "918c1ebeb9a6ace3d7b09b75cb0eca281e13eb9180515112cba88211e8b35904"
+  }
+}

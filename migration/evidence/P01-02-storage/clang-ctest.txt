@@ -1,0 +1,41 @@
+Start testing: Oct 17 02:54 IDT
+----------------------------------------------------------
+1/2 Testing: storage-layout-boundaries
+1/2 Test: storage-layout-boundaries
+Command: "/tmp/biglybtc-storage-clang/biglybtc-storage-tests"
+Directory: /tmp/biglybtc-storage-clang
+"storage-layout-boundaries" start time: Oct 17 02:54 IDT
+Output:
+----------------------------------------------------------
+PASS compact/reordered mapping, transient holes, bounds and malformed control maps
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"storage-layout-boundaries" end time: Oct 17 02:54 IDT
+"storage-layout-boundaries" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/2 Testing: java-storage-interop
+2/2 Test: java-storage-interop
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/migration/probes/storage/../../tools/storage.py" "--probe" "/tmp/biglybtc-storage-clang/biglybtc-storage-probe"
+Directory: /tmp/biglybtc-storage-clang
+"java-storage-interop" start time: Oct 17 02:54 IDT
+Output:
+----------------------------------------------------------
+PASS reordered-boundary Java logical bytes and transient-piece classification
+PASS reordered-short Java logical bytes and transient-piece classification
+PASS reordered-compact Java logical bytes and transient-piece classification
+PASS reordered Java logical bytes and transient-piece classification
+PASS compact-short Java logical bytes and transient-piece classification
+PASS compact-unaligned Java logical bytes and transient-piece classification
+PASS compact-aligned Java logical bytes and transient-piece classification
+<end of output>
+Test time =  16.64 sec
+----------------------------------------------------------
+Test Passed.
+"java-storage-interop" end time: Oct 17 02:54 IDT
+"java-storage-interop" time elapsed: 00:00:16
+----------------------------------------------------------
+
+End testing: Oct 17 02:54 IDT

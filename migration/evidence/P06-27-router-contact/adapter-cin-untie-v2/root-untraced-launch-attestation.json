@@ -1,0 +1,101 @@
+{
+  "status": "root-attested untraced launch; completed three-lane qualification",
+  "recorded_utc": "2026-10-18T01:20:13.080025+00:00",
+  "matrix": "migration/evidence/P06-27-router-contact/adapter-cin-untie-v2/matrix.json",
+  "matrix_sha256": "95bc46d2c2f873076cf2a6e118eca8d1f47ec73de331ebb9fae92a85c4fff851",
+  "runner": "migration/tools/azureus_router_contact_adapter_matrix.py",
+  "runner_sha256": "c1fcf28890371ce4cf4c94a0984f167b988ee471679a351d3ae2d6441fbf8447",
+  "launch_identity": "build/recovery/router-contact-adapter-v2-native-execution.json",
+  "launch_identity_sha256": "2cac14d93c87c232573867f691116c0b4692ef542be4c10ec1c2afeb4a582384",
+  "direct_manager_observation": "build/recovery/root-reviews/p27-active-manager-untraced-observation.json",
+  "direct_manager_observation_sha256": "21fd4f93d29f6628466c7cdefff755db846778504403682789b9fea08618eb2d",
+  "launch_tool_sandbox_permissions": "require_escalated",
+  "root_launch_attestation": "Root launched the recorded manager through the require_escalated untraced tool path; the exact same-PID exec manager was directly observed with TracerPid 0 while the matrix was running. The manager sequentially created these fresh owned CTest session leaders.",
+  "CTest_TracerPid_directly_measured": false,
+  "measurement_limit": "All three CTest leaders had exited before root attempted a direct per-CTest observation. Their untraced execution is attested from the launch path, not claimed as a retrospective /proc measurement.",
+  "ctest_commands": [
+    {
+      "pid": 204452,
+      "owned_session_leader": 204452,
+      "command": [
+        "/usr/bin/ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-router-contact-adapter-v2-qualified-gcc",
+        "--output-on-failure",
+        "-j1"
+      ],
+      "started_at_utc": "2026-10-18T00:51:47.595250+00:00",
+      "finished_at_utc": "2026-10-18T00:52:40.388368+00:00",
+      "log": "migration/evidence/P06-27-router-contact/adapter-cin-untie-v2/matrix-gcc-12-ctest.txt",
+      "log_sha256": "c6e29195b05c0bc0686a31afb0ec076d7c89a0fa1665f80c21e2c76ff3f19f4b",
+      "owned_group_gone": true,
+      "owned_leader_reaped": true,
+      "returncode": 0,
+      "compiler": "gcc"
+    },
+    {
+      "pid": 206843,
+      "owned_session_leader": 206843,
+      "command": [
+        "/usr/bin/ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-router-contact-adapter-v2-qualified-clang",
+        "--output-on-failure",
+        "-j1"
+      ],
+      "started_at_utc": "2026-10-18T01:03:27.082613+00:00",
+      "finished_at_utc": "2026-10-18T01:03:52.442990+00:00",
+      "log": "migration/evidence/P06-27-router-contact/adapter-cin-untie-v2/matrix-clang-12-ctest.txt",
+      "log_sha256": "7965d1daee34ccbfb72220f8077d8a278d3b2189ef92da5eeb1244d0dbd13bc8",
+      "owned_group_gone": true,
+      "owned_leader_reaped": true,
+      "returncode": 0,
+      "compiler": "clang"
+    },
+    {
+      "pid": 209417,
+      "owned_session_leader": 209417,
+      "command": [
+        "/usr/bin/ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-router-contact-adapter-v2-qualified-asan",
+        "--output-on-failure",
+        "-j1"
+      ],
+      "started_at_utc": "2026-10-18T01:14:20.369203+00:00",
+      "finished_at_utc": "2026-10-18T01:16:33.684163+00:00",
+      "log": "migration/evidence/P06-27-router-contact/adapter-cin-untie-v2/matrix-asan-12-ctest.txt",
+      "log_sha256": "1a95bde518e40fb9dfaec851c5699f3598284d07d62e824e415da73d3096c501",
+      "owned_group_gone": true,
+      "owned_leader_reaped": true,
+      "returncode": 0,
+      "compiler": "asan"
+    }
+  ],
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1:allow_addr2line=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "environment_override_keys_removed": [
+    "ASAN_OPTIONS",
+    "LSAN_OPTIONS",
+    "UBSAN_OPTIONS",
+    "ASAN_SYMBOLIZER_PATH",
+    "TSAN_OPTIONS",
+    "CXXFLAGS",
+    "CFLAGS",
+    "CPPFLAGS",
+    "LDFLAGS",
+    "CC",
+    "CXX",
+    "CPATH",
+    "CPLUS_INCLUDE_PATH",
+    "LIBRARY_PATH",
+    "LD_PRELOAD",
+    "LD_LIBRARY_PATH",
+    "GCC_EXEC_PREFIX",
+    "COMPILER_PATH"
+  ],
+  "native_execution_by_this_attestation": false,
+  "whole_component_or_phase_completion_claim": false
+}

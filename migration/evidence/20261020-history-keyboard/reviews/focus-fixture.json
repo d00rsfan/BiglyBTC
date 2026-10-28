@@ -1,0 +1,47 @@
+{
+  "schema": 1,
+  "milestone": "P04-24",
+  "verdict": "PASS_SOURCE_ONLY",
+  "reviewer": "independent-driver",
+  "subject_manifest": "build/statistics-next-two-20261020/tests-keyboard-focus-fix/manifest.json",
+  "subject_manifest_sha256": "c4da15686caa213c86ca3edd538658350eda000d92ab6ba5e34a4475ac72d2d2",
+  "original_source_sha256": "e98ada709439ee95b25067893da0d4a7653271cad50f62c1ed41b0d7bc275e30",
+  "replacement_source_sha256": "cccd2192cfcb61a58f8b296e7da0eb7352ca8cfe7154ad9dfc3b2480c83aa30e",
+  "patch_sha256": "5b2b32ea19ae42f2d3a870923bcd55e471eadc15bd1aa51bec2707207873be0a",
+  "original_capsule_manifest_sha256": "f20f287800b7e00c2d1a432fc275a45eaa5048557c063988c7aae716158008cf",
+  "checks": {
+    "exactly_two_source_line_replacements": true,
+    "reversing_both_fixture_activation_changes_recovers_entire_original_source": true,
+    "all_assertion_invocations_data_keys_and_deadlines_unchanged": true,
+    "same_source_slot_names_order_and_count": true,
+    "all_seven_original_capsule_artifacts_unchanged": true,
+    "frozen_production_sources_unchanged": true,
+    "no_skips_removed_tests_or_production_focus_guard_relaxation": true
+  },
+  "assessment": [
+    "The helper processes queued show events before explicitly activating its own top-level widget in QApplication and requesting focus, then processes events. The same sequence follows showNormal. This addresses offscreen fixture activation while preserving the product focus requirement.",
+    "Real Tab traversal, hasFocus assertions, hidden/minimized rejection, selection preservation, raster/callback checks and all default QTRY deadlines remain exact. Remaining host activation fixtures are unchanged."
+  ],
+  "preserved_initial_actual_execution": {
+    "log": "migration/evidence/20261020-history-keyboard/tests-keyboard-focus-fix/diagnostics/initial-gcc-tests.log",
+    "sha256": "d66c13eaf6fb06473e02f913775b50f887bfb78519bec9261140f331a46e5aeb",
+    "observed_passed": 16,
+    "observed_failed": 1,
+    "observed_skipped": 0,
+    "scope": "Root initial old-source execution only; its failed hasFocus setup precedes minimized checks. No corrected-source pass inferred."
+  },
+  "limits": [
+    "Static source/hash/diff review only; corrected qualification remains root-owned.",
+    "Explicit QApplication activation in offscreen tests does not establish real compositor or assistive-technology acceptance."
+  ],
+  "reviewer_execution": {
+    "target_import": false,
+    "compiler": false,
+    "tests": false,
+    "native": false,
+    "JVM": false,
+    "Git": false,
+    "native_edits": false
+  },
+  "blockers": []
+}

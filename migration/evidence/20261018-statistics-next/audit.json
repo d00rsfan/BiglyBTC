@@ -1,0 +1,241 @@
+{
+  "status": "SOURCE_AUDIT_AND_DESIGN_ONLY",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_pins": {
+    "file": "source-pins.json",
+    "sha256": "666018d13c674419efe0ee7d3b7e1dbfadea36c6be37bdf8a57ffcff4e32cb40",
+    "original_files": 35,
+    "complete_selected_method_bodies": 58,
+    "native_context_files": 18,
+    "native_HEAD": "2501968f62d4ec7e70b093c2186a31fcf2ede518",
+    "native_context_note": "Initial P04-14 working context and HEAD retained above. Root committed during this audit; all18 final committed file bytes match the initially inspected working hashes. No build/runtime credit is supplied by this audit.",
+    "final_native_HEAD": "8efe56e4c0a4c46b8cdcb51035364db938494bb5"
+  },
+  "menu": {
+    "authorities": [
+      "MainMenuV2.addToolsMenu",
+      "MainMenuV3.addToolsMenu",
+      "MenuFactory.addStatisticsMenuItem",
+      "MenuFactory.addMenuItem(style)",
+      "KeyBindings.parseKeyBinding",
+      "KeyBindings.setAccelerator(localization)",
+      "MessagesBundle.properties",
+      "MenuBuildUtils.addMaintenanceListenerForMenu"
+    ],
+    "linux_label": "Tools > Statistics",
+    "message_key": "MainWindow.menu.view.stats",
+    "default_binding": "Meta+5; SWT.MOD1 means Ctrl+5 on Linux, Command+5 on macOS. Locale/platform keybinding overrides remain possible.",
+    "mac_menu_note": "Classic macOS menu construction puts these Tools entries under View instead.",
+    "dispatch": "Gets the main MDI and calls showEntryByID(StatsView.VIEW_ID), with no Transfers datasource. Menu maintenance eagerly builds the always-built Tools items so the accelerator is not dependent on first opening the menu.",
+    "different_entrypoint": "Status-bar rate-label double-click explicitly selects TransferStatsView; do not attribute that datasource to Tools/Ctrl+5.",
+    "backend_effect": "Navigation only; no transfer, cancel, reset-mark or statistics-file write is dispatched by the menu listener."
+  },
+  "view_lifecycle": {
+    "authorities": [
+      "MainMDISetup StatsView factory fragment",
+      "BaseMDI.showEntryByID",
+      "TabbedEntry.isCloseable",
+      "StatsView.initialize",
+      "StatsView.eventOccurred",
+      "StatsView.delete",
+      "StatsView.UpdateThread.run"
+    ],
+    "entry_id": "StatsView",
+    "outer_title": "Statistics",
+    "close_reopen": "The main MDI factory creates a closeable entry. Existing entry activation reuses it; after normal outer close the retained factory can create it again. Generic close listeners may veto; StatsView declares no special permanent-entry veto.",
+    "deactivate": "Outer view sets destroyOnDeactivate=false. Its embedded MDI sets destroyEntriesOnDeactivate=true for subview instances.",
+    "periodic_update": "StatsView creates a daemon update thread that signals EVENT_PERIODIC_UPDATE to entries approximately once per second; TYPE_REFRESH updates the selected entry. Delete stops the thread loop flag and disposes its parent.",
+    "inner_x_scope": "The small embedded top-right x directly calls StatsView.delete/disposes its parent; this audit does not equate that implementation detail with the outer MDI close transaction.",
+    "native_requirement": "Ctrl+5 and tab close/reopen must preserve existing transfer work. A view close must never mean Cancel or application Quit."
+  },
+  "subviews": {
+    "authorities": [
+      "StatsView.registerPluginViews",
+      "ViewManagerSWT.getBuilders(Object,sort)",
+      "ViewManagerSWT.sortBuilders",
+      "UISWTViewBuilderCore.getDefaultVisibility",
+      "TabbedMDI.buildMDI",
+      "TransferStatsView.initialize"
+    ],
+    "core_registration_order": [
+      "Activity (SpeedView)",
+      "Transfers (TransferStatsView)",
+      "Cache",
+      "Tracker",
+      "conditional DHT/DDB Graph/Vivaldi family",
+      "Tag Activity",
+      "Country Stats",
+      "Counters"
+    ],
+    "conditional_details": [
+      "IPv4: main DHT, main DDB Graph, main Vivaldi.",
+      "IPv6: IPv6 DHT and Vivaldi; IPv6 DDB Graph only when IPv4 is absent.",
+      "IPv4: BiglyBT DHT; BiglyBT Vivaldi additionally on CVS builds. Commented-out CVS registrations do not create tabs."
+    ],
+    "fresh_default": "With fresh embedded-tab configuration and no plugin reordering, Activity is the first selected subview. Tools does not force Transfers.",
+    "saved_configuration": [
+      "StatsView.closedtabs",
+      "StatsView.openedtabs",
+      "StatsView.tabOrder",
+      "StatsView.selectedTab"
+    ],
+    "plugin_scope": "Core registration is guarded once; plugin views can be added. Stable core-before-plugin sorting and saved tab state mean exact visible tab set/order is not universal.",
+    "transfers_inner_tabs": [
+      "Current",
+      "History"
+    ],
+    "transfers_inner_default": "tsv:tabfolder.sel defaults to 0 (Current); previously selected History can be restored."
+  },
+  "counter_domains": {
+    "authorities": [
+      "ActivityView.periodicUpdate",
+      "TransferStatsView.refreshGeneral",
+      "TransferStatsView.createHistoryPanel",
+      "TransferStatsView.refreshHistory",
+      "GlobalManagerStatsImpl",
+      "OverallStatsImpl",
+      "GeneralStats",
+      "DisplayFormatters"
+    ],
+    "activity": "Samples actual global-manager data plus protocol byte rates, along with protocol, configured limits and swarm-average series. Saved totals are not graph samples.",
+    "transfers_now": "GlobalManagerStats current data/protocol receive/send rates; underlying rates are bytes per second.",
+    "transfers_session": "GlobalManagerStats session cumulative data plus protocol byte counters; OverallStats session uptime uses the instance's current-time start, not a saved start field.",
+    "transfers_total": "OverallStats downloaded/uploaded/uptime getters called with since_mark=true. Mark time controls the displayed since-date label; mark counters still affect subtraction when mark_time is zero.",
+    "history": "Separate LongTermStats service, with period selection and resolution. OverallStats saved totals and per-download saved records contain no equivalent history samples.",
+    "display_units": "Underlying byte counters/rates are separate from formatting. DisplayFormatters has configurable SI/IEC labels, 1000/1024 scaling, bits for rates and format overrides. Uptime is seconds; mark time is epoch milliseconds.",
+    "other_current_panels": "Connections, routing, queued uploads, SOCKS, autospeed capacities/pings and DHT/cache/tag/country services need actual owned service inputs; no native saved-library proxy is available."
+  },
+  "saved_overall_file": {
+    "authority": "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java at the pinned commit, plus Constants, GeneralStats and FileUtil",
+    "default_basename": "BiglyBT.statistics",
+    "basename_expression": "Constants.APP_NAME + .statistics; APP_NAME defaults to BiglyBT and can be overridden by the original product-name system property. A first fixed-default reader must not silently rename it BiglyBTC.statistics.",
+    "format": "Plain resilient bencoded root dictionary containing the all dictionary. This path uses BEncoder/BDecoder, without gzip.",
+    "field_type": "Each writer field is a Java Long represented as a signed bencode integer. Raw signed values and presence/type should remain inspectable.",
+    "fields": [
+      {
+        "key": "downloaded",
+        "unit": "bytes",
+        "meaning": "Accumulated global transfer data plus protocol received bytes"
+      },
+      {
+        "key": "uploaded",
+        "unit": "bytes",
+        "meaning": "Accumulated global transfer data plus protocol sent bytes"
+      },
+      {
+        "key": "uptime",
+        "unit": "seconds",
+        "meaning": "Accumulated lifetime uptime"
+      },
+      {
+        "key": "mark_time",
+        "unit": "epoch milliseconds",
+        "meaning": "Mark label timestamp; not last-save timestamp"
+      },
+      {
+        "key": "mark_downloaded",
+        "unit": "bytes",
+        "meaning": "Downloaded baseline at mark"
+      },
+      {
+        "key": "mark_uploaded",
+        "unit": "bytes",
+        "meaning": "Uploaded baseline at mark"
+      },
+      {
+        "key": "mark_uptime",
+        "unit": "seconds",
+        "meaning": "Uptime baseline at mark"
+      },
+      {
+        "key": "dht_down",
+        "unit": "bytes",
+        "meaning": "Separate accumulated DHT receive bytes"
+      },
+      {
+        "key": "dht_up",
+        "unit": "bytes",
+        "meaning": "Separate accumulated DHT send bytes"
+      },
+      {
+        "key": "p_uploaded",
+        "unit": "bytes",
+        "meaning": "Accumulated global transfer protocol sent bytes"
+      },
+      {
+        "key": "d_uploaded",
+        "unit": "bytes",
+        "meaning": "Accumulated global transfer data sent bytes"
+      },
+      {
+        "key": "p_downloaded",
+        "unit": "bytes",
+        "meaning": "Accumulated global transfer protocol received bytes"
+      },
+      {
+        "key": "d_downloaded",
+        "unit": "bytes",
+        "meaning": "Accumulated global transfer data received bytes"
+      }
+    ],
+    "do_not_sum_twice": "downloaded/uploaded already combine the global-manager data/protocol counters. DHT values are stored independently; do not add them or the split fields into those combined totals as a new client total.",
+    "stale_comment": "OverallStatsImpl's sizes-in-MB comment is contradicted by byte-valued counters and the GeneralStats API; the stored byte fields are not megabytes.",
+    "source_load_defaults": "getLong returns zero for absent/null all map, absent field or non-Long field, and retains any supplied signed Long. The direct all-to-Map cast can throw for a wrong-shaped all value. Missing/invalid whole-file reader results may become empty maps in Java.",
+    "recommended_native_difference": "Expose raw optional values, type/default diagnostics and missing/error provenance. Do not present a missing or corrupt file as an observed zero total. If source-default zero is projected for an absent individual field, retain explicit default provenance; invalid/negative arithmetic can independently remain unavailable under a reviewed native policy.",
+    "mark_operations": {
+      "setMark": "Sets mark_time to current epoch milliseconds and copies current downloaded/uploaded/uptime baselines.",
+      "clearMark": "Sets mark_time and the three mark baselines to zero, without resetting lifetime totals.",
+      "since_mark_getter": "If baseline exceeds total, first lowers the in-memory baseline to total, then returns total minus baseline. This is independent of mark_time. A read-only snapshot can derive admitted nonnegative since-mark values without mutating the original document, with normalization provenance.",
+      "no_first_scope_writer": "No Set Mark, Clear Mark, reset, recovery rewrite or total accumulation in the initial read-only implementation."
+    },
+    "save_cadence": "Nominal 60-second timer, save every tenth completed tick (10 minutes), plus forced update at destroyInitiated. Clock reversal, rejected time delta, write failure or abrupt exit can prevent saving; neither a shutdown-save guarantee nor freshness can be inferred.",
+    "not_stored": [
+      "Last-save timestamp",
+      "Current receive/send rates",
+      "Session counters/start time",
+      "LongTermStats history",
+      "Connection/routing/autospeed state"
+    ],
+    "no_core_startup_required": "A pure bounded bencode projection of generated bytes or a fixed-leaf native read-only adapter can inspect saved values without Java, Core, GlobalManager or normal manager startup.",
+    "prohibited_shortcut": "Do not instantiate OverallStatsImpl or StatsFactory.initialize for a fixture/reader: they register global providers, lifecycle listeners and periodic timers, and initialize other stats services.",
+    "read_only_io_prerequisite": "Current native ConfigFile::load accepts safe .config names only. BiglyBT.statistics requires a separately reviewed fixed-leaf read-only adapter over the existing held directory fd/detail::readFile; do not widen the generic writer's allowlist.",
+    "recovery_scope": "Original FileUtil recovery may try .saving/.bak, partially recover, make bad copies and rewrite primary from backup. The new reader must disclose its chosen complete-document candidate precedence and provenance and perform no original recovery side effects. Existing native reader ordering is not automatically complete original FileUtil equivalence.",
+    "ownership_bounds": "Proposed immutable owned Document with ordinary 4 MiB/100000-node/depth64 limits, exact default basename and exact allowed suffixes only, stop checks around read/projection, unknown fields retained. Current parser rejects duplicate dictionary keys; that compatibility limit must remain explicit."
+  },
+  "native_available_inputs": {
+    "saved_library": "SavedDownload.downloaded/uploaded become LibraryItem.received/sent. Original GlobalManager export stores each download's lifetime data-only counters, not global protocol totals or this-session values.",
+    "library_scope": "At most 100000 accepted model records; duplicate hashes are allowed while duplicate keys are not. A saved-library summary must count records and report nonnegative known-field coverage, independently for received/sent; it must not silently deduplicate by hash.",
+    "unknown_and_overflow": "Initial not-loaded, successfully loaded empty, absent field, negative raw field and checked-sum overflow are distinct. No absent values become zero. A complete loaded empty record set can have a genuine zero sum.",
+    "filter_scope": "Use accepted source-model records, rather than currently visible proxy-filter rows, for an explicitly labelled saved-library summary.",
+    "rate_input": "LocalProgress publishes actual per-torrent libtorrent torrent_status download_payload_rate/upload_payload_rate, throttled with steady_clock to roughly 200 ms. It is a single owned local-transfer payload domain, not original GlobalManager data-plus-protocol or all-client traffic.",
+    "telemetry_scope": "Target/revision-bound UI telemetry can provide observed transfer rates. It has no recorded history timestamps; any bounded native chart must sample actual arrival/monotonic times and explicitly describe its local preview/payload scope. No zero samples before an event or fictitious preexisting history.",
+    "notification_scope": "Authoritative snapshots may change saved counters; accepted telemetry updates columns1..5 and details0..3. A summary need not rescan100000 rows for every telemetry/detail change. No performance result is claimed here.",
+    "current_gaps": "No native OverallStats/BiglyBT.statistics reader, global session counters, global protocol rates or LongTermStats service exists in the inspected source."
+  },
+  "implementation_recommendation": {
+    "navigation": "Add Tools > Statistics (Ctrl+5), a single closeable known page, activate existing page or reopen after close; Ctrl+W/X close only the view while busy. Keep torrent targets suppressed while Statistics is current. Do not dispatch transfer/cancel/refresh merely for activation.",
+    "first_useful_transfers": "Read-only Last-saved overall totals (fixed BiglyBT.statistics reader), independent saved mark and lifetime facts with units/provenance/unknowns; a separate Saved library records summary with coverage. Never substitute the latter for original Total or This Session.",
+    "first_activity_choice": "A useful Activity subview can show actual observed local-transfer payload rates/series with explicit scope and no-sample state. Exact original global Activity remains open until a real global service exists. Root chooses whether to select Activity first for original navigation or Transfers first as an explicitly documented preview adaptation.",
+    "unavailable_services": "Keep session/protocol-global/history/connection/autospeed/cache/DHT/tag/country metrics unavailable until corresponding owned inputs exist; no fake zeros or fabricated graphs.",
+    "generation": "Statistics IO must use its own nonzero session/request generation over the existing held worker lease, reject stale completions, remain independent of saved-service/layout active-pending tokens, and publish result before busy=false with QObject deletion/queued cancellation guards.",
+    "details": "No torrent-state/payload scan, per-torrent startup IO, filesystem stat of payloads, ordinary Java manager, new profile lease or network request is required for saved global projection."
+  },
+  "proposed_independent_tests": [
+    "Ctrl+5 from My Torrents filter/Files/service controls, singleton tab, Ctrl+W and X during idle/busy, close/reopen without transfer/cancel/selection retargeting.",
+    "Not loaded versus loaded-empty library, partial known counters, negative raw counters, independent overflow, duplicate hashes and filter independence.",
+    "Generated overall bencode fixtures covering all13 fields/units, unknown fields, missing/wrong all, wrong individual types, negative values, mark>total, mark_time0 with nonzero marks, independent metrics and checked arithmetic.",
+    "Fixed-leaf read-only reader: true missing, primary/backup/saving provenance, malformed candidates, unsafe symlinks, size/node/depth caps, stop/stale/deletion gates, byte/inode identity and no rewrite.",
+    "Actual telemetry target/revision checks, no-sample state, bounded event-driven payload-rate samples, close/reopen lifetime, no original global/history claim.",
+    "Any future Java equality evidence needs a separately approved inert exact-body source probe; these proposed synthetic tests give no Java execution/equality credit."
+  ],
+  "execution_credit": {
+    "source_and_hash_inspection_only": true,
+    "Java": 0,
+    "native_builds_or_tests": 0,
+    "GUI_or_running_client_interaction": 0,
+    "profile_or_payload_IO": 0,
+    "network": 0,
+    "Git_or_index_writes": 0,
+    "native_statistics_implementation": 0
+  }
+}

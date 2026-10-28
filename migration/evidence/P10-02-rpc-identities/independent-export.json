@@ -1,0 +1,35 @@
+{
+  "local_review_commit": "56ededc615758cb58f5ba9b74d3cf0e2a42961f4",
+  "provenance_sha256": "f24b558acdfe04668c20388ffa2bdf93fcee41315200280706b70ea5a3e8489b",
+  "commands": [
+    [
+      "cmake",
+      "-S",
+      "/tmp/biglybtc-public-rpc",
+      "-B",
+      "/tmp/biglybtc-public-rpc-build",
+      "-G",
+      "Ninja",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64",
+      "-DCMAKE_BUILD_TYPE=Release"
+    ],
+    [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/tmp/biglybtc-public-rpc-build",
+      "-j2"
+    ],
+    [
+      "ctest",
+      "--test-dir",
+      "/tmp/biglybtc-public-rpc-build",
+      "--output-on-failure"
+    ]
+  ],
+  "files_verified": 25,
+  "scope": "Independent Qt6.12 RPC wrapper/identity static libraries only;804 wrapper and828 ID cases, no listener/profile/network"
+}

@@ -1,0 +1,40 @@
+{
+  "status": "passed",
+  "recorded_utc": "2026-10-17T05:07:06.735063+00:00",
+  "test_count": 5,
+  "build": "/tmp/biglybtc-speed-scheduler-gcc",
+  "implementation_commit": "1c81314a6530f6ff65761e73214525f6ba1dac21",
+  "test_log": "/tmp/biglybtc-speed-scheduler-gcc-full-5-ctest.log",
+  "test_log_sha256": "fd38819805d41d632e68af7ddc0f6c1859a5858f4adcda10e082c3895ca21cd6",
+  "verification_mode": "single_suite",
+  "initial_failed_tests": [],
+  "retry_log": null,
+  "retry_log_sha256": null,
+  "binary_sha256": {
+    "ownership-tests": "147fe8bddcf5459e61232c95d40e64e38f6140921e7df9bf06cd67d492c25b69",
+    "scheduler-tests": "02320578c7b73d32c797f9b0d7c55b109de1352cb34528d4ef9721e4bd29d038",
+    "CMakeFiles/4.2.3/CMakeDetermineCompilerABI_CXX.bin": "ede6159aafea58ac251cf316d8c40b5c31bcb3d84ce808c990e5bcb3aa18dccf",
+    "CMakeFiles/4.2.3/CompilerIdCXX/a.out": "10a702d347575f653f7eeb474abf029d492ac4dbb1193fa4da1a854d9aff0c11"
+  },
+  "retained_binary_paths": {},
+  "source_sha256": {
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/scheduler.cpp": "7b6a707e66d77674665e5d213ac3acc5d81e763af3f0bdedf37dc90bf3e6869d",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/original_xml.cpp": "04a210b1f3e91b7458a0afa20057efd37e4b2b36d9dc5560e8d931e0b2231817",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_file.cpp": "2016f51cc3c7fdd4977898b27f42de24ccd4b00d9b1e4965e6c701ce8f68f3ae",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/tests.cpp": "2616f72edc5da5e2779829f49396063d8e13834e21161156573a52747ea4acc1",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_tests.cpp": "62e9d424d668117f539a78146a2b850ca410eeef80fb0d1cf7cff1a008d6567d",
+    "native/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_file.hpp": "20ad7b0962cb9339b629ce9d8e3582cb848e7fe52f5f434a6306455f0c7be051",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/CMakeLists.txt": "a84dbf4d585b8380805415b32d5d448721d413f113edd6fc950b09a984618553",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/scheduler.hpp": "96f8bc6ecd338c21a5293a6476bf857a33228eab96904f97da4428352d97d170"
+  },
+  "build_inputs_sha256": {
+    "CMakeCache.txt": "2648141c061169f9d94c79192671acbaf448c11341e8f7f7caa60c175f446472",
+    "compile_commands.json": "d49492ebfa97764f73f346f04196de84d6fbcdce2a5809a682e6e6995e9b8830",
+    "build.ninja": "35f40d9f6684d42157db2e17ca35fa540bed3d70f8276f0d0d57f0a959171ec4"
+  },
+  "limitations": [
+    "Development build/test capsule, not a complete release dependency/source closure",
+    "A passing scoped test matrix does not certify full client parity"
+  ]
+}

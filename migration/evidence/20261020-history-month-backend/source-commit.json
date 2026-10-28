@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "source_commit": "d36dd2d1c92914c796e20115939e3c66e7627ba1",
+  "native_parent": "3635fe01fa0212e075af5c956740e499303980b9",
+  "source_commit_parent": "3635fe01fa0212e075af5c956740e499303980b9",
+  "source_files_verified": 9,
+  "source_sha256": {
+    "preview/native/adapters/CMakeLists.txt": "25a905cd6ddfb1b238880c1b63a270903a8ec1f2ac76691c33c775af3de0a050",
+    "preview/native/adapters/history_month_view.cpp": "ee6c6d736340332d837a196c860fa1fd4c74dcfd44480f11b8d1588c1e0f6fd4",
+    "preview/native/adapters/history_month_view.hpp": "19df42d0392b15b94c7f911828818ed6b2d1dddcc6e800253552ee2f32b659fa",
+    "preview/native/core/CMakeLists.txt": "8fcc664847f3e0c79944cae20ffb901d4cc47ed991acf72b0f11140289ab5120",
+    "preview/native/core/include/biglybtc/saved_history_month.hpp": "c2359d984746fbbd9ee842ce59fb2ed461354cbb10421b03bdf6171861a34a1a",
+    "preview/native/core/src/saved_history_month.cpp": "9b1e5978d4d2d9718374f34561cd641419fbd9eeb8c6d01f625460dcf8a27b83",
+    "preview/native/tests/CMakeLists.txt": "c9dfb78a4081c1f07040b27e3517894f45ef8abc65eca3ee6414ec78e874e72e",
+    "preview/native/tests/history_month_view_tests.cpp": "80b046ae66c5801c0ac545afa8e48704150de27d9eba870b419f4bd5f911b327",
+    "preview/native/tests/saved_history_month_tests.cpp": "7b40f2779b5497c72a554a2da4932dfb662e91ae232665cab511bc6f10b98176"
+  },
+  "qualification_at_source_publication": "GCC73 and all three scaled smokes passed; Clang/sanitizer/hosted success remains mandatory for dist, metadata and tag."
+}

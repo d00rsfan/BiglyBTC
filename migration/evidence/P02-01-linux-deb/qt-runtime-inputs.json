@@ -1,0 +1,1237 @@
+{
+  "variant": "bundled-qt",
+  "qt_version": "6.12.0",
+  "private_runtime": "usr/lib/biglybtc/qt",
+  "files": [
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/platforms/libqxcb.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/platforms/libqxcb.so",
+      "sha256": "8611ee4e2315bcf4b38e14e2714b553e227e489a5cfaaa40b692fff9f2ac272a",
+      "needed": [
+        "libQt6XcbQpa.so.6",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libxkbcommon-x11.so.0",
+        "libxcb-cursor.so.0",
+        "libxcb-icccm.so.4",
+        "libxcb-util.so.1",
+        "libxcb-image.so.0",
+        "libxcb-keysyms.so.1",
+        "libxcb-randr.so.0",
+        "libxcb-render-util.so.0",
+        "libxcb-shm.so.0",
+        "libxcb-sync.so.1",
+        "libxcb-xfixes.so.0",
+        "libxcb-render.so.0",
+        "libxcb-shape.so.0",
+        "libxcb-xkb.so.1",
+        "libxcb.so.1",
+        "libX11-xcb.so.1",
+        "libX11.so.6",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/platforms/libqwayland.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/platforms/libqwayland.so",
+      "sha256": "1ade530571b63a433d192110121a11bae023cc58d8a6e586a352936ac0d6c7c2",
+      "needed": [
+        "libQt6WaylandClient.so.6",
+        "libwayland-client.so.0",
+        "libwayland-cursor.so.0",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/platforms/libqoffscreen.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/platforms/libqoffscreen.so",
+      "sha256": "b03cc26de26de6e09adceaf7ab2866ebbae39d88d893e0a5032e3ea55f190a67",
+      "needed": [
+        "libX11.so.6",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/platforms/libqminimal.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/platforms/libqminimal.so",
+      "sha256": "65b076f7bcfcc1dfa2da0bfff3a40f6429d7b0470569d6569f8d8fe2d5314b1a",
+      "needed": [
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libfreetype.so.6",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/imageformats/libqgif.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/imageformats/libqgif.so",
+      "sha256": "c84d1245e6824a2176079c5d72234b0a2a805b10214037b1229e8bc2c4ff62ca",
+      "needed": [
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/imageformats/libqicns.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/imageformats/libqicns.so",
+      "sha256": "36c77e14da63b8a6c2a09892240cd003fa31b4d7e0a1c1e3ff442baedf15b952",
+      "needed": [
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/imageformats/libqico.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/imageformats/libqico.so",
+      "sha256": "9423748bb76c7a26197f7f5c437e25ce21aa3ff2717e5c6cc9c35d552b46f28e",
+      "needed": [
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/imageformats/libqjpeg.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/imageformats/libqjpeg.so",
+      "sha256": "aedd3e4f7a233365dcef9f016bd64f05575dd49aba69ce923fc99f214f5384ee",
+      "needed": [
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/imageformats/libqsvg.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/imageformats/libqsvg.so",
+      "sha256": "b178be1a99734997111e740a54b2ac0649e66b73d51ce259f13cc6c7534861c9",
+      "needed": [
+        "libQt6Svg.so.6",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/imageformats/libqtga.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/imageformats/libqtga.so",
+      "sha256": "b0efbd5a9c43151335f9490b0403ef0dcd7e77fbd06ecef9f16da7b4a80849c3",
+      "needed": [
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/imageformats/libqtiff.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/imageformats/libqtiff.so",
+      "sha256": "4ec0307bc51f16f4812a781ab2facfdf45e06f427a103435d70ed29768808332",
+      "needed": [
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libz.so.1",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/imageformats/libqwbmp.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/imageformats/libqwbmp.so",
+      "sha256": "d7200eb7ab8542b4a99836c39c1f638b4f10bce171b9d0e71dd272bba5bb06d4",
+      "needed": [
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/imageformats/libqwebp.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/imageformats/libqwebp.so",
+      "sha256": "4b22639fb50987b5aec000690b165d7406ee4486a11d4c02b86c8a14e321f162",
+      "needed": [
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/iconengines/libqsvgicon.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/iconengines/libqsvgicon.so",
+      "sha256": "5c83c91f83f7a528ad054d1031b338c21e9d7c3aca3d02bf98518ec5d89d65af",
+      "needed": [
+        "libQt6Svg.so.6",
+        "libxkbcommon.so.0",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/platformthemes/libqgtk3.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/platformthemes/libqgtk3.so",
+      "sha256": "9a8157d6b1ae49e790f0d84b93d350616f92c97cbb3df673b3a63aa8b6351e7f",
+      "needed": [
+        "libX11.so.6",
+        "libgtk-3.so.0",
+        "libgdk-3.so.0",
+        "libpangocairo-1.0.so.0",
+        "libpango-1.0.so.0",
+        "libharfbuzz.so.0",
+        "libatk-1.0.so.0",
+        "libcairo-gobject.so.2",
+        "libcairo.so.2",
+        "libgdk_pixbuf-2.0.so.0",
+        "libgio-2.0.so.0",
+        "libgobject-2.0.so.0",
+        "libglib-2.0.so.0",
+        "libQt6Gui.so.6",
+        "libQt6DBus.so.6",
+        "libQt6Core.so.6",
+        "libGL.so.1",
+        "libxkbcommon.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/platformthemes/libqxdgdesktopportal.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/platformthemes/libqxdgdesktopportal.so",
+      "sha256": "67fe302dbb46f498dc6b7fc7d1d54d5939f55635ad988b9af730c2e25a31ea4a",
+      "needed": [
+        "libQt6Gui.so.6",
+        "libQt6DBus.so.6",
+        "libQt6Core.so.6",
+        "libGL.so.1",
+        "libxkbcommon.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/xcbglintegrations/libqxcb-egl-integration.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/xcbglintegrations/libqxcb-egl-integration.so",
+      "sha256": "01088ab95461d805bd558ce9d651e07b20215958f7febf4ec099c710cfcef5e7",
+      "needed": [
+        "libQt6XcbQpa.so.6",
+        "libEGL.so.1",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libxkbcommon-x11.so.0",
+        "libxcb-cursor.so.0",
+        "libxcb-icccm.so.4",
+        "libxcb-util.so.1",
+        "libxcb-image.so.0",
+        "libxcb-keysyms.so.1",
+        "libxcb-randr.so.0",
+        "libxcb-render-util.so.0",
+        "libxcb-shm.so.0",
+        "libxcb-sync.so.1",
+        "libxcb-xfixes.so.0",
+        "libxcb-render.so.0",
+        "libxcb-shape.so.0",
+        "libxcb-xkb.so.1",
+        "libxcb.so.1",
+        "libX11-xcb.so.1",
+        "libX11.so.6",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/xcbglintegrations/libqxcb-glx-integration.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/xcbglintegrations/libqxcb-glx-integration.so",
+      "sha256": "af8bb94f80cdbed024770705f5ce1ec77cd543d379f539bd6463b26dc2ad7caa",
+      "needed": [
+        "libQt6XcbQpa.so.6",
+        "libxcb-glx.so.0",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libxkbcommon-x11.so.0",
+        "libxcb-cursor.so.0",
+        "libxcb-icccm.so.4",
+        "libxcb-util.so.1",
+        "libxcb-image.so.0",
+        "libxcb-keysyms.so.1",
+        "libxcb-randr.so.0",
+        "libxcb-render-util.so.0",
+        "libxcb-shm.so.0",
+        "libxcb-sync.so.1",
+        "libxcb-xfixes.so.0",
+        "libxcb-render.so.0",
+        "libxcb-shape.so.0",
+        "libxcb-xkb.so.1",
+        "libX11-xcb.so.1",
+        "libX11.so.6",
+        "libxcb.so.1",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/wayland-decoration-client/libadwaita.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/wayland-decoration-client/libadwaita.so",
+      "sha256": "225a5289c9518ea4a61a31daf881524309ff150a57601944eed37699e079da54",
+      "needed": [
+        "libQt6Svg.so.6",
+        "libwayland-client.so.0",
+        "libQt6WaylandClient.so.6",
+        "libwayland-cursor.so.0",
+        "libQt6Gui.so.6",
+        "libQt6DBus.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/wayland-decoration-client/libbradient.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/wayland-decoration-client/libbradient.so",
+      "sha256": "c7f7f5547ad55202de8a35dfa0765a7c67a8404dee19eb07c568ee3d64f49cc9",
+      "needed": [
+        "libwayland-client.so.0",
+        "libQt6WaylandClient.so.6",
+        "libwayland-cursor.so.0",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/wayland-graphics-integration-client/libdmabuf-server.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/wayland-graphics-integration-client/libdmabuf-server.so",
+      "sha256": "06de14b9f4af7f3a89f8136b21bf3178c9e7d5957496a034ea5c3cc41f1cc23a",
+      "needed": [
+        "libEGL.so.1",
+        "libQt6OpenGL.so.6",
+        "libwayland-client.so.0",
+        "libQt6WaylandClient.so.6",
+        "libwayland-cursor.so.0",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/wayland-graphics-integration-client/libdrm-egl-server.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/wayland-graphics-integration-client/libdrm-egl-server.so",
+      "sha256": "18e9efba44e96184c60581f13273285bf787d8f2e21231eb2f4b14a357a7dd44",
+      "needed": [
+        "libEGL.so.1",
+        "libQt6OpenGL.so.6",
+        "libwayland-client.so.0",
+        "libQt6WaylandClient.so.6",
+        "libwayland-cursor.so.0",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/wayland-graphics-integration-client/libqt-plugin-wayland-egl.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/wayland-graphics-integration-client/libqt-plugin-wayland-egl.so",
+      "sha256": "a18ea802b7cde98dbfb0769c8ff69b1fa7cd49750078567a8462f297e30665e4",
+      "needed": [
+        "libEGL.so.1",
+        "libwayland-client.so.0",
+        "libwayland-egl.so.1",
+        "libQt6OpenGL.so.6",
+        "libQt6WaylandClient.so.6",
+        "libwayland-cursor.so.0",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/wayland-graphics-integration-client/libshm-emulation-server.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/wayland-graphics-integration-client/libshm-emulation-server.so",
+      "sha256": "571b172fb331e199f3c63c09d2cded3b585cd81cedeb2a15bddbb1540beb0017",
+      "needed": [
+        "libQt6OpenGL.so.6",
+        "libwayland-client.so.0",
+        "libQt6WaylandClient.so.6",
+        "libwayland-cursor.so.0",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/wayland-graphics-integration-client/libvulkan-server.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/wayland-graphics-integration-client/libvulkan-server.so",
+      "sha256": "8d8ac1c33618dc979c50497541bd7c0f5012ed34248de5b05fc15077b7e20fac",
+      "needed": [
+        "libQt6OpenGL.so.6",
+        "libwayland-client.so.0",
+        "libQt6WaylandClient.so.6",
+        "libwayland-cursor.so.0",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/wayland-shell-integration/libfullscreen-shell-v1.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/wayland-shell-integration/libfullscreen-shell-v1.so",
+      "sha256": "411e4a8b431937b0b54b7d72e1c7669c475ce91e31832808995387cd88e35306",
+      "needed": [
+        "libwayland-client.so.0",
+        "libxkbcommon.so.0",
+        "libQt6WaylandClient.so.6",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libwayland-cursor.so.0",
+        "libQt6Core.so.6",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/wayland-shell-integration/libivi-shell.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/wayland-shell-integration/libivi-shell.so",
+      "sha256": "b50baea26ba1a06806086e067b247eedaa6562dfe151e56fc1a90cf00b66c9dc",
+      "needed": [
+        "libwayland-client.so.0",
+        "libxkbcommon.so.0",
+        "libQt6WaylandClient.so.6",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libwayland-cursor.so.0",
+        "libQt6Core.so.6",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/wayland-shell-integration/libqt-shell.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/wayland-shell-integration/libqt-shell.so",
+      "sha256": "7b07043f423d73168b74b80a39ffe01b2e6bd091a155c2d3388e60fcaabb8772",
+      "needed": [
+        "libwayland-client.so.0",
+        "libxkbcommon.so.0",
+        "libQt6WaylandClient.so.6",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libwayland-cursor.so.0",
+        "libQt6Core.so.6",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/wayland-shell-integration/libwl-shell-plugin.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/wayland-shell-integration/libwl-shell-plugin.so",
+      "sha256": "644dd3a2a0cec928f16350088d90e0fe81db3364e386c498e43e5145a769f7d7",
+      "needed": [
+        "libQt6WlShellIntegration.so.6",
+        "libxkbcommon.so.0",
+        "libQt6WaylandClient.so.6",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libwayland-client.so.0",
+        "libwayland-cursor.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/plugins/wayland-shell-integration/libxdg-shell.so",
+      "destination": "usr/lib/biglybtc/qt/plugins/wayland-shell-integration/libxdg-shell.so",
+      "sha256": "69dee3d9eb391e4d167fb9c077a6bf2f0d7a074ce0a7d62ff6b6e34f50984f8c",
+      "needed": [
+        "libwayland-client.so.0",
+        "libxkbcommon.so.0",
+        "libQt6WaylandClient.so.6",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libwayland-cursor.so.0",
+        "libQt6Core.so.6",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [],
+      "rpath": [
+        "$ORIGIN/../../lib"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/lib/libQt6Widgets.so.6.12.0",
+      "destination": "usr/lib/biglybtc/qt/lib/libQt6Widgets.so.6",
+      "sha256": "ae894c4a328a883311faf7449dcdd1ec70e6be25784e5676cb9977fe437d01c4",
+      "needed": [
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [
+        "libQt6Widgets.so.6"
+      ],
+      "rpath": [
+        "$ORIGIN"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6.12.0",
+      "destination": "usr/lib/biglybtc/qt/lib/libQt6Core.so.6",
+      "sha256": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+      "needed": [
+        "libicui18n.so.73",
+        "libicuuc.so.73",
+        "libicudata.so.73",
+        "libzstd.so.1",
+        "libglib-2.0.so.0",
+        "libz.so.1",
+        "libgthread-2.0.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-x86-64.so.2"
+      ],
+      "soname": [
+        "libQt6Core.so.6"
+      ],
+      "rpath": [
+        "$ORIGIN"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/lib/libicudata.so.73.2",
+      "destination": "usr/lib/biglybtc/qt/lib/libicudata.so.73",
+      "sha256": "4f182a855296cf96d39f75c9028b12765a78fe6afff3d3781d633110525b7a8b",
+      "needed": [],
+      "soname": [
+        "libicudata.so.73"
+      ],
+      "rpath": [
+        "$ORIGIN"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/lib/libicuuc.so.73.2",
+      "destination": "usr/lib/biglybtc/qt/lib/libicuuc.so.73",
+      "sha256": "b76380b2c15c8ff8b3c94576ac98b40d34fc0a091db4a89324d72e271c7699f0",
+      "needed": [
+        "libicudata.so.73",
+        "libpthread.so.0",
+        "libdl.so.2",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6",
+        "ld-linux-x86-64.so.2"
+      ],
+      "soname": [
+        "libicuuc.so.73"
+      ],
+      "rpath": [
+        "$ORIGIN"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/lib/libicui18n.so.73.2",
+      "destination": "usr/lib/biglybtc/qt/lib/libicui18n.so.73",
+      "sha256": "a18e48266e59efff3ec872d9dc5cc99b776e180b8ede57269d354e6bc6595778",
+      "needed": [
+        "libicuuc.so.73",
+        "libicudata.so.73",
+        "libpthread.so.0",
+        "libdl.so.2",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [
+        "libicui18n.so.73"
+      ],
+      "rpath": [
+        "$ORIGIN"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/lib/libQt6Gui.so.6.12.0",
+      "destination": "usr/lib/biglybtc/qt/lib/libQt6Gui.so.6",
+      "sha256": "392cf5a2fed77ca7b861484ae0f25a2f7f54789024e79518c6c28e1ddf5b4b1a",
+      "needed": [
+        "libEGL.so.1",
+        "libX11.so.6",
+        "libglib-2.0.so.0",
+        "libQt6DBus.so.6",
+        "libxkbcommon.so.0",
+        "libGL.so.1",
+        "libz.so.1",
+        "libfreetype.so.6",
+        "libfontconfig.so.1",
+        "libgthread-2.0.so.0",
+        "libQt6Core.so.6",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [
+        "libQt6Gui.so.6"
+      ],
+      "rpath": [
+        "$ORIGIN"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/lib/libQt6DBus.so.6.12.0",
+      "destination": "usr/lib/biglybtc/qt/lib/libQt6DBus.so.6",
+      "sha256": "678d0bf82548e35680a93615d476d79405f1d4beec4ce405236e04bc64ea14eb",
+      "needed": [
+        "libdbus-1.so.3",
+        "libQt6Core.so.6",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [
+        "libQt6DBus.so.6"
+      ],
+      "rpath": [
+        "$ORIGIN"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/lib/libQt6WaylandClient.so.6.12.0",
+      "destination": "usr/lib/biglybtc/qt/lib/libQt6WaylandClient.so.6",
+      "sha256": "28423e53b5c6f6c69d50068be70467f15826027e6d965b68411e9daad30712dc",
+      "needed": [
+        "libwayland-client.so.0",
+        "libwayland-cursor.so.0",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [
+        "libQt6WaylandClient.so.6"
+      ],
+      "rpath": [
+        "$ORIGIN"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/lib/libQt6WlShellIntegration.so.6.12.0",
+      "destination": "usr/lib/biglybtc/qt/lib/libQt6WlShellIntegration.so.6",
+      "sha256": "03b88400fcbbaeb19448b39cc1db9bd1cbc7e870ce5827eeb7254103e634549d",
+      "needed": [
+        "libwayland-client.so.0",
+        "libxkbcommon.so.0",
+        "libQt6WaylandClient.so.6",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libwayland-cursor.so.0",
+        "libQt6Core.so.6",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [
+        "libQt6WlShellIntegration.so.6"
+      ],
+      "rpath": [
+        "$ORIGIN"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/lib/libQt6OpenGL.so.6.12.0",
+      "destination": "usr/lib/biglybtc/qt/lib/libQt6OpenGL.so.6",
+      "sha256": "8452e1c7f849a81f38fa2e99fbcd066c24902892fcfa4ce0e188f4691dc2d106",
+      "needed": [
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [
+        "libQt6OpenGL.so.6"
+      ],
+      "rpath": [
+        "$ORIGIN"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/lib/libQt6Svg.so.6.12.0",
+      "destination": "usr/lib/biglybtc/qt/lib/libQt6Svg.so.6",
+      "sha256": "ad54290bfb1929296b1662375d1902ad9810162051f51ff00bce3b2843bdbf2c",
+      "needed": [
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libxkbcommon.so.0",
+        "libz.so.1",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [
+        "libQt6Svg.so.6"
+      ],
+      "rpath": [
+        "$ORIGIN"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/lib/libQt6XcbQpa.so.6.12.0",
+      "destination": "usr/lib/biglybtc/qt/lib/libQt6XcbQpa.so.6",
+      "sha256": "fe274149676867bb59884a3bb0aa5ae6b2365a92f1e7449ea12a4dc267a53fa3",
+      "needed": [
+        "libxcb-cursor.so.0",
+        "libxcb-icccm.so.4",
+        "libxcb-util.so.1",
+        "libxcb-image.so.0",
+        "libxcb-keysyms.so.1",
+        "libxcb-randr.so.0",
+        "libxcb-render.so.0",
+        "libxcb-render-util.so.0",
+        "libxcb-shape.so.0",
+        "libxcb-shm.so.0",
+        "libxcb-sync.so.1",
+        "libxcb.so.1",
+        "libxcb-xfixes.so.0",
+        "libxcb-xkb.so.1",
+        "libxkbcommon.so.0",
+        "libglib-2.0.so.0",
+        "libX11-xcb.so.1",
+        "libX11.so.6",
+        "libxkbcommon-x11.so.0",
+        "libQt6Gui.so.6",
+        "libGL.so.1",
+        "libQt6Core.so.6",
+        "libgthread-2.0.so.0",
+        "libstdc++.so.6",
+        "libm.so.6",
+        "libgcc_s.so.1",
+        "libc.so.6"
+      ],
+      "soname": [
+        "libQt6XcbQpa.so.6"
+      ],
+      "rpath": [
+        "$ORIGIN"
+      ]
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_ar.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_ar.qm",
+      "sha256": "e03fe68d83201543698fd7fe267dd5dfc5bfd195147e74ff2f19ac3491401263"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_bg.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_bg.qm",
+      "sha256": "e448ac9e3f16c29eb27af3012efe21052daa78fabfb34cd6dff2f69ee3bd3cdb"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_ca.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_ca.qm",
+      "sha256": "5298532fc52ffbc4e2c549f277151a61e741921c834286f7c04d3753677b6b04"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_cs.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_cs.qm",
+      "sha256": "03028b42df5479270371e4c3bdc7df2f56cbbe6dda956a2864ac6f6415861fe8"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_da.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_da.qm",
+      "sha256": "7d1e5ca3310b54d104c19bf2abd402b38e584e87039a70e153c4a9af74b25c22"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_de.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_de.qm",
+      "sha256": "a1483bae0385c380edad72b818ce7c2f54ba617ba4c709b2a34a76886d5b5f3d"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_en.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_en.qm",
+      "sha256": "494ac9a2b2cb2fdeced353f4a9f898ed8dcf616e9bc667438c62681e3f7f79cf"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_es.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_es.qm",
+      "sha256": "4ffda56ba3bb5414ab0482d1dde64a6f226e3488f6b7f3f11a150e01f53fa4c8"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_fa.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_fa.qm",
+      "sha256": "f78e59b5bdd586181a999034ba418868ed17fe9c05707fb65e523f70e92253d2"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_fi.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_fi.qm",
+      "sha256": "e47fe13713e184d07fa4495dde0c589b0e8f562e91574a3558a9363443a4fa72"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_fr.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_fr.qm",
+      "sha256": "314243a55c32679ad473fdfe48dc7d66e973ad0fc8bf2164480c58dddb50c1a7"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_gd.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_gd.qm",
+      "sha256": "63b439dd44139aa3aed54c2ebe03fa9bc77f22c14ed8fba8eff2608445bb233d"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_he.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_he.qm",
+      "sha256": "e1ebca16afe8994356f81ca007fbdb9ddf865842010fe908923d873b687cad3f"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_hr.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_hr.qm",
+      "sha256": "bb9eec9a9a652c1340dc75eb2e749be50df00f885b3d6900dfc76799c45b244d"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_hu.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_hu.qm",
+      "sha256": "98463295539d769c8645a0b7fb95ad38454cfd0b14f36af485513f036ddbbbc6"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_it.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_it.qm",
+      "sha256": "7808ed542a7833c4bd94ec8bdfbbca00bb4f2fe15979b9121ce3249323687300"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_ja.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_ja.qm",
+      "sha256": "2b9581c69b975f59be505b127cd3c19d403ef3d12e0e8386fb97238223e9c1df"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_ka.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_ka.qm",
+      "sha256": "e55e4b72fa620bebee5297ca59dfe2f49894a1e544f2b7485b1cfd8829289d6f"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_kk.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_kk.qm",
+      "sha256": "8bab72c453e87489d76cc7efffc57e947cbfa239dee4d6fa113f7b7b8cbd5b86"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_ko.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_ko.qm",
+      "sha256": "0179ed1b136e1cb3f583351eaa2c545ba3d83a6ee3f82c32505926a1a5f5f183"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_lg.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_lg.qm",
+      "sha256": "31c0cc4ce13b1d74fe0c19ed0b47638fb31e20c93ee08092533e884007aebfb5"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_lv.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_lv.qm",
+      "sha256": "846e047573ae40c83671c3ba7f73e27efc24b98c82701da0df9973e574178bb2"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_nl.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_nl.qm",
+      "sha256": "f61513bcdbb6ad800585f9437a95d018aab17fa12ee414aa31462ff279d8240e"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_nn.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_nn.qm",
+      "sha256": "f9f2fb7c60e7fcb38bbd3c1314ef122145594265e20b0659ff00004baab13ac7"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_pl.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_pl.qm",
+      "sha256": "3cf6b5c14d5eb0cf81e9af2066e66b3aa579a6b9b3c323ed670761f6254a8c54"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_pt_BR.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_pt_BR.qm",
+      "sha256": "3475d61604b938d459949801a906dbd34a8ca824ade94120015d676e208da859"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_ru.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_ru.qm",
+      "sha256": "3da6605668f9178d11a838c4515478084dcfb4f9cf22f99d7a92b492db9c224b"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_sk.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_sk.qm",
+      "sha256": "d586ae2c314074cf398417fdecb40709d5478dfeb0a67c2fe60d509ee9b59ed7"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_sv.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_sv.qm",
+      "sha256": "5a2178dd2c03cc4516697f1fb0049649c9ed53f5cde6b937786733dae06aeda8"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_tr.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_tr.qm",
+      "sha256": "353fdfd7165659a49212e7a25bf91c0a71588e52c836f7496640f26782414634"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_uk.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_uk.qm",
+      "sha256": "51b8ff55b37dc5907d637a8ddda12fbe816852b0244c74eb4f0fb84867a786e0"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_zh_CN.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_zh_CN.qm",
+      "sha256": "0481a9b92a6f0578400e960a7d5ee70217a6a450eaf7f98b7d32b8dbd0d58616"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/translations/qtbase_zh_TW.qm",
+      "destination": "usr/lib/biglybtc/qt/translations/qtbase_zh_TW.qm",
+      "sha256": "21012b2b427f8d09d31ce9cae582ca27955b478ca3dc2ec18a3068d808638c6a"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/sbom/qtbase-6.12.0.spdx.json",
+      "destination": "usr/share/doc/biglybtc-experimental/qt/qtbase-6.12.0.spdx.json",
+      "sha256": "6c21550027d570a4ed5f14632d5377c66f246973dca9038e7532f878766879c1"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/sbom/qtwayland-6.12.0.spdx.json",
+      "destination": "usr/share/doc/biglybtc-experimental/qt/qtwayland-6.12.0.spdx.json",
+      "sha256": "d1e6a757b9dc2a7d21e1f9b13451bea5d19eb73ab8d500938032fe52b2a2c425"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/sbom/qtimageformats-6.12.0.spdx.json",
+      "destination": "usr/share/doc/biglybtc-experimental/qt/qtimageformats-6.12.0.spdx.json",
+      "sha256": "e515d0921b0f293376c0514b7f1148d716862ab2b83069b5cf4a7619e2ed59b6"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/sbom/qtsvg-6.12.0.spdx.json",
+      "destination": "usr/share/doc/biglybtc-experimental/qt/qtsvg-6.12.0.spdx.json",
+      "sha256": "cd5e3c9bb49586815c2450a24643463e7c2d83e9341312e918c1e468e7c81c0a"
+    },
+    {
+      "source": "/opt/Qt/6.12.0/gcc_64/sbom/qttranslations-6.12.0.spdx.json",
+      "destination": "usr/share/doc/biglybtc-experimental/qt/qttranslations-6.12.0.spdx.json",
+      "sha256": "4dab31376076448f2a0f4a62045378c2f81e170533d7b42ead0eb3424a53da54"
+    },
+    {
+      "source": "/home/yurii/Java/BiglyBT/native/packaging/notices/GPL-3.0-only.txt",
+      "destination": "usr/share/doc/biglybtc-experimental/qt/GPL-3.0-only.txt",
+      "sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903"
+    },
+    {
+      "source": "/home/yurii/Java/BiglyBT/native/packaging/notices/ICU-LICENSE.txt",
+      "destination": "usr/share/doc/biglybtc-experimental/qt/ICU-LICENSE.txt",
+      "sha256": "f3005e195ff74d8812cc1f182a1c446fab678d70a10e3dada497585befee5416"
+    },
+    {
+      "source": "/home/yurii/Java/BiglyBT/native/packaging/notices/LGPL-3.0-only.txt",
+      "destination": "usr/share/doc/biglybtc-experimental/qt/LGPL-3.0-only.txt",
+      "sha256": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768"
+    },
+    {
+      "source": "/home/yurii/Java/BiglyBT/native/packaging/notices/Qt-runtime.txt",
+      "destination": "usr/share/doc/biglybtc-experimental/qt/Qt-runtime.txt",
+      "sha256": "e718ffc9e5324b52aa2f450687405b1d93e7d7b5750a7725f339cf39d8efa5ce"
+    }
+  ],
+  "system_sonames": [
+    "ld-linux-x86-64.so.2",
+    "libEGL.so.1",
+    "libGL.so.1",
+    "libX11-xcb.so.1",
+    "libX11.so.6",
+    "libatk-1.0.so.0",
+    "libc.so.6",
+    "libcairo-gobject.so.2",
+    "libcairo.so.2",
+    "libdbus-1.so.3",
+    "libdl.so.2",
+    "libfontconfig.so.1",
+    "libfreetype.so.6",
+    "libgcc_s.so.1",
+    "libgdk-3.so.0",
+    "libgdk_pixbuf-2.0.so.0",
+    "libgio-2.0.so.0",
+    "libglib-2.0.so.0",
+    "libgobject-2.0.so.0",
+    "libgthread-2.0.so.0",
+    "libgtk-3.so.0",
+    "libharfbuzz.so.0",
+    "libm.so.6",
+    "libpango-1.0.so.0",
+    "libpangocairo-1.0.so.0",
+    "libpthread.so.0",
+    "libstdc++.so.6",
+    "libwayland-client.so.0",
+    "libwayland-cursor.so.0",
+    "libwayland-egl.so.1",
+    "libxcb-cursor.so.0",
+    "libxcb-glx.so.0",
+    "libxcb-icccm.so.4",
+    "libxcb-image.so.0",
+    "libxcb-keysyms.so.1",
+    "libxcb-randr.so.0",
+    "libxcb-render-util.so.0",
+    "libxcb-render.so.0",
+    "libxcb-shape.so.0",
+    "libxcb-shm.so.0",
+    "libxcb-sync.so.1",
+    "libxcb-util.so.1",
+    "libxcb-xfixes.so.0",
+    "libxcb-xkb.so.1",
+    "libxcb.so.1",
+    "libxkbcommon-x11.so.0",
+    "libxkbcommon.so.0",
+    "libz.so.1",
+    "libzstd.so.1"
+  ],
+  "qualification": "experimental; SDK source/third-party redistribution closure remains pending"
+}

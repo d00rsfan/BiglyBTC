@@ -1,0 +1,137 @@
+{
+  "builds": [
+    {
+      "compiler": "gcc",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-xmwebui",
+          "-B",
+          "/tmp/biglybtc-rpc-qualified-gcc",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS=",
+          "-DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-rpc-qualified-gcc",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-rpc-qualified-gcc",
+          "--output-on-failure"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-rpc-qualified-gcc/biglybtc-rpc-contract-driver": "1e759058cd9cb6bd2a07bb1049cf032a2740e94bab9f54201988a352f315e253",
+        "/tmp/biglybtc-rpc-qualified-gcc/biglybtc-rpc-contract-bounds-tests": "548f79805ed0f1364b50e408b2824ecaecb785eb7ea97096a777e2e7f8dd4a49",
+        "/tmp/biglybtc-rpc-qualified-gcc/libbiglybtc_rpc_contract.a": "5192b2f35c9114279b9a4167b22bc1f53a49c6d90132632e9a640a5a4407505a"
+      }
+    },
+    {
+      "compiler": "clang",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-xmwebui",
+          "-B",
+          "/tmp/biglybtc-rpc-qualified-clang",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16",
+          "-DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-rpc-qualified-clang",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-rpc-qualified-clang",
+          "--output-on-failure"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-rpc-qualified-clang/biglybtc-rpc-contract-driver": "6aa720e623a076e0e202f0cb228ef6a3f51993085c8d8459f84e55aef03cad81",
+        "/tmp/biglybtc-rpc-qualified-clang/biglybtc-rpc-contract-bounds-tests": "aa4694133d9b75a6b52415d578cccff36caad16083f0ea2518965ce25d1f31ac",
+        "/tmp/biglybtc-rpc-qualified-clang/libbiglybtc_rpc_contract.a": "8b8498ad027874131a5dcd29960aa36d2af0ac1107b2a70c1b7af87296549c8e"
+      }
+    },
+    {
+      "compiler": "asan",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-xmwebui",
+          "-B",
+          "/tmp/biglybtc-rpc-qualified-asan",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Debug",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer",
+          "-DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-rpc-qualified-asan",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-rpc-qualified-asan",
+          "--output-on-failure"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-rpc-qualified-asan/biglybtc-rpc-contract-driver": "b68402602c49e37da097a4661bfa246f8bd5ffae90c91cc362233476583b7765",
+        "/tmp/biglybtc-rpc-qualified-asan/biglybtc-rpc-contract-bounds-tests": "0a485a39d884380083aeb667c33be971521f6ecce4b5df07bc432e98aacb4186",
+        "/tmp/biglybtc-rpc-qualified-asan/libbiglybtc_rpc_contract.a": "037eaa3c2cd36486a5806b470d5497251ad3b726fb1b05f6b4328d573892f73b"
+      }
+    }
+  ],
+  "source_sha256": {
+    "migration/fixtures/rpc-contract/.gitattributes": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da",
+    "migration/fixtures/rpc-contract/commands.jsonl": "2df6b5aff547f0a394bfec845518055bfaa30ce7e8674ad0c9aa544fabc4f977",
+    "migration/fixtures/rpc-contract/expected.jsonl": "a2cc7f196548502df683b23550677e55649004d2c65204463056f00bb6fa947d",
+    "migration/fixtures/rpc-contract/manifest.json": "54d168f3acb1fe8d22659e978364d7c94ff84d434bbd1b79bba178149dce48f3",
+    "migration/tools/rpc_contract_matrix.py": "4a842774ff43fed476648c7f5655ea7e01e5069e055b2697df7746c66c5661b2",
+    "migration/tools/rpc_contract_oracle.py": "7baaf76db5c601cb4e68b9dc7f6e65c950f93d743dcb91afec7ef919ce0f7a92",
+    "native/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "native/plugins/BiglyBTC-plugin-xmwebui/CMakeLists.txt": "8382adf8213b48a174d23361dc57c9331ebff0f1e98258d9e1f0307780e5d39e",
+    "native/plugins/BiglyBTC-plugin-xmwebui/COPYING": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6",
+    "native/plugins/BiglyBTC-plugin-xmwebui/README.md": "1f6a5f3bf5bde7d1fae45e9f096e926e5a97dc96f51eb6e440cebe620a658494",
+    "native/plugins/BiglyBTC-plugin-xmwebui/bounds_test.cpp": "941d90b6ebbe255e2823dfee8f849083957ba12c841f415363c5db34f062abb2",
+    "native/plugins/BiglyBTC-plugin-xmwebui/contract_driver.cpp": "e73e996d84297d86dc05ae6125b45f638a9c2d22c68c2a837b21b48433e015ba",
+    "native/plugins/BiglyBTC-plugin-xmwebui/fixture_test.py": "0a3176bc0cbd46b109cbb5979f6af99641f8ed55eaf33756270f8b4a12054bdd",
+    "native/plugins/BiglyBTC-plugin-xmwebui/rpc_contract.cpp": "0a7389c1e128c35e2e7100e15fd90465d99934c4f1a0d494a631a1fd7b0193ef",
+    "native/plugins/BiglyBTC-plugin-xmwebui/rpc_contract.hpp": "4b8997482e320a187ec5d952d547a63f35290ecfd0819c493cd2740d50629bd2"
+  },
+  "qt_core_sha256": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+  "scope": "804 exact original RPC wrapper/session observations with controlled dispatcher/trusted-tunnel host boundary, Qt6.12 numeric/Unicode semantics and rejected-input bounds; no HTTP listener, profile or network"
+}

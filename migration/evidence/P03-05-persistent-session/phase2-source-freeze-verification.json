@@ -1,0 +1,47 @@
+{
+  "status": "original-source-frozen-before-native",
+  "source_manifest_sha256": "8f3dd78a593ac7fd42130d6b5497e3ca386421cb89c9c1f07aaaa61d589352b4",
+  "source_reference_sha256": "4174a8f71a03c89ac104d4fd8d68176e4f446a58d4601ec847f56696c77104a6",
+  "source_harness_sha256": "e9dca56d934a945313012d426425fe97ff3af12b21f3cc352b529b987d6f3f47",
+  "helper_classes": 22,
+  "first_actual_phase2_classes": true,
+  "source_observations": 2280,
+  "groups": {
+    "controller-semantic": {
+      "observations": 80,
+      "scenarios": 8,
+      "outward_errors": 0,
+      "caught_save_failures": 0
+    },
+    "peer-semantic": {
+      "observations": 1408,
+      "scenarios": 141,
+      "outward_errors": 0,
+      "caught_save_failures": 0
+    },
+    "clock-order": {
+      "observations": 176,
+      "scenarios": 16,
+      "outward_errors": 0,
+      "caught_save_failures": 0
+    },
+    "partial-fault": {
+      "observations": 529,
+      "scenarios": 48,
+      "outward_errors": 46,
+      "caught_save_failures": 3
+    },
+    "boundary-contract": {
+      "observations": 87,
+      "scenarios": 8,
+      "outward_errors": 0,
+      "caught_save_failures": 0
+    }
+  },
+  "expected_outward_exceptions": 46,
+  "strict_per_scenario_error_validator_passed": true,
+  "native_implementation_or_comparison": false,
+  "native_equality_credit": 0,
+  "persistent_work": "/home/yurii/Java/BiglyBT/build/recovery/generated-references/biglybtc-completion-oracle-kdi7glyr",
+  "persistent_file_count": 88
+}

@@ -1,0 +1,45 @@
+{
+  "source_commit": "9db774659334daa2dbabd81762c819c108eb43b2",
+  "method": "Actual view_image inspection of ready and missing-day captures at all three scales; PNG IHDR dimensions verified",
+  "files": {
+    "1-statistics-history-preview.png": {
+      "sha256": "cefdf0871d722cacbbc3b46a8ec6c0c20bf4e323715b1b9cc2478a954b9963f7",
+      "width": 1280,
+      "height": 900
+    },
+    "1-statistics-history-missing-preview.png": {
+      "sha256": "cf36a293ba9fc569d3acb732921ca9983231bf0a43931b4de9a52c1d427dc739",
+      "width": 1280,
+      "height": 900
+    },
+    "1.5-statistics-history-preview.png": {
+      "sha256": "bf6e872f38e5a8de4549e56c1e374719973240832f4fc77383341e2c26f66468",
+      "width": 1920,
+      "height": 1350
+    },
+    "1.5-statistics-history-missing-preview.png": {
+      "sha256": "b984f00c8a0617111798934607a5e858bfbe1f3b667b7271f60249d1448fc482",
+      "width": 1920,
+      "height": 1350
+    },
+    "2-statistics-history-preview.png": {
+      "sha256": "f2efa433ff30be867702f95d154bb4335224969c383cdcd6ec4f4bf0e6dcfcb4",
+      "width": 2560,
+      "height": 1800
+    },
+    "2-statistics-history-missing-preview.png": {
+      "sha256": "35b0cc8fab556b61dca20ef71652ce9432b3b43d50a86620692b7234aaaf3d68",
+      "width": 2560,
+      "height": 1800
+    }
+  },
+  "observations": [
+    "Date, previous/next, refresh controls and selected History tab remain visible at all tested scales",
+    "Six counter headers and signed byte values fit the fixed hourly table; scrolling retains all24 model rows",
+    "Ready day distinguishes observed zero from missing hours",
+    "Missing day exposes explicit status and unavailable totals without stale values",
+    "No overlap or clipped controls observed at1280x900 logical window size"
+  ],
+  "result": "PASS bounded offscreen review",
+  "manual_compositor_acceptance": false
+}

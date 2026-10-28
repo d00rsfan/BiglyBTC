@@ -1,0 +1,229 @@
+{
+  "builds": [
+    {
+      "compiler": "gcc",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-azrating",
+          "-B",
+          "/tmp/biglybtc-rating-local-qualified-gcc",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS=",
+          "-DCMAKE_PREFIX_PATH=/tmp/biglybtc-rating-package-gcc/relocated-prefix",
+          "-DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF",
+          "-DCMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY=OFF"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-rating-local-qualified-gcc",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-rating-local-qualified-gcc",
+          "--output-on-failure"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/rating_data_roundtrip.py",
+          "--driver",
+          "/tmp/biglybtc-rating-local-qualified-gcc/biglybtc-rating-driver",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-06-rating-local/gcc-roundtrip.json"
+        ]
+      ],
+      "core_dependency_sha256": {
+        "/tmp/biglybtc-rating-package-gcc/relocated-prefix/include/biglybtc/bencode.hpp": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+        "/tmp/biglybtc-rating-package-gcc/relocated-prefix/include/biglybtc/executor.hpp": "d2afcc590573e64bce376aadc42051198353e4c79c5f69f8a2452ab5a7d3d8bc",
+        "/tmp/biglybtc-rating-package-gcc/relocated-prefix/include/biglybtc/file_policy.hpp": "0d199f329d775783d9f4195ba6e14ff660b410ce4bfc555c4c55b4eaa43bff46",
+        "/tmp/biglybtc-rating-package-gcc/relocated-prefix/include/biglybtc/library.hpp": "8ad4e7f5346300fdc03c6318d629b6185874d35109511ca445609639b7168875",
+        "/tmp/biglybtc-rating-package-gcc/relocated-prefix/include/biglybtc/state_cache.hpp": "036be2d5a02e1cab9be638496e7b066ef13619a22443ea508a3d583f8f5dcd15",
+        "/tmp/biglybtc-rating-package-gcc/relocated-prefix/include/biglybtc/torrent_layout.hpp": "59accc489872b0f69444da51cdd2a79aeaa0510deeaf1a01434aab2b8699a775",
+        "/tmp/biglybtc-rating-package-gcc/relocated-prefix/lib/cmake/BiglyBTCCore/BiglyBTCCoreConfig.cmake": "301e2e9da77aea4130773aa126cae235f178e89737938b75c2213f6e966684e9",
+        "/tmp/biglybtc-rating-package-gcc/relocated-prefix/lib/cmake/BiglyBTCCore/BiglyBTCCoreConfigVersion.cmake": "4440cdfab7c7e4e4fffcf0d81d698fcd80290c4f2a8d32c4f8242993b0af951d",
+        "/tmp/biglybtc-rating-package-gcc/relocated-prefix/lib/cmake/BiglyBTCCore/BiglyBTCCoreTargets-release.cmake": "d59d78b52830923e86f54d8d3756638577dcd09d1f112854f83bcbef72e3bc64",
+        "/tmp/biglybtc-rating-package-gcc/relocated-prefix/lib/cmake/BiglyBTCCore/BiglyBTCCoreTargets.cmake": "5d2dee9affa80a236e8799e3f19a684c3dad6ab4ac693f717ad1e5a7b4a6d904",
+        "/tmp/biglybtc-rating-package-gcc/relocated-prefix/lib/libbiglybtc_core.a": "9a09049591152c6411ad821f8d33d7e952904f34544a0ac30ba13658c6e3fd39",
+        "/tmp/biglybtc-rating-package-gcc/relocated-prefix/share/licenses/BiglyBTCCore/COPYING": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73",
+        "/tmp/biglybtc-rating-package-gcc/relocated-prefix/share/licenses/BiglyBTCCore/NOTICE.md": "134ce136c10d24a9fe87da3e3502cf03f8e641578f699b84a68b6b6f3907cf63"
+      },
+      "binary_sha256": {
+        "/tmp/biglybtc-rating-local-qualified-gcc/biglybtc-rating-driver": "3912fa4d2843cc25bc6b0acbe5cff8461f8544e0f9d38be35c3d4f631f884630",
+        "/tmp/biglybtc-rating-local-qualified-gcc/biglybtc-rating-bounds-tests": "0492d929c8c1979e39fb5b812abd36eb60f6d7e147b21722c8c0e59bbd05d296",
+        "/tmp/biglybtc-rating-local-qualified-gcc/biglybtc-rating-local-driver": "aa9dfa8905278785ad9e161840e9995b96c4954799c2a9bc784acf5cb6221dfd",
+        "/tmp/biglybtc-rating-local-qualified-gcc/biglybtc-rating-local-bounds-tests": "ee52e47397cf3732820895f61a84a5e3ceacb826ef58ea3b2b432491c68111d6",
+        "/tmp/biglybtc-rating-local-qualified-gcc/libbiglybtc_rating_data.a": "918c1ebeb9a6ace3d7b09b75cb0eca281e13eb9180515112cba88211e8b35904"
+      }
+    },
+    {
+      "compiler": "clang",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-azrating",
+          "-B",
+          "/tmp/biglybtc-rating-local-qualified-clang",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16",
+          "-DCMAKE_PREFIX_PATH=/tmp/biglybtc-rating-package-clang/relocated-prefix",
+          "-DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF",
+          "-DCMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY=OFF"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-rating-local-qualified-clang",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-rating-local-qualified-clang",
+          "--output-on-failure"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/rating_data_roundtrip.py",
+          "--driver",
+          "/tmp/biglybtc-rating-local-qualified-clang/biglybtc-rating-driver",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-06-rating-local/clang-roundtrip.json"
+        ]
+      ],
+      "core_dependency_sha256": {
+        "/tmp/biglybtc-rating-package-clang/relocated-prefix/include/biglybtc/bencode.hpp": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+        "/tmp/biglybtc-rating-package-clang/relocated-prefix/include/biglybtc/executor.hpp": "d2afcc590573e64bce376aadc42051198353e4c79c5f69f8a2452ab5a7d3d8bc",
+        "/tmp/biglybtc-rating-package-clang/relocated-prefix/include/biglybtc/file_policy.hpp": "0d199f329d775783d9f4195ba6e14ff660b410ce4bfc555c4c55b4eaa43bff46",
+        "/tmp/biglybtc-rating-package-clang/relocated-prefix/include/biglybtc/library.hpp": "8ad4e7f5346300fdc03c6318d629b6185874d35109511ca445609639b7168875",
+        "/tmp/biglybtc-rating-package-clang/relocated-prefix/include/biglybtc/state_cache.hpp": "036be2d5a02e1cab9be638496e7b066ef13619a22443ea508a3d583f8f5dcd15",
+        "/tmp/biglybtc-rating-package-clang/relocated-prefix/include/biglybtc/torrent_layout.hpp": "59accc489872b0f69444da51cdd2a79aeaa0510deeaf1a01434aab2b8699a775",
+        "/tmp/biglybtc-rating-package-clang/relocated-prefix/lib/cmake/BiglyBTCCore/BiglyBTCCoreConfig.cmake": "301e2e9da77aea4130773aa126cae235f178e89737938b75c2213f6e966684e9",
+        "/tmp/biglybtc-rating-package-clang/relocated-prefix/lib/cmake/BiglyBTCCore/BiglyBTCCoreConfigVersion.cmake": "4440cdfab7c7e4e4fffcf0d81d698fcd80290c4f2a8d32c4f8242993b0af951d",
+        "/tmp/biglybtc-rating-package-clang/relocated-prefix/lib/cmake/BiglyBTCCore/BiglyBTCCoreTargets-release.cmake": "d59d78b52830923e86f54d8d3756638577dcd09d1f112854f83bcbef72e3bc64",
+        "/tmp/biglybtc-rating-package-clang/relocated-prefix/lib/cmake/BiglyBTCCore/BiglyBTCCoreTargets.cmake": "5d2dee9affa80a236e8799e3f19a684c3dad6ab4ac693f717ad1e5a7b4a6d904",
+        "/tmp/biglybtc-rating-package-clang/relocated-prefix/lib/libbiglybtc_core.a": "c26e2256144515b964f4d08a8f5b886f31d421c776a04ace68b5527441743bea",
+        "/tmp/biglybtc-rating-package-clang/relocated-prefix/share/licenses/BiglyBTCCore/COPYING": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73",
+        "/tmp/biglybtc-rating-package-clang/relocated-prefix/share/licenses/BiglyBTCCore/NOTICE.md": "134ce136c10d24a9fe87da3e3502cf03f8e641578f699b84a68b6b6f3907cf63"
+      },
+      "binary_sha256": {
+        "/tmp/biglybtc-rating-local-qualified-clang/biglybtc-rating-driver": "40281e6b3e0023ec0c062e4fc840a635d9d29bce196f64deb9d35c895e731fd0",
+        "/tmp/biglybtc-rating-local-qualified-clang/biglybtc-rating-bounds-tests": "e30a0e0c2d1fcc05f1ebcaf39d16d59c721f7220b352ce722ce507cfd7276a04",
+        "/tmp/biglybtc-rating-local-qualified-clang/biglybtc-rating-local-driver": "fdfe764f07ff7fd350c1094972bd44dcf1cf8449a90b775507296da09fa6f89a",
+        "/tmp/biglybtc-rating-local-qualified-clang/biglybtc-rating-local-bounds-tests": "3406bd84d629e645681b6a5f8fa6cb3d6b5e296da6139f448aafb37f25fca6ca",
+        "/tmp/biglybtc-rating-local-qualified-clang/libbiglybtc_rating_data.a": "9cad29bef1382a50781d9f84724b97baeabf02b4ed36aa9f5dfd417e4bc0ac5f"
+      }
+    },
+    {
+      "compiler": "asan",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-azrating",
+          "-B",
+          "/tmp/biglybtc-rating-local-qualified-asan",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Debug",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer",
+          "-DCMAKE_PREFIX_PATH=/tmp/biglybtc-rating-package-asan/relocated-prefix",
+          "-DCMAKE_FIND_USE_PACKAGE_REGISTRY=OFF",
+          "-DCMAKE_FIND_USE_SYSTEM_PACKAGE_REGISTRY=OFF"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-rating-local-qualified-asan",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-rating-local-qualified-asan",
+          "--output-on-failure"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/rating_data_roundtrip.py",
+          "--driver",
+          "/tmp/biglybtc-rating-local-qualified-asan/biglybtc-rating-driver",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-06-rating-local/asan-roundtrip.json"
+        ]
+      ],
+      "core_dependency_sha256": {
+        "/tmp/biglybtc-rating-package-asan/relocated-prefix/include/biglybtc/bencode.hpp": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+        "/tmp/biglybtc-rating-package-asan/relocated-prefix/include/biglybtc/executor.hpp": "d2afcc590573e64bce376aadc42051198353e4c79c5f69f8a2452ab5a7d3d8bc",
+        "/tmp/biglybtc-rating-package-asan/relocated-prefix/include/biglybtc/file_policy.hpp": "0d199f329d775783d9f4195ba6e14ff660b410ce4bfc555c4c55b4eaa43bff46",
+        "/tmp/biglybtc-rating-package-asan/relocated-prefix/include/biglybtc/library.hpp": "8ad4e7f5346300fdc03c6318d629b6185874d35109511ca445609639b7168875",
+        "/tmp/biglybtc-rating-package-asan/relocated-prefix/include/biglybtc/state_cache.hpp": "036be2d5a02e1cab9be638496e7b066ef13619a22443ea508a3d583f8f5dcd15",
+        "/tmp/biglybtc-rating-package-asan/relocated-prefix/include/biglybtc/torrent_layout.hpp": "59accc489872b0f69444da51cdd2a79aeaa0510deeaf1a01434aab2b8699a775",
+        "/tmp/biglybtc-rating-package-asan/relocated-prefix/lib/cmake/BiglyBTCCore/BiglyBTCCoreConfig.cmake": "301e2e9da77aea4130773aa126cae235f178e89737938b75c2213f6e966684e9",
+        "/tmp/biglybtc-rating-package-asan/relocated-prefix/lib/cmake/BiglyBTCCore/BiglyBTCCoreConfigVersion.cmake": "4440cdfab7c7e4e4fffcf0d81d698fcd80290c4f2a8d32c4f8242993b0af951d",
+        "/tmp/biglybtc-rating-package-asan/relocated-prefix/lib/cmake/BiglyBTCCore/BiglyBTCCoreTargets-debug.cmake": "024d5e1ce68ff84ef8f38d006daa92e2beb77482b3970d402c420b63a2301828",
+        "/tmp/biglybtc-rating-package-asan/relocated-prefix/lib/cmake/BiglyBTCCore/BiglyBTCCoreTargets.cmake": "5d2dee9affa80a236e8799e3f19a684c3dad6ab4ac693f717ad1e5a7b4a6d904",
+        "/tmp/biglybtc-rating-package-asan/relocated-prefix/lib/libbiglybtc_core.a": "8c06bab1db94bd811e9a972734282b97a60462abd2892cc6f619165d9325f203",
+        "/tmp/biglybtc-rating-package-asan/relocated-prefix/share/licenses/BiglyBTCCore/COPYING": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73",
+        "/tmp/biglybtc-rating-package-asan/relocated-prefix/share/licenses/BiglyBTCCore/NOTICE.md": "134ce136c10d24a9fe87da3e3502cf03f8e641578f699b84a68b6b6f3907cf63"
+      },
+      "binary_sha256": {
+        "/tmp/biglybtc-rating-local-qualified-asan/biglybtc-rating-driver": "414dfe16ef75b50181694a7d4c5d7fd254333377b5b4bdb1aab23075746ed5b8",
+        "/tmp/biglybtc-rating-local-qualified-asan/biglybtc-rating-bounds-tests": "7990b9a46a14bbb3207c4b7e5120f22f73d870e16daa1eea8124955884ff0aaa",
+        "/tmp/biglybtc-rating-local-qualified-asan/biglybtc-rating-local-driver": "73cbd0655c6b6138f7eb43d7d6521e2bdb3caa1faa6475a788565f6c7749ecae",
+        "/tmp/biglybtc-rating-local-qualified-asan/biglybtc-rating-local-bounds-tests": "cc11f68c5badbfd51a92047d3ddefe223f72e03343ab50affb5928af1ab56cd3",
+        "/tmp/biglybtc-rating-local-qualified-asan/libbiglybtc_rating_data.a": "5d45e953ef81eaa53c07a383c1734ddc5120ac836abfa848dbdaa2848994c392"
+      }
+    }
+  ],
+  "source_sha256": {
+    "migration/fixtures/rating-data/commands.txt": "db3e186aa8732f554fe45648f8c70b1915057145dd12493b3336b5ffc7905919",
+    "migration/fixtures/rating-data/expected.txt": "e17460cae22483868685a15d47a47e551d128714153ad60bf3ac1e5595884f04",
+    "migration/fixtures/rating-data/manifest.json": "15b053e883add4e9fcfcbd942e6b59d6d9b397055ebf1b72b9404539325ba79b",
+    "migration/fixtures/rating-local/commands.txt": "ecc190391ca0d61c34105151b7f607896082bcf2f29ccacc9c27c437b1228697",
+    "migration/fixtures/rating-local/digit-zeroes.txt": "bbbe2b6c847a90702a6b37ab63d445dcee1a0daa4132d33af3f87f94e8944dfa",
+    "migration/fixtures/rating-local/expected.txt": "71af01ae1c4e5496f1e3449b09609d6d262df2de93926ef7e1a20261c452bfed",
+    "migration/fixtures/rating-local/manifest.json": "a925ba5d0983bc20e0653bc2648e10cd45886e896379d09ef250735e498f57ea",
+    "migration/fixtures/rating-local/runtime.txt": "a3bdaf447261e3dfc0e8663de929b21a5708f56222d3f5e5424f92b917aaeba2",
+    "migration/tools/export_plugin_sources.py": "63c334d11cbc78234808e8f7477ea2c5bed55af5a73b93ca3746bd3c312f42c9",
+    "migration/tools/rating_data_roundtrip.py": "81356406063b3d921012ad5e78c37e8a6ea1f7c26d40443d90bea5ab1309d222",
+    "migration/tools/rating_local_matrix.py": "3229be74a1274701a4d7df1fb0e135242fa947cd7ab2453aade744e902f57bd0",
+    "migration/tools/rating_local_oracle.py": "10404093050960b50ab29a2c5eca20d9f9d2b64290bc12dec095f35f544d65c1",
+    "native/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "native/plugins/BiglyBTC-plugin-azrating/CMakeLists.txt": "48433386273b9e925cc4b80faf1ed631f2dc974ba23bede50ee1cbc96d1a6558",
+    "native/plugins/BiglyBTC-plugin-azrating/COPYING": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6",
+    "native/plugins/BiglyBTC-plugin-azrating/README.md": "7faab0376135593181ce61f671e677879bc0910f2376c98392f6d471e0ecc9fa",
+    "native/plugins/BiglyBTC-plugin-azrating/bounds_test.cpp": "f583acdd72fa17c76e2aa83577a7c5e059f77ad542626ba9c027d65fce95851f",
+    "native/plugins/BiglyBTC-plugin-azrating/fixture_test.py": "a9cf68d51de499d9e5ce348ddf7b5a920333c598849a189e14224a1226998998",
+    "native/plugins/BiglyBTC-plugin-azrating/local_bounds_test.cpp": "d5c1485a107ef0aa69c10ed4f5940db0e220a2536c0992ca4a82021f3c947b53",
+    "native/plugins/BiglyBTC-plugin-azrating/local_driver.cpp": "489616a8c83188b7f521d445253801eafb91f064b5ed45b8921059f967901b6c",
+    "native/plugins/BiglyBTC-plugin-azrating/local_fixture_test.py": "8bd9137ec272243e7f61891c87d4f36d06bed80968a9ff38c7f18e558d76b804",
+    "native/plugins/BiglyBTC-plugin-azrating/local_rating.cpp": "baa6682bbac733889c5b47c80667cacd191c83e6a372b46c66c4b03d129f50b2",
+    "native/plugins/BiglyBTC-plugin-azrating/local_rating.hpp": "17b2d6739d0f1e5e2594185dd948448ed4584e0890b679213501ec45506a49f3",
+    "native/plugins/BiglyBTC-plugin-azrating/rating_data.cpp": "9cc52433ca85c6edab960f5fe7fcf5c7fa319f15dad5fc6f5bd3ac9f92031896",
+    "native/plugins/BiglyBTC-plugin-azrating/rating_data.hpp": "912589da9cf1bea24c927a90013bf332b023f4c5cb158e28dbe0a493f6f87058",
+    "native/plugins/BiglyBTC-plugin-azrating/rating_driver.cpp": "64637e0fdd5091c2e8aaeedcf9f2a948634105e2b4f104e3ebd66459313a13ee"
+  },
+  "core_package_evidence_sha256": "396719d15632a97e945495102174fa3c786220f1cd4fcc347504e400191ddd6b",
+  "scope": "70000 original load/store observations incl exhaustive BMP units, local limits/ownership,1819 rating data observations/bounds and366 Java payload readbacks per compiler. Pure supplied host policy; no actual attribute writer, publication queue, DDB or live profile."
+}

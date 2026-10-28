@@ -1,0 +1,783 @@
+{
+  "status": "SOURCE_ONLY_COMMITTED_AUTHORITY_NO_EXECUTION",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_sha256_and_blobs": {
+    "uis/src/com/biglybt/ui/swt/mainwindow/MainMenuV2.java": {
+      "git_blob": "cdf1fd41311e98762ac58a168d7c09c3894304d0",
+      "sha256": "e7045fd861fc5eb62a26033fb48c39af42c4d8071dcc67d68bd39d142678d6b1",
+      "bytes": 10632
+    },
+    "uis/src/com/biglybt/ui/swt/shells/main/MainMenuV3.java": {
+      "git_blob": "375b174dac8169581e577d497467d3b3b06bacae",
+      "sha256": "16e5195da0afdc5ac46555eb0dbbc8606172c1cc11acdd368f42149e2feb5127",
+      "bytes": 24078
+    },
+    "uis/src/com/biglybt/ui/swt/mainwindow/MenuFactory.java": {
+      "git_blob": "fe6baf3bb1da72362773aedced66ff48084c4d4e",
+      "sha256": "178e65a1154cc19d67b3fd3c4be5c84cfe666a616e527d1aed0db39112a6f1b4",
+      "bytes": 92087
+    },
+    "uis/src/com/biglybt/ui/swt/mainwindow/IMenuConstants.java": {
+      "git_blob": "f586712de95578ed1f4dfc6dbee99aeff6b5219e",
+      "sha256": "b8638f6316da62e74476a13376f09f79ece8fa013eeec7b172207e853dde2e8f",
+      "bytes": 9036
+    },
+    "uis/src/com/biglybt/ui/swt/KeyBindings.java": {
+      "git_blob": "cd7af1dcc0b4f39c716df662117a44e8aebb1c85",
+      "sha256": "bb17a964a742d89ac6a78ae6c9bd1a7fa9e853a6ea613b21606d0a87aff8ba4d",
+      "bytes": 17920
+    },
+    "uis/src/com/biglybt/ui/swt/shells/main/MainMDISetup.java": {
+      "git_blob": "a34502ff825448fa7db14cf27e560519d37f31f4",
+      "sha256": "cecfce4f796772a5997913f711c27bd27fcd0895397d18fe3658262de66e5938",
+      "bytes": 55348
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java": {
+      "git_blob": "b02e0bbb331bdf6c517387ba999284af7fb53cf2",
+      "sha256": "caf9b2db52ea7fc48248131f75d59466157a6578045c32bb9db0c3a4b763b648",
+      "bytes": 8385
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/ActivityView.java": {
+      "git_blob": "805df9f17c887034129858a27517ed488a79e215",
+      "sha256": "5ed9705c122842319eea84339a783a498cc03fc338d9637ff4772887fd73fcd2",
+      "bytes": 7143
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java": {
+      "git_blob": "0cfe7a202d8ff27da9500435ea9bd659a1de6ba5",
+      "sha256": "0c2b304c022013d0797732049c51deb23a7af976f74b0d47f22156d8da097103",
+      "bytes": 76096
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/CacheView.java": {
+      "git_blob": "d23fdf1e9a0334098bfbb7132c5b21261fea1573",
+      "sha256": "dcdb8d7ecb9aab01998bb331c56614dd382b89028f9c0d677f77707aa8e875e5",
+      "bytes": 20739
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/TrackerActivityView.java": {
+      "git_blob": "88b74b7c237f59124d80e67eb7f826d678c6d090",
+      "sha256": "82e1f741ad2daee3fe98cd0208bcbec5a01a862789eb38667fbc0df9e8b231a3",
+      "bytes": 16879
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/TagStatsView.java": {
+      "git_blob": "55062ba959707735ecac6ad66466813c0a1d9d87",
+      "sha256": "d55137ef360c54ab076e23566b75e40ef27bebd9d6a451e763ae3e8f80a14408",
+      "bytes": 12952
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/XferStatsView.java": {
+      "git_blob": "d75332825445612a754e18fffe2d31f8bccd6254",
+      "sha256": "1f45adf82caa2ddfecfc584c96106a098385399433793f1527b831a991f8d0bf",
+      "bytes": 4816
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/CountersView.java": {
+      "git_blob": "ad4a21d8ff48e3ef39321ba7ccfa0fed272fc698",
+      "sha256": "ed9f8012d173d440dc355128629ba6c7840ce60c16d5da4f386a16b9a5ac0cbb",
+      "bytes": 5339
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/DHTView.java": {
+      "git_blob": "f2af473f79be652f64de229b5fd0c9ad8d638aa9",
+      "sha256": "d33842d7e04b05085760475771082f7cf86689085366292455592b361a2c22bb",
+      "bytes": 30405
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/DHTOpsView.java": {
+      "git_blob": "3a01d48eb12883a96c94985e14caa6e7d004dfa2",
+      "sha256": "e681f2a700af900a5674e5f48b10a330306463673a049e1eb42e5e7837965b2c",
+      "bytes": 5136
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/VivaldiView.java": {
+      "git_blob": "bb8cb8a1b949cbb823c219a771c6d9873a66720e",
+      "sha256": "7fa88c534fb4944ce11f8b2c6e886849799f82f473c22eeda29059603e96377e",
+      "bytes": 5563
+    },
+    "uis/src/com/biglybt/ui/swt/views/ViewManagerSWT.java": {
+      "git_blob": "0f4930d02385e3b0f4bcbe5bf571d0fc45819e37",
+      "sha256": "00e245a51450df63ad9982543913f7cdea3c2f6a56c24fa0fd92b19463edf7ca",
+      "bytes": 12654
+    },
+    "uis/src/com/biglybt/ui/swt/pifimpl/UISWTViewBuilderCore.java": {
+      "git_blob": "fa8732e07b0f7701d0c1f789d393f31fa23b8462",
+      "sha256": "21652002919624dc19457382b67b57905c604b1dded28e4aae6dbb5a47db262c",
+      "bytes": 11458
+    },
+    "uis/src/com/biglybt/ui/swt/pif/UISWTInstance.java": {
+      "git_blob": "ef32c5e7657445ff2e9af3b8e7ecc0eb496797fd",
+      "sha256": "0f8cfa59af09c42903b038d04cc5e014d6ca51cfb3eb56ec16252ff560f96ac6",
+      "bytes": 13492
+    },
+    "uis/src/com/biglybt/ui/swt/mdi/TabbedMDI.java": {
+      "git_blob": "2d956e729ab8ec07021e9340ef68da08688ca323",
+      "sha256": "8a69fc161b6946b1f3821afdecc4c36c9dbac91430b8c315573a7d4330b6e481",
+      "bytes": 52813
+    },
+    "uis/src/com/biglybt/ui/swt/mdi/TabbedEntry.java": {
+      "git_blob": "a4911e0db4e0b919f3ab577d0f30825a6f57ba80",
+      "sha256": "8b1167b2ab5344f321702c10107385a53476351599bd14b2f7d4fea0c1d3eaf4",
+      "bytes": 15222
+    },
+    "uis/src/com/biglybt/ui/swt/mdi/BaseMDI.java": {
+      "git_blob": "c1d36a2db9f1691e9840bcce94dbf3f1f26a3877",
+      "sha256": "6d4e0eb41359cb8d2d704dbcb70b50d3df1008832239509df3b69501af94ae0f",
+      "bytes": 36063
+    },
+    "core/src/com/biglybt/core/global/impl/GlobalManagerStatsImpl.java": {
+      "git_blob": "a247b2ee87abdc97c8e1b980ada9be3e6c85e31f",
+      "sha256": "124c0cf19f7c99dc5a72b9d9f4bc99a0da942f0c3a7c2dc37cd1acd12e86c7c3",
+      "bytes": 37548
+    },
+    "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java": {
+      "git_blob": "f992aecdc28168d656c322512434ff1cbaf95c02",
+      "sha256": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39",
+      "bytes": 144403
+    },
+    "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java": {
+      "git_blob": "ac2a37822729b721aed9367b77d88450b826ec45",
+      "sha256": "14a6ecbee076ac3fa991db8d618af9faab83e1b6b4ea52e1f71eb2b2d7ea240f",
+      "bytes": 15312
+    },
+    "core/src/com/biglybt/core/util/DisplayFormatters.java": {
+      "git_blob": "a6b5fed59b21876db0a75a733c53ec2794742c3d",
+      "sha256": "9c39600a8c46d455c91cbfa4f4eb826c2b7af2fd56a43c5ea61f04811a3192f7",
+      "bytes": 49013
+    },
+    "core/src/com/biglybt/core/util/Constants.java": {
+      "git_blob": "4ddd1e96dc735f8fda4c723629f4ba9924423a8a",
+      "sha256": "d030f8eb323021ed4ca8d8d2d644d028abc3799295e16bce2785b276cdb420ea",
+      "bytes": 19072
+    },
+    "core/src/com/biglybt/internat/MessagesBundle.properties": {
+      "git_blob": "6b9be9a72dcb4c5618239927c5629449533ce9df",
+      "sha256": "a73301400676c4295396be3e4e033e68e8b912a547e2c5a32425253809ba83c0",
+      "bytes": 316206
+    },
+    "uis/src/com/biglybt/ui/swt/MenuBuildUtils.java": {
+      "git_blob": "58b254ec8501fb196bf0fdeacbe30f51dd928eee",
+      "sha256": "2e51dee1653263f55cc56a848b0c1bfebe9b79bcbc21cb2029de46a21c37fb0c",
+      "bytes": 47088
+    },
+    "uis/src/com/biglybt/ui/swt/mainwindow/MainStatusBar.java": {
+      "git_blob": "9a437c0a2606dac5959a88637b6b892d4a7de629",
+      "sha256": "0da589dfc3acf8b443f0d89ed211b8b0df99265af0437f73ecb9c08af42b0c7b",
+      "bytes": 65282
+    },
+    "core/src/com/biglybt/core/util/FileUtil.java": {
+      "git_blob": "e96c2282bb45c0a32f31450f25b8bc3d65b5739b",
+      "sha256": "6565fa6aa08efd7ef64d339db28040d909765b0808050c7b70ae9a09e8cb4ba2",
+      "bytes": 106930
+    },
+    "core/src/com/biglybt/core/stats/transfer/StatsFactory.java": {
+      "git_blob": "c748f467cae4144ca856db54e16dd09a331f4a82",
+      "sha256": "91959571782238cd27fb1832a11fc0f0b48c02ce10bc1e04e0de5022ceb4ec7f",
+      "bytes": 2318
+    },
+    "core/src/com/biglybt/core/stats/transfer/GeneralStats.java": {
+      "git_blob": "4a4573d3bf6f7639a76c4cc12fe9567f491a2e38",
+      "sha256": "4c4cd0df178265c76ba4da78b3ca79f23d4f3bf2a2b663fe67f3647a1735bd8b",
+      "bytes": 2166
+    },
+    "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java": {
+      "git_blob": "72d5cccf803da692911b9a0e56777262138d6e00",
+      "sha256": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194",
+      "bytes": 45598
+    }
+  },
+  "complete_selected_methods": [
+    {
+      "path": "uis/src/com/biglybt/ui/swt/mainwindow/MainMenuV2.java",
+      "name": "addToolsMenu",
+      "line": 287,
+      "end_line": 305,
+      "declaration_sha256": "3c7f9fdab25ae3cdf8df99fd66bbb669e9c65bf119eec384c92b61de01a7c11c",
+      "body_sha256": "a50ca6799fca27620fb0523d75ec20796f9140b7f862b58fb0bb177fd710e762",
+      "signature": "private void addToolsMenu()"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/shells/main/MainMenuV3.java",
+      "name": "addToolsMenu",
+      "line": 566,
+      "end_line": 590,
+      "declaration_sha256": "3ef1b30a7c023d8ae25b54d5b71aec97b77df4d95fccddbc5abe1e2f7b5016a7",
+      "body_sha256": "8152664f225ae0754cf00b7642e302cf30b8ef1ad8a02b7a42212e7162ee45e9",
+      "signature": "private void addToolsMenu()"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/mainwindow/MenuFactory.java",
+      "name": "addStatisticsMenuItem",
+      "line": 2124,
+      "end_line": 2135,
+      "declaration_sha256": "cc9d88baa9d393eb140b4b523b526af3afe50a6eedbe73a3d376a695146addd9",
+      "body_sha256": "8c396a2df6f8dac3ee1160d4639f02e35083265be20a2f32c169dd23d7a97e71",
+      "signature": "public static MenuItem addStatisticsMenuItem(Menu menu)"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/mainwindow/MenuFactory.java",
+      "name": "addMenuItem(style)",
+      "line": 2911,
+      "end_line": 2925,
+      "declaration_sha256": "b6897b675a4fb99653b8f39175a15dad4d460ac3001ed699a5ae67980b96a17c",
+      "body_sha256": "8e8b303245e540aa218b0750d50b570709199fa63f255d67de9e470beae60032",
+      "signature": "public static final MenuItem addMenuItem(Menu menu, String localizationKey, Listener selListener, int style)"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/KeyBindings.java",
+      "name": "parseKeyBinding",
+      "line": 200,
+      "end_line": 285,
+      "declaration_sha256": "be495dc3c94451661ac5cfb6dab47b8ce858662a2b6b00a13fec3a13c42b8585",
+      "body_sha256": "486e796d1b3a66e01df44430933786e078dd32bf9f47ecd17ed19c2655efc71e",
+      "signature": "private static KeyBindingInfo parseKeyBinding(final String keyBindingValue)"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/KeyBindings.java",
+      "name": "setAccelerator(localization)",
+      "line": 317,
+      "end_line": 346,
+      "declaration_sha256": "9509408c7c401fbe26df29eb6d6b0b2fbd9440e859bbc45524943f83cb742abb",
+      "body_sha256": "54275676db6ce06bc467d0a6ff28f639eac6eadc7413be1df1b4d02575b3eb7c",
+      "signature": "public static void setAccelerator(final MenuItem menu, String localizationKey)"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java",
+      "name": "initialize",
+      "line": 107,
+      "end_line": 132,
+      "declaration_sha256": "be20720a872a6747a2b843907e76b22ae71c823ed24ea28bbdd8751af797b17a",
+      "body_sha256": "66e180ad539b491f036893e42e88d6c45bfaac134d5a2091f89cded4ea6ed911",
+      "signature": "private void initialize(Composite composite)"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java",
+      "name": "registerPluginViews",
+      "line": 134,
+      "end_line": 233,
+      "declaration_sha256": "642554a33a78849ab8a1f3a47a556ff4ad3b6c10a3e4aa5b78056059509d2062",
+      "body_sha256": "a78298c53b92222702d33d098487d36403d5920716140ea03901e469d4a6be21",
+      "signature": "private static void registerPluginViews()"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java",
+      "name": "refresh",
+      "line": 236,
+      "end_line": 244,
+      "declaration_sha256": "83d92164d821a424fec90d9f7c94511ee1a2a92848ac807b29f898c076d4a769",
+      "body_sha256": "c3ca6aa5f31c8d74e8cc5ef4eeee1f5671f044684ad83cf0d90b29afa7ef0c33",
+      "signature": "private void refresh()"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java",
+      "name": "delete",
+      "line": 250,
+      "end_line": 258,
+      "declaration_sha256": "94cef01ede11210ab5afc22bc7f8ed3c7af3409b666ed129edffd4bb14889daa",
+      "body_sha256": "c797dcaa192714d90923bb4bcc1910a7c39f745df377dad944f43a1ae4147026",
+      "signature": "private void delete()"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java",
+      "name": "dataSourceChanged",
+      "line": 260,
+      "end_line": 271,
+      "declaration_sha256": "4426d72a16cfa3aa2b98ae9c8957913347cf2ea721100ae4c34a00eb37e77820",
+      "body_sha256": "7462adb87addd28d18ae8b293381a6ed10475e454ad5886680f117ad0f86fc88",
+      "signature": "private void dataSourceChanged(Object newDataSource)"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java",
+      "name": "eventOccurred",
+      "line": 277,
+      "end_line": 310,
+      "declaration_sha256": "69261849c4da1760f102104ad6105fbece349931636cdef84a49586247b1d2fc",
+      "body_sha256": "7f96e532e9f181e8258b36990322808db3d7c68061aaa54b20f45e8b9a28d15c",
+      "signature": "public boolean eventOccurred(UISWTViewEvent event)"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java",
+      "name": "UpdateThread.run",
+      "line": 73,
+      "end_line": 95,
+      "declaration_sha256": "7d6120db022c8cf67694bcbdaa9fc53fd7a04a69ffa73029168ac99734a9b5f7",
+      "body_sha256": "c8984bb12d075bacd6d21dbcab6ac638f7bcfff026491b4865933d78dde98c2e",
+      "signature": "public void run()"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java",
+      "name": "UpdateThread.stopIt",
+      "line": 97,
+      "end_line": 99,
+      "declaration_sha256": "576db6598604d628933e5bdc6fcce5ae2bb121a8e939f9ace360a9e9d81fc93c",
+      "body_sha256": "69dc269895fe0d2aa2ce6c7ed716382cbf1a60e114cc2beaa0888baed7f0ccc6",
+      "signature": "public void stopIt()"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/stats/ActivityView.java",
+      "name": "periodicUpdate",
+      "line": 90,
+      "end_line": 110,
+      "declaration_sha256": "3986d7e200d38f13973cfa7f206bd0490cb77ecd8a0eb0ffbd6030e623c1d3e0",
+      "body_sha256": "7f1e63c1c862105b9af32e82573a7c6f19904e8a77a1f2307c5b96a878c1d9b6",
+      "signature": "public void periodicUpdate()"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+      "name": "initialize",
+      "line": 227,
+      "end_line": 284,
+      "declaration_sha256": "76eefd121133eda76f50cbf6fb5e4d8104643e2b4db6c5a0607412e6cc8c8e70",
+      "body_sha256": "981a8dc4813e851f124433a54d30c3f77329c547713d82d9ed407c703a005f6e",
+      "signature": "private void initialize(Composite composite)"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+      "name": "refreshGeneral",
+      "line": 971,
+      "end_line": 1123,
+      "declaration_sha256": "bb426e2ec2b18c803678b0570458e9f7bd975b9e857fcbb3ac531a87101ecb01",
+      "body_sha256": "5dfb5b0152a037c52b8e24b2bcc94c133fe0c0f5ca1e92f0d623454d5ef99322",
+      "signature": "private void refreshGeneral()"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+      "name": "createGeneralPanel",
+      "line": 286,
+      "end_line": 496,
+      "declaration_sha256": "317a56b58e6d45a8032533ec1c01785b2d8efe3f637df8376e6ee8e09a45446c",
+      "body_sha256": "296304db17577c3b843a1e0ca38728c377beeaa3f26eb62657b0cc88531c34b5",
+      "signature": "private void createGeneralPanel()"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+      "name": "createHistoryPanel",
+      "line": 2242,
+      "end_line": 2482,
+      "declaration_sha256": "cd809bdb03a2f3120cde10d05a34bb5507ad84dd831d783fb51beead837aafaf",
+      "body_sha256": "8be1ce63077efd39776c5ebc2ddcae7645225c17d5a705e6911191597102e950",
+      "signature": "private void createHistoryPanel()"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+      "name": "refreshHistory",
+      "line": 2489,
+      "end_line": 2697,
+      "declaration_sha256": "0bc92b8f876ce17772ea019db6d7e6dbe0d3fc2a2528fdc97dfa6f877d0f9cde",
+      "body_sha256": "47ead5acfb2d9f420bfd94b0b3daae8d2a6db7893534ed6d4025f3aa9ccb1635",
+      "signature": "private void refreshHistory()"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/ViewManagerSWT.java",
+      "name": "getBuilders(Object,sort)",
+      "line": 159,
+      "end_line": 180,
+      "declaration_sha256": "bf1ab9f7de512ac75c655581f34982376267fc2ec4e9448855af188e57169eb8",
+      "body_sha256": "d5e6dde6dfd8871e931df78c56f7597f92ae0ea66b08535061605df2e06dfcfb",
+      "signature": "private List<UISWTViewBuilderCore> getBuilders(Object forDSTypeOrViewID, boolean sort)"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/views/ViewManagerSWT.java",
+      "name": "sortBuilders",
+      "line": 207,
+      "end_line": 221,
+      "declaration_sha256": "57cbaff445bc8b177312b5c146c6f8f3774b0c6341b4ef8cd4177e328c3458b9",
+      "body_sha256": "1f6b489d8f31da166ed18b122ae13a924715c07bdd0a34c062ccb820058efba2",
+      "signature": "private static void sortBuilders(List<UISWTViewBuilderCore> list)"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/pifimpl/UISWTViewBuilderCore.java",
+      "name": "getDefaultVisibility",
+      "line": 369,
+      "end_line": 373,
+      "declaration_sha256": "7ec78392b2d8967f3fe709e6449955f6364eb3093b005e56f7319d6c67e394cd",
+      "body_sha256": "a30ef710c5c5b4952549b75ef75ebf564b49e39f5122337f4c2b331136e77395",
+      "signature": "public boolean getDefaultVisibility()"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/mdi/TabbedMDI.java",
+      "name": "embeddedConstructor",
+      "line": 146,
+      "end_line": 165,
+      "declaration_sha256": "8ea3ef7ea8674d26fc6f5aa309f2bcc501230c333fe9aaa4b6aa01c0c88a7f85",
+      "body_sha256": "605fa76cd082fb8de2dbf53ce73e1efc9e1304a4e794c9c613fe7865ea2e802a",
+      "signature": "public TabbedMDI(Class<?> pluginDataSourceType, String viewID, String props_prefix, UISWTView parentView, Object dataSource)"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/mdi/TabbedMDI.java",
+      "name": "buildTabs",
+      "line": 797,
+      "end_line": 877,
+      "declaration_sha256": "a70b546696d666415d49d3e253e4a1eda6551846cc5846d4db899f1955e5c363",
+      "body_sha256": "7b2bcbb6072cff96c3149ba702b00091bf1a71f7108e4c135fe5fb3703d9eae5",
+      "signature": "private void buildTabs()"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/mdi/TabbedMDI.java",
+      "name": "swt_setupNewEntry",
+      "line": 1241,
+      "end_line": 1350,
+      "declaration_sha256": "fb159de212103734b877ea2ea889a5f2d36c5e08b888540fb619952fc7a63457",
+      "body_sha256": "208ac854ef07f0dceacb8b87e540d195b990562e48905921d363a9e4db0156c2",
+      "signature": "private void swt_setupNewEntry(TabbedEntry entry)"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/mdi/TabbedMDI.java",
+      "name": "createEntry(builder)",
+      "line": 1145,
+      "end_line": 1195,
+      "declaration_sha256": "b7a0962f3ef7cd3289a10c52c9c37c2ef15f88dc4f2bf295ec19bf988a69c8ec",
+      "body_sha256": "66c533dc135e85864d23fe8b60be09ecf59fb59e11e9eed4937c5c548e1bdaf5",
+      "signature": "public TabbedEntry createEntry(UISWTViewBuilderCore builder, boolean closeable)"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/mdi/TabbedEntry.java",
+      "name": "isCloseable",
+      "line": 268,
+      "end_line": 270,
+      "declaration_sha256": "89dafc4be75e5c3fac9ebb8695ea7b392486cb9b01785552984699e2ec88cc52",
+      "body_sha256": "a5831063377590abd712407c7608d92638450f388a1ae0ee6f1fad47d4032d4b",
+      "signature": "public boolean isCloseable()"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/mdi/TabbedEntry.java",
+      "name": "setCloseable",
+      "line": 276,
+      "end_line": 288,
+      "declaration_sha256": "115a45a5a4d60ab81b5bd56b5534c2b8af77010d60dd4cb72308a8f252a103bd",
+      "body_sha256": "8dfbb7c84d92358304777f38d352daa21006d450f58452abba46859a1a263873",
+      "signature": "public void setCloseable(boolean closeable)"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/mdi/BaseMDI.java",
+      "name": "showEntryByID",
+      "line": 587,
+      "end_line": 589,
+      "declaration_sha256": "0b651a633c0f337e8475ec7c1c51bb190cc3258b9e718cd9682d3d8da496efe4",
+      "body_sha256": "e97c696588149a406b535bac2103aae4bfcc06f9d6b06c89c8c9a8d622363ea3",
+      "signature": "public boolean showEntryByID(String id)"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/mdi/BaseMDI.java",
+      "name": "loadAndGetEntryByID",
+      "line": 755,
+      "end_line": 817,
+      "declaration_sha256": "2afb1c3122d41ebf343cfd1771d1d2f3d3f01cc8045581e5036c29b59fd602da",
+      "body_sha256": "d20cc6501895d842e6394e70e2f8301a356cb2002d7388d215a655d6f6bd5b84",
+      "signature": "private MdiEntry loadAndGetEntryByID( String id, boolean activate, boolean onlyLoadOnce, Object datasource )"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/mdi/BaseMDI.java",
+      "name": "closeEntryByID",
+      "line": 219,
+      "end_line": 247,
+      "declaration_sha256": "472c00ef4af36766692f0d304559968078858ff76b34dc62404385054d7461e0",
+      "body_sha256": "0ce8ce61ba629d38f727e5a000ed717d488064c84d42854c8dab72ac2bb1e26c",
+      "signature": "protected BaseMdiEntry closeEntryByID(String id, boolean userInitiated)"
+    },
+    {
+      "path": "core/src/com/biglybt/core/global/impl/GlobalManagerStatsImpl.java",
+      "name": "getDataReceiveRate",
+      "line": 325,
+      "end_line": 327,
+      "declaration_sha256": "85f146e8aa9e7bf168ff4ea86d53cf58ec4d54c615e8493924d9e9bde72fb0d8",
+      "body_sha256": "64ead9bb57481e6f09310cbdef083ed30744e08e740990cf22cb5914128585ad",
+      "signature": "public long getDataReceiveRate()"
+    },
+    {
+      "path": "core/src/com/biglybt/core/global/impl/GlobalManagerStatsImpl.java",
+      "name": "getDataSendRate",
+      "line": 355,
+      "end_line": 357,
+      "declaration_sha256": "1abd8a83f4f806fc9ecbded45c7992587bfa7c343fd9428f1de0ccfd728a9a2b",
+      "body_sha256": "0f1c1eb073a13cfa1860e74c25469517c8ab957eac8cad7c69fb61d481ce83fe",
+      "signature": "public long getDataSendRate()"
+    },
+    {
+      "path": "core/src/com/biglybt/core/global/impl/GlobalManagerStatsImpl.java",
+      "name": "getTotalDataBytesReceived",
+      "line": 397,
+      "end_line": 399,
+      "declaration_sha256": "09bfaad5135bac45f4fc02b0172fac7662df0c1740c07289aa8fa3abad7447b5",
+      "body_sha256": "bac2439076001e071e62e22d1df112dcf11b0980481f16e915fe1ae79af09d5e",
+      "signature": "public long getTotalDataBytesReceived()"
+    },
+    {
+      "path": "core/src/com/biglybt/core/global/impl/GlobalManagerStatsImpl.java",
+      "name": "getTotalDataBytesSent",
+      "line": 386,
+      "end_line": 388,
+      "declaration_sha256": "890a396a2a2da99cecffe2e19db61ea1bf78f044e06fed37487a1731960d24ea",
+      "body_sha256": "cd7e05526065b0a100eea240f4032e1ce701f3b4c245f408e294f8815560104f",
+      "signature": "public long getTotalDataBytesSent()"
+    },
+    {
+      "path": "core/src/com/biglybt/core/global/impl/GlobalManagerStatsImpl.java",
+      "name": "getTotalProtocolBytesReceived",
+      "line": 402,
+      "end_line": 404,
+      "declaration_sha256": "0f5728600f2e31d670d69982e255b8594516ef16f3816ebae2f1f03cf576938f",
+      "body_sha256": "dfcf0a2879e45101e0b9f11f68ba5e2ea17c9288cec08bf78a6e18585652b75a",
+      "signature": "public long getTotalProtocolBytesReceived()"
+    },
+    {
+      "path": "core/src/com/biglybt/core/global/impl/GlobalManagerStatsImpl.java",
+      "name": "getTotalProtocolBytesSent",
+      "line": 391,
+      "end_line": 393,
+      "declaration_sha256": "f0fdc894d31425bfc7224c114d73e0a885e895c62c94c8895b9d6cc1fe375a0b",
+      "body_sha256": "ea0ef6529f5dc1c6680f8edf9a96fbcdfc21925bcb7a3d35bc97416f029e0ad1",
+      "signature": "public long getTotalProtocolBytesSent()"
+    },
+    {
+      "path": "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java",
+      "name": "exportDownloadStateToMapSupport",
+      "line": 3435,
+      "end_line": 3557,
+      "declaration_sha256": "102479ed84e9557425c0adf6e6af229558e06d5a41a0b3ae4150f98481b7ecb4",
+      "body_sha256": "1935f111c920ab8919f63e358a821e377a911d082ed6dbdacdb13089c563ed98",
+      "signature": "private Map exportDownloadStateToMapSupport( DownloadManager dm, boolean internal_export, boolean interim )"
+    },
+    {
+      "path": "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java",
+      "name": "load()",
+      "line": 111,
+      "end_line": 113,
+      "declaration_sha256": "650258684fd303f45be337291556e0c74c4d7c64b628ae9e2358fb10a2684468",
+      "body_sha256": "81b478daf2850e5c27d05e7e5399152dc3acd5390259886ae5939bb9dfd64186",
+      "signature": "private Map load()"
+    },
+    {
+      "path": "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java",
+      "name": "validateAndLoadValues",
+      "line": 134,
+      "end_line": 172,
+      "declaration_sha256": "61a9f81d4e3fbcf8890d58eafb601f41257f2d590e52251e2b550ca55b5f11e0",
+      "body_sha256": "e015771a27625f27c2b20402664b40b5e92bcfe13a6b258b452aed5d9e482dd3",
+      "signature": "private void validateAndLoadValues( Map statisticsMap )"
+    },
+    {
+      "path": "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java",
+      "name": "getDownloadedBytes(since_mark)",
+      "line": 323,
+      "end_line": 333,
+      "declaration_sha256": "9bb6372b2d95097bec6d725b81721b05cd8ce05501c4bd1de46e27b3243284de",
+      "body_sha256": "4906f0550f0d40ef636ea8a0f76d5806f87345f75416595438e91880053503ed",
+      "signature": "public long getDownloadedBytes(boolean since_mark )"
+    },
+    {
+      "path": "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java",
+      "name": "getUploadedBytes(since_mark)",
+      "line": 335,
+      "end_line": 345,
+      "declaration_sha256": "35a5908e1324c5659d31879a3f2aff4e8a377a632eccb88a406cccc60862a169",
+      "body_sha256": "ad0cf68b01d6a038e704f7c88468632c467293329599989ee7d95179ce1a3eb1",
+      "signature": "public long getUploadedBytes(boolean since_mark )"
+    },
+    {
+      "path": "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java",
+      "name": "getTotalUpTime(since_mark)",
+      "line": 347,
+      "end_line": 356,
+      "declaration_sha256": "99141148d1f1ca321b8e4eb6fb8833a38bc9cb35da905bff401c905fbdaa85a4",
+      "body_sha256": "9559b335e3b578258156038e868384dc03434749a84558f13805bb0666436a18",
+      "signature": "public long getTotalUpTime(boolean since_mark )"
+    },
+    {
+      "path": "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java",
+      "name": "getSessionUpTime",
+      "line": 413,
+      "end_line": 415,
+      "declaration_sha256": "b3902ce14fab6e0527f357179e58de47bb754fb814e3b2d926e0168654479944",
+      "body_sha256": "d35b3653a340aaa64bed1862cc06eaa0e48a044a7193717e52693ba83f2cb393",
+      "signature": "public long getSessionUpTime()"
+    },
+    {
+      "path": "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java",
+      "name": "updateStats",
+      "line": 435,
+      "end_line": 602,
+      "declaration_sha256": "188d04d86e58c8c35191ffcc2dd0bc96aaf3407f489fc30c5ad744e0925599ec",
+      "body_sha256": "7114d89a4558213b9ab8bd48d30e5c70254f417b70247714c731ea33cafe384a",
+      "signature": "private void updateStats( boolean force )"
+    },
+    {
+      "path": "core/src/com/biglybt/core/util/DisplayFormatters.java",
+      "name": "formatByteCountToKiBEtc(4args)",
+      "line": 436,
+      "end_line": 468,
+      "declaration_sha256": "ceda2d8175bcbe30522b8a8e2e3ff46b4ea7715b09ad25ed5f60f6adf4173eaa",
+      "body_sha256": "8b90661f13ed6ff03d1ef32120c2d5c2f73f4394a72e074fbe115d386515b6b7",
+      "signature": "String formatByteCountToKiBEtc( long n, boolean rate, boolean bTruncateZeros, int precision)"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/MenuBuildUtils.java",
+      "name": "addMaintenanceListenerForMenu(alwaysBuilt)",
+      "line": 113,
+      "end_line": 170,
+      "declaration_sha256": "7ff08b5f874328442ed6103d03a3833af644966ccc517a6c1892c3c6b64dda69",
+      "body_sha256": "f1b2ef33fb13155c172f40f3fa3a639c1fc88159e3eb962d9df9c43f184dc799",
+      "signature": "public static void addMaintenanceListenerForMenu(final Menu menu, final MenuBuilder builder, boolean alwaysBuilt)"
+    },
+    {
+      "path": "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java",
+      "name": "getLong",
+      "line": 174,
+      "end_line": 190,
+      "declaration_sha256": "64734f6d574a3643d5eb1e9a1fd5d84ef188038833bd53cfcf1041b8e9acce78",
+      "body_sha256": "ed93c630eaaa7da63ca40e21bbaed7a9e7e36cf1f9234c909632705fdf53b801",
+      "signature": "protected long getLong( Map map, String name )"
+    },
+    {
+      "path": "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java",
+      "name": "save(Map)",
+      "line": 130,
+      "end_line": 132,
+      "declaration_sha256": "85c66c8680abe4cf1d2230cdbee92ce377353a46ff238411a9c0898a6f70e79a",
+      "body_sha256": "69fa35c2496d20e066c616ba4332cf973b6138e1bdc5008f43fb968f2ed19570",
+      "signature": "private void save( Map map )"
+    },
+    {
+      "path": "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java",
+      "name": "setMark",
+      "line": 394,
+      "end_line": 400,
+      "declaration_sha256": "7831c20cdb0985810d3664bce91898200e27e284ac1956a199bc855e346b98fd",
+      "body_sha256": "277a27db28073a4aab7b12e4a93fad5ed4efa5f492dd40977df33ddb12601a72",
+      "signature": "public void setMark()"
+    },
+    {
+      "path": "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java",
+      "name": "clearMark",
+      "line": 403,
+      "end_line": 410,
+      "declaration_sha256": "a4f5f09c6f90945840934cb53a37140144f482e5ce114264d457c100aaaf7e6f",
+      "body_sha256": "2c3dad299779a0499043d1a290f2d5a72e0087d37712f176e3f81459716a80ce",
+      "signature": "public void clearMark()"
+    },
+    {
+      "path": "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java",
+      "name": "destroyInitiated",
+      "line": 418,
+      "end_line": 420,
+      "declaration_sha256": "edd24340fb4c19eb7d33018df04adb5be07386bc2df4871c2b390b73c7550b04",
+      "body_sha256": "5dc011790e9c30f87291d9697add00e4411032f70595b3d044c63891f6f0c735",
+      "signature": "public void destroyInitiated()"
+    },
+    {
+      "path": "core/src/com/biglybt/core/util/FileUtil.java",
+      "name": "readResilientConfigFile(defaultBackupPolicy)",
+      "line": 1222,
+      "end_line": 1231,
+      "declaration_sha256": "1e3c250ef106f3aeb8105bd2c25645a580b7e5a09b8059e819571ffc350f69d3",
+      "body_sha256": "c92069317c1265493d93c7542dc4ecfc2beb6afe5e8d89288a7332352021eb01",
+      "signature": "public static Map readResilientConfigFile( String file_name )"
+    },
+    {
+      "path": "core/src/com/biglybt/core/util/FileUtil.java",
+      "name": "writeResilientConfigFile",
+      "line": 902,
+      "end_line": 912,
+      "declaration_sha256": "e088d9cf06dbdddcaef6ca2c59848b2539cfdfb3a5917e6722aff2f97307f46b",
+      "body_sha256": "a4571b5c59dc2b9a483e0af92211ea53b4cf0b770a615ea71ca2e64d853a380a",
+      "signature": "public static void writeResilientConfigFile( String file_name, Map data )"
+    },
+    {
+      "path": "core/src/com/biglybt/core/util/FileUtil.java",
+      "name": "readResilientFile(candidates)",
+      "line": 1292,
+      "end_line": 1340,
+      "declaration_sha256": "5edce8018b6539a64a2c2ca8dccc6d2f577d4055b0c7355ebd36a3c5231518d2",
+      "body_sha256": "df6eee919e754aa4ab367c213c9918aef2a70f2b3bf713569bfcf7d6d68154b4",
+      "signature": "public static Map readResilientFile( File parent_dir, String file_name, boolean use_backup, boolean intern_keys )"
+    },
+    {
+      "path": "core/src/com/biglybt/core/util/FileUtil.java",
+      "name": "writeResilientFile(bencodePayload)",
+      "line": 973,
+      "end_line": 1108,
+      "declaration_sha256": "4c7684315968d5f7c8e3087a56fd2f7668791770f3642b316711264ad6e97a02",
+      "body_sha256": "c375e165a23e82479e215e227532f1e908b6eceb4afb5bd1a090f1af7b639994",
+      "signature": "private static boolean writeResilientFile( File parent_dir, String file_name, Map data )"
+    },
+    {
+      "path": "core/src/com/biglybt/core/stats/transfer/StatsFactory.java",
+      "name": "initialize",
+      "line": 54,
+      "end_line": 61,
+      "declaration_sha256": "1e7738dad0c46e07c3f63a63f0e34b8359cba2e81ed0d0101419f3e61d879851",
+      "body_sha256": "d0b82fdcda54ae734754570a05f37c2664f855b819ed5b0e298cfde03d5028f6",
+      "signature": "public static void initialize( Core core, GlobalManagerStats stats )"
+    }
+  ],
+  "selected_fragments": [
+    {
+      "path": "uis/src/com/biglybt/ui/swt/shells/main/MainMDISetup.java",
+      "name": "StatsView outer MDI factory",
+      "line": 182,
+      "end_line": 215,
+      "sha256": "35f27ae45f640b5a4d398dea661ded459c30a1e090dcc162bc1adb8f9770ba27",
+      "scope": "exact selected committed fragment, not a complete-method qualification"
+    },
+    {
+      "path": "core/src/com/biglybt/internat/MessagesBundle.properties",
+      "name": "Statistics shortcut and Activity title",
+      "line": 607,
+      "end_line": 611,
+      "sha256": "2d754aca497376107c303dbd3efafd5fef9fa258d74d30ec094d7cf61c470e25",
+      "scope": "exact selected committed fragment, not a complete-method qualification"
+    },
+    {
+      "path": "uis/src/com/biglybt/ui/swt/mainwindow/MainStatusBar.java",
+      "name": "Status rate double-click explicitly selects Transfers unlike Tools menu",
+      "line": 583,
+      "end_line": 598,
+      "sha256": "9570210152cbdeadc0e6eea818622bcea59f39cffaf002d22c8c3fed9e27a738",
+      "scope": "exact selected committed fragment, not a complete-method qualification"
+    },
+    {
+      "path": "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java",
+      "name": "Use Config File Backups defaults true",
+      "line": 186,
+      "sha256": "8d214d41ba8ef321e71ece3d296c8b40a5f8cd98570df815fe3f21f05172872f",
+      "scope": "exact default declaration"
+    }
+  ],
+  "native_context": {
+    "HEAD": "2501968f62d4ec7e70b093c2186a31fcf2ede518",
+    "working_source_sha256": {
+      "preview/native/ui/library_window.hpp": "ea8ba25020774136ccf8e6edfcc306fffb54f8f399b26a536a8e36278c397ecf",
+      "preview/native/ui/library_window.cpp": "ce4812638f26fd46aeaa85546219ae5da653364fd7d6c4648d916ccccc47c500",
+      "preview/native/ui/library_model.hpp": "8abca399af00b5c2c96e760c85b6c1078e69274be8b68c6dc8de7ac877772d98",
+      "preview/native/ui/library_model.cpp": "c934ccdf09240b30330545e08b2dd0499d5688092321a18e0686e849100769cf",
+      "preview/native/ui/classic_filter.hpp": "be3b774a0f50a7075154d936cab10fc922772ca95a7436ae93e55a00d9c02634",
+      "preview/native/ui/classic_filter.cpp": "2186674f85e4bf6eeb6eeb1b2c568c3b4f060eac4a443d04130144dab3d50003",
+      "preview/native/app/session_bridge.hpp": "b33167ca52aef52eb16cf3e38587e9bcb10721e1d0be866c09a02312fcfc2c8d",
+      "preview/native/app/session_bridge.cpp": "301135e3c4ebd67884028db1d639978c96da7e6bfb2bdb41d2c9c5cb52eef33c",
+      "preview/native/adapters/library_view.hpp": "43877d12f340bdd43cb1df1b98eddf6b39c89b7ec51d63de3b572ba9d4b5a82e",
+      "preview/native/adapters/library_view.cpp": "a9aa1e0f6ccde4a7b4990f2340da1dd3472d372441b1389805e5d16ef1b229d4",
+      "preview/native/core/include/biglybtc/library.hpp": "8ad4e7f5346300fdc03c6318d629b6185874d35109511ca445609639b7168875",
+      "preview/native/core/src/library.cpp": "3ba21404a77e0e3c9e23cbf267be130609598ed6646693df7c4f656306895348",
+      "preview/native/adapters/profile.hpp": "0e7bb950e4d66e2fdf88b2733cb00d149e8b17ea805348300327af8418649831",
+      "preview/native/adapters/profile.cpp": "38c0838d5aae673304ce9dade42cae18bf9607d54d4480949617dcc1c5dafbd9",
+      "preview/native/adapters/file_io.hpp": "8d0fc78f8b6fd62932c8ff07fcbcd8203d6bac0ca2255d86bb849c4b1b413cb6",
+      "preview/native/adapters/file_io.cpp": "a3fd490e8e49b8d066f27205ab25636ac51c5e0715bf5c25f169e877da17f89c",
+      "preview/native/engine/local_session.hpp": "3ac5e56321e5202a27cc542c0d8ca9daa6a8354d7a2c1b6293b7e3fdda3caa4b",
+      "preview/native/engine/local_session.cpp": "5a74426229f890480d7cb062d0a11aaaf74c51ced5d1ed713b758f0a9f5eef9d"
+    },
+    "note": "Initial P04-14 working context and HEAD retained above. Root committed during this audit; all18 final committed file bytes match the initially inspected working hashes. No build/runtime credit is supplied by this audit.",
+    "selected_fragments": [
+      {
+        "path": "preview/native/engine/local_session.cpp",
+        "name": "Actual per-transfer payload-rate publication, monotonic 200 ms throttle",
+        "line": 332,
+        "end_line": 339,
+        "sha256": "6f70512cba71a3a11d17b57c3f71366e466d225984941995d77c2fb830ea2497",
+        "scope": "native current context, not original global-rate equivalence"
+      }
+    ],
+    "final_HEAD": "8efe56e4c0a4c46b8cdcb51035364db938494bb5",
+    "final_committed_files_match_initial_working_hashes": 18
+  },
+  "execution": {
+    "Java": false,
+    "GUI": false,
+    "native": false,
+    "profile": false,
+    "network": false,
+    "Git_writes": false
+  },
+  "scope": "Pins establish immutable source provenance and exact selected method extents; no claim every subview implementation was exhaustively audited or executed."
+}

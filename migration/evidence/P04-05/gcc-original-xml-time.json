@@ -1,0 +1,70 @@
+{
+  "status": "passed",
+  "source_commit": "1ee6a53dae017696d2f0002e4a0d74f5a9476af5",
+  "core_source_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+  "original_plugin_class_digest": "8f6a561f700e214fdb4aeda5242466b3e5e242ef2e3a5a0cd7fdb46c7959200f",
+  "original_plugin_overlay": false,
+  "harness_sha256": {
+    "ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+    "SpeedSchedulerOracle.java": "56fe63c615117da7cc01bf4787fac81c65e11b1e4865a03b15b1cdb32f159a15"
+  },
+  "native_binary_sha256": "bf1852a869a805c08d3d5ad88ed9ab7d3d582081e57f7caa9da796df938594e3",
+  "work": "/tmp/biglybtc-speed-interop-gcc-retained",
+  "cases": [
+    {
+      "case": "original-writer",
+      "xml_sha256": "fcf9866d582fa83ad7cbb68526e418df9d233f1ec1b299b671287f15fb8653cd",
+      "xml_bytes": 3454,
+      "original_output_sha256": "238d5a687dca64cfaf46728ab146e1297cf986029b1b20d46c1cd57880b27ec4",
+      "native_output_sha256": "e2c3dbca9b15f977153cf032ff2612f0d3cbc84079a77297acbc3f8e4f6f4cf4",
+      "original_xml_path": "/tmp/biglybtc-speed-interop-gcc-retained/original-writer/plugin/SavedSchedules.xml",
+      "configuration_and_schedules_match": true,
+      "time_minutes_compared": 7200,
+      "original_xml_bytes_preserved": true,
+      "log": "/tmp/biglybtc-speed-interop-gcc-retained/original-writer/original.log"
+    },
+    {
+      "case": "legacy-and-unknown",
+      "xml_sha256": "695b26e458dc8ef762dc6114f1528dd50baedd4c3b8a9e17a679c20fd30c8aba",
+      "xml_bytes": 538,
+      "original_output_sha256": "10f3e1327b96f103f913ecc7da4d933f931b76c7e7d42d5d3288cf10d9130ec4",
+      "native_output_sha256": "749cf708dae835d427a606c085d03a2267f56d028c5759d7e93c8a93bcc634ee",
+      "original_xml_path": "/tmp/biglybtc-speed-interop-gcc-retained/legacy-and-unknown/plugin/SavedSchedules.xml",
+      "configuration_and_schedules_match": true,
+      "time_minutes_compared": 2880,
+      "original_xml_bytes_preserved": true,
+      "log": "/tmp/biglybtc-speed-interop-gcc-retained/legacy-and-unknown/original.log"
+    },
+    {
+      "case": "utf16-original-xml",
+      "xml_sha256": "2f4ab75f5369f30044214cecb5e376beac538cb76e6ea665169fa3d1c57ccc62",
+      "xml_bytes": 1114,
+      "original_output_sha256": "10f3e1327b96f103f913ecc7da4d933f931b76c7e7d42d5d3288cf10d9130ec4",
+      "native_output_sha256": "749cf708dae835d427a606c085d03a2267f56d028c5759d7e93c8a93bcc634ee",
+      "original_xml_path": "/tmp/biglybtc-speed-interop-gcc-retained/utf16-original-xml/plugin/SavedSchedules.xml",
+      "configuration_and_schedules_match": true,
+      "time_minutes_compared": 2880,
+      "original_xml_bytes_preserved": true,
+      "log": "/tmp/biglybtc-speed-interop-gcc-retained/utf16-original-xml/original.log"
+    },
+    {
+      "case": "deterministic-boundaries",
+      "xml_sha256": "64fbb6a921fe260341ba6b4dc0a50d2c4521fa7c1e0f0047be30935c78cd2bcb",
+      "xml_bytes": 18772,
+      "original_output_sha256": "f970875cbc2b4ab76813160f4a5ebf1bfe4cca9158b26dda25a980dffc4c043e",
+      "native_output_sha256": "2ae2d3ff2a9e0c4a687f56883d1ce8db912d188c35b86c6d04b37408ad0e2d93",
+      "original_xml_path": "/tmp/biglybtc-speed-interop-gcc-retained/deterministic-boundaries/plugin/SavedSchedules.xml",
+      "configuration_and_schedules_match": true,
+      "time_minutes_compared": 138240,
+      "original_xml_bytes_preserved": true,
+      "log": "/tmp/biglybtc-speed-interop-gcc-retained/deterministic-boundaries/original.log"
+    }
+  ],
+  "scope": "Original XML reader/writer, Time.between and Schedule.inSpan against bounded native importer/time semantics",
+  "limitations": [
+    "Host value proxies; original normal initialize/UI never invoked",
+    "Full live scheduler thread/owned-pause file/AutoSpeed/engine integration and Qt editor remain separate gates"
+  ],
+  "total_minutes_compared": 151200
+}

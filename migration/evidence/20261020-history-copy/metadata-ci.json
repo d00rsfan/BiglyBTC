@@ -1,0 +1,13 @@
+{
+  "metadata_commit": "3635fe01fa0212e075af5c956740e499303980b9",
+  "sdk": {
+    "conclusion": "success",
+    "databaseId": 39452631555,
+    "headSha": "3635fe01fa0212e075af5c956740e499303980b9",
+    "status": "completed",
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39452631555",
+    "workflowName": "Native plugin SDK contract"
+  },
+  "source_qualification_commit": "ab0ff75d81300d8d3f9e930a9bf55491c1801400",
+  "scope": "SDK workflow on metadata-only tip; desktop qualification remains bound to exact implementation source"
+}

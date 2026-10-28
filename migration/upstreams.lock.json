@@ -7,7 +7,7 @@
     {
       "id": "BiglyBT",
       "url": "https://github.com/BiglySoftware/BiglyBT.git",
-      "checkout_hint": ".",
+      "checkout_hint": "../BiglyBT",
       "git_object_format": "sha1",
       "audit_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
       "audited_on": "2026-10-16",
@@ -338,6 +338,16 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "8239f5b42c3f2f56126b7a382dc75a4bd8114607",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "5809ac611bb5d49b8de1c5eab0c7dca3ef8cbe9a",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "013fa60f59898392a33855ba148961090bacca14",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -347,7 +357,8 @@
         "migration/evidence/20261018-classic-layout-first-save/reviews/adapter.json",
         "migration/evidence/20261018-classic-layout-first-save/reviews/bridge.json",
         "migration/evidence/20261018-classic-layout-first-save/reviews/ui-integration.json",
-        "migration/updates/settings.classic_options/20261024.md"
+        "migration/updates/settings.classic_options/20261024.md",
+        "migration/updates/network-service-cohort/20261028-bounded.md"
       ],
       "evidence": [
         "migration/evidence/P02-03/gcc-ctest.txt",
@@ -360,7 +371,8 @@
         "migration/evidence/20261018-classic-layout-first-save/hosted-verification.json",
         "migration/evidence/20261018-classic-layout-first-save/publication.json",
         "migration/evidence/20261018-classic-layout-first-save/dist-promotion.json",
-        "migration/evidence/20261024-options/verification.json"
+        "migration/evidence/20261024-options/verification.json",
+        "migration/evidence/20261028-network-service-cohort/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-004.md"
     },
@@ -1991,10 +2003,26 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-mlDHT.git",
           "commit": "f9f3e2364b3a12849e84b025067eeb61a845d475",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "3b18849f06a6287c4da7d97c067480156c6ef796",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "5809ac611bb5d49b8de1c5eab0c7dca3ef8cbe9a",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "013fa60f59898392a33855ba148961090bacca14",
+          "purpose": "integration"
         }
       ],
       "review_records": [
-        "migration/updates/plugins.mldht_identity/20261017-initial-bounded.md"
+        "migration/updates/plugins.mldht_identity/20261017-initial-bounded.md",
+        "migration/updates/network-service-cohort/20261028-bounded.md"
       ],
       "evidence": [
         "migration/evidence/P05-02-mldht/source-comparison.json",
@@ -2002,7 +2030,8 @@
         "migration/evidence/P05-02-mldht/identity-matrix.json",
         "migration/fixtures/mldht-identity/manifest.json",
         "migration/evidence/P05-02-mldht/fixture-location-followup.json",
-        "migration/evidence/P05-02-mldht/byte-exact-fixtures.json"
+        "migration/evidence/P05-02-mldht/byte-exact-fixtures.json",
+        "migration/evidence/20261028-network-service-cohort/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-008.md"
     },
@@ -2292,11 +2321,32 @@
           "repository": ".",
           "commit": "4067fb0c16df05153f04fc2453071aed418a30ff",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "3b18849f06a6287c4da7d97c067480156c6ef796",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "5809ac611bb5d49b8de1c5eab0c7dca3ef8cbe9a",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "9d3058b8e3fd073a5c9102a17ce6104daa23c534",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "013fa60f59898392a33855ba148961090bacca14",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/updates/plugins.aznettor_control_channel/20261017-initial-bounded.md",
-        "migration/evidence/P07-01d-tor-channel-teardown/review.md"
+        "migration/evidence/P07-01d-tor-channel-teardown/review.md",
+        "migration/updates/network-service-cohort/20261028-bounded.md"
       ],
       "evidence": [
         "migration/evidence/P07-01b-tor-channel/matrix.json",
@@ -2304,7 +2354,8 @@
         "migration/tasks/P07-01d-tor-channel-teardown.md",
         "migration/evidence/P07-01d-tor-channel-teardown/matrix.json",
         "migration/evidence/P07-01d-tor-channel-teardown/review.md",
-        "migration/evidence/P07-01d-tor-channel-teardown/committed-inputs.json"
+        "migration/evidence/P07-01d-tor-channel-teardown/committed-inputs.json",
+        "migration/evidence/20261028-network-service-cohort/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-004.md"
     },
@@ -3730,14 +3781,37 @@
           "repository": ".",
           "commit": "1010d252f1b7192f7660493be7e25605ff86151c",
           "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "3b18849f06a6287c4da7d97c067480156c6ef796",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "5809ac611bb5d49b8de1c5eab0c7dca3ef8cbe9a",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "9d3058b8e3fd073a5c9102a17ce6104daa23c534",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "013fa60f59898392a33855ba148961090bacca14",
+          "purpose": "integration"
         }
       ],
-      "review_records": [],
+      "review_records": [
+        "migration/updates/network-service-cohort/20261028-bounded.md"
+      ],
       "evidence": [
         "migration/tasks/P07-01c-tor-ownership.md",
         "migration/evidence/P07-01c-tor-ownership/matrix.json",
         "migration/evidence/P07-01c-tor-ownership/review.md",
-        "migration/evidence/P07-01c-tor-ownership/source-verification.json"
+        "migration/evidence/P07-01c-tor-ownership/source-verification.json",
+        "migration/evidence/20261028-network-service-cohort/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-004.md"
     },
@@ -7819,17 +7893,34 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "36bb5613aea66cf6e10ec20f51c4f5dfba03a612",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "3b18849f06a6287c4da7d97c067480156c6ef796",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "5809ac611bb5d49b8de1c5eab0c7dca3ef8cbe9a",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "013fa60f59898392a33855ba148961090bacca14",
+          "purpose": "integration"
         }
       ],
       "review_records": [
         "migration/updates/engine.mainline_queued_scrape/20261028-in-progress.md",
-        "migration/updates/engine.mainline_queued_scrape/20261028-active-scrape.md"
+        "migration/updates/engine.mainline_queued_scrape/20261028-active-scrape.md",
+        "migration/updates/network-service-cohort/20261028-bounded.md"
       ],
       "evidence": [
         "migration/evidence/20261028-mainline-scrape-storage-stats/verification.json",
         "migration/evidence/20261028-mainline-scrape-storage-stats/REVIEW.md",
         "migration/evidence/20261028-mainline-active-scrape/verification.json",
-        "migration/evidence/20261028-mainline-active-scrape/REVIEW.md"
+        "migration/evidence/20261028-mainline-active-scrape/REVIEW.md",
+        "migration/evidence/20261028-network-service-cohort/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -7878,14 +7969,26 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "ae79d7f8991e7444407462697526e0089ed42e65",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "3b18849f06a6287c4da7d97c067480156c6ef796",
+          "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "013fa60f59898392a33855ba148961090bacca14",
+          "purpose": "integration"
         }
       ],
       "review_records": [
-        "migration/updates/transport.azureus_storage_key_stats/20261028-in-progress.md"
+        "migration/updates/transport.azureus_storage_key_stats/20261028-in-progress.md",
+        "migration/updates/network-service-cohort/20261028-bounded.md"
       ],
       "evidence": [
         "migration/evidence/20261028-mainline-scrape-storage-stats/verification.json",
-        "migration/evidence/20261028-mainline-scrape-storage-stats/REVIEW.md"
+        "migration/evidence/20261028-mainline-scrape-storage-stats/REVIEW.md",
+        "migration/evidence/20261028-network-service-cohort/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },

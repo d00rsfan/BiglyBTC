@@ -1,0 +1,164 @@
+{
+  "schema": 1,
+  "milestone": "P04-23",
+  "status": "PASS source-only independent consumer review",
+  "reviewer": "error_codec",
+  "author": "error_driver",
+  "blockers": [],
+  "source_sha256": {
+    "preview/native/ui/history_view.hpp": "4d0003b6020169b59a0e194e0abb34c10ad4abe165db318dc9684224f3c00f2d",
+    "preview/native/ui/history_view.cpp": "88f0c5feaae55442dacefb264f54c93c08a72a5cb24c1646063b51be28fbac9c",
+    "preview/native/ui/history_week_view.hpp": "8613aee6f0c3171655a7112ffcccc576016c038c056f2864dfc9ceede079ab6a",
+    "preview/native/ui/history_week_view.cpp": "fb57304086deb24bed1cea791456e33ca363417af8e29723ca57f80c5e6d1800",
+    "preview/native/ui/statistics_page.cpp": "83a4a2a442491565ae9f4236efbba6f6100b3dcc3af466b077d4978cbb311891",
+    "preview/native/ui/statistics_navigation.hpp": "806fd6bc8682a8ecae5785ce8b82d841288effdda666861456949dc142ebea5b"
+  },
+  "capsule_manifest_sha256": "3b856df0e8f6c34f392276fce3dd6f0a948b6df25ac7601393195adfef0bc58e",
+  "capsule_metadata_sha256": "d4dca880794a8e2e0460370209b6741fbb502c63bd87e4d54fb0e12a404f1f38",
+  "before_source_sha256": {
+    "preview/native/ui/history_view.hpp": "82c3df480d314a5054f612cf4a7d5b3fafc2ba33d1327ce62c052f41cd4a02d1",
+    "preview/native/ui/history_view.cpp": "e3917656108b069be2adae43346728dd6f84dcdb707bbc4e7511ee82e9bf3877",
+    "preview/native/ui/history_week_view.hpp": "9781bf2cd11d21ca6dd6d25b28595baca5cbb88e884ac32359bdd26bd15783a7",
+    "preview/native/ui/history_week_view.cpp": "db10f35546c547226ce26c00569b5e286e2083a45ac4a7726358f2bf3907f2f9",
+    "preview/native/ui/statistics_page.cpp": "4b8c3039b77c2019b807c06be6dc9d33bb7f6bafb99c04cffabbf2b18898cae8",
+    "preview/native/ui/statistics_navigation.hpp": "c702b5f3d82fc5243b43fbacf8a3ffb0679e1950db4e5909d1c34da986e11ad5"
+  },
+  "contract_sha256": "4265194d70a5cb8aeae51b23da91f0c95d44403348241197f2a27d82dcf6ab05",
+  "plot_traffic_api_sha256": "ec35b38d7f7fc0b9cc41b4fded4a5b5a247de76959b65ad80cc28cf195576caf",
+  "verification": {
+    "all_declared_source_artifact_and_before_hashes_verified": true,
+    "old_member_definitions_unchanged": 55,
+    "member_definition_details": {
+      "HistoryView": {
+        "changed": [
+          "HistoryView",
+          "refresh"
+        ],
+        "unchanged_sha256": {
+          "selectedDate": "aa661cb5451e0329273eb40460f53b2650341345631e0cb8724fb8c1f86156c6",
+          "advance": "b25a7bde39f4aa377113741352d3d76f15ef31b3b7388e19b6d93e234e4fd2b5",
+          "accepts": "9001d165611e4893cc2da55fde63bc8e0e26d23b5b9f4485906be8a0f00e7c39",
+          "resetSession": "ec159ba394bc067986122e5311ce769656afe088a6a10fcf29c7f71d553d0a75",
+          "beginRequest": "d6980a9c144d3a69c29bab0b1a69450d4bccd8fae8410f511ad1a08ee72c5d6c",
+          "setFailed": "4aa27b78ee2e754a7eff7f1e4dba2cc596ec9db48e7640c42e2094eef794a40d",
+          "setPresentation": "bb3a902c6da4876f3d0a4bf02e996f81afcb9a8a07847d027a77b5448382674e",
+          "dateChanged": "44f9d6646024a2aac63616fcfdeee5ca7d9b97b364dd2f06d591aabefaa640e3",
+          "requestRead": "c2a8f1404cea73e1a040a4366bfbb9c90d3f9ab55fa528a9ab6fd2f450e72e09",
+          "observeWindow": "c735cbcc609803bfb491710b6f605e54353f977eacbb9858f675254727d90c8c",
+          "showEvent": "e398fd03c355f92bb31534c9ecd3146d4f88a1f565f5e565d82a2b33dfa06173",
+          "eventFilter": "5b58b6a4f09024597b29f1c5efc8b34d2169eb6c1159b0480b33b7d8736217df"
+        }
+      },
+      "HistoryWeekView": {
+        "changed": [
+          "HistoryWeekView",
+          "refresh"
+        ],
+        "unchanged_sha256": {
+          "selectedDate": "9cb0e8e9fb0f52a4f64160c8e9eca27d5b488f60d496e51708d0e566881d20d6",
+          "hourlyResolution": "9a195cf3f75efb19e85ace91fd6767c7421bc9c008214ab03df1274c9afc917d",
+          "advance": "0576eaa602544cbd81577449d5d81558387b9f49775304d96df57e7a47fffe40",
+          "accepts": "ed54ed9871b88d48881b0cc50b10814b833e2b8b216a6aab98949692beab950e",
+          "resetSession": "e25cc687b730ccdb59ba3ab21f0668e462762f533afb1845fa944ac15b314139",
+          "beginRequest": "1dc2d5753669f638dc3a4db3e6138a0448c245e913a98045504099cf2ca7edba",
+          "setFailed": "6e5685d454fdfe102eaf073ce9feae6198c0a626dcbd63c9d6316e4cc5184244",
+          "setPresentation": "47fef3798504d9f31345d3e0f8b7e5cad7a9e35edac5a98fceb1c036afa33ebd",
+          "dateChanged": "c7cb6e5af15823b64528c746aadd148125dcbed6156889a056b7105ada821a4b",
+          "requestRead": "ccc91526e247e3616581d0714979161b4e13e6c803daff4cca9e3d67b8d7c68b",
+          "observeWindow": "0d3ec0a8c9375e7a7431c87800341ece4acf81ad0199b2fb27ae2266a1882416",
+          "showEvent": "b32c10b08a5be1cc18fa862d646faaa945138589c13c0fa1f3dc01f58e0f3ffc",
+          "eventFilter": "22e943b40afba2c0ec144bf1724625c3b221cd9cee78c6575c7c350f0f9888cd"
+        }
+      },
+      "StatisticsPage": {
+        "changed": [
+          "StatisticsPage",
+          "navigation"
+        ],
+        "unchanged_sha256": {
+          "beginHistoryRequest": "818d0ad1ec59fa969d07d78bb74e09648d7f3e8dd066b9343788e8383f091e59",
+          "setHistory": "0a881e7b0aa8d64b5fd11cba48877cd6bca32459c79dd96861e38270e5a27443",
+          "setHistoryFailed": "768de83e048ecdd76eb06b3f29d847390af263e9b43aef73cde540edba83f185",
+          "resetHistorySession": "4248bafa29d311c526c1d856081d7722e463d7305dcb75087ab3a1cfc0541e24",
+          "selectedHistoryDate": "cdb2251d5d8205ad199fbfc5c2ce93f55593dc3a48f6727228602e3fa89441b3",
+          "historyPresentation": "aa7fec271d33b9868338f48c816a61b03ceff9a6d5261bbaceeba0e653307d1a",
+          "historySelected": "40ddfcfa95f2d05d0b131e94191897b8c844e29b9aa98f1c82e671b428102de2",
+          "beginHistoryWeekRequest": "e09fa6537c1201a81061ce3d5e991b57033d762952175c1fa4e03c194620d8b2",
+          "setHistoryWeek": "f038ec0ba49dc10d6a711a0aa3821e033f0a64a21c6368251ce145ad89b8fb54",
+          "setHistoryWeekFailed": "bfd2a9b2da5040423a152e140b07613d25f813e8805028a3ce211559e61dbd1f",
+          "selectedHistoryWeekDate": "5729f165e83774083bea4abf1550657c99296abcf10d1fb2fb3f0240bccd2677",
+          "historyWeekPresentation": "63ac8f2cfaef6e72e8b93f3b7b8170899e10bbcf69d3fdfe0b1d9c6a788affde",
+          "historyWeekSelected": "716148a2b30d5893139d107eeadc078645a0b73cc39fa89329a21cb7cfa090d7",
+          "tabs": "a3ebbcb83c7e1d84eb77ed535776275c42c0ce49563ede05271168c41511ceeb",
+          "sampleCount": "e1bafd4ce0199e5ca110fc09286b87815cdcb1de25ccb87af23365248c282707",
+          "accepts": "c68f75d468af52ebc6a4f5bb46dd9e4029efc109d30a43c1bed7ee0f00fb2328",
+          "emptyFacts": "8995ac6a8f812799d2e3024b52b85d477bd498cd2306a6071bb3991eeb76be8e",
+          "writeFacts": "b560fb4cc151eeecbe4fde4ae26239034329b3e6bb787a8c9c22faed2839e185",
+          "beginRequest": "f1ffba71a9e40c224ea3c0825bcd8b38a8239b842ec230c3f0ad3fb995850cc8",
+          "setFailed": "6167503ee9fceb4b031aa88825750e69f95fed6e5408e6a2b192b2fb476f2bd2",
+          "setPresentation": "b5cc668941e0b1ca76109f3d340dc90d109310757e5dd461e6e3bcf571a6f43e",
+          "setEngineStatistics": "f02dfdec6631b45af2f35c967bc833eb715fbbba0819dcaebc9c901561e640c4",
+          "setEngineActivity": "49fe8bb60a1297ceb67ade0123245b2b472ce3608695a0f770c5447d3c73fe12",
+          "engineActivitySnapshot": "646bd77914ab3465d4def2c01feed02bc5b534880fac8ee3a3fbb3ef8d1f0b31",
+          "refreshEngine": "63ca9f2a48935b35b8936f47e3491a4c8cc7667b2a03876d8531b720852d6340",
+          "clearActivity": "cc83ab3dd0b35f1f75001b90ba183eae76f37c56179b2d1b1ee0f74049b79dbe",
+          "recordPayload": "4b0c418a7118948114634d36f3c90e72571a89d6f27879768c5e4d374849f0a2",
+          "refreshActivity": "0f2d5e76f614960abfd119a02e69778ee766dc6f93f7c7aaf4037cad0fb86bbc",
+          "showEvent": "99e4496959f920047fa3d1a810b1e736dfb466cb8d1768cfd6bc6e6ee7dacdc2",
+          "eventFilter": "2bdbc862a48facfc52e27d1c136c7d33f6b14b3a717942fd94b846afc7a390e7"
+        }
+      }
+    },
+    "both_models_exact": true,
+    "refresh_only_adds_selected_enum_to_plot_setters": true,
+    "navigation_getter_only_appends_two_enum_values": true,
+    "traffic_indices_initialized_before_queued_handlers": true,
+    "Page_all_or_default_admission_before_child_construction": true,
+    "observed_native_files_equal_candidate": {
+      "preview/native/ui/history_view.hpp": true,
+      "preview/native/ui/history_view.cpp": true,
+      "preview/native/ui/history_week_view.hpp": true,
+      "preview/native/ui/history_week_view.cpp": true,
+      "preview/native/ui/statistics_page.cpp": true,
+      "preview/native/ui/statistics_navigation.hpp": true
+    }
+  },
+  "assessments": [
+    {
+      "topic": "zero reads and model notifications",
+      "status": "PASS",
+      "detail": "Each traffic combo changes only advance() revision/dirty and posts QObject-bound refresh. No date/request/session/frame/readRequested mutation or new IO is introduced. Existing snapshots remain bound; both exact model no-op paths suppress notifications for an unchanged binding. Explicit daily Payload summary/table values and seven-day table remain separate from selected chart family."
+    },
+    {
+      "topic": "visibility and reentry",
+      "status": "PASS",
+      "detail": "Both refresh methods retain all current revision/QPointer/visible/minimized checks and only append traffic() to existing plot setter calls. Immediate revision invalidation prevents an older tooltip/accessibility refresh from later writing a stale model; queued refresh lets Qt combo setters finish and is canceled on deletion. Hidden/minimized changes defer chart/tooltip/model changes until activation."
+    },
+    {
+      "topic": "constructor/default compatibility",
+      "status": "PASS",
+      "detail": "Daily adds third enum argument, Week fourth after the preserved bool. Both defaultPayload and validate initial enum before choosing combo index, before handlers are connected. Old callers therefore preserve date/resolution behavior and Payload. Labels/buddies and Chart traffic accessible names are present in enum order."
+    },
+    {
+      "topic": "navigation capture/restore",
+      "status": "PASS",
+      "detail": "Two defaultPayload enum fields append after previous scalar fields; trivial copying remains enforced. Validator requires both enums; Page keeps complete all-or-default admission. Constructor forwards each independent saved choice and getter captures both hidden controls. Existing Window scalar record automatically carries these fields without retaining packets/widgets; closed-session policy remains unchanged."
+    },
+    {
+      "topic": "old lifecycle/accounting scope",
+      "status": "PASS",
+      "detail": "55 pre-existing member definitions plus both full table models and all read/session/stale admission callbacks are exact. No worker/adapter/core/parser/accounting, new read, timer, configuration persistence, combined sum or Java equality scope is added."
+    }
+  ],
+  "execution": {
+    "compilers": 0,
+    "tests": 0,
+    "native_or_Java_processes": 0,
+    "git_commands": 0,
+    "source_edits": 0
+  },
+  "limits": [
+    "Independent source review; actual compilation, zero-read/model-signal and deletion tests remain root-owned.",
+    "No claims of screen-reader acceptance or original full chart/persistence parity."
+  ]
+}

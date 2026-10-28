@@ -1,0 +1,24 @@
+{
+  "status": "PASS_source_only",
+  "source_sha256": {
+    "packaging/preview.py": "28f1ebabbb61db7427925159ea93b4763e26fa6bd9a390df9d0a1ff5d3c5c9fb",
+    "packaging/preview_smoke.cpp": "1e1c9fc177a07a8296fe882d2112e3d62e26204f7930fbc232e1ac175941b715"
+  },
+  "prior_blocked_review_sha256": "39f091c27b31f634639eb493c9ccf1b1bc280acc436703b270b43fd30431c678",
+  "root_fix_recipe_sha256": "357909cf330eda8fe6f2d8f2535ceaee9ef3edc74ef08705846495bd06d90668",
+  "source_revision_sha256": {
+    "after.py": "28f1ebabbb61db7427925159ea93b4763e26fa6bd9a390df9d0a1ff5d3c5c9fb",
+    "before.py": "13ac916a093761bd49eed1aef4913aea9a87daf0e1017d427cd461eca652ee80",
+    "change.patch": "a0a9df3ac23d0d1c4d9575060fb623fe395f6811436df3cc0b7015f555688969",
+    "review.json": "c35cb652add382f163423f3e89c4009754357e9b0ff46ed715be4bed4bb6049f"
+  },
+  "closed_finding": "PREVIEW-WEEK-1",
+  "checks": [
+    "Exactlyone currentUTCdate read in prepare; both daily/week loops use samecaptured ending set.",
+    "Reverseonlynewassignment+loopiterbinding gives exactbefore prepareAST; allotherfunctions ASTexact.",
+    "OldDailybytegenerationunchanged; lateclockrollover cannot make newweekoverwrite endingday.",
+    "Smokebytes unchanged since initialreview; alloldassertions retained and ready/missingweekcounts/rowmapping sound."
+  ],
+  "executed_by_reviewer": false,
+  "findings": []
+}

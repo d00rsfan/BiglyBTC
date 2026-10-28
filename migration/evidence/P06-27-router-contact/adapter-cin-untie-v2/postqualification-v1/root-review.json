@@ -1,0 +1,44 @@
+{
+  "status": "root independent validator/source review PASS; actual Git-input stage pending",
+  "reviewed_validator_source_sha256": "c0ab4252263a57f493bac154ae72d8d6b2b6e61fe61bbc8f6de31311b2faa17e",
+  "completed_matrix_sha256": "95bc46d2c2f873076cf2a6e118eca8d1f47ec73de331ebb9fae92a85c4fff851",
+  "stage1_receipt_sha256": "7bc62c4f4f8c685c39e5f27fdb95d8d768f5ba2e71726562fb15867f612e257b",
+  "root_review": "Read all445 validator lines, complete usage notes and actual first-stage receipt. This independently parses ten actual CTest sections per lane, hashes346 qualified inputs and guarded runtimes/classes, preserves historical evidence, verifies39 command+two preparation snapshots and exact binary/dependency/cache/linkage receipts. No target import/execution or Git mutation. Actual stage2 must inspect an already-created commit before provenance updates.",
+  "qualified_scope": "5054 frozen source-semantic router-contact observations per lane;258 native ownership/bounds assertions and851 CLI policy rows. Retained DB/wire/node regressions pass in each of three fresh lanes.1933 source-only observations receive zero native equality credit.",
+  "untraced_evidence_limit": "Manager directly measured TracerPid0 while live; all three exited CTest leaders have root-attested launch-path evidence only.",
+  "native_commit": null,
+  "first_ported_commit": null,
+  "integrated_through_commit": null,
+  "publication": false,
+  "whole_component_or_phase_completion": false,
+  "files": {
+    "build/recovery/root-tools/validate_router_contact_adapter_v2.py": {
+      "copy": "migration/evidence/P06-27-router-contact/adapter-cin-untie-v2/postqualification-v1/validate_router_contact_adapter_v2.py",
+      "sha256": "c0ab4252263a57f493bac154ae72d8d6b2b6e61fe61bbc8f6de31311b2faa17e"
+    },
+    "build/recovery/root-tools/validate_router_contact_adapter_v2_README.md": {
+      "copy": "migration/evidence/P06-27-router-contact/adapter-cin-untie-v2/postqualification-v1/validate_router_contact_adapter_v2_README.md",
+      "sha256": "9f3bf934105f72c8e97942cd370041b8011b321225df58e93367ed7b63f3bc28"
+    },
+    "build/recovery/root-reviews/p27-adapter-v2-postqualification-validation-v1.json": {
+      "copy": "migration/evidence/P06-27-router-contact/adapter-cin-untie-v2/postqualification-v1/p27-adapter-v2-postqualification-validation-v1.json",
+      "sha256": "7bc62c4f4f8c685c39e5f27fdb95d8d768f5ba2e71726562fb15867f612e257b"
+    },
+    "build/recovery/root-reviews/p27-active-manager-untraced-observation.json": {
+      "copy": "migration/evidence/P06-27-router-contact/adapter-cin-untie-v2/postqualification-v1/p27-active-manager-untraced-observation.json",
+      "sha256": "21fd4f93d29f6628466c7cdefff755db846778504403682789b9fea08618eb2d"
+    },
+    "build/recovery/router-contact-adapter-v2-native-execution.json": {
+      "copy": "migration/evidence/P06-27-router-contact/adapter-cin-untie-v2/postqualification-v1/router-contact-adapter-v2-native-execution.json",
+      "sha256": "2cac14d93c87c232573867f691116c0b4692ef542be4c10ec1c2afeb4a582384"
+    },
+    "build/recovery/root-tools/attest_p27_completed_launch.py": {
+      "copy": "migration/evidence/P06-27-router-contact/adapter-cin-untie-v2/postqualification-v1/attest_p27_completed_launch.py",
+      "sha256": "4cb1901855cdcb4a0c6b6b448648fc68f37255cde8df70a7d7c934692d57584e"
+    },
+    "build/recovery/root-tools/checkpoint_while_p28_matrix.py": {
+      "copy": "migration/evidence/P06-27-router-contact/adapter-cin-untie-v2/postqualification-v1/checkpoint_while_p28_matrix.py",
+      "sha256": "226c8fd8557c09622f81485b82d7e1497334e1ae7184101007adc3c0ece4d4b2"
+    }
+  }
+}

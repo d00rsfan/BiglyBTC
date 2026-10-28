@@ -1,0 +1,151 @@
+{
+  "builds": [
+    {
+      "compiler": "gcc",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/services/tor_control",
+          "-B",
+          "/tmp/biglybtc-tor-channel-qualified-gcc",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS=",
+          "-DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-tor-channel-qualified-gcc",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-tor-channel-qualified-gcc",
+          "--output-on-failure"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-tor-channel-qualified-gcc/biglybtc-tor-channel-tests": "0a0779dd0c32089e3f61dd0c7e8b0dee90c5e480cfeb1dedbdf5e0b5dae30f0e",
+        "/tmp/biglybtc-tor-channel-qualified-gcc/libbiglybtc_tor_channel.a": "2dbab4dfec8af9a539790f123075766b2dece447a0ac5473f0bd1a2580fabca6",
+        "/tmp/biglybtc-tor-channel-qualified-gcc/tor-auth/biglybtc-tor-auth-driver": "b4fe0ac30321b82f4fb808652420d05639178eb362975e2961c57c0fe6ea0461",
+        "/tmp/biglybtc-tor-channel-qualified-gcc/tor-auth/libbiglybtc_tor_auth.a": "a268a592454b0ea89ef91e167898f31d8ea43ba125502dce81f68793bbd70498"
+      },
+      "runtime_loader": "\tlinux-vdso.so.1 (0x0000733c8e34d000)\n\tlibQt6Test.so.6 => /opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6 (0x0000733c8e2b4000)\n\tlibQt6Network.so.6 => /opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6 (0x0000733c8e000000)\n\tlibcrypto.so.3 => /usr/lib/x86_64-linux-gnu/libcrypto.so.3 (0x0000733c8d800000)\n\tlibQt6Core.so.6 => /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6 (0x0000733c8d000000)\n\tlibstdc++.so.6 => /usr/lib/x86_64-linux-gnu/libstdc++.so.6 (0x0000733c8cc00000)\n\tlibgcc_s.so.1 => /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 (0x0000733c8e268000)\n\tlibc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x0000733c8c800000)\n\tlibm.so.6 => /usr/lib/x86_64-linux-gnu/libm.so.6 (0x0000733c8deda000)\n\t/lib64/ld-linux-x86-64.so.2 (0x0000733c8e34f000)\n\tlibzstd.so.1 => /usr/lib/x86_64-linux-gnu/libzstd.so.1 (0x0000733c8cf3d000)\n\tlibgssapi_krb5.so.2 => /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 (0x0000733c8e210000)\n\tlibbrotlidec.so.1 => /usr/lib/x86_64-linux-gnu/libbrotlidec.so.1 (0x0000733c8dec9000)\n\tlibbrotlicommon.so.1 => /usr/lib/x86_64-linux-gnu/libbrotlicommon.so.1 (0x0000733c8dea6000)\n\tlibz.so.1 => /usr/lib/x86_64-linux-gnu/libz.so.1 (0x0000733c8de88000)\n\tlibresolv.so.2 => /usr/lib/x86_64-linux-gnu/libresolv.so.2 (0x0000733c8de75000)\n\tlibicui18n.so.73 => /opt/Qt/6.12.0/gcc_64/lib/libicui18n.so.73 (0x0000733c8c400000)\n\tlibicuuc.so.73 => /opt/Qt/6.12.0/gcc_64/lib/libicuuc.so.73 (0x0000733c8c000000)\n\tlibicudata.so.73 => /opt/Qt/6.12.0/gcc_64/lib/libicudata.so.73 (0x0000733c8a000000)\n\tlibglib-2.0.so.0 => /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0 (0x0000733c8caa8000)\n\tlibgthread-2.0.so.0 => /usr/lib/x86_64-linux-gnu/libgthread-2.0.so.0 (0x0000733c8de6e000)\n\tlibkrb5.so.3 => /usr/lib/x86_64-linux-gnu/libkrb5.so.3 (0x0000733c8c334000)\n\tlibk5crypto.so.3 => /usr/lib/x86_64-linux-gnu/libk5crypto.so.3 (0x0000733c8de40000)\n\tlibcom_err.so.2 => /usr/lib/x86_64-linux-gnu/libcom_err.so.2 (0x0000733c8de3a000)\n\tlibkrb5support.so.0 => /usr/lib/x86_64-linux-gnu/libkrb5support.so.0 (0x0000733c8de2d000)\n\tlibpthread.so.0 => /usr/lib/x86_64-linux-gnu/libpthread.so.0 (0x0000733c8de28000)\n\tlibdl.so.2 => /usr/lib/x86_64-linux-gnu/libdl.so.2 (0x0000733c8de23000)\n\tlibatomic.so.1 => /usr/lib/x86_64-linux-gnu/libatomic.so.1 (0x0000733c8d7f5000)\n\tlibpcre2-8.so.0 => /usr/lib/x86_64-linux-gnu/libpcre2-8.so.0 (0x0000733c8c754000)\n\tlibkeyutils.so.1 => /usr/lib/x86_64-linux-gnu/libkeyutils.so.1 (0x0000733c8de1a000)\n"
+    },
+    {
+      "compiler": "clang",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/services/tor_control",
+          "-B",
+          "/tmp/biglybtc-tor-channel-qualified-clang",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16",
+          "-DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-tor-channel-qualified-clang",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-tor-channel-qualified-clang",
+          "--output-on-failure"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-tor-channel-qualified-clang/biglybtc-tor-channel-tests": "0aa769346c79bc5025710013c2c824630e8832043cf51c10061f5debdff6f9d7",
+        "/tmp/biglybtc-tor-channel-qualified-clang/libbiglybtc_tor_channel.a": "15c6d14094d86c20e822b52c8f877328d55d88f5adb599a146b9d2d1038fb237",
+        "/tmp/biglybtc-tor-channel-qualified-clang/tor-auth/biglybtc-tor-auth-driver": "e3c504054f0bd684465d4070e996efe8a2b73e5ace892669604702df0c74a147",
+        "/tmp/biglybtc-tor-channel-qualified-clang/tor-auth/libbiglybtc_tor_auth.a": "56722a411485da40c426e64cb3da232fb97daa277cd53ac1be05e7639258ca39"
+      },
+      "runtime_loader": "\tlinux-vdso.so.1 (0x00007c964fa93000)\n\tlibQt6Test.so.6 => /opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6 (0x00007c964f9fe000)\n\tlibQt6Network.so.6 => /opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6 (0x00007c964f600000)\n\tlibcrypto.so.3 => /usr/lib/x86_64-linux-gnu/libcrypto.so.3 (0x00007c964ee00000)\n\tlibQt6Core.so.6 => /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6 (0x00007c964e600000)\n\tlibstdc++.so.6 => /usr/lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007c964e200000)\n\tlibm.so.6 => /usr/lib/x86_64-linux-gnu/libm.so.6 (0x00007c964f8ba000)\n\tlibgcc_s.so.1 => /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007c964f88c000)\n\tlibc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x00007c964de00000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007c964fa95000)\n\tlibzstd.so.1 => /usr/lib/x86_64-linux-gnu/libzstd.so.1 (0x00007c964f53d000)\n\tlibgssapi_krb5.so.2 => /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 (0x00007c964f834000)\n\tlibbrotlidec.so.1 => /usr/lib/x86_64-linux-gnu/libbrotlidec.so.1 (0x00007c964f823000)\n\tlibbrotlicommon.so.1 => /usr/lib/x86_64-linux-gnu/libbrotlicommon.so.1 (0x00007c964f51a000)\n\tlibz.so.1 => /usr/lib/x86_64-linux-gnu/libz.so.1 (0x00007c964f4fc000)\n\tlibresolv.so.2 => /usr/lib/x86_64-linux-gnu/libresolv.so.2 (0x00007c964f810000)\n\tlibicui18n.so.73 => /opt/Qt/6.12.0/gcc_64/lib/libicui18n.so.73 (0x00007c964da00000)\n\tlibicuuc.so.73 => /opt/Qt/6.12.0/gcc_64/lib/libicuuc.so.73 (0x00007c964d600000)\n\tlibicudata.so.73 => /opt/Qt/6.12.0/gcc_64/lib/libicudata.so.73 (0x00007c964b600000)\n\tlibglib-2.0.so.0 => /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0 (0x00007c964e4a8000)\n\tlibgthread-2.0.so.0 => /usr/lib/x86_64-linux-gnu/libgthread-2.0.so.0 (0x00007c964f4f5000)\n\tlibkrb5.so.3 => /usr/lib/x86_64-linux-gnu/libkrb5.so.3 (0x00007c964f429000)\n\tlibk5crypto.so.3 => /usr/lib/x86_64-linux-gnu/libk5crypto.so.3 (0x00007c964edd4000)\n\tlibcom_err.so.2 => /usr/lib/x86_64-linux-gnu/libcom_err.so.2 (0x00007c964f421000)\n\tlibkrb5support.so.0 => /usr/lib/x86_64-linux-gnu/libkrb5support.so.0 (0x00007c964edc7000)\n\tlibpthread.so.0 => /usr/lib/x86_64-linux-gnu/libpthread.so.0 (0x00007c964f41c000)\n\tlibdl.so.2 => /usr/lib/x86_64-linux-gnu/libdl.so.2 (0x00007c964edc2000)\n\tlibatomic.so.1 => /usr/lib/x86_64-linux-gnu/libatomic.so.1 (0x00007c964edb7000)\n\tlibpcre2-8.so.0 => /usr/lib/x86_64-linux-gnu/libpcre2-8.so.0 (0x00007c964e154000)\n\tlibkeyutils.so.1 => /usr/lib/x86_64-linux-gnu/libkeyutils.so.1 (0x00007c964edb0000)\n"
+    },
+    {
+      "compiler": "asan",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/services/tor_control",
+          "-B",
+          "/tmp/biglybtc-tor-channel-qualified-asan",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Debug",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer",
+          "-DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-tor-channel-qualified-asan",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-tor-channel-qualified-asan",
+          "--output-on-failure"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-tor-channel-qualified-asan/biglybtc-tor-channel-tests": "72cf24a818aed58885d5e144a32fd8d0b8ce83cdeda6a199ab335fc66c4ce23c",
+        "/tmp/biglybtc-tor-channel-qualified-asan/libbiglybtc_tor_channel.a": "5d23c6c96dd71950d169dc51d10555bc1bc2cb141f5821590f6bbd0e7fd68142",
+        "/tmp/biglybtc-tor-channel-qualified-asan/tor-auth/biglybtc-tor-auth-driver": "2501118d24474508fb35277938db0af314ab768d3d504c6ca10f1dcc9e8f1e91",
+        "/tmp/biglybtc-tor-channel-qualified-asan/tor-auth/libbiglybtc_tor_auth.a": "d24ec79e960eb4ada9cbe6c70f011638925e383c44048684f6dd427b63fac3f5"
+      },
+      "runtime_loader": "\tlinux-vdso.so.1 (0x0000795550e42000)\n\tlibQt6Test.so.6 => /opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6 (0x000079555023d000)\n\tlibQt6Network.so.6 => /opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6 (0x0000795550000000)\n\tlibcrypto.so.3 => /usr/lib/x86_64-linux-gnu/libcrypto.so.3 (0x000079554f800000)\n\tlibQt6Core.so.6 => /opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6 (0x000079554f000000)\n\tlibstdc++.so.6 => /usr/lib/x86_64-linux-gnu/libstdc++.so.6 (0x000079554ec00000)\n\tlibm.so.6 => /usr/lib/x86_64-linux-gnu/libm.so.6 (0x000079554feda000)\n\tlibresolv.so.2 => /usr/lib/x86_64-linux-gnu/libresolv.so.2 (0x000079554fec7000)\n\tlibgcc_s.so.1 => /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 (0x000079554fe99000)\n\tlibc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x000079554e800000)\n\t/lib64/ld-linux-x86-64.so.2 (0x0000795550e44000)\n\tlibzstd.so.1 => /usr/lib/x86_64-linux-gnu/libzstd.so.1 (0x000079554ef3d000)\n\tlibgssapi_krb5.so.2 => /usr/lib/x86_64-linux-gnu/libgssapi_krb5.so.2 (0x000079554fe41000)\n\tlibbrotlidec.so.1 => /usr/lib/x86_64-linux-gnu/libbrotlidec.so.1 (0x000079554fe32000)\n\tlibbrotlicommon.so.1 => /usr/lib/x86_64-linux-gnu/libbrotlicommon.so.1 (0x000079554f7dd000)\n\tlibz.so.1 => /usr/lib/x86_64-linux-gnu/libz.so.1 (0x000079554f7bf000)\n\tlibicui18n.so.73 => /opt/Qt/6.12.0/gcc_64/lib/libicui18n.so.73 (0x000079554e400000)\n\tlibicuuc.so.73 => /opt/Qt/6.12.0/gcc_64/lib/libicuuc.so.73 (0x000079554e000000)\n\tlibicudata.so.73 => /opt/Qt/6.12.0/gcc_64/lib/libicudata.so.73 (0x000079554c000000)\n\tlibglib-2.0.so.0 => /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0 (0x000079554eaa8000)\n\tlibgthread-2.0.so.0 => /usr/lib/x86_64-linux-gnu/libgthread-2.0.so.0 (0x0000795550216000)\n\tlibkrb5.so.3 => /usr/lib/x86_64-linux-gnu/libkrb5.so.3 (0x000079554e334000)\n\tlibk5crypto.so.3 => /usr/lib/x86_64-linux-gnu/libk5crypto.so.3 (0x000079554f793000)\n\tlibcom_err.so.2 => /usr/lib/x86_64-linux-gnu/libcom_err.so.2 (0x000079554fe2c000)\n\tlibkrb5support.so.0 => /usr/lib/x86_64-linux-gnu/libkrb5support.so.0 (0x000079554fe1f000)\n\tlibpthread.so.0 => /usr/lib/x86_64-linux-gnu/libpthread.so.0 (0x000079554fe1a000)\n\tlibdl.so.2 => /usr/lib/x86_64-linux-gnu/libdl.so.2 (0x000079554f78e000)\n\tlibatomic.so.1 => /usr/lib/x86_64-linux-gnu/libatomic.so.1 (0x000079554f783000)\n\tlibpcre2-8.so.0 => /usr/lib/x86_64-linux-gnu/libpcre2-8.so.0 (0x000079554e754000)\n\tlibkeyutils.so.1 => /usr/lib/x86_64-linux-gnu/libkeyutils.so.1 (0x000079554f77c000)\n"
+    }
+  ],
+  "source_sha256": {
+    "migration/fixtures/tor-auth/commands.txt": "154413c94b10862e4d6b522b12dee5bcd3a79c5492904fbf6300dd8070f923e6",
+    "migration/fixtures/tor-auth/expected.txt": "426d8d9eaac7cb1581ee6b3731efd8406f309d5db58d39f330aeeca85c470520",
+    "migration/fixtures/tor-auth/manifest.json": "aaee152fd0b9596843cb1122f731aac276f5fe8a4c30857e8adcb49a66d9a644",
+    "migration/tools/tor_channel_matrix.py": "0659868345ef1105d9304840db2142fd7b428b2447678978ce3e344d4087d411",
+    "native/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "native/plugins/BiglyBTC-plugin-aznettor/CMakeLists.txt": "85f17c8ac3425c40324ef72bd31b5bc107cc47a4baa3ad98541c6dadd3e96669",
+    "native/plugins/BiglyBTC-plugin-aznettor/COPYING": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6",
+    "native/plugins/BiglyBTC-plugin-aznettor/README.md": "4aaebf616dc9dae10e8a23da5b294e153a31c5dbf999664daa173b88a64f1932",
+    "native/plugins/BiglyBTC-plugin-aznettor/auth_bounds_test.cpp": "2ad18e071953a5fdb05f370f21b399c8b934c5f755e868bf2fc5a0759446c524",
+    "native/plugins/BiglyBTC-plugin-aznettor/auth_driver.cpp": "4dca8fb217d2063fb14cb3e21beab9ae7feeaf0be102d89000d382d5a6e9873a",
+    "native/plugins/BiglyBTC-plugin-aznettor/fixture_test.py": "e491d5c327042bbd4b32459a7f178f410f84015ffa8cc9c227f57647640e98c5",
+    "native/plugins/BiglyBTC-plugin-aznettor/safecookie.cpp": "bddc5eaf95294a1fa4a7a6e541f7d51d0d53418b6bdae6afea7ec41230ed3901",
+    "native/plugins/BiglyBTC-plugin-aznettor/safecookie.hpp": "10e6092b7d6f0476f10d9d3742ca1a81c50f7a0feb2ed21b97af0a91f5143a17",
+    "native/services/tor_control/CMakeLists.txt": "cff099f447f88da1af11ba092674464b2f2bece7f6baafced418075e68d2f6a5",
+    "native/services/tor_control/README.md": "dc07706dc2277c891517b2298dc460f589b7320e4cc7513554690662cdda99bd",
+    "native/services/tor_control/channel.cpp": "f433c36f9ad374a54ef849464e6abe6f84b84b59590a01a0128af8eadc6696df",
+    "native/services/tor_control/channel.hpp": "f6687c4e9b0cbd96ce733eede6114b5b10ce9b5e5e7854d24a7de4f8a3b85ff5",
+    "native/services/tor_control/channel_tests.cpp": "d4d6dbb19984c1205eb913a44e08c5e7153a769eb67c65e93b97ee8ec3b08943"
+  },
+  "dependency_sha256": {
+    "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6.12.0": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6.12.0": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6.12.0": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975"
+  },
+  "scope": "Qt6.12 owner-thread asynchronous control channel; ephemeral numeric loopback servers, no Tor launch, live profile, existing service port, proxy or public network; original SAFECOOKIE regressions"
+}

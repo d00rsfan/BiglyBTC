@@ -1,0 +1,127 @@
+{
+  "verdict": "PASS_SOURCE_REVIEW_FINDINGS_RESOLVED_ON_FINAL_HASHES",
+  "reviewer": "error_codec",
+  "scope": "Independent source review of root-authored generated owned-engine fixture, real/synthetic Qt integration tests and two CMake registrations. Own arithmetic implementation/tests are excluded from independent implementation credit; their CMake wiring only is reviewed.",
+  "subject_sha256": {
+    "tests/owned_engine_fixture.hpp": "799b00c13c45dfd9f8edc0e3e89deff616eb872497a67ced52935aca53330cfa",
+    "tests/engine_statistics_integration_tests.cpp": "63035d9489e3d39abcd878f2d429c06b79e8aa6eea17088e44071b32eebddfc8",
+    "tests/CMakeLists.txt": "d27fbc54084c2e2f61cc9ba8a536276f73df44b92f9dbe3614b631bf206b3ca2",
+    "CMakeLists.txt": "f19b755253c754692a0f5273236cbd2f771d01bafd7e22ff4bd0a0592d6fd8da"
+  },
+  "native_parent_metadata_commit": "e9eef6cbf633207ae4b44691147e5ece4f5b03be",
+  "historical_source_hashes": {
+    "initial_fixture": "776174afdf9d02cd2d7730e436a8b1cef84050c76aaa9b6790e4c97708799b11",
+    "initial_integration": "cf67756202017b88ae1c1edd557f41cd5eb767bab7a776853cbc848d4f6d07b2",
+    "partial_seed_fixture_before_root_compile_correction": "4c63b40c6c7e8e6dbb6fc87c7086d813ca68d8818b2eddfc05ab30c606e3be7d",
+    "partial_seed_integration_before_second_operation": "5ace148ee1c5eac1b9845c6ce274772d4ef929d7aef9a384a7dd20b1d585217b"
+  },
+  "resolved_findings": [
+    {
+      "id": "ES-T1",
+      "initial_severity": "blocking_failure_cleanup",
+      "problem": "Raw new Bridge had no owner; QVERIFY/QTRY early return could leak active worker/lease before fixture deletion.",
+      "resolution": "Stack QObject bridgeOwner declared after fixture owns Bridge; explicit slot delete unregisters child normally; all early-return paths now join before fixture teardown.",
+      "status": "RESOLVED_SOURCE"
+    },
+    {
+      "id": "ES-T2",
+      "initial_severity": "determinism_scope",
+      "problem": "A queued Observed signal and rate-limited complete seed did not guarantee unfinished transfer if GUI delivery lagged.",
+      "resolution": "Cancel/delete rows use partialSeed=true. Exact final16384-byte piece is zeroed in source while metadata retains expected bytes; ready requires7/8 pieces and neither checking nor seeding. No other discovery/peer can provide final piece. Deletion name now accurately refers to unfinished transfer. Normal success fixtures remain full8/8.",
+      "status": "RESOLVED_SOURCE"
+    },
+    {
+      "id": "ES-T3",
+      "origin": "Root first focused compile diagnosis, not independently discovered by this reviewer",
+      "problem": "Initial optional<TorrentHash> incorrectly assigned expected<TorrentHash,Error>.",
+      "resolution": "Final source checks parsedHash.has_value then assigns *parsedHash. Matches actual core parse signature; first failed build/log retained by root. No initial compile PASS is claimed.",
+      "status": "RESOLVED_SOURCE"
+    }
+  ],
+  "checks": [
+    {
+      "id": "ES-T4",
+      "result": "PASS",
+      "subject": "Generated profile/privacy",
+      "detail": "Fresh QTemporaryDir owns every profile/active/state/payload/seed file. Both LT owners bind/outgo127.0.0.1; DHT/LSD/UPnP/NATPMP/UTP disabled, bootstrap empty, trackers cleared and PEX off. No Java, normal profile, DNS name, public peer or scan. Temporary root outlives seed and every scoped Bridge/lease owner."
+    },
+    {
+      "id": "ES-T5",
+      "result": "PASS",
+      "subject": "Payload/hash geometry",
+      "detail": "131072 deterministic nonzero bytes,8pieces of16384; single sample.bin or two65536-byte files under bundle/Sub. Piece SHA1s use exact concatenation; infohash SHA1 uses encoded info. Save/metadata paths match; sink starts zero; original payload device/inode retained. Last piece pattern is not all-zero, so the partial source cannot validate it. maxdl65536 is actual byte/sec policy, not the cancellation correctness gate."
+    },
+    {
+      "id": "ES-T6",
+      "result": "PASS",
+      "subject": "Synthetic controller/cache checks",
+      "detail": "Independent packets reject unbound target/stale operation/profile/terminal sequence and preserve last facts through terminal/no sample and page close/reopen. Filter/column width/files target comparisons protect retained library state. These DTO cases are distinct from real loopback measurements."
+    },
+    {
+      "id": "ES-T7",
+      "result": "PASS",
+      "subject": "Real observations/owner reset",
+      "detail": "Both layouts require Preparing, strict session/operation sequence, successful Ended/sample, positive payload<=physical bytes, combined>payload and positive measured combined rate. Samples structurally validate; actual payload bytes and inode/device must match and statistics stays unchanged. New final delta runs a second completed-file recheck, requires operation+1 and payloadReceived0, and verifies page displays actual new-owner zero instead of prior totals."
+    },
+    {
+      "id": "ES-T8",
+      "result": "PASS",
+      "subject": "Cancel/delete lifecycle",
+      "detail": "Cancellation starts only after a real positive-payload sample with missing-finalpiece source; unsuccessful terminal retains displayed last-observed sample. Deletion runs from positive sample, QPointer must clear after destructor/join and a new lease is acquired afterward. Parent owner handles all test-assertion early returns. No complete byte content is asserted for intentionally cancelled payload."
+    },
+    {
+      "id": "ES-T9",
+      "result": "PASS",
+      "subject": "Observer errors do not change transfer",
+      "detail": "Four real direct LocalOptions rows cover single/multi opted-out and throwing observers. They require actual success, exactly0/1 callback calls, full size/payload/device/inode/statistics preservation and retained opaque root bytes. No expected-output transition mirror or fake counters replace LT output."
+    },
+    {
+      "id": "ES-T10",
+      "result": "PASS",
+      "subject": "Qt waiting/fixture teardown",
+      "detail": "Offscreen asserted. No sleeps: QTRY/qWaitFor poll actual ready/busy/packet/lease conditions with unchanged30s/3s. Scoped seed/Bridge/spies now tear down before generated root removal. Optional screenshot writes absent fixed PNG names only to caller-provided existing capture directory; no profile traversal."
+    },
+    {
+      "id": "ES-T11",
+      "result": "PASS",
+      "subject": "Two CMake registrations",
+      "detail": "Core arithmetic target uses existing Core/strict warnings/30s. Real integration is desktop-gated (top level requires local engine), AUTOMOC and actual host+engine+LT+QtTest, strict warnings/offscreen/120s/owned-loopback labels. No skip return, deadline expansion, warning relaxation, mock engine or Java startup."
+    }
+  ],
+  "context_sha256": {
+    "core/include/biglybtc/library.hpp": "8ad4e7f5346300fdc03c6318d629b6185874d35109511ca445609639b7168875",
+    "engine/local_session.hpp": "68b9c9f4baccc8e7ee9c4c33b4534855fdf75082003bd591ca84aca6d9643270",
+    "engine/local_session.cpp": "4d7d7fd631cb48d712585f02e29d5541a3883d39a3d6f54b6234ba3bab93b132",
+    "engine/multifile_session.cpp": "d300d6c23c90d73c4c0c610e310a0827d3a19403ec6bbc2785e9ebaaff92044f",
+    "engine/engine_statistics_sampler.hpp": "689355ba82df086033944edb37f2a6a877d7471bd2e2f73dadc6124b7f094089",
+    "engine/engine_statistics_sampler.cpp": "8185293d7e20a7de009d431fcd6d4f4fbded469118e201f3d94bbaf420a44604",
+    "app/session_bridge.hpp": "2dd37ae64b3fcc8569f52b8668784289bf3cf2b660a74e24fa172933075c9cf1",
+    "app/session_bridge.cpp": "1bf37191d2761ce153fb1689a03e081c5bef53b811ddcc7de475c7185ad1fd2f",
+    "ui/library_window.hpp": "ef543fb88d905c6967baa820f4a9d89f666b059bbf6e4cd0b9391b74a926f6e7",
+    "ui/library_window.cpp": "d4a4d5b0e1d459b64fcd3e7c231cf6d6e9f1d59e6397bdb5fcfdc1f6450c3e00",
+    "ui/engine_statistics_presentation.hpp": "2b1270182e459b2b93aa3376f80b8bcb52500b51486dca0e93820684479db67d"
+  },
+  "planned_source_counts": {
+    "behavior_families": 6,
+    "expanded_behavior_rows": 10,
+    "expected_Qt_rows_including_init_cleanup": 12,
+    "new_CTest_targets": 2,
+    "runtime_credit_by_reviewer": 0
+  },
+  "scope_precision": [
+    "intact(false) intentionally checks payload device/inode rather than complete bytes.",
+    "Saved statistics compares raw bytes and absent .bak/.saving, not its original inode/mode. Entire profile is not unchanged because actual transfer updates state/download inventory.",
+    "Simple two-file geometry has no padding/DND/incomplete suffix; wider file-policy/crash/rename evidence is separate.",
+    "No exact final teardown byte receipt, full global/application lifetime, original Java equality or performance claim."
+  ],
+  "execution": {
+    "source_hash_text_review_only": true,
+    "selected_target_definition_evaluation": 0,
+    "build_or_test_runs": 0,
+    "Java_GUI_or_process_fixture_runs": 0,
+    "normal_profile_payload_IO": 0,
+    "network": 0,
+    "Git": 0,
+    "production_or_test_edits": 0
+  }
+}

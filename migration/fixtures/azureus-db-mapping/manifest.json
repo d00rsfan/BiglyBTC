@@ -1,0 +1,516 @@
+{
+  "reference": {
+    "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "parent_reference": {
+      "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "source_sha256": {
+        "core/src/com/biglybt/core/dht/db/impl/DHTDBValueImpl.java": "1e4facb3b8b6672d7252c9a593398b01ebfbd0eb4eb59dc39465114ceb0bda13",
+        "core/src/com/biglybt/core/dht/db/DHTDBValue.java": "fda90143dfffb1da3f487786b22bb616b7a2a9d1b2d8800bc6dfd0a6a2385704",
+        "core/src/com/biglybt/core/dht/transport/DHTTransportValue.java": "cf5164aa1813c93a5581d52bd3c266d82693d60fc3032cccfe80ff3a1ce947db",
+        "core/src/com/biglybt/core/dht/transport/DHTTransportContact.java": "b720d632dbca28a4a788516881ea239e7e055e8153dff4bf93f453101fef4c0c",
+        "core/src/com/biglybt/core/dht/DHT.java": "0a56d60ddafdd35441e53ae3bcc3d9c4f9a674b3a118d5ab6fd6a6fc1543b0cf",
+        "core/src/com/biglybt/core/util/SystemTime.java": "d57063696e281cc005e5b146a8f863a2ca52180696a98b473ff8566851f97353",
+        "core/src/com/biglybt/core/dht/impl/DHTLog.java": "41f6eb899b0018f77159c251908644c5b6ca63ea656a20a4fae4b8818decc5df",
+        "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPUtils.java": "d852f590ca0df5361061e598be2087787ea588201f23d2fb7f826cfd62d4694b",
+        "core/src/com/biglybt/core/dht/db/impl/DHTDBImpl.java": "c3ccf59ce89df24426ff9a8a61ea71c8a4ac055d5aa885593129b459b21b36c3",
+        "core/src/com/biglybt/core/dht/db/impl/DHTDBMapping.java": "9f0fec4e9ce11773db31a3cad503b1a9b8d5a967d9ac2688a60729347968fc69"
+      },
+      "methods": {
+        "CREATE": {
+          "body_sha256": "d9a4edb5caaf89653ad35992aa259158e968d0bf7309d92d610e576f1426830a",
+          "declaration_start_line": 62,
+          "body_start_line": 73,
+          "body_end_line": 92,
+          "signature": "protected\n\tDHTDBValueImpl(\n\t\tlong\t\t\t\t_creation_time,\n\t\tbyte[]\t\t\t\t_value,\n\t\tint\t\t\t\t\t_version,\n\t\tDHTTransportContact\t_originator,\n\t\tDHTTransportContact\t_sender,\n\t\tboolean\t\t\t\t_local,\n\t\tint\t\t\t\t\t_flags,\n\t\tint\t\t\t\t\t_life_hours,\n\t\tbyte\t\t\t\t_rep_control )"
+        },
+        "COPY": {
+          "body_sha256": "eb079d99368018804bfd93b27ba1c782d77a69519bee942cec0e1115530e43d4",
+          "declaration_start_line": 102,
+          "body_start_line": 107,
+          "body_end_line": 117,
+          "signature": "protected\n\tDHTDBValueImpl(\n\t\tDHTTransportContact\t_sender,\n\t\tDHTTransportValue\t_other,\n\t\tboolean\t\t\t\t_local )"
+        },
+        "RESET": {
+          "body_sha256": "e125b60dacb6701f845d6a1de8354251c1208dd4b4462490d8a85127d0fcc4cb",
+          "declaration_start_line": 119,
+          "body_start_line": 121,
+          "body_end_line": 130,
+          "signature": "protected void\n\treset()"
+        },
+        "getCreationTime": {
+          "body_sha256": "3a7e5b1f87473ff4f7c4c217dc3717c90ff7f8addb8b33060d69b46a94e07c6c",
+          "declaration_start_line": 133,
+          "body_start_line": 135,
+          "body_end_line": 137,
+          "signature": "public long\n\tgetCreationTime()"
+        },
+        "setCreationTime": {
+          "body_sha256": "d174cf640040681a6f42e8be06875786aa14b449d6f8723500726f09fdac3764",
+          "declaration_start_line": 139,
+          "body_start_line": 141,
+          "body_end_line": 143,
+          "signature": "protected void\n\tsetCreationTime()"
+        },
+        "setStoreTime": {
+          "body_sha256": "17066c34567de73aa1a3b2bbc8b76430d4dea5ecb8702b15175ec3f78a61e35b",
+          "declaration_start_line": 145,
+          "body_start_line": 148,
+          "body_end_line": 150,
+          "signature": "protected void\n\tsetStoreTime(\n\t\tlong\tl )"
+        },
+        "getStoreTime": {
+          "body_sha256": "74fa98845acc2649d1074e797c34f65f39599f31a7c94ca60f61b849df93b61c",
+          "declaration_start_line": 152,
+          "body_start_line": 154,
+          "body_end_line": 156,
+          "signature": "protected long\n\tgetStoreTime()"
+        },
+        "isLocal": {
+          "body_sha256": "be7d1e85d019bb326c98faab5ec433bbd95d2f0610cc3f0d01a4a06ea795ce5e",
+          "declaration_start_line": 159,
+          "body_start_line": 161,
+          "body_end_line": 163,
+          "signature": "public boolean\n\tisLocal()"
+        },
+        "getValue": {
+          "body_sha256": "3594903b5f8d5cb6e2d87cee2e68cfaf7cd44b66821effe91ef36e943aa46bc1",
+          "declaration_start_line": 166,
+          "body_start_line": 168,
+          "body_end_line": 170,
+          "signature": "public byte[]\n\tgetValue()"
+        },
+        "getVersion": {
+          "body_sha256": "ad4b466b3091f665015dad023c45e0a37931b5ec9ffec6d8dd5f00a348d3f3c8",
+          "declaration_start_line": 173,
+          "body_start_line": 175,
+          "body_end_line": 177,
+          "signature": "public int\n\tgetVersion()"
+        },
+        "getOriginator": {
+          "body_sha256": "aff8e028bf38edbffd95b0acbe7d5d7ef1d27c4716a852ad06fce43a1c5859b0",
+          "declaration_start_line": 180,
+          "body_start_line": 182,
+          "body_end_line": 184,
+          "signature": "public DHTTransportContact\n\tgetOriginator()"
+        },
+        "getSender": {
+          "body_sha256": "d46e2ccba4fb5137e16b56fe09d8a1e6005b0be3f9896d94a719d4c51093a0b5",
+          "declaration_start_line": 186,
+          "body_start_line": 188,
+          "body_end_line": 190,
+          "signature": "public DHTTransportContact\n\tgetSender()"
+        },
+        "getFlags": {
+          "body_sha256": "c0fbbb9c0cfc28b456d7def0a910705bffd46bd81b83109684da2a61f2fe14d5",
+          "declaration_start_line": 193,
+          "body_start_line": 195,
+          "body_end_line": 197,
+          "signature": "public int\n\tgetFlags()"
+        },
+        "setFlags": {
+          "body_sha256": "f3d019f4c3a825c678413764b3057b36d88ef2ea7346242e2a71354df5ed12b7",
+          "declaration_start_line": 200,
+          "body_start_line": 203,
+          "body_end_line": 205,
+          "signature": "public void\n\tsetFlags(\n\t\tbyte\t_flags )"
+        },
+        "getLifeTimeHours": {
+          "body_sha256": "51a154c0ad7597a2e0e1e349baaf3b100db86429ba88e5f83ee52fc41d91b94a",
+          "declaration_start_line": 208,
+          "body_start_line": 210,
+          "body_end_line": 212,
+          "signature": "public int\n\tgetLifeTimeHours()"
+        },
+        "getReplicationControl": {
+          "body_sha256": "6c65648c5f8abe94ce8adbacf005d3892f4622858c5e815d59a2663dba916e19",
+          "declaration_start_line": 215,
+          "body_start_line": 217,
+          "body_end_line": 219,
+          "signature": "public byte\n\tgetReplicationControl()"
+        },
+        "getReplicationFactor": {
+          "body_sha256": "77d4b3146b23ea752190dd26e19a243e55f23b02a78f384f483de9f06d54e77a",
+          "declaration_start_line": 222,
+          "body_start_line": 224,
+          "body_end_line": 226,
+          "signature": "public byte\n\tgetReplicationFactor()"
+        },
+        "getReplicationFrequencyHours": {
+          "body_sha256": "83b0c3db6ee3615118f7a0b522c21652cdd9d9867e9772f0bd4faccc92cfc4a5",
+          "declaration_start_line": 229,
+          "body_start_line": 231,
+          "body_end_line": 233,
+          "signature": "public byte\n\tgetReplicationFrequencyHours()"
+        },
+        "setOriginatorAndSender": {
+          "body_sha256": "787222134604f753aa8250fe7611ef201bbd563df002a6a015c1c08e2f5fc31c",
+          "declaration_start_line": 235,
+          "body_start_line": 238,
+          "body_end_line": 241,
+          "signature": "protected void\n\tsetOriginatorAndSender(\n\t\tDHTTransportContact\t_originator )"
+        },
+        "getValueForRelay": {
+          "body_sha256": "c260e991c888b71165170bc4ea23644c61c88bbeaa35874c84b0ca640e889db5",
+          "declaration_start_line": 244,
+          "body_start_line": 247,
+          "body_end_line": 249,
+          "signature": "public DHTDBValue\n\tgetValueForRelay(\n\t\tDHTTransportContact\t_sender )"
+        },
+        "getValueForDeletion": {
+          "body_sha256": "ade4046d0f5e30dcbabf8df7a5ddc5595d439c2fa0ae4aab6e51ab4a5efd4795",
+          "declaration_start_line": 251,
+          "body_start_line": 254,
+          "body_end_line": 264,
+          "signature": "public DHTDBValue\n\tgetValueForDeletion(\n\t\tint\t\t_version )"
+        },
+        "getString": {
+          "body_sha256": "cb44bb6762f7df387a8ece59ed499aca5a677cbc6fa9b3bec6e00af140682afc",
+          "declaration_start_line": 267,
+          "body_start_line": 269,
+          "body_end_line": 275,
+          "signature": "public String\n\tgetString()"
+        }
+      },
+      "original_class_body_sha256": "6f2950c36af5d0f1dc66871fbb9bcfd299641c055324f9e19083441ddb10346b",
+      "adapted_class_body_sha256": "6f2950c36af5d0f1dc66871fbb9bcfd299641c055324f9e19083441ddb10346b",
+      "exact_fragment_sha256": {
+        "CLASS": "6f2950c36af5d0f1dc66871fbb9bcfd299641c055324f9e19083441ddb10346b",
+        "CONSTANT": "92d8c393564194e168730585eefddbff6e2e76c9a7c6318269d5efc59de297d5",
+        "VALUE_INTERFACE": "886041b2db637d37ff24d792ea50faf73f9f206e3eebaff6d23d73080b07f65b",
+        "DB_INTERFACE": "2509c902f5b24d4c84648a88b088d3168883eca8a55ab751d252c01c0e6f946a",
+        "LOG": "e641b80a20ce31c6ba82f98481ae7eac39ee788474e77603fd2923d038123b0e"
+      },
+      "tool_inputs_sha256": {
+        "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-value/source_audit.py": "a4f1a28b7e5a5fe2bf43796f824858b3c148963f4b489cbbc5b4222f5db9aef1",
+        "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-value/db_value_oracle.py": "cc1dbf5317f42c3e3a5f30604f7b4adc3d30ceee6677101f90f5b4b3fe852d9e",
+        "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-value/db_value_fixtures.py": "498f5f29625f53770d902c1cc2521833ab53b222592d546873c5e1c9dffe2b43",
+        "/home/yurii/Java/BiglyBT/migration/tools/oracle.py": "8eb1cc4758ba78b4679b05b553ed8f6b7c1c1abe1745b8b1f5357ae681f0710f",
+        "/home/yurii/Java/BiglyBT/migration/tools/mldht_identity_oracle.py": "9775c25bc03d4b28c3444ca5633b0952234241adcbcf60f6a75676f5e163810e",
+        "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+        "/home/yurii/Java/BiglyBT/migration/evidence/P00-04/reference-fence.json": "0c35e6bb2212e681ed4be8ecc65c50e35d7e191701bee59c9e139f2fbcb17302",
+        "/home/yurii/Java/BiglyBT/migration/evidence/P00-03/formats.json": "a2b20eaa9f0a2210938bb6c8d2f568bce7ad3ca22de9c4b1eca23d23c6c9c594"
+      },
+      "persistent_compile_attempt": "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-value/development/compile-attempt-4efo0iy1",
+      "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+      "core_on_runtime_classpath": false,
+      "harness_sha256": "a3bd7c560c13bc45ef520ad07655eff2f7178b527cd6703d943f1b7a134060e7",
+      "helper_class_sha256": {
+        "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd",
+        "DbValueLifecycleOracle.class": "f5d720f9c58523ed7324ef2d3b8a88eb36b1a15e54bcdcfdd4fb99d81155decc",
+        "DbValueLifecycleOracle$Probe.class": "d3dd213e5040591e1bfc6d66c4363e9e783667b0cc4d5635b5115cca6c62bad8",
+        "DbValueLifecycleOracle$Contact.class": "bf3254448a26750b592547555b6c45b840935d2e2445d781708de12e57d2ed91",
+        "DbValueLifecycleOracle$DHTDBValueImpl.class": "993983d28009b7258ef54056769f27ca4c785a54b7a0a18994e35afd79c8845c",
+        "DbValueLifecycleOracle$DHTLog.class": "d16a108d96e0a417647d1871b1c11e4dedfc4a81dfc32a414bd43db9c7829547",
+        "DbValueLifecycleOracle$SystemTime.class": "4c33fee731087d2f13b3bf92d06f3c06cd6ef97dbd656e1e8d4445efa5fdda91",
+        "DbValueLifecycleOracle$DHTDBValue.class": "92319aad062abb4eb99574e10189d87c7e92f6e42355fdd59e56460681301638",
+        "DbValueLifecycleOracle$DHTTransportValue.class": "0476eb063d301900d987ee960ba6d820a599526d7aa6b5e462835370ce9d3fa1",
+        "DbValueLifecycleOracle$DHTTransportContact.class": "1168971c905ce4ee0361a420297c4bd29cbec91c6c75560a16344a3af4d1db2c",
+        "DbValueLifecycleOracle$DHT.class": "adb039792e393766c851eac86b150b6ae8291e6191d5f7a90aae84855b394497"
+      },
+      "compile_command": [
+        "nice",
+        "-n",
+        "5",
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+        "-J-XX:ActiveProcessorCount=2",
+        "--release",
+        "8",
+        "-encoding",
+        "UTF-8",
+        "-d",
+        "/tmp/biglybtc-db-value-oracle-4efo0iy1/classes",
+        "/tmp/biglybtc-db-value-oracle-4efo0iy1/source/DbValueLifecycleOracle.java",
+        "/tmp/biglybtc-db-value-oracle-4efo0iy1/source/ReferenceFence.java"
+      ],
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+        "-XX:ActiveProcessorCount=2",
+        "-Xmx256m",
+        "-Dfile.encoding=UTF-8",
+        "-Djava.security.manager=ReferenceFence",
+        "-Dbiglybtc.test.root=/tmp/biglybtc-db-value-oracle-4efo0iy1",
+        "-Duser.home=/tmp/biglybtc-db-value-oracle-4efo0iy1",
+        "-Dazureus.config.path=/tmp/biglybtc-db-value-oracle-4efo0iy1/profile",
+        "-cp",
+        "/tmp/biglybtc-db-value-oracle-4efo0iy1/classes",
+        "DbValueLifecycleOracle"
+      ],
+      "work": "/tmp/biglybtc-db-value-oracle-4efo0iy1",
+      "scope": "Exact entire original DHTDBValueImpl class body and value interfaces, scripted wall clock and inert opaque contacts/logging-off DHTLog. Pure lifecycle only, no real SystemTime/DHTLog/core/DB/network/profile initialization. Source mutable-array/contact alias observations recorded separately from native owned-data policy. DB replication unsigned-nibble behavior distinct from qualified wire value signed shift; wire component untouched."
+    },
+    "source_sha256": {
+      "core/src/com/biglybt/core/dht/db/impl/DHTDBMapping.java": "9f0fec4e9ce11773db31a3cad503b1a9b8d5a967d9ac2688a60729347968fc69",
+      "core/src/com/biglybt/core/util/HashWrapper.java": "cc768d652317b2e19a749db727e899f3a419c87cf2134536ffe4a6ae995b3cea",
+      "core/src/com/biglybt/pif/utils/ByteArrayWrapper.java": "58ae575902faca4ad88d04441b0e1f793c1db540f4464b4bd0051b3900f64861",
+      "core/src/com/biglybt/core/dht/DHTStorageKey.java": "54988aec948c57673d5720d1a4e1c9e5e7c7ab00ca846d04b5ce92ba759b8476",
+      "core/src/com/biglybt/core/dht/DHT.java": "0a56d60ddafdd35441e53ae3bcc3d9c4f9a674b3a118d5ab6fd6a6fc1543b0cf"
+    },
+    "original_method_sha256": {
+      "DHTDBMapping.DHTDBMapping(DHTDBImpl _db, HashWrapper _key, boolean _local)": "1d5446eaf6c3ff7970f784395dd6b8fff975fc674d2bce678f249117ecd81ebf",
+      "DHTDBMapping.createLinkedMap()": "e24a3c667d9a468e2be809282556fdb95bf747e24a38fc5cc53eb8af11e23ad9",
+      "DHTDBMapping.getKey()": "c97eaf94c2ffbcb5f3eba3ec4356810741429a02557fd86551c86c7c04e622b5",
+      "DHTDBMapping.getShortKey()": "b35de391331536df1074ff445033adfa200581c77f877a95f452b035c6e9fa51",
+      "DHTDBMapping.updateLocalContact(DHTTransportContact contact)": "9929837d2a1521502f998da1dc94fd0427d13c12d324aab89090a1da67df4a9a",
+      "DHTDBMapping.add(DHTDBValueImpl new_value)": "5af99390c5ff502dc003eccf7c0428b285a153925c0e958d66202c4100a9a213",
+      "DHTDBMapping.getOriginatorValueID(DHTDBValueImpl value)": "8a6e8a539d06cf01eeacc97ebfc1c7af1d83b6d8d108d8f964f960fdbc3cc21f",
+      "DHTDBMapping.addHit()": "905ee277ac02fe466f2107b3cfb64f2ddbc137ba00e35ff1ac11f20c506d3cd3",
+      "DHTDBMapping.getHits()": "daa48124b237cfd887fe3fb3eeb98681074e92be62dff20317507638c108814c",
+      "DHTDBMapping.getIndirectSize()": "1817352c84a73196ac0ea296383185a5baea1a48c0b9828e53131df8619a5b33",
+      "DHTDBMapping.getDirectSize()": "645f332b49264005e9b995e1822709d6fe853eb910a488d7484a42692dc48bc5",
+      "DHTDBMapping.getLocalSize()": "b2f9c875d93dbe46c2559f21ca05d4f600cdce3a11f7fa83b81da2e81aa3c4f0",
+      "DHTDBMapping.get(DHTTransportContact by_who, int max, short flags)": "550c2d992d784421ee7a5998ef4f970d717353f8844c4e77fe1f36a709d30e66",
+      "DHTDBMapping.get(DHTTransportContact originator)": "ef152fc3e7534418e06c2daf405d7eaaccb8d95834a578cb4085e57c00904935",
+      "DHTDBMapping.getAnyValue(DHTTransportContact originator)": "43aef5eceb6236c9312e9e329d20307b4b025a54a5f74e17bb265dd7c14d6bb3",
+      "DHTDBMapping.getAllValues(DHTTransportContact originator)": "004eff2f0d3b853fc80fa31c2bbd9c10923feb3f0c51363d573329970e8de7ed",
+      "DHTDBMapping.remove(DHTTransportContact originator)": "c991ab330eea116b38a9674c25f92c3cb669aca22faa3cdfcc199b55e56667a8",
+      "DHTDBMapping.getValueCount()": "dfccb50c21923a35ad97b82bb95632b303fd92f0c5ce5ec24ab3c6d77e2061cb",
+      "DHTDBMapping.getDirectValueCount()": "506064bfee0985e026a9c140ba442efb1e9f309ec7fa4bbbf40ace83b5cbe90b",
+      "DHTDBMapping.getIndirectValueCount()": "ecde5e29cc6119434201fc169b361c0285859687090c85e6bd3dc852bcf2ef58",
+      "DHTDBMapping.getValues()": "ec11cbb61fa06441de362cc41947843a4a574c69e0894325b8166708a83a9f9e",
+      "DHTDBMapping.getDirectValues()": "641a78a94f683959e3b64e13b5466b7b17a4e59ffd869829e7def12885175279",
+      "DHTDBMapping.getIndirectValues()": "a58d626973c228ac8727dd914d83570fe834fb26f673616e62d75de210352606",
+      "DHTDBMapping.getDiversificationType()": "3ded021338f9d244ae64a95505b6c239215c9511d90def68e108af1e53e63c4e",
+      "DHTDBMapping.addDirectValue(HashWrapper value_key, DHTDBValueImpl value)": "e3993f5ffc711d2cc812e48ad2192832c01fae3256c365d5b3502826c9f8409e",
+      "DHTDBMapping.removeDirectValue(HashWrapper value_key)": "c771863f97208f2522d190b3be822161390aecfd6f3688541c81a2e1f0abe929",
+      "DHTDBMapping.addIndirectValue(HashWrapper value_key, DHTDBValueImpl value)": "fe868f37f0ba1581d44f8bd55b529d8fa4bff4d542d74a5f80caa065031af326",
+      "DHTDBMapping.removeIndirectValue(HashWrapper value_key)": "3e026310d3ec7256eaae8c673f15addc3d5efef9832bf685928ef794be2d5284",
+      "DHTDBMapping.destroy()": "fb7808940dfc1c4cc6ae04423a1477739dbf685b999c1ab90c071c7d77996de1",
+      "DHTDBMapping.informDeleted(DHTDBValueImpl value)": "9ae341e7aac08836223c9116de60250488d783a9324839ac14250054311a5e66",
+      "DHTDBMapping.informAdded(DHTDBValueImpl value)": "2333f2c82f0df40bd00115ce165acd53eaeb83c7c5f22383573c3fa2388e4575",
+      "DHTDBMapping.informUpdated(DHTDBValueImpl old_value, DHTDBValueImpl new_value)": "4428f3a4a37e45d6a01d98b7e472c5f608ad12a6acf3aeb355ed428bf1e67286",
+      "DHTDBMapping.informRead(DHTTransportContact contact)": "a08d6918d093cc118fe22f6b51f4a70d0085b2bd30efe2f11ef839f427ff53e4",
+      "valueIterator.valueIterator(boolean direct, boolean indirect)": "b7466f2cabc115fe83344ecdf25be95840ca20a17f7a1d96e298f655fb72cae7",
+      "valueIterator.hasNext()": "edce90eb31323c46aec565e1b3282dea622b72f8e3289b021f99f5ba29cffac7",
+      "valueIterator.next()": "59dec5cfdf06ca3b4eb25da48c33620f7191a50c6623cdcb05ad5d3818de89e3",
+      "valueIterator.remove()": "12202ffc7c27208d52bbcc04e2d30405bb26958e4d413159489608671e3d9308",
+      "ShortHash.ShortHash(byte[] _bytes)": "73f8b9c8d014638e28a45d44e1c6e107c7977f5552aaab1b29e65f9ba9864fbb",
+      "ShortHash.equals(Object o)": "15b13d3db3478c56ba858a87b50ba69e898da09cb41edf9866a2f0f80e4bf8d5",
+      "ShortHash.hashCode()": "d69e4e7ed3a301c94f6a48548991dc9e9976b39867381fb1a73cff80f4f80147"
+    },
+    "adapted_method_sha256": {
+      "DHTDBMapping.DHTDBMapping(DHTDBImpl _db, HashWrapper _key, boolean _local)": "1d5446eaf6c3ff7970f784395dd6b8fff975fc674d2bce678f249117ecd81ebf",
+      "DHTDBMapping.createLinkedMap()": "e24a3c667d9a468e2be809282556fdb95bf747e24a38fc5cc53eb8af11e23ad9",
+      "DHTDBMapping.getKey()": "c97eaf94c2ffbcb5f3eba3ec4356810741429a02557fd86551c86c7c04e622b5",
+      "DHTDBMapping.getShortKey()": "b35de391331536df1074ff445033adfa200581c77f877a95f452b035c6e9fa51",
+      "DHTDBMapping.updateLocalContact(DHTTransportContact contact)": "9929837d2a1521502f998da1dc94fd0427d13c12d324aab89090a1da67df4a9a",
+      "DHTDBMapping.add(DHTDBValueImpl new_value)": "5af99390c5ff502dc003eccf7c0428b285a153925c0e958d66202c4100a9a213",
+      "DHTDBMapping.getOriginatorValueID(DHTDBValueImpl value)": "8a6e8a539d06cf01eeacc97ebfc1c7af1d83b6d8d108d8f964f960fdbc3cc21f",
+      "DHTDBMapping.addHit()": "905ee277ac02fe466f2107b3cfb64f2ddbc137ba00e35ff1ac11f20c506d3cd3",
+      "DHTDBMapping.getHits()": "daa48124b237cfd887fe3fb3eeb98681074e92be62dff20317507638c108814c",
+      "DHTDBMapping.getIndirectSize()": "1817352c84a73196ac0ea296383185a5baea1a48c0b9828e53131df8619a5b33",
+      "DHTDBMapping.getDirectSize()": "645f332b49264005e9b995e1822709d6fe853eb910a488d7484a42692dc48bc5",
+      "DHTDBMapping.getLocalSize()": "b2f9c875d93dbe46c2559f21ca05d4f600cdce3a11f7fa83b81da2e81aa3c4f0",
+      "DHTDBMapping.get(DHTTransportContact by_who, int max, short flags)": "550c2d992d784421ee7a5998ef4f970d717353f8844c4e77fe1f36a709d30e66",
+      "DHTDBMapping.get(DHTTransportContact originator)": "ef152fc3e7534418e06c2daf405d7eaaccb8d95834a578cb4085e57c00904935",
+      "DHTDBMapping.getAnyValue(DHTTransportContact originator)": "43aef5eceb6236c9312e9e329d20307b4b025a54a5f74e17bb265dd7c14d6bb3",
+      "DHTDBMapping.getAllValues(DHTTransportContact originator)": "004eff2f0d3b853fc80fa31c2bbd9c10923feb3f0c51363d573329970e8de7ed",
+      "DHTDBMapping.remove(DHTTransportContact originator)": "c991ab330eea116b38a9674c25f92c3cb669aca22faa3cdfcc199b55e56667a8",
+      "DHTDBMapping.getValueCount()": "dfccb50c21923a35ad97b82bb95632b303fd92f0c5ce5ec24ab3c6d77e2061cb",
+      "DHTDBMapping.getDirectValueCount()": "506064bfee0985e026a9c140ba442efb1e9f309ec7fa4bbbf40ace83b5cbe90b",
+      "DHTDBMapping.getIndirectValueCount()": "ecde5e29cc6119434201fc169b361c0285859687090c85e6bd3dc852bcf2ef58",
+      "DHTDBMapping.getValues()": "ec11cbb61fa06441de362cc41947843a4a574c69e0894325b8166708a83a9f9e",
+      "DHTDBMapping.getDirectValues()": "641a78a94f683959e3b64e13b5466b7b17a4e59ffd869829e7def12885175279",
+      "DHTDBMapping.getIndirectValues()": "a58d626973c228ac8727dd914d83570fe834fb26f673616e62d75de210352606",
+      "DHTDBMapping.getDiversificationType()": "3ded021338f9d244ae64a95505b6c239215c9511d90def68e108af1e53e63c4e",
+      "DHTDBMapping.addDirectValue(HashWrapper value_key, DHTDBValueImpl value)": "e3993f5ffc711d2cc812e48ad2192832c01fae3256c365d5b3502826c9f8409e",
+      "DHTDBMapping.removeDirectValue(HashWrapper value_key)": "c771863f97208f2522d190b3be822161390aecfd6f3688541c81a2e1f0abe929",
+      "DHTDBMapping.addIndirectValue(HashWrapper value_key, DHTDBValueImpl value)": "fe868f37f0ba1581d44f8bd55b529d8fa4bff4d542d74a5f80caa065031af326",
+      "DHTDBMapping.removeIndirectValue(HashWrapper value_key)": "3e026310d3ec7256eaae8c673f15addc3d5efef9832bf685928ef794be2d5284",
+      "DHTDBMapping.destroy()": "fb7808940dfc1c4cc6ae04423a1477739dbf685b999c1ab90c071c7d77996de1",
+      "DHTDBMapping.informDeleted(DHTDBValueImpl value)": "9ae341e7aac08836223c9116de60250488d783a9324839ac14250054311a5e66",
+      "DHTDBMapping.informAdded(DHTDBValueImpl value)": "2333f2c82f0df40bd00115ce165acd53eaeb83c7c5f22383573c3fa2388e4575",
+      "DHTDBMapping.informUpdated(DHTDBValueImpl old_value, DHTDBValueImpl new_value)": "4428f3a4a37e45d6a01d98b7e472c5f608ad12a6acf3aeb355ed428bf1e67286",
+      "DHTDBMapping.informRead(DHTTransportContact contact)": "a08d6918d093cc118fe22f6b51f4a70d0085b2bd30efe2f11ef839f427ff53e4",
+      "valueIterator.valueIterator(boolean direct, boolean indirect)": "b7466f2cabc115fe83344ecdf25be95840ca20a17f7a1d96e298f655fb72cae7",
+      "valueIterator.hasNext()": "edce90eb31323c46aec565e1b3282dea622b72f8e3289b021f99f5ba29cffac7",
+      "valueIterator.next()": "59dec5cfdf06ca3b4eb25da48c33620f7191a50c6623cdcb05ad5d3818de89e3",
+      "valueIterator.remove()": "12202ffc7c27208d52bbcc04e2d30405bb26958e4d413159489608671e3d9308",
+      "ShortHash.ShortHash(byte[] _bytes)": "73f8b9c8d014638e28a45d44e1c6e107c7977f5552aaab1b29e65f9ba9864fbb",
+      "ShortHash.equals(Object o)": "15b13d3db3478c56ba858a87b50ba69e898da09cb41edf9866a2f0f80e4bf8d5",
+      "ShortHash.hashCode()": "d69e4e7ed3a301c94f6a48548991dc9e9976b39867381fb1a73cff80f4f80147"
+    },
+    "exact_fragment_sha256": {
+      "CONSTANTS": "cb63b37bffce72f51900880fe6c6c832c25f288a0cbe75283903477cb10c9378",
+      "MAPPING_FIELDS": "09356085ecbd9bbd4b41d52707f380ae2963186c990adc964c47ba255866f673",
+      "MAPPING_METHODS": "63b9d05fdb2c7543b044c0a370c5a8aef2df674d80ecddf400c3dc9d0068c6ad",
+      "ITERATOR": "b0cf4840eb23688b1c8c15c9d907b785b41c8efe0512712faadca547e16bccce",
+      "SHORTHASH": "f0c4d0150bcc7359a3fd2e22814a9896fe0d8b083a00a65c5050d5983277acbe",
+      "HASHWRAPPER": "7e42c69072405e1e3a6ccc7de5fb4a140fc0f326440189f67f02264c9b16b1ec",
+      "BYTEWRAPPER": "ef7a1e0a1487c594d43e4833c1670a5b1391d8f95d4c364de19656bcb4967432",
+      "STORAGEKEY": "e77b5e1ffc30e09a4dc885dca802d9e08a4700143ebdff38abc3c0dfdd01063c"
+    },
+    "harness_sha256": "3110859f649f62d163bb93a36772671f193d451ee644cf259da306bb11351a9a",
+    "tool_inputs_sha256": {
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-mapping-audit/oracle/v2/AzureusDbMappingOracle.java.in": "23657401a0e2438bf4202f10b4af563792300eb7bdfe62cfe1a7d41fe14d5d18",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-mapping-audit/oracle/v2/azureus_db_mapping_oracle.py": "36ea3b1e9257921171a15a79a6f7cce566d013414e56ca9c5803bfa4d15c129f",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-mapping-audit/oracle/v2/azureus_db_mapping_fixtures.py": "2013325845aa4073d9b0b6aa3de4d5440f89502ce85b9082fe569ede042340e1",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-mapping-audit/oracle/v2/plan.md": "3dcec4bec1252dcc9eb0dce491eee4408d24f21eed413328159a1e601bb6a4c4",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-mapping-audit/oracle/history/v1-3831/snapshot-manifest.json": "4673833d73224fc9b921c46232ab8b479492dafb77ee71eefdfb770d6fc9f061",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-mapping-audit/audit_mapping.py": "4d2478a27efe68b18997b239fe4b1f24a5a69638b51a3eccb9d8345fa530bbe4",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-mapping-audit/source-audit.json": "b90fbad4cba834aab4182dc21e52ac575681ce5af4bdd698171baad14ce45149",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-value/fixtures/manifest.json": "a16121f193c73595aafd9e0e7571c9bc1c4b07622ca392d02e96b5314b18d3ee",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P00-04/reference-fence.json": "0c35e6bb2212e681ed4be8ecc65c50e35d7e191701bee59c9e139f2fbcb17302",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P00-03/formats.json": "a2b20eaa9f0a2210938bb6c8d2f568bce7ad3ca22de9c4b1eca23d23c6c9c594",
+      "/home/yurii/Java/BiglyBT/migration/tools/oracle.py": "8eb1cc4758ba78b4679b05b553ed8f6b7c1c1abe1745b8b1f5357ae681f0710f",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-mapping-audit/oracle/v2/planned/alias-policy.txt": "ef61742bc7b2ac0a174303d3b635956fc033c9b8a453f1509f4e1194a5a686d6",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-mapping-audit/oracle/v2/planned/callback-fault.txt": "0839095dcce718ddec49cbf97947de16bda08e09200791c510b04153bc01a7db",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-mapping-audit/oracle/v2/planned/diagnostic.txt": "acb36ead8aa938f1bd8722125e6c8852bcfc6356fd0d628c0dee603bd4b6c77b",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-mapping-audit/oracle/v2/planned/getter-contract.txt": "e8e126f143970cc51f63312f264feb4e5ef8bb44ba9a1d69608cf8c623d4e946",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-mapping-audit/oracle/v2/planned/iterator-destroy.txt": "f199228d9e992fb6b75461b8d8f806be0e60f4b63ffaeebd962b15f22af89364",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-mapping-audit/oracle/v2/planned/key-getters.txt": "a35e0b1c18ed3d5b12a970d56e3aa3c0b0d8f0a851cb1429d8636153b0eb4d34",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-mapping-audit/oracle/v2/planned/plan.json": "57e5e0eec1088ae465805b257aa1ccba929b4734f3ebd0ea2b392e5f8ace3046",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-mapping-audit/oracle/v2/planned/semantic.txt": "609f0bdea1921bbafe4bf70ec901d756677394ee0371982450d71df17c4aa04d",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/db-mapping-audit/oracle/v2/planned/short-key-contract.txt": "8924b03c43ffe163374889077f41915aff51e999f0853d09250051e93ed01cde"
+    },
+    "helper_class_sha256": {
+      "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd",
+      "AzureusDbMappingOracle.class": "12ce040e02eb84bce8f0b0108bc52401668361bae406ece8e148c50d5fdc7b34",
+      "AzureusDbMappingOracle$DHTDBMapping.class": "6c5e34fd81554f815b3e5073c668997e8881d0930efb83b90d690d4853663554",
+      "AzureusDbMappingOracle$DHTDBMapping$ShortHash.class": "afbbe0659b38fcb738639c0314cee8878de32737433fd74688389b7091c8560a",
+      "AzureusDbMappingOracle$DHTDBMapping$valueIterator.class": "4afe7f07f9baae8bb8ace5ecbfa60a18c70123fdb7216cc7fd42380680b7019a",
+      "AzureusDbMappingOracle$DHTDBImpl.class": "02e980ca062c332b182d621ddcf2f8d7fb5e0a2fddc5d8c60651ea14e60ca6b4",
+      "AzureusDbMappingOracle$Adapter.class": "7db94ccb908ca19ccc12966205be442af4cbef63f7473defd7cb689c253e2b48",
+      "AzureusDbMappingOracle$Key.class": "593382bd7d97ae053590094322b5ea233f54f14f011844819b75e60322d3e98a",
+      "AzureusDbMappingOracle$Plan.class": "08944ad23fc7c495a3d8a2a06b2595fb15bab5d76db4064a92be6e30acb2c0ce",
+      "AzureusDbMappingOracle$Debug.class": "759e377a9060d37c93a20ac6853ed8a056b88bd38faf8277c9cbc5f20c1a439f",
+      "AzureusDbMappingOracle$DHTLog.class": "5d8d6aa09552fc0c315c48ef546c730ffcb4e63d72b14776c5a4af7911f04a01",
+      "AzureusDbMappingOracle$SystemTime.class": "5bc3bd297468cb900b00df089d23ea3b211b3785d2049d674c8489669def1027",
+      "AzureusDbMappingOracle$DHTDBValueImpl.class": "2bc49c034fd76da0e83250f2f89d88cf1e01d11e68d51d0da1b5046b2c78208d",
+      "AzureusDbMappingOracle$Contact.class": "2edece5b30b988fe5e338de72b67d381dda8c01dcfddc45100fe864da05cea1a",
+      "AzureusDbMappingOracle$DHTTransportContact.class": "fcf5cf4b83b838816b5035d05b4c18d052f3d1c5023bb5ca64696cb0291a81b2",
+      "AzureusDbMappingOracle$DHTStorageKey.class": "fd48895100739d144d40dc56c12855423fe8bf6884e8227809854c91e9323ca7",
+      "AzureusDbMappingOracle$Base32.class": "9fdfdb305d96b779b06b112742c348421ccf0af7b825b69e9ecab509a820fb00",
+      "AzureusDbMappingOracle$HashWrapper.class": "c79d0f2b3490e79244e7bf2c7e7f6e9b3782df1fdb471af54bd7461a1f16a392",
+      "AzureusDbMappingOracle$ByteArrayWrapper.class": "f84df6af2d97de96a7bd1f4468e6fbee75c3d9a1d00e95e2427208ba76bf78fd",
+      "AzureusDbMappingOracle$DHT.class": "fc3b5eb3673f60dde541905cbe3ba501a2cc6f7f37919e0430d22c538531eaab"
+    },
+    "compile_command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "-J-XX:ActiveProcessorCount=2",
+      "--release",
+      "8",
+      "-encoding",
+      "UTF-8",
+      "-cp",
+      "/tmp/biglybtc-db-mapping-oracle-fp2ts6mh/classes:/tmp/biglybtc-db-value-oracle-4efo0iy1/classes",
+      "-d",
+      "/tmp/biglybtc-db-mapping-oracle-fp2ts6mh/classes",
+      "/tmp/biglybtc-db-mapping-oracle-fp2ts6mh/source/AzureusDbMappingOracle.java",
+      "/tmp/biglybtc-db-mapping-oracle-fp2ts6mh/source/ReferenceFence.java"
+    ],
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "-Xmx256m",
+      "-Dfile.encoding=UTF-8",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-db-mapping-oracle-fp2ts6mh",
+      "-Duser.home=/tmp/biglybtc-db-mapping-oracle-fp2ts6mh",
+      "-Dazureus.config.path=/tmp/biglybtc-db-mapping-oracle-fp2ts6mh/profile",
+      "-cp",
+      "/tmp/biglybtc-db-mapping-oracle-fp2ts6mh/classes:/tmp/biglybtc-db-value-oracle-4efo0iy1/classes",
+      "AzureusDbMappingOracle"
+    ],
+    "work": "/tmp/biglybtc-db-mapping-oracle-fp2ts6mh",
+    "persistent_work": "/home/yurii/Java/BiglyBT/build/recovery/generated-references/biglybtc-db-mapping-oracle-fp2ts6mh",
+    "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+    "core_on_runtime_classpath": false,
+    "scope": "NEW inert one-key Mapping wrapper:40 original Mapping/nested bodies plus exact HashWrapper/interface/constants. New covariant value bridge delegates immutable qualified P26 lifecycle/getters. Shared original fake clock; observer snapshots do not read time or contact getters. Original callback ordering with recording adapter and explicit bloom intentions only. No real facade/flood/IP-filter/router/DB/profile/network or native equality claim."
+  },
+  "groups": {
+    "semantic": {
+      "observations": 2745,
+      "expected_source_exceptions": 0,
+      "files_sha256": {
+        "source-stdout.txt": "144bfe1c933c70d73c43461fb17304b66fe351526010d29a1a793ae7d0fc3593",
+        "commands.txt": "609f0bdea1921bbafe4bf70ec901d756677394ee0371982450d71df17c4aa04d",
+        "expected.txt": "144bfe1c933c70d73c43461fb17304b66fe351526010d29a1a793ae7d0fc3593",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189"
+      }
+    },
+    "callback-fault": {
+      "observations": 603,
+      "expected_source_exceptions": 2,
+      "files_sha256": {
+        "source-stdout.txt": "90248588870032801574ac30226c56363836d5f58f41aa00791a79acd10a7f6d",
+        "commands.txt": "0839095dcce718ddec49cbf97947de16bda08e09200791c510b04153bc01a7db",
+        "expected.txt": "90248588870032801574ac30226c56363836d5f58f41aa00791a79acd10a7f6d",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189"
+      }
+    },
+    "iterator-destroy": {
+      "observations": 219,
+      "expected_source_exceptions": 5,
+      "files_sha256": {
+        "source-stdout.txt": "f2c994a4cd0ed214315075325af8a86bcbf239091426e77dcf880790e0328b26",
+        "commands.txt": "f199228d9e992fb6b75461b8d8f806be0e60f4b63ffaeebd962b15f22af89364",
+        "expected.txt": "f2c994a4cd0ed214315075325af8a86bcbf239091426e77dcf880790e0328b26",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189"
+      }
+    },
+    "alias-policy": {
+      "observations": 412,
+      "expected_source_exceptions": 0,
+      "files_sha256": {
+        "source-stdout.txt": "b50a2b7c51c908b8c03c84602f26d7e88ce137251c4e33827367331a0375b9c0",
+        "commands.txt": "ef61742bc7b2ac0a174303d3b635956fc033c9b8a453f1509f4e1194a5a686d6",
+        "expected.txt": "b50a2b7c51c908b8c03c84602f26d7e88ce137251c4e33827367331a0375b9c0",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189"
+      }
+    },
+    "getter-contract": {
+      "observations": 336,
+      "expected_source_exceptions": 24,
+      "files_sha256": {
+        "source-stdout.txt": "84c55bd70b7b675d5d33012c6e8accdcc0ec7d6d9d9807964efee860c1ed58d9",
+        "commands.txt": "e8e126f143970cc51f63312f264feb4e5ef8bb44ba9a1d69608cf8c623d4e946",
+        "expected.txt": "84c55bd70b7b675d5d33012c6e8accdcc0ec7d6d9d9807964efee860c1ed58d9",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189"
+      }
+    },
+    "diagnostic": {
+      "observations": 85,
+      "expected_source_exceptions": 4,
+      "files_sha256": {
+        "source-stdout.txt": "2f8dd245cbf9b504f530a8dbaa5efbcc9eddbf25f5db94fa915ed604778038a1",
+        "commands.txt": "acb36ead8aa938f1bd8722125e6c8852bcfc6356fd0d628c0dee603bd4b6c77b",
+        "expected.txt": "2f8dd245cbf9b504f530a8dbaa5efbcc9eddbf25f5db94fa915ed604778038a1",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189"
+      }
+    },
+    "key-getters": {
+      "observations": 380,
+      "expected_source_exceptions": 0,
+      "files_sha256": {
+        "source-stdout.txt": "dc0d30f296d147ab7182ec4374c5a00be41bd6a3f4d06c53472342ae13657861",
+        "commands.txt": "a35e0b1c18ed3d5b12a970d56e3aa3c0b0d8f0a851cb1429d8636153b0eb4d34",
+        "expected.txt": "dc0d30f296d147ab7182ec4374c5a00be41bd6a3f4d06c53472342ae13657861",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189"
+      }
+    },
+    "short-key-contract": {
+      "observations": 846,
+      "expected_source_exceptions": 0,
+      "files_sha256": {
+        "source-stdout.txt": "39f53c4acc2996a659de04398cc8bf9f95af346cbeac5ce518fae72ca526e4df",
+        "commands.txt": "8924b03c43ffe163374889077f41915aff51e999f0853d09250051e93ed01cde",
+        "expected.txt": "39f53c4acc2996a659de04398cc8bf9f95af346cbeac5ce518fae72ca526e4df",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189"
+      }
+    }
+  },
+  "native_comparison_performed": false,
+  "native_equivalence_assumed": false,
+  "planned_manifest_sha256": "57e5e0eec1088ae465805b257aa1ccba929b4734f3ebd0ea2b392e5f8ace3046",
+  "collector_sha256": "2013325845aa4073d9b0b6aa3de4d5440f89502ce85b9082fe569ede042340e1"
+}

@@ -1,0 +1,95 @@
+{
+  "status": "PASS_BOUNDED_CONTROLS_PACKAGE",
+  "source_commit": "2c5a81227e750202403fec188fbb71817aa3cfca",
+  "metadata_commit": "a22006f43450fdeeca7766e2fd293b095d323d10",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "private_checkpoint_parent": "f4f2909c01846a5d6f9f1c43fd25d5fe72f03e00",
+  "private_checkpoint_pending": true,
+  "source_inputs": 41,
+  "source_inputs_sha256": "e7b950fdc34ba8c11ffdee25b4956b21a567e4666fa6ef7c5eb140307054ccb1",
+  "local": {
+    "gcc": {
+      "covered_suites": 17,
+      "v3_passed": 13,
+      "v3_not_run": 4,
+      "v4_previously_unbuilt_built_and_passed": 4,
+      "final_coverage_missing": 0
+    },
+    "clang": {
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 113.9
+    },
+    "asan_ubsan_lsan": {
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0,
+      "seconds": 145.7,
+      "leak_detection": true
+    }
+  },
+  "exact_affected_unit_names": [
+    "effective-rate-limits",
+    "effective-rate-limits-ui",
+    "minute-history-writer",
+    "native-session-statistics",
+    "native-session-statistics-worker",
+    "native-session-ui",
+    "overall-accounting-window-worker",
+    "overall-live-view",
+    "saved-history-live-refresh",
+    "saved-history-month-page",
+    "saved-history-page",
+    "saved-history-week-page",
+    "source-rate-projection",
+    "statistics-navigation-page",
+    "statistics-navigation-window-worker",
+    "statistics-page-behavior",
+    "statistics-window-worker"
+  ],
+  "original_java_handoff": {
+    "cases": 2,
+    "overall_field_comparisons": 52,
+    "history_queries": 50,
+    "history_scalar_comparisons": 300,
+    "opaque_subtree_comparisons": 4,
+    "original_subject_recompiled": false,
+    "availability_equality_claimed": false
+  },
+  "hosted": {
+    "run": 39849224530,
+    "head": "2c5a81227e750202403fec188fbb71817aa3cfca",
+    "conclusion": "success",
+    "unit_suites": 102,
+    "failures": 0,
+    "artifact_id": 12456748520,
+    "archive_sha256": "7cd61831c7c16beb60a38d728a2d70f6688e48e57f657749e5dbb784849b0f31",
+    "captures": 28
+  },
+  "sdk": {
+    "run": 39849224485,
+    "conclusion": "success",
+    "basis": "root confirmation; hosted workflow separate from desktop artifact"
+  },
+  "portable": {
+    "manifest_files": 107,
+    "manifest_sha256": "6680f0033c3b0f4f5578d93d85cd3e5279d42b1877f9802afab36b2f99773467",
+    "smoke_qt_rows": 13,
+    "actual_worker_suites": 2,
+    "captures": 19,
+    "promoted": true,
+    "system_installation": false,
+    "rollback": "../BiglyBTC/build/statistics-completion-20261022/controls-publication/previous-dist"
+  },
+  "original_live_profile_or_process_access": false,
+  "full_statistics_complete": false,
+  "aggregation_only": true,
+  "new_tests_or_subject_executions_by_documentation_agent": false,
+  "limitations": [
+    "Exact configured policy and actual native settings are not capacity, routing or service-manager parity.",
+    "Java handoffs cover original decoder/Overall constructor/Date-query numerics and selected opaque subtrees, not original startup/save lifecycle or availability equality.",
+    "Initial compile failures and incomplete attempts are retained; final coverage uses the explicit pass sets.",
+    "Immutable accounting foundation is referenced; no new credit for unchanged old differential corpora."
+  ]
+}

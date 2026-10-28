@@ -1,0 +1,78 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "milestone": "P04-20",
+  "status": "Source-only audit complete; no Java or native target execution",
+  "original_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_parent": "94bf1cb1c17ea7979bc56ae21e9837605689f6a1",
+  "private_parent": "028b319961b4f412d8b41a69f92ce720774582a9",
+  "original_sources": {
+    "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java": {
+      "git_blob": "0cfe7a202d8ff27da9500435ea9bd659a1de6ba5",
+      "sha256": "0c2b304c022013d0797732049c51deb23a7af976f74b0d47f22156d8da097103",
+      "bytes": 76096,
+      "lines": 2871,
+      "preserved_image": "migration/evidence/20261020-history-charts/original/uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java"
+    },
+    "core/src/com/biglybt/core/stats/transfer/LongTermStats.java": {
+      "git_blob": "a369578b191cf4ead71a32e15b5592dcfa06212c",
+      "sha256": "f1a4bfaa8d15e8b0f9318a2af1653a854f9969bc09b80f4e9bd3c48afb62e1bf",
+      "bytes": 2666,
+      "lines": 110,
+      "preserved_image": "migration/evidence/20261020-history-charts/original/core/src/com/biglybt/core/stats/transfer/LongTermStats.java"
+    }
+  },
+  "source_ranges": "source-ranges.json",
+  "source_ranges_sha256": "b5eba3c36101dc66f41ad9a88df46f1393657539664bd6a1e4e8c3d0ab607845",
+  "unchanged_behavior_baseline": "unchanged-behavior-baseline.json",
+  "unchanged_behavior_baseline_sha256": "645940ac533999d2918159a6d0980fb01f6028be3c5c5fcacbb2d7c10c95e9b7",
+  "original_facts": [
+    {
+      "range": "ui.createHistoryPanel",
+      "fact": "The original History panel offers Hour through Year plus All, previous/next period offsets, separate overall payload Down/Up totals, two colored Down/Up ValueSources, a configurable legend and MultiPlotGraphic sized from the sum of monitor client widths. Source getValue methods are placeholders; refreshHistory supplies graph data explicitly."
+    },
+    {
+      "range": "ui.createHistoryPanel",
+      "fact": "Axis byte labels multiply a scaled int by history_scale_div and format a byte count, not bytes per second. Time labels use SimpleDateFormat with the default locale/time zone (HH:mm, dd HH:mm, MM/dd, or yyyy/MM), not an explicit UTC axis."
+    },
+    {
+      "range": "ui.refreshHistory",
+      "fact": "A hidden panel returns immediately. Visible resolution is minutes for hour/day, hours for week/month, days for year, or weeks for All. It uses SystemTime.getCurrentTime, rounded period boundaries, configured span/offset and current graph width; it also queries an overall range total."
+    },
+    {
+      "range": "ui.refreshHistory",
+      "fact": "Each period invokes the LongTermStats Date reader, then selects only ST_DATA_DOWNLOAD (3) and ST_DATA_UPLOAD (1). If a period maps to no pixels its values accumulate into pending totals; values are then repeated across a pixel chunk. Graph arrays therefore depend on visible width and include width aggregation/replication, not fixed 24/7 independent bucket markers."
+    },
+    {
+      "range": "ui.refreshHistory",
+      "fact": "max_data begins at zero and is raised for positive maxima, then a power-of-two history_scale_div reduces long values before int conversion. This source path is not a full signed-int64 graph contract; no numerical or visual equivalence is claimed for the new signed renderer."
+    },
+    {
+      "range": "interface.counterOrderAndPeriodConstants",
+      "fact": "The immutable six-component order is protocol upload, payload upload, protocol download, payload download, DHT upload, DHT download. Current/sliding period constants do not themselves define the new explicit saved UTC selection."
+    }
+  ],
+  "deliberate_native_scope": [
+    "Only render existing immutable Daily 24 hourly buckets or seven independent UTC daily-file totals. Select payload download index 3 and upload index 1 directly; do not sum counters, compute rates, interpolate, smooth, aggregate weeks, re-read files or invoke a clock/timer.",
+    "Unknown snapshot/hour/day totals remain gaps; observed zero is a real marker; signed corrections remain signed. A missing bucket breaks both traces. Known adjacent buckets connect, and isolated values remain visible.",
+    "Use fixed UTC labels, byte units, raw exact signed tooltip values, and finite coordinates throughout the signed-int64 input domain. New rendering need not match original width-dependent period queries, scale division, default-zone labels, overall totals or legend preferences.",
+    "Existing lazy date/mode/session/request admission and hidden/minimized deferral remain intact. New charts consume already accepted snapshots and do not add workers, leases, network, accounting or persistence.",
+    "Keep prior 2550 and 3150 Java scalar comparisons independently frozen, without adding them into a new corpus or granting any new Java runtime, chart, missingness, strict-policy, full-owner or global-history equality credit."
+  ],
+  "prior_evidence_scope": {
+    "retained_P04_18_scalar_comparisons": 2550,
+    "retained_P04_19_scalar_comparisons": 3150,
+    "new_java_oracle_execution": false,
+    "new_java_equality_credit": false,
+    "previous_multi_file_query_vs_independent_daily_difference_retained": true,
+    "previous_clock_clamp_cache_writer_and_full_runtime_exclusions_retained": true
+  },
+  "boundaries": {
+    "new_chart_implementation_review": "Pending author freeze; this source audit does not qualify forthcoming code or tests.",
+    "operational_scripts_executed": false,
+    "git_mutations": false,
+    "builds_or_runtime_probes": false,
+    "ordinary_profile_or_client_access": false,
+    "original_source_edited": false
+  }
+}

@@ -1,0 +1,158 @@
+{
+  "builds": [
+    {
+      "compiler": "gcc",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-mlDHT",
+          "-B",
+          "/tmp/biglybtc-mldht-identity-qualified-gcc",
+          "-G",
+          "Ninja",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+          "-DCMAKE_CXX_FLAGS="
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-mldht-identity-qualified-gcc",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-mldht-identity-qualified-gcc",
+          "--output-on-failure"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/mldht_identity_roundtrip.py",
+          "--driver",
+          "/tmp/biglybtc-mldht-identity-qualified-gcc/mldht-identity-driver",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P05-02-mldht/gcc-identity-roundtrip.json"
+        ]
+      ],
+      "binaries": {
+        "/tmp/biglybtc-mldht-identity-qualified-gcc/mldht-identity-driver": "5c53528ba7af74f10168d362e4a3ae05bb8155e6a99f48145516ca372e15ffc5",
+        "/tmp/biglybtc-mldht-identity-qualified-gcc/mldht-policy-driver": "74fac36031016d966eabe81c1f9e7ccf5029ef83c8c6aa646b7cb5b9a8d05ae3",
+        "/tmp/biglybtc-mldht-identity-qualified-gcc/libbiglybtc_mldht_identity.a": "63cfe953af85a75ad3ab1b302b4fce1d0f70ab41ffbf8879ee5ae299bda18fc6",
+        "/tmp/biglybtc-mldht-identity-qualified-gcc/libbiglybtc_mldht_policy.a": "2c132150e2b17b51fc770e90c754f1f5058c01ffbac84b4db8830a71548ee024"
+      }
+    },
+    {
+      "compiler": "clang",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-mlDHT",
+          "-B",
+          "/tmp/biglybtc-mldht-identity-qualified-clang",
+          "-G",
+          "Ninja",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-mldht-identity-qualified-clang",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-mldht-identity-qualified-clang",
+          "--output-on-failure"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/mldht_identity_roundtrip.py",
+          "--driver",
+          "/tmp/biglybtc-mldht-identity-qualified-clang/mldht-identity-driver",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P05-02-mldht/clang-identity-roundtrip.json"
+        ]
+      ],
+      "binaries": {
+        "/tmp/biglybtc-mldht-identity-qualified-clang/mldht-identity-driver": "a7443f54a7c70d156a105a987351d6fbcb698f69766f68a7ff5b18d13af6223d",
+        "/tmp/biglybtc-mldht-identity-qualified-clang/mldht-policy-driver": "2a67d1c787eb4470ededf2dc753ff3ab513f4f5ddb1a37be1322d4d5d237ce08",
+        "/tmp/biglybtc-mldht-identity-qualified-clang/libbiglybtc_mldht_identity.a": "ca0f008ad5bc128a55d2aefdd668e45de154ae113f4b5e29d0fa8810ed1d20d1",
+        "/tmp/biglybtc-mldht-identity-qualified-clang/libbiglybtc_mldht_policy.a": "0761d48a6741df008152d3bb67115c00f476d2bcef9dd3a574bac2f9a62b1984"
+      }
+    },
+    {
+      "compiler": "asan",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-mlDHT",
+          "-B",
+          "/tmp/biglybtc-mldht-identity-qualified-asan",
+          "-G",
+          "Ninja",
+          "-DCMAKE_BUILD_TYPE=Debug",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-mldht-identity-qualified-asan",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-mldht-identity-qualified-asan",
+          "--output-on-failure"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/mldht_identity_roundtrip.py",
+          "--driver",
+          "/tmp/biglybtc-mldht-identity-qualified-asan/mldht-identity-driver",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P05-02-mldht/asan-identity-roundtrip.json"
+        ]
+      ],
+      "binaries": {
+        "/tmp/biglybtc-mldht-identity-qualified-asan/mldht-identity-driver": "54d2baae74e0e692da3a596849fc184f544d79bbca005c9d6ecd58e6204567d4",
+        "/tmp/biglybtc-mldht-identity-qualified-asan/mldht-policy-driver": "31f9be1be4b9998782252f40c5557d6cd5bb8b8600151a3244c3e4db594ae632",
+        "/tmp/biglybtc-mldht-identity-qualified-asan/libbiglybtc_mldht_identity.a": "b35e26eb366d78e74bb145d54620ef8312eab15482196f69c2ddaebb09f3dbd6",
+        "/tmp/biglybtc-mldht-identity-qualified-asan/libbiglybtc_mldht_policy.a": "40646fc80dea1c0c368259be0b07d0cf168c3c1ae8de79962cc65508250c319c"
+      }
+    }
+  ],
+  "source_sha256": {
+    "native/plugins/BiglyBTC-plugin-mlDHT/.gitignore": "862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793",
+    "native/plugins/BiglyBTC-plugin-mlDHT/CMakeLists.txt": "8dbb959ba2c06f7fdfe80c3a5f18fd357cb4f80e8e2db7908a654a08447b1f81",
+    "native/plugins/BiglyBTC-plugin-mlDHT/LICENSE": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73",
+    "native/plugins/BiglyBTC-plugin-mlDHT/LICENSES/MPL-2.0.txt": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+    "native/plugins/BiglyBTC-plugin-mlDHT/README.md": "01ea849de9c74fe1e911a971f3360a225355a18d3be4538f2a9cc1bd99bfa5f9",
+    "native/plugins/BiglyBTC-plugin-mlDHT/fixture_test.py": "4b15d1f72e1c8731c3469236c6e4ecccb3d1ad8085c4d8242ba9dcbb67b42a66",
+    "native/plugins/BiglyBTC-plugin-mlDHT/identity.cpp": "fb3f6f1d535ce2b60cf7534872b2a161a62dd3ac258b857c93e37e0f32aefe8b",
+    "native/plugins/BiglyBTC-plugin-mlDHT/identity.hpp": "3ab542b58b746d1630ff666cab83486efa48baeca2c09137a211c168477a3657",
+    "native/plugins/BiglyBTC-plugin-mlDHT/identity_driver.cpp": "7f2b2a4041b4fe563b38dbddb1e5440366d0fb2cd13536ef17fafb2845cc112a",
+    "native/plugins/BiglyBTC-plugin-mlDHT/identity_fixture_test.py": "06402759296618548f0dba1da7ae1da8f7d678cfa7e742f0b17408fd7746ede4",
+    "native/plugins/BiglyBTC-plugin-mlDHT/policy.cpp": "77e9730d39c6db49130f19a91e60214470d0319508165aa17f10ed8f04891076",
+    "native/plugins/BiglyBTC-plugin-mlDHT/policy.hpp": "0fa999a994e43925b5a8465a9b14d1b7966bdf81190817084ccca720ba9a9b7d",
+    "native/plugins/BiglyBTC-plugin-mlDHT/policy_driver.cpp": "376971f9f76769fe7d7581257ac6615bbcd5cee3e669e66a94023b88c25bd9a2"
+  },
+  "scope": "117 frozen original identity cases plus 104 native/original-Java writer roundtrips per compiler; 4860 host-policy regressions; no DHT startup/network/live profile"
+}

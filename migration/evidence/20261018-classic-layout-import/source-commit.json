@@ -1,0 +1,23 @@
+{
+  "commit": "2b09f1ec75271fe6cf59e47f895087e041beff10",
+  "parent": "eefbd205ca0940ad4868ee07989b2d42be1a99dc",
+  "paths": [
+    "preview/README.md",
+    "preview/docs/classic-column-layout-import-contract.json",
+    "preview/native/app/main_desktop.cpp",
+    "preview/native/app/session_bridge.hpp",
+    "preview/native/app/session_bridge.cpp",
+    "preview/native/packaging/preview.py",
+    "preview/native/packaging/preview_smoke.cpp",
+    "preview/native/ui/CMakeLists.txt",
+    "preview/native/ui/classic_columns.hpp",
+    "preview/native/ui/classic_columns.cpp",
+    "preview/native/ui/library_window.hpp",
+    "preview/native/ui/library_window.cpp",
+    "preview/native/ui/column_layout_presentation.hpp",
+    "preview/native/tests/CMakeLists.txt",
+    "preview/native/tests/classic_layout_import_tests.cpp",
+    "preview/native/tests/classic_layout_bridge_tests.cpp"
+  ],
+  "committed_bytes_verified": true
+}

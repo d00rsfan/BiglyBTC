@@ -1,0 +1,98 @@
+{
+  "schema": 1,
+  "status": "PASS_source_only",
+  "subject": "Driver-authored P04-22 documentation finalizer; complete464-line source read without import or body evaluation",
+  "source_sha256": {
+    "build/statistics-navigation-20261020/finalize_docs.py": "d688fa07bf6f596756e9406c529c1b2d04cd1ab0bc0a38e53942dfb8a943372f",
+    "build/statistics-navigation-20261020/finalize_evidence.py": "3a6d0242130c59c554721b1bc68b56ee0c2a8b2f735e261fae6f4b056502c8f4",
+    "build/history-hourly-20261020/finalize_docs.py": "bef19751ac0507d861994c792d12a28f9b7cb3039c8b04e7c6db472b3c00de0f",
+    "build/statistics-navigation-20261020/contract.md": "7d2cb76ff9f72776e5f586675a07c3d9927ebee8fd807509de58b9d37dc7794e",
+    "migration/evidence/20261020-statistics-navigation/baseline.json": "5a5063b709ae5dd7c7e8ac415b7759bdceae5f901bfcdbeff6d4ea1815add5a9",
+    "migration/evidence/20261020-statistics-navigation/unchanged-behavior-baseline.json": "09dceea5e790a2170e4893ce5f94d991a6f7f90fd1b9e9e09544b5c7b53bb54a",
+    "migration/evidence/20261020-history-hourly/local-verification.json": "64fceaeb07ae14c9eea9768ae444782cb84599fcbf54fb152557c1c79ce1b6b9",
+    "build/statistics-navigation-20261020/commit_source_amendment.py": "cc90669b0efd63f068723d9a61f0c8eb3572c56bf14ff19b30a716eef5b82ff9",
+    "migration/evidence/20261020-statistics-navigation/smoke-assertion-amendment/review.json": "e3e2a0482268735b83cdd9cddc1ea4f745f95fa7cbf57dfc9f98dc0313c7d283"
+  },
+  "independence": "Reviewer authored new test/public-contract inputs, not this documentation finalizer; no independent authorship credit for own tests is implied.",
+  "method": [
+    "Full source read; retained nine helper ASTs compared with previous reviewed finalizer",
+    "Static keys/schema comparison against current root evidence producer",
+    "Current baseline/previous completed cohort/221 unchanged-byte map inspected",
+    "Seven document paths/anchors/scoped component updates and resulting prose inspected"
+  ],
+  "checks": {
+    "new_parent42b_privatebcee_previousqualifiedc35_and_distdc27_match_contract": true,
+    "actual_source_receipts_and_raw_current_source_map_cross_bound": true,
+    "exact221_guard_map_matches_current_raw_source_and_producer": true,
+    "no_nonexistent_behavior_private_parent_key_required": true,
+    "67_18_21_exact_sets_retain65_16_19_plus_two_new_names": true,
+    "all_old_Qt_counts_fixed_new_Page_Window_rows_observed_from_consistent_actual_receipts": true,
+    "new9_smoke18_per_scale54_local18_hosted_vs_previous8_16_48_historical": true,
+    "source_metadata_tag_component_feature_namespaces_correct": true,
+    "103_dist82_private_runtime_complete_rollback_and_RPATH_receipt_prerequisites": true,
+    "seven_transforms_fully_staged_after_all_gates_before_first_document_write": true,
+    "shared_registry_only_matching_new_component_changed": true,
+    "original_coverage_first_ported_integrated_remain_null": true,
+    "only_closed_navigation_cleared_on_accepted_monotonic_session": true,
+    "visible_Page_navigation_and_session_reset_behavior_preserved": true,
+    "fresh_Page_and_saved_reads_no_widget_or_saved_packet_retention": true,
+    "zero_duplicate_old_sessions_ignored_no_restart_or_cross_Window_retention": true,
+    "existing_engine_activity_retention_distinguished_from_navigation_record": true,
+    "original_Java2550_3150_corpora_correct_namespaces_no_new_UI_runtime_equality": true,
+    "old_milestone_qualification_and_rollbacks_remain_historical": true,
+    "original_index_and_scoped_minus_text_raw_protection_required": true,
+    "no_future_private_checkpoint_hash_or_manual_compositor_acceptance_claim": true,
+    "full_client_plugin_switching_performance_release_gates_open": true
+  },
+  "blockers": [],
+  "limits": [
+    "No finalizer import, execution, selected-body evaluation, builds, tests, Git or native source writes occurred.",
+    "This report validates source admission/prose and current frozen context; it is not an actual completed qualification/publication receipt.",
+    "Actual local/hosted suites, publication, dist promotion and documentation execution remain root-owned gates."
+  ],
+  "helper_ASTs_equal_to_previous": [
+    "append_unique",
+    "digest",
+    "full_hash",
+    "load",
+    "milestone_block",
+    "read_json",
+    "replace_between",
+    "replace_once",
+    "require"
+  ],
+  "prior_review_preserved": {
+    "path": "migration/evidence/20261020-statistics-navigation/smoke-assertion-amendment/initial-docs-contract.json",
+    "sha256": "24f1561c205da99826fe2d61e48a29ed54f907410e974fd2794098daa9618f74",
+    "prior_producer_sha256": "0da49ac870f0dd3ed157b257644d52cebd7d3bc87c96659d1c45f8829f6f3256"
+  },
+  "source_amendment_context": {
+    "status": "PASS_source_only_no_derived_docs_contradiction",
+    "docs_script_unchanged": true,
+    "native_parent": "42b45749abd481014486a33844520c5d670b534b",
+    "native_parent_scope": "Previous qualified milestone baseline; not the corrected source direct parent.",
+    "source_commit_parent": "ded34d2d4d0345b75d69320f98744236e7cb837a",
+    "actual_direct_parent_guard": "Producer requires actual source^ equals source_commit_parent. Amendment requires linear baseline..corrected-source exactly [ded34d..., corrected-source].",
+    "only_changed_path_from_initial_source": "preview/native/packaging/preview_smoke.cpp",
+    "full_source_pins": "All16 map retained; the other15 must match exact initial-source Gitblobs and corrected current/source bytes. Original221 unchanged guards remain against42b baseline.",
+    "derived_docs_compatibility": "Docs still require native_parent42b for baseline/history and one corrected source across receipts; extra explicit direct-parent fields do not change schema keys used by docs or imply42b is direct parent.",
+    "failure_preservation": "Initial ded source attempt, failed smoke/hosted CI and before/after assertion amendment remain separate historical evidence; future corrected smoke/CI must pass before completion.",
+    "no_scope_or_count_relaxation": "No production/new-unit/old-unit/221guard/accounting change, no Qt count or smoke threshold/deadline relaxation inferred.",
+    "execution_limit": "Reviewed source/guard semantics only; no helper import, execution, tests, builds, Git or native writes."
+  },
+  "prior_amendment_gate_review_preserved": {
+    "path": "migration/evidence/20261020-statistics-navigation/smoke-assertion-amendment/pre-strict-amendment-docs-contract.json",
+    "sha256": "cc9a95474bda23c4b1bf4a3795afafb279a1ce0ebbcec42f12158805f8a1b3b8"
+  },
+  "strict_amendment_flag_rebind": {
+    "status": "PASS_source_only",
+    "previous_producer_sha256": "fe0e337b0536bcd21f63bcc0260e4d527d9535938dfb48cd50b187b96afcf49c",
+    "current_producer_sha256": "3a6d0242130c59c554721b1bc68b56ee0c2a8b2f735e261fae6f4b056502c8f4",
+    "reverse_only_new_gate_recovers_exact_prior_producer": true,
+    "checked": "Exact bool source_amendment (missing defaultsFalse); true keeps fixed ded direct-parent/linear ancestry/packaging-only/full16-pin guards; false/missing now requires actual direct parent equals42b milestone baseline. Actual source^ equality remains mandatory.",
+    "second_pin_guard": "Existing later commit.get(source_amendment) pin branch is equivalent after the strict bool validation; no intervening commit mutation.",
+    "docs_script_and_schema_unchanged": true,
+    "no_derived_documentation_contradiction": true,
+    "scope": "Source review and pin rebind only; no helper import/evaluation/execution or Git/native changes."
+  }
+}

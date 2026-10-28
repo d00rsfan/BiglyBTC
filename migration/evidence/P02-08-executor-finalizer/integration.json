@@ -1,0 +1,15 @@
+{
+  "status": "adopted-for-first-native-qualification; unexecuted",
+  "native_draft_sha256": "4c46f61dfdc117028551ee3db3886e562ebdc7178b69689d4acdfa3cbff8640c",
+  "implementation_files_sha256": {
+    "native/core/include/biglybtc/executor.hpp": "0d99cc28102acb980070efc9a72f8e0686ecf94dc43bb81198694245c6b72777",
+    "native/core/src/executor.cpp": "b886692587ef8c5efc269ea3735f2b64f3432a255b8a1bd57b357627bc3da77a",
+    "native/tests/executor_finalizer_tests.cpp": "eb7d05c99058950c02a56b625cad688107a071dbe92ecf9b13df2dd1ea8e9770",
+    "native/tests/executor_startup_failure_tests.cpp": "d270ebd9fe42ce9fe0f8f89e9c1b5afbd97f04e1c1920530189b6f381518a5b2",
+    "native/tests/executor_tests.cpp": "41b8ac27f40d257a199e03d48865cd32a7a8f91b5a655a7f94a2a1f7c5ac9ea4"
+  },
+  "old_tests_CMakeLists_sha256": "5947e7e7a9dc2def8afe51e3f6fc81cf3ced50131a1fe2d27ac62aa38be2c8ee",
+  "new_tests_CMakeLists_sha256": "dd9b6546f51b0e83163c8ee5249f0c41468c612991301ded46bef672d080ae77",
+  "only_CMake_change": "Append two test entries; all old bytes retained as prefix.",
+  "original_executor_test_unchanged": true
+}

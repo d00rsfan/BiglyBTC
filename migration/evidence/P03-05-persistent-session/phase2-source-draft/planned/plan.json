@@ -1,0 +1,1258 @@
+{
+  "status": "planned-only-no-source-or-native-execution",
+  "groups": {
+    "controller-semantic": {
+      "scenarios": 8,
+      "commands": 80,
+      "sha256": "e5f77c08e29ede218dcf7a862abcc75b33d325eaf781f4c2fc26fa2f18c21bbc",
+      "contracts": [
+        {
+          "id": "never0-retain0-force0",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "never0-retain0-force1",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "never0-retain1-force0",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "never0-retain1-force1",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "never1-retain0-force0",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "never1-retain0-force1",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "never1-retain1-force0",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "never1-retain1-force1",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        }
+      ],
+      "native_equivalence_assumed": false
+    },
+    "peer-semantic": {
+      "scenarios": 141,
+      "commands": 1408,
+      "sha256": "4aaf24363e78c15c1ae4d32be3799fd1ef588eba6d9a307d1838e2ef271e67bd",
+      "contracts": [
+        {
+          "id": "start0-retain0-force0-check0-before0-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force0-check0-before0-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force0-check0-before0-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force0-check0-before0-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force0-check0-before1-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force0-check0-before1-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force0-check0-before1-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force0-check0-before1-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force0-check1-before0-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force0-check1-before0-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force0-check1-before0-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force0-check1-before0-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force0-check1-before1-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force0-check1-before1-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force0-check1-before1-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force0-check1-before1-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force1-check0-before0-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force1-check0-before0-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force1-check0-before0-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force1-check0-before0-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force1-check0-before1-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force1-check0-before1-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force1-check0-before1-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force1-check0-before1-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force1-check1-before0-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force1-check1-before0-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force1-check1-before0-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force1-check1-before0-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force1-check1-before1-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force1-check1-before1-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force1-check1-before1-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain0-force1-check1-before1-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force0-check0-before0-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force0-check0-before0-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force0-check0-before0-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force0-check0-before0-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force0-check0-before1-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force0-check0-before1-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force0-check0-before1-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force0-check0-before1-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force0-check1-before0-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force0-check1-before0-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force0-check1-before0-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force0-check1-before0-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force0-check1-before1-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force0-check1-before1-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force0-check1-before1-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force0-check1-before1-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force1-check0-before0-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force1-check0-before0-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force1-check0-before0-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force1-check0-before0-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force1-check0-before1-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force1-check0-before1-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force1-check0-before1-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force1-check0-before1-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force1-check1-before0-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force1-check1-before0-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force1-check1-before0-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force1-check1-before0-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force1-check1-before1-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force1-check1-before1-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force1-check1-before1-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-retain1-force1-check1-before1-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force0-check0-before0-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force0-check0-before0-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force0-check0-before0-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force0-check0-before0-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force0-check0-before1-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force0-check0-before1-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force0-check0-before1-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force0-check0-before1-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force0-check1-before0-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force0-check1-before0-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force0-check1-before0-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force0-check1-before0-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force0-check1-before1-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force0-check1-before1-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force0-check1-before1-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force0-check1-before1-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force1-check0-before0-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force1-check0-before0-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force1-check0-before0-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force1-check0-before0-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force1-check0-before1-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force1-check0-before1-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force1-check0-before1-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force1-check0-before1-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force1-check1-before0-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force1-check1-before0-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force1-check1-before0-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force1-check1-before0-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force1-check1-before1-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force1-check1-before1-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force1-check1-before1-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain0-force1-check1-before1-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force0-check0-before0-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force0-check0-before0-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force0-check0-before0-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force0-check0-before0-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force0-check0-before1-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force0-check0-before1-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force0-check0-before1-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force0-check0-before1-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force0-check1-before0-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force0-check1-before0-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force0-check1-before0-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force0-check1-before0-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force0-check1-before1-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force0-check1-before1-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force0-check1-before1-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force0-check1-before1-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force1-check0-before0-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force1-check0-before0-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force1-check0-before0-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force1-check0-before0-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force1-check0-before1-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force1-check0-before1-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force1-check0-before1-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force1-check0-before1-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force1-check1-before0-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force1-check1-before0-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force1-check1-before0-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force1-check1-before0-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force1-check1-before1-full0-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force1-check1-before1-full0-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force1-check1-before1-full99-resultN",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-retain1-force1-check1-before1-full99-resultDONE",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "incomplete-start0-remaining1",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "incomplete-start0-remaining99",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "incomplete-start0-remaining9223372036854775807",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "incomplete-start1-remaining1",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "incomplete-start1-remaining99",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "incomplete-start1-remaining9223372036854775807",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "peer-count0-start0",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "peer-count1-start0",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "peer-count3-start0",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "peer-count0-start1",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "peer-count1-start1",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "peer-count3-start1",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "complete-then-incomplete-kernel-leaves-other-fields",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        }
+      ],
+      "native_equivalence_assumed": false
+    },
+    "clock-order": {
+      "scenarios": 16,
+      "commands": 176,
+      "sha256": "b7546724603161bbc329c7b5baa1f428356eb67c7d9d9825cd3be3c5ecc8dba2",
+      "contracts": [
+        {
+          "id": "start0-M-9223372036854775808-W-9223372036854775808-M-9223372036854775808",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-M-1-W0-M1",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-M0-W0-M0",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-M1-W-1-M0",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-M9223372036854775807-W9223372036854775807-M9223372036854775807",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-M9223372036854775807-W-9223372036854775808-M-1",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start0-M101-W303-M202",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-M-9223372036854775808-W-9223372036854775808-M-9223372036854775808",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-M-1-W0-M1",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-M0-W0-M0",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-M1-W-1-M0",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-M9223372036854775807-W9223372036854775807-M9223372036854775807",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-M9223372036854775807-W-9223372036854775808-M-1",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "start1-M101-W303-M202",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "incomplete-consumes-no-clock",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "controller-consumes-no-clock",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        }
+      ],
+      "native_equivalence_assumed": false
+    },
+    "partial-fault": {
+      "scenarios": 48,
+      "commands": 529,
+      "sha256": "2427f9e665338740bd35b23049d9b1c0eb64df464ba88fa9add55b9b24c1b643",
+      "contracts": [
+        {
+          "id": "before0-REMAINING_EX_DND-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-CLEAR_ENDGAME-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-ADAPTER_FINISH-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-CTRL_FINISH-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-CTRL_FINISH-2",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-TIME-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-TIME-2",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-TIME-3",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-PEER_SNUB-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-PEER_SNUB-2",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-ADAPTER_SEED-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-DM_ENDED-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-CTRL_STATE-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-CTRL_FORCE-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-CONFIG-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-CONFIG-2",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-CONFIG-3",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-DISK_ENDED-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-CREATE_CHECK-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before0-ENQUEUE_CHECK-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-REMAINING_EX_DND-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-CLEAR_ENDGAME-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-ADAPTER_FINISH-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-CTRL_FINISH-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-CTRL_FINISH-2",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-TIME-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-TIME-2",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-TIME-3",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-PEER_SNUB-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-PEER_SNUB-2",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-ADAPTER_SEED-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-DM_ENDED-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-CTRL_STATE-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-CTRL_FORCE-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-CONFIG-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-CONFIG-2",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-CONFIG-3",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-DISK_ENDED-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-CREATE_CHECK-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "before1-ENQUEUE_CHECK-1",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "caught-save-resume-before0",
+          "expected_errors": {},
+          "expected_caught_faults": {
+            "9": 1
+          }
+        },
+        {
+          "id": "caught-save-resume-before1",
+          "expected_errors": {},
+          "expected_caught_faults": {
+            "9": 1
+          }
+        },
+        {
+          "id": "debug-failure-after-caught-resume-save",
+          "expected_errors": {
+            "10": "SuppliedFailure"
+          },
+          "expected_caught_faults": {
+            "10": 1
+          }
+        },
+        {
+          "id": "controller-CTRL_FINISH",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "controller-DM_ENDED",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "controller-CTRL_STATE",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "controller-CTRL_FORCE",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "controller-CONFIG",
+          "expected_errors": {
+            "9": "SuppliedFailure"
+          },
+          "expected_caught_faults": {}
+        }
+      ],
+      "native_equivalence_assumed": false
+    },
+    "boundary-contract": {
+      "scenarios": 8,
+      "commands": 87,
+      "sha256": "19234e2511028823b25cf2d565a0c4e1f58d9b272a19932eacb392b018d5f9c8",
+      "contracts": [
+        {
+          "id": "supplied-nonforwarding-adapter-start0",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "supplied-null-check-request-start0",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "supplied-nonforwarding-adapter-start1",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "supplied-null-check-request-start1",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "supplied-negative-remaining--1",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "supplied-negative-remaining--9223372036854775808",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "repeated-check-kernel-not-caller-state-machine",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        },
+        {
+          "id": "repeated-controller-recording-force-intentions",
+          "expected_errors": {},
+          "expected_caught_faults": {}
+        }
+      ],
+      "native_equivalence_assumed": false
+    }
+  },
+  "source_observations": 0,
+  "native_equivalence_assumed": false,
+  "native_policy_future": [
+    "Owned state/event/lifetime and resource caps",
+    "Native failure/flush/publish barrier; caught source resume-save failure does not authorize unsafe completion",
+    "Actual controller/disk/peer effects and DND/full tracker policy remain separate",
+    "RDResume and conservative recheck checkpoint policy remain pending"
+  ],
+  "total_scenarios": 221,
+  "total_commands": 2280
+}

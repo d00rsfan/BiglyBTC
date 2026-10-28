@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "status": "PASS-independent-source-review-no-blocker",
+  "reviewer": "error_driver",
+  "independence": "Root authored Window changes. Reviewer authored separate reader; own source excluded. New integration tests are being authored byroot and are not claimed reviewed/executed here.",
+  "source_sha256": {
+    "preview/native/ui/library_window.hpp": "6a1b36fddee2dc88330157c3521f0c07f1c5cf5b8d3b0c9a173d4a74f8dd7279",
+    "preview/native/ui/library_window.cpp": "bd5d55056e1fbb3ee5228284c7f4dc7d3ff06ce2ab7abf292991a31819404909"
+  },
+  "page_context_sha256": {
+    "preview/native/ui/statistics_presentation.hpp": "57d027756285b3619187b4fe907cab8ce9624205043eef49e3dcb78ae0c09ef8",
+    "preview/native/ui/statistics_page.hpp": "49ccac1562b9c1d0fb2aef4ba46bed1b9b16094682a133041f43b483b74c0e04",
+    "preview/native/ui/statistics_page.cpp": "2eb00a7088a75f6a159ec3a9da68487db4199138180f38bc306c11c67d78f6cb",
+    "preview/native/tests/statistics_page_tests.cpp": "40038f43099b12f141b7c937179d7914a135a55ca82123e581547b34f22385f9"
+  },
+  "native_parent": "8127336eada41e5795d6fdadaa42eea0ff555ec1",
+  "unchanged_library_method_bodies": [
+    "showMyTorrents",
+    "activate",
+    "selected",
+    "actionTarget",
+    "selectedHashes",
+    "restoreSelection",
+    "updateCounts",
+    "updateGeneral",
+    "setPresentation",
+    "setDetails",
+    "requestDetails",
+    "setOfflinePreview"
+  ],
+  "blocking_findings": [],
+  "checks": [
+    {
+      "area": "Navigation/hiddenlibrary",
+      "result": "Tools Statistics Ctrl5 WindowShortcut creates/reuses one exactpage; fresh page Activitydefault. Current page closes via shared CtrlW/tabclose with immediate QPointerclear+pendingclear and deleteLater, retaining oldactive onlyuntil actualcompletion/busyrelease. Ctrl1 retains existing torrent widget/model/filter/columns/details. actionTarget and requestDetails exactoldbody guards prevent hidden transfer/details dispatch; refresh routes Stats before savedservices/torrent refresh."
+    },
+    {
+      "area": "Weakpage/session/requestbinding",
+      "result": "Each refresh increments bounded nonzero independentrequest under ownercolumnSession; pending/active storeweak pageidentity. beginRequest occursbeforequeueing so newer pending invalidates oldpage loading result. Actualpacket onlymatchesexactactivepair and exactsame livepage+session, then Page independentlymatches request. Closed/reopened oldresults cannot modify newpage, and no-result busyfalse fails onlymatchingoldrequest. Owner newsession clears active/pending and starts freshpage request."
+    },
+    {
+      "area": "Queues/rejecteddispatch",
+      "result": "All optionalread queues mutuallyexclude active savedservice/columnread/columnsave/Stats and respectbusy/closing. queueOptionalViews drains each boundedlatestpending slot. Stats and newlyhardened savedservices bind activebeforeemit, QPointerguardafteremit and releaseonlymatching no-busy/no-consumedpacket request; synchronouspacket/newpending reentry remainsvalid. This prevents unconnected/rejected oldservice request from blocking Stats permanently. Existing columnrejected/ack queues nowalso drain Stats."
+    },
+    {
+      "area": "Telemetryadmission",
+      "result": "Window calls actual modelapply, retains selectedhash restore, guards Windowafter synchronous model/selection signals, then rechecks modelaccepts exactTarget before recording payloadwithcurrentdisplayname. Invalid/stale telemetrycannot enterStats. Page ring bounds/target/eventreentry guard are independent. Original fullcompletion, target, snapshot/details/request bodies listedabove remain byteidentical."
+    },
+    {
+      "area": "Close/busy/deletion",
+      "result": "Closing onlyStatistics view performs no workerCancel or transfer/libraryrefresh. WholeWindow existingClose maycancel busywork, clears allpending, defers actualclose until busyfalse, and QObject timers are contextbound. Publicrequest/packet and page render calls are QPointerguarded before further Window access. Save currentcolumns is mutuallyexcluded while Stats active without changing persistence semantics."
+    }
+  ],
+  "limits": [
+    "Source review only; no builds, Qt/native tests, process/JVM/profileIO or network execution.",
+    "Review does not claim arbitrary QObject API reentry globally safe outside the new guarded flows, nor fairness under an endless stream of userrefresh requests.",
+    "New rootintegration runtime/tests and Bridge Statistics implementation are separate review/qualification scopes; existing inherited librarycode preservation is explicitly bounded to listedmethods."
+  ]
+}

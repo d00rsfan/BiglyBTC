@@ -1,0 +1,122 @@
+{
+  "scope": "packaging source/environment; no remote CI or full application installation qualification",
+  "os_release": "PRETTY_NAME=\"Ubuntu 26.04.1 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"26.04\"\nVERSION=\"26.04.1 LTS (Resolute Raccoon)\"\nVERSION_CODENAME=resolute\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=resolute\nLOGO=ubuntu-logo\n",
+  "source_sha256": {
+    "native/CMakeLists.txt": "68c6ec2cf78c392d6fc6963134c7e38d952cb8ae7186d2c0e25c02a16a1b8db6",
+    "native/ui/CMakeLists.txt": "e62b0ad980cd6edd56300a827eb4d073f1540df76d8bf3d1efcfdb864b6d3834",
+    "native/packaging/Debian.cmake": "8e542d234b82da9dc2fc7358081889e5c00421502ae3a55ee231bedcc46b2c28",
+    "native/packaging/EXPERIMENTAL.txt": "f65716ef57277467d4683659fd482b59e15523767f306aec5599ba2c0fd5c9f1",
+    "native/packaging/README.md": "29dfc1f28a6872304c004c1545a12dd35826a5b887ecc5be6550e9847a429851",
+    "native/packaging/audit_deb.py": "adc61a80ef9de556cf54be82416778c095d70ba3789b339ab32ccd5a92fcd452",
+    "native/packaging/notices/GPL-3.0-only.txt": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+    "native/packaging/notices/ICU-LICENSE.txt": "f3005e195ff74d8812cc1f182a1c446fab678d70a10e3dada497585befee5416",
+    "native/packaging/notices/LGPL-3.0-only.txt": "da7eabb7bafdf7d3ae5e9f223aa5bdc1eece45ac569dc21b3b037520b4464768",
+    "native/packaging/notices/Qt-runtime.txt": "e718ffc9e5324b52aa2f450687405b1d93e7d7b5750a7725f339cf39d8efa5ce",
+    "native/packaging/notices/sources.json": "24a4dd22aa2cadac1533c3c7135295c5aa58d5fcf9bc8f9e40e58888a72ac510",
+    "native/packaging/qt_bundle.py": "05b6643493cc0ee3b0be148851545ad83f20cf831af77d2149feafd70c962802",
+    "native/packaging/strict_shlibdeps.py.in": "4e6be1a95225276d3f2abeffc4884525e404958ac626971f1019ab88b1aad92d",
+    "native/packaging/test_packaging.py": "a198b2080fffa8e0120f50dbc6fbb7561f98056f474be8ebf6b97f696115300a",
+    "native/packaging/test_qt_bundle.py": "bea34359853f9f0c867a08b82f0043bebf687762023efd3af05e50b7d1d683c4",
+    ".github/workflows/biglybtc-linux-packaging.yml": "6a395044e24ca52fec48e8085a34cd1fe567b5e3980ec87da73107586e58f66b",
+    ".github/workflows/biglybtc-linux-deb.yml": "c55751b58056f5bd6bef71750b530c510f42c77a14c194354147778272becc8c",
+    "migration/decisions/AD-006.md": "be05479dbac23f75cb503cb3a01005bf8aad28f62b26df462a16ce9ea15a09c9"
+  },
+  "observations": [
+    {
+      "command": [
+        "apt-cache",
+        "policy",
+        "qt6-base-dev",
+        "libqt6core6t64",
+        "libqt6gui6",
+        "libqt6widgets6"
+      ],
+      "stdout": "qt6-base-dev:\n  Installed: (none)\n  Candidate: 6.10.2+dfsg-7\n  Version table:\n     6.10.2+dfsg-7 500\n        500 https://ubuntu-archive.interhost.co.il/ubuntu resolute/universe amd64 Packages\nlibqt6core6t64:\n  Installed: (none)\n  Candidate: 6.10.2+dfsg-7\n  Version table:\n     6.10.2+dfsg-7 500\n        500 https://ubuntu-archive.interhost.co.il/ubuntu resolute/universe amd64 Packages\nlibqt6gui6:\n  Installed: (none)\n  Candidate: 6.10.2+dfsg-7\n  Version table:\n     6.10.2+dfsg-7 500\n        500 https://ubuntu-archive.interhost.co.il/ubuntu resolute/universe amd64 Packages\nlibqt6widgets6:\n  Installed: (none)\n  Candidate: 6.10.2+dfsg-7\n  Version table:\n     6.10.2+dfsg-7 500\n        500 https://ubuntu-archive.interhost.co.il/ubuntu resolute/universe amd64 Packages\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "cmake",
+        "--version"
+      ],
+      "stdout": "cmake version 4.2.3\n\nCMake suite maintained and supported by Kitware (kitware.com/cmake).\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "dpkg-deb",
+        "--version"
+      ],
+      "stdout": "Debian 'dpkg-deb' package archive backend version 1.23.7 (amd64).\nThis is free software; see the GNU General Public License version 2 or\nlater for copying conditions. There is NO warranty.\n",
+      "stderr": ""
+    },
+    {
+      "command": [
+        "readelf",
+        "--version"
+      ],
+      "stdout": "GNU readelf (GNU Binutils for Ubuntu) 2.46\nCopyright (C) 2026 Free Software Foundation, Inc.\nThis program is free software; you may redistribute it under the terms of\nthe GNU General Public License version 3 or (at your option) any later version.\nThis program has absolutely no warranty.\n",
+      "stderr": ""
+    }
+  ],
+  "workflow_yaml_and_shell_syntax_pass": true,
+  "runtime_cpp_unchanged_from": "5073f29e81752be5b6cef9ceabddd9e919eaae72",
+  "runtime_cpp_files": [
+    "native/adapters/encoded_document.cpp",
+    "native/adapters/encoded_document.hpp",
+    "native/adapters/file_io.cpp",
+    "native/adapters/file_io.hpp",
+    "native/adapters/library_view.cpp",
+    "native/adapters/library_view.hpp",
+    "native/adapters/profile.cpp",
+    "native/adapters/profile.hpp",
+    "native/adapters/torrent_state.cpp",
+    "native/adapters/torrent_state.hpp",
+    "native/app/main.cpp",
+    "native/app/main_desktop.cpp",
+    "native/app/session_bridge.cpp",
+    "native/app/session_bridge.hpp",
+    "native/core/include/biglybtc/bencode.hpp",
+    "native/core/include/biglybtc/executor.hpp",
+    "native/core/include/biglybtc/file_policy.hpp",
+    "native/core/include/biglybtc/library.hpp",
+    "native/core/include/biglybtc/state_cache.hpp",
+    "native/core/include/biglybtc/torrent_layout.hpp",
+    "native/core/src/bencode.cpp",
+    "native/core/src/executor.cpp",
+    "native/core/src/file_policy.cpp",
+    "native/core/src/library.cpp",
+    "native/core/src/state_cache.cpp",
+    "native/core/src/torrent_layout.cpp",
+    "native/engine/local_session.cpp",
+    "native/engine/local_session.hpp",
+    "native/engine/local_support.hpp",
+    "native/engine/multifile_session.cpp",
+    "native/engine/multifile_session.hpp",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/original_xml.cpp",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_file.cpp",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_file.hpp",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_tests.cpp",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/scheduler.cpp",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/scheduler.hpp",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/tests.cpp",
+    "native/ui/file_model.cpp",
+    "native/ui/file_model.hpp",
+    "native/ui/library_model.cpp",
+    "native/ui/library_model.hpp",
+    "native/ui/library_window.cpp",
+    "native/ui/library_window.hpp"
+  ],
+  "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "evidence_sha256": {
+    "application-bundled-configure.json": "4d50e141adc1e3dbefb350ad601ed5945066bb6a0c6923e4aea227eb5848fa5d",
+    "qt-runtime-inputs.json": "0b3e0e3f9c6bb542e7fcc621bd275e43d1f0ee38d7e297d11f56e32220847c3c",
+    "qt-bundle.json": "4809986287e79effe62950367513aad57d2167d7240849154a0842c158e14e62",
+    "packaging-contract.json": "2dfae4ff97dec311cf1c338140d44f7a9b2971910376de011f6b9823f33cd731",
+    "application-configure.json": "6f539edfaeb65404dbca0f3c12dbaf213bca105df95f47d9792f36115b0d3d5d",
+    "implementation-checkpoint.json": "3deca7759489117b20a2660e91b7ddd2329a088081905a11f23d4216fb8ba513",
+    "runtime-metadata-preflight.json": "9daf7ce709d7452d30b8dd62f4f1b53fe697a3572b90e8c8a4289734b290bdd8"
+  },
+  "packaging_implementation_commit": "f6e0f2e9fd4ae43c4f375dcf7ec19c9f9a40d534"
+}

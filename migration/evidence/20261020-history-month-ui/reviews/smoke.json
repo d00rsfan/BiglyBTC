@@ -1,0 +1,19 @@
+{
+  "status": "PASS independent root full composition/smoke patch review",
+  "reviewer": "root",
+  "manifest_sha256": "7c3fa9a12f5792ba3e07006a5a9fbe84f8fdb9b359a555df24b641d67ec9f087",
+  "source_sha256": {
+    "preview/native/app/main_desktop.cpp": "f1a01fe64002d15ad347d6ee33f498ed6c6bbdffbd7caf96c2ff0b984d236025",
+    "preview/native/packaging/preview_smoke.cpp": "f401011a4c048eb50765bbba9eb59db37646c75668d04b41670ab060fa780182",
+    ".github/workflows/native-preview.yml": "88cc3bd0df5c16d6ad5f8e5245049c27c0744b3d69e07878c300f4df17c25c27",
+    "preview/README.md": "f404df058ceecd32439f869ac857ff4754172efbebf7140e20c14cc0af4ec3b5"
+  },
+  "findings": [
+    "Read entire additive201-line real worker smoke and both app signal connections plus exact workflow capture addition and accurate README scope.",
+    "Generated profile requires canonical owned/tmp root and private Clipboard MIME restoration; allthirty dates and six fields checked against literal constants, including missing, empty,zero and signed corrections.",
+    "Exactlyone new smoke method, alloldmethods unmodified except additivewire. Traffic no read, realfocused keys+explicitCopy preserve immutableframe; close/reopen destroyswidgets, restores scalar choices and rereads ownedfiles.",
+    "Actual13 Qtrow/23capture claims remain pendingexecution; new dailyview explicitlydoesnotclaim original720hour rolling graph equality."
+  ],
+  "blockers": [],
+  "execution_credit": false
+}

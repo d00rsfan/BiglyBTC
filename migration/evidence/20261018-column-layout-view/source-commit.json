@@ -1,0 +1,14 @@
+{
+  "commit": "51ce95d150fa352ef81ef18c6f318c7ef23642b4",
+  "parent": "5bf0a30160c52c51d8efce279cac758948adfff2",
+  "paths": [
+    "preview/README.md",
+    "preview/docs/classic-column-layout-reader-contract.json",
+    "preview/native/adapters/CMakeLists.txt",
+    "preview/native/adapters/column_layout_view.hpp",
+    "preview/native/adapters/column_layout_view.cpp",
+    "preview/native/tests/CMakeLists.txt",
+    "preview/native/tests/column_layout_view_tests.cpp"
+  ],
+  "committed_bytes_verified": true
+}

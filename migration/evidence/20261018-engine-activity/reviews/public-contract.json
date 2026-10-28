@@ -1,0 +1,51 @@
+{
+  "schema": 1,
+  "scope": "Independent source review of final status-only public P04-17 graph contract change and retained README/workflow",
+  "verdict": "PASS; two status leaves only, no behavior or scope change",
+  "source_only": true,
+  "source_sha256": {
+    "preview/README.md": "b6b842111eefda50bd67e6ab07cf09a9f541ed25875f230b361cad2bca39384d",
+    ".github/workflows/native-preview.yml": "b6d6e9120add079a6e2f3b2aac6baafd596bc0f99c2febb37ccb7b3b894ac300",
+    "preview/docs/engine-activity-contract.json": "3a6e9c657c98c9ed63404a11f8b90635c0a5eec190618f71f1c151675e7e7d31"
+  },
+  "frozen_original_contract": {
+    "path": "build/engine-activity-20261018/public-engine-activity-contract.json",
+    "sha256": "e7535c4792376466652476c2fda3232a981f52e33ea66e33ab8e802f3f38721b"
+  },
+  "exact_semantic_changes": {
+    "status": {
+      "before": "source contract; new graph implementation qualification pending",
+      "after": "Source and behavior contract; actual qualification is recorded separately"
+    },
+    "qualification.new_graph_execution_status": {
+      "before": "pending",
+      "after": "See published milestone evidence for executed source hashes and results"
+    }
+  },
+  "all_other_json_fields_exact": true,
+  "readme_and_workflow_prior_review_pins_unchanged": true,
+  "checks": [
+    "Actual qualification is explicitly recorded separately from the behavior contract; no unexecuted result is asserted.",
+    "All rate sources,600-point limits,gap/terminal/ownership semantics remain byte-equivalent JSON values.",
+    "One owned experimental operation scope and zero Java-runtime/global-session/persistent-history parity credit remain unchanged.",
+    "README retains separate Payload/Engine traffic views and actual steady times with no timer/inferred observations or global/lifetime claim.",
+    "Workflow still differs from prior milestone only by two activity capture directory/environment lines; existing artifact evidence parent exports the PNGs."
+  ],
+  "author_draft_correction": {
+    "path": "build/engine-activity-20261018/finalize_evidence.py",
+    "before_sha256": "47ffba11628c7cc86d8f73efee02388f2541aab115759c8aba1c007914394518",
+    "after_sha256": "5e0cf611ccb1e9943fd417e4bee63ce9018abc0dbbf678f2a2bb47a44c90645f",
+    "sole_change": "View count guard25\u219226; actual count still read from qualification-counts.json.view_qt_rows",
+    "history_path": "build/engine-activity-20261018/draft-history/finalize_evidence-view25.py",
+    "hosted_verifier_dynamic_view_count_unchanged": true,
+    "independent_review_credit": false
+  },
+  "execution": {
+    "target_imports": 0,
+    "target_script_invocations": 0,
+    "builds_tests": 0,
+    "git": 0,
+    "native_gui_process_launches": 0,
+    "shared_production_edits": 0
+  }
+}

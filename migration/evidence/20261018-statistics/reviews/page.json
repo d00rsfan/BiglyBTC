@@ -1,0 +1,48 @@
+{
+  "schema": 1,
+  "status": "PASS-independent-source-review-no-blocker",
+  "reviewer": "error_driver",
+  "independence": "Oracle authored all4newpage/DTO/testfiles. Reviewer authored separate reader; own source excluded.",
+  "source_sha256": {
+    "preview/native/ui/statistics_presentation.hpp": "57d027756285b3619187b4fe907cab8ce9624205043eef49e3dcb78ae0c09ef8",
+    "preview/native/ui/statistics_page.hpp": "49ccac1562b9c1d0fb2aef4ba46bed1b9b16094682a133041f43b483b74c0e04",
+    "preview/native/ui/statistics_page.cpp": "2eb00a7088a75f6a159ec3a9da68487db4199138180f38bc306c11c67d78f6cb",
+    "preview/native/tests/statistics_page_tests.cpp": "40038f43099b12f141b7c937179d7914a135a55ca82123e581547b34f22385f9"
+  },
+  "blocking_findings": [],
+  "checks": [
+    {
+      "area": "Saved facts/provenance",
+      "result": "Activity/Transfers and Current/History defaults match selected original navigation. Saved13raw values are presented separately from unavailable current global/session/history capabilities. Byte/second/epoch-ms units, negative/type/missing unavailability, separateDHT and splits, absentall versus emptyall, sourcecandidate and unknown save time are explicit. Since-mark uses accepted core clamp; mark_time0 does not suppress derivation and no raw source is rewritten."
+    },
+    {
+      "area": "Packet admission/requestlifetime",
+      "result": "Requires current nonzero loading session/request and accepts each completion once. Strictly newer request/session resets saved labels and stale/duplicate outcomes are ignored. Ready requires valid sourceenum, immutable nonnull owned source withinwholebytecap and internally consistent fieldflags; Missing requires no payload/source/failure. Failed/errors bounded8192 and all labels PlainText; unknown source fields are never rendered."
+    },
+    {
+      "area": "Qt reentry/deletion",
+      "result": "writeFacts owns its temporary18facts, snapshots session/request/state/loading, checks QPointer page+label around each synchronous text/tooltip write. Activity updates similarly snapshot target/session/eventrevision and guard label/plot/page. A nested new request/target or deletion stops old writes. Refresh signal is a direct signal relay with no postemit page member use."
+    },
+    {
+      "area": "Actualboundedactivity",
+      "result": "No sampling/animation timer exists. Only admitted nonnegative payload telemetry with valid identity appends to fixed600ring, using actual QElapsedTimer relative nanosecond arrival. Changed target resets series; same-session saved read preserves it, changed session clears it. Name512/hash256 bounds, revision saturation no wrap, actual0 rates accepted, absent samples unavailable. Rate-to-plot floating conversion remains visual only; signed integer labels preserve exact values."
+    },
+    {
+      "area": "Hidden/minimizedbehavior",
+      "result": "Hidden/minimized pages may retain bounded actual arrivals but refreshActivity performs no labelwrites/plotupdate there. paintEvent also returns when hidden/minimized. On show/currentActivity/windowrestore, guarded queued/event callbacks publish the latest existing observations; nosynthetic samples or timer work is introduced."
+    },
+    {
+      "area": "Polylineclarification",
+      "result": "paintEvent connects actual arrival points with drawPolyline. Root explicitly accepted connection-only visual plotting and clarified task no-interpolated-samples language; legend says lines connect actual observations and no samples are inferred. No stored or claimed interpolation is allowed."
+    },
+    {
+      "area": "Testsource",
+      "result": "Read full35plannedQtrows including datarows. Source tests exercise13labels/units/rawlimits/clamps/sourcevariants, stale/duplicate/admissioncaps, PlainText/privateunknownabsence, actual0 and targetchange, rejectedtelemetry,600ring, hidden/minimized repaintcount, sessionreset, synchronous renderreentry/deletion and refreshemits. No author/reviewer execution is inferred."
+    }
+  ],
+  "limitations": [
+    "Page consumes trusted immutable workerDTOs; its defensive shape checks are not an independent reparsing authority or unforgeable provenance token.",
+    "Actual monotonic arrival time describes accepted GUI events; no claim of original global sampler cadence, rate history, interpolation, wholeStatsView/plugin parity or source/runtime Java equality.",
+    "No builds, Qt tests, GUI processes, source imports, JVM, profileIO or network execution by reviewer. Root owns runtimequalification."
+  ]
+}

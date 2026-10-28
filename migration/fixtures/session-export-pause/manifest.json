@@ -1,0 +1,231 @@
+{
+  "status": "original-source-frozen-before-native-comparison",
+  "reference": {
+    "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "source_audit_sha256": "76358854aae101de2ea4d9196d5e664c6bc4b5263a418d2ecf5b8ba461e4a17e",
+    "work": "/tmp/biglybtc-export-pause-oracle-2hegvyon",
+    "persistent_compile_attempt": "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/development/compile-attempt-2hegvyon",
+    "source_sha256": {
+      "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39",
+      "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java": "a88937664cb90354be6600448a63684b6a7b5c9e7906a9425b9f5a4758afbeda",
+      "core/src/com/biglybt/core/download/impl/DownloadManagerController.java": "b22ccde4addada902b8bac14c2177e7496b9329304c534d6ed2fdde9dbdc8860",
+      "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a",
+      "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java": "3b2eb44625911187e3058b7363b96b7ee813a9bf8051de54fada0f1ccc3243c7",
+      "core/src/com/biglybt/core/disk/impl/resume/RDResumeHandler.java": "dd63d0d6944ab73d7c29d6c190258b9cf2b6552d80972644188edab1b87882bc",
+      "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java": "6755b950c548c5a7d153b9aef2c1024c7c5c79d5880fd858f3bac4261adcdf8c",
+      "core/src/com/biglybt/core/peer/impl/control/PEPeerControlImpl.java": "b306689754d6feb7f7597adb092c0f9e86885a45e65c7ac8733eeceb9a66288e",
+      "core/src/com/biglybt/core/impl/CoreImpl.java": "871ac9f1276d9e52789fc0b01128b1c077800099746bba8b9c2dd10f8a649f01",
+      "core/src/com/biglybt/core/util/LinkFileMap.java": "360e9acb5ff349e4e507487af847111d00c9ccc5e8d5e2f0053d02ead649abed",
+      "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java": "821229517d374be10b95b4c2b623e3f25b356bf6d29724067933d943f719bcef",
+      "core/src/com/biglybt/core/util/HashWrapper.java": "cc768d652317b2e19a749db727e899f3a419c87cf2134536ffe4a6ae995b3cea",
+      "core/src/com/biglybt/core/util/AEMonitor.java": "10732da79c2ca2b92d0103036ccac23f0751a3141f0a770f5df24ea44aa96276",
+      "core/src/com/biglybt/core/util/SystemTime.java": "d57063696e281cc005e5b146a8f863a2ca52180696a98b473ff8566851f97353",
+      "core/src/com/biglybt/core/download/DownloadManager.java": "cfa73bb4c32801fa98565e163cbf7100a24240c790c25cdf2c4ce265402538a6",
+      "core/src/com/biglybt/core/global/GlobalManager.java": "70ea189d521a3ccdcd89014d81019dbd4964a462738a1efb2da9c9cc16ee46c0",
+      "core/src/com/biglybt/core/download/DownloadManagerState.java": "9bd11377c6abe2f4cf1e0cb10cc42032917679216fccb12fbb43a239a13a2867",
+      "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194",
+      "core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopConfigModel.java": "3c46e88ab04ee8afeba60a6fd02a7c293be15ec4f382f54922402fe1234afe55",
+      "core/src/com/biglybt/core/disk/DiskManager.java": "f4f90a96208101e683727485fd1b04da8f4d41e4fc9c8d50381efb1e7e37f2f8",
+      "core/src/com/biglybt/pif/utils/ByteArrayWrapper.java": "58ae575902faca4ad88d04441b0e1f793c1db540f4464b4bd0051b3900f64861",
+      "core/src/com/biglybt/core/torrent/impl/TOTorrentImpl.java": "a3a688ca2fc2e91b36c660270d6a72bc3b5f423bd694c4b58ad21958d32e6499",
+      "core/src/com/biglybt/core/download/DownloadManagerStats.java": "5bef43e44a54039626ee7bf6486bdfbb9223aa49560fe8f4bb3b253346873bd6",
+      "core/src/com/biglybt/core/config/impl/ConfigurationManager.java": "2627f71f0dd69b2cee577331ad6ce05fd230d47df816b592d07236c9b759bc82",
+      "core/src/com/biglybt/core/config/COConfigurationManager.java": "5c966082555816d9df5fcc62e2f727ca6a9fbd9317554a66ea72123fea7df99c"
+    },
+    "exact_fragment_sha256": {
+      "ORIGINAL_METHODS": "661c0b07ce6da3c26c05e63f5711d52574135c5f5c1cd927ed363dbdd25254f2",
+      "PAUSE_STATE": "c365c8ac843eae482ffaf87eb0229acbd7f0fd461bab33378f1b38cef1009c3f",
+      "HASHWRAPPER": "7e42c69072405e1e3a6ccc7de5fb4a140fc0f326440189f67f02264c9b16b1ec",
+      "BYTEWRAPPER": "ef7a1e0a1487c594d43e4833c1670a5b1391d8f95d4c364de19656bcb4967432",
+      "DOWNLOAD_CONSTANTS": "020b28baa91f0cf975b8509b79122bd3b180972f68779ae91b2c178bf031420f",
+      "DISK_CONSTANTS": "77205800f8bced68990c7907fe57ce0218391fbe7821561bcef804f82b58a3b9",
+      "OWNER_CONSTANTS": "7bb22a8bb63f94a5a44bdf08d748d529fb9a758c184c5a4c6aafb13015455992"
+    },
+    "original_method_sha256": {
+      "pauseDownload": "0f47cdfcc35e976d91ede9784652a0c9784b7e8fc2625ab6c0570561069051c5",
+      "stopPausedDownload": "914f9734869750c67c1b21851d16532079f3351a6118cdedda8f7b1d04aa4e1f",
+      "isPaused": "33dc40964a9841aaf7f519a4d8e7008dc2355e738de27dbf22dd103334ec6af2",
+      "resumeDownload": "d251419151765f99ddb73463b6e75bd4e818df808a100f0fe901c9f5ea85b346",
+      "resumingDownload": "e3522b665eaee04af5368be4733627ab07e05b5fe67d04e4ab5dc1ef762bff1d",
+      "exportDownloadStateToMapSupport": "1935f111c920ab8919f63e358a821e377a911d082ed6dbdacdb13089c563ed98"
+    },
+    "adapted_method_sha256": {
+      "pauseDownload": "0f47cdfcc35e976d91ede9784652a0c9784b7e8fc2625ab6c0570561069051c5",
+      "stopPausedDownload": "914f9734869750c67c1b21851d16532079f3351a6118cdedda8f7b1d04aa4e1f",
+      "isPaused": "33dc40964a9841aaf7f519a4d8e7008dc2355e738de27dbf22dd103334ec6af2",
+      "resumeDownload": "d251419151765f99ddb73463b6e75bd4e818df808a100f0fe901c9f5ea85b346",
+      "resumingDownload": "e3522b665eaee04af5368be4733627ab07e05b5fe67d04e4ab5dc1ef762bff1d",
+      "exportDownloadStateToMapSupport": "1935f111c920ab8919f63e358a821e377a911d082ed6dbdacdb13089c563ed98"
+    },
+    "harness_sha256": "8c75ae7e74580221619348d23a7bb867faf1782ab51fb1207124d7b98fe61f3a",
+    "helper_class_sha256": {
+      "ExportPauseOracle$Base32.class": "f4f0b5c3df096f3d1eec20b0a3bc9c9faf3ac73693df4de1be5e7185b04243d7",
+      "ExportPauseOracle$ByteArrayWrapper.class": "cb4b81833b69f4ea3a45e6a4a8d6de04e47b25bc58fe02fcbce7f3636a043793",
+      "ExportPauseOracle$Debug.class": "97a3dea47d96a1a484f762ee7dbade50460f7a907ed4e634cd5193168e1d69e2",
+      "ExportPauseOracle$DiskManager.class": "9e4c635afff4a4d1951382e722110c5cbb8e18fc3b41535316d411e04b824c32",
+      "ExportPauseOracle$DownloadManager.class": "9a370802601105fc144a1a900f1768b2c2dd47b8f07e51f204a46c6f902f7c8d",
+      "ExportPauseOracle$DownloadManagerStats.class": "d8712a8c752ece04455f013ac37aa0a2bb21bfc7f0e586f4a247b7b6341a07fe",
+      "ExportPauseOracle$Fault.class": "9597fe046c0af66287ebedf2500deda2d4e55ed12fba2b097fcb10533b3ecf54",
+      "ExportPauseOracle$GlobalManagerImpl$PauseState.class": "92f4e002ec70017c43b9192b2db343636a0afd5cd3c43150ec550b073e327fe4",
+      "ExportPauseOracle$GlobalManagerImpl.class": "cea963db27ec8b92b277f325435469703217dfcdebc2c8bfaa0fc113749cecf1",
+      "ExportPauseOracle$HashWrapper.class": "6a23036429433f4fd5e88b5c4c40696a5a43f8615f152a64dffbd7755a0acb48",
+      "ExportPauseOracle$Monitor.class": "1161770c61bc5b46fa2f8a84e1336d5bfe7898b4b1f79604defaaba165baec26",
+      "ExportPauseOracle$PauseContract.class": "1005621d9adf2d7e6683658d11163357800facc8e87e47dd052bdb808fb24b2f",
+      "ExportPauseOracle$TOTorrent.class": "3728907f0bcedada23f8c05e9e1c17b07b2a71d2a4f53fde527e3d1bc519de46",
+      "ExportPauseOracle$TOTorrentException.class": "4c0d9aee019d628e1f8c3396855ccf9d33e1b32c6b790679ebb254094742be6a",
+      "ExportPauseOracle$Tagger.class": "cc500ef1812cfcbdb7363828bc4c8f4a8de674ba99211caa74058ecda393d4e5",
+      "ExportPauseOracle.class": "f421d01fb215ae11326132e077b9f2a79a3fe856f6083722123386455863e204",
+      "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd"
+    },
+    "tool_inputs_sha256": {
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/source-audit.json": "76358854aae101de2ea4d9196d5e664c6bc4b5263a418d2ecf5b8ba461e4a17e",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/ExportPauseOracle.java.in": "ba1aa56910df529fa99e98a823250c21e9754da6374d38ffc08f6507f4865a6d",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/source_scan.py": "c826a5ffb83d672896f5924f3051a68b7da6cfd427361a2c3a954a830bd9198e",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/export_pause_oracle.py": "3f4d4922f546a477295163da7f365c58300c58bf63b9e0b4ae41f5e6098c7acf",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/export_pause_fixtures.py": "e02bc0669d06dc21a2a163cc52ed360e553655b3297c5f61dfefc1cc0c5cd1ea",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/README.md": "9eb84f007129d4d8bde3435236c86cd3f1da8ecf26c8172f8177cd6ec937b31b",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P00-04/reference-fence.json": "0c35e6bb2212e681ed4be8ecc65c50e35d7e191701bee59c9e139f2fbcb17302",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java": "6755b950c548c5a7d153b9aef2c1024c7c5c79d5880fd858f3bac4261adcdf8c",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java": "821229517d374be10b95b4c2b623e3f25b356bf6d29724067933d943f719bcef",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/core/disk/impl/resume/RDResumeHandler.java": "dd63d0d6944ab73d7c29d6c190258b9cf2b6552d80972644188edab1b87882bc",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/core/download/DownloadManager.java": "cfa73bb4c32801fa98565e163cbf7100a24240c790c25cdf2c4ce265402538a6",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/core/download/DownloadManagerState.java": "9bd11377c6abe2f4cf1e0cb10cc42032917679216fccb12fbb43a239a13a2867",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/core/download/impl/DownloadManagerController.java": "b22ccde4addada902b8bac14c2177e7496b9329304c534d6ed2fdde9dbdc8860",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java": "a88937664cb90354be6600448a63684b6a7b5c9e7906a9425b9f5a4758afbeda",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java": "3b2eb44625911187e3058b7363b96b7ee813a9bf8051de54fada0f1ccc3243c7",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/core/global/GlobalManager.java": "70ea189d521a3ccdcd89014d81019dbd4964a462738a1efb2da9c9cc16ee46c0",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/core/impl/CoreImpl.java": "871ac9f1276d9e52789fc0b01128b1c077800099746bba8b9c2dd10f8a649f01",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/core/peer/impl/control/PEPeerControlImpl.java": "b306689754d6feb7f7597adb092c0f9e86885a45e65c7ac8733eeceb9a66288e",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/core/util/AEMonitor.java": "10732da79c2ca2b92d0103036ccac23f0751a3141f0a770f5df24ea44aa96276",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/core/util/HashWrapper.java": "cc768d652317b2e19a749db727e899f3a419c87cf2134536ffe4a6ae995b3cea",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/core/util/LinkFileMap.java": "360e9acb5ff349e4e507487af847111d00c9ccc5e8d5e2f0053d02ead649abed",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/core/util/SystemTime.java": "d57063696e281cc005e5b146a8f863a2ca52180696a98b473ff8566851f97353",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/pinned-source/BiglyBT/core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopConfigModel.java": "3c46e88ab04ee8afeba60a6fd02a7c293be15ec4f382f54922402fe1234afe55",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/pinned-source/core/src/com/biglybt/core/config/COConfigurationManager.java": "5c966082555816d9df5fcc62e2f727ca6a9fbd9317554a66ea72123fea7df99c",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/pinned-source/core/src/com/biglybt/core/config/impl/ConfigurationManager.java": "2627f71f0dd69b2cee577331ad6ce05fd230d47df816b592d07236c9b759bc82",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/pinned-source/core/src/com/biglybt/core/disk/DiskManager.java": "f4f90a96208101e683727485fd1b04da8f4d41e4fc9c8d50381efb1e7e37f2f8",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/pinned-source/core/src/com/biglybt/core/download/DownloadManagerStats.java": "5bef43e44a54039626ee7bf6486bdfbb9223aa49560fe8f4bb3b253346873bd6",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/pinned-source/core/src/com/biglybt/core/torrent/impl/TOTorrentImpl.java": "a3a688ca2fc2e91b36c660270d6a72bc3b5f423bd694c4b58ad21958d32e6499",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/pinned-source/core/src/com/biglybt/pif/utils/ByteArrayWrapper.java": "58ae575902faca4ad88d04441b0e1f793c1db540f4464b4bd0051b3900f64861",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/planned/alias-policy.txt": "f3dd2e3952992756bd174b81d999325634cab5be51bafa0703d024d8a5b27e37",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/planned/callback-order.txt": "9fd63621f0e254cbff24f6e89ef6801418484a530a26d4450bbd8b0997498121",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/planned/export-semantic.txt": "cd065966bb9b78a0b0048e42a4bec20fb8afe3884cc932672ac0ba7b17deec24",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/planned/getter-fault.txt": "bda9176b6aeda778d695851936e6c66330756dcf82e6f7c0a009bd695762b4b9",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/planned/pause-semantic.txt": "47c60c35fb586467c517c21f0e0f5e4f9e9d0751dedd7aa8271dd8f69d464ef4",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/planned/plan.json": "5b04787519d2e9eb93ca890e18d19dee370aea738f2b1846728f97536558d9df",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/persistent-session-audit/oracle-export-pause/planned/provider-boundary.txt": "01976415bf1c69efc6a2496a41c430a2a93b2a2bfbfd73ebf05dd33dc9f0deb2"
+    },
+    "java_launcher_compiler_sha256": {
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java": "0e72dac1212b98b6450d1b17d403680be25002d47465dbdb460d24c45cbbde3c",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac": "ef60c7cfcdbd1313151738e56754e09a4706f7d822899054281d4def617bce1d"
+    },
+    "core_on_classpath": false,
+    "compile_command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "-J-XX:ActiveProcessorCount=2",
+      "--release",
+      "8",
+      "-encoding",
+      "UTF-8",
+      "-classpath",
+      "/tmp/biglybtc-export-pause-oracle-2hegvyon/classes",
+      "-sourcepath",
+      "/tmp/biglybtc-export-pause-oracle-2hegvyon/source",
+      "-d",
+      "/tmp/biglybtc-export-pause-oracle-2hegvyon/classes",
+      "/tmp/biglybtc-export-pause-oracle-2hegvyon/source/ExportPauseOracle.java",
+      "/tmp/biglybtc-export-pause-oracle-2hegvyon/source/ReferenceFence.java"
+    ],
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "-Xmx256m",
+      "-Dfile.encoding=UTF-8",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-export-pause-oracle-2hegvyon",
+      "-Duser.home=/tmp/biglybtc-export-pause-oracle-2hegvyon",
+      "-Dazureus.config.path=/tmp/biglybtc-export-pause-oracle-2hegvyon/profile",
+      "-cp",
+      "/tmp/biglybtc-export-pause-oracle-2hegvyon/classes",
+      "ExportPauseOracle"
+    ],
+    "scope": "Exact GlobalManager export and individual pause/resume bodies with exact PauseState/HashWrapper and constants. Supplied recording getter/effect boundaries only. No ordinary managers, actual controller/disk/state/profile/network/settings or native comparison."
+  },
+  "groups": {
+    "export-semantic": {
+      "observations": 2353,
+      "source_exceptions": 0,
+      "files_sha256": {
+        "commands.txt": "cd065966bb9b78a0b0048e42a4bec20fb8afe3884cc932672ac0ba7b17deec24",
+        "expected.txt": "c296647dd86f0ce014fc203e2692f5784c311afa60c92e3164975bdce5afe3b8",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "c296647dd86f0ce014fc203e2692f5784c311afa60c92e3164975bdce5afe3b8"
+      }
+    },
+    "pause-semantic": {
+      "observations": 10657,
+      "source_exceptions": 0,
+      "files_sha256": {
+        "commands.txt": "47c60c35fb586467c517c21f0e0f5e4f9e9d0751dedd7aa8271dd8f69d464ef4",
+        "expected.txt": "f68a3c63d7c2ae79ed8d6a2aa4131343b6111d6c084d976aceb02aa2ae9afaf0",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "f68a3c63d7c2ae79ed8d6a2aa4131343b6111d6c084d976aceb02aa2ae9afaf0"
+      }
+    },
+    "callback-order": {
+      "observations": 198,
+      "source_exceptions": 0,
+      "files_sha256": {
+        "commands.txt": "9fd63621f0e254cbff24f6e89ef6801418484a530a26d4450bbd8b0997498121",
+        "expected.txt": "3d9bb4904cb0d1f37d0eda73f9a017254f8777db7cb187ae5c2092a8fba3a84a",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "3d9bb4904cb0d1f37d0eda73f9a017254f8777db7cb187ae5c2092a8fba3a84a"
+      }
+    },
+    "getter-fault": {
+      "observations": 634,
+      "source_exceptions": 61,
+      "files_sha256": {
+        "commands.txt": "bda9176b6aeda778d695851936e6c66330756dcf82e6f7c0a009bd695762b4b9",
+        "expected.txt": "e009213b481285a8e1d8050fcffd6eaad6a0b171ede0867c2c164e713c9c018c",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "e009213b481285a8e1d8050fcffd6eaad6a0b171ede0867c2c164e713c9c018c"
+      }
+    },
+    "alias-policy": {
+      "observations": 95,
+      "source_exceptions": 0,
+      "files_sha256": {
+        "commands.txt": "f3dd2e3952992756bd174b81d999325634cab5be51bafa0703d024d8a5b27e37",
+        "expected.txt": "e1ba6b0d0310b95500e7b129c0c35c14310b7e394af77334add8cb8518983426",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "e1ba6b0d0310b95500e7b129c0c35c14310b7e394af77334add8cb8518983426"
+      }
+    },
+    "provider-boundary": {
+      "observations": 131,
+      "source_exceptions": 6,
+      "files_sha256": {
+        "commands.txt": "01976415bf1c69efc6a2496a41c430a2a93b2a2bfbfd73ebf05dd33dc9f0deb2",
+        "expected.txt": "44de14f13ee69563c81ac3b6a3c33d11f29da524c12c7dffd9a4ea452bc2528a",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "44de14f13ee69563c81ac3b6a3c33d11f29da524c12c7dffd9a4ea452bc2528a"
+      }
+    }
+  },
+  "planned_manifest_sha256": "5b04787519d2e9eb93ca890e18d19dee370aea738f2b1846728f97536558d9df",
+  "collector_sha256": "e02bc0669d06dc21a2a163cc52ed360e553655b3297c5f61dfefc1cc0c5cd1ea",
+  "native_comparison_performed": false,
+  "native_equivalence_assumed": false
+}

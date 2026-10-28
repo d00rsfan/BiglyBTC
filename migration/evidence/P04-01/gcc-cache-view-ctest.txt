@@ -1,0 +1,45 @@
+Start testing: Oct 17 04:53 IDT
+----------------------------------------------------------
+3/14 Testing: cached-state-metadata
+3/14 Test: cached-state-metadata
+Command: "/tmp/biglybtc-native-local-gcc/tests/biglybtc-cache-tests"
+Directory: /tmp/biglybtc-native-local-gcc/tests
+"cached-state-metadata" start time: Oct 17 04:53 IDT
+Output:
+----------------------------------------------------------
+PASS bounded original cache fields, duplicates, unknown bytes, malformed entries and owned lifetimes
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"cached-state-metadata" end time: Oct 17 04:53 IDT
+"cached-state-metadata" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/14 Testing: java-cached-library-view
+7/14 Test: java-cached-library-view
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/library_view_interop.py" "--driver" "/tmp/biglybtc-native-local-gcc/tests/biglybtc-library-view-driver"
+Directory: /tmp/biglybtc-native-local-gcc/tests
+"java-cached-library-view" start time: Oct 17 04:53 IDT
+Output:
+----------------------------------------------------------
+PASS actual Java v1/v2/hybrid cached names/sizes and unchanged profile bytes
+PASS missing/corrupt/symbolic cache keeps inventory readable without changing data
+<end of output>
+Test time =   0.69 sec
+----------------------------------------------------------
+Test Passed.
+"java-cached-library-view" end time: Oct 17 04:53 IDT
+"java-cached-library-view" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 17 04:53 IDT
+
+integration =   0.69 sec*proc
+
+java =   0.69 sec*proc
+
+local-files =   0.69 sec*proc
+
+unit =   0.02 sec*proc
+

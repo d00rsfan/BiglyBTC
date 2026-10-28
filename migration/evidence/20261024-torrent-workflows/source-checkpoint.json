@@ -1,0 +1,25 @@
+{
+  "state": "source_implemented_final_qualification_running",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_core_commit": "8795a76eef634bc6167713d913af7d302e3e028d",
+  "native_source_commit": "50943cae2eb986f3d33da61b346c2e35d4bae637",
+  "libtorrent_source_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "source_paths": [
+    "core/src/com/biglybt/plugin/magnet/MagnetPlugin.java",
+    "core/src/com/biglybt/plugin/magnet/MagnetPluginMDDownloader.java",
+    "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java",
+    "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java",
+    "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java",
+    "core/src/com/biglybt/core/disk/impl/resume/RDResumeHandler.java"
+  ],
+  "actual_handoff": "build/torrent-workflows-20261024/handoff-r4/result.json",
+  "final_portable_promoted": false,
+  "original_live_profile_access": false,
+  "verification_source_commit": "49f02c870f70cb7a1aa42cf71c4e53a89eca07a0",
+  "clang_suites_passed": 26,
+  "handoff_record_sha256": "dbc02aea1cf3c02d158c3734e455df41806ad3359feccb88d8be9dcfd0f95ffc",
+  "final_qualified_native_source": "08a44ec3134e32c8f1cebc4061f5fa608ba2cc35",
+  "final_metadata_commit": "a98c94e0cee216049ac31b46ebaf91fc118e5081",
+  "final_status": "QUALIFIED_PROMOTED",
+  "final_verification": "verification.json"
+}

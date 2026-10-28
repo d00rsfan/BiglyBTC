@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "reviewer": "root",
+  "status": "PASS_source_only",
+  "scope": "Independent static review of root CMake registration and additive actual preview chart checks; no execution credit",
+  "source_sha256": {
+    "preview/native/ui/CMakeLists.txt": "e05fb21024d6e64bce8671451d6bbb89694e3541bc94e55317a2f3b3ebcc02cd",
+    "preview/native/tests/CMakeLists.txt": "c5b5fc271d42d7c02954c226265dfa33c90fb2511562e01a824ba78604372a8d",
+    "preview/native/packaging/preview_smoke.cpp": "d44b0cce5e4ec13b6569895ef73cf8f37c7fe13cf6c442e5df239fe3aa344c5d"
+  },
+  "checks": [
+    "All old targets preserved; three distinct Qt test targets use existing strict flags/offscreen deadlines.",
+    "Actual preview uses held worker snapshots then compares all24 hourly and7 daily chart buckets to the exact same accepted payload values.",
+    "Preview checks recorded zero, signed correction, unknown clearing and old frame immutability; old raw file and no-extra-read checks remain in place.",
+    "No preview input generator change, extra smoke method or screenshot name change."
+  ],
+  "blockers": []
+}

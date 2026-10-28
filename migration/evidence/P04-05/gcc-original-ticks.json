@@ -1,0 +1,150 @@
+{
+  "status": "passed",
+  "source_commit": "1ee6a53dae017696d2f0002e4a0d74f5a9476af5",
+  "source_class_digest": "8f6a561f700e214fdb4aeda5242466b3e5e242ef2e3a5a0cd7fdb46c7959200f",
+  "source_overlay": false,
+  "core_source_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+  "harness_sha256": {
+    "ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+    "EngineOracle.java": "325ca455bfdcd754e4369261348856a9c2143268dd189c3716f1cb7ba4cf7765",
+    "SpeedSchedulerOracle.java": "56fe63c615117da7cc01bf4787fac81c65e11b1e4865a03b15b1cdb32f159a15",
+    "SchedulerTickOracle.java": "2dd26ab1a22fee334e5469c66197153bfb014fc7d00d4614b4e8fc1765a73622"
+  },
+  "native_binary_sha256": "02320578c7b73d32c797f9b0d7c55b109de1352cb34528d4ef9721e4bd29d038",
+  "work": "/tmp/biglybtc-scheduler-ticks-gcc-core",
+  "cases": [
+    {
+      "case": "global-overlap",
+      "torrents": 576,
+      "xml_sha256": "14699da92812d39682b7d0d13a557caf43d1c46e13a1d8bdfaf7a983692d1f95",
+      "properties_sha256": "0555307dd7f05af16214e634ed002475cd513f2699a7fdebaad4cd8a1eceaba3",
+      "original_log": "/tmp/biglybtc-scheduler-ticks-gcc-core/global-overlap/original.log",
+      "original_log_sha256": "27c7c3440c1f2c1b9fba0b91ba8ce5cecbe38f274edc21fca3a18fd82462d8ac",
+      "native_log_sha256": "278940f27c9bc8afcbadcc88bdd51f293e705a6f253a6529086932cf710ed475",
+      "commands_rates_selection_and_owned_pauses_match": true,
+      "source_xml_preserved": true
+    },
+    {
+      "case": "global-and-exclusion",
+      "torrents": 576,
+      "xml_sha256": "528dd96ea99f746ae04ebd834128d7ca15ca118c6eef9472ec45df57208bd8e7",
+      "properties_sha256": "0555307dd7f05af16214e634ed002475cd513f2699a7fdebaad4cd8a1eceaba3",
+      "original_log": "/tmp/biglybtc-scheduler-ticks-gcc-core/global-and-exclusion/original.log",
+      "original_log_sha256": "5131d61bdddcf44c06659393d53386d2042ad57edd905ee908d40dd50291b3c3",
+      "native_log_sha256": "d78dbda15ea7f70eb375406e7e9bf132bde93099fb87e2f320cd29cbae37690f",
+      "commands_rates_selection_and_owned_pauses_match": true,
+      "source_xml_preserved": true
+    },
+    {
+      "case": "category-only",
+      "torrents": 576,
+      "xml_sha256": "bf9c222eea0edf0a8a512f885946ad772f55caff5824ca2359a05a971a93eec6",
+      "properties_sha256": "0555307dd7f05af16214e634ed002475cd513f2699a7fdebaad4cd8a1eceaba3",
+      "original_log": "/tmp/biglybtc-scheduler-ticks-gcc-core/category-only/original.log",
+      "original_log_sha256": "d08d6b2e0c1dcb5c4aafb934469cddb12fd1514f998f0afd33e9bec53602b476",
+      "native_log_sha256": "55bbca3e599ef473f47177b00f3f55b5bc96eec742d9ff85ce8fdc91a697ea3e",
+      "commands_rates_selection_and_owned_pauses_match": true,
+      "source_xml_preserved": true
+    },
+    {
+      "case": "both-category-flags",
+      "torrents": 576,
+      "xml_sha256": "62a22bc56da0b68ff7fc89d2c4ad47ac06428287f959dc8db58a935f273a87e3",
+      "properties_sha256": "0555307dd7f05af16214e634ed002475cd513f2699a7fdebaad4cd8a1eceaba3",
+      "original_log": "/tmp/biglybtc-scheduler-ticks-gcc-core/both-category-flags/original.log",
+      "original_log_sha256": "6b2e4f920aac7ba19c86576f8d8ca7b8285b1cbc5a92097f71fa3e7c635b0743",
+      "native_log_sha256": "d78dbda15ea7f70eb375406e7e9bf132bde93099fb87e2f320cd29cbae37690f",
+      "commands_rates_selection_and_owned_pauses_match": true,
+      "source_xml_preserved": true
+    },
+    {
+      "case": "override-forced",
+      "torrents": 576,
+      "xml_sha256": "c338aaca84f721c228b22d534e35d4b216c27e34f1c6bcb3ce7f4acbf47c4e70",
+      "properties_sha256": "af50bd20e9cf3995f098715ea70b7069edadf7af8c8a19c764174531e8796de0",
+      "original_log": "/tmp/biglybtc-scheduler-ticks-gcc-core/override-forced/original.log",
+      "original_log_sha256": "ef893a72ed0803eccb3285f88c1c48ed9ea96ea34e5155b33b46867234d8d65b",
+      "native_log_sha256": "7bd5583d23ee9e72a34a15fe5e9fa418d439431dd7dd4c23d0f3e0e496917b51",
+      "commands_rates_selection_and_owned_pauses_match": true,
+      "source_xml_preserved": true
+    },
+    {
+      "case": "disabled-polling",
+      "torrents": 576,
+      "xml_sha256": "c338aaca84f721c228b22d534e35d4b216c27e34f1c6bcb3ce7f4acbf47c4e70",
+      "properties_sha256": "0213f9ccfd42ddbbb5e7ad18cbaf9e68b9c94dc79142817adb38dd016036f7a2",
+      "original_log": "/tmp/biglybtc-scheduler-ticks-gcc-core/disabled-polling/original.log",
+      "original_log_sha256": "876a80b8fc4867eedec718c6a34c82c0067ea9515e6ccd5e160d9bf1621ded99",
+      "native_log_sha256": "6398aac36a1da67114d160ff21cb09d34e38113fe22616ff16f3f922e06625ea",
+      "commands_rates_selection_and_owned_pauses_match": true,
+      "source_xml_preserved": true
+    },
+    {
+      "case": "startup-default-restore",
+      "torrents": 576,
+      "xml_sha256": "4a97894fadd30660822994b94e715b5b4f1c6de82c3fbdcea933a146f7eccac8",
+      "properties_sha256": "0555307dd7f05af16214e634ed002475cd513f2699a7fdebaad4cd8a1eceaba3",
+      "original_log": "/tmp/biglybtc-scheduler-ticks-gcc-core/startup-default-restore/original.log",
+      "original_log_sha256": "7bf48425e1e3aa5316213138620957cf0d55480a428ffe7870ee2215adfb9398",
+      "native_log_sha256": "6cfd26da71d635b662999670d8e5d394ff1ee062528288fbe31e8a023a4c8506",
+      "commands_rates_selection_and_owned_pauses_match": true,
+      "source_xml_preserved": true
+    },
+    {
+      "case": "settled-unenforced-defaults",
+      "torrents": 576,
+      "xml_sha256": "4a97894fadd30660822994b94e715b5b4f1c6de82c3fbdcea933a146f7eccac8",
+      "properties_sha256": "fb9a069d72b9d4ddd0396b93ea0115de384f17b79051b6f0fb391dc63aeca9e7",
+      "original_log": "/tmp/biglybtc-scheduler-ticks-gcc-core/settled-unenforced-defaults/original.log",
+      "original_log_sha256": "99ff25eb8e66b54fda8d4e783c9c477484368ff5c1ebcf539172031ab9e08281",
+      "native_log_sha256": "e92697fe9ea344e83f969cbd176d3b6d77e18445740d6c424c7d45c5b0e93d02",
+      "commands_rates_selection_and_owned_pauses_match": true,
+      "source_xml_preserved": true
+    },
+    {
+      "case": "enforced-defaults",
+      "torrents": 576,
+      "xml_sha256": "3f6ff02b46f5c1935a73b9d1e3f89c2b83ad13874600477de304b6df23e09ae4",
+      "properties_sha256": "fb9a069d72b9d4ddd0396b93ea0115de384f17b79051b6f0fb391dc63aeca9e7",
+      "original_log": "/tmp/biglybtc-scheduler-ticks-gcc-core/enforced-defaults/original.log",
+      "original_log_sha256": "684b3b9e24cd33e1f6678cc46b2a68d211f753867ee77c5a8f02c633a7437381",
+      "native_log_sha256": "6cfd26da71d635b662999670d8e5d394ff1ee062528288fbe31e8a023a4c8506",
+      "commands_rates_selection_and_owned_pauses_match": true,
+      "source_xml_preserved": true
+    },
+    {
+      "case": "selection-and-rate-order",
+      "torrents": 576,
+      "xml_sha256": "099bab65ff14f4fe97c68ef88e484e889785d5df45de36e133b543264b8b98cd",
+      "properties_sha256": "0555307dd7f05af16214e634ed002475cd513f2699a7fdebaad4cd8a1eceaba3",
+      "original_log": "/tmp/biglybtc-scheduler-ticks-gcc-core/selection-and-rate-order/original.log",
+      "original_log_sha256": "6a24294629212ab672b9435771b316aa572a504d9c2fb23ec85100a119dedbea",
+      "native_log_sha256": "d93a24be78b77b298999eccc4eb8a20b93b4e0aff6b091336ec3b863f7879d60",
+      "commands_rates_selection_and_owned_pauses_match": true,
+      "source_xml_preserved": true
+    },
+    {
+      "case": "unicode-category",
+      "torrents": 576,
+      "xml_sha256": "822edab246f04012eb925e965190c7e17c25b7984f4f41bd212bc199cc33d3c7",
+      "properties_sha256": "0555307dd7f05af16214e634ed002475cd513f2699a7fdebaad4cd8a1eceaba3",
+      "original_log": "/tmp/biglybtc-scheduler-ticks-gcc-core/unicode-category/original.log",
+      "original_log_sha256": "284ecf03b838bd9390d3cad67bc2d1162e4a91dd52c3afad7c7b9643343ad63a",
+      "native_log_sha256": "e6a76a3a85e2e86006a6cbb60b544d874339ac333635c65b16416f87785fbc22",
+      "commands_rates_selection_and_owned_pauses_match": true,
+      "source_xml_preserved": true
+    }
+  ],
+  "scope": "Unchanged original Thread.run plus actual PausedTorrents.conf helpers compared with native policy values",
+  "fixture_boundaries": [
+    "Synchronous one-tick execution; a host sleep-setting query throws a test Error before the second tick",
+    "Empty source-built core supplies the original tag service; plugins disabled and listener fenced to one owned loopback port",
+    "Host download/rate values are proxies; AutoSpeed/environmental getters/setters are overridden by the fixture subclass",
+    "Schedules select all real local days/minutes or none, avoiding a source clock overlay; exhaustive original time differential is separate"
+  ],
+  "limitations": [
+    "Actual native engine pause/resume, native ownership-file writes, real tags/AutoSpeed routing and editor integration remain open"
+  ],
+  "total_torrent_states_compared": 6336
+}

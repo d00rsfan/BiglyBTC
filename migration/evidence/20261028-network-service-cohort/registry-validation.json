@@ -1,0 +1,25 @@
+{
+  "status": "PASS_ACTUAL_LOCAL_REGISTRY_VALIDATION",
+  "source_commit": "013fa60f59898392a33855ba148961090bacca14",
+  "sources": 19,
+  "components": 105,
+  "dependencies": 19,
+  "runs": [
+    {
+      "log": "registry-original-final013-r1.log",
+      "sha256": "6040c935827fcaae27225d649d676fd1480023e843cf0defbf3c84531bdcc401"
+    },
+    {
+      "log": "registry-native-final013-r3.log",
+      "sha256": "6040c935827fcaae27225d649d676fd1480023e843cf0defbf3c84531bdcc401"
+    }
+  ],
+  "local_source_setup": "native-paired-source-setup-r1.json",
+  "historical_reference_export": "native-historical-reference-export-r1.json",
+  "full_public_clone_bootstrap": false,
+  "metadata_only_no_cpp_retest": true,
+  "initial_native_failures_retained": [
+    "registry-native-final013-r1.log",
+    "registry-native-final013-r2.log"
+  ]
+}

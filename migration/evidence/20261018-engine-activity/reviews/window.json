@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "scope": "Independent source review of root-authored P04-17 Window integration only; excludes own History implementation",
+  "verdict": "PASS, no source blocker found",
+  "source_sha256": {
+    "preview/native/ui/library_window.hpp": "e8da1e830f25fd2fbc91f0634146085eb8cfcbe4d50ff08b716aa7afadbdb79a",
+    "preview/native/ui/library_window.cpp": "387557096d899c1d2de33f6c8bd85394aa4e40e7b10d9fdb71e60555a51cee91"
+  },
+  "parent_snapshot_sha256": {
+    "preview/native/ui/library_window.hpp": "ef543fb88d905c6967baa820f4a9d89f666b059bbf6e4cd0b9391b74a926f6e7",
+    "preview/native/ui/library_window.cpp": "d4a4d5b0e1d459b64fcd3e7c231cf6d6e9f1d59e6397bdb5fcfdc1f6450c3e00"
+  },
+  "history_api_sha256": "6361476296ad8f0aa1d320b5f96f7fb84356557fef402c01c03036fe8e295844",
+  "exact_delta_reconstruction": true,
+  "checks": [
+    "Initial admission still requires valid P04-16 packet and Preparing with current real model target before opening an operation.",
+    "History observes only packets that pass Window identity/session/target/order checks; same-operation terminal sample normalization matches History duplicate rules.",
+    "Both current packet and history are updated before optional Page delivery, so reentrant Page callbacks observe current owner state.",
+    "The delivery to Page is the final operation in setEngineStatistics, with no subsequent Window member access after potentially deleting Page signal/event callbacks.",
+    "Window owns the ring independently of Page/tab lifetime; auxiliary Page close leaves it intact.",
+    "Fresh Page replay occurs after session-bound beginRequest and guarded Page selection, with QPointer/current widget checks after direct callbacks.",
+    "Session advance resets packet and history together before saved Statistics request begins; stale old-session packets cannot repopulate history.",
+    "No sampling/IO/timers/transfer side effects were added by this delta; existing graph snapshots are copied at delivery.",
+    "All unchanged Window source bytes equal the preserved parent snapshot after removing the explicitly reviewed integration delta."
+  ],
+  "limitations": [
+    "New Page/graph implementation was not yet installed at this review; its own admission, session reset and Qt deletion behavior require separate review.",
+    "Snapshot/normalization allocations can throw; no allocator-fault or process memory cap is claimed.",
+    "Own History/API correctness is not counted as independently reviewed here; driver reviews that separately."
+  ],
+  "execution": {
+    "builds": 0,
+    "tests": 0,
+    "git": 0,
+    "target_imports": 0,
+    "native_gui_or_process_launches": 0,
+    "source_mutations": 0
+  }
+}

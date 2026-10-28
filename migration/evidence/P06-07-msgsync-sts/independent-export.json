@@ -1,0 +1,16 @@
+{
+  "status": "passed",
+  "build": "/tmp/biglybtc-public-sts-export-build",
+  "compiler": "/usr/bin/g++-16",
+  "ctest_rows": 4,
+  "public_commit": "3d8e761639b59b4310d1950b7227cfae4272d749",
+  "binary_sha256": {
+    "/tmp/biglybtc-public-sts-export-build/biglybtc-msgsync-sts-driver": "a4b945711225e99a4a9805583132f728bc5f18d86cb74ef5e3dc81bf695ca62d",
+    "/tmp/biglybtc-public-sts-export-build/biglybtc-msgsync-sts-bounds-tests": "a8b7d3cfea5cd33b074c2442d4bd53072d01beaaee3e9d80e7189c8d89de99a9",
+    "/tmp/biglybtc-public-sts-export-build/libbiglybtc_msgsync_sts.a": "664a418552cfd41ac97442d83cd2baf8353566ed073084597ae0834ef4e38c2c",
+    "/tmp/biglybtc-public-sts-export-build/biglybtc-msgsync-envelope-driver": "d523d449c63160af710ff6fdc47786b85e5e559b323257602b703e565180736b",
+    "/tmp/biglybtc-public-sts-export-build/biglybtc-msgsync-envelope-bounds-tests": "ed4c932aaf4c1255d5ab75270ebe3965614a73cde66c6f7f664b760cff7fc867",
+    "/tmp/biglybtc-public-sts-export-build/libbiglybtc_msgsync_envelope.a": "871cf19797311529d827b280de8d7309b6a2ee480843d7398c884ae7e3579440"
+  },
+  "scope": "Clean independent public source export; portable original frames/integers/native policy plus envelope and ownership/bounds tests; no Java runtime needed for fixture replay"
+}

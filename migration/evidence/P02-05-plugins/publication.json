@@ -1,0 +1,78 @@
+{
+  "owner": "d00rsfan",
+  "published": [
+    {
+      "repository": "https://github.com/d00rsfan/BiglyBTC",
+      "commit": "8ff37cf27c1d1de6358b8e5e70d42fc1316c30f4",
+      "scope": "sdk",
+      "source_review_commit": "87e5afbda4f65456a27a1651aa46803993ab7ca4",
+      "ci_enabled": false,
+      "binary_release": false,
+      "source_provenance_sha256": "97193e8bfb17957b999eda8f6bc100879d13b6ea47300c97b2ec72806bba11eb",
+      "paths": [
+        "CMakeLists.txt",
+        "LICENSE",
+        "README.md",
+        "ci/plugin-sdk.yml",
+        "plugin-sdk/.gitignore",
+        "plugin-sdk/CMakeLists.txt",
+        "plugin-sdk/LICENSE",
+        "plugin-sdk/README.md",
+        "plugin-sdk/include/biglybtc/plugin.h",
+        "plugin-sdk/include/biglybtc/plugin_host.hpp",
+        "plugin-sdk/include/biglybtc/scheduler.h",
+        "plugin-sdk/src/host.cpp",
+        "plugin-sdk/tests/abi.c",
+        "plugin-sdk/tests/host.cpp",
+        "plugin-sdk/tests/module.c",
+        "plugin-sdk/tests/store_test.py",
+        "plugin-sdk/tools/plugin_store.py"
+      ]
+    },
+    {
+      "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-azlocprov",
+      "commit": "f470d28e79dd14c8d6498267f16519afe2615067",
+      "scope": "location",
+      "source_review_commit": "7c7d5e82e26bf9e35e3fbcbc8b8f20498e4d78dd",
+      "ci_enabled": false,
+      "binary_release": false,
+      "source_provenance_sha256": "52798f38ca1c596dd280a5943673d0d3703ccbfe29d7735182c911d11ac4f6f0",
+      "paths": [
+        ".gitignore",
+        "CMakeLists.txt",
+        "LICENSE",
+        "README.md",
+        "ci/linux.yml",
+        "location.cpp",
+        "tests/compatibility.py",
+        "tests/driver.cpp",
+        "tests/fetch_fixture.py"
+      ]
+    },
+    {
+      "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-mlDHT",
+      "commit": "9e054b77de34e5007da167e2d27bc2ed970b6cb4",
+      "scope": "mldht_policy",
+      "source_review_commit": "7c7d5e82e26bf9e35e3fbcbc8b8f20498e4d78dd",
+      "ci_enabled": false,
+      "binary_release": false,
+      "source_provenance_sha256": "d32f8a1f08fed94b84361ecde8fcbbfaa33e69761ae19e4ebc74d1db5f8332c9",
+      "paths": [
+        ".gitignore",
+        "CMakeLists.txt",
+        "LICENSE",
+        "README.md",
+        "ci/policy.yml",
+        "fixture_test.py",
+        "fixtures/input.tsv",
+        "fixtures/manifest.json",
+        "fixtures/original.expected",
+        "policy.cpp",
+        "policy.hpp",
+        "policy_driver.cpp"
+      ]
+    }
+  ],
+  "qualification": "Local clean-export rebuild/tests plus main compiler/sanitizer capsules. No remote CI run or binary release.",
+  "workflow_scope_rejection": "migration/evidence/P02-05-plugins/github-workflow-scope.json"
+}

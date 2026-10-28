@@ -1,0 +1,79 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "milestone": "P04-21",
+  "reviewer": "error_driver",
+  "status": "PASS: independent amended-source review; initial reviews/failures preserved, root rerun required",
+  "reviewed_sources_sha256": {
+    "preview/native/ui/saved_history_plot.hpp": "06fb44176eb22bb2f4f45af0fbe00463409a4270b8ff82448e05b02599500995",
+    "preview/native/ui/saved_history_plot.cpp": "61b47d7aef66ee1bead308f20cc98fc7d1c054859ece5cc5b784bf51f455a80d",
+    "preview/native/ui/history_week_view.hpp": "6381e065155a545262772eef1f47bc1a0b778a6696f626927f2ed0112451adf6",
+    "preview/native/ui/history_week_view.cpp": "04868bfac614b27c9b8126f9b3aef4d5fbfe7c5e27140cadedd57578ee3b4173"
+  },
+  "author_capsule": {
+    "path": "build/history-hourly-20261020/source/manifest.json",
+    "sha256": "47d62f3733bff70b58f50134c6ca594ca54dab2a5f2828f173b1573de6fe4bfc"
+  },
+  "context_sha256": {
+    "build/history-hourly-20261020/contract.md": "9743c737d40d42ad12952296e21c4b2390387a35cfeaf2b2ce9d5deed60ea502",
+    "migration/evidence/20261020-history-hourly/source-audit.json": "13f515f6a98d94af02a1f69d7c31b0eecaae93efbc18c13e2a3756d78ff20141",
+    "migration/evidence/20261020-history-hourly/source-ranges.json": "0cc54584b07df0e4e92b354e9bdae8fe7b93ce757057231cef377c9356536ceb",
+    "migration/evidence/20261020-history-hourly/unchanged-behavior-baseline.json": "4f46d1b4a32b3a7b326a8c5566ed7a4a84f5fe6f2df06d1eee842459cc11f857",
+    "build/history-hourly-20261020/source/before-sha256.json": "cd6877176ccd4e04fa0d5a9d48348fea0ca02f1d29c99df24a7101a309f8b6df",
+    "build/history-hourly-20261020/source/implementation.patch": "94effdbf7817d312a1b006909c853a324c13121259ab8588d966689ceb46c188",
+    "build/history-hourly-20261020/source/static-checks.json": "b017750ff8ee3018ba13ade03e79034d40b9faee9d49b27a9bfe032f878af1cd"
+  },
+  "checks": [
+    "Complete four installed source files and precise before/after patch read. Appended WeekHourly enum retains Day/Week values; fixed private capacity168 remains bounded and existing factories still return exact24/7 spans.",
+    "New factory validates requested seven-date range, outer ending date, every row date and supplied inner day date before accepting values. A mismatch produces168 unknown buckets with the correct requested identities; invalid requested range produces no frame.",
+    "Day-major/hour-minor index24*day+hour stays0..167. Each date/hour is set independently; only present days/hours supply payload download3 and upload1. No sum, division, total fallback, rate, clock or missing-zero substitution occurs.",
+    "Copied optionals/dates retain no source snapshot alias. Old finite signed-int64 geometry, exact raw tooltip labels, setter/event QPointer/token guards, adjacent-segment and isolated-marker paint logic are unchanged.",
+    "New-mode title explicitly describes saved hourly bytes for seven independent UTC days. Tick labels add month/date/hour at midnight plus final hour if nonoverlap permits, so repeated unqualified times do not confuse days; all exact per-bucket facts remain available independently of width. Existing Day/Week label/title paths are preserved.",
+    "New owned combo defaults to Daily totals and has the required semantic/accessibility IDs/items. Only its revision/dirty state advances, then existing refresh runs; accepted packet, request/session, date and requestedDate are not cleared or retargeted. No read signal/path is invoked.",
+    "Visible refresh selects setWeek or setWeekHourly before unchanged model binding; the existing postsetter current revision/QPointer check rejects deletion or a nested newer mode/frame. Mode-only unchanged table binding remains a no-op, so there is no reset, row swap or dataChanged signal.",
+    "Existing dirty/visibility/minimized gate defers plot facts/tooltips/model writes for hidden mode changes. Pending, error, session/date reset pass a null source at the selected resolution. Selection persists in the combo for this View lifetime only, with no settings write.",
+    "Independently compared25 retained complete definitions, including old factories, point/tooltip/event/setters, all request/admission/date/lifetime paths and entire DaysModel: byte-identical before/current. All202 independent accounting/reader/worker/DTO/old-test/fixture guards remain exact.",
+    "No new reader, worker, lease, network, timer, writer/cache, accounting or original Java execution/equality path exists. Fixed selected UTC168 hours deliberately differs from original current-clock hour-rounded/pixel-merged TS_WEEK."
+  ],
+  "preservation": {
+    "unchanged_complete_definitions_verified": 25,
+    "unchanged_behavior_files_verified": 202,
+    "retained_java_scalar_comparison_scopes": [
+      2550,
+      3150
+    ],
+    "new_java_execution": false,
+    "new_java_equality_credit": false
+  },
+  "blockers": [],
+  "limits": [
+    "Source review only: actual compiler/sanitizer/UI rows, interaction/raster results and captures must be recorded by root.",
+    "No test source has been independently reviewed by this production report; oracle new tests/public contract review is separate.",
+    "Immutable GUI-thread source deliveries remain the documented boundary, with no concurrent mutable-alias or global OOM guarantee.",
+    "Finite display coordinates do not imply pixel-level distinction for every64-bit integer; raw facts/tooltips remain exact."
+  ],
+  "execution": {
+    "source_edits": false,
+    "builds_or_native_tests": false,
+    "java_or_profile_runtime": false,
+    "target_import_or_selected_evaluation": false,
+    "git_mutations": false,
+    "amended_subject_execution_by_reviewer": false
+  },
+  "review_revision": 2,
+  "previous_review": {
+    "path": "migration/evidence/20261020-history-hourly/diagnostics/initial-production.json",
+    "sha256": "35f125a489124c68639b10ad3b98d2946ecaa1ffc08b8349e11f5114d5098cad",
+    "scope": "Preserved initial-source static review; subsequent actual qualification exposed the Qt sender-tail boundary and raster fringe."
+  },
+  "amendment": {
+    "capsule": "migration/evidence/20261020-history-hourly/lifetime-amendment/manifest.json",
+    "capsule_sha256": "b021f9e73f3c5afb6cbff13eda13127f1cf956b2773709446925cbe399b6740f",
+    "actual_deletion_backtrace_sha256": "d636d43b4bcb2ed89dc5ed8bcbfa28bff91ec41b6084741769b8c1df1a046812",
+    "cause": "The original direct refresh let a tooltip callback delete the View/combo while QComboBox::setCurrentIndex still had currentTextChanged to emit. The app-local postcallback guards could not protect that Qt sender tail.",
+    "correction": "advance() invalidates older work immediately, then a context-bound queued refresh waits for the control signal delivery to finish. The queued callback is discarded if its View dies before delivery. Existing visible/current guards still protect rendering reentry; no read/timer/worker is added.",
+    "exact_one_statement_change_independently_verified": true,
+    "other_three_production_files_unchanged": true,
+    "remaining_scope": "Serialized ordinary GUI event delivery; no promise about hostile nested event pumps in arbitrary external signal handlers."
+  }
+}

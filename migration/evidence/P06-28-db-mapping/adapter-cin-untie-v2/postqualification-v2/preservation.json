@@ -1,0 +1,80 @@
+{
+  "status": "P28 three-lane evidence independently validated; actual checkpoint Git-input stage pending",
+  "matrix_sha256": "3f1800e1d6b4c1c6f327480973662d4ced5efd0171eb5c864c6a2ad254a2040d",
+  "stage1_receipt_sha256": "f1eb27ece92057a2be28296876695e30b6f00d86dbf261ff7817383e1d0a3137",
+  "current_inputs": 499,
+  "same_path_inputs_planned": 351,
+  "exact_archive_aliases": 148,
+  "scope": "2745 semantic matches,318 bounds assertions,1149 CLI policy rows per lane;2881 source-only rows zero equality. Retained DB/wire/node regressions pass. No router/DB integration or full-client completion.",
+  "validator_repair": "First read-only postvalidator failed on JSON key-order assumption. Immutable old source/failure and independently reviewed one-line parser V2 retained. Actual qualification and all expected outputs unchanged.",
+  "native_commit": null,
+  "first_ported_commit": null,
+  "integrated_through_commit": null,
+  "publication": false,
+  "files": {
+    "build/recovery/root-tools/validate_db_mapping_adapter_v2.py": {
+      "copy": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/postqualification-v2/build/recovery/root-tools/validate_db_mapping_adapter_v2.py",
+      "sha256": "b903ed57ae713446d1f2cbd1260fb89c546f758940af0dced935186a41332a44"
+    },
+    "build/recovery/root-tools/validate_db_mapping_adapter_v2_postvalidate_v2.py": {
+      "copy": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/postqualification-v2/build/recovery/root-tools/validate_db_mapping_adapter_v2_postvalidate_v2.py",
+      "sha256": "ff2191048136b493d30bdd21106c7d5ada1b17c8a801b7dfe138f835009d6b15"
+    },
+    "build/recovery/root-tools/validate_db_mapping_adapter_v2_README.md": {
+      "copy": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/postqualification-v2/build/recovery/root-tools/validate_db_mapping_adapter_v2_README.md",
+      "sha256": "fdbd5170f1b703d0288ba6719b8a5da7a2d83df271011adcda0effb913148f79"
+    },
+    "build/recovery/root-tools/db_mapping_postqualification_validator_draft_v1.json": {
+      "copy": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/postqualification-v2/build/recovery/root-tools/db_mapping_postqualification_validator_draft_v1.json",
+      "sha256": "172d898987904a70c8138c4fc1f622d9e0f39e00726944d9ddb2d596320007c8"
+    },
+    "build/recovery/root-tools/db_mapping_postqualification_input_inventory_v1.json": {
+      "copy": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/postqualification-v2/build/recovery/root-tools/db_mapping_postqualification_input_inventory_v1.json",
+      "sha256": "bae03d9219c000c2250d1c2481bb29fd25036debc2825533706a4a21bd3eb1f0"
+    },
+    "build/recovery/root-reviews/p28-adapter-v2-postqualification-validation-v2.json": {
+      "copy": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/postqualification-v2/build/recovery/root-reviews/p28-adapter-v2-postqualification-validation-v2.json",
+      "sha256": "f1eb27ece92057a2be28296876695e30b6f00d86dbf261ff7817383e1d0a3137"
+    },
+    "build/recovery/root-reviews/p28-postqualification-validator-source-review.json": {
+      "copy": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/postqualification-v2/build/recovery/root-reviews/p28-postqualification-validator-source-review.json",
+      "sha256": "d4930f1b0b6843d47a8aeac75440b64b225ab5dafd2a2c8c261571cca5c210f8"
+    },
+    "build/recovery/root-reviews/p28-active-manager-untraced-observation.json": {
+      "copy": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/postqualification-v2/build/recovery/root-reviews/p28-active-manager-untraced-observation.json",
+      "sha256": "91d201c3be6efcb487ed7f06f422b14895ced28a6a6b40d806c75420cf8bbe77"
+    },
+    "build/recovery/db-mapping-adapter-v2-native-execution.json": {
+      "copy": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/postqualification-v2/build/recovery/db-mapping-adapter-v2-native-execution.json",
+      "sha256": "af01c3057e2db9e2457313b3afb4d50dee79b1cf873a94eb127d9330c76e5caf"
+    },
+    "build/recovery/root-tools/attest_p28_completed_launch.py": {
+      "copy": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/postqualification-v2/build/recovery/root-tools/attest_p28_completed_launch.py",
+      "sha256": "c291afa43c9371c30a4757060c330971cd6774cc3282f06f190a9f21e41b5fb3"
+    },
+    "build/recovery/root-tools/preserve_p28_qualified_validation.py": {
+      "copy": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/postqualification-v2/build/recovery/root-tools/preserve_p28_qualified_validation.py",
+      "sha256": "c6aa0e08d7f5093408f32c1d6126269cc84854c205c2a070663d47dd023244e2"
+    },
+    "build/recovery/root-reviews/p28-validator-parser-v2-draft/change.patch": {
+      "copy": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/postqualification-v2/build/recovery/root-reviews/p28-validator-parser-v2-draft/change.patch",
+      "sha256": "6ed1b93781640f0b26eb9c5677a8198f6d1187d0fa85769d131120a4361a0768"
+    },
+    "build/recovery/root-reviews/p28-validator-parser-v2-draft/independent-review.json": {
+      "copy": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/postqualification-v2/build/recovery/root-reviews/p28-validator-parser-v2-draft/independent-review.json",
+      "sha256": "f112364c03b4215f6bc98373b401bbe4a0136f98e09a4c2e8174a060f7fd9196"
+    },
+    "build/recovery/root-reviews/p28-validator-parser-v2-draft/independent-review.md": {
+      "copy": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/postqualification-v2/build/recovery/root-reviews/p28-validator-parser-v2-draft/independent-review.md",
+      "sha256": "9606443af5f2c1506507a2ccffb2a027d8725b7b79d1d935921ad35780f8b92e"
+    },
+    "build/recovery/root-reviews/p28-validator-parser-v2-draft/manifest.json": {
+      "copy": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/postqualification-v2/build/recovery/root-reviews/p28-validator-parser-v2-draft/manifest.json",
+      "sha256": "996c18c74acb2a7f37701e4aed17f8af8d9ff91fd126491435a60c65e5d82737"
+    },
+    "build/recovery/root-reviews/p28-validator-parser-v2-draft/prior-validation-failure.json": {
+      "copy": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/postqualification-v2/build/recovery/root-reviews/p28-validator-parser-v2-draft/prior-validation-failure.json",
+      "sha256": "8c004f1263e4503531c2be57b332dfced6bd2d4d789cd37c3b139688acc861bb"
+    }
+  }
+}

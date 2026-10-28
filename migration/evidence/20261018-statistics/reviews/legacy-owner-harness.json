@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "status": "PASS-independent-source-delta-review-no-blocker",
+  "reviewer": "error_driver",
+  "independence": "Oracle authored this30line fixture delta; reviewer authored the original legacy test files in earlier tasks, so independent credit is strictly for the new correction, not rereview of own original suite.",
+  "root_recorded_parent_commit": "6900477df3b7fcf0361cd9310deb7454bcb1a62f",
+  "root_recorded_final_commit": "be9ad3d5f409947445b6c253b17430a9df0f6655",
+  "commit_authority": "Root source-commit receipts; reviewer performed no Git command or object/index/ref operation in this review.",
+  "source_sha256": {
+    "preview/native/tests/saved_services_navigation_tests.cpp": "18a404ae06467b516cfa1a9cca2e0e31a346c42e2959622f6b83fca60797f039",
+    "preview/native/tests/classic_close_tab_tests.cpp": "1d8acd1323781c782622ebebc499019f3c1e363887dd301e6efec4f066569181"
+  },
+  "before_sha256": {
+    "preview/native/tests/saved_services_navigation_tests.cpp": "5d9689192f4fd693b24986a11d0912f9538ce3ae6047230ba0f1cd79c2ef1f5f",
+    "preview/native/tests/classic_close_tab_tests.cpp": "15a923fd5505550c01edd6e2a465a8e3405b9a4d9ed7b4e1289d1cb187e344c0"
+  },
+  "baseline_and_authority_receipts": {
+    "migration/evidence/20261018-statistics/source-commit-initial.json": "4bac9572313f76690ff71aa5b23d5720c4d3505800a3ac00f39857234027d494",
+    "/home/yurii/Java/BiglyBTC/build/statistics-20261018/source-commit.json": "f9e30d6e5fa5343a979b8f29df9f41e7b689aad920f5ed0bca0083542f536a41",
+    "build/statistics-20261018/legacy-test-acceptance/author-source.json": "a07e6e63cba3f89a76c7f463d47998884edcfeff312a218846afe16f2e20e67b",
+    "build/statistics-20261018/legacy-test-acceptance/independent-static-preservation.json": "34411cb1a6fffd73841f78f59e218f32056b9f8c4ad6fc98d1ab847501ad89a2"
+  },
+  "production_context_sha256": {
+    "preview/native/app/session_bridge.cpp": "4bbdb23e54096d170bb38189960044647fe702ca791ac331b256a4972ee314b4",
+    "preview/native/ui/library_window.cpp": "bd5d55056e1fbb3ee5228284c7f4dc7d3ff06ce2ab7abf292991a31819404909"
+  },
+  "unchanged_other_source_map": {
+    "count": 25,
+    "sha256": {
+      ".github/workflows/native-preview.yml": "4ee65f126e5f6fd00c52e3f5c4ee23b793c7f753353ea33bc5c0bfdec20d7dc4",
+      "preview/README.md": "c0691180eb1c4b88a932966be64f4b2fac0fdef9a149c997400448dce8e33c2e",
+      "preview/docs/classic-statistics-contract.json": "d1dd2859cc0d9c0de2528a2b845c5ba8a3bec153a51e40bdcb342a97f1e6be84",
+      "preview/native/adapters/CMakeLists.txt": "66bdf7920e59627442486abaa03ddbd6c0b756911da4fc949ab79c9ccf82eb1f",
+      "preview/native/adapters/statistics_view.cpp": "76f55675813481121b523e461d960ad315125151581ed66932bd0bfb3dc897a1",
+      "preview/native/adapters/statistics_view.hpp": "bfe21dc7989e315945fd51b35721904bcf9d52186a50007a9d6c09c322d4e125",
+      "preview/native/app/main_desktop.cpp": "99d1dc531eb020c619a5c0b73805828dbe3e1326457e926591aa5973c2ab88ca",
+      "preview/native/app/session_bridge.cpp": "4bbdb23e54096d170bb38189960044647fe702ca791ac331b256a4972ee314b4",
+      "preview/native/app/session_bridge.hpp": "9c53a5a49420ff11037ac72496a5c7c9d83982dc10261fa510123e04a1a65175",
+      "preview/native/core/CMakeLists.txt": "008c58da8ee2340e084c4a6dbba0c1af5f33d644075ae78438579b38852a984e",
+      "preview/native/core/include/biglybtc/saved_statistics.hpp": "c3e1c4adee063466bae0034571b42c9a4c291c72687eebbc2dc2c33a2cd529c3",
+      "preview/native/core/src/saved_statistics.cpp": "e6f4db1e06a993dbce1739a52f053dc9b0e201a89d1ba440100dfd081e355cd3",
+      "preview/native/packaging/preview.py": "78e6d1e95e9c946601da9432943b6894898638a1835516d8ca9116dbb99d9c00",
+      "preview/native/packaging/preview_smoke.cpp": "cc433e748d32439bf58711094e3b96c102aa1ea903dff9b0718ae67b9185f8ff",
+      "preview/native/tests/CMakeLists.txt": "75ec4b4caf6b1d13030166689307c08770adc79081fca351e3de2a9fc71c526e",
+      "preview/native/tests/saved_statistics_tests.cpp": "e2b577560e1fff2f3ccd9b1b3f793047645a5118ac437974cec3d00d83392176",
+      "preview/native/tests/statistics_integration_tests.cpp": "c9fb28db4fb2d4ad33945b74e0137144bea626f7b28d79c477943b3678c5bc33",
+      "preview/native/tests/statistics_page_tests.cpp": "40038f43099b12f141b7c937179d7914a135a55ca82123e581547b34f22385f9",
+      "preview/native/tests/statistics_view_tests.cpp": "3ac8f4f139fc0fdc1d5e606566af779556e5f31aae97205376bb15cb81de1e16",
+      "preview/native/ui/CMakeLists.txt": "d63de5bc15b4e4ee8a2dd80f84e8020cb803af5a0e5121cc357f46d14bf01aab",
+      "preview/native/ui/library_window.cpp": "bd5d55056e1fbb3ee5228284c7f4dc7d3ff06ce2ab7abf292991a31819404909",
+      "preview/native/ui/library_window.hpp": "6a1b36fddee2dc88330157c3521f0c07f1c5cf5b8d3b0c9a173d4a74f8dd7279",
+      "preview/native/ui/statistics_page.cpp": "2eb00a7088a75f6a159ec3a9da68487db4199138180f38bc306c11c67d78f6cb",
+      "preview/native/ui/statistics_page.hpp": "49ccac1562b9c1d0fb2aef4ba46bed1b9b16094682a133041f43b483b74c0e04",
+      "preview/native/ui/statistics_presentation.hpp": "57d027756285b3619187b4fe907cab8ce9624205043eef49e3dcb78ae0c09ef8"
+    }
+  },
+  "blocking_findings": [],
+  "delta_checks": [
+    {
+      "path": "preview/native/tests/saved_services_navigation_tests.cpp",
+      "before_sha256": "5d9689192f4fd693b24986a11d0912f9538ce3ae6047230ba0f1cd79c2ef1f5f",
+      "after_sha256": "18a404ae06467b516cfa1a9cca2e0e31a346c42e2959622f6b83fca60797f039",
+      "added_lines": 21,
+      "added_busy_assertions": 9,
+      "all_old_bytes_retained": true,
+      "capsule_after_equals_installed": true
+    },
+    {
+      "path": "preview/native/tests/classic_close_tab_tests.cpp",
+      "before_sha256": "15a923fd5505550c01edd6e2a465a8e3405b9a4d9ed7b4e1289d1cb187e344c0",
+      "after_sha256": "1d8acd1323781c782622ebebc499019f3c1e363887dd301e6efec4f066569181",
+      "added_lines": 9,
+      "added_busy_assertions": 2,
+      "all_old_bytes_retained": true,
+      "capsule_after_equals_installed": true
+    }
+  ],
+  "total_added_lines": 30,
+  "total_new_busy_assertions": 11,
+  "checks": [
+    {
+      "area": "Actualaccepteddispatchcontract",
+      "result": "Read complete realSessionBridge::dispatch: rejectsbusy upfront, setsbusytrue, submits, onfailure synchronouslybusyfalseandreturnfalse; onacceptedsubmit storesownedticket/monitorstate, emitsbusyChanged(true) before returningtrue. SavedServices uses this dispatch; Window signal delivery onGUIownerthread therefore observes acceptedbusytrue before savedServicesRequested returns. No queue-only acceptance withoutbusy is supported."
+    },
+    {
+      "area": "Correctheldsyntheticprovider",
+      "result": "Each file adds samewindow-context DirectConnection helper settingWindow busytrue synchronously in savedServicesRequested. Manual-delivery tests retain exactpacket/cancel/noresult/busyfalse control; no synthetic completion or filesystem/Bridge service claim. Context-owned connection andreference remainvalid forWindow lifetime; no queued danglingcapture."
+    },
+    {
+      "area": "Narrow7manualmethods",
+      "result": "Sixnavigation methods plusoneclose/reopen method bindheldowner beforedispatch. Eleven immediate post-request cancelAction-enabled checks proveacceptedbusy priorreturn. Existing auto-delivery syntheticowner andall othertestmethod bodies remainunchanged."
+    },
+    {
+      "area": "Noassertion/data/deadlineweakening",
+      "result": "Independent ndiff verifies21+9additions andzero removed/replaced lines. Removing exactadditions reconstructs byte-exact before-images. All priorassertions, datarows, fixtureDTOs, QTRYexpressions/deadlines andmanualstatechanges retained; addedlines contain no QTRY/skip/sleep/data/timeout changes. Bothcapsuleafterimages byteequal installedsources."
+    },
+    {
+      "area": "Productionpreserved",
+      "result": "Compared initial6900477 andfinalbe9ad3d rootrecord source maps; all other mappedsource bytes remainexact andcurrent. Existing newrejected/noowner release behavior inWindow is preserved; no production guard, CMakefilter, timeout or runtimeflag changed to accommodate oldfakeworkers."
+    },
+    {
+      "area": "Failureevidence",
+      "result": "Preserved hosted39139375177 logSHA verified; rawlog shows onlytwofailedsuites and specificmanualdelivery failures. This source review doesnot replace failedrun evidence or claim newtests/hostedrun passed."
+    }
+  ],
+  "hosted_failure": {
+    "run": 39139375177,
+    "path": "/home/yurii/Java/BiglyBTC/build/statistics-20261018/hosted-first-failure.log",
+    "sha256": "33eeea63288459788d58a344eb2e8b7df0482e9e3792b35b11e4ee0120dc46ea",
+    "failed_suites": [
+      "saved-services-view-navigation",
+      "classic-close-tab-lifecycle"
+    ]
+  },
+  "runtime_credit": {
+    "test_or_native_execution_by_reviewer": 0,
+    "compiler": 0,
+    "Java": 0,
+    "profile_or_network": 0,
+    "Git_commands_or_mutations": 0
+  },
+  "limits": [
+    "Corrects Window-only fakeprovider acceptance timing; no new realworker/profile/service/network coverage.",
+    "Actual updatedlocal/hosted pass is root qualification scope, not inferred from thissource review."
+  ]
+}

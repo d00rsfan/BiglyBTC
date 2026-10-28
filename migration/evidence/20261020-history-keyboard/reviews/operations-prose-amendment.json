@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "milestone": "P04-24",
+  "reviewer": "error_codec",
+  "status": "PASS source-only private-message prose amendment",
+  "blockers": [],
+  "preserved_review": "migration/evidence/20261020-history-keyboard/reviews/operations.json",
+  "preserved_review_sha256": "10d529ee088891e39a0005088be6931abeab31ab2da0b8088141af177e909e3c",
+  "changed_helper": "build/history-keyboard-20261020/checkpoint_milestone.py",
+  "before_sha256": "8aa46529570097d85fd76518843f89a0b7d3e9786a476bb7e143f50f689e5679",
+  "after_sha256": "80ff4bc64df7c73057cfd23bdeb26b589e263a14a0f49dcd2b2e4ec44ab7e318",
+  "before_phrase": "session-scoped scalar History keyboard inspection",
+  "after_phrase": "per-frame History keyboard inspection and retained navigation",
+  "checks": {
+    "reversing_only_literal_phrase_reproduces_exact_reviewed_before_bytes": true,
+    "all_other_17_reviewed_sources_unchanged_including_docs": true,
+    "AST_parse_without_import": true,
+    "runtime_guards_counts_paths_deadlines_unchanged": true
+  },
+  "rationale": "The keyboard cursor is per-frame; existing scalar subview navigation is retained separately. This improves the private commit message without altering admission or snapshot behavior. Original operations receipt remains immutable history.",
+  "execution": {
+    "helper_imports": 0,
+    "selected_definitions_evaluated": 0,
+    "helpers_run": 0,
+    "builds": 0,
+    "tests": 0,
+    "git_commands": 0,
+    "native_edits": 0,
+    "helper_edits": 0
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "source_commit": "889dfe8cc9a22830149d79c7108ce946a7df2766",
+  "native_parent": "94bf1cb1c17ea7979bc56ae21e9837605689f6a1",
+  "source_files_verified": 14,
+  "source_sha256": {
+    "preview/README.md": "e56337ef9a3befed91f937a84eec0de0b1a20488372492f71d6376a41067c08b",
+    "preview/docs/history-charts-contract.json": "9870ce18e6eb9083e7475b82024d78f237f81bc7ba0cfb186f3e3adb978ecb3d",
+    "preview/native/packaging/preview_smoke.cpp": "d44b0cce5e4ec13b6569895ef73cf8f37c7fe13cf6c442e5df239fe3aa344c5d",
+    "preview/native/tests/CMakeLists.txt": "c5b5fc271d42d7c02954c226265dfa33c90fb2511562e01a824ba78604372a8d",
+    "preview/native/tests/saved_history_chart_view_tests.cpp": "b658c04de48dfc5192d9344f1320a063bf4f1aab70981a982efed2023c954c5a",
+    "preview/native/tests/saved_history_plot_tests.cpp": "918ac3e3c3da7242f58a88df674a4f0bc45f0d28e41dd850903e77e1c8fbf738",
+    "preview/native/tests/saved_history_plot_widget_tests.cpp": "406932105a972d62267af2d44a6980acffa814e11bd205510db9a7422e874cce",
+    "preview/native/ui/CMakeLists.txt": "e05fb21024d6e64bce8671451d6bbb89694e3541bc94e55317a2f3b3ebcc02cd",
+    "preview/native/ui/history_view.cpp": "5036248a34cd7194f18be72cf723dc02a681f650d41ecd9450a21a2105fa44e9",
+    "preview/native/ui/history_view.hpp": "630d338494acd3a860ea690f0795bf0498a8b69aba399f657440f4f712ce1583",
+    "preview/native/ui/history_week_view.cpp": "d5cd24203169ccb188988fe7663dedf515f8374dfe29cd35eff2135bef54d2b3",
+    "preview/native/ui/history_week_view.hpp": "77be4bc9a23ccb1d7334b5c75f5abc01c6d266e995a7f34662a651a7c43bd68f",
+    "preview/native/ui/saved_history_plot.cpp": "725b2aea935e3a5d5ed74acf1526be289105f139f66ab85cf54b29f7c99f0b56",
+    "preview/native/ui/saved_history_plot.hpp": "7358b1d6a900f3ae787b83aab1b2889138ff2ffdb328171fd1be93b858bc50fd"
+  }
+}

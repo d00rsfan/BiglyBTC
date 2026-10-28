@@ -1,0 +1,14 @@
+{
+  "status": "compiled",
+  "source_commit": "1ee6a53dae017696d2f0002e4a0d74f5a9476af5",
+  "source_count": 22,
+  "source_overlay": false,
+  "class_count": 60,
+  "classes": "/tmp/biglybtc-speedscheduler-java/classes",
+  "class_digest": "8f6a561f700e214fdb4aeda5242466b3e5e242ef2e3a5a0cd7fdb46c7959200f",
+  "log": "/tmp/biglybtc-speedscheduler-java/build.log",
+  "log_sha256": "f96c74083940b969bf9f01adc1769a1d15c31cc119803451f07b56aae4f57f49",
+  "scope": "Full frozen original plugin compilation only; normal initialize/UI entry point never called",
+  "compile_swt_jar": "/home/yurii/.m2/repository/org/eclipse/swt/org.eclipse.swt.gtk.linux.x86_64/4.9/org.eclipse.swt.gtk.linux.x86_64-4.9.jar",
+  "compile_swt_sha256": "152274b413dbdda5a4ea98908db97ef6b614472b62d410b6d5eb7999feff05f6"
+}

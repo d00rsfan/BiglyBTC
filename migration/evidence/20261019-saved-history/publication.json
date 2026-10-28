@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "repository": "https://github.com/d00rsfan/BiglyBTC",
+  "source_commit": "9db774659334daa2dbabd81762c819c108eb43b2",
+  "metadata_commit": "fe09d1c9430a5a3c684d34be97a6661d08704c72",
+  "tag": "milestone-saved-history-20261019",
+  "tag_object": "febf5610526d72a61b0963d2575fb521a54425cf",
+  "tag_target": "fe09d1c9430a5a3c684d34be97a6661d08704c72",
+  "remote_identity_verified": true,
+  "source_files_verified": 48,
+  "qualification": "local-verification.json and hosted-verification.json",
+  "dist_manifest_sha256": "3e9cac217002984615942bb8542594962750d6cddde0274d8a855bb1da67478c",
+  "original_processes_signaled": false,
+  "original_profile_access": false
+}

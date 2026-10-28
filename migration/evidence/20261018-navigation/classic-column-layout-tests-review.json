@@ -1,0 +1,155 @@
+{
+  "schema": 1,
+  "status": "PASS_FROZEN_TEST_SOURCE_REVIEW_NO_BLOCKER",
+  "subject": "P04-10 independently authored generated in-memory column-layout tests",
+  "reviewer": "/root/error_codec",
+  "observed_at_utc": "2026-10-18T11:13:36.901082+00:00",
+  "independence": "Reviewer authored production projection, not this test source/fixture plan. This is independent test-source review; it does not replace the separately authored production review or create independent review credit for the reviewer own production code.",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_observed_head": "5bf0a30160c52c51d8efce279cac758948adfff2",
+  "input_sha256": {
+    "/home/yurii/Java/BiglyBTC/preview/native/tests/column_layout_tests.cpp": "d3755633442de66243bf2904e4610be6c146d3258f04559dcfb9fa60fda63a44",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/column_layout.hpp": "1d4d1c06efd71ef2ab026364eb15f434d4b8647d15f8ae31852052f63a996d39",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/src/column_layout.cpp": "b55620a54cbdc243c8eccade512b19905d1efe819a4efb0db39bb435a325dd25",
+    "/home/yurii/Java/BiglyBT/migration/evidence/20261018-navigation/classic-column-layout-test-plan.json": "a132537138cbfdd5a1835985ee1d80caea1b159ac90ffb61f0367a4634d2af1d",
+    "/home/yurii/Java/BiglyBT/migration/evidence/20261018-navigation/classic-column-persistence-audit.json": "474b6bc5bfca4a2798b89024075267acc20128f3e1784e6efff38434b3216b64",
+    "/home/yurii/Java/BiglyBT/migration/evidence/20261018-navigation/classic-column-projection-design.md": "b556cf736095ee573c9902ee6883b3c6fb4a1d25b7f39a27203160f20fd2cc3a",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/bencode.hpp": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/src/bencode.cpp": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08",
+    "/home/yurii/Java/BiglyBT/migration/evidence/20261018-navigation/classic-column-projection-implementation-review.json": "80284c17ce1e90a24c7bb667e8370246af6b915491fa9f288529e176ad28b7c1",
+    "/home/yurii/Java/BiglyBT/migration/evidence/20261018-navigation/classic-column-projection-api-review.json": "d848b1b48cd038efa29b7f4fdd60a3916f430d20d004b945d659ce315feca92e"
+  },
+  "original_source_guards_verified": 28,
+  "original_source_sha256": {
+    "core/src/com/biglybt/core/config/impl/ConfigurationManager.java": "2627f71f0dd69b2cee577331ad6ce05fd230d47df816b592d07236c9b759bc82",
+    "core/src/com/biglybt/core/util/FileUtil.java": "6565fa6aa08efd7ef64d339db28040d909765b0808050c7b70ae9a09e8cb4ba2",
+    "core/src/com/biglybt/pif/ui/tables/TableColumn.java": "e907852123e7a43121dd794d3419fb6c90e583e9bbe356ea7956a96b535be734",
+    "core/src/com/biglybt/pif/ui/tables/TableManager.java": "c5f7c045f3bb0e9cee42a8270ce023893d98d716fd35058bf00037855b36f9e8",
+    "core/src/com/biglybt/ui/common/table/impl/CoreTableColumn.java": "d60558501605835c7ea0023cbc4c4a1cf968f5e89d40a21e0796194c584b6104",
+    "core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java": "f68a5a85867ce73bdeea6c8b3fae2a6cad0f504daea894747abfedfd5ad565ac",
+    "core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java": "5d0b80ab7137e2d8740376da363593e077b6859ef7ee8daca0c90c8ef64d2aa9",
+    "core/src/com/biglybt/ui/common/table/impl/TableViewImpl.java": "62cc55430c2378e8f893df25576f19ae07db068c13c802646be65ab2c7b73960",
+    "core/src/com/biglybt/util/MapUtils.java": "78531933cb0e466d78d273dd44dbd8c400f2255ad1e7d824fb2f52bb3912a991",
+    "uis/src/com/biglybt/ui/swt/views/MyTorrentsSuperView.java": "24af1c9a8235eeeca9c1944a86214c2782ac4391d78533613e813fb379d4144a",
+    "uis/src/com/biglybt/ui/swt/views/MyTorrentsView.java": "5d019924be50987d683aa82a2000a42cce3297156036ddd5ab8fa65f8eef88fd",
+    "uis/src/com/biglybt/ui/swt/views/columnsetup/TableColumnSetupWindow.java": "2c040d15afd00b20cbf2be7a00d866dd319f6efddcb15fc955641b8835086370",
+    "uis/src/com/biglybt/ui/swt/views/skin/SB_Transfers.java": "7871a709028ced6d7d1839efa8d0ffbe86af677b5c30a47379315b298439f636",
+    "uis/src/com/biglybt/ui/swt/views/table/impl/TableViewSWT_Common.java": "e7ff336a03bd721d598e4f9dd0965c214daf3e96f035858d3a08fd2f7ae6b186",
+    "uis/src/com/biglybt/ui/swt/views/table/painted/TableHeaderPainted.java": "7ac135f00c5f8b2119319b400cf9efebccc3a74336ca2b1db152f338a30c91ff",
+    "uis/src/com/biglybt/ui/swt/views/table/painted/TableViewPainted.java": "2f8dbc0ddb3cba5dbb12d312c64724cfbc3315d74155ca1452d4be059f9da275",
+    "uis/src/com/biglybt/ui/swt/views/table/utils/TableColumnCreator.java": "e0ce2a57077d76685b1e71d2cb7a831c7cc79fa1e5f93f7979536146ac80053a",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DoneItem.java": "5844b06d3c9bf42447e8835bdb18af7417a55e71aa3ddecc3b3769c45e23f0f4",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DownItem.java": "dcfc8904f44d695327ab75e17b6de82331cf5702ed9624516b2f6131fdc1bd9b",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DownSpeedItem.java": "36e0e8ec776464905f4bde5ebf889f04f29016fbbbd12361ba2caaba1226dec2",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/NameItem.java": "093bcc658b79ffa2013243878ee697e409efc8f351515549fd9c9b548353d9dd",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/RankItem.java": "618c621c5980dac6a01364c6bf793d18c51f13346ab8cb44acac8c91b1cd142b",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/RemainingItem.java": "c85e3a3d0ac983b63e29d45631c945696ef6e923018e61c9ab11019a59caf232",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/SizeItem.java": "799ccd6d2457b69094ad64829387420e38777a23d67c6f3ae06adee2c87a4136",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/StatusItem.java": "0f74cb1db1597c52d873370d7037eca9919f41bb605a45303b755a57353de6ea",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/TorrentHashItem.java": "3710fce21ad229424087eb9e9effd61dd912831049c4f7925bc2998e408d8d1a",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/UpItem.java": "d32af2abfb333efdee334ea263b1b08d6f40364071b81e65dee039657dbf90a2",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/UpSpeedItem.java": "de112301ab5d09a54259955444e7e9b2aa9887f8ca21bb7ca593fcd959da19da"
+  },
+  "static_plan_mapping": {
+    "families": {
+      "TABLE": 8,
+      "NAMESPACES": 1,
+      "SLOT": 1,
+      "SHORT": 11,
+      "RECORD": 3,
+      "LOW32": 9,
+      "WRONG_NUMBER": 7,
+      "LEGACY_FLAGS": 2,
+      "RGB": 8,
+      "OPAQUE": 3,
+      "IDS": 4,
+      "ORDER": 3,
+      "SORT": 10,
+      "METADATA": 2,
+      "OWNERSHIP": 3,
+      "EDIT": 5,
+      "HARD_DOCUMENT": 6,
+      "LOWER_DOCUMENT": 3,
+      "HARD_PROJECTION": 8,
+      "LOWER_PROJECTION": 4,
+      "RAISED_LIMIT": 8,
+      "ROOT": 3
+    },
+    "planned_named_cases": 112,
+    "review": "All22 frozen families are represented by named run calls or fixed-bound literal-array loops; main invokes all8 case groups and checks named case count112. This is static source inspection, not a measured executed count."
+  },
+  "checks": [
+    {
+      "id": "CT1",
+      "result": "PASS",
+      "scope": "Helpers and fixture authority",
+      "evidence": "Bencode builders only create supplied input. Assertions invoke real Document::parse/readColumnLayouts; no fake result implementation, expected-output adapter, private-state hook or original manager. Explicit signed-low32 expected constants are independent, not calculated by the production converter. exactBytes is used only for the inspected representable lengths25,26,4194304,4194305; exactNodes includes root/key/list; exactDepth is root0 with exact64/65 boundary."
+    },
+    {
+      "id": "CT2",
+      "result": "PASS",
+      "scope": "Table/default/namespace contracts",
+      "evidence": "Tests190..262 distinguish absent/empty/wrong exact and selected-default provenance for both named panes, preserve original dictionary-pair indices, and keep scoped/modern/unused defaults opaque even beyond selected ID/count caps. No registered defaults or runtime sorting are inferred."
+    },
+    {
+      "id": "CT3",
+      "result": "PASS",
+      "scope": "Requested slot facts and optional semantics",
+      "evidence": "Tests265..389 pin executable POSITION index1/WIDTH index2, all short-list boundaries, seven numeric slots over nine hardcoded raw64/low32 extremes, knownfalse engagement, independent wrong numeric slots, exact legacyRequired conditions and negative numeric width without fallback. The tests correctly distinguish requested facts from effective original registration/integrity properties."
+    },
+    {
+      "id": "CT4",
+      "result": "PASS",
+      "scope": "Malformed/RGB/opaque/ID behavior",
+      "evidence": "RGB outer-type versus bad-length/member outcomes match the frozen presence/issue contract, including actual member indices and valid sibling survival. ID invalidUTF8/NUL/empty remains bytes plus issues; extra tails/plugin/userData stay raw. Duplicate/negative/gapped positions remain source order, not normalized. See nonblocking literal precision note below."
+    },
+    {
+      "id": "CT5",
+      "result": "PASS",
+      "scope": "Sort/metadata precedence",
+      "evidence": "Tests525..623 retain ordered multiple IDs, duplicate/NUL IDs and unknown primary. Empty valid current list suppresses overlength/wrong unused legacy without its quotas/issues. Wrong current outer type alone permits singleton; invalid members do not. Empty or nonUTF8 legacy bytes remain Present, with no UTF8 Encoding issue; exact field/index diagnostics verified. No global-nullguard, default direction or UI comparator behavior is claimed."
+    },
+    {
+      "id": "CT6",
+      "result": "PASS",
+      "scope": "Ownership and safe tampering fixtures",
+      "evidence": "Tests625..711 verify independent backing, caller destruction/later supported edits, copied/moved result storage and shared immutable source. const_cast modifies actual nonconst caller Node objects with valid memory only; foreign-byte storage lives through call, and tree/view/order/odd/scalar-child/origin corruption is never serialized. Checks throw before unchecked optional/expected/front accesses. Synchronous run invokes captures immediately; no callback or thread lifetime issue found."
+    },
+    {
+      "id": "CT7",
+      "result": "PASS",
+      "scope": "Meaningful hard/lower limits",
+      "evidence": "Tests713..838 admit exact4MiB/100000nodes/depth64 and reject+1 using deliberately larger caller parser quotas. Every configurable maximum is individually rejected when raised. Selected column/sort counts include malformed/duplicates and are tested per-pane; suffix/sort ID bounds, zero/lowered caps and4096/4097 issue outcomes fail rather than truncate. Successful oversized caller paths are not serialized by helpers; depth65 is deliberately bounded."
+    },
+    {
+      "id": "CT8",
+      "result": "PASS",
+      "scope": "Scope/reporting",
+      "evidence": "Suite identifies generated requested-fact-only scope, uses no file/profile/socket/Java/executor APIs, and claims no source runtime equality or actual UI application. Runtime/build results reported separately by root are not execution by this reviewer. No allocator-fault guarantee is inferred from these successful/malformed fixtures."
+    }
+  ],
+  "nonblocking_scope_precision": [
+    {
+      "id": "CT-N1",
+      "line": 66,
+      "detail": "slots() uses opaque userdata key \"nameoverride\" rather than original \"tablecolumn.nameoverride\". The raw-map/unchanged-ID assertion remains valid for this projection, which interprets no userdata keys, but this literal is not an exact original rename-key fixture. Root explicitly chose to keep frozen tests/results unchanged; no original effective-title/rename claim is made.",
+      "action": "No source change required for this bounded milestone; align exact literal in a separately reviewed future rename-specific fixture if that behavior is added."
+    },
+    {
+      "id": "CT-N2",
+      "detail": "No explicit tampered dictionary-key-type or end-extent fixture; existing source comparison covers those guards, while current tests exercise integer/view/begin/order/odd/scalar-child/origin tampering. No fixture credit is assigned to the additional branches.",
+      "action": "Optional later hardening; not a blocker or excuse to broaden the current claim."
+    }
+  ],
+  "blockers": [],
+  "frozen_inputs_before_after": "All declared test/API/core/plan/design/audit inputs and28 original working files remained hash-identical through this static review.",
+  "execution_by_reviewer": {
+    "compiler": 0,
+    "native": 0,
+    "Java": 0,
+    "target_import": 0,
+    "test_execution": 0,
+    "profile_or_network": 0
+  },
+  "source_edits": 0
+}

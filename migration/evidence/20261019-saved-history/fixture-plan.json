@@ -1,0 +1,197 @@
+{
+  "schema": 1,
+  "cases": [
+    {
+      "basename": "basic-hour-boundary.dat",
+      "date": [
+        2024,
+        2,
+        29
+      ],
+      "bytes": 89,
+      "sha256": "44da5d23003c55f1407335f35fe17cbba8a41b7402cf7f5ff33084dc35918117",
+      "purpose": "Delta/e occupy reconstructed00:59,01:00,01:01; e recorded23:59 ignored."
+    },
+    {
+      "basename": "baselines-ignored.dat",
+      "date": [
+        2024,
+        2,
+        29
+      ],
+      "bytes": 79,
+      "sha256": "a2670d7f338ed4a4fee02125edb139423e7bc6bdd6dfc06b088a328ad35636fa",
+      "purpose": "Large absolute start baselines are not daily traffic."
+    },
+    {
+      "basename": "overlapping-sessions.dat",
+      "date": [
+        2024,
+        2,
+        29
+      ],
+      "bytes": 104,
+      "sha256": "4f538b1c8318e7a9a613256eafc7966191ba1f39a940344906b4bc1c38329325",
+      "purpose": "Duplicate reconstructed minute from multiple sessions adds, no replacement."
+    },
+    {
+      "basename": "end-timestamp-ignored.dat",
+      "date": [
+        2024,
+        2,
+        29
+      ],
+      "bytes": 68,
+      "sha256": "2235b5081888974e80f68d50bb363c167ae222e9f85b3ca3d948895dc1d4f5d7",
+      "purpose": "e stored18:00 belongs to reconstructed06:00."
+    },
+    {
+      "basename": "rollover-spill.dat",
+      "date": [
+        2024,
+        2,
+        29
+      ],
+      "bytes": 86,
+      "sha256": "6e27d4d99a7ce922057dcfa815c3e37e0672d02be30ef5113f029b9f2e0a9118",
+      "purpose": "Writer switch appends a spill record to prior file; reconstructed next-day record excluded."
+    },
+    {
+      "basename": "signed-adjustments.dat",
+      "date": [
+        2024,
+        2,
+        29
+      ],
+      "bytes": 84,
+      "sha256": "242a0543bc06c6b40519e57ac168da8090241a679247fc817f30a9b12c320a53",
+      "purpose": "Signed source counter adjustments, safely away from overflow."
+    },
+    {
+      "basename": "crlf.dat",
+      "date": [
+        2024,
+        2,
+        29
+      ],
+      "bytes": 81,
+      "sha256": "bcc068a5dc24a9ce509500733a7a817df90016c2b786a6686a5e14278605f44a",
+      "purpose": "CRLF and blank complete lines."
+    },
+    {
+      "basename": "complete-eof.dat",
+      "date": [
+        2024,
+        2,
+        29
+      ],
+      "bytes": 54,
+      "sha256": "0cd6f7d48aba52d2341e7232086c3fcaeef602f8dd8111e762c27bfd501c2d39",
+      "purpose": "Complete last delta without newline."
+    },
+    {
+      "basename": "known-zero.dat",
+      "date": [
+        2024,
+        2,
+        29
+      ],
+      "bytes": 49,
+      "sha256": "a5099b8d84f68c5cd9d4f039db646a64754fd55fe0249318c30fe3924c2f36f0",
+      "purpose": "Actual anchored zero observation; Java totals alone do not encode missing/hour presence."
+    },
+    {
+      "basename": "header-only.dat",
+      "date": [
+        2024,
+        2,
+        29
+      ],
+      "bytes": 37,
+      "sha256": "15a1a28168ec48f2c1a3fdb25be958dffd305834444678d64cd9d8701393a791",
+      "purpose": "Only absolute baseline, no observations."
+    },
+    {
+      "basename": "empty.dat",
+      "date": [
+        2024,
+        2,
+        29
+      ],
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "purpose": "Empty regular file, no observations."
+    },
+    {
+      "basename": "pre-anchor-zero-anchor.dat",
+      "date": [
+        2024,
+        2,
+        29
+      ],
+      "bytes": 139,
+      "sha256": "e0997160da29ce86ccfbf8457eff96883c46ca316d97b53ca4e257be52a68ce5",
+      "purpose": "Valid deltas/e before a positive anchor and after s0 are ignored; later positive anchor activates."
+    },
+    {
+      "basename": "negative-anchor.dat",
+      "date": [
+        2024,
+        2,
+        29
+      ],
+      "bytes": 129,
+      "sha256": "36e752655a0954c236c570794302a9190e12a0baf889e6fd74814ab6e3779afb",
+      "purpose": "Negative start minute is inactive, then positive reset."
+    },
+    {
+      "basename": "after-end-anchor-retained.dat",
+      "date": [
+        2024,
+        2,
+        29
+      ],
+      "bytes": 76,
+      "sha256": "9e2aefb7222eaaa50354bb247910f7560b8a60ef5a8e0bb5525c47151e8b0a33",
+      "purpose": "Reader-only grammar boundary: e does not clear anchor; not claimed ordinary emitted lifecycle after session end."
+    },
+    {
+      "basename": "large-signed-values.dat",
+      "date": [
+        2024,
+        2,
+        29
+      ],
+      "bytes": 127,
+      "sha256": "187505ebd3befa9b602ee3859fb04c91d288ac10368341505f9b90a3656728de",
+      "purpose": "Signed64 values beyond int32; sums safely fit int64."
+    },
+    {
+      "basename": "explicit-plus-signs.dat",
+      "date": [
+        2024,
+        2,
+        29
+      ],
+      "bytes": 55,
+      "sha256": "2ebe09fa5f78a2efc114b5e01b987d0e9aa3c00f812e94004fda10c970af7ba4",
+      "purpose": "Java Long.parseLong plus syntax, native policy agreed."
+    },
+    {
+      "basename": "epoch-positive-anchor.dat",
+      "date": [
+        1970,
+        1,
+        1
+      ],
+      "bytes": 44,
+      "sha256": "bfbbbdf083581f9ccf2e71e5dd45b1842121037c4781af140ce8081838c58ed0",
+      "purpose": "Epoch-day positive minute1 begins at00:02; gate distinguishes s0."
+    }
+  ],
+  "fixtures": 17,
+  "queries_per_fixture": 25,
+  "expected_rows": 425,
+  "expected_scalar_observations": 2550,
+  "expected_values": "Not generated here; actual original Java reader stdout only."
+}

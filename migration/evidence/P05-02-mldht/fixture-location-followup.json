@@ -1,0 +1,33 @@
+{
+  "source_sha256": {
+    "fixture_test.py": "8683efc9bfcda23fa95858d8ffe4058afb8f7d9bbdda16a30837f23b2c3711ed",
+    "identity_fixture_test.py": "974b2e624978c3a9b373bcf73cdd26d364bc61f76a3a73c584ef02b8edf42943"
+  },
+  "builds": [
+    {
+      "compiler": "gcc",
+      "binary_sha256": {
+        "/tmp/biglybtc-mldht-identity-qualified-gcc/mldht-policy-driver": "74fac36031016d966eabe81c1f9e7ccf5029ef83c8c6aa646b7cb5b9a8d05ae3",
+        "/tmp/biglybtc-mldht-identity-qualified-gcc/mldht-identity-driver": "5c53528ba7af74f10168d362e4a3ae05bb8155e6a99f48145516ca372e15ffc5"
+      },
+      "log": "migration/evidence/P05-02-mldht/gcc-fixture-location-followup.txt"
+    },
+    {
+      "compiler": "clang",
+      "binary_sha256": {
+        "/tmp/biglybtc-mldht-identity-qualified-clang/mldht-policy-driver": "2a67d1c787eb4470ededf2dc753ff3ab513f4f5ddb1a37be1322d4d5d237ce08",
+        "/tmp/biglybtc-mldht-identity-qualified-clang/mldht-identity-driver": "a7443f54a7c70d156a105a987351d6fbcb698f69766f68a7ff5b18d13af6223d"
+      },
+      "log": "migration/evidence/P05-02-mldht/clang-fixture-location-followup.txt"
+    },
+    {
+      "compiler": "asan",
+      "binary_sha256": {
+        "/tmp/biglybtc-mldht-identity-qualified-asan/mldht-policy-driver": "31f9be1be4b9998782252f40c5557d6cd5bb8b8600151a3244c3e4db594ae632",
+        "/tmp/biglybtc-mldht-identity-qualified-asan/mldht-identity-driver": "54d2baae74e0e692da3a596849fc184f544d79bbca005c9d6ecd58e6204567d4"
+      },
+      "log": "migration/evidence/P05-02-mldht/asan-fixture-location-followup.txt"
+    }
+  ],
+  "scope": "Only fixture location helpers changed. Both suites replayed on identical previously-qualified native binaries and clean shallow export preview."
+}

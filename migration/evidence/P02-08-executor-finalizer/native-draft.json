@@ -1,0 +1,55 @@
+{
+  "status": "isolated-native-foundation-draft-unbuilt-unexecuted",
+  "before_draft_sha256": "d4c82fc4dd8819ff41b8abfcd8bd1d9f5461af4c3136fad0467f8ac335b6122b",
+  "base_source_sha256": {
+    "native/core/include/biglybtc/executor.hpp": "d2afcc590573e64bce376aadc42051198353e4c79c5f69f8a2452ab5a7d3d8bc",
+    "native/core/src/executor.cpp": "bd3adadaec6e4f48c0ffbb8ffc77e2c67c15296302105a73e984f58e4e8d7613",
+    "native/tests/executor_tests.cpp": "41b8ac27f40d257a199e03d48865cd32a7a8f91b5a655a7f94a2a1f7c5ac9ea4",
+    "native/core/CMakeLists.txt": "bd0e3c00533497d4ad524bb4ff82adf26e1f353a24a6f7b5c5ff53cf94a64d09",
+    "native/tests/CMakeLists.txt": "5947e7e7a9dc2def8afe51e3f6fc81cf3ced50131a1fe2d27ac62aa38be2c8ee",
+    "native/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "native/app/session_bridge.cpp": "c9d8145e15602b2b0c2b0ed58ce04786905f2e021caeca85f64fddd4528c0e3e",
+    "native/app/session_bridge.hpp": "e7312e57494c9106a20f55ccde826e483d904902a720def65fbb19669c96bb45",
+    "build/recovery/active-drafts/persistent-session-audit/executor-finalizer-notes.md": "0de4f1046bbfd9ba88e7bb0e3d50a0f2f050b1f3649080b7eb683be54c4aaaff"
+  },
+  "implementation_files_sha256": {
+    "native/core/include/biglybtc/executor.hpp": "0d99cc28102acb980070efc9a72f8e0686ecf94dc43bb81198694245c6b72777",
+    "native/core/src/executor.cpp": "b886692587ef8c5efc269ea3735f2b64f3432a255b8a1bd57b357627bc3da77a",
+    "native/tests/executor_finalizer_tests.cpp": "eb7d05c99058950c02a56b625cad688107a071dbe92ecf9b13df2dd1ea8e9770",
+    "native/tests/executor_startup_failure_tests.cpp": "d270ebd9fe42ce9fe0f8f89e9c1b5afbd97f04e1c1920530189b6f381518a5b2",
+    "native/tests/executor_tests.cpp": "41b8ac27f40d257a199e03d48865cd32a7a8f91b5a655a7f94a2a1f7c5ac9ea4"
+  },
+  "draft_artifact_sha256": {
+    "CMakeLists.txt": "bc235f46647263418d1a63fe4c7ca43ffc24a61a5de54ead735394c59d688e63",
+    "README.md": "32a608a63ff1713331d45447c723e036c79113c6c6fe36310aed5dac230b04d4",
+    "integration-cmake-snippet.txt": "ccc30e1f0fde0689e3eff002aa7d1e6c25d9597d9f2bd14566e80a4edbe675e2",
+    "startup-source-proof.json": "fb42cbdc0bd02d1a358027ad3bce7735f0513e1753d0dd71083355071b3dcf0c",
+    "implementation.patch": "f6743a450b49f39cbd5771bed2ae7c179366b41e770c340c598305354e616946",
+    "inspection.json": "7fcb1710b5151ec365b40a938dd3041fa9428a514006036422c093c30401d8fd"
+  },
+  "preserved_original_test": {
+    "path": "native/tests/executor_tests.cpp",
+    "sha256": "41b8ac27f40d257a199e03d48865cd32a7a8f91b5a655a7f94a2a1f7c5ac9ea4",
+    "byte_identical": true
+  },
+  "existing_start_API_symbol_preserved": true,
+  "new_API": "using Finalizer = std::move_only_function<void() noexcept>; bool Executor::start(Finalizer);",
+  "native_policy": "Successful nonempty hook runs exactly once on worker after accepted work futures/captures and in-flight caller cleanup; hook captures clear on worker. Rejected/failed hooks never invoked and clean up caller-unlocked. Ordinary external callers must be excluded during host destruction; no executor self-destruction.",
+  "scope_exclusions": [
+    "Original Java equality",
+    "Graceful compatible Close/pause/resume",
+    "Save/flush/disk release results or error reporting",
+    "Reserved command admission/deadlines",
+    "Persistent session/engine/profile/network activation"
+  ],
+  "prepared_test_entries": [
+    "bounded-executor",
+    "executor-owner-finalizer",
+    "executor-startup-rollback"
+  ],
+  "new_case_count": 7,
+  "actual_test_results": null,
+  "compiler_JVM_native_test_execution": false,
+  "main_source_edits": false,
+  "questions": "No user input required for this foundation seam. Graceful persistence/Close remains separately scoped P03 work."
+}

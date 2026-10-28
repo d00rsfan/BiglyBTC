@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "status": "PASS: independent full new test/public contract source review; actual qualification pending",
+  "reviewer": "root",
+  "sources_sha256": {
+    "preview/native/tests/statistics_navigation_page_tests.cpp": "000d0818401369dd15d8e40db8a6b3336ecd1b5f12b7653377deb3f501ece76d",
+    "preview/native/tests/statistics_navigation_window_tests.cpp": "44e807d2eca7c5c1aac8c1b6fade4edcf5afe92975c4d63b7a369e65fab4839d",
+    "preview/docs/statistics-navigation-contract.json": "ab117b572dcd913d17ab7f0e411cee0715b0a759b01a15e48d41d39041b9b46e"
+  },
+  "checks": [
+    "Read all three complete files against production APIs and ownership contract.",
+    "32 choice combinations initialize actual hidden controls, not mock mirrors; invalid state discards all choices, selected first-show requests are observed.",
+    "Captured navigation allows saved DTO weak ownership to expire on Page destruction; reopening starts with empty result state.",
+    "Actual generated held profiles verify changed input bytes are re-read on reopening and profile transition loads fresh totals; bytes/device/inode are checked for all generated inputs.",
+    "Independent deterministic tests cover pending old Page/replies, nonzero/duplicate/older/new sessions, callback reentry and deletion, Ctrl+5/Ctrl+W and library filter/selection/columns.",
+    "All85 old unit test source/helper files and fixtures remain unchanged; all221 frozen raw inputs are exact. The separate preview smoke reset expectation changes intentionally to retained navigation, with stronger full-state equality and no removed assertion, disabled test or relaxed deadline."
+  ],
+  "case_scope": {
+    "page_methods": 7,
+    "page_planned_qt_rows": 13,
+    "window_methods": 9,
+    "window_planned_qt_rows": 11,
+    "executed_counts_claimed": false
+  },
+  "blockers": [],
+  "limits": [
+    "No original Java UI runtime/persistence equality; actual compilation, execution and sanitizer results are separate."
+  ],
+  "smoke_expectation_amendment": "smoke-assertion-amendment/review.json"
+}

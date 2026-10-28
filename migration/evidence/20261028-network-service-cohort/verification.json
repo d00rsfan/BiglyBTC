@@ -1,0 +1,1481 @@
+{
+  "status": "VERIFIED_SCOPED_ACTUAL_NETWORK_SERVICE_COHORT",
+  "qualified_source": "013fa60f59898392a33855ba148961090bacca14",
+  "source_commits": [
+    "3b18849f06a6287c4da7d97c067480156c6ef796",
+    "5809ac611bb5d49b8de1c5eab0c7dca3ef8cbe9a",
+    "9d3058b8e3fd073a5c9102a17ce6104daa23c534",
+    "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+    "013fa60f59898392a33855ba148961090bacca14"
+  ],
+  "matrix": {
+    "gcc": {
+      "actual_suites": 24,
+      "suite_names": [
+        "mainline-dht",
+        "mainline-active-scrape-owner",
+        "mainline-original-identity",
+        "mainline-checkpoint",
+        "mainline-scrape-codec",
+        "queue-policy",
+        "managed-queue",
+        "persistent-native-peer-session",
+        "managed-magnet",
+        "mainline-original-wire-identity",
+        "mainline-single-tracker-owner",
+        "azureus-storage-stats",
+        "azureus-database-runtime",
+        "owned-tor-control-channel",
+        "owned-tor-control-ownership",
+        "owned-tor-ownership-source",
+        "original-tor-safecookie",
+        "bounded-tor-safecookie",
+        "profile-lease-retention",
+        "owned-tor-child-lifecycle",
+        "provider-original-identity-runtime-inputs",
+        "provider-original-identity-runtime-deployment",
+        "provider-original-identity-reject-foreign-identity",
+        "provider-original-identity-reject-foreign-tracker"
+      ],
+      "actual_fresh_suites": 4,
+      "fresh_suite_names": [
+        "azureus-database-runtime",
+        "mainline-original-wire-identity",
+        "owned-tor-child-lifecycle",
+        "mainline-single-tracker-owner"
+      ],
+      "historical_suites": 20,
+      "historical_source": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+      "fresh_source": "013fa60f59898392a33855ba148961090bacca14",
+      "suite_origins": {
+        "original-tor-safecookie": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "30b9c1ea9b7746cef3f56c88e75dd14d0c598266a765cf2f71253c963a308723",
+          "image_sha256": "b4fe0ac30321b82f4fb808652420d05639178eb362975e2961c57c0fe6ea0461",
+          "historical_gzip_sha256": "93f7f1675847c070bd092ce2eb0394ce08fef3509d5adf6885ed9ae553a3596c"
+        },
+        "bounded-tor-safecookie": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "2e35459a9b8cebb426a6e3440a1fe8c6711fe0e4bb7084b8cccb78a88a4af12d",
+          "image_sha256": "b0672a5f36382e7659aed96561461304be7beee8b0ad5cfef15f0841e3956396",
+          "historical_gzip_sha256": "70d3bdf3788f98ff8f232df55540713a71acc2a23297af5a55c551a25cecfec2"
+        },
+        "owned-tor-control-channel": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "7f05f1ad051cfed022a6880f819c760056e58341ac223324719de0dad67a09a5",
+          "image_sha256": "1f999f11213c47509d17ef60b1939f7d519d16d1caf90bed14840c84d65fd9b2",
+          "historical_gzip_sha256": "7bc83e58e193bf85dafbb3acdcf593efd4d5b8e52f2a889231d0afca218ee48a"
+        },
+        "owned-tor-control-ownership": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "d6df53be59b376af50c76376b415b59bf3820667350d205d64624a7a4363822b",
+          "image_sha256": "f9a558528ad1c42a9f603ecda8da0617d028e4837d534c62819458620f8ab597",
+          "historical_gzip_sha256": "93983b12bea81fd7f5e9d4ce7771c6d5fdbb2e315426f9357c9b2ef2bb46dceb"
+        },
+        "owned-tor-ownership-source": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "e5ecb32c04cc636a5394d37762c5129f6a03a81ffd77f551707245a8f0c1581a",
+          "image_sha256": "53e56a3465450d0cc39db8f9ca87a1c3a737f2026b1f487b45cc632783d22f6f",
+          "historical_gzip_sha256": "b361ef16962ce1618429dcf84c46b61faec45bf16da650b3369c6ad05a79d014"
+        },
+        "persistent-native-peer-session": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "a846c07ed87f4cab5b8e370504d6b21a1c43a0b62b24d1bba5d262ea2f6e15a9",
+          "image_sha256": "1196455dfc0dcad923ac9b401cad743eff234cc24b13ebc7c811be0bf512a536",
+          "historical_gzip_sha256": "e35e85e80cf55bcd2364d87df8e55aec6a6c2bb5988a960074252a1b060c80ab"
+        },
+        "managed-magnet": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "eb6d95df19da2b0d000a0ccbd4c531d8d82dbbbcaf8caf591c79aca1d4ff2b59",
+          "image_sha256": "9696ca62dc4cef2ad7d4fc7e168828a573782b96e1945a60978a5359828bc5dc",
+          "historical_gzip_sha256": "81d617eea0d1c58c3bbbcc6934bff4b1e005fecbe67bb9653cb70f17575babdf"
+        },
+        "queue-policy": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "479a39c943be4e76f4b7ca7d040220dcd5deefc1984714daab9250cbd7c89ed0",
+          "image_sha256": "cf6906384a7c76f6e8268cce1f8a527b8c3fb7200c9e42c22eb7ce3442e37347",
+          "historical_gzip_sha256": "985c849a68324c70d0cc5e79f279f0e3c0366a84a55720000ed2c0dc55290c38"
+        },
+        "managed-queue": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "975a54a140aba710422153c371f0db7e7295d7ee1f7a7c2c509635540bfe71df",
+          "image_sha256": "cf1231aae48ebf3222d0de494b7a3b98b428a7e2bd6bb3f9796728b3decfe476",
+          "historical_gzip_sha256": "5a76a16d0e48d9ceab0bc5abf8f013b68c4dcb56b786c49c47e30fc91628c1a2"
+        },
+        "mainline-dht": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "2d20b1a6a2a0cd8613cc1f5d9bada9ddd181999455a673c2200911817c653a18",
+          "image_sha256": "bad8886a7c8da2b0b4b2c4b25cfcdc9628dc84d496cfb1a861ca83e16a12df64",
+          "historical_gzip_sha256": "722cb04c06164f301a3c25204f4fc239f761959b3938aa7683015f98eb112fcf"
+        },
+        "mainline-checkpoint": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "6604e575ab9f0b171c28c1607d1dc4454b472860361c24fc2f7c48cc091efce9",
+          "image_sha256": "2620c450a907ce313b90c0080138872da5ad0d44657efdf5c7cd7d20b1a7c30d",
+          "historical_gzip_sha256": "f1e2dbe2b557487e205dce6f74d178cd6a9b2307881d9deadf9819434fcff02b"
+        },
+        "mainline-scrape-codec": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "7fea91a2389cef0d4bc3c88e0f600b13865ed74a06f6a85fb29d51443cb2d685",
+          "image_sha256": "ea5c5022093a4e1025aeb71395d8732f28b0ce64ed32226118b0801f1071451a",
+          "historical_gzip_sha256": "9c67ea1f4a50cfb79cab9714ea9f8c8d4b884e28cc23baeeb42fc1363741f9b3"
+        },
+        "azureus-storage-stats": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "2a6259cdb6f9bd7f6ed0740acd71a670dbc0c718db68f74df8345950cfb5ea98",
+          "image_sha256": "86b8a1665df4073e7ae40eeb6babc7a907c44ba60bb3bbbc2de40601b89363f1",
+          "historical_gzip_sha256": "ec15b3103804de1573fb2bb14126db00139bab75068cb35f5293e2175e74757b"
+        },
+        "mainline-original-identity": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "c0111293f173166df9123716e058af1fb56f36b4d7080541517a5a4f5c3b6b66",
+          "image_sha256": "98044c3a2780d0e710aea70575508ab2fef3b0da32a03f2835349d6849c461eb",
+          "historical_gzip_sha256": "9154fc031f7252f85deb78e44299f7ec94bf96d55cbce356247532b65790c816"
+        },
+        "mainline-active-scrape-owner": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "bfb0916923ca5d791b1bb0388715d9df5cfe7eca964248593504196e2aec8486",
+          "image_sha256": "2fa0cf0527082a1cf1ed20c25674f2c451c5a676c58b1de4a927579f5464fed4",
+          "historical_gzip_sha256": "e2a527df956bf3645a082636a0936a644c7c4ce97c77683d3b4fb47d36ee0c77"
+        },
+        "provider-original-identity-runtime-inputs": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "eacd2265808fad2c9437fb5ac8f938e1dd1563c277704e111d4d0da3b991f1f2",
+          "image_sha256": null,
+          "historical_gzip_sha256": null
+        },
+        "provider-original-identity-runtime-deployment": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "15a18028890e6afd049e740389f30a53cfc08893f76f91ae21ea0c23962b290a",
+          "image_sha256": "ae6d424f0108cba3b34dbf2fcf156f00f3e3575cd6e7f067c80d51cb56ffbb0d",
+          "historical_gzip_sha256": "b767e69469141ccec2552e29f01f8c4afc9b0cbb7ac812568c155d6c54d7adf8"
+        },
+        "provider-original-identity-reject-foreign-identity": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "b7f7af2bed571dd519e6ca6a608cdfae6c9e8e7ac2d77b8818c46d4325dcf8d7",
+          "image_sha256": "91886e73b18d794751438abea8c041ab1ae40cedc4442a0ae619a04e70077acc",
+          "historical_gzip_sha256": "3b41de65fd5d8dfb2dd900e235334b5567e2cc6dde9caf6f7f96ba6a2bd893b2"
+        },
+        "provider-original-identity-reject-foreign-tracker": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "0388a74bfcf89900bdcc4989ec8a78f3402c7344cd17dbd6a5ca5b440114335f",
+          "image_sha256": "91886e73b18d794751438abea8c041ab1ae40cedc4442a0ae619a04e70077acc",
+          "historical_gzip_sha256": "3b41de65fd5d8dfb2dd900e235334b5567e2cc6dde9caf6f7f96ba6a2bd893b2"
+        },
+        "profile-lease-retention": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "1c2cf4baedc54fa8a84cdc5c3e889f3ef4c8e4e825d686f89e9f28ab52233baa",
+          "normalized_row_sha256": "e7fb6143def836f347ef2d423d82d288f0b671d32314a7ed1117ab6cd1adedac",
+          "image_sha256": "7e53fcf7889e2e9df6a214717db982526dba14e0565a1adebb33e1474e2b23ff",
+          "historical_gzip_sha256": "e3f22b57a0e1a9fba6c46f5ba52728aaa3463b61427e6f0f225194b44fab7ff6"
+        },
+        "azureus-database-runtime": {
+          "kind": "fresh_named_pass",
+          "source_commit": "013fa60f59898392a33855ba148961090bacca14",
+          "junit_sha256": "e90cf32a4617fb7e9c699d8dab58cc2cabdd0c0cfd500423278cf989fbbc787a",
+          "normalized_row_sha256": "9bdbd6d150f44da52c241d29e1b15bdffcdcd32dfc119e916fffe073d2e61465",
+          "image_sha256": "343caad488dea0c795082ea862b9bdcb9f58546c5924e5e2dd0a8c3bf7da7c16",
+          "historical_gzip_sha256": null
+        },
+        "mainline-original-wire-identity": {
+          "kind": "fresh_named_pass",
+          "source_commit": "013fa60f59898392a33855ba148961090bacca14",
+          "junit_sha256": "e90cf32a4617fb7e9c699d8dab58cc2cabdd0c0cfd500423278cf989fbbc787a",
+          "normalized_row_sha256": "822907a9c0ab129d9f15a3a5c29deb5855fd319776a36db0c621ec2f60e69fbb",
+          "image_sha256": "3d08c64c94dfb94f8cd6ce79c42eb4742cd694910213220b38e729b4227790d2",
+          "historical_gzip_sha256": null
+        },
+        "owned-tor-child-lifecycle": {
+          "kind": "fresh_named_pass",
+          "source_commit": "013fa60f59898392a33855ba148961090bacca14",
+          "junit_sha256": "e90cf32a4617fb7e9c699d8dab58cc2cabdd0c0cfd500423278cf989fbbc787a",
+          "normalized_row_sha256": "a97040b3cfa78e14f1ecddd4a220b8aed5a5013ed1cbe850df3b7e3b2b0d0db4",
+          "image_sha256": "a7619a49d32e40e5270a52e73076fd453a81f88572f9671d2309bf9683de6661",
+          "historical_gzip_sha256": null
+        },
+        "mainline-single-tracker-owner": {
+          "kind": "fresh_named_pass",
+          "source_commit": "013fa60f59898392a33855ba148961090bacca14",
+          "junit_sha256": "e90cf32a4617fb7e9c699d8dab58cc2cabdd0c0cfd500423278cf989fbbc787a",
+          "normalized_row_sha256": "fb29fe9294741c1bbc5090960f2425ccc109de3456c6d07e23ed681477a01bb2",
+          "image_sha256": "caa7ae83763f50e5a461cffaea063053b4421082daff7b81282e816d789dace1",
+          "historical_gzip_sha256": null
+        }
+      },
+      "current_image_compile_only_suites": [
+        "mainline-dht",
+        "mainline-active-scrape-owner",
+        "mainline-original-identity",
+        "mainline-checkpoint",
+        "mainline-scrape-codec",
+        "queue-policy",
+        "managed-queue",
+        "persistent-native-peer-session",
+        "managed-magnet",
+        "azureus-storage-stats",
+        "owned-tor-control-channel",
+        "owned-tor-control-ownership",
+        "owned-tor-ownership-source",
+        "original-tor-safecookie",
+        "bounded-tor-safecookie",
+        "profile-lease-retention",
+        "provider-original-identity-runtime-inputs",
+        "provider-original-identity-runtime-deployment",
+        "provider-original-identity-reject-foreign-identity",
+        "provider-original-identity-reject-foreign-tracker"
+      ],
+      "declared_compile_only_suites": [],
+      "current_image_scope": {
+        "biglybtc-mainline-dht-tests": "compile_only_current_image",
+        "biglybtc-mainline-active-scrape-owner-tests": "compile_only_current_image",
+        "biglybtc-mainline-identity-tests": "compile_only_current_image",
+        "biglybtc-mainline-checkpoint-tests": "compile_only_current_image",
+        "biglybtc-mainline-scrape-tests": "compile_only_current_image",
+        "biglybtc-queue-policy-tests": "compile_only_current_image",
+        "biglybtc-managed-queue-tests": "compile_only_current_image",
+        "biglybtc-persistent-session-tests": "compile_only_current_image",
+        "biglybtc-managed-magnet-tests": "compile_only_current_image",
+        "biglybtc-mainline-original-wire-tests": "actual_fresh_test",
+        "biglybtc-mainline-single-tracker-owner-tests": "actual_fresh_test",
+        "biglybtc-azureus-storage-stats-tests": "compile_only_current_image",
+        "biglybtc-azureus-database-runtime-tests": "actual_fresh_test",
+        "biglybtc-tor-channel-tests": "compile_only_current_image",
+        "biglybtc-tor-ownership-tests": "compile_only_current_image",
+        "biglybtc-tor-ownership-source-tests": "compile_only_current_image",
+        "biglybtc-tor-auth-driver": "compile_only_current_image",
+        "biglybtc-tor-auth-bounds-tests": "compile_only_current_image",
+        "biglybtc-profile-lease-retention-tests": "compile_only_current_image",
+        "biglybtc-tor-owned-child-tests": "actual_fresh_test",
+        "biglybtc-provider-original-identity-runtime-deployment-driver": "compile_only_current_image",
+        "biglybtc-original-identity-interposition-driver": "compile_only_current_image",
+        "BiglyBTC": "compile_only_current_image",
+        "BiglyBTC-headless": "compile_only_current_image",
+        "biglybtc-preview-smoke": "compile_only_current_image",
+        "biglybtc-queue-facts-replay": "compile_only_current_image",
+        "biglybtc-runtime-interposition-driver": "compile_only_current_image",
+        "biglybtc-runtime-interposer": "compile_only_current_image",
+        "biglybtc-original-identity-foreign-marker": "compile_only_current_image",
+        "biglybtc-original-tracker-foreign-marker": "compile_only_current_image"
+      },
+      "result_sha256": "da39244f5c8d7ea30158d8cd010b5652905ebfe59e7e80700940d7d81d766c8d",
+      "source_map_sha256": "af60e349197615e7dcb3aadf2c74d04c735fb501234e499684d65b851eae3864",
+      "binaries": {
+        "biglybtc-mainline-dht-tests": {
+          "sha256": "f0b7c331eb5b54e7a588407769bbdf67e11c77dd39f2ead13eac3df95e21aba8",
+          "bytes": 5869264,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-mainline-active-scrape-owner-tests": {
+          "sha256": "535f0a21489a4a5b4654c504909fbaa605dcbea4da467ff8fcd7b2f4839846a8",
+          "bytes": 5436856,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-mainline-identity-tests": {
+          "sha256": "98044c3a2780d0e710aea70575508ab2fef3b0da32a03f2835349d6849c461eb",
+          "bytes": 323864,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-mainline-checkpoint-tests": {
+          "sha256": "2620c450a907ce313b90c0080138872da5ad0d44657efdf5c7cd7d20b1a7c30d",
+          "bytes": 388080,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-mainline-scrape-tests": {
+          "sha256": "ea5c5022093a4e1025aeb71395d8732f28b0ce64ed32226118b0801f1071451a",
+          "bytes": 176384,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-queue-policy-tests": {
+          "sha256": "cf6906384a7c76f6e8268cce1f8a527b8c3fb7200c9e42c22eb7ce3442e37347",
+          "bytes": 396008,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-managed-queue-tests": {
+          "sha256": "f9c0871368fc1613d9430ed281501aa2a69992555f654a658c23f3ff10384189",
+          "bytes": 5679608,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-persistent-session-tests": {
+          "sha256": "ecb6cb2a965f0be3d288a3c985c0d172dc32cd752138cde92523c8f9491f3527",
+          "bytes": 5418184,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-managed-magnet-tests": {
+          "sha256": "d87652f09e00a0bb29719be8d824aaa48d4198c07a1d03e9c041917f195c7b9d",
+          "bytes": 5433520,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-mainline-original-wire-tests": {
+          "sha256": "3d08c64c94dfb94f8cd6ce79c42eb4742cd694910213220b38e729b4227790d2",
+          "bytes": 694344,
+          "scope": "actual_fresh_test"
+        },
+        "biglybtc-mainline-single-tracker-owner-tests": {
+          "sha256": "caa7ae83763f50e5a461cffaea063053b4421082daff7b81282e816d789dace1",
+          "bytes": 5467856,
+          "scope": "actual_fresh_test"
+        },
+        "biglybtc-azureus-storage-stats-tests": {
+          "sha256": "86b8a1665df4073e7ae40eeb6babc7a907c44ba60bb3bbbc2de40601b89363f1",
+          "bytes": 53240,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-azureus-database-runtime-tests": {
+          "sha256": "343caad488dea0c795082ea862b9bdcb9f58546c5924e5e2dd0a8c3bf7da7c16",
+          "bytes": 1066144,
+          "scope": "actual_fresh_test"
+        },
+        "biglybtc-tor-channel-tests": {
+          "sha256": "1f999f11213c47509d17ef60b1939f7d519d16d1caf90bed14840c84d65fd9b2",
+          "bytes": 150288,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-tor-ownership-tests": {
+          "sha256": "f9a558528ad1c42a9f603ecda8da0617d028e4837d534c62819458620f8ab597",
+          "bytes": 189416,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-tor-ownership-source-tests": {
+          "sha256": "53e56a3465450d0cc39db8f9ca87a1c3a737f2026b1f487b45cc632783d22f6f",
+          "bytes": 126984,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-tor-auth-driver": {
+          "sha256": "b4fe0ac30321b82f4fb808652420d05639178eb362975e2961c57c0fe6ea0461",
+          "bytes": 39752,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-tor-auth-bounds-tests": {
+          "sha256": "b0672a5f36382e7659aed96561461304be7beee8b0ad5cfef15f0841e3956396",
+          "bytes": 27048,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-profile-lease-retention-tests": {
+          "sha256": "7e53fcf7889e2e9df6a214717db982526dba14e0565a1adebb33e1474e2b23ff",
+          "bytes": 193696,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-tor-owned-child-tests": {
+          "sha256": "a7619a49d32e40e5270a52e73076fd453a81f88572f9671d2309bf9683de6661",
+          "bytes": 318552,
+          "scope": "actual_fresh_test"
+        },
+        "biglybtc-provider-original-identity-runtime-deployment-driver": {
+          "sha256": "ae6d424f0108cba3b34dbf2fcf156f00f3e3575cd6e7f067c80d51cb56ffbb0d",
+          "bytes": 60616,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-original-identity-interposition-driver": {
+          "sha256": "91886e73b18d794751438abea8c041ab1ae40cedc4442a0ae619a04e70077acc",
+          "bytes": 44384,
+          "scope": "compile_only_current_image"
+        },
+        "BiglyBTC": {
+          "sha256": "3fcf0c54c0050fda182826aa19080e7b99e46592d2ea13cc2e7916998d686edd",
+          "bytes": 10948896,
+          "scope": "compile_only_current_image"
+        },
+        "BiglyBTC-headless": {
+          "sha256": "961904c12b2d480c6b4258a4adc071ef0e7c31a9b46e7bc1ed77deb0213e791f",
+          "bytes": 5282824,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-preview-smoke": {
+          "sha256": "3579f9a2519df8c909e0f5f581876bb4bdb24f9e349d786be5d33c9a1df4ac9e",
+          "bytes": 11260216,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-queue-facts-replay": {
+          "sha256": "98ea7f3ebb90274275b3b113250d65da02cd64df421ec85d8719a0166b39c729",
+          "bytes": 51048,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-runtime-interposition-driver": {
+          "sha256": "c3628ca6a143cab8f16d23a45ce356968462fd00ee9291b41c02f30c15671368",
+          "bytes": 5276560,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-runtime-interposer": {
+          "sha256": "1f4dda335c3b5d4917fe8d0f6dc5b8f6e9e28d9361c58601ea3c51f682f72153",
+          "bytes": 15264,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-original-identity-foreign-marker": {
+          "sha256": "41887af20833e3e7c4381eed5551453af41b7d6f3982af3519c022c65a465f5d",
+          "bytes": 15216,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-original-tracker-foreign-marker": {
+          "sha256": "1614d5758346e39a6327e19651f7907bb69ddfd24249a80ae0fcad5476e5aa7e",
+          "bytes": 15216,
+          "scope": "compile_only_current_image"
+        }
+      },
+      "real_offline_tor": {
+        "status": "PASS_REAL_EXTRACTED_OFFLINE_TOR",
+        "receipt_sha256": "30cef53e7ee6dc0041c3d98f69d4b768283d41b25ab965e1c5d6c9bb8cee6304",
+        "joined": true
+      }
+    },
+    "clang": {
+      "actual_suites": 19,
+      "suite_names": [
+        "mainline-original-identity",
+        "mainline-checkpoint",
+        "mainline-scrape-codec",
+        "queue-policy",
+        "managed-queue",
+        "mainline-original-wire-identity",
+        "azureus-storage-stats",
+        "azureus-database-runtime",
+        "owned-tor-control-channel",
+        "owned-tor-control-ownership",
+        "owned-tor-ownership-source",
+        "original-tor-safecookie",
+        "bounded-tor-safecookie",
+        "profile-lease-retention",
+        "owned-tor-child-lifecycle",
+        "provider-original-identity-runtime-inputs",
+        "provider-original-identity-runtime-deployment",
+        "provider-original-identity-reject-foreign-identity",
+        "provider-original-identity-reject-foreign-tracker"
+      ],
+      "actual_fresh_suites": 3,
+      "fresh_suite_names": [
+        "azureus-database-runtime",
+        "mainline-original-wire-identity",
+        "owned-tor-child-lifecycle"
+      ],
+      "historical_suites": 16,
+      "historical_source": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+      "fresh_source": "013fa60f59898392a33855ba148961090bacca14",
+      "suite_origins": {
+        "original-tor-safecookie": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "798c9fca3c09db95aaeb633efdf31e043e6552df505a27314c2eec017cbab402",
+          "normalized_row_sha256": "8201a537fa0fe3b4470675c04b402e4a11f84eac00887edd32f0584ce1b47449",
+          "image_sha256": "e3c504054f0bd684465d4070e996efe8a2b73e5ace892669604702df0c74a147",
+          "historical_gzip_sha256": "f0b9438e1f09093953f56dc746758b9011d5a55592fc6795243d0275866d861b"
+        },
+        "bounded-tor-safecookie": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "798c9fca3c09db95aaeb633efdf31e043e6552df505a27314c2eec017cbab402",
+          "normalized_row_sha256": "dc08ae1076f14558bec01881699c2105340272c1a8aa42ca4bddfda6bf9056f5",
+          "image_sha256": "6becbd922d03b558e9342d30b85cbbe18a700f2cc577e20ca60a217a1a1f5816",
+          "historical_gzip_sha256": "8614852f1900d28a1b1eff52c711049c2ef0614838cf4c3bb8278fd1a71184bc"
+        },
+        "owned-tor-control-channel": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "798c9fca3c09db95aaeb633efdf31e043e6552df505a27314c2eec017cbab402",
+          "normalized_row_sha256": "7fc1ca74471984c9188c3c067dea4cfdc68dc5f7b4e489377605bb2a6a856e46",
+          "image_sha256": "608a261ec1d6b7e0868c9facdc2829c8a2858c964f5bbab6473d820c4d2ffdf6",
+          "historical_gzip_sha256": "4d601355aa053b882e75393c7a237234eb5d9ed9222a5df0446106330a6df168"
+        },
+        "owned-tor-control-ownership": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "798c9fca3c09db95aaeb633efdf31e043e6552df505a27314c2eec017cbab402",
+          "normalized_row_sha256": "5edd12d655de3a4666efcace99dc7a51c93130c246e6e2dd81c45d57c7bd260d",
+          "image_sha256": "3336ebbdc1667fc44ef44f70a0743ba746e64c873d945346faddb64ef8518e55",
+          "historical_gzip_sha256": "1668eb2895ea148d3e6b8cc841698cbd2f7dc15a33f09325659d1f969f07391e"
+        },
+        "owned-tor-ownership-source": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "798c9fca3c09db95aaeb633efdf31e043e6552df505a27314c2eec017cbab402",
+          "normalized_row_sha256": "a06d830c5badb10920983b515aeba09e2f878e8f6567181529f7f22cd00ff6de",
+          "image_sha256": "6ba0d670920a3075b94510f72fd6127a3dc29d5dd6458d551ba8c18393d3caf5",
+          "historical_gzip_sha256": "fa31f8b33cda3c1c14d794a5aa66110b4a7f97cfca8be3337f2555e4c5a75b13"
+        },
+        "queue-policy": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "798c9fca3c09db95aaeb633efdf31e043e6552df505a27314c2eec017cbab402",
+          "normalized_row_sha256": "c60b78589799d0d9adb726d0cab7dfd492f4f0961d785d41f57634605fbe8e9c",
+          "image_sha256": "e6432dcfc321ed9d87b0f0aa59584c0efa75ca09600198ef53eadc585db68810",
+          "historical_gzip_sha256": "b1ca7bc0005fad1e1d50a8b4283a6b8dd9a8b44a45f2f5d4ff34a787e354bce3"
+        },
+        "managed-queue": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "798c9fca3c09db95aaeb633efdf31e043e6552df505a27314c2eec017cbab402",
+          "normalized_row_sha256": "757e4a02d255e44041c22053af56b901198054e1783ab09d8f690636e39203a8",
+          "image_sha256": "5ec4fe794dd6ca3445838bd240047ecb87c037410d879171d28996ceafa4181b",
+          "historical_gzip_sha256": "c072183374d65bcb1999e1dfef2606bd25c9a1ac12e1ee80409df7fa1c7288cf"
+        },
+        "mainline-checkpoint": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "798c9fca3c09db95aaeb633efdf31e043e6552df505a27314c2eec017cbab402",
+          "normalized_row_sha256": "9fe32042f4888768814cef94a5b8d04d150903e94b2d409ab5b3406ea5c2334b",
+          "image_sha256": "d11582b38d48031079fd5ed63704d780374abe609a83ea2af25a1e3ce9aa7f29",
+          "historical_gzip_sha256": "abe6451c5042c86a6d2aa50938638ca3bcd083942029e98b22a0bccd72f2ebf3"
+        },
+        "mainline-scrape-codec": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "798c9fca3c09db95aaeb633efdf31e043e6552df505a27314c2eec017cbab402",
+          "normalized_row_sha256": "c789627be870f15b25487aadcda7b5703a2570f7f4678d014bbfb217aed302db",
+          "image_sha256": "d30897f0611250c75b0e6b8af2e4873e9831ef7a95146b35035f5be4d88b054b",
+          "historical_gzip_sha256": "73b1d6efa7ac6c2c093b444dc8c4f68b16d365d556e699dfc20ddebe41935922"
+        },
+        "azureus-storage-stats": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "798c9fca3c09db95aaeb633efdf31e043e6552df505a27314c2eec017cbab402",
+          "normalized_row_sha256": "8cfeb53e1d1f63cae1d8e9e95123b10ad1182c8f58b7f77378bf15a3758debb7",
+          "image_sha256": "601d1f06114557c5ff2182b21485f0d7928c4c738ca7b5625fe39d7c3a31656f",
+          "historical_gzip_sha256": "d6934e5daa511a55690a9271925f3e7e83f858054d484aa701ee38e9b382cacc"
+        },
+        "mainline-original-identity": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "798c9fca3c09db95aaeb633efdf31e043e6552df505a27314c2eec017cbab402",
+          "normalized_row_sha256": "acdfbce5cf51c8d67db5ee3a35bdf1ef271831e320fcbfb875074bf10bc10113",
+          "image_sha256": "85a069cf7dcb88232313ca075eea75647889ee3e7cd546f0f92305e4d3ba6169",
+          "historical_gzip_sha256": "64172e4f31708aae9dace094a23517cd2ecf03a557bd42633e17021bdfb0da0f"
+        },
+        "provider-original-identity-runtime-inputs": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "798c9fca3c09db95aaeb633efdf31e043e6552df505a27314c2eec017cbab402",
+          "normalized_row_sha256": "e12df4742b2e385174f1a5842cb9203561ec1926f1ba7d8f22ab5ca1c04a2af9",
+          "image_sha256": null,
+          "historical_gzip_sha256": null
+        },
+        "provider-original-identity-runtime-deployment": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "798c9fca3c09db95aaeb633efdf31e043e6552df505a27314c2eec017cbab402",
+          "normalized_row_sha256": "6a65537f7116ae41244ca6c6ad319d72db16e64d835db0930a5d602c803d27ee",
+          "image_sha256": "f2569367781f102aaf1a4e5bed0c63a5523f8bf1ca3b9c3afd25867155097ea1",
+          "historical_gzip_sha256": "b03cbba6cedcf682408cfe5fc0c273ce2085befa812799af9aa8d1b2cf37cc24"
+        },
+        "provider-original-identity-reject-foreign-identity": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "798c9fca3c09db95aaeb633efdf31e043e6552df505a27314c2eec017cbab402",
+          "normalized_row_sha256": "4f5539d6eac0f68231e026970a2c1fa4544ce31fae968b87dca4cb4a7709e2c7",
+          "image_sha256": "76617b29cfff9e2600bc473c73c6628d5235e3b471a0a864941c0e4b0f0eacd1",
+          "historical_gzip_sha256": "8f16054f1fe29bdd060919339880796dd0caa8655528acdca45eaea251d718ff"
+        },
+        "provider-original-identity-reject-foreign-tracker": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "798c9fca3c09db95aaeb633efdf31e043e6552df505a27314c2eec017cbab402",
+          "normalized_row_sha256": "03976a32f6ab95d9678e7f83dcccc755db6425dedb89596b4ecbcb7a92d56f67",
+          "image_sha256": "76617b29cfff9e2600bc473c73c6628d5235e3b471a0a864941c0e4b0f0eacd1",
+          "historical_gzip_sha256": "8f16054f1fe29bdd060919339880796dd0caa8655528acdca45eaea251d718ff"
+        },
+        "profile-lease-retention": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "798c9fca3c09db95aaeb633efdf31e043e6552df505a27314c2eec017cbab402",
+          "normalized_row_sha256": "bcd56c0cc675ed06ee9fd003eaa0e512a199f7bf0618ef98f2fe6e94dae4ed66",
+          "image_sha256": "d616834eb92fcafc50b21ddaf3f4e5dd5d2c49957222d8d7c672e12c19ca7a33",
+          "historical_gzip_sha256": "ca80e06237afff065391eee29a0265f0bbdf37ab9cd5d6f0cd6a067e7faba5cd"
+        },
+        "azureus-database-runtime": {
+          "kind": "fresh_named_pass",
+          "source_commit": "013fa60f59898392a33855ba148961090bacca14",
+          "junit_sha256": "00d05740944525af0ae4f7fb4ae0f639d1c0afd55655d6c266afe0ea147d9afb",
+          "normalized_row_sha256": "e1bbf92d3f9d630c63e7df9feb0afed0c7a3f11a2cfa7b21aa4e544346338263",
+          "image_sha256": "0a73e17a30d9a341b5bb4845bc973b216dec9b8d83d894a54b179c84fe191aad",
+          "historical_gzip_sha256": null
+        },
+        "mainline-original-wire-identity": {
+          "kind": "fresh_named_pass",
+          "source_commit": "013fa60f59898392a33855ba148961090bacca14",
+          "junit_sha256": "00d05740944525af0ae4f7fb4ae0f639d1c0afd55655d6c266afe0ea147d9afb",
+          "normalized_row_sha256": "36954e437d04d3359db75e35742751298d8f43f614dfa07f9f234508a74789ed",
+          "image_sha256": "3bfa60a85eb22cffa54b351a7a11e6d7cd6f952b901f38d771a83781aa802e19",
+          "historical_gzip_sha256": null
+        },
+        "owned-tor-child-lifecycle": {
+          "kind": "fresh_named_pass",
+          "source_commit": "013fa60f59898392a33855ba148961090bacca14",
+          "junit_sha256": "00d05740944525af0ae4f7fb4ae0f639d1c0afd55655d6c266afe0ea147d9afb",
+          "normalized_row_sha256": "bf54675add9ac77ab6b3342a5edbd8832e7e46ecaf8bd64fc893f363a42c9303",
+          "image_sha256": "ed52a8d5f41b4ada6b2013783d2c3f518c8c596a5bc8987ff13b33d2a9d6fd3f",
+          "historical_gzip_sha256": null
+        }
+      },
+      "current_image_compile_only_suites": [
+        "mainline-dht",
+        "mainline-active-scrape-owner",
+        "mainline-original-identity",
+        "mainline-checkpoint",
+        "mainline-scrape-codec",
+        "queue-policy",
+        "managed-queue",
+        "persistent-native-peer-session",
+        "managed-magnet",
+        "mainline-single-tracker-owner",
+        "azureus-storage-stats",
+        "owned-tor-control-channel",
+        "owned-tor-control-ownership",
+        "owned-tor-ownership-source",
+        "original-tor-safecookie",
+        "bounded-tor-safecookie",
+        "profile-lease-retention",
+        "provider-original-identity-runtime-inputs",
+        "provider-original-identity-runtime-deployment",
+        "provider-original-identity-reject-foreign-identity",
+        "provider-original-identity-reject-foreign-tracker"
+      ],
+      "declared_compile_only_suites": [
+        "mainline-dht",
+        "mainline-active-scrape-owner",
+        "persistent-native-peer-session",
+        "managed-magnet",
+        "mainline-single-tracker-owner"
+      ],
+      "current_image_scope": {
+        "biglybtc-mainline-dht-tests": "compile_only_current_image",
+        "biglybtc-mainline-active-scrape-owner-tests": "compile_only_current_image",
+        "biglybtc-mainline-identity-tests": "compile_only_current_image",
+        "biglybtc-mainline-checkpoint-tests": "compile_only_current_image",
+        "biglybtc-mainline-scrape-tests": "compile_only_current_image",
+        "biglybtc-queue-policy-tests": "compile_only_current_image",
+        "biglybtc-managed-queue-tests": "compile_only_current_image",
+        "biglybtc-persistent-session-tests": "compile_only_current_image",
+        "biglybtc-managed-magnet-tests": "compile_only_current_image",
+        "biglybtc-mainline-original-wire-tests": "actual_fresh_test",
+        "biglybtc-mainline-single-tracker-owner-tests": "compile_only_current_image",
+        "biglybtc-azureus-storage-stats-tests": "compile_only_current_image",
+        "biglybtc-azureus-database-runtime-tests": "actual_fresh_test",
+        "biglybtc-tor-channel-tests": "compile_only_current_image",
+        "biglybtc-tor-ownership-tests": "compile_only_current_image",
+        "biglybtc-tor-ownership-source-tests": "compile_only_current_image",
+        "biglybtc-tor-auth-driver": "compile_only_current_image",
+        "biglybtc-tor-auth-bounds-tests": "compile_only_current_image",
+        "biglybtc-profile-lease-retention-tests": "compile_only_current_image",
+        "biglybtc-tor-owned-child-tests": "actual_fresh_test",
+        "biglybtc-provider-original-identity-runtime-deployment-driver": "compile_only_current_image",
+        "biglybtc-original-identity-interposition-driver": "compile_only_current_image",
+        "BiglyBTC": "compile_only_current_image",
+        "BiglyBTC-headless": "compile_only_current_image",
+        "biglybtc-preview-smoke": "compile_only_current_image",
+        "biglybtc-queue-facts-replay": "compile_only_current_image",
+        "biglybtc-runtime-interposition-driver": "compile_only_current_image",
+        "biglybtc-runtime-interposer": "compile_only_current_image",
+        "biglybtc-original-identity-foreign-marker": "compile_only_current_image",
+        "biglybtc-original-tracker-foreign-marker": "compile_only_current_image"
+      },
+      "result_sha256": "5807b38946a7ef8543426b0fb128cc0ff599b109af3ec01e10fe44186c6151f8",
+      "source_map_sha256": "af60e349197615e7dcb3aadf2c74d04c735fb501234e499684d65b851eae3864",
+      "binaries": {
+        "biglybtc-mainline-dht-tests": {
+          "sha256": "8f7caffa6d6b39dee42f5df1ef2576692abda3d47fe47de9511c10897b31cbc1",
+          "bytes": 4861376,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-mainline-active-scrape-owner-tests": {
+          "sha256": "997ca5ca08efe383c9ef7f76aab105da7df01e439ba1310438352e6c6be7d4e4",
+          "bytes": 4522288,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-mainline-identity-tests": {
+          "sha256": "85a069cf7dcb88232313ca075eea75647889ee3e7cd546f0f92305e4d3ba6169",
+          "bytes": 210640,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-mainline-checkpoint-tests": {
+          "sha256": "d11582b38d48031079fd5ed63704d780374abe609a83ea2af25a1e3ce9aa7f29",
+          "bytes": 245344,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-mainline-scrape-tests": {
+          "sha256": "d30897f0611250c75b0e6b8af2e4873e9831ef7a95146b35035f5be4d88b054b",
+          "bytes": 99496,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-queue-policy-tests": {
+          "sha256": "e6432dcfc321ed9d87b0f0aa59584c0efa75ca09600198ef53eadc585db68810",
+          "bytes": 280144,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-managed-queue-tests": {
+          "sha256": "b626085c89dd496501c5038c3f41865f686219eabf6c30dfbc4d7669a6e7099a",
+          "bytes": 4836848,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-persistent-session-tests": {
+          "sha256": "af1dcfef3a4fdef6eb8801a9c1e8ef90f16d12d513632be07c927baf59063b5a",
+          "bytes": 4512832,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-managed-magnet-tests": {
+          "sha256": "59e1ee1ee83d7f824aa8414e7f6b5f0e31ec2f619c48f4db67bcc879bb95d109",
+          "bytes": 4517168,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-mainline-original-wire-tests": {
+          "sha256": "3bfa60a85eb22cffa54b351a7a11e6d7cd6f952b901f38d771a83781aa802e19",
+          "bytes": 505896,
+          "scope": "actual_fresh_test"
+        },
+        "biglybtc-mainline-single-tracker-owner-tests": {
+          "sha256": "5e02634861cf74120a977c3b9268fc5f3fee440f8dd748cedc255c34a1caf67c",
+          "bytes": 4554576,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-azureus-storage-stats-tests": {
+          "sha256": "601d1f06114557c5ff2182b21485f0d7928c4c738ca7b5625fe39d7c3a31656f",
+          "bytes": 47288,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-azureus-database-runtime-tests": {
+          "sha256": "0a73e17a30d9a341b5bb4845bc973b216dec9b8d83d894a54b179c84fe191aad",
+          "bytes": 809544,
+          "scope": "actual_fresh_test"
+        },
+        "biglybtc-tor-channel-tests": {
+          "sha256": "608a261ec1d6b7e0868c9facdc2829c8a2858c964f5bbab6473d820c4d2ffdf6",
+          "bytes": 129784,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-tor-ownership-tests": {
+          "sha256": "3336ebbdc1667fc44ef44f70a0743ba746e64c873d945346faddb64ef8518e55",
+          "bytes": 150976,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-tor-ownership-source-tests": {
+          "sha256": "6ba0d670920a3075b94510f72fd6127a3dc29d5dd6458d551ba8c18393d3caf5",
+          "bytes": 108944,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-tor-auth-driver": {
+          "sha256": "e3c504054f0bd684465d4070e996efe8a2b73e5ace892669604702df0c74a147",
+          "bytes": 34528,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-tor-auth-bounds-tests": {
+          "sha256": "6becbd922d03b558e9342d30b85cbbe18a700f2cc577e20ca60a217a1a1f5816",
+          "bytes": 27392,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-profile-lease-retention-tests": {
+          "sha256": "d616834eb92fcafc50b21ddaf3f4e5dd5d2c49957222d8d7c672e12c19ca7a33",
+          "bytes": 116264,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-tor-owned-child-tests": {
+          "sha256": "ed52a8d5f41b4ada6b2013783d2c3f518c8c596a5bc8987ff13b33d2a9d6fd3f",
+          "bytes": 269896,
+          "scope": "actual_fresh_test"
+        },
+        "biglybtc-provider-original-identity-runtime-deployment-driver": {
+          "sha256": "f2569367781f102aaf1a4e5bed0c63a5523f8bf1ca3b9c3afd25867155097ea1",
+          "bytes": 56888,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-original-identity-interposition-driver": {
+          "sha256": "76617b29cfff9e2600bc473c73c6628d5235e3b471a0a864941c0e4b0f0eacd1",
+          "bytes": 39872,
+          "scope": "compile_only_current_image"
+        },
+        "BiglyBTC": {
+          "sha256": "5803ca5bb9afecc0fbeba5324ad09a343dafe82ae3a5b6b38d11af51af73c4e0",
+          "bytes": 8788464,
+          "scope": "compile_only_current_image"
+        },
+        "BiglyBTC-headless": {
+          "sha256": "8c94a14837722ae0375e4a7f31b6cafd296e47a1ffae32bd0a52ceea157f2aea",
+          "bytes": 4379664,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-preview-smoke": {
+          "sha256": "aaa66439ddba3f4959a67adc22e2980abdffa8b3f94f9045a0c077758f1745b8",
+          "bytes": 9048784,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-queue-facts-replay": {
+          "sha256": "00d369b892846ac3ab6e2e2ea313bf1ba8c171713630d60eef6a54914305e1e2",
+          "bytes": 38592,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-runtime-interposition-driver": {
+          "sha256": "31dd4bb3a8f88a8a7f8a03c3775bac4df9ecbc2b6b3d09d1b20aa6cf252f4dbc",
+          "bytes": 4365688,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-runtime-interposer": {
+          "sha256": "14c604d0e4a751e59b8a2a75956b9772801ee5e7fbd9e558d35e485bac1f6b6e",
+          "bytes": 15440,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-original-identity-foreign-marker": {
+          "sha256": "9f172e7add1b0b9b0573d591c688a1b89e53150fe3d7df34993beea9bdc3e467",
+          "bytes": 15384,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-original-tracker-foreign-marker": {
+          "sha256": "ebb16d5ca8f39d545a61fb4019d8f8dc1473c12de596d9369b1554ff0e687535",
+          "bytes": 15384,
+          "scope": "compile_only_current_image"
+        }
+      },
+      "real_offline_tor": {
+        "status": "PASS_REAL_EXTRACTED_OFFLINE_TOR",
+        "receipt_sha256": "2189b08c6daf1ba13ddb252ec8d49ddaeccd5f1972f6acc7e700748e75776a77",
+        "joined": true
+      }
+    },
+    "san": {
+      "actual_suites": 24,
+      "suite_names": [
+        "mainline-dht",
+        "mainline-active-scrape-owner",
+        "mainline-original-identity",
+        "mainline-checkpoint",
+        "mainline-scrape-codec",
+        "queue-policy",
+        "managed-queue",
+        "persistent-native-peer-session",
+        "managed-magnet",
+        "mainline-original-wire-identity",
+        "mainline-single-tracker-owner",
+        "azureus-storage-stats",
+        "azureus-database-runtime",
+        "owned-tor-control-channel",
+        "owned-tor-control-ownership",
+        "owned-tor-ownership-source",
+        "original-tor-safecookie",
+        "bounded-tor-safecookie",
+        "profile-lease-retention",
+        "owned-tor-child-lifecycle",
+        "provider-original-identity-runtime-inputs",
+        "provider-original-identity-runtime-deployment",
+        "provider-original-identity-reject-foreign-identity",
+        "provider-original-identity-reject-foreign-tracker"
+      ],
+      "actual_fresh_suites": 4,
+      "fresh_suite_names": [
+        "azureus-database-runtime",
+        "mainline-original-wire-identity",
+        "owned-tor-child-lifecycle",
+        "mainline-single-tracker-owner"
+      ],
+      "historical_suites": 20,
+      "historical_source": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+      "fresh_source": "013fa60f59898392a33855ba148961090bacca14",
+      "suite_origins": {
+        "original-tor-safecookie": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "36e82c31c4529e82bc50d942fcda605f74935bd8dcd4d9fae8e01cd17644e070",
+          "image_sha256": "83c1ffefd148d38651ffb060b78afea2af458f0c52aba728986a8d05154eb541",
+          "historical_gzip_sha256": "a3a82c2fe1ba5815ad068606949d7aab4560b3c4a46467d89e54c4d397c25783"
+        },
+        "bounded-tor-safecookie": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "89becba4139b8e898241fd03414af5d0de7bfd99dd109d6e689fc112e307cd8d",
+          "image_sha256": "3976f35bd99292b74b37cb12af5f1b760df2b884a96f892eb1d7d58b1b41dd48",
+          "historical_gzip_sha256": "d5ac42fa37dbfaff6b535d67c23213f2d821bb98cda0061fe4054bcb3e7dc7f8"
+        },
+        "owned-tor-control-channel": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "988ebdd481320b710b9a039d44f4049d9fb7fed8e67b13f68ab9aa3ee7470b85",
+          "image_sha256": "d4319c7d883e04e1e30a3aecbf34e2b2dd815c40e761d3d271aa06148c9cb9ff",
+          "historical_gzip_sha256": "acb619867a4ec8a7216693dcbf86c43c3ad950f992c81ce21151df101886ac2f"
+        },
+        "owned-tor-control-ownership": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "1ad223d5a99be87a2adf4c7dc21486c6030bb65c5dd517bcd74cd667446b8a5b",
+          "image_sha256": "dd9c923a0363ad8c2b0c2ca4f29387e1ec8b3521fa0b0a34ce3a517e6ca0dd57",
+          "historical_gzip_sha256": "2c970c97abd9cd0143e1ce396367467267ed7eef7ae22be59ef5579673517121"
+        },
+        "owned-tor-ownership-source": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "2bd7c127f2fd99015697e698be764f35afd0eb1e5d7d9d049811e127277a504c",
+          "image_sha256": "6dfb12d3ecba723bd899ae3da1b792950e635988e21f505e3dfae05c9faf40e5",
+          "historical_gzip_sha256": "86648e63b2dc5f9a4cda2594daf39ae53aaf7e6696cccdcbc326cc167bd36269"
+        },
+        "persistent-native-peer-session": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "b17fdb64866e44d7b7cfe7540399cb1da0e318b481fafe89050de1c886280199",
+          "image_sha256": "a05c8743d5cae12371ddcc57790852b1600fbaad90483d32c77fe76c11722704",
+          "historical_gzip_sha256": "24f015d4ce0e48baa2efc6fa721837e7aa9c00a0ca9a0f3687d4da8e84a4dfe4"
+        },
+        "managed-magnet": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "0ced255bc017def6ca9071c35673fcd9ca3194fd4e7d9762b3034cac99b481d7",
+          "image_sha256": "c0f458f4f54afbde0dbd9da7114152b2f167eea35b7fb27078bd196f42065817",
+          "historical_gzip_sha256": "fa1ef3dca770b027f7a52a1612f7aafcddfcbb818b701cdb94d7b91547da6606"
+        },
+        "queue-policy": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "8f2f4e306614e4e564617754132fb1cd39d59908575d602c9f503e3072e3aa35",
+          "image_sha256": "328e7c33e3ef07495c03aff1d9c19f685a8050cdc75efae44fa12bc9ff6970f7",
+          "historical_gzip_sha256": "0949acedf3afd7924bf67bddb0f3a5bae3f181594fef1ff909463a71c5075545"
+        },
+        "managed-queue": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "490d00632d4cda85679de051264e7e8bc9ec5b3744163ca171c1441afbf34b46",
+          "image_sha256": "4a4549b13662cb87719558c1c6df46a7f362f7805c36110e27f270def5809b09",
+          "historical_gzip_sha256": "04dcde19d895202d8857371310f8dddaac092ba86f1eb742735ceb480eff2338"
+        },
+        "mainline-dht": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "2bbf855ed1bb16902601b0e135f1cdb20daa43342f066059d05f3c152676b3ba",
+          "image_sha256": "af59ebfd6b10c9fba4d7626400fd31686faa778f52f9bd01c51117f8824aa05a",
+          "historical_gzip_sha256": "2804815171ecbc85134b29808705faea9bec17325a9b50c57481fb4961b514b3"
+        },
+        "mainline-checkpoint": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "99f57ac28022b245f001d13e261c67e3d363890416dd19ac882eda3263f20ac6",
+          "image_sha256": "00932de3960b2571eda799edb330dd5c297c456c3c84381bab8702cf209c815b",
+          "historical_gzip_sha256": "459c10d758080e63f5191e2055c783fb8ba28f1dcb922661e9229ca02e5c8212"
+        },
+        "mainline-scrape-codec": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "2c835587107faffe8cb77f3e872aab4ddb3cb09d8c9caed8a2f7ec3a0e7bfac4",
+          "image_sha256": "318635ddb4d5669c6a04a3c4bc46fc8096435984fa40c3290aa17de84790cb09",
+          "historical_gzip_sha256": "54f0d3c758bd82e93030dada61e435e495208de80692fd45ae6274b14c5ab26b"
+        },
+        "azureus-storage-stats": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "107e81925e3fe164ca476c65fe322789085351d9d4e75b0277aa1def4b4afaef",
+          "image_sha256": "e4234468cb11b37899fa68c61e15a69ccfe99cddfb21b9888d748a6a0087ac47",
+          "historical_gzip_sha256": "4f4e02999b48c489b5f9c740e0e0ad1c74dba18993f2a6efd67ac91665601a8a"
+        },
+        "mainline-original-identity": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "11d61bf58d2d14da603c5bd4ce62f502aba6772a7198f4163d2090cd170c0e3e",
+          "image_sha256": "c5a48ed76461bb7688b742c1663c9dc38b14d6a60efaf183471361cc5dda4216",
+          "historical_gzip_sha256": "9565ba81c3ab34f044d5155955aa11d3740bf76ce9fbfe7bdffac967d991f986"
+        },
+        "mainline-active-scrape-owner": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "f098f70e42159440fc86c1ae0238df4931450c6545ef9262604b1e06e5e8805e",
+          "image_sha256": "1d4872cee88a723c1e8a6987520186e7ec443dcb90c0b02accba58fbc1607580",
+          "historical_gzip_sha256": "69c24becdd3ad3a05b4371f96d6a8c3497f3d0434a1ef7ff0b40cabf1874c3c3"
+        },
+        "provider-original-identity-runtime-inputs": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "dc3dde9f6005b70b455921a13b1319346b701c13ba555ecbad37202618ebbe0f",
+          "image_sha256": null,
+          "historical_gzip_sha256": null
+        },
+        "provider-original-identity-runtime-deployment": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "45a3c15fa19eaf8d173e483e23225657f43e0fbeedb9f46954cf609b2511cb20",
+          "image_sha256": "ea62b7027e4278a6334b40c994c02dc24cebdf5f927ea737e6b8edec6d446b47",
+          "historical_gzip_sha256": "8b6562ee193827855cf4c31b7912178c39033f551cf9c8b42b1a9dd885680ba1"
+        },
+        "provider-original-identity-reject-foreign-identity": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "16314294d99aae4fbfa9f1eff852ded0f44480e978e6541c837c9bc6e10085b3",
+          "image_sha256": "d40d01e93d87f9ec54d45e65c1cd7a118b26ab2ad8b63171b9c0ac1117f40413",
+          "historical_gzip_sha256": "8ba1930bc8d2d2dd0c92ccd51f7724730bcb986400dcdf3be648a926697b25ee"
+        },
+        "provider-original-identity-reject-foreign-tracker": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "cabd10f0f5ceafba281bfa47c417407de89f6d1ce39cd893dfa75481fd4745c3",
+          "image_sha256": "d40d01e93d87f9ec54d45e65c1cd7a118b26ab2ad8b63171b9c0ac1117f40413",
+          "historical_gzip_sha256": "8ba1930bc8d2d2dd0c92ccd51f7724730bcb986400dcdf3be648a926697b25ee"
+        },
+        "profile-lease-retention": {
+          "kind": "historical_named_pass",
+          "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+          "junit_sha256": "81f98e4040c7fb558f1247c72628d84588e5a120ed4b19ae5438ef89afe99b57",
+          "normalized_row_sha256": "070af40e9222e3e49bd5bf8a01240cbc24e504173bfbf03b04896f8e7ff84124",
+          "image_sha256": "26f148bd3e3e8a4053af819d3bb7ebaa9f77236e9c9b77f10b79f05b5723180e",
+          "historical_gzip_sha256": "e05d91fb9b8da2e4ad99e71d67d180c71e0f193f693e895925112d0e8ddb1382"
+        },
+        "azureus-database-runtime": {
+          "kind": "fresh_named_pass",
+          "source_commit": "013fa60f59898392a33855ba148961090bacca14",
+          "junit_sha256": "58aeb4c0400d61f193ff6384c2b50d889226638a5c3070daebc7356cba984594",
+          "normalized_row_sha256": "9e902db42c5ffca6e759f1720088921aef58a49b13a33eb650d9e64cce384b7e",
+          "image_sha256": "10894a4ef8d66ae1622bbb93397ac88c77c7e8780a87cbdd8b1f091de4f64004",
+          "historical_gzip_sha256": null
+        },
+        "mainline-original-wire-identity": {
+          "kind": "fresh_named_pass",
+          "source_commit": "013fa60f59898392a33855ba148961090bacca14",
+          "junit_sha256": "58aeb4c0400d61f193ff6384c2b50d889226638a5c3070daebc7356cba984594",
+          "normalized_row_sha256": "80f49a7c072fa0cf9be2014895fff2a5e7ab16882e42fe8555f55e6c51bec3ae",
+          "image_sha256": "96e39bccb08570043ad01b64b2546a7bb65f16fc64e103fdcf348dccf5587eaf",
+          "historical_gzip_sha256": null
+        },
+        "owned-tor-child-lifecycle": {
+          "kind": "fresh_named_pass",
+          "source_commit": "013fa60f59898392a33855ba148961090bacca14",
+          "junit_sha256": "58aeb4c0400d61f193ff6384c2b50d889226638a5c3070daebc7356cba984594",
+          "normalized_row_sha256": "0d992dccf66c4a4978cdbb8236f0eb2d3d16c6f18349db74f2c5b3471939f78f",
+          "image_sha256": "ac82cd3c047cf08e3d48d8b4ef8388b1f9ed6b2ad479788102347703756a4c83",
+          "historical_gzip_sha256": null
+        },
+        "mainline-single-tracker-owner": {
+          "kind": "fresh_named_pass",
+          "source_commit": "013fa60f59898392a33855ba148961090bacca14",
+          "junit_sha256": "58aeb4c0400d61f193ff6384c2b50d889226638a5c3070daebc7356cba984594",
+          "normalized_row_sha256": "c72a94780f15d31c4f1a3b066f483263dddf0dded6a551fe53622f562c4f68e0",
+          "image_sha256": "6efe61d146c59b2ecbb2807a95de2a86d2330439d017ac52b3b49a1945540a68",
+          "historical_gzip_sha256": null
+        }
+      },
+      "current_image_compile_only_suites": [
+        "mainline-dht",
+        "mainline-active-scrape-owner",
+        "mainline-original-identity",
+        "mainline-checkpoint",
+        "mainline-scrape-codec",
+        "queue-policy",
+        "managed-queue",
+        "persistent-native-peer-session",
+        "managed-magnet",
+        "azureus-storage-stats",
+        "owned-tor-control-channel",
+        "owned-tor-control-ownership",
+        "owned-tor-ownership-source",
+        "original-tor-safecookie",
+        "bounded-tor-safecookie",
+        "profile-lease-retention",
+        "provider-original-identity-runtime-inputs",
+        "provider-original-identity-runtime-deployment",
+        "provider-original-identity-reject-foreign-identity",
+        "provider-original-identity-reject-foreign-tracker"
+      ],
+      "declared_compile_only_suites": [],
+      "current_image_scope": {
+        "biglybtc-mainline-dht-tests": "compile_only_current_image",
+        "biglybtc-mainline-active-scrape-owner-tests": "compile_only_current_image",
+        "biglybtc-mainline-identity-tests": "compile_only_current_image",
+        "biglybtc-mainline-checkpoint-tests": "compile_only_current_image",
+        "biglybtc-mainline-scrape-tests": "compile_only_current_image",
+        "biglybtc-queue-policy-tests": "compile_only_current_image",
+        "biglybtc-managed-queue-tests": "compile_only_current_image",
+        "biglybtc-persistent-session-tests": "compile_only_current_image",
+        "biglybtc-managed-magnet-tests": "compile_only_current_image",
+        "biglybtc-mainline-original-wire-tests": "actual_fresh_test",
+        "biglybtc-mainline-single-tracker-owner-tests": "actual_fresh_test",
+        "biglybtc-azureus-storage-stats-tests": "compile_only_current_image",
+        "biglybtc-azureus-database-runtime-tests": "actual_fresh_test",
+        "biglybtc-tor-channel-tests": "compile_only_current_image",
+        "biglybtc-tor-ownership-tests": "compile_only_current_image",
+        "biglybtc-tor-ownership-source-tests": "compile_only_current_image",
+        "biglybtc-tor-auth-driver": "compile_only_current_image",
+        "biglybtc-tor-auth-bounds-tests": "compile_only_current_image",
+        "biglybtc-profile-lease-retention-tests": "compile_only_current_image",
+        "biglybtc-tor-owned-child-tests": "actual_fresh_test",
+        "biglybtc-provider-original-identity-runtime-deployment-driver": "compile_only_current_image",
+        "biglybtc-original-identity-interposition-driver": "compile_only_current_image",
+        "BiglyBTC": "compile_only_current_image",
+        "BiglyBTC-headless": "compile_only_current_image",
+        "biglybtc-preview-smoke": "compile_only_current_image",
+        "biglybtc-queue-facts-replay": "compile_only_current_image",
+        "biglybtc-runtime-interposition-driver": "compile_only_current_image",
+        "biglybtc-runtime-interposer": "compile_only_current_image",
+        "biglybtc-original-identity-foreign-marker": "compile_only_current_image",
+        "biglybtc-original-tracker-foreign-marker": "compile_only_current_image"
+      },
+      "result_sha256": "c4928219ca472d8ebf94ce259edeb18a4a21b44fcf6e45bf88312de3e984d5ae",
+      "source_map_sha256": "af60e349197615e7dcb3aadf2c74d04c735fb501234e499684d65b851eae3864",
+      "binaries": {
+        "biglybtc-mainline-dht-tests": {
+          "sha256": "a6183626594a2e67e2e343a165e641a9ef64d3f5858cf5148a827231e65cb13d",
+          "bytes": 114259800,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-mainline-active-scrape-owner-tests": {
+          "sha256": "0da7489795505b8a515bc1b36a3500d7611748592cc144763de0ac3c48426bcc",
+          "bytes": 107942648,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-mainline-identity-tests": {
+          "sha256": "c5a48ed76461bb7688b742c1663c9dc38b14d6a60efaf183471361cc5dda4216",
+          "bytes": 6045096,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-mainline-checkpoint-tests": {
+          "sha256": "00932de3960b2571eda799edb330dd5c297c456c3c84381bab8702cf209c815b",
+          "bytes": 7499296,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-mainline-scrape-tests": {
+          "sha256": "318635ddb4d5669c6a04a3c4bc46fc8096435984fa40c3290aa17de84790cb09",
+          "bytes": 2551192,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-queue-policy-tests": {
+          "sha256": "328e7c33e3ef07495c03aff1d9c19f685a8050cdc75efae44fa12bc9ff6970f7",
+          "bytes": 5976504,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-managed-queue-tests": {
+          "sha256": "c29c95e6ea01b8329a80c8a2b8401a21f904aff43c7b4ae897a7fe3a269a7bef",
+          "bytes": 112765312,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-persistent-session-tests": {
+          "sha256": "ef90faba087266cabd7283db92ff6e575dad5d609627b2876e9d6cded4127404",
+          "bytes": 106755128,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-managed-magnet-tests": {
+          "sha256": "fdebeb93908134a69f3c45c0d3c0feac1174f9eb51b099d38b2e59f5f98c33bd",
+          "bytes": 107142824,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-mainline-original-wire-tests": {
+          "sha256": "96e39bccb08570043ad01b64b2546a7bb65f16fc64e103fdcf348dccf5587eaf",
+          "bytes": 17867184,
+          "scope": "actual_fresh_test"
+        },
+        "biglybtc-mainline-single-tracker-owner-tests": {
+          "sha256": "6efe61d146c59b2ecbb2807a95de2a86d2330439d017ac52b3b49a1945540a68",
+          "bytes": 108510480,
+          "scope": "actual_fresh_test"
+        },
+        "biglybtc-azureus-storage-stats-tests": {
+          "sha256": "e4234468cb11b37899fa68c61e15a69ccfe99cddfb21b9888d748a6a0087ac47",
+          "bytes": 972672,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-azureus-database-runtime-tests": {
+          "sha256": "10894a4ef8d66ae1622bbb93397ac88c77c7e8780a87cbdd8b1f091de4f64004",
+          "bytes": 31052400,
+          "scope": "actual_fresh_test"
+        },
+        "biglybtc-tor-channel-tests": {
+          "sha256": "d4319c7d883e04e1e30a3aecbf34e2b2dd815c40e761d3d271aa06148c9cb9ff",
+          "bytes": 4139664,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-tor-ownership-tests": {
+          "sha256": "dd9c923a0363ad8c2b0c2ca4f29387e1ec8b3521fa0b0a34ce3a517e6ca0dd57",
+          "bytes": 5281880,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-tor-ownership-source-tests": {
+          "sha256": "6dfb12d3ecba723bd899ae3da1b792950e635988e21f505e3dfae05c9faf40e5",
+          "bytes": 4071112,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-tor-auth-driver": {
+          "sha256": "83c1ffefd148d38651ffb060b78afea2af458f0c52aba728986a8d05154eb541",
+          "bytes": 813464,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-tor-auth-bounds-tests": {
+          "sha256": "3976f35bd99292b74b37cb12af5f1b760df2b884a96f892eb1d7d58b1b41dd48",
+          "bytes": 574280,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-profile-lease-retention-tests": {
+          "sha256": "26f148bd3e3e8a4053af819d3bb7ebaa9f77236e9c9b77f10b79f05b5723180e",
+          "bytes": 3739928,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-tor-owned-child-tests": {
+          "sha256": "ac82cd3c047cf08e3d48d8b4ef8388b1f9ed6b2ad479788102347703756a4c83",
+          "bytes": 7404024,
+          "scope": "actual_fresh_test"
+        },
+        "biglybtc-provider-original-identity-runtime-deployment-driver": {
+          "sha256": "ea62b7027e4278a6334b40c994c02dc24cebdf5f927ea737e6b8edec6d446b47",
+          "bytes": 882448,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-original-identity-interposition-driver": {
+          "sha256": "d40d01e93d87f9ec54d45e65c1cd7a118b26ab2ad8b63171b9c0ac1117f40413",
+          "bytes": 469552,
+          "scope": "compile_only_current_image"
+        },
+        "BiglyBTC": {
+          "sha256": "ac01b777e3310f18169091cb9918eb2e0a870eb816ed4ff30c2b4f939d3310d2",
+          "bytes": 272776080,
+          "scope": "compile_only_current_image"
+        },
+        "BiglyBTC-headless": {
+          "sha256": "d84dceb4de0e79d6481aaf446e722edfb7c8235edd641115a285a26c4b66ee00",
+          "bytes": 103371528,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-preview-smoke": {
+          "sha256": "3faa2e68861bd9a92bd17387641c9679c803f3534587b56a32d7e24601c5cc08",
+          "bytes": 276227440,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-queue-facts-replay": {
+          "sha256": "86ef7c1360e2e15cd6b3d963b516deaf20db10c3ab3b7256b049e5b65a31af68",
+          "bytes": 1032296,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-runtime-interposition-driver": {
+          "sha256": "1f26948fc9a92e22ccf558c2b9d10d4e06364332c2a352214d85af4137a622a1",
+          "bytes": 103251384,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-runtime-interposer": {
+          "sha256": "569f7f5fb4a411b16292b6008285af64a0102fefbfe6c780306b4b1fd8e16a2a",
+          "bytes": 17336,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-original-identity-foreign-marker": {
+          "sha256": "054ed0dd600c97e3ed3ca36219a54e79709fcb218490dae6d83fd849d1840b18",
+          "bytes": 17024,
+          "scope": "compile_only_current_image"
+        },
+        "biglybtc-original-tracker-foreign-marker": {
+          "sha256": "e0675d862bcde0991647ba1dfb348a04fe05134b5983cf28c93320996951b311",
+          "bytes": 17024,
+          "scope": "compile_only_current_image"
+        }
+      },
+      "real_offline_tor": {
+        "status": "PASS_REAL_EXTRACTED_OFFLINE_TOR",
+        "receipt_sha256": "7c079fd3e26f1dd703f3e29300dcf5b7a00d99819892c6947467ba0ed0f2c6dc",
+        "joined": true
+      }
+    }
+  },
+  "original_single_tracker": {
+    "source_commit": "b0c0270cc8c41deb5169767e583b49ec654c73ca",
+    "projection_source_unchanged": true,
+    "current_image_executed": false,
+    "actual_cases": 16,
+    "scalar_comparisons": 80,
+    "receipt_sha256": "15fbc2338a7dcc02bdd0542b805b72a185d934d628a0208b47fd83f60c84b093",
+    "scope": "Actual original getters with explicit thin wrapper predicate; no tracker wire parser/full permission equality"
+  },
+  "diversification_reference": {
+    "observations": 63,
+    "receipt_sha256": "0509ad05b4df67b64d81884cd2af8f71b525643834a823c871736f57989ddbd8",
+    "scope": "Exact original storageKey class/suspendDivs/serialiseStats with controlled clock/draw/deadline; original bloom. No full manager, file persistence, random distribution, network, Core or profile.",
+    "rerun": false
+  },
+  "private_runtime": {
+    "actual_programs": 4,
+    "receipt_sha256": "cfcd03d0f83d5c9d159710485c97a5c68e88a72abde915290276bd5e4bc40408",
+    "provider_sha256": "3e7bb59a4b419bc8f5198dd8ebf4b1a6cd2c1b106a7f032759bdbf552faa1890"
+  },
+  "private_development_promotion": {
+    "receipt_sha256": "f63926e489c76ebf534ee2087a192959f95126c07f4c5fcd0562871111335d76",
+    "manifest_sha256": "e79037c9d5b5bdf7cb2662bb240f1a57a347fddc85d0a206ce28bf6c7925b3d3",
+    "rollback_manifest_sha256": "404f1429f97da909b18860e49d1cbb63b9cd56c78f8637fafe84662bc77013c8",
+    "leaves": 118,
+    "shipping_approved": false,
+    "previous_manifest_retained_as_evidence": true,
+    "permanent_previous_tree_required": false
+  },
+  "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "component_count_preserved": 105,
+  "external_dependency_count_preserved": 19,
+  "cf_parents_closed": [],
+  "public_network_qualified": false,
+  "whole_phase_complete": false,
+  "shipping_approved": false,
+  "historical_closeout_sha256": "8bcc7f9c3ae82fc2cc4aa491a3051dd628ef9a3b2b3bcea89792118b95b998b9",
+  "matrix_scope": "Fresh4/3/4 at013 plus historical20/16/20 exact b0 origins; no all-current full-cohort claim.",
+  "retained_local_history": [
+    {
+      "path": "build/network-service-cohort-20261028/qualification/runs/clang-r1/result.json",
+      "sha256": "7fac429562cfb08a4f740d9b299c50ceb6db19699193d6353f61edaa2a982cc2",
+      "status": "FAIL",
+      "credited": false
+    },
+    {
+      "path": "build/network-service-cohort-20261028/qualification/runs/gcc-r1/result.json",
+      "sha256": "a89fac1fa00770b3f556b6b1dad2249fc6aaaeadf5d102f421d718c3fb08f428",
+      "status": "FAIL",
+      "credited": false
+    },
+    {
+      "path": "build/network-service-cohort-20261028/qualification/runs/san-r1/result.json",
+      "sha256": "550747c1456b0ad1ae617ff25b8c66d5f76472e29d8229f005ba043388972ed4",
+      "status": "FAIL",
+      "credited": false
+    },
+    {
+      "path": "build/network-service-cohort-20261028/amendments/file-fd-default-recipes/qualification/runs/clang-r2/result.json",
+      "sha256": "f08198c7a68cff30a2f2142c6dccb859729596a131de5f94032bfd0333b9d72a",
+      "status": "FAIL",
+      "credited": false
+    },
+    {
+      "path": "build/network-service-cohort-20261028/amendments/file-fd-default-recipes/qualification/runs/gcc-r2/result.json",
+      "sha256": "74167f42a15e0a353f095420c5266395a29affd836e9c8af4e0b7066185444a8",
+      "status": "FAIL",
+      "credited": false
+    },
+    {
+      "path": "build/network-service-cohort-20261028/amendments/file-fd-default-recipes/qualification/runs/san-r2/result.json",
+      "sha256": "b51e7bceaa4976c26233a419018b2da3a257b2fb288a5c54b996c9de0b25ea58",
+      "status": "FAIL",
+      "credited": false
+    },
+    {
+      "path": "build/network-service-cohort-20261028/amendments/managed-storage-include-recipes/qualification/runs/clang-r3/result.json",
+      "sha256": "cbcfa00b65dabf35e3484d4b91d868d91b63106296d18301b1c8dbff818d61fd",
+      "status": "FAIL",
+      "credited": false
+    },
+    {
+      "path": "build/network-service-cohort-20261028/amendments/managed-storage-include-recipes/qualification/runs/gcc-r3/result.json",
+      "sha256": "e4d5ea3f115d263fecefa2f2ac144ea0379cb61faea6da456c045c9db31d5067",
+      "status": "FAIL",
+      "credited": false
+    },
+    {
+      "path": "build/network-service-cohort-20261028/amendments/managed-storage-include-recipes/qualification/runs/san-r3/result.json",
+      "sha256": "f62c60309996d2c2ce8352a485e0ac44e6a35dd319c683fd1b92901bd6d27599",
+      "status": "FAIL",
+      "credited": false
+    },
+    {
+      "path": "build/network-service-cohort-20261028/scoped-followup/runs/clang-r5/result.json",
+      "sha256": "5807b38946a7ef8543426b0fb128cc0ff599b109af3ec01e10fe44186c6151f8",
+      "status": "PASS_SCOPED_WITH_EXPLICIT_HISTORICAL_ORIGINS",
+      "credited": true
+    },
+    {
+      "path": "build/network-service-cohort-20261028/scoped-followup/runs/gcc-r5/result.json",
+      "sha256": "da39244f5c8d7ea30158d8cd010b5652905ebfe59e7e80700940d7d81d766c8d",
+      "status": "PASS_SCOPED_WITH_EXPLICIT_HISTORICAL_ORIGINS",
+      "credited": true
+    },
+    {
+      "path": "build/network-service-cohort-20261028/scoped-followup/runs/san-r5/result.json",
+      "sha256": "c4928219ca472d8ebf94ce259edeb18a4a21b44fcf6e45bf88312de3e984d5ae",
+      "status": "PASS_SCOPED_WITH_EXPLICIT_HISTORICAL_ORIGINS",
+      "credited": true
+    },
+    {
+      "path": "build/network-service-cohort-20261028/real-tor-standalone/clang-r3/result.json",
+      "sha256": "7dfffa2cc25558b246926fed4bd315b5cfd491c2d768294daed44564f0439f90",
+      "status": "FAILED",
+      "credited": false
+    },
+    {
+      "path": "build/network-service-cohort-20261028/tor-config-diagnostic/metadata-r1/result.json",
+      "sha256": "2b2d36b75b6a0a1a2e47b371d717c708dfda2d68cc48b48379530aede0d05dca",
+      "status": "METADATA_DIAGNOSTIC_ONLY_NO_PASS_CREDIT",
+      "credited": false
+    },
+    {
+      "path": "build/network-service-cohort-20261028/tor-config-diagnostic/verbose-signals-r1/result.json",
+      "sha256": "e481a9fecf7466777222bad31468a7e68ddeddef3b3236c57adcef451859b2d3",
+      "status": "DIAGNOSTIC_ONLY_NO_PASS_CREDIT",
+      "credited": false
+    },
+    {
+      "path": "build/network-service-cohort-20261028/amendments/runtime-eight-private-recipes/private-runtime/runs/private013-r1/result.json",
+      "sha256": "cfcd03d0f83d5c9d159710485c97a5c68e88a72abde915290276bd5e4bc40408",
+      "status": "PASS_PRIVATE_RELOCATED_RUNTIME",
+      "credited": false
+    },
+    {
+      "path": "build/network-service-cohort-20261028/amendments/runtime-eight-private-recipes/private-runtime/promotions/private013-r1/result.json",
+      "sha256": "f63926e489c76ebf534ee2087a192959f95126c07f4c5fcd0562871111335d76",
+      "status": "PASS_PROMOTED_PRIVATE_DEVELOPMENT_DIST",
+      "credited": false
+    }
+  ],
+  "excluded_future": [
+    "numeric never-admitted UDP producer0f4f",
+    "dual-family27/Host identity",
+    "ancestor watcher11e0",
+    "original-root writer"
+  ],
+  "local_audit_bundle_reference": {
+    "pack_receipt_sha256": "7a029621901b709b513aafc8389a0b08fb5d85114dc79035856ea161cdc72ff7",
+    "restore_receipt_sha256": "139bad86c35b0a52503bc5072cb081de880c24afee5b345d4e35b688e880ef4b",
+    "archive_sha256": "1c1a9db33d53116c97fb097dc4e6ae1da2b7de64446bdc5b93bf8cd3b7091690",
+    "archive_bytes": 195926839,
+    "scope": "Actual local incremental pack/depth1 restoration only; no public attachment/bootstrap/resolver-store integration claim."
+  },
+  "retained_audit_resolver_requested": true,
+  "retained_audit_resolver": {
+    "manifest_sha256": "4974d8fdc788ea07b1f9eadfc121200fa6bdac788911c8d368be1a4d8d9d5af7",
+    "root_fixture_review_sha256": "ac8b456e42d14ed94bc0fb9649c7ee0e200b6993f7e16be084b5204f515584ed",
+    "actual_fixture_methods": 18,
+    "scope": "Exact retained original audit checkout only; portable/public export remains open."
+  },
+  "registry_validation_after_adoption_required": true,
+  "publication_commit": null,
+  "raw_archive_sha256": "2ec7800cd07f60a89c0d4d067b2c5b7d25087ea1e2914a790818adbb107d4602"
+}

@@ -1,0 +1,99 @@
+{
+  "status": "source-stable installed; independent review and root execution pending",
+  "files": [
+    {
+      "path": "preview/native/tests/saved_services_navigation_tests.cpp",
+      "before_sha256": "5d9689192f4fd693b24986a11d0912f9538ce3ae6047230ba0f1cd79c2ef1f5f",
+      "after_sha256": "18a404ae06467b516cfa1a9cca2e0e31a346c42e2959622f6b83fca60797f039",
+      "affected_methods": [
+        "closeReopenRejectsStaleGeneration",
+        "busyNavigationAndRefreshKeepOnlyLatestPending",
+        "noResultBusyReleaseFailsOnlyActiveAndRetainsNewerPending",
+        "failedActiveRefreshRecoversWithoutAcceptingOldPacket",
+        "independentPacketStatesAndSources",
+        "unrelatedAndDuplicatePacketsCannotReplaceCurrentRows"
+      ],
+      "added_acceptance_assertions": 9,
+      "all_original_bytes_restored_by_removing_exact_additions": true,
+      "test_slot_names_unchanged": true,
+      "data_row_declarations_unchanged": true,
+      "helper_line": 107,
+      "before_line_count": 597,
+      "after_line_count": 618,
+      "test_slots_including_data_and_initialization": 14,
+      "data_row_declarations": 10,
+      "installed_sha256_verified": true
+    },
+    {
+      "path": "preview/native/tests/classic_close_tab_tests.cpp",
+      "before_sha256": "15a923fd5505550c01edd6e2a465a8e3405b9a4d9ed7b4e1289d1cb187e344c0",
+      "after_sha256": "1d8acd1323781c782622ebebc499019f3c1e363887dd301e6efec4f066569181",
+      "affected_methods": [
+        "busyAuxiliaryCloseReopenRejectsOldPacketAndKeepsLatestPending"
+      ],
+      "added_acceptance_assertions": 2,
+      "all_original_bytes_restored_by_removing_exact_additions": true,
+      "test_slot_names_unchanged": true,
+      "data_row_declarations_unchanged": true,
+      "helper_line": 89,
+      "before_line_count": 478,
+      "after_line_count": 487,
+      "test_slots_including_data_and_initialization": 11,
+      "data_row_declarations": 10,
+      "installed_sha256_verified": true
+    }
+  ],
+  "failure_log": {
+    "path": "/home/yurii/Java/BiglyBTC/build/statistics-20261018/hosted-first-failure.log",
+    "sha256": "33eeea63288459788d58a344eb2e8b7df0482e9e3792b35b11e4ee0120dc46ea"
+  },
+  "production_guard": {
+    "path": "preview/native/ui/library_window.cpp",
+    "sha256": "bd5d55056e1fbb3ee5228284c7f4dc7d3ff06ce2ab7abf292991a31819404909"
+  },
+  "preserved": [
+    "all existing test bodies and assertions as an exact byte subsequence",
+    "test data rows",
+    "timeouts",
+    "production acceptance/rejection guard"
+  ],
+  "scope": "Window-only synthetic DTO routing; no Bridge/profile/network or Java runtime equality credit",
+  "schema": 1,
+  "author_role": "test-fixture repair author; not an independent review of these changes",
+  "trigger": {
+    "hosted_run": "39139375177",
+    "failed_suites": [
+      "saved-services-view-navigation",
+      "classic-close-tab-lifecycle"
+    ],
+    "classification": "Manual synthetic owners accepted after the dispatch signal returned, so the intentional no-acceptance guard had already retired the active request. This is a fixture sequencing mismatch."
+  },
+  "change": "Each affected manual-delivery case binds a context-owned DirectConnection receiver before navigation; it marks busy inside savedServicesRequested and leaves packet delivery/busy release under the existing test control.",
+  "new_assertions": 11,
+  "new_test_cases": 0,
+  "static_checks": [
+    "Removing only the exact new helper, bindings, and eleven acceptance assertions restores both original files byte-for-byte.",
+    "All original slot names and data-row declarations remain identical; all prior comparisons, packet data, stale-generation checks, cancellation checks, UI keyboard paths, and timeout arguments remain.",
+    "Only the seven affected manual-delivery methods gain acceptance bindings; existing automatic synthetic owners and intentional unowned paths are unchanged.",
+    "QObject connection has the owning Window context and DirectConnection; it starts no timer/worker/service and captures no borrowed per-case stack state beyond the Window.",
+    "Production library_window.cpp matches the preserved before hash after installation."
+  ],
+  "executed": {
+    "builds": 0,
+    "tests": 0,
+    "apps": 0,
+    "profiles_read": 0,
+    "network": 0
+  },
+  "runtime_result": "Not run by this author. Root must rebuild both affected targets and requalify the full suite; the preserved hosted failure remains unchanged.",
+  "artifact_sha256": {
+    "build/statistics-20261018/legacy-test-acceptance/after/classic_close_tab_tests.cpp": "1d8acd1323781c782622ebebc499019f3c1e363887dd301e6efec4f066569181",
+    "build/statistics-20261018/legacy-test-acceptance/after/saved_services_navigation_tests.cpp": "18a404ae06467b516cfa1a9cca2e0e31a346c42e2959622f6b83fca60797f039",
+    "build/statistics-20261018/legacy-test-acceptance/author-source.json": "a07e6e63cba3f89a76c7f463d47998884edcfeff312a218846afe16f2e20e67b",
+    "build/statistics-20261018/legacy-test-acceptance/before/classic_close_tab_tests.cpp": "15a923fd5505550c01edd6e2a465a8e3405b9a4d9ed7b4e1289d1cb187e344c0",
+    "build/statistics-20261018/legacy-test-acceptance/before/saved_services_navigation_tests.cpp": "5d9689192f4fd693b24986a11d0912f9538ce3ae6047230ba0f1cd79c2ef1f5f",
+    "build/statistics-20261018/legacy-test-acceptance/classic_close_tab_tests.cpp.patch": "481552dc8cd7083e187c5388bddf82147ef97bf05b0759387dc4a78bcaccbbfd",
+    "build/statistics-20261018/legacy-test-acceptance/hosted-first-failure.log": "33eeea63288459788d58a344eb2e8b7df0482e9e3792b35b11e4ee0120dc46ea",
+    "build/statistics-20261018/legacy-test-acceptance/saved_services_navigation_tests.cpp.patch": "23b3ce4538fe465be11fe8e1bb49d87bf0410651016bc24e1dc016370ce87832"
+  }
+}

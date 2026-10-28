@@ -1,0 +1,77 @@
+{
+  "schema": 1,
+  "verdict": "PASS source-only; no concrete production blocker",
+  "reviewed_author": "error_codec",
+  "reviewer": "error_driver",
+  "milestone": "P04-17",
+  "independence": "Reviewer authored original/native baseline audit and draft public contract, not these four History source/test files. No own implementation credit included.",
+  "native_source_parent": "5fc34b588713112b126f3cebdfc891020301a281",
+  "native_metadata_parent": "30569e2631427003a4a92e7edee3572a3b34e740",
+  "manifest": "build/engine-activity-20261018/history-source/manifest.json",
+  "manifest_sha256": "61943701c3a9236d44aae686aff9cc5f00bdbc1cba4f18074ad0ad424d51a794",
+  "source_sha256": {
+    "preview/native/ui/engine_activity_presentation.hpp": "e45ba4e1f5e929d3921545a6b8cad300238737d205f75707defb3c6dbb4479a5",
+    "preview/native/ui/engine_activity_history.hpp": "6361476296ad8f0aa1d320b5f96f7fb84356557fef402c01c03036fe8e295844",
+    "preview/native/ui/engine_activity_history.cpp": "5920ea01804bbc5dc1f96c71d549c0e5abd8fe3cda581c1ea817358d1aaa95a6",
+    "preview/native/tests/engine_activity_history_tests.cpp": "8ea9550837cbd5e03cdd1be0de35bd63809217938dac65a8d2f0635f3e3c9ce8"
+  },
+  "unchanged_context_sha256": {
+    "preview/native/ui/engine_statistics_presentation.hpp": "2b1270182e459b2b93aa3376f80b8bcb52500b51486dca0e93820684479db67d",
+    "preview/native/ui/library_model.hpp": "8abca399af00b5c2c96e760c85b6c1078e69274be8b68c6dc8de7ac877772d98",
+    "preview/native/core/include/biglybtc/engine_statistics.hpp": "f5946fd72b06312dd4772bbfb7f4c84ebbfcff53971b737e8ba7cda4902678f9",
+    "preview/native/core/src/engine_statistics.cpp": "77f4214794a6eb942f6732614dac55905d72ea91433c3b7158cc8095f78dd90d"
+  },
+  "artifact_sha256": {
+    "new-files.patch": "b1a5ce57f9c90b726e972c9086fd544a32e92317fd989a4a1c4ab0a476ed6f42",
+    "notes.md": "0898232b340a1e1bbb52c4286d697285088282f77e56e2997409b1a8d0659a30",
+    "static-checks.json": "f0c4480121c014871b2ad8456a1513d06139844a6098d19d4950d679685f1cc4"
+  },
+  "checks": [
+    "All four live source files, four staged copies, four unchanged dependency contexts and all three capsule artifact hashes match frozen manifest; manifest is exact.",
+    "Existing acceptEngineStatistics gate validates expected session, operation/sequence, target, state, core sample shape and regression before any allocation or ring mutation. An existing foreign-session latest prevents replacement until explicit clear.",
+    "Missing terminal normalization allocates a private packet before mutation and only after same-operation admission; caller packet is not mutated and no prior operation sample is inherited.",
+    "Known rates append all six supplied int64 rate fields verbatim; absent rates append no point and still advance latest so the next known point disconnects. Zero-valued rates remain present actual points.",
+    "Only consecutive-sequence Observed/Observed samples with known predecessor rates connect. Admission enforces increasing observed elapsed time; unsigned difference is safe after ordering admission. New-operation and later terminal points are disconnected.",
+    "Equal-time admitted terminal snapshot and missing same-operation terminal add no duplicate point. Newer actual terminal sample may append exactly one isolated rate point; post-terminal same-operation packets cannot revive.",
+    "Fixed array600 ring has bounded modulo/destination arithmetic, exact overwrite/oldest order and first retained connection reset after eviction. New operation clear occurs only after admission/normalization succeeds.",
+    "Snapshot reserves at most600 points then copies oldest-to-newest into owned vector and shared immutable object; allocation failure cannot mutate history. shared_ptr construction cleans its newly allocated object on control-block allocation failure. No global OOM/RSS/no-allocation claim.",
+    "History copy/move/clear and snapshot lifetime do not expose mutable ring spans; moved-from source can be cleared/reused. Borrowed incoming packet immutability remains explicit input contract rather than deep clone protection.",
+    "No added timers, threads, clock reads, network, storage/profile IO, global/Java smoothing, alert consumer or sampler dependencies in these new implementations.",
+    "Tests exercise actual production History, not duplicated algorithm:19 behavior methods,48 expanded behavior rows,50 planned Qt totals; malformed/regressing rejection checks retained latest pointer and every point, cap/wrap tests check order and disconnected edge, old snapshots survive clears/destruction."
+  ],
+  "findings": [],
+  "nonblocking_test_limits": [
+    {
+      "id": "HA-T1",
+      "observation": "newerTerminalSampleAddsStandaloneActualPoint uses sequence8 after2, so a sequence gap also explains the disconnected result.",
+      "recommendation": "Optional additive consecutive-sequence newer Ended fixture isolates the terminal-only standalone rule."
+    },
+    {
+      "id": "HA-T2",
+      "observation": "Ordinary rate fixtures use combined=payload+protocol exactly; no supplied separately-floored difference1 rate group. Current implementation does copy all six fields correctly.",
+      "recommendation": "Optional additive gap1 floor-shape fixture protects against future protocol-rate subtraction."
+    },
+    {
+      "observation": "No allocator-fault runtime tests are present; exception rollback is source-reviewed standard RAII only. Synthetic packets do not establish original-Java/libtorrent/real-engine/runtime equality."
+    }
+  ],
+  "execution": {
+    "compiler": false,
+    "tests": false,
+    "java": false,
+    "target_import": false,
+    "process_fixture": false
+  },
+  "static_counts": {
+    "source_files": 4,
+    "unchanged_contexts": 4,
+    "behavior_methods": 19,
+    "expanded_behavior_rows_planned": 48,
+    "qt_rows_planned": 50
+  },
+  "pending": [
+    "Root compilation and actual focused/regression execution",
+    "Independent View/Page source review and root Window integration review/qualification",
+    "Actual generated loopback graph data and captures before new graph runtime acceptance"
+  ]
+}

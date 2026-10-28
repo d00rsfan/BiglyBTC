@@ -1,0 +1,110 @@
+{
+  "status": "passed",
+  "source_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+  "driver_sha256": "3d76f1e916ee343effee7b834fca1cac860f923d41aaf65a282209ba808e382c",
+  "harness_sha256": {
+    "native/tests/ProfileOracle.java": "cffb53cba0be09cb582a52ba785f0dd8d1753623ae37729af578e1235992c669",
+    "migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+    "native/tests/profile_write_faults.py": "0f3e8b0a93bcdb6e0fc0de0fb74d59ddc5a31b124d4f065c94fe54f19f30b554"
+  },
+  "cases": [
+    {
+      "case": "reported-0",
+      "child_exit": 2,
+      "file_size_limit": 0,
+      "saving_bytes": 0,
+      "committed_files_sha256_device_inode": {
+        "biglybt.config": [
+          "b072d02798ba4530c0e0d173a85332ab1bb0dae4f65f114942b1b10ffed33159",
+          46,
+          378020
+        ],
+        "biglybt.config.bak": [
+          "e5691d378608807b0e0a55e13a1b7469a76a54f15a3d1c355b49aa9b52185521",
+          46,
+          378021
+        ]
+      },
+      "native_diagnostic": "Unable to write complete saving file; original preserved\n",
+      "profile": "/tmp/biglybtc-profile-write-faults-992ab7278b174775b15e3a4d03f15452/reported-0"
+    },
+    {
+      "case": "terminated-0",
+      "child_exit": -25,
+      "file_size_limit": 0,
+      "saving_bytes": 0,
+      "committed_files_sha256_device_inode": {
+        "biglybt.config": [
+          "b072d02798ba4530c0e0d173a85332ab1bb0dae4f65f114942b1b10ffed33159",
+          46,
+          378025
+        ],
+        "biglybt.config.bak": [
+          "e5691d378608807b0e0a55e13a1b7469a76a54f15a3d1c355b49aa9b52185521",
+          46,
+          378026
+        ]
+      },
+      "native_diagnostic": "",
+      "profile": "/tmp/biglybtc-profile-write-faults-992ab7278b174775b15e3a4d03f15452/terminated-0"
+    },
+    {
+      "case": "reported-16",
+      "child_exit": 2,
+      "file_size_limit": 16,
+      "saving_bytes": 16,
+      "committed_files_sha256_device_inode": {
+        "biglybt.config": [
+          "b072d02798ba4530c0e0d173a85332ab1bb0dae4f65f114942b1b10ffed33159",
+          46,
+          378030
+        ],
+        "biglybt.config.bak": [
+          "e5691d378608807b0e0a55e13a1b7469a76a54f15a3d1c355b49aa9b52185521",
+          46,
+          378031
+        ]
+      },
+      "native_diagnostic": "Unable to write complete saving file; original preserved\n",
+      "profile": "/tmp/biglybtc-profile-write-faults-992ab7278b174775b15e3a4d03f15452/reported-16"
+    },
+    {
+      "case": "terminated-16",
+      "child_exit": -25,
+      "file_size_limit": 16,
+      "saving_bytes": 16,
+      "committed_files_sha256_device_inode": {
+        "biglybt.config": [
+          "b072d02798ba4530c0e0d173a85332ab1bb0dae4f65f114942b1b10ffed33159",
+          46,
+          378035
+        ],
+        "biglybt.config.bak": [
+          "e5691d378608807b0e0a55e13a1b7469a76a54f15a3d1c355b49aa9b52185521",
+          46,
+          378036
+        ]
+      },
+      "native_diagnostic": "",
+      "profile": "/tmp/biglybtc-profile-write-faults-992ab7278b174775b15e3a4d03f15452/terminated-16"
+    }
+  ],
+  "parent_limits_unchanged": [
+    [
+      -1,
+      -1
+    ],
+    [
+      0,
+      -1
+    ]
+  ],
+  "java_log": "/tmp/biglybtc-profile-write-faults-992ab7278b174775b15e3a4d03f15452/java-recovery.log",
+  "java_log_sha256": "d725ab8ec3f5924198b397511193d1295873092d109497e61140228f61320ad8",
+  "limitations": [
+    "Linux actual RLIMIT_FSIZE/EFBIG and child SIGXFSZ only; no ENOSPC/fsync/rename fault qualification",
+    "Abruptly terminated children cannot run sanitizer finalization; reported-error/reopen paths retain normal leak checks",
+    "Generated configuration files only; no payload or running user application is involved"
+  ]
+}

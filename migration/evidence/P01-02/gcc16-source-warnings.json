@@ -1,0 +1,33 @@
+{
+  "status": "observed_review_pending",
+  "upstream_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "compiler": "GCC16.0.1 20260322 r16-8246-g569ace1fa50",
+  "diagnostic": "-Warray-bounds in std::vector<char>::resize(1), instantiated through i2p_stream::start_read_line",
+  "observed_count": 3,
+  "source": "/tmp/biglybtc-deps/libtorrent-2.0.12-release/libtorrent-2.0.12/include/libtorrent/i2p_stream.hpp",
+  "source_sha256": "d3bb9186f586ef0201b68ac1ec6c389f1e18b389d9d99eb1c027729712f2be0a",
+  "source_excerpt_lines_219_232": [
+    "\ttemplate <typename Handler>",
+    "\tvoid start_read_line(error_code const& e, Handler h)",
+    "\t{",
+    "\t\tTORRENT_ASSERT(m_magic == 0x1337);",
+    "\t\tCOMPLETE_ASYNC(\"i2p_stream::start_read_line\");",
+    "\t\tif (handle_error(e, h)) return;",
+    "",
+    "\t\tADD_OUTSTANDING_ASYNC(\"i2p_stream::read_line\");",
+    "\t\tm_buffer.resize(1);",
+    "\t\tasync_read(m_sock, boost::asio::buffer(m_buffer), wrap_allocator(",
+    "\t\t\t[this](error_code const& ec, std::size_t, Handler hn) {",
+    "\t\t\t\tread_line(ec, std::move(hn));",
+    "\t\t\t}, std::move(h)));",
+    "\t}"
+  ],
+  "log": "/tmp/biglybtc-libtorrent-source-resumed-build.log",
+  "policy": [
+    "No source modification or warning suppression",
+    "Local numeric-loopback handoffs do not exercise I2P",
+    "Do not classify this warning as a proven defect or proven false positive without further evidence",
+    "Source build/runtime development checks do not qualify privacy transport or release selection"
+  ],
+  "observed_utc": "2026-10-17 05:29:05 UTC"
+}

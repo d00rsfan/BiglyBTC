@@ -1,0 +1,18 @@
+[
+  {
+    "symbol": "void initKey(",
+    "pom_engine_commit": "067f434eb60323123a5e885093ab2504ab10d5f9",
+    "fork_commit": "f9290cbd63805229aef418639b781696c5fa1573",
+    "identical_body": true,
+    "pom_body_sha256": "deba3dbfb4b97dfed91fe1826a293cab9d8041abaf2e5d4d63d4d13325155c18",
+    "fork_body_sha256": "deba3dbfb4b97dfed91fe1826a293cab9d8041abaf2e5d4d63d4d13325155c18"
+  },
+  {
+    "symbol": "void persistKey(",
+    "pom_engine_commit": "067f434eb60323123a5e885093ab2504ab10d5f9",
+    "fork_commit": "f9290cbd63805229aef418639b781696c5fa1573",
+    "identical_body": true,
+    "pom_body_sha256": "288fe00b0df2bbde3c8aadc86162fe00f98094086dc046b2796a83b29f86aa09",
+    "fork_body_sha256": "288fe00b0df2bbde3c8aadc86162fe00f98094086dc046b2796a83b29f86aa09"
+  }
+]

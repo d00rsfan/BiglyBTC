@@ -1,0 +1,39 @@
+Test project /tmp/biglybtc-desktop-asan
+      Start  9: owned-peer-readiness
+ 1/11 Test  #9: owned-peer-readiness .............   Passed    0.39 sec
+      Start 29: desktop-model-and-lifecycle
+ 2/11 Test #29: desktop-model-and-lifecycle ......   Passed   25.68 sec
+      Start 30: desktop-files-model
+ 3/11 Test #30: desktop-files-model ..............   Passed    9.79 sec
+      Start 31: desktop-readonly-files-1
+ 4/11 Test #31: desktop-readonly-files-1 .........   Passed   84.19 sec
+      Start 32: desktop-readonly-files-3
+ 5/11 Test #32: desktop-readonly-files-3 .........   Passed   79.43 sec
+      Start 33: desktop-readonly-files-2
+ 6/11 Test #33: desktop-readonly-files-2 .........   Passed   43.01 sec
+      Start 34: desktop-readonly-paused-files
+ 7/11 Test #34: desktop-readonly-paused-files ....   Passed   54.50 sec
+      Start 36: desktop-java-v2
+ 8/11 Test #36: desktop-java-v2 ..................   Passed   71.02 sec
+      Start 38: desktop-java-cancel
+ 9/11 Test #38: desktop-java-cancel ..............   Passed  105.18 sec
+      Start 39: desktop-java-close
+10/11 Test #39: desktop-java-close ...............   Passed   83.54 sec
+      Start 43: desktop-original-file-policy
+11/11 Test #43: desktop-original-file-policy .....   Passed   91.64 sec
+
+100% tests passed, 0 tests failed out of 11
+
+Label Time Summary:
+files           = 270.92 sec*proc (5 tests)
+fixtures        =   0.39 sec*proc (1 test)
+integration     = 612.52 sec*proc (8 tests)
+loopback        = 612.52 sec*proc (8 tests)
+multifile       =  91.64 sec*proc (1 test)
+policy          =  91.64 sec*proc (1 test)
+read-only       = 261.13 sec*proc (4 tests)
+same-profile    = 351.39 sec*proc (4 tests)
+ui              = 647.98 sec*proc (10 tests)
+unit            =  35.85 sec*proc (3 tests)
+
+Total Test time (real) = 648.40 sec

@@ -1,0 +1,280 @@
+{
+  "status": "source-frozen-before-native-comparison",
+  "reference": {
+    "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "source_audit_sha256": "b8b686746253f939d5ece5d054cb52cc1694c96eca1bf4748500dce95c19df1e",
+    "source_sha256": {
+      "core/src/com/biglybt/core/dht/router/impl/DHTRouterContactImpl.java": "a7bf00ba5d617aad5a5909e366d0f4703c6fa4b78a40bf8ce974ab87bd6d3db3",
+      "core/src/com/biglybt/core/dht/router/DHTRouterContact.java": "fdaca3e78a1137f32ce807cbc41c1c6d1c9a89741dec4f0f033be2a83c061dbe",
+      "core/src/com/biglybt/core/dht/router/DHTRouterContactAttachment.java": "a1f3b265d2d372f4e89dc1670cbe4905ca1bdaace3021507e9c35bd24d8f6f70",
+      "core/src/com/biglybt/core/dht/router/DHTRouterContactWrapper.java": "5f7e5e55bf0e3cc23a101bb64051a09e0d1aba101366e57bfaf47b1d16e06822",
+      "core/src/com/biglybt/core/dht/router/impl/DHTRouterNodeImpl.java": "aa41bc97d091672ceb4ad3b2a5502833b37c9a60141ea61043b452db3b9a9a73",
+      "core/src/com/biglybt/core/dht/router/impl/DHTRouterImpl.java": "50b1defa8637bd435960b628c37f7f02f31a2f52c2bb357e1b081eeae637dec4",
+      "core/src/com/biglybt/core/dht/router/DHTRouterAdapter.java": "4467dd997f04512b19c6bf8bd6a2da8f05548d1d5d06c10cabf45fc39cd19768",
+      "core/src/com/biglybt/core/dht/router/DHTRouterObserver.java": "684f8aeb8021f2867e8ad1472b82a162e42d5edfddfe3f8d1cf219fea0d2b5c8",
+      "core/src/com/biglybt/core/dht/control/impl/DHTControlContactImpl.java": "c38b71f1c6caa76f2096275c933ecdf8e75b934e98e973ecc417a90fae0c387e",
+      "core/src/com/biglybt/core/dht/control/DHTControlContact.java": "f3bd59d42ec64b2e87036ca3a2b9b4dadf0e57a8de4ea57b8b2225f24feee903",
+      "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java": "952851231979640c1eb5704f55120e19fda91270dbd1c98c9fcc454ccf89daa9",
+      "core/src/com/biglybt/core/dht/transport/DHTTransport.java": "57b1bd3ae1644e327c658b68f6570b85b46938ac0920c7a644cf3cb48a3a3c47",
+      "core/src/com/biglybt/core/dht/transport/DHTTransportContact.java": "b720d632dbca28a4a788516881ea239e7e055e8153dff4bf93f453101fef4c0c",
+      "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java": "30cd1f70c74274aec6496a2f711b5865ad1b776d028f25503ba6a52ddb3fa6af",
+      "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java": "b1d4e38f2bc9c33bda1bd39092ea87352a6668ca41664dafe1be7011fe163092",
+      "core/src/com/biglybt/core/util/SystemTime.java": "d57063696e281cc005e5b146a8f863a2ca52180696a98b473ff8566851f97353",
+      "core/src/com/biglybt/core/util/AEMonitor.java": "10732da79c2ca2b92d0103036ccac23f0751a3141f0a770f5df24ea44aa96276",
+      "core/src/com/biglybt/core/dht/impl/DHTLog.java": "41f6eb899b0018f77159c251908644c5b6ca63ea656a20a4fae4b8818decc5df",
+      "core/src/com/biglybt/core/util/ByteFormatter.java": "b1eb635fddd00ad72301128231a756ce6b95d6a7a6721e1d2be3841bbad53560"
+    },
+    "exact_declaration_sha256": {
+      "CONTACT_CLASS": "2a2d8bac5bfbfdaafe1bf0d92ceaa66e8bce7fe70ca716291a31822fcad372ee",
+      "CONTACT_INTERFACE": "4e3fe14d8033bc40d5747cf028cd7830b1febbed42f0c7f42335016c1422ec85",
+      "ATTACHMENT_INTERFACE": "96d9853469772abfb833dbffa70dfd06731e1766b347cfe359be90ac35623ea0",
+      "LOG_METHOD": "72fc31f09588042374f6c2041ad8be920364679bd2ad0296513a0a3e0e353db1",
+      "FORMAT_ONE": "515897f9b22fc56da6e90a5d91970a220cd4a4a97466a76ae1b62b51e248c405",
+      "FORMAT_TWO": "dbe617d34e5c075394fd2b67dd714c31bc17b1ced299cbcbff497c286fa3b837",
+      "FORMAT_THREE": "c170bd3e41687409f8a42a47cb91543a78748cd9001ab79f466575d2f2998415",
+      "FORMAT_CONSTANT": "c84e09f49b62a080b8707984d2c2cc8ef0777a8053b7cffd1f05848ad8ad59d3"
+    },
+    "original_body_sha256": {
+      "CONTACT_CLASS": "341fd67967dffa982d295e652dc6fbe9b1f914646f1fa406a6f350d6cd4a38d4",
+      "CONTACT_INTERFACE": "6ba4a7e11156404808c3222148a793b4bf6ef8428231ac05816c41df10d006d0",
+      "ATTACHMENT_INTERFACE": "35a6558ba4790030163183ab5550830dd6a34849a5058d5af72f44b860f0af7d",
+      "LOG_METHOD": "3a1e162b0c3a89f0866f125bade50948c106351785a612bf4fc1ffe03953c46a",
+      "FORMAT_ONE": "47e2877961e5982be4bead779a2cb728cf72b011dd98e196179c90888e98d151",
+      "FORMAT_TWO": "4fe571417ba8e5db14dd7440c3d180d0a8a9617fe3ec2540a97b2c7192eb65d3",
+      "FORMAT_THREE": "c588716db433a700faf1688f12b592677877e1495e8f4c8594a1e25f695abf92"
+    },
+    "adapted_body_sha256": {
+      "CONTACT_CLASS": "341fd67967dffa982d295e652dc6fbe9b1f914646f1fa406a6f350d6cd4a38d4",
+      "CONTACT_INTERFACE": "6ba4a7e11156404808c3222148a793b4bf6ef8428231ac05816c41df10d006d0",
+      "ATTACHMENT_INTERFACE": "35a6558ba4790030163183ab5550830dd6a34849a5058d5af72f44b860f0af7d",
+      "LOG_METHOD": "3a1e162b0c3a89f0866f125bade50948c106351785a612bf4fc1ffe03953c46a",
+      "FORMAT_ONE": "47e2877961e5982be4bead779a2cb728cf72b011dd98e196179c90888e98d151",
+      "FORMAT_TWO": "4fe571417ba8e5db14dd7440c3d180d0a8a9617fe3ec2540a97b2c7192eb65d3",
+      "FORMAT_THREE": "c588716db433a700faf1688f12b592677877e1495e8f4c8594a1e25f695abf92"
+    },
+    "tool_inputs_sha256": {
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/source-audit.json": "b8b686746253f939d5ece5d054cb52cc1694c96eca1bf4748500dce95c19df1e",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/RouterContactLifecycleOracle.java.in": "907fe7837e3cb31c2490749b78427cccf9c300f3c897ebf529a525eb33b0a9a0",
+      "/home/yurii/Java/BiglyBT/migration/tools/azureus_router_contact_oracle.py": "11c596966aaa8e214847e9fc8e4a70e07ef057a180c6c1fb2adb44a5b5ee9e2e",
+      "/home/yurii/Java/BiglyBT/migration/tools/azureus_router_contact_fixtures.py": "60fc333925de9adc81941dcb808ac2227b5b38146c072517540e7d07e4908380",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P00-04/reference-fence.json": "0c35e6bb2212e681ed4be8ecc65c50e35d7e191701bee59c9e139f2fbcb17302",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/development/pre-relocation/helper-draft.json": "79ef18711b94eca20921b8ed4d8cfe899a8fe0fad618f60ea4e59c4cf1b798f8",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/control/DHTControlContact.java": "f3bd59d42ec64b2e87036ca3a2b9b4dadf0e57a8de4ea57b8b2225f24feee903",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/control/impl/DHTControlContactImpl.java": "c38b71f1c6caa76f2096275c933ecdf8e75b934e98e973ecc417a90fae0c387e",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java": "952851231979640c1eb5704f55120e19fda91270dbd1c98c9fcc454ccf89daa9",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/impl/DHTLog.java": "41f6eb899b0018f77159c251908644c5b6ca63ea656a20a4fae4b8818decc5df",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/DHTRouterAdapter.java": "4467dd997f04512b19c6bf8bd6a2da8f05548d1d5d06c10cabf45fc39cd19768",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/DHTRouterContact.java": "fdaca3e78a1137f32ce807cbc41c1c6d1c9a89741dec4f0f033be2a83c061dbe",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/DHTRouterContactAttachment.java": "a1f3b265d2d372f4e89dc1670cbe4905ca1bdaace3021507e9c35bd24d8f6f70",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/DHTRouterContactWrapper.java": "5f7e5e55bf0e3cc23a101bb64051a09e0d1aba101366e57bfaf47b1d16e06822",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/DHTRouterObserver.java": "684f8aeb8021f2867e8ad1472b82a162e42d5edfddfe3f8d1cf219fea0d2b5c8",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/impl/DHTRouterContactImpl.java": "a7bf00ba5d617aad5a5909e366d0f4703c6fa4b78a40bf8ce974ab87bd6d3db3",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/impl/DHTRouterImpl.java": "50b1defa8637bd435960b628c37f7f02f31a2f52c2bb357e1b081eeae637dec4",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/impl/DHTRouterNodeImpl.java": "aa41bc97d091672ceb4ad3b2a5502833b37c9a60141ea61043b452db3b9a9a73",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/transport/DHTTransport.java": "57b1bd3ae1644e327c658b68f6570b85b46938ac0920c7a644cf3cb48a3a3c47",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/transport/DHTTransportContact.java": "b720d632dbca28a4a788516881ea239e7e055e8153dff4bf93f453101fef4c0c",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java": "30cd1f70c74274aec6496a2f711b5865ad1b776d028f25503ba6a52ddb3fa6af",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java": "b1d4e38f2bc9c33bda1bd39092ea87352a6668ca41664dafe1be7011fe163092",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/util/AEMonitor.java": "10732da79c2ca2b92d0103036ccac23f0751a3141f0a770f5df24ea44aa96276",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/util/ByteFormatter.java": "b1eb635fddd00ad72301128231a756ce6b95d6a7a6721e1d2be3841bbad53560",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/util/SystemTime.java": "d57063696e281cc005e5b146a8f863a2ca52180696a98b473ff8566851f97353",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/source-plan/semantic.txt": "211f46b54a3df001bf4644fc00ff5c2d47948aabbeb06f18fe8a9a59217d53d4",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/source-plan/alias-policy.txt": "472f7f3d2f49c14e80a3717aad0761f6b27230bc0702eff7b58c062157e76d1e",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/source-plan/getter-contract.txt": "1bcf785e2c114d3b336270ccf1d443dba220502107ed6ad78fef0a7470ac90df",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/source-plan/seeded-boundary.txt": "3b28e6ca9d2a5dd0d163d1265c5c4ccab13a056a1938861e0bfe150e54a4f13d",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/source-plan/diagnostic.txt": "da4b36c282bc32ee9c60108303a54aa58eb5e015e7c0b8901fd85e8b9646347a",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/source-plan/plan.json": "9a3243c87cd4e2bb5995ab935fc2adc534f6ae873694205870d53f95e26e6e0a"
+    },
+    "java_launcher_compiler_sha256": {
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java": "0e72dac1212b98b6450d1b17d403680be25002d47465dbdb460d24c45cbbde3c",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac": "ef60c7cfcdbd1313151738e56754e09a4706f7d822899054281d4def617bce1d"
+    },
+    "harness_sha256": "d77e00ab8f111882037fd59359dbb4264a8af6656d9bc939b6c2a3e9ac8aef39",
+    "helper_class_sha256": {
+      "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd",
+      "RouterContactLifecycleOracle$Attachment.class": "09a3f0c595a709465d9ecf36f684589ee8e1c481921b5196ee1135800479dec8",
+      "RouterContactLifecycleOracle$ByteFormatter.class": "44a164ad11253ff021495d96b48989eb897b8b3290f8390d8a7aa3b4f9479e77",
+      "RouterContactLifecycleOracle$DHTLog.class": "195f75eb9622292e520f80c7bec7214c566b51f7fe5eecfa9f67c765f441b30e",
+      "RouterContactLifecycleOracle$DHTRouterContact.class": "84ee04ebc8e1d83db98b9a2c8e942b3c75d4067908726a649b76d12bd093684e",
+      "RouterContactLifecycleOracle$DHTRouterContactAttachment.class": "3c0652b7736a0490f6f84570cb63b3fd52371d2efd3fe7e2820b685e545a57a7",
+      "RouterContactLifecycleOracle$DHTRouterContactImpl.class": "79392d146f9e5753592dfa8513c034a8c5e4da0666e1fc74b3d25a3134113fb3",
+      "RouterContactLifecycleOracle$Debug.class": "38aa5c1cd4d9c97fe925764ce5e566de32a6a8cddb0b0856d6f79a6599954a58",
+      "RouterContactLifecycleOracle$SystemTime.class": "6d073d5de1d5fc9eed44cc741e1b780e8bc7b02b5b97603f8be1e05d3d6836b3",
+      "RouterContactLifecycleOracle.class": "6d37c4b829682ba47c1b0beb22536dcb1aafeb1f17decb8cfbe28c6036d6f3d9"
+    },
+    "core_on_classpath": false,
+    "compile_command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "-J-XX:ActiveProcessorCount=2",
+      "--release",
+      "8",
+      "-encoding",
+      "UTF-8",
+      "-classpath",
+      "/tmp/biglybtc-router-contact-oracle-hpweusi3/classes",
+      "-sourcepath",
+      "/tmp/biglybtc-router-contact-oracle-hpweusi3/source",
+      "-d",
+      "/tmp/biglybtc-router-contact-oracle-hpweusi3/classes",
+      "/tmp/biglybtc-router-contact-oracle-hpweusi3/source/RouterContactLifecycleOracle.java",
+      "/tmp/biglybtc-router-contact-oracle-hpweusi3/source/ReferenceFence.java"
+    ],
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "-Xmx256m",
+      "-Dfile.encoding=UTF-8",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-router-contact-oracle-hpweusi3",
+      "-Duser.home=/tmp/biglybtc-router-contact-oracle-hpweusi3",
+      "-Dazureus.config.path=/tmp/biglybtc-router-contact-oracle-hpweusi3/profile",
+      "-cp",
+      "/tmp/biglybtc-router-contact-oracle-hpweusi3/classes",
+      "RouterContactLifecycleOracle"
+    ],
+    "work": "/tmp/biglybtc-router-contact-oracle-hpweusi3",
+    "persistent_work": "/home/yurii/Java/BiglyBT/build/recovery/generated-references/biglybtc-router-contact-oracle-hpweusi3",
+    "persistent_compile_attempt": "/home/yurii/Java/BiglyBT/build/recovery/generated-references/biglybtc-router-contact-oracle-hpweusi3",
+    "original_contact_method_sha256": {
+      "DHTRouterContactImpl(\n\t\tbyte[]\t\t\t\t\t\t\t_node_id,\n\t\tDHTRouterContactAttachment\t\t_attachment,\n\t\tboolean\t\t\t\t\t\t\t_known_to_be_alive )": "18b5b36a602df891d79d6cdce8177c0b1914f97d11b757225d3356689ff6a14c",
+      "getID()": "b362ae5a2f971006b3fb61913d3e72e4074ebaf67f82d0a98464df69f8cf37d4",
+      "getAttachment()": "15fc21d455e45b77e13b8b8d869e8a65e559e9353dfcf639c69fb4b3d65f3a86",
+      "setAttachment(\n\t\tDHTRouterContactAttachment\t_attachment )": "3f86c0b396fb58ff4eb2a98a969b6dba09f5efd3111a9dd37065ff9791bd333c",
+      "setAlive()": "60187072026d64a0e5842e202c379e70254f20b250882cffe7324746802327a7",
+      "hasBeenAlive()": "f20d9a1e7a531e1deea7aacd52ff629e947575b0a57469c599fddf0a7053021e",
+      "isAlive()": "86f190c055f564c88f789907af64cdbaca0ee7b0003a0f78f7a7611b9934426f",
+      "isFailing()": "81063753f1dd0d4193d2952610be3d134b04be8095a80d001410d191bfa4f4ec",
+      "getFailCount()": "4f8f1d0bf4e6f26d3050af9cc7e751b421f26e89a928061eda2bb1e5ded5c401",
+      "getTimeAlive()": "6d7283d9b2ed2e8f3958e221921ed695e9eba9843972ff442283d555508fa36f",
+      "setFailed()": "5a8000cf4fc14de07e2c1f6529b88806f83068df88ae1e4ea488e47f290f73cb",
+      "hasFailed()": "38e7353fa9d439db26d8d3e5c53ecc83e1a621f9253f0f3661e1e2d75e3493d4",
+      "getFirstFailTime()": "d493564634a2f7d524d3b4f694fc50befa77fe9ccc0b6d7132d8b1d8196a2940",
+      "getLastAliveTime()": "0fff1dbdf2b1d81e11772481b6c76483637b83830a59dd3d13223cc39b1ba9a8",
+      "getFirstFailOrLastAliveTime()": "41edd59c991225191a586cc9ed74840bc5e5966450919de583717033952d220f",
+      "getFirstAliveTime()": "5c15556b5cf86250341a5aeb56eb9adbb665af8ed6a3cac09e9a89ea99637107",
+      "getLastAddedTime()": "f7cb2cdd9ec5b00ba96727fb217f4befefdc6202961e65adc82a0102aeee1183",
+      "setLastAddedTime(\n\t\tlong\tl )": "8923d71a52ab801074387ffdd453a789a8faeb2e4ba10ca5c4969032679380ef",
+      "setPingOutstanding(\n\t\tboolean\tb )": "b85f663f757204d4788f6deb0c4c22ba7eeaa15c57a061f92385a3ff12fa01fd",
+      "getPingOutstanding()": "53c8a4c018b07d39699eb9370cb900f2cfb5b1f6275ab6186fb2270332228bc0",
+      "getString()": "64dd53836b236c6e2a5cf61e0ee80ceb54c80df9e6fa2d038712a47109a9b4c0",
+      "getString(\n\t\tStringBuilder sb )": "46e2ce78d7e9cd0f20f6eb1554d242bbe266153e03125311353d5ae92df63d1b",
+      "isBucketEntry()": "190273f447ae0b4a35db16dec6a1fcbe023ba56d2b0ffc99a1c2b9fd6a55a1fe",
+      "setBucketEntry()": "6cf54e726924aa55bf463c8562d4f50da4426f1f2f9b991b5889bde293541c3f",
+      "isReplacement()": "445432ebbc662f275f54da739ee8ed78eb72c8b4749547bc6c699694bdbb5c0e",
+      "setReplacement()": "12823b47f78405dca89b3f44924da5d003c2c75a8e8a51f8e0ea2a80ba079499"
+    },
+    "original_contact_fields": [
+      {
+        "name": "node_id",
+        "type": "byte[]",
+        "final": true
+      },
+      {
+        "name": "attachment",
+        "type": "DHTRouterContactAttachment",
+        "final": false
+      },
+      {
+        "name": "has_been_alive",
+        "type": "boolean",
+        "final": false
+      },
+      {
+        "name": "ping_outstanding",
+        "type": "boolean",
+        "final": false
+      },
+      {
+        "name": "fail_count",
+        "type": "int",
+        "final": false
+      },
+      {
+        "name": "first_alive_time",
+        "type": "long",
+        "final": false
+      },
+      {
+        "name": "first_fail_or_last_alive_time",
+        "type": "long",
+        "final": false
+      },
+      {
+        "name": "last_added_time",
+        "type": "long",
+        "final": false
+      },
+      {
+        "name": "is_bucket_entry",
+        "type": "boolean",
+        "final": false
+      }
+    ],
+    "scope": "Exact original router-contact class/interfaces; scripted clock and inert attachment/observer. Source aliases/callbacks/seeded fields/diagnostics separate. First actual helper class map, with no fabricated pre-relocation class proof. No ordinary router, transport, SystemTime, logger/core, timer, profile, database or networking."
+  },
+  "groups": {
+    "semantic": {
+      "observations": 5054,
+      "source_exceptions": 0,
+      "files_sha256": {
+        "commands.txt": "211f46b54a3df001bf4644fc00ff5c2d47948aabbeb06f18fe8a9a59217d53d4",
+        "expected.txt": "035ac43efc6804ae91d4592fa342c79384db4ab193e39310806e82fc971182d0",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "035ac43efc6804ae91d4592fa342c79384db4ab193e39310806e82fc971182d0"
+      }
+    },
+    "alias-policy": {
+      "observations": 144,
+      "source_exceptions": 0,
+      "files_sha256": {
+        "commands.txt": "472f7f3d2f49c14e80a3717aad0761f6b27230bc0702eff7b58c062157e76d1e",
+        "expected.txt": "bbd8b19e8f233aa4b01f5d4378f0e31caa518d8364cefb7267249ee0b9b13e23",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "bbd8b19e8f233aa4b01f5d4378f0e31caa518d8364cefb7267249ee0b9b13e23"
+      }
+    },
+    "getter-contract": {
+      "observations": 468,
+      "source_exceptions": 14,
+      "files_sha256": {
+        "commands.txt": "1bcf785e2c114d3b336270ccf1d443dba220502107ed6ad78fef0a7470ac90df",
+        "expected.txt": "a2cc1b93eb570ca872d5ff21cf6f284ec13a5bb8376374d4297b7f1edb22ef98",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "a2cc1b93eb570ca872d5ff21cf6f284ec13a5bb8376374d4297b7f1edb22ef98"
+      }
+    },
+    "seeded-boundary": {
+      "observations": 1017,
+      "source_exceptions": 0,
+      "files_sha256": {
+        "commands.txt": "3b28e6ca9d2a5dd0d163d1265c5c4ccab13a056a1938861e0bfe150e54a4f13d",
+        "expected.txt": "1bbed3036730ad692a082e6e05a72b330e6606b77f9288ca31cbbad63b4eecee",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "1bbed3036730ad692a082e6e05a72b330e6606b77f9288ca31cbbad63b4eecee"
+      }
+    },
+    "diagnostic": {
+      "observations": 304,
+      "source_exceptions": 0,
+      "files_sha256": {
+        "commands.txt": "da4b36c282bc32ee9c60108303a54aa58eb5e015e7c0b8901fd85e8b9646347a",
+        "expected.txt": "1d63972530bfd1dc5068f5ad67b93d3874622051614e83ebeb152163b7ad7174",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "1d63972530bfd1dc5068f5ad67b93d3874622051614e83ebeb152163b7ad7174"
+      }
+    }
+  },
+  "persistent_attempt": "/home/yurii/Java/BiglyBT/migration/evidence/P06-27-router-contact/development/freeze-attempt-t6fc8vte",
+  "source_plan_sha256": "9a3243c87cd4e2bb5995ab935fc2adc534f6ae873694205870d53f95e26e6e0a",
+  "collector_sha256": "60fc333925de9adc81941dcb808ac2227b5b38146c072517540e7d07e4908380",
+  "native_code_or_comparison": false,
+  "native_equality_credit": 0,
+  "scope": "Original source only. Semantic/alias/getter/seeded/diagnostic groups remain separate. No native comparison or automatic equality allocation."
+}

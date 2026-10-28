@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-SpeedScheduler",
+  "public_commit": "91c417ca5aa5494f8c5791d8f29cf96350a0071d",
+  "local_review_commit": "6f3c5f29938da958031173805ce9cf8ae15445f1",
+  "verified_files": 96,
+  "provenance_sha256": "d3a69c733fba0db0e4ab7a582724ee675fded280aea12507f0b9aad0801cf62d",
+  "ci_enabled": true
+}

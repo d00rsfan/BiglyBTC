@@ -1,0 +1,316 @@
+{
+  "status": "phase2 source-only uncompiled/unexecuted draft",
+  "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_sha256": {
+    "core/src/com/biglybt/core/global/impl/GlobalManagerImpl.java": "6666748d19087e95df977f75b5165d35b62c811146d672409d8d9c7da7d7be39",
+    "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java": "a88937664cb90354be6600448a63684b6a7b5c9e7906a9425b9f5a4758afbeda",
+    "core/src/com/biglybt/core/download/impl/DownloadManagerController.java": "b22ccde4addada902b8bac14c2177e7496b9329304c534d6ed2fdde9dbdc8860",
+    "core/src/com/biglybt/core/download/impl/DownloadManagerStateImpl.java": "edd46e4f4ae512dd4fb0495ee6cf7a19964fefb6099dc83f45f09e31dc0d197a",
+    "core/src/com/biglybt/core/download/impl/DownloadManagerStatsImpl.java": "3b2eb44625911187e3058b7363b96b7ee813a9bf8051de54fada0f1ccc3243c7",
+    "core/src/com/biglybt/core/disk/impl/resume/RDResumeHandler.java": "dd63d0d6944ab73d7c29d6c190258b9cf2b6552d80972644188edab1b87882bc",
+    "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java": "6755b950c548c5a7d153b9aef2c1024c7c5c79d5880fd858f3bac4261adcdf8c",
+    "core/src/com/biglybt/core/peer/impl/control/PEPeerControlImpl.java": "b306689754d6feb7f7597adb092c0f9e86885a45e65c7ac8733eeceb9a66288e",
+    "core/src/com/biglybt/core/impl/CoreImpl.java": "871ac9f1276d9e52789fc0b01128b1c077800099746bba8b9c2dd10f8a649f01",
+    "core/src/com/biglybt/core/util/LinkFileMap.java": "360e9acb5ff349e4e507487af847111d00c9ccc5e8d5e2f0053d02ead649abed",
+    "core/src/com/biglybt/core/disk/impl/DiskManagerUtil.java": "821229517d374be10b95b4c2b623e3f25b356bf6d29724067933d943f719bcef",
+    "core/src/com/biglybt/core/util/HashWrapper.java": "cc768d652317b2e19a749db727e899f3a419c87cf2134536ffe4a6ae995b3cea",
+    "core/src/com/biglybt/core/util/AEMonitor.java": "10732da79c2ca2b92d0103036ccac23f0751a3141f0a770f5df24ea44aa96276",
+    "core/src/com/biglybt/core/util/SystemTime.java": "d57063696e281cc005e5b146a8f863a2ca52180696a98b473ff8566851f97353",
+    "core/src/com/biglybt/core/download/DownloadManager.java": "cfa73bb4c32801fa98565e163cbf7100a24240c790c25cdf2c4ce265402538a6",
+    "core/src/com/biglybt/core/global/GlobalManager.java": "70ea189d521a3ccdcd89014d81019dbd4964a462738a1efb2da9c9cc16ee46c0",
+    "core/src/com/biglybt/core/download/DownloadManagerState.java": "9bd11377c6abe2f4cf1e0cb10cc42032917679216fccb12fbb43a239a13a2867",
+    "core/src/com/biglybt/core/config/impl/ConfigurationDefaults.java": "8078a6a9efb9bd8d6afa614d4c68f8b144f6911013efedb6aba919c26ec1f194",
+    "core/src/com/biglybt/plugin/startstoprules/defaultplugin/StartStopConfigModel.java": "3c46e88ab04ee8afeba60a6fd02a7c293be15ec4f382f54922402fe1234afe55",
+    "core/src/com/biglybt/core/config/ConfigKeys.java": "29779ff4bd0f04e021cdafd91f7b50dcf870a0ed81405288e4553d3c6c092b21",
+    "core/src/com/biglybt/core/disk/DiskManager.java": "f4f90a96208101e683727485fd1b04da8f4d41e4fc9c8d50381efb1e7e37f2f8",
+    "core/src/com/biglybt/core/peer/impl/transport/PEPeerTransportProtocol.java": "56d269aa533788742b61f26b5b065520f0aa720a4c30339425cf388be62367eb"
+  },
+  "harness_sha256": "e9dca56d934a945313012d426425fe97ff3af12b21f3cc352b529b987d6f3f47",
+  "exact_fragment_sha256": {
+    "CONTROLLER_SEED": "f4f479ed0a7a65413bcd51807dba3ec47403bfd0f5cbd3a82c20a05bba0e26e0",
+    "FORCE_PREDICATE": "5397840fc03c2b5399e550e4a12a80b8263c2c55439ea59b43bcb50d577b1c04",
+    "CHECK_FINISHED": "e96a2152b1710066209f15eda14ebdc0ad11cbdb5aa46c765b906d6d57292a2f",
+    "SNUBBED_SETTER": "28d87b9f8dfc5e07c028823d26d84ec74687f476814ff18246f75031d17beae3",
+    "STATE_CONSTANTS": "a03a65a4553104eb3ba9db4feff3aa2274ac44e6ce28b40a451d14f17913b206",
+    "CONFIG_KEYS": "a99cc7033f49eb7f9e9f0acc56ca422eaeae9e875f0da978d98ea27af90036e2",
+    "CHECK_CONSTANT": "4c5440d54eed48bc9a4297ee20c2650a9256e9fca48642f4db4c74c296db6dcc",
+    "PROGRESS_INTERFACE": "a448f710787187be2618151b413bde5bf057ac1893bf86949a2ba39621d3428c"
+  },
+  "original_methods": {
+    "DownloadManagerController.setStateSeeding": {
+      "source": "core/src/com/biglybt/core/download/impl/DownloadManagerController.java",
+      "name": "setStateSeeding",
+      "arguments": "boolean never_downloaded",
+      "signature": "@Override\n\tpublic void\n  \tsetStateSeeding(\n  \t\tboolean\tnever_downloaded )",
+      "declaration_start_line": 1269,
+      "body_start_line": 1273,
+      "body_end_line": 1293,
+      "body_sha256": "c52d7bbb72d3670d5c003c1842fd9e17108ff51db8e7fd42444e35c4d6213b81",
+      "body": "{\n\t\t// should already be finishing, but make sure (if it already is, there\n\t\t// won't be a trigger)\n  \t\t\n\t\tsetStateFinishing();\n\n\t\tdownload_manager.downloadEnded(never_downloaded);\n\n\t\tsetState( DownloadManager.STATE_SEEDING, true);\n\t\t\n\t\tif ( !never_downloaded ){\n\t\t\t\n\t    \tif ( !COConfigurationManager.getBooleanParameter( \"StartStopManager_bRetainForceStartWhenComplete\" )){\n\t\n\t    \t\tif (isForceStart()){\n\t\n\t\t    \t\tsetForceStart(false);\n\t    \t\t}\n\t    \t}\n\t\t}\n\t}"
+    },
+    "DownloadManagerController.isForceStart": {
+      "source": "core/src/com/biglybt/core/download/impl/DownloadManagerController.java",
+      "name": "isForceStart",
+      "arguments": "",
+      "signature": "public boolean\n  \tisForceStart()",
+      "declaration_start_line": 2070,
+      "body_start_line": 2072,
+      "body_end_line": 2074,
+      "body_sha256": "9a64f6064d277bed3f6b2c94ebc2199b243630f6072eb27ec12e134a7df792b4",
+      "body": "{\n\t    return( force_start );\n\t}"
+    },
+    "PEPeerControlImpl.checkFinished": {
+      "source": "core/src/com/biglybt/core/peer/impl/control/PEPeerControlImpl.java",
+      "name": "checkFinished",
+      "arguments": "final boolean start_of_day",
+      "signature": "private void checkFinished(final boolean start_of_day)",
+      "declaration_start_line": 2131,
+      "body_start_line": 2131,
+      "body_end_line": 2217,
+      "body_sha256": "b3e2c6d04b4ac3c450ac1e7733d4177a68d90eaa9b8c735b655c548b2ce285d1",
+      "body": "{\n\t\tfinal boolean all_pieces_done = disk_mgr.getRemainingExcludingDND() == 0;\n\n\t\tif ( all_pieces_done ){\n\n\t\t\tseeding_mode = true;\n\n\t\t\tnbBytesRemaining = 0;\n\n\t\t\tprefer_udp_bloom = null;\n\n\t\t\tpiecePicker.clearEndGameChunks();\n\n\t\t\tif ( !start_of_day ){\n\t\t\t\t\n\t\t\t\tadapter.setStateFinishing();\n\t\t\t}\n\t\t\t\n\t\t\t_timeFinished_mono = SystemTime.getMonotonousTime();\n\t\t\t\n\t\t\t\t// remove previous snubbing\n\t\t\t\n\t\t\tfor ( PEPeerTransport pc: peer_transports_cow ){\n\t\t\t\t\n\t\t\t\tpc.setSnubbed( false );\n\t\t\t}\n\t\t\t\n\t\t\tsetNbPeersSnubbed(0);\n\n\t\t\t_timeStartedSeeding = SystemTime.getCurrentTime();\n\t\t\t_timeStartedSeeding_mono = SystemTime.getMonotonousTime();\n\n\t\t\ttry{\n\t\t\t\tdisk_mgr.saveResumeData(false);\n\n\t\t\t}catch(Throwable e){\n\t\t\t\t\n\t\t\t\tDebug.out(\"Failed to save resume data\", e);\n\t\t\t}\n\n\t\t\t\t// NOTE: setStateSeeding has the side effect of marking the download as complete (calls setAssumedComplete)\n\t\t\t\t// which needs to be done BEFORE informing the disk manager that the download has ended as this processes\n\t\t\t\t// the 'move on complete' actions which will fail if assumedComplete isn't true\n\t\t\t\n\t\t\tadapter.setStateSeeding(start_of_day);\n\n\t\t\t\t// this will kick off any async move operations if needed\n\t\t\t\n\t\t\tboolean checkPieces = COConfigurationManager.getBooleanParameter(ConfigKeys.File.BCFG_CHECK_PIECES_ON_COMPLETION);\n\n\t\t\tboolean checkBeforeMove\t= COConfigurationManager.getBooleanParameter(ConfigKeys.File.BCFG_CHECK_PIECES_ON_COMPLETION_BEFORE_MOVE);\n\t\t\t\n\t\t\tif ( !checkBeforeMove ){\n\t\t\t\t\n\t\t\t\tfinish_in_progress = disk_mgr.downloadEnded( start_of_day );\n\t\t\t}\n\t\t\n\t\t\t\t// re-check all pieces to make sure they are not corrupt, but only if we weren't\n\t\t\t\t// already complete\n\t\t\t\t// this is low priority so do it after the move - we want to move to complete quickly to\n\t\t\t\t// minimise the chance of something messing with it\n\t\t\t\n\t\t\t\t// UNLESS user explicitly wants this :) The might if the move is to a network drive and \n\t\t\t\t// they don't want the recheck running over the network after the move but would rather have\n\t\t\t\t// it done locally first and then moved\n\t\t\t\n\t\t\tif ( checkPieces && !start_of_day ){\n\t\t\t\t\n\t\t\t\tDiskManagerCheckRequest req = disk_mgr.createCheckRequest(-1, new Integer(CHECK_REASON_COMPLETE));\n\t\t\t\t\n\t\t\t\t\t// this call is guaranteed to register the recheck operation with the operation scheduler\n\t\t\t\t\t// before returning and therefore it will be in the queue before any potential move\n\t\t\t\t\t// operation is added in downloadEnded\n\t\t\t\t\n\t\t\t\tdisk_mgr.enqueueCompleteRecheckRequest(req, this);\n\t\t\t}\n\t\t\t\n\t\t\tif ( checkBeforeMove ){\n\t\t\t\t\n\t\t\t\tfinish_in_progress = disk_mgr.downloadEnded( start_of_day );\n\t\t\t}\n\n\t\t}else{\n\n\t\t\tseeding_mode = false;\n\t\t}\n\t}"
+    },
+    "PEPeerControlImpl.setNbPeersSnubbed": {
+      "source": "core/src/com/biglybt/core/peer/impl/control/PEPeerControlImpl.java",
+      "name": "setNbPeersSnubbed",
+      "arguments": "int n",
+      "signature": "@Override\n\tpublic void setNbPeersSnubbed(int n)",
+      "declaration_start_line": 6692,
+      "body_start_line": 6693,
+      "body_end_line": 6695,
+      "body_sha256": "9ced42f34f9f6830c562066769c45a899176a7ce82631190ba483cec06bee16e",
+      "body": "{\n\t\tnbPeersSnubbed = n;\n\t}"
+    }
+  },
+  "context_only_unexecuted": {
+    "DownloadManagerController": {
+      "source": "core/src/com/biglybt/core/download/impl/DownloadManagerController.java",
+      "executed_in_helper": false,
+      "methods": [
+        {
+          "name": "setStateFinishing",
+          "arguments": "",
+          "signature": "@Override\n\t  public void\n  \tsetStateFinishing()",
+          "declaration_start_line": 1250,
+          "body_start_line": 1253,
+          "body_end_line": 1255,
+          "body_sha256": "837f0e15d0afc7835b75adda4485107fcabbf56437f63d8189846ef5c40ab9ca",
+          "body": "{\n  \t\tsetState(DownloadManager.STATE_FINISHING, true);\n  \t}"
+        },
+        {
+          "name": "setState",
+          "arguments": "int _state, boolean _inform_changed",
+          "signature": "void\n  \tsetState(\n  \t\tint \t\t_state,\n  \t\tboolean\t\t_inform_changed )",
+          "declaration_start_line": 1383,
+          "body_start_line": 1387,
+          "body_end_line": 1473,
+          "body_sha256": "aceb939cd883538962aefdf93a3c13d800a2c6a1f53751a369f823ac8b5c9d11",
+          "body": "{\n  \t\t\t// we bring this call out of the monitor block to prevent a potential deadlock whereby we chain\n  \t\t\t// state_mon -> control_mon (there exist numerous dependencies control_mon -> state_mon...\n\n  \t\tboolean\tcall_filesExist\t= false;\n\n   \t\ttry{\n  \t\t\tstate_mon.enter();\n\n\t  \t\tint\told_state = state_set_by_method;\n\n\t\t\t// note: there is a DIFFERENCE between the state held on the DownloadManager and\n\t\t    // that reported via getState as getState incorporated DiskManager states when\n\t\t    // the DownloadManager is INITIALIZED\n\t\t  \t//System.out.println( \"DM:setState - \" + _state );\n\n\t  \t\tif ( old_state != _state ){\n\n\t  \t\t\tstate_set_by_method = _state;\n\n\t  \t\t\tif ( state_set_by_method != DownloadManager.STATE_QUEUED ){\n\n\t  \t\t\t\t\t// only maintain this while queued\n\n\t  \t\t\t\tactivation_bloom = null;\n\n\t  \t\t\t\tif ( \tstate_set_by_method == DownloadManager.STATE_STOPPED ||\n\t  \t\t\t\t\t\tstate_set_by_method == DownloadManager.STATE_DOWNLOADING ||\n\t  \t\t\t\t\t\tstate_set_by_method == DownloadManager.STATE_SEEDING ){\n\n\t  \t\t\t\t\t\t// don't need this anymore once stopped or active\n\t  \t\t\t\t\t\n\t  \t\t\t\t\tactivation_count = 0;\n\t  \t\t\t\t}\n\t  \t\t\t}\n\n\t  \t\t\tif (state_set_by_method == DownloadManager.STATE_QUEUED ){\n\n\n\t  \t\t\t\t// don't pick up errors regarding missing data while queued.\n\t  \t\t\t\t// We'll do that when the torrent starts.  Saves time at startup\n\t  \t\t\t\t// pick up any errors regarding missing data for queued SEEDING torrents\n//\t  \t\t\t\tif (  download_manager.getAssumedComplete()){\n//\n//\t  \t\t\t\t\tcall_filesExist\t= true;\n//\t  \t\t\t\t}\n\n\t  \t\t\t}else if ( state_set_by_method == DownloadManager.STATE_ERROR ){\n\n\t\t      \t\t// the process of attempting to start the torrent may have left some empty\n\t\t      \t\t// directories created, some users take exception to this.\n\t\t      \t\t// the most straight forward way of remedying this is to delete such empty\n\t\t      \t\t// folders here\n\n\t  \t\t\t\tTOTorrent\ttorrent = download_manager.getTorrent();\n\n\t  \t\t\t\tif ( torrent != null && !torrent.isSimpleTorrent()){\n\n\t  \t\t\t\t\tFile\tsave_dir_file\t= download_manager.getAbsoluteSaveLocation();\n\n\t  \t\t\t\t\tif ( save_dir_file != null && FileUtil.exists( save_dir_file ) && save_dir_file.isDirectory()){\n\n\t  \t\t\t\t\t\tTorrentUtils.recursiveEmptyDirDelete( save_dir_file, false );\n\t  \t\t\t\t\t}\n\t  \t\t\t\t}\n\t  \t\t\t}\n\t  \t\t\t\n\t  \t\t\tif ( old_state == DownloadManager.STATE_STOPPED ){\n\t  \t\t\t\t\n\t  \t\t\t\tdownload_manager.setStopReason( null );\n\t  \t\t\t}\n\t  \t\t}\n  \t\t}finally{\n\n  \t\t\tstate_mon.exit();\n  \t\t}\n\n  \t\tif ( call_filesExist ){\n\n  \t\t\tfilesExist( true, false );\n  \t\t}\n\n  \t\tif ( _inform_changed ){\n\n  \t\t\tdownload_manager.informStateChanged();\n  \t\t}\n  \t}"
+        },
+        {
+          "name": "setForceStart",
+          "arguments": "boolean _force_start",
+          "signature": "public void\n\tsetForceStart(\n\t\tboolean _force_start)",
+          "declaration_start_line": 2076,
+          "body_start_line": 2079,
+          "body_end_line": 2107,
+          "body_sha256": "f7f51e5d04a9e94efd88f765ffa6e2d14220dd0283b54543acad08ec589544bb",
+          "body": "{\n\t\ttry{\n\t\t\tstate_mon.enter();\n\n\t\t\tif ( force_start != _force_start ){\n\n\t\t\t\tforce_start = _force_start;\n\n\t\t\t\tint\tstate = getState();\n\n\t\t\t\tif (\tforce_start &&\n\t\t\t\t\t\t(\tstate == DownloadManager.STATE_ERROR ||\n\t\t\t\t\t\t\tstate == DownloadManager.STATE_STOPPED ||\n\t\t\t\t\t\t\tstate == DownloadManager.STATE_QUEUED )) {\n\n\t\t\t\t\t\t// Start it!  (Which will cause a stateChanged to trigger)\n\n\t\t\t\t\tsetState(DownloadManager.STATE_WAITING, false );\n\t\t\t\t}\n\t\t    }\n\t\t}finally{\n\n\t\t\tstate_mon.exit();\n\t\t}\n\n\t\t\t// \"state\" includes the force-start setting\n\n\t\tdownload_manager.informStateChanged();\n\t}"
+        }
+      ]
+    },
+    "DownloadManagerImpl": {
+      "source": "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+      "executed_in_helper": false,
+      "methods": [
+        {
+          "name": "setAssumedComplete",
+          "arguments": "boolean _assumedComplete",
+          "signature": "protected void setAssumedComplete(boolean _assumedComplete)",
+          "declaration_start_line": 3352,
+          "body_start_line": 3352,
+          "body_end_line": 3354,
+          "body_sha256": "80541c3ab939180debf36ac95ed043ef92c9042b88073b2c9dfa81b8815ae53c",
+          "body": "{\n\t\tsetAssumedComplete( _assumedComplete, false );\n\t}"
+        },
+        {
+          "name": "setAssumedComplete",
+          "arguments": "boolean _assumedComplete, boolean filePriorityChanged",
+          "signature": "protected void setAssumedComplete(boolean _assumedComplete, boolean filePriorityChanged )",
+          "declaration_start_line": 3356,
+          "body_start_line": 3356,
+          "body_end_line": 3507,
+          "body_sha256": "70a5065f55ad33ed73a5a62a3c3dd641f207181dfd55426c1907dec66f2aab07",
+          "body": "{\n\t\tif (_assumedComplete) {\n\t\t\tlong completedOn = download_manager_state.getLongParameter(DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME);\n\t\t\tif (completedOn <= 0) {\n\t\t\t\tlong now =SystemTime.getCurrentTime();\n\t\t\t\t\n\t\t\t\tdownload_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME, now );\n\t\t\t\t\n\t\t\t\tlong last_file = download_manager_state.getLongParameter( DownloadManagerState.PARAM_DOWNLOAD_FILE_COMPLETED_TIME );\n\t\t\t\t\n\t\t\t\tif ( last_file <= 0 ){\n\t\t\t\t\n\t\t\t\t\tRunnable set_it = \n\t\t\t\t\t\tnew Runnable()\n\t\t\t\t\t\t{\n\t\t\t\t\t\t\tpublic void\n\t\t\t\t\t\t\trun()\n\t\t\t\t\t\t\t{\n\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t// get a sensible value from actual files - useful when adding-for-seeding\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\tlong\tlast_mod = 0;\n\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\tDiskManagerFileInfo[] files = getDiskManagerFileInfoSet().getFiles();\n\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\tfor ( DiskManagerFileInfo file: files ){\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\tif ( !file.isSkipped()){\n\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t\tFile f = file.getFile( true );\n\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t\tif ( f.length() == file.getLength()){\n\t\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t\t\tlong mod = f.lastModified();\n\t\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t\t\tif ( mod > last_mod ){\n\t\t\t\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t\t\t\tlast_mod = mod;\n\t\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\tif ( last_mod == 0 ){\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\tlast_mod = now;\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\tdownload_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_FILE_COMPLETED_TIME, last_mod );\n\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\tif ( last_mod < now ){\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\t\t// update with more useful value\n\t\t\t\t\t\t\t\t\t\n\t\t\t\t\t\t\t\t\tdownload_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME, last_mod );\n\t\t\t\t\t\t\t\t}\n\t\t\t\t\t\t\t}\n\t\t\t\t\t\t};\n\t\t\t\t\t\t\n\t\t\t\t\tsynchronized( init_lock ){\n\t\t\t\t\t\t\n\t\t\t\t\t\tif ( !initialised ){\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\tpost_init_tasks.add( set_it );\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\tset_it = null;\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t\t\n\t\t\t\t\tif ( set_it != null ){\n\t\t\t\t\t\t\n\t\t\t\t\t\tset_it.run();\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t}\n\t\t}else{\n\t\t\tif ( filePriorityChanged ){\n\t\t\t\t\n\t\t\t\t\t// download no longer complete due to user switching file from DND - reset\n\t\t\t\t\n\t\t\t\tdownload_manager_state.setLongParameter( DownloadManagerState.PARAM_DOWNLOAD_COMPLETED_TIME, 0 );\n\t\t\t}\n\t\t}\n\n\t\tif (assumedComplete == _assumedComplete) {\n\t\t\treturn;\n\t\t}\n\n\t\t//Logger.log(new LogEvent(this, LogIDs.CORE, \"setAssumedComplete(\"\n\t\t//\t\t+ _assumedComplete + \") was \" + assumedComplete));\n\n\t\tassumedComplete = _assumedComplete;\n\n\t\tif (!assumedComplete) {\n\t\t\tcontroller.setStateDownloading();\n\t\t}\n\n\t\t// NOTE: We don't set \"stats.setDownloadCompleted(1000)\" anymore because\n\t\t//       we can be in seeding mode with an unfinished torrent\n\n\t\tif ( position != -1 && globalManager.contains( this )){\n\t\t\t\n\t\t\t// we are in a new list, move to the top of the list so that we continue\n\t\t\t// seeding.\n\t\t\t// -1 position means it hasn't been added to the global list.  We\n\t\t\t// shouldn't touch it, since it'll get a position once it's adding is\n\t\t\t// complete. Also check explicitly that it is known to the global manager\n\t\t\t// as it is possible to come through here twice during init\n\n\t\t\tDownloadManager[] dms = { DownloadManagerImpl.this };\n\n\t\t\t// pretend we are at the bottom of the new list\n\t\t\t// so that move top will shift everything down one\n\n\t\t\tposition = globalManager.getDownloadManagers().size() + 1;\n\n\t\t\tif ( _assumedComplete ){\n\t\t\t\t\n\t\t\t\tif (COConfigurationManager.getBooleanParameter( CFG_MOVE_COMPLETED_TOP )){\n\t\n\t\t\t\t\tglobalManager.moveTop(dms);\n\t\n\t\t\t\t} else {\n\t\n\t\t\t\t\tglobalManager.moveEnd(dms);\n\t\t\t\t}\n\t\t\t}else{\n\t\t\t\t\n\t\t\t\t\t// moved back to downloading - use the open-torrent-options default to decide where to put the download\n\t\t\t\t\t\n\t\t\t\tint qp = COConfigurationManager.getIntParameter( \"Add Torrent Queue Position\", 1 );\n\t\t\t\t\n\t\t\t\tif ( qp == 0 ){\n\t\t\t\t\t\n\t\t\t\t\tglobalManager.moveTop(dms);\n\t\t\t\t\t\n\t\t\t\t}else{\n\t\t\t\t\t\n\t\t\t\t\tglobalManager.moveEnd(dms);\n\t\t\t\t}\n\t\t\t}\n\t\t\t\n\t\t\t// we left a gap in incomplete list, fixup\n\n\t\t\tglobalManager.fixUpDownloadManagerPositions();\n\t\t}\n\n\t\tlisteners.dispatch(LDT_COMPLETIONCHANGED, new Object[] {\n\t\t\t\tthis,\n\t\t\tBoolean.valueOf(_assumedComplete)\n\t\t});\n\t}"
+        },
+        {
+          "name": "informDownloadEnded",
+          "arguments": "",
+          "signature": "protected void\n\tinformDownloadEnded()",
+          "declaration_start_line": 4414,
+          "body_start_line": 4416,
+          "body_end_line": 4426,
+          "body_sha256": "bf098e73e4db96b8c135b58465f7127a8b6fd0c4e48089ddc80c210860a21224",
+          "body": "{\n\t\ttry{\n\t\t\tlisteners_mon.enter();\n\n\t\t\tlisteners.dispatch( LDT_DOWNLOADCOMPLETE, new Object[]{ this });\n\n\t\t}finally{\n\n\t\t\tlisteners_mon.exit();\n\t\t}\n\t}"
+        },
+        {
+          "name": "downloadEnded",
+          "arguments": "boolean never_downloaded",
+          "signature": "protected void\n\tdownloadEnded(\n\t\tboolean\tnever_downloaded )",
+          "declaration_start_line": 4995,
+          "body_start_line": 4998,
+          "body_end_line": 5025,
+          "body_sha256": "629d12a55ba4b9f544ae6310077b757d29edfb89b860a49d576675fed1ee08fa",
+          "body": "{\n\t    if ( !never_downloaded ){\n\n\t    \tsetAssumedComplete(true);\n\n\t    \tinformDownloadEnded();\n\t    }\n\n\t    TRTrackerAnnouncer\ttc = getTrackerClient();\n\n\t    if ( tc != null ){\n\n\t    \tDiskManager\tdm = getDiskManager();\n\n\t    \t\t// only report \"complete\" if we really are complete, not a dnd completion event\n\n\t    \tboolean globalMask = COConfigurationManager.getBooleanParameter( ConfigKeys.Transfer.BCFG_PEERCONTROL_HIDE_PIECE );\n\t    \t\n\t    \tBoolean dmMask = download_manager_state.getOptionalBooleanAttribute( DownloadManagerState.AT_MASK_DL_COMP_OPTIONAL );\n\t    \t\n\t    \tboolean mask = dmMask==null?globalMask:dmMask;\n\t    \t\n\t    \tif ( dm != null && dm.getRemaining() == 0 && !mask ){\n\n\t    \t\ttc.complete( never_downloaded );\n\t    \t}\n\t    }\n\t}"
+        }
+      ]
+    },
+    "DiskManagerImpl": {
+      "source": "core/src/com/biglybt/core/disk/impl/DiskManagerImpl.java",
+      "executed_in_helper": false,
+      "methods": [
+        {
+          "name": "getRemainingExcludingDND",
+          "arguments": "",
+          "signature": "@Override\n    public long\n    getRemainingExcludingDND()",
+          "declaration_start_line": 1839,
+          "body_start_line": 1842,
+          "body_end_line": 1846,
+          "body_sha256": "31c4abd3df9536253e874eaa3174faee5cbefda24605ccc5d020100730ce33b4",
+          "body": "{\n    \tfixupSkippedCalculation();\n    \t\n    \treturn( remaining_excluding_dnd );\n    }"
+        },
+        {
+          "name": "saveResumeData",
+          "arguments": "boolean interim_save",
+          "signature": "@Override\n    public void\n    saveResumeData(\n        boolean interim_save )\n\n        throws Exception",
+          "declaration_start_line": 2756,
+          "body_start_line": 2762,
+          "body_end_line": 2775,
+          "body_sha256": "da4dd03de3cdbcb9d030f6841c785c6e248922c1adc3a31fcad02f341c34ed06",
+          "body": "{\n    \ttry{\n    \t\tresume_handler.saveResumeData( interim_save );\n    \t\t\n    \t}catch( Exception e ){\n    \t\t\n    \t\tif ( interim_save && canFailureBeIgnored( e )){\n    \t\t\t\n    \t\t\treturn;\n    \t\t}\n    \t\t\n    \t\tthrow( e );\n    \t}\n    }"
+        },
+        {
+          "name": "downloadEnded",
+          "arguments": "boolean start_of_day",
+          "signature": "@Override\n    public DownloadEndedProgress \n    downloadEnded(\n    \tboolean start_of_day )",
+          "declaration_start_line": 2777,
+          "body_start_line": 2781,
+          "body_end_line": 2790,
+          "body_sha256": "0ee9b29dfdf2021121eeb4c24e0e5c96b88d111eb1146a30325e162ebd844bb7",
+          "body": "{\n        DownloadEndedProgressImpl progress = new DownloadEndedProgressImpl();\n\n        AEThread2.createAndStartDaemon( \"DownloadEnded\", ()->{\n        \t\n        \t\tmoveDownloadFilesWhenEndedOrRemoved( false, true, progress, start_of_day );\n        \t});\n        \n        return( progress );\n    }"
+        }
+      ]
+    },
+    "RDResumeHandler": {
+      "source": "core/src/com/biglybt/core/disk/impl/resume/RDResumeHandler.java",
+      "executed_in_helper": false,
+      "methods": [
+        {
+          "name": "saveResumeData",
+          "arguments": "boolean interim_save",
+          "signature": "public void\n\tsaveResumeData(\n\t\tboolean interim_save ) \t// data is marked as \"invalid\" if this is true to enable checking on pieces on crash restart\n\n\t\tthrows Exception",
+          "declaration_start_line": 812,
+          "body_start_line": 817,
+          "body_end_line": 988,
+          "body_sha256": "260f698f39fc1f36aafd5112918d58acb2835d39351e52a6ef277ad57a313018",
+          "body": "{\n\t\tif ( check_in_progress && interim_save ){\n\n\t\t\t\t// while we are rechecking it is important that an interim save doesn't come\n\t\t\t\t// along and overwrite the persisted resume data. This is because should we crash\n\t\t\t\t// while rechecking we need the persisted state to be unchanged so that on\n\t\t\t\t// restart the rechecking occurs again\n\n\t\t\t\t// a non-interim save means that the user has decided to stop the  download (or some\n\t\t\t\t// other such significant event) so we just persist the current state\n\n\t\t\treturn;\n\t\t}\n\n\t\t\t// if file caching is enabled then this is an important time to ensure that the cache is\n\t\t\t// flushed as we are going to record details about the accuracy of written data.\n\t\t\t// First build the resume map from the data (as updates can still be goin on)\n\t\t\t// Then, flush the cache. This means that on a successful flush the built resume\n\t\t\t// data matches at least the valid state of the data\n\t\t\t// Then update the torrent\n\n\t\tDiskManagerFileInfo[]\tfiles = disk_manager.getFiles();\n\n\t\t/*\n\t\tif ( !use_fast_resume ){\n\n\t\t\t\t// flush cache even if resume disable as this is a good point to ensure that data\n\t\t\t\t// is persisted anyway\n\n\t\t\tfor (int i=0;i<files.length;i++){\n\n\t\t\t\tfiles[i].flushCache();\n\t\t\t}\n\n\t\t\treturn;\n\t\t}\n\t\t*/\n\t\t\n\t\tboolean\twas_complete = isTorrentResumeDataComplete( disk_manager.getDownloadManager().getDownloadState());\n\n\t\tif ( was_complete && check_interrupted ){\n\t\t\n\t\t\t\t// piece completion state not usable, stick with the previous state of affairs\n\t\t\t\n\t\t\treturn;\n\t\t}\n\t\t\n\t\tDiskManagerPiece[] pieces\t= disk_manager.getPieces();\n\n\t\t\t//build the piece byte[]\n\n\t\tbyte[] resume_pieces = new byte[pieces.length];\n\n\t\tfor (int i = 0; i < resume_pieces.length; i++) {\n\n\t\t\tDiskManagerPiece piece = pieces[i];\n\n\t\t\t\t// if we are terminating due to az closure and this has interrupted a recheck then\n\t\t\t\t// make sure that the recheck continues appropriately on restart\n\n\t\t\tif ( stopped_for_close && check_interrupted && i >= check_position ){\n\n\t\t\t\tresume_pieces[i] = PIECE_RECHECK_REQUIRED;\n\n\t\t\t}else if ( piece.isDone()){\n\n\t\t\t\tresume_pieces[i] = PIECE_DONE;\n\n\t\t  \t}else if ( piece.getNbWritten() > 0 ){\n\n\t\t  \t\tresume_pieces[i] = PIECE_STARTED;\n\n\t\t  \t}else{\n\n\t\t\t\tresume_pieces[i] = PIECE_NOT_DONE;\n\t\t  \t}\n\t\t}\n\n\t\tMap\tresume_data = new HashMap();\n\n\t\tresume_data.put( \"resume data\", resume_pieces );\n\n\t\tMap partialPieces = new HashMap();\n\n\t\tfor (int i = 0; i < pieces.length; i++) {\n\n\t\t\tDiskManagerPiece piece = pieces[i];\n\n\t\t\t\t// save the partial pieces for any pieces that have not yet been completed\n\t\t\t\t// and are in-progress (i.e. have at least one block downloaded)\n\n\t\t\tboolean[] written = piece.getWritten();\n\n\t\t\tif (( !piece.isDone()) && piece.getNbWritten() > 0 && written != null ){\n\n\t\t\t\tboolean\tall_written = true;\n\n\t\t\t\tfor (int j = 0; j < written.length; j++) {\n\n\t\t\t\t\tif ( !written[j] ){\n\n\t\t\t\t\t\tall_written = false;\n\n\t\t\t\t\t\tbreak;\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\tif ( all_written ){\n\n\t\t\t\t\t\t// just mark the entire piece for recheck as we've stopped the torrent at the\n\t\t\t\t\t\t// point where a check-piece was, or was about to be, scheduled\n\n\t\t\t\t\tresume_pieces[ i ] = PIECE_RECHECK_REQUIRED;\n\n\t\t\t\t}else{\n\n\t\t\t\t\tList blocks = new ArrayList();\n\n\t\t\t\t\tfor (int j = 0; j < written.length; j++) {\n\n\t\t\t\t\t\tif (written[j]){\n\n\t\t\t\t\t\t\tblocks.add(new Long(j));\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\n\t\t\t\t\tpartialPieces.put(\"\" + i, blocks);\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\n\t\tresume_data.put(\"blocks\", partialPieces);\n\n\t\tlong lValid;\n\n\t\tif ( check_interrupted ){\n\n\t\t\t\t// set validity to what it was before the check started\n\n\t\t\tlValid = check_resume_was_valid?1:0;\n\n\t\t}else if ( interim_save ){\n\n\t\t\t\t// set invalid so that not-done pieces get rechecked on startup\n\n\t\t\tlValid = 0;\n\n\t\t}else{\n\n\t\t\tlValid = 1;\n\t\t}\n\n\t\tresume_data.put(\"valid\", new Long(lValid));\n\n\t\tfor (int i=0;i<files.length;i++){\n\n\t\t\tfiles[i].flushCache();\n\t\t}\n\n\t  \t\t// OK, we've got valid resume data and flushed the cache\n\n\t\tboolean\tis_complete = isTorrentResumeDataComplete( pieces.length, resume_data );\n\n\t\tif ( was_complete && is_complete ){\n\n\t  \t\t// no change, no point in writing\n\n\t\t}else{\n\n\t\t\tsaveResumeData( resume_data );\n\t\t}\n\t}"
+        },
+        {
+          "name": "saveResumeData",
+          "arguments": "Map resume_data",
+          "signature": "private void\n\tsaveResumeData(\n\t\tMap\t\tresume_data )",
+          "declaration_start_line": 996,
+          "body_start_line": 999,
+          "body_end_line": 1001,
+          "body_sha256": "21ee35e91feced2c405e90443c2ee425b5e86990e09012f58e6bf77e935befbb",
+          "body": "{\n\t\tsaveResumeData( disk_manager.getDownloadManager().getDownloadState(), resume_data );\n\t}"
+        },
+        {
+          "name": "saveResumeData",
+          "arguments": "DownloadManagerState download_manager_state, Map resume_data",
+          "signature": "private static void\n\tsaveResumeData(\n\t\tDownloadManagerState\t\tdownload_manager_state,\n\t\tMap\t\t\t\t\t\t\tresume_data )",
+          "declaration_start_line": 1036,
+          "body_start_line": 1040,
+          "body_end_line": 1046,
+          "body_sha256": "838cece0ed6b068f2cc88791816a1e48ed29666229cb943c25f47541833fc2c2",
+          "body": "{\n\t\tMap\tresume_map = new HashMap();\n\n\t\tresume_map.put( \"data\", resume_data );\n\n\t\tdownload_manager_state.setResumeData( resume_map );\n\t}"
+        }
+      ]
+    },
+    "PEPeerControlImpl": {
+      "source": "core/src/com/biglybt/core/peer/impl/control/PEPeerControlImpl.java",
+      "executed_in_helper": false,
+      "methods": [
+        {
+          "name": "schedule",
+          "arguments": "",
+          "signature": "@Override\n\tpublic void \n\tschedule()",
+          "declaration_start_line": 895,
+          "body_start_line": 898,
+          "body_end_line": 993,
+          "body_sha256": "1bb06ce099738000d14cb7fd8307e620c4d39d772551eab356053dba07913ef4",
+          "body": "{\n\t\tif ( finish_in_progress != null ){\n\n\t\t\t// System.out.println( \"Finish in prog\" );\n\n\t\t\tif ( finish_in_progress.isComplete()){\n\n\t\t\t\tfinish_in_progress = null;\n\n\t\t\t\t// System.out.println( \"Finished\" );\n\t\t\t}else{\n\n\t\t\t\treturn;\n\t\t\t}\n\t\t}\n\n\t\ttry{\n\t\t\t// first off update the stats so they can be used by subsequent steps\n\n\t\t\tupdateStats();\n\n\t\t\tupdateTrackerAnnounceInterval();\n\n\t\t\tdoConnectionChecks();\n\n\t\t\tprocessPieceChecks();\n\n\t\t\tif ( finish_in_progress != null ){\n\n\t\t\t\t// get off the scheduler thread while potentially long running operations\n\t\t\t\t// complete\n\n\t\t\t\treturn;\n\t\t\t}\n\n\t\t\t// note that seeding_mode -> torrent totally downloaded, not just non-dnd files\n\t\t\t// complete, so there is no change of a new piece appearing done by a means such\n\t\t\t// as\n\t\t\t// background periodic file rescans\n\n\t\t\tif(!seeding_mode){\n\n\t\t\t\tcheckCompletedPieces(); // check to see if we've completed anything else\n\t\t\t}\n\n\t\t\tcheckBadPieces();\n\n\t\t\tcheckInterested(); // see if need to recheck Interested on all peers\n\n\t\t\tpiecePicker.updateAvailability();\n\n\t\t\tcheckCompletionState(); // pick up changes in completion caused by dnd file changes\n\n\t\t\tif ( finish_in_progress != null ){\n\n\t\t\t\t// get off the scheduler thread while potentially long running operations\n\t\t\t\t// complete\n\n\t\t\t\treturn;\n\t\t\t}\n\n\t\t\tcheckSeeds();\n\n\t\t\tif ( seeding_mode ){\n\n\t\t\t\tif(mainloop_loop_count % MAINLOOP_FIVE_SECOND_INTERVAL == 0){\n\n\t\t\t\t\thash_handler.update();\n\t\t\t\t}\n\t\t\t}else{\n\t\t\t\t// if we're not finished\n\n\t\t\t\tcheckRequests();\n\n\t\t\t\tpiecePicker.allocateRequests();\n\n\t\t\t\tcheckRescan();\n\t\t\t\tcheckSpeedAndReserved();\n\n\t\t\t\tcheck99PercentBug();\n\t\t\t}\n\n\t\t\tupdatePeersInSuperSeedMode();\n\t\t\tdoUnchokes();\n\n\t\t\tif(mainloop_loop_count % MAINLOOP_ONE_SECOND_INTERVAL == 0){\n\n\t\t\t\tmy_peer.update();\n\t\t\t}\n\n\t\t}catch(Throwable e){\n\n\t\t\tDebug.printStackTrace(e);\n\t\t}\n\t\tmainloop_loop_count++;\n\t}"
+        },
+        {
+          "name": "checkCompletionState",
+          "arguments": "",
+          "signature": "protected void checkCompletionState()",
+          "declaration_start_line": 2219,
+          "body_start_line": 2219,
+          "body_end_line": 2268,
+          "body_sha256": "55345946d41cf3591f6f9f5065b32f894e8a0a45a7baa0bd3402d5873ea15893",
+          "body": "{\n\t\tif(mainloop_loop_count % MAINLOOP_ONE_SECOND_INTERVAL != 0){\n\n\t\t\treturn;\n\t\t}\n\n\t\tboolean dm_done = disk_mgr.getRemainingExcludingDND() == 0;\n\n\t\tif(seeding_mode){\n\n\t\t\tif(!dm_done){\n\n\t\t\t\tseeding_mode = false;\n\n\t\t\t\t_timeStartedSeeding = -1;\n\t\t\t\t_timeStartedSeeding_mono = -1;\n\t\t\t\t_timeFinished_mono = 0;\n\n\t\t\t\tsynchronized( outbound_ignore_addresses ){\n\n\t\t\t\t\tIterator<Integer> it =  outbound_ignore_addresses.values().iterator();\n\t\t\t\t\t\n\t\t\t\t\twhile( it.hasNext()){\n\t\t\t\t\t\t\n\t\t\t\t\t\tint rc = it.next();\n\t\t\t\t\t\t\n\t\t\t\t\t\tif ( rc == Transport.CR_NOT_INTERESTED_UPLOAD_ONLY || rc == Transport.CR_UPLOAD_TO_UPLOAD ){\n\t\t\t\t\t\t\t\n\t\t\t\t\t\t\tit.remove();\n\t\t\t\t\t\t}\n\t\t\t\t\t}\n\t\t\t\t}\n\n\t\t\t\tLogger.log(new LogEvent(disk_mgr.getTorrent(), LOGID, \"Turning off seeding mode for PEPeerManager\"));\n\t\t\t}\n\n\t\t}else{\n\n\t\t\tif(dm_done){\n\n\t\t\t\tcheckFinished(false);\n\n\t\t\t\tif(seeding_mode){\n\n\t\t\t\t\tLogger.log(new LogEvent(disk_mgr.getTorrent(), LOGID, \"Turning on seeding mode for PEPeerManager\"));\n\n\t\t\t\t}\n\t\t\t}\n\t\t}\n\t}"
+        }
+      ]
+    },
+    "PEPeerTransportProtocol": {
+      "source": "core/src/com/biglybt/core/peer/impl/transport/PEPeerTransportProtocol.java",
+      "executed_in_helper": false,
+      "methods": [
+        {
+          "name": "setSnubbed",
+          "arguments": "boolean b",
+          "signature": "@Override\n\tpublic void setSnubbed(boolean b)",
+          "declaration_start_line": 2289,
+          "body_start_line": 2291,
+          "body_end_line": 2311,
+          "body_sha256": "cbf9bf223649b4f854db7f37a19e2c33a9d5ed7cd23cc2d933d49fbdf6234f3c",
+          "body": "{\n\t\tif ( !closing ){\n\t\t\t\n\t\t\tlong now_mono = SystemTime.getMonotonousTime();\n\t\t\t\n\t\t\tif (!b){\n\t\t\t\t\n\t\t\t\tif ( snubbed_time_mono >= 0 ){\n\t\t\t\t\t\n\t\t\t\t\tsnubbed_time_mono = -1;\n\t\t\t\t\t\n\t\t\t\t\tmanager.decNbPeersSnubbed();\n\t\t\t\t}\n\t\t\t}else if ( snubbed_time_mono < 0 ){\n\t\t\t\t\n\t\t\t\tsnubbed_time_mono = now_mono;\n\t\t\t\t\n\t\t\t\tmanager.incNbPeersSnubbed();\n\t\t\t}\n\t\t}\n\t}"
+        }
+      ]
+    },
+    "source_defaults": {
+      "executed_in_helper": false,
+      "exact_snippets": {
+        "ZERO": "private static final Long ZERO\t= new Long(0);",
+        "ONE": "private static final Long ONE\t\t= new Long(1);",
+        "FALSE": "private static final Long FALSE\t= ZERO;",
+        "TRUE": "private static final Long TRUE\t= ONE;",
+        "Check Pieces on Completion": "def.put(\"Check Pieces on Completion\", TRUE);",
+        "Check Pieces on Completion Before Move": "def.put(\"Check Pieces on Completion Before Move\", FALSE);",
+        "RetainForceStartWhenComplete": "model.addBooleanParameter2(\"StartStopManager_bRetainForceStartWhenComplete\",\n\t\t\t\t\"ConfigView.label.queue.retainforce\", false);"
+      },
+      "sha256": {
+        "ZERO": "06fa3bd8f2818d9e7a30001877da7fb169102d9a251b1d2cf58e1f334b54c7e0",
+        "ONE": "37523ac3267a47fd6b6cb47cea3a2776d4bfab8b87115543f9ae7d667814e312",
+        "FALSE": "d3a414349256be86008890377eaab8c237e416c3adb391b01a5af77d9452802b",
+        "TRUE": "ae41b669849058b07b9c6e883b77b67b8935f2ffe2263e4432917a34894cbc7c",
+        "Check Pieces on Completion": "9cfe096a678f8104e4f52df3c17dd19b9f6eac79de8ae69c54c2569b6d0d201e",
+        "Check Pieces on Completion Before Move": "5d3ba924db4bfdecf288e9a96e682a27039100510ec10ee52429560bb34665c4",
+        "RetainForceStartWhenComplete": "fd57d638788ce49fb0f37cce8c8bb681e4478fdb96274d16392bce3e260d23a7"
+      },
+      "fact": "Completion recheck true, recheck-before-move false, retain-force UI default false. All helper config values are explicit supplied inputs."
+    }
+  },
+  "subject_methods": [
+    "DownloadManagerController.setStateSeeding",
+    "PEPeerControlImpl.checkFinished"
+  ],
+  "support_methods": [
+    "DownloadManagerController.isForceStart",
+    "PEPeerControlImpl.setNbPeersSnubbed"
+  ],
+  "core_on_classpath": false,
+  "source_JVM_native_execution": false,
+  "native_equivalence_assumed": false
+}

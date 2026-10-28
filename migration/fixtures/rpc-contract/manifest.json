@@ -1,0 +1,48 @@
+{
+  "upstream_commit": "c9ab8f7cd62b2874f7385772992c0288a224e85d",
+  "source_sha256": {
+    "com/aelitis/azureus/plugins/xmwebui/XMWebUIPlugin.java": "5336f4a540d1e84fd9e470db10031af925f268bd0f64c74884bcb24f13a72931",
+    "com/aelitis/azureus/plugins/xmwebui/StaticUtils.java": "d274065d482d8785dab667083f87be4bf44054c99757d49bf326071b3091afef",
+    "com/aelitis/azureus/plugins/xmwebui/TransmissionVars.java": "0645c6847e93e8dd7b2b9fe499d050e7a107f08b0d7e8e97ad3200a6eb6bd0c7",
+    "com/aelitis/azureus/plugins/xmwebui/TextualException.java": "e26717fd571fcc304d920b87abd9628e0ad083c24c5e7f17d4173138b688d008"
+  },
+  "method_sha256": {
+    "WRAPPER": "82db0900653e9b3103ce19b44d05c5c20a7178264c6dbdfab24c144bc925a755",
+    "COOKIE": "61db527f808834f507b6206e3e4444acd2e2ea84b41320766299b13acd9c1596",
+    "SESSION": "6c103048b501096aeadd19f839ac2e736044a3a4ffa08f6d691270a3db1eb6da",
+    "SPLIT": "06a6b378a050cdad4dd2059fb8d72bf54b95ff3c27dda30328e54f80032ae3c2",
+    "CAUSES": "d75d94f9d63ea9fdc4e9665f9ee09eb890f8f3a86e4ce514ca650ca03c626085",
+    "METHOD": "2c527aa7204bac7266ebf99cf856fc631fef7873a400d6075443412937670c8f"
+  },
+  "harness_sha256": "902956c0bb6985ee87f5c9a7c17f00a19c19b12f8c10c94485227e91cf740a3e",
+  "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+  "commands_sha256": "2df6b5aff547f0a394bfec845518055bfaa30ce7e8674ad0c9aa544fabc4f977",
+  "expected_sha256": "a2cc7f196548502df683b23550677e55649004d2c65204463056f00bb6fa947d",
+  "observations": 804,
+  "work": "/tmp/biglybtc-rpc-contract-oracle-nrkvvn3g",
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+    "-XX:ActiveProcessorCount=2",
+    "-Djava.security.manager=ReferenceFence",
+    "-Dbiglybtc.test.root=/tmp/biglybtc-rpc-contract-oracle-nrkvvn3g",
+    "-Duser.home=/tmp/biglybtc-rpc-contract-oracle-nrkvvn3g",
+    "-Dazureus.config.path=/tmp/biglybtc-rpc-contract-oracle-nrkvvn3g/profile",
+    "-cp",
+    "/tmp/biglybtc-rpc-contract-oracle-nrkvvn3g/classes:/tmp/biglybtc-oracle/classes",
+    "RpcContractOracle",
+    "/tmp/biglybtc-rpc-contract-oracle-nrkvvn3g/commands.jsonl"
+  ],
+  "scope": "Exact original RPC wrapper/session/cookie/split/cause methods, supplied dispatcher/session/trusted-tunnel host filter; frozen core JSON, no real plugin/core, HTTP listener, profile or network",
+  "helper_class_sha256": {
+    "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd",
+    "RpcContractOracle$Host.class": "39f11a52f1f193071dcba9bf2ce163524137d3b3d6c89c20162d2c406f45fc6b",
+    "RpcContractOracle$PermissionDeniedException.class": "01ab3a6c7e25f9411668ec39f8fa39a7bca7875fe1c7a457f4cdedc6cdbba642",
+    "RpcContractOracle$StaticUtils.class": "7b2160348411d5daefce6c69ded1794823440671bca74d24a14558fffc7f4a61",
+    "RpcContractOracle$TrackerWebPageRequest.class": "73225d17efdfd570e8faea7037ac73ecf2988d7107e9ba95fc99544d6cbec51c",
+    "RpcContractOracle.class": "3534ef1f578a22af085cc45817ecd0ab0ab6c974ac9e85ec039772ea56cd3334",
+    "com/aelitis/azureus/plugins/xmwebui/TextualException.class": "5f6043fe3d4e3782ca586b5dec4b7d98fddd73354dedec88515c7d3a85c74ecd"
+  }
+}

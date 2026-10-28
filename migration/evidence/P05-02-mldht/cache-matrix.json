@@ -1,0 +1,246 @@
+{
+  "builds": [
+    {
+      "compiler": "gcc",
+      "commands": [
+        {
+          "command": [
+            "cmake",
+            "-S",
+            "/home/yurii/Java/BiglyBT/native",
+            "-B",
+            "/tmp/biglybtc-cache-qualified-gcc",
+            "-G",
+            "Ninja",
+            "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DCMAKE_CXX_FLAGS="
+          ],
+          "log": "migration/evidence/P05-02-mldht/gcc-cache-0.txt",
+          "log_sha256": "ced26056ee969f9db1bd6e8b594a4c5ad3ee6dcd03ec23ea6b4b2fd93070e2c2"
+        },
+        {
+          "command": [
+            "nice",
+            "-n",
+            "5",
+            "cmake",
+            "--build",
+            "/tmp/biglybtc-cache-qualified-gcc",
+            "--target",
+            "biglybtc-mldht-cache-driver",
+            "biglybtc-core-tests",
+            "biglybtc-document-edit-tests",
+            "-j2"
+          ],
+          "log": "migration/evidence/P05-02-mldht/gcc-cache-1.txt",
+          "log_sha256": "bd43a069bc2c43bed59754f2664646946591bf37e33308a7f602daccd7925cc2"
+        },
+        {
+          "command": [
+            "ctest",
+            "--test-dir",
+            "/tmp/biglybtc-cache-qualified-gcc",
+            "-R",
+            "original-mldht-routing-cache|bounded-core-formats|structured-document-edits",
+            "--output-on-failure"
+          ],
+          "log": "migration/evidence/P05-02-mldht/gcc-cache-2.txt",
+          "log_sha256": "fb74635699641ddf0b0634f75a84f3732f04cab69f1905390c6f906255831a54"
+        },
+        {
+          "command": [
+            "python3",
+            "/home/yurii/Java/BiglyBT/migration/tools/mldht_cache_roundtrip.py",
+            "--driver",
+            "/tmp/biglybtc-cache-qualified-gcc/tests/biglybtc-mldht-cache-driver",
+            "--output",
+            "/home/yurii/Java/BiglyBT/migration/evidence/P05-02-mldht/gcc-cache-roundtrip.json"
+          ],
+          "log": "migration/evidence/P05-02-mldht/gcc-cache-3.txt",
+          "log_sha256": "baf1faa0520baaee6d998db005bb288767f4abdc5e589f40d4e23ca379a6dadc"
+        }
+      ],
+      "binaries_sha256": {
+        "/tmp/biglybtc-cache-qualified-gcc/tests/biglybtc-mldht-cache-driver": "ca26b4a33beb6998856ad82cb613549a5d009baf4875d585df34c32fd1b93532",
+        "/tmp/biglybtc-cache-qualified-gcc/adapters/libbiglybtc_mldht_cache.a": "3de0a6b24dbbb1a36ee46202c073c3e35f3e5ba49a847b94c216d417236a1fee",
+        "/tmp/biglybtc-cache-qualified-gcc/core/libbiglybtc_core.a": "dac744dbe6141fb7fe1ba1a9b56088d2b4c56925166000379c4ba54c2a53d299",
+        "/tmp/biglybtc-cache-qualified-gcc/tests/biglybtc-core-tests": "9ccd4a8ff908e8872fb4d0916ef83fd0b2a954cd1d0bda76c1e58b8a5c3aebef",
+        "/tmp/biglybtc-cache-qualified-gcc/tests/biglybtc-document-edit-tests": "552ae845fddc2734256d2c8d5d7507a1e67d0aeb48dec107dd134b2936541ed7"
+      }
+    },
+    {
+      "compiler": "clang",
+      "commands": [
+        {
+          "command": [
+            "cmake",
+            "-S",
+            "/home/yurii/Java/BiglyBT/native",
+            "-B",
+            "/tmp/biglybtc-cache-qualified-clang",
+            "-G",
+            "Ninja",
+            "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16"
+          ],
+          "log": "migration/evidence/P05-02-mldht/clang-cache-0.txt",
+          "log_sha256": "8633d7bf7a51b3d76ff2de60004d2cd1caf3d116b82f179d1edfff6ee38f2135"
+        },
+        {
+          "command": [
+            "nice",
+            "-n",
+            "5",
+            "cmake",
+            "--build",
+            "/tmp/biglybtc-cache-qualified-clang",
+            "--target",
+            "biglybtc-mldht-cache-driver",
+            "biglybtc-core-tests",
+            "biglybtc-document-edit-tests",
+            "-j2"
+          ],
+          "log": "migration/evidence/P05-02-mldht/clang-cache-1.txt",
+          "log_sha256": "f42da68cf617af15731b24db11c6990627f643002dda817951875ae8bd24a65c"
+        },
+        {
+          "command": [
+            "ctest",
+            "--test-dir",
+            "/tmp/biglybtc-cache-qualified-clang",
+            "-R",
+            "original-mldht-routing-cache|bounded-core-formats|structured-document-edits",
+            "--output-on-failure"
+          ],
+          "log": "migration/evidence/P05-02-mldht/clang-cache-2.txt",
+          "log_sha256": "964c52d827e98ab6dacc7af8496448c0570e2437b396613d21e0878c97437963"
+        },
+        {
+          "command": [
+            "python3",
+            "/home/yurii/Java/BiglyBT/migration/tools/mldht_cache_roundtrip.py",
+            "--driver",
+            "/tmp/biglybtc-cache-qualified-clang/tests/biglybtc-mldht-cache-driver",
+            "--output",
+            "/home/yurii/Java/BiglyBT/migration/evidence/P05-02-mldht/clang-cache-roundtrip.json"
+          ],
+          "log": "migration/evidence/P05-02-mldht/clang-cache-3.txt",
+          "log_sha256": "baf1faa0520baaee6d998db005bb288767f4abdc5e589f40d4e23ca379a6dadc"
+        }
+      ],
+      "binaries_sha256": {
+        "/tmp/biglybtc-cache-qualified-clang/tests/biglybtc-mldht-cache-driver": "3c9670512634269b219c36192069ed4231c35de3265aacd6262f1c03fd147d7a",
+        "/tmp/biglybtc-cache-qualified-clang/adapters/libbiglybtc_mldht_cache.a": "a8cf96d225d355881fb144a68447d70f4f1def15942a5fb4d249efa07ebb8b11",
+        "/tmp/biglybtc-cache-qualified-clang/core/libbiglybtc_core.a": "508f0dee5f49032e422203fe974613e79fee42be5944de9ddf3deb547c661d2b",
+        "/tmp/biglybtc-cache-qualified-clang/tests/biglybtc-core-tests": "7590df0bb07daaebbe242d218db5ac2a067afaddd0818d4aad81ab5925e1c576",
+        "/tmp/biglybtc-cache-qualified-clang/tests/biglybtc-document-edit-tests": "00853931c5951f11282bbbb500c1ae1e615729390fedb465aae5866cf7f10191"
+      }
+    },
+    {
+      "compiler": "asan",
+      "commands": [
+        {
+          "command": [
+            "cmake",
+            "-S",
+            "/home/yurii/Java/BiglyBT/native",
+            "-B",
+            "/tmp/biglybtc-cache-qualified-asan",
+            "-G",
+            "Ninja",
+            "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+            "-DCMAKE_BUILD_TYPE=Debug",
+            "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer"
+          ],
+          "log": "migration/evidence/P05-02-mldht/asan-cache-0.txt",
+          "log_sha256": "be6db7593260e3e39296134b6e4967e63dec06621087ee51cc986994b2d0041b"
+        },
+        {
+          "command": [
+            "nice",
+            "-n",
+            "5",
+            "cmake",
+            "--build",
+            "/tmp/biglybtc-cache-qualified-asan",
+            "--target",
+            "biglybtc-mldht-cache-driver",
+            "biglybtc-core-tests",
+            "biglybtc-document-edit-tests",
+            "-j2"
+          ],
+          "log": "migration/evidence/P05-02-mldht/asan-cache-1.txt",
+          "log_sha256": "9e197738b481954adddb954be042265687c99b2de48276ebda7ae4b6b75ed545"
+        },
+        {
+          "command": [
+            "ctest",
+            "--test-dir",
+            "/tmp/biglybtc-cache-qualified-asan",
+            "-R",
+            "original-mldht-routing-cache|bounded-core-formats|structured-document-edits",
+            "--output-on-failure"
+          ],
+          "log": "migration/evidence/P05-02-mldht/asan-cache-2.txt",
+          "log_sha256": "2c0d7c96076e980b8c45ab8d157da4bcd7bc7b0bcd763c939584c2c0fab52041"
+        },
+        {
+          "command": [
+            "python3",
+            "/home/yurii/Java/BiglyBT/migration/tools/mldht_cache_roundtrip.py",
+            "--driver",
+            "/tmp/biglybtc-cache-qualified-asan/tests/biglybtc-mldht-cache-driver",
+            "--output",
+            "/home/yurii/Java/BiglyBT/migration/evidence/P05-02-mldht/asan-cache-roundtrip.json"
+          ],
+          "log": "migration/evidence/P05-02-mldht/asan-cache-3.txt",
+          "log_sha256": "baf1faa0520baaee6d998db005bb288767f4abdc5e589f40d4e23ca379a6dadc"
+        }
+      ],
+      "binaries_sha256": {
+        "/tmp/biglybtc-cache-qualified-asan/tests/biglybtc-mldht-cache-driver": "ff5807581dc4196ef32e74eb7f621858c8e3baeb43fb2496faace2bc53bebcab",
+        "/tmp/biglybtc-cache-qualified-asan/adapters/libbiglybtc_mldht_cache.a": "0b0dc1cf2c20edf08e6865dcf3eb7542651f70e92dcaf6588ed0d1cf7a9e25ec",
+        "/tmp/biglybtc-cache-qualified-asan/core/libbiglybtc_core.a": "5ddcf557fe366e62b1180e59a0b26426e44e195c513df3d594e902c141dbdf73",
+        "/tmp/biglybtc-cache-qualified-asan/tests/biglybtc-core-tests": "cb600b30d53792fb1309227f5f6c74748300860c6ae37a4ffdd2a33cf269d372",
+        "/tmp/biglybtc-cache-qualified-asan/tests/biglybtc-document-edit-tests": "e59f0ff6e144261259eb263105e3cfee03d52521a0242f0e9cde09476b2e8468"
+      }
+    }
+  ],
+  "source_sha256": {
+    "native/CMakeLists.txt": "68c6ec2cf78c392d6fc6963134c7e38d952cb8ae7186d2c0e25c02a16a1b8db6",
+    "native/adapters/CMakeLists.txt": "73442cb9ed563aaffba907d51e3ceb6def9bd6186501df3f49d68036c48ce76e",
+    "native/adapters/MPL-2.0.txt": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+    "native/adapters/encoded_document.cpp": "6963883e88118c95d2668c926cb6c15b78c5eb299ccf2f98bbba5b0026f276a2",
+    "native/adapters/encoded_document.hpp": "fce354efe66973b5ad655b9d0fd09891bc610206d54918bdc0f4ca6ae6b333be",
+    "native/adapters/file_io.cpp": "c55df3bfa6531534819a798351a5320365e1081d774f466fe4342bffa54793b9",
+    "native/adapters/file_io.hpp": "41b14236290a65b52f75d56f076857a1ffd037f9bd823f1f9afef98c82a9cd37",
+    "native/adapters/library_view.cpp": "3fe1277cf97ae0775b528c371996ed3af61c50d18025b3ba10e6d7538dac1dfa",
+    "native/adapters/library_view.hpp": "03ea42490496ca46e25b82ed4f5b2d1e154ddc01048714dc573f7be74f03f8dd",
+    "native/adapters/mldht_cache.cpp": "5d5b5b4f33388ea03c45e4acf3fce8eee4d203cef1e701f6e2bd4495c7c615ae",
+    "native/adapters/mldht_cache.hpp": "b3aadc2899eb224456baa7540ed988bd2e8bd0762f7fd35eeb01c23580bcd12c",
+    "native/adapters/profile.cpp": "f31f99cf73484c0c4fb058a6fc9e3937ecd74412f5ae794c775c0a7e8c4b91ee",
+    "native/adapters/profile.hpp": "e91ff37048e02b87a4d6f97d774fe3e33b491febd0b2ec55d3dedbbf20dd60ff",
+    "native/adapters/torrent_state.cpp": "215f3e4ad1483615543529af0cbfc557645706f2536048126438b9399d3df0f7",
+    "native/adapters/torrent_state.hpp": "947bb4933bbfe11d1e7162e0f1d039ff25feb3ad59f0227a2fb4b52f770318c6",
+    "native/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "native/core/CMakeLists.txt": "a297b965f0cbc9134509f709823bed695dcfcfaf660e838936ed13547e919290",
+    "native/core/include/biglybtc/bencode.hpp": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+    "native/core/include/biglybtc/executor.hpp": "d2afcc590573e64bce376aadc42051198353e4c79c5f69f8a2452ab5a7d3d8bc",
+    "native/core/include/biglybtc/file_policy.hpp": "0d199f329d775783d9f4195ba6e14ff660b410ce4bfc555c4c55b4eaa43bff46",
+    "native/core/include/biglybtc/library.hpp": "8ad4e7f5346300fdc03c6318d629b6185874d35109511ca445609639b7168875",
+    "native/core/include/biglybtc/state_cache.hpp": "036be2d5a02e1cab9be638496e7b066ef13619a22443ea508a3d583f8f5dcd15",
+    "native/core/include/biglybtc/torrent_layout.hpp": "59accc489872b0f69444da51cdd2a79aeaa0510deeaf1a01434aab2b8699a775",
+    "native/core/src/bencode.cpp": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08",
+    "native/core/src/executor.cpp": "bd3adadaec6e4f48c0ffbb8ffc77e2c67c15296302105a73e984f58e4e8d7613",
+    "native/core/src/file_policy.cpp": "a50ae3dfcb3d75d9c3220db803823bf91a7f4daaf40ee54f7c325bda7d6a764a",
+    "native/core/src/library.cpp": "3ba21404a77e0e3c9e23cbf267be130609598ed6646693df7c4f656306895348",
+    "native/core/src/state_cache.cpp": "b73688291e949eb592b0e12281e79bf19dc1000a4f5b9d80f6a06a63238e4fc2",
+    "native/core/src/torrent_layout.cpp": "58e6961c5136d1a5f9adf860748a9b3e645fe0ff05ccb50836f339a636ce072d",
+    "native/tests/CMakeLists.txt": "e9f8df49f8123cd46bb45bfc6bb3f74a223566b6bc3ac4cb79cbf59f20b847ce",
+    "native/tests/mldht_cache_driver.cpp": "039f1eda1c689264a50befbeeb21c9461a57ab9919b5ffd73ffddd885ab26eed",
+    "native/tests/mldht_cache_fixtures.py": "df7a7cac4a4a3974c26fdb69b87fb77e349d8a21f38272eeb720dd24015712f6"
+  },
+  "scope": "64 original routing-cache fixtures, byte-preserving Java/native/Java roundtrips and two core-format regressions on GCC/Clang/ASan/UBSan/LSan. No DHT startup/network/full application test matrix."
+}

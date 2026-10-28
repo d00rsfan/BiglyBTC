@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "source_commit": "07219078bf3c5b3ed1cca7e701dcbdfeda8e687d",
+  "dist": "/home/yurii/Java/BiglyBTC/dist",
+  "rollback": "/home/yurii/Java/BiglyBTC/build/history-keyboard-20261020/previous-dist",
+  "files_verified": 103,
+  "runtime_files_byte_identical": 82,
+  "previous_manifest_sha256": "7a38544ed765728555f4423bee7a9beba3f16a7a312accddbab6036e7efb8417",
+  "manifest_sha256": "4059fe8db68c5583cd5349ec0a1f98928888653370238eecf0517a9f3b9cfd31",
+  "system_installation": false,
+  "processes_signaled": false,
+  "installed_rpath_equivalence": {
+    "build_sha256": "03c0fb3ca20c1efa5b5850d0f248013e3a290e01c8dd695fae4cc36a78664931",
+    "installed_sha256": "53a3bf8f57b9fdb27a985c9ed46c08b628da483eefc6835d73ade58fa4e7d03a",
+    "replayed_install_sha256": "53a3bf8f57b9fdb27a985c9ed46c08b628da483eefc6835d73ade58fa4e7d03a",
+    "old_runpath": "/opt/Qt/6.12.0/gcc_64/lib:/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/lib/x86_64-linux-gnu:",
+    "new_runpath": "$ORIGIN/../qt/lib",
+    "cmake_install_script_sha256": "7d481d255b0e1fdd912a88504e8780549460588b7ca7957579c2416a997790c2",
+    "complete_bytes_match_after_exact_rpath_change": true
+  }
+}

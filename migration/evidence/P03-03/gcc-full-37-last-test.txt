@@ -1,0 +1,691 @@
+Start testing: Oct 17 06:12 IDT
+----------------------------------------------------------
+1/37 Testing: bounded-core-formats
+1/37 Test: bounded-core-formats
+Command: "/tmp/biglybtc-desktop-gcc/tests/biglybtc-core-tests"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"bounded-core-formats" start time: Oct 17 06:12 IDT
+Output:
+----------------------------------------------------------
+PASS 70 checks; 20,000 malformed-input trials
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"bounded-core-formats" end time: Oct 17 06:12 IDT
+"bounded-core-formats" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/37 Testing: saved-library-inventory
+2/37 Test: saved-library-inventory
+Command: "/tmp/biglybtc-desktop-gcc/tests/biglybtc-library-tests"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"saved-library-inventory" start time: Oct 17 06:12 IDT
+Output:
+----------------------------------------------------------
+PASS original/legacy inventory, owned paths/hashes, normalized startup, force/pause owners, issues and bounds
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"saved-library-inventory" end time: Oct 17 06:12 IDT
+"saved-library-inventory" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/37 Testing: cached-state-metadata
+3/37 Test: cached-state-metadata
+Command: "/tmp/biglybtc-desktop-gcc/tests/biglybtc-cache-tests"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"cached-state-metadata" start time: Oct 17 06:12 IDT
+Output:
+----------------------------------------------------------
+PASS bounded original cache fields, duplicates, unknown bytes, malformed entries and owned lifetimes
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"cached-state-metadata" end time: Oct 17 06:12 IDT
+"cached-state-metadata" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/37 Testing: original-torrent-geometry
+4/37 Test: original-torrent-geometry
+Command: "/tmp/biglybtc-desktop-gcc/tests/biglybtc-torrent-layout-tests"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"original-torrent-geometry" start time: Oct 17 06:12 IDT
+Output:
+----------------------------------------------------------
+PASS original file geometry, UTF16 ordering, padding and malformed/overflow boundaries
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"original-torrent-geometry" end time: Oct 17 06:12 IDT
+"original-torrent-geometry" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/37 Testing: original-file-priorities
+5/37 Test: original-file-priorities
+Command: "/tmp/biglybtc-desktop-gcc/tests/biglybtc-file-policy-tests"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"original-file-priorities" start time: Oct 17 06:12 IDT
+Output:
+----------------------------------------------------------
+PASS original compressed/legacy priority ranges, Java signed values, bounds and ordered activation
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"original-file-priorities" end time: Oct 17 06:12 IDT
+"original-file-priorities" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/37 Testing: structured-document-edits
+6/37 Test: structured-document-edits
+Command: "/tmp/biglybtc-desktop-gcc/tests/biglybtc-document-edit-tests"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"structured-document-edits" start time: Oct 17 06:12 IDT
+Output:
+----------------------------------------------------------
+PASS structured insertion/replacement, nested splicing, source ownership, unknown/info bytes and edit quotas
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"structured-document-edits" end time: Oct 17 06:12 IDT
+"structured-document-edits" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/37 Testing: compressed-state-envelope
+7/37 Test: compressed-state-envelope
+Command: "/tmp/biglybtc-desktop-gcc/tests/biglybtc-codec-tests"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"compressed-state-envelope" start time: Oct 17 06:12 IDT
+Output:
+----------------------------------------------------------
+PASS plain/gzip identity, binary edits, copy lifetime, CRC/truncation, quotas and concatenated members
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"compressed-state-envelope" end time: Oct 17 06:12 IDT
+"compressed-state-envelope" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/37 Testing: bounded-executor
+8/37 Test: bounded-executor
+Command: "/tmp/biglybtc-desktop-gcc/tests/biglybtc-executor-tests"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"bounded-executor" start time: Oct 17 06:12 IDT
+Output:
+----------------------------------------------------------
+PASS: lifecycle, backpressure, FIFO, cancellation, ownership, reentrant stop, concurrency
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"bounded-executor" end time: Oct 17 06:12 IDT
+"bounded-executor" time elapsed: 00:00:00
+----------------------------------------------------------
+
+9/37 Testing: java-file-priority-loader
+9/37 Test: java-file-priority-loader
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/file_policy_interop.py" "--driver" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-file-policy-tests"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"java-file-priority-loader" start time: Oct 17 06:12 IDT
+Output:
+----------------------------------------------------------
+PASS source-built original signed/legacy file-priority loader differential; evidence /tmp/biglybtc-policy-interop-cfb5bdfe9b70495c82a780f88b21f1e1
+<end of output>
+Test time =  77.71 sec
+----------------------------------------------------------
+Test Passed.
+"java-file-priority-loader" end time: Oct 17 06:14 IDT
+"java-file-priority-loader" time elapsed: 00:01:17
+----------------------------------------------------------
+
+10/37 Testing: java-multifile-geometry
+10/37 Test: java-multifile-geometry
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/geometry_interop.py" "--driver" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-torrent-layout-tests"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"java-multifile-geometry" start time: Oct 17 06:14 IDT
+Output:
+----------------------------------------------------------
+PASS original file geometry, UTF16 ordering, padding and malformed/overflow boundaries
+<end of output>
+Test time =   1.49 sec
+----------------------------------------------------------
+Test Passed.
+"java-multifile-geometry" end time: Oct 17 06:14 IDT
+"java-multifile-geometry" time elapsed: 00:00:01
+----------------------------------------------------------
+
+11/37 Testing: java-cached-library-view
+11/37 Test: java-cached-library-view
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/library_view_interop.py" "--driver" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-library-view-driver"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"java-cached-library-view" start time: Oct 17 06:14 IDT
+Output:
+----------------------------------------------------------
+PASS actual Java v1/v2/hybrid cached names/sizes and unchanged profile bytes
+PASS missing/corrupt/symbolic cache keeps inventory readable without changing data
+<end of output>
+Test time =   1.41 sec
+----------------------------------------------------------
+Test Passed.
+"java-cached-library-view" end time: Oct 17 06:14 IDT
+"java-cached-library-view" time elapsed: 00:00:01
+----------------------------------------------------------
+
+12/37 Testing: torrent-state-java-interop
+12/37 Test: torrent-state-java-interop
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/torrent_state_tests.py" "--driver" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-torrent-state-driver"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"torrent-state-java-interop" start time: Oct 17 06:14 IDT
+Output:
+----------------------------------------------------------
+Note: /home/yurii/Java/BiglyBT/migration/fixtures/java/CacheFixtureOracle.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+PASS original Java reads every native save/crash/backup/cache checkpoint
+PASS cache hydration, unrelated/unknown data, stale/cross-profile/symlink protection and immutable info
+<end of output>
+Test time =  43.67 sec
+----------------------------------------------------------
+Test Passed.
+"torrent-state-java-interop" end time: Oct 17 06:14 IDT
+"torrent-state-java-interop" time elapsed: 00:00:43
+----------------------------------------------------------
+
+13/37 Testing: java-saved-library-inventory
+13/37 Test: java-saved-library-inventory
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/library_interop.py" "--driver" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-library-driver"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"java-saved-library-inventory" start time: Oct 17 06:14 IDT
+Output:
+----------------------------------------------------------
+PASS original Java v1 inventory, identities, counters and all profile bytes retained
+PASS original Java v2 inventory, identities, counters and all profile bytes retained
+PASS original Java hybrid inventory, identities, counters and all profile bytes retained
+<end of output>
+Test time =   0.97 sec
+----------------------------------------------------------
+Test Passed.
+"java-saved-library-inventory" end time: Oct 17 06:14 IDT
+"java-saved-library-inventory" time elapsed: 00:00:00
+----------------------------------------------------------
+
+14/37 Testing: state-java-interop
+14/37 Test: state-java-interop
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/../../migration/tools/state_interop.py" "--driver" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-state-driver"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"state-java-interop" start time: Oct 17 06:14 IDT
+Output:
+----------------------------------------------------------
+PASS byte-identical Java gzip biglybt.config.gz
+PASS byte-identical Java gzip generated-1.torrent.gz
+PASS byte-identical Java gzip generated-2.torrent.gz
+PASS byte-identical Java gzip generated-3.torrent.gz
+PASS byte-identical operational downloads.config
+PASS byte-identical operational active/cache.dat
+PASS byte-identical operational active/7B26D19F7DC2D2F9D9F897AD851B0AB6E0D58C6C.dat
+PASS DEBUG::Sat Oct 17 06:15:40 IDT 2026  BC Provider 'BC_VUZE' initialised successfully (loaded from file:/tmp/biglybtc-oracle/classes/org/gudy/bouncycastle/jce/provider/BouncyCastleProvider.class)
+DEBUG::Sat Oct 17 06:15:40 IDT 2026  Not installing security manager - disabled by system property
+PASS Java reads structured operational resume edit with unchanged info/attributes/unknown fields
+PASS Java reads edited gzip config and unchanged v1/v2/hybrid torrent hashes
+<end of output>
+Test time =  48.04 sec
+----------------------------------------------------------
+Test Passed.
+"state-java-interop" end time: Oct 17 06:15 IDT
+"state-java-interop" time elapsed: 00:00:48
+----------------------------------------------------------
+
+15/37 Testing: profile-java-interop
+15/37 Test: profile-java-interop
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/profile_tests.py" "--driver" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-profile-driver"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"profile-java-interop" start time: Oct 17 06:15 IDT
+Output:
+----------------------------------------------------------
+PASS hold-lock conflicts with Java and native; death releases lock
+PASS duplicate-lock conflicts with Java and native; death releases lock
+PASS Java lock excludes native; release permits native
+PASS compatible save/recovery at normal
+PASS compatible save/recovery at temp
+PASS compatible save/recovery at backup
+PASS compatible save/recovery at primary
+PASS traversal, stale input, exclusive saving and symlink protection
+<end of output>
+Test time =  32.48 sec
+----------------------------------------------------------
+Test Passed.
+"profile-java-interop" end time: Oct 17 06:16 IDT
+"profile-java-interop" time elapsed: 00:00:32
+----------------------------------------------------------
+
+16/37 Testing: saved-policy-preflight-no-mutation
+16/37 Test: saved-policy-preflight-no-mutation
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/activation_rejections.py" "--app" "/tmp/biglybtc-desktop-gcc/app/BiglyBTC-headless"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"saved-policy-preflight-no-mutation" start time: Oct 17 06:16 IDT
+Output:
+----------------------------------------------------------
+PREPARED original multifile type 1 resume [1, 0, 0, 0, 0, 0, 0, 0]
+PASS unsafe saved policy rejected before all profile/cache/payload mutations; evidence /tmp/biglybtc-policy-rejection-f281cd62c3864b2db214f237d36247e5
+<end of output>
+Test time =  52.49 sec
+----------------------------------------------------------
+Test Passed.
+"saved-policy-preflight-no-mutation" end time: Oct 17 06:17 IDT
+"saved-policy-preflight-no-mutation" time elapsed: 00:00:52
+----------------------------------------------------------
+
+17/37 Testing: same-profile-handoff-1
+17/37 Test: same-profile-handoff-1
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/handoff_tests.py" "--app" "/tmp/biglybtc-desktop-gcc/app/BiglyBTC-headless" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-owned-test-peer" "--type" "1"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"same-profile-handoff-1" start time: Oct 17 06:17 IDT
+Output:
+----------------------------------------------------------
+PREPARED original Java incomplete profile /tmp/biglybtc-handoff-test-2704c9e046734e9aa8f5abc8763d2623/java/profile
+PASS same-profile Java -> BiglyBTC -> Java handoff; type 1
+Generated same-profile handoff evidence: /tmp/biglybtc-handoff-test-2704c9e046734e9aa8f5abc8763d2623
+<end of output>
+Test time =  90.53 sec
+----------------------------------------------------------
+Test Passed.
+"same-profile-handoff-1" end time: Oct 17 06:18 IDT
+"same-profile-handoff-1" time elapsed: 00:01:30
+----------------------------------------------------------
+
+18/37 Testing: same-profile-handoff-3
+18/37 Test: same-profile-handoff-3
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/handoff_tests.py" "--app" "/tmp/biglybtc-desktop-gcc/app/BiglyBTC-headless" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-owned-test-peer" "--type" "3"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"same-profile-handoff-3" start time: Oct 17 06:18 IDT
+Output:
+----------------------------------------------------------
+PREPARED original Java incomplete profile /tmp/biglybtc-handoff-test-4497d61cdea545679fdbd2cef73438f2/java/profile
+PASS same-profile Java -> BiglyBTC -> Java handoff; type 3
+Generated same-profile handoff evidence: /tmp/biglybtc-handoff-test-4497d61cdea545679fdbd2cef73438f2
+<end of output>
+Test time =  90.44 sec
+----------------------------------------------------------
+Test Passed.
+"same-profile-handoff-3" end time: Oct 17 06:20 IDT
+"same-profile-handoff-3" time elapsed: 00:01:30
+----------------------------------------------------------
+
+19/37 Testing: same-profile-handoff-2
+19/37 Test: same-profile-handoff-2
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/handoff_tests.py" "--app" "/tmp/biglybtc-desktop-gcc/app/BiglyBTC-headless" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-owned-test-peer" "--type" "2"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"same-profile-handoff-2" start time: Oct 17 06:20 IDT
+Output:
+----------------------------------------------------------
+PREPARED original Java incomplete profile /tmp/biglybtc-handoff-test-a5380ae52d8246bdaf76e180198c1a5b/java/profile
+PASS same-profile Java -> BiglyBTC -> Java handoff; type 2
+Generated same-profile handoff evidence: /tmp/biglybtc-handoff-test-a5380ae52d8246bdaf76e180198c1a5b
+<end of output>
+Test time =  59.85 sec
+----------------------------------------------------------
+Test Passed.
+"same-profile-handoff-2" end time: Oct 17 06:21 IDT
+"same-profile-handoff-2" time elapsed: 00:00:59
+----------------------------------------------------------
+
+20/37 Testing: multifile-java-1
+20/37 Test: multifile-java-1
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/multifile_case.py" "--app" "/tmp/biglybtc-desktop-gcc/app/BiglyBTC-headless" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-multifile-test-peer" "--type" "1"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"multifile-java-1" start time: Oct 17 06:21 IDT
+Output:
+----------------------------------------------------------
+PREPARED original multifile type 1 resume [1, 0, 0, 0, 0, 0, 0, 0]
+PASS original Java -> native multifile -> original Java; type 1
+Multifile same-profile evidence: /tmp/biglybtc-multifile-case-2db473795c8f4eefb50c82bb870bd77f
+<end of output>
+Test time =  50.54 sec
+----------------------------------------------------------
+Test Passed.
+"multifile-java-1" end time: Oct 17 06:21 IDT
+"multifile-java-1" time elapsed: 00:00:50
+----------------------------------------------------------
+
+21/37 Testing: multifile-java-3
+21/37 Test: multifile-java-3
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/multifile_case.py" "--app" "/tmp/biglybtc-desktop-gcc/app/BiglyBTC-headless" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-multifile-test-peer" "--type" "3"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"multifile-java-3" start time: Oct 17 06:21 IDT
+Output:
+----------------------------------------------------------
+PREPARED original multifile type 3 resume [1, 1, 0, 0, 0, 0, 0, 0, 0]
+PASS original Java -> native multifile -> original Java; type 3
+Multifile same-profile evidence: /tmp/biglybtc-multifile-case-625c57b88fb0496da0a753e991071151
+<end of output>
+Test time =  44.91 sec
+----------------------------------------------------------
+Test Passed.
+"multifile-java-3" end time: Oct 17 06:22 IDT
+"multifile-java-3" time elapsed: 00:00:44
+----------------------------------------------------------
+
+22/37 Testing: multifile-java-2
+22/37 Test: multifile-java-2
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/multifile_case.py" "--app" "/tmp/biglybtc-desktop-gcc/app/BiglyBTC-headless" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-multifile-test-peer" "--type" "2"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"multifile-java-2" start time: Oct 17 06:22 IDT
+Output:
+----------------------------------------------------------
+PREPARED original multifile type 2 resume [1, 1, 0, 0, 0, 0, 0, 0, 0]
+PASS original Java -> native multifile -> original Java; type 2
+Multifile same-profile evidence: /tmp/biglybtc-multifile-case-7450bf32b33446beaa1eaa369d80f860
+<end of output>
+Test time =  41.42 sec
+----------------------------------------------------------
+Test Passed.
+"multifile-java-2" end time: Oct 17 06:23 IDT
+"multifile-java-2" time elapsed: 00:00:41
+----------------------------------------------------------
+
+23/37 Testing: multifile-crash3-java-first-1
+23/37 Test: multifile-crash3-java-first-1
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/multifile_case.py" "--app" "/tmp/biglybtc-desktop-gcc/app/BiglyBTC-headless" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-multifile-test-peer" "--type" "1" "--crash" "3"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"multifile-crash3-java-first-1" start time: Oct 17 06:23 IDT
+Output:
+----------------------------------------------------------
+PREPARED original multifile type 1 resume [1, 0, 0, 0, 0, 0, 0, 0]
+PASS original Java -> native multifile -> original Java; type 1
+Multifile same-profile evidence: /tmp/biglybtc-multifile-case-45e78e5c2fd1455ca5d006a1b10efca3
+<end of output>
+Test time =  61.97 sec
+----------------------------------------------------------
+Test Passed.
+"multifile-crash3-java-first-1" end time: Oct 17 06:24 IDT
+"multifile-crash3-java-first-1" time elapsed: 00:01:01
+----------------------------------------------------------
+
+24/37 Testing: multifile-crash3-java-first-3
+24/37 Test: multifile-crash3-java-first-3
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/multifile_case.py" "--app" "/tmp/biglybtc-desktop-gcc/app/BiglyBTC-headless" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-multifile-test-peer" "--type" "3" "--crash" "3"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"multifile-crash3-java-first-3" start time: Oct 17 06:24 IDT
+Output:
+----------------------------------------------------------
+PREPARED original multifile type 3 resume [1, 1, 0, 0, 0, 0, 0, 0, 0]
+PASS original Java -> native multifile -> original Java; type 3
+Multifile same-profile evidence: /tmp/biglybtc-multifile-case-f3cfa39cf117492593235b217cfdca80
+<end of output>
+Test time =  84.66 sec
+----------------------------------------------------------
+Test Passed.
+"multifile-crash3-java-first-3" end time: Oct 17 06:25 IDT
+"multifile-crash3-java-first-3" time elapsed: 00:01:24
+----------------------------------------------------------
+
+25/37 Testing: multifile-original-policy-1
+25/37 Test: multifile-original-policy-1
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/multifile_case.py" "--app" "/tmp/biglybtc-desktop-gcc/app/BiglyBTC-headless" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-multifile-test-peer" "--type" "1" "--priorities"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"multifile-original-policy-1" start time: Oct 17 06:25 IDT
+Output:
+----------------------------------------------------------
+PREPARED original multifile type 1 resume [1, 0, 0, 0, 0, 0, 0, 0]
+PASS original Java -> native multifile -> original Java; type 1
+Multifile same-profile evidence: /tmp/biglybtc-multifile-case-fd9106ff1c104ef9942569f84e5b1da4
+<end of output>
+Test time =  94.33 sec
+----------------------------------------------------------
+Test Passed.
+"multifile-original-policy-1" end time: Oct 17 06:27 IDT
+"multifile-original-policy-1" time elapsed: 00:01:34
+----------------------------------------------------------
+
+26/37 Testing: multifile-original-policy-3
+26/37 Test: multifile-original-policy-3
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/multifile_case.py" "--app" "/tmp/biglybtc-desktop-gcc/app/BiglyBTC-headless" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-multifile-test-peer" "--type" "3" "--priorities"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"multifile-original-policy-3" start time: Oct 17 06:27 IDT
+Output:
+----------------------------------------------------------
+PREPARED original multifile type 3 resume [1, 1, 0, 0, 0, 0, 0, 0, 0]
+PASS original Java -> native multifile -> original Java; type 3
+Multifile same-profile evidence: /tmp/biglybtc-multifile-case-5bd8a92d383a43848c83eb482e1ffb97
+<end of output>
+Test time =  75.07 sec
+----------------------------------------------------------
+Test Passed.
+"multifile-original-policy-3" end time: Oct 17 06:28 IDT
+"multifile-original-policy-3" time elapsed: 00:01:15
+----------------------------------------------------------
+
+27/37 Testing: multifile-original-policy-2
+27/37 Test: multifile-original-policy-2
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/multifile_case.py" "--app" "/tmp/biglybtc-desktop-gcc/app/BiglyBTC-headless" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-multifile-test-peer" "--type" "2" "--priorities"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"multifile-original-policy-2" start time: Oct 17 06:28 IDT
+Output:
+----------------------------------------------------------
+PREPARED original multifile type 2 resume [1, 1, 0, 0, 0, 0, 0, 0, 0]
+PASS original Java -> native multifile -> original Java; type 2
+Multifile same-profile evidence: /tmp/biglybtc-multifile-case-fac0397a11204a3c825fb2bcc1d27b0c
+<end of output>
+Test time =  71.18 sec
+----------------------------------------------------------
+Test Passed.
+"multifile-original-policy-2" end time: Oct 17 06:29 IDT
+"multifile-original-policy-2" time elapsed: 00:01:11
+----------------------------------------------------------
+
+28/37 Testing: desktop-model-and-lifecycle
+28/37 Test: desktop-model-and-lifecycle
+Command: "/tmp/biglybtc-desktop-gcc/tests/biglybtc-desktop-tests" "modelValuesSelectionAndStaleTargets" "closeWaitsForCancellationAndWorkerTeardown" "cancellationFromBusyNotificationCompletes"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"desktop-model-and-lifecycle" start time: Oct 17 06:29 IDT
+Output:
+----------------------------------------------------------
+********* Start testing of DesktopTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : DesktopTests::initTestCase()
+PASS   : DesktopTests::modelValuesSelectionAndStaleTargets()
+QWARN  : DesktopTests::closeWaitsForCancellationAndWorkerTeardown() This plugin does not support propagateSizeHints()
+PASS   : DesktopTests::closeWaitsForCancellationAndWorkerTeardown()
+PASS   : DesktopTests::cancellationFromBusyNotificationCompletes()
+PASS   : DesktopTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 2606ms
+********* Finished testing of DesktopTests *********
+<end of output>
+Test time =   3.10 sec
+----------------------------------------------------------
+Test Passed.
+"desktop-model-and-lifecycle" end time: Oct 17 06:29 IDT
+"desktop-model-and-lifecycle" time elapsed: 00:00:03
+----------------------------------------------------------
+
+29/37 Testing: desktop-java-v1
+29/37 Test: desktop-java-v1
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/desktop_case.py" "--test" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-desktop-tests" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-owned-test-peer" "--type" "1" "--action" "complete"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"desktop-java-v1" start time: Oct 17 06:29 IDT
+Output:
+----------------------------------------------------------
+PREPARED original Java incomplete profile /tmp/biglybtc-desktop-test-fefc96a0a3d5451faf29f620eb25a260/java/profile
+PASS actual Qt desktop -> original Java; type 1 action complete
+Actual desktop/Java evidence: /tmp/biglybtc-desktop-test-fefc96a0a3d5451faf29f620eb25a260
+<end of output>
+Test time =  82.77 sec
+----------------------------------------------------------
+Test Passed.
+"desktop-java-v1" end time: Oct 17 06:31 IDT
+"desktop-java-v1" time elapsed: 00:01:22
+----------------------------------------------------------
+
+30/37 Testing: desktop-java-v2
+30/37 Test: desktop-java-v2
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/desktop_case.py" "--test" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-desktop-tests" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-owned-test-peer" "--type" "3" "--action" "complete"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"desktop-java-v2" start time: Oct 17 06:31 IDT
+Output:
+----------------------------------------------------------
+PREPARED original Java incomplete profile /tmp/biglybtc-desktop-test-f1f592cd08174002b5c8a270e616869c/java/profile
+PASS actual Qt desktop -> original Java; type 3 action complete
+Actual desktop/Java evidence: /tmp/biglybtc-desktop-test-f1f592cd08174002b5c8a270e616869c
+<end of output>
+Test time =  83.19 sec
+----------------------------------------------------------
+Test Passed.
+"desktop-java-v2" end time: Oct 17 06:32 IDT
+"desktop-java-v2" time elapsed: 00:01:23
+----------------------------------------------------------
+
+31/37 Testing: desktop-java-hybrid
+31/37 Test: desktop-java-hybrid
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/desktop_case.py" "--test" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-desktop-tests" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-owned-test-peer" "--type" "2" "--action" "complete"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"desktop-java-hybrid" start time: Oct 17 06:32 IDT
+Output:
+----------------------------------------------------------
+PREPARED original Java incomplete profile /tmp/biglybtc-desktop-test-8e4787adba924be08ed23b30db68d792/java/profile
+PASS actual Qt desktop -> original Java; type 2 action complete
+Actual desktop/Java evidence: /tmp/biglybtc-desktop-test-8e4787adba924be08ed23b30db68d792
+<end of output>
+Test time =  65.76 sec
+----------------------------------------------------------
+Test Passed.
+"desktop-java-hybrid" end time: Oct 17 06:33 IDT
+"desktop-java-hybrid" time elapsed: 00:01:05
+----------------------------------------------------------
+
+32/37 Testing: desktop-java-cancel
+32/37 Test: desktop-java-cancel
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/desktop_case.py" "--test" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-desktop-tests" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-owned-test-peer" "--type" "1" "--action" "cancel"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"desktop-java-cancel" start time: Oct 17 06:33 IDT
+Output:
+----------------------------------------------------------
+PREPARED original Java incomplete profile /tmp/biglybtc-desktop-test-9ec9ebb8a4c34ca6a74aac4a3bd6246d/java/profile
+PASS actual Qt desktop -> original Java; type 1 action cancel
+Actual desktop/Java evidence: /tmp/biglybtc-desktop-test-9ec9ebb8a4c34ca6a74aac4a3bd6246d
+<end of output>
+Test time =  42.87 sec
+----------------------------------------------------------
+Test Passed.
+"desktop-java-cancel" end time: Oct 17 06:34 IDT
+"desktop-java-cancel" time elapsed: 00:00:42
+----------------------------------------------------------
+
+33/37 Testing: desktop-java-close
+33/37 Test: desktop-java-close
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/desktop_case.py" "--test" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-desktop-tests" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-owned-test-peer" "--type" "1" "--action" "close"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"desktop-java-close" start time: Oct 17 06:34 IDT
+Output:
+----------------------------------------------------------
+PREPARED original Java incomplete profile /tmp/biglybtc-desktop-test-1b2af29acc584186a184fb74493a5fb4/java/profile
+PASS actual Qt desktop -> original Java; type 1 action close
+Actual desktop/Java evidence: /tmp/biglybtc-desktop-test-1b2af29acc584186a184fb74493a5fb4
+<end of output>
+Test time =  33.40 sec
+----------------------------------------------------------
+Test Passed.
+"desktop-java-close" end time: Oct 17 06:35 IDT
+"desktop-java-close" time elapsed: 00:00:33
+----------------------------------------------------------
+
+34/37 Testing: desktop-multifile-java-1
+34/37 Test: desktop-multifile-java-1
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/multifile_case.py" "--gui-test" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-desktop-tests" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-multifile-test-peer" "--type" "1"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"desktop-multifile-java-1" start time: Oct 17 06:35 IDT
+Output:
+----------------------------------------------------------
+PREPARED original multifile type 1 resume [1, 0, 0, 0, 0, 0, 0, 0]
+PASS original Java -> native multifile -> original Java; type 1
+Multifile same-profile evidence: /tmp/biglybtc-multifile-case-0c2073fb92074cca894051e38715725c
+<end of output>
+Test time =  35.86 sec
+----------------------------------------------------------
+Test Passed.
+"desktop-multifile-java-1" end time: Oct 17 06:35 IDT
+"desktop-multifile-java-1" time elapsed: 00:00:35
+----------------------------------------------------------
+
+35/37 Testing: desktop-multifile-java-3
+35/37 Test: desktop-multifile-java-3
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/multifile_case.py" "--gui-test" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-desktop-tests" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-multifile-test-peer" "--type" "3"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"desktop-multifile-java-3" start time: Oct 17 06:35 IDT
+Output:
+----------------------------------------------------------
+PREPARED original multifile type 3 resume [1, 1, 0, 0, 0, 0, 0, 0, 0]
+PASS original Java -> native multifile -> original Java; type 3
+Multifile same-profile evidence: /tmp/biglybtc-multifile-case-640c1cc4804f4542807c97a08ee45315
+<end of output>
+Test time =  73.03 sec
+----------------------------------------------------------
+Test Passed.
+"desktop-multifile-java-3" end time: Oct 17 06:36 IDT
+"desktop-multifile-java-3" time elapsed: 00:01:13
+----------------------------------------------------------
+
+36/37 Testing: desktop-multifile-java-2
+36/37 Test: desktop-multifile-java-2
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/multifile_case.py" "--gui-test" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-desktop-tests" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-multifile-test-peer" "--type" "2"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"desktop-multifile-java-2" start time: Oct 17 06:36 IDT
+Output:
+----------------------------------------------------------
+PREPARED original multifile type 2 resume [1, 1, 0, 0, 0, 0, 0, 0, 0]
+PASS original Java -> native multifile -> original Java; type 2
+Multifile same-profile evidence: /tmp/biglybtc-multifile-case-86de8b7129ee47c59da50aa7a1e415a7
+<end of output>
+Test time =  58.88 sec
+----------------------------------------------------------
+Test Passed.
+"desktop-multifile-java-2" end time: Oct 17 06:37 IDT
+"desktop-multifile-java-2" time elapsed: 00:00:58
+----------------------------------------------------------
+
+37/37 Testing: desktop-original-file-policy
+37/37 Test: desktop-original-file-policy
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/multifile_case.py" "--gui-test" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-desktop-tests" "--peer" "/tmp/biglybtc-desktop-gcc/tests/biglybtc-multifile-test-peer" "--type" "3" "--priorities"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"desktop-original-file-policy" start time: Oct 17 06:37 IDT
+Output:
+----------------------------------------------------------
+PREPARED original multifile type 3 resume [1, 1, 0, 0, 0, 0, 0, 0, 0]
+PASS original Java -> native multifile -> original Java; type 3
+Multifile same-profile evidence: /tmp/biglybtc-multifile-case-cf957ce09f4042c3bcddd6d31e1541bc
+<end of output>
+Test time = 147.02 sec
+----------------------------------------------------------
+Test Passed.
+"desktop-original-file-policy" end time: Oct 17 06:40 IDT
+"desktop-original-file-policy" time elapsed: 00:02:27
+----------------------------------------------------------
+
+End testing: Oct 17 06:40 IDT
+
+crash = 146.62 sec*proc
+
+faults =  52.49 sec*proc
+
+integration = 1645.97 sec*proc
+
+java = 205.79 sec*proc
+
+local-files = 205.79 sec*proc
+
+loopback = 1440.18 sec*proc
+
+multifile = 838.87 sec*proc
+
+policy = 440.09 sec*proc
+
+same-profile = 1387.69 sec*proc
+
+ui = 625.89 sec*proc
+
+unit =   3.36 sec*proc
+

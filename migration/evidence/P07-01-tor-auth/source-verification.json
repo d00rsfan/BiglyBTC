@@ -1,0 +1,12 @@
+{
+  "source_hashes_match": true,
+  "files": 13,
+  "transcripts_per_compiler": 1024,
+  "accepted": 384,
+  "rejected": 640,
+  "compilers": [
+    "gcc16",
+    "clang24",
+    "clang24-asan-ubsan-lsan"
+  ]
+}

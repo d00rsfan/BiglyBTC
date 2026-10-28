@@ -1,0 +1,172 @@
+{
+  "status": "QUALIFIED_PROMOTED_BOUNDED_EVERYDAY_TORRENT_WORKFLOWS",
+  "original_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_start": "14232b346e7dc70d45e8a41fee1746244a080b46",
+  "native_source": "08a44ec3134e32c8f1cebc4061f5fa608ba2cc35",
+  "native_implementation_commits": [
+    "8795a76eef634bc6167713d913af7d302e3e028d",
+    "50943cae2eb986f3d33da61b346c2e35d4bae637",
+    "08a44ec3134e32c8f1cebc4061f5fa608ba2cc35"
+  ],
+  "test_assertion_commit": "49f02c870f70cb7a1aa42cf71c4e53a89eca07a0",
+  "libtorrent_source": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "shipping_runtime_sha256": "c35f1b0408508c019f002c438d70dd361a55be20286ded56711efd6bba2424e3",
+  "secondary_causal_runtime_sha256": "60ac6edd933f028f63f67f5f567066aefe069cda0693fe7c987448412fd444a3",
+  "qt_version": "6.12.0",
+  "compiler_lanes": {
+    "chapter-abi-gcc": {
+      "passed_suites": 7,
+      "receipt_sha256": "a60a821b621ef4b1f850777a15ac0444fb100ff9c1d5851db6688e2897a12b65",
+      "source_map_sha256": "b73cacf5b039fb2d1530dbf806b3880f1f6337803b10d0e2a8259b01d4e8cf28"
+    },
+    "chapter-clang-r1": {
+      "passed_suites": 26,
+      "receipt_sha256": "d0baba84b55eb677b4cc26276489c8619999a8e89b9718998504e820d272b902",
+      "source_map_sha256": "0ccf39056b3cf464da0e73b111d5f318f63e5dd906121c2648fbdaa64438f11d"
+    },
+    "chapter-abi-clang": {
+      "passed_suites": 7,
+      "receipt_sha256": "cc049cc7b7ce4a905627ac9cb33b6e62fe58ec843664fbbc749f440d43a15109",
+      "source_map_sha256": "b73cacf5b039fb2d1530dbf806b3880f1f6337803b10d0e2a8259b01d4e8cf28"
+    },
+    "chapter-sanitized-r1": {
+      "passed_suites": 26,
+      "receipt_sha256": "8625f0b8889dc83d2f6747bc830414d88f6ed97e9deb545d6f30f46e07284947",
+      "source_map_sha256": "b73cacf5b039fb2d1530dbf806b3880f1f6337803b10d0e2a8259b01d4e8cf28"
+    }
+  },
+  "clang_reuse": "26 suites at 49f02; all seven affected suites repeated at final 08a44 after ABI shim extraction",
+  "sanitizer_scope": "Native code ASan/UBSan with leak detection. Only source-bound managed_payload_counters.cpp excludes vptr because approved LT DSO hides private RTTI; address and other UB checks remain. Causal provider is not represented as an ASan-built dependency.",
+  "java_handoff": {
+    "result_sha256": "748fef53bcd8389d6bb81eb582612a76e92acc33b145f38292e5f4ed103dc5b2",
+    "cases": 2,
+    "native_admissions": 4,
+    "actual_java_reload_observations": 6,
+    "scope": "Generated v1 single/multifile linear same-profile stop/reopen only; original API reload, real payload and checked progress",
+    "retained_original_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+    "retention_sha256": "7472e8bda8d832fd5a962cda76ba1fcefaa0e6e9b4cad2621e0be97e6fbec9dd",
+    "driver_sha256": "61f1d839c48fee5670160c1446f01c6e7c8ffb18fcd1f754739ac8786c15e299",
+    "original_core_recompiled": false
+  },
+  "hosted": [
+    {
+      "conclusion": "success",
+      "createdAt": "2026-10-24T11:34:45Z",
+      "databaseId": 40090465981,
+      "headSha": "08a44ec3134e32c8f1cebc4061f5fa608ba2cc35",
+      "name": "Native plugin SDK contract",
+      "status": "completed",
+      "updatedAt": "2026-10-24T11:35:49Z",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40090465981"
+    },
+    {
+      "conclusion": "success",
+      "createdAt": "2026-10-24T11:34:45Z",
+      "databaseId": 40090466024,
+      "headSha": "08a44ec3134e32c8f1cebc4061f5fa608ba2cc35",
+      "name": "Native desktop preview unit and smoke tests",
+      "status": "completed",
+      "updatedAt": "2026-10-24T11:50:44Z",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40090466024"
+    }
+  ],
+  "portable": {
+    "status": "PRIVATE_RUNTIME_QUALIFIED_NOT_PROMOTED",
+    "native_source": "08a44ec3134e32c8f1cebc4061f5fa608ba2cc35",
+    "source_map_sha256": "b73cacf5b039fb2d1530dbf806b3880f1f6337803b10d0e2a8259b01d4e8cf28",
+    "candidate": "/home/yurii/Java/BiglyBTC/build/torrent-workflows-20261024/portable/workflow-final-r1/candidate",
+    "build": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+    "manifest_sha256": "f38d56989a1cb26f988f715106830e1550b08e5d7eec595008a310e06d5d108c",
+    "manifest_files": 114,
+    "previous_manifest_sha256": "5e272dfd4e2d5afc3b3e88b3618836968be225f70ec7543ab8f610094966591e",
+    "tests": [
+      "library-commands",
+      "network-policy",
+      "library-action-ui",
+      "managed-download",
+      "managed-tracker",
+      "managed-storage",
+      "torrent-intake",
+      "file-policy-commands",
+      "file-priority-ui",
+      "torrent-import-ui",
+      "magnet-intake",
+      "metadata-disk-router",
+      "managed-seeding",
+      "managed-magnet",
+      "managed-library-command-routing",
+      "magnet-host",
+      "persistent-native-peer-session",
+      "startup-statistics-worker",
+      "desktop-model-and-lifecycle",
+      "desktop-files-model",
+      "persistent-native-session-window-worker"
+    ],
+    "suite_count": 21,
+    "smoke_qt_rows": 13,
+    "captures": {
+      "statistics-history-month-preview.png": "b2532033d240728f4f6a81084099f89c78b9d7364f2cafd088e22b4ddc14d131",
+      "statistics-history-copy-preview.png": "9aba3812449e712e74c1ee7282cd6a51e9a0139a40ec03033587519c3e14939f",
+      "statistics-history-keyboard-preview.png": "9aba3812449e712e74c1ee7282cd6a51e9a0139a40ec03033587519c3e14939f",
+      "statistics-history-dht-preview.png": "e0b70a6b6aefa811ec9af6f1c83a9ff5f9bed3a7aba8d32c1ec60b2f29334e91",
+      "statistics-history-protocol-preview.png": "f9040b2d75c005d9e27c251faff2201e9cce436d47ba5b901bc2d751977430e9",
+      "statistics-navigation-new-session-preview.png": "46897686b24409c6ce462d11617547268eb2e56326f202f148d8142bd6617b8f",
+      "statistics-navigation-reopened-preview.png": "7bfdb4f15156c5464cd72bd735951ae99ac567307c04c7c838fe8f8fc4de1250",
+      "statistics-history-week-missing-preview.png": "1921744c1ed7f20f1ba931e03100c3912ae0c01645e9276c5f27363d1de5519e",
+      "statistics-history-week-hourly-missing-preview.png": "1047f83e813f8e758e69f088f96cf1ac88866ccb9798d1570a0a35fcd0fdf4dc",
+      "statistics-history-week-preview.png": "142f631ab3d42b209d4804d18ad54af0cf18ba6361437514f55cee66736bde01",
+      "statistics-history-week-hourly-preview.png": "7bfdb4f15156c5464cd72bd735951ae99ac567307c04c7c838fe8f8fc4de1250",
+      "statistics-history-missing-preview.png": "0a1809a6dcb1ca7604bcbb905ec2aed2e66257b63845d19bc28fd9288cac5926",
+      "statistics-history-preview.png": "bae29f51f0ef3c331ecdbadac60bbc3dd26311e97d430c386acdbfa89a037e2b",
+      "statistics-section-9-preview.png": "dfa79a9d3229a7dcdd8812c8ee193234a07dcd0bb2ceab17153df83ea889900f",
+      "statistics-section-8-preview.png": "00d15e7592a2c0f2c4eee112684ff96cf5ab23255ec50f06cb865a853f6054b9",
+      "statistics-section-7-preview.png": "15a3fc693c078f1b6ba4076915dff25d43547624c4327133b78888e752bf3f41",
+      "statistics-section-6-preview.png": "15372387c7ad47e53103ad94b8335e14f69765ef7013e155630b73bc741054c0",
+      "statistics-section-5-preview.png": "64221311f537beead580e3e105363309e1c98aea3e914efed2c991a8264e4d14",
+      "statistics-section-4-preview.png": "8efa93b6fe65a3f8895576bb18de09f02bac2bb88ed51e47fe79eed0f3f9146d",
+      "statistics-section-3-preview.png": "abdd0326053428ec3475254d127a73320a8017f013b9cde78d75c51fe571c9cf",
+      "statistics-section-2-preview.png": "7b0ce06441b433c4f0b70a52929088f0f565eb08d84671ece9374c547f70ee83",
+      "statistics-capacity-preview.png": "907c8e611877558aec0188f520d4a827ef39fb00d15fc2a009d8a178a2a91add",
+      "statistics-transfers-preview.png": "f41d8dba6de092c2bcb838f6bbaac7b5ba781c36093927ae9e69325c226aa72c",
+      "statistics-activity-preview.png": "21bb73c7f43f322dde535fa9edb1cab6e3bbc65c0c482c227a2bf06788148813",
+      "my-shares-preview.png": "e083de6d1deb14f5f589471113962bb03c1ae2a50093ef37609fdd60e36fb465",
+      "my-tracker-preview.png": "85cd91ad94abeef35fa4b9c8b2400c3c9d3576c8973f684da5fe3583f89c74ce",
+      "saved-selected-preview.png": "b9f150f8ac3a7a4bdc2c4bdf4c1aee83716c420728bb8b02422149450ebd3be5",
+      "classic-preview.png": "0de56536d66af98e60ccf1a008773f276b9c0d255c2d6f1917d7eab93e6646f5"
+    },
+    "capture_scale": 1,
+    "sample_root": "/tmp/biglybtc-preview-ogj5dox_",
+    "provider_sha256": "c35f1b0408508c019f002c438d70dd361a55be20286ded56711efd6bba2424e3",
+    "qt_version": "6.12.0",
+    "normal_launcher_usage_only": true,
+    "normal_launcher_profile_opened": false,
+    "original_profile_or_process_access": false,
+    "system_installation": false,
+    "promoted": false
+  },
+  "promotion": {
+    "native_source": "08a44ec3134e32c8f1cebc4061f5fa608ba2cc35",
+    "dist": "/home/yurii/Java/BiglyBTC/dist",
+    "rollback": "/home/yurii/Java/BiglyBTC/build/torrent-workflows-20261024/portable/workflow-final-r1/previous-dist",
+    "old_manifest_sha256": "5e272dfd4e2d5afc3b3e88b3618836968be225f70ec7543ab8f610094966591e",
+    "manifest_sha256": "f38d56989a1cb26f988f715106830e1550b08e5d7eec595008a310e06d5d108c",
+    "manifest_files": 114,
+    "system_installation": false,
+    "original_profile_or_process_access": false
+  },
+  "original_profile_or_process_access": false,
+  "system_installation": false,
+  "open_human_questions": [],
+  "remaining_epic_work": [
+    "Compact/reordered/unsupported storage mappings",
+    "Broader original queue/scheduling and bind/interface/proxy/Tor/I2P policy",
+    "Full v2/hybrid Java handoffs and broader real-profile option combinations",
+    "Removal/delete/move/create and remaining options dialogs",
+    "Full plugin/engine integration and public swarm/performance qualification"
+  ],
+  "hosted_counts": {
+    "desktop_unit_suites": 148,
+    "smoke_qt_rows": 13,
+    "sdk_suites": 2
+  }
+}

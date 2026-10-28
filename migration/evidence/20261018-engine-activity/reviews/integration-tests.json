@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "scope": "Independent source review of root new P04-17 Window/real-engine integration tests and only the three-target CMake delta",
+  "verdict": "PASS after cancellation-trigger false-positive correction",
+  "source_sha256": {
+    "preview/native/tests/engine_activity_integration_tests.cpp": "90e49d368486162f457eb8704ffda44d7920407ba0db4b9bf396e4716a20677a",
+    "preview/native/tests/CMakeLists.txt": "91c5f9dc6a15e1a74334afa6905ca48ad0f83f1e35d57dd793de9c9c3fa75fd2"
+  },
+  "unchanged_qualified_context_sha256": {
+    "preview/native/tests/owned_engine_fixture.hpp": "799b00c13c45dfd9f8edc0e3e89deff616eb872497a67ced52935aca53330cfa",
+    "preview/native/tests/engine_statistics_integration_tests.cpp": "51ea4c4e6634738342638080977a38b5ab1ffc232093c1c1098af70d4c84e060"
+  },
+  "new_cmake_block_sha256": "af250936f3aa243af549107518eb57a8bbca0d94533f99b1811f30623cabf677",
+  "old_cmake_bytes_reconstructed_exact": true,
+  "planned_qt_rows": 7,
+  "planned_behavior_rows": 5,
+  "finding_history": [
+    {
+      "id": "EA-T1",
+      "status": "resolved before test execution",
+      "site": "cancellationRetainsActualHistoryFromAnUnfinishedTransfer engineStatisticsReady callback",
+      "initial_issue": "Any terminal retained positive rate could trigger cancellation only after timeout, causing a false-positive cancellation assertion.",
+      "correction": "Require packet state Observed and Bridge busy before accepting positive payload rate and requesting cancellation.",
+      "current_source_checked": true
+    }
+  ],
+  "checks": [
+    "Synthetic tests exercise actual Window admission/cache, no Page collection, close/reopen immutable replay, saved refresh preservation, 600-point eviction and fresh operation/session reset.",
+    "Real single/multifile cases use the unchanged independently qualified 8-piece generated fixture, owned loopback-only seed/transfer, actual rate packets and completed payload/statistics identity checks.",
+    "Positive payload/protocol rate points are required from actual transfer, point times strictly increase and combined rate dominates payload; no expected-output mirror or graph-derived observations are used.",
+    "Close/reopen and saved refresh compare retained actual point values, while selected pane width/filter state remain independent.",
+    "Fresh completed-payload recheck requires increased operation ID and actual zero payload counter/rates, preventing inherited prior-transfer data.",
+    "Cancellation uses unchanged 7-of-8-piece partial seed incapable of completing; cancellation is now driven only by a busy Observed positive payload-rate packet.",
+    "Stack declaration order destroys Bridge and joins its owned worker before Window and generated fixture storage; all early QtTest return paths retain this ordering.",
+    "No elapsed sleeps or arbitrary GUI delays are introduced; qWaitFor/QTRY conditions wait on actual state and retain 30-second inner limits.",
+    "All three new test targets use AUTOMOC, strict warning errors, Qt6::Test and 120-second offscreen unit/statistics/activity policy. The real target links actual desktop host/local engine/libtorrent.",
+    "Every previous CMake byte is unchanged after removing this new three-target block; original fixture and old 12-row suite bytes match the qualified source map."
+  ],
+  "limitations": [
+    "This review does not independently qualify our own History implementation or Oracle graph/Page code.",
+    "Generated fixtures and native graph integration do not establish Java Activity smoothing/global-history equality.",
+    "Root reports premature configure/build before graph test source existed; that is retained build history, with no compilation/runtime credit from this source review.",
+    "Actual test outcomes and timings remain root-owned pending qualification."
+  ],
+  "execution": {
+    "builds": 0,
+    "tests": 0,
+    "git": 0,
+    "target_imports": 0,
+    "native_gui_or_process_launches": 0,
+    "production_or_shared_edits": 0
+  }
+}

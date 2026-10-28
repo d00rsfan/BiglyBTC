@@ -1,0 +1,26 @@
+{
+  "status": "PASS_SOURCE_ONLY",
+  "prior_blocked_review_sha256": "660bdf81e515116b3cb64d8a6e6684ca9305d83466e16c7149a68aeb6fc26673",
+  "closed_findings": [
+    "GUI-A1 Ready observations/coverage coherence",
+    "final-total tooltip delete/reentry"
+  ],
+  "current_source_sha256": {
+    "ui/history_range_presentation.hpp": "2301375a1f8328bd4e09d98f63f879feaab92e209090b9c41e84a807f42db62c",
+    "ui/history_range_view.hpp": "64cfb338ffd1be636e90762effd990e1edb3995b7a498fe300316cdc2e97de41",
+    "ui/history_range_view.cpp": "7930096086b46e257e13ff30e4ceb3be0a9ab5fa6b6b85b1333678748ecccf05",
+    "ui/history_range_plot.hpp": "7315dfef929f525c59ad89f91bdb770adf7d208e84cda629c7aee72a3e6135d5",
+    "ui/history_range_plot.cpp": "37b740ef07fafae33cefe1633c5ed837e26b9758153476565c5ad2c002f72910",
+    "tests/history_range_view_tests.cpp": "94e22c67d2956b2a3991180acc1f0e9014b30456fb8a737ae82c614dc6d5ce8a"
+  },
+  "reviewed_candidate_manifest_sha256": "ccf7bd8278199c5c22a353865dba90932136e5b88180a942e85665ce921e6a42",
+  "findings": [
+    "Actual presentFiles is bounded before multiplication by8192, including present0 => observations0.",
+    "Running bucket count starts0 and each bucket is checked against whole-minus-running before addition, preventing unsigned underflow/overflow. No numeric counter sums are compared.",
+    "Three additive rows isolate absent files with observations, actual-file record cap, and combined bucket counts exceeding whole while individual counts remain within whole. All reject to Failed and unknown graph/total.",
+    "All staged post-tooltip guards and both direct callback rows remain present. Other changes are one product-facing range phrase; all4 other source pins stay exact."
+  ],
+  "executions_by_reviewer": 0,
+  "independent_core_review_credit": 0,
+  "runtime_results": "root-owned; not inferred by this source review"
+}

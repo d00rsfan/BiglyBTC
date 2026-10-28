@@ -1,0 +1,47 @@
+{
+  "status": "PASS_SOURCE_ONLY_NO_BLOCKER",
+  "reviewer": "error_oracle",
+  "scope": "Only current P04-29 hosted collection/verification derivatives; no execution, network, test/build or publication action.",
+  "source_sha256": {
+    "build/statistics-completion-20261021/next-accounting/hosted-publication/collect_hosted.py": "4652cd1784b4c5e2ee99a2f9de6d73dc8d29640046d8e53f56dfc89bb26db63d",
+    "build/statistics-completion-20261021/next-accounting/hosted-publication/verify_hosted.py": "1954d1737f67d15df06f6ef9617b18db7257a299571e888742cefea06675e3bb",
+    "build/statistics-completion-20261021/collect_hosted.py": "dd61107a68051d409be1776347c2a1be0eecdd25236c30814ee52bd9be03a899",
+    "build/statistics-completion-20261021/verify_hosted.py": "804942394b8953a259dda04cacf378755e3288f88eec092245a0e102fb29e99b",
+    "/home/yurii/Java/BiglyBTC/.github/workflows/native-preview.yml": "774be22df1f8fab33f240817a16104fdc488777f45c8217d045cf7677ee4b3fc",
+    "migration/evidence/20261020-history-month-ui/hosted-verification.json": "577336e71728e031811c92060384c8cc5c3688b88df352fd907c07cd53ea6616"
+  },
+  "static_checks": {
+    "both_python_sources_parse": true,
+    "complete_derivatives_read": true,
+    "collector_exact_reversal_to_prior_after_2_path_changes": true,
+    "verifier_exact_reversal_to_prior_after_5_declared_path_count_field_changes": true,
+    "old_83_unit_assertion_absent": true,
+    "unit_count": 85,
+    "unit_names_source": "source-commit.json unit_test_sets.gcc",
+    "old_qualified_capture_names": 23,
+    "new_retained_rolling_capture_names": 3,
+    "expected_total_captures": 26,
+    "expected_smoke_qt_rows": 13
+  },
+  "findings": [
+    "Collector reads/writes only native build/persistent-peer-accounting-20261021 and invokes the new next-accounting/hosted-publication verifier. It polls both named workflows for the exact source commit and requires success.",
+    "Verifier writes only original migration/evidence/20261021-persistent-peer-accounting and its hosted child. Prior month-ui hosted evidence is read-only. No prior rolling-history or earlier evidence output path is reused.",
+    "Both85-case exact XML-name comparison and native_units_passed85 receipt field are updated. XML names must be unique and match the frozen producer gcc set, with no failure/error/skipped child. LastTest sections must be unique and match the same names.",
+    "Source SHA is checked across both workflow receipts and artifact API workflow-run identity/main branch. Artifact name/expiry/count/id, API digest and byte size remain enforced. Every extracted file hash must equal the downloaded API ZIP member hash; duplicate/unsafe/symlink/nonregular ZIP paths are rejected.",
+    "Retained rolling49/8/6 Qt rows and19families/5289assertions/reader16 markers remain bound to actual LastTest sections. Both frozen original-corpus replay units must pass. Smoke13 rows and all26 PNG names/magic remain verified against actual archive/tree data.",
+    "Receipt correctly calls these retained_rolling_qt_rows, declares no hosted Java execution, no manual compositor/original profile/process credit and full_statistics_complete false. These default hosted tests do not certify the separate bound/instrumented causal cohorts."
+  ],
+  "pending_actual_binding": {
+    "source_commit_json_exists_at_review": false,
+    "detail": "Native build/persistent-peer-accounting-20261021/source-commit.json has not yet been produced. Future execution must supply actual source_commit and85-name unit_test_sets.gcc. This review verifies the required access/gates source-only, not an absent producer receipt or future GitHub outcomes."
+  },
+  "blockers": [],
+  "actions_performed": {
+    "helper_import_or_execution": false,
+    "network_or_tests": false,
+    "builds": false,
+    "git_mutation": false,
+    "old_evidence_write": false,
+    "only_new_review_file_written": true
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "schema": 1,
+  "status": "BLOCKED-source-only-first-freeze-review",
+  "reviewer": "error_driver",
+  "source_capsule": "build/statistics-engine-20261018/ui/after",
+  "source_sha256": {
+    "ui/engine_statistics_presentation.hpp": "de33972337f92eda398df794bbc9b6447cfc4fd4f933ab5b17e6746e6609bd30",
+    "ui/statistics_page.hpp": "c43190406354f1f24708a1e5407525c6879a1c6680a15d5b1bf3e71fe72daf2e",
+    "ui/statistics_page.cpp": "7d23ef810257466b0b28666d61c2e8958e83c7d05821ebbcc66daddcbdcab7ad",
+    "tests/statistics_page_tests.cpp": "8f1a9cf95211a06c0d4a67dff99f471df1de3db74750fdfee4d075a6e7cbb6b5"
+  },
+  "confirmed_blocker": {
+    "id": "SB-UI-1",
+    "file": "ui/statistics_page.cpp",
+    "method": "setEngineStatistics",
+    "trigger": "Existing op1 measured sample followed directly by accepted higher op2 Ended/no-sample",
+    "effect": "Unconditional terminal normalization copies oldop1 engine_->sample intoop2, contradicting no-observation/new-run scope",
+    "required_fix": "Retain omittedterminalsample onlysame session/operation/target; higheroperation withoutsample clearscounterdetail. Existing engineTerminalMayRepeatLastSampleOrHaveNoObservation already catches directcase; keep itsassertions. Rootauthorizedadditive regressionandversionedfix."
+  },
+  "accepted_refinement": {
+    "id": "SB-UI-2",
+    "file": "ui/engine_statistics_presentation.hpp",
+    "trigger": "Same-operation Ended sample with equalelapsed butdifferentcounters/rates",
+    "required_fix": "When elapsed equals prior sample, terminal sample must exactlyequal prior sample. Greaterelapsed is allowed for coalescedactualobservations. Rootaccepted sourcehardening; finalversionreviewpending."
+  },
+  "other_source_checks": "No additional blockerfound after readingcomplete Page/DTO/helper and54newplannedexpandedrows. Finalpassrecord awaits versionedcorrections andsourcehashes.",
+  "execution": {
+    "compiler": 0,
+    "Qt_or_native_tests": 0,
+    "Git": 0,
+    "Java_profile_network": 0
+  },
+  "source_edits": false
+}

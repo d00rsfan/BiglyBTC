@@ -1,0 +1,262 @@
+{
+  "compiler": "asan",
+  "compiler_identity": "Ubuntu clang version 24.0.0 (++20260911085248+58c46bae2118-1~exp1~20260911085258.254)\nTarget: x86_64-pc-linux-gnu\nThread model: posix\nInstalledDir: /usr/lib/llvm-24/bin\n",
+  "work": "/tmp/biglybtc-plugin-qualified-asan",
+  "commands": [
+    {
+      "command": [
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBT/native/plugin-sdk",
+        "-B",
+        "/tmp/biglybtc-plugin-qualified-asan/sdk",
+        "-G",
+        "Ninja",
+        "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+        "-DCMAKE_C_COMPILER=/usr/lib/llvm-24/bin/clang",
+        "-DCMAKE_BUILD_TYPE=Debug",
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        "-DCMAKE_C_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined",
+        "-DCMAKE_MODULE_LINKER_FLAGS=-fsanitize=address,undefined",
+        "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer",
+        "-DCMAKE_INSTALL_PREFIX=/tmp/biglybtc-plugin-qualified-asan/install"
+      ],
+      "exit": 0,
+      "log": "migration/evidence/P02-05-plugins/asan-sdk-configure.txt",
+      "sha256": "42a59bc36b0eebc087b55697f69073315cd2a46c63848bcd2108d0708acb799f"
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/tmp/biglybtc-plugin-qualified-asan/sdk",
+        "-j2"
+      ],
+      "exit": 0,
+      "log": "migration/evidence/P02-05-plugins/asan-sdk-build.txt",
+      "sha256": "5d7b7a57ab7d385585f0eb2b5ec57026de158ce4fb1315b74f85a8941f4caf8a"
+    },
+    {
+      "command": [
+        "ctest",
+        "--test-dir",
+        "/tmp/biglybtc-plugin-qualified-asan/sdk",
+        "--output-on-failure"
+      ],
+      "exit": 0,
+      "log": "migration/evidence/P02-05-plugins/asan-sdk-test.txt",
+      "sha256": "eebb36118edc6f385e227bfdbc623812b6244338a65e1f2f0eec236198aca7f3"
+    },
+    {
+      "command": [
+        "cmake",
+        "--install",
+        "/tmp/biglybtc-plugin-qualified-asan/sdk"
+      ],
+      "exit": 0,
+      "log": "migration/evidence/P02-05-plugins/asan-sdk-install.txt",
+      "sha256": "478c52d6691a5dfe5077c47bbc28ec5d23a41363dd59252651539c06d446bb8e"
+    },
+    {
+      "command": [
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-azlocprov",
+        "-B",
+        "/tmp/biglybtc-plugin-qualified-asan/location",
+        "-G",
+        "Ninja",
+        "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+        "-DCMAKE_C_COMPILER=/usr/lib/llvm-24/bin/clang",
+        "-DCMAKE_BUILD_TYPE=Debug",
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        "-DCMAKE_C_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined",
+        "-DCMAKE_MODULE_LINKER_FLAGS=-fsanitize=address,undefined",
+        "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer",
+        "-DCMAKE_PREFIX_PATH=/tmp/biglybtc-plugin-qualified-asan/install;/tmp/biglybtc-plugin-deps/sysroot/usr;/opt/Qt/6.12.0/gcc_64",
+        "-DLibArchive_LIBRARY=/tmp/biglybtc-plugin-deps/sysroot/usr/lib/x86_64-linux-gnu/libarchive.so.13",
+        "-DBIGLYBTC_PLUGIN_UPDATE_FIXTURES=ON",
+        "-DBIGLYBTC_MMDB_FIXTURE=/tmp/biglybtc-plugin-deps/fixtures/GeoIP2-Country-Test.mmdb"
+      ],
+      "exit": 0,
+      "log": "migration/evidence/P02-05-plugins/asan-location-configure.txt",
+      "sha256": "38699608e0d8bba5dadb677bb408be226fb0b8172ff07b1e441c291f8d7751d7"
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/tmp/biglybtc-plugin-qualified-asan/location",
+        "-j2"
+      ],
+      "exit": 0,
+      "log": "migration/evidence/P02-05-plugins/asan-location-build.txt",
+      "sha256": "b95d9d603861ff74187b5296f68c4a514e8332eb7fad33e662c97bbdad2ebb77"
+    },
+    {
+      "command": [
+        "ctest",
+        "--test-dir",
+        "/tmp/biglybtc-plugin-qualified-asan/location",
+        "--output-on-failure"
+      ],
+      "exit": 0,
+      "log": "migration/evidence/P02-05-plugins/asan-location-test.txt",
+      "sha256": "0a4f5b1c9ccd5aba238e00d7cf53b48b72efeef616d37e7338763b8bc4203732"
+    },
+    {
+      "command": [
+        "cmake",
+        "-S",
+        "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-SpeedScheduler",
+        "-B",
+        "/tmp/biglybtc-plugin-qualified-asan/scheduler",
+        "-G",
+        "Ninja",
+        "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+        "-DCMAKE_C_COMPILER=/usr/lib/llvm-24/bin/clang",
+        "-DCMAKE_BUILD_TYPE=Debug",
+        "-DCMAKE_EXPORT_COMPILE_COMMANDS=ON",
+        "-DCMAKE_C_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer",
+        "-DCMAKE_EXE_LINKER_FLAGS=-fsanitize=address,undefined",
+        "-DCMAKE_MODULE_LINKER_FLAGS=-fsanitize=address,undefined",
+        "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer",
+        "-DCMAKE_PREFIX_PATH=/tmp/biglybtc-plugin-qualified-asan/install;/tmp/biglybtc-plugin-deps/sysroot/usr;/opt/Qt/6.12.0/gcc_64",
+        "-DLibArchive_LIBRARY=/tmp/biglybtc-plugin-deps/sysroot/usr/lib/x86_64-linux-gnu/libarchive.so.13",
+        "-DBIGLYBTC_PLUGIN_UPDATE_FIXTURES=ON",
+        "-DBIGLYBTC_MMDB_FIXTURE=/tmp/biglybtc-plugin-deps/fixtures/GeoIP2-Country-Test.mmdb"
+      ],
+      "exit": 0,
+      "log": "migration/evidence/P02-05-plugins/asan-scheduler-configure.txt",
+      "sha256": "74a9c53574c8a59d087b1455af3329bbfb14b57244aaa0f6d14d05ff57e02585"
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "cmake",
+        "--build",
+        "/tmp/biglybtc-plugin-qualified-asan/scheduler",
+        "-j2"
+      ],
+      "exit": 0,
+      "log": "migration/evidence/P02-05-plugins/asan-scheduler-build.txt",
+      "sha256": "0cf765f6e21b6071ffe877cc62145bbc6ab9731e90df6d457609d8ad93cbb315"
+    },
+    {
+      "command": [
+        "ctest",
+        "--test-dir",
+        "/tmp/biglybtc-plugin-qualified-asan/scheduler",
+        "--output-on-failure"
+      ],
+      "exit": 0,
+      "log": "migration/evidence/P02-05-plugins/asan-scheduler-test.txt",
+      "sha256": "d32f8d78f598040f5347eed9ee6346656875eccf343f4a52b708687da9fd7bc0"
+    },
+    {
+      "command": [
+        "nice",
+        "-n",
+        "5",
+        "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+        "-J-XX:ActiveProcessorCount=2",
+        "--release",
+        "8",
+        "-cp",
+        "/tmp/biglybtc-oracle/classes",
+        "-d",
+        "/tmp/biglybtc-plugin-qualified-asan/java-helpers",
+        "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java",
+        "/home/yurii/Java/BiglyBT/migration/fixtures/java/NativePluginLayoutOracle.java"
+      ],
+      "exit": 0,
+      "log": "migration/evidence/P02-05-plugins/asan-java-helpers.txt",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "command": [
+        "/usr/bin/python3",
+        "/home/yurii/Java/BiglyBT/native/plugin-sdk/tests/store_test.py",
+        "/tmp/biglybtc-plugin-qualified-asan/location/location-driver",
+        "/tmp/biglybtc-plugin-qualified-asan/location/BiglyBTC-plugin-azlocprov.so",
+        "/tmp/biglybtc-plugin-deps/fixtures/GeoIP2-Country-Test.mmdb"
+      ],
+      "exit": 0,
+      "log": "migration/evidence/P02-05-plugins/asan-signed-store.txt",
+      "sha256": "76d866241c0a7eb1186d7706decc5ec387c92f21caf54769ed487c2d24d7a861"
+    }
+  ],
+  "source_sha256": {
+    "native/plugin-sdk/.gitignore": "862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793",
+    "native/plugin-sdk/CMakeLists.txt": "33616c6a6f7f5757015f30adc9ad15f1163e70f8283d8103dc4e3d982819b426",
+    "native/plugin-sdk/LICENSE": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73",
+    "native/plugin-sdk/README.md": "373b1ba28bc2342d4a871ae069ccdecc4860f68e14567656d52814021ddf3e56",
+    "native/plugin-sdk/include/biglybtc/plugin.h": "119da17cfe1147e786d19bc84401a7e2f9a6d71ee256f6a6307efe8ba0d7b552",
+    "native/plugin-sdk/include/biglybtc/plugin_host.hpp": "f4fc41a44b1b9f10106fb66b7efecb517d66c0a9e7b5ab8e1579236d7daace99",
+    "native/plugin-sdk/include/biglybtc/scheduler.h": "54675a9fffa63923111c037cf5b4711d548a614e4e0760edb1c3bf990f97fc46",
+    "native/plugin-sdk/src/host.cpp": "ee5c7a9904c70edaf9dac47223cbd31ab8ee6d25683643d2486a97ab9289d0e3",
+    "native/plugin-sdk/tests/abi.c": "54aa3646f34b0f076d8af9bbc70113450d6b16daf743c942ed84bbd206e50885",
+    "native/plugin-sdk/tests/host.cpp": "9bdfdbcdd7f85fe0822e1ddedd6e2ab6c3b2e7afa13bb5cd8d9c06edd3f84a10",
+    "native/plugin-sdk/tests/module.c": "87ce79175d258b27cb019a337666593c9b69b278a3ef7952700d371c17e2d25b",
+    "native/plugin-sdk/tests/store_test.py": "41ce00e21834d40fef4565f0065ca8953cf9491687726145e3dc4ea2556149f8",
+    "native/plugin-sdk/tools/plugin_store.py": "a9a4ae4ad0ce89f4c8c9d91fda226d0413e32d834046f3b0b7c0c838cf1ed78a",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/CMakeLists.txt": "140c34e1d9dd64cff1a6de55a87b3f863144c10e7aee70be44106388e348e7d4",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/README.md": "0de1dbc2400bf185800440e4ac3a269fd7828734273e787e918d17a857818bff",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/fixture_test.py": "6c24d149d2338a68bba52298a7f5c8d9caec2ed88a058adc76df1b952fb5cb0b",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/module.cpp": "59f81f65f88088758bfc554e81904f0c265e11491897d221b5550130d2de5da4",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/module_driver.cpp": "554528d69b558712809f8ec709565c6caefb9bcfacc165de512d240be4540c0c",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/module_fixture_test.py": "d1c49f56fd0cc026c766a90baa535871e6511c2599af9ba0247654b3a04bee7b",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/original_xml.cpp": "04a210b1f3e91b7458a0afa20057efd37e4b2b36d9dc5560e8d931e0b2231817",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_file.cpp": "2016f51cc3c7fdd4977898b27f42de24ccd4b00d9b1e4965e6c701ce8f68f3ae",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_file.hpp": "20ad7b0962cb9339b629ce9d8e3582cb848e7fe52f5f434a6306455f0c7be051",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_fixture_test.py": "4ebf24447dde113652f6a1dd48030454b673af368a2c0979441dee8a2bb5843e",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_tests.cpp": "62e9d424d668117f539a78146a2b850ca410eeef80fb0d1cf7cff1a008d6567d",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/scheduler.cpp": "7b6a707e66d77674665e5d213ac3acc5d81e763af3f0bdedf37dc90bf3e6869d",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/scheduler.hpp": "96f8bc6ecd338c21a5293a6476bf857a33228eab96904f97da4428352d97d170",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/tests.cpp": "2616f72edc5da5e2779829f49396063d8e13834e21161156573a52747ea4acc1",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/tick_fixture_test.py": "a50c29f37e765a4c18e0fa370fdaa4b5d082cf241583c6c02d1b0236f7a30bb8",
+    "native/plugins/BiglyBTC-plugin-azlocprov/CMakeLists.txt": "f1d0d7b40f32d9d92854faf9df5783467a94c77cf94094bc7d145a105f4db78b",
+    "native/plugins/BiglyBTC-plugin-azlocprov/LICENSE": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73",
+    "native/plugins/BiglyBTC-plugin-azlocprov/README.md": "926107b6f94a09d1015be25a8ecfd69768c7ce66acb0c98af91c05583bfb5511",
+    "native/plugins/BiglyBTC-plugin-azlocprov/location.cpp": "d5d1cb15640d85a847ced90206a8ef2c296baa10833591c2c40efe581f6d391f",
+    "native/plugins/BiglyBTC-plugin-azlocprov/tests/compatibility.py": "37cb327d1bec33d0fd05fb1cfe2e7a31d612f504bc9492929a2c7a22e4ed5bae",
+    "native/plugins/BiglyBTC-plugin-azlocprov/tests/driver.cpp": "2bc3fc76f3137abe806aa10123a5592e21656f9cc534f9494301b945bbd43a04",
+    "native/plugins/BiglyBTC-plugin-azlocprov/tests/fetch_fixture.py": "e1992d43ff9623ccd07469738b7f9d807eef398368386b3a84445470e6b1df99"
+  },
+  "binary_sha256": {
+    "/tmp/biglybtc-plugin-qualified-asan/location/BiglyBTC-plugin-azlocprov.so": "e3a160412ebf5e9577d2ee9ec1a77dcf0e0a0044a8a6125badce650e35f99672",
+    "/tmp/biglybtc-plugin-qualified-asan/location/location-driver": "e5ef418c613f54ebfd9acd8665eb2ea5dc8562232be7fb3dc0ec7775cf4b65fa",
+    "/tmp/biglybtc-plugin-qualified-asan/location/location-update-2.so": "f5190f45a8d931013c55da9b8622244c39c720659ac5fecdaefb6f58d25a038a",
+    "/tmp/biglybtc-plugin-qualified-asan/location/location-update-3.so": "4793025c585edff6896fefce703ed7aaa0cf853d2446124f1c2f94c23631514a",
+    "/tmp/biglybtc-plugin-qualified-asan/location/location-update-4.so": "11ca7518aaba59a0a2035900b3b6bae5d02afa6c1df61025ee0014787857a369",
+    "/tmp/biglybtc-plugin-qualified-asan/location/location-update-5.so": "e1cfa6f85bcefce945824db0c1f07cb739a27d8333f39b2e57821c1df0629940",
+    "/tmp/biglybtc-plugin-qualified-asan/location/location-update-6.so": "31b7797a3274cb12b131e8eeac70cf0964359ff5df72ac5b53341a36b838e464",
+    "/tmp/biglybtc-plugin-qualified-asan/scheduler/BiglyBTC-plugin-SpeedScheduler.so": "07f67f3e9d409527f2dfbccfc7d6da249fc2f4dd11eaed004983f13d404385fd",
+    "/tmp/biglybtc-plugin-qualified-asan/scheduler/libbiglybtc_scheduler_policy.a": "461839232a1ebb40db8c4a8693540200918a5af186e309ea0c0f2d34fdce46ab",
+    "/tmp/biglybtc-plugin-qualified-asan/scheduler/ownership-tests": "e2dc906dce6ecc9393f426adc25ac5d3f93b6d202afd5ee610feb83210da2887",
+    "/tmp/biglybtc-plugin-qualified-asan/scheduler/scheduler-module-driver": "95480b96cee769672c25ffc56bc4796aaddcac6fdaad86e1d09aad33d778bf94",
+    "/tmp/biglybtc-plugin-qualified-asan/scheduler/scheduler-tests": "04b1307d058beda44037885dd9c60a7862afe10afec5979d22c0cc4f8cc5e6e2",
+    "/tmp/biglybtc-plugin-qualified-asan/sdk/biglybtc-abi-c": "c350ea040e477f7052834004edc5ab486efcbde81d6bd99e2d376d1a36235802",
+    "/tmp/biglybtc-plugin-qualified-asan/sdk/biglybtc-plugin-host-tests": "7cc83d184fe2282aeac0c736b7a0d5af6d2cc003b5930930f9dd61cef4b15cf2",
+    "/tmp/biglybtc-plugin-qualified-asan/sdk/libbiglybtc_plugin_host.a": "6a2b6bd197f48bf8eaaaa022f68f420046968c2c24d242fa52a975f66c1c7fd1",
+    "/tmp/biglybtc-plugin-qualified-asan/sdk/libsdk-fixture-0.so": "37609c8106d2a396f012b7a8feb8688e18398fa38c0ae36c85cc0a626db9770d",
+    "/tmp/biglybtc-plugin-qualified-asan/sdk/libsdk-fixture-1.so": "90fc74f33abe96ded8f2d506b0d453be1a29b5dbd011e5ce1f02ca850d445df3",
+    "/tmp/biglybtc-plugin-qualified-asan/sdk/libsdk-fixture-2.so": "cce35b2c27c13c54a1cbe5175a67af802f352e8c15fb4ca4ed2dc81536509c9d",
+    "/tmp/biglybtc-plugin-qualified-asan/sdk/libsdk-fixture-3.so": "dc46a410d57d76452727d4e09ddd1e7db1b8db3d847a687d1b9168679767fcb3",
+    "/tmp/biglybtc-plugin-qualified-asan/sdk/libsdk-fixture-4.so": "8566259ec4d84575453f49e7907fcd8d3a5fa2c4b575635525070c7f2a058c69",
+    "/tmp/biglybtc-plugin-qualified-asan/sdk/libsdk-fixture-5.so": "9aeb89c43f228eebcc952b5b2e5e39b9c9eb17b67a646c7be8fe2f056e60f316",
+    "/tmp/biglybtc-plugin-qualified-asan/sdk/libsdk-fixture-6.so": "d763b141cbcacd674c83c7e739a66ec3c9239b38e3599f19b88acb08b4420638"
+  },
+  "java_core_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+  "scope": "SDK lifecycle + location files + scheduler policy/module fixtures + offline signed store; no live profile, public peers or production release"
+}

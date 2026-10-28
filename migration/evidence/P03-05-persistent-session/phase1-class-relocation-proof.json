@@ -1,0 +1,29 @@
+{
+  "status": "passed",
+  "old_reference": "/tmp/biglybtc-export-pause-oracle-2hegvyon/reference.json",
+  "new_reference": "/tmp/biglybtc-export-pause-oracle-bt1r4msd/reference.json",
+  "new_reference_sha256": "fdd5844c5bb271657b34083d68b0bf48a62c04020c3657bdbea4d8f949ed5946",
+  "all_17_helper_classes_unchanged": {
+    "ExportPauseOracle$Base32.class": "f4f0b5c3df096f3d1eec20b0a3bc9c9faf3ac73693df4de1be5e7185b04243d7",
+    "ExportPauseOracle$ByteArrayWrapper.class": "cb4b81833b69f4ea3a45e6a4a8d6de04e47b25bc58fe02fcbce7f3636a043793",
+    "ExportPauseOracle$Debug.class": "97a3dea47d96a1a484f762ee7dbade50460f7a907ed4e634cd5193168e1d69e2",
+    "ExportPauseOracle$DiskManager.class": "9e4c635afff4a4d1951382e722110c5cbb8e18fc3b41535316d411e04b824c32",
+    "ExportPauseOracle$DownloadManager.class": "9a370802601105fc144a1a900f1768b2c2dd47b8f07e51f204a46c6f902f7c8d",
+    "ExportPauseOracle$DownloadManagerStats.class": "d8712a8c752ece04455f013ac37aa0a2bb21bfc7f0e586f4a247b7b6341a07fe",
+    "ExportPauseOracle$Fault.class": "9597fe046c0af66287ebedf2500deda2d4e55ed12fba2b097fcb10533b3ecf54",
+    "ExportPauseOracle$GlobalManagerImpl$PauseState.class": "92f4e002ec70017c43b9192b2db343636a0afd5cd3c43150ec550b073e327fe4",
+    "ExportPauseOracle$GlobalManagerImpl.class": "cea963db27ec8b92b277f325435469703217dfcdebc2c8bfaa0fc113749cecf1",
+    "ExportPauseOracle$HashWrapper.class": "6a23036429433f4fd5e88b5c4c40696a5a43f8615f152a64dffbd7755a0acb48",
+    "ExportPauseOracle$Monitor.class": "1161770c61bc5b46fa2f8a84e1336d5bfe7898b4b1f79604defaaba165baec26",
+    "ExportPauseOracle$PauseContract.class": "1005621d9adf2d7e6683658d11163357800facc8e87e47dd052bdb808fb24b2f",
+    "ExportPauseOracle$TOTorrent.class": "3728907f0bcedada23f8c05e9e1c17b07b2a71d2a4f53fde527e3d1bc519de46",
+    "ExportPauseOracle$TOTorrentException.class": "4c0d9aee019d628e1f8c3396855ccf9d33e1b32c6b790679ebb254094742be6a",
+    "ExportPauseOracle$Tagger.class": "cc500ef1812cfcbdb7363828bc4c8f4a8de674ba99211caa74058ecda393d4e5",
+    "ExportPauseOracle.class": "f421d01fb215ae11326132e077b9f2a79a3fe856f6083722123386455863e204",
+    "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd"
+  },
+  "harness_sha256": "8c75ae7e74580221619348d23a7bb867faf1782ab51fb1207124d7b98fe61f3a",
+  "source_manifest_unchanged_sha256": "6e60e51825488fce6e5717e90a4414c7eec908e383665be7a5f8dd5b0ce72b33",
+  "persistent_work": "/home/yurii/Java/BiglyBT/build/recovery/generated-references/biglybtc-export-pause-oracle-bt1r4msd",
+  "source_freeze_repeated": false
+}

@@ -1,0 +1,37 @@
+{
+  "recorded_utc": "2026-10-18T08:12:21.954987+00:00",
+  "scope": "Classic My Torrents label/menu/shortcut navigation; broader classic and service integration unfinished",
+  "upstream_repository": "https://github.com/BiglySoftware/BiglyBT",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_repository": "https://github.com/d00rsfan/BiglyBTC",
+  "native_commit": "9abef333ab0a4178bc68e098a038d04514a37ddc",
+  "pushed": true,
+  "local_units": {
+    "passed": 24,
+    "failed": 0
+  },
+  "navigation_qt_rows": {
+    "passed": 13,
+    "failed": 0,
+    "skipped": 0
+  },
+  "preview_smoke_qt_rows": {
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0
+  },
+  "source_review": "native-navigation-review.json",
+  "hosted_preview_run": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39110452616",
+  "hosted_preview_result": "success",
+  "hosted_sdk_run": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39110452580",
+  "hosted_sdk_result": "success",
+  "dist": "/home/yurii/Java/BiglyBTC/dist",
+  "existing_native_preview_left_running": true,
+  "runtime_files_byte_identical_verified": 82,
+  "original_java_client_profile_untouched": true,
+  "remaining": [
+    "My Tracker/My Shares services unavailable",
+    "Full classic settings/navigation/localization parity",
+    "Original-profile switching and performance qualification"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "native_parent": "3635fe01fa0212e075af5c956740e499303980b9",
+  "private_parent": "0666c1846d86367c2ec7eb0c119382e85d79148b",
+  "previous_source_commit": "ab0ff75d81300d8d3f9e930a9bf55491c1801400",
+  "previous_tag": "milestone-history-copy-20261020",
+  "previous_dist_manifest_sha256": "b3a56ffc8d4dd98ee24b1e4d121b61348893cc701572dcfe4b19c2df5cdaa854",
+  "scope": "P04-26 first of two: fixed30 independent saved UTC daily records; read-only backend"
+}

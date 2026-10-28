@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "repository": "https://github.com/d00rsfan/BiglyBTC",
+  "source_commit": "a84e4ecc6f78112c115c182aefc13bc4a1f3ac17",
+  "metadata_commit": "9d6023fca3b322dfbe5d92d1666b7f2120cd7752",
+  "tag": "milestone-engine-activity-20261019",
+  "tag_object": "d8cb999967f10ac1d5f298b5cc5c0ec37a7c5ed9",
+  "tag_target": "9d6023fca3b322dfbe5d92d1666b7f2120cd7752",
+  "remote_identity_verified": true,
+  "source_files_verified": 17,
+  "qualification": "local-verification.json and hosted-verification.json",
+  "dist_manifest_sha256": "9a1c4df480a92fc177d3561bebe70ffb277f1dba2061ae256b09a04190b07544",
+  "original_processes_signaled": false,
+  "original_profile_access": false
+}

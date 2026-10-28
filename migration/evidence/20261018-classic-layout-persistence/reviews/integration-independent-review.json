@@ -1,0 +1,58 @@
+{
+  "status": "PASS-source-only-no-blocking-finding",
+  "reviewer": "error_oracle; independent of Window/integration-test author; author of separately reviewed ClassicColumns methods",
+  "source_sha256": {
+    "tests/classic_preferences_integration_tests.cpp": "a8d4cf24dea6a07ac02697db32cb5bf9d3de293bb58eb3868eb599b86993d53b",
+    "ui/library_window.cpp": "10f6f967e3975994c4173c1dc707b127fed3ce26627ccf475db13ec7a4330bce",
+    "ui/library_window.hpp": "ea8ba25020774136ccf8e6edfcc306fffb54f8f399b26a536a8e36278c397ecf",
+    "ui/column_layout_presentation.hpp": "7dd6edd9a8584525e3dab2dab9ed1fe44727e2d0600e356d06a7e1cc5286aa81"
+  },
+  "scope": [
+    "complete new generated-profile integration test file",
+    "Window native-preference admission and save-capture/ack lifecycle",
+    "existing selection/details/update and busy queue interactions"
+  ],
+  "planned_rows": {
+    "named_behavior_methods": 9,
+    "data_expanded_behavior_rows": 9,
+    "qt_rows_with_init_cleanup": 11
+  },
+  "test_methods": [
+    "initTestCase",
+    "realSaveReloadAndRestartPreserveOriginalRecords",
+    "allThirteenStableIdsSurviveRealSaveAndRestartInBothPanes",
+    "changedPrimaryRejectsWriteWithoutRefreshingLibrary",
+    "unknownPrivateVersionDoesNotBlockLibraryOpenOrPermitSave",
+    "rejectedSaveDoesNotLatchAndCaptureIsImmutable",
+    "missingOrStaleAckCannotConsumeCurrentSave",
+    "directWorkerRequiresReadBaselineAndDeliversBeforeBusyRelease",
+    "reloadRequestedWhileSaveRunsWaitsForActualSaveResult",
+    "deletingWindowInsideSaveRequestIsSafe"
+  ],
+  "review_findings": [
+    {
+      "id": "CP-I1",
+      "severity": "coverage-gap-closed-before-execution",
+      "historical_test_sha256": "6e775af8873b30308f72e27b0495bbe1ae31cbf7ca5ca19929f23e8bf4e6f244",
+      "finding": "Initial real restart row covered representative fields rather than the complete13-ID native catalogue.",
+      "resolution": "New allThirteenStableIdsSurviveRealSaveAndRestartInBothPanes declares distinct two-pane visibility/width/order/sort facts, compares immutable actual submission and stored private DTO, then fresh Window+Bridge restart recaptures both complete pane DTOs including Name width absence and Stretch mode."
+    }
+  ],
+  "checks": {
+    "fixture_isolation": "Only fresh QTemporaryDir private profiles with generated downloads.config/tables.config; no user/profile discovery or live Java startup. Fixture binary values and unknown plugin/root records are in memory literals.",
+    "original_preservation": "Real save/reload/restart row independently compares original opaque, Table.MyTorrents and Table.UnknownPlugin value encodings; first .bak equals original; second .bak equals previous committed bytes; Reset and restart do not rewrite tables.config. Core byte/order tests separately cover all untouched root slices.",
+    "native_capture_and_commit": "Actual Save action captures immutable pane DTO before newer local edit; actual Bridge result and reparse verify older capture committed, newer width retained locally with truthful unsaved indication. Reload reads actual committed capture; later Save reuses updated baseline.",
+    "identity_and_no_fake_refresh": "Session/request checks, stale/missing ack and rejected dispatch cases; actual worker refuses missing read baseline; result emitted while busy, refuses reentrant write/refresh and remains truthful if cancel called from result slot. Snapshot count remains1 across layout and save commands.",
+    "window_admission": "Native preferences validated before use; source/snapshot ownership required; existing per-pane revision and stillCurrent checks retained; updating_ surrounds apply to suppress hidden detail requests; no selection/filter/pane model mutation in new branch.",
+    "window_acks": "Acknowledgment never reapplies the submitted layout, uses captured revisions only to label current or newer unsaved edits; a failed/missing result disables Save until reload, pending reload waits for actual save result; close/deletion guards retain known signal boundary behavior.",
+    "other_finite_cases": "External primary edit refusal leaves external bytes/bak absence/UI widths, unknown future private namespace does not block library open and never permits Save, deleting Window directly from save-request signal is guarded."
+  },
+  "limitations": [
+    "Static source review only; no build/compiler/preprocessor/native/Qt/Java/process/profile execution by reviewer.",
+    "11Qt rows are source-planned, not an execution result. Root owns actual command logs/results.",
+    "No claim that all original Java table layout choices are shared with native; native preference namespace is separate.",
+    "No global OOM, arbitrary custom-model callback, filesystem durability or full-client parity guarantee.",
+    "Pure controller and storage/Bridge tests have separate authors/reviews and are not substituted by this integration review."
+  ],
+  "subject_files_changed_by_review": false
+}

@@ -1,0 +1,71 @@
+{
+  "schema": 1,
+  "milestone": "P04-17",
+  "verdict": "PASS source-only correction review; completed root execution remains separate",
+  "prior_review": "page-view.json",
+  "prior_review_sha256": "7d80d90e467709b778e4691f86a0385c042ee28596ce252dcaf690c6f6e3c2af",
+  "prior_record_correction": "page-view-record-correction.json",
+  "prior_record_correction_sha256": "18a21541d41db4221a3218d8d2262f332bf173af9da74ebc3d63dd011b1c4fb8",
+  "revision3_capsule": "build/engine-activity-20261018/view/revision-3/source-freeze.json",
+  "revision3_capsule_sha256": "5601451d11f2b079521be5c0a7b7ffaba7bd4f3cf76c65d415abd47146182fde",
+  "source_sha256": {
+    "preview/native/ui/engine_activity_view.hpp": "58d5007738e2a38d644eabb75eac48e5dbdd1037afff5ab693f075d82bc8977d",
+    "preview/native/ui/engine_activity_view.cpp": "a5487c5daf13a0aed1b480411c438ded2af1c0657571dbf619da46686b18dcca",
+    "preview/native/ui/statistics_page.hpp": "4ce83c66cc462a56ac80784b3a5a8657eace3e4a213b54edfa49f234910b5b25",
+    "preview/native/ui/statistics_page.cpp": "0e5fd0a5b7fa600d498ebcc1803affd0e080d3c6504990a2023a9071b49b57e9",
+    "preview/native/tests/engine_activity_view_tests.cpp": "dc90da49ded058abaf1c7e24d8ac16fdcfdf0f6c04051b52f070008d82591e61"
+  },
+  "root_diagnostics_sha256": {
+    "render-diagnostic-view.txt": "468350eb7b1b98708e8b78a46c8f269112effe9d5ea7a3f93b0b61aed998569d",
+    "render-diagnostic-page.txt": "5edf2285de466a1bad1315869e99cda3e39774b2193d68856c83cbc606d438d9",
+    "render-diagnostic-build.log": "0cab0808ada30b3811d324ff0d5ec1f095514c1161b794f61b744ca7a27a2949"
+  },
+  "root_diagnostics_scope": "Read retained root-created diagnostic logs/receipts only; reviewer ran no subject. Old minimized method3rows passed after revision2; original raster diagnostic still failed received green at0 while blue718. Uniform2px revision qualification not inferred from those prior logs.",
+  "changes_reviewed": [
+    "Legacy Page show/window-state path sets actual payload plot updatesEnabled false on minimize and true on restore/show, with QPointer lifetime checks before subsequent work. Pure ring append and all old92-row tests remain unchanged; no rate/observation data, old assertions, deadline or behavior threshold is relaxed.",
+    "Uniform2px series pens retain exact3colors, solid/dashed/dotted styles, integer-first coordinates and run segmentation; change improves actual trace coverage instead of reducing the raster test threshold. Initial1.7px explanation remains source-supported, not a separately proven causal experiment.",
+    "Display-only adaptive elapsed formatter chooses ns/<1000, microseconds/<1e6, ms/<1e9, otherwise seconds. Divisors1000..1e9 bound remainder*1000+divisor/2 below1.001e12; whole increment cannot approach INT64_MAX. Rounding3digits and trimming trailing zeros change labels only, not elapsed geometry or rate history.",
+    "Exact raw plotted first/last/span nanoseconds remain in chart tooltip; span arithmetic stays nonnegative and <=INT64_MAX. Visible repaintFrame constructs tooltip under retained immutable frame and checks Chart QPointer/frame after synchronous ToolTipChange before update. Outer View revision/lifetime checks still stop stale/deleted rendering.",
+    "New5-vector test independently covers2ns,1.5microseconds,226.979ms/3.806s,1.5s/4s and near-INT64_MAX exact range with rounded9223372036.855s. It checks exact raw tooltip first/last/span in both receive/send directions. This is one added behavior method, not five Qt rows.",
+    "All old View test method bodies except diagnostic-only raster method remain byte-exact; pixel-color classifier/tolerance/middle region unchanged. Raster >5 connected and0 disconnected criteria preserved; qInfo/QVERIFY2 only improve failure attribution. Whole old Page test SHA remains exact."
+  ],
+  "preservation": {
+    "old_view_method_bodies_byte_exact_except_diagnostic_raster": [
+      "initTestCase",
+      "nestedActivityPreservesPayloadDefaultAndExistingIdentities",
+      "firstCounterObservationNeverInventsRateOrPoint",
+      "sixExactLatestRatesUseOwnedComponentsAndPlainText",
+      "genuineZeroRatesAreKnownObservations",
+      "latestUnknownRateKeepsPriorPlotButNeverStaleRateLabels_data",
+      "latestUnknownRateKeepsPriorPlotButNeverStaleRateLabels",
+      "terminalRetainsActualPointsWithoutDuplicateOrSyntheticZero",
+      "newPreparingClearsPointsAndEarlierRunCannotReturn",
+      "higherProfileRebindsAndLowerProfileIsRejected",
+      "nullDuplicateAndOlderFrameCannotReplaceCurrent",
+      "factoryFramesOwnAllSixHundredPointsAfterHistoryDestruction",
+      "largeObservationTimesSubtractBeforeFloatingConversion",
+      "hiddenUpdatesOnlyOwnedCacheWithoutLabelMutationOrPaint",
+      "minimizedUpdatesWaitForActualRestore",
+      "hiddenClearDropsDataThenShowsAnEmptyGraph",
+      "reentrantNewOperationWinsEveryRemainingLabelAndChart",
+      "reentrantClearCannotBeOverwrittenByOldFrame",
+      "directDeletionDuringViewRenderIsGuarded",
+      "pageSavedRefreshKeepsFrameNewProfileClearsAndPayloadRemainsSeparate",
+      "pageOnlyForwardsTheExactAdmittedImmutablePacket",
+      "pageRenderReentryCannotForwardAFrameToAnotherProfile",
+      "pageDeletionDuringCounterAdmissionPreventsTrailingViewAccess"
+    ],
+    "new_behavior_method_names": [
+      "readableElapsedAxesKeepExactNanosecondTooltips"
+    ],
+    "planned_new_qt_rows": 26,
+    "old_page_qt_rows_preserved": 92,
+    "data_or_rate_algorithm_changed": false,
+    "prior_freezes_and_failures_preserved": true
+  },
+  "findings": [],
+  "limitations": [
+    "No subject/compiler/JVM/native/Qt test execution by reviewer. Actual final root raster/minimized/full focused/regression/hosted results must be tied to these revised pins.",
+    "Source-lifetime review covers parent-owned chart widgets and immutable factory frame contract; no general malicious QObject child deletion or global allocation-failure guarantee."
+  ]
+}

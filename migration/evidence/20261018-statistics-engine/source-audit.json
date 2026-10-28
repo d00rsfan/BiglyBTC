@@ -1,0 +1,284 @@
+{
+  "status": "SOURCE_ONLY_AUDIT_AND_SINGLE_MILESTONE_PROPOSAL",
+  "original_upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_source": {
+    "core/src/com/biglybt/core/global/GlobalManagerStats.java": {
+      "sha256": "e93c2aff9071ea0be53e61c2c78ff9534b23a1bd647a7a94b6a32f1bbb801558",
+      "bytes": 4322,
+      "git_blob_content_hash": "5edcc5dc9827f0f3a4cfc2787b0087a87d1029c2",
+      "matches_frozen_cb8_blob_proof": false,
+      "note": "Additional interface/average context read from original tree; content/blob hash supplied, no new Git command run."
+    },
+    "core/src/com/biglybt/core/global/impl/GlobalManagerStatsImpl.java": {
+      "sha256": "124c0cf19f7c99dc5a72b9d9f4bc99a0da942f0c3a7c2dc37cd1acd12e86c7c3",
+      "bytes": 37548,
+      "git_blob_content_hash": "a247b2ee87abdc97c8e1b980ada9be3e6c85e31f",
+      "matches_frozen_cb8_blob_proof": true
+    },
+    "core/src/com/biglybt/core/stats/transfer/GeneralStats.java": {
+      "sha256": "4c4cd0df178265c76ba4da78b3ca79f23d4f3bf2a2b663fe67f3647a1735bd8b",
+      "bytes": 2166,
+      "git_blob_content_hash": "4a4573d3bf6f7639a76c4cc12fe9567f491a2e38",
+      "matches_frozen_cb8_blob_proof": true
+    },
+    "core/src/com/biglybt/core/stats/transfer/impl/OverallStatsImpl.java": {
+      "sha256": "14a6ecbee076ac3fa991db8d618af9faab83e1b6b4ea52e1f71eb2b2d7ea240f",
+      "bytes": 15312,
+      "git_blob_content_hash": "ac2a37822729b721aed9367b77d88450b826ec45",
+      "matches_frozen_cb8_blob_proof": true
+    },
+    "core/src/com/biglybt/core/util/Average.java": {
+      "sha256": "490fc2ac31e6b740a9c4afe370f6efb73b8d5209e63d48e39d5a715cb7e02e75",
+      "bytes": 7422,
+      "git_blob_content_hash": "9ba2b07dbd0cf53adc04d416e66b8aace8b0afe3",
+      "matches_frozen_cb8_blob_proof": false,
+      "note": "Additional interface/average context read from original tree; content/blob hash supplied, no new Git command run."
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java": {
+      "sha256": "caf9b2db52ea7fc48248131f75d59466157a6578045c32bb9db0c3a4b763b648",
+      "bytes": 8385,
+      "git_blob_content_hash": "b02e0bbb331bdf6c517387ba999284af7fb53cf2",
+      "matches_frozen_cb8_blob_proof": true
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/ActivityView.java": {
+      "sha256": "5ed9705c122842319eea84339a783a498cc03fc338d9637ff4772887fd73fcd2",
+      "bytes": 7143,
+      "git_blob_content_hash": "805df9f17c887034129858a27517ed488a79e215",
+      "matches_frozen_cb8_blob_proof": true
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java": {
+      "sha256": "0c2b304c022013d0797732049c51deb23a7af976f74b0d47f22156d8da097103",
+      "bytes": 76096,
+      "git_blob_content_hash": "0cfe7a202d8ff27da9500435ea9bd659a1de6ba5",
+      "matches_frozen_cb8_blob_proof": true
+    }
+  },
+  "native_source_commit_from_completed_parent_milestone": "be9ad3d5f409947445b6c253b17430a9df0f6655",
+  "native_metadata_commit_from_parent": "e9eef6cbf633207ae4b44691147e5ece4f5b03be",
+  "native_working_source_sha256": {
+    "preview/native/engine/local_session.hpp": "3ac5e56321e5202a27cc542c0d8ca9daa6a8354d7a2c1b6293b7e3fdda3caa4b",
+    "preview/native/engine/local_session.cpp": "5a74426229f890480d7cb062d0a11aaaf74c51ced5d1ed713b758f0a9f5eef9d",
+    "preview/native/engine/multifile_session.cpp": "ab09eb93faf057e69068f5467e535d753b68887be0a82d7970532a11331bf57a",
+    "preview/native/engine/local_support.hpp": "c8e4bf6a1df817359ba6c27a76b3307025e90b404d67eacb0f9b21482e08b22b",
+    "preview/native/engine/CMakeLists.txt": "ee58a160b63acccdf5fc31139e8dce64e0c7c27115bec9bf9a406a7a0a593058",
+    "preview/native/app/session_bridge.hpp": "9c53a5a49420ff11037ac72496a5c7c9d83982dc10261fa510123e04a1a65175",
+    "preview/native/app/session_bridge.cpp": "4bbdb23e54096d170bb38189960044647fe702ca791ac331b256a4972ee314b4",
+    "preview/native/ui/library_model.hpp": "8abca399af00b5c2c96e760c85b6c1078e69274be8b68c6dc8de7ac877772d98",
+    "preview/native/ui/statistics_page.hpp": "49ccac1562b9c1d0fb2aef4ba46bed1b9b16094682a133041f43b483b74c0e04",
+    "preview/native/ui/statistics_page.cpp": "2eb00a7088a75f6a159ec3a9da68487db4199138180f38bc306c11c67d78f6cb",
+    "preview/native/ui/statistics_presentation.hpp": "57d027756285b3619187b4fe907cab8ce9624205043eef49e3dcb78ae0c09ef8"
+  },
+  "libtorrent": {
+    "version": "2.0.12; package2.0.12-1",
+    "recorded_upstream_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+    "commit_authority": "Existing migration/evidence/P01-02/gcc16-source-build.json and locked source dependency record; no new Git/tag/network query performed. Exact archive members, not inferred Git equivalence, are independently checked here.",
+    "embedded_version_revision": "078a3e722 (generated version.hpp marker, not substituted for full recorded source identity)",
+    "source_archive": {
+      "path": "/tmp/biglybtc-deps/libtorrent-rasterbar_2.0.12.orig.tar.xz",
+      "sha256": "fa0168f5c2b510105ce4e215f5863c80597112b99fc4f30514de2a6ea84da1b5",
+      "url": "https://archive.ubuntu.com/ubuntu/pool/universe/libt/libtorrent-rasterbar/libtorrent-rasterbar_2.0.12.orig.tar.xz"
+    },
+    "source_root": "/tmp/biglybtc-deps/libtorrent-2.0.12-release/libtorrent-2.0.12",
+    "source": {
+      "include/libtorrent/version.hpp": {
+        "sha256": "78facdac8e2d843d1c7aaf3ea39c3f6fd9c8af8c00934a4ec14f928b0c5a0c81",
+        "bytes": 2687,
+        "matches_exact_archive_member": true
+      },
+      "include/libtorrent/session_stats.hpp": {
+        "sha256": "50f24276b7ba33ecbd09613a168a2d1646ad5b8fe580fd4e91f3636c7d767ef1",
+        "bytes": 3114,
+        "matches_exact_archive_member": true
+      },
+      "include/libtorrent/performance_counters.hpp": {
+        "sha256": "41a1b2f2678ad605ee0022c298bece06095be6a991457b026545eac9f9005af2",
+        "bytes": 13638,
+        "matches_exact_archive_member": true
+      },
+      "include/libtorrent/session_handle.hpp": {
+        "sha256": "66055aa158d65f70972a2a19927d4cf7bc7e3ef223a69e3b825353a270757798",
+        "bytes": 48691,
+        "matches_exact_archive_member": true
+      },
+      "include/libtorrent/alert_types.hpp": {
+        "sha256": "15ce77c102b456465db6c119d15bbb6b74792ba684aa386669b3d6d748442897",
+        "bytes": 111193,
+        "matches_exact_archive_member": true
+      },
+      "include/libtorrent/alert.hpp": {
+        "sha256": "57b7b46958f52f9882ad230e921441f46e40fac8a659173d6d2da1a4c32a222d",
+        "bytes": 13244,
+        "matches_exact_archive_member": true
+      },
+      "include/libtorrent/time.hpp": {
+        "sha256": "a21e3756ecc26f662ccf7889234d971dd9490cff60c6ff5bdade2ec2f9972749",
+        "bytes": 3301,
+        "matches_exact_archive_member": true
+      },
+      "include/libtorrent/torrent_status.hpp": {
+        "sha256": "8d536cd124ed6b4b124db781fc75a6bf6e645db9622f05e4e24f6dd98ec33db4",
+        "bytes": 25265,
+        "matches_exact_archive_member": true
+      },
+      "include/libtorrent/stat.hpp": {
+        "sha256": "1458d8cc96f226f862e197568d4ea5850402b9f8e19e1fdafb45f9eb4279019b",
+        "bytes": 8201,
+        "matches_exact_archive_member": true
+      },
+      "src/session_stats.cpp": {
+        "sha256": "cd71bfbcdf53304921700d1989c5fea8575b5ebc630c061ae309eae71cd3f937",
+        "bytes": 22814,
+        "matches_exact_archive_member": true
+      },
+      "src/session_handle.cpp": {
+        "sha256": "4982bbac9aa578949623ee62781b124900b75c95ca99d5fb1adc410ef728b74e",
+        "bytes": 37529,
+        "matches_exact_archive_member": true
+      },
+      "src/session_impl.cpp": {
+        "sha256": "e33778939a03634f7ca588752f924afcdf790ac48ddd2a127af71e00f34d1c65",
+        "bytes": 224090,
+        "matches_exact_archive_member": true
+      },
+      "src/alert.cpp": {
+        "sha256": "750ccc0d3a62ffd6e2dbce1d9930556bc9613ec3b10a40825bb28bc863179773",
+        "bytes": 89515,
+        "matches_exact_archive_member": true
+      },
+      "src/performance_counters.cpp": {
+        "sha256": "867f5ccd8f8ddf121fb202027bb612f7c9e7b07a01395d1ce9e2cbebdb7a65b3",
+        "bytes": 5487,
+        "matches_exact_archive_member": true
+      },
+      "src/stat.cpp": {
+        "sha256": "7dc9b2b214396ef3e400907031df69b166e00d4639ce940a00712f1573d5d642",
+        "bytes": 1890,
+        "matches_exact_archive_member": true
+      },
+      "src/torrent.cpp": {
+        "sha256": "d0b8d64c54583cb9287d20aaf5ea5bc2e85cbf0caa5d5c9df42f40c77187d185",
+        "bytes": 364420,
+        "matches_exact_archive_member": true
+      },
+      "src/tracker_manager.cpp": {
+        "sha256": "8c8ebd4a76603cc6a9eca4d17177078092a4cf7d7532e5e53fa2bb36f9ad235c",
+        "bytes": 15133,
+        "matches_exact_archive_member": true
+      },
+      "src/kademlia/dht_tracker.cpp": {
+        "sha256": "d3711a78e50dbbfd37fb0a501fbe13e9f7ef2b7b5fba6735095ff05aa2225bcc",
+        "bytes": 22721,
+        "matches_exact_archive_member": true
+      },
+      "docs/manual.rst": {
+        "sha256": "941b5b482ed4ad7ad7e89619931999626e87d895af06f8635be8fe02a0cd4a09",
+        "bytes": 64512,
+        "matches_exact_archive_member": true
+      }
+    },
+    "actual_preview_installed_headers": {
+      "/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/include/libtorrent/version.hpp": {
+        "sha256": "78facdac8e2d843d1c7aaf3ea39c3f6fd9c8af8c00934a4ec14f928b0c5a0c81",
+        "matches_release_source": true
+      },
+      "/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/include/libtorrent/session_stats.hpp": {
+        "sha256": "50f24276b7ba33ecbd09613a168a2d1646ad5b8fe580fd4e91f3636c7d767ef1",
+        "matches_release_source": true
+      },
+      "/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/include/libtorrent/performance_counters.hpp": {
+        "sha256": "41a1b2f2678ad605ee0022c298bece06095be6a991457b026545eac9f9005af2",
+        "matches_release_source": true
+      },
+      "/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/include/libtorrent/session_handle.hpp": {
+        "sha256": "66055aa158d65f70972a2a19927d4cf7bc7e3ef223a69e3b825353a270757798",
+        "matches_release_source": true
+      },
+      "/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/include/libtorrent/alert_types.hpp": {
+        "sha256": "15ce77c102b456465db6c119d15bbb6b74792ba684aa386669b3d6d748442897",
+        "matches_release_source": true
+      },
+      "/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/include/libtorrent/alert.hpp": {
+        "sha256": "57b7b46958f52f9882ad230e921441f46e40fac8a659173d6d2da1a4c32a222d",
+        "matches_release_source": true
+      },
+      "/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/include/libtorrent/time.hpp": {
+        "sha256": "a21e3756ecc26f662ccf7889234d971dd9490cff60c6ff5bdade2ec2f9972749",
+        "matches_release_source": true
+      },
+      "/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/include/libtorrent/torrent_status.hpp": {
+        "sha256": "8d536cd124ed6b4b124db781fc75a6bf6e645db9622f05e4e24f6dd98ec33db4",
+        "matches_release_source": true
+      },
+      "/home/yurii/Java/BiglyBTC/build/dependencies/sysroot/usr/include/libtorrent/stat.hpp": {
+        "sha256": "1458d8cc96f226f862e197568d4ea5850402b9f8e19e1fdafb45f9eb4279019b",
+        "matches_release_source": true
+      }
+    },
+    "existing_provenance_sha256": {
+      "migration/evidence/P01-02/gcc16-source-build.json": "436931d4c6b87274c60b89877afedc19e06485bc4f04d120a3ab3e1889abfc66",
+      "migration/tools/persistent_session_qualification_inputs_v4.json": "8589f2972814dd2c05cc728a0c80ff826d52549a0137a7e449c917a38b721eec"
+    },
+    "actual_preview_CMakeCache_sha256": "852492d362f0c9d1cfd3178744e90ec1b12cc2be3a66bbd691be7d3c7327193b"
+  },
+  "original_semantics": [
+    "GlobalManagerStatsImpl has four additive in-memory data/protocol sent/received counters. LAN traffic contributes to ordinary totals/rates; NoLAN averages exclude it. Its four ordinary Average instances use1000ms buckets and10s windows.",
+    "Original Average timestamps additions with stepped monotonic time; getAverage sums completed slots, excludes current incomplete slot and divides by period. A native interval average over session snapshots is a different explicit policy, not exact original ten-second smoothing.",
+    "TransferStatsView Now sums global data+protocol receive/send rates and shows protocol shares. Session uses four global-manager cumulative counters. Activity samples those global values plus limits/swarm series roughly once per second.",
+    "GeneralStats/OverallStats lifetime and marks use independently saved BiglyBT.statistics totals and wallclock-based uptime. Session uptime belongs to OverallStats instance lifetime, not one native transfer. New operation counters must not alter saved lifetime/marks or silently claim application-wide persistent/session parity."
+  ],
+  "engine_metric_contract": {
+    "required_named_counters": [
+      "net.recv_bytes",
+      "net.sent_bytes",
+      "net.recv_payload_bytes",
+      "net.sent_payload_bytes"
+    ],
+    "source_arithmetic": "session_impl::received_bytes/sent_bytes increments combined by bytes_payload+bytes_protocol, and payload by bytes_payload. For each direction protocol = checked(combined-payload).",
+    "separate_domains": "IP overhead, tracker bytes and DHT bytes have separately updated counters. Do not mix them into the four chosen peer-transfer counters or add payload to already combined totals.",
+    "mapping": "session_stats_metrics returns names/value_index/type; require four distinct in-range indices of metric_type_t::counter, never hardcode enum numeric positions. Mapping is version-bound and stable for one loaded library.",
+    "request": "post_session_stats asynchronously posts an explicit session_stats_alert; it is not filtered by alert_mask and needs no new global logging/category enablement.",
+    "ownership": "Copy the four primitive values during the existing pop_alerts batch. Alerts and counters() span are borrowed session storage, invalid after subsequent pop calls; never queue raw spans/alert pointers to GUI or keep a second alert consumer.",
+    "lifetime": "Session counters initialize at zero for a new LT session and accumulate across its torrents. Current continueLocal/continueMultifile construct and destroy one session per operation. Torrent status counters reset on resume/pause boundaries and are unsuitable substitutes.",
+    "clock": "alert::timestamp uses clock_type=std::chrono::high_resolution_clock. Installed GCC16 chrono.h explicitly aliases it to system_clock. Use native steady_clock observation time for intervals; do not treat this LT timestamp as monotonic.",
+    "overflow": "LT counter source asserts nonnegative/monotone under normal increments, not an application saturation protocol. Validate each observed int64 and total>=payload; treat regressions, negative values, invalid mapping/span and dropped/unobserved samples explicitly rather than unsigned wrapping."
+  },
+  "recommended_one_milestone": {
+    "name": "P04-16 real owned-engine operation session telemetry",
+    "observable_scope": "This owned engine session / operation only, with data+protocol, payload and checked protocol counters/rates. Retain original unavailable application-session/global-history labels outside that exact domain.",
+    "pure_accumulator": "Four raw nonnegative totals, strictly increasing explicit steady observation time, independent operation reset. First valid observation gives known totals/elapsed0 and unavailable rates; later valid observations give exact checked interval rates. Invalid samples reject without mutation. All four raw and both derived protocol totals must be monotone.",
+    "rate_math": "floor(delta*1000000000/dtNanoseconds) for six rates with overflow-safe exact arithmetic. If an admitted total interval yields any rate above INT64_MAX, preserve accepted totals/time but rates unavailable; never UB, clamp or replace them withzero. Rate derived fields can differ by1 because independent floors.",
+    "engine_integration": "One stats sampler inside each actual LT session scope; at most one outstanding request, bounded steady cadence through existing shared wait/pop loop. Integrate both single-file and multifile paths; preserve existing fixed deadlines/error processing/flush and completion ordering. Telemetry loss or malformed stats must not invent storage success or silently extend a transfer timeout.",
+    "identity": "Separate nonzero owned-operation identity plus profile session and immutable original target. Do not rely only on torrent hash/library revision: a later same-target operation is a new engine session. Old queued observations cannot overwrite a newer operation or replacement page.",
+    "end_semantics": "Label ended/cancelled/failed and last-observed sample explicitly. After owner teardown there is no newrate sample; no artificial zero. A last pre-teardown observation is not guaranteed to include every shutdown byte. No callback from an LT-affine destructor; publish operation lifecycle from controller/worker completion after actual owner scope returns.",
+    "existing_values": "Keep old payload progress callback behavior and saved per-download counter updates unchanged. Never write BiglyBT.statistics, seed operation totals from saved globals or add operation totals across fresh owners as lifetime/application-session totals.",
+    "UI": "Add an explicitly identified owned-engine operation section to Transfers/Activity, actual observed intervals and bounded plots. No regular sampler/timer while idle; snapshots are received from active owned engine work and remain owned after close. Root chooses precise display/pipeline API.",
+    "not_in_scope": [
+      "Persistent all-application engine owner",
+      "Summing concurrent/future sessions as original global state",
+      "Java ten-second smoothing equality",
+      "Mark/reset or BiglyBT.statistics writes",
+      "DHT/tracker/UDP/IP accounting parity",
+      "Protocol byte-exact equality across network timing",
+      "Persistent history or additional backend networking"
+    ]
+  },
+  "qualification_plan": [
+    "Pure generated accumulator cases: unknown first-rate, exact counters/protocol, strict times, zero delta over positive time, equal/backward time rejection without mutation, raw/protocol regressions, negative/total<payload, floor-rounding relations, INT64 extremes and independent rational reference vectors.",
+    "Actual generated loopback single/multifile owned transfers: nonzero payload/combined/known protocol observations, source-bound named metric mapping, valid ownership after later alert pops and owner teardown, existing flush/completion/profile byte protections unchanged. Do not assert fixed handshake/protocol byte amounts.",
+    "Lifecycle/cancellation/error/repeated-same-hash/page-close/reopen/late packet tests. Unavailable or closed telemetry must never become saved lifetime totals or change library selection/counters.",
+    "Strict GCC16/Clang24 and leak-enabled ASan/UBSan, existing lower regressions/actual local transfer and Statistics smoke/hosted CI; root owns execution. No original Java runtime equality or performance credit from this audit."
+  ],
+  "execution": {
+    "kind": "File/source/archive-text/hash reads and new audit artifacts only",
+    "Git_commands_or_mutation": 0,
+    "native_compiler_or_tests": 0,
+    "Java_or_manager": 0,
+    "GUI_or_live_profile_or_payload": 0,
+    "network": 0,
+    "production_edits": 0
+  },
+  "installed_clock_header": {
+    "path": "/usr/include/c++/16/bits/chrono.h",
+    "sha256": "108216bcb9352ee4700a04eb67ba9e238911b3a3c0bcd2d2ebe6365237337b27"
+  }
+}

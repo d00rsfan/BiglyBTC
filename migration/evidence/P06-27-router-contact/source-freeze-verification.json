@@ -1,0 +1,45 @@
+{
+  "status": "source-frozen-before-native-implementation",
+  "source_fixture_manifest_sha256": "8b48930b99574e0a83aa9edc914149fdb3ba9cae5e54c394815c5e3f8e7e3eed",
+  "source_reference_sha256": "dbd2aa56fecf594323cc9becb9f478578083624a09dba4286a9177eba893a3a1",
+  "actual_first_helper_class_sha256": {
+    "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd",
+    "RouterContactLifecycleOracle$Attachment.class": "09a3f0c595a709465d9ecf36f684589ee8e1c481921b5196ee1135800479dec8",
+    "RouterContactLifecycleOracle$ByteFormatter.class": "44a164ad11253ff021495d96b48989eb897b8b3290f8390d8a7aa3b4f9479e77",
+    "RouterContactLifecycleOracle$DHTLog.class": "195f75eb9622292e520f80c7bec7214c566b51f7fe5eecfa9f67c765f441b30e",
+    "RouterContactLifecycleOracle$DHTRouterContact.class": "84ee04ebc8e1d83db98b9a2c8e942b3c75d4067908726a649b76d12bd093684e",
+    "RouterContactLifecycleOracle$DHTRouterContactAttachment.class": "3c0652b7736a0490f6f84570cb63b3fd52371d2efd3fe7e2820b685e545a57a7",
+    "RouterContactLifecycleOracle$DHTRouterContactImpl.class": "79392d146f9e5753592dfa8513c034a8c5e4da0666e1fc74b3d25a3134113fb3",
+    "RouterContactLifecycleOracle$Debug.class": "38aa5c1cd4d9c97fe925764ce5e566de32a6a8cddb0b0856d6f79a6599954a58",
+    "RouterContactLifecycleOracle$SystemTime.class": "6d073d5de1d5fc9eed44cc741e1b780e8bc7b02b5b97603f8be1e05d3d6836b3",
+    "RouterContactLifecycleOracle.class": "6d37c4b829682ba47c1b0beb22536dcb1aafeb1f17decb8cfbe28c6036d6f3d9"
+  },
+  "persistent_reference_file_count": 47,
+  "groups": {
+    "semantic": {
+      "observations": 5054,
+      "source_exceptions": 0
+    },
+    "alias-policy": {
+      "observations": 144,
+      "source_exceptions": 0
+    },
+    "getter-contract": {
+      "observations": 468,
+      "source_exceptions": 14
+    },
+    "seeded-boundary": {
+      "observations": 1017,
+      "source_exceptions": 0
+    },
+    "diagnostic": {
+      "observations": 304,
+      "source_exceptions": 0
+    }
+  },
+  "total": 6987,
+  "semantic_rows_eligible_for_later_native_comparison": 5054,
+  "other_source_rows_native_equality_credit": 0,
+  "native_execution": false,
+  "native_implementation": false
+}

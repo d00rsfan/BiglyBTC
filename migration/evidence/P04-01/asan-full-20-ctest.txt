@@ -1,0 +1,386 @@
+Start testing: Oct 17 05:21 IDT
+----------------------------------------------------------
+1/20 Testing: bounded-core-formats
+1/20 Test: bounded-core-formats
+Command: "/tmp/biglybtc-desktop-asan/tests/biglybtc-core-tests"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"bounded-core-formats" start time: Oct 17 05:21 IDT
+Output:
+----------------------------------------------------------
+PASS 70 checks; 20,000 malformed-input trials
+<end of output>
+Test time =   1.41 sec
+----------------------------------------------------------
+Test Passed.
+"bounded-core-formats" end time: Oct 17 05:21 IDT
+"bounded-core-formats" time elapsed: 00:00:01
+----------------------------------------------------------
+
+2/20 Testing: saved-library-inventory
+2/20 Test: saved-library-inventory
+Command: "/tmp/biglybtc-desktop-asan/tests/biglybtc-library-tests"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"saved-library-inventory" start time: Oct 17 05:21 IDT
+Output:
+----------------------------------------------------------
+PASS original/legacy inventory, owned paths/hashes, normalized startup, force/pause owners, issues and bounds
+<end of output>
+Test time =   0.09 sec
+----------------------------------------------------------
+Test Passed.
+"saved-library-inventory" end time: Oct 17 05:21 IDT
+"saved-library-inventory" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/20 Testing: cached-state-metadata
+3/20 Test: cached-state-metadata
+Command: "/tmp/biglybtc-desktop-asan/tests/biglybtc-cache-tests"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"cached-state-metadata" start time: Oct 17 05:21 IDT
+Output:
+----------------------------------------------------------
+PASS bounded original cache fields, duplicates, unknown bytes, malformed entries and owned lifetimes
+<end of output>
+Test time =   0.08 sec
+----------------------------------------------------------
+Test Passed.
+"cached-state-metadata" end time: Oct 17 05:21 IDT
+"cached-state-metadata" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/20 Testing: structured-document-edits
+4/20 Test: structured-document-edits
+Command: "/tmp/biglybtc-desktop-asan/tests/biglybtc-document-edit-tests"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"structured-document-edits" start time: Oct 17 05:21 IDT
+Output:
+----------------------------------------------------------
+PASS structured insertion/replacement, nested splicing, source ownership, unknown/info bytes and edit quotas
+<end of output>
+Test time =   0.26 sec
+----------------------------------------------------------
+Test Passed.
+"structured-document-edits" end time: Oct 17 05:21 IDT
+"structured-document-edits" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/20 Testing: compressed-state-envelope
+5/20 Test: compressed-state-envelope
+Command: "/tmp/biglybtc-desktop-asan/tests/biglybtc-codec-tests"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"compressed-state-envelope" start time: Oct 17 05:21 IDT
+Output:
+----------------------------------------------------------
+PASS plain/gzip identity, binary edits, copy lifetime, CRC/truncation, quotas and concatenated members
+<end of output>
+Test time =   0.07 sec
+----------------------------------------------------------
+Test Passed.
+"compressed-state-envelope" end time: Oct 17 05:21 IDT
+"compressed-state-envelope" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/20 Testing: bounded-executor
+6/20 Test: bounded-executor
+Command: "/tmp/biglybtc-desktop-asan/tests/biglybtc-executor-tests"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"bounded-executor" start time: Oct 17 05:21 IDT
+Output:
+----------------------------------------------------------
+PASS: lifecycle, backpressure, FIFO, cancellation, ownership, reentrant stop, concurrency
+<end of output>
+Test time =   0.09 sec
+----------------------------------------------------------
+Test Passed.
+"bounded-executor" end time: Oct 17 05:21 IDT
+"bounded-executor" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/20 Testing: java-cached-library-view
+7/20 Test: java-cached-library-view
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/library_view_interop.py" "--driver" "/tmp/biglybtc-desktop-asan/tests/biglybtc-library-view-driver"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"java-cached-library-view" start time: Oct 17 05:21 IDT
+Output:
+----------------------------------------------------------
+PASS actual Java v1/v2/hybrid cached names/sizes and unchanged profile bytes
+PASS missing/corrupt/symbolic cache keeps inventory readable without changing data
+<end of output>
+Test time =   0.76 sec
+----------------------------------------------------------
+Test Passed.
+"java-cached-library-view" end time: Oct 17 05:21 IDT
+"java-cached-library-view" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/20 Testing: torrent-state-java-interop
+8/20 Test: torrent-state-java-interop
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/torrent_state_tests.py" "--driver" "/tmp/biglybtc-desktop-asan/tests/biglybtc-torrent-state-driver"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"torrent-state-java-interop" start time: Oct 17 05:21 IDT
+Output:
+----------------------------------------------------------
+Note: /home/yurii/Java/BiglyBT/migration/fixtures/java/CacheFixtureOracle.java uses unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+PASS original Java reads every native save/crash/backup/cache checkpoint
+PASS cache hydration, unrelated/unknown data, stale/cross-profile/symlink protection and immutable info
+<end of output>
+Test time =  16.84 sec
+----------------------------------------------------------
+Test Passed.
+"torrent-state-java-interop" end time: Oct 17 05:22 IDT
+"torrent-state-java-interop" time elapsed: 00:00:16
+----------------------------------------------------------
+
+9/20 Testing: java-saved-library-inventory
+9/20 Test: java-saved-library-inventory
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/library_interop.py" "--driver" "/tmp/biglybtc-desktop-asan/tests/biglybtc-library-driver"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"java-saved-library-inventory" start time: Oct 17 05:22 IDT
+Output:
+----------------------------------------------------------
+PASS original Java v1 inventory, identities, counters and all profile bytes retained
+PASS original Java v2 inventory, identities, counters and all profile bytes retained
+PASS original Java hybrid inventory, identities, counters and all profile bytes retained
+<end of output>
+Test time =   0.82 sec
+----------------------------------------------------------
+Test Passed.
+"java-saved-library-inventory" end time: Oct 17 05:22 IDT
+"java-saved-library-inventory" time elapsed: 00:00:00
+----------------------------------------------------------
+
+10/20 Testing: state-java-interop
+10/20 Test: state-java-interop
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/../../migration/tools/state_interop.py" "--driver" "/tmp/biglybtc-desktop-asan/tests/biglybtc-state-driver"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"state-java-interop" start time: Oct 17 05:22 IDT
+Output:
+----------------------------------------------------------
+PASS byte-identical Java gzip biglybt.config.gz
+PASS byte-identical Java gzip generated-1.torrent.gz
+PASS byte-identical Java gzip generated-2.torrent.gz
+PASS byte-identical Java gzip generated-3.torrent.gz
+PASS byte-identical operational downloads.config
+PASS byte-identical operational active/cache.dat
+PASS byte-identical operational active/7B26D19F7DC2D2F9D9F897AD851B0AB6E0D58C6C.dat
+PASS DEBUG::Sat Oct 17 05:22:21 IDT 2026  BC Provider 'BC_VUZE' initialised successfully (loaded from file:/tmp/biglybtc-oracle/classes/org/gudy/bouncycastle/jce/provider/BouncyCastleProvider.class)
+DEBUG::Sat Oct 17 05:22:21 IDT 2026  Not installing security manager - disabled by system property
+PASS Java reads structured operational resume edit with unchanged info/attributes/unknown fields
+PASS Java reads edited gzip config and unchanged v1/v2/hybrid torrent hashes
+<end of output>
+Test time =  17.40 sec
+----------------------------------------------------------
+Test Passed.
+"state-java-interop" end time: Oct 17 05:22 IDT
+"state-java-interop" time elapsed: 00:00:17
+----------------------------------------------------------
+
+11/20 Testing: profile-java-interop
+11/20 Test: profile-java-interop
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/profile_tests.py" "--driver" "/tmp/biglybtc-desktop-asan/tests/biglybtc-profile-driver"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"profile-java-interop" start time: Oct 17 05:22 IDT
+Output:
+----------------------------------------------------------
+PASS hold-lock conflicts with Java and native; death releases lock
+PASS duplicate-lock conflicts with Java and native; death releases lock
+PASS Java lock excludes native; release permits native
+PASS compatible save/recovery at normal
+PASS compatible save/recovery at temp
+PASS compatible save/recovery at backup
+PASS compatible save/recovery at primary
+PASS traversal, stale input, exclusive saving and symlink protection
+<end of output>
+Test time =  13.57 sec
+----------------------------------------------------------
+Test Passed.
+"profile-java-interop" end time: Oct 17 05:22 IDT
+"profile-java-interop" time elapsed: 00:00:13
+----------------------------------------------------------
+
+12/20 Testing: same-profile-handoff-1
+12/20 Test: same-profile-handoff-1
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/handoff_tests.py" "--app" "/tmp/biglybtc-desktop-asan/app/BiglyBTC-headless" "--peer" "/tmp/biglybtc-desktop-asan/tests/biglybtc-owned-test-peer" "--type" "1"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"same-profile-handoff-1" start time: Oct 17 05:22 IDT
+Output:
+----------------------------------------------------------
+PREPARED original Java incomplete profile /tmp/biglybtc-handoff-test-5e6b63b395d44e94bcd4540aa4388ae8/java/profile
+PASS same-profile Java -> BiglyBTC -> Java handoff; type 1
+Generated same-profile handoff evidence: /tmp/biglybtc-handoff-test-5e6b63b395d44e94bcd4540aa4388ae8
+<end of output>
+Test time =  41.59 sec
+----------------------------------------------------------
+Test Passed.
+"same-profile-handoff-1" end time: Oct 17 05:23 IDT
+"same-profile-handoff-1" time elapsed: 00:00:41
+----------------------------------------------------------
+
+13/20 Testing: same-profile-handoff-3
+13/20 Test: same-profile-handoff-3
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/handoff_tests.py" "--app" "/tmp/biglybtc-desktop-asan/app/BiglyBTC-headless" "--peer" "/tmp/biglybtc-desktop-asan/tests/biglybtc-owned-test-peer" "--type" "3"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"same-profile-handoff-3" start time: Oct 17 05:23 IDT
+Output:
+----------------------------------------------------------
+PREPARED original Java incomplete profile /tmp/biglybtc-handoff-test-f628c4a37d0f44268332f58ddd983433/java/profile
+PASS same-profile Java -> BiglyBTC -> Java handoff; type 3
+Generated same-profile handoff evidence: /tmp/biglybtc-handoff-test-f628c4a37d0f44268332f58ddd983433
+<end of output>
+Test time =  71.44 sec
+----------------------------------------------------------
+Test Passed.
+"same-profile-handoff-3" end time: Oct 17 05:24 IDT
+"same-profile-handoff-3" time elapsed: 00:01:11
+----------------------------------------------------------
+
+14/20 Testing: same-profile-handoff-2
+14/20 Test: same-profile-handoff-2
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/handoff_tests.py" "--app" "/tmp/biglybtc-desktop-asan/app/BiglyBTC-headless" "--peer" "/tmp/biglybtc-desktop-asan/tests/biglybtc-owned-test-peer" "--type" "2"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"same-profile-handoff-2" start time: Oct 17 05:24 IDT
+Output:
+----------------------------------------------------------
+PREPARED original Java incomplete profile /tmp/biglybtc-handoff-test-af609a797bda496abb922790262b4843/java/profile
+PASS same-profile Java -> BiglyBTC -> Java handoff; type 2
+Generated same-profile handoff evidence: /tmp/biglybtc-handoff-test-af609a797bda496abb922790262b4843
+<end of output>
+Test time =  53.19 sec
+----------------------------------------------------------
+Test Passed.
+"same-profile-handoff-2" end time: Oct 17 05:25 IDT
+"same-profile-handoff-2" time elapsed: 00:00:53
+----------------------------------------------------------
+
+15/20 Testing: desktop-model-and-lifecycle
+15/20 Test: desktop-model-and-lifecycle
+Command: "/tmp/biglybtc-desktop-asan/tests/biglybtc-desktop-tests" "modelValuesSelectionAndStaleTargets" "closeWaitsForCancellationAndWorkerTeardown" "cancellationFromBusyNotificationCompletes"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"desktop-model-and-lifecycle" start time: Oct 17 05:25 IDT
+Output:
+----------------------------------------------------------
+********* Start testing of DesktopTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : DesktopTests::initTestCase()
+PASS   : DesktopTests::modelValuesSelectionAndStaleTargets()
+QWARN  : DesktopTests::closeWaitsForCancellationAndWorkerTeardown() This plugin does not support propagateSizeHints()
+PASS   : DesktopTests::closeWaitsForCancellationAndWorkerTeardown()
+PASS   : DesktopTests::cancellationFromBusyNotificationCompletes()
+PASS   : DesktopTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 4383ms
+********* Finished testing of DesktopTests *********
+<end of output>
+Test time =   5.26 sec
+----------------------------------------------------------
+Test Passed.
+"desktop-model-and-lifecycle" end time: Oct 17 05:25 IDT
+"desktop-model-and-lifecycle" time elapsed: 00:00:05
+----------------------------------------------------------
+
+16/20 Testing: desktop-java-v1
+16/20 Test: desktop-java-v1
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/desktop_case.py" "--test" "/tmp/biglybtc-desktop-asan/tests/biglybtc-desktop-tests" "--peer" "/tmp/biglybtc-desktop-asan/tests/biglybtc-owned-test-peer" "--type" "1" "--action" "complete"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"desktop-java-v1" start time: Oct 17 05:25 IDT
+Output:
+----------------------------------------------------------
+PREPARED original Java incomplete profile /tmp/biglybtc-desktop-test-820b4483a57a43af8262140a0130acda/java/profile
+PASS actual Qt desktop -> original Java; type 1 action complete
+Actual desktop/Java evidence: /tmp/biglybtc-desktop-test-820b4483a57a43af8262140a0130acda
+<end of output>
+Test time =  41.25 sec
+----------------------------------------------------------
+Test Passed.
+"desktop-java-v1" end time: Oct 17 05:26 IDT
+"desktop-java-v1" time elapsed: 00:00:41
+----------------------------------------------------------
+
+17/20 Testing: desktop-java-v2
+17/20 Test: desktop-java-v2
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/desktop_case.py" "--test" "/tmp/biglybtc-desktop-asan/tests/biglybtc-desktop-tests" "--peer" "/tmp/biglybtc-desktop-asan/tests/biglybtc-owned-test-peer" "--type" "3" "--action" "complete"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"desktop-java-v2" start time: Oct 17 05:26 IDT
+Output:
+----------------------------------------------------------
+PREPARED original Java incomplete profile /tmp/biglybtc-desktop-test-dd08a0d5ff4245508076c9a81ff00a4b/java/profile
+PASS actual Qt desktop -> original Java; type 3 action complete
+Actual desktop/Java evidence: /tmp/biglybtc-desktop-test-dd08a0d5ff4245508076c9a81ff00a4b
+<end of output>
+Test time =  38.26 sec
+----------------------------------------------------------
+Test Passed.
+"desktop-java-v2" end time: Oct 17 05:26 IDT
+"desktop-java-v2" time elapsed: 00:00:38
+----------------------------------------------------------
+
+18/20 Testing: desktop-java-hybrid
+18/20 Test: desktop-java-hybrid
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/desktop_case.py" "--test" "/tmp/biglybtc-desktop-asan/tests/biglybtc-desktop-tests" "--peer" "/tmp/biglybtc-desktop-asan/tests/biglybtc-owned-test-peer" "--type" "2" "--action" "complete"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"desktop-java-hybrid" start time: Oct 17 05:26 IDT
+Output:
+----------------------------------------------------------
+PREPARED original Java incomplete profile /tmp/biglybtc-desktop-test-6992ea206eed482e892c934242436234/java/profile
+PASS actual Qt desktop -> original Java; type 2 action complete
+Actual desktop/Java evidence: /tmp/biglybtc-desktop-test-6992ea206eed482e892c934242436234
+<end of output>
+Test time =  39.43 sec
+----------------------------------------------------------
+Test Passed.
+"desktop-java-hybrid" end time: Oct 17 05:27 IDT
+"desktop-java-hybrid" time elapsed: 00:00:39
+----------------------------------------------------------
+
+19/20 Testing: desktop-java-cancel
+19/20 Test: desktop-java-cancel
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/desktop_case.py" "--test" "/tmp/biglybtc-desktop-asan/tests/biglybtc-desktop-tests" "--peer" "/tmp/biglybtc-desktop-asan/tests/biglybtc-owned-test-peer" "--type" "1" "--action" "cancel"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"desktop-java-cancel" start time: Oct 17 05:27 IDT
+Output:
+----------------------------------------------------------
+PREPARED original Java incomplete profile /tmp/biglybtc-desktop-test-de6d1012d27341f4aa90c3df1d0d168b/java/profile
+PASS actual Qt desktop -> original Java; type 1 action cancel
+Actual desktop/Java evidence: /tmp/biglybtc-desktop-test-de6d1012d27341f4aa90c3df1d0d168b
+<end of output>
+Test time =  36.27 sec
+----------------------------------------------------------
+Test Passed.
+"desktop-java-cancel" end time: Oct 17 05:28 IDT
+"desktop-java-cancel" time elapsed: 00:00:36
+----------------------------------------------------------
+
+20/20 Testing: desktop-java-close
+20/20 Test: desktop-java-close
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/desktop_case.py" "--test" "/tmp/biglybtc-desktop-asan/tests/biglybtc-desktop-tests" "--peer" "/tmp/biglybtc-desktop-asan/tests/biglybtc-owned-test-peer" "--type" "1" "--action" "close"
+Directory: /tmp/biglybtc-desktop-asan/tests
+"desktop-java-close" start time: Oct 17 05:28 IDT
+Output:
+----------------------------------------------------------
+PREPARED original Java incomplete profile /tmp/biglybtc-desktop-test-69352a0edf8946c385c742042367d894/java/profile
+PASS actual Qt desktop -> original Java; type 1 action close
+Actual desktop/Java evidence: /tmp/biglybtc-desktop-test-69352a0edf8946c385c742042367d894
+<end of output>
+Test time =  36.57 sec
+----------------------------------------------------------
+Test Passed.
+"desktop-java-close" end time: Oct 17 05:28 IDT
+"desktop-java-close" time elapsed: 00:00:36
+----------------------------------------------------------
+
+End testing: Oct 17 05:28 IDT
+
+integration = 407.39 sec*proc
+
+java =  49.38 sec*proc
+
+local-files =  49.38 sec*proc
+
+loopback = 358.00 sec*proc
+
+same-profile = 358.00 sec*proc
+
+ui = 197.05 sec*proc
+
+unit =   7.26 sec*proc
+

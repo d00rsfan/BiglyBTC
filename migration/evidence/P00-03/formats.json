@@ -1,0 +1,176 @@
+{
+  "schema_version": 1,
+  "upstream_id": "BiglyBT",
+  "source_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_archive_sha256": "1db995a8a1240ca7058107aca7a36b8b6d88125225ec7a7a92f3f149ee28258d",
+  "recipe": "migration/tools/oracle.py",
+  "java_source_count": 2680,
+  "javac_command": [
+    "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+    "--release",
+    "8",
+    "-encoding",
+    "ISO-8859-1",
+    "-cp",
+    "/tmp/biglybtc-oracle/source/core/lib/commons-cli.jar",
+    "-d",
+    "/tmp/biglybtc-oracle/classes",
+    "@/tmp/biglybtc-oracle/sources.txt"
+  ],
+  "java_identity": "openjdk version \"17.0.20\" 2026-07-21\nOpenJDK Runtime Environment (build 17.0.20+8-1-26.04-Ubuntu)\nOpenJDK 64-Bit Server VM (build 17.0.20+8-1-26.04-Ubuntu, mixed mode, sharing)\n",
+  "commons_cli_sha256": "fd3c7c9545a9cdb2051d1f9155c4f76b1e4ac5a57304404a6eedb578ffba7328",
+  "harness_sha256": "43a0d40415a9d616889b977f06cda23e9d4d18da599901869d210b49cadbab21",
+  "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+  "cases": [
+    {
+      "id": "empty",
+      "input": "migration/fixtures/bencoding/empty.input",
+      "input_sha256": "959a45d44e6fcf58361ed004681556fe50129f2109e817dec098c00c9e5d2578",
+      "java_result": "ACCEPT",
+      "canonical": "migration/fixtures/bencoding/empty.canonical",
+      "canonical_sha256": "959a45d44e6fcf58361ed004681556fe50129f2109e817dec098c00c9e5d2578"
+    },
+    {
+      "id": "integer-zero",
+      "input": "migration/fixtures/bencoding/integer-zero.input",
+      "input_sha256": "e279b72c99bff6b282b3356a59831ef4b18200c94087a88f217c9faa45f7526d",
+      "java_result": "ACCEPT",
+      "canonical": "migration/fixtures/bencoding/integer-zero.canonical",
+      "canonical_sha256": "e279b72c99bff6b282b3356a59831ef4b18200c94087a88f217c9faa45f7526d"
+    },
+    {
+      "id": "integer-negative",
+      "input": "migration/fixtures/bencoding/integer-negative.input",
+      "input_sha256": "4895710db31a9c035a7c45c49202bd22b3dc9884ef699dd3ee9f5d1a31a7427d",
+      "java_result": "ACCEPT",
+      "canonical": "migration/fixtures/bencoding/integer-negative.canonical",
+      "canonical_sha256": "4895710db31a9c035a7c45c49202bd22b3dc9884ef699dd3ee9f5d1a31a7427d"
+    },
+    {
+      "id": "integer-minimum",
+      "input": "migration/fixtures/bencoding/integer-minimum.input",
+      "input_sha256": "f65993074bcf24c6af97944bd50e2547bbd5be126f3f1141feacf586763ef122",
+      "java_result": "ACCEPT",
+      "canonical": "migration/fixtures/bencoding/integer-minimum.canonical",
+      "canonical_sha256": "f65993074bcf24c6af97944bd50e2547bbd5be126f3f1141feacf586763ef122"
+    },
+    {
+      "id": "integer-maximum",
+      "input": "migration/fixtures/bencoding/integer-maximum.input",
+      "input_sha256": "5c717a46405a1a146a747565baa5f6b2593b84a59f1d0c8a0e2e8c6522b27c21",
+      "java_result": "ACCEPT",
+      "canonical": "migration/fixtures/bencoding/integer-maximum.canonical",
+      "canonical_sha256": "5c717a46405a1a146a747565baa5f6b2593b84a59f1d0c8a0e2e8c6522b27c21"
+    },
+    {
+      "id": "binary",
+      "input": "migration/fixtures/bencoding/binary.input",
+      "input_sha256": "7015e03e23d9e14fb082c912446269caa2466b21be4a9020236496947b55525e",
+      "java_result": "ACCEPT",
+      "canonical": "migration/fixtures/bencoding/binary.canonical",
+      "canonical_sha256": "7015e03e23d9e14fb082c912446269caa2466b21be4a9020236496947b55525e"
+    },
+    {
+      "id": "nested",
+      "input": "migration/fixtures/bencoding/nested.input",
+      "input_sha256": "1c387f17b478fb990e0a636a83fbbd3f17f07e98b7543ff48d1ae1899c2f651d",
+      "java_result": "ACCEPT",
+      "canonical": "migration/fixtures/bencoding/nested.canonical",
+      "canonical_sha256": "1c387f17b478fb990e0a636a83fbbd3f17f07e98b7543ff48d1ae1899c2f651d"
+    },
+    {
+      "id": "unordered",
+      "input": "migration/fixtures/bencoding/unordered.input",
+      "input_sha256": "e411156c2d4aa47997e36ee84c885e8c145b77fca31a889ab68fbd38600bd009",
+      "java_result": "ACCEPT",
+      "canonical": "migration/fixtures/bencoding/unordered.canonical",
+      "canonical_sha256": "54363b7ebf54d1d0b247376267b2ae44cbe1e596b425dda749020a150332f9ea"
+    },
+    {
+      "id": "duplicate-key",
+      "input": "migration/fixtures/bencoding/duplicate-key.input",
+      "input_sha256": "dd5868765167cbd85c376606a2c25c1bf795228a84eaa26c4866d40ee7de3206",
+      "java_result": "ACCEPT",
+      "canonical": "migration/fixtures/bencoding/duplicate-key.canonical",
+      "canonical_sha256": "ac93d137de423ded2aee838c0d959c3a609a02cc3b4d7488d34348c36704ce47"
+    },
+    {
+      "id": "leading-zero",
+      "input": "migration/fixtures/bencoding/leading-zero.input",
+      "input_sha256": "1033543751e4dba3c11efd92c43cd9bfa4f894458525fb0106d101db851a232e",
+      "java_result": "ACCEPT",
+      "canonical": "migration/fixtures/bencoding/leading-zero.canonical",
+      "canonical_sha256": "e279b72c99bff6b282b3356a59831ef4b18200c94087a88f217c9faa45f7526d"
+    },
+    {
+      "id": "negative-zero",
+      "input": "migration/fixtures/bencoding/negative-zero.input",
+      "input_sha256": "c311e1b54893500fee6662a7cf979fc7e3e2638747b49fecc11231874fc0f3a1",
+      "java_result": "ACCEPT",
+      "canonical": "migration/fixtures/bencoding/negative-zero.canonical",
+      "canonical_sha256": "e279b72c99bff6b282b3356a59831ef4b18200c94087a88f217c9faa45f7526d"
+    },
+    {
+      "id": "trailing-data",
+      "input": "migration/fixtures/bencoding/trailing-data.input",
+      "input_sha256": "0ba954bb91b066353975198ce08bd3f09d53637f06880dd2bbf01e6e7e0ed643",
+      "java_result": "ACCEPT",
+      "canonical": "migration/fixtures/bencoding/trailing-data.canonical",
+      "canonical_sha256": "959a45d44e6fcf58361ed004681556fe50129f2109e817dec098c00c9e5d2578"
+    },
+    {
+      "id": "truncated-string",
+      "input": "migration/fixtures/bencoding/truncated-string.input",
+      "input_sha256": "33eb1249faed74a5bf25a217292fa801af239173853c2ea737d5f2fe837e9530",
+      "java_result": "REJECT IOException"
+    },
+    {
+      "id": "truncated-dictionary",
+      "input": "migration/fixtures/bencoding/truncated-dictionary.input",
+      "input_sha256": "6f4380049cd6538e71639d65e912ec8ec8b8e91df74cce1115db630f8c9749fb",
+      "java_result": "ACCEPT",
+      "canonical": "migration/fixtures/bencoding/truncated-dictionary.canonical",
+      "canonical_sha256": "74fa4e4422998cf0a23733fc1b8905ba3c28ac96a31499791ff8392f0d29b60c"
+    },
+    {
+      "id": "bad-integer",
+      "input": "migration/fixtures/bencoding/bad-integer.input",
+      "input_sha256": "ebdfd9dcdb541e648496eb6fbd183b47da8acef619d3b3f2ffc5a40beb35ba30",
+      "java_result": "ACCEPT",
+      "canonical": "migration/fixtures/bencoding/bad-integer.canonical",
+      "canonical_sha256": "ac93d137de423ded2aee838c0d959c3a609a02cc3b4d7488d34348c36704ce47"
+    },
+    {
+      "id": "integer-overflow",
+      "input": "migration/fixtures/bencoding/integer-overflow.input",
+      "input_sha256": "efc754fa419dcded4e2a28e44af2525a57a0181bdac9d5706e22ba203e196ad4",
+      "java_result": "ACCEPT",
+      "canonical": "migration/fixtures/bencoding/integer-overflow.canonical",
+      "canonical_sha256": "5c717a46405a1a146a747565baa5f6b2593b84a59f1d0c8a0e2e8c6522b27c21"
+    },
+    {
+      "id": "empty-integer",
+      "input": "migration/fixtures/bencoding/empty-integer.input",
+      "input_sha256": "913faa080ac5f972595516752385c6e58cb3bf36664e6d6206679fb4061ed415",
+      "java_result": "ACCEPT",
+      "canonical": "migration/fixtures/bencoding/empty-integer.canonical",
+      "canonical_sha256": "e279b72c99bff6b282b3356a59831ef4b18200c94087a88f217c9faa45f7526d"
+    },
+    {
+      "id": "string-leading-zero",
+      "input": "migration/fixtures/bencoding/string-leading-zero.input",
+      "input_sha256": "4f786217af78368c74cc2d59432afeb8d9528622b68571c2967840781de04d6d",
+      "java_result": "ACCEPT",
+      "canonical": "migration/fixtures/bencoding/string-leading-zero.canonical",
+      "canonical_sha256": "f9fefddfb2889fa9f46061caaa2ab5b0456dec7e9ac9d202238f0425596a30ff"
+    },
+    {
+      "id": "binary-key",
+      "input": "migration/fixtures/bencoding/binary-key.input",
+      "input_sha256": "1db616cf363ae12fc9da80300dd4a5154e64233097aa6aea6c8ed3e364279b49",
+      "java_result": "ACCEPT",
+      "canonical": "migration/fixtures/bencoding/binary-key.canonical",
+      "canonical_sha256": "5f1492827ae89cdba5d40bb23f9e7c73947fb96ed709944e13de5891dc161b97"
+    }
+  ]
+}

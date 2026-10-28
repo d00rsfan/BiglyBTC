@@ -1,0 +1,266 @@
+{
+  "schema": 1,
+  "milestone": "P04-27",
+  "status": "PASS independent actual operational source review; no runtime qualification credit",
+  "reviewer": "error_codec",
+  "blockers": [],
+  "operational_helper_sha256": {
+    "checkpoint_history_month_ui.py": "a09596b5e5c5535341dea994fbc50608627e69ea1e33458e540f8a68d6520f9a",
+    "checkpoint_milestone.py": "446af45062db14c6887d0b330bf252d8fb0580ec2daa088bbe53b5c976921601",
+    "collect_hosted.py": "b68c335b550ddaa561558cc3ce70c8fea7f8d194047e2cfc514d6b01a824fff7",
+    "collect_metadata_ci.py": "a0f2c6c2ebd033b6b117bd8101ec430a2f784057b458da03591e7eb34a6e9bc3",
+    "commit_source.py": "a96915e5cc74626aed7b046956e85e787da444fa49a6ad3c2ded33f16fadcaa9",
+    "finalize_evidence.py": "9fcffb5c758ca281676b30a7c39fbe4666554044458814683834b3b330c44172",
+    "finish_milestone.py": "4a023b2a275ce58f4edad1fbc8aaf987c14514ee276541ae77f93eae3232efbc",
+    "promote_dist.py": "cbee5cd9e539dc3460ad7bb1984f9035c174ff8a314dc66d5d41cd6f4593a6bc",
+    "publish.py": "20a1c4062963e9e5ac6ff78c3367a9cfbca57dc572ef17e9a14a258104cfd69b",
+    "qualify.py": "e9c14c5350419736885991d49f6c44868b64ada4203d13b92ceebba70c7914bb",
+    "record_toolchains.py": "96d9dbb9c5a36e502722e0d1104da2d6252c15d64d7bf6b470d2e5b1cce31355",
+    "record_visual_review.py": "425788dc8de6ce2b307487635f14984c5f736e82c6914d88712df0e454aa2252",
+    "run_smoke_scales.py": "10641ebec1e1aeeeddc8f078dedb3aab9dfa36c92bee846d5a02b4f0aaf7b487",
+    "run_visuals.py": "07abbfe11cb87926816463efc84dcf6929a3e075bda3f3faccd636f20dab02fd",
+    "verify_dist.py": "4d51c3972a235dcba148951487d8633fc950fee4e2c1f565a875273b820629c6",
+    "verify_hosted.py": "1a5afb475f9f9de9ccfda5813e61d98082d11903a4ef28d4a1b5d323c6f872e5",
+    "verify_private_checkpoint.py": "0d0e9879ec58b49b241818e6e365f154655a8de07935a13ff46139afd93d8796"
+  },
+  "generator": {
+    "path": "build/history-thirty-next-two-20261020/prepare_ui_ops.py",
+    "sha256": "394b413f5718021ea8f129c4c725d6c7d31aa67d6f1b598a7d2214b1c778323e",
+    "independent_generator_review_path": "build/history-thirty-next-two-20261020/reviews/ui-ops-generator-final.json",
+    "independent_generator_review_sha256": "bfee4546aa19d824ce0a71159d626f7ca414b4a09470ff1261453543e09ee73f",
+    "reviewer_did_not_execute": true
+  },
+  "preparation": {
+    "path": "build/history-month-ui-20261020/recipe-preparation.json",
+    "sha256": "137d2e9947b44a6bfa3f1ff56a163fe5a36e3580bc417885a5d2d791468221e8",
+    "all17_current_pins_match": true,
+    "scope_sha256": "591e387dc548d753121f2ff2aae10dfdce56fc5be461715e9e7e83b96835e824",
+    "baseline_sha256": "4bed800e75faed1f3a7b1862dce06fb4733f9d176422db4988d182fe0a3fc611",
+    "actual_namespace_and_parent_substitutions_reviewed": true
+  },
+  "baseline": {
+    "schema": 1,
+    "date": "2026-10-20",
+    "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+    "native_parent": "e53678361d8903f1e34b0a0c39623c78bd7dff7c",
+    "private_parent": "b1b72df3534bb16c9b7abdc66b897805d3435e3d",
+    "previous_source_commit": "d36dd2d1c92914c796e20115939e3c66e7627ba1",
+    "previous_tag": "milestone-history-month-backend-20261020",
+    "previous_dist_manifest_sha256": "4f2839f0654531fcf8ecb0abaef11b01f87bef5aa13cdfb25944d48900d0ea35",
+    "scope": "P04-27 second and final of two: classic Statistics thirty independent saved UTC daily records"
+  },
+  "phase_scope": {
+    "schema": 1,
+    "phase": "ui",
+    "source_files": 24,
+    "unchanged_files": 238,
+    "unit_suites": {
+      "gcc": 76,
+      "clang": 27,
+      "sanitized": 30
+    },
+    "new_units": [
+      "saved-history-month-page",
+      "saved-history-month-plot-data",
+      "saved-history-month-window-worker"
+    ],
+    "unit_count_keys": {
+      "saved-history-month-plot-data": "saved_history_month_plot_qt_rows",
+      "saved-history-month-page": "saved_history_month_ui_qt_rows",
+      "saved-history-month-window-worker": "saved_history_month_window_worker_qt_rows"
+    },
+    "smoke_qt_rows": 13,
+    "captures_per_scale": 23,
+    "local_captures": 69,
+    "hosted_captures": 23
+  },
+  "qualified_predecessor": {
+    "source": "d36dd2d1c92914c796e20115939e3c66e7627ba1",
+    "metadata": "e53678361d8903f1e34b0a0c39623c78bd7dff7c",
+    "private_commit": "b1b72df3534bb16c9b7abdc66b897805d3435e3d",
+    "publication_sha256": "858ee5ff6678a56fa2bf246050e9bad1e29263a94188f588032670e471757ed8",
+    "local_verification_sha256": "379c24084e9403fe65e4fabc89ace2d9ac79e12fcf4dc25aac83901f82fd60c9",
+    "private_verification_sha256": "faef541759efee264b59522dd2ee8a83ebcff058a1a3bd356e954f9cc3c3cfbc",
+    "preparation_sha256": "c9ab061f0f095ebbbaaba765e390516845e43a4a1efa56fe486364a15f0cd5de",
+    "initial_ops_review_sha256": "e69f320309717ed9a2840f282afa50d8fcee2674321763ce3412a7b4bd8612b1",
+    "ops_prose_amendment_sha256": "faff049a12fb74753824af3eca41f480ecfce05cdaf8817891849e293ac408c3"
+  },
+  "source_sha256": {
+    ".github/workflows/native-preview.yml": "88cc3bd0df5c16d6ad5f8e5245049c27c0744b3d69e07878c300f4df17c25c27",
+    "preview/README.md": "f404df058ceecd32439f869ac857ff4754172efbebf7140e20c14cc0af4ec3b5",
+    "preview/native/app/main_desktop.cpp": "f1a01fe64002d15ad347d6ee33f498ed6c6bbdffbd7caf96c2ff0b984d236025",
+    "preview/native/app/session_bridge.cpp": "efa8b9b5ce2e9661e79f2120aaa75bf9653a7a4d4cb2d4dacd929921b4a830e3",
+    "preview/native/app/session_bridge.hpp": "d19a3b68d5eeb693677ea0233c18f19f86666298bceadef91c7cb2bb7aeab5f2",
+    "preview/native/packaging/preview_smoke.cpp": "f401011a4c048eb50765bbba9eb59db37646c75668d04b41670ab060fa780182",
+    "preview/native/tests/CMakeLists.txt": "5e1355994fe260ba2fed3a94c666547eebd7581868a280d6fa3b3054132d5e20",
+    "preview/native/tests/history_month_integration_tests.cpp": "2d0d35f5632d9c8d35f6546112a4a1deaea3f9d9aff93cff942852a8bdca8cd3",
+    "preview/native/tests/history_month_plot_tests.cpp": "af4c9a4b69a9e4d904b9c2c7ff10f25da3cd76cbced67f18edab16fd2016b6f4",
+    "preview/native/tests/history_month_view_ui_tests.cpp": "d7222a7155db8fb355e6f0e34392b0ed91729549df96ce1ba359153039d767a6",
+    "preview/native/tests/history_week_view_ui_tests.cpp": "0c4e0e769a95997f7b4e0fb074da088a7af7367f7725f0b9287db7c162377844",
+    "preview/native/tests/statistics_navigation_page_tests.cpp": "ce299f43386052579eeb57e977fb6b2fe1f1c23f72936ca9fe6ecfc6d757e4fc",
+    "preview/native/tests/statistics_navigation_window_tests.cpp": "97059903a2978c85ef081a3cda78148aa1ad1e7649233ffc35a5793792f8e780",
+    "preview/native/ui/CMakeLists.txt": "e69466c91f44660a386aa14cf0d4390fdc2fc3d71678e7130ec2ce9aca009ca3",
+    "preview/native/ui/history_month_presentation.hpp": "a39b92cb28d744e073c4ed62142d02627d5ecc8eb43b96df002e0862c9d9d9db",
+    "preview/native/ui/history_month_view.cpp": "9327b8b50a65e2aa1372e565e0624de801814a528a53d5a2192aac7b2f39ddaf",
+    "preview/native/ui/history_month_view.hpp": "22f10d166de262cb038b6bf661c8d2c6ebfa9aebbd61ffb2a4c9ce429e032eaf",
+    "preview/native/ui/library_window.cpp": "5cb8a3a43255d3fb2336fb61b74399ba49806f65514bba7f2df20dc954324aab",
+    "preview/native/ui/library_window.hpp": "7b15fbaee57efd3e243735b258a7a712fb4acf69ccbc5746a8a17d66ac941c8a",
+    "preview/native/ui/saved_history_plot.cpp": "321ad30eeb02db0bc3e5842d04048e6bfb867f2abda66c1e689847acbbb102b4",
+    "preview/native/ui/saved_history_plot.hpp": "66a0369a35761ae8a2b6824e0d3c386468d4f063588fd3d0208378fc8f595250",
+    "preview/native/ui/statistics_navigation.hpp": "d67a9c2dbb52dd55324032c7fd169403a4fc7c83f74f2091963740feae940e52",
+    "preview/native/ui/statistics_page.cpp": "295153e9158076dcaaf5b7241697cf42fc4ac3c611b10cbb60ca996e9c4aa635",
+    "preview/native/ui/statistics_page.hpp": "44ad261bf8ec7dfacb46a842847f440f259e337ba693acf94b5ca3cd49a2ae0e"
+  },
+  "source_files_verified": 24,
+  "source_inputs_sha256": "dd42c49bb56f602458e08e05a012b66b94ab2f766d3556165e54ad2c6b002b22",
+  "guard_map_sha256": "7c8735ada87756c050ac0ffab0862a00ebc9ebb15d086f6c09d22f447eb89cb1",
+  "guard_continuity_sha256": "8bb50e0738b33da2ba3521457dff66da7c8b25d3b37d97c437be26abc855f517",
+  "guard_change": {
+    "previous_count": 246,
+    "current_count": 238,
+    "actual_previous_guard_paths_removed": [
+      ".github/workflows/native-preview.yml",
+      "preview/native/app/main_desktop.cpp",
+      "preview/native/app/session_bridge.cpp",
+      "preview/native/app/session_bridge.hpp",
+      "preview/native/packaging/preview_smoke.cpp",
+      "preview/native/tests/history_week_view_ui_tests.cpp",
+      "preview/native/tests/statistics_navigation_page_tests.cpp",
+      "preview/native/tests/statistics_navigation_window_tests.cpp",
+      "preview/native/ui/CMakeLists.txt",
+      "preview/native/ui/library_window.cpp",
+      "preview/native/ui/library_window.hpp",
+      "preview/native/ui/saved_history_plot.cpp",
+      "preview/native/ui/saved_history_plot.hpp",
+      "preview/native/ui/statistics_navigation.hpp",
+      "preview/native/ui/statistics_page.cpp",
+      "preview/native/ui/statistics_page.hpp"
+    ],
+    "previous_changed_source_files_added_as_guards": [
+      "preview/native/adapters/CMakeLists.txt",
+      "preview/native/adapters/history_month_view.cpp",
+      "preview/native/adapters/history_month_view.hpp",
+      "preview/native/core/CMakeLists.txt",
+      "preview/native/core/include/biglybtc/saved_history_month.hpp",
+      "preview/native/core/src/saved_history_month.cpp",
+      "preview/native/tests/history_month_view_tests.cpp",
+      "preview/native/tests/saved_history_month_tests.cpp"
+    ],
+    "all_surviving_pairs_exact": true,
+    "all_added_pairs_equal_previous_qualified_source": true,
+    "current_raw_guard_files_verified": 238,
+    "retained_original_java_receipt_map_exact": true,
+    "note": "guard-continuity also retains the old tests/CMakeLists.txt beforeimage from the prior source map; it was not an entry in the previous246 guard set. Actual set difference is16 removed plus8 added."
+  },
+  "findings": [
+    {
+      "id": "MUI-OPS-1",
+      "result": "PASS",
+      "detail": "Complete actual helpers and normalized differences versus qualified P26 were inspected. All17 source hashes match preparation, all Python ASTs parse without import, and generator/scope/baseline receipt hashes match. Actual predecessor identities are source d36dd2d1, metadata e5367836 and private b1b72df3; no future identity is invented."
+    },
+    {
+      "id": "MUI-OPS-2",
+      "result": "PASS",
+      "detail": "The source-commit whitelist is exactly the24 frozen qualification-input paths. It includes reviewed UI/app/composition/CMake/new tests plus the three explicitly amended legacy-test expectations. Every current source byte matches. Source publication requires actual GCC76 and all three13-row scaled smokes plus seven successful visual commands; all lanes/hosted remain mandatory for metadata, dist and tag."
+    },
+    {
+      "id": "MUI-OPS-3",
+      "result": "PASS",
+      "detail": "The238 guards equal (old246 plus the complete previous9-file source map) minus current changed paths. No retained hash was rebased; all eight new guards match the actual qualified backend source, and every current raw guard byte verifies. Underlying daily/week/month backend implementations, old corpora and retained tests remain guarded unless explicitly in the reviewed24-source map."
+    },
+    {
+      "id": "MUI-OPS-4",
+      "result": "PASS",
+      "detail": "GCC76/Clang27/sanitizer30 retain exact old73/24/27 names plus only saved-history-month-plot-data/page/window-worker. Static Clang list has27 unique exact names, sanitizer retains its three extra lifecycle regressions. nice5, compiler jobs2/1, ordinary-priority tests, unchanged deadlines, no-tests error and leak-enabled sanitizer environment are preserved."
+    },
+    {
+      "id": "MUI-OPS-5",
+      "result": "PASS",
+      "detail": "Three new actual Qt row metrics map to their own CTest sections in both producers: saved_history_month_plot_qt_rows, saved_history_month_ui_qt_rows and saved_history_month_window_worker_qt_rows. Values must be bounded positive actual ints and are never guessed. Copy19/keyboard17 and all retained Qt, backend plain PASS and original2550/3150 comparison markers remain required."
+    },
+    {
+      "id": "MUI-OPS-6",
+      "result": "PASS",
+      "detail": "The new month PNG appears once in all declared image sets. Offline smoke13 and19 offline+four engine/graph images produce23 per scale/69 local/23 hosted. Seven visual commands, exact screenshot names/PNG bytes and source-bound visual review remain required. Existing real-engine and graph capture cases/deadlines are unchanged."
+    },
+    {
+      "id": "MUI-OPS-7",
+      "result": "PASS",
+      "detail": "Both local and hosted receipts set history_month_ui_only=true and read_only_backend_only=false. Renderer/navigation/traffic/keyboard/Copy-only and Clipboard-only flags remain false; automatic clipboard writes, new Java execution/equality and broad advancement stay false. Actual scope is30 independent daily records with UI/traffic/inspection/Copy, no period sum or original720-hour graph equality."
+    },
+    {
+      "id": "MUI-OPS-8",
+      "result": "PASS",
+      "detail": "Exact-source workflow/run/API artifact binding, real ZIP digest/size, canonical file types/paths, actual member hashing and complete extracted-tree equality remain inherited. Hosted must retain exact previous73 names plus three new names; ZIP entry count is observed, not guessed. The sole hosted success receipt is published after all checks."
+    },
+    {
+      "id": "MUI-OPS-9",
+      "result": "PASS",
+      "detail": "103-file dist,82 unchanged runtimes, prior manifest4f2839f0, full previous-dist rollback, private loader checks and whole-file exact RPATH replay remain qualified-pattern code. Final no-work/source/current/rollback hashes remain required before final evidence."
+    },
+    {
+      "id": "MUI-OPS-10",
+      "result": "PASS",
+      "detail": "Private wrapper and post-verifier retain both P04-26/P04-27 cards with exact current private parent b1b72df3, original cb8 HEAD/index baseline, alternate-index/scoped raw-byte rule, all staged blob and inventory checks before ref advancement and full actual-commit validation afterward. The original P26 milestone and its parentage remain unchanged."
+    },
+    {
+      "id": "MUI-OPS-11",
+      "result": "PASS",
+      "detail": "The shared docs helper93bc95 configuration matches actual scope76/27/30,24 source/238 guard counts from completion-scope, three exact unit/key pairs,13 smoke/69 local/23 hosted. Completion still requires independent plot/tests/smoke/operations/visual reviews and actual source/local/hosted/metaCI/dist proof, then root records the actual final private checkpoint before stopping the two-milestone request."
+    }
+  ],
+  "preparation_scope": {
+    "source_files": 24,
+    "guard_files": 238,
+    "prior_suites": {
+      "gcc": 73,
+      "clang": 24,
+      "sanitized": 27
+    },
+    "new_suites": {
+      "gcc": 76,
+      "clang": 27,
+      "sanitized": 30
+    },
+    "new_units": [
+      "saved-history-month-page",
+      "saved-history-month-plot-data",
+      "saved-history-month-window-worker"
+    ],
+    "unit_count_keys": {
+      "saved-history-month-plot-data": "saved_history_month_plot_qt_rows",
+      "saved-history-month-page": "saved_history_month_ui_qt_rows",
+      "saved-history-month-window-worker": "saved_history_month_window_worker_qt_rows"
+    },
+    "actual_new_Qt_rows": "pending actual qualification; no guessed totals",
+    "retained_Copy_rows": 19,
+    "retained_keyboard_rows": 17,
+    "smoke_rows": 13,
+    "offline_images_per_scale": 19,
+    "captures_per_scale": 23,
+    "local_captures": 69,
+    "hosted_captures": 23,
+    "dist_files": 103,
+    "runtime_files_unchanged": 82
+  },
+  "shared_docs_helper": {
+    "path": "build/history-thirty-next-two-20261020/finalize_docs.py",
+    "sha256": "93bc95d817e21767628ade66f69b761139ef6754b44530ef923243e2bae374f6",
+    "scope_schema_matches": true,
+    "review_credit": "Only schema linkage checked here; full helper review is the separate Driver docs-contract receipt."
+  },
+  "scope_precision": [
+    "This operational review excludes independent production credit for the eight UI files authored by error_codec; root/Driver source reviews supply that independent credit.",
+    "This is a review of generated source and current hashes, not actual new compiler/test/hosted/dist/publication/private-checkpoint success. Root exclusively executes those gates.",
+    "No generator, helper or selected target body was imported/evaluated/executed by the reviewer; no builds, tests, Git, network, live profile, Java or native execution occurred."
+  ],
+  "execution": {
+    "source_hash_AST_only": true,
+    "helpers_executed": false,
+    "generator_executed_by_reviewer": false,
+    "builds_native_JVM_tests_Git_network": false,
+    "native_or_shared_docs_modified": false,
+    "runtime_credit": false
+  }
+}

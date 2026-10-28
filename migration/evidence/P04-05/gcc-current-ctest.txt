@@ -1,0 +1,9 @@
+Test project /tmp/biglybtc-speed-scheduler-gcc
+    Start 1: original-scheduler-policy
+1/2 Test #1: original-scheduler-policy ..............   Passed    0.03 sec
+    Start 2: original-scheduler-xml-time-fixtures
+2/2 Test #2: original-scheduler-xml-time-fixtures ...   Passed    1.07 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   1.11 sec

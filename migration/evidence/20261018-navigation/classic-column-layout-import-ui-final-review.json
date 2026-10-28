@@ -1,0 +1,39 @@
+{
+  "status": "PASS_SOURCE_REVIEW_ALL_THREE_FINDINGS_RESOLVED",
+  "component": "P04-12 native read-only classic layout UI",
+  "prior_full_review_sha256": "e7d0afb0300b9e1fc6345ec495c5d0544ca6154204cba95ba6bbc8bd8cdbdce3",
+  "prior_dispatch_blocked_addendum_sha256": "a714171b627772eff0ae6d4f9314086312a2ccbd0cd4750307232c0dc34c9ac1",
+  "prior_reports_preserved": true,
+  "reviewed_current_source_sha256": {
+    "preview/native/ui/classic_columns.hpp": "03617c8ead50014fb24dfff7fce871f2f14cc88e135b93c509cc0e84c3e73fe7",
+    "preview/native/ui/classic_columns.cpp": "91ca50a44a162032f3ea090d328228bc96d1d6e1716294150d72bc3090be5c53",
+    "preview/native/ui/library_window.hpp": "dee0185015986a8073d53698e330ca70588ed019223713794cb45dd17401a985",
+    "preview/native/ui/library_window.cpp": "ed2d59cf03b15b7a93521ade53cf148442ca5a6b15bbeb3394fc7c0d1cdf3e66",
+    "preview/native/ui/column_layout_presentation.hpp": "447fed4086b0551601d324f42dd5de39eda2eb51ee476ab63343a6d02238cf83"
+  },
+  "corrections": [
+    {
+      "id": "CLI_UI_1",
+      "status": "Resolved",
+      "details": "Reset loop currentVisual fixes int/predicate shadowing, no policy change."
+    },
+    {
+      "id": "CLI_UI_2",
+      "status": "Resolved",
+      "details": "Final controller cpp91ca guards before and after initial and loop predicates; deletion/reset cannot bypass expected edit revision or lead to later owner access."
+    },
+    {
+      "id": "CLI_UI_3",
+      "status": "Resolved",
+      "details": "Final Windowed2d wraps request emission in QPointer; if no synchronous busy acceptance and the exact same active session/request remains, it releases only that failed slot and schedules pending services/layouts. A synchronous packet that consumed active or a newer active session/request is not cleared. Real Bridge acceptance emits busytrue synchronously; posted cancellations/failures release via existing busyfalse path."
+    }
+  ],
+  "preserved_policy": "All whitelist/typed/bounded plan, width/order/sort, edit revisions/construction reset, per-pane local-edit priority, source ownership, close/reopen retention and queue separation checks from prior full review remain unchanged. The24 old complete Window definitions remain exact; this final Window delta is only post-request rejection handling.",
+  "final_window_delta_sha256": "9e75bb3f63af8a6bea6386c0add343c926f4a78f2d52e8a6ae2c12886bc99660",
+  "review_method": "Complete frozen source read, lexical/source-byte comparison and hashes only. No subject/test/build/process execution. Own Bridge implementation not independently reviewed by author.",
+  "runtime_status": "Root/oracle own builds and regression execution; no actual UI pass inferred by this review.",
+  "scope_exclusions": [
+    "No config writes, Java layout/default/comparator parity or automatic engine integration.",
+    "No physical profile/network/runtime access by reviewer."
+  ]
+}

@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "verdict": "PASS source-only additive test delta; HA-T1 and HA-T2 addressed",
+  "prior_review": "history.json",
+  "prior_review_sha256": "c20f3ef8e13aa68c54460864b51d166e5c6cf2ea085a706a86ffda5289cbe234",
+  "manifest_sha256": "79a42772e0a1ace10d18476b093b3be041c014b5a3724b0343f4d92cb464ee87",
+  "historical_manifest_sha256": "61943701c3a9236d44aae686aff9cc5f00bdbc1cba4f18074ad0ad424d51a794",
+  "source_sha256": {
+    "preview/native/ui/engine_activity_presentation.hpp": "e45ba4e1f5e929d3921545a6b8cad300238737d205f75707defb3c6dbb4479a5",
+    "preview/native/ui/engine_activity_history.hpp": "6361476296ad8f0aa1d320b5f96f7fb84356557fef402c01c03036fe8e295844",
+    "preview/native/ui/engine_activity_history.cpp": "5920ea01804bbc5dc1f96c71d549c0e5abd8fe3cda581c1ea817358d1aaa95a6",
+    "preview/native/tests/engine_activity_history_tests.cpp": "3025608220e9152ee04a9b9e270621c99db669ef3cfa1058c86af17fcf2c4715"
+  },
+  "unchanged_context_sha256": {
+    "preview/native/ui/engine_statistics_presentation.hpp": "2b1270182e459b2b93aa3376f80b8bcb52500b51486dca0e93820684479db67d",
+    "preview/native/ui/library_model.hpp": "8abca399af00b5c2c96e760c85b6c1078e69274be8b68c6dc8de7ac877772d98",
+    "preview/native/core/include/biglybtc/engine_statistics.hpp": "f5946fd72b06312dd4772bbfb7f4c84ebbfcff53971b737e8ba7cda4902678f9",
+    "preview/native/core/src/engine_statistics.cpp": "77f4214794a6eb942f6732614dac55905d72ea91433c3b7158cc8095f78dd90d"
+  },
+  "delta": {
+    "production_files_changed": 0,
+    "test_insert_blocks": 1,
+    "test_lines_inserted": 20,
+    "old_test_bytes_preserved_in_order": true,
+    "new_behavior_methods": 2,
+    "behavior_methods_total": 21,
+    "planned_behavior_rows": 50,
+    "planned_qt_rows": 52
+  },
+  "checks": [
+    "Actual2-to3 consecutive packet sequence plus later elapsed Ended now must remain disconnected; no sequence gap can explain the outcome.",
+    "Provided rates100/60/79/39/20/20 satisfy admitted independently-floored difference1 shape and are checked by all-field equality plus explicit21-versus20 protocol differences, protecting against recomputation.",
+    "All earlier behavior/data/helper/main bytes remain exactly in sequence; production3 files and four contexts unchanged; original manifest/staged source history retained and exact."
+  ],
+  "findings": [],
+  "execution": {
+    "tests": false,
+    "compiler": false,
+    "subject_import": false,
+    "java": false
+  }
+}

@@ -1,0 +1,19 @@
+Start testing: Oct 17 02:37 IDT
+----------------------------------------------------------
+1/1 Testing: storage-layout-boundaries
+1/1 Test: storage-layout-boundaries
+Command: "/tmp/biglybtc-storage-gcc/biglybtc-storage-tests"
+Directory: /tmp/biglybtc-storage-gcc
+"storage-layout-boundaries" start time: Oct 17 02:37 IDT
+Output:
+----------------------------------------------------------
+PASS compact/reordered mapping, transient holes, bounds and malformed control maps
+<end of output>
+Test time =   0.09 sec
+----------------------------------------------------------
+Test Passed.
+"storage-layout-boundaries" end time: Oct 17 02:37 IDT
+"storage-layout-boundaries" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 17 02:37 IDT

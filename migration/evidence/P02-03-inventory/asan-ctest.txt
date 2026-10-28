@@ -1,0 +1,150 @@
+Start testing: Oct 17 03:31 IDT
+----------------------------------------------------------
+1/8 Testing: bounded-core-formats
+1/8 Test: bounded-core-formats
+Command: "/tmp/biglybtc-native-asan/tests/biglybtc-core-tests"
+Directory: /tmp/biglybtc-native-asan/tests
+"bounded-core-formats" start time: Oct 17 03:31 IDT
+Output:
+----------------------------------------------------------
+PASS 70 checks; 20,000 malformed-input trials
+<end of output>
+Test time =   3.07 sec
+----------------------------------------------------------
+Test Passed.
+"bounded-core-formats" end time: Oct 17 03:31 IDT
+"bounded-core-formats" time elapsed: 00:00:03
+----------------------------------------------------------
+
+2/8 Testing: saved-library-inventory
+2/8 Test: saved-library-inventory
+Command: "/tmp/biglybtc-native-asan/tests/biglybtc-library-tests"
+Directory: /tmp/biglybtc-native-asan/tests
+"saved-library-inventory" start time: Oct 17 03:31 IDT
+Output:
+----------------------------------------------------------
+PASS original/legacy inventory, owned paths/hashes, normalized startup, force/pause owners, issues and bounds
+<end of output>
+Test time =   0.17 sec
+----------------------------------------------------------
+Test Passed.
+"saved-library-inventory" end time: Oct 17 03:31 IDT
+"saved-library-inventory" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/8 Testing: structured-document-edits
+3/8 Test: structured-document-edits
+Command: "/tmp/biglybtc-native-asan/tests/biglybtc-document-edit-tests"
+Directory: /tmp/biglybtc-native-asan/tests
+"structured-document-edits" start time: Oct 17 03:31 IDT
+Output:
+----------------------------------------------------------
+PASS structured insertion/replacement, nested splicing, source ownership, unknown/info bytes and edit quotas
+<end of output>
+Test time =   0.51 sec
+----------------------------------------------------------
+Test Passed.
+"structured-document-edits" end time: Oct 17 03:31 IDT
+"structured-document-edits" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/8 Testing: compressed-state-envelope
+4/8 Test: compressed-state-envelope
+Command: "/tmp/biglybtc-native-asan/tests/biglybtc-codec-tests"
+Directory: /tmp/biglybtc-native-asan/tests
+"compressed-state-envelope" start time: Oct 17 03:31 IDT
+Output:
+----------------------------------------------------------
+PASS plain/gzip identity, binary edits, copy lifetime, CRC/truncation, quotas and concatenated members
+<end of output>
+Test time =   0.14 sec
+----------------------------------------------------------
+Test Passed.
+"compressed-state-envelope" end time: Oct 17 03:31 IDT
+"compressed-state-envelope" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/8 Testing: bounded-executor
+5/8 Test: bounded-executor
+Command: "/tmp/biglybtc-native-asan/tests/biglybtc-executor-tests"
+Directory: /tmp/biglybtc-native-asan/tests
+"bounded-executor" start time: Oct 17 03:31 IDT
+Output:
+----------------------------------------------------------
+PASS: lifecycle, backpressure, FIFO, cancellation, ownership, reentrant stop, concurrency
+<end of output>
+Test time =   0.47 sec
+----------------------------------------------------------
+Test Passed.
+"bounded-executor" end time: Oct 17 03:31 IDT
+"bounded-executor" time elapsed: 00:00:00
+----------------------------------------------------------
+
+6/8 Testing: java-saved-library-inventory
+6/8 Test: java-saved-library-inventory
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/library_interop.py" "--driver" "/tmp/biglybtc-native-asan/tests/biglybtc-library-driver"
+Directory: /tmp/biglybtc-native-asan/tests
+"java-saved-library-inventory" start time: Oct 17 03:31 IDT
+Output:
+----------------------------------------------------------
+PASS original Java v1 inventory, identities, counters and all profile bytes retained
+PASS original Java v2 inventory, identities, counters and all profile bytes retained
+PASS original Java hybrid inventory, identities, counters and all profile bytes retained
+<end of output>
+Test time =   3.37 sec
+----------------------------------------------------------
+Test Passed.
+"java-saved-library-inventory" end time: Oct 17 03:31 IDT
+"java-saved-library-inventory" time elapsed: 00:00:03
+----------------------------------------------------------
+
+7/8 Testing: state-java-interop
+7/8 Test: state-java-interop
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/../../migration/tools/state_interop.py" "--driver" "/tmp/biglybtc-native-asan/tests/biglybtc-state-driver"
+Directory: /tmp/biglybtc-native-asan/tests
+"state-java-interop" start time: Oct 17 03:31 IDT
+Output:
+----------------------------------------------------------
+PASS byte-identical Java gzip biglybt.config.gz
+PASS byte-identical Java gzip generated-1.torrent.gz
+PASS byte-identical Java gzip generated-2.torrent.gz
+PASS byte-identical Java gzip generated-3.torrent.gz
+PASS byte-identical operational downloads.config
+PASS byte-identical operational active/cache.dat
+PASS byte-identical operational active/7B26D19F7DC2D2F9D9F897AD851B0AB6E0D58C6C.dat
+PASS DEBUG::Sat Oct 17 03:32:00 IDT 2026  BC Provider 'BC_VUZE' initialised successfully (loaded from file:/tmp/biglybtc-oracle/classes/org/gudy/bouncycastle/jce/provider/BouncyCastleProvider.class)
+DEBUG::Sat Oct 17 03:32:00 IDT 2026  Not installing security manager - disabled by system property
+PASS Java reads structured operational resume edit with unchanged info/attributes/unknown fields
+PASS Java reads edited gzip config and unchanged v1/v2/hybrid torrent hashes
+<end of output>
+Test time =  28.15 sec
+----------------------------------------------------------
+Test Passed.
+"state-java-interop" end time: Oct 17 03:32 IDT
+"state-java-interop" time elapsed: 00:00:28
+----------------------------------------------------------
+
+8/8 Testing: profile-java-interop
+8/8 Test: profile-java-interop
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/profile_tests.py" "--driver" "/tmp/biglybtc-native-asan/tests/biglybtc-profile-driver"
+Directory: /tmp/biglybtc-native-asan/tests
+"profile-java-interop" start time: Oct 17 03:32 IDT
+Output:
+----------------------------------------------------------
+PASS hold-lock conflicts with Java and native; death releases lock
+PASS duplicate-lock conflicts with Java and native; death releases lock
+PASS Java lock excludes native; release permits native
+PASS compatible save/recovery at normal
+PASS compatible save/recovery at temp
+PASS compatible save/recovery at backup
+PASS compatible save/recovery at primary
+PASS traversal, stale input, exclusive saving and symlink protection
+<end of output>
+Test time =  15.61 sec
+----------------------------------------------------------
+Test Passed.
+"profile-java-interop" end time: Oct 17 03:32 IDT
+"profile-java-interop" time elapsed: 00:00:15
+----------------------------------------------------------
+
+End testing: Oct 17 03:32 IDT

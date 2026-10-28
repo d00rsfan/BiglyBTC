@@ -1,0 +1,217 @@
+{
+  "builds": [
+    {
+      "compiler": "gcc",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native",
+          "-B",
+          "/tmp/biglybtc-rating-qualified-gcc",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS="
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-rating-qualified-gcc",
+          "--target",
+          "biglybtc-rating-driver",
+          "biglybtc-rating-bounds-tests",
+          "biglybtc-plugin-settings-driver",
+          "biglybtc-mldht-cache-driver",
+          "biglybtc-document-edit-tests",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-rating-qualified-gcc",
+          "-R",
+          "rating-data|original-plugin-settings|original-mldht-routing-cache|structured-document-edits",
+          "--output-on-failure"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/rating_data_roundtrip.py",
+          "--driver",
+          "/tmp/biglybtc-rating-qualified-gcc/plugins/BiglyBTC-plugin-azrating/biglybtc-rating-driver",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-04-rating-data/gcc-roundtrip.json"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-rating-qualified-gcc/plugins/BiglyBTC-plugin-azrating/biglybtc-rating-driver": "830b6a630796923c968cfb57d39dd2f11b54efc6c8fd9f78319d4b2dbe5a34cd",
+        "/tmp/biglybtc-rating-qualified-gcc/plugins/BiglyBTC-plugin-azrating/biglybtc-rating-bounds-tests": "6685f927162e28a5227017ee6d9fa2113c969a8616d0c1a53b127093d067cade",
+        "/tmp/biglybtc-rating-qualified-gcc/plugins/BiglyBTC-plugin-azrating/libbiglybtc_rating_data.a": "20c69965345ff2d6bba5cce508d42975b59b01307a75006e3c25ab58f1857411"
+      }
+    },
+    {
+      "compiler": "clang",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native",
+          "-B",
+          "/tmp/biglybtc-rating-qualified-clang",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-rating-qualified-clang",
+          "--target",
+          "biglybtc-rating-driver",
+          "biglybtc-rating-bounds-tests",
+          "biglybtc-plugin-settings-driver",
+          "biglybtc-mldht-cache-driver",
+          "biglybtc-document-edit-tests",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-rating-qualified-clang",
+          "-R",
+          "rating-data|original-plugin-settings|original-mldht-routing-cache|structured-document-edits",
+          "--output-on-failure"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/rating_data_roundtrip.py",
+          "--driver",
+          "/tmp/biglybtc-rating-qualified-clang/plugins/BiglyBTC-plugin-azrating/biglybtc-rating-driver",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-04-rating-data/clang-roundtrip.json"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-rating-qualified-clang/plugins/BiglyBTC-plugin-azrating/biglybtc-rating-driver": "67f3050e8a2517162710f9d0855e3782f509e169bfb603cba40a27242f592926",
+        "/tmp/biglybtc-rating-qualified-clang/plugins/BiglyBTC-plugin-azrating/biglybtc-rating-bounds-tests": "5f8ff833fdbd74f2b209e3e7e1746b808b4a1e1da4c388019130bbd6ea3d94f8",
+        "/tmp/biglybtc-rating-qualified-clang/plugins/BiglyBTC-plugin-azrating/libbiglybtc_rating_data.a": "cb31b42c9165048089f08f2c37dbd8a6183e3672c32f6edb957fe9848be4dcb0"
+      }
+    },
+    {
+      "compiler": "asan",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native",
+          "-B",
+          "/tmp/biglybtc-rating-qualified-asan",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Debug",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-rating-qualified-asan",
+          "--target",
+          "biglybtc-rating-driver",
+          "biglybtc-rating-bounds-tests",
+          "biglybtc-plugin-settings-driver",
+          "biglybtc-mldht-cache-driver",
+          "biglybtc-document-edit-tests",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-rating-qualified-asan",
+          "-R",
+          "rating-data|original-plugin-settings|original-mldht-routing-cache|structured-document-edits",
+          "--output-on-failure"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/rating_data_roundtrip.py",
+          "--driver",
+          "/tmp/biglybtc-rating-qualified-asan/plugins/BiglyBTC-plugin-azrating/biglybtc-rating-driver",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-04-rating-data/asan-roundtrip.json"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-rating-qualified-asan/plugins/BiglyBTC-plugin-azrating/biglybtc-rating-driver": "77a7d35ba80cae1bbdf6179e616af9456cfc7a41666b21a97e57ac050da8fb83",
+        "/tmp/biglybtc-rating-qualified-asan/plugins/BiglyBTC-plugin-azrating/biglybtc-rating-bounds-tests": "b5f06e0157fb3d4b139eb611cee55efe90ebf3689422dff69131b344d5612397",
+        "/tmp/biglybtc-rating-qualified-asan/plugins/BiglyBTC-plugin-azrating/libbiglybtc_rating_data.a": "8e0e630b4d6da88634e0ecb69008790af20b34a036d0a860ca0527f3524a04cf"
+      }
+    }
+  ],
+  "source_sha256": {
+    "migration/fixtures/rating-data/commands.txt": "db3e186aa8732f554fe45648f8c70b1915057145dd12493b3336b5ffc7905919",
+    "migration/fixtures/rating-data/expected.txt": "e17460cae22483868685a15d47a47e551d128714153ad60bf3ac1e5595884f04",
+    "migration/fixtures/rating-data/manifest.json": "15b053e883add4e9fcfcbd942e6b59d6d9b397055ebf1b72b9404539325ba79b",
+    "migration/tools/rating_data_oracle.py": "28cf385a3f23c09ef5d826369527571e8cff3b238de139ad33bea11d100757c5",
+    "migration/tools/rating_data_roundtrip.py": "81356406063b3d921012ad5e78c37e8a6ea1f7c26d40443d90bea5ab1309d222",
+    "migration/tools/rating_matrix.py": "d5289e3f2a96b1ebb781eb6d88aeabad88256baef58be26425ba4b7ea467c0c0",
+    "native/CMakeLists.txt": "f19b755253c754692a0f5273236cbd2f771d01bafd7e22ff4bd0a0592d6fd8da",
+    "native/adapters/CMakeLists.txt": "1acfd90cb500e759669b36a89151f9ba58e8e725b09046b0042c879ade0c3ff0",
+    "native/adapters/MPL-2.0.txt": "fab3dd6bdab226f1c08630b1dd917e11fcb4ec5e1e020e2c16f83a0a13863e85",
+    "native/adapters/encoded_document.cpp": "6963883e88118c95d2668c926cb6c15b78c5eb299ccf2f98bbba5b0026f276a2",
+    "native/adapters/encoded_document.hpp": "fce354efe66973b5ad655b9d0fd09891bc610206d54918bdc0f4ca6ae6b333be",
+    "native/adapters/file_io.cpp": "c55df3bfa6531534819a798351a5320365e1081d774f466fe4342bffa54793b9",
+    "native/adapters/file_io.hpp": "41b14236290a65b52f75d56f076857a1ffd037f9bd823f1f9afef98c82a9cd37",
+    "native/adapters/library_view.cpp": "3fe1277cf97ae0775b528c371996ed3af61c50d18025b3ba10e6d7538dac1dfa",
+    "native/adapters/library_view.hpp": "03ea42490496ca46e25b82ed4f5b2d1e154ddc01048714dc573f7be74f03f8dd",
+    "native/adapters/mldht_cache.cpp": "5d5b5b4f33388ea03c45e4acf3fce8eee4d203cef1e701f6e2bd4495c7c615ae",
+    "native/adapters/mldht_cache.hpp": "b3aadc2899eb224456baa7540ed988bd2e8bd0762f7fd35eeb01c23580bcd12c",
+    "native/adapters/plugin_settings.cpp": "9acca18418c2c52e09e8e67665eac81a8d9e0df3397bf71268c750c85c516f8c",
+    "native/adapters/plugin_settings.hpp": "b2a8e74f2b244589733925ab714902ee2eecfc51ad50b1e1e4faf2fc31096292",
+    "native/adapters/profile.cpp": "f31f99cf73484c0c4fb058a6fc9e3937ecd74412f5ae794c775c0a7e8c4b91ee",
+    "native/adapters/profile.hpp": "e91ff37048e02b87a4d6f97d774fe3e33b491febd0b2ec55d3dedbbf20dd60ff",
+    "native/adapters/torrent_state.cpp": "215f3e4ad1483615543529af0cbfc557645706f2536048126438b9399d3df0f7",
+    "native/adapters/torrent_state.hpp": "947bb4933bbfe11d1e7162e0f1d039ff25feb3ad59f0227a2fb4b52f770318c6",
+    "native/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "native/core/CMakeLists.txt": "a297b965f0cbc9134509f709823bed695dcfcfaf660e838936ed13547e919290",
+    "native/core/include/biglybtc/bencode.hpp": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+    "native/core/include/biglybtc/executor.hpp": "d2afcc590573e64bce376aadc42051198353e4c79c5f69f8a2452ab5a7d3d8bc",
+    "native/core/include/biglybtc/file_policy.hpp": "0d199f329d775783d9f4195ba6e14ff660b410ce4bfc555c4c55b4eaa43bff46",
+    "native/core/include/biglybtc/library.hpp": "8ad4e7f5346300fdc03c6318d629b6185874d35109511ca445609639b7168875",
+    "native/core/include/biglybtc/state_cache.hpp": "036be2d5a02e1cab9be638496e7b066ef13619a22443ea508a3d583f8f5dcd15",
+    "native/core/include/biglybtc/torrent_layout.hpp": "59accc489872b0f69444da51cdd2a79aeaa0510deeaf1a01434aab2b8699a775",
+    "native/core/src/bencode.cpp": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08",
+    "native/core/src/executor.cpp": "bd3adadaec6e4f48c0ffbb8ffc77e2c67c15296302105a73e984f58e4e8d7613",
+    "native/core/src/file_policy.cpp": "a50ae3dfcb3d75d9c3220db803823bf91a7f4daaf40ee54f7c325bda7d6a764a",
+    "native/core/src/library.cpp": "3ba21404a77e0e3c9e23cbf267be130609598ed6646693df7c4f656306895348",
+    "native/core/src/state_cache.cpp": "b73688291e949eb592b0e12281e79bf19dc1000a4f5b9d80f6a06a63238e4fc2",
+    "native/core/src/torrent_layout.cpp": "58e6961c5136d1a5f9adf860748a9b3e645fe0ff05ccb50836f339a636ce072d",
+    "native/plugins/BiglyBTC-plugin-azrating/CMakeLists.txt": "e675cd47eaa541765c28a292d0424d1872eb1d59ec10db76d0a53077f48e8af3",
+    "native/plugins/BiglyBTC-plugin-azrating/COPYING": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6",
+    "native/plugins/BiglyBTC-plugin-azrating/README.md": "ef82d90762c9677f6de10b85ecf3a4aaaa0b7bb5aa36b5eb9552febdb5968e7d",
+    "native/plugins/BiglyBTC-plugin-azrating/bounds_test.cpp": "f583acdd72fa17c76e2aa83577a7c5e059f77ad542626ba9c027d65fce95851f",
+    "native/plugins/BiglyBTC-plugin-azrating/fixture_test.py": "332c70827dd4ce01ef1b43ed30794ad131872dc3f009f3f4eaf5ec1a634533cd",
+    "native/plugins/BiglyBTC-plugin-azrating/rating_data.cpp": "9cc52433ca85c6edab960f5fe7fcf5c7fa319f15dad5fc6f5bd3ac9f92031896",
+    "native/plugins/BiglyBTC-plugin-azrating/rating_data.hpp": "912589da9cf1bea24c927a90013bf332b023f4c5cb158e28dbe0a493f6f87058",
+    "native/plugins/BiglyBTC-plugin-azrating/rating_driver.cpp": "64637e0fdd5091c2e8aaeedcf9f2a948634105e2b4f104e3ebd66459313a13ee",
+    "native/tests/CMakeLists.txt": "d7726608a520bbe00d415c53d05d0ff0597fa1a52ab849ca205973bc5ca926f0",
+    "native/tests/document_edit_tests.cpp": "de628c050a9d5b32c6689bb357bd594105ddd82d1d388189af529bbd4fa23eb1",
+    "native/tests/mldht_cache_driver.cpp": "039f1eda1c689264a50befbeeb21c9461a57ab9919b5ffd73ffddd885ab26eed",
+    "native/tests/mldht_cache_fixtures.py": "df7a7cac4a4a3974c26fdb69b87fb77e349d8a21f38272eeb720dd24015712f6",
+    "native/tests/plugin_settings_driver.cpp": "b7b603b0b8d9bf948c688427e74100f8f0cdd12790ae81c67b4adfef893e5ccb",
+    "native/tests/plugin_settings_fixtures.py": "3e3216171250c38bb5fb6e3517be8da830b1057b9f4b50403e761bb18241af63"
+  },
+  "scope": "1819 unchanged original rating observations, bounded input/aggregation tests, native -> Java payload roundtrips and original settings/cache/document regressions; no live profile, DDB, plugin startup or network"
+}

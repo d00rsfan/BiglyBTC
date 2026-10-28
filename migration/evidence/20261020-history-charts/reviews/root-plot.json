@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "reviewer": "root",
+  "status": "PASS_source_only",
+  "scope": "Independent static source review of immutable scalar projection, signed chart renderer and focused tests; actual qualification pending",
+  "source_sha256": {
+    "preview/native/ui/saved_history_plot.hpp": "7358b1d6a900f3ae787b83aab1b2889138ff2ffdb328171fd1be93b858bc50fd",
+    "preview/native/ui/saved_history_plot.cpp": "725b2aea935e3a5d5ed74acf1526be289105f139f66ab85cf54b29f7c99f0b56",
+    "preview/native/tests/saved_history_plot_tests.cpp": "918ac3e3c3da7242f58a88df674a4f0bc45f0d28e41dd850903e77e1c8fbf738",
+    "preview/native/tests/saved_history_plot_widget_tests.cpp": "ff7b24f2c46639b6f008aab2e0c51e20d5626086e5253f6a56e7332cc063f836"
+  },
+  "checks": [
+    "Two exact payload components are copied into fixed24/7 immutable scalar buckets; no sum, rate conversion or data path/clock ownership.",
+    "Date/range mismatches cannot relabel saved source facts. Missing optional facts stay absent; recorded zero stays present.",
+    "Signed axis bounds include zero; coordinate math converts before subtraction and rejects non-finite/invalid rectangles without int64 abs/subtraction overflow.",
+    "Only adjacent known values connect per trace; isolated observations use markers. Sparse labels elide safely and hover retains exact UTC/signed byte facts.",
+    "Setter/tooltip/accessibility paths retain QPointer and current-frame guards across deletion and direct reentry; immutable facts outlive source aliases/widgets.",
+    "Tests cover bounded facts, date labels, owned copies, signed extremes, rendered missing/zero/gap/isolated traces, nearest-bucket hover and callback lifetimes."
+  ],
+  "blockers": []
+}

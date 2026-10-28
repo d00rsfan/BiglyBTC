@@ -1,0 +1,482 @@
+{
+  "activity.constructor": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/ActivityView.java",
+    "signature_anchor": "public ActivityView()",
+    "first_line": 75,
+    "last_line": 85,
+    "bytes": 330,
+    "sha256": "f0a6194d071413ce774e81ed6a233966d2267a21a4c6ade1ecba65a843360100",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "activity.periodicUpdate": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/ActivityView.java",
+    "signature_anchor": "public void periodicUpdate()",
+    "first_line": 90,
+    "last_line": 110,
+    "bytes": 766,
+    "sha256": "5fca8039be3f433b381007d8b87ece19359be9925837c6a3f0ddd9f47e29c6c3",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "activity.initialize": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/ActivityView.java",
+    "signature_anchor": "private void initialize(Composite composite)",
+    "first_line": 112,
+    "last_line": 167,
+    "bytes": 1749,
+    "sha256": "da2a431a1bb6bf818cc87f57314a1561d922c8f056f00bae57b6abcd096ae81c",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "activity.delete": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/ActivityView.java",
+    "signature_anchor": "private void delete()",
+    "first_line": 169,
+    "last_line": 174,
+    "bytes": 209,
+    "sha256": "6e4f05f0deb0e917a3d76e8e78b1531c9d01ef849003525f727f25e0ec4b44cf",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "activity.refresh": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/ActivityView.java",
+    "signature_anchor": "private void refresh(boolean force)",
+    "first_line": 180,
+    "last_line": 183,
+    "bytes": 116,
+    "sha256": "6b5ba8520978e1f6253f167fde7aeea9ebdd091f5d39ad1694de4094e773abf4",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "activity.parameterChanged": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/ActivityView.java",
+    "signature_anchor": "public void parameterChanged(String param_name)",
+    "first_line": 186,
+    "last_line": 191,
+    "bytes": 343,
+    "sha256": "9654cd514b656ac404878ba6132b8a7aace2f8e8e79549f51d8c06d267c4d89c",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "activity.eventOccurred": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/ActivityView.java",
+    "signature_anchor": "public boolean eventOccurred(UISWTViewEvent event)",
+    "first_line": 194,
+    "last_line": 230,
+    "bytes": 895,
+    "sha256": "48fa81b2fab23243b30e038dd609a83d9e1060dd65886b3b10f5e618a239eaeb",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "speed.constructor": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/SpeedGraphic.java",
+    "signature_anchor": "private SpeedGraphic(Scale scale,ValueFormater formater)",
+    "first_line": 95,
+    "last_line": 101,
+    "bytes": 191,
+    "sha256": "f7bb3e74c50c388dca56d69f237f962c75ce14c6f82be5bbafb553b942f16299",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "speed.addMenuItems": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/SpeedGraphic.java",
+    "signature_anchor": "  protected void\n  addMenuItems(",
+    "first_line": 147,
+    "last_line": 180,
+    "bytes": 677,
+    "sha256": "3d9bd2ad6fa8af2ca2f33e19526d7e3c3565ce95d68899b29926eb67732346d3",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "speed.addLongsValue": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/SpeedGraphic.java",
+    "signature_anchor": "public void addLongsValue(long[] new_values)",
+    "first_line": 189,
+    "last_line": 233,
+    "bytes": 911,
+    "sha256": "47390c575ef5841f606685bb7dca0ffcb5b9bef024386acee13cc91daa15486a",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "speed.refresh": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/SpeedGraphic.java",
+    "signature_anchor": "public void refresh(boolean force)",
+    "first_line": 244,
+    "last_line": 298,
+    "bytes": 1366,
+    "sha256": "3d11b8e3795279f5e7d0aaa8586bd9fa28a899e876cf6fc1e11584cca849b1b1",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "speed.drawChart": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/SpeedGraphic.java",
+    "signature_anchor": "protected void drawChart(boolean sizeChanged)",
+    "first_line": 300,
+    "last_line": 547,
+    "bytes": 5690,
+    "sha256": "5baff0b5a102ceb3c13abcbf102409b3e2bc34184a320704b0d93387b7fc74b6",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "speed.computeAverage": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/SpeedGraphic.java",
+    "signature_anchor": "protected int computeAverage(int position)",
+    "first_line": 549,
+    "last_line": 560,
+    "bytes": 273,
+    "sha256": "cfec6e52c728aed0000279db9b4086119e111347166d169fcbb44e0d27e364d6",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "speed.parameterChanged": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/SpeedGraphic.java",
+    "signature_anchor": "public void parameterChanged(String parameter)",
+    "first_line": 563,
+    "last_line": 565,
+    "bytes": 135,
+    "sha256": "02344c8918f6f4d6c6c47d4af292eecb1d1ed4681d15e6366efecdc57e7dc62d",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "speed.dispose": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/SpeedGraphic.java",
+    "signature_anchor": "public void dispose()",
+    "first_line": 568,
+    "last_line": 574,
+    "bytes": 222,
+    "sha256": "a5a49280a81ac506d22e46f835d646f6b466ff59fc78a1f1b9ad789285f66083",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "multiplot.constructor": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/MultiPlotGraphic.java",
+    "signature_anchor": "\tprivate\n\tMultiPlotGraphic(",
+    "first_line": 103,
+    "last_line": 120,
+    "bytes": 369,
+    "sha256": "d5bd86d37efe8f9108a92f249ba3ca9e9f8534a056c0d68cb846fc1d1ee22532",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "multiplot.init": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/MultiPlotGraphic.java",
+    "signature_anchor": "\tprivate void\n\tinit(",
+    "first_line": 122,
+    "last_line": 162,
+    "bytes": 746,
+    "sha256": "0c4251f74efbc33519959e4e8d49db1232966859eec0b36b7e9ce120597f601b",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "multiplot.getHistory": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/MultiPlotGraphic.java",
+    "signature_anchor": "\tpublic int[][]\n\tgetHistory()",
+    "first_line": 164,
+    "last_line": 187,
+    "bytes": 376,
+    "sha256": "379bf3282ecddff305d651548acaada2ca7eb132cee96b16eafc012ac5d9c05f",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "multiplot.initialize": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/MultiPlotGraphic.java",
+    "signature_anchor": "\tpublic void\n\tinitialize(\n\t\tCanvas \tcanvas,",
+    "first_line": 197,
+    "last_line": 228,
+    "bytes": 806,
+    "sha256": "d2f1e1c323c99e488f7c0ae83bfa2ab2de3601081b47b94bc81f00df98fb5a52",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "multiplot.setActive": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/MultiPlotGraphic.java",
+    "signature_anchor": "\tpublic void\n\tsetActive(\n\t\tboolean\tactive,",
+    "first_line": 270,
+    "last_line": 323,
+    "bytes": 943,
+    "sha256": "c83f403b4e6ff380c27ef62148cc2586fcb7ceefc62147d6b7fe22aa3d52f657",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "multiplot.reset": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/MultiPlotGraphic.java",
+    "signature_anchor": "\tpublic void\n\treset(\n\t\tint[][]\t\thistory,",
+    "first_line": 332,
+    "last_line": 349,
+    "bytes": 219,
+    "sha256": "b00d9b5a2844beb6414397041d879f4d43b0397c7ef74399be58250bec5849a8",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "multiplot.getAverage": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/MultiPlotGraphic.java",
+    "signature_anchor": "\tpublic int[]\n\tgetAverage(",
+    "first_line": 351,
+    "last_line": 403,
+    "bytes": 1059,
+    "sha256": "5cb1491718dbc26cf217638d758a5b7511a3e2bfcb902a74b1ba376ebd5f1455",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "multiplot.addIntsValue": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/MultiPlotGraphic.java",
+    "signature_anchor": "\tprivate void\n\taddIntsValue(",
+    "first_line": 405,
+    "last_line": 461,
+    "bytes": 958,
+    "sha256": "5ec9a730db7cf2ec95f06e330b1ace9981338dfab70f75ac734006eb8a15b135",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "multiplot.refresh": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/MultiPlotGraphic.java",
+    "signature_anchor": "\tpublic void\n\trefresh(",
+    "first_line": 465,
+    "last_line": 555,
+    "bytes": 1674,
+    "sha256": "ae5b050706ec5bdb5a950674fa95bcb6e043a51b672eb5fa54867aad975cba0c",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "multiplot.drawChart": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/MultiPlotGraphic.java",
+    "signature_anchor": "\tprotected void\n\tdrawChart(",
+    "first_line": 568,
+    "last_line": 1046,
+    "bytes": 9663,
+    "sha256": "4893688a679abb2e0d97e65d0e6f5e4a32f10339416f0c82114507dc6b2b8f8f",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "multiplot.parameterChanged": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/MultiPlotGraphic.java",
+    "signature_anchor": "\tpublic void\n\tparameterChanged(",
+    "first_line": 1049,
+    "last_line": 1060,
+    "bytes": 340,
+    "sha256": "3c11b73b912ae911b0e264a7139e05432158e18d80c3bf125ecb1f0706a33008",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "multiplot.dispose": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/components/graphics/MultiPlotGraphic.java",
+    "signature_anchor": "\tpublic void\n\tdispose(\n\t\tboolean\t_maintain_history )",
+    "first_line": 1069,
+    "last_line": 1091,
+    "bytes": 476,
+    "sha256": "24dbbd8efb26c7701cd123ca44dc314bd0d1a39fdf308df48a9ebf3d708f68bb",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "stats.UpdateThread": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java",
+    "signature_anchor": "private class UpdateThread",
+    "first_line": 63,
+    "last_line": 100,
+    "bytes": 626,
+    "sha256": "554e2071524ff4c541e0819b2b8ead21eb9068d168bfe75ee4e0a79ef0fc1ef0",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "stats.initialize": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java",
+    "signature_anchor": "private void initialize(Composite composite)",
+    "first_line": 107,
+    "last_line": 132,
+    "bytes": 671,
+    "sha256": "a5a25206044ba40aa3bd8542b14a9e1b282c98e2f1f1f0e902e417efed4e9c8e",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "stats.delete": {
+    "group": "original",
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/StatsView.java",
+    "signature_anchor": "private void delete()",
+    "first_line": 250,
+    "last_line": 258,
+    "bytes": 146,
+    "sha256": "9b14ed67da198faee8d6dcd0ec07df727e00f562990eabbe20456a8499563bdf",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "global.getDataReceiveRate": {
+    "group": "original",
+    "path": "core/src/com/biglybt/core/global/impl/GlobalManagerStatsImpl.java",
+    "signature_anchor": "public long getDataReceiveRate()",
+    "first_line": 325,
+    "last_line": 327,
+    "bytes": 81,
+    "sha256": "8f1de7389f3093babdea2dbb19d2b74f8ea38a2100da48aa4c8cd4b6b14f6685",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "global.getProtocolReceiveRate": {
+    "group": "original",
+    "path": "core/src/com/biglybt/core/global/impl/GlobalManagerStatsImpl.java",
+    "signature_anchor": "public int getProtocolReceiveRate()",
+    "first_line": 337,
+    "last_line": 339,
+    "bytes": 93,
+    "sha256": "0635b74159d374ff8f34f3a61f90e0a0ab80f3a9bb1bdfe0a6c59feeb285b212",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "global.getDataSendRate": {
+    "group": "original",
+    "path": "core/src/com/biglybt/core/global/impl/GlobalManagerStatsImpl.java",
+    "signature_anchor": "public long getDataSendRate()",
+    "first_line": 355,
+    "last_line": 357,
+    "bytes": 75,
+    "sha256": "89ce05ea7efc90ca8174b6f8d92bcf9095aa27fecd3aa1ca1d2e197fb9694035",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "global.getProtocolSendRate": {
+    "group": "original",
+    "path": "core/src/com/biglybt/core/global/impl/GlobalManagerStatsImpl.java",
+    "signature_anchor": "public int getProtocolSendRate()",
+    "first_line": 368,
+    "last_line": 370,
+    "bytes": 87,
+    "sha256": "88c0d201b4720530c088e852d8de8513608a3365796e3024b191bcbb5abb5559",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "average.constructor": {
+    "group": "original",
+    "path": "core/src/com/biglybt/core/util/Average.java",
+    "signature_anchor": "protected Average(int _refreshRate, int _period)",
+    "first_line": 56,
+    "last_line": 63,
+    "bytes": 285,
+    "sha256": "f125a0e46e9b72d295b9cd6bb8d8e097ddafc972ca712636a19f15a482a2844d",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "average.update": {
+    "group": "original",
+    "path": "core/src/com/biglybt/core/util/Average.java",
+    "signature_anchor": "private void update(long timeFactor)",
+    "first_line": 110,
+    "last_line": 132,
+    "bytes": 843,
+    "sha256": "5e02c8bd273e80116b5e3576a99d0fde1fe64058c495ad95c9546cf8a6769e2b",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "average.addValue": {
+    "group": "original",
+    "path": "core/src/com/biglybt/core/util/Average.java",
+    "signature_anchor": "public synchronized void addValue(long value)",
+    "first_line": 139,
+    "last_line": 152,
+    "bytes": 441,
+    "sha256": "72bd0c9934f1afc129bcef57b0dfc0273d32d6ec8f9668651ea5d7b520da35f8",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "average.getAverage": {
+    "group": "original",
+    "path": "core/src/com/biglybt/core/util/Average.java",
+    "signature_anchor": "public long getAverage()",
+    "first_line": 158,
+    "last_line": 160,
+    "bytes": 65,
+    "sha256": "f279f3735e8b3ab22f5f9756df51d3a97c1ce95875fcd7312cb995630c7047b7",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "average.getSum": {
+    "group": "original",
+    "path": "core/src/com/biglybt/core/util/Average.java",
+    "signature_anchor": "public synchronized final long getSum()",
+    "first_line": 203,
+    "last_line": 224,
+    "bytes": 681,
+    "sha256": "cd42ff2d69ab2ca13f25d5b28b80f771a4136e07427fa188a0f306f35ad03d7e",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "average.effectiveTime": {
+    "group": "original",
+    "path": "core/src/com/biglybt/core/util/Average.java",
+    "signature_anchor": "  protected long\n  getEffectiveTime()",
+    "first_line": 260,
+    "last_line": 264,
+    "bytes": 97,
+    "sha256": "85e0ad3fca5072b4bfd351281cf7e8cdaefdbb387ea9c464c36ba1e5851f0a04",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "native.payloadRecord": {
+    "group": "native",
+    "path": "preview/native/ui/statistics_page.cpp",
+    "signature_anchor": "void StatisticsPage::recordPayload(",
+    "first_line": 348,
+    "last_line": 358,
+    "bytes": 670,
+    "sha256": "afc9d43be4022446adef006d8ec6e25a195d71c5ce56474d3a5aff7f1e8e2520",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "native.payloadRefresh": {
+    "group": "native",
+    "path": "preview/native/ui/statistics_page.cpp",
+    "signature_anchor": "void StatisticsPage::refreshActivity()",
+    "first_line": 359,
+    "last_line": 382,
+    "bytes": 2041,
+    "sha256": "6c0783c2f96b2f54cbf00713628dea7e1f3de37dcb776e7894857ef49c8e3dad",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "native.pageBegin": {
+    "group": "native",
+    "path": "preview/native/ui/statistics_page.cpp",
+    "signature_anchor": "void StatisticsPage::beginRequest(",
+    "first_line": 215,
+    "last_line": 222,
+    "bytes": 623,
+    "sha256": "8497ad212758a222b963b40693e7bb4310d16064d6a8745c554627e6a1c34343",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "native.pageEngine": {
+    "group": "native",
+    "path": "preview/native/ui/statistics_page.cpp",
+    "signature_anchor": "void StatisticsPage::setEngineStatistics(",
+    "first_line": 274,
+    "last_line": 284,
+    "bytes": 752,
+    "sha256": "c5e04897efe16d3b03bcc48c71b6daff9e3f4ad6bc8432dae82c36047d0a161d",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "native.windowEngine": {
+    "group": "native",
+    "path": "preview/native/ui/library_window.cpp",
+    "signature_anchor": "void LibraryWindow::setEngineStatistics(",
+    "first_line": 481,
+    "last_line": 496,
+    "bytes": 1018,
+    "sha256": "038b083a96e4e432b0012568a43a85af87f40a596245f0353ac2fd039f5a8324",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "native.windowStatisticsOpen": {
+    "group": "native",
+    "path": "preview/native/ui/library_window.cpp",
+    "signature_anchor": "void LibraryWindow::showStatistics()",
+    "first_line": 408,
+    "last_line": 428,
+    "bytes": 869,
+    "sha256": "a9cbc417765e48e8d57669ea08dc81789223076d84a54d85e267e17c61499003",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "native.windowNewSession": {
+    "group": "native",
+    "path": "preview/native/ui/library_window.cpp",
+    "signature_anchor": "void LibraryWindow::beginColumnLayoutSession(",
+    "first_line": 583,
+    "last_line": 595,
+    "bytes": 479,
+    "sha256": "73747f4663eac3a200ac53eaec9f20f1dbccfa7bee1abcc34d40ec14d09dd0e1",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  },
+  "native.bridgeEngineDelivery": {
+    "group": "native",
+    "path": "preview/native/app/session_bridge.cpp",
+    "signature_anchor": "void SessionBridge::engineStatistics(",
+    "first_line": 504,
+    "last_line": 527,
+    "bytes": 998,
+    "sha256": "850831c7ea2ef07213c8a8f5409921f57ca23b338102878c0d7c01763c60a683",
+    "selection": "Complete signature/body, or named complete inner class; original bytes including line endings"
+  }
+}

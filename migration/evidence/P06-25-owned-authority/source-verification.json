@@ -1,0 +1,69 @@
+{
+  "status": "passed",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_sha256": {
+    "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java": "952851231979640c1eb5704f55120e19fda91270dbd1c98c9fcc454ccf89daa9",
+    "core/src/com/biglybt/core/dht/DHT.java": "0a56d60ddafdd35441e53ae3bcc3d9c4f9a674b3a118d5ab6fd6a6fc1543b0cf",
+    "core/src/com/biglybt/core/dht/DHTFactory.java": "24bcc8c15707ff1cb2967b303fa9e21621c54e75db3de6afdcadc276fd93aed0"
+  },
+  "exact_source_parts_sha256": {
+    "STORE": "423a5b6978d07bf8d561caffdce634a2961ead4ec7e38805f25f7961f77782be",
+    "DISTANCE": "af0d0656ab1539eab66942952b069e54553e4862c380442c4d0c595938ef9f31",
+    "DISTANCE2": "9169597cbc881dfb04e622f0ba44360fa401782f8595aff6065f87a41bfedeba",
+    "REPLY": "0ce8e598a99427775cbd4e077e167b6f0412c3f9946ecfe5aafa9fb68353159c",
+    "LARGE": "229c3bdb178c46195a0ae55e39ccef3d20b176552738b14506b7e72336007d61",
+    "FN_PUBLIC": "fe7f8cdd652fe147fed48295b872734c40007621a7f8af20b5b93c72d70b3045",
+    "FN_PRIVATE": "e85e792e20625a4f1ad6645ebb81802545dbdab5ba1ad224ea1008dc0b3e2761",
+    "CONSTANTS": "646d503705048765ff4c45c8c72d6f5ecbe91f106ed0b3227d12f2cbf2ea2a93"
+  },
+  "all_parts_present_verbatim": true,
+  "harness_sha256": "a3e10fd99baf3705438f872768f621ada4ffcf4417ff106ddbbe1c942cc0111a",
+  "stable_class_proof": {
+    "status": "passed",
+    "baseline_v2_reference_sha256": "848ea8d8f3ac28cf27b59014f68726c8795164b8df09fcda8cebcbd9906bbb37",
+    "harness_sha256": "a3e10fd99baf3705438f872768f621ada4ffcf4417ff106ddbbe1c942cc0111a",
+    "all_generated_classes_unchanged": false,
+    "unchanged_class_count": 26,
+    "changed_classes": {
+      "OwnedAuthorityDatagramOracle.class": {
+        "before": "3499579d99eac551c9330c7182f38f9664a86d487da2d282187d33f45ffb60a7",
+        "after": "53495e2d7090092481c59a9e02cec516ed468009b2737efabe739043f8372ae0"
+      }
+    },
+    "peer_validation_revision": "default two-key diversification length",
+    "class_count": 27,
+    "class_sha256": {
+      "AzureusOwnedAuthorityOracle$Contact.class": "86902674cfb365f63d297097f1b3ee73434493c70298614fc71ff46102dd9b4f",
+      "AzureusOwnedAuthorityOracle$Controller$1.class": "e1a48989de268f176149bd6631e5891fa98aaba4f165ce70eeaabf25908401b4",
+      "AzureusOwnedAuthorityOracle$Controller$Adapter.class": "4ae4d1ce4600d75632d7b4e26c479688e78a9f1f7a4012b9bb740bd18ef4a857",
+      "AzureusOwnedAuthorityOracle$Controller$DHTStorageAdapter.class": "01961e7e8eb89cf60a50f585d3de9e693e0c4e79f5359224241f680c2aa3ab09",
+      "AzureusOwnedAuthorityOracle$Controller$Database$1.class": "79ca527dc21d7debdd91ff7b8863a3258f181e46d891c1c14ef5cefb27119123",
+      "AzureusOwnedAuthorityOracle$Controller$Database.class": "83e44b5fd3753b97ec16e301371c6065dbd0eb624c1cc2357ee9f488ee09a5c6",
+      "AzureusOwnedAuthorityOracle$Controller$Logger.class": "a86e1a315a70828fd3817d73f23688ac7235f00dc5a8edb21312239468080167",
+      "AzureusOwnedAuthorityOracle$Controller$Router.class": "2d7e16ae58096c0277ab820a2d4fd3156fb3ee8b63a9c396db78c19f510acd65",
+      "AzureusOwnedAuthorityOracle$Controller.class": "0872b88cad8af462d727553b662dc39787fc851d4bd21bd59373fffaa8781c45",
+      "AzureusOwnedAuthorityOracle$DHT.class": "0fd98a6f47919d0bf1d7b8727c0141ac4142cda6508fb57f5c4f066225152a5f",
+      "AzureusOwnedAuthorityOracle$DHTControlContactImpl.class": "e7cf6ae919e64170186f990200f70488e0a113f6caa0d82ce80d5b4be48fdf73",
+      "AzureusOwnedAuthorityOracle$DHTFactory.class": "b196129af0b7c082adfcb397754d4dd10e4696cf82da84c72d982a2a9fc89b5a",
+      "AzureusOwnedAuthorityOracle$DHTLog.class": "4b4259b2c900809de911bc096bcfa3ff2b35326ccb263a2ae2b82f0f74220e65",
+      "AzureusOwnedAuthorityOracle$DHTStorageBlock.class": "142b897af4668d6a8a8c4481f83d78c6ea50c49780e522630417cc23ee330f20",
+      "AzureusOwnedAuthorityOracle$DHTTransportContact.class": "188cc20cf1a730d18be40bfc6a59153b2e9f30c577eaa76f5ff3acbd7f841e0f",
+      "AzureusOwnedAuthorityOracle$DHTTransportStoreReply.class": "78c73e0efd9d3ab7978418c7c77db692b120a78ab5c68bf14d1be5b66cec97a5",
+      "AzureusOwnedAuthorityOracle$DHTTransportStoreReplyImpl.class": "5f0f6c90e86f4e08461bda6b5e6ee867f8d5d57da0ea83e25e4088f291005441",
+      "AzureusOwnedAuthorityOracle$DHTTransportValue.class": "a5484e0253b0837bfcc2c643b21880eef407db4ef9ee68947e4e7272a24f61f8",
+      "AzureusOwnedAuthorityOracle$Debug.class": "e7051d6c2f3bd74547237ccf2564e60f6b9c1ec8084022012fc45010f33e062e",
+      "AzureusOwnedAuthorityOracle$Gate.class": "95658081f9b585c3748858f3908835f2b7c379d4e10a1bc77dee83b9234caa30",
+      "AzureusOwnedAuthorityOracle$Key.class": "4c33c77d76a0b71ff09ba66653a94eeec3b146a352fa78e60936da86d0a22b1f",
+      "AzureusOwnedAuthorityOracle$Result.class": "3d9a9e4c41a64ad365b813f483c1218d77f5a22a16f22698d1a24996486fe181",
+      "AzureusOwnedAuthorityOracle$SystemTime.class": "660f1ad5dadbe6ec8593f8465c87e7ca09c2bad977fcd2963fb546ce35ebaf51",
+      "AzureusOwnedAuthorityOracle.class": "81ec81e98137caafddd4dc465db6b39f7585825dee1ccfaed28a597c93651856",
+      "OwnedAuthorityDatagramOracle$Served.class": "88a88e33ccddc3eef4435ee836f1c73fe058a2ae1679cb49db91273f212e39a9",
+      "OwnedAuthorityDatagramOracle.class": "53495e2d7090092481c59a9e02cec516ed468009b2737efabe739043f8372ae0",
+      "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd"
+    }
+  },
+  "source_only_observations": 1070,
+  "native_full_1070_replay": false,
+  "native_reverse_gate_comparisons_per_compiler": 210,
+  "scope": "Exact original controller bodies with original Authority called at the STORE gate; source transport/contact bridge audit and lower immutable helpers remain separately recorded. Only token inputs/outputs cross independent authority keys by the stated normalization."
+}

@@ -1,0 +1,270 @@
+{
+  "builds": [
+    {
+      "compiler": "gcc",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-azmsgsync",
+          "-B",
+          "/tmp/biglybtc-sts-formats-qualified-gcc",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS="
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-sts-formats-qualified-gcc",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-sts-formats-qualified-gcc",
+          "--output-on-failure"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/sts_interop.py",
+          "--driver",
+          "/tmp/biglybtc-sts-formats-qualified-gcc/biglybtc-msgsync-sts-driver",
+          "--reference",
+          "/tmp/biglybtc-sts-reference-usyz43_k/manifest.json",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-07-msgsync-sts/gcc-interop.json"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/msgsync_envelope_roundtrip.py",
+          "--driver",
+          "/tmp/biglybtc-sts-formats-qualified-gcc/biglybtc-msgsync-envelope-driver",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-07-msgsync-sts/gcc-envelope-roundtrip.json"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-sts-formats-qualified-gcc/biglybtc-msgsync-sts-driver": "a4b945711225e99a4a9805583132f728bc5f18d86cb74ef5e3dc81bf695ca62d",
+        "/tmp/biglybtc-sts-formats-qualified-gcc/biglybtc-msgsync-sts-bounds-tests": "a8b7d3cfea5cd33b074c2442d4bd53072d01beaaee3e9d80e7189c8d89de99a9",
+        "/tmp/biglybtc-sts-formats-qualified-gcc/libbiglybtc_msgsync_sts.a": "664a418552cfd41ac97442d83cd2baf8353566ed073084597ae0834ef4e38c2c",
+        "/tmp/biglybtc-sts-formats-qualified-gcc/libbiglybtc_msgsync_envelope.a": "871cf19797311529d827b280de8d7309b6a2ee480843d7398c884ae7e3579440",
+        "/tmp/biglybtc-sts-formats-qualified-gcc/biglybtc-msgsync-envelope-driver": "d523d449c63160af710ff6fdc47786b85e5e559b323257602b703e565180736b",
+        "/tmp/biglybtc-sts-formats-qualified-gcc/biglybtc-msgsync-envelope-bounds-tests": "ed4c932aaf4c1255d5ab75270ebe3965614a73cde66c6f7f664b760cff7fc867"
+      }
+    },
+    {
+      "compiler": "clang",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-azmsgsync",
+          "-B",
+          "/tmp/biglybtc-sts-formats-qualified-clang",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-sts-formats-qualified-clang",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-sts-formats-qualified-clang",
+          "--output-on-failure"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/sts_interop.py",
+          "--driver",
+          "/tmp/biglybtc-sts-formats-qualified-clang/biglybtc-msgsync-sts-driver",
+          "--reference",
+          "/tmp/biglybtc-sts-reference-usyz43_k/manifest.json",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-07-msgsync-sts/clang-interop.json"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/msgsync_envelope_roundtrip.py",
+          "--driver",
+          "/tmp/biglybtc-sts-formats-qualified-clang/biglybtc-msgsync-envelope-driver",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-07-msgsync-sts/clang-envelope-roundtrip.json"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-sts-formats-qualified-clang/biglybtc-msgsync-sts-driver": "be6630f51c6b8ce34f240b455c3713900641518ebc58a756344a5a37fb31efe5",
+        "/tmp/biglybtc-sts-formats-qualified-clang/biglybtc-msgsync-sts-bounds-tests": "aa07a3df3bf87b94bafe871a395fdab9d455e0826766ec90236adfe685f142aa",
+        "/tmp/biglybtc-sts-formats-qualified-clang/libbiglybtc_msgsync_sts.a": "209fc431b1e085c52775d85d3617dae8eaac8c7ac37c6e0955cfaa06620d0701",
+        "/tmp/biglybtc-sts-formats-qualified-clang/libbiglybtc_msgsync_envelope.a": "4071972e54c2b755d3159f8052d863ed37c73b0f3845d79047887fea39fc81bd",
+        "/tmp/biglybtc-sts-formats-qualified-clang/biglybtc-msgsync-envelope-driver": "4fac3a3a78f0a085987ea45949ab8c4c828a7f5a594a3ec9d16edc7e61b7e3b3",
+        "/tmp/biglybtc-sts-formats-qualified-clang/biglybtc-msgsync-envelope-bounds-tests": "d9928150a375f6638f996bd3a3af3c5bdd2402f0359ad6c024e26df6475c3d8d"
+      }
+    },
+    {
+      "compiler": "asan",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-azmsgsync",
+          "-B",
+          "/tmp/biglybtc-sts-formats-qualified-asan",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Debug",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-sts-formats-qualified-asan",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-sts-formats-qualified-asan",
+          "--output-on-failure"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/sts_interop.py",
+          "--driver",
+          "/tmp/biglybtc-sts-formats-qualified-asan/biglybtc-msgsync-sts-driver",
+          "--reference",
+          "/tmp/biglybtc-sts-reference-usyz43_k/manifest.json",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-07-msgsync-sts/asan-interop.json"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/msgsync_envelope_roundtrip.py",
+          "--driver",
+          "/tmp/biglybtc-sts-formats-qualified-asan/biglybtc-msgsync-envelope-driver",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-07-msgsync-sts/asan-envelope-roundtrip.json"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-sts-formats-qualified-asan/biglybtc-msgsync-sts-driver": "08507a2d94e45de918f285ffa1027462983a087e2c1b1230c37980270b4234b1",
+        "/tmp/biglybtc-sts-formats-qualified-asan/biglybtc-msgsync-sts-bounds-tests": "c5c6c56da01b12dde1bc743df6fa357b00d53ae839d58ea3d62381d92ad98afc",
+        "/tmp/biglybtc-sts-formats-qualified-asan/libbiglybtc_msgsync_sts.a": "51475bd6c6845ef43d7e632c0ed7e5f6d42b140e6d74ca891c1aa8ba6de6dd18",
+        "/tmp/biglybtc-sts-formats-qualified-asan/libbiglybtc_msgsync_envelope.a": "20b8e14be4ad5eef940f24800bf22cb7ffa2a6b5cb95de4a6d07cab34db09492",
+        "/tmp/biglybtc-sts-formats-qualified-asan/biglybtc-msgsync-envelope-driver": "d5e53da953877bef1b4d14aa3fe9918e51ec7cd38f768de6b65156d5492d6299",
+        "/tmp/biglybtc-sts-formats-qualified-asan/biglybtc-msgsync-envelope-bounds-tests": "2d6863c1c4663829d1b117caddde1dae94569b2d65939f03d773032d2cef75b1"
+      }
+    }
+  ],
+  "source_sha256": {
+    "migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+    "migration/fixtures/java/StsOracle.java": "9dd11a8ceb19ecd27057fd3afff7a2c48d18384f2f88008b3306aae5b0d46143",
+    "migration/fixtures/msgsync-envelope/.gitattributes": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da",
+    "migration/fixtures/msgsync-envelope/commands.txt": "eabb9fe888af084a94653969c321bf87c7e23b1802b48d0aa461f98b6f0af1e2",
+    "migration/fixtures/msgsync-envelope/encrypt-input.txt": "29b01e4ce4eb5db28c961cd24ee2662114e3303c5d18591838008aefbc787a56",
+    "migration/fixtures/msgsync-envelope/expected.txt": "51970fe73ed568885b14446dd91dcc4d44a89e320eba968b8f83613ea5ec8a91",
+    "migration/fixtures/msgsync-envelope/manifest.json": "7ebabed9595c6178042ea81b75312b0de8eb6b12c3cb50e76a4196ee83ae5a72",
+    "migration/fixtures/msgsync-sts/commands.txt": "0f84d9cb3b616e53ec4f9b0e7bdae166fe75ca89922ad9852262539bdda78a4f",
+    "migration/fixtures/msgsync-sts/expected.txt": "d7ba6b174aaeeeb711df456db112c4b96b1b958aeefaae31f17b410ecff2f2a5",
+    "migration/fixtures/msgsync-sts/integers.json": "b9830577eb93d6bbf16ec0a6dff8b25ff979886955320747708cad64e816e5e4",
+    "migration/fixtures/msgsync-sts/manifest.json": "1899fc453c3b9ff8957812c6a2a4485d895f00d9e3a605149f494f4548dadb3a",
+    "migration/fixtures/msgsync-sts/native-policy.json": "98d01f278237e6f35eba296565a9202e488ba43cccbafadd74b1cfd9484cf2b1",
+    "migration/fixtures/msgsync-sts/test-identity.json": "d604ec2d922d1d8e2646a248eb68595d4abf8548490474f38e551ea089dfb61b",
+    "migration/tools/export_plugin_sources.py": "4ea9d35bfe13035c4be4d49fff3ee105ed81e4ffc52c27d5182738782279dd09",
+    "migration/tools/msgsync_envelope_roundtrip.py": "bdebdac1dc95e5f1cc70d450992a169e088b6398bd7c7392e54c13760eea4f04",
+    "migration/tools/sts_interop.py": "feec507814e3a64e337a654461c3e7ab709b35cacbd2f593f6512cc2ebe684cd",
+    "migration/tools/sts_matrix.py": "461c9310fab021c420cbb0eca9c477d48cb5d387122a6a45a5659a24c7d7008d",
+    "migration/tools/sts_oracle.py": "913d3317e8377850bf194622fb427158870443f1e7f46a7eb9b564e2e4f3bf20",
+    "migration/tools/sts_reference.py": "339ac546f022525613fb2563371070f0d481f84b75b62c9702dabde48df2d4c3",
+    "native/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "native/plugins/BiglyBTC-plugin-azmsgsync/.gitignore": "ef2d3a662976b2c26a55d13b98b4be552bc693a37d446e8f29db5ea5b32a3b90",
+    "native/plugins/BiglyBTC-plugin-azmsgsync/CMakeLists.txt": "e7d66833f12680fb40c71963e513a255c06231baf4e209b17b3ac4304d412de3",
+    "native/plugins/BiglyBTC-plugin-azmsgsync/COPYING": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6",
+    "native/plugins/BiglyBTC-plugin-azmsgsync/README.md": "b8c1f6a124d93dc99cee8f114ecfa67b1c8c4645ff5023f3163c41db3a25295a",
+    "native/plugins/BiglyBTC-plugin-azmsgsync/bounds_test.cpp": "280f950bd38ee35237054189b5bbcb68019d117d791fea6f3ceec2bba50735ae",
+    "native/plugins/BiglyBTC-plugin-azmsgsync/envelope.cpp": "3cf033b2873de6920a7d87b0dd1107fdcf73da26eaa61c83fda8cc4683cf8eba",
+    "native/plugins/BiglyBTC-plugin-azmsgsync/envelope.hpp": "1ca6c6e2fa825200d5a14da5c38870ed598e373e09791500d3b58f91545002ff",
+    "native/plugins/BiglyBTC-plugin-azmsgsync/envelope_driver.cpp": "9d410642f73cbfc4330e045659ea0590fc2efef2277c4813206d42d5d52ab781",
+    "native/plugins/BiglyBTC-plugin-azmsgsync/fixture_test.py": "ea5b6248f938685e1ad3ddbe77c8e1232c680b067befac81472600f0cd5d7769",
+    "native/plugins/BiglyBTC-plugin-azmsgsync/legacy_sts.cpp": "5e4ae610148d571639a1d9823918681de83a1e71dc3c5b79bfed3bea693d6924",
+    "native/plugins/BiglyBTC-plugin-azmsgsync/legacy_sts.hpp": "61c18880d630d589e577abfacdacf836f7510ecab0ea4a3561bbe4b7f2af7ffd",
+    "native/plugins/BiglyBTC-plugin-azmsgsync/sts_bounds_test.cpp": "5926ff402ba8143cbd91c2476283f558da1d36a4aeba0dd80acbf776e82d0ecd",
+    "native/plugins/BiglyBTC-plugin-azmsgsync/sts_driver.cpp": "327529e1ba4766d113e02f3a32c737b6b4b400af0fd06e6fc84f31b7c8db91ea",
+    "native/plugins/BiglyBTC-plugin-azmsgsync/sts_fixture_test.py": "427fbf1a505aba1c0a20ecbeb59d2d5d602a3cfa844c4c840fd8bc390ab87dcc"
+  },
+  "reference": {
+    "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "source_sha256": {
+      "core/src/com/biglybt/core/security/impl/CryptoSTSEngineImpl.java": "a00b89fe42a7cf5c4ef2b40277c694c9cc6a1e6fe2e5f16d32f6e57609db8bf0",
+      "core/src/com/biglybt/core/security/CryptoECCUtils.java": "c728534c2216f254da74878a48cd571bfe9769071128f52befcbeb4be3e9230e",
+      "core/src/org/gudy/bouncycastle/jce/provider/JCEECDHKeyAgreement.java": "cdba14da99120e3d5be3c2163e95550777fec9e7c42d1638b5e4bf270d04da87",
+      "core/src/org/gudy/bouncycastle/math/ec/ECPoint.java": "8adcb9370f13f173b65f46a9cc157a8610ee8ba7ccc584e01a4a0e6e593355cd",
+      "core/src/org/gudy/bouncycastle/math/ec/ECCurve.java": "a4b36b16aeb2d241c74d18ae89f3ff6633a8ff4acb9ef4a4696a9f22e3a9b9da"
+    },
+    "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+    "helper_source_sha256": {
+      "migration/fixtures/java/StsOracle.java": "9dd11a8ceb19ecd27057fd3afff7a2c48d18384f2f88008b3306aae5b0d46143",
+      "migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933"
+    },
+    "helper_class_sha256": {
+      "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd",
+      "StsOracle.class": "fd1db181315958af8a784c835286427f83bb03d5a759f9e0791877afed56eb41",
+      "StsOracle$Peer.class": "3d4f33d57012a77f7ba360a4ac5de647af8f85722f418cb6a5e5d895d17bc064"
+    },
+    "envelope_helper_manifest_sha256": "7ebabed9595c6178042ea81b75312b0de8eb6b12c3cb50e76a4196ee83ae5a72",
+    "compile_command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "-J-XX:ActiveProcessorCount=2",
+      "--release",
+      "8",
+      "-encoding",
+      "UTF-8",
+      "-cp",
+      "/tmp/biglybtc-sts-reference-usyz43_k/classes:/tmp/biglybtc-msgsync-envelope-oracle-bfpehfqq/classes:/tmp/biglybtc-oracle/classes",
+      "-d",
+      "/tmp/biglybtc-sts-reference-usyz43_k/classes",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/StsOracle.java",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java"
+    ],
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-sts-reference-usyz43_k",
+      "-Duser.home=/tmp/biglybtc-sts-reference-usyz43_k",
+      "-Dazureus.config.path=/tmp/biglybtc-sts-reference-usyz43_k/profile",
+      "-cp",
+      "/tmp/biglybtc-sts-reference-usyz43_k/classes:/tmp/biglybtc-msgsync-envelope-oracle-bfpehfqq/classes:/tmp/biglybtc-oracle/classes",
+      "StsOracle"
+    ],
+    "work": "/tmp/biglybtc-sts-reference-usyz43_k",
+    "scope": "Actual unchanged pure CryptoSTSEngineImpl with generated identities and frozen vendored BC provider; helper reflection only opens its constructor. Previously qualified exact original fixSecret/private AES methods consume derived keys. No normal manager/plugin/profile startup or network."
+  },
+  "libcrypto_sha256": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+  "scope": "313 original frame/phase cases (1033 observations, explicit two-row invalid-curve rejection),225 original integer vectors, native state/ownership/bounds,65 original-Java/native mutual handshakes and780 private ciphertext readbacks per compiler incl targeted23-byte secret; existing envelope fixtures and136 Java readbacks. No DHT/runtime/profile activation."
+}

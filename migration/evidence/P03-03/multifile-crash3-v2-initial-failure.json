@@ -1,0 +1,8 @@
+{
+  "status": "failed",
+  "source_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "stage": 3,
+  "log": "/tmp/biglybtc-multifile-crash/java-3/interrupted-java.log",
+  "log_sha256": "47f06eb0b2b0ad2724e9c777ab68fbcde583d042727f1fecaaf4f8cca8911381",
+  "reason": "Original Java recheck reports 8/9 although physical files match; original-only reproduction retained separately. Do not interpret normal-completion success as full recheck coverage."
+}

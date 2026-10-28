@@ -1,0 +1,240 @@
+{
+  "source_sha256": {
+    "migration/fixtures/azureus-positions/commands.txt": "cd1a64fcf2a90e2b3b1d0891754b63b87d68734c0dbe60385cf74637c25b8fb5",
+    "migration/fixtures/azureus-positions/emitted.json": "4e814118c4e41e6012a281f40838699f0467bfdf2d4941b8e72684f206d900a5",
+    "migration/fixtures/azureus-positions/expected.txt": "9c0b0349f7a1347961f447d6b80827e0fbbe87be7245684a17c585370e007de6",
+    "migration/fixtures/azureus-positions/manifest.json": "a23387bf83606b467c018ee41852b9ad9b60d25ee0645381f7670f8642cb7659",
+    "migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+    "migration/tools/azureus_headers_oracle.py": "70c333becbc3f88949f31f89cf29625572d4ac0c07cdba19c9bb1424112f5f02",
+    "migration/tools/azureus_positions_fixtures.py": "4adb036a48422c474a76d24e7a250dc0f0939097508601814985bf91e9e9e3c5",
+    "migration/tools/azureus_positions_matrix.py": "44855c517aac684159ace688c27597728bac6f94d3fa2d01701a984356e9775c",
+    "migration/tools/azureus_positions_oracle.py": "bd42d4f8944096c8a82de85f9d10a62470af25d6eba2316c108f5d1a09e02ed8",
+    "migration/tools/azureus_positions_readback.py": "bc6b5931b4eaea2048d892bf2a05526ef116ef491046b50be95cec242670adc5",
+    "migration/tools/mldht_identity_oracle.py": "9775c25bc03d4b28c3444ca5633b0952234241adcbcf60f6a75676f5e163810e",
+    "migration/tools/oracle.py": "8eb1cc4758ba78b4679b05b553ed8f6b7c1c1abe1745b8b1f5357ae681f0710f",
+    "native/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "native/services/azureus_positions/CMakeLists.txt": "8ab91269271036a811d5a464c2c1e3ad5e6d7bf7e48afec6a4abbc8101f66259",
+    "native/services/azureus_positions/README.md": "95410fb14d172fc3e7bc8d6abb17771f84c5b4ea5618bfabd87117eedfc7bf19",
+    "native/services/azureus_positions/position_bounds_test.cpp": "5147061f0a87a169ae2f480724d9955611080aa2fadfdb2a17c20baeaa276c4b",
+    "native/services/azureus_positions/position_driver.cpp": "c9b93c10e7d0e0855f8f90ed564e3293c79bc7fb1c48e04faeea0ce3ecf79e14",
+    "native/services/azureus_positions/position_fixture_test.py": "c60ed220e90f5192b5ba79738a8991ba796d2c6b585e1cf0d4b4ecf4d49f6895",
+    "native/services/azureus_positions/positions.cpp": "97813eef1bba0edb61ba13c948ba6da211b524577b5027688a58d3e6069a3a5b",
+    "native/services/azureus_positions/positions.hpp": "ae2271c2b6fc5365282433a3097180dbfeb302e37a2b968c0de8307790194c6d"
+  },
+  "reference": {
+    "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "source_sha256": {
+      "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPUtils.java": "d852f590ca0df5361061e598be2087787ea588201f23d2fb7f826cfd62d4694b",
+      "core/src/com/biglybt/core/dht/transport/udp/DHTTransportUDP.java": "cffec69e83c20fac92414189e39aece9c359911c18250a0ba82d45ef42401f0f",
+      "core/src/com/biglybt/core/dht/netcoords/DHTNetworkPositionManager.java": "b5139356164db50b78f2a15e9ee7292f9ad95cfe326d365468610f43f3589bd3",
+      "core/src/com/biglybt/core/dht/netcoords/DHTNetworkPosition.java": "b9b73ad4a25d6f80d98228e1397957f5356c510659b38dc374ace70e7fb62e1d",
+      "core/src/com/biglybt/core/dht/netcoords/DHTNetworkPositionProvider.java": "d94ecb758cd51e1475669be114eff978db4a2d5ea145e6cf234b0feff166a40b",
+      "core/src/com/biglybt/core/dht/netcoords/DHTNetworkPositionListener.java": "c61966ad996dca2fee773cd4d9f213402143b821b1a93d94dfe5de48978eb8c0",
+      "core/src/com/biglybt/core/dht/netcoords/vivaldi/ver1/VivaldiPositionProvider.java": "b5e8ca04a2fdbbd357168ae86ba70f6c3e3574a266a9b11a8b9cd89fa0fa2f13",
+      "core/src/com/biglybt/core/dht/netcoords/vivaldi/ver1/VivaldiPositionFactory.java": "90ba7a517335dca18d3111dd6d3a94ed7b0c0a634dcd6483a3cc86744d99f092",
+      "core/src/com/biglybt/core/dht/netcoords/vivaldi/ver1/VivaldiPosition.java": "fd496737de8954de579c474a7003893eeea830d111e875ccc6c15e1458a2a481",
+      "core/src/com/biglybt/core/dht/netcoords/vivaldi/ver1/Coordinates.java": "a261daaa8b09e2ccf31423f5ea185d3308d7b036cd234c0a7158534d212a096d",
+      "core/src/com/biglybt/core/dht/netcoords/vivaldi/ver1/impl/VivaldiPositionImpl.java": "d0a93b48f7a7206dd793301ab95bdca5ca6c2bdd008eb8b50cac3039e8f9ff44",
+      "core/src/com/biglybt/core/dht/netcoords/vivaldi/ver1/impl/HeightCoordinatesImpl.java": "d3cc09f02c8b9d493e8d18ff1d69816ad627f72970243e53fed75204e52e6631"
+    },
+    "method_sha256": {
+      "WRITE": "ae428696d2757491f8bb1800a4609e39917fccbf161479a78706d4fd5d41a893",
+      "READ": "a69e534fe275d2e91ec65a52306c457eedcce8a410b67aee1e757f5bd9a611b7",
+      "PROVIDER_READ": "b9347664d11f2cdccdb814f06f0a08526c2eb31d34783f65d17032f72a0db9c3",
+      "CONSTANTS": "167723675dfc41670cfa8a6ff3871ea41d3f04cce2ca7e1ecc18cd9962e8146e"
+    },
+    "harness_sha256": "4bc9cf69b4f152ba1767df351b6343d4d2d6821102248391232d2e96df4493ff",
+    "helper_class_sha256": {
+      "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd",
+      "AzureusPositionsOracle.class": "d5f79e70d64d1a70ebee15f5985ef1266eee7c58b74c50646c91cb34a06cfb64",
+      "AzureusPositionsOracle$Opaque.class": "cbd8eb9517a787d2f44d794aa6bbaa9a4c80efc42d4b4d94d367fef6344ac447",
+      "AzureusPositionsOracle$DHTNetworkPositionManager.class": "4890ce148c20fcb1b5789f1a8459e3162332d3c9a2766033522bb630b700eddd",
+      "AzureusPositionsOracle$DHTUDPPacketReply.class": "ed88af6a3f7c9937dc645dac1d1847f2e2a57712b8ac9b732730e072551e75b6",
+      "AzureusPositionsOracle$DHTTransportUDP.class": "c9c53b47302d400ece2d4b0a717755332a4a3e42db8dbf6001f536eb2ca331f4",
+      "AzureusPositionsOracle$CopyOnWriteList.class": "21c3d64a414a570e6277ba765a2c2ef1cd5ff014ebe98ffa423366f5c7d60ee8",
+      "AzureusPositionsOracle$Debug.class": "017c3cff61721b7411e6e1e863759f5ef533a12d9fa63ac676bdf164597377f1"
+    },
+    "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+    "compile_command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "-J-XX:ActiveProcessorCount=2",
+      "--release",
+      "8",
+      "-encoding",
+      "UTF-8",
+      "-cp",
+      "/tmp/biglybtc-azureus-positions-oracle-grxcqq68/classes:/tmp/biglybtc-oracle/classes",
+      "-d",
+      "/tmp/biglybtc-azureus-positions-oracle-grxcqq68/classes",
+      "/tmp/biglybtc-azureus-positions-oracle-grxcqq68/source/AzureusPositionsOracle.java",
+      "/tmp/biglybtc-azureus-positions-oracle-grxcqq68/source/ReferenceFence.java"
+    ],
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "-Xmx256m",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-azureus-positions-oracle-grxcqq68",
+      "-Duser.home=/tmp/biglybtc-azureus-positions-oracle-grxcqq68",
+      "-Dazureus.config.path=/tmp/biglybtc-azureus-positions-oracle-grxcqq68/profile",
+      "-cp",
+      "/tmp/biglybtc-azureus-positions-oracle-grxcqq68/classes:/tmp/biglybtc-oracle/classes",
+      "AzureusPositionsOracle"
+    ],
+    "work": "/tmp/biglybtc-azureus-positions-oracle-grxcqq68",
+    "scope": "Exact original Vivaldi frame/manager deserialize bodies, actual unchanged frozen Vivaldi v1 provider/factory/impl. Supplied provider registration, reply fields, no listeners and counted debug errors. Opaque test providers only serialize supplied bytes. No manager/core/config/plugin startup, coordinate update algorithm, sockets/DNS or live profile."
+  },
+  "builds": [
+    {
+      "compiler": "gcc",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/services/azureus_positions",
+          "-B",
+          "/tmp/biglybtc-azureus-positions-qualified-gcc",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS="
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-azureus-positions-qualified-gcc",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-azureus-positions-qualified-gcc",
+          "--output-on-failure",
+          "-j1"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/azureus_positions_readback.py",
+          "--driver",
+          "/tmp/biglybtc-azureus-positions-qualified-gcc/biglybtc-azureus-position-driver",
+          "--reference",
+          "/tmp/biglybtc-azureus-positions-oracle-grxcqq68/reference.json",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-10-azureus-positions/gcc-readback.json"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-azureus-positions-qualified-gcc/biglybtc-azureus-position-driver": "29e6ef48e97266908f69f40feb8c3345367f61edb38da9903947ce54a2068f84",
+        "/tmp/biglybtc-azureus-positions-qualified-gcc/biglybtc-azureus-position-bounds-tests": "9e5b7e20f9eb4deeb70f15ab729e51e8f45350031b35eea5eb106e8ac3fae794",
+        "/tmp/biglybtc-azureus-positions-qualified-gcc/libbiglybtc_azureus_positions.a": "14ab10cbe589fd619a8f01b0c4a253b5357e93e2319848e85d8ea9f6f9a72aec"
+      }
+    },
+    {
+      "compiler": "clang",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/services/azureus_positions",
+          "-B",
+          "/tmp/biglybtc-azureus-positions-qualified-clang",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-azureus-positions-qualified-clang",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-azureus-positions-qualified-clang",
+          "--output-on-failure",
+          "-j1"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/azureus_positions_readback.py",
+          "--driver",
+          "/tmp/biglybtc-azureus-positions-qualified-clang/biglybtc-azureus-position-driver",
+          "--reference",
+          "/tmp/biglybtc-azureus-positions-oracle-grxcqq68/reference.json",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-10-azureus-positions/clang-readback.json"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-azureus-positions-qualified-clang/biglybtc-azureus-position-driver": "62b658e296cedda873404df64352642676d872ba2b74a9a1c5e8bf9cd34f6e80",
+        "/tmp/biglybtc-azureus-positions-qualified-clang/biglybtc-azureus-position-bounds-tests": "ab3aeb363f62e8bd4767c50d29ea447847201b94db1342ac794f751ff85ee51d",
+        "/tmp/biglybtc-azureus-positions-qualified-clang/libbiglybtc_azureus_positions.a": "4a59f91acf88418ba0173758f32233701e6a4d5006a9ba22bfd19435aaf99851"
+      }
+    },
+    {
+      "compiler": "asan",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/services/azureus_positions",
+          "-B",
+          "/tmp/biglybtc-azureus-positions-qualified-asan",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Debug",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-azureus-positions-qualified-asan",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-azureus-positions-qualified-asan",
+          "--output-on-failure",
+          "-j1"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/azureus_positions_readback.py",
+          "--driver",
+          "/tmp/biglybtc-azureus-positions-qualified-asan/biglybtc-azureus-position-driver",
+          "--reference",
+          "/tmp/biglybtc-azureus-positions-oracle-grxcqq68/reference.json",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-10-azureus-positions/asan-readback.json"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-azureus-positions-qualified-asan/biglybtc-azureus-position-driver": "d8e79e25c69f775b0ba37e1ad465e2d3eefc8b1c62fe6eb676a54f4f63694176",
+        "/tmp/biglybtc-azureus-positions-qualified-asan/biglybtc-azureus-position-bounds-tests": "e437c7b39907c7a1231f47bdb81c0aa63d3b24b05ce8eb2e8898d5a379dc3479",
+        "/tmp/biglybtc-azureus-positions-qualified-asan/libbiglybtc_azureus_positions.a": "3623786c29ebf1031fcfb557998dda82b117e5fb47452996f3ffd89b33bd56d9"
+      }
+    }
+  ],
+  "scope": "8554 original observations, native limits/ownership/reset and2494 original encoder comparisons/4988 accepted-failure Java readbacks per compiler. Original provider classes with supplied registration; no runtime activation or coordinate algorithm."
+}

@@ -1,0 +1,57 @@
+{
+  "status": "PASS-source-only-no-blocking-finding",
+  "reviewer": "error_oracle: independent of the config_create_tests and integration authors; author of the separate adapter and create-view tests.",
+  "source_sha256": {
+    "tests/config_create_tests.cpp": "e0aec4419f27b3badb0cc9e90eac916c8b9e70a0a274be8201d1f3fc6a71cd55",
+    "tests/CMakeLists.txt": "32e9b02b29c7c0ba66a1cfd4fb5761fc405cc552d36a41d2be589a75af020dab",
+    "adapters/CMakeLists.txt": "b32ab9f7254ca70a33c644dfa5461e2697565055058d286fc4c8a496a629252e",
+    "core/CMakeLists.txt": "b3957a51295489e92f051d592648bde299205ba6608fb2db98fbddfc2e6db997",
+    "ui/CMakeLists.txt": "4cb2c67c9e809d99332d2e4361f806bf7da8138e7b2ed3b8b1972bcfc34382da",
+    "app/session_bridge.cpp": "301135e3c4ebd67884028db1d639978c96da7e6bfb2bdb41d2c9c5cb52eef33c",
+    "ui/library_window.cpp": "ce4812638f26fd46aeaa85546219ae5da653364fd7d6c4648d916ccccc47c500",
+    "adapters/profile.hpp": "0e7bb950e4d66e2fdf88b2733cb00d149e8b17ea805348300327af8418649831",
+    "adapters/profile.cpp": "38c0838d5aae673304ce9dade42cae18bf9607d54d4480949617dcc1c5dafbd9",
+    "adapters/file_io.hpp": "8d0fc78f8b6fd62932c8ff07fcbcd8203d6bac0ca2255d86bb849c4b1b413cb6",
+    "adapters/file_io.cpp": "a3fd490e8e49b8d066f27205ab25636ac51c5e0715bf5c25f169e877da17f89c"
+  },
+  "planned_cases": 61,
+  "planned_case_breakdown": {
+    "baseline_and_lifetime": 5,
+    "existing_candidates_3names_x6types": 18,
+    "invalid_names": 8,
+    "invalid_lease": 1,
+    "invalid_encoded_inputs": 7,
+    "caller_limits": 4,
+    "ordinary_overbyte_limit": 1,
+    "exact_byte_limit": 1,
+    "late_candidates_2names_x3types": 6,
+    "observable_staging_tamper": 5,
+    "actual_kernel_noreplace_boundary": 1,
+    "synthetic_unsupported_syscall_results": 3,
+    "post_publication_sync_fault": 1
+  },
+  "runtime_execution_by_reviewer": false,
+  "checks": {
+    "target_scope": "Both new executables link biglybtc_profile with strict warnings and Werror. fsync/renameat2 wrappers are PRIVATE to config-create; only fsync is PRIVATE to create-view. No production library, UI or desktop target inherits these wrappers. Both CTests retain30-second deadlines and unit/fixtures labels.",
+    "real_noreplace_boundary": "The hook matches the exact held numeric directory fd, directory type/device/inode for both arguments, literal saving/primary names, and RENAME_NOREPLACE. It creates, syncs and records a foreign primary after source prechecks, then invokes __real_renameat2 exactly once and preserves errno. The case requires fixtureError0, realCalls1, realResult-1, realError EEXIST and only the TemporarySynced stage. It checks the introduced primary inode, metadata and bytes are unchanged, with complete owned staging retained.",
+    "synthetic_scope": "ENOSYS, EOPNOTSUPP and EINVAL are explicitly injected syscall results, with zero real calls asserted. These test Unsupported, no replacing fallback and retained recovery data; they provide no actual kernel fault or support credit.",
+    "sync_hook": "Only the PrimaryRenamed observer arms the injection. fstat must match the owned profile directory device/inode; data-file fsync and unrelated descriptors call real fsync. Assertions require a readable committed primary, no invented backup/staging, and an Io diagnostic stating publication already occurred.",
+    "determinism": "A restrictive umask0777 exercises normalization to0600 on the owned descriptor. Same-size tampering explicitly changes mtime with futimens and verifies the difference before the creator resumes. Replacement identity, truncation size and hardlink count also provide concrete distinctions without timing assumptions.",
+    "fixture_ownership": "Each case uses a fresh private mkdtemp root, generated profile, tracked exact leaves/directories, and real ProfileLease. Observer interference stays within that root. Cleanup releases the lease and attempts only those tracked generated paths. There is no original Java/profile/payload/network access.",
+    "meaningful_negative_checks": "Six entry types across all three candidate names; invalid names, lease, raw format and lower caller limits. Refusals preserve bytes, inode, mode, ownership, link count, size, mtime and ctime. Atime is excluded because fixture reads can update it. Observer-time arrivals are distinguished from actual kernel-boundary coverage.",
+    "ordinary_followup": "Creation verifies a pristine owned Primary with exact bytes; caller-input mutation cannot alter it. Ordinary load and subsequent edit/save preserve backup identity and bytes. Cases also cover a generic safe name, empty root and document lifetime after profile release.",
+    "source_integration": "Manual Save becomes available only after a complete Missing packet. The worker requires a completed missing read under the held Host lease and a read token that was not cancelled. Success replaces the missing marker with a pristine Primary baseline; later saves use the existing-file path. Actual write outcomes remain independent of late cancellation. Reading never creates the file."
+  },
+  "followup_notes": {
+    "earlier_test_gaps": "Final source e0aec adds the actual kernel boundary, restrictive umask and explicit mtime distinctions requested during review. Existing assertions were not weakened.",
+    "adapter_authorship": "The38 create-view cases are a separately authored suite and are not claimed as independently reviewed here."
+  },
+  "limits": [
+    "The61 cases are source-planned counts. Actual compilation and test results belong to root execution evidence.",
+    "No original Java BEncoder/manager/profile parity or full-client credit.",
+    "No global OOM, arbitrary throwing-observer or physical power-loss durability guarantee.",
+    "Prechecks plus kernel target no-replace behavior do not establish an atomic source-inode CAS or exclude every noncooperating pathname swap.",
+    "Late-candidate and staging mutations are controlled in-process fixture actions, not concurrent external-manager execution."
+  ],
+  "review_changed_subject_sources": false
+}

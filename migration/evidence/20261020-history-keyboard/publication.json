@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "repository": "https://github.com/d00rsfan/BiglyBTC",
+  "source_commit": "07219078bf3c5b3ed1cca7e701dcbdfeda8e687d",
+  "metadata_commit": "05d460afde14e9a3510fe2f6d823422fe4edd642",
+  "tag": "milestone-history-keyboard-20261020",
+  "tag_object": "1ad982cb05bbedfb0cd878579ecb23e45997a4aa",
+  "tag_target": "05d460afde14e9a3510fe2f6d823422fe4edd642",
+  "remote_identity_verified": true,
+  "source_files_verified": 7,
+  "qualification": "local-verification.json and hosted-verification.json",
+  "dist_manifest_sha256": "4059fe8db68c5583cd5349ec0a1f98928888653370238eecf0517a9f3b9cfd31",
+  "original_processes_signaled": false,
+  "original_profile_access": false
+}

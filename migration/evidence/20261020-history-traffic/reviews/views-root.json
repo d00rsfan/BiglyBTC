@@ -1,0 +1,19 @@
+{
+  "status": "PASS source-only root review",
+  "source_sha256": {
+    "preview/native/ui/history_view.hpp": "4d0003b6020169b59a0e194e0abb34c10ad4abe165db318dc9684224f3c00f2d",
+    "preview/native/ui/history_view.cpp": "88f0c5feaae55442dacefb264f54c93c08a72a5cb24c1646063b51be28fbac9c",
+    "preview/native/ui/history_week_view.hpp": "8613aee6f0c3171655a7112ffcccc576016c038c056f2864dfc9ceede079ab6a",
+    "preview/native/ui/history_week_view.cpp": "fb57304086deb24bed1cea791456e33ca363417af8e29723ca57f80c5e6d1800",
+    "preview/native/ui/statistics_page.cpp": "83a4a2a442491565ae9f4236efbba6f6100b3dcc3af466b077d4978cbb311891",
+    "preview/native/ui/statistics_navigation.hpp": "806fd6bc8682a8ecae5785ce8b82d841288effdda666861456949dc142ebea5b"
+  },
+  "reviewer": "root",
+  "findings": [
+    "Complete six-file consumer patch read, fields appended without invalidating old aggregate defaults.",
+    "Choices initialized before handlers; change invalidates revision then queues render, with all request/session/stale/lifecycle methods and table bindings unchanged.",
+    "Payload summaries retain explicit payload semantics; charts receive selected traffic and each hidden choice is captured/restored."
+  ],
+  "blockers": [],
+  "execution_credit": false
+}

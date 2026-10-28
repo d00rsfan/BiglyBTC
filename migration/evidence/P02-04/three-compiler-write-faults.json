@@ -1,0 +1,34 @@
+{
+  "status": "passed",
+  "case_count": 12,
+  "reports": [
+    {
+      "compiler": "gcc",
+      "report": "migration/evidence/P02-04/gcc-real-write-faults.json",
+      "report_sha256": "3239abb619f4dc40225de7d0e8a231e026c5acba284cf67fd3dcef985ab53646",
+      "native_build_capsule": "migration/evidence/P04-02/gcc-transfer-build-capsule.json",
+      "native_build_capsule_sha256": "999a40941c272762e9eaddc3852e0c58a600380b4d0997ca6649e7b3559eb5a9",
+      "native_implementation_commit": "781467117ba6a5f119b1ae92eda456468bfa48a8"
+    },
+    {
+      "compiler": "clang",
+      "report": "migration/evidence/P02-04/clang-real-write-faults.json",
+      "report_sha256": "b7cbdacfbbfd31eeb5f4666d9033dcd59b48d33b9b567270a5495dca9cec3c9d",
+      "native_build_capsule": "migration/evidence/P04-02/clang-transfer-build-capsule.json",
+      "native_build_capsule_sha256": "fceffdabe8eacabd5cb0951c93792f7c4c91d86cb87cbe701b89e2d7108de765",
+      "native_implementation_commit": "781467117ba6a5f119b1ae92eda456468bfa48a8"
+    },
+    {
+      "compiler": "asan",
+      "report": "migration/evidence/P02-04/asan-real-write-faults.json",
+      "report_sha256": "be75214056775aecbe8247bb55510671153b45e1f960cd072e2724667ebd390a",
+      "native_build_capsule": "migration/evidence/P04-02/asan-files-transfer-build-capsule.json",
+      "native_build_capsule_sha256": "16a883cf68522cf185d7a0a32f04dd8247e59ee9c3b5e55cbd206fdd6c130036",
+      "native_implementation_commit": "781467117ba6a5f119b1ae92eda456468bfa48a8"
+    }
+  ],
+  "limitations": [
+    "Actual Linux EFBIG/SIGXFSZ only; ENOSPC/fsync/rename/payload faults remain open",
+    "Abrupt child termination cannot execute sanitizer finalization"
+  ]
+}

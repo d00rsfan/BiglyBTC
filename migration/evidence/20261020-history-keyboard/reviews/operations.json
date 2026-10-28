@@ -1,0 +1,261 @@
+{
+  "schema": 1,
+  "milestone": "P04-24",
+  "reviewer": "error_codec",
+  "authors": {
+    "runtime_helpers": "root",
+    "documentation_consumer": "error_driver"
+  },
+  "status": "PASS independent source-only runtime/completion helper review",
+  "blockers": [],
+  "scope": "All 17 runtime/completion helpers plus the frozen docs consumer reviewed against P04-23. Own plot/smoke implementation is excluded from independent production credit; separate root/Driver reviews remain required. No helper execution, imports or Git commands.",
+  "source_sha256": {
+    "build/history-keyboard-20261020/checkpoint_history_keyboard.py": "d0b4f07c5371c903bae4c5316fea1f2351eeb9da9361e3d9fa9da52512c0b7ac",
+    "build/history-keyboard-20261020/checkpoint_milestone.py": "8aa46529570097d85fd76518843f89a0b7d3e9786a476bb7e143f50f689e5679",
+    "build/history-keyboard-20261020/collect_hosted.py": "b73e9b46c8ddd3462b042ccb09e20f129bad54a801efb99a5c6dfddaf38db851",
+    "build/history-keyboard-20261020/collect_metadata_ci.py": "c1001e361acb293c92bcbd4130719d7b8703507e5edc6b026396244a5c373b3c",
+    "build/history-keyboard-20261020/commit_source.py": "c6f6371b0d0cc61a0d7bd019d39e84d0f2fd358df6526a4e391ed600a8a4b51c",
+    "build/history-keyboard-20261020/finalize_docs.py": "9e42d568361882b1405269aec4048514f00e510a8d4de6167fcb10617c25ee8a",
+    "build/history-keyboard-20261020/finalize_evidence.py": "b08b61bbfbc4d92f3ea43c33c08cd829d3145cf8672d6bafdc708f50ce5d30e2",
+    "build/history-keyboard-20261020/finish_milestone.py": "9cbf3716dff3a733cccff59c5a39c48fb32d1804e8941a61f7771e6219b8aa1f",
+    "build/history-keyboard-20261020/promote_dist.py": "4b9171ecd974230abe10b914193e936bb044b46449b52b6686f66a224eeca023",
+    "build/history-keyboard-20261020/publish.py": "2164b459fb55c33f1a2cbd50f10cf12d8111d534e94d2a7438ce0a3515ff2ef3",
+    "build/history-keyboard-20261020/qualify.py": "22d5ef76b1d45384d425add5fa21085a963241d70533a803c857f80991b7e0bf",
+    "build/history-keyboard-20261020/record_toolchains.py": "005b4b9bca1d81c76d193ff39d10be48e85f599da36a4ea4007cd9c91b4b60b9",
+    "build/history-keyboard-20261020/record_visual_review.py": "59a6b8027bf095deb2eaae19af12d041a7f716610a0e861de755debf97036f65",
+    "build/history-keyboard-20261020/run_smoke_scales.py": "3c58292e853ccf688ab2979394847bec660454cd39c77d9e0b6df93f52177dc9",
+    "build/history-keyboard-20261020/run_visuals.py": "deff7c382673e1781340183b6c12fe0a714a2b0a9f289647b9bede631ddd3113",
+    "build/history-keyboard-20261020/verify_dist.py": "70518ad071d442ac89ec43b62eac40afdab985d63e8368f494a27658ed64f367",
+    "build/history-keyboard-20261020/verify_hosted.py": "057c2902740d4758ccfac831b617d3579cb342ef165961b8f7070cf315b3d538",
+    "build/history-keyboard-20261020/verify_private_checkpoint.py": "4d4cf830e31296ba16bfc54dc329be4d55b947d93e4b82d6bff260b18bee4016"
+  },
+  "predecessor_source_sha256": {
+    "build/history-traffic-20261020/checkpoint_history_traffic.py": "4af019197bda99e65afe5ab42b34855a48c4c5b043232f8fc9dccee1b4c6a370",
+    "build/history-traffic-20261020/checkpoint_milestone.py": "748482bbdb5aa1a7d519ecdc6d7ac27392a0d6d41b8dff2d1556a1e0164c4138",
+    "build/history-traffic-20261020/collect_hosted.py": "cdebeafcec3d0bbe935f31229813495b30eb0ed06ab1ce68745dc55460735b9c",
+    "build/history-traffic-20261020/collect_metadata_ci.py": "a0bcfe09341ed65a9eee77f768a949e9b8415e6d9c1db23479f132186efff1e1",
+    "build/history-traffic-20261020/commit_source.py": "6d3ae350950b981568aa0df26d2be96e9cf274185185c308f6e8c3e39335e6bd",
+    "build/history-traffic-20261020/finalize_docs.py": "1aa912062b7bef61b9534be0b2bb1cae6b027f6e0ba2a441c7887d116db81484",
+    "build/history-traffic-20261020/finalize_evidence.py": "9c8ad174d38654d96dfc64db2852ac8a731ad88f695e337b2f1772ac2fe3ec05",
+    "build/history-traffic-20261020/finish_milestone.py": "e7a947f897d63516c236051b14f2721342c968cc8f6c823e0a2468f6d3f4ece4",
+    "build/history-traffic-20261020/promote_dist.py": "2f5ba7a6583f8cc014664b63c95d7e33dc7b2cff6b8f1a52f0426c9520191cea",
+    "build/history-traffic-20261020/publish.py": "e7907411d82906ae97613c55b97bb298d8d16f37dd65b2b7052ddc7d7cc3e083",
+    "build/history-traffic-20261020/qualify.py": "a05fc984e4e00a5cd83a6a104df1996929dd07bce10645cd1843b4bad2b796ac",
+    "build/history-traffic-20261020/record_toolchains.py": "7101886dd529d667fd8ff328f528b70c46be993d4893c25329fa845fe23bf629",
+    "build/history-traffic-20261020/record_visual_review.py": "f2bd7613403be3f6bfd060ec0d1e6ec2a456414600af4c85f6ce95b06ea0e93c",
+    "build/history-traffic-20261020/run_smoke_scales.py": "e4793ea62af2719668a150e9bcae60dad8eaabbb68d76f80bb0694bd9cac418e",
+    "build/history-traffic-20261020/run_visuals.py": "b4cd8147247f4f39d63ab7f048d01d9ecd81c6b931f6d45753386495b839dfa0",
+    "build/history-traffic-20261020/verify_dist.py": "01eacd0c24bee4c5b972dc20c386b6133f801afc1b2c426e53c91a2c08f7137a",
+    "build/history-traffic-20261020/verify_hosted.py": "9e32decdc644ac021680fa9ff74c22573354b33f3886be8d227184aeb4479e32",
+    "build/history-traffic-20261020/verify_private_checkpoint.py": "fe60b88f1c65ea110379eed0373d1e3b2fe3ef28352b8a4c1f4c54c3ba6ec1d2"
+  },
+  "context_sha256": {
+    "migration/evidence/20261020-history-keyboard/baseline.json": "753015c1172e27d9611b92da6f66a41c311fff213418dcb3aa3787bd807b9619",
+    "migration/evidence/20261020-history-keyboard/qualification-inputs.json": "7a0539d79b948ea18a68858444a9429485f8c9925c7398f89eb11253ac672d6b",
+    "migration/evidence/20261020-history-keyboard/unchanged-behavior-baseline.json": "71f2a298aad10873b1879351e3f58d66faea8b141ca616206d24d9ac3552e93e",
+    "migration/evidence/20261020-history-keyboard/source-audit.json": "58b721643d25b7337badbfee29c2372bab0d1ec5a3672f2041a2be5cdbc6d24f",
+    "migration/evidence/20261020-history-keyboard/.gitattributes": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da",
+    "migration/tools/checkpoint.py": "209d8da4eb017bb4d166871bdc36144d6ffa984ab8674e1b69d2a4bf930ce8ef",
+    "build/statistics-next-two-20261020/prepare_keyboard_finish.py": "61a20b8077aea969fd2695416bdc1884cc02747fe955b4fcab0519982dcf1a3e",
+    "migration/evidence/20261020-history-traffic/reviews/operations.json": "deeb5d9db54bda48f6c64edb7f2b6a217ef884e4eb9ee7ab0048dfebb53edd2f",
+    "migration/evidence/20261020-history-traffic/local-verification.json": "83a98787d3b54474733c65fcce92266796ab7c874c7123e9f5d85fb8cc61f5da"
+  },
+  "baseline": {
+    "original": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+    "native": "bd27aeba82c48c8cd4bddcd8ca35d9f48fb7f310",
+    "private": "882b9e3a4d028f67baedf983e4a84515b68abcfd",
+    "previous_source": "1b08cceee82df9d29f1b35719a6ac24f2c6c2bc1",
+    "previous_dist_manifest_sha256": "7a38544ed765728555f4423bee7a9beba3f16a7a312accddbab6036e7efb8417"
+  },
+  "static_checks": {
+    "helpers_AST_parsed_without_import": 18,
+    "qualified_source_files_verified": 7,
+    "unchanged_native_files_verified": 241,
+    "all_232_previous_guard_pairs_preserved": true,
+    "nine_additions_exact_prior_nonchanging_source_pins": [
+      "preview/native/tests/history_traffic_tests.cpp",
+      "preview/native/tests/history_traffic_view_tests.cpp",
+      "preview/native/ui/history_view.cpp",
+      "preview/native/ui/history_view.hpp",
+      "preview/native/ui/history_week_view.cpp",
+      "preview/native/ui/history_week_view.hpp",
+      "preview/native/ui/saved_history_traffic.hpp",
+      "preview/native/ui/statistics_navigation.hpp",
+      "preview/native/ui/statistics_page.cpp"
+    ],
+    "original_index_hash_verified": true,
+    "all_timeout_expressions_inherited": true,
+    "unchanged_function_AST_after_namespace_normalization": {
+      "checkpoint_history_keyboard.py": [
+        "raw_git",
+        "assert_original_baseline",
+        "verify"
+      ],
+      "checkpoint_milestone.py": [],
+      "collect_hosted.py": [
+        "gh"
+      ],
+      "collect_metadata_ci.py": [],
+      "commit_source.py": [
+        "git",
+        "sha"
+      ],
+      "finalize_docs.py": [
+        "require",
+        "read_json",
+        "load",
+        "digest",
+        "full_hash",
+        "replace_once",
+        "replace_between",
+        "milestone_block",
+        "append_unique"
+      ],
+      "finalize_evidence.py": [
+        "require",
+        "digest",
+        "read",
+        "git",
+        "cases",
+        "sections",
+        "captures",
+        "original_unchanged"
+      ],
+      "finish_milestone.py": [
+        "run"
+      ],
+      "promote_dist.py": [
+        "digest",
+        "runpath"
+      ],
+      "publish.py": [
+        "git"
+      ],
+      "qualify.py": [
+        "run"
+      ],
+      "record_toolchains.py": [],
+      "record_visual_review.py": [],
+      "run_smoke_scales.py": [],
+      "run_visuals.py": [
+        "run"
+      ],
+      "verify_dist.py": [],
+      "verify_hosted.py": [
+        "digest",
+        "require"
+      ],
+      "verify_private_checkpoint.py": [
+        "git"
+      ]
+    },
+    "raw_checkpoint_shared_paths": [
+      ".gitignore",
+      "MIGRATION_PLAN.md",
+      "migration/STATE.md",
+      "migration/FEATURE_MATRIX.md",
+      "migration/PREVIEW.md",
+      "migration/RECOVERY.md",
+      "migration/upstreams.lock.json",
+      "migration/tasks/P04-23-history-traffic.md",
+      "migration/tasks/P04-24-history-keyboard.md",
+      "migration/tasks/P04-25-history-copy.md",
+      "migration/publication/preview/native-preview.yml"
+    ],
+    "qualified_source_pin_paths": [
+      ".github/workflows/native-preview.yml",
+      "preview/native/packaging/README.md",
+      "preview/native/packaging/preview_smoke.cpp",
+      "preview/native/tests/CMakeLists.txt",
+      "preview/native/tests/history_keyboard_tests.cpp",
+      "preview/native/ui/saved_history_plot.cpp",
+      "preview/native/ui/saved_history_plot.hpp"
+    ]
+  },
+  "required_cohorts": {
+    "retained": {
+      "gcc": 69,
+      "clang": 20,
+      "sanitized": 23
+    },
+    "current": {
+      "gcc": 70,
+      "clang": 21,
+      "sanitized": 24
+    },
+    "new_units": [
+      "saved-history-keyboard"
+    ],
+    "new_actual_row_key": "history_keyboard_qt_rows",
+    "offline_smoke_rows": 11,
+    "offline_captures_per_scale": 17,
+    "all_captures_per_scale": 21,
+    "local_captures": 63,
+    "hosted_captures": 21
+  },
+  "assessments": [
+    {
+      "topic": "exact cohorts and source continuity",
+      "status": "PASS",
+      "detail": "Runner adds one keyboard target/test to each prior cohort. Finalizer requires exact prior 69/20/23 names plus saved-history-keyboard, matching XML/LastTest names, successful configure/build/tests and per-section retained/new Qt/accounting markers. Seven source pins match current bytes and must match actual source Git blobs. All 241 inherited inputs additionally match the fixed native baseline; all 232 previous guard pairs remain exact and nine additions are exactly prior nonchanging P04-23 pins. Job limits, nice5 builds, ordinary-priority tests, deadlines and leak-enabled ASAN/UBSAN flags are unchanged."
+    },
+    {
+      "topic": "source publication stage",
+      "status": "PASS",
+      "detail": "Source helper admits exactly seven paths, known main/origin/clean index and fixed baseline parent. GCC 70 and all three scaled smoke receipts/seven successful visual commands, 241 unchanged guards and complete pre-build pin equality precede source publication. Receipt explicitly leaves Clang, sanitizer and hosted success mandatory. finish/finalizer still require every lane and hosted qualification before dist/metadata/tag completion. No historical alternate-parent amendment branch is needed or admitted."
+    },
+    {
+      "topic": "hosted archive and markers",
+      "status": "PASS",
+      "detail": "Desktop/SDK completed source identities, API artifact name/ID/run/head/main branch/digest/size, actual ZIP hash, canonical regular entries and full extracted path/byte equality precede one success receipt. Seventy unique XML units must equal prior 69 plus keyboard and all LastTest names. The actual bounded integer history_keyboard_qt_rows is required in its own section. Retained marker fields remain in their original unit sections. ZIP file count is observed, never guessed."
+    },
+    {
+      "topic": "captures and honest scope",
+      "status": "PASS",
+      "detail": "The unchanged 90-second full smoke now requires 11 rows and 17 offline captures, adding only statistics-history-keyboard-preview.png. Two engine and two graph captures yield 21 per scale, 63 local and 21 hosted. Exact names/signatures and command success remain required. Keyboard-only scope is explicit, clipboard/copy receives no credit, and new Java execution/equality remain false. Actual compositor and screen-reader acceptance stay open."
+    },
+    {
+      "topic": "original accounting provenance",
+      "status": "PASS",
+      "detail": "The 2550 daily and 3150 independent day/hour scalar scopes remain in their original 20261019-saved-history and 20261020-history-week namespaces. Immutable private-parent receipt/stdout/execution and fixture bindings remain intact. Existing traffic/navigation markers stay separate retained metrics; keyboard interaction creates no new aggregate/rate/rolling-history or original UI equality claim."
+    },
+    {
+      "topic": "dist, RPATH and metadata",
+      "status": "PASS",
+      "detail": "Exact prior manifest, 103-file set and 82 identical private runtimes are retained. Separate ELF replay proves complete installed bytes after only the exact CMake RUNPATH edit, preserving original build bytes. Complete previous-dist rollback and rename-failure restoration remain. Final loader/source/map checks precede milestone-only JSON metadata/tag publication; known main/origin, clean metadata scope and exact remote main/tag/peeled identities remain checked."
+    },
+    {
+      "topic": "raw checkpoint boundary",
+      "status": "PASS",
+      "detail": "Current evidence plus the same eleven shared paths retain all three task cards. Raw attributes, alternate-index scoped renormalization, every staged regular-blob/raw-byte check and the complete future inventory precede write-tree/commit-tree/first ref update. Original HEAD/index and fixed sole private parent are checked. Post-ref verification checks every required file/blob and inventory. No actual checkpoint execution credit is granted here."
+    },
+    {
+      "topic": "docs producer/consumer and request boundary",
+      "status": "PASS source-only",
+      "detail": "Frozen docs 9e42d568 consumes history_keyboard_qt_rows and keyboard_navigation_only=true, with traffic_selection_only/navigation_only=false. It retains all previous row keys, 70/21/24 cohorts, 11 smoke rows, 63/21 captures and dist/source/metadata bindings. Nine predecessor helper ASTs remain exact. All seven intended document transformations are prepared before writing; only statistics.history_keyboard becomes implemented and broad source first_ported/integrated fields stay null. Cursor is per-frame, not retained navigation. Request remains active after milestone two; only P04-25 is pending."
+    }
+  ],
+  "notes": [
+    {
+      "topic": "carryover comments",
+      "detail": "Root corrected only finalizer wording from traffic selection to keyboard inspection; corrected hashes are pinned."
+    },
+    {
+      "topic": "authoring recipe",
+      "detail": "prepare_keyboard_finish.py is pinned authoring history only, not an execution step to rerun over final sources. Root owns all actual qualification and publication."
+    }
+  ],
+  "execution": {
+    "helper_imports": 0,
+    "selected_target_definitions_evaluated": 0,
+    "helper_execution": 0,
+    "builds": 0,
+    "tests": 0,
+    "git_commands": 0,
+    "native_edits": 0,
+    "helper_edits": 0
+  },
+  "actual_qualification_credit": false,
+  "actual_Git_ancestry_verified_by_reviewer": false
+}

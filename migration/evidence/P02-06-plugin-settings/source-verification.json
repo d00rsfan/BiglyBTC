@@ -1,0 +1,9 @@
+{
+  "source_hashes_match": true,
+  "files": 34,
+  "results": {
+    "gcc": "Test project /tmp/biglybtc-settings-qualified-gcc\n    Start  6: structured-document-edits\n1/3 Test  #6: structured-document-edits ........   Passed    0.01 sec\n    Start  9: original-mldht-routing-cache\n2/3 Test  #9: original-mldht-routing-cache .....   Passed    0.47 sec\n    Start 10: original-plugin-settings\n3/3 Test #10: original-plugin-settings .........   Passed    0.51 sec\n\n100% tests passed, 0 tests failed out of 3\n\nLabel Time Summary:\nfixtures    =   0.99 sec*proc (2 tests)\nunit        =   1.00 sec*proc (3 tests)\n\nTotal Test time (real) =   1.00 sec\n",
+    "clang": "Test project /tmp/biglybtc-settings-qualified-clang\n    Start  6: structured-document-edits\n1/3 Test  #6: structured-document-edits ........   Passed    0.00 sec\n    Start  9: original-mldht-routing-cache\n2/3 Test  #9: original-mldht-routing-cache .....   Passed    0.27 sec\n    Start 10: original-plugin-settings\n3/3 Test #10: original-plugin-settings .........   Passed    0.47 sec\n\n100% tests passed, 0 tests failed out of 3\n\nLabel Time Summary:\nfixtures    =   0.74 sec*proc (2 tests)\nunit        =   0.75 sec*proc (3 tests)\n\nTotal Test time (real) =   0.75 sec\n",
+    "asan": "Test project /tmp/biglybtc-settings-qualified-asan\n    Start  6: structured-document-edits\n1/3 Test  #6: structured-document-edits ........   Passed    0.09 sec\n    Start  9: original-mldht-routing-cache\n2/3 Test  #9: original-mldht-routing-cache .....   Passed    1.78 sec\n    Start 10: original-plugin-settings\n3/3 Test #10: original-plugin-settings .........   Passed    1.93 sec\n\n100% tests passed, 0 tests failed out of 3\n\nLabel Time Summary:\nfixtures    =   3.70 sec*proc (2 tests)\nunit        =   3.79 sec*proc (3 tests)\n\nTotal Test time (real) =   3.80 sec\n"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "status": "passed",
+  "probe_sha256": "d3a41af90c7428d3c599a9e71f89a9b50db4404f6a89f95b7c568ddd697a253b",
+  "records": [
+    {
+      "torrent_type": 1,
+      "output": "META files=3 size=131072 pieces=8\nFILE 0 size=20000 offset=0 pad=0 path=\"multi-fixture/01-first.bin\"\nFILE 1 size=111072 offset=20000 pad=0 path=\"multi-fixture/nested/02-שب.bin\"\nFILE 2 size=0 offset=131072 pad=0 path=\"multi-fixture/nested/03-empty.bin\"\nCHECK pieces=1 done=16384 wanted_done=16384\nPASS original multifile physical mapping verification\n",
+      "copied_work": "/tmp/biglybtc-multifile-check-1",
+      "original_source": "/tmp/biglybtc-multifile-java/java-1/payload/multi-fixture"
+    },
+    {
+      "torrent_type": 3,
+      "output": "META files=5 size=147456 pieces=9\nFILE 0 size=20000 offset=0 pad=0 path=\"multi-fixture/01-first.bin\"\nFILE 1 size=12768 offset=20000 pad=1 path=\"multi-fixture/.pad/12768\"\nFILE 2 size=111072 offset=32768 pad=0 path=\"multi-fixture/nested/02-שب.bin\"\nFILE 3 size=3616 offset=143840 pad=1 path=\"multi-fixture/.pad/3616\"\nFILE 4 size=0 offset=147456 pad=0 path=\"multi-fixture/nested/03-empty.bin\"\nCHECK pieces=2 done=20000 wanted_done=20000\nPASS original multifile physical mapping verification\n",
+      "copied_work": "/tmp/biglybtc-multifile-check-3",
+      "original_source": "/tmp/biglybtc-multifile-java/java-3/payload/multi-fixture"
+    },
+    {
+      "torrent_type": 2,
+      "output": "META files=5 size=147456 pieces=9\nFILE 0 size=20000 offset=0 pad=0 path=\"multi-fixture/01-first.bin\"\nFILE 1 size=12768 offset=20000 pad=1 path=\"multi-fixture/.pad/12768\"\nFILE 2 size=111072 offset=32768 pad=0 path=\"multi-fixture/nested/02-שب.bin\"\nFILE 3 size=3616 offset=143840 pad=1 path=\"multi-fixture/.pad/3616\"\nFILE 4 size=0 offset=147456 pad=0 path=\"multi-fixture/nested/03-empty.bin\"\nCHECK pieces=2 done=20000 wanted_done=20000\nPASS original multifile physical mapping verification\n",
+      "copied_work": "/tmp/biglybtc-multifile-check-2",
+      "original_source": "/tmp/biglybtc-multifile-java/java-2/payload/multi-fixture"
+    }
+  ],
+  "limitations": [
+    "Copied original physical data only; not same-profile multifile activation"
+  ]
+}

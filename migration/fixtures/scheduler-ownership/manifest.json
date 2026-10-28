@@ -1,0 +1,111 @@
+{
+  "source_commit": "1ee6a53dae017696d2f0002e4a0d74f5a9476af5",
+  "core_source_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_plugin_class_digest": "8f6a561f700e214fdb4aeda5242466b3e5e242ef2e3a5a0cd7fdb46c7959200f",
+  "source_overlay": false,
+  "harness_sha256": {
+    "ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+    "SpeedSchedulerOracle.java": "56fe63c615117da7cc01bf4787fac81c65e11b1e4865a03b15b1cdb32f159a15",
+    "SchedulerOwnershipOracle.java": "f0a76cb1927f6bcb0099323ddeae97254d88dc400a4359099d9f1406d957377c"
+  },
+  "evidence": "migration/evidence/P04-06/gcc-original-ownership.json",
+  "scope": "Unchanged original contains/add/remove helpers; thread constructed but never started/run",
+  "limitations": [
+    "Native returns edited bytes; physical durable ownership persistence/host integration remains open",
+    "Unknown lines retain raw bytes instead of Java's destructive trim/reencoding during removal",
+    "Unterminated foreign last line is rejected on append; Java loses new ownership by merging lines",
+    "Linux source-helper differential; Windows newline encoding has native tests only"
+  ],
+  "cases": [
+    {
+      "case": "empty",
+      "classification": "membership_matches",
+      "sha256": {
+        "original.expected": "f12d0ef80d92b83e687b215e3303cba18b4d80e8ccc7584a72f4532f45e1eb55",
+        "input.conf": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "native.expected": "f12d0ef80d92b83e687b215e3303cba18b4d80e8ccc7584a72f4532f45e1eb55"
+      }
+    },
+    {
+      "case": "canonical",
+      "classification": "membership_matches",
+      "sha256": {
+        "original.expected": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+        "input.conf": "ad57830a73307903d06ebeb6fa859b72ef9c29bc0b470c322f501a04072534f3",
+        "native.expected": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8"
+      }
+    },
+    {
+      "case": "crlf-and-unknown",
+      "classification": "membership_matches",
+      "sha256": {
+        "original.expected": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+        "input.conf": "77f5522adb1c2bb8a0d1c9d3094a793073f37629f237d7750b1eedd5d26aac3a",
+        "native.expected": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8"
+      }
+    },
+    {
+      "case": "cr-only",
+      "classification": "membership_matches",
+      "sha256": {
+        "original.expected": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+        "input.conf": "645906e4a8aef1b22642ab40487b35e19c9441e33ffa872f63f44ad55383a8ec",
+        "native.expected": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8"
+      }
+    },
+    {
+      "case": "duplicate",
+      "classification": "membership_matches",
+      "sha256": {
+        "original.expected": "8af20e225a05a8595a13b56574afdb73e30da4d715f06c391abbfb1ac850b653",
+        "input.conf": "1441794d639fdb346dd5308eb00d1a23e6f90c292867122d4bccaf0221b43726",
+        "native.expected": "8af20e225a05a8595a13b56574afdb73e30da4d715f06c391abbfb1ac850b653"
+      }
+    },
+    {
+      "case": "case-sensitive",
+      "classification": "membership_matches",
+      "sha256": {
+        "original.expected": "f12d0ef80d92b83e687b215e3303cba18b4d80e8ccc7584a72f4532f45e1eb55",
+        "input.conf": "3d4b6ce447b66029e9a55d39e8df8a034a9848fd89755bee2af9e1c209f97701",
+        "native.expected": "f12d0ef80d92b83e687b215e3303cba18b4d80e8ccc7584a72f4532f45e1eb55"
+      }
+    },
+    {
+      "case": "ascii-trim",
+      "classification": "membership_matches",
+      "sha256": {
+        "original.expected": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+        "input.conf": "562fdcbe7fd5b9101a1374496b2eb6f5329292756e43eaf8ad441710814b9a29",
+        "native.expected": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8"
+      }
+    },
+    {
+      "case": "unicode-not-java-trim",
+      "classification": "membership_matches",
+      "sha256": {
+        "original.expected": "f12d0ef80d92b83e687b215e3303cba18b4d80e8ccc7584a72f4532f45e1eb55",
+        "input.conf": "10db7a509802c72711936d1ed34cf0394972f483ed105a2e27e0b2e9252d772c",
+        "native.expected": "f12d0ef80d92b83e687b215e3303cba18b4d80e8ccc7584a72f4532f45e1eb55"
+      }
+    },
+    {
+      "case": "unterminated-owned",
+      "classification": "membership_matches",
+      "sha256": {
+        "original.expected": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+        "input.conf": "47b38c456ecc7ef97695fca53153634178f301b86cae47bd738c7e20994d8b0b",
+        "native.expected": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8"
+      }
+    },
+    {
+      "case": "unterminated-foreign",
+      "classification": "explicit_unterminated_append_rejection",
+      "sha256": {
+        "original.expected": "cde8591fb05c538bd6eafcf03019d5deee6c67bd583debb645fc9b400bbc894d",
+        "input.conf": "a6b0bdf4d3ce8e13f52849cd33132a1f11970551a19cf7a074fdafd351146abc",
+        "native.expected": "6e29ef512e0905650769dc2034ad1affa69c08fe6ba11ff9a475b311a42be048"
+      }
+    }
+  ]
+}

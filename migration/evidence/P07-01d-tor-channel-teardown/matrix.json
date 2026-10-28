@@ -1,0 +1,378 @@
+{
+  "status": "passed",
+  "started_at_utc": "2026-10-17T20:19:18.189265+00:00",
+  "builds": [
+    {
+      "compiler": "gcc",
+      "status": "passed",
+      "build_root": "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-gcc",
+      "commands": [
+        {
+          "index": 0,
+          "command": [
+            "cmake",
+            "-S",
+            "/home/yurii/Java/BiglyBT/native/services/tor_control",
+            "-B",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-gcc",
+            "-G",
+            "Ninja",
+            "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DCMAKE_CXX_FLAGS=",
+            "-DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64"
+          ],
+          "status": "passed",
+          "started_at_utc": "2026-10-17T20:19:19.169390+00:00",
+          "log": "migration/evidence/P07-01d-tor-channel-teardown/gcc-0.txt",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T20:19:22.247669+00:00",
+          "log_sha256": "e44c661ddc383b4e7f35052f77f2053174575be31a3016c4d7d7152e44d78369"
+        },
+        {
+          "index": 1,
+          "command": [
+            "nice",
+            "-n",
+            "5",
+            "cmake",
+            "--build",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-gcc",
+            "-j2"
+          ],
+          "status": "passed",
+          "started_at_utc": "2026-10-17T20:19:22.262539+00:00",
+          "log": "migration/evidence/P07-01d-tor-channel-teardown/gcc-1.txt",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T20:20:14.694074+00:00",
+          "log_sha256": "2a44af141aaa6c96aba750d9b05001b142b34f7f7cd7a66ed156bcefe6493ed7"
+        },
+        {
+          "index": 2,
+          "command": [
+            "ctest",
+            "--test-dir",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-gcc",
+            "--output-on-failure",
+            "-j1"
+          ],
+          "status": "passed",
+          "started_at_utc": "2026-10-17T20:20:14.706293+00:00",
+          "log": "migration/evidence/P07-01d-tor-channel-teardown/gcc-2.txt",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T20:20:25.421744+00:00",
+          "log_sha256": "0a047ea1c09f3a6b31ced30358fc5e6e37acf4f4a374cc09a860897612f8c9b6"
+        }
+      ],
+      "persistent_runtime": {
+        "original_work": "/tmp/biglybtc-tor-channel-teardown-runtime-gcc",
+        "persistent_work": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/biglybtc-tor-channel-teardown-runtime-gcc",
+        "manifest_sha256": "91dcf68bd2d2fb8d1a924d93cf30190593072ac3ae54132c6033b0ebfc4617ab"
+      },
+      "binary_sha256": {
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-gcc/biglybtc-tor-channel-tests": "022158a0840b3207706e3d83ca7699dda331ec40892c11ecf17533a4c913fa76",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-gcc/biglybtc-tor-ownership-source-tests": "5f56090625df492aef4c38fa691e814712239ee015769ad6d0eafe88390fb46e",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-gcc/biglybtc-tor-ownership-tests": "657cb7d718c445eefc306410020c00671d7b2b4c0574d3af1bcbed2277de1504",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-gcc/libbiglybtc_tor_channel.a": "8bef0479c079ac15071a337f4f176fd7b95388172c4f6d1e2a14a9814930cdee",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-gcc/libbiglybtc_tor_ownership.a": "505db35745af4e985865b31268f8cf545a50cf3b528165ad081ffba7adda48b7",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-gcc/tor-auth/biglybtc-tor-auth-bounds-tests": "b0672a5f36382e7659aed96561461304be7beee8b0ad5cfef15f0841e3956396",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-gcc/tor-auth/biglybtc-tor-auth-driver": "b4fe0ac30321b82f4fb808652420d05639178eb362975e2961c57c0fe6ea0461",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-gcc/tor-auth/libbiglybtc_tor_auth.a": "a268a592454b0ea89ef91e167898f31d8ea43ba125502dce81f68793bbd70498"
+      },
+      "observations": {
+        "ctest_rows": 5,
+        "qt_passes": 167,
+        "qt_totals": {
+          "owned-tor-control-channel": 28,
+          "owned-tor-control-ownership": 44,
+          "owned-tor-ownership-source": 95
+        },
+        "unchanged_prior_channel_qt_rows": 24,
+        "new_channel_qt_rows": 4,
+        "original_authentication_observations": 1024,
+        "frozen_ownership_source_observations": 93,
+        "source_native_policy_rows": 4
+      },
+      "ctest_log_sha256": "25474dc886753755ef1632b54138dcfa83126d5234d12632395a3e93caffd47a",
+      "finished_at_utc": "2026-10-17T20:20:25.978748+00:00"
+    },
+    {
+      "compiler": "clang",
+      "status": "passed",
+      "build_root": "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-clang",
+      "commands": [
+        {
+          "index": 0,
+          "command": [
+            "cmake",
+            "-S",
+            "/home/yurii/Java/BiglyBT/native/services/tor_control",
+            "-B",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-clang",
+            "-G",
+            "Ninja",
+            "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+            "-DCMAKE_BUILD_TYPE=Release",
+            "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16",
+            "-DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64"
+          ],
+          "status": "passed",
+          "started_at_utc": "2026-10-17T20:20:25.989749+00:00",
+          "log": "migration/evidence/P07-01d-tor-channel-teardown/clang-0.txt",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T20:20:27.759761+00:00",
+          "log_sha256": "54d6d8a70aa3062c4fa87b6942744eda8f8b4d40b799b7c7a82ce215b3c8bfc0"
+        },
+        {
+          "index": 1,
+          "command": [
+            "nice",
+            "-n",
+            "5",
+            "cmake",
+            "--build",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-clang",
+            "-j2"
+          ],
+          "status": "passed",
+          "started_at_utc": "2026-10-17T20:20:27.775653+00:00",
+          "log": "migration/evidence/P07-01d-tor-channel-teardown/clang-1.txt",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T20:21:20.089724+00:00",
+          "log_sha256": "2a44af141aaa6c96aba750d9b05001b142b34f7f7cd7a66ed156bcefe6493ed7"
+        },
+        {
+          "index": 2,
+          "command": [
+            "ctest",
+            "--test-dir",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-clang",
+            "--output-on-failure",
+            "-j1"
+          ],
+          "status": "passed",
+          "started_at_utc": "2026-10-17T20:21:20.100749+00:00",
+          "log": "migration/evidence/P07-01d-tor-channel-teardown/clang-2.txt",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T20:21:30.791203+00:00",
+          "log_sha256": "d606daf892e8cbf4aa6cbf71046cd695ad7f006f236860b00000ef1844acef32"
+        }
+      ],
+      "persistent_runtime": {
+        "original_work": "/tmp/biglybtc-tor-channel-teardown-runtime-clang",
+        "persistent_work": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/biglybtc-tor-channel-teardown-runtime-clang",
+        "manifest_sha256": "c8c216b54eeb42425d9b920418d51ca169c7a302d7774288a4e92e297176ee5e"
+      },
+      "binary_sha256": {
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-clang/biglybtc-tor-channel-tests": "766bdf8adac43b473c7b1b2211c6779ade919e536152675e9c1bc3adf8d0ded3",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-clang/biglybtc-tor-ownership-source-tests": "951ba78c16561affd1043cc0f7e620679d47d97f9a36ada8cbce353a55c60e6c",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-clang/biglybtc-tor-ownership-tests": "85c37eb70d3b389e2019afd6d4bea78c49976f99e84d5ecce6b90b0248f12d81",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-clang/libbiglybtc_tor_channel.a": "84f2ca7a7ce0897b4387b6f1eed371672f2d4b53c4004f59b880c05d19a1d528",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-clang/libbiglybtc_tor_ownership.a": "3b6a78d3752ad58c5d10ea0571962f02ef7b1cb93389bd9b14da591758e9dc2d",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-clang/tor-auth/biglybtc-tor-auth-bounds-tests": "6becbd922d03b558e9342d30b85cbbe18a700f2cc577e20ca60a217a1a1f5816",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-clang/tor-auth/biglybtc-tor-auth-driver": "e3c504054f0bd684465d4070e996efe8a2b73e5ace892669604702df0c74a147",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-clang/tor-auth/libbiglybtc_tor_auth.a": "56722a411485da40c426e64cb3da232fb97daa277cd53ac1be05e7639258ca39"
+      },
+      "observations": {
+        "ctest_rows": 5,
+        "qt_passes": 167,
+        "qt_totals": {
+          "owned-tor-control-channel": 28,
+          "owned-tor-control-ownership": 44,
+          "owned-tor-ownership-source": 95
+        },
+        "unchanged_prior_channel_qt_rows": 24,
+        "new_channel_qt_rows": 4,
+        "original_authentication_observations": 1024,
+        "frozen_ownership_source_observations": 93,
+        "source_native_policy_rows": 4
+      },
+      "ctest_log_sha256": "a0c92579de0eb321b31239745bb88b45e27f77825731a494f24fdff2c8011a08",
+      "finished_at_utc": "2026-10-17T20:21:31.301639+00:00"
+    },
+    {
+      "compiler": "asan",
+      "status": "passed",
+      "build_root": "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-asan",
+      "commands": [
+        {
+          "index": 0,
+          "command": [
+            "cmake",
+            "-S",
+            "/home/yurii/Java/BiglyBT/native/services/tor_control",
+            "-B",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-asan",
+            "-G",
+            "Ninja",
+            "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+            "-DCMAKE_BUILD_TYPE=Debug",
+            "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer",
+            "-DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64"
+          ],
+          "status": "passed",
+          "started_at_utc": "2026-10-17T20:21:31.312643+00:00",
+          "log": "migration/evidence/P07-01d-tor-channel-teardown/asan-0.txt",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T20:21:34.376285+00:00",
+          "log_sha256": "b39b06afa0526ec40ab63c5905d7a7e3448a2e4576607b969626c3ce7cae0755"
+        },
+        {
+          "index": 1,
+          "command": [
+            "nice",
+            "-n",
+            "5",
+            "cmake",
+            "--build",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-asan",
+            "-j2"
+          ],
+          "status": "passed",
+          "started_at_utc": "2026-10-17T20:21:34.384429+00:00",
+          "log": "migration/evidence/P07-01d-tor-channel-teardown/asan-1.txt",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T20:22:37.663389+00:00",
+          "log_sha256": "2a44af141aaa6c96aba750d9b05001b142b34f7f7cd7a66ed156bcefe6493ed7"
+        },
+        {
+          "index": 2,
+          "command": [
+            "ctest",
+            "--test-dir",
+            "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-asan",
+            "--output-on-failure",
+            "-j1"
+          ],
+          "status": "passed",
+          "started_at_utc": "2026-10-17T20:22:37.923084+00:00",
+          "log": "migration/evidence/P07-01d-tor-channel-teardown/asan-2.txt",
+          "returncode": 0,
+          "finished_at_utc": "2026-10-17T20:22:49.275830+00:00",
+          "log_sha256": "b51d9566c7a615758fe2b8178e26439fa014d95b62edf9bb459c87057eb4980d"
+        }
+      ],
+      "persistent_runtime": {
+        "original_work": "/tmp/biglybtc-tor-channel-teardown-runtime-asan",
+        "persistent_work": "/home/yurii/Java/BiglyBT/build/recovery/generated-runtime/biglybtc-tor-channel-teardown-runtime-asan",
+        "manifest_sha256": "4a519603f988d9ab5d301773f9437711dcec236a31a7093f0c299fc2603b6e86"
+      },
+      "binary_sha256": {
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-asan/biglybtc-tor-channel-tests": "b7cfbefc53f47639794b19783fef785fe8ffe41a4bf44df08888dbfd6eff05a3",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-asan/biglybtc-tor-ownership-source-tests": "2fd05dc92641da61f322687825a55c4f0e07342f63a0ccd001083dda679ce25d",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-asan/biglybtc-tor-ownership-tests": "c8d9dd4c969f20cf8cb8869627d0a6208c000c5338928031fc2437c68e40c0cd",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-asan/libbiglybtc_tor_channel.a": "b721a62b944995871c9647f5639bf0751b8394bf5761b0ca831303a01b8157ef",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-asan/libbiglybtc_tor_ownership.a": "08d36c9a348d9e100570ecd5b7b979cf7f615ca9ade6722dce40f38a8b6e309f",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-asan/tor-auth/biglybtc-tor-auth-bounds-tests": "10a3a859ccec3e4c0b0900f63c8e6f4dd40f5f480a90f25488258d72aaeede68",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-asan/tor-auth/biglybtc-tor-auth-driver": "4901bd27df47a0494261159aa69827d23f0a6a4b2687f9a4d2c8f54d14d77954",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-channel-teardown-qualified-asan/tor-auth/libbiglybtc_tor_auth.a": "3bab5f933e0eae606cf5442926eb503e6149849ad75808e0b2f723122b7cbf11"
+      },
+      "observations": {
+        "ctest_rows": 5,
+        "qt_passes": 167,
+        "qt_totals": {
+          "owned-tor-control-channel": 28,
+          "owned-tor-control-ownership": 44,
+          "owned-tor-ownership-source": 95
+        },
+        "unchanged_prior_channel_qt_rows": 24,
+        "new_channel_qt_rows": 4,
+        "original_authentication_observations": 1024,
+        "frozen_ownership_source_observations": 93,
+        "source_native_policy_rows": 4
+      },
+      "ctest_log_sha256": "94c143197d96615ab09283aa12a31a9a0284a0c4c5da6af16c332ba4a0ab7ce0",
+      "finished_at_utc": "2026-10-17T20:22:50.099970+00:00"
+    }
+  ],
+  "source_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_plugin_baseline": "ae8efb8d40fb38246ac1790ab5cfb11584689c4a",
+  "expected_ctest_rows": 5,
+  "expected_qt_passes": 167,
+  "fresh_java_or_reference_builder_executions": 0,
+  "scope": "Quiet standalone ControlChannel teardown while timer/state/socket/secrets remain alive.28 channel Qt cases include unchanged prior24 plus4 new destruction regressions; existing44 ownership and95 source Qt cases unchanged. Original1024 SAFECOOKIE observations and native authentication bounds unchanged. Generated in-process numeric-loopback peers only; no Tor child, existing daemon/controller, cookie/profile/PID file, proxy/host/plugin activation, shutdown, event/keepalive multiplexer or non-ASCII socket-decoder claim.",
+  "updated_at_utc": "2026-10-17T20:22:50.965134+00:00",
+  "source_sha256": {
+    "migration/evidence/P00-03/formats.json": "a2b20eaa9f0a2210938bb6c8d2f568bce7ad3ca22de9c4b1eca23d23c6c9c594",
+    "migration/evidence/P00-04/reference-fence.json": "0c35e6bb2212e681ed4be8ecc65c50e35d7e191701bee59c9e139f2fbcb17302",
+    "migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+    "migration/fixtures/tor-auth/.gitattributes": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da",
+    "migration/fixtures/tor-auth/commands.txt": "154413c94b10862e4d6b522b12dee5bcd3a79c5492904fbf6300dd8070f923e6",
+    "migration/fixtures/tor-auth/expected.txt": "426d8d9eaac7cb1581ee6b3731efd8406f309d5db58d39f330aeeca85c470520",
+    "migration/fixtures/tor-auth/manifest.json": "aaee152fd0b9596843cb1122f731aac276f5fe8a4c30857e8adcb49a66d9a644",
+    "migration/fixtures/tor-ownership/cases.json": "3a14ef6b9c78c6b6740cc24f6ff7f6b3e8abfb92b5f0b9c74e07f0032f329167",
+    "migration/fixtures/tor-ownership/commands.txt": "7720c970eeeab1f2706c279a7e94475950c13ba2079c05946a73f290f9910f7e",
+    "migration/fixtures/tor-ownership/expected.txt": "941117b6a32ed64220ce0badd9b3b755e8fede305ab30235b183be629147737e",
+    "migration/fixtures/tor-ownership/manifest.json": "075f6a8c86b549a471419f7509ea6447a04f13341218b0dfbdaec1c7d91288d3",
+    "migration/tools/tor_channel_teardown_matrix.py": "204774e14a2d23a794b7394cac6d920413b75b46d104b3404735fdf08b7619c2",
+    "migration/tools/tor_ownership_matrix.py": "71df26ff7718b65577cbeab0b80a1f44ff4e8de6d1bbc3677d95834c3bbe08f5",
+    "migration/tools/tor_ownership_oracle.py": "4cb845c03d81d477b22e97330faeea904bf363178919c8d03d2e32b1954602da",
+    "native/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "native/plugins/BiglyBTC-plugin-aznettor/.gitignore": "ef2d3a662976b2c26a55d13b98b4be552bc693a37d446e8f29db5ea5b32a3b90",
+    "native/plugins/BiglyBTC-plugin-aznettor/CMakeLists.txt": "85f17c8ac3425c40324ef72bd31b5bc107cc47a4baa3ad98541c6dadd3e96669",
+    "native/plugins/BiglyBTC-plugin-aznettor/COPYING": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6",
+    "native/plugins/BiglyBTC-plugin-aznettor/README.md": "4aaebf616dc9dae10e8a23da5b294e153a31c5dbf999664daa173b88a64f1932",
+    "native/plugins/BiglyBTC-plugin-aznettor/auth_bounds_test.cpp": "2ad18e071953a5fdb05f370f21b399c8b934c5f755e868bf2fc5a0759446c524",
+    "native/plugins/BiglyBTC-plugin-aznettor/auth_driver.cpp": "4dca8fb217d2063fb14cb3e21beab9ae7feeaf0be102d89000d382d5a6e9873a",
+    "native/plugins/BiglyBTC-plugin-aznettor/fixture_test.py": "60be3a64fd5daba3af946d050df677956eec446edecfae12860e8850f3dbef92",
+    "native/plugins/BiglyBTC-plugin-aznettor/safecookie.cpp": "bddc5eaf95294a1fa4a7a6e541f7d51d0d53418b6bdae6afea7ec41230ed3901",
+    "native/plugins/BiglyBTC-plugin-aznettor/safecookie.hpp": "10e6092b7d6f0476f10d9d3742ca1a81c50f7a0feb2ed21b97af0a91f5143a17",
+    "native/services/tor_control/CMakeLists.txt": "574d57c77a97f033cbe492be3f7dcc66ff8e45a8f8d026271cdc6eca763a24df",
+    "native/services/tor_control/README.md": "73271c17c7e0678614cd6e709e886b11d890259f93b3dc3d716bd17627e0c8a3",
+    "native/services/tor_control/channel.cpp": "d14762f4133f1a68c961b31706a012eda8a250bc7db46adf397efe67f06e668d",
+    "native/services/tor_control/channel.hpp": "f6687c4e9b0cbd96ce733eede6114b5b10ce9b5e5e7854d24a7de4f8a3b85ff5",
+    "native/services/tor_control/channel_tests.cpp": "a23e37a86c4647ccbf27f8c7fd4e972b0538643d7adb5bc9ab52317a7b250cba",
+    "native/services/tor_control/ownership.cpp": "1c9f585833345a5075000795895b7bbe990692a220f5cff05edd5c46f845daa2",
+    "native/services/tor_control/ownership.hpp": "d643f1a1d646439b85810a2a3e96c123b661797d9199103500dfc92f3c44a18f",
+    "native/services/tor_control/ownership_source_tests.cpp": "9c33353cf5b8b28ca815ea02fa63866330fe1882afde3e69a0ce44036edcf232",
+    "native/services/tor_control/ownership_tests.cpp": "a82426f050ba1cc616e96094a0a06ea1809b9ef0b3256580913b8d059ee84079"
+  },
+  "dependency_sha256": {
+    "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6.12.0": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6.12.0": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6.12.0": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975"
+  },
+  "helper_sha256": {
+    "/tmp/biglybtc-tor-auth-oracle-sd2zox7u/source/TorAuthOracle.java": "40551c870d0bb3d060ff59dbe1bf37a5d3c22da9a402a4202b5e213dfe52af9f",
+    "/tmp/biglybtc-tor-auth-oracle-sd2zox7u/classes/ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd",
+    "/tmp/biglybtc-tor-auth-oracle-sd2zox7u/classes/TorAuthOracle$Connection.class": "c0458ca854048f034f2090176ddf99f5f8b1d90202562e15e8c76479bb5e5b32",
+    "/tmp/biglybtc-tor-auth-oracle-sd2zox7u/classes/TorAuthOracle$Constants.class": "7047d454baf6014ff3dd3a1062ed70a619a46d96803f5fc3346c653f3e7c031c",
+    "/tmp/biglybtc-tor-auth-oracle-sd2zox7u/classes/TorAuthOracle$FileUtil.class": "0aecfdceb654317440117193485d9e129690c53b9dda370647680599ceac0490",
+    "/tmp/biglybtc-tor-auth-oracle-sd2zox7u/classes/TorAuthOracle.class": "fde26d8eab92652368ffe6863190cd9b461b28a5c0d931b6a2b72a7988da54dd",
+    "/tmp/biglybtc-tor-auth-oracle-sd2zox7u/source/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+    "/tmp/biglybtc-tor-ownership-oracle-9oplx30k/source/TorOwnershipOracle.java": "d69404618574df63875ef06159fd6c136ed989696260a5b38ad7a14c95f36fa3",
+    "/tmp/biglybtc-tor-ownership-oracle-9oplx30k/classes/ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd",
+    "/tmp/biglybtc-tor-ownership-oracle-9oplx30k/classes/TorOwnershipOracle$ControlConnection.class": "07defe7c30713136b2941bf4da9b3735d198d65e8d815c458463bf22c81076c8",
+    "/tmp/biglybtc-tor-ownership-oracle-9oplx30k/classes/TorOwnershipOracle.class": "80ed48b9f68672aeb316aa5f432b09ba5a9785c59ba4f3c52d8a396ee87257d1",
+    "/tmp/biglybtc-tor-ownership-oracle-9oplx30k/source/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933"
+  },
+  "lower_matrix_sha256": "9cb2a2142c2d40f68f7775bb72398e32fae777d9ee1e0ebb00c3658da0ed761c",
+  "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+  "original_repository": {
+    "head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_path": "/home/yurii/Java/BiglyBT/.git/index",
+    "index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "lower_input_changes": {
+    "native/services/tor_control/channel.cpp": {
+      "before": "f433c36f9ad374a54ef849464e6abe6f84b84b59590a01a0128af8eadc6696df",
+      "after": "d14762f4133f1a68c961b31706a012eda8a250bc7db46adf397efe67f06e668d"
+    },
+    "native/services/tor_control/channel_tests.cpp": {
+      "before": "d4d6dbb19984c1205eb913a44e08c5e7153a769eb67c65e93b97ee8ec3b08943",
+      "after": "a23e37a86c4647ccbf27f8c7fd4e972b0538643d7adb5bc9ab52317a7b250cba"
+    }
+  },
+  "upstream": {
+    "commit": "ae8efb8d40fb38246ac1790ab5cfb11584689c4a",
+    "source_path": "org/parg/azureus/plugins/networks/tor/TorPlugin.java",
+    "source_sha256": "b4d560691d64a200e46222cb9e1f74b2ce90f4e3df9b737ad8a7f2a67d708776"
+  },
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1:allow_addr2line=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1",
+    "QT_QPA_PLATFORM": "offscreen"
+  },
+  "finished_at_utc": "2026-10-17T20:22:50.965113+00:00"
+}

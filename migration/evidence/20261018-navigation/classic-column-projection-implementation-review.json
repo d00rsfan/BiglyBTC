@@ -1,0 +1,121 @@
+{
+  "schema": 1,
+  "status": "PASS_FROZEN_PRODUCTION_SOURCE_REVIEW_NO_BLOCKER",
+  "subject": "P04-10 pure owned classic column layout projection",
+  "reviewer": "/root/error_driver",
+  "observed_at_utc": "2026-10-18T10:55:58.429535+00:00",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_baseline_commit": "0e96f6a5d8f6922791ab0655dc93b13e163366af",
+  "independence": "Production implementation authored by error_codec; this reviewer authored no part of it and reviewed no own tests. Prior source/API/adapter proposals are context only, not implementation validation. All conclusions follow direct read of frozen header/source and unchanged codec contracts.",
+  "input_sha256": {
+    "/home/yurii/Java/BiglyBTC/preview/native/core/src/column_layout.cpp": "b55620a54cbdc243c8eccade512b19905d1efe819a4efb0db39bb435a325dd25",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/column_layout.hpp": "1d4d1c06efd71ef2ab026364eb15f434d4b8647d15f8ae31852052f63a996d39",
+    "migration/evidence/20261018-navigation/classic-column-projection-api-review.json": "d848b1b48cd038efa29b7f4fdd60a3916f430d20d004b945d659ce315feca92e",
+    "build/navigation-20261018/column-layout-source/source-check.json": "603c5dcbc99b2e06463294897b7d1ed0d500e33f1eb98ad3908bae28a4d79f71",
+    "build/navigation-20261018/column-layout-source/before.json": "89cc94a623bb2f474b7e1a7cced9de15566fa844fb1cca9b20500a0326d9e3a5",
+    "build/navigation-20261018/column-layout-source/implementation.patch": "7c609e59134232e971cf0dbe85345dbb42c8b97128b388742a2e3d2d4f6098b0",
+    "build/navigation-20261018/column-layout-source/implementation-notes.md": "a0cf83e766521f640573196ce8d550935f933e88c6485af9e41a499ef7900d5e",
+    "build/navigation-20261018/column-layout-source/column_layout.cpp": "b55620a54cbdc243c8eccade512b19905d1efe819a4efb0db39bb435a325dd25"
+  },
+  "frozen_context_guards_sha256": {
+    "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/column_layout.hpp": "1d4d1c06efd71ef2ab026364eb15f434d4b8647d15f8ae31852052f63a996d39",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/bencode.hpp": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/saved_services.hpp": "c7ed179ad9d6f3b278e04b47b2889d5ab36db035ff37f4619efae909ad730b75",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/saved_dnd.hpp": "776d08b0497c41d69883b70aef5df45c959a44c5918400d1d2756eb44afd4699",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/state_cache.hpp": "f097b34cb04613a7ff368df90e74d1ac3467338a3f9226b1accd1ea52e98eef9",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/src/bencode.cpp": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/src/saved_services.cpp": "e855a95c76eb2c797f270c9cbd5cbb1531708353108cc636dd739a950797afcb",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/src/saved_dnd.cpp": "c4e1d0f03be63697bcb95c4dd3d457b449005bc3768f795bcb255d03817288e7",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/src/state_cache.cpp": "4c9bf61302b1381ea03aceabdf45436c0498de10e4ad77f42c7ffd1aeb7a4926",
+    "/home/yurii/Java/BiglyBT/migration/tasks/P04-10-classic-column-layout-projection.md": "7b21105e03a51fef5be32ce9e37152c04e362a6daa7a013d95bbb3a09b1da97f",
+    "/home/yurii/Java/BiglyBT/migration/evidence/20261018-navigation/classic-column-persistence-audit.json": "474b6bc5bfca4a2798b89024075267acc20128f3e1784e6efff38434b3216b64",
+    "/home/yurii/Java/BiglyBT/migration/evidence/20261018-navigation/classic-column-projection-design.md": "b556cf736095ee573c9902ee6883b3c6fb4a1d25b7f39a27203160f20fd2cc3a",
+    "/home/yurii/Java/BiglyBT/migration/evidence/20261018-navigation/classic-column-projection-api-pins.json": "2d00da1c7304dedde3662bc2dd94884b3904142c014a12c2d828d4b83c887fe5",
+    "/home/yurii/Java/BiglyBT/migration/evidence/20261018-navigation/classic-column-layout-test-plan.json": "a132537138cbfdd5a1835985ee1d80caea1b159ac90ffb61f0367a4634d2af1d"
+  },
+  "checks": [
+    {
+      "id": "CL-IMPL-1",
+      "scope": "column_layout.cpp17–82",
+      "result": "PASS",
+      "evidence": "All nine cap fields compare against default maxima before input use; raw length checked first. Caller traversal uses fixed65Frames/rootdepth0, counts every key/value node, bounds children against remaining node count, rejects edit/origin/invalid extent/type/scalar children/odd dictionaries/nonbyte keys. Depth is checked before fetching child, so no array index beyond64. No caller byte payload is read: only view length and structural metadata. High-quota deep input rejects before owned parse/serialization or recursive traversal."
+    },
+    {
+      "id": "CL-IMPL-2",
+      "scope": "column_layout.cpp85–125,356–369",
+      "result": "PASS",
+      "evidence": "A fresh bounded parse precedes structural comparison. Compare verifies type, begin/end, integer and child-count/order against trusted fresh nodes; byte pointers are checked only for equality and size against a trusted original-buffer span. Pointer subtraction occurs exclusively between fresh parser bytes and its own backing. Empty byte strings can use the valid one-past span. An external/dangling replacement view is rejected without reading its payload or subtracting it. Comparison descent is controlled by the fresh bounded tree; all source lookups/UTF8 reads subsequently use the fresh owned parse."
+    },
+    {
+      "id": "CL-IMPL-3",
+      "scope": "column_layout.cpp356–385",
+      "result": "PASS",
+      "evidence": "Fresh raw string copy/parse owns source independently, moved into shared_ptr<constDocument>. Projected IDs copy bounded strings; no borrowed caller nodes/views escape. Unknown tables/plugin/userData/tails remain once in that source. Every parse/consistency/cap issue path returns fixed error after local cleanup; bad_alloc maps to Memory. Caller Document is not written. No successful partial result is published. This is structural bounded ownership, not an exact allocator-overhead/RSS/assembly-stack claim."
+    },
+    {
+      "id": "CL-IMPL-4",
+      "scope": "column_layout.cpp166–203,317–345",
+      "result": "PASS",
+      "evidence": "Exact table wins if present, including empty/wrong type; only absent exact consults matching user default. Both pane selections preflight Column.* counts and suffix lengths, selected current/legacy sort count and raw byte ID sizes before constructing records. Malformed Column records and invalid/duplicate sort slots consume their counts. Unselected defaults/scoped/other tables and an unused SortColumn do not receive ID caps or projected copies; document caps still cover them. Checked small bounded counters cannot overflow."
+    },
+    {
+      "id": "CL-IMPL-5",
+      "scope": "column_layout.cpp128–134,267–296",
+      "result": "PASS",
+      "evidence": "Number conversion retains signed64 and modulo low32 using only representable unsigned-to-signed casts and subtraction; INT32_MIN/max and negative raw int64 cannot invoke signed overflow. Slots match executable source order0visibility/1position/2width/3tooltip/4sort/5userdata/6alignment/7fg/8bg/9icon. Known numeric false stays an engaged optional. Sort direction engages only nonnegative low32 (1ascending,otherdescending); negative retains number with unknown direction. No source defaults, width/visibility normalization, registry or geometry are computed."
+    },
+    {
+      "id": "CL-IMPL-6",
+      "scope": "column_layout.cpp211–258,267–296",
+      "result": "PASS",
+      "evidence": "Presence is independent per field; Missing adds no per-field issue. Non-list column produces WrongType record but Missing slots and all three legacy-required flags; negative numeric width/order remains Present without legacy fallback. Wrong RGB outer type is WrongType; bad length/member is Malformed with fixed shape/type/element-index issues and no partial RGB value. Valid raw channels are not visually clamped. UserData/last.reset expose only expected type presence; full raw values and extra list tail remain owned."
+    },
+    {
+      "id": "CL-IMPL-7",
+      "scope": "column_layout.cpp135–152,227–237,298–350",
+      "result": "PASS",
+      "evidence": "UTF8 scan checks length before continuation access and rejects overlong/surrogate/out-of-range encodings without signed-char errors. Empty/NUL/invalidUTF8 bytes remain Present, copied unchanged with flags/issues. Current list bytes use Encoding diagnostics; legacy bytes retain validUtf8 fact without Encoding. Exact-byte duplicate sort IDs remain in order and receive bounded32-entry diagnostics; nonbyte sort slots remain WrongType with actual source index, never dropped."
+    },
+    {
+      "id": "CL-IMPL-8",
+      "scope": "column_layout.cpp317–352",
+      "result": "PASS",
+      "evidence": "A valid SortColumns list always wins, including empty or invalid-member lists. Wrong-type outer list is diagnosed then permits legacy singleton; absent/wrong legacy leaves LegacyGlobalRequired. Unused legacy gets presence only, no reinterpretation or encoding/ID-cap side effect. No painted # default, later-known-ID promotion, global config lookup, inherited direction or source key migration occurs. RowHeight/raw last.reset remain typed facts."
+    },
+    {
+      "id": "CL-IMPL-9",
+      "scope": "column_layout.cpp211–214,356–385",
+      "result": "PASS",
+      "evidence": "Global issue cap checked before every append. Both-pane preprocessing and bounded result vectors/IDs are local; failures destroy intermediate source/records rather than truncate. Allocation paths are fresh raw parse/tree, shared owner, bounded projected vectors/ID strings and issues. Standard parse allocation failures are caught at boundary. No source/target mutation, callback, thread, clock,IO or fallback allocator is introduced."
+    },
+    {
+      "id": "CL-IMPL-10",
+      "scope": "Full source + frozen guard maps",
+      "result": "PASS",
+      "evidence": "Header1d4d and production388-line b556 source/copy match freeze. All14 author before-map guards independently rehashed and matched before/after; eight pre-existing native context files also equal actual0e96 Git bytes. Source patch/before/source-check hashes retained. Parent-owned CMake/test authoring is outside this fourteenth-guard source scope. Review directly read actual implementation; prior reviewer-authored proposals are context, not independent implementation evidence."
+    }
+  ],
+  "blockers": [],
+  "limits": [
+    "Source review only. Native compilation/tests/ASAN/UBSan/allocation and boundary fixtures remain separate parent-owned gates; none inferred here.",
+    "Input must be a valid live Document with no concurrent mutation during this synchronous call. Raw tree view tampering is checked, not arbitrary C++ object corruption or invalid/moved-from owner use.",
+    "Requested decoded facts only; source Java constructor/default/plugin/partial-side-effect/effective layout, legacy charset/global fallback, UI sorting/reset/geometry, config IO/writes and Java runtime equality remain unimplemented and receive zero credit.",
+    "Existing parser duplicate-key rejection and ordinary input/string/node/depth maxima remain unchanged. Structural counts do not claim exact portable heap/RSS or private compiler stack layout."
+  ],
+  "execution_by_reviewer": {
+    "native": 0,
+    "compiler": 0,
+    "Java": 0,
+    "target_import": 0,
+    "profile_or_network": 0
+  },
+  "integrity": {
+    "cpp_frozen_sha256": "b55620a54cbdc243c8eccade512b19905d1efe819a4efb0db39bb435a325dd25",
+    "header_frozen_sha256": "1d4d1c06efd71ef2ab026364eb15f434d4b8647d15f8ae31852052f63a996d39",
+    "source_lines": 388,
+    "unchanged_context_guard_count": 14,
+    "old_native_files_git_verified": 8,
+    "source_after_review_equals_before": true,
+    "code_edits_by_reviewer": 0
+  }
+}

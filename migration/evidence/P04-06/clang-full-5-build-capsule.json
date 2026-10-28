@@ -1,0 +1,40 @@
+{
+  "status": "passed",
+  "recorded_utc": "2026-10-17T05:07:06.358468+00:00",
+  "test_count": 5,
+  "build": "/tmp/biglybtc-speed-scheduler-clang",
+  "implementation_commit": "1c81314a6530f6ff65761e73214525f6ba1dac21",
+  "test_log": "/tmp/biglybtc-speed-scheduler-clang-full-5-ctest.log",
+  "test_log_sha256": "8f9ac1f66be9ee4769f622b3ad6031230e4d55207d71d303226112607ccd5417",
+  "verification_mode": "single_suite",
+  "initial_failed_tests": [],
+  "retry_log": null,
+  "retry_log_sha256": null,
+  "binary_sha256": {
+    "ownership-tests": "68d64c44f00ecb18a586e8bc0340ed2d23efb59708e29a71544840589e0c8949",
+    "scheduler-tests": "6ac2d15f9769fd5b977cdea9e8393a6fc43d668e08f12235de70a967584f41f8",
+    "CMakeFiles/4.2.3/CMakeDetermineCompilerABI_CXX.bin": "3b59d5a99e7b8872cd725d5bff15761185f35043ecb3b9ea677174cacaa3f99c",
+    "CMakeFiles/4.2.3/CompilerIdCXX/a.out": "ab6d01fb0655129d1ae5ce0bcee4d3a7c6a112f0e87b678e2646cc9736a93857"
+  },
+  "retained_binary_paths": {},
+  "source_sha256": {
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/scheduler.cpp": "7b6a707e66d77674665e5d213ac3acc5d81e763af3f0bdedf37dc90bf3e6869d",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/original_xml.cpp": "04a210b1f3e91b7458a0afa20057efd37e4b2b36d9dc5560e8d931e0b2231817",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_file.cpp": "2016f51cc3c7fdd4977898b27f42de24ccd4b00d9b1e4965e6c701ce8f68f3ae",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/tests.cpp": "2616f72edc5da5e2779829f49396063d8e13834e21161156573a52747ea4acc1",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_tests.cpp": "62e9d424d668117f539a78146a2b850ca410eeef80fb0d1cf7cff1a008d6567d",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_file.hpp": "20ad7b0962cb9339b629ce9d8e3582cb848e7fe52f5f434a6306455f0c7be051",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/CMakeLists.txt": "a84dbf4d585b8380805415b32d5d448721d413f113edd6fc950b09a984618553",
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/scheduler.hpp": "96f8bc6ecd338c21a5293a6476bf857a33228eab96904f97da4428352d97d170",
+    "native/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564"
+  },
+  "build_inputs_sha256": {
+    "CMakeCache.txt": "95177fb05ac451a05dc6ed9e79a4ac2dd1a6cf728cf4ceaabf5f962c47df0d6c",
+    "compile_commands.json": "4ad4dd9b71a35d673a58f48523272d477aa7ebc7f6836fd14c8328a14e3def1a",
+    "build.ninja": "c5246028852cee64eb9f12dcbc53d2ba3174cecb974a80b6c990164422c8b67b"
+  },
+  "limitations": [
+    "Development build/test capsule, not a complete release dependency/source closure",
+    "A passing scoped test matrix does not certify full client parity"
+  ]
+}

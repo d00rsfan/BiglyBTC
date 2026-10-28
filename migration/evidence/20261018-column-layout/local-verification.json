@@ -1,0 +1,63 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "scope": "Pure owned classic saved table-layout requested facts; no UI application or profile adapter",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_parent": "0e96f6a5d8f6922791ab0655dc93b13e163366af",
+  "source_sha256": {
+    "preview/README.md": "5e84ed3eac5cd09d13181cdae58f70cc04cdf04ccb020e02823744a37d325180",
+    "preview/docs/classic-column-layout-contract.json": "5ec2455489938064e9e18eccb386f1bb0363bac920f97a0eebf2ca8ebcc9ad47",
+    "preview/docs/classic-column-persistence-source.json": "474b6bc5bfca4a2798b89024075267acc20128f3e1784e6efff38434b3216b64",
+    "preview/native/core/CMakeLists.txt": "f21a9aeb5bed1706378d59ba650270724b9c8b89fcc593d1f6ada406ea29d834",
+    "preview/native/core/include/biglybtc/column_layout.hpp": "1d4d1c06efd71ef2ab026364eb15f434d4b8647d15f8ae31852052f63a996d39",
+    "preview/native/core/src/column_layout.cpp": "b55620a54cbdc243c8eccade512b19905d1efe819a4efb0db39bb435a325dd25",
+    "preview/native/tests/CMakeLists.txt": "d0b218975fd739655163764c489216e0382ea8b8a8d33a7f884e739ad08bc7df",
+    "preview/native/tests/column_layout_tests.cpp": "d3755633442de66243bf2904e4610be6c146d3258f04559dcfb9fa60fda63a44"
+  },
+  "focused_lanes": {
+    "gcc16-release": {
+      "cases": 112,
+      "assertions": 1628
+    },
+    "clang24-release": {
+      "cases": 112,
+      "assertions": 1628
+    },
+    "gcc16-debug-asan-ubsan": {
+      "cases": 112,
+      "assertions": 1628,
+      "detect_leaks": true,
+      "halt_on_error": true
+    }
+  },
+  "full_native_units_passed": 35,
+  "skipped": 0,
+  "normal_profile_access": false,
+  "processes_signaled": false,
+  "java_runtime_equality_credit": 0,
+  "ui_layout_application_credit": 0,
+  "dist_source_unchanged": "03e31e5ce260e1327e63cca63d22d8d5984ceae9",
+  "evidence_sha256": {
+    "gcc-tests.log": "2e78280b1a57a14e9974567ef9938f0830815b0280948687347cd40a3de2e45d",
+    "sanitized-test-build.log": "48158c497485e8fe2b60d09cf22691b4e796bb918fda516413572b986b455a25",
+    "gcc-focused-LastTest.log": "130e7b22abe6d6f83c3cd5a2846ddcaa826783c0fd99ef0642514e2ff57ee90e",
+    "gcc-test-build.log": "8592cf4269de78f64ce1622e88d61f9e8bc52ba226eff212b78d2c036ca6e4ee",
+    "clang-core-build.log": "16eab42581e6f069a5762e384f372febc3237389d37e0a38dc7ee13dd58f032f",
+    "gcc-full-build.log": "2488132c6547c43c4b02911a4162fe489c8b0cffff22eb2e108b3e10e1176d1c",
+    "sanitized-core-build.log": "72027b1aa74e48196c13376438127fec4e1496081e37afa37232f1453924110d",
+    "clang-test-build.log": "a0dbf76248044224988747c2c658da0b2f5b8c809addb217f1a9746dee953b47",
+    "sanitized-tests.xml": "2e5b76420dedd669dfe0eafac8efc6093e73039dd9353a4509f2994c6048a376",
+    "gcc-full-unit.xml": "6b36ec1fb99acb33129d53bf864949a36901e0d6a9c1955441676713430fda19",
+    "clang-tests.log": "bc5c07bbfeb0464a9fe188e3e2814120c16a3a17d48c1deede35ed87c306c7ac",
+    "gcc-full-unit.log": "5cff9ea98c06d979ec2327b64e932b37945ddfd6c1396ce18da0a72c28e4c2e3",
+    "gcc-full-LastTest.log": "ad444324f616f200d1528d982ba89da385b897215c67fbcf03423f582470540e",
+    "root-source-review.json": "448c13e4f57a8088b0a3b6858f279451a80e3b183d7e0e7acc2feeb9197c073b",
+    "gcc-core-build.log": "39607fa208a63bf16ff1a44d0cedaf934292f6f16b98791702aef8832fa2f3d3",
+    "clang-tests.xml": "bb0ecffbdcc166d1ea1bb2a64811aed48b9e6b6face628eca135db4b174c81ed",
+    "sanitized-focused-LastTest.log": "d0b48766f134d0adfedbc2b80732f1a99eb3b8f0277a5e5f2fb5956b2399ea1a",
+    "gcc-tests.xml": "abb36655df794e2fc27846c6edbb8986671bbb3743933a69fb50dec543736e98",
+    "clang-focused-LastTest.log": "b4614aca94a5c6437e5c0ee04b1db17a4a2b6cd3c54d0bba47277e199e7aa690",
+    ".gitignore": "e027cf8ebf80d6dcdacced8a4dbd1c440e2436fb1868ec851db4061cb67bb787",
+    "sanitized-tests.log": "f8f7780fcab0b962234aaf2cda09981e4def71801af1e3d0d55ff9dd5318a416"
+  }
+}

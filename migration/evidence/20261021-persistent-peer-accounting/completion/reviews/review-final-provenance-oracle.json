@@ -1,0 +1,116 @@
+{
+  "status": "PASS_READ_ONLY_PROVENANCE_NO_BLOCKER",
+  "scope": "Final current P04-29 only; no future UI/writer adoption or whole-Statistics completion. Hosted desktop CI remains pending.",
+  "source_commit": "b0c7f259bca2043df4fb1297e3440f2e5eb1a270",
+  "native_parent": "f50a09bbefd8cee89ed8f0ecdb14240c7a226b7b",
+  "input_sha256": {
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/source-commit.json": "4e1187384a7fb6ec0d85268815aa395e00c82b63d2f2c0e1e607b52cf6e787e0",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/source-created.json": "78f3d332a0bc24c8f66c848c7646c2a45ff4b18ac5eeab2e0dc8144d9c25f2e4",
+    "migration/evidence/20261021-persistent-peer-accounting/local-verification.json": "eee3591a1856e3b87b732586e31b03f0b7bc4b9fa47e531d4ec1ecb2ac2a8285",
+    "migration/evidence/20261021-persistent-peer-accounting/recipes-and-source/publication/source-inputs.json": "bfda1c924ef1fd3f02f15ee30c681b22e473057b8b992b1f47b8508df704c7e2",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/publication/source-binding.json": "d3e62ead2d53a4133d01e4dee5cf7726d1007a2fd1045869cf5677c7f88a86d5",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/publication/dist-promotion.json": "86d1ff562f0f4b2f486098e5a185af90e517f168436c227b93cf3d4938d79041",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/publication/dist-verification.json": "cce7f869690099cbcccc23cad5bfc349bd1a04ae807b7aded4cf9fec4c4326a2",
+    "/home/yurii/Java/BiglyBTC/dist/BUILD_MANIFEST.json": "fc3c012766af59d689d501ed139ee87327fac9091a829a77bd28200b214777b9",
+    "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/publication/previous-dist/BUILD_MANIFEST.json": "44cefcf27bb44664475b9a0e31a8ff3a51c2a363222570720cbb5ab2719d605c",
+    "build/statistics-completion-20261021/next-accounting/hosted-publication/collect_hosted.py": "4652cd1784b4c5e2ee99a2f9de6d73dc8d29640046d8e53f56dfc89bb26db63d",
+    "build/statistics-completion-20261021/next-accounting/hosted-publication/verify_hosted.py": "1954d1737f67d15df06f6ef9617b18db7257a299571e888742cefea06675e3bb",
+    "build/statistics-completion-20261021/next-accounting/review-hosted-publication-oracle.json": "2279e11a73cad453033d469174e5e3df9f91991707775df7746c4bb4d05c12e2",
+    "build/statistics-completion-20261021/next-accounting/review-final-production-oracle.json": "575551ecc2e2f5ffb030896a5c0366af872df2fe2d4e5006074bae25a4631134"
+  },
+  "commit_checks": {
+    "changed_source_blobs_verified": 53,
+    "unchanged_guard_blobs_verified_at_source": 360,
+    "unchanged_guard_blobs_verified_at_parent": 360,
+    "current_working_files_match_committed_maps": 413,
+    "single_commit_parent_matches_receipt": true,
+    "source_inputs_and_local_verification_maps_hashes_match": true,
+    "method": "Read-only git cat-file batch with raw bytes, independently SHA256-hashed; no helper evaluation."
+  },
+  "hosted_producer_binding": {
+    "actual_source_commit_receipt_now_present": true,
+    "gcc_unit_test_set_count": 85,
+    "gcc_matches_actual_default_xml_names": true,
+    "clang_unit_test_set_count": 49,
+    "sanitized_unit_test_set_count": 52,
+    "consumer": "hosted-publication/verify_hosted.py reads source-commit.json unit_test_sets.gcc and requires exactly85 unique passing names. Previous absent-producer limitation is now closed by actual receipt/raw evidence; no hosted result claimed."
+  },
+  "local_checks": {
+    "archived_artifacts_rehashed": 1387,
+    "raw_artifact_bytes": 35942860,
+    "suite_counts": {
+      "default": 85,
+      "instrumented_gcc": 15,
+      "clang": 49,
+      "sanitized": 52,
+      "source_bound_gcc": 13
+    },
+    "all_five_xml_name_sets_exact": true,
+    "all_five_lasttest_name_sets_exact": true,
+    "all_final_xml_cases_no_failure_error_or_skip": true,
+    "all_final_lasttest_sections_passed": true,
+    "qt_rows_from_all_three_instrumented_lasttest_logs": {
+      "persistent-native-peer-session": 12,
+      "persistent-native-session-window-worker": 9,
+      "persistent-native-peer-faults": 20,
+      "persistent-native-session-close-faults": 6,
+      "persistent-native-causal": 5,
+      "persistent-actual-alert-policy": 15
+    },
+    "sanitizer_options": {
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1"
+    },
+    "source_bound_gcc_is_separate_13_suite_cohort": true
+  },
+  "retained_failure": {
+    "file": "local/instrumented-gcc-tests.xml",
+    "total_cases": 15,
+    "failed_test": "persistent-native-causal",
+    "failed_count": 1,
+    "raw_xml_and_logs_retained_in_hashed_archive": true,
+    "cause_excerpt": "v1 combined hold failed waiting for DiskHeld; successful v2 records remain separate. No failure rewritten into a pass."
+  },
+  "dist_checks": {
+    "source_commit": "b0c7f259bca2043df4fb1297e3440f2e5eb1a270",
+    "source_receipt_and_promotion_verification_hash_chain_exact": true,
+    "all_dist_manifest_files_rehashed": 103,
+    "all_previous_dist_manifest_files_rehashed": 103,
+    "unchanged_runtime_files_verified_against_rollback": 82,
+    "both_installed_and_replayed_elf_hashes_match": true,
+    "rpath": "$ORIGIN/../qt/lib",
+    "recorded_loader_log_hashes_verified_without_execution": 4,
+    "offscreen_smoke_xml_rows": 13,
+    "offscreen_smoke_xml_skipped": 0,
+    "capture_png_bytes_hashes_verified": 19,
+    "smoke_scope": "Source-built existing full-UI smoke with promoted private runtime and generated profile, as explicitly recorded. Not installed-main interaction, new session widgets or persistent-owner transfer certification.",
+    "default_unbound": true,
+    "portable_persistent_owner_enabled": false
+  },
+  "scope_checks": {
+    "full_statistics_complete": false,
+    "stage_b_ui_implemented": false,
+    "overall_writer_implemented": false,
+    "overall_oracle_current_finality_credit": false,
+    "public_default_persistent_enabled": false,
+    "original_profile_access": false,
+    "original_processes_signaled": false,
+    "field_values_confirmed_in_local_receipt": true,
+    "public_contract_matches_bounded_stageA": true,
+    "whole_stats_or_future_milestone_credit": false
+  },
+  "blockers": [],
+  "not_claimed": [
+    "Independent remote push/run verification or hosted CI success",
+    "Any fresh native/loader/test/Java execution by reviewer",
+    "Generic kernel error-plus-positive-byte causality, natural allocator pressure or exhaustive wire/final durability",
+    "Future StageB UI or lifetime/mark/history writer completion"
+  ],
+  "actions": {
+    "tests_or_engine_or_loader_executed": false,
+    "network_accessed": false,
+    "copies_or_receipts_mutated": false,
+    "native_or_git_mutated": false,
+    "only_new_review_json_written": true
+  }
+}

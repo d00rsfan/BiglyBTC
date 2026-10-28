@@ -1,0 +1,31 @@
+Test project /tmp/biglybtc-desktop-gcc
+    Start 35: desktop-java-v1
+1/9 Test #35: desktop-java-v1 ..................   Passed  104.79 sec
+    Start 36: desktop-java-v2
+2/9 Test #36: desktop-java-v2 ..................   Passed   96.23 sec
+    Start 37: desktop-java-hybrid
+3/9 Test #37: desktop-java-hybrid ..............   Passed  110.99 sec
+    Start 38: desktop-java-cancel
+4/9 Test #38: desktop-java-cancel ..............   Passed   93.53 sec
+    Start 39: desktop-java-close
+5/9 Test #39: desktop-java-close ...............   Passed   66.80 sec
+    Start 40: desktop-multifile-java-1
+6/9 Test #40: desktop-multifile-java-1 .........   Passed  108.54 sec
+    Start 41: desktop-multifile-java-3
+7/9 Test #41: desktop-multifile-java-3 .........   Passed  143.63 sec
+    Start 42: desktop-multifile-java-2
+8/9 Test #42: desktop-multifile-java-2 .........   Passed  125.13 sec
+    Start 43: desktop-original-file-policy
+9/9 Test #43: desktop-original-file-policy .....   Passed  122.71 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Label Time Summary:
+integration     = 972.36 sec*proc (9 tests)
+loopback        = 972.36 sec*proc (9 tests)
+multifile       = 500.01 sec*proc (4 tests)
+policy          = 122.71 sec*proc (1 test)
+same-profile    = 972.36 sec*proc (9 tests)
+ui              = 972.36 sec*proc (9 tests)
+
+Total Test time (real) = 972.41 sec

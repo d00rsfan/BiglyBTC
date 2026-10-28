@@ -1,0 +1,30 @@
+{
+  "status": "BLOCKED_source_only",
+  "source_sha256": {
+    "packaging/preview.py": "13ac916a093761bd49eed1aef4913aea9a87daf0e1017d427cd461eca652ee80",
+    "packaging/preview_smoke.cpp": "1e1c9fc177a07a8296fe882d2112e3d62e26204f7930fbc232e1ac175941b715"
+  },
+  "executed_by_reviewer": false,
+  "scope": "Independent review of root preview/sample/smoke additions, own UI excluded from independent authorship credit.",
+  "checks": {
+    "old_preview_bytes_reconstruct_exact": true,
+    "old_smoke_bytes_reconstruct_exact_after_two_connections_and_new_method_removed": true,
+    "old_daily_sample_format_and_counters_unchanged_in_first_loop": true,
+    "week_fixture": "Fixed ending2024-01-02 produces rowdates2023-12-27..2024-01-02: positive6,positive5,missing,negative1,emptyfile,observedzero,original9observationendingday. Daily payload values tested -2048/0/17301504.",
+    "smoke": "Added onebehavioralslot (8Qtrows total), actual wiredworker/session, date/mode selected before activation, missingweek2024-02-01 Ready7missing. Sevenby8model,rawunknown,existing6filebytes/statisticsbytes/payloadabsence/requestcounts guarded.14capturepaths per-scale after2newPNGs. Alloldmethodassertions exact."
+  },
+  "findings": [
+    {
+      "id": "PREVIEW-WEEK-1",
+      "severity": "requires_narrow_fix",
+      "location": "packaging/preview.py two independent datetime.now(datetime.timezone.utc).date() calls in prepare",
+      "trigger": "First daily loop observes UTCdayD; midnight passes before new week loop observesD+1.",
+      "effect": "New week offset1 rewrites D.dat (alreadygenerated9observations) with observedzero, violating preserved existingdaily samplebytes.",
+      "recommendation": "Capture the fixed+currentUTCdate ending set once and reuse both loops; source-only fix, then rebind finalsource review."
+    }
+  ],
+  "no_claims": [
+    "No generator/test/app/native/Java/profile/network execution by reviewer.",
+    "No broad graph/global/writer/transactional-week equality credit."
+  ]
+}

@@ -1,0 +1,371 @@
+{
+  "schema": 1,
+  "status": "PASS: actual scaled captures and visual inspection",
+  "reviewer": "root",
+  "source_commit": "ddc6bb022095866eceeddf2d8598201e07652c28",
+  "visual_commands_passed": 7,
+  "captures_per_scale": 23,
+  "three_scale_captures": 69,
+  "manually_inspected_offscreen_images": [
+    "1-statistics-history-month-preview.png",
+    "1.5-statistics-history-month-preview.png",
+    "2-statistics-history-month-preview.png"
+  ],
+  "images": {
+    "1-classic-preview.png": {
+      "sha256": "24323291844b570aa83430b3cc8ff508135f74d01cee2bbd869f0c8354329b08",
+      "width": 1250,
+      "height": 800
+    },
+    "1-my-tracker-preview.png": {
+      "sha256": "314c5d2f1084b99c454a6e51c5ca46a512d0cb60f3c6a0afd75f4098fb3a7a3b",
+      "width": 1250,
+      "height": 800
+    },
+    "1-my-shares-preview.png": {
+      "sha256": "4f2dcabed15b70ef4d04e37107f983814bf25fd9d4e824026be4230d51e54adf",
+      "width": 1250,
+      "height": 800
+    },
+    "1-saved-selected-preview.png": {
+      "sha256": "9da1e93280d2efdd704a14e9e6cc4756cbb686c75e37d2ef73e34d4e9d224e0b",
+      "width": 1250,
+      "height": 800
+    },
+    "1-statistics-activity-preview.png": {
+      "sha256": "eade61468b91b344580e92bf68bc4d0fb97905ee857012b2f4627e144e8adf6a",
+      "width": 1280,
+      "height": 823
+    },
+    "1-statistics-transfers-preview.png": {
+      "sha256": "569bbede2560c2c2a274ba83d840af7c8e5d089f42fa1807abed418889a39019",
+      "width": 1280,
+      "height": 823
+    },
+    "1-statistics-history-preview.png": {
+      "sha256": "df44be20bff50ee239ee9fbb6df1495271fe7a0de2bb9aaae6e053ccebad6f8d",
+      "width": 1280,
+      "height": 900
+    },
+    "1-statistics-history-missing-preview.png": {
+      "sha256": "d94515a5192749334b4f36786b70535f216beecb57b37aed5eb7d14b928845b4",
+      "width": 1280,
+      "height": 900
+    },
+    "1-statistics-history-week-preview.png": {
+      "sha256": "bfcf19d3806630b15e4199ee4c39adef77091863bc11cf1c9911fc43503ca6eb",
+      "width": 1280,
+      "height": 900
+    },
+    "1-statistics-history-week-missing-preview.png": {
+      "sha256": "ecbb9698ed82ce139827bbb88dc39c7ea2dceb238c3ad3cbb7fa4c929d5c575b",
+      "width": 1280,
+      "height": 900
+    },
+    "1-statistics-history-week-hourly-preview.png": {
+      "sha256": "7c43246fbaf532051214590440d3fd082c13af4d0e71579d60dfaf4437a32b0b",
+      "width": 1280,
+      "height": 900
+    },
+    "1-statistics-history-week-hourly-missing-preview.png": {
+      "sha256": "c279170bc6c499bc9d85b0765cfde1847f312d142d6c3e41e10779017bfdcc3d",
+      "width": 1280,
+      "height": 900
+    },
+    "1-statistics-navigation-reopened-preview.png": {
+      "sha256": "7c43246fbaf532051214590440d3fd082c13af4d0e71579d60dfaf4437a32b0b",
+      "width": 1280,
+      "height": 900
+    },
+    "1-statistics-navigation-new-session-preview.png": {
+      "sha256": "27de310b8d7718766ac1fd19413f6c258b6960d8e303ae7a2e7573d25148021e",
+      "width": 1280,
+      "height": 900
+    },
+    "1-statistics-history-protocol-preview.png": {
+      "sha256": "6d008afb15962055a16e8e65e64a98f8a81bca742527a0b27d882942ae992ae1",
+      "width": 1280,
+      "height": 900
+    },
+    "1-statistics-history-dht-preview.png": {
+      "sha256": "e955af15b3c79976e95487fc3ad3482b65cd212170fb378228c1ff707c9697bf",
+      "width": 1280,
+      "height": 900
+    },
+    "1-statistics-history-keyboard-preview.png": {
+      "sha256": "7db6f15189145ac70d7aa237fff7223d45a15bed121206f4e5d1a28951b30ec8",
+      "width": 1280,
+      "height": 900
+    },
+    "1-statistics-history-copy-preview.png": {
+      "sha256": "7db6f15189145ac70d7aa237fff7223d45a15bed121206f4e5d1a28951b30ec8",
+      "width": 1280,
+      "height": 900
+    },
+    "1-statistics-history-month-preview.png": {
+      "sha256": "6be74af03ff51c2d4ffc9ba2e92d1a8ee18485cb3a2b4be30ac638f895f32d3a",
+      "width": 1280,
+      "height": 900
+    },
+    "engine-scale-1/engine-single.png": {
+      "sha256": "fb213a7fc034cdd9ccc7076274a39f3133bd22ff0fd92934d05758f2c96306d9",
+      "width": 1280,
+      "height": 900
+    },
+    "engine-scale-1/engine-multifile.png": {
+      "sha256": "d776b0c3b5cdbc26010096f66186d682097a0e21800ed867ccbd25ebd937504e",
+      "width": 1280,
+      "height": 900
+    },
+    "activity-scale-1/activity-single.png": {
+      "sha256": "931dbc039eb5d585231b21a32f23c52e65fc96a094fcf268808a41cecacc16ef",
+      "width": 1280,
+      "height": 900
+    },
+    "activity-scale-1/activity-multifile.png": {
+      "sha256": "e6cbd90948905460c9c32a037ef32d965428631a3fa83883d478b3585c6265eb",
+      "width": 1280,
+      "height": 900
+    },
+    "1.5-classic-preview.png": {
+      "sha256": "c7949fdee0de286ac311bedbf3df9d99d6603a58e8ba641c0d73d51738713db0",
+      "width": 1875,
+      "height": 1200
+    },
+    "1.5-my-tracker-preview.png": {
+      "sha256": "e0296210b24e2bab8034ae40433c491021593ffbb5dace70d23a0f642460d5c0",
+      "width": 1875,
+      "height": 1200
+    },
+    "1.5-my-shares-preview.png": {
+      "sha256": "cf4243f6b7082adcca251ceed50b0fb8136b6eb4056ceebda741c7adcf893c99",
+      "width": 1875,
+      "height": 1200
+    },
+    "1.5-saved-selected-preview.png": {
+      "sha256": "a2729b7bf338de8ae271fb89ac98111f648098eadb3a846cca25742eee763c0c",
+      "width": 1875,
+      "height": 1200
+    },
+    "1.5-statistics-activity-preview.png": {
+      "sha256": "73b3ca9eb87d923830567b523d67ddf9647f8937a48b82174fc893931e69f7e5",
+      "width": 1920,
+      "height": 1235
+    },
+    "1.5-statistics-transfers-preview.png": {
+      "sha256": "18141620af88539ac77592e521597b9fa19ec027f7d31cfb5f671c1a072e1137",
+      "width": 1920,
+      "height": 1235
+    },
+    "1.5-statistics-history-preview.png": {
+      "sha256": "469c75c1ff489eea30fdfa741a88a0ebf844502bc187e99a27e1b840e4bd26ed",
+      "width": 1920,
+      "height": 1350
+    },
+    "1.5-statistics-history-missing-preview.png": {
+      "sha256": "c79b3ff7a9710bdf6149e8eb60c586d9cdb2b58bee6b88faac36102e7f7744ed",
+      "width": 1920,
+      "height": 1350
+    },
+    "1.5-statistics-history-week-preview.png": {
+      "sha256": "57cf7a3be6d47945a40de425cbd06f8a3fe842f6a6d594972590bccb24d3e2c9",
+      "width": 1920,
+      "height": 1350
+    },
+    "1.5-statistics-history-week-missing-preview.png": {
+      "sha256": "a6133adb0977d81298b139c30b4e8e9a932fe87599183bdaaca5aa9e9806ec2a",
+      "width": 1920,
+      "height": 1350
+    },
+    "1.5-statistics-history-week-hourly-preview.png": {
+      "sha256": "b2d81ae841dab66f038a705d1525115239dfbaf170372b03c02e460f9e60b198",
+      "width": 1920,
+      "height": 1350
+    },
+    "1.5-statistics-history-week-hourly-missing-preview.png": {
+      "sha256": "6ebee82a88c47317bf4a6b38e3002d04ebf2c5d0966a8e22882797406a8e9e69",
+      "width": 1920,
+      "height": 1350
+    },
+    "1.5-statistics-navigation-reopened-preview.png": {
+      "sha256": "b2d81ae841dab66f038a705d1525115239dfbaf170372b03c02e460f9e60b198",
+      "width": 1920,
+      "height": 1350
+    },
+    "1.5-statistics-navigation-new-session-preview.png": {
+      "sha256": "7357686a5be45bca800178d24d8eb6de063beee2c0e81663e0e87485fcacfe06",
+      "width": 1920,
+      "height": 1350
+    },
+    "1.5-statistics-history-protocol-preview.png": {
+      "sha256": "6ce187163312a9bb17edcfa4642a71097732aa5ab547caf5f7016f94d519dd1b",
+      "width": 1920,
+      "height": 1350
+    },
+    "1.5-statistics-history-dht-preview.png": {
+      "sha256": "1ed09c204dc8552284443c3c0aedf3d7be42f988e828480194876cde7f8aa2fc",
+      "width": 1920,
+      "height": 1350
+    },
+    "1.5-statistics-history-keyboard-preview.png": {
+      "sha256": "e1dba988d7e793771ca4cf7a322a209fb5727774607247c0a075c8056c67c4e2",
+      "width": 1920,
+      "height": 1350
+    },
+    "1.5-statistics-history-copy-preview.png": {
+      "sha256": "e1dba988d7e793771ca4cf7a322a209fb5727774607247c0a075c8056c67c4e2",
+      "width": 1920,
+      "height": 1350
+    },
+    "1.5-statistics-history-month-preview.png": {
+      "sha256": "73722d3d26e6621233b1e15fad7d96a38cca872efadb3744563893ca2c2aa596",
+      "width": 1920,
+      "height": 1350
+    },
+    "engine-scale-1.5/engine-single.png": {
+      "sha256": "f6fc27a59f62c4ca6af69b034024f02768e85c57ccce6e76d33b164133374184",
+      "width": 1920,
+      "height": 1350
+    },
+    "engine-scale-1.5/engine-multifile.png": {
+      "sha256": "151c0e4d398a0e3256c90a09f9feb09db888ef32c77248952abd1f4b1cb19729",
+      "width": 1920,
+      "height": 1350
+    },
+    "activity-scale-1.5/activity-single.png": {
+      "sha256": "81b9cb00ba3f19f685866f59b99f7bbd2e553297043320431f3541f691b26bc5",
+      "width": 1920,
+      "height": 1350
+    },
+    "activity-scale-1.5/activity-multifile.png": {
+      "sha256": "d9d9ef05be0205b08853dadad7ad0131e10a39a8a10ef1a7a8a4757ad884bdf5",
+      "width": 1920,
+      "height": 1350
+    },
+    "2-classic-preview.png": {
+      "sha256": "6a48c9ddf0c73fa13dbcd0194bdca055d53dc2ad4214b30aea90dcc1da3efdaa",
+      "width": 2500,
+      "height": 1600
+    },
+    "2-my-tracker-preview.png": {
+      "sha256": "45cf02c65047fb45d8059f401b5b7ce6c277f84782acdabb64cfa6c8bdcf3b47",
+      "width": 2500,
+      "height": 1600
+    },
+    "2-my-shares-preview.png": {
+      "sha256": "497bad52332e2c49d691c7b39eec0a51cf8311a7e7ece7976ee8b6603464fd42",
+      "width": 2500,
+      "height": 1600
+    },
+    "2-saved-selected-preview.png": {
+      "sha256": "2a9e94700e16f4377a90e51264c424d7a5a2e99936fe3a84ac4973e0205d8c94",
+      "width": 2500,
+      "height": 1600
+    },
+    "2-statistics-activity-preview.png": {
+      "sha256": "a8230970157377be728c70b004da31f565b594d1adfd236a2778b209b05e74e5",
+      "width": 2560,
+      "height": 1646
+    },
+    "2-statistics-transfers-preview.png": {
+      "sha256": "fa294f6456c5abb6572d1182e52c1ae31e7a259a7818e6a2afd35ae77beeb6d2",
+      "width": 2560,
+      "height": 1646
+    },
+    "2-statistics-history-preview.png": {
+      "sha256": "d0fae9fd425fc8415058f167184be8eaf5dd580a27f108959d044c5f2e78de28",
+      "width": 2560,
+      "height": 1800
+    },
+    "2-statistics-history-missing-preview.png": {
+      "sha256": "7af36a600425e4e560250f55208238828cc6c277242e8514cb782a37d854aa64",
+      "width": 2560,
+      "height": 1800
+    },
+    "2-statistics-history-week-preview.png": {
+      "sha256": "54b0a960ad628b2b4c6979706f642d1f1f37671c2680214f7ced003e415763b6",
+      "width": 2560,
+      "height": 1800
+    },
+    "2-statistics-history-week-missing-preview.png": {
+      "sha256": "19354095e1341964b8045228c18bb0fc1e98cb0b3e597169e4459809b985ccfc",
+      "width": 2560,
+      "height": 1800
+    },
+    "2-statistics-history-week-hourly-preview.png": {
+      "sha256": "d5d3d4375167ac1a1ef390f403dd53f6dd63d14c7792065d2a9a3ad4e85e97eb",
+      "width": 2560,
+      "height": 1800
+    },
+    "2-statistics-history-week-hourly-missing-preview.png": {
+      "sha256": "94a40b6954b2ba4ce982bc50b923188bbbca8700d2b962526dcaffe30ef57bfb",
+      "width": 2560,
+      "height": 1800
+    },
+    "2-statistics-navigation-reopened-preview.png": {
+      "sha256": "d5d3d4375167ac1a1ef390f403dd53f6dd63d14c7792065d2a9a3ad4e85e97eb",
+      "width": 2560,
+      "height": 1800
+    },
+    "2-statistics-navigation-new-session-preview.png": {
+      "sha256": "e837ae593d5ec034a875ec899c24c934614e10775b7410ebca5cc53f185d9888",
+      "width": 2560,
+      "height": 1800
+    },
+    "2-statistics-history-protocol-preview.png": {
+      "sha256": "0367e7f887cb0512dad4be8f28d14b14851b4f1dc449a9a9c7bea7c48a4a2253",
+      "width": 2560,
+      "height": 1800
+    },
+    "2-statistics-history-dht-preview.png": {
+      "sha256": "bd679f4db135f295fbe0175a3be72843cba236631b040fd91fd4bb89299e8ebb",
+      "width": 2560,
+      "height": 1800
+    },
+    "2-statistics-history-keyboard-preview.png": {
+      "sha256": "2b07f17ac32d15172abd7790e310a1686de2e4cca7c60a789df6af578b28dcbc",
+      "width": 2560,
+      "height": 1800
+    },
+    "2-statistics-history-copy-preview.png": {
+      "sha256": "2b07f17ac32d15172abd7790e310a1686de2e4cca7c60a789df6af578b28dcbc",
+      "width": 2560,
+      "height": 1800
+    },
+    "2-statistics-history-month-preview.png": {
+      "sha256": "b3d448dc14393832618df017db32ad11a1031a7afd2da671b1f278714947f298",
+      "width": 2560,
+      "height": 1800
+    },
+    "engine-scale-2/engine-single.png": {
+      "sha256": "fc2f97455e408fa2659b0452f0ea83b5cdbecaad02f9abf468c0f268ad242fdd",
+      "width": 2560,
+      "height": 1800
+    },
+    "engine-scale-2/engine-multifile.png": {
+      "sha256": "9a3015052ca47f669f08ff7046f2b4996747b4cd981734df7197e7d13a26673c",
+      "width": 2560,
+      "height": 1800
+    },
+    "activity-scale-2/activity-single.png": {
+      "sha256": "63722a3369b2c9b8444370a94039a0a986738a361cff72eef3604912199d0f08",
+      "width": 2560,
+      "height": 1800
+    },
+    "activity-scale-2/activity-multifile.png": {
+      "sha256": "fea7c97a4c65c9c38e7cbb6c3e38fb9a0ce23a74e41d99183fdd67f5dfc2b29b",
+      "width": 2560,
+      "height": 1800
+    }
+  },
+  "observations": [
+    "Selected saved UTC/traffic values and caption remain readable in each inspected Copy capture; clipboard behavior comes from actual Qt assertions, not image pixels.",
+    "Generated-profile smoke asserts unchanged byte counters, no additional reads on choice/resolution switching and fresh reads with retained choices on reopening.",
+    "Controls, layout and text remain visible at each inspected scale. Actual worker reads and first profile bytes are asserted by the new smoke."
+  ],
+  "blockers": [],
+  "limits": [
+    "Offscreen image inspection; no real compositor acceptance or original Java graph equality credit."
+  ],
+  "manual_compositor_credit": false
+}

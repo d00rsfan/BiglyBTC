@@ -1,0 +1,88 @@
+{
+  "verdict": "PASS_SOURCE_DOCUMENTATION_REVIEW_NO_REQUIRED_CORRECTION",
+  "reviewer": "error_codec",
+  "scope": "Root-authored public Statistics contract and new Statistics README section, compared with frozen committed original audit and current source. Not an independent implementation review of reviewer-authored pure core; no runtime claims validated by execution.",
+  "subject_sha256": {
+    "docs/classic-statistics-contract.json": "d1dd2859cc0d9c0de2528a2b845c5ba8a3bec153a51e40bdcb342a97f1e6be84",
+    "README.md": "c0691180eb1c4b88a932966be64f4b2fac0fdef9a149c997400448dce8e33c2e"
+  },
+  "README_statistics_section_sha256": "94ea77395c1048143fae202832c11f256c12b840e06f72f29c59fb521e45caf7",
+  "context_source_sha256": {
+    "native/core/include/biglybtc/saved_statistics.hpp": "c3e1c4adee063466bae0034571b42c9a4c291c72687eebbc2dc2c33a2cd529c3",
+    "native/core/src/saved_statistics.cpp": "e6f4db1e06a993dbce1739a52f053dc9b0e201a89d1ba440100dfd081e355cd3",
+    "native/adapters/statistics_view.hpp": "bfe21dc7989e315945fd51b35721904bcf9d52186a50007a9d6c09c322d4e125",
+    "native/adapters/statistics_view.cpp": "76f55675813481121b523e461d960ad315125151581ed66932bd0bfb3dc897a1",
+    "native/ui/statistics_presentation.hpp": "57d027756285b3619187b4fe907cab8ce9624205043eef49e3dcb78ae0c09ef8",
+    "native/ui/statistics_page.hpp": "49ccac1562b9c1d0fb2aef4ba46bed1b9b16094682a133041f43b483b74c0e04",
+    "native/ui/statistics_page.cpp": "2eb00a7088a75f6a159ec3a9da68487db4199138180f38bc306c11c67d78f6cb",
+    "native/ui/library_window.hpp": "6a1b36fddee2dc88330157c3521f0c07f1c5cf5b8d3b0c9a173d4a74f8dd7279",
+    "native/ui/library_window.cpp": "bd5d55056e1fbb3ee5228284c7f4dc7d3ff06ce2ab7abf292991a31819404909",
+    "native/app/session_bridge.hpp": "9c53a5a49420ff11037ac72496a5c7c9d83982dc10261fa510123e04a1a65175",
+    "native/app/session_bridge.cpp": "4bbdb23e54096d170bb38189960044647fe702ca791ac331b256a4972ee314b4",
+    "native/app/main_desktop.cpp": "99d1dc531eb020c619a5c0b73805828dbe3e1326457e926591aa5973c2ab88ca",
+    "native/packaging/preview.py": "78e6d1e95e9c946601da9432943b6894898638a1835516d8ca9116dbb99d9c00"
+  },
+  "authority_sha256": {
+    "migration/evidence/20261018-statistics-next/manifest.json": "92dbafa6e3275bab32cf74d4a514ec7dcd07f501f991e615b162d5de0f8f2f5f",
+    "migration/evidence/20261018-statistics-next/source-pins.json": "666018d13c674419efe0ee7d3b7e1dbfadea36c6be37bdf8a57ffcff4e32cb40",
+    "migration/evidence/20261018-statistics-next/audit.json": "a4d5bece16ee013b6dd1b2b9b3f711732b8fe5fede7fbe861c6fb55dd9075ea3",
+    "migration/tasks/P04-15-classic-statistics.md": "0dd4ec8e353e892a877211884f2cf537bd646b6fc315156937cb894572fc217a"
+  },
+  "checks": [
+    {
+      "id": "ST-D1",
+      "result": "PASS",
+      "detail": "All35 original path/blob/SHA/length entries exactly equal the frozen source-pins map at full cb8c6cb9bb97916cbc7e80338a017200ffc3e71f; no changed upstream authority or unqualified source substitution."
+    },
+    {
+      "id": "ST-D2",
+      "result": "PASS",
+      "detail": "Linux Tools/Statistics Ctrl+5, Activity-first fresh page, reuse/close/reopen and Ctrl+1/Ctrl+W agree with source-audited default menu and bounded native known-page integration. This does not claim persistence of every original embedded StatsView tab or full platform/locale shortcut equivalence."
+    },
+    {
+      "id": "ST-D3",
+      "result": "PASS",
+      "detail": "13 original fields exactly match the core key order; bytes vs uptime seconds vs epoch-ms mark label are correct. Combined global data+protocol counters are kept separate from their splits and DHT, never summed twice. No save timestamp or saved freshness is fabricated."
+    },
+    {
+      "id": "ST-D4",
+      "result": "PASS",
+      "detail": "Known nonnegative since-mark formula total-min(total,baseline) implements original upper-baseline clamp without mutating raw document; missing/type-invalid/negative operands remain unavailable under admitted native policy. Contract/README impose no mark_time>0 condition and offer no reset/mark writer."
+    },
+    {
+      "id": "ST-D5",
+      "result": "PASS",
+      "detail": "Missing/noninteger scalar values and raw negative retention match typed core facts/page rendering. Missing whole file is distinct from complete empty dictionary. Recovery statement correctly makes complete Primary win, absent Primary try Saving before Backup, malformed Primary try Backup before Saving, and wrong all/unsafe/read/oversize fail. Parser quotas and unknown bytes remain bounded; generic writer allowlist is unchanged."
+    },
+    {
+      "id": "ST-D6",
+      "result": "PASS",
+      "detail": "Activity is explicitly latest observed transfer payload scope, not global/session traffic. Page ring capacity600, actual monotonic event arrivals, target change reset, empty/no-rate state and timer-free hidden/minimized rendering guards support the wording. Polyline display connects actual observations; docs do not promise interpolation-free geometry or invent intermediate samples."
+    },
+    {
+      "id": "ST-D7",
+      "result": "PASS",
+      "detail": "README explicitly names unavailable global data+protocol/session/history and other original subviews. JSON separately lists unfinished Cache/Tracker/DHT/Vivaldi/Tag/Country/Counters, mark/reset writing, switching/performance/full-client qualification. Neither document claims full StatsView/global/session/history or performance parity."
+    },
+    {
+      "id": "ST-D8",
+      "result": "PASS",
+      "detail": "F5 routes current Statistics page to its saved read request, rather than torrent refresh, transfer, cancellation or write. Bridge fixed reader uses held lease with recoverLibrarySnapshot=false. Sample launcher supplies generated original-format BiglyBT.statistics; offline Activity begins without telemetry samples."
+    }
+  ],
+  "nonblocking_precision": [
+    "A future prose clarification may explicitly state that retained mark baselines still affect since-mark derivation when mark_time is zero; current formula is already correct and states no contrary time gate.",
+    "The absent/wrong-type provenance statement concerns scalar facts; wrong-shaped all fails the optional read as separately stated. Java getLong default0 and partial recovery semantics are deliberately not claimed by the strict native projection."
+  ],
+  "execution": {
+    "source_hash_JSON_text_review_only": true,
+    "target_imports_or_selected_definition_evaluation": 0,
+    "compilers": 0,
+    "native_or_Java_runs": 0,
+    "GUI_or_normal_profile_IO": 0,
+    "network": 0,
+    "Git_or_index_mutation": 0,
+    "production_or_document_edits": 0
+  },
+  "scope_limit": "This source review confirms documentation consistency with inspected code, not execution/test counts, real saved-file freshness, live-original compatibility or full-client behavior."
+}

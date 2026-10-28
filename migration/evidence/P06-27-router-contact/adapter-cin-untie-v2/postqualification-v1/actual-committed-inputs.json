@@ -1,0 +1,2442 @@
+{
+  "status": "passed",
+  "stage": "actual-checkpoint-Git-input-mapping",
+  "implementation_commit": "20520f590610966047dfc59e01f4ff4422bfd1e9",
+  "source_baseline": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "validation_receipt": "/home/yurii/Java/BiglyBT/build/recovery/root-reviews/p27-adapter-v2-postqualification-validation-v1.json",
+  "validation_receipt_sha256": "7bc62c4f4f8c685c39e5f27fdb95d8d768f5ba2e71726562fb15867f612e257b",
+  "matrix_sha256": "95bc46d2c2f873076cf2a6e118eca8d1f47ec73de331ebb9fae92a85c4fff851",
+  "qualified_inputs": 346,
+  "same_path_inputs": 345,
+  "historical_alias_inputs": 1,
+  "verified_Git_blobs": [
+    {
+      "qualified_input": "migration/consumers/azureus_db_value/CMakeLists.txt",
+      "Git_path": "migration/consumers/azureus_db_value/CMakeLists.txt",
+      "Git_blob": "273e26d0bf9d78ad4897f09ad5927ae6be292ef6",
+      "sha256": "890dbe378f7d3775a1955e951d5b9aa20af277668988472104d3e33e03bc8be5",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/consumers/azureus_find_node/CMakeLists.txt",
+      "Git_path": "migration/consumers/azureus_find_node/CMakeLists.txt",
+      "Git_blob": "8958d73bcbd99c549068d4a9036cb47a9b858134",
+      "sha256": "a08a5119676364980e40672e5eee34bc5b53a74692e80e8f93918d4efc9cb970",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/consumers/azureus_find_value/CMakeLists.txt",
+      "Git_path": "migration/consumers/azureus_find_value/CMakeLists.txt",
+      "Git_blob": "3aa3c5bbd766e312e71b9c2c2d957204d67bc198",
+      "sha256": "a20a830671b2f6ce341e76d804a5aa7105a0dc6d7219261dbc467a8453a8ed5c",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/consumers/azureus_nodes/CMakeLists.txt",
+      "Git_path": "migration/consumers/azureus_nodes/CMakeLists.txt",
+      "Git_blob": "c77de776bb3d27b8cbe76a3315061ebff9480ad5",
+      "sha256": "df855ca95bad0ab763104134a51072632e815cfc3343aa51ed42d98f0d1e5a6e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/consumers/azureus_owned_authority/CMakeLists.txt",
+      "Git_path": "migration/consumers/azureus_owned_authority/CMakeLists.txt",
+      "Git_blob": "289a1ec7d1278f2baff981f9a291c3fbfff04fe3",
+      "sha256": "b32253bb0cd152091ae9f749580a83b51908f41fbc10cacc85ab16e50cc0daa0",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/consumers/azureus_owned_store/CMakeLists.txt",
+      "Git_path": "migration/consumers/azureus_owned_store/CMakeLists.txt",
+      "Git_blob": "742890e741de6f2496871f5b02cc96e17a79fc88",
+      "sha256": "82e6109b3c043052b3a03a933a2b5afe7585da9a52369254692dbadda964fa4a",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/consumers/azureus_store/CMakeLists.txt",
+      "Git_path": "migration/consumers/azureus_store/CMakeLists.txt",
+      "Git_blob": "0505509096b804b74f2d28f7288c7984104a552d",
+      "sha256": "2f607576f6db27d14c318f8f33d4bf109c50ab27ad7d10ca2926c594e9980e8a",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/consumers/azureus_stream/CMakeLists.txt",
+      "Git_path": "migration/consumers/azureus_stream/CMakeLists.txt",
+      "Git_blob": "827cebc17295b7903310784c77bf3db00acc3a06",
+      "sha256": "363be59b272246962059473a3eb9b0061acd6f554e563f25e97f2f140da3ced0",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/consumers/azureus_values/CMakeLists.txt",
+      "Git_path": "migration/consumers/azureus_values/CMakeLists.txt",
+      "Git_blob": "a80ce73332350e9d39596508d0ffc970e2177dc2",
+      "sha256": "fe5e46eba434255025c735be753daa29c787be3fc0ff9471fe883fc45c73fd20",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P00-03/formats.json",
+      "Git_path": "migration/evidence/P00-03/formats.json",
+      "Git_blob": "8e25db9d8f4971c25171188e35f0ce4187f9892e",
+      "sha256": "a2b20eaa9f0a2210938bb6c8d2f568bce7ad3ca22de9c4b1eca23d23c6c9c594",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P00-04/reference-fence.json",
+      "Git_path": "migration/evidence/P00-04/reference-fence.json",
+      "Git_blob": "a8f4474252681b8398c5c6a6093b50a0ee4414d5",
+      "sha256": "0c35e6bb2212e681ed4be8ecc65c50e35d7e191701bee59c9e139f2fbcb17302",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-26-azureus-db-value/native-draft.json",
+      "Git_path": "migration/evidence/P06-26-azureus-db-value/native-draft.json",
+      "Git_blob": "000421079bee7ce9ee28480018e308f680fd383f",
+      "sha256": "3bc0230f7f1fbaf392c4c54ef391ec60afbd6968fa1996ef670e07dc55ee2d62",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-auth/commands.txt",
+      "Git_path": "migration/fixtures/azureus-auth/commands.txt",
+      "Git_blob": "0cfa3b3f5e00aa83f142489f9598fea0c0ce706f",
+      "sha256": "71fed46b409b734a17433684ce5752be371d14d78b662d51537cdad79c128f2c",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-auth/expected.txt",
+      "Git_path": "migration/fixtures/azureus-auth/expected.txt",
+      "Git_blob": "a84ce581a8e81a662366565aa22e82bc59c37e5e",
+      "sha256": "c733101d9a20b0b9f90c9814288189f360ea1878ab6ecb2cc44c85c0f50c62a9",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-auth/manifest.json",
+      "Git_path": "migration/fixtures/azureus-auth/manifest.json",
+      "Git_blob": "00662a3ac933410c41d6c44b968adb60c6ccd3b5",
+      "sha256": "c46d76716952f4a7967c4cfd89156e9df4d174b6e6c7df5d53879fb92d2284e3",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-auth/provider-failure-policy.json",
+      "Git_path": "migration/fixtures/azureus-auth/provider-failure-policy.json",
+      "Git_blob": "062383ef19e56ac9241776d2c0d06da122cc5316",
+      "sha256": "21297ed5d0ac7fb4e18cb3356a92cb428abd07974a6ab83356b7863d9cbafc62",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-contacts/commands.txt",
+      "Git_path": "migration/fixtures/azureus-contacts/commands.txt",
+      "Git_blob": "0fa2642666696cb13a8fb8495372d149da5b850e",
+      "sha256": "59ba8605db62d17455be2089107f39daacdaf22632406c98b1f27bc433271874",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-contacts/emitted.json",
+      "Git_path": "migration/fixtures/azureus-contacts/emitted.json",
+      "Git_blob": "0252a94d86f99c1189e5e5a673af95c68466a736",
+      "sha256": "962117e1d710d6917f61068909a80adef2b874a29346474c9b877fdb6463e356",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-contacts/expected.txt",
+      "Git_path": "migration/fixtures/azureus-contacts/expected.txt",
+      "Git_blob": "0c102736e82dc99e3b11593b8298d60f83c8ae1f",
+      "sha256": "da9912925a778e4bb1d99e7adae61d6e46cbf51e30ee37e5263538425cb8dd30",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-contacts/manifest.json",
+      "Git_path": "migration/fixtures/azureus-contacts/manifest.json",
+      "Git_blob": "e74a2fada48b7afbcee6e4759b40183052c4995d",
+      "sha256": "4ce01b4a997f119f44d4f13af171341831d8c76d7ef76f0920a7724632e96762",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-db-value/alias-policy/commands.txt",
+      "Git_path": "migration/fixtures/azureus-db-value/alias-policy/commands.txt",
+      "Git_blob": "0a19e70c4f29f95ec6d5c578eb585f63dda44c0d",
+      "sha256": "ac23ce1ca6c92a53bd7c703de2477b6960dd519accb9469ff570f894f8a6c0e5",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-db-value/alias-policy/expected.txt",
+      "Git_path": "migration/fixtures/azureus-db-value/alias-policy/expected.txt",
+      "Git_blob": "67f05d6da8bff4ee6afa013a43797fce45a39319",
+      "sha256": "58015fa5ec91c513c6f99dc06cb2d9dcb43a41a07304a2a0064e6f2974602888",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-db-value/alias-policy/source-stderr.txt",
+      "Git_path": "migration/fixtures/azureus-db-value/alias-policy/source-stderr.txt",
+      "Git_blob": "70e56199f38c2d5728d6f84cf82b97bd67ef6d86",
+      "sha256": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-db-value/alias-policy/source-stdout.txt",
+      "Git_path": "migration/fixtures/azureus-db-value/alias-policy/source-stdout.txt",
+      "Git_blob": "67f05d6da8bff4ee6afa013a43797fce45a39319",
+      "sha256": "58015fa5ec91c513c6f99dc06cb2d9dcb43a41a07304a2a0064e6f2974602888",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-db-value/diagnostic/commands.txt",
+      "Git_path": "migration/fixtures/azureus-db-value/diagnostic/commands.txt",
+      "Git_blob": "2c6d5b273c24d4ba38297ed5cd0d5a02fd685bb0",
+      "sha256": "97e7e54a4eaa202d6696b3509b8cdfb5e9818bdbd98cc202115c918af700dce6",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-db-value/diagnostic/expected.txt",
+      "Git_path": "migration/fixtures/azureus-db-value/diagnostic/expected.txt",
+      "Git_blob": "2fb29a3f80fd34ccef496639b2bd7dfc23aa09f6",
+      "sha256": "3e868382ce0196fab6983dcf23a7692cba2b4992d896eab9e224ad43203eaad7",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-db-value/diagnostic/source-stderr.txt",
+      "Git_path": "migration/fixtures/azureus-db-value/diagnostic/source-stderr.txt",
+      "Git_blob": "70e56199f38c2d5728d6f84cf82b97bd67ef6d86",
+      "sha256": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-db-value/diagnostic/source-stdout.txt",
+      "Git_path": "migration/fixtures/azureus-db-value/diagnostic/source-stdout.txt",
+      "Git_blob": "2fb29a3f80fd34ccef496639b2bd7dfc23aa09f6",
+      "sha256": "3e868382ce0196fab6983dcf23a7692cba2b4992d896eab9e224ad43203eaad7",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-db-value/getter-contract/commands.txt",
+      "Git_path": "migration/fixtures/azureus-db-value/getter-contract/commands.txt",
+      "Git_blob": "dbbd28769e2b01d9166c2e7471e06a1851e64e0b",
+      "sha256": "ddc10d7112a6b4125974f4aedc4900c4d8867539cefcb34aefaea91c052ed4f2",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-db-value/getter-contract/expected.txt",
+      "Git_path": "migration/fixtures/azureus-db-value/getter-contract/expected.txt",
+      "Git_blob": "cd51f0d96017bbc30fdc96832d4c8ff8cc2a9f6d",
+      "sha256": "6afee806fc67e7ced69b990e92391f05bdd23d98a9151fbf29da8e3c78a97097",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-db-value/getter-contract/source-stderr.txt",
+      "Git_path": "migration/fixtures/azureus-db-value/getter-contract/source-stderr.txt",
+      "Git_blob": "70e56199f38c2d5728d6f84cf82b97bd67ef6d86",
+      "sha256": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-db-value/getter-contract/source-stdout.txt",
+      "Git_path": "migration/fixtures/azureus-db-value/getter-contract/source-stdout.txt",
+      "Git_blob": "cd51f0d96017bbc30fdc96832d4c8ff8cc2a9f6d",
+      "sha256": "6afee806fc67e7ced69b990e92391f05bdd23d98a9151fbf29da8e3c78a97097",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-db-value/manifest.json",
+      "Git_path": "migration/fixtures/azureus-db-value/manifest.json",
+      "Git_blob": "1af0379442b9dbbfbac7a1aeac8d02a33039d4bc",
+      "sha256": "a16121f193c73595aafd9e0e7571c9bc1c4b07622ca392d02e96b5314b18d3ee",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-db-value/semantic/commands.txt",
+      "Git_path": "migration/fixtures/azureus-db-value/semantic/commands.txt",
+      "Git_blob": "8d74a4b53c064d66a1b55a9adff45dfb0585ff1b",
+      "sha256": "18484f16ae0029cab2459b82b1708663038f386aaa2ca76c60a5986ae56b58e0",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-db-value/semantic/expected.txt",
+      "Git_path": "migration/fixtures/azureus-db-value/semantic/expected.txt",
+      "Git_blob": "68d264518f8b6e142536fc58d7b514fbb65802b4",
+      "sha256": "460dc01dfecaa13b38bbfdc662977b0cdb8fa14bbc791c66a3a17cf568c5caa4",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-db-value/semantic/source-stderr.txt",
+      "Git_path": "migration/fixtures/azureus-db-value/semantic/source-stderr.txt",
+      "Git_blob": "70e56199f38c2d5728d6f84cf82b97bd67ef6d86",
+      "sha256": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-db-value/semantic/source-stdout.txt",
+      "Git_path": "migration/fixtures/azureus-db-value/semantic/source-stdout.txt",
+      "Git_blob": "68d264518f8b6e142536fc58d7b514fbb65802b4",
+      "sha256": "460dc01dfecaa13b38bbfdc662977b0cdb8fa14bbc791c66a3a17cf568c5caa4",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-error/commands.txt",
+      "Git_path": "migration/fixtures/azureus-error/commands.txt",
+      "Git_blob": "fefbad27d47fce6b069b91e8e3d3907328f8a597",
+      "sha256": "1bb3e2ea0ccdb07b4abf6259d99c99ebc168331537c3472f292652d948883da2",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-error/emitted.json",
+      "Git_path": "migration/fixtures/azureus-error/emitted.json",
+      "Git_blob": "e3d941dd16b43ef821fd5b54a0d6c6bf1bc10103",
+      "sha256": "1dde9d2bd28b8bd4c90502d7e0bf5a03e0017da31699b2981b8d63f919aa70b1",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-error/expected.txt",
+      "Git_path": "migration/fixtures/azureus-error/expected.txt",
+      "Git_blob": "4fa79a0174cb450eaa7aeaff0eceef74ddaa1271",
+      "sha256": "6aae6792823d724bdb3858720b273f16717e7d3ecdc09096ab249653b84f594d",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-error/manifest.json",
+      "Git_path": "migration/fixtures/azureus-error/manifest.json",
+      "Git_blob": "d652c2ae28e990797094c577678e39ea25620413",
+      "sha256": "4eb02077f2cd61f60da6a52b362dede3228d72497adcb13ba0a514a859f480fe",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-error/policy.json",
+      "Git_path": "migration/fixtures/azureus-error/policy.json",
+      "Git_blob": "ca54bab0c91a43bc93f0fb9afb6d921635aae502",
+      "sha256": "59a4e15c48be970f383d0612a62c1fa57e9c4039319ff49221a24f240dd98558",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-find-node/commands.txt",
+      "Git_path": "migration/fixtures/azureus-find-node/commands.txt",
+      "Git_blob": "3bbe0470e2f93b27ebbc39de3b0b2795f20bdab2",
+      "sha256": "c80a5e98d5950939b1e6f5a95997fb82bc3fd2813941c9bf13f7041843880fc2",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-find-node/emitted.json",
+      "Git_path": "migration/fixtures/azureus-find-node/emitted.json",
+      "Git_blob": "71d2d3d5564a6edbc9d7914960d131d5dc48e4ba",
+      "sha256": "7ea40790f7fec3b4432b072c422f91346844f739c19589034c3f79d07c7fdd03",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-find-node/expected.txt",
+      "Git_path": "migration/fixtures/azureus-find-node/expected.txt",
+      "Git_blob": "08b47943a2900eec6b44ec9a7e8edd3e7f33d6ee",
+      "sha256": "9452b357a86d29f7e2494d88186922ba79ae6a021c45826c115ec9fc7f0e9b1c",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-find-node/manifest.json",
+      "Git_path": "migration/fixtures/azureus-find-node/manifest.json",
+      "Git_blob": "71876f4370d4099035d98678f653e88bfb4479d9",
+      "sha256": "eea9f49d16bd878221576d615896bf9cd85c670a0f66a90c8b1fa4528c52c3dc",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-find-value/commands.txt",
+      "Git_path": "migration/fixtures/azureus-find-value/commands.txt",
+      "Git_blob": "5f1ce29ca4abcf23f3ac0a04636f3f745ad84ff1",
+      "sha256": "7dcfc6960865b1dcdf744d585f4e4ff9e8f017e984a2329d588f3f4a0cd55be2",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-find-value/emitted.json",
+      "Git_path": "migration/fixtures/azureus-find-value/emitted.json",
+      "Git_blob": "70432a3f158cacc31f1155bf8abbea81bee438cf",
+      "sha256": "f729ca0e7e9cd7adee98ec1b52fd5429b24a0d7629c168bc5977b6b4fa2c3ed1",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-find-value/expected.txt",
+      "Git_path": "migration/fixtures/azureus-find-value/expected.txt",
+      "Git_blob": "e7f969ea525ff1bb7b4ada5bc760c807e3cb7f7a",
+      "sha256": "5f6d3c16813474e14bdaeab902c7b423be1020ca6b211c9bd7b2ee1c66435749",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-find-value/manifest.json",
+      "Git_path": "migration/fixtures/azureus-find-value/manifest.json",
+      "Git_blob": "865a88acb9e8bd3a57a10e6c04c01ab079ae8aa1",
+      "sha256": "0c71c6e1e768c7646864003ee79adeefd7a7044dbfcf626a02e95549676f76fb",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-headers/commands.txt",
+      "Git_path": "migration/fixtures/azureus-headers/commands.txt",
+      "Git_blob": "b09ed6e76331e20ea93f33683f56fd03f3fab3a2",
+      "sha256": "e23acc5358f691c7b2d3e3d1650be41ed7d013c368000abe29209dc1d6551cda",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-headers/emitted.json",
+      "Git_path": "migration/fixtures/azureus-headers/emitted.json",
+      "Git_blob": "f2fdbf8d78549c322eaff82eaace4399adf3411e",
+      "sha256": "130448c113a97af1344fecec176554bd4818aa1b8c331ee9b026d63b7de5f1de",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-headers/expected.txt",
+      "Git_path": "migration/fixtures/azureus-headers/expected.txt",
+      "Git_blob": "d060a65c21aee14947e209539c559a50de071801",
+      "sha256": "884c394e2b5c50a6eb3d4053fb0fc53ed31a3574904598e56ac0cbe38ed1dec9",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-headers/manifest.json",
+      "Git_path": "migration/fixtures/azureus-headers/manifest.json",
+      "Git_blob": "f2c8aa61e9f3491294d011788580fae322293eed",
+      "sha256": "50083fb2fe1ca077b8d93efa8137b8925b132a78a27a2784320ea0e8da12bce8",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-nodes/commands.txt",
+      "Git_path": "migration/fixtures/azureus-nodes/commands.txt",
+      "Git_blob": "0b60c823bd88a1ca378f75c0ecca6bc69d18ba9e",
+      "sha256": "cfbf7a1308d34eab82a9787541d567da15b97bfdc62dceb6b3f7db778d2b7996",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-nodes/emitted.json",
+      "Git_path": "migration/fixtures/azureus-nodes/emitted.json",
+      "Git_blob": "c56a46f1429bc3c5ea8651186fbd26bcb1d3b059",
+      "sha256": "34252c55fee6a270f7ecac22a8e82c9cda43d8121b2a3063fa4a4c64bc7986ea",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-nodes/expected.txt",
+      "Git_path": "migration/fixtures/azureus-nodes/expected.txt",
+      "Git_blob": "b4db584a20833d83cb8d4a9939aaaab48a8192c2",
+      "sha256": "1a09760250104244ef94432db9c8caed5c4c822be295c4d833abde1c28413d71",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-nodes/manifest.json",
+      "Git_path": "migration/fixtures/azureus-nodes/manifest.json",
+      "Git_blob": "6f0fa03eb622f413d7ffc6e6853259f9ab3f0c6b",
+      "sha256": "c72795537a5c4755ac37cc8e3c45621e71b56caf2c28566e151ec14c277d8c2b",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-owned-authority/commands.txt",
+      "Git_path": "migration/fixtures/azureus-owned-authority/commands.txt",
+      "Git_blob": "fc452e3682eca0e82a604a58e999d89d440c6e60",
+      "sha256": "01d15ec33cfd090a5f8f8929dc35af72b5de1091614def5b5bd6f35d62a0904c",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-owned-authority/expected.txt",
+      "Git_path": "migration/fixtures/azureus-owned-authority/expected.txt",
+      "Git_blob": "ca679faa794e8ccda5f315d46cb9f1617ede624a",
+      "sha256": "87620b46957f492a628042575b7d4692c3473cd4d268328d049c907d150a10a3",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-owned-authority/manifest.json",
+      "Git_path": "migration/fixtures/azureus-owned-authority/manifest.json",
+      "Git_blob": "86de0f0ea6cba4d30c7bcc2ad4ec90a4b9323ecc",
+      "sha256": "944ba39709a5a1b32c6e9799088351e5b99735e47ea6e3e918c8d911939ab99f",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-owned-authority/semantic.txt",
+      "Git_path": "migration/fixtures/azureus-owned-authority/semantic.txt",
+      "Git_blob": "33d79efd77c77a8de8a6e021b55a80954d070df1",
+      "sha256": "fda93d6eefd82c3c17a850f9086108072f7f9b935e174b90f54de667312b5ed2",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-owned-authority/stderr.txt",
+      "Git_path": "migration/fixtures/azureus-owned-authority/stderr.txt",
+      "Git_blob": "70e56199f38c2d5728d6f84cf82b97bd67ef6d86",
+      "sha256": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-packets/commands.txt",
+      "Git_path": "migration/fixtures/azureus-packets/commands.txt",
+      "Git_blob": "c56bbd0134e39ebfdcb78b7ec378a1d8a688b441",
+      "sha256": "a7b212ecc0453540a2dcb13acdba9ad1524173a655c06ab471c9e2d1bde841a9",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-packets/emitted.json",
+      "Git_path": "migration/fixtures/azureus-packets/emitted.json",
+      "Git_blob": "4638b415b9fb70489cdfa33a2a3b5f66f258cad6",
+      "sha256": "c9f9f8edfcf1a515523cc7c4a86bb838f51fd54e8f1db516ff75e194d6f3acb3",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-packets/expected.txt",
+      "Git_path": "migration/fixtures/azureus-packets/expected.txt",
+      "Git_blob": "83a13d7de077dcd675ee389d16306664f8cc20a9",
+      "sha256": "b95dc1f35a23fd965173528fbf37216f4edf4490207776ae5a412dcb0d9fd78c",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-packets/manifest.json",
+      "Git_path": "migration/fixtures/azureus-packets/manifest.json",
+      "Git_blob": "bce862974c1ffd992076fb071f096ee0dfe7d467",
+      "sha256": "7b88946d0966680d1b58c98387ace8768a3bf6aff42d9ab73ba7fa6c17f2e4f6",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-ping/commands.txt",
+      "Git_path": "migration/fixtures/azureus-ping/commands.txt",
+      "Git_blob": "891171b5caf2fa443856a0ca38da3d7cb28df12c",
+      "sha256": "358615d2d065de834771ed5c1c353d3c6428a49e27757bd4b1e51edddf36fa1d",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-ping/emitted.json",
+      "Git_path": "migration/fixtures/azureus-ping/emitted.json",
+      "Git_blob": "3c9493f6eb1759836f2794c1bf50c7ac7701ec08",
+      "sha256": "1446f9e525683af916ac4c86fb83a674304419a6017dc4ffad08a01416d566eb",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-ping/expected.txt",
+      "Git_path": "migration/fixtures/azureus-ping/expected.txt",
+      "Git_blob": "a686fff35e5cd14ee830f0ee95e78ef94909b55d",
+      "sha256": "2a39e8e30f8d67ad8465c48520676bcab268e07a86eadffbe4c903f86a7ec037",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-ping/manifest.json",
+      "Git_path": "migration/fixtures/azureus-ping/manifest.json",
+      "Git_blob": "16bab4c0dea072c89c8c2788bbea027a182383b4",
+      "sha256": "893a7bd88424105452363b24631d70b0f92102331eca40de80bba31f5333066b",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-positions/commands.txt",
+      "Git_path": "migration/fixtures/azureus-positions/commands.txt",
+      "Git_blob": "683389664d97d5d0e5e751e3d55ab4158bc5b293",
+      "sha256": "cd1a64fcf2a90e2b3b1d0891754b63b87d68734c0dbe60385cf74637c25b8fb5",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-positions/emitted.json",
+      "Git_path": "migration/fixtures/azureus-positions/emitted.json",
+      "Git_blob": "b389f575f016b6fce5c1061185fc57ca119bf07c",
+      "sha256": "4e814118c4e41e6012a281f40838699f0467bfdf2d4941b8e72684f206d900a5",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-positions/expected.txt",
+      "Git_path": "migration/fixtures/azureus-positions/expected.txt",
+      "Git_blob": "e90a2ac2507e484f205c5c2e62dea6837f8a49a6",
+      "sha256": "9c0b0349f7a1347961f447d6b80827e0fbbe87be7245684a17c585370e007de6",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-positions/manifest.json",
+      "Git_path": "migration/fixtures/azureus-positions/manifest.json",
+      "Git_blob": "7536b1e0d96ca0edeb23ccc052475e515b757c57",
+      "sha256": "a23387bf83606b467c018ee41852b9ad9b60d25ee0645381f7670f8642cb7659",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-store-policy/commands.txt",
+      "Git_path": "migration/fixtures/azureus-store-policy/commands.txt",
+      "Git_blob": "e9020551caa2ac4a826a854c2b8d4db1d5d306f2",
+      "sha256": "54dcae4a20d12d800475fff7da3fd9ad94ebf15a9c4408b7c067746f7d3c429f",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-store-policy/expected.txt",
+      "Git_path": "migration/fixtures/azureus-store-policy/expected.txt",
+      "Git_blob": "c61493f9ea647d8a58a00277610e13bf9fa9e20e",
+      "sha256": "6bc4fdf982cbbc175c45b3d46fe5041d3c785ff1e924529fb017363dc182c4a5",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-store-policy/manifest.json",
+      "Git_path": "migration/fixtures/azureus-store-policy/manifest.json",
+      "Git_blob": "caa924d5c2142450088239381205fd9f348fa512",
+      "sha256": "d9fbe7c3f68fb78d0c0d748241be30b98ed4b502c81c0982b928da88c4bc7901",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-store/commands.txt",
+      "Git_path": "migration/fixtures/azureus-store/commands.txt",
+      "Git_blob": "1534000397e4f82026953e9158be973fc53e2281",
+      "sha256": "e4de059e8760e4456ee7a830e6cbd83bc8fa6b7b202057dd79df7f33535feb33",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-store/emitted.json",
+      "Git_path": "migration/fixtures/azureus-store/emitted.json",
+      "Git_blob": "7e9d4b1993106970289ceb1d8d992612ca00916a",
+      "sha256": "9581c28e3c0bc658da429c38a48f788542296dc1f4e209c7d64ac422ac757e0f",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-store/expected.txt",
+      "Git_path": "migration/fixtures/azureus-store/expected.txt",
+      "Git_blob": "1a1996b576821078fc4014e6525e20e1437e9040",
+      "sha256": "4a8f24a846d4a89bbe5f72a8aaa4f6ae76932198fd373a063c9c22420dc46b7b",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-store/manifest.json",
+      "Git_path": "migration/fixtures/azureus-store/manifest.json",
+      "Git_blob": "32d87e36fb4cb91b87c86228667a2298a683d54d",
+      "sha256": "6cae5057a0327abcab66045ad9ef8d2cea2cd6bbf2185f354f3c80eb43c72008",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-values/commands.txt",
+      "Git_path": "migration/fixtures/azureus-values/commands.txt",
+      "Git_blob": "502cb0dc05fb93a6fb79a3fddf59f7713fe49fe4",
+      "sha256": "16529d85bf731b792e93a4a5b29c7019dab460c627d45562d9ccd09468c2f653",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-values/emitted.json",
+      "Git_path": "migration/fixtures/azureus-values/emitted.json",
+      "Git_blob": "93223a1c322282299f5ebe80b4419933ca4d808a",
+      "sha256": "5c87400b5fecb9a33ba999f18248ef1c5f7b2753bafed619e8a408c11fc1f750",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-values/expected.txt",
+      "Git_path": "migration/fixtures/azureus-values/expected.txt",
+      "Git_blob": "4cdfbad2ff8ba2ba7b3e6ba359a358c20cf0c49e",
+      "sha256": "dbc4b9ca5f6f81772c572abec9c4257b195b5b2fdb7f5a2a33c1c26f4ecb225b",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-values/manifest.json",
+      "Git_path": "migration/fixtures/azureus-values/manifest.json",
+      "Git_blob": "a63d476f208414ea29099e33949eb40f0a08694a",
+      "sha256": "071ff51f85b620d5635daa17181368468885db76cdf21e8ec30dd4328433fccd",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/java/AzureusOwnedAuthorityOracle.java.in",
+      "Git_path": "migration/fixtures/java/AzureusOwnedAuthorityOracle.java.in",
+      "Git_blob": "bdd91e04d25bfe6fac1fc6285e14e8df82a4b127",
+      "sha256": "9bb3d52bdce6c24e56c00a5da3127e20210eeaaa5d75ef6cf80699dd051976e8",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/java/DbValueLifecycleOracle.java.in",
+      "Git_path": "migration/fixtures/java/DbValueLifecycleOracle.java.in",
+      "Git_blob": "e36edc9f28f633c1db273477450d5453407cb1bb",
+      "sha256": "c73295dfa179d0b6b20e027b44e065466785163dd7451cdb82ba9109ded90d3d",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/java/OwnedAuthorityDatagramOracle.java",
+      "Git_path": "migration/fixtures/java/OwnedAuthorityDatagramOracle.java",
+      "Git_blob": "937925a906f150fe741b7a873d6d435ba9515d87",
+      "sha256": "4269f70527af20b845c1757cd5369e62844216a71c49d6f0b94f95b1a3b0adfc",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/java/OwnedFindNodeDatagramOracle.java",
+      "Git_path": "migration/fixtures/java/OwnedFindNodeDatagramOracle.java",
+      "Git_blob": "f5129bfad6eaf25dca8e2c77c5c6152c70bc344f",
+      "sha256": "d909a68864c341cdf146b65e845f8222317ceb5e0d06110e9b3d5e3219bd5bef",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/java/OwnedPingDatagramOracle.java",
+      "Git_path": "migration/fixtures/java/OwnedPingDatagramOracle.java",
+      "Git_blob": "ef75da6e152cab586efd32966af3ff01cf596571",
+      "sha256": "65ea90cb3cc3cbdfb09ebf438f7a2e6de137f86a6db15a9a8dab85b9740a8b66",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/java/OwnedStoreDatagramOracle.java",
+      "Git_path": "migration/fixtures/java/OwnedStoreDatagramOracle.java",
+      "Git_blob": "15a86d205bcc362661566b7b0470b63011eca0e5",
+      "sha256": "3b69de6896888b218cef711d5c1d1f1a7ee4a698fad19e5659eefe4aee8eb433",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/java/OwnedValueStreamDatagramOracle.java",
+      "Git_path": "migration/fixtures/java/OwnedValueStreamDatagramOracle.java",
+      "Git_blob": "ba17daa862685322fe03517fd897e150e8541819",
+      "sha256": "96394cf91bcf43fb7014208834d6ac24e026abbd4f9d8bb9527564336b6b3ed3",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/java/ReferenceFence.java",
+      "Git_path": "migration/fixtures/java/ReferenceFence.java",
+      "Git_blob": "4bb64ca2b538134d88b758468a1deadccc9b2ab9",
+      "sha256": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_auth_fixtures.py",
+      "Git_path": "migration/tools/azureus_auth_fixtures.py",
+      "Git_blob": "5f7f2a026f1f5732acf4832b50d8c69bec74877e",
+      "sha256": "76ad00ddee8303dfdf371435e9f38c5207af4451db369e73602c13f652b2753c",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_auth_matrix.py",
+      "Git_path": "migration/tools/azureus_auth_matrix.py",
+      "Git_blob": "ff6f0855a07aa0732d56ec7eea0efd5a4cf04758",
+      "sha256": "8c332b3a60b985618667579bc9ab75834685cf000bfedc9f67ed318a1f7b724f",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_auth_oracle.py",
+      "Git_path": "migration/tools/azureus_auth_oracle.py",
+      "Git_blob": "72fe80e28c6c151fdfc90fe6cee04efac80fa895",
+      "sha256": "f6c74db88d44998f83108fe3f0a7cdb80bad91769cef446cea5a5ac956dd9f95",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_auth_readback.py",
+      "Git_path": "migration/tools/azureus_auth_readback.py",
+      "Git_blob": "3abbc4b8bf17ad24b45e25e200d245133b8b53d7",
+      "sha256": "7eca111138ce82e2dee1927c84ef99bdc53eb5bf1db7e4b9703c9ca6e118dfd2",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_contacts_fixtures.py",
+      "Git_path": "migration/tools/azureus_contacts_fixtures.py",
+      "Git_blob": "049b668e99141276c99f05eddebe1077c22b8d35",
+      "sha256": "70e690fb4002b49412b497d49ee4c188e818ab3afabfd7cd2aa588e1929c07d4",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_contacts_oracle.py",
+      "Git_path": "migration/tools/azureus_contacts_oracle.py",
+      "Git_blob": "9087e4cf0743e9eea6fda92a422848e39631a6e0",
+      "sha256": "9aef5aa83e4a5ff0bdd9b0f6382c989183d67732339d864d81085e3d77e7671a",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_contacts_readback.py",
+      "Git_path": "migration/tools/azureus_contacts_readback.py",
+      "Git_blob": "e5a424b92d981dc6ad2a5fd26a5c322084dc7b82",
+      "sha256": "9741c1b7c3d804cbef7734a2cb6c7e98587ed457e53b9d5f83bdbf022c6c7b92",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_db_value_fixtures.py",
+      "Git_path": "migration/tools/azureus_db_value_fixtures.py",
+      "Git_blob": "3cdc1ab9c729e13ab78581edae3bf1aee039f699",
+      "sha256": "e227b7c7e918acd078e4703da6c3e245933bcc0d30bad76278e93e3fa625e352",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_db_value_matrix.py",
+      "Git_path": "migration/tools/azureus_db_value_matrix.py",
+      "Git_blob": "eb517722138d071150b8b4680f794c2ce022978d",
+      "sha256": "cd7a80ff43e9bad936574701ba68cb40b7722715d71233f956528d1ecef3c463",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_db_value_oracle.py",
+      "Git_path": "migration/tools/azureus_db_value_oracle.py",
+      "Git_blob": "7df306a5c97aaba17dd7ae3c31a8634f3eaa2cea",
+      "sha256": "0c5f9aa0b87bcc53d2d4d35ef6a4466ec6f6b96f55949059d670544733744c17",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_error_fixtures.py",
+      "Git_path": "migration/tools/azureus_error_fixtures.py",
+      "Git_blob": "d7068e2ce06962a8d43b7cb6e1faced350296a10",
+      "sha256": "437b03cb3f1425dd1ca7ab847b28a4e60190d8e97dcd5221f81190809b98e95b",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_error_matrix.py",
+      "Git_path": "migration/tools/azureus_error_matrix.py",
+      "Git_blob": "d99e3e08d43297b3e9c18aa7b12d2d48f9c95477",
+      "sha256": "47b02763a28f823bc1005aac695a81e014307a801c2c8eb7e1937914b7daf726",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_error_oracle.py",
+      "Git_path": "migration/tools/azureus_error_oracle.py",
+      "Git_blob": "292574d757603af5963330a033c1ae1148f9d711",
+      "sha256": "28055dc09c491a10ae714abd609c9e7a032838bb4cd66a24b994dfc2b105e6db",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_error_readback.py",
+      "Git_path": "migration/tools/azureus_error_readback.py",
+      "Git_blob": "50f4e98a8eb2a34db1a1a1bd024a6f1bc6018307",
+      "sha256": "87da77536cc56bfe96da4b595aa92c7c00dbb50a3701480b0a3d1f5ed725784f",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_find_node_fixtures.py",
+      "Git_path": "migration/tools/azureus_find_node_fixtures.py",
+      "Git_blob": "b7b2f64700d37f22d737a1a0f2ce4b2050cf2146",
+      "sha256": "2ddda9bf7e8d61a451fd2e74952ecd22c05e253c3cc994d30e75efb19971d748",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_find_node_matrix.py",
+      "Git_path": "migration/tools/azureus_find_node_matrix.py",
+      "Git_blob": "cf80d204161f1a82d44a58e9cc4fe070712e2e16",
+      "sha256": "39db9c6e7f360b3bc13de69292c60f567e456c1d96624894cecf9d4f7e2eed00",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_find_node_oracle.py",
+      "Git_path": "migration/tools/azureus_find_node_oracle.py",
+      "Git_blob": "6d31370fb2bcfbd41d7e413caf91e713c5a03d6d",
+      "sha256": "01513e17238b5429d67c2e8ab3a2b8d8cb7ce2c6402369ec183c051717045620",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_find_node_readback.py",
+      "Git_path": "migration/tools/azureus_find_node_readback.py",
+      "Git_blob": "7511c4ed4d4794137917ad9dd8e2aaf65e82f7b5",
+      "sha256": "b53eaceef1a4d40aa9c9f1aa00cb5d6df9039de17041964b9944dc24a41c7cf1",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_find_node_udp_interop.py",
+      "Git_path": "migration/tools/azureus_find_node_udp_interop.py",
+      "Git_blob": "33394a470f03e5e0c88e0b3ec566be5320051865",
+      "sha256": "81692aab943da7b71cd56d444bbf09bd5e7f60cac018d63a7db878a9cd6cc788",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_find_node_udp_matrix.py",
+      "Git_path": "migration/tools/azureus_find_node_udp_matrix.py",
+      "Git_blob": "25115c2daf9fdd483bf550f5aef7d416e9d451ce",
+      "sha256": "f902fc8c52b0dcdff61f83f6e39a45fb94f2e02e2819408733de3fe408e6eeeb",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_find_node_udp_reference.py",
+      "Git_path": "migration/tools/azureus_find_node_udp_reference.py",
+      "Git_blob": "4d46570ab12742e8f7deed2f570ea676626b214b",
+      "sha256": "5de4af52cfd731cbe145d77ac97d2702f3d22a5cbe27826f8b71acbeaab7fdf4",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_find_value_fixtures.py",
+      "Git_path": "migration/tools/azureus_find_value_fixtures.py",
+      "Git_blob": "c856256bec44c5234b88f3fe9c51dac9c963b5d6",
+      "sha256": "87c114ee096df6d985177c429e3d7c8ca0e2e23d0a38d26d057851ff3d493117",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_find_value_matrix.py",
+      "Git_path": "migration/tools/azureus_find_value_matrix.py",
+      "Git_blob": "cea29f6a66f84e6f44af89324d13150774e8adab",
+      "sha256": "9283a55b635ba42ad7f29864c2ceb82661d386e4648ce073da73d43c0e8485eb",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_find_value_oracle.py",
+      "Git_path": "migration/tools/azureus_find_value_oracle.py",
+      "Git_blob": "b1c5e107ad944b57132e071dd8fdedb3b3e8f464",
+      "sha256": "0de96fddea3cb98d0eccd41b6ce37768bb3145457cbb01180a4d229e033dac02",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_find_value_readback.py",
+      "Git_path": "migration/tools/azureus_find_value_readback.py",
+      "Git_blob": "d3a824b69aebfb5bf24b6148128fe717198aa593",
+      "sha256": "e46f7cf51bf3fc7cbb5f7001bd20bf2f5ec21ba68d71a0e7fe3ab06a35fe6b69",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_headers_fixtures.py",
+      "Git_path": "migration/tools/azureus_headers_fixtures.py",
+      "Git_blob": "29b8dddb6d8d3d9dba4dfae4d1b059992bf3f6af",
+      "sha256": "58ab8e376b5dcf0d1ea46bb06a4e67d9e7cba3810061e3968989bc00627c40fa",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_headers_oracle.py",
+      "Git_path": "migration/tools/azureus_headers_oracle.py",
+      "Git_blob": "2784376e3b8346004d4e7bd373682abb953cae1f",
+      "sha256": "70c333becbc3f88949f31f89cf29625572d4ac0c07cdba19c9bb1424112f5f02",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_headers_readback.py",
+      "Git_path": "migration/tools/azureus_headers_readback.py",
+      "Git_blob": "fcd72605eb66f2f5159fb7ad1972d6ff3c47dc71",
+      "sha256": "0a356718ca001a3a16ea4580157cbd6d403f1a094fedcaef4920c273e8572862",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_nodes_fixtures.py",
+      "Git_path": "migration/tools/azureus_nodes_fixtures.py",
+      "Git_blob": "312b52fb1842f24083bbd0f4beb523e37cc01853",
+      "sha256": "114b983fba633bb6ad9092c25a56a9085fe3b78588bbe97fa6ec8ead12ffe292",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_nodes_matrix.py",
+      "Git_path": "migration/tools/azureus_nodes_matrix.py",
+      "Git_blob": "6c924716b8a91b80a3827b84872bcf3d60361fe4",
+      "sha256": "6c92407a6aa092f5ba7a9d3a4e0cd847e0fa2d175bc928a70e617b4421c4c142",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_nodes_oracle.py",
+      "Git_path": "migration/tools/azureus_nodes_oracle.py",
+      "Git_blob": "98d25a4db62b3ff4899e25c3ac39a8b0faf96e34",
+      "sha256": "b31bf4de5537796635af78abf876d4c705a8d9090670656e028fca3450ba33e3",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_nodes_readback.py",
+      "Git_path": "migration/tools/azureus_nodes_readback.py",
+      "Git_blob": "58c4182a5e2701c4ebf3192ddfd5d4a820561104",
+      "sha256": "e9c221b95d7dfa8233bd98324ee6f1872dbb8d71a9fe971461dc1017b2cfa64b",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_owned_authority_fixtures.py",
+      "Git_path": "migration/tools/azureus_owned_authority_fixtures.py",
+      "Git_blob": "0354e24541008e0a68e1932e7c879e0dc3330301",
+      "sha256": "9d08f7429525c0399e1ee7f77f245cf4c8aad15637c6b61db49be27ca8d18416",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_owned_authority_interop.py",
+      "Git_path": "migration/tools/azureus_owned_authority_interop.py",
+      "Git_blob": "fc1ed1b90cebd18f668e5dba52227787755ba56e",
+      "sha256": "132f99b83ee7919c523d836baae07a8fadc4fbdad6be55f7828258803fec4d72",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_owned_authority_matrix.py",
+      "Git_path": "migration/tools/azureus_owned_authority_matrix.py",
+      "Git_blob": "386540f1b9773ede8ffd53956fcfdb8eb8033f6b",
+      "sha256": "ae360854d67bca9e4e6acbfb67b5b7c16e6aa30df841d486ea2bfbcbf93fdca2",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_owned_authority_oracle.py",
+      "Git_path": "migration/tools/azureus_owned_authority_oracle.py",
+      "Git_blob": "cdde9b36f057a67d6d5dc255bbb84fdc233916da",
+      "sha256": "18fb9fa5296ebe5d33ff2cde465882c8db32833c47e3ca82070dda35f80797d2",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_packets_fixtures.py",
+      "Git_path": "migration/tools/azureus_packets_fixtures.py",
+      "Git_blob": "d46a82e48808e59b0b8e054db3aa4ee086f60f64",
+      "sha256": "e232179108ce881859a37b643289f52ef5784d8d392870c76be3ef19e7a8bec4",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_packets_matrix.py",
+      "Git_path": "migration/tools/azureus_packets_matrix.py",
+      "Git_blob": "bb9f6c43697f494030d18629d4d1aa70265a8a1e",
+      "sha256": "f543e794b3e1ed807477f0a0567833d9fbd9a7f1bd64a02a005eeb80235ede50",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_packets_oracle.py",
+      "Git_path": "migration/tools/azureus_packets_oracle.py",
+      "Git_blob": "dff00d0578100e63997c16acdbd107491a563e0e",
+      "sha256": "747fd77e033f87d7131261d991580b5b78120d59fc772cf4e76df1df956b0ea9",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_packets_readback.py",
+      "Git_path": "migration/tools/azureus_packets_readback.py",
+      "Git_blob": "f71d58337f8bd1e1ef48150b14b98ee506d8b04a",
+      "sha256": "54b29ccfd8ae54a5f5d5933ff5694b75c9f4d879b5ac39bb23c9cb58933fcdd3",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_ping_fixtures.py",
+      "Git_path": "migration/tools/azureus_ping_fixtures.py",
+      "Git_blob": "59a16a570260a2436d8a06602e860a7db2aff565",
+      "sha256": "e1df7ccf2adaea4bd0d8c299c9f08a05cd7693b96e6f0f08be0787a92119c835",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_ping_oracle.py",
+      "Git_path": "migration/tools/azureus_ping_oracle.py",
+      "Git_blob": "ed7aea53e88e5bb7ccf7796807cc3755d601babe",
+      "sha256": "da254f3dbe91069c0bc7bb063ac01c74dfdf2b89b202ed477b543ae920972b3e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_ping_readback.py",
+      "Git_path": "migration/tools/azureus_ping_readback.py",
+      "Git_blob": "62384194c223a19f8760212217a4336bd8ab5c0b",
+      "sha256": "65df118b9123632931745b2a5402d37696b23b9f113f27e2c2b7284e4e4d9b3e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_positions_fixtures.py",
+      "Git_path": "migration/tools/azureus_positions_fixtures.py",
+      "Git_blob": "9d6068a2b1235288a3d5c812778f4cd3016e185e",
+      "sha256": "4adb036a48422c474a76d24e7a250dc0f0939097508601814985bf91e9e9e3c5",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_positions_oracle.py",
+      "Git_path": "migration/tools/azureus_positions_oracle.py",
+      "Git_blob": "60b4e523bb8920097138ccc890a59a91b927a559",
+      "sha256": "bd42d4f8944096c8a82de85f9d10a62470af25d6eba2316c108f5d1a09e02ed8",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_positions_readback.py",
+      "Git_path": "migration/tools/azureus_positions_readback.py",
+      "Git_blob": "14bce3965a67a9375586b3cef1103a2962943bf2",
+      "sha256": "bc6b5931b4eaea2048d892bf2a05526ef116ef491046b50be95cec242670adc5",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_store_fixtures.py",
+      "Git_path": "migration/tools/azureus_store_fixtures.py",
+      "Git_blob": "a9ce887ed15e4251cc1513d85ce4ed2a4bdae655",
+      "sha256": "d03d141dd88767db10b16e97ae8dc86e9bbf8bdc1f81fce3d0e195578345cab1",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_store_matrix.py",
+      "Git_path": "migration/tools/azureus_store_matrix.py",
+      "Git_blob": "a5c8a81bfad236066d3536376e0ff9a2285f629c",
+      "sha256": "7de607a46e083c230f6b61c5770a8000c23ff9af2b900671bb966d99b5cb5d34",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_store_oracle.py",
+      "Git_path": "migration/tools/azureus_store_oracle.py",
+      "Git_blob": "e1986ec2636b52dbeff429430a007ef86aedeb4b",
+      "sha256": "83fad1bb35a8f36932912dff20670b6006cf1fc929525a7bff0996585c2abf88",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_store_policy_compare.py",
+      "Git_path": "migration/tools/azureus_store_policy_compare.py",
+      "Git_blob": "f61a67e3f0d18067216af4680c9f434e11ce0f4e",
+      "sha256": "e83e8abbc4a3b648560c29a955e2b04bf8d8dfadc194d45494c320c25f68c24d",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_store_policy_fixtures.py",
+      "Git_path": "migration/tools/azureus_store_policy_fixtures.py",
+      "Git_blob": "86c10b105bb252d108b07d1faa4e13fadf8ba02b",
+      "sha256": "a9cdbce2c35b8ffc4577c213e20980b484d22de08cf6bc94cb095037faaf5648",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_store_policy_matrix.py",
+      "Git_path": "migration/tools/azureus_store_policy_matrix.py",
+      "Git_blob": "94d7533e021ebc673ad53013e92d283f8af65411",
+      "sha256": "9fa9c076a9fb73d8b26b05b5f5cda55be16c146698e2e9842af5e4496b8f0fc2",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_store_policy_oracle.py",
+      "Git_path": "migration/tools/azureus_store_policy_oracle.py",
+      "Git_blob": "f428894938acefb2e6e81e8e0ef6a19c57e81cc4",
+      "sha256": "cb5a04bfc3b385bf0a9187601b731949bb727f9d7cf7c6139b6c6d872bff2745",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_store_readback.py",
+      "Git_path": "migration/tools/azureus_store_readback.py",
+      "Git_blob": "04f654a51f07d8d748d4821b33aaf7e917e219e3",
+      "sha256": "28b18137b26a66d151e756bd517cde9ad4db6b68c6563fdb2c4fb6cf6c41dddc",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_store_udp_interop.py",
+      "Git_path": "migration/tools/azureus_store_udp_interop.py",
+      "Git_blob": "c518b55dac21f7b9e11efb5dab7a3a77831d5ebe",
+      "sha256": "5daafb60fa44533dcd7f3cc450559b38a4fca5b2ec4e6e1bd06e7c63a50b92b9",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_store_udp_matrix.py",
+      "Git_path": "migration/tools/azureus_store_udp_matrix.py",
+      "Git_blob": "4af5b9d592ee6b94da9d78a344fac74689ddd4d6",
+      "sha256": "c02e4dbbead4e4b0b659b3e61f27781dcc3cf2d48b76cc5e33b932e1ec4dffc5",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_store_udp_reference.py",
+      "Git_path": "migration/tools/azureus_store_udp_reference.py",
+      "Git_blob": "7059e3efcac4969c016fcae3fad26ed606dbd2fe",
+      "sha256": "c6be25f1bc9a9122a92f1f0a26e2cd6e5b9b98253a161edcddc8809acba74632",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_store_udp_resume.py",
+      "Git_path": "migration/tools/azureus_store_udp_resume.py",
+      "Git_blob": "6709edc9cc59e5e6420d344cdb81cfb9af453149",
+      "sha256": "fa7d5087600dc23e8fab44412a9ca372a2c4cb8adc39edfa7d46334bb6c83162",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_store_udp_resume_link.py",
+      "Git_path": "migration/tools/azureus_store_udp_resume_link.py",
+      "Git_blob": "0266acc7073f56dc84cb0bfbd4f7d97945f41930",
+      "sha256": "16c315aaf4fd4100f2939f1ec2e77821a6a5c28bcd01ebd8c9f5b2b0423dbd6c",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_stream_interop.py",
+      "Git_path": "migration/tools/azureus_stream_interop.py",
+      "Git_blob": "382b72db27f4f390bb21f6b7c5f02483a90e8081",
+      "sha256": "4103b8ed9802dd587f1b911505811c6ef13e23a115968363c137a612a4491a17",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_stream_matrix.py",
+      "Git_path": "migration/tools/azureus_stream_matrix.py",
+      "Git_blob": "1e671e09f068b6676235bc3bac4830790b9a7cec",
+      "sha256": "d477bcb6cf5475712a6fa839f9eb99664385b4b13dc0ef01e8a823fc07ab236e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_stream_reference.py",
+      "Git_path": "migration/tools/azureus_stream_reference.py",
+      "Git_blob": "648967e3f6346e46fd999d8c507e2b17a5c9606b",
+      "sha256": "682e29b526edff6fe30603e37a6e15e56da373e583c9433901e669e984170ef1",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_udp_interop.py",
+      "Git_path": "migration/tools/azureus_udp_interop.py",
+      "Git_blob": "0663195b18e2631930503296e6000d212dcfc5da",
+      "sha256": "601e054db77b4ee75fddd312916223d2a93b5a8dddf390dedd54ce85f8dc1609",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_udp_matrix.py",
+      "Git_path": "migration/tools/azureus_udp_matrix.py",
+      "Git_blob": "ad77d8aee673586b0701c6ebbbb6da3628465112",
+      "sha256": "ed00c7feff181ca2ac869191ae1590a2e03e5bc9ef44b83cbe22c626d6718147",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_udp_reference.py",
+      "Git_path": "migration/tools/azureus_udp_reference.py",
+      "Git_blob": "8f15f10e5ffcdddb7c7b08f87d5e3622d71ade0e",
+      "sha256": "89937fe645d614595bb31c03c7a644acf8d3683321eed69186c42d152ca49fc2",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_values_fixtures.py",
+      "Git_path": "migration/tools/azureus_values_fixtures.py",
+      "Git_blob": "09fa5b95cd5302786f4133496a8a28372993cb33",
+      "sha256": "71debc7f5e113e99e7cdd9ac9657397aefe16a25c648bc1ef4f64316165bfc1c",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_values_matrix.py",
+      "Git_path": "migration/tools/azureus_values_matrix.py",
+      "Git_blob": "7323c5bd5b79c1cc20be7131121f86016d329f81",
+      "sha256": "be8281c744ae8dc159da794e571e51b9edbec9375c67ba4cafba6557805e58b3",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_values_oracle.py",
+      "Git_path": "migration/tools/azureus_values_oracle.py",
+      "Git_blob": "fe2ab0bff9a38a348c7780bd7f3af1ea1bebdc18",
+      "sha256": "9fae201fae422dc8ef52032c511925aef4e2b8a4082a17404ffdf17fd77e0bb4",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_values_readback.py",
+      "Git_path": "migration/tools/azureus_values_readback.py",
+      "Git_blob": "7757a7f4ffd46d6ab911fc3e4d265b38808cc2f5",
+      "sha256": "3d1bd612b8c89698e9990b033e81c725ea66d541f049514b89aee41bf71dce66",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/mldht_identity_oracle.py",
+      "Git_path": "migration/tools/mldht_identity_oracle.py",
+      "Git_blob": "942fe9380b47872467dcdb5e919e855b31d9f5cb",
+      "sha256": "9775c25bc03d4b28c3444ca5633b0952234241adcbcf60f6a75676f5e163810e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/oracle.py",
+      "Git_path": "migration/tools/oracle.py",
+      "Git_blob": "c1220686d5da49a060aa32037b137812e2bbfee2",
+      "sha256": "8eb1cc4758ba78b4679b05b553ed8f6b7c1c1abe1745b8b1f5357ae681f0710f",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/cmake/Toolchain.cmake",
+      "Git_path": "native/cmake/Toolchain.cmake",
+      "Git_blob": "e5524498385657fa80b50842092c09c5754e43ec",
+      "sha256": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_auth/CMakeLists.txt",
+      "Git_path": "native/services/azureus_auth/CMakeLists.txt",
+      "Git_blob": "bec6d096cf4acb63c964d86e0635821984885b97",
+      "sha256": "1955e764cf73bb05db724d8d723d149b31f027be55d046840ef7b97ba93f549e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_auth/README.md",
+      "Git_path": "native/services/azureus_auth/README.md",
+      "Git_blob": "86608e68a7c2678fe7e0caf919dde7e7b5a3d546",
+      "sha256": "618adaeb71afa20c045ce4bfe636d19ec5aa8ad56387bd80d6333b3bd85389b4",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_auth/authority.cpp",
+      "Git_path": "native/services/azureus_auth/authority.cpp",
+      "Git_blob": "bc0465a3ab99034af2fdbbb1747319d34b68e022",
+      "sha256": "c502058283e6204667fd95bfbf10cf024e3c7a24a4dc01601faa01323ece3494",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_auth/authority.hpp",
+      "Git_path": "native/services/azureus_auth/authority.hpp",
+      "Git_blob": "40146f12c37f97d9ee04479ab47f7be8c72f5c10",
+      "sha256": "8077a4a3c7c8d5059446716bda0125f414075e3bc1f1961fd7c1ea8a7b5844aa",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_auth/authority_bounds_test.cpp",
+      "Git_path": "native/services/azureus_auth/authority_bounds_test.cpp",
+      "Git_blob": "8c5d2f6585ca067371d90387f581f7ab9625f1ff",
+      "sha256": "9783dedd6f7b44dcef3019e99fdfd1ab3649fb27206043e6ab2f8d87fcc53c13",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_auth/authority_driver.cpp",
+      "Git_path": "native/services/azureus_auth/authority_driver.cpp",
+      "Git_blob": "4d787c2da2601d7dc3c1bf914ccb811c6b5c8db0",
+      "sha256": "f4c3934485c53b233d0e9923ad8d384e15de9680453fce283af9f85998384781",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_auth/authority_fixture_test.py",
+      "Git_path": "native/services/azureus_auth/authority_fixture_test.py",
+      "Git_blob": "6c4f73fbdfe748b3d11f4d964cdf34a0e37d3eb1",
+      "sha256": "7f63d4c4661b51193e1d590810dfcc2a3c7bd961c1775169b0464ab72087f443",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_contacts/CMakeLists.txt",
+      "Git_path": "native/services/azureus_contacts/CMakeLists.txt",
+      "Git_blob": "d64b35018461fd178cd7b85307a8e6d1b3563832",
+      "sha256": "630dbfa820490787eba31bf757c6cdd950439ca97ab6904375a618f074865d08",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_contacts/README.md",
+      "Git_path": "native/services/azureus_contacts/README.md",
+      "Git_blob": "d0a1eb01d77f26aade8ebeed9e0afdf22a211fc3",
+      "sha256": "46a5ef52aa3f3a556aa967148376d9081720bf51fd346d9e7a61a83f37d81b14",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_contacts/contact_bounds_test.cpp",
+      "Git_path": "native/services/azureus_contacts/contact_bounds_test.cpp",
+      "Git_blob": "bc38bbf1c9664b1a182acfc96b06627ad0fcd7a7",
+      "sha256": "1160208cf248160ac1f08e0a93ff0e1ab2875038214b4eac3859fb5b56a6c40c",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_contacts/contact_driver.cpp",
+      "Git_path": "native/services/azureus_contacts/contact_driver.cpp",
+      "Git_blob": "85657f37b66aefd2a23d93fb882508551b2dc3e8",
+      "sha256": "cb76c879ca52775455c658c399c52d1f14447106bc3face7330a1899d483383e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_contacts/contact_fixture_test.py",
+      "Git_path": "native/services/azureus_contacts/contact_fixture_test.py",
+      "Git_blob": "99efd2fa02efe0c55727a0242e93227778e74e53",
+      "sha256": "edf8dce99c1b606f7b2c1c6946630239b886a6e634ee4c7bcc4f3282cb002184",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_contacts/contacts.cpp",
+      "Git_path": "native/services/azureus_contacts/contacts.cpp",
+      "Git_blob": "f96dc2a1a61526f9f283b065892c04f8f5828ba5",
+      "sha256": "027ffb6e9033ec293df004afde2b275d3e041d5a8a99a9eb59f6335ace6e3087",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_contacts/contacts.hpp",
+      "Git_path": "native/services/azureus_contacts/contacts.hpp",
+      "Git_blob": "f6b976106e1f47d7d8beeffa7455b56858f6341f",
+      "sha256": "3bdb8b0c8f3c8292b6fe499b200fc648964cb8f0aa2d1680fcf603b7aee43701",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_db_value/CMakeLists.txt",
+      "Git_path": "native/services/azureus_db_value/CMakeLists.txt",
+      "Git_blob": "7b6c880a8d9c5172a15e5e408e44e153a26f04ff",
+      "sha256": "89ef66d3a56d7c102ff0f71c6f750f7ed0754bbddb239c76432b34a28ebe97f2",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_db_value/README.md",
+      "Git_path": "native/services/azureus_db_value/README.md",
+      "Git_blob": "9667cf068d78d2de9c4d9fcd8a914859ab6a2250",
+      "sha256": "8ee422cebf23bf9e1713310c40bda814d3fb1c8e7eb032f952bfcb4b0f7a84ac",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_db_value/db_value.cpp",
+      "Git_path": "native/services/azureus_db_value/db_value.cpp",
+      "Git_blob": "48837d67d2613ec9ceccece5a14b4326e82da305",
+      "sha256": "094fb52f5708bf9bfa978dadb41dec2016cd4e13a06c6e276ee1c4cc2fe027db",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_db_value/db_value.hpp",
+      "Git_path": "native/services/azureus_db_value/db_value.hpp",
+      "Git_blob": "9a8021e50020f1d2cfd6300c152c0b79064d55a6",
+      "sha256": "dee3ba6f1752e8f0f76fbf6d00496b8395667a5bf195c1bf9dc045c3a7f509d5",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_db_value/db_value_bounds_test.cpp",
+      "Git_path": "native/services/azureus_db_value/db_value_bounds_test.cpp",
+      "Git_blob": "012b51440cb7a5cfb4e5931bba107553c58f722d",
+      "sha256": "c0eaa19aecf89469747de3816e1d1184bbfb10ca5a09c2aedbc188c591e7fefc",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_db_value/db_value_driver.cpp",
+      "Git_path": "native/services/azureus_db_value/db_value_driver.cpp",
+      "Git_blob": "037c9d788d6a1dd24abf59de79ae8b3794c1c554",
+      "sha256": "f170dfccb8cc7d762d6a1e0801b1ae4e9c885eec8b4bd50f4dd5eee93b94e4b3",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_db_value/db_value_driver_bounds_test.py",
+      "Git_path": "native/services/azureus_db_value/db_value_driver_bounds_test.py",
+      "Git_blob": "60fb55885ae465e1f33876ca3b7ac77cfdaf5e60",
+      "sha256": "227a04947b40eede831a9c17921644c525204fb2316f75db6ba25362f307d245",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_db_value/db_value_fixture_test.py",
+      "Git_path": "native/services/azureus_db_value/db_value_fixture_test.py",
+      "Git_blob": "dfa0c967cdac271815007a91984e439978935797",
+      "sha256": "81adde86b24d0c930655a0e066da1b09af18fc34196891fceef68665bfdc86e7",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_dht/CMakeLists.txt",
+      "Git_path": "native/services/azureus_dht/CMakeLists.txt",
+      "Git_blob": "b05d5ce8981abe7d84ed2d1013277ce55a03ddee",
+      "sha256": "9461460fcde6d12d35039b2825694644e758cad30c2ecc95c92857859cb75c0a",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_dht/README.md",
+      "Git_path": "native/services/azureus_dht/README.md",
+      "Git_blob": "1d1a24971ed9df51334349b67408858e7fb688f2",
+      "sha256": "8f075c4d7cd50d3a9f887bf80735d06d4663a057cbbbf31063002e6fd9c964f4",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_dht/header_bounds_test.cpp",
+      "Git_path": "native/services/azureus_dht/header_bounds_test.cpp",
+      "Git_blob": "0e69fd59ae1e10c86910e3418fc72e21951c60a4",
+      "sha256": "84390640d110f339c51cee508cadd8ef8c3b371215fdd64e164dac8710f81b3f",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_dht/header_driver.cpp",
+      "Git_path": "native/services/azureus_dht/header_driver.cpp",
+      "Git_blob": "2025b8597850a43dc9f2ea0d8589749101347ee9",
+      "sha256": "875e961dd0867b6c5556a71a5f31ec666c14bf35042cf5f328f60492760a892b",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_dht/header_fixture_test.py",
+      "Git_path": "native/services/azureus_dht/header_fixture_test.py",
+      "Git_blob": "be743a5203484bcecaa245e26ebde7b9bac5cf0c",
+      "sha256": "62c852e740712872f7488830747b047b0408f054de0fe1b3d37bff8ba375b47e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_dht/headers.cpp",
+      "Git_path": "native/services/azureus_dht/headers.cpp",
+      "Git_blob": "2f16a4924c9cd5aeee6148ba393e2bfb478887b4",
+      "sha256": "61c18255d3c73bb40ebfa137674fdb5b0339a863847b54d80f4fe58729891320",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_dht/headers.hpp",
+      "Git_path": "native/services/azureus_dht/headers.hpp",
+      "Git_blob": "4e47748e1a4e80cb21d386e3b36e0731befa656d",
+      "sha256": "55b5b843bac55236d2edab37bdd050a1a1802db6f0a56bed6f3515345b0f55cc",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_error/CMakeLists.txt",
+      "Git_path": "native/services/azureus_error/CMakeLists.txt",
+      "Git_blob": "7636f8a50ef1e3171a22cdec14483326cbc408e9",
+      "sha256": "a4b853e1a17b1c272227c6b6b8dbf22fbddb5811f149a938ca98e377d7ad4902",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_error/README.md",
+      "Git_path": "native/services/azureus_error/README.md",
+      "Git_blob": "373f0e53aba50fc92b723f5bc74954c1d3d15348",
+      "sha256": "cdebe1e2108ead9c1219aae3ac4b70d6956b8d26af45a195904d1a46bd926c79",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_error/error.cpp",
+      "Git_path": "native/services/azureus_error/error.cpp",
+      "Git_blob": "c1b2058627c357cad1f179c303a110b069f0ab5e",
+      "sha256": "04c2c70ebe3602220e8efe8780acb99f467c17ce02f8e7faf0c627d307ab72fe",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_error/error.hpp",
+      "Git_path": "native/services/azureus_error/error.hpp",
+      "Git_blob": "43d697772de496a3315305dc47d93839ade433e6",
+      "sha256": "cb96493a7cf2bb0aef98ba2ffd1b7b29982e4bcb1cae3f2fea91ce2a888adb0d",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_error/error_bounds_test.cpp",
+      "Git_path": "native/services/azureus_error/error_bounds_test.cpp",
+      "Git_blob": "88775048b4ec7c3ee64e097bcfb367cda06fb87a",
+      "sha256": "352862b19be4c46349e5c2dd514c49843f5c54ec9b9c9f7bd6cae7cc3f33ea9d",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_error/error_driver.cpp",
+      "Git_path": "native/services/azureus_error/error_driver.cpp",
+      "Git_blob": "c7db49a55888aecdd82cdfc84ca0114310632e13",
+      "sha256": "3b8873accd2ef9f546423ec580d0db694e6dc050e2e98efda3908700854b0f41",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_error/error_fixture_test.py",
+      "Git_path": "native/services/azureus_error/error_fixture_test.py",
+      "Git_blob": "26c7b29c93e3043a6539fc8b15ad4e62a5777a26",
+      "sha256": "1b2660f1df1d6a469e2a86ae08ec163420def99e62e3f74dd25633ee4999ec17",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_find_node/CMakeLists.txt",
+      "Git_path": "native/services/azureus_find_node/CMakeLists.txt",
+      "Git_blob": "5e3d53229a9cbea77b16b49082ea7178f93ecc05",
+      "sha256": "4659d35646025c5ef116bd91052ecd2c34b20d039ed4c905341af4a019bf5686",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_find_node/README.md",
+      "Git_path": "native/services/azureus_find_node/README.md",
+      "Git_blob": "9a3c742fa6e456e59d0d31059a92a5302d3e84c2",
+      "sha256": "1b2809824a0f3ef534b257fc96f3abdb2a3cb4636646da4264f52cce5821e5c4",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_find_node/find_node.cpp",
+      "Git_path": "native/services/azureus_find_node/find_node.cpp",
+      "Git_blob": "55d42ad743ac79662e9fd219f75cedfc8509bd88",
+      "sha256": "884218510b783a87fbb609fbfe3fe4c9bcb3064f274aa3042b15bfaee5fb0bbd",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_find_node/find_node.hpp",
+      "Git_path": "native/services/azureus_find_node/find_node.hpp",
+      "Git_blob": "2c8fb655258b66246c0d31e6d3fc9240d93fc684",
+      "sha256": "ef39f44cbc0d82cdb7ce3f0e610fb956c9359bb45d70b51d7fbb192c7b558b64",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_find_node/find_node_bounds_test.cpp",
+      "Git_path": "native/services/azureus_find_node/find_node_bounds_test.cpp",
+      "Git_blob": "3c0887f12a2e5bdde19dcab01108dfa7f6e9ce4f",
+      "sha256": "b5ebeed5a1088d3f5cd8fa509de0a14157814ac58ea0fac043fda40576daa362",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_find_node/find_node_driver.cpp",
+      "Git_path": "native/services/azureus_find_node/find_node_driver.cpp",
+      "Git_blob": "0ab0faa6d25c4500931f272b5300dd33bd0d29c7",
+      "sha256": "da203002e02f54b7cdd962cd64ee5e445f300fd4343cfe208a4d6111478de416",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_find_node/find_node_fixture_test.py",
+      "Git_path": "native/services/azureus_find_node/find_node_fixture_test.py",
+      "Git_blob": "dd7abd0962ec45b2f201d17d21e79108e712c13f",
+      "sha256": "728b7b19b55443f4cbd13dfd3c0be3caef384aa5dde9501c66abf249e0defa53",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_find_value/CMakeLists.txt",
+      "Git_path": "native/services/azureus_find_value/CMakeLists.txt",
+      "Git_blob": "27fb78b971f1879c6edf9cbb2a021ec5e74dd931",
+      "sha256": "dc99adbc26584d4ec0071c401d5aee056033961b3b803a09ac71ae1f1445a8f2",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_find_value/README.md",
+      "Git_path": "native/services/azureus_find_value/README.md",
+      "Git_blob": "ea845e844c00138ce664d6a1a7ee034f2224e000",
+      "sha256": "67912f092dc02ca8776e78067f8575a6c69b4589773bd7d575210fdfa76035fa",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_find_value/find_value.cpp",
+      "Git_path": "native/services/azureus_find_value/find_value.cpp",
+      "Git_blob": "f4ae39a92f23a5984988a535de1ab04d5571f8b4",
+      "sha256": "3f9dbab8c0da167f9ad70c54169d02c7e870c0f89ce4af668c726a549e7ee2b5",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_find_value/find_value.hpp",
+      "Git_path": "native/services/azureus_find_value/find_value.hpp",
+      "Git_blob": "1907a351e5d5a0d398968e04f908df47839d6d56",
+      "sha256": "671284065dfd1e30ce11fc15efb81e54cb0b6235ce967b1131f499ffcc2aae04",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_find_value/find_value_bounds_test.cpp",
+      "Git_path": "native/services/azureus_find_value/find_value_bounds_test.cpp",
+      "Git_blob": "e47587ad00fec94c753d9c1e7fc4fc7a5449d0ee",
+      "sha256": "5e330ced9522ecf7a780062344e9fa5d37ab65a0f80543b9987e946a6e47469e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_find_value/find_value_driver.cpp",
+      "Git_path": "native/services/azureus_find_value/find_value_driver.cpp",
+      "Git_blob": "c120dc2ae76aaa2252920516f2c5a23710823f1c",
+      "sha256": "1cafaf1221f1ca53b8d227f45bada95df88d07e7e840d19445e7dd856864b519",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_find_value/find_value_fixture_test.py",
+      "Git_path": "native/services/azureus_find_value/find_value_fixture_test.py",
+      "Git_blob": "431a7039075c869099340853487635a5711bd75e",
+      "sha256": "143ae3db743c9d06794987000371b0e56206d988457e11b5a8e967fdfc0ac620",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_nodes/CMakeLists.txt",
+      "Git_path": "native/services/azureus_nodes/CMakeLists.txt",
+      "Git_blob": "c38903cab9c20e15d7a56052a5135fa09667cdd4",
+      "sha256": "e4c55b8553e9b71c2de6fd7c749b63f11eb0db110cf088a7a49bfca509e74d7f",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_nodes/README.md",
+      "Git_path": "native/services/azureus_nodes/README.md",
+      "Git_blob": "ad90b0d8721dec6a7f8ad0b443853f634fa4096c",
+      "sha256": "6d5af870a9e19b8063a3c5e21fc16f1bcc0db49d3af9b95e022be51d825b0b12",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_nodes/node_bounds_test.cpp",
+      "Git_path": "native/services/azureus_nodes/node_bounds_test.cpp",
+      "Git_blob": "934649d1390392059a63ee372eb12a47b33973df",
+      "sha256": "1542e932e72ffc03cb990a140f24eb6027191f43e8f6c270caf3e14e8ffd2846",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_nodes/node_driver.cpp",
+      "Git_path": "native/services/azureus_nodes/node_driver.cpp",
+      "Git_blob": "fb830548aff213c73e6a244f8b3859394c3bb811",
+      "sha256": "03a61076fdebb137137a46b32a98c03aee1323313f5d8dd612d549368e822737",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_nodes/node_fixture_test.py",
+      "Git_path": "native/services/azureus_nodes/node_fixture_test.py",
+      "Git_blob": "9d66e46c2b956cf90360bef3212e87ac0aca444c",
+      "sha256": "5a2f36877cbd76ea14165390bb553da3c5246162ce77c7312c53050eb42eb5b6",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_nodes/nodes.cpp",
+      "Git_path": "native/services/azureus_nodes/nodes.cpp",
+      "Git_blob": "c52d26976d7c60c677b47f6423a563ef451eb489",
+      "sha256": "ce79c94ebabc0c192e22253af6f980b9b2bac8ffd92b1e4b1bd939ed563c9bfb",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_nodes/nodes.hpp",
+      "Git_path": "native/services/azureus_nodes/nodes.hpp",
+      "Git_blob": "33747025e7d2491fa9bb616f208e8e107978fb83",
+      "sha256": "9233d16f4f73007d6e141cc11936744bcfcc39e8666f2d02473d63ed66af69e3",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_packets/CMakeLists.txt",
+      "Git_path": "native/services/azureus_packets/CMakeLists.txt",
+      "Git_blob": "21f088d31868085602640a9fa0bf676a36e465f5",
+      "sha256": "d001df5bff796e6c5f34129016464ceea572207a053365560c4e154947197958",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_packets/README.md",
+      "Git_path": "native/services/azureus_packets/README.md",
+      "Git_blob": "040d36f38c5aac170f601d566100faa57beec4e5",
+      "sha256": "4025c26612b373222c5c03c7df2775c39344b15e14e21ad9553e6d10232fc63e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_packets/packet_bounds_test.cpp",
+      "Git_path": "native/services/azureus_packets/packet_bounds_test.cpp",
+      "Git_blob": "9917e91c205b235c0b065f5bbb019dacf674f12c",
+      "sha256": "2ec0d9ef39e995959db168b9bd79ac306bc45fc10323e6f07d12ffa8b6ef5c43",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_packets/packet_driver.cpp",
+      "Git_path": "native/services/azureus_packets/packet_driver.cpp",
+      "Git_blob": "f35a1cccf6d962731503f80e2310ea15fdff97dc",
+      "sha256": "e56412c7109b90d3ff20627a69246bf7122d2ffb4c5c79f6fab609042991a7e8",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_packets/packet_fixture_test.py",
+      "Git_path": "native/services/azureus_packets/packet_fixture_test.py",
+      "Git_blob": "b5534d730040c739aeda297f406ba147427c010f",
+      "sha256": "7aeccf7c15bef3a0863ae961bd3dd610078fb31f99f13d8b9602202cfd8d467d",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_packets/ping.cpp",
+      "Git_path": "native/services/azureus_packets/ping.cpp",
+      "Git_blob": "481eea2db8714964892cec6cf7008a66e5b7b399",
+      "sha256": "565bcd8a06f38ecf7835854ea9c5cee903707ebb0209c61c291161b02d131796",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_packets/ping.hpp",
+      "Git_path": "native/services/azureus_packets/ping.hpp",
+      "Git_blob": "cbb6483c0148fcda786c8ea058191ca4d50540b9",
+      "sha256": "a916fccc431b7a648af3581439762f15b476ed80dfd4d8ccf8d925b9a70ea622",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_ping/CMakeLists.txt",
+      "Git_path": "native/services/azureus_ping/CMakeLists.txt",
+      "Git_blob": "5fbd4d33bb1b1d6beafd942e81aaf466f788d901",
+      "sha256": "1f98c086be89be8033ee87093444b47242af8d86512c592130c0956e66013cf7",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_ping/README.md",
+      "Git_path": "native/services/azureus_ping/README.md",
+      "Git_blob": "dc7fa4d049f87c91a1d4c0961e60a2ffd6ec185b",
+      "sha256": "f5f9f4edb53d9b733594fb676d8ec95d166e3a0ccf04fa33492ca08de1b18253",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_ping/option_bounds_test.cpp",
+      "Git_path": "native/services/azureus_ping/option_bounds_test.cpp",
+      "Git_blob": "b0467c46066c64baede27fc0c906aca8886f2a68",
+      "sha256": "5dfc1579230931b385b7da6c440ca7bbeda2e059a5438f26d314e8628ec70ae8",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_ping/option_driver.cpp",
+      "Git_path": "native/services/azureus_ping/option_driver.cpp",
+      "Git_blob": "6d108b7b2cb1b4754e466b1193ca018cd5b62481",
+      "sha256": "bf35eaa6191c22441d2c50b1a87aca2f966e78f1fd7105989b87f0b247c39d3a",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_ping/option_fixture_test.py",
+      "Git_path": "native/services/azureus_ping/option_fixture_test.py",
+      "Git_blob": "0158b6b9dd69e39cb950261bdabd8a277af9876f",
+      "sha256": "a6c0f93720e62e25be93cc90a2d99e112485e3cfd9290a3063290464cbeaf0ef",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_ping/options.cpp",
+      "Git_path": "native/services/azureus_ping/options.cpp",
+      "Git_blob": "b5fcf3b4644be43c778e06c7e4d71c8552792c97",
+      "sha256": "f30448e22433773c3d8d0f4fd8129309a593586b8d8ea9038f88b24f2edf8454",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_ping/options.hpp",
+      "Git_path": "native/services/azureus_ping/options.hpp",
+      "Git_blob": "f5b6a6d0e7f04b580a1c02c5d48e7323c3aea90d",
+      "sha256": "d5b6344353e3fad5b8e425554aaeb1f7e92545643e6d6b8077699dafd6b5d157",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_positions/CMakeLists.txt",
+      "Git_path": "native/services/azureus_positions/CMakeLists.txt",
+      "Git_blob": "92fc303392ca70764e267fe5daa8046367f57cbe",
+      "sha256": "8ab91269271036a811d5a464c2c1e3ad5e6d7bf7e48afec6a4abbc8101f66259",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_positions/README.md",
+      "Git_path": "native/services/azureus_positions/README.md",
+      "Git_blob": "556f2ad71bd729bb8a32e128582ef5b9ae846a37",
+      "sha256": "95410fb14d172fc3e7bc8d6abb17771f84c5b4ea5618bfabd87117eedfc7bf19",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_positions/position_bounds_test.cpp",
+      "Git_path": "native/services/azureus_positions/position_bounds_test.cpp",
+      "Git_blob": "a579de92b9529401755062436716f2f2f610b3aa",
+      "sha256": "5147061f0a87a169ae2f480724d9955611080aa2fadfdb2a17c20baeaa276c4b",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_positions/position_driver.cpp",
+      "Git_path": "native/services/azureus_positions/position_driver.cpp",
+      "Git_blob": "b8efb376e2a92d40417bc55f53582711b247fcdd",
+      "sha256": "c9b93c10e7d0e0855f8f90ed564e3293c79bc7fb1c48e04faeea0ce3ecf79e14",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_positions/position_fixture_test.py",
+      "Git_path": "native/services/azureus_positions/position_fixture_test.py",
+      "Git_blob": "d667738954add0937132231325ea7252df05cfd0",
+      "sha256": "c60ed220e90f5192b5ba79738a8991ba796d2c6b585e1cf0d4b4ecf4d49f6895",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_positions/positions.cpp",
+      "Git_path": "native/services/azureus_positions/positions.cpp",
+      "Git_blob": "0a6cca5ea1aa498c591d7afefe38b9ae9dff68a1",
+      "sha256": "97813eef1bba0edb61ba13c948ba6da211b524577b5027688a58d3e6069a3a5b",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_positions/positions.hpp",
+      "Git_path": "native/services/azureus_positions/positions.hpp",
+      "Git_blob": "4a51834d75a51682b8fdf5b6eda3bf6971f8f569",
+      "sha256": "ae2271c2b6fc5365282433a3097180dbfeb302e37a2b968c0de8307790194c6d",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_store/CMakeLists.txt",
+      "Git_path": "native/services/azureus_store/CMakeLists.txt",
+      "Git_blob": "72e3bf4a0cb5c130a75df3eb9a06b55ad5942209",
+      "sha256": "309216bdcdb6155a6bca0d3db5b283a5c99397d0c91e04a257a7901e8e62e38e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_store/README.md",
+      "Git_path": "native/services/azureus_store/README.md",
+      "Git_blob": "f7e3d42cbb08a000d7d1a0ff3719889c97017bfb",
+      "sha256": "7c2025a6338d14310ea1f71661cd85fdd53732d13a1fa1f33533c44cc935fc60",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_store/store.cpp",
+      "Git_path": "native/services/azureus_store/store.cpp",
+      "Git_blob": "927f30203290c75dee51f23b9d1ae0e4bdc3fa2a",
+      "sha256": "492ca45797b0e3aeb6d95c551982e9ecae436bcebda0553cf9180f67686a1026",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_store/store.hpp",
+      "Git_path": "native/services/azureus_store/store.hpp",
+      "Git_blob": "ab157c37cd884a47dacb3f9fd6466471954867ba",
+      "sha256": "c64df77e00d113ea66c7b9491077f3dad226431b8b82cb8bc94546cfc0f130b8",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_store/store_bounds_test.cpp",
+      "Git_path": "native/services/azureus_store/store_bounds_test.cpp",
+      "Git_blob": "93cc922e6e74fa8dbe5b204a1ab9de263be2e6c8",
+      "sha256": "a676508f570902e98f75b452f59693c0b0a56615b4e78c649071b37cbf284d9e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_store/store_driver.cpp",
+      "Git_path": "native/services/azureus_store/store_driver.cpp",
+      "Git_blob": "5d3c4e5848d0883d8e8719f1d8e3dd15b517591c",
+      "sha256": "be05f0b236649b2e612a84396de0334bd4e95fc4f3dc5b7a3fc978b4f00a0bef",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_store/store_fixture_test.py",
+      "Git_path": "native/services/azureus_store/store_fixture_test.py",
+      "Git_blob": "8d19ea9a7047b7824b2265d9660c7c696ea91e23",
+      "sha256": "19d08e09c40f62df9820acefffc2b5f97e17fc90971ef7c3bc59c8a99a1a3536",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_store_policy/CMakeLists.txt",
+      "Git_path": "native/services/azureus_store_policy/CMakeLists.txt",
+      "Git_blob": "a27a8bc6aa8ea2806f8683657869ad07b199951b",
+      "sha256": "20892a741f395826ca5f379f10646173ea1892bddee7a5957320a9bcd36b1a4e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_store_policy/README.md",
+      "Git_path": "native/services/azureus_store_policy/README.md",
+      "Git_blob": "bd4c59fcd79589e7c862ee9d4139a9bbbb4d9b0d",
+      "sha256": "0d3dd0173db6d9fa82933a0bfee155058fed4e93e336a77ae0cad20839ab9899",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_store_policy/store_policy.cpp",
+      "Git_path": "native/services/azureus_store_policy/store_policy.cpp",
+      "Git_blob": "002f70c7fc4e4ee9d2872c8cb0b61560356683e2",
+      "sha256": "c6e43af5ee37abc23422c19d9ad4cc8a79e70c009f894b4451e7cdb8763adaa9",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_store_policy/store_policy.hpp",
+      "Git_path": "native/services/azureus_store_policy/store_policy.hpp",
+      "Git_blob": "eb282b75325289c574d6e9927f35d505135b4fee",
+      "sha256": "c6465c292efb2ec1107c20cbaf9525a0f2b2787de84ea23e85b6d0256851294f",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_store_policy/store_policy_bounds_test.cpp",
+      "Git_path": "native/services/azureus_store_policy/store_policy_bounds_test.cpp",
+      "Git_blob": "35b22bdf6d2d20b519b49fc6ea92320b2412ea1f",
+      "sha256": "ef3d695d806551351e7e32a74c9b2c59f8c26f15f371dab0b330532dc72b9ade",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_store_policy/store_policy_driver.cpp",
+      "Git_path": "native/services/azureus_store_policy/store_policy_driver.cpp",
+      "Git_blob": "6f3c5d4e1888253c30ec71b568497faf761c00fd",
+      "sha256": "061024e5eb9ca94025c7b4e350107bf805a77c5eb5e17e2782e99e3623d4fe7f",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_store_policy/store_policy_fixture_test.py",
+      "Git_path": "native/services/azureus_store_policy/store_policy_fixture_test.py",
+      "Git_blob": "6ce8465e2d9b1f10c8e46eaeb66c0488ea180d0b",
+      "sha256": "36013fc15d63f20fc3fd612c0c45efe0268e27348306fe83b905c7df6530bafb",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_udp/CMakeLists.txt",
+      "Git_path": "native/services/azureus_udp/CMakeLists.txt",
+      "Git_blob": "1d51d292bc9f850003dac192ab710ded35d9f87f",
+      "sha256": "7c4d5f12abb0e0300381fcffb55d7612264ac0c7fade245da72807236a863c3f",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_udp/README.md",
+      "Git_path": "native/services/azureus_udp/README.md",
+      "Git_blob": "ba75f736b23c4cc9ffd68b5e1d54e89c4a01b11a",
+      "sha256": "ae866d627d00f58a2e8f3fcf45a3f9ee25b77fdd79249461439caacccc495cb3",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_udp/authority_interop_driver.cpp",
+      "Git_path": "native/services/azureus_udp/authority_interop_driver.cpp",
+      "Git_blob": "54f55be586c3947bef8da96cd2d54bec06c883ae",
+      "sha256": "98c616f9d3699a3995096e9c9178588bd229768082b2ba97d768451b7dabf36a",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_udp/find_node_interop_driver.cpp",
+      "Git_path": "native/services/azureus_udp/find_node_interop_driver.cpp",
+      "Git_blob": "b8459579da5d53510b7f67cfa0ae213dc48c0224",
+      "sha256": "24aad1940e9761a715042bcdf78459fb009230ff1ce79b3bdb3a7bd2b7811f2c",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_udp/interop_driver.cpp",
+      "Git_path": "native/services/azureus_udp/interop_driver.cpp",
+      "Git_blob": "f3fd27855f4c1df407f7a8f15cdd529c2e2919fb",
+      "sha256": "c17bde9b0cbe0a0de639adbbc30149f2981100dc9f5c3089fee4f164496acd87",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_udp/owned_authority_tests.cpp",
+      "Git_path": "native/services/azureus_udp/owned_authority_tests.cpp",
+      "Git_blob": "6633b27aa9723be44bab117502c3ca54ca6e9936",
+      "sha256": "330723beaf959319bfe50c0d983fb58d6261bb7988da69dab27685a6513b6fae",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_udp/owned_find_node_tests.cpp",
+      "Git_path": "native/services/azureus_udp/owned_find_node_tests.cpp",
+      "Git_blob": "11e7818643eb45c434bbd4ac0c64e731224297ff",
+      "sha256": "61ca3733669f7725f744d95a2742d0e1b02a600484962fa262aa4b371b4fe275",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_udp/owned_store_tests.cpp",
+      "Git_path": "native/services/azureus_udp/owned_store_tests.cpp",
+      "Git_blob": "5ab450c05485b67a60d862f4a9b15134e11c89f9",
+      "sha256": "f82f78397cac0772d9f7a476d3fb7f6c8e63b3c6d65008be13dc3128a0f9321d",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_udp/owned_stream_tests.cpp",
+      "Git_path": "native/services/azureus_udp/owned_stream_tests.cpp",
+      "Git_blob": "d07b574e0a2d17250cbdafbb8cf269464d8470c3",
+      "sha256": "8c74b8529aaf467f8545b64daa7ae6ccebb41dc9af7543282dfd73f58e1bc845",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_udp/owned_transport.cpp",
+      "Git_path": "native/services/azureus_udp/owned_transport.cpp",
+      "Git_blob": "bd908684f49320e55d97afabd5b878a28b6d0ea6",
+      "sha256": "970301c887f25678dc03cbe6d925ab589e62d7ad7f16cf9c2bfb6972ee1d4df5",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_udp/owned_transport.hpp",
+      "Git_path": "native/services/azureus_udp/owned_transport.hpp",
+      "Git_blob": "d33d5e022a87833813764ec10adc8d0617778a4a",
+      "sha256": "f7a33febea039ddb1089c7f3e88e29297f8aeaafe274de723837ba96c036f721",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_udp/owned_transport_tests.cpp",
+      "Git_path": "native/services/azureus_udp/owned_transport_tests.cpp",
+      "Git_blob": "97a3cc0567f72b9d435443225125eb3406451b5e",
+      "sha256": "a5d17965bb502bed1b359759b398b3ff04dc9d27869c1cb05d17ca6f7f0fced5",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_udp/store_interop_driver.cpp",
+      "Git_path": "native/services/azureus_udp/store_interop_driver.cpp",
+      "Git_blob": "443071d3f2e2d7e633235c3699e00cead5aae87d",
+      "sha256": "ad44a680e51f25a6c90bba575c9c71f6bd18be2c0ab583145ab4862c3383f2c6",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_udp/stream_interop_driver.cpp",
+      "Git_path": "native/services/azureus_udp/stream_interop_driver.cpp",
+      "Git_blob": "c4497be5a87e6590a40d8f5e99dd2360dcce27e6",
+      "sha256": "38137cec145f581db91807bb5fa997d9a6b383c062f3736f55062eaccaec4aff",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_values/CMakeLists.txt",
+      "Git_path": "native/services/azureus_values/CMakeLists.txt",
+      "Git_blob": "af6d96dfaedbf83e80c239b464f718c947802a08",
+      "sha256": "92d7a18f5fc8072a99da059c461fdebbc5574f2bcb8382b64efd033915a566d0",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_values/README.md",
+      "Git_path": "native/services/azureus_values/README.md",
+      "Git_blob": "72fe3d7ddebb7f9527070dad1afdf6c31b02af03",
+      "sha256": "5e5f655f7cef8fef873adf573c4b98dd1c9e58ced16d083faab5d868962cb8c9",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_values/value_bounds_test.cpp",
+      "Git_path": "native/services/azureus_values/value_bounds_test.cpp",
+      "Git_blob": "64f6b637ff53b335d926be56c174efccb771d4bc",
+      "sha256": "875d8e3e1b88e4f6d129077a50d99a68bbb3c8627a1542aa67b51f204430e1be",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_values/value_driver.cpp",
+      "Git_path": "native/services/azureus_values/value_driver.cpp",
+      "Git_blob": "b5b7d5a4e21e435f59d4bf56e09719843dd67fa3",
+      "sha256": "bd7c608723213dfaa87a0bc2849b7b057d25cccdbdd5c3cf1205160c955d649c",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_values/value_fixture_test.py",
+      "Git_path": "native/services/azureus_values/value_fixture_test.py",
+      "Git_blob": "4050f4b200d4f217da795f6ef45fe74398733b4e",
+      "sha256": "1b69650c93eb8a10204d98965a6b83f44b03d050fa033f601608480628f8d9c7",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_values/values.cpp",
+      "Git_path": "native/services/azureus_values/values.cpp",
+      "Git_blob": "8a267ee4a6f247ba8d8408520b55a54c86edaf7a",
+      "sha256": "c78221fdb1059e67df7a8044ad504bd0c98ad2287ac2c09f9c39f6c45ded3fde",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_values/values.hpp",
+      "Git_path": "native/services/azureus_values/values.hpp",
+      "Git_blob": "e60adac5f959f3bac82a9e68581414069daef2a5",
+      "sha256": "d44dfc2627c6a2ae3f92e645e0a3377bfd98df050a8942f031e1624e3115a043",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_db_value_sanitizer_recovery.py",
+      "Git_path": "migration/tools/azureus_db_value_sanitizer_recovery.py",
+      "Git_blob": "1b3910ff6b0dd1bdb5ea3994a604a6d094b0df11",
+      "sha256": "85ce630d78c8e1609462269c64d892c9d073a62b22801d8a40dc31461f19897d",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_router_contact/CMakeLists.txt",
+      "Git_path": "native/services/azureus_router_contact/CMakeLists.txt",
+      "Git_blob": "aa457bf64c45716e7c4fa83b31ad3606e77893a6",
+      "sha256": "01803d1082429211cb012718b7e3a7c23b789d6486b5f93f9eedc84f6595728b",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_router_contact/README.md",
+      "Git_path": "native/services/azureus_router_contact/README.md",
+      "Git_blob": "fecaec98c0cd4e912a4ec17b1d162e379b6558ea",
+      "sha256": "8f99100f03ce4a8f1a5860cfa66cd2deabdd3997c0317e6cc42ad42d5c60d0b8",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_router_contact/router_contact.cpp",
+      "Git_path": "native/services/azureus_router_contact/router_contact.cpp",
+      "Git_blob": "703455ae508290a7b721f09fa01974172dc34a11",
+      "sha256": "d66155d39d52e93a874ebd8b6bb6073b13344f8c57ba3b186edb5ace09d75dde",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_router_contact/router_contact.hpp",
+      "Git_path": "native/services/azureus_router_contact/router_contact.hpp",
+      "Git_blob": "400ace405a24467507cf17e8cfb9c503b6fdb37a",
+      "sha256": "7ecdce4f6f8ff08762fd4d02ca3ebc0ad7e00b619ae0cef43a8116adfe91b5ce",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_router_contact/router_contact_bounds_test.cpp",
+      "Git_path": "native/services/azureus_router_contact/router_contact_bounds_test.cpp",
+      "Git_blob": "af96989ea36873c2f7cbf4197334d17e13535522",
+      "sha256": "fa452cde4c38ab38ee931ad39d7cdf7670ef177e797818bb724b8956f23fd116",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_router_contact/router_contact_driver.cpp",
+      "Git_path": "native/services/azureus_router_contact/router_contact_driver.cpp",
+      "Git_blob": "e2343cf2d1431fb1149e13c6343ee8f1845e5593",
+      "sha256": "a6863312e04b0152d68d5d8afdff515bdcea8155864acfce904c35eacbfb2aea",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_router_contact/router_contact_driver_bounds_test.py",
+      "Git_path": "native/services/azureus_router_contact/router_contact_driver_bounds_test.py",
+      "Git_blob": "e431ce4d1d9051d97a65ca30c778a46a1ecf6c9d",
+      "sha256": "032d12bd094714611d784bbf338dc9776a247f6d8cef8a8e33441ac9a7299e20",
+      "same_path": true
+    },
+    {
+      "qualified_input": "native/services/azureus_router_contact/router_contact_fixture_test.py",
+      "Git_path": "native/services/azureus_router_contact/router_contact_fixture_test.py",
+      "Git_blob": "0995ef781f542f667c02872f4164567b6dd852f8",
+      "sha256": "17339aedb628bbcd91f195fc80604921a7eb559863d3e8a4dccd936c03a48079",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/manifest-in-progress.json",
+      "Git_path": "migration/fixtures/azureus-router-contact/manifest-in-progress.json",
+      "Git_blob": "b8065435c12ec999fdfb835f1b64e391fccba553",
+      "sha256": "5f4efe5268cf312144ee3d3c702225d8aeb5690cbba4d1b817048871081d77a6",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/manifest.json",
+      "Git_path": "migration/fixtures/azureus-router-contact/manifest.json",
+      "Git_blob": "6d8213a5eda14328991ab9618655bd71fb07a74c",
+      "sha256": "8b48930b99574e0a83aa9edc914149fdb3ba9cae5e54c394815c5e3f8e7e3eed",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/getter-contract/source-stdout.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/getter-contract/source-stdout.txt",
+      "Git_blob": "14447fefd35d113cf6bf0df4b0c0be4a65d5d8f1",
+      "sha256": "a2cc1b93eb570ca872d5ff21cf6f284ec13a5bb8376374d4297b7f1edb22ef98",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/getter-contract/commands.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/getter-contract/commands.txt",
+      "Git_blob": "356b2a2e431c82cfd18d315493b3e5a5deca7136",
+      "sha256": "1bcf785e2c114d3b336270ccf1d443dba220502107ed6ad78fef0a7470ac90df",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/getter-contract/expected.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/getter-contract/expected.txt",
+      "Git_blob": "14447fefd35d113cf6bf0df4b0c0be4a65d5d8f1",
+      "sha256": "a2cc1b93eb570ca872d5ff21cf6f284ec13a5bb8376374d4297b7f1edb22ef98",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/getter-contract/source-stderr.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/getter-contract/source-stderr.txt",
+      "Git_blob": "70e56199f38c2d5728d6f84cf82b97bd67ef6d86",
+      "sha256": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/seeded-boundary/source-stdout.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/seeded-boundary/source-stdout.txt",
+      "Git_blob": "21f6b647259dd672e2d46e4fe0e7e713c7e86b98",
+      "sha256": "1bbed3036730ad692a082e6e05a72b330e6606b77f9288ca31cbbad63b4eecee",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/seeded-boundary/commands.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/seeded-boundary/commands.txt",
+      "Git_blob": "951d6d8a7a70c2f09610ad6d67214d1ad758cfbb",
+      "sha256": "3b28e6ca9d2a5dd0d163d1265c5c4ccab13a056a1938861e0bfe150e54a4f13d",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/seeded-boundary/expected.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/seeded-boundary/expected.txt",
+      "Git_blob": "21f6b647259dd672e2d46e4fe0e7e713c7e86b98",
+      "sha256": "1bbed3036730ad692a082e6e05a72b330e6606b77f9288ca31cbbad63b4eecee",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/seeded-boundary/source-stderr.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/seeded-boundary/source-stderr.txt",
+      "Git_blob": "70e56199f38c2d5728d6f84cf82b97bd67ef6d86",
+      "sha256": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/semantic/source-stdout.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/semantic/source-stdout.txt",
+      "Git_blob": "fc83d3d1fac188d3db596865344ff414f5627b33",
+      "sha256": "035ac43efc6804ae91d4592fa342c79384db4ab193e39310806e82fc971182d0",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/semantic/commands.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/semantic/commands.txt",
+      "Git_blob": "1d0de9cc91d797fd87056ac09ffbe4f65bf359f6",
+      "sha256": "211f46b54a3df001bf4644fc00ff5c2d47948aabbeb06f18fe8a9a59217d53d4",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/semantic/expected.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/semantic/expected.txt",
+      "Git_blob": "fc83d3d1fac188d3db596865344ff414f5627b33",
+      "sha256": "035ac43efc6804ae91d4592fa342c79384db4ab193e39310806e82fc971182d0",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/semantic/source-stderr.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/semantic/source-stderr.txt",
+      "Git_blob": "70e56199f38c2d5728d6f84cf82b97bd67ef6d86",
+      "sha256": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/alias-policy/source-stdout.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/alias-policy/source-stdout.txt",
+      "Git_blob": "f9c7967d2a6c29357c35ebbeb4756ba0cf5b3647",
+      "sha256": "bbd8b19e8f233aa4b01f5d4378f0e31caa518d8364cefb7267249ee0b9b13e23",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/alias-policy/commands.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/alias-policy/commands.txt",
+      "Git_blob": "3b0e22835eef1ce711ec46db398b023942aa826e",
+      "sha256": "472f7f3d2f49c14e80a3717aad0761f6b27230bc0702eff7b58c062157e76d1e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/alias-policy/expected.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/alias-policy/expected.txt",
+      "Git_blob": "f9c7967d2a6c29357c35ebbeb4756ba0cf5b3647",
+      "sha256": "bbd8b19e8f233aa4b01f5d4378f0e31caa518d8364cefb7267249ee0b9b13e23",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/alias-policy/source-stderr.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/alias-policy/source-stderr.txt",
+      "Git_blob": "70e56199f38c2d5728d6f84cf82b97bd67ef6d86",
+      "sha256": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/diagnostic/source-stdout.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/diagnostic/source-stdout.txt",
+      "Git_blob": "b23dd2d037dc95be33ca40a21b78cffbd00cd28e",
+      "sha256": "1d63972530bfd1dc5068f5ad67b93d3874622051614e83ebeb152163b7ad7174",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/diagnostic/commands.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/diagnostic/commands.txt",
+      "Git_blob": "63c9d60fead6f65a250bb532033af5395cb4ee21",
+      "sha256": "da4b36c282bc32ee9c60108303a54aa58eb5e015e7c0b8901fd85e8b9646347a",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/diagnostic/expected.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/diagnostic/expected.txt",
+      "Git_blob": "b23dd2d037dc95be33ca40a21b78cffbd00cd28e",
+      "sha256": "1d63972530bfd1dc5068f5ad67b93d3874622051614e83ebeb152163b7ad7174",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/azureus-router-contact/diagnostic/source-stderr.txt",
+      "Git_path": "migration/fixtures/azureus-router-contact/diagnostic/source-stderr.txt",
+      "Git_blob": "70e56199f38c2d5728d6f84cf82b97bd67ef6d86",
+      "sha256": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_router_contact_matrix.py",
+      "Git_path": "migration/tools/azureus_router_contact_matrix.py",
+      "Git_blob": "9b879909d6f73672cdb78fea14493cdd2431951a",
+      "sha256": "bd2f1a4b931c69c2caf6b758d93984c4aec2b0409f78800c6332ca5bed81c0bf",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/consumers/azureus_router_contact/CMakeLists.txt",
+      "Git_path": "migration/consumers/azureus_router_contact/CMakeLists.txt",
+      "Git_blob": "8e1a921a0e4df1455d171f5f5e66d087a1327f33",
+      "sha256": "e9589c88e1fc9aa3e44f13082ada0a5ec0a25be087d234abc2f9b4b0be4936c8",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/source-audit.json",
+      "Git_path": "migration/evidence/P06-27-router-contact/source-audit.json",
+      "Git_blob": "507e7cba44e3769d60f53b22e9077977230d911a",
+      "sha256": "b8b686746253f939d5ece5d054cb52cc1694c96eca1bf4748500dce95c19df1e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/fixtures/java/RouterContactLifecycleOracle.java.in",
+      "Git_path": "migration/fixtures/java/RouterContactLifecycleOracle.java.in",
+      "Git_blob": "9b2a40cc18f5ba4e96a8e9f864d808e5eadc8890",
+      "sha256": "907fe7837e3cb31c2490749b78427cccf9c300f3c897ebf529a525eb33b0a9a0",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_router_contact_oracle.py",
+      "Git_path": "migration/tools/azureus_router_contact_oracle.py",
+      "Git_blob": "966e74ebf65d4f31859254100a22c5a8dab781aa",
+      "sha256": "11c596966aaa8e214847e9fc8e4a70e07ef057a180c6c1fb2adb44a5b5ee9e2e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_router_contact_fixtures.py",
+      "Git_path": "migration/tools/azureus_router_contact_fixtures.py",
+      "Git_blob": "89735fec5c464abe539a27715da969ff35f177fd",
+      "sha256": "60fc333925de9adc81941dcb808ac2227b5b38146c072517540e7d07e4908380",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/development/pre-relocation/helper-draft.json",
+      "Git_path": "migration/evidence/P06-27-router-contact/development/pre-relocation/helper-draft.json",
+      "Git_blob": "c91c7bd9d8252306e252d40e9ea20be59df5d303",
+      "sha256": "79ef18711b94eca20921b8ed4d8cfe899a8fe0fad618f60ea4e59c4cf1b798f8",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/control/DHTControlContact.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/control/DHTControlContact.java",
+      "Git_blob": "95a50fb1c20e716af3bb0f4325915f85aafe37e4",
+      "sha256": "f3bd59d42ec64b2e87036ca3a2b9b4dadf0e57a8de4ea57b8b2225f24feee903",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/control/impl/DHTControlContactImpl.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/control/impl/DHTControlContactImpl.java",
+      "Git_blob": "7d689221f72290dc063708a42b6ec9980f72a869",
+      "sha256": "c38b71f1c6caa76f2096275c933ecdf8e75b934e98e973ecc417a90fae0c387e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java",
+      "Git_blob": "a895f11be8bf2e7e00d15a841a8de975e63663d6",
+      "sha256": "952851231979640c1eb5704f55120e19fda91270dbd1c98c9fcc454ccf89daa9",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/impl/DHTLog.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/impl/DHTLog.java",
+      "Git_blob": "f061e57bc5d0cda42c2d2285188ee620584e87c6",
+      "sha256": "41f6eb899b0018f77159c251908644c5b6ca63ea656a20a4fae4b8818decc5df",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/DHTRouterAdapter.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/DHTRouterAdapter.java",
+      "Git_blob": "0f42e46525f9c23b1fbb3e36f55647f20561a308",
+      "sha256": "4467dd997f04512b19c6bf8bd6a2da8f05548d1d5d06c10cabf45fc39cd19768",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/DHTRouterContact.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/DHTRouterContact.java",
+      "Git_blob": "20f27617e5b961eae443df0a401c72e64d47eb16",
+      "sha256": "fdaca3e78a1137f32ce807cbc41c1c6d1c9a89741dec4f0f033be2a83c061dbe",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/DHTRouterContactAttachment.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/DHTRouterContactAttachment.java",
+      "Git_blob": "c50d7721f2f96d0c42e3ac83ce1f2717d3b2b540",
+      "sha256": "a1f3b265d2d372f4e89dc1670cbe4905ca1bdaace3021507e9c35bd24d8f6f70",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/DHTRouterContactWrapper.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/DHTRouterContactWrapper.java",
+      "Git_blob": "97bf657917447a2cca3e0cbb43cace27736d0b90",
+      "sha256": "5f7e5e55bf0e3cc23a101bb64051a09e0d1aba101366e57bfaf47b1d16e06822",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/DHTRouterObserver.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/DHTRouterObserver.java",
+      "Git_blob": "1e60de720f473ccbbcd8d39658a0284ba1eea683",
+      "sha256": "684f8aeb8021f2867e8ad1472b82a162e42d5edfddfe3f8d1cf219fea0d2b5c8",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/impl/DHTRouterContactImpl.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/impl/DHTRouterContactImpl.java",
+      "Git_blob": "13bd895df01f866ef938456fa842bd75ee0dfff4",
+      "sha256": "a7bf00ba5d617aad5a5909e366d0f4703c6fa4b78a40bf8ce974ab87bd6d3db3",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/impl/DHTRouterImpl.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/impl/DHTRouterImpl.java",
+      "Git_blob": "90e9b2028c8f3b532848ced0b40c401f15833be2",
+      "sha256": "50b1defa8637bd435960b628c37f7f02f31a2f52c2bb357e1b081eeae637dec4",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/impl/DHTRouterNodeImpl.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/router/impl/DHTRouterNodeImpl.java",
+      "Git_blob": "11af5da461d6f6793567ddecc82baf55fe33237b",
+      "sha256": "aa41bc97d091672ceb4ad3b2a5502833b37c9a60141ea61043b452db3b9a9a73",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/transport/DHTTransport.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/transport/DHTTransport.java",
+      "Git_blob": "333147871ce9b4a389ceb86a7f67fd729f9151c2",
+      "sha256": "57b1bd3ae1644e327c658b68f6570b85b46938ac0920c7a644cf3cb48a3a3c47",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/transport/DHTTransportContact.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/transport/DHTTransportContact.java",
+      "Git_blob": "3af01daa6daad93c8af9680ee1d301bcfcbef6a5",
+      "sha256": "b720d632dbca28a4a788516881ea239e7e055e8153dff4bf93f453101fef4c0c",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java",
+      "Git_blob": "28ad1c52552f254759b82418e1cf2b3678323407",
+      "sha256": "30cd1f70c74274aec6496a2f711b5865ad1b776d028f25503ba6a52ddb3fa6af",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java",
+      "Git_blob": "b756f15b7863793f320b55957b657c53196b0cba",
+      "sha256": "b1d4e38f2bc9c33bda1bd39092ea87352a6668ca41664dafe1be7011fe163092",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/util/AEMonitor.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/util/AEMonitor.java",
+      "Git_blob": "d1d317cb1bc766b72ce3a7967df9b1a884768114",
+      "sha256": "10732da79c2ca2b92d0103036ccac23f0751a3141f0a770f5df24ea44aa96276",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/util/ByteFormatter.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/util/ByteFormatter.java",
+      "Git_blob": "3316a55349229cdcb6293e6723bce5ae91a57e05",
+      "sha256": "b1eb635fddd00ad72301128231a756ce6b95d6a7a6721e1d2be3841bbad53560",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/util/SystemTime.java",
+      "Git_path": "migration/evidence/P06-27-router-contact/pinned-source/core/src/com/biglybt/core/util/SystemTime.java",
+      "Git_blob": "684948cfbb4a20fbecaec4614d2c24a33d2de27e",
+      "sha256": "d57063696e281cc005e5b146a8f863a2ca52180696a98b473ff8566851f97353",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/source-plan/semantic.txt",
+      "Git_path": "migration/evidence/P06-27-router-contact/source-plan/semantic.txt",
+      "Git_blob": "1d0de9cc91d797fd87056ac09ffbe4f65bf359f6",
+      "sha256": "211f46b54a3df001bf4644fc00ff5c2d47948aabbeb06f18fe8a9a59217d53d4",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/source-plan/alias-policy.txt",
+      "Git_path": "migration/evidence/P06-27-router-contact/source-plan/alias-policy.txt",
+      "Git_blob": "3b0e22835eef1ce711ec46db398b023942aa826e",
+      "sha256": "472f7f3d2f49c14e80a3717aad0761f6b27230bc0702eff7b58c062157e76d1e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/source-plan/getter-contract.txt",
+      "Git_path": "migration/evidence/P06-27-router-contact/source-plan/getter-contract.txt",
+      "Git_blob": "356b2a2e431c82cfd18d315493b3e5a5deca7136",
+      "sha256": "1bcf785e2c114d3b336270ccf1d443dba220502107ed6ad78fef0a7470ac90df",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/source-plan/seeded-boundary.txt",
+      "Git_path": "migration/evidence/P06-27-router-contact/source-plan/seeded-boundary.txt",
+      "Git_blob": "951d6d8a7a70c2f09610ad6d67214d1ad758cfbb",
+      "sha256": "3b28e6ca9d2a5dd0d163d1265c5c4ccab13a056a1938861e0bfe150e54a4f13d",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/source-plan/diagnostic.txt",
+      "Git_path": "migration/evidence/P06-27-router-contact/source-plan/diagnostic.txt",
+      "Git_blob": "63c9d60fead6f65a250bb532033af5395cb4ee21",
+      "sha256": "da4b36c282bc32ee9c60108303a54aa58eb5e015e7c0b8901fd85e8b9646347a",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/source-plan/plan.json",
+      "Git_path": "migration/evidence/P06-27-router-contact/source-plan/plan.json",
+      "Git_blob": "59ac2de8b8f7241f8baf8938e027c3aeca03a02c",
+      "sha256": "9a3243c87cd4e2bb5995ab935fc2adc534f6ae873694205870d53f95e26e6e0a",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-26-azureus-db-value/matrix.json",
+      "Git_path": "migration/evidence/P06-26-azureus-db-value/matrix.json",
+      "Git_blob": "75337772fc5682fcefe32b775da668ccecf38c3b",
+      "sha256": "e7c56b0e9064b1270cfeef1800661ce67ca9d80a682a0d9a252062ab553d2586",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/tools/azureus_router_contact_adapter_matrix.py",
+      "Git_path": "migration/tools/azureus_router_contact_adapter_matrix.py",
+      "Git_blob": "91e62c1dbea7b35494d065c78ac0e74a49445e37",
+      "sha256": "c1fcf28890371ce4cf4c94a0984f167b988ee471679a351d3ae2d6441fbf8447",
+      "same_path": true
+    },
+    {
+      "qualified_input": "migration/evidence/P06-27-router-contact/adapter-cin-untie-v1/approval.json",
+      "Git_path": "migration/evidence/P06-27-router-contact/adapter-cin-untie-v1/approval.json",
+      "Git_blob": "4d766f6d1e26a5b1e98705a5396d125de0e7987c",
+      "sha256": "5606be9cdf3470254d3f96cf2e64ab4959142f46ae3c88ef3e1248935cc7633e",
+      "same_path": true
+    },
+    {
+      "qualified_input": "build/recovery/active-drafts/db-driver-input-performance-v2/preserved/native/services/azureus_db_value/db_value_driver.cpp",
+      "Git_path": "migration/recovery/20261018/db-driver-pre-untie-image/db_value_driver.cpp",
+      "Git_blob": "6a1b631f98e3ea576b6d9ee286c594af2945e3fd",
+      "sha256": "0915963f861e279e1d0b50347d31cd14f5c9f8829e516532e318822cba5008f5",
+      "same_path": false
+    }
+  ],
+  "first_ported_commit": null,
+  "integrated_through_commit": null,
+  "proposed_metadata": "Append this actual immutable checkpoint to native_commits without replacing691376ed23bf65025800c9385dfaea774ed1462c or historical evidence. Keep first_ported/integrated null for wider unported coverage.",
+  "Git_worktree_index_refs_mutated": false,
+  "native_JVM_or_test_execution": false,
+  "validator_source_sha256": "c0ab4252263a57f493bac154ae72d8d6b2b6e61fe61bbc8f6de31311b2faa17e"
+}

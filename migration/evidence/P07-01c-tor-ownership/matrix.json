@@ -1,0 +1,249 @@
+{
+  "source_sha256": {
+    "migration/fixtures/tor-auth/.gitattributes": "705fd4d6451a31d36b3df7de96f83f30ac976c9b4a6d1e51671d8e2f33e2d0da",
+    "migration/fixtures/tor-auth/commands.txt": "154413c94b10862e4d6b522b12dee5bcd3a79c5492904fbf6300dd8070f923e6",
+    "migration/fixtures/tor-auth/expected.txt": "426d8d9eaac7cb1581ee6b3731efd8406f309d5db58d39f330aeeca85c470520",
+    "migration/fixtures/tor-auth/manifest.json": "aaee152fd0b9596843cb1122f731aac276f5fe8a4c30857e8adcb49a66d9a644",
+    "migration/fixtures/tor-ownership/cases.json": "3a14ef6b9c78c6b6740cc24f6ff7f6b3e8abfb92b5f0b9c74e07f0032f329167",
+    "migration/fixtures/tor-ownership/commands.txt": "7720c970eeeab1f2706c279a7e94475950c13ba2079c05946a73f290f9910f7e",
+    "migration/fixtures/tor-ownership/expected.txt": "941117b6a32ed64220ce0badd9b3b755e8fede305ab30235b183be629147737e",
+    "migration/fixtures/tor-ownership/manifest.json": "075f6a8c86b549a471419f7509ea6447a04f13341218b0dfbdaec1c7d91288d3",
+    "migration/tools/tor_ownership_matrix.py": "71df26ff7718b65577cbeab0b80a1f44ff4e8de6d1bbc3677d95834c3bbe08f5",
+    "migration/tools/tor_ownership_oracle.py": "4cb845c03d81d477b22e97330faeea904bf363178919c8d03d2e32b1954602da",
+    "native/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "native/plugins/BiglyBTC-plugin-aznettor/.gitignore": "ef2d3a662976b2c26a55d13b98b4be552bc693a37d446e8f29db5ea5b32a3b90",
+    "native/plugins/BiglyBTC-plugin-aznettor/CMakeLists.txt": "85f17c8ac3425c40324ef72bd31b5bc107cc47a4baa3ad98541c6dadd3e96669",
+    "native/plugins/BiglyBTC-plugin-aznettor/COPYING": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6",
+    "native/plugins/BiglyBTC-plugin-aznettor/README.md": "4aaebf616dc9dae10e8a23da5b294e153a31c5dbf999664daa173b88a64f1932",
+    "native/plugins/BiglyBTC-plugin-aznettor/auth_bounds_test.cpp": "2ad18e071953a5fdb05f370f21b399c8b934c5f755e868bf2fc5a0759446c524",
+    "native/plugins/BiglyBTC-plugin-aznettor/auth_driver.cpp": "4dca8fb217d2063fb14cb3e21beab9ae7feeaf0be102d89000d382d5a6e9873a",
+    "native/plugins/BiglyBTC-plugin-aznettor/fixture_test.py": "60be3a64fd5daba3af946d050df677956eec446edecfae12860e8850f3dbef92",
+    "native/plugins/BiglyBTC-plugin-aznettor/safecookie.cpp": "bddc5eaf95294a1fa4a7a6e541f7d51d0d53418b6bdae6afea7ec41230ed3901",
+    "native/plugins/BiglyBTC-plugin-aznettor/safecookie.hpp": "10e6092b7d6f0476f10d9d3742ca1a81c50f7a0feb2ed21b97af0a91f5143a17",
+    "native/services/tor_control/CMakeLists.txt": "574d57c77a97f033cbe492be3f7dcc66ff8e45a8f8d026271cdc6eca763a24df",
+    "native/services/tor_control/README.md": "73271c17c7e0678614cd6e709e886b11d890259f93b3dc3d716bd17627e0c8a3",
+    "native/services/tor_control/channel.cpp": "f433c36f9ad374a54ef849464e6abe6f84b84b59590a01a0128af8eadc6696df",
+    "native/services/tor_control/channel.hpp": "f6687c4e9b0cbd96ce733eede6114b5b10ce9b5e5e7854d24a7de4f8a3b85ff5",
+    "native/services/tor_control/channel_tests.cpp": "d4d6dbb19984c1205eb913a44e08c5e7153a769eb67c65e93b97ee8ec3b08943",
+    "native/services/tor_control/ownership.cpp": "1c9f585833345a5075000795895b7bbe990692a220f5cff05edd5c46f845daa2",
+    "native/services/tor_control/ownership.hpp": "d643f1a1d646439b85810a2a3e96c123b661797d9199103500dfc92f3c44a18f",
+    "native/services/tor_control/ownership_source_tests.cpp": "9c33353cf5b8b28ca815ea02fa63866330fe1882afde3e69a0ce44036edcf232",
+    "native/services/tor_control/ownership_tests.cpp": "a82426f050ba1cc616e96094a0a06ea1809b9ef0b3256580913b8d059ee84079"
+  },
+  "lower_matrix_sha256": "70fb8ad4e69ad76b8eb7f0287ad2b0b3e3730d2031db5e256741f2b387a3a51d",
+  "lower_input_changes": {
+    "native/plugins/BiglyBTC-plugin-aznettor/fixture_test.py": {
+      "before": "e491d5c327042bbd4b32459a7f178f410f84015ffa8cc9c227f57647640e98c5",
+      "after": "60be3a64fd5daba3af946d050df677956eec446edecfae12860e8850f3dbef92"
+    },
+    "native/services/tor_control/CMakeLists.txt": {
+      "before": "cff099f447f88da1af11ba092674464b2f2bece7f6baafced418075e68d2f6a5",
+      "after": "574d57c77a97f033cbe492be3f7dcc66ff8e45a8f8d026271cdc6eca763a24df"
+    },
+    "native/services/tor_control/README.md": {
+      "before": "dc07706dc2277c891517b2298dc460f589b7320e4cc7513554690662cdda99bd",
+      "after": "73271c17c7e0678614cd6e709e886b11d890259f93b3dc3d716bd17627e0c8a3"
+    }
+  },
+  "historical_fixture_location_update": {
+    "commit": "4ea971c87cdaf5f2c792e220c4dd66643af41a14",
+    "path": "native/plugins/BiglyBTC-plugin-aznettor/fixture_test.py",
+    "current_sha256": "60be3a64fd5daba3af946d050df677956eec446edecfae12860e8850f3dbef92",
+    "prior_qualification_evidence": "migration/evidence/P06-03-message-envelope/fixture-export-followup.json",
+    "prior_qualification_evidence_sha256": "679679b49632e34c13db7b7ac26f3cb4c72e2ad2d5a78ba8bdab16674e5a2be2"
+  },
+  "dependency_sha256": {
+    "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Core.so.6.12.0": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Network.so.6.12.0": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+    "/opt/Qt/6.12.0/gcc_64/lib/libQt6Test.so.6.12.0": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975"
+  },
+  "source_reference_manifest_sha256": "075f6a8c86b549a471419f7509ea6447a04f13341218b0dfbdaec1c7d91288d3",
+  "builds": [
+    {
+      "compiler": "gcc",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/services/tor_control",
+          "-B",
+          "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-gcc",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS=",
+          "-DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-gcc",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-gcc",
+          "--output-on-failure",
+          "-j1"
+        ]
+      ],
+      "qt_totals": [
+        [
+          24,
+          0,
+          0
+        ],
+        [
+          44,
+          0,
+          0
+        ],
+        [
+          95,
+          0,
+          0
+        ]
+      ],
+      "binary_sha256": {
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-gcc/biglybtc-tor-channel-tests": "b62f7380fec6f92fce2ccaa0d9c1afa9735667cf772fa47ae5eef4d6ce628ccb",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-gcc/biglybtc-tor-ownership-source-tests": "a81bac4633c15860013193aa05d65319c59128b10c38c68bf09887945738f895",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-gcc/biglybtc-tor-ownership-tests": "ae2bbb2beb5a22c5d6103daca6d2ca1c0009bdfb856f3c04ba88962f1ca088ec",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-gcc/libbiglybtc_tor_channel.a": "2dbab4dfec8af9a539790f123075766b2dece447a0ac5473f0bd1a2580fabca6",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-gcc/libbiglybtc_tor_ownership.a": "505db35745af4e985865b31268f8cf545a50cf3b528165ad081ffba7adda48b7",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-gcc/tor-auth/biglybtc-tor-auth-bounds-tests": "b0672a5f36382e7659aed96561461304be7beee8b0ad5cfef15f0841e3956396",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-gcc/tor-auth/biglybtc-tor-auth-driver": "b4fe0ac30321b82f4fb808652420d05639178eb362975e2961c57c0fe6ea0461",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-gcc/tor-auth/libbiglybtc_tor_auth.a": "a268a592454b0ea89ef91e167898f31d8ea43ba125502dce81f68793bbd70498"
+      }
+    },
+    {
+      "compiler": "clang",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/services/tor_control",
+          "-B",
+          "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-clang",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16",
+          "-DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-clang",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-clang",
+          "--output-on-failure",
+          "-j1"
+        ]
+      ],
+      "qt_totals": [
+        [
+          24,
+          0,
+          0
+        ],
+        [
+          44,
+          0,
+          0
+        ],
+        [
+          95,
+          0,
+          0
+        ]
+      ],
+      "binary_sha256": {
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-clang/biglybtc-tor-channel-tests": "990db662f7517c7e007d6aa5401231e25e5432f05c785c62c6dff088300e026b",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-clang/biglybtc-tor-ownership-source-tests": "8659a10f051f224fbb99c4643f023ec5138853cd188de66082426185ce4656d3",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-clang/biglybtc-tor-ownership-tests": "f7169a5e4978df27b6d3b200ddd2e462810f40164514bfc9cfdcc8cd2de67924",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-clang/libbiglybtc_tor_channel.a": "15c6d14094d86c20e822b52c8f877328d55d88f5adb599a146b9d2d1038fb237",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-clang/libbiglybtc_tor_ownership.a": "3b6a78d3752ad58c5d10ea0571962f02ef7b1cb93389bd9b14da591758e9dc2d",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-clang/tor-auth/biglybtc-tor-auth-bounds-tests": "6becbd922d03b558e9342d30b85cbbe18a700f2cc577e20ca60a217a1a1f5816",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-clang/tor-auth/biglybtc-tor-auth-driver": "e3c504054f0bd684465d4070e996efe8a2b73e5ace892669604702df0c74a147",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-clang/tor-auth/libbiglybtc_tor_auth.a": "56722a411485da40c426e64cb3da232fb97daa277cd53ac1be05e7639258ca39"
+      }
+    },
+    {
+      "compiler": "asan",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/services/tor_control",
+          "-B",
+          "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-asan",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Debug",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer",
+          "-DCMAKE_PREFIX_PATH=/opt/Qt/6.12.0/gcc_64"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-asan",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-asan",
+          "--output-on-failure",
+          "-j1"
+        ]
+      ],
+      "qt_totals": [
+        [
+          24,
+          0,
+          0
+        ],
+        [
+          44,
+          0,
+          0
+        ],
+        [
+          95,
+          0,
+          0
+        ]
+      ],
+      "binary_sha256": {
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-asan/biglybtc-tor-channel-tests": "f74fc89af471921fd08408f239ebb64e6760473f36dd62a2274f895cd728ae2a",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-asan/biglybtc-tor-ownership-source-tests": "7f98cf0951467b0eb3e1738c797fdd4864d739ebc7a82c735be11be05dd388b4",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-asan/biglybtc-tor-ownership-tests": "da731e220b5c639fe9a5202f52e5cd6249b6e5e81daa924ca997e4b2b2637b98",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-asan/libbiglybtc_tor_channel.a": "eb8e4c3fc39699d1283088ed5fddf543ceffa6a8ec56463c2c2585057376d4bb",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-asan/libbiglybtc_tor_ownership.a": "a48f30a66976e39675c9ddb3a35435d4676577f6c7cffa878c70b5a3946c6835",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-asan/tor-auth/biglybtc-tor-auth-bounds-tests": "8b766486b32002bb9ca565515b5290a650455ed1eb4de7dfc3546d5730bac7f0",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-asan/tor-auth/biglybtc-tor-auth-driver": "2fb65349969847bc0108ce1008a34daf2421d875554e8dbfd019cbaf23c55836",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-tor-ownership-qualified-v2-asan/tor-auth/libbiglybtc_tor_auth.a": "c5f61a38490639c3f2146c458ba57a94441af5cea50f6bbfc2fdf1b8f2a44648"
+      }
+    }
+  ],
+  "status": "passed",
+  "scope": "Original post-AUTH TAKEOWNERSHIP/RESETCONF/GETINFO version command sequence and String-level projection, with unchanged SAFECOOKIE/channel, bounded replies and one fixed setup deadline. Fresh in-process numeric loopback fake peers only. No Tor child, existing daemon, profile, proxy activation, keepalive/event multiplexer or non-ASCII InputStreamReader wire equivalence."
+}

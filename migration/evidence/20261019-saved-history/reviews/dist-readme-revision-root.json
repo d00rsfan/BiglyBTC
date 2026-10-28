@@ -1,0 +1,8 @@
+{
+  "file": "build/saved-history-20261019/promote_dist.py",
+  "sha256": "168b989e93ef4c276932e6f929bd0e53b42d6a37b3771aa6ed30e73ce7c74a2d",
+  "change": "Two generated README prose lines only: spacing and where to find sample saved history",
+  "operational_guards_changed": false,
+  "source_revision_changed": false,
+  "result": "PASS root review; not executed yet"
+}

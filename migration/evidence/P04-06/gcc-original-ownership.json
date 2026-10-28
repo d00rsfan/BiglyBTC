@@ -1,0 +1,221 @@
+{
+  "status": "passed",
+  "source_commit": "1ee6a53dae017696d2f0002e4a0d74f5a9476af5",
+  "core_source_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_plugin_class_digest": "8f6a561f700e214fdb4aeda5242466b3e5e242ef2e3a5a0cd7fdb46c7959200f",
+  "native_binary_sha256": "147fe8bddcf5459e61232c95d40e64e38f6140921e7df9bf06cd67d492c25b69",
+  "source_overlay": false,
+  "harness_sha256": {
+    "ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+    "SpeedSchedulerOracle.java": "56fe63c615117da7cc01bf4787fac81c65e11b1e4865a03b15b1cdb32f159a15",
+    "SchedulerOwnershipOracle.java": "f0a76cb1927f6bcb0099323ddeae97254d88dc400a4359099d9f1406d957377c"
+  },
+  "cases": [
+    {
+      "case": "empty",
+      "input": "/tmp/biglybtc-scheduler-ownership-gcc-original-20261017/empty/input.conf",
+      "input_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "original_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 0",
+        "APPENDED 1",
+        "REMOVED 0"
+      ],
+      "native_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 0",
+        "APPENDED 1",
+        "REMOVED 0"
+      ],
+      "original_log_sha256": "30698ec05da675aee5439104e764e9a234d272543902ebdea17c957a5e2793fa",
+      "native_output_sha256": "f12d0ef80d92b83e687b215e3303cba18b4d80e8ccc7584a72f4532f45e1eb55",
+      "classification": "membership_matches"
+    },
+    {
+      "case": "canonical",
+      "input": "/tmp/biglybtc-scheduler-ownership-gcc-original-20261017/canonical/input.conf",
+      "input_sha256": "ad57830a73307903d06ebeb6fa859b72ef9c29bc0b470c322f501a04072534f3",
+      "original_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 1",
+        "APPENDED 1",
+        "REMOVED 0"
+      ],
+      "native_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 1",
+        "APPENDED 1",
+        "REMOVED 0"
+      ],
+      "original_log_sha256": "ab17e1a7a71a00ce67b0b78680296fb44c44699f90df2a5b174b5c81367fd92b",
+      "native_output_sha256": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+      "classification": "membership_matches"
+    },
+    {
+      "case": "crlf-and-unknown",
+      "input": "/tmp/biglybtc-scheduler-ownership-gcc-original-20261017/crlf-and-unknown/input.conf",
+      "input_sha256": "77f5522adb1c2bb8a0d1c9d3094a793073f37629f237d7750b1eedd5d26aac3a",
+      "original_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 1",
+        "APPENDED 1",
+        "REMOVED 0"
+      ],
+      "native_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 1",
+        "APPENDED 1",
+        "REMOVED 0"
+      ],
+      "original_log_sha256": "ab17e1a7a71a00ce67b0b78680296fb44c44699f90df2a5b174b5c81367fd92b",
+      "native_output_sha256": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+      "classification": "membership_matches"
+    },
+    {
+      "case": "cr-only",
+      "input": "/tmp/biglybtc-scheduler-ownership-gcc-original-20261017/cr-only/input.conf",
+      "input_sha256": "645906e4a8aef1b22642ab40487b35e19c9441e33ffa872f63f44ad55383a8ec",
+      "original_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 1",
+        "APPENDED 1",
+        "REMOVED 0"
+      ],
+      "native_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 1",
+        "APPENDED 1",
+        "REMOVED 0"
+      ],
+      "original_log_sha256": "ab17e1a7a71a00ce67b0b78680296fb44c44699f90df2a5b174b5c81367fd92b",
+      "native_output_sha256": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+      "classification": "membership_matches"
+    },
+    {
+      "case": "duplicate",
+      "input": "/tmp/biglybtc-scheduler-ownership-gcc-original-20261017/duplicate/input.conf",
+      "input_sha256": "1441794d639fdb346dd5308eb00d1a23e6f90c292867122d4bccaf0221b43726",
+      "original_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 1",
+        "APPENDED 1",
+        "REMOVED 1"
+      ],
+      "native_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 1",
+        "APPENDED 1",
+        "REMOVED 1"
+      ],
+      "original_log_sha256": "17273fd76475e463125c3e2a93b207594595064f02e7b9fd232e6a2e7ece3801",
+      "native_output_sha256": "8af20e225a05a8595a13b56574afdb73e30da4d715f06c391abbfb1ac850b653",
+      "classification": "membership_matches"
+    },
+    {
+      "case": "case-sensitive",
+      "input": "/tmp/biglybtc-scheduler-ownership-gcc-original-20261017/case-sensitive/input.conf",
+      "input_sha256": "3d4b6ce447b66029e9a55d39e8df8a034a9848fd89755bee2af9e1c209f97701",
+      "original_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 0",
+        "APPENDED 1",
+        "REMOVED 0"
+      ],
+      "native_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 0",
+        "APPENDED 1",
+        "REMOVED 0"
+      ],
+      "original_log_sha256": "30698ec05da675aee5439104e764e9a234d272543902ebdea17c957a5e2793fa",
+      "native_output_sha256": "f12d0ef80d92b83e687b215e3303cba18b4d80e8ccc7584a72f4532f45e1eb55",
+      "classification": "membership_matches"
+    },
+    {
+      "case": "ascii-trim",
+      "input": "/tmp/biglybtc-scheduler-ownership-gcc-original-20261017/ascii-trim/input.conf",
+      "input_sha256": "562fdcbe7fd5b9101a1374496b2eb6f5329292756e43eaf8ad441710814b9a29",
+      "original_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 1",
+        "APPENDED 1",
+        "REMOVED 0"
+      ],
+      "native_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 1",
+        "APPENDED 1",
+        "REMOVED 0"
+      ],
+      "original_log_sha256": "ab17e1a7a71a00ce67b0b78680296fb44c44699f90df2a5b174b5c81367fd92b",
+      "native_output_sha256": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+      "classification": "membership_matches"
+    },
+    {
+      "case": "unicode-not-java-trim",
+      "input": "/tmp/biglybtc-scheduler-ownership-gcc-original-20261017/unicode-not-java-trim/input.conf",
+      "input_sha256": "10db7a509802c72711936d1ed34cf0394972f483ed105a2e27e0b2e9252d772c",
+      "original_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 0",
+        "APPENDED 1",
+        "REMOVED 0"
+      ],
+      "native_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 0",
+        "APPENDED 1",
+        "REMOVED 0"
+      ],
+      "original_log_sha256": "30698ec05da675aee5439104e764e9a234d272543902ebdea17c957a5e2793fa",
+      "native_output_sha256": "f12d0ef80d92b83e687b215e3303cba18b4d80e8ccc7584a72f4532f45e1eb55",
+      "classification": "membership_matches"
+    },
+    {
+      "case": "unterminated-owned",
+      "input": "/tmp/biglybtc-scheduler-ownership-gcc-original-20261017/unterminated-owned/input.conf",
+      "input_sha256": "47b38c456ecc7ef97695fca53153634178f301b86cae47bd738c7e20994d8b0b",
+      "original_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 1",
+        "APPENDED 1",
+        "REMOVED 0"
+      ],
+      "native_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 1",
+        "APPENDED 1",
+        "REMOVED 0"
+      ],
+      "original_log_sha256": "ab17e1a7a71a00ce67b0b78680296fb44c44699f90df2a5b174b5c81367fd92b",
+      "native_output_sha256": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+      "classification": "membership_matches"
+    },
+    {
+      "case": "unterminated-foreign",
+      "input": "/tmp/biglybtc-scheduler-ownership-gcc-original-20261017/unterminated-foreign/input.conf",
+      "input_sha256": "a6b0bdf4d3ce8e13f52849cd33132a1f11970551a19cf7a074fdafd351146abc",
+      "original_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 0",
+        "APPENDED 0",
+        "REMOVED 0"
+      ],
+      "native_output": [
+        "FORMAT ABABABAB ABABABAB ABABABAB ABABABAB ABABABAB",
+        "BEFORE 0",
+        "APPEND_REJECTED"
+      ],
+      "original_log_sha256": "62140a3bea65ccee156cd0765ddee599c5361c00bf3e03180ce1f07ade60e91b",
+      "native_output_sha256": "6e29ef512e0905650769dc2034ad1affa69c08fe6ba11ff9a475b311a42be048",
+      "classification": "explicit_unterminated_append_rejection"
+    }
+  ],
+  "scope": "Unchanged original contains/add/remove helpers; thread constructed but never started/run",
+  "limitations": [
+    "Native returns edited bytes; physical durable ownership persistence/host integration remains open",
+    "Unknown lines retain raw bytes instead of Java's destructive trim/reencoding during removal",
+    "Unterminated foreign last line is rejected on append; Java loses new ownership by merging lines",
+    "Linux source-helper differential; Windows newline encoding has native tests only"
+  ]
+}

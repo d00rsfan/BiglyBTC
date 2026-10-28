@@ -1,0 +1,51 @@
+{
+  "status": "PASS-source-only-no-blocking-finding",
+  "reviewer": "error_oracle independent of lowlevel author; author of separate first-save adapter/tests",
+  "actual_subject_sha256": {
+    "profile.hpp": "0e7bb950e4d66e2fdf88b2733cb00d149e8b17ea805348300327af8418649831",
+    "profile.cpp": "38c0838d5aae673304ce9dade42cae18bf9607d54d4480949617dcc1c5dafbd9",
+    "file_io.hpp": "8d0fc78f8b6fd62932c8ff07fcbcd8203d6bac0ca2255d86bb849c4b1b413cb6",
+    "file_io.cpp": "a3fd490e8e49b8d066f27205ab25636ac51c5e0715bf5c25f169e877da17f89c"
+  },
+  "before_sha256": {
+    "profile.hpp": "e91ff37048e02b87a4d6f97d774fe3e33b491febd0b2ec55d3dedbbf20dd60ff",
+    "profile.cpp": "f31f99cf73484c0c4fb058a6fc9e3937ecd74412f5ae794c775c0a7e8c4b91ee",
+    "file_io.hpp": "41b14236290a65b52f75d56f076857a1ffd037f9bd823f1f9afef98c82a9cd37",
+    "file_io.cpp": "c55df3bfa6531534819a798351a5320365e1081d774f466fe4342bffa54793b9"
+  },
+  "complete_source_files_read": [
+    "profile.hpp",
+    "profile.cpp",
+    "file_io.hpp",
+    "file_io.cpp"
+  ],
+  "exact_old_body_checks": {
+    "profile_namespace_through_load": "byteidentical",
+    "profile_save_through_namespace_end": "byteidentical",
+    "file_io_namespace_helpers_descriptor_and_read": "byteidentical",
+    "old_exclusive_write_loop_and_failure_policy": "byteidentical except expected<Descriptor> signature and returnfile; original writeExclusive API delegates and releases actualfd before returning"
+  },
+  "checks": {
+    "scope_and_validation": "Safe fixed-name predicate and held directoryfd; parsed complete dictionary under caller quotas and all successful-return fields staged before file creation. Wrapper passes ordinary4MiB/100000/depth64 limits.",
+    "candidate_preservation": "Initial primary/bak/saving fstatat with AT_SYMLINK_NOFOLLOW rejects any existing leaf asConflict without opening contents; late primary/bak observations repeated after T; no deletion/promotion of existing leaves.",
+    "staging_identity": "Retains actual O_EXCL descriptor; private0600 normalization applies only actualfd, followed by fsync and updated fstat; verifies owned regular singlelink named+opened device/inode/uid/mode/size/mtime/ctime before and after T. Descriptor retention prevents inode reuse by a replacement after unlink.",
+    "publication": "Linux renameat2 RENAME_NOREPLACE only, no overwrite fallback. Existing targetConflict; unsupported syscall/filesystemUnsupported; failure retains staging. TthenP only, noB; no backup is invented.",
+    "lease_and_lifetime": "Borrowed lease not consumed; directoryfd validity/device/inode/type rechecked after observer before publication. Move-only Descriptor closes on every exit; prepared ConfigFile is noexceptmovable.",
+    "outcome": "Post-P directorysync failure returnsIo with explicit firstpublicationalreadyoccurred diagnostic. Success returns preallocated expected without successful-path allocation; adapter separatelyprepares shared baseline. No cancellation within lowlevel synchronous transaction.",
+    "legacy_regression": "Old load/save/reader/partial-discard exactbodies; old exclusive write delegates same write/fsync logic and closes samefd beforecaller resumes; errors moved without addedstringcopy."
+  },
+  "runtime_credit": {
+    "compiler_or_preprocessor": false,
+    "native_or_tests": false,
+    "filesystem_fixture_execution": false,
+    "Java_or_client": false
+  },
+  "limitations": [
+    "Physical powerloss/disk durability is not demonstrated by source review or injected sync result.",
+    "Path checks plus rename are not an atomic source-inode CAS or exclusion against arbitrary noncooperating swaps; RENAME_NOREPLACE protects existing primary target only.",
+    "Successful creation does not promise absence of a backup introduced by another process after its final absence observation.",
+    "Observer is a deterministic diagnostic/fault seam; arbitrary throwing/reentrant observer exception safety or unbounded/globalOOM guarantees are not claimed.",
+    "Existing ProfileLease canonicalization/lock and old save semantics remain inherited, not strengthened."
+  ],
+  "subject_edits_by_review": false
+}

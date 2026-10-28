@@ -1,0 +1,718 @@
+{
+  "schema": 1,
+  "status": "INDEPENDENT_EXPORT_INPUT_AUDIT_SOURCE_ONLY",
+  "original_plugin_commit": "1ee6a53dae017696d2f0002e4a0d74f5a9476af5",
+  "original_core_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "private_qualified_native_commit": "afeb3b2a25e6f37ac27e53ad8fed5d2fa426d671",
+  "latest_byte_exact_fixture_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0",
+  "fixture_summary": [
+    {
+      "directory": "migration/fixtures/speedscheduler",
+      "files": 9,
+      "bytes": 185162,
+      "cases": 4,
+      "manifest_sha256": "6b681e71d8f1eeb48a0d6d5c37cca7a398e88ed65652e569f4d51b04492e781f"
+    },
+    {
+      "directory": "migration/fixtures/scheduler-ticks",
+      "files": 34,
+      "bytes": 1693819,
+      "cases": 11,
+      "manifest_sha256": "c83e6b4090ec01a256674dcacbc97e7f4b33790c601f6576172bc5e1412c972d"
+    },
+    {
+      "directory": "migration/fixtures/scheduler-ownership",
+      "files": 31,
+      "bytes": 7410,
+      "cases": 10,
+      "manifest_sha256": "382efcaeb5ddbd161079ec813cf89ff782d5bf45590a659baf33eb8fc04a307a"
+    }
+  ],
+  "fixture_file_count": 74,
+  "fixture_bytes": 1886391,
+  "fixture_files": {
+    "migration/fixtures/speedscheduler/deterministic-boundaries.expected": {
+      "sha256": "2ae2d3ff2a9e0c4a687f56883d1ce8db912d188c35b86c6d04b37408ad0e2d93",
+      "bytes": 146175,
+      "git_blob": "e15a032f9c79d2913f819b6df52bcfbf10b89a4c",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/speedscheduler/deterministic-boundaries.xml": {
+      "sha256": "64fbb6a921fe260341ba6b4dc0a50d2c4521fa7c1e0f0047be30935c78cd2bcb",
+      "bytes": 18772,
+      "git_blob": "34252370ea704ca3d8446a9076b78ee56d66fe25",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/speedscheduler/legacy-and-unknown.expected": {
+      "sha256": "749cf708dae835d427a606c085d03a2267f56d028c5759d7e93c8a93bcc634ee",
+      "bytes": 3013,
+      "git_blob": "2982b84af21172e1d4a18267624876d747e8069f",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/speedscheduler/legacy-and-unknown.xml": {
+      "sha256": "695b26e458dc8ef762dc6114f1528dd50baedd4c3b8a9e17a679c20fd30c8aba",
+      "bytes": 538,
+      "git_blob": "45477d0edddd0d41e6e21eb9f0e3d6b1a0bbad71",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/speedscheduler/manifest.json": {
+      "sha256": "6b681e71d8f1eeb48a0d6d5c37cca7a398e88ed65652e569f4d51b04492e781f",
+      "bytes": 1553,
+      "git_blob": "d86e55ef66b77d534905cad564ade8dd3a65d0fc",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/speedscheduler/original-writer.expected": {
+      "sha256": "e2c3dbca9b15f977153cf032ff2612f0d3cbc84079a77297acbc3f8e4f6f4cf4",
+      "bytes": 7530,
+      "git_blob": "575ade266073152c9540db13f3992b9f51232424",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/speedscheduler/original-writer.xml": {
+      "sha256": "fcf9866d582fa83ad7cbb68526e418df9d233f1ec1b299b671287f15fb8653cd",
+      "bytes": 3454,
+      "git_blob": "492309efe8dfefa7a4f86fa48d8aea0b57e6b09b",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/speedscheduler/utf16-original-xml.expected": {
+      "sha256": "749cf708dae835d427a606c085d03a2267f56d028c5759d7e93c8a93bcc634ee",
+      "bytes": 3013,
+      "git_blob": "2982b84af21172e1d4a18267624876d747e8069f",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/speedscheduler/utf16-original-xml.xml": {
+      "sha256": "2f4ab75f5369f30044214cecb5e376beac538cb76e6ea665169fa3d1c57ccc62",
+      "bytes": 1114,
+      "git_blob": "5b83af7e74d3d6e236c0e69d8d53dfe7e0e637c3",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/both-category-flags/SavedSchedules.xml": {
+      "sha256": "62a22bc56da0b68ff7fc89d2c4ad47ac06428287f959dc8db58a935f273a87e3",
+      "bytes": 622,
+      "git_blob": "5b3883f89524071220568f2985ccb4ef16b3c819",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/both-category-flags/original.expected": {
+      "sha256": "d78dbda15ea7f70eb375406e7e9bf132bde93099fb87e2f320cd29cbae37690f",
+      "bytes": 46862,
+      "git_blob": "68a1faec4d3235e832fc4287b1139c8968d8957d",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/both-category-flags/values.properties": {
+      "sha256": "0555307dd7f05af16214e634ed002475cd513f2699a7fdebaad4cd8a1eceaba3",
+      "bytes": 111547,
+      "git_blob": "fc2fad68fd85f5b2590677c3ebe377c0f0e98e5e",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/category-only/SavedSchedules.xml": {
+      "sha256": "bf9c222eea0edf0a8a512f885946ad772f55caff5824ca2359a05a971a93eec6",
+      "bytes": 624,
+      "git_blob": "58331805903bb3a50cc7dd56107d0f006b5c5233",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/category-only/original.expected": {
+      "sha256": "55bbca3e599ef473f47177b00f3f55b5bc96eec742d9ff85ce8fdc91a697ea3e",
+      "bytes": 34862,
+      "git_blob": "4c4688e362c533ab738727cd23e08a6032c36fd5",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/category-only/values.properties": {
+      "sha256": "0555307dd7f05af16214e634ed002475cd513f2699a7fdebaad4cd8a1eceaba3",
+      "bytes": 111547,
+      "git_blob": "fc2fad68fd85f5b2590677c3ebe377c0f0e98e5e",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/disabled-polling/SavedSchedules.xml": {
+      "sha256": "c338aaca84f721c228b22d534e35d4b216c27e34f1c6bcb3ce7f4acbf47c4e70",
+      "bytes": 625,
+      "git_blob": "50648417496824dfb7e7a46bb4a2e91136fead72",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/disabled-polling/original.expected": {
+      "sha256": "6398aac36a1da67114d160ff21cb09d34e38113fe22616ff16f3f922e06625ea",
+      "bytes": 33041,
+      "git_blob": "2a87bd0de27256861bf17dc55d7092385b5bb4b7",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/disabled-polling/values.properties": {
+      "sha256": "0213f9ccfd42ddbbb5e7ad18cbaf9e68b9c94dc79142817adb38dd016036f7a2",
+      "bytes": 111548,
+      "git_blob": "4ecb0f3a29acf2268ec8f2288b0a1fca0bb807ea",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/enforced-defaults/SavedSchedules.xml": {
+      "sha256": "3f6ff02b46f5c1935a73b9d1e3f89c2b83ad13874600477de304b6df23e09ae4",
+      "bytes": 634,
+      "git_blob": "836cfc4aaa2ce076e5bb13bcd906cb1946edef72",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/enforced-defaults/original.expected": {
+      "sha256": "6cfd26da71d635b662999670d8e5d394ff1ee062528288fbe31e8a023a4c8506",
+      "bytes": 30659,
+      "git_blob": "ebc7ed232fd93c731c791fac442780309015c38a",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/enforced-defaults/values.properties": {
+      "sha256": "fb9a069d72b9d4ddd0396b93ea0115de384f17b79051b6f0fb391dc63aeca9e7",
+      "bytes": 111549,
+      "git_blob": "f24497cb5db9186e845c95927f17d9804ea6356b",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/global-and-exclusion/SavedSchedules.xml": {
+      "sha256": "528dd96ea99f746ae04ebd834128d7ca15ca118c6eef9472ec45df57208bd8e7",
+      "bytes": 1580,
+      "git_blob": "a9495ebf70057b99b46b30eb3eceef91d4016769",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/global-and-exclusion/original.expected": {
+      "sha256": "d78dbda15ea7f70eb375406e7e9bf132bde93099fb87e2f320cd29cbae37690f",
+      "bytes": 46862,
+      "git_blob": "68a1faec4d3235e832fc4287b1139c8968d8957d",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/global-and-exclusion/values.properties": {
+      "sha256": "0555307dd7f05af16214e634ed002475cd513f2699a7fdebaad4cd8a1eceaba3",
+      "bytes": 111547,
+      "git_blob": "fc2fad68fd85f5b2590677c3ebe377c0f0e98e5e",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/global-overlap/SavedSchedules.xml": {
+      "sha256": "14699da92812d39682b7d0d13a557caf43d1c46e13a1d8bdfaf7a983692d1f95",
+      "bytes": 1583,
+      "git_blob": "6b722bda2e28eeed0453748b469058700cde5a98",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/global-overlap/original.expected": {
+      "sha256": "278940f27c9bc8afcbadcc88bdd51f293e705a6f253a6529086932cf710ed475",
+      "bytes": 43566,
+      "git_blob": "bd325b741fde8f435498e9f31e5ca1bc0e1e683d",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/global-overlap/values.properties": {
+      "sha256": "0555307dd7f05af16214e634ed002475cd513f2699a7fdebaad4cd8a1eceaba3",
+      "bytes": 111547,
+      "git_blob": "fc2fad68fd85f5b2590677c3ebe377c0f0e98e5e",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/manifest.json": {
+      "sha256": "c83e6b4090ec01a256674dcacbc97e7f4b33790c601f6576172bc5e1412c972d",
+      "bytes": 5124,
+      "git_blob": "1345ee372c51e5173ff3e4749a2855df323b5f79",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/override-forced/SavedSchedules.xml": {
+      "sha256": "c338aaca84f721c228b22d534e35d4b216c27e34f1c6bcb3ce7f4acbf47c4e70",
+      "bytes": 625,
+      "git_blob": "50648417496824dfb7e7a46bb4a2e91136fead72",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/override-forced/original.expected": {
+      "sha256": "7bd5583d23ee9e72a34a15fe5e9fa418d439431dd7dd4c23d0f3e0e496917b51",
+      "bytes": 76262,
+      "git_blob": "0254eb2dadd8f17184bf4a1539830c11810a9d8b",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/override-forced/values.properties": {
+      "sha256": "af50bd20e9cf3995f098715ea70b7069edadf7af8c8a19c764174531e8796de0",
+      "bytes": 111546,
+      "git_blob": "6c622d6cd4e245e161c60fe274892cdb5ed8aac0",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/selection-and-rate-order/SavedSchedules.xml": {
+      "sha256": "099bab65ff14f4fe97c68ef88e484e889785d5df45de36e133b543264b8b98cd",
+      "bytes": 2067,
+      "git_blob": "97e3cfba52989b01b67647425ada3e7b4adfd08e",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/selection-and-rate-order/original.expected": {
+      "sha256": "d93a24be78b77b298999eccc4eb8a20b93b4e0aff6b091336ec3b863f7879d60",
+      "bytes": 30667,
+      "git_blob": "789a73c205a8a2f7b5fd2484708751ecfe149349",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/selection-and-rate-order/values.properties": {
+      "sha256": "0555307dd7f05af16214e634ed002475cd513f2699a7fdebaad4cd8a1eceaba3",
+      "bytes": 111547,
+      "git_blob": "fc2fad68fd85f5b2590677c3ebe377c0f0e98e5e",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/settled-unenforced-defaults/SavedSchedules.xml": {
+      "sha256": "4a97894fadd30660822994b94e715b5b4f1c6de82c3fbdcea933a146f7eccac8",
+      "bytes": 634,
+      "git_blob": "50f212f06008513295bfb7cc9b1253bd86c56ffd",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/settled-unenforced-defaults/original.expected": {
+      "sha256": "e92697fe9ea344e83f969cbd176d3b6d77e18445740d6c424c7d45c5b0e93d02",
+      "bytes": 30641,
+      "git_blob": "eff38909f020410feb661457c95462d061546df2",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/settled-unenforced-defaults/values.properties": {
+      "sha256": "fb9a069d72b9d4ddd0396b93ea0115de384f17b79051b6f0fb391dc63aeca9e7",
+      "bytes": 111549,
+      "git_blob": "f24497cb5db9186e845c95927f17d9804ea6356b",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/startup-default-restore/SavedSchedules.xml": {
+      "sha256": "4a97894fadd30660822994b94e715b5b4f1c6de82c3fbdcea933a146f7eccac8",
+      "bytes": 634,
+      "git_blob": "50f212f06008513295bfb7cc9b1253bd86c56ffd",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/startup-default-restore/original.expected": {
+      "sha256": "6cfd26da71d635b662999670d8e5d394ff1ee062528288fbe31e8a023a4c8506",
+      "bytes": 30659,
+      "git_blob": "ebc7ed232fd93c731c791fac442780309015c38a",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/startup-default-restore/values.properties": {
+      "sha256": "0555307dd7f05af16214e634ed002475cd513f2699a7fdebaad4cd8a1eceaba3",
+      "bytes": 111547,
+      "git_blob": "fc2fad68fd85f5b2590677c3ebe377c0f0e98e5e",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/unicode-category/SavedSchedules.xml": {
+      "sha256": "822edab246f04012eb925e965190c7e17c25b7984f4f41bd212bc199cc33d3c7",
+      "bytes": 1103,
+      "git_blob": "2589f8cf0101fa5865c5c3c444dd4efe28034a8b",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/unicode-category/original.expected": {
+      "sha256": "e6a76a3a85e2e86006a6cbb60b544d874339ac333635c65b16416f87785fbc22",
+      "bytes": 46862,
+      "git_blob": "2a01a235fc54f152003e2253bdcf30e3a8e2d601",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ticks/unicode-category/values.properties": {
+      "sha256": "0555307dd7f05af16214e634ed002475cd513f2699a7fdebaad4cd8a1eceaba3",
+      "bytes": 111547,
+      "git_blob": "fc2fad68fd85f5b2590677c3ebe377c0f0e98e5e",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/ascii-trim/input.conf": {
+      "sha256": "562fdcbe7fd5b9101a1374496b2eb6f5329292756e43eaf8ad441710814b9a29",
+      "bytes": 49,
+      "git_blob": "6d34e726f29de131f14ead695dbedd7d203efa01",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/ascii-trim/native.expected": {
+      "sha256": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+      "bytes": 82,
+      "git_blob": "73392c00426e963510af387fe36d39406d2f2739",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/ascii-trim/original.expected": {
+      "sha256": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+      "bytes": 82,
+      "git_blob": "73392c00426e963510af387fe36d39406d2f2739",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/canonical/input.conf": {
+      "sha256": "ad57830a73307903d06ebeb6fa859b72ef9c29bc0b470c322f501a04072534f3",
+      "bytes": 90,
+      "git_blob": "bc6857d228eb5010869c653aa36a720ed93dad0b",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/canonical/native.expected": {
+      "sha256": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+      "bytes": 82,
+      "git_blob": "73392c00426e963510af387fe36d39406d2f2739",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/canonical/original.expected": {
+      "sha256": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+      "bytes": 82,
+      "git_blob": "73392c00426e963510af387fe36d39406d2f2739",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/case-sensitive/input.conf": {
+      "sha256": "3d4b6ce447b66029e9a55d39e8df8a034a9848fd89755bee2af9e1c209f97701",
+      "bytes": 45,
+      "git_blob": "ab8910062b0fd91c6bac3938c189f9cebe1e5a6a",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/case-sensitive/native.expected": {
+      "sha256": "f12d0ef80d92b83e687b215e3303cba18b4d80e8ccc7584a72f4532f45e1eb55",
+      "bytes": 82,
+      "git_blob": "2e8714b4e564fc65681713fdd8a1e80fc4d8fbb0",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/case-sensitive/original.expected": {
+      "sha256": "f12d0ef80d92b83e687b215e3303cba18b4d80e8ccc7584a72f4532f45e1eb55",
+      "bytes": 82,
+      "git_blob": "2e8714b4e564fc65681713fdd8a1e80fc4d8fbb0",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/cr-only/input.conf": {
+      "sha256": "645906e4a8aef1b22642ab40487b35e19c9441e33ffa872f63f44ad55383a8ec",
+      "bytes": 90,
+      "git_blob": "0953bbec307b603f9d4bc128114878ff74c81505",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/cr-only/native.expected": {
+      "sha256": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+      "bytes": 82,
+      "git_blob": "73392c00426e963510af387fe36d39406d2f2739",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/cr-only/original.expected": {
+      "sha256": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+      "bytes": 82,
+      "git_blob": "73392c00426e963510af387fe36d39406d2f2739",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/crlf-and-unknown/input.conf": {
+      "sha256": "77f5522adb1c2bb8a0d1c9d3094a793073f37629f237d7750b1eedd5d26aac3a",
+      "bytes": 113,
+      "git_blob": "59747f8b0f363b542d2165396bf4a4254c26fe21",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/crlf-and-unknown/native.expected": {
+      "sha256": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+      "bytes": 82,
+      "git_blob": "73392c00426e963510af387fe36d39406d2f2739",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/crlf-and-unknown/original.expected": {
+      "sha256": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+      "bytes": 82,
+      "git_blob": "73392c00426e963510af387fe36d39406d2f2739",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/duplicate/input.conf": {
+      "sha256": "1441794d639fdb346dd5308eb00d1a23e6f90c292867122d4bccaf0221b43726",
+      "bytes": 90,
+      "git_blob": "e617bceedc45d6bc46a537e0ae454572c4c759c6",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/duplicate/native.expected": {
+      "sha256": "8af20e225a05a8595a13b56574afdb73e30da4d715f06c391abbfb1ac850b653",
+      "bytes": 82,
+      "git_blob": "9c89a1c8cd76b830f230444bf1bc74dbfd7ea8c4",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/duplicate/original.expected": {
+      "sha256": "8af20e225a05a8595a13b56574afdb73e30da4d715f06c391abbfb1ac850b653",
+      "bytes": 82,
+      "git_blob": "9c89a1c8cd76b830f230444bf1bc74dbfd7ea8c4",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/empty/input.conf": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0,
+      "git_blob": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/empty/native.expected": {
+      "sha256": "f12d0ef80d92b83e687b215e3303cba18b4d80e8ccc7584a72f4532f45e1eb55",
+      "bytes": 82,
+      "git_blob": "2e8714b4e564fc65681713fdd8a1e80fc4d8fbb0",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/empty/original.expected": {
+      "sha256": "f12d0ef80d92b83e687b215e3303cba18b4d80e8ccc7584a72f4532f45e1eb55",
+      "bytes": 82,
+      "git_blob": "2e8714b4e564fc65681713fdd8a1e80fc4d8fbb0",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/manifest.json": {
+      "sha256": "382efcaeb5ddbd161079ec813cf89ff782d5bf45590a659baf33eb8fc04a307a",
+      "bytes": 5188,
+      "git_blob": "247fa8e304f4fa080e6f64a18fb09a215a05b9f3",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/unicode-not-java-trim/input.conf": {
+      "sha256": "10db7a509802c72711936d1ed34cf0394972f483ed105a2e27e0b2e9252d772c",
+      "bytes": 47,
+      "git_blob": "3a1f184fec527897a7c8744e1f8e6c8856e4b841",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/unicode-not-java-trim/native.expected": {
+      "sha256": "f12d0ef80d92b83e687b215e3303cba18b4d80e8ccc7584a72f4532f45e1eb55",
+      "bytes": 82,
+      "git_blob": "2e8714b4e564fc65681713fdd8a1e80fc4d8fbb0",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/unicode-not-java-trim/original.expected": {
+      "sha256": "f12d0ef80d92b83e687b215e3303cba18b4d80e8ccc7584a72f4532f45e1eb55",
+      "bytes": 82,
+      "git_blob": "2e8714b4e564fc65681713fdd8a1e80fc4d8fbb0",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/unterminated-foreign/input.conf": {
+      "sha256": "a6b0bdf4d3ce8e13f52849cd33132a1f11970551a19cf7a074fdafd351146abc",
+      "bytes": 19,
+      "git_blob": "89b2504decc08e55d7daaf6fa4602821e1deb763",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/unterminated-foreign/native.expected": {
+      "sha256": "6e29ef512e0905650769dc2034ad1affa69c08fe6ba11ff9a475b311a42be048",
+      "bytes": 77,
+      "git_blob": "0eb62f17416f39035acc98cba0de1da66de48731",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/unterminated-foreign/original.expected": {
+      "sha256": "cde8591fb05c538bd6eafcf03019d5deee6c67bd583debb645fc9b400bbc894d",
+      "bytes": 82,
+      "git_blob": "13cf3855eaa4823742665d393d5e3548bf193ead",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/unterminated-owned/input.conf": {
+      "sha256": "47b38c456ecc7ef97695fca53153634178f301b86cae47bd738c7e20994d8b0b",
+      "bytes": 44,
+      "git_blob": "d266d29273dbc88db6433666ccb94954be90cee2",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/unterminated-owned/native.expected": {
+      "sha256": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+      "bytes": 82,
+      "git_blob": "73392c00426e963510af387fe36d39406d2f2739",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    },
+    "migration/fixtures/scheduler-ownership/unterminated-owned/original.expected": {
+      "sha256": "a7988411c27114d330cfa988534c4f9d92ae5f8c96a058a11cfa7f9b752472a8",
+      "bytes": 82,
+      "git_blob": "73392c00426e963510af387fe36d39406d2f2739",
+      "private_image_commit": "ae10147424936506bd978bb2f8226d5c505c92c0"
+    }
+  },
+  "historical_git_newline_distinction": [
+    {
+      "path": "migration/fixtures/scheduler-ownership/crlf-and-unknown/input.conf",
+      "qualified_raw_sha256": "77f5522adb1c2bb8a0d1c9d3094a793073f37629f237d7750b1eedd5d26aac3a",
+      "raw_bytes": 113,
+      "old_afeb_git_sha256": "85e251a1b3b1120ebb53c5a033ffdeb502f4c6be65f7ca4ab37700a5ca9e4b9a",
+      "old_git_bytes": 110,
+      "raw_CR_count": 3,
+      "old_CR_count": 0,
+      "byte_preserving_fix_commit": "015241e1ea32c6fa8b0f191718efb9f6983aee02"
+    }
+  ],
+  "native_qualified_inputs": {
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/CMakeLists.txt": {
+      "qualified_sha256": "140c34e1d9dd64cff1a6de55a87b3f863144c10e7aee70be44106388e348e7d4",
+      "qualified_git_blob": "5b7012a9e71533323f528dcef827de80c6744e36",
+      "checkpoint_sha256": "140c34e1d9dd64cff1a6de55a87b3f863144c10e7aee70be44106388e348e7d4",
+      "working_observed_sha256": "a9ebfaf53e645b946d9fb3571699f9808cd375a80c5235ca612602e60b1b92e9",
+      "checkpoint_equals_qualified": true,
+      "working_equals_qualified": false
+    },
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/README.md": {
+      "qualified_sha256": "0de1dbc2400bf185800440e4ac3a269fd7828734273e787e918d17a857818bff",
+      "qualified_git_blob": "97584e38a769a86bc3ced361f39eea4c2052a512",
+      "checkpoint_sha256": "0de1dbc2400bf185800440e4ac3a269fd7828734273e787e918d17a857818bff",
+      "working_observed_sha256": "0de1dbc2400bf185800440e4ac3a269fd7828734273e787e918d17a857818bff",
+      "checkpoint_equals_qualified": true,
+      "working_equals_qualified": true
+    },
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/fixture_test.py": {
+      "qualified_sha256": "6c24d149d2338a68bba52298a7f5c8d9caec2ed88a058adc76df1b952fb5cb0b",
+      "qualified_git_blob": "d4699cec8014defb854b374ed5cc65530c24dfd2",
+      "checkpoint_sha256": "6c24d149d2338a68bba52298a7f5c8d9caec2ed88a058adc76df1b952fb5cb0b",
+      "working_observed_sha256": "5547caa4b189bf6f5a33a3d2f52235a3f4948dd98d6ee04c7c33c3ebe22013ec",
+      "checkpoint_equals_qualified": true,
+      "working_equals_qualified": false
+    },
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/module.cpp": {
+      "qualified_sha256": "59f81f65f88088758bfc554e81904f0c265e11491897d221b5550130d2de5da4",
+      "qualified_git_blob": "72a00d471495d7e63f4a1b68dc5397f8ebfc1af7",
+      "checkpoint_sha256": "59f81f65f88088758bfc554e81904f0c265e11491897d221b5550130d2de5da4",
+      "working_observed_sha256": "59f81f65f88088758bfc554e81904f0c265e11491897d221b5550130d2de5da4",
+      "checkpoint_equals_qualified": true,
+      "working_equals_qualified": true
+    },
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/module_driver.cpp": {
+      "qualified_sha256": "554528d69b558712809f8ec709565c6caefb9bcfacc165de512d240be4540c0c",
+      "qualified_git_blob": "88d792978acbe42e66f622f7c2542a2675d7e45a",
+      "checkpoint_sha256": "554528d69b558712809f8ec709565c6caefb9bcfacc165de512d240be4540c0c",
+      "working_observed_sha256": "554528d69b558712809f8ec709565c6caefb9bcfacc165de512d240be4540c0c",
+      "checkpoint_equals_qualified": true,
+      "working_equals_qualified": true
+    },
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/module_fixture_test.py": {
+      "qualified_sha256": "d1c49f56fd0cc026c766a90baa535871e6511c2599af9ba0247654b3a04bee7b",
+      "qualified_git_blob": "23bc15880578098aaf7755f9b8450678cfe0ce55",
+      "checkpoint_sha256": "d1c49f56fd0cc026c766a90baa535871e6511c2599af9ba0247654b3a04bee7b",
+      "working_observed_sha256": "e540d7e70c76985bb8b06515b564b8c5eb42cc53ef03bbf56bd0d1c1bd748cca",
+      "checkpoint_equals_qualified": true,
+      "working_equals_qualified": false
+    },
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/original_xml.cpp": {
+      "qualified_sha256": "04a210b1f3e91b7458a0afa20057efd37e4b2b36d9dc5560e8d931e0b2231817",
+      "qualified_git_blob": "62a6f0c252d1555345b773ec2118c7f51d445e91",
+      "checkpoint_sha256": "04a210b1f3e91b7458a0afa20057efd37e4b2b36d9dc5560e8d931e0b2231817",
+      "working_observed_sha256": "04a210b1f3e91b7458a0afa20057efd37e4b2b36d9dc5560e8d931e0b2231817",
+      "checkpoint_equals_qualified": true,
+      "working_equals_qualified": true
+    },
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_file.cpp": {
+      "qualified_sha256": "2016f51cc3c7fdd4977898b27f42de24ccd4b00d9b1e4965e6c701ce8f68f3ae",
+      "qualified_git_blob": "a90595d5f93a2896098cde9ceecdeb36e187569f",
+      "checkpoint_sha256": "2016f51cc3c7fdd4977898b27f42de24ccd4b00d9b1e4965e6c701ce8f68f3ae",
+      "working_observed_sha256": "2016f51cc3c7fdd4977898b27f42de24ccd4b00d9b1e4965e6c701ce8f68f3ae",
+      "checkpoint_equals_qualified": true,
+      "working_equals_qualified": true
+    },
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_file.hpp": {
+      "qualified_sha256": "20ad7b0962cb9339b629ce9d8e3582cb848e7fe52f5f434a6306455f0c7be051",
+      "qualified_git_blob": "749b7333e36c92c9df96b40ac0ea7e2b0c33eaa6",
+      "checkpoint_sha256": "20ad7b0962cb9339b629ce9d8e3582cb848e7fe52f5f434a6306455f0c7be051",
+      "working_observed_sha256": "20ad7b0962cb9339b629ce9d8e3582cb848e7fe52f5f434a6306455f0c7be051",
+      "checkpoint_equals_qualified": true,
+      "working_equals_qualified": true
+    },
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_fixture_test.py": {
+      "qualified_sha256": "4ebf24447dde113652f6a1dd48030454b673af368a2c0979441dee8a2bb5843e",
+      "qualified_git_blob": "968c22440f9b9915d108f68957ee60561ac943d4",
+      "checkpoint_sha256": "4ebf24447dde113652f6a1dd48030454b673af368a2c0979441dee8a2bb5843e",
+      "working_observed_sha256": "0ccf1eff56ae04e33ca52ec18d80e529213d712f06127278df85c16bf1ed5286",
+      "checkpoint_equals_qualified": true,
+      "working_equals_qualified": false
+    },
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/ownership_tests.cpp": {
+      "qualified_sha256": "62e9d424d668117f539a78146a2b850ca410eeef80fb0d1cf7cff1a008d6567d",
+      "qualified_git_blob": "40858026e8e5c0ae47af2457bd5ad7931102108f",
+      "checkpoint_sha256": "62e9d424d668117f539a78146a2b850ca410eeef80fb0d1cf7cff1a008d6567d",
+      "working_observed_sha256": "62e9d424d668117f539a78146a2b850ca410eeef80fb0d1cf7cff1a008d6567d",
+      "checkpoint_equals_qualified": true,
+      "working_equals_qualified": true
+    },
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/scheduler.cpp": {
+      "qualified_sha256": "7b6a707e66d77674665e5d213ac3acc5d81e763af3f0bdedf37dc90bf3e6869d",
+      "qualified_git_blob": "7668209757bd6a94d70ef6965a0834b35f5dd313",
+      "checkpoint_sha256": "7b6a707e66d77674665e5d213ac3acc5d81e763af3f0bdedf37dc90bf3e6869d",
+      "working_observed_sha256": "7b6a707e66d77674665e5d213ac3acc5d81e763af3f0bdedf37dc90bf3e6869d",
+      "checkpoint_equals_qualified": true,
+      "working_equals_qualified": true
+    },
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/scheduler.hpp": {
+      "qualified_sha256": "96f8bc6ecd338c21a5293a6476bf857a33228eab96904f97da4428352d97d170",
+      "qualified_git_blob": "20d665484d0ff6c5add3c152a03c3c84bad60338",
+      "checkpoint_sha256": "96f8bc6ecd338c21a5293a6476bf857a33228eab96904f97da4428352d97d170",
+      "working_observed_sha256": "96f8bc6ecd338c21a5293a6476bf857a33228eab96904f97da4428352d97d170",
+      "checkpoint_equals_qualified": true,
+      "working_equals_qualified": true
+    },
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/tests.cpp": {
+      "qualified_sha256": "2616f72edc5da5e2779829f49396063d8e13834e21161156573a52747ea4acc1",
+      "qualified_git_blob": "d3ca6086a5d18dd35951dc111205e8b2ace557e3",
+      "checkpoint_sha256": "2616f72edc5da5e2779829f49396063d8e13834e21161156573a52747ea4acc1",
+      "working_observed_sha256": "2616f72edc5da5e2779829f49396063d8e13834e21161156573a52747ea4acc1",
+      "checkpoint_equals_qualified": true,
+      "working_equals_qualified": true
+    },
+    "native/plugins/BiglyBTC-plugin-SpeedScheduler/tick_fixture_test.py": {
+      "qualified_sha256": "a50c29f37e765a4c18e0fa370fdaa4b5d082cf241583c6c02d1b0236f7a30bb8",
+      "qualified_git_blob": "2d87a65972ae3c3c97cf8c1daeff2961522c0480",
+      "checkpoint_sha256": "a50c29f37e765a4c18e0fa370fdaa4b5d082cf241583c6c02d1b0236f7a30bb8",
+      "working_observed_sha256": "6024c98b4f2b41b60ccb1d5acb61a07f91dddff09198dc97a6bbf85fcb7be3c7",
+      "checkpoint_equals_qualified": true,
+      "working_equals_qualified": false
+    }
+  },
+  "published_sdk_inputs": {
+    "native/plugin-sdk/include/biglybtc/scheduler.h": {
+      "sha256": "54675a9fffa63923111c037cf5b4711d548a614e4e0760edb1c3bf990f97fc46",
+      "public_path": "plugin-sdk/include/biglybtc/scheduler.h",
+      "public_commit": "eefbd205ca0940ad4868ee07989b2d42be1a99dc",
+      "public_git_blob": "e658c41c0a96135f70bb3922c3b9e2a351772332"
+    },
+    "native/plugin-sdk/include/biglybtc/plugin.h": {
+      "sha256": "119da17cfe1147e786d19bc84401a7e2f9a6d71ee256f6a6307efe8ba0d7b552",
+      "public_path": "plugin-sdk/include/biglybtc/plugin.h",
+      "public_commit": "eefbd205ca0940ad4868ee07989b2d42be1a99dc",
+      "public_git_blob": "00f14ff0dfc1f54c12735db7bf365e4abf198bac"
+    },
+    "native/plugin-sdk/include/biglybtc/plugin_host.hpp": {
+      "sha256": "f4fc41a44b1b9f10106fb66b7efecb517d66c0a9e7b5ab8e1579236d7daace99",
+      "public_path": "plugin-sdk/include/biglybtc/plugin_host.hpp",
+      "public_commit": "eefbd205ca0940ad4868ee07989b2d42be1a99dc",
+      "public_git_blob": "dde807188fcd338e27660b9d6fc44a39e7b75667"
+    }
+  },
+  "selected_original_source_blobs": {
+    "speedscheduler/Time.java": {
+      "commit": "1ee6a53dae017696d2f0002e4a0d74f5a9476af5",
+      "sha256": "a4f19f8afccb38648fe61f687a68302b2044bcd53496949021cc1d23fa61707b",
+      "git_blob": "67fc7384daa7a557940fb1740e10100035fb5683"
+    },
+    "speedscheduler/Schedule.java": {
+      "commit": "1ee6a53dae017696d2f0002e4a0d74f5a9476af5",
+      "sha256": "fefa4f6c1b51f09cac2630a508b5cbeaf92232a9e11a72feedf0cc208950d66e",
+      "git_blob": "2b6b1872cd1c7b0ba72d5c15013d203067c08042"
+    },
+    "speedscheduler/SpeedSchedulerThread.java": {
+      "commit": "1ee6a53dae017696d2f0002e4a0d74f5a9476af5",
+      "sha256": "d0d14741402c60a52cae7ba2b07cde7e2aa58cdf81c464b809f98cbff4d457cc",
+      "git_blob": "2d8cefb4f8bdb98e20fbf07f1614e8c2e2f16aef"
+    },
+    "speedscheduler/io/XmlScheduleIO.java": {
+      "commit": "1ee6a53dae017696d2f0002e4a0d74f5a9476af5",
+      "sha256": "7c387c1bf7e649bfff35b4b2edb1d4805626230e387cf9f2708fed9383849752",
+      "git_blob": "89a47e44aea1e399a5876e1b2393a5fd56a51027"
+    },
+    "speedscheduler/SchedulePersistencyManager.java": {
+      "commit": "1ee6a53dae017696d2f0002e4a0d74f5a9476af5",
+      "sha256": "737b09d84a435a8533fb367806e870249a7ba6603e891c3b6d893675653e4584",
+      "git_blob": "6d888d96267b9225e48e703e5d06de44c8dc969b"
+    },
+    "core/src/com/biglybt/core/util/ByteFormatter.java": {
+      "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "sha256": "b1eb635fddd00ad72301128231a756ce6b95d6a7a6721e1d2be3841bbad53560",
+      "git_blob": "3316a55349229cdcb6293e6723bce5ae91a57e05"
+    }
+  },
+  "source_observation_receipts_sha256": {
+    "migration/evidence/P04-05/original-plugin-build.json": "c15c520b164d8d1ec26bdb4b0540e16a552e35bad8774d3ea036a4d582abfa13",
+    "migration/evidence/P04-05/gcc-original-xml-time.json": "f9f50dc76d730f2db228d13e5cf164d7b42681115f7a63dbad9f9070cb5d6d1c",
+    "migration/evidence/P04-05/gcc-original-ticks.json": "8ea557ed58e1a3bc792093135d05be748abaa2dafd5a1e9c3995a10b60e46db7",
+    "migration/evidence/P04-06/gcc-original-ownership.json": "3f62891abc6f8801386cc94e437d83abba25422cc83548a5ecef9f2c5fc3f701",
+    "migration/evidence/P02-05-plugins/implementation-checkpoint.json": "073096a0886955b5d7703c41d594b9c138edcaf840cb9d1d5ad1a661ea7c7e65",
+    "migration/evidence/P02-05-plugins/qualification-source-check.json": "3a29d14eb4a98907967b1b5073f85b82a352eb26f7871873a2ac19f21d1f1c43"
+  },
+  "historical_three_lane_six_suite_evidence": {
+    "gcc": {
+      "receipt": "migration/evidence/P02-05-plugins/gcc.json",
+      "receipt_sha256": "d1131f5fdfe912b42a33a938669650b56a4fcaae576b52983d83355ca270bad6",
+      "scheduler_test_log": "migration/evidence/P02-05-plugins/gcc-scheduler-test.txt",
+      "test_log_sha256": "b62d732c3155279fdbbc2df456fbdd411f5a062cac416cc2281a6569eaf379c0",
+      "historical_suites_passed": 6,
+      "CPP_Python_CMake_pins_match_private_afeb": true,
+      "README_document_only_historical_difference": {
+        "native/plugins/BiglyBTC-plugin-SpeedScheduler/README.md": {
+          "receipt_sha256": "bf5780f63448b31fed4d31393d97eb890285783cbdbe77fb7c804baf9553d135",
+          "private_afeb_sha256": "0de1dbc2400bf185800440e4ac3a269fd7828734273e787e918d17a857818bff"
+        }
+      }
+    },
+    "clang": {
+      "receipt": "migration/evidence/P02-05-plugins/clang.json",
+      "receipt_sha256": "9632e2476c5d84ef99dfcd6ac76aac8593a1e06b3719fc34d834019f9048128e",
+      "scheduler_test_log": "migration/evidence/P02-05-plugins/clang-scheduler-test.txt",
+      "test_log_sha256": "09e5a187097254199d04e4b3d69d26dc402481126248f98f6524caf462453e8c",
+      "historical_suites_passed": 6,
+      "CPP_Python_CMake_pins_match_private_afeb": true,
+      "README_document_only_historical_difference": {
+        "native/plugins/BiglyBTC-plugin-SpeedScheduler/README.md": {
+          "receipt_sha256": "bf5780f63448b31fed4d31393d97eb890285783cbdbe77fb7c804baf9553d135",
+          "private_afeb_sha256": "0de1dbc2400bf185800440e4ac3a269fd7828734273e787e918d17a857818bff"
+        }
+      }
+    },
+    "asan": {
+      "receipt": "migration/evidence/P02-05-plugins/asan.json",
+      "receipt_sha256": "6acd41863f105a1f6da1d5018d017527f7e96f6ddcacbbdd17b71cc72b84c9ce",
+      "scheduler_test_log": "migration/evidence/P02-05-plugins/asan-scheduler-test.txt",
+      "test_log_sha256": "d32f8d78f598040f5347eed9ee6346656875eccf343f4a52b708687da9fd7bc0",
+      "historical_suites_passed": 6,
+      "CPP_Python_CMake_pins_match_private_afeb": true,
+      "README_document_only_historical_difference": {}
+    }
+  },
+  "original_user_repository": {
+    "head_before_after": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "index_sha256_before_after": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4"
+  },
+  "authoring_inspection_note": "First attempted afeb raw-fixture assertion correctly exposed one old CRLF-normalized Git blob; exact latestae101 image was then independently verified for all74. A later enumeration encountered newly authored NOTICE outside old15; audit now explicitly enumerates immutable old15 and does not treat new export files as already qualified. No source or fixture changed.",
+  "credit": "No compiler/preprocessor, CMake, JVM, native/module/test, profile, network or publication execution. Existing receipts are historical evidence, not a fresh matrix. Fixed C++/headers/tests match privatequalifiedafeb and latestae101; driver path-only CMake/replay-script/NOTICE/workflow changes require separate review/rebuild."
+}

@@ -1,0 +1,16 @@
+{
+  "status": "PASS_SOURCE_ONLY_NO_REMAINING_BLOCKER",
+  "prior_review_sha256": "251c1893ed4d3750112375863a67a35a2d3ce161822c51ec4233436ea1a8477c",
+  "optional_guard_manifest_sha256": "3692495d416bf585af58b08614d56444741b99eb1954c209340d566163d21df3",
+  "before_sha256": "022ef72782253085f7ba19d40c2159d6a241e43fa0b6d235e5befe935838dc94",
+  "after_sha256": "9f0f2d2eeaa45aa4667be5dcab5563abc1ddb8b47edd7e918356c4e11318e022",
+  "native_resulting_subject_sha256": {
+    "engine/persistent_session.cpp": "9f1825b5823ec7c75ec5e631f22d6d9806baae236a2c08d84236f15cafe5b010",
+    "tests/persistent_session_fault_tests.cpp": "9f0f2d2eeaa45aa4667be5dcab5563abc1ddb8b47edd7e918356c4e11318e022",
+    "tests/RuntimeBindingTests.cmake": "cd94b8edcfb0b59853a7bd2e4e538a2852ddfcac569ef5cbf8f530d4202161fb"
+  },
+  "resolution": "POLL-T1 closed: exactly one QVERIFY optional-presence assertion precedes dereference; full byte reversal matches022ef frozen test. Production9f1825 and direct CMake linkcd94b remain exact. No test expectations, row counts, deadlines or flags were relaxed.",
+  "inherited_nonblocking_scope_precision": "First diagnostic sample/time identity versus last immediately preceding real idle sample, reentry, invalid clock and sequence exhaustion remain source-reviewed subcases without new actual execution credit.",
+  "actual_execution_by_reviewer": false,
+  "edits_to_subjects_by_reviewer": false
+}

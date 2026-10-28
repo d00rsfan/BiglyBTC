@@ -1,0 +1,40 @@
+{
+  "status": "PASS_SOURCE_ONLY_APP_CLOSE_DELTA",
+  "inputs_sha256": {
+    "build/statistics-completion-20261021/next-accounting/review-app-oracle.md": "4a637b5b120b29d04ff492fcdee458fe0bdb824ca6e0b4b9231f000baa242d6a",
+    "build/statistics-completion-20261021/next-accounting/review-app-oracle-pins.json": "0cf39079ee88003fab9a6ff5f33391392e5083bec386bf71dda517ef1abf3bed",
+    "build/statistics-completion-20261021/next-accounting/APP-CONTRACT.md": "362d677d02312af56914bd2388aa32849daf5cd9cc0c9d567888ce3867bd4b8a",
+    "build/statistics-completion-20261021/next-accounting/app-amendments/close-lifecycle/manifest.json": "9f517dc228061ba5939782c3438ecc6efed065e00f77a1a8e0ab6588ef7052b7",
+    "build/statistics-completion-20261021/next-accounting/app-amendments/close-lifecycle/amendment.patch": "5df4eb64c98bf38c2446a8bfa2b729bbd4652d19b9e30d141426421e2a7026b4",
+    "build/statistics-completion-20261021/next-accounting/app-amendments/close-lifecycle/before/manifest.json": "a55cf67e6431496f6aa0abf52858ab6ef8b5cda9036cc69e0e7f401233bf802c",
+    "build/statistics-completion-20261021/next-accounting/app-amendments/close-lifecycle/stage_app.before.py": "d7cc83abb181695f844917e16b2b62fceea5b2c2cff4cb27e2a24feb5f035e81",
+    "build/statistics-completion-20261021/next-accounting/app-overlay/manifest.json": "3651c7ec3286e612a0fdd17ab7a1d8af830a44a513a34600609fbfc5f0d565b3",
+    "build/statistics-completion-20261021/next-accounting/stage_app.py": "123f2576b860c40f3f577f7c591c3f15cd7df5e25a8ef4c178c1504d79cdf5d8",
+    "build/statistics-completion-20261021/next-accounting/app-overlay/app/main_desktop.cpp": "b46ba3b199d7e47b74d75d2a96c4635c82df4dc994b96e6279c0d7e1e7a88d4d",
+    "build/statistics-completion-20261021/next-accounting/app-overlay/app/session_bridge.cpp": "a4c634ccf9194caf0a8b80a81e9b84a1a45aa507f54efb416fa2b6d0ac0f2a4a",
+    "build/statistics-completion-20261021/next-accounting/app-overlay/app/session_bridge.hpp": "e8d608e780031c4f39160ba44661f0fe2593e76b78cd310ec40c9e5042f209c2",
+    "build/statistics-completion-20261021/next-accounting/app-overlay/tests/native_session_integration_tests.cpp": "c60be4de49c9c2cf851406bd2fdfe03f8b31d3c1d7e31d0b1e5276fb8a0255ff",
+    "build/statistics-completion-20261021/next-accounting/app-overlay/ui/library_window.cpp": "a8d415366ef181cb7d516c9570b501fdc4773dc880cc9e90d230eea8885ad814",
+    "build/statistics-completion-20261021/next-accounting/app-overlay/ui/library_window.hpp": "a1bd12e905e39b197f648b21a540a568ae3bf6d3802d164626102c7a7d2d5e0c",
+    "build/statistics-completion-20261021/next-accounting/app-overlay/ui/native_session_presentation.hpp": "fd2015a5d5844657265ac0d62d864f911a06bcde3f3d7b35041f97f0571bb2f1"
+  },
+  "closed_findings": {
+    "APP-A1": "cancel() refuses once close is latched; closing-operation wrapper failures and executor-skip monitor failure reset Bridge and emit closeFailed before busy false; Window clears its closing/request latches via the new signal. Ordinary active-transfer cancellation remains unchanged before close admission.",
+    "APP-A2": "Final snapshot allocation and delivery are individually catch-all optional operations; Host reset/join+lease release no longer depends on either. Primitive close receipt remains the real outcome.",
+    "APP-A3": "QPointer is retained across dispatch; no rejection-tail member access occurs after direct deletion."
+  },
+  "reproduction_clarification": "stage_app now pins the two explicit externally authored DTO/test inputs before any output mutation and emits exactly five generated plus these two source paths. It no longer infers unrelated leftovers by rglob. Its docstring describes author staging, not from-empty DTO/test generation.",
+  "preservation": "All original six reviewed beforeimages remain exact in the separate amendment history; original BLOCKED report unchanged. Seven current source pins verified.",
+  "remaining_qualification": [
+    "Deterministic accepted-close queued behind actual held worker turn plus repeated cancellation/close.",
+    "Controlled optional final-publication failure must still release Host lease and acknowledge true primitive outcome.",
+    "Rejected dispatch with direct Bridge deletion, and failure signal/deletion/reentry ordering.",
+    "Source-bound loaded LT artifact gate and causal engine fence/fault qualification remain separate pending requirements."
+  ],
+  "test_snapshot": "The staged integration test retains the meaningful ordinary cases. Current Target initializer now matches actual {hash,generation}; these new close fault paths are not yet claimed covered.",
+  "executed_author_tools": false,
+  "builds": 0,
+  "runtime_tests": 0,
+  "native_mutations": 0,
+  "git_mutations": 0
+}

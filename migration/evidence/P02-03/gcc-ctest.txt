@@ -1,0 +1,58 @@
+Start testing: Oct 17 02:23 IDT
+----------------------------------------------------------
+1/3 Testing: bounded-core-formats
+1/3 Test: bounded-core-formats
+Command: "/tmp/biglybtc-native-gcc/tests/biglybtc-core-tests"
+Directory: /tmp/biglybtc-native-gcc/tests
+"bounded-core-formats" start time: Oct 17 02:23 IDT
+Output:
+----------------------------------------------------------
+PASS 55 checks; 20,000 malformed-input trials
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"bounded-core-formats" end time: Oct 17 02:23 IDT
+"bounded-core-formats" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/3 Testing: bounded-executor
+2/3 Test: bounded-executor
+Command: "/tmp/biglybtc-native-gcc/tests/biglybtc-executor-tests"
+Directory: /tmp/biglybtc-native-gcc/tests
+"bounded-executor" start time: Oct 17 02:23 IDT
+Output:
+----------------------------------------------------------
+PASS: lifecycle, backpressure, FIFO, cancellation, ownership, reentrant stop, concurrency
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"bounded-executor" end time: Oct 17 02:23 IDT
+"bounded-executor" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/3 Testing: profile-java-interop
+3/3 Test: profile-java-interop
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/profile_tests.py" "--driver" "/tmp/biglybtc-native-gcc/tests/biglybtc-profile-driver"
+Directory: /tmp/biglybtc-native-gcc/tests
+"profile-java-interop" start time: Oct 17 02:23 IDT
+Output:
+----------------------------------------------------------
+PASS hold-lock conflicts with Java and native; death releases lock
+PASS duplicate-lock conflicts with Java and native; death releases lock
+PASS Java lock excludes native; release permits native
+PASS compatible save/recovery at normal
+PASS compatible save/recovery at temp
+PASS compatible save/recovery at backup
+PASS compatible save/recovery at primary
+PASS traversal, stale input, exclusive saving and symlink protection
+<end of output>
+Test time =   7.04 sec
+----------------------------------------------------------
+Test Passed.
+"profile-java-interop" end time: Oct 17 02:23 IDT
+"profile-java-interop" time elapsed: 00:00:07
+----------------------------------------------------------
+
+End testing: Oct 17 02:23 IDT

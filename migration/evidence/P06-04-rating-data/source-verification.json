@@ -1,0 +1,11 @@
+{
+  "source_hashes_match": true,
+  "files": 51,
+  "observations_per_compiler": 1819,
+  "java_reopened_distinct_payloads_per_compiler": 366,
+  "compilers": [
+    "gcc16",
+    "clang24",
+    "clang24-asan-ubsan-lsan"
+  ]
+}

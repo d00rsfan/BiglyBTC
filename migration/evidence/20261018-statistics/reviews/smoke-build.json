@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "status": "PASS-independent-source-review-no-blocker",
+  "reviewer": "error_driver",
+  "independence": "Root authored these sample/smoke/build/workflowchanges. Reader author is reviewer, but ownreader source/ownreader test semantics excluded from independentcredit here; linkintegration is reviewed.",
+  "source_sha256": {
+    "preview/native/packaging/preview_smoke.cpp": "cc433e748d32439bf58711094e3b96c102aa1ea903dff9b0718ae67b9185f8ff",
+    "preview/native/packaging/preview.py": "78e6d1e95e9c946601da9432943b6894898638a1835516d8ca9116dbb99d9c00",
+    "preview/native/tests/CMakeLists.txt": "75ec4b4caf6b1d13030166689307c08770adc79081fca351e3de2a9fc71c526e",
+    "preview/native/core/CMakeLists.txt": "008c58da8ee2340e084c4a6dbba0c1af5f33d644075ae78438579b38852a984e",
+    "preview/native/adapters/CMakeLists.txt": "66bdf7920e59627442486abaa03ddbd6c0b756911da4fc949ab79c9ccf82eb1f",
+    "preview/native/ui/CMakeLists.txt": "d63de5bc15b4e4ee8a2dd80f84e8020cb803af5a0e5121cc357f46d14bf01aab",
+    ".github/workflows/native-preview.yml": "4ee65f126e5f6fd00c52e3f5c4ee23b793c7f753353ea33bc5c0bfdec20d7dc4"
+  },
+  "blocking_findings": [],
+  "old_smoke_preservation": {
+    "before_sha256": "fef6cc6db731c6b326ad60c24c572d08052d0b256ab074f74ae03f47fb38fcde",
+    "check": "Removing only4newinclude lines,2newStats signalconnections,1newreadonlyfixturebaseline line and1newStats slot reconstructs the exact previous P04-14smoke bytes/hash; alloldsmoke assertions/functions remain byteidentical."
+  },
+  "checks": [
+    {
+      "area": "Generatedsample",
+      "result": "Existing purePython encoder and root/profile isolation unchanged. One new literal original-default BiglyBT.statistics document undergeneratedprofile contains all13signedlongfields plus binaryunknown. Static AST/literal inspection only confirmed schema and data+protocol split sums5368709120/2147483648 with DHTseparate; since-markdownload4294967296 is arithmetic over those fixed actualwrittenvalues. No runtime import/call or wholeJavaencoding equality is implied."
+    },
+    {
+      "area": "ActualQtflow",
+      "result": "Smoke wires Window Statsrequest->Bridge and actualimmutableResult->Window alongside unchangedbusysignal/session connections. Opens realgeneratedprofile, waitsactualcolumnread/busyrelease, targetsPausedrow and retainsselection/details/filter/headerwidth, activates Ctrl5 fromfocusedfilter, waitsactualStatisticsReady and verifiesPageActivity/no inventedpayloadobservations/exactsavedtotal/since/source. Ctrl1returnsretainedlibrary; Ctrl5reusespage withoutread; CtrlWdeletesonlyview/noCancel; reopenactualsecondread/freshActivity/noobservations/deferredolddeletion. Torrentssnapshot and detailscount stayfixed."
+    },
+    {
+      "area": "Read-onlyassertions",
+      "result": "Statsfile addedtoexistingreadonlyfixture baseline; dedicatedStats smoke retains exactstats+tablesbytes, assertsnorecoveryleaves andemptypayloaddir. Optionalstatisticsread doesnottriggerSave/reset/mark/transfer/libraryrefresh; previousexplicitcolumnSave smoke remainsseparatelyintentional andunchanged. Bytepreservation smoke is distinct from reader testdevino/metadata coverage."
+    },
+    {
+      "area": "CaptureandCI",
+      "result": "With existing capture env, unique statistics-activity-preview.png and statistics-transfers-preview.png are saved underfencedgeneratedsampleparent; actualActivity is emptyunavailable, TransfersCurrent showslastsavedfacts. Both exactnames match2newCIcpstatements. Wholeworkflow otherwise unchanged:standardubuntu26.04,readonlypermissions,pinnedactions,exactexistingbootstrap,ReleaseC++/Qtdeps,j2nice5,unitJUnit,actualoffscreenSmoke,freshprivate/tmp/XDG roots,pipefail andalwaysartifactupload. No integration/fullclient/nativefixture/JVM claims are added."
+    },
+    {
+      "area": "CMake",
+      "result": "CoreappendsQtfree saved_statistics.cpp; held-profileappends statistics_view.cpp withoutwriter/filename changes; UI appendsDTO/pagehpp/cpp withexistingAUTOMOC and QtWidgets/Corelink. Fournewtesttargets haveexistingwarningsWerror; pure/reader30s andunitlabels, readeronlytarget-private wrapread; page/integrationAUTOMOCQtTest120s offscreenunitlabels insideDesktopconditional. No oldtarget/test/label/timeout/flagremoved. Existingdesktop_host publicUILink and privateprofile resolvesSmoke targets."
+    }
+  ],
+  "nonblocking_followup": [
+    {
+      "path": "migration/publication/preview/native-preview.yml",
+      "issue": "Original future-export template still copies onlyclassic-preview.png, so it also predates existingservice/selectedcaptures. Sync to actualcurrentpublicworkflow before any futuretemplate-driven re-export; actualreviewedworkflow already includesall6images.",
+      "owner": "root",
+      "actual_pipeline_blocker": false
+    }
+  ],
+  "static_validation": {
+    "sample_python_AST_syntax": true,
+    "sample_literal_dict_fields": 13,
+    "sample_literal_combined_sums_and_since_expected": true,
+    "old_smoke_hash_reconstruction": true,
+    "read_only_Git_diff_was_inspected": "No index/ref/commit/push or working source mutation",
+    "compiler_or_test_or_subject_run": false,
+    "process_fixture": false,
+    "Java": false,
+    "profile_or_network": false
+  },
+  "limits": [
+    "Source-onlyreview cannot assert actualhosted/local/sanitizer/Smoke pass; rootowns all runtime qualification.",
+    "The newsmoke validates generatedsaveddata/read-onlynavigation, not currentglobal/session statistics, originalhistory/sampler, liveprofilebehavior, Javaexecution/equality or physicaldurability.",
+    "No reusable sourceproof/qualification framework or extra target execution was introduced."
+  ]
+}

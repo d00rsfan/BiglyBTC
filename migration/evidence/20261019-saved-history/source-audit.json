@@ -1,0 +1,113 @@
+{
+  "schema": 1,
+  "scope": "P04-18 original saved VERSION1 history format, cold Date reader and bounded UTC-day browser differences",
+  "status": "Source audit complete; actual Java Date-reader oracle collected separately; native comparison pending",
+  "original_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_parent": "9d6023fca3b322dfbe5d92d1666b7f2120cd7752",
+  "original_source": {
+    "core/src/com/biglybt/core/stats/transfer/LongTermStats.java": {
+      "git_blob": "a369578b191cf4ead71a32e15b5592dcfa06212c",
+      "sha256": "f1a4bfaa8d15e8b0f9318a2af1653a854f9969bc09b80f4e9bd3c48afb62e1bf",
+      "bytes": 2666,
+      "lines": 110
+    },
+    "core/src/com/biglybt/core/stats/transfer/LongTermStatsListener.java": {
+      "git_blob": "e43a6369202effd6ce07520789ba8d0b890e9941",
+      "sha256": "212cf7beb50619e90575f86ceb1357d59e43c69806f00fc18e3406cee8afc258",
+      "bytes": 973,
+      "lines": 29
+    },
+    "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsBase.java": {
+      "git_blob": "5f3aed69cf85d10d927bc8fe8e8677e2b8ea567f",
+      "sha256": "1f9e0967309777ad4c19be9ee123351c9a21755337a0d48fa52dd3752de5ca7f",
+      "bytes": 29331,
+      "lines": 1396
+    },
+    "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsImpl.java": {
+      "git_blob": "9146de0217f34f6e9345f5727dc6727397f4d712",
+      "sha256": "9dd5c8f8f551bc69e61f000defa73f845dc4011fc5e631dd1a5d5c377af7dc6d",
+      "bytes": 7036,
+      "lines": 298
+    },
+    "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsWrapper.java": {
+      "git_blob": "3f48639a3b8ee891f84c4d9f7d04eb2cb4b7a5bc",
+      "sha256": "8b761975a6f44d90e518872c5afd4fdf2ec2acd13c78bc677f6a5ea9ec8e1eac",
+      "bytes": 3876,
+      "lines": 178
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java": {
+      "git_blob": "0cfe7a202d8ff27da9500435ea9bd659a1de6ba5",
+      "sha256": "0c2b304c022013d0797732049c51deb23a7af976f74b0d47f22156d8da097103",
+      "bytes": 76096,
+      "lines": 2871
+    }
+  },
+  "source_ranges_file": "source-ranges.json",
+  "source_ranges_sha256": "50e668e4a095a492a6e37c5b2a6ad2b65b25759b12e4c30834a88fa4ce946e93",
+  "complete_ranges": 18,
+  "facts": [
+    {
+      "source": [
+        "interface.complete",
+        "impl.sessionStart",
+        "impl.updateStats"
+      ],
+      "fact": "Exactly six counters in order protocol-upload,payload-upload,protocol-download,payload-download,DHT-upload,DHT-download. LongTermStatsImpl selects stats under original user stats directory, links Core lifecycle/global/DHT counters, writes6-entry baselines and later deltas. This full owner/constructor is audited but never compiled or initialized by oracle."
+    },
+    {
+      "source": [
+        "base.write",
+        "impl.getNewFileSessionStats"
+      ],
+      "fact": "Writer VERSION1 emits s/e marker,version,epochMinute,six signed long numbers; periodic records contain only six comma-delimited deltas relative to previous line counters. Start absolute baselines reset per-line previous counters; baselines are not usage. At file rollover the pending non-start line is first appended to prior file, then a new file begins with an absolute s baseline (except session-end does not open a new file). This explains a spill in prior-day file."
+    },
+    {
+      "source": [
+        "base.dateReaderActualOracle"
+      ],
+      "fact": "Date overload synchronizes this, sets enable_caching=(accepter==null), clamps end>=now to now, enumerates requested UTC year/month/day files, opens LineNumberReader via FileUtil, and returns six sums. It ignores unavailable files. Nonnull accepter disables MonthCache reads/writes and DayCache branches."
+    },
+    {
+      "source": [
+        "base.dateReaderActualOracle"
+      ],
+      "fact": "s sets session_start_time=fields[2]*60000 and session_time to that anchor, parses six absolute baseline longs without summing them. Non-s records are processed only while session_start_time>0; each then advances session_time by60000. e selects field offset3 but its recorded timestamp/version never reset or parse the reconstructed time. End does not clear the anchor. Duplicate/overlapping minutes sum. Date bounds inclusive; accepter is called only inside them."
+    },
+    {
+      "source": [
+        "base.dateReaderActualOracle"
+      ],
+      "fact": "Original reader only prechecks fields.length>=6, ignores version numbers, skips per-record Throwable, can advance minute before numeric parse failure, ignores parsing of inactive numeric/e records, and has unchecked long multiplication/addition. It can return partial plausible sums. Native strict all-record/version/range/limit/overflow errors intentionally differ; invalid inputs have zero Java equality credit."
+    },
+    {
+      "source": [
+        "base.sessionStartComplete",
+        "base.currentRateNotExecuted",
+        "base.DayCacheNotExecuted",
+        "base.MonthCacheNotExecuted"
+      ],
+      "fact": "Original live writer uses a periodic minute timer, a3-entry moving average for current rates, cache.dat month persistence and current-day cache. Native day browser and oracle do not activate or port those services. A nonnull accepter is mandatory for this oracle, not a claim that ordinary original UI avoids cache writes."
+    },
+    {
+      "source": [
+        "ui.createHistoryPanel",
+        "ui.refreshHistory",
+        "ui.totalUsageWrapper"
+      ],
+      "fact": "Original History UI has hour/day/week/month/year/all-time span navigation, dynamic pixel resolution and payload upload/download history graph. It asks StatsFactory long-term service for overall totals and inclusive per-period sums, merges intervals into pixel chunks, scales to int graph values and calls MultiPlotGraphic reset with times. The source wrapper returns cached/default overload r1; a comparison using nonnull accepter is inside a comment. Native fixed UTC day,24 signed six-counter rows and payload summary are a deliberate new bounded presentation, not this full graph/span/cache UI parity."
+    }
+  ],
+  "deliberate_native_differences": [
+    "Pure selected UTC date has no now clock; Java-equality corpus uses only dates wholly before supplied2030 clock. Future/current-future-minute behavior is not equality-qualified.",
+    "All syntactically complete records are validated even before inactive anchor and outside selected day; unknown versions/errors/limits/overflow reject whole read.",
+    "Positive start gate preserved; s0/negative inactive until a positive s. Native also checks every s/e minute*60000, even ignored e timestamp, unlike original unchecked/unused fields.",
+    "Input bounds1MiB,8192records,512line bytes and Gregorian1970..9999; no directory scan/cache/live writer/listeners/thread/timer/new data collection.",
+    "Unknown hourly presence remains distinct from observed zero. Original six-zero result arrays alone cannot distinguish no data, missing files, header-only and real zero; only numeric totals are equality-eligible.",
+    "Observation/outside-day counts, strict error taxonomy, cancellation, held-lease safety and UI generation/lifetime are native-only qualification."
+  ],
+  "runtime_boundary": "Only complete committed LongTermStatsBase.java and actual LongTermStats/Listener interfaces compiled; all dependency/provider stubs disclosed in oracle-source-manifest.json. LongTermStatsImpl/UI remain source-only.",
+  "java_oracle_receipt": "java-oracle.json",
+  "writer_runtime_credit": 0,
+  "java_ui_runtime_credit": 0,
+  "native_runtime_credit": 0
+}

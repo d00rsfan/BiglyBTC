@@ -1,0 +1,291 @@
+{
+  "schema": 1,
+  "status": "PASS_PROJECTION_ONLY_SOURCE_DESIGN_REVIEW_NO_BLOCKER",
+  "subject": "Classic saved column layout audit and bounded raw projection design",
+  "reviewer": "/root/error_driver",
+  "observed_at_utc": "2026-10-18T10:42:08.409895+00:00",
+  "independence": "Audit/proposal authored by error_codec; this reviewer authored neither. This review assesses source/design only, not the mutable candidate header or any implementation.",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_audit_historical_head": "9e890be4c6096934ab27c786ef37f3f706d67f94",
+  "native_current_implementation_commit": "03e31e5ce260e1327e63cca63d22d8d5984ceae9",
+  "native_current_metadata_commit": "0e96f6a5d8f6922791ab0655dc93b13e163366af",
+  "reviewed_inputs_sha256": {
+    "migration/evidence/20261018-navigation/classic-column-persistence-audit.json": "474b6bc5bfca4a2798b89024075267acc20128f3e1784e6efff38434b3216b64",
+    "migration/evidence/20261018-navigation/classic-column-persistence-proposal.md": "0f18f7e79ac140d634c2e2d529f91d18378976715322a80a1e94e5974e9d0879"
+  },
+  "source_context_sha256": {
+    "migration/evidence/20261018-navigation/next-library-columns-audit.json": "a6253890e826161bf1d880c772355ef0804a626b476a95d5ec5090380beb1d5e",
+    "migration/evidence/20261018-navigation/classic-close-tab-contract.json": "aa558d5335e13a6ef3dd143d0627a2f6b6bdfc03d38570c8af51d4479120eb6e",
+    "migration/evidence/20261018-navigation/saved-dnd-math-review.json": "9a51ed571449487a651d0a80169943df593fba628beca178b712282ea8cc433f",
+    "migration/evidence/20261018-navigation/saved-dnd-library-integration-proposal.md": "f405ab0733038a7c9555c5a589acfa2a3d33fda31c23d82f2c3ae3551c01dbad",
+    "migration/evidence/20261018-navigation/saved-dnd-library-integration-pins.json": "1ccd7ab4bd78c08872d2d8548a452ac669b762ebbf17889ac4134e2536aabeeb"
+  },
+  "original_files": {
+    "core/src/com/biglybt/core/config/impl/ConfigurationManager.java": "2627f71f0dd69b2cee577331ad6ce05fd230d47df816b592d07236c9b759bc82",
+    "core/src/com/biglybt/core/util/FileUtil.java": "6565fa6aa08efd7ef64d339db28040d909765b0808050c7b70ae9a09e8cb4ba2",
+    "core/src/com/biglybt/pif/ui/tables/TableColumn.java": "e907852123e7a43121dd794d3419fb6c90e583e9bbe356ea7956a96b535be734",
+    "core/src/com/biglybt/pif/ui/tables/TableManager.java": "c5f7c045f3bb0e9cee42a8270ce023893d98d716fd35058bf00037855b36f9e8",
+    "core/src/com/biglybt/ui/common/table/impl/CoreTableColumn.java": "d60558501605835c7ea0023cbc4c4a1cf968f5e89d40a21e0796194c584b6104",
+    "core/src/com/biglybt/ui/common/table/impl/TableColumnImpl.java": "f68a5a85867ce73bdeea6c8b3fae2a6cad0f504daea894747abfedfd5ad565ac",
+    "core/src/com/biglybt/ui/common/table/impl/TableColumnManager.java": "5d0b80ab7137e2d8740376da363593e077b6859ef7ee8daca0c90c8ef64d2aa9",
+    "core/src/com/biglybt/ui/common/table/impl/TableViewImpl.java": "62cc55430c2378e8f893df25576f19ae07db068c13c802646be65ab2c7b73960",
+    "core/src/com/biglybt/util/MapUtils.java": "78531933cb0e466d78d273dd44dbd8c400f2255ad1e7d824fb2f52bb3912a991",
+    "uis/src/com/biglybt/ui/swt/views/MyTorrentsSuperView.java": "24af1c9a8235eeeca9c1944a86214c2782ac4391d78533613e813fb379d4144a",
+    "uis/src/com/biglybt/ui/swt/views/MyTorrentsView.java": "5d019924be50987d683aa82a2000a42cce3297156036ddd5ab8fa65f8eef88fd",
+    "uis/src/com/biglybt/ui/swt/views/columnsetup/TableColumnSetupWindow.java": "2c040d15afd00b20cbf2be7a00d866dd319f6efddcb15fc955641b8835086370",
+    "uis/src/com/biglybt/ui/swt/views/skin/SB_Transfers.java": "7871a709028ced6d7d1839efa8d0ffbe86af677b5c30a47379315b298439f636",
+    "uis/src/com/biglybt/ui/swt/views/table/impl/TableViewSWT_Common.java": "e7ff336a03bd721d598e4f9dd0965c214daf3e96f035858d3a08fd2f7ae6b186",
+    "uis/src/com/biglybt/ui/swt/views/table/painted/TableHeaderPainted.java": "7ac135f00c5f8b2119319b400cf9efebccc3a74336ca2b1db152f338a30c91ff",
+    "uis/src/com/biglybt/ui/swt/views/table/painted/TableViewPainted.java": "2f8dbc0ddb3cba5dbb12d312c64724cfbc3315d74155ca1452d4be059f9da275",
+    "uis/src/com/biglybt/ui/swt/views/table/utils/TableColumnCreator.java": "e0ce2a57077d76685b1e71d2cb7a831c7cc79fa1e5f93f7979536146ac80053a",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DoneItem.java": "5844b06d3c9bf42447e8835bdb18af7417a55e71aa3ddecc3b3769c45e23f0f4",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DownItem.java": "dcfc8904f44d695327ab75e17b6de82331cf5702ed9624516b2f6131fdc1bd9b",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/DownSpeedItem.java": "36e0e8ec776464905f4bde5ebf889f04f29016fbbbd12361ba2caaba1226dec2",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/NameItem.java": "093bcc658b79ffa2013243878ee697e409efc8f351515549fd9c9b548353d9dd",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/RankItem.java": "618c621c5980dac6a01364c6bf793d18c51f13346ab8cb44acac8c91b1cd142b",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/RemainingItem.java": "c85e3a3d0ac983b63e29d45631c945696ef6e923018e61c9ab11019a59caf232",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/SizeItem.java": "799ccd6d2457b69094ad64829387420e38777a23d67c6f3ae06adee2c87a4136",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/StatusItem.java": "0f74cb1db1597c52d873370d7037eca9919f41bb605a45303b755a57353de6ea",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/TorrentHashItem.java": "3710fce21ad229424087eb9e9effd61dd912831049c4f7925bc2998e408d8d1a",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/UpItem.java": "d32af2abfb333efdee334ea263b1b08d6f40364071b81e65dee039657dbf90a2",
+    "uis/src/com/biglybt/ui/swt/views/tableitems/mytorrents/UpSpeedItem.java": "de112301ab5d09a54259955444e7e9b2aa9887f8ca21bb7ca593fcd959da19da"
+  },
+  "native_context": {
+    "preview/native/ui/classic_columns.hpp": {
+      "historical_audit_committed_sha256": "18e90f2c4ede7a5d8e04eb95b1fa566d8b92f07d9010b37dbd017776b080937d",
+      "historical_audit_observed_working_sha256": "18e90f2c4ede7a5d8e04eb95b1fa566d8b92f07d9010b37dbd017776b080937d",
+      "historical_audit_working_matches_commit": true,
+      "current_sha256": "18e90f2c4ede7a5d8e04eb95b1fa566d8b92f07d9010b37dbd017776b080937d",
+      "equals_implementation_and_metadata_commits": true
+    },
+    "preview/native/ui/classic_columns.cpp": {
+      "historical_audit_committed_sha256": "7eff7d0eae0c38261cd8a0f36bf7cc31f87b97f03d5a57815b75f3d9c91c868b",
+      "historical_audit_observed_working_sha256": "7eff7d0eae0c38261cd8a0f36bf7cc31f87b97f03d5a57815b75f3d9c91c868b",
+      "historical_audit_working_matches_commit": true,
+      "current_sha256": "7eff7d0eae0c38261cd8a0f36bf7cc31f87b97f03d5a57815b75f3d9c91c868b",
+      "equals_implementation_and_metadata_commits": true
+    },
+    "preview/native/ui/classic_filter.cpp": {
+      "historical_audit_committed_sha256": "2186674f85e4bf6eeb6eeb1b2c568c3b4f060eac4a443d04130144dab3d50003",
+      "historical_audit_observed_working_sha256": "2186674f85e4bf6eeb6eeb1b2c568c3b4f060eac4a443d04130144dab3d50003",
+      "historical_audit_working_matches_commit": true,
+      "current_sha256": "2186674f85e4bf6eeb6eeb1b2c568c3b4f060eac4a443d04130144dab3d50003",
+      "equals_implementation_and_metadata_commits": true
+    },
+    "preview/native/ui/library_model.hpp": {
+      "historical_audit_committed_sha256": "5fbc9384b339e109fee7718d917219cbb33fa7c153d142df2db33aa5c89cb24c",
+      "historical_audit_observed_working_sha256": "8abca399af00b5c2c96e760c85b6c1078e69274be8b68c6dc8de7ac877772d98",
+      "historical_audit_working_matches_commit": false,
+      "current_sha256": "8abca399af00b5c2c96e760c85b6c1078e69274be8b68c6dc8de7ac877772d98",
+      "equals_implementation_and_metadata_commits": true
+    },
+    "preview/native/ui/library_model.cpp": {
+      "historical_audit_committed_sha256": "f55e2840877c9df938944e9c88904e9b11f62f3d00e8a843d2370f8a1afc1d2e",
+      "historical_audit_observed_working_sha256": "c934ccdf09240b30330545e08b2dd0499d5688092321a18e0686e849100769cf",
+      "historical_audit_working_matches_commit": false,
+      "current_sha256": "c934ccdf09240b30330545e08b2dd0499d5688092321a18e0686e849100769cf",
+      "equals_implementation_and_metadata_commits": true
+    },
+    "preview/native/ui/library_window.hpp": {
+      "historical_audit_committed_sha256": "8f64bcb083935e8064ef6ea9b0952ef1201c7d2102835bc26c9c36a3d52e3151",
+      "historical_audit_observed_working_sha256": "8f64bcb083935e8064ef6ea9b0952ef1201c7d2102835bc26c9c36a3d52e3151",
+      "historical_audit_working_matches_commit": true,
+      "current_sha256": "8f64bcb083935e8064ef6ea9b0952ef1201c7d2102835bc26c9c36a3d52e3151",
+      "equals_implementation_and_metadata_commits": true
+    },
+    "preview/native/ui/library_window.cpp": {
+      "historical_audit_committed_sha256": "5d9ac47ea40b9d6ce2bb32739daecb977daad817fa07d2e22fe7d1b13ebe76a6",
+      "historical_audit_observed_working_sha256": "da04f71c92300d239ff3203166cba8af252fdcc552f28bf21742839d4f087add",
+      "historical_audit_working_matches_commit": false,
+      "current_sha256": "da04f71c92300d239ff3203166cba8af252fdcc552f28bf21742839d4f087add",
+      "equals_implementation_and_metadata_commits": true
+    },
+    "preview/native/adapters/profile.hpp": {
+      "historical_audit_committed_sha256": "e91ff37048e02b87a4d6f97d774fe3e33b491febd0b2ec55d3dedbbf20dd60ff",
+      "historical_audit_observed_working_sha256": "e91ff37048e02b87a4d6f97d774fe3e33b491febd0b2ec55d3dedbbf20dd60ff",
+      "historical_audit_working_matches_commit": true,
+      "current_sha256": "e91ff37048e02b87a4d6f97d774fe3e33b491febd0b2ec55d3dedbbf20dd60ff",
+      "equals_implementation_and_metadata_commits": true
+    },
+    "preview/native/adapters/profile.cpp": {
+      "historical_audit_committed_sha256": "f31f99cf73484c0c4fb058a6fc9e3937ecd74412f5ae794c775c0a7e8c4b91ee",
+      "historical_audit_observed_working_sha256": "f31f99cf73484c0c4fb058a6fc9e3937ecd74412f5ae794c775c0a7e8c4b91ee",
+      "historical_audit_working_matches_commit": true,
+      "current_sha256": "f31f99cf73484c0c4fb058a6fc9e3937ecd74412f5ae794c775c0a7e8c4b91ee",
+      "equals_implementation_and_metadata_commits": true
+    },
+    "preview/native/adapters/file_io.hpp": {
+      "historical_audit_committed_sha256": "41b14236290a65b52f75d56f076857a1ffd037f9bd823f1f9afef98c82a9cd37",
+      "historical_audit_observed_working_sha256": "41b14236290a65b52f75d56f076857a1ffd037f9bd823f1f9afef98c82a9cd37",
+      "historical_audit_working_matches_commit": true,
+      "current_sha256": "41b14236290a65b52f75d56f076857a1ffd037f9bd823f1f9afef98c82a9cd37",
+      "equals_implementation_and_metadata_commits": true
+    },
+    "preview/native/adapters/file_io.cpp": {
+      "historical_audit_committed_sha256": "c55df3bfa6531534819a798351a5320365e1081d774f466fe4342bffa54793b9",
+      "historical_audit_observed_working_sha256": "c55df3bfa6531534819a798351a5320365e1081d774f466fe4342bffa54793b9",
+      "historical_audit_working_matches_commit": true,
+      "current_sha256": "c55df3bfa6531534819a798351a5320365e1081d774f466fe4342bffa54793b9",
+      "equals_implementation_and_metadata_commits": true
+    },
+    "preview/native/adapters/library_view.hpp": {
+      "historical_audit_committed_sha256": "43877d12f340bdd43cb1df1b98eddf6b39c89b7ec51d63de3b572ba9d4b5a82e",
+      "historical_audit_observed_working_sha256": "43877d12f340bdd43cb1df1b98eddf6b39c89b7ec51d63de3b572ba9d4b5a82e",
+      "historical_audit_working_matches_commit": true,
+      "current_sha256": "43877d12f340bdd43cb1df1b98eddf6b39c89b7ec51d63de3b572ba9d4b5a82e",
+      "equals_implementation_and_metadata_commits": true
+    },
+    "preview/native/adapters/library_view.cpp": {
+      "historical_audit_committed_sha256": "a9aa1e0f6ccde4a7b4990f2340da1dd3472d372441b1389805e5d16ef1b229d4",
+      "historical_audit_observed_working_sha256": "a9aa1e0f6ccde4a7b4990f2340da1dd3472d372441b1389805e5d16ef1b229d4",
+      "historical_audit_working_matches_commit": true,
+      "current_sha256": "a9aa1e0f6ccde4a7b4990f2340da1dd3472d372441b1389805e5d16ef1b229d4",
+      "equals_implementation_and_metadata_commits": true
+    },
+    "preview/native/adapters/saved_service_view.cpp": {
+      "historical_audit_committed_sha256": "4cedc6fcf9bc89628e66d633cbea70249e9e71d151a85d184fdf3ad4cadbb887",
+      "historical_audit_observed_working_sha256": "4cedc6fcf9bc89628e66d633cbea70249e9e71d151a85d184fdf3ad4cadbb887",
+      "historical_audit_working_matches_commit": true,
+      "current_sha256": "4cedc6fcf9bc89628e66d633cbea70249e9e71d151a85d184fdf3ad4cadbb887",
+      "equals_implementation_and_metadata_commits": true
+    },
+    "preview/native/app/session_bridge.hpp": {
+      "historical_audit_committed_sha256": "f9d29fa411136f2373dd8a1c94b8ce99808ab7561b361bcd3b99ffdbc782164d",
+      "historical_audit_observed_working_sha256": "f9d29fa411136f2373dd8a1c94b8ce99808ab7561b361bcd3b99ffdbc782164d",
+      "historical_audit_working_matches_commit": true,
+      "current_sha256": "f9d29fa411136f2373dd8a1c94b8ce99808ab7561b361bcd3b99ffdbc782164d",
+      "equals_implementation_and_metadata_commits": true
+    },
+    "preview/native/app/session_bridge.cpp": {
+      "historical_audit_committed_sha256": "0fe02643a7e93cd91073d2f5d688507b534aaa17f12e4f7c4f630b045a3e029a",
+      "historical_audit_observed_working_sha256": "f43bcf4cb34ea8df76cf3b36bc92e7dbe25b57ec1cd0fa7792a11153454bb2fe",
+      "historical_audit_working_matches_commit": false,
+      "current_sha256": "f43bcf4cb34ea8df76cf3b36bc92e7dbe25b57ec1cd0fa7792a11153454bb2fe",
+      "equals_implementation_and_metadata_commits": true
+    },
+    "preview/native/core/include/biglybtc/bencode.hpp": {
+      "historical_audit_committed_sha256": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+      "historical_audit_observed_working_sha256": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+      "historical_audit_working_matches_commit": true,
+      "current_sha256": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+      "equals_implementation_and_metadata_commits": true
+    },
+    "preview/native/core/src/bencode.cpp": {
+      "historical_audit_committed_sha256": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08",
+      "historical_audit_observed_working_sha256": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08",
+      "historical_audit_working_matches_commit": true,
+      "current_sha256": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08",
+      "equals_implementation_and_metadata_commits": true
+    }
+  },
+  "supplemental_original_dependency": {
+    "path": "core/src/com/biglybt/core/util/BEncoder.java",
+    "git_blob": "b7c115a50155809dcaf87edfce7e3eb25bea682e",
+    "sha256": "27f8a104b355bc8f79a3ff8fbb36efe0a34636add267ba212dad0638ab5c1fbe",
+    "complete_definitions": {
+      "cloneMap": {
+        "first_line": 925,
+        "complete_definition_sha256": "222b7e82f945c656e78777823557890f25eb8f7464e93edb776f09b6a7dc2c98",
+        "complete_body_sha256": "e4db91e2b164de845a83e4fa3dfc3391940b9ad4148a4543be154b4ea5f35fb3"
+      },
+      "cloneList": {
+        "first_line": 958,
+        "complete_definition_sha256": "2ddaf021dc4c6f09d13eb9b9168b9981c73b71f2702035546997b6b013fd1b1d",
+        "complete_body_sha256": "002cae6cdb14ecb21895992dcd6388acc5d2668bbd644929ebf4655b126ea33f"
+      },
+      "clone": {
+        "first_line": 979,
+        "complete_definition_sha256": "2f913c53412e6f0410cd99f6cc5ab5949e992160d654ea051214e9761680ddcc",
+        "complete_body_sha256": "bdaf8ab49a70145f7aae48a02b291f96365844cb861e64a648669733a9e7f035"
+      }
+    },
+    "scope": "Source-only clone dependency context; audit original28/60 inventory is unchanged."
+  },
+  "checks": [
+    {
+      "id": "CP1",
+      "scope": "Actual classic identities and exact/default lookup",
+      "result": "PASS",
+      "evidence": "TableManager constants map incomplete MyTorrents and complete MySeeders; split view passes these through optional scoped IDs. TableColumnManager casts Table.<id> first and only a null/absent map consults cloned TableDefault.<base>; an existing empty map wins. Base strips after the last ::. Wrong exact/default map type is not valid absence and must not silently fall through. .big/.small/tag/group maps remain independent and raw; projection chooses only the two declared classic IDs."
+    },
+    {
+      "id": "CP2",
+      "scope": "Executable slot format and integer narrowing",
+      "result": "PASS",
+      "evidence": "Complete loadSettings and saveSettings agree visibility0, position1, width2, autoTooltip3, direction4, userData5, alignment6, foreground7, background8, icon9; the nearby width/position comment is stale. Ordinary bencode Integer maps to Java Long Number.intValue signed low32. Raw signed64 and interpreted signed32 must remain separately owned facts; source Java-only Number subclasses are outside ordinary decoded bencode equality. Visibility/autoTooltip are exactly low32==1; icon is low32!=0. Conversion must avoid implementation-defined or overflowing C++ narrowing."
+    },
+    {
+      "id": "CP3",
+      "scope": "Requested facts are not effective runtime layout",
+      "result": "PASS",
+      "evidence": "setVisible can move an initially invisible column; legacy position fallback can show/hide it; ensureIntegrity hides -1, reindexes other registered columns and can reset/save when none remain. Width applies registered min/max and existing/default widths, so a raw negative/zero/extreme requested width is a fact rather than a portable effective width. A pure snapshot must retain missing, wrong-type and malformed distinctions without inventing effective visibility/width/position. Native visual bounds16..8192 and unique-order compaction are future GUI admission policy, not source defaults or this projector."
+    },
+    {
+      "id": "CP4",
+      "scope": "Sort-list precedence and direction",
+      "result": "PASS",
+      "evidence": "MapUtils.getMapList accepts any List including empty; wrong top type returns null and permits legacy lookup. A present empty list remains a current list (painted table later supplies # default); invalid members become null via MapUtils.getString and do not justify legacy or later-known-ID promotion. SortColumn is considered only without a list and accepts String/byte[]; byte[] uses JVM default charset whereas SortColumns members use explicit UTF8. Preserve ordered IDs, invalid slots/duplicates, source provenance and raw bytes. Slot4 nonnegative low32 gives ascending iff1, otherwise descending; negative leaves current direction, missing/wrong invokes runtime default. Neither inherited case may become assumed ascending."
+    },
+    {
+      "id": "CP5",
+      "scope": "Legacy/global and default-state uncertainty",
+      "result": "PASS",
+      "evidence": "Without current list/legacy singleton, original getter consults global <table>.sortColumn and removes it plus .sortAsc; missing/wrong list position/width/tooltip may consult global Table.<table>.<column> keys. The audit accurately leaves that file unread and unresolved. The original condition s!=null || s.isEmpty() can fault for a null provider result; projection must neither repair nor execute this active behavior. Default arrays, force-visible flags, constructor sort settings, plugin registration and reset hooks can change applied state. The reset-version map has no active entries and RERESET=false, so no invented last.reset migration is warranted."
+    },
+    {
+      "id": "CP6",
+      "scope": "Malformed subvalues, raw preservation and ownership",
+      "result": "PASS",
+      "evidence": "Wrong/non-list Column values behave as empty list in original loader, not valid known zeros. Each absent/wrong slot must preserve requested-fact provenance and legacy-needed flags; bad RGB may throw after earlier Java mutations, which pure independent facts do not reproduce. Keep complete unknown tables/columns/userData/tails/nonUTF8 bytes with one fresh immutable owned Document, not per-record duplicated subtrees. Reject supported edited-Document inputs before projecting raw facts. Frozen parser duplicate dictionary rejection remains explicit; repeated sort/list values are different and remain preservable."
+    },
+    {
+      "id": "CP7",
+      "scope": "Bounds and transactional projection contract",
+      "result": "PASS",
+      "evidence": "4MiB input,100000 nodes/depth64, two selected tables,1024 column slots per selected table,32 sort slots,256 ID bytes and4096 issues are explicit native maxima with lower-only caller limits. Count actual malformed/unknown selected Column slots and sort entries before skipping, never silently truncate. Include key/dictionary nodes and whole unknown subtrees in supplied-Document validation. Check cumulative size/count arithmetic and all selected-field copies, fail whole projection on Limit/Memory rather than returning partial data. These limits are not an allocation-free/RSS promise; exact implementation/rollback and boundary tests remain required."
+    },
+    {
+      "id": "CP8",
+      "scope": "Projection-only checkpoint and preserved native UI",
+      "result": "PASS",
+      "evidence": "Root selected pure core projection only. Proposed adapter, legacy config reads, Host dispatch, GUI mapping, widths, Reset policy, persistent writer/private IDs and profiles remain separate unimplemented gates. Current chooser reset is construction snapshot; Name Stretch, existing single UserRole sort, stable logical0..12/selection/Target/Close Tab behavior must remain unchanged here. Source column correspondence is layout-only and expressly excludes original size/done/down/# aliases to deliberately saved native columns."
+    },
+    {
+      "id": "CP9",
+      "scope": "Source/context integrity and supplemental dependency",
+      "result": "PASS",
+      "evidence": "All28 full original Git blobs,60 complete original definitions/bodies and18 native audit files/eight complete native definitions independently rechecked. Original audit historical head9e890 and its four WIP observations are preserved truthfully; the same observed bytes now equal actual03e31 implementation and0e96 metadata Git commits. All five prior context pins remain exact. Supplemental original BEncoder cloneMap/list/clone inspection confirms null preservation and deep cloning through TreeMap/list/byte-array helpers; no ordinary Java constructor or service was run."
+    }
+  ],
+  "implementation_constraints": [
+    "Use a requested/raw-facts vocabulary; do not advertise table snapshots as original effective layout or resolved visibility/width/sort.",
+    "Exact wrong-type table/default must remain an explicit failure/fact; it cannot become absent and select a different layout.",
+    "Retain present empty SortColumns and invalid member slots as authoritative current data. No silent legacy or later-known-key promotion.",
+    "Legacy/global fallbacks and inherited sort defaults stay unresolved; no implicit biglybt.config read and no source migration/removal.",
+    "Keep raw source ownership independent from caller Document edits/lifetime; fail malformed/limit/edited input transactionally with no partial external publication.",
+    "Future adapter/UI/writer policies, private IDs, actual original default/plugin behavior and runtime equality require separate review/qualification."
+  ],
+  "blockers": [],
+  "nonblocking_limits": [
+    "The audit includes future adapter/UI/writer proposals; root authorizes only pure projection for this checkpoint. No such later behavior is implemented or approved by this review.",
+    "No actual Java observations, native implementation/compilation/tests, effective layout application, original default/plugin registry or config migration parity credit.",
+    "Pure snapshot may characterize ordinary decoded bencode integers/bytes/lists/maps and retain malformed raw facts; it does not reproduce every Java object subclass, exception/partial-mutation or default-charset environment."
+  ],
+  "execution_by_reviewer": {
+    "Java": 0,
+    "native": 0,
+    "compiler": 0,
+    "target_import": 0,
+    "profile_or_network": 0
+  },
+  "integrity": {
+    "original_full_git_blobs": 28,
+    "original_complete_definitions": 60,
+    "native_files": 18,
+    "native_complete_definitions": 8,
+    "context_pins": 5,
+    "historical_audit_maps_preserved": true,
+    "four_prior_UI_hashes_unchanged": true,
+    "production_edits": 0
+  }
+}

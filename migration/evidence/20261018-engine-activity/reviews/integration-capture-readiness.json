@@ -1,0 +1,30 @@
+{
+  "schema": 1,
+  "scope": "Independent source-only review of two additive capture-readiness lines in root P04-17 real integration test",
+  "verdict": "PASS; no blocker",
+  "source_sha256": {
+    "preview/native/tests/engine_activity_integration_tests.cpp": "482247433ea949bad4dc1c69169d67c261e0c03ab91cca4e9f620cc262fd66c5"
+  },
+  "reviewed_parent_sha256": "90e49d368486162f457eb8704ffda44d7920407ba0db4b9bf396e4716a20677a",
+  "exact_change": "Before optional screenshot capture, require the initial saved downloaded label to show actual fixture999 bytes and Bridge to be idle.",
+  "all_other_source_bytes_exact": true,
+  "test_case_method_names_unchanged": true,
+  "planned_qt_rows_unchanged": 7,
+  "checks": [
+    "The existing actual engine transfer/rate/payload assertions still complete before the new saved-read readiness check.",
+    "The expected999 bytes is the unchanged generated fixture saved-statistics field, not synthesized from engine counters.",
+    "The label and Bridge idle conditions wait for actual queued saved Statistics completion before capturing a screenshot, avoiding transient Loading/Unavailable evidence.",
+    "Both checks use existing Qt event-driven waits; no arbitrary sleep, manufactured observations or changed engine/cancellation predicate is added.",
+    "All existing cases, successful/partial-seed fixtures, later refresh/recheck assertions and120-second CTest declaration remain untouched.",
+    "The raw QLabel is owned by the still-live local Window/Page and this test has no deletion callbacks; existing declaration-order cleanup is unchanged."
+  ],
+  "execution": {
+    "source_hash_diff_only": true,
+    "test_invocations": 0,
+    "builds": 0,
+    "git": 0,
+    "production_edits": 0,
+    "native_gui_processes": 0
+  },
+  "write_hold": "After writing this report the reviewer holds all source/evidence writes for root source freeze."
+}

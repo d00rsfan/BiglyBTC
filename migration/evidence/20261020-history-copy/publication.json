@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "repository": "https://github.com/d00rsfan/BiglyBTC",
+  "source_commit": "ab0ff75d81300d8d3f9e930a9bf55491c1801400",
+  "metadata_commit": "3635fe01fa0212e075af5c956740e499303980b9",
+  "tag": "milestone-history-copy-20261020",
+  "tag_object": "ec9d66fde607898acef82337f13ea89d0b88d196",
+  "tag_target": "3635fe01fa0212e075af5c956740e499303980b9",
+  "remote_identity_verified": true,
+  "source_files_verified": 6,
+  "qualification": "local-verification.json and hosted-verification.json",
+  "dist_manifest_sha256": "b3a56ffc8d4dd98ee24b1e4d121b61348893cc701572dcfe4b19c2df5cdaa854",
+  "original_processes_signaled": false,
+  "original_profile_access": false
+}

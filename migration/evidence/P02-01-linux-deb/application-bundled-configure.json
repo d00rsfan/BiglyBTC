@@ -1,0 +1,27 @@
+{
+  "scope": "actual application bundled-Qt CMake configuration only; no application rebuild or installation",
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "cmake",
+    "-S",
+    "native",
+    "-B",
+    "/tmp/biglybtc-deb-bundled-configure-20261017",
+    "-G",
+    "Ninja",
+    "-DCMAKE_BUILD_TYPE=Release",
+    "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+    "-DBIGLYBTC_LOCAL_ENGINE=ON",
+    "-DBIGLYBTC_DESKTOP=ON",
+    "-DBIGLYBTC_DEB=ON",
+    "-DBIGLYBTC_BUNDLE_QT=ON",
+    "-DCMAKE_INSTALL_PREFIX=/usr",
+    "-DBIGLYBTC_DEB_CONTACT=Packaging Fixture <fixture@example.invalid>",
+    "-DCMAKE_PREFIX_PATH=/tmp/biglybtc-deps/sysroot/usr;/opt/Qt/6.12.0/gcc_64"
+  ],
+  "returncode": 0,
+  "stdout": "-- The CXX compiler identification is GNU 16.0.1\n-- Detecting CXX compiler ABI info\n-- Detecting CXX compiler ABI info - done\n-- Check for working CXX compiler: /usr/bin/g++-16 - skipped\n-- Detecting CXX compile features\n-- Detecting CXX compile features - done\n-- Performing Test BIGLYBTC_PINNED_STDLIB\n-- Performing Test BIGLYBTC_PINNED_STDLIB - Success\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD\n-- Performing Test CMAKE_HAVE_LIBC_PTHREAD - Success\n-- Found Threads: TRUE\n-- Found ZLIB: /usr/lib/x86_64-linux-gnu/libz.so (found suitable exact version \"1.3.1\")\n-- Found OpenSSL: /usr/lib/x86_64-linux-gnu/libcrypto.so (found version \"3.5.5\")\n-- Performing Test HAVE_STDATOMIC\n-- Performing Test HAVE_STDATOMIC - Success\n-- Found WrapAtomic: TRUE\n-- Found OpenGL: /usr/lib/x86_64-linux-gnu/libOpenGL.so\n-- Found WrapOpenGL: TRUE\n-- Found WrapVulkanHeaders: /usr/include\n-- Found Python3: /usr/bin/python3 (found version \"3.14.4\") found components: Interpreter\n-- Configuring done (3.1s)\n-- Generating done (0.1s)\n-- Build files have been written to: /tmp/biglybtc-deb-bundled-configure-20261017\n",
+  "stderr": ""
+}

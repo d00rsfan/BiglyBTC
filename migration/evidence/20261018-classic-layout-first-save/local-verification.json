@@ -1,0 +1,76 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "scope": "Explicit first native classic-layout save only after confirmed Missing, generated profiles; unchanged existing Primary and recovery refusal preserved",
+  "original_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_source_commit": "8efe56e4c0a4c46b8cdcb51035364db938494bb5",
+  "native_parent": "2501968f62d4ec7e70b093c2186a31fcf2ede518",
+  "source_sha256": {
+    "preview/README.md": "c811b62f196989d43af08243934401ce77df41dcfb688a8a4300061568bf3c59",
+    "preview/docs/classic-preferences-contract.json": "8f369a8198a0bcfb256c6822b28ef484d592a5f9fa1606818fa60ce4509e7e21",
+    "preview/native/adapters/column_layout_view.cpp": "a7d3e205d846814d14c71b1e21e94999e6420147f5f184cbe7ececbe77939581",
+    "preview/native/adapters/column_layout_view.hpp": "59e6f64f85eb75b9a58f69100370c32a774540ac9b46f61427dd6ca29f2709af",
+    "preview/native/adapters/file_io.cpp": "a3fd490e8e49b8d066f27205ab25636ac51c5e0715bf5c25f169e877da17f89c",
+    "preview/native/adapters/file_io.hpp": "8d0fc78f8b6fd62932c8ff07fcbcd8203d6bac0ca2255d86bb849c4b1b413cb6",
+    "preview/native/adapters/profile.cpp": "38c0838d5aae673304ce9dade42cae18bf9607d54d4480949617dcc1c5dafbd9",
+    "preview/native/adapters/profile.hpp": "0e7bb950e4d66e2fdf88b2733cb00d149e8b17ea805348300327af8418649831",
+    "preview/native/app/session_bridge.cpp": "301135e3c4ebd67884028db1d639978c96da7e6bfb2bdb41d2c9c5cb52eef33c",
+    "preview/native/packaging/preview_smoke.cpp": "fef6cc6db731c6b326ad60c24c572d08052d0b256ab074f74ae03f47fb38fcde",
+    "preview/native/tests/CMakeLists.txt": "32e9b02b29c7c0ba66a1cfd4fb5761fc405cc552d36a41d2be589a75af020dab",
+    "preview/native/tests/classic_preferences_create_view_tests.cpp": "f3594599b7f69d60e6c749a78647362290fbaa508a2041c896547e2f5483a5b8",
+    "preview/native/tests/classic_preferences_integration_tests.cpp": "89dea2b82ee601bc97c1a5cbb25b5cd5c75cd19a67eba09f0f69ee5f6da19384",
+    "preview/native/tests/config_create_tests.cpp": "e0aec4419f27b3badb0cc9e90eac916c8b9e70a0a274be8201d1f3fc6a71cd55",
+    "preview/native/ui/library_window.cpp": "ce4812638f26fd46aeaa85546219ae5da653364fd7d6c4648d916ccccc47c500"
+  },
+  "source_files_verified": 15,
+  "unit_suites_passed": {
+    "gcc": 44,
+    "clang": 4,
+    "sanitized": 5
+  },
+  "skipped": 0,
+  "new_config_cases": 61,
+  "new_config_assertions": 2366,
+  "new_preference_creation_cases": 38,
+  "new_preference_creation_assertions": 1134,
+  "focused_storage_cases_per_secondary_lane": 195,
+  "window_worker_qt_rows": 21,
+  "sanitizer_options": {
+    "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+    "UBSAN_OPTIONS": "halt_on_error=1"
+  },
+  "real_write_faults_per_lane": 4,
+  "real_write_retries_per_lane": 2,
+  "real_write_fault_lanes": [
+    "gcc",
+    "clang",
+    "sanitized"
+  ],
+  "original_java_helpers": "Fenced original FileUtil recovery, no ordinary running client/profile access; abrupt owned SIGXFSZ cases have no sanitizer finalization credit",
+  "actual_smoke_scales": [
+    1,
+    1.5,
+    2
+  ],
+  "actual_smoke_qt_rows_per_scale": 5,
+  "captures_per_scale": 4,
+  "manual_compositor_credit": false,
+  "hosted_desktop_run": 39135512836,
+  "hosted_sdk_run": 39135512901,
+  "dist_files_verified": 103,
+  "private_runtime_files_unchanged": 82,
+  "installed_rpath_replay_full_byte_equality": true,
+  "original_head_index_unchanged": true,
+  "original_profile_access": false,
+  "original_processes_signaled": false,
+  "limitations": [
+    "Only explicit first creation with all3 candidates absent; no recovery promotion or cleanup",
+    "Native private column preferences, not original registered/plugin-aware shared layout writing",
+    "No transaction against noncooperating staging/backup pathname swaps, physical power-loss proof or global OOM guarantee",
+    "No original-profile/client switching or full plugin/client/performance completion"
+  ],
+  "history": [
+    "Initial GCC build started while independent config test author completed its syscall seam; final frozen source then fullunits and smoke passed, and final incremental build reports no work",
+    "No source/test/deadline/compiler flag or fixture checks relaxed"
+  ]
+}

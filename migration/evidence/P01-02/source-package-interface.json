@@ -1,0 +1,26 @@
+{
+  "status": "exported_interface_properties_match",
+  "records": {
+    "source": {
+      "path": "/tmp/biglybtc-deps/from-source-gcc16/lib/cmake/LibtorrentRasterbar/LibtorrentRasterbarTargets.cmake",
+      "sha256": "a1a1a4fbb937c38789820fb528450b21d15b158c31659f7e4ffd73871fc3de6b",
+      "properties": {
+        "INTERFACE_COMPILE_DEFINITIONS": "TORRENT_LINKING_SHARED;\\$<\\$<CONFIG:Debug>:TORRENT_USE_ASSERTS>;BOOST_ASIO_ENABLE_CANCELIO;BOOST_ASIO_NO_DEPRECATED;TORRENT_USE_OPENSSL;TORRENT_USE_LIBCRYPTO;TORRENT_SSL_PEERS;OPENSSL_NO_SSL2;OPENSSL_NO_SSL3;OPENSSL_NO_TLS1;OPENSSL_NO_TLS1_1;OPENSSL_NO_DTLS1",
+        "INTERFACE_COMPILE_OPTIONS": "-fexceptions",
+        "INTERFACE_LINK_LIBRARIES": "Threads::Threads;OpenSSL::SSL;Boost::headers"
+      }
+    },
+    "package": {
+      "path": "/tmp/biglybtc-deps/sysroot/usr/lib/x86_64-linux-gnu/cmake/LibtorrentRasterbar/LibtorrentRasterbarTargets.cmake",
+      "sha256": "250820b08b3f620dc92011f72632f40748588036d63c1548e592d9461cb3c0f2",
+      "properties": {
+        "INTERFACE_COMPILE_DEFINITIONS": "TORRENT_LINKING_SHARED;\\$<\\$<CONFIG:Debug>:TORRENT_USE_ASSERTS>;BOOST_ASIO_ENABLE_CANCELIO;BOOST_ASIO_NO_DEPRECATED;TORRENT_USE_OPENSSL;TORRENT_USE_LIBCRYPTO;TORRENT_SSL_PEERS;OPENSSL_NO_SSL2;OPENSSL_NO_SSL3;OPENSSL_NO_TLS1;OPENSSL_NO_TLS1_1;OPENSSL_NO_DTLS1",
+        "INTERFACE_COMPILE_OPTIONS": "-fexceptions",
+        "INTERFACE_LINK_LIBRARIES": "Threads::Threads;OpenSSL::SSL;Boost::headers"
+      }
+    }
+  },
+  "limitations": [
+    "Exported CMake properties only; not complete ABI, signatures or release dependency qualification"
+  ]
+}

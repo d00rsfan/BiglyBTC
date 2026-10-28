@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "native_parent": "bd27aeba82c48c8cd4bddcd8ca35d9f48fb7f310",
+  "private_parent": "882b9e3a4d028f67baedf983e4a84515b68abcfd",
+  "previous_source_commit": "1b08cceee82df9d29f1b35719a6ac24f2c6c2bc1",
+  "previous_tag": "milestone-history-traffic-20261020",
+  "previous_dist_manifest_sha256": "7a38544ed765728555f4423bee7a9beba3f16a7a312accddbab6036e7efb8417",
+  "scope": "P04-24, second of three authorized milestones: keyboard inspection of saved History charts"
+}

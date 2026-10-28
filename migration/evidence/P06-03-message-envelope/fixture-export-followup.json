@@ -1,0 +1,87 @@
+{
+  "records": [
+    {
+      "kind": "tor-auth",
+      "compiler": "gcc",
+      "command": [
+        "ctest",
+        "--test-dir",
+        "/tmp/biglybtc-tor-auth-qualified-gcc",
+        "-R",
+        "original-tor-safecookie",
+        "--output-on-failure"
+      ],
+      "log": "migration/evidence/P06-03-message-envelope/tor-auth-gcc-fixture-export-followup.txt"
+    },
+    {
+      "kind": "tor-auth",
+      "compiler": "clang",
+      "command": [
+        "ctest",
+        "--test-dir",
+        "/tmp/biglybtc-tor-auth-qualified-clang",
+        "-R",
+        "original-tor-safecookie",
+        "--output-on-failure"
+      ],
+      "log": "migration/evidence/P06-03-message-envelope/tor-auth-clang-fixture-export-followup.txt"
+    },
+    {
+      "kind": "tor-auth",
+      "compiler": "asan",
+      "command": [
+        "ctest",
+        "--test-dir",
+        "/tmp/biglybtc-tor-auth-qualified-asan",
+        "-R",
+        "original-tor-safecookie",
+        "--output-on-failure"
+      ],
+      "log": "migration/evidence/P06-03-message-envelope/tor-auth-asan-fixture-export-followup.txt"
+    },
+    {
+      "kind": "msgsync",
+      "compiler": "gcc",
+      "command": [
+        "ctest",
+        "--test-dir",
+        "/tmp/biglybtc-msgsync-qualified-gcc",
+        "-R",
+        "original-msgsync-envelopes",
+        "--output-on-failure"
+      ],
+      "log": "migration/evidence/P06-03-message-envelope/msgsync-gcc-fixture-export-followup.txt"
+    },
+    {
+      "kind": "msgsync",
+      "compiler": "clang",
+      "command": [
+        "ctest",
+        "--test-dir",
+        "/tmp/biglybtc-msgsync-qualified-clang",
+        "-R",
+        "original-msgsync-envelopes",
+        "--output-on-failure"
+      ],
+      "log": "migration/evidence/P06-03-message-envelope/msgsync-clang-fixture-export-followup.txt"
+    },
+    {
+      "kind": "msgsync",
+      "compiler": "asan",
+      "command": [
+        "ctest",
+        "--test-dir",
+        "/tmp/biglybtc-msgsync-qualified-asan",
+        "-R",
+        "original-msgsync-envelopes",
+        "--output-on-failure"
+      ],
+      "log": "migration/evidence/P06-03-message-envelope/msgsync-asan-fixture-export-followup.txt"
+    }
+  ],
+  "source_sha256": {
+    "native/plugins/BiglyBTC-plugin-aznettor/fixture_test.py": "60be3a64fd5daba3af946d050df677956eec446edecfae12860e8850f3dbef92",
+    "native/plugins/BiglyBTC-plugin-azmsgsync/fixture_test.py": "ea5b6248f938685e1ad3ddbe77c8e1232c680b067befac81472600f0cd5d7769"
+  },
+  "scope": "Only fixture location helpers changed after initial matrices; original fixtures and C++ binaries unchanged; prefer local exported fixtures, shallow-safe workspace fallback"
+}

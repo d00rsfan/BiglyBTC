@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "source_commit": "be9ad3d5f409947445b6c253b17430a9df0f6655",
+  "hosted": {
+    "desktop": {
+      "conclusion": "success",
+      "databaseId": 39140391574,
+      "headSha": "be9ad3d5f409947445b6c253b17430a9df0f6655",
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39140391574"
+    },
+    "sdk": {
+      "conclusion": "success",
+      "databaseId": 39140391247,
+      "headSha": "be9ad3d5f409947445b6c253b17430a9df0f6655",
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39140391247"
+    }
+  },
+  "independent_artifact_inspection": true,
+  "native_units_passed": 48,
+  "skipped": 0,
+  "statistics_projection_cases": 25,
+  "statistics_reader_cases": 61,
+  "statistics_page_qt_rows": 35,
+  "statistics_window_worker_qt_rows": 20,
+  "actual_smoke_qt_rows": 6,
+  "captures": 6,
+  "artifact_files_sha256": {
+    "biglybtc-preview-ci-build/CMakeCache.txt": "92cab4b2d9f9a7bea256b933f84aaa81b6f57388b3b2071944e52dccdb6bc090",
+    "biglybtc-preview-ci-build/CTestTestfile.cmake": "066fcb1b7f073504cd8ae2d5a2a9a353c12bd25dc619cb7b9612f07f8cfa93d2",
+    "biglybtc-preview-ci-build/Testing/Temporary/CTestCostData.txt": "e373f73be3b0d19b7b20c0631dd8df069be1b1b64f4d7cbc5f8deec51c27fc6f",
+    "biglybtc-preview-ci-build/Testing/Temporary/LastTest.log": "34e7e88294664cc8c640ca3d80365f85611d3f6eb1c2ad1abbcd91a2c6c3d69d",
+    "biglybtc-preview-ci-build/qt-runtime.json": "3f603998203dd059447924448f1b20937de1ad99da96d3770af0165be50de574",
+    "biglybtc-preview-ci-dependencies/bootstrap.log": "1ffc1d27137c943c1fcee236f3a366894a0aee1825c68ecce1f0eef17510479a",
+    "biglybtc-preview-ci-dependencies/compiler.txt": "325aa607160ea4cc23f3fb04f3a801b16d4b19ab635ebed094f6fca82b9f7f93",
+    "biglybtc-preview-ci-dependencies/github.env": "f41df066b7e2b377e53ed93d41914c7225d46c399a1d6f3bb2721b94af6bf35b",
+    "biglybtc-preview-ci-dependencies/installed-packages.tsv": "1b3933b010e170a3e14ecd7cc8dfc52dcbd8cae7b2c38f321965ed302185d194",
+    "biglybtc-preview-ci-dependencies/python-packages.txt": "4ff8c7c637d87aecd40f669682365a1bb7470f1c49eca69861c23b3e9a3d818e",
+    "biglybtc-preview-ci-dependencies/qt-Updates-after.xml": "615f617ad82e9c9b50e339ce19eb340901919ea29386a93843be236cb77ca5a7",
+    "biglybtc-preview-ci-dependencies/qt-Updates.xml": "615f617ad82e9c9b50e339ce19eb340901919ea29386a93843be236cb77ca5a7",
+    "biglybtc-preview-ci-dependencies/qt-archives-SHA256SUMS": "e0e760ff303066796d942f0c160fde94eedd518699dc4a2aed2e8196c0e74967",
+    "biglybtc-preview-ci-dependencies/requested-packages.txt": "333054189259c0ad05f0abe89cd00486a28d39d09da838d653ff202b60813af7",
+    "biglybtc-preview-ci-evidence/build.log": "84a1302917d0d332687df8bedf077854adbebe2e3995cff337e84cec2dbac815",
+    "biglybtc-preview-ci-evidence/classic-preview.png": "7cf64f30d45a22fef1e5de903d0b9abc1c536bd221949a30922fea61551f0b22",
+    "biglybtc-preview-ci-evidence/configure.log": "21bbc16c38d17d2fc1328926bb20b4a223645005424d282668481d5294f7abe8",
+    "biglybtc-preview-ci-evidence/my-shares-preview.png": "f7713063d69d1e854f8ad91a58fe92fd2783b4da0b8eaab17c4e8102b304a0dd",
+    "biglybtc-preview-ci-evidence/my-tracker-preview.png": "4dfbc25e498f8ab5ffd7e9d92b8c00fd938dd8bf747943fe7f7926296b0e1a23",
+    "biglybtc-preview-ci-evidence/preview-smoke.txt": "32899682bc3f529aed115a8d6cbb45c59c0f5c4502c77cf9c0e08b418d8ca108",
+    "biglybtc-preview-ci-evidence/sample-preparation.log": "a9448476f9c0395c418fd0e7d46636caa754fe1564a44cee1b6f6d1c645e71ee",
+    "biglybtc-preview-ci-evidence/sample-root.txt": "4739ca5fe55e0908f2e46440293cdb3661914b050332d69a2ad71db1d04e3967",
+    "biglybtc-preview-ci-evidence/saved-selected-preview.png": "43d9ebd3a31aeab800e5f16fb006aa67a87ec3fb05e9a49326c7bdb6b55be8de",
+    "biglybtc-preview-ci-evidence/statistics-activity-preview.png": "82635aea3f5b5e0dec3c20611a9c81ff5ec014d3cd8d30c7ca9d1753dcf14427",
+    "biglybtc-preview-ci-evidence/statistics-transfers-preview.png": "b05492b88b5fc274abf4e2b56f1980486b63fbc41d200b8189de9327ea11249e",
+    "biglybtc-preview-ci-evidence/unit-tests.log": "bdd4bac9dc9eef4b79d33884c8b66626ab4bb57f3d983692e6ae70828f1cdb1c",
+    "biglybtc-preview-ci-evidence/unit-tests.xml": "814ea12fc3761d6cce0f1bb0281d23d6fda067ca39a4935f24cb8ff74e8f45c7"
+  },
+  "large_dependency_xml_archived_in_build_only": true
+}

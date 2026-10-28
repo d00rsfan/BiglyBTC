@@ -1,0 +1,271 @@
+{
+  "schema": 1,
+  "status": "PASS: actual scaled captures and visual inspection",
+  "reviewer": "root",
+  "source_commit": "c35ca6e2470aa8f154ec7676e61734c012725283",
+  "visual_commands_passed": 7,
+  "captures_per_scale": 16,
+  "three_scale_captures": 48,
+  "manually_inspected_offscreen_images": [
+    "1-statistics-history-week-hourly-preview.png",
+    "1-statistics-history-week-hourly-missing-preview.png",
+    "1.5-statistics-history-week-hourly-preview.png",
+    "1.5-statistics-history-week-hourly-missing-preview.png",
+    "2-statistics-history-week-hourly-preview.png",
+    "2-statistics-history-week-hourly-missing-preview.png",
+    "1-statistics-history-week-preview.png"
+  ],
+  "images": {
+    "1-classic-preview.png": {
+      "sha256": "24323291844b570aa83430b3cc8ff508135f74d01cee2bbd869f0c8354329b08",
+      "width": 1250,
+      "height": 800
+    },
+    "1-my-tracker-preview.png": {
+      "sha256": "314c5d2f1084b99c454a6e51c5ca46a512d0cb60f3c6a0afd75f4098fb3a7a3b",
+      "width": 1250,
+      "height": 800
+    },
+    "1-my-shares-preview.png": {
+      "sha256": "c6c6ce270b35f002fcba6a58a09592640d4a4ac8014d77cf27c8d94ce5ce9c7b",
+      "width": 1250,
+      "height": 800
+    },
+    "1-saved-selected-preview.png": {
+      "sha256": "9da1e93280d2efdd704a14e9e6cc4756cbb686c75e37d2ef73e34d4e9d224e0b",
+      "width": 1250,
+      "height": 800
+    },
+    "1-statistics-activity-preview.png": {
+      "sha256": "eade61468b91b344580e92bf68bc4d0fb97905ee857012b2f4627e144e8adf6a",
+      "width": 1280,
+      "height": 823
+    },
+    "1-statistics-transfers-preview.png": {
+      "sha256": "569bbede2560c2c2a274ba83d840af7c8e5d089f42fa1807abed418889a39019",
+      "width": 1280,
+      "height": 823
+    },
+    "1-statistics-history-preview.png": {
+      "sha256": "123bbf7cfb721fb73a8eea37b6827a5add9b4568945377abb0d3f64099dbddbb",
+      "width": 1280,
+      "height": 900
+    },
+    "1-statistics-history-missing-preview.png": {
+      "sha256": "c15d7e5897f25107c115e8789bed74e3c3e1da9ad652afd081096aae05b1affe",
+      "width": 1280,
+      "height": 900
+    },
+    "1-statistics-history-week-preview.png": {
+      "sha256": "fa27d76430adc37cada19e9df5f1100cbc843a87cf61e3301ff8c2da28849e29",
+      "width": 1280,
+      "height": 900
+    },
+    "1-statistics-history-week-missing-preview.png": {
+      "sha256": "57dd6405ff57a8b967d68885cbf5d3579435bbe4980f2dd4fc63e3ee43120bb2",
+      "width": 1280,
+      "height": 900
+    },
+    "1-statistics-history-week-hourly-preview.png": {
+      "sha256": "df6458877a7be261164991a18bf479a25c37fc88f4e9a3d35eba17f585508c57",
+      "width": 1280,
+      "height": 900
+    },
+    "1-statistics-history-week-hourly-missing-preview.png": {
+      "sha256": "3aedc0e142c53fe316db1fddb7d1d2399941b2dcdad3966285c4d6a983d2b1e1",
+      "width": 1280,
+      "height": 900
+    },
+    "engine-scale-1/engine-single.png": {
+      "sha256": "7788e3fbffd08a8b703c056eee4d3ccb2efdd89f92638382b6800a92d4923f1a",
+      "width": 1280,
+      "height": 900
+    },
+    "engine-scale-1/engine-multifile.png": {
+      "sha256": "a2d83d89bb5fe9adb463febb3ec81d9f4ea61111f9a53ee1d865f05810d9a67c",
+      "width": 1280,
+      "height": 900
+    },
+    "activity-scale-1/activity-single.png": {
+      "sha256": "d75f6ee6f71e837685e92d49bf1fcd75c140fbacdf748d896cd5942a8e143c74",
+      "width": 1280,
+      "height": 900
+    },
+    "activity-scale-1/activity-multifile.png": {
+      "sha256": "53da66b54d02161cfa9487ddaeee43c6e1477b17eff35b1094785db95fea01c2",
+      "width": 1280,
+      "height": 900
+    },
+    "1.5-classic-preview.png": {
+      "sha256": "c7949fdee0de286ac311bedbf3df9d99d6603a58e8ba641c0d73d51738713db0",
+      "width": 1875,
+      "height": 1200
+    },
+    "1.5-my-tracker-preview.png": {
+      "sha256": "e0296210b24e2bab8034ae40433c491021593ffbb5dace70d23a0f642460d5c0",
+      "width": 1875,
+      "height": 1200
+    },
+    "1.5-my-shares-preview.png": {
+      "sha256": "0a226075f9b923a5a0134039b2f51d15665e6859c55d35b695ecaf3ad57d8e1e",
+      "width": 1875,
+      "height": 1200
+    },
+    "1.5-saved-selected-preview.png": {
+      "sha256": "a2729b7bf338de8ae271fb89ac98111f648098eadb3a846cca25742eee763c0c",
+      "width": 1875,
+      "height": 1200
+    },
+    "1.5-statistics-activity-preview.png": {
+      "sha256": "73b3ca9eb87d923830567b523d67ddf9647f8937a48b82174fc893931e69f7e5",
+      "width": 1920,
+      "height": 1235
+    },
+    "1.5-statistics-transfers-preview.png": {
+      "sha256": "18141620af88539ac77592e521597b9fa19ec027f7d31cfb5f671c1a072e1137",
+      "width": 1920,
+      "height": 1235
+    },
+    "1.5-statistics-history-preview.png": {
+      "sha256": "c61fc9897802f74668b0c26b0e9f632b9ee01d72a4e83f8b2184cf2b3ad9d748",
+      "width": 1920,
+      "height": 1350
+    },
+    "1.5-statistics-history-missing-preview.png": {
+      "sha256": "b0b952f52f74c6e4d941b34f8f2f87ca1273ad77c821dd9e7e606a7f4e38bfcb",
+      "width": 1920,
+      "height": 1350
+    },
+    "1.5-statistics-history-week-preview.png": {
+      "sha256": "976cd9c89dab132134c21c7d9592f68d34731ee220cf8889b96fa17585d6bf4f",
+      "width": 1920,
+      "height": 1350
+    },
+    "1.5-statistics-history-week-missing-preview.png": {
+      "sha256": "eacfdd6cab4319de7888960ee520df03cf10379399a67ed700b415431b7ec048",
+      "width": 1920,
+      "height": 1350
+    },
+    "1.5-statistics-history-week-hourly-preview.png": {
+      "sha256": "dbadccc819a20e2a15468a413170fa6e8211a2ec3b45bd547581c9d563c44ebb",
+      "width": 1920,
+      "height": 1350
+    },
+    "1.5-statistics-history-week-hourly-missing-preview.png": {
+      "sha256": "8938a54a4c994d8af53ece65b1349d07bad0a4783369dd4cb831beb1995b275d",
+      "width": 1920,
+      "height": 1350
+    },
+    "engine-scale-1.5/engine-single.png": {
+      "sha256": "106670a0418493a104bacc55e38b3c7c276463f3f6c83a6f13c6936998827079",
+      "width": 1920,
+      "height": 1350
+    },
+    "engine-scale-1.5/engine-multifile.png": {
+      "sha256": "d138154c1d13a9d5b681ad79e7223c3639e3dfcfefc9b1e4c284e452fd544854",
+      "width": 1920,
+      "height": 1350
+    },
+    "activity-scale-1.5/activity-single.png": {
+      "sha256": "0f53c4398e44b42e556789a2a2242dbd34aca093c7ec95f7c5154b8a1c260b41",
+      "width": 1920,
+      "height": 1350
+    },
+    "activity-scale-1.5/activity-multifile.png": {
+      "sha256": "33a07d9486090e498f83209b9622038cd93beb595bf4ce7d882abb7ab89a1846",
+      "width": 1920,
+      "height": 1350
+    },
+    "2-classic-preview.png": {
+      "sha256": "6a48c9ddf0c73fa13dbcd0194bdca055d53dc2ad4214b30aea90dcc1da3efdaa",
+      "width": 2500,
+      "height": 1600
+    },
+    "2-my-tracker-preview.png": {
+      "sha256": "45cf02c65047fb45d8059f401b5b7ce6c277f84782acdabb64cfa6c8bdcf3b47",
+      "width": 2500,
+      "height": 1600
+    },
+    "2-my-shares-preview.png": {
+      "sha256": "09e272e9d0f15def2e25e0b7161404d40162c51931e0aced4e71640c4b8104b0",
+      "width": 2500,
+      "height": 1600
+    },
+    "2-saved-selected-preview.png": {
+      "sha256": "2a9e94700e16f4377a90e51264c424d7a5a2e99936fe3a84ac4973e0205d8c94",
+      "width": 2500,
+      "height": 1600
+    },
+    "2-statistics-activity-preview.png": {
+      "sha256": "a8230970157377be728c70b004da31f565b594d1adfd236a2778b209b05e74e5",
+      "width": 2560,
+      "height": 1646
+    },
+    "2-statistics-transfers-preview.png": {
+      "sha256": "fa294f6456c5abb6572d1182e52c1ae31e7a259a7818e6a2afd35ae77beeb6d2",
+      "width": 2560,
+      "height": 1646
+    },
+    "2-statistics-history-preview.png": {
+      "sha256": "89e179a80ba232eaed463fc9aa0b0402589c55f64b26d963170d48d444c6fd11",
+      "width": 2560,
+      "height": 1800
+    },
+    "2-statistics-history-missing-preview.png": {
+      "sha256": "da169ea38b9145d0b42dc9191c77a27be1a90b5eab698b22e5a0831e5b4b7be3",
+      "width": 2560,
+      "height": 1800
+    },
+    "2-statistics-history-week-preview.png": {
+      "sha256": "1abefaa85d50bb793402ddbf86a4e0e8ac9a5747f37c6887b3d898c8fc7c5134",
+      "width": 2560,
+      "height": 1800
+    },
+    "2-statistics-history-week-missing-preview.png": {
+      "sha256": "a45129498131366105e67bf46dd11e3ac6c1d548f997f97bd45119ff5d770914",
+      "width": 2560,
+      "height": 1800
+    },
+    "2-statistics-history-week-hourly-preview.png": {
+      "sha256": "0590e5e6cc242676ab4f231194571552753fe54ca5eac5a56a5a03f69d49e60c",
+      "width": 2560,
+      "height": 1800
+    },
+    "2-statistics-history-week-hourly-missing-preview.png": {
+      "sha256": "7a4f46f155678c4cbef8492b2e386df2bdf829699a3e068f28947f85bcf48be1",
+      "width": 2560,
+      "height": 1800
+    },
+    "engine-scale-2/engine-single.png": {
+      "sha256": "5c6ae413d454b79c7393037c786881b5cf94422e69eabd16bdffa1abb5f2ed5d",
+      "width": 2560,
+      "height": 1800
+    },
+    "engine-scale-2/engine-multifile.png": {
+      "sha256": "1367920118329d09033db708818b3f14e25f9a0ca591abf0932c952ab177f8aa",
+      "width": 2560,
+      "height": 1800
+    },
+    "activity-scale-2/activity-single.png": {
+      "sha256": "b5c4782ec2fd1f19fb60013c7bdb3a1f2d98f54c010b794ba170aabfafe5ff7a",
+      "width": 2560,
+      "height": 1800
+    },
+    "activity-scale-2/activity-multifile.png": {
+      "sha256": "c3ba8ae83930d3a2e23c25e191e5720426fc4ae098d8238b498c8d196e5a572e",
+      "width": 2560,
+      "height": 1800
+    }
+  },
+  "observations": [
+    "Graph resolution control, date navigation and refresh remain visible at all inspected scales.",
+    "Ready hourly views show sparse UTC date/hour ticks, distinct payload traces/markers and the unchanged seven-row daily table. Unknown hours remain gaps.",
+    "All-missing hourly views contain no trace and explicitly state no saved payload observations; every table row is Missing.",
+    "Switching back to Daily totals restores the seven-bucket chart with the same daily table."
+  ],
+  "blockers": [],
+  "limits": [
+    "Offscreen image inspection; no real compositor acceptance or original Java graph equality credit."
+  ],
+  "manual_compositor_credit": false
+}

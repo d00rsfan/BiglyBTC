@@ -1,0 +1,119 @@
+{
+  "verdict": "PASS_SOURCE_REVIEW_NO_BLOCKING_FINDING",
+  "reviewer": "error_codec",
+  "independence": "Independent review of driver-authored private sampler and root-authored existing-engine integration. Reviewer-authored EngineStatistics core is only an interface dependency, excluded from independent implementation credit.",
+  "subject_sha256": {
+    "engine/engine_statistics_sampler.hpp": "689355ba82df086033944edb37f2a6a877d7471bd2e2f73dadc6124b7f094089",
+    "engine/engine_statistics_sampler.cpp": "8185293d7e20a7de009d431fcd6d4f4fbded469118e201f3d94bbaf420a44604",
+    "engine/local_support.hpp": "a553d4f4c0c82bd2606be258619daaef33c578884c8e59f5916b8a34c4bedc16",
+    "engine/local_session.hpp": "68b9c9f4baccc8e7ee9c4c33b4534855fdf75082003bd591ca84aca6d9643270",
+    "engine/local_session.cpp": "4d7d7fd631cb48d712585f02e29d5541a3883d39a3d6f54b6234ba3bab93b132",
+    "engine/multifile_session.cpp": "d300d6c23c90d73c4c0c610e310a0827d3a19403ec6bbc2785e9ebaaff92044f",
+    "engine/CMakeLists.txt": "4445b14869f3e5be1bb4b67e09c23f82c4d1c4fcfae95a9b05e779dc2d6e34f5"
+  },
+  "baseline_native_source_commit": "be9ad3d5f409947445b6c253b17430a9df0f6655",
+  "baseline_exact_reconstruction_sha256": {
+    "engine/local_session.cpp": "5a74426229f890480d7cb062d0a11aaaf74c51ced5d1ed713b758f0a9f5eef9d",
+    "engine/multifile_session.cpp": "ab09eb93faf057e69068f5467e535d753b68887be0a82d7970532a11331bf57a",
+    "engine/local_session.hpp": "3ac5e56321e5202a27cc542c0d8ca9daa6a8354d7a2c1b6293b7e3fdda3caa4b",
+    "engine/local_support.hpp": "c8e4bf6a1df817359ba6c27a76b3307025e90b404d67eacb0f9b21482e08b22b",
+    "engine/CMakeLists.txt": "ee58a160b63acccdf5fc31139e8dce64e0c7c27115bec9bf9a406a7a0a593058"
+  },
+  "author_sampler_manifest_sha256": "6ea3d1a32bbd2fb20b3f1239211f2f79da97a266c3c1711829e88c37928b5244",
+  "libtorrent_version": "2.0.12/package2.0.12-1",
+  "libtorrent_context_root": "/tmp/biglybtc-deps/libtorrent-2.0.12-release/libtorrent-2.0.12",
+  "libtorrent_source_sha256": {
+    "include/libtorrent/session_stats.hpp": "50f24276b7ba33ecbd09613a168a2d1646ad5b8fe580fd4e91f3636c7d767ef1",
+    "include/libtorrent/session_handle.hpp": "66055aa158d65f70972a2a19927d4cf7bc7e3ef223a69e3b825353a270757798",
+    "include/libtorrent/alert_types.hpp": "15ce77c102b456465db6c119d15bbb6b74792ba684aa386669b3d6d748442897",
+    "include/libtorrent/alert.hpp": "57b7b46958f52f9882ad230e921441f46e40fac8a659173d6d2da1a4c32a222d",
+    "include/libtorrent/span.hpp": "6609d95721f6e694cd1a699e902267667f5e70b6f40ac96a943651733f5958f5",
+    "include/libtorrent/time.hpp": "a21e3756ecc26f662ccf7889234d971dd9490cff60c6ff5bdade2ec2f9972749",
+    "include/libtorrent/aux_/alert_manager.hpp": "502489634068af7b19b86c8cc2ace8312ea963649c64a486a82dc1c013fac941",
+    "src/session_stats.cpp": "cd71bfbcdf53304921700d1989c5fea8575b5ebc630c061ae309eae71cd3f937",
+    "src/session_impl.cpp": "e33778939a03634f7ca588752f924afcdf790ac48ddd2a127af71e00f34d1c65",
+    "src/alert.cpp": "750ccc0d3a62ffd6e2dbce1d9930556bc9613ec3b10a40825bb28bc863179773",
+    "src/settings_pack.cpp": "059759d20da14fc8ada6177df77562addda1a033ef6fe08edf631f757dfd9bf4"
+  },
+  "own_core_header_context_sha256": "f5946fd72b06312dd4772bbfb7f4c84ebbfcff53971b737e8ba7cda4902678f9",
+  "source_audit_sha256": "bb36ee7a70e8059f7ef29b46e376524b12bd60358e3ccce90f27d15f7122ba7e",
+  "checks": [
+    {
+      "id": "ES-1",
+      "result": "PASS",
+      "subject": "Disabled path and baseline preservation",
+      "detail": "Sampler constructor immediately returns for empty statistics callback before any metric API/steady read/post; poll/request immediately return. Reverse-transforming only documented include/callback/sampler/poll/request/CMake additions reproduces all5 preintegration engine-file hashes. Settings, payload progress, saved counter/report calculations, storage writes, error handling, deadlines, sleeps and predicates remain byte-identical."
+    },
+    {
+      "id": "ES-2",
+      "result": "PASS",
+      "subject": "Single alert owner/all waits",
+      "detail": "All3 single-file and all3 multifile existing waits pass the same scope-local sampler. Only preexisting shared wait performs pop_alerts. errors(pending) still runs before optional sampler poll, then the unchanged ready predicate; no second pop/wait consumer or network/settings mutation is added."
+    },
+    {
+      "id": "ES-3",
+      "result": "PASS",
+      "subject": "Named metrics and actual bounds",
+      "detail": "Four exact peer-transfer metric names are resolved through runtime session_stats_metrics. Missing/duplicate name, wrong counter type, negative index or reused index leaves sampler disabled. Every selected index is compared with actual session_stats_alert counters().size() before lookup. No numeric offset assumption, gauge interpretation or IP/tracker/DHT double counting."
+    },
+    {
+      "id": "ES-4",
+      "result": "PASS",
+      "subject": "Borrowed alert lifetime and owner scope",
+      "detail": "Only four primitive counter values escape the popped batch, through a stack-owned accumulator result. No alert pointer/span/metrics vector is retained. Sampler is nonmovable/noncopyable, owns copied callback, borrows the local session declared immediately before it and dies on the same worker before that session. Callback state is not destroyed inside disable/reentrant callback unwinding."
+    },
+    {
+      "id": "ES-5",
+      "result": "PASS",
+      "subject": "Explicit steady timing and arithmetic guards",
+      "detail": "Supported-platform compile-time checks require signed integral nanosecond steady_clock ticks fitting int64. Constructor origin is nonnegative; later readings must be >=origin; elapsed and cadence subtraction are guarded. No libtorrent high_resolution timestamp or floating duration conversion is used. Counter/time discontinuity rejection disables optional sampling rather than silently resetting/stitching owners."
+    },
+    {
+      "id": "ES-6",
+      "result": "PASS",
+      "subject": "One outstanding request/cadence",
+      "detail": "post marks outstanding before asynchronous LT call, clears coalesced force flag and records admitted steady time. request with outstanding only sets one forceNext latch. Ordinary poll posts only with none outstanding and >=200ms since lastpost; explicit stage request may bypass cadence once, as documented. No retry flood, extra sampling thread or GUI timer."
+    },
+    {
+      "id": "ES-7",
+      "result": "PASS",
+      "subject": "Dropped/unexpected alert handling",
+      "detail": "All batch alerts are inspected for null or alerts_dropped containing session_stats_alert type; this disables sampling before delivering a possibly incomplete batch. Unexpected session stats without outstanding also disables. Other alert drops are not consumed/removed and continue under inherited transfer owner policy. An unreported lost response can leave sampling outstanding/unavailable, without retries or a fabricated sample."
+    },
+    {
+      "id": "ES-8",
+      "result": "PASS",
+      "subject": "Optional exception isolation",
+      "detail": "Sampler constructor/poll/post contain metric/copy/clock/post/sample/callback exceptions; failures disable this observer without throwing into transfer or authorizing storage/completion. Immutable callback samples have no publication guarantee if callback throws. Public callbacks retain the normal bounded, owner-thread/nonblocking calling contract; this source review does not promise immunity to arbitrary blocking/destructive user code."
+    },
+    {
+      "id": "ES-9",
+      "result": "PASS",
+      "subject": "Final request and completion authority",
+      "detail": "One request before existing pause+save_resume_data may obtain a fresh observation during the unchanged existing flush wait. Predicate still accepts save_resume_data_alert alone; no new wait, required Stats response, timeout expansion or final exhaustive byte receipt. Sampler destruction adds no callback. Engine session destruction still precedes original durable state/rename/inventory completion publication."
+    },
+    {
+      "id": "ES-10",
+      "result": "PASS",
+      "subject": "Build wiring",
+      "detail": "Only engine_statistics_sampler.cpp is appended to the existing engine static library; exact LT2.0.12 requirement and strict -Wall/-Wextra/-Wpedantic/-Werror options are unchanged. New core header is pure data/API; no new external/Qt dependency or weakening in engine CMake."
+    }
+  ],
+  "remaining_execution_gates": [
+    "Actual strict GCC16/Clang24 compile of nanosecond clock/ABI forward declarations and LT span API.",
+    "Generated actual single/multifile loopback sampling, callback-throw/disabled preservation, cancellation and prior flush/completion regressions.",
+    "Independent sampler branch coverage for unexpected/drop/metric corruption is not claimed by this source report.",
+    "UI/Bridge session/operation identity, stale filtering and terminal unavailable/closed labels require separate current integration review.",
+    "No original Java/global-client/ten-second-rate/persistence/performance equality follows."
+  ],
+  "execution": {
+    "kind": "Source/hash/manual-delta reconstruction only",
+    "target_definition_import_or_evaluation": 0,
+    "Git": 0,
+    "builds_or_compilers": 0,
+    "native_or_Java_or_process_fixture": 0,
+    "GUI_profile_payload_IO": 0,
+    "network": 0,
+    "production_source_edits": 0
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "status": "original-source-frozen-before-native",
+  "native_implementation_or_comparison": false,
+  "source_manifest_sha256": "88c89f6c60f8488cc6164da13d477a560784c99232a5abdc1afda6d91fe4c162",
+  "source_reference_sha256": "6f61d34dfd1b1a5621dba7202f9c112af461f31849446f1a2974795c6753d655",
+  "source_harness_sha256": "b7e4c10a6f20029c9848140c3e92dcfb6de518105222ec5867406554e540b20a",
+  "helper_classes": 18,
+  "all_v1_v2_classes_unchanged": true,
+  "source_observations": 846,
+  "groups": {
+    "queue-dispatch": {
+      "observations": 362,
+      "scenarios": 22,
+      "command_errors": 0
+    },
+    "completion-timer": {
+      "observations": 177,
+      "scenarios": 12,
+      "command_errors": 0
+    },
+    "removal-stop": {
+      "observations": 114,
+      "scenarios": 8,
+      "command_errors": 0
+    },
+    "boundary-fault": {
+      "observations": 99,
+      "scenarios": 8,
+      "command_errors": 5
+    },
+    "callback-contract": {
+      "observations": 94,
+      "scenarios": 6,
+      "command_errors": 1
+    }
+  },
+  "semantic_subset_eligible_for_future_projection": 653,
+  "remaining_source_only_native_credit": 0,
+  "failed_v1_attempt_preserved": true,
+  "v1_successful_group_outputs_unchanged": true
+}

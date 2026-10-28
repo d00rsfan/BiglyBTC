@@ -1,0 +1,16 @@
+{
+  "policy": "Reject invalid EC ephemeral points using OpenSSL public-key validation before ECDH. The original accepts (0,0), which is off this curve; normal generated keys are unaffected. Preserve original observations unchanged.",
+  "observation_overrides": {
+    "677": {
+      "command_sha256": "f9fef21e6dc435035c8866b7d8193afaadadb1532cfbf39ff758dccdf2d10308",
+      "original": "PUT_KEYS 1 148 x0264142B1CA4F4100ED93017F60F3E4879A44BAB2AC4665217 1",
+      "required_native": "PUT_KEYS 0 148 x0264142B1CA4F4100ED93017F60F3E4879A44BAB2AC4665217 0"
+    },
+    "678": {
+      "command_sha256": "ff70929b82eabc3a753a2069ae04d99cb53ba62ccb889648781b8df5d3d13938",
+      "original": "STATE x0264142B1CA4F4100ED93017F60F3E4879A44BAB2AC4665217 1",
+      "required_native": "STATE x0264142B1CA4F4100ED93017F60F3E4879A44BAB2AC4665217 0"
+    }
+  },
+  "release_status": "Bounded implementation choice; no complete component integration/release baseline is advanced."
+}

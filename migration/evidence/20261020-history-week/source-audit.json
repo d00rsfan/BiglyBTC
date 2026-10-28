@@ -1,0 +1,115 @@
+{
+  "schema": 1,
+  "milestone": "P04-19",
+  "status": "Complete source audit; actual Java characterized independent member periods only",
+  "original_upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_parent": "fe09d1c9430a5a3c684d34be97a6661d08704c72",
+  "private_parent": "ac1d95f97b2dfeec2110d790549ffb8b16a038ef",
+  "original_source": {
+    "core/src/com/biglybt/core/stats/transfer/LongTermStats.java": {
+      "git_blob": "a369578b191cf4ead71a32e15b5592dcfa06212c",
+      "sha256": "f1a4bfaa8d15e8b0f9318a2af1653a854f9969bc09b80f4e9bd3c48afb62e1bf",
+      "bytes": 2666,
+      "lines": 110
+    },
+    "core/src/com/biglybt/core/stats/transfer/LongTermStatsListener.java": {
+      "git_blob": "e43a6369202effd6ce07520789ba8d0b890e9941",
+      "sha256": "212cf7beb50619e90575f86ceb1357d59e43c69806f00fc18e3406cee8afc258",
+      "bytes": 973,
+      "lines": 29
+    },
+    "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsBase.java": {
+      "git_blob": "5f3aed69cf85d10d927bc8fe8e8677e2b8ea567f",
+      "sha256": "1f9e0967309777ad4c19be9ee123351c9a21755337a0d48fa52dd3752de5ca7f",
+      "bytes": 29331,
+      "lines": 1396
+    },
+    "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsImpl.java": {
+      "git_blob": "9146de0217f34f6e9345f5727dc6727397f4d712",
+      "sha256": "9dd5c8f8f551bc69e61f000defa73f845dc4011fc5e631dd1a5d5c377af7dc6d",
+      "bytes": 7036,
+      "lines": 298
+    },
+    "core/src/com/biglybt/core/stats/transfer/impl/LongTermStatsWrapper.java": {
+      "git_blob": "3f48639a3b8ee891f84c4d9f7d04eb2cb4b7a5bc",
+      "sha256": "8b761975a6f44d90e518872c5afd4fdf2ec2acd13c78bc677f6a5ea9ec8e1eac",
+      "bytes": 3876,
+      "lines": 178
+    },
+    "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java": {
+      "git_blob": "0cfe7a202d8ff27da9500435ea9bd659a1de6ba5",
+      "sha256": "0c2b304c022013d0797732049c51deb23a7af976f74b0d47f22156d8da097103",
+      "bytes": 76096,
+      "lines": 2871
+    },
+    "core/src/com/biglybt/core/util/TimeFormatter.java": {
+      "git_blob": "4809f0f1028875d82ddc2fc4f4d2502a273eef55",
+      "sha256": "0076bf6d6205e01dee097f6d43b6ade84b7b2cb7b84db6c4d1c6d0511e8ea898",
+      "bytes": 14486,
+      "lines": 615
+    }
+  },
+  "source_ranges_file": "source-ranges.json",
+  "source_ranges_sha256": "f7cf41b3f33ffc1a5b9bd4a6d83788baaae0ffc82368d4f2ca5e20a314155a51",
+  "complete_ranges": 19,
+  "retained_P04_18_ranges_verbatim": 18,
+  "facts": [
+    {
+      "source": [
+        "interface.complete",
+        "impl.sessionStart",
+        "impl.updateStats"
+      ],
+      "fact": "Original order remains six signed long byte counters: protocol upload,payload upload,protocol download,payload download,DHT upload,DHT download. Only the actual original interfaces and complete Base are compiled; global/DHT/Core/session owner construction is source-only."
+    },
+    {
+      "source": [
+        "base.dateReaderActualOracle"
+      ],
+      "fact": "Each Date query enumerates UTC daily pathnames selected by its start/end day; within each opened file, record eligibility uses the entire requested interval, not an extra clipping to the pathname day. Nonnull accepter disables month/day cache paths; the end>=now clamp still applies. All new fixture dates are before fixed2030."
+    },
+    {
+      "source": [
+        "base.write",
+        "impl.getNewFileSessionStats",
+        "base.dateReaderActualOracle"
+      ],
+      "fact": "Writer rollover appends the pending non-start line to the prior file before switching. Thus a whole multi-day Date-range query can include a next-day reconstructed spill from that prior file, whereas seven independent clipped one-day queries can omit it. P04-19 intentionally exposes only the latter and produces no aggregate/week total. Both month and year rollover fixtures characterize exclusion per member day, not a whole-week query."
+    },
+    {
+      "source": [
+        "base.dateReaderActualOracle"
+      ],
+      "fact": "Positive s anchors only; s0/negative deactivates. Valid inactive records are ignored. Each anchored delta/e advances exactly one reconstructed minute; e timestamp/version do not replace that clock and e does not clear the source anchor. Baselines are parsed but not usage; overlapping reconstructed minutes add and signed adjustments remain signed."
+    },
+    {
+      "source": [
+        "ui.createHistoryPanel",
+        "ui.refreshHistory",
+        "util.timeSuffixUnitsAndWeekMultiplier"
+      ],
+      "fact": "Original UI TS_WEEK is7*24*60*60seconds and uses TS_HOUR buckets:168 hours, current-time/hour-rounded range plus span offsets, payload-only chart with pixel-dependent merging/scaling. This is not seven selected UTC day rows and has an original whole-span total. None of those graph/total paths is implemented or runtime-qualified by P04-19."
+    },
+    {
+      "source": [
+        "base.periodReaderNotExecuted"
+      ],
+      "fact": "Original PT_SLIDING_WEEK uses now minus multiplier*week; PT_CURRENT_WEEK uses default-timezone GregorianCalendar and configurable long.term.stats.weekstart. This overload config hook is fail-closed in the oracle and is never called. Explicit UTC end-minus6 calendar dates are a deliberate different bounded presentation."
+    },
+    {
+      "source": [
+        "base.dateReaderActualOracle"
+      ],
+      "fact": "Java permissively skips records/errors and has unchecked multiplication/sums, ignores versions and inactive record field validation. Native retained exact-shape/VERSION1/all-record/checked-arithmetic/bounds/cancellation policies deliberately differ. Presence/observations/strict errors get zero Java equality credit."
+    }
+  ],
+  "actual_oracle": "java-oracle.json",
+  "scope": [
+    "Seven independent original daily results; each member also characterized for24 hours; no whole-week result supplied",
+    "Missing day Java zero arrays are numeric expectations only, not authority to fabricate native observed zero",
+    "Inherited P04-18 source,17fixtures/425queries/2550scalars unchanged; only new525queries/3150scalars are new observations",
+    "No writer/cache/global original owner, originalUI/TimeFormatter initializer, or live profile runs",
+    "Native7sequential held-file reads do not form an atomic storage snapshot; allfail/cancel semantics require independent native qualification"
+  ],
+  "source_reference_license": "Original Java remains source-audit/isolated oracle input in private evidence; only generated fixtures/metadata are exported publicly."
+}

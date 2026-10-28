@@ -1,0 +1,31 @@
+{
+  "source": "6a29eacc23619a8c4adf562174b81b98010645c4",
+  "parent": "b829bbb53914349c9933b3e44b257e6b8991f812",
+  "upstream": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "inputs": {
+    "README.md": "0b63b89f7391236b6adde479825d80d70943a79598b4bcdbd0fe759cbc93dbd4",
+    "preview/native/core/CMakeLists.txt": "483e660a9831a5f6f09d4863d7b2a3e68e9e00f6dfb4edf358e713418666efe2",
+    "preview/native/core/include/biglybtc/passive_speed_mapper.hpp": "25fedbde5ba13b1f1f6af6e6fa487c789f98dfa4805bda9327fe7dbffd11b112",
+    "preview/native/core/include/biglybtc/saved_speed_map.hpp": "43057d73a9dfdbb1ee3cc302025866e296322d6f1d5f9b353072402723263304",
+    "preview/native/core/src/passive_speed_mapper.cpp": "a0e9172bff4db313025acbcc3309eade30627b668a4e67ce4e89e2748118135b",
+    "preview/native/core/src/saved_speed_map.cpp": "89b4ac1ad2031725e5d6c5393e7b2f629c2c05fe6ec1c0e3774936666cb712df",
+    "preview/native/tests/CMakeLists.txt": "1fd6be122737a574cb42cca01e8f05480611df11593f220c48497313e9953d86",
+    "preview/native/tests/fixtures/saved-speed-map/expected.tsv": "10269b02b37bd1e409f548b4207e4c195083c948516fb6ed6dcf96067f787276",
+    "preview/native/tests/fixtures/saved-speed-map/known-zero.dat": "901590e3d95afd4e7747a8b74ce79534d3f8ce460ff656176e91794af82a26a1",
+    "preview/native/tests/fixtures/saved-speed-map/malformed-gaps.dat": "8f1c8540f03d6dfc2760076464e287dd2f9dd840584e26bf2427d9a15a605114",
+    "preview/native/tests/fixtures/saved-speed-map/ordinary.dat": "ef3fd84b533932d974cc5ebc8a62bb3cf6d026e9bb52b470fa4b9cc949dccdfa",
+    "preview/native/tests/fixtures/saved-speed-map/rating.tsv": "fff7fec6caedb3fc7bfc59768e91ad4f397c03c110e1e27b3cd1fa6283eeafcf",
+    "preview/native/tests/fixtures/saved-speed-map/wrap-and-cap.dat": "6eb886d93bed4c0a59b7004a181068ccb7018994c5ad822c4e0f393959d77819",
+    "preview/native/tests/passive_speed_mapper_literals.hpp": "893c0fcf828a61240685ee2a19ef006aa1f58214af5b072159a8fd4c8ee012ba",
+    "preview/native/tests/passive_speed_mapper_tests.cpp": "88da54ad28389814238f9ed7cc87c5f010dc74f0be71f3ee4781fd70265cf425",
+    "preview/native/tests/saved_speed_map_tests.cpp": "4718645f881862cf3e5f91b9dc4813e89db8c56797b147f31b2774ad5ef3800c",
+    "preview/native/tests/saved_speed_map_ui_tests.cpp": "bdf29d2f7033b84942bf87581bbc1eb653b27e2dd88a677b2c86b1a4a8f3432d",
+    "preview/native/ui/CMakeLists.txt": "4c75cbfd82a8f1a67a8eccaf28784fc7e197b7eb0ed2442ce3d62da751e7e741",
+    "preview/native/ui/saved_speed_manager_view.cpp": "7a6a8d50e80a11bd84d2db472fbcb1d15c0e2279ef47fa74023c8263e1ae7f56",
+    "preview/native/ui/saved_speed_manager_view.hpp": "94f2fb7beb155afda67067f57a3517718b49f8f519f24a24306eca944ae08b26",
+    "preview/native/ui/saved_speed_map_widget.cpp": "c3e1fccf243d6d283c131ddf413ffb1137754db134a4abb8a877cc7170629196",
+    "preview/native/ui/saved_speed_map_widget.hpp": "9ee565811db979aa21f9cb7bbd31629cdf03d8f4380e4acc74674c0ee6b4b010"
+  },
+  "gcc": "6 affected suites pass across speed-map-gcc-v1/v2",
+  "status": "GCC_PASSED_SECONDARY_IN_PROGRESS"
+}

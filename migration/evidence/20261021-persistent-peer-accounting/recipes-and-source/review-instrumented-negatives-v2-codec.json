@@ -1,0 +1,67 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY_NO_BLOCKER",
+  "reviewer": "error_codec",
+  "reviewed_manifest_sha256": "22a7c88ddd5c30bb2a91b0570ae52b6d7d39fe7a3315e3729e24516e3473fd9e",
+  "base_script_sha256": "57b1babe169954d5d25e162442c5e4a2515d7a9aa240dd6b92379c5a242e525f",
+  "derived_script_sha256": "9523eb1f57635136e0e5e8bafd77df5584592b7269211add29a37a3a37fb5858",
+  "catalog_manifest_sha256": "5d28405f86ec48fd512355a9eeff8adb0fe5344a3a7cfa9d460a1dfbe27392b3",
+  "generator_sha256": "08b90304b2ae9e1cd4136140fa2a91e04af265fc2f894706b873045216c07a73",
+  "independent_complete_diff_sha256": "4c402a731b0270483f6da2a66006e2ab1858854f8a1445fbd15131e5f3e97206",
+  "subject_pins": {
+    "verify_runtime_manifest.py": {
+      "sha256": "8dd7d9c6894d6fe5f8139657e700e94c4854638e67a72169821ef60dc40c42d9",
+      "provider": "staged_v2_catalog"
+    },
+    "verify_instrumented_runtime_v2.py": {
+      "sha256": "0fd0b83d3bb30539dfa9d1e260a5ebd1b100514e28cae33a22695c9fdeb9cbb8",
+      "provider": "staged_v2_catalog"
+    },
+    "instrumented-runtime-v2.json": {
+      "sha256": "37ce74d783fe42e42f09415ffd4358f330d5849803ef1064cb5abab7f89c5abc",
+      "provider": "staged_v2_catalog"
+    },
+    "instrumented-source-build-record-v2.json": {
+      "sha256": "c2a18c7d10684fd5b943e5e2d167e57d7417b3d1fddc0d641904386d41e47b91",
+      "provider": "staged_v2_catalog"
+    },
+    "causal-overlay-manifest-v2.json": {
+      "sha256": "e9233edf660ff2ce461277b9a1dbd5eb3377c5dc52f2a8ef05a20557dfbbfd36",
+      "provider": "staged_v2_catalog"
+    },
+    "source-build-record.json": {
+      "sha256": "436931d4c6b87274c60b89877afedc19e06485bc4f04d120a3ab3e1889abfc66",
+      "provider": "unchanged_native_subject"
+    },
+    "PersistentRuntimeBinding.cmake": {
+      "sha256": "53026c5cadba464fe34f12fe231be24cca3ea19352dad6413cff8bd2d7878fba",
+      "provider": "unchanged_native_subject"
+    }
+  },
+  "provider_artifact_sha256_read_only": "60ac6edd933f028f63f67f5f567066aefe069cda0693fe7c987448412fd444a3",
+  "checks": [
+    "Complete derived script is byte-exact original after only four declared metadata/helper filename substitutions, one causal->causal-v2 provider-root literal and seven exact PINS entries (five changed values, two retained). Full reversal recovers exact original 57b1 source.",
+    "All top-level functions/classes retain names/order and exact AST after reversing only the four declared filename string literals. No descriptor, journal, backup, signal, restore, recovery, provider mutation, invocation, deadline or case logic changed.",
+    "All seven PINS bind exact staged v2 subjects or unchanged native parent-record/CMake. All eight staged catalog source leaves match catalog5d284. Full catalog semantic review is assigned separately to Driver; this receipt does not replace it.",
+    "Runtime metadata names in normal, per-case, interrupted recovery, initial/full-positive and final-positive calls are consistently v2. All three actual provider roots are exactly causal-v2; the read-only actual DSO hash is 60ac6edd, distinct from preserved v1 3bb4.",
+    "The frozen 22-case cohort (21 rejection cases plus exact-copy positive), durable backups outside the provider, exact descriptor identities, pending journal, no-consumer CLI requirement and full real positive checks after each restoration/final state are inherited byte-for-byte.",
+    "Generator was read in full and syntax-parsed only. Its negative-fixture transformation matches the independently derived full bytes. Its separate matrix/default-final derivations were not executed and are outside this narrow fixture verdict."
+  ],
+  "blockers": [],
+  "cases_planned_not_executed": 22,
+  "scope_limits": [
+    "Root must adopt the separately approved actual catalog before running this fixture.",
+    "Root must maintain the no-v2-consumer fence for all 22 actual cases and interrupted recovery.",
+    "No fixture/provider mutation, negative execution, configure, build, owner run or causal qualification was performed by this reviewer."
+  ],
+  "execution": {
+    "reviewed_generator": 0,
+    "negative_fixture": 0,
+    "configure": 0,
+    "compiler": 0,
+    "native": 0,
+    "git": 0,
+    "native_or_provider_mutations": 0
+  },
+  "final_manifest_sha256": "22a7c88ddd5c30bb2a91b0570ae52b6d7d39fe7a3315e3729e24516e3473fd9e"
+}

@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-azmsgsync",
+  "public_commit": "3d8e761639b59b4310d1950b7227cfae4272d749",
+  "local_review_commit": "3d823b31c24285d1e586f655c0bbe24f9b1d6408",
+  "verified_files": 29,
+  "provenance_sha256": "aea9653854aa4b55c72fff5f074ab707886a46cc33cb9bd390de238aa399cf3d",
+  "ci_enabled": false,
+  "local_clone": "/tmp/biglybtc-public-second-wave/BiglyBTC-plugin-azmsgsync",
+  "scope": "Bounded legacy STS and envelope libraries; explicit curve validation, no runtime/DHT/private-chat activation or binary release"
+}

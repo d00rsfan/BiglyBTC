@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "milestone": "P04-23",
+  "reviewer": "error_driver",
+  "status": "PASS: independent source-only new smoke method and prepared runner review; installation/execution and complete publication pipeline remain root gates",
+  "source_sha256": {
+    "build/statistics-next-two-20261020/traffic_smoke_method.cpp": "137617ecb9135e91b80f7fae58041163c37e82adf06a213e990ebc7826330624",
+    "build/statistics-next-two-20261020/prepare_traffic_ops.py": "a471ac736f192cfc31ee4c3edbfbfba0b077f912d1cec699ef13f90e0af5d4eb",
+    "build/history-traffic-20261020/qualify.py": "a05fc984e4e00a5cd83a6a104df1996929dd07bce10645cd1843b4bad2b796ac",
+    "build/history-traffic-20261020/run_smoke_scales.py": "e4793ea62af2719668a150e9bcae60dad8eaabbb68d76f80bb0694bd9cac418e",
+    "build/history-traffic-20261020/run_visuals.py": "11b8cee2a978c88077599a3462fd605a6376220dcaede8a9a921421088fd8c02",
+    "build/history-traffic-20261020/record_toolchains.py": "7101886dd529d667fd8ff328f528b70c46be993d4893c25329fa845fe23bf629",
+    "build/history-traffic-20261020/collect_hosted.py": "cdebeafcec3d0bbe935f31229813495b30eb0ed06ab1ce68745dc55460735b9c",
+    "build/history-traffic-20261020/collect_metadata_ci.py": "a0bcfe09341ed65a9eee77f768a949e9b8415e6d9c1db23479f132186efff1e1",
+    "build/history-traffic-20261020/promote_dist.py": "2f5ba7a6583f8cc014664b63c95d7e33dc7b2cff6b8f1a52f0426c9520191cea",
+    "build/history-traffic-20261020/verify_dist.py": "01eacd0c24bee4c5b972dc20c386b6133f801afc1b2c426e53c91a2c08f7137a"
+  },
+  "prior_native_smoke": {
+    "path": "preview/native/packaging/preview_smoke.cpp",
+    "sha256": "d62514b8ec5fc21b5d2e3a148ff6a510367eabaade331530c2f4a797064fa6a4",
+    "matches_actual_previous_qualified_source_map": true,
+    "behavioral_methods_exact": [
+      "generatedSampleLibraryAndFiles",
+      "generatedColumnPreferencesSaveAndRestart",
+      "explicitFirstSaveCreatesOnlyAfterMissingReadAndRestarts",
+      "statisticsShortcutSavedTotalsAndCloseReopen",
+      "generatedSavedHistoryDayAndMissingDayRemainReadOnly",
+      "generatedSevenDayOverviewAndMissingWeekRemainReadOnly",
+      "statisticsNavigationSurvivesCloseAndNewSessionClearsMemory"
+    ],
+    "behavioral_methods": 7,
+    "prior_qt_rows_including_init_cleanup": 9,
+    "new_method_already_inserted_at_review": false
+  },
+  "prepared_source_guard_map": {
+    "path": "migration/evidence/20261020-history-traffic/unchanged-behavior-baseline.json",
+    "sha256": "a0ae135e7d6461093e4ecfd7caf682de82e614e2b911f90233447df018829fea",
+    "current_regular_source_files_verified": 232,
+    "native_parent": "11dd37171a68c9de8bdae662cc2daf630f363120",
+    "actual_parent_git_blob_equality_credit_by_reviewer": false
+  },
+  "checks": [
+    "Complete staged method and prepare_traffic_ops.py plus all eight generated runner sources read. New method uses existing real wire(Window,Bridge), exactly one SessionBridge and one held profile opened with port0. No second owner, mock worker, transfer trigger, normal profile path or new networking is introduced.",
+    "Run_smoke_scales always creates a fresh explicit /tmp/biglybtc-preview-UUID via unchanged preview.py --prepare, passes its profile/capture paths and owned XDG roots to offscreen Qt, and retains fixed90s per-scale timeout. The standalone method is reviewed only under that generated-profile runner contract.",
+    "After defaultPayload controls and initial saved totals, hidden Daily date/Protocol choices are set before activating History. Exactly one real daily result is required. All24 known-hour download/upload comparisons use Protocol[2]/[0] of the actual accepted immutable day. Switching toDHT then back changes the plotted enum, retains identical day packet and requires days count1.",
+    "Week ending/date, DHT and hourly choices are set before first weekly activation. Exactly one real weekly result is required. All168 known-hour pairs use DHT[5]/[4] from actual accepted per-day hourly snapshots; missing snapshots/hours stay unknown in plotted download presence. Week daily/hourly resolution toggles preserve weekly packet identity and weeks count1.",
+    "Full navigation captures independent Protocol Daily/DHT Week choices. Closing proves old Page deletion; fresh reopen requires identical scalar navigation plus real saved-total/weekly delivery counts2 and daily count1. Final plot still carriesDHT. Actual fixed history file/downloads bytes and empty generated payload remain checked. This observes fresh worker delivery; it does not claim inode/CAS or exhaustive filesystem preservation.",
+    "Two distinct captures record Daily Protocol and reopened WeekHourly DHT. Existing old captures are retained by the scale runner, now sixteen offline plus unchanged two engine and two activity captures per scale. No new output-derived expectations, original-Java oracle rerun or renderer Java equality is claimed.",
+    "Qualification preparation appends exactly two new targets/tests and preserves the previous18 Clang names; sanitizer adds the existing three lifetime suites for23. GCC retains full unit label. Existing strict source/CMake flags, j2 GCC/sanitizer and j1Clang/nice5, offscreen environment and leak-enabled sanitizer policy are retained. No prior test is filtered out.",
+    "All eight operational scripts use distinct history-traffic-20261020 output/receipt namespaces. Hosted collection remains actual-source/API/digest-bound and metadata SDK scope remains distinct; no script was run. Dist staging/rollback remain complete103 files with82 runtime hash preservation and exact installed RPATH replay, separate from system install.",
+    "prepare_traffic_ops computes232 tracked current source guards excluding only eight intended old production files and root tests/CMake registration. It retains both original corpus receipt maps. Newly added enum/tests belong to changed-source manifests rather than inherited guard credit. All232 current pins rehashed exact; the map is not represented here as independently verified immutable-parent Git equality."
+  ],
+  "planned_counts_not_execution_credit": {
+    "old_unit_cohorts": {
+      "gcc": 67,
+      "clang": 18,
+      "sanitized": 21
+    },
+    "new_units": 2,
+    "expected_new_cohorts": {
+      "gcc": 69,
+      "clang": 20,
+      "sanitized": 23
+    },
+    "old_smoke_qt_rows": 9,
+    "expected_new_smoke_qt_rows": 10,
+    "expected_capture_count_per_scale": 20,
+    "expected_local_three_scale_captures": 60
+  },
+  "blockers": [],
+  "remaining_gates": [
+    "Root must install the staged method while preserving all seven previous behavioral bodies/nine previous Qt rows byte-for-byte. At this review installed source still equals the previous qualified d62514b8 image and contains no new method; post-insertion whole-source identity is not claimed.",
+    "Root must qualify the final installed hashes and actual expanded Qt row counts in all lanes/scales. No compiler, smoke, capture or hosted success follows from this source review.",
+    "collect_hosted.py intentionally references later history-traffic verify_hosted.py, not yet present at review. That verifier, source/publication/docs/private-checkpoint gates and any final operational schemas require their separate source review before pipeline execution.",
+    "Initial source guard preparation hashes current tracked bytes; later completion must bind them against the actual native-parent/source Git blobs and freeze all new source bytes. No silent rebaseline of unrelated code is approved.",
+    "The inherited run_visuals.py leading comment still describes the prior navigation-capture addition; actual command/capture names and final print use the current16offline+4 engine/activity scope. This comment does not affect execution."
+  ],
+  "execution": {
+    "operational_import_or_execution": false,
+    "builds_tests_or_native_or_java": false,
+    "git_commands_or_mutations": false,
+    "native_source_edits": false,
+    "live_profile_access": false
+  }
+}

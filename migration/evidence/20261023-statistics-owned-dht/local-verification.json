@@ -1,0 +1,166 @@
+{
+  "source": "c793f61a4bb82f36ca7220cf35581cc5cb83c230",
+  "parent": "7a80774cf5ba052a4e362d063b02acf1d69ae03e",
+  "inputs": 29,
+  "gcc_unique_suites": 11,
+  "clang_suites": 6,
+  "asan_ubsan_lsan_suites": 6,
+  "portable": {
+    "native_source": "c793f61a4bb82f36ca7220cf35581cc5cb83c230",
+    "candidate": "/home/yurii/Java/BiglyBTC/build/statistics-finish-20261023/owned-dht-publication/candidate-v1",
+    "sample_root": "/tmp/biglybtc-preview-2mzpl6o5",
+    "manifest_sha256": "28e5ad15477701eaa9ed55498d6ab593d0f476b065cf006edbd02d89d97d8e89",
+    "manifest_files": 113,
+    "private_runtime_environment": {
+      "LD_LIBRARY_PATH": "/home/yurii/Java/BiglyBTC/build/statistics-finish-20261023/owned-dht-publication/candidate-v1/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBTC/build/statistics-finish-20261023/owned-dht-publication/candidate-v1/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBTC/build/statistics-finish-20261023/owned-dht-publication/candidate-v1/dependencies/libtorrent/usr/lib/x86_64-linux-gnu",
+      "QT_PLUGIN_PATH": "/home/yurii/Java/BiglyBTC/build/statistics-finish-20261023/owned-dht-publication/candidate-v1/usr/lib/biglybtc/qt/plugins",
+      "QT_QPA_PLATFORM_PLUGIN_PATH": "/home/yurii/Java/BiglyBTC/build/statistics-finish-20261023/owned-dht-publication/candidate-v1/usr/lib/biglybtc/qt/plugins/platforms"
+    },
+    "captures": {
+      "statistics-history-month-preview.png": "bfa27c48ff0792ae21c0f9e89806ce1c094ec5f68f467540a8780902fe8cc0f5",
+      "statistics-history-copy-preview.png": "6098113bf8e2272746a8fdd2b5d6728b8b24ed11b69c086ade8df1c81f76cdd9",
+      "statistics-history-keyboard-preview.png": "6098113bf8e2272746a8fdd2b5d6728b8b24ed11b69c086ade8df1c81f76cdd9",
+      "statistics-history-dht-preview.png": "a59c023bd19db7dad8afe269e256a9d64006dc0c49f45568ccacc58c8a51cf80",
+      "statistics-history-protocol-preview.png": "d58831a40af713a5a9b2416f4c8f8eb7bcec2ecec56bf6c02da8b1c954c381ca",
+      "statistics-navigation-new-session-preview.png": "a735715ff0e04f75c7ed58202c601139aa9e76a879e0bffec8b6fee84dd54121",
+      "statistics-navigation-reopened-preview.png": "0a3f8247b254dcd67c908be6ed77941adc080899ff41784331e504f754fa32f0",
+      "statistics-history-week-missing-preview.png": "239e2ee1d0a933292b1179e27bab22e65a72099f1a94d4ec5076c774b0c33641",
+      "statistics-history-week-hourly-missing-preview.png": "e11dc93e3924384f01ae29866946897e53523c935203a6c2fcaf0433e68d0640",
+      "statistics-history-week-preview.png": "be69c15ecfd9f159f09e2e5deebae8963113e532cd9d4bb574ede637428635dd",
+      "statistics-history-week-hourly-preview.png": "0a3f8247b254dcd67c908be6ed77941adc080899ff41784331e504f754fa32f0",
+      "statistics-history-missing-preview.png": "18a12e4893f771348e02c9a4de2466ddb53ad87e9c0a81425571ad37755b5c6c",
+      "statistics-history-preview.png": "9723a5509c265bc716aa572b68bfa8659c2ff595fbcb36692b45ccea1abedfb6",
+      "statistics-section-9-preview.png": "bb57c9b8d4160d1ed2c4e7c14a5cf9b7e3d5b75ee101c97f39094c6da3e8e7f3",
+      "statistics-section-8-preview.png": "9c1214aa02bb9a5358c5f5856ae6a269a8c5bcecb71fef6ee4c948e383487e0f",
+      "statistics-section-7-preview.png": "f5678bb744091df08eb53f136af82813c6c160a93b2e3687ef85fc4147dadd71",
+      "statistics-section-6-preview.png": "0778feeb8527ef98260ce016d1d0352fb82999b1e9c170c64287c245f409e933",
+      "statistics-section-5-preview.png": "56af659efa25fd2c0446e4fc0d3c130067ade11f8abf35a194e89b452b03e442",
+      "statistics-section-4-preview.png": "4ba504770a1b1082efba66df184a0fbfea145ee4d4194b1026f1f2279f7dae0a",
+      "statistics-section-3-preview.png": "d7f05fed975f756fd0962a7c02e64f9e2418c8cd4428995d2bd8ad4a25634f53",
+      "statistics-section-2-preview.png": "d8d7cead96a32eafc177e00aae7a0e2eabc1cd348f8cddd99368a8b0aa405755",
+      "statistics-transfers-preview.png": "62845618d2b07649e2cba2c18edc61710a008dda83dad1955d0db38f1557e154",
+      "statistics-activity-preview.png": "fe05213ca619b83780ca986390fd69949f92f85be89fa376407979ece0d8c0f0",
+      "my-shares-preview.png": "d40fae3ffebb397e1780dfd1217a160b2a005e8246296686513f31e26ed08165",
+      "my-tracker-preview.png": "314c5d2f1084b99c454a6e51c5ca46a512d0cb60f3c6a0afd75f4098fb3a7a3b",
+      "saved-selected-preview.png": "9da1e93280d2efdd704a14e9e6cc4756cbb686c75e37d2ef73e34d4e9d224e0b",
+      "classic-preview.png": "24323291844b570aa83430b3cc8ff508135f74d01cee2bbd869f0c8354329b08"
+    },
+    "test_only_sdk_dependency": "Qt6Test; all product Qt dependencies loaded privately",
+    "system_installation": false,
+    "promoted": false,
+    "actual_owned_service_suites": 5
+  },
+  "status": "QUALIFIED_AND_PROMOTED",
+  "next": "Saved SpeedManager map visualization and passive source mapper; staged only",
+  "original_profile_or_process_access": false,
+  "system_installation": false,
+  "promotion": {
+    "native_source": "c793f61a4bb82f36ca7220cf35581cc5cb83c230",
+    "dist": "/home/yurii/Java/BiglyBTC/dist",
+    "rollback": "/home/yurii/Java/BiglyBTC/build/statistics-finish-20261023/owned-dht-publication/previous-dist",
+    "old_manifest_sha256": "d7431f1cbdc1ad02e2150fd7bc95f85cb75e3044a20b3f19dd52d5fe751875f1",
+    "manifest_sha256": "28e5ad15477701eaa9ed55498d6ab593d0f476b065cf006edbd02d89d97d8e89",
+    "files": 113,
+    "captures": 27,
+    "system_installation": false,
+    "original_profile_or_process_access": false
+  },
+  "hosted": {
+    "conclusion": "success",
+    "headSha": "c793f61a4bb82f36ca7220cf35581cc5cb83c230",
+    "jobs": [
+      {
+        "completedAt": "2026-10-23T20:21:39Z",
+        "conclusion": "success",
+        "databaseId": 120631116381,
+        "name": "preview",
+        "startedAt": "2026-10-23T20:08:26Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-10-23T20:08:28Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-10-23T20:08:26Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-23T20:08:30Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-10-23T20:08:28Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-23T20:10:44Z",
+            "conclusion": "success",
+            "name": "Install pinned compiler, libtorrent and Qt 6.12.0 SDK",
+            "number": 3,
+            "startedAt": "2026-10-23T20:08:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-23T20:19:47Z",
+            "conclusion": "success",
+            "name": "Configure and build the desktop preview",
+            "number": 4,
+            "startedAt": "2026-10-23T20:10:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-23T20:21:29Z",
+            "conclusion": "success",
+            "name": "Run offline unit tests",
+            "number": 5,
+            "startedAt": "2026-10-23T20:19:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-23T20:21:34Z",
+            "conclusion": "success",
+            "name": "Run actual offline preview smoke and capture classic view",
+            "number": 6,
+            "startedAt": "2026-10-23T20:21:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-23T20:21:36Z",
+            "conclusion": "success",
+            "name": "Preserve test, screenshot and dependency evidence",
+            "number": 7,
+            "startedAt": "2026-10-23T20:21:34Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-23T20:21:36Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 14,
+            "startedAt": "2026-10-23T20:21:36Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-23T20:21:36Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 15,
+            "startedAt": "2026-10-23T20:21:36Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40016884895/job/120631116381"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40016884895"
+  },
+  "hosted_units": 125,
+  "hosted_smoke_rows": 13,
+  "test_fixture_amendment": {
+    "path": "preview/native/tests/owned_azureus_service_tests.cpp",
+    "sha256": "3f80898a892451b383f6e4ecf7eab1a987403c68c0704123028e59f06316ce89",
+    "scope": "Value-initialize Config and emplace optional reply; identical responder data; no check suppression or changed assertion"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "schema": 1,
+  "source_commit": "c35ca6e2470aa8f154ec7676e61734c012725283",
+  "native_parent": "775f84222031c1f43ee96e76c53fff0a5ef1e225",
+  "source_files_verified": 10,
+  "source_sha256": {
+    ".github/workflows/native-preview.yml": "73f1394ff287bce982cf424e09d4ad805b5b83a7b7c7c95f8fc84591afd2468e",
+    "preview/README.md": "d4686d72fcc741eae06372768d45e29c94f1ffc95cc9928f28fda4781d7eacd6",
+    "preview/docs/history-hourly-contract.json": "51382230b4a02725f70a50f75fe9a66b4f03454c760f3b78af71673e2876a67b",
+    "preview/native/packaging/preview_smoke.cpp": "138c2aecf4b0997d4129728810d6f75004cba8b7267aeef67cf6c23d2f624fe6",
+    "preview/native/tests/CMakeLists.txt": "cd54d2b314d72be2b56e2110453f46152ba102171d278913179e384d16448022",
+    "preview/native/tests/history_hourly_resolution_tests.cpp": "fca10770ec16f1da7740ff9a0da29b69ed392a707a6f083a34188290a7477402",
+    "preview/native/ui/history_week_view.cpp": "04868bfac614b27c9b8126f9b3aef4d5fbfe7c5e27140cadedd57578ee3b4173",
+    "preview/native/ui/history_week_view.hpp": "6381e065155a545262772eef1f47bc1a0b778a6696f626927f2ed0112451adf6",
+    "preview/native/ui/saved_history_plot.cpp": "61b47d7aef66ee1bead308f20cc98fc7d1c054859ece5cc5b784bf51f455a80d",
+    "preview/native/ui/saved_history_plot.hpp": "06fb44176eb22bb2f4f45af0fbe00463409a4270b8ff82448e05b02599500995"
+  }
+}

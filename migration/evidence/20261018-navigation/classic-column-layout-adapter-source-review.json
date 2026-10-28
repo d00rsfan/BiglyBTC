@@ -1,0 +1,94 @@
+{
+  "schema": 1,
+  "status": "PASS_INDEPENDENT_STATIC_SOURCE_REVIEW_NO_EXECUTION",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "subject": "P04-11 held-profile, read-only classic column-layout reader",
+  "independence": "Reviewer authored the separate P04-10 fixture plan/tests and persistence source audit, but did not author this two-file adapter. This review assesses adapter composition; it transfers no runtime credit from those artifacts.",
+  "production_sha256": {
+    "/home/yurii/Java/BiglyBTC/preview/native/adapters/column_layout_view.hpp": "eee7b06a10d3b8ebddbecad07c50344b09953d0273bfc0b0129692cc23cb96ea",
+    "/home/yurii/Java/BiglyBTC/preview/native/adapters/column_layout_view.cpp": "d4bc7a9008acd645de68a80c2ecfa8bed2e18deb1272e4c802c0e5e70396288e"
+  },
+  "verified_source_freeze": {
+    "path": "build/navigation-20261018/column-layout-view-source/manifest.json",
+    "sha256": "d1b0b112758dfef6f6d95ba6da0c16c047a73d82c88ab0e9225399be6d31b3ab",
+    "all_artifacts_verified": 6
+  },
+  "contracts_sha256": {
+    "migration/tasks/P04-11-classic-column-layout-reader.md": "220ba52b109f0296151ffc3fc1913bdf244f7865421e7f9cc2a355db21cae1f4",
+    "migration/evidence/20261018-navigation/classic-column-layout-adapter-proposal.md": "3f0599f3d2a61a35b02838648a9b86e0048a46e58bee90a29cf23c3e382f453d"
+  },
+  "unchanged_context_sha256": {
+    "/home/yurii/Java/BiglyBTC/preview/native/adapters/profile.hpp": "e91ff37048e02b87a4d6f97d774fe3e33b491febd0b2ec55d3dedbbf20dd60ff",
+    "/home/yurii/Java/BiglyBTC/preview/native/adapters/profile.cpp": "f31f99cf73484c0c4fb058a6fc9e3937ecd74412f5ae794c775c0a7e8c4b91ee",
+    "/home/yurii/Java/BiglyBTC/preview/native/adapters/file_io.hpp": "41b14236290a65b52f75d56f076857a1ffd037f9bd823f1f9afef98c82a9cd37",
+    "/home/yurii/Java/BiglyBTC/preview/native/adapters/file_io.cpp": "c55df3bfa6531534819a798351a5320365e1081d774f466fe4342bffa54793b9",
+    "/home/yurii/Java/BiglyBTC/preview/native/adapters/saved_service_view.hpp": "2363d3548dcd3d7da5fcc9263d479dfc0548fbcd8c5ab0d1d7d75eb2d92b26a6",
+    "/home/yurii/Java/BiglyBTC/preview/native/adapters/saved_service_view.cpp": "4cedc6fcf9bc89628e66d633cbea70249e9e71d151a85d184fdf3ad4cadbb887",
+    "/home/yurii/Java/BiglyBTC/preview/native/adapters/library_view.hpp": "43877d12f340bdd43cb1df1b98eddf6b39c89b7ec51d63de3b572ba9d4b5a82e",
+    "/home/yurii/Java/BiglyBTC/preview/native/adapters/library_view.cpp": "a9aa1e0f6ccde4a7b4990f2340da1dd3472d372441b1389805e5d16ef1b229d4",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/column_layout.hpp": "1d4d1c06efd71ef2ab026364eb15f434d4b8647d15f8ae31852052f63a996d39",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/src/column_layout.cpp": "b55620a54cbdc243c8eccade512b19905d1efe819a4efb0db39bb435a325dd25",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/include/biglybtc/bencode.hpp": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/src/bencode.cpp": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08"
+  },
+  "blockers": [],
+  "findings": [
+    {
+      "id": "CLV-1",
+      "result": "pass",
+      "lines": "column_layout_view.cpp:45-50, profile.cpp:88-98",
+      "detail": "Pre-requested stop returns Cancelled before any lease access. The existing loader validates held lease/name and identifies its existing directory descriptor. The new API only borrows the unmoved lease synchronously and never acquires/releases it or accepts a filename/path."
+    },
+    {
+      "id": "CLV-2",
+      "result": "pass",
+      "lines": "column_layout_view.cpp:49, profile.cpp:98-130",
+      "detail": "Fixed tables.config and ordinary core::Limits{} preserve actual loader semantics: valid primary wins without probing backup/saving; absent primary tries saving then backup; malformed present primary tries backup then saving. Read/unsafe/oversize failures propagate without skip. A parseable candidate must be a full dictionary; original manager recovery writes do not run."
+    },
+    {
+      "id": "CLV-3",
+      "result": "pass",
+      "lines": "column_layout_view.cpp:33-41,51-60",
+      "detail": "Only loader Missing triggers bounded checks of the three literal candidates. Each read is checked for cancellation before/after; read errors are forwarded. Any observed present candidate converts ambiguous Missing to InvalidFormat. Missing success requires all three observed absent and returns both optionals absent. No enumeration or second recovery-selection algorithm occurs."
+    },
+    {
+      "id": "CLV-4",
+      "result": "pass",
+      "lines": "column_layout_view.cpp:62-70",
+      "detail": "Pure projection receives the loaded unedited Document with fixed default limits. Empty loaded dictionary and malformed selected table/field facts remain engaged snapshots with accurate candidate RecoverySource; no missing/empty normalization. Owned core source/IDs move into result; local ConfigFile, lease, fd and raw borrowed views are not retained."
+    },
+    {
+      "id": "CLV-5",
+      "result": "pass",
+      "lines": "column_layout_view.cpp:15-26,63-73",
+      "detail": "Pure Limit maps to Unsupported; Memory to Io; Root/EditedDocument to InvalidFormat. Loader/parser input-limit errors retain their actual loader InvalidFormat instead of being mislabeled pure Unsupported. Post-load, post-projection and prepublication stops discard results; bad_alloc catch gives observed stop priority and fixed non-config-bearing messages."
+    },
+    {
+      "id": "CLV-6",
+      "result": "pass",
+      "lines": "file_io.cpp:49-84, column_layout_view.cpp:34-39",
+      "detail": "All data access is inherited descriptor-relative openat with read-only, close-on-exec, nofollow, nonblock flags; regular-file check, fixed maximum before buffer allocation, complete read and descriptor size/mtime recheck. Leaf symlinks and nonregular candidates do not become configuration. No new chmod, rename, unlink, lock, save, directory scan, payload/global-config read or file write is introduced."
+    }
+  ],
+  "practical_limits": [
+    "Stop is observed at call/read/projection boundaries, not during blocking reads, parsing or projection; no prompt in-read interruption guarantee.",
+    "Recovery selection and Missing confirmation are separate observations, not an atomic filesystem snapshot. Replacement races can need explicit refresh and can return InvalidFormat instead of selecting newly appeared data.",
+    "Existing readFile protects held descriptor content by size/mtime observations; it does not promise immutable pathname identity or immunity to hostile same-size/mtime-restored external modifications. No stronger new claim is made.",
+    "Read access can update atime. Metadata/bytes preservation tests must exclude atime; acquiring the caller lease remains outside this function.",
+    "Allocation-error message construction can itself allocate; this boundary is not noexcept or an exhaustive out-of-memory guarantee.",
+    "Projection-only snapshot is not effective Java registered layout, UI application, sorting, legacy global resolution, migration, recovery rewrite or persistence."
+  ],
+  "verification": {
+    "subject_and_context_hashes_verified": 14,
+    "freeze_artifacts_verified": 6,
+    "full_new_header_and_implementation_read": true,
+    "actual_loader_lease_readFile_contracts_read": true,
+    "fixed_names_and_calls_source_checked": true,
+    "compiler_or_preprocessor_run": false,
+    "native_tests_or_app_run": false,
+    "java_run": false,
+    "profile_or_user_data_access": false,
+    "production_or_test_edits": false
+  },
+  "required_parent_execution": "Generated-profile adapter tests, deterministic post-read cancellation, candidate errors/precedence, byte+inode metadata preservation and snapshot lifetime remain parent-owned runtime gates."
+}

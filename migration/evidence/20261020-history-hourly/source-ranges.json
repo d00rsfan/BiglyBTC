@@ -1,0 +1,47 @@
+{
+  "ui.createHistoryPanel": {
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+    "first_line": 2242,
+    "last_line": 2482,
+    "bytes": 5558,
+    "sha256": "e3e4150fde303fcbc4f49173a29ff7091bc68326f42d1a5710e7f7aed174bd8a",
+    "scope": "Complete original panel construction; period selector, formatter and payload legends.",
+    "raw_line_endings_preserved": true
+  },
+  "ui.refreshHistory": {
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+    "first_line": 2489,
+    "last_line": 2697,
+    "bytes": 4561,
+    "sha256": "5158f82ef054f2b06af4c7c4b163fd60d9acaf6c3dd8e3404e91e1d9e8b6d22b",
+    "scope": "Complete original refresh; TS_WEEK uses TS_HOUR period, current clock and width-dependent resampling.",
+    "raw_line_endings_preserved": true
+  },
+  "ui.totalUsageWrapper": {
+    "path": "uis/src/com/biglybt/ui/swt/views/stats/TransferStatsView.java",
+    "first_line": 2699,
+    "last_line": 2719,
+    "bytes": 471,
+    "sha256": "5c6a46b4239dd3ba93cedbade9b14fdcadefd8d002f04746cc393516434c3921",
+    "scope": "Complete original whole-period helper.",
+    "raw_line_endings_preserved": true
+  },
+  "util.timeUnits": {
+    "path": "core/src/com/biglybt/core/util/TimeFormatter.java",
+    "first_line": 36,
+    "last_line": 49,
+    "bytes": 695,
+    "sha256": "c8b53985740bed83eba3f3afa2c86a7bbc2ade9bdafe8b486d6f668df12e3fc9",
+    "scope": "Complete named time suffix/index/multiplier group; TS_WEEK is seven fixed24-hour days.",
+    "raw_line_endings_preserved": true
+  },
+  "interface.counterAndPeriodConstants": {
+    "path": "core/src/com/biglybt/core/stats/transfer/LongTermStats.java",
+    "first_line": 28,
+    "last_line": 47,
+    "bytes": 810,
+    "sha256": "245e097479334af729e0f9e96008670cfa022ade31bc323c18c35d401c7f43f1",
+    "scope": "Complete counter order and current/sliding period constants.",
+    "raw_line_endings_preserved": true
+  }
+}

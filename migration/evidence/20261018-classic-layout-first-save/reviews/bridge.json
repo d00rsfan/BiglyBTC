@@ -1,0 +1,64 @@
+{
+  "status": "PASS_INDEPENDENT_SOURCE_REVIEW_NO_EXECUTION",
+  "scope": "P04-14 root Bridge/Window first-Missing admission and adapter creation/cancellation integration",
+  "reviewer": "error_codec; root authored Bridge/Window integration. Reviewer authored lowlevel createMissing; its independent production review is separate error_oracle storage.json, not self-credited here.",
+  "reviewed_source_sha256": {
+    "preview/native/app/session_bridge.hpp": "b33167ca52aef52eb16cf3e38587e9bcb10721e1d0be866c09a02312fcfc2c8d",
+    "preview/native/app/session_bridge.cpp": "301135e3c4ebd67884028db1d639978c96da7e6bfb2bdb41d2c9c5cb52eef33c",
+    "preview/native/ui/library_window.hpp": "ea8ba25020774136ccf8e6edfcc306fffb54f8f399b26a536a8e36278c397ecf",
+    "preview/native/ui/library_window.cpp": "ce4812638f26fd46aeaa85546219ae5da653364fd7d6c4648d916ccccc47c500",
+    "preview/native/ui/column_layout_presentation.hpp": "7dd6edd9a8584525e3dab2dab9ed1fe44727e2d0600e356d06a7e1cc5286aa81",
+    "preview/native/adapters/column_layout_view.hpp": "59e6f64f85eb75b9a58f69100370c32a774540ac9b46f61427dd6ca29f2709af",
+    "preview/native/adapters/column_layout_view.cpp": "a7d3e205d846814d14c71b1e21e94999e6420147f5f184cbe7ececbe77939581",
+    "preview/native/core/include/biglybtc/executor.hpp": "0d99cc28102acb980070efc9a72f8e0686ecf94dc43bb81198694245c6b72777"
+  },
+  "independent_lowlevel_context": {
+    "path": "migration/evidence/20261018-classic-layout-first-save/reviews/storage.json",
+    "sha256": "66873766cdda887e85cc223bcdefb72d54e10a6076d27f0212e6aaad00fe511e"
+  },
+  "blocking_findings": [],
+  "checks": [
+    {
+      "area": "Worker-owned admission",
+      "evidence": "Host has separate columnBaselineMissing and retained columnBaselineReadStop, alongside existing owned Document/source. Each executed layout read clears prior baseline/Missing state before actual reader call; only view.missing() after exact absence verification sets Missing. Successful Ready retains original baseline/source. Failed/malformed read does not fabricate absence. Matching actual Host/session is still required at worker save."
+    },
+    {
+      "area": "Cancelled-read authority",
+      "evidence": "Read stores its actual stop_token before IO. A read cancelled after worker success but before queued GUI publication cannot authorize save: GUI read callback suppresses the packet, and save checks retained read stop_requested before selecting creation or ordinary save. Successful save clears that read-stop binding and Missing state only after real adapter success. Ticket has no auto-cancel destructor, so replacing a completed ticket does not spuriously cancel a successful admission."
+    },
+    {
+      "area": "Missing DTO/UI admission",
+      "evidence": "Window consumes only exact active nonzero session/request; it starts saveAvailable=false. Missing enables first save only with no source/snapshot/nativePreferences and empty failure. Contradictory/malformed Missing and Failed/invalid-state packets remain unavailable. Ready retains existing source/raw ownership/private schema validation and Primary-only update rule. No private preferences/default layout are fabricated from Missing."
+    },
+    {
+      "area": "Explicit first save and owned inputs",
+      "evidence": "Existing explicit Save action captures owned validated pane preferences/revisions. Bridge clones bounded values before worker dispatch, still requires matching published nonzero session/request. Worker chooses createClassicPreferencesView only for actual retained Missing; otherwise existing save path requires baseline/source. No automatic file creation on open/read/refresh/Reset/close or unrelated library action."
+    },
+    {
+      "area": "Adapter preparation and safe transaction boundary",
+      "evidence": "Creation adapter validates lease/preferences, builds a bounded empty dictionary, writes only private schema, serializes and reparses ordinary limits, allocates immutable success baseline before calling createMissing. Fixed tables.config and borrowed held lease only. Stop checked before the synchronous creator; no later stop test turns publication into a false Cancelled/unchanged outcome. Ordinary update path remains distinct and unchanged."
+    },
+    {
+      "area": "Actual outcome and baseline lifecycle",
+      "evidence": "Bridge has no post-create/save checkpoint. Success stores preallocated returned pristine baseline, sets Primary, clears Missing/read-stop and marks actual saved=true. Failure clears baseline/source/Missing, requiring reload; it does not promote recovery or silently retry. Post-publication fsync errors remain failed outcomes with original already-occurred diagnostic, not an absence assertion."
+    },
+    {
+      "area": "QObject/reentry and pending queues",
+      "evidence": "Save outcome remains QObject-bound queued delivery under busy=true; QPointer checked after public columnLayoutSaved before further member access; busyfalse is last signal. Window matches active save tokens before applying acknowledgement and compares captured revisions so later edits remain unsaved. Rejected/unconnected save clears only matching active request and resumes service/layout queues. Closing/deferred-close and queued result destruction retain existing behavior without retargeting transfers."
+    }
+  ],
+  "limitations": [
+    "Only complete source reading, local source/hash checks and this report were performed. No target definition import/evaluation, compiler/linker, test/native/GUI process, JVM, file transaction/profile IO or network execution by reviewer.",
+    "GUI facades remain owner-thread APIs. The core/adapter validates the storage operation; a synthetic forged public packet cannot bypass the Bridge worker actual-baseline and no-replace checks.",
+    "Candidate absence/read verification is observational; no transactional absence or protection against arbitrary noncooperating pathname swaps is added. renameat2NOREPLACE provides the operation-specific no-overwrite guarantee; final-directory fsync errors may mean Primary already exists.",
+    "No original Java normal-save semantic retention, registered column geometry/comparator behavior, live backend scheduling or whole-client parity result is implied. Root owns actual generated-profile, unit, Qt, sanitizer and smoke qualification."
+  ],
+  "actual_reviewer_execution": {
+    "compiler": false,
+    "native_or_Qt_tests": false,
+    "process_fixture": false,
+    "JVM": false,
+    "profile_or_storage_IO": false
+  },
+  "reviewer_production_changes": "None during integration review; lowlevel4authorfiles remain frozen separately."
+}

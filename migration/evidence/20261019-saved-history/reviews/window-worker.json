@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "scope": "Independent source review of root P04-18 Window/worker/desktop wiring, immutable DTO admission and new integration tests; excludes own parser/reader implementation",
+  "verdict": "PASS; no source blocker found",
+  "source_sha256": {
+    "preview/native/ui/library_window.hpp": "149aa2d059c9cfe402515d2a7799011ab6c541257cd8921f309fac40341eb433",
+    "preview/native/ui/library_window.cpp": "e588cc03386713ab7c2a5b98c13df6f20a9d2f83e92d879790ab7604f5a9cf0d",
+    "preview/native/app/session_bridge.hpp": "649301e41f9414f7196efdd4cfdf0c8d4b46a65d9d964db1218a2ce7c7ddb91b",
+    "preview/native/app/session_bridge.cpp": "634d9c9b1fd6cbd5f5c17424dc801a70905e46e0b5a57644588c602cea6667de",
+    "preview/native/app/main_desktop.cpp": "c795f84043ad43f6900d0bdd84a0e00bbd98bdb6cc8cfa00958f33b49ca26e31",
+    "preview/native/tests/history_integration_tests.cpp": "9f270f5674edb5c97e1d53e08683d07e7b196b1629a6bbc55ce22e55ac71cb8d",
+    "preview/native/ui/history_presentation.hpp": "fee2b17a249857d4db0f576e7c6a25e98ef7887e82ec76ba7229b44a9d493d3f"
+  },
+  "author_recipe_sha256": "3e244be1edfaf77090a522705315ccbc89ebdc1da4781faba07c18ebcb016bb0",
+  "exact_parent_source_reversal": {
+    "preview/native/ui/library_window.hpp": {
+      "parent_sha256": "e8da1e830f25fd2fbc91f0634146085eb8cfcbe4d50ff08b716aa7afadbdb79a",
+      "exact_additive_reversal": true
+    },
+    "preview/native/ui/library_window.cpp": {
+      "parent_sha256": "387557096d899c1d2de33f6c8bd85394aa4e40e7b10d9fdb71e60555a51cee91",
+      "exact_additive_reversal": true
+    },
+    "preview/native/app/session_bridge.hpp": {
+      "parent_sha256": "2dd37ae64b3fcc8569f52b8668784289bf3cf2b660a74e24fa172933075c9cf1",
+      "exact_additive_reversal": true
+    },
+    "preview/native/app/session_bridge.cpp": {
+      "parent_sha256": "5858d71a4f3b1494d54250cf52edb116271f6fa84956a6f3d48fea22b909eea0",
+      "exact_additive_reversal": true
+    },
+    "preview/native/app/main_desktop.cpp": {
+      "parent_sha256": "b409ed2b0a75212247fa84b9e98c5ee527d32d845050098797751d44a660f139",
+      "exact_additive_reversal": true
+    }
+  },
+  "checks": [
+    "Saved totals and History retain independent pending requests and counters, sharing exactly one active optional StatisticsRequest record; new dates coalesce only History pending work.",
+    "Dispatch is deferred, single-shot and gated by busy/closing/other active optional work; active record is installed before direct request signal.",
+    "The saved reply gate rejects history-kind active work; History replies require kind/session/request/date, then still bind the currently live Page/session before application.",
+    "Returned/stale same-date requests cannot replace later request IDs; Page validates selected date/current loading token. A prior closed Page cannot receive a replacement Page result.",
+    "Busyfalse without a result fails only the active request kind/date and then schedules independent pending work; failure or cancellation cannot fabricate missing/empty history.",
+    "Closing an auxiliary Page discards its pending requests without cancelling an unrelated command; window close discards pending work and retains existing deferred-close/cancel behavior.",
+    "A newer profile session clears both pending kinds/current owner slot and immediately resets History Page facts; old session replies are rejected.",
+    "Bridge preflight accepts only a published nonzero session/request and valid Gregorian date; actual read occurs on existing worker with its already held lease and no library query/recovery.",
+    "Worker builds an owned primitive snapshot and tagged immutable packet, propagating Missing versus Failed. Cancelled errors take existing cancellation handling.",
+    "Stop/session are rechecked inside QObject-bound queued delivery; busy stays true through historyReady, direct reentry is rejected and QPointer guards later member access after deletion.",
+    "New read failures use dispatch recoverLibrarySnapshot=false; no library revision, profile save, engine sampling, second thread or lease acquisition is introduced.",
+    "Actual desktop connections and Qt metatype registrations bind the exact HistoryDate/HistoryPresentation types.",
+    "Only literal intended root recipe deltas separate five production files from prior qualified source hashes; selected recipe AST literals were read as data, never executed."
+  ],
+  "integration_tests": {
+    "behavior_methods": [
+      "realHistoryIsLazyRefreshableAndPreservesSavedFilesAndFavoriteView",
+      "directBridgeBindsDateAndKeepsTheWorkerBusyThroughDelivery",
+      "missingMalformedAndUnsafeHistoryDoNotReviseTheLibrary",
+      "pendingDatesCoalesceWithoutDroppingSavedTotalsOrAcceptingWrongKinds",
+      "closeReopenRejectsClosedPageAndReplaysOnlyTheNewRead",
+      "newProfileClearsHistoryAndRejectsOldSession",
+      "cancellationBeforeQueuedDeliveryNeverPublishesAHistoryPacket",
+      "deletingWindowDuringHistoryDispatchIsSafe"
+    ],
+    "behavior_rows_planned": 10,
+    "qt_rows_planned": 12,
+    "checks": [
+      "Actual generated files are read through Bridge/held worker; known44/55 bytes, observed0 and unknown hours, date navigation and explicit refresh are asserted.",
+      "Window/model/filter/width and initial library snapshot count are preserved; primitive immutable old snapshot survives explicit fixture edit and reread.",
+      "Missing/version/symlink cases require independent states and no library revision; pure native parse/helper values are used rather than a duplicated expected parser.",
+      "Synthetic admission cases distinguish request kind despite equal numeric IDs, pending date coalescing, Page destruction/reopen, profile reset and old session/date rejection.",
+      "Immediate cancellation is connected after real Bridge request dispatch, so the stop is requested before GUI queued-result processing even if the worker has already queued it.",
+      "Dispatch-slot deletion destroys Window only after its new QTimer request fires; QPointer guard checks prevent subsequent Window access.",
+      "Stack Bridge lifetime precedes Window and generated Profile cleanup on every early assertion return; no raw unowned Bridge leaks are introduced.",
+      "No sleeps/engine/public network/profile input is used; qWaitFor/QTRY conditions retain bounded existing deadlines."
+    ],
+    "scope_limits": [
+      "Profile intact() verifies supplied bytes/device/inode and absence of day backup/saving; it does not establish no read-atime change or complete directory immutability.",
+      "No actual live history writer, source manager, persistent global owner or full rolling-history parity is tested.",
+      "New dedicated Bridge deletion-from-historyReady and latest-pending no-packet tests are not separately present; current guarded delivery/common failure paths are source-reviewed without inventing test credit."
+    ]
+  },
+  "own_core_adapter_independent_credit": false,
+  "execution": {
+    "target_imports_or_evaluation": 0,
+    "builds_tests": 0,
+    "git": 0,
+    "native_or_gui_process_launches": 0,
+    "production_edits": 0,
+    "source_hash_ast_literal_inspection_only": true
+  }
+}

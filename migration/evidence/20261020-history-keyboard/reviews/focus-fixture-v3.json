@@ -1,0 +1,54 @@
+{
+  "schema": 1,
+  "milestone": "P04-24",
+  "verdict": "PASS_SOURCE_ONLY",
+  "reviewer": "independent-driver",
+  "subject_manifest_sha256": "7f0b3e8dab6bc7df4a3754c01f55b7aefe1301ccc2749f5c0611b3beabe85228",
+  "before_v2_source_sha256": "db2baf7b0e18a4c64c94794e41ed0c5b1b4a42734b4978463e5ed3924972a0db",
+  "after_v3_source_sha256": "6c8f6d4570527b966562921c0c3b4fbd0f1233089420d8a988a17f17c6a1d46d",
+  "patch_sha256": "6ce05ad246f7cbe3ddf72db0a863c11f5f453a68fa316e61b84e4bca9d115510",
+  "initial_source_sha256": "e98ada709439ee95b25067893da0d4a7653271cad50f62c1ed41b0d7bc275e30",
+  "prior_review_preserved": {
+    "path": "migration/evidence/20261020-history-keyboard/reviews/focus-fixture.json",
+    "sha256": "a5aeb0bfd0a1540f8c65b2eec635b5b564f85c491731bc895cd9a38ed6e31550"
+  },
+  "checks": {
+    "all_six_declared_artifacts_raw_hashes_verified": true,
+    "two_added_fixture_lines_only_one_comment_one_owned_window_sequence": true,
+    "removing_addition_recovers_entire_v2_source": true,
+    "normalizing_two_old_fixture_activation_sequences_recovers_entire_initial_source": true,
+    "all_original_assertions_data_key_events_order_and_deadlines_preserved": true,
+    "production_focus_guards_unchanged": true,
+    "no_deprecated_QApplication_setActiveWindow": true,
+    "no_skips_or_test_removal": true
+  },
+  "assessment": [
+    "The stack-owned activationAnchor is created and activated only after the hidden negative assertions, immediately before re-showing the tested plot. It repairs offscreen application activation setup without changing product input eligibility or hidden/minimized checks.",
+    "The exact source does not reactivate the anchor before showNormal. Its existing focus/selection assertions remain unchanged. Root confirmed the focused actual probe and keyboard suite passed this exact source; those outcomes are root-reported context, not execution by this reviewer.",
+    "The extra top-level window is generated and stack-owned by the test. No existing application window or original Java/profile is used."
+  ],
+  "root_diagnostic_artifacts": {
+    "focus-diagnostic.cpp": "8155f1eb38c027f9641f0a226ffa1e0b63037738f7d092ca40c9a1a757d46e0b",
+    "focus-diagnostic.log": "1614193a421dfca82523455192d599252e998427c02be176da9115bb56c9dbd2",
+    "focus-diagnostic-anchor.log": "5386a2ee6e45609144113a003e4fe33ef5f92b9ffebbfb798914d7acc3539b94"
+  },
+  "diagnostic_scope": "Plain QWidget logs demonstrate offscreen stale focusWindow with cleared activeWindow after hide/show and restored focus following an owned anchor transition. The diagnostic uses an additional anchor activation before showNormal which is not part of the candidate; no broader identity is inferred.",
+  "history": [
+    "Initial e98 source failed the original focus setup in actual root cohorts.",
+    "cccd candidate compile failed deprecated QApplication API under strict warnings; v1 source-only review remains historical.",
+    "db2b supported-activation candidate and root diagnostics are preserved; v3 adds only the owned anchor fixture."
+  ],
+  "reviewer_execution": {
+    "compiler": false,
+    "tests": false,
+    "native": false,
+    "Qt": false,
+    "target_import": false,
+    "Git": false,
+    "native_edits": false
+  },
+  "blockers": [],
+  "limits": [
+    "Source/hash/diff review only. Real compositor/assistive-technology acceptance remains open."
+  ]
+}

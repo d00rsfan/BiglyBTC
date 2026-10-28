@@ -1,0 +1,246 @@
+{
+  "source_sha256": {
+    "migration/fixtures/azureus-ping/commands.txt": "358615d2d065de834771ed5c1c353d3c6428a49e27757bd4b1e51edddf36fa1d",
+    "migration/fixtures/azureus-ping/emitted.json": "1446f9e525683af916ac4c86fb83a674304419a6017dc4ffad08a01416d566eb",
+    "migration/fixtures/azureus-ping/expected.txt": "2a39e8e30f8d67ad8465c48520676bcab268e07a86eadffbe4c903f86a7ec037",
+    "migration/fixtures/azureus-ping/manifest.json": "893a7bd88424105452363b24631d70b0f92102331eca40de80bba31f5333066b",
+    "migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+    "migration/tools/azureus_headers_oracle.py": "70c333becbc3f88949f31f89cf29625572d4ac0c07cdba19c9bb1424112f5f02",
+    "migration/tools/azureus_ping_fixtures.py": "e1df7ccf2adaea4bd0d8c299c9f08a05cd7693b96e6f0f08be0787a92119c835",
+    "migration/tools/azureus_ping_matrix.py": "9acc9e81c5f200bb0f057bc7b604f1727bf211765ccbab204dfa0de83fe975d5",
+    "migration/tools/azureus_ping_oracle.py": "da254f3dbe91069c0bc7bb063ac01c74dfdf2b89b202ed477b543ae920972b3e",
+    "migration/tools/azureus_ping_readback.py": "65df118b9123632931745b2a5402d37696b23b9f113f27e2c2b7284e4e4d9b3e",
+    "migration/tools/mldht_identity_oracle.py": "9775c25bc03d4b28c3444ca5633b0952234241adcbcf60f6a75676f5e163810e",
+    "migration/tools/oracle.py": "8eb1cc4758ba78b4679b05b553ed8f6b7c1c1abe1745b8b1f5357ae681f0710f",
+    "native/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "native/services/azureus_ping/CMakeLists.txt": "1f98c086be89be8033ee87093444b47242af8d86512c592130c0956e66013cf7",
+    "native/services/azureus_ping/README.md": "1604a04e29757b17aeee70dc9d4863366bd672f3da72aaf10800f4864352ef13",
+    "native/services/azureus_ping/option_bounds_test.cpp": "5dfc1579230931b385b7da6c440ca7bbeda2e059a5438f26d314e8628ec70ae8",
+    "native/services/azureus_ping/option_driver.cpp": "bf35eaa6191c22441d2c50b1a87aca2f966e78f1fd7105989b87f0b247c39d3a",
+    "native/services/azureus_ping/option_fixture_test.py": "a6c0f93720e62e25be93cc90a2d99e112485e3cfd9290a3063290464cbeaf0ef",
+    "native/services/azureus_ping/options.cpp": "90e1f7f96b0d032afde3bf3452588689f9a52c7e730664b279860ea2f42f4ef0",
+    "native/services/azureus_ping/options.hpp": "fd11419d7a8ca1994b78ec38562016cd07f7b8cc324e6f07dceb82f5028b96e4"
+  },
+  "reference": {
+    "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "source_sha256": {
+      "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPUtils.java": "d852f590ca0df5361061e598be2087787ea588201f23d2fb7f826cfd62d4694b",
+      "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPPacketRequestPing.java": "d15f47d995416403f34cca81d1cddfc6701e2bace016419d482077d12422fbdd",
+      "core/src/com/biglybt/core/dht/transport/udp/DHTTransportUDP.java": "cffec69e83c20fac92414189e39aece9c359911c18250a0ba82d45ef42401f0f"
+    },
+    "method_sha256": {
+      "PING_READ": "20ec2e2d1584c17cd0c8825ce7b688a5030d0de8ac1f818a0ba72d640207f112",
+      "PING_WRITE": "e94a25e0f669410b62e2358e675772318ced7b71a6f92afcabb171a6abb3d441",
+      "ALT_WRITE": "3e5b6f5ef7e2dca166166aa269aa66462f58401d09e083f758a5c9e2115fb126",
+      "ALT_READ": "8347a4181b023cb10875abc624559c2e93c203124b08cf056b28f933fd459c1f",
+      "STAT_WRITE": "658aae009008a1128f83165480e0f86e969a7e81f04445463fb5b26ac1eb0ba9",
+      "STAT_READ": "71b5d80dedcd9d7e86d4d52ef356c40e1bdfccd4e9057cef6306c7f605e55664",
+      "LENGTH_WRITE": "83bc004bef0f80fa30033315b80869d53461aafa090e5029f22d569d47abb252",
+      "LENGTH_READ": "85fe541eb0a2712bbaf1b45a677a81f71295a100cc72b4ec1a3a2f9126a4d3ce",
+      "CONSTANTS": "d9bdf40ab2db2b2bd5b24cc3e0ebc754390949de2b8105ba064443ad09767cf6"
+    },
+    "harness_sha256": "cb377bb91016b0d9b1af6d7a04c3480082258e4922897ec57b7b692cfa148ae7",
+    "helper_class_sha256": {
+      "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd",
+      "AzureusPingOracle.class": "ac53dd457f9f18b4b0d499c4c20ded5891c3ec694e85bac251cfb0bdb9ea48bc",
+      "AzureusPingOracle$DHTUDPUtils.class": "2f68a130c34908526f1a04f4276cb943513c5b595f5a4491bf8ae3fd178a424d",
+      "AzureusPingOracle$DHTUDPUtils$4.class": "0181fbf7cb5d3085575dbfae2255f70e41f329bdb753980a095d31a6edceaf5f",
+      "AzureusPingOracle$DHTUDPUtils$3.class": "11e15dd868c5dcb258976c11d6d9814b0ae53c6fecfed91e9e721aafdb2c1c87",
+      "AzureusPingOracle$DHTUDPUtils$2.class": "332fb71fc1f2a6e09504eb028d78f3f6601805b7f4eb0da0532b4d22775c3e95",
+      "AzureusPingOracle$DHTUDPUtils$1.class": "8d6ba0ac40a09afe7c3453c8c769742af09452d720d6d368b609af37f07510a7",
+      "AzureusPingOracle$Debug.class": "bd4438a6a105e1d4194d2f5b4ba43e5983348d2c59a198c90632865380eef616",
+      "AzureusPingOracle$Constants.class": "25c53fd9a6b3cce9652dcecb557371a2dea0e1b8a7ab3853bb0a9298d51ae046",
+      "AzureusPingOracle$AENetworkClassifier.class": "b61cb8d34f93d43db3e606a24769643540796d26e46111f6f6400007c862083f",
+      "AzureusPingOracle$SystemTime.class": "f0ec625a38e70451b8870910bc7a5fe3a74f0a23e314680a9ceb81687a68b873",
+      "AzureusPingOracle$CoreFactory.class": "2c7f2e907844979cdd3e440e69a2840b533f88a5bebefe57df303d749b268bdb",
+      "AzureusPingOracle$GlobalManagerStats.class": "5030ab2c520dbbf176026c4923d17702f68a37475b8beb14115c9157446ed4a9",
+      "AzureusPingOracle$CountryDetails.class": "d3b75c875cae66cf7901288316b43e28e18106dffee05f3fd87ebd0e33cf6ab0",
+      "AzureusPingOracle$RemoteCountryStats.class": "1e9bee35236d17ed26d8416ad330d8b8701087be808f54ac13c4eac5ad1bb3ce",
+      "AzureusPingOracle$DHTUDPPacketRequestPing.class": "e80056e9fcc3f729dfbcbe257efc1135af076c7e0dfb88d5788949006ee35fc6",
+      "AzureusPingOracle$DHTUDPPacketRequest.class": "6aed36a814fb272b932be7ef65799a5fa82df3c2500ca7413018dea417a2d6e8",
+      "AzureusPingOracle$DHTUDPPacketNetworkHandler.class": "f97b20363271d2922cc3fe87a25de6b3ba7f7a024d64b7f1ca2d6e022b509881",
+      "AzureusPingOracle$DHTUDPPacketHelper.class": "d0f4348fc5c384a117c19563d4f7393d3e99b71ad00e97e5ac3f250fd0de5f15",
+      "AzureusPingOracle$DHTTransportUDP.class": "e59205c231524f2ec666d9e8a75deaf530d2ed24d2db58dcae8ea7823362dc05",
+      "AzureusPingOracle$DHT.class": "fa838f9e590cce1839b9e00cd050f20a75cbdc466eed89a4f482da7f90dc56e7"
+    },
+    "compile_command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "-J-XX:ActiveProcessorCount=2",
+      "--release",
+      "8",
+      "-encoding",
+      "UTF-8",
+      "-d",
+      "/tmp/biglybtc-azureus-ping-oracle-ipniq7ht/classes",
+      "/tmp/biglybtc-azureus-ping-oracle-ipniq7ht/source/AzureusPingOracle.java",
+      "/tmp/biglybtc-azureus-ping-oracle-ipniq7ht/source/ReferenceFence.java"
+    ],
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "-Xmx256m",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-azureus-ping-oracle-ipniq7ht",
+      "-Duser.home=/tmp/biglybtc-azureus-ping-oracle-ipniq7ht",
+      "-Dazureus.config.path=/tmp/biglybtc-azureus-ping-oracle-ipniq7ht/profile",
+      "-cp",
+      "/tmp/biglybtc-azureus-ping-oracle-ipniq7ht/classes",
+      "AzureusPingOracle"
+    ],
+    "work": "/tmp/biglybtc-azureus-ping-oracle-ipniq7ht",
+    "scope": "Exact original PING request constructor/serializer and option/upload methods; base header is no-op, cached country arrays/totals, version/network and clock supplied. No sampling/sorting/cache refresh or333ms host-throttle behavior qualified; CoreFactory trap. Version2 map output canonicalized by country. No normal startup, sockets/DNS or profile."
+  },
+  "builds": [
+    {
+      "compiler": "gcc",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/services/azureus_ping",
+          "-B",
+          "/tmp/biglybtc-azureus-ping-qualified-gcc",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS="
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-azureus-ping-qualified-gcc",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-azureus-ping-qualified-gcc",
+          "--output-on-failure",
+          "-j1"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/azureus_ping_readback.py",
+          "--driver",
+          "/tmp/biglybtc-azureus-ping-qualified-gcc/biglybtc-azureus-ping-driver",
+          "--reference",
+          "/tmp/biglybtc-azureus-ping-oracle-ipniq7ht/reference.json",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-09-azureus-ping-options/gcc-readback.json"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-azureus-ping-qualified-gcc/biglybtc-azureus-ping-driver": "8184be96a59d96aecc88970de3f5f054156388444dec31386bcb90016b9e29e2",
+        "/tmp/biglybtc-azureus-ping-qualified-gcc/biglybtc-azureus-ping-bounds-tests": "2f0ed7c3eba2e164b319b29ce73325941beff23146897b0dc5044b278ae4b5df",
+        "/tmp/biglybtc-azureus-ping-qualified-gcc/libbiglybtc_azureus_ping_options.a": "19e51bc399f10a8dfd5f8ffe1ec01073542dcef12bc67e08277ab7685ded4154"
+      }
+    },
+    {
+      "compiler": "clang",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/services/azureus_ping",
+          "-B",
+          "/tmp/biglybtc-azureus-ping-qualified-clang",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-azureus-ping-qualified-clang",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-azureus-ping-qualified-clang",
+          "--output-on-failure",
+          "-j1"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/azureus_ping_readback.py",
+          "--driver",
+          "/tmp/biglybtc-azureus-ping-qualified-clang/biglybtc-azureus-ping-driver",
+          "--reference",
+          "/tmp/biglybtc-azureus-ping-oracle-ipniq7ht/reference.json",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-09-azureus-ping-options/clang-readback.json"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-azureus-ping-qualified-clang/biglybtc-azureus-ping-driver": "a38c3091b2faa3b4d4115dd218c4f60971b686f24aba3eb0a6a45b7820b59a31",
+        "/tmp/biglybtc-azureus-ping-qualified-clang/biglybtc-azureus-ping-bounds-tests": "f67987a33f6b02d86580f3d205dbefbd280db2aaa128d4519c05822dc7752be7",
+        "/tmp/biglybtc-azureus-ping-qualified-clang/libbiglybtc_azureus_ping_options.a": "ecb1e20bedd1a18d0063f9f2714754b6e9ede83a9a97f2917429070808571f66"
+      }
+    },
+    {
+      "compiler": "asan",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/services/azureus_ping",
+          "-B",
+          "/tmp/biglybtc-azureus-ping-qualified-asan",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Debug",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-azureus-ping-qualified-asan",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-azureus-ping-qualified-asan",
+          "--output-on-failure",
+          "-j1"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/azureus_ping_readback.py",
+          "--driver",
+          "/tmp/biglybtc-azureus-ping-qualified-asan/biglybtc-azureus-ping-driver",
+          "--reference",
+          "/tmp/biglybtc-azureus-ping-oracle-ipniq7ht/reference.json",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-09-azureus-ping-options/asan-readback.json"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-azureus-ping-qualified-asan/biglybtc-azureus-ping-driver": "da85a86317e063c6f6057055942c1eb9685ea3c69d1989de5b596fe8400b7306",
+        "/tmp/biglybtc-azureus-ping-qualified-asan/biglybtc-azureus-ping-bounds-tests": "464280664a4d05ac903614769cfbc079f1d8fa6eae5965f79a06c0fbdf7a2a4b",
+        "/tmp/biglybtc-azureus-ping-qualified-asan/libbiglybtc_azureus_ping_options.a": "4c2f49616dd5ccb9af38a4a36db09f8a7528f7f9f90948f142c135c79ef4f26f"
+      }
+    }
+  ],
+  "scope": "12772 original observations, native bounds/ownership/rounding,3288 original encoder comparisons/request readbacks and2802 upload readbacks per compiler. Cached snapshot supplied; no host statistics policy or runtime activation."
+}

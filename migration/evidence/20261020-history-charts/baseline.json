@@ -1,0 +1,12 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+  "native_parent": "94bf1cb1c17ea7979bc56ae21e9837605689f6a1",
+  "private_parent": "028b319961b4f412d8b41a69f92ce720774582a9",
+  "previous_source_commit": "136af049bc3ea5307a666ef4b716eaa50d36d1c4",
+  "previous_tag": "milestone-history-week-20261020",
+  "previous_dist_manifest_sha256": "6c651dbceea52b32bf1a22f8e622eaf1fb714ec22e7fb0abd6391ded6af013f5",
+  "scope": "Exactly one P04-20: charts of existing independent saved daily/hourly UTC payload values. No new accounting or rolling-query/writer behavior."
+}

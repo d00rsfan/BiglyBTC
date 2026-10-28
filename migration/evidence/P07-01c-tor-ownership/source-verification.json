@@ -1,0 +1,14 @@
+{
+  "upstream_commit": "ae8efb8d40fb38246ac1790ab5cfb11584689c4a",
+  "source_path": "org/parg/azureus/plugins/networks/tor/TorPlugin.java",
+  "source_sha256": "b4d560691d64a200e46222cb9e1f74b2ce90f4e3df9b737ad8a7f2a67d708776",
+  "exact_source_parts_sha256": {
+    "getInfo": "8554ac78cf1bbcdeb4ad8ad261b9ab6f6d33f10d5a7f7aa5a62d03f64df8708f",
+    "sendAndReceive": "aa18b249addfdcc23daa0f4395efe05839ba540afa60636389431f1d6bbcab12",
+    "readLine(boolean)": "11f7f891b91a05bd31615840f31f8a0a427f4f3b7651e90090241f62de413099",
+    "post-AUTH-connect-block": "d4ecf865d02d5bbe4d8629ce4bb80f9e67f987f8184fccce1edbc22caf40da96"
+  },
+  "all_original_parts_present_verbatim": true,
+  "harness_sha256": "d69404618574df63875ef06159fd6c136ed989696260a5b38ad7a14c95f36fa3",
+  "scope": "Original post-AUTH ACK block/getInfo/sendAndReceive/readLine control flow over inert reader/writer/log/close, not original socket charset decoding, periodic keepalive or process ownership."
+}

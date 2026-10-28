@@ -1,0 +1,99 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "milestone": "P04-21",
+  "reviewer": "error_driver",
+  "status": "PASS: independent amended-source review; initial reviews/failures preserved, root rerun required",
+  "sources_sha256": {
+    "preview/native/tests/history_hourly_resolution_tests.cpp": "fca10770ec16f1da7740ff9a0da29b69ed392a707a6f083a34188290a7477402",
+    "preview/docs/history-hourly-contract.json": "51382230b4a02725f70a50f75fe9a66b4f03454c760f3b78af71673e2876a67b"
+  },
+  "author_capsule": {
+    "path": "migration/evidence/20261020-history-hourly/tests-contract/source-freeze.json",
+    "sha256": "849c8697db7774edc79aa98f680b82bd6f2e9b11e61896e9f265b9328cb36ce7"
+  },
+  "context_sha256": {
+    "build/history-hourly-20261020/contract.md": "9743c737d40d42ad12952296e21c4b2390387a35cfeaf2b2ce9d5deed60ea502",
+    "migration/evidence/20261020-history-hourly/source-audit.json": "13f515f6a98d94af02a1f69d7c31b0eecaae93efbc18c13e2a3756d78ff20141",
+    "migration/evidence/20261020-history-hourly/source-ranges.json": "0cc54584b07df0e4e92b354e9bdae8fe7b93ce757057231cef377c9356536ceb",
+    "migration/evidence/20261020-history-hourly/unchanged-behavior-baseline.json": "4f46d1b4a32b3a7b326a8c5566ed7a4a84f5fe6f2df06d1eee842459cc11f857",
+    "migration/evidence/20261020-history-hourly/reviews/production.json": "35f125a489124c68639b10ad3b98d2946ecaa1ffc08b8349e11f5114d5098cad",
+    "build/history-hourly-20261020/tests-contract/preserved-inputs.json": "d50ffa7537a42e7da50e7985bf27ec77238ac5edfd6d735affa03eaec90c0a81"
+  },
+  "case_scope": {
+    "behavioral_methods_planned": 20,
+    "qt_rows_planned": 22,
+    "actual_qt_rows": "Not asserted; root observes completed runs.",
+    "methods": [
+      "all168BucketsHaveExactUtcIdentityAndPayloadOnlyValues",
+      "missingDayMissingHourEmptyAndHeaderAreUnknownButRecordedZeroIsKnown",
+      "invalidRequestedRangesHaveNoFrameAndCannotRetargetWidget",
+      "anyMismatchedSourceDateMakesWholeFrameUnknownWithRequestedLabels",
+      "copiedFrameOutlivesAndDoesNotAliasMutableSource",
+      "exactSignedExtremesHaveFiniteGeometryWithoutChangingDailyFactory",
+      "hovering168BucketsAndHalfwayOffsetsUsesNearestExactUtcIdentity",
+      "midnightConnectionHasInteriorStrokesAndMissingMidnightBreaksBoth",
+      "isolatedHourlyPointAndKnownZeroRemainVisibleMarkers",
+      "narrowHourlyRenderingKeeps168FactsAndNoSamplingTimer",
+      "daysDefaultAndModeSwitchPreserveAllSevenTableRowsAndBindingWithoutReads",
+      "selectingHoursWhilePendingUsesActualArrivingSnapshotWithoutAnotherRequest",
+      "hiddenModeChangesDeferChartTooltipAndTableUntilShownWithoutReread",
+      "minimizedModeChangesDeferUntilRestoreWithoutReread",
+      "staleSessionRequestAndDateCannotReplaceAcceptedHourlyFrame",
+      "pendingFailureMissingDaysAndNewSessionClearHoursButRetainResolution",
+      "selectingAnotherDateClearsHourlyFactsAndUsesOnlyExistingDateRead",
+      "tooltipModeReentryKeepsNewestDailyModeAndNeverNotifiesTable",
+      "tooltipNewRequestKeepsNewHourlyFrameAndDoesNotResumeOlderBinding",
+      "tooltipCallbackMayDeleteOwningViewDuringModeSwitch"
+    ]
+  },
+  "meaningful_checks": [
+    "All168 day-major/hour-minor raw payload mappings and UTC labels are checked with distinct generated hour/day values and unrelated protocol/DHT fields. Daily totals are deliberately different from hourly values, excluding total/24 fallback.",
+    "Original-format synthetic records are passed through the unchanged actual parser. Missing day/hour, empty/header-only day, observedzero and signed corrections are independently checked over every bucket; no Java expected data is generated or modified.",
+    "Invalid ranges cannot retarget an existing widget. Mismatched outer ending, row date or inner snapshot date produce all-unknown frames with requested UTC identities. Weak ownership and post-source mutation/destruction checks require copied immutable facts.",
+    "INT64_MIN/MAX in opposite directions/endpoints require finite in-bounds coordinates and bounded indices/invalid-area behavior while old24/7 factories retain their original shapes.",
+    "Real mouse events test all168 nearest buckets, both sides of midnight rounding, outside-range clamps, exact UTC/plain signed tooltips and unavailable values.",
+    "Actual cross-midnight raster checks use a3200px controlled-font plot: interior between hour23 and next-day hour0 excludes both endpoint markers, so positive pixels prove a stroke. Missing midnight requires exactly0 colors in the same region for each direction. Prior QFont::NoSubpixelAntialias fixture avoids known black-text LCD fringe false positives without changing production fonts or classifiers.",
+    "Isolated known/zero raster markers, widths1/40/120/1000, bounded height and absence of sampling timers are checked.",
+    "Actual combo defaults and visible mode toggles retain the accepted packet/date, exact7x8 table values, and emit neither readRequested nor dataChanged/modelReset. Pending resolution accepts the arriving snapshot without another request.",
+    "Hidden/minimized changes retain old plot facts/tooltips until activation, then show the selected resolution without reads or model notifications. Failed/missing/reset/date changes clear hourly facts while preserving mode and existing date-read semantics.",
+    "Tooltip-triggered nested mode changes preserve the newest mode with no table event. Nested newer request requires only its two expected clear/new-binding notifications; owner deletion is checked through QPointer without later raw access.",
+    "Public contract accurately distinguishes selected fixed UTC168 hours from original rolling/current-clock/pixel graph semantics, byte counts from rates, seven-row daily table from chart resolution, local choice from persistence, and copied facts from new accounting/reads.",
+    "Both prior TSV digests and2550/3150 scalar scopes are exact, with zero new Java runtime/equality credit. All202 independent protected files remain byte-identical; no old test assertions, data, fixtures or deadlines were edited."
+  ],
+  "coverage_limits": [
+    "New Qt interaction hooks explicitly cover ToolTipChange; accessibility behavior reuses unchanged previously tested plot notification guards and is additionally inspected in production review, not claimed as a separate new accessibility runtime observation.",
+    "Stale result tests exercise existing session/request/date rejection in selected hourly mode; stronger prior admission suites remain unchanged and retained.",
+    "Raster/font/interactions and the planned22 rows are unexecuted by this reviewer; actual compiler/sanitizer/full-suite qualification remains root work."
+  ],
+  "blockers": [],
+  "execution": {
+    "builds_or_tests": false,
+    "java_or_native_subject_runs": false,
+    "target_import_or_selected_evaluation": false,
+    "source_edits": false,
+    "git_mutations": false,
+    "amended_subject_execution_by_reviewer": false
+  },
+  "review_revision": 2,
+  "previous_review": {
+    "path": "migration/evidence/20261020-history-hourly/diagnostics/initial-tests-contract.json",
+    "sha256": "dba99f0842adb4600f525c21641637a0a97849236b35e70ed6ab3f3e81e921e7",
+    "scope": "Preserved initial-source static review; subsequent actual qualification exposed the Qt sender-tail boundary and raster fringe."
+  },
+  "amendment": {
+    "before_test_sha256": "e2e52e1fd4ac7b24d2f2242ca58c85648ceb193368957c47a3c26d3f3c3fe937",
+    "after_test_sha256": "fca10770ec16f1da7740ff9a0da29b69ed392a707a6f083a34188290a7477402",
+    "before_contract_sha256": "1cb2077c1d9dde1f491a5ee2a95228c2cb69f64d372e2526b20fb8fa97ded85d",
+    "after_contract_sha256": "51382230b4a02725f70a50f75fe9a66b4f03454c760f3b78af71673e2876a67b",
+    "methods_and_planned_rows_unchanged": true,
+    "checks": [
+      "All20 behavioral method names and underlying data/strict pixel thresholds are retained. QTRY predicates await the newly queued graph refresh; no sleeps, read assertions, source values or whole120s deadline are weakened.",
+      "Deletion still happens directly inside the tooltip hook. New setterReturned/callbackAfterSetter/deletedInsideCallback assertions require the Qt combo setter returned before the deleting callback and require the owner already null inside that callback.",
+      "Raster4000px/inset6 replaces3200px/inset4 to exclude marker radius+stroke+antialias/floor coverage while preserving a greater-than5px interior region. Both continuous>0 and missing==0 color assertions are unchanged.",
+      "Public JSON only adds an accurate render_delivery fact: synchronous invalidation and deferred GUI rendering, without another read.",
+      "All202 old inputs remain exact; no native accounting/old test/fixture changes."
+    ],
+    "production_dependency_sha256": "04868bfac614b27c9b8126f9b3aef4d5fbfe7c5e27140cadedd57578ee3b4173"
+  }
+}

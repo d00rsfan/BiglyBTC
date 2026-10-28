@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "reviewer": "root",
+  "status": "PASS_offscreen_visual_review",
+  "native_source_commit": "889dfe8cc9a22830149d79c7108ce946a7df2766",
+  "scope": "Actual saved Daily/7 days ready/missing chart captures at 100/150/200 percent, normal production fonts",
+  "captures_sha256": {
+    "1-statistics-history-preview.png": "123bbf7cfb721fb73a8eea37b6827a5add9b4568945377abb0d3f64099dbddbb",
+    "1-statistics-history-missing-preview.png": "c15d7e5897f25107c115e8789bed74e3c3e1da9ad652afd081096aae05b1affe",
+    "1-statistics-history-week-preview.png": "527df75d3d2a9387ebe29244a5d2c490fc84ebb8ee7794043eab51cf266cf3f1",
+    "1-statistics-history-week-missing-preview.png": "299f7c1b7268c44a3ab233c66c38942bb305bebc83e0d13fc0c74cec16795070",
+    "1.5-statistics-history-preview.png": "c61fc9897802f74668b0c26b0e9f632b9ee01d72a4e83f8b2184cf2b3ad9d748",
+    "1.5-statistics-history-missing-preview.png": "b0b952f52f74c6e4d941b34f8f2f87ca1273ad77c821dd9e7e606a7f4e38bfcb",
+    "1.5-statistics-history-week-preview.png": "6304e3e8748a2d1a2844d05a0e4974ac0d4e6b2884643ce9c09ca50374f33a09",
+    "1.5-statistics-history-week-missing-preview.png": "72d1503a7f53d6afaf7f2d278ba76dfa15bae95edae864d0b0f2003a07d02603",
+    "2-statistics-history-preview.png": "89e179a80ba232eaed463fc9aa0b0402589c55f64b26d963170d48d444c6fd11",
+    "2-statistics-history-missing-preview.png": "da169ea38b9145d0b42dc9191c77a27be1a90b5eab698b22e5a0831e5b4b7be3",
+    "2-statistics-history-week-preview.png": "5657a97eed37a9ac45eee6c76fcc59bc6ea8acfbb80823d6bd8dc5ca4c7e53bb",
+    "2-statistics-history-week-missing-preview.png": "69417d8cd14c536f928f67abc70bfba97ef197ac68a2cff6391baea366c5b36e"
+  },
+  "observations": [
+    "Chart headers, two legends, UTC axes, controls and source-state text remain visible and separate from the tables.",
+    "Daily scene has connected adjacent observations and isolated markers; unknown hours leave gaps.",
+    "Seven-day scene preserves missing/empty gaps and observed zero/signed values; range includes negative corrections and no weekly sum.",
+    "All-missing daily/seven-day scenes show no data trace and an explicit empty message.",
+    "Chart height leaves the existing seven-day rows visible and retains scrolling for the hourly table.",
+    "New charts use bytes and distinct solid blue/dashed orange traces; actual preview uses normal text rendering rather than the raster-test font fixture."
+  ],
+  "manual_compositor_credit": false,
+  "limitations": [
+    "Offscreen captured windows only; manual compositor/font/locale acceptance remains separate.",
+    "Inherited table columns remain interactively resizable."
+  ],
+  "blockers": []
+}

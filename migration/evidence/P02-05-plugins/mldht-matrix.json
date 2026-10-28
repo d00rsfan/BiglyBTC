@@ -1,0 +1,117 @@
+{
+  "scope": "4860 exact extracted-original bind and effective-state observations; no network/plugin initialization",
+  "builds": [
+    {
+      "compiler": "gcc",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-mlDHT",
+          "-B",
+          "/tmp/biglybtc-mldht-qualified-gcc",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS="
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-mldht-qualified-gcc",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-mldht-qualified-gcc",
+          "--output-on-failure"
+        ]
+      ],
+      "binary": "/tmp/biglybtc-mldht-qualified-gcc/mldht-policy-driver",
+      "binary_sha256": "74fac36031016d966eabe81c1f9e7ccf5029ef83c8c6aa646b7cb5b9a8d05ae3"
+    },
+    {
+      "compiler": "clang",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-mlDHT",
+          "-B",
+          "/tmp/biglybtc-mldht-qualified-clang",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-mldht-qualified-clang",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-mldht-qualified-clang",
+          "--output-on-failure"
+        ]
+      ],
+      "binary": "/tmp/biglybtc-mldht-qualified-clang/mldht-policy-driver",
+      "binary_sha256": "2a67d1c787eb4470ededf2dc753ff3ab513f4f5ddb1a37be1322d4d5d237ce08"
+    },
+    {
+      "compiler": "asan",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/plugins/BiglyBTC-plugin-mlDHT",
+          "-B",
+          "/tmp/biglybtc-mldht-qualified-asan",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Debug",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-mldht-qualified-asan",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-mldht-qualified-asan",
+          "--output-on-failure"
+        ]
+      ],
+      "binary": "/tmp/biglybtc-mldht-qualified-asan/mldht-policy-driver",
+      "binary_sha256": "d6f13c44e85b74c2ae9a39dd859703a79a8d8a8234ce6af1244b79c29b7c1d59"
+    }
+  ],
+  "source_sha256": {
+    "native/plugins/BiglyBTC-plugin-mlDHT/.gitignore": "862263fa1f46c20f0d1e4dac5ffcc75abd55c08211b2c3864c5f8764b9d87793",
+    "native/plugins/BiglyBTC-plugin-mlDHT/CMakeLists.txt": "d6cdc9ae7e6529ca76da0cf93cc12da615e41238dd7fea067dc22eb55976044d",
+    "native/plugins/BiglyBTC-plugin-mlDHT/LICENSE": "db296f2f7f35bca3a174efb0eb392b3b17bd94b341851429a3dff411b1c2fc73",
+    "native/plugins/BiglyBTC-plugin-mlDHT/README.md": "11a458423a31a69b4412be138dcf45c123e73764fecf56c91c366b4f748a9353",
+    "native/plugins/BiglyBTC-plugin-mlDHT/fixture_test.py": "4b15d1f72e1c8731c3469236c6e4ecccb3d1ad8085c4d8242ba9dcbb67b42a66",
+    "native/plugins/BiglyBTC-plugin-mlDHT/policy.cpp": "77e9730d39c6db49130f19a91e60214470d0319508165aa17f10ed8f04891076",
+    "native/plugins/BiglyBTC-plugin-mlDHT/policy.hpp": "0fa999a994e43925b5a8465a9b14d1b7966bdf81190817084ccca720ba9a9b7d",
+    "native/plugins/BiglyBTC-plugin-mlDHT/policy_driver.cpp": "376971f9f76769fe7d7581257ac6615bbcd5cee3e669e66a94023b88c25bd9a2"
+  }
+}

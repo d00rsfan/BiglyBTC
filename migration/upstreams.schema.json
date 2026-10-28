@@ -1,0 +1,607 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "BiglyBT Migration Provenance Registry",
+  "description": "Validates record structure. Git existence, ancestry, cross-record references, review dispositions and test evidence require additional semantic checks.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema",
+    "schema_version",
+    "created_on",
+    "purpose",
+    "upstreams",
+    "components",
+    "update_reviews",
+    "external_dependencies",
+    "unresolved_inputs"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "minLength": 1
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "created_on": {
+      "type": "string",
+      "format": "date"
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "upstreams": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/upstream"
+      },
+      "minItems": 1
+    },
+    "components": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/component"
+      },
+      "minItems": 0
+    },
+    "update_reviews": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "component_id",
+          "upstream_id",
+          "from_commit",
+          "to_commit",
+          "record",
+          "outcome",
+          "native_commits"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "component_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "upstream_id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "from_commit": {
+            "$ref": "#/$defs/commit"
+          },
+          "to_commit": {
+            "$ref": "#/$defs/commit"
+          },
+          "record": {
+            "type": "string",
+            "minLength": 1
+          },
+          "outcome": {
+            "enum": [
+              "pending",
+              "partial",
+              "integrated",
+              "no_relevant_changes"
+            ]
+          },
+          "native_commits": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/nativeCommit"
+            },
+            "minItems": 0
+          }
+        }
+      },
+      "minItems": 0
+    },
+    "external_dependencies": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/externalDependency"
+      },
+      "minItems": 0
+    },
+    "unresolved_inputs": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "description",
+          "phase"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": {
+            "type": "string",
+            "minLength": 1
+          },
+          "phase": {
+            "type": "string",
+            "pattern": "^P[0-9]{2}$"
+          }
+        }
+      },
+      "minItems": 0
+    }
+  },
+  "$defs": {
+    "commit": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+    },
+    "nativeCommit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "repository",
+        "commit",
+        "purpose"
+      ],
+      "properties": {
+        "repository": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commit": {
+          "$ref": "#/$defs/commit"
+        },
+        "purpose": {
+          "enum": [
+            "implementation",
+            "tests",
+            "integration"
+          ]
+        }
+      }
+    },
+    "sourceCoverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "upstream_id",
+        "source_paths",
+        "source_symbols",
+        "baseline_commit",
+        "first_ported_commit",
+        "integrated_through_commit",
+        "last_reviewed_commit"
+      ],
+      "properties": {
+        "upstream_id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "source_symbols": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "baseline_commit": {
+          "$ref": "#/$defs/commit"
+        },
+        "first_ported_commit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/commit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "integrated_through_commit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/commit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "last_reviewed_commit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/commit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "upstream": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "url",
+        "checkout_hint",
+        "git_object_format",
+        "audit_commit",
+        "audited_on",
+        "audit_checkout_dirty",
+        "notes"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]+$"
+        },
+        "url": {
+          "type": "string",
+          "format": "uri"
+        },
+        "checkout_hint": {
+          "type": "string",
+          "minLength": 1
+        },
+        "git_object_format": {
+          "enum": [
+            "sha1",
+            "sha256"
+          ]
+        },
+        "audit_commit": {
+          "$ref": "#/$defs/commit"
+        },
+        "audited_on": {
+          "type": "string",
+          "format": "date"
+        },
+        "audit_checkout_dirty": {
+          "type": "boolean"
+        },
+        "notes": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "git_object_format": {
+                "const": "sha1"
+              }
+            },
+            "required": [
+              "git_object_format"
+            ]
+          },
+          "then": {
+            "properties": {
+              "audit_commit": {
+                "pattern": "^[0-9a-f]{40}$"
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "git_object_format": {
+                "const": "sha256"
+              }
+            },
+            "required": [
+              "git_object_format"
+            ]
+          },
+          "then": {
+            "properties": {
+              "audit_commit": {
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "component": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "feature_ids",
+        "state",
+        "task_records",
+        "target_paths",
+        "source_coverage",
+        "native_commits",
+        "review_records",
+        "evidence",
+        "decision_ref"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "feature_ids": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[FX][0-9]{2}(?:\\.[a-z0-9_-]+)*$"
+          },
+          "minItems": 1
+        },
+        "state": {
+          "enum": [
+            "not_started",
+            "in_progress",
+            "implemented",
+            "verified",
+            "deferred",
+            "retired"
+          ]
+        },
+        "task_records": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        },
+        "target_paths": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "source_coverage": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/sourceCoverage"
+          },
+          "minItems": 1
+        },
+        "native_commits": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/nativeCommit"
+          },
+          "minItems": 0
+        },
+        "review_records": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "evidence": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 0
+        },
+        "decision_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "const": "verified"
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "native_commits": {
+                "minItems": 1
+              },
+              "review_records": {
+                "minItems": 1
+              },
+              "evidence": {
+                "minItems": 1
+              },
+              "source_coverage": {
+                "items": {
+                  "properties": {
+                    "first_ported_commit": {
+                      "$ref": "#/$defs/commit"
+                    },
+                    "integrated_through_commit": {
+                      "$ref": "#/$defs/commit"
+                    },
+                    "last_reviewed_commit": {
+                      "$ref": "#/$defs/commit"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "state": {
+                "enum": [
+                  "retired",
+                  "deferred"
+                ]
+              }
+            },
+            "required": [
+              "state"
+            ]
+          },
+          "then": {
+            "properties": {
+              "decision_ref": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          }
+        }
+      ]
+    },
+    "externalDependency": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "version",
+        "repository_url",
+        "source_commit",
+        "artifacts",
+        "build_recipe",
+        "patches",
+        "notices"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "version": {
+          "type": "string",
+          "minLength": 1
+        },
+        "repository_url": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "source_commit": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/commit"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "artifacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "url",
+              "sha256"
+            ],
+            "properties": {
+              "url": {
+                "type": "string",
+                "format": "uri"
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          },
+          "minItems": 0
+        },
+        "build_recipe": {
+          "type": "string",
+          "minLength": 1
+        },
+        "patches": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              }
+            }
+          },
+          "minItems": 0
+        },
+        "notices": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1
+        }
+      },
+      "anyOf": [
+        {
+          "properties": {
+            "source_commit": {
+              "$ref": "#/$defs/commit"
+            }
+          }
+        },
+        {
+          "properties": {
+            "artifacts": {
+              "minItems": 1
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,75 @@
+{
+  "status": "qualified bounded package; full Statistics remains in_progress",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_source_commit": "292193b3e837d6bf36468d6c64ee8c982a693003",
+  "native_parent": "01973075251a3078f45973318fb841422ff25f7c",
+  "local": {
+    "gcc_default": {
+      "full_attempt": 99,
+      "initial_failures": 6,
+      "focused_corrections_passed": 6,
+      "final_covered_suites": 99
+    },
+    "gcc_source": {
+      "full_affected_attempt": 33,
+      "initial_failures": 2,
+      "focused_corrections_passed": 3,
+      "final_covered_suites": 33
+    },
+    "clang": {
+      "suites": 35,
+      "failures": 0,
+      "skips": 0
+    },
+    "asan_ubsan_lsan": {
+      "suites": 35,
+      "failures": 0,
+      "skips": 0,
+      "detect_leaks": true
+    }
+  },
+  "hosted": {
+    "run": 39843436848,
+    "source_commit": "292193b3e837d6bf36468d6c64ee8c982a693003",
+    "suites": 99,
+    "failures": 0,
+    "skips": 0,
+    "captures": 28,
+    "sdk_run": 39843436887,
+    "sdk_result": "success"
+  },
+  "portable": {
+    "native_source": "292193b3e837d6bf36468d6c64ee8c982a693003",
+    "dist": "/home/yurii/Java/BiglyBTC/dist",
+    "rollback": "/home/yurii/Java/BiglyBTC/build/statistics-completion-20261022/publication/previous-dist",
+    "manifest_sha256": "29aba35174ade993c9be4397e2a23a8716e3f3ca0ec789f1fec4fab897ae73cd",
+    "files": 107,
+    "loaders": {
+      "BiglyBTC": "\tlinux-vdso.so.1 (0x00007d7f25a0f000)\n\tlibQt6Widgets.so.6 => /home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libQt6Widgets.so.6 (0x00007d7f24e00000)\n\tlibQt6Gui.so.6 => /home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libQt6Gui.so.6 (0x00007d7f24200000)\n\tlibGLX.so.0 => /usr/lib/x86_64-linux-gnu/libGLX.so.0 (0x00007d7f259b8000)\n\tlibOpenGL.so.0 => /usr/lib/x86_64-linux-gnu/libOpenGL.so.0 (0x00007d7f2598d000)\n\tlibQt6Core.so.6 => /home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libQt6Core.so.6 (0x00007d7f23a00000)\n\tlibtorrent-rasterbar.so.2.0 => /home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0 (0x00007d7f23200000)\n\tlibcrypto.so.3 => /usr/lib/x86_64-linux-gnu/libcrypto.so.3 (0x00007d7f22a00000)\n\tlibz.so.1 => /usr/lib/x86_64-linux-gnu/libz.so.1 (0x00007d7f2596d000)\n\tlibstdc++.so.6 => /usr/lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007d7f22600000)\n\tlibm.so.6 => /usr/lib/x86_64-linux-gnu/libm.so.6 (0x00007d7f25847000)\n\tlibgcc_s.so.1 => /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007d7f255d2000)\n\tlibc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x00007d7f22200000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007d7f25a11000)\n\tlibGL.so.1 => /usr/lib/x86_64-linux-gnu/libGL.so.1 (0x00007d7f24d7b000)\n\tlibxkbcommon.so.0 => /usr/lib/x86_64-linux-gnu/libxkbcommon.so.0 (0x00007d7f241a1000)\n\tlibEGL.so.1 => /usr/lib/x86_64-linux-gnu/libEGL.so.1 (0x00007d7f25832000)\n\tlibX11.so.6 => /usr/lib/x86_64-linux-gnu/libX11.so.6 (0x00007d7f238be000)\n\tlibglib-2.0.so.0 => /usr/lib/x86_64-linux-gnu/libglib-2.0.so.0 (0x00007d7f230a8000)\n\tlibQt6DBus.so.6 => /home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libQt6DBus.so.6 (0x00007d7f22925000)\n\tlibfreetype.so.6 => /usr/lib/x86_64-linux-gnu/libfreetype.so.6 (0x00007d7f2252b000)\n\tlibfontconfig.so.1 => /usr/lib/x86_64-linux-gnu/libfontconfig.so.1 (0x00007d7f24d28000)\n\tlibgthread-2.0.so.0 => /usr/lib/x86_64-linux-gnu/libgthread-2.0.so.0 (0x00007d7f2582b000)\n\tlibGLdispatch.so.0 => /usr/lib/x86_64-linux-gnu/libGLdispatch.so.0 (0x00007d7f22472000)\n\tlibicui18n.so.73 => /home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libicui18n.so.73 (0x00007d7f21e00000)\n\tlibicuuc.so.73 => /home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libicuuc.so.73 (0x00007d7f21a00000)\n\tlibicudata.so.73 => /home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/qt/lib/libicudata.so.73 (0x00007d7f1fa00000)\n\tlibzstd.so.1 => /usr/lib/x86_64-linux-gnu/libzstd.so.1 (0x00007d7f21d3d000)\n\tlibssl.so.3 => /usr/lib/x86_64-linux-gnu/libssl.so.3 (0x00007d7f21c2f000)\n\tlibxcb.so.1 => /usr/lib/x86_64-linux-gnu/libxcb.so.1 (0x00007d7f24176000)\n\tlibatomic.so.1 => /usr/lib/x86_64-linux-gnu/libatomic.so.1 (0x00007d7f2416b000)\n\tlibpcre2-8.so.0 => /usr/lib/x86_64-linux-gnu/libpcre2-8.so.0 (0x00007d7f22154000)\n\tlibdbus-1.so.3 => /usr/lib/x86_64-linux-gnu/libdbus-1.so.3 (0x00007d7f2386e000)\n\tlibbz2.so.1.0 => /usr/lib/x86_64-linux-gnu/libbz2.so.1.0 (0x00007d7f23859000)\n\tlibpng16.so.16 => /usr/lib/x86_64-linux-gnu/libpng16.so.16 (0x00007d7f2306e000)\n\tlibbrotlidec.so.1 => /usr/lib/x86_64-linux-gnu/libbrotlidec.so.1 (0x00007d7f2415c000)\n\tlibexpat.so.1 => /usr/lib/x86_64-linux-gnu/libexpat.so.1 (0x00007d7f23041000)\n\tlibpthread.so.0 => /usr/lib/x86_64-linux-gnu/libpthread.so.0 (0x00007d7f255cd000)\n\tlibdl.so.2 => /usr/lib/x86_64-linux-gnu/libdl.so.2 (0x00007d7f24d23000)\n\tlibXau.so.6 => /usr/lib/x86_64-linux-gnu/libXau.so.6 (0x00007d7f23853000)\n\tlibXdmcp.so.6 => /usr/lib/x86_64-linux-gnu/libXdmcp.so.6 (0x00007d7f23039000)\n\tlibsystemd.so.0 => /usr/lib/x86_64-linux-gnu/libsystemd.so.0 (0x00007d7f218ec000)\n\tlibbrotlicommon.so.1 => /usr/lib/x86_64-linux-gnu/libbrotlicommon.so.1 (0x00007d7f22902000)\n",
+      "BiglyBTC-headless": "\tlinux-vdso.so.1 (0x00007f134d91d000)\n\tlibz.so.1 => /usr/lib/x86_64-linux-gnu/libz.so.1 (0x00007f134d846000)\n\tlibtorrent-rasterbar.so.2.0 => /home/yurii/Java/BiglyBTC/dist/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0 (0x00007f134d000000)\n\tlibcrypto.so.3 => /usr/lib/x86_64-linux-gnu/libcrypto.so.3 (0x00007f134c800000)\n\tlibstdc++.so.6 => /usr/lib/x86_64-linux-gnu/libstdc++.so.6 (0x00007f134c400000)\n\tlibgcc_s.so.1 => /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 (0x00007f134d816000)\n\tlibc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x00007f134c000000)\n\tlibssl.so.3 => /usr/lib/x86_64-linux-gnu/libssl.so.3 (0x00007f134d708000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007f134d91f000)\n\tlibzstd.so.1 => /usr/lib/x86_64-linux-gnu/libzstd.so.1 (0x00007f134cf3d000)\n\tlibm.so.6 => /usr/lib/x86_64-linux-gnu/libm.so.6 (0x00007f134c6da000)\n"
+    },
+    "promoted": true,
+    "system_installation": false
+  },
+  "scope": [
+    "persistent peer-session Activity/Current",
+    "original rate arithmetic with cumulative-sample delivery timing",
+    "compatible Overall fields, marks and fixed-name transactions",
+    "original-format six-field minute recording",
+    "actual native disk/tracker/peer/general metric tables",
+    "exact uninstrumented copied runtime admission"
+  ],
+  "remaining": [
+    "configured smoothing and session-global limits follow-up",
+    "write-driven visible history refresh follow-up",
+    "Transfers derived summary and diagnostics follow-up",
+    "capacity, ASN, auto-speed and original service parity",
+    "DHT/DDB/Vivaldi, Tags, Country service providers",
+    "normal-profile activation/switching and broader client migration"
+  ],
+  "notes": [
+    "GCC initial failures and focused fixes retained; passing full default set is independently confirmed by hosted CI at exact final source.",
+    "First portable verifier attempts had helper argument/path assumptions; product smoke and actual workers passed verification-v3 with private product Qt; SDK QtTest is test-only.",
+    "No system installation, original running application or live profile access."
+  ]
+}

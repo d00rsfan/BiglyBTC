@@ -1,0 +1,229 @@
+{
+  "status": "passed",
+  "reports": [
+    {
+      "status": "passed",
+      "source_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+      "torrent_type": 3,
+      "native_test_sha256": "b085f516b2fd5d7d5eed4d71f1da9813e62771e52b85f88db8e569ca4a319ba3",
+      "profile": "/tmp/biglybtc-files-view-53bccd8f5d3b470fb1a60f390d39faa1/java-3/profile",
+      "profile_sha256_unchanged": {
+        "biglybt.config": "60dff4c7729daa45f49c29640557176b73060ac7bedebb71ee596c80e573bfc1",
+        "biglybt.config.bak": "217382e7b3269646346126a4ae390d30d791012487e27ef277ea91a593262e49",
+        "alltrackers.config": "1b6e61759ae2968f6fbbcdafa2d65cd5e0ca58978c9475c2ddd33ea2e8052f9e",
+        "tag.config": "2020da2940bb97780d1e76d79c5abd80fe91aee3995efe2691299751db352689",
+        "downloads.config": "2a308cb1508bc2e868bfacb92b7e9d8007fe9bd0b900b12aea5c46a567d665c6",
+        "BiglyBT.statistics": "bd02c008664099f88fcb3fae49ee27f3695c7ec5f6cb943820ac953065c75c8e",
+        "dlhistorya.config": "a5bd024fede747a4b342799394a773e4300a425a6a7718eb23fccea6c99b2bce",
+        "ipfilter.cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        ".azlock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exported_params.properties": "31a3d5db2f824eb2c1cd16a6b3b5be000875dbb27224727ba4ff971355f8d1c7",
+        ".certs": "9a17d084940e9954ae268ad8b3aae9f0f7c3df2cd17e97441763f8c6cc7e6d1d",
+        ".keystore": "09754edeef3ef6906c67e7ed4d41d9c32bdd840f10f45748b215d050fe198db8",
+        ".lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "active/cache.dat": "9f37cfc9164cc3723cd84a6ebc8d42b6b5e1e2a6614b9d7f3884503ceb4bb357",
+        "active/F569E1D9A053C64CEEE2C6EAA0D9BFA0789389A6.dat": "e60bf1dcdd415438e581de989abbaeeed639ab1077ff4597d61944ce7b21c993",
+        "active/F569E1D9A053C64CEEE2C6EAA0D9BFA0789389A6.dat.bak": "7ab99c77900c2bde3293d32c4b46016687b936f408e0d0f8b2c720207bb26a27",
+        "net/pm_default.dat": "2de72de5599016a5aaf19de3000651f3d89ad15bf1551d7930979e815948e479",
+        "logs/DiskOps_1.log": "658af25f853ab218bc324d18c1a513619fa222452d708e5bae2e7713ea6ff807",
+        "logs/Swarm Merge_1.log": "73ebdaaf2efcac4a1b217aca5a8deb59caa19abfd18facca37766b273e58d454",
+        "logs/alerts_1.log": "ec2da00401e1dbf5e38c246d0acd2671809d71046825f38e86110c9c4bf5dd00",
+        "logs/seltrace_1.log": "9b7ce83006a0d4ffa0a81ecf3ea780aa44bb3be69de984dd6843a3110118d9a4",
+        "logs/debug_1.log": "f7787f743345b27f3901d1f135ea977791e5c018edb00a5134763250d697d21c",
+        "plugins/azupnpav/plugin.properties": "fea54f28ebac68f1f17f87a71e8df8a9bdad5dbfe4d4b866e29cefafc52769f8",
+        "stats/2026/10/17.dat": "0c8902a6d1fa82e5b011b5e7ab33a022d9136933d5d9a9c0cd83d2b26b6c74bf"
+      },
+      "payload_sha256_unchanged": {
+        "multi-fixture/01-first.bin": "0a04099770b4d0fabe7d259a1e5d10014d8e7eda9871cb78451cc6a1639eaac2",
+        "multi-fixture/nested/03-empty.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "multi-fixture/nested/02-\u05e9\u0628.bin.az!": "ed3538c2a6bf45812142d7af94e8c00d130b2de1897ccba30e73d02f74df0145"
+      },
+      "fixture_overlays": [
+        "Authoritative cached display name differs from stale raw state name",
+        "Saved stopped state plus original general-owner pause entry"
+      ],
+      "assertions": [
+        "Original indices/Unicode/empty files/signed priorities",
+        "Virtual padding hidden/toggled",
+        "Cached display name remains authoritative",
+        "Refresh does not mutate metadata or cache",
+        "Payload path unavailable throughout native query/view",
+        "No permanent JVM dependency"
+      ],
+      "log": "/tmp/biglybtc-files-view-53bccd8f5d3b470fb1a60f390d39faa1/java-3/native-files.log",
+      "screenshot": "/tmp/biglybtc-files-view-53bccd8f5d3b470fb1a60f390d39faa1/java-3/BiglyBTC-files.png",
+      "limitations": [
+        "Generated read-only Linux offscreen file view; editing/platform/full-view parity remains open"
+      ]
+    },
+    {
+      "status": "passed",
+      "source_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+      "torrent_type": 2,
+      "native_test_sha256": "b085f516b2fd5d7d5eed4d71f1da9813e62771e52b85f88db8e569ca4a319ba3",
+      "profile": "/tmp/biglybtc-files-view-c350bfd074134ca69a6b9595f70c2422/java-2/profile",
+      "profile_sha256_unchanged": {
+        "biglybt.config": "b69d7a3d583124c0f22e189efdfcd7db01d5baba67c8e17413b3473727419dd6",
+        "biglybt.config.bak": "8c9529fdfcdb36eddce823aa23ca42097c540b840b7f268fbe159044a57ce0f3",
+        "alltrackers.config": "fdffaa93137ec8129f477621cae47ad1b2075832f7bf32860744b4fdbb6dd9fd",
+        "tag.config": "2020da2940bb97780d1e76d79c5abd80fe91aee3995efe2691299751db352689",
+        "downloads.config": "a0c80cb53119786b88523dd2bf076fafbd6356e543a77d3977594d9e429a60a3",
+        "BiglyBT.statistics": "f4ffc2039037bf31a5d993b131775e2e363fa7d85415b684cd6aaaf73911dbb4",
+        "dlhistorya.config": "32af42a7ee07ebac4f4b6c6df7ef05c3c405f1a37a430767dcff7c7a0551c011",
+        "ipfilter.cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        ".azlock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exported_params.properties": "31a3d5db2f824eb2c1cd16a6b3b5be000875dbb27224727ba4ff971355f8d1c7",
+        ".certs": "9a17d084940e9954ae268ad8b3aae9f0f7c3df2cd17e97441763f8c6cc7e6d1d",
+        ".keystore": "09754edeef3ef6906c67e7ed4d41d9c32bdd840f10f45748b215d050fe198db8",
+        ".lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "active/cache.dat": "ca4c1278012da35a3d9d1621c84ad6f3ea83ca5be08d9f9a90a241f229f86689",
+        "active/391E1F56342E15EEBC8B038FB878A37913F60294.dat": "19829d77d55e26c27e57f57a36b6fde04af00a2de17ff023475e42dc3a351b08",
+        "active/391E1F56342E15EEBC8B038FB878A37913F60294.dat.bak": "a24a6cdf721108f8528e316b850fa5eb71ef0cad8984ea2bb122aabfdab5d381",
+        "net/pm_default.dat": "2de72de5599016a5aaf19de3000651f3d89ad15bf1551d7930979e815948e479",
+        "logs/DiskOps_1.log": "93fae08a8b7102cd34b72e855b3bd1610d825fe5b44b378a7e8e25c27712bcf6",
+        "logs/Swarm Merge_1.log": "30cea5234f2daf8130f03c5719db4b0b82452b3dbb9b20676d60232f9e69f0ed",
+        "logs/alerts_1.log": "aa1cf30eb852f62515a5a1a976309d6f371af347ddfc2efbabe7c3ed6cc59fc4",
+        "logs/seltrace_1.log": "1afc141093082007a3d260d8bb84b84ba1b318db13a9e0c103bbdf2478d80af1",
+        "logs/debug_1.log": "cada98b0c9e06272e563e57a4c9587efa7c98f935d748634b5b771255ada0703",
+        "plugins/azupnpav/plugin.properties": "fea54f28ebac68f1f17f87a71e8df8a9bdad5dbfe4d4b866e29cefafc52769f8",
+        "stats/2026/10/17.dat": "c0dba883c32c74afe90a6a85434991861983191e35143aa804264f4fabd7495f"
+      },
+      "payload_sha256_unchanged": {
+        "multi-fixture/01-first.bin": "0a04099770b4d0fabe7d259a1e5d10014d8e7eda9871cb78451cc6a1639eaac2",
+        "multi-fixture/nested/03-empty.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "multi-fixture/nested/02-\u05e9\u0628.bin.az!": "ed3538c2a6bf45812142d7af94e8c00d130b2de1897ccba30e73d02f74df0145"
+      },
+      "fixture_overlays": [
+        "Authoritative cached display name differs from stale raw state name",
+        "No pause overlay"
+      ],
+      "assertions": [
+        "Original indices/Unicode/empty files/signed priorities",
+        "Virtual padding hidden/toggled",
+        "Cached display name remains authoritative",
+        "Refresh does not mutate metadata or cache",
+        "Payload path unavailable throughout native query/view",
+        "No permanent JVM dependency"
+      ],
+      "log": "/tmp/biglybtc-files-view-c350bfd074134ca69a6b9595f70c2422/java-2/native-files.log",
+      "screenshot": "/tmp/biglybtc-files-view-c350bfd074134ca69a6b9595f70c2422/java-2/BiglyBTC-files.png",
+      "limitations": [
+        "Generated read-only Linux offscreen file view; editing/platform/full-view parity remains open"
+      ]
+    },
+    {
+      "status": "passed",
+      "source_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+      "torrent_type": 3,
+      "native_test_sha256": "b085f516b2fd5d7d5eed4d71f1da9813e62771e52b85f88db8e569ca4a319ba3",
+      "profile": "/tmp/biglybtc-files-view-def2b43fee6841e2b6a9c93f0062286e/java-3/profile",
+      "profile_sha256_unchanged": {
+        "biglybt.config": "e32422a1adbb96f5d05e2ea92394e8d744904b747679e79abfc9618b11512b33",
+        "biglybt.config.bak": "6bf01e2024ad19bd31f42af0900a423da04d6d007509327ef8864ae639cb87b8",
+        "tag.config": "2020da2940bb97780d1e76d79c5abd80fe91aee3995efe2691299751db352689",
+        "alltrackers.config": "73b166d0056fe30f74fd2e7756824b15b88ec7d975b9e45c9fec1dac865217f7",
+        "downloads.config": "34354702745a50ce83613e51f44ec19241275a58b984fc7948c65d2bead853de",
+        "BiglyBT.statistics": "8dfc99c021c25ed5fbf96ba18a12e414365b0e47e97ab6e232d0be2b7d08ac34",
+        "dlhistorya.config": "eb3620b72e4e7cbe3c1437174944912f25066be95af53786fcfd69a2cafdfcb1",
+        "ipfilter.cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        ".azlock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exported_params.properties": "31a3d5db2f824eb2c1cd16a6b3b5be000875dbb27224727ba4ff971355f8d1c7",
+        ".certs": "9a17d084940e9954ae268ad8b3aae9f0f7c3df2cd17e97441763f8c6cc7e6d1d",
+        ".keystore": "09754edeef3ef6906c67e7ed4d41d9c32bdd840f10f45748b215d050fe198db8",
+        ".lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "active/cache.dat": "01a77d5b9e29169f40041a451d7991de3985caf0a7028a7374995c5e26e6582c",
+        "active/F569E1D9A053C64CEEE2C6EAA0D9BFA0789389A6.dat": "967fdbb55dfa8998741d44d56237ddfb999293251625a102ef80df69aef700a4",
+        "active/F569E1D9A053C64CEEE2C6EAA0D9BFA0789389A6.dat.bak": "011134fc39bdf4bfd89ed1274fd32600f1cae03687cbdb197b87aa373e8ff28b",
+        "net/pm_default.dat": "2de72de5599016a5aaf19de3000651f3d89ad15bf1551d7930979e815948e479",
+        "logs/DiskOps_1.log": "9ea629c01a4d6dd5f5a53848656ba102ffb4e808ad8ea5ea48d7d3ba0632e8a6",
+        "logs/Swarm Merge_1.log": "25d44ac7d11911bdd411bfb5f74c819ef2cbc938ca95a995b059d55a4edf7370",
+        "logs/alerts_1.log": "5408b20c491a188c7933097d6213ff6b0f5d1795252d81966ab9b1d8e4d7db8f",
+        "logs/seltrace_1.log": "98e04e9d205ab1e11d006898f88e3c7d113805b5092e8494239e793b268525a1",
+        "logs/debug_1.log": "6ef5a60feef86f31ae1d9bc83d4a571c15c34068099dbfc7d610682ce58b1e04",
+        "plugins/azupnpav/plugin.properties": "fea54f28ebac68f1f17f87a71e8df8a9bdad5dbfe4d4b866e29cefafc52769f8",
+        "stats/2026/10/17.dat": "bf7722bfebe7ee0cb1adc8b31ce68de866225fc6b08075a8a3c278f9ab53fc3a"
+      },
+      "payload_sha256_unchanged": {
+        "multi-fixture/01-first.bin": "0a04099770b4d0fabe7d259a1e5d10014d8e7eda9871cb78451cc6a1639eaac2",
+        "multi-fixture/nested/03-empty.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "multi-fixture/nested/02-\u05e9\u0628.bin.az!": "ed3538c2a6bf45812142d7af94e8c00d130b2de1897ccba30e73d02f74df0145"
+      },
+      "fixture_overlays": [
+        "Authoritative cached display name differs from stale raw state name",
+        "No pause overlay"
+      ],
+      "assertions": [
+        "Original indices/Unicode/empty files/signed priorities",
+        "Virtual padding hidden/toggled",
+        "Cached display name remains authoritative",
+        "Refresh does not mutate metadata or cache",
+        "Payload path unavailable throughout native query/view",
+        "No permanent JVM dependency"
+      ],
+      "log": "/tmp/biglybtc-files-view-def2b43fee6841e2b6a9c93f0062286e/java-3/native-files.log",
+      "screenshot": "/tmp/biglybtc-files-view-def2b43fee6841e2b6a9c93f0062286e/java-3/BiglyBTC-files.png",
+      "limitations": [
+        "Generated read-only Linux offscreen file view; editing/platform/full-view parity remains open"
+      ]
+    },
+    {
+      "status": "passed",
+      "source_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+      "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+      "torrent_type": 1,
+      "native_test_sha256": "b085f516b2fd5d7d5eed4d71f1da9813e62771e52b85f88db8e569ca4a319ba3",
+      "profile": "/tmp/biglybtc-files-view-3c59880742ae4733b8689067af4de0fa/java-1/profile",
+      "profile_sha256_unchanged": {
+        "biglybt.config": "9894e67a0a6aebf8261a5d24b7a1e9be83f4603c1221a2ecb95739eed921131e",
+        "biglybt.config.bak": "ca80df938da97a8863da0ec575a7a4072dce65bd49f3dfb0eebc0a80a5570b15",
+        "tag.config": "2020da2940bb97780d1e76d79c5abd80fe91aee3995efe2691299751db352689",
+        "alltrackers.config": "0da3b0cfb56dd4e4e3e2a4f99e30926376ddb1b4469d57cc070927532129bcc7",
+        "downloads.config": "18e07db39bffbd9664814dbe9e07b69bfc61b7c8f7c91c476388a6f282c5287f",
+        "BiglyBT.statistics": "8dfc99c021c25ed5fbf96ba18a12e414365b0e47e97ab6e232d0be2b7d08ac34",
+        "dlhistorya.config": "83f69ba7a8299788af89b328310d38165cc08b3bdfd751ccfddfa6205ced7a15",
+        "ipfilter.cache": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        ".azlock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "exported_params.properties": "31a3d5db2f824eb2c1cd16a6b3b5be000875dbb27224727ba4ff971355f8d1c7",
+        ".certs": "9a17d084940e9954ae268ad8b3aae9f0f7c3df2cd17e97441763f8c6cc7e6d1d",
+        ".keystore": "09754edeef3ef6906c67e7ed4d41d9c32bdd840f10f45748b215d050fe198db8",
+        ".lock": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "active/cache.dat": "013a7cec5c44476c905f5f5a1cff946555087faee0f0e3f17d5688bc480151da",
+        "active/FB0FE084BF2D622B633F6542DADF120F718693B7.dat": "06cd59b62b5d7f2d7231c38a17e949d3de016ebba9eeab4f83ff3509a55d28cc",
+        "active/FB0FE084BF2D622B633F6542DADF120F718693B7.dat.bak": "ed5e74c5ab72780c0f13f54ed30cfc879a041c35477ade6161e40e1dcb18d40b",
+        "net/pm_default.dat": "2de72de5599016a5aaf19de3000651f3d89ad15bf1551d7930979e815948e479",
+        "logs/DiskOps_1.log": "502d84e64edabb6588e76d39d85fffb6e3eb50f5e233d56a1fd9c53a8ae7258c",
+        "logs/Swarm Merge_1.log": "770cd5511734f91ef7859bb94bf41085c28610e72c0bf6ee441251a798b75fed",
+        "logs/alerts_1.log": "298c011d2a0aeaf39f51027e185dab2e8debb7f393814afb0917cf3bce82c1ec",
+        "logs/seltrace_1.log": "72b4729c4c83c178d9a8b2f823ef29a5c10a7114ef6c5b3072171fa21c6bce19",
+        "logs/debug_1.log": "880bc14f19d2497ffe6fa6cc1e9c2ab9d6b921449f9a53f92bea8ee444c82458",
+        "plugins/azupnpav/plugin.properties": "fea54f28ebac68f1f17f87a71e8df8a9bdad5dbfe4d4b866e29cefafc52769f8",
+        "stats/2026/10/17.dat": "2b4eb66e8b94267c2000a5ef9ff59a708ec373c22d5c4c2b5ec291e419a89d85"
+      },
+      "payload_sha256_unchanged": {
+        "multi-fixture/01-first.bin.az!": "0a04099770b4d0fabe7d259a1e5d10014d8e7eda9871cb78451cc6a1639eaac2",
+        "multi-fixture/nested/03-empty.bin": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "multi-fixture/nested/02-\u05e9\u0628.bin.az!": "ed3538c2a6bf45812142d7af94e8c00d130b2de1897ccba30e73d02f74df0145"
+      },
+      "fixture_overlays": [
+        "Authoritative cached display name differs from stale raw state name",
+        "No pause overlay"
+      ],
+      "assertions": [
+        "Original indices/Unicode/empty files/signed priorities",
+        "Virtual padding hidden/toggled",
+        "Cached display name remains authoritative",
+        "Refresh does not mutate metadata or cache",
+        "Payload path unavailable throughout native query/view",
+        "No permanent JVM dependency"
+      ],
+      "log": "/tmp/biglybtc-files-view-3c59880742ae4733b8689067af4de0fa/java-1/native-files.log",
+      "screenshot": "/tmp/biglybtc-files-view-3c59880742ae4733b8689067af4de0fa/java-1/BiglyBTC-files.png",
+      "limitations": [
+        "Generated read-only Linux offscreen file view; editing/platform/full-view parity remains open"
+      ]
+    }
+  ]
+}

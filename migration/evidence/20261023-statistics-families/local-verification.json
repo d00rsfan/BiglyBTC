@@ -1,0 +1,342 @@
+{
+  "schema": 1,
+  "status": "QUALIFIED_AND_PROMOTED",
+  "observed_at_utc": "2026-10-23T19:34:31.383664+00:00",
+  "implementation_commit": "5ea3fb7391a3e5df107754b5bba95492f19efd1b",
+  "test_only_followup_commit": "eb671331dcb665e1f97b66a2f628ff86571089fc",
+  "test_only_followup_parent": "5ea3fb7391a3e5df107754b5bba95492f19efd1b",
+  "test_only_followup_changed_paths": [
+    "preview/native/tests/runtime_metrics_view_tests.cpp"
+  ],
+  "static_source_binding": {
+    "input_receipt": {
+      "path": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/implementation-sources.json",
+      "sha256": "e8029b37e2bfbcdb2661877edddd2bf2b0e86f1ec39d29f055d58624f293b390",
+      "bytes": 25616
+    },
+    "committed_inputs_verified": 139,
+    "method": "Read-only Git blob SHA-256 and length comparison; no compilation or test execution"
+  },
+  "scope": [
+    "Ten native Statistics sections and Capacity navigation",
+    "Country approved module/data binding, observed payload-byte prefixes and retained retired rows",
+    "Tracker observations, native mmap disk/cache measurements and saved speed-manager projection",
+    "Azureus transport/transaction and Vivaldi facts exercised by owned loopback providers"
+  ],
+  "gcc": {
+    "coverage": "24 distinct affected suites, latest available result for each passed across three retained attempts; not one clean 24-suite run",
+    "unique_passed": 24,
+    "latest_failed": 0,
+    "latest_skipped": 0,
+    "unit_names": [
+      "azureus-statistics",
+      "cache-statistics-view",
+      "country-observed-bytes",
+      "country-provider",
+      "country-provider-binding",
+      "country-statistics",
+      "country-statistics-bridge",
+      "country-statistics-view",
+      "country-statistics-window",
+      "engine-activity-view",
+      "manual-tag-window",
+      "peer-payload-ledger",
+      "peer-payload-observer",
+      "saved-history-month-page",
+      "saved-history-page",
+      "saved-history-week-page",
+      "saved-speed-manager",
+      "saved-speed-manager-ui",
+      "startup-statistics-worker",
+      "statistics-navigation-page",
+      "statistics-navigation-window-worker",
+      "statistics-page-behavior",
+      "tracker-statistics-sampler",
+      "tracker-statistics-view"
+    ],
+    "attempts": [
+      {
+        "case": "gcc-v4",
+        "passed": 18,
+        "failed": 6,
+        "skipped": 0,
+        "failed_names": [
+          "startup-statistics-worker",
+          "country-provider-binding",
+          "country-statistics-window",
+          "country-statistics-bridge",
+          "azureus-statistics",
+          "cache-statistics-view"
+        ],
+        "junit": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/gcc-v4.xml",
+        "receipt": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/gcc-v4-receipt.json"
+      },
+      {
+        "case": "gcc-v5",
+        "passed": 7,
+        "failed": 1,
+        "skipped": 0,
+        "failed_names": [
+          "country-statistics-window"
+        ],
+        "junit": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/gcc-v5.xml",
+        "receipt": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/gcc-v5-receipt.json"
+      },
+      {
+        "case": "gcc-v7",
+        "passed": 2,
+        "failed": 0,
+        "skipped": 0,
+        "failed_names": [],
+        "junit": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/gcc-v7.xml",
+        "receipt": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/gcc-v7-receipt.json"
+      }
+    ],
+    "unique_passed_including_hosted_regression_repair": 25,
+    "additional_regression": "local/runtime-navigation-repair.xml",
+    "public_accessor_actual_suites": "local/public-accessor.xml"
+  },
+  "clang": {
+    "build": "Log reaches final 137/137 link; initial runner interrupted with exit 143 before final build receipt (parent-reported)",
+    "initial_build_receipt_claims_success": false,
+    "focused_tests_passed": 13,
+    "focused_tests_failed": 0,
+    "focused_tests_skipped": 0,
+    "seconds": 73.42,
+    "junit": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/clang-final-tests.xml",
+    "receipt": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/clang-final-tests-receipt.json",
+    "accessor_followup": "Changed object compiled successfully; clang-public-accessor-build.txt; unchanged prior13suite behavior evidence reused"
+  },
+  "sanitizers": {
+    "status": "passed",
+    "suites": 13,
+    "junit": "local/sanitized-v2.xml",
+    "receipt": "local/sanitized-v2-receipt.json",
+    "checks": "AddressSanitizer, UndefinedBehaviorSanitizer and LeakSanitizer; checks unchanged"
+  },
+  "hosted": {
+    "status_source": "SDK success independently observed during plugin publication; remaining terminal/current states relayed by parent, pending final receipt collection",
+    "sdk": {
+      "run": 40010131879,
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40010131879",
+      "head_sha": "5ea3fb7391a3e5df107754b5bba95492f19efd1b",
+      "status": "success"
+    },
+    "initial_desktop": {
+      "status": "failed",
+      "reason": "Single obsolete nested Counters view expectation in runtime-metrics-view",
+      "raw_log": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/hosted-desktop-failed.txt",
+      "other_failures_in_log": false
+    },
+    "desktop_followup": {
+      "run": 40011838412,
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40011838412",
+      "head_sha": "eb671331dcb665e1f97b66a2f628ff86571089fc",
+      "status": "success",
+      "unit_suites": 120,
+      "smoke_rows": 13
+    },
+    "azlocprov": {
+      "source_commit": "252bcf70f3dfd7a3fa6aa0d3efeb38bae6c61df4",
+      "run": 40011105375,
+      "url": "https://github.com/d00rsfan/BiglyBTC-plugin-azlocprov/actions/runs/40011105375",
+      "status": "success_parent_reported",
+      "prior_in_progress_receipt": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/azlocprov-public/publication/publication.json"
+    },
+    "final_source": {
+      "conclusion": "success",
+      "headSha": "fbda051338e08c66242e97494e533ad420a1de38",
+      "jobs": [
+        {
+          "completedAt": "2026-10-23T19:54:36Z",
+          "conclusion": "success",
+          "databaseId": 120619762170,
+          "name": "preview",
+          "startedAt": "2026-10-23T19:42:49Z",
+          "status": "completed",
+          "steps": [
+            {
+              "completedAt": "2026-10-23T19:42:52Z",
+              "conclusion": "success",
+              "name": "Set up job",
+              "number": 1,
+              "startedAt": "2026-10-23T19:42:50Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-23T19:42:53Z",
+              "conclusion": "success",
+              "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "number": 2,
+              "startedAt": "2026-10-23T19:42:52Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-23T19:44:10Z",
+              "conclusion": "success",
+              "name": "Install pinned compiler, libtorrent and Qt 6.12.0 SDK",
+              "number": 3,
+              "startedAt": "2026-10-23T19:42:53Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-23T19:52:41Z",
+              "conclusion": "success",
+              "name": "Configure and build the desktop preview",
+              "number": 4,
+              "startedAt": "2026-10-23T19:44:10Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-23T19:54:26Z",
+              "conclusion": "success",
+              "name": "Run offline unit tests",
+              "number": 5,
+              "startedAt": "2026-10-23T19:52:41Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-23T19:54:32Z",
+              "conclusion": "success",
+              "name": "Run actual offline preview smoke and capture classic view",
+              "number": 6,
+              "startedAt": "2026-10-23T19:54:26Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-23T19:54:34Z",
+              "conclusion": "success",
+              "name": "Preserve test, screenshot and dependency evidence",
+              "number": 7,
+              "startedAt": "2026-10-23T19:54:32Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-23T19:54:34Z",
+              "conclusion": "success",
+              "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+              "number": 14,
+              "startedAt": "2026-10-23T19:54:34Z",
+              "status": "completed"
+            },
+            {
+              "completedAt": "2026-10-23T19:54:34Z",
+              "conclusion": "success",
+              "name": "Complete job",
+              "number": 15,
+              "startedAt": "2026-10-23T19:54:34Z",
+              "status": "completed"
+            }
+          ],
+          "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40013558473/job/120619762170"
+        }
+      ],
+      "status": "completed",
+      "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40013558473"
+    }
+  },
+  "portable": {
+    "native_source": "fbda051338e08c66242e97494e533ad420a1de38",
+    "dist": "/home/yurii/Java/BiglyBTC/dist",
+    "rollback": "/home/yurii/Java/BiglyBTC/build/statistics-finish-20261023/publication/previous-dist",
+    "old_manifest_sha256": "7f17e98086f0445a900060415884890d6c73a9d96db0b8a11735c3cfb24ee3cd",
+    "manifest_sha256": "d7431f1cbdc1ad02e2150fd7bc95f85cb75e3044a20b3f19dd52d5fe751875f1",
+    "files": 112,
+    "captures": 27,
+    "system_installation": false,
+    "original_profile_or_process_access": false,
+    "smoke_rows": 13,
+    "actual_worker_reuse": "verification-v1; same exact c35f runtime; post-accessor actual worker additionally passed GCC and sanitizer suites"
+  },
+  "remaining": [
+    "Worker-owned Azureus service/router integration and its actual lifecycle tests are separate staged work, not qualification credited to these commits",
+    "Public Azureus routing, full DDB control trees, live auto-speed/ASN and original Java cache-manager semantics are not ported by these native measurements"
+  ],
+  "staged_only_references": [
+    "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/dht-service-binding/staging/app/owned_azureus_service.cpp",
+    "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/dht-service-binding/staging/tests/owned_azureus_service_tests.cpp",
+    "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/dht-router-provider/staging/services/azureus_router/router.cpp"
+  ],
+  "limitations": [
+    "The isolated application keeps trackers/public DHT disabled; opening Statistics does not activate networking",
+    "Country prefixes exclude restored carryover and unknown intervals; retired rows do not invent current rates or certified tails",
+    "Cache disk operation metrics are not Java cache-hit/capacity parity",
+    "No new Java equivalence or full Statistics completion claim",
+    "Failed/interrupted attempts remain referenced; no tests, builds, Git changes or native writes performed by this draft task"
+  ],
+  "references": {
+    "implementation-sources.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/implementation-sources.json",
+      "sha256": "e8029b37e2bfbcdb2661877edddd2bf2b0e86f1ec39d29f055d58624f293b390",
+      "bytes": 25616
+    },
+    "gcc-v4-receipt.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/gcc-v4-receipt.json",
+      "sha256": "d047acbe913784bb406dac29ef6affdccb706a55e2a9d62f782602e146b141e5",
+      "bytes": 4275
+    },
+    "gcc-v4.xml": {
+      "path": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/gcc-v4.xml",
+      "sha256": "81e2c707596d3ddbafef2889a7c5cb3b52b14a05c0eba701b196abd0c1b433c7",
+      "bytes": 36959
+    },
+    "gcc-v5-receipt.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/gcc-v5-receipt.json",
+      "sha256": "82d0c55790f51f2219996999973cded8159f73438528b625ea98a8992c137e5a",
+      "bytes": 2550
+    },
+    "gcc-v5.xml": {
+      "path": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/gcc-v5.xml",
+      "sha256": "dab61022691ff7f741bbdca638c34c8a36c7267355a0f4a8b527879602f9890c",
+      "bytes": 14281
+    },
+    "gcc-v7-receipt.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/gcc-v7-receipt.json",
+      "sha256": "f9582e9f2fcc1428374544db147355df07aa39fd235d5878d2e78cdc512fa112",
+      "bytes": 1888
+    },
+    "gcc-v7.xml": {
+      "path": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/gcc-v7.xml",
+      "sha256": "40aa2d0ed2786a3e442a4c501ec6f479206be1279b407fb259cde5a90856418a",
+      "bytes": 2945
+    },
+    "clang-final-receipt.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/clang-final-receipt.json",
+      "sha256": "1d2fba534d13a35f17d912c277bf00225c12003962e207ce88a595731f8c5829",
+      "bytes": 1214
+    },
+    "clang-final-build.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/clang-final-build.txt",
+      "sha256": "0dbbd1ad70ef70787bd41a6f2523e6a7cad97a33363ef9a56f787a8580cbfa56",
+      "bytes": 13268
+    },
+    "clang-final-tests-receipt.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/clang-final-tests-receipt.json",
+      "sha256": "6aac7eb3ff3fe2ebb1a225081ef6477c42131cc474940b8d5dae3fe0f28bd650",
+      "bytes": 1376
+    },
+    "clang-final-tests.xml": {
+      "path": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/clang-final-tests.xml",
+      "sha256": "88d663c992e7b89230f802c4a3ea1da1dc29f1bc1aa0c23960924a4fb45e9f5f",
+      "bytes": 14868
+    },
+    "hosted-desktop-failed.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/hosted-desktop-failed.txt",
+      "sha256": "257b2f49e9f1c04d9923d4fc76485e56ab0bcd8f1175307a999dfd996eb2346c",
+      "bytes": 51589
+    },
+    "azlocprov-public/publication/publication.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/statistics-finish-20261023/azlocprov-public/publication/publication.json",
+      "sha256": "13501727f210c845b255bc786ccd201955c42575cf21352fc1767d191b27e2cf",
+      "bytes": 1288
+    }
+  },
+  "next_owner_actions": [
+    "Bind actual sanitizer completion/test result",
+    "Collect and bind followup desktop result/artifact source and file map",
+    "Bind portable verification/promotion before claiming a shipped current dist",
+    "Keep owner/router adoption and tests separate from these established source facts"
+  ],
+  "implementation_patch": "engine peer classification uses exported handle.type(), preserving all sanitizer checks",
+  "runtime_accessor_commit": "fbda051338e08c66242e97494e533ad420a1de38"
+}

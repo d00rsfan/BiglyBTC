@@ -1,0 +1,101 @@
+{
+  "status": "PASS-source-only; no remaining blocking finding",
+  "reviewer": "error_oracle, independent of integration-test/Window/Bridge author; author of the separate Statistics page/DTO/unit tests",
+  "subject_sha256": {
+    "tests/statistics_integration_tests.cpp": "c9fb28db4fb2d4ad33945b74e0137144bea626f7b28d79c477943b3678c5bc33",
+    "tests/CMakeLists.txt": "75ec4b4caf6b1d13030166689307c08770adc79081fca351e3de2a9fc71c526e",
+    "ui/library_window.hpp": "6a1b36fddee2dc88330157c3521f0c07f1c5cf5b8d3b0c9a173d4a74f8dd7279",
+    "ui/library_window.cpp": "bd5d55056e1fbb3ee5228284c7f4dc7d3ff06ce2ab7abf292991a31819404909",
+    "app/session_bridge.hpp": "9c53a5a49420ff11037ac72496a5c7c9d83982dc10261fa510123e04a1a65175",
+    "app/session_bridge.cpp": "4bbdb23e54096d170bb38189960044647fe702ca791ac331b256a4972ee314b4",
+    "app/CMakeLists.txt": "cb78012dbd26ea33292c590e576ac569ee43ce9d3d716c5fabc14cd4b0850d6b",
+    "ui/CMakeLists.txt": "d63de5bc15b4e4ee8a2dd80f84e8020cb803af5a0e5121cc357f46d14bf01aab",
+    "adapters/CMakeLists.txt": "66bdf7920e59627442486abaa03ddbd6c0b756911da4fc949ab79c9ccf82eb1f",
+    "core/CMakeLists.txt": "008c58da8ee2340e084c4a6dbba0c1af5f33d644075ae78438579b38852a984e",
+    "ui/statistics_presentation.hpp": "57d027756285b3619187b4fe907cab8ce9624205043eef49e3dcb78ae0c09ef8",
+    "ui/statistics_page.hpp": "49ccac1562b9c1d0fb2aef4ba46bed1b9b16094682a133041f43b483b74c0e04",
+    "ui/statistics_page.cpp": "2eb00a7088a75f6a159ec3a9da68487db4199138180f38bc306c11c67d78f6cb",
+    "ui/library_model.cpp": "c934ccdf09240b30330545e08b2dd0499d5688092321a18e0686e849100769cf",
+    "adapters/statistics_view.hpp": "bfe21dc7989e315945fd51b35721904bcf9d52186a50007a9d6c09c322d4e125",
+    "adapters/statistics_view.cpp": "76f55675813481121b523e461d960ad315125151581ed66932bd0bfb3dc897a1",
+    "core/include/biglybtc/saved_statistics.hpp": "c3e1c4adee063466bae0034571b42c9a4c291c72687eebbc2dc2c33a2cd529c3",
+    "core/src/saved_statistics.cpp": "e6f4db1e06a993dbce1739a52f053dc9b0e201a89d1ba440100dfd081e355cd3"
+  },
+  "scope": "Complete integration test file, actual affected Window/Bridge queue and telemetry paths, and source/target/link/test registration. Related page/core/reader contracts read to check fixture expectations.",
+  "planned_counts": {
+    "behavior_methods": 16,
+    "expanded_behavior_rows": 18,
+    "qt_rows_with_init_cleanup": 20
+  },
+  "behavior_methods": [
+    "toolsShortcutReusesPageAndPreservesFavoriteLibraryView",
+    "opensBeforeSessionAndLoadsOnceSessionIsReady",
+    "closeReopenDuringReadRejectsOldPageAndOldPacket",
+    "rejectedStatisticsDrainsReentrantColumnReload",
+    "busyRefreshesCoalesceAndOldResultCannotSettleLatestRead",
+    "rejectedSavedServiceDrainsReentrantStatistics",
+    "columnReloadWaitsForStatisticsCompletion",
+    "realStatisticsWaitsForColumnSaveAndDoesNotRefreshLibrary",
+    "missingMalformedAndBackupReadNeverBlockLibrary",
+    "realRefreshAndReopenReadNewSavedCountersWithoutWrites",
+    "directBridgeBindsSessionAndHoldsBusyThroughResult",
+    "cancellationBeforeQueuedDeliveryDoesNotPublishOrRefresh",
+    "acceptedPayloadTargetsOnlyAndBoundedHistoryWithoutRetargetingSelection",
+    "modelReplacementDuringTelemetryDoesNotRecordObsoleteGeneration",
+    "deletingWindowInsideStatisticsDispatchIsSafe",
+    "deletingBridgeInsideStatisticsResultIsSafe"
+  ],
+  "findings_closed_before_final_review": [
+    {
+      "id": "SI1",
+      "severity": "compile-blocker",
+      "initial_source_sha256": "3333230c732d7053a38a4007889da7ac36b511778c399dceeb9270213ddd6e96",
+      "finding": "syntheticOwner lacked its closing function brace before wire, making wire a nested function definition.",
+      "resolution": "Root added the single missing closing brace. The final source has the two helpers as separate namespace functions."
+    },
+    {
+      "id": "SI2",
+      "severity": "test-strength",
+      "finding": "Both initial synthetic torrents were ineligible for Continue, so disabled-on-Statistics alone did not test page action gating.",
+      "resolution": "Alpha explicitly has canContinue=true; the row asserts enabled before Ctrl+5, disabled and no Ctrl+R dispatch in Statistics, then enabled again after Ctrl+1."
+    },
+    {
+      "id": "SI3",
+      "severity": "coverage",
+      "finding": "There was no direct same-page multiple-refresh coalescing regression.",
+      "resolution": "The added row queues three refreshes while the first read owns busy, rejects the old/intermediate results, dispatches only the latest pending request, and asserts two total reads and the latest value."
+    },
+    {
+      "id": "SI4",
+      "severity": "coverage",
+      "finding": "The busy close row called the action directly rather than exercising the Statistics child-focus shortcut.",
+      "resolution": "It now focuses Statistics tabs and sends actual Ctrl+W, then verifies close/reopen identity, no cancellation and stale-result isolation."
+    }
+  ],
+  "checks": {
+    "generated_inputs": "Every actual IO row uses a fresh QTemporaryDir profile containing generated empty downloads.config, tables.config and selected BiglyBT.statistics candidates. raw() is independently readable bounded bencoding with the13 correct field names/types. There is no original Java/profile/payload read or network operation in the fixtures.",
+    "synthetic_vs_actual": "Synthetic request owners explicitly use real pure projection DTOs, busy=true and a queued QObject-context callback. They test Window queues/navigation, not reader IO. Separate rows use actual SessionBridge, held lease and fixed-leaf reader with generated files. Neither is presented as original-manager parity.",
+    "navigation_and_identity": "Tools membership, actual Ctrl+5 from a focused filter, singleton reuse/Activity default, Ctrl+1 preservation of filter/width/selection/details, busy Ctrl+W close, deferred destruction, fresh reopen and old packet rejection are substantive checks.",
+    "queue_sequence": "Unowned/rejected Statistics and saved-services dispatches drain reentrant pending work. Column reload waits for Statistics; actual Statistics waits for a real column save. Multiple refreshes retain only latest pending identity. The assertions match actual active-token release and busy transitions.",
+    "worker_and_cancellation": "Real Bridge binds the published nonzero session, rejects invalid IDs and reentrant commands while delivering a result, and retains one library snapshot. Cancellation is deterministic before queued GUI delivery: the cancel connection runs in the same direct request activation after accepted dispatch, before queued result handling. Both early worker cancellation and queued-completion suppression lead to no published statistics packet or library revision.",
+    "telemetry": "Only LibraryModel-admitted generation/hash/rates produce payload samples. The row verifies stale/negative rejection,600-cap, another target resetting the series, and unchanged hidden torrent selection. A separate synchronous dataChanged replacement advances the actual model generation before recording; obsolete telemetry then produces no sample.",
+    "lifetime": "Window deletion occurs inside the actual request emission; Bridge deletion occurs inside actual result delivery. QPointers are used after deletion instead of dereferencing the reset owners. Deferred synthetic callbacks use the Window as QObject context; no deletion row relies on the synthetic helper being a general reentrant-safe completion implementation.",
+    "read_only_and_reopen": "Missing, invalid all and backup reads leave library opening/model/filter/selection available and preserve generated saved bytes. Real refresh and a fresh Bridge/Window cycle read externally changed generated counters. Table saving changes only its intended file and backup; statistics never gains invented recovery files.",
+    "cmake": "The target is inside BIGLYBTC_DESKTOP, has AUTOMOC, Qt6::Test, desktop host/profile dependencies, strict warnings/Werror,120-second CTest deadline, offscreen platform and unit/ui/statistics/config labels. It has no test syscall wrappers or production macros. New page/core/reader source registrations provide the referenced implementations."
+  },
+  "execution_credit": {
+    "target_imports": 0,
+    "compiler_or_preprocessor": 0,
+    "native_or_qt_tests": 0,
+    "Java": 0,
+    "fixture_or_network_execution": 0
+  },
+  "limitations": [
+    "Counts are source-planned rows, not execution results. Root owns build and CTest evidence.",
+    "The page, raw codec and fixed reader have separate unit tests; this integration file is not credited with exhaustively reproducing their entire cap/type/format corpus.",
+    "Current global/session rates, long-term history, physical durability, full original StatsView/plugin parity and performance are not established.",
+    "Actual tab-close-button mouse activation is not tested here; the busy Statistics path is covered by actual Ctrl+W and the same closePage implementation.",
+    "Synthetic library records in IO tests deliberately establish GUI preservation context and are not claimed to be worker-owned activated transfers."
+  ],
+  "subject_files_modified_by_reviewer": false
+}

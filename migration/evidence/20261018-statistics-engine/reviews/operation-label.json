@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "verdict": "PASS source-only additive review; no concrete blocker",
+  "scope": "Root-authored operation label lookup and one strengthened real-engine test assertion. Prior Bridge/Window and real-test reviews remain unchanged.",
+  "prior_reviews": {
+    "bridge_window": {
+      "path": "migration/evidence/20261018-statistics-engine/reviews/bridge-window.json",
+      "sha256": "21482a6ba9bf5d9b032ee6b5cde9ea54a779c796719f58f6f3b6c4339e251268"
+    },
+    "real_engine_tests": {
+      "path": "migration/evidence/20261018-statistics-engine/reviews/real-engine-tests.json",
+      "sha256": "795015a140c5d7184db1abab1e631761031006c47be934d1d99f02a3e40a9e2e"
+    }
+  },
+  "source_sha256": {
+    "app/session_bridge.cpp": {
+      "before": "1bf37191d2761ce153fb1689a03e081c5bef53b811ddcc7de475c7185ad1fd2f",
+      "after": "5858d71a4f3b1494d54250cf52edb116271f6fa84956a6f3d48fea22b909eea0"
+    },
+    "tests/engine_statistics_integration_tests.cpp": {
+      "before": "63035d9489e3d39abcd878f2d429c06b79e8aa6eea17088e44071b32eebddfc8",
+      "after": "51ea4c4e6634738342638080977a38b5ab1ffc232093c1c1098af70d4c84e060"
+    },
+    "tests/owned_engine_fixture.hpp": "799b00c13c45dfd9f8edc0e3e89deff616eb872497a67ced52935aca53330cfa"
+  },
+  "exact_delta_validation": {
+    "bridge_only_owned_snapshot_label_lookup_changed": true,
+    "test_only_single_added_name_comparison": true,
+    "prior_fixture_and_both_CMake_pins_unchanged": true,
+    "before_test_image": "Reconstructed by removing the exact single new assertion; its raw SHA equals the prior independent review pin.",
+    "capsule": "build/statistics-engine-20261018/operation-label-review"
+  },
+  "reasoning": [
+    "Host::accepts checks target revision and membership before the lookup. currentHashes contains only unique valid download hashes, so the first matching snapshot row cannot select an admitted duplicate identity.",
+    "lastSnapshot is worker-owned, immutable shared LibraryPresentation produced by the existing query. Its names already apply saved save_file/save_dir fallback, cache display-name precedence and bounded text projection. Reusing that row does not initialize an engine, parse a torrent, access the filesystem or borrow GUI state.",
+    "The old known map is populated from cache/details/completed-transfer discovery, so a valid uncached saved download could have a meaningful snapshot name and no known-map entry. The new lookup covers that real path without inventing a name.",
+    "The chosen QString is copied into the local packet then moved into the immutable Preparing copy; subsequent Observed/Ended copies preserve that same name. Operation/session/target allocation, callback lifetime, coalescing and terminal ordering are unchanged.",
+    "The fixture creates sample.bin or a two-file bundle using saved save_file and no active/cache.dat. The added exact comparison therefore checks the previously uncovered uncached label path in both real successful layouts, rather than relying on details/cache prewarming.",
+    "Removing only the single name assertion restores the previously independently reviewed test bytes. All ownership cleanup, partial-seed cancellation/deletion gates, second-operation zero counters, primitive/rate checks, packet sequence checks, payload identity, file preservation and strict deadlines remain intact."
+  ],
+  "coverage_counts": {
+    "test_cases_added": 0,
+    "new_comparison": 1,
+    "expanded_existing_rows_exercising_label": 2,
+    "expected_total_Qt_rows_unchanged": 12,
+    "reviewer_executed_rows": 0
+  },
+  "execution_note": "Parent reports the initial earlier-pin real-engine12Qt run passed. This review neither ran nor attributes that result to the changed source; root must rebuild/re-run the new label assertion.",
+  "limits": [
+    "No full original Java equality or app/global statistics credit.",
+    "No additional coverage claim for arbitrary cache localization/title mutation; snapshot name semantics are inherited unchanged from Host::query.",
+    "Reviewer-authored DTO/Page implementation is outside independent authorship scope."
+  ],
+  "executed": {
+    "builds": 0,
+    "tests": 0,
+    "apps": 0,
+    "network": 0,
+    "profiles": 0
+  },
+  "artifact_sha256": {
+    "after/app/session_bridge.cpp": "5858d71a4f3b1494d54250cf52edb116271f6fa84956a6f3d48fea22b909eea0",
+    "after/tests/engine_statistics_integration_tests.cpp": "51ea4c4e6634738342638080977a38b5ab1ffc232093c1c1098af70d4c84e060",
+    "before/app/session_bridge.cpp": "1bf37191d2761ce153fb1689a03e081c5bef53b811ddcc7de475c7185ad1fd2f",
+    "before/tests/engine_statistics_integration_tests.cpp": "63035d9489e3d39abcd878f2d429c06b79e8aa6eea17088e44071b32eebddfc8",
+    "engine_statistics_integration_tests.cpp.patch": "e387ea01fddfb5721322f06e8a792d84482964bb838226f51c420266a5532e0d",
+    "session_bridge.cpp.patch": "7600293482cb36223179fd6431eae15ebefe181c27d2a9415f7dee8a25a87099"
+  }
+}

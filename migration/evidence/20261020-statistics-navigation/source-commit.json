@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "source_commit": "f7d979801773934d481155019b18319b64beff96",
+  "native_parent": "42b45749abd481014486a33844520c5d670b534b",
+  "source_commit_parent": "ded34d2d4d0345b75d69320f98744236e7cb837a",
+  "native_parent_scope": "Previous qualified milestone baseline; source_commit_parent is the actual direct parent.",
+  "source_files_verified": 16,
+  "source_sha256": {
+    ".github/workflows/native-preview.yml": "e2ac37776599c9fee6531d8454ea74e871a2199c53bb85da936f8f4ae55e863f",
+    "preview/README.md": "4c96c5cfc33d8db9e708c72c94c7bfc3b3bc729fdbb85c76f769a0f351931683",
+    "preview/docs/statistics-navigation-contract.json": "ab117b572dcd913d17ab7f0e411cee0715b0a759b01a15e48d41d39041b9b46e",
+    "preview/native/packaging/preview_smoke.cpp": "d62514b8ec5fc21b5d2e3a148ff6a510367eabaade331530c2f4a797064fa6a4",
+    "preview/native/tests/CMakeLists.txt": "66a190c8067a29fb8b4493dc67a9cc22d180bd8357f2ee994a0656015e12ec3b",
+    "preview/native/tests/statistics_navigation_page_tests.cpp": "000d0818401369dd15d8e40db8a6b3336ecd1b5f12b7653377deb3f501ece76d",
+    "preview/native/tests/statistics_navigation_window_tests.cpp": "44e807d2eca7c5c1aac8c1b6fade4edcf5afe92975c4d63b7a369e65fab4839d",
+    "preview/native/ui/history_view.cpp": "e3917656108b069be2adae43346728dd6f84dcdb707bbc4e7511ee82e9bf3877",
+    "preview/native/ui/history_view.hpp": "82c3df480d314a5054f612cf4a7d5b3fafc2ba33d1327ce62c052f41cd4a02d1",
+    "preview/native/ui/history_week_view.cpp": "db10f35546c547226ce26c00569b5e286e2083a45ac4a7726358f2bf3907f2f9",
+    "preview/native/ui/history_week_view.hpp": "9781bf2cd11d21ca6dd6d25b28595baca5cbb88e884ac32359bdd26bd15783a7",
+    "preview/native/ui/library_window.cpp": "2b85d44913d6797c18bd601cf3e6bca4e7c5b418021b7682679b8f8cdaae1b72",
+    "preview/native/ui/library_window.hpp": "e4c09d49e2eac724bedc76324172093279ba7adfd13295708369d1d4de479be1",
+    "preview/native/ui/statistics_navigation.hpp": "c702b5f3d82fc5243b43fbacf8a3ffb0679e1950db4e5909d1c34da986e11ad5",
+    "preview/native/ui/statistics_page.cpp": "4b8c3039b77c2019b807c06be6dc9d33bb7f6bafb99c04cffabbf2b18898cae8",
+    "preview/native/ui/statistics_page.hpp": "54b50eb943dd2137f04a133aa6fabeb471ee804a14ecf96abd3c6bde1732713a"
+  },
+  "initial_source_attempt": "ded34d2d4d0345b75d69320f98744236e7cb837a",
+  "source_amendment": true
+}

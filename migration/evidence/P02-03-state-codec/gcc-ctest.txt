@@ -1,0 +1,28 @@
+Start testing: Oct 17 03:01 IDT
+----------------------------------------------------------
+4/5 Testing: state-java-interop
+4/5 Test: state-java-interop
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/../../migration/tools/state_interop.py" "--driver" "/tmp/biglybtc-native-gcc/tests/biglybtc-state-driver"
+Directory: /tmp/biglybtc-native-gcc/tests
+"state-java-interop" start time: Oct 17 03:01 IDT
+Output:
+----------------------------------------------------------
+PASS byte-identical Java gzip biglybt.config.gz
+PASS byte-identical Java gzip generated-1.torrent.gz
+PASS byte-identical Java gzip generated-2.torrent.gz
+PASS byte-identical Java gzip generated-3.torrent.gz
+PASS DEBUG::Sat Oct 17 03:01:50 IDT 2026  BC Provider 'BC_VUZE' initialised successfully (loaded from file:/tmp/biglybtc-oracle/classes/org/gudy/bouncycastle/jce/provider/BouncyCastleProvider.class)
+DEBUG::Sat Oct 17 03:01:51 IDT 2026  Not installing security manager - disabled by system property
+PASS Java reads edited gzip config and unchanged v1/v2/hybrid torrent hashes
+PASS byte-identical operational downloads.config
+PASS byte-identical operational active/cache.dat
+PASS byte-identical operational active/7B26D19F7DC2D2F9D9F897AD851B0AB6E0D58C6C.dat
+<end of output>
+Test time =  40.47 sec
+----------------------------------------------------------
+Test Passed.
+"state-java-interop" end time: Oct 17 03:01 IDT
+"state-java-interop" time elapsed: 00:00:40
+----------------------------------------------------------
+
+End testing: Oct 17 03:01 IDT

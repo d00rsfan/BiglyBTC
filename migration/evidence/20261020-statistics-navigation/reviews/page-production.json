@@ -1,0 +1,92 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "milestone": "P04-22",
+  "reviewer": "error_driver",
+  "independence": "Author of Window2 integration; independent of Codec Page7 implementation. No independent review credit assigned to own Window code.",
+  "status": "PASS: independent full Page-side production source and exact-delta review; root qualification pending",
+  "native_parent": "42b45749abd481014486a33844520c5d670b534b",
+  "private_parent": "bcee2bb8ccb671240c25d3f2b7716017ecc89d94",
+  "source_sha256": {
+    "preview/native/ui/statistics_navigation.hpp": "c702b5f3d82fc5243b43fbacf8a3ffb0679e1950db4e5909d1c34da986e11ad5",
+    "preview/native/ui/statistics_page.hpp": "54b50eb943dd2137f04a133aa6fabeb471ee804a14ecf96abd3c6bde1732713a",
+    "preview/native/ui/statistics_page.cpp": "4b8c3039b77c2019b807c06be6dc9d33bb7f6bafb99c04cffabbf2b18898cae8",
+    "preview/native/ui/history_view.hpp": "82c3df480d314a5054f612cf4a7d5b3fafc2ba33d1327ce62c052f41cd4a02d1",
+    "preview/native/ui/history_view.cpp": "e3917656108b069be2adae43346728dd6f84dcdb707bbc4e7511ee82e9bf3877",
+    "preview/native/ui/history_week_view.hpp": "9781bf2cd11d21ca6dd6d25b28595baca5cbb88e884ac32359bdd26bd15783a7",
+    "preview/native/ui/history_week_view.cpp": "db10f35546c547226ce26c00569b5e286e2083a45ac4a7726358f2bf3907f2f9"
+  },
+  "before_source_sha256": {
+    "preview/native/ui/statistics_page.hpp": "c605599c85e6d0a5e2b132cf2a7d74b9147265314c4a45bdf186b54c4b86b82a",
+    "preview/native/ui/statistics_page.cpp": "88cc88ad1729897b221c14c7c4c626d306fe8e6822b30b3fe9194e3a08d9a03c",
+    "preview/native/ui/history_view.hpp": "630d338494acd3a860ea690f0795bf0498a8b69aba399f657440f4f712ce1583",
+    "preview/native/ui/history_view.cpp": "5036248a34cd7194f18be72cf723dc02a681f650d41ecd9450a21a2105fa44e9",
+    "preview/native/ui/history_week_view.hpp": "6381e065155a545262772eef1f47bc1a0b778a6696f626927f2ed0112451adf6",
+    "preview/native/ui/history_week_view.cpp": "04868bfac614b27c9b8126f9b3aef4d5fbfe7c5e27140cadedd57578ee3b4173"
+  },
+  "source_capsule": {
+    "path": "migration/evidence/20261020-statistics-navigation/source-page/manifest.json",
+    "sha256": "d33799b0c65a320e83ecbdc114370c04a32c8956db170d13ce8ede87eb466df2",
+    "declared_artifacts_verified": 4,
+    "before_images_verified": 6,
+    "installed_and_staged_images_verified": 7,
+    "evidence_manifest_byte_identical": true
+  },
+  "independent_static_checks": {
+    "path": "build/statistics-navigation-20261020/page-production-independent/static-checks.json",
+    "sha256": "1494df6a8fd0e1700e498dd17f9a5d1f75f29e177f284f7b9185614419f1b5f0",
+    "unchanged_old_method_counts": {
+      "StatisticsPage": 30,
+      "HistoryView": 13,
+      "HistoryWeekView": 13
+    },
+    "unchanged_old_method_total": 56,
+    "changed_old_definitions": {
+      "StatisticsPage": [
+        "StatisticsPage"
+      ],
+      "HistoryView": [
+        "HistoryView"
+      ],
+      "HistoryWeekView": [
+        "HistoryWeekView"
+      ]
+    },
+    "new_definitions": {
+      "StatisticsPage": [
+        "navigation"
+      ],
+      "HistoryView": [],
+      "HistoryWeekView": [
+        "hourlyResolution"
+      ]
+    },
+    "unchanged_baseline_files_verified": 221,
+    "baseline_sha256": "09dceea5e790a2170e4893ce5f94d991a6f7f90fd1b9e9e09544b5c7b53bb54a"
+  },
+  "checks": [
+    "All seven complete installed files and full delta against the six author before images read. The only changed old member definitions are the three constructors. All56 old nonconstructor member definitions are exact, including lazy reads, session/request validation, current-generation and visibility guards, queued resolution rendering, immutable frame admission, model update boundaries, existing telemetry and engine handling.",
+    "StatisticsNavigation is an owned trivially-copyable aggregate with four integer choices, two HistoryDate values and one bool; no pointers/strings/widget/result/session/path or mutable aliases. Validator bounds all four indices0..1, requires valid daily date and a complete seven-date range. Calls remain bounded pure/noexcept; no file or clock read is introduced by validation/capture.",
+    "Page validates supplied aggregate once before using any choice. Invalid aggregate resets the entire optional, so all tab/date/resolution choices follow original defaults together, including current UTC date. Valid aggregate initializes both selected dates and the hourly preference even when those subviews will be hidden.",
+    "Direct HistoryView initial date must satisfy original core1970..9999 day domain; direct Week initial date must include a complete seven-day range. Otherwise each constructor uses its existing currentUTC default. Inputs are validated before unsigned-to-int Qt date conversions. Date bounds and all other widget/model initialization remain intact.",
+    "Week sets initial resolution before connecting the unchanged currentIndexChanged handler. Page initializes inner Activity/History/Transfers choices and finally top section before connecting its own currentChanged render handlers and before LibraryWindow wiring/show. Hidden constructor choices therefore do not dispatch stale intermediate requests or trigger the unsafe live combo-setter callback path. Existing context-bound queued handler remains exact for later user changes.",
+    "navigation() reads every nested control and both hidden dates plus hourlyResolution, validates the combined value and returns a scalar copy. No setter/write/notification/read request or retained packet is involved. Invalid live control shape yields no partial value.",
+    "Each new Page/HistoryView/Week instance retains default-null frame/requestedDate and initial zero session/request state. The constructors pass only scalar navigation and never old snapshots, totals, pending results, models or Activity payload samples. Existing Page engine-history rehydration remains the separate unchanged Window behavior.",
+    "Unchanged showEvent/requestedDate/session reset paths still determine the first selected History request and suppress duplicate show delivery. Saved totals and selected daily/week optional reads retain existing ownership/coalescing rules; this review does not execute those paths.",
+    "All221 root immutable behavior-map files and all221 author retained pins rehashed exact, including old test assertions, core/accounting, readers/worker, old source DTOs and both original Java fixture trees. No new Java execution/equality or original-profile/global history parity follows from scalar UI navigation."
+  ],
+  "blockers": [],
+  "scope_limits": [
+    "Source-only review; no compiler, Qt/native/Java/test/GUI/default-target execution, Git command/mutation or source edit performed during this independent review.",
+    "Actual initial selected-read count, close/reopen lifetime, pending reply fencing, callback deletion/reentry and all retained suites require root execution against these exact pins.",
+    "Navigation is deliberately per-Window and session-scoped; it is not configuration persistence, application restart restoration, original Java lastTab option equality or whole-client parity."
+  ],
+  "execution": {
+    "source_reads_hashes_lexical_definition_comparison_only": true,
+    "subject_execution": false,
+    "builds": false,
+    "git_commands_or_mutations": false,
+    "production_edits_during_review": false,
+    "original_profile_access": false
+  }
+}

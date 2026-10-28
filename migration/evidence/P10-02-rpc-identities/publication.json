@@ -1,0 +1,10 @@
+{
+  "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-xmwebui",
+  "public_commit": "50d32a08b7bb8822e6d9bbb234caf986c8da2d84",
+  "initial_commit": "f12a62becf9ab40615b1d661e5d0b38f42d39c35",
+  "local_review_commit": "56ededc615758cb58f5ba9b74d3cf0e2a42961f4",
+  "local_clone": "/tmp/biglybtc-public-rpc",
+  "files_verified_against_committed_blobs": 25,
+  "ci_enabled": false,
+  "scope": "Qt6.12 RPC wrapper/session and staged torrent identity libraries only; no HTTP listener, real methods, profile writes or binary/catalogue release"
+}

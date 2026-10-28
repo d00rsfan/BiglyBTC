@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "repository": "https://github.com/d00rsfan/BiglyBTC",
+  "source_commit": "d36dd2d1c92914c796e20115939e3c66e7627ba1",
+  "metadata_commit": "e53678361d8903f1e34b0a0c39623c78bd7dff7c",
+  "tag": "milestone-history-month-backend-20261020",
+  "tag_object": "32e777849dd2a2d29dd65175bff379f1438250d5",
+  "tag_target": "e53678361d8903f1e34b0a0c39623c78bd7dff7c",
+  "remote_identity_verified": true,
+  "source_files_verified": 9,
+  "qualification": "local-verification.json and hosted-verification.json",
+  "dist_manifest_sha256": "4f2839f0654531fcf8ecb0abaef11b01f87bef5aa13cdfb25944d48900d0ea35",
+  "original_processes_signaled": false,
+  "original_profile_access": false
+}

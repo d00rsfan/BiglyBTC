@@ -1,0 +1,126 @@
+{
+  "verdict": "PASS_SOURCE_REVIEW_NO_BLOCKING_FINDING",
+  "reviewer": "error_codec",
+  "independence": "Independent review covers error_driver-authored fixed-file reader and tests. Reviewer authored saved_statistics core and previously the new write helper; neither is given independent implementation credit by this report. Existing readFile and parser are integration context only.",
+  "subject_sha256": {
+    "adapters/statistics_view.hpp": "bfe21dc7989e315945fd51b35721904bcf9d52186a50007a9d6c09c322d4e125",
+    "adapters/statistics_view.cpp": "76f55675813481121b523e461d960ad315125151581ed66932bd0bfb3dc897a1",
+    "tests/statistics_view_tests.cpp": "3ac8f4f139fc0fdc1d5e606566af779556e5f31aae97205376bb15cb81de1e16"
+  },
+  "dependency_context_sha256": {
+    "adapters/profile.hpp": "0e7bb950e4d66e2fdf88b2733cb00d149e8b17ea805348300327af8418649831",
+    "adapters/profile.cpp": "38c0838d5aae673304ce9dade42cae18bf9607d54d4480949617dcc1c5dafbd9",
+    "adapters/file_io.hpp": "8d0fc78f8b6fd62932c8ff07fcbcd8203d6bac0ca2255d86bb849c4b1b413cb6",
+    "adapters/file_io.cpp": "a3fd490e8e49b8d066f27205ab25636ac51c5e0715bf5c25f169e877da17f89c",
+    "core/include/biglybtc/saved_statistics.hpp": "c3e1c4adee063466bae0034571b42c9a4c291c72687eebbc2dc2c33a2cd529c3",
+    "core/src/saved_statistics.cpp": "e6f4db1e06a993dbce1739a52f053dc9b0e201a89d1ba440100dfd081e355cd3",
+    "core/include/biglybtc/bencode.hpp": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+    "core/src/bencode.cpp": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08"
+  },
+  "source_contract_sha256": {
+    "migration/tasks/P04-15-classic-statistics.md": "46bcb26a1a43649749543445f4f37a5f01b7ca2c0511305b8055618d50a4ce44",
+    "migration/evidence/20261018-statistics-next/manifest.json": "92dbafa6e3275bab32cf74d4a514ec7dcd07f501f991e615b162d5de0f8f2f5f",
+    "migration/evidence/20261018-statistics-next/audit.json": "a4d5bece16ee013b6dd1b2b9b3f711732b8fe5fede7fbe861c6fb55dd9075ea3"
+  },
+  "checks": [
+    {
+      "id": "ST-R1",
+      "result": "PASS",
+      "subject": "Fixed filename/held lease",
+      "detail": "Only BiglyBT.statistics/.saving/.bak constants reach existing directory-fd readFile. No caller filename, lease reacquire, ConfigFile validator widening, manager, clock, path chase, scan or network."
+    },
+    {
+      "id": "ST-R2",
+      "result": "PASS",
+      "subject": "Candidate order and error priority",
+      "detail": "Initial Primary,Saving,Backup changes to Primary,Backup,Saving only after a present unprojectable Primary. First complete dictionary returns, including empty root/all and individual wrong-typed fields. Wrong-shaped all InvalidAll fails immediately; IO/unsafe/oversize read errors and core Memory are fatal. Parse syntax/node/depth/string Limit can try the agreed older candidate. anyPresent prevents malformed candidates from becoming Missing."
+    },
+    {
+      "id": "ST-R3",
+      "result": "PASS",
+      "subject": "Pure projection boundary",
+      "detail": "Every read uses ordinary core 4MiB maximum and the core bytes-only projection; no compatible192MiB limits or public edited tree ingress. Root/shape/quota/core errors are mapped according to the card. Result owns optional SavedStatistics and exact RecoverySource, with missing neither fabricated fields nor source."
+    },
+    {
+      "id": "ST-R4",
+      "result": "PASS",
+      "subject": "Cancellation and ownership",
+      "detail": "Stop precedes lease/file work, brackets each read and projection and is checked before final absence. Cancellation after read wins over read error/result, preventing fallback/publication. No asynchronous callbacks or borrowed raw buffers; snapshots outlive lease/input/profile. Caller must continue to hold and externally serialize the borrowed lease."
+    },
+    {
+      "id": "ST-R5",
+      "result": "PASS",
+      "subject": "Read-only behavior and inherited filesystem contract",
+      "detail": "No write, rename, unlink, mkdir or save call exists in production reader. readFile uses O_NOFOLLOW/O_NONBLOCK then regular-file validation and post-read size/mtime consistency. Different candidate reads are explicitly separate observations, not an atomic filesystem transaction. Existing atime effects are excluded from no-write test assertions."
+    },
+    {
+      "id": "ST-T1",
+      "result": "PASS",
+      "subject": "Independent generated expectations",
+      "detail": "Fixtures hardcode13 original keys/distinct signed64 values, absence/type cases, binary/unknown source bytes and complete-dictionary wins. They do not compute expectations using projection decisions or initialize original Java. Wrong all and wrong scalar expectations deliberately follow accepted bounded native policy rather than all Java recovery behavior."
+    },
+    {
+      "id": "ST-T2",
+      "result": "PASS",
+      "subject": "Recovery and bounds coverage",
+      "detail": "12 independent three-candidate cases plus six syntax/root/duplicate failures, six wrong-all cases, unsafe visited and ignored candidates, read-oversize fatality, parser quota recovery and exact ordinary limits. Exact nodes count root/key/list; depth fixture uses empty deepest list with root at0."
+    },
+    {
+      "id": "ST-T3",
+      "result": "PASS",
+      "subject": "Meaningful syscall instrumentation",
+      "detail": "Target-private GNU --wrap=read calls real read first, gates by actual fstat device/inode and positive consumed bytes, and only then requests stop or returns injected EIO. RAII disarms the thread-local gate. Pre-stop asserts zero read calls. No sleeps, synthetic projection outputs or global mutable production hooks."
+    },
+    {
+      "id": "ST-T4",
+      "result": "PASS",
+      "subject": "Fixture isolation, teardown and no-write checks",
+      "detail": "Every Area owns one fresh /tmp/biglybtc-statistics-view-tests-XXXXXX root and only generated exact paths. Cleanup releases lease first, unlinks tracked files and removes explicit directories in reverse order; no recursive/global cleanup or normal profile access. Symlinks/FIFOs are observed without following/blocking; all loaded/error paths compare raw bytes and device/inode/mode/uid/gid/nlink/size/mtime/ctime for candidates, lock, sentinel and directory metadata. Lifetime/replacement cases prove independent raw ownership."
+    }
+  ],
+  "planned_case_expansion": {
+    "missing": 1,
+    "full_fields": 1,
+    "empty_root_and_all": 2,
+    "wrong_scalar": 1,
+    "recovery_matrix": 12,
+    "malformed_primary": 6,
+    "wrong_all": 6,
+    "valid_primary_ignores_unsafe": 6,
+    "visited_unsafe": 9,
+    "preferred_backup": 1,
+    "oversize": 3,
+    "parser_limit_recovery": 2,
+    "inclusive_limits": 3,
+    "invalid_lease_and_prestop": 1,
+    "actual_read_cancellation": 3,
+    "actual_read_error": 1,
+    "owned_lifetime": 1,
+    "independent_replacement": 1,
+    "fixed_leaf_and_generic_validator": 1,
+    "total": 61
+  },
+  "limitations_not_blockers": [
+    "No compiler/test execution by this reviewer. The61 cases are source-counted planned observations, not passes.",
+    "No independently executed original Java/recovery/manager/full-client equality or saved-file freshness claim.",
+    "No deterministic allocation-failure, cancellation-during-projection, EINTR or concurrent edit test is claimed here; existing helper regressions and source checks remain separate evidence. Error text itself uses the inherited allocating storage::Error type, so this review does not promise no-throw behavior under persistent allocator exhaustion.",
+    "Tests require a target-private --wrap=read link option. Production helper ownership/permission/race semantics are inherited and not strengthened by this adapter.",
+    "No current/session/global protocol rates or historical statistics can be inferred from these saved-file facts."
+  ],
+  "input_preservation": {
+    "public_three_files_match_frozen_stage": true,
+    "declared_subjects_rechecked_before_report": true,
+    "subject_or_dependency_changes": 0
+  },
+  "execution": {
+    "kind": "Read-only source/hash inspection and new review JSON publication only",
+    "target_imports_or_selected_definitions": 0,
+    "compilers": 0,
+    "native_tests": 0,
+    "Java": 0,
+    "GUI": 0,
+    "profile_or_payload_IO": 0,
+    "network": 0,
+    "Git_or_index_mutation": 0
+  }
+}

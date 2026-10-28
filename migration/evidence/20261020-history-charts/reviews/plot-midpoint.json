@@ -1,0 +1,39 @@
+{
+  "schema": 1,
+  "date": "2026-10-20",
+  "milestone": "P04-20",
+  "reviewer": "error_driver",
+  "status": "PASS: additive HC-T1 candidate meaningfully proves line and gap; not installed or executed by reviewer",
+  "candidate_sha256": {
+    "build/history-charts-20261020/plot-midpoint-amendment/candidate.cpp": "e5adba2c672620be7cd6e505561470c944b2c083b79c8e7165caee680ec63f77",
+    "build/history-charts-20261020/plot-midpoint-amendment/candidate.patch": "38a51331ea6d816384bca48094b214b497db2d6cc03b1999660946a68e6dfe49",
+    "build/history-charts-20261020/plot-midpoint-amendment/before.cpp": "ff7b24f2c46639b6f008aab2e0c51e20d5626086e5253f6a56e7332cc063f836",
+    "build/history-charts-20261020/plot-midpoint-amendment/manifest.json": "e578f282a00fd47f99a31d3230b257a63113952641488a8122b6f28641bdb0d0"
+  },
+  "initial_review": {
+    "path": "migration/evidence/20261020-history-charts/reviews/plot.json",
+    "sha256": "23000c7901afbc774d3e9c14fc0d6675cb617b4b4482343bdccc887945c0defd",
+    "preserved_unchanged": true
+  },
+  "checks": [
+    "Complete candidate and patch read; removing exactly the eight-line addition recovers before.cpp byte-for-byte.",
+    "All prior assertions, test methods, data, thresholds and timing remain unchanged; no new Qt test row is introduced.",
+    "Probe point is centered between known buckets4 and5, away from the endpoint markers under this fixed760px fixture. It tests both series and cannot be satisfied by the old bucket5 marker alone.",
+    "Both source samples have the same fixed values/min-max, so continuous and gap rasters share coordinates; the negative probe truly measures the same region.",
+    "Radius4 spans a small segment interior and accommodates the existing dashed upload stroke phase without reaching either endpoint marker. Colored-positive in the continuous image proves a stroke, while exact0 in the4/6 gap image rules out bridging the unknown5 bucket.",
+    "Native widget test remains the initial ff7b24 source during current root builds; candidate acceptance is separate from installation and future actual qualification."
+  ],
+  "finding": "HC-T1 resolved by proposed additive test amendment; no production change required.",
+  "blockers": [],
+  "execution": {
+    "builds": false,
+    "test_or_raster_execution": false,
+    "target_import_or_selected_evaluation": false,
+    "native_source_edits": false,
+    "git_mutations": false
+  },
+  "remaining": [
+    "Root installs the exact candidate after current lanes finish and records a separate final-source append receipt.",
+    "Root reruns the strengthened source through appropriate strict qualification; this static review grants no runtime pass."
+  ]
+}

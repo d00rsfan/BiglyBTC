@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "reviewer": "root",
+  "status": "passed",
+  "scope": "Static independent review of seven-day UI, shared Statistics Page changes, tests and public contract; no execution credit",
+  "source_sha256": {
+    "preview/native/ui/history_week_presentation.hpp": "ba27ac7248f1690a14252eb82d4d35beb5e8a93544476de4010641a47527c7c8",
+    "preview/native/ui/history_week_view.hpp": "db72d49f4a17acfade71de5bd037ad366a6a98f87dc360363fa00bcac5618548",
+    "preview/native/ui/history_week_view.cpp": "5372057549dbaed1c7c3e2467f1d7b55842ac4229542f353f25911217819c673",
+    "preview/native/ui/statistics_page.hpp": "c605599c85e6d0a5e2b132cf2a7d74b9147265314c4a45bdf186b54c4b86b82a",
+    "preview/native/ui/statistics_page.cpp": "88cc88ad1729897b221c14c7c4c626d306fe8e6822b30b3fe9194e3a08d9a03c",
+    "preview/native/tests/history_week_view_ui_tests.cpp": "1ff152616d063648e7337b12985716639e2b6957ee30e4d805b8d95c5b767805",
+    "preview/docs/history-week-contract.json": "93b4ea56192ea68a4fc27e264dd1fb8332b361ed03bdd452bbbe00a312fa51bf"
+  },
+  "checks": [
+    "Fixed seven-by-eight read-only model keeps optional day/optional totals separate from zero and signed int64 values.",
+    "Input binding rejects invalid sessions, requests, ending dates and malformed batch metadata.",
+    "UTC default and complete supported date domain; seven-day stepping boundaries; Daily retained as first default tab.",
+    "Visible-only rendering uses revision and QPointer checks across direct event/signal reentry; immutable facts may cache while hidden or minimized.",
+    "Nested Page activation lazy and independent of saved totals; session reset guards Page deletion and delegates monotonic guards to both views.",
+    "New tests cover provenance, signed limits, no weekly aggregation, hidden/minimized/lifetime/reentrant events and deferred activation; passing claims await actual runs.",
+    "Public contract binds frozen Java corpus and distinguishes whole-period queries, nontransactional daily reads, strict native policies and open broader migration."
+  ],
+  "blockers": []
+}

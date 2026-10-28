@@ -1,0 +1,52 @@
+{
+  "schema": 1,
+  "subject": "prepare_ui_install.py",
+  "status": "PASS_SOURCE_ONLY",
+  "source_sha256": "e30b88cd92d655701a74426fa1aac0384f7e233b3d0ff34ed57a0bc14ea3a189",
+  "reviewer": "error_oracle",
+  "full_source_read": true,
+  "subject_import_or_execution": false,
+  "native_mutation": false,
+  "initial_findings_closed": [
+    {
+      "id": "UII1",
+      "finding": "Private workflow source hash/before-image checks previously occurred after native copies; now explicit exact source and original-target checks populate private_inputs before any mutation."
+    },
+    {
+      "id": "UII2",
+      "finding": "Evidence directory previously created before frozen-input/guard preflight; now mkdir follows every native/private input and inherited-guard check."
+    }
+  ],
+  "manifest_sha256": {
+    "source-ui": "c753ee6ee26b2a4135df912249d1fd4df301df38d294530f28d95d1a31941d91",
+    "source-app": "3de548257f4e945f14fecc4ea6f5528223269b1fceffbf437bcedd39a6c709a4",
+    "tests-ui": "a94075093edfb984c426a0215ca5d02d05c9754667f8d7c3c0a2be862b0fe25e",
+    "tests-legacy-amendment": "68564695a11d552bec0020e3d7248fbeca3b5b4f70b4c52f1865409451bb51c5",
+    "smoke-composition": "7c3fa9a12f5792ba3e07006a5a9fbe84f8fdb9b359a555df24b641d67ec9f087"
+  },
+  "verified_native_capsule_inputs": 22,
+  "private_template_inputs": 1,
+  "native_CMake_inputs": 2,
+  "qualification_source_files": 24,
+  "guard_formula": {
+    "P26_unchanged": 246,
+    "P26_source_files": 9,
+    "disjoint_union": 255,
+    "explicit_reviewed_changes_removed": 17,
+    "retained_unchanged": 238
+  },
+  "findings": [
+    "Actual five frozen manifest schemas and path conventions match loader, including tests.sources and composition.original_source_sha256; every selected frozen raw source hash independently checked.",
+    "Preconditions require P26 passing73/24/27 receipt, private pre-ref/raw/index flags plus actual private branch ref, native clean metadata tip and metadata SDK success. Final receipt files do not yet exist: this review grants no execution/completion credit.",
+    "Each changed existing native source has checked explicit before bytes; newly created six capsule sources must be absent. CMake source anchors are single-use, and all removed inherited paths match their explicit before images.",
+    "New three targets link UI/UI/desktop_host plus QtTest, AUTOMOC, strict Werror, 120s/offscreen. Existing test definitions stay intact. Source count24 derives from22 capsule inputs plus2 CMake files.",
+    "Evidence copies complete five capsules, contracts and independent UI/app reviews, original blobs/ranges and prior source audit with precise new component and hourly-versus-daily scope. The private workflow is validated before mutation and applied only from private_inputs.",
+    "Copy/install remains an ordinary reviewed local mutation sequence, not an atomic multi-file transaction. OSError after mutation begins requires retained-before-image recovery; no stronger rollback guarantee is claimed."
+  ],
+  "scope_limits": [
+    "Static read/hash/AST inspection only; no installer/preflight/build/Git/JVM/native/Qt execution.",
+    "Author of the new tests and legacy amendments: this is independent review of root installer/schema/ordering, not independent test-authorship credit.",
+    "P26 actual publication/private completion and runtime qualification remain future root gates."
+  ],
+  "blockers": []
+}

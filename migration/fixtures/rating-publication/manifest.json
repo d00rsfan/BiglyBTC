@@ -1,0 +1,170 @@
+{
+  "reference": {
+    "source_sha256": {
+      "azrating:com/aelitis/azureus/plugins/rating/updater/RatingsUpdater.java": "a5a74e1ccfdc81eefb3b30e8cd12a7c51f420d7e77936c9a2044e8853a299ba6",
+      "azrating:com/aelitis/azureus/plugins/rating/updater/CompletionListener.java": "d2dfe35f4c4f434085d83a2509d89c8027ab7e1306640314bf0c030bb10527b9",
+      "azrating:com/aelitis/azureus/plugins/rating/RatingPlugin.java": "451ff160d70e0885ef5dea837bd06da0c16563d089a6126fec79ca3277223f91",
+      "biglybt:core/src/com/biglybt/core/util/AsyncDispatcher.java": "6812e4f72536cf9457f02b1e205ea425abe7e094cf0220f6cfa5a52d467aba29",
+      "biglybt:core/src/com/biglybt/core/util/AERunnable.java": "0475b3c481ee8007cf5b77f9996d19f2e18b71a1155159fb673b12e2b295780a",
+      "biglybt:core/src/com/biglybt/core/util/RandomUtils.java": "770fd2f307dd2bf859d8d33ee38aaf990285399e2e41ca1b92e74e7790efeee8",
+      "biglybt:core/src/com/biglybt/core/util/SystemTime.java": "d57063696e281cc005e5b146a8f863a2ca52180696a98b473ff8566851f97353",
+      "biglybt:core/src/com/biglybt/core/util/SimpleTimer.java": "edcb355440e4a04d7383549524802bf043b77cd612ff05ff482aa378e07a6b20",
+      "biglybt:core/src/com/biglybt/core/util/Timer.java": "5de8bcb18e2f067879fca8116a99d6c4b6e292d7c1ab8856e8b25a97da194dc9",
+      "biglybt:core/src/com/biglybt/pif/download/Download.java": "3e6484279df6215385591a0f7f297920fe234fb9e9baf7a57a0ba09d86a2e74e",
+      "biglybt:core/src/com/biglybt/pifimpl/local/download/DownloadImpl.java": "83d6c7140d01f26b82389da036253d5dd52ba71867b9faf54b75ad132236de29"
+    },
+    "original_method_sha256": {
+      "downloadRemoved": "4d2e25cc47005b973d0c95482c1ff089d493b4c21a94d1d9f24e192a96ce4f40",
+      "addForPublish": "99691aff49c6f75e2edf041c4efa2146ffa035e695a3295c27687b5ed903a3e4"
+    },
+    "adapted_method_sha256": {
+      "downloadRemoved": "4d2e25cc47005b973d0c95482c1ff089d493b4c21a94d1d9f24e192a96ce4f40",
+      "addForPublish": "99691aff49c6f75e2edf041c4efa2146ffa035e695a3295c27687b5ed903a3e4"
+    },
+    "exact_fragment_sha256": {
+      "WRITE_DELAY": "338750f78d1ab1f4fee037089ec09a61d26d057c4b0fd848f86c4989f60069ff",
+      "COMPLETION_LISTENER": "c7ce6c43baa4d672226fc73a94e43b19093f218e7510979ca6220d658992b75b",
+      "DOWNLOAD_REMOVED": "aa89fe08ad3641efbee39cfc42a8394ae6eb4cdd5ad4d66505351010716771d6",
+      "ADD_FOR_PUBLISH": "2799298a8649349929655ae4c2401f1b86f2e02a47336407c6e6c252b5c6c77d"
+    },
+    "harness_sha256": "b7e4c10a6f20029c9848140c3e92dcfb6de518105222ec5867406554e540b20a",
+    "tool_inputs_sha256": {
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/rating-publication/v2/RatingPublicationOracle.java.in": "52314c3c25d2af7fe09c624e32973aa84bdfbde9cd2703ae95617134583dd833",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/rating-publication/v2/rating_publication_oracle.py": "c792a3071c79f8cfe0e11c63fa735c1bf729aead287f6b87456588d3463703ed",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/rating-publication/v2/rating_publication_plan.py": "39afd5b9b1143329a9d8552b9517df29edf56f51587cd10662a38f5f3e63d622",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/rating-publication/v2/source_tools.py": "b7318e74d618c2db2cab165c3a64b61f1736edf1470c89a53809623fdad5c955",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/rating-publication/v2/source-audit.json": "e8e53bbdf9fdf4042ef1a2ce29b5a15fc220912c9ec9a9ff7c80c3e352586b62",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/rating-publication/v2/baseline.json": "baf7d2b29877d7e79e479f503df9ee47f4a9542c17aa95f5e9f2789946b791fd",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/rating-publication/v2/plan.md": "71bec934e99b12eea80948bf42d7fea710202c520ab6411d1d233afbd949aafe",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/rating-publication/v2/planned/boundary-fault.txt": "922993b9b057ed8db34dc96f55f6eab611ee083bdcd77fa90bfbe16f7d521e14",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/rating-publication/v2/planned/callback-contract.txt": "bce9e7b44eb6a727024d515499b6297c69a5838afa6a8ae0c51a8b5ee730165f",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/rating-publication/v2/planned/completion-timer.txt": "7f77c7888559ce6994a079c19c26af9f090701c78b5403009f0b0e9963be8f89",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/rating-publication/v2/planned/plan.json": "c0720b12cb25f4b0e707d99a67ab0794298e5ded2af5aacc3b5987d989e43c24",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/rating-publication/v2/planned/queue-dispatch.txt": "827cc26aef93c0830e71a32fb3ca345bd061781f2b1c5394932ebfbc7a693f49",
+      "/home/yurii/Java/BiglyBT/build/recovery/active-drafts/rating-publication/v2/planned/removal-stop.txt": "cb273253417561b2f38254d13e26b6ed9958dfa278e2fe3545941026f29a1ab5",
+      "/home/yurii/Java/BiglyBT/migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+      "/home/yurii/Java/BiglyBT/migration/evidence/P00-04/reference-fence.json": "0c35e6bb2212e681ed4be8ecc65c50e35d7e191701bee59c9e139f2fbcb17302"
+    },
+    "helper_class_sha256": {
+      "RatingPublicationOracle$AERunnable.class": "9ed3cd37aad73293307022dbcc3e818a8bb08585f7db39dfc71d4a1a21f3d2f2",
+      "RatingPublicationOracle$AsyncDispatcher.class": "3a6bdde26489c9f511fa70ecc267f771fd5a804c8094cc6599eed9c1c5cf53e7",
+      "RatingPublicationOracle$BoundaryFailure.class": "7a84d272b4f45d364b82ed7c80f1e4260e604a8fdb4ee9b11e3782157bd82b6f",
+      "RatingPublicationOracle$CompletionListener.class": "ff02306c102dcfbbec3656e228197d88e90c262fac6632c4c8937702d48d9427",
+      "RatingPublicationOracle$Download.class": "841a0b7f942f166ce77e850a1978480195afb44840890fbb0cff98524b1fa8af",
+      "RatingPublicationOracle$RandomUtils.class": "7ee57fd2ad4331a93c158a68095a1bac10e7ee3a479c41471ef07c71f16afd72",
+      "RatingPublicationOracle$RatingResults.class": "75ed5e4d9039acdb39f3181ce9311e74422f4d644a3c7306bd1e486908b4f6ab",
+      "RatingPublicationOracle$RatingsUpdater$1$1$1.class": "ba40e7db832dd4688f37ff597881b623b7240a238f40470ca24e116f13a48db4",
+      "RatingPublicationOracle$RatingsUpdater$1$1.class": "1ba2d24bd14854b82bd4438815d7458723255efa2c905e217d8dfadf9866adb8",
+      "RatingPublicationOracle$RatingsUpdater$1.class": "fd6261e044868fa6dabd4ab76936d0e781cb70c046cdbd8ee2a6e544a493421a",
+      "RatingPublicationOracle$RatingsUpdater.class": "e4bc6f942c19575455a8ee4064ec07edb8c0abf91be149fadfc62094ba625b48",
+      "RatingPublicationOracle$SimpleTimer.class": "757899ee17cada5edc60eb7b66901ae0bcc01d4fb4295d905783d222e145da3b",
+      "RatingPublicationOracle$SystemTime.class": "bfb46abfef2d03cecb4242dfb2e71c0381b044163f95aae086afb383ef0680c6",
+      "RatingPublicationOracle$TimerEvent.class": "aaf9f2f034560b6a52ffc7a8de789b0802a59ef09b7e4ea92aac0437e45228ad",
+      "RatingPublicationOracle$TimerEventPerformer.class": "d89ebd5805ef697cf86cda7a1217e1a0705f10349798a97a0e5a8a569f324718",
+      "RatingPublicationOracle$Write.class": "ee6352b74367d6cc4f745072a0ef03d46073ac73f6b6ae63497bcbe8a0be13c9",
+      "RatingPublicationOracle.class": "c1c16e50d561441f3c90f2fb6088b2ce60b3a8fe605475d9bd021ceba4a1ab2c",
+      "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd"
+    },
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "-Xmx256m",
+      "-Dfile.encoding=UTF-8",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-rating-publication-oracle-6f_h3mjb",
+      "-Duser.home=/tmp/biglybtc-rating-publication-oracle-6f_h3mjb",
+      "-Dazureus.config.path=/tmp/biglybtc-rating-publication-oracle-6f_h3mjb/profile",
+      "-cp",
+      "/tmp/biglybtc-rating-publication-oracle-6f_h3mjb/classes",
+      "RatingPublicationOracle"
+    ],
+    "compile_command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "-J-XX:ActiveProcessorCount=2",
+      "-J-Xmx256m",
+      "--release",
+      "8",
+      "-encoding",
+      "UTF-8",
+      "-cp",
+      "/tmp/biglybtc-rating-publication-oracle-6f_h3mjb/classes",
+      "-d",
+      "/tmp/biglybtc-rating-publication-oracle-6f_h3mjb/classes",
+      "/tmp/biglybtc-rating-publication-oracle-6f_h3mjb/source/RatingPublicationOracle.java",
+      "/tmp/biglybtc-rating-publication-oracle-6f_h3mjb/source/ReferenceFence.java"
+    ],
+    "work": "/tmp/biglybtc-rating-publication-oracle-6f_h3mjb",
+    "persistent_work": "/home/yurii/Java/BiglyBT/build/recovery/generated-references/biglybtc-rating-publication-oracle-6f_h3mjb",
+    "core_on_runtime_classpath": false,
+    "existing_rating_helpers_on_runtime_classpath": false,
+    "upstream_azrating_commit": "1629340340d0bc391d9e582f9ee989a93d550581",
+    "upstream_core_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "scope": "Two complete original rating queue/removal bodies and contained callbacks; inert manual FIFO/timer/RNG/write boundary only. Not real dispatcher, timer, DDB or host activation."
+  },
+  "groups": {
+    "queue-dispatch": {
+      "observations": 362,
+      "scenarios": 22,
+      "command_errors": 0,
+      "files_sha256": {
+        "commands.txt": "827cc26aef93c0830e71a32fb3ca345bd061781f2b1c5394932ebfbc7a693f49",
+        "expected.txt": "af91bb143af32e2a002c840923d4e744903fa97083d4f738a5a3734effcaa3f8",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "af91bb143af32e2a002c840923d4e744903fa97083d4f738a5a3734effcaa3f8"
+      }
+    },
+    "completion-timer": {
+      "observations": 177,
+      "scenarios": 12,
+      "command_errors": 0,
+      "files_sha256": {
+        "commands.txt": "7f77c7888559ce6994a079c19c26af9f090701c78b5403009f0b0e9963be8f89",
+        "expected.txt": "127a92832c7cb4cf097884e55f1a2167307bcae9032f525600696a2b3c460a6e",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "127a92832c7cb4cf097884e55f1a2167307bcae9032f525600696a2b3c460a6e"
+      }
+    },
+    "removal-stop": {
+      "observations": 114,
+      "scenarios": 8,
+      "command_errors": 0,
+      "files_sha256": {
+        "commands.txt": "cb273253417561b2f38254d13e26b6ed9958dfa278e2fe3545941026f29a1ab5",
+        "expected.txt": "719879d27110221181775d1ede222e2d41bbded1cfb66d8ba2eb13f3afa08d92",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "719879d27110221181775d1ede222e2d41bbded1cfb66d8ba2eb13f3afa08d92"
+      }
+    },
+    "boundary-fault": {
+      "observations": 99,
+      "scenarios": 8,
+      "command_errors": 5,
+      "files_sha256": {
+        "commands.txt": "922993b9b057ed8db34dc96f55f6eab611ee083bdcd77fa90bfbe16f7d521e14",
+        "expected.txt": "767dc89a391d0907db41ac0fa5153c0ef39f48c1801430eadfea30839d094a9e",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "767dc89a391d0907db41ac0fa5153c0ef39f48c1801430eadfea30839d094a9e"
+      }
+    },
+    "callback-contract": {
+      "observations": 94,
+      "scenarios": 6,
+      "command_errors": 1,
+      "files_sha256": {
+        "commands.txt": "bce9e7b44eb6a727024d515499b6297c69a5838afa6a8ae0c51a8b5ee730165f",
+        "expected.txt": "a7445f7c8fea6e7dee435d3847331a95d0d85fa900c1ad6861403ee9d58e1ed6",
+        "source-stderr.txt": "e25cc1be7556c40132c07d721b51d8d28b2184910477910bd4ebc48dbc3a7189",
+        "source-stdout.txt": "a7445f7c8fea6e7dee435d3847331a95d0d85fa900c1ad6861403ee9d58e1ed6"
+      }
+    }
+  },
+  "native_comparison_performed": false,
+  "native_equality_credit": 0,
+  "plan_sha256": "c0720b12cb25f4b0e707d99a67ab0794298e5ded2af5aacc3b5987d989e43c24"
+}

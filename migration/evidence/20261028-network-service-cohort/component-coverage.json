@@ -1,0 +1,127 @@
+{
+  "schema_version": 1,
+  "status": "DRAFT_APPLY_ONLY_AFTER_COLLECTOR_GATES",
+  "qualified_source": "013fa60f59898392a33855ba148961090bacca14",
+  "provider_variant": {
+    "artifact_sha256": "3e7bb59a4b419bc8f5198dd8ebf4b1a6cd2c1b106a7f032759bdbf552faa1890",
+    "source_build_record_sha256": "d5fc5bc1b3188a1adda1e847df0ddeaa20e232a15536b4735a86f38175f32d20",
+    "runtime_manifest_sha256": "68c25c3ac2680513deef488f7f74dc0c6788b1802df43361ef00886c962bde58",
+    "same_image_export_count": 25,
+    "shipping_approved": false,
+    "existing_dependency_records_modified": false
+  },
+  "components": [
+    {
+      "id": "profile.config",
+      "native_commits": [
+        "5809ac611bb5d49b8de1c5eab0c7dca3ef8cbe9a",
+        "013fa60f59898392a33855ba148961090bacca14"
+      ],
+      "source_sha256": {
+        "preview/native/adapters/profile.hpp": "768b3e34cc9387ee581246edb2d9d06c5f1fb14410a0a01f1f3aa7ec02441bc0",
+        "preview/native/adapters/profile.cpp": "fbe43abafbed42e943fa7c383ad30397f7ed3c1b7559dee57926f40579332e70"
+      },
+      "partial_scope": "Retained token duplicates the actual held OFD and preserves original Java/POSIX exclusion until last close; named lock replacement refuses.",
+      "remaining": "No current Host activation or standalone public audit export claim.",
+      "baseline_and_state_change": false
+    },
+    {
+      "id": "plugins.mldht_identity",
+      "native_commits": [
+        "3b18849f06a6287c4da7d97c067480156c6ef796",
+        "5809ac611bb5d49b8de1c5eab0c7dca3ef8cbe9a",
+        "013fa60f59898392a33855ba148961090bacca14"
+      ],
+      "source_sha256": {
+        "preview/native/engine/mainline_dht.hpp": "d3da4dc53413554a68f1ed6b1678cda75311c1043d3078e1623462fd16ca0665",
+        "preview/native/engine/mainline_dht.cpp": "d32004b8b8ec5c44baaeed015515f099510b954a65a0288ebf6b99d6676bf340",
+        "preview/native/engine/mainline_original_identity.inc": "5f9f23a4e9a9dd0d116caca5f44c52aabe436afc38c542cf05ffa826784e63ea",
+        "preview/native/engine/persistent_runtime_guard.cpp": "147eb35d22e89b26193982158502527ac4b0574a199ed914d8dc4dd76b595ae8",
+        "preview/native/engine/persistent_runtime_guard.hpp": "1d44dcf76a6b161391ca6f0da1a5bb5c4e833651c6da7a92dd771355bedd7412"
+      },
+      "partial_scope": "Explicit optional original-compatible identity on one enabled actual DHT socket/family, installed-policy acknowledgement and exact same-image provider proof.",
+      "remaining": "Dual-family, Host activation, original-root writeback, public operation and whole plugin parity remain separate.",
+      "baseline_and_state_change": false
+    },
+    {
+      "id": "plugins.aznettor_control_channel",
+      "native_commits": [
+        "3b18849f06a6287c4da7d97c067480156c6ef796",
+        "5809ac611bb5d49b8de1c5eab0c7dca3ef8cbe9a",
+        "9d3058b8e3fd073a5c9102a17ce6104daa23c534",
+        "013fa60f59898392a33855ba148961090bacca14"
+      ],
+      "source_sha256": {
+        "preview/native/services/tor_control/channel.hpp": "f6687c4e9b0cbd96ce733eede6114b5b10ce9b5e5e7854d24a7de4f8a3b85ff5",
+        "preview/native/services/tor_control/channel.cpp": "d14762f4133f1a68c961b31706a012eda8a250bc7db46adf397efe67f06e668d",
+        "preview/native/services/tor_control/ownership.hpp": "d643f1a1d646439b85810a2a3e96c123b661797d9199103500dfc92f3c44a18f",
+        "preview/native/services/tor_control/ownership.cpp": "1c9f585833345a5075000795895b7bbe990692a220f5cff05edd5c46f845daa2",
+        "preview/native/services/tor_control/owned_child.hpp": "dece7b195c8ec40a352f1b1e655070f8c3e954fc3c6f3c3f76430d5f3ba32cf8",
+        "preview/native/services/tor_control/owned_child.cpp": "6a031682026e1fe3a7c13bc359970372e521a3712d209f182d82ce54ca0807a2"
+      },
+      "partial_scope": "Exported bounded control protocol plus explicitly supplied owned Tor child with SAFECOOKIE/TAKEOWNERSHIP, fresh private working directory, nofollow/held leaf proof and owned QProcess retirement. Generation-bound authenticated control.port republishing is accepted only through the current authenticated owned listener.",
+      "remaining": "No proxy/onion activation, external PID adoption, daemon discovery, ancestor watcher11e0 or whole P07 closure.",
+      "baseline_and_state_change": false
+    },
+    {
+      "id": "plugins.aznettor_control_ownership",
+      "native_commits": [
+        "3b18849f06a6287c4da7d97c067480156c6ef796",
+        "5809ac611bb5d49b8de1c5eab0c7dca3ef8cbe9a",
+        "9d3058b8e3fd073a5c9102a17ce6104daa23c534",
+        "013fa60f59898392a33855ba148961090bacca14"
+      ],
+      "source_sha256": {
+        "preview/native/services/tor_control/ownership.hpp": "d643f1a1d646439b85810a2a3e96c123b661797d9199103500dfc92f3c44a18f",
+        "preview/native/services/tor_control/ownership.cpp": "1c9f585833345a5075000795895b7bbe990692a220f5cff05edd5c46f845daa2",
+        "preview/native/services/tor_control/owned_child.hpp": "dece7b195c8ec40a352f1b1e655070f8c3e954fc3c6f3c3f76430d5f3ba32cf8",
+        "preview/native/services/tor_control/owned_child.cpp": "6a031682026e1fe3a7c13bc359970372e521a3712d209f182d82ce54ca0807a2"
+      },
+      "partial_scope": "Generated-peer and separate extracted actual Tor prove authentication, cancellation and joined cleanup for only the owned child. Generation-bound authenticated control.port republishing is accepted only through the current authenticated owned listener.",
+      "remaining": "Separate real Tor result required per lane; watcher11e0 remains unadopted/future, no process authority inferred from PID.",
+      "baseline_and_state_change": false
+    },
+    {
+      "id": "engine.mainline_queued_scrape",
+      "native_commits": [
+        "3b18849f06a6287c4da7d97c067480156c6ef796",
+        "5809ac611bb5d49b8de1c5eab0c7dca3ef8cbe9a",
+        "013fa60f59898392a33855ba148961090bacca14"
+      ],
+      "source_sha256": {
+        "preview/native/core/include/biglybtc/queue_observations.hpp": "640ac99dddf15376b4b5f4749f3fd9fb1ed33156b40308098277fe70f3c5e826",
+        "preview/native/core/src/queue_observations.cpp": "e90af08a1a2a346ff2e6e26f5e76ef9526368a6aaaf3edd37632f86e21153e82",
+        "preview/native/engine/mainline_owner.inc": "28ff46e353d966698c8ae9cba6eb01c991000792caea116e484266eb2d60cf1e",
+        "preview/native/engine/managed_tracker_responses.hpp": "8fb2ec4a46d324cabb5b552444033381b8d78056a93862001edaf485f032a37b",
+        "preview/native/engine/persistent_session.cpp": "503b5fa22770950dc76c5e1174abe1c3fba550df7050b0c2552398bdbcca0ab4",
+        "preview/native/engine/queued_mainline_scrape.hpp": "87e375035a0d05e44435b1adaa7e80acf41b7fedeae2f3ab791aa476be3037f9",
+        "preview/native/engine/queued_mainline_scrape.cpp": "2376dac105d6b924177afaed1b491c5bde6fae4378bda0d894921d273aa9a842",
+        "preview/native/engine/mainline_scrape_runtime.inc": "b941fa655f51653243ece7b6264bc0543cd8deda5bc3b93c6ad4fd14620e22dd",
+        "preview/native/services/mainline_scrape.hpp": "bcb17211d4c7c49bca87c3c1cad441c0b673bf5295dbfd4a6ea724a81f1a7037",
+        "preview/native/services/mainline_scrape.cpp": "80ca6c7ba63d5a6d4ba8426cdd031ae16eca8262b02c9287db7da726ae27420e",
+        "preview/native/engine/persistent_session.hpp": "030bc6c5f7deb81d427d4fb1ce02cc716b04a652fa3ab36615ea163707f243dc"
+      },
+      "partial_scope": "Exact original nonempty compact-item caller gate for BFse; actual one-URL retained response owner uses matched rich scrape/announce terminals and preserves failure counts/start, same admission/subject/policy authentication and original zero-result suppression. Passive diagnostic response getter copies current admission facts only; it never drives authority or RPCs.",
+      "remaining": "Original16/80 is getter projection with explicit thin predicates, not original tracker wire parser. Never-admitted numeric producer0f4f, multiple URL/tier selection, wider transports and public qualification remain open.",
+      "baseline_and_state_change": false
+    },
+    {
+      "id": "transport.azureus_storage_key_stats",
+      "native_commits": [
+        "3b18849f06a6287c4da7d97c067480156c6ef796",
+        "013fa60f59898392a33855ba148961090bacca14"
+      ],
+      "source_sha256": {
+        "preview/native/services/azureus_db_runtime/storage_diversification.hpp": "e97b8ec5b1cad8f46b3fbbd13efbbfbc96474b39cb040bca050f531f6f0f2a32",
+        "preview/native/services/azureus_db_runtime/storage_diversification.cpp": "ae704a38126a3232fde22b70266cfde0883798b7cea16248149ef4e35f26283b",
+        "preview/native/services/azureus_db_runtime/storage_stats.hpp": "347459ec33180a99abb33838f61e9cbe680c3d9b8fb5c8c81b8949605819d24e",
+        "preview/native/services/azureus_db_runtime/database.hpp": "6835f68c02677bf14e0f4f56bcf4c46281f24d713497cde4d2ffe531f4354440",
+        "preview/native/services/azureus_db_runtime/database.cpp": "52251f4ca7715060c18d8b7414edacb0648e23dc0b8a7e5b5d088909d1e00d4f"
+      },
+      "partial_scope": "Volatile bounded storage diversification integrated with real DB controls; original63 pure class/controlled-input projections and previous three native comparisons retained.",
+      "remaining": "No full original manager/persistence/random distribution equality, no P06 closure; old baselines and19 dependency records unchanged.",
+      "baseline_and_state_change": false
+    }
+  ],
+  "matrix_scope": "Fresh4/3/4 plus historical20/16/20 b0 origins; exact final013 source association, no whole-current rerun"
+}

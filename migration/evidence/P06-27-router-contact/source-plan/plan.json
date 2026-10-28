@@ -1,0 +1,232 @@
+{
+  "status": "commands-planned-source-unexecuted",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "planned_command_counts": {
+    "semantic": 5054,
+    "alias-policy": 144,
+    "getter-contract": 468,
+    "seeded-boundary": 1017,
+    "diagnostic": 304
+  },
+  "command_files_sha256": {
+    "semantic.txt": "211f46b54a3df001bf4644fc00ff5c2d47948aabbeb06f18fe8a9a59217d53d4",
+    "alias-policy.txt": "472f7f3d2f49c14e80a3717aad0761f6b27230bc0702eff7b58c062157e76d1e",
+    "getter-contract.txt": "1bcf785e2c114d3b336270ccf1d443dba220502107ed6ad78fef0a7470ac90df",
+    "seeded-boundary.txt": "3b28e6ca9d2a5dd0d163d1265c5c4ccab13a056a1938861e0bfe150e54a4f13d",
+    "diagnostic.txt": "da4b36c282bc32ee9c60108303a54aa58eb5e015e7c0b8901fd85e8b9646347a"
+  },
+  "collector_sha256": "6b161dacc0734b27a279e7534bd5f9f24f8c7b0f82d58a5c148ffc287841df67",
+  "original_contact_methods": [
+    {
+      "name": "DHTRouterContactImpl",
+      "name_line": 49,
+      "body_start_line": 53,
+      "body_end_line": 68,
+      "body_sha256": "18b5b36a602df891d79d6cdce8177c0b1914f97d11b757225d3356689ff6a14c",
+      "signature_fragment": "DHTRouterContactImpl(\n\t\tbyte[]\t\t\t\t\t\t\t_node_id,\n\t\tDHTRouterContactAttachment\t\t_attachment,\n\t\tboolean\t\t\t\t\t\t\t_known_to_be_alive )"
+    },
+    {
+      "name": "getID",
+      "name_line": 72,
+      "body_start_line": 73,
+      "body_end_line": 75,
+      "body_sha256": "b362ae5a2f971006b3fb61913d3e72e4074ebaf67f82d0a98464df69f8cf37d4",
+      "signature_fragment": "getID()"
+    },
+    {
+      "name": "getAttachment",
+      "name_line": 79,
+      "body_start_line": 80,
+      "body_end_line": 82,
+      "body_sha256": "15fc21d455e45b77e13b8b8d869e8a65e559e9353dfcf639c69fb4b3d65f3a86",
+      "signature_fragment": "getAttachment()"
+    },
+    {
+      "name": "setAttachment",
+      "name_line": 85,
+      "body_start_line": 87,
+      "body_end_line": 89,
+      "body_sha256": "3f86c0b396fb58ff4eb2a98a969b6dba09f5efd3111a9dd37065ff9791bd333c",
+      "signature_fragment": "setAttachment(\n\t\tDHTRouterContactAttachment\t_attachment )"
+    },
+    {
+      "name": "setAlive",
+      "name_line": 92,
+      "body_start_line": 93,
+      "body_end_line": 102,
+      "body_sha256": "60187072026d64a0e5842e202c379e70254f20b250882cffe7324746802327a7",
+      "signature_fragment": "setAlive()"
+    },
+    {
+      "name": "hasBeenAlive",
+      "name_line": 106,
+      "body_start_line": 107,
+      "body_end_line": 109,
+      "body_sha256": "f20d9a1e7a531e1deea7aacd52ff629e947575b0a57469c599fddf0a7053021e",
+      "signature_fragment": "hasBeenAlive()"
+    },
+    {
+      "name": "isAlive",
+      "name_line": 113,
+      "body_start_line": 114,
+      "body_end_line": 116,
+      "body_sha256": "86f190c055f564c88f789907af64cdbaca0ee7b0003a0f78f7a7611b9934426f",
+      "signature_fragment": "isAlive()"
+    },
+    {
+      "name": "isFailing",
+      "name_line": 120,
+      "body_start_line": 121,
+      "body_end_line": 123,
+      "body_sha256": "81063753f1dd0d4193d2952610be3d134b04be8095a80d001410d191bfa4f4ec",
+      "signature_fragment": "isFailing()"
+    },
+    {
+      "name": "getFailCount",
+      "name_line": 126,
+      "body_start_line": 127,
+      "body_end_line": 129,
+      "body_sha256": "4f8f1d0bf4e6f26d3050af9cc7e751b421f26e89a928061eda2bb1e5ded5c401",
+      "signature_fragment": "getFailCount()"
+    },
+    {
+      "name": "getTimeAlive",
+      "name_line": 133,
+      "body_start_line": 134,
+      "body_end_line": 141,
+      "body_sha256": "6d7283d9b2ed2e8f3958e221921ed695e9eba9843972ff442283d555508fa36f",
+      "signature_fragment": "getTimeAlive()"
+    },
+    {
+      "name": "setFailed",
+      "name_line": 144,
+      "body_start_line": 145,
+      "body_end_line": 154,
+      "body_sha256": "5a8000cf4fc14de07e2c1f6529b88806f83068df88ae1e4ea488e47f290f73cb",
+      "signature_fragment": "setFailed()"
+    },
+    {
+      "name": "hasFailed",
+      "name_line": 157,
+      "body_start_line": 158,
+      "body_end_line": 167,
+      "body_sha256": "38e7353fa9d439db26d8d3e5c53ecc83e1a621f9253f0f3661e1e2d75e3493d4",
+      "signature_fragment": "hasFailed()"
+    },
+    {
+      "name": "getFirstFailTime",
+      "name_line": 170,
+      "body_start_line": 171,
+      "body_end_line": 173,
+      "body_sha256": "d493564634a2f7d524d3b4f694fc50befa77fe9ccc0b6d7132d8b1d8196a2940",
+      "signature_fragment": "getFirstFailTime()"
+    },
+    {
+      "name": "getLastAliveTime",
+      "name_line": 176,
+      "body_start_line": 177,
+      "body_end_line": 179,
+      "body_sha256": "0fff1dbdf2b1d81e11772481b6c76483637b83830a59dd3d13223cc39b1ba9a8",
+      "signature_fragment": "getLastAliveTime()"
+    },
+    {
+      "name": "getFirstFailOrLastAliveTime",
+      "name_line": 182,
+      "body_start_line": 183,
+      "body_end_line": 185,
+      "body_sha256": "41edd59c991225191a586cc9ed74840bc5e5966450919de583717033952d220f",
+      "signature_fragment": "getFirstFailOrLastAliveTime()"
+    },
+    {
+      "name": "getFirstAliveTime",
+      "name_line": 188,
+      "body_start_line": 189,
+      "body_end_line": 191,
+      "body_sha256": "5c15556b5cf86250341a5aeb56eb9adbb665af8ed6a3cac09e9a89ea99637107",
+      "signature_fragment": "getFirstAliveTime()"
+    },
+    {
+      "name": "getLastAddedTime",
+      "name_line": 194,
+      "body_start_line": 195,
+      "body_end_line": 197,
+      "body_sha256": "f7cb2cdd9ec5b00ba96727fb217f4befefdc6202961e65adc82a0102aeee1183",
+      "signature_fragment": "getLastAddedTime()"
+    },
+    {
+      "name": "setLastAddedTime",
+      "name_line": 200,
+      "body_start_line": 202,
+      "body_end_line": 204,
+      "body_sha256": "8923d71a52ab801074387ffdd453a789a8faeb2e4ba10ca5c4969032679380ef",
+      "signature_fragment": "setLastAddedTime(\n\t\tlong\tl )"
+    },
+    {
+      "name": "setPingOutstanding",
+      "name_line": 207,
+      "body_start_line": 209,
+      "body_end_line": 211,
+      "body_sha256": "b85f663f757204d4788f6deb0c4c22ba7eeaa15c57a061f92385a3ff12fa01fd",
+      "signature_fragment": "setPingOutstanding(\n\t\tboolean\tb )"
+    },
+    {
+      "name": "getPingOutstanding",
+      "name_line": 214,
+      "body_start_line": 215,
+      "body_end_line": 217,
+      "body_sha256": "53c8a4c018b07d39699eb9370cb900f2cfb5b1f6275ab6186fb2270332228bc0",
+      "signature_fragment": "getPingOutstanding()"
+    },
+    {
+      "name": "getString",
+      "name_line": 221,
+      "body_start_line": 222,
+      "body_end_line": 226,
+      "body_sha256": "64dd53836b236c6e2a5cf61e0ee80ceb54c80df9e6fa2d038712a47109a9b4c0",
+      "signature_fragment": "getString()"
+    },
+    {
+      "name": "getString",
+      "name_line": 229,
+      "body_start_line": 231,
+      "body_end_line": 240,
+      "body_sha256": "46e2ce78d7e9cd0f20f6eb1554d242bbe266153e03125311353d5ae92df63d1b",
+      "signature_fragment": "getString(\n\t\tStringBuilder sb )"
+    },
+    {
+      "name": "isBucketEntry",
+      "name_line": 243,
+      "body_start_line": 243,
+      "body_end_line": 245,
+      "body_sha256": "190273f447ae0b4a35db16dec6a1fcbe023ba56d2b0ffc99a1c2b9fd6a55a1fe",
+      "signature_fragment": "isBucketEntry()"
+    },
+    {
+      "name": "setBucketEntry",
+      "name_line": 247,
+      "body_start_line": 247,
+      "body_end_line": 249,
+      "body_sha256": "6cf54e726924aa55bf463c8562d4f50da4426f1f2f9b991b5889bde293541c3f",
+      "signature_fragment": "setBucketEntry()"
+    },
+    {
+      "name": "isReplacement",
+      "name_line": 252,
+      "body_start_line": 252,
+      "body_end_line": 254,
+      "body_sha256": "445432ebbc662f275f54da739ee8ed78eb72c8b4749547bc6c699694bdbb5c0e",
+      "signature_fragment": "isReplacement()"
+    },
+    {
+      "name": "setReplacement",
+      "name_line": 256,
+      "body_start_line": 256,
+      "body_end_line": 258,
+      "body_sha256": "12823b47f78405dca89b3f44924da5d003c2c75a8e8a51f8e0ea2a80ba079499",
+      "signature_fragment": "setReplacement()"
+    }
+  ],
+  "coverage_note": "P/snapshot calls only no-effect ID/attachment/scalar/time/flag getters; explicit C/AL/F/HF/TA/SA/PO/LA/BU/RE/G/GB cover all26 original methods. Source alias/getter/diagnostic/seeded groups separate; no native equality allocation made.",
+  "native_code_or_comparison": false,
+  "Java_execution": false
+}

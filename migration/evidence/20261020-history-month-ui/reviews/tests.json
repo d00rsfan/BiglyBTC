@@ -1,0 +1,18 @@
+{
+  "status": "PASS independent root full three-file month UI regression review",
+  "source_sha256": {
+    "history_month_integration_tests.cpp": "2d0d35f5632d9c8d35f6546112a4a1deaea3f9d9aff93cff942852a8bdca8cd3",
+    "history_month_plot_tests.cpp": "af4c9a4b69a9e4d904b9c2c7ff10f25da3cd76cbced67f18edab16fd2016b6f4",
+    "history_month_view_ui_tests.cpp": "d7222a7155db8fb355e6f0e34392b0ed91729549df96ce1ba359153039d767a6"
+  },
+  "reviewer": "root",
+  "findings": [
+    "Read complete plot/page/worker sources including signed extremes, missing and empty distinction, all traffic field pairs, finite plot bounds, Copy and callback deletion.",
+    "Model/session/request/date binding and hidden/minimized rendering exercised; fixed thirty-day previous/next domain bounds and lazy tab reads explicit.",
+    "Real owned generated profiles exercise F5/reopen fresh bytes, no extra reads from traffic/keyboard/Copy and parser/unsafe-file failures without Library recovery.",
+    "Separately labelled deterministic Window owners exercise three-kind coalescing, totals priority, stale results, close/reopen, new session, rejected dispatch and direct deletion.",
+    "Three legacy amendments preserve every case/data-row/timeout and add valid new month scalar expectations; new invalid index is3."
+  ],
+  "blockers": [],
+  "execution_credit": false
+}

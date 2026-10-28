@@ -1,0 +1,257 @@
+{
+  "source_sha256": {
+    "migration/fixtures/azureus-headers/commands.txt": "e23acc5358f691c7b2d3e3d1650be41ed7d013c368000abe29209dc1d6551cda",
+    "migration/fixtures/azureus-headers/emitted.json": "130448c113a97af1344fecec176554bd4818aa1b8c331ee9b026d63b7de5f1de",
+    "migration/fixtures/azureus-headers/expected.txt": "884c394e2b5c50a6eb3d4053fb0fc53ed31a3574904598e56ac0cbe38ed1dec9",
+    "migration/fixtures/azureus-headers/manifest.json": "50083fb2fe1ca077b8d93efa8137b8925b132a78a27a2784320ea0e8da12bce8",
+    "migration/fixtures/java/ReferenceFence.java": "ee2c0200a2dfe240f7db4e4dad636b35d6a630561994d261e7182d74085b1933",
+    "migration/tools/azureus_headers_fixtures.py": "58ab8e376b5dcf0d1ea46bb06a4e67d9e7cba3810061e3968989bc00627c40fa",
+    "migration/tools/azureus_headers_matrix.py": "81ea5bf93d5267971662fcff2fb906241fab1e3979648f72ae8aed8de51b9657",
+    "migration/tools/azureus_headers_oracle.py": "70c333becbc3f88949f31f89cf29625572d4ac0c07cdba19c9bb1424112f5f02",
+    "migration/tools/azureus_headers_readback.py": "0a356718ca001a3a16ea4580157cbd6d403f1a094fedcaef4920c273e8572862",
+    "migration/tools/mldht_identity_oracle.py": "9775c25bc03d4b28c3444ca5633b0952234241adcbcf60f6a75676f5e163810e",
+    "migration/tools/oracle.py": "8eb1cc4758ba78b4679b05b553ed8f6b7c1c1abe1745b8b1f5357ae681f0710f",
+    "native/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "native/services/azureus_dht/CMakeLists.txt": "9461460fcde6d12d35039b2825694644e758cad30c2ecc95c92857859cb75c0a",
+    "native/services/azureus_dht/README.md": "8f075c4d7cd50d3a9f887bf80735d06d4663a057cbbbf31063002e6fd9c964f4",
+    "native/services/azureus_dht/header_bounds_test.cpp": "84390640d110f339c51cee508cadd8ef8c3b371215fdd64e164dac8710f81b3f",
+    "native/services/azureus_dht/header_driver.cpp": "875e961dd0867b6c5556a71a5f31ec666c14bf35042cf5f328f60492760a892b",
+    "native/services/azureus_dht/header_fixture_test.py": "62c852e740712872f7488830747b047b0408f054de0fe1b3d37bff8ba375b47e",
+    "native/services/azureus_dht/headers.cpp": "61c18255d3c73bb40ebfa137674fdb5b0339a863847b54d80f4fe58729891320",
+    "native/services/azureus_dht/headers.hpp": "55b5b843bac55236d2edab37bdd050a1a1802db6f0a56bed6f3515345b0f55cc"
+  },
+  "reference": {
+    "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "source_sha256": {
+      "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPPacketRequest.java": "0fa65b99098ad444f192c70a2f7c81feffcd40574abd6c22bfb396781809b26b",
+      "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPPacketReply.java": "d832002ac09b218982b876e38dcba99a3fc4685389fd56b3b9a4dcc86a8e7218",
+      "core/src/com/biglybt/net/udp/uc/PRUDPPacket.java": "258ec28c79ce7a4a9ba976cb476309ccde5ed656896b9116b1cb899aaaeb947c",
+      "core/src/com/biglybt/net/udp/uc/PRUDPPacketRequest.java": "104def38078f71131b29bd7e553a51b43a17682afe4f6ae4396bd9e3e4477d13",
+      "core/src/com/biglybt/net/udp/uc/PRUDPPacketReply.java": "e40e3af734b63fc37c5ef262e5b665c87ee2e52fd7e530b98ba812b53f86e33f",
+      "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPUtils.java": "d852f590ca0df5361061e598be2087787ea588201f23d2fb7f826cfd62d4694b",
+      "core/src/com/biglybt/core/dht/transport/udp/DHTTransportUDP.java": "cffec69e83c20fac92414189e39aece9c359911c18250a0ba82d45ef42401f0f",
+      "core/src/com/biglybt/core/dht/DHT.java": "0a56d60ddafdd35441e53ae3bcc3d9c4f9a674b3a118d5ab6fd6a6fc1543b0cf"
+    },
+    "method_sha256": {
+      "REQ_CREATE": "b8fcc1c1a5bb6ea0cccc51b2256202b06c4485d63645a0841ee8aa0d65859d07",
+      "REQ_READ": "74fbda4ac4143af81c25d6b5ebbc3ea3e188aaa6d5a44db585d94dce4921f9dc",
+      "REQ_WRITE": "de6183f2f07263a25faaefdfa835dd735f633295397f08962595c2785217a2c8",
+      "REP_CREATE": "1ccd6ca7dfe9770f51f251eb4a0a5a230ece35ea7977f31b299275c6239e9bf2",
+      "REP_READ": "dcfe96d9acf50202d3ce1215bad487a6b307791b896865a382716a690bbea55f",
+      "REP_WRITE": "90b7fd1f0971685f8c37ce35c79e16728ccc207252943f23091363d572814e24",
+      "REQ_BASE": "c54f77608cddcb1c0cc1a912db0633b1107c3b060bb2226f1adddd2adc39230a",
+      "REP_BASE": "ddbb7310381b0ba32da0538d216c4579c555c5bd838e29ecbb4294d89ff8b543",
+      "MINIMUM": "3e67eb85d0715c184ccd63a62879b5f917d3438b76df800e2d080e5e64212011",
+      "VERSION": "2ebe60c87aa5c3ff75ce97f167ecb1f24d9c9cdb5ea24226fc7eb7c023b27f45",
+      "WRITE_LENGTH": "83bc004bef0f80fa30033315b80869d53461aafa090e5029f22d569d47abb252",
+      "READ_LENGTH": "85fe541eb0a2712bbaf1b45a677a81f71295a100cc72b4ec1a3a2f9126a4d3ce",
+      "READ_BYTES": "12acc90bc7c36e5ba7492927cde1e2b20928244d8aec8863cd7c7f051faf3c6e",
+      "WRITE_BYTES": "899492a7e96ab0a5a72a6911a0550f115342ba701f5c92d0a5594ecaad64c44c",
+      "WRITE_BYTES_SLICE": "32c94eef3d6f43f9eec1005bccfa3ed8b7b536843774f4b2dc8c3b57cc18e9c2",
+      "WRITE_ADDRESS": "0ec0d4797823f8ee4b36e8068bce3f1d6c33eef59fa2bceac72d4e1b22853fe7",
+      "READ_ADDRESS": "f039831f5d07941f9919ac31c5a046fdc744be1a314d69ec1d16e1d8238a9b4e",
+      "CONSTANTS": "e1f7a703b4f26b0c1a6df8ee9a2b97b451cfacfa2c42aa9bd6df2e772fa19296",
+      "NETWORKS": "666035b3eff95b3ab9ecfd92e7f309e130de1f5cbd6473bd26313280653c198a"
+    },
+    "harness_sha256": "3d3c248801b0bb1828a4236dfb34288b95be2715a54d169a809c613b078731c5",
+    "helper_class_sha256": {
+      "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd",
+      "AzureusHeadersOracle.class": "821d32c86305c4b9b338f16d3296dbe12ae995a8b5c9c2bcba601d5c1e59c364",
+      "AzureusHeadersOracle$DHTUDPPacketReply.class": "67ae12450cebe1624e8039f46cb4433f2274a28752a3cb37b5c5ccd16d2f637e",
+      "AzureusHeadersOracle$DHTUDPPacketRequest.class": "d9b98128aac8a0256f30d30be6d45f3aa22f1ac0bfd791d24d5f2fc3ef9d74dc",
+      "AzureusHeadersOracle$PRUDPPacketReply.class": "29ab515e324b6f763e2767c75c98852b332ab3cec6499d73c325322df251b047",
+      "AzureusHeadersOracle$PRUDPPacketRequest.class": "318927349045d616a41bf580fd414dfd8b36a4b1c1bd70863b517ba8e20a2fcd",
+      "AzureusHeadersOracle$PRUDPPacket.class": "4888a6b161f6336e9e35164f1b682f3919c0ac299d4df22981627443e3c66ec7",
+      "AzureusHeadersOracle$DHTTransportUDPContactImpl.class": "f41d1e87bcfdc8a3a677027359a6cab33dd7c3b7e1c4984ba9b699eca9f889f4",
+      "AzureusHeadersOracle$DHTTransportContact.class": "64fc0a415db7bb4adb01d675f0d797ff1f3ddfcbd7e89ebbec35edefefa605ce",
+      "AzureusHeadersOracle$DHTUDPPacketNetworkHandler.class": "e5167732d2eed0bf35415213e5c0f24e711028f22d2eede43549db804fa981f6",
+      "AzureusHeadersOracle$DHTTransportUDPImpl.class": "940c6686c3883270b572827746f95c09611f4bb3b2d60d4f2fa1fe15a9d616da",
+      "AzureusHeadersOracle$DHTUDPUtils.class": "9ecd41b7eadcdfbf33b15edbc6f7ae9a974a00bdabe8dbc2cd58698c972722c9",
+      "AzureusHeadersOracle$DHTTransportException.class": "00f7098df32a68f054e4c825cd3e13d5361c5b338a5d7554be55b1a042fb047e",
+      "AzureusHeadersOracle$DHTTransportUDP.class": "0d392b3ece19c480cda6ee88383b2cbfefdfb3bb9743cfbb072dc97b7751d318",
+      "AzureusHeadersOracle$DHTTransportUDP$Helper.class": "a2b8f20718f765001cc086d826a332e25556d98522580dfbd73ea2b725003cfd",
+      "AzureusHeadersOracle$DHT.class": "914537819930896e125198fffd2f215195f8a8f3be91048ef3c9374e269e8696",
+      "AzureusHeadersOracle$SystemTime.class": "8b09611410bb6939d651d7b8981c4bc0a8a1d8931df4633504cd4855fbee6a23",
+      "AzureusHeadersOracle$Context.class": "48eb940eaa21cc81f5f108d8ea1d7035f1a75537449b1803f2d937654e4896b7"
+    },
+    "compile_command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+      "-J-XX:ActiveProcessorCount=2",
+      "--release",
+      "8",
+      "-encoding",
+      "UTF-8",
+      "-d",
+      "/tmp/biglybtc-azureus-headers-oracle-pok4auxk/classes",
+      "/tmp/biglybtc-azureus-headers-oracle-pok4auxk/source/AzureusHeadersOracle.java",
+      "/tmp/biglybtc-azureus-headers-oracle-pok4auxk/source/ReferenceFence.java"
+    ],
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+      "-XX:ActiveProcessorCount=2",
+      "-Xmx256m",
+      "-Djava.security.manager=ReferenceFence",
+      "-Dbiglybtc.test.root=/tmp/biglybtc-azureus-headers-oracle-pok4auxk",
+      "-Duser.home=/tmp/biglybtc-azureus-headers-oracle-pok4auxk",
+      "-Dazureus.config.path=/tmp/biglybtc-azureus-headers-oracle-pok4auxk/profile",
+      "-cp",
+      "/tmp/biglybtc-azureus-headers-oracle-pok4auxk/classes",
+      "AzureusHeadersOracle"
+    ],
+    "work": "/tmp/biglybtc-azureus-headers-oracle-pok4auxk",
+    "scope": "Exact original constructor/header/endpoint/length/minimum bodies, supplied transport/contact getters, clock, registered-network and transaction-ID context. PRUDP base serializers are exact original bodies; no normal manager/transport/config/plugin, sockets, DNS or profile startup."
+  },
+  "builds": [
+    {
+      "compiler": "gcc",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/services/azureus_dht",
+          "-B",
+          "/tmp/biglybtc-azureus-headers-qualified-gcc",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS="
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-azureus-headers-qualified-gcc",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-azureus-headers-qualified-gcc",
+          "--output-on-failure",
+          "-j1"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/azureus_headers_readback.py",
+          "--driver",
+          "/tmp/biglybtc-azureus-headers-qualified-gcc/biglybtc-azureus-header-driver",
+          "--reference",
+          "/tmp/biglybtc-azureus-headers-oracle-pok4auxk/reference.json",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-08-azureus-dht-headers/gcc-readback.json"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-azureus-headers-qualified-gcc/biglybtc-azureus-header-driver": "dae5c5451929320b778cd577659200829ca97649d1e3be96e011033216a02cf8",
+        "/tmp/biglybtc-azureus-headers-qualified-gcc/biglybtc-azureus-header-bounds-tests": "632620211a42da892d58a5ea391f0e784350cca4c658b85763580193100aa117",
+        "/tmp/biglybtc-azureus-headers-qualified-gcc/libbiglybtc_azureus_udp_headers.a": "8bc2f8b04d57a710c2f5e8988db9898ba3848b9d9463685bb628375a3da80f78"
+      }
+    },
+    {
+      "compiler": "clang",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/services/azureus_dht",
+          "-B",
+          "/tmp/biglybtc-azureus-headers-qualified-clang",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Release",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-azureus-headers-qualified-clang",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-azureus-headers-qualified-clang",
+          "--output-on-failure",
+          "-j1"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/azureus_headers_readback.py",
+          "--driver",
+          "/tmp/biglybtc-azureus-headers-qualified-clang/biglybtc-azureus-header-driver",
+          "--reference",
+          "/tmp/biglybtc-azureus-headers-oracle-pok4auxk/reference.json",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-08-azureus-dht-headers/clang-readback.json"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-azureus-headers-qualified-clang/biglybtc-azureus-header-driver": "3f007e0da349084a15fd6d0f236cc27858c8cc0cb25339f33116b743a5b20215",
+        "/tmp/biglybtc-azureus-headers-qualified-clang/biglybtc-azureus-header-bounds-tests": "f580649d4add29a8bb132aafc42ca3f1271486873de88e929ae17e34848dfc4f",
+        "/tmp/biglybtc-azureus-headers-qualified-clang/libbiglybtc_azureus_udp_headers.a": "e55e6972da37b0b834fd4407e5dd9febffe435d3c5acdde0d674394a0a503800"
+      }
+    },
+    {
+      "compiler": "asan",
+      "commands": [
+        [
+          "cmake",
+          "-S",
+          "/home/yurii/Java/BiglyBT/native/services/azureus_dht",
+          "-B",
+          "/tmp/biglybtc-azureus-headers-qualified-asan",
+          "-G",
+          "Ninja",
+          "-DCMAKE_CXX_COMPILER=/usr/lib/llvm-24/bin/clang++",
+          "-DCMAKE_BUILD_TYPE=Debug",
+          "-DCMAKE_CXX_FLAGS=--gcc-install-dir=/usr/lib/gcc/x86_64-linux-gnu/16 -fsanitize=address,undefined -fno-omit-frame-pointer"
+        ],
+        [
+          "nice",
+          "-n",
+          "5",
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-azureus-headers-qualified-asan",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-azureus-headers-qualified-asan",
+          "--output-on-failure",
+          "-j1"
+        ],
+        [
+          "python3",
+          "/home/yurii/Java/BiglyBT/migration/tools/azureus_headers_readback.py",
+          "--driver",
+          "/tmp/biglybtc-azureus-headers-qualified-asan/biglybtc-azureus-header-driver",
+          "--reference",
+          "/tmp/biglybtc-azureus-headers-oracle-pok4auxk/reference.json",
+          "--output",
+          "/home/yurii/Java/BiglyBT/migration/evidence/P06-08-azureus-dht-headers/asan-readback.json"
+        ]
+      ],
+      "binary_sha256": {
+        "/tmp/biglybtc-azureus-headers-qualified-asan/biglybtc-azureus-header-driver": "a379775bf1986757350ae4ee651cea1e2a1cc789b904f566b6185639dce68f8d",
+        "/tmp/biglybtc-azureus-headers-qualified-asan/biglybtc-azureus-header-bounds-tests": "e4d934a30a3056b454bb636b25b4c1ba70b5fc417409cf4f53c070b931ef59da",
+        "/tmp/biglybtc-azureus-headers-qualified-asan/libbiglybtc_azureus_udp_headers.a": "3405b49a31879d99267f1e0ed7fdbbea3bfd1f9f9a013456e6e586d217430700"
+      }
+    }
+  ],
+  "scope": "7379 original observations, native bounds/ownership,3292 source-built Java header readbacks per compiler. Supplied context around exact original bodies; no network/runtime/plugin/profile activation."
+}

@@ -1,0 +1,112 @@
+{
+  "schema": 1,
+  "status": "PASS_INDEPENDENT_BRIDGE_SOURCE_REVIEW_NO_EXECUTION",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "subject": "P04-12 SessionBridge optional classic column-layout command and profile-session publication",
+  "independence": "Reviewer authored separate new Qt regression tests from the frozen import proposal; did not author these Bridge changes. Review is source-only and transfers no test execution credit.",
+  "source_sha256": {
+    "preview/native/app/session_bridge.hpp": "5044106852db60f4b4d10873576acfa24b2107dba7f3c422976ecbdf9a5a4209",
+    "preview/native/app/session_bridge.cpp": "07daab4bffaf61e83fa603eaabf7bc048c3f8aa3ec123e84ed64f8b5a2fce00e",
+    "preview/native/ui/column_layout_presentation.hpp": "447fed4086b0551601d324f42dd5de39eda2eb51ee476ab63343a6d02238cf83",
+    "preview/native/adapters/column_layout_view.hpp": "eee7b06a10d3b8ebddbecad07c50344b09953d0273bfc0b0129692cc23cb96ea",
+    "preview/native/adapters/column_layout_view.cpp": "d4bc7a9008acd645de68a80c2ecfa8bed2e18deb1272e4c802c0e5e70396288e",
+    "preview/native/core/include/biglybtc/column_layout.hpp": "1d4d1c06efd71ef2ab026364eb15f434d4b8647d15f8ae31852052f63a996d39",
+    "preview/native/core/src/column_layout.cpp": "b55620a54cbdc243c8eccade512b19905d1efe819a4efb0db39bb435a325dd25",
+    "preview/native/core/include/biglybtc/bencode.hpp": "0cb19fdadf44986201db077690c8e904c94b98d99ee2714cc419fd9ffe9fdbdd",
+    "preview/native/core/src/bencode.cpp": "d2ce64e3520c74017c436acc415f19cd79d949247e7040a9ae638489d373cf08"
+  },
+  "preserved_before_after_patch": {
+    "directory": "build/navigation-20261018/column-layout-bridge-source",
+    "patch_sha256": "a216d2820797ffa018552af80e99c50233f9f6bfe8397c9452adfee135e247b8",
+    "author_source_review_sha256": "e58f0eb489f83020111da9d171393184a73550e626881f7605ff6d3b39b5bd21"
+  },
+  "unchanged_complete_definitions_independently_verified": {
+    "template<typename T> T take(": "129ef2182747bc1adf4ced27d608fd79ec21569d2c365eb810d18d508539b15e",
+    "void checkpoint(": "e7c16f1c788e61d0bc92f91549b72fa99a28519a1c2e9129110c4c2590b98112",
+    "QString text(": "1cf38efb8b7089ac9c1303bff3f14469f9038de23408876630c0f12bb8652a49",
+    "std::optional<ui::SavedPageSource> savedSource(": "741201d6b533cc6ca518f62d0c3fec27f764d2b4a6c96d68cacd7b7dc6026728",
+    "template<typename Snapshot, typename View>": "8878d5ff994de8a0431335ede91df9f787c60f71be60bac176434d686de4a0b8",
+    "core::TorrentHash identity(": "eb199f3ffcd87b37dd95fd93637cfc578207eb3b34fa03564d3d5ee3a0475ebb",
+    "  void accepts(": "63ee468b213d4c5a9801f301e38bd96d341928eca92a006d26c717a97fe654d0",
+    "  ui::Presentation query(": "8d773095fd4e0940008f4b81d4d6ad475417b8a44be7eed154cf232eb8c21bd1",
+    "SessionBridge::~SessionBridge()": "1a00024995bfd6c9bf6b9879326775cccdbe031cf687c93f238e097aadb910ed",
+    "void SessionBridge::failed(": "6aec7cef69ce649ad067148d924ab515c777ef0889774f4931ddeff007b167ad",
+    "bool SessionBridge::refresh()": "58c890bd59a709e9711d7670c0c8b05c5f0d97da9f79a554ecadeda098839a46",
+    "bool SessionBridge::savedServices(": "07830418fb07c281dd05225747082e33aad482b8a62e532f96205820147eba80",
+    "bool SessionBridge::details(": "bc51c6020a99c69b52eef9029f04360a9ed824195384f40c359b6acdb93899fb",
+    "void SessionBridge::progress(": "fe7bb45da6f2a9a9694a7cc022a4d31169519150428483d818f32824a878dee1",
+    "bool SessionBridge::continueDownload(": "9c677d899d490167ad05a00f02889e5de3873f3d8abd04f60a64ad7f8ce78182",
+    "void SessionBridge::cancel()": "c292ea0a8a44e19216166d5d7093cf3c725046dc14bac2996802ff06419940b4"
+  },
+  "blockers": [],
+  "findings": [
+    {
+      "id": "CLB-1",
+      "result": "pass",
+      "lines": "session_bridge.cpp:20-29,87-93,255-262",
+      "detail": "Process-global atomic identity reservation starts at0, returns only positive values and refuses exhaustion before unsigned wrap. Relaxed CAS supplies uniqueness without claiming unrelated synchronization. It runs after actual lease acquisition; the immutable Host identity belongs to worker-owned Host. Failed later construction may consume an ID but cannot reuse one."
+    },
+    {
+      "id": "CLB-2",
+      "result": "pass",
+      "lines": "session_bridge.cpp:182-200, session_bridge.hpp:51-56",
+      "detail": "ready reads Host only on the worker and captures immutable identity by value. The queued GUI callback sets publishedColumnLayoutSession_ once and emits session-ready before initial snapshot while still busy. QPointer is checked after new session signal and existing busy/snapshot signals. New command admission uses only GUI-owned publication, not cross-thread Host access; no profile replacement/session-reset API is invented."
+    },
+    {
+      "id": "CLB-3",
+      "result": "pass",
+      "lines": "session_bridge.cpp:302-325",
+      "detail": "Zero session/request, unpublished or wrong session reject synchronously before dispatch/read. Busy rejects through unchanged one-command dispatch. Worker validates captured identity against actual Host before borrowing its held lease for only readColumnLayoutsView. No new lease acquisition, library query, selected details, path scan, global config or file mutation occurs in this command."
+    },
+    {
+      "id": "CLB-4",
+      "result": "pass",
+      "lines": "session_bridge.cpp:308-326",
+      "detail": "Expected reader failures produce bounded fixed-context Failed presentation; Missing has no source/snapshot; successful read maps exact recovery source and owns const core snapshot. Cancellation is not converted to Failed data: checkpoints before/after reader and before queued publication throw to cancellation handling. The DTO is published through a shared_ptr<const packet> alias after mutable construction ends."
+    },
+    {
+      "id": "CLB-5",
+      "result": "pass",
+      "lines": "session_bridge.cpp:327-343",
+      "detail": "Queued callback owns immutable presentation plus stop token and rechecks stop/session before exposure. It keeps busy through the public result signal to reject direct reentry, checks QPointer after result deletion, then stops monitor/releases busy. Cancellation/session mismatch releases busy without a packet; post-busy cancellation message is guarded. No this access follows final busyChanged in successful completion."
+    },
+    {
+      "id": "CLB-6",
+      "result": "pass",
+      "lines": "session_bridge.cpp:212-254, session_bridge.hpp:42",
+      "detail": "Private recoverLibrarySnapshot defaults true for every old call site; false is passed only by the new optional column read. Its typed failure/cancellation posts failed() instead of query/revision-copy recovery, so optional read failure cannot synthesize a new library revision. Existing old typed recovery branches, queue rejection guard and completion monitor remain intact. All16 claimed complete old definitions independently match the preserved before-image."
+    },
+    {
+      "id": "CLB-7",
+      "result": "pass",
+      "lines": "session_bridge.cpp:155-180, session_bridge.hpp:56-57; core/src/executor.cpp:30-35",
+      "detail": "DTO metatype registration supports queued GUI delivery. Pre-wrapper queued cancellation remains covered by existing Ticket completion monitor and its post-busy QPointer guard. Worker stays last declared member and is destroyed/joined before Host/lease/tickets/mutex; destructor requests cancellation/shutdown while those objects remain alive. Queued callbacks use this as Qt context, so QObject destruction drops pending deliveries."
+    }
+  ],
+  "limits": [
+    "Public Bridge methods and destruction are used on the QObject GUI thread; new GUI fields are not a general cross-thread API.",
+    "Current Host is single-profile; no reset/replacement/reopen identity lifecycle is added. Positive request IDs are caller-owned and Bridge intentionally does not impose monotonic request filtering.",
+    "Cancellation checks are operation/read/queued-delivery boundaries, not interruption inside blocking filesystem reads or parsing. A cancellation after result emission does not retract an already observed packet.",
+    "Existing allocation/Qt queue behavior is not broadened into noexcept/OOM success guarantees. Unexpected allocation/standard exceptions follow existing failed(message) path.",
+    "This review does not establish effective Java layout/comparator/default parity, profile writer behavior or actual Qt deletion/thread timing. Parent execution owns those native test claims."
+  ],
+  "verification": {
+    "full_current_cpp_hpp_and_complete_patch_read": true,
+    "source_and_dependency_hashes_verified": 9,
+    "unchanged_definitions_checked": 16,
+    "compiled": false,
+    "native_or_Qt_tests_run": false,
+    "JVM_run": false,
+    "profiles_accessed": false,
+    "production_or_old_tests_edited": false
+  },
+  "new_test_sources_separate": {
+    "import_sha256": "6152485bbac7c6f61e07bc28adb0a29cb442bd889d5a9b9e35f453cb36abd47f",
+    "bridge_sha256": "e12946c979fdf1b491b5e7c2bb0baa2ffb7d9d22a0fc04057d72cefd3647788c",
+    "planned_Qt_rows": {
+      "import": 27,
+      "bridge": 16
+    },
+    "execution_credit": 0
+  }
+}

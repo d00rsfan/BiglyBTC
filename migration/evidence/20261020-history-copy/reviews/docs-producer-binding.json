@@ -1,0 +1,85 @@
+{
+  "schema": 1,
+  "milestone": "P04-25",
+  "status": "PASS source-only docs consumer/actual producer binding",
+  "reviewer_role": "Consumer author source-schema validation; not an independent review of own finalizer",
+  "consumer": {
+    "path": "build/history-copy-20261020/finalize_docs.py",
+    "sha256": "685fd093f52820b732f701fa06d08969fe574dc07efd96cdc7b1a5f14085a515",
+    "unchanged_since_freeze": true
+  },
+  "producers_sha256": {
+    "finalize_evidence.py": "6723701b7c45b90756d511ba3709150cff8630586cd2c13ef726d006f9887c64",
+    "verify_hosted.py": "2a4918d05036d994c460b856f5d9dbf6dfd8fd76f6caba923d39a4e68be1d85c",
+    "publish.py": "2e2663ee6f53fe6c51626f477dc7846666ec4bd0ddd9e41aea830f9d3ffaabeb",
+    "collect_metadata_ci.py": "b72dcc54cdf7634c157860ac230e2e8a247bce1f26712b66f63151f08b68481f",
+    "promote_dist.py": "c8b55c2c2269787b35ec77440c850b53dc0338c25fe2544d506b6d3956529266"
+  },
+  "actual_input_receipts_sha256": {
+    "baseline.json": "f89e1b7d8577c723eb035a6434998e05784c986b96ceb30bcff4434a814e4bcd",
+    "unchanged-behavior-baseline.json": "27ed4f45d5348ee1ce0cf0fa2fa560dd294c1f22ca1dbdebe9a0c0fc24ad4a44",
+    "qualification-inputs.json": "db5196d563c843335c380415e441e68e3a9d4c4d3bbbe5b628b2510ca8cbc1f4"
+  },
+  "actual_parent_context": {
+    "native_metadata": "05d460afde14e9a3510fe2f6d823422fe4edd642",
+    "private_checkpoint": "219a199f85732caa206dc723988d4345db9cc596",
+    "previous_source": "07219078bf3c5b3ed1cca7e701dcbdfeda8e687d",
+    "native_source_files": 6,
+    "unchanged_guards": 243,
+    "prior_guards_retained": 241,
+    "exact_additions": 2
+  },
+  "schema_checks": {
+    "fixed_local_metrics": 28,
+    "supported_hosted_fixed_metrics": 26,
+    "unsupported_hosted_java_fixture_and_query_fields_not_required": true,
+    "copy_rows_dynamic_positive_actual_local_hosted_counts_binding": true,
+    "retained_keyboard_rows": 17,
+    "local_hosted_scope_flags": {
+      "renderer_only": false,
+      "navigation_only": false,
+      "traffic_selection_only": false,
+      "keyboard_navigation_only": false,
+      "copy_selection_only": true,
+      "clipboard_mode_only": true,
+      "automatic_clipboard_writes": false,
+      "new_java_oracle_execution": false,
+      "new_java_equality_credit": false
+    },
+    "expected_suite_totals": {
+      "gcc": 71,
+      "clang": 22,
+      "sanitized": 25
+    },
+    "exact_prior_suite_totals": {
+      "gcc": 70,
+      "clang": 21,
+      "sanitized": 24
+    },
+    "new_unit_only": "saved-history-copy",
+    "offline_smoke_rows": 12,
+    "local_captures": 66,
+    "hosted_captures": 22,
+    "dist_files": 103,
+    "private_runtime_files": 82,
+    "new_rollback_namespace": "build/history-copy-20261020/previous-dist",
+    "full_RPATH_byte_identity_fields_match": true,
+    "source_SDK_and_metadata_SDK_fields_match_actual_producers": true
+  },
+  "document_checks": {
+    "all_current_task_STATE_RECOVERY_feature_registry_anchors_present_once": true,
+    "staged_unqualified_task_paragraph_will_be_explicitly_replaced": true,
+    "exactly_seven_document_transformations_before_only_write_loop": true,
+    "request_completed_milestones": 3,
+    "request_remaining": [],
+    "completed_request_heading_replaces_active_heading": true,
+    "broader_migration_and_first_ported_integrated_nulls_remain_open": true,
+    "no_future_self_or_native_commit_guess": true
+  },
+  "limitations": [
+    "This validates source schemas, actual frozen input maps/bytes and shared anchors, not successful execution of any P04-25 qualification, hosted workflow, promotion/publication or docs finalizer. Those receipts remain mandatory before writes.",
+    "Actual new Copy row count and actual final source/metadata/tag values remain runtime evidence inputs; no pass or value is extrapolated.",
+    "No operational module import, selected-body evaluation, compiler/Qt/native/JVM/Git invocation or native/shared-doc edit occurred."
+  ],
+  "blockers": []
+}

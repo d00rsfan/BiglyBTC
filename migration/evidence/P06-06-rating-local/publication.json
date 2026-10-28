@@ -1,0 +1,11 @@
+{
+  "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-azrating",
+  "public_commit": "019c13d8916285351441f69e14cf001116a9cb58",
+  "local_review_commit": "97921ec837ef7394d7be83ec5b39119eceea1453",
+  "verified_files": 25,
+  "provenance_sha256": "ac6b7ca078c4b2be0a6e711ab1925e9507ccaba4bb6f60f64f5f803626d6044f",
+  "ci_enabled": false,
+  "core_dependency_commit": "499466856913d4d7d5e73d2a143c845864c7b44d",
+  "local_clone": "/tmp/biglybtc-public-rating",
+  "scope": "Pure local rating load/store and ordered intentions; no actual attribute writer/queue/DDB/UI or binary release"
+}

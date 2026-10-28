@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "repositories": [
+    {
+      "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+      "path": "/home/yurii/Java/BiglyBTC"
+    },
+    {
+      "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-azlocprov.git",
+      "path": "/home/yurii/Java/BiglyBTC-plugin-azlocprov"
+    },
+    {
+      "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-mlDHT.git",
+      "path": "/home/yurii/Java/BiglyBTC-plugin-mlDHT"
+    },
+    {
+      "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-aznettor.git",
+      "path": "/home/yurii/Java/BiglyBTC-plugin-aznettor"
+    },
+    {
+      "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-azmsgsync.git",
+      "path": "/home/yurii/Java/BiglyBTC-plugin-azmsgsync"
+    },
+    {
+      "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-xmwebui.git",
+      "path": "/home/yurii/Java/BiglyBTC-plugin-xmwebui"
+    },
+    {
+      "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-azrating.git",
+      "path": "/home/yurii/Java/BiglyBTC-plugin-azrating"
+    },
+    {
+      "repository": "https://github.com/d00rsfan/BiglyBTC-plugin-SpeedScheduler.git",
+      "path": "/home/yurii/Java/BiglyBTC-plugin-SpeedScheduler"
+    },
+    {
+      "repository": "https://github.com/d00rsfan/BiglyBTC-plugins.git",
+      "path": "/home/yurii/Java/BiglyBTC-plugins"
+    }
+  ]
+}

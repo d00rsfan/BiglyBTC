@@ -1,0 +1,44 @@
+Start testing: Oct 17 05:55 IDT
+----------------------------------------------------------
+4/16 Testing: original-torrent-geometry
+4/16 Test: original-torrent-geometry
+Command: "/tmp/biglybtc-native-local-clang/tests/biglybtc-torrent-layout-tests"
+Directory: /tmp/biglybtc-native-local-clang/tests
+"original-torrent-geometry" start time: Oct 17 05:55 IDT
+Output:
+----------------------------------------------------------
+PASS original file geometry, UTF16 ordering, padding and malformed/overflow boundaries
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"original-torrent-geometry" end time: Oct 17 05:55 IDT
+"original-torrent-geometry" time elapsed: 00:00:00
+----------------------------------------------------------
+
+8/16 Testing: java-multifile-geometry
+8/16 Test: java-multifile-geometry
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/geometry_interop.py" "--driver" "/tmp/biglybtc-native-local-clang/tests/biglybtc-torrent-layout-tests"
+Directory: /tmp/biglybtc-native-local-clang/tests
+"java-multifile-geometry" start time: Oct 17 05:55 IDT
+Output:
+----------------------------------------------------------
+PASS original file geometry, UTF16 ordering, padding and malformed/overflow boundaries
+<end of output>
+Test time =   0.37 sec
+----------------------------------------------------------
+Test Passed.
+"java-multifile-geometry" end time: Oct 17 05:55 IDT
+"java-multifile-geometry" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 17 05:55 IDT
+
+integration =   0.37 sec*proc
+
+java =   0.37 sec*proc
+
+local-files =   0.37 sec*proc
+
+unit =   0.01 sec*proc
+

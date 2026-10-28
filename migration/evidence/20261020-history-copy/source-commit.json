@@ -1,0 +1,16 @@
+{
+  "schema": 1,
+  "source_commit": "ab0ff75d81300d8d3f9e930a9bf55491c1801400",
+  "native_parent": "05d460afde14e9a3510fe2f6d823422fe4edd642",
+  "source_commit_parent": "05d460afde14e9a3510fe2f6d823422fe4edd642",
+  "source_files_verified": 6,
+  "source_sha256": {
+    ".github/workflows/native-preview.yml": "7288b8c5db0d7ebaf78c460f64d330945b67d5e0822e7f85655b9758e873e856",
+    "preview/native/packaging/README.md": "24f4305a37e144412714d86d3b56b1901780edc9d21f1342f76f3d16b3dc0b63",
+    "preview/native/packaging/preview_smoke.cpp": "3705af5f74f03d29fd83cee72f4c5ee75c9020902da4e9ed33537ac6d16f75c9",
+    "preview/native/tests/CMakeLists.txt": "3cb556a21720f1045f2d01b319ff220310b05e467ecbdf9d6a77fdeb09c794cc",
+    "preview/native/tests/history_copy_tests.cpp": "52571378bef5d50b8abff98601843578052072b9f784804cb1a53c4d79567b5d",
+    "preview/native/ui/saved_history_plot.cpp": "dcaae6c5d9fc4df60e8b0475c67f5d8349d6ab0586b5c078715c6b3e7dc8229c"
+  },
+  "qualification_at_source_publication": "GCC71 and all three scaled smokes passed; Clang/sanitizer/hosted success remains mandatory for dist, metadata and tag."
+}

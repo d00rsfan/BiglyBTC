@@ -1,0 +1,964 @@
+{
+  "status": "read_only_source_audit_no_implementation_or_execution",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "upstream_repository": ".",
+  "method_hashing": "Exact UTF8 original body bytes from opening brace through matched close; lexical mask ignores comments/string/char braces only when locating endpoints. No method body adaptation. Top-level class methods only; overloads separately recorded.",
+  "files": {
+    "core/src/com/biglybt/core/dht/router/impl/DHTRouterContactImpl.java": {
+      "sha256": "a7bf00ba5d617aad5a5909e366d0f4703c6fa4b78a40bf8ce974ab87bd6d3db3",
+      "bytes": 4669,
+      "methods": [
+        {
+          "name": "DHTRouterContactImpl",
+          "name_line": 49,
+          "body_start_line": 53,
+          "body_end_line": 68,
+          "body_sha256": "18b5b36a602df891d79d6cdce8177c0b1914f97d11b757225d3356689ff6a14c",
+          "signature_fragment": "DHTRouterContactImpl(\n\t\tbyte[]\t\t\t\t\t\t\t_node_id,\n\t\tDHTRouterContactAttachment\t\t_attachment,\n\t\tboolean\t\t\t\t\t\t\t_known_to_be_alive )"
+        },
+        {
+          "name": "getID",
+          "name_line": 72,
+          "body_start_line": 73,
+          "body_end_line": 75,
+          "body_sha256": "b362ae5a2f971006b3fb61913d3e72e4074ebaf67f82d0a98464df69f8cf37d4",
+          "signature_fragment": "getID()"
+        },
+        {
+          "name": "getAttachment",
+          "name_line": 79,
+          "body_start_line": 80,
+          "body_end_line": 82,
+          "body_sha256": "15fc21d455e45b77e13b8b8d869e8a65e559e9353dfcf639c69fb4b3d65f3a86",
+          "signature_fragment": "getAttachment()"
+        },
+        {
+          "name": "setAttachment",
+          "name_line": 85,
+          "body_start_line": 87,
+          "body_end_line": 89,
+          "body_sha256": "3f86c0b396fb58ff4eb2a98a969b6dba09f5efd3111a9dd37065ff9791bd333c",
+          "signature_fragment": "setAttachment(\n\t\tDHTRouterContactAttachment\t_attachment )"
+        },
+        {
+          "name": "setAlive",
+          "name_line": 92,
+          "body_start_line": 93,
+          "body_end_line": 102,
+          "body_sha256": "60187072026d64a0e5842e202c379e70254f20b250882cffe7324746802327a7",
+          "signature_fragment": "setAlive()"
+        },
+        {
+          "name": "hasBeenAlive",
+          "name_line": 106,
+          "body_start_line": 107,
+          "body_end_line": 109,
+          "body_sha256": "f20d9a1e7a531e1deea7aacd52ff629e947575b0a57469c599fddf0a7053021e",
+          "signature_fragment": "hasBeenAlive()"
+        },
+        {
+          "name": "isAlive",
+          "name_line": 113,
+          "body_start_line": 114,
+          "body_end_line": 116,
+          "body_sha256": "86f190c055f564c88f789907af64cdbaca0ee7b0003a0f78f7a7611b9934426f",
+          "signature_fragment": "isAlive()"
+        },
+        {
+          "name": "isFailing",
+          "name_line": 120,
+          "body_start_line": 121,
+          "body_end_line": 123,
+          "body_sha256": "81063753f1dd0d4193d2952610be3d134b04be8095a80d001410d191bfa4f4ec",
+          "signature_fragment": "isFailing()"
+        },
+        {
+          "name": "getFailCount",
+          "name_line": 126,
+          "body_start_line": 127,
+          "body_end_line": 129,
+          "body_sha256": "4f8f1d0bf4e6f26d3050af9cc7e751b421f26e89a928061eda2bb1e5ded5c401",
+          "signature_fragment": "getFailCount()"
+        },
+        {
+          "name": "getTimeAlive",
+          "name_line": 133,
+          "body_start_line": 134,
+          "body_end_line": 141,
+          "body_sha256": "6d7283d9b2ed2e8f3958e221921ed695e9eba9843972ff442283d555508fa36f",
+          "signature_fragment": "getTimeAlive()"
+        },
+        {
+          "name": "setFailed",
+          "name_line": 144,
+          "body_start_line": 145,
+          "body_end_line": 154,
+          "body_sha256": "5a8000cf4fc14de07e2c1f6529b88806f83068df88ae1e4ea488e47f290f73cb",
+          "signature_fragment": "setFailed()"
+        },
+        {
+          "name": "hasFailed",
+          "name_line": 157,
+          "body_start_line": 158,
+          "body_end_line": 167,
+          "body_sha256": "38e7353fa9d439db26d8d3e5c53ecc83e1a621f9253f0f3661e1e2d75e3493d4",
+          "signature_fragment": "hasFailed()"
+        },
+        {
+          "name": "getFirstFailTime",
+          "name_line": 170,
+          "body_start_line": 171,
+          "body_end_line": 173,
+          "body_sha256": "d493564634a2f7d524d3b4f694fc50befa77fe9ccc0b6d7132d8b1d8196a2940",
+          "signature_fragment": "getFirstFailTime()"
+        },
+        {
+          "name": "getLastAliveTime",
+          "name_line": 176,
+          "body_start_line": 177,
+          "body_end_line": 179,
+          "body_sha256": "0fff1dbdf2b1d81e11772481b6c76483637b83830a59dd3d13223cc39b1ba9a8",
+          "signature_fragment": "getLastAliveTime()"
+        },
+        {
+          "name": "getFirstFailOrLastAliveTime",
+          "name_line": 182,
+          "body_start_line": 183,
+          "body_end_line": 185,
+          "body_sha256": "41edd59c991225191a586cc9ed74840bc5e5966450919de583717033952d220f",
+          "signature_fragment": "getFirstFailOrLastAliveTime()"
+        },
+        {
+          "name": "getFirstAliveTime",
+          "name_line": 188,
+          "body_start_line": 189,
+          "body_end_line": 191,
+          "body_sha256": "5c15556b5cf86250341a5aeb56eb9adbb665af8ed6a3cac09e9a89ea99637107",
+          "signature_fragment": "getFirstAliveTime()"
+        },
+        {
+          "name": "getLastAddedTime",
+          "name_line": 194,
+          "body_start_line": 195,
+          "body_end_line": 197,
+          "body_sha256": "f7cb2cdd9ec5b00ba96727fb217f4befefdc6202961e65adc82a0102aeee1183",
+          "signature_fragment": "getLastAddedTime()"
+        },
+        {
+          "name": "setLastAddedTime",
+          "name_line": 200,
+          "body_start_line": 202,
+          "body_end_line": 204,
+          "body_sha256": "8923d71a52ab801074387ffdd453a789a8faeb2e4ba10ca5c4969032679380ef",
+          "signature_fragment": "setLastAddedTime(\n\t\tlong\tl )"
+        },
+        {
+          "name": "setPingOutstanding",
+          "name_line": 207,
+          "body_start_line": 209,
+          "body_end_line": 211,
+          "body_sha256": "b85f663f757204d4788f6deb0c4c22ba7eeaa15c57a061f92385a3ff12fa01fd",
+          "signature_fragment": "setPingOutstanding(\n\t\tboolean\tb )"
+        },
+        {
+          "name": "getPingOutstanding",
+          "name_line": 214,
+          "body_start_line": 215,
+          "body_end_line": 217,
+          "body_sha256": "53c8a4c018b07d39699eb9370cb900f2cfb5b1f6275ab6186fb2270332228bc0",
+          "signature_fragment": "getPingOutstanding()"
+        },
+        {
+          "name": "getString",
+          "name_line": 221,
+          "body_start_line": 222,
+          "body_end_line": 226,
+          "body_sha256": "64dd53836b236c6e2a5cf61e0ee80ceb54c80df9e6fa2d038712a47109a9b4c0",
+          "signature_fragment": "getString()"
+        },
+        {
+          "name": "getString",
+          "name_line": 229,
+          "body_start_line": 231,
+          "body_end_line": 240,
+          "body_sha256": "46e2ce78d7e9cd0f20f6eb1554d242bbe266153e03125311353d5ae92df63d1b",
+          "signature_fragment": "getString(\n\t\tStringBuilder sb )"
+        },
+        {
+          "name": "isBucketEntry",
+          "name_line": 243,
+          "body_start_line": 243,
+          "body_end_line": 245,
+          "body_sha256": "190273f447ae0b4a35db16dec6a1fcbe023ba56d2b0ffc99a1c2b9fd6a55a1fe",
+          "signature_fragment": "isBucketEntry()"
+        },
+        {
+          "name": "setBucketEntry",
+          "name_line": 247,
+          "body_start_line": 247,
+          "body_end_line": 249,
+          "body_sha256": "6cf54e726924aa55bf463c8562d4f50da4426f1f2f9b991b5889bde293541c3f",
+          "signature_fragment": "setBucketEntry()"
+        },
+        {
+          "name": "isReplacement",
+          "name_line": 252,
+          "body_start_line": 252,
+          "body_end_line": 254,
+          "body_sha256": "445432ebbc662f275f54da739ee8ed78eb72c8b4749547bc6c699694bdbb5c0e",
+          "signature_fragment": "isReplacement()"
+        },
+        {
+          "name": "setReplacement",
+          "name_line": 256,
+          "body_start_line": 256,
+          "body_end_line": 258,
+          "body_sha256": "12823b47f78405dca89b3f44924da5d003c2c75a8e8a51f8e0ea2a80ba079499",
+          "signature_fragment": "setReplacement()"
+        }
+      ]
+    },
+    "core/src/com/biglybt/core/dht/router/DHTRouterContact.java": {
+      "sha256": "fdaca3e78a1137f32ce807cbc41c1c6d1c9a89741dec4f0f033be2a83c061dbe",
+      "bytes": 2046,
+      "methods": []
+    },
+    "core/src/com/biglybt/core/dht/router/DHTRouterContactAttachment.java": {
+      "sha256": "a1f3b265d2d372f4e89dc1670cbe4905ca1bdaace3021507e9c35bd24d8f6f70",
+      "bytes": 1160,
+      "methods": []
+    },
+    "core/src/com/biglybt/core/dht/router/DHTRouterContactWrapper.java": {
+      "sha256": "5f7e5e55bf0e3cc23a101bb64051a09e0d1aba101366e57bfaf47b1d16e06822",
+      "bytes": 1920,
+      "methods": [
+        {
+          "name": "DHTRouterContactWrapper",
+          "name_line": 32,
+          "body_start_line": 34,
+          "body_end_line": 36,
+          "body_sha256": "46d90f51456f6fb8192beabb3974ae1fed32fe4cd820301b3c7e1f08b4f9ce8a",
+          "signature_fragment": "DHTRouterContactWrapper(\n\t\tDHTRouterContact\t\t_contact )"
+        },
+        {
+          "name": "getDelegate",
+          "name_line": 39,
+          "body_start_line": 40,
+          "body_end_line": 42,
+          "body_sha256": "017e2e2f417ca792d11b4ee2d77375c74df13ea3e9603a4e1b5088c4b7898049",
+          "signature_fragment": "getDelegate()"
+        },
+        {
+          "name": "getID",
+          "name_line": 46,
+          "body_start_line": 47,
+          "body_end_line": 49,
+          "body_sha256": "fffdc6c0275e5634d5461cdd1f77d5dc53b4eb28a81201a02b2fc50a8a38809f",
+          "signature_fragment": "getID()"
+        },
+        {
+          "name": "getAttachment",
+          "name_line": 53,
+          "body_start_line": 54,
+          "body_end_line": 56,
+          "body_sha256": "e314c43b90de1fbbe2bd7bae9f0892f66599137f0d3a1bdc48bb508dcb240cf9",
+          "signature_fragment": "getAttachment()"
+        },
+        {
+          "name": "hasBeenAlive",
+          "name_line": 60,
+          "body_start_line": 61,
+          "body_end_line": 63,
+          "body_sha256": "501577a90f9f73a7c26fa44907beb77c0af3ccf819045c31e400a4bf475f46df",
+          "signature_fragment": "hasBeenAlive()"
+        },
+        {
+          "name": "isFailing",
+          "name_line": 67,
+          "body_start_line": 68,
+          "body_end_line": 70,
+          "body_sha256": "6ce200f671f251ec985e0e055913759a10b50ccffb74fb66bff0207312a151b3",
+          "signature_fragment": "isFailing()"
+        },
+        {
+          "name": "isAlive",
+          "name_line": 74,
+          "body_start_line": 75,
+          "body_end_line": 77,
+          "body_sha256": "bb2a6050b3e921da1f18849e022e6d26b39fc8584e7d6cc21a918fc9316cd3b9",
+          "signature_fragment": "isAlive()"
+        },
+        {
+          "name": "getTimeAlive",
+          "name_line": 81,
+          "body_start_line": 82,
+          "body_end_line": 84,
+          "body_sha256": "01af0d1bca1c76ec9b5490ec46ee4538c43f1d04aa9cac5b4423863b50407422",
+          "signature_fragment": "getTimeAlive()"
+        },
+        {
+          "name": "isBucketEntry",
+          "name_line": 95,
+          "body_start_line": 96,
+          "body_end_line": 98,
+          "body_sha256": "669669171151fe46645f9b9ceb3b8d2475bc15273b4bfd9f7b4d151df8367ef8",
+          "signature_fragment": "isBucketEntry()"
+        },
+        {
+          "name": "isReplacement",
+          "name_line": 102,
+          "body_start_line": 103,
+          "body_end_line": 105,
+          "body_sha256": "c9d4559b3e8c43f20bf4250ec62ae4440cad0f4963c404f50d6a33c5b104020a",
+          "signature_fragment": "isReplacement()"
+        }
+      ]
+    },
+    "core/src/com/biglybt/core/dht/router/impl/DHTRouterNodeImpl.java": {
+      "sha256": "aa41bc97d091672ceb4ad3b2a5502833b37c9a60141ea61043b452db3b9a9a73",
+      "bytes": 13100,
+      "methods": [
+        {
+          "name": "DHTRouterNodeImpl",
+          "name_line": 52,
+          "body_start_line": 57,
+          "body_end_line": 62,
+          "body_sha256": "7e296bbdc002767fd32f2649cdc49377d9ba60159ab15cf31a1c631a6a90d0b3",
+          "signature_fragment": "DHTRouterNodeImpl(\n\t\tDHTRouterImpl\t\t\t\t\t_router,\n\t\tint\t\t\t\t\t\t\t\t_depth,\n\t\tboolean\t\t\t\t\t\t\t_contains_router_node_id,\n\t\tList<DHTRouterContactImpl>\t\t_buckets )"
+        },
+        {
+          "name": "addNode",
+          "name_line": 126,
+          "body_start_line": 128,
+          "body_end_line": 136,
+          "body_sha256": "0334a5471178067c76e22e4fb86911c79849ee25657b443591429dc2a551b9d7",
+          "signature_fragment": "addNode(\n\t\tDHTRouterContactImpl\tnode )"
+        },
+        {
+          "name": "addReplacement",
+          "name_line": 139,
+          "body_start_line": 142,
+          "body_end_line": 258,
+          "body_sha256": "93dcce1c34b309b064551c09b385102d350d4234c4d17f69b50f55c9c5e58313",
+          "signature_fragment": "addReplacement(\n\t\tDHTRouterContactImpl\treplacement,\n\t\tint\t\t\t\t\t\tmax_rep_per_node )"
+        },
+        {
+          "name": "updateExistingNode",
+          "name_line": 261,
+          "body_start_line": 265,
+          "body_end_line": 335,
+          "body_sha256": "30b291fb06042595c483ffa3c8c0948e8ac34b6fd9b6323408c09e0f1bca9cef",
+          "signature_fragment": "updateExistingNode(\n\t\tbyte[]\t\t\t\t\t\tnode_id,\n\t\tDHTRouterContactAttachment\tattachment,\n\t\tboolean\t\t\t\t\t\tknown_to_be_alive )"
+        },
+        {
+          "name": "alive",
+          "name_line": 338,
+          "body_start_line": 340,
+          "body_end_line": 398,
+          "body_sha256": "47d7759f950d8c019b58e459a3a26b7998923049f899089e2607ea83d5385dc2",
+          "signature_fragment": "alive(\n\t\tDHTRouterContactImpl\tcontact )"
+        },
+        {
+          "name": "dead",
+          "name_line": 401,
+          "body_start_line": 404,
+          "body_end_line": 489,
+          "body_sha256": "a3343d99ed059503c0d4e00e4150cd440407f35d8d255d90ac8d94c521b0ec4f",
+          "signature_fragment": "dead(\n\t\tDHTRouterContactImpl\tcontact,\n\t\tboolean\t\t\t\t\tforce )"
+        },
+        {
+          "name": "requestNodeAdd",
+          "name_line": 492,
+          "body_start_line": 495,
+          "body_end_line": 517,
+          "body_sha256": "2201b8a2f5fc44c786ff9c5e6c241305a342c31f8f7ab2c3a8f522c97f4fa9c2",
+          "signature_fragment": "requestNodeAdd(\n\t\tDHTRouterContactImpl\tcontact,\n\t\tboolean\t\t\t\t\tdefinite_change )"
+        }
+      ]
+    },
+    "core/src/com/biglybt/core/dht/router/impl/DHTRouterImpl.java": {
+      "sha256": "50b1defa8637bd435960b628c37f7f02f31a2f52c2bb357e1b081eeae637dec4",
+      "bytes": 29950,
+      "methods": [
+        {
+          "name": "DHTRouterImpl",
+          "name_line": 95,
+          "body_start_line": 102,
+          "body_end_line": 172,
+          "body_sha256": "433cf8f903bdbb720dbabf22cb680f18300bc4dc4a28d8563ee7c0b0b3547297",
+          "signature_fragment": "DHTRouterImpl(\n\t\tint\t\t\t\t\t\t\t\t\t\t_K,\n\t\tint\t\t\t\t\t\t\t\t\t\t_B,\n\t\tint\t\t\t\t\t\t\t\t\t\t_max_rep_per_node,\n\t\tbyte[]\t\t\t\t\t\t\t\t\t_router_node_id,\n\t\tDHTRouterContactAttachment\t\t\t\t_attachment,\n\t\tDHTLogger\t\t\t\t\t\t\t\t_logger )"
+        },
+        {
+          "name": "notifyAdded",
+          "name_line": 174,
+          "body_start_line": 174,
+          "body_end_line": 183,
+          "body_sha256": "b014d94384b0f14b0e8edd7ffde2956258dbc2c7f940922d926bf87345f6a9b4",
+          "signature_fragment": "notifyAdded(DHTRouterContact contact)"
+        },
+        {
+          "name": "notifyRemoved",
+          "name_line": 185,
+          "body_start_line": 185,
+          "body_end_line": 194,
+          "body_sha256": "7a3e7403800d74df946746b5277cd3aa0a85c6d9424074051c7fd79f1738b583",
+          "signature_fragment": "notifyRemoved(DHTRouterContact contact)"
+        },
+        {
+          "name": "notifyLocationChanged",
+          "name_line": 196,
+          "body_start_line": 196,
+          "body_end_line": 205,
+          "body_sha256": "d983205a3d2c0371a5a962434df3e8cffae28371e011f6e2fceea3163863adb3",
+          "signature_fragment": "notifyLocationChanged(DHTRouterContact contact)"
+        },
+        {
+          "name": "notifyNowAlive",
+          "name_line": 207,
+          "body_start_line": 207,
+          "body_end_line": 216,
+          "body_sha256": "202ca859c644240e05c970508a43dd00ec92f18b29b89d2406db72f172dfe726",
+          "signature_fragment": "notifyNowAlive(DHTRouterContact contact)"
+        },
+        {
+          "name": "notifyNowFailing",
+          "name_line": 218,
+          "body_start_line": 218,
+          "body_end_line": 227,
+          "body_sha256": "5f15df39d6c92f1cbaad0f9b3ee070723bc42d3f10426c904086f719cc7da97d",
+          "signature_fragment": "notifyNowFailing(DHTRouterContact contact)"
+        },
+        {
+          "name": "contactKnown",
+          "name_line": 327,
+          "body_start_line": 331,
+          "body_end_line": 351,
+          "body_sha256": "c99ff68e0502693827b4f64f66c86994ac855882605b39b32ac9f4b6eb713b8e",
+          "signature_fragment": "contactKnown(\n\t\tbyte[]\t\t\t\t\t\tnode_id,\n\t\tDHTRouterContactAttachment\tattachment,\n\t\tboolean\t\t\t\t\t\tforce )"
+        },
+        {
+          "name": "contactAlive",
+          "name_line": 355,
+          "body_start_line": 358,
+          "body_end_line": 360,
+          "body_sha256": "61c096f1f8a1506c0371d9340116f96436cee19ff75d1794e6c0d5c353bece3e",
+          "signature_fragment": "contactAlive(\n\t\tbyte[]\t\t\t\t\t\tnode_id,\n\t\tDHTRouterContactAttachment\tattachment )"
+        },
+        {
+          "name": "contactDead",
+          "name_line": 374,
+          "body_start_line": 377,
+          "body_end_line": 435,
+          "body_sha256": "0e10e22de4152021c7b66dbe2c791f88f1901def11eb2f3475b851f9985f300a",
+          "signature_fragment": "contactDead(\n\t\tbyte[]\t\t\t\t\t\tnode_id,\n\t\tboolean\t\t\t\t\t\tforce )"
+        },
+        {
+          "name": "contactDeadSupport",
+          "name_line": 438,
+          "body_start_line": 442,
+          "body_end_line": 457,
+          "body_sha256": "9703467b09fc697ebe4946750834030a31dfa526bec54544e0fe119c390e6817",
+          "signature_fragment": "contactDeadSupport(\n\t\tDHTRouterNodeImpl\t\tnode,\n\t\tDHTRouterContactImpl\tcontact,\n\t\tboolean\t\t\t\t\tforce )"
+        },
+        {
+          "name": "addContact",
+          "name_line": 467,
+          "body_start_line": 471,
+          "body_end_line": 524,
+          "body_sha256": "b73a0929f74db80ce2b83487611245bd50bd6472e52949b22f88c4087dcf303b",
+          "signature_fragment": "addContact(\n\t\tbyte[]\t\t\t\t\t\tnode_id,\n\t\tDHTRouterContactAttachment\tattachment,\n\t\tboolean\t\t\t\t\t\tknown_to_be_alive )"
+        },
+        {
+          "name": "addContactSupport",
+          "name_line": 527,
+          "body_start_line": 531,
+          "body_end_line": 717,
+          "body_sha256": "ed90cc98b1e7b93eb71865fff51b5615c19b228627bec1d0211c3e59a781fa4c",
+          "signature_fragment": "addContactSupport(\n\t\tbyte[]\t\t\t\t\t\tnode_id,\n\t\tDHTRouterContactAttachment\tattachment,\n\t\tboolean\t\t\t\t\t\tknown_to_be_alive )"
+        },
+        {
+          "name": "findClosestContacts",
+          "name_line": 721,
+          "body_start_line": 725,
+          "body_end_line": 741,
+          "body_sha256": "f45d505232b74f2893b17e68fb5f42cbfb214eaffcad5c0b28e4508d880e29db",
+          "signature_fragment": "findClosestContacts(\n\t\tbyte[]\t\tnode_id,\n\t\tint\t\t\tnum_to_return,\n\t\tboolean\t\tlive_only )"
+        },
+        {
+          "name": "findClosestContacts",
+          "name_line": 744,
+          "body_start_line": 751,
+          "body_end_line": 796,
+          "body_sha256": "76616202b5fb37ae52ec09f1dc6b8a09ac027f840b920d259267f3fd5ba8b0e0",
+          "signature_fragment": "findClosestContacts(\n\t\tbyte[]\t\t\t\t\tnode_id,\n\t\tint\t\t\t\t\t\tnum_to_return,\n\t\tint\t\t\t\t\t\tdepth,\n\t\tDHTRouterNodeImpl\t\tcurrent_node,\n\t\tboolean\t\t\t\t\tlive_only,\n\t\tList\t\t\t\t\tres )"
+        },
+        {
+          "name": "findContactSupport",
+          "name_line": 818,
+          "body_start_line": 820,
+          "body_end_line": 877,
+          "body_sha256": "42535dceb35dcda40e48d00a3ed2a58698c3a8f1f550b8e76d5aa21c0a1ecbb8",
+          "signature_fragment": "findContactSupport(\n\t\tbyte[]\t\tnode_id )"
+        },
+        {
+          "name": "findBestContacts",
+          "name_line": 921,
+          "body_start_line": 923,
+          "body_end_line": 962,
+          "body_sha256": "6d479289f1e997683a620963a6ad6ccb91b61d59d3f042c61482f865bab3f3c1",
+          "signature_fragment": "findBestContacts(\n\t\tint\t\tmax )"
+        },
+        {
+          "name": "requestPing",
+          "name_line": 1195,
+          "body_start_line": 1197,
+          "body_end_line": 1210,
+          "body_sha256": "82aac879a32b17248357fe67c8356f458ac45922483501007ce449b51b0a0102",
+          "signature_fragment": "requestPing(\n\t\tbyte[]\t\tnode_id )"
+        },
+        {
+          "name": "requestPing",
+          "name_line": 1213,
+          "body_start_line": 1215,
+          "body_end_line": 1241,
+          "body_sha256": "017c6314b45f9ad71aec90663ad852919a87e7a726431e7d7599b50377986318",
+          "signature_fragment": "requestPing(\n\t\tDHTRouterContactImpl\tcontact )"
+        },
+        {
+          "name": "dispatchPings",
+          "name_line": 1244,
+          "body_start_line": 1245,
+          "body_end_line": 1274,
+          "body_sha256": "15adcc891e16c370ac0dbebb8914920a9917eeca0806bf2367cb16e8b800ba7a",
+          "signature_fragment": "dispatchPings()"
+        },
+        {
+          "name": "requestNodeAdd",
+          "name_line": 1349,
+          "body_start_line": 1351,
+          "body_end_line": 1377,
+          "body_sha256": "e2b026e65c148d8a1d901c1ba59630f6651893d574887cbe2a6b1e80ed9ebe48",
+          "signature_fragment": "requestNodeAdd(\n\t\tDHTRouterContactImpl\tcontact )"
+        },
+        {
+          "name": "dispatchNodeAdds",
+          "name_line": 1380,
+          "body_start_line": 1381,
+          "body_end_line": 1410,
+          "body_sha256": "912f49098653f4b0a8206f54e7985b0244bad090c0350863ff41b0c6c7072938",
+          "signature_fragment": "dispatchNodeAdds()"
+        },
+        {
+          "name": "getStatsSupport",
+          "name_line": 1436,
+          "body_start_line": 1439,
+          "body_end_line": 1481,
+          "body_sha256": "61206cec31b1ad265f5c251cbfbd85ab3678b225c3a2e9a092bb651577057eeb",
+          "signature_fragment": "getStatsSupport(\n\t\tlong[]\t\t\t\tstats_array,\n\t\tDHTRouterNodeImpl\tnode )"
+        },
+        {
+          "name": "getStatsSupport",
+          "name_line": 1484,
+          "body_start_line": 1485,
+          "body_end_line": 1508,
+          "body_sha256": "5a18dc1f046a04c478155d888cdb82f63acc736b3de443a6ff4dd5aa1aad3ffd",
+          "signature_fragment": "getStatsSupport()"
+        }
+      ]
+    },
+    "core/src/com/biglybt/core/dht/router/DHTRouterAdapter.java": {
+      "sha256": "4467dd997f04512b19c6bf8bd6a2da8f05548d1d5d06c10cabf45fc39cd19768",
+      "bytes": 1123,
+      "methods": []
+    },
+    "core/src/com/biglybt/core/dht/router/DHTRouterObserver.java": {
+      "sha256": "684f8aeb8021f2867e8ad1472b82a162e42d5edfddfe3f8d1cf219fea0d2b5c8",
+      "bytes": 2040,
+      "methods": []
+    },
+    "core/src/com/biglybt/core/dht/control/impl/DHTControlContactImpl.java": {
+      "sha256": "c38b71f1c6caa76f2096275c933ecdf8e75b934e98e973ecc417a90fae0c387e",
+      "bytes": 2252,
+      "methods": [
+        {
+          "name": "DHTControlContactImpl",
+          "name_line": 40,
+          "body_start_line": 42,
+          "body_end_line": 44,
+          "body_sha256": "4388941d060144090027802f5405d3b20ccfe2386faaf028cdfd2669f8bdfc2b",
+          "signature_fragment": "DHTControlContactImpl(\n\t\tDHTTransportContact\t\t_t_contact )"
+        },
+        {
+          "name": "DHTControlContactImpl",
+          "name_line": 47,
+          "body_start_line": 50,
+          "body_end_line": 53,
+          "body_sha256": "d8e6d8ea89f62651dc84e8d6930be7e82254eb8c0500a21873fa23ebaa1c6bca",
+          "signature_fragment": "DHTControlContactImpl(\n\t\tDHTTransportContact\t\t_t_contact,\n\t\tDHTRouterContact\t\t_r_contact )"
+        },
+        {
+          "name": "setRouterContact",
+          "name_line": 57,
+          "body_start_line": 59,
+          "body_end_line": 61,
+          "body_sha256": "aaba503a3221bc622c0e36472e037a649620001a4841f2768d2c363bbb6c48bb",
+          "signature_fragment": "setRouterContact(\n\t\tDHTRouterContact\t\t_r_contact )"
+        },
+        {
+          "name": "getMaxFailForLiveCount",
+          "name_line": 65,
+          "body_start_line": 66,
+          "body_end_line": 68,
+          "body_sha256": "aeace44d74e38d1bd3d0d9d83f7298fdd592adbe80a96c48687a0b418ef4aee3",
+          "signature_fragment": "getMaxFailForLiveCount()"
+        },
+        {
+          "name": "getMaxFailForUnknownCount",
+          "name_line": 72,
+          "body_start_line": 73,
+          "body_end_line": 75,
+          "body_sha256": "943cec5dbe20e298cfa8c47425257e35c853598a54349ef9763f4ef5e4ad36d9",
+          "signature_fragment": "getMaxFailForUnknownCount()"
+        },
+        {
+          "name": "getInstanceID",
+          "name_line": 79,
+          "body_start_line": 80,
+          "body_end_line": 82,
+          "body_sha256": "9bdc8825bcded27e313c758f8cf9cbb0fe5395b621aeebb6c5ddf3d7424f8569",
+          "signature_fragment": "getInstanceID()"
+        },
+        {
+          "name": "getTransportContact",
+          "name_line": 86,
+          "body_start_line": 87,
+          "body_end_line": 89,
+          "body_sha256": "b2abb8328111b0b52ce439d75e4e139998cbb78bbdabba4802729ee6ba8e4754",
+          "signature_fragment": "getTransportContact()"
+        },
+        {
+          "name": "getRouterContact",
+          "name_line": 93,
+          "body_start_line": 94,
+          "body_end_line": 96,
+          "body_sha256": "92b30535d28ccf487f44907ba6f902e2afe61a15d46cbcdfd72ce02713c416a9",
+          "signature_fragment": "getRouterContact()"
+        },
+        {
+          "name": "isSleeping",
+          "name_line": 100,
+          "body_start_line": 101,
+          "body_end_line": 103,
+          "body_sha256": "3ce4fb005c4cda7ac936f03274c8e1c6f27a6e3fb4ca213efa84c4d8b897a1c8",
+          "signature_fragment": "isSleeping()"
+        }
+      ]
+    },
+    "core/src/com/biglybt/core/dht/control/DHTControlContact.java": {
+      "sha256": "f3bd59d42ec64b2e87036ca3a2b9b4dadf0e57a8de4ea57b8b2225f24feee903",
+      "bytes": 1127,
+      "methods": []
+    },
+    "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java": {
+      "sha256": "952851231979640c1eb5704f55120e19fda91270dbd1c98c9fcc454ccf89daa9",
+      "bytes": 126762,
+      "methods": [
+        {
+          "name": "contactImported",
+          "name_line": 666,
+          "body_start_line": 669,
+          "body_end_line": 671,
+          "body_sha256": "8e95fadc71e0fea66da1c84a83fb39f59fbfab0a31ab62b2feb6d3cdc73a63dc",
+          "signature_fragment": "contactImported(\n\t\tDHTTransportContact\tcontact,\n\t\tboolean\t\t\t\tis_bootstrap )"
+        },
+        {
+          "name": "contactRemoved",
+          "name_line": 675,
+          "body_start_line": 677,
+          "body_end_line": 684,
+          "body_sha256": "9ff9b813a5fd33155dd2ce0a0842461529822815b2ce899efa2635609581235a",
+          "signature_fragment": "contactRemoved(\n\t\tDHTTransportContact\tcontact )"
+        },
+        {
+          "name": "pingRequest",
+          "name_line": 3273,
+          "body_start_line": 3275,
+          "body_end_line": 3281,
+          "body_sha256": "71ca3aef6a9359f516b6c607f9604d97b65ad1fa39282d27775d84ace51b215c",
+          "signature_fragment": "pingRequest(\n\t\tDHTTransportContact originating_contact )"
+        },
+        {
+          "name": "storeRequest",
+          "name_line": 3301,
+          "body_start_line": 3305,
+          "body_end_line": 3470,
+          "body_sha256": "423a5b6978d07bf8d561caffdce634a2961ead4ec7e38805f25f7961f77782be",
+          "signature_fragment": "storeRequest(\n\t\tDHTTransportContact \toriginating_contact,\n\t\tbyte[][]\t\t\t\tkeys,\n\t\tDHTTransportValue[][]\tvalue_sets )"
+        },
+        {
+          "name": "findNodeRequest",
+          "name_line": 3504,
+          "body_start_line": 3507,
+          "body_end_line": 3509,
+          "body_sha256": "fe7f8cdd652fe147fed48295b872734c40007621a7f8af20b5b93c72d70b3045",
+          "signature_fragment": "findNodeRequest(\n   \t\tDHTTransportContact originating_contact,\n   \t\tbyte[]\t\t\t\tid )"
+        },
+        {
+          "name": "findNodeRequest",
+          "name_line": 3512,
+          "body_start_line": 3516,
+          "body_end_line": 3555,
+          "body_sha256": "e85e792e20625a4f1ad6645ebb81802545dbdab5ba1ad224ea1008dc0b3e2761",
+          "signature_fragment": "findNodeRequest(\n\t\tDHTTransportContact originating_contact,\n\t\tbyte[]\t\t\t\tid,\n\t\tboolean\t\t\t\talready_logged )"
+        },
+        {
+          "name": "requestPing",
+          "name_line": 3608,
+          "body_start_line": 3610,
+          "body_end_line": 3639,
+          "body_sha256": "39da5d1e24a167e0c5c9bebd7a75c8c371e5d175c8ce435b661b063cc7bd9087",
+          "signature_fragment": "requestPing(\n\t\tDHTRouterContact\tcontact )"
+        },
+        {
+          "name": "nodeAddedToRouter",
+          "name_line": 3642,
+          "body_start_line": 3644,
+          "body_end_line": 4067,
+          "body_sha256": "8217bdf789b34b14c10afdb56d62f53f5e4b1676fff5e2b7bc21963c30462c3f",
+          "signature_fragment": "nodeAddedToRouter(\n\t\tDHTRouterContact\tnew_contact )"
+        }
+      ]
+    },
+    "core/src/com/biglybt/core/dht/transport/DHTTransport.java": {
+      "sha256": "57b1bd3ae1644e327c658b68f6570b85b46938ac0920c7a644cf3cb48a3a3c47",
+      "bytes": 3679,
+      "methods": [],
+      "sleeping_flag": {
+        "line": 36,
+        "value": "0x01",
+        "line_sha256": "945a70571f030cb281bc3882df7e4c47dd3c2ecd636ede869349abd98d241b9e"
+      }
+    },
+    "core/src/com/biglybt/core/dht/transport/DHTTransportContact.java": {
+      "sha256": "b720d632dbca28a4a788516881ea239e7e055e8153dff4bf93f453101fef4c0c",
+      "bytes": 3368,
+      "methods": []
+    },
+    "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java": {
+      "sha256": "30cd1f70c74274aec6496a2f711b5865ad1b776d028f25503ba6a52ddb3fa6af",
+      "bytes": 11172,
+      "methods": [
+        {
+          "name": "DHTTransportUDPContactImpl",
+          "name_line": 108,
+          "body_start_line": 119,
+          "body_end_line": 141,
+          "body_sha256": "1dff950769da0b169f8559ac997d0bb18062a5c5b72545a87d7e27771c9f205f",
+          "signature_fragment": "DHTTransportUDPContactImpl(\n\t\tboolean\t\t\t\t\t_is_local,\n\t\tDHTTransportUDPImpl\t\t_transport,\n\t\tInetSocketAddress\t\t_transport_address,\n\t\tInetSocketAddress\t\t_external_address,\n\t\tbyte\t\t\t\t\t_protocol_version,\n\t\tint\t\t\t\t\t\t_instance_id,\n\t\tlong\t\t\t\t\t_skew,\n\t\tbyte\t\t\t\t\t_generic_flags )\n\n\t\tthrows DHTTransportException"
+        },
+        {
+          "name": "isSleeping",
+          "name_line": 230,
+          "body_start_line": 231,
+          "body_end_line": 233,
+          "body_sha256": "4c6b4b30f2e244a34054c34c0a1f75c2163a0129e37fd66273ad0cb3d7b6360f",
+          "signature_fragment": "isSleeping()"
+        },
+        {
+          "name": "setGenericFlags",
+          "name_line": 236,
+          "body_start_line": 238,
+          "body_end_line": 240,
+          "body_sha256": "7b86df45c82f7368b4b1fab4922ebaaf3802c8de3f4a7b008c7a8264bc25762d",
+          "signature_fragment": "setGenericFlags(\n\t\tbyte\t\tflags )"
+        },
+        {
+          "name": "addressMatchesID",
+          "name_line": 243,
+          "body_start_line": 244,
+          "body_end_line": 246,
+          "body_sha256": "a4f5893adc758b79ccfd69de0369f4e1830ae4d7c1c152527a061d462ef6e3c1",
+          "signature_fragment": "addressMatchesID()"
+        },
+        {
+          "name": "getTransportAddress",
+          "name_line": 250,
+          "body_start_line": 251,
+          "body_end_line": 253,
+          "body_sha256": "c2389c4d7ddee379149b302e8202aeedbd6989d161b05a073fc33fc316499542",
+          "signature_fragment": "getTransportAddress()"
+        },
+        {
+          "name": "getExternalAddress",
+          "name_line": 265,
+          "body_start_line": 266,
+          "body_end_line": 268,
+          "body_sha256": "e63c337f674f869aeecae699597750fdc34ca600f84f2a9f265a854d6fd5f6b2",
+          "signature_fragment": "getExternalAddress()"
+        },
+        {
+          "name": "getAddress",
+          "name_line": 286,
+          "body_start_line": 287,
+          "body_end_line": 289,
+          "body_sha256": "5cff2bc5a513aba2ac43d0cbe1859df66aaa7fc4b1a60ab02b8662681990e067",
+          "signature_fragment": "getAddress()"
+        },
+        {
+          "name": "getMaxFailForLiveCount",
+          "name_line": 293,
+          "body_start_line": 294,
+          "body_end_line": 296,
+          "body_sha256": "93065a4ed74c5375a6e39d82c768d2cc1ff37987a1abca9c5fdf37fefdd326e2",
+          "signature_fragment": "getMaxFailForLiveCount()"
+        },
+        {
+          "name": "getMaxFailForUnknownCount",
+          "name_line": 300,
+          "body_start_line": 301,
+          "body_end_line": 303,
+          "body_sha256": "3dd0bdad69434c1a119c66f7fb97ba56ad7639c3fe539ec59e8faba7635043cb",
+          "signature_fragment": "getMaxFailForUnknownCount()"
+        },
+        {
+          "name": "getInstanceID",
+          "name_line": 307,
+          "body_start_line": 308,
+          "body_end_line": 310,
+          "body_sha256": "1becb64e457c173ef9541ac3e0eff105bb414b647a02824b48e4a75cfecb2c21",
+          "signature_fragment": "getInstanceID()"
+        },
+        {
+          "name": "setInstanceIDAndVersion",
+          "name_line": 313,
+          "body_start_line": 316,
+          "body_end_line": 325,
+          "body_sha256": "833171a2bace4fed4c260bbac13b50dbee91fcd9507c1c40587c12fe1617c61b",
+          "signature_fragment": "setInstanceIDAndVersion(\n\t\tint\t\t_instance_id,\n\t\tbyte\t_protocol_version )"
+        },
+        {
+          "name": "getID",
+          "name_line": 491,
+          "body_start_line": 492,
+          "body_end_line": 499,
+          "body_sha256": "6396742e4f752312ed3ce4e84f4cd15e7f862fc3e64ac139102d16987bac4251",
+          "signature_fragment": "getID()"
+        }
+      ]
+    },
+    "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java": {
+      "sha256": "b1d4e38f2bc9c33bda1bd39092ea87352a6668ca41664dafe1be7011fe163092",
+      "bytes": 88916,
+      "methods": [
+        {
+          "name": "getMaxFailForLiveCount",
+          "name_line": 1453,
+          "body_start_line": 1454,
+          "body_end_line": 1456,
+          "body_sha256": "ffd24f3b044441a56bfa009ca6ac05291aa60410180741cabca0118ef2bc5fbc",
+          "signature_fragment": "getMaxFailForLiveCount()"
+        },
+        {
+          "name": "getMaxFailForUnknownCount",
+          "name_line": 1459,
+          "body_start_line": 1460,
+          "body_end_line": 1462,
+          "body_sha256": "1171c1d6a1c4fb70439c9a9dac226d23950097814ee036af083aef3df3b12528",
+          "signature_fragment": "getMaxFailForUnknownCount()"
+        }
+      ]
+    },
+    "core/src/com/biglybt/core/util/SystemTime.java": {
+      "sha256": "d57063696e281cc005e5b146a8f863a2ca52180696a98b473ff8566851f97353",
+      "bytes": 18062,
+      "methods": [
+        {
+          "name": "getCurrentTime",
+          "name_line": 446,
+          "body_start_line": 446,
+          "body_end_line": 448,
+          "body_sha256": "83ebf3920be848f5ececfd8e855c5b30d8bd30d1c152123f7110b69968c83cc1",
+          "signature_fragment": "getCurrentTime()"
+        },
+        {
+          "name": "getMonotonousTime",
+          "name_line": 529,
+          "body_start_line": 529,
+          "body_end_line": 531,
+          "body_sha256": "f775e1a577cbc65e7e4a8182947930d936003affbe4e9a74cf1df5a53d3022a5",
+          "signature_fragment": "getMonotonousTime()"
+        }
+      ]
+    },
+    "core/src/com/biglybt/core/util/AEMonitor.java": {
+      "sha256": "10732da79c2ca2b92d0103036ccac23f0751a3141f0a770f5df24ea44aa96276",
+      "bytes": 1814,
+      "methods": [
+        {
+          "name": "AEMonitor",
+          "name_line": 36,
+          "body_start_line": 38,
+          "body_end_line": 40,
+          "body_sha256": "ef91932cd9631b36d9484a27c794f11c209dc3e558ffe5503a982bbc1e9f9574",
+          "signature_fragment": "AEMonitor(\n\t\tString\t\t\t_name )"
+        },
+        {
+          "name": "AEMonitor",
+          "name_line": 43,
+          "body_start_line": 46,
+          "body_end_line": 48,
+          "body_sha256": "0c7b43f6b0b497bc6ed7fd647083e59543aece67365171a49066d7e194e96e2a",
+          "signature_fragment": "AEMonitor(\n\t\tString\t\t\t_name,\n\t\tboolean\t\t\t_fair )"
+        },
+        {
+          "name": "enter",
+          "name_line": 52,
+          "body_start_line": 53,
+          "body_end_line": 55,
+          "body_sha256": "6560314c553b58352930d68aaa27ebb62133c23fa765e100bc8423eb2b74f905",
+          "signature_fragment": "enter()"
+        },
+        {
+          "name": "enter",
+          "name_line": 63,
+          "body_start_line": 65,
+          "body_end_line": 81,
+          "body_sha256": "3dffd726378c65ab041b233101ffbd110840d559ed455aad1bfc6f3c1adde6d1",
+          "signature_fragment": "enter(\n\t\tint\tmax_millis )"
+        },
+        {
+          "name": "exit",
+          "name_line": 84,
+          "body_start_line": 85,
+          "body_end_line": 92,
+          "body_sha256": "28176574fed14aac02d90f425ce6eb997d01b2bd5e7e98f91dd6c9c2d7cea5bb",
+          "signature_fragment": "exit()"
+        },
+        {
+          "name": "isHeld",
+          "name_line": 95,
+          "body_start_line": 96,
+          "body_end_line": 98,
+          "body_sha256": "5c75bb68bb6b8ec70c7765a18ffbec0516de61d1112ee09d259a4eb2f9e1968d",
+          "signature_fragment": "isHeld()"
+        }
+      ]
+    },
+    "core/src/com/biglybt/core/dht/impl/DHTLog.java": {
+      "sha256": "41f6eb899b0018f77159c251908644c5b6ca63ea656a20a4fae4b8818decc5df",
+      "bytes": 6623,
+      "methods": [
+        {
+          "name": "getString2",
+          "name_line": 122,
+          "body_start_line": 124,
+          "body_end_line": 133,
+          "body_sha256": "3a1e162b0c3a89f0866f125bade50948c106351785a612bf4fc1ffe03953c46a",
+          "signature_fragment": "getString2(\n\t\tbyte[]\tb )"
+        }
+      ]
+    }
+  },
+  "no_java_native_build_or_network": true,
+  "no_main_ref_or_golden_changes": true
+}

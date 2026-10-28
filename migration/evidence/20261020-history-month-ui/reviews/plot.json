@@ -1,0 +1,16 @@
+{
+  "status": "PASS independent root UI and worker integration source review",
+  "reviewer": "root",
+  "capsule_sha256": {
+    "source-ui": "e11f48fcaebb03ed6bc4b5e7a77ee315f91bf7869b3d845ca8818be9ff7b328c",
+    "source-app": "14e63acab22867c681672e7411b99ef65114f9795b7908cfab4fc85967002207"
+  },
+  "findings": [
+    "Read complete new month view, plot/Page/navigation patch and four-file Bridge/Window patch. Fixed30 sorted owned scalar records with missing/empty/zero distinction, three field-pair traffic modes, daily-only range.",
+    "Reuses existing plot interaction/copy methods byte-for-byte; Month appended enum keeps old values and max168 capacity. No new cursor/result/config retention.",
+    "Month shares latest pending history and optional worker slot, distinct kind fences on dispatch, no-owner, busy-failed, stale/session/result and F5 paths; totals priority retained.",
+    "Callback refresh paths retain QPointer/revision guards and notification-last model update; close destroys page and reopens from scalar-only choices."
+  ],
+  "blockers": [],
+  "execution_credit": false
+}

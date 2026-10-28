@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "status": "PASS_source_only",
+  "subject": "Root-authored P04-21 finalize_evidence.py; complete109-line source and predecessor/delta reviewed",
+  "source_sha256": {
+    "build/history-hourly-20261020/finalize_evidence.py": "9ef0f2d3ced75451649537d855052dfabb68a71752db8a269e7da479f92a4758",
+    "build/history-charts-20261020/finalize_evidence.py": "ba65256275f05e9e814ef47254e611d45e6bbab37441100be0abfa0cf5cc0205",
+    "build/history-hourly-20261020/contract.md": "acaa84dba6242f1f2d8ebf8c3b3902a48c6f0fc5f5110d54fbd3586076f68e30",
+    "migration/evidence/20261020-history-hourly/baseline.json": "1616329a920468e4078499dd12c35ae39a81916327f508556de2c1825032ae9c",
+    "migration/evidence/20261020-history-hourly/unchanged-behavior-baseline.json": "4f46d1b4a32b3a7b326a8c5566ed7a4a84f5fe6f2df06d1eee842459cc11f857",
+    "migration/evidence/20261020-history-charts/local-verification.json": "6d2b39694637be0aab5b1cfef107b26f1a28e2ae543a9769c1e8ce3591502e96",
+    "build/history-hourly-20261020/verify_hosted.py": "bd09c645495925b4226d5c99ef652fcae6c1eb8dfb427964bf45a534d9efdf57",
+    "build/history-hourly-20261020/qualify.py": "04de1423f53e0d891cb03aee920014fcb7c9e1b2fdbd83ad9d63510e0f368bf1",
+    "build/history-hourly-20261020/run_visuals.py": "9342d5a490a9561b8d8ff0e80e925c253f149bcd8391b29f360e24791641a776"
+  },
+  "independence": "Reviewer did not author the finalizer. Own new hourly test/public contract are context only, no independent authorship credit claimed.",
+  "method": [
+    "Complete static text/diff review",
+    "stdlib AST parse and exact8function comparison; no selected body evaluation",
+    "Read current baseline/202 unchanged map/previous cohort and retained Java receipts",
+    "Read producer/hosted-verifier receipt schemas for compatibility"
+  ],
+  "checks": {
+    "immutable_parent_constants_match_current_baseline": true,
+    "full_original_head_and_index_checked_before_and_after_admission": true,
+    "source_map_current_raw_and_actual_commit_Gitblob_equality_required": true,
+    "unchanged202_current_and_new_and_parent_commit_bytes_required": true,
+    "currently_observed_202_raw_inputs_match_frozen_map": true,
+    "previous_source889d_and_chart_namespace_correct": true,
+    "previous64_15_18_sets_plus_exact_one_new_unit": true,
+    "new65_16_19_and_skips_zero": true,
+    "retained_chart_qt_rows19_13_22": true,
+    "new_hourly_rows_from_actual_receipt_and_named_LastTest_sections": true,
+    "XML_exact_sets_and_passing_status_crosscheck_named_LastTest": true,
+    "commands_configure_build_tests_complete_exit_zero": true,
+    "local16_per_scale48_and_hosted16_exact_capture_names": true,
+    "full_hosted_ZIP_digest_API_source_and_tree_receipt_bound": true,
+    "original_Java_namespaces_20261019_saved_history_and_20261020_history_week_unchanged": true,
+    "original_Java3files_each_raw_hash_against_immutable_private_parent": true,
+    "retained425queries2550scalars_and525queries3150scalars_no_new_Java": true,
+    "dist103_runtime82_previous_complete_rollback_and_manifest_bytes": true,
+    "full_byte_RPATH_replay_and_final_loader_incremental_checks": true,
+    "only_retained_semantic_metrics_inherited_not_old_source_or_testcohort_identity": true,
+    "public_component_scope_renderer_only_no_new_equality_no_weekly_sum": true
+  },
+  "blockers": [],
+  "limits": [
+    "No script import, execution, build, compiler, native/JVM or Git mutation occurred during review.",
+    "Review validates source admission logic and current frozen context, not completed qualification.",
+    "Local/hosted qualification, captures, dist promotion and finalizer actual execution are root-owned future gates.",
+    "Original Java receipts are reused immutable historical evidence; renderer/API/168-bucket whole-period equality is not credited."
+  ],
+  "observed_context": {
+    "unchanged_inputs": 202,
+    "previous_test_counts": {
+      "gcc": 64,
+      "clang": 15,
+      "sanitized": 18
+    },
+    "previous_source": "889dfe8cc9a22830149d79c7108ce946a7df2766",
+    "new_target": "saved-history-hourly-resolution",
+    "function_ASTs_identical_to_previous": [
+      "captures",
+      "cases",
+      "digest",
+      "git",
+      "original_unchanged",
+      "read",
+      "require",
+      "sections"
+    ]
+  },
+  "historical_review_preserved": {
+    "path": "migration/evidence/20261020-history-hourly/diagnostics/initial-evidence-finalizer.json",
+    "sha256": "5a1c520d23e122d03f29ba2f2998ff80a228a92861f39e4b2f2396dccee939ca",
+    "historical_contract_sha256": "9743c737d40d42ad12952296e21c4b2390387a35cfeaf2b2ce9d5deed60ea502",
+    "historical_contract_image": "migration/evidence/20261020-history-hourly/diagnostics/initial-finalizer-contract-context.md"
+  },
+  "contract_context_rebinding": {
+    "scope": "Read appended qualification-driven lifetime refinement; producer script unchanged.",
+    "original_context_exact_prefix_of_current": true,
+    "current_contract_sha256": "acaa84dba6242f1f2d8ebf8c3b3902a48c6f0fc5f5110d54fbd3586076f68e30",
+    "queued_render": "Revision invalidated synchronously; QObject-context queued refresh delivers rendering after Qt combo sender tail. No accounting/read/receipt schema/count changes.",
+    "retained_failures": "Initial GCC/Clang failures/backtrace/sourcecapsules retained; no blanket pass assigned by this source review.",
+    "producer_still_same_sha256": "9ef0f2d3ced75451649537d855052dfabb68a71752db8a269e7da479f92a4758"
+  }
+}

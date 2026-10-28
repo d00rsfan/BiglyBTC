@@ -1,0 +1,34 @@
+{
+  "status": "PASS_source_only",
+  "subject": "Independent review of codec-authored week date helper, held-profile batch adapter and both test sources",
+  "source_sha256": {
+    "core/include/biglybtc/saved_history_week.hpp": "deb6eb835a2f7583314f62b3d872d437cbb3b66f52a95a73d2707e8a6ade15bd",
+    "core/src/saved_history_week.cpp": "c7a5ace11307997ba53c11ae6494783f173f031a04ad87dcba52183751bba77c",
+    "adapters/history_week_view.hpp": "414870f9c38940a9295fd354a760a0dbed76d4e86c1519fb0e3463a8ba965e39",
+    "adapters/history_week_view.cpp": "f3340e8eb14f52b2af9f2ecde6281548809b8f3f7cca77e35f22b4d5031e928f",
+    "tests/saved_history_week_tests.cpp": "ab2e78dd6a262f7f97bc16c831c5a4f72ee8c73eb5823674606881d6799a36f6",
+    "tests/history_week_view_tests.cpp": "e718497088be5838386d062f2944f4e086a79004ff40a1080fbfb06bbccf5079"
+  },
+  "unchanged_daily_lower_sha256": {
+    "core/include/biglybtc/saved_history.hpp": "799e17e75dc5916b2bce548bc2d5499068169ae406cd00556d76ab90c8315516",
+    "core/src/saved_history.cpp": "49c004362813fc6cc39f82fd2e2e64ba8016ec20493ae955653de51b914fd267",
+    "adapters/history_view.hpp": "0e4d06bb785b3a4e4595059b338d42b12d9e27fec3c8cdb958f7905d3bf45235",
+    "adapters/history_view.cpp": "7a36a9307b6b8cee95169d77bbfe727ce183711d3c08034142363792a337b10c"
+  },
+  "contract_sha256": "79884ec4be3ae982d5b1ba41cd220a0e7d516b307ec990361d92763614b70286",
+  "executed_by_reviewer": false,
+  "checks": {
+    "date_math": "Validates full Gregorian input before chrono conversion; subtracts6sys_days, rejects before1970; bounded1970..9999 arithmetic/casts, fixedowned7array, noexcept/noalloc/noclock.",
+    "adapter": "One borrowedconstlease, exactly7unchangeddailyreads oldest-first, stop checks before/between/after; only completeownedarray returns; errors/cancel failwholebatch, no prefix exposed. Missing/empty/zero/signed retained. Onefilebufferatime; no scans/cache/writes/leaseacquire.",
+    "limits": "Inherits perfile1MiB/8192nonblank/512line through unchanged reader. Seven files sequential, no weeklysum. Not atomic crossfile observation; older completed day may differ from later diskstate.",
+    "date_tests": "9families: explicit epoch/latest/leap/century/month/year/DST vectors, invalidextremes, ownership, independentintegerGregorian ordinal allmonthends1970..9999. No mirroredchronooracle.",
+    "adapter_tests": "12families with realheldgeneratedprofiles, exactknownleafcleanup andleaseFDidentity. Target-private readwrapper callsrealreadfirst and matchesdevice/inode, records firstreadperday/order. Tests missingcomponents, mixedstates/recoveryignored, unsafeleaf, parserlimits, first/middle/lastcancel, EIO/cancelpriority, exactsamebytesreplacementconflict, oldercompleteddayownership/nontransactionality.",
+    "oracle_comparison": "Requires supplied frozen15fieldTSV,3cases\u00d77days\u00d725queries=525 and3150scalarchecks; exact7deriveddates/all25slots/uniquequeries. Copies physical supplied leaves into ownprofiles, validatespresence separately, unknown\u21920 only scalar comparison. NoJava presence/count/strict-error/whole-week credit.",
+    "harness": "ReadPlan bounded7seenidentities prevents arrayoverrun; threadlocal Arm cleared beforefixturescleanup onthrow; cleanup releaseslease beforeexactknownpathunlink/rmdir. GNU/Linux --wrap=read required, scoped pertesttarget."
+  },
+  "limits_of_review": [
+    "Source-only, does not validate compiler/runtime result.",
+    "Original Java execution/provenance independently supplied by driver/root; these test sources consume frozen outputs, no Java launch."
+  ],
+  "findings": []
+}

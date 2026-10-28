@@ -1,0 +1,84 @@
+{
+  "schema": 1,
+  "milestone": "P04-23",
+  "status": "PASS source-only independent plot review",
+  "reviewer": "error_codec",
+  "author": "root",
+  "blockers": [],
+  "source_sha256": {
+    "preview/native/ui/saved_history_plot.hpp": "4d61602d74475896ec57956a5df15c96ed0db82dcf67bc2cc449b7e82af9309e",
+    "preview/native/ui/saved_history_plot.cpp": "f148e539426c76ca6e4a5c4b275a6c21d67c0a9be5c0ecda58d6573fe82b1fdd",
+    "preview/native/ui/saved_history_traffic.hpp": "ec35b38d7f7fc0b9cc41b4fded4a5b5a247de76959b65ad80cc28cf195576caf"
+  },
+  "capsule_manifest_sha256": "841f5537a70a1b419b3821b72ea8349d28cd8180b013810b6850a7630622c693",
+  "contract_sha256": "4265194d70a5cb8aeae51b23da91f0c95d44403348241197f2a27d82dcf6ab05",
+  "baseline_receipt_sha256": "07aa139a046484f437916933689c0693f47faeb7462d4fa0d16456118d527a00",
+  "native_parent": "11dd37171a68c9de8bdae662cc2daf630f363120",
+  "original_source": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "previous_plot_sha256": {
+    "preview/native/ui/saved_history_plot.hpp": "06fb44176eb22bb2f4f45af0fbe00463409a4270b8ff82448e05b02599500995",
+    "preview/native/ui/saved_history_plot.cpp": "61b47d7aef66ee1bead308f20cc98fc7d1c054859ece5cc5b784bf51f455a80d"
+  },
+  "previous_plot_images": "build/history-hourly-20261020/source/frozen/ui; these plot files stayed unchanged through P04-22",
+  "counter_order_source_sha256": "799e17e75dc5916b2bce548bc2d5499068169ae406cd00556d76ab90c8315516",
+  "verification": {
+    "all_three_capsule_hashes_verified": true,
+    "installed_files_match_capsule": true,
+    "unchanged_definition_sha256": {
+      "QString dateText(": "91f9b5d1830c6f7037f9671a630d141593fc434b37b19025df9e5d360042b96a",
+      "QString amount(": "24f852bab41e687eb5c01514613da4283b64cc5f58d36068e0ca0bcdd5be388a",
+      "QString summary(": "82b6cdb91f5fad62921bc0f35d021ba0b9732ac6d32ec7a6531fea66d004ce1c",
+      "void SavedHistoryPlotFrame::finish(": "a2486b69a91d4555e04eeb94b8842c0758781a6e6089534ea01328729bcf837a",
+      "QString SavedHistoryPlotFrame::bucketLabel(": "336c7a374c3354556797b1115d5b9da84d95e48bd426b6909f382750a601cb49",
+      "std::optional<QPointF> SavedHistoryPlotFrame::point(": "a5bf8fa1a3d7ba3b8584e67307cb66a2f541401cf1b99a67a5d8b5c916345901",
+      "SavedHistoryPlot::SavedHistoryPlot(": "a1b4925bf0e16099b403ad4691302837bdf3635a776d43f4e63a8a9f66d813c2",
+      "QSize SavedHistoryPlot::sizeHint(": "4aef280416d2ff1874290fd04e0abe297d3d4629c9fb94e079dd9f1df626659a",
+      "QRectF SavedHistoryPlot::plotRect(": "885548c05fe6b27f19702ba0b7ecd0061593571b32d0b8a13a4c72b08c48d010",
+      "bool SavedHistoryPlot::bucketToolTip(": "ac8611f58c1c6b3ae9c3386ee22612011f393efbcc946fd767d1193da5068ae5",
+      "void SavedHistoryPlot::mouseMoveEvent(": "99bc2057619056ada702220b25975e4deab87cce948d4d54c4f73e29a9bec2ba",
+      "bool SavedHistoryPlot::event(": "9c097008b8a222bd1e10762c87351b665effcec46697e15a7ab6d65391df4015"
+    },
+    "all_three_defaultPayload_factories_exact_after_removing_only_new_enum_parameter_validation_storage_and_index_selection": true,
+    "all_three_setter_bodies_exact_after_removing_only_traffic_parameter_forwarding": true,
+    "six_public_defaults_are_Payload": true
+  },
+  "assessments": [
+    {
+      "topic": "mapping",
+      "status": "PASS",
+      "detail": "All24/7/168 factories copy precisely Payload download3/upload1,Protocol download2/upload0,DHT download5/upload4. No sums/rates/narrowing/clamps/new accounting; optional signed values remain owned scalar copies."
+    },
+    {
+      "topic": "default and invalid values",
+      "status": "PASS",
+      "detail": "Existing calls default to Payload. Invalid enum values are rejected by every factory before allocation/index selection; setter null result preserves current frame. English default title/legend/tooltip/accessibility/empty text remains equivalent. No translated SWT/string-catalog parity is claimed."
+    },
+    {
+      "topic": "date,unknown,zero,extremes",
+      "status": "PASS",
+      "detail": "Original full date binding and optional bucket paths reproduce the previous bodies after default mapping normalization. Unknown remains a gap, known0 is a marker, and complete signed64 geometry/bounds and gap/marker rendering stay unchanged."
+    },
+    {
+      "topic": "captions and accessibility",
+      "status": "PASS",
+      "detail": "Chosen family appears in titles, download/upload series names, exact byte tooltips, accessible names/descriptions and empty-observation text. DHT remains a separate source pair. Captions are generated enum/numeric text, with no path/raw-input display or bytes/s claim."
+    },
+    {
+      "topic": "lifetime/reentry",
+      "status": "PASS",
+      "detail": "Setters preserve QPointer plus before-frame identity checks. replace retains current checks after every public Qt property setter and adds one after dynamic series-name creation. Existing hover/event/coordinate paths remain byte-identical. No newer frame/deletion is followed by old writes under the existing tooltip/accessibility callback contract."
+    }
+  ],
+  "scope_limits": [
+    "Source-only review; native installation by root was observed during review, and final installed bytes equal the frozen capsule. No compilation or execution credit is claimed.",
+    "No new Java execution/equality, combined/global traffic, writer/read/timer/worker or full original chart parity.",
+    "Arbitrary translator/global-constructor behavior remains the existing broader boundary; no new recovery guarantee is inferred."
+  ],
+  "execution": {
+    "compilers": 0,
+    "tests": 0,
+    "native_or_Java_processes": 0,
+    "git_commands": 0,
+    "source_edits": 0
+  }
+}

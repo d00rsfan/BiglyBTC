@@ -1,0 +1,43 @@
+{
+  "upstream_commit": "4209aa5029e3035cbb09dc3a83e9491d3f36fbc6",
+  "source_path": "com/vuze/plugins/azmsgsync/MsgSyncHandler.java",
+  "source_sha256": "1d12f6ec192b6409f8fd9ff5fa749b6927ddefd2cbe590b397f828bc7466a454",
+  "method_sha256": {
+    "generalMessageEncrypt": "f930b6faf22ba296dc2a1ba27abce78fb4f979c1cab40940d73a3e7c13fd44c0",
+    "generalMessageDecrypt": "df9d2c74b7034e2fe4e1b69f6e4b4795ac9008a848761a6d7e427864f59ab019",
+    "fixSecret": "ddecba0b631557cb4fd500d0faa22b821ed41d1a1d2654670023eafb4fbec5c0",
+    "privateMessageEncrypt": "d851bc7f0887f82d072dc5b22d66bb3a6e09028d4c8d1000e251ba34b5b5dc9d",
+    "privateMessageDecrypt": "9652772a699eb1d4c297c0fb7b77afdb1f20526dbe5afd941b625ce789ff037b",
+    "initKeys": "540230185189ba9212b0b17251b312c40b59407618a4f01e428a57be4a6602b3"
+  },
+  "harness_sha256": "dcdfb9c35638448dbcc7ce1e54bc306186e1b5d5dd6e02a4986c98cbb0c8a5a2",
+  "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+  "helper_class_sha256": {
+    "MsgEnvelopeOracle$Debug.class": "d9e1d80ec35f070c90a5e5443e43bfcd6bbf5016e65983c2726e4d92b40a18db",
+    "MsgEnvelopeOracle$Handler.class": "4aecc092ecf33b5d296be4fc3509ee9d239a8f3e6406ecd29c88ca6fe0bc2fce",
+    "MsgEnvelopeOracle$RandomUtils.class": "734655d8b5fd6ac83650a3877ef10b29cb37c6034a2f913e7dcb325e279667e7",
+    "MsgEnvelopeOracle.class": "199bbd42d455a33a3bed7e17c601f22d0b6df6d9376703c6df401ee59ae94ab0",
+    "ReferenceFence.class": "fae206b15dec70900f7a0375e53af4bddd0b260241d8063ed7dd10ed16090acd"
+  },
+  "commands_sha256": "eabb9fe888af084a94653969c321bf87c7e23b1802b48d0aa461f98b6f0af1e2",
+  "expected_sha256": "51970fe73ed568885b14446dd91dcc4d44a89e320eba968b8f83613ea5ec8a91",
+  "encrypt_input_sha256": "29b01e4ce4eb5db28c961cd24ee2662114e3303c5d18591838008aefbc787a56",
+  "observations": 463,
+  "original_encrypted_payloads": 136,
+  "work": "/tmp/biglybtc-msgsync-envelope-oracle-bfpehfqq",
+  "java_command": [
+    "nice",
+    "-n",
+    "5",
+    "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+    "-XX:ActiveProcessorCount=2",
+    "-Djava.security.manager=ReferenceFence",
+    "-Dbiglybtc.test.root=/tmp/biglybtc-msgsync-envelope-oracle-bfpehfqq",
+    "-Duser.home=/tmp/biglybtc-msgsync-envelope-oracle-bfpehfqq",
+    "-Dazureus.config.path=/tmp/biglybtc-msgsync-envelope-oracle-bfpehfqq/profile",
+    "-cp",
+    "/tmp/biglybtc-msgsync-envelope-oracle-bfpehfqq/classes:/tmp/biglybtc-oracle/classes",
+    "MsgEnvelopeOracle"
+  ],
+  "scope": "Exact original key derivation and encryption/decryption method bodies with supplied fields; original SHA1 and BouncyCastle; no real handler/plugin/core startup, persistence, identity, DHT or socket"
+}

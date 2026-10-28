@@ -1,0 +1,57 @@
+{
+  "records": [
+    {
+      "compiler": "gcc",
+      "commands": [
+        [
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-rpc-identities-qualified-gcc",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-rpc-identities-qualified-gcc",
+          "--output-on-failure"
+        ]
+      ]
+    },
+    {
+      "compiler": "clang",
+      "commands": [
+        [
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-rpc-identities-qualified-clang",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-rpc-identities-qualified-clang",
+          "--output-on-failure"
+        ]
+      ]
+    },
+    {
+      "compiler": "asan",
+      "commands": [
+        [
+          "cmake",
+          "--build",
+          "/tmp/biglybtc-rpc-identities-qualified-asan",
+          "-j2"
+        ],
+        [
+          "ctest",
+          "--test-dir",
+          "/tmp/biglybtc-rpc-identities-qualified-asan",
+          "--output-on-failure"
+        ]
+      ]
+    }
+  ],
+  "cmake_sha256": "134e296012e0fe9850665e0850e980d7c049bd104c41708484992aced21bebdb",
+  "scope": "Portable include path for the same pinned toolchain; no C++ or original observation changes. Reconfigured/replayed all four tests on the existing qualified roots."
+}

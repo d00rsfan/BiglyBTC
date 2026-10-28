@@ -1,0 +1,116 @@
+Start testing: Oct 17 03:19 IDT
+----------------------------------------------------------
+1/6 Testing: bounded-core-formats
+1/6 Test: bounded-core-formats
+Command: "/tmp/biglybtc-native-clang/tests/biglybtc-core-tests"
+Directory: /tmp/biglybtc-native-clang/tests
+"bounded-core-formats" start time: Oct 17 03:19 IDT
+Output:
+----------------------------------------------------------
+PASS 70 checks; 20,000 malformed-input trials
+<end of output>
+Test time =   0.06 sec
+----------------------------------------------------------
+Test Passed.
+"bounded-core-formats" end time: Oct 17 03:19 IDT
+"bounded-core-formats" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/6 Testing: structured-document-edits
+2/6 Test: structured-document-edits
+Command: "/tmp/biglybtc-native-clang/tests/biglybtc-document-edit-tests"
+Directory: /tmp/biglybtc-native-clang/tests
+"structured-document-edits" start time: Oct 17 03:19 IDT
+Output:
+----------------------------------------------------------
+PASS structured insertion/replacement, nested splicing, source ownership, unknown/info bytes and edit quotas
+<end of output>
+Test time =   0.03 sec
+----------------------------------------------------------
+Test Passed.
+"structured-document-edits" end time: Oct 17 03:19 IDT
+"structured-document-edits" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/6 Testing: compressed-state-envelope
+3/6 Test: compressed-state-envelope
+Command: "/tmp/biglybtc-native-clang/tests/biglybtc-codec-tests"
+Directory: /tmp/biglybtc-native-clang/tests
+"compressed-state-envelope" start time: Oct 17 03:19 IDT
+Output:
+----------------------------------------------------------
+PASS plain/gzip identity, binary edits, copy lifetime, CRC/truncation, quotas and concatenated members
+<end of output>
+Test time =   0.04 sec
+----------------------------------------------------------
+Test Passed.
+"compressed-state-envelope" end time: Oct 17 03:19 IDT
+"compressed-state-envelope" time elapsed: 00:00:00
+----------------------------------------------------------
+
+4/6 Testing: bounded-executor
+4/6 Test: bounded-executor
+Command: "/tmp/biglybtc-native-clang/tests/biglybtc-executor-tests"
+Directory: /tmp/biglybtc-native-clang/tests
+"bounded-executor" start time: Oct 17 03:19 IDT
+Output:
+----------------------------------------------------------
+PASS: lifecycle, backpressure, FIFO, cancellation, ownership, reentrant stop, concurrency
+<end of output>
+Test time =   0.05 sec
+----------------------------------------------------------
+Test Passed.
+"bounded-executor" end time: Oct 17 03:19 IDT
+"bounded-executor" time elapsed: 00:00:00
+----------------------------------------------------------
+
+5/6 Testing: state-java-interop
+5/6 Test: state-java-interop
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/../../migration/tools/state_interop.py" "--driver" "/tmp/biglybtc-native-clang/tests/biglybtc-state-driver"
+Directory: /tmp/biglybtc-native-clang/tests
+"state-java-interop" start time: Oct 17 03:19 IDT
+Output:
+----------------------------------------------------------
+PASS byte-identical Java gzip biglybt.config.gz
+PASS byte-identical Java gzip generated-1.torrent.gz
+PASS byte-identical Java gzip generated-2.torrent.gz
+PASS byte-identical Java gzip generated-3.torrent.gz
+PASS byte-identical operational downloads.config
+PASS byte-identical operational active/cache.dat
+PASS byte-identical operational active/7B26D19F7DC2D2F9D9F897AD851B0AB6E0D58C6C.dat
+PASS DEBUG::Sat Oct 17 03:20:21 IDT 2026  BC Provider 'BC_VUZE' initialised successfully (loaded from file:/tmp/biglybtc-oracle/classes/org/gudy/bouncycastle/jce/provider/BouncyCastleProvider.class)
+DEBUG::Sat Oct 17 03:20:21 IDT 2026  Not installing security manager - disabled by system property
+PASS Java reads structured operational resume edit with unchanged info/attributes/unknown fields
+PASS Java reads edited gzip config and unchanged v1/v2/hybrid torrent hashes
+<end of output>
+Test time =  29.43 sec
+----------------------------------------------------------
+Test Passed.
+"state-java-interop" end time: Oct 17 03:20 IDT
+"state-java-interop" time elapsed: 00:00:29
+----------------------------------------------------------
+
+6/6 Testing: profile-java-interop
+6/6 Test: profile-java-interop
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/profile_tests.py" "--driver" "/tmp/biglybtc-native-clang/tests/biglybtc-profile-driver"
+Directory: /tmp/biglybtc-native-clang/tests
+"profile-java-interop" start time: Oct 17 03:20 IDT
+Output:
+----------------------------------------------------------
+PASS hold-lock conflicts with Java and native; death releases lock
+PASS duplicate-lock conflicts with Java and native; death releases lock
+PASS Java lock excludes native; release permits native
+PASS compatible save/recovery at normal
+PASS compatible save/recovery at temp
+PASS compatible save/recovery at backup
+PASS compatible save/recovery at primary
+PASS traversal, stale input, exclusive saving and symlink protection
+<end of output>
+Test time =  19.10 sec
+----------------------------------------------------------
+Test Passed.
+"profile-java-interop" end time: Oct 17 03:20 IDT
+"profile-java-interop" time elapsed: 00:00:19
+----------------------------------------------------------
+
+End testing: Oct 17 03:20 IDT

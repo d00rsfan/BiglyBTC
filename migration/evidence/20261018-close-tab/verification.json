@@ -1,0 +1,104 @@
+{
+  "schema": 1,
+  "date": "2026-10-18",
+  "scope": "Classic Close Tab for three known views and retained My Torrents reopening; saved-page one-time font width defaults",
+  "upstream_repository": "https://github.com/BiglySoftware/BiglyBT",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_repository": "https://github.com/d00rsfan/BiglyBTC",
+  "native_commit": "4bfa2d85c9154ac3ede33c8298d2d7209d6589c5",
+  "pushed": true,
+  "native_units_passed": 32,
+  "native_units_skipped": 0,
+  "close_tab_qt_rows_passed": 16,
+  "sanitized_lifecycle_checks_passed": 3,
+  "sanitized_qt_rows": {
+    "classic-close-tab-lifecycle": 16,
+    "saved-services-bridge-lifecycle": 17,
+    "saved-services-view-navigation": 19
+  },
+  "sanitizers": "GCC16 Debug ASan/UBSan;detect_leaks=1;halt_on_error=1",
+  "three_view_smoke_scales_passed": [
+    1,
+    1.5,
+    2
+  ],
+  "preview_smoke_qt_rows_per_scale": 3,
+  "visual_offscreen_captures_reviewed": true,
+  "manual_compositor_credit": false,
+  "java_runtime_equality_credit": 0,
+  "source_sha256": {
+    "preview/README.md": "9b67f3e3be5236c21221b346c464b1889a673b611f301b5b99050068ab1e3ab6",
+    "preview/docs/classic-close-tab-contract.json": "aa558d5335e13a6ef3dd143d0627a2f6b6bdfc03d38570c8af51d4479120eb6e",
+    "preview/docs/classic-closeability-correction.json": "82a0f01a27c842ca6921868e9d10f1f80d7d0acdc24880e0790a50b86c012806",
+    "preview/native/packaging/preview_smoke.cpp": "52c790a8fbab667cd85fec4ab2f4ac18af4c33a102a8f0fa02879a7453e2d414",
+    "preview/native/tests/CMakeLists.txt": "58a95bd4f3128bbd0a509026ef1944694feafa779a43ae540d557ccdb61c6ad7",
+    "preview/native/tests/classic_close_tab_tests.cpp": "15a923fd5505550c01edd6e2a465a8e3405b9a4d9ed7b4e1289d1cb187e344c0",
+    "preview/native/tests/navigation_tests.cpp": "f78865828d432fdb7e891e72dcc862db76f002ab881f6c892213877695c43fa9",
+    "preview/native/tests/saved_services_navigation_tests.cpp": "5d9689192f4fd693b24986a11d0912f9538ce3ae6047230ba0f1cd79c2ef1f5f",
+    "preview/native/ui/library_window.cpp": "5d9ac47ea40b9d6ce2bb32739daecb977daad817fa07d2e22fe7d1b13ebe76a6",
+    "preview/native/ui/library_window.hpp": "8f64bcb083935e8064ef6ea9b0952ef1201c7d2102835bc26c9c36a3d52e3151",
+    "preview/native/ui/saved_service_pages.cpp": "931e08d0fb4e3d3693368e68442d7d39ab149fcd3b2e66f27ce509ba118f7d3b"
+  },
+  "normal_profile_access": false,
+  "processes_signaled": false,
+  "dist_promotion": {
+    "source_commit": "4bfa2d85c9154ac3ede33c8298d2d7209d6589c5",
+    "dist": "/home/yurii/Java/BiglyBTC/dist",
+    "rollback": "/home/yurii/Java/BiglyBTC/build/close-tab-20261018/previous-dist",
+    "files_verified": 103,
+    "runtime_files_byte_identical": 82,
+    "manifest_sha256": "dd884201fc5761f1733ec59ea248f9b5e52bb8623cb0c173150dd119fae1642b",
+    "processes_signaled": false,
+    "system_installation": false
+  },
+  "hosted_desktop": {
+    "run": 39116079560,
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39116079560",
+    "status": "success",
+    "native_units_passed": 32,
+    "all_three_view_captures": true
+  },
+  "hosted_sdk": {
+    "run": 39116079517,
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/39116079517",
+    "status": "success"
+  },
+  "limitations": [
+    "Native retained widgets differ from original view destruction/recreation",
+    "Qt adjacent-tab selection differs from original MDI history",
+    "Full plugin close-veto/persisted-view/window/tray lifecycle remains open",
+    "Full client/profile/performance compatibility remains open"
+  ],
+  "source_reviews": [
+    "../20261018-navigation/classic-closeability-correction.json",
+    "../20261018-navigation/close-tab-source-review.json",
+    "../20261018-navigation/saved-service-pages-widths-review.json"
+  ],
+  "evidence_sha256": {
+    "1-classic-preview.png": "e75cba1f4d3e4884d8960647bcecb0c77847be57fe8406acbf61d4e3be970015",
+    "1-my-shares-preview.png": "ce292fbbb759f971340d254d06b16652ee0c7dd4bda040879be6d9b42feac353",
+    "1-my-tracker-preview.png": "e99bcef829b285c70fe9ed2bbf65aedf7085356963e7dbf8090ebfb97008ed44",
+    "1.5-classic-preview.png": "ea327a25d4b259a81f0424c67a3045a43128fc458e1b46020726723819a7ee50",
+    "1.5-my-shares-preview.png": "d74c30860338a2a7223f62209183111c62beb119d13c0968c10e40060f7b96f1",
+    "1.5-my-tracker-preview.png": "5e1ccc6b90d4606249958af5acf6a3bd1a3e921120e6656fb4eaf1c504b5467c",
+    "2-classic-preview.png": "883f106765d04d7a38e8163cb629deca361beca4e07a81e9d6e7cc3b77c4d58e",
+    "2-my-shares-preview.png": "54ed0b269c82bdbf46057e2a211320eb19303602b9820ca8d08a4fc42356d00d",
+    "2-my-tracker-preview.png": "8f4f9328c001c10e36ba6226fe19a68f8ddab63c78eaa39c00ca761512e99c3e",
+    "build.log": "7a0faf97aa46947f9a856fa2249026241691ed9415cbfa59ac5ae79d43c9e525",
+    "close-tab-qt-full.log": "f089786b757de126ba5e9a966e971dbe2de1cbbdc3e5b89b4ca70d72cc432c75",
+    "dist-promotion.json": "a45055d04a375b59342e771be586d0d2d26b22132edd3349c5c7b9c2ca92e588",
+    "sanitized-build.log": "8bd80fb36ea3e6b4c516d87250ae0c72473c525e363f88ef88eb51edad15acf4",
+    "sanitized-qt-full.log": "a1b12ba7c35c1f8c501eb38b55dfc002975d19103de0d2271f22111aa41c1aab",
+    "sanitized-tests.log": "35cbaaf07fb833c5ea818f22a9d3dd97f0cefd51021449d8f9da898be0a36787",
+    "sanitized-tests.xml": "54f73d783285be058bc0072cf98d6b258ab0a264cb84a96baa0f05c1bb995103",
+    "smoke-1.5.log": "9e9d5af9451aa3f31b291587883397c626335ddf0283adfb60a55c10b775a41a",
+    "smoke-1.log": "59497d0b0aeff74f703f940d0b797138904abb59ffce032e94ca98606ff37660",
+    "smoke-2.log": "e7031d66fdea81c1ac5b69732690e8df36a700501c862d1b0c333693a32c767f",
+    "smoke-roots.json": "0e446ec83c6efa1757f6c35c3086a092764ce83159ea6fe71788fec17a439742",
+    "unit-tests.log": "863b7dda6a8b1d2aa60a2485d85cbcd88442994578c1870a108cf25b9ced5692",
+    "unit-tests.xml": "996d03c65c0b7b03c87ad564c2bfa5076ce591254f97d2ff5fa80d43b48e94c4"
+  },
+  "milestone_commit": "efdf27688594ceecd6d27f8bc2c6e7c0e4c5ce4c",
+  "milestone_tag": "milestone-classic-tabs-20261018",
+  "remote_tag_object": "9e3f775ae1e0ced3947b0ca89f502097efffa6a3"
+}

@@ -1,0 +1,311 @@
+{
+  "schema": 1,
+  "profiles": 3,
+  "member_days": 21,
+  "present_days": 18,
+  "missing_days": 3,
+  "queries_per_member": 25,
+  "expected_rows": 525,
+  "expected_scalar_observations": 3150,
+  "whole_week_queries": 0,
+  "cases": [
+    {
+      "case_id": "leap-mixed",
+      "ending_date": [
+        2024,
+        3,
+        2
+      ],
+      "days": [
+        {
+          "day_index": 0,
+          "date": [
+            2024,
+            2,
+            25
+          ],
+          "present": false,
+          "relative_path": "cases/leap-mixed/stats/2024/02/25.dat",
+          "purpose": "Missing leaf: independent daily numeric oracle returns six zeros; native presence remains absent."
+        },
+        {
+          "day_index": 1,
+          "date": [
+            2024,
+            2,
+            26
+          ],
+          "present": true,
+          "relative_path": "cases/leap-mixed/stats/2024/02/26.dat",
+          "purpose": "Present empty file; no observations, distinct from missing in native state.",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "day_index": 2,
+          "date": [
+            2024,
+            2,
+            27
+          ],
+          "present": true,
+          "relative_path": "cases/leap-mixed/stats/2024/02/27.dat",
+          "purpose": "Present header-only absolute baselines, never usage.",
+          "bytes": 61,
+          "sha256": "7ff4388a3d920b0e16a91277eb5922fd01095430aab7edb4d623be8b5055a3c8"
+        },
+        {
+          "day_index": 3,
+          "date": [
+            2024,
+            2,
+            28
+          ],
+          "present": true,
+          "relative_path": "cases/leap-mixed/stats/2024/02/28.dat",
+          "purpose": "Real anchored zero, distinct from absent observations.",
+          "bytes": 49,
+          "sha256": "9410f09691c0300cd972cc182d7b5fafc099f869418214c452c3991df7f4c7d7"
+        },
+        {
+          "day_index": 4,
+          "date": [
+            2024,
+            2,
+            29
+          ],
+          "present": true,
+          "relative_path": "cases/leap-mixed/stats/2024/02/29.dat",
+          "purpose": "Leap day, signed adjustments, explicit plus, overlapping sessions and hour boundary.",
+          "bytes": 145,
+          "sha256": "cd3b3a6c19277503f19e95fd9c1f90a6d5fec3b8ed9027a6456635ab88ea9168"
+        },
+        {
+          "day_index": 5,
+          "date": [
+            2024,
+            3,
+            1
+          ],
+          "present": true,
+          "relative_path": "cases/leap-mixed/stats/2024/03/01.dat",
+          "purpose": "Rollover spill reconstructs next-day midnight and is excluded from this independent day query; no weekly total is inferred.",
+          "bytes": 88,
+          "sha256": "8eadb9f5a64d4e28ef251bb7116e536f5258b88046e4c90bf1e87580ce5cf482"
+        },
+        {
+          "day_index": 6,
+          "date": [
+            2024,
+            3,
+            2
+          ],
+          "present": true,
+          "relative_path": "cases/leap-mixed/stats/2024/03/02.dat",
+          "purpose": "Separate next-day file, CRLF/blank line, ignored end timestamp and hour transition.",
+          "bytes": 91,
+          "sha256": "a02ddd0fe84542c9c01565d6c484fca32bd6b0ff4e913230f59e9205c767c4bc"
+        }
+      ]
+    },
+    {
+      "case_id": "year-boundary",
+      "ending_date": [
+        2024,
+        1,
+        3
+      ],
+      "days": [
+        {
+          "day_index": 0,
+          "date": [
+            2023,
+            12,
+            28
+          ],
+          "present": true,
+          "relative_path": "cases/year-boundary/stats/2023/12/28.dat",
+          "purpose": "Signed values beyond int32, safely within source long arithmetic.",
+          "bytes": 112,
+          "sha256": "03039658e0670159814e43d483d90a12b43bd737bd2ec469b89b73294b364366"
+        },
+        {
+          "day_index": 1,
+          "date": [
+            2023,
+            12,
+            29
+          ],
+          "present": false,
+          "relative_path": "cases/year-boundary/stats/2023/12/29.dat",
+          "purpose": "Missing daily leaf among present neighboring dates."
+        },
+        {
+          "day_index": 2,
+          "date": [
+            2023,
+            12,
+            30
+          ],
+          "present": true,
+          "relative_path": "cases/year-boundary/stats/2023/12/30.dat",
+          "purpose": "CRLF and complete final EOF, observed zero followed by nonzero in next hour.",
+          "bytes": 75,
+          "sha256": "55fe730194588623ebdfa54f8e759f75498102def315871292d831eadddbab92"
+        },
+        {
+          "day_index": 3,
+          "date": [
+            2023,
+            12,
+            31
+          ],
+          "present": true,
+          "relative_path": "cases/year-boundary/stats/2023/12/31.dat",
+          "purpose": "Year rollover spill remains excluded from the prior file selected-day query.",
+          "bytes": 83,
+          "sha256": "e271b94631b21509c7fb601ae0f29c34eb8279a270ec5ac5e0484197436b70b3"
+        },
+        {
+          "day_index": 4,
+          "date": [
+            2024,
+            1,
+            1
+          ],
+          "present": true,
+          "relative_path": "cases/year-boundary/stats/2024/01/01.dat",
+          "purpose": "New year file has its own actual zero observation; prior-file spill is not carried into it.",
+          "bytes": 49,
+          "sha256": "8736bd4fe9beef84f9b68c256e941a696e14617ecdea81ba22f9f45b9961bd8d"
+        },
+        {
+          "day_index": 5,
+          "date": [
+            2024,
+            1,
+            2
+          ],
+          "present": true,
+          "relative_path": "cases/year-boundary/stats/2024/01/02.dat",
+          "purpose": "Independent present header-only day.",
+          "bytes": 37,
+          "sha256": "a62df59299d1606a6f0301a6d3d02de7572f4047a055ac641055ab9260a6f3b4"
+        },
+        {
+          "day_index": 6,
+          "date": [
+            2024,
+            1,
+            3
+          ],
+          "present": true,
+          "relative_path": "cases/year-boundary/stats/2024/01/03.dat",
+          "purpose": "Independent present empty ending day.",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "case_id": "epoch-domain",
+      "ending_date": [
+        1970,
+        1,
+        7
+      ],
+      "days": [
+        {
+          "day_index": 0,
+          "date": [
+            1970,
+            1,
+            1
+          ],
+          "present": true,
+          "relative_path": "cases/epoch-domain/stats/1970/01/01.dat",
+          "purpose": "Earliest complete native seven-day interval; zero anchor inactive, minute1 positive anchor activates at00:02.",
+          "bytes": 124,
+          "sha256": "808a4e5c087e16d29001c581a39b8fe2934cd73f102a5e22687beeb852b6811a"
+        },
+        {
+          "day_index": 1,
+          "date": [
+            1970,
+            1,
+            2
+          ],
+          "present": true,
+          "relative_path": "cases/epoch-domain/stats/1970/01/02.dat",
+          "purpose": "Negative source anchor inactive until a later positive start; all fields valid.",
+          "bytes": 122,
+          "sha256": "889053dd74c67736f30cc04018bbedf74461adbb808b55a4b3d4131efaae5ae0"
+        },
+        {
+          "day_index": 2,
+          "date": [
+            1970,
+            1,
+            3
+          ],
+          "present": true,
+          "relative_path": "cases/epoch-domain/stats/1970/01/03.dat",
+          "purpose": "End timestamp elsewhere in the interval cannot replace reconstructed10:59/11:00.",
+          "bytes": 72,
+          "sha256": "b9197dd0c31249082bb9fc80a259798638c3d058b267bf78e3120aef09138740"
+        },
+        {
+          "day_index": 3,
+          "date": [
+            1970,
+            1,
+            4
+          ],
+          "present": true,
+          "relative_path": "cases/epoch-domain/stats/1970/01/04.dat",
+          "purpose": "Header-only day.",
+          "bytes": 33,
+          "sha256": "6012c67fb90a865848a0445c9862fc3c2c52c852a9e801da97dfe0180b4b832a"
+        },
+        {
+          "day_index": 4,
+          "date": [
+            1970,
+            1,
+            5
+          ],
+          "present": true,
+          "relative_path": "cases/epoch-domain/stats/1970/01/05.dat",
+          "purpose": "Real observed zero day.",
+          "bytes": 45,
+          "sha256": "664de07df7b726322f18da27b69b1adfdf2213cbdef01f88f5ae1290c6c3a227"
+        },
+        {
+          "day_index": 5,
+          "date": [
+            1970,
+            1,
+            6
+          ],
+          "present": false,
+          "relative_path": "cases/epoch-domain/stats/1970/01/06.dat",
+          "purpose": "Missing day, not a fabricated native zero."
+        },
+        {
+          "day_index": 6,
+          "date": [
+            1970,
+            1,
+            7
+          ],
+          "present": true,
+          "relative_path": "cases/epoch-domain/stats/1970/01/07.dat",
+          "purpose": "Present empty last day.",
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    }
+  ],
+  "expected_values": "Not computed by this generator; actual unchanged original Java daily/hourly query stdout only."
+}

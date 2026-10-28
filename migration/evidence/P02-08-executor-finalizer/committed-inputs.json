@@ -1,0 +1,25 @@
+{
+  "implementation_commit": "d4d539e761e136c9916a9305c2f8fff48e5061f8",
+  "qualified_input_count": 19,
+  "verified_git_blob_sha256": {
+    "native/core/include/biglybtc/executor.hpp": "0d99cc28102acb980070efc9a72f8e0686ecf94dc43bb81198694245c6b72777",
+    "native/core/src/executor.cpp": "b886692587ef8c5efc269ea3735f2b64f3432a255b8a1bd57b357627bc3da77a",
+    "native/tests/executor_tests.cpp": "039cd9a55aae2b9ef9381f420622530d23c610e5bdf44d8d30e9dc8fa7824a0d",
+    "native/tests/executor_finalizer_tests.cpp": "14b024235761416b11a005ebba10033bb2963c41ec7748487e78a7aa8f5bdaf6",
+    "native/tests/executor_startup_failure_tests.cpp": "4b14e9dafe83b339ccbe714c1aac31e84c3875102f001d7000b4ce3fdcfd2458",
+    "native/core/CMakeLists.txt": "bd0e3c00533497d4ad524bb4ff82adf26e1f353a24a6f7b5c5ff53cf94a64d09",
+    "native/tests/CMakeLists.txt": "2b6c01e50b03e320ae86436befa0df1e6dc87844876e72d6f8cc6df23041716a",
+    "native/cmake/Toolchain.cmake": "b18f11310d62491bdaa615ecaa024daed381050306982fca7b3cf31d23564564",
+    "native/app/session_bridge.cpp": "c9d8145e15602b2b0c2b0ed58ce04786905f2e021caeca85f64fddd4528c0e3e",
+    "native/app/session_bridge.hpp": "e7312e57494c9106a20f55ccde826e483d904902a720def65fbb19669c96bb45",
+    "migration/consumers/executor_finalizer/CMakeLists.txt": "4ffbcb055e0bc5f552848e79d354ebfc07b129d568332732da00f97f2d259a64",
+    "migration/tools/executor_finalizer_matrix.py": "5da8d7ac59cf847b1161a87007b90aa4b7e6e2c2d2bf668dd5592bb6c6d0e426",
+    "migration/evidence/P02-08-executor-finalizer/native-draft.json": "4c46f61dfdc117028551ee3db3886e562ebdc7178b69689d4acdfa3cbff8640c",
+    "migration/evidence/P02-08-executor-finalizer/startup-source-proof.json": "fb42cbdc0bd02d1a358027ad3bce7735f0513e1753d0dd71083355071b3dcf0c",
+    "native/tests/executor_startup_allocation.hpp": "bf019c709db4f96773e19621a2dea26eae966d1f33997efb652d6beb6b44f3ee",
+    "native/tests/executor_startup_allocation.cpp": "06b16614a4f44dc721df9339174af89381113bf93fd061a3c1e589ec7c45619f",
+    "migration/evidence/P02-08-executor-finalizer/qualification-native-inputs.json": "b41c98e3f0b7d18b166891ade0b89a9950575f804de83e0299af851ef57ec1cd",
+    "migration/evidence/P02-08-executor-finalizer/before/native/tests/executor_tests.cpp": "41b8ac27f40d257a199e03d48865cd32a7a8f91b5a655a7f94a2a1f7c5ac9ea4",
+    "migration/evidence/P02-08-executor-finalizer/startup-wrap-proof.json": "71383e6be225b5e9e14610f5bdd093338665c807bd97d4cb33d214a1ed2b7764"
+  }
+}

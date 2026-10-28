@@ -1,0 +1,180 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY_NO_BLOCKER",
+  "reviewer": "error_codec",
+  "author": "error_driver",
+  "subject": "causal-fixtures/amendments/both-hold-order/trace-on-exit",
+  "manifest_sha256": "5ec055b0388e9f8f23c2321e1f928157432154e7a403ef4d818a594853f06405",
+  "parent_manifest_sha256": "ea97a7d3e1579ba1b11749b9b789fb7af008bddeb5e76996585807f0c3aeeccc",
+  "original_manifest_sha256": "83ec1f779117fcfa05c83a57df6f52074e3aca7c1cba357d9291760dce29dce7",
+  "independent_static_script_sha256": "d79fbce6024f958ba020ffeb4170523b6964b3e95a70ac9163070bd251aa850b",
+  "independent_static_receipt_sha256": "503c585dd0f9c59d22d681d1eb224d5824e35a6bfc01727158c0f309bba62c6f",
+  "complete_source_sha256": {
+    "include/libtorrent/aux_/biglybtc_causal_test.hpp": "6c8942610714de8effaa13b6286fb9efb5f9b45eef320822955d4d4cb4e94eb7",
+    "include/libtorrent/mmap_storage.hpp": "92606cadfc513fda25016c36ef71ac5c4c9e73b1c35de1621d2ab7bf04517729",
+    "src/biglybtc_causal_test.cpp": "982a73b5b06704b0ad2b9efad891217e7c71bff3f7789d2d4969b97a022accce",
+    "src/mmap_disk_io.cpp": "38690ea74b49d086f989d8f995bb486e955d590e6c60395e92bd3e42aca71b3a",
+    "src/peer_connection.cpp": "223e0358de276c5bfd50e762e13475c854daea67e342a49d1115ce3efc28aaad",
+    "src/session_impl.cpp": "07101e1b6d6d36eab6fcf05e99b0cf6078c9dfbc3a7f99ad8f962d07e2db854a",
+    "src/torrent.cpp": "c9933b4cb853200d2d71df3022eb01fb87ee1493c1e1497eb8ede71bc0620af0"
+  },
+  "complete_test_sha256": {
+    "tests/causal_worker.hpp": "e5cfb37a21515346ae34e5df2144253eeadfd20e7ada64a0c538a63463627df6",
+    "tests/persistent_causal_tests.cpp": "2fabc8f39d068aef17eaec7aa4d118d492f9d0b4d9a7b83e23849daa6870f612"
+  },
+  "reviewed_files": [
+    "Complete amended controller/hook implementation and header, complete tests and unchanged Worker.",
+    "Complete two amendment patches, proposal, notes, manifests and beforeimages.",
+    "Existing peer receive and successful mmap write-job hook call sites, preserving original callback/pool-free positions.",
+    "Original 22 artifacts, order amendment 22 artifacts, final trace amendment 21 artifacts, all exact.",
+    "Five actual v1 raw log/XML/LastTest/build-record/image pins, read/hash only."
+  ],
+  "checks": [
+    {
+      "id": "BHO-01",
+      "verdict": "PASS",
+      "finding": "Both-hold order ea97 follows exact original 83ec; final trace 5ec055 follows exact ea97. Every beforeimage equals its immediate predecessor. Independent regenerated complete unified diffs match both stored patches. Removing only known additions and the v1/v2 test identity change recovers original source/tests byte-for-byte. No frozen predecessor was changed."
+    },
+    {
+      "id": "BHO-02",
+      "verdict": "PASS",
+      "finding": "wants_socket and hold_socket each check wantDisk/usedDisk under the same controller mutex. usedDisk is set only after capturing the real successful completed write job continuation and immediately before DiskHeld is appended in that critical section. The original receive body runs unmodified until that real disk hold is established. This avoids holding a partial receive before the first disk job can exist; it invents no job or received bytes."
+    },
+    {
+      "id": "BHO-03",
+      "verdict": "PASS",
+      "finding": "When disk hold is not requested, the new condition is vacuous; disk-only never admits a socket as before. Existing allowHolds/target/usedSocket checks remain. release_all_and_wait atomically disarms future admissions, queues both real releases before waiting, invokes captured code outside the controller mutex and precedes all Worker owner/thread joins. The ordering amendment adds no wait, timer, thread, alert consumer or production owner change."
+    },
+    {
+      "id": "BHO-04",
+      "verdict": "PASS",
+      "finding": "usedDisk means an actual disk hold occurred, not a general promise of continued occupancy after arbitrary caller release. The combined test releases neither gate before its occupied snapshot and independently requires simultaneous diskHeld/socketHeld/live owner; positive byte counts, exactly one hold each, DiskHeld<SocketHeld and no prior release event establish the intended stronger test precondition."
+    },
+    {
+      "id": "BHO-05",
+      "verdict": "PASS",
+      "finding": "All original case names, assertions, wait deadlines and payload/receipt checks remain, with only the explicit test-only image identity moving v1 to v2. Both earlier single-hold proof bodies are byte-exact under the first amendment. Final trace adds only a helper and one declaration in each of the three existing methods. Planned test row count remains five; no actual v2 result is claimed."
+    },
+    {
+      "id": "BHO-06",
+      "verdict": "PASS",
+      "finding": "All three local declarations are ordered fixture, Gates, TraceOnExit, Worker. Reverse destruction therefore releases/disarms callbacks and closes/joins the Worker, then snapshots/prints diagnostics, then finishes the controller, then destroys the fixture. Constructor failure before Worker completion still leaves Gates cleanup. Worker source and its exceptional owner/lease lifetime protection are byte-identical to original 83ec."
+    },
+    {
+      "id": "BHO-07",
+      "verdict": "PASS",
+      "finding": "snapshot copies the fixed-capacity scalar ledger while holding the controller mutex and releases that mutex before qInfo formatting. TraceOnExit holds only a static literal name, adds no owner/callback/packet reference, consumes no alerts and emits no causal certification event. Qt logging may allocate or fail catastrophically; this occurs after successful Worker release/join and is not promised to be allocation-failure-safe or to survive SIGKILL/terminate. A missing diagnostic cannot count as causal PASS."
+    },
+    {
+      "id": "BHO-08",
+      "verdict": "PASS",
+      "finding": "The partial-payload scheduling diagnosis remains labelled inference: the occupied combined-case ledger did not exist before its v1 wait failure. The retained v1 image/build record and raw failures are unchanged. Individual existing successful v1 proofs do not certify the new simultaneous schedule; a fresh v2 source-bound image/catalog and actual traces are still required."
+    }
+  ],
+  "blockers": [],
+  "nonblocking_precision": [
+    "The new dependency deliberately couples only the test fixture schedule when both holds are armed. It is not a production scheduling rule.",
+    "A real disk callback has already run before its job pool-free is deferred; the retained job supplies the strong storage/torrent chain. DiskHeld does not mean a disk callback was fabricated or delayed.",
+    "Exit traces are supplemental diagnostics. Existing actual occupied/final assertions remain authoritative, and logging itself supplies no certification.",
+    "The review covers source correctness and exact identities; no root build, v2 mapped-image check, runtime test, counter finality or durability credit is asserted here."
+  ],
+  "required_root_v2_gates": [
+    "Build in a new isolated source/build/install cohort, with v2 build identity and separately approved exact source/build/image/catalog bindings.",
+    "Run all three causal methods through ordinary PersistentSession runtime admission; an unqualified provider must fail, never skip.",
+    "Combined actual trace must show positive DiskHeld before positive SocketHeld, simultaneous live occupancy before release, then both real continuations before owner return/join.",
+    "Retain all v1 failed logs/image/catalog and any v2 failure. Preserve ordinary policy/owner checks and source prerequisites independently.",
+    "No hidden metadata-flush error or power-loss durability guarantee follows from storage lifetime retirement."
+  ],
+  "artifact_maps": {
+    "original": {
+      "BUILD-NOTES.md": "344ba17d0c4a73e773e9d9c0de34079413f0780f1bac14b6006bf7a16890f956",
+      "PLAN.md": "7057f830d2ecfa086a1b5ce3b361179a905ab54d8a5441ff7c54fdcf2a07ee40",
+      "author-notes.json": "535878b6a46be2c02156a2e652a11109c8e9b9aa9522cd93fc9a234b785c5b6d",
+      "before/include/libtorrent/mmap_storage.hpp": "8b7d60a7e946eaa789d31fcd0c2f720a6bda1fbaa0a345218919fdedad44ee87",
+      "before/src/mmap_disk_io.cpp": "e28fdbb4f9eec4f7808098051987a5f9beab1fca1be3e5d0b628fb73c4ae1410",
+      "before/src/peer_connection.cpp": "41d22135c8f01adb1eaf6f668b7113d09b270da0d593b2b9cb6fb866048ee7e4",
+      "before/src/session_impl.cpp": "e33778939a03634f7ca588752f924afcdf790ac48ddd2a127af71e00f34d1c65",
+      "before/src/torrent.cpp": "d0b8d64c54583cb9287d20aaf5ea5bc2e85cbf0caa5d5c9df42f40c77187d185",
+      "check_source.py": "f245422120293ec2923aa9e5184e1f8202b8b06ef47b486bea5b916c71c76eb2",
+      "libtorrent-causal.patch": "d186f4bdfc797fdcb81a38613f527478076cf374dec91da977cc6645a9764d9b",
+      "overlay/include/libtorrent/aux_/biglybtc_causal_test.hpp": "6c8942610714de8effaa13b6286fb9efb5f9b45eef320822955d4d4cb4e94eb7",
+      "overlay/include/libtorrent/mmap_storage.hpp": "92606cadfc513fda25016c36ef71ac5c4c9e73b1c35de1621d2ab7bf04517729",
+      "overlay/src/biglybtc_causal_test.cpp": "8ac20d265abe3d7dde66b638574c113c8bfb5c9874d46eb452aceb42aedc08d6",
+      "overlay/src/mmap_disk_io.cpp": "38690ea74b49d086f989d8f995bb486e955d590e6c60395e92bd3e42aca71b3a",
+      "overlay/src/peer_connection.cpp": "223e0358de276c5bfd50e762e13475c854daea67e342a49d1115ce3efc28aaad",
+      "overlay/src/session_impl.cpp": "07101e1b6d6d36eab6fcf05e99b0cf6078c9dfbc3a7f99ad8f962d07e2db854a",
+      "overlay/src/torrent.cpp": "c9933b4cb853200d2d71df3022eb01fb87ee1493c1e1497eb8ede71bc0620af0",
+      "overlay-target.cmake": "a05013c6db066627fb4c078fa9e82f4406cfae3e568890a070fd6e05dc74cbb1",
+      "prepare_overlay.py": "da0085859d030d531c19a97fe8023a02225811f2880040d81cedd0477370942c",
+      "static-checks.json": "3e989d3ab0f3bf71beccd8beb8910d2fea0350d03ad4b4c5cfd775ee7d84219c",
+      "tests/causal_worker.hpp": "e5cfb37a21515346ae34e5df2144253eeadfd20e7ada64a0c538a63463627df6",
+      "tests/persistent_causal_tests.cpp": "c5bdfe4878ae852f1ec001bbeb73e994a5762ece425f15afe1457b66e690ff71"
+    },
+    "order": {
+      "PROPOSAL.md": "95f39ef0524a04a18654269fff30a67b621b9a44ad0231c2b94b04f0f3d9dbee",
+      "before/overlay/include/libtorrent/aux_/biglybtc_causal_test.hpp": "6c8942610714de8effaa13b6286fb9efb5f9b45eef320822955d4d4cb4e94eb7",
+      "before/overlay/include/libtorrent/mmap_storage.hpp": "92606cadfc513fda25016c36ef71ac5c4c9e73b1c35de1621d2ab7bf04517729",
+      "before/overlay/src/biglybtc_causal_test.cpp": "8ac20d265abe3d7dde66b638574c113c8bfb5c9874d46eb452aceb42aedc08d6",
+      "before/overlay/src/mmap_disk_io.cpp": "38690ea74b49d086f989d8f995bb486e955d590e6c60395e92bd3e42aca71b3a",
+      "before/overlay/src/peer_connection.cpp": "223e0358de276c5bfd50e762e13475c854daea67e342a49d1115ce3efc28aaad",
+      "before/overlay/src/session_impl.cpp": "07101e1b6d6d36eab6fcf05e99b0cf6078c9dfbc3a7f99ad8f962d07e2db854a",
+      "before/overlay/src/torrent.cpp": "c9933b4cb853200d2d71df3022eb01fb87ee1493c1e1497eb8ede71bc0620af0",
+      "before/tests/causal_worker.hpp": "e5cfb37a21515346ae34e5df2144253eeadfd20e7ada64a0c538a63463627df6",
+      "before/tests/persistent_causal_tests.cpp": "c5bdfe4878ae852f1ec001bbeb73e994a5762ece425f15afe1457b66e690ff71",
+      "candidate.patch": "28f463a137648e9cf93c62c4a8198e30bbbf78d4adb3c384730a70330a709a5f",
+      "overlay/include/libtorrent/aux_/biglybtc_causal_test.hpp": "6c8942610714de8effaa13b6286fb9efb5f9b45eef320822955d4d4cb4e94eb7",
+      "overlay/include/libtorrent/mmap_storage.hpp": "92606cadfc513fda25016c36ef71ac5c4c9e73b1c35de1621d2ab7bf04517729",
+      "overlay/src/biglybtc_causal_test.cpp": "982a73b5b06704b0ad2b9efad891217e7c71bff3f7789d2d4969b97a022accce",
+      "overlay/src/mmap_disk_io.cpp": "38690ea74b49d086f989d8f995bb486e955d590e6c60395e92bd3e42aca71b3a",
+      "overlay/src/peer_connection.cpp": "223e0358de276c5bfd50e762e13475c854daea67e342a49d1115ce3efc28aaad",
+      "overlay/src/session_impl.cpp": "07101e1b6d6d36eab6fcf05e99b0cf6078c9dfbc3a7f99ad8f962d07e2db854a",
+      "overlay/src/torrent.cpp": "c9933b4cb853200d2d71df3022eb01fb87ee1493c1e1497eb8ede71bc0620af0",
+      "static-checks.json": "6833b4a4a5eddb125cd2eecb11c19581f2f7eae2219e01f0bc8353b2e61caa8d",
+      "tests/causal_worker.hpp": "e5cfb37a21515346ae34e5df2144253eeadfd20e7ada64a0c538a63463627df6",
+      "tests/persistent_causal_tests.cpp": "1b0930a3753d93980f01e22047d10a49bf1ceeb3bf1ec0c13592ee411b8336bf",
+      "v1-failure-excerpt.log": "740ca46efc2bb10b5299ce97873d84ee60f8985c99faa8ae4866c9f37210dc9c"
+    },
+    "trace": {
+      "NOTES.md": "03c900cefcf92b09f134988cb9428285698462e8cc52c8e28816a0c30c834133",
+      "before/overlay/include/libtorrent/aux_/biglybtc_causal_test.hpp": "6c8942610714de8effaa13b6286fb9efb5f9b45eef320822955d4d4cb4e94eb7",
+      "before/overlay/include/libtorrent/mmap_storage.hpp": "92606cadfc513fda25016c36ef71ac5c4c9e73b1c35de1621d2ab7bf04517729",
+      "before/overlay/src/biglybtc_causal_test.cpp": "982a73b5b06704b0ad2b9efad891217e7c71bff3f7789d2d4969b97a022accce",
+      "before/overlay/src/mmap_disk_io.cpp": "38690ea74b49d086f989d8f995bb486e955d590e6c60395e92bd3e42aca71b3a",
+      "before/overlay/src/peer_connection.cpp": "223e0358de276c5bfd50e762e13475c854daea67e342a49d1115ce3efc28aaad",
+      "before/overlay/src/session_impl.cpp": "07101e1b6d6d36eab6fcf05e99b0cf6078c9dfbc3a7f99ad8f962d07e2db854a",
+      "before/overlay/src/torrent.cpp": "c9933b4cb853200d2d71df3022eb01fb87ee1493c1e1497eb8ede71bc0620af0",
+      "before/tests/causal_worker.hpp": "e5cfb37a21515346ae34e5df2144253eeadfd20e7ada64a0c538a63463627df6",
+      "before/tests/persistent_causal_tests.cpp": "1b0930a3753d93980f01e22047d10a49bf1ceeb3bf1ec0c13592ee411b8336bf",
+      "candidate.patch": "5de1089ef6b380365639a877c4ec7fd0f825fe31331f2f86838ef38f1e7d1022",
+      "overlay/include/libtorrent/aux_/biglybtc_causal_test.hpp": "6c8942610714de8effaa13b6286fb9efb5f9b45eef320822955d4d4cb4e94eb7",
+      "overlay/include/libtorrent/mmap_storage.hpp": "92606cadfc513fda25016c36ef71ac5c4c9e73b1c35de1621d2ab7bf04517729",
+      "overlay/src/biglybtc_causal_test.cpp": "982a73b5b06704b0ad2b9efad891217e7c71bff3f7789d2d4969b97a022accce",
+      "overlay/src/mmap_disk_io.cpp": "38690ea74b49d086f989d8f995bb486e955d590e6c60395e92bd3e42aca71b3a",
+      "overlay/src/peer_connection.cpp": "223e0358de276c5bfd50e762e13475c854daea67e342a49d1115ce3efc28aaad",
+      "overlay/src/session_impl.cpp": "07101e1b6d6d36eab6fcf05e99b0cf6078c9dfbc3a7f99ad8f962d07e2db854a",
+      "overlay/src/torrent.cpp": "c9933b4cb853200d2d71df3022eb01fb87ee1493c1e1497eb8ede71bc0620af0",
+      "static-checks.json": "ba239199f0bc282c915a7561e9ede88d6bc3ff4e1414b6719a5015758be4e03f",
+      "tests/causal_worker.hpp": "e5cfb37a21515346ae34e5df2144253eeadfd20e7ada64a0c538a63463627df6",
+      "tests/persistent_causal_tests.cpp": "2fabc8f39d068aef17eaec7aa4d118d492f9d0b4d9a7b83e23849daa6870f612"
+    }
+  },
+  "raw_v1_artifacts_verified": {
+    "build/persistent-peer-accounting-20261021/instrumented-gcc-tests.log": "fc4803a1a7c2038c1585da16b8784f55e696d95e764ae3d1c27c192aef868cc5",
+    "build/persistent-peer-accounting-20261021/instrumented-gcc-tests.xml": "a8e329f5b7be9510093e9af64e546a72cb417fc427b00f3f5d0c6415baf2f68e",
+    "build/persistent-peer-accounting-20261021/instrumented-gcc-tests-LastTest.log": "351469172e291379ab4798a091499dfbd4140408cfb00abf7ef99eb392e6bff8",
+    "build/persistent-peer-accounting-20261021/causal/instrumented-build-record.json": "cdf5a9c6614d6fac04973067377787515cc71a348fc4e5f285e435d08278acf9",
+    "build/persistent-peer-accounting-20261021/causal/install/lib/libtorrent-rasterbar.so.2.0.12": "3bb4f7666c002f4bdb0e303aebd235c6a39850f82813600c3a08a888f1a3f89d"
+  },
+  "execution": {
+    "independent_stdlib_source_checks": true,
+    "reviewed_helpers": 0,
+    "configure": 0,
+    "compiler": 0,
+    "native": 0,
+    "java": 0,
+    "git": 0,
+    "native_source_mutations": 0,
+    "provider_mutations": 0
+  },
+  "final_manifest_sha256": "5ec055b0388e9f8f23c2321e1f928157432154e7a403ef4d818a594853f06405"
+}

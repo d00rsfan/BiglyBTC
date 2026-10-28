@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "repository": "https://github.com/d00rsfan/BiglyBTC",
+  "source_commit": "0ecf3f3945bd810d6abc27a385f82b2317024b55",
+  "metadata_commit": "f50a09bbefd8cee89ed8f0ecdb14240c7a226b7b",
+  "tag": "milestone-rolling-history-20261021",
+  "tag_object": "659caba2c1fb0e0c6838e0ba5a4e35516a7dac91",
+  "tag_target": "f50a09bbefd8cee89ed8f0ecdb14240c7a226b7b",
+  "remote_identity_verified": true,
+  "source_files_verified": 101,
+  "qualification": "local-verification.json and hosted-verification.json",
+  "dist_manifest_sha256": "44cefcf27bb44664475b9a0e31a8ff3a51c2a363222570720cbb5ab2719d605c",
+  "original_processes_signaled": false,
+  "original_profile_access": false
+}

@@ -1,0 +1,18 @@
+{
+  "status": "PASS independent complete root source-only review",
+  "source_sha256": {
+    "preview/native/tests/history_keyboard_tests.cpp": "6c8f6d4570527b966562921c0c3b4fbd0f1233089420d8a988a17f17c6a1d46d"
+  },
+  "findings": [
+    "Complete222-line source read; all9 shape/traffic cases, unknown/zero/extremes, focus/modifiers/hidden/minimized and accepted-frame cursor lifetime covered.",
+    "Single destructive key events avoid fixture release-to-deleted-widget; tooltip and actual accessibility callbacks require real delivery.",
+    "Same-frame nested keys/new-frame/deletion, visible caption and focus-only guide checked separately; real compositor/screen-reader acceptance remains open.",
+    "Initial e98 source review preserved separately; complete v3 diff plus all assertions reviewed. Supported owned-window fixture only; candidate failure logs and independent focus reviews retained."
+  ],
+  "blockers": [],
+  "execution_credit": false,
+  "amendments": [
+    "focus-fixture.json",
+    "focus-fixture-v3.json"
+  ]
+}

@@ -1,0 +1,72 @@
+Start testing: Oct 17 05:10 IDT
+----------------------------------------------------------
+3/15 Testing: cached-state-metadata
+3/15 Test: cached-state-metadata
+Command: "/tmp/biglybtc-desktop-clang/tests/biglybtc-cache-tests"
+Directory: /tmp/biglybtc-desktop-clang/tests
+"cached-state-metadata" start time: Oct 17 05:10 IDT
+Output:
+----------------------------------------------------------
+PASS bounded original cache fields, duplicates, unknown bytes, malformed entries and owned lifetimes
+<end of output>
+Test time =   0.01 sec
+----------------------------------------------------------
+Test Passed.
+"cached-state-metadata" end time: Oct 17 05:10 IDT
+"cached-state-metadata" time elapsed: 00:00:00
+----------------------------------------------------------
+
+7/15 Testing: java-cached-library-view
+7/15 Test: java-cached-library-view
+Command: "/usr/bin/python3" "/home/yurii/Java/BiglyBT/native/tests/library_view_interop.py" "--driver" "/tmp/biglybtc-desktop-clang/tests/biglybtc-library-view-driver"
+Directory: /tmp/biglybtc-desktop-clang/tests
+"java-cached-library-view" start time: Oct 17 05:10 IDT
+Output:
+----------------------------------------------------------
+PASS actual Java v1/v2/hybrid cached names/sizes and unchanged profile bytes
+PASS missing/corrupt/symbolic cache keeps inventory readable without changing data
+<end of output>
+Test time =   0.52 sec
+----------------------------------------------------------
+Test Passed.
+"java-cached-library-view" end time: Oct 17 05:10 IDT
+"java-cached-library-view" time elapsed: 00:00:00
+----------------------------------------------------------
+
+15/15 Testing: desktop-model-and-lifecycle
+15/15 Test: desktop-model-and-lifecycle
+Command: "/tmp/biglybtc-desktop-clang/tests/biglybtc-desktop-tests" "modelValuesSelectionAndStaleTargets" "closeWaitsForCancellationAndWorkerTeardown" "cancellationFromBusyNotificationCompletes"
+Directory: /tmp/biglybtc-desktop-clang/tests
+"desktop-model-and-lifecycle" start time: Oct 17 05:10 IDT
+Output:
+----------------------------------------------------------
+********* Start testing of DesktopTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : DesktopTests::initTestCase()
+PASS   : DesktopTests::modelValuesSelectionAndStaleTargets()
+QWARN  : DesktopTests::closeWaitsForCancellationAndWorkerTeardown() This plugin does not support propagateSizeHints()
+PASS   : DesktopTests::closeWaitsForCancellationAndWorkerTeardown()
+PASS   : DesktopTests::cancellationFromBusyNotificationCompletes()
+PASS   : DesktopTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 1326ms
+********* Finished testing of DesktopTests *********
+<end of output>
+Test time =   1.44 sec
+----------------------------------------------------------
+Test Passed.
+"desktop-model-and-lifecycle" end time: Oct 17 05:10 IDT
+"desktop-model-and-lifecycle" time elapsed: 00:00:01
+----------------------------------------------------------
+
+End testing: Oct 17 05:10 IDT
+
+integration =   0.52 sec*proc
+
+java =   0.52 sec*proc
+
+local-files =   0.52 sec*proc
+
+ui =   1.44 sec*proc
+
+unit =   1.45 sec*proc
+

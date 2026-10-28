@@ -1,0 +1,33 @@
+Start testing: Oct 17 05:02 IDT
+----------------------------------------------------------
+15/15 Testing: desktop-model-and-lifecycle
+15/15 Test: desktop-model-and-lifecycle
+Command: "/tmp/biglybtc-desktop-gcc/tests/biglybtc-desktop-tests" "modelValuesSelectionAndStaleTargets" "closeWaitsForCancellationAndWorkerTeardown" "cancellationFromBusyNotificationCompletes"
+Directory: /tmp/biglybtc-desktop-gcc/tests
+"desktop-model-and-lifecycle" start time: Oct 17 05:02 IDT
+Output:
+----------------------------------------------------------
+********* Start testing of DesktopTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : DesktopTests::initTestCase()
+PASS   : DesktopTests::modelValuesSelectionAndStaleTargets()
+QWARN  : DesktopTests::closeWaitsForCancellationAndWorkerTeardown() This plugin does not support propagateSizeHints()
+PASS   : DesktopTests::closeWaitsForCancellationAndWorkerTeardown()
+PASS   : DesktopTests::cancellationFromBusyNotificationCompletes()
+PASS   : DesktopTests::cleanupTestCase()
+Totals: 5 passed, 0 failed, 0 skipped, 0 blacklisted, 1366ms
+********* Finished testing of DesktopTests *********
+<end of output>
+Test time =   1.48 sec
+----------------------------------------------------------
+Test Passed.
+"desktop-model-and-lifecycle" end time: Oct 17 05:02 IDT
+"desktop-model-and-lifecycle" time elapsed: 00:00:01
+----------------------------------------------------------
+
+End testing: Oct 17 05:02 IDT
+
+ui =   1.48 sec*proc
+
+unit =   1.48 sec*proc
+

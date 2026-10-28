@@ -1,0 +1,253 @@
+{
+  "schema": 1,
+  "milestone": "P04-23",
+  "reviewer": "error_codec",
+  "authors": {
+    "operations": "root",
+    "documentation_consumer": "error_driver with root task-anchor correction"
+  },
+  "status": "PASS independent source-only operational and evidence-finalization review",
+  "blockers": [],
+  "scope": "Read all 17 operational/completion helpers plus documentation consumer. No helper import, selected-body evaluation, execution, build, Git command or native edit. Root owns actual qualification/publication/checkpoint.",
+  "source_sha256": {
+    "build/history-traffic-20261020/checkpoint_history_traffic.py": "4af019197bda99e65afe5ab42b34855a48c4c5b043232f8fc9dccee1b4c6a370",
+    "build/history-traffic-20261020/checkpoint_milestone.py": "748482bbdb5aa1a7d519ecdc6d7ac27392a0d6d41b8dff2d1556a1e0164c4138",
+    "build/history-traffic-20261020/collect_hosted.py": "cdebeafcec3d0bbe935f31229813495b30eb0ed06ab1ce68745dc55460735b9c",
+    "build/history-traffic-20261020/collect_metadata_ci.py": "a0bcfe09341ed65a9eee77f768a949e9b8415e6d9c1db23479f132186efff1e1",
+    "build/history-traffic-20261020/commit_source.py": "6d3ae350950b981568aa0df26d2be96e9cf274185185c308f6e8c3e39335e6bd",
+    "build/history-traffic-20261020/finalize_docs.py": "1aa912062b7bef61b9534be0b2bb1cae6b027f6e0ba2a441c7887d116db81484",
+    "build/history-traffic-20261020/finalize_evidence.py": "9c8ad174d38654d96dfc64db2852ac8a731ad88f695e337b2f1772ac2fe3ec05",
+    "build/history-traffic-20261020/finish_milestone.py": "e7a947f897d63516c236051b14f2721342c968cc8f6c823e0a2468f6d3f4ece4",
+    "build/history-traffic-20261020/promote_dist.py": "2f5ba7a6583f8cc014664b63c95d7e33dc7b2cff6b8f1a52f0426c9520191cea",
+    "build/history-traffic-20261020/publish.py": "e7907411d82906ae97613c55b97bb298d8d16f37dd65b2b7052ddc7d7cc3e083",
+    "build/history-traffic-20261020/qualify.py": "a05fc984e4e00a5cd83a6a104df1996929dd07bce10645cd1843b4bad2b796ac",
+    "build/history-traffic-20261020/record_toolchains.py": "7101886dd529d667fd8ff328f528b70c46be993d4893c25329fa845fe23bf629",
+    "build/history-traffic-20261020/record_visual_review.py": "f2bd7613403be3f6bfd060ec0d1e6ec2a456414600af4c85f6ce95b06ea0e93c",
+    "build/history-traffic-20261020/run_smoke_scales.py": "e4793ea62af2719668a150e9bcae60dad8eaabbb68d76f80bb0694bd9cac418e",
+    "build/history-traffic-20261020/run_visuals.py": "b4cd8147247f4f39d63ab7f048d01d9ecd81c6b931f6d45753386495b839dfa0",
+    "build/history-traffic-20261020/verify_dist.py": "01eacd0c24bee4c5b972dc20c386b6133f801afc1b2c426e53c91a2c08f7137a",
+    "build/history-traffic-20261020/verify_hosted.py": "9e32decdc644ac021680fa9ff74c22573354b33f3886be8d227184aeb4479e32",
+    "build/history-traffic-20261020/verify_private_checkpoint.py": "fe60b88f1c65ea110379eed0373d1e3b2fe3ef28352b8a4c1f4c54c3ba6ec1d2"
+  },
+  "predecessor_source_sha256": {
+    "build/statistics-navigation-20261020/checkpoint_statistics_navigation.py": "2b07d06d33b0e2f7b2a2d4af7884d54d76475463595ae6a289bc9b53a1b4e973",
+    "build/statistics-navigation-20261020/checkpoint_milestone.py": "de626422bb97c68ed1f301087e2e1279345d208553e0edcbef8bc21f2238d419",
+    "build/statistics-navigation-20261020/collect_hosted.py": "c128a93a6fb29a21c4661a8e10e744a1f55ab2503ab35653139fa59747b66b74",
+    "build/statistics-navigation-20261020/collect_metadata_ci.py": "af4086f669392567372ae19663319fc9bbb69f44718d4979a0a49dd7aaf11566",
+    "build/statistics-navigation-20261020/commit_source.py": "b1bf9c5e0b9cef78b6da475ca95a9ee3d00dadce032b3ec3276140e4c97fb253",
+    "build/statistics-navigation-20261020/finalize_docs.py": "d688fa07bf6f596756e9406c529c1b2d04cd1ab0bc0a38e53942dfb8a943372f",
+    "build/statistics-navigation-20261020/finalize_evidence.py": "3a6d0242130c59c554721b1bc68b56ee0c2a8b2f735e261fae6f4b056502c8f4",
+    "build/statistics-navigation-20261020/finish_milestone.py": "7f4723b7aa62b7643f283d0d367b86ba7f6487d5a68ceef786411709322bf261",
+    "build/statistics-navigation-20261020/promote_dist.py": "9a8f7cd17dcc98faa3946edee84c291a508aa9e3a9d11ec839195319b13f3f88",
+    "build/statistics-navigation-20261020/publish.py": "324efa87f0b3fe559d97e5123d7f19be64791800bfcaed4d5976de428881eca3",
+    "build/statistics-navigation-20261020/qualify.py": "ec00cb6dda5d88ac7076ab729f2eaab27df90c67a7aceee9d670919fdb77f711",
+    "build/statistics-navigation-20261020/record_toolchains.py": "39bb18eba9754842fe63543abcfedef7871a547bb20ba3d97c1d0891bd614836",
+    "build/statistics-navigation-20261020/record_visual_review.py": "db27306ae4476128bd9acc8278073dde47191b4ce7eb6b3cd20774cffcc55510",
+    "build/statistics-navigation-20261020/run_smoke_scales.py": "c2584a87d107f6219f5385c3c86ff889af42976598a333c5678f63d4bbdd5ddc",
+    "build/statistics-navigation-20261020/run_visuals.py": "42749154bc81a2079b9b6b683e3a9b73bad0e06c36ce85cce16b799bfc519ef7",
+    "build/statistics-navigation-20261020/verify_dist.py": "45ef7636d8f071ea6a5ffdd53d5892771644b7c37cc486d38c261d74d4f14458",
+    "build/statistics-navigation-20261020/verify_hosted.py": "a8a4feb0031c5a99d855f60a01ddeaf5a437e100562f7d5521d3fd7b689306b3",
+    "build/statistics-navigation-20261020/verify_private_checkpoint.py": "ea9b011b0c137234cfc0df6d9f7f0dbf4528c46764ee4eac08c2c9c942f87cbb"
+  },
+  "context_sha256": {
+    "migration/evidence/20261020-history-traffic/baseline.json": "07aa139a046484f437916933689c0693f47faeb7462d4fa0d16456118d527a00",
+    "migration/evidence/20261020-history-traffic/qualification-inputs.json": "abc69f2a105f89c91ceb6208c9e22c9f0bc9d235177454b6f3b6c6d2853409c3",
+    "migration/evidence/20261020-history-traffic/unchanged-behavior-baseline.json": "a0ae135e7d6461093e4ecfd7caf682de82e614e2b911f90233447df018829fea",
+    "migration/evidence/20261020-history-traffic/source-audit.json": "7a07caf4cdfd0723c8fffb3c264279dec0c301410d85804deedec52ed17362ce",
+    "migration/evidence/20261020-history-traffic/source-ranges.json": "998c1b1f456ced493b05fc5799b6910753d44a7107baee346e6dcbece601cc41",
+    "migration/evidence/20261020-history-traffic/contract-at-source-freeze.md": "4265194d70a5cb8aeae51b23da91f0c95d44403348241197f2a27d82dcf6ab05",
+    "migration/evidence/20261020-history-traffic/current-request.md": "d3a137b3b5221c81f7a6cbef75b86b7857bcc09d2dfa56c79e9d6a0e77409cdb",
+    "migration/evidence/20261020-history-traffic/request-steering.json": "354c2d20b94bc34155e5aeb5009ff8c8e87804e82fb466b292771076bba296a2",
+    "migration/tools/checkpoint.py": "209d8da4eb017bb4d166871bdc36144d6ffa984ab8674e1b69d2a4bf930ce8ef",
+    "/home/yurii/Java/BiglyBTC/build/history-traffic-20261020/source-commit.json": "12d1205340c45a3329c8935338386922d4131a8fdfde5988b05fed1e99f6e920",
+    "build/statistics-navigation-20261020/finalize_evidence.py": "3a6d0242130c59c554721b1bc68b56ee0c2a8b2f735e261fae6f4b056502c8f4"
+  },
+  "baselines": {
+    "original": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+    "native": "11dd37171a68c9de8bdae662cc2daf630f363120",
+    "private": "679a7b4af30ee9ca6bbba9b81f438028f8c88c6b",
+    "previous_qualified_source": "f7d979801773934d481155019b18319b64beff96",
+    "source_receipt_observed": "1b08cceee82df9d29f1b35719a6ac24f2c6c2bc1",
+    "actual_Git_ancestry_independently_executed": false
+  },
+  "independent_static_checks": {
+    "AST_parsed_without_import": 18,
+    "current_qualified_source_files_verified": 15,
+    "unchanged_native_files_verified": 232,
+    "original_index_hash_verified": true,
+    "all_timeout_expressions_inherited": true,
+    "inherited_function_AST_after_namespace_normalization": {
+      "checkpoint_history_traffic.py": [
+        "raw_git",
+        "assert_original_baseline",
+        "verify"
+      ],
+      "checkpoint_milestone.py": [],
+      "collect_hosted.py": [
+        "gh"
+      ],
+      "collect_metadata_ci.py": [],
+      "commit_source.py": [],
+      "finalize_docs.py": [
+        "require",
+        "read_json",
+        "load",
+        "digest",
+        "full_hash",
+        "replace_once",
+        "replace_between",
+        "milestone_block",
+        "append_unique"
+      ],
+      "finalize_evidence.py": [
+        "require",
+        "digest",
+        "read",
+        "git",
+        "cases",
+        "sections",
+        "captures",
+        "original_unchanged"
+      ],
+      "finish_milestone.py": [
+        "run"
+      ],
+      "promote_dist.py": [
+        "digest",
+        "runpath"
+      ],
+      "publish.py": [
+        "git"
+      ],
+      "qualify.py": [
+        "run"
+      ],
+      "record_toolchains.py": [],
+      "record_visual_review.py": [],
+      "run_smoke_scales.py": [],
+      "run_visuals.py": [
+        "run"
+      ],
+      "verify_dist.py": [],
+      "verify_hosted.py": [
+        "digest",
+        "require"
+      ],
+      "verify_private_checkpoint.py": [
+        "git"
+      ]
+    },
+    "source_images_and_ranges_hash_checked": 2,
+    "checkpoint_shared_paths": [
+      ".gitignore",
+      "MIGRATION_PLAN.md",
+      "migration/STATE.md",
+      "migration/FEATURE_MATRIX.md",
+      "migration/PREVIEW.md",
+      "migration/RECOVERY.md",
+      "migration/upstreams.lock.json",
+      "migration/tasks/P04-23-history-traffic.md",
+      "migration/tasks/P04-24-history-keyboard.md",
+      "migration/tasks/P04-25-history-copy.md",
+      "migration/publication/preview/native-preview.yml"
+    ]
+  },
+  "cohorts": {
+    "previous": {
+      "gcc": 67,
+      "clang": 18,
+      "sanitized": 21
+    },
+    "required_final": {
+      "gcc": 69,
+      "clang": 20,
+      "sanitized": 23
+    },
+    "new_units": [
+      "saved-history-traffic-data",
+      "saved-history-traffic-views"
+    ],
+    "new_count_keys": [
+      "history_traffic_data_qt_rows",
+      "history_traffic_views_qt_rows"
+    ],
+    "retained_navigation_rows": [
+      13,
+      11
+    ],
+    "retained_chart_rows": [
+      19,
+      13,
+      22
+    ],
+    "retained_hourly_rows": 22,
+    "offline_smoke_rows": 10,
+    "offline_PNGs_per_scale": 16,
+    "all_PNGs_per_scale": 20,
+    "local_PNGs": 60,
+    "hosted_PNGs": 20
+  },
+  "assessments": [
+    {
+      "topic": "qualification and exact source",
+      "status": "PASS",
+      "detail": "Runner retains all old cohorts and adds exactly two named data/View targets. Ordinary-priority CTest, nice5 builds, existing jobs/deadlines and leak-enabled ASAN/UBSAN flags remain intact. Finalizer requires previous exact 67/18/21 names plus two, matching XML and LastTest sections, successful configure/build/tests and per-section old/new Qt/accounting markers.15 source pins and232 inherited guards are bound to current bytes, actual source Git blobs and fixed baseline parent."
+    },
+    {
+      "topic": "source publication staging",
+      "status": "PASS with explicit stage distinction",
+      "detail": "Current commit_source admits only exact 15 allowed changed/new paths, clean index/main/known origin, GCC 69 and all 3 scaled smoke logs / 7 successful visual commands, 232 unchanged inputs and complete pre-build pin equality. It records that Clang/sanitizer/hosted qualification remains mandatory. This is source publication to start CI, not full milestone completion. finish_milestone and finalizer continue to require all three lanes and hosted before promotion/metadata/tag; actual direct source parent is fixed baseline 11dd, with no unnecessary historical amendment branch."
+    },
+    {
+      "topic": "hosted run, archive and capture provenance",
+      "status": "PASS",
+      "detail": "Desktop/SDK exact source/workflow identities and completed success, API artifact ID/run/head/branch/name/digest/size, retained actual ZIP hash, canonical regular ZIP entries and full extracted-path/byte equality precede the one success receipt.69 unique XML names must equal previous 67 plus the two new units and all LastTest names.20 exact PNG names/signatures and 10 smoke rows are required. Archive file count is observed, never guessed."
+    },
+    {
+      "topic": "inherited Java scope",
+      "status": "PASS",
+      "detail": "2550 daily and 3150 independent day/hour scalar scopes remain in their original 20261019-saved-history and20261020-history-week namespaces. Receipt/stdout/execution hashes are tied to immutable private parent 679 and public fixture maps, original cb8 and exact query totals. Both new Java execution and new equality credit are explicitly false. No traffic-renderer Java UI equality is inferred."
+    },
+    {
+      "topic": "dist, RPATH and publication",
+      "status": "PASS",
+      "detail": "Previous manifest must equal baseline.103-file set and 82 exact private runtimes are preserved; installation is replayed on a separate build ELF with only the exact CMake RUNPATH change and complete byte equality. Complete previous-dist remains available and rename failure restores it. Final source/map/loader checks and strict local/hosted completion precede metadata publication. Publication admits only this milestone JSON, checks known main/origin and exact remote main/tag/peeled identities."
+    },
+    {
+      "topic": "raw private checkpoint",
+      "status": "PASS",
+      "detail": "Scope is the current evidence subtree plus 11 explicit shared files, including all 3 current task cards. Scoped raw attributes and alternate-index renormalization are retained. The wrapper compares every staged evidence/shared regular blob and complete future inventory with raw working bytes before write-tree/commit-tree/first ref update. Original HEAD/index is checked around that boundary. Post-ref verification checks fixed sole parent 679, every required blob and inventory. Root must run this after the final evidence inventory; no future receipt is claimed by this review."
+    },
+    {
+      "topic": "documentation producer/consumer schema",
+      "status": "PASS source-only coherence",
+      "detail": "Current finalize_docs1aa912 consumes the exact producer row keys and 69/20/23 cohorts, preserves old fixed 13/11 navigation and other accounting/Qt markers, no-new-Java flags,60/20 captures and 103/82 dist identities. It stages all 7 intended document transformations before writes, modifies only statistics.history_traffic component, and keeps broad first_ported/integrated fields null. Current completion is 1 of 3; P04-24/P04-25 remain future milestones. No metadata/private IDs are guessed."
+    }
+  ],
+  "resolved_or_disclosed_notes": [
+    {
+      "topic": "historical request baseline",
+      "resolution": "The raw baseline first-of-two wording remains byte-preserved as captured history. request-steering/current-request explicitly bind the user addition and total 3; current task cards and docs consumer now say three. This preserves history without granting future keyboard/copy feature credit."
+    },
+    {
+      "topic": "helper carryover prose",
+      "resolution": "Root corrected hosted/checkpoint milestone docstrings and run_visuals comment to fourteen retained plus Protocol/DHT, sixteen offline. No operational expression changed; current hashes are pinned."
+    },
+    {
+      "topic": "authoring history",
+      "resolution": "prepare/wire source generation recipes are not selected runtime steps in this operations set and must not overwrite corrected frozen source. All inspections here parsed static source only."
+    }
+  ],
+  "execution": {
+    "helper_imports": 0,
+    "selected_target_definitions_evaluated": 0,
+    "helper_execution": 0,
+    "builds": 0,
+    "tests": 0,
+    "git_commands": 0,
+    "native_edits": 0,
+    "helper_edits": 0
+  },
+  "qualification_credit": false
+}

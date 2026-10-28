@@ -1,0 +1,64 @@
+{
+  "schema": 1,
+  "status": "PROPOSED_STANDALONE_VALIDATION_NOT_EXECUTED",
+  "input_manifest": {
+    "path": "migration/evidence/20261018-scheduler-export/independent-inputs-oracle.json",
+    "sha256": "03debd1fee899971cce3c7e77d19a7f1382a0dd27fccea388098baba6ac87393"
+  },
+  "scope": "Clean standalone scheduler source export plus published PluginSDK; no BiglyBTC core/app, original Java/core classes/JVM/SWT, live profile, real engine actions or ownership-file writer. Qt6::Core is a required library and is not the BiglyBTC core.",
+  "layout": {
+    "speedscheduler": "fixtures",
+    "scheduler-ticks": "tick-fixtures",
+    "scheduler-ownership": "ownership-fixtures",
+    "fixed_source_cpp_headers": "root",
+    "Toolchain.cmake": "cmake/Toolchain.cmake",
+    "published_sdk_commit": "eefbd205ca0940ad4868ee07989b2d42be1a99dc"
+  },
+  "gates": [
+    "Create export only from actual immutable private checkpoint; compare each exported source, all74 fixture raw bytes and all3 fixture manifests to the precise source image; preserve CRLF77f552..., UTF16, zero-length and binary files using -text attributes. No golden regeneration.",
+    "Review CMake and four replay scripts as explicit export-path deltas. Compare every nonpath AST node/assertion/subprocess argv/strict timeout against old qualified script. Keep SDK SOURCE_PROVENANCE distinct from scheduler export provenance.",
+    "Build/install exact BiglyBTCPluginSDK0.1.0 at explicit published commit. Configure scheduler alone with plugin ON, C++23 and exact pinned Qt6.12Core/toolchain; do not configure preview/core/app or locate/execute Java.",
+    "Inspect configured CTest manifest for exactly the six named suites below, unchanged timeouts and real built executable/module paths. Run all six normally without optimized-away Python assertions; no skipped module suite or fabricated original oracle run.",
+    "Confirm policy/module/unit source hashes before/after, exported fixtures and module-input originals unchanged, compile_commands and linkage use only scheduler policy, QtCore and SDK host/dl closure. Record actual compiler/Qt/SDK/source/binary/test logs, failures and output counts.",
+    "If claiming GCC/Clang/sanitizer portability, run each claimed lane separately; a hosted workflow from only one compiler is not a replay of old3lane qualification. No leak suppression or source/deadline change concealed as path adaptation.",
+    "Publication/CI success can be claimed only from actual fresh export commit and actual run receipt. Existing historical6suite logs are provenance only; no new binary release or client feature activation follows automatically."
+  ],
+  "required_suites": [
+    {
+      "name": "original-scheduler-policy",
+      "timeout_seconds": 60,
+      "scope": "Existing native policy unit assertions"
+    },
+    {
+      "name": "original-scheduler-module-fixtures",
+      "timeout_seconds": 180,
+      "scope": "6336 frozen tick state projections through actual independently loaded module ABI; original SELECT diagnostics intentionally excluded by existing script"
+    },
+    {
+      "name": "original-scheduler-xml-time-fixtures",
+      "timeout_seconds": 120,
+      "scope": "4 frozen XML/model/time normalized record files; historical151200 minute comparisons, no new Java execution"
+    },
+    {
+      "name": "original-scheduler-tick-fixtures",
+      "timeout_seconds": 180,
+      "scope": "11 \u00d7576 =6336 frozen commands/rates/selection/ownership states"
+    },
+    {
+      "name": "original-pause-ownership",
+      "timeout_seconds": 60,
+      "scope": "Existing bounded codec unit/lookup cases; no physical writer"
+    },
+    {
+      "name": "original-pause-ownership-fixtures",
+      "timeout_seconds": 120,
+      "scope": "10 frozen original helper cases:9 membership equivalents and1 separately expected unterminated-foreign append rejection"
+    }
+  ],
+  "honest_boundaries": [
+    "Original callbacks/AutoSpeed/tag/engine/UI integration remain unimplemented by this standalone export; output commands/rates are not applied.",
+    "Unknown ownership lines preserve raw bytes on native removal rather than Java destructive trim/reencoding; unterminated foreign append has explicit rejection, not equality credit.",
+    "Original class digests and helper/JDK/environment boundaries are inherited historical receipts, not reverified by executing Java or source classes here.",
+    "User explicitly authorized public ports with original source references; this audit adds attribution/provenance facts, not a new publication approval gate or invented upstream redistribution grant."
+  ]
+}

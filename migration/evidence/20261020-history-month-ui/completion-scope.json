@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "phase": "ui",
+  "source_files": 24,
+  "unchanged_files": 238,
+  "unit_suites": {
+    "gcc": 76,
+    "clang": 27,
+    "sanitized": 30
+  },
+  "new_units": [
+    "saved-history-month-page",
+    "saved-history-month-plot-data",
+    "saved-history-month-window-worker"
+  ],
+  "unit_count_keys": {
+    "saved-history-month-plot-data": "saved_history_month_plot_qt_rows",
+    "saved-history-month-page": "saved_history_month_ui_qt_rows",
+    "saved-history-month-window-worker": "saved_history_month_window_worker_qt_rows"
+  },
+  "smoke_qt_rows": 13,
+  "captures_per_scale": 23,
+  "local_captures": 69,
+  "hosted_captures": 23
+}

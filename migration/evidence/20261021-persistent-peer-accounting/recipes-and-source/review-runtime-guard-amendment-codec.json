@@ -1,0 +1,164 @@
+{
+  "status": "PASS_SOURCE_ONLY_NO_BLOCKER",
+  "reviewer": "independent codec agent; runtime guard and amendment authored by Driver; prior guard review authored by Oracle",
+  "scope": "Complete correction candidate and full changed definitions; inherited unchanged guard/Bridge paths read for context, own original core arithmetic excluded from independent credit",
+  "candidate_manifest_sha256": "1d0dd690ebbd6d10f032f3ffc3cb3c084325291cc48c674160e9bf76712f4cdc",
+  "base_manifest_sha256": "40b09c4fc898159d71bcdd331b4cc2b9f04df09ed1d0cb8b4cf8e615989f0186",
+  "base_blocked_review_sha256": "e78560659386dfea6ff5c0a10467b22ee21c6b51405db06b91f734844c6510a6",
+  "source_sha256": {
+    "app/session_bridge.cpp": "1910a79a18908bf9563a8377367c4d1e209cc16b92e53b7a29ac0927e942b061",
+    "engine/CMakeLists.txt": "2b65bae23965c4325dfb85edbb3479a247e43e9084243e2915eaa315e8a9414b",
+    "engine/persistent_runtime_guard.cpp": "0b0d8e795fa5e6a03f6f4ff68018599ee57c73b8c118b555a93bc1d635eabc20",
+    "engine/persistent_runtime_guard.hpp": "822cc7081c1eff86a37699a2a71b5645750a1c032a50ee26e9d51d28d459e39e",
+    "engine/persistent_session.cpp": "ac9857fa432fb51bdc8b526acebf55ea0a57520e284a59c2bca4858e2c4c071c",
+    "engine/persistent_session.hpp": "588635aa587c733d64d97eb64581ea2a91cc4305c4af8617507d0b0e2519a3e6",
+    "engine/runtime-binding/PersistentRuntimeBinding.cmake": "53026c5cadba464fe34f12fe231be24cca3ea19352dad6413cff8bd2d7878fba",
+    "engine/runtime-binding/approved-runtime.json": "aa5f1767640fc1ca5f978360ddb8eebd26fc29b2f0c34b44fdf7416299a1bb3c",
+    "engine/runtime-binding/retained-runtime.json": "9b9ba22c14eafac097aecea13097ef59be6b686ff7150814b5d8889f6acc3b91",
+    "engine/runtime-binding/source-build-record.json": "436931d4c6b87274c60b89877afedc19e06485bc4f04d120a3ab3e1889abfc66",
+    "engine/runtime-binding/verify_runtime_manifest.py": "33b967e0688eb4ba59d551b7239d72adf133850197620572d2370a47fcc77b69",
+    "tests/RuntimeBindingTests.cmake": "216eedea6d8518d18a1126def40b4a528b58d12e866053f11126421901e90804",
+    "tests/persistent_runtime_binding_driver.cpp": "9b72882e5fecaf3a3b68c1d6609c34ffa7bcb90730d698345399d98939f2fd12",
+    "tests/persistent_runtime_negative_driver.cpp": "9d3e4d0b8e3fa29d2b9bb139d577ab353d6066f246cda7c27d90934acc52af69",
+    "tests/persistent_unbound_bridge_tests.cpp": "9fb10b63fca906160b927d438193fc5c9772498ef902f317d9207c65348a7acc",
+    "tests/runtime_interposer.cpp": "5e1ca8b234abd010b1a72024c2631fa7e46afcd90b2c8217b709dbb1bb50a586",
+    "tests/runtime_interposition_driver.cpp": "6259bf5d12d468ef3b594b90957cf8b9376a947cd79e6908e8d2f96043c8b4f8",
+    "tests/runtime_manifest_tests.py": "c8df442275b53311e6b667498ca3fdf2792ec503e7c4acdb7e2f6442017c8975"
+  },
+  "artifact_input_sha256": {
+    "NOTES.md": "60211337d0603ba65420061343430c3753b0425911e91c385ac28d2e2a13226d",
+    "before/app/session_bridge.cpp": "1910a79a18908bf9563a8377367c4d1e209cc16b92e53b7a29ac0927e942b061",
+    "before/engine/CMakeLists.txt": "2b65bae23965c4325dfb85edbb3479a247e43e9084243e2915eaa315e8a9414b",
+    "before/engine/persistent_runtime_guard.cpp": "8c019fc8ab5b46dd40cea02009f9289b8d2bb6df084ec003b041647d611859ca",
+    "before/engine/persistent_runtime_guard.hpp": "822cc7081c1eff86a37699a2a71b5645750a1c032a50ee26e9d51d28d459e39e",
+    "before/engine/persistent_session.cpp": "bbe3692f4e2dca89d5e714db7fa5ef8ec4ba5d013b88fbdffb664c0a19723fed",
+    "before/engine/persistent_session.hpp": "588635aa587c733d64d97eb64581ea2a91cc4305c4af8617507d0b0e2519a3e6",
+    "before/engine/runtime-binding/PersistentRuntimeBinding.cmake": "53026c5cadba464fe34f12fe231be24cca3ea19352dad6413cff8bd2d7878fba",
+    "before/engine/runtime-binding/approved-runtime.json": "010c6094b62e5e2e597ce6267b0125f6560d1a043a792218389ef4b962e871ae",
+    "before/engine/runtime-binding/source-build-record.json": "436931d4c6b87274c60b89877afedc19e06485bc4f04d120a3ab3e1889abfc66",
+    "before/engine/runtime-binding/verify_runtime_manifest.py": "ca0c9d38a753cd6ccb073c40244932e51895be89de428c42baf319305ad17442",
+    "before/tests/RuntimeBindingTests.cmake": "fdb60a0a128b3dfa74f5830261f14013b236350654f27380575d75468ca10e2d",
+    "before/tests/persistent_runtime_binding_driver.cpp": "9b72882e5fecaf3a3b68c1d6609c34ffa7bcb90730d698345399d98939f2fd12",
+    "before/tests/persistent_runtime_negative_driver.cpp": "88611f3562f57add6386d93b5a35550a4bec3705abfbdffd7b7f530287eaf097",
+    "before/tests/persistent_unbound_bridge_tests.cpp": "9fb10b63fca906160b927d438193fc5c9772498ef902f317d9207c65348a7acc",
+    "before/tests/runtime_interposer.cpp": "5e1ca8b234abd010b1a72024c2631fa7e46afcd90b2c8217b709dbb1bb50a586",
+    "before/tests/runtime_manifest_tests.py": "82d6af083fc375936324ff47ff015807103a8a2a7fd4d911ec3c2fe934ace526",
+    "candidate.patch": "ee05cb7675a1d4957015919b13899864985e0ecb39fb646f1e9860709e59791c",
+    "staging/app/session_bridge.cpp": "1910a79a18908bf9563a8377367c4d1e209cc16b92e53b7a29ac0927e942b061",
+    "staging/engine/CMakeLists.txt": "2b65bae23965c4325dfb85edbb3479a247e43e9084243e2915eaa315e8a9414b",
+    "staging/engine/persistent_runtime_guard.cpp": "0b0d8e795fa5e6a03f6f4ff68018599ee57c73b8c118b555a93bc1d635eabc20",
+    "staging/engine/persistent_runtime_guard.hpp": "822cc7081c1eff86a37699a2a71b5645750a1c032a50ee26e9d51d28d459e39e",
+    "staging/engine/persistent_session.cpp": "ac9857fa432fb51bdc8b526acebf55ea0a57520e284a59c2bca4858e2c4c071c",
+    "staging/engine/persistent_session.hpp": "588635aa587c733d64d97eb64581ea2a91cc4305c4af8617507d0b0e2519a3e6",
+    "staging/engine/runtime-binding/PersistentRuntimeBinding.cmake": "53026c5cadba464fe34f12fe231be24cca3ea19352dad6413cff8bd2d7878fba",
+    "staging/engine/runtime-binding/approved-runtime.json": "aa5f1767640fc1ca5f978360ddb8eebd26fc29b2f0c34b44fdf7416299a1bb3c",
+    "staging/engine/runtime-binding/retained-runtime.json": "9b9ba22c14eafac097aecea13097ef59be6b686ff7150814b5d8889f6acc3b91",
+    "staging/engine/runtime-binding/source-build-record.json": "436931d4c6b87274c60b89877afedc19e06485bc4f04d120a3ab3e1889abfc66",
+    "staging/engine/runtime-binding/verify_runtime_manifest.py": "33b967e0688eb4ba59d551b7239d72adf133850197620572d2370a47fcc77b69",
+    "staging/tests/RuntimeBindingTests.cmake": "216eedea6d8518d18a1126def40b4a528b58d12e866053f11126421901e90804",
+    "staging/tests/persistent_runtime_binding_driver.cpp": "9b72882e5fecaf3a3b68c1d6609c34ffa7bcb90730d698345399d98939f2fd12",
+    "staging/tests/persistent_runtime_negative_driver.cpp": "9d3e4d0b8e3fa29d2b9bb139d577ab353d6066f246cda7c27d90934acc52af69",
+    "staging/tests/persistent_unbound_bridge_tests.cpp": "9fb10b63fca906160b927d438193fc5c9772498ef902f317d9207c65348a7acc",
+    "staging/tests/runtime_interposer.cpp": "5e1ca8b234abd010b1a72024c2631fa7e46afcd90b2c8217b709dbb1bb50a586",
+    "staging/tests/runtime_interposition_driver.cpp": "6259bf5d12d468ef3b594b90957cf8b9376a947cd79e6908e8d2f96043c8b4f8",
+    "staging/tests/runtime_manifest_tests.py": "c8df442275b53311e6b667498ca3fdf2792ec503e7c4acdb7e2f6442017c8975",
+    "static-checks.json": "64b7c85852cd481f6919dfd9fc0d64638acc1db5409bcbfd553e3235e8a8123a"
+  },
+  "before_sha256": {
+    "app/session_bridge.cpp": "1910a79a18908bf9563a8377367c4d1e209cc16b92e53b7a29ac0927e942b061",
+    "engine/CMakeLists.txt": "2b65bae23965c4325dfb85edbb3479a247e43e9084243e2915eaa315e8a9414b",
+    "engine/persistent_runtime_guard.cpp": "8c019fc8ab5b46dd40cea02009f9289b8d2bb6df084ec003b041647d611859ca",
+    "engine/persistent_runtime_guard.hpp": "822cc7081c1eff86a37699a2a71b5645750a1c032a50ee26e9d51d28d459e39e",
+    "engine/persistent_session.cpp": "bbe3692f4e2dca89d5e714db7fa5ef8ec4ba5d013b88fbdffb664c0a19723fed",
+    "engine/persistent_session.hpp": "588635aa587c733d64d97eb64581ea2a91cc4305c4af8617507d0b0e2519a3e6",
+    "engine/runtime-binding/PersistentRuntimeBinding.cmake": "53026c5cadba464fe34f12fe231be24cca3ea19352dad6413cff8bd2d7878fba",
+    "engine/runtime-binding/approved-runtime.json": "010c6094b62e5e2e597ce6267b0125f6560d1a043a792218389ef4b962e871ae",
+    "engine/runtime-binding/source-build-record.json": "436931d4c6b87274c60b89877afedc19e06485bc4f04d120a3ab3e1889abfc66",
+    "engine/runtime-binding/verify_runtime_manifest.py": "ca0c9d38a753cd6ccb073c40244932e51895be89de428c42baf319305ad17442",
+    "tests/RuntimeBindingTests.cmake": "fdb60a0a128b3dfa74f5830261f14013b236350654f27380575d75468ca10e2d",
+    "tests/persistent_runtime_binding_driver.cpp": "9b72882e5fecaf3a3b68c1d6609c34ffa7bcb90730d698345399d98939f2fd12",
+    "tests/persistent_runtime_negative_driver.cpp": "88611f3562f57add6386d93b5a35550a4bec3705abfbdffd7b7f530287eaf097",
+    "tests/persistent_unbound_bridge_tests.cpp": "9fb10b63fca906160b927d438193fc5c9772498ef902f317d9207c65348a7acc",
+    "tests/runtime_interposer.cpp": "5e1ca8b234abd010b1a72024c2631fa7e46afcd90b2c8217b709dbb1bb50a586",
+    "tests/runtime_manifest_tests.py": "82d6af083fc375936324ff47ff015807103a8a2a7fd4d911ec3c2fe934ace526"
+  },
+  "changed_inputs": [
+    "engine/persistent_runtime_guard.cpp",
+    "engine/persistent_session.cpp",
+    "engine/runtime-binding/approved-runtime.json",
+    "engine/runtime-binding/retained-runtime.json",
+    "engine/runtime-binding/verify_runtime_manifest.py",
+    "tests/RuntimeBindingTests.cmake",
+    "tests/persistent_runtime_negative_driver.cpp",
+    "tests/runtime_interposition_driver.cpp",
+    "tests/runtime_manifest_tests.py"
+  ],
+  "checks": {
+    "all_candidate_declared_artifact_and_source_hashes_exact": true,
+    "all_base_artifact_inputs_preserved": true,
+    "all_16_candidate_beforeimages_equal_base_sources": true,
+    "complete_nine_input_patch_reconstructed_exactly": true,
+    "python_ast_only_nodes": {
+      "tests/runtime_manifest_tests.py": 921,
+      "engine/runtime-binding/verify_runtime_manifest.py": 1407
+    },
+    "actual_retained_record_maps_rehashed": {
+      "source_sha256": 444,
+      "source_build_rules_sha256": 13,
+      "bundled_dependency_sha256": 16,
+      "installed_sha256": 282,
+      "build_files_sha256": 4
+    },
+    "actual_retained_runtime_sha256": "c35f1b0408508c019f002c438d70dd361a55be20286ded56711efd6bba2424e3",
+    "fixed_two_entry_qualification_only_catalog_no_instrumented_entry": true
+  },
+  "findings": [
+    {
+      "id": "RG-A1",
+      "resolution": "closed in candidate source",
+      "evidence": "persistent_session.cpp explicitly includes persistent_runtime_guard.hpp before invoking its declaration; no generated/test-only declaration or relaxed diagnostics."
+    },
+    {
+      "id": "RG-A2",
+      "resolution": "closed in candidate source",
+      "evidence": "Exact artifact open uses O_RDONLY|O_CLOEXEC|O_NOFOLLOW|O_NONBLOCK; descriptor regular-type/device/inode/size checks still precede reading. A FIFO without a writer cannot block this open."
+    },
+    {
+      "id": "RG-RETENTION",
+      "resolution": "sound bounded relocation",
+      "evidence": "One exact retained manifest and exact retention receipt are added to a closed SHA catalog. Historical436931 source/build record and c35f artifact remain unchanged. Original and retained roots are checked separately; all444/13/16/282/4 maps are independently still exact. Relative library location is preserved beneath exact retained install. Relocated Ninja is not invoked."
+    },
+    {
+      "id": "RG-FIFO-NEGATIVE",
+      "resolution": "meaningful source fixture; execution pending",
+      "evidence": "Matched test-only open seam returns a real owned0600 FIFO descriptor opened with exact production nonblocking flags. Test requires positive injection and DependencyUnqualified. This exercises actual descriptor-type rejection without changing or replacing the approved DSO pathname."
+    },
+    {
+      "id": "RG-INTERPOSITION",
+      "resolution": "meaningful distinct source fixture; execution pending",
+      "evidence": "Separate LD_PRELOAD child first proves real provider-handle version export differs from RTLD_DEFAULT, then unsets only LD_PRELOAD while retaining mapping, and requires create rejection. Unchanged bound positive control and CMake-selected provider remain necessary to attribute runtime coverage."
+    },
+    {
+      "id": "RG-TEST-HYGIENE",
+      "resolution": "closed in source",
+      "evidence": "sys.dont_write_bytecode is set before verifier import; all additive CTest branches have unit labels and bounded15/60/120second deadlines. Existing strict compile options and exact distro artifact negative remain."
+    }
+  ],
+  "limitations": [
+    "Source-only PASS is not compiler, loader, test, causal or deployment execution credit.",
+    "FIFO evidence is a real descriptor supplied by a narrow test seam, not an actual concurrent pathname replacement race. Inode/content/open seams remain simulated matched caller results.",
+    "Runtime guard protects the declared owned Linux/glibc deployment boundary, not arbitrary hostile in-process memory/code or filesystem mutation.",
+    "The retained c35f catalog remains source-bound qualification-only with causal_qualified=false. A future instrumented DSO requires actual parent/overlay/source/build/artifact evidence and a separate explicit reviewed catalog amendment.",
+    "Previously passed unbound ordinary tests do not become persistent storage-fence/finality evidence. All bound/default/negative, wrapper, causal and appropriate sanitizer cohorts remain pending root execution."
+  ],
+  "execution": {
+    "target_import": 0,
+    "configure": 0,
+    "compiler": 0,
+    "native_test": 0,
+    "loader_probe": 0,
+    "git_mutation": 0,
+    "profile_access": 0
+  },
+  "native_and_candidate_edits_by_reviewer": false
+}

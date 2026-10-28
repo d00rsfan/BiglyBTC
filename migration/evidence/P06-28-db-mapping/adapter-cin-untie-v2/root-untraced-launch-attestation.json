@@ -1,0 +1,101 @@
+{
+  "status": "root-attested untraced launch; completed three-lane qualification",
+  "recorded_utc": "2026-10-18T02:06:06.768267+00:00",
+  "matrix": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/matrix.json",
+  "matrix_sha256": "3f1800e1d6b4c1c6f327480973662d4ced5efd0171eb5c864c6a2ad254a2040d",
+  "runner": "migration/tools/azureus_db_mapping_adapter_matrix.py",
+  "runner_sha256": "082f84a1c3c1d8523e17d97955bfec08ffc3c6c8b3f63060402378372ba4e0b7",
+  "launch_identity": "build/recovery/db-mapping-adapter-v2-native-execution.json",
+  "launch_identity_sha256": "af01c3057e2db9e2457313b3afb4d50dee79b1cf873a94eb127d9330c76e5caf",
+  "direct_manager_observation": "build/recovery/root-reviews/p28-active-manager-untraced-observation.json",
+  "direct_manager_observation_sha256": "91d201c3be6efcb487ed7f06f422b14895ced28a6a6b40d806c75420cf8bbe77",
+  "launch_tool_sandbox_permissions": "require_escalated",
+  "root_launch_attestation": "Root launched the recorded manager through the require_escalated untraced tool path; the exact same-PID exec manager was directly observed with TracerPid 0 while the matrix was running. The manager sequentially created these fresh owned CTest session leaders.",
+  "CTest_TracerPid_directly_measured": false,
+  "measurement_limit": "No direct per-CTest TracerPid measurement was recorded. Their untraced execution is attested from the launch path; no retrospective /proc measurement is claimed.",
+  "ctest_commands": [
+    {
+      "pid": 214699,
+      "owned_session_leader": 214699,
+      "command": [
+        "/usr/bin/ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-db-mapping-adapter-v2-qualified-gcc",
+        "--output-on-failure",
+        "-j1"
+      ],
+      "started_at_utc": "2026-10-18T01:35:49.123435+00:00",
+      "finished_at_utc": "2026-10-18T01:36:29.060248+00:00",
+      "log": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/matrix-gcc-12-ctest.txt",
+      "log_sha256": "5d838cbdc5649d89f0bc71bbb0facfcec53e62d0638d3b586b26be9f55183453",
+      "owned_group_gone": true,
+      "owned_leader_reaped": true,
+      "returncode": 0,
+      "compiler": "gcc"
+    },
+    {
+      "pid": 218147,
+      "owned_session_leader": 218147,
+      "command": [
+        "/usr/bin/ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-db-mapping-adapter-v2-qualified-clang",
+        "--output-on-failure",
+        "-j1"
+      ],
+      "started_at_utc": "2026-10-18T01:51:20.115279+00:00",
+      "finished_at_utc": "2026-10-18T01:51:53.206098+00:00",
+      "log": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/matrix-clang-12-ctest.txt",
+      "log_sha256": "128ccbfefe65f1c0b26c045dd975954202020825e6164a163d01ab8af2e15f61",
+      "owned_group_gone": true,
+      "owned_leader_reaped": true,
+      "returncode": 0,
+      "compiler": "clang"
+    },
+    {
+      "pid": 220416,
+      "owned_session_leader": 220416,
+      "command": [
+        "/usr/bin/ctest",
+        "--test-dir",
+        "/home/yurii/Java/BiglyBT/build/biglybtc-db-mapping-adapter-v2-qualified-asan",
+        "--output-on-failure",
+        "-j1"
+      ],
+      "started_at_utc": "2026-10-18T02:02:12.074347+00:00",
+      "finished_at_utc": "2026-10-18T02:04:58.375990+00:00",
+      "log": "migration/evidence/P06-28-db-mapping/adapter-cin-untie-v2/matrix-asan-12-ctest.txt",
+      "log_sha256": "0896ffdcaf764cca971d91f7be7d704bd7e74c4ce824cac55bc7eff6d809a869",
+      "owned_group_gone": true,
+      "owned_leader_reaped": true,
+      "returncode": 0,
+      "compiler": "asan"
+    }
+  ],
+  "sanitizer_environment": {
+    "ASAN_OPTIONS": "detect_leaks=1:abort_on_error=1:allow_addr2line=1",
+    "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+  },
+  "environment_override_keys_removed": [
+    "ASAN_OPTIONS",
+    "LSAN_OPTIONS",
+    "UBSAN_OPTIONS",
+    "ASAN_SYMBOLIZER_PATH",
+    "TSAN_OPTIONS",
+    "CXXFLAGS",
+    "CFLAGS",
+    "CPPFLAGS",
+    "LDFLAGS",
+    "CC",
+    "CXX",
+    "CPATH",
+    "CPLUS_INCLUDE_PATH",
+    "LIBRARY_PATH",
+    "LD_PRELOAD",
+    "LD_LIBRARY_PATH",
+    "GCC_EXEC_PREFIX",
+    "COMPILER_PATH"
+  ],
+  "native_execution_by_this_attestation": false,
+  "whole_component_or_phase_completion_claim": false
+}

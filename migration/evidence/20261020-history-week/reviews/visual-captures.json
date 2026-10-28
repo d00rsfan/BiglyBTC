@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "reviewer": "root",
+  "status": "passed",
+  "scope": "Visual inspection of actual new seven-day ready/missing offscreen captures at 100/150/200 percent; no manual compositor credit",
+  "native_source_commit": "136af049bc3ea5307a666ef4b716eaa50d36d1c4",
+  "captures_sha256": {
+    "1-statistics-history-week-preview.png": "6c2ebe5a229fe872e2cc1c5fb2444f95ecec4a03100b2dd9b49a412e1f51401f",
+    "1-statistics-history-week-missing-preview.png": "af89379a2246293284e09ebdcc404d89ec06812b1c36f109c2d7e929609f6549",
+    "1.5-statistics-history-week-preview.png": "3174df099f216115651099927cfb26edd37d188e0b9f98cc6566a491bc0df6ab",
+    "1.5-statistics-history-week-missing-preview.png": "5c4a5c80982f1439ffffc24f4bdbe039e4f0bdcb65c54b3b947c6ae133980d93",
+    "2-statistics-history-week-preview.png": "2a3934b71831011c07ebb793dc854182969974bebe2782e01cc81baffd611118",
+    "2-statistics-history-week-missing-preview.png": "2d2ba97bd774efa69cbc5c680eadb2019feea5565b23aa44004f799e6a15a83d"
+  },
+  "observations": [
+    "UTC ending editor and previous/next/refresh controls are visible.",
+    "Seven chronological date rows and all eight column headings fit the captured 1280 by 900 logical window.",
+    "Missing, present no-observation, observed zero, signed negative and positive values remain visually distinct.",
+    "All-missing period reports no history files and keeps all six counters unknown.",
+    "Daily tab remains visible first; independent saved totals refresh remains below History.",
+    "No clipping, overlapping text or lost table column detected in the six captured offscreen scenes."
+  ],
+  "manual_compositor_credit": false,
+  "blockers": []
+}

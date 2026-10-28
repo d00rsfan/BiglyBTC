@@ -1,0 +1,136 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_REVIEW_NO_BLOCKER",
+  "subject": "Pure saved DND facts/projection and cache-row integration",
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "native_base_commit": "efdf27688594ceecd6d27f8bc2c6e7c0e4c5ce4c",
+  "independence": "Reviewer derived the separate original-source mathematics; the reviewed C++ implementation is authored by error_codec. No implementation or tests changed by this review.",
+  "reviewed_files": [
+    {
+      "path": "preview/native/core/include/biglybtc/saved_dnd.hpp",
+      "sha256": "776d08b0497c41d69883b70aef5df45c959a44c5918400d1d2756eb44afd4699",
+      "bytes": 3095
+    },
+    {
+      "path": "preview/native/core/src/saved_dnd.cpp",
+      "sha256": "c4e1d0f03be63697bcb95c4dd3d457b449005bc3768f795bcb255d03817288e7",
+      "bytes": 8021
+    },
+    {
+      "path": "preview/native/core/include/biglybtc/state_cache.hpp",
+      "sha256": "f097b34cb04613a7ff368df90e74d1ac3467338a3f9226b1accd1ea52e98eef9",
+      "bytes": 1068
+    },
+    {
+      "path": "preview/native/core/src/state_cache.cpp",
+      "sha256": "4c9bf61302b1381ea03aceabdf45436c0498de10e4ad77f42c7ffd1aeb7a4926",
+      "bytes": 2901
+    }
+  ],
+  "prior_evidence": [
+    {
+      "path": "migration/evidence/20261018-navigation/saved-dnd-math-review.json",
+      "sha256": "9a51ed571449487a651d0a80169943df593fba628beca178b712282ea8cc433f"
+    },
+    {
+      "path": "migration/evidence/20261018-navigation/saved-dnd-progress-contract.json",
+      "sha256": "806127bade54705fd5b70a77c8d99f6f4e3b3a968ad1ea3a74d464fdf210cc5a"
+    },
+    {
+      "path": "build/navigation-20261018/dnd-source/api-review.json",
+      "sha256": "1be478d5451f0a59f94522692ac449c695771cc549ea99a8cf0adc61261cbae8"
+    },
+    {
+      "path": "build/navigation-20261018/saved-dnd-source/source-check.json",
+      "sha256": "b16a36ef385fc6376b1becce0c4ce238132ac3e47f18fb441d3731ebc33db66e"
+    },
+    {
+      "path": "build/navigation-20261018/saved-dnd-source/implementation.patch",
+      "sha256": "b7b3ce7a5f74d60b047ddd3920841ab7ba864b2b8ca392ce561007db6f6e54f9"
+    }
+  ],
+  "checks": [
+    {
+      "id": "DND-IMPL-1",
+      "scope": "saved_dnd.cpp42\u201364, facts/default/type projection",
+      "result": "PASS",
+      "evidence": "All fields fixed-size owned values. attributes nullptr or invalid dictionary produces no defaults. Valid even-child/string-key dictionaries retain explicit presence and raw signed64 only for integers; missingK sets tagged original\u22121 default but no raw value, missingB sets tagged0 default. Missing/invalid parameters and flags retain already extracted K/B facts. No field/text parsing, int32 truncation, writes or recovery."
+    },
+    {
+      "id": "DND-IMPL-2",
+      "scope": "saved_dnd.cpp66\u201397, independent cached flags/candidates",
+      "result": "PASS",
+      "evidence": "Parent-approved valid-T/C rules precede dependent arithmetic but do not prevent hasDND flags/candidates. Signed64\u2192uint64 conversion gives defined modulo bit interpretation. Optional0 is present; masks1/2 retain explicitfalse facts. hasDND=false candidates use C==T only when full remaining known; bit2 is not substituted. hasDND=true excluding candidate is bit2; including candidate is knownfalse independently of T/C/K/B."
+    },
+    {
+      "id": "DND-IMPL-3",
+      "scope": "Original Controller.java2416\u20132454 including-DND/noREADY branch",
+      "result": "PASS",
+      "evidence": "Direct original source comparison confirms cachedHasDnd=true + noREADY + includeDND=true returnsfalse. This intentionally counterintuitive field is a no-DiskManager controller candidate only, not public assumedComplete, READY behavior or pane membership."
+    },
+    {
+      "id": "DND-IMPL-4",
+      "scope": "saved_dnd.cpp98\u2013112, partial selected size and zero-size early return",
+      "result": "PASS",
+      "evidence": "T>0 and explicitK\u2208[0,T] produce S=T\u2212K even when B/C or flags are unavailable. Missing/negativeK remains unresolved, malformedK does not become0. S0 stores Done1000 before any B/C-dependent return, preserving the original short-circuit and the approved independent-field policy."
+    },
+    {
+      "id": "DND-IMPL-5",
+      "scope": "saved_dnd.cpp114\u2013137, bounded consistency and remaining",
+      "result": "PASS",
+      "evidence": "B must be stored integer or original tagged default0 and lie[0,K]; C must lie[0,T]; C>=B and C\u2212B<=S. Invalid/cross-inconsistent counters leave Q and positive-S Done unknown while preserving S/S0Done/flags/candidates. These are explicit conservative native conditions, not original getter validation. Given admitted inputs, R=T\u2212C, U=K\u2212B, Q=R\u2212U=S\u2212(C\u2212B) lies[0,S]; therefore omitted max(0,Q) has no effect in this domain."
+    },
+    {
+      "id": "DND-IMPL-6",
+      "scope": "saved_dnd.cpp36\u201340, all subtraction/cast safety",
+      "result": "PASS",
+      "evidence": "Private checked subtraction tests min+positiveRight or max+negativeRight only in sign branches where those bound additions are representable; left\u2212right executes only after safe-range proof. All actual metric subtractions are additionally bounded by accepted nonnegative counters. No signed wrap/undefined overflow executes. Original malformed wrapped arithmetic is excluded with diagnostics, not claimed equal."
+    },
+    {
+      "id": "DND-IMPL-7",
+      "scope": "saved_dnd.cpp139\u2013150, float32 Done",
+      "result": "PASS",
+      "evidence": "static_assert pins IEEE binary32 dimensions. Source-order S\u2212Q integer subtraction precedes separate long\u2192float conversions, float division, float1000 multiplication and truncating int32 cast. Valid0<=S\u2212Q<=S with S>0 establishes finite numerator/positive denominator, fraction[0,1], scale[0,1000], making C++ int conversion representable. Raw1000 with Q>0 corrects to999. Negative branch is retained but unreachable in admitted normal domain. Depends on normal compiler floating semantics/default rounding, not a changed floating environment or fast-math promise."
+    },
+    {
+      "id": "DND-IMPL-8",
+      "scope": "saved_dnd.cpp19\u201334 + unchanged Node::find",
+      "result": "PASS",
+      "evidence": "Dictionary/type lookup is read-only and bounded by an already decoded Document. Fixed optionals and masks retain no Node/string_view/backing references. Node::find loops existing children and compares string_views without allocating. No new container, heap allocation, callback, staticmutable state, file or network IO appears. Independent calls operate only on const supplied facts."
+    },
+    {
+      "id": "DND-IMPL-9",
+      "scope": "state_cache.hpp/.cpp integration inverse-byte check",
+      "result": "PASS",
+      "evidence": "Removing exactly one include and appended SavedDndFacts member reproduces old header byte-for-byte; removing exactly one readSavedDndFacts call reproduces old cpp byte-for-byte. Before images independently equal native base Git blobs. New DND-specific malformed fields only populate diagnostics and do not reject old valid cache rows. Existing whole-row attributes/displayname errors, size/files/type validation, ownership, entry caps and last-valid-identity behavior unchanged."
+    },
+    {
+      "id": "DND-IMPL-10",
+      "scope": "Source and evidence integrity",
+      "result": "PASS",
+      "evidence": "All four final source SHA values checked before/after. All19 original source files remain byte-identical to frozen original Git-verified math report. Source contract806127/math9a51 and author patch/source-check pinned. No older evidence modified."
+    }
+  ],
+  "blockers": [],
+  "nonblocking_limits": [
+    "Pure source review only. Actual native compilation, independent test-source coverage, full/regression tests and sanitizers remain parent-owned separate gates.",
+    "No UI/Bridge/adapters, metadata suppression, selected geometry/per-file IO, retained assumedComplete or pane behavior changed or qualified. These full DND compatibility requirements remain OPEN.",
+    "API accepts already decoded Node/fixed facts; it does not validate the entire Document backing/edited-root provenance and does not promise original exception or recovery side effects.",
+    "Saved snapshots/candidates are not current disk verification, live original Java observations, Java runtime equality or a whole-original-controller lifecycle.",
+    "ArithmeticOverflow diagnostic guards are defensive; normal admitted ranges exclude overflow structurally, and invalid source inputs may instead carry range/inconsistency diagnostics. No fabricated overflow-equality credit."
+  ],
+  "execution_credit": {
+    "Java": 0,
+    "native": 0,
+    "tests": 0,
+    "builds": 0,
+    "copied_formula_oracle_equality": 0
+  },
+  "integrity": {
+    "four_source_hashes_before_after_equal": true,
+    "original19_source_guards_unchanged": true,
+    "old_cache_header_and_cpp_inverse_byte_equal": true,
+    "production_edits_by_reviewer": 0,
+    "historical_reviews_unchanged": true
+  }
+}

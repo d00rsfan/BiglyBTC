@@ -1,0 +1,80 @@
+{
+  "schema": 1,
+  "status": "PASS-independent-source-review-after-corrections",
+  "reviewer": "error_driver",
+  "independence": "Oracle authored DTO/Page/testdelta. Reviewer authored separateprivateSampler; ownsource excluded.",
+  "source_sha256": {
+    "preview/native/ui/engine_statistics_presentation.hpp": "2b1270182e459b2b93aa3376f80b8bcb52500b51486dca0e93820684479db67d",
+    "preview/native/ui/statistics_page.hpp": "c43190406354f1f24708a1e5407525c6879a1c6680a15d5b1bf3e71fe72daf2e",
+    "preview/native/ui/statistics_page.cpp": "f65d150e73265426a7020b89a7793f387b8f5b978808d9d1f3d8757b3e512a02",
+    "preview/native/tests/statistics_page_tests.cpp": "1e793ae37ee7b8042f7940e54c358bb58373651bc60ec7deb5e23de76e55900e"
+  },
+  "initial_blocked_review": {
+    "path": "migration/evidence/20261018-statistics-engine/reviews/page-before-correction.json",
+    "sha256": "574ec02e119406ec4a7455ac90bdad10cb075d71a8966c5980da89657e2202a3"
+  },
+  "resolved_findings": [
+    {
+      "id": "SB-UI-1",
+      "before": "Unconditional omittedterminalsample normalization could copy oldrun counters to higheroperation withno observation",
+      "fix": "Revision2 requires same session+operation+target forretention; newerrun terminalwithoutsample keepsunavailable/hidesdetails. Existing direct terminaltest preserved andoneadditive explicitrow verifies op2identity+unavailablecounters/rates."
+    },
+    {
+      "id": "SB-UI-2",
+      "before": "Equalelapsed terminalcouldchange counters/rates despite timestamp denotingthesame observation",
+      "fix": "Revision3 requires full EngineStatistics equality forEndedsameelapsed. Twonewdatacases preserveoldmeasurement onchangedcounter orchangedrate, thenaccept genuinelygreaterelapsedcoalescedterminal. StrictObservedtime andnondecreasingall6counters remain."
+    }
+  ],
+  "blocking_findings": [],
+  "preservation": {
+    "original35plannedQtrows": "Alloldtestsourcebytes preservedinorder; no deleted/replacedlines or changeddata/assert/deadline",
+    "original_saved_activity_method_bodies_unchanged": [
+      "tabs",
+      "sampleCount",
+      "accepts",
+      "emptyFacts",
+      "writeFacts",
+      "setFailed",
+      "setPresentation",
+      "clearActivity",
+      "recordPayload",
+      "refreshActivity"
+    ],
+    "planned_total_Qt_rows": 92,
+    "planned_new_expanded_rows": 57,
+    "revision_history_capsules_preserved": [
+      "ui/after",
+      "ui/revision-2/before",
+      "ui/revision-2/after",
+      "ui/revision-3/before",
+      "ui/revision-3/after"
+    ]
+  },
+  "checks": [
+    {
+      "area": "Packetidentity/order",
+      "result": "Boundednonzeroowner session/operation/sequence/target; name8192/hash256; safeactualsample structure. Preparingseq1/nosample/nosuccess; Observedseq>1/sample/nosuccess; Endedseq>1/optionallastmeasurement. Same-runstrictsequence andexacttarget, noafterterminal, independentfreshoperation andall4raw/2protocol/time monotonic checks. Page mayreceiveactualcachedObserved/Endedfirst; Windowseparatelyrequiresactualmodel-target provenance."
+    },
+    {
+      "area": "Safeprimitives",
+      "result": "CorevalidEngineStatistics precedes alldisplay/protocoldifferences andinterpacketcomparisons. Bothderivedcombined-minus-payload counters admitted0..MAX so subtractsafe; elapsedcomparesonly, no newdelta/rate arithmetic inUI. Exactintegernumberlabels/MAXtooltips/PlainTextboundnames, firstnorates versusactualzero differentiated."
+    },
+    {
+      "area": "Separatedscope/lifetime",
+      "result": "OneTransferenginesession group iscompactbeforeactualobservation;6combined/payload/protocolcounters and2combinedintervalrates shownonlywithactualsample, Ended last-observed label includesnonexhaustivequalification. Savedoverall13facts/mark/history/payloadActivitynotupdatedfromenginepacket. Sharedconstboundedpacket cache owned independently; sameprofile savedrefreshretainsenginefacts, newprofile clears."
+    },
+    {
+      "area": "Renderreentry/deletion/visibility",
+      "result": "refreshEngine capturesimmutablepacket+session andQPointerbeforeQt calls, checkscurrent aroundeverytext/tooltip/visibilitychange, aborts oldwritesifnestednewrun/profile/deletion. Hidden/minimized/nonCurrenttabs deferallrendering andcacheonlylatest. Show/window/tabrestore usesexistingeventhookswithQPointer chaining; no timer/sample/transfer/IOcreation."
+    },
+    {
+      "area": "Testcoverage",
+      "result": "Readcomplete57newexpandedrows plusunchangedold35.26malformedpacket and15ordering rows exercisehelperandPage. Directfirst/ratezero/Maxvalues, retainedterminal/postterminal/newrun, exactequal-timeterminal, cachedreopen, newprofile/reset, hidden/minimized/tab rendering, synchronousreentry/deletion, PlainTextcaps andActivityisolation are substantive. Allclaims source-onlypendingrootruntime."
+    }
+  ],
+  "limits": [
+    "ImmutableDTOs are trustedworker-owned inputs, not unforgeableproof of measurement origin; Page helper validatesstructure/order andWindow actualtarget admission is separate.",
+    "Globalallocationfailure/arbitraryQObjectselfdestruction outside guardedslots remainsunclaimed. Terminalcloning andQtstrings mayallocate.",
+    "Nocompiler/preprocessor/nativeQt/run/import/JVM/profile/network/Git execution byreviewer; planned92rows notactualpass. Root owns runtimequalification."
+  ]
+}

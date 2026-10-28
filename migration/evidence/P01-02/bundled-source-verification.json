@@ -1,0 +1,88 @@
+{
+  "source_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "archive_bundled_sha256": {
+    "deps/try_signal/appveyor.yml": "be8ad8a7d633a3106bfcce456b3afe388a649633784ea59e3bbbcb1a3966daf6",
+    "deps/try_signal/signal_error_code.hpp": "dc8309519a49c7d2dceecce3bad6bac47b0df840602226014ca276d85f1ce4ca",
+    "deps/try_signal/try_signal_msvc.hpp": "157f3b18a1f0e78856134b00688ce965b7e26c71cafc8a656e2e5c772f79f39a",
+    "deps/try_signal/example.cpp": "40f663590fdd20959cac3f93b5da0636d1b92598aa46a63abfacc1b4a8a6636d",
+    "deps/try_signal/LICENSE": "18a7c1435a7a7ebc120a181c7309d0d7dfcbec76be4950ff23c9aa37f9c93725",
+    "deps/try_signal/Jamfile": "30b14c8127a2b1b1c9bc86774c792827e62f99062a64f5432661649d533595ad",
+    "deps/try_signal/README.rst": "b4a436c8bd09ae063b672296d00ff1f0f0a5a5525e513eea293958d0f87d387b",
+    "deps/try_signal/signal_error_code.cpp": "84e0de2882672bff931306ebf268fc48efe08b65c1038f8d1188aae1ca0dbfd5",
+    "deps/try_signal/try_signal_posix.hpp": "5877ff01098e6984380bb8b075048654a461b677ffbdadca50bbb101e2d5692b",
+    "deps/try_signal/test.cpp": "ef8dad2ed629671c133e1f5168371a4e3cf66bdfa56af2595885d5f55a6a0c3d",
+    "deps/try_signal/try_signal.hpp": "b7219222335f731b03191d690359a479259f03fedee8831f8ebb8831dad5e744",
+    "deps/try_signal/CMakeLists.txt": "71c11a8ae2a290bd794c49b1f772fa9b0c534c9f84447dd1cc811b651dd80467",
+    "deps/try_signal/project-root.jam": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "deps/try_signal/.travis.yml": "c0d489d3df893afc625acad9c203fcd1c8dbe6c6f1a75b7792750e51a31df1ab",
+    "deps/try_signal/try_signal.cpp": "a9a758c4bbb9ce2c5dd9fa37cfb76179389fe8b514b85c6faac7b2cbd2fbe314",
+    "deps/try_signal/try_signal_mingw.hpp": "d311ac181e3664ac97f3f7c2959484f32fdbd13e9be3be3b2591776714e27280"
+  },
+  "dependencies": {
+    "deps/asio-gnutls": {
+      "source_commit": "a57d4d36923c5fafa9698e14be16b8bc2913700a",
+      "status": "not_shipped_disabled_in_this_build",
+      "matched_files": [],
+      "missing_files": [
+        ".clang-format",
+        ".editorconfig",
+        ".gitignore",
+        "Jamfile",
+        "LICENSE_1_0.txt",
+        "README.md",
+        "include/boost/asio/gnutls.hpp",
+        "include/boost/asio/gnutls/context.hpp",
+        "include/boost/asio/gnutls/context_base.hpp",
+        "include/boost/asio/gnutls/error.hpp",
+        "include/boost/asio/gnutls/host_name_verification.hpp",
+        "include/boost/asio/gnutls/rfc2818_verification.hpp",
+        "include/boost/asio/gnutls/stream.hpp",
+        "include/boost/asio/gnutls/stream_base.hpp",
+        "include/boost/asio/gnutls/verify_context.hpp",
+        "test/gnutls/Jamfile.v2",
+        "test/gnutls/context.cpp",
+        "test/gnutls/context_base.cpp",
+        "test/gnutls/error.cpp",
+        "test/gnutls/host_name_verification.cpp",
+        "test/gnutls/rfc2818_verification.cpp",
+        "test/gnutls/stream.cpp",
+        "test/gnutls/stream_base.cpp",
+        "test/unit_test.hpp"
+      ],
+      "different_files": [],
+      "compiled_in_this_build": false
+    },
+    "deps/try_signal": {
+      "source_commit": "105cce59972f925a33aa6b1c3109e4cd3caf583d",
+      "status": "all_shipped_files_match_only_repository_metadata_omitted",
+      "matched_files": [
+        ".travis.yml",
+        "CMakeLists.txt",
+        "Jamfile",
+        "LICENSE",
+        "README.rst",
+        "appveyor.yml",
+        "example.cpp",
+        "project-root.jam",
+        "signal_error_code.cpp",
+        "signal_error_code.hpp",
+        "test.cpp",
+        "try_signal.cpp",
+        "try_signal.hpp",
+        "try_signal_mingw.hpp",
+        "try_signal_msvc.hpp",
+        "try_signal_posix.hpp"
+      ],
+      "missing_files": [
+        ".github/workflows/test.yml",
+        ".gitignore"
+      ],
+      "different_files": [],
+      "compiled_in_this_build": true
+    }
+  },
+  "limitations": [
+    "Bundled source equality only; signatures, compiler/system/transitive artifacts and release qualification remain separate"
+  ],
+  "observed_utc": "2026-10-17 05:38:26 UTC"
+}

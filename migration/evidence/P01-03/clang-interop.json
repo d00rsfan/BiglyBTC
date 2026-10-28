@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "source_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "probe_sha256": "dab1ef5c4799119645d5abfc697e93b8952549f55a2f06642ab58a9fafbb6953",
+  "java_harness_sha256": "91f7e12ae0cfda450ad67965a23f4de591ec4fe69cbfa79ff5a96d192ce14c83",
+  "generation": "DEBUG::Sat Oct 17 02:02:54 IDT 2026  BC Provider 'BC_VUZE' initialised successfully (loaded from file:/tmp/biglybtc-oracle/classes/org/gudy/bouncycastle/jce/provider/BouncyCastleProvider.class)\nTORRENT 1 7B26D19F7DC2D2F9D9F897AD851B0AB6E0D58C6C\nTORRENT 3 5DB3E00F788EB746D6703C41630245213F158390\nTORRENT 2 048A14D7CF867E89C77A019DAB014575EC3F2E32\n",
+  "generated_profile_sha256": {
+    "downloads.config": "4c9a5d5d7e6659d91a9191b07f807f4f7be6bc65647a87896d8f9bdc97c4036b",
+    "generated.bin.az!": "9e7a6677253d3829c9ea6772357fac63cb4be9b5765816d8e650da29fc94cc3c",
+    "generated-2.torrent": "7eb16898bd9c6be18843d0cb355e3963e14bb3c49dbcbf8f3a3e7594131fb682",
+    "generated-3.torrent": "d32c7779e826b94a8fcfa020257482fbb7e032ab73ab11e5deb497b8586f6c9f",
+    "generated-1.torrent": "81c6415e3488b072ff9a02e87e395131ca09edc0dea44026900bd8be4c1a28ea",
+    "biglybt.config.saving": "bd860cbfb1db3d67503f6a2edebc65ac572a9d318d0afb4800c032c908635de3",
+    "biglybt.config.bak": "bd860cbfb1db3d67503f6a2edebc65ac572a9d318d0afb4800c032c908635de3",
+    "biglybt.config": "bd860cbfb1db3d67503f6a2edebc65ac572a9d318d0afb4800c032c908635de3",
+    "active/048A14D7CF867E89C77A019DAB014575EC3F2E32.dat": "5cc7a473c3acc3e6ab3697cad1a0c15053c53d23ba1b4084076f34102b2136e5",
+    "active/5DB3E00F788EB746D6703C41630245213F158390.dat": "d81b50ad62a70239660a65810454d62a0c19c76c404ec02e2bc7df71ce1adda2",
+    "active/7B26D19F7DC2D2F9D9F897AD851B0AB6E0D58C6C.dat": "aac2defce01d4abd5f09edc5843fff7068d106af22c3df9f74561f45c7730572"
+  },
+  "checks": [
+    "identity-0: Java/native signatures and negative cases",
+    "identity-1: Java/native signatures and negative cases",
+    "identity-2: Java/native signatures and negative cases",
+    "private key sign/range and keypair checks",
+    "byte-identical active/048A14D7CF867E89C77A019DAB014575EC3F2E32.dat",
+    "byte-identical active/5DB3E00F788EB746D6703C41630245213F158390.dat",
+    "byte-identical active/7B26D19F7DC2D2F9D9F897AD851B0AB6E0D58C6C.dat",
+    "byte-identical biglybt.config",
+    "byte-identical biglybt.config.bak",
+    "byte-identical biglybt.config.saving",
+    "byte-identical downloads.config",
+    "byte-identical generated-1.torrent",
+    "byte-identical generated-2.torrent",
+    "byte-identical generated-3.torrent",
+    "known configuration edit preserves all unknown fields; Java reads result",
+    "all original profile and incomplete payload hashes preserved"
+  ],
+  "status": "passed",
+  "limitations": [
+    "No operational torrent resume or live profile tested",
+    "No complete storage-layout, recovery or plugin-schema qualification",
+    "Uncommitted prototype; no full phase verified"
+  ]
+}

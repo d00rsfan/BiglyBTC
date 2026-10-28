@@ -1,0 +1,185 @@
+{
+  "status": "PASS_SOURCE_ONLY_NO_MATERIAL_PRODUCTION_BLOCKER",
+  "scope": "Current P04-29 persistent peer-owner production and tracking only; no StageB or writer adoption.",
+  "reviewer": "error_oracle",
+  "baseline_native": "f50a09bbefd8cee89ed8f0ecdb14240c7a226b7b",
+  "original_reference": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "source_sha256": {
+    "engine/persistent_session.hpp": "588635aa587c733d64d97eb64581ea2a91cc4305c4af8617507d0b0e2519a3e6",
+    "engine/persistent_session.cpp": "9f1825b5823ec7c75ec5e631f22d6d9806baae236a2c08d84236f15cafe5b010",
+    "engine/persistent_session_support.hpp": "bae8513b521d7a91ed151336f6e6aeecbff327f58dc1324f1e268e1e00494892",
+    "engine/persistent_runtime_guard.hpp": "822cc7081c1eff86a37699a2a71b5645750a1c032a50ee26e9d51d28d459e39e",
+    "engine/persistent_runtime_guard.cpp": "0b0d8e795fa5e6a03f6f4ff68018599ee57c73b8c118b555a93bc1d635eabc20",
+    "engine/runtime-binding/PersistentRuntimeBinding.cmake": "53026c5cadba464fe34f12fe231be24cca3ea19352dad6413cff8bd2d7878fba",
+    "engine/runtime-binding/verify_runtime_manifest.py": "8dd7d9c6894d6fe5f8139657e700e94c4854638e67a72169821ef60dc40c42d9",
+    "engine/runtime-binding/approved-runtime.json": "aa5f1767640fc1ca5f978360ddb8eebd26fc29b2f0c34b44fdf7416299a1bb3c",
+    "engine/runtime-binding/source-build-record.json": "436931d4c6b87274c60b89877afedc19e06485bc4f04d120a3ab3e1889abfc66",
+    "engine/runtime-binding/retained-runtime.json": "9b9ba22c14eafac097aecea13097ef59be6b686ff7150814b5d8889f6acc3b91",
+    "engine/local_session.hpp": "bf73fd78726b0a7f840b5ec44a71bbd2008b03730b83d8cdb2db31cbd03321c5",
+    "engine/local_session.cpp": "dbad47f3e0580a9a7a8bbb2c3eb4b46e1978d19f6e435f55c9f90c15ced19ecc",
+    "engine/multifile_session.hpp": "d3a3820a416f73255b8062d10426f07063f2ea405454269639bab08d81c11b34",
+    "engine/multifile_session.cpp": "a469a24ae657fbe90e58edb04138aded07b1ec40f69f68d9391288ac82298154",
+    "engine/local_support.hpp": "a553d4f4c0c82bd2606be258619daaef33c578884c8e59f5916b8a34c4bedc16",
+    "engine/engine_statistics_sampler.hpp": "689355ba82df086033944edb37f2a6a877d7471bd2e2f73dadc6124b7f094089",
+    "engine/engine_statistics_sampler.cpp": "8185293d7e20a7de009d431fcd6d4f4fbded469118e201f3d94bbaf420a44604",
+    "engine/CMakeLists.txt": "2b65bae23965c4325dfb85edbb3479a247e43e9084243e2915eaa315e8a9414b",
+    "app/session_bridge.hpp": "e8d608e780031c4f39160ba44661f0fe2593e76b78cd310ec40c9e5042f209c2",
+    "app/session_bridge.cpp": "1910a79a18908bf9563a8377367c4d1e209cc16b92e53b7a29ac0927e942b061",
+    "app/main_desktop.cpp": "b46ba3b199d7e47b74d75d2a96c4635c82df4dc994b96e6279c0d7e1e7a88d4d",
+    "ui/library_window.hpp": "a1bd12e905e39b197f648b21a540a568ae3bf6d3802d164626102c7a7d2d5e0c",
+    "ui/library_window.cpp": "a8d415366ef181cb7d516c9570b501fdc4773dc880cc9e90d230eea8885ad814",
+    "ui/native_session_presentation.hpp": "fd2015a5d5844657265ac0d62d864f911a06bcde3f3d7b35041f97f0571bb2f1",
+    "ui/statistics_page.hpp": "629f19bac01b15e2dbb1fab911bbc51399ef285507f109419e20eb7acc962367",
+    "ui/statistics_page.cpp": "931282e2d13cca15aeabb1d77c6b34a8eb44a87c82251cd547cc7105b2771829",
+    "ui/statistics_navigation.hpp": "b7c63705c813cc0f034875b0d7086b6a879b33df1f9a19055ea9993c28ed28b2",
+    "core/include/biglybtc/executor.hpp": "0d99cc28102acb980070efc9a72f8e0686ecf94dc43bb81198694245c6b72777",
+    "core/src/executor.cpp": "b886692587ef8c5efc269ea3735f2b64f3432a255b8a1bd57b357627bc3da77a",
+    "adapters/profile.hpp": "0e7bb950e4d66e2fdf88b2733cb00d149e8b17ea805348300327af8418649831",
+    "adapters/profile.cpp": "38c0838d5aae673304ce9dade42cae18bf9607d54d4480949617dcc1c5dafbd9"
+  },
+  "tracking_sha256": {
+    "migration/STATE.md": "e76a90b39b9882428b7a1c3c401838f85568efd2c24b472b076f7f874c3542b3",
+    "migration/tasks/P04-29-persistent-peer-accounting.md": "16aaa98a66f811afaf90a1c470818ccf810ccba49a44f38bb3266c862b04dd3e"
+  },
+  "context_sha256": {
+    "APP-CONTRACT.md": "362d677d02312af56914bd2388aa32849daf5cd9cc0c9d567888ce3867bd4b8a",
+    "CONTRACT.md": "5ded928a630e4475354c6e14843c37ed7c66a40a445d2cd036b9d987de3977fc",
+    "implementation/manifest.json": "a6d937f283471f20d2d5b8b1b6c098eb687c1926299b0a5cc0b461a33a1975f7",
+    "app-overlay/manifest.json": "3651c7ec3286e612a0fdd17ab7a1d8af830a44a513a34600609fbfc5f0d565b3",
+    "app-amendments/close-lifecycle/manifest.json": "9f517dc228061ba5939782c3438ecc6efed065e00f77a1a8e0ab6588ef7052b7",
+    "implementation-amendments/poll-failure/manifest.json": "d258fb6cdd4c19413d3ce06aba4cf9be1bcfe4d313dd0beecd7e87ef39b193de",
+    "session-ui/integration/manifest.json": "44ba9b8ba1e4e9f2803505c3ecddf48b4a6c1182fa534c3dc5b9980d223642fd",
+    "review-session-ui-integration-oracle.json": "c3e80eb256c8245b523dd4efa58ad6e7936da0c12926a25d3d34ed0f401b343f"
+  },
+  "blockers": [],
+  "legacy_compatibility": {
+    "full_cpp_in_memory_reversal_exact": {
+      "engine/local_session.cpp": "4d7d7fd631cb48d712585f02e29d5541a3883d39a3d6f54b6234ba3bab93b132",
+      "engine/multifile_session.cpp": "d300d6c23c90d73c4c0c610e310a0827d3a19403ec6bbc2785e9ebaaff92044f"
+    },
+    "full_header_in_memory_reversal_exact": {
+      "engine/local_session.hpp": "68b9c9f4baccc8e7ee9c4c33b4534855fdf75082003bd591ca84aca6d9643270",
+      "engine/multifile_session.hpp": "fdc94f4b83c03b224ae9bcd00939ee5ae89a99da52a42c9ea3ee7c4be2eb3fa7"
+    },
+    "meaning": "Removing only additive owner integration recovers complete original files, including original ephemeral LT block, convenience overloads, policy checks, payload fsync and completion/intent/inventory publication. Old calls default owner=nullptr; single/multifile selection is preserved.",
+    "bridge_named_nondestructor_old_definitions": 19,
+    "bridge_exact_old_definitions": 15,
+    "bridge_changed_old_definitions": [
+      "SessionBridge",
+      "dispatch",
+      "continueDownload",
+      "cancel"
+    ],
+    "window_old_definitions": 52,
+    "window_exact_old_definitions": 50,
+    "window_changed_old_definitions": [
+      "beginColumnLayoutSession",
+      "closeEvent"
+    ],
+    "old_ui_baseline_files": 42,
+    "old_ui_baseline_files_exact": 40,
+    "changed_old_ui_files": [
+      "ui/library_window.cpp",
+      "ui/library_window.hpp"
+    ],
+    "unchanged_ui_sha256": {
+      "ui/CMakeLists.txt": "d88d9107e655c279328ca7c903619722f667190b2087abaa1aabda2979966836",
+      "ui/classic_columns.cpp": "df19731a01e224ac84b0e18246f8031e882ffcf428a8fecdd1627e559450f1fc",
+      "ui/classic_columns.hpp": "95ab8d362015a3c98c2b7aec1bc79b0a7e59c8cbed6808c159529a538485942b",
+      "ui/classic_filter.cpp": "2186674f85e4bf6eeb6eeb1b2c568c3b4f060eac4a443d04130144dab3d50003",
+      "ui/classic_filter.hpp": "be3b774a0f50a7075154d936cab10fc922772ca95a7436ae93e55a00d9c02634",
+      "ui/column_layout_presentation.hpp": "7dd6edd9a8584525e3dab2dab9ed1fe44727e2d0600e356d06a7e1cc5286aa81",
+      "ui/engine_activity_history.cpp": "5920ea01804bbc5dc1f96c71d549c0e5abd8fe3cda581c1ea817358d1aaa95a6",
+      "ui/engine_activity_history.hpp": "6361476296ad8f0aa1d320b5f96f7fb84356557fef402c01c03036fe8e295844",
+      "ui/engine_activity_presentation.hpp": "e45ba4e1f5e929d3921545a6b8cad300238737d205f75707defb3c6dbb4479a5",
+      "ui/engine_activity_view.cpp": "a5487c5daf13a0aed1b480411c438ded2af1c0657571dbf619da46686b18dcca",
+      "ui/engine_activity_view.hpp": "58d5007738e2a38d644eabb75eac48e5dbdd1037afff5ab693f075d82bc8977d",
+      "ui/engine_statistics_presentation.hpp": "2b1270182e459b2b93aa3376f80b8bcb52500b51486dca0e93820684479db67d",
+      "ui/file_model.cpp": "a3085e257868c9a175db26efd2381641b313dcdc6f075d7cd6630720deb2c733",
+      "ui/file_model.hpp": "0aee945350a17d48a60a76eef199b9bf1f6186556304293ead37b5abda60f26c",
+      "ui/history_month_presentation.hpp": "a39b92cb28d744e073c4ed62142d02627d5ecc8eb43b96df002e0862c9d9d9db",
+      "ui/history_month_view.cpp": "9327b8b50a65e2aa1372e565e0624de801814a528a53d5a2192aac7b2f39ddaf",
+      "ui/history_month_view.hpp": "22f10d166de262cb038b6bf661c8d2c6ebfa9aebbd61ffb2a4c9ce429e032eaf",
+      "ui/history_presentation.hpp": "fee2b17a249857d4db0f576e7c6a25e98ef7887e82ec76ba7229b44a9d493d3f",
+      "ui/history_range_plot.cpp": "7605da1a7c80942844e4f72897a9db3ed4f5e12e185b018d46d029052044f9be",
+      "ui/history_range_plot.hpp": "7315dfef929f525c59ad89f91bdb770adf7d208e84cda629c7aee72a3e6135d5",
+      "ui/history_range_presentation.hpp": "2301375a1f8328bd4e09d98f63f879feaab92e209090b9c41e84a807f42db62c",
+      "ui/history_range_view.cpp": "bf5643e0e93bc5f4d5b6ec13af1e13a37faa13f5e07cd4a2955478e1a48c0ec1",
+      "ui/history_range_view.hpp": "64cfb338ffd1be636e90762effd990e1edb3995b7a498fe300316cdc2e97de41",
+      "ui/history_view.cpp": "88f0c5feaae55442dacefb264f54c93c08a72a5cb24c1646063b51be28fbac9c",
+      "ui/history_view.hpp": "4d0003b6020169b59a0e194e0abb34c10ad4abe165db318dc9684224f3c00f2d",
+      "ui/history_week_presentation.hpp": "ba27ac7248f1690a14252eb82d4d35beb5e8a93544476de4010641a47527c7c8",
+      "ui/history_week_view.cpp": "fb57304086deb24bed1cea791456e33ca363417af8e29723ca57f80c5e6d1800",
+      "ui/history_week_view.hpp": "8613aee6f0c3171655a7112ffcccc576016c038c056f2864dfc9ceede079ab6a",
+      "ui/library_model.cpp": "c934ccdf09240b30330545e08b2dd0499d5688092321a18e0686e849100769cf",
+      "ui/library_model.hpp": "8abca399af00b5c2c96e760c85b6c1078e69274be8b68c6dc8de7ac877772d98",
+      "ui/saved_history_plot.cpp": "321ad30eeb02db0bc3e5842d04048e6bfb867f2abda66c1e689847acbbb102b4",
+      "ui/saved_history_plot.hpp": "66a0369a35761ae8a2b6824e0d3c386468d4f063588fd3d0208378fc8f595250",
+      "ui/saved_history_traffic.hpp": "ec35b38d7f7fc0b9cc41b4fded4a5b5a247de76959b65ad80cc28cf195576caf",
+      "ui/saved_service_pages.cpp": "931e08d0fb4e3d3693368e68442d7d39ab149fcd3b2e66f27ce509ba118f7d3b",
+      "ui/saved_service_pages.hpp": "62facde85e509699e5c444ec7a069cc02a1f6b866acffabda47c57dc861970ee",
+      "ui/saved_services_presentation.hpp": "f0d4a11acab04211e52d78dbfe0155c3955306bb614b3290521d72140330d530",
+      "ui/statistics_navigation.hpp": "b7c63705c813cc0f034875b0d7086b6a879b33df1f9a19055ea9993c28ed28b2",
+      "ui/statistics_page.cpp": "931282e2d13cca15aeabb1d77c6b34a8eb44a87c82251cd547cc7105b2771829",
+      "ui/statistics_page.hpp": "629f19bac01b15e2dbb1fab911bbc51399ef285507f109419e20eb7acc962367",
+      "ui/statistics_presentation.hpp": "57d027756285b3619187b4fe907cab8ce9624205043eef49e3dcb78ae0c09ef8"
+    },
+    "stageB_component_cpp_absent": true,
+    "stageB_page_navigation_integration_not_adopted": true
+  },
+  "findings": [
+    {
+      "id": "FP1",
+      "status": "PASS",
+      "detail": "Bound owner holds one worker-thread LT session and exactly one pop_alerts consumer. Borrowed alert/counter storage is used/copied before the next pop. Scoped PersistentCall spans preflight/publication and callback reentry; operation sinks are cleared before retirement/destruction and do not escape the synchronous LocalOptions lifetime."
+    },
+    {
+      "id": "FP2",
+      "status": "PASS",
+      "detail": "Persistent single/multifile branches require matched retirement.storageReleased before the unchanged payload fsync/state/intent/inventory completion path. Removal identity includes registered weak ownership and operation userdata, then expiry/error checks and fresh response. Error/loss joins poisoned owner rather than certifying. Stats-only failure retains uncertainty rather than synthetic zero or an exact seal."
+    },
+    {
+      "id": "FP3",
+      "status": "PASS",
+      "detail": "create rejects unqualified runtime before Impl construction/LT calls. CMake default explicitly emits BOUND0; opt-in requires reviewed source/runtime manifest and actual imported artifact. Runtime checks original exports, current mapped identity and descriptor hash with nofollow/nonblock/stable metadata. Bridge falls back ONLY for DependencyUnqualified; invalid/memory/other factory errors are not silently downgraded."
+    },
+    {
+      "id": "FP4",
+      "status": "PASS",
+      "detail": "Host engine is declared after its held ProfileLease, so reverse destruction joins engine first. Bridge Executor is the last data member and its destructor joins before mutex/cache/tickets/Host/QObject teardown. Accepted finalizer runs on worker after task captures drain, clears stable sink and destroys Host. ProfileLease destructor closes held OFD lock and directory only afterward."
+    },
+    {
+      "id": "FP5",
+      "status": "PASS",
+      "detail": "Explicit close stops GUI idle scheduling and queues on the same worker behind any held idle poll. Once close is accepted, cancel cannot cancel it. Close-operation failure clears closing flags and emits sessionCloseFailed before busyfalse so Window can retry. Rejected submission uses QPointer tail guards. Optional final packet allocation/publication failure is caught; mandatory Host reset still precedes sessionClosed acknowledgement."
+    },
+    {
+      "id": "FP6",
+      "status": "PASS",
+      "detail": "Idle timer submits at most one outstanding poll, does not toggle GUI busy, query/revise library, read profile or introduce another alert consumer. Worker packet mailbox is bounded/coalesced; receiver-context queued delivery drops on QObject destruction. New idle counter failure publishes one Uncertified status retaining actual previous sample."
+    },
+    {
+      "id": "FP7",
+      "status": "PASS_LIMITED",
+      "detail": "Existing operation and saved-result methods remain exact except declared constructor/dispatch/continuation/cancel changes. UI keeps all old Statistics widgets, navigation and activity defaults; only cache/opt-in normal-close handshake enters existing Window. Staged StageB Page/widgets/history integration and Overall oracle have not been adopted. Source preservation does not replace root actual regression/visual qualification."
+    },
+    {
+      "id": "FP8",
+      "status": "PASS_SCOPE",
+      "detail": "Latest STATE explicitly requires finish ONLY P04-29, publish/checkpoint and STOP. It labels P04-30/writer materials preparatory and whole Statistics unfinished. No future milestone, writer, application-global/DHT/IP total or exhaustive finality credit is granted by this review."
+    }
+  ],
+  "tracking_refresh_needed_before_final_completion": [
+    "P04-29 task progress still contains the earlier no-instrumented-owner-executed/pending-causal snapshot. Latest STATE already records actual v1 14of15 and v2 rebuilding. Root final evidence/docs should replace stale current-progress paragraphs with actual final cohort outcomes while preserving failed attempts.",
+    "The task text mentions later Activity/Transfers views; current code and latest STATE correctly leave StageB UI/writer adoption outside P04-29. Final summary must retain that boundary."
+  ],
+  "execution_and_credit": {
+    "native_engine_or_test_execution_by_reviewer": false,
+    "builds_or_runtime_probes_by_reviewer": false,
+    "production_test_or_tracking_edits": false,
+    "git_mutations": false,
+    "live_profile_or_client_access": false,
+    "qualification_claim": "Source audit only. Root actual default/bound/instrumented causal/fault/compiler/sanitizer and compatibility evidence must independently pass; no result is inferred here.",
+    "join_bound": "Certification effort deadline does not bound OS/LT join; GUI acknowledgement means Host reset/join completed, not that bool receipt proves durability or exact final counters."
+  }
+}

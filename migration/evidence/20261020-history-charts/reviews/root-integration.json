@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "reviewer": "root",
+  "status": "PASS_source_only",
+  "scope": "Static independent integration review; no passing runtime claim",
+  "source_sha256": {
+    "preview/native/ui/history_view.hpp": "630d338494acd3a860ea690f0795bf0498a8b69aba399f657440f4f712ce1583",
+    "preview/native/ui/history_view.cpp": "5036248a34cd7194f18be72cf723dc02a681f650d41ecd9450a21a2105fa44e9",
+    "preview/native/ui/history_week_view.hpp": "77be4bc9a23ccb1d7334b5c75f5abc01c6d266e995a7f34662a651a7c43bd68f",
+    "preview/native/ui/history_week_view.cpp": "d5cd24203169ccb188988fe7663dedf515f8374dfe29cd35eff2135bef54d2b3",
+    "preview/docs/history-charts-contract.json": "9870ce18e6eb9083e7475b82024d78f237f81bc7ba0cfb186f3e3adb978ecb3d"
+  },
+  "checks": [
+    "Chart pointers forward-declared so existing worker/Page headers do not acquire renderer dependency.",
+    "Chart constructed above unchanged table; existing semantic IDs and default modes remain.",
+    "Only current visible/minimization-guarded refresh calls chart setter; stale input rejection remains existing behavior.",
+    "Plot update precedes final model signal; original revision/QPointer current() is checked after synchronous plot events.",
+    "Pending/missing/failed/reset/date transitions send unknown frame; ready sends existing immutable snapshot, without new requests or accounting.",
+    "Product footer and public contract accurately distinguish saved hourly/daily charts from rolling History and new Java equality."
+  ],
+  "blockers": []
+}

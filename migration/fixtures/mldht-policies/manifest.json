@@ -1,0 +1,14 @@
+{
+  "upstream_commit": "3b12515c5541ed75cfb4f795b672d4e786df9f45",
+  "source_sha256": "fe1011f995335ed16461f9c1aaf2c56d6abca63b79da53e29e83643f45b2965e",
+  "bind_body_sha256": "b35136d44290d9b277ee76029971acf3d1c282bd6cabe63b3b2ebe52624edcb9",
+  "effective_state_body_sha256": "9641f1a93292e514f1f610ef5eb8942b914e4fde25ba5f9091582d3087d2fa94",
+  "harness_sha256": "10e024881bc87ec324a8c3a721b97a925dc2e0c467a2e89213d4b0e7a4970eb9",
+  "work": "/tmp/biglybtc-mldht-oracle-1qx8dzz8",
+  "cases": 4860,
+  "scope": "Exact extracted method bodies; supplied host NetworkAdmin/core-manager values; no plugin initialization, DHT engine, sockets or full wrapper claim",
+  "files": {
+    "input.tsv": "b610db79b5c45d5994ee13b5435da5334543a17bfad17a087f9122b19e55486b",
+    "original.expected": "be466e6f3175565bf4fcb8f9a44b1c7b0986012cf60486552f4a5be0c09cb31c"
+  }
+}

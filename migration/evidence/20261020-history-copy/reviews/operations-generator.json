@@ -1,0 +1,160 @@
+{
+  "schema": 1,
+  "milestone": "P04-25",
+  "status": "PASS: independent source-only generator and template review; no execution credit",
+  "reviewer": "error_codec",
+  "blockers": [],
+  "generator": {
+    "path": "build/statistics-next-two-20261020/prepare_copy_ops.py",
+    "sha256": "4742ab55f6514f8c2abd2dfe8dd3ec6fa85c458f87910a130abf5337c7848247",
+    "complete_source_lines": 275,
+    "capsule_sha256": {
+      "manifest.json": "292808a80b2af04274eae036bfded5c8f8d91dc17a3a7bbe6ed6717054145cc3",
+      "prepare_copy_ops.py": "4742ab55f6514f8c2abd2dfe8dd3ec6fa85c458f87910a130abf5337c7848247",
+      "template-source-sha256.json": "0be8d91ee2a080882a0b41689d26eb546fb40cb6cb8477ba7e18a433a13d4037",
+      "static-anchor-inspection.json": "aea789a15de6a174ccdfab4acd6f3c74120bf77212f5475d0c841f75db70dd87",
+      "static-review.json": "7df86580d53503117605738e13528e90c5095e6dea5d4d0b30b7093976ff0660",
+      "README.md": "358bb0c255bfbe8365be168aa1422f9a0181e7cfa9add538290df133c1a77ae0"
+    }
+  },
+  "template_sha256": {
+    "qualify.py": "22d5ef76b1d45384d425add5fa21085a963241d70533a803c857f80991b7e0bf",
+    "run_smoke_scales.py": "3c58292e853ccf688ab2979394847bec660454cd39c77d9e0b6df93f52177dc9",
+    "run_visuals.py": "deff7c382673e1781340183b6c12fe0a714a2b0a9f289647b9bede631ddd3113",
+    "record_toolchains.py": "005b4b9bca1d81c76d193ff39d10be48e85f599da36a4ea4007cd9c91b4b60b9",
+    "collect_hosted.py": "b73e9b46c8ddd3462b042ccb09e20f129bad54a801efb99a5c6dfddaf38db851",
+    "collect_metadata_ci.py": "c1001e361acb293c92bcbd4130719d7b8703507e5edc6b026396244a5c373b3c",
+    "commit_source.py": "c6f6371b0d0cc61a0d7bd019d39e84d0f2fd358df6526a4e391ed600a8a4b51c",
+    "finalize_evidence.py": "b08b61bbfbc4d92f3ea43c33c08cd829d3145cf8672d6bafdc708f50ce5d30e2",
+    "verify_hosted.py": "057c2902740d4758ccfac831b617d3579cb342ef165961b8f7070cf315b3d538",
+    "promote_dist.py": "4b9171ecd974230abe10b914193e936bb044b46449b52b6686f66a224eeca023",
+    "verify_dist.py": "70518ad071d442ac89ec43b62eac40afdab985d63e8368f494a27658ed64f367",
+    "publish.py": "2164b459fb55c33f1a2cbd50f10cf12d8111d534e94d2a7438ce0a3515ff2ef3",
+    "finish_milestone.py": "9cbf3716dff3a733cccff59c5a39c48fb32d1804e8941a61f7771e6219b8aa1f",
+    "checkpoint_history_keyboard.py": "d0b4f07c5371c903bae4c5316fea1f2351eeb9da9361e3d9fa9da52512c0b7ac",
+    "checkpoint_milestone.py": "80ff4bc64df7c73057cfd23bdeb26b589e263a14a0f49dcd2b2e4ec44ab7e318",
+    "verify_private_checkpoint.py": "4d4cf830e31296ba16bfc54dc329be4d55b947d93e4b82d6bff260b18bee4016",
+    "record_visual_review.py": "59a6b8027bf095deb2eaae19af12d041a7f716610a0e861de755debf97036f65"
+  },
+  "context": {
+    "copy_contract_sha256": "edf2e63ec8d9b704b1cdfbd5f6b28c4f62765692f0414292bfcde0b8b8cff29d",
+    "keyboard_baseline_sha256": "753015c1172e27d9611b92da6f66a41c311fff213418dcb3aa3787bd807b9619",
+    "keyboard_unchanged_map_sha256": "71f2a298aad10873b1879351e3f58d66faea8b141ca616206d24d9ac3552e93e",
+    "current_retained_source_files_hash_verified": 241,
+    "docs_path": "build/history-copy-20261020/finalize_docs.py",
+    "docs_sha256": "685fd093f52820b732f701fa06d08969fe574dc07efd96cdc7b1a5f14085a515"
+  },
+  "static_inspection": {
+    "generator_and_all17_templates_AST_parsed": true,
+    "complete_generator_and17_templates_read": true,
+    "literal_once_calls": 74,
+    "matching_author_anchor_records": 74,
+    "every_before_anchor_unique_in_pinned_original_template": true,
+    "frozen_image_and_all_declared_capsule_hashes_verified": true,
+    "templates_unchanged_at_review_completion": true,
+    "no_transformed_helpers_generated_even_in_memory": true
+  },
+  "findings": [
+    {
+      "id": "COG-1",
+      "result": "PASS",
+      "detail": "Preparation requires real phase-three baseline/map and phase-two local/publication/private receipts. Full source/metadata/private identities, prior tag, dist digest, source identity, completed 70/21/24 cohorts, 63/21 captures, keyboard17 and publication/private facts cross-bind; no future commit value is invented."
+    },
+    {
+      "id": "COG-2",
+      "result": "PASS",
+      "detail": "Original cb8 HEAD/index baseline and the exact SHA-pinned 241-input guard map are preserved. The new set must be exactly prior241 plus plot header and keyboard test. Each addition binds the actual qualified phase-two source map, including its final focus-fixture revision. All guard paths/digests/current bytes are checked; six changed source paths are disjoint."
+    },
+    {
+      "id": "COG-3",
+      "result": "PASS",
+      "detail": "All 17 templates are SHA-pinned. The 74 once transformations use unique original anchors; namespace and actual baseline substitutions remain explicit. Inspection of ordering found no anchor collision. Every transformed script is AST-checked before writing, destinations/receipt refuse overwrite, and Driver docs are excluded."
+    },
+    {
+      "id": "COG-4",
+      "result": "PASS",
+      "detail": "New target/unit is only biglybtc-history-copy-tests / saved-history-copy. Final local sets are exact predecessor70/21/24 plus one new name =71/22/25; hosted retains the exact prior70 names plus Copy. Keyboard17 is explicitly retained; actual positive Copy Qt rows come from qualification-counts.json and bind to the Copy CTest section. Existing Qt/native/2550+3150 Java markers remain in their own sections and historical namespaces."
+    },
+    {
+      "id": "COG-5",
+      "result": "PASS",
+      "detail": "Source publication admits exactly six paths and requires actual GCC71, all three 12-row smokes, seven successful visual commands, qualification source pins and inherited guards. Full Clang/sanitizer/hosted gates remain mandatory for completion, dist metadata and tag; no execution credit is inferred from source generation."
+    },
+    {
+      "id": "COG-6",
+      "result": "PASS",
+      "detail": "The additional Copy image yields18 offline plus four real-engine/graph captures per scale,22 per scale/66 local/22 hosted. Both actual source-run API artifact identity and ZIP size/digest/path/type/tree-byte equality checks remain unchanged; archive entry count is observed, not guessed."
+    },
+    {
+      "id": "COG-7",
+      "result": "PASS",
+      "detail": "Both local and hosted producers set renderer_only=false, keyboard_navigation_only=false, copy_selection_only=true, clipboard_mode_only=true and automatic_clipboard_writes=false. Config/history write, Java rerun/equality, navigation/traffic-only and broad integration flags retain their prior truthful limits. Copy is explicit selected immutable text, not hover text or a sum."
+    },
+    {
+      "id": "COG-8",
+      "result": "PASS",
+      "detail": "Portable dist keeps103 files,82 unchanged runtime files, exact previous manifest, complete rollback and full-byte replay of only the installed RPATH transformation. Guarded loader checks and final no-work source build remain preserved."
+    },
+    {
+      "id": "COG-9",
+      "result": "PASS",
+      "detail": "Private checkpoint and verifier preserve original HEAD/index, alternate-index isolation, scoped raw-byte renormalization, complete staged-blob equality and inventory before ref advancement, exact expected parent and post-ref whole-tree checks. All three requested task cards remain in both scopes; no blanket P04 renaming mutates historical tasks."
+    },
+    {
+      "id": "COG-10",
+      "result": "PASS",
+      "detail": "Driver docs685fd093 consumes the actual producer field names: history_copy_qt_rows; retained history_keyboard_qt_rows17; source_count6; exact local/hosted counts and scope booleans. The third/final-request state and seven scoped documentation writes remain consistent. Arbitrary Qt-internal ActionChanged event-filter deletion is expressly excluded from the reviewed signal callback seam."
+    }
+  ],
+  "expected_scope": {
+    "source_paths": [
+      ".github/workflows/native-preview.yml",
+      "preview/native/packaging/README.md",
+      "preview/native/packaging/preview_smoke.cpp",
+      "preview/native/tests/CMakeLists.txt",
+      "preview/native/tests/history_copy_tests.cpp",
+      "preview/native/ui/saved_history_plot.cpp"
+    ],
+    "retained_guards": 241,
+    "additional_guards": [
+      "preview/native/ui/saved_history_plot.hpp",
+      "preview/native/tests/history_keyboard_tests.cpp"
+    ],
+    "total_guards": 243,
+    "prior_suites": {
+      "gcc": 70,
+      "clang": 21,
+      "sanitized": 24
+    },
+    "new_suites": {
+      "gcc": 71,
+      "clang": 22,
+      "sanitized": 25
+    },
+    "new_unit": "saved-history-copy",
+    "keyboard_qt_rows": 17,
+    "copy_qt_rows": "actual positive qualification-counts.json history_copy_qt_rows",
+    "smoke_qt_rows": 12,
+    "offline_png_per_scale": 18,
+    "captures_per_scale": 22,
+    "local_captures": 66,
+    "hosted_captures": 22,
+    "dist_files": 103,
+    "runtime_files_unchanged": 82,
+    "requested_milestones": 3
+  },
+  "limits": [
+    "This review does not certify future phase-two/phase-three receipts: prepare() must validate the actual completed inputs at execution.",
+    "No helper was generated, imported or executed. Generated output hashes and all qualification/publication/private-checkpoint outcomes remain root-owned future gates.",
+    "Preparation writes are exclusive but not a transactional batch; an I/O/interruption failure may leave partial unexecuted helpers and no successful preparation receipt. Preserve any such attempt and use an explicitly reviewed recovery rather than overwriting it.",
+    "No real compositor/system clipboard, live profile, full client or new original Java equality claim is established."
+  ],
+  "review_execution": {
+    "source_text_hash_AST_only": true,
+    "generator_executed": false,
+    "template_or_target_body_evaluated": false,
+    "helpers_generated": false,
+    "builds_tests_compiler_JVM_native_Git_network": false,
+    "native_or_shared_docs_modified": false
+  }
+}

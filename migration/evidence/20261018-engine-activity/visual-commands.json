@@ -1,0 +1,209 @@
+[
+  {
+    "name": "offline-smoke-scales",
+    "argv": [
+      "python3",
+      "/home/yurii/Java/BiglyBT/build/statistics-20261018/run_smoke_scales.py",
+      "--repo",
+      "/home/yurii/Java/BiglyBTC",
+      "--output",
+      "/home/yurii/Java/BiglyBTC/build/engine-activity-20261018"
+    ],
+    "started": "2026-10-18T21:32:38.335264+00:00",
+    "exit_code": 0,
+    "environment": {
+      "QT_ACCESSIBILITY": "1",
+      "XDG_CONFIG_DIRS": "/etc/xdg/xdg-ubuntu:/etc/xdg",
+      "XDG_MENU_PREFIX": "gnome-",
+      "QT_IM_MODULES": "wayland;ibus",
+      "XDG_SESSION_DESKTOP": "ubuntu",
+      "XDG_SESSION_TYPE": "wayland",
+      "XDG_CURRENT_DESKTOP": "ubuntu:GNOME",
+      "XDG_SESSION_CLASS": "user",
+      "QT_IM_MODULE": "ibus",
+      "XDG_RUNTIME_DIR": "/run/user/1000",
+      "XDG_DATA_DIRS": "/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop",
+      "XDG_SESSION_EXTRA_DEVICE_ACCESS": "render:accel"
+    }
+  },
+  {
+    "name": "engine-scale-1",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/desktop/tests/biglybtc-engine-statistics-integration-tests",
+      "realMeasurementsReachWindowAndSurviveTabReopening",
+      "-o",
+      "-,txt"
+    ],
+    "started": "2026-10-18T21:33:25.963837+00:00",
+    "exit_code": 0,
+    "environment": {
+      "QT_ACCESSIBILITY": "1",
+      "XDG_CONFIG_DIRS": "/etc/xdg/xdg-ubuntu:/etc/xdg",
+      "XDG_MENU_PREFIX": "gnome-",
+      "QT_IM_MODULES": "wayland;ibus",
+      "XDG_SESSION_DESKTOP": "ubuntu",
+      "XDG_SESSION_TYPE": "wayland",
+      "XDG_CURRENT_DESKTOP": "ubuntu:GNOME",
+      "XDG_SESSION_CLASS": "user",
+      "QT_IM_MODULE": "ibus",
+      "XDG_RUNTIME_DIR": "/run/user/1000",
+      "XDG_DATA_DIRS": "/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop",
+      "XDG_SESSION_EXTRA_DEVICE_ACCESS": "render:accel",
+      "QT_QPA_PLATFORM": "offscreen",
+      "QT_SCALE_FACTOR": "1",
+      "QT_PLUGIN_PATH": "/opt/Qt/6.12.0/gcc_64/plugins",
+      "QT_QPA_PLATFORM_PLUGIN_PATH": "/opt/Qt/6.12.0/gcc_64/plugins/platforms",
+      "BIGLYBTC_ENGINE_CAPTURE_DIRECTORY": "/home/yurii/Java/BiglyBTC/build/engine-activity-20261018/engine-scale-1"
+    }
+  },
+  {
+    "name": "engine-scale-1.5",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/desktop/tests/biglybtc-engine-statistics-integration-tests",
+      "realMeasurementsReachWindowAndSurviveTabReopening",
+      "-o",
+      "-,txt"
+    ],
+    "started": "2026-10-18T21:33:43.668938+00:00",
+    "exit_code": 0,
+    "environment": {
+      "QT_ACCESSIBILITY": "1",
+      "XDG_CONFIG_DIRS": "/etc/xdg/xdg-ubuntu:/etc/xdg",
+      "XDG_MENU_PREFIX": "gnome-",
+      "QT_IM_MODULES": "wayland;ibus",
+      "XDG_SESSION_DESKTOP": "ubuntu",
+      "XDG_SESSION_TYPE": "wayland",
+      "XDG_CURRENT_DESKTOP": "ubuntu:GNOME",
+      "XDG_SESSION_CLASS": "user",
+      "QT_IM_MODULE": "ibus",
+      "XDG_RUNTIME_DIR": "/run/user/1000",
+      "XDG_DATA_DIRS": "/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop",
+      "XDG_SESSION_EXTRA_DEVICE_ACCESS": "render:accel",
+      "QT_QPA_PLATFORM": "offscreen",
+      "QT_SCALE_FACTOR": "1.5",
+      "QT_PLUGIN_PATH": "/opt/Qt/6.12.0/gcc_64/plugins",
+      "QT_QPA_PLATFORM_PLUGIN_PATH": "/opt/Qt/6.12.0/gcc_64/plugins/platforms",
+      "BIGLYBTC_ENGINE_CAPTURE_DIRECTORY": "/home/yurii/Java/BiglyBTC/build/engine-activity-20261018/engine-scale-1.5"
+    }
+  },
+  {
+    "name": "engine-scale-2",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/desktop/tests/biglybtc-engine-statistics-integration-tests",
+      "realMeasurementsReachWindowAndSurviveTabReopening",
+      "-o",
+      "-,txt"
+    ],
+    "started": "2026-10-18T21:34:04.650706+00:00",
+    "exit_code": 0,
+    "environment": {
+      "QT_ACCESSIBILITY": "1",
+      "XDG_CONFIG_DIRS": "/etc/xdg/xdg-ubuntu:/etc/xdg",
+      "XDG_MENU_PREFIX": "gnome-",
+      "QT_IM_MODULES": "wayland;ibus",
+      "XDG_SESSION_DESKTOP": "ubuntu",
+      "XDG_SESSION_TYPE": "wayland",
+      "XDG_CURRENT_DESKTOP": "ubuntu:GNOME",
+      "XDG_SESSION_CLASS": "user",
+      "QT_IM_MODULE": "ibus",
+      "XDG_RUNTIME_DIR": "/run/user/1000",
+      "XDG_DATA_DIRS": "/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop",
+      "XDG_SESSION_EXTRA_DEVICE_ACCESS": "render:accel",
+      "QT_QPA_PLATFORM": "offscreen",
+      "QT_SCALE_FACTOR": "2",
+      "QT_PLUGIN_PATH": "/opt/Qt/6.12.0/gcc_64/plugins",
+      "QT_QPA_PLATFORM_PLUGIN_PATH": "/opt/Qt/6.12.0/gcc_64/plugins/platforms",
+      "BIGLYBTC_ENGINE_CAPTURE_DIRECTORY": "/home/yurii/Java/BiglyBTC/build/engine-activity-20261018/engine-scale-2"
+    }
+  },
+  {
+    "name": "activity-scale-1",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/desktop/tests/biglybtc-engine-activity-integration-tests",
+      "realTrafficCollectedWithClosedTabAndReopenedAfterCompletion",
+      "-o",
+      "-,txt"
+    ],
+    "started": "2026-10-18T21:34:25.324489+00:00",
+    "exit_code": 0,
+    "environment": {
+      "QT_ACCESSIBILITY": "1",
+      "XDG_CONFIG_DIRS": "/etc/xdg/xdg-ubuntu:/etc/xdg",
+      "XDG_MENU_PREFIX": "gnome-",
+      "QT_IM_MODULES": "wayland;ibus",
+      "XDG_SESSION_DESKTOP": "ubuntu",
+      "XDG_SESSION_TYPE": "wayland",
+      "XDG_CURRENT_DESKTOP": "ubuntu:GNOME",
+      "XDG_SESSION_CLASS": "user",
+      "QT_IM_MODULE": "ibus",
+      "XDG_RUNTIME_DIR": "/run/user/1000",
+      "XDG_DATA_DIRS": "/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop",
+      "XDG_SESSION_EXTRA_DEVICE_ACCESS": "render:accel",
+      "QT_QPA_PLATFORM": "offscreen",
+      "QT_SCALE_FACTOR": "1",
+      "QT_PLUGIN_PATH": "/opt/Qt/6.12.0/gcc_64/plugins",
+      "QT_QPA_PLATFORM_PLUGIN_PATH": "/opt/Qt/6.12.0/gcc_64/plugins/platforms",
+      "BIGLYBTC_ENGINE_ACTIVITY_CAPTURE_DIRECTORY": "/home/yurii/Java/BiglyBTC/build/engine-activity-20261018/activity-scale-1"
+    }
+  },
+  {
+    "name": "activity-scale-1.5",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/desktop/tests/biglybtc-engine-activity-integration-tests",
+      "realTrafficCollectedWithClosedTabAndReopenedAfterCompletion",
+      "-o",
+      "-,txt"
+    ],
+    "started": "2026-10-18T21:34:46.150156+00:00",
+    "exit_code": 0,
+    "environment": {
+      "QT_ACCESSIBILITY": "1",
+      "XDG_CONFIG_DIRS": "/etc/xdg/xdg-ubuntu:/etc/xdg",
+      "XDG_MENU_PREFIX": "gnome-",
+      "QT_IM_MODULES": "wayland;ibus",
+      "XDG_SESSION_DESKTOP": "ubuntu",
+      "XDG_SESSION_TYPE": "wayland",
+      "XDG_CURRENT_DESKTOP": "ubuntu:GNOME",
+      "XDG_SESSION_CLASS": "user",
+      "QT_IM_MODULE": "ibus",
+      "XDG_RUNTIME_DIR": "/run/user/1000",
+      "XDG_DATA_DIRS": "/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop",
+      "XDG_SESSION_EXTRA_DEVICE_ACCESS": "render:accel",
+      "QT_QPA_PLATFORM": "offscreen",
+      "QT_SCALE_FACTOR": "1.5",
+      "QT_PLUGIN_PATH": "/opt/Qt/6.12.0/gcc_64/plugins",
+      "QT_QPA_PLATFORM_PLUGIN_PATH": "/opt/Qt/6.12.0/gcc_64/plugins/platforms",
+      "BIGLYBTC_ENGINE_ACTIVITY_CAPTURE_DIRECTORY": "/home/yurii/Java/BiglyBTC/build/engine-activity-20261018/activity-scale-1.5"
+    }
+  },
+  {
+    "name": "activity-scale-2",
+    "argv": [
+      "/home/yurii/Java/BiglyBTC/build/desktop/tests/biglybtc-engine-activity-integration-tests",
+      "realTrafficCollectedWithClosedTabAndReopenedAfterCompletion",
+      "-o",
+      "-,txt"
+    ],
+    "started": "2026-10-18T21:35:19.650851+00:00",
+    "exit_code": 0,
+    "environment": {
+      "QT_ACCESSIBILITY": "1",
+      "XDG_CONFIG_DIRS": "/etc/xdg/xdg-ubuntu:/etc/xdg",
+      "XDG_MENU_PREFIX": "gnome-",
+      "QT_IM_MODULES": "wayland;ibus",
+      "XDG_SESSION_DESKTOP": "ubuntu",
+      "XDG_SESSION_TYPE": "wayland",
+      "XDG_CURRENT_DESKTOP": "ubuntu:GNOME",
+      "XDG_SESSION_CLASS": "user",
+      "QT_IM_MODULE": "ibus",
+      "XDG_RUNTIME_DIR": "/run/user/1000",
+      "XDG_DATA_DIRS": "/usr/share/ubuntu:/usr/share/gnome:/usr/local/share/:/usr/share/:/var/lib/snapd/desktop",
+      "XDG_SESSION_EXTRA_DEVICE_ACCESS": "render:accel",
+      "QT_QPA_PLATFORM": "offscreen",
+      "QT_SCALE_FACTOR": "2",
+      "QT_PLUGIN_PATH": "/opt/Qt/6.12.0/gcc_64/plugins",
+      "QT_QPA_PLATFORM_PLUGIN_PATH": "/opt/Qt/6.12.0/gcc_64/plugins/platforms",
+      "BIGLYBTC_ENGINE_ACTIVITY_CAPTURE_DIRECTORY": "/home/yurii/Java/BiglyBTC/build/engine-activity-20261018/activity-scale-2"
+    }
+  }
+]

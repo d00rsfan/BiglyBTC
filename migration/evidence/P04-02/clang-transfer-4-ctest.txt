@@ -1,0 +1,21 @@
+Test project /tmp/biglybtc-desktop-clang
+    Start 36: desktop-java-v2
+1/4 Test #36: desktop-java-v2 ..................   Passed  118.58 sec
+    Start 38: desktop-java-cancel
+2/4 Test #38: desktop-java-cancel ..............   Passed  111.25 sec
+    Start 39: desktop-java-close
+3/4 Test #39: desktop-java-close ...............   Passed   94.69 sec
+    Start 43: desktop-original-file-policy
+4/4 Test #43: desktop-original-file-policy .....   Passed   96.42 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+integration     = 420.94 sec*proc (4 tests)
+loopback        = 420.94 sec*proc (4 tests)
+multifile       =  96.42 sec*proc (1 test)
+policy          =  96.42 sec*proc (1 test)
+same-profile    = 420.94 sec*proc (4 tests)
+ui              = 420.94 sec*proc (4 tests)
+
+Total Test time (real) = 421.09 sec

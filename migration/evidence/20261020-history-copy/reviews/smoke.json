@@ -1,0 +1,86 @@
+{
+  "schema": 1,
+  "milestone": "P04-25",
+  "reviewer": "error_codec",
+  "author": "error_driver",
+  "status": "PASS independent source-only Copy smoke candidate review",
+  "blockers": [],
+  "capsule_manifest_sha256": "b101a1986f2a624bc6413206ace29b538d6c7c21efc23c9be84543a46c3aee9f",
+  "source_sha256": {
+    "build/statistics-next-two-20261020/copy-smoke/candidate.cpp": "3705af5f74f03d29fd83cee72f4c5ee75c9020902da4e9ed33537ac6d16f75c9",
+    "build/statistics-next-two-20261020/copy-smoke/copy_smoke_method.cpp": "19e528b20e92d4dd26ebbb9241a95b51d5f36e32c97882e64ade0b9ad550eb32",
+    "build/statistics-next-two-20261020/copy-smoke/before/preview_smoke.cpp": "e8af4bd2554c41a799cc2468eaaad9b4405777043a4b5f1f320530130ba98973"
+  },
+  "artifacts_sha256": {
+    "additive.patch": "7ec119bec1a2d59edd26e3e33a1199b86339e5f3d8100594aae57ca1c07d157f",
+    "author-notes.md": "a585ced563624cf0aad59151bfae855f18c669d0b056cffbb94ad18daefc02d4",
+    "before/preview_smoke.cpp": "e8af4bd2554c41a799cc2468eaaad9b4405777043a4b5f1f320530130ba98973",
+    "candidate.cpp": "3705af5f74f03d29fd83cee72f4c5ee75c9020902da4e9ed33537ac6d16f75c9",
+    "copy_smoke_method.cpp": "19e528b20e92d4dd26ebbb9241a95b51d5f36e32c97882e64ade0b9ad550eb32",
+    "required-includes.txt": "6da74e2c002e73470d773eaae7c2870861bdbf2d576d1af84a700c3375d30ed9",
+    "static-checks.json": "0cb02b66711d64d49ceb44da479d9f0a58b11adaed4ba0d5be87454c4f159000"
+  },
+  "contract_sha256": "edf2e63ec8d9b704b1cdfbd5f6b28c4f62765692f0414292bfcde0b8b8cff29d",
+  "copy_production_manifest_sha256": "ce00514f47a30630c11f9a97db254d3e83f5bed4a8f60a4e684b5e6a1909c41b",
+  "checks": {
+    "all7_declared_artifacts_verified": true,
+    "required_complete_before_image_matches_current_native_bytes": true,
+    "reversing_only_new_method_and_two_includes_recovers_entire_before_image": true,
+    "all9_old_methods_complete_bodies_preserved": true,
+    "old_method_names": [
+      "generatedSampleLibraryAndFiles",
+      "generatedColumnPreferencesSaveAndRestart",
+      "explicitFirstSaveCreatesOnlyAfterMissingReadAndRestarts",
+      "statisticsShortcutSavedTotalsAndCloseReopen",
+      "generatedSavedHistoryDayAndMissingDayRemainReadOnly",
+      "generatedSevenDayOverviewAndMissingWeekRemainReadOnly",
+      "statisticsNavigationSurvivesCloseAndNewSessionClearsMemory",
+      "historyTrafficUsesFreshSavedFactsWithoutExtraReads",
+      "savedHistoryKeyboardInspectsRealBucketsWithoutExtraReads"
+    ],
+    "new_method_lines": 185,
+    "new_method_bytes": 12662,
+    "one_new_capture": "statistics-history-copy-preview.png",
+    "no_deprecated_setActiveWindow_or_sleeps_or_skips": true
+  },
+  "assessments": [
+    {
+      "topic": "strict additive preservation",
+      "status": "PASS",
+      "detail": "Complete candidate 3705af5 reverses exactly to before e8af4 after removing only the 185-line method and QClipboard/QMimeData includes. All nine old complete slot bodies, assertions, helpers, data, capture paths and deadlines remain exact. Planned 12 Qt rows and 22 captures are pending actual root observation, not reviewer execution credit."
+    },
+    {
+      "topic": "generated profile and actual data",
+      "status": "PASS",
+      "detail": "The method admits only offscreen and a canonical /tmp/biglybtc-preview-*/profile, then opens the real Bridge with port 0. It selects fixed 2024-01-02 seven-day Hourly/DHT, waits for actual accepted week/idle and binds all 168 copied bucket pairs to packet indices 5/4. A literal terminal UTC/Unknown string is checked; known text is tied to those already checked accepted facts. This is UI/transport inspection, not new parser/accounting or Java equality."
+    },
+    {
+      "topic": "real explicit copy and no automatic publication",
+      "status": "PASS",
+      "detail": "It checks the actual child QAction identity, parent, label, standard shortcut, WidgetShortcut and ActionsContextMenu registration. Actual Ctrl+C copies the unknown bucket while focused. The same context-menu action is triggered after focus loss to copy a known bucket, without pretending a menu popup/compositor was exercised. Sentinel and changed counts show startup/selection/focus/traffic replacement/reopening add no automatic copy. All observed changes must use Clipboard and copied MIME must be plain text without HTML."
+    },
+    {
+      "topic": "clipboard and lifecycle isolation",
+      "status": "PASS",
+      "detail": "Clipboard-only MIME bytes are owned/restored by local RAII even on QtTest early returns; the global Clipboard is checked before use and the guard is QPointer-backed. Signal spies and Bridge/Window locals are destroyed before restoration, avoiding callbacks into dead test fixtures. Only the offscreen Clipboard mode is accessed; no Selection/FindBuffer or real system clipboard acceptance is claimed. Reopening waits for old Page/plot QPointers to clear, restores scalar navigation, receives fresh packet/frame and starts with no cursor and disabled Copy."
+    },
+    {
+      "topic": "read-only effects and bounded checks",
+      "status": "PASS",
+      "detail": "History/overall/library signal counts remain 1/1/1 during keys, copying and traffic changes, daily stays 0, and fresh reopening produces exactly the second totals/week reply. No library refresh or transfer action is invoked. Twelve fixed config/day paths retain presence and exact bytes, including empty/missing distinctions, and the generated payload directory remains empty. Those explicit before/after verification reads are separate from observed Bridge reads. The one new PNG is an authorized generated-root test output; no profile writer or extra file scan is added. No new inode/mtime, live client or network qualification is inferred."
+    }
+  ],
+  "installation_gate": "Root must finish P04-24 and require the complete actual native smoke beforeimage e8af4 before installing; any different parent needs an explicit reviewed amendment. Source-only review does not authorize silent merge/rebaseline.",
+  "execution": {
+    "builds": 0,
+    "Qt_or_test_execution": 0,
+    "JVM": 0,
+    "Git_commands": 0,
+    "native_edits": 0,
+    "frozen_capsule_edits": 0,
+    "target_imports_or_selected_body_evaluations": 0
+  },
+  "actual_Qt_rows": null,
+  "actual_captures": null,
+  "actual_qualification_credit": false
+}

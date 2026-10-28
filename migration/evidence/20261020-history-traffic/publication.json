@@ -1,0 +1,15 @@
+{
+  "schema": 1,
+  "repository": "https://github.com/d00rsfan/BiglyBTC",
+  "source_commit": "1b08cceee82df9d29f1b35719a6ac24f2c6c2bc1",
+  "metadata_commit": "bd27aeba82c48c8cd4bddcd8ca35d9f48fb7f310",
+  "tag": "milestone-history-traffic-20261020",
+  "tag_object": "e019acd499fd19cdd1ae3158c3c71e743b41c08e",
+  "tag_target": "bd27aeba82c48c8cd4bddcd8ca35d9f48fb7f310",
+  "remote_identity_verified": true,
+  "source_files_verified": 15,
+  "qualification": "local-verification.json and hosted-verification.json",
+  "dist_manifest_sha256": "7a38544ed765728555f4423bee7a9beba3f16a7a312accddbab6036e7efb8417",
+  "original_processes_signaled": false,
+  "original_profile_access": false
+}

@@ -1,0 +1,19 @@
+{
+  "inspection": "Root viewed actual generated PNGs with view_image",
+  "captures_sha256": {
+    "activity-scale-1/activity-single.png": "f426499509af3cbedf43b03e71182602144a460fbadcaac4b3c4997cae95ef30",
+    "activity-scale-1.5/activity-multifile.png": "3c2654dd1104bb7d7ca5afbfb60288c97af1750bd1752076c21911f2c81285c4",
+    "activity-scale-2/activity-single.png": "525c896d76c8a44287853c0e4f962bbfcb36ccc3ffb9a7e723e5483f97d0f6b1",
+    "1-statistics-activity-preview.png": "eade61468b91b344580e92bf68bc4d0fb97905ee857012b2f4627e144e8adf6a",
+    "2-statistics-transfers-preview.png": "fa294f6456c5abb6572d1182e52c1ae31e7a259a7818e6a2afd35ae77beeb6d2"
+  },
+  "findings": [
+    "Both direction charts, six labels, legend, elapsed axes and Refresh fit the1280x900 logical classic window at100/150/200%",
+    "Populated plots come from actual generated single/multifile loopback transfers; saved totals loaded separately",
+    "Default Payload stays first, displays no fabricated observations in the offline launcher",
+    "Transfers retains scrollable original-format saved counters and distinct unavailable engine scope"
+  ],
+  "additional_hosted_capture": "Hosted activity-multifile.png independently viewed and fits; raw hosted map is in hosted-verification.json",
+  "manual_compositor_credit": false,
+  "focus_or_window_manager_acceptance": false
+}

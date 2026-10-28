@@ -1,0 +1,68 @@
+{
+  "upstream_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "cases": 38,
+  "cases_sha256": "4332facf46bc93da89fe27957065b0f948bcc3888c0e575f1194af50cf134604",
+  "source_sha256": {
+    "core/src/com/biglybt/pifimpl/local/download/DownloadStubImpl.java": "5deffd907b97fdbe1e4779acd57ab24f6b0983039568105d55645e242a105e92"
+  },
+  "stub_getter_sha256": "edde239b6dfd763fbde502f407a81d1b3a96a1b3b7507f1585a73f065db83738",
+  "harness_sha256": "f89002d45f8ce563cebdf3cc6b516f5250fad2bfc8e96f2e432f32d7561c697d",
+  "qualified_getters_manifest_sha256": "9b694680305c7e82593fcf9c49c6a05114c761f4c21fb1ed9ab20566d4f4e6b4",
+  "core_class_digest": "d90b37e4e09c054caf7f70ca03a6816faff559a0c05bc965ac8d4382983c9ae0",
+  "generated_seed_metadata_sha256": {
+    "v1": {
+      "downloads.config": "a1fe0b80c0898e06b82acc2fee542be714dfda5163e06232640e5a62f336f9da",
+      "active/cache.dat": "aa3a608d859570f6256cf6ff7851e069fbcb777d9cdd198f2a84535a7c616f06",
+      "active/7B26D19F7DC2D2F9D9F897AD851B0AB6E0D58C6C.dat": "fddd5fb3af4e1f0aa3147f816e88108ff88e5dba864d07bd41068fc2639776cc"
+    },
+    "v2": {
+      "downloads.config": "7d6303413aeb843d4dfbdf183a4929561deac5a5513516cf7699c86ed7174cfc",
+      "active/cache.dat": "fb2ea485248f3a3953b02d24f573b41c9bcfa0fc4d63392edf6ad25051042b34",
+      "active/5DB3E00F788EB746D6703C41630245213F158390.dat": "b4511530c5728e49e67f9ea3e782f93412503d636efd83fafb8a1b8e674bc1aa"
+    },
+    "hybrid": {
+      "downloads.config": "4a2d20333eff16effa2d6b40c043124cb5fd51aa49a4843cef8e3791ff984f3b",
+      "active/cache.dat": "bde1ff89f6cf3061869411603467ac1c3dbcc41ecdc27c421a9e7193bb6e8093",
+      "active/048A14D7CF867E89C77A019DAB014575EC3F2E32.dat": "d16a02416e1a3eca99ac81e39dd4c53295a0bbc92e79228e0f14549f5debb799"
+    }
+  },
+  "helper_class_sha256": {
+    "RpcProfileOracle.class": "1a8ae7633b27ed67f92412dfdb729c7e47511ef5a7d99f2b4db61b231aec7544",
+    "RpcProfileOracle$Lazy.class": "d788dbb264169a64ec0a86868757b3c5dab25244a5de02efcdb6e0d4e7437d56",
+    "RpcProfileOracle$Stub.class": "dd914f95ca9f6b2a3f2b80dc841860f465651bff7aaba253c8815f7d206f72e0",
+    "RpcProfileOracle$TorrentAttribute.class": "78741b6d7c3176ec3e8e823d076cd8ee5229c906aa785d778f93e5ff761d6fdc"
+  },
+  "command": [
+    "nice",
+    "-n",
+    "5",
+    "/usr/lib/jvm/java-17-openjdk-amd64/bin/java",
+    "-XX:ActiveProcessorCount=2",
+    "-Djava.security.manager=ReferenceFence",
+    "-Dbiglybtc.test.root=/tmp/biglybtc-rpc-profile-oracle-hywp106r",
+    "-Duser.home=/tmp/biglybtc-rpc-profile-oracle-hywp106r",
+    "-Dazureus.config.path=/tmp/biglybtc-rpc-profile-oracle-hywp106r/profile",
+    "-cp",
+    "/tmp/biglybtc-rpc-profile-oracle-hywp106r/classes:/tmp/biglybtc-plugin-attributes-oracle-6zeaz1wx/classes:/tmp/biglybtc-oracle/classes",
+    "RpcProfileOracle",
+    "/tmp/biglybtc-rpc-profile-oracle-hywp106r"
+  ],
+  "compile_command": [
+    "nice",
+    "-n",
+    "5",
+    "/usr/lib/jvm/java-17-openjdk-amd64/bin/javac",
+    "-J-XX:ActiveProcessorCount=2",
+    "--release",
+    "8",
+    "-encoding",
+    "UTF-8",
+    "-cp",
+    "/tmp/biglybtc-rpc-profile-oracle-hywp106r/classes:/tmp/biglybtc-plugin-attributes-oracle-6zeaz1wx/classes:/tmp/biglybtc-oracle/classes",
+    "-d",
+    "/tmp/biglybtc-rpc-profile-oracle-hywp106r/classes",
+    "/tmp/biglybtc-rpc-profile-oracle-hywp106r/source/RpcProfileOracle.java"
+  ],
+  "work": "/tmp/biglybtc-rpc-profile-oracle-hywp106r",
+  "scope": "Exact original cached/primary Long getters, config Long getter and archived stub Long getter over generated metadata; supplied filesystem/cache/recovery adapter and monitors. Not normal startup/registration/archived stub restoration, ID allocation, RPC server or live-profile qualification."
+}
