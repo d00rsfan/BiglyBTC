@@ -1,0 +1,196 @@
+{
+  "status": "BOUNDED_NETWORK_RELIABILITY_CHAPTER_COMPLETE",
+  "chapter_complete": true,
+  "full_network_or_performance_parity": false,
+  "shipping_approved": false,
+  "original_source": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "provider_upstream": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "application_implementation": "54af52933cc663634a6ad0ca2f6390ff38e34721",
+  "application_build_and_initial_test_source": "ec948313479d6cb351cd8ed4724d551f5ff54f4e",
+  "final_test_source": "22916f704844836955cc33cce3a6aee86cfe6bcd",
+  "provider": {
+    "status": "EXACT_SOURCE_SDK_ARTIFACT_AND_DIRECT_TESTS_REVIEWED",
+    "record_sha256": "9f8d1f436f943994a117f9f33bbaf016f92bb60ab3c0cecf9e0b6f02efb3c6ee",
+    "artifact_sha256": "a5b78ccb4ee17a6773899e797d867844c8a24a45358e260b7ab65a93e2954187",
+    "source_leaves": 1075,
+    "sdk_headers": 277,
+    "install_leaves": 286,
+    "required_exports": 17,
+    "direct_test_cases": 8,
+    "parent_immutable": true,
+    "shipping_approved": false
+  },
+  "effective_native_lanes": {
+    "gcc": {
+      "status": "PASS_WITH_EXPLICIT_UNCHANGED_SUCCESS_REUSE",
+      "lane": "gcc",
+      "final_test_source_commit": "22916f704844836955cc33cce3a6aee86cfe6bcd",
+      "actual_new_suite": "owned-fixture-read-diagnostic",
+      "actual_new_test_binary_sha256": "c62ac92b41eb4d4fc86ccaf75f5347e37b44de5406425cd34117b65ad4ca473f",
+      "other_images_byte_identical": {
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-network-proxy-owner-tests": "6b6e1eaf4b4c1986bbeb8709676734d8c34fbd3ea7ce8d39a67b79890bf2a3c5",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-network-binding-owner-tests": "ed8f42df50c9a64fee3372f890bed83db5c5326b4b51a542eb5a48f96a3dfdae",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/app/BiglyBTC": "0c460707a688dd8e076f995a8e298f3a03a8c1416ab0c5405f2178bc867157c1",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/app/BiglyBTC-headless": "369d972c91c168a5a924037f259b8a07dbfaa61669da323c2100d3e1a2d1e639",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-managed-download-tests": "412753d16e54327d9680486dc52103ed754ca6f9e531ae6083342766d49c1b1b",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-persistent-session-tests": "a02fdd4db7f8332dd66a922bdfceca4f4cc91c170af76ff4eec2d5dadaec11c1",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-selected-swarm-admission-tests": "2e6b9e9975dee55e459bb79cfaed74967da0b44fd5f8b561b5cb695b346657f2",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-provider-payload-counter-tests": "9e214b7f75eaacf4679d3d6d08cf8e7b8d497a186cae74edba04b5e09bc4efa6",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-provider-socks-runtime-deployment-driver": "ca1b062566a5c44f4c764e5d3113982730542af52460f0e9cf17588bf6a98869",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-runtime-interposition-driver": "134ed89cfe7ecf3090728c7b5d194529c6da808f51edf3d03836f0fdac8590b9",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/libbiglybtc-runtime-interposer.so": "1f4dda335c3b5d4917fe8d0f6dc5b8f6e9e28d9361c58601ea3c51f682f72153",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-runtime-binding-driver": "68bf5e5b772bb6674a11df22e8ea81656b934e937a720f99fdd2729222226872",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-runtime-negative-driver": "38e86cf89a0158259aeb85fcbdbc96f2735a83c6918cd1045f99c6cacd642791",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-network-proxy-capability-tests": "bae1975574b193458c04604f580058ce05f18da72499ba1b38306b5e5b1e32f1",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/libbiglybtc-network-proxy-foreign-marker.so": "4fa5f89baac652b8207181c547555d6406977dadecc409b4352c44616677801c",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/libbiglybtc-network-proxy-foreign-webseed-marker.so": "ee2bef1f91191fd92a8e66e2f93dccf127f06c5302e4f83ef235762eaa082b76",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/app/BiglyBTC-plugin-azlocprov.so": "dbe306d4ed1eb3e54ff52f322f285a09d00d07939bd2e271c4c75917e9d917ba",
+        "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/app/BiglyBTC-plugin-SpeedScheduler.so": "736860113143539cc658a14219246f6d4468e64d0da6a21c21108dcf828ea5d3"
+      },
+      "reused_successful_suites": [
+        "persistent-native-peer-session",
+        "persistent-runtime-source-bound",
+        "persistent-runtime-reject-open",
+        "persistent-runtime-reject-inode",
+        "persistent-runtime-reject-content",
+        "persistent-runtime-reject-fifo",
+        "managed-download",
+        "network-binding-owner",
+        "provider-payload-counter",
+        "selected-swarm-admission",
+        "network-proxy-owner",
+        "network-proxy-capability-present-webseed",
+        "network-proxy-capability-foreign-marker",
+        "network-proxy-capability-foreign-webseed-marker",
+        "provider-socks-runtime-inputs",
+        "provider-socks-runtime-deployment"
+      ],
+      "prior_whole_test_exit": 8,
+      "prior_source_commit": "ec948313479d6cb351cd8ed4724d551f5ff54f4e",
+      "raw_result": "/home/yurii/Java/BiglyBT/build/network-reliability-20261028/native-gcc-r2/tests.xml",
+      "association_recovery": "Changed read test mistakenly included in GCC unchanged-image cohort; excluded only that expected changed subject, all other image bytes match. Existing successful GCC build/test receipts reused without executions."
+    },
+    "clang": {
+      "status": "PASS_WITH_EXPLICIT_UNCHANGED_SUCCESS_REUSE",
+      "lane": "clang",
+      "final_test_source_commit": "22916f704844836955cc33cce3a6aee86cfe6bcd",
+      "actual_new_suite": "owned-fixture-read-diagnostic",
+      "actual_new_test_binary_sha256": "0471849af23f8d55540269c84ac4a07f1b736afea116efe1cc4dea5a72258433",
+      "other_images_byte_identical": {
+        "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-network-proxy-owner-tests": "4421a485f854b5a3861d15a694d0a3b2b3e01000a9095ae2b9363e941e80d314",
+        "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-network-binding-owner-tests": "3bef3aa1084cff92f4542d9bc02db9207055629f207be278a39a32c34fd7cb29"
+      },
+      "reused_successful_suites": [
+        "network-binding-owner",
+        "network-proxy-owner"
+      ],
+      "prior_whole_test_exit": 8,
+      "prior_source_commit": "ec948313479d6cb351cd8ed4724d551f5ff54f4e",
+      "raw_result": "/home/yurii/Java/BiglyBT/build/network-reliability-20261028/native-clang/tests.xml",
+      "association_recovery": "Changed read test mistakenly included in GCC unchanged-image cohort; excluded only that expected changed subject, all other image bytes match. Existing successful GCC build/test receipts reused without executions."
+    },
+    "san": {
+      "status": "PASS_WITH_EXPLICIT_UNCHANGED_SUCCESS_REUSE",
+      "lane": "san",
+      "final_test_source_commit": "22916f704844836955cc33cce3a6aee86cfe6bcd",
+      "actual_new_suite": "owned-fixture-read-diagnostic",
+      "actual_new_test_binary_sha256": "a24d3f4e56e18c07aa510449d16b42bb10cb3cf1c27e2ee55b83f8f2f2c1fe63",
+      "other_images_byte_identical": {
+        "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-network-proxy-owner-tests": "9b68d547f336f67617dec7bc32ef4e4509bbe59e7db9e954cd35f56d642846f3",
+        "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-network-binding-owner-tests": "578e2c13db7be98a7f0e1dcbcc8ff20afff46030fa9a07e567a4ea8f32cf92ad"
+      },
+      "reused_successful_suites": [
+        "network-binding-owner",
+        "network-proxy-owner"
+      ],
+      "prior_whole_test_exit": 8,
+      "prior_source_commit": "ec948313479d6cb351cd8ed4724d551f5ff54f4e",
+      "raw_result": "/home/yurii/Java/BiglyBT/build/network-reliability-20261028/native-san/tests.xml",
+      "association_recovery": "Changed read test mistakenly included in GCC unchanged-image cohort; excluded only that expected changed subject, all other image bytes match. Existing successful GCC build/test receipts reused without executions."
+    }
+  },
+  "direct_clang": {
+    "status": "PASS",
+    "lane": "clang",
+    "actual_suites": 1,
+    "actual_phase_cases": 7,
+    "sanitizer_environment": {}
+  },
+  "direct_san": {
+    "status": "PASS",
+    "lane": "san",
+    "actual_suites": 1,
+    "actual_phase_cases": 7,
+    "sanitizer_environment": {
+      "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+      "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+    }
+  },
+  "private_runtime": {
+    "status": "PASS_PRIVATE_RUNTIME_WITH_EXPLICIT_TEST_FIXTURE_FOLLOWUP",
+    "candidate": "/home/yurii/Java/BiglyBT/build/network-reliability-20261028/private-runtime/candidate",
+    "manifest_sha256": "6914e2964d448a969a8cc760eae8cb6f6f8ce7c87d1594a20a9d4606b2c683fb",
+    "verified_leaves": 118,
+    "provider_sha256": "a5b78ccb4ee17a6773899e797d867844c8a24a45358e260b7ab65a93e2954187",
+    "reused_actual_positive_suites": [
+      "biglybtc-network-proxy-owner-tests",
+      "biglybtc-network-binding-owner-tests",
+      "biglybtc-persistent-session-tests",
+      "biglybtc-provider-payload-counter-tests"
+    ],
+    "new_read_diagnostic_suite": true,
+    "new_smoke_suite": true,
+    "prior_whole_process_result": "Failed new directory fixture assumption; retained, not relabelled",
+    "application_build_source": "ec948313479d6cb351cd8ed4724d551f5ff54f4e",
+    "final_test_source": "22916f704844836955cc33cce3a6aee86cfe6bcd",
+    "normal_usage_exit": 2,
+    "offline_preview_controlled_exit": 124,
+    "private_loader_init_verified": true,
+    "shipping_approved": false
+  },
+  "dist_promotion": {
+    "status": "PROMOTED_AND_RELOCATED_LAUNCH_VERIFIED",
+    "new_manifest_sha256": "6914e2964d448a969a8cc760eae8cb6f6f8ce7c87d1594a20a9d4606b2c683fb",
+    "previous_manifest_sha256": "58902e71cb376c8b78654dc2cbfd95d9b2aa9886618511bceea3120b84603f7d",
+    "new_leaves": 118,
+    "previous_leaves": 118,
+    "rollback": "/home/yurii/Java/BiglyBT/build/network-reliability-20261028/previous-published-dist-20261028-socks",
+    "installed_path": "/home/yurii/Java/BiglyBTC/dist",
+    "post_relocation_usage_exit": 2,
+    "actual_private_qt_and_provider_init": true,
+    "provider_sha256": "a5b78ccb4ee17a6773899e797d867844c8a24a45358e260b7ab65a93e2954187",
+    "shipping_approved": false
+  },
+  "retained_failures": [
+    "Initial reproduction build used obsolete Asio timer.cancel(error_code); corrected before frozen legacy proof",
+    "Initial app configure refused unregistered new deployment cohort before compiling; exact test registration added",
+    "Private test-loader preflight found unbundled QtTest; exact separate test copy added before subject execution",
+    "Initial new directory fixture wrongly assumed QFile opens directories; only this test image rebuilt after16/2/2 successful suites",
+    "Association bookkeeping initially included the changed read subject in the unchanged-image group; recovered from actual successful receipts without GCC execution"
+  ],
+  "open_limits": [
+    "Historic generic generated-file read failure cause remains unproved; diagnostics now include path, operation, QFile error, errno and explanation",
+    "Historic zero-CONNECT chronology was not wire-captured; the exact symptom is now causally reproduced by a real queued resolver completion after close and that path is fixed",
+    "Cancel without close does not establish reconnect on an already open socket",
+    "Broader CF01-CF08/P05-P12 services, compositor/public-network/performance and shipping gates remain open"
+  ],
+  "archive": {
+    "path": "retained-evidence.tar.gz",
+    "sha256": "600a35f9dad11676cc985c4bfac8842b98fdd0bf62b20920eb257aa142593ab1",
+    "bytes": 306037,
+    "members": 194
+  },
+  "hosted_ci": {
+    "record": "hosted-ci.json",
+    "desktop_run": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40683126641",
+    "plugin_sdk_run": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40683126636",
+    "source_commit": "22916f704844836955cc33cce3a6aee86cfe6bcd",
+    "conclusion": "success"
+  },
+  "registry_validation": {
+    "record": "registry-validation.json",
+    "sources": 18,
+    "components": 97,
+    "reviews": 0
+  }
+}

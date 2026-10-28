@@ -7160,7 +7160,8 @@
         "migration/evidence/20261026-compatibility-batch1/verification.json",
         "migration/evidence/20261026-compatibility-batch3/verification.json",
         "migration/evidence/20261027-compatibility-gcc-milestone/verification.json",
-        "migration/evidence/20261028-compatibility-chapter/verification.json"
+        "migration/evidence/20261028-compatibility-chapter/verification.json",
+        "migration/evidence/20261028-network-reliability/verification.json"
       ],
       "feature_ids": [
         "F05.persistent_owned_local"
@@ -7231,6 +7232,21 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "61fc63b5bcb783dd82b3bafb9eb62ecee578cc02",
           "purpose": "tests"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "54af52933cc663634a6ad0ca2f6390ff38e34721",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "ec948313479d6cb351cd8ed4724d551f5ff54f4e",
+          "purpose": "tests"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "22916f704844836955cc33cce3a6aee86cfe6bcd",
+          "purpose": "tests"
         }
       ],
       "review_records": [
@@ -7240,7 +7256,8 @@
         "migration/updates/compatibility.providers/20261026-batch1.md",
         "migration/updates/compatibility.providers/20261026-batch3.md",
         "migration/updates/compatibility.providers/20261027-gcc-milestone.md",
-        "migration/updates/compatibility.providers/20261028-chapter.md"
+        "migration/updates/compatibility.providers/20261028-chapter.md",
+        "migration/updates/network.reliability/20261028.md"
       ],
       "source_coverage": [
         {
@@ -7264,7 +7281,8 @@
       ],
       "task_records": [
         "migration/tasks/P04-OPTIONS.md",
-        "migration/tasks/P08-01-compatibility-providers.md"
+        "migration/tasks/P08-01-compatibility-providers.md",
+        "migration/tasks/P05-NETWORK-RELIABILITY.md"
       ]
     },
     {
@@ -8101,6 +8119,31 @@
         {
           "path": "migration/evidence/20261025-compatibility-providers/provider-patches/provider-next.patch",
           "sha256": "f2b784a9800bdf079ad738ca8b354efe527b6bad0b0c8151974315da406a5051"
+        }
+      ],
+      "notices": [
+        "migration/notices/libtorrent-2.0.12-LICENSE",
+        "migration/notices/libtorrent-2.0.12-COPYING",
+        "migration/notices/libtorrent-2.0.12-debian-copyright"
+      ]
+    },
+    {
+      "id": "bounded-engine-libtorrent-private-socks-lifecycle",
+      "name": "Private LT cancellation-safe provider (development qualification only)",
+      "version": "2.0.12",
+      "repository_url": "https://github.com/arvidn/libtorrent.git",
+      "source_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+      "artifacts": [
+        {
+          "url": "file:///home/yurii/Java/BiglyBT/build/network-reliability-20261028/provider-socks-lifecycle/install/lib/libtorrent-rasterbar.so.2.0.12",
+          "sha256": "a5b78ccb4ee17a6773899e797d867844c8a24a45358e260b7ab65a93e2954187"
+        }
+      ],
+      "build_recipe": "Exact additive patch on retained traffic-V3 provider. See preview/native/engine/runtime-binding/provider-socks-source-build-record.json and migration/evidence/20261028-network-reliability/verification.json; complete source/SDK/artifact inventories, actual commands and failure history retained. Not shipping or inherited full causal/client/performance approval.",
+      "patches": [
+        {
+          "path": "preview/migration/dependencies/libtorrent/socks-cancellation.patch",
+          "sha256": "c71a6eb1388f4620e5f943e9d9b4303a336babb2f96505c7b64785df91ab4479"
         }
       ],
       "notices": [

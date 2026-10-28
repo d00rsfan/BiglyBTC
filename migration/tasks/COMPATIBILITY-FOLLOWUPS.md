@@ -1,81 +1,12 @@
 # Compatibility follow-ups
 
-Bounded ordinary Linux compatibility chapter completed; final test source `61fc63b5bcb783dd82b3bafb9eb62ecee578cc02`, application `7405a61a7a605c9962cc7a630b06fef25c0a5c66`. Development dist updated and rollback preserved. Runtime qualification remains limited: provider CONNECT0.0.0.0:0 and the prior generated-file read failure remain open in CF03/CF08. All broad CF/P05–P12 dependencies stay open. [Final review](../evidence/20261028-compatibility-chapter/REVIEW.md). Stop before the next chapter.
+Read this checklist with the main plan before selecting or closing work. Broad CF01–CF08 remain open. No item currently requires a user answer.
 
-Open runtime follow-up: capture provider socket/cancel/resolver lifecycle for the observed zero endpoint; do not whitelist it. Add filename/errno diagnostics on the next controlled reproduction of the generic file-read exception. Known causes must precede fixes; no blanket retries.
+Latest bounded chapter: [network runtime reliability](P05-NETWORK-RELIABILITY.md), completed2026-10-28. [Review](../evidence/20261028-network-reliability/REVIEW.md). The exact late-resolver zero-CONNECT path is causally reproduced and fixed; strict routing/CMD3/SDK/runtime guards pass. Native17/3/3 uses explicit successful-case reuse and focused read followups. Generic historic generated-file read failure cause stays open; precise diagnostics are now tested. Broader CF families below remain open.
 
-## Earlier checkpoints and broad open families
+The earlier ordinary compatibility chapter remains qualified within its [recorded scope](../evidence/20261028-compatibility-chapter/REVIEW.md); historical descriptions below do not erase its later bounded expansions.
 
-Current GCC milestone completed at native `7405a61a7a605c9962cc7a630b06fef25c0a5c66`. Forty affected suites are covered by39 unchanged successful runs and one corrected actual rerun, with source/command/input/image hashes proving reuse. The compatibility chapter is unfinished; the latest user instruction is to stop after this milestone.
-Latest boundary: **STOP now**. [Actual milestone evidence and open limits](../evidence/20261027-compatibility-gcc-milestone/REVIEW.md). Next work remains original11/2 readbacks, Clang/SAN and portable/dist gates; no next chapter is authorized by this checkpoint. Previous continuation/STOP boundaries below are historical.
-
-
-Authenticated existing custom save roots at native `d2796585f5ddf6bd3bd4ae00729b3a8a8fea7a76`: gcc 9 suites, clang 9 suites, san 9 suites pass; 3 new actual original-client cases are recorded. [Review](../updates/compatibility.providers/20261027-batch10.md). The user-authorized current milestone plus two further milestones are complete. STOPPED after batch10, as requested. Do not start another milestone or the next chapter without new instructions. All CF parents stay open.
-
-
-Versioned and padded verified existing-data seeding at native `a2f050e27779c3b949db6f144f978ae0cc542a44`: gcc 9 suites, clang 9 suites, san 9 suites pass; 5 new actual original-client cases are recorded. [Review](../updates/compatibility.providers/20261027-batch9.md). Exactly one authorized milestone remains in this compatibility section: authenticated existing custom save roots (batch10). Complete it, then STOP. Do not start the next chapter. All CF parents stay open.
-
-
-Compatibility batch8 qualifies verified existing-data seeding at native `663cd8e9f387c8540976153c70238d1ef7869126`: thirteen affected suites pass in each GCC, Clang and leak-enabled ASan/UBSan lane. Four actual native producer profiles are independently reloaded by original Java Core: complete single/multifile, corrupt single and stopped single. Complete native cases transfer to a real loopback receiver.
-[Batch8 review](../updates/compatibility.providers/20261027-batch8.md). All CF parents remain open. Current user boundary: exactly two additional milestones in this section after batch8, then STOP; no next chapter.
-
-
-Compatibility batch7 qualifies bounded file-operation receipt reuse at native `dad74e36931da36a90de2c65aed0130e6fae26f6`: three affected suites pass in each GCC, Clang and leak-enabled ASan/UBSan lane. Nine actual unequal-size/sparse payload-read cases and two cold-recovery cases per lane retain strict content checks, journal order and descriptor cleanup.
-[Batch7 review](../updates/compatibility.providers/20261027-batch7.md). All CF parents remain open.
-
-
-Compatibility batch6 qualifies optional top-level save-name editing at native `c3501e2037e35727af4c684afee2f905fd56c905`: five affected suites pass in each GCC, Clang and leak-enabled ASan/UBSan lane. Eight generated native imports reload through one actual original Java Core to READY with matching absolute paths, titles, file indices, selected bytes and unchanged payload inodes.
-[Batch6 review](../updates/compatibility.providers/20261027-batch6.md). All CF parents remain open.
-
-
-Compatibility batch5 is qualified at native `5361bbc55d4f5eefafb344bb16c04e107b245dd8`: twelve affected suites pass in GCC, Clang and leak-enabled ASan/UBSan at the same source. Actual original KOI8-R filename getters match227 cases/681 lines plus256 byte classifications. Actual original tracker mutations match44 cases across v1, v2 and both hybrid selections.
-[Batch5 review](../updates/compatibility.providers/20261026-batch5.md). All CF parents remain open; previous STOP boundaries below are historical.
-
-Compatibility batch4 is qualified at native `6896d528de5f33292631f39ba2db6a8369e2066e`: all12 affected suites pass at that final source in GCC, Clang and leak-enabled ASan/UBSan lanes. Actual original filename comparison passes226 cases/678 lines plus256 byte classifications. Initial GUI-fixture failures remain retained history.
-[Batch4 review](../updates/compatibility.providers/20261026-batch4.md). All CF parents remain open.
-
-Current bounded checkpoint: `e24c6eb492786290a1acf87fed44442694a0d4e4`; effective32 affected suites per lane (30 initial +2 focused), with actual companions4, ETA31/124 and filename cases7. [Batch2 review](../updates/compatibility.providers/20261026-batch2.md). All CF01–CF08 remain open; retained provider/dist records and earlier failures remain unchanged.
-
-Bounded compatibility batch1 is qualified at native `2482d8a6dd63d2bcdf3f8b93f70e7bf2e6325b1a`: 27 effective affected suites per GCC/Clang/leak-enabled sanitizer lane, selected individually from actual source-bound PASS rows; four actual original Java partial/complete hybrid/v2 handoffs; controlled SOCKS5 hostname webseed payload and deterministic file-operation read-work observations; Scheduler interrupted-intent recovery/editor capture. Failed case attempts remain uncredited history; successful cases completed before a different case failed are credited individually. The original empty-first hybrid and pure-V2 failures remain explicit limitations; separately named nonempty replacements supply the other two strict cases. Continue all remaining work autonomously with batched checks. All CF01–CF08 remain open. Future webseed provider remains unapproved and supplies no batch1 authority; this is no whole-client/performance/release closure.
-
-[Batch1 evidence](../evidence/20261026-compatibility-batch1/verification.json).
-
-
-The two authorized final milestones are qualified: verified native SOCKS4a/USERID source `b43971447b44db2f107b205204e1637bff8124ff` and imported-original Scheduler source `6b44a2c21f88c32d6f94fe595d4a42877a895bc1`, final qualified source `861d4f17f2454086de8ec44a9814c292ce1f41fe`. Each GCC/Clang/leak-enabled ASan-UBSan lane passes20 affected suites; actual generated Java/native/Java pause switchback passes2 cases, and the standalone old-SDK denial proof covers275 headers without LT/loader linkage. These are bounded numeric SOCKS framing/authentication and explicit imported-pause recovery, not whole network/Scheduler parity. The current milestone plus two authorized milestones are finished: STOP. No next chapter or autonomous additional work. All CF01–CF08 remain open; no tracker/app-hostname4a proof, Java-enforced journal barrier, crash-recovery UI, new causal/DHT/public-wire, full network or performance closure is claimed.
-
-[Final two-milestone evidence](../evidence/20261025-proxy-scheduler/verification.json).
-
-## Historical records
-
-
-Current bounded compatibility-provider milestone is qualified: implementation `c8afff5311e4ff650b17d09651e3db440a0c93e8`, test-only qualification followup `471ebb75fc66fefb0208b0d086a934b68aced84b`. Effective GCC/Clang/leak-enabled ASan-UBSan lanes each credit38 original unaffected PASS +2 focused followup PASS =40; no full40 rerun or identical full-snapshot claim. Actual original observations: priority8, probes14, nonlinear corners2, rate arithmetic23; packaging preflight7. Private b0e/3342 candidate passes13 smoke Qt rows,28 captures,5 positive cohorts and11 deployment controls. It remains private-only and unpromoted; published dist deefcbe remains unchanged. No full CF closure, new causal/DHT/public-wire, bound target ETA, native SOCKS4a/USERID admission or imported Scheduler recovery is claimed. All CF01–CF08 remain open.
-
-Latest explicit user boundary: finish this current milestone, then exactly two further milestones in the same compatibility chapter—verified native SOCKS4a/USERID admission and imported-original Scheduler pause recovery—then STOP. Both are pending. No next chapter is authorized. This boundary supersedes older open-ended continuation text preserved below as history.
-
-[Current completion](../evidence/20261025-compatibility-providers/completion.json).
-
-## Historical records
-
-
-Bounded source `4f948e042df9467310a5752d4343b07915673f84` now qualifies original-selected v2/hybrid
-identity, generated handoffs, exact selected provider, bind/interface, ordinary
-flexible queue slots, pre-add file choices and creator variants.
-[Review](../evidence/20261025-v2-workflows/REVIEW.md). The full families below
-remain open, including reproduced original limitations. The private payload
-shim is replaced by a public provider ABI; full native vptr sanitization is
-restored. Combined counters and old causal/fence proof are separate work.
-
-Read this checklist alongside MIGRATION_PLAN.md and STATE.md when selecting or
-closing a milestone. A qualified preview does not close these items. Keep an
-item open until its implementation commits and applicable interoperability or
-runtime evidence are linked here; split partially completed items explicitly.
-No item currently requires a user answer.
-
-Sources: [chapter review](../evidence/20261024-torrent-workflows/REVIEW.md),
-[detailed scope](../evidence/20261024-torrent-workflows/scope.md), and
-[qualification receipt](../evidence/20261024-torrent-workflows/verification.json).
-Qualified native source: `08a44ec3134e32c8f1cebc4061f5fa608ba2cc35`.
-Original baseline: `cb8c6cb9bb97916cbc7e80338a017200ffc3e71f`.
+Historical checkpoint/STOP instructions are preserved in [the history](COMPATIBILITY-FOLLOWUPS-HISTORY-20261028.md); they are not current boundaries.
 
 - [ ] **CF-01 — Additional storage layouts (P03/P11).** Implement compact,
   reordered and remaining unsupported original mappings. Qualify partial and

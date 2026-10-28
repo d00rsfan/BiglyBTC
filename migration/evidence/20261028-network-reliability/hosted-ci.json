@@ -1,0 +1,108 @@
+{
+  "desktop": {
+    "conclusion": "success",
+    "headSha": "22916f704844836955cc33cce3a6aee86cfe6bcd",
+    "jobs": [
+      {
+        "completedAt": "2026-10-28T12:10:27Z",
+        "conclusion": "success",
+        "databaseId": 122798621520,
+        "name": "preview",
+        "startedAt": "2026-10-28T11:51:05Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-10-28T11:51:06Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-10-28T11:51:06Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T11:51:11Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 2,
+            "startedAt": "2026-10-28T11:51:06Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T11:51:11Z",
+            "conclusion": "success",
+            "name": "Check offline preview console forwarding",
+            "number": 3,
+            "startedAt": "2026-10-28T11:51:11Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T11:51:55Z",
+            "conclusion": "success",
+            "name": "Install pinned compiler, libtorrent and Qt 6.12.0 SDK",
+            "number": 4,
+            "startedAt": "2026-10-28T11:51:11Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T12:08:07Z",
+            "conclusion": "success",
+            "name": "Configure and build the desktop preview",
+            "number": 5,
+            "startedAt": "2026-10-28T11:51:55Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T12:10:18Z",
+            "conclusion": "success",
+            "name": "Run offline unit tests",
+            "number": 6,
+            "startedAt": "2026-10-28T12:08:07Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T12:10:24Z",
+            "conclusion": "success",
+            "name": "Run actual offline preview smoke and capture classic view",
+            "number": 7,
+            "startedAt": "2026-10-28T12:10:18Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T12:10:25Z",
+            "conclusion": "success",
+            "name": "Preserve test, screenshot and dependency evidence",
+            "number": 8,
+            "startedAt": "2026-10-28T12:10:24Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T12:10:25Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1",
+            "number": 16,
+            "startedAt": "2026-10-28T12:10:25Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-10-28T12:10:26Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 17,
+            "startedAt": "2026-10-28T12:10:25Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40683126641/job/122798621520"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40683126641"
+  },
+  "plugin_sdk": {
+    "conclusion": "success",
+    "headSha": "22916f704844836955cc33cce3a6aee86cfe6bcd",
+    "status": "completed",
+    "url": "https://github.com/d00rsfan/BiglyBTC/actions/runs/40683126636"
+  },
+  "scope": "Actual hosted success at the final test source; metadata-only publication does not repeat those builds"
+}

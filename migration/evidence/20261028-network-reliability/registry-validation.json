@@ -1,0 +1,11 @@
+{
+  "status": "PASS",
+  "command": [
+    "python3",
+    "migration/tools/validate.py"
+  ],
+  "exit": 0,
+  "output": "PASS registry: 18 sources, 97 components, 0 reviews",
+  "registry_sha256": "dea3dbad99fab2ec5baa7e59fca742e44d409735fa78faca450e56cc8aa6c7d4",
+  "native_registry_identical": true
+}
