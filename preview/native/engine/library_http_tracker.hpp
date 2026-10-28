@@ -14,13 +14,15 @@ struct LibraryHttpRoute {
   bool operator==(const LibraryHttpRoute&)const=default;
 };
 std::expected<LibraryHttpRoute,storage::Error> libraryHttpRoute(const NetworkPolicy&,std::string_view);
+std::expected<LibraryHttpRoute,storage::Error> libraryHttpRedirectRoute(
+    const LibraryHttpRoute&,const QByteArray& location,std::span<const std::byte,20> hash);
 std::string libraryHttpRouteScope(const LibraryHttpRoute&,std::string_view);
 // A DNS answer is only a proposal. Caller must authenticate current saved
 // permissions before this function's chosen numeric route can be connected.
 std::optional<std::pair<QHostAddress,QHostAddress>> libraryHttpEndpoint(
     const LibraryHttpRoute&,const QList<QHostAddress>&);
 namespace http_tracker_wire {
-struct Body {bool complete=false,unsupported=false;QByteArray bytes;bool failed=false;};
+struct Body {bool complete=false,unsupported=false;QByteArray bytes;bool failed=false;QByteArray location={};};
 Body response(const QByteArray&,bool eof);
 core::QueueTrackerTerminal scrape(std::string_view,std::span<const std::byte,20>,
     std::int64_t now,std::int64_t wall,std::int64_t started,bool singleOnly,unsigned fuzzSeconds);
@@ -37,6 +39,7 @@ public:
   LibraryHttpTracker(const LibraryHttpTracker&)=delete;
   LibraryHttpTracker& operator=(const LibraryHttpTracker&)=delete;
   const Request* active()const noexcept;
+  bool redirectProposalPending() const; // Passive; never resolves/approves.
   bool resolvedProposalPending() const; // Passive internal diagnostic, no DNS/pump/authority.
   std::expected<void,storage::Error> start(Request,const LibraryHttpRoute&,std::int64_t now,
       std::int64_t wall,bool singleOnly=false);

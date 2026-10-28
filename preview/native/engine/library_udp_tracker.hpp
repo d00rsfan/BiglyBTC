@@ -1,7 +1,9 @@
 #pragma once
+#include "biglybtc/library.hpp"
 #include "biglybtc/queue_observations.hpp"
 #include "network_policy.hpp"
 #include "profile.hpp"
+#include <libtorrent/address.hpp>
 #include <libtorrent/socket.hpp>
 #include <openssl/rand.h>
 #include <array>
@@ -83,7 +85,7 @@ public:
   struct Result {Request request;core::QueueTrackerTerminal terminal;};
   static constexpr std::int64_t StageTimeoutMillis=30000; // Original DEFAULT_UDP_TIMEOUT, one retry-count1.
   LibraryUdpTracker()=default;LibraryUdpTracker(const LibraryUdpTracker&)=delete;LibraryUdpTracker& operator=(const LibraryUdpTracker&)=delete;
-  ~LibraryUdpTracker(){cancel();}
+  ~LibraryUdpTracker()=default;
   const Request* active()const noexcept{return round_?&round_->request:nullptr;}
   void cancel()noexcept{round_.reset();}
   std::expected<void,storage::Error> start(Request request,const LibraryUdpRoute& route,std::int64_t now,std::int64_t wall){
