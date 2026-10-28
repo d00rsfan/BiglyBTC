@@ -53,6 +53,8 @@ struct MainlineDhtStatus {
   // One newly correlated successful PORT-node reply whose endpoint is in the
   // actual active routing table; never addNode registration or a peer count.
   std::uint64_t peerBootstrapProgress = 0;
+  // Passive actual storage/terminal accounting, not elapsed-time estimates.
+  std::size_t scrapeRetainedRounds=0,scrapePendingProbes=0,scrapeQueuedResults=0;
 };
 
 // Worker-confined dedicated session: never owns a profile, torrent or payload.
@@ -87,6 +89,8 @@ public:
   std::expected<std::vector<MainlineDhtPeers>, storage::Error> poll();
   // One bounded known-live-node round, independent of lookup/announce and
   // without peer injection. Explicit dialect is never inferred from a packet.
+  // At most64 unresolved rounds/undelivered results. Closed round cookies are
+  // reclaimed only after all actual RPC terminal and live-table alerts drain.
   std::expected<std::uint64_t,storage::Error> scrape(libtorrent::sha1_hash,
       services::mainline_scrape::Dialect, bool noSeeds=false);
   std::expected<void,storage::Error> cancelScrape(std::uint64_t);

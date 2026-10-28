@@ -1,4 +1,5 @@
 #include "mainline_dht.hpp"
+#include "owned_mainline_krpc.hpp"
 #include "queued_mainline_scrape.hpp"
 #include "library_commands.hpp"
 #include "persistent_session.hpp"
@@ -27,6 +28,7 @@ namespace {
 using namespace biglybtc;
 using namespace std::chrono_literals;
 namespace lt = libtorrent;
+using OwnedKrpc=test::mainline::OwnedKrpc;
 
 QByteArray bytes(std::string_view value) { return QByteArray(value.data(), static_cast<qsizetype>(value.size())); }
 QByteArray string(const QByteArray& value) { return QByteArray::number(value.size()) + ':' + value; }
@@ -81,155 +83,6 @@ unsigned short dhtPort(unsigned short peerPort=0) {
   return result;
 }
 
-// Independent KRPC wire fixture. The production service supplies neither its
-// bencode nor its expected hash/token/port. Local IDs use LT's unchanged BEP42
-// local-address exemption (kademlia/node_id.cpp), not a relaxed DHT setting.
-class OwnedKrpc final {
-  struct Request { QByteArray transaction,hash; QHostAddress address; unsigned short port=0; bool scrape=false; };
-  QUdpSocket socket_;
-  QTcpServer decoy_;
-  const QByteArray nodeId_=QByteArray(20,'K');
-  std::set<QByteArray> allowed_,noPeers_;
-  std::vector<Request> heldPings_;
-  std::optional<unsigned short> announcePort_;
-  bool holdPings_=false;
-  std::map<QByteArray,int> gets_,announces_;
-  std::map<QByteArray,std::set<QByteArray>> clientIds_;
-  std::map<QByteArray,QByteArray> tokens_;
-  std::vector<Request> held_;
-  QByteArray heldHash_;
-  unsigned short peerPort_;
-  bool noise_=false;
-  QByteArray scrapeSeedKey_="BFse";
-  bool scrapeZero_=false,scrapeWrongId_=false;
-  int scrapeGets_=0;
-  int scrapeNoSeeds_=0;
-  // Independent wire fixture: fixed bit patterns, not production Bloom output.
-  QByteArray scrapeFilter()const{QByteArray value(256,'\0');if(!scrapeZero_){value[0]=3;value[7]=8;}return value;}
-
-  void fail(const char* text) { if (failure.isEmpty()) { failure=QString::fromLatin1(text); } }
-  QByteArray tokenKey(const Request& request) const {
-    return request.hash + request.address.toString().toUtf8() + ':' + QByteArray::number(request.port);
-  }
-  void send(const Request& request,const QByteArray& packet) {
-    if (socket_.writeDatagram(packet,request.address,request.port)!=packet.size()) { fail("Owned KRPC reply write failed"); }
-  }
-  QByteArray response(const Request& request,const std::map<QByteArray,QByteArray>& result) const {
-    return dictionary({{"r",dictionary(result)},{"t",string(request.transaction)},{"y",string("r")}});
-  }
-  void answerPeers(const Request& request) {
-    if(request.scrape){
-      const auto id=scrapeWrongId_?QByteArray(20,'W'):nodeId_;
-      send(request,response(request,{{"id",string(id)},{"nodes",string({})},
-          {scrapeSeedKey_,string(scrapeFilter())},{"BFpe",string(scrapeFilter())}}));return;
-    }
-    const auto token=QCryptographicHash::hash(tokenKey(request),QCryptographicHash::Sha1).first(8);
-    tokens_[tokenKey(request)]=token;
-    std::vector<QByteArray> peers;
-    if(!noPeers_.contains(request.hash)){peers.push_back(string(compact(peerPort_)));}
-    if (noise_) {
-      // Unsolicited and malformed packets precede a valid owned progress
-      // barrier. An unrequested hash in a reply is never lookup authority.
-      auto unrelated=request; unrelated.transaction += "unrelated";
-      send(unrelated,response(unrelated,{{"id",string(nodeId_)},{"info_hash",string(QByteArray(20,'Z'))},
-          {"values",list({string(compact(decoy_.serverPort()))})}}));
-      send(request,QByteArray("d1:ri-no-integer-ee"));
-      peers.push_back(string({})); peers.push_back(string(QByteArray(5,'x')));
-      peers.push_back(string(QByteArray(6,'\0'))); peers.push_back(string(compact(0)));
-      ++noiseReplies;
-    }
-    send(request,response(request,{{"id",string(nodeId_)},{"token",string(token)},{"values",list(peers)}}));
-  }
-  void receive() {
-    while (socket_.hasPendingDatagrams()) {
-      const auto packet=socket_.receiveDatagram(4096);
-      if (!packet.senderAddress().isLoopback() || packet.senderPort()==0 || packet.data().size()>2048) {
-        fail("KRPC query has invalid owned source or size"); continue;
-      }
-      auto parsed=core::Document::parse(packet.data().toStdString(),{4096,2048,128,8});
-      if (!parsed || parsed->root().type!=core::Node::Type::Dictionary) { fail("Invalid KRPC query bencode"); continue; }
-      const auto& root=parsed->root();
-      const auto* transaction=field(root,"t",core::Node::Type::Bytes);
-      const auto* kind=field(root,"y",core::Node::Type::Bytes);
-      const auto* query=field(root,"q",core::Node::Type::Bytes);
-      const auto* args=field(root,"a",core::Node::Type::Dictionary);
-      const auto* id=args?field(*args,"id",core::Node::Type::Bytes):nullptr;
-      if (!transaction || transaction->bytes.empty() || transaction->bytes.size()>16 || !kind || kind->bytes!="q"
-          || !query || !args || !id || id->bytes.size()!=20 || bytes(id->bytes)==QByteArray(20,'\0')) {
-        fail("KRPC query lacks an actual transaction/node identity"); continue;
-      }
-      const auto sourcePort=packet.senderPort();
-      if (sourcePort<1 || sourcePort>65535) { fail("Invalid owned datagram source port"); continue; }
-      Request request{bytes(transaction->bytes),{},packet.senderAddress(),static_cast<unsigned short>(sourcePort)};
-      sourcePorts.insert(request.port);
-      if (query->bytes=="ping") {
-        ++bootstrapQueries;
-        if(holdPings_){heldPings_.push_back(request);}else{send(request,response(request,{{"id",string(nodeId_)}}));}
-      } else if (query->bytes=="find_node") {
-        const auto* target=field(*args,"target",core::Node::Type::Bytes);
-        if (!target || target->bytes.size()!=20) { fail("Invalid find_node target"); continue; }
-        ++bootstrapQueries; send(request,response(request,{{"id",string(nodeId_)},{"nodes",string({})}}));
-      } else if (query->bytes=="get_peers" || query->bytes=="announce_peer") {
-        const auto* info=field(*args,"info_hash",core::Node::Type::Bytes);
-        if (!info || info->bytes.size()!=20 || bytes(info->bytes)==QByteArray(20,'\0')) { fail("Invalid KRPC info_hash"); continue; }
-        request.hash=bytes(info->bytes);
-        if (query->bytes=="get_peers") {
-          // LT can probe a random routing bucket with get_peers. Such a query
-          // receives no values; only explicitly registered subjects get peers.
-          if (!allowed_.contains(request.hash)) {
-            ++bootstrapQueries; send(request,response(request,{{"id",string(nodeId_)},{"nodes",string({})}})); continue;
-          }
-          if(const auto* scrape=args->find("scrape")){
-            const auto* noseed=args->find("noseed");
-            if(scrape->type!=core::Node::Type::Integer||scrape->integer!=1||!noseed||noseed->type!=core::Node::Type::Integer||noseed->integer!=scrapeNoSeeds_){fail("Invalid actual scrape/noseed query");continue;}
-            request.scrape=true;++scrapeGets_;
-          }
-          clientIds_[request.hash].insert(bytes(id->bytes)); ++gets_[request.hash];
-          if (request.hash==heldHash_) { held_.push_back(request); } else { answerPeers(request); }
-        } else {
-          const auto* token=field(*args,"token",core::Node::Type::Bytes);
-          const auto* port=field(*args,"port",core::Node::Type::Integer);
-          const auto* implied=args->find("implied_port");
-          const auto issued=tokens_.find(tokenKey(request));
-          if (!allowed_.contains(request.hash) || !token || issued==tokens_.end() || bytes(token->bytes)!=issued->second
-              || !port || port->integer!=announcePort_.value_or(peerPort_) || announcePort_.value_or(peerPort_)==request.port
-              || (implied && (implied->type!=core::Node::Type::Integer || implied->integer!=0))) {
-            fail("announce_peer did not use the issued hash/source token and explicit TCP peer port"); continue;
-          }
-          clientIds_[request.hash].insert(bytes(id->bytes)); ++announces_[request.hash]; send(request,response(request,{{"id",string(nodeId_)}}));
-        }
-      } else { fail("Unexpected KRPC query outside owned fixture protocol"); }
-    }
-  }
-public:
-  QString failure;
-  int bootstrapQueries=0,noiseReplies=0;
-  std::set<unsigned short> sourcePorts;
-  explicit OwnedKrpc(unsigned short peerPort,QHostAddress address=QHostAddress::LocalHost) : peerPort_(peerPort) {
-    test::require(peerPort_!=0,"Owned KRPC fixture needs a real TCP peer");
-    test::require(socket_.bind(address,0,QUdpSocket::DontShareAddress),"Cannot bind owned KRPC fixture");
-    test::require(decoy_.listen(QHostAddress::LocalHost,0),"Cannot bind owned decoy endpoint");
-    QObject::connect(&socket_,&QUdpSocket::readyRead,&socket_,[this]{receive();});
-  }
-  unsigned short port() const { return socket_.localPort(); }
-  void peerPort(unsigned short port) { test::require(port!=0,"Actual owned peer port required"); peerPort_=port; }
-  std::set<QByteArray> clientIds(const lt::sha1_hash& value) const {
-    const auto found=clientIds_.find(hashBytes(value)); return found==clientIds_.end()?std::set<QByteArray>{}:found->second;
-  }
-  void allow(const lt::sha1_hash& value) { allowed_.insert(hashBytes(value)); }
-  void allowWithoutPeers(const lt::sha1_hash& value){allow(value);noPeers_.insert(hashBytes(value));}
-  void announcePort(unsigned short value){test::require(value!=0,"Actual owner port required");announcePort_=value;}
-  void holdPings(bool value){holdPings_=value;}
-  void releasePings(){holdPings_=false;auto rows=std::move(heldPings_);heldPings_.clear();for(const auto& row:rows){send(row,response(row,{{"id",string(nodeId_)}}));}}
-  void noise(bool enabled) { noise_=enabled; }
-  void hold(const lt::sha1_hash& value) { heldHash_=hashBytes(value); }
-  void release() { heldHash_.clear(); auto pending=std::move(held_); held_.clear(); for (const auto& request:pending) { answerPeers(request); } }
-  void scrapeReply(QByteArray key="BFse",bool zero=false,bool wrongId=false){scrapeSeedKey_=std::move(key);scrapeZero_=zero;scrapeWrongId_=wrongId;}
-  void scrapeNoSeeds(int value){test::require(value==0||value==1,"Invalid owned noseed expectation");scrapeNoSeeds_=value;}
-  int scrapes()const{return scrapeGets_;}
-  int gets(const lt::sha1_hash& value) const { const auto it=gets_.find(hashBytes(value)); return it==gets_.end()?0:it->second; }
-  int announced(const lt::sha1_hash& value) const { const auto it=announces_.find(hashBytes(value)); return it==announces_.end()?0:it->second; }
-};
 engine::MainlineDhtOptions options(const OwnedKrpc& fixture,unsigned short peerPort) {
   engine::MainlineDhtOptions result;
   result.port=dhtPort(peerPort); result.ipv4=true; result.ipv6=false;
@@ -392,8 +245,6 @@ private slots:
     QTRY_VERIFY_WITH_TIMEOUT(pump(),15000);QCOMPARE(replies[0].summary.responses,std::size_t{1});QCOMPARE(replies[0].summary.seeds,1);
     replies.clear();fixture.scrapeReply("BFse",true);auto zero=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(zero);
     QTRY_VERIFY_WITH_TIMEOUT(pump(),15000);QCOMPARE(replies[0].summary.responses,std::size_t{1});QCOMPARE(replies[0].summary.seeds,0);QCOMPARE(replies[0].summary.peers,0);
-    replies.clear();fixture.scrapeReply("BFse",false,true);auto wrong=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(wrong);
-    QTRY_VERIFY_WITH_TIMEOUT(pump(),15000);QCOMPARE(replies[0].summary.responses,std::size_t{0});
     // Saved completion controls only this source query preference. Payload
     // remains zero/unverified; no owner admission or verified bit is invented.
     auto completeState=core::Document::parse(stateBefore.toStdString(),storage::compatibleConfigLimits());QVERIFY(completeState);
@@ -405,6 +256,12 @@ private slots:
     auto completedAuthority=engine::readSavedMainlineScrapeTargets(*lease);QVERIFY(completedAuthority);QCOMPARE(completedAuthority->size(),std::size_t{1});QVERIFY(completedAuthority->front().noSeeds);
     fixture.scrapeReply();fixture.scrapeNoSeeds(1);replies.clear();auto noSeeds=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse,completedAuthority->front().noSeeds);QVERIFY(noSeeds);
     QTRY_VERIFY_WITH_TIMEOUT(pump(),15000);QCOMPARE(replies[0].summary.responses,std::size_t{1});
+    // LT evicts a known endpoint after a correlated changed-ID reply. Keep
+    // this destructive control last, after all valid live-node queries.
+    const auto beforeWrong=fixture.scrapes();fixture.scrapeNoSeeds(0);
+    replies.clear();fixture.scrapeReply("BFse",false,true);auto wrong=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(wrong);
+    QTRY_VERIFY_WITH_TIMEOUT(pump(),15000);QCOMPARE(replies[0].summary.responses,std::size_t{0});
+    QCOMPARE(fixture.scrapes(),beforeWrong+1);
     test::write(saved.stateFile,stateBefore);test::write(saved.profile+"/downloads.config",inventoryBefore);QVERIFY(saved.intact(false));
     QVERIFY(fixture.scrapes()>=6);QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));QVERIFY(actual->close());
   }
@@ -493,13 +350,76 @@ private slots:
     auto queueFacts=engine::readSavedMainlineScrapeTargets(*held);QVERIFY(queueFacts);QCOMPARE(queueFacts->size(),std::size_t{1});current.settled(*fixture.hash);QVERIFY(current.reconcile(*queueFacts,70004,0));QVERIFY(current.due(130004));
     QCOMPARE(test::read(fixture.profile+"/downloads.config"),inventory);QCOMPARE(test::read(fixture.stateFile),state);QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);QVERIFY(fixture.intact(false));
   }
-  void retainedScrapeCookiesHaveAnExplicitLifetimeBoundAndCloseFence(){
+  void unissuedScrapeCancellationReclaimsWithoutLosingCloseFence(){
     auto policy=localPolicy();engine::MainlineDhtOptions opts;opts.bootstrapNodes.clear();opts.port=dhtPort();opts.ipv6=false;
     auto created=engine::MainlineDhtService::create(policy,opts);QVERIFY(created);auto& actual=**created;
-    for(unsigned i=0;i<64;++i){auto round=actual.scrape(hash('B'),services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(round);QVERIFY(actual.cancelScrape(*round));}
-    auto exhausted=actual.scrape(hash('B'),services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(!exhausted);QCOMPARE(exhausted.error().code,storage::ErrorCode::Busy);
+    for(unsigned i=0;i<128;++i){
+      auto round=actual.scrape(hash('B'),services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(round);QVERIFY(actual.cancelScrape(*round));
+      QCOMPARE(actual.status().scrapeRetainedRounds,std::size_t{0});QCOMPARE(actual.status().scrapePendingProbes,std::size_t{0});
+    }
     auto completed=actual.takeScrapes();QVERIFY(completed);QVERIFY(completed->empty());QCOMPARE(actual.status().lookups,std::uint64_t{0});QCOMPARE(actual.status().announces,std::uint64_t{0});
     QVERIFY(actual.close());QVERIFY(!actual.scrape(hash('B'),services::mainline_scrape::Dialect::OriginalBFse));QVERIFY(!actual.cancelScrape(1));
+  }
+  void completedWireRoundsReclaimBeyondSixtyFourAndUnreadResultsStayBounded(){
+    QTcpServer peer;QVERIFY(peer.listen(QHostAddress::LocalHost,0));OwnedKrpc fixture(peer.serverPort());
+    const auto wanted=hash('F');fixture.allow(wanted);auto opts=options(fixture,peer.serverPort());opts.bootstrapNodes.clear();
+    auto created=engine::MainlineDhtService::create(localPolicy(),opts);QVERIFY(created);auto actual=std::move(*created);Observations observed;
+    QVERIFY(actual->addNode({"127.0.0.1",fixture.port()}));QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),fixture.bootstrapQueries>0),15000);
+    QVERIFY(actual->lookup(wanted));QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),observed.contains(wanted,peer.serverPort())),15000);
+    fixture.duplicateScrapes(true); // Duplicate wire packets cannot create a second actual RPC callback.
+    std::uint64_t previous=0;
+    for(unsigned i=0;i<96;++i){
+      auto round=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY2(round,round?"":round.error().message.c_str());QVERIFY(*round>previous);previous=*round;
+      QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),actual->status().scrapeQueuedResults==1||!observed.failure.isEmpty()||!fixture.failure.isEmpty()),15000);
+      QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));
+      auto replies=actual->takeScrapes();QVERIFY(replies);QCOMPARE(replies->size(),std::size_t{1});QCOMPARE(replies->front().round,*round);QCOMPARE(replies->front().hash,wanted);
+      QCOMPARE(replies->front().summary.responses,std::size_t{1});QCOMPARE(replies->front().summary.seeds,1);QCOMPARE(replies->front().summary.peers,1);
+      QCOMPARE(actual->status().scrapeRetainedRounds,std::size_t{0});QCOMPARE(actual->status().scrapePendingProbes,std::size_t{0});QCOMPARE(actual->status().scrapeQueuedResults,std::size_t{0});
+    }
+    QCOMPARE(fixture.scrapes(),96);fixture.duplicateScrapes(false);
+    // Reclaiming terminal cookies must not make the copied-result queue unbounded.
+    for(unsigned i=0;i<64;++i){
+      auto round=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(round);
+      QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),actual->status().scrapeQueuedResults==i+1||!observed.failure.isEmpty()||!fixture.failure.isEmpty()),15000);
+      QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));QCOMPARE(actual->status().scrapeRetainedRounds,std::size_t{0});
+    }
+    auto blocked=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(!blocked);QCOMPARE(blocked.error().code,storage::ErrorCode::Busy);
+    auto unread=actual->takeScrapes();QVERIFY(unread);QCOMPARE(unread->size(),std::size_t{64});std::set<std::uint64_t> rounds;
+    for(const auto& reply:*unread){QVERIFY(rounds.insert(reply.round).second);QCOMPARE(reply.hash,wanted);QCOMPARE(reply.summary.responses,std::size_t{1});}
+    auto again=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(again);QVERIFY(actual->cancelScrape(*again));
+    QCOMPARE(fixture.scrapes(),160);QCOMPARE(fixture.announced(wanted),0);QCOMPARE(actual->status().announces,std::uint64_t{0});QVERIFY(actual->close());
+  }
+  void cancelledHeldAndErrorTimeoutProbesRequireActualTerminalConsumption(){
+    QTcpServer peer;QVERIFY(peer.listen(QHostAddress::LocalHost,0));OwnedKrpc fixture(peer.serverPort());
+    const auto wanted=hash('H');fixture.allow(wanted);auto opts=options(fixture,peer.serverPort());opts.bootstrapNodes.clear();
+    auto created=engine::MainlineDhtService::create(localPolicy(),opts);QVERIFY(created);auto actual=std::move(*created);Observations observed;
+    QVERIFY(actual->addNode({"127.0.0.1",fixture.port()}));QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),fixture.bootstrapQueries>0),15000);
+    QVERIFY(actual->lookup(wanted));QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),observed.contains(wanted,peer.serverPort())),15000);
+    fixture.hold(wanted);auto old=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(old);
+    QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),fixture.scrapes()==1||!fixture.failure.isEmpty()),15000);QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));
+    QVERIFY(actual->cancelScrape(*old));QCOMPARE(actual->status().scrapeRetainedRounds,std::size_t{1});QCOMPARE(actual->status().scrapePendingProbes,std::size_t{1});
+    // No poll/terminal consumption: elapsed time and later local cancellations
+    // cannot reclaim the held probe, even while zero-issued rounds are reused.
+    for(unsigned i=0;i<96;++i){auto local=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(local);QVERIFY(actual->cancelScrape(*local));}
+    QCOMPARE(actual->status().scrapeRetainedRounds,std::size_t{1});QCOMPARE(actual->status().scrapePendingProbes,std::size_t{1});
+    fixture.release();
+    QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),actual->status().scrapeRetainedRounds==0||!observed.failure.isEmpty()||!fixture.failure.isEmpty()),15000);
+    QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));
+    auto cancelled=actual->takeScrapes();QVERIFY(cancelled);QVERIFY(cancelled->empty());
+    auto fresh=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(fresh);QVERIFY(*fresh>*old);
+    QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),actual->status().scrapeQueuedResults==1),15000);
+    auto success=actual->takeScrapes();QVERIFY(success);QCOMPARE(success->size(),std::size_t{1});QCOMPARE(success->front().round,*fresh);QCOMPARE(success->front().summary.seeds,1);
+    fixture.errorScrapes(true);auto failed=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(failed);
+    QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),actual->status().scrapeQueuedResults==1),15000);
+    auto error=actual->takeScrapes();QVERIFY(error);QCOMPARE(error->size(),std::size_t{1});QCOMPARE(error->front().round,*failed);QCOMPARE(error->front().summary.responses,std::size_t{0});QCOMPARE(actual->status().scrapePendingProbes,std::size_t{0});QCOMPARE(actual->status().scrapeRetainedRounds,std::size_t{0});
+    fixture.errorScrapes(false);fixture.dropScrapes(true);auto timeout=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(timeout);
+    QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),fixture.scrapes()==4),15000);QVERIFY(actual->cancelScrape(*timeout));QCOMPARE(actual->status().scrapeRetainedRounds,std::size_t{1});
+    // Wait for the provider's real15s RPC timeout alert, never its duration as
+    // a reclamation heuristic. Only consumed typed terminals change this count.
+    QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),actual->status().scrapePendingProbes==0||!observed.failure.isEmpty()),30000);
+    QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));QCOMPARE(actual->status().scrapeRetainedRounds,std::size_t{0});
+    auto expired=actual->takeScrapes();QVERIFY(expired);QVERIFY(expired->empty());QCOMPARE(fixture.announced(wanted),0);
+    QVERIFY(actual->close());QCOMPARE(actual->status().scrapeRetainedRounds,std::size_t{0});
   }
   void queuedSchedulingAndPositivePublicationAreScopeBoundWithoutInventedExpiry(){
     const auto raw=std::string(20,'Q');auto key=core::TorrentHash::parse(raw);QVERIFY(key);

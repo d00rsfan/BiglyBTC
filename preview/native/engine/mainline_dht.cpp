@@ -316,7 +316,7 @@ struct MainlineDhtService::Impl {
     requests.clear(); pendingNodes.clear(); status.activeHashes = 0;
     session.reset(); // Joins this service only; no borrowed owner or callbacks.
     routeQueues.clear(); peerProbes.clear();
-    scrapeRounds.clear();completedScrapes.clear();activeScrape=0;
+    scrapeCookies.clear();scrapeRounds.clear();completedScrapes.clear();activeScrape=0;
     return error(Code::Io, message);
   }
   std::expected<Request*, storage::Error> request(lt::sha1_hash hash) {
@@ -653,6 +653,7 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
       impl_->status.deliveredPeers += peers.size();
       output.push_back({hash, std::move(peers)});
     }
+    impl_->reclaimScrapes();
     return output;
   } catch (...) { return impl_->fail("Mainline DHT polling failed", true); }
 }
@@ -663,8 +664,10 @@ std::expected<std::uint64_t,storage::Error> MainlineDhtService::scrape(lt::sha1_
       &&dialect!=services::mainline_scrape::Dialect::LibtorrentBFsd)){
     return error(Code::InvalidFormat,"Invalid Mainline scrape hash/dialect");
   }
-  if(impl_->activeScrape||impl_->scrapeRounds.size()==64||impl_->nextScrape==UINT64_MAX){
-    return error(Code::Busy,"Mainline scrape round/lifetime bound");
+  // Counts outstanding/undelivered work, not completed lifetime rounds.
+  impl_->reclaimScrapes();
+  if(impl_->activeScrape||impl_->scrapeRounds.size()>=64||impl_->completedScrapes.size()>=64||impl_->nextScrape==UINT64_MAX){
+    return error(Code::Busy,"Mainline scrape pending/unconsumed bound");
   }
   try{
     const auto number=++impl_->nextScrape;auto& round=impl_->scrapeRounds.try_emplace(number).first->second;
@@ -678,7 +681,8 @@ std::expected<void,storage::Error> MainlineDhtService::cancelScrape(std::uint64_
   if(found!=impl_->scrapeRounds.end()){
     found->second.cancelled=true;impl_->finishScrape(found->second);
   }
-  std::erase_if(impl_->completedScrapes,[&](const auto& row){return row.round==number;});return {};
+  std::erase_if(impl_->completedScrapes,[&](const auto& row){return row.round==number;});
+  impl_->reclaimScrapes();return {};
 }
 std::expected<std::vector<MainlineDhtScrape>,storage::Error> MainlineDhtService::takeScrapes() {
   auto valid=impl_->check();if(!valid){return std::unexpected(valid.error());}
@@ -703,6 +707,7 @@ std::expected<void, storage::Error> MainlineDhtService::close() {
   if (impl_->status.phase == MainlineDhtPhase::Closed) { return {}; }
   impl_->session.reset(); // Actual network thread retirement precedes success.
   impl_->requests.clear(); impl_->nodes.clear(); impl_->pendingNodes.clear(); impl_->routeQueues.clear(); impl_->peerProbes.clear();
+  impl_->scrapeCookies.clear();impl_->scrapeRounds.clear();impl_->completedScrapes.clear();impl_->activeScrape=0;
   impl_->status.activeHashes = 0; impl_->status.listenPort = 0; impl_->status.phase = MainlineDhtPhase::Closed;
   return {};
 }
@@ -711,7 +716,10 @@ MainlineDhtStatus MainlineDhtService::status() const noexcept {
     MainlineDhtStatus unavailable; unavailable.phase = MainlineDhtPhase::Failed; unavailable.observationsLost = true;
     return unavailable;
   }
-  return impl_->status;
+  auto result=impl_->status;
+  result.scrapeRetainedRounds=impl_->scrapeRounds.size();result.scrapeQueuedResults=impl_->completedScrapes.size();
+  for(const auto& [number,round]:impl_->scrapeRounds){(void)number;result.scrapePendingProbes+=round.issued-round.finished;}
+  return result;
 }
 
 } // namespace biglybtc::engine

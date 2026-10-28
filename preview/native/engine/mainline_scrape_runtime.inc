@@ -1,6 +1,6 @@
-// Included in MainlineDhtService::Impl. All cookies remain alive until session
-// join; a cancellation consumes delivery authority, never reuses RPC storage.
-struct ScrapeRound;
+// Included in MainlineDhtService::Impl. Cancellation only revokes delivery.
+// Reclaim a closed round only after ALL issued RPC terminal alerts and queued
+// live-table references are consumed. Otherwise keep its cookies until join.
 struct ScrapeProbe {
   ScrapeRound* round=nullptr;
   UdpEndpoint endpoint;
@@ -18,9 +18,23 @@ struct ScrapeRound {
   services::mainline_scrape::Aggregate aggregate;
 };
 std::map<std::uint64_t,ScrapeRound> scrapeRounds;
+// Lookup typed opaque cookies without dereferencing an unrecognised pointer.
+std::map<ScrapeProbe*,ScrapeRound*> scrapeCookies;
 std::uint64_t nextScrape=0,activeScrape=0;
 std::vector<MainlineDhtScrape> completedScrapes;
 
+void reclaimScrapes() {
+  // Called only outside alert iteration/callback frames. The exact provider
+  // direct_observer/direct_traversal emits AT MOST one terminal callback, and
+  // session_impl copies its cookie into that alert without dereferencing it.
+  // A consumed terminal is therefore a lifetime fence, not a clock estimate.
+  for(auto it=scrapeRounds.begin();it!=scrapeRounds.end();){
+    auto& round=it->second;
+    if(!round.closed||round.pendingTables||round.finished!=round.issued){++it;continue;}
+    for(auto& probe:round.probes){if(probe.issued){scrapeCookies.erase(&probe);}}
+    it=scrapeRounds.erase(it);
+  }
+}
 void finishScrape(ScrapeRound& round,bool timedOut=false) {
   if(round.closed){return;}
   round.closed=true;
@@ -45,20 +59,16 @@ void issueScrape(ScrapeRound& round,const lt::dht_live_nodes_alert& table) {
     lt::entry query(lt::entry::dictionary_type{});query["q"]="get_peers";
     auto& args=query["a"];args["info_hash"]=round.hash.to_string();args["scrape"]=1;
     args["noseed"]=round.noSeeds?1:0;
+    scrapeCookies.emplace(&probe,&round); // Retained before the asynchronous submission.
     session->dht_direct_request(endpoint,query,lt::client_data_t(&probe));
     probe.issued=true;++round.issued;++count;
   }
 }
 bool acceptScrape(const lt::dht_direct_response_alert& response) {
-  const auto* cookie=response.userdata.get<ScrapeProbe>();
-  ScrapeProbe* matched=nullptr;
-  for(auto& [number,round]:scrapeRounds){
-    (void)number;
-    for(auto& probe:round.probes){if(&probe==cookie){matched=&probe;break;}}
-    if(matched){break;}
-  }
-  if(!matched){return false;}
-  auto& probe=*matched;auto& round=*probe.round;
+  auto* cookie=response.userdata.get<ScrapeProbe>();
+  const auto found=scrapeCookies.find(cookie);
+  if(found==scrapeCookies.end()){return false;}
+  auto& probe=*found->first;auto& round=*found->second;
   if(!probe.issued||probe.finished){return true;}
   probe.finished=true;++round.finished;
   if(!round.closed&&!round.cancelled&&response.endpoint==probe.endpoint){

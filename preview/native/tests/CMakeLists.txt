@@ -1878,3 +1878,15 @@ if(TARGET biglybtc_azureus_owned_udp)
   add_test(NAME azureus-storage-stats COMMAND biglybtc-azureus-storage-stats-tests)
   set_tests_properties(azureus-storage-stats PROPERTIES TIMEOUT 30 LABELS "unit;database")
 endif()
+
+# Append once after the existing Mainline target. Shared owned_mainline_krpc.hpp
+# is supplied by the reviewed runtime-lifetime capsule, never a production hook.
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-mainline-queued-owner-tests mainline_queued_owner_tests.cpp)
+  set_target_properties(biglybtc-mainline-queued-owner-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-mainline-queued-owner-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network)
+  target_compile_options(biglybtc-mainline-queued-owner-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME mainline-queued-owner COMMAND biglybtc-mainline-queued-owner-tests)
+  # One real100s startup plus two source-defined first delays, no clock override.
+  set_tests_properties(mainline-queued-owner PROPERTIES TIMEOUT 360 LABELS "network;discovery;owned;slow")
+endif()
