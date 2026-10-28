@@ -200,7 +200,7 @@ struct SessionBridge::Host {
   std::filesystem::path profile;
   unsigned short peerPort;
   bool normalNetwork = false;
-  engine::NetworkPolicy networkPolicy{}; // Isolated until normal configure succeeds.
+  engine::NetworkPolicy networkPolicy; // Member defaults keep this isolated until configure succeeds.
   bool socks4CapabilityChecked = false; // Worker-owned, independent of config repair success.
   using MagnetStamp = std::tuple<std::uint64_t, engine::MagnetPhase, bool, std::string,
       std::optional<storage::ErrorCode>, std::string>;
