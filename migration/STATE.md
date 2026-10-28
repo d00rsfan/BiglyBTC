@@ -1,5 +1,9 @@
 # BiglyBTC migration state
 
+Bounded ordinary Linux compatibility chapter completed; final test source `61fc63b5bcb783dd82b3bafb9eb62ecee578cc02`, application `7405a61a7a605c9962cc7a630b06fef25c0a5c66`. Development dist updated and rollback preserved. Runtime qualification remains limited: provider CONNECT0.0.0.0:0 and the prior generated-file read failure remain open in CF03/CF08. All broad CF/P05–P12 dependencies stay open. [Final review](evidence/20261028-compatibility-chapter/REVIEW.md). Stop before the next chapter.
+
+## Earlier checkpoints (historical boundaries)
+
 Current GCC milestone completed at native `7405a61a7a605c9962cc7a630b06fef25c0a5c66`. Forty affected suites are covered by39 unchanged successful runs and one corrected actual rerun, with source/command/input/image hashes proving reuse. The compatibility chapter is unfinished; the latest user instruction is to stop after this milestone.
 Latest boundary: **STOP now**. [Actual milestone evidence and open limits](evidence/20261027-compatibility-gcc-milestone/REVIEW.md). Next work remains original11/2 readbacks, Clang/SAN and portable/dist gates; no next chapter is authorized by this checkpoint. Previous continuation/STOP boundaries below are historical.
 

@@ -1,0 +1,1852 @@
+{
+  "schema": 1,
+  "status": "BOUNDED_ORDINARY_CHAPTER_COMPLETE_WITH_EXPLICIT_RUNTIME_CONSTRAINT",
+  "chapter_scope": "CHAPTER.md ordinary Linux compatibility implementation; no broad CF01-CF08, whole-client, plugin, public-network, shipping or performance closure",
+  "chapter_complete": true,
+  "full_runtime_qualification_complete": false,
+  "original_source": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "application_qualified_source": "7405a61a7a605c9962cc7a630b06fef25c0a5c66",
+  "consumer_runtime_source": "ee7985e4b78f1d8c9d89f727f29f3a025f3c63fc",
+  "final_test_fixture_source": "61fc63b5bcb783dd82b3bafb9eb62ecee578cc02",
+  "production_source_unchanged_since": "ee7985e4b78f1d8c9d89f727f29f3a025f3c63fc",
+  "cf_parents_closed": [],
+  "source_commits": [
+    "a6a4dd1638ff130aea4bae7ca66ab8ec02a653f6",
+    "ad4a3aab044b3a7e1c187143656bcc065ff7ce41",
+    "de778f563392fb874ece34b8b5b5cf8b0d245144",
+    "644157e3f26e8f287e653cd76aa2dbd83cefad8e",
+    "06ebc5474d1765d3331e00eb492faf341aee67a8",
+    "76cf831a61ecc68ee72ec958bf3667945074d251",
+    "f34be1d8b414c0be2c4b16b442d721765526c383",
+    "61b97612df6aa7b99c569ff712a613cb500bdf0a",
+    "bf4348d3a681083d7b148bc65d344fae885dffac",
+    "fee3a72d85a9d6581b1320105ad06c33ae09924b",
+    "6445069cae4f010f6c463452c91f10814b476ac6",
+    "d14719ddd2714788dc8d0b66e7e6abbeac9f9aeb",
+    "7405a61a7a605c9962cc7a630b06fef25c0a5c66",
+    "ee7985e4b78f1d8c9d89f727f29f3a025f3c63fc",
+    "61fc63b5bcb783dd82b3bafb9eb62ecee578cc02"
+  ],
+  "records": {
+    "gcc": {
+      "path": "build/compatibility-chapter-20261027/gcc-final-r4/result.json",
+      "sha256": "dcb87cc7e3e2d4a333d2d7c52097405f9308696d190d6167034c382bf1363cfc",
+      "record": {
+        "status": "PASS_GCC40_WITH_EXPLICIT_UNCHANGED_RESULT_REUSE",
+        "source_commit": "7405a61a7a605c9962cc7a630b06fef25c0a5c66",
+        "tests": 40,
+        "actually_reexecuted_tests": [
+          "managed-download"
+        ],
+        "unchanged_passed_tests_reused": [
+          "application-settings",
+          "engine-live-settings",
+          "file-operation-dialog",
+          "file-operation-sequence",
+          "file-operations",
+          "file-operations-host",
+          "file-priority-ui",
+          "managed-combined-counter-domain",
+          "managed-queue",
+          "managed-seeding",
+          "managed-storage",
+          "metadata-disk-router",
+          "network-binding-owner",
+          "network-policy",
+          "network-proxy-capability-foreign-marker",
+          "network-proxy-capability-foreign-webseed-marker",
+          "network-proxy-capability-present-webseed",
+          "network-proxy-owner",
+          "options-host",
+          "original-disk-io",
+          "original-linear-to-compact",
+          "original-storage-controls",
+          "original-storage-defaults",
+          "original-torrent-geometry",
+          "persistent-native-peer-session",
+          "provider-payload-counter",
+          "provider-traffic-runtime-deployment",
+          "provider-traffic-runtime-inputs",
+          "queue-policy",
+          "queue-rate-providers",
+          "queue-target-statistics",
+          "scheduler-host-engine",
+          "selected-swarm-admission",
+          "torrent-creation-dialog",
+          "torrent-creator",
+          "torrent-intake",
+          "torrent-intake-file-options",
+          "torrent-intake-file-options-ui",
+          "torrent-intake-file-options-worker"
+        ],
+        "reuse_before_sha256": "9edb7a8e17e8381b1db502958358c6ef4b32f848fc6d95215ae0ed36af25372e",
+        "current_xml_sha256": "6a06fd0fb30d46641fe015f98d9b783ca97485d7f82124a39d3ed153d996e814",
+        "source_manifest_sha256": "60bb83144e06cfdca4c646ac198dce665989e3515d90e77394fee77d1de367c7",
+        "only_source_change": "preview/native/tests/managed_download_tests.cpp",
+        "all_reused_command_inputs_and_generated_binding_bytes_unchanged": true,
+        "production_unchanged_from": "d14719ddd2714788dc8d0b66e7e6abbeac9f9aeb",
+        "chapter_complete": false,
+        "user_boundary": "Finish current milestone then STOP"
+      }
+    },
+    "clang": {
+      "path": "build/compatibility-chapter-20261027/clang-final-settle-r1/result.json",
+      "sha256": "59c54693360394135f7168bb1fff6669de0d5b1dbb66b04f85ad1d9a6499e8df",
+      "record": {
+        "status": "PASS_ALL_40_CASES_WITH_EXACT_UNCHANGED_INPUT_REUSE_AFTER_MOC_SETTLE",
+        "lane": "clang",
+        "source_commit": "ee7985e4b78f1d8c9d89f727f29f3a025f3c63fc",
+        "tests": 40,
+        "actual_tests_rerun": 0,
+        "reused_result": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/clang-final-r2/result-recovered.json",
+        "reused_result_sha256": "7826e9e9b6057e25d056f85c25b3b986b56cd4829af6144fc22eed4abdc6cb03",
+        "actual_prior_ctest_exit_code": null,
+        "actual_prior_wrapper_exit": 143,
+        "actual_build_exit": 0,
+        "all_registered_command_input_bytes_unchanged": true,
+        "input_count": 991,
+        "source_manifest_sha256": "60bb83144e06cfdca4c646ac198dce665989e3515d90e77394fee77d1de367c7",
+        "build_receipt_sha256": "93eeb354ab1295df6bbe7e5a530f8d3fcba998d8bcff7d5170a2ddc3380074d2"
+      }
+    },
+    "clang_original": {
+      "path": "build/compatibility-chapter-20261027/clang-final-r2/result-recovered.json",
+      "sha256": "7826e9e9b6057e25d056f85c25b3b986b56cd4829af6144fc22eed4abdc6cb03",
+      "record": {
+        "status": "PASS_ALL_40_CASES_WITH_ACTUAL_JUNIT_AND_FINAL_CTEST_SUMMARY",
+        "lane": "clang",
+        "source_commit": "ee7985e4b78f1d8c9d89f727f29f3a025f3c63fc",
+        "tests": 40,
+        "build_exit": 0,
+        "ctest_process_exit_code": null,
+        "wrapper_exit_observed": 143,
+        "explanation": "All40 actual testcase statuses and complete CTest success summary retained; wrapper143 prevented ordinary final receipt. No CLI exit0 invented and no tests rerun.",
+        "summary": "100% tests passed, 0 tests failed out of 40",
+        "tests_xml_sha256": "72f017cf45457dab280224d252df30624f618bf05f62c52eb7ce14ada23deef6",
+        "tests_log_sha256": "d3a6bfa44562768dbdf68585f7ef65149b64eafaa9771a026e5b1ec4917066b6",
+        "build_receipt_sha256": "c5565caf54f94abd1ed4de30218423296f7d019a59bbbae660dd2b00f168f95f",
+        "source_manifest_sha256": "60bb83144e06cfdca4c646ac198dce665989e3515d90e77394fee77d1de367c7",
+        "source_clean_and_unchanged": true,
+        "testcases": [
+          {
+            "name": "original-torrent-geometry",
+            "status": "run",
+            "seconds": "0.00759873"
+          },
+          {
+            "name": "persistent-native-peer-session",
+            "status": "run",
+            "seconds": "40.3069"
+          },
+          {
+            "name": "network-policy",
+            "status": "run",
+            "seconds": "0.00836901"
+          },
+          {
+            "name": "managed-download",
+            "status": "run",
+            "seconds": "45.8841"
+          },
+          {
+            "name": "managed-storage",
+            "status": "run",
+            "seconds": "2.03694"
+          },
+          {
+            "name": "torrent-intake",
+            "status": "run",
+            "seconds": "0.0833571"
+          },
+          {
+            "name": "file-priority-ui",
+            "status": "run",
+            "seconds": "2.16053"
+          },
+          {
+            "name": "metadata-disk-router",
+            "status": "run",
+            "seconds": "1.78847"
+          },
+          {
+            "name": "managed-seeding",
+            "status": "run",
+            "seconds": "18.1844"
+          },
+          {
+            "name": "application-settings",
+            "status": "run",
+            "seconds": "0.019895"
+          },
+          {
+            "name": "options-host",
+            "status": "run",
+            "seconds": "1.52016"
+          },
+          {
+            "name": "engine-live-settings",
+            "status": "run",
+            "seconds": "7.44101"
+          },
+          {
+            "name": "queue-policy",
+            "status": "run",
+            "seconds": "0.0405431"
+          },
+          {
+            "name": "managed-queue",
+            "status": "run",
+            "seconds": "52.7768"
+          },
+          {
+            "name": "scheduler-host-engine",
+            "status": "run",
+            "seconds": "11.4173"
+          },
+          {
+            "name": "torrent-creator",
+            "status": "run",
+            "seconds": "1.58329"
+          },
+          {
+            "name": "file-operations",
+            "status": "run",
+            "seconds": "1.62747"
+          },
+          {
+            "name": "file-operation-dialog",
+            "status": "run",
+            "seconds": "0.518556"
+          },
+          {
+            "name": "torrent-creation-dialog",
+            "status": "run",
+            "seconds": "0.537674"
+          },
+          {
+            "name": "file-operations-host",
+            "status": "run",
+            "seconds": "53.3574"
+          },
+          {
+            "name": "original-disk-io",
+            "status": "run",
+            "seconds": "1.28312"
+          },
+          {
+            "name": "original-storage-controls",
+            "status": "run",
+            "seconds": "0.0196701"
+          },
+          {
+            "name": "original-storage-defaults",
+            "status": "run",
+            "seconds": "0.0139939"
+          },
+          {
+            "name": "original-linear-to-compact",
+            "status": "run",
+            "seconds": "1.16158"
+          },
+          {
+            "name": "torrent-intake-file-options",
+            "status": "run",
+            "seconds": "0.760962"
+          },
+          {
+            "name": "torrent-intake-file-options-ui",
+            "status": "run",
+            "seconds": "2.29819"
+          },
+          {
+            "name": "network-binding-owner",
+            "status": "run",
+            "seconds": "190.063"
+          },
+          {
+            "name": "torrent-intake-file-options-worker",
+            "status": "run",
+            "seconds": "28.29"
+          },
+          {
+            "name": "provider-payload-counter",
+            "status": "run",
+            "seconds": "9.19582"
+          },
+          {
+            "name": "selected-swarm-admission",
+            "status": "run",
+            "seconds": "2.69039"
+          },
+          {
+            "name": "network-proxy-owner",
+            "status": "run",
+            "seconds": "38.7787"
+          },
+          {
+            "name": "file-operation-sequence",
+            "status": "run",
+            "seconds": "1.82369"
+          },
+          {
+            "name": "managed-combined-counter-domain",
+            "status": "run",
+            "seconds": "0.0174344"
+          },
+          {
+            "name": "queue-rate-providers",
+            "status": "run",
+            "seconds": "0.0111166"
+          },
+          {
+            "name": "network-proxy-capability-present-webseed",
+            "status": "run",
+            "seconds": "0.170619"
+          },
+          {
+            "name": "network-proxy-capability-foreign-marker",
+            "status": "run",
+            "seconds": "0.165139"
+          },
+          {
+            "name": "network-proxy-capability-foreign-webseed-marker",
+            "status": "run",
+            "seconds": "0.142408"
+          },
+          {
+            "name": "queue-target-statistics",
+            "status": "run",
+            "seconds": "0.00358452"
+          },
+          {
+            "name": "provider-traffic-runtime-inputs",
+            "status": "run",
+            "seconds": "14.438"
+          },
+          {
+            "name": "provider-traffic-runtime-deployment",
+            "status": "run",
+            "seconds": "2.63125"
+          }
+        ]
+      }
+    },
+    "san": {
+      "path": "build/compatibility-chapter-20261027/san-proxy-focused-r1/case-reuse-association.json",
+      "sha256": "0402a15570f1a1613edd623a1260c87b52dd8e65ab926f4f5c7495ec1f9dcd00",
+      "record": {
+        "schema": 1,
+        "status": "ALL_40_SUITES_COVERED_WITH_EXPLICIT_UNCHANGED_PROXY_CASE_REUSE",
+        "source_commit": "ee7985e4b78f1d8c9d89f727f29f3a025f3c63fc",
+        "original_ctest_exit": 8,
+        "original_wrapper_or_suite_success_invented": false,
+        "actual_unchanged_passed_suites": [
+          "original-torrent-geometry",
+          "persistent-native-peer-session",
+          "network-policy",
+          "managed-download",
+          "managed-storage",
+          "torrent-intake",
+          "file-priority-ui",
+          "metadata-disk-router",
+          "managed-seeding",
+          "application-settings",
+          "options-host",
+          "engine-live-settings",
+          "queue-policy",
+          "managed-queue",
+          "scheduler-host-engine",
+          "torrent-creator",
+          "file-operations",
+          "file-operation-dialog",
+          "torrent-creation-dialog",
+          "file-operations-host",
+          "original-disk-io",
+          "original-storage-controls",
+          "original-storage-defaults",
+          "original-linear-to-compact",
+          "torrent-intake-file-options",
+          "torrent-intake-file-options-ui",
+          "network-binding-owner",
+          "torrent-intake-file-options-worker",
+          "provider-payload-counter",
+          "selected-swarm-admission",
+          "file-operation-sequence",
+          "managed-combined-counter-domain",
+          "queue-rate-providers",
+          "network-proxy-capability-present-webseed",
+          "network-proxy-capability-foreign-marker",
+          "network-proxy-capability-foreign-webseed-marker",
+          "queue-target-statistics",
+          "provider-traffic-runtime-inputs",
+          "provider-traffic-runtime-deployment"
+        ],
+        "proxy": {
+          "original_status": "FAIL_14_PASS_1_FAIL_0_SKIP",
+          "prior_subject_passes": 12,
+          "focused_subject_passes": 1,
+          "unique_subject_cases": 13,
+          "whole_proxy_suite_exit_zero_claimed": false,
+          "focused_row": [
+            "actualRemoteWebSeedPayload(SOCKS5-remote-name)"
+          ],
+          "focused_exit": 0,
+          "unresolved_limitation": "Original failed row unplanned proxy destination; failing endpoint unrecorded. No source cause/fix claim."
+        },
+        "sanitizer_environment": {
+          "ASAN_OPTIONS": "detect_leaks=1:halt_on_error=1",
+          "UBSAN_OPTIONS": "halt_on_error=1:print_stacktrace=1"
+        },
+        "no_sanitizer_diagnostic_in_observed_logs": true,
+        "inputs": {
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/san-final-r3/tests.xml": "0345d9077940d3dfc49641d2031cfe35a2f33874b598a6a09d14626c4edd0b38",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/san-final-r3/tests.log": "c5104d40788dd9f530ba05ff30dbb97f1641667d2326b1657ebbbfb154ff8405",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/san-final-r3/commands.json": "007017e076237df8d0247f55a128bc6232c1b63bb56e018b15a1fc5a7fafc9e6",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/san-final-r3/build-receipt.json": "108c5cd668fc64433aed1cf2e1f6ba2480808e9d8cd3455ebf4b2989c44ef683",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/san-final-r3/build-source.json": "60bb83144e06cfdca4c646ac198dce665989e3515d90e77394fee77d1de367c7",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/san-final-r3/registered-tests.json": "137d32f6c5b807cd50c80ffbe909a24010dab2f8b1b11065d32c580730931c89",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/san-proxy-focused-r1/command.json": "23320d0a0371a1449a79556b6abb76f69351760e3bc9f09bb7ae15933ebf8848",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/san-proxy-focused-r1/result.json": "f1f04cc22ce49f527c746dfe0dbcb5f82bb149009fda955cba0cedc7d43437c0",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/san-proxy-focused-r1/stdout.log": "a2df3a5bd69d05b0b096fa750c97c8108c2109afcac882268fc6bf93424d1ed4",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/san-proxy-focused-r1/associate.py": "f142f9798981bf15e73af794c847e78fcfef680266c1da9f1be0d9a0b7a552a9"
+        },
+        "original_fail_history_unchanged": true,
+        "builds": 0,
+        "whole_40_reruns": 0
+      }
+    },
+    "original11_and_allocation2": {
+      "path": "build/compatibility-chapter-20261027/reference-completion-association/metadata-ee7985/execution-review/review.json",
+      "sha256": "954fe8379a8d69c56528d483e51401a846cf04e0b628e592351870b0f324b85d",
+      "record": {
+        "schema": 1,
+        "status": "PASS_SCOPED_ACTUAL_LINKED_SELECTED11_AND_ALLOCATION2",
+        "runtime_source_commit": "ee7985e4b78f1d8c9d89f727f29f3a025f3c63fc",
+        "actual_build_source_commit": "7405a61a7a605c9962cc7a630b06fef25c0a5c66",
+        "metadata_only_source_equal_descendant": true,
+        "gcc_gate": "39 explicit unchanged reuse +1 actual managed-download; original build receipt CID preserved",
+        "existing_interop": {
+          "effective_cases": 11,
+          "linked": {
+            "actual_passed_cases": [
+              "linked-single-complete",
+              "linked-multi-complete",
+              "linked-one-multi-complete",
+              "linked-v2-tail-complete"
+            ],
+            "result": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/existing-storage-oracle/runs/run-r3-ee7985/result.json",
+            "result_sha256": "266f33802c31164b66cc6a0f8c9a0350b82c8dbe43c6f1c67272da25ed947db2",
+            "whole_attempt_status": "FAIL",
+            "reuse": "Only these four completed PASS case records reused; original selected mismatch retained as FAIL"
+          },
+          "selected": {
+            "actual_passed_cases": [
+              "selected-linear-missing-complete",
+              "selected-compact-edges-complete",
+              "selected-reordered-edges-complete",
+              "selected-reordered-compact-edges-complete",
+              "selected-v2-missing-complete",
+              "selected-compact-edges-corrupt",
+              "selected-linear-missing-stopped"
+            ],
+            "actual_cases": 7,
+            "actual_original_processes": 7,
+            "result": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/existing-storage-oracle/runs/run-r4-selected-ee7985/result.json",
+            "result_sha256": "f07bfbd026f583a7f17a20c68444a6c450512027ffbc652218b7a7687c3ae095",
+            "status": "PASS_ACTUAL_EXISTING_STORAGE_ORIGINAL_READY"
+          },
+          "original_created_zero_leaves": {
+            "selected-linear-missing-complete": {
+              "1": {
+                "path": "/tmp/biglybtc-existing-storage-tbbtk8kg/cases/selected-linear-missing-complete/payload/selected/m.bin",
+                "native_present": false,
+                "native_allocated": false,
+                "original_created": true,
+                "original_physical": {
+                  "dev": 46,
+                  "ino": 1527169,
+                  "bytes": 32768,
+                  "sha256": "c35020473aed1b4642cd726cad727b63fff2824ad68cedd7ffb73c7cbd890479",
+                  "mtime_ns": 1793177542589938231,
+                  "ctime_ns": 1793177542589938231,
+                  "mode": 33204,
+                  "nlink": 1
+                },
+                "downloaded": 0,
+                "verified_bitmap": "1001",
+                "scope": "Original allocation only; zeros are not authentic downloaded/verified source data"
+              }
+            },
+            "selected-v2-missing-complete": {
+              "1": {
+                "path": "/tmp/biglybtc-existing-storage-tbbtk8kg/cases/selected-v2-missing-complete/payload/selected/m.bin",
+                "native_present": false,
+                "native_allocated": false,
+                "original_created": true,
+                "original_physical": {
+                  "dev": 46,
+                  "ino": 1527720,
+                  "bytes": 32768,
+                  "sha256": "c35020473aed1b4642cd726cad727b63fff2824ad68cedd7ffb73c7cbd890479",
+                  "mtime_ns": 1793177602704693781,
+                  "ctime_ns": 1793177602704693781,
+                  "mode": 33204,
+                  "nlink": 1
+                },
+                "downloaded": 0,
+                "verified_bitmap": "1001",
+                "scope": "Original allocation only; zeros are not authentic downloaded/verified source data"
+              }
+            },
+            "selected-linear-missing-stopped": {
+              "1": {
+                "path": "/tmp/biglybtc-existing-storage-tbbtk8kg/cases/selected-linear-missing-stopped/payload/selected/m.bin",
+                "native_present": false,
+                "native_allocated": false,
+                "original_created": true,
+                "original_physical": {
+                  "dev": 46,
+                  "ino": 1527946,
+                  "bytes": 32768,
+                  "sha256": "c35020473aed1b4642cd726cad727b63fff2824ad68cedd7ffb73c7cbd890479",
+                  "mtime_ns": 1793177630666888625,
+                  "ctime_ns": 1793177630666888625,
+                  "mode": 33204,
+                  "nlink": 1
+                },
+                "downloaded": 0,
+                "verified_bitmap": "1001",
+                "scope": "Original allocation only; zeros are not authentic downloaded/verified source data"
+              }
+            }
+          },
+          "truthful_boundary": "Original initialize allocated three originally missing skipped-L extents. Native RO missing/bitfield proof remains separate; no authenticity/completion credit for zero data. Existing authentic leaves/fullstat and original READY/selected remaining/raw/opaque/control observations checked."
+        },
+        "allocation_interop": {
+          "actual_cases": 2,
+          "actual_passed_cases": [
+            "stopped",
+            "paused"
+          ],
+          "result": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/allocation-original-oracle/runs/run-r3-ee7985/result.json",
+          "result_sha256": "7bb51e60d34e4e29241ac5440985cb117ec2ac092e7bad98fedbb131f787f2e6",
+          "status": "PASS_ACTUAL_ALLOCATION_ORIGINAL_STOPPED",
+          "actual_original_processes": 2,
+          "scope": "Original stopped/paused allocation getters only; no READY/verification/original zero-fill execution."
+        },
+        "changes": {
+          "native_source": [],
+          "old_recipes_modified": false,
+          "association_helper": "New source-equal preparation preserves old helper, both actual commits/full graph and GCC39+1 evidence.",
+          "recipe_amendment": "Original missing-skipped-linear observation only, original helper/proof byte-exact;7selected cases rerun,4linked successes reused."
+        },
+        "failed_histories": [
+          {
+            "attempt": "r1",
+            "status": "FAIL_PREFLIGHT",
+            "reason": "Author wrapper cwd W instead of R; no javac/subjects started."
+          },
+          {
+            "attempt": "r2",
+            "status": "FAIL_SANDBOX_SOCKET_DENIAL",
+            "reason": "Allocation native completed; socket EPERM before original JVM. Linked native owner poll failed without detailed causal message; no product defect inferred."
+          },
+          {
+            "attempt": "r3 existing",
+            "status": "FAIL_ORIGINAL_OBSERVATION_EXPECTATION",
+            "reason": "Original genuine skipped-L allocation contradicted absence assertion; source-backed amendment/new selected attempt, prior result unchanged."
+          }
+        ],
+        "native_clean_after": true,
+        "real_original_profile_or_process_access": false,
+        "original_core_recompiled": false,
+        "cf_parents_closed": [],
+        "remaining_scope": "No generic external layouts, public routing, restored native-private grants/reopen or whole client/family closure.",
+        "inputs_sha256": {
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/reference-completion-association/metadata-ee7985/manifest.json": "3418d97281a0d93a245b6de376a95378c031a41856309e0b76813d1afcc2571b",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/prepare-reference-completions.py": "475617c0b214bd2633dbc344eeab0e2ec9edb8597323c6f6a9cde0d079d6fc7f",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/prepare-reference-completions-source-equal.py": "c06679332f873713bf328e3297dab59432a21949479e6baaf445ecd55d4b7d03",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/existing-completion-metadata-ee7985-r1.json": "31c52ee71adbfc79a3b4cb16973c0024455d1bafbc57da21a187a6ba528a770f",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/allocation-completion-metadata-ee7985-r1.json": "1b652c6b9e6b0d040e319bc2fb5791aa302437740e0c29921ba6d7a457e27c27",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/existing-storage-oracle/amendments/original-linear-allocation/manifest.json": "f0bb494be0be5145d3a056c1961dcae2b5a6f8eab2959ebe8b531c2204cd4bc7",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/gcc-final-r4/build-receipt.json": "6042ff654e35ec7061b6e416deac5ee1477deac625efa112fc959615d6a5f40f",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/gcc-final-r4/build-source.json": "60bb83144e06cfdca4c646ac198dce665989e3515d90e77394fee77d1de367c7",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/gcc-final-r4/result.json": "dcb87cc7e3e2d4a333d2d7c52097405f9308696d190d6167034c382bf1363cfc",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/gcc-final-r4/reuse-before.json": "9edb7a8e17e8381b1db502958358c6ef4b32f848fc6d95215ae0ed36af25372e",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/gcc-final-r4/tests.xml": "6a06fd0fb30d46641fe015f98d9b783ca97485d7f82124a39d3ed153d996e814",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/reference-comparisons-ee7985-r1.json": "42e0cfca8a3aa2b29ebdcf7eaadc6a1aff9d02a0064128c80300f23b5032e348",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/reference-comparisons-ee7985-r2.json": "96efede62e252fb657ad6b644c0dc10a4f25153ded42ddda6d9ae82ae1cddab7",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/reference-comparisons-ee7985-r3.json": "b9cc06cc63575a3400337c9d2f422e5dde0efecea8d5906b21b95714e2c08835",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/selected-comparison-ee7985-r4.json": "5af56b0aa6efd09d17ddd1df01776528d7f0771e0d2992272e8a4fede24c97c6",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/run_reference_comparisons_ee7985.py": "634884380d2cc2e9cdbf1d62b44232eff8e1f4efabcae7faba315516e8546d7e",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/run_reference_comparisons_ee7985_r2.py": "926f3b6d05dc8b9a4ad91953fdb618f66e0d998e10e90a7ffa80b90158cd6d20",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/run_reference_comparisons_ee7985_r3.py": "fd2678a3f3d33af0b9d0f0e3aeba55b171f35f905597cd7ff14485dbe7b938af",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/run_selected_reference_ee7985_r4.py": "8335c182368abd45b4a40b99620f6a1afeba038394cbf66ff5ad4ab4482fa407",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/existing-storage-oracle/runs/run-r3-ee7985/result.json": "266f33802c31164b66cc6a0f8c9a0350b82c8dbe43c6f1c67272da25ed947db2",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/existing-storage-oracle/runs/run-r4-selected-ee7985/result.json": "f07bfbd026f583a7f17a20c68444a6c450512027ffbc652218b7a7687c3ae095",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/allocation-original-oracle/runs/run-r3-ee7985/result.json": "7bb51e60d34e4e29241ac5440985cb117ec2ac092e7bad98fedbb131f787f2e6"
+        }
+      }
+    },
+    "portable_gcc": {
+      "path": "build/compatibility-chapter-20261027/portable-gcc-ee798-r2/addendum-r1/result.json",
+      "sha256": "3388f254bc2171972b15d3fe19a9b7a7eb50bc37d5db8da9a8fa5131bf18ef2e",
+      "record": {
+        "schema": 1,
+        "status": "PRIVATE_RUNTIME_COVERED_WITH_EXPLICIT_UNCHANGED_CASE_REUSE_NOT_PROMOTED",
+        "source": "ee7985e4b78f1d8c9d89f727f29f3a025f3c63fc",
+        "lane": "gcc",
+        "candidate": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/candidate",
+        "manifest_sha256": "58902e71cb376c8b78654dc2cbfd95d9b2aa9886618511bceea3120b84603f7d",
+        "rollback": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/previous-dist",
+        "completion_sha256": "12b36bcd60be82012713bd84875d3c6a271a31c479b6724e6aaa1cfbc8426cc7",
+        "recipe_manifest_sha256": "d6c3ab1809dd1cbb10a33a647dd77efb82a07359ba15535f6ecbb816e24146e0",
+        "prior_failed_attempt": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/failure.json",
+        "unresolved_limitation": "Original full managed-download process threw Cannot read generated file after42PASS; isolated exact method passed. No source fix or complete-suite exit0 is claimed.",
+        "cohort": [
+          {
+            "name": "provider-payload-counter",
+            "status": "UNCHANGED_PRIOR_PASS",
+            "qt_rows": 7,
+            "log_sha256": "5746c5ccac15c11783323dca6b33d3f06e85d31d2c0fad562bbf06a01687ff82"
+          },
+          {
+            "name": "selected-swarm-admission",
+            "status": "UNCHANGED_PRIOR_PASS",
+            "qt_rows": 25,
+            "log_sha256": "6337acb3454a56b6dc23444436b5e288b6a035fd2212181b9a8bbb788b3d069f"
+          },
+          {
+            "name": "persistent-native-peer-session",
+            "status": "UNCHANGED_PRIOR_PASS",
+            "qt_rows": 12,
+            "log_sha256": "c773b4de502f8a1a263a9083959c52e27fbe5e626835a4a8d6306b2032ecede8"
+          },
+          {
+            "name": "managed-download",
+            "status": "ALL_REQUIRED_CASES_PASS_WITH_EXPLICIT_UNCHANGED_CASE_REUSE",
+            "required_cases": 56,
+            "prior_successful_cases": 41,
+            "targeted_reproduction_cases": 2,
+            "newly_executed_cases": 14,
+            "unique_covered_cases": 56,
+            "whole_suite_exit_zero_claimed": false,
+            "original_full_run_status": "FAIL_UNRESOLVED_GENERATED_FILE_READ",
+            "coverage": {
+              "prior": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/cohort-managed-download.log",
+              "targeted": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/diagnostic-managed-read-r1/stdout.log",
+              "remaining": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/addendum-r1/managed-uncovered-methods.log"
+            }
+          },
+          {
+            "name": "network-proxy-owner",
+            "status": "PASS",
+            "qt_rows": 15
+          },
+          {
+            "name": "network-binding-owner",
+            "status": "PASS",
+            "qt_rows": 18
+          },
+          {
+            "name": "torrent-intake-file-options-ui",
+            "status": "PASS",
+            "qt_rows": 29
+          },
+          {
+            "name": "file-operation-dialog",
+            "status": "PASS",
+            "qt_rows": 17
+          },
+          {
+            "name": "torrent-creation-dialog",
+            "status": "PASS",
+            "qt_rows": 14
+          },
+          {
+            "name": "provider-traffic-runtime-deployment",
+            "status": "PASS",
+            "cases": 11,
+            "base_provider": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/provider-traffic-v3/install/lib/libtorrent-rasterbar.so.2.0.12",
+            "direct_staged_provider_test": false,
+            "receipt_sha256": "f9fcb0f2dddff0b6ed6cd2fb5403f4b4713032e96ac8a5341e2b85eb6d417634"
+          }
+        ],
+        "smoke_qt_rows": 13,
+        "captures": {
+          "statistics-section-3-preview.png": "be9484e7cfa39068cade12acfceb3a44e2a7689fe89c528f65955e6b6c643bf0",
+          "statistics-history-week-preview.png": "70042ff9deff29ba239e98f1b820f9f0e75e7be3c50f1afeef79800cf4c79d79",
+          "file-operation-recycle-choice.png": "c4b066d016fc1aea9a5650e73cc11b18ef6f17566602f8d22507d316853a7ff9",
+          "file-operation-recovery-review.png": "2e1ec3db45df40a1e75d87a54a31d15b16360fed9a7d4ad45e63496bf480f518",
+          "file-operation-rename-preview.png": "1e1885a2b192517f978e677668cb87f679226085f226d302b075cfaae539d43e",
+          "statistics-history-keyboard-preview.png": "278f489116c8fbfc30ad15b2b4d6cffce61109c1701c8b81f31253c9cb29fe45",
+          "statistics-section-5-preview.png": "af2560935dc0a71bda0478c11ab63cb79897694be4459ab1133ebf32fd333f92",
+          "torrent-intake-verified-seeding.png": "479afb7fbfb11f3697a064e151f9c62c34cca3e09920fc6113ae0304f41c58ab",
+          "statistics-history-month-preview.png": "275318ab88c4c8f193ffb6f412e140229d84c784a292fd098cad36270f09af02",
+          "statistics-history-week-hourly-missing-preview.png": "9ea2aa205d1fc608ae95a5ed79320443214104de767e516390e97e2ba3a1fb25",
+          "statistics-history-missing-preview.png": "d8f46c011306a6ea0c2b7d4fcdf29166a87f57c09d2255913a686d4d9cd52a08",
+          "torrent-intake-save-name.png": "a437e9f39e724d18d2d4a668865981197fcda8322449456da3c064c40867b7b3",
+          "statistics-navigation-new-session-preview.png": "e5137f106f8e03c27fcdef56750c84378d646e62c2c2cab6a3c18bdf5a8e7b19",
+          "statistics-section-7-preview.png": "207c8fad759d7215d96ea995a2540aab57132259cb7a875773970fafb23c8446",
+          "statistics-capacity-preview.png": "1972e079671d6be417c7bed9a08a50036bac28ede8f02b2874c28f7293d303dc",
+          "classic-preview.png": "af95e42763b034dba10820cb9b32eb278d2f6754e9a2256d1fa92a73d78e7196",
+          "statistics-navigation-reopened-preview.png": "3f920d5e649a1709626a39b60ca410f55ff3b4b44cc89d8bfa7c94d2a85f3eee",
+          "statistics-transfers-preview.png": "8ee1893a80bdc0d53d7846b67db391abd942e001d3bef31e0342d9d2781a4b8c",
+          "my-shares-preview.png": "09cf8ecb3647ce6f75b9c564eef75aacd7d0b8a2d828a0c8c61750c774ff831c",
+          "torrent-intake-file-destinations.png": "014c5b661a571ee783109d01e569670946ada1861268a89d82ea2464bda80557",
+          "statistics-history-preview.png": "508bbbce9f2352dba4751bc056cae294a4e5dd6536007a9b126e23623b07f24f",
+          "file-operation-archive-preview.png": "8c6746c23eb7f5f3ab3122d73cdd8f1048be6b75b6a0e776f43d0794b3e6be89",
+          "statistics-history-week-missing-preview.png": "973da38d1c6c294eaf853a6d3b4b1a1ae46b34cd5863bb4ecbe169c353ccd620",
+          "file-operation-replacement-preview.png": "c4cabf418adea2d8e586a37303b06950ca68bfae41ec2f12f9da2cc3eb3d1f78",
+          "statistics-history-protocol-preview.png": "852ac90d97880810b1024ba3156a23d9af380f486e798ad4b9af5cddb9cec55b",
+          "statistics-section-2-preview.png": "07794fbd4be90f6c89e84b32fc612293f20d546abe88eacc716b67dbf1b19f23",
+          "statistics-section-4-preview.png": "c08db90bae4bf271dd3c6c8caf38958ac5384bbdd78d2252a813542d9c76dec8",
+          "statistics-section-8-preview.png": "dd93ec646cc23ceea705bfe7ab3fc9ac793e10fa0292e801023fb5a053876438",
+          "statistics-activity-preview.png": "43a205afbd0ee09c34ba3ef2c7e334e37ac316d3d7e7968dc9454a58ece31fde",
+          "my-tracker-preview.png": "112bfbc8432048f36b483077af24218f6e299307ec8a60de991ac21d04321fbb",
+          "torrent-intake-tracker-tiers.png": "37e2755dbb139efe0307ea0e8f320cbdad717d615a400be2be96bd96b1cb705b",
+          "statistics-history-week-hourly-preview.png": "3f920d5e649a1709626a39b60ca410f55ff3b4b44cc89d8bfa7c94d2a85f3eee",
+          "torrent-intake-sequential-limits.png": "d5a376786d17302b23dde49a2ece2c0496f4a73a5e57dcb0815f2b50acce5952",
+          "statistics-history-dht-preview.png": "d4d420aeb67a45e14d477018a5564d2593642cbe1f3fff64a16b1cc92e975063",
+          "statistics-section-9-preview.png": "1536ff351f211fe9a6d3bb55688177b742017b98ede0f6391400a125e9f2bb6b",
+          "statistics-section-6-preview.png": "d62cd2ee8888ae156253b44d6e6e9ebf78f2a08ae886f70b4a420ed3aef46ee9",
+          "statistics-history-copy-preview.png": "278f489116c8fbfc30ad15b2b4d6cffce61109c1701c8b81f31253c9cb29fe45",
+          "torrent-creation-preview.png": "700a8c1f0ad137d9af09baef2788d510605cbf12c1fed7825c53c34e52c74d41",
+          "torrent-intake-allocate-mode.png": "bc670344d0d09178c9b12e4e64ab73fd3c1268f621578a91a26010f953b8b13b",
+          "file-operation-preview.png": "6fdd86ebcd7898f31099ba95e648f865b30106a337e46af7a62ed3b72266d49e",
+          "saved-selected-preview.png": "4479f58c81148d091e940898149b64ba97a9672c0754cb3f2f870066e81883c7",
+          "torrent-intake-custom-existing.png": "5d2b293abb11d98a151e9dd4e04ab53b84231b511f963a3ec9837a1056ea5fb2"
+        },
+        "loader_stage_launch_smoke_reused_commands_sha256": "6623c3e74c0d433136ceb3ab2abb9e5c57f1c83c35a8ef1d1d3ad4a3016f14ab",
+        "provider_sha256": "98279a468e0fa5147876b6f22f8947f432c294dfc02fb50cf179fc9472b3b51f",
+        "provider_manifest_sha256": "5901b34eeb25370106bdbf6185a80f0c86c62a837bf2e455f5619921db665760",
+        "record_sha256": "91218c17d3e74bb79a0fea0cfbbf3734e3422895e59f46fad4cb6b17e2927fd0",
+        "builds": 0,
+        "shipping_approved": false,
+        "promoted": false,
+        "manual_wayland_or_public_or_causal_credit": false
+      }
+    },
+    "portable_clang": {
+      "path": "build/compatibility-chapter-20261027/portable-clang-ee798-r2/addendum-r1/result.json",
+      "sha256": "8622374406af20db0f883c5368e1f1743c58d1a8063945be27214a60d2a40c76",
+      "record": {
+        "schema": 1,
+        "status": "PRIVATE_RUNTIME_COVERED_WITH_EXPLICIT_UNCHANGED_CASE_REUSE_NOT_PROMOTED",
+        "source": "ee7985e4b78f1d8c9d89f727f29f3a025f3c63fc",
+        "lane": "clang",
+        "candidate": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/candidate",
+        "manifest_sha256": "9dcbeb134bdc47369e2942466b22f6fe15a82bd66c914e94442cf3341b75d171",
+        "rollback": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/previous-dist",
+        "completion_sha256": "8e4ee9b2fa3cc2c2da15b9951ba910c6de7a82d66aa3c0d7e8f590832d6a20d4",
+        "recipe_manifest_sha256": "c786d92dd0f581d833a2bbf54f9d0716859ff8d0065bb417266c084ef160362a",
+        "prior_failed_attempt": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/failure.json",
+        "unresolved_limitation": "Original full network-proxy-owner process had14PASS/1FAIL: SOCKS5 redirect unplanned destination. Exact single-row reproduction passed; original failing endpoint unknown. No source cause/fix or full-suite exit0 is claimed.",
+        "cohort": [
+          {
+            "name": "provider-payload-counter",
+            "status": "UNCHANGED_PRIOR_PASS",
+            "qt_rows": 7,
+            "log_sha256": "45097ae8032539da32c58551d50623f7be6c8ef06826eab5ffa38493e6a2137a"
+          },
+          {
+            "name": "selected-swarm-admission",
+            "status": "UNCHANGED_PRIOR_PASS",
+            "qt_rows": 25,
+            "log_sha256": "e8fb072bcfdbed72811446ebbc8eedde35413878a46b8d3331644113c28f9953"
+          },
+          {
+            "name": "persistent-native-peer-session",
+            "status": "UNCHANGED_PRIOR_PASS",
+            "qt_rows": 12,
+            "log_sha256": "f65a27a9510472eb38fa84c580a4dfd0bdedbc163f06c59340048d0bd718933c"
+          },
+          {
+            "name": "managed-download",
+            "status": "UNCHANGED_PRIOR_PASS",
+            "qt_rows": 58,
+            "log_sha256": "28dd18fe304f8c7802f5c73d1515ef6510a256af4636830a454173b8f69b479c"
+          },
+          {
+            "name": "network-proxy-owner",
+            "status": "ALL_REQUIRED_CASES_PASS_WITH_EXPLICIT_UNCHANGED_CASE_REUSE",
+            "required_cases": 13,
+            "prior_successful_cases": 12,
+            "targeted_reproduction_cases": 1,
+            "unique_covered_cases": 13,
+            "whole_suite_exit_zero_claimed": false,
+            "original_full_run_status": "FAIL_UNRESOLVED_REDIRECT_PROXY_DESTINATION",
+            "coverage": {
+              "prior": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/cohort-network-proxy-owner.log",
+              "targeted": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/diagnostic-proxy-redirect-r1/stdout.log"
+            }
+          },
+          {
+            "name": "network-binding-owner",
+            "status": "PASS",
+            "qt_rows": 18
+          },
+          {
+            "name": "torrent-intake-file-options-ui",
+            "status": "PASS",
+            "qt_rows": 29
+          },
+          {
+            "name": "file-operation-dialog",
+            "status": "PASS",
+            "qt_rows": 17
+          },
+          {
+            "name": "torrent-creation-dialog",
+            "status": "PASS",
+            "qt_rows": 14
+          },
+          {
+            "name": "provider-traffic-runtime-deployment",
+            "status": "PASS",
+            "cases": 11,
+            "base_provider": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/provider-traffic-v3/install/lib/libtorrent-rasterbar.so.2.0.12",
+            "direct_staged_provider_test": false,
+            "receipt_sha256": "138b02442d59f855989fc989d0467525df63cab3fbd5c8905037e10bfe86c157"
+          }
+        ],
+        "smoke_qt_rows": 13,
+        "captures": {
+          "statistics-section-3-preview.png": "be9484e7cfa39068cade12acfceb3a44e2a7689fe89c528f65955e6b6c643bf0",
+          "statistics-history-week-preview.png": "70042ff9deff29ba239e98f1b820f9f0e75e7be3c50f1afeef79800cf4c79d79",
+          "file-operation-recycle-choice.png": "c4b066d016fc1aea9a5650e73cc11b18ef6f17566602f8d22507d316853a7ff9",
+          "file-operation-recovery-review.png": "2e1ec3db45df40a1e75d87a54a31d15b16360fed9a7d4ad45e63496bf480f518",
+          "file-operation-rename-preview.png": "1e1885a2b192517f978e677668cb87f679226085f226d302b075cfaae539d43e",
+          "statistics-history-keyboard-preview.png": "278f489116c8fbfc30ad15b2b4d6cffce61109c1701c8b81f31253c9cb29fe45",
+          "statistics-section-5-preview.png": "af2560935dc0a71bda0478c11ab63cb79897694be4459ab1133ebf32fd333f92",
+          "torrent-intake-verified-seeding.png": "479afb7fbfb11f3697a064e151f9c62c34cca3e09920fc6113ae0304f41c58ab",
+          "statistics-history-month-preview.png": "275318ab88c4c8f193ffb6f412e140229d84c784a292fd098cad36270f09af02",
+          "statistics-history-week-hourly-missing-preview.png": "9ea2aa205d1fc608ae95a5ed79320443214104de767e516390e97e2ba3a1fb25",
+          "statistics-history-missing-preview.png": "d8f46c011306a6ea0c2b7d4fcdf29166a87f57c09d2255913a686d4d9cd52a08",
+          "torrent-intake-save-name.png": "a437e9f39e724d18d2d4a668865981197fcda8322449456da3c064c40867b7b3",
+          "statistics-navigation-new-session-preview.png": "e5137f106f8e03c27fcdef56750c84378d646e62c2c2cab6a3c18bdf5a8e7b19",
+          "statistics-section-7-preview.png": "207c8fad759d7215d96ea995a2540aab57132259cb7a875773970fafb23c8446",
+          "statistics-capacity-preview.png": "1972e079671d6be417c7bed9a08a50036bac28ede8f02b2874c28f7293d303dc",
+          "classic-preview.png": "af95e42763b034dba10820cb9b32eb278d2f6754e9a2256d1fa92a73d78e7196",
+          "statistics-navigation-reopened-preview.png": "3f920d5e649a1709626a39b60ca410f55ff3b4b44cc89d8bfa7c94d2a85f3eee",
+          "statistics-transfers-preview.png": "8ee1893a80bdc0d53d7846b67db391abd942e001d3bef31e0342d9d2781a4b8c",
+          "my-shares-preview.png": "c62b34ab0b1c575964394a7919a526f79653d67e15dc7349c84f952fd2a706f0",
+          "torrent-intake-file-destinations.png": "014c5b661a571ee783109d01e569670946ada1861268a89d82ea2464bda80557",
+          "statistics-history-preview.png": "508bbbce9f2352dba4751bc056cae294a4e5dd6536007a9b126e23623b07f24f",
+          "file-operation-archive-preview.png": "8c6746c23eb7f5f3ab3122d73cdd8f1048be6b75b6a0e776f43d0794b3e6be89",
+          "statistics-history-week-missing-preview.png": "973da38d1c6c294eaf853a6d3b4b1a1ae46b34cd5863bb4ecbe169c353ccd620",
+          "file-operation-replacement-preview.png": "c4cabf418adea2d8e586a37303b06950ca68bfae41ec2f12f9da2cc3eb3d1f78",
+          "statistics-history-protocol-preview.png": "852ac90d97880810b1024ba3156a23d9af380f486e798ad4b9af5cddb9cec55b",
+          "statistics-section-2-preview.png": "07794fbd4be90f6c89e84b32fc612293f20d546abe88eacc716b67dbf1b19f23",
+          "statistics-section-4-preview.png": "c08db90bae4bf271dd3c6c8caf38958ac5384bbdd78d2252a813542d9c76dec8",
+          "statistics-section-8-preview.png": "dd93ec646cc23ceea705bfe7ab3fc9ac793e10fa0292e801023fb5a053876438",
+          "statistics-activity-preview.png": "43a205afbd0ee09c34ba3ef2c7e334e37ac316d3d7e7968dc9454a58ece31fde",
+          "my-tracker-preview.png": "112bfbc8432048f36b483077af24218f6e299307ec8a60de991ac21d04321fbb",
+          "torrent-intake-tracker-tiers.png": "37e2755dbb139efe0307ea0e8f320cbdad717d615a400be2be96bd96b1cb705b",
+          "statistics-history-week-hourly-preview.png": "3f920d5e649a1709626a39b60ca410f55ff3b4b44cc89d8bfa7c94d2a85f3eee",
+          "torrent-intake-sequential-limits.png": "d5a376786d17302b23dde49a2ece2c0496f4a73a5e57dcb0815f2b50acce5952",
+          "statistics-history-dht-preview.png": "d4d420aeb67a45e14d477018a5564d2593642cbe1f3fff64a16b1cc92e975063",
+          "statistics-section-9-preview.png": "1536ff351f211fe9a6d3bb55688177b742017b98ede0f6391400a125e9f2bb6b",
+          "statistics-section-6-preview.png": "d62cd2ee8888ae156253b44d6e6e9ebf78f2a08ae886f70b4a420ed3aef46ee9",
+          "statistics-history-copy-preview.png": "278f489116c8fbfc30ad15b2b4d6cffce61109c1701c8b81f31253c9cb29fe45",
+          "torrent-creation-preview.png": "700a8c1f0ad137d9af09baef2788d510605cbf12c1fed7825c53c34e52c74d41",
+          "torrent-intake-allocate-mode.png": "bc670344d0d09178c9b12e4e64ab73fd3c1268f621578a91a26010f953b8b13b",
+          "file-operation-preview.png": "6fdd86ebcd7898f31099ba95e648f865b30106a337e46af7a62ed3b72266d49e",
+          "saved-selected-preview.png": "4479f58c81148d091e940898149b64ba97a9672c0754cb3f2f870066e81883c7",
+          "torrent-intake-custom-existing.png": "5d2b293abb11d98a151e9dd4e04ab53b84231b511f963a3ec9837a1056ea5fb2"
+        },
+        "loader_stage_launch_smoke_reused_commands_sha256": "52c2403209bdbdad1dc1be37827370c46eea4c1f355400ea27be7746aa11470a",
+        "provider_sha256": "98279a468e0fa5147876b6f22f8947f432c294dfc02fb50cf179fc9472b3b51f",
+        "provider_manifest_sha256": "5901b34eeb25370106bdbf6185a80f0c86c62a837bf2e455f5619921db665760",
+        "record_sha256": "91218c17d3e74bb79a0fea0cfbbf3734e3422895e59f46fad4cb6b17e2927fd0",
+        "builds": 0,
+        "shipping_approved": false,
+        "promoted": false,
+        "manual_wayland_or_public_or_causal_credit": false
+      }
+    },
+    "proxy_open": {
+      "path": "build/compatibility-chapter-20261027/proxy-route-diagnostic-final-review/final-diagnostic-review.json",
+      "sha256": "4a8d5a559e8fb8a0c0aa8776124627339d412431fd453f4b87e01d33379cc667",
+      "record": {
+        "schema": 1,
+        "status": "OPEN_PROVIDER_RUNTIME_CONSTRAINT_NO_FIX_JUSTIFIED",
+        "native_source_commit": "61fc63b5bcb783dd82b3bafb9eb62ecee578cc02",
+        "observed": {
+          "requested_host": "0.0.0.0",
+          "requested_port": 0,
+          "domain_mode": false,
+          "socks5": true,
+          "failed_named_subject_rows": [
+            "actualRemoteWebSeedPayload(SOCKS5-remote-name)",
+            "actualRemoteWebSeedPayload(SOCKS5-redirected-name)"
+          ],
+          "qtest_text_totals": {
+            "passed": 2,
+            "failed": 2,
+            "skipped": 0
+          },
+          "junit_case_count": 5,
+          "junit_extra_untagged_case": "actualRemoteWebSeedPayload",
+          "extra_untagged_case_is_not_additional_subject_credit": true,
+          "failure_lines": [
+            "FAIL!  : NetworkProxyOwnerTests::actualRemoteWebSeedPayload(SOCKS5-remote-name) 'proxy.failure.isEmpty()' returned FALSE. (unplanned proxy destination requested-host-hex=302e302e302e30 port=0 domain=0 expected-tracker=localhost:36289 expected-peer=127.0.0.2:0 expected-webseed=seed.biglybtc.invalid|redirect.biglybtc.invalid:33511 v5=1 remote4=0)",
+            "FAIL!  : NetworkProxyOwnerTests::actualRemoteWebSeedPayload(SOCKS5-redirected-name) 'proxy.failure.isEmpty()' returned FALSE. (unplanned proxy destination requested-host-hex=302e302e302e30 port=0 domain=0 expected-tracker=localhost:34393 expected-peer=127.0.0.2:0 expected-webseed=seed.biglybtc.invalid|redirect.biglybtc.invalid:36915 v5=1 remote4=0)"
+          ]
+        },
+        "source_findings": [
+          {
+            "symbol": "test Socks::receive, lines239-249/275-285",
+            "finding": "Exact CMD3 UDP ASSOCIATE is rejected before route selection. Reaching the observed v5 route failure requires CMD1 by unchanged control flow; this is source-derived, not an actual captured command byte."
+          },
+          {
+            "symbol": "udp_socket.cpp socks5::socks_forward_udp, lines867-889",
+            "finding": "Provider raw UDP control explicitly emits CMD3 with default0.0.0.0:0, distinct from CMD1 route failure."
+          },
+          {
+            "symbol": "socks5_stream constructor/socks_connect; proxy_base::close",
+            "finding": "Ordinary stream defaultsCMD1 and writes current destination name/endpoint. Close clears destination name/endpoint; this makes cancel lifecycle worth instrumenting, but is not causal proof."
+          },
+          {
+            "symbol": "test actualRemoteWebSeedPayload/Tracker; PersistentSession managed admission",
+            "finding": "No trackerSource call/announce in this fixture; Tracker(1,false) encodes127.0.0.2:1. Explicit peer port0 is guarded before connect_peer. No fixture-invented0.0.0.0:0 peer is supported by inspected source."
+          }
+        ],
+        "not_proven": [
+          "Intentional provider0CONNECT probe",
+          "Exact callback/cancel/DNS lifecycle causing endpoint loss",
+          "A safe fixture-only semantic correction"
+        ],
+        "disposition": {
+          "CF03_CF08_provider_runtime": "OPEN",
+          "unexpected_CONNECT_predicates": "preserved",
+          "zero_endpoint_whitelist": false,
+          "new_provider_or_production_patch": false,
+          "new_executions_or_retries": 0,
+          "earlier_positive_case_coverage_is_not_route_stability_or_full_parity": true,
+          "scope": "Developer preview only; no shipping/full-route-parity approval"
+        },
+        "next_step": "Separate provider/runtime investigation: instrument socks5_stream socket identity, generation, destination/command at async_connect and write, close/cancel and resolver/auth completion; capture actual ordering before proposing a source-qualified fix. No implementation/run authorized by this review.",
+        "source_sha256": {
+          "/home/yurii/Java/BiglyBTC/preview/native/tests/network_proxy_owner_tests.cpp": "9385de07a0dc96d567a75cf98dd3a4b780064cefe68724b658240d018b9ea327",
+          "/home/yurii/Java/BiglyBTC/preview/native/tests/owned_engine_fixture.hpp": "22e43b024c87175358c0a5ca50f9b482547704acfc61622e1f090acab35bde5e",
+          "/home/yurii/Java/BiglyBTC/preview/native/engine/persistent_session.cpp": "ea4426e995cd6fdf8628e687090d7ad0055b196d399f62bff9a86b54660980de",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/provider-traffic-v3/source/include/libtorrent/socks5_stream.hpp": "4444715ce0d17139f665321ca9d9dbed9b06a2ee14fc31d2b359ae68179a8b3d",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/provider-traffic-v3/source/include/libtorrent/proxy_base.hpp": "d765b6a8c710f73d1f108fa9fd5e8052a43667ff6b2aff1bc7519a37d1e58bc3",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/provider-traffic-v3/source/src/udp_socket.cpp": "31aa49a7d1cbc43b0989f6a2a5e2a64179b9d46310f7746b867b7892969b975c",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/provider-traffic-v3/source/src/torrent.cpp": "84a0dee4a254852950bdad9e3ae73b8ac1b47c08d943c8fbe49e59395e4d803c"
+        },
+        "evidence_sha256": {
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/focused-final-clang-r2/proxy.txt": "957d5979fc27436f13fde5cb1779151b265ef9232efc0c2509f6fc941b278e30",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/focused-final-clang-r2/proxy.xml": "fe640f1cd4d178627e957a13bfeb2fcb0bc916a2c2591ad63c9f2baf6cadf0ca",
+          "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-network-proxy-owner-tests": "50c6ec140f6e0402a3c671209254ffe2080c46408ed2aea49fee4bd6f84c62c8",
+          "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/provider-traffic-v3/install/lib/libtorrent-rasterbar.so.2.0.12": "98279a468e0fa5147876b6f22f8947f432c294dfc02fb50cf179fc9472b3b51f",
+          "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-traffic-runtime.json": "5901b34eeb25370106bdbf6185a80f0c86c62a837bf2e455f5619921db665760",
+          "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-traffic-source-build-record.json": "91218c17d3e74bb79a0fea0cfbbf3734e3422895e59f46fad4cb6b17e2927fd0"
+        }
+      }
+    },
+    "visual": {
+      "path": "build/compatibility-chapter-20261027/visual-review/corrected-capture-comparison.json",
+      "sha256": "aa4ec57e7fa4ea52964ed07906ded2d3cd2a6d6fe70eb75cd39f32c338c4b057",
+      "record": {
+        "source_commit": "61fc63b5bcb783dd82b3bafb9eb62ecee578cc02",
+        "identical_across_three_lanes": true,
+        "captures": {
+          "file-operation-recovery-review.png": "fc26024c8615e9246763bbe115de7704faec6462c9627e26f97bbe7dbfa7c795",
+          "file-operation-replacement-preview.png": "1170b45de4d7d9d559913df2c978df103d6f2e9fb931b83a413df7338ad00b2d"
+        },
+        "inspection_pending": false,
+        "root_visual_review": "Both corrected1000x560 captures inspected: prior size/fullSHA256/retainedpreimage/uncertaindirectory visible above table. Three lanes byte-identical. Original clippedcaptures retained asfailedcapturehistory."
+      }
+    },
+    "promotion": {
+      "path": "build/compatibility-chapter-20261027/dist-promotion.json",
+      "sha256": "f5f0ddbbca75dc7c464a4cb28d4a7aee8b3862db0bc48d6cba47d82ba9f9ef98",
+      "record": {
+        "status": "DEVELOPMENT_PREVIEW_PROMOTED_WITH_EXPLICIT_RUNTIME_LIMITATIONS",
+        "fixture_source_commit": "61fc63b5bcb783dd82b3bafb9eb62ecee578cc02",
+        "application_source_unchanged_since": "ee7985e4b78f1d8c9d89f727f29f3a025f3c63fc",
+        "application_qualified_source": "7405a61a7a605c9962cc7a630b06fef25c0a5c66",
+        "dist": "/home/yurii/Java/BiglyBTC/dist",
+        "manifest_sha256": "58902e71cb376c8b78654dc2cbfd95d9b2aa9886618511bceea3120b84603f7d",
+        "leaves": 118,
+        "previous_dist": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/previous-published-dist-20261028",
+        "previous_manifest_sha256": "e34ade281e7c8548c837968f7c095042d93862a4e1312f790feba464de3ba421",
+        "previous_leaves": 118,
+        "source_test_only_bridge": [
+          "preview/native/tests/file_operation_dialog_tests.cpp",
+          "preview/native/tests/network_proxy_owner_tests.cpp"
+        ],
+        "proofs": {
+          "gcc": {
+            "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/addendum-r1/result.json",
+            "sha256": "3388f254bc2171972b15d3fe19a9b7a7eb50bc37d5db8da9a8fa5131bf18ef2e",
+            "result": {
+              "schema": 1,
+              "status": "PRIVATE_RUNTIME_COVERED_WITH_EXPLICIT_UNCHANGED_CASE_REUSE_NOT_PROMOTED",
+              "source": "ee7985e4b78f1d8c9d89f727f29f3a025f3c63fc",
+              "lane": "gcc",
+              "candidate": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/candidate",
+              "manifest_sha256": "58902e71cb376c8b78654dc2cbfd95d9b2aa9886618511bceea3120b84603f7d",
+              "rollback": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/previous-dist",
+              "completion_sha256": "12b36bcd60be82012713bd84875d3c6a271a31c479b6724e6aaa1cfbc8426cc7",
+              "recipe_manifest_sha256": "d6c3ab1809dd1cbb10a33a647dd77efb82a07359ba15535f6ecbb816e24146e0",
+              "prior_failed_attempt": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/failure.json",
+              "unresolved_limitation": "Original full managed-download process threw Cannot read generated file after42PASS; isolated exact method passed. No source fix or complete-suite exit0 is claimed.",
+              "cohort": [
+                {
+                  "name": "provider-payload-counter",
+                  "status": "UNCHANGED_PRIOR_PASS",
+                  "qt_rows": 7,
+                  "log_sha256": "5746c5ccac15c11783323dca6b33d3f06e85d31d2c0fad562bbf06a01687ff82"
+                },
+                {
+                  "name": "selected-swarm-admission",
+                  "status": "UNCHANGED_PRIOR_PASS",
+                  "qt_rows": 25,
+                  "log_sha256": "6337acb3454a56b6dc23444436b5e288b6a035fd2212181b9a8bbb788b3d069f"
+                },
+                {
+                  "name": "persistent-native-peer-session",
+                  "status": "UNCHANGED_PRIOR_PASS",
+                  "qt_rows": 12,
+                  "log_sha256": "c773b4de502f8a1a263a9083959c52e27fbe5e626835a4a8d6306b2032ecede8"
+                },
+                {
+                  "name": "managed-download",
+                  "status": "ALL_REQUIRED_CASES_PASS_WITH_EXPLICIT_UNCHANGED_CASE_REUSE",
+                  "required_cases": 56,
+                  "prior_successful_cases": 41,
+                  "targeted_reproduction_cases": 2,
+                  "newly_executed_cases": 14,
+                  "unique_covered_cases": 56,
+                  "whole_suite_exit_zero_claimed": false,
+                  "original_full_run_status": "FAIL_UNRESOLVED_GENERATED_FILE_READ",
+                  "coverage": {
+                    "prior": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/runtime/verification/cohort-managed-download.log",
+                    "targeted": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/diagnostic-managed-read-r1/stdout.log",
+                    "remaining": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-gcc-ee798-r2/addendum-r1/managed-uncovered-methods.log"
+                  }
+                },
+                {
+                  "name": "network-proxy-owner",
+                  "status": "PASS",
+                  "qt_rows": 15
+                },
+                {
+                  "name": "network-binding-owner",
+                  "status": "PASS",
+                  "qt_rows": 18
+                },
+                {
+                  "name": "torrent-intake-file-options-ui",
+                  "status": "PASS",
+                  "qt_rows": 29
+                },
+                {
+                  "name": "file-operation-dialog",
+                  "status": "PASS",
+                  "qt_rows": 17
+                },
+                {
+                  "name": "torrent-creation-dialog",
+                  "status": "PASS",
+                  "qt_rows": 14
+                },
+                {
+                  "name": "provider-traffic-runtime-deployment",
+                  "status": "PASS",
+                  "cases": 11,
+                  "base_provider": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/provider-traffic-v3/install/lib/libtorrent-rasterbar.so.2.0.12",
+                  "direct_staged_provider_test": false,
+                  "receipt_sha256": "f9fcb0f2dddff0b6ed6cd2fb5403f4b4713032e96ac8a5341e2b85eb6d417634"
+                }
+              ],
+              "smoke_qt_rows": 13,
+              "captures": {
+                "statistics-section-3-preview.png": "be9484e7cfa39068cade12acfceb3a44e2a7689fe89c528f65955e6b6c643bf0",
+                "statistics-history-week-preview.png": "70042ff9deff29ba239e98f1b820f9f0e75e7be3c50f1afeef79800cf4c79d79",
+                "file-operation-recycle-choice.png": "c4b066d016fc1aea9a5650e73cc11b18ef6f17566602f8d22507d316853a7ff9",
+                "file-operation-recovery-review.png": "2e1ec3db45df40a1e75d87a54a31d15b16360fed9a7d4ad45e63496bf480f518",
+                "file-operation-rename-preview.png": "1e1885a2b192517f978e677668cb87f679226085f226d302b075cfaae539d43e",
+                "statistics-history-keyboard-preview.png": "278f489116c8fbfc30ad15b2b4d6cffce61109c1701c8b81f31253c9cb29fe45",
+                "statistics-section-5-preview.png": "af2560935dc0a71bda0478c11ab63cb79897694be4459ab1133ebf32fd333f92",
+                "torrent-intake-verified-seeding.png": "479afb7fbfb11f3697a064e151f9c62c34cca3e09920fc6113ae0304f41c58ab",
+                "statistics-history-month-preview.png": "275318ab88c4c8f193ffb6f412e140229d84c784a292fd098cad36270f09af02",
+                "statistics-history-week-hourly-missing-preview.png": "9ea2aa205d1fc608ae95a5ed79320443214104de767e516390e97e2ba3a1fb25",
+                "statistics-history-missing-preview.png": "d8f46c011306a6ea0c2b7d4fcdf29166a87f57c09d2255913a686d4d9cd52a08",
+                "torrent-intake-save-name.png": "a437e9f39e724d18d2d4a668865981197fcda8322449456da3c064c40867b7b3",
+                "statistics-navigation-new-session-preview.png": "e5137f106f8e03c27fcdef56750c84378d646e62c2c2cab6a3c18bdf5a8e7b19",
+                "statistics-section-7-preview.png": "207c8fad759d7215d96ea995a2540aab57132259cb7a875773970fafb23c8446",
+                "statistics-capacity-preview.png": "1972e079671d6be417c7bed9a08a50036bac28ede8f02b2874c28f7293d303dc",
+                "classic-preview.png": "af95e42763b034dba10820cb9b32eb278d2f6754e9a2256d1fa92a73d78e7196",
+                "statistics-navigation-reopened-preview.png": "3f920d5e649a1709626a39b60ca410f55ff3b4b44cc89d8bfa7c94d2a85f3eee",
+                "statistics-transfers-preview.png": "8ee1893a80bdc0d53d7846b67db391abd942e001d3bef31e0342d9d2781a4b8c",
+                "my-shares-preview.png": "09cf8ecb3647ce6f75b9c564eef75aacd7d0b8a2d828a0c8c61750c774ff831c",
+                "torrent-intake-file-destinations.png": "014c5b661a571ee783109d01e569670946ada1861268a89d82ea2464bda80557",
+                "statistics-history-preview.png": "508bbbce9f2352dba4751bc056cae294a4e5dd6536007a9b126e23623b07f24f",
+                "file-operation-archive-preview.png": "8c6746c23eb7f5f3ab3122d73cdd8f1048be6b75b6a0e776f43d0794b3e6be89",
+                "statistics-history-week-missing-preview.png": "973da38d1c6c294eaf853a6d3b4b1a1ae46b34cd5863bb4ecbe169c353ccd620",
+                "file-operation-replacement-preview.png": "c4cabf418adea2d8e586a37303b06950ca68bfae41ec2f12f9da2cc3eb3d1f78",
+                "statistics-history-protocol-preview.png": "852ac90d97880810b1024ba3156a23d9af380f486e798ad4b9af5cddb9cec55b",
+                "statistics-section-2-preview.png": "07794fbd4be90f6c89e84b32fc612293f20d546abe88eacc716b67dbf1b19f23",
+                "statistics-section-4-preview.png": "c08db90bae4bf271dd3c6c8caf38958ac5384bbdd78d2252a813542d9c76dec8",
+                "statistics-section-8-preview.png": "dd93ec646cc23ceea705bfe7ab3fc9ac793e10fa0292e801023fb5a053876438",
+                "statistics-activity-preview.png": "43a205afbd0ee09c34ba3ef2c7e334e37ac316d3d7e7968dc9454a58ece31fde",
+                "my-tracker-preview.png": "112bfbc8432048f36b483077af24218f6e299307ec8a60de991ac21d04321fbb",
+                "torrent-intake-tracker-tiers.png": "37e2755dbb139efe0307ea0e8f320cbdad717d615a400be2be96bd96b1cb705b",
+                "statistics-history-week-hourly-preview.png": "3f920d5e649a1709626a39b60ca410f55ff3b4b44cc89d8bfa7c94d2a85f3eee",
+                "torrent-intake-sequential-limits.png": "d5a376786d17302b23dde49a2ece2c0496f4a73a5e57dcb0815f2b50acce5952",
+                "statistics-history-dht-preview.png": "d4d420aeb67a45e14d477018a5564d2593642cbe1f3fff64a16b1cc92e975063",
+                "statistics-section-9-preview.png": "1536ff351f211fe9a6d3bb55688177b742017b98ede0f6391400a125e9f2bb6b",
+                "statistics-section-6-preview.png": "d62cd2ee8888ae156253b44d6e6e9ebf78f2a08ae886f70b4a420ed3aef46ee9",
+                "statistics-history-copy-preview.png": "278f489116c8fbfc30ad15b2b4d6cffce61109c1701c8b81f31253c9cb29fe45",
+                "torrent-creation-preview.png": "700a8c1f0ad137d9af09baef2788d510605cbf12c1fed7825c53c34e52c74d41",
+                "torrent-intake-allocate-mode.png": "bc670344d0d09178c9b12e4e64ab73fd3c1268f621578a91a26010f953b8b13b",
+                "file-operation-preview.png": "6fdd86ebcd7898f31099ba95e648f865b30106a337e46af7a62ed3b72266d49e",
+                "saved-selected-preview.png": "4479f58c81148d091e940898149b64ba97a9672c0754cb3f2f870066e81883c7",
+                "torrent-intake-custom-existing.png": "5d2b293abb11d98a151e9dd4e04ab53b84231b511f963a3ec9837a1056ea5fb2"
+              },
+              "loader_stage_launch_smoke_reused_commands_sha256": "6623c3e74c0d433136ceb3ab2abb9e5c57f1c83c35a8ef1d1d3ad4a3016f14ab",
+              "provider_sha256": "98279a468e0fa5147876b6f22f8947f432c294dfc02fb50cf179fc9472b3b51f",
+              "provider_manifest_sha256": "5901b34eeb25370106bdbf6185a80f0c86c62a837bf2e455f5619921db665760",
+              "record_sha256": "91218c17d3e74bb79a0fea0cfbbf3734e3422895e59f46fad4cb6b17e2927fd0",
+              "builds": 0,
+              "shipping_approved": false,
+              "promoted": false,
+              "manual_wayland_or_public_or_causal_credit": false
+            }
+          },
+          "clang": {
+            "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/addendum-r1/result.json",
+            "sha256": "8622374406af20db0f883c5368e1f1743c58d1a8063945be27214a60d2a40c76",
+            "result": {
+              "schema": 1,
+              "status": "PRIVATE_RUNTIME_COVERED_WITH_EXPLICIT_UNCHANGED_CASE_REUSE_NOT_PROMOTED",
+              "source": "ee7985e4b78f1d8c9d89f727f29f3a025f3c63fc",
+              "lane": "clang",
+              "candidate": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/candidate",
+              "manifest_sha256": "9dcbeb134bdc47369e2942466b22f6fe15a82bd66c914e94442cf3341b75d171",
+              "rollback": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/previous-dist",
+              "completion_sha256": "8e4ee9b2fa3cc2c2da15b9951ba910c6de7a82d66aa3c0d7e8f590832d6a20d4",
+              "recipe_manifest_sha256": "c786d92dd0f581d833a2bbf54f9d0716859ff8d0065bb417266c084ef160362a",
+              "prior_failed_attempt": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/failure.json",
+              "unresolved_limitation": "Original full network-proxy-owner process had14PASS/1FAIL: SOCKS5 redirect unplanned destination. Exact single-row reproduction passed; original failing endpoint unknown. No source cause/fix or full-suite exit0 is claimed.",
+              "cohort": [
+                {
+                  "name": "provider-payload-counter",
+                  "status": "UNCHANGED_PRIOR_PASS",
+                  "qt_rows": 7,
+                  "log_sha256": "45097ae8032539da32c58551d50623f7be6c8ef06826eab5ffa38493e6a2137a"
+                },
+                {
+                  "name": "selected-swarm-admission",
+                  "status": "UNCHANGED_PRIOR_PASS",
+                  "qt_rows": 25,
+                  "log_sha256": "e8fb072bcfdbed72811446ebbc8eedde35413878a46b8d3331644113c28f9953"
+                },
+                {
+                  "name": "persistent-native-peer-session",
+                  "status": "UNCHANGED_PRIOR_PASS",
+                  "qt_rows": 12,
+                  "log_sha256": "f65a27a9510472eb38fa84c580a4dfd0bdedbc163f06c59340048d0bd718933c"
+                },
+                {
+                  "name": "managed-download",
+                  "status": "UNCHANGED_PRIOR_PASS",
+                  "qt_rows": 58,
+                  "log_sha256": "28dd18fe304f8c7802f5c73d1515ef6510a256af4636830a454173b8f69b479c"
+                },
+                {
+                  "name": "network-proxy-owner",
+                  "status": "ALL_REQUIRED_CASES_PASS_WITH_EXPLICIT_UNCHANGED_CASE_REUSE",
+                  "required_cases": 13,
+                  "prior_successful_cases": 12,
+                  "targeted_reproduction_cases": 1,
+                  "unique_covered_cases": 13,
+                  "whole_suite_exit_zero_claimed": false,
+                  "original_full_run_status": "FAIL_UNRESOLVED_REDIRECT_PROXY_DESTINATION",
+                  "coverage": {
+                    "prior": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/runtime/verification/cohort-network-proxy-owner.log",
+                    "targeted": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/portable-clang-ee798-r2/diagnostic-proxy-redirect-r1/stdout.log"
+                  }
+                },
+                {
+                  "name": "network-binding-owner",
+                  "status": "PASS",
+                  "qt_rows": 18
+                },
+                {
+                  "name": "torrent-intake-file-options-ui",
+                  "status": "PASS",
+                  "qt_rows": 29
+                },
+                {
+                  "name": "file-operation-dialog",
+                  "status": "PASS",
+                  "qt_rows": 17
+                },
+                {
+                  "name": "torrent-creation-dialog",
+                  "status": "PASS",
+                  "qt_rows": 14
+                },
+                {
+                  "name": "provider-traffic-runtime-deployment",
+                  "status": "PASS",
+                  "cases": 11,
+                  "base_provider": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/provider-traffic-v3/install/lib/libtorrent-rasterbar.so.2.0.12",
+                  "direct_staged_provider_test": false,
+                  "receipt_sha256": "138b02442d59f855989fc989d0467525df63cab3fbd5c8905037e10bfe86c157"
+                }
+              ],
+              "smoke_qt_rows": 13,
+              "captures": {
+                "statistics-section-3-preview.png": "be9484e7cfa39068cade12acfceb3a44e2a7689fe89c528f65955e6b6c643bf0",
+                "statistics-history-week-preview.png": "70042ff9deff29ba239e98f1b820f9f0e75e7be3c50f1afeef79800cf4c79d79",
+                "file-operation-recycle-choice.png": "c4b066d016fc1aea9a5650e73cc11b18ef6f17566602f8d22507d316853a7ff9",
+                "file-operation-recovery-review.png": "2e1ec3db45df40a1e75d87a54a31d15b16360fed9a7d4ad45e63496bf480f518",
+                "file-operation-rename-preview.png": "1e1885a2b192517f978e677668cb87f679226085f226d302b075cfaae539d43e",
+                "statistics-history-keyboard-preview.png": "278f489116c8fbfc30ad15b2b4d6cffce61109c1701c8b81f31253c9cb29fe45",
+                "statistics-section-5-preview.png": "af2560935dc0a71bda0478c11ab63cb79897694be4459ab1133ebf32fd333f92",
+                "torrent-intake-verified-seeding.png": "479afb7fbfb11f3697a064e151f9c62c34cca3e09920fc6113ae0304f41c58ab",
+                "statistics-history-month-preview.png": "275318ab88c4c8f193ffb6f412e140229d84c784a292fd098cad36270f09af02",
+                "statistics-history-week-hourly-missing-preview.png": "9ea2aa205d1fc608ae95a5ed79320443214104de767e516390e97e2ba3a1fb25",
+                "statistics-history-missing-preview.png": "d8f46c011306a6ea0c2b7d4fcdf29166a87f57c09d2255913a686d4d9cd52a08",
+                "torrent-intake-save-name.png": "a437e9f39e724d18d2d4a668865981197fcda8322449456da3c064c40867b7b3",
+                "statistics-navigation-new-session-preview.png": "e5137f106f8e03c27fcdef56750c84378d646e62c2c2cab6a3c18bdf5a8e7b19",
+                "statistics-section-7-preview.png": "207c8fad759d7215d96ea995a2540aab57132259cb7a875773970fafb23c8446",
+                "statistics-capacity-preview.png": "1972e079671d6be417c7bed9a08a50036bac28ede8f02b2874c28f7293d303dc",
+                "classic-preview.png": "af95e42763b034dba10820cb9b32eb278d2f6754e9a2256d1fa92a73d78e7196",
+                "statistics-navigation-reopened-preview.png": "3f920d5e649a1709626a39b60ca410f55ff3b4b44cc89d8bfa7c94d2a85f3eee",
+                "statistics-transfers-preview.png": "8ee1893a80bdc0d53d7846b67db391abd942e001d3bef31e0342d9d2781a4b8c",
+                "my-shares-preview.png": "c62b34ab0b1c575964394a7919a526f79653d67e15dc7349c84f952fd2a706f0",
+                "torrent-intake-file-destinations.png": "014c5b661a571ee783109d01e569670946ada1861268a89d82ea2464bda80557",
+                "statistics-history-preview.png": "508bbbce9f2352dba4751bc056cae294a4e5dd6536007a9b126e23623b07f24f",
+                "file-operation-archive-preview.png": "8c6746c23eb7f5f3ab3122d73cdd8f1048be6b75b6a0e776f43d0794b3e6be89",
+                "statistics-history-week-missing-preview.png": "973da38d1c6c294eaf853a6d3b4b1a1ae46b34cd5863bb4ecbe169c353ccd620",
+                "file-operation-replacement-preview.png": "c4cabf418adea2d8e586a37303b06950ca68bfae41ec2f12f9da2cc3eb3d1f78",
+                "statistics-history-protocol-preview.png": "852ac90d97880810b1024ba3156a23d9af380f486e798ad4b9af5cddb9cec55b",
+                "statistics-section-2-preview.png": "07794fbd4be90f6c89e84b32fc612293f20d546abe88eacc716b67dbf1b19f23",
+                "statistics-section-4-preview.png": "c08db90bae4bf271dd3c6c8caf38958ac5384bbdd78d2252a813542d9c76dec8",
+                "statistics-section-8-preview.png": "dd93ec646cc23ceea705bfe7ab3fc9ac793e10fa0292e801023fb5a053876438",
+                "statistics-activity-preview.png": "43a205afbd0ee09c34ba3ef2c7e334e37ac316d3d7e7968dc9454a58ece31fde",
+                "my-tracker-preview.png": "112bfbc8432048f36b483077af24218f6e299307ec8a60de991ac21d04321fbb",
+                "torrent-intake-tracker-tiers.png": "37e2755dbb139efe0307ea0e8f320cbdad717d615a400be2be96bd96b1cb705b",
+                "statistics-history-week-hourly-preview.png": "3f920d5e649a1709626a39b60ca410f55ff3b4b44cc89d8bfa7c94d2a85f3eee",
+                "torrent-intake-sequential-limits.png": "d5a376786d17302b23dde49a2ece2c0496f4a73a5e57dcb0815f2b50acce5952",
+                "statistics-history-dht-preview.png": "d4d420aeb67a45e14d477018a5564d2593642cbe1f3fff64a16b1cc92e975063",
+                "statistics-section-9-preview.png": "1536ff351f211fe9a6d3bb55688177b742017b98ede0f6391400a125e9f2bb6b",
+                "statistics-section-6-preview.png": "d62cd2ee8888ae156253b44d6e6e9ebf78f2a08ae886f70b4a420ed3aef46ee9",
+                "statistics-history-copy-preview.png": "278f489116c8fbfc30ad15b2b4d6cffce61109c1701c8b81f31253c9cb29fe45",
+                "torrent-creation-preview.png": "700a8c1f0ad137d9af09baef2788d510605cbf12c1fed7825c53c34e52c74d41",
+                "torrent-intake-allocate-mode.png": "bc670344d0d09178c9b12e4e64ab73fd3c1268f621578a91a26010f953b8b13b",
+                "file-operation-preview.png": "6fdd86ebcd7898f31099ba95e648f865b30106a337e46af7a62ed3b72266d49e",
+                "saved-selected-preview.png": "4479f58c81148d091e940898149b64ba97a9672c0754cb3f2f870066e81883c7",
+                "torrent-intake-custom-existing.png": "5d2b293abb11d98a151e9dd4e04ab53b84231b511f963a3ec9837a1056ea5fb2"
+              },
+              "loader_stage_launch_smoke_reused_commands_sha256": "52c2403209bdbdad1dc1be37827370c46eea4c1f355400ea27be7746aa11470a",
+              "provider_sha256": "98279a468e0fa5147876b6f22f8947f432c294dfc02fb50cf179fc9472b3b51f",
+              "provider_manifest_sha256": "5901b34eeb25370106bdbf6185a80f0c86c62a837bf2e455f5619921db665760",
+              "record_sha256": "91218c17d3e74bb79a0fea0cfbbf3734e3422895e59f46fad4cb6b17e2927fd0",
+              "builds": 0,
+              "shipping_approved": false,
+              "promoted": false,
+              "manual_wayland_or_public_or_causal_credit": false
+            }
+          },
+          "gcc-focused": {
+            "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/focused-final-gcc-r2/result-recovered.json",
+            "sha256": "3fb6a7c7b3ee1879f0db8629deb1c05327e096fd1c090a68a594b3c78b217d8b"
+          },
+          "clang-focused": {
+            "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/focused-final-clang-r2/result-recovered.json",
+            "sha256": "24095aefbbd5e9f6e66b06370e9a73cfcbba97d4cd80987056936900c8700e1a"
+          },
+          "san-focused": {
+            "path": "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/focused-final-san-r2/result-recovered.json",
+            "sha256": "0310e11990c3d9fe909631ca39ed64d598f1ac1c275d6dd45d3fedb2140b8b82"
+          }
+        },
+        "postpromotion_usage_exit": 2,
+        "postpromotion_usage_log_sha256": "c8b19874e7fe61523145c58a8f33f7fbcad9fd5b263f30789fb08f88d12c61d5",
+        "provider_sha256": "98279a468e0fa5147876b6f22f8947f432c294dfc02fb50cf179fc9472b3b51f",
+        "shipping_approved": false,
+        "known_limits": [
+          "Unresolved stock-provider SOCKS5 CONNECT0.0.0.0:0 observed; no arbitrary destination accepted, CF03/08open.",
+          "Prior generated-file read exception unestablished; all required subject positives explicitly associated, original failures retained.",
+          "Original emptyV2/hybrid creator defects; broader client/plugin/performance parity unclaimed."
+        ],
+        "original_head": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+        "original_index_sha256": "ac45601f3bed2b3a3d2ac91d715e4b052108a5b7478de62bb67f165ce0de30d4",
+        "original_client_signalled_or_attached": false,
+        "real_profile_or_payload_selected": false
+      }
+    },
+    "cleanup": {
+      "path": "build/compatibility-chapter-20261027/tmp-runtime-cleanup-20261028.json",
+      "sha256": "ca31f87acc2c951f18f3ee047d065c4dadfc63f2a5987057a8386a4d8f49c197",
+      "record": {
+        "scope": "Only inactive owned /tmp/biglybtc-runtime-* directories older5minutes, command/maps/fd/cwd references protected; originalprofile/oracleclasses/otherTMP untouched.",
+        "removed": [
+          {
+            "name": "biglybtc-runtime-deploy-1e7fd_es",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-2311u7l2",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-2gocz_6j",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-386p6qyo",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-3_1gvi1d",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-4nztgle3",
+            "bytes": 4913824
+          },
+          {
+            "name": "biglybtc-runtime-deploy-4v8hsl8a",
+            "bytes": 4913824
+          },
+          {
+            "name": "biglybtc-runtime-deploy-54_qhnp6",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-5lcx3ey5",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-66476dl6",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-6yqezrjn",
+            "bytes": 4913824
+          },
+          {
+            "name": "biglybtc-runtime-deploy-70kr3ztm",
+            "bytes": 4913824
+          },
+          {
+            "name": "biglybtc-runtime-deploy-79fi8nhu",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-7byaylrt",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-8v1yk7ni",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-9ed452za",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-9txxrifp",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-_61qyayi",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-_9u8wcz_",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-c_xsw5gh",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-cjs8lawx",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-d5ho912s",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-dbed4g74",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-dh1ba52l",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-e01u_sem",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-ejvi71_b",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-ep1yj83b",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-ezozwh6d",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-gpaxua46",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-gzyb46la",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-hjb6hn3v",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-hl7vwky0",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-hrs0ym1l",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-i6wwdbfh",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-i_oaktk7",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-ih8edvzz",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-keini2_n",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-kj09zasg",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-ljmhbeqc",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-m5hn8ibf",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-m7exr4wl",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-mtw_9am5",
+            "bytes": 4913824
+          },
+          {
+            "name": "biglybtc-runtime-deploy-nb3chkw1",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-o4rxpkuc",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-o564tqyz",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-owupltub",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-pbkjzahc",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-pqd6ufzj",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-qcutilbr",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-qrszf8y6",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-qutn1_eb",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-results-1qsa4xhs",
+            "bytes": 19381
+          },
+          {
+            "name": "biglybtc-runtime-deploy-results-327k840n",
+            "bytes": 19381
+          },
+          {
+            "name": "biglybtc-runtime-deploy-results-f1flop1m",
+            "bytes": 20011
+          },
+          {
+            "name": "biglybtc-runtime-deploy-results-grlul8fu",
+            "bytes": 19297
+          },
+          {
+            "name": "biglybtc-runtime-deploy-results-hsu1bw74",
+            "bytes": 20053
+          },
+          {
+            "name": "biglybtc-runtime-deploy-results-lra9lfh_",
+            "bytes": 19381
+          },
+          {
+            "name": "biglybtc-runtime-deploy-results-qow4z6fq",
+            "bytes": 19045
+          },
+          {
+            "name": "biglybtc-runtime-deploy-sludbdcg",
+            "bytes": 4913824
+          },
+          {
+            "name": "biglybtc-runtime-deploy-svj3lknj",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-sx233icr",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-tepas9su",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-tf5zshd6",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-u1vefqp1",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-uk82iqoc",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-ukqug5be",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-uopf8iqg",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-v16mi6i4",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-v4c2jqoe",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-v626ektq",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-vpqdw5_c",
+            "bytes": 4913824
+          },
+          {
+            "name": "biglybtc-runtime-deploy-wa_twhbu",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-wqn60rtp",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-y_bf2bsa",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-ygl86gwk",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-yobbcjsa",
+            "bytes": 9090088
+          },
+          {
+            "name": "biglybtc-runtime-deploy-zw1p1pt9",
+            "bytes": 9090088
+          }
+        ],
+        "skipped": [],
+        "bytes": 607208861
+      }
+    },
+    "focused_gcc": {
+      "path": "build/compatibility-chapter-20261027/focused-final-gcc-r2/result-recovered.json",
+      "sha256": "3fb6a7c7b3ee1879f0db8629deb1c05327e096fd1c090a68a594b3c78b217d8b",
+      "record": {
+        "status": "PASS_GUI_AND_PROXY_SUBJECTS",
+        "lane": "gcc",
+        "source_commit": "61fc63b5bcb783dd82b3bafb9eb62ecee578cc02",
+        "production_and_other_registered_images_unchanged": true,
+        "changed_test_images": {
+          "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-file-operation-dialog-tests": {
+            "before": "e7a815f0835733b70ce85dc0ac8fcea9fac6f7b2a5ee881be5d17c8ceb4dadca",
+            "after": "e4e3fb1706b3699ef5b9afb725b2057ca67da5c292ec9d08a762380aaeb1a941"
+          },
+          "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-network-proxy-owner-tests": {
+            "before": "e4367d2381b3531fc6285473c1d8f9cb95b9add5d7c2e9a664b21c3575679f59",
+            "after": "9b393068f118334eef6bad551dbf126844d194f1bd18adbd82357eb9375fea08"
+          }
+        },
+        "file_dialog_qt_cases": 4,
+        "proxy_qt_cases": 5,
+        "proxy_failures": 0,
+        "captures": {
+          "file-operation-recovery-review.png": "fc26024c8615e9246763bbe115de7704faec6462c9627e26f97bbe7dbfa7c795",
+          "file-operation-replacement-preview.png": "1170b45de4d7d9d559913df2c978df103d6f2e9fb931b83a413df7338ad00b2d"
+        },
+        "commands": [
+          {
+            "name": "build",
+            "command": [
+              "nice",
+              "-n",
+              "5",
+              "cmake",
+              "--build",
+              "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+              "--parallel",
+              "1",
+              "--target",
+              "biglybtc-file-operation-dialog-tests",
+              "biglybtc-network-proxy-owner-tests"
+            ],
+            "exit": 0,
+            "seconds": 103.14365956187248
+          },
+          {
+            "name": "file-dialog",
+            "command": [
+              "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-file-operation-dialog-tests",
+              "interruptedReplacementReviewShowsFreshBackupAndLeavesConsentUntransferred",
+              "explicitReplacementShowsRetainedPreimageAndRequiresFreshConsent",
+              "-o",
+              "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/focused-final-gcc-r2/file-dialog.txt,txt",
+              "-o",
+              "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/focused-final-gcc-r2/file-dialog.xml,junitxml"
+            ],
+            "exit": 0,
+            "seconds": 5.296506380662322
+          },
+          {
+            "name": "proxy",
+            "command": [
+              "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-network-proxy-owner-tests",
+              "actualRemoteWebSeedPayload:SOCKS5-remote-name",
+              "actualRemoteWebSeedPayload:SOCKS5-redirected-name",
+              "-o",
+              "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/focused-final-gcc-r2/proxy.txt,txt",
+              "-o",
+              "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/focused-final-gcc-r2/proxy.xml,junitxml"
+            ],
+            "exit": 0,
+            "seconds": 10.217205214314163
+          }
+        ],
+        "recorder_correction": "Qt adds synthetic untagged method row for multiple data selectors. Observed5cases accepted by actualnames; no execution repeated."
+      }
+    },
+    "focused_clang": {
+      "path": "build/compatibility-chapter-20261027/focused-final-clang-r2/result-recovered.json",
+      "sha256": "24095aefbbd5e9f6e66b06370e9a73cfcbba97d4cd80987056936900c8700e1a",
+      "record": {
+        "status": "PASS_GUI_PROXY_FAILURE_RETAINED",
+        "lane": "clang",
+        "source_commit": "61fc63b5bcb783dd82b3bafb9eb62ecee578cc02",
+        "production_and_other_registered_images_unchanged": true,
+        "changed_test_images": {
+          "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-file-operation-dialog-tests": {
+            "before": "5e4bec5be32c400b64c8e716fa914d82a6ed5d6468fca20d320909ae9aff18a7",
+            "after": "8b31da83cc91e6ed8f6d3e26f3b1f4aaeddafc218cfbb67e19357af656d85672"
+          },
+          "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-network-proxy-owner-tests": {
+            "before": "2ac56b60294a8cdbff422bf9eb75ad43626ae8a13fd68a175a1b9b31d5bc7078",
+            "after": "50c6ec140f6e0402a3c671209254ffe2080c46408ed2aea49fee4bd6f84c62c8"
+          }
+        },
+        "file_dialog_qt_cases": 4,
+        "proxy_qt_cases": 5,
+        "proxy_failures": 2,
+        "captures": {
+          "file-operation-recovery-review.png": "fc26024c8615e9246763bbe115de7704faec6462c9627e26f97bbe7dbfa7c795",
+          "file-operation-replacement-preview.png": "1170b45de4d7d9d559913df2c978df103d6f2e9fb931b83a413df7338ad00b2d"
+        },
+        "commands": [
+          {
+            "name": "build",
+            "command": [
+              "nice",
+              "-n",
+              "5",
+              "cmake",
+              "--build",
+              "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+              "--parallel",
+              "1",
+              "--target",
+              "biglybtc-file-operation-dialog-tests",
+              "biglybtc-network-proxy-owner-tests"
+            ],
+            "exit": 0,
+            "seconds": 108.47133623994887
+          },
+          {
+            "name": "file-dialog",
+            "command": [
+              "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-file-operation-dialog-tests",
+              "interruptedReplacementReviewShowsFreshBackupAndLeavesConsentUntransferred",
+              "explicitReplacementShowsRetainedPreimageAndRequiresFreshConsent",
+              "-o",
+              "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/focused-final-clang-r2/file-dialog.txt,txt",
+              "-o",
+              "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/focused-final-clang-r2/file-dialog.xml,junitxml"
+            ],
+            "exit": 0,
+            "seconds": 0.21432346384972334
+          },
+          {
+            "name": "proxy",
+            "command": [
+              "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-network-proxy-owner-tests",
+              "actualRemoteWebSeedPayload:SOCKS5-remote-name",
+              "actualRemoteWebSeedPayload:SOCKS5-redirected-name",
+              "-o",
+              "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/focused-final-clang-r2/proxy.txt,txt",
+              "-o",
+              "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/focused-final-clang-r2/proxy.xml,junitxml"
+            ],
+            "exit": 2,
+            "seconds": 8.812630779109895
+          }
+        ],
+        "recorder_correction": "Qt adds synthetic untagged method row for multiple data selectors. Observed5cases accepted by actualnames; no execution repeated."
+      }
+    },
+    "focused_san": {
+      "path": "build/compatibility-chapter-20261027/focused-final-san-r2/result-recovered.json",
+      "sha256": "0310e11990c3d9fe909631ca39ed64d598f1ac1c275d6dd45d3fedb2140b8b82",
+      "record": {
+        "status": "PASS_GUI_AND_PROXY_SUBJECTS",
+        "lane": "san",
+        "source_commit": "61fc63b5bcb783dd82b3bafb9eb62ecee578cc02",
+        "production_and_other_registered_images_unchanged": true,
+        "changed_test_images": {
+          "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-file-operation-dialog-tests": {
+            "before": "e3b5e5a12a735bad1c953421ca5006aaa33f162f1d48ef6d2cebe961dd336853",
+            "after": "b5d968fcc29dcfe6ada335700d0b2f38a82fb79931569ee63748bdae2be0b91d"
+          },
+          "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-network-proxy-owner-tests": {
+            "before": "2fc4eca24af578ab0b804bec2dfe5646873477f334605684511e485e5a06a374",
+            "after": "e10468cb19c7eb30f52b4cecef3888ac1697328d2cee96f3e1c38ebde1adf6a8"
+          }
+        },
+        "file_dialog_qt_cases": 4,
+        "proxy_qt_cases": 5,
+        "proxy_failures": 0,
+        "captures": {
+          "file-operation-recovery-review.png": "fc26024c8615e9246763bbe115de7704faec6462c9627e26f97bbe7dbfa7c795",
+          "file-operation-replacement-preview.png": "1170b45de4d7d9d559913df2c978df103d6f2e9fb931b83a413df7338ad00b2d"
+        },
+        "commands": [
+          {
+            "name": "build",
+            "command": [
+              "nice",
+              "-n",
+              "5",
+              "cmake",
+              "--build",
+              "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+              "--parallel",
+              "1",
+              "--target",
+              "biglybtc-file-operation-dialog-tests",
+              "biglybtc-network-proxy-owner-tests"
+            ],
+            "exit": 0,
+            "seconds": 175.045639927499
+          },
+          {
+            "name": "file-dialog",
+            "command": [
+              "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-file-operation-dialog-tests",
+              "interruptedReplacementReviewShowsFreshBackupAndLeavesConsentUntransferred",
+              "explicitReplacementShowsRetainedPreimageAndRequiresFreshConsent",
+              "-o",
+              "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/focused-final-san-r2/file-dialog.txt,txt",
+              "-o",
+              "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/focused-final-san-r2/file-dialog.xml,junitxml"
+            ],
+            "exit": 0,
+            "seconds": 0.46580173820257187
+          },
+          {
+            "name": "proxy",
+            "command": [
+              "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-network-proxy-owner-tests",
+              "actualRemoteWebSeedPayload:SOCKS5-remote-name",
+              "actualRemoteWebSeedPayload:SOCKS5-redirected-name",
+              "-o",
+              "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/focused-final-san-r2/proxy.txt,txt",
+              "-o",
+              "/home/yurii/Java/BiglyBT/build/compatibility-chapter-20261027/focused-final-san-r2/proxy.xml,junitxml"
+            ],
+            "exit": 0,
+            "seconds": 8.999389672651887
+          }
+        ],
+        "recorder_correction": "Qt adds synthetic untagged method row for multiple data selectors. Observed5cases accepted by actualnames; no execution repeated."
+      }
+    }
+  },
+  "prior_evidence": "migration/evidence/20261027-compatibility-gcc-milestone/verification.json",
+  "delta_archive_sha256": "55f190d8ccfafe3a1144e6c1fd1807eb36c153a3292867ade15e9ff01d199b68",
+  "delta_archive_bytes": 4668501,
+  "delta_archive_members": 840,
+  "prior_archive_reused_sha256": "f59fdd798996aa084637794abd7578bb308b936976de36b4e26863bb1ec936f1",
+  "open_runtime_criteria": [
+    "Stock-provider SOCKS5 CONNECT route0.0.0.0:0 observed; CMD1 inferred from strict parser, root cause unproved. No fixture whitelist or provider fix. CF03/CF08open.",
+    "Earlier generic QFile read failure remains unestablished. Positive per-case evidence is explicitly reused; original failed processes remain failed."
+  ],
+  "known_original_creator_failures": {
+    "positive_distinct_subjects": 10,
+    "failed_distinct_subjects": 3,
+    "independent_causes": 2,
+    "ui_creation_tested": false
+  },
+  "shipping_approved": false,
+  "stop_before_next_chapter": true
+}

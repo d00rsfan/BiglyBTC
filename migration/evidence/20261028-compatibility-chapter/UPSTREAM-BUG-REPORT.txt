@@ -1,0 +1,15 @@
+Hi, I found two separate empty-file issues in the original Java code at cb8c6cb9bb97916cbc7e80338a017200ffc3e71f (tested with the retained Java classes on JDK 17). These were API-level creator/parser checks, not tests of the original creation UI.
+
+1. Hybrid torrents: an empty file interrupts lazy Merkle-root fixup.
+
+Use a temporary directory containing a-first.bin (17,001 bytes), b-empty.bin (0 bytes) and c-last.bin (50,003 bytes), with a 32,768-byte piece length. Create a hybrid through TOTorrentFactory.createFromFileOrDirWithFixedPieceLength(TOTorrent.TT_V1_V2, directory, announceURL, true, 32768).create(), then call getRootHash() on each non-pad, non-empty TOTorrentFile.
+
+The actual trace reaches TOTorrentCreateV2Impl.setV2FileHashes(), line 501: v2_file.getHashTree() is null for the empty file. The exception is caught, so later non-empty files never receive their roots. TOTorrentImpl.fixupRootHashes(), lines 217–219, still marks fixup complete. We saw this both with an ordinary directory and a virtual/file-map hybrid. Expected: empty files need no Merkle root, but must not prevent later non-empty roots being populated.
+
+2. Pure V2 virtual torrents: an empty file shifts initial-linkage indices.
+
+Use a bencoded file-map descriptor with logical_path=["bundle","folder"] pointing to an external directory containing a.bin (17,001 bytes) and empty.bin (0 bytes), plus logical_path=["bundle","tail.bin"] pointing to a separate 50,003-byte file. Create TT_V2 at piece length 32768, calling creator.setFileIsLayoutDescriptor(true) before create(). Compare TorrentUtils.getInitialLinkage(torrent) with torrent.getFiles().
+
+The parsed geometry has real files at indices 0, 2 and 3, with one pad at index 1. Merkle and file-geometry checks pass, but the original descriptor-created linkage differs. TOTorrentCreateV2Impl.processFile(), lines 210–212, increments synthetic_pad_file_count from cumulative real bytes; the empty entry leaves that count's input unchanged, so it increments again before tail.bin. Source inspection of processFile() and handleFile() suggests an extra synthetic-pad increment, shifting the tail linkage beyond its actual file index. Expected: linkage keys must match the actual file indices, including only pads that really exist.
+
+Both new virtual V2/hybrid variants passed when the empty middle file was replaced by one byte. I can share the small fixture/helper and raw traces if useful.
