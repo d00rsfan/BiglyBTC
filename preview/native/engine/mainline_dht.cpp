@@ -273,6 +273,12 @@ struct MainlineDhtService::Impl {
   std::vector<Address> bindings;
   MainlineDhtStatus status;
   bool ipv4 = false, ipv6 = false, running = false;
+  // LT starts DHT before creating listen sockets when there is no router DNS
+  // delay. Preserve warm state until real sockets exist, then wait for EACH
+  // initial node's bootstrap callback before submitting the caller's round.
+  bool deferredStartup = false, bootstrapPending = false;
+  std::string deferredBootstrap;
+  std::size_t bootstrapCompletions = 0, expectedBootstraps = 0;
   unsigned short port = 0;
 
   std::expected<void, storage::Error> check() const {
@@ -381,6 +387,14 @@ std::expected<std::unique_ptr<MainlineDhtService>, storage::Error> MainlineDhtSe
         | lt::alert_category::error | lt::alert_category::dht_operation));
     auto restored = restoredState(options, impl->ipv4, impl->ipv6, impl->bindings);
     if (!restored) { return std::unexpected(restored.error()); }
+    if (!restored->nodes.empty() || !restored->nodes6.empty() || !restored->nids.empty()) {
+      impl->deferredStartup = impl->bootstrapPending = true;
+      impl->deferredBootstrap = bootstrap;
+      settings->set_int(Settings::alert_mask, static_cast<int>(lt::alert_category::status
+          | lt::alert_category::error | lt::alert_category::dht_operation | lt::alert_category::dht));
+      settings->set_bool(Settings::enable_dht, false);
+      settings->set_str(Settings::dht_bootstrap_nodes, "");
+    }
     lt::session_params parameters(std::move(*settings));
     parameters.dht_state = std::move(*restored);
     parameters.extensions.clear(); // No default torrent plugins or hidden handles.
@@ -441,6 +455,10 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
     for (const auto* alert : alerts) {
       if (lt::alert_cast<lt::alerts_dropped_alert>(alert)) { return impl_->fail("Mainline DHT alerts were lost", true); }
       if (lt::alert_cast<lt::listen_failed_alert>(alert)) { return impl_->fail("Mainline DHT source binding failed"); }
+      if (impl_->bootstrapPending && lt::alert_cast<lt::dht_bootstrap_alert>(alert)) {
+        if (impl_->bootstrapCompletions == MaximumIdentities) { return impl_->fail("Mainline DHT bootstrap completion limit", true); }
+        ++impl_->bootstrapCompletions;
+      }
       if (const auto* listening = lt::alert_cast<lt::listen_succeeded_alert>(alert)) {
         if (listening->socket_type == lt::socket_type_t::utp) {
           if (listening->port != impl_->port) { return impl_->fail("Mainline DHT listener changed port"); }
@@ -462,12 +480,39 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
         peers.push_back(peer);
       }
     }
-    // Bootstrap DNS can delay LT's DHT construction; requests before it would
-    // otherwise be silently ignored. Query only this session's startup barrier.
-    if (!impl_->running) { impl_->running = impl_->session->is_dht_running(); }
+    if (impl_->deferredStartup && impl_->status.phase == MainlineDhtPhase::Listening) {
+      lt::settings_pack start;
+      start.set_str(lt::settings_pack::dht_bootstrap_nodes, impl_->deferredBootstrap);
+      start.set_bool(lt::settings_pack::enable_dht, true);
+      impl_->session->apply_settings(start);
+      impl_->deferredStartup = false;
+    }
+    // Bootstrap DNS can delay LT construction. A warm startup also needs actual
+    // routing bootstrap completion: an early lookup sees no nodes and finishes
+    // empty. Count all initial sockets, so an empty family's callback cannot
+    // release a different family's restored contacts prematurely.
+    if (!impl_->running) {
+      impl_->running = impl_->session->is_dht_running();
+      if (impl_->running && impl_->bootstrapPending) {
+        const auto initial = impl_->session->session_state(lt::session_handle::save_dht_state);
+        impl_->expectedBootstraps = initial.dht_state.nids.size();
+        if (impl_->expectedBootstraps == 0 || impl_->expectedBootstraps > MaximumIdentities) {
+          return impl_->fail("Mainline DHT initial node count is unavailable", true);
+        }
+      }
+    }
     if (impl_->running) {
       for (const auto& value : impl_->pendingNodes) { impl_->session->add_dht_node(value); }
       impl_->pendingNodes.clear();
+      if (impl_->bootstrapPending && impl_->bootstrapCompletions >= impl_->expectedBootstraps) {
+        lt::settings_pack steady;
+        steady.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::status
+            | lt::alert_category::error | lt::alert_category::dht_operation));
+        impl_->session->apply_settings(steady);
+        impl_->bootstrapPending = false;
+      }
+    }
+    if (impl_->running && !impl_->bootstrapPending) {
       for (auto& [hash, request] : impl_->requests) {
         if (request.lookup && !request.lookupIssued) {
           if (!available(impl_->status.lookups)) { return impl_->fail("Mainline DHT request counter overflow", true); }
