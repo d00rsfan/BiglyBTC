@@ -1890,3 +1890,28 @@ if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIM
   # One real100s startup plus two source-defined first delays, no clock override.
   set_tests_properties(mainline-queued-owner PROPERTIES TIMEOUT 360 LABELS "network;discovery;owned;slow")
 endif()
+
+# Append to preview/native/tests/CMakeLists.txt after Qt6::Test is available.
+if(TARGET biglybtc_mainline_identity AND TARGET Qt6::Test)
+  add_executable(biglybtc-mainline-identity-tests mainline_identity_tests.cpp)
+  set_target_properties(biglybtc-mainline-identity-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-mainline-identity-tests PRIVATE biglybtc_mainline_identity biglybtc_plugin_settings Qt6::Test)
+  target_compile_options(biglybtc-mainline-identity-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME mainline-original-identity COMMAND biglybtc-mainline-identity-tests)
+  set_tests_properties(mainline-original-identity PROPERTIES TIMEOUT 30 LABELS "unit;storage;discovery;read-only")
+endif()
+
+# Append once beside the existing queued-owner qualification target.
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-mainline-active-scrape-owner-tests mainline_active_scrape_owner_tests.cpp)
+  set_target_properties(biglybtc-mainline-active-scrape-owner-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-mainline-active-scrape-owner-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network)
+  target_compile_options(biglybtc-mainline-active-scrape-owner-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME mainline-active-scrape-owner COMMAND biglybtc-mainline-active-scrape-owner-tests)
+  set_tests_properties(mainline-active-scrape-owner PROPERTIES TIMEOUT 180 LABELS "network;discovery;owned;slow")
+endif()
+
+# The existing managed-queue target now contains one owned HTTP fixture.
+if(TARGET biglybtc-managed-queue-tests)
+  target_link_libraries(biglybtc-managed-queue-tests PRIVATE Qt6::Network)
+endif()

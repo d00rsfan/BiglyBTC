@@ -431,6 +431,51 @@ private slots:
     auto expired=actual->takeScrapes();QVERIFY(expired);QVERIFY(expired->empty());QCOMPARE(fixture.announced(wanted),0);
     QVERIFY(actual->close());QCOMPARE(actual->status().scrapeRetainedRounds,std::size_t{0});
   }
+  void activeScrapeAuthorityBindsRealStorageFreshPolicyAndAdmissionWithoutPayloadEffects(){
+    test::OwnedEngineFixture saved(false);auto lease=storage::ProfileLease::acquire(saved.native());QVERIFY(lease);
+    const auto editState=[&](const char* key,std::string_view encoded){
+      auto source=core::Document::parse(test::read(saved.stateFile).toStdString());if(!source){return false;}
+      const auto* attrs=source->find("attributes");if(!attrs){return false;}const auto raw=core::encodeValue(*attrs);if(!raw){return false;}
+      auto changed=core::Document::parse(*raw);if(!changed||!changed->replaceValue(key,std::string(encoded))||!source->replaceValue("attributes",changed->serialize())){return false;}
+      test::write(saved.stateFile,bytes(source->serialize()));return true;
+    };
+    const auto editRow=[&](const char* key,std::string_view encoded){
+      auto inventory=core::Document::parse(test::read(saved.profile+"/downloads.config").toStdString());if(!inventory){return false;}
+      const auto* rows=inventory->find("downloads");if(!rows||rows->children.size()!=1){return false;}
+      const auto raw=core::encodeValue(rows->children[0]);if(!raw){return false;}
+      auto row=core::Document::parse(*raw);if(!row||!row->replaceValue(key,std::string(encoded))||!inventory->replaceValue("downloads","l"+row->serialize()+"e")){return false;}
+      test::write(saved.profile+"/downloads.config",bytes(inventory->serialize()));return true;
+    };
+    QVERIFY(editState("pluginoptions","d5:mldhtd14:enableannouncei0eee"));QVERIFY(editRow("state","i50e"));
+    auto prepared=engine::detail::ManagedStorage::prepare(*lease,*saved.hash,localPolicy());QVERIFY(prepared);
+    QVERIFY(!prepared->mainlinePolicy().discover);QVERIFY(!prepared->mainlinePolicy().announce);
+    const auto state=test::read(saved.stateFile),inventory=test::read(saved.profile+"/downloads.config"),payload=test::read(saved.payload+"/sample.bin");
+    engine::ManagedMainlineScrapeObservation accepted{&*prepared,41,false};
+    const auto read=[&]{return engine::readCurrentMainlineScrapeTargets(*lease,std::span(&accepted,1));};
+    auto absent=engine::readSavedMainlineScrapeTargets(*lease);QVERIFY(absent);QVERIFY(absent->empty()); // Saved50 cannot invent an active handle.
+    auto target=read();QVERIFY(target);QCOMPARE(target->size(),std::size_t{1});QCOMPARE(target->front().admission,std::uint64_t{41});QVERIFY(!target->front().noSeeds);
+    const auto first=target->front();accepted.wholeComplete=true;auto complete=read();QVERIFY(complete);QCOMPARE(complete->size(),std::size_t{1});QVERIFY(complete->front().noSeeds);QVERIFY(complete->front().scope!=first.scope);
+    accepted.wholeComplete=false;accepted.admission=42;auto readmitted=read();QVERIFY(readmitted);QCOMPARE(readmitted->size(),std::size_t{1});QVERIFY(readmitted->front().scope!=first.scope);
+    // A held result for the old admission cannot publish into the same hash.
+    engine::QueuedMainlineScrapes consumer;QVERIFY(consumer.reconcile(std::span(&first,1),0,0));QVERIFY(consumer.started(first.hash,first.scope,9,1000));
+    engine::MainlineDhtScrape reply{9,lt::sha1_hash(reinterpret_cast<const char*>(saved.hash->bytes().data())),services::mainline_scrape::Dialect::OriginalBFse,{1,1,0,1},false};
+    consumer.completed(9,reply,readmitted->front(),100000,0);QVERIFY(consumer.estimates().empty());
+    accepted.admission=0;QVERIFY(!read());accepted.admission=41;
+    for(const auto* value:{"d5:mldhtd14:enableannouncei1eee","d5:mldhtd14:enableannouncei-1eee","de"}){
+      QVERIFY(editState("pluginoptions",value));auto refused=read();QVERIFY(refused);QVERIFY(refused->empty());
+    }
+    QVERIFY(editState("pluginoptions","d5:mldhtd14:enableannouncei4294967296eee"));auto low32=read();QVERIFY(low32);QCOMPARE(low32->size(),std::size_t{1});
+    QVERIFY(editState("pluginoptions","d5:mldhtd14:enableannounce1:0ee"));QVERIFY(!read());
+    test::write(saved.stateFile,state);QVERIFY(editState("storetypes","l1:Re"));auto changedMap=read();QVERIFY(changedMap);QVERIFY(changedMap->empty());test::write(saved.stateFile,state);
+    QVERIFY(editRow("file_priorities","li0ee"));auto changedSelection=read();QVERIFY(changedSelection);QVERIFY(changedSelection->empty());test::write(saved.profile+"/downloads.config",inventory);
+    QVERIFY(editRow("state","i70e"));auto stopped=read();QVERIFY(stopped);QVERIFY(stopped->empty());test::write(saved.profile+"/downloads.config",inventory);
+    QVERIFY(editRow("BiglyBTC.verifiedSeeding","i1e"));auto held=read();QVERIFY(held);QVERIFY(held->empty());test::write(saved.profile+"/downloads.config",inventory);
+    QVERIFY(editState("peersources","l7:Trackere"));auto denied=read();QVERIFY(denied);QVERIFY(denied->empty());test::write(saved.stateFile,state);
+    auto changed=core::Document::parse(state.toStdString());QVERIFY(changed);const auto rawInfo=core::encodeValue(*changed->find("info"));QVERIFY(rawInfo);auto info=core::Document::parse(*rawInfo);QVERIFY(info);QVERIFY(info->replaceValue("name","9:other.bin"));QVERIFY(changed->replaceValue("info",info->serialize()));test::write(saved.stateFile,bytes(changed->serialize()));QVERIFY(!read());test::write(saved.stateFile,state);
+    auto tracked=core::Document::parse(state.toStdString());QVERIFY(tracked);QVERIFY(tracked->replaceValue("announce",string("http://127.0.0.1:1/announce").toStdString()));test::write(saved.stateFile,bytes(tracked->serialize()));auto regular=read();QVERIFY(regular);QVERIFY(regular->empty());test::write(saved.stateFile,state);
+    // Reader calls add no state or payload effects after ordinary preparation.
+    QCOMPARE(test::read(saved.profile+"/downloads.config"),inventory);QCOMPARE(test::read(saved.stateFile),state);QCOMPARE(test::read(saved.payload+"/sample.bin"),payload);QVERIFY(saved.intact(false));
+  }
   void queuedSchedulingAndPositivePublicationAreScopeBoundWithoutInventedExpiry(){
     const auto raw=std::string(20,'Q');auto key=core::TorrentHash::parse(raw);QVERIFY(key);
     engine::SavedMainlineScrapeTarget target{*key,{},std::string(64,'a')};

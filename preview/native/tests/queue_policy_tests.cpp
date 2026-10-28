@@ -291,6 +291,30 @@ int main(){try{
         std::numeric_limits<std::int64_t>::max(),1)==-1);
     auto f=seed();f.shareRatio=-500;CHECK(decide(read(),f).firstPriority);
   });
+  run("raw last scrape terminal is live selected source and never aggregate cache or response authority",[]{
+    std::array<unsigned char,32> tracker{};tracker[0]=7;
+    QueueOwnerObservations source(1);CHECK(source.trackerOrder(std::span(&tracker,1)));CHECK(source.restoreAggregate("3,99,88"));
+    CHECK(!source.facts(1).lastTrackerScrape);
+    std::uint64_t sequence=0;
+    const auto send=[&](QueueObservationKind kind,unsigned protocol,std::int64_t now,std::int32_t seeds=-1,std::int32_t peers=-1){
+      QueueObservation e;e.sequence=++sequence;e.request=sequence;e.observedNanos=now*1000000;e.requestStartedNanos=(now-10)*1000000;
+      e.observedWallMillis=100000+now;e.requestStartedWallMillis=100000+now-10;e.kind=kind;e.protocol=protocol;e.tracker=tracker;e.seeds=seeds;e.peers=peers;return source.observe(e);
+    };
+    CHECK(send(QueueObservationKind::Announce,1,1000,5,6));CHECK(!source.facts(1000).lastTrackerScrape);
+    CHECK(send(QueueObservationKind::ScrapeFailed,1,2000));auto f=source.facts(2000);CHECK(f.lastTrackerScrape);
+    const auto first=*f.lastTrackerScrape;CHECK(first.kind==QueueScrapeTerminalKind::RequestFailed&&first.sequence==2&&first.request==2);
+    CHECK(first.protocol==1&&first.tracker==tracker&&first.seeds==-1&&first.peers==-1);
+    CHECK(first.observedNanos==2000000000&&first.requestStartedNanos==1990000000);
+    CHECK(first.observedWallMillis==102000&&first.requestStartedWallMillis==101990);
+    CHECK(send(QueueObservationKind::Scrape,2,3000,99,99));CHECK(source.facts(3000).lastTrackerScrape->request==first.request);
+    CHECK(send(QueueObservationKind::Scrape,1,4000,7,9));f=source.facts(4000);CHECK(f.lastTrackerScrape&&f.lastTrackerScrape->kind==QueueScrapeTerminalKind::Reply&&f.lastTrackerScrape->seeds==7&&f.lastTrackerScrape->peers==9);
+    CHECK(send(QueueObservationKind::ScrapeFailed,1,5000));f=source.facts(5000);CHECK(f.lastTrackerScrape&&f.lastTrackerScrape->kind==QueueScrapeTerminalKind::RequestFailed);
+    CHECK(f.lastTrackerScrape->seeds==-1&&f.lastTrackerScrape->peers==-1);CHECK(f.swarm&&f.swarm->success); // Historical counts do not turn RPC error into original RT_ERROR.
+    tracker[0]=8;CHECK(send(QueueObservationKind::Scrape,1,6000,1,2));CHECK(!source.facts(6000).lastTrackerScrape); // Unknown URL withdraws latest raw source.
+    tracker[0]=7;CHECK(send(QueueObservationKind::Scrape,1,7000,0,0));f=source.facts(7000);CHECK(f.lastTrackerScrape&&f.lastTrackerScrape->seeds==0&&f.lastTrackerScrape->peers==0);
+    source.lost();CHECK(!source.facts(7000).lastTrackerScrape);
+    QueueOwnerObservations readmitted(1);CHECK(readmitted.trackerOrder(std::span(&tracker,1)));readmitted.restoreLegacy((std::int64_t{7}<<32)|9);CHECK(!readmitted.facts(8000).lastTrackerScrape);
+  });
   run("source lifecycle floors each actual peer epoch and resets seed time on unfinish",[]{
     QueueOwnerObservations source(1);std::uint64_t sequence=0;
     const auto send=[&](QueueObservationKind kind,std::int64_t millis){QueueObservation e;e.sequence=++sequence;e.observedNanos=millis*1000000;e.observedWallMillis=100000+millis;e.kind=kind;return source.observe(e);};

@@ -4,6 +4,11 @@
 #include "owned_engine_fixture.hpp"
 #include "verified_seeding_fixture.hpp"
 #include "managed_queue_observations.hpp"
+#include "managed_payload_counters.hpp"
+#include <libtorrent/alert_types.hpp>
+#include <libtorrent/hasher.hpp>
+#include <QTcpServer>
+#include <QTcpSocket>
 #include <thread>
 
 #include <QtTest>
@@ -119,6 +124,51 @@ void merge(test::OwnedEngineFixture& first,const test::OwnedEngineFixture& secon
 core::QueuePolicy policy(int downloads,int active) {
   core::QueuePolicy p;p.maximumDownloads=downloads;p.maximumActive=active;p.minimumDownloads=0;return p;
 }
+// Owned HTTP tracker for the existing exact provider observer. Only actual
+// loopback HTTP requests matching the fixture's20-byte info hash are answered.
+class RawScrapeTracker final {
+  QTcpServer server_;
+  std::string hash_;
+  void fail(const char* message){if(failure.isEmpty()){failure=QString::fromLatin1(message);}}
+  void serve(QTcpSocket* socket,QByteArray request){
+    const auto line=request.left(request.indexOf("\r\n"));const auto fields=line.split(' ');
+    if(fields.size()!=3||fields[0]!="GET"){fail("Invalid owned tracker HTTP request");socket->abort();return;}
+    const auto target=fields[1];const auto begin=target.indexOf("info_hash=");
+    if(begin<0){fail("Owned tracker request has no info hash");socket->abort();return;}
+    auto escaped=target.mid(begin+10);const auto end=escaped.indexOf('&');if(end>=0){escaped.truncate(end);}
+    if(QByteArray::fromPercentEncoding(escaped)!=QByteArray::fromStdString(hash_)){fail("Owned tracker received wrong selected hash");socket->abort();return;}
+    QByteArray body;bool failed=false;
+    if(target.startsWith("/announce?")){++announces;body="d8:intervali3600e5:peers0:e";}
+    else if(target.startsWith("/scrape?")){
+      ++scrapes;failed=errorReply;
+      if(failed){body="owned scrape failure";}
+      else{libtorrent::entry data;data["files"][hash_]["complete"]=3;data["files"][hash_]["incomplete"]=4;body=QByteArray::fromStdString(test::encoded(data));}
+    }else{fail("Owned tracker received unexpected path");socket->abort();return;}
+    const auto response=QByteArray(failed?"HTTP/1.1 500 Owned failure\r\n":"HTTP/1.1 200 OK\r\n")+"Content-Length: "+QByteArray::number(body.size())+"\r\nConnection: close\r\n\r\n"+body;
+    if(socket->write(response)!=response.size()){fail("Owned tracker response write failed");}socket->disconnectFromHost();
+  }
+public:
+  int announces=0,scrapes=0;bool errorReply=false;QString failure;
+  explicit RawScrapeTracker(std::string hash):hash_(std::move(hash)){
+    test::require(server_.listen(QHostAddress::LocalHost,0),"Cannot listen owned scrape tracker");
+    QObject::connect(&server_,&QTcpServer::newConnection,&server_,[this]{
+      while(auto* socket=server_.nextPendingConnection()){
+        if(!socket->peerAddress().isLoopback()){fail("Owned tracker has nonloopback source");socket->abort();continue;}
+        QObject::connect(socket,&QTcpSocket::disconnected,socket,&QObject::deleteLater);
+        auto input=std::make_shared<std::pair<QByteArray,bool>>();
+        const auto receive=[this,socket,input]{
+          auto& pending=input->first;auto& complete=input->second;
+          pending+=socket->readAll();if(complete){if(!pending.isEmpty()){fail("Unexpected owned tracker pipelining");}return;}
+          if(pending.size()>8192){fail("Oversize owned tracker request");socket->abort();return;}
+          if(pending.contains("\r\n\r\n")){complete=true;serve(socket,pending);pending.clear();}
+        };
+        QObject::connect(socket,&QTcpSocket::readyRead,socket,receive);
+        if(socket->bytesAvailable()){receive();}
+      }
+    });
+  }
+  std::string url()const{return "http://127.0.0.1:"+std::to_string(server_.serverPort())+"/announce";}
+};
 } // namespace
 
 class ManagedQueueTests final:public QObject {
@@ -149,6 +199,42 @@ private slots:
     const auto closed=service->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(fixture.intact());
   }
 
+  void rawScrapeTerminalUsesSameAdmissionRingAndWithdrawsOnLoss(){
+    std::array<unsigned char,32> key{};key[0]=3;
+    engine::detail::ManagedQueueObservations observations(1);
+    observations.trackerOrder(std::vector<std::array<unsigned char,32>>{key});observations.restore(std::optional<std::string_view>{"3,9,8"},{});observations.installed();
+    QVERIFY(!observations.facts(1000).lastTrackerScrape);
+    std::thread producer([&]{core::QueueObservation e;e.kind=core::QueueObservationKind::ScrapeFailed;e.sequence=1;e.request=4;
+      e.observedNanos=2000000000;e.requestStartedNanos=1900000000;e.observedWallMillis=200000;e.requestStartedWallMillis=199900;e.protocol=1;e.tracker=key;observations.observe(e);});
+    producer.join();auto fact=observations.facts(2000);QVERIFY(fact.lastTrackerScrape);QCOMPARE(fact.lastTrackerScrape->request,std::uint64_t{4});
+    std::atomic<bool> foreign{false};std::thread reader([&]{foreign=observations.facts(2000).lastTrackerScrape.has_value();});reader.join();QVERIFY(!foreign.load());QVERIFY(observations.facts(2000).lastTrackerScrape);
+    std::thread overflow([&]{core::QueueObservation e;e.kind=core::QueueObservationKind::ScrapeFailed;e.request=5;e.observedNanos=3000000000;e.requestStartedNanos=2900000000;e.protocol=1;e.tracker=key;
+      for(std::uint64_t i=0;i<=engine::detail::ManagedQueueObservations::Capacity;++i){e.sequence=i+2;observations.observe(e);}});
+    overflow.join();QVERIFY(!observations.facts(3000).lastTrackerScrape);
+    engine::detail::ManagedQueueObservations next(1);next.trackerOrder(std::vector<std::array<unsigned char,32>>{key});next.installed();QVERIFY(!next.facts(4000).lastTrackerScrape);
+  }
+  void actualOwnedTrackerScrapeReplyAndErrorReachRetainedRawSource(){
+    namespace lt=libtorrent;test::OwnedEngineFixture fixture(false);RawScrapeTracker tracker(hashBytes(*fixture.hash));
+    const auto url=tracker.url();const auto digest=lt::hasher256(lt::span<const char>(url.data(),url.size())).final();std::array<unsigned char,32> key{};std::copy(digest.begin(),digest.end(),key.begin());
+    auto observations=std::make_shared<engine::detail::ManagedQueueObservations>(1);observations->trackerOrder(std::vector<std::array<unsigned char,32>>{key});
+    auto settings=test::localSettings();settings.set_int(lt::settings_pack::alert_mask,static_cast<int>(lt::alert_category::tracker|lt::alert_category::status|lt::alert_category::error));
+    auto session=std::make_unique<lt::session>(settings);const auto encodedMetadata=test::read(fixture.stateFile);lt::error_code error;
+    lt::add_torrent_params parameters;parameters.ti=std::make_shared<lt::torrent_info>(lt::span<const char>(encodedMetadata.constData(),encodedMetadata.size()),error,lt::from_span);QVERIFY(!error);
+    parameters.ti->clear_trackers();parameters.trackers={url};parameters.save_path=fixture.payload.toStdString();parameters.flags|=lt::torrent_flags::paused|lt::torrent_flags::disable_dht|lt::torrent_flags::disable_lsd|lt::torrent_flags::disable_pex;parameters.flags&=~lt::torrent_flags::auto_managed;
+    const auto bridge=engine::detail::managedPayloadCounterBridge();QVERIFY(bridge);auto counters=std::make_shared<engine::detail::ManagedPayloadCounters>();
+    QVERIFY(engine::detail::attachManagedPayloadCounters(parameters,counters,bridge,observations));auto handle=session->add_torrent(std::move(parameters),error);QVERIFY(!error&&handle.is_valid());handle.resume();
+    bool announced=false;const auto pump=[&]{std::vector<lt::alert*> alerts;session->pop_alerts(&alerts);for(const auto* a:alerts){const auto* reply=lt::alert_cast<lt::tracker_reply_alert>(a);if(reply&&reply->handle==handle){announced=true;}}return announced||!tracker.failure.isEmpty();};
+    const auto now=[] {return std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now().time_since_epoch()).count();};
+    QTRY_VERIFY_WITH_TIMEOUT(pump(),15000);QVERIFY2(tracker.failure.isEmpty(),qPrintable(tracker.failure));QCOMPARE(tracker.announces,1);QVERIFY(!observations->facts(now()).lastTrackerScrape);
+    handle.scrape_tracker();std::optional<core::QueueScrapeTerminal> first;
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{first=observations->facts(now()).lastTrackerScrape;return first.has_value()||!tracker.failure.isEmpty();})(),15000);
+    QVERIFY2(tracker.failure.isEmpty(),qPrintable(tracker.failure));QVERIFY(first);QCOMPARE(tracker.scrapes,1);QCOMPARE(first->kind,core::QueueScrapeTerminalKind::Reply);QCOMPARE(first->tracker,key);QCOMPARE(first->protocol,1u);QCOMPARE(first->seeds,3);QCOMPARE(first->peers,4);QVERIFY(first->request);QVERIFY(first->requestStartedNanos>0&&first->requestStartedNanos<=first->observedNanos);
+    tracker.errorReply=true;handle.scrape_tracker();std::optional<core::QueueScrapeTerminal> failed;
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{failed=observations->facts(now()).lastTrackerScrape;return (failed&&failed->sequence>first->sequence)||!tracker.failure.isEmpty();})(),15000);
+    QVERIFY2(tracker.failure.isEmpty(),qPrintable(tracker.failure));QVERIFY(failed);QCOMPARE(tracker.scrapes,2);QCOMPARE(failed->kind,core::QueueScrapeTerminalKind::RequestFailed);QCOMPARE(failed->tracker,key);QVERIFY(failed->request>first->request);QCOMPARE(failed->seeds,-1);QCOMPARE(failed->peers,-1);
+    const auto historical=observations->facts(now());QVERIFY(historical.swarm&&historical.swarm->success); // Error RPC is not original RT_ERROR authority.
+    session.reset();QVERIFY(fixture.intact(false));
+  }
   void actualObserverQueueHasBoundedNonblockingProducerAndWorkerOnlyDrain(){
     engine::detail::ManagedQueueObservations observations(1);observations.installed();
     std::thread producer([&]{core::QueueObservation event;event.kind=core::QueueObservationKind::StartedDownload;event.sequence=1;event.observedNanos=1000000000;event.observedWallMillis=100000;observations.observe(event);});

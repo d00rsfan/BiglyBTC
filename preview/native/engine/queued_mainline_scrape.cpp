@@ -1,5 +1,7 @@
 #include "queued_mainline_scrape.hpp"
 #include "library_view.hpp"
+#include "managed_storage.hpp"
+#include "queue_positions.hpp"
 #include "original_filename_policy.hpp"
 #include "biglybtc/saved_dnd.hpp"
 #include "torrent_state.hpp"
@@ -51,11 +53,37 @@ std::optional<std::string> digest(std::string_view bytes){
   for(auto value:out){result+=hex[value>>4];result+=hex[value&15];}return result;
 }
 void append(std::string& scope,std::string_view value){scope+=std::to_string(value.size())+":";scope+=value;}
+std::expected<bool,storage::Error> activeScrapeOnly(const Node& attributes){
+  const auto* options=attributes.find("pluginoptions");if(!options){return false;}
+  if(!unique(*options)){return error(Code::InvalidFormat,"Ambiguous active Mainline plugin options");}
+  const auto* plugin=options->find("mldht");if(!plugin){return false;}
+  if(!unique(*plugin)){return error(Code::InvalidFormat,"Ambiguous active mlDHT options");}
+  const auto* enabled=plugin->find("enableannounce");if(!enabled){return false;}
+  if(enabled->type!=Node::Type::Integer){return error(Code::InvalidFormat,"Invalid active mlDHT announce option");}
+  return static_cast<std::uint32_t>(enabled->integer)==0; // Java Number.intValue().
+}
 std::int64_t later(std::int64_t now,std::int64_t delay){return now>INT64_MAX-delay?INT64_MAX:now+delay;}
 }
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
 readSavedMainlineScrapeTargets(const storage::ProfileLease& lease){
+  return readCurrentMainlineScrapeTargets(lease,{});
+}
+std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
+readCurrentMainlineScrapeTargets(const storage::ProfileLease& lease,
+    std::span<const ManagedMainlineScrapeObservation> observations){
   try{
+    if(observations.size()>256){return error(Code::Unsupported,"Active Mainline scrape target bound");}
+    std::map<std::string,const ManagedMainlineScrapeObservation*> active;
+    std::set<std::uint64_t> admissions;
+    for(const auto& observation:observations){
+      if(!observation.storage||!observation.admission
+          ||observation.storage->purpose()!=detail::ManagedStoragePurpose::Download
+          ||observation.storage->identity().originalKey.bytes().size()!=20
+          ||!admissions.insert(observation.admission).second
+          ||!active.emplace(observation.storage->identity().originalKey.hex(),&observation).second){
+        return error(Code::Conflict,"Ambiguous managed Mainline scrape observation");
+      }
+    }
     struct stat profile{};
     if(!lease.valid()||::fstat(lease.directoryHandle(),&profile)!=0||!S_ISDIR(profile.st_mode)){return error(Code::Conflict,"Saved scrape profile lease is unavailable");}
     auto inventory=storage::ConfigFile::load(lease,"downloads.config");
@@ -70,9 +98,15 @@ readSavedMainlineScrapeTargets(const storage::ProfileLease& lease){
     for(const auto& row:library->items){
       if(!row.saved.hash){continue;}const auto& key=*row.saved.hash;
       if(!seen.insert(key.hex()).second){return error(Code::Conflict,"Duplicate saved Mainline identity");}
-      // This slice uses explicit queued75 only. Neither Waiting0 nor a saved
-      // completion counter manufactures active/checked/seed authority.
-      if(!row.saved.persistent||(row.saved.startup!=core::StartupState::Queued||row.saved.originalState!=75)||row.saved.forceStart||paused.contains(key.hex())){continue;}
+      const auto admitted=active.find(key.hex());
+      const auto* observation=admitted==active.end()?nullptr:admitted->second;
+      if(!row.saved.persistent||paused.contains(key.hex())){continue;}
+      if(observation){
+        // Current checked Downloading/Seeding comes from the owner, not this
+        // persisted number. Stop/error/unknown saved intent still withdraws it.
+        if(row.saved.originalState!=0&&row.saved.originalState!=50
+            &&row.saved.originalState!=60&&row.saved.originalState!=75){continue;}
+      }else if(row.saved.startup!=core::StartupState::Queued||row.saved.originalState!=75||row.saved.forceStart){continue;}
       if(result.size()==256){return error(Code::Unsupported,"Saved Mainline scrape target bound");}
       const Node* savedRow=nullptr;
       if(row.saved.legacyKey){
@@ -99,6 +133,10 @@ readSavedMainlineScrapeTargets(const storage::ProfileLease& lease){
       }
       if(const auto* flags=attrs->find("flags");flags&&(flags->type!=Node::Type::Integer||(static_cast<std::uint64_t>(flags->integer)&0x200u))){continue;}
       if(!withoutRealTracker(doc,key)){continue;} // Regular scrape authority is not guessed.
+      if(observation){
+        const auto permitted=activeScrapeOnly(*attrs);if(!permitted){return std::unexpected(permitted.error());}
+        if(!*permitted){continue;} // Normal active announce mode is not a passive scrape.
+      }
       const auto encoded=doc.serialize();libtorrent::error_code ec;
       libtorrent::torrent_info metadata(libtorrent::span<const char>(encoded.data(),encoded.size()),ec,libtorrent::from_span);
       if(ec){return error(Code::InvalidFormat,"Saved scrape metadata is not accepted by the engine");}
@@ -106,12 +144,37 @@ readSavedMainlineScrapeTargets(const storage::ProfileLease& lease){
       if(!identity){return std::unexpected(identity.error());}
       auto bound=storage::validateOriginalTorrentKey(*identity,key,true);if(!bound){return std::unexpected(bound.error());}
       auto layout=storage::readOriginalLayout(lease,doc);if(!layout){return std::unexpected(layout.error());}
-      if(!row.saved.completedBytes||*row.saved.completedBytes<0||*row.saved.completedBytes>layout->bytes){continue;}
-      const auto progress=core::projectSavedDndProgress(layout->bytes,row.saved.completedBytes,core::readSavedDndFacts(attrs));
-      if(*row.saved.completedBytes==layout->bytes&&!progress.controllerNoDiskCompleteIncludingDnd){continue;}
-      const bool noSeeds=progress.controllerNoDiskCompleteIncludingDnd.value_or(false);
-      // This is the original no-DiskManager query preference, not verified
-      // seeding authority. No piece/resume bit is read or granted here.
+      bool noSeeds=false;
+      std::string mapping;
+      if(observation){
+        const auto& files=*observation->storage;const auto& captured=files.capturedDownload();
+        const auto& capturedIdentity=files.identity();
+        // A fresh passive permission cannot turn an already discovery-enabled
+        // admission into both consumers. Route changes require normal readmission.
+        if(files.mainlinePolicy().discover||files.mainlinePolicy().announce){continue;}
+        const auto params=files.parameters();if(!params.ti){continue;}
+        const auto subject=storage::originalTorrentInfoSubject(doc);if(!subject){return std::unexpected(subject.error());}
+        const auto section=params.ti->info_section();
+        if(captured.hash!=row.saved.hash||!captured.persistent
+            ||captured.torrentFile!=row.saved.torrentFile||captured.saveDirectory!=row.saved.saveDirectory
+            ||captured.saveFile!=row.saved.saveFile||captured.legacySavePath!=row.saved.legacySavePath
+            ||capturedIdentity.originalKey!=identity->originalKey||capturedIdentity.selected!=identity->selected
+            ||capturedIdentity.full!=identity->full
+            ||std::string_view(section.data(),static_cast<std::size_t>(section.size()))!=*subject){continue;}
+        auto currentMapping=storage::originalQueueMappingScope(doc);if(!currentMapping){return std::unexpected(currentMapping.error());}
+        const auto currentPolicy=compat::originalFilePolicy(*savedRow,files.capturedFilePolicy().size());
+        if(files.capturedQueueMappingScope().empty()||*currentMapping!=files.capturedQueueMappingScope()
+            ||!currentPolicy||!std::ranges::equal(*currentPolicy,files.capturedFilePolicy())){continue;}
+        mapping=std::move(*currentMapping);noSeeds=observation->wholeComplete;
+      }else{
+        if(!row.saved.completedBytes||*row.saved.completedBytes<0||*row.saved.completedBytes>layout->bytes){continue;}
+        const auto progress=core::projectSavedDndProgress(layout->bytes,row.saved.completedBytes,core::readSavedDndFacts(attrs));
+        if(*row.saved.completedBytes==layout->bytes&&!progress.controllerNoDiskCompleteIncludingDnd){continue;}
+        noSeeds=progress.controllerNoDiskCompleteIncludingDnd.value_or(false);
+      }
+      // Saved targets use the original no-DiskManager query preference;
+      // active targets use the SAME accepted whole-complete sample. Neither
+      // branch grants a piece/resume bit or any seeding/transfer authority.
       // Full32 input stays a reader policy; BEP5 queries always use original20.
       if(key.bytes().size()!=20){continue;}
       auto raw=storage::originalTorrentInfoSubject(doc);if(!raw){return std::unexpected(raw.error());}
@@ -121,8 +184,9 @@ readSavedMainlineScrapeTargets(const storage::ProfileLease& lease){
         if(const auto* value=attrs->find(name)){auto encodedValue=core::encodeValue(*value,storage::compatibleConfigLimits());if(!encodedValue){return error(Code::InvalidFormat,"Scrape scope exceeds encoding bound");}append(scope,*encodedValue);}else{append(scope,"");}
       }
       if(const auto* az=doc.find("azureus_properties")){auto value=core::encodeValue(*az,storage::compatibleConfigLimits());if(!value){return error(Code::InvalidFormat,"Scrape source scope exceeds encoding bound");}append(scope,*value);}
-      auto hashed=digest(scope);if(!hashed){return error(Code::Io,"Cannot authenticate saved Mainline scope");}
-      result.push_back({key,identity->full,std::move(*hashed),noSeeds});
+      if(observation){append(scope,"active-mldht-scrape");append(scope,std::to_string(observation->admission));append(scope,mapping);}
+      auto hashed=digest(scope);if(!hashed){return error(Code::Io,observation?"Cannot authenticate managed Mainline scope":"Cannot authenticate saved Mainline scope");}
+      result.push_back({key,identity->full,std::move(*hashed),noSeeds,observation?observation->admission:0});
     }
     auto current=storage::ConfigFile::load(lease,"downloads.config");
     if(!current||current->recoverySource()!=storage::RecoverySource::Primary
@@ -178,7 +242,7 @@ void QueuedMainlineScrapes::completed(std::uint64_t round,const std::optional<Ma
   const auto found=rows_.find(activeKey_);
   if(found!=rows_.end()){
     auto& row=found->second;row.due=later(now,delayMillis(false,random));
-    if(fresh&&fresh->hash==row.target.hash&&fresh->full==row.target.full&&fresh->scope==activeScope_
+    if(fresh&&fresh->hash==row.target.hash&&fresh->full==row.target.full&&fresh->admission==row.target.admission&&fresh->scope==activeScope_
         &&row.target.scope==activeScope_&&result&&result->round==round
         &&std::equal(fresh->hash.bytes().begin(),fresh->hash.bytes().end(),reinterpret_cast<const std::byte*>(result->hash.data()))
         &&result->dialect==services::mainline_scrape::Dialect::OriginalBFse

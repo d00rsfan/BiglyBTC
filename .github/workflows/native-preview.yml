@@ -28,6 +28,13 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+      - name: Check out reviewed pure mlDHT identity dependency
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: d00rsfan/BiglyBTC-plugin-mlDHT
+          ref: 92c72c92c7a98efcfd2b29e3fb37a1c12880ea5a
+          path: _dependencies/mldht-identity
+          persist-credentials: false
       - name: Check offline preview console forwarding
         run: python3 -B preview/native/packaging/test_preview.py
       - name: Install pinned compiler, libtorrent and Qt 6.12.0 SDK
@@ -54,6 +61,8 @@ jobs:
             -DBIGLYBTC_COUNTRY_MMDB_FIXTURE="$RUNNER_TEMP/country-fixtures/GeoIP2-Country-Test.mmdb" \
             -DBIGLYBTC_LOCAL_ENGINE=ON \
             -DBIGLYBTC_DESKTOP=ON \
+            -DBIGLYBTC_ORIGINAL_MLDHT_IDENTITY_READER=ON \
+            -DBIGLYBTC_MLDHT_IDENTITY_SOURCE_DIR="$GITHUB_WORKSPACE/_dependencies/mldht-identity" \
             -DBIGLYBTC_DEB=ON \
             -DBIGLYBTC_BUNDLE_QT=ON \
             '-DBIGLYBTC_DEB_CONTACT=d00rsfan <d00rsfan@users.noreply.github.com>' \

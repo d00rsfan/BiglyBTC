@@ -52,6 +52,7 @@ QueueObservedFacts QueueOwnerObservations::facts(std::int64_t now) const noexcep
     result.runningMillis=now-*started_;result.seedingMillis=seedStarted_?now-*seedStarted_:0;
   }
   result.durations=QueueObservedDurations{down,seed};result.idleEpoch=idleEpoch_;
+  result.lastTrackerScrape=lastTrackerScrape_;
   auto seeds=0,peers=0;
   if(aggregate_){
     if(aggregate_->started>0){
@@ -103,6 +104,9 @@ bool QueueOwnerObservations::observe(const QueueObservation& event) noexcept {
     announceSuccess_=true;announceSeeds_=event.seeds;announcePeers_=event.peers;
   }else if(kind==QueueObservationKind::AnnounceFailed){announceSuccess_=false;}
   else if(kind==QueueObservationKind::Scrape||kind==QueueObservationKind::ScrapeFailed){
+    // The newest selected-protocol terminal supersedes the previous raw value.
+    // Unknown/config-changed URL is unavailable, never a borrowed old source.
+    lastTrackerScrape_.reset();
     unsigned index=0;for(;index<count_&&scrapes_[index].key!=event.tracker;++index){}
     if(index==count_){
       if(orderKnown_){return true;} // Not an original configured scrape source.
@@ -110,6 +114,9 @@ bool QueueOwnerObservations::observe(const QueueObservation& event) noexcept {
       // acquire arrival-order authority. Do not guess an alternative order.
       lost_=true;return false;
     }
+    lastTrackerScrape_=QueueScrapeTerminal{event.sequence,event.request,event.observedNanos,event.requestStartedNanos,
+        event.observedWallMillis,event.requestStartedWallMillis,event.seeds,event.peers,event.protocol,event.tracker,
+        kind==QueueObservationKind::Scrape?QueueScrapeTerminalKind::Reply:QueueScrapeTerminalKind::RequestFailed};
     auto& value=scrapes_[index];
     if(kind==QueueObservationKind::Scrape){
       value.seeds=event.seeds;value.peers=event.peers;value.started=event.requestStartedWallMillis;value.good=true;everSuccess_=true;

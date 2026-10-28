@@ -210,11 +210,25 @@ std::uint32_t scrapeRandom() {
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> savedScrapeTargets(){
   if(!mainlineLease||!network||!networkBinding||network->mode!=NetworkMode::Normal||!network->dht
       ||network->proxy.kind!=NetworkProxyKind::None){return std::vector<SavedMainlineScrapeTarget>{};}
-  auto targets=readSavedMainlineScrapeTargets(*mainlineLease);if(!targets){return targets;}
+  std::vector<ManagedMainlineScrapeObservation> admitted;
+  for(const auto& [key,entry]:managed){
+    (void)key;const auto& value=*entry;
+    if(managedLease!=mainlineLease||!value.token||value.token->number!=value.status.admission
+        ||!value.status.admission||value.storage.identity().originalKey!=value.status.hash
+        ||!value.status.retained||!value.status.checked||value.status.failure
+        ||value.stop||value.removing||value.manualPaused||value.policyHeld||value.status.verificationHeld
+        ||value.seedIntent||value.allocationIntent||!value.handle.is_valid()
+        ||(value.status.phase!=ManagedPhase::Downloading&&value.status.phase!=ManagedPhase::Seeding)){continue;}
+    const auto handle=managedByHandle.find(value.handle);
+    if(handle==managedByHandle.end()||handle->second!=&value){continue;}
+    admitted.push_back({&value.storage,value.status.admission,value.status.complete});
+  }
+  auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,admitted);if(!targets){return targets;}
   // Saved-only authority cannot borrow any retained/checking/failed admission.
+  // Active targets above have their own immutable accepted admission stamp.
   std::erase_if(*targets,[&](const auto& target){
     const auto live=managed.find(target.hash.hex());const auto metadata=magnets.find(target.hash.hex());
-    return (live!=managed.end()&&(live->second->status.retained||live->second->status.failure))
+    return (!target.admission&&live!=managed.end()&&(live->second->status.retained||live->second->status.failure))
         ||(metadata!=magnets.end()&&metadata->second->status.retained);
   });return targets;
 }
@@ -246,7 +260,7 @@ void advanceMainlineScrapes(Clock::time_point now) noexcept {
       auto fresh=savedScrapeTargets();
       if(!fresh){mainlineScrapeFailure=fresh.error();return;}
       const auto current=std::ranges::find(*fresh,candidate->hash,&SavedMainlineScrapeTarget::hash);
-      if(current==fresh->end()||current->scope!=candidate->scope||current->full!=candidate->full){mainlineScrapes.revoke(candidate->hash);return;}
+      if(current==fresh->end()||current->scope!=candidate->scope||current->full!=candidate->full||current->admission!=candidate->admission){mainlineScrapes.revoke(candidate->hash);return;}
       auto round=mainline->scrape(lt::sha1_hash(reinterpret_cast<const char*>(candidate->hash.bytes().data())),services::mainline_scrape::Dialect::OriginalBFse,candidate->noSeeds);
       if(!round){mainlineScrapeFailure=round.error();return;}
       const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();

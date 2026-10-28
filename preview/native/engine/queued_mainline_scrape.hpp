@@ -7,16 +7,32 @@
 #include <span>
 
 namespace biglybtc::engine {
-// Read-only library authority, never a torrent admission/payload claim. Scope is
-// a digest of actual selected raw/full identity and current saved permission.
+namespace detail {class ManagedStorage;}
+// Borrowed only during this synchronous metadata authentication call. The sole
+// owner supplies SAME-lease storage/token and its accepted checked active
+// sample; this value never prepares storage or grants transfer/discovery rights.
+struct ManagedMainlineScrapeObservation {
+  const detail::ManagedStorage* storage=nullptr;
+  std::uint64_t admission=0;
+  bool wholeComplete=false;
+};
+// Passive query authority, never a payload claim or transfer permission. Scope
+// binds selected raw/full identity, current policy and optional actual admission.
 struct SavedMainlineScrapeTarget {
   core::TorrentHash hash;
   storage::OriginalFullInfoHashes full;
   std::string scope;
   bool noSeeds=false;
+  std::uint64_t admission=0; // Zero is explicit saved/unadmitted queued authority.
 };
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
 readSavedMainlineScrapeTargets(const storage::ProfileLease&);
+// Combines saved queued75 with actual active Downloading/Seeding observations
+// whose current explicit mlDHT enableannounce Java-int value is zero. Saved
+// row state alone can never manufacture the active branch.
+std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error>
+readCurrentMainlineScrapeTargets(const storage::ProfileLease&,
+    std::span<const ManagedMainlineScrapeObservation>);
 // Pure injected monotone clock/random-word scheduling. No sampler or timer.
 // Initial 60..119s, repeat 1200..1799s; check cadence10s, startup100s.
 class QueuedMainlineScrapes final {

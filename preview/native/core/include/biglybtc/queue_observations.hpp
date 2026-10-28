@@ -54,11 +54,27 @@ private:
   std::optional<std::int64_t> sourceLastSent_;
   bool baseKnown_=true,stopped_=false,lost_=false;
 };
+// Exact terminal of one actually observed scrape RPC, selected protocol and
+// configured URL digest. This is NOT Download.getLastScrapeResult/RT_ERROR:
+// original retained counts, announce-created responses and tracker selection
+// need separate authority. No saved aggregate/cache can construct this value.
+enum class QueueScrapeTerminalKind { Reply, RequestFailed };
+struct QueueScrapeTerminal {
+  std::uint64_t sequence=0,request=0;
+  std::int64_t observedNanos=0,requestStartedNanos=0;
+  std::int64_t observedWallMillis=0,requestStartedWallMillis=0;
+  std::int32_t seeds=-1,peers=-1;
+  unsigned protocol=0;
+  std::array<unsigned char,32> tracker{};
+  QueueScrapeTerminalKind kind=QueueScrapeTerminalKind::RequestFailed;
+};
 struct QueueObservedFacts {
   std::optional<QueueObservedSwarm> swarm;
   std::optional<QueueIdleEpoch> idleEpoch;
   std::optional<QueueObservedDurations> durations;
   std::optional<std::int64_t> runningMillis,seedingMillis;
+  // Passive same-admission raw source, never scrape-only network permission.
+  std::optional<QueueScrapeTerminal> lastTrackerScrape;
 };
 // Fixed source-owned cache, no clocks/IO/allocation. The creator supplies the
 // selected protocol and consumes only events from that exact admission's sink.
@@ -81,6 +97,7 @@ private:
   unsigned protocol_=0,count_=0;bool orderKnown_=false;
   std::array<Scrape,MaximumTrackers> scrapes_{};
   std::optional<Scrape> aggregate_;
+  std::optional<QueueScrapeTerminal> lastTrackerScrape_;
   bool aggregateCached_=false,everSuccess_=false,announceSuccess_=false,lost_=false;
   std::int32_t announceSeeds_=-1,announcePeers_=-1;
   std::uint64_t sequence_=0;
