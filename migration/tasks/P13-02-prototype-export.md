@@ -1,0 +1,7 @@
+# Export retained early native components
+
+Pending whole-plan work, not a human question. Early Tor control-channel/ownership code is durable under original-audit `native/services/tor_control` and has qualified source/test evidence. It is absent from public-native `preview/native` and `native` paths. Port these existing qualified sources byte-exact into the native project before implementing actual owned Tor child lifetime and application integration; preserve original SAFECOOKIE dependency and all existing lifecycle regressions.
+
+The original registry's `repository: .` native hashes resolve against the original audit checkout. A copied registry in the native project does not automatically import those Git objects. Example ownership implementation `1010d252f1b7192f7660493be7e25605ff86151c`: original object status=0, native object status=128. Registry validation so far was explicitly run in the original audit checkout. Native standalone audit/export resolution and early prototype-source publication must be closed for P13; do not relabel unavailable old hashes as public-native commits or advance upstream baselines to mask this.
+
+Use explicit export provenance: retained original audit commit/source hashes, actual new native source commit, fresh integrated tests, and a documented resolver/archive for historical audit evidence. Preserve all early source/evidence and original ordinary HEAD/index. No existing daemon discovery/adoption or Java/live-profile access is authorised by a Tor migration test.

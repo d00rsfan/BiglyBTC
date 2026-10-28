@@ -1709,3 +1709,7 @@ Azureus normal flag reads preserve original seed/downloading/unknown flag behavi
 Both new components remain in_progress. No whole phase, shipping, public-network, full Java-runtime or performance parity is claimed. Whole-plan continuation remains authorised; no chapter STOP is inserted.
 
 Evidence: migration/evidence/20261028-mainline-scrape-storage-stats/verification.json.
+
+## 2026-10-28 bounded active Mainline scrape and passive readers
+
+Native implementation `91a1bb98ca1464eec871cb066107c2cf845d8e56`, final test integration `36bb5613aea66cf6e10ec20f51c4f5dfba03a612`: actual per-suite origins GCC9/Clang4/SAN7; only GCC/SAN managed-queue reran after an owned HTTP fixture correction. Three private full QtTest binaries and actual118-leaf private development promotion are retained. Configured/never-admitted/public/dual-family activation, the BF-only original caller gate and full P05/P06 remain open. No upstream baselines advance. Evidence: `migration/evidence/20261028-mainline-active-scrape/verification.json` and `migration/evidence/20261028-mainline-active-scrape/REVIEW.md`.

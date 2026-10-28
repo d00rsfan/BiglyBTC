@@ -7757,7 +7757,8 @@
       ],
       "state": "in_progress",
       "task_records": [
-        "migration/tasks/P05-MAINLINE-QUEUED-SCRAPE.md"
+        "migration/tasks/P05-MAINLINE-QUEUED-SCRAPE.md",
+        "migration/tasks/P05-MAINLINE-ACTIVE-SCRAPE.md"
       ],
       "target_paths": [
         "preview/native/engine/queued_mainline_scrape.cpp",
@@ -7808,14 +7809,27 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "ae79d7f8991e7444407462697526e0089ed42e65",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "91a1bb98ca1464eec871cb066107c2cf845d8e56",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "36bb5613aea66cf6e10ec20f51c4f5dfba03a612",
+          "purpose": "integration"
         }
       ],
       "review_records": [
-        "migration/updates/engine.mainline_queued_scrape/20261028-in-progress.md"
+        "migration/updates/engine.mainline_queued_scrape/20261028-in-progress.md",
+        "migration/updates/engine.mainline_queued_scrape/20261028-active-scrape.md"
       ],
       "evidence": [
         "migration/evidence/20261028-mainline-scrape-storage-stats/verification.json",
-        "migration/evidence/20261028-mainline-scrape-storage-stats/REVIEW.md"
+        "migration/evidence/20261028-mainline-scrape-storage-stats/REVIEW.md",
+        "migration/evidence/20261028-mainline-active-scrape/verification.json",
+        "migration/evidence/20261028-mainline-active-scrape/REVIEW.md"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -7872,6 +7886,144 @@
       "evidence": [
         "migration/evidence/20261028-mainline-scrape-storage-stats/verification.json",
         "migration/evidence/20261028-mainline-scrape-storage-stats/REVIEW.md"
+      ],
+      "decision_ref": "migration/decisions/AD-001.md"
+    },
+    {
+      "id": "engine.tracker_scrape_observations",
+      "feature_ids": [
+        "F04"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P05-TRACKER-SCRAPE-OBSERVATIONS.md"
+      ],
+      "target_paths": [
+        "preview/native/core/include/biglybtc/queue_observations.hpp",
+        "preview/native/core/src/queue_observations.cpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/pifimpl/local/download/DownloadImpl.java",
+            "core/src/com/biglybt/pifimpl/local/download/DownloadScrapeResultImpl.java",
+            "core/src/com/biglybt/core/tracker/client/impl/TRTrackerScraperResponseImpl.java",
+            "core/src/com/biglybt/core/download/impl/DownloadManagerImpl.java",
+            "core/src/com/biglybt/core/tracker/client/impl/bt/TRTrackerBTAnnouncerImpl.java"
+          ],
+          "source_symbols": [
+            "DownloadImpl.getLastScrapeResult",
+            "DownloadScrapeResultImpl",
+            "TRTrackerScraperResponseImpl.isValid",
+            "DownloadManagerImpl.getTrackerScrapeResponse",
+            "TRTrackerBTAnnouncerImpl"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "91a1bb98ca1464eec871cb066107c2cf845d8e56",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "36bb5613aea66cf6e10ec20f51c4f5dfba03a612",
+          "purpose": "integration"
+        }
+      ],
+      "review_records": [
+        "migration/updates/engine.tracker_scrape_observations/20261028-in-progress.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261028-mainline-active-scrape/verification.json",
+        "migration/evidence/20261028-mainline-active-scrape/REVIEW.md"
+      ],
+      "decision_ref": "migration/decisions/AD-001.md"
+    },
+    {
+      "id": "adapters.mainline_original_identity",
+      "feature_ids": [
+        "F25.mldht_identity"
+      ],
+      "state": "in_progress",
+      "task_records": [
+        "migration/tasks/P05-MAINLINE-ORIGINAL-IDENTITY-READER.md"
+      ],
+      "target_paths": [
+        "preview/native/adapters/mainline_identity.cpp",
+        "preview/native/adapters/mainline_identity.hpp"
+      ],
+      "source_coverage": [
+        {
+          "upstream_id": "mldht-paired",
+          "source_paths": [
+            "src/lbms/plugins/mldht/kad/Node.java",
+            "src/lbms/plugins/mldht/kad/Key.java",
+            "src/lbms/plugins/mldht/kad/RPCServer.java"
+          ],
+          "source_symbols": [
+            "Node.initKey",
+            "Node.registerServer",
+            "Key",
+            "RPCServer"
+          ],
+          "baseline_commit": "067f434eb60323123a5e885093ab2504ab10d5f9",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "067f434eb60323123a5e885093ab2504ab10d5f9"
+        },
+        {
+          "upstream_id": "mlDHT",
+          "source_paths": [
+            "src/lbms/plugins/mldht/azureus/MlDHTPlugin.java"
+          ],
+          "source_symbols": [
+            "alwaysRestoreID",
+            "DHTConfiguration"
+          ],
+          "baseline_commit": "3b12515c5541ed75cfb4f795b672d4e786df9f45",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "3b12515c5541ed75cfb4f795b672d4e786df9f45"
+        },
+        {
+          "upstream_id": "BiglyBT",
+          "source_paths": [
+            "core/src/com/biglybt/pifimpl/local/PluginConfigImpl.java"
+          ],
+          "source_symbols": [
+            "PluginConfigImpl"
+          ],
+          "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+          "first_ported_commit": null,
+          "integrated_through_commit": null,
+          "last_reviewed_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f"
+        }
+      ],
+      "native_commits": [
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "91a1bb98ca1464eec871cb066107c2cf845d8e56",
+          "purpose": "implementation"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "36bb5613aea66cf6e10ec20f51c4f5dfba03a612",
+          "purpose": "integration"
+        }
+      ],
+      "review_records": [
+        "migration/updates/adapters.mainline_original_identity/20261028-in-progress.md"
+      ],
+      "evidence": [
+        "migration/evidence/20261028-mainline-active-scrape/verification.json",
+        "migration/evidence/20261028-mainline-active-scrape/REVIEW.md"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     }
