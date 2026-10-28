@@ -1,4 +1,5 @@
 #include "database.hpp"
+#include "storage_stats.hpp"
 #include "owned_azureus_service.hpp"
 #include "owned_ddb_fixture.hpp"
 #include <QtTest>
@@ -61,6 +62,57 @@ private slots:
    read=(*owner)->read(key,b,0,0,clock);QVERIFY(read&&*read);QCOMPARE((**read).values.front().bytes,std::string("newer"));
    const auto retained=**read;(*owner)->close();QCOMPARE(retained.values.front().bytes,std::string("newer"));QVERIFY(!(*owner)->read(key,b,0,0,clock));
  }
+ void normalFindFlagsReturnUnfilteredValuesLikeOriginalMapping(){
+   auto owner=db::Owner::create();QVERIFY(owner);Clock clock;
+   auto a=contact({QHostAddress::LocalHost,41001});const std::string key(20,'F');auto item=value(a,"downloading-value");item.flags=1;
+   QVERIFY((*owner)->store(key,a,{&item,1},clock));
+   for(const std::int16_t flags:{0,1,2,3,4,16,128,-32768}){
+     const auto result=(*owner)->read(key,a,0,flags,clock);QVERIFY(result&&*result);
+     QCOMPARE((**result).values.size(),std::size_t{1});QCOMPARE((**result).values.front().bytes,item.bytes);QCOMPARE((**result).values.front().flags,item.flags);
+   }
+   const auto stats=(*owner)->read(key,a,0,8,clock);QVERIFY(stats&&*stats);QVERIFY((**stats).values.empty());
+ }
+ void actualFindFlagsReachTheDatabaseWithoutSeedFiltering(){
+   const std::string key(20,'W'),binary("wire\0flags",10);udp::Config config;config.generatedStoreService.emplace();config.generatedStoreService->volatileDatabase.emplace();
+   services::azureus_store_policy::Key state;state.bytes=key;state.closest=true;config.generatedStoreService->keyStates={state};
+   udp::OwnedPingTransport server(std::move(config)),client(udp::Config{});QVERIFY(server.start());QVERIFY(client.start());QVERIFY(server.allowPeer(client.endpoint()));QVERIFY(client.allowPeer(server.endpoint()));
+   const auto issued=token(client,server.endpoint(),this);QVERIFY(issued);auto item=value(contact(client.endpoint()),binary,1,QDateTime::currentMSecsSinceEpoch());item.flags=1;
+   QVERIFY(stored(store(client,server.endpoint(),this,*issued,key,{item})));udp::lookup::nodes::NodeId target{};std::copy(key.begin(),key.end(),target.begin());
+   for(const int flags:{1,2,3,4,16,128}){
+     auto result=std::make_shared<std::optional<udp::FindValueOutcome>>();
+     const auto sent=client.findValue(server.endpoint(),55,target,flags,0,this,[result](auto received){result->emplace(std::move(received));},2s);
+     QVERIFY(sent);QVERIFY(spin([&]{return result->has_value();}));QVERIFY((*result)->has_value());
+     const auto& reply=std::get<udp::lookup::ReplyBody>((**result)->body());QVERIFY(!reply.continuation);
+     const auto* values=std::get_if<udp::lookup::FoundValues>(&reply.result);QVERIFY(values);QCOMPARE(values->values.size(),std::size_t{1});QCOMPARE(values->values.front().bytes,binary);QCOMPARE(values->values.front().flags,item.flags);
+   }
+   const auto read=server.databaseState();QVERIFY(read);QCOMPARE(read->reads,std::uint64_t{6});client.close();server.close();
+ }
+ void statsValueRequiresRealAdapterAndLocalIdentity(){
+   db::Limits limits;limits.storageStats=db::StorageStatsMode::SuspendedDiversification;auto owner=db::Owner::create(limits);QVERIFY(owner);Clock clock;
+   auto local=contact({QHostAddress::LocalHost,41001}),reader=contact({QHostAddress::LocalHost,41002});QVERIFY((*owner)->bindLocal(local));QVERIFY(!(*owner)->bindLocal(local));
+   const std::string key(20,'S');auto item=value(reader,"binary",1);QVERIFY((*owner)->store(key,reader,{&item,1},clock));
+   const auto normal=(*owner)->read(key,reader,0,0,clock);QVERIFY(normal&&*normal);QCOMPARE((**normal).values.front().bytes,item.bytes);
+   struct Sequence final:db::lifecycle::WallClock {std::array<std::int64_t,3> times{65000,64000,63000};std::size_t at=0;std::int64_t nowMilliseconds()noexcept override{return times[std::min(at++,times.size()-1)];}} sequence;
+   const auto result=(*owner)->read(key,reader,0,9,sequence);QVERIFY(result&&*result);QCOMPARE(sequence.at,std::size_t{3});QCOMPARE((**result).values.size(),std::size_t{1});const auto& stat=(**result).values.front();
+   QCOMPARE(stat.created,std::int64_t{63000});QCOMPARE(stat.version,0);QCOMPARE(stat.flags,std::uint8_t{8});QCOMPARE(stat.lifeHours,std::uint8_t{0});QCOMPARE(stat.replication,std::int8_t{-1});QVERIFY(stat.originator.id==local.id);
+   auto decoded=services::azureus_storage_stats::decode(stat.bytes);QVERIFY(decoded);QCOMPARE(decoded->value.entries,1);QCOMPARE(decoded->value.bytes,6);QCOMPARE(decoded->value.readsPerMinute,0);QCOMPARE(decoded->value.diversification,std::int8_t{1});
+   auto invalid=reader;invalid.address.length=3;QVERIFY(!(*owner)->read(key,invalid,0,0,clock));QVERIFY(!(*owner)->read(key,reader,0,8,clock)); // Failed adapter observation never publishes guessed stats.
+ }
+ void actualStatsReadIsBoundToSocketAndRealMappingEvents(){
+   namespace stats=services::azureus_storage_stats;const std::string key(20,'T');udp::Config cfg;cfg.generatedStoreService.emplace();cfg.generatedStoreService->volatileDatabase.emplace();cfg.generatedStoreService->volatileDatabase->storageStats=db::StorageStatsMode::SuspendedDiversification;
+   services::azureus_store_policy::Key state;state.bytes=key;state.closest=true;cfg.generatedStoreService->keyStates={state};
+   udp::OwnedPingTransport server(std::move(cfg)),client(udp::Config{});QVERIFY(server.start());QVERIFY(client.start(QHostAddress(QStringLiteral("127.0.0.2"))));QVERIFY(server.allowPeer(client.endpoint()));QVERIFY(client.allowPeer(server.endpoint()));
+   const auto issued=token(client,server.endpoint(),this);QVERIFY(issued);auto item=value(contact(client.endpoint()),std::string("data\0stats",10),1,QDateTime::currentMSecsSinceEpoch());QVERIFY(stored(store(client,server.endpoint(),this,*issued,key,{item})));
+   udp::lookup::nodes::NodeId target{};std::copy(key.begin(),key.end(),target.begin());const auto actualLocal=contact(server.endpoint());
+   for(const auto& [version,size]:{std::pair{1,10},std::pair{2,3},std::pair{3,0}}){
+     if(version!=1){item.version=version;item.bytes=std::string(static_cast<std::size_t>(size),'x');QVERIFY(stored(store(client,server.endpoint(),this,*issued,key,{item})));}
+     auto result=std::make_shared<std::optional<udp::FindValueOutcome>>();QVERIFY(client.findValue(server.endpoint(),55,target,9,0,this,[result](auto received){result->emplace(std::move(received));},2s));QVERIFY(spin([&]{return result->has_value();}));QVERIFY((*result)->has_value());
+     const auto& reply=std::get<udp::lookup::ReplyBody>((**result)->body());const auto* values=std::get_if<udp::lookup::FoundValues>(&reply.result);QVERIFY(values);QCOMPARE(values->values.size(),std::size_t{1});const auto& stat=values->values.front();
+     QCOMPARE(stat.bytes.size(),std::size_t{14});QCOMPARE(stat.version,0);QCOMPARE(stat.flags,std::uint8_t{8});QCOMPARE(stat.lifeHours,std::uint8_t{0});QCOMPARE(stat.replication,std::int8_t{-1});QVERIFY(stat.originator.id==actualLocal.id);QVERIFY(stat.originator.address==actualLocal.address);
+     const auto decoded=stats::decode(stat.bytes);QVERIFY(decoded);QCOMPARE(decoded->value.entries,1);QCOMPARE(decoded->value.bytes,size);QCOMPARE(decoded->value.readsPerMinute,0);QCOMPARE(decoded->value.diversification,std::int8_t{1});
+   }
+   const auto read=server.databaseState();QVERIFY(read);QCOMPARE(read->reads,std::uint64_t{3});client.close();server.close();
+ }
  void borrowedClockCannotReenterFacadeMutation(){
    auto owner=db::Owner::create();QVERIFY(owner);
    struct Reentrant final:db::lifecycle::WallClock {
@@ -88,7 +140,7 @@ private slots:
    auto payload=value(a,"must-not-appear",2);const auto quota=(*owner)->store(key,a,{&payload,1},clock);QVERIFY(quota);QCOMPARE(*quota,std::int8_t{3});
    auto snapshot=(*owner)->snapshot();QVERIFY(snapshot);QCOMPARE(snapshot->values,std::size_t{1});QCOMPARE(snapshot->bytes,std::size_t{0});
    bool refused=false;std::thread foreign([&]{refused=!(*owner)->contains(key);});foreign.join();QVERIFY(refused);
-   QVERIFY(!(*owner)->store("tiny",a,{&payload,1},clock));QVERIFY(!(*owner)->read(key,a,0,8,clock));
+   QVERIFY(!(*owner)->store("tiny",a,{&payload,1},clock));const auto absentStats=(*owner)->read(key,a,0,8,clock);QVERIFY(absentStats&&*absentStats);QVERIFY((**absentStats).values.empty());
    limits.payloadQuota=4*1024*1024;auto bounded=db::Owner::create(limits);QVERIFY(bounded);QVERIFY((*bounded)->store(key,a,{&payload,1},clock));
    QVERIFY(!(*bounded)->store(std::string(20,'X'),a,{&payload,1},clock));const auto held=(*bounded)->snapshot();QVERIFY(held);QCOMPARE(held->keys,std::size_t{1});QCOMPARE(held->values,std::size_t{1});
  }

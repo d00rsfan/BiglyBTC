@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "database.hpp"
+#include "storage_stats.hpp"
 #include <algorithm>
 #include <bit>
 #include <limits>
@@ -8,14 +9,21 @@ namespace biglybtc::services::azureus_db_runtime {
 namespace {
 std::int64_t add(std::int64_t a,std::int64_t b)noexcept{return std::bit_cast<std::int64_t>(std::bit_cast<std::uint64_t>(a)+std::bit_cast<std::uint64_t>(b));}
 std::int64_t subtract(std::int64_t a,std::int64_t b)noexcept{return std::bit_cast<std::int64_t>(std::bit_cast<std::uint64_t>(a)-std::bit_cast<std::uint64_t>(b));}
-struct AbsentPort final:mapping::StoragePort {
-  AbsentPort():StoragePort(false){}
-  std::expected<bool,mapping::BoundaryError> keyCreated(const mapping::Key&,bool)noexcept override{return std::unexpected(mapping::BoundaryError::Failed);}
-  std::expected<void,mapping::BoundaryError> valueAdded(const mapping::ValueView&)noexcept override{return std::unexpected(mapping::BoundaryError::Failed);}
-  std::expected<void,mapping::BoundaryError> valueUpdated(const mapping::ValueView&,const mapping::ValueView&)noexcept override{return std::unexpected(mapping::BoundaryError::Failed);}
-  std::expected<void,mapping::BoundaryError> valueDeleted(const mapping::ValueView&)noexcept override{return std::unexpected(mapping::BoundaryError::Failed);}
-  std::expected<void,mapping::BoundaryError> keyRead(const mapping::Contact&)noexcept override{return std::unexpected(mapping::BoundaryError::Failed);}
-  std::expected<std::int8_t,mapping::BoundaryError> diversification()noexcept override{return std::unexpected(mapping::BoundaryError::Failed);}
+struct KeyPort final:mapping::StoragePort {
+  bool present,failed=false;azureus_storage_stats::Key key;lifecycle::WallClock* borrowedClock=nullptr;
+  explicit KeyPort(bool enabled):StoragePort(enabled),present(enabled){}
+  std::unexpected<mapping::BoundaryError> fail()noexcept{failed=true;return std::unexpected(mapping::BoundaryError::Failed);}
+  struct Borrow {KeyPort& port;Borrow(KeyPort& p,lifecycle::WallClock& clock):port(p){port.borrowedClock=&clock;}~Borrow(){port.borrowedClock=nullptr;}};
+  static std::optional<std::int32_t> length(const mapping::ValueView& value)noexcept{if(!value.lifecycle){return {};}const auto payload=value.lifecycle->payload().view();if(!payload||payload->size()>512){return {};}return static_cast<std::int32_t>(payload->size());}
+  std::expected<bool,mapping::BoundaryError> keyCreated(const mapping::Key&,bool)noexcept override{return present;}
+  std::expected<void,mapping::BoundaryError> valueAdded(const mapping::ValueView& value)noexcept override{auto n=length(value);if(!n){return fail();}key.changed(1,*n);return {};}
+  std::expected<void,mapping::BoundaryError> valueUpdated(const mapping::ValueView& old,const mapping::ValueView& value)noexcept override{auto a=length(old),b=length(value);if(!a||!b){return fail();}key.changed(0,*b-*a);return {};}
+  std::expected<void,mapping::BoundaryError> valueDeleted(const mapping::ValueView& value)noexcept override{auto n=length(value);if(!n){return fail();}key.changed(-1,-*n);return {};}
+  std::expected<void,mapping::BoundaryError> keyRead(const mapping::Contact& contact)noexcept override{
+    const auto value=contact.transport().get();if(!borrowedClock||!value||(value->address.length!=4&&value->address.length!=16)){return fail();}
+    if(!key.read(std::span(value->address.bytes).first(value->address.length),borrowedClock->nowMilliseconds())){return fail();}return {};
+  }
+  std::expected<std::int8_t,mapping::BoundaryError> diversification()noexcept override{if(failed){return fail();}return std::int8_t{1};}
 };
 bool expired(const lifecycle::DbValue& value,std::int64_t now,std::int32_t interval)noexcept{
   if(value.isLocal()){return false;}
@@ -27,8 +35,8 @@ bool expired(const lifecycle::DbValue& value,std::int64_t now,std::int32_t inter
 }
 }
 struct Owner::Impl {
-  struct Record {mapping::Owner owner;AbsentPort port;explicit Record(mapping::Owner value):owner(std::move(value)){};};
-  Limits limits;const std::thread::id thread=std::this_thread::get_id();
+  struct Record {mapping::Owner owner;KeyPort port;Record(mapping::Owner value,bool stats):owner(std::move(value)),port(stats){};};
+  Limits limits;std::optional<azureus_nodes::Contact> local;const std::thread::id thread=std::this_thread::get_id();
   std::map<std::string,std::unique_ptr<Record>,std::less<>> records;
   std::int64_t lastScan=0;std::uint64_t stores=0,reads=0,expiredCount=0;bool closed=false,busy=false;
   struct Guard {Impl& owner;explicit Guard(Impl& value):owner(value){owner.busy=true;}~Guard(){owner.busy=false;}};
@@ -49,9 +57,14 @@ Owner::Owner(std::unique_ptr<Impl> value):impl_(std::move(value)){}
 Owner::~Owner()=default;
 std::expected<std::unique_ptr<Owner>,Error> Owner::create(Limits limits){
   if(!limits.maximumKeys||limits.maximumKeys>64||!limits.maximumEntriesPerKey||limits.maximumEntriesPerKey>64
-      ||limits.payloadQuota>4*1024*1024){return std::unexpected(Error::Invalid);}
+      ||limits.payloadQuota>4*1024*1024||(limits.storageStats!=StorageStatsMode::Absent&&limits.storageStats!=StorageStatsMode::SuspendedDiversification)){return std::unexpected(Error::Invalid);}
   try{auto impl=std::make_unique<Impl>();impl->limits=limits;return std::unique_ptr<Owner>(new Owner(std::move(impl)));}
   catch(...){return std::unexpected(Error::Memory);}
+}
+std::expected<void,Error> Owner::bindLocal(const azureus_nodes::Contact& contact){
+  if(auto valid=impl_->check();!valid){return valid;}
+  if(impl_->local||!impl_->records.empty()||!contact.address.port||(contact.address.length!=4&&contact.address.length!=16)){return std::unexpected(Error::Invalid);}
+  impl_->local=contact;return {};
 }
 std::expected<bool,Error> Owner::contains(std::string_view key)const {
   if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}
@@ -70,7 +83,7 @@ std::expected<void,Error> Owner::Impl::scan(lifecycle::WallClock& clock,bool for
           if(entry.value.lifecycle&&expired(*entry.value.lifecycle,now,limits.originalRepublishMillis)){
             if(expiredCount==UINT64_MAX){return std::unexpected(Error::Capacity);}
             const auto removed=direct?record.owner.removeDirect(entry.key,record.port):record.owner.removeForwarded(entry.key,record.port);
-            if(!removed){return std::unexpected(Error::Mapping);}++expiredCount;
+            if(!removed||record.port.failed){return std::unexpected(Error::Mapping);}++expiredCount;
           }
         }
       }++it; // A newly emptied mapping survives until a later scan, as source.
@@ -97,7 +110,7 @@ std::expected<std::int8_t,Error> Owner::store(std::string_view key,const azureus
       limits.values=limits.entries*4+16;limits.retainedPayloadBytes=(limits.entries+256)*512;
       auto made=mapping::Owner::create(limits);auto copied=mapping::Key::copy(key);
       if(!made||!copied){return std::unexpected(Error::Memory);}
-      auto record=std::make_unique<Impl::Record>(std::move(*made));
+      auto record=std::make_unique<Impl::Record>(std::move(*made),impl_->limits.storageStats==StorageStatsMode::SuspendedDiversification);
       if(!record->owner.open(std::move(*copied),false,record->port)){return std::unexpected(Error::Mapping);}
       found=impl_->records.emplace(std::string(key),std::move(record)).first;
     }
@@ -108,7 +121,7 @@ std::expected<std::int8_t,Error> Owner::store(std::string_view key,const azureus
       if(!originator||!source||!payload){return std::unexpected(Error::Capacity);}
       mapping::ValueFields fields{value.created,std::move(*payload),value.version,*originator,*source,false,value.flags,value.lifeHours,value.replication};
       auto copied=record.owner.value(std::move(fields),clock);
-      if(!copied||!record.owner.add(copied->value,clock,record.port)){return std::unexpected(Error::Mapping);}
+      if(!copied||!record.owner.add(copied->value,clock,record.port)||record.port.failed){return std::unexpected(Error::Mapping);}
     }
     if(impl_->stores==UINT64_MAX){return std::unexpected(Error::Capacity);}++impl_->stores;
     return record.owner.snapshot().diversification;
@@ -117,14 +130,28 @@ std::expected<std::int8_t,Error> Owner::store(std::string_view key,const azureus
 std::expected<std::optional<Read>,Error> Owner::read(std::string_view key,const azureus_nodes::Contact& reader,
     std::int32_t maximum,std::int16_t flags,lifecycle::WallClock& clock){
   if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}
-  if(flags!=0||maximum<0||maximum>255){return std::unexpected(Error::Unsupported);}
+  if(maximum<0||maximum>255){return std::unexpected(Error::Unsupported);}
   try{
     Impl::Guard guard(*impl_);
     if(auto scanned=impl_->scan(clock,false);!scanned){return std::unexpected(scanned.error());}
     const auto found=impl_->records.find(key);if(found==impl_->records.end()){return std::optional<Read>{};}
-    auto& record=*found->second;auto contact=record.owner.contact(reader);if(!contact){return std::unexpected(Error::Capacity);}
+    auto& record=*found->second;if(record.port.failed){return std::unexpected(Error::Mapping);}
     if(!record.owner.hit()){return std::unexpected(Error::Mapping);}
-    auto read=record.owner.read(*contact,maximum,flags,record.port);if(!read){return std::unexpected(Error::Mapping);}
+    if((static_cast<std::uint16_t>(flags)&8U)!=0){
+      Read output;output.diversification=record.owner.snapshot().diversification;
+      if(record.port.present){
+        if(!impl_->local){return std::unexpected(Error::Unsupported);}
+        auto payload=lifecycle::Payload::copy(azureus_storage_stats::encode(record.port.key.stats()));if(!payload){return std::unexpected(Error::Memory);}
+        auto local=lifecycle::ContactHandle::copy(*impl_->local);lifecycle::Fields fields{clock.nowMilliseconds(),std::move(*payload),0,local,local,true,8,0,-1};
+        const auto value=lifecycle::DbValue::create(std::move(fields),clock);
+        output.values.push_back({value.version(),value.creationTime(),std::string(*value.payload().view()),*impl_->local,value.flags(),value.lifeTimeHours(),value.replicationControl()});
+      }
+      if(impl_->reads==UINT64_MAX){return std::unexpected(Error::Capacity);}++impl_->reads;
+      return std::optional<Read>{std::move(output)}; // Absent adapter: original empty result, no normal-read callback.
+    }
+    auto contact=record.owner.contact(reader);if(!contact){return std::unexpected(Error::Capacity);}
+    KeyPort::Borrow borrowed(record.port,clock);
+    auto read=record.owner.read(*contact,maximum,flags,record.port);if(!read||record.port.failed){return std::unexpected(Error::Mapping);}
     Read output;output.diversification=record.owner.snapshot().diversification;output.values.reserve(read->value.size());
     for(const auto& value:read->value){const auto current=value.snapshot();if(!current||!current->originator().get()||!current->payload().view()){return std::unexpected(Error::Mapping);}
       output.values.push_back({current->version(),current->creationTime(),std::string(*current->payload().view()),*current->originator().get(),current->flags(),current->lifeTimeHours(),current->replicationControl()});

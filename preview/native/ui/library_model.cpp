@@ -1,6 +1,7 @@
 #include "library_model.hpp"
 
 #include <algorithm>
+#include <QDateTime>
 
 namespace biglybtc::ui {
 namespace {
@@ -22,6 +23,11 @@ QVariant LibraryModel::data(const QModelIndex& index, int role) const {
   const auto& row = rows_[static_cast<std::size_t>(index.row())];
   if (role == KeyRole) { return row.item.key; }
   if (role == CompletionRole) { return completionAt(index.row()).value_or(false); }
+  if(role==Qt::ToolTipRole&&index.column()==1&&row.item.mainlineEstimate){
+    const auto& value=*row.item.mainlineEstimate;
+    return tr("Mainline estimate: %1 seeds, %2 peers\nObserved %3\nSource: Mainline DHT (BEP33 estimate)")
+        .arg(value.seeds).arg(value.peers).arg(QDateTime::fromMSecsSinceEpoch(value.startedWallMillis).toString(Qt::ISODate));
+  }
   if (role == Qt::ToolTipRole) { return index.column() >= 10 ? QVariant{savedSelectedTooltip()} : QVariant{}; }
   if (role != Qt::DisplayRole && role != Qt::UserRole && role != Qt::AccessibleTextRole) { return {}; }
   switch (index.column()) {
@@ -70,6 +76,8 @@ bool LibraryModel::apply(const Presentation& snapshot) {
     const auto& item = snapshot->items[i];
     if (item.key.isEmpty() || keys.contains(item.key) || (item.bytes && *item.bytes < 0)
         || (item.actionMask & ~AllDownloadActions) != 0) { return false; }
+    if(item.mainlineEstimate&&(item.mainlineEstimate->seeds<0||item.mainlineEstimate->peers<0
+        ||(item.mainlineEstimate->seeds==0&&item.mainlineEstimate->peers==0)||item.mainlineEstimate->startedWallMillis<0)){return false;}
     if (item.savedSelected) {
       const auto& saved = *item.savedSelected;
       if ((saved.bytes && *saved.bytes < 0) || (saved.remaining && *saved.remaining < 0)

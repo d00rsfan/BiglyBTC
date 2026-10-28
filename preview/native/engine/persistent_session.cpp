@@ -22,8 +22,10 @@
 #include <libtorrent/write_resume_data.hpp>
 #include "network_policy.hpp"
 #include "mainline_dht.hpp"
+#include "queued_mainline_scrape.hpp"
 #include "mainline_checkpoint.hpp"
 #include <libtorrent/peer_info.hpp>
+#include <openssl/rand.h>
 #include "network_binding.hpp"
 #include "network_peer_classes.hpp"
 #include "biglybtc/queue_rate_providers.hpp"
@@ -1443,7 +1445,7 @@ std::expected<void, storage::Error> PersistentSession::configureMainlineBootstra
 }
 MainlineDiscoveryStatus PersistentSession::mainlineDiscovery() const {
   if (!impl_->onWorker()) { return {MainlineDiscoveryStatus::State::Unavailable,0,0,0,storage::Error{storage::ErrorCode::Conflict,"Mainline observation requires its owner worker"}}; }
-  return impl_->mainlineStatus;
+  auto result=impl_->mainlineStatus;result.queuedScrapeFailure=impl_->mainlineScrapeFailure;return result;
 }
 std::optional<LiveSettingsSnapshot> PersistentSession::liveSettings() const noexcept {
   if (!impl_->onWorker() || !impl_->session || impl_->closed || impl_->poisoned) { return {}; }
@@ -1730,6 +1732,7 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
   catch (...) { impl_->call = false; return std::unexpected(storage::Error{storage::ErrorCode::Io, "Managed admission failed"}); }
 }
 std::expected<void, storage::Error> PersistentSession::pauseManaged(const core::TorrentHash& hash, bool paused) {
+  revokeMainlineScrape(hash);
   if (!impl_->onWorker() || impl_->call || impl_->closed || impl_->poisoned) {
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Managed control is unavailable"});
   }
@@ -1758,6 +1761,7 @@ std::expected<void, storage::Error> PersistentSession::pauseManaged(const core::
   return {};
 }
 std::expected<void, storage::Error> PersistentSession::queueManaged(const core::TorrentHash& hash, bool forceStart, bool queued) {
+  revokeMainlineScrape(hash);
   if (!managedAvailable() || impl_->call) {
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Managed queue control is unavailable"});
   }
@@ -1779,6 +1783,7 @@ std::expected<void, storage::Error> PersistentSession::queueManaged(const core::
   return {};
 }
 std::expected<void, storage::Error> PersistentSession::stopManaged(const core::TorrentHash& hash) {
+  revokeMainlineScrape(hash);
   if (!impl_->onWorker() || impl_->call || impl_->closed || impl_->poisoned) {
     return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Managed control is unavailable"});
   }
@@ -1971,6 +1976,31 @@ void PersistentSession::clearObservationSink() noexcept {
 std::optional<ApplicationPeerObservation> PersistentSession::latest() const {
   if (!impl_->onWorker()) { return {}; }
   return impl_->observation;
+}
+std::vector<MainlineScrapeEstimate> PersistentSession::mainlineScrapeEstimates() const {
+  if(!impl_->onWorker()||impl_->closed||impl_->poisoned||impl_->closingAdmission||!impl_->mainline){return {};}
+  return impl_->mainlineScrapes.estimates();
+}
+void PersistentSession::revokeMainlineScrape(const core::TorrentHash& hash) noexcept {
+  if(!impl_->onWorker()||!impl_->mainline){return;}
+  try{
+    const auto active=impl_->mainlineScrapes.activeTarget();
+    if(active&&active->hash==hash&&impl_->mainlineScrapes.active()&&impl_->mainline){
+      static_cast<void>(impl_->mainline->cancelScrape(*impl_->mainlineScrapes.active()));
+    }
+  }catch(...){}
+  impl_->mainlineScrapes.revoke(hash);
+}
+std::expected<void,storage::Error> PersistentSession::rearmMainlineScrape(const core::TorrentHash& hash) {
+  if(!impl_->onWorker()||impl_->call||impl_->closed||impl_->poisoned||!impl_->mainline||!impl_->mainlineLease){
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Mainline saved-intent rearm is unavailable"});
+  }
+  revokeMainlineScrape(hash); // Cancel any old cookie before fresh authority IO.
+  // This is independent fresh saved authority; no caller-supplied scope or
+  // row cache can clear a failed command's tombstone by itself.
+  auto fresh=readSavedMainlineScrapeTargets(*impl_->mainlineLease);
+  if(!fresh){impl_->mainlineScrapeFailure=fresh.error();return std::unexpected(fresh.error());}
+  impl_->mainlineScrapes.settled(hash);impl_->mainlineScrapeRefresh={};return {};
 }
 std::optional<core::TrackerStatistics> PersistentSession::trackerStatistics() const noexcept {
   if (!impl_ || !impl_->onWorker()) { return std::nullopt; }

@@ -76,6 +76,15 @@ ui::DownloadTargets targets(ui::LibraryWindow& window, std::initializer_list<int
 class LibraryActionUiTests final : public QObject {
   Q_OBJECT
 private slots:
+  void mainlineEstimateIsSeparateStateTooltipAndWithdrawsWithSnapshot(){
+    ui::LibraryModel model;auto value=sample(1,{0,0,0,0});
+    value->items[0].mainlineEstimate=ui::MainlineEstimateValues{3,7,123456};QVERIFY(model.apply(value));
+    const auto state=model.index(0,1);const auto hint=model.data(state,Qt::ToolTipRole).toString();
+    QVERIFY(hint.contains("3"));QVERIFY(hint.contains("7"));QVERIFY(hint.contains("Mainline"));QVERIFY(hint.contains("BEP33"));
+    QCOMPARE(model.data(state,Qt::DisplayRole).toString(),QStringLiteral("Downloading"));
+    auto withdrawn=sample(2,{0,0,0,0});QVERIFY(model.apply(withdrawn));QVERIFY(model.data(state,Qt::ToolTipRole).toString().isEmpty());
+    auto invalid=sample(3,{0,0,0,0});invalid->items[0].mainlineEstimate=ui::MainlineEstimateValues{0,0,123456};QVERIFY(!model.apply(invalid));
+  }
   void initTestCase() {
     QCOMPARE(QGuiApplication::platformName(), QStringLiteral("offscreen"));
     QApplication::setQuitOnLastWindowClosed(false);

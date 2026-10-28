@@ -242,6 +242,8 @@ std::expected<void,Failure> OwnedPingTransport::start(const QHostAddress& bindAd
     if (!local) { return std::unexpected(Failure::Authority); }
     auto authority=auth::Authority::create(true);if (!authority) { return std::unexpected(Failure::Authority); }
     admission_=std::make_unique<policy::Admission>();authority_=std::move(*authority);localId_=local->id;
+    if(database_){find::nodes::Contact contact;contact.protocol=config_.version;contact.address=originator(endpoint());contact.id=local->id;contact.instance=config_.instance;contact.flags=config_.flags;
+      if(!database_->bindLocal(contact)){return std::unexpected(Failure::State);}}
   }
   statisticsFamily_=address.protocol()==QAbstractSocket::IPv6Protocol?TransportStatisticsFamily::IPv6:TransportStatisticsFamily::IPv4;
   state_=State::Bound;rollback.dismiss();return {};

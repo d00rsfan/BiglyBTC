@@ -10,6 +10,8 @@
 #include <libtorrent/socket_type.hpp>
 
 #include <algorithm>
+#include <array>
+#include <chrono>
 #include <initializer_list>
 #include <deque>
 #include <limits>
@@ -269,7 +271,8 @@ lt::dht::dht_state boundedCheckpoint(const lt::dht::dht_state& state, bool ipv4,
 struct MainlineDhtService::Impl {
   struct Request { bool lookup = false, lookupIssued = false; unsigned short port = 0; bool announceIssued = false; };
   struct PeerProbe { UdpEndpoint endpoint; bool issued=false, finished=false; lt::sha1_hash nodeId{}; };
-  struct RouteCheck { PeerProbe* probe=nullptr; std::uint64_t generation=0; };
+  struct ScrapeRound;
+  struct RouteCheck { PeerProbe* probe=nullptr; std::uint64_t generation=0; ScrapeRound* scrape=nullptr; };
   struct RouteQueue {
     std::deque<RouteCheck> waiting;
     std::uint64_t next=0,issued=0,completed=0;
@@ -297,6 +300,8 @@ struct MainlineDhtService::Impl {
   std::size_t bootstrapCompletions = 0, expectedBootstraps = 0;
   unsigned short port = 0;
 
+#include "mainline_scrape_runtime.inc"
+
   ~Impl(){session.reset();} // Join before stable correlation slots are destroyed.
   std::expected<void, storage::Error> check() const {
     if (std::this_thread::get_id() != worker) { return error(Code::Busy, "Mainline DHT requires its owner worker"); }
@@ -311,6 +316,7 @@ struct MainlineDhtService::Impl {
     requests.clear(); pendingNodes.clear(); status.activeHashes = 0;
     session.reset(); // Joins this service only; no borrowed owner or callbacks.
     routeQueues.clear(); peerProbes.clear();
+    scrapeRounds.clear();completedScrapes.clear();activeScrape=0;
     return error(Code::Io, message);
   }
   std::expected<Request*, storage::Error> request(lt::sha1_hash hash) {
@@ -501,6 +507,7 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
         }
       }
       if(const auto* response=lt::alert_cast<lt::dht_direct_response_alert>(alert)){
+        if(impl_->acceptScrape(*response)){continue;}
         const auto* cookie=response->userdata.get<Impl::PeerProbe>();
         const auto found=std::ranges::find_if(impl_->peerProbes,[&](const auto& row){return &row.second==cookie;});
         if(found==impl_->peerProbes.end()||!found->second.issued||found->second.finished){continue;}
@@ -537,13 +544,20 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
         if(request.generation!=queue.issued||queue.issued<=queue.completed||table->num_nodes()<0){
           return impl_->fail("Mainline PORT routing correlation was lost",true);
         }
-        const auto entries=table->nodes();
-        const bool live=std::ranges::any_of(entries,[&](const auto& row){
-          return row.first==request.probe->nodeId&&row.second==request.probe->endpoint;
-        });
-        if(live){
-          if(!available(impl_->status.peerBootstrapProgress)){return impl_->fail("Mainline PORT progress overflow",true);}
-          ++impl_->status.peerBootstrapProgress;
+        if(request.scrape){
+          auto& round=*request.scrape;
+          impl_->issueScrape(round,*table);
+          if(round.pendingTables){--round.pendingTables;}
+          if(!round.pendingTables&&round.finished==round.issued){impl_->finishScrape(round);}
+        }else{
+          const auto entries=table->nodes();
+          const bool live=std::ranges::any_of(entries,[&](const auto& row){
+            return row.first==request.probe->nodeId&&row.second==request.probe->endpoint;
+          });
+          if(live){
+            if(!available(impl_->status.peerBootstrapProgress)){return impl_->fail("Mainline PORT progress overflow",true);}
+            ++impl_->status.peerBootstrapProgress;
+          }
         }
         queue.completed=request.generation;queue.waiting.pop_front();
         if(!queue.waiting.empty()){
@@ -616,6 +630,22 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
         }
       }
     }
+    if(impl_->activeScrape){
+      auto& round=impl_->scrapeRounds.at(impl_->activeScrape);
+      if(!round.started&&impl_->running&&!impl_->bootstrapPending){
+        round.started=true;
+        const auto state=impl_->session->session_state(lt::session_handle::save_dht_state);
+        for(const auto& [address,id]:state.dht_state.nids){
+          if(id.is_all_zeros()||!enabled(address,impl_->ipv4,impl_->ipv6)){continue;}
+          auto& queue=impl_->routeQueues[id];
+          if(queue.next==UINT64_MAX){return impl_->fail("Mainline scrape routing generation overflow",true);}
+          queue.waiting.push_back({nullptr,++queue.next,&round});++round.pendingTables;
+          if(queue.waiting.size()==1){queue.issued=queue.waiting.front().generation;impl_->session->dht_live_nodes(id);}
+        }
+        if(!round.pendingTables){impl_->finishScrape(round);}
+      }
+      if(!round.closed&&std::chrono::steady_clock::now()>=round.deadline){impl_->finishScrape(round,true);}
+    }
     std::vector<MainlineDhtPeers> output;
     output.reserve(results.size());
     for (auto& [hash, peers] : results) {
@@ -625,6 +655,34 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
     }
     return output;
   } catch (...) { return impl_->fail("Mainline DHT polling failed", true); }
+}
+std::expected<std::uint64_t,storage::Error> MainlineDhtService::scrape(lt::sha1_hash hash,
+    services::mainline_scrape::Dialect dialect,bool noSeeds) {
+  auto valid=impl_->check();if(!valid){return std::unexpected(valid.error());}
+  if(hash.is_all_zeros()||(dialect!=services::mainline_scrape::Dialect::OriginalBFse
+      &&dialect!=services::mainline_scrape::Dialect::LibtorrentBFsd)){
+    return error(Code::InvalidFormat,"Invalid Mainline scrape hash/dialect");
+  }
+  if(impl_->activeScrape||impl_->scrapeRounds.size()==64||impl_->nextScrape==UINT64_MAX){
+    return error(Code::Busy,"Mainline scrape round/lifetime bound");
+  }
+  try{
+    const auto number=++impl_->nextScrape;auto& round=impl_->scrapeRounds.try_emplace(number).first->second;
+    round.number=number;round.hash=hash;round.dialect=dialect;round.noSeeds=noSeeds;
+    round.deadline=std::chrono::steady_clock::now()+std::chrono::minutes(15);impl_->activeScrape=number;return number;
+  }catch(...){return error(Code::Io,"Cannot retain bounded Mainline scrape");}
+}
+std::expected<void,storage::Error> MainlineDhtService::cancelScrape(std::uint64_t number) {
+  auto valid=impl_->check();if(!valid){return valid;}
+  const auto found=impl_->scrapeRounds.find(number);
+  if(found!=impl_->scrapeRounds.end()){
+    found->second.cancelled=true;impl_->finishScrape(found->second);
+  }
+  std::erase_if(impl_->completedScrapes,[&](const auto& row){return row.round==number;});return {};
+}
+std::expected<std::vector<MainlineDhtScrape>,storage::Error> MainlineDhtService::takeScrapes() {
+  auto valid=impl_->check();if(!valid){return std::unexpected(valid.error());}
+  auto result=std::move(impl_->completedScrapes);impl_->completedScrapes.clear();return result;
 }
 std::expected<std::string, storage::Error> MainlineDhtService::checkpoint() {
   try {

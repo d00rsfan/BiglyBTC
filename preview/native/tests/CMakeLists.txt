@@ -1860,3 +1860,21 @@ if(TARGET biglybtc_owned_azureus_service)
   add_test(NAME azureus-database-runtime COMMAND biglybtc-azureus-database-runtime-tests)
   set_tests_properties(azureus-database-runtime PROPERTIES TIMEOUT 120 LABELS "unit;database;loopback")
 endif()
+
+add_executable(biglybtc-mainline-scrape-tests mainline_scrape_tests.cpp)
+target_link_libraries(biglybtc-mainline-scrape-tests PRIVATE biglybtc_mainline_scrape)
+target_compile_options(biglybtc-mainline-scrape-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME mainline-scrape-codec COMMAND biglybtc-mainline-scrape-tests)
+set_tests_properties(mainline-scrape-codec PROPERTIES TIMEOUT 30 LABELS "unit;discovery")
+
+# Additive root composition, no author CMake/build execution.
+# services/CMakeLists.txt already adds azureus_db_runtime/storage_stats.cpp to
+# biglybtc_azureus_owned_udp in the staged exact-preimage source patch.
+# tests/CMakeLists.txt append:
+if(TARGET biglybtc_azureus_owned_udp)
+  add_executable(biglybtc-azureus-storage-stats-tests azureus_storage_stats_tests.cpp)
+  target_link_libraries(biglybtc-azureus-storage-stats-tests PRIVATE biglybtc_azureus_owned_udp)
+  target_compile_options(biglybtc-azureus-storage-stats-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME azureus-storage-stats COMMAND biglybtc-azureus-storage-stats-tests)
+  set_tests_properties(azureus-storage-stats PROPERTIES TIMEOUT 30 LABELS "unit;database")
+endif()

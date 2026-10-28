@@ -1,4 +1,6 @@
 #include "mainline_dht.hpp"
+#include "queued_mainline_scrape.hpp"
+#include "library_commands.hpp"
 #include "persistent_session.hpp"
 #include "magnet_intake.hpp"
 #include "managed_storage.hpp"
@@ -10,6 +12,7 @@
 #include <QTcpSocket>
 #include <QUdpSocket>
 #include <QtTest>
+#include <zlib.h>
 
 #include <algorithm>
 #include <chrono>
@@ -34,6 +37,14 @@ QByteArray dictionary(const std::map<QByteArray,QByteArray>& values) {
 }
 QByteArray list(const std::vector<QByteArray>& values) {
   QByteArray result("l"); for (const auto& value : values) { result += value; } return result + 'e';
+}
+QByteArray gzipOwned(const QByteArray& input){
+  z_stream stream{};test::require(::deflateInit2(&stream,Z_BEST_SPEED,Z_DEFLATED,31,8,Z_DEFAULT_STRATEGY)==Z_OK,"Owned cache gzip init");
+  QByteArray output(static_cast<qsizetype>(::deflateBound(&stream,static_cast<uLong>(input.size()))),'\0');
+  stream.next_in=reinterpret_cast<Bytef*>(const_cast<char*>(input.constData()));stream.avail_in=static_cast<uInt>(input.size());
+  stream.next_out=reinterpret_cast<Bytef*>(output.data());stream.avail_out=static_cast<uInt>(output.size());
+  const auto rc=::deflate(&stream,Z_FINISH);const auto size=stream.total_out;::deflateEnd(&stream);
+  test::require(rc==Z_STREAM_END,"Owned cache gzip finish");output.resize(static_cast<qsizetype>(size));return output;
 }
 QByteArray hashBytes(const lt::sha1_hash& hash) { return QByteArray(hash.data(), 20); }
 lt::sha1_hash hash(char value) { const QByteArray raw(20,value); return lt::sha1_hash(raw.constData()); }
@@ -74,7 +85,7 @@ unsigned short dhtPort(unsigned short peerPort=0) {
 // bencode nor its expected hash/token/port. Local IDs use LT's unchanged BEP42
 // local-address exemption (kademlia/node_id.cpp), not a relaxed DHT setting.
 class OwnedKrpc final {
-  struct Request { QByteArray transaction,hash; QHostAddress address; unsigned short port=0; };
+  struct Request { QByteArray transaction,hash; QHostAddress address; unsigned short port=0; bool scrape=false; };
   QUdpSocket socket_;
   QTcpServer decoy_;
   const QByteArray nodeId_=QByteArray(20,'K');
@@ -89,6 +100,12 @@ class OwnedKrpc final {
   QByteArray heldHash_;
   unsigned short peerPort_;
   bool noise_=false;
+  QByteArray scrapeSeedKey_="BFse";
+  bool scrapeZero_=false,scrapeWrongId_=false;
+  int scrapeGets_=0;
+  int scrapeNoSeeds_=0;
+  // Independent wire fixture: fixed bit patterns, not production Bloom output.
+  QByteArray scrapeFilter()const{QByteArray value(256,'\0');if(!scrapeZero_){value[0]=3;value[7]=8;}return value;}
 
   void fail(const char* text) { if (failure.isEmpty()) { failure=QString::fromLatin1(text); } }
   QByteArray tokenKey(const Request& request) const {
@@ -101,6 +118,11 @@ class OwnedKrpc final {
     return dictionary({{"r",dictionary(result)},{"t",string(request.transaction)},{"y",string("r")}});
   }
   void answerPeers(const Request& request) {
+    if(request.scrape){
+      const auto id=scrapeWrongId_?QByteArray(20,'W'):nodeId_;
+      send(request,response(request,{{"id",string(id)},{"nodes",string({})},
+          {scrapeSeedKey_,string(scrapeFilter())},{"BFpe",string(scrapeFilter())}}));return;
+    }
     const auto token=QCryptographicHash::hash(tokenKey(request),QCryptographicHash::Sha1).first(8);
     tokens_[tokenKey(request)]=token;
     std::vector<QByteArray> peers;
@@ -157,6 +179,11 @@ class OwnedKrpc final {
           if (!allowed_.contains(request.hash)) {
             ++bootstrapQueries; send(request,response(request,{{"id",string(nodeId_)},{"nodes",string({})}})); continue;
           }
+          if(const auto* scrape=args->find("scrape")){
+            const auto* noseed=args->find("noseed");
+            if(scrape->type!=core::Node::Type::Integer||scrape->integer!=1||!noseed||noseed->type!=core::Node::Type::Integer||noseed->integer!=scrapeNoSeeds_){fail("Invalid actual scrape/noseed query");continue;}
+            request.scrape=true;++scrapeGets_;
+          }
           clientIds_[request.hash].insert(bytes(id->bytes)); ++gets_[request.hash];
           if (request.hash==heldHash_) { held_.push_back(request); } else { answerPeers(request); }
         } else {
@@ -197,6 +224,9 @@ public:
   void noise(bool enabled) { noise_=enabled; }
   void hold(const lt::sha1_hash& value) { heldHash_=hashBytes(value); }
   void release() { heldHash_.clear(); auto pending=std::move(held_); held_.clear(); for (const auto& request:pending) { answerPeers(request); } }
+  void scrapeReply(QByteArray key="BFse",bool zero=false,bool wrongId=false){scrapeSeedKey_=std::move(key);scrapeZero_=zero;scrapeWrongId_=wrongId;}
+  void scrapeNoSeeds(int value){test::require(value==0||value==1,"Invalid owned noseed expectation");scrapeNoSeeds_=value;}
+  int scrapes()const{return scrapeGets_;}
   int gets(const lt::sha1_hash& value) const { const auto it=gets_.find(hashBytes(value)); return it==gets_.end()?0:it->second; }
   int announced(const lt::sha1_hash& value) const { const auto it=announces_.find(hashBytes(value)); return it==announces_.end()?0:it->second; }
 };
@@ -325,6 +355,172 @@ std::optional<engine::ManagedDownloadStatus> managed(engine::PersistentSession& 
 class MainlineDhtTests final : public QObject {
   Q_OBJECT
 private slots:
+
+  void queuedScrapeUsesActualLiveNodesExplicitDialectAndNeverAnnounces(){
+    test::OwnedEngineFixture saved(false);auto lease=storage::ProfileLease::acquire(saved.native());QVERIFY(lease);
+    const auto inventoryBefore=test::read(saved.profile+"/downloads.config"),stateBefore=test::read(saved.stateFile);
+    auto authority=engine::readSavedMainlineScrapeTargets(*lease);QVERIFY(authority);QCOMPARE(authority->size(),std::size_t{1});
+    engine::QueuedMainlineScrapes consumer;QVERIFY(consumer.reconcile(*authority,0,0));QVERIFY(consumer.checkDue(100000));
+    QTcpServer peer;QVERIFY(peer.listen(QHostAddress::LocalHost,0));
+    const auto wanted=lt::sha1_hash(reinterpret_cast<const char*>(saved.hash->bytes().data())),other=hash('L');
+    OwnedKrpc fixture(peer.serverPort());fixture.allow(wanted);fixture.allow(other);
+    auto opts=options(fixture,peer.serverPort());opts.bootstrapNodes.clear();auto created=engine::MainlineDhtService::create(localPolicy(),opts);QVERIFY(created);auto actual=std::move(*created);Observations observed;
+    QVERIFY(actual->addNode({"127.0.0.1",fixture.port()}));QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),fixture.bootstrapQueries>0),15000);QVERIFY(actual->lookup(wanted));
+    QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),observed.contains(wanted,peer.serverPort())||!observed.failure.isEmpty()||!fixture.failure.isEmpty()),15000);
+    QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));
+    std::vector<engine::MainlineDhtScrape> replies;
+    const auto pump=[&]{
+      if(!observed.pump(*actual)){return true;}auto rows=actual->takeScrapes();
+      if(!rows){observed.failure=QString::fromStdString(rows.error().message);return true;}
+      for(auto& row:*rows){replies.push_back(std::move(row));}return !replies.empty();
+    };
+    auto first=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(first);QVERIFY(!actual->scrape(other,services::mainline_scrape::Dialect::OriginalBFse));
+    QVERIFY(consumer.started(authority->front().hash,authority->front().scope,*first,123456));
+    QVERIFY(actual->lookup(other));
+    QTRY_VERIFY_WITH_TIMEOUT(pump(),15000);QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));
+    QCOMPARE(replies.size(),std::size_t{1});QCOMPARE(replies[0].round,*first);QCOMPARE(replies[0].hash,wanted);
+    QCOMPARE(replies[0].summary.responses,std::size_t{1});QCOMPARE(replies[0].summary.seeds,1);QCOMPARE(replies[0].summary.peers,1);
+    auto freshAuthority=engine::readSavedMainlineScrapeTargets(*lease);QVERIFY(freshAuthority);QCOMPARE(freshAuthority->size(),std::size_t{1});
+    consumer.completed(*first,replies[0],freshAuthority->front(),100001,0);
+    const auto estimates=consumer.estimates();QCOMPARE(estimates.size(),std::size_t{1});QCOMPARE(estimates[0].counts.seeds,1);QCOMPARE(estimates[0].startedWallMillis,123456);
+    QCOMPARE(test::read(saved.profile+"/downloads.config"),inventoryBefore);QCOMPARE(test::read(saved.stateFile),stateBefore);QVERIFY(saved.intact(false));
+    QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),observed.contains(other,peer.serverPort())),15000);
+    QCOMPARE(actual->status().announces,std::uint64_t{0});QCOMPARE(fixture.announced(wanted),0);QCOMPARE(fixture.announced(other),0);
+    replies.clear();fixture.scrapeReply("BFsd");auto refused=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(refused);
+    QTRY_VERIFY_WITH_TIMEOUT(pump(),15000);QCOMPARE(replies[0].summary.responses,std::size_t{0});QCOMPARE(replies[0].summary.seeds,0);
+    replies.clear();auto explicitLt=actual->scrape(wanted,services::mainline_scrape::Dialect::LibtorrentBFsd);QVERIFY(explicitLt);
+    QTRY_VERIFY_WITH_TIMEOUT(pump(),15000);QCOMPARE(replies[0].summary.responses,std::size_t{1});QCOMPARE(replies[0].summary.seeds,1);
+    replies.clear();fixture.scrapeReply("BFse",true);auto zero=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(zero);
+    QTRY_VERIFY_WITH_TIMEOUT(pump(),15000);QCOMPARE(replies[0].summary.responses,std::size_t{1});QCOMPARE(replies[0].summary.seeds,0);QCOMPARE(replies[0].summary.peers,0);
+    replies.clear();fixture.scrapeReply("BFse",false,true);auto wrong=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(wrong);
+    QTRY_VERIFY_WITH_TIMEOUT(pump(),15000);QCOMPARE(replies[0].summary.responses,std::size_t{0});
+    // Saved completion controls only this source query preference. Payload
+    // remains zero/unverified; no owner admission or verified bit is invented.
+    auto completeState=core::Document::parse(stateBefore.toStdString(),storage::compatibleConfigLimits());QVERIFY(completeState);
+    auto attributes=core::Document::parse("d10:parametersd8:dndflagsi0eee");QVERIFY(attributes);
+    QVERIFY(completeState->replaceValue("attributes",attributes->serialize()));test::write(saved.stateFile,bytes(completeState->serialize()));
+    auto inventory=core::Document::parse(inventoryBefore.toStdString(),storage::compatibleConfigLimits());QVERIFY(inventory);
+    const auto& oldRow=inventory->find("downloads")->children[0];auto row=core::Document::parse(inventory->originalBytes().substr(oldRow.begin,oldRow.end-oldRow.begin),storage::compatibleConfigLimits());QVERIFY(row);
+    QVERIFY(row->replaceValue("completedbytes","i131072e"));QVERIFY(inventory->replaceValue("downloads","l"+row->serialize()+"e"));test::write(saved.profile+"/downloads.config",bytes(inventory->serialize()));
+    auto completedAuthority=engine::readSavedMainlineScrapeTargets(*lease);QVERIFY(completedAuthority);QCOMPARE(completedAuthority->size(),std::size_t{1});QVERIFY(completedAuthority->front().noSeeds);
+    fixture.scrapeReply();fixture.scrapeNoSeeds(1);replies.clear();auto noSeeds=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse,completedAuthority->front().noSeeds);QVERIFY(noSeeds);
+    QTRY_VERIFY_WITH_TIMEOUT(pump(),15000);QCOMPARE(replies[0].summary.responses,std::size_t{1});
+    test::write(saved.stateFile,stateBefore);test::write(saved.profile+"/downloads.config",inventoryBefore);QVERIFY(saved.intact(false));
+    QVERIFY(fixture.scrapes()>=6);QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));QVERIFY(actual->close());
+  }
+  void heldScrapeCancellationCannotPublishIntoSameHashFreshRound(){
+    QTcpServer peer;QVERIFY(peer.listen(QHostAddress::LocalHost,0));OwnedKrpc fixture(peer.serverPort());
+    const auto wanted=hash('C');fixture.allow(wanted);auto opts=options(fixture,peer.serverPort());opts.bootstrapNodes.clear();
+    auto created=engine::MainlineDhtService::create(localPolicy(),opts);QVERIFY(created);auto actual=std::move(*created);Observations observed;
+    QVERIFY(actual->addNode({"127.0.0.1",fixture.port()}));QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),fixture.bootstrapQueries>0),15000);
+    QVERIFY(actual->lookup(wanted));QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),observed.contains(wanted,peer.serverPort())),15000);
+    fixture.hold(wanted);auto old=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(old);
+    QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),fixture.scrapes()==1||!fixture.failure.isEmpty()),15000);
+    QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));QVERIFY(actual->cancelScrape(*old));
+    auto fresh=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(fresh);QVERIFY(*fresh!=*old);
+    QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),fixture.scrapes()==2||!fixture.failure.isEmpty()),15000);
+    fixture.release();std::vector<engine::MainlineDhtScrape> replies;
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{if(!observed.pump(*actual)){return true;}auto rows=actual->takeScrapes();if(!rows){return true;}for(auto& row:*rows){replies.push_back(std::move(row));}return !replies.empty();}()),15000);
+    QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));
+    QCOMPARE(replies.size(),std::size_t{1});QCOMPARE(replies[0].round,*fresh);QCOMPARE(replies[0].summary.seeds,1);
+    QCOMPARE(actual->status().announces,std::uint64_t{0});QVERIFY(actual->close());QVERIFY(!actual->takeScrapes());
+  }
+  void savedQueuedAuthorityReadsNoPayloadAndRefusesOtherConsumers(){
+    test::OwnedEngineFixture fixture(false);auto held=storage::ProfileLease::acquire(fixture.native());QVERIFY(held);
+    const auto inventory=test::read(fixture.profile+"/downloads.config"),state=test::read(fixture.stateFile),payload=test::read(fixture.payload+"/sample.bin");
+    auto good=engine::readSavedMainlineScrapeTargets(*held);QVERIFY2(good.has_value(),good?"":good.error().message.c_str());QCOMPARE(good->size(),std::size_t{1});QCOMPARE(good->front().hash,*fixture.hash);QCOMPARE(good->front().scope.size(),std::size_t{64});
+    engine::QueuedMainlineScrapes current;QVERIFY(current.reconcile(*good,0,0));auto due=current.due(60000);QVERIFY(due);
+    QVERIFY(current.started(due->hash,due->scope,19,123456));
+    auto changed=core::Document::parse(state.toStdString(),storage::compatibleConfigLimits());QVERIFY(changed);
+    // Encode through a real document below; no malformed-fixture permission.
+    libtorrent::entry denied(libtorrent::entry::dictionary_type{});denied["networks"]=libtorrent::entry::list_type{libtorrent::entry("Public")};denied["peersourcesdenied"]=libtorrent::entry::list_type{libtorrent::entry("DHT")};
+    changed=core::Document::parse(state.toStdString(),storage::compatibleConfigLimits());QVERIFY(changed);QVERIFY(changed->replaceValue("attributes",test::encoded(denied)));test::write(fixture.stateFile,bytes(changed->serialize()));
+    auto revoked=engine::readSavedMainlineScrapeTargets(*held);QVERIFY(revoked);QVERIFY(revoked->empty());
+    engine::MainlineDhtScrape result{19,lt::sha1_hash(reinterpret_cast<const char*>(fixture.hash->bytes().data())),services::mainline_scrape::Dialect::OriginalBFse,{3,2,0,1},false};
+    current.completed(19,result,{},60001,0);QVERIFY(current.estimates().empty());
+    test::write(fixture.stateFile,state);
+    libtorrent::entry cached(libtorrent::entry::dictionary_type{});cached["hash"]=std::string(reinterpret_cast<const char*>(fixture.hash->bytes().data()),fixture.hash->bytes().size());
+    cached["attributes"]=denied;libtorrent::entry cache(libtorrent::entry::dictionary_type{});cache["state"]=libtorrent::entry::list_type{cached};
+    const auto cacheBytes=gzipOwned(bytes(test::encoded(cache)));const auto cachePath=fixture.profile+"/active/cache.dat";test::write(cachePath,cacheBytes);
+    auto cachedDenied=engine::readSavedMainlineScrapeTargets(*held);QVERIFY(cachedDenied);QVERIFY(cachedDenied->empty());
+    QCOMPARE(test::read(cachePath),cacheBytes);QCOMPARE(test::read(fixture.stateFile),state);QVERIFY(QFile::remove(cachePath));
+    std::vector<libtorrent::entry> refusedAttributes;
+    for(const auto& name:{"networks","flags"}){
+      libtorrent::entry value(libtorrent::entry::dictionary_type{});
+      if(std::string_view(name)=="networks"){value[name]=libtorrent::entry::list_type{};}
+      else{value[name]=std::string_view(name)=="flags"?512:1;}
+      refusedAttributes.push_back(std::move(value));
+    }
+    for(const auto& [name,value]:std::vector<std::pair<std::string,std::string>>{{"networks","public"},{"peersources","dht"}}){
+      libtorrent::entry attributes(libtorrent::entry::dictionary_type{});attributes[name]=libtorrent::entry::list_type{libtorrent::entry(value)};refusedAttributes.push_back(std::move(attributes));
+    }
+    for(const auto& attributes:refusedAttributes){
+      auto doc=core::Document::parse(state.toStdString(),storage::compatibleConfigLimits());QVERIFY(doc);
+      QVERIFY(doc->replaceValue("attributes",test::encoded(attributes)));test::write(fixture.stateFile,bytes(doc->serialize()));
+      auto refused=engine::readSavedMainlineScrapeTargets(*held);QVERIFY(refused);QVERIFY(refused->empty());
+    }
+    auto doc=core::Document::parse(state.toStdString(),storage::compatibleConfigLimits());QVERIFY(doc);
+    libtorrent::entry marker("dht://"+fixture.hash->hex()+".dht/announce");QVERIFY(doc->replaceValue("announce",test::encoded(marker)));test::write(fixture.stateFile,bytes(doc->serialize()));
+    auto decentralized=engine::readSavedMainlineScrapeTargets(*held);QVERIFY(decentralized);QCOMPARE(decentralized->size(),std::size_t{1});
+    // A configured tracker cannot be inferred to have failed from saved counts.
+    libtorrent::entry tracker("http://127.0.0.1:1/announce");doc=core::Document::parse(state.toStdString(),storage::compatibleConfigLimits());QVERIFY(doc);QVERIFY(doc->replaceValue("announce",test::encoded(tracker)));test::write(fixture.stateFile,bytes(doc->serialize()));
+    auto unavailable=engine::readSavedMainlineScrapeTargets(*held);QVERIFY(unavailable);QVERIFY(unavailable->empty());
+    test::write(fixture.stateFile,state);
+    for(const auto& intent:{"BiglyBTC.verifiedSeeding","BiglyBTC.allocationMode"}){
+      auto saved=core::Document::parse(inventory.toStdString(),storage::compatibleConfigLimits());QVERIFY(saved);
+      const auto& raw=saved->find("downloads")->children[0];auto entry=core::Document::parse(saved->originalBytes().substr(raw.begin,raw.end-raw.begin),storage::compatibleConfigLimits());QVERIFY(entry);
+      QVERIFY(entry->replaceValue(intent,"i1e"));QVERIFY(saved->replaceValue("downloads","l"+entry->serialize()+"e"));test::write(fixture.profile+"/downloads.config",bytes(saved->serialize()));
+      auto blocked=engine::readSavedMainlineScrapeTargets(*held);QVERIFY(blocked);QVERIFY(blocked->empty());
+    }
+    test::write(fixture.profile+"/downloads.config",inventory);
+    {
+      auto saved=core::Document::parse(inventory.toStdString(),storage::compatibleConfigLimits());QVERIFY(saved);const auto& raw=saved->find("downloads")->children[0];
+      auto entry=core::Document::parse(saved->originalBytes().substr(raw.begin,raw.end-raw.begin),storage::compatibleConfigLimits());QVERIFY(entry);QVERIFY(entry->replaceValue("forceStart","i1e"));
+      QVERIFY(saved->replaceValue("downloads","l"+entry->serialize()+"e"));test::write(fixture.profile+"/downloads.config",bytes(saved->serialize()));
+      auto forced=engine::readSavedMainlineScrapeTargets(*held);QVERIFY(forced);QVERIFY(forced->empty());
+    }
+    auto saved=core::Document::parse(inventory.toStdString(),storage::compatibleConfigLimits());QVERIFY(saved);
+    auto rows=core::Document::parse(saved->originalBytes().substr(saved->find("downloads")->children[0].begin,saved->find("downloads")->children[0].end-saved->find("downloads")->children[0].begin),storage::compatibleConfigLimits());QVERIFY(rows);QVERIFY(rows->replaceValue("state","i70e"));QVERIFY(saved->replaceValue("downloads","l"+rows->serialize()+"e"));test::write(fixture.profile+"/downloads.config",bytes(saved->serialize()));
+    auto stopped=engine::readSavedMainlineScrapeTargets(*held);QVERIFY(stopped);QVERIFY(stopped->empty());
+    test::write(fixture.profile+"/downloads.config",inventory);
+    // Real explicit saved Stop→Queue publications are fresh generations. A
+    // failed/no-ack command or a temporary empty eligible list is not one.
+    current.revoke(*fixture.hash);auto beforeStop=engine::readSavedMainlineScrapeTargets(*held);QVERIFY(beforeStop);QVERIFY(current.reconcile(*beforeStop,70000,0));QVERIFY(!current.due(INT64_MAX));
+    current.unavailable();QVERIFY(current.reconcile({},70001,0));QVERIFY(current.reconcile(*beforeStop,70002,0));QVERIFY(!current.due(INT64_MAX));
+    auto stoppedCommand=storage::applyLibraryCommand(*held,*fixture.hash,core::DownloadAction::Stop);QVERIFY(stoppedCommand);
+    auto stopFacts=engine::readSavedMainlineScrapeTargets(*held);QVERIFY(stopFacts);QVERIFY(stopFacts->empty());current.settled(*fixture.hash);QVERIFY(current.reconcile(*stopFacts,70003,0));
+    auto queuedCommand=storage::applyLibraryCommand(*held,*fixture.hash,core::DownloadAction::Queue);QVERIFY(queuedCommand);
+    auto queueFacts=engine::readSavedMainlineScrapeTargets(*held);QVERIFY(queueFacts);QCOMPARE(queueFacts->size(),std::size_t{1});current.settled(*fixture.hash);QVERIFY(current.reconcile(*queueFacts,70004,0));QVERIFY(current.due(130004));
+    QCOMPARE(test::read(fixture.profile+"/downloads.config"),inventory);QCOMPARE(test::read(fixture.stateFile),state);QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);QVERIFY(fixture.intact(false));
+  }
+  void retainedScrapeCookiesHaveAnExplicitLifetimeBoundAndCloseFence(){
+    auto policy=localPolicy();engine::MainlineDhtOptions opts;opts.bootstrapNodes.clear();opts.port=dhtPort();opts.ipv6=false;
+    auto created=engine::MainlineDhtService::create(policy,opts);QVERIFY(created);auto& actual=**created;
+    for(unsigned i=0;i<64;++i){auto round=actual.scrape(hash('B'),services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(round);QVERIFY(actual.cancelScrape(*round));}
+    auto exhausted=actual.scrape(hash('B'),services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(!exhausted);QCOMPARE(exhausted.error().code,storage::ErrorCode::Busy);
+    auto completed=actual.takeScrapes();QVERIFY(completed);QVERIFY(completed->empty());QCOMPARE(actual.status().lookups,std::uint64_t{0});QCOMPARE(actual.status().announces,std::uint64_t{0});
+    QVERIFY(actual.close());QVERIFY(!actual.scrape(hash('B'),services::mainline_scrape::Dialect::OriginalBFse));QVERIFY(!actual.cancelScrape(1));
+  }
+  void queuedSchedulingAndPositivePublicationAreScopeBoundWithoutInventedExpiry(){
+    const auto raw=std::string(20,'Q');auto key=core::TorrentHash::parse(raw);QVERIFY(key);
+    engine::SavedMainlineScrapeTarget target{*key,{},std::string(64,'a')};
+    engine::QueuedMainlineScrapes queue;QVERIFY(queue.reconcile(std::span(&target,1),0,0));
+    QVERIFY(!queue.checkDue(99999));QVERIFY(queue.checkDue(100000));QVERIFY(!queue.checkDue(109999));QVERIFY(queue.checkDue(110000));
+    QCOMPARE(engine::QueuedMainlineScrapes::delayMillis(true,59),119000);QCOMPARE(engine::QueuedMainlineScrapes::delayMillis(false,599),1799000);
+    QVERIFY(!queue.due(59999));QVERIFY(queue.due(60000));QVERIFY(queue.started(*key,target.scope,1,9000));
+    engine::MainlineDhtScrape result{1,lt::sha1_hash(raw.data()),services::mainline_scrape::Dialect::OriginalBFse,{4,7,0,1},false};
+    queue.completed(1,result,target,120000,0);QCOMPARE(queue.estimates().size(),std::size_t{1});QCOMPARE(queue.estimates()[0].counts.peers,7);
+    // The source agsc write throttle is not a result TTL. A zero round retains
+    // the previous positive observation rather than fabricating fresh zero.
+    QVERIFY(queue.due(1320000));QVERIFY(queue.started(*key,target.scope,2,12000));result.round=2;result.summary={0,0,0,1};queue.completed(2,result,target,1320000,0);
+    QCOMPARE(queue.estimates().size(),std::size_t{1});QCOMPARE(queue.estimates()[0].round,std::uint64_t{1});
+    QVERIFY(queue.reconcile(std::span(&target,1),99999999,0));QCOMPARE(queue.estimates().size(),std::size_t{1});
+    QVERIFY(queue.started(*key,target.scope,3,13000));queue.revoke(*key);result.round=3;result.summary={2,1,0,1};queue.completed(3,result,target,99999999,0);QVERIFY(queue.estimates().empty());
+    QVERIFY(queue.reconcile(std::span(&target,1),99999999,0));QVERIFY(!queue.due(INT64_MAX));
+    target.scope=std::string(64,'b');QVERIFY(queue.reconcile(std::span(&target,1),99999999,0));QVERIFY(queue.due(INT64_MAX));
+    engine::QueuedMainlineScrapes beforeLoad;beforeLoad.revoke(*key);QVERIFY(beforeLoad.reconcile(std::span(&target,1),0,0));QVERIFY(!beforeLoad.due(INT64_MAX));
+    beforeLoad.settled(*key);QVERIFY(beforeLoad.reconcile(std::span(&target,1),0,0));QVERIFY(beforeLoad.due(60000));
+  }
   void lookupAndTokenAnnounceUseActualDistinctPeerPort() {
     QTcpServer peer; QVERIFY(peer.listen(QHostAddress::LocalHost,0));
     OwnedKrpc fixture(peer.serverPort()); const auto wanted=hash('A'); fixture.allow(wanted);

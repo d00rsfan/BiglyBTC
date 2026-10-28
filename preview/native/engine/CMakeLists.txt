@@ -59,3 +59,12 @@ find_package(ZLIB REQUIRED)
 target_link_libraries(biglybtc_local_engine PRIVATE ZLIB::ZLIB)
 
 target_link_libraries(biglybtc_local_engine PRIVATE biglybtc_mainline_checkpoint)
+
+# Queued BEP33 uses the same frozen codec in desktop and headless owners.
+add_library(biglybtc_mainline_scrape STATIC ../services/mainline_scrape.cpp)
+target_include_directories(biglybtc_mainline_scrape PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/../services")
+target_link_libraries(biglybtc_mainline_scrape PUBLIC BiglyBTC::Core PRIVATE OpenSSL::Crypto)
+target_compile_features(biglybtc_mainline_scrape PUBLIC cxx_std_23)
+target_compile_options(biglybtc_mainline_scrape PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_sources(biglybtc_local_engine PRIVATE queued_mainline_scrape.cpp)
+target_link_libraries(biglybtc_local_engine PRIVATE biglybtc_mainline_scrape)

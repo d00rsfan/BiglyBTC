@@ -5,6 +5,7 @@
 #include "managed_download.hpp"
 #include "original_torrent_identity.hpp"
 #include "live_settings.hpp"
+#include "mainline_scrape_estimate.hpp"
 #include "biglybtc/runtime_metrics.hpp"
 #include "biglybtc/peer_payload_ledger.hpp"
 #include "biglybtc/effective_rate_limits.hpp"
@@ -56,6 +57,7 @@ struct MainlineDiscoveryStatus {
   // Optional source-bound PORT bridge; counters describe accepted provider wire events.
   bool portBridgeAvailable=false,portHintsLost=false;
   std::uint64_t portHintsObserved=0,portHintsAccepted=0,portHintsRejected=0;
+  std::optional<storage::Error> queuedScrapeFailure{};
 };
 namespace detail { class PersistentCall; class PersistentOperation; }
 class PersistentSession;
@@ -122,6 +124,11 @@ public:
   // Must be configured before startup. No provider, DNS or sockets are touched here.
   std::expected<void, storage::Error> configureMainlineBootstrap(std::vector<std::pair<std::string,int>>);
   MainlineDiscoveryStatus mainlineDiscovery() const;
+  // Last accepted saved-target estimates; no LT/profile IO or rank authority.
+  std::vector<MainlineScrapeEstimate> mainlineScrapeEstimates() const;
+  void revokeMainlineScrape(const core::TorrentHash&) noexcept;
+  // Call only after a successful explicit saved-intent/controller transaction.
+  std::expected<void,storage::Error> rearmMainlineScrape(const core::TorrentHash&);
   // Host calls pure prepareLiveSettings BEFORE persistence, this method only
   // AFTER successful save. Routing changes remain pending for owner recreation.
   // Before startIdle this caches safe values without creating an LT session.

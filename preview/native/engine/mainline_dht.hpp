@@ -1,6 +1,7 @@
 #pragma once
 
 #include "network_policy.hpp"
+#include "../services/mainline_scrape.hpp"
 #include "../adapters/profile.hpp"
 
 #include <libtorrent/sha1_hash.hpp>
@@ -33,6 +34,13 @@ struct MainlineDhtOptions {
 struct MainlineDhtPeers {
   libtorrent::sha1_hash hash;
   std::vector<libtorrent::tcp::endpoint> peers;
+};
+struct MainlineDhtScrape {
+  std::uint64_t round=0;
+  libtorrent::sha1_hash hash{};
+  services::mainline_scrape::Dialect dialect=services::mainline_scrape::Dialect::OriginalBFse;
+  services::mainline_scrape::Summary summary;
+  bool timedOut=false;
 };
 enum class MainlineDhtPhase { Starting, Listening, Failed, Closed };
 struct MainlineDhtStatus {
@@ -77,6 +85,12 @@ public:
   // a hash cannot distinguish an old reply; peer hints carry no admission proof.
   std::expected<void, storage::Error> forget(libtorrent::sha1_hash);
   std::expected<std::vector<MainlineDhtPeers>, storage::Error> poll();
+  // One bounded known-live-node round, independent of lookup/announce and
+  // without peer injection. Explicit dialect is never inferred from a packet.
+  std::expected<std::uint64_t,storage::Error> scrape(libtorrent::sha1_hash,
+      services::mainline_scrape::Dialect, bool noSeeds=false);
+  std::expected<void,storage::Error> cancelScrape(std::uint64_t);
+  std::expected<std::vector<MainlineDhtScrape>,storage::Error> takeScrapes();
   // Worker/live-session only; contains no settings, torrents or profile data.
   std::expected<std::string, storage::Error> checkpoint();
   std::expected<void, storage::Error> close();

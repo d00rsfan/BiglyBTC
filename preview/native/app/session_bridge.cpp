@@ -569,6 +569,7 @@ struct SessionBridge::Host {
     loadVerifiedSeedIntents();
     checkpoint(stop);
     auto source = take(storage::readLibraryView(lease));
+    const auto mainlineEstimates=engine?engine->mainlineScrapeEstimates():std::vector<engine::MainlineScrapeEstimate>{};
     readMagnets();
     checkpoint(stop);
     auto result = std::make_shared<ui::LibraryPresentation>();
@@ -699,6 +700,11 @@ struct SessionBridge::Host {
           .received = saved.downloaded, .sent = saved.uploaded,
           .canContinue = peerPort != 0 && unique && saved.persistent && !stopped && !paused && !retained && !magnetRetained,
           .savedPosition = saved.position, .savedSelected = std::move(savedSelected), .actionMask = actions});
+      if(unique&&!retained&&!magnetRetained&&!paused&&!stopped&&!admissionFailures.contains(hash)){
+        const auto estimate=std::ranges::find_if(mainlineEstimates,[&](const auto& item){return item.hash.hex()==hash;});
+        if(estimate!=mainlineEstimates.end()){result->items.back().mainlineEstimate=ui::MainlineEstimateValues{
+            estimate->counts.seeds,estimate->counts.peers,estimate->startedWallMillis};}
+      }
     }
     std::set<std::string> pendingHashes;
     for (const auto& [hash, item] : pendingIntents) { (void)item; pendingHashes.insert(hash); }
@@ -1066,6 +1072,7 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
       hashes.push_back(std::move(hash));
     }
     QStringList failures;
+    for(const auto& hash:hashes){host_->engine->revokeMainlineScrape(hash);}
     // Withdraw EVERY accepted selected ticket before the first target's IO.
     // A failure for A must not leave selected B authorized to auto-publish.
     std::set<std::string> cancelledVerification,cancelledAllocation;
@@ -1170,7 +1177,7 @@ bool SessionBridge::downloadAction(ui::DownloadTargets targets, core::DownloadAc
       if (!controlled) {
         host_->admissionFailures.insert_or_assign(hash.hex(), controlled.error());
         failures.push_back(text(hash.hex()) + QStringLiteral(": ") + text(controlled.error().message));
-      }
+      }else{static_cast<void>(host_->engine->rearmMainlineScrape(hash));}
     }
     ready(host_->query({}), failures.empty() ? tr("Download command applied") : failures.join(QLatin1Char('\n')));
   });
@@ -3027,6 +3034,7 @@ void SessionBridge::tickScheduler() noexcept {
       auto current=host_->schedulerTorrents();
       const auto row=std::ranges::find(current,action.hash,&storage::SchedulerTorrent::hash);
       if(row==current.end()){continue;}
+      host_->engine->revokeMainlineScrape(action.hash);
       auto began=host_->scheduler->beginAction(host_->lease,action,*row);
       if(!began){host_->schedulerFailure=text(began.error().message);continue;}
       bool intentConfirmed=false;
@@ -3042,6 +3050,7 @@ void SessionBridge::tickScheduler() noexcept {
           if(pause){host_->schedulerPaused.insert(action.hash.hex());}else{host_->schedulerPaused.erase(action.hash.hex());}
         }
         static_cast<void>(take(host_->scheduler->finishAction(host_->lease,action,storage::SchedulerActionResult::Succeeded)));
+        static_cast<void>(host_->engine->rearmMainlineScrape(action.hash));
       }catch(const Failure& error){
         static_cast<void>(host_->scheduler->finishAction(host_->lease,action,storage::SchedulerActionResult::Indeterminate));
         host_->schedulerFailure=text(error.error.message);
@@ -3059,6 +3068,7 @@ void SessionBridge::tickScheduler() noexcept {
       auto current=host_->schedulerImportedTargets();
       const auto row=std::ranges::find(current,action.target.hash,&storage::ImportedSchedulerTarget::hash);
       if(row==current.end()){continue;}
+      host_->engine->revokeMainlineScrape(action.target.hash);
       const auto began=host_->scheduler->beginImportedAction(host_->lease,action,*row);
       if(!began){host_->schedulerFailure=text(began.error().message);continue;}
       try{
@@ -3080,6 +3090,7 @@ void SessionBridge::tickScheduler() noexcept {
         if(action.kind==storage::scheduler::ActionKind::SetStopReason&&action.target.paused){host_->schedulerPaused.insert(action.target.hash.hex());}
         static_cast<void>(take(host_->scheduler->finishImportedAction(host_->lease,action,storage::SchedulerActionResult::Succeeded,
             publication?&*publication:nullptr)));
+        static_cast<void>(host_->engine->rearmMainlineScrape(action.target.hash));
       }catch(const Failure& error){
         static_cast<void>(host_->scheduler->finishImportedAction(host_->lease,action,storage::SchedulerActionResult::Indeterminate));
         host_->schedulerFailure=text(error.error.message);break;

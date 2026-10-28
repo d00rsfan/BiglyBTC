@@ -196,6 +196,75 @@ std::optional<std::vector<std::pair<std::string,int>>> mainlineBootstrap;
 MainlineDiscoveryStatus mainlineStatus;
 std::vector<lt::sha1_hash> mainlineActive;
 std::uint64_t mainlinePortProgress=0;
+QueuedMainlineScrapes mainlineScrapes{std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count()};
+Clock::time_point mainlineScrapeRefresh{};
+std::optional<storage::Error> mainlineScrapeFailure;
+std::uint32_t scrapeRandom() {
+  std::uint32_t value=0;
+  for(unsigned attempt=0;attempt<8;++attempt){
+    if(RAND_bytes(reinterpret_cast<unsigned char*>(&value),sizeof(value))!=1){break;}
+    if(value<UINT32_MAX-UINT32_MAX%600){return value;} // Uniform for60 and600.
+  }
+  throw detail::Failure{{storage::ErrorCode::Io,"Mainline scrape scheduling entropy failed"}};
+}
+std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> savedScrapeTargets(){
+  if(!mainlineLease||!network||!networkBinding||network->mode!=NetworkMode::Normal||!network->dht
+      ||network->proxy.kind!=NetworkProxyKind::None){return std::vector<SavedMainlineScrapeTarget>{};}
+  auto targets=readSavedMainlineScrapeTargets(*mainlineLease);if(!targets){return targets;}
+  // Saved-only authority cannot borrow any retained/checking/failed admission.
+  std::erase_if(*targets,[&](const auto& target){
+    const auto live=managed.find(target.hash.hex());const auto metadata=magnets.find(target.hash.hex());
+    return (live!=managed.end()&&(live->second->status.retained||live->second->status.failure))
+        ||(metadata!=magnets.end()&&metadata->second->status.retained);
+  });return targets;
+}
+void advanceMainlineScrapes(Clock::time_point now) noexcept {
+  try {
+  const auto millis=std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+  if(now>=mainlineScrapeRefresh){
+    mainlineScrapeRefresh=now+10s;
+    auto targets=savedScrapeTargets();
+    if(!targets){mainlineScrapeFailure=targets.error();mainlineScrapes.unavailable();}
+    else{auto accepted=mainlineScrapes.reconcile(*targets,millis,scrapeRandom());if(!accepted){throw detail::Failure{accepted.error()};}mainlineScrapeFailure.reset();}
+  }
+  if(mainlineScrapes.active()&&!mainlineScrapes.activeTarget()){
+    const auto number=*mainlineScrapes.active();static_cast<void>(mainline->cancelScrape(number));
+    mainlineScrapes.completed(number,{},{},millis,scrapeRandom());
+  }
+  auto completed=mainline->takeScrapes();if(!completed){throw detail::Failure{completed.error()};}
+  for(const auto& result:*completed){
+    if(!mainlineScrapes.active()||*mainlineScrapes.active()!=result.round){continue;}
+    // Delivery never reuses the last periodic refresh as current permission.
+    auto fresh=savedScrapeTargets();std::optional<SavedMainlineScrapeTarget> target;
+    const auto active=mainlineScrapes.activeTarget();
+    if(fresh&&active){const auto row=std::ranges::find(*fresh,active->hash,&SavedMainlineScrapeTarget::hash);if(row!=fresh->end()){target=*row;}}
+    mainlineScrapes.completed(result.round,result,target,millis,scrapeRandom());
+  }
+  if(mainlineScrapes.checkDue(millis)){
+    const auto candidate=mainlineScrapes.due(millis);
+    if(candidate){
+      auto fresh=savedScrapeTargets();
+      if(!fresh){mainlineScrapeFailure=fresh.error();return;}
+      const auto current=std::ranges::find(*fresh,candidate->hash,&SavedMainlineScrapeTarget::hash);
+      if(current==fresh->end()||current->scope!=candidate->scope||current->full!=candidate->full){mainlineScrapes.revoke(candidate->hash);return;}
+      auto round=mainline->scrape(lt::sha1_hash(reinterpret_cast<const char*>(candidate->hash.bytes().data())),services::mainline_scrape::Dialect::OriginalBFse,candidate->noSeeds);
+      if(!round){mainlineScrapeFailure=round.error();return;}
+      const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+      if(!mainlineScrapes.started(candidate->hash,candidate->scope,*round,wall)){static_cast<void>(mainline->cancelScrape(*round));}
+    }
+  }
+  }catch(...){
+    // Optional authority/scheduling failures never tear down peer discovery.
+    try{
+      if(mainlineScrapes.active()){static_cast<void>(mainline->cancelScrape(*mainlineScrapes.active()));}
+      const auto millis=std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+      mainlineScrapes.unavailable();
+      if(mainlineScrapes.active()){mainlineScrapes.completed(*mainlineScrapes.active(),{},{},millis,0);}
+      mainlineScrapeFailure=storage::Error{storage::ErrorCode::Io,"Mainline scrape observations unavailable"};
+    }catch(...){}
+  }
+}
+
 static lt::sha1_hash discoveryHash(const core::TorrentHash& hash) {
   const auto bytes=hash.bytes();
   detail::require(bytes.size()>=20,"Mainline discovery requires a complete selected identity");
@@ -334,6 +403,7 @@ void advanceMainline() noexcept {
       mainlineStatus.failure=replies.error(); mainlineStatus.state=MainlineDiscoveryStatus::State::Unavailable;
       silenceMainlinePorts();mainline.reset(); return;
     }
+    advanceMainlineScrapes(now);
     advanceMainlinePorts();
     // Peer hints cannot authorize storage, metadata, network changes or a stale
     // handle. Re-evaluate the current admission at delivery, after stop/retire.

@@ -19,6 +19,7 @@ add_library(biglybtc_azureus_owned_udp STATIC
   azureus_db_value/db_value.cpp
   azureus_db_mapping/mapping.cpp
   azureus_db_runtime/database.cpp
+  azureus_db_runtime/storage_stats.cpp
 )
 target_include_directories(biglybtc_azureus_owned_udp PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/azureus_dht"

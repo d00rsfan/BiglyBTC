@@ -9,10 +9,12 @@ namespace biglybtc::services::azureus_db_runtime {
 namespace mapping=azureus_db_mapping;
 namespace lifecycle=azureus_db_value;
 enum class Error {Invalid,Unsupported,Thread,Busy,Closed,Capacity,Memory,Mapping};
+enum class StorageStatsMode { Absent,SuspendedDiversification };
 struct Limits {
   std::size_t maximumKeys=32,maximumEntriesPerKey=64;
   std::size_t payloadQuota=4*1024*1024; // Source existing bytes+4*entries, checked before expiry.
   std::int32_t originalRepublishMillis=8*60*60*1000;
+  StorageStatsMode storageStats=StorageStatsMode::Absent;
 };
 struct Snapshot {std::size_t keys=0,values=0,bytes=0;std::uint64_t stores=0,reads=0,expired=0;bool closed=false;};
 struct Read {std::int8_t diversification=1;std::vector<azureus_values::Value> values;};
@@ -25,6 +27,8 @@ public:
   ~Owner();
   Owner(const Owner&)=delete;Owner& operator=(const Owner&)=delete;
   std::expected<bool,Error> contains(std::string_view)const;
+  // Bind exactly once before records exist; transport supplies actual bound socket/NodeCache contact.
+  std::expected<void,Error> bindLocal(const azureus_nodes::Contact&);
   std::expected<std::int8_t,Error> store(std::string_view,const azureus_nodes::Contact& sender,
       std::span<const azureus_values::Value>,lifecycle::WallClock&);
   std::expected<std::optional<Read>,Error> read(std::string_view,const azureus_nodes::Contact& reader,
