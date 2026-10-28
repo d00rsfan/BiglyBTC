@@ -229,7 +229,11 @@ std::expected<void,Failure> OwnedPingTransport::start(const QHostAddress& bindAd
       } }
     }
   }
-  auto rollback=qScopeGuard([this] { authority_.reset();admission_.reset();localId_.reset();nodeCache_.reset();socket_.close(); });
+  auto rollback=qScopeGuard([this] { database_.reset();authority_.reset();admission_.reset();localId_.reset();nodeCache_.reset();socket_.close(); });
+  if(config_.generatedStoreService&&config_.generatedStoreService->volatileDatabase){
+    auto made=database::Owner::create(*config_.generatedStoreService->volatileDatabase);if(!made){return std::unexpected(Failure::Capacity);}
+    database_=std::move(*made);
+  }
   if (!socket_.bind(address,0,QUdpSocket::DontShareAddress)) { return std::unexpected(Failure::Send); }
   socket_.setSocketOption(QAbstractSocket::ReceiveBufferSizeSocketOption,65536);
   nodeCache_=std::make_unique<find::nodes::NodeCache>(); // Construct on the actual Qt owner, after any moveToThread.
@@ -416,6 +420,7 @@ void OwnedPingTransport::deliver() {
 }
 void OwnedPingTransport::close() {
   if (!owner() || state_==State::Closed) { return; }
+  if(database_){database_->close();database_.reset();}
   state_=State::Closed;socket_.close();deadline_.stop();peers_.clear();authority_.reset();admission_.reset();localId_.reset();nodeCache_.reset();
   while (!pending_.empty()) { finish(pending_.begin()->first,std::unexpected(Failure::Closed)); }
 }
@@ -547,6 +552,7 @@ void OwnedPingTransport::answerService(const Peer& peer,ServiceRequest request,s
     const auto found=std::ranges::find(service.keyStates,key,&policy::Key::bytes);
     if (found==service.keyStates.end()) { policy::Key missing;missing.bytes=key;input.keys.push_back(std::move(missing)); }
     else { input.keys.push_back(*found); }
+    if(database_){const auto exists=database_->contains(key);if(!exists){receipt.databaseError=exists.error();receipt.status=ServiceStatus::DatabaseFailed;retain();return;}input.keys.back().exists=*exists;}
   }
   for (const auto& set:storeRequest.valueSets) {
     auto& origins=input.valueOriginators.emplace_back();origins.reserve(set.size());for (const auto& value:set) { origins.push_back(value.originator.id); }
@@ -561,7 +567,17 @@ void OwnedPingTransport::answerService(const Peer& peer,ServiceRequest request,s
     else { receipt.status=ServiceStatus::PolicyFailed;++statistics_.policyErrors; }
     retain();return;
   }
-  const auto& decision=*result;std::expected<std::string,Failure> wire=std::unexpected(Failure::Encode);
+  auto& decision=*result;std::expected<std::string,Failure> wire=std::unexpected(Failure::Encode);
+  if(database_){
+    struct Wall final:database::lifecycle::WallClock{std::int64_t nowMilliseconds()noexcept override{return QDateTime::currentMSecsSinceEpoch();}} clock;
+    for(const auto& event:decision.events){if(event.type!=policy::EventType::Store){continue;}
+      if(event.index>=storeRequest.keys.size()||event.index>=storeRequest.valueSets.size()
+          ||(!decision.blocked()&&(!decision.diversification||event.index>=decision.diversification->size()))){receipt.status=ServiceStatus::DatabaseFailed;retain();return;}
+      const auto stored=database_->store(storeRequest.keys[event.index],sender,storeRequest.valueSets[event.index],clock);
+      if(!stored){receipt.databaseError=stored.error();receipt.status=ServiceStatus::DatabaseFailed;retain();return;}
+      if(decision.diversification&&event.index<decision.diversification->size()){(*decision.diversification)[event.index]=*stored;}
+    }
+  }
   if (decision.blocked() && sender.protocol>=14) {
     remote_error::ReplyFields reply;reply.header=replyHeader(1032);receipt.replyAction=1032;reply.type=2;
     if (decision.blockRequest) { reply.request=*decision.blockRequest; }
@@ -579,6 +595,57 @@ void OwnedPingTransport::answerService(const Peer& peer,ServiceRequest request,s
   }
   sendServiceReply(receipt,std::move(wire));retain();
 }
+std::expected<database::Snapshot,Failure> OwnedPingTransport::databaseState()const{
+  if(!owner()){return std::unexpected(Failure::Thread);}if(!database_){return std::unexpected(Failure::State);}
+  const auto value=database_->snapshot();if(!value){return std::unexpected(Failure::State);}return *value;
+}
+void OwnedPingTransport::answerDatabase(const Peer& peer,const lookup::Decoded& request,std::int64_t receivedAt){
+  if(!database_||!config_.generatedStoreService||!nodeCache_){return;}
+  const auto& incoming=request.header().fields();
+  const auto header=[&](std::int32_t action){packet::udp::EncodeFields h;h.kind=packet::udp::Kind::Reply;h.action=action;
+    h.network=config_.network;h.localVersion=config_.version;h.remoteVersion=incoming.originatorVersion;
+    h.connection=incoming.connection;h.transaction=incoming.transaction;h.instance=config_.instance;h.flags=config_.flags;h.flags2=config_.flags2;
+    h.now=QDateTime::currentMSecsSinceEpoch();h.receivedAt=receivedAt;return h;};
+  const auto send=[&](const std::expected<std::string,lookup::Error>& encoded){
+    if(!encoded||encoded->size()>static_cast<std::size_t>(maximumDatagram)){++statistics_.malformed;return false;}
+    const auto sent=socket_.writeDatagram(encoded->data(),static_cast<qint64>(encoded->size()),peer.address,peer.port);
+    observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
+    if(sent!=static_cast<qint64>(encoded->size())){++statistics_.ioErrors;return false;}++statistics_.sent;return true;
+  };
+  if(!incoming.originator||!sameIp(originator(peer),*incoming.originator)){
+    remote_error::ReplyFields reply;reply.header=header(1032);reply.type=1;reply.originator=remote_error::Endpoint{originator(peer)};
+    const auto encoded=remote_error::encodeReply(reply);if(!encoded||encoded->size()>static_cast<std::size_t>(maximumDatagram)){++statistics_.malformed;return;}
+    const auto sent=socket_.writeDatagram(encoded->data(),static_cast<qint64>(encoded->size()),peer.address,peer.port);observeSocketPayloadBytes(statistics_.sentPayloadBytes,sent);
+    if(sent==static_cast<qint64>(encoded->size())){++statistics_.sent;}else{++statistics_.ioErrors;}return;
+  }
+  const auto id=nodeCache_->lookup(find::nodes::ResolvedEndpoint{*incoming.originator,{}},incoming.originatorVersion);
+  if(!id){++statistics_.authorityErrors;return;}
+  find::nodes::Contact reader;reader.id=id->id;reader.address=*incoming.originator;reader.protocol=incoming.originatorVersion;
+  reader.instance=incoming.instance;reader.flags=incoming.flags;reader.skew=request.header().skew()->delta;
+  const auto& query=std::get<lookup::RequestBody>(request.body());
+  struct Wall final:database::lifecycle::WallClock{std::int64_t nowMilliseconds()noexcept override{return QDateTime::currentMSecsSinceEpoch();}} clock;
+  const auto result=database_->read(query.target,reader,query.maximumValues,query.flags,clock);
+  if(!result){++statistics_.policyErrors;return;}
+  if(!*result){
+    lookup::ReplyFields reply;reply.header=header(1031);reply.contacts=config_.generatedStoreService->findNodeContacts;
+    reply.positions=std::span<const std::optional<lookup::positions::WirePosition>>{};send(lookup::encodeReply(reply));return;
+  }
+  const auto& values=(**result).values;
+  if(values.empty()){
+    lookup::ReplyFields reply;reply.header=header(1031);reply.diversification=(**result).diversification;
+    reply.values=lookup::ValueSet{};send(lookup::encodeReply(reply));return;
+  }
+  // One real bounded value per fragment; no partial datagram or guessed value.
+  for(std::size_t i=0;i<values.size();++i){
+    const auto& value=values[i];lookup::values::Snapshot snapshot{value.version,value.created,value.bytes,
+        find::nodes::Snapshot{true,value.originator.protocol,value.originator.address},value.flags,value.lifeHours,value.replication};
+    std::array<std::optional<lookup::values::Snapshot>,1> snapshots{snapshot};
+    lookup::ReplyFields reply;reply.header=header(1031);reply.continuation=i+1<values.size();reply.diversification=(**result).diversification;
+    reply.values=lookup::ValueSet{snapshots};reply.remoteClockSkew=reader.skew;
+    if(!send(lookup::encodeReply(reply))){return;}
+  }
+}
+
 void OwnedPingTransport::consume() {
   if (draining_ || state_!=State::Bound) { return; }draining_=true;++statistics_.readTurns;
   for (unsigned i=0;i<workPerTurn && state_==State::Bound && socket_.hasPendingDatagrams();++i) {
@@ -634,7 +701,7 @@ void OwnedPingTransport::consume() {
     } else if (action==1030 || action==1031) {
       lookup::Context context;context.header=headerContext;auto decoded=lookup::decode(kind,std::move(bytes),context,*nodeCache_);
       if (!decoded) { ++statistics_.malformed;continue; }
-      if (kind==packet::udp::Kind::Request) { ++statistics_.requests;answer(peer,*decoded,headerContext.now);continue; }
+      if (kind==packet::udp::Kind::Request) { ++statistics_.requests;if(database_){answerDatabase(peer,*decoded,headerContext.now);}else{answer(peer,*decoded,headerContext.now);}continue; }
       const auto transaction=decoded->header().fields().transaction;
       if (pending_.at(transaction).expires<=Clock::now()) { ++statistics_.timeouts;finish(transaction,std::unexpected(Failure::Timeout));continue; }
       const auto continuation=std::get<lookup::ReplyBody>(decoded->body()).continuation;++statistics_.replies;

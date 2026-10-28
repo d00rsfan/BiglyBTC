@@ -16,6 +16,9 @@ add_library(biglybtc_azureus_owned_udp STATIC
   azureus_store_policy/store_policy.cpp
   azureus_udp/owned_transport.cpp
   azureus_router/router.cpp
+  azureus_db_value/db_value.cpp
+  azureus_db_mapping/mapping.cpp
+  azureus_db_runtime/database.cpp
 )
 target_include_directories(biglybtc_azureus_owned_udp PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/azureus_dht"
@@ -33,6 +36,9 @@ target_include_directories(biglybtc_azureus_owned_udp PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/azureus_store_policy"
   "${CMAKE_CURRENT_SOURCE_DIR}/azureus_udp"
   "${CMAKE_CURRENT_SOURCE_DIR}/azureus_router"
+  "${CMAKE_CURRENT_SOURCE_DIR}/azureus_db_value"
+  "${CMAKE_CURRENT_SOURCE_DIR}/azureus_db_mapping"
+  "${CMAKE_CURRENT_SOURCE_DIR}/azureus_db_runtime"
 )
 target_link_libraries(biglybtc_azureus_owned_udp PUBLIC Qt6::Core Qt6::Network PRIVATE OpenSSL::Crypto Threads::Threads)
 target_compile_features(biglybtc_azureus_owned_udp PUBLIC cxx_std_23)

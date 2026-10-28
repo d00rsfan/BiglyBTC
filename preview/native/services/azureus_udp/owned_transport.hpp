@@ -9,6 +9,7 @@
 #include "error.hpp"
 #include "authority.hpp"
 #include "store_policy.hpp"
+#include "database.hpp"
 #include <memory>
 #include <QChronoTimer>
 #include <QHostAddress>
@@ -27,6 +28,7 @@ namespace storage=biglybtc::services::azureus_store;
 namespace remote_error=biglybtc::services::azureus_error;
 namespace auth=biglybtc::services::azureus_auth;
 namespace policy=biglybtc::services::azureus_store_policy;
+namespace database=biglybtc::services::azureus_db_runtime;
 struct Peer { QHostAddress address;quint16 port=0;bool operator==(const Peer&) const=default; };
 struct Ticket { std::uint64_t value=0;bool operator==(const Ticket&) const=default; };
 enum class Failure { State,Thread,Peer,Capacity,Version,Deadline,Receiver,Random,Encode,Send,Timeout,Cancelled,Closed,Remote,Authority };
@@ -79,9 +81,10 @@ struct GeneratedStoreService {
   std::int32_t findNodeStatus=-1,estimatedSize=0;
   std::vector<find::nodes::Snapshot> findNodeContacts;
   std::size_t maximumReceipts=32;
+  std::optional<database::Limits> volatileDatabase; // Explicit generated-only real DB; absent preserves old mode.
 };
 using ServiceRequest=std::variant<find::Decoded,storage::Decoded>;
-enum class ServiceStatus { Replied,AddressRejected,AuthorityFailed,PolicyFailed,EncodeFailed,SendFailed };
+enum class ServiceStatus { Replied,AddressRejected,AuthorityFailed,PolicyFailed,EncodeFailed,SendFailed,DatabaseFailed };
 struct ServiceReceipt {
   Peer peer;
   ServiceRequest request;
@@ -93,6 +96,7 @@ struct ServiceReceipt {
   ServiceStatus status=ServiceStatus::EncodeFailed;
   std::int32_t replyAction=0;
   bool sent=false;
+  std::optional<database::Error> databaseError;
   ServiceReceipt(Peer,ServiceRequest);
   ServiceReceipt(const ServiceReceipt&);
   ServiceReceipt& operator=(const ServiceReceipt&);
@@ -149,6 +153,7 @@ public:
   std::expected<Ticket,Failure> requestStoreToken(Peer,std::int8_t remoteVersion,QObject* receiver,DetailedFindNodeCallback,
       std::chrono::nanoseconds deadline=std::chrono::seconds(30));
   std::expected<GeneratedServiceState,Failure> generatedServiceState() const;
+  std::expected<database::Snapshot,Failure> databaseState() const;
   // Owner-only pull. Moved receipts own the request referenced by policy indices.
   std::expected<std::optional<ServiceReceipt>,Failure> takeServiceReceipt();
   bool cancel(Ticket);
@@ -217,11 +222,13 @@ private:
   void answer(const Peer&,const lookup::Decoded&,std::int64_t receivedAt);
   void answer(const Peer&,const storage::Decoded&,std::int64_t receivedAt);
   void answerService(const Peer&,ServiceRequest,std::int64_t receivedAt);
+  void answerDatabase(const Peer&,const lookup::Decoded&,std::int64_t receivedAt);
   void sendServiceReply(ServiceReceipt&,std::expected<std::string,Failure>);
   Config config_;
   std::unique_ptr<find::nodes::NodeCache> nodeCache_;
   std::unique_ptr<auth::Authority> authority_;
   std::unique_ptr<policy::Admission> admission_;
+  std::unique_ptr<database::Owner> database_;
   std::optional<find::nodes::NodeId> localId_;
   std::deque<ServiceReceipt> serviceReceipts_;
   QUdpSocket socket_;
