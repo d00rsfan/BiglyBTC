@@ -20,6 +20,7 @@
 #include <libtorrent/torrent_status.hpp>
 
 #include <algorithm>
+#include <cerrno>
 #include <filesystem>
 #include <memory>
 #include <stdexcept>
@@ -39,7 +40,21 @@ inline void write(const QString& path, const QByteArray& bytes) {
   require(file.write(bytes) == bytes.size() && file.flush(), "Generated file write failed");
 }
 inline QByteArray read(const QString& path) {
-  QFile file(path); require(file.open(QIODevice::ReadOnly), "Cannot read generated file"); return file.readAll();
+  QFile file(path);
+  const auto failure = [&](const char* stage, int savedErrno) {
+    return std::runtime_error("Cannot read generated file: path=\"" + path.toUtf8().toStdString()
+        + "\" stage=" + stage + " qfileError=" + std::to_string(static_cast<int>(file.error()))
+        + " errno=" + std::to_string(savedErrno) + " errorString=\""
+        + file.errorString().toUtf8().toStdString() + "\"");
+  };
+  if (!file.open(QIODevice::ReadOnly)) {
+    const int savedErrno = errno;
+    throw failure("open", savedErrno);
+  }
+  const auto bytes = file.readAll();
+  const int savedErrno = errno;
+  if (file.error() != QFileDevice::NoError) { throw failure("readAll", savedErrno); }
+  return bytes;
 }
 inline lt::settings_pack localSettings() {
   lt::settings_pack settings;

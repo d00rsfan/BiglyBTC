@@ -565,6 +565,131 @@ def install_private_traffic_libtorrent(destination, dependency, source, payload)
         "package_role": "Original Debian package metadata and notices retained; its shared objects replaced"}
 
 
+# Additive exact traffic-V3 lane. Previous selectors/functions stay unchanged.
+PRIVATE_SOCKS_LIBTORRENT_SHA256 = 'a5b78ccb4ee17a6773899e797d867844c8a24a45358e260b7ab65a93e2954187'
+PRIVATE_SOCKS_LIBTORRENT_BYTES = 9139888
+PRIVATE_SOCKS_RUNTIME_MANIFEST_SHA256 = '2a5e56dd4987756e74871c3aad015ad93974e6d47aad8754b0ad05d09f3ca94e'
+PRIVATE_SOCKS_CANDIDATE = '/home/yurii/Java/BiglyBT/build/network-reliability-20261028/provider-socks-lifecycle'
+PRIVATE_SOCKS_RECORDS = {'provider-socks-source-build-record.json': '9f8d1f436f943994a117f9f33bbaf016f92bb60ab3c0cecf9e0b6f02efb3c6ee', 'provider-traffic-source-build-record.json': '91218c17d3e74bb79a0fea0cfbbf3734e3422895e59f46fad4cb6b17e2927fd0', 'provider-queue-source-build-record.json': '598a2501d1fb3175df4d7fe49e46add045ba78e79c9c0288b7d5b04b4cbaf087', 'provider-webseed-source-build-record.json': 'a2692224abe745899c52cee6f1535d7a9db0d995e1e863ec50f2b9323f4bbf08', 'provider-next-source-build-record.json': '3fcd415424d71e6082022f8be6bb1a75036a0fbf3b228228813e1a4cee1ffdca', 'provider-source-build-record.json': '34bbba203833a31e59f0e9101f232fc2aaebe2bf080bdb8b640a29d68bd4016f', 'source-build-record.json': '436931d4c6b87274c60b89877afedc19e06485bc4f04d120a3ab3e1889abfc66'}
+PRIVATE_SOCKS_VERIFIERS = {'verify_runtime_manifest_socks.py': '3a6cc04acda2d6ded210fa81487f2bc3ccf50d2c8b13ad3a2ec5025f4632eded', 'verify_runtime_manifest_traffic.py': '8e37f7ad597ea4d8af5665c35db4466d6e08d367e96380c0c3118454c8b7834b', 'verify_runtime_manifest_queue.py': 'd53a3efa5160764ac48212c0ce0c85aa0fad4e1d1760ea13c3c9f2e2aa6a0bf0', 'verify_runtime_manifest_webseed.py': 'b07b80c7aa6b0e1371f583eb15051b337cb4d8e96af76c65da5e20bcf6f00ab0', 'verify_runtime_manifest.py': 'db8dc81c8d2baf5cf3859d5706bacbea68253866bdbfc03b19d24cdcf2a7cb6c', 'verify_provider_next_runtime.py': '0922c9960a507c0b453b240ba3ca5b56c595eaf256fbcf5ce4bcf2d968b88e32', 'verify_provider_runtime.py': 'fc9ae8203bb6f32f94d57a05c5ea174944bdf1dbbe41ae51d9caf987ac01d89a'}
+
+def private_socks_source_libtorrent(path, manifest_path, build):
+    """Read-only exact private preflight; no loader/subprocess/target invocation."""
+    import importlib.util
+    import sys
+    sys.dont_write_bytecode = True
+
+    def pinned_file(candidate, pin):
+        if (not candidate.is_absolute() or candidate.is_symlink() or not candidate.is_file()
+                or candidate.resolve(strict=True) != candidate
+                or hashlib.sha256(candidate.read_bytes()).hexdigest() != pin):
+            raise ValueError("Changed/unqualified private-provider input: " + str(candidate))
+
+    manifest_path = manifest_path.absolute()
+    pinned_file(manifest_path, PRIVATE_SOCKS_RUNTIME_MANIFEST_SHA256)
+    for name, pin in PRIVATE_SOCKS_RECORDS.items():
+        pinned_file(manifest_path.parent / name, pin)
+    manifest = json.loads(manifest_path.read_bytes())
+    expected_roots = {key: str(Path(PRIVATE_SOCKS_CANDIDATE) / name) for key, name in (
+        ("source_root", "source"), ("build_root", "build"), ("install_root", "install"))}
+    if (any(manifest.get(key) != value for key, value in expected_roots.items())
+            or manifest.get("source_build_record") != "provider-socks-source-build-record.json"
+            or manifest.get("source_build_record_sha256") != PRIVATE_SOCKS_RECORDS["provider-socks-source-build-record.json"]
+            or manifest.get("purpose") != "source-bound-qualification-only"
+            or manifest.get("causal_qualified") is not False):
+        raise ValueError("Wrong exact private-provider source/history cohort")
+    source = path.absolute()
+    pinned_file(source, PRIVATE_SOCKS_LIBTORRENT_SHA256)
+    if (str(source) != manifest.get("artifact")
+            or source != Path(expected_roots["install_root"]) / "lib/libtorrent-rasterbar.so.2.0.12"
+            or manifest.get("artifact_sha256") != PRIVATE_SOCKS_LIBTORRENT_SHA256
+            or type(manifest.get("artifact_bytes")) is not int
+            or manifest["artifact_bytes"] != PRIVATE_SOCKS_LIBTORRENT_BYTES
+            or source.stat().st_size != PRIVATE_SOCKS_LIBTORRENT_BYTES):
+        raise ValueError("Expected the exact privately qualified traffic-V3 source artifact")
+    payload = source.read_bytes()
+    if (len(payload) != PRIVATE_SOCKS_LIBTORRENT_BYTES
+            or hashlib.sha256(payload).hexdigest() != PRIVATE_SOCKS_LIBTORRENT_SHA256):
+        raise ValueError("Private-provider source image changed during preflight")
+    binding = Path(__file__).resolve().parents[2] / "native/engine/runtime-binding"
+    # Both recursive helpers are pinned before executing the outer definitions.
+    # No import by ambient module name, path/version fallback or marker trust.
+    for name, pin in PRIVATE_SOCKS_VERIFIERS.items():
+        pinned_file(binding / name, pin)
+    spec = importlib.util.spec_from_file_location("biglybtc_portable_private_next_qualification",
+                                                binding / "verify_runtime_manifest_socks.py")
+    verifier = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(verifier)
+    admitted, pin = verifier.inspect(manifest_path, source, Path(expected_roots["install_root"]) / "include")
+    if pin != PRIVATE_SOCKS_RUNTIME_MANIFEST_SHA256 or admitted != manifest:
+        raise ValueError("Private provider failed complete source/build/SDK/history admission")
+    generated = build.resolve(strict=True) / "engine/runtime-binding"
+    receipt_path = generated / "configure-receipt.json"
+    header_path = generated / "persistent_runtime_config.hpp"
+    for candidate in (receipt_path, header_path):
+        if candidate.is_symlink() or not candidate.is_file() or candidate.resolve(strict=True) != candidate:
+            raise ValueError("Private-provider generated binding is not a canonical regular file")
+    receipt = json.loads(receipt_path.read_bytes())
+    expected = {"manifest_sha256": PRIVATE_SOCKS_RUNTIME_MANIFEST_SHA256,
+        "artifact_sha256": PRIVATE_SOCKS_LIBTORRENT_SHA256, "artifact": str(source),
+        "provider_queue_observer": True, "provider_traffic_v3": True, "provider_socks_cancellation": True,
+        "causal_qualified": False, "purpose": "source-bound-qualification-only"}
+    if (receipt != expected or any(type(receipt[key]) is not type(value) for key, value in expected.items())):
+        raise ValueError("Application was not configured against this exact private provider/SDK")
+    header = ("#pragma once\n#define BIGLYBTC_PERSISTENT_RUNTIME_BOUND 1\n"
+        "namespace biglybtc::engine::detail::runtime_binding {\n"
+        "inline constexpr char artifact[] = " + json.dumps(str(source)) + ";\n"
+        "inline constexpr char sha256[] = " + json.dumps(PRIVATE_SOCKS_LIBTORRENT_SHA256) + ";\n"
+        "inline constexpr char manifest[] = " + json.dumps(PRIVATE_SOCKS_RUNTIME_MANIFEST_SHA256) + ";\n"
+        "inline constexpr unsigned long long bytes = 9139888ULL;\n}\n")
+    if header_path.read_text() != header:
+        raise ValueError("Application compiled binding does not select this exact private provider")
+    return source, payload
+
+
+def install_private_socks_libtorrent(destination, dependency, source, payload):
+    """Only after exact private preflight, into main's fresh output directory."""
+    if (len(payload) != PRIVATE_SOCKS_LIBTORRENT_BYTES
+            or hashlib.sha256(payload).hexdigest() != PRIVATE_SOCKS_LIBTORRENT_SHA256):
+        raise ValueError("Changed private-provider bytes before installation")
+    private = destination / "usr/lib/biglybtc/lib"
+    lookup = dependency / "usr/lib/x86_64-linux-gnu"
+    for directory in (private, lookup):
+        directory.mkdir(parents=True, exist_ok=True)
+        if directory.is_symlink() or not directory.resolve().is_relative_to(destination.resolve()):
+            raise ValueError("Runtime directory escapes the fresh private distribution: " + str(directory))
+        for alias in directory.glob("libtorrent-rasterbar.so*"):
+            if alias.name not in LIBTORRENT_NAMES or (alias.is_dir() and not alias.is_symlink()):
+                raise ValueError("Unexpected runtime alias in the fresh private distribution: " + str(alias))
+            alias.unlink()
+    canonical = private / LIBTORRENT_NAMES[-1]
+    canonical.write_bytes(payload)
+    canonical.chmod(0o644)
+    for name in LIBTORRENT_NAMES[:-1]:
+        (private / name).symlink_to(canonical.name)
+    for name in LIBTORRENT_NAMES:
+        (lookup / name).symlink_to(os.path.relpath(canonical, lookup))
+    aliases = []
+    for directory in (private, lookup):
+        for name in LIBTORRENT_NAMES:
+            alias = directory / name
+            if (alias.resolve(strict=True) != canonical or alias.stat().st_size != PRIVATE_SOCKS_LIBTORRENT_BYTES
+                    or hashlib.sha256(alias.read_bytes()).hexdigest() != PRIVATE_SOCKS_LIBTORRENT_SHA256):
+                raise ValueError("Runtime alias differs from the exact private provider: " + str(alias))
+            aliases.append(alias.relative_to(destination).as_posix())
+    return {"provider": "source-built-private-socks-cancellation-traffic-v3", "version": "2.0.12",
+        "artifact_sha256": PRIVATE_SOCKS_LIBTORRENT_SHA256, "artifact_bytes": PRIVATE_SOCKS_LIBTORRENT_BYTES,
+        "source_input": str(source), "upstream_commit": SOURCE_LIBTORRENT_COMMIT,
+        "source_build_record_sha256": PRIVATE_SOCKS_RECORDS["provider-socks-source-build-record.json"],
+        "parent_source_build_record_sha256": PRIVATE_SOCKS_RECORDS["provider-traffic-source-build-record.json"],
+        "runtime_manifest_sha256": PRIVATE_SOCKS_RUNTIME_MANIFEST_SHA256,
+        "artifact": canonical.relative_to(destination).as_posix(), "aliases": aliases,
+        "instrumented": False, "causal_qualified": False, "shipping_approved": False,
+        "distribution_scope": "private-qualification-only",
+        "scope": "Exact private source/SDK-qualified dependency; application runtime qualification is separate",
+        "package_role": "Original Debian package metadata and notices retained; its shared objects replaced"}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", type=Path, required=True)
@@ -580,7 +705,14 @@ def main():
         help="Private qualification only: exact d33c source/SDK/13-export cohort; no shipping selector")
     parser.add_argument("--private-traffic-provider-manifest", type=Path,
         help="Private qualification only: exact traffic-V3 source/SDK/history cohort; no shipping selector")
+    parser.add_argument("--private-socks-provider-manifest", type=Path,
+        help="Private qualification only: exact cancellation-fixed source/SDK/history cohort")
     args = parser.parse_args()
+    if args.private_socks_provider_manifest is not None:
+        if any(value is not None for value in (args.private_traffic_provider_manifest, args.private_webseed_provider_manifest, args.private_source_provider_manifest, args.source_provider_manifest)):
+            parser.error("Select one explicit private or existing provider manifest")
+        if args.source_libtorrent is None:
+            parser.error("--private-socks-provider-manifest also requires --source-libtorrent")
     if args.private_traffic_provider_manifest is not None:
         if any(value is not None for value in (args.private_webseed_provider_manifest,
                 args.private_source_provider_manifest, args.source_provider_manifest)):
@@ -602,7 +734,9 @@ def main():
     source = None
     if args.source_libtorrent is not None:
         try:
-            if args.private_traffic_provider_manifest is not None:
+            if args.private_socks_provider_manifest is not None:
+                source = private_socks_source_libtorrent(args.source_libtorrent, args.private_socks_provider_manifest, args.build)
+            elif args.private_traffic_provider_manifest is not None:
                 source = private_traffic_source_libtorrent(args.source_libtorrent,
                     args.private_traffic_provider_manifest, args.build)
             elif args.private_webseed_provider_manifest is not None:
@@ -636,7 +770,9 @@ def main():
     subprocess.run(["dpkg-deb", "--extract", str(package), str(dependency)], check=True, timeout=60)
     provider = None
     if source is not None:
-        if args.private_traffic_provider_manifest is not None:
+        if args.private_socks_provider_manifest is not None:
+            provider = install_private_socks_libtorrent(destination, dependency, *source)
+        elif args.private_traffic_provider_manifest is not None:
             provider = install_private_traffic_libtorrent(destination, dependency, *source)
         elif args.private_webseed_provider_manifest is not None:
             provider = install_private_webseed_libtorrent(destination, dependency, *source)
@@ -694,7 +830,7 @@ def main():
             notice.write("\nThis folder uses the exact uninstrumented source-built libtorrent 2.0.12.\n"
                          "The extracted Debian package retains its metadata and license notices;\n"
                          "its shared objects resolve to the private source-built image.\n")
-    if args.private_source_provider_manifest is not None or args.private_webseed_provider_manifest is not None or args.private_traffic_provider_manifest is not None:
+    if args.private_source_provider_manifest is not None or args.private_webseed_provider_manifest is not None or args.private_traffic_provider_manifest is not None or args.private_socks_provider_manifest is not None:
         with (destination / "README.txt").open("a") as notice:
             notice.write("Private qualification folder only; no shipping approval is implied.\n")
     environment["LD_LIBRARY_PATH"] = str(dependency / "usr/lib/x86_64-linux-gnu")
@@ -760,7 +896,7 @@ def main():
         "dependency_package_sha256": hashlib.sha256(package.read_bytes()).hexdigest(),
         "files_sha256": files, "loader": linked, "system_installation": False,
     }
-    if args.private_source_provider_manifest is not None or args.private_webseed_provider_manifest is not None or args.private_traffic_provider_manifest is not None:
+    if args.private_source_provider_manifest is not None or args.private_webseed_provider_manifest is not None or args.private_traffic_provider_manifest is not None or args.private_socks_provider_manifest is not None:
         manifest["distribution_scope"] = "private-qualification-only"
     if country_bundle is not None:
         manifest["country_bundle"] = country_bundle

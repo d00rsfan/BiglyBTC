@@ -1820,3 +1820,15 @@ target_compile_options(biglybtc-queue-facts-replay PRIVATE -Wall -Wextra -Wpedan
 include("${CMAKE_CURRENT_SOURCE_DIR}/ProviderQueueRuntimeTests.cmake")
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/ProviderTrafficRuntimeTests.cmake")
+
+include("${CMAKE_CURRENT_SOURCE_DIR}/ProviderSocksRuntimeTests.cmake")
+
+# Append to preview/native/tests/CMakeLists.txt after Qt6::Test is available.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND TARGET Qt6::Test AND TARGET LibtorrentRasterbar::torrent-rasterbar)
+  add_executable(biglybtc-owned-fixture-read-tests owned_fixture_read_tests.cpp)
+  set_target_properties(biglybtc-owned-fixture-read-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-owned-fixture-read-tests PRIVATE BiglyBTC::Core LibtorrentRasterbar::torrent-rasterbar Qt6::Test)
+  target_compile_options(biglybtc-owned-fixture-read-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME owned-fixture-read-diagnostic COMMAND biglybtc-owned-fixture-read-tests)
+  set_tests_properties(owned-fixture-read-diagnostic PROPERTIES TIMEOUT 15 LABELS "unit;fixtures;io")
+endif()

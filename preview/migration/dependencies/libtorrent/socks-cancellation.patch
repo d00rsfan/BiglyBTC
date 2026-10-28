@@ -1,0 +1,571 @@
+--- a/include/libtorrent/socks5_stream.hpp
++++ b/include/libtorrent/socks5_stream.hpp
+@@ -35,6 +35,8 @@
+ #define TORRENT_SOCKS5_STREAM_HPP_INCLUDED
+ 
+ #include <functional>
++#include <memory>
++#include <vector>
+ 
+ #include "libtorrent/proxy_base.hpp"
+ #include "libtorrent/biglybtc_socks4a.hpp"
+@@ -96,6 +98,14 @@
+ 
+ class socks5_stream : public proxy_base
+ {
++	// Socket operations retain their buffers until completion, including
++	// when close() is followed immediately by another connect.
++	struct connect_attempt
++	{
++		std::vector<char> buffer;
++	};
++	using attempt_ptr = std::shared_ptr<connect_attempt>;
++
+ public:
+ 
+ 	// commands
+@@ -139,8 +149,23 @@
+ 			m_dst_name.resize(255);
+ 	}
+ 
++	void cancel()
++	{
++		m_attempt.reset();
++		m_resolver.cancel();
++		proxy_base::cancel();
++	}
++
++	void cancel(error_code& ec)
++	{
++		m_attempt.reset();
++		m_resolver.cancel();
++		proxy_base::cancel(ec);
++	}
++
+ 	void close(error_code& ec)
+ 	{
++		m_attempt.reset();
+ 		m_dst_name.clear();
+ 		proxy_base::close(ec);
+ 	}
+@@ -148,6 +173,7 @@
+ #ifndef BOOST_NO_EXCEPTIONS
+ 	void close()
+ 	{
++		m_attempt.reset();
+ 		m_dst_name.clear();
+ 		proxy_base::close();
+ 	}
+@@ -162,7 +188,19 @@
+ 		TORRENT_ASSERT(endpoint.address() != address()
+ 			|| (!m_dst_name.empty() && (m_version == 5 || m_version == biglybtc_socks4a_version)));
+ 
+-		m_remote_endpoint = endpoint;
++		auto attempt = std::make_shared<connect_attempt>();
++		endpoint_type const remote = endpoint;
++		// Supersede the old handshake before closing its transport. Pending
++		// callbacks retain their own buffers and cannot advance this attempt.
++		// Preserve the caller's newly configured destination name.
++		if (m_attempt)
++		{
++			m_attempt.reset();
++			error_code ignored;
++			proxy_base::close(ignored);
++		}
++		m_attempt = attempt;
++		m_remote_endpoint = remote;
+ 
+ 		// the connect is split up in the following steps:
+ 		// 1. resolve name of proxy server
+@@ -175,48 +213,83 @@
+ 
+ 		ADD_OUTSTANDING_ASYNC("socks5_stream::name_lookup");
+ 		m_resolver.async_resolve(m_hostname, to_string(m_port).data(), wrap_allocator(
+-			[this](error_code const& ec, tcp::resolver::results_type ips, Handler hn) {
+-				name_lookup(ec, std::move(ips), std::move(hn));
++			[this, attempt](error_code const& ec, tcp::resolver::results_type ips, Handler hn) {
++				name_lookup(ec, std::move(ips), attempt, std::move(hn));
+ 			}, std::move(handler)));
+ 	}
+ 
+ private:
+ 
++	// A resolver success already queued when close() runs must not reopen
++	// the socket or serialize a cleared destination.
++	template <typename Handler>
++	bool check_attempt(error_code const& e, attempt_ptr const& attempt, Handler&& h)
++	{
++		if (m_attempt != attempt)
++		{
++			std::forward<Handler>(h)(error_code(boost::asio::error::operation_aborted));
++			return true;
++		}
++		if (!e) return false;
++		finish_attempt(attempt, e, std::forward<Handler>(h));
++		return true;
++	}
++
++	template <typename Handler>
++	void finish_attempt(attempt_ptr const& attempt, error_code const& e, Handler&& h)
++	{
++		if (m_attempt != attempt)
++		{
++			std::forward<Handler>(h)(error_code(boost::asio::error::operation_aborted));
++			return;
++		}
++		m_attempt.reset();
++		if (e)
++		{
++			m_dst_name.clear();
++			error_code ignored;
++			proxy_base::close(ignored);
++		}
++		// The callback may destroy or reconnect the stream. All cleanup,
++		// including protocol-error cleanup, precedes it.
++		std::forward<Handler>(h)(e);
++	}
++
+ 	template <typename Handler>
+ 	void name_lookup(error_code const& e, tcp::resolver::results_type ips
+-		, Handler h)
++		, attempt_ptr const& attempt, Handler h)
+ 	{
+ 		COMPLETE_ASYNC("socks5_stream::name_lookup");
+-		if (handle_error(e, std::move(h))) return;
++		if (check_attempt(e, attempt, std::move(h))) return;
+ 
+ 		auto i = ips.begin();
+ 		if (!m_sock.is_open())
+ 		{
+ 			error_code ec;
+ 			m_sock.open(i->endpoint().protocol(), ec);
+-			if (handle_error(ec, std::move(h))) return;
++			if (check_attempt(ec, attempt, std::move(h))) return;
+ 		}
+ 
+ 		// TODO: we could bind the socket here, since we know what the
+ 		// target endpoint is of the proxy
+ 		ADD_OUTSTANDING_ASYNC("socks5_stream::connected");
+ 		m_sock.async_connect(i->endpoint(), wrap_allocator(
+-			[this](error_code const& ec, Handler hn)
+-			{ connected(ec, std::move(hn)); }, std::move(h)));
+-	}
+-
+-	template <typename Handler>
+-	void connected(error_code const& e, Handler h)
++			[this, attempt](error_code const& ec, Handler hn)
++			{ connected(ec, attempt, std::move(hn)); }, std::move(h)));
++	}
++
++	template <typename Handler>
++	void connected(error_code const& e, attempt_ptr const& attempt, Handler h)
+ 	{
+ 		COMPLETE_ASYNC("socks5_stream::connected");
+-		if (handle_error(e, std::move(h))) return;
++		if (check_attempt(e, attempt, std::move(h))) return;
+ 
+ 		using namespace libtorrent::aux;
+ 		if (m_version == 5)
+ 		{
+ 			// send SOCKS5 authentication methods
+-			m_buffer.resize(m_user.empty()?3:4);
+-			char* p = &m_buffer[0];
++			attempt->buffer.resize(m_user.empty()?3:4);
++			char* p = &attempt->buffer[0];
+ 			write_uint8(5, p); // SOCKS VERSION 5
+ 			if (m_user.empty())
+ 			{
+@@ -230,68 +303,68 @@
+ 				write_uint8(2, p); // username/password
+ 			}
+ 			ADD_OUTSTANDING_ASYNC("socks5_stream::handshake1");
+-			async_write(m_sock, boost::asio::buffer(m_buffer), wrap_allocator(
+-				[this](error_code const& ec, std::size_t, Handler hn) {
+-					handshake1(ec, std::move(hn));
++			async_write(m_sock, boost::asio::buffer(attempt->buffer), wrap_allocator(
++				[this, attempt](error_code const& ec, std::size_t, Handler hn) {
++					handshake1(ec, attempt, std::move(hn));
+ 				}, std::move(h)));
+ 		}
+ 		else if (m_version == 4 || m_version == biglybtc_socks4a_version)
+ 		{
+-			socks_connect(std::move(h));
++			socks_connect(attempt, std::move(h));
+ 		}
+ 		else
+ 		{
+-			std::move(h)(error_code(socks_error::unsupported_version));
+-		}
+-	}
+-
+-	template <typename Handler>
+-	void handshake1(error_code const& e, Handler h)
++			finish_attempt(attempt, error_code(socks_error::unsupported_version), std::move(h));
++		}
++	}
++
++	template <typename Handler>
++	void handshake1(error_code const& e, attempt_ptr const& attempt, Handler h)
+ 	{
+ 		COMPLETE_ASYNC("socks5_stream::handshake1");
+-		if (handle_error(e, std::move(h))) return;
++		if (check_attempt(e, attempt, std::move(h))) return;
+ 
+ 		ADD_OUTSTANDING_ASYNC("socks5_stream::handshake2");
+-		m_buffer.resize(2);
+-		async_read(m_sock, boost::asio::buffer(m_buffer), wrap_allocator(
+-			[this](error_code const& ec, std::size_t, Handler hn) {
+-				handshake2(ec, std::move(hn));
++		attempt->buffer.resize(2);
++		async_read(m_sock, boost::asio::buffer(attempt->buffer), wrap_allocator(
++			[this, attempt](error_code const& ec, std::size_t, Handler hn) {
++				handshake2(ec, attempt, std::move(hn));
+ 			}, std::move(h)));
+ 	}
+ 
+ 	template <typename Handler>
+-	void handshake2(error_code const& e, Handler h)
++	void handshake2(error_code const& e, attempt_ptr const& attempt, Handler h)
+ 	{
+ 		COMPLETE_ASYNC("socks5_stream::handshake2");
+-		if (handle_error(e, std::move(h))) return;
++		if (check_attempt(e, attempt, std::move(h))) return;
+ 
+ 		using namespace libtorrent::aux;
+ 
+-		char* p = &m_buffer[0];
++		char* p = &attempt->buffer[0];
+ 		int version = read_uint8(p);
+ 		int method = read_uint8(p);
+ 
+ 		if (version < m_version)
+ 		{
+-			std::move(h)(error_code(socks_error::unsupported_version));
++			finish_attempt(attempt, error_code(socks_error::unsupported_version), std::move(h));
+ 			return;
+ 		}
+ 
+ 		if (method == 0)
+ 		{
+-			socks_connect(std::move(h));
++			socks_connect(attempt, std::move(h));
+ 		}
+ 		else if (method == 2)
+ 		{
+ 			if (m_user.empty())
+ 			{
+-				std::move(h)(error_code(socks_error::username_required));
++				finish_attempt(attempt, error_code(socks_error::username_required), std::move(h));
+ 				return;
+ 			}
+ 
+ 			// start sub-negotiation
+-			m_buffer.resize(m_user.size() + m_password.size() + 3);
+-			p = &m_buffer[0];
++			attempt->buffer.resize(m_user.size() + m_password.size() + 3);
++			p = &attempt->buffer[0];
+ 			write_uint8(1, p);
+ 			TORRENT_ASSERT(m_user.size() < 0x100);
+ 			write_uint8(uint8_t(m_user.size()), p);
+@@ -301,72 +374,74 @@
+ 			write_string(m_password, p);
+ 
+ 			ADD_OUTSTANDING_ASYNC("socks5_stream::handshake3");
+-			async_write(m_sock, boost::asio::buffer(m_buffer), wrap_allocator(
+-				[this](error_code const& ec, std::size_t const, Handler hn) {
+-					handshake3(ec, std::move(hn));
++			async_write(m_sock, boost::asio::buffer(attempt->buffer), wrap_allocator(
++				[this, attempt](error_code const& ec, std::size_t const, Handler hn) {
++					handshake3(ec, attempt, std::move(hn));
+ 				}, std::move(h)));
+ 		}
+ 		else
+ 		{
+-			std::move(h)(error_code(socks_error::unsupported_authentication_method));
++			finish_attempt(attempt, error_code(socks_error::unsupported_authentication_method), std::move(h));
+ 			return;
+ 		}
+ 	}
+ 
+ 	template <typename Handler>
+-	void handshake3(error_code const& e, Handler h)
++	void handshake3(error_code const& e, attempt_ptr const& attempt, Handler h)
+ 	{
+ 		COMPLETE_ASYNC("socks5_stream::handshake3");
+-		if (handle_error(e, std::move(h))) return;
++		if (check_attempt(e, attempt, std::move(h))) return;
+ 
+ 		ADD_OUTSTANDING_ASYNC("socks5_stream::handshake4");
+-		m_buffer.resize(2);
+-		async_read(m_sock, boost::asio::buffer(m_buffer), wrap_allocator(
+-			[this](error_code const& ec, std::size_t, Handler hn) {
+-				handshake4(ec, std::move(hn));
++		attempt->buffer.resize(2);
++		async_read(m_sock, boost::asio::buffer(attempt->buffer), wrap_allocator(
++			[this, attempt](error_code const& ec, std::size_t, Handler hn) {
++				handshake4(ec, attempt, std::move(hn));
+ 			}, std::move(h)));
+ 	}
+ 
+ 	template <typename Handler>
+-	void handshake4(error_code const& e, Handler h)
++	void handshake4(error_code const& e, attempt_ptr const& attempt, Handler h)
+ 	{
+ 		COMPLETE_ASYNC("socks5_stream::handshake4");
+-		if (handle_error(e, std::move(h))) return;
++		if (check_attempt(e, attempt, std::move(h))) return;
+ 
+ 		using namespace libtorrent::aux;
+ 
+-		char* p = &m_buffer[0];
++		char* p = &attempt->buffer[0];
+ 		int version = read_uint8(p);
+ 		int status = read_uint8(p);
+ 
+ 		if (version != 1)
+ 		{
+-			std::move(h)(error_code(socks_error::unsupported_authentication_version));
++			finish_attempt(attempt, error_code(socks_error::unsupported_authentication_version), std::move(h));
+ 			return;
+ 		}
+ 
+ 		if (status != 0)
+ 		{
+-			std::move(h)(error_code(socks_error::authentication_error));
++			finish_attempt(attempt, error_code(socks_error::authentication_error), std::move(h));
+ 			return;
+ 		}
+ 
+-		std::vector<char>().swap(m_buffer);
+-		socks_connect(std::move(h));
+-	}
+-
+-	template <typename Handler>
+-	void socks_connect(Handler h)
+-	{
++		std::vector<char>().swap(attempt->buffer);
++		socks_connect(attempt, std::move(h));
++	}
++
++	template <typename Handler>
++	void socks_connect(attempt_ptr const& attempt, Handler h)
++	{
++		if (check_attempt(error_code{}, attempt, std::move(h))) return;
++
+ 		using namespace libtorrent::aux;
+ 
+ 		if (m_version == 5)
+ 		{
+ 			// send SOCKS5 connect command
+-			m_buffer.resize(6 + (!m_dst_name.empty()
++			attempt->buffer.resize(6 + (!m_dst_name.empty()
+ 				? m_dst_name.size() + 1
+ 				:(aux::is_v4(m_remote_endpoint) ? 4 : 16)));
+-			char* p = &m_buffer[0];
++			char* p = &attempt->buffer[0];
+ 			write_uint8(5, p); // SOCKS VERSION 5
+ 			write_uint8(std::uint8_t(m_command), p); // CONNECT command
+ 			write_uint8(0, p); // reserved
+@@ -394,14 +469,14 @@
+ 			if (m_command != socks5_connect || m_user.find('\0') != std::string::npos
+ 				|| (!remote_name && !m_dst_name.empty()))
+ 			{
+-				std::move(h)(error_code(boost::asio::error::invalid_argument));
++				finish_attempt(attempt, error_code(boost::asio::error::invalid_argument), std::move(h));
+ 				return;
+ 			}
+ 			// SOCKS4 uses numeric IPv4. SOCKS4a carries the bounded destination
+ 			// as a NUL-terminated name after USERID, never a local DNS fallback.
+ 			if (!remote_name && !aux::is_v4(m_remote_endpoint))
+ 			{
+-				std::move(h)(error_code(boost::asio::error::address_family_not_supported));
++				finish_attempt(attempt, error_code(boost::asio::error::address_family_not_supported), std::move(h));
+ 				return;
+ 			}
+ 			std::string const host = remote_name
+@@ -411,11 +486,11 @@
+ 				|| host.find('\0') != std::string::npos
+ 				|| (m_dst_name.empty() && m_remote_endpoint.address().is_unspecified())))
+ 			{
+-				std::move(h)(error_code(boost::asio::error::invalid_argument));
+-				return;
+-			}
+-			m_buffer.resize(m_user.size() + 9 + (remote_name ? host.size() + 1 : 0));
+-			char* p = &m_buffer[0];
++				finish_attempt(attempt, error_code(boost::asio::error::invalid_argument), std::move(h));
++				return;
++			}
++			attempt->buffer.resize(m_user.size() + 9 + (remote_name ? host.size() + 1 : 0));
++			char* p = &attempt->buffer[0];
+ 			write_uint8(4, p); // SOCKS VERSION 4
+ 			write_uint8(std::uint8_t(m_command), p); // CONNECT command
+ 			write_uint16(m_remote_endpoint.port(), p);
+@@ -431,44 +506,44 @@
+ 		}
+ 		else
+ 		{
+-			std::move(h)(error_code(socks_error::unsupported_version));
++			finish_attempt(attempt, error_code(socks_error::unsupported_version), std::move(h));
+ 			return;
+ 		}
+ 
+ 		ADD_OUTSTANDING_ASYNC("socks5_stream::connect1");
+-		async_write(m_sock, boost::asio::buffer(m_buffer), wrap_allocator(
+-			[this](error_code const& ec, std::size_t, Handler hn) {
+-				connect1(ec, std::move(hn));
++		async_write(m_sock, boost::asio::buffer(attempt->buffer), wrap_allocator(
++			[this, attempt](error_code const& ec, std::size_t, Handler hn) {
++				connect1(ec, attempt, std::move(hn));
+ 			}, std::move(h)));
+ 	}
+ 
+ 	template <typename Handler>
+-	void connect1(error_code const& e, Handler h)
++	void connect1(error_code const& e, attempt_ptr const& attempt, Handler h)
+ 	{
+ 		COMPLETE_ASYNC("socks5_stream::connect1");
+-		if (handle_error(e, std::move(h))) return;
++		if (check_attempt(e, attempt, std::move(h))) return;
+ 
+ 		if (m_version == 5)
+-			m_buffer.resize(6 + 4); // assume an IPv4 address
++			attempt->buffer.resize(6 + 4); // assume an IPv4 address
+ 		else if (m_version == 4 || m_version == biglybtc_socks4a_version)
+-			m_buffer.resize(8);
++			attempt->buffer.resize(8);
+ 
+ 		ADD_OUTSTANDING_ASYNC("socks5_stream::connect2");
+-		async_read(m_sock, boost::asio::buffer(m_buffer), wrap_allocator(
+-			[this](error_code const& ec, std::size_t, Handler hn) {
+-				connect2(ec, std::move(hn));
++		async_read(m_sock, boost::asio::buffer(attempt->buffer), wrap_allocator(
++			[this, attempt](error_code const& ec, std::size_t, Handler hn) {
++				connect2(ec, attempt, std::move(hn));
+ 			}, std::move(h)));
+ 	}
+ 
+ 	template <typename Handler>
+-	void connect2(error_code const& e, Handler h)
++	void connect2(error_code const& e, attempt_ptr const& attempt, Handler h)
+ 	{
+ 		COMPLETE_ASYNC("socks5_stream::connect2");
+-		if (handle_error(e, std::move(h))) return;
++		if (check_attempt(e, attempt, std::move(h))) return;
+ 
+ 		using namespace libtorrent::aux;
+ 
+-		char const* p = &m_buffer[0];
++		char const* p = &attempt->buffer[0];
+ 		int const version = read_uint8(p);
+ 		int const response = read_uint8(p);
+ 
+@@ -476,7 +551,7 @@
+ 		{
+ 			if (version < m_version)
+ 			{
+-				std::move(h)(error_code(socks_error::unsupported_version));
++				finish_attempt(attempt, error_code(socks_error::unsupported_version), std::move(h));
+ 				return;
+ 			}
+ 			if (response != 0)
+@@ -492,7 +567,7 @@
+ 					case 7: ec = socks_error::command_not_supported; break;
+ 					case 8: ec = boost::asio::error::address_family_not_supported; break;
+ 				}
+-				std::move(h)(ec);
++				finish_attempt(attempt, ec, std::move(h));
+ 				return;
+ 			}
+ 			p += 1; // reserved
+@@ -501,8 +576,8 @@
+ 			// on address type)
+ 			if (atyp == 1)
+ 			{
+-				std::vector<char>().swap(m_buffer);
+-				std::move(h)(e);
++				std::vector<char>().swap(attempt->buffer);
++				finish_attempt(attempt, e, std::move(h));
+ 				return;
+ 			}
+ 			std::size_t extra_bytes = 0;
+@@ -518,31 +593,31 @@
+ 			}
+ 			else
+ 			{
+-				std::move(h)(error_code(boost::asio::error::address_family_not_supported));
+-				return;
+-			}
+-			m_buffer.resize(m_buffer.size() + extra_bytes);
++				finish_attempt(attempt, error_code(boost::asio::error::address_family_not_supported), std::move(h));
++				return;
++			}
++			attempt->buffer.resize(attempt->buffer.size() + extra_bytes);
+ 
+ 			ADD_OUTSTANDING_ASYNC("socks5_stream::connect3");
+ 			TORRENT_ASSERT(extra_bytes > 0);
+-			async_read(m_sock, boost::asio::buffer(&m_buffer[m_buffer.size() - extra_bytes], extra_bytes)
+-				, wrap_allocator([this](error_code const& ec, std::size_t, Handler hn) {
+-					connect3(ec, std::move(hn));
++			async_read(m_sock, boost::asio::buffer(&attempt->buffer[attempt->buffer.size() - extra_bytes], extra_bytes)
++				, wrap_allocator([this, attempt](error_code const& ec, std::size_t, Handler hn) {
++					connect3(ec, attempt, std::move(hn));
+ 				}, std::move(h)));
+ 		}
+ 		else if (m_version == 4 || m_version == biglybtc_socks4a_version)
+ 		{
+ 			if (version != 0)
+ 			{
+-				std::move(h)(error_code(socks_error::general_failure));
++				finish_attempt(attempt, error_code(socks_error::general_failure), std::move(h));
+ 				return;
+ 			}
+ 
+ 			// access granted
+ 			if (response == 90)
+ 			{
+-				std::vector<char>().swap(m_buffer);
+-				std::move(h)(e);
++				std::vector<char>().swap(attempt->buffer);
++				finish_attempt(attempt, e, std::move(h));
+ 				return;
+ 			}
+ 
+@@ -553,24 +628,24 @@
+ 				case 92: ec = socks_error::no_identd; break;
+ 				case 93: ec = socks_error::identd_error; break;
+ 			}
+-			std::move(h)(ec);
+-		}
+-	}
+-
+-	template <typename Handler>
+-	void connect3(error_code const& e, Handler h)
++			finish_attempt(attempt, ec, std::move(h));
++		}
++	}
++
++	template <typename Handler>
++	void connect3(error_code const& e, attempt_ptr const& attempt, Handler h)
+ 	{
+ 		COMPLETE_ASYNC("socks5_stream::connect3");
+ 		using namespace libtorrent::aux;
+ 
+-		if (handle_error(e, std::move(h))) return;
+-
+-		std::vector<char>().swap(m_buffer);
+-		std::move(h)(e);
+-	}
+-
+-	// send and receive buffer
+-	std::vector<char> m_buffer;
++		if (check_attempt(e, attempt, std::move(h))) return;
++
++		std::vector<char>().swap(attempt->buffer);
++		finish_attempt(attempt, e, std::move(h));
++	}
++
++	// Only this handshake may advance the socket.
++	attempt_ptr m_attempt;
+ 	// proxy authentication
+ 	std::string m_user;
+ 	std::string m_password;

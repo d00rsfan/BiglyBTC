@@ -1,0 +1,10 @@
+{
+  "upstream_commit": "740a0b9aeabe00e762cc0efe4a0f27593db2550b",
+  "parent_artifact_sha256": "98279a468e0fa5147876b6f22f8947f432c294dfc02fb50cf179fc9472b3b51f",
+  "parent_record_sha256": "91218c17d3e74bb79a0fea0cfbbf3734e3422895e59f46fad4cb6b17e2927fd0",
+  "before_header_sha256": "4444715ce0d17139f665321ca9d9dbed9b06a2ee14fc31d2b359ae68179a8b3d",
+  "after_header_sha256": "97678a90bed06ee4c7324982a3baf455f313cb8e0d8aa87f95432594bd8a1ec2",
+  "patch_sha256": "c71a6eb1388f4620e5f943e9d9b4303a336babb2f96505c7b64785df91ab4479",
+  "source_build_record": "../../../native/engine/runtime-binding/provider-socks-source-build-record.json",
+  "scope": "Additional cancellation patch on the exact retained traffic-V3 provider; not applicable directly to unmodified upstream without the documented earlier patches. Development qualification only, not shipping approval."
+}

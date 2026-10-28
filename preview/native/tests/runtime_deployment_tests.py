@@ -31,7 +31,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--driver", type=Path, required=True)
     parser.add_argument("--provider", type=Path, required=True)
-    parser.add_argument("--mode", choices=("source", "selected", "provider-next", "webseed", "queue", "traffic", "strict"), required=True)
+    parser.add_argument("--mode", choices=("source", "selected", "provider-next", "webseed", "queue", "traffic", "socks", "strict"), required=True)
     parser.add_argument("--manifest", type=Path)
     parser.add_argument("--alternate", type=Path)
     parser.add_argument("--interposition-driver", type=Path)
@@ -82,6 +82,15 @@ def main():
         if (Path(declared["artifact"]).resolve(strict=True) != provider
                 or declared["artifact_sha256"] != original_sha or declared["artifact_bytes"] != provider.stat().st_size):
             raise ValueError("Traffic V3 relocation differs from the reviewed manifest")
+    elif args.mode == "socks":
+        if (not args.manifest or digest(args.manifest) != "2a5e56dd4987756e74871c3aad015ad93974e6d47aad8754b0ad05d09f3ca94e"
+                or original_sha != "a5b78ccb4ee17a6773899e797d867844c8a24a45358e260b7ab65a93e2954187" or provider.stat().st_size != 9139888
+                or not args.alternate or not args.interposition_driver or not args.preload):
+            raise ValueError("SOCKS cancellation relocation requires exact source/image and all rejection controls")
+        declared = json.loads(args.manifest.read_bytes())
+        if (Path(declared["artifact"]).resolve(strict=True) != provider
+                or declared["artifact_sha256"] != original_sha or declared["artifact_bytes"] != provider.stat().st_size):
+            raise ValueError("SOCKS cancellation relocation differs from the reviewed manifest")
     elif original_sha not in INSTRUMENTED:
         raise ValueError("Strict relocation test requires an exact retained instrumented image")
     root = Path(tempfile.mkdtemp(prefix="biglybtc-runtime-deploy-results-", dir="/tmp"))

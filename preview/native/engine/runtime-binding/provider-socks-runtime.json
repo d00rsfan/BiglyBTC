@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "causal_qualified": false,
+  "source_root": "/home/yurii/Java/BiglyBT/build/network-reliability-20261028/provider-socks-lifecycle/source",
+  "build_root": "/home/yurii/Java/BiglyBT/build/network-reliability-20261028/provider-socks-lifecycle/build",
+  "install_root": "/home/yurii/Java/BiglyBT/build/network-reliability-20261028/provider-socks-lifecycle/install",
+  "artifact": "/home/yurii/Java/BiglyBT/build/network-reliability-20261028/provider-socks-lifecycle/install/lib/libtorrent-rasterbar.so.2.0.12",
+  "artifact_sha256": "a5b78ccb4ee17a6773899e797d867844c8a24a45358e260b7ab65a93e2954187",
+  "artifact_bytes": 9139888,
+  "purpose": "source-bound-qualification-only",
+  "source_build_record": "provider-socks-source-build-record.json",
+  "source_build_record_sha256": "9f8d1f436f943994a117f9f33bbaf016f92bb60ab3c0cecf9e0b6f02efb3c6ee"
+}
