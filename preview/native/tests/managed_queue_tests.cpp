@@ -1,4 +1,5 @@
 #include "persistent_session.hpp"
+#include "managed_storage.hpp"
 #include "library_commands.hpp"
 #include "file_policy_commands.hpp"
 #include "owned_engine_fixture.hpp"
