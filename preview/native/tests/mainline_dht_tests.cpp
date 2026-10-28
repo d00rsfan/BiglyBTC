@@ -1,4 +1,5 @@
 #include "mainline_dht.hpp"
+#include <QElapsedTimer>
 #include "owned_mainline_krpc.hpp"
 #include "queued_mainline_scrape.hpp"
 #include "library_commands.hpp"
@@ -366,8 +367,15 @@ private slots:
     QVERIFY(actual->addNode({"127.0.0.1",fixture.port()}));QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),fixture.bootstrapQueries>0),15000);
     QVERIFY(actual->lookup(wanted));QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),observed.contains(wanted,peer.serverPort())),15000);
     fixture.duplicateScrapes(true); // Duplicate wire packets cannot create a second actual RPC callback.
+    // SDK defaults reject the50th incoming packet/IP within10s (including
+    // our duplicate replies). Keep this lifetime test below that wire budget;
+    // production queued rounds already run many orders of magnitude slower.
+    QElapsedTimer wirePace;wirePace.start();qint64 nextWire=0;
     std::uint64_t previous=0;
     for(unsigned i=0;i<96;++i){
+      QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),wirePace.elapsed()>=nextWire||!observed.failure.isEmpty()||!fixture.failure.isEmpty()),15000);
+      QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));
+      nextWire=wirePace.elapsed()+600;
       auto round=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY2(round,round?"":round.error().message.c_str());QVERIFY(*round>previous);previous=*round;
       QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),actual->status().scrapeQueuedResults==1||!observed.failure.isEmpty()||!fixture.failure.isEmpty()),15000);
       QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));
@@ -378,6 +386,9 @@ private slots:
     QCOMPARE(fixture.scrapes(),96);fixture.duplicateScrapes(false);
     // Reclaiming terminal cookies must not make the copied-result queue unbounded.
     for(unsigned i=0;i<64;++i){
+      QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),wirePace.elapsed()>=nextWire||!observed.failure.isEmpty()||!fixture.failure.isEmpty()),15000);
+      QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));
+      nextWire=wirePace.elapsed()+600;
       auto round=actual->scrape(wanted,services::mainline_scrape::Dialect::OriginalBFse);QVERIFY(round);
       QTRY_VERIFY_WITH_TIMEOUT((observed.pump(*actual),actual->status().scrapeQueuedResults==i+1||!observed.failure.isEmpty()||!fixture.failure.isEmpty()),15000);
       QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));QCOMPARE(actual->status().scrapeRetainedRounds,std::size_t{0});
