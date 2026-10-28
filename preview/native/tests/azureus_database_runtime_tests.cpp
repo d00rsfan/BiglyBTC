@@ -51,7 +51,10 @@ private slots:
    auto lower=value(a,"lower",9);QVERIFY((*owner)->store(key,a,{&lower,1},clock));
    auto read=(*owner)->read(key,b,0,0,clock);QVERIFY(read&&*read);QCOMPARE((**read).values.size(),std::size_t{1});QCOMPARE((**read).values.front().bytes,binary);
    clock.now=2000;auto equal=value(a,"different",10);QVERIFY((*owner)->store(key,a,{&equal,1},clock));
-   read=(*owner)->read(key,b,0,0,clock);QVERIFY(read&&*read);QCOMPARE((**read).values.front().bytes,binary);QCOMPARE((**read).values.front().created,std::int64_t{2000});
+   read=(*owner)->read(key,b,0,0,clock);QVERIFY(read&&*read);QCOMPARE((**read).values.front().bytes,binary);QCOMPARE((**read).values.front().created,std::int64_t{1000});
+   // Equal-version reset refreshes store time; creation only clamps backwards.
+   clock.now=500;QVERIFY((*owner)->store(key,a,{&equal,1},clock));
+   read=(*owner)->read(key,b,0,0,clock);QVERIFY(read&&*read);QCOMPARE((**read).values.front().bytes,binary);QCOMPARE((**read).values.front().created,std::int64_t{500});clock.now=2000;
    auto forwarded=value(a,"forwarded-newer",11);QVERIFY((*owner)->store(key,b,{&forwarded,1},clock));
    read=(*owner)->read(key,b,0,0,clock);QVERIFY(read&&*read);QCOMPARE((**read).values.front().bytes,binary);
    auto newer=value(a,"newer",11);QVERIFY((*owner)->store(key,a,{&newer,1},clock));
