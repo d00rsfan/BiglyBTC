@@ -7,6 +7,7 @@
 #include <thread>
 #include <algorithm>
 #include <limits>
+#include <utility>
 namespace {
 using namespace biglybtc;
 namespace db=services::azureus_db_runtime;
@@ -92,7 +93,7 @@ private slots:
    const std::string key(20,'D'),binary("a\0b\xff",4);
    udp::Config config;config.generatedStoreService.emplace();config.generatedStoreService->volatileDatabase.emplace();
    services::azureus_store_policy::Key ownedKey;ownedKey.bytes=key;ownedKey.closest=true;config.generatedStoreService->keyStates={ownedKey};
-   udp::OwnedPingTransport server(config),first(udp::Config{}),second(udp::Config{});QVERIFY(server.start());QVERIFY(first.start(QHostAddress(QStringLiteral("127.0.0.2"))));QVERIFY(second.start(QHostAddress(QStringLiteral("127.0.0.3"))));
+   udp::OwnedPingTransport server(std::move(config)),first(udp::Config{}),second(udp::Config{});QVERIFY(server.start());QVERIFY(first.start(QHostAddress(QStringLiteral("127.0.0.2"))));QVERIFY(second.start(QHostAddress(QStringLiteral("127.0.0.3"))));
    for(auto* peer:{&first,&second}){QVERIFY(server.allowPeer(peer->endpoint()));QVERIFY(peer->allowPeer(server.endpoint()));}
    const auto firstCookie=token(first,server.endpoint(),this),secondCookie=token(second,server.endpoint(),this);QVERIFY(firstCookie&&secondCookie);
    auto a=value(contact(first.endpoint()),binary,1,QDateTime::currentMSecsSinceEpoch());
@@ -120,20 +121,20 @@ private slots:
  void malformedAndWrongNetworkNeverReachTheDatabase(){
    const std::string key(20,'M');udp::Config config;config.generatedStoreService.emplace();config.generatedStoreService->volatileDatabase.emplace();
    services::azureus_store_policy::Key ownedKey;ownedKey.bytes=key;ownedKey.closest=true;config.generatedStoreService->keyStates={ownedKey};
-   udp::OwnedPingTransport server(config),valid(udp::Config{});QVERIFY(server.start());QVERIFY(valid.start());QVERIFY(server.allowPeer(valid.endpoint()));QVERIFY(valid.allowPeer(server.endpoint()));
+   udp::OwnedPingTransport server(std::move(config)),valid(udp::Config{});QVERIFY(server.start());QVERIFY(valid.start());QVERIFY(server.allowPeer(valid.endpoint()));QVERIFY(valid.allowPeer(server.endpoint()));
    QUdpSocket raw;QVERIFY(raw.bind(QHostAddress::LocalHost,0,QUdpSocket::DontShareAddress));QVERIFY(server.allowPeer({QHostAddress::LocalHost,raw.localPort()}));
    const auto malformed=server.statistics().malformed;QByteArray invalid(16,'\0');QCOMPARE(raw.writeDatagram(invalid,server.endpoint().address,server.endpoint().port),qint64{16});
    QVERIFY(spin([&]{return server.statistics().malformed>malformed;}));QVERIFY(token(valid,server.endpoint(),this));
-   udp::Config foreignConfig;foreignConfig.network=9;udp::OwnedPingTransport foreign(foreignConfig);QVERIFY(foreign.start());QVERIFY(server.allowPeer(foreign.endpoint()));QVERIFY(foreign.allowPeer(server.endpoint()));
+   udp::Config foreignConfig;foreignConfig.network=9;udp::OwnedPingTransport foreign(std::move(foreignConfig));QVERIFY(foreign.start());QVERIFY(server.allowPeer(foreign.endpoint()));QVERIFY(foreign.allowPeer(server.endpoint()));
    auto item=value(contact(foreign.endpoint()),"must-not-store",1,QDateTime::currentMSecsSinceEpoch());
    const auto denied=store(foreign,server.endpoint(),this,0,key,{item});QVERIFY(denied);QVERIFY(!denied->has_value());QCOMPARE(denied->error(),udp::Failure::Timeout);
    const auto state=server.databaseState();QVERIFY(state);QCOMPARE(state->stores,std::uint64_t{0});QCOMPARE(state->values,std::size_t{0});
    foreign.close();valid.close();server.close();
  }
  void legacyModeRemainsNonDatabaseAndUnsafeBindCannotActivateIt(){
-   udp::Config config;config.generatedStoreService.emplace();udp::OwnedPingTransport legacy(config);QVERIFY(legacy.start());QVERIFY(!legacy.databaseState());legacy.close();
-   config.generatedStoreService->volatileDatabase.emplace();udp::OwnedPingTransport refused(config);QVERIFY(!refused.start(QHostAddress(QStringLiteral("192.0.2.1"))));QVERIFY(!refused.databaseState());
-   config.findValueReply=std::vector<udp::FindValueSlice>{};udp::OwnedPingTransport mixed(config);QVERIFY(!mixed.start());
+   udp::Config config;config.generatedStoreService.emplace();udp::OwnedPingTransport legacy(std::move(config));QVERIFY(legacy.start());QVERIFY(!legacy.databaseState());legacy.close();
+   udp::Config refusedConfig;refusedConfig.generatedStoreService.emplace();refusedConfig.generatedStoreService->volatileDatabase.emplace();udp::OwnedPingTransport refused(std::move(refusedConfig));QVERIFY(!refused.start(QHostAddress(QStringLiteral("192.0.2.1"))));QVERIFY(!refused.databaseState());
+   udp::Config mixedConfig;mixedConfig.generatedStoreService.emplace();mixedConfig.generatedStoreService->volatileDatabase.emplace();mixedConfig.findValueReply=std::vector<udp::FindValueSlice>{};udp::OwnedPingTransport mixed(std::move(mixedConfig));QVERIFY(!mixed.start());
  }
 };
 QTEST_GUILESS_MAIN(AzureusDatabaseRuntimeTests)

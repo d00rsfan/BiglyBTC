@@ -628,7 +628,7 @@ private slots:
     QVERIFY(!actual->mainlineDiscovery().checkpointLoaded);QCOMPARE(actual->mainlineDiscovery().legacyHints,std::size_t{0});
     QCOMPARE(actual->mainlineDiscovery().portHintsAccepted,std::uint64_t{0});QCOMPARE(fixture.bootstrapQueries,0);
     PortPeer peer(transfer,*source.hash);
-    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value(),!peer.advertised.empty()||!peer.failure.isEmpty()),15000);
+    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value()&&(!peer.advertised.empty()||!peer.failure.isEmpty())),15000);
     QVERIFY2(peer.failure.isEmpty(),qPrintable(peer.failure));QVERIFY(peer.ready()&&peer.dhtSupported);
     for(const auto port:peer.advertised){QCOMPARE(port,static_cast<unsigned short>(policy.mainlinePort));QVERIFY(port!=transfer);QVERIFY(port!=peer.port());}
     // The real connected source is127.0.0.2; the KRPC endpoint binds there.
@@ -638,8 +638,8 @@ private slots:
     QCOMPARE(actual->mainlineDiscovery().portHintsAccepted,std::uint64_t{0});QCOMPARE(fixture.bootstrapQueries,0);
     peer.sendPort(fixture.port());peer.barrier();QTRY_VERIFY_WITH_TIMEOUT(peer.barriers==2||!peer.failure.isEmpty(),15000);
     QVERIFY2(peer.failure.isEmpty(),qPrintable(peer.failure));
-    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value(),pending(*actual,*metadata.hash)
-        &&pending(*actual,*metadata.hash)->phase==engine::MagnetPhase::Imported&&!pending(*actual,*metadata.hash)->retained),45000);
+    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value()&&(pending(*actual,*metadata.hash)
+        &&pending(*actual,*metadata.hash)->phase==engine::MagnetPhase::Imported&&!pending(*actual,*metadata.hash)->retained)),45000);
     QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));const auto result=pending(*actual,*metadata.hash);QVERIFY(result&&!result->failure);
     const auto discovery=actual->mainlineDiscovery();QCOMPARE(discovery.portHintsAccepted,std::uint64_t{1});QVERIFY(discovery.portHintsObserved>=1);
     QVERIFY(!discovery.portHintsLost);QVERIFY(discovery.deliveredPeers>0);QVERIFY(fixture.gets(intent->requested.v1)>0);
@@ -666,7 +666,7 @@ private slots:
     QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value()&&actual->tcpListenPort()&&managed(*actual,*source.hash)
         &&managed(*actual,*source.hash)->phase==engine::ManagedPhase::Downloading&&actual->mainlineDiscovery().portBridgeAvailable),15000);
     fixture.announcePort(*actual->tcpListenPort());const auto old=managed(*actual,*source.hash)->admission;PortPeer peer(*actual->tcpListenPort(),*source.hash);
-    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value(),!peer.advertised.empty()||!peer.failure.isEmpty()),15000);QVERIFY2(peer.failure.isEmpty(),qPrintable(peer.failure));
+    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value()&&(!peer.advertised.empty()||!peer.failure.isEmpty())),15000);QVERIFY2(peer.failure.isEmpty(),qPrintable(peer.failure));
     peer.sendPort(fixture.port());peer.barrier();QTRY_VERIFY_WITH_TIMEOUT(peer.barriers==1||!peer.failure.isEmpty(),15000);QVERIFY2(peer.failure.isEmpty(),qPrintable(peer.failure));
     // No owner poll between the ordered wire barrier and manual retirement.
     QVERIFY(actual->stopManaged(*source.hash));
@@ -675,10 +675,10 @@ private slots:
     QVERIFY(actual->startManaged(*held,{.hash=*source.hash,.forceStart=true}));
     QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value()&&managed(*actual,*source.hash)&&managed(*actual,*source.hash)->phase==engine::ManagedPhase::Downloading),15000);
     QVERIFY(managed(*actual,*source.hash)->admission!=old);QCOMPARE(actual->mainlineDiscovery().portHintsAccepted,std::uint64_t{0});
-    PortPeer current(*actual->tcpListenPort(),*source.hash);QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value(),!current.advertised.empty()||!current.failure.isEmpty()),15000);
+    PortPeer current(*actual->tcpListenPort(),*source.hash);QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value()&&(!current.advertised.empty()||!current.failure.isEmpty())),15000);
     QVERIFY2(current.failure.isEmpty(),qPrintable(current.failure));current.sendPort(fixture.port());current.barrier();
     QTRY_VERIFY_WITH_TIMEOUT(current.barriers==1||!current.failure.isEmpty(),15000);QVERIFY2(current.failure.isEmpty(),qPrintable(current.failure));
-    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value(),fixture.gets(lt::sha1_hash(reinterpret_cast<const char*>(source.hash->bytes().data())))>0||!fixture.failure.isEmpty()),15000);
+    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value()&&(fixture.gets(lt::sha1_hash(reinterpret_cast<const char*>(source.hash->bytes().data())))>0||!fixture.failure.isEmpty())),15000);
     QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));QCOMPARE(actual->mainlineDiscovery().portHintsAccepted,std::uint64_t{1});
     const auto closed=actual->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(source.accountingIntact(false));
   }
@@ -689,7 +689,7 @@ private slots:
     QVERIFY(actual->configureNetwork(policy));QVERIFY(actual->configureMainlineBootstrap({}));QVERIFY(actual->startIdle(*held));QVERIFY(actual->startManaged(*held,{.hash=*source.hash,.forceStart=true}));
     QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value()&&actual->tcpListenPort()&&managed(*actual,*source.hash)
         &&managed(*actual,*source.hash)->phase==engine::ManagedPhase::Downloading&&actual->mainlineDiscovery().portBridgeAvailable),15000);
-    PortPeer peer(*actual->tcpListenPort(),*source.hash);QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value(),!peer.advertised.empty()||!peer.failure.isEmpty()),15000);QVERIFY2(peer.failure.isEmpty(),qPrintable(peer.failure));
+    PortPeer peer(*actual->tcpListenPort(),*source.hash);QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value()&&(!peer.advertised.empty()||!peer.failure.isEmpty())),15000);QVERIFY2(peer.failure.isEmpty(),qPrintable(peer.failure));
     peer.sendPort(fixture.port(),65);peer.barrier();QTRY_VERIFY_WITH_TIMEOUT(peer.barriers==1||!peer.failure.isEmpty(),15000);QVERIFY2(peer.failure.isEmpty(),qPrintable(peer.failure));
     QVERIFY(actual->poll());const auto failed=actual->mainlineDiscovery();QVERIFY(failed.portHintsLost);QCOMPARE(failed.portHintsAccepted,std::uint64_t{0});
     QCOMPARE(failed.state,engine::MainlineDiscoveryStatus::State::Running);QCOMPARE(fixture.bootstrapQueries,0);QVERIFY(actual->tcpListenPort());
