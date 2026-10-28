@@ -16,6 +16,7 @@
 #include <functional>
 #include <memory>
 #include <optional>
+#include <vector>
 
 namespace biglybtc::engine {
 
@@ -46,6 +47,11 @@ using ApplicationObservationSink = std::function<void(ApplicationPeerObservation
 
 struct NetworkPolicy;
 struct PendingMagnet;
+// Last successful existing-pump refresh only; never a permission/dispatch DTO.
+struct MainlineScrapeCandidateStatus {
+  core::TorrentHash hash;
+  std::uint64_t admission;
+};
 struct MainlineDiscoveryStatus {
   enum class State { Disabled, Running, Unavailable, Closed };
   State state=State::Disabled;
@@ -58,6 +64,9 @@ struct MainlineDiscoveryStatus {
   bool portBridgeAvailable=false,portHintsLost=false;
   std::uint64_t portHintsObserved=0,portHintsAccepted=0,portHintsRejected=0;
   std::optional<storage::Error> queuedScrapeFailure{};
+  bool originalIdentityRequested=false,originalIdentityActive=false,originalIdentityJoined=false;
+  std::uint64_t originalIdentityAdoptions=0,originalIdentityRetirements=0;
+  std::vector<MainlineScrapeCandidateStatus> admittedScrapeCandidates{};
 };
 namespace detail { class PersistentCall; class PersistentOperation; }
 class PersistentSession;
@@ -122,6 +131,10 @@ public:
   std::expected<void, storage::Error> configureNetwork(const NetworkPolicy&);
   // Explicit bootstrap authority for owned/private deployments; empty means no routers.
   // Must be configured before startup. No provider, DNS or sockets are touched here.
+  // Explicit Host opt-in before startIdle. Retains the SAME OFD lease and
+  // original source; a failed restore latches optional discovery unavailable.
+  // Does not acquire another owner, write original files or start a service.
+  std::expected<void, storage::Error> configureOriginalMainlineIdentity(const storage::ProfileLease&);
   std::expected<void, storage::Error> configureMainlineBootstrap(std::vector<std::pair<std::string,int>>);
   MainlineDiscoveryStatus mainlineDiscovery() const;
   // Last accepted saved-target estimates; no LT/profile IO or rank authority.

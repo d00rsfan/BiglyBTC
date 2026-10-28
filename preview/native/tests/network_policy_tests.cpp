@@ -85,6 +85,31 @@ int main(int argc, char** argv) {
       rejected(malformed,Code::InvalidConfiguration);
     });
 
+    run("original wildcard bind facts retain multihoming without altering explicit numeric APIs", [] {
+      const auto defaults=normal();
+      CHECK(defaults.mainlineOriginalBindPlan && !defaults.mainlineMultihoming4 && defaults.mainlineMultihoming6);
+      CHECK(defaults.mainlineOriginalAutostart4 && defaults.mainlineOriginalAutostart6);
+      engine::NetworkPolicy api;CHECK(!api.mainlineOriginalBindPlan);
+      auto explicitBind=config({{"Bind IP",bytes("127.0.0.1")},{"Plugin.mldht.multihoming",integer(1)},
+          {"Plugin.mldht.multihoming6",integer(0)}});
+      const auto explicitPolicy=normal(&explicitBind);
+      CHECK(!explicitPolicy.mainlineOriginalBindPlan && explicitPolicy.mainlineMultihoming4 && !explicitPolicy.mainlineMultihoming6);
+      auto numeric6=config({{"Bind IP",bytes("127.0.0.1")},{"Plugin.mldht.autostart.IPv4",integer(0)}});
+      const auto legacy6=normal(&numeric6);CHECK(!legacy6.mainlineOriginalBindPlan && !legacy6.dht && !legacy6.ipv6);
+      auto wildcard=config({{"Bind IP",bytes("0.0.0.0")},{"Plugin.mldht.multihoming",integer(4294967296LL)},
+          {"Plugin.mldht.multihoming6",integer(2)}});
+      const auto imported=normal(&wildcard);CHECK(imported.mainlineOriginalBindPlan && !imported.mainlineMultihoming4 && imported.mainlineMultihoming6);
+      auto wrong=config({{"Plugin.mldht.multihoming6",bytes("wrong")}});rejected(wrong,Code::InvalidConfiguration);
+      for(unsigned field=0;field<5;++field){auto next=defaults;
+        switch(field){case 0:next.mainlineOriginalBindPlan=false;break;case 1:next.mainlineOriginalAutostart4=false;break;
+          case 2:next.mainlineOriginalAutostart6=false;break;case 3:next.mainlineMultihoming4=true;break;default:next.mainlineMultihoming6=false;break;}
+        auto live=engine::prepareLiveSettings(defaults,next);CHECK(live && live->restartFields);
+        CHECK(live->effectivePolicy.mainlineOriginalBindPlan==defaults.mainlineOriginalBindPlan
+            &&live->effectivePolicy.mainlineMultihoming6==defaults.mainlineMultihoming6);
+      }
+      CHECK(explicitBind.originalBytes()==explicitBind.serialize() && wildcard.originalBytes()==wildcard.serialize());
+    });
+
     run("saved decentralized marker never becomes a tracker or enables discovery", [] {
       const std::string url="dht://0123456789ABCDEF0123456789ABCDEF01234567.dht/announce";
       const std::string source="d8:announce"+bytes(url)+"4:infod6:lengthi1e4:name1:x12:piece lengthi16384e6:pieces20:"+std::string(20,'h')+"ee";
@@ -139,13 +164,17 @@ int main(int argc, char** argv) {
       auto javaNonzero = config({{"Plugin.mldht.enable", integer(2)}});
       CHECK(normal(&javaNonzero).dht);
     });
-    run("Mainline autostart families intersect global IPv6 permission", [] {
+    run("Mainline original wildcard autostart is independent of payload IPv6", [] {
       auto none = config({{"Plugin.mldht.autostart.IPv4", integer(0)},
           {"Plugin.mldht.autostart.IPv6", integer(0)}});
       const auto disabled = normal(&none);
       CHECK(!disabled.dht && !disabled.mainlineIpv4 && !disabled.mainlineIpv6);
       auto v6Only = config({{"Plugin.mldht.autostart.IPv4", integer(0)}});
-      CHECK(!normal(&v6Only).dht);
+      const auto original6=normal(&v6Only);
+      CHECK(original6.dht && original6.mainlineOriginalBindPlan && original6.mainlineOriginalAutostart6);
+      CHECK(!original6.ipv6 && !original6.mainlineIpv6); // Payload policy stays unchanged.
+      const auto payload=engine::makeNetworkSettings(original6);
+      CHECK(payload && !payload->get_bool(Settings::enable_dht));
       auto allowed = config({{"Plugin.mldht.autostart.IPv4", integer(0)}, {"IPV6 Enable Support", integer(1)}});
       const auto p = normal(&allowed);
       CHECK(p.dht && !p.mainlineIpv4 && p.mainlineIpv6);

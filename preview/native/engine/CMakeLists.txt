@@ -76,3 +76,18 @@ if(TARGET biglybtc_mainline_identity)
 else()
   target_compile_definitions(biglybtc_local_engine PRIVATE BIGLYBTC_ORIGINAL_MLDHT_IDENTITY_READER=0)
 endif()
+
+# Append under preview/native/engine after profile/plugin_settings/LT targets.
+# Owner activation consumes this component; no provider build or policy permission change.
+add_library(biglybtc_mainline_bind_plan STATIC mainline_bind_plan.hpp mainline_bind_plan.cpp)
+target_include_directories(biglybtc_mainline_bind_plan PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(biglybtc_mainline_bind_plan PUBLIC biglybtc_profile PRIVATE biglybtc_plugin_settings LibtorrentRasterbar::torrent-rasterbar)
+target_compile_features(biglybtc_mainline_bind_plan PUBLIC cxx_std_23)
+target_compile_options(biglybtc_mainline_bind_plan PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_link_libraries(biglybtc_local_engine PRIVATE biglybtc_mainline_bind_plan)
+
+
+# Worker-owned direct tracker stats; private Qt event loop, no GUI dependency.
+find_package(Qt6 6.12.0 EXACT REQUIRED COMPONENTS Network)
+target_sources(biglybtc_local_engine PRIVATE library_http_tracker.cpp library_http_protocol.cpp)
+target_link_libraries(biglybtc_local_engine PRIVATE Qt6::Network)

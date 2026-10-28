@@ -16,7 +16,7 @@ namespace biglybtc::storage {
 using MainlineIdentityKey = std::array<std::uint8_t, 20>;
 enum class OriginalMainlineIdentityState { Disabled, Missing, Imported };
 // Owned source observation only. This is not a live wire ID or a reservation.
-// Missing/malformed original files are never generated, repaired or replaced.
+// load() never generates, repairs or replaces original files.
 struct OriginalMainlineIdentitySnapshot {
   OriginalMainlineIdentityState state = OriginalMainlineIdentityState::Missing;
   std::string pluginDirectory;
@@ -28,6 +28,8 @@ struct OriginalMainlineIdentitySlot {
   std::uint32_t index;
 };
 
+enum class OriginalMainlineIdentityCreateStage { PendingSynced, PrimaryPublished };
+
 class OriginalMainlineIdentity final {
 public:
   static constexpr std::size_t MaximumBytes = 1024 * 1024;
@@ -35,6 +37,15 @@ public:
   // mainlineRestoreIdentity. Disabled mode does not open any original path.
   static std::expected<OriginalMainlineIdentity, Error> load(
       const ProfileLease&, std::string pluginDirectory, bool restoreIdentity = true);
+  // Explicit restore=true, absent primary and existing owned non-writable-by-
+  // others directories only. Generate internally, or recover an exact canonical
+  // private pending root; never replace/repair an existing primary. PendingSynced
+  // follows file+directory fsync; PrimaryPublished is before final directory
+  // fsync (an error can leave the published primary). No cancellation/retry loop.
+  // Returns a freshly loaded, fully validated reader on this SAME held lease.
+  static std::expected<OriginalMainlineIdentity, Error> createMissing(
+      const ProfileLease&, std::string pluginDirectory, bool restoreIdentity = true,
+      void (*observer)(OriginalMainlineIdentityCreateStage) = nullptr);
   OriginalMainlineIdentity(OriginalMainlineIdentity&&) noexcept;
   OriginalMainlineIdentity& operator=(OriginalMainlineIdentity&&) noexcept;
   OriginalMainlineIdentity(const OriginalMainlineIdentity&) = delete;

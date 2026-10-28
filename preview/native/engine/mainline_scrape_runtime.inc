@@ -45,12 +45,12 @@ void finishScrape(ScrapeRound& round,bool timedOut=false) {
   const auto counts=!summary||round.failed?services::mainline_scrape::Summary{}:*summary;
   completedScrapes.push_back({round.number,round.hash,round.dialect,counts,timedOut});
 }
-void issueScrape(ScrapeRound& round,const lt::dht_live_nodes_alert& table) {
+template<class Nodes> void issueScrapeNodes(ScrapeRound& round,const lt::sha1_hash& local,const Nodes& nodes) {
   if(round.closed||round.cancelled){return;}
   unsigned v4=0,v6=0;
   for(const auto& prior:round.probes){if(prior.issued){++(prior.endpoint.address().is_v4()?v4:v6);}}
-  for(const auto& [id,endpoint]:table.nodes()){
-    if(id.is_all_zeros()||id==table.node_id||!permittedContact(endpoint,ipv4,ipv6,bindings)){continue;}
+  for(const auto& [id,endpoint]:nodes){
+    if(id.is_all_zeros()||id==local||!permittedContact(endpoint,ipv4,ipv6,bindings)){continue;}
     auto& count=endpoint.address().is_v4()?v4:v6;
     if(count==8||round.issued==round.probes.size()){continue;}
     const bool duplicate=std::ranges::any_of(round.probes,[&](const auto& p){return p.issued&&p.endpoint==endpoint;});
@@ -63,6 +63,9 @@ void issueScrape(ScrapeRound& round,const lt::dht_live_nodes_alert& table) {
     session->dht_direct_request(endpoint,query,lt::client_data_t(&probe));
     probe.issued=true;++round.issued;++count;
   }
+}
+void issueScrape(ScrapeRound& round,const lt::dht_live_nodes_alert& table) {
+  issueScrapeNodes(round,table.node_id,table.nodes());
 }
 bool acceptScrape(const lt::dht_direct_response_alert& response) {
   auto* cookie=response.userdata.get<ScrapeProbe>();

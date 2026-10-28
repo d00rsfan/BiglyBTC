@@ -48,6 +48,9 @@ def plan(sdk, version, notices):
     for plugin_type in PLUGIN_TYPES:
         for plugin in sorted((sdk / "plugins" / plugin_type).glob("*.so")):
             add(plugin, f"{PRIVATE}/plugins/{plugin_type}/{plugin.name}", True)
+    # HTTPS is real client functionality: ship the actual OpenSSL TLS backend.
+    add(sdk / "plugins/tls/libqopensslbackend.so",
+        f"{PRIVATE}/plugins/tls/libqopensslbackend.so", True)
     queue.extend(("libQt6Core.so.6", "libQt6Gui.so.6", "libQt6Widgets.so.6", "libQt6Network.so.6"))
     seen = set()
     while queue:
@@ -72,6 +75,8 @@ def plan(sdk, version, notices):
     return {"variant": "bundled-qt", "qt_version": version,
         "private_runtime": PRIVATE, "files": list(files.values()),
         "system_sonames": sorted(seen - {pathlib.PurePosixPath(p).name for p in files}),
+        # The OpenSSL backend opens these SONAMEs at runtime, not via DT_NEEDED.
+        "runtime_loaded_system_sonames": ["libssl.so.3", "libcrypto.so.3"],
         "qualification": "experimental; SDK source/third-party redistribution closure remains pending"}
 
 

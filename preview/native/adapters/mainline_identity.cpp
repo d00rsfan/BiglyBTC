@@ -4,10 +4,13 @@
 #include "identity.hpp" // Existing source-pinned mlDHT plugin target; private dependency.
 
 #include <cerrno>
+#include <cstdio>
 #include <new>
 #include <utility>
 
 #include <fcntl.h>
+#include <linux/fs.h>
+#include <sys/random.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -179,5 +182,153 @@ std::expected<OriginalMainlineIdentitySlot, Error> OriginalMainlineIdentity::sel
   const auto selected = biglybtc::plugins::mldht::selectOriginalIdentity(*impl_->source.root, active);
   if (!selected) { return error(ErrorCode::Unsupported, "Original Mainline active identity bound exceeded"); }
   return OriginalMainlineIdentitySlot{selected->key, selected->index};
+}
+std::expected<OriginalMainlineIdentity, Error> OriginalMainlineIdentity::createMissing(
+    const ProfileLease& lease, std::string pluginDirectory, bool restoreIdentity,
+    void (*observer)(OriginalMainlineIdentityCreateStage)) {
+  // This is not the original malformed/restore=false replacement branch.
+  if (!restoreIdentity) { return error(ErrorCode::Unsupported, "Original Mainline replacement is not enabled"); }
+  try {
+    auto ownership = lease.retain(); if (!ownership) { return std::unexpected(ownership.error()); }
+    const ProfileLease& held = **ownership;
+    auto source = load(held, std::move(pluginDirectory), true);
+    if (!source) { return std::unexpected(source.error()); }
+    if (source->snapshot().state != OriginalMainlineIdentityState::Missing) {
+      return error(ErrorCode::Conflict, "Original Mainline first creation requires an absent primary");
+    }
+    const auto& captured = *source->impl_;
+    if (captured.plugins.get() < 0 || captured.directory.get() < 0) {
+      return error(ErrorCode::Missing, "Original Mainline first creation requires existing plugin directories");
+    }
+    if ((captured.profile.st_mode | captured.pluginsStamp.st_mode | captured.directoryStamp.st_mode) & 0022) {
+      return error(ErrorCode::UnsafePath, "Original Mainline creation directories must not allow other writers");
+    }
+    const int parent = captured.directory.get();
+    constexpr auto Pending = "baseID.config.BiglyBTC-pending";
+    const auto chainCurrent = [&]() -> std::expected<void, Error> {
+      auto retained = held.retain(); if (!retained) { return std::unexpected(retained.error()); }
+      auto currentProfile = profile(held); if (!currentProfile) { return std::unexpected(currentProfile.error()); }
+      if (!sameDirectory(captured.profile, *currentProfile)
+          || !currentDirectory(held.directoryHandle(), "plugins", captured.plugins.get(), captured.pluginsStamp)
+          || !currentDirectory(captured.plugins.get(), captured.source.pluginDirectory.c_str(), parent, captured.directoryStamp)) {
+        return error(ErrorCode::Conflict, "Original Mainline creation directory chain changed");
+      }
+      return {};
+    };
+    auto current = chainCurrent(); if (!current) { return std::unexpected(current.error()); }
+    current = source->validate(held); if (!current) { return std::unexpected(current.error()); }
+    detail::Descriptor pending(::openat(parent, Pending, O_RDONLY | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK));
+    detail::Descriptor created{-1};
+    std::string bytes;
+    struct stat approved{};
+    if (pending.get() < 0) {
+      if (errno != ENOENT) {
+        return error(errno == ELOOP || errno == ENOTDIR ? ErrorCode::UnsafePath : ErrorCode::Io,
+            "Cannot open original Mainline pending root safely");
+      }
+      MainlineIdentityKey key{};
+      std::size_t offset = 0;
+      while (offset < key.size()) {
+        const auto count = ::getrandom(key.data()+offset, key.size()-offset, GRND_NONBLOCK);
+        if (count < 0 && errno == EINTR) { continue; }
+        if (count <= 0) { return error(ErrorCode::Io, "Cannot generate original Mainline root"); }
+        offset += static_cast<std::size_t>(count);
+      }
+      bytes = biglybtc::plugins::mldht::encodeNewIdentity(key);
+      current = source->validate(held); if (!current) { return std::unexpected(current.error()); }
+      current = chainCurrent(); if (!current) { return std::unexpected(current.error()); }
+      auto written = detail::writeExclusiveOwned(parent, Pending, bytes, 0600);
+      if (!written) { return std::unexpected(written.error()); }
+      created = std::move(*written);
+      if (::fstat(created.get(), &approved) != 0 || !sameFile(approved, approved)) {
+        return error(ErrorCode::Conflict, "Created original Mainline pending root changed");
+      }
+      // Normalize only this exclusively created inode, never a recovery file.
+      if ((approved.st_mode & 07777) != 0600 && ::fchmod(created.get(), 0600) != 0) {
+        return error(ErrorCode::Io, "Cannot set private original Mainline pending mode");
+      }
+      if (::fsync(created.get()) != 0 || ::fstat(created.get(), &approved) != 0) {
+        return error(ErrorCode::Io, "Cannot synchronize original Mainline pending root");
+      }
+      // The shared writer retains O_WRONLY authority; read via a separate FD
+      // only after proving it is the SAME created inode and complete metadata.
+      pending = detail::Descriptor(::openat(parent, Pending, O_RDONLY | O_NOFOLLOW | O_CLOEXEC | O_NONBLOCK));
+      struct stat readStamp{};
+      if (pending.get() < 0 || ::fstat(pending.get(), &readStamp) != 0 || !sameFile(approved, readStamp)) {
+        return error(ErrorCode::Conflict, "Created original Mainline pending pathname changed");
+      }
+    } else {
+      if (::fstat(pending.get(), &approved) != 0 || !sameFile(approved, approved)
+          || (approved.st_mode & 07777) != 0600 || approved.st_size != 41) {
+        return error(ErrorCode::UnsafePath, "Recovery requires an owned private canonical pending root");
+      }
+      auto recovered = contents(pending.get(), approved); if (!recovered) { return std::unexpected(recovered.error()); }
+      auto parsed = biglybtc::plugins::mldht::readOriginalIdentity(*recovered);
+      if (!parsed || biglybtc::plugins::mldht::encodeNewIdentity(parsed->key) != *recovered) {
+        return error(ErrorCode::InvalidFormat, "Original Mainline pending root is not canonical");
+      }
+      bytes = std::move(*recovered); // Zero roots are valid; no entropy replacement.
+    }
+    const auto pendingCurrent = [&]() -> std::expected<void, Error> {
+      struct stat held{}, named{}, written{};
+      if (::fstat(pending.get(), &held) != 0 || ::fstatat(parent, Pending, &named, AT_SYMLINK_NOFOLLOW) != 0
+          || !sameFile(approved, held) || !sameFile(held, named) || (held.st_mode & 07777) != 0600
+          || held.st_size != 41 || (created.get() >= 0 && (::fstat(created.get(), &written) != 0 || !sameFile(held, written)))) {
+        return error(ErrorCode::Conflict, "Original Mainline pending authority changed");
+      }
+      auto read = contents(pending.get(), held); if (!read) { return std::unexpected(read.error()); }
+      if (*read != bytes || ::fstat(pending.get(), &held) != 0 || !sameFile(approved, held)
+          || ::fstatat(parent, Pending, &named, AT_SYMLINK_NOFOLLOW) != 0 || !sameFile(held, named)) {
+        return error(ErrorCode::Conflict, "Original Mainline pending content changed");
+      }
+      return chainCurrent();
+    };
+    current = pendingCurrent(); if (!current) { return std::unexpected(current.error()); }
+    if (::fsync(pending.get()) != 0 || ::fsync(parent) != 0) {
+      return error(ErrorCode::Io, "Cannot synchronize recoverable original Mainline pending root");
+    }
+    if (observer) { observer(OriginalMainlineIdentityCreateStage::PendingSynced); }
+    current = source->validate(held); if (!current) { return std::unexpected(current.error()); }
+    current = pendingCurrent(); if (!current) { return std::unexpected(current.error()); }
+    if (::renameat2(parent, Pending, parent, Leaf, RENAME_NOREPLACE) != 0) {
+      return error(errno == EEXIST || errno == ENOTEMPTY ? ErrorCode::Conflict
+          : errno == ENOSYS || errno == EINVAL || errno == EOPNOTSUPP ? ErrorCode::Unsupported : ErrorCode::Io,
+          "Original Mainline publication refused without replacement; pending retained");
+    }
+    if (observer) { observer(OriginalMainlineIdentityCreateStage::PrimaryPublished); }
+    current = chainCurrent(); if (!current) { return std::unexpected(current.error()); }
+    if (::fsync(parent) != 0) {
+      return error(ErrorCode::Io, "Original Mainline primary published but directory synchronization failed");
+    }
+    struct stat published{}, named{}, final{};
+    // Our rename may change ctime. Do not refresh authority just from metadata:
+    // reread the exact41 bytes, with full stable FD/name stamps on both sides.
+    if (::fstat(pending.get(), &published) != 0 || !sameFile(published, published)
+        || published.st_dev != approved.st_dev || published.st_ino != approved.st_ino
+        || published.st_mode != approved.st_mode || published.st_uid != approved.st_uid || published.st_gid != approved.st_gid
+        || published.st_size != 41 || published.st_mtim.tv_sec != approved.st_mtim.tv_sec
+        || published.st_mtim.tv_nsec != approved.st_mtim.tv_nsec
+        || ::fstatat(parent, Leaf, &named, AT_SYMLINK_NOFOLLOW) != 0 || !sameFile(published, named)) {
+      return error(ErrorCode::Conflict, "Published original Mainline root lost its owned inode");
+    }
+    auto publishedBytes = contents(pending.get(), published); if (!publishedBytes) { return std::unexpected(publishedBytes.error()); }
+    if (*publishedBytes != bytes || ::fstat(pending.get(), &final) != 0 || !sameFile(published, final)
+        || ::fstatat(parent, Leaf, &named, AT_SYMLINK_NOFOLLOW) != 0 || !sameFile(final, named)) {
+      return error(ErrorCode::Conflict, "Published original Mainline content changed");
+    }
+    auto reloaded = load(held, captured.source.pluginDirectory, true);
+    if (!reloaded) { return std::unexpected(reloaded.error()); }
+    if (reloaded->snapshot().state != OriginalMainlineIdentityState::Imported
+        || reloaded->snapshot().originalBytes != bytes || !sameFile(final, reloaded->impl_->fileStamp)
+        || !sameDirectory(captured.pluginsStamp, reloaded->impl_->pluginsStamp)
+        || !sameDirectory(captured.directoryStamp, reloaded->impl_->directoryStamp)) {
+      return error(ErrorCode::Conflict, "Reloaded original Mainline root differs from its publication");
+    }
+    current = chainCurrent(); if (!current) { return std::unexpected(current.error()); }
+    current = reloaded->validate(held); if (!current) { return std::unexpected(current.error()); }
+    return reloaded;
+  } catch (const std::bad_alloc&) {
+    return error(ErrorCode::Io, "Cannot allocate original Mainline first creation; pending or primary may remain");
+  }
 }
 } // namespace biglybtc::storage

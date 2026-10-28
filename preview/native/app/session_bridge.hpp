@@ -137,6 +137,7 @@ private:
   void ensureScheduler();
   void tickScheduler() noexcept;
   void initializePersistentOwner(std::stop_token);
+  void publishMainlineFailure() noexcept;
   void observeNative(const engine::ApplicationPeerObservation&) noexcept;
   void refreshDhtAccounting(bool ending = false) noexcept;
   void tickAccounting(bool force = false, bool ending = false) noexcept;

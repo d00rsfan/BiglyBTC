@@ -75,6 +75,12 @@ struct NetworkPolicy {
   int mainlinePort = 49001;
   bool mainlineIpv4 = true, mainlineIpv6 = true;
   bool mainlineBackupOnly = false, mainlinePeerBootstrapOnly = false;
+  // Imported original startup facts, independent of payload IPv6. The planner
+  // is enabled only by the original reader for default/wildcard binds; manually
+  // constructed numeric service policies keep their established behavior.
+  bool mainlineOriginalBindPlan = false;
+  bool mainlineOriginalAutostart4 = true, mainlineOriginalAutostart6 = true;
+  bool mainlineMultihoming4 = false, mainlineMultihoming6 = true;
 };
 struct TorrentNetworkSelection {
   bool publicNetwork = true, tor = false, i2p = false;

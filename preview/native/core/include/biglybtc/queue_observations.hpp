@@ -97,6 +97,8 @@ struct QueueTrackerTerminal {
   unsigned present=0;
   bool comparable=false,definitiveFailure=false;
   std::int64_t observedMillis=0,observedWallMillis=0,requestStartedWallMillis=0;
+  // Present only for a source-decoded HTTP scheduler recommendation.
+  std::optional<std::int64_t> regularDelayMillis;
 };
 class QueueOriginalTrackerResponse final {
 public:
@@ -105,6 +107,12 @@ public:
   bool eligible(std::int64_t nowMillis) const noexcept;
   bool regularDue(std::int64_t nowMillis) const noexcept;
   void requested() noexcept {pending_=true;}
+  void cancelRequest() noexcept {pending_=false;} // Withdraw only this pending transport, retaining response history.
+  // Original skips intermediate SCRAPING notifications, retaining the same
+  // last content. Caller must prove its actual scoped regular request lives.
+  bool eligibleDuringOwnedRequest() const noexcept {
+    return known_&&regular_&&pending_&&sourceQueueQueuedScrapeEligible(response(),ownStart_);
+  }
   bool publishDht(std::int32_t seeds,std::int32_t peers,std::int64_t startedWallMillis) noexcept;
   QueueOriginalScrapeResponse response() const noexcept;
   bool dhtBackup()const noexcept{return backup_;}

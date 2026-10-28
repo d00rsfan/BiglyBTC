@@ -12,6 +12,9 @@ std::shared_ptr<void> mainlinePortRuntimePin() noexcept;
 // Complete existing20 plus all three original-ID exports from the SAME exact
 // approved image; retains that proven object through service callbacks/join.
 std::shared_ptr<void> mainlineIdentityRuntimePin() noexcept;
+// Complete27 SAME-image proof: existing25 plus both socket-query exports.
+// No policy/source authority follows from this lifetime pin alone.
+std::shared_ptr<void> mainlineRoutingRuntimePin() noexcept;
 // Conservative combined25 proof for the additive rich tracker-terminal API.
 // A proven image pin grants no original-ID policy or torrent admission rights.
 std::shared_ptr<void> managedTrackerResponseRuntimePin() noexcept;

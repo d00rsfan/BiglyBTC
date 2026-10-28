@@ -52,7 +52,8 @@ void QueueOriginalTrackerResponse::observe(const QueueTrackerTerminal& value) no
   if(value.observedMillis<0||(value.present&~7u)){unavailable();return;}
   const bool scrape=value.kind==QueueTrackerTerminalKind::Scrape||value.kind==QueueTrackerTerminalKind::ScrapeFailed;
   const bool failed=value.kind==QueueTrackerTerminalKind::ScrapeFailed||value.kind==QueueTrackerTerminalKind::AnnounceFailed;
-  if(scrape){pending_=false;regular_=true;nextRegular_=value.observedMillis>INT64_MAX-600000?INT64_MAX:value.observedMillis+600000;}
+  if(scrape){pending_=false;regular_=true;const auto delay=value.regularDelayMillis.value_or(600000);
+    nextRegular_=delay>0&&value.observedMillis>INT64_MAX-delay?INT64_MAX:value.observedMillis+delay;}
   if(failed){
     if(!value.definitiveFailure){known_=false;return;}
     if(scrape){error_=true;visible_=true;} // Announce failure does not change the BT scraper object.

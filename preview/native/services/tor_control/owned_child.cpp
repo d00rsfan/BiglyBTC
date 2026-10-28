@@ -10,16 +10,21 @@
 #include <QProcess>
 #include <QProcessEnvironment>
 #include <QRegularExpression>
+#include <QSocketNotifier>
 #include <QThread>
 #include <QTimer>
 #include <openssl/crypto.h>
 #include <openssl/rand.h>
+#include <algorithm>
+#include <array>
 #include <cerrno>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <fcntl.h>
 #include <limits>
+#include <sys/inotify.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <utility>
@@ -144,7 +149,9 @@ struct OwnedTorChild::Impl {
   QFileSystemWatcher watcher;
   std::unique_ptr<OwnershipHandshake> handshake;
   std::vector<Directory> chain, executableChain;
-  Fd dataDirectory;
+  Fd dataDirectory, directoryEvents;
+  std::unique_ptr<QSocketNotifier> directoryNotifier;
+  std::vector<int> directoryWatches;
   File executable, config, cookie, portFile;
   OwnedTorChildOptions options;
   State state = State::Idle;
@@ -188,12 +195,94 @@ struct OwnedTorChild::Impl {
   }
   ~Impl() {
     destroying = true;
+    stopDirectoryWatch();
     QObject::disconnect(&process,nullptr,q,nullptr);
     QObject::disconnect(&watcher,nullptr,q,nullptr);
     discovery.stop(); deadline.stop(); escalation.stop();
     if (handshake) { handshake->blockSignals(true); handshake->stop(); handshake.reset(); }
     if (process.state() != QProcess::NotRunning) {
       process.kill(); process.waitForFinished(3000); // QProcess owns/reaps only its actual child.
+    }
+  }
+  void stopDirectoryWatch() {
+    if (directoryNotifier) {
+      directoryNotifier->setEnabled(false);
+      QObject::disconnect(directoryNotifier.get(),nullptr,q,nullptr);
+      // This may run inside activated(), including synchronous stop/delete.
+      // The notifier owns no FD and remains disabled until Qt deletes it.
+      directoryNotifier->deleteLater();
+      static_cast<void>(directoryNotifier.release());
+    }
+    directoryEvents = Fd{}; // Closing the instance releases every inode watch.
+    directoryWatches.clear();
+  }
+  bool watchDirectories() {
+    stopDirectoryWatch();
+    directoryEvents = Fd(::inotify_init1(IN_NONBLOCK|IN_CLOEXEC));
+    if (directoryEvents.value < 0) { return false; }
+    constexpr std::uint32_t mask = IN_ONLYDIR|IN_MOVE_SELF|IN_DELETE_SELF|IN_UNMOUNT|IN_ATTRIB;
+    const auto add = [this](int fd) {
+      const auto path = QByteArray("/proc/self/fd/")+QByteArray::number(fd);
+      // Follow only our already held FD, never resolve a fresh source pathname.
+      const int wd = ::inotify_add_watch(directoryEvents.value,path.constData(),mask);
+      if (wd < 0) { return false; }
+      if (std::find(directoryWatches.begin(),directoryWatches.end(),wd) == directoryWatches.end()) {
+        directoryWatches.push_back(wd);
+      }
+      return true;
+    };
+    for (const auto& directory : chain) { if (!add(directory.fd.value)) { return false; } }
+    for (const auto& directory : executableChain) { if (!add(directory.fd.value)) { return false; } }
+    if (!add(dataDirectory.value) || !baseCurrent()) { return false; }
+    directoryNotifier = std::make_unique<QSocketNotifier>(directoryEvents.value,QSocketNotifier::Read,q);
+    const auto at = generation;
+    QObject::connect(directoryNotifier.get(),&QSocketNotifier::activated,q,[this,at]{
+      if (at == generation && !destroying) { directoryChanged(); }
+    });
+    return true;
+  }
+  void directoryChanged() {
+    if (state != State::Starting && state != State::Discovering
+        && state != State::Authenticating && state != State::Ready) { return; }
+    // At most 16 KiB / 1024 self events in one activation. A readable remainder
+    // is delivered by the existing Qt dispatcher, without a timer or busy loop.
+    std::array<char,4096> buffer{};
+    bool attributes = false;
+    for (int reads = 0; reads < 4; ++reads) {
+      const auto count = ::read(directoryEvents.value,buffer.data(),buffer.size());
+      if (count < 0 && errno == EINTR) { continue; }
+      if (count < 0 && (errno == EAGAIN || errno == EWOULDBLOCK)) { break; }
+      if (count <= 0) { stopWithFailure(QStringLiteral("Owned Tor source watch lost")); return; }
+      std::size_t offset = 0;
+      const auto bytes = static_cast<std::size_t>(count);
+      while (offset < bytes) {
+        if (bytes-offset < sizeof(inotify_event)) {
+          stopWithFailure(QStringLiteral("Owned Tor source watch lost")); return;
+        }
+        inotify_event event{};
+        std::memcpy(&event,buffer.data()+offset,sizeof(event));
+        if (event.len > bytes-offset-sizeof(event) || (event.mask & (IN_Q_OVERFLOW|IN_IGNORED|IN_UNMOUNT))
+            || std::find(directoryWatches.begin(),directoryWatches.end(),event.wd) == directoryWatches.end()) {
+          stopWithFailure(QStringLiteral("Owned Tor source watch lost")); return;
+        }
+        // A recorded self rename/delete revokes the captured naming even if
+        // another actor restores the original name before this event is read.
+        if (!event.len && (event.mask & (IN_MOVE_SELF|IN_DELETE_SELF))) {
+          const bool current = baseCurrent();
+          stopWithFailure(current ? QStringLiteral("Owned Tor retained directory moved")
+              : QStringLiteral("Owned Tor retained source changed")); return;
+        }
+        if (!(event.mask & IN_ATTRIB) || (event.mask & ~(IN_ATTRIB|IN_ISDIR))) {
+          stopWithFailure(QStringLiteral("Owned Tor source watch lost")); return;
+        }
+        // IN_ATTRIB also reports named children. Their entries are not this
+        // directory proof; selected leaf watchers/held descendants cover them.
+        if (!event.len) { attributes = attributes || (event.mask & IN_ATTRIB); }
+        offset += sizeof(event)+event.len;
+      }
+    }
+    if (attributes && ((state == State::Ready || state == State::Authenticating) ? !sourceCurrent() : !baseCurrent())) {
+      stopWithFailure(QStringLiteral("Owned Tor retained source changed"));
     }
   }
   bool change(State next) {
@@ -275,10 +364,12 @@ struct OwnedTorChild::Impl {
     const auto files = watcher.files(), dirs = watcher.directories();
     if (!files.isEmpty()) { watcher.removePaths(files); }
     if (!dirs.isEmpty()) { watcher.removePaths(dirs); }
+    stopDirectoryWatch();
     handshake.reset(); chain.clear(); executableChain.clear(); dataDirectory = Fd{};
     executable = File{}; config = File{}; cookie = File{}; portFile = File{};
     reaped = false; // Current attempt; a refusal below proves no child was launched.
     if (!prepare()) { stoppingFailure = true; reason = QStringLiteral("Owned Tor source or fresh directory refused"); finished(); return false; }
+    if (!watchDirectories()) { stoppingFailure = true; reason = QStringLiteral("Owned Tor directory watch refused"); finished(); return false; }
     expires = Clock::now()+std::chrono::milliseconds(options.startupMilliseconds);
     deadline.start(options.startupMilliseconds); discovery.start();
     const int executableFd = executable.fd.value, directoryFd = chain.back().fd.value;
@@ -365,6 +456,7 @@ struct OwnedTorChild::Impl {
   void stop() {
     if (state == State::Stopped || state == State::Failed || state == State::Stopping) { return; }
     deadline.stop(); discovery.stop();
+    stopDirectoryWatch();
     if (handshake) { handshake->blockSignals(true); handshake->stop(); }
     if (!change(State::Stopping)) { return; }
     if (process.state() == QProcess::NotRunning) { finished(); return; }
@@ -374,6 +466,7 @@ struct OwnedTorChild::Impl {
     if (destroying || (reaped && (state == State::Stopped || state == State::Failed))) { return; }
     if (process.state() != QProcess::NotRunning) { return; }
     reaped = true; deadline.stop(); discovery.stop(); escalation.stop();
+    stopDirectoryWatch();
     if (handshake) { handshake->blockSignals(true); handshake->stop(); }
     const auto files = watcher.files(), dirs = watcher.directories();
     if (!files.isEmpty()) { watcher.removePaths(files); }

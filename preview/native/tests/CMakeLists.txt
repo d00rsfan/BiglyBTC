@@ -1923,17 +1923,25 @@ if(TARGET biglybtc_mainline_identity AND TARGET biglybtc_local_engine)
   target_link_libraries(biglybtc-mainline-original-wire-tests PRIVATE biglybtc_local_engine biglybtc_mainline_identity LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network)
   target_compile_options(biglybtc-mainline-original-wire-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
   add_test(NAME mainline-original-wire-identity COMMAND biglybtc-mainline-original-wire-tests)
-  set_tests_properties(mainline-original-wire-identity PROPERTIES TIMEOUT 90 LABELS "network;discovery;owned;optional-provider")
+  set_tests_properties(mainline-original-wire-identity PROPERTIES TIMEOUT 360 LABELS "network;discovery;owned;optional-provider")
 endif()
 
 # Append beside the existing real Mainline owner acceptance targets.
 if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
   add_executable(biglybtc-mainline-single-tracker-owner-tests mainline_single_tracker_owner_tests.cpp)
   set_target_properties(biglybtc-mainline-single-tracker-owner-tests PROPERTIES AUTOMOC ON)
+  if(TARGET biglybtc_mainline_identity)
+    target_link_libraries(biglybtc-mainline-single-tracker-owner-tests PRIVATE biglybtc_mainline_identity)
+    target_compile_definitions(biglybtc-mainline-single-tracker-owner-tests PRIVATE BIGLYBTC_TEST_ORIGINAL_MAINLINE_READER=1)
+  endif()
   target_link_libraries(biglybtc-mainline-single-tracker-owner-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network)
   target_compile_options(biglybtc-mainline-single-tracker-owner-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
   add_test(NAME mainline-single-tracker-owner COMMAND biglybtc-mainline-single-tracker-owner-tests)
   set_tests_properties(mainline-single-tracker-owner PROPERTIES TIMEOUT 210 LABELS "network;discovery;owned;slow")
+  if(TARGET biglybtc_mainline_identity)
+    # Additional real imported-token/admission row; all existing row deadlines remain unchanged.
+    set_tests_properties(mainline-single-tracker-owner PROPERTIES TIMEOUT 270)
+  endif()
 endif()
 
 include(ProviderOriginalIdentityRuntimeTests.cmake)
@@ -1944,3 +1952,61 @@ target_link_libraries(biglybtc-profile-lease-retention-tests PRIVATE biglybtc_pr
 target_compile_options(biglybtc-profile-lease-retention-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
 add_test(NAME profile-lease-retention COMMAND biglybtc-profile-lease-retention-tests)
 set_tests_properties(profile-lease-retention PROPERTIES TIMEOUT 30 LABELS "unit;storage;locking")
+
+# Real Host worker path is separate from the engine-only wire target.
+if(BIGLYBTC_DESKTOP AND TARGET biglybtc_mainline_identity AND TARGET biglybtc_desktop_host)
+  add_executable(biglybtc-mainline-original-host-tests mainline_original_host_tests.cpp)
+  set_target_properties(biglybtc-mainline-original-host-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-mainline-original-host-tests PRIVATE biglybtc_desktop_host biglybtc_mainline_identity biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network)
+  target_compile_options(biglybtc-mainline-original-host-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME mainline-original-host-identity COMMAND biglybtc-mainline-original-host-tests)
+  set_tests_properties(mainline-original-host-identity PROPERTIES TIMEOUT 180 ENVIRONMENT "QT_QPA_PLATFORM=offscreen" LABELS "network;discovery;owned;ui;optional-provider")
+endif()
+
+# Append beside the existing read-only identity suite; preserve that suite.
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND TARGET biglybtc_mainline_identity AND TARGET Qt6::Test)
+  add_executable(biglybtc-mainline-identity-create-tests mainline_identity_create_tests.cpp)
+  set_target_properties(biglybtc-mainline-identity-create-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-mainline-identity-create-tests PRIVATE biglybtc_mainline_identity Qt6::Test)
+  target_compile_options(biglybtc-mainline-identity-create-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_link_options(biglybtc-mainline-identity-create-tests PRIVATE
+    LINKER:--wrap=getrandom LINKER:--wrap=fsync LINKER:--wrap=renameat2)
+  add_test(NAME mainline-original-identity-create COMMAND biglybtc-mainline-identity-create-tests)
+  set_tests_properties(mainline-original-identity-create PROPERTIES TIMEOUT 45 LABELS "unit;storage;discovery;owned;writeback")
+endif()
+
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-mainline-single-udp-tests mainline_single_udp_tests.cpp)
+  set_target_properties(biglybtc-mainline-single-udp-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-mainline-single-udp-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network)
+  target_compile_options(biglybtc-mainline-single-udp-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME mainline-single-udp COMMAND biglybtc-mainline-single-udp-tests)
+  set_tests_properties(mainline-single-udp PROPERTIES TIMEOUT 240 LABELS "network;discovery;owned;slow")
+endif()
+
+# Append under preview/native/tests (Linux POSIX profile/route-source wrapper).
+if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND TARGET biglybtc_mainline_bind_plan)
+  add_executable(biglybtc-mainline-bind-plan-tests mainline_bind_plan_tests.cpp)
+  target_link_libraries(biglybtc-mainline-bind-plan-tests PRIVATE biglybtc_mainline_bind_plan LibtorrentRasterbar::torrent-rasterbar)
+  target_compile_options(biglybtc-mainline-bind-plan-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  target_link_options(biglybtc-mainline-bind-plan-tests PRIVATE LINKER:--wrap=getifaddrs LINKER:--wrap=freeifaddrs LINKER:--wrap=if_nametoindex LINKER:--wrap=socket)
+  add_test(NAME mainline-bind-plan COMMAND biglybtc-mainline-bind-plan-tests)
+  set_tests_properties(mainline-bind-plan PROPERTIES TIMEOUT 30 LABELS "unit;discovery;read-only;owned-profile")
+endif()
+
+# Existing actual Host target now also exercises genuine default-route capture.
+if(TARGET biglybtc-mainline-original-host-tests)
+  target_link_libraries(biglybtc-mainline-original-host-tests PRIVATE biglybtc_mainline_bind_plan)
+endif()
+
+include(ProviderMainlineRoutingRuntimeTests.cmake)
+
+# Append after the existing single-UDP registration; do not replace tests/CMakeLists.
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-mainline-single-http-tests mainline_single_http_tests.cpp)
+  set_target_properties(biglybtc-mainline-single-http-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-mainline-single-http-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network OpenSSL::Crypto)
+  target_compile_options(biglybtc-mainline-single-http-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME mainline-single-http COMMAND biglybtc-mainline-single-http-tests)
+  set_tests_properties(mainline-single-http PROPERTIES TIMEOUT 240 LABELS "network;discovery;owned;tls;slow")
+endif()

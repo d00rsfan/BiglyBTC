@@ -135,6 +135,58 @@ private slots:
     QVERIFY(denied("peersources","l3:DHTe"));QVERIFY(denied("peersourcesdenied","l7:Trackere"));QVERIFY(denied("pluginoptions","d5:mldhtd14:enableannouncei1eee"));test::write(fixture.stateFile,state);
     QCOMPARE(test::read(fixture.profile+"/downloads.config"),inventory);QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);QCOMPARE(test::read(fixture.stateFile),state);QVERIFY(fixture.intact(false));
   }
+#if BIGLYBTC_TEST_ORIGINAL_MAINLINE_READER
+  void retainedOriginalLeaseKeepsTheActualAdmittedTrackerScrapeCandidate(){
+    QVERIFY(engine::detail::managedTrackerResponseRuntimePin());
+    test::OwnedEngineFixture fixture(false);OwnedUdpTracker tracker(*fixture.hash,true);
+    prepareProfile(fixture,false,tracker.url());
+    // A real imported original root, separate from the actual admission's
+    // caller object. configureOriginal retains the SAME acquired OFD lock.
+    const auto root=fixture.profile+"/plugins/mldht/baseID.config";
+    const QByteArray rootBytes=QByteArray(20,'r').toHex().toUpper()+"\n";test::write(root,rootBytes);
+    const auto info=rawInfo(fixture.stateFile),payload=test::read(fixture.payload+"/sample.bin");
+    auto lease=storage::ProfileLease::acquire(fixture.native());QVERIFY(lease);
+    auto actual=engine::PersistentSession::create({7921,7922,7923});QVERIFY(actual);
+    auto selected=policy();tracker.peerPort(selected.listenPort);
+    QVERIFY((*actual)->configureNetwork(selected));QVERIFY((*actual)->configureMainlineBootstrap({}));
+    QVERIFY((*actual)->configureOriginalMainlineIdentity(*lease));
+    QVERIFY((*actual)->startIdle(*lease));QVERIFY((*actual)->startManaged(*lease,{.hash=*fixture.hash,.queued=false}));
+    QString failure;
+    const auto pump=[&]{
+      if(!(*actual)->poll()){failure="Retained original/admitted owner poll failed";return false;}
+      const auto status=(*actual)->mainlineDiscovery();
+      if(status.failure||status.queuedScrapeFailure){failure=QString::fromStdString(status.failure?status.failure->message:status.queuedScrapeFailure->message);return false;}
+      if(!tracker.failure.isEmpty()){failure=tracker.failure;return false;}
+      for(const auto& value:(*actual)->managedDownloads()){if(value.failure){failure=QString::fromStdString(value.failure->message);return false;}}
+      return true;
+    };
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{
+      if(!pump()){return true;}const auto values=(*actual)->managedDownloads();
+      return values.size()==1&&values[0].checked&&values[0].phase==engine::ManagedPhase::Downloading
+          &&tracker.announces>0&&tracker.scrapes>0&&(*actual)->mainlineDiscovery().originalIdentityActive;
+    }()),25000);QVERIFY2(failure.isEmpty(),qPrintable(failure));
+    const auto admission=(*actual)->managedDownloads()[0].admission;QVERIFY(admission);
+    // Existing10s refresh only. No production startup/check clock is replaced
+    // and no100s DHT scrape is needed to observe the genuinely eligible row.
+    QTRY_VERIFY_WITH_TIMEOUT(([&]{
+      if(!pump()){return true;}const auto status=(*actual)->mainlineDiscovery();
+      return status.admittedScrapeCandidates.size()==1&&status.admittedScrapeCandidates[0].hash==*fixture.hash
+          &&status.admittedScrapeCandidates[0].admission==admission;
+    }()),15000);QVERIFY2(failure.isEmpty(),qPrintable(failure));
+    const auto observed=(*actual)->mainlineDiscovery();QVERIFY(observed.originalIdentityActive);
+    QCOMPARE(observed.originalIdentityAdoptions,std::uint64_t{1});
+    QCOMPARE(observed.lookups,std::uint64_t{0});QCOMPARE(observed.announces,std::uint64_t{0});QCOMPARE(observed.deliveredPeers,std::uint64_t{0});
+    QVERIFY((*actual)->mainlineScrapeEstimates().empty());
+    const auto values=(*actual)->managedDownloads();QCOMPARE(values[0].admission,admission);
+    QCOMPARE(values[0].received,std::int64_t{0});QCOMPARE(values[0].sent,std::int64_t{0});
+    QVERIFY((*actual)->pauseManaged(*fixture.hash,true));QVERIFY((*actual)->mainlineDiscovery().admittedScrapeCandidates.empty());
+    const auto closed=(*actual)->close(std::chrono::steady_clock::now()+10s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
+    const auto retired=(*actual)->mainlineDiscovery();QVERIFY(retired.admittedScrapeCandidates.empty());QVERIFY(retired.originalIdentityJoined);
+    QCOMPARE(retired.originalIdentityRetirements,std::uint64_t{1});
+    QCOMPARE(test::read(root),rootBytes);QCOMPARE(test::read(fixture.payload+"/sample.bin"),payload);QCOMPARE(rawInfo(fixture.stateFile),info);
+    QVERIFY(fixture.accountingIntact(false));
+  }
+#endif
   void actualFailedUdpResponseAllowsScrapeWhileHealthyResponseSuppressesIt(){
     // A full catalog/mapping/source-image proof is mandatory. The marker and
     // SDK alone cannot turn this into an accepted configured-tracker test.

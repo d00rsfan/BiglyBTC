@@ -940,6 +940,130 @@ def install_private_original_identity_libtorrent(destination, dependency, source
         "package_role": "Original Debian package metadata and notices retained; its shared objects replaced"}
 
 
+PRIVATE_MAINLINE_ROUTING_LIBTORRENT_SHA256 = '35e6d55478547fdae5bce6fbc4c4c5a1bad576e2a943a1341c4df90e7f1da629'
+PRIVATE_MAINLINE_ROUTING_LIBTORRENT_BYTES = 9194904
+PRIVATE_MAINLINE_ROUTING_RUNTIME_MANIFEST_SHA256 = 'bb84628c0b874c317f7bbd39dc5bd216b8ea9c19b9df5587e9773108b9e9c93f'
+PRIVATE_MAINLINE_ROUTING_CANDIDATE = '/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r1'
+PRIVATE_MAINLINE_ROUTING_RECORDS = dict(PRIVATE_ORIGINAL_IDENTITY_RECORDS, **{'provider-mainline-routing-source-build-record.json': 'ac30c3c79d71d35c85475a5dbd3d551b4f8ac2178561b45c8452e16d8994f01b'})
+PRIVATE_MAINLINE_ROUTING_VERIFIERS = dict(PRIVATE_ORIGINAL_IDENTITY_VERIFIERS, **{'verify_runtime_manifest_mainline_routing.py': '5ee7369b7d135ed09620410e22b788c7bd1ee201cf9aea29fb9e55a68582d306'})
+
+def private_mainline_routing_source_libtorrent(path, manifest_path, build):
+    """Read-only exact private preflight; no loader/subprocess/target invocation."""
+    import importlib.util
+    import sys
+    sys.dont_write_bytecode = True
+
+    def pinned_file(candidate, pin):
+        if (not candidate.is_absolute() or candidate.is_symlink() or not candidate.is_file()
+                or candidate.resolve(strict=True) != candidate
+                or hashlib.sha256(candidate.read_bytes()).hexdigest() != pin):
+            raise ValueError("Changed/unqualified private-provider input: " + str(candidate))
+
+    manifest_path = manifest_path.absolute()
+    pinned_file(manifest_path, PRIVATE_MAINLINE_ROUTING_RUNTIME_MANIFEST_SHA256)
+    for name, pin in PRIVATE_MAINLINE_ROUTING_RECORDS.items():
+        pinned_file(manifest_path.parent / name, pin)
+    manifest = json.loads(manifest_path.read_bytes())
+    expected_roots = {key: str(Path(PRIVATE_MAINLINE_ROUTING_CANDIDATE) / name) for key, name in (
+        ("source_root", "source"), ("build_root", "build"), ("install_root", "install"))}
+    if (any(manifest.get(key) != value for key, value in expected_roots.items())
+            or manifest.get("source_build_record") != "provider-mainline-routing-source-build-record.json"
+            or manifest.get("source_build_record_sha256") != PRIVATE_MAINLINE_ROUTING_RECORDS["provider-mainline-routing-source-build-record.json"]
+            or manifest.get("purpose") != "source-bound-qualification-only"
+            or manifest.get("causal_qualified") is not False):
+        raise ValueError("Wrong exact private-provider source/history cohort")
+    source = path.absolute()
+    pinned_file(source, PRIVATE_MAINLINE_ROUTING_LIBTORRENT_SHA256)
+    if (str(source) != manifest.get("artifact")
+            or source != Path(expected_roots["install_root"]) / "lib/libtorrent-rasterbar.so.2.0.12"
+            or manifest.get("artifact_sha256") != PRIVATE_MAINLINE_ROUTING_LIBTORRENT_SHA256
+            or type(manifest.get("artifact_bytes")) is not int
+            or manifest["artifact_bytes"] != PRIVATE_MAINLINE_ROUTING_LIBTORRENT_BYTES
+            or source.stat().st_size != PRIVATE_MAINLINE_ROUTING_LIBTORRENT_BYTES):
+        raise ValueError("Expected the exact privately qualified PORT source artifact")
+    payload = source.read_bytes()
+    if (len(payload) != PRIVATE_MAINLINE_ROUTING_LIBTORRENT_BYTES
+            or hashlib.sha256(payload).hexdigest() != PRIVATE_MAINLINE_ROUTING_LIBTORRENT_SHA256):
+        raise ValueError("Private-provider source image changed during preflight")
+    binding = Path(__file__).resolve().parents[2] / "native/engine/runtime-binding"
+    # Both recursive helpers are pinned before executing the outer definitions.
+    # No import by ambient module name, path/version fallback or marker trust.
+    for name, pin in PRIVATE_MAINLINE_ROUTING_VERIFIERS.items():
+        pinned_file(binding / name, pin)
+    spec = importlib.util.spec_from_file_location("biglybtc_portable_private_mainline_routing_qualification",
+                                                binding / "verify_runtime_manifest_mainline_routing.py")
+    verifier = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(verifier)
+    admitted, pin = verifier.inspect(manifest_path, source, Path(expected_roots["install_root"]) / "include")
+    if pin != PRIVATE_MAINLINE_ROUTING_RUNTIME_MANIFEST_SHA256 or admitted != manifest:
+        raise ValueError("Private provider failed complete source/build/SDK/history admission")
+    generated = build.resolve(strict=True) / "engine/runtime-binding"
+    receipt_path = generated / "configure-receipt.json"
+    header_path = generated / "persistent_runtime_config.hpp"
+    for candidate in (receipt_path, header_path):
+        if candidate.is_symlink() or not candidate.is_file() or candidate.resolve(strict=True) != candidate:
+            raise ValueError("Private-provider generated binding is not a canonical regular file")
+    receipt = json.loads(receipt_path.read_bytes())
+    expected = {"manifest_sha256": PRIVATE_MAINLINE_ROUTING_RUNTIME_MANIFEST_SHA256,
+        "artifact_sha256": PRIVATE_MAINLINE_ROUTING_LIBTORRENT_SHA256, "artifact": str(source),
+        "provider_queue_observer": True, "provider_traffic_v3": True, "provider_socks_cancellation": True, "provider_mainline_port": True, "provider_original_identity": True, "provider_tracker_response": True, "provider_mainline_routing": True,
+        "causal_qualified": False, "purpose": "source-bound-qualification-only"}
+    if (receipt != expected or any(type(receipt[key]) is not type(value) for key, value in expected.items())):
+        raise ValueError("Application was not configured against this exact private provider/SDK")
+    header = ("#pragma once\n#define BIGLYBTC_PERSISTENT_RUNTIME_BOUND 1\n"
+        "namespace biglybtc::engine::detail::runtime_binding {\n"
+        "inline constexpr char artifact[] = " + json.dumps(str(source)) + ";\n"
+        "inline constexpr char sha256[] = " + json.dumps(PRIVATE_MAINLINE_ROUTING_LIBTORRENT_SHA256) + ";\n"
+        "inline constexpr char manifest[] = " + json.dumps(PRIVATE_MAINLINE_ROUTING_RUNTIME_MANIFEST_SHA256) + ";\n"
+        "inline constexpr unsigned long long bytes = 9194904ULL;\n}\n")
+    if header_path.read_text() != header:
+        raise ValueError("Application compiled binding does not select this exact private provider")
+    return source, payload
+
+
+def install_private_mainline_routing_libtorrent(destination, dependency, source, payload):
+    """Only after exact private preflight, into main's fresh output directory."""
+    if (len(payload) != PRIVATE_MAINLINE_ROUTING_LIBTORRENT_BYTES
+            or hashlib.sha256(payload).hexdigest() != PRIVATE_MAINLINE_ROUTING_LIBTORRENT_SHA256):
+        raise ValueError("Changed private-provider bytes before installation")
+    private = destination / "usr/lib/biglybtc/lib"
+    lookup = dependency / "usr/lib/x86_64-linux-gnu"
+    for directory in (private, lookup):
+        directory.mkdir(parents=True, exist_ok=True)
+        if directory.is_symlink() or not directory.resolve().is_relative_to(destination.resolve()):
+            raise ValueError("Runtime directory escapes the fresh private distribution: " + str(directory))
+        for alias in directory.glob("libtorrent-rasterbar.so*"):
+            if alias.name not in LIBTORRENT_NAMES or (alias.is_dir() and not alias.is_symlink()):
+                raise ValueError("Unexpected runtime alias in the fresh private distribution: " + str(alias))
+            alias.unlink()
+    canonical = private / LIBTORRENT_NAMES[-1]
+    canonical.write_bytes(payload)
+    canonical.chmod(0o644)
+    for name in LIBTORRENT_NAMES[:-1]:
+        (private / name).symlink_to(canonical.name)
+    for name in LIBTORRENT_NAMES:
+        (lookup / name).symlink_to(os.path.relpath(canonical, lookup))
+    aliases = []
+    for directory in (private, lookup):
+        for name in LIBTORRENT_NAMES:
+            alias = directory / name
+            if (alias.resolve(strict=True) != canonical or alias.stat().st_size != PRIVATE_MAINLINE_ROUTING_LIBTORRENT_BYTES
+                    or hashlib.sha256(alias.read_bytes()).hexdigest() != PRIVATE_MAINLINE_ROUTING_LIBTORRENT_SHA256):
+                raise ValueError("Runtime alias differs from the exact private provider: " + str(alias))
+            aliases.append(alias.relative_to(destination).as_posix())
+    return {"provider": "source-built-private-mainline-routing27", "version": "2.0.12",
+        "artifact_sha256": PRIVATE_MAINLINE_ROUTING_LIBTORRENT_SHA256, "artifact_bytes": PRIVATE_MAINLINE_ROUTING_LIBTORRENT_BYTES,
+        "source_input": str(source), "upstream_commit": SOURCE_LIBTORRENT_COMMIT,
+        "source_build_record_sha256": PRIVATE_MAINLINE_ROUTING_RECORDS["provider-mainline-routing-source-build-record.json"],
+        "parent_source_build_record_sha256": PRIVATE_MAINLINE_ROUTING_RECORDS["provider-original-identity-source-build-record.json"],
+        "runtime_manifest_sha256": PRIVATE_MAINLINE_ROUTING_RUNTIME_MANIFEST_SHA256,
+        "artifact": canonical.relative_to(destination).as_posix(), "aliases": aliases,
+        "instrumented": False, "causal_qualified": False, "shipping_approved": False,
+        "distribution_scope": "private-qualification-only",
+        "scope": "Exact private source/SDK-qualified dependency; application runtime qualification is separate",
+        "package_role": "Original Debian package metadata and notices retained; its shared objects replaced"}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--build", type=Path, required=True)
@@ -961,7 +1085,14 @@ def main():
         help="Private qualification only: exact PORT source/SDK/history cohort")
     parser.add_argument("--private-original-identity-provider-manifest", type=Path,
         help="Private qualification only: exact root-reviewed optional identity/tracker25 source/SDK cohort")
+    parser.add_argument("--private-mainline-routing-provider-manifest", type=Path,
+        help="Private qualification only: exact root-reviewed socket-qualified27 source/SDK cohort")
     args = parser.parse_args()
+    if args.private_mainline_routing_provider_manifest is not None:
+        if any(value is not None for value in (args.private_original_identity_provider_manifest,args.private_mainline_provider_manifest,args.private_socks_provider_manifest,args.private_traffic_provider_manifest,args.private_webseed_provider_manifest,args.private_source_provider_manifest,args.source_provider_manifest)):
+            parser.error("Select one explicit private or existing provider manifest")
+        if args.source_libtorrent is None:
+            parser.error("--private-mainline-routing-provider-manifest also requires --source-libtorrent")
     if args.private_original_identity_provider_manifest is not None:
         if any(value is not None for value in (args.private_mainline_provider_manifest,args.private_socks_provider_manifest,
                 args.private_traffic_provider_manifest,args.private_webseed_provider_manifest,args.private_source_provider_manifest,args.source_provider_manifest)):
@@ -1001,7 +1132,9 @@ def main():
     source = None
     if args.source_libtorrent is not None:
         try:
-            if args.private_original_identity_provider_manifest is not None:
+            if args.private_mainline_routing_provider_manifest is not None:
+                source = private_mainline_routing_source_libtorrent(args.source_libtorrent,args.private_mainline_routing_provider_manifest,args.build)
+            elif args.private_original_identity_provider_manifest is not None:
                 source = private_original_identity_source_libtorrent(args.source_libtorrent,args.private_original_identity_provider_manifest,args.build)
             elif args.private_mainline_provider_manifest is not None:
                 source = private_mainline_source_libtorrent(args.source_libtorrent, args.private_mainline_provider_manifest, args.build)
@@ -1041,7 +1174,9 @@ def main():
     subprocess.run(["dpkg-deb", "--extract", str(package), str(dependency)], check=True, timeout=60)
     provider = None
     if source is not None:
-        if args.private_original_identity_provider_manifest is not None:
+        if args.private_mainline_routing_provider_manifest is not None:
+            provider = install_private_mainline_routing_libtorrent(destination,dependency,*source)
+        elif args.private_original_identity_provider_manifest is not None:
             provider = install_private_original_identity_libtorrent(destination,dependency,*source)
         elif args.private_mainline_provider_manifest is not None:
             provider = install_private_mainline_libtorrent(destination, dependency, *source)
@@ -1105,7 +1240,7 @@ def main():
             notice.write("\nThis folder uses the exact uninstrumented source-built libtorrent 2.0.12.\n"
                          "The extracted Debian package retains its metadata and license notices;\n"
                          "its shared objects resolve to the private source-built image.\n")
-    if args.private_source_provider_manifest is not None or args.private_webseed_provider_manifest is not None or args.private_traffic_provider_manifest is not None or args.private_socks_provider_manifest is not None or args.private_mainline_provider_manifest is not None or args.private_original_identity_provider_manifest is not None:
+    if args.private_source_provider_manifest is not None or args.private_webseed_provider_manifest is not None or args.private_traffic_provider_manifest is not None or args.private_socks_provider_manifest is not None or args.private_mainline_provider_manifest is not None or args.private_original_identity_provider_manifest is not None or args.private_mainline_routing_provider_manifest is not None:
         with (destination / "README.txt").open("a") as notice:
             notice.write("Private qualification folder only; no shipping approval is implied.\n")
     environment["LD_LIBRARY_PATH"] = str(dependency / "usr/lib/x86_64-linux-gnu")
@@ -1171,7 +1306,7 @@ def main():
         "dependency_package_sha256": hashlib.sha256(package.read_bytes()).hexdigest(),
         "files_sha256": files, "loader": linked, "system_installation": False,
     }
-    if args.private_source_provider_manifest is not None or args.private_webseed_provider_manifest is not None or args.private_traffic_provider_manifest is not None or args.private_socks_provider_manifest is not None or args.private_mainline_provider_manifest is not None or args.private_original_identity_provider_manifest is not None:
+    if args.private_source_provider_manifest is not None or args.private_webseed_provider_manifest is not None or args.private_traffic_provider_manifest is not None or args.private_socks_provider_manifest is not None or args.private_mainline_provider_manifest is not None or args.private_original_identity_provider_manifest is not None or args.private_mainline_routing_provider_manifest is not None:
         manifest["distribution_scope"] = "private-qualification-only"
     if country_bundle is not None:
         manifest["country_bundle"] = country_bundle

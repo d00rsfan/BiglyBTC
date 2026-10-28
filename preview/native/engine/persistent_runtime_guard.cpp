@@ -204,6 +204,12 @@ bool relocatableOriginalIdentityProviderArtifact() {
       && std::string_view(runtime_binding::sha256) == "3e7bb59a4b419bc8f5198dd8ebf4b1a6cd2c1b106a7f032759bdbf552faa1890"
       && runtime_binding::bytes == 9184016ULL;
 }
+bool relocatableMainlineRoutingProviderArtifact() {
+  // Exact root-approved socket-qualified27 source/SDK/artifact lane.
+  return std::string_view(runtime_binding::manifest) == "bb84628c0b874c317f7bbd39dc5bd216b8ea9c19b9df5587e9773108b9e9c93f"
+      && std::string_view(runtime_binding::sha256) == "35e6d55478547fdae5bce6fbc4c4c5a1bad576e2a943a1341c4df90e7f1da629"
+      && runtime_binding::bytes == 9194904ULL;
+}
 bool hashed(int descriptor) {
   Digest context;
   if (!context.value || EVP_DigestInit_ex(context.value, EVP_sha256(), nullptr) != 1) { return false; }
@@ -229,7 +235,7 @@ bool hashed(int descriptor) {
 }
 bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* retainedPin = nullptr,
     bool combinedCounters = false, bool queueObserver = false, bool extendedTraffic = false, bool mainlinePort = false,
-    bool originalIdentity = false, bool trackerResponse = false) {
+    bool originalIdentity = false, bool trackerResponse = false, bool socketRouting = false) {
   const char* preload = std::getenv("LD_PRELOAD");
   const char* audit = std::getenv("LD_AUDIT");
   if ((preload && *preload) || (audit && *audit)) { return false; }
@@ -242,7 +248,7 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
   const auto actual = canonicalPath(object->l_name);
   if (!actual || (std::string_view(actual->data()) != runtime_binding::artifact
                   && !relocatableSourceArtifact() && !relocatableSelectedProviderArtifact() && !relocatableNextProviderArtifact()
-                  && !relocatableWebseedProviderArtifact() && !relocatableQueueProviderArtifact() && !relocatableTrafficProviderArtifact() && !relocatableSocksProviderArtifact() && !relocatableMainlineProviderArtifact() && !relocatableOriginalIdentityProviderArtifact())) { return false; }
+                  && !relocatableWebseedProviderArtifact() && !relocatableQueueProviderArtifact() && !relocatableTrafficProviderArtifact() && !relocatableSocksProviderArtifact() && !relocatableMainlineProviderArtifact() && !relocatableOriginalIdentityProviderArtifact() && !relocatableMainlineRoutingProviderArtifact())) { return false; }
   // These are ORIGINAL dynamic exports, not &method / __wrap_* references.
   // GNU --wrap test seams therefore do not misidentify the test executable as LT.
   constexpr const char* symbols[] = {
@@ -261,10 +267,11 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
       "biglybtc_mainline_port_abi_v1", "biglybtc_attach_mainline_port_observer_v1",
       "biglybtc_refresh_mainline_port_v1",
       "biglybtc_mainline_identity_abi_v1", "biglybtc_configure_mainline_identity_v1", "biglybtc_read_mainline_identity_v1",
-      "biglybtc_tracker_response_abi_v1", "biglybtc_attach_tracker_response_observer_v1"};
-  const std::size_t required = trackerResponse ? 25 : originalIdentity ? 23 : mainlinePort ? 20 : extendedTraffic ? 15 : queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
-  std::array<std::uintptr_t, 25> addresses{};
-  std::array<Mapping, 25> beforeMappings{};
+      "biglybtc_tracker_response_abi_v1", "biglybtc_attach_tracker_response_observer_v1",
+      "biglybtc_mainline_routing_abi_v1", "biglybtc_query_mainline_routing_v1"};
+  const std::size_t required = socketRouting ? 27 : trackerResponse ? 25 : originalIdentity ? 23 : mainlinePort ? 20 : extendedTraffic ? 15 : queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
+  std::array<std::uintptr_t, 27> addresses{};
+  std::array<Mapping, 27> beforeMappings{};
   std::size_t at = 0;
   for (; at < required; ++at) {
     const auto* name = symbols[at];
@@ -377,6 +384,15 @@ std::shared_ptr<void> mainlineIdentityRuntimePin() noexcept {
 }
 
 namespace biglybtc::engine::detail {
+std::shared_ptr<void> mainlineRoutingRuntimePin() noexcept {
+#if BIGLYBTC_PERSISTENT_RUNTIME_BOUND
+  try {std::shared_ptr<void> pin;if(!checkLoadedProvider(true,&pin,true,true,true,true,true,true,true)){return {};}return pin;}
+  catch (...) {return {};}
+#else
+  return {};
+#endif
+}
+
 std::shared_ptr<void> managedTrackerResponseRuntimePin() noexcept {
 #if BIGLYBTC_PERSISTENT_RUNTIME_BOUND
   try {std::shared_ptr<void> pin;if(!checkLoadedProvider(true,&pin,true,true,true,true,true,true)){return {};}return pin;}

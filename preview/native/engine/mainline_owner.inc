@@ -91,10 +91,13 @@ std::shared_ptr<MainlinePortQueue> attachMainlinePort(lt::add_torrent_params& pa
 }
 static void retireMainlinePort(const std::shared_ptr<MainlinePortQueue>& queue) noexcept {if(queue){queue->retire();}}
 void retireMainlinePorts() noexcept {
+  cancelLibraryUdp();cancelLibraryHttp();libraryHttp.close();
   for(auto& [key,value]:managed){(void)key;retireMainlinePort(value->mainlinePort);}
   for(auto& [key,value]:magnets){(void)key;retireMainlinePort(value->mainlinePort);}
 }
 void silenceMainlinePorts() noexcept {
+  mainlineStatus.admittedScrapeCandidates.clear();
+  cancelLibraryUdp();cancelLibraryHttp();libraryHttp.close();
   for(auto& [key,value]:managed){(void)key;if(value->mainlinePort){value->mainlinePort->advertised.store(0,std::memory_order_release);}}
   for(auto& [key,value]:magnets){(void)key;if(value->mainlinePort){value->mainlinePort->advertised.store(0,std::memory_order_release);}}
 }
@@ -128,7 +131,8 @@ std::optional<std::pair<std::string,int>> mainlinePortEndpoint(const MainlinePor
     if(std::ranges::any_of(hint.address.begin()+4,hint.address.end(),[](auto value){return value!=0;})){return {};}
   }else{lt::address_v6::bytes_type bytes{};std::copy(hint.address.begin(),hint.address.end(),bytes.begin());address=lt::address_v6(bytes);}
   if(address.is_unspecified()||address.is_multicast()||!networkBinding){return {};}
-  if((address.is_v4()&&!network->mainlineIpv4)||(address.is_v6()&&(!network->ipv6||!network->mainlineIpv6))){return {};}
+  const auto& discovery=mainlineResolvedPolicy?*mainlineResolvedPolicy:*network;
+  if((address.is_v4()&&!discovery.mainlineIpv4)||(address.is_v6()&&(!discovery.ipv6||!discovery.mainlineIpv6))){return {};}
   bool privateRoute=false;
   if(address.is_v4()){
     const auto value=address.to_v4().to_uint(),first=value>>24;
@@ -190,6 +194,80 @@ void advanceMainlinePorts() noexcept {
 // single pump, payload counters and retirement certificates remain independent.
 std::unique_ptr<MainlineDhtService> mainline;
 const storage::ProfileLease* mainlineLease=nullptr;
+bool mainlineOriginalConfigured=false,mainlineOriginalRejected=false;
+std::shared_ptr<const storage::OriginalMainlineIdentity> mainlineOriginalSource;
+std::shared_ptr<const storage::ProfileLease> mainlineOriginalLease;
+// Only original default/wildcard owner activation uses this retained plan.
+// Explicit numeric service/Host callers keep their established route contract.
+std::optional<MainlineBindCapture> mainlineBindCapture;
+std::optional<NetworkPolicy> mainlineResolvedPolicy;
+struct OriginalBindSource {NetworkPolicy policy;MainlineBindOptions options;};
+std::expected<OriginalBindSource,storage::Error> originalBindSource() const {
+  if(!mainlineOriginalLease||!network){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Original Mainline bind source has no held profile"});}
+  auto config=detail::udpTrackerConfig(*mainlineOriginalLease,"biglybt.config");
+  if(!config){return std::unexpected(config.error());}
+  auto empty=core::Document::parse("de");
+  if(!empty){return std::unexpected(storage::Error{storage::ErrorCode::Io,"Cannot read original Mainline bind defaults"});}
+  const auto& document=*config?(**config).document():*empty;
+  auto policy=readNetworkPolicy(&document,{.mode=NetworkMode::Normal,.socks4Capability=network->socks4Capability,.mldhtDirectory=network->mainlineDirectory});
+  if(!policy){return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Original Mainline bind source is no longer supported"});}
+  auto settings=storage::readOriginalMldhtSettings(document,network->mainlineDirectory);
+  if(!settings){return std::unexpected(storage::Error{storage::ErrorCode::InvalidFormat,"Invalid original Mainline plugin binding"});}
+  auto options=mainlineBindOptions(*settings,policy->bindAddresses);
+  if(!options){return std::unexpected(options.error());}
+  return OriginalBindSource{std::move(*policy),std::move(*options)};
+}
+bool sameOriginalBindPolicy(const NetworkPolicy& fresh) const {
+  return network&&fresh.mode==network->mode&&fresh.dht==network->dht
+      &&fresh.proxy.kind==NetworkProxyKind::None&&network->proxy.kind==NetworkProxyKind::None
+      &&fresh.mainlineOriginalBindPlan&&fresh.bindAddresses==network->bindAddresses
+      &&fresh.listenPort==network->listenPort&&fresh.mainlineDirectory==network->mainlineDirectory
+      &&fresh.mainlinePort==network->mainlinePort&&fresh.mainlineRestoreIdentity==network->mainlineRestoreIdentity
+      &&fresh.mainlineBackupOnly==network->mainlineBackupOnly&&fresh.mainlinePeerBootstrapOnly==network->mainlinePeerBootstrapOnly
+      &&fresh.mainlineOriginalAutostart4==network->mainlineOriginalAutostart4
+      &&fresh.mainlineOriginalAutostart6==network->mainlineOriginalAutostart6
+      &&fresh.mainlineMultihoming4==network->mainlineMultihoming4&&fresh.mainlineMultihoming6==network->mainlineMultihoming6;
+}
+std::expected<void,storage::Error> currentMainlineBind() const {
+  if(!mainlineBindCapture){return {};}
+  auto valid=mainlineBindCapture->validate();if(!valid){return valid;}
+  auto source=originalBindSource();if(!source){return std::unexpected(source.error());}
+  if(!sameOriginalBindPolicy(source->policy)||source->options!=mainlineBindCapture->options()){
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Original Mainline bind settings changed"});
+  }
+#if BIGLYBTC_ORIGINAL_MLDHT_IDENTITY_READER
+  if(!mainlineOriginalSource||!mainlineOriginalLease){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Original Mainline bind source was retired"});}
+  return mainlineOriginalSource->validate(*mainlineOriginalLease);
+#else
+  return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,"Original Mainline identity reader is unavailable"});
+#endif
+}
+bool checkMainlineBind() {
+  auto current=currentMainlineBind();if(current){return true;}
+  mainlineStatus.failure=current.error();mainlineStatus.state=MainlineDiscoveryStatus::State::Unavailable;
+  silenceMainlinePorts();closeMainline();return false;
+}
+
+void observeOriginalMainline() noexcept {
+  if(!mainline){return;}const auto observed=mainline->status();
+  mainlineStatus.originalIdentityRequested|=observed.originalIdentityRequested;
+  mainlineStatus.originalIdentityActive=observed.originalIdentityActive;
+  mainlineStatus.originalIdentityJoined=observed.originalIdentityJoined;
+  mainlineStatus.originalIdentityAdoptions=observed.originalIdentityAdoptions;
+  mainlineStatus.originalIdentityRetirements=observed.originalIdentityRetirements;
+}
+void closeMainline() noexcept {
+  mainlineStatus.admittedScrapeCandidates.clear();
+  if(mainline){
+    try{const auto closed=mainline->close();observeOriginalMainline();
+      if(!closed){mainlineStatus.failure=closed.error();}}
+    catch(...){try{mainlineStatus.failure=storage::Error{storage::ErrorCode::Io,"Original Mainline service join could not be acknowledged"};}catch(...){}}
+    mainline.reset(); // Joins before releasing the source/SAME-OFD token below.
+  }
+  if(mainlineLease==mainlineOriginalLease.get()){mainlineLease=nullptr;}
+  mainlineBindCapture.reset();mainlineResolvedPolicy.reset();
+  mainlineOriginalSource.reset();mainlineOriginalLease.reset();
+}
 std::optional<storage::MainlineCheckpoint> mainlineCheckpoint;
 Clock::time_point mainlineCheckpointNext{};
 std::optional<std::vector<std::pair<std::string,int>>> mainlineBootstrap;
@@ -202,6 +280,8 @@ std::optional<storage::Error> mainlineScrapeFailure;
 // The ordinary library owns responses beyond a single transfer/admission.
 // No state/cache restore populates this map and no eviction resets validity.
 detail::LibraryTrackerResponses trackerResponses;
+#include "library_http_owner.inc"
+#include "library_udp_owner.inc"
 // Stop/Pause removes the wrapper's TrackedTorrent own-start authority. The
 // core BT response itself survives; positions/reconcile only revoke RPCs.
 void forgetTrackerDhtAuthority(const core::TorrentHash& hash) noexcept {
@@ -217,13 +297,24 @@ std::uint32_t scrapeRandom() {
   }
   throw detail::Failure{{storage::ErrorCode::Io,"Mainline scrape scheduling entropy failed"}};
 }
+bool sameMainlineProfileLease() const noexcept {
+  if(managedLease==mainlineLease){return true;} // Preserve the ordinary direct-token path.
+  if(!managedLease||!mainlineOriginalLease||mainlineLease!=mainlineOriginalLease.get()
+      ||!managedLease->sharesOwnership(*mainlineOriginalLease)||!profileBound
+      ||!networkBinding||!networkBindingCurrent(*networkBinding)){return false;}
+  struct stat managedProfile{},mainlineProfile{};
+  return ::fstat(managedLease->directoryHandle(),&managedProfile)==0&&S_ISDIR(managedProfile.st_mode)
+      &&::fstat(mainlineOriginalLease->directoryHandle(),&mainlineProfile)==0&&S_ISDIR(mainlineProfile.st_mode)
+      &&managedProfile.st_dev==mainlineProfile.st_dev&&managedProfile.st_ino==mainlineProfile.st_ino
+      &&mainlineProfile.st_dev==profileDevice&&mainlineProfile.st_ino==profileInode;
+}
 std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> savedScrapeTargets(){
   if(!mainlineLease||!network||!networkBinding||network->mode!=NetworkMode::Normal||!network->dht
       ||network->proxy.kind!=NetworkProxyKind::None){return std::vector<SavedMainlineScrapeTarget>{};}
   std::vector<ManagedMainlineScrapeObservation> admitted;
   for(const auto& [key,entry]:managed){
     (void)key;const auto& value=*entry;
-    if(managedLease!=mainlineLease||!value.token||value.token->number!=value.status.admission
+    if(!sameMainlineProfileLease()||!value.token||value.token->number!=value.status.admission
         ||!value.status.admission||value.storage.identity().originalKey!=value.status.hash
         ||!value.status.retained||!value.status.checked||value.status.failure
         ||value.stop||value.removing||value.manualPaused||value.policyHeld||value.status.verificationHeld
@@ -235,10 +326,23 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> savedScrape
   }
   auto targets=readCurrentMainlineScrapeTargets(*mainlineLease,admitted,true);if(!targets){return targets;}
   const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now().time_since_epoch()).count();
-  std::erase_if(*targets,[&](const auto& target){
+  std::optional<std::expected<std::string,storage::Error>> udpConfiguration;
+  std::erase_if(*targets,[&](auto& target){
     if(target.trackerResponseKey.empty()){return false;}
+    if(mainlineScrapes.revoked(target.hash)){return true;}
+    // Never-admitted rows use their own regular direct tracker transport. No hidden LT
+    // torrent, payload handle or constructor-null response grants authority.
+    bool pendingEligibility=false;
+    if(!target.admission){
+      if(target.configuredTracker.starts_with("http://")||target.configuredTracker.starts_with("https://")){
+        if(!prepareLibraryHttp(target,now,pendingEligibility)){return true;}
+      }else{
+        if(!udpConfiguration){udpConfiguration=detail::libraryUdpConfiguration(*mainlineLease);}
+        if(!*udpConfiguration||!prepareLibraryUdp(target,now,**udpConfiguration,pendingEligibility)){return true;}
+      }
+    }
     const auto found=trackerResponses.find(target.trackerResponseKey);
-    if(found==trackerResponses.end()||mainlineScrapes.revoked(target.hash)){return true;}
+    if(found==trackerResponses.end()){return true;}
     const auto entry=managed.find(target.hash.hex());
     if(target.admission){
       if(entry==managed.end()||entry->second->status.admission!=target.admission||!entry->second->trackerResponse
@@ -252,7 +356,7 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> savedScrape
     }
     // A retired/unadmitted row may reuse its live library response only until
     // a fresh regular scrape is due. No hidden torrent or stale error is made.
-    return !found->second->eligible(now);
+    return !found->second->eligible(now)&&!pendingEligibility;
   });
   // Saved-only authority cannot borrow any retained/checking/failed admission.
   // Active targets above have their own immutable accepted admission stamp.
@@ -264,12 +368,18 @@ std::expected<std::vector<SavedMainlineScrapeTarget>,storage::Error> savedScrape
 }
 void advanceMainlineScrapes(Clock::time_point now) noexcept {
   try {
+  advanceLibraryUdp(now);advanceLibraryHttp(now);
   const auto millis=std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
   if(now>=mainlineScrapeRefresh){
     mainlineScrapeRefresh=now+10s;
+    mainlineStatus.admittedScrapeCandidates.clear();
     auto targets=savedScrapeTargets();
     if(!targets){mainlineScrapeFailure=targets.error();mainlineScrapes.unavailable();}
-    else{auto accepted=mainlineScrapes.reconcile(*targets,millis,scrapeRandom());if(!accepted){throw detail::Failure{accepted.error()};}mainlineScrapeFailure.reset();}
+    else{auto accepted=mainlineScrapes.reconcile(*targets,millis,scrapeRandom());if(!accepted){throw detail::Failure{accepted.error()};}mainlineScrapeFailure.reset();
+      // Already authenticated, response-filtered and bounded by reconcile. A
+      // passive snapshot cannot feed dispatch, scheduling or saved authority.
+      for(const auto& target:*targets){if(target.admission&&!mainlineScrapes.revoked(target.hash)){mainlineStatus.admittedScrapeCandidates.push_back({target.hash,target.admission});}}
+    }
   }
   if(mainlineScrapes.active()&&!mainlineScrapes.activeTarget()){
     const auto number=*mainlineScrapes.active();static_cast<void>(mainline->cancelScrape(number));
@@ -295,17 +405,18 @@ void advanceMainlineScrapes(Clock::time_point now) noexcept {
     const auto candidate=mainlineScrapes.due(millis);
     if(candidate){
       auto fresh=savedScrapeTargets();
-      if(!fresh){mainlineScrapeFailure=fresh.error();return;}
+      if(!fresh){mainlineStatus.admittedScrapeCandidates.clear();mainlineScrapeFailure=fresh.error();return;}
       const auto current=std::ranges::find(*fresh,candidate->hash,&SavedMainlineScrapeTarget::hash);
       if(current==fresh->end()||current->scope!=candidate->scope||current->full!=candidate->full||current->admission!=candidate->admission){mainlineScrapes.revoke(candidate->hash);return;}
       auto round=mainline->scrape(lt::sha1_hash(reinterpret_cast<const char*>(candidate->hash.bytes().data())),services::mainline_scrape::Dialect::OriginalBFse,candidate->noSeeds);
-      if(!round){mainlineScrapeFailure=round.error();return;}
+      if(!round){mainlineStatus.admittedScrapeCandidates.clear();mainlineScrapeFailure=round.error();return;}
       const auto wall=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
       if(!mainlineScrapes.started(candidate->hash,candidate->scope,*round,wall)){static_cast<void>(mainline->cancelScrape(*round));}
     }
   }
   }catch(...){
     // Optional authority/scheduling failures never tear down peer discovery.
+    mainlineStatus.admittedScrapeCandidates.clear();
     try{
       if(mainlineScrapes.active()){static_cast<void>(mainline->cancelScrape(*mainlineScrapes.active()));}
       const auto millis=std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
@@ -323,13 +434,23 @@ static lt::sha1_hash discoveryHash(const core::TorrentHash& hash) {
 }
 void startMainline() noexcept {
   if (!network || !networkBinding || network->mode!=NetworkMode::Normal || !network->dht) { return; }
+  if(mainlineOriginalRejected){return;} // A failed original restore never falls back to stock IDs.
+  if(network->mainlineOriginalBindPlan&&(!mainlineOriginalSource||!mainlineBindCapture)){
+    mainlineStatus.state=MainlineDiscoveryStatus::State::Unavailable;
+    try{mainlineStatus.failure=storage::Error{storage::ErrorCode::Unsupported,"Imported Mainline wildcard policy requires original identity and captured numeric plan"};}catch(...){}
+    return;
+  }
   try {
     MainlineDhtOptions options;
-    options.port=network->mainlinePort;
-    options.ipv4=network->mainlineIpv4;
-    options.ipv6=network->mainlineIpv6 && network->ipv6;
+    if(!checkMainlineBind()){return;}
+    const auto& selected=mainlineResolvedPolicy?*mainlineResolvedPolicy:networkBinding->effective;
+    options.port=selected.mainlinePort;
+    options.ipv4=selected.mainlineIpv4;
+    options.ipv6=selected.mainlineIpv6 && selected.ipv6;
     options.onlyPeerBootstrap=network->mainlinePeerBootstrapOnly;
     options.restoreIdentity=network->mainlineRestoreIdentity;
+    options.originalIdentity=mainlineOriginalSource;
+    options.originalIdentityLease=mainlineOriginalLease;
     if (mainlineBootstrap) { options.bootstrapNodes=*mainlineBootstrap; }
     // Optional state never changes route policy. Unsupported proxies do not
     // even open these files; the service itself reports unavailable below.
@@ -348,25 +469,25 @@ void startMainline() noexcept {
         }
       } else { mainlineStatus.checkpointFailure=legacy.error(); }
     }
-    auto created=MainlineDhtService::create(networkBinding->effective,options);
+    auto created=MainlineDhtService::create(selected,options);
     if (!created && !options.restoredState.empty() && created.error().code==storage::ErrorCode::InvalidFormat) {
       // Known optional-cache corruption only. Preserve the file and revoke
       // writes; repeat with identical routes and no untrusted saved state.
       mainlineStatus.checkpointFailure=created.error(); mainlineCheckpoint.reset();
       options.restoredState.clear();
-      created=MainlineDhtService::create(networkBinding->effective,options);
+      created=MainlineDhtService::create(selected,options);
     }
     if (!created) {
       mainlineStatus.state=MainlineDiscoveryStatus::State::Unavailable;
       mainlineStatus.failure=created.error(); return;
     }
-    mainline=std::move(*created);
+    mainline=std::move(*created);observeOriginalMainline();
     mainlineStatus.checkpointLoaded=!options.restoredState.empty();
     mainlineStatus.legacyHints=options.restoredNodes.size();
     mainlineStatus.state=MainlineDiscoveryStatus::State::Running;
     mainlineCheckpointNext=Clock::now()+5min;
   } catch (...) {
-    silenceMainlinePorts();mainline.reset(); mainlineStatus.state=MainlineDiscoveryStatus::State::Unavailable;
+    silenceMainlinePorts();closeMainline(); mainlineStatus.state=MainlineDiscoveryStatus::State::Unavailable;
     try { mainlineStatus.failure=storage::Error{storage::ErrorCode::Io,"Mainline service startup failed"}; } catch (...) {}
   }
 }
@@ -374,6 +495,7 @@ void persistMainline() noexcept {
   if (!mainline || !mainlineCheckpoint || !mainlineLease || !mainlineLease->valid()
       || mainline->status().phase!=MainlineDhtPhase::Listening) { return; }
   try {
+    if(!checkMainlineBind()){return;}
     auto snapshot=mainline->checkpoint();
     if (!snapshot) { mainlineStatus.checkpointFailure=snapshot.error(); mainlineCheckpoint.reset(); return; }
     auto saved=mainlineCheckpoint->save(*mainlineLease,*snapshot);
@@ -398,8 +520,10 @@ bool discoverable(const Magnet& value) const {
 void advanceMainline() noexcept {
   if (!mainline || closingAdmission || poisoned || closed) { return; }
   try {
+    if(!checkMainlineBind()){return;}
     const auto now=Clock::now();
     if (now>=mainlineCheckpointNext) { persistMainline(); mainlineCheckpointNext=now+5min; }
+    if(!mainline){return;} // A second checkpoint fence may have withdrawn/joined it.
     const auto peerProgress=mainline->status().peerBootstrapProgress;
     const bool peerAdvanced=peerProgress>mainlinePortProgress;
     if(peerAdvanced){mainlinePortProgress=peerProgress;}
@@ -449,10 +573,10 @@ void advanceMainline() noexcept {
       if (std::ranges::find(current,hash)==current.end()) { static_cast<void>(mainline->forget(hash)); }
     }
     mainlineActive=std::move(current);
-    auto replies=mainline->poll();
+    auto replies=mainline->poll();observeOriginalMainline();
     if (!replies) {
       mainlineStatus.failure=replies.error(); mainlineStatus.state=MainlineDiscoveryStatus::State::Unavailable;
-      silenceMainlinePorts();mainline.reset(); return;
+      silenceMainlinePorts();closeMainline(); return;
     }
     advanceMainlineScrapes(now);
     advanceMainlinePorts();
@@ -462,16 +586,16 @@ void advanceMainline() noexcept {
       for (auto& [key,entry]:managed) {
         static_cast<void>(key); auto& value=*entry;
         if (!discoverable(value) || discoveryHash(value.storage.identity().originalKey)!=reply.hash) { continue; }
-        for (const auto& peer:reply.peers) { value.handle.connect_peer(peer,lt::peer_info::dht); ++mainlineStatus.deliveredPeers; }
+        for (const auto& peer:reply.peers) { if(peer.address().is_v6()&&!network->ipv6){continue;} value.handle.connect_peer(peer,lt::peer_info::dht); ++mainlineStatus.deliveredPeers; }
       }
       for (auto& [key,entry]:magnets) {
         static_cast<void>(key); auto& value=*entry;
         if (!discoverable(value) || discoveryHash(value.intent.hash)!=reply.hash) { continue; }
-        for (const auto& peer:reply.peers) { value.handle.connect_peer(peer,lt::peer_info::dht); ++mainlineStatus.deliveredPeers; }
+        for (const auto& peer:reply.peers) { if(peer.address().is_v6()&&!network->ipv6){continue;} value.handle.connect_peer(peer,lt::peer_info::dht); ++mainlineStatus.deliveredPeers; }
       }
     }
   } catch (...) {
-    silenceMainlinePorts();mainline.reset(); mainlineStatus.state=MainlineDiscoveryStatus::State::Unavailable;
+    silenceMainlinePorts();closeMainline(); mainlineStatus.state=MainlineDiscoveryStatus::State::Unavailable;
     try { mainlineStatus.failure=storage::Error{storage::ErrorCode::Io,"Mainline service failed; torrent owner remains available"}; } catch (...) {}
   }
 }

@@ -31,7 +31,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--driver", type=Path, required=True)
     parser.add_argument("--provider", type=Path, required=True)
-    parser.add_argument("--mode", choices=("source", "selected", "provider-next", "webseed", "queue", "traffic", "socks", "mainline", "original-identity", "strict"), required=True)
+    parser.add_argument("--mode", choices=("source", "selected", "provider-next", "webseed", "queue", "traffic", "socks", "mainline", "original-identity", "mainline-routing", "strict"), required=True)
     parser.add_argument("--manifest", type=Path)
     parser.add_argument("--alternate", type=Path)
     parser.add_argument("--interposition-driver", type=Path)
@@ -109,6 +109,15 @@ def main():
         if (Path(declared["artifact"]).resolve(strict=True) != provider
                 or declared["artifact_sha256"] != original_sha or declared["artifact_bytes"] != provider.stat().st_size):
             raise ValueError("Original identity/tracker relocation differs from the reviewed manifest")
+    elif args.mode == "mainline-routing":
+        if (not args.manifest or digest(args.manifest) != "bb84628c0b874c317f7bbd39dc5bd216b8ea9c19b9df5587e9773108b9e9c93f"
+                or original_sha != "35e6d55478547fdae5bce6fbc4c4c5a1bad576e2a943a1341c4df90e7f1da629" or provider.stat().st_size != 9194904
+                or not args.alternate or not args.interposition_driver or not args.preload):
+            raise ValueError("Original identity/tracker relocation requires exact source/image and all rejection controls")
+        declared = json.loads(args.manifest.read_bytes())
+        if (Path(declared["artifact"]).resolve(strict=True) != provider
+                or declared["artifact_sha256"] != original_sha or declared["artifact_bytes"] != provider.stat().st_size):
+            raise ValueError("Original identity/tracker relocation differs from the reviewed manifest")
     elif original_sha not in INSTRUMENTED:
         raise ValueError("Strict relocation test requires an exact retained instrumented image")
     root = Path(tempfile.mkdtemp(prefix="biglybtc-runtime-deploy-results-", dir="/tmp"))
@@ -152,6 +161,10 @@ def main():
             raise ValueError("Copied runtime fixture failed: " + name + ": " + result.stderr.decode(errors="replace"))
         if b"original_opens=0" not in result.stdout or b"mapped_copy=" not in result.stdout:
             raise ValueError("Missing actual copied-origin/original-path controls: " + name)
+        if args.mode == "mainline-routing":
+            proof = b"proof=mainline_routing27 retained_pin=" + (b"1" if expected == "bound" else b"0")
+            if proof not in result.stdout:
+                raise ValueError("Missing retained complete27-export proof: " + name)
         if args.mode == "original-identity":
             proof = b"proof=original_identity_tracker25 retained_pin=" + (b"1" if expected == "bound" else b"0")
             if proof not in result.stdout:

@@ -44,7 +44,12 @@ std::expected<LiveSettingsPlan, storage::Error> prepareLiveSettings(const Networ
         || active.mainlinePort != requested.mainlinePort
         || active.mainlineIpv4 != requested.mainlineIpv4 || active.mainlineIpv6 != requested.mainlineIpv6
         || active.mainlineBackupOnly != requested.mainlineBackupOnly
-        || active.mainlinePeerBootstrapOnly != requested.mainlinePeerBootstrapOnly, LiveRestartField::Discovery);
+        || active.mainlinePeerBootstrapOnly != requested.mainlinePeerBootstrapOnly
+        || active.mainlineOriginalBindPlan != requested.mainlineOriginalBindPlan
+        || active.mainlineOriginalAutostart4 != requested.mainlineOriginalAutostart4
+        || active.mainlineOriginalAutostart6 != requested.mainlineOriginalAutostart6
+        || active.mainlineMultihoming4 != requested.mainlineMultihoming4
+        || active.mainlineMultihoming6 != requested.mainlineMultihoming6, LiveRestartField::Discovery);
     difference(active.requireEncryption != requested.requireEncryption, LiveRestartField::Encryption);
     difference(active.httpTrackers != requested.httpTrackers || active.udpTrackers != requested.udpTrackers
         || active.pex != requested.pex || active.webSeeds != requested.webSeeds, LiveRestartField::TorrentSources);

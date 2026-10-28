@@ -194,7 +194,8 @@ void validate(const NetworkPolicy& p) {
         Code::InvalidConfiguration, "Mainline plugin directory");
     require(p.mainlinePort >= 1 && p.mainlinePort <= 65535,
         Code::InvalidConfiguration, "Mainline DHT port");
-    require(p.mainlineIpv4 || (p.ipv6 && p.mainlineIpv6),
+    require(p.mainlineOriginalBindPlan ? (p.mainlineOriginalAutostart4 || p.mainlineOriginalAutostart6)
+        : (p.mainlineIpv4 || (p.ipv6 && p.mainlineIpv6)),
         Code::InvalidConfiguration, "Mainline DHT address families");
   }
   const auto& proxy = p.proxy;
@@ -321,7 +322,7 @@ std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(
     // Retain the original reader's Java int/boolean projection, while rejecting
     // malformed or duplicate keys at this strict no-effects policy boundary.
     for (const auto name : {"enable", "port", "autostart.IPv4", "autostart.IPv6",
-        "backupOnly", "onlyPeerBootstrap", "alwaysRestoreID"}) {
+        "backupOnly", "onlyPeerBootstrap", "alwaysRestoreID", "multihoming", "multihoming6"}) {
       const auto key = mainline->binding.configPrefix + name;
       c.originalPluginInteger(key);
     }
@@ -329,6 +330,10 @@ std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(
     p.mainlineDirectory = mainline->binding.directoryName;
     p.mainlineRestoreIdentity = mainline->alwaysRestoreId;
     p.mainlinePort = mainline->port;
+    p.mainlineOriginalAutostart4 = mainline->autostart4;
+    p.mainlineOriginalAutostart6 = mainline->autostart6;
+    p.mainlineMultihoming4 = mainline->multihoming4;
+    p.mainlineMultihoming6 = mainline->multihoming6;
     p.mainlineIpv4 = mainline->autostart4;
     p.mainlineIpv6 = p.ipv6 && mainline->autostart6;
     p.mainlineBackupOnly = mainline->backupOnly;
@@ -377,6 +382,16 @@ std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(
         remaining.remove_prefix(end + 1);
         require(!trim(remaining).empty(), Code::InvalidConfiguration, "Bind IP");
       }
+    }
+    p.mainlineOriginalBindPlan = std::ranges::any_of(p.bindAddresses, [](const auto& text) {
+      return text == "0.0.0.0" || text == "::";
+    });
+    if (p.mainlineOriginalBindPlan) {
+      // Wrapper3b125 starts each mlDHT family from its own autostart flag.
+      // Core IPv6 continues to constrain the PAYLOAD policy/settings above.
+      p.dht = c.boolean("Peer Source Selection Default.DHT", true)
+          && mainline->loadedAtStartup && mainline->enabled
+          && (mainline->autostart4 || mainline->autostart6);
     }
     p.uploadBytesPerSecond = c.rate("Max Upload Speed KBs");
     p.downloadBytesPerSecond = c.rate("Max Download Speed KBs");

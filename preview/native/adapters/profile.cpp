@@ -69,11 +69,15 @@ std::expected<ProfileLease, Error> ProfileLease::acquire(const std::filesystem::
     }
     return error(ErrorCode::Unsupported, "Compatible profile locking is unavailable");
   }
-  return ProfileLease(directory.release(), lock.release());
+  // Allocate while both descriptors still have RAII owners. Only a successful
+  // independent lock acquisition mints a lineage; retain never mints another.
+  auto ownership = std::make_shared<const unsigned char>(0);
+  return ProfileLease(directory.release(), lock.release(), std::move(ownership));
 }
 
 ProfileLease::ProfileLease(ProfileLease&& other) noexcept
-    : directory_(std::exchange(other.directory_, -1)), lock_(std::exchange(other.lock_, -1)) {}
+    : directory_(std::exchange(other.directory_, -1)), lock_(std::exchange(other.lock_, -1)),
+      ownership_(std::move(other.ownership_)) {}
 
 ProfileLease& ProfileLease::operator=(ProfileLease&& other) noexcept {
   if (this != &other) {
@@ -81,6 +85,7 @@ ProfileLease& ProfileLease::operator=(ProfileLease&& other) noexcept {
     if (directory_ >= 0) { ::close(directory_); }
     directory_ = std::exchange(other.directory_, -1);
     lock_ = std::exchange(other.lock_, -1);
+    ownership_ = std::move(other.ownership_);
   }
   return *this;
 }
@@ -91,7 +96,7 @@ ProfileLease::~ProfileLease() {
 }
 
 std::expected<std::shared_ptr<const ProfileLease>, Error> ProfileLease::retain() const {
-  if (!valid()) { return error(ErrorCode::Conflict, "Profile lease is no longer held"); }
+  if (!valid() || !ownership_) { return error(ErrorCode::Conflict, "Profile lease is no longer held"); }
   // dup preserves the OFD owning Java-compatible exclusion. A fresh open or a
   // new lock acquisition would describe a different owner and is forbidden.
   Descriptor directory(::fcntl(directory_, F_DUPFD_CLOEXEC, 0));
@@ -107,7 +112,7 @@ std::expected<std::shared_ptr<const ProfileLease>, Error> ProfileLease::retain()
       || !S_ISREG(named.st_mode) || named.st_dev != held.st_dev || named.st_ino != held.st_ino) {
     return error(ErrorCode::Conflict, "Held profile lock pathname changed");
   }
-  return std::shared_ptr<const ProfileLease>(new ProfileLease(directory.release(), lock.release()));
+  return std::shared_ptr<const ProfileLease>(new ProfileLease(directory.release(), lock.release(), ownership_));
 }
 
 std::expected<ConfigFile, Error> ConfigFile::load(const ProfileLease& lease, std::string filename, core::Limits limits) {

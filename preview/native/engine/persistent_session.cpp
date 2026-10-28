@@ -6,6 +6,8 @@
 #include "managed_payload_counters.hpp"
 #include "managed_queue_observations.hpp"
 #include "managed_tracker_responses.hpp"
+#include "library_udp_policy.hpp"
+#include "library_http_policy.hpp"
 #include "tracker_statistics_sampler.hpp"
 #include "persistent_runtime_guard.hpp"
 #include "runtime_metrics_sampler.hpp"
@@ -23,8 +25,13 @@
 #include <libtorrent/write_resume_data.hpp>
 #include "network_policy.hpp"
 #include "mainline_dht.hpp"
+#include "mainline_bind_plan.hpp"
+#include "plugin_settings.hpp"
 #include "queued_mainline_scrape.hpp"
 #include "mainline_checkpoint.hpp"
+#if BIGLYBTC_ORIGINAL_MLDHT_IDENTITY_READER
+#include "mainline_identity.hpp"
+#endif
 #include <libtorrent/peer_info.hpp>
 #include <openssl/rand.h>
 #include "network_binding.hpp"
@@ -509,7 +516,7 @@ struct PersistentSession::Impl {
     // Not bounded by the certification deadline. No callback is made by LT
     // destruction, and no joined tail is relabeled as a final counter sample.
     retireMainlinePorts();
-    mainline.reset();
+    closeMainline();
     mainlineStatus.state=MainlineDiscoveryStatus::State::Closed;
     session.reset();
     for (auto& [key, entry] : managed) {
@@ -553,7 +560,7 @@ struct PersistentSession::Impl {
       detail::require(profile.st_dev == profileDevice && profile.st_ino == profileInode,
           "Persistent owner cannot cross profile identities", storage::ErrorCode::Conflict);
     } else { profileDevice = profile.st_dev; profileInode = profile.st_ino; profileBound = true; }
-    mainlineLease=&lease;
+    mainlineLease=mainlineOriginalLease?mainlineOriginalLease.get():&lease;
     detail::require(bindingHealthy(), "Explicit network binding was lost", storage::ErrorCode::Io);
   }
   #include "mainline_owner.inc"
@@ -1146,7 +1153,7 @@ struct PersistentSession::Impl {
       if (value.removing && value.removed && !value.handle.is_valid()) {
         // Actual weak expiry is the last callback fence: drain final terminal
         // updates before the admission may disappear, retain library response.
-        if(value.trackerResponse){static_cast<void>(value.trackerResponse->drain());}
+        if(value.trackerResponse){static_cast<void>(value.trackerResponse->drain());value.trackerResponse->response->cancelRequest();} // Actual weak-expiry: no later torrent callback can own this pending regular request.
         if(value.timelineLost && !value.status.failure) {
           value.status.failure=storage::Error{storage::ErrorCode::Io,"Original active-time observations were lost; saved state requires recheck"};
         }
@@ -1410,7 +1417,7 @@ PersistentSession::~PersistentSession() {
   // fresh measurement, final seal or bounded join is promised by this fallback.
   impl_->sink = {}; impl_->operationSink = {};
   impl_->retireMainlinePorts();
-  impl_->mainline.reset();
+  impl_->closeMainline();
   impl_->session.reset();
 }
 std::expected<void, AccountingError> PersistentSession::startIdle(const storage::ProfileLease& lease) {
@@ -1433,14 +1440,63 @@ std::expected<void, AccountingError> PersistentSession::startIdle(const storage:
   }
 }
 std::expected<void, storage::Error> PersistentSession::configureNetwork(const NetworkPolicy& policy) {
-  if (!impl_->onWorker() || impl_->call || impl_->session || impl_->closed || impl_->poisoned) {
-    return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Configure networking before owner startup"});
+  if (!impl_->onWorker() || impl_->call || impl_->session || impl_->closed || impl_->poisoned || impl_->mainlineOriginalConfigured) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict, "Configure networking before original identity opt-in and owner startup"});
   }
   auto settings = validateNetworkPolicy(policy);
   if (!settings) { return std::unexpected(storage::Error{storage::ErrorCode::Unsupported,
       "Unsupported network setting: " + settings.error().field}); }
   impl_->network = policy;
   return {};
+}
+std::expected<void, storage::Error> PersistentSession::configureOriginalMainlineIdentity(const storage::ProfileLease& lease) {
+  if(!impl_->onWorker()||impl_->call||impl_->session||impl_->closed||impl_->poisoned||impl_->mainlineOriginalConfigured||!impl_->network){
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Configure original Mainline identity once after policy and before owner startup"});
+  }
+  impl_->mainlineOriginalConfigured=true;
+  const auto& policy=*impl_->network;
+  if(policy.mode!=NetworkMode::Normal||!policy.dht||policy.proxy.kind!=NetworkProxyKind::None||!policy.mainlineRestoreIdentity){return {};}
+  impl_->mainlineStatus.originalIdentityRequested=true;
+  const auto refused=[&](storage::Error failure)->std::expected<void,storage::Error>{
+    impl_->mainlineOriginalRejected=true;impl_->mainlineStatus.state=MainlineDiscoveryStatus::State::Unavailable;
+    impl_->mainlineStatus.failure=failure;return std::unexpected(std::move(failure));
+  };
+  try{
+#if BIGLYBTC_ORIGINAL_MLDHT_IDENTITY_READER
+    auto retained=lease.retain();if(!retained){return refused(retained.error());}
+    // This binds the owner to the retained SAME-OFD profile before any source
+    // is installed. A later startIdle on a different profile is refused.
+    impl_->mainlineOriginalLease=std::move(*retained);
+    impl_->bind(*impl_->mainlineOriginalLease); // Own bind's raw reference even if bind throws.
+    if(policy.mainlineOriginalBindPlan){
+      auto current=impl_->originalBindSource();if(!current){return refused(current.error());}
+      if(!impl_->sameOriginalBindPolicy(current->policy)){return refused({storage::ErrorCode::Conflict,"Original Mainline policy changed before bind capture"});}
+      auto capture=MainlineBindCapture::capture(*impl_->mainlineOriginalLease,policy,current->options);
+      if(!capture){return refused(capture.error());}
+      auto numeric=projectMainlineBindPlan(policy,capture->plan());if(!numeric){return refused(numeric.error());}
+      impl_->mainlineBindCapture.emplace(std::move(*capture));impl_->mainlineResolvedPolicy.emplace(std::move(*numeric));
+      auto after=impl_->originalBindSource();if(!after){return refused(after.error());}
+      if(!impl_->sameOriginalBindPolicy(after->policy)||after->options!=impl_->mainlineBindCapture->options()){
+        return refused({storage::ErrorCode::Conflict,"Original Mainline settings changed during bind capture"});
+      }
+    }
+    auto source=storage::OriginalMainlineIdentity::load(*impl_->mainlineOriginalLease,policy.mainlineDirectory,policy.mainlineRestoreIdentity);
+    if(!source){return refused(source.error());}
+    if(source->snapshot().state==storage::OriginalMainlineIdentityState::Missing){
+      source=storage::OriginalMainlineIdentity::createMissing(*impl_->mainlineOriginalLease,policy.mainlineDirectory,policy.mainlineRestoreIdentity);
+      if(!source){return refused(source.error());}
+    }
+    if(source->snapshot().state!=storage::OriginalMainlineIdentityState::Imported){
+      return refused({storage::ErrorCode::Missing,"Original Mainline root is unavailable"});
+    }
+    impl_->mainlineOriginalSource=std::make_shared<storage::OriginalMainlineIdentity>(std::move(*source));
+    return {};
+#else
+    (void)lease;
+    return refused({storage::ErrorCode::Unsupported,"Original Mainline identity reader is not enabled in this build"});
+#endif
+  }catch(const detail::Failure& failure){return refused(failure.error);}
+  catch(...){return refused({storage::ErrorCode::Io,"Cannot retain the original Mainline identity source"});}
 }
 std::expected<void, storage::Error> PersistentSession::configureMainlineBootstrap(std::vector<std::pair<std::string,int>> nodes) {
   if (!impl_->onWorker() || impl_->call || impl_->session || impl_->closed || impl_->poisoned || nodes.size()>64) {
@@ -2003,7 +2059,10 @@ std::vector<MainlineScrapeEstimate> PersistentSession::mainlineScrapeEstimates()
   return impl_->mainlineScrapes.estimates();
 }
 void PersistentSession::revokeMainlineScrape(const core::TorrentHash& hash) noexcept {
-  if(!impl_->onWorker()||!impl_->mainline){return;}
+  if(!impl_->onWorker()){return;}
+  std::erase_if(impl_->mainlineStatus.admittedScrapeCandidates,[&](const auto& row){return row.hash==hash;});
+  impl_->cancelLibraryUdp(&hash);impl_->cancelLibraryHttp(&hash);
+  if(!impl_->mainline){return;}
   try{
     const auto active=impl_->mainlineScrapes.activeTarget();
     if(active&&active->hash==hash&&impl_->mainlineScrapes.active()&&impl_->mainline){
@@ -2092,7 +2151,7 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
   impl_->persistMainline();
   impl_->retireMainlinePorts();
   impl_->sink = {}; impl_->operationSink = {};
-  impl_->mainline.reset();
+  impl_->closeMainline();
   impl_->mainlineStatus.state=MainlineDiscoveryStatus::State::Closed;
   impl_->session.reset(); // Join may outlive the certification effort deadline.
   impl_->registered = false; impl_->outstanding = false;

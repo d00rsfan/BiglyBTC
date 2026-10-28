@@ -29,12 +29,19 @@ public:
   // the profile or borrowing the caller's object lifetime. Closing either token
   // leaves Java/native exclusion in place until the last alias is destroyed.
   std::expected<std::shared_ptr<const ProfileLease>, Error> retain() const;
+  // Provenance of aliases of the SAME successfully acquired OFD lock. This
+  // does not replace the caller's current profile/path/network validation.
+  bool sharesOwnership(const ProfileLease& other) const noexcept {
+    return valid() && other.valid() && ownership_ && ownership_ == other.ownership_;
+  }
   int directoryHandle() const { return directory_; }
   bool valid() const { return directory_ >= 0 && lock_ >= 0; }
 private:
-  ProfileLease(int directory, int lock) : directory_(directory), lock_(lock) {}
+  ProfileLease(int directory, int lock, std::shared_ptr<const unsigned char> ownership)
+      : directory_(directory), lock_(lock), ownership_(std::move(ownership)) {}
   int directory_ = -1;
   int lock_ = -1;
+  std::shared_ptr<const unsigned char> ownership_;
 };
 
 enum class RecoverySource { Primary, Backup, Saving };

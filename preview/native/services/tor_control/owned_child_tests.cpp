@@ -10,14 +10,20 @@
 #include <QPointer>
 #include <QRegularExpression>
 #include <QSignalSpy>
+#include <QSocketNotifier>
 #include <QTemporaryDir>
 #include <QTimer>
 #include <QtTest>
 #include <cerrno>
 #include <csignal>
+#include <fcntl.h>
+#include <limits>
 #include <memory>
+#include <sys/inotify.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#include <vector>
 
 using biglybtc::services::tor::OwnedTorChild;
 using biglybtc::services::tor::OwnedTorChildOptions;
@@ -56,6 +62,40 @@ QByteArray fileHash(const QString& path) {
   if (!file.open(QIODevice::ReadOnly)) { return {}; }
   QCryptographicHash hash(QCryptographicHash::Sha256);
   return hash.addData(&file) ? hash.result().toHex() : QByteArray{};
+}
+struct DirectoryWatch {
+  QPointer<QSocketNotifier> notifier;
+  int fd = -1;
+  std::vector<int> watches;
+};
+DirectoryWatch directoryWatch(OwnedTorChild& child) {
+  // Inspect only the direct notifier's real kernel watch set; no production
+  // injection API, other process FD, or QFileSystemWatcher internals are used.
+  for (auto* notifier : child.findChildren<QSocketNotifier*>(QString(),Qt::FindDirectChildrenOnly)) {
+    const auto descriptor = notifier->socket();
+    if (descriptor < 0 || descriptor > std::numeric_limits<int>::max() || notifier->type() != QSocketNotifier::Read) { continue; }
+    const int fd = static_cast<int>(descriptor);
+    const auto info = read(QStringLiteral("/proc/self/fdinfo/")+QString::number(fd));
+    const QRegularExpression pattern(QStringLiteral("inotify wd:([0-9a-f]+) .*mask:([0-9a-f]+) ignored_mask:"));
+    auto matches = pattern.globalMatch(QString::fromLatin1(info));
+    std::vector<int> watches;
+    bool safe = true;
+    while (matches.hasNext()) {
+      const auto match = matches.next(); bool okWd = false, okMask = false;
+      const int wd = match.captured(1).toInt(&okWd,16);
+      const auto mask = match.captured(2).toUInt(&okMask,16);
+      constexpr unsigned int needed = IN_ATTRIB|IN_MOVE_SELF|IN_DELETE_SELF;
+      constexpr unsigned int entries = IN_CREATE|IN_DELETE|IN_MOVED_FROM|IN_MOVED_TO;
+      if (!okWd || !okMask || wd < 0 || (mask & needed) != needed || (mask & entries)) { safe = false; break; }
+      watches.push_back(wd);
+    }
+    if (safe && !watches.empty()) { return {notifier,fd,std::move(watches)}; }
+  }
+  return {};
+}
+int queuedBytes(int fd) {
+  int bytes = -1;
+  return ::ioctl(fd,FIONREAD,&bytes) == 0 ? bytes : -1;
 }
 }
 
@@ -221,6 +261,135 @@ private slots:
     child.stop(); QTRY_VERIFY_WITH_TIMEOUT(child.joined(),5000);
     QCOMPARE(child.state(),OwnedTorChild::State::Stopped);
     QCOMPARE(read(options.workingDirectory+QStringLiteral("/data/control_auth_cookie")).size(),32);
+  }
+  void retainedAncestorEventsRevokeWithoutAnySourceQuery_data() {
+    QTest::addColumn<QByteArray>("kind");
+    QTest::newRow("higher-work-ancestor") << QByteArray("work");
+    QTest::newRow("work-ancestor-renamed-back-before-dispatch") << QByteArray("restored");
+    QTest::newRow("executable-ancestor") << QByteArray("executable");
+  }
+  void retainedAncestorEventsRevokeWithoutAnySourceQuery() {
+    QFETCH(QByteArray,kind);
+    Fixture fixture; QVERIFY(fixture.ready);
+    const auto ancestor = fixture.root.path()+QStringLiteral("/ancestor");
+    QVERIFY(QDir().mkdir(ancestor));
+    QVERIFY(QFile::setPermissions(ancestor,QFile::ReadOwner|QFile::WriteOwner|QFile::ExeOwner));
+    auto options = fixture.options();
+    if (kind == "executable") {
+      options.executable = ancestor+QStringLiteral("/owned-peer.py");
+      QVERIFY(write(options.executable,read(fixture.executable),true));
+    } else {
+      const auto middle = ancestor+QStringLiteral("/middle");
+      QVERIFY(QDir().mkdir(middle));
+      QVERIFY(QFile::setPermissions(middle,QFile::ReadOwner|QFile::WriteOwner|QFile::ExeOwner));
+      options.workingDirectory = middle+QStringLiteral("/run");
+    }
+    const auto outsider = fixture.root.path()+QStringLiteral("/outsider-cookie");
+    const auto outsiderHash = fileHash(outsider); struct stat before{};
+    QVERIFY(!::lstat(QFile::encodeName(outsider).constData(),&before));
+    OwnedTorChild child; QSignalSpy ready(&child,&OwnedTorChild::ready), failed(&child,&OwnedTorChild::failed), finished(&child,&OwnedTorChild::finished);
+    QVERIFY(child.start(options)); QTRY_COMPARE_WITH_TIMEOUT(ready.count(),1,5000);
+    const auto pid = child.processId(); QVERIFY(pid > 0); QVERIFY(directoryWatch(child).notifier);
+    const auto moved = ancestor+QStringLiteral(".kept");
+    QVERIFY(QDir().rename(ancestor,moved));
+    if (kind == "restored") { QVERIFY(QDir().rename(moved,ancestor)); }
+    // Deliberately do not call sourceCurrent(): the event alone must revoke.
+    QTRY_COMPARE_WITH_TIMEOUT(failed.count(),1,5000);
+    QVERIFY(child.joined()); QVERIFY(reaped(pid)); QCOMPARE(child.state(),OwnedTorChild::State::Failed);
+    QCOMPARE(child.controlPort(),quint16(0)); QCOMPARE(ready.count(),1); QCOMPARE(finished.count(),1);
+    struct stat after{}; QVERIFY(!::lstat(QFile::encodeName(outsider).constData(),&after));
+    QCOMPARE(after.st_dev,before.st_dev); QCOMPARE(after.st_ino,before.st_ino); QCOMPARE(fileHash(outsider),outsiderHash);
+  }
+  void directoryWatchIgnoresSiblingEntriesAndDrainsWithFixedWorkBudget() {
+    Fixture fixture; QVERIFY(fixture.ready);
+    OwnedTorChild child; QSignalSpy ready(&child,&OwnedTorChild::ready), failed(&child,&OwnedTorChild::failed);
+    const auto options = fixture.options(); QVERIFY(child.start(options));
+    QTRY_COMPARE_WITH_TIMEOUT(ready.count(),1,5000);
+    const auto watch = directoryWatch(child); QVERIFY(watch.notifier); QVERIFY(watch.fd >= 0);
+    QVERIFY(::fcntl(watch.fd,F_GETFL) & O_NONBLOCK); QVERIFY(::fcntl(watch.fd,F_GETFD) & FD_CLOEXEC);
+    QCOMPARE(queuedBytes(watch.fd),0);
+    // The root is an approved ancestor, but these unrelated entries are not
+    // authority. No CREATE/DELETE/MOVE entry masks may wake its notifier.
+    for (int i = 0; i < 64; ++i) {
+      const auto sibling = fixture.root.path()+QStringLiteral("/unselected-")+QString::number(i);
+      QFile file(sibling); QVERIFY(file.open(QIODevice::WriteOnly|QIODevice::NewOnly));
+      QCOMPARE(file.write("unselected"),qint64(10)); file.close(); QVERIFY(QFile::remove(sibling));
+    }
+    QCOMPARE(queuedBytes(watch.fd),0);
+    const auto attributedSibling = fixture.root.path()+QStringLiteral("/unselected-attribute");
+    QVERIFY(write(attributedSibling,"unchosen"));
+    QTRY_COMPARE_WITH_TIMEOUT(queuedBytes(watch.fd),0,3000);
+    QCOMPARE(child.state(),OwnedTorChild::State::Ready); QCOMPARE(failed.count(),0);
+    QVERIFY(QFile::remove(attributedSibling));
+    int activations = 0, firstRemaining = -1;
+    connect(watch.notifier,&QSocketNotifier::activated,&child,[&]{
+      ++activations;
+      if (firstRemaining < 0) { firstRemaining = queuedBytes(watch.fd); }
+    });
+    // Alternate two actual watched inodes, so identical events cannot coalesce.
+    // Both stay private and unchanged in authority throughout the queued burst.
+    for (int i = 0; i < 600; ++i) {
+      QVERIFY(!::chmod(QFile::encodeName(fixture.root.path()).constData(),0700));
+      QVERIFY(!::chmod(QFile::encodeName(options.workingDirectory).constData(),0700));
+    }
+    const int before = queuedBytes(watch.fd); QVERIFY(before > 16*1024);
+    QTRY_VERIFY_WITH_TIMEOUT(firstRemaining >= 0,3000);
+    QVERIFY(firstRemaining > 0); QVERIFY(firstRemaining < before); QVERIFY(before-firstRemaining <= 16*1024);
+    QTRY_COMPARE_WITH_TIMEOUT(queuedBytes(watch.fd),0,3000);
+    QVERIFY(activations >= 2); QCOMPARE(child.state(),OwnedTorChild::State::Ready); QCOMPARE(failed.count(),0);
+    const auto pid = child.processId(); child.stop(); QTRY_VERIFY_WITH_TIMEOUT(child.joined(),5000); QVERIFY(reaped(pid));
+  }
+  void lostKernelWatchWithdrawsAndJoinsWithoutSourceQuery() {
+    Fixture fixture; QVERIFY(fixture.ready);
+    OwnedTorChild child; QSignalSpy ready(&child,&OwnedTorChild::ready), failed(&child,&OwnedTorChild::failed);
+    QVERIFY(child.start(fixture.options())); QTRY_COMPARE_WITH_TIMEOUT(ready.count(),1,5000);
+    const auto watch = directoryWatch(child); QVERIFY(watch.notifier); QVERIFY(!watch.watches.empty());
+    const auto pid = child.processId();
+    // An actual kernel IN_IGNORED, not an authored success/loss callback.
+    QVERIFY(!::inotify_rm_watch(watch.fd,watch.watches.back()));
+    QTRY_COMPARE_WITH_TIMEOUT(failed.count(),1,5000);
+    QCOMPARE(child.state(),OwnedTorChild::State::Failed); QVERIFY(child.joined()); QVERIFY(reaped(pid));
+    QCOMPARE(child.controlPort(),quint16(0)); QVERIFY(!directoryWatch(child).notifier);
+  }
+  void queuedAncestorEventsCannotCrossCancellationAndFreshRestart() {
+    Fixture fixture; QVERIFY(fixture.ready);
+    OwnedTorChild child; QSignalSpy ready(&child,&OwnedTorChild::ready), failed(&child,&OwnedTorChild::failed);
+    const auto ancestor = fixture.root.path()+QStringLiteral("/cancel-ancestor");
+    QVERIFY(QDir().mkdir(ancestor));
+    QVERIFY(QFile::setPermissions(ancestor,QFile::ReadOwner|QFile::WriteOwner|QFile::ExeOwner));
+    auto options = fixture.options(); options.workingDirectory = ancestor+QStringLiteral("/run");
+    QVERIFY(child.start(options)); QTRY_COMPARE_WITH_TIMEOUT(ready.count(),1,5000);
+    const auto oldPid = child.processId();
+    QVERIFY(QDir().rename(ancestor,ancestor+QStringLiteral(".kept")));
+    child.stop(); QTRY_VERIFY_WITH_TIMEOUT(child.joined(),5000);
+    QCOMPARE(child.state(),OwnedTorChild::State::Stopped); QVERIFY(reaped(oldPid)); QCOMPARE(failed.count(),0);
+    QVERIFY(child.start(fixture.options(QStringLiteral("fresh"))));
+    QTRY_COMPARE_WITH_TIMEOUT(ready.count(),2,5000);
+    QCOMPARE(child.state(),OwnedTorChild::State::Ready); QCOMPARE(failed.count(),0);
+    const auto newPid = child.processId(); QVERIFY(newPid > 0);
+    child.stop(); QTRY_VERIFY_WITH_TIMEOUT(child.joined(),5000); QVERIFY(reaped(newPid));
+  }
+  void ancestorInvalidationSupportsReentrantStopAndDeletion() {
+    Fixture fixture; QVERIFY(fixture.ready);
+    for (const bool deleting : {false,true}) {
+      const auto ancestor = fixture.root.path()+QStringLiteral("/reentrant-")+QString::number(deleting);
+      QVERIFY(QDir().mkdir(ancestor));
+      QVERIFY(QFile::setPermissions(ancestor,QFile::ReadOwner|QFile::WriteOwner|QFile::ExeOwner));
+      auto options = fixture.options(); options.workingDirectory = ancestor+QStringLiteral("/run");
+      auto* child = new OwnedTorChild; QPointer<OwnedTorChild> guard(child);
+      QSignalSpy ready(child,&OwnedTorChild::ready);
+      QVERIFY(child->start(options)); QTRY_COMPARE_WITH_TIMEOUT(ready.count(),1,5000);
+      const auto pid = child->processId();
+      connect(child,&OwnedTorChild::stateChanged,child,[child,deleting](OwnedTorChild::State state){
+        if (state == OwnedTorChild::State::Stopping) {
+          if (deleting) { delete child; } else { child->stop(); }
+        }
+      });
+      QVERIFY(QDir().rename(ancestor,ancestor+QStringLiteral(".kept")));
+      if (deleting) { QTRY_VERIFY_WITH_TIMEOUT(!guard,5000); }
+      else { QTRY_VERIFY_WITH_TIMEOUT(child->joined(),5000); QCOMPARE(child->state(),OwnedTorChild::State::Failed); delete child; }
+      QVERIFY(reaped(pid));
+    }
   }
   void signalCancellationAndImmediateDeletionCannotLaunchAfterCallback() {
     Fixture fixture; QVERIFY(fixture.ready);

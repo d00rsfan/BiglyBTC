@@ -201,6 +201,14 @@ struct SessionBridge::Host {
   unsigned short peerPort;
   bool normalNetwork = false;
   engine::NetworkPolicy networkPolicy; // Member defaults keep this isolated until configure succeeds.
+  std::optional<std::pair<storage::ErrorCode,std::string>> reportedMainlineFailure;
+  QString mainlineNotice() {
+    if(!engine){return {};}const auto observed=engine->mainlineDiscovery();
+    if(!observed.originalIdentityRequested||!observed.failure){return {};}
+    const auto stamp=std::pair{observed.failure->code,observed.failure->message};
+    if(reportedMainlineFailure==stamp){return {};}reportedMainlineFailure=stamp;
+    return SessionBridge::tr("Mainline discovery is unavailable: %1").arg(text(observed.failure->message));
+  }
   bool socks4CapabilityChecked = false; // Worker-owned, independent of config repair success.
   using MagnetStamp = std::tuple<std::uint64_t, engine::MagnetPhase, bool, std::string,
       std::optional<storage::ErrorCode>, std::string>;
@@ -814,7 +822,7 @@ SessionBridge::SessionBridge(QObject* parent, CountryProviderFactory factory, Az
       if (!stop.stop_requested() && host_) {
         publishAzureus(); // Consume older RTT receipts before advancing source rate buckets.
         if (host_->engine) {
-          static_cast<void>(host_->engine->poll()); tickScheduler(); tickAccounting();
+          static_cast<void>(host_->engine->poll()); publishMainlineFailure(); tickScheduler(); tickAccounting();
           auto current = host_->engine->managedDownloads();
           bool changed = current.size() != host_->lastManagedPhases.size();
           for (const auto& item : current) {
@@ -870,6 +878,8 @@ void SessionBridge::ready(ui::Presentation snapshot, QString message) {
     if (settings) { host_->intakeDefault = optionDefaultPath(*settings); }
   }
   if (host_) {
+    const auto mainline=host_->mainlineNotice();
+    if(!mainline.isEmpty()){message=message.isEmpty()?mainline:message+QLatin1Char('\n')+mainline;}
     const auto notice = host_->pendingNotice();
     if (!notice.isEmpty()) { message = message.isEmpty() ? notice : message + QLatin1Char('\n') + notice; }
   }
@@ -2191,6 +2201,15 @@ bool SessionBridge::continueDownload(ui::Target target) {
     ready(host_->query({}), tr("Complete"));
   });
 }
+void SessionBridge::publishMainlineFailure() noexcept {
+  if(!host_||!host_->engine){return;}
+  try{const auto notice=host_->mainlineNotice();if(notice.isEmpty()){return;}
+    const auto session=host_->columnLayoutSession;
+    QMetaObject::invokeMethod(this,[this,session,notice]{
+      if(!profileClosed_&&session==publishedColumnLayoutSession_){emit messageReady(notice);}
+    },Qt::QueuedConnection);
+  }catch(...){}
+}
 void SessionBridge::initializePersistentOwner(std::stop_token stop) {
   if (!host_ || host_->fileRecoveryRequired || (host_->peerPort == 0 && !host_->normalNetwork) || host_->engine) { return; }
   checkpoint(stop);
@@ -2222,6 +2241,10 @@ void SessionBridge::initializePersistentOwner(std::stop_token stop) {
     host_->networkPolicy = std::move(*policy);
     auto live = (*owner)->applyLiveSettings(host_->networkPolicy, config ? optionQueues(config->document()) : engine::LiveQueueLimits{});
     if (!live) { throw Failure{live.error()}; }
+    // Optional discovery failure is retained by the actual owner and surfaced
+    // below; it never creates a second lease or changes the payload route.
+    const auto original=(*owner)->configureOriginalMainlineIdentity(host_->lease);
+    if(!original&&(*owner)->mainlineDiscovery().state!=engine::MainlineDiscoveryStatus::State::Unavailable){throw Failure{original.error()};}
   }
   if (!(*owner)->startIdle(host_->lease)) {
     throw Failure{{storage::ErrorCode::Io, "Cannot initialize the native idle session"}};

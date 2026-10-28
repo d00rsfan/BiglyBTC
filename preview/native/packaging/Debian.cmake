@@ -118,10 +118,10 @@ set(CPACK_PROJECT_CONFIG_FILE "${CMAKE_CURRENT_BINARY_DIR}/BiglyBTCPack.cmake")
 set(CPACK_DEBIAN_PACKAGE_SHLIBDEPS ON)
 # Ubuntu 26.04 amd64 is the first build baseline; qualify Mint/Debian ABIs separately.
 # Qt platform plugins are loaded dynamically and cannot be found by shlibdeps.
-set(CPACK_DEBIAN_PACKAGE_DEPENDS "python3")
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "python3, libssl3t64 (>= 3.0.0), ca-certificates")
 if(NOT BIGLYBTC_BUNDLE_QT)
   set(CPACK_DEBIAN_PACKAGE_DEPENDS
-    "python3, libqt6core6t64 (>= ${BIGLYBTC_QT_RUNTIME_VERSION}), libqt6gui6 (>= ${BIGLYBTC_QT_RUNTIME_VERSION}), libqt6widgets6 (>= ${BIGLYBTC_QT_RUNTIME_VERSION}), qt6-qpa-plugins (>= ${BIGLYBTC_QT_RUNTIME_VERSION})")
+    "python3, libssl3t64 (>= 3.0.0), ca-certificates, libqt6core6t64 (>= ${BIGLYBTC_QT_RUNTIME_VERSION}), libqt6gui6 (>= ${BIGLYBTC_QT_RUNTIME_VERSION}), libqt6widgets6 (>= ${BIGLYBTC_QT_RUNTIME_VERSION}), qt6-qpa-plugins (>= ${BIGLYBTC_QT_RUNTIME_VERSION})")
   set(CPACK_DEBIAN_PACKAGE_RECOMMENDS "qt6-wayland (>= ${BIGLYBTC_QT_RUNTIME_VERSION})")
 endif()
 include(CPack)

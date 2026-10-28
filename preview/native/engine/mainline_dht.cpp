@@ -5,6 +5,12 @@
 #define BIGLYBTC_HAS_ORIGINAL_MAINLINE_IDENTITY 1
 #include "../adapters/mainline_identity.hpp"
 #include <libtorrent/biglybtc_mainline_identity.hpp>
+#if __has_include(<libtorrent/biglybtc_mainline_routing.hpp>)
+#define BIGLYBTC_HAS_ORIGINAL_MAINLINE_ROUTING 1
+#include <libtorrent/biglybtc_mainline_routing.hpp>
+#else
+#define BIGLYBTC_HAS_ORIGINAL_MAINLINE_ROUTING 0
+#endif
 #include <atomic>
 #include <dlfcn.h>
 #include <mutex>
@@ -12,6 +18,7 @@
 #include <tuple>
 #else
 #define BIGLYBTC_HAS_ORIGINAL_MAINLINE_IDENTITY 0
+#define BIGLYBTC_HAS_ORIGINAL_MAINLINE_ROUTING 0
 #endif
 
 #include <libtorrent/alert_types.hpp>
@@ -559,6 +566,15 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
         const auto id=result.dict_find_string("id");
         if(!id||id.string_length()!=20||lt::sha1_hash(id.string_ptr()).is_all_zeros()){continue;}
         probe.nodeId=lt::sha1_hash(id.string_ptr());
+        if(impl_->originalIdentity&&impl_->originalIdentity->socketRouting()){
+          auto live=impl_->originalIdentity->routing(*impl_->session,probe.endpoint.address().is_v4(),std::pair{probe.nodeId,probe.endpoint});
+          if(!live){return impl_->fail("Original Mainline PORT socket proof failed",true);}
+          if(live->local!=probe.nodeId&&live->matched){
+            if(!available(impl_->status.peerBootstrapProgress)){return impl_->fail("Mainline PORT progress overflow",true);}
+            ++impl_->status.peerBootstrapProgress;
+          }
+          continue;
+        }
         // The RPC callback posts before node_seen(). This synchronous call is
         // an executor barrier and selects an ACTUAL local node ID. Saved
         // contacts include replacements, so they are NOT routing proof.
@@ -682,6 +698,15 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
       auto& round=impl_->scrapeRounds.at(impl_->activeScrape);
       if(!round.started&&impl_->running&&!impl_->bootstrapPending){
         round.started=true;
+        if(impl_->originalIdentity&&impl_->originalIdentity->socketRouting()){
+          for(const auto v4:{true,false}){
+            if(!(v4?impl_->ipv4:impl_->ipv6)){continue;}
+            auto table=impl_->originalIdentity->routing(*impl_->session,v4);
+            if(!table){return impl_->fail("Original Mainline scrape socket proof failed",true);}
+            impl_->issueScrapeNodes(round,table->local,table->nodes);
+          }
+          if(round.finished==round.issued){impl_->finishScrape(round);}
+        }else{
         const auto state=impl_->session->session_state(lt::session_handle::save_dht_state);
         for(const auto& [address,id]:state.dht_state.nids){
           if((id.is_all_zeros()&&!(impl_->originalIdentity&&impl_->originalIdentity->localId(id)))
@@ -692,6 +717,7 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
           if(queue.waiting.size()==1){queue.issued=queue.waiting.front().generation;impl_->session->dht_live_nodes(id);}
         }
         if(!round.pendingTables){impl_->finishScrape(round);}
+        }
       }
       if(!round.closed&&std::chrono::steady_clock::now()>=round.deadline){impl_->finishScrape(round,true);}
     }

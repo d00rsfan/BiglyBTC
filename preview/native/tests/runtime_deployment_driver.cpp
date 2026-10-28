@@ -137,7 +137,10 @@ int main(int argc, char** argv) {
       if (fault == "replace") { fs::copy_file(cleanup.saved, image); }
     }
     armed = true;
-#if defined(BIGLYBTC_ORIGINAL_IDENTITY_DEPLOYMENT) && BIGLYBTC_ORIGINAL_IDENTITY_DEPLOYMENT
+#if defined(BIGLYBTC_MAINLINE_ROUTING_DEPLOYMENT) && BIGLYBTC_MAINLINE_ROUTING_DEPLOYMENT
+    const auto retainedPin = biglybtc::engine::detail::mainlineRoutingRuntimePin();
+    const bool admitted = static_cast<bool>(retainedPin);
+#elif defined(BIGLYBTC_ORIGINAL_IDENTITY_DEPLOYMENT) && BIGLYBTC_ORIGINAL_IDENTITY_DEPLOYMENT
     const auto retainedPin = biglybtc::engine::detail::managedTrackerResponseRuntimePin();
     const bool admitted = static_cast<bool>(retainedPin);
 #elif defined(BIGLYBTC_MAINLINE_PORT_DEPLOYMENT) && BIGLYBTC_MAINLINE_PORT_DEPLOYMENT
@@ -161,7 +164,9 @@ int main(int argc, char** argv) {
     std::cout << "case=" << fault << " admitted=" << admitted << " copied_opens=" << opens
         << " original_opens=" << originalOpens << " injected=" << injected << " real_bytes=" << readBytes
         << " mapped_copy=" << actual << '\n';
-#if defined(BIGLYBTC_ORIGINAL_IDENTITY_DEPLOYMENT) && BIGLYBTC_ORIGINAL_IDENTITY_DEPLOYMENT
+#if defined(BIGLYBTC_MAINLINE_ROUTING_DEPLOYMENT) && BIGLYBTC_MAINLINE_ROUTING_DEPLOYMENT
+    std::cout << "proof=mainline_routing27 retained_pin=" << static_cast<bool>(retainedPin) << '\n';
+#elif defined(BIGLYBTC_ORIGINAL_IDENTITY_DEPLOYMENT) && BIGLYBTC_ORIGINAL_IDENTITY_DEPLOYMENT
     std::cout << "proof=original_identity_tracker25 retained_pin=" << static_cast<bool>(retainedPin) << '\n';
 #elif defined(BIGLYBTC_MAINLINE_PORT_DEPLOYMENT) && BIGLYBTC_MAINLINE_PORT_DEPLOYMENT
     std::cout << "proof=mainline20 retained_pin=" << static_cast<bool>(retainedPin) << '\n';
