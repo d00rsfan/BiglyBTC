@@ -81,7 +81,7 @@ bool holdDirectory(const QString& path, std::vector<Directory>& chain) {
   return directoryChainCurrent(chain);
 }
 struct File {
-  Fd fd;
+  Fd fd{};
   int parent = -1;
   QByteArray name;
   struct stat stamp{};
