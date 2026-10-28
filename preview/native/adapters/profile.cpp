@@ -90,6 +90,26 @@ ProfileLease::~ProfileLease() {
   if (directory_ >= 0) { ::close(directory_); }
 }
 
+std::expected<std::shared_ptr<const ProfileLease>, Error> ProfileLease::retain() const {
+  if (!valid()) { return error(ErrorCode::Conflict, "Profile lease is no longer held"); }
+  // dup preserves the OFD owning Java-compatible exclusion. A fresh open or a
+  // new lock acquisition would describe a different owner and is forbidden.
+  Descriptor directory(::fcntl(directory_, F_DUPFD_CLOEXEC, 0));
+  Descriptor lock(::fcntl(lock_, F_DUPFD_CLOEXEC, 0));
+  if (directory.get() < 0 || lock.get() < 0) {
+    return error(ErrorCode::Io, "Cannot retain held profile descriptors");
+  }
+  struct stat dir{}, held{}, named{};
+  if (::fstat(directory.get(), &dir) != 0 || !S_ISDIR(dir.st_mode)
+      || ::fstat(lock.get(), &held) != 0 || !S_ISREG(held.st_mode)
+      || held.st_nlink != 1 || held.st_uid != ::geteuid()
+      || ::fstatat(directory.get(), ".azlock", &named, AT_SYMLINK_NOFOLLOW) != 0
+      || !S_ISREG(named.st_mode) || named.st_dev != held.st_dev || named.st_ino != held.st_ino) {
+    return error(ErrorCode::Conflict, "Held profile lock pathname changed");
+  }
+  return std::shared_ptr<const ProfileLease>(new ProfileLease(directory.release(), lock.release()));
+}
+
 std::expected<ConfigFile, Error> ConfigFile::load(const ProfileLease& lease, std::string filename, core::Limits limits) {
   if (!lease.valid() || !validName(filename)) {
     return error(ErrorCode::UnsafePath, "Held profile lease and safe configuration filename required");

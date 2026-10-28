@@ -40,7 +40,7 @@ QByteArray cache(unsigned short port){
   return dictionary({{"mainEntries",list({node})},{"replacements",list({})},{"oldKey",string(QByteArray(20,'R'))},{"timestamp","i1000e"}});
 }
 engine::NetworkPolicy policy(){
-  engine::NetworkPolicy result;result.mode=engine::NetworkMode::Normal;result.dht=true;result.ipv6=false;
+  engine::NetworkPolicy result;result.mode=engine::NetworkMode::Normal;result.dht=true;result.ipv6=false;result.udpTrackers=true;
   result.bindAddresses={"127.0.0.1"};result.mainlineIpv4=true;result.mainlineIpv6=false;result.mainlinePeerBootstrapOnly=true;
   QTcpServer tcp,dht;test::require(tcp.listen(QHostAddress::LocalHost,0)&&dht.listen(QHostAddress::LocalHost,0),"Cannot reserve owned active ports");
   QUdpSocket udp;test::require(udp.bind(QHostAddress::LocalHost,dht.serverPort(),QUdpSocket::DontShareAddress),"Cannot reserve owned active UDP port");
@@ -151,12 +151,13 @@ private slots:
     test::write(failed.profile+"/plugins/mldht/IPv4-table.cache",cache(failedWire.port()));
     test::write(healthy.profile+"/plugins/mldht/IPv4-table.cache",cache(healthyWire.port()));
     auto failedLease=storage::ProfileLease::acquire(failed.native()),healthyLease=storage::ProfileLease::acquire(healthy.native());QVERIFY(failedLease);QVERIFY(healthyLease);
+    QElapsedTimer elapsed;elapsed.start();
     auto a=engine::PersistentSession::create({7901,7902,7903}),b=engine::PersistentSession::create({7911,7912,7913});QVERIFY(a);QVERIFY(b);
     auto bad=std::move(*a),good=std::move(*b);const auto badPolicy=policy(),goodPolicy=policy();
     failedTracker.peerPort(badPolicy.listenPort);healthyTracker.peerPort(goodPolicy.listenPort);
     QVERIFY(bad->configureNetwork(badPolicy));QVERIFY(good->configureNetwork(goodPolicy));
     QVERIFY(bad->configureMainlineBootstrap({}));QVERIFY(good->configureMainlineBootstrap({}));
-    QElapsedTimer elapsed;elapsed.start();QVERIFY(bad->startIdle(*failedLease));QVERIFY(good->startIdle(*healthyLease));
+    QVERIFY(bad->startIdle(*failedLease));QVERIFY(good->startIdle(*healthyLease));
     QVERIFY(bad->startManaged(*failedLease,{.hash=*failed.hash,.queued=false}));
     QVERIFY(good->startManaged(*healthyLease,{.hash=*healthy.hash,.queued=false}));
     QString failure;

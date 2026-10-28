@@ -34,3 +34,19 @@ target_compile_options(biglybtc-tor-ownership-source-tests PRIVATE -Wall -Wextra
 target_compile_definitions(biglybtc-tor-ownership-source-tests PRIVATE BIGLYBTC_TOR_OWNERSHIP_FIXTURES="${CMAKE_CURRENT_SOURCE_DIR}/../../../../migration/fixtures/tor-ownership/cases.json")
 add_test(NAME owned-tor-ownership-source COMMAND biglybtc-tor-ownership-source-tests)
 set_tests_properties(owned-tor-ownership-source PROPERTIES TIMEOUT 120 LABELS "integration;loopback;qt;source")
+
+# Optional owned-child layer under the existing explicit Tor-control option.
+# No existing channel/ownership sources or APIs change.
+add_library(biglybtc_tor_owned_child STATIC owned_child.hpp owned_child.cpp)
+set_target_properties(biglybtc_tor_owned_child PROPERTIES AUTOMOC ON)
+target_include_directories(biglybtc_tor_owned_child PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(biglybtc_tor_owned_child PUBLIC biglybtc_tor_ownership PRIVATE OpenSSL::Crypto)
+target_compile_features(biglybtc_tor_owned_child PUBLIC cxx_std_23)
+target_compile_options(biglybtc_tor_owned_child PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_executable(biglybtc-tor-owned-child-tests owned_child_tests.cpp)
+set_target_properties(biglybtc-tor-owned-child-tests PROPERTIES AUTOMOC ON)
+target_link_libraries(biglybtc-tor-owned-child-tests PRIVATE biglybtc_tor_owned_child Qt6::Test)
+target_compile_options(biglybtc-tor-owned-child-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+target_compile_definitions(biglybtc-tor-owned-child-tests PRIVATE BIGLYBTC_TOR_CHILD_FIXTURE="${CMAKE_CURRENT_SOURCE_DIR}/../../../../migration/fixtures/tor-owned-child/peer.py")
+add_test(NAME owned-tor-child-lifecycle COMMAND biglybtc-tor-owned-child-tests)
+set_tests_properties(owned-tor-child-lifecycle PROPERTIES TIMEOUT 120 LABELS "integration;loopback;qt;owned-process")

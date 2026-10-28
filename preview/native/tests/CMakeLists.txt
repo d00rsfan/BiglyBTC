@@ -1935,3 +1935,12 @@ if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIM
   add_test(NAME mainline-single-tracker-owner COMMAND biglybtc-mainline-single-tracker-owner-tests)
   set_tests_properties(mainline-single-tracker-owner PROPERTIES TIMEOUT 210 LABELS "network;discovery;owned;slow")
 endif()
+
+include(ProviderOriginalIdentityRuntimeTests.cmake)
+
+add_executable(biglybtc-profile-lease-retention-tests profile_lease_retention_tests.cpp)
+set_target_properties(biglybtc-profile-lease-retention-tests PROPERTIES AUTOMOC ON)
+target_link_libraries(biglybtc-profile-lease-retention-tests PRIVATE biglybtc_profile Qt6::Test)
+target_compile_options(biglybtc-profile-lease-retention-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+add_test(NAME profile-lease-retention COMMAND biglybtc-profile-lease-retention-tests)
+set_tests_properties(profile-lease-retention PROPERTIES TIMEOUT 30 LABELS "unit;storage;locking")

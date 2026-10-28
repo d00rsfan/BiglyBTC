@@ -198,6 +198,12 @@ bool relocatableMainlineProviderArtifact() {
       && std::string_view(runtime_binding::sha256) == "9fbb550bbc1f877ce34ce21849deab97971f5d3eacfbc531a7b777d28a3b2eea"
       && runtime_binding::bytes == 9153448ULL;
 }
+bool relocatableOriginalIdentityProviderArtifact() {
+  // Exact reviewed optional identity/tracker source/SDK/full-artifact lane.
+  return std::string_view(runtime_binding::manifest) == "68c25c3ac2680513deef488f7f74dc0c6788b1802df43361ef00886c962bde58"
+      && std::string_view(runtime_binding::sha256) == "3e7bb59a4b419bc8f5198dd8ebf4b1a6cd2c1b106a7f032759bdbf552faa1890"
+      && runtime_binding::bytes == 9184016ULL;
+}
 bool hashed(int descriptor) {
   Digest context;
   if (!context.value || EVP_DigestInit_ex(context.value, EVP_sha256(), nullptr) != 1) { return false; }
@@ -236,7 +242,7 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
   const auto actual = canonicalPath(object->l_name);
   if (!actual || (std::string_view(actual->data()) != runtime_binding::artifact
                   && !relocatableSourceArtifact() && !relocatableSelectedProviderArtifact() && !relocatableNextProviderArtifact()
-                  && !relocatableWebseedProviderArtifact() && !relocatableQueueProviderArtifact() && !relocatableTrafficProviderArtifact() && !relocatableSocksProviderArtifact() && !relocatableMainlineProviderArtifact())) { return false; }
+                  && !relocatableWebseedProviderArtifact() && !relocatableQueueProviderArtifact() && !relocatableTrafficProviderArtifact() && !relocatableSocksProviderArtifact() && !relocatableMainlineProviderArtifact() && !relocatableOriginalIdentityProviderArtifact())) { return false; }
   // These are ORIGINAL dynamic exports, not &method / __wrap_* references.
   // GNU --wrap test seams therefore do not misidentify the test executable as LT.
   constexpr const char* symbols[] = {

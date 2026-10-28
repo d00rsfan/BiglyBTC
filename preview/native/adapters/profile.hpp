@@ -5,6 +5,7 @@
 #include <expected>
 #include <filesystem>
 #include <optional>
+#include <memory>
 #include <string>
 #include <string_view>
 
@@ -24,6 +25,10 @@ public:
   ProfileLease(ProfileLease&& other) noexcept;
   ProfileLease& operator=(ProfileLease&& other) noexcept;
   ~ProfileLease();
+  // Retain this actual Linux open-file-description lock, without reacquiring
+  // the profile or borrowing the caller's object lifetime. Closing either token
+  // leaves Java/native exclusion in place until the last alias is destroyed.
+  std::expected<std::shared_ptr<const ProfileLease>, Error> retain() const;
   int directoryHandle() const { return directory_; }
   bool valid() const { return directory_ >= 0 && lock_ >= 0; }
 private:

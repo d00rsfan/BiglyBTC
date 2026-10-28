@@ -16,7 +16,8 @@ if(NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
       OR _biglybtc_deployment_manifest STREQUAL "f95542706a3b7324c6f2589d90d51a4374c92e7e245319b156f044aeec76a1d8"
       OR _biglybtc_deployment_manifest STREQUAL "5901b34eeb25370106bdbf6185a80f0c86c62a837bf2e455f5619921db665760"
       OR _biglybtc_deployment_manifest STREQUAL "2a5e56dd4987756e74871c3aad015ad93974e6d47aad8754b0ad05d09f3ca94e"
-      OR _biglybtc_deployment_manifest STREQUAL "1267bf58a235dc6c32d9ffadab8bbd994ec81f2aa958f0cf621f8a71e4f6c84c")
+      OR _biglybtc_deployment_manifest STREQUAL "1267bf58a235dc6c32d9ffadab8bbd994ec81f2aa958f0cf621f8a71e4f6c84c"
+      OR _biglybtc_deployment_manifest STREQUAL "68c25c3ac2680513deef488f7f74dc0c6788b1802df43361ef00886c962bde58")
     # Exact private next-provider fixtures are registered below by the separate
     # provider-next-runtime-deployment block, including all rejection controls.
     # Configure-time manifest/source/image verification has already succeeded.

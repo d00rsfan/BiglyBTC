@@ -35,6 +35,13 @@ jobs:
           ref: 92c72c92c7a98efcfd2b29e3fb37a1c12880ea5a
           path: _dependencies/mldht-identity
           persist-credentials: false
+      - name: Check out reviewed Tor SAFECOOKIE dependency
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: d00rsfan/BiglyBTC-plugin-aznettor
+          ref: 223467c0afef06bf3835ec20863c6f1ec7d79583
+          path: _dependencies/tor-auth
+          persist-credentials: false
       - name: Check offline preview console forwarding
         run: python3 -B preview/native/packaging/test_preview.py
       - name: Install pinned compiler, libtorrent and Qt 6.12.0 SDK
@@ -62,6 +69,8 @@ jobs:
             -DBIGLYBTC_LOCAL_ENGINE=ON \
             -DBIGLYBTC_DESKTOP=ON \
             -DBIGLYBTC_ORIGINAL_MLDHT_IDENTITY_READER=ON \
+            -DBIGLYBTC_TOR_CONTROL=ON \
+            -DBIGLYBTC_TOR_AUTH_SOURCE_DIR="$GITHUB_WORKSPACE/_dependencies/tor-auth" \
             -DBIGLYBTC_MLDHT_IDENTITY_SOURCE_DIR="$GITHUB_WORKSPACE/_dependencies/mldht-identity" \
             -DBIGLYBTC_DEB=ON \
             -DBIGLYBTC_BUNDLE_QT=ON \
@@ -86,6 +95,13 @@ jobs:
           /usr/bin/ctest --test-dir "$BUILD_DIR" -L unit --no-tests=error \
             --output-on-failure --output-junit "$EVIDENCE_DIR/unit-tests.xml" \
             2>&1 | tee "$EVIDENCE_DIR/unit-tests.log"
+      - name: Exercise explicit original-ID stock SDK refusal
+        shell: bash
+        run: |
+          set -euo pipefail
+          /usr/bin/ctest --test-dir "$BUILD_DIR" -R '^mainline-original-wire-identity$' --no-tests=error \
+            --output-on-failure --output-junit "$EVIDENCE_DIR/original-id-stock-sdk.xml" \
+            2>&1 | tee "$EVIDENCE_DIR/original-id-stock-sdk.log"
       - name: Run actual offline preview smoke and capture classic view
         shell: bash
         run: |
