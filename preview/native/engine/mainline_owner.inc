@@ -116,6 +116,8 @@ void refreshMainlinePort(lt::torrent_handle handle,const std::shared_ptr<Mainlin
       return {};
     });
   }catch(...){queue->fail();}
+#else
+  (void)handle;
 #endif
 }
 std::optional<std::pair<std::string,int>> mainlinePortEndpoint(const MainlinePortQueue::Hint& hint) const {
