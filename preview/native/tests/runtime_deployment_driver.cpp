@@ -137,7 +137,12 @@ int main(int argc, char** argv) {
       if (fault == "replace") { fs::copy_file(cleanup.saved, image); }
     }
     armed = true;
+#if defined(BIGLYBTC_MAINLINE_PORT_DEPLOYMENT) && BIGLYBTC_MAINLINE_PORT_DEPLOYMENT
+    const auto retainedPin = biglybtc::engine::detail::mainlinePortRuntimePin();
+    const bool admitted = static_cast<bool>(retainedPin);
+#else
     const bool admitted = biglybtc::engine::detail::persistentRuntimeQualified();
+#endif
     armed = false;
     if (admitted != (expectation == "bound") || originalOpens != 0) { return 1; }
     if ((fault == "copy" || fault == "moved") && (opens != 1 || !readBytes || !S_ISREG(actualMode))) { return 2; }
@@ -153,6 +158,9 @@ int main(int argc, char** argv) {
     std::cout << "case=" << fault << " admitted=" << admitted << " copied_opens=" << opens
         << " original_opens=" << originalOpens << " injected=" << injected << " real_bytes=" << readBytes
         << " mapped_copy=" << actual << '\n';
+#if defined(BIGLYBTC_MAINLINE_PORT_DEPLOYMENT) && BIGLYBTC_MAINLINE_PORT_DEPLOYMENT
+    std::cout << "proof=mainline20 retained_pin=" << static_cast<bool>(retainedPin) << '\n';
+#endif
     return 0;
   } catch (const std::exception& error) {
     std::cerr << error.what() << '\n'; return 70;

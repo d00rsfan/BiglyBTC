@@ -31,7 +31,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--driver", type=Path, required=True)
     parser.add_argument("--provider", type=Path, required=True)
-    parser.add_argument("--mode", choices=("source", "selected", "provider-next", "webseed", "queue", "traffic", "socks", "strict"), required=True)
+    parser.add_argument("--mode", choices=("source", "selected", "provider-next", "webseed", "queue", "traffic", "socks", "mainline", "strict"), required=True)
     parser.add_argument("--manifest", type=Path)
     parser.add_argument("--alternate", type=Path)
     parser.add_argument("--interposition-driver", type=Path)
@@ -91,6 +91,15 @@ def main():
         if (Path(declared["artifact"]).resolve(strict=True) != provider
                 or declared["artifact_sha256"] != original_sha or declared["artifact_bytes"] != provider.stat().st_size):
             raise ValueError("SOCKS cancellation relocation differs from the reviewed manifest")
+    elif args.mode == "mainline":
+        if (not args.manifest or digest(args.manifest) != "1267bf58a235dc6c32d9ffadab8bbd994ec81f2aa958f0cf621f8a71e4f6c84c"
+                or original_sha != "9fbb550bbc1f877ce34ce21849deab97971f5d3eacfbc531a7b777d28a3b2eea" or provider.stat().st_size != 9153448
+                or not args.alternate or not args.interposition_driver or not args.preload):
+            raise ValueError("Mainline PORT relocation requires exact source/image and all rejection controls")
+        declared = json.loads(args.manifest.read_bytes())
+        if (Path(declared["artifact"]).resolve(strict=True) != provider
+                or declared["artifact_sha256"] != original_sha or declared["artifact_bytes"] != provider.stat().st_size):
+            raise ValueError("Mainline PORT relocation differs from the reviewed manifest")
     elif original_sha not in INSTRUMENTED:
         raise ValueError("Strict relocation test requires an exact retained instrumented image")
     root = Path(tempfile.mkdtemp(prefix="biglybtc-runtime-deploy-results-", dir="/tmp"))
@@ -134,6 +143,10 @@ def main():
             raise ValueError("Copied runtime fixture failed: " + name + ": " + result.stderr.decode(errors="replace"))
         if b"original_opens=0" not in result.stdout or b"mapped_copy=" not in result.stdout:
             raise ValueError("Missing actual copied-origin/original-path controls: " + name)
+        if args.mode == "mainline":
+            proof = b"proof=mainline20 retained_pin=" + (b"1" if expected == "bound" else b"0")
+            if proof not in result.stdout:
+                raise ValueError("Missing actual retained full20-export PORT proof: " + name)
         rows.append({"case": name, "fault": fault, "expected": expected, "argv": argv,
                      "owned_root": str(area), "selected_provider_sha256": selected_sha,
                      "copied_provider_sha256": digest(image), "source_stamp_unchanged": True,

@@ -1822,6 +1822,7 @@ include("${CMAKE_CURRENT_SOURCE_DIR}/ProviderQueueRuntimeTests.cmake")
 include("${CMAKE_CURRENT_SOURCE_DIR}/ProviderTrafficRuntimeTests.cmake")
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/ProviderSocksRuntimeTests.cmake")
+include("${CMAKE_CURRENT_SOURCE_DIR}/ProviderMainlineRuntimeTests.cmake")
 
 # Append to preview/native/tests/CMakeLists.txt after Qt6::Test is available.
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND TARGET Qt6::Test AND TARGET LibtorrentRasterbar::torrent-rasterbar)
