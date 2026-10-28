@@ -73,6 +73,18 @@ int main(int argc, char** argv) {
       return 0;
     }
 
+    run("Mainline restart policy keeps original directory and restore flag", [] {
+      auto document=config({{"Plugin.CustomML.alwaysRestoreID",integer(0)}});
+      const auto before=document.originalBytes();
+      auto policy=engine::readNetworkPolicy(&document,{.mode=engine::NetworkMode::Normal,.mldhtDirectory="CustomML"});
+      CHECK(policy && policy->mainlineDirectory=="CustomML" && !policy->mainlineRestoreIdentity);
+      CHECK(document.originalBytes()==before);
+      const auto defaults=normal(); CHECK(defaults.mainlineDirectory=="mldht" && defaults.mainlineRestoreIdentity);
+      policy->mainlineDirectory="../escape"; CHECK(!engine::validateNetworkPolicy(*policy));
+      auto malformed=config({{"Plugin.mldht.alwaysRestoreID",bytes("wrong")}});
+      rejected(malformed,Code::InvalidConfiguration);
+    });
+
     run("saved decentralized marker never becomes a tracker or enables discovery", [] {
       const std::string url="dht://0123456789ABCDEF0123456789ABCDEF01234567.dht/announce";
       const std::string source="d8:announce"+bytes(url)+"4:infod6:lengthi1e4:name1:x12:piece lengthi16384e6:pieces20:"+std::string(20,'h')+"ee";

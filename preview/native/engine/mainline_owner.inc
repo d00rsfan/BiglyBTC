@@ -1,6 +1,9 @@
 // This separate service owns its own DHT alert queue. The torrent session's
 // single pump, payload counters and retirement certificates remain independent.
 std::unique_ptr<MainlineDhtService> mainline;
+const storage::ProfileLease* mainlineLease=nullptr;
+std::optional<storage::MainlineCheckpoint> mainlineCheckpoint;
+Clock::time_point mainlineCheckpointNext{};
 std::optional<std::vector<std::pair<std::string,int>>> mainlineBootstrap;
 MainlineDiscoveryStatus mainlineStatus;
 std::vector<lt::sha1_hash> mainlineActive;
@@ -17,17 +20,59 @@ void startMainline() noexcept {
     options.ipv4=network->mainlineIpv4;
     options.ipv6=network->mainlineIpv6 && network->ipv6;
     options.onlyPeerBootstrap=network->mainlinePeerBootstrapOnly;
+    options.restoreIdentity=network->mainlineRestoreIdentity;
     if (mainlineBootstrap) { options.bootstrapNodes=*mainlineBootstrap; }
+    // Optional state never changes route policy. Unsupported proxies do not
+    // even open these files; the service itself reports unavailable below.
+    if (mainlineLease && network->proxy.kind==NetworkProxyKind::None) {
+      auto cached=storage::MainlineCheckpoint::load(*mainlineLease,network->mainlineDirectory);
+      if (cached) {
+        mainlineCheckpoint.emplace(std::move(*cached));
+        if (mainlineCheckpoint->state()) { options.restoredState=*mainlineCheckpoint->state(); }
+      } else { mainlineStatus.checkpointFailure=cached.error(); }
+      const auto now=std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count();
+      auto legacy=storage::readLegacyMldhtHints(*mainlineLease,network->mainlineDirectory,now);
+      if (legacy) {
+        for (const auto& hint:legacy->endpoints) {
+          const bool ipv6=hint.address.find(':')!=std::string::npos;
+          if ((ipv6 && options.ipv6) || (!ipv6 && options.ipv4)) { options.restoredNodes.emplace_back(hint.address,hint.port); }
+        }
+      } else { mainlineStatus.checkpointFailure=legacy.error(); }
+    }
     auto created=MainlineDhtService::create(networkBinding->effective,options);
+    if (!created && !options.restoredState.empty() && created.error().code==storage::ErrorCode::InvalidFormat) {
+      // Known optional-cache corruption only. Preserve the file and revoke
+      // writes; repeat with identical routes and no untrusted saved state.
+      mainlineStatus.checkpointFailure=created.error(); mainlineCheckpoint.reset();
+      options.restoredState.clear();
+      created=MainlineDhtService::create(networkBinding->effective,options);
+    }
     if (!created) {
       mainlineStatus.state=MainlineDiscoveryStatus::State::Unavailable;
       mainlineStatus.failure=created.error(); return;
     }
     mainline=std::move(*created);
+    mainlineStatus.checkpointLoaded=!options.restoredState.empty();
+    mainlineStatus.legacyHints=options.restoredNodes.size();
     mainlineStatus.state=MainlineDiscoveryStatus::State::Running;
+    mainlineCheckpointNext=Clock::now()+5min;
   } catch (...) {
     mainline.reset(); mainlineStatus.state=MainlineDiscoveryStatus::State::Unavailable;
     try { mainlineStatus.failure=storage::Error{storage::ErrorCode::Io,"Mainline service startup failed"}; } catch (...) {}
+  }
+}
+void persistMainline() noexcept {
+  if (!mainline || !mainlineCheckpoint || !mainlineLease || !mainlineLease->valid()
+      || mainline->status().phase!=MainlineDhtPhase::Listening) { return; }
+  try {
+    auto snapshot=mainline->checkpoint();
+    if (!snapshot) { mainlineStatus.checkpointFailure=snapshot.error(); mainlineCheckpoint.reset(); return; }
+    auto saved=mainlineCheckpoint->save(*mainlineLease,*snapshot);
+    if (!saved) { mainlineStatus.checkpointFailure=saved.error(); mainlineCheckpoint.reset(); return; }
+    mainlineStatus.checkpointSaved=true;
+  } catch (...) {
+    mainlineCheckpoint.reset();
+    try { mainlineStatus.checkpointFailure=storage::Error{storage::ErrorCode::Io,"Optional Mainline checkpoint failed; original data preserved"}; } catch (...) {}
   }
 }
 bool discoverable(const Managed& value) const {
@@ -45,6 +90,7 @@ void advanceMainline() noexcept {
   if (!mainline || closingAdmission || poisoned || closed) { return; }
   try {
     const auto now=Clock::now();
+    if (now>=mainlineCheckpointNext) { persistMainline(); mainlineCheckpointNext=now+5min; }
     std::vector<lt::sha1_hash> current;
     const auto retain=[&](const lt::sha1_hash& hash) {
       if (std::ranges::find(current,hash)==current.end() && current.size()<MainlineDhtService::MaximumActiveHashes) { current.push_back(hash); }

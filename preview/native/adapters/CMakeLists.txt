@@ -61,3 +61,9 @@ target_sources(biglybtc_profile PRIVATE original_file_io.cpp)
 target_sources(biglybtc_profile PRIVATE original_storage_defaults.cpp)
 
 target_sources(biglybtc_profile PRIVATE original_torrent_identity.cpp)
+
+# Disposable native engine checkpoint; original plugin data remain read-only.
+add_library(biglybtc_mainline_checkpoint STATIC mainline_checkpoint.cpp)
+target_include_directories(biglybtc_mainline_checkpoint PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(biglybtc_mainline_checkpoint PUBLIC biglybtc_profile PRIVATE biglybtc_mldht_cache biglybtc_plugin_settings)
+target_compile_options(biglybtc_mainline_checkpoint PRIVATE -Wall -Wextra -Wpedantic -Werror)

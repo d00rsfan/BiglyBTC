@@ -188,6 +188,10 @@ void validate(const NetworkPolicy& p) {
       && p.lanUploadBytesPerSecond >= 0 && p.lanDownloadBytesPerSecond >= 0,
       Code::InvalidConfiguration, "rate limits");
   if (p.dht) {
+    require(!p.mainlineDirectory.empty() && p.mainlineDirectory.size()<=255
+        && p.mainlineDirectory!="." && p.mainlineDirectory!=".."
+        && p.mainlineDirectory.find_first_of(std::string("/\0",2))==std::string::npos,
+        Code::InvalidConfiguration, "Mainline plugin directory");
     require(p.mainlinePort >= 1 && p.mainlinePort <= 65535,
         Code::InvalidConfiguration, "Mainline DHT port");
     require(p.mainlineIpv4 || (p.ipv6 && p.mainlineIpv6),
@@ -317,11 +321,13 @@ std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(
     // Retain the original reader's Java int/boolean projection, while rejecting
     // malformed or duplicate keys at this strict no-effects policy boundary.
     for (const auto name : {"enable", "port", "autostart.IPv4", "autostart.IPv6",
-        "backupOnly", "onlyPeerBootstrap"}) {
+        "backupOnly", "onlyPeerBootstrap", "alwaysRestoreID"}) {
       const auto key = mainline->binding.configPrefix + name;
       c.originalPluginInteger(key);
     }
     c.originalPluginInteger(mainline->binding.startupKey);
+    p.mainlineDirectory = mainline->binding.directoryName;
+    p.mainlineRestoreIdentity = mainline->alwaysRestoreId;
     p.mainlinePort = mainline->port;
     p.mainlineIpv4 = mainline->autostart4;
     p.mainlineIpv6 = p.ipv6 && mainline->autostart6;

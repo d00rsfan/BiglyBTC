@@ -4,9 +4,11 @@
 #include <libtorrent/alert_types.hpp>
 #include <libtorrent/session.hpp>
 #include <libtorrent/session_params.hpp>
+#include <libtorrent/kademlia/dht_state.hpp>
 #include <libtorrent/socket_type.hpp>
 
 #include <algorithm>
+#include <initializer_list>
 #include <limits>
 #include <map>
 #include <new>
@@ -72,6 +74,193 @@ std::string endpoint(const Node& value) {
   return (value.first.find(':') == std::string::npos ? value.first : '[' + value.first + ']')
       + ':' + std::to_string(value.second);
 }
+constexpr std::size_t MaximumStateBytes = MainlineDhtService::MaximumStateBytes;
+constexpr std::size_t MaximumContacts = MainlineDhtService::MaximumRoutingContacts;
+constexpr std::size_t MaximumIdentities = MainlineDhtService::MaximumNodeIdentities;
+using Address = lt::address;
+using UdpEndpoint = lt::udp::endpoint;
+
+bool knownKeys(const core::Node& value, std::initializer_list<std::string_view> allowed) {
+  if (value.type != core::Node::Type::Dictionary || value.children.size() % 2 != 0) { return false; }
+  std::set<std::string_view> seen;
+  for (std::size_t i = 0; i < value.children.size(); i += 2) {
+    const auto& key = value.children[i];
+    if (key.type != core::Node::Type::Bytes || !seen.insert(key.bytes).second
+        || std::find(allowed.begin(), allowed.end(), key.bytes) == allowed.end()) { return false; }
+  }
+  return true;
+}
+bool enabled(const Address& address, bool ipv4, bool ipv6) {
+  return address.is_v4() ? ipv4 : ipv6;
+}
+bool unicastAddress(const Address& address) {
+  if (address.is_unspecified() || address.is_multicast()) { return false; }
+  if (address.is_v4()) {
+    const auto value = address.to_v4().to_uint();
+    // Exclude this-network, multicast, reserved and limited-broadcast ranges.
+    return (value >> 24) != 0 && (value >> 24) < 224;
+  }
+  return !address.to_v6().is_v4_mapped() && address.to_v6().scope_id() == 0;
+}
+bool privateAddress(const Address& address) {
+  if (address.is_v4()) {
+    const auto value = address.to_v4().to_uint();
+    return (value & 0xff000000u) == 0x0a000000u
+        || (value & 0xfff00000u) == 0xac100000u
+        || (value & 0xffff0000u) == 0xc0a80000u
+        || (value & 0xffc00000u) == 0x64400000u
+        || (value & 0xffff0000u) == 0xa9fe0000u || address.is_loopback();
+  }
+  const auto value = address.to_v6();
+  return value.is_loopback() || value.is_link_local() || value.is_site_local()
+      || (value.to_bytes()[0] & 0xfe) == 0xfc;
+}
+bool matchesBinding(const Address& address, const std::vector<Address>& bindings) {
+  return std::ranges::any_of(bindings, [&](const auto& bound) {
+    return address.is_v4() == bound.is_v4() && (bound.is_unspecified() || bound == address);
+  });
+}
+bool permittedContact(const UdpEndpoint& contact, bool ipv4, bool ipv6,
+    const std::vector<Address>& bindings) {
+  const auto& address = contact.address();
+  if (contact.port() == 0 || !unicastAddress(address) || !enabled(address, ipv4, ipv6)) { return false; }
+  if (!privateAddress(address)) { return true; }
+  // A cache cannot invent a private route. Explicit loopback fixtures are the
+  // sole supported private contact scope; wildcard bindings do not authorise it.
+  return address.is_loopback() && std::ranges::any_of(bindings, [&](const auto& bound) {
+    return bound.is_loopback() && bound.is_v4() == address.is_v4();
+  });
+}
+Address compactAddress(std::string_view value) {
+  if (value.size() == 4) {
+    lt::address_v4::bytes_type bytes{};
+    for (std::size_t i = 0; i < bytes.size(); ++i) { bytes[i] = static_cast<unsigned char>(value[i]); }
+    return lt::address_v4(bytes);
+  }
+  lt::address_v6::bytes_type bytes{};
+  for (std::size_t i = 0; i < bytes.size(); ++i) { bytes[i] = static_cast<unsigned char>(value[i]); }
+  return lt::address_v6(bytes);
+}
+UdpEndpoint compactEndpoint(std::string_view value) {
+  const auto size = value.size();
+  const auto port = static_cast<unsigned short>((static_cast<unsigned char>(value[size - 2]) << 8)
+      | static_cast<unsigned char>(value[size - 1]));
+  return {compactAddress(value.substr(0, size - 2)), port};
+}
+bool zeroIdentity(std::string_view value) {
+  return std::ranges::all_of(value.substr(0, 20), [](char byte) { return byte == 0; });
+}
+
+std::expected<lt::dht::dht_state, storage::Error> restoredState(const MainlineDhtOptions& options,
+    bool ipv4, bool ipv6, const std::vector<Address>& bindings) {
+  if (options.restoredState.size() > MaximumStateBytes || options.restoredNodes.size() > MainlineDhtService::MaximumNodes) {
+    return error(Code::InvalidFormat, "Mainline DHT restored state exceeds its bounded format");
+  }
+  lt::dht::dht_state result;
+  if (!options.restoredState.empty()) {
+    // Validate strictly before LT's intentionally permissive state reader.
+    // Unknown outer wrappers belong to the profile codec, never this parser.
+    auto document = core::Document::parse(options.restoredState, {MaximumStateBytes, 256, 1024, 5});
+    if (!document || !knownKeys(document->root(), {"dht state"}) || document->root().children.size() != 2) {
+      return error(Code::InvalidFormat, "Invalid Mainline DHT state envelope");
+    }
+    const auto* state = document->find("dht state");
+    if (!state || !knownKeys(*state, {"node-id", "nodes", "nodes6"})) {
+      return error(Code::InvalidFormat, "Invalid Mainline DHT state fields");
+    }
+    std::size_t contacts = 0;
+    for (const auto key : {"nodes", "nodes6"}) {
+      const auto* values = state->find(key);
+      if (!values) { continue; }
+      if (values->type != core::Node::Type::List || values->children.size() > MaximumContacts - contacts) {
+        return error(Code::InvalidFormat, "Mainline DHT routing contact limit or type");
+      }
+      contacts += values->children.size();
+      for (const auto& value : values->children) {
+        if (value.type != core::Node::Type::Bytes || (value.bytes.size() != 6 && value.bytes.size() != 18)) {
+          return error(Code::InvalidFormat, "Invalid Mainline DHT compact contact");
+        }
+        const auto contact = compactEndpoint(value.bytes);
+        if (contact.port() == 0 || !unicastAddress(contact.address())) {
+          return error(Code::InvalidFormat, "Invalid Mainline DHT restored contact address or port");
+        }
+        // A valid cache survives a user disabling one address family. Its
+        // contacts are discarded below; this is not cache corruption.
+        if (enabled(contact.address(), ipv4, ipv6) && !permittedContact(contact, ipv4, ipv6, bindings)) {
+          return error(Code::InvalidFormat, "Mainline DHT restored contact has an ineligible private route");
+        }
+      }
+    }
+    if (const auto* values = state->find("node-id")) {
+      if (values->type != core::Node::Type::List || values->children.size() > MaximumIdentities) {
+        return error(Code::InvalidFormat, "Mainline DHT node identity limit or type");
+      }
+      std::map<Address, std::string_view> identities;
+      for (const auto& value : values->children) {
+        if (value.type != core::Node::Type::Bytes || (value.bytes.size() != 24 && value.bytes.size() != 36)
+            || zeroIdentity(value.bytes)) {
+          return error(Code::InvalidFormat, "Invalid Mainline DHT address-specific node identity");
+        }
+        const auto address = compactAddress(value.bytes.substr(20));
+        if (!unicastAddress(address)) { return error(Code::InvalidFormat, "Invalid Mainline DHT node identity address"); }
+        const auto [at, inserted] = identities.emplace(address, value.bytes.substr(0, 20));
+        if (!inserted && at->second != value.bytes.substr(0, 20)) {
+          return error(Code::InvalidFormat, "Conflicting Mainline DHT identities for one address");
+        }
+      }
+    }
+    auto parameters = lt::read_session_params(lt::span<const char>(options.restoredState.data(), options.restoredState.size()),
+        lt::session_handle::save_dht_state);
+    result = std::move(parameters.dht_state); // Never restore settings/proxy/extensions.
+  }
+  // Both LT lists may contain either family (dht_tracker::state appends all
+  // sockets to nodes). Rebuild them by actual address and deduplicate contacts.
+  std::set<UdpEndpoint> contacts;
+  for (const auto* values : {&result.nodes, &result.nodes6}) {
+    for (const auto& contact : *values) {
+      if (enabled(contact.address(), ipv4, ipv6)) { contacts.insert(contact); }
+    }
+  }
+  for (const auto& hint : options.restoredNodes) {
+    lt::error_code ec; const auto address = lt::make_address(hint.first, ec);
+    // Legacy contacts are optional, untrusted hints. Bad or ineligible
+    // contacts cannot poison an otherwise valid same-policy service startup.
+    if (ec || hint.second < 1 || hint.second > 65535) { continue; }
+    const UdpEndpoint contact(address, static_cast<unsigned short>(hint.second));
+    if (!permittedContact(contact, ipv4, ipv6, bindings)) { continue; }
+    if (contacts.size() < MaximumContacts) { contacts.insert(contact); }
+  }
+  if (contacts.size() > MaximumContacts) { return error(Code::InvalidFormat, "Merged Mainline DHT routing contact limit"); }
+  result.nodes.clear(); result.nodes6.clear();
+  for (const auto& contact : contacts) { (contact.address().is_v4() ? result.nodes : result.nodes6).push_back(contact); }
+  std::erase_if(result.nids, [&](const auto& identity) {
+    return !options.restoreIdentity || !enabled(identity.first, ipv4, ipv6) || !matchesBinding(identity.first, bindings);
+  });
+  std::set<Address> identities;
+  std::erase_if(result.nids, [&](const auto& identity) { return !identities.insert(identity.first).second; });
+  return result;
+}
+
+lt::dht::dht_state boundedCheckpoint(const lt::dht::dht_state& state, bool ipv4, bool ipv6,
+    const std::vector<Address>& bindings) {
+  lt::dht::dht_state result;
+  std::set<Address> identities;
+  for (const auto& identity : state.nids) {
+    if (result.nids.size() == MaximumIdentities) { break; }
+    if (!identity.second.is_all_zeros() && unicastAddress(identity.first) && enabled(identity.first, ipv4, ipv6)
+        && matchesBinding(identity.first, bindings) && identities.insert(identity.first).second) { result.nids.push_back(identity); }
+  }
+  std::set<UdpEndpoint> contacts;
+  for (const auto* values : {&state.nodes, &state.nodes6}) {
+    for (const auto& contact : *values) {
+      if (contacts.size() == MaximumContacts) { break; }
+      if (permittedContact(contact, ipv4, ipv6, bindings)) { contacts.insert(contact); }
+    }
+  }
+  for (const auto& contact : contacts) { (contact.address().is_v4() ? result.nodes : result.nodes6).push_back(contact); }
+  return result;
+}
+
 } // namespace
 
 struct MainlineDhtService::Impl {
@@ -81,6 +270,7 @@ struct MainlineDhtService::Impl {
   std::map<lt::sha1_hash, Request> requests;
   std::set<Node> nodes;
   std::vector<Node> pendingNodes;
+  std::vector<Address> bindings;
   MainlineDhtStatus status;
   bool ipv4 = false, ipv6 = false, running = false;
   unsigned short port = 0;
@@ -154,7 +344,9 @@ std::expected<std::unique_ptr<MainlineDhtService>, storage::Error> MainlineDhtSe
       lt::error_code ec;
       const auto address = lt::make_address(text, ec);
       if (ec) { return error(Code::Unsupported, "Mainline DHT requires resolved numeric source bindings"); }
-      if ((address.is_v4() && impl->ipv4) || (address.is_v6() && impl->ipv6)) { selected.bindAddresses.push_back(text); }
+      if ((address.is_v4() && impl->ipv4) || (address.is_v6() && impl->ipv6)) {
+        selected.bindAddresses.push_back(text); impl->bindings.push_back(address);
+      }
     }
     if (selected.bindAddresses.empty()) { return error(Code::Unsupported, "Mainline DHT has no enabled bound family"); }
     selected.ipv6 = impl->ipv6;
@@ -187,7 +379,10 @@ std::expected<std::unique_ptr<MainlineDhtService>, storage::Error> MainlineDhtSe
     settings->set_int(Settings::alert_queue_size, 1024);
     settings->set_int(Settings::alert_mask, static_cast<int>(lt::alert_category::status
         | lt::alert_category::error | lt::alert_category::dht_operation));
+    auto restored = restoredState(options, impl->ipv4, impl->ipv6, impl->bindings);
+    if (!restored) { return std::unexpected(restored.error()); }
     lt::session_params parameters(std::move(*settings));
+    parameters.dht_state = std::move(*restored);
     parameters.extensions.clear(); // No default torrent plugins or hidden handles.
     impl->session = std::make_unique<lt::session>(std::move(parameters));
     return std::unique_ptr<MainlineDhtService>(new MainlineDhtService(std::move(impl)));
@@ -294,6 +489,20 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
     return output;
   } catch (...) { return impl_->fail("Mainline DHT polling failed", true); }
 }
+std::expected<std::string, storage::Error> MainlineDhtService::checkpoint() {
+  try {
+    auto valid = impl_->check(); if (!valid) { return std::unexpected(valid.error()); }
+    if (!impl_->running || impl_->status.phase != MainlineDhtPhase::Listening) {
+      return error(Code::Busy, "Mainline DHT checkpoint requires its running bound listener");
+    }
+    auto parameters = impl_->session->session_state(lt::session_handle::save_dht_state);
+    parameters.dht_state = boundedCheckpoint(parameters.dht_state, impl_->ipv4, impl_->ipv6, impl_->bindings);
+    const auto bytes = lt::write_session_params_buf(parameters, lt::session_handle::save_dht_state);
+    if (bytes.size() > MaximumStateBytes) { return error(Code::Io, "Mainline DHT checkpoint exceeded its bounded format"); }
+    return std::string(bytes.begin(), bytes.end());
+  } catch (...) { return error(Code::Io, "Mainline DHT checkpoint failed"); }
+}
+
 std::expected<void, storage::Error> MainlineDhtService::close() {
   if (std::this_thread::get_id() != impl_->worker) { return error(Code::Busy, "Mainline DHT requires its owner worker"); }
   if (impl_->status.phase == MainlineDhtPhase::Closed) { return {}; }

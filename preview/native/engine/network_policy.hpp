@@ -70,6 +70,8 @@ struct NetworkPolicy {
   std::shared_ptr<const VerifiedSocks4Capability> socks4Capability{};
   // Mainline uses a dedicated discovery service, never the torrent session's
   // DHT socket. dht above records semantic source permission for that service.
+  std::string mainlineDirectory = "mldht";
+  bool mainlineRestoreIdentity = true;
   int mainlinePort = 49001;
   bool mainlineIpv4 = true, mainlineIpv6 = true;
   bool mainlineBackupOnly = false, mainlinePeerBootstrapOnly = false;

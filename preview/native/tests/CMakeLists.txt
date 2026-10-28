@@ -1841,3 +1841,12 @@ if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIM
   add_test(NAME mainline-dht COMMAND biglybtc-mainline-dht-tests)
   set_tests_properties(mainline-dht PROPERTIES TIMEOUT 180 LABELS "network;discovery;owned")
 endif()
+
+if(TARGET Qt6::Test)
+  add_executable(biglybtc-mainline-checkpoint-tests mainline_checkpoint_tests.cpp)
+  set_target_properties(biglybtc-mainline-checkpoint-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-mainline-checkpoint-tests PRIVATE biglybtc_mainline_checkpoint Qt6::Test)
+  target_compile_options(biglybtc-mainline-checkpoint-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME mainline-checkpoint COMMAND biglybtc-mainline-checkpoint-tests)
+  set_tests_properties(mainline-checkpoint PROPERTIES TIMEOUT 60 LABELS "unit;storage;discovery")
+endif()

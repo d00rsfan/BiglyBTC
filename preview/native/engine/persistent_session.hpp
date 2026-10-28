@@ -50,6 +50,9 @@ struct MainlineDiscoveryStatus {
   State state=State::Disabled;
   std::uint64_t lookups=0, announces=0, deliveredPeers=0;
   std::optional<storage::Error> failure{};
+  bool checkpointLoaded=false, checkpointSaved=false;
+  std::size_t legacyHints=0;
+  std::optional<storage::Error> checkpointFailure{};
 };
 namespace detail { class PersistentCall; class PersistentOperation; }
 class PersistentSession;
@@ -104,6 +107,7 @@ public:
   PersistentSession& operator=(PersistentSession&&) = delete;
 
   // Explicit application/profile startup only, never Statistics navigation.
+  // The held profile lease must outlive this owner when Mainline caching is enabled.
   // Bind the held lease and initialize the same isolated LT session used by
   // prepare(); no torrent, synthetic sample, new pump or final receipt is made.
   // create() stays lazy/source-guarded for existing independent API callers.

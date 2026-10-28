@@ -22,6 +22,7 @@
 #include <libtorrent/write_resume_data.hpp>
 #include "network_policy.hpp"
 #include "mainline_dht.hpp"
+#include "mainline_checkpoint.hpp"
 #include <libtorrent/peer_info.hpp>
 #include "network_binding.hpp"
 #include "network_peer_classes.hpp"
@@ -532,6 +533,7 @@ struct PersistentSession::Impl {
       detail::require(profile.st_dev == profileDevice && profile.st_ino == profileInode,
           "Persistent owner cannot cross profile identities", storage::ErrorCode::Conflict);
     } else { profileDevice = profile.st_dev; profileInode = profile.st_ino; profileBound = true; }
+    mainlineLease=&lease;
     detail::require(bindingHealthy(), "Explicit network binding was lost", storage::ErrorCode::Io);
   }
   #include "mainline_owner.inc"
@@ -2013,6 +2015,7 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
   impl_->closingAdmission = true;
   impl_->phase = AccountingState::Closing;
   const auto result = impl_->retire(std::min(deadline, Clock::now() + CertificationBudget));
+  impl_->persistMainline();
   impl_->sink = {}; impl_->operationSink = {};
   impl_->mainline.reset();
   impl_->mainlineStatus.state=MainlineDiscoveryStatus::State::Closed;

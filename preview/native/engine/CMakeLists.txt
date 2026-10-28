@@ -57,3 +57,5 @@ target_sources(biglybtc_profile PRIVATE ../adapters/queue_positions.cpp)
 # Original descriptor linkage >=100 leaves uses its source-defined gzip envelope.
 find_package(ZLIB REQUIRED)
 target_link_libraries(biglybtc_local_engine PRIVATE ZLIB::ZLIB)
+
+target_link_libraries(biglybtc_local_engine PRIVATE biglybtc_mainline_checkpoint)

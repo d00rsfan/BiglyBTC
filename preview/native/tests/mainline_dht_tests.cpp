@@ -2,6 +2,7 @@
 #include "persistent_session.hpp"
 #include "magnet_intake.hpp"
 #include "managed_storage.hpp"
+#include "mainline_checkpoint.hpp"
 #include "owned_engine_fixture.hpp"
 
 #include <QNetworkDatagram>
@@ -42,6 +43,15 @@ QByteArray compact(unsigned short port) {
   QByteArray result; result.append(char(127)); result.append(char(0)); result.append(char(0)); result.append(char(1));
   result.append(static_cast<char>(port >> 8)); result.append(static_cast<char>(port & 255)); return result;
 }
+QByteArray originalCache(unsigned short port) {
+  // Original f929 cache schema. The stored verification bit is only historical
+  // input: the real KRPC fixture must answer before it can supply metadata peers.
+  const auto contact=dictionary({{"addr",string(compact(port))},{"id",string(QByteArray(20,'K'))},
+      {"created","i800e"},{"lastSeen","i995e"},{"failedCount","i0e"},{"verified","i1e"}});
+  return dictionary({{"mainEntries",list(port?std::vector<QByteArray>{contact}:std::vector<QByteArray>{})},
+      {"replacements",list({})},{"oldKey",string(QByteArray(20,'R'))},{"timestamp","i1000e"},
+      {"opaque",string(QByteArray::fromHex("00ff51"))}});
+}
 engine::NetworkPolicy localPolicy() {
   engine::NetworkPolicy result;
   result.mode=engine::NetworkMode::Normal; result.dht=true; result.ipv6=false;
@@ -69,6 +79,7 @@ class OwnedKrpc final {
   const QByteArray nodeId_=QByteArray(20,'K');
   std::set<QByteArray> allowed_;
   std::map<QByteArray,int> gets_,announces_;
+  std::map<QByteArray,std::set<QByteArray>> clientIds_;
   std::map<QByteArray,QByteArray> tokens_;
   std::vector<Request> held_;
   QByteArray heldHash_;
@@ -139,7 +150,7 @@ class OwnedKrpc final {
           if (!allowed_.contains(request.hash)) {
             ++bootstrapQueries; send(request,response(request,{{"id",string(nodeId_)},{"nodes",string({})}})); continue;
           }
-          ++gets_[request.hash];
+          clientIds_[request.hash].insert(bytes(id->bytes)); ++gets_[request.hash];
           if (request.hash==heldHash_) { held_.push_back(request); } else { answerPeers(request); }
         } else {
           const auto* token=field(*args,"token",core::Node::Type::Bytes);
@@ -151,7 +162,7 @@ class OwnedKrpc final {
               || (implied && (implied->type!=core::Node::Type::Integer || implied->integer!=0))) {
             fail("announce_peer did not use the issued hash/source token and explicit TCP peer port"); continue;
           }
-          ++announces_[request.hash]; send(request,response(request,{{"id",string(nodeId_)}}));
+          clientIds_[request.hash].insert(bytes(id->bytes)); ++announces_[request.hash]; send(request,response(request,{{"id",string(nodeId_)}}));
         }
       } else { fail("Unexpected KRPC query outside owned fixture protocol"); }
     }
@@ -166,6 +177,10 @@ public:
     QObject::connect(&socket_,&QUdpSocket::readyRead,&socket_,[this]{receive();});
   }
   unsigned short port() const { return socket_.localPort(); }
+  void peerPort(unsigned short port) { test::require(port!=0,"Actual owned peer port required"); peerPort_=port; }
+  std::set<QByteArray> clientIds(const lt::sha1_hash& value) const {
+    const auto found=clientIds_.find(hashBytes(value)); return found==clientIds_.end()?std::set<QByteArray>{}:found->second;
+  }
   void allow(const lt::sha1_hash& value) { allowed_.insert(hashBytes(value)); }
   void noise(bool enabled) { noise_=enabled; }
   void hold(const lt::sha1_hash& value) { heldHash_=hashBytes(value); }
@@ -217,8 +232,8 @@ struct Client {
     lease.emplace(std::move(*held));
   }
 };
-std::unique_ptr<engine::PersistentSession> owner() {
-  auto created=engine::PersistentSession::create({7101,7102,7103});
+std::unique_ptr<engine::PersistentSession> owner(std::uint64_t epoch=7103) {
+  auto created=engine::PersistentSession::create({7101,7102,epoch});
   test::require(created.has_value(),"Mainline owner tests require actual source-bound runtime"); return std::move(*created);
 }
 std::optional<engine::PendingMagnetStatus> pending(engine::PersistentSession& owner,const core::TorrentHash& wanted) {
@@ -303,17 +318,116 @@ private slots:
     QCOMPARE((*actual)->status().activeHashes,std::size_t{0}); QCOMPARE((*actual)->status().lookups,std::uint64_t{0});
     QVERIFY((*actual)->close());
   }
+  void checkpointRecreatesActualLookupWithoutRoutersAndOptionallyRestoresWireIdentity() {
+    QTcpServer peer; QVERIFY(peer.listen(QHostAddress::LocalHost,0)); OwnedKrpc fixture(peer.serverPort());
+    const auto firstHash=hash('R'),secondHash=hash('S'),freshHash=hash('T');
+    fixture.allow(firstHash); fixture.allow(secondHash); fixture.allow(freshHash);
+    auto opts=options(fixture,peer.serverPort()); opts.bootstrapNodes.clear();
+    auto first=engine::MainlineDhtService::create(localPolicy(),opts); QVERIFY(first);
+    const auto premature=(*first)->checkpoint(); QVERIFY(!premature); QCOMPARE(premature.error().code,storage::ErrorCode::Busy);
+    // Configured routers are excluded from LT routing buckets. Add this actual
+    // node, then prove a response before asking LT to save its real routing state.
+    QVERIFY((*first)->addNode({"127.0.0.1",fixture.port()})); Observations firstObserved;
+    QTRY_VERIFY_WITH_TIMEOUT((firstObserved.pump(**first),fixture.bootstrapQueries>0 || !fixture.failure.isEmpty() || !firstObserved.failure.isEmpty()),15000);
+    QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure)); QVERIFY2(firstObserved.failure.isEmpty(),qPrintable(firstObserved.failure));
+    QVERIFY((*first)->lookup(firstHash));
+    QTRY_VERIFY_WITH_TIMEOUT((firstObserved.pump(**first),firstObserved.contains(firstHash,peer.serverPort()) || !fixture.failure.isEmpty() || !firstObserved.failure.isEmpty()),15000);
+    QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure)); QVERIFY2(firstObserved.failure.isEmpty(),qPrintable(firstObserved.failure));
+    QVERIFY(firstObserved.contains(firstHash,peer.serverPort())); QCOMPARE(fixture.clientIds(firstHash).size(),std::size_t{1});
+    const auto originalId=*fixture.clientIds(firstHash).begin(); const auto saved=(*first)->checkpoint();
+    QVERIFY2(saved,saved?"":saved.error().message.c_str()); QVERIFY(!saved->empty());
+    const auto document=core::Document::parse(*saved); QVERIFY(document); QCOMPARE(document->root().children.size(),std::size_t{2});
+    const auto* dht=field(document->root(),"dht state",core::Node::Type::Dictionary); QVERIFY(dht);
+    const auto* ids=field(*dht,"node-id",core::Node::Type::List); QVERIFY(ids); QCOMPARE(ids->children.size(),std::size_t{1});
+    QCOMPARE(bytes(ids->children.front().bytes).first(20),originalId);
+    bool actualContact=false;
+    for (const auto name:{"nodes","nodes6"}) {
+      const auto* contacts=field(*dht,name,core::Node::Type::List); if (!contacts) { continue; }
+      for (const auto& contact:contacts->children) { actualContact |= bytes(contact.bytes)==compact(fixture.port()); }
+    }
+    QVERIFY(actualContact); QVERIFY((*first)->close()); QVERIFY(!(*first)->checkpoint());
+    opts.restoredState=*saved; // No bootstrap routers or explicit addNode on either restart.
+    auto second=engine::MainlineDhtService::create(localPolicy(),opts); QVERIFY(second); QVERIFY((*second)->lookup(secondHash)); Observations secondObserved;
+    QTRY_VERIFY_WITH_TIMEOUT((secondObserved.pump(**second),secondObserved.contains(secondHash,peer.serverPort()) || !fixture.failure.isEmpty() || !secondObserved.failure.isEmpty()),15000);
+    QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure)); QVERIFY2(secondObserved.failure.isEmpty(),qPrintable(secondObserved.failure));
+    QVERIFY(secondObserved.contains(secondHash,peer.serverPort())); QCOMPARE(fixture.clientIds(secondHash).size(),std::size_t{1});
+    QCOMPARE(*fixture.clientIds(secondHash).begin(),originalId); QVERIFY((*second)->close());
+    opts.restoreIdentity=false;
+    auto fresh=engine::MainlineDhtService::create(localPolicy(),opts); QVERIFY(fresh); QVERIFY((*fresh)->lookup(freshHash)); Observations freshObserved;
+    QTRY_VERIFY_WITH_TIMEOUT((freshObserved.pump(**fresh),freshObserved.contains(freshHash,peer.serverPort()) || !fixture.failure.isEmpty() || !freshObserved.failure.isEmpty()),15000);
+    QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure)); QVERIFY2(freshObserved.failure.isEmpty(),qPrintable(freshObserved.failure));
+    QVERIFY(freshObserved.contains(freshHash,peer.serverPort())); QCOMPARE(fixture.clientIds(freshHash).size(),std::size_t{1});
+    QVERIFY(*fixture.clientIds(freshHash).begin()!=originalId); QVERIFY((*fresh)->close());
+  }
+  void injectedSettingsAndMalformedCheckpointCannotConstructAListener_data() {
+    QTest::addColumn<QByteArray>("checkpoint");
+    QTest::newRow("injected-root-settings")<<dictionary({{"dht state",dictionary({})},{"settings",dictionary({{"enable_dht","i1e"}})}});
+    QTest::newRow("injected-nested-settings")<<dictionary({{"dht state",dictionary({{"settings",dictionary({})}})}});
+    QTest::newRow("old-bare-node-id")<<dictionary({{"dht state",dictionary({{"node-id",string(QByteArray(20,'A'))}})}});
+    QTest::newRow("zero-node-identity")<<dictionary({{"dht state",dictionary({{"node-id",list({string(QByteArray(20,'\0')+QByteArray::fromHex("7f000001"))})}})}});
+    QTest::newRow("zero-contact-port")<<dictionary({{"dht state",dictionary({{"nodes",list({string(compact(0))})}})}});
+    QTest::newRow("malformed-bencode")<<QByteArray("not-bencode");
+  }
+  void injectedSettingsAndMalformedCheckpointCannotConstructAListener() {
+    QFETCH(QByteArray,checkpoint); auto opts=engine::MainlineDhtOptions{};
+    opts.port=dhtPort(); opts.ipv6=false; opts.bootstrapNodes.clear(); opts.restoredState=checkpoint.toStdString();
+    const auto refused=engine::MainlineDhtService::create(localPolicy(),opts); QVERIFY(!refused);
+    QCOMPARE(refused.error().code,storage::ErrorCode::InvalidFormat);
+    QUdpSocket unbound; QVERIFY(unbound.bind(QHostAddress::LocalHost,static_cast<quint16>(opts.port),QUdpSocket::DontShareAddress));
+  }
+  void untrustedLegacyHintFailuresCannotSuppressThePermittedOwnedNode() {
+    QTcpServer peer; QVERIFY(peer.listen(QHostAddress::LocalHost,0)); OwnedKrpc fixture(peer.serverPort());
+    const auto wanted=hash('U'); fixture.allow(wanted); auto opts=options(fixture,peer.serverPort()); opts.bootstrapNodes.clear();
+    opts.restoredNodes={{"non-numeric.invalid",6881},{"127.0.0.1",0},{"0.0.0.0",6881},
+        {"224.0.0.1",6881},{"10.0.0.1",6881},{"::1",6881},{"127.0.0.1",fixture.port()}};
+    auto actual=engine::MainlineDhtService::create(localPolicy(),opts); QVERIFY(actual); QVERIFY((*actual)->lookup(wanted)); Observations observed;
+    QTRY_VERIFY_WITH_TIMEOUT((observed.pump(**actual),observed.contains(wanted,peer.serverPort()) || !fixture.failure.isEmpty() || !observed.failure.isEmpty()),15000);
+    QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure)); QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));
+    QVERIFY(observed.contains(wanted,peer.serverPort())); QVERIFY(fixture.gets(wanted)>0);
+    const auto saved=(*actual)->checkpoint(); QVERIFY(saved); const auto document=core::Document::parse(*saved); QVERIFY(document);
+    const auto* dht=field(document->root(),"dht state",core::Node::Type::Dictionary); QVERIFY(dht); std::size_t contacts=0;
+    for (const auto name:{"nodes","nodes6"}) {
+      const auto* list=field(*dht,name,core::Node::Type::List); if (!list) { continue; }
+      for (const auto& contact:list->children) { QCOMPARE(bytes(contact.bytes),compact(fixture.port())); ++contacts; }
+    }
+    QVERIFY(contacts>0); QVERIFY((*actual)->close());
+  }
+  void corruptDisposableStateDoesNotRerouteOrDisableTheOwnedTorrentSession() {
+    Client client; auto cached=storage::MainlineCheckpoint::load(*client.lease,"mldht"); QVERIFY(cached);
+    QVERIFY(cached->save(*client.lease,"not-dht"));
+    const auto path=client.profile+"/BiglyBTC-mainline.config"; const auto before=test::read(path);
+    auto policy=localPolicy(); policy.mainlinePort=dhtPort(); auto actual=owner();
+    QVERIFY(actual->configureNetwork(policy)); QVERIFY(actual->configureMainlineBootstrap({})); QVERIFY(actual->startIdle(*client.lease));
+    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value() && actual->tcpListenPort().has_value()),15000);
+    const auto discovery=actual->mainlineDiscovery(); QCOMPARE(discovery.state,engine::MainlineDiscoveryStatus::State::Running);
+    QVERIFY(!discovery.checkpointLoaded && discovery.checkpointFailure); QCOMPARE(discovery.legacyHints,std::size_t{0});
+    const auto route=actual->liveSettings(); QVERIFY(route);
+    QCOMPARE(route->listenInterfaces,std::string("127.0.0.1:0")); QCOMPARE(route->outgoingInterfaces,std::string("127.0.0.1"));
+    QCOMPARE(route->proxyType,static_cast<int>(lt::settings_pack::none)); QVERIFY(!route->dht);
+    QVERIFY(!QFileInfo::exists(client.payload)); QCOMPARE(test::read(path),before);
+    const auto closed=actual->close(std::chrono::steady_clock::now()+5s);
+    QVERIFY(closed.sessionJoined && closed.retirement.storageReleased && !closed.checkpointFailure);
+    QVERIFY(actual->mainlineDiscovery().checkpointFailure); QVERIFY(!actual->mainlineDiscovery().checkpointSaved);
+    QCOMPARE(test::read(path),before); QCOMPARE(test::read(client.sentinel),QByteArray("unchanged-owned-sentinel"));
+  }
   void hashOnlyMagnetImportsMetadataFromOwnedMainlineResult() {
     test::OwnedEngineFixture seed(false); QTRY_VERIFY_WITH_TIMEOUT(seed.ready(),15000);
     const auto seedState=test::read(seed.stateFile); const auto seedInventory=test::read(seed.profile+"/downloads.config");
     std::vector<QByteArray> originalPayload; for (const auto& file:seed.files) { originalPayload.push_back(test::read(seed.payload+'/'+file.relative)); }
     OwnedKrpc fixture(seed.port()); Client client; auto policy=localPolicy(); policy.mainlinePort=dhtPort(seed.port());
+    const auto originalRoot=client.profile+"/plugins/mldht/";
+    const QByteArray originalId("# preserved original ID\n0123456789ABCDEF0123456789ABCDEF01234567\n");
+    const auto original4=originalCache(fixture.port()),original6=originalCache(0);
+    test::write(originalRoot+"baseID.config",originalId); test::write(originalRoot+"IPv4-table.cache",original4); test::write(originalRoot+"IPv6-table.cache",original6);
     auto parsed=engine::parseMagnetIntent("magnet:?xt=urn:btih:"+seed.hash->hex(),client.payload.toStdString(),true,policy);
     QVERIFY(parsed); QVERIFY(parsed->peers.empty()); QVERIFY(parsed->trackers.empty()); QVERIFY(parsed->webSeeds.empty()); QVERIFY(parsed->dhtNodes.empty());
     fixture.allow(parsed->requested.v1);
     auto queued=engine::queuePendingMagnet(*client.lease,*parsed,policy); QVERIFY(queued);
     auto actual=owner(); QVERIFY(actual->configureNetwork(policy));
-    QVERIFY(actual->configureMainlineBootstrap({{"127.0.0.1",fixture.port()}})); QVERIFY(actual->startIdle(*client.lease));
+    // No public/configured routers: the original-format owned contact is a
+    // read-only hint. The restart below loads native state too; the dedicated
+    // service case independently proves state-only routing without these hints.
+    QVERIFY(actual->configureMainlineBootstrap({})); QVERIFY(actual->startIdle(*client.lease));
     QVERIFY(actual->startMagnet(*client.lease,*queued,client.profile.toStdString()));
     QString pollFailure;
     const auto terminal=[&] {
@@ -327,6 +441,7 @@ private slots:
     const auto row=pending(*actual,*seed.hash); QVERIFY(row);
     QVERIFY2(!row->failure,row->failure?row->failure->message.c_str():"none"); QCOMPARE(row->phase,engine::MagnetPhase::Imported); QVERIFY(!row->retained);
     const auto discovery=actual->mainlineDiscovery(); QCOMPARE(discovery.state,engine::MainlineDiscoveryStatus::State::Running);
+    QVERIFY(discovery.legacyHints>0);
     QVERIFY(discovery.lookups>0); QVERIFY(discovery.deliveredPeers>0); QCOMPARE(discovery.announces,std::uint64_t{0});
     QVERIFY(fixture.gets(parsed->requested.v1)>0); QCOMPARE(fixture.announced(parsed->requested.v1),0); QVERIFY(actual->managedDownloads().empty());
     QVERIFY(!QFileInfo::exists(client.payload));
@@ -337,6 +452,38 @@ private slots:
     const auto closed=actual->close(std::chrono::steady_clock::now()+5s);
     QVERIFY(closed.sessionJoined); QVERIFY(closed.retirement.storageReleased); QVERIFY(!closed.checkpointFailure);
     QCOMPARE(actual->mainlineDiscovery().state,engine::MainlineDiscoveryStatus::State::Closed);
+    QVERIFY(actual->mainlineDiscovery().checkpointSaved);
+    auto checkpoint=storage::MainlineCheckpoint::load(*client.lease,"mldht"); QVERIFY(checkpoint && checkpoint->state() && !checkpoint->state()->empty());
+    test::OwnedEngineFixture secondSeed(true); QTRY_VERIFY_WITH_TIMEOUT(secondSeed.ready(),15000); QVERIFY(secondSeed.hash!=seed.hash);
+    const auto secondState=test::read(secondSeed.stateFile),secondInventory=test::read(secondSeed.profile+"/downloads.config");
+    fixture.peerPort(secondSeed.port());
+    auto secondIntent=engine::parseMagnetIntent("magnet:?xt=urn:btih:"+secondSeed.hash->hex(),client.payload.toStdString(),true,policy);
+    QVERIFY(secondIntent); QVERIFY(secondIntent->peers.empty() && secondIntent->trackers.empty() && secondIntent->webSeeds.empty() && secondIntent->dhtNodes.empty());
+    fixture.allow(secondIntent->requested.v1);
+    auto secondQueued=engine::queuePendingMagnet(*client.lease,*secondIntent,policy); QVERIFY(secondQueued);
+    auto restarted=owner(7104); QVERIFY(restarted->configureNetwork(policy)); QVERIFY(restarted->configureMainlineBootstrap({}));
+    QVERIFY(restarted->startIdle(*client.lease)); QVERIFY(restarted->mainlineDiscovery().checkpointLoaded);
+    QVERIFY(restarted->startMagnet(*client.lease,*secondQueued,client.profile.toStdString()));
+    const auto secondTerminal=[&] {
+      if (!restarted->poll()) { pollFailure=QStringLiteral("Restarted persistent owner poll failed"); return true; }
+      const auto current=pending(*restarted,*secondSeed.hash);
+      return !fixture.failure.isEmpty() || (current && (current->phase==engine::MagnetPhase::Failed
+          || (current->phase==engine::MagnetPhase::Imported && !current->retained)));
+    };
+    QTRY_VERIFY_WITH_TIMEOUT(secondTerminal(),45000);
+    QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure)); QVERIFY2(pollFailure.isEmpty(),qPrintable(pollFailure));
+    const auto secondRow=pending(*restarted,*secondSeed.hash); QVERIFY(secondRow);
+    QVERIFY2(!secondRow->failure,secondRow->failure?secondRow->failure->message.c_str():"none"); QCOMPARE(secondRow->phase,engine::MagnetPhase::Imported);
+    QVERIFY(!secondRow->retained && restarted->managedDownloads().empty()); QVERIFY(fixture.gets(secondIntent->requested.v1)>0);
+    QCOMPARE(fixture.announced(secondIntent->requested.v1),0); QVERIFY(!QFileInfo::exists(client.payload));
+    const auto secondClosed=restarted->close(std::chrono::steady_clock::now()+5s);
+    QVERIFY(secondClosed.sessionJoined && secondClosed.retirement.storageReleased && !secondClosed.checkpointFailure);
+    QVERIFY(restarted->mainlineDiscovery().checkpointSaved);
+    const auto both=core::Document::parse(test::read(client.profile+"/downloads.config").toStdString()); QVERIFY(both);
+    const auto bothLibrary=core::readLibrary(*both); QVERIFY(bothLibrary && bothLibrary->issues.empty()); QCOMPARE(bothLibrary->downloads.size(),std::size_t{2});
+    for (const auto& download:bothLibrary->downloads) { QCOMPARE(download.originalState,std::int64_t{70}); QVERIFY(!download.forceStart); }
+    QCOMPARE(test::read(originalRoot+"baseID.config"),originalId); QCOMPARE(test::read(originalRoot+"IPv4-table.cache"),original4); QCOMPARE(test::read(originalRoot+"IPv6-table.cache"),original6);
+    QCOMPARE(test::read(secondSeed.stateFile),secondState); QCOMPARE(test::read(secondSeed.profile+"/downloads.config"),secondInventory); QVERIFY(secondSeed.intact(false));
     QCOMPARE(test::read(client.sentinel),QByteArray("unchanged-owned-sentinel"));
     QCOMPARE(test::read(seed.stateFile),seedState); QCOMPARE(test::read(seed.profile+"/downloads.config"),seedInventory); QVERIFY(seed.intact(false));
     for (std::size_t i=0;i<seed.files.size();++i) { QCOMPARE(test::read(seed.payload+'/'+seed.files[i].relative),originalPayload[i]); }

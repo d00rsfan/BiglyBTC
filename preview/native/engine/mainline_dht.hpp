@@ -24,6 +24,11 @@ struct MainlineDhtOptions {
   std::vector<std::pair<std::string, int>> bootstrapNodes{
       {"dht.transmissionbt.com", 6881}, {"router.bittorrent.com", 6881},
       {"router.utorrent.com", 6881}, {"router.silotis.us", 6881}};
+  // Opaque native LT DHT-only state. Legacy contacts are numeric, untrusted
+  // bootstrap hints; neither source grants peer or verified-node authority.
+  std::string restoredState{};
+  std::vector<std::pair<std::string, int>> restoredNodes{};
+  bool restoreIdentity = true;
 };
 struct MainlineDhtPeers {
   libtorrent::sha1_hash hash;
@@ -40,13 +45,16 @@ struct MainlineDhtStatus {
 };
 
 // Worker-confined dedicated session: never owns a profile, torrent or payload.
-// No ID/cache import/export yet. TCP/uTP peer transfers are disabled; LT still
+// Native DHT-only checkpoints are bounded warm hints. TCP/uTP transfers are disabled; LT still
 // creates an unused TCP acceptor. Proxied DHT is unsupported without fallback.
 class MainlineDhtService final {
 public:
   static constexpr std::size_t MaximumActiveHashes = 256;
   static constexpr std::size_t MaximumPeers = 128;
   static constexpr std::size_t MaximumNodes = 64;
+  static constexpr std::size_t MaximumStateBytes = 1024 * 1024;
+  static constexpr std::size_t MaximumRoutingContacts = 256;
+  static constexpr std::size_t MaximumNodeIdentities = 64;
   static std::expected<std::unique_ptr<MainlineDhtService>, storage::Error> create(
       const NetworkPolicy& resolvedPolicy, const MainlineDhtOptions&);
   ~MainlineDhtService();
@@ -62,6 +70,8 @@ public:
   // a hash cannot distinguish an old reply; peer hints carry no admission proof.
   std::expected<void, storage::Error> forget(libtorrent::sha1_hash);
   std::expected<std::vector<MainlineDhtPeers>, storage::Error> poll();
+  // Worker/live-session only; contains no settings, torrents or profile data.
+  std::expected<std::string, storage::Error> checkpoint();
   std::expected<void, storage::Error> close();
   MainlineDhtStatus status() const noexcept;
 
