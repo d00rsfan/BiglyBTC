@@ -1,0 +1,9 @@
+# Mainline discovery in the development client
+
+The normal-network persistent owner uses a dedicated Mainline DHT service and the original mlDHT enable/startup, address-family, separate-port (default49001), backup-only and peer-bootstrap settings. Its torrent session keeps internal DHT disabled. The offline preview creates no Mainline service.
+
+Current public, nonprivate managed downloads may receive peer hints only while actively downloading/seeding and after original source and announce permissions permit it. Backup-only mode withdraws discovery while the tracker is healthy. Pending magnets can obtain metadata through DHT without a tracker or explicit peer; they never announce. Selected hybrid identity, current handle, cancellation, pause and retirement are checked before delivery. The service has bounded request/result queues and its own sole alert consumer; it contributes no invented peer payload counters.
+
+This is a bounded development integration. Original identity/routing files are not modified, restored into this replacement engine or written back yet. Queued scrape-only handling, BEP5 peer-port bootstrap bridging, proxied DHT, IPv6/public-swarm qualification, Mainline byte statistics and performance remain open. Unsupported proxy discovery has no direct fallback and does not invalidate the torrent owner. The selected engine disables TCP/uTP peer transfers for this service but still creates an unused TCP acceptor on its service port; occupied ports make discovery unavailable. Coincident transfer/service ports remain unsupported. Custom original plugin directory names can be supplied explicitly through the policy API; automatic host directory discovery is pending.
+
+Qualification uses generated profiles, owned KRPC/TCP endpoints and actual metadata import. It does not initialise the running Java program or use its profile.

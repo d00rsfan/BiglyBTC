@@ -1,5 +1,6 @@
 #include "../engine/network_policy.hpp"
 #include "../engine/network_peer_classes.hpp"
+#include "../engine/live_settings.hpp"
 
 #include <libtorrent/address.hpp>
 #include <libtorrent/torrent_info.hpp>
@@ -77,7 +78,7 @@ int main(int argc, char** argv) {
       const std::string source="d8:announce"+bytes(url)+"4:infod6:lengthi1e4:name1:x12:piece lengthi16384e6:pieces20:"+std::string(20,'h')+"ee";
       lt::error_code error;auto parsed=std::make_shared<lt::torrent_info>(source.data(),static_cast<int>(source.size()),error);
       CHECK(!error&&parsed->is_valid()&&parsed->trackers().empty());
-      auto disabled=config({{"Plugin.DHT.dht.enabled",integer(0)}});const auto policy=normal(&disabled);
+      auto disabled=config({{"Plugin.mldht.enable",integer(0)}});const auto policy=normal(&disabled);
       lt::add_torrent_params params;params.ti=parsed;params.flags|=lt::torrent_flags::disable_pex|lt::torrent_flags::disable_lsd;
       CHECK(engine::applyTorrentNetworkPolicy(policy,{},params));CHECK(params.trackers.empty());
       CHECK((params.flags & lt::torrent_flags::disable_dht)&&(params.flags & lt::torrent_flags::disable_pex)&&(params.flags & lt::torrent_flags::disable_lsd));
@@ -100,11 +101,140 @@ int main(int argc, char** argv) {
       const auto settings = engine::makeNetworkSettings(p);
       CHECK(settings && settings->get_str(Settings::listen_interfaces) == "0.0.0.0:6881");
       CHECK(settings->get_str(Settings::outgoing_interfaces).empty());
-      CHECK(settings->get_bool(Settings::enable_dht));
-      CHECK(settings->get_str(Settings::dht_bootstrap_nodes) == "dht.libtorrent.org:25401");
+      CHECK(p.mainlinePort == 49001 && p.mainlineIpv4 && !p.mainlineIpv6);
+      CHECK(!p.mainlineBackupOnly && !p.mainlinePeerBootstrapOnly);
+      CHECK(!settings->get_bool(Settings::enable_dht));
+      CHECK(settings->get_str(Settings::dht_bootstrap_nodes).empty());
       CHECK(settings->get_int(Settings::proxy_type) == Settings::none);
       CHECK(settings->get_int(Settings::upload_rate_limit) == 0);
       CHECK(settings->get_int(Settings::max_retry_port_bind) == 0 && !settings->get_bool(Settings::listen_system_port_fallback));
+    });
+    run("Mainline and Azureus have independent enable switches", [] {
+      auto azureusOff = config({{"Plugin.DHT.dht.enabled", integer(0)}});
+      CHECK(normal(&azureusOff).dht);
+      for (const auto key : {"PluginInfo.mldht.enabled", "Plugin.mldht.enable", "Peer Source Selection Default.DHT"}) {
+        auto document = config({{key, integer(0)}, {"Plugin.DHT.dht.enabled", integer(1)}});
+        const auto original = document.originalBytes();
+        const auto policy = normal(&document);
+        CHECK(!policy.dht && policy.httpTrackers && policy.outgoingTcp);
+        const auto settings = engine::makeNetworkSettings(policy);
+        CHECK(settings && !settings->get_bool(Settings::enable_dht)
+            && settings->get_str(Settings::dht_bootstrap_nodes).empty());
+        CHECK(document.serialize() == original && document.originalBytes() == original);
+      }
+      auto javaZero = config({{"Plugin.mldht.enable", integer(4294967296LL)}});
+      CHECK(!normal(&javaZero).dht); // Original Number.intValue() projection.
+      auto javaNonzero = config({{"Plugin.mldht.enable", integer(2)}});
+      CHECK(normal(&javaNonzero).dht);
+    });
+    run("Mainline autostart families intersect global IPv6 permission", [] {
+      auto none = config({{"Plugin.mldht.autostart.IPv4", integer(0)},
+          {"Plugin.mldht.autostart.IPv6", integer(0)}});
+      const auto disabled = normal(&none);
+      CHECK(!disabled.dht && !disabled.mainlineIpv4 && !disabled.mainlineIpv6);
+      auto v6Only = config({{"Plugin.mldht.autostart.IPv4", integer(0)}});
+      CHECK(!normal(&v6Only).dht);
+      auto allowed = config({{"Plugin.mldht.autostart.IPv4", integer(0)}, {"IPV6 Enable Support", integer(1)}});
+      const auto p = normal(&allowed);
+      CHECK(p.dht && !p.mainlineIpv4 && p.mainlineIpv6);
+      CHECK(p.listenPort == 6881 && p.mainlinePort == 49001);
+      auto v4Only = config({{"Plugin.mldht.autostart.IPv6", integer(0)}, {"IPV6 Enable Support", integer(1)}});
+      CHECK(normal(&v4Only).dht && normal(&v4Only).mainlineIpv4 && !normal(&v4Only).mainlineIpv6);
+      CHECK(!engine::makeNetworkSettings(p)->get_bool(Settings::enable_dht));
+    });
+    run("Mainline owns an independent bounded UDP port", [] {
+      auto independent = config({{"TCP.Listen.Port", integer(5001)}, {"UDP.Listen.Port", integer(5002)},
+          {"peercontrol.udp.public.enable", integer(0)}, {"Server Enable UDP", integer(0)},
+          {"UDP.NonData.Listen.Port.Same", integer(0)}, {"UDP.NonData.Listen.Port", integer(5003)},
+          {"Plugin.mldht.port", integer(49002)}});
+      const auto p = normal(&independent);
+      CHECK(p.dht && p.listenPort == 5001 && p.mainlinePort == 49002);
+      CHECK(engine::makeNetworkSettings(p)->get_str(Settings::listen_interfaces) == "0.0.0.0:5001");
+      for (const auto port : {1, 65535}) {
+        auto valid = config({{"Plugin.mldht.port", integer(port)}});
+        CHECK(normal(&valid).mainlinePort == port);
+      }
+      for (const auto port : {-1, 0, 65536}) {
+        auto invalid = config({{"Plugin.mldht.port", integer(port)}});
+        const auto original = invalid.originalBytes();
+        rejected(invalid, Code::InvalidConfiguration);
+        CHECK(invalid.serialize() == original);
+        auto off = config({{"Plugin.mldht.port", integer(port)}, {"Plugin.mldht.enable", integer(0)}});
+        CHECK(!normal(&off).dht && normal(&off).mainlinePort == port);
+      }
+    });
+    run("Mainline captured directory selects only original plugin namespace", [] {
+      auto document = config({{"Plugin.mldht.enable", integer(0)}, {"Plugin.custom-ml.enable", integer(1)},
+          {"Plugin.custom-ml.port", integer(49003)}, {"Plugin.custom-ml.backupOnly", integer(1)},
+          {"Plugin.custom-ml.onlyPeerBootstrap", integer(1)}, {"Plugin.DHT.dht.enabled", integer(0)}});
+      const auto original = document.originalBytes();
+      engine::NetworkPolicyOptions options; options.mode = engine::NetworkMode::Normal;
+      options.mldhtDirectory = "custom-ml";
+      const auto p = engine::readNetworkPolicy(&document, options);
+      CHECK(p && p->dht && p->mainlinePort == 49003 && p->mainlineBackupOnly && p->mainlinePeerBootstrapOnly);
+      CHECK(!normal(&document).dht);
+      CHECK(document.serialize() == original);
+      auto startupOff = config({{"Plugin.custom-ml.enable", integer(1)}, {"PluginInfo.mldht.enabled", integer(0)}});
+      CHECK(!engine::readNetworkPolicy(&startupOff, options)->dht);
+      options.mldhtDirectory = "caf\xc3\xa9";
+      auto latinKey = config({{"Plugin.caf\xe9.enable", integer(0)}, {"Plugin.caf\xe9.port", integer(49004)}});
+      const auto latinBefore = latinKey.originalBytes();
+      const auto latinPolicy = engine::readNetworkPolicy(&latinKey, options);
+      CHECK(latinPolicy && !latinPolicy->dht && latinPolicy->mainlinePort == 49004);
+      CHECK(latinKey.serialize() == latinBefore);
+      auto malformedLatin = config({{"Plugin.caf\xe9.enable", bytes("invalid")}});
+      CHECK(!engine::readNetworkPolicy(&malformedLatin, options));
+      const auto latin = bytes("Plugin.caf\xe9.enable");
+      const auto duplicateLatin = core::Document::parse("d" + latin + integer(1) + latin + integer(0) + 'e');
+      CHECK(!duplicateLatin && duplicateLatin.error().code == "duplicate_key");
+      options.mldhtDirectory = "../mldht";
+      CHECK(!engine::readNetworkPolicy(&document, options));
+      CHECK(document.serialize() == original);
+    });
+    run("malformed Mainline policy cannot fall back or mutate config", [] {
+      for (const auto key : {"Plugin.mldht.port", "Plugin.mldht.enable", "PluginInfo.mldht.enabled",
+          "Plugin.mldht.autostart.IPv4", "Plugin.mldht.backupOnly", "Plugin.mldht.onlyPeerBootstrap"}) {
+        auto malformed = config({{key, bytes("not-an-integer")}});
+        const auto original = malformed.originalBytes();
+        rejected(malformed, Code::InvalidConfiguration);
+        CHECK(malformed.serialize() == original && malformed.originalBytes() == original);
+      }
+      const auto key = bytes("Plugin.mldht.enable");
+      const auto duplicate = core::Document::parse("d" + key + integer(1) + key + integer(0) + 'e');
+      CHECK(!duplicate && duplicate.error().code == "duplicate_key");
+    });
+    run("Mainline changes require Discovery restart while live rates remain safe", [] {
+      auto dualStack = config({{"IPV6 Enable Support", integer(1)}});
+      const auto active = normal(&dualStack);
+      const auto checkRestart = [&](engine::NetworkPolicy requested) {
+        requested.uploadBytesPerSecond = 12345;
+        const auto plan = engine::prepareLiveSettings(active, requested);
+        CHECK(plan && plan->restartFields == static_cast<std::uint32_t>(engine::LiveRestartField::Discovery));
+        CHECK(plan->effectivePolicy.mainlinePort == active.mainlinePort);
+        CHECK(plan->effectivePolicy.mainlineIpv4 == active.mainlineIpv4 && plan->effectivePolicy.mainlineIpv6 == active.mainlineIpv6);
+        CHECK(plan->effectivePolicy.mainlineBackupOnly == active.mainlineBackupOnly);
+        CHECK(plan->effectivePolicy.mainlinePeerBootstrapOnly == active.mainlinePeerBootstrapOnly);
+        CHECK(plan->effectivePolicy.dht == active.dht && plan->effectivePolicy.uploadBytesPerSecond == 12345);
+      };
+      auto requested = active; requested.mainlinePort = 49002; checkRestart(requested);
+      requested = active; requested.mainlineBackupOnly = true; checkRestart(requested);
+      requested = active; requested.mainlinePeerBootstrapOnly = true; checkRestart(requested);
+      requested = active; requested.mainlineIpv6 = false; checkRestart(requested);
+      requested = active; requested.mainlineIpv4 = false; checkRestart(requested);
+      requested = active; requested.mainlinePort = 0;
+      CHECK(!engine::prepareLiveSettings(active, requested));
+      CHECK(active.mainlinePort == 49001 && active.dht);
+    });
+    run("semantic Mainline eligibility survives torrent-session DHT isolation", [] {
+      const auto policy = normal();
+      lt::add_torrent_params params; params.ti = metadata();
+      params.dht_nodes.emplace_back("owned-node.invalid", 49001);
+      CHECK(engine::applyTorrentNetworkPolicy(policy, {}, params));
+      CHECK(!(params.flags & lt::torrent_flags::disable_dht) && params.dht_nodes.size() == 1);
+      CHECK(!engine::makeNetworkSettings(policy)->get_bool(Settings::enable_dht));
+      params.flags |= lt::torrent_flags::disable_dht;
+      CHECK(engine::applyTorrentNetworkPolicy(policy, {}, params));
+      CHECK((params.flags & lt::torrent_flags::disable_dht) && params.dht_nodes.empty());
     });
     run("unknown config/raw order unchanged", [] {
       auto document = config({{"opaque", "d3:raw3:\r\nXe"}, {"Max Upload Speed KBs", integer(17)}});
@@ -217,7 +347,7 @@ int main(int argc, char** argv) {
     });
     run("discovery requires caller permission", [] {
       CHECK(normal(nullptr, true, true).lsd && normal(nullptr, true, true).upnp);
-      auto disabled = config({{"Plugin.UPnP.upnp.enable", integer(0)}, {"Plugin.DHT.dht.enabled", integer(0)}});
+      auto disabled = config({{"Plugin.UPnP.upnp.enable", integer(0)}, {"Plugin.mldht.enable", integer(0)}});
       const auto p = normal(&disabled, true, true);
       CHECK(!p.upnp && !p.natpmp && !p.dht);
       auto natpmp = config({{"Plugin.UPnP.natpmp.enable", integer(1)}});
@@ -304,6 +434,33 @@ int main(int argc, char** argv) {
       CHECK(settings->get_bool(Settings::proxy_tracker_connections) && !settings->get_bool(Settings::proxy_peer_connections));
       CHECK(settings->get_bool(Settings::enable_outgoing_utp)); // Direct data path is explicitly configured.
       CHECK(settings->get_bool(Settings::proxy_hostnames));
+    });
+    run("Mainline semantic permission cannot invalidate independent proxy routes", [] {
+      auto http = config({{"Enable.Proxy", integer(1)}, {"Proxy.Host", bytes("127.0.0.1")},
+          {"Proxy.Port", bytes("8080")}, {"Server Enable UDP", integer(0)}});
+      const auto httpBefore = http.originalBytes();
+      const auto httpPolicy = normal(&http);
+      CHECK(httpPolicy.dht && httpPolicy.proxy.kind == engine::NetworkProxyKind::Http);
+      const auto httpSettings = engine::makeNetworkSettings(httpPolicy);
+      CHECK(httpSettings && httpSettings->get_int(Settings::proxy_type) == Settings::http);
+      CHECK(httpSettings->get_bool(Settings::proxy_tracker_connections) && !httpSettings->get_bool(Settings::proxy_peer_connections));
+      CHECK(httpSettings->get_bool(Settings::enable_outgoing_utp)); // Explicit direct data route.
+      CHECK(!httpSettings->get_bool(Settings::enable_dht) && httpSettings->get_str(Settings::dht_bootstrap_nodes).empty());
+      CHECK(http.serialize() == httpBefore);
+      CHECK(http.replaceValue("Server Enable UDP", integer(1)));
+      rejected(http, Code::Unsupported); // HTTP still cannot proxy UDP trackers.
+      auto socks4 = config({{"Proxy.Data.Enable", integer(1)}, {"Proxy.Data.SOCKS.version", bytes("V4")},
+          {"Proxy.Host", bytes("127.0.0.1")}, {"Proxy.Port", bytes("1080")},
+          {"peercontrol.udp.public.enable", integer(0)}, {"Server Enable UDP", integer(0)}});
+      const auto socksBefore = socks4.originalBytes();
+      const auto socksPolicy = normal(&socks4);
+      CHECK(socksPolicy.dht && socksPolicy.proxy.kind == engine::NetworkProxyKind::Socks4);
+      const auto socksSettings = engine::makeNetworkSettings(socksPolicy);
+      CHECK(socksSettings && socksSettings->get_int(Settings::proxy_type) == Settings::socks4);
+      CHECK(!socksSettings->get_bool(Settings::enable_dht) && socksSettings->get_str(Settings::dht_bootstrap_nodes).empty());
+      CHECK(!socksSettings->get_bool(Settings::enable_outgoing_utp) && socks4.serialize() == socksBefore);
+      CHECK(socks4.replaceValue("peercontrol.udp.public.enable", integer(1)));
+      rejected(socks4, Code::Unsupported); // SOCKS4 still cannot proxy uTP peers.
     });
     run("unsupported proxy routes fail without secrets", [] {
       auto httpUdp = config({{"Enable.Proxy", integer(1)}, {"Proxy.Host", bytes("proxy.invalid")},

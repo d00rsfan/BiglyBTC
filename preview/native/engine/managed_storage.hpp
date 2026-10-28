@@ -31,6 +31,10 @@ struct ManagedPayloadClaim {
   std::uint64_t device=0,inode=0;
 };
 
+struct ManagedMainlinePolicy {
+  bool discover=false, announce=false;
+  bool operator==(const ManagedMainlinePolicy&) const = default;
+};
 struct ManagedBadPayloadBytes { std::int64_t discarded=0,hashFailed=0; };
 
 struct ManagedQueueMetadata {
@@ -68,6 +72,7 @@ public:
   ManagedStorage& operator=(const ManagedStorage&) = delete;
   ~ManagedStorage();
   libtorrent::add_torrent_params parameters() const;
+  ManagedMainlinePolicy mainlinePolicy() const noexcept;
   ManagedStoragePurpose purpose() const noexcept;
   // Immutable NEED mask, never observed/verified data. Full stays all pieces.
   std::span<const std::uint8_t> existingVerificationPieces() const noexcept;

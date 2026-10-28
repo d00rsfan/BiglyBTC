@@ -45,6 +45,12 @@ using ApplicationObservationSink = std::function<void(ApplicationPeerObservation
 
 struct NetworkPolicy;
 struct PendingMagnet;
+struct MainlineDiscoveryStatus {
+  enum class State { Disabled, Running, Unavailable, Closed };
+  State state=State::Disabled;
+  std::uint64_t lookups=0, announces=0, deliveredPeers=0;
+  std::optional<storage::Error> failure{};
+};
 namespace detail { class PersistentCall; class PersistentOperation; }
 class PersistentSession;
 // Only the source-bound successful retirement protocol may mint a settled
@@ -105,6 +111,10 @@ public:
 
   // Configure before startIdle/admission. No live routing-policy mutation.
   std::expected<void, storage::Error> configureNetwork(const NetworkPolicy&);
+  // Explicit bootstrap authority for owned/private deployments; empty means no routers.
+  // Must be configured before startup. No provider, DNS or sockets are touched here.
+  std::expected<void, storage::Error> configureMainlineBootstrap(std::vector<std::pair<std::string,int>>);
+  MainlineDiscoveryStatus mainlineDiscovery() const;
   // Host calls pure prepareLiveSettings BEFORE persistence, this method only
   // AFTER successful save. Routing changes remain pending for owner recreation.
   // Before startIdle this caches safe values without creating an LT session.

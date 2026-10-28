@@ -1,5 +1,7 @@
 #include "network_policy.hpp"
 #include "network_binding.hpp"
+#include "plugin_keys.hpp"
+#include "plugin_settings.hpp"
 
 #include <libtorrent/torrent_info.hpp>
 
@@ -10,6 +12,7 @@
 #include <cstdint>
 #include <limits>
 #include <new>
+#include <optional>
 #include <string_view>
 #include <utility>
 
@@ -124,6 +127,21 @@ public:
     require(value <= std::numeric_limits<int>::max() / 1024, Code::Limit, key);
     return static_cast<int>(value * 1024);
   }
+  void originalPluginInteger(std::string_view key) const {
+    if (!document_) { return; }
+    const auto* value = storage::detail::findOriginalKey(document_->root(), key);
+    if (!value) { return; }
+    // The original bdecoder treats config keys as ISO-8859-1. Resolve through
+    // the existing plugin adapter, then check duplicates using the raw key.
+    const auto& children = document_->root().children;
+    for (std::size_t i = 0; i + 1 < children.size(); i += 2) {
+      if (&children[i + 1] == value) {
+        const auto* checked = find(children[i].bytes);
+        require(checked && checked->type == Node::Type::Integer, Code::InvalidConfiguration, key);
+        return;
+      }
+    }
+  }
 private:
   const core::Document* document_;
 };
@@ -169,6 +187,12 @@ void validate(const NetworkPolicy& p) {
   require(p.uploadBytesPerSecond >= 0 && p.downloadBytesPerSecond >= 0 && p.seedingUploadBytesPerSecond >= 0
       && p.lanUploadBytesPerSecond >= 0 && p.lanDownloadBytesPerSecond >= 0,
       Code::InvalidConfiguration, "rate limits");
+  if (p.dht) {
+    require(p.mainlinePort >= 1 && p.mainlinePort <= 65535,
+        Code::InvalidConfiguration, "Mainline DHT port");
+    require(p.mainlineIpv4 || (p.ipv6 && p.mainlineIpv6),
+        Code::InvalidConfiguration, "Mainline DHT address families");
+  }
   const auto& proxy = p.proxy;
   require(proxy.kind == NetworkProxyKind::None || proxy.kind == NetworkProxyKind::Socks4
       || proxy.kind == NetworkProxyKind::Socks5 || proxy.kind == NetworkProxyKind::Http
@@ -194,10 +218,11 @@ void validate(const NetworkPolicy& p) {
           && proxy.password.empty() && !p.ipv6, Code::Unsupported, "SOCKS4 routing");
     }
     if (proxy.kind != NetworkProxyKind::Socks5) {
-      require(!p.dht && (!proxy.peers || (!p.incomingUtp && !p.outgoingUtp))
+      require((!proxy.peers || (!p.incomingUtp && !p.outgoingUtp))
           && (!proxy.trackers || !p.udpTrackers), Code::Unsupported, "proxy UDP routing");
     }
-    require(!p.dht || proxy.peers, Code::Unsupported, "proxy DHT routing");
+    // This session carries torrents only. The separate Mainline service must
+    // refuse unsupported proxy routing before creating its own listener.
     // LT replaces peer-proxied listen interfaces with one proxy endpoint.
     // Do not silently discard a user's explicit source-address restriction.
     if (proxy.peers) {
@@ -278,7 +303,32 @@ std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(
         && c.boolean("Tracker Client Enable TCP", true);
     p.udpTrackers = c.boolean("Peer Source Selection Default.Tracker", true)
         && c.boolean("Server Enable UDP", true);
-    p.dht = c.boolean("Peer Source Selection Default.DHT", true) && c.boolean("Plugin.DHT.dht.enabled", true);
+    // mlDHT wrapper3b125 uses its external-directory namespace and the separate
+    // PluginInfo.mldht.enabled startup switch. Azureus Plugin.DHT is unrelated.
+    std::optional<core::Document> defaults;
+    if (!configuration) {
+      auto empty = core::Document::parse("de");
+      require(empty.has_value(), Code::Memory, "Mainline plugin settings");
+      defaults.emplace(std::move(*empty));
+    }
+    const auto mainline = storage::readOriginalMldhtSettings(
+        configuration ? *configuration : *defaults, options.mldhtDirectory);
+    require(mainline.has_value(), Code::InvalidConfiguration, "Mainline plugin directory");
+    // Retain the original reader's Java int/boolean projection, while rejecting
+    // malformed or duplicate keys at this strict no-effects policy boundary.
+    for (const auto name : {"enable", "port", "autostart.IPv4", "autostart.IPv6",
+        "backupOnly", "onlyPeerBootstrap"}) {
+      const auto key = mainline->binding.configPrefix + name;
+      c.originalPluginInteger(key);
+    }
+    c.originalPluginInteger(mainline->binding.startupKey);
+    p.mainlinePort = mainline->port;
+    p.mainlineIpv4 = mainline->autostart4;
+    p.mainlineIpv6 = p.ipv6 && mainline->autostart6;
+    p.mainlineBackupOnly = mainline->backupOnly;
+    p.mainlinePeerBootstrapOnly = mainline->onlyPeerBootstrap;
+    p.dht = c.boolean("Peer Source Selection Default.DHT", true)
+        && mainline->loadedAtStartup && mainline->enabled && (p.mainlineIpv4 || p.mainlineIpv6);
     p.pex = c.boolean("Peer Source Selection Default.PeerExchange", true);
     p.webSeeds = true;
     p.lsd = options.localDiscovery;
@@ -288,9 +338,9 @@ std::expected<NetworkPolicy, NetworkPolicyError> readNetworkPolicy(
     const int udpPort = c.port("UDP.Listen.Port", 6881);
     const bool separate = !c.boolean("UDP.NonData.Listen.Port.Same", true);
     const int nonDataPort = c.port("UDP.NonData.Listen.Port", 6881);
-    const bool needsUdp = p.incomingUtp || p.outgoingUtp || p.dht || p.udpTrackers;
+    const bool needsUdp = p.incomingUtp || p.outgoingUtp || p.udpTrackers;
     require(!needsUdp || !p.incomingTcp || tcpPort == udpPort, Code::Unsupported, "TCP/UDP listen ports");
-    require(!separate || (!p.dht && !p.udpTrackers) || nonDataPort == udpPort,
+    require(!separate || !p.udpTrackers || nonDataPort == udpPort,
         Code::Unsupported, "UDP.NonData.Listen.Port");
     p.listenPort = needsUdp ? udpPort : tcpPort;
     require(!c.boolean("Listen.Port.Randomize.Enable", false), Code::Unsupported, "Listen.Port.Randomize.Enable");
@@ -419,11 +469,13 @@ std::expected<libtorrent::settings_pack, NetworkPolicyError> makeNetworkSettings
     result.set_bool(Settings::enable_outgoing_tcp, p.outgoingTcp);
     result.set_bool(Settings::enable_incoming_utp, p.incomingUtp);
     result.set_bool(Settings::enable_outgoing_utp, p.outgoingUtp);
-    result.set_bool(Settings::enable_dht, p.dht);
+    // Mainline's separate service owns its own configured UDP listener. Never
+    // enable a second DHT or implicit bootstrap in the torrent-bearing session.
+    result.set_bool(Settings::enable_dht, false);
     result.set_bool(Settings::enable_lsd, p.lsd);
     result.set_bool(Settings::enable_upnp, p.upnp);
     result.set_bool(Settings::enable_natpmp, p.natpmp);
-    result.set_str(Settings::dht_bootstrap_nodes, p.dht ? "dht.libtorrent.org:25401" : "");
+    result.set_str(Settings::dht_bootstrap_nodes, "");
     result.set_int(Settings::download_rate_limit, p.downloadBytesPerSecond);
     result.set_int(Settings::upload_rate_limit, seedingOnly && p.seedingOnlyUpload
         ? p.seedingUploadBytesPerSecond : p.uploadBytesPerSecond);

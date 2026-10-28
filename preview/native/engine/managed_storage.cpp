@@ -496,6 +496,32 @@ TorrentNetworkSelection networks(const Document& state, const Node& attributes) 
   }
   return result;
 }
+ManagedMainlinePolicy originalMainlinePolicy(const NetworkPolicy& policy, const Node& attributes, bool privateTorrent) {
+  ManagedMainlinePolicy result{policy.dht && !privateTorrent, true};
+  if (const auto* sources=attributes.find("peersources")) {
+    require(sources->type==Node::Type::List && sources->children.size()<=16,"Invalid original peer sources",ErrorCode::InvalidFormat);
+    result.discover=result.discover && std::ranges::any_of(sources->children,[](const Node& source){return text(&source)=="DHT";});
+  }
+  if (const auto* denied=attributes.find("peersourcesdenied")) {
+    require(denied->type==Node::Type::List && denied->children.size()<=16,"Invalid original denied peer sources",ErrorCode::InvalidFormat);
+    if (std::ranges::any_of(denied->children,[](const Node& source){return text(&source)=="DHT";})) { result.discover=false; }
+  }
+  if (const auto* options=attributes.find("pluginoptions")) {
+    require(options->type==Node::Type::Dictionary,"Invalid original plugin options",ErrorCode::InvalidFormat);
+    if (const auto* plugin=options->find("mldht")) {
+      require(plugin->type==Node::Type::Dictionary,"Invalid original mlDHT options",ErrorCode::InvalidFormat);
+      if (const auto* enabled=plugin->find("enableannounce")) {
+        require(enabled->type==Node::Type::Integer,"Invalid original mlDHT announce option",ErrorCode::InvalidFormat);
+        result.announce=static_cast<std::uint32_t>(enabled->integer)!=0;
+      }
+    }
+  }
+  // Disabled active announcements map to original QUEUED scrape-only mode.
+  // Until that scrape service is ported, neither lookup nor peer injection is admitted.
+  result.discover=result.discover && result.announce;
+  result.announce=result.announce && result.discover;
+  return result;
+}
 // Called only on this fresh, privately owned LT parse AFTER its complete raw
 // info/full hashes and selected original key have been authenticated. This
 // projects a qualified v1 filename codec, never a file/piece geometry change.
@@ -610,6 +636,7 @@ struct ManagedStorage::Impl {
   std::shared_ptr<const ManagedPayloadCounterBridge> swarmBridge;
   core::SavedDownload captured;
   ManagedQueueMetadata queue;
+  ManagedMainlinePolicy mainline;
   std::vector<compat::FilePolicy> filePolicies;
   std::string queueMappingScope;
   storage::TorrentStateStore store;
@@ -644,6 +671,7 @@ ManagedStorage::ManagedStorage(ManagedStorage&&) noexcept=default;
 ManagedStorage& ManagedStorage::operator=(ManagedStorage&&) noexcept=default;
 ManagedStorage::~ManagedStorage()=default;
 lt::add_torrent_params ManagedStorage::parameters() const { return impl_?impl_->params:lt::add_torrent_params{}; }
+ManagedMainlinePolicy ManagedStorage::mainlinePolicy() const noexcept { return impl_?impl_->mainline:ManagedMainlinePolicy{}; }
 ManagedStoragePurpose ManagedStorage::purpose() const noexcept {return impl_?impl_->purpose:ManagedStoragePurpose::Download;}
 std::span<const std::uint8_t> ManagedStorage::existingVerificationPieces()const noexcept{return impl_?std::span<const std::uint8_t>{impl_->requiredPieces}:std::span<const std::uint8_t>{};}
 std::expected<void,Error> ManagedStorage::validateExistingSnapshot() const {
@@ -847,7 +875,11 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
       *target=value?static_cast<int>(value):-1;
     }
     params.flags&=~lt::torrent_flags::auto_managed; params.flags|=lt::torrent_flags::paused;
-    auto filtered=applyTorrentNetworkPolicy(policy,networks(source,attributes.root()),params);
+    const auto selectedNetworks=networks(source,attributes.root());
+    auto mainline=originalMainlinePolicy(policy,attributes.root(),info->priv());
+    mainline.discover=mainline.discover && selectedNetworks.publicNetwork && selectedNetworks.dhtBackup && !selectedNetworks.tor && !selectedNetworks.i2p;
+    mainline.announce=mainline.announce && mainline.discover;
+    auto filtered=applyTorrentNetworkPolicy(policy,selectedNetworks,params);
     require(filtered.has_value(),"Managed torrent network selection is unsupported by the owner policy");
     auto claimPlan=payloadClaimPlan(slots,save,attributes.root(),pending);
     checkManagedClaims(claimPlan.values,claimed);
@@ -966,9 +998,15 @@ std::expected<ManagedStorage,Error> ManagedStorage::prepare(const storage::Profi
       params.renamed_files[lt::file_index_t{static_cast<int>(slot.index)}]=slot.actual.string();
     }
     for(std::size_t i=0;i<claimPlan.values.size();++i){const auto& id=slots[claimPlan.indices[i]].identity;claimPlan.values[i].device=static_cast<std::uint64_t>(id.st_dev);claimPlan.values[i].inode=static_cast<std::uint64_t>(id.st_ino);}
+    auto checkedMainline=originalMainlinePolicy(policy,actual.root(),info->priv());
+    const auto actualNetworks=networks(state.document(),actual.root());
+    checkedMainline.discover=checkedMainline.discover && actualNetworks.publicNetwork && actualNetworks.dhtBackup && !actualNetworks.tor && !actualNetworks.i2p;
+    checkedMainline.announce=checkedMainline.announce && checkedMainline.discover;
+    require(mainline==checkedMainline,"Original Mainline source selection changed during preparation",ErrorCode::Conflict);
     auto result=std::make_unique<Impl>(hash,std::move(identity),saved,std::move(store),std::move(state),std::move(layout),std::move(params),save,
       std::move(slots),std::move(pending),std::move(claimPlan.values),profile.st_dev,profile.st_ino);
     result->approvedProofs=std::move(approvedProofs);
+    result->mainline=mainline;
     result->purpose=purpose;result->requiredPieces=std::move(requiredPieces);result->selectedLease=selectedOnly?&lease:nullptr;result->selectedScope=std::move(selectedScope); result->queue=queue; result->swarmBridge=std::move(swarmBridge); result->filePolicies=std::move(*parsedPolicy);
     // Capture after authoritative cache hydration, defaults and conversions;
     // later classification cannot authorize a newly relinked physical map.

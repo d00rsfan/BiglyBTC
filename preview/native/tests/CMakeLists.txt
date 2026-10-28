@@ -1832,3 +1832,12 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux" AND TARGET Qt6::Test AND TARGET Libtorrent
   add_test(NAME owned-fixture-read-diagnostic COMMAND biglybtc-owned-fixture-read-tests)
   set_tests_properties(owned-fixture-read-diagnostic PROPERTIES TIMEOUT 15 LABELS "unit;fixtures;io")
 endif()
+
+if(BIGLYBTC_LOCAL_ENGINE AND BIGLYBTC_DESKTOP AND NOT BIGLYBTC_PERSISTENT_RUNTIME_MANIFEST STREQUAL "")
+  add_executable(biglybtc-mainline-dht-tests mainline_dht_tests.cpp)
+  set_target_properties(biglybtc-mainline-dht-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-mainline-dht-tests PRIVATE biglybtc_local_engine LibtorrentRasterbar::torrent-rasterbar Qt6::Test Qt6::Network)
+  target_compile_options(biglybtc-mainline-dht-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME mainline-dht COMMAND biglybtc-mainline-dht-tests)
+  set_tests_properties(mainline-dht PROPERTIES TIMEOUT 180 LABELS "network;discovery;owned")
+endif()

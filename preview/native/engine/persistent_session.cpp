@@ -21,6 +21,8 @@
 #include <libtorrent/session_params.hpp>
 #include <libtorrent/write_resume_data.hpp>
 #include "network_policy.hpp"
+#include "mainline_dht.hpp"
+#include <libtorrent/peer_info.hpp>
 #include "network_binding.hpp"
 #include "network_peer_classes.hpp"
 #include "biglybtc/queue_rate_providers.hpp"
@@ -79,6 +81,8 @@ struct PersistentSession::Impl {
     lt::torrent_handle handle;
     ManagedDownloadStatus status;
     bool manualPaused = false, forceStart = false, stop = false;
+    bool mainlineTrackerHealthy=false;
+    Clock::time_point mainlineNext{};
     bool policyHeld = false, completedTransition = false, completionHandled = false;
     core::QueueActivityMemory activity;
     std::optional<core::QueueFilePriorityStats> filePriority;
@@ -167,7 +171,7 @@ struct PersistentSession::Impl {
     PendingMagnet intent;
     lt::torrent_handle handle;
     PendingMagnetStatus status;
-    Clock::time_point expires{}, deadline{};
+    Clock::time_point expires{}, deadline{}, mainlineNext{};
     bool removing = false, removed = false, cancel = false, shutdown = false;
     std::string metadata;
     Magnet(std::uint64_t id, PendingMagnet value)
@@ -411,6 +415,8 @@ struct PersistentSession::Impl {
       const auto owned = managedByHandle.find(torrentAlert->handle);
       if (owned == managedByHandle.end()) { continue; }
       auto& value = *owned->second;
+      if (lt::alert_cast<lt::tracker_reply_alert>(alert)) { value.mainlineTrackerHealthy=true; }
+      if (lt::alert_cast<lt::tracker_error_alert>(alert)) { value.mainlineTrackerHealthy=false; }
       if (const auto* state = lt::alert_cast<lt::state_changed_alert>(alert)) {
         value.advanceTimeline(state->timestamp()); value.timelineState=state->state;
       }
@@ -482,6 +488,8 @@ struct PersistentSession::Impl {
     phase = AccountingState::Uncertified;
     // Not bounded by the certification deadline. No callback is made by LT
     // destruction, and no joined tail is relabeled as a final counter sample.
+    mainline.reset();
+    mainlineStatus.state=MainlineDiscoveryStatus::State::Closed;
     session.reset();
     for (auto& [key, entry] : managed) {
       static_cast<void>(key);
@@ -526,6 +534,8 @@ struct PersistentSession::Impl {
     } else { profileDevice = profile.st_dev; profileInode = profile.st_ino; profileBound = true; }
     detail::require(bindingHealthy(), "Explicit network binding was lost", storage::ErrorCode::Io);
   }
+  #include "mainline_owner.inc"
+
   void ensureSession() {
     detail::require(bindingHealthy(), "Explicit network binding was lost", storage::ErrorCode::Io);
     if (!session) {
@@ -548,7 +558,7 @@ struct PersistentSession::Impl {
           }
           settings.set_bool(lt::settings_pack::dont_count_slow_torrents, false);
         }
-        if (queuePolicy) {
+        if (queuePolicy || (network && network->dht)) {
           settings.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::tracker
               | lt::alert_category::error | lt::alert_category::status | lt::alert_category::storage));
         } else settings.set_int(lt::settings_pack::alert_mask, static_cast<int>(lt::alert_category::error
@@ -564,6 +574,7 @@ struct PersistentSession::Impl {
         rateLimits = detail::readEffectiveRateLimits(*session); // Optional read, never applies settings.
         phase = AccountingState::Idle;
         mapCounters();
+        startMainline();
       } catch (...) { joinPoisoned(); throw; }
     }
   }
@@ -1370,6 +1381,7 @@ PersistentSession::~PersistentSession() {
   // Owner-thread destruction is a lifetime precondition. No destructor signal,
   // fresh measurement, final seal or bounded join is promised by this fallback.
   impl_->sink = {}; impl_->operationSink = {};
+  impl_->mainline.reset();
   impl_->session.reset();
 }
 std::expected<void, AccountingError> PersistentSession::startIdle(const storage::ProfileLease& lease) {
@@ -1400,6 +1412,17 @@ std::expected<void, storage::Error> PersistentSession::configureNetwork(const Ne
       "Unsupported network setting: " + settings.error().field}); }
   impl_->network = policy;
   return {};
+}
+std::expected<void, storage::Error> PersistentSession::configureMainlineBootstrap(std::vector<std::pair<std::string,int>> nodes) {
+  if (!impl_->onWorker() || impl_->call || impl_->session || impl_->closed || impl_->poisoned || nodes.size()>64) {
+    return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Configure bounded Mainline bootstrap before owner startup"});
+  }
+  impl_->mainlineBootstrap=std::move(nodes);
+  return {};
+}
+MainlineDiscoveryStatus PersistentSession::mainlineDiscovery() const {
+  if (!impl_->onWorker()) { return {MainlineDiscoveryStatus::State::Unavailable,0,0,0,storage::Error{storage::ErrorCode::Conflict,"Mainline observation requires its owner worker"}}; }
+  return impl_->mainlineStatus;
 }
 std::optional<LiveSettingsSnapshot> PersistentSession::liveSettings() const noexcept {
   if (!impl_->onWorker() || !impl_->session || impl_->closed || impl_->poisoned) { return {}; }
@@ -1632,6 +1655,8 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
           |lt::torrent_flags::upload_mode;
       parameters.flags&=~lt::torrent_flags::seed_mode;
     }
+    parameters.flags |= lt::torrent_flags::disable_dht;
+    parameters.dht_nodes.clear();
     parameters.userdata = value->token.get();
     try {
       value->queueObservations=std::make_shared<detail::ManagedQueueObservations>(
@@ -1823,6 +1848,8 @@ std::expected<void, storage::Error> PersistentSession::startMagnet(storage::Prof
     detail::done(impl_->diskPolicy->registerMetadataPath(virtualPath));
     auto parameters = detail::take(metadataOnlyParameters(intent, *impl_->network, virtualPath));
     auto value = std::make_unique<Impl::Magnet>(admission, intent);
+    parameters.flags |= lt::torrent_flags::disable_dht;
+    parameters.dht_nodes.clear();
     parameters.userdata = value->token.get();
     detail::attachPeerPayloadObserver(parameters, impl_->peerPayloadLedger, admission);
     parameters.flags |= lt::torrent_flags::paused | lt::torrent_flags::duplicate_is_error;
@@ -1953,6 +1980,7 @@ std::expected<void, AccountingError> PersistentSession::poll() {
     if(impl_->session){static_cast<void>(impl_->pop());}
     impl_->advanceManaged();
     if(impl_->session){impl_->advanceMagnets();}
+    impl_->advanceMainline();
     if (impl_->transferError || impl_->removalLost) {
       impl_->counterError(AccountingError::Engine);
       impl_->joinPoisoned();
@@ -1986,6 +2014,8 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
   impl_->phase = AccountingState::Closing;
   const auto result = impl_->retire(std::min(deadline, Clock::now() + CertificationBudget));
   impl_->sink = {}; impl_->operationSink = {};
+  impl_->mainline.reset();
+  impl_->mainlineStatus.state=MainlineDiscoveryStatus::State::Closed;
   impl_->session.reset(); // Join may outlive the certification effort deadline.
   impl_->registered = false; impl_->outstanding = false;
   impl_->closed = true; impl_->phase = AccountingState::Closed;

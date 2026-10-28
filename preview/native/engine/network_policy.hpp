@@ -41,6 +41,8 @@ struct NetworkPolicyOptions {
   // Requires both caller permission and original UPnP/NAT-PMP enable settings.
   bool portMapping = false;
   std::shared_ptr<const VerifiedSocks4Capability> socks4Capability{};
+  // Original external-plugin directory basename, independent of runtime ID.
+  std::string mldhtDirectory = "mldht";
 };
 struct NetworkPolicy {
   NetworkMode mode = NetworkMode::IsolatedLoopback;
@@ -66,6 +68,11 @@ struct NetworkPolicy {
   int lanUploadBytesPerSecond = 0, lanDownloadBytesPerSecond = 0;
   // Retains verified provider lifetime; no caller boolean or version allowlist.
   std::shared_ptr<const VerifiedSocks4Capability> socks4Capability{};
+  // Mainline uses a dedicated discovery service, never the torrent session's
+  // DHT socket. dht above records semantic source permission for that service.
+  int mainlinePort = 49001;
+  bool mainlineIpv4 = true, mainlineIpv6 = true;
+  bool mainlineBackupOnly = false, mainlinePeerBootstrapOnly = false;
 };
 struct TorrentNetworkSelection {
   bool publicNetwork = true, tor = false, i2p = false;
