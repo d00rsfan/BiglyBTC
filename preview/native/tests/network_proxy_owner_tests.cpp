@@ -275,7 +275,15 @@ private:
     const bool tracker = domain && host == trackerName && port == trackerPort;
     const bool peer = (!domain || (!v5 && remoteSocks4)) && host == "127.0.0.2" && port == seedPort;
     const bool webseed = (v5 || remoteSocks4) && domain && (host == RemoteSeedName || host == RemoteRedirectName) && webSeedPort && port == webSeedPort;
-    if (!tracker && !peer && !webseed) { bad(channel, "unplanned proxy destination"); return; }
+    if (!tracker && !peer && !webseed) {
+      const auto reason = QByteArray("unplanned proxy destination requested-host-hex=") + host.toHex()
+          + " port=" + QByteArray::number(port) + " domain=" + QByteArray::number(domain ? 1 : 0)
+          + " expected-tracker=" + trackerName + ':' + QByteArray::number(trackerPort)
+          + " expected-peer=127.0.0.2:" + QByteArray::number(seedPort)
+          + " expected-webseed=" + RemoteSeedName + '|' + RemoteRedirectName + ':' + QByteArray::number(webSeedPort)
+          + " v5=" + QByteArray::number(v5 ? 1 : 0) + " remote4=" + QByteArray::number(remoteSocks4 ? 1 : 0);
+      bad(channel, reason.constData()); return;
+    }
     if (webseed && refuseWebSeed) {
       ++refused; data.clear(); channel->phase = Phase::Rejected;
       channel->client->write(QByteArray::fromHex(v5 ? "05050001000000000000" : "005b000000000000"));
