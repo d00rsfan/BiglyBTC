@@ -120,7 +120,9 @@ class OwnedKrpc final {
           || !query || !args || !id || id->bytes.size()!=20 || bytes(id->bytes)==QByteArray(20,'\0')) {
         fail("KRPC query lacks an actual transaction/node identity"); continue;
       }
-      Request request{bytes(transaction->bytes),{},packet.senderAddress(),packet.senderPort()};
+      const auto sourcePort=packet.senderPort();
+      if (sourcePort<1 || sourcePort>65535) { fail("Invalid owned datagram source port"); continue; }
+      Request request{bytes(transaction->bytes),{},packet.senderAddress(),static_cast<unsigned short>(sourcePort)};
       if (query->bytes=="ping") {
         ++bootstrapQueries; send(request,response(request,{{"id",string(nodeId_)}}));
       } else if (query->bytes=="find_node") {
