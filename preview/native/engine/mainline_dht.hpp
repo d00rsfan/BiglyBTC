@@ -42,6 +42,9 @@ struct MainlineDhtStatus {
   // LT API submissions and actual delivered replies/peers, not wire packets.
   std::uint64_t lookups = 0, announces = 0, replies = 0, deliveredPeers = 0;
   bool observationsLost = false;
+  // One newly correlated successful PORT-node reply whose endpoint is in the
+  // actual active routing table; never addNode registration or a peer count.
+  std::uint64_t peerBootstrapProgress = 0;
 };
 
 // Worker-confined dedicated session: never owns a profile, torrent or payload.
@@ -66,6 +69,10 @@ public:
   // This bounded service requires a distinct DHT/transfer port.
   std::expected<void, storage::Error> announce(libtorrent::sha1_hash, unsigned short actualPeerPort);
   std::expected<void, storage::Error> addNode(const std::pair<std::string, int>&);
+  // Numeric endpoint supplied by an authenticated current peer PORT event.
+  // One bounded lifetime probe per endpoint; no DNS, retry or peer authority.
+  // Actual response/routing progress is reported separately in status().
+  std::expected<void, storage::Error> addPeerNode(const std::pair<std::string, int>&);
   // LT has no request cancellation: this only revokes result delivery. Reusing
   // a hash cannot distinguish an old reply; peer hints carry no admission proof.
   std::expected<void, storage::Error> forget(libtorrent::sha1_hash);

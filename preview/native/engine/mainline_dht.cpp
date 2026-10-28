@@ -2,6 +2,8 @@
 #include "persistent_runtime_guard.hpp"
 
 #include <libtorrent/alert_types.hpp>
+#include <libtorrent/client_data.hpp>
+#include <libtorrent/entry.hpp>
 #include <libtorrent/session.hpp>
 #include <libtorrent/session_params.hpp>
 #include <libtorrent/kademlia/dht_state.hpp>
@@ -9,6 +11,7 @@
 
 #include <algorithm>
 #include <initializer_list>
+#include <deque>
 #include <limits>
 #include <map>
 #include <new>
@@ -265,11 +268,24 @@ lt::dht::dht_state boundedCheckpoint(const lt::dht::dht_state& state, bool ipv4,
 
 struct MainlineDhtService::Impl {
   struct Request { bool lookup = false, lookupIssued = false; unsigned short port = 0; bool announceIssued = false; };
+  struct PeerProbe { UdpEndpoint endpoint; bool issued=false, finished=false; lt::sha1_hash nodeId{}; };
+  struct RouteCheck { PeerProbe* probe=nullptr; std::uint64_t generation=0; };
+  struct RouteQueue {
+    std::deque<RouteCheck> waiting;
+    std::uint64_t next=0,issued=0,completed=0;
+  };
   const std::thread::id worker = std::this_thread::get_id();
   std::unique_ptr<lt::session> session;
   std::map<lt::sha1_hash, Request> requests;
   std::set<Node> nodes;
   std::vector<Node> pendingNodes;
+  // Map entries are never erased/reused before session join. Their stable
+  // addresses are opaque client_data cookies, never dereferenced by LT.
+  std::map<Node,PeerProbe> peerProbes;
+  // One typed live-table query in flight per local node. Generations are
+  // never reused; each next query is issued only after the previous alert.
+  // Dead UDP probes never enter these queues or block another endpoint.
+  std::map<lt::sha1_hash,RouteQueue> routeQueues;
   std::vector<Address> bindings;
   MainlineDhtStatus status;
   bool ipv4 = false, ipv6 = false, running = false;
@@ -281,6 +297,7 @@ struct MainlineDhtService::Impl {
   std::size_t bootstrapCompletions = 0, expectedBootstraps = 0;
   unsigned short port = 0;
 
+  ~Impl(){session.reset();} // Join before stable correlation slots are destroyed.
   std::expected<void, storage::Error> check() const {
     if (std::this_thread::get_id() != worker) { return error(Code::Busy, "Mainline DHT requires its owner worker"); }
     if (status.phase == MainlineDhtPhase::Closed) { return error(Code::Cancelled, "Mainline DHT is closed"); }
@@ -293,6 +310,7 @@ struct MainlineDhtService::Impl {
     status.observationsLost |= lost;
     requests.clear(); pendingNodes.clear(); status.activeHashes = 0;
     session.reset(); // Joins this service only; no borrowed owner or callbacks.
+    routeQueues.clear(); peerProbes.clear();
     return error(Code::Io, message);
   }
   std::expected<Request*, storage::Error> request(lt::sha1_hash hash) {
@@ -440,6 +458,22 @@ std::expected<void, storage::Error> MainlineDhtService::addNode(const Node& inpu
     return {};
   } catch (...) { return impl_->fail("Mainline DHT node submission failed"); }
 }
+std::expected<void, storage::Error> MainlineDhtService::addPeerNode(const Node& input) {
+  try {
+    auto valid=impl_->check(); if(!valid){return valid;}
+    lt::error_code ec; const auto address=lt::make_address(input.first,ec);
+    if(ec||input.second<1||input.second>65535){return error(Code::InvalidFormat,"Invalid numeric Mainline PORT node");}
+    const UdpEndpoint endpoint(address,static_cast<unsigned short>(input.second));
+    if(!permittedContact(endpoint,impl_->ipv4,impl_->ipv6,impl_->bindings)){
+      return error(Code::Unsupported,"Mainline PORT node is outside the current route policy");
+    }
+    const Node key{address.to_string(),input.second};
+    if(impl_->peerProbes.contains(key)){return error(Code::Conflict,"Mainline PORT node was already probed");}
+    if(impl_->peerProbes.size()==MaximumNodes){return error(Code::Busy,"Mainline PORT lifetime probe limit");}
+    impl_->peerProbes.try_emplace(key,Impl::PeerProbe{endpoint});
+    return {};
+  }catch(...){return impl_->fail("Mainline PORT node registration failed");}
+}
 std::expected<void, storage::Error> MainlineDhtService::forget(lt::sha1_hash hash) {
   auto valid = impl_->check(); if (!valid) { return valid; }
   impl_->requests.erase(hash); impl_->status.activeHashes = impl_->requests.size();
@@ -465,6 +499,58 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
           impl_->status.listenPort = impl_->port;
           impl_->status.phase = MainlineDhtPhase::Listening;
         }
+      }
+      if(const auto* response=lt::alert_cast<lt::dht_direct_response_alert>(alert)){
+        const auto* cookie=response->userdata.get<Impl::PeerProbe>();
+        const auto found=std::ranges::find_if(impl_->peerProbes,[&](const auto& row){return &row.second==cookie;});
+        if(found==impl_->peerProbes.end()||!found->second.issued||found->second.finished){continue;}
+        auto& probe=found->second; probe.finished=true; // Error/timeout consumes this one-shot too.
+        const auto packet=response->response();
+        if(response->endpoint!=probe.endpoint||packet.type()!=lt::bdecode_node::dict_t
+            ||packet.dict_find_string_value("y")!="r"){continue;}
+        const auto result=packet.dict_find_dict("r");
+        if(!result){continue;}
+        const auto id=result.dict_find_string("id");
+        if(!id||id.string_length()!=20||lt::sha1_hash(id.string_ptr()).is_all_zeros()){continue;}
+        probe.nodeId=lt::sha1_hash(id.string_ptr());
+        // The RPC callback posts before node_seen(). This synchronous call is
+        // an executor barrier and selects an ACTUAL local node ID. Saved
+        // contacts include replacements, so they are NOT routing proof.
+        const auto state=impl_->session->session_state(lt::session_handle::save_dht_state);
+        const auto local=std::ranges::find_if(state.dht_state.nids,[&](const auto& row){
+          return row.first.is_v4()==probe.endpoint.address().is_v4()&&!row.second.is_all_zeros();
+        });
+        if(local==state.dht_state.nids.end()||local->second==probe.nodeId){continue;}
+        auto& queue=impl_->routeQueues[local->second];
+        if(queue.next==UINT64_MAX){return impl_->fail("Mainline PORT routing generation overflow",true);}
+        queue.waiting.push_back({&probe,++queue.next});
+        if(queue.waiting.size()==1){
+          queue.issued=queue.waiting.front().generation;
+          impl_->session->dht_live_nodes(local->second);
+        }
+        continue;
+      }
+      if(const auto* table=lt::alert_cast<lt::dht_live_nodes_alert>(alert)){
+        auto found=impl_->routeQueues.find(table->node_id);
+        if(found==impl_->routeQueues.end()||found->second.waiting.empty()){continue;}
+        auto& queue=found->second; const auto request=queue.waiting.front();
+        if(request.generation!=queue.issued||queue.issued<=queue.completed||table->num_nodes()<0){
+          return impl_->fail("Mainline PORT routing correlation was lost",true);
+        }
+        const auto entries=table->nodes();
+        const bool live=std::ranges::any_of(entries,[&](const auto& row){
+          return row.first==request.probe->nodeId&&row.second==request.probe->endpoint;
+        });
+        if(live){
+          if(!available(impl_->status.peerBootstrapProgress)){return impl_->fail("Mainline PORT progress overflow",true);}
+          ++impl_->status.peerBootstrapProgress;
+        }
+        queue.completed=request.generation;queue.waiting.pop_front();
+        if(!queue.waiting.empty()){
+          queue.issued=queue.waiting.front().generation;
+          impl_->session->dht_live_nodes(table->node_id);
+        }
+        continue;
       }
       const auto* reply = lt::alert_cast<lt::dht_get_peers_reply_alert>(alert);
       if (!reply || !impl_->requests.contains(reply->info_hash)) { continue; }
@@ -513,6 +599,12 @@ std::expected<std::vector<MainlineDhtPeers>, storage::Error> MainlineDhtService:
       }
     }
     if (impl_->running && !impl_->bootstrapPending) {
+      for(auto& [key,probe]:impl_->peerProbes){
+        (void)key; if(probe.issued){continue;}
+        lt::entry ping(lt::entry::dictionary_type{}); ping["q"]="ping";
+        impl_->session->dht_direct_request(probe.endpoint,ping,lt::client_data_t(&probe));
+        probe.issued=true;
+      }
       for (auto& [hash, request] : impl_->requests) {
         if (request.lookup && !request.lookupIssued) {
           if (!available(impl_->status.lookups)) { return impl_->fail("Mainline DHT request counter overflow", true); }
@@ -552,7 +644,7 @@ std::expected<void, storage::Error> MainlineDhtService::close() {
   if (std::this_thread::get_id() != impl_->worker) { return error(Code::Busy, "Mainline DHT requires its owner worker"); }
   if (impl_->status.phase == MainlineDhtPhase::Closed) { return {}; }
   impl_->session.reset(); // Actual network thread retirement precedes success.
-  impl_->requests.clear(); impl_->nodes.clear(); impl_->pendingNodes.clear();
+  impl_->requests.clear(); impl_->nodes.clear(); impl_->pendingNodes.clear(); impl_->routeQueues.clear(); impl_->peerProbes.clear();
   impl_->status.activeHashes = 0; impl_->status.listenPort = 0; impl_->status.phase = MainlineDhtPhase::Closed;
   return {};
 }

@@ -53,6 +53,9 @@ struct MainlineDiscoveryStatus {
   bool checkpointLoaded=false, checkpointSaved=false;
   std::size_t legacyHints=0;
   std::optional<storage::Error> checkpointFailure{};
+  // Optional source-bound PORT bridge; counters describe accepted provider wire events.
+  bool portBridgeAvailable=false,portHintsLost=false;
+  std::uint64_t portHintsObserved=0,portHintsAccepted=0,portHintsRejected=0;
 };
 namespace detail { class PersistentCall; class PersistentOperation; }
 class PersistentSession;

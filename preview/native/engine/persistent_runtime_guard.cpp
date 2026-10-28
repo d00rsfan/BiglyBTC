@@ -192,6 +192,12 @@ bool relocatableSocksProviderArtifact() {
       && std::string_view(runtime_binding::sha256) == "a5b78ccb4ee17a6773899e797d867844c8a24a45358e260b7ab65a93e2954187"
       && runtime_binding::bytes == 9139888ULL;
 }
+bool relocatableMainlineProviderArtifact() {
+  // Exact root-reviewed private qualification cohort; application tests remain separate.
+  return std::string_view(runtime_binding::manifest) == "1267bf58a235dc6c32d9ffadab8bbd994ec81f2aa958f0cf621f8a71e4f6c84c"
+      && std::string_view(runtime_binding::sha256) == "9fbb550bbc1f877ce34ce21849deab97971f5d3eacfbc531a7b777d28a3b2eea"
+      && runtime_binding::bytes == 9153448ULL;
+}
 bool hashed(int descriptor) {
   Digest context;
   if (!context.value || EVP_DigestInit_ex(context.value, EVP_sha256(), nullptr) != 1) { return false; }
@@ -216,7 +222,7 @@ bool hashed(int descriptor) {
   return std::string_view(encoded.data(), encoded.size()) == runtime_binding::sha256;
 }
 bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* retainedPin = nullptr,
-    bool combinedCounters = false, bool queueObserver = false, bool extendedTraffic = false) {
+    bool combinedCounters = false, bool queueObserver = false, bool extendedTraffic = false, bool mainlinePort = false) {
   const char* preload = std::getenv("LD_PRELOAD");
   const char* audit = std::getenv("LD_AUDIT");
   if ((preload && *preload) || (audit && *audit)) { return false; }
@@ -229,7 +235,7 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
   const auto actual = canonicalPath(object->l_name);
   if (!actual || (std::string_view(actual->data()) != runtime_binding::artifact
                   && !relocatableSourceArtifact() && !relocatableSelectedProviderArtifact() && !relocatableNextProviderArtifact()
-                  && !relocatableWebseedProviderArtifact() && !relocatableQueueProviderArtifact() && !relocatableTrafficProviderArtifact() && !relocatableSocksProviderArtifact())) { return false; }
+                  && !relocatableWebseedProviderArtifact() && !relocatableQueueProviderArtifact() && !relocatableTrafficProviderArtifact() && !relocatableSocksProviderArtifact() && !relocatableMainlineProviderArtifact())) { return false; }
   // These are ORIGINAL dynamic exports, not &method / __wrap_* references.
   // GNU --wrap test seams therefore do not misidentify the test executable as LT.
   constexpr const char* symbols[] = {
@@ -243,10 +249,13 @@ bool checkLoadedProvider(bool counterBridge = false, std::shared_ptr<void>* reta
       "biglybtc_swarm_mask_abi_v1",
       "biglybtc_traffic_counter_abi_v2", "biglybtc_read_traffic_counters_v2",
       "biglybtc_queue_observer_abi_v1", "biglybtc_attach_queue_observer_v1",
-      "biglybtc_traffic_counter_abi_v3", "biglybtc_read_traffic_counters_v3"};
-  const std::size_t required = extendedTraffic ? 15 : queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
-  std::array<std::uintptr_t, 15> addresses{};
-  std::array<Mapping, 15> beforeMappings{};
+      "biglybtc_traffic_counter_abi_v3", "biglybtc_read_traffic_counters_v3",
+      "biglybtc_socks4a_abi_v1", "biglybtc_socks4a_webseed_abi_v1",
+      "biglybtc_mainline_port_abi_v1", "biglybtc_attach_mainline_port_observer_v1",
+      "biglybtc_refresh_mainline_port_v1"};
+  const std::size_t required = mainlinePort ? 20 : extendedTraffic ? 15 : queueObserver ? 13 : combinedCounters ? 11 : counterBridge ? 9 : 6;
+  std::array<std::uintptr_t, 20> addresses{};
+  std::array<Mapping, 20> beforeMappings{};
   std::size_t at = 0;
   for (; at < required; ++at) {
     const auto* name = symbols[at];
@@ -329,6 +338,17 @@ std::shared_ptr<void> managedExtendedTrafficRuntimePin() noexcept {
   catch(...){return {};}
 #else
   return {};
+#endif
+}
+std::shared_ptr<void> mainlinePortRuntimePin() noexcept {
+#if BIGLYBTC_PERSISTENT_RUNTIME_BOUND
+  try {
+    std::shared_ptr<void> pin;
+    if (!checkLoadedProvider(true, &pin, true, true, true, true)) { return {}; }
+    return pin;
+  } catch (...) { return {}; }
+#else
+  return {}; // Optional PORT never loads an image to manufacture capability.
 #endif
 }
 bool managedPayloadCounterRuntimeQualified() noexcept {

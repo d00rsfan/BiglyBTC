@@ -7,6 +7,7 @@
 
 #include <QNetworkDatagram>
 #include <QTcpServer>
+#include <QTcpSocket>
 #include <QUdpSocket>
 #include <QtTest>
 
@@ -77,7 +78,10 @@ class OwnedKrpc final {
   QUdpSocket socket_;
   QTcpServer decoy_;
   const QByteArray nodeId_=QByteArray(20,'K');
-  std::set<QByteArray> allowed_;
+  std::set<QByteArray> allowed_,noPeers_;
+  std::vector<Request> heldPings_;
+  std::optional<unsigned short> announcePort_;
+  bool holdPings_=false;
   std::map<QByteArray,int> gets_,announces_;
   std::map<QByteArray,std::set<QByteArray>> clientIds_;
   std::map<QByteArray,QByteArray> tokens_;
@@ -99,7 +103,8 @@ class OwnedKrpc final {
   void answerPeers(const Request& request) {
     const auto token=QCryptographicHash::hash(tokenKey(request),QCryptographicHash::Sha1).first(8);
     tokens_[tokenKey(request)]=token;
-    std::vector<QByteArray> peers{string(compact(peerPort_))};
+    std::vector<QByteArray> peers;
+    if(!noPeers_.contains(request.hash)){peers.push_back(string(compact(peerPort_)));}
     if (noise_) {
       // Unsolicited and malformed packets precede a valid owned progress
       // barrier. An unrequested hash in a reply is never lookup authority.
@@ -134,8 +139,10 @@ class OwnedKrpc final {
       const auto sourcePort=packet.senderPort();
       if (sourcePort<1 || sourcePort>65535) { fail("Invalid owned datagram source port"); continue; }
       Request request{bytes(transaction->bytes),{},packet.senderAddress(),static_cast<unsigned short>(sourcePort)};
+      sourcePorts.insert(request.port);
       if (query->bytes=="ping") {
-        ++bootstrapQueries; send(request,response(request,{{"id",string(nodeId_)}}));
+        ++bootstrapQueries;
+        if(holdPings_){heldPings_.push_back(request);}else{send(request,response(request,{{"id",string(nodeId_)}}));}
       } else if (query->bytes=="find_node") {
         const auto* target=field(*args,"target",core::Node::Type::Bytes);
         if (!target || target->bytes.size()!=20) { fail("Invalid find_node target"); continue; }
@@ -158,7 +165,7 @@ class OwnedKrpc final {
           const auto* implied=args->find("implied_port");
           const auto issued=tokens_.find(tokenKey(request));
           if (!allowed_.contains(request.hash) || !token || issued==tokens_.end() || bytes(token->bytes)!=issued->second
-              || !port || port->integer!=peerPort_ || peerPort_==request.port
+              || !port || port->integer!=announcePort_.value_or(peerPort_) || announcePort_.value_or(peerPort_)==request.port
               || (implied && (implied->type!=core::Node::Type::Integer || implied->integer!=0))) {
             fail("announce_peer did not use the issued hash/source token and explicit TCP peer port"); continue;
           }
@@ -170,9 +177,10 @@ class OwnedKrpc final {
 public:
   QString failure;
   int bootstrapQueries=0,noiseReplies=0;
-  explicit OwnedKrpc(unsigned short peerPort) : peerPort_(peerPort) {
+  std::set<unsigned short> sourcePorts;
+  explicit OwnedKrpc(unsigned short peerPort,QHostAddress address=QHostAddress::LocalHost) : peerPort_(peerPort) {
     test::require(peerPort_!=0,"Owned KRPC fixture needs a real TCP peer");
-    test::require(socket_.bind(QHostAddress::LocalHost,0,QUdpSocket::DontShareAddress),"Cannot bind owned KRPC fixture");
+    test::require(socket_.bind(address,0,QUdpSocket::DontShareAddress),"Cannot bind owned KRPC fixture");
     test::require(decoy_.listen(QHostAddress::LocalHost,0),"Cannot bind owned decoy endpoint");
     QObject::connect(&socket_,&QUdpSocket::readyRead,&socket_,[this]{receive();});
   }
@@ -182,6 +190,10 @@ public:
     const auto found=clientIds_.find(hashBytes(value)); return found==clientIds_.end()?std::set<QByteArray>{}:found->second;
   }
   void allow(const lt::sha1_hash& value) { allowed_.insert(hashBytes(value)); }
+  void allowWithoutPeers(const lt::sha1_hash& value){allow(value);noPeers_.insert(hashBytes(value));}
+  void announcePort(unsigned short value){test::require(value!=0,"Actual owner port required");announcePort_=value;}
+  void holdPings(bool value){holdPings_=value;}
+  void releasePings(){holdPings_=false;auto rows=std::move(heldPings_);heldPings_.clear();for(const auto& row:rows){send(row,response(row,{{"id",string(nodeId_)}}));}}
   void noise(bool enabled) { noise_=enabled; }
   void hold(const lt::sha1_hash& value) { heldHash_=hashBytes(value); }
   void release() { heldHash_.clear(); auto pending=std::move(held_); held_.clear(); for (const auto& request:pending) { answerPeers(request); } }
@@ -240,6 +252,74 @@ std::optional<engine::PendingMagnetStatus> pending(engine::PersistentSession& ow
   const auto rows=owner.pendingMagnets(); const auto found=std::ranges::find_if(rows,[&](const auto& row){return row.hash==wanted;});
   return found==rows.end()?std::nullopt:std::optional{*found};
 }
+// Actual incoming TCP/BEP5 peer. A FAST reject_request after PORT frames is an
+// ordered network-executor barrier, not a sleep or an owner/provider test hook.
+class PortPeer final {
+  QTcpSocket socket_;
+  QByteArray input_,hash_;
+  bool handshake_=false;
+  void fail(const char* value){if(failure.isEmpty()){failure=QString::fromLatin1(value);}socket_.abort();}
+  static void append32(QByteArray& value,quint32 n){for(int shift=24;shift>=0;shift-=8){value+=static_cast<char>(n>>shift);}}
+  static quint32 read32(const QByteArray& value){quint32 n=0;for(int i=0;i<4;++i){n=(n<<8)|static_cast<unsigned char>(value[i]);}return n;}
+  void receive(){
+    input_+=socket_.readAll();if(input_.size()>256*1024){fail("Owned PORT peer receive bound");return;}
+    if(!handshake_){
+      if(input_.size()<68){return;}
+      if(input_[0]!=19||input_.mid(1,19)!="BitTorrent protocol"||input_.mid(28,20)!=hash_){fail("Owned PORT handshake identity mismatch");return;}
+      dhtSupported=(static_cast<unsigned char>(input_[27])&1)!=0;
+      if((static_cast<unsigned char>(input_[27])&4)==0){fail("Owned PORT barrier requires actual negotiated FAST");return;}
+      input_.remove(0,68);handshake_=true;
+    }
+    while(input_.size()>=4){
+      const auto n=read32(input_);if(n>128*1024){fail("Owned PORT frame bound");return;}
+      if(input_.size()<static_cast<qsizetype>(n)+4){return;}
+      const auto body=input_.mid(4,n);input_.remove(0,static_cast<qsizetype>(n)+4);
+      if(body.isEmpty()){continue;}
+      const auto kind=static_cast<unsigned char>(body[0]);
+      if(kind==9){
+        if(body.size()!=3){fail("Malformed actual outgoing PORT");return;}
+        const auto port=static_cast<unsigned short>((static_cast<unsigned char>(body[1])<<8)|static_cast<unsigned char>(body[2]));
+        if(port==0){fail("Zero actual outgoing PORT");return;}advertised.push_back(port);
+      }else if(kind==16){
+        if(body.size()!=13||read32(body.mid(1))!=0||read32(body.mid(5))!=0||read32(body.mid(9))!=16384){fail("Wrong ordered FAST rejection");return;}
+        ++barriers;
+      }else if(kind==7){fail("Owned empty managed peer unexpectedly supplied payload");return;}
+    }
+  }
+public:
+  QString failure;
+  bool dhtSupported=false;
+  int barriers=0;
+  std::vector<unsigned short> advertised;
+  PortPeer(unsigned short ownerPort,const core::TorrentHash& selected,QHostAddress source=QHostAddress(QStringLiteral("127.0.0.2"))){
+    const auto raw=selected.bytes();test::require(raw.size()>=20,"PORT peer needs actual selected full identity");
+    hash_=QByteArray(reinterpret_cast<const char*>(raw.data()),20);
+    test::require(socket_.bind(source,0),"Cannot bind owned PORT source");
+    QObject::connect(&socket_,&QTcpSocket::connected,&socket_,[this]{
+      QByteArray handshake(68,'\0');handshake[0]=19;handshake.replace(1,19,"BitTorrent protocol");
+      handshake[27]=5;handshake.replace(28,20,hash_);static unsigned serial=0;const auto peerId=QByteArray("-BCPORT-")+QByteArray::number(++serial).rightJustified(12,'0');
+      handshake.replace(48,20,peerId);
+      if(socket_.write(handshake)!=handshake.size()){fail("Owned PORT handshake write failed");}
+      // Eight real pieces in OwnedEngineFixture; this peer has none.
+      frame(QByteArray::fromHex("0500"));
+    });
+    QObject::connect(&socket_,&QTcpSocket::readyRead,&socket_,[this]{receive();});
+    socket_.connectToHost(QHostAddress::LocalHost,ownerPort);
+  }
+  bool ready()const{return handshake_&&failure.isEmpty();}
+  unsigned short port()const{return socket_.localPort();}
+  void frame(const QByteArray& body){QByteArray packet;append32(packet,static_cast<quint32>(body.size()));packet+=body;if(socket_.write(packet)!=packet.size()){fail("Owned PORT frame write failed");}}
+  void sendPort(unsigned short port,int copies=1){
+    QByteArray body(1,char(9));body+=static_cast<char>(port>>8);body+=static_cast<char>(port&255);
+    for(int i=0;i<copies;++i){frame(body);}
+  }
+  void barrier(){QByteArray request(1,char(6));append32(request,0);append32(request,0);append32(request,16384);frame(request);}
+};
+std::optional<engine::ManagedDownloadStatus> managed(engine::PersistentSession& actual,const core::TorrentHash& key){
+  const auto rows=actual.managedDownloads();const auto found=std::ranges::find_if(rows,[&](const auto& row){return row.hash==key;});
+  return found==rows.end()?std::nullopt:std::optional{*found};
+}
+
 } // namespace
 
 class MainlineDhtTests final : public QObject {
@@ -527,6 +607,159 @@ private slots:
     auto prepared=engine::detail::ManagedStorage::prepare(*held,*fixture.hash,localPolicy());
     QVERIFY2(prepared,prepared?"":prepared.error().message.c_str());
     QCOMPARE(prepared->mainlinePolicy().discover,allowed); QCOMPARE(prepared->mainlinePolicy().announce,allowed);
+  }
+  void actualPeerPortBootstrapsHashOnlyMetadataAndAdvertisesSeparateListener(){
+    test::OwnedEngineFixture source(false),metadata(true);QTRY_VERIFY_WITH_TIMEOUT(metadata.ready(),15000);
+    const auto metadataBefore=test::read(metadata.stateFile),metadataInventoryBefore=test::read(metadata.profile+"/downloads.config");
+    auto held=storage::ProfileLease::acquire(source.native());QVERIFY(held);
+    auto policy=localPolicy();policy.mainlinePeerBootstrapOnly=true;policy.mainlinePort=dhtPort(metadata.port());
+    OwnedKrpc fixture(metadata.port(),QHostAddress(QStringLiteral("127.0.0.2")));
+    fixture.allowWithoutPeers(lt::sha1_hash(reinterpret_cast<const char*>(source.hash->bytes().data())));
+    const auto destination=source.root.path()+"/metadata-only-payload";
+    auto intent=engine::parseMagnetIntent("magnet:?xt=urn:btih:"+metadata.hash->hex(),destination.toStdString(),true,policy);QVERIFY(intent);
+    QVERIFY(intent->peers.empty()&&intent->trackers.empty()&&intent->dhtNodes.empty()&&intent->webSeeds.empty());fixture.allow(intent->requested.v1);
+    auto queued=engine::queuePendingMagnet(*held,*intent,policy);QVERIFY(queued);
+    auto actual=owner(7201);QVERIFY(actual->configureNetwork(policy));QVERIFY(actual->configureMainlineBootstrap({}));QVERIFY(actual->startIdle(*held));
+    QVERIFY(actual->startManaged(*held,{.hash=*source.hash,.forceStart=true}));
+    QVERIFY(actual->startMagnet(*held,*queued,source.profile.toStdString()));
+    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value()&&actual->tcpListenPort()&&managed(*actual,*source.hash)
+        &&managed(*actual,*source.hash)->phase==engine::ManagedPhase::Downloading&&actual->mainlineDiscovery().portBridgeAvailable),15000);
+    const auto transfer=*actual->tcpListenPort();QVERIFY(transfer!=policy.mainlinePort);fixture.announcePort(transfer);
+    QVERIFY(!actual->mainlineDiscovery().checkpointLoaded);QCOMPARE(actual->mainlineDiscovery().legacyHints,std::size_t{0});
+    QCOMPARE(actual->mainlineDiscovery().portHintsAccepted,std::uint64_t{0});QCOMPARE(fixture.bootstrapQueries,0);
+    PortPeer peer(transfer,*source.hash);
+    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value(),!peer.advertised.empty()||!peer.failure.isEmpty()),15000);
+    QVERIFY2(peer.failure.isEmpty(),qPrintable(peer.failure));QVERIFY(peer.ready()&&peer.dhtSupported);
+    for(const auto port:peer.advertised){QCOMPARE(port,static_cast<unsigned short>(policy.mainlinePort));QVERIFY(port!=transfer);QVERIFY(port!=peer.port());}
+    // The real connected source is127.0.0.2; the KRPC endpoint binds there.
+    // A guessed127.0.0.1 source or a TCP-port substitution cannot make progress.
+    peer.sendPort(0);peer.barrier();QTRY_VERIFY_WITH_TIMEOUT(peer.barriers==1||!peer.failure.isEmpty(),15000);
+    QVERIFY2(peer.failure.isEmpty(),qPrintable(peer.failure));QVERIFY(actual->poll());
+    QCOMPARE(actual->mainlineDiscovery().portHintsAccepted,std::uint64_t{0});QCOMPARE(fixture.bootstrapQueries,0);
+    peer.sendPort(fixture.port());peer.barrier();QTRY_VERIFY_WITH_TIMEOUT(peer.barriers==2||!peer.failure.isEmpty(),15000);
+    QVERIFY2(peer.failure.isEmpty(),qPrintable(peer.failure));
+    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value(),pending(*actual,*metadata.hash)
+        &&pending(*actual,*metadata.hash)->phase==engine::MagnetPhase::Imported&&!pending(*actual,*metadata.hash)->retained),45000);
+    QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));const auto result=pending(*actual,*metadata.hash);QVERIFY(result&&!result->failure);
+    const auto discovery=actual->mainlineDiscovery();QCOMPARE(discovery.portHintsAccepted,std::uint64_t{1});QVERIFY(discovery.portHintsObserved>=1);
+    QVERIFY(!discovery.portHintsLost);QVERIFY(discovery.deliveredPeers>0);QVERIFY(fixture.gets(intent->requested.v1)>0);
+    QCOMPARE(fixture.announced(intent->requested.v1),0);QCOMPARE(fixture.sourcePorts,std::set<unsigned short>{static_cast<unsigned short>(policy.mainlinePort)});
+    QVERIFY(!QFileInfo::exists(destination));const auto saved=core::Document::parse(test::read(source.profile+"/downloads.config").toStdString());QVERIFY(saved);
+    const auto library=core::readLibrary(*saved);QVERIFY(library&&library->issues.empty());
+    const auto imported=std::ranges::find_if(library->downloads,[&](const auto& row){return row.hash==metadata.hash;});QVERIFY(imported!=library->downloads.end());
+    QCOMPARE(imported->originalState,std::int64_t{70});QVERIFY(!imported->forceStart);
+    const auto expected=core::Document::parse(metadataBefore.toStdString());QVERIFY(expected);
+    const auto received=core::Document::parse(test::read(source.profile+"/active/"+QString::fromStdString(metadata.hash->hex())+".dat").toStdString());QVERIFY(received);
+    const auto* expectedInfo=expected->find("info");const auto* receivedInfo=received->find("info");QVERIFY(expectedInfo&&receivedInfo);
+    QCOMPARE(received->originalBytes().substr(receivedInfo->begin,receivedInfo->end-receivedInfo->begin),
+        expected->originalBytes().substr(expectedInfo->begin,expectedInfo->end-expectedInfo->begin));
+    const auto closed=actual->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);
+    QVERIFY(source.accountingIntact(false));QVERIFY(metadata.intact(false));
+    QCOMPARE(test::read(metadata.stateFile),metadataBefore);QCOMPARE(test::read(metadata.profile+"/downloads.config"),metadataInventoryBefore);
+  }
+  void queuedPeerPortCannotSurviveStopAndReadmission(){
+    test::OwnedEngineFixture source(false);auto held=storage::ProfileLease::acquire(source.native());QVERIFY(held);
+    QTcpServer unused;QVERIFY(unused.listen(QHostAddress::LocalHost,0));OwnedKrpc fixture(unused.serverPort(),QHostAddress(QStringLiteral("127.0.0.2")));
+    fixture.allowWithoutPeers(lt::sha1_hash(reinterpret_cast<const char*>(source.hash->bytes().data())));
+    auto policy=localPolicy();policy.mainlinePeerBootstrapOnly=true;policy.mainlinePort=dhtPort();auto actual=owner(7202);
+    QVERIFY(actual->configureNetwork(policy));QVERIFY(actual->configureMainlineBootstrap({}));QVERIFY(actual->startIdle(*held));QVERIFY(actual->startManaged(*held,{.hash=*source.hash,.forceStart=true}));
+    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value()&&actual->tcpListenPort()&&managed(*actual,*source.hash)
+        &&managed(*actual,*source.hash)->phase==engine::ManagedPhase::Downloading&&actual->mainlineDiscovery().portBridgeAvailable),15000);
+    fixture.announcePort(*actual->tcpListenPort());const auto old=managed(*actual,*source.hash)->admission;PortPeer peer(*actual->tcpListenPort(),*source.hash);
+    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value(),!peer.advertised.empty()||!peer.failure.isEmpty()),15000);QVERIFY2(peer.failure.isEmpty(),qPrintable(peer.failure));
+    peer.sendPort(fixture.port());peer.barrier();QTRY_VERIFY_WITH_TIMEOUT(peer.barriers==1||!peer.failure.isEmpty(),15000);QVERIFY2(peer.failure.isEmpty(),qPrintable(peer.failure));
+    // No owner poll between the ordered wire barrier and manual retirement.
+    QVERIFY(actual->stopManaged(*source.hash));
+    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value()&&managed(*actual,*source.hash)&&!managed(*actual,*source.hash)->retained),15000);
+    QCOMPARE(actual->mainlineDiscovery().portHintsAccepted,std::uint64_t{0});QCOMPARE(fixture.bootstrapQueries,0);
+    QVERIFY(actual->startManaged(*held,{.hash=*source.hash,.forceStart=true}));
+    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value()&&managed(*actual,*source.hash)&&managed(*actual,*source.hash)->phase==engine::ManagedPhase::Downloading),15000);
+    QVERIFY(managed(*actual,*source.hash)->admission!=old);QCOMPARE(actual->mainlineDiscovery().portHintsAccepted,std::uint64_t{0});
+    PortPeer current(*actual->tcpListenPort(),*source.hash);QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value(),!current.advertised.empty()||!current.failure.isEmpty()),15000);
+    QVERIFY2(current.failure.isEmpty(),qPrintable(current.failure));current.sendPort(fixture.port());current.barrier();
+    QTRY_VERIFY_WITH_TIMEOUT(current.barriers==1||!current.failure.isEmpty(),15000);QVERIFY2(current.failure.isEmpty(),qPrintable(current.failure));
+    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value(),fixture.gets(lt::sha1_hash(reinterpret_cast<const char*>(source.hash->bytes().data())))>0||!fixture.failure.isEmpty()),15000);
+    QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));QCOMPARE(actual->mainlineDiscovery().portHintsAccepted,std::uint64_t{1});
+    const auto closed=actual->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(source.accountingIntact(false));
+  }
+  void actualPortFloodWithdrawsAdmissionBeforeUnrelatedOwnerProgress(){
+    test::OwnedEngineFixture source(false);auto held=storage::ProfileLease::acquire(source.native());QVERIFY(held);
+    QTcpServer unused;QVERIFY(unused.listen(QHostAddress::LocalHost,0));OwnedKrpc fixture(unused.serverPort(),QHostAddress(QStringLiteral("127.0.0.2")));
+    auto policy=localPolicy();policy.mainlinePeerBootstrapOnly=true;policy.mainlinePort=dhtPort();auto actual=owner(7203);
+    QVERIFY(actual->configureNetwork(policy));QVERIFY(actual->configureMainlineBootstrap({}));QVERIFY(actual->startIdle(*held));QVERIFY(actual->startManaged(*held,{.hash=*source.hash,.forceStart=true}));
+    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value()&&actual->tcpListenPort()&&managed(*actual,*source.hash)
+        &&managed(*actual,*source.hash)->phase==engine::ManagedPhase::Downloading&&actual->mainlineDiscovery().portBridgeAvailable),15000);
+    PortPeer peer(*actual->tcpListenPort(),*source.hash);QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value(),!peer.advertised.empty()||!peer.failure.isEmpty()),15000);QVERIFY2(peer.failure.isEmpty(),qPrintable(peer.failure));
+    peer.sendPort(fixture.port(),65);peer.barrier();QTRY_VERIFY_WITH_TIMEOUT(peer.barriers==1||!peer.failure.isEmpty(),15000);QVERIFY2(peer.failure.isEmpty(),qPrintable(peer.failure));
+    QVERIFY(actual->poll());const auto failed=actual->mainlineDiscovery();QVERIFY(failed.portHintsLost);QCOMPARE(failed.portHintsAccepted,std::uint64_t{0});
+    QCOMPARE(failed.state,engine::MainlineDiscoveryStatus::State::Running);QCOMPARE(fixture.bootstrapQueries,0);QVERIFY(actual->tcpListenPort());
+    // The original transfer listener and same owner remain live; a new real
+    // handshake/FAST barrier proves withdrawal did not kill ordinary TCP.
+    PortPeer after(*actual->tcpListenPort(),*source.hash,QHostAddress(QStringLiteral("127.0.0.3")));QTRY_VERIFY_WITH_TIMEOUT(after.ready()||!after.failure.isEmpty(),15000);
+    QVERIFY2(after.failure.isEmpty(),qPrintable(after.failure));after.barrier();QTRY_VERIFY_WITH_TIMEOUT(after.barriers==1||!after.failure.isEmpty(),15000);
+    QVERIFY2(after.failure.isEmpty(),qPrintable(after.failure));QVERIFY(after.advertised.empty());QVERIFY(actual->poll());QVERIFY(actual->mainlineDiscovery().portHintsLost);
+    const auto closed=actual->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(source.accountingIntact(false));
+  }
+  void deniedSourceCannotAdvertiseOrBootstrapPort_data(){
+    QTest::addColumn<QByteArray>("key");QTest::addColumn<QByteArray>("value");
+    QTest::newRow("source-disabled")<<QByteArray("peersources")<<QByteArray("l7:Trackere");
+    QTest::newRow("source-denied")<<QByteArray("peersourcesdenied")<<QByteArray("l3:DHTe");
+    QTest::newRow("private")<<QByteArray{}<<QByteArray{};
+  }
+  void deniedSourceCannotAdvertiseOrBootstrapPort(){
+    QFETCH(QByteArray,key);QFETCH(QByteArray,value);test::OwnedEngineFixture source(false);
+    auto doc=core::Document::parse(test::read(source.stateFile).toStdString());QVERIFY(doc);
+    if(key.isEmpty()){
+      const auto* info=doc->find("info");QVERIFY(info);auto encoded=core::encodeValue(*info);QVERIFY(encoded);auto changed=core::Document::parse(*encoded);QVERIFY(changed);
+      QVERIFY(changed->replaceValue("private","i1e"));QVERIFY(doc->replaceValue("info",changed->serialize()));
+      const auto raw=QCryptographicHash::hash(QByteArray::fromStdString(changed->serialize()),QCryptographicHash::Sha1);
+      const auto parsed=core::TorrentHash::parse(std::string_view(raw.constData(),static_cast<std::size_t>(raw.size())));QVERIFY(parsed);
+      const auto oldFile=source.stateFile;source.hash=*parsed;source.stateFile=source.profile+"/active/"+QString::fromStdString(parsed->hex())+".dat";
+      test::write(source.stateFile,QByteArray::fromStdString(doc->serialize()));QVERIFY(QFile::remove(oldFile));
+      auto inventory=core::Document::parse(test::read(source.profile+"/downloads.config").toStdString());QVERIFY(inventory);
+      const auto* rows=inventory->find("downloads");QVERIFY(rows&&rows->children.size()==1);auto rowBytes=core::encodeValue(rows->children[0]);QVERIFY(rowBytes);auto row=core::Document::parse(*rowBytes);QVERIFY(row);
+      QVERIFY(row->replaceValue("torrent_hash",string(raw).toStdString()));QVERIFY(row->replaceValue("torrent",string(source.stateFile.toUtf8()).toStdString()));
+      QVERIFY(inventory->replaceValue("downloads","l"+row->serialize()+"e"));test::write(source.profile+"/downloads.config",QByteArray::fromStdString(inventory->serialize()));
+    }else{
+      const auto* attrs=doc->find("attributes");QVERIFY(attrs);auto encoded=core::encodeValue(*attrs);QVERIFY(encoded);auto changed=core::Document::parse(*encoded);QVERIFY(changed);
+      QVERIFY(changed->replaceValue(key.toStdString(),value.toStdString()));QVERIFY(doc->replaceValue("attributes",changed->serialize()));test::write(source.stateFile,QByteArray::fromStdString(doc->serialize()));
+    }
+    auto held=storage::ProfileLease::acquire(source.native());QVERIFY(held);auto policy=localPolicy();policy.mainlinePeerBootstrapOnly=true;policy.mainlinePort=dhtPort();auto actual=owner(7204);
+    QVERIFY(actual->configureNetwork(policy));QVERIFY(actual->configureMainlineBootstrap({}));QVERIFY(actual->startIdle(*held));QVERIFY(actual->startManaged(*held,{.hash=*source.hash,.forceStart=true}));
+    QTRY_VERIFY_WITH_TIMEOUT((actual->poll().has_value()&&actual->tcpListenPort()&&managed(*actual,*source.hash)
+        &&managed(*actual,*source.hash)->phase==engine::ManagedPhase::Downloading),15000);
+    QVERIFY(!actual->mainlineDiscovery().portBridgeAvailable);
+    PortPeer peer(*actual->tcpListenPort(),*source.hash);QTRY_VERIFY_WITH_TIMEOUT(peer.ready()||!peer.failure.isEmpty(),15000);QVERIFY2(peer.failure.isEmpty(),qPrintable(peer.failure));QUdpSocket trap;QVERIFY(trap.bind(QHostAddress(QStringLiteral("127.0.0.2")),0,QUdpSocket::DontShareAddress));
+    peer.sendPort(trap.localPort());peer.barrier();QTRY_VERIFY_WITH_TIMEOUT(peer.barriers==1||!peer.failure.isEmpty(),15000);QVERIFY2(peer.failure.isEmpty(),qPrintable(peer.failure));QVERIFY(actual->poll());
+    QCOMPARE(actual->mainlineDiscovery().portHintsAccepted,std::uint64_t{0});QVERIFY(peer.advertised.empty());QCOMPARE(actual->mainlineDiscovery().lookups,std::uint64_t{0});
+    const auto closed=actual->close(std::chrono::steady_clock::now()+5s);QVERIFY(closed.sessionJoined&&closed.retirement.storageReleased&&!closed.checkpointFailure);QVERIFY(source.accountingIntact(false));
+  }
+  void peerProbeRequiresRealReplyAndActiveRoutingBeforeProgress(){
+    QTcpServer peer;QVERIFY(peer.listen(QHostAddress::LocalHost,0));OwnedKrpc fixture(peer.serverPort());const auto wanted=hash('P');fixture.allow(wanted);fixture.holdPings(true);
+    auto opts=options(fixture,peer.serverPort());opts.bootstrapNodes.clear();opts.onlyPeerBootstrap=true;auto actual=engine::MainlineDhtService::create(localPolicy(),opts);QVERIFY(actual);
+    QVERIFY((*actual)->lookup(wanted));QVERIFY((*actual)->addPeerNode({"127.0.0.1",fixture.port()}));QCOMPARE((*actual)->status().peerBootstrapProgress,std::uint64_t{0});Observations observed;
+    QTRY_VERIFY_WITH_TIMEOUT((observed.pump(**actual),fixture.bootstrapQueries>0||!fixture.failure.isEmpty()||!observed.failure.isEmpty()),15000);
+    QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));QCOMPARE((*actual)->status().peerBootstrapProgress,std::uint64_t{0});
+    fixture.releasePings();QTRY_VERIFY_WITH_TIMEOUT((observed.pump(**actual),(*actual)->status().peerBootstrapProgress==1||!fixture.failure.isEmpty()||!observed.failure.isEmpty()),15000);
+    QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));QCOMPARE((*actual)->status().peerBootstrapProgress,std::uint64_t{1});
+    QVERIFY(!(*actual)->addPeerNode({"127.0.0.1",fixture.port()}));QVERIFY(!(*actual)->addPeerNode({"not-numeric.invalid",1}));QVERIFY(!(*actual)->addPeerNode({"10.0.0.1",1}));
+    QVERIFY((*actual)->lookup(wanted));QTRY_VERIFY_WITH_TIMEOUT((observed.pump(**actual),observed.contains(wanted,peer.serverPort())||!fixture.failure.isEmpty()||!observed.failure.isEmpty()),15000);
+    QVERIFY2(fixture.failure.isEmpty(),qPrintable(fixture.failure));QVERIFY2(observed.failure.isEmpty(),qPrintable(observed.failure));QVERIFY(observed.contains(wanted,peer.serverPort()));QCOMPARE((*actual)->status().peerBootstrapProgress,std::uint64_t{1});QVERIFY((*actual)->close());
+  }
+  void peerProbeLifetimeBoundDoesNotIssueUnownedRequests(){
+    auto opts=engine::MainlineDhtOptions{};opts.port=dhtPort();opts.ipv6=false;opts.bootstrapNodes.clear();opts.onlyPeerBootstrap=true;
+    auto actual=engine::MainlineDhtService::create(localPolicy(),opts);QVERIFY(actual);
+    std::vector<std::unique_ptr<QUdpSocket>> owned;
+    for(std::size_t i=0;i<engine::MainlineDhtService::MaximumNodes;++i){
+      auto socket=std::make_unique<QUdpSocket>();QVERIFY(socket->bind(QHostAddress::LocalHost,0,QUdpSocket::DontShareAddress));
+      QVERIFY((*actual)->addPeerNode({"127.0.0.1",socket->localPort()}));owned.push_back(std::move(socket));
+    }
+    QUdpSocket extra;QVERIFY(extra.bind(QHostAddress::LocalHost,0,QUdpSocket::DontShareAddress));
+    const auto refused=(*actual)->addPeerNode({"127.0.0.1",extra.localPort()});QVERIFY(!refused);QCOMPARE(refused.error().code,storage::ErrorCode::Busy);
+    QCOMPARE((*actual)->status().peerBootstrapProgress,std::uint64_t{0});QVERIFY((*actual)->close());
+    // No poll/dispatch occurred: all64 bounded registrations retire without
+    // issuing a UDP request, and all numeric endpoints stayed owned throughout.
+    for(const auto& socket:owned){QVERIFY(!socket->hasPendingDatagrams());}
   }
 };
 QTEST_GUILESS_MAIN(MainlineDhtTests)

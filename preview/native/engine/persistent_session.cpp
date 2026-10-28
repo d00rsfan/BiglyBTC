@@ -29,6 +29,18 @@
 #include "biglybtc/queue_rate_providers.hpp"
 #include <libtorrent/torrent_status.hpp>
 #include <map>
+#include <atomic>
+#include <libtorrent/extensions.hpp>
+#if defined(__linux__) && __has_include(<libtorrent/biglybtc_mainline_port.hpp>) && !defined(TORRENT_DISABLE_EXTENSIONS)
+#include <libtorrent/biglybtc_mainline_port.hpp>
+#if TORRENT_BIGLYBTC_MAINLINE_PORT_ABI == 1
+#include <dlfcn.h>
+#define BIGLYBTC_MAINLINE_PORT_BRIDGE 1
+#endif
+#endif
+#ifndef BIGLYBTC_MAINLINE_PORT_BRIDGE
+#define BIGLYBTC_MAINLINE_PORT_BRIDGE 0
+#endif
 
 #include <libtorrent/alert_types.hpp>
 #include <libtorrent/session.hpp>
@@ -74,6 +86,7 @@ bool subtract(const core::EngineCounters& value, const core::EngineCounters& bas
 } // namespace
 
 struct PersistentSession::Impl {
+  struct MainlinePortQueue;
   struct OperationToken { std::uint64_t number = 0; } token;
   struct Managed {
     std::unique_ptr<OperationToken> token;
@@ -82,6 +95,7 @@ struct PersistentSession::Impl {
     lt::torrent_handle handle;
     ManagedDownloadStatus status;
     bool manualPaused = false, forceStart = false, stop = false;
+    std::shared_ptr<MainlinePortQueue> mainlinePort;
     bool mainlineTrackerHealthy=false;
     Clock::time_point mainlineNext{};
     bool policyHeld = false, completedTransition = false, completionHandled = false;
@@ -173,6 +187,7 @@ struct PersistentSession::Impl {
     lt::torrent_handle handle;
     PendingMagnetStatus status;
     Clock::time_point expires{}, deadline{}, mainlineNext{};
+    std::shared_ptr<MainlinePortQueue> mainlinePort;
     bool removing = false, removed = false, cancel = false, shutdown = false;
     std::string metadata;
     Magnet(std::uint64_t id, PendingMagnet value)
@@ -489,6 +504,7 @@ struct PersistentSession::Impl {
     phase = AccountingState::Uncertified;
     // Not bounded by the certification deadline. No callback is made by LT
     // destruction, and no joined tail is relabeled as a final counter sample.
+    retireMainlinePorts();
     mainline.reset();
     mainlineStatus.state=MainlineDiscoveryStatus::State::Closed;
     session.reset();
@@ -823,6 +839,7 @@ struct PersistentSession::Impl {
     else { value.status.phase = sample.is_finished ? ManagedPhase::Seeding : ManagedPhase::Downloading; }
   }
   void requestStop(Managed& value) {
+    retireMainlinePort(value.mainlinePort);
     if(value.allocationIntent&&value.status.retained){value.stop=true;value.status.phase=ManagedPhase::Stopping;return;}
     if(value.mmapLatency){value.mmapLatency->retire();}
     value.queueSource={};value.smoothedUpload.reset();value.sendSmoothing.reset();value.sendFirstMillis.reset();
@@ -1199,6 +1216,7 @@ struct PersistentSession::Impl {
     return false;
   }
   void requestMagnetRetirement(Magnet& value) {
+    retireMainlinePort(value.mainlinePort);
     if (value.removing || !value.handle.is_valid()) { return; }
     value.status.phase = MagnetPhase::Retiring;
     value.deadline = Clock::now() + CertificationBudget;
@@ -1383,6 +1401,7 @@ PersistentSession::~PersistentSession() {
   // Owner-thread destruction is a lifetime precondition. No destructor signal,
   // fresh measurement, final seal or bounded join is promised by this fallback.
   impl_->sink = {}; impl_->operationSink = {};
+  impl_->retireMainlinePorts();
   impl_->mainline.reset();
   impl_->session.reset();
 }
@@ -1671,6 +1690,8 @@ std::expected<void, storage::Error> PersistentSession::startManaged(
     detail::require(detail::attachManagedPayloadCounters(parameters, value->payloadCounters, payloadBridge,value->queueObservations),
         "Exact managed transfer counters require the approved source ABI", storage::ErrorCode::Unsupported);
     detail::attachPeerPayloadObserver(parameters, impl_->peerPayloadLedger, impl_->operation);
+    if(value->storage.mainlinePolicy().discover){value->mainlinePort=impl_->attachMainlinePort(parameters,value->status.admission,
+        value->storage.identity().originalKey,value->storage.identity().selected==storage::OriginalSelectedHash::V1?1u:2u);}
     parameters.flags |= lt::torrent_flags::paused | lt::torrent_flags::duplicate_is_error;
     if (impl_->queuePolicy || options.manuallyPaused || intent) {
       parameters.flags &= ~lt::torrent_flags::auto_managed;
@@ -1721,6 +1742,7 @@ std::expected<void, storage::Error> PersistentSession::pauseManaged(const core::
   if(value.status.verificationHeld){return std::unexpected(storage::Error{storage::ErrorCode::Conflict,"Verification is held; cancel or wait for actual completion"});}
   value.manualPaused = paused;
   if (paused) {
+    if(value.mainlinePort){value.mainlinePort->advertised.store(0,std::memory_order_release);}
     value.handle.unset_flags(lt::torrent_flags::auto_managed); value.handle.pause();
     if (impl_->queuePolicy) { impl_->sampleManaged(value); }
   }
@@ -1857,6 +1879,7 @@ std::expected<void, storage::Error> PersistentSession::startMagnet(storage::Prof
     parameters.flags |= lt::torrent_flags::paused | lt::torrent_flags::duplicate_is_error;
     parameters.flags &= ~lt::torrent_flags::auto_managed;
     impl_->ensureSession();
+    value->mainlinePort=impl_->attachMainlinePort(parameters,admission,value->intent.hash,value->intent.requested.has_v1()?1u:2u);
     if (old != impl_->magnets.end()) { impl_->magnets.erase(old); }
     auto [slot, inserted] = impl_->magnets.emplace(key, std::move(value));
     detail::require(inserted, "Duplicate magnet admission", storage::ErrorCode::Conflict);
@@ -2016,6 +2039,7 @@ CloseReceipt PersistentSession::close(Clock::time_point deadline) noexcept {
   impl_->phase = AccountingState::Closing;
   const auto result = impl_->retire(std::min(deadline, Clock::now() + CertificationBudget));
   impl_->persistMainline();
+  impl_->retireMainlinePorts();
   impl_->sink = {}; impl_->operationSink = {};
   impl_->mainline.reset();
   impl_->mainlineStatus.state=MainlineDiscoveryStatus::State::Closed;
