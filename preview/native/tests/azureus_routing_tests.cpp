@@ -50,7 +50,14 @@ QByteArray nodeReply(const QNetworkDatagram& datagram,std::span<const services::
   const auto bytes=datagram.data();udp::find::Context context;context.header.network=0;context.header.now=QDateTime::currentMSecsSinceEpoch();services::azureus_nodes::NodeCache cache;
   auto request=udp::find::decode(udp::packet::udp::Kind::Request,std::string(bytes.constData(),static_cast<std::size_t>(bytes.size())),context,cache);if(!request){throw std::runtime_error("Cannot decode actual NODE fixture request");}
   const auto& header=request->header().fields();udp::find::ReplyFields reply;reply.header.network=0;reply.header.localVersion=55;reply.header.remoteVersion=header.originatorVersion;reply.header.connection=header.connection;reply.header.transaction=wrongTransaction?header.transaction^1:header.transaction;reply.header.now=context.header.now;reply.header.receivedAt=context.header.now;reply.contacts=contacts;
-  auto encoded=udp::find::encodeReply(reply);if(!encoded){throw std::runtime_error("Cannot encode owned NODE reply");}return QByteArray(encoded->data(),static_cast<qsizetype>(encoded->size()));
+  // Protocol>=10 requires an engaged positions collection, including empty.
+  // This is the same zero-provider payload used by the normal owner.
+  reply.positions=std::span<const std::optional<udp::find::positions::WirePosition>>{};
+  auto encoded=udp::find::encodeReply(reply);if(!encoded){throw std::runtime_error("Cannot encode owned NODE reply: codec="+std::to_string(static_cast<unsigned>(encoded.error().code))+", partial="+std::to_string(encoded.error().partial.size()));}
+  auto decoded=udp::find::decode(udp::packet::udp::Kind::Reply,*encoded,context,cache);
+  const auto* body=decoded?std::get_if<udp::find::ReplyBody>(&decoded->body()):nullptr;
+  if(!decoded||decoded->consumed()!=encoded->size()||!decoded->trailing().empty()||!body||body->providerFailures||!body->positions.empty()||body->contacts.size()!=contacts.size()||decoded->header().fields().connection!=reply.header.connection||decoded->header().fields().transaction!=reply.header.transaction){throw std::runtime_error("Owned NODE fixture reply failed exact framing check");}
+  return QByteArray(encoded->data(),static_cast<qsizetype>(encoded->size()));
 }
 void send(QUdpSocket& server,const QNetworkDatagram& datagram,const QByteArray& bytes){if(datagram.senderPort()<=0||datagram.senderPort()>65535||server.writeDatagram(bytes,datagram.senderAddress(),static_cast<quint16>(datagram.senderPort()))!=bytes.size()){throw std::runtime_error("Cannot send owned NODE fixture reply");}}
 }
