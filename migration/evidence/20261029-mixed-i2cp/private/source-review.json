@@ -1,0 +1,21 @@
+{
+  "status": "SOURCE_ONLY_ROOT_READY",
+  "script": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/run.py",
+    "sha256": "f7fd607b4934574c42a7db6a3a0a866f1c0f477ca31b0d778cb83e84af13f536"
+  },
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/admitted-http-followup-20261029/private-focused/run.py",
+    "sha256": "ade8ee5e6bb0df099bc899a8bde44574674dfca6f8ef52e09bb8eb3103ec70ad"
+  },
+  "input_pins": {
+    "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/run.py": "97c98dcb7faf1933ed787e254db29ba57c46d655af75b6ca9325c7c75ccce3f1",
+    "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/root-adoption.json": "072504870cb231fdb211cafdda63cd2580eee7cb705981053b220e806a98869c"
+  },
+  "source_commit": "ef494c64add015ea84df93ebcfbff1c7a38fa10b",
+  "qualification": "Requires actual PASS_MIXED_I2CP_COHORT fresh5/4/5 XML, zero skipped/errors/inner failures; sourcecount10, exact8current image paths/hash/bytes, source snapshot,3completed commands/logs and suite\u2192actualELF mapping. Clang owner fullsuite compile-only. No selected UDP or prior-pass pooling.",
+  "private": "One staged candidate, one current GCC HTTP ELF copied with exact same-Qt QtTest. Actual mixed HTTP\u2192UDP and UDP\u2192HTTP saved wire rows then known DIRECT HTTPS/JKS; all require mapped private QtCore/Network/provider. Only HTTPS requires mapped privateTLS/OSOpenSSL; any actually loaded Qt/provider image must stay private. Existing candidate/current-dist/source/image/provider unchanged gates retained.",
+  "invocation": "python3 -B /home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/run.py --source-commit ef494c64add015ea84df93ebcfbff1c7a38fa10b --attempt r1 --gcc-result /home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/runs/gcc-r1/result.json --gcc-sha256 ACTUAL_GCC_SHA --clang-result /home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/runs/clang-r1/result.json --clang-sha256 ACTUAL_CLANG_SHA --san-result /home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/runs/san-r1/result.json --san-sha256 ACTUAL_SAN_SHA",
+  "result": "private-focused/runs/r1/result.json, PASS_PRIVATE_MIXED_TIERS_AND_HTTPS only after root actual execution",
+  "checks": "Python AST parses and exact source methods/data tags exist. No helper execution, subjects, C++/Java build, N/cache/dist edit or promotion."
+}

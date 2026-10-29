@@ -1,0 +1,39 @@
+{
+  "status": "PASS_MIXED_I2CP_COHORT",
+  "source_commit": "ef494c64add015ea84df93ebcfbff1c7a38fa10b",
+  "lane": "clang",
+  "prior_qualification_sha256": "56d04d9387361cbbef9d011ae8f70bc11cc9dd402ed5f998ff64567b2adb1604",
+  "historical_passes_pooled": false,
+  "provider_rebuilt": false,
+  "compiled_targets": [
+    "biglybtc-mainline-single-http-tests",
+    "biglybtc-managed-queue-tests",
+    "biglybtc-queue-policy-tests",
+    "biglybtc-mainline-single-tracker-owner-tests",
+    "biglybtc-i2cp-protocol-tests",
+    "BiglyBTC",
+    "BiglyBTC-headless",
+    "biglybtc-preview-smoke"
+  ],
+  "compile_only_suites": [
+    "mainline-single-tracker-owner"
+  ],
+  "cache": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+  "runner_sha256": "97c98dcb7faf1933ed787e254db29ba57c46d655af75b6ca9325c7c75ccce3f1",
+  "source_receipt_sha256": "072504870cb231fdb211cafdda63cd2580eee7cb705981053b220e806a98869c",
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "dist_manifest_before": "64a35efc425f418ca8ae84ca5044db53c13144e2ad6666fcb88f4635835dd623",
+  "full_ctest_log_sha256": "391e1a653a8a2781f65683bd45c303a2405737b730139ad7dc6421f4a3c5af9a",
+  "suite_names": [
+    "queue-policy",
+    "managed-queue",
+    "mainline-single-http",
+    "pure-i2cp-initial-session-codec"
+  ],
+  "actual_suites": 4,
+  "tests_xml_sha256": "9102a80bf7ec5e5a47cd591516b46ca2c17dbb836a916b136a507a765340a6cb",
+  "source_unchanged": true,
+  "images_unchanged": true,
+  "sanitizer_environment": {},
+  "commands_sha256": "c1e0d9a0aab682e9d4dc7f4f3f87c9d00e2650c774fb76d1cdd17790c96f5f47"
+}

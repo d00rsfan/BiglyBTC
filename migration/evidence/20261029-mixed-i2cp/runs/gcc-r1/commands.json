@@ -1,0 +1,64 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-mainline-single-http-tests",
+      "biglybtc-managed-queue-tests",
+      "biglybtc-queue-policy-tests",
+      "biglybtc-mainline-single-tracker-owner-tests",
+      "biglybtc-i2cp-protocol-tests",
+      "BiglyBTC",
+      "BiglyBTC-headless",
+      "biglybtc-preview-smoke"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 318.451,
+    "log": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/runs/gcc-r1/build.log",
+    "log_sha256": "37e13ccc6c85d7dc632860572ef6f19744f21e85a4b901621f6963407e62582b"
+  },
+  {
+    "name": "http-loader",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-http-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.019,
+    "log": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/runs/gcc-r1/http-loader.log",
+    "log_sha256": "745f9faf96d8d44bd34d359f7c58e792dd6a014021d3f54342e4c19628f9005e"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--parallel",
+      "1",
+      "-R",
+      "^(queue-policy|managed-queue|mainline-single-http|pure-i2cp-initial-session-codec|mainline-single-tracker-owner)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/runs/gcc-r1/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 711.373,
+    "log": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/runs/gcc-r1/tests.log",
+    "log_sha256": "c839b482ff0882777a726d9380580bfbd9d0f00a2263b612417d28a8228a3d82"
+  }
+]

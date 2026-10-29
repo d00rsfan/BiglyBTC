@@ -1,0 +1,13 @@
+PASS original I2CP verify get-date-none bytes=5
+PASS original I2CP verify get-date-empty bytes=6
+PASS original I2CP verify get-date-version bytes=12
+PASS original I2CP verify get-date-maximum bytes=261
+PASS original I2CP verify set-date-legacy bytes=13
+PASS original I2CP verify set-date-version bytes=20
+PASS original I2CP verify set-date-zero bytes=14
+PASS original I2CP verify disconnect-control bytes=10
+PASS original I2CP verify disconnect-maximum bytes=261
+PASS original I2CP verify status-created bytes=8
+PASS original I2CP verify status-refused bytes=8
+PASS original I2CP verify destroy-session bytes=7
+PASS offline original I2CP message bridge; no session/router

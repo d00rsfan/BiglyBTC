@@ -1,0 +1,85 @@
+[
+  {
+    "name": "stage",
+    "command": [
+      "python3",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/preview/migration/tools/stage_preview.py",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--output",
+      "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/candidate",
+      "--libtorrent-package",
+      "/home/yurii/Java/BiglyBTC/build/dependencies/packages/libtorrent-rasterbar2.0t64_2.0.12-1_amd64.deb",
+      "--source-libtorrent",
+      "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/libtorrent-rasterbar.so.2.0.12",
+      "--private-mainline-routing-provider-manifest",
+      "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-mainline-routing-runtime.json"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 7.189,
+    "log": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/stage.log",
+    "log_sha256": "b6e0048cd282590d59e59373c6d06fea62a0f9a26f298678a052a3555f39dbfd"
+  },
+  {
+    "name": "loader-biglybtc-mainline-single-http-tests",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/biglybtc-mainline-single-http-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.017,
+    "log": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/loader-biglybtc-mainline-single-http-tests.log",
+    "log_sha256": "1dee76ec7e35bedb6c0827527f9fab729cd9a1ec75d2acdac7f4a3e1ce64f8d2"
+  },
+  {
+    "name": "selected-1",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/biglybtc-mainline-single-http-tests",
+      "savedRegularTiersMixHttpAndNumericUdpWithOneActualRequest:HTTP-error-then-UDP-success",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/selected-1.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/selected-1.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 20.229,
+    "log": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/selected-1.log",
+    "log_sha256": "1d47c756d667775846ac016c400bcbf6a67f287d8341abac758e3c0b5a64d8a5"
+  },
+  {
+    "name": "selected-2",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/biglybtc-mainline-single-http-tests",
+      "savedRegularTiersMixHttpAndNumericUdpWithOneActualRequest:UDP-error-then-HTTP-success",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/selected-2.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/selected-2.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 20.204,
+    "log": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/selected-2.log",
+    "log_sha256": "bb871588d332be016d6e321529f0ab84e439542f88eb0ae71ed1c9403aae8829"
+  },
+  {
+    "name": "selected-3",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/biglybtc-mainline-single-http-tests",
+      "directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline:private-HTTPS-saved-JKS-regular-scrape",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/selected-3.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/selected-3.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 20.475,
+    "log": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/selected-3.log",
+    "log_sha256": "0724071a07918f6096667f90fe808e8133586aed6cbfd928bbf1a2a22fc58bfe"
+  }
+]

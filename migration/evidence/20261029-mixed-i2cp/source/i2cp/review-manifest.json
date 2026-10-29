@@ -1,0 +1,11 @@
+{
+  "status": "PASS_SOURCE_REVIEW",
+  "capsule_sha256": "96f471b5ebc464fa95dd350d39d98c4e68153aade0dc84e72acf2ea60a67f361",
+  "review_sha256": "311803406ff54cab3a11b600b7a72d7019712516ba854664e596343ee527fa95",
+  "source_paths_sha256": {
+    "preview/native/services/i2cp/protocol.cpp": "c45f446b48854cf3b0fa677e6a06bc6aab7cdf1644fd4e939c7a25d8d4196672",
+    "preview/native/services/i2cp/protocol.hpp": "d88a9b8bb5049c8c458b47598f6627ecf85a1b3b2b10bc97d8b65397da26d9c8",
+    "preview/native/tests/i2cp_protocol_tests.cpp": "2fc8ef8dc32e4df338242b48dd1a24546d75217b21c11ca660500519c0f6695b"
+  },
+  "compiler_or_subject_executed": false
+}

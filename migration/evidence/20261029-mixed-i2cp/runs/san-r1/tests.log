@@ -1,0 +1,27 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop
+    Start 218: queue-policy
+1/5 Test #218: queue-policy ......................   Passed    0.17 sec
+    Start 221: managed-queue
+2/5 Test #221: managed-queue .....................   Passed   65.43 sec
+    Start 270: mainline-single-tracker-owner
+3/5 Test #270: mainline-single-tracker-owner .....   Passed  219.57 sec
+    Start 281: mainline-single-http
+4/5 Test #281: mainline-single-http ..............   Passed  404.86 sec
+    Start 284: pure-i2cp-initial-session-codec
+5/5 Test #284: pure-i2cp-initial-session-codec ...   Passed    0.02 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+discovery        = 624.43 sec*proc (2 tests)
+i2p              =   0.02 sec*proc (1 test)
+network          = 624.43 sec*proc (2 tests)
+no-network       =   0.02 sec*proc (1 test)
+owned            = 624.43 sec*proc (2 tests)
+queue            =  65.59 sec*proc (2 tests)
+runtime-bound    =  65.43 sec*proc (1 test)
+slow             = 624.43 sec*proc (2 tests)
+tls              = 404.86 sec*proc (1 test)
+unit             =  65.62 sec*proc (3 tests)
+
+Total Test time (real) = 690.06 sec

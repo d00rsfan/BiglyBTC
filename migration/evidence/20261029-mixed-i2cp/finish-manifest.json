@@ -1,0 +1,9 @@
+{
+  "status": "SOURCE_ONLY_ROOT_READY",
+  "artifacts_sha256": {
+    "finish.py": "cf8cd9461fa92f0119381c1c56f8d22649d9ce5294ab2cbf400f2e37c5cee91e",
+    "finish-source-review.json": "d1314403c43e85161884b7ec20eae122a5ed434f7ff30a484cc866653bf84110",
+    "i2cp-component-proposal.json": "e934bfafb3e48b99e44e58310fe00627256e0fc58885726702b5b0438a1dd001",
+    "P07-02b-i2cp-initial-session.md": "ffe856f90a283899ef4e4a814f9e22324445b35dff225b6cb99c20315648479f"
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "status": "BLOCKED_SOURCE_REVIEW_ONE_CORRECTION",
+  "capsule_sha256": "2a6b01ae0005d36554d4b84c7f0788780ff11fbb87c9defa1e6ac34249230c44",
+  "verified_artifacts": 25,
+  "verified_original_files": 13,
+  "finding": {
+    "path": "preview/native/services/i2cp/protocol.cpp",
+    "function": "FrameDecoder::consume",
+    "description": "lengthKnown_=true precedes payload_.resize. If allocation throws, later consume skips allocation but can write through empty/undersized payload_. Header already consumed, so failure should leave stream poisoned until reset; do not merely let a retry replay unknown bytes.",
+    "recommended_minimal_fix": "Commit lengthKnown only after successful resize; mark failed_=true before propagating any allocation exception (or return a fail-closed Error). Preserve parent in additive child."
+  },
+  "remaining_review": "Framing5 bytes/payload128KiB; nonnegative dates/null-zero; ASCII exact subset, session0..4 versus internal5 and typed unsupported boundaries align with pinned original classes. Concrete Java methods/constructors are nonabstract; no session/router API. Twelve explicit cases per reference plus auth refusal remain planned. New native3 leaves/CMake pure target30s have no Qt/crypto/network dependency. No other concrete blocker found.",
+  "input_checks": "All capsule artifact hashes and13 retained original source files match pinned source JAR; both actual reference JAR/class bytes match API record. Native/default strings/tokens/endian/frame bounds inspected.",
+  "compiler_or_subject_executed": false,
+  "native_cache_dist_modified": false
+}

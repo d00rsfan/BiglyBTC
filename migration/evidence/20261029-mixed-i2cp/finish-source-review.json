@@ -1,0 +1,22 @@
+{
+  "status": "SOURCE_ONLY_ROOT_READY",
+  "script": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/finish.py",
+    "sha256": "cf8cd9461fa92f0119381c1c56f8d22649d9ce5294ab2cbf400f2e37c5cee91e"
+  },
+  "basis": "U/finish.py direct-UDP promotion pattern; no actual execution by author",
+  "scope": "Fresh actual5/4/5, exact10paths/8images/3commands, private3sameGCCHTTPimage, actual12/reference offline bound only to currentGCC ELF; raw XML/commands/log/image/source/review gates before promotion.",
+  "metadata": "After bounded evidence is ready in both repositories, append one in_progress services.i2cp_initial_session proposal107\u2192108 and integration/evidence references to two existing tracker components. All20 sources/22 dependencies/coverage/baselines/other components preserved. Per-file registry preimage checks and exclusive temp+fsync+atomic replace; both actual validators must report20/108. No cross-repository atomicity claim.",
+  "promotion": "One candidate only; exact old64a manifest/no mapped candidate/current/copies; atomic exchange, delete only previous dist after byte comparison; clean copied tests/QtTest. No build/test/Java reruns, no old acceptance pooling.",
+  "evidence": "Only new bounded logs/JSON/XML/source/review pins/small protocol frames/helper sources; excludes ELF/compiled Java/classes/provider/SDK/oldarchives. Allocation initialblockedreview preserved.",
+  "component_proposal": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/i2cp-component-proposal.json",
+    "sha256": "e934bfafb3e48b99e44e58310fe00627256e0fc58885726702b5b0438a1dd001"
+  },
+  "task_proposal": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/P07-02b-i2cp-initial-session.md",
+    "sha256": "ffe856f90a283899ef4e4a814f9e22324445b35dff225b6cb99c20315648479f"
+  },
+  "invocation": "python3 -B /home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/finish.py",
+  "source_checks": "Python AST parses, strict source/input pin allowlist only; actual results remain root gated. No N/cache/dist/shared registry writes by author."
+}

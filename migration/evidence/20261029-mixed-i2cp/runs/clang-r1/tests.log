@@ -1,0 +1,25 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang
+    Start 218: queue-policy
+1/4 Test #218: queue-policy ......................   Passed    0.04 sec
+    Start 221: managed-queue
+2/4 Test #221: managed-queue .....................   Passed   62.07 sec
+    Start 281: mainline-single-http
+3/4 Test #281: mainline-single-http ..............   Passed  422.51 sec
+    Start 284: pure-i2cp-initial-session-codec
+4/4 Test #284: pure-i2cp-initial-session-codec ...   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+discovery        = 422.51 sec*proc (1 test)
+i2p              =   0.01 sec*proc (1 test)
+network          = 422.51 sec*proc (1 test)
+no-network       =   0.01 sec*proc (1 test)
+owned            = 422.51 sec*proc (1 test)
+queue            =  62.11 sec*proc (2 tests)
+runtime-bound    =  62.07 sec*proc (1 test)
+slow             = 422.51 sec*proc (1 test)
+tls              = 422.51 sec*proc (1 test)
+unit             =  62.12 sec*proc (3 tests)
+
+Total Test time (real) = 484.65 sec

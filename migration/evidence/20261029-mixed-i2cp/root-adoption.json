@@ -1,0 +1,63 @@
+{
+  "source_commit": "ef494c64add015ea84df93ebcfbff1c7a38fa10b",
+  "source_path_count": 10,
+  "source_paths": {
+    "preview/native/engine/library_http_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/engine/library_http_owner.inc",
+      "before_sha256": "0885f7d17893240dcdb6ef26f55a5dc91f99b8393f32d425ea674ea8e3813818",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/staging/preview/native/engine/library_http_owner.inc",
+      "after_sha256": "0f5fba45380f8da048ac119c0e4b58ab5f87e55772958ca440c990e26d1ea30e"
+    },
+    "preview/native/engine/mainline_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/engine/mainline_owner.inc",
+      "before_sha256": "cafdc301adbf9f4898b01014e61b045b6054f115f00dc0a5537ec5c4fbc3be13",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/staging/preview/native/engine/mainline_owner.inc",
+      "after_sha256": "57661676dbb276eaccc74d71e98ee5b1487796d174a10a8150ca0c2d9a9e95db"
+    },
+    "preview/native/engine/queued_mainline_scrape.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/engine/queued_mainline_scrape.hpp",
+      "before_sha256": "e953cff344c8d9b444ab97aa5c1ea4b4b50a12dbdf73292444d3e65be19b3239",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/staging/preview/native/engine/queued_mainline_scrape.hpp",
+      "after_sha256": "81f4c65f08767efe953818dbb14b007782f8b3b9451449c724e86d823a952dd5"
+    },
+    "preview/native/engine/queued_mainline_scrape.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/engine/queued_mainline_scrape.cpp",
+      "before_sha256": "57dd04df1712043fccb41f2b4f24329283e0a1942689009470dbf5b61deb5404",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/staging/preview/native/engine/queued_mainline_scrape.cpp",
+      "after_sha256": "9ac57c6489c94f1f3da2b4c49d5c4c369c63828bccb8d234dacaa9870ce7b5d9"
+    },
+    "preview/native/tests/mainline_single_http_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/tests/mainline_single_http_tests.cpp",
+      "before_sha256": "2557654031afde1e03c547001cffce11cf390ccd7ae9e651e2e645345786f263",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/staging/preview/native/tests/mainline_single_http_tests.cpp",
+      "after_sha256": "65fe06a97f676f856ac571ff845d6a770936056ae134fe994fbd9c207c697999"
+    },
+    "preview/native/services/i2cp/protocol.cpp": {
+      "before_sha256": null,
+      "after_sha256": "c45f446b48854cf3b0fa677e6a06bc6aab7cdf1644fd4e939c7a25d8d4196672",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/staging/preview/native/services/i2cp/protocol.cpp"
+    },
+    "preview/native/services/i2cp/protocol.hpp": {
+      "before_sha256": null,
+      "after_sha256": "d88a9b8bb5049c8c458b47598f6627ecf85a1b3b2b10bc97d8b65397da26d9c8",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/staging/preview/native/services/i2cp/protocol.hpp"
+    },
+    "preview/native/tests/i2cp_protocol_tests.cpp": {
+      "before_sha256": null,
+      "after_sha256": "2fc8ef8dc32e4df338242b48dd1a24546d75217b21c11ca660500519c0f6695b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/staging/preview/native/tests/i2cp_protocol_tests.cpp"
+    },
+    "preview/native/services/CMakeLists.txt": {
+      "before_sha256": "6dff369d7afc43cf71be6b49f4386f326b61bdf3d619df38a17e954ba8af872a",
+      "after_sha256": "603fdb5a321c18da639c9a7e1df4a299fc104c21864bd48810cd09b9d8eeb92b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/staging/preview/native/services/CMakeLists.txt"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "before_sha256": "d18f441f45cb624c8e0f783601c0ea11c8753013cd3405bdedeed7c712d726ce",
+      "after_sha256": "3f24a19efd15c858b282bde281c1b8243930671b191cb304be0399ef16bfa70d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/staging/preview/native/tests/CMakeLists.txt"
+    }
+  },
+  "manifest_sha256": "8614c98e8a3b9ddbf507a3efa2994c90f679bcbad40cf155d79296beb2d237ff",
+  "working_and_committed_afterimages_verified": true
+}

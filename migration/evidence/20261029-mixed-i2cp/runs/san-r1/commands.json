@@ -1,0 +1,64 @@
+[
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-mainline-single-http-tests",
+      "biglybtc-managed-queue-tests",
+      "biglybtc-queue-policy-tests",
+      "biglybtc-mainline-single-tracker-owner-tests",
+      "biglybtc-i2cp-protocol-tests",
+      "BiglyBTC",
+      "BiglyBTC-headless",
+      "biglybtc-preview-smoke"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 444.776,
+    "log": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/runs/san-r1/build.log",
+    "log_sha256": "ff10af1f9d0fe8c12f520773353018e4b9e808cc9d7d586e9f081bc403cfa350"
+  },
+  {
+    "name": "http-loader",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-single-http-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.068,
+    "log": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/runs/san-r1/http-loader.log",
+    "log_sha256": "8ad4b5187a2b5872fc7c6f9ec8a59bb282dabe6932f1d9bfb3c649b5da317fd9"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--parallel",
+      "1",
+      "-R",
+      "^(queue-policy|managed-queue|mainline-single-http|pure-i2cp-initial-session-codec|mainline-single-tracker-owner)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/runs/san-r1/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 690.116,
+    "log": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/runs/san-r1/tests.log",
+    "log_sha256": "16f3005336b4a8def11cd27bea0525c23f4c1c07fb7b7d3eabfcc7d1a7b25b25"
+  }
+]

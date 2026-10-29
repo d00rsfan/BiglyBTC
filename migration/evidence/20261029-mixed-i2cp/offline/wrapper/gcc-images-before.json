@@ -1,0 +1,42 @@
+{
+  "biglybtc-mainline-single-http-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-http-tests",
+    "sha256": "902ae4b0e9cd91732c05f66c01a2476c59087f3fe3c424bc77cda9c54edee06c",
+    "bytes": 6749128
+  },
+  "biglybtc-managed-queue-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-managed-queue-tests",
+    "sha256": "4cfe541153c82da2d380ea5969c0d7cb6fe0dad3d8c06180654658741e304b04",
+    "bytes": 6219192
+  },
+  "biglybtc-queue-policy-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-queue-policy-tests",
+    "sha256": "01c971da1ae9f8ccf04751bf7083ca7ca98f540dc121d64cfd254f3d0576f36d",
+    "bytes": 414320
+  },
+  "biglybtc-mainline-single-tracker-owner-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-tracker-owner-tests",
+    "sha256": "54670cb08ac4b051a54d36169321ddeb70a55eeccfa792126d26ba87a72bde01",
+    "bytes": 6111920
+  },
+  "biglybtc-i2cp-protocol-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-i2cp-protocol-tests",
+    "sha256": "19ddd36c75619a7440c3c064c14d1d51f5dfdad7ba9e2973fbadd2e62fd8d99c",
+    "bytes": 105136
+  },
+  "BiglyBTC": {
+    "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/app/BiglyBTC",
+    "sha256": "a5ca48a88b4a3335a8068449ec177eaf131946f94ee204c19fb4966a4ddc710a",
+    "bytes": 11499208
+  },
+  "BiglyBTC-headless": {
+    "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/app/BiglyBTC-headless",
+    "sha256": "ec2c665850c00ccd08e84c422a56614f3456c8be0ac8132a34f9927cc438cf54",
+    "bytes": 5834480
+  },
+  "biglybtc-preview-smoke": {
+    "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/biglybtc-preview-smoke",
+    "sha256": "7360bd25b9ea8d53a29f0071c2cbba662f9c46f14503329028b9fc94241f3f42",
+    "bytes": 11811344
+  }
+}

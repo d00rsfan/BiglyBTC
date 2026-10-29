@@ -1,0 +1,12 @@
+{
+  "status": "PASS_SOURCE_REVIEW",
+  "script": {
+    "path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/offline.py",
+    "sha256": "70db7a9fd2efdc4ab2dedd83142b2ba7161ff0789f68e118e72e67c582013af1"
+  },
+  "findings": [],
+  "checks": "Unique completed exact GCC8-target build/log, current sourceef/adoption10 and8image path/hash/size binding; frozen96f+parent inputs,12actualnamedwidth rows per stage, actual required9/all net.i2p class origins pinned to each exact JAR, deterministic cross-reference frames plus actual2property auth fixture/nativeUnsupported assertion, all inputs/source8images unchanged. No session constructor/socket/router/client activation.",
+  "runtime": "Existing root offline-wrapper-r1 result is separate; this review executed only AST/read checks.",
+  "compiler_or_subject_executed": false,
+  "native_cache_dist_modified": false
+}

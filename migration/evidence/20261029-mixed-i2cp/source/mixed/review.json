@@ -1,0 +1,25 @@
+{
+  "status": "PASS_SOURCE_REVIEW",
+  "capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/mainline-regular-mixed-tiers-20261029/manifest.json",
+    "sha256": "c6d1e367a21e1e3f912caa711857c38d8d1ec9af5d5efc92d996c8f8ebc07eb1"
+  },
+  "findings": [],
+  "verified": "All10 artifacts/5 actual0cb before+after maps/3 immutable source inputs; entire old HTTP/helper source reconstructs byte-exact after removing2 additive blocks and1 include. Current sender-port correction is disjoint and preserved.",
+  "checks": [
+    "New RegularSavedTiers purpose excludes actual observations; only saved queued/unpaused/persistent rows can enter. Existing full info/identity/Tracker/Public/group/URL scope is retained; new purpose marker binds HTTP and UDP jobs to one group. Active multi-URL remains excluded.",
+    "Combined regular inventory appends supported2..8-member mixed/all-UDP groups once. Default HTTP-only/single-UDP scopes and live Mainline-owned hash/admission exclusion remain intact. Proxy groups containing UDP refuse rather than direct fallback.",
+    "Tier dispatcher/order/seed/response history/due/selection logic unchanged; only forwards existing explicit regular role to UDP. Existing preflight authenticates all member protocols/configs before first IO; fresh selected-member group+route/source callbacks handle CONNECT/SCRAPE/HTTP auth/TLS and terminal delivery. One existing pending producer across transports.",
+    "Original core ordering/selector and process-local seed semantics untouched; no new session/handle/announce/peer/DHT/PORT permission or timer. Cancellation and group edit invalidate held members.",
+    "Seven proposed rows cover HTTP\u2194UDP, HTTPS/JKS\u2192UDP, allUDP failover, stable same-tier stop, tier replacement and unsupported hostname refusal, retaining payload inotify/raw/control/join gates. No actual qualification claimed."
+  ],
+  "minimum_regression_scope": [
+    "mainline-single-http (new seven rows plus retained tier/DIRECT/SOCKS/auth/JKS regressions)",
+    "mainline-single-tracker-owner (existing DIRECT UDP and cancellation)",
+    "queue-policy (unchanged order/selection consumer regression)",
+    "compile shipping products"
+  ],
+  "limitations": "Saved/unadmitted only;2..8 members, numeric DIRECT UDP with supported original defaults. UDP DNS/proxy/auth/advanced suffix, active mixed/multi-URL announcer selection and larger groups remain open. Existing1000s HTTP CTest budget unaffected.",
+  "compiler_or_subject_executed": false,
+  "native_cache_dist_modified": false
+}

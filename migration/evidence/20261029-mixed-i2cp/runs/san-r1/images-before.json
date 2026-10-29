@@ -1,0 +1,42 @@
+{
+  "biglybtc-mainline-single-http-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-single-http-tests",
+    "sha256": "c3e5037c66442301078e24f56626040aa76013df553e11762d387e9c2ab53a78",
+    "bytes": 133250096
+  },
+  "biglybtc-managed-queue-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-managed-queue-tests",
+    "sha256": "ae4f238f592b0291529690cd415156152adf7a43f9e9f688cb67a8b3707398e5",
+    "bytes": 126374536
+  },
+  "biglybtc-queue-policy-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-queue-policy-tests",
+    "sha256": "a7ecbb7fd35b93dc31e17fc7eac48fd517117b1d0b611703ba8f5da6ccaa0c24",
+    "bytes": 6331360
+  },
+  "biglybtc-mainline-single-tracker-owner-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-mainline-single-tracker-owner-tests",
+    "sha256": "34209a51465177a3e85b6be2c056880ef6389b6dd6e6a2f88ad07207288c1d86",
+    "bytes": 124444000
+  },
+  "biglybtc-i2cp-protocol-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/tests/biglybtc-i2cp-protocol-tests",
+    "sha256": "c9532162380d6554e37cbefce3c293d8a56878c4a55d13a123002f481fae86db",
+    "bytes": 2407912
+  },
+  "BiglyBTC": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/app/BiglyBTC",
+    "sha256": "5e459f3514f20119786725b9e3ef86352606d7e38887f3c79d14ca060c7df860",
+    "bytes": 286533880
+  },
+  "BiglyBTC-headless": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/app/BiglyBTC-headless",
+    "sha256": "76fccdf6d7532992c874634d344f28e3ed21ed557f5d512ba3b43bf0596f54fa",
+    "bytes": 117257040
+  },
+  "biglybtc-preview-smoke": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop/biglybtc-preview-smoke",
+    "sha256": "40d8026675fe9fd885b0bbc3f901ac0022b02c7b10fafd615b1dbfac9c579f82",
+    "bytes": 290514032
+  }
+}

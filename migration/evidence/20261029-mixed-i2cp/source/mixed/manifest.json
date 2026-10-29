@@ -1,0 +1,59 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_SAVED_REGULAR_MIXED_TIERS_PENDING_INDEPENDENT_REVIEW",
+  "native_source_basis": "0cb5817bf07c6268bcccf9722f8c741a904163c6",
+  "requested_virtual_basis": "e2cfda10ced37ca61d269a18c40a00fcf80eb924",
+  "virtual_parent_manifest": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/manifest.json",
+  "virtual_parent_manifest_sha256": "ce9f62a49c73a3abde470382611aeaf6cda0d22831bcb72a859e4fb4195db5c6",
+  "source_path_count": 5,
+  "source_paths": {
+    "preview/native/engine/library_http_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/engine/library_http_owner.inc",
+      "before_sha256": "0885f7d17893240dcdb6ef26f55a5dc91f99b8393f32d425ea674ea8e3813818",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-regular-mixed-tiers-20261029/staging/preview/native/engine/library_http_owner.inc",
+      "after_sha256": "0f5fba45380f8da048ac119c0e4b58ab5f87e55772958ca440c990e26d1ea30e"
+    },
+    "preview/native/engine/mainline_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/engine/mainline_owner.inc",
+      "before_sha256": "cafdc301adbf9f4898b01014e61b045b6054f115f00dc0a5537ec5c4fbc3be13",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-regular-mixed-tiers-20261029/staging/preview/native/engine/mainline_owner.inc",
+      "after_sha256": "57661676dbb276eaccc74d71e98ee5b1487796d174a10a8150ca0c2d9a9e95db"
+    },
+    "preview/native/engine/queued_mainline_scrape.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/engine/queued_mainline_scrape.hpp",
+      "before_sha256": "e953cff344c8d9b444ab97aa5c1ea4b4b50a12dbdf73292444d3e65be19b3239",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-regular-mixed-tiers-20261029/staging/preview/native/engine/queued_mainline_scrape.hpp",
+      "after_sha256": "81f4c65f08767efe953818dbb14b007782f8b3b9451449c724e86d823a952dd5"
+    },
+    "preview/native/engine/queued_mainline_scrape.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/staging/preview/native/engine/queued_mainline_scrape.cpp",
+      "before_sha256": "57dd04df1712043fccb41f2b4f24329283e0a1942689009470dbf5b61deb5404",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-regular-mixed-tiers-20261029/staging/preview/native/engine/queued_mainline_scrape.cpp",
+      "after_sha256": "9ac57c6489c94f1f3da2b4c49d5c4c369c63828bccb8d234dacaa9870ce7b5d9"
+    },
+    "preview/native/tests/mainline_single_http_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBTC/preview/native/tests/mainline_single_http_tests.cpp",
+      "before_sha256": "2557654031afde1e03c547001cffce11cf390ccd7ae9e651e2e645345786f263",
+      "after_path": "/home/yurii/Java/BiglyBT/build/mainline-regular-mixed-tiers-20261029/staging/preview/native/tests/mainline_single_http_tests.cpp",
+      "after_sha256": "65fe06a97f676f856ac571ff845d6a770936056ae134fe994fbd9c207c697999"
+    }
+  },
+  "source_inputs": {
+    "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029/amendments/pre-authority-terminal-stamp/manifest.json": "ce9f62a49c73a3abde470382611aeaf6cda0d22831bcb72a859e4fb4195db5c6",
+    "/home/yurii/Java/BiglyBT/build/mainline-udp-direct-20261029-review/manifest.json": "8ccd6f024818de5f785533d74a0781992c45256b986fc119743f9a718574a277",
+    "/home/yurii/Java/BiglyBT/build/mainline-scrape-multi-tracker-20261029-review/review.json": "38bb3232585a573d314262605a46b6aa1e1b463d8d7c1307ab124fc135619afd"
+  },
+  "artifacts": {
+    "retention.json": "c298e4aeadc045ac0dd664d1d4e4703df43fefb6b125f53b1ed937859db9d1d6",
+    "ADOPTION.txt": "4b4d19bc66807759dbdf29b3c1bd18bdbb168d9087e87288d54679c40f73b4ab",
+    "before.json": "2c33b9d34b6b521a1b499093955ae17b14613540c25140fbf2a049804caef37f",
+    "changes.patch": "eb0c0ffa87ea5c164105812f65891a72cb550291280ec76188bfb4c5432506f0",
+    "original-source-pins.json": "eb089289f730b0b89d6d6bf7b3ef3cdb8237058026f3ce40ccd584ca22d183cd",
+    "staging/preview/native/tests/mainline_single_http_tests.cpp": "65fe06a97f676f856ac571ff845d6a770936056ae134fe994fbd9c207c697999",
+    "staging/preview/native/engine/queued_mainline_scrape.cpp": "9ac57c6489c94f1f3da2b4c49d5c4c369c63828bccb8d234dacaa9870ce7b5d9",
+    "staging/preview/native/engine/queued_mainline_scrape.hpp": "81f4c65f08767efe953818dbb14b007782f8b3b9451449c724e86d823a952dd5",
+    "staging/preview/native/engine/library_http_owner.inc": "0f5fba45380f8da048ac119c0e4b58ab5f87e55772958ca440c990e26d1ea30e",
+    "staging/preview/native/engine/mainline_owner.inc": "57661676dbb276eaccc74d71e98ee5b1487796d174a10a8150ca0c2d9a9e95db"
+  },
+  "author_execution": false
+}

@@ -1,0 +1,25 @@
+{
+  "status": "PASS_SOURCE_REVIEW",
+  "capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-session-codec-20261029/amendments/allocation-failure-poison/manifest.json",
+    "sha256": "96f471b5ebc464fa95dd350d39d98c4e68153aade0dc84e72acf2ea60a67f361"
+  },
+  "parent_manifest_sha256": "2a6b01ae0005d36554d4b84c7f0788780ff11fbb87c9defa1e6ac34249230c44",
+  "initial_blocked_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-session-codec-20261029-review/review.json",
+    "sha256": "3acd15a572cdeb15f41a824ce6925497466d0f3beed24d91c16c81465a26cf9f"
+  },
+  "findings": [],
+  "resolution": "Only payload allocation is wrapped. Any exception sets failed_ before rethrow; all later consume/finish calls refuse until reset. lengthKnown commits only after successful resize. Thus no undersized copy and no ambiguous replay after consumed header. Inverting this exact block reproduces parent CPP byte-for-byte.",
+  "retention": "All9 child artifacts/3 new source maps verified. Header/test/CMake/Java/commands byte-exact parent;13 original source/JAR and both reference class records retain initial review pins. Existing native tree has none of the three new paths.",
+  "minimum_root_qualification": {
+    "target": "biglybtc-i2cp-protocol-tests",
+    "suite": "pure-i2cp-initial-session-codec",
+    "timeout_seconds": 30,
+    "native": "Build/test pure target GCC/Clang/SAN; no GUI/provider/router rebuild caused by this codec alone.",
+    "offline": "One javac concrete-message helper, two exact reference JARs with12cases each +auth refusal against qualified current native ELF. Parse actual logs/class origins; no prior identity/datagram PASS inheritance."
+  },
+  "limits": "Pure framing/typed no-auth prerequisite only; explicit ASCII/nonnegative-date/status0..4 subset. No initial-session state machine, client/router transport, credentials/key stream or activation. Allocation-failure injection remains unexecuted; runtime/original interop pending.",
+  "compiler_or_subject_executed": false,
+  "native_cache_dist_modified": false
+}

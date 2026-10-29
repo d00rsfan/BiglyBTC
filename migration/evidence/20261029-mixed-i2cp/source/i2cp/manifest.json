@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_ALLOCATION_EXCEPTION_POISON_CORRECTION",
+  "parent_manifest": "/home/yurii/Java/BiglyBT/build/i2cp-session-codec-20261029/manifest.json",
+  "parent_manifest_sha256": "2a6b01ae0005d36554d4b84c7f0788780ff11fbb87c9defa1e6ac34249230c44",
+  "native_source_basis": "e2cfda10ced37ca61d269a18c40a00fcf80eb924",
+  "official_source_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "plugin_context_commit": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+  "source_paths": {
+    "preview/native/services/i2cp/protocol.cpp": {
+      "before_sha256": null,
+      "after_sha256": "c45f446b48854cf3b0fa677e6a06bc6aab7cdf1644fd4e939c7a25d8d4196672",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-session-codec-20261029/amendments/allocation-failure-poison/staging/preview/native/services/i2cp/protocol.cpp"
+    },
+    "preview/native/services/i2cp/protocol.hpp": {
+      "before_sha256": null,
+      "after_sha256": "d88a9b8bb5049c8c458b47598f6627ecf85a1b3b2b10bc97d8b65397da26d9c8",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-session-codec-20261029/amendments/allocation-failure-poison/staging/preview/native/services/i2cp/protocol.hpp"
+    },
+    "preview/native/tests/i2cp_protocol_tests.cpp": {
+      "before_sha256": null,
+      "after_sha256": "2fc8ef8dc32e4df338242b48dd1a24546d75217b21c11ca660500519c0f6695b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-session-codec-20261029/amendments/allocation-failure-poison/staging/preview/native/tests/i2cp_protocol_tests.cpp"
+    }
+  },
+  "inherited_exact_source_pins": "/home/yurii/Java/BiglyBT/build/i2cp-session-codec-20261029/source-pins.json",
+  "inherited_reference_API_check": "/home/yurii/Java/BiglyBT/build/i2cp-session-codec-20261029/reference-api-check.json",
+  "CMake_fragment": "CMake.fragment",
+  "new_target": "biglybtc-i2cp-protocol-tests",
+  "new_suite": "pure-i2cp-initial-session-codec",
+  "timeout_seconds": 30,
+  "compiler_or_java_or_tests_executed": false,
+  "runtime_and_interop": "PENDING_ROOT_QUALIFICATION",
+  "native_or_shared_registry_changed": false,
+  "artifacts_sha256": {
+    "CMake.fragment": "dc3770e77218fa913c650d775e23bee26591198746335570973c0fdbd6e7b3a8",
+    "IMPLEMENTATION.txt": "25ad9a5da0afeebcf863e009d7ca15862291bb1b5dd8b07ae7511f2acc57b65d",
+    "OFFLINE-COMMANDS.sh": "88f61ba71b88270b4598d436a75fee17b2494f700022df71ef069b20eee834e9",
+    "interop/I2cpVectors.java": "2cb5abf64c51efb614125186da37bb9b8cdb1ee4f7776c69ca20253010360fe3",
+    "parent-delta.patch": "74ae0b1a88b3bd42bff26c37781df0d71a0b94e5a6f5738e422d9b9c2b2f1068",
+    "source-checks.json": "c978f814ce561f9c486f968f80ce3b0f5fc1189e65d0353811619cd91675fc31",
+    "staging/preview/native/services/i2cp/protocol.cpp": "c45f446b48854cf3b0fa677e6a06bc6aab7cdf1644fd4e939c7a25d8d4196672",
+    "staging/preview/native/services/i2cp/protocol.hpp": "d88a9b8bb5049c8c458b47598f6627ecf85a1b3b2b10bc97d8b65397da26d9c8",
+    "staging/preview/native/tests/i2cp_protocol_tests.cpp": "2fc8ef8dc32e4df338242b48dd1a24546d75217b21c11ca660500519c0f6695b"
+  }
+}

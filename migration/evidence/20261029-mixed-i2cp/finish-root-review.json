@@ -1,0 +1,13 @@
+{
+  "status": "PASS_ROOT_SOURCE_REVIEW_EXECUTION_PENDING",
+  "script_sha256": "cf8cd9461fa92f0119381c1c56f8d22649d9ce5294ab2cbf400f2e37c5cee91e",
+  "checks": [
+    "fresh5/4/5 source/image/command/XML bindings with Clang owner compile-only",
+    "private3 exact selector and loadedimage checks",
+    "offline12 perreference with GCC-only ELF hash, no cross-compiler identity comparison",
+    "complete beforeimage/input pins before one atomically exchanged dist and immediate old-dist deletion",
+    "all108 registry evidence/task references exist before lock publication; unchanged20upstreams22dependencies/null baselines",
+    "both validators executed after installation; no rebuild/test rerun in finisher"
+  ],
+  "preflight": "all current cohort inputs exist and fit copying bound; remaining private inputs required by runtime gates"
+}

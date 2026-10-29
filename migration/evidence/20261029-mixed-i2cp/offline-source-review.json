@@ -1,0 +1,16 @@
+{
+  "status": "SOURCE_ONLY_WRAPPER_NOT_EXECUTED",
+  "wrapper": "offline.py",
+  "wrapper_sha256": "70db7a9fd2efdc4ab2dedd83142b2ba7161ff0789f68e118e72e67c582013af1",
+  "source_commit": "ef494c64add015ea84df93ebcfbff1c7a38fa10b",
+  "bridge_manifest_sha256": "96f471b5ebc464fa95dd350d39d98c4e68153aade0dc84e72acf2ea60a67f361",
+  "unique_completed_GCC_build_and_exact8image_graph_required": true,
+  "cases_per_reference": 12,
+  "class_origin_gate": "all loaded net.i2p and required9 net.i2p.data.i2cp implementation classes to one exact reference JAR",
+  "real_auth_options_fixture_must_be_explicitly_refused": true,
+  "bounded_command_seconds": 180,
+  "one_javac_serial": true,
+  "python_ast_parse": "PASS_SOURCE_SYNTAX_ONLY",
+  "author_executed_wrapper_or_compiler_or_tests": false,
+  "N_or_shared_registry_changed": false
+}

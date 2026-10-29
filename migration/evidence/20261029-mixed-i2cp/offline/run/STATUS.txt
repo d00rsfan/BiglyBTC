@@ -1,0 +1,1 @@
+PASS actual official + modified offline I2CP message bridge (12 cases each)

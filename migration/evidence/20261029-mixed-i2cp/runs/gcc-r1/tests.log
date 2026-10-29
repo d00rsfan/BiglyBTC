@@ -1,0 +1,27 @@
+Test project /home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc
+    Start 218: queue-policy
+1/5 Test #218: queue-policy ......................   Passed    0.02 sec
+    Start 221: managed-queue
+2/5 Test #221: managed-queue .....................   Passed   61.02 sec
+    Start 270: mainline-single-tracker-owner
+3/5 Test #270: mainline-single-tracker-owner .....   Passed  237.97 sec
+    Start 281: mainline-single-http
+4/5 Test #281: mainline-single-http ..............   Passed  412.31 sec
+    Start 284: pure-i2cp-initial-session-codec
+5/5 Test #284: pure-i2cp-initial-session-codec ...   Passed    0.01 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+discovery        = 650.28 sec*proc (2 tests)
+i2p              =   0.01 sec*proc (1 test)
+network          = 650.28 sec*proc (2 tests)
+no-network       =   0.01 sec*proc (1 test)
+owned            = 650.28 sec*proc (2 tests)
+queue            =  61.04 sec*proc (2 tests)
+runtime-bound    =  61.02 sec*proc (1 test)
+slow             = 650.28 sec*proc (2 tests)
+tls              = 412.31 sec*proc (1 test)
+unit             =  61.05 sec*proc (3 tests)
+
+Total Test time (real) = 711.34 sec

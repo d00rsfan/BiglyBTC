@@ -1,0 +1,13 @@
+PASS original I2CP produce get-date-none bytes=5
+PASS original I2CP produce get-date-empty bytes=6
+PASS original I2CP produce get-date-version bytes=12
+PASS original I2CP produce get-date-maximum bytes=261
+PASS original I2CP produce set-date-legacy bytes=13
+PASS original I2CP produce set-date-version bytes=20
+PASS original I2CP produce set-date-zero bytes=14
+PASS original I2CP produce disconnect-control bytes=10
+PASS original I2CP produce disconnect-maximum bytes=261
+PASS original I2CP produce status-created bytes=8
+PASS original I2CP produce status-refused bytes=8
+PASS original I2CP produce destroy-session bytes=7
+PASS offline original I2CP message bridge; no session/router

@@ -1,0 +1,67 @@
+{
+  "id": "services.i2cp_initial_session",
+  "feature_ids": [
+    "F06.i2cp_initial_session"
+  ],
+  "state": "in_progress",
+  "task_records": [
+    "migration/tasks/P07-02b-i2cp-initial-session.md"
+  ],
+  "target_paths": [
+    "preview/native/services/i2cp/protocol.hpp",
+    "preview/native/services/i2cp/protocol.cpp",
+    "preview/native/tests/i2cp_protocol_tests.cpp",
+    "preview/native/services/CMakeLists.txt",
+    "preview/native/tests/CMakeLists.txt"
+  ],
+  "source_coverage": [
+    {
+      "upstream_id": "i2p-java",
+      "source_paths": [
+        "core/java/src/net/i2p/data/i2cp/I2CPMessage.java",
+        "core/java/src/net/i2p/data/i2cp/I2CPMessageImpl.java",
+        "core/java/src/net/i2p/data/i2cp/I2CPMessageHandler.java",
+        "core/java/src/net/i2p/data/i2cp/GetDateMessage.java",
+        "core/java/src/net/i2p/data/i2cp/SetDateMessage.java",
+        "core/java/src/net/i2p/data/i2cp/DisconnectMessage.java",
+        "core/java/src/net/i2p/data/i2cp/SessionStatusMessage.java",
+        "core/java/src/net/i2p/data/i2cp/DestroySessionMessage.java",
+        "core/java/src/net/i2p/data/i2cp/SessionId.java",
+        "core/java/src/net/i2p/data/DataHelper.java",
+        "core/java/src/net/i2p/client/I2PClient.java",
+        "core/java/src/net/i2p/client/impl/I2PSessionImpl.java",
+        "core/java/src/net/i2p/util/Clock.java"
+      ],
+      "source_symbols": [
+        "I2CPMessageImpl.readMessage/writeMessage",
+        "I2CPMessageHandler.readMessage",
+        "GetDateMessage",
+        "SetDateMessage",
+        "DisconnectMessage",
+        "SessionStatusMessage",
+        "DestroySessionMessage",
+        "SessionId",
+        "DataHelper.readString/writeString/readDate/writeDate",
+        "I2PClient.PROTOCOL_BYTE"
+      ],
+      "baseline_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+      "first_ported_commit": null,
+      "integrated_through_commit": null,
+      "last_reviewed_commit": "9134f808337b401e8e53c73734c81fab04280c9d"
+    }
+  ],
+  "native_commits": [
+    {
+      "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+      "commit": "ef494c64add015ea84df93ebcfbff1c7a38fa10b",
+      "purpose": "implementation"
+    }
+  ],
+  "review_records": [
+    "migration/evidence/20261029-mixed-i2cp/REVIEW.md"
+  ],
+  "evidence": [
+    "migration/evidence/20261029-mixed-i2cp/verification.json"
+  ],
+  "decision_ref": "MIGRATION_PLAN.md"
+}

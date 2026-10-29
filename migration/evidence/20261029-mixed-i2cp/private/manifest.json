@@ -1,0 +1,11 @@
+{
+  "status": "SOURCE_ONLY_ROOT_READY",
+  "artifacts_sha256": {
+    "run.py": "f7fd607b4934574c42a7db6a3a0a866f1c0f477ca31b0d778cb83e84af13f536",
+    "source-review.json": "acca5d1415297dfac06154d7e14515eae2a0e7f4d32915efd4c5f65e1ff49908"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/run.py": "97c98dcb7faf1933ed787e254db29ba57c46d655af75b6ca9325c7c75ccce3f1",
+    "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/root-adoption.json": "072504870cb231fdb211cafdda63cd2580eee7cb705981053b220e806a98869c"
+  }
+}

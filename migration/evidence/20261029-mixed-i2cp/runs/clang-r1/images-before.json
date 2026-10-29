@@ -1,0 +1,42 @@
+{
+  "biglybtc-mainline-single-http-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-mainline-single-http-tests",
+    "sha256": "0ecc0c0846f5df8fd1f7340a0f0a6fdbe57971a5ad344706857c3660fab2a1a8",
+    "bytes": 5630408
+  },
+  "biglybtc-managed-queue-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-managed-queue-tests",
+    "sha256": "1f7f43dbc6b6105f54317ec2fc182611d71ee20c24c25ada916f86aaf4812f75",
+    "bytes": 5269192
+  },
+  "biglybtc-queue-policy-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-queue-policy-tests",
+    "sha256": "43a72b4b6d15b762019fc3ae1e0ec9f3b06113dc18b62c7dd121cee74e40f373",
+    "bytes": 297408
+  },
+  "biglybtc-mainline-single-tracker-owner-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-mainline-single-tracker-owner-tests",
+    "sha256": "451e97a7da05291910e3a3f3e7a6a56dd36cd237399869a136b830994e8416c1",
+    "bytes": 5074216
+  },
+  "biglybtc-i2cp-protocol-tests": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-i2cp-protocol-tests",
+    "sha256": "9d21c30f3ecf901f53f1ab4dd4c4e3254c5a5b8a3ba0b16dbd3711834adfb69f",
+    "bytes": 81960
+  },
+  "BiglyBTC": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/app/BiglyBTC",
+    "sha256": "c1042f4cde280821cfc7f96f99f47f124fcaa016d6a9b52ba22a1bd910de5731",
+    "bytes": 9226720
+  },
+  "BiglyBTC-headless": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/app/BiglyBTC-headless",
+    "sha256": "3fae3f4edfdcc7a91e842042559bb4e47e7720eb84b7dd5f13a98de269fb5d15",
+    "bytes": 4815744
+  },
+  "biglybtc-preview-smoke": {
+    "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/biglybtc-preview-smoke",
+    "sha256": "30bb8f6bfadbd03417a614b1200755910362a38a0474e4a14a0ab336c280aea5",
+    "bytes": 9500952
+  }
+}

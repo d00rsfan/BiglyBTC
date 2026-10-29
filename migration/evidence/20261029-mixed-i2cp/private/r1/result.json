@@ -1,0 +1,104 @@
+{
+  "status": "PASS_PRIVATE_MIXED_TIERS_AND_HTTPS",
+  "source_commit": "ef494c64add015ea84df93ebcfbff1c7a38fa10b",
+  "focused_results": {
+    "gcc": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/runs/gcc-r1/result.json",
+      "sha256": "13fe9c1ddac22585c79ce5b818a452e148cc5684e6b0ade31a7a73220ce2a2b7",
+      "images_sha256": "6ccb10c74522b54b75d84e3092daec2bb024388bbca127f5fce4608301043b9e",
+      "source_before_sha256": "dcec141684e3033c73bc515cd3e9da0d1aa8b81a659bdf5ba3a5529d28fba290"
+    },
+    "clang": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/runs/clang-r1/result.json",
+      "sha256": "e9356ff30faf96ac683e2e5d6698196f4938f377361b741a83ce745e9ec20395",
+      "images_sha256": "052bff60ad55b2954a296cc4ee871b8b7d84992c77455e5f965a011ffb823f3f",
+      "source_before_sha256": "dcec141684e3033c73bc515cd3e9da0d1aa8b81a659bdf5ba3a5529d28fba290"
+    },
+    "san": {
+      "path": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/runs/san-r1/result.json",
+      "sha256": "4d2ef0ec2f974cb82b39c156acdbf9ef7504432cd746d49dbe21712fdfa5c93a",
+      "images_sha256": "63492a67c1d3d8db92cfeaac7632b914303b8e49c335e93e2a910e1727bd25fb",
+      "source_before_sha256": "dcec141684e3033c73bc515cd3e9da0d1aa8b81a659bdf5ba3a5529d28fba290"
+    }
+  },
+  "builds_executed": false,
+  "promotion_executed": false,
+  "historical_runtime_passes_pooled": false,
+  "qualification_scope": "fresh suites GCC5/Clang4/SAN5; Clang full tracker owner suite compile-only; no pooled runtime origins",
+  "candidate": "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/candidate",
+  "candidate_manifest_sha256": "ac09f0dc9de3527e653e06b86e1c0d55d227f378593b0decc5233470f1cd2e69",
+  "actual_leaf_count": 119,
+  "copied_images": {
+    "biglybtc-mainline-single-http-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-mainline-single-http-tests",
+      "sha256": "902ae4b0e9cd91732c05f66c01a2476c59087f3fe3c424bc77cda9c54edee06c",
+      "bytes": 6749128
+    }
+  },
+  "actual_tests": [
+    {
+      "target": "biglybtc-mainline-single-http-tests",
+      "selector": "savedRegularTiersMixHttpAndNumericUdpWithOneActualRequest:HTTP-error-then-UDP-success",
+      "exit": 0,
+      "xml_sha256": "6b3472bb9e43d5dec5d358171ee60493ce5f579b4a32fcecf81ead7bbefd44bc",
+      "case_names": [
+        "initTestCase",
+        "savedRegularTiersMixHttpAndNumericUdpWithOneActualRequest(HTTP-error-then-UDP-success)",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+        "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/plugins/tls/libqopensslbackend.so": "d6f153ea607720b1ea08fb66d224be3c012d5023cee983a22735ae11c03709d2",
+        "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70"
+      }
+    },
+    {
+      "target": "biglybtc-mainline-single-http-tests",
+      "selector": "savedRegularTiersMixHttpAndNumericUdpWithOneActualRequest:UDP-error-then-HTTP-success",
+      "exit": 0,
+      "xml_sha256": "5ccfd6f81c649609c5d23742a3241e9289d42f4bd42eeebab540393a2075ef3c",
+      "case_names": [
+        "initTestCase",
+        "savedRegularTiersMixHttpAndNumericUdpWithOneActualRequest(UDP-error-then-HTTP-success)",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+        "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/plugins/tls/libqopensslbackend.so": "d6f153ea607720b1ea08fb66d224be3c012d5023cee983a22735ae11c03709d2",
+        "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70"
+      }
+    },
+    {
+      "target": "biglybtc-mainline-single-http-tests",
+      "selector": "directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline:private-HTTPS-saved-JKS-regular-scrape",
+      "exit": 0,
+      "xml_sha256": "9d3f421c0b005cd23f29140d0f79548ac1579df3780b5dede7bcb9b437c1e99f",
+      "case_names": [
+        "initTestCase",
+        "directAdmittedTrackerUsesActualAnnounceOrSavedTrustWithoutMainline(private-HTTPS-saved-JKS-regular-scrape)",
+        "cleanupTestCase"
+      ],
+      "initialized_images_sha256": {
+        "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/lib/libtorrent-rasterbar.so.2.0.12": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+        "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Core.so.6": "26341368e3f2017ab9e33a3faa8806ae87fd59f2f8491f4c5aa7e8c1053b8a05",
+        "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/lib/libQt6Network.so.6": "973d87ea5fc92dafb82aac307c32b7646cbd6640d06bc3f7d8b6c1771077603f",
+        "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/candidate/usr/lib/biglybtc/qt/plugins/tls/libqopensslbackend.so": "d6f153ea607720b1ea08fb66d224be3c012d5023cee983a22735ae11c03709d2",
+        "/home/yurii/Java/BiglyBT/build/mixed-i2cp-followup-20261029/private-focused/runs/r1/test-support/libQt6Test.so.6": "126b5f212c2f4438789be7abd2cd66393d9b6f4cca9550ebb3b33a9c742a3975",
+        "/usr/lib/x86_64-linux-gnu/libcrypto.so.3": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+        "/usr/lib/x86_64-linux-gnu/libssl.so.3": "a78c54c7203f51eb49c3d9acc5e935e5402a147f75abf3152b628a9753cfea70"
+      }
+    }
+  ],
+  "provider_sha256": "355f0c7bca7404c3199e85d4741a3734ac460c79d641a2539c049c5a8ad0c443",
+  "old_dist_unchanged": "64a35efc425f418ca8ae84ca5044db53c13144e2ad6666fcb88f4635835dd623",
+  "source_unchanged": true,
+  "commands_sha256": "40393ef4977d7f608e4e98383e49e79cc7fa0afb1377baf886e3019c35b3d8e0"
+}

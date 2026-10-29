@@ -1,0 +1,13 @@
+PASS actual original/native I2CP get-date-none
+PASS actual original/native I2CP get-date-empty
+PASS actual original/native I2CP get-date-version
+PASS actual original/native I2CP get-date-maximum
+PASS actual original/native I2CP set-date-legacy
+PASS actual original/native I2CP set-date-version
+PASS actual original/native I2CP set-date-zero
+PASS actual original/native I2CP disconnect-control
+PASS actual original/native I2CP disconnect-maximum
+PASS actual original/native I2CP status-created
+PASS actual original/native I2CP status-refused
+PASS actual original/native I2CP destroy-session
+PASS bounded I2CP framing/initial session subset; no connection
