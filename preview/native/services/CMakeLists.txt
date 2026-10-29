@@ -159,3 +159,6 @@ target_link_libraries(biglybtc_azureus_control PRIVATE BiglyBTC::Core)
 if(TARGET biglybtc_i2p_streaming)
   target_compile_options(biglybtc_i2p_streaming PRIVATE -ffp-contract=off)
 endif()
+
+# Public endpoint predicate is declared in Core; UDP includes it directly.
+target_link_libraries(biglybtc_azureus_owned_udp PRIVATE BiglyBTC::Core)
