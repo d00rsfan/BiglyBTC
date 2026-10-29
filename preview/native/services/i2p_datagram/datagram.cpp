@@ -104,6 +104,19 @@ Result<Bytes> signingPublicKey(SigningType type,View privateKey){
   if(BN_mod_exp_mont_consttime(y.get(),g.get(),x.get(),p.get(),ctx.get(),nullptr)!=1){return error(ErrorCode::CryptoFailure,"I2P DSA public key derivation failed");}Bytes pub(128);
   if(BN_bn2binpad(y.get(),pub.data(),128)!=128){return error(ErrorCode::CryptoFailure,"I2P DSA public key width changed");}return pub;
 }
+Result<Bytes> signData(SigningType type,View privateKey,View data){
+  if(data.size()>MaximumSignedDataBytes){return error(ErrorCode::TooLarge,"I2P signing input exceeds protocol bound");}
+  auto pub=signingPublicKey(type,privateKey);if(!pub){return std::unexpected(pub.error());}
+  return sign(type,*pub,privateKey,data);
+}
+Result<void> verifyData(SigningType type,View publicKey,View signature,View data){
+  if(data.size()>MaximumSignedDataBytes){return error(ErrorCode::TooLarge,"I2P signing input exceeds protocol bound");}
+  if(type!=SigningType::DsaSha1&&type!=SigningType::Ed25519){return error(ErrorCode::Unsupported,"I2P signing type is unsupported");}
+  if(publicKey.size()!=(type==SigningType::DsaSha1?128U:32U)||signature.size()!=signatureSize(type)){
+    return error(ErrorCode::InvalidFormat,"I2P public signing key/signature width changed");
+  }
+  return verify(type,publicKey,signature,data);
+}
 Result<Bytes> encode2(View sender,View privateKey,const Hash& recipient,View payload){
   auto from=decodeDestination(sender);if(!from){return std::unexpected(from.error());}const auto overhead=sender.size()+2+signatureSize(from->signingType);
   if(payload.size()>MaximumWireBytes-overhead){return error(ErrorCode::TooLarge,"I2P Datagram2 exceeds maker bound");}

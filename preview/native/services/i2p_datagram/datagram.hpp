@@ -29,6 +29,12 @@ struct Destination {
 // as a router/client/session authority. No network or persistent identities.
 Result<Destination> decodeDestination(View);
 Result<Bytes> signingPublicKey(SigningType,View privateKey);
+// Shared original raw signing format for bounded protocol preimages. DSA0
+// hashes with SHA-1 and returns raw r||s40; Ed7 signs directly and returns64.
+// No session/identity/date authority is conferred by signature verification.
+inline constexpr std::size_t MaximumSignedDataBytes=128*1024;
+Result<Bytes> signData(SigningType,View privateKey,View data);
+Result<void> verifyData(SigningType,View publicKey,View signature,View data);
 struct Datagram2 {Destination sender;Bytes payload;};
 // Online/default no-options form. Receiver hash participates in the signature
 // but is NOT transmitted. Signature proves signing-key possession/recipient

@@ -1,6 +1,7 @@
 #pragma once
 #include "owned_transport.hpp"
 #include "router.hpp"
+#include "azureus_value_versions.hpp"
 #include "../services/azureus_control/lookup.hpp"
 #include <chrono>
 #include <cstddef>
@@ -8,14 +9,16 @@
 #include <expected>
 #include <memory>
 #include <optional>
+#include <string>
+#include <vector>
 
 namespace biglybtc::app {
 namespace azureus=services::azureus_udp;
 enum class AzureusServiceError {
-  Disabled,Invalid,NoApplication,Start,Closed,Capacity,Dispatch,Memory,Thread,UnknownRequest,Transport
+  Disabled,Invalid,NoApplication,Start,Closed,Capacity,Dispatch,Memory,Thread,UnknownRequest,Transport,Profile,Readback
 };
 enum class AzureusServiceState { Starting,Running,Closing,Closed,Failed };
-enum class AzureusServiceCommand { AllowPeer,Ping,FindNode,FindValue,Cancel,LookupValue };
+enum class AzureusServiceCommand { AllowPeer,Ping,FindNode,FindValue,Cancel,LookupValue,PublishValue };
 struct AzureusServiceOptions {
   bool enabled=false;
   QHostAddress bindAddress{QHostAddress::LocalHost};
@@ -23,6 +26,10 @@ struct AzureusServiceOptions {
   std::int8_t version=55;
   bool servePings=false,enableVivaldi=true;
   std::size_t maximumPending=32,maximumPeers=32,maximumCommands=64;
+  // Explicit optional SAME-OFD original version manager; absence keeps all
+  // old read-only service behavior. Its network must match this actual actor.
+  std::shared_ptr<storage::AzureusValueVersions> valueVersions{};
+
 };
 struct AzureusServiceResult {
   std::uint64_t request=0,targetRequest=0;
@@ -30,6 +37,17 @@ struct AzureusServiceResult {
   bool terminal=true;
   std::optional<AzureusServiceError> error;
   std::optional<azureus::Failure> transportFailure;
+};
+enum class AzureusPublishState {Local,Token,Store,Readback,Complete,Failed,Cancelled,Closed};
+struct AzureusPublishSnapshot {
+  std::uint64_t request=0;
+  AzureusPublishState state=AzureusPublishState::Local;
+  services::azureus_nodes::NodeId key{};
+  std::optional<services::azureus_db_value::DbValue> localValue;
+  std::vector<services::azureus_values::Value> readback;
+  std::optional<AzureusServiceError> error;
+  std::optional<azureus::Failure> transportFailure;
+  std::optional<storage::Error> profileFailure;
 };
 struct AzureusServiceObservation {
   std::uint64_t sequence=0;
@@ -48,11 +66,14 @@ struct AzureusServiceObservation {
   std::optional<services::azureus_router::RouterError> routerFailure;
   std::shared_ptr<const services::azureus_control::LookupSnapshot> lookupSnapshot;
   std::optional<AzureusServiceError> lookupFailure;
+  std::shared_ptr<const AzureusPublishSnapshot> publishSnapshot;
 };
 // Explicit Host-owned development service. create(enabled=false) returns before
 // any Qt thread/socket exists. A dedicated Qt event loop exclusively constructs,
 // calls and destroys the existing numeric-loopback actor. No bootstrap/public
-// peer, full DHT controller/DB activation, profile IO, observer timer or GUI callback is added.
+// peer, full DHT controller/DB activation, observer timer or GUI callback is added.
+// Optional explicit local publication performs only version reservations on its
+// held profile; generated receiving DBs never become normal routing authority.
 // The optional bounded router records explicit known contacts and qualified
 // replies/timeouts only. Its Ping/NodeAdded intents are never executed here.
 class OwnedAzureusService final {
@@ -82,6 +103,13 @@ public:
   // One active lookup; observation() and Statistics never start/refresh it.
   std::expected<std::uint64_t,AzureusServiceError> lookupValue(azureus::Peer seed,
       azureus::lookup::nodes::NodeId target,std::int32_t flags=0,std::int32_t maximumValues=32,
+      std::chrono::nanoseconds timeout=std::chrono::seconds(5));
+  // One ordinary nonempty value <=512B. SHA1 hashes the unencoded key <=1024B;
+  // the peer MUST have already succeeded through allowPeer(). The command
+  // creates the local DB value then uses real FIND_NODE token/STORE/GET on the
+  // same endpoint. Success requires matching actual readback, never just ACK.
+  std::expected<std::uint64_t,AzureusServiceError> publishValue(azureus::Peer,
+      std::string applicationKey,std::string payload,
       std::chrono::nanoseconds timeout=std::chrono::seconds(5));
   std::expected<std::uint64_t,AzureusServiceError> cancel(std::uint64_t request);
   // Seals admission and joins even with queued/active work; idempotent. No forced

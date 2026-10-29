@@ -1,18 +1,42 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "channel.hpp"
 #include <QFile>
+#include <QEventLoop>
 #include <QPointer>
 #include <QSignalSpy>
 #include <QTcpServer>
 #include <QTcpSocket>
+#include <QTimer>
 #include <QtTest>
 #include <optional>
 
 namespace wire=biglybtc::services::i2p::i2cp;
+namespace i2p=biglybtc::services::i2p;
 using Channel=wire::InitialChannel;
 Q_DECLARE_METATYPE(Channel::Failure)
 
 namespace {
+i2p::ClientIdentity signer(const char* name){
+  auto read=[&](const char* suffix){
+    const auto path=QString::fromUtf8(BIGLYBTC_I2P_TEST_KEYS_DIR)+QLatin1Char('/')+QString::fromLatin1(name)+QString::fromLatin1(suffix);
+    QFile file(path);if(!file.open(QIODevice::ReadOnly)||file.size()<1||file.size()>1024){qFatal("Cannot open bounded synthetic signer %s: %s",qPrintable(path),qPrintable(file.errorString()));}
+    const auto bytes=file.readAll();if(file.error()!=QFileDevice::NoError){qFatal("Cannot read synthetic signer %s: %s",qPrintable(path),qPrintable(file.errorString()));}
+    return i2p::Bytes(reinterpret_cast<const i2p::Byte*>(bytes.constData()),reinterpret_cast<const i2p::Byte*>(bytes.constData())+bytes.size());
+  };
+  const auto dest=read(".sender"),secret=read(".known-test-key");auto result=i2p::makeClientIdentity(dest,i2p::Bytes(256,0x51),secret);
+  if(!result){qFatal("Cannot import synthetic signer: %s",result.error().message.c_str());}return std::move(*result);
+}
+QByteArray statusFrame(std::uint16_t id,wire::SessionState state){
+  const auto bytes=wire::encodeMessage(wire::SessionStatus{id,state});if(!bytes){qFatal("Cannot encode original status fixture: %s",bytes.error().message.c_str());}
+  return QByteArray(reinterpret_cast<const char*>(bytes->data()),static_cast<qsizetype>(bytes->size()));
+}
+std::optional<wire::Frame> sentFrame(const QByteArray& bytes,qsizetype offset){
+  if(offset<0||bytes.size()-offset<5){return std::nullopt;}
+  const auto* at=reinterpret_cast<const wire::Byte*>(bytes.constData()+offset);std::uint32_t length=0;
+  for(unsigned i=0;i<4;++i){length=(length<<8)|at[i];}if(length>wire::MaximumPayloadBytes){qFatal("Unbounded client session frame");}
+  if(bytes.size()-offset<5+static_cast<qsizetype>(length)){return std::nullopt;}
+  auto parsed=wire::decodeFrame(wire::View(at,5+length));if(!parsed){qFatal("Client sent invalid session frame: %s",parsed.error().message.c_str());}return std::move(*parsed);
+}
 // Only generated, owned, random-port loopback endpoints. No real router.
 struct OwnedRouter {
   QTcpServer server;
@@ -179,6 +203,163 @@ private slots:
     // Positive recovery uses the same instance after the final refusal; no
     // rejected option can have left live I/O/deadline behind.
     QVERIFY(channel.begin(good));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
+  }
+  void actualSignedRegistrationAndMergedReconfigure_data(){
+    QTest::addColumn<QByteArray>("family");QTest::addColumn<bool>("ipv6");
+    QTest::newRow("DSA0-v4")<<QByteArray("dsa")<<false;QTest::newRow("Ed7-v4")<<QByteArray("ed25519")<<false;
+    QTest::newRow("DSA0-v6")<<QByteArray("dsa")<<true;QTest::newRow("Ed7-v6")<<QByteArray("ed25519")<<true;
+  }
+  void actualSignedRegistrationAndMergedReconfigure(){
+    QFETCH(QByteArray,family);QFETCH(bool,ipv6);OwnedRouter router;QVERIFY(router.listen(ipv6?QHostAddress::LocalHostIPv6:QHostAddress::LocalHost));
+    Channel channel;auto identity=signer(family.constData());const auto expectedDestination=identity.destination()->wire;
+    QSignalSpy created(&channel,&Channel::sessionCreated),updated(&channel,&Channel::sessionUpdated);
+    QVERIFY(!channel.createSession(identity,{},1761739200123)); // No date/TCP authority.
+    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
+    const wire::SessionOptions initial{{"keep","old"},{"change","old"},{"i2cp.tcp.host","client-only"}};
+    auto requested=channel.createSession(identity,initial,1761739200123);QVERIFY2(requested.has_value(),requested?"":requested.error().message.c_str());
+    QCOMPARE(channel.state(),Channel::State::Creating);QVERIFY(!channel.sessionId());QVERIFY(channel.sessionOptions().empty());QVERIFY(channel.deadlineActive());
+    QVERIFY(!channel.createSession(identity,initial,1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()).has_value());
+    const auto first=*sentFrame(router.received,hello().size());auto parsed=wire::decodeSessionMessage(first);QVERIFY(parsed);
+    const auto& config=std::get<wire::CreateSession>(*parsed).config;QVERIFY(config.destination.wire==expectedDestination);
+    QVERIFY(wire::verifySessionConfig(config,1761739200123));QVERIFY(config.options==wire::SessionOptions({{"change","old"},{"keep","old"}}));
+    identity.clear();QVERIFY(!identity.valid()); // Controller retained no borrowed signer.
+    QVERIFY(router.send(status));QTRY_COMPARE(created.count(),1);QCOMPARE(channel.state(),Channel::State::SessionCreated);
+    QVERIFY(channel.sessionId()==std::optional<std::uint16_t>(0xabcd));QVERIFY(channel.sessionOptions()==config.options);QVERIFY(!channel.deadlineActive());
+    identity=signer(family.constData());const auto old=channel.sessionOptions();const wire::SessionOptions patch{{"change","new"},{"added","value"}};
+    requested=channel.reconfigureSession(identity,patch,1761739200123);QVERIFY2(requested.has_value(),requested?"":requested.error().message.c_str());
+    QCOMPARE(channel.state(),Channel::State::Reconfiguring);QVERIFY(channel.sessionOptions()==old);QVERIFY(channel.deadlineActive());
+    const auto offset=hello().size()+5+static_cast<qsizetype>(first.payload.size());QTRY_VERIFY(sentFrame(router.received,offset).has_value());
+    auto update=wire::decodeSessionMessage(*sentFrame(router.received,offset));QVERIFY(update);const auto& changed=std::get<wire::ReconfigureSession>(*update);
+    QCOMPARE(changed.sessionId,std::uint16_t(0xabcd));QVERIFY(changed.config.destination.wire==expectedDestination);QVERIFY(wire::verifySessionConfig(changed.config,1761739200123));
+    QVERIFY(router.send(statusFrame(0xabcd,wire::SessionState::Updated)));QTRY_COMPARE(updated.count(),1);QCOMPARE(created.count(),1);
+    QCOMPARE(channel.state(),Channel::State::SessionCreated);QVERIFY(channel.sessionOptions()==wire::SessionOptions({{"added","value"},{"change","new"},{"keep","old"}}));
+    router.peer->disconnectFromHost();QTRY_COMPARE(channel.state(),Channel::State::Failed);QCOMPARE(channel.failure(),Channel::Failure::TransportClosed);
+    QVERIFY(!channel.sessionId());QVERIFY(channel.sessionOptions().empty());QVERIFY(!channel.routerDate());QVERIFY(!channel.deadlineActive());
+  }
+  void terminalRegistrationStatusNeverAdmits_data(){
+    QTest::addColumn<int>("kind");QTest::addColumn<Channel::Failure>("failure");
+    QTest::newRow("refused-UNKNOWN")<<4<<Channel::Failure::SessionRejected;
+    QTest::newRow("invalid")<<3<<Channel::Failure::SessionRejected;
+    QTest::newRow("destroyed")<<0<<Channel::Failure::SessionDestroyed;
+    QTest::newRow("unsolicited-updated")<<2<<Channel::Failure::UnexpectedMessage;
+    QTest::newRow("created-UNKNOWN")<<1<<Channel::Failure::InvalidSessionId;
+  }
+  void terminalRegistrationStatusNeverAdmits(){
+    QFETCH(int,kind);QFETCH(Channel::Failure,failure);OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");QSignalSpy created(&channel,&Channel::sessionCreated);
+    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
+    QVERIFY(channel.createSession(identity,{},1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()).has_value());
+    QVERIFY(router.send(statusFrame(kind==1||kind==4?65535:13,static_cast<wire::SessionState>(kind))));QTRY_COMPARE(channel.state(),Channel::State::Failed);
+    QCOMPARE(channel.failure(),failure);QCOMPARE(created.count(),0);QVERIFY(!channel.sessionId());QVERIFY(channel.sessionOptions().empty());QVERIFY(!channel.deadlineActive());QVERIFY(!channel.socketActive());
+  }
+  void reconfigureCannotChangeIdentityOrAcceptWrongId(){
+    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");
+    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
+    QVERIFY(channel.createSession(identity,{{"keep","old"}},1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()).has_value());
+    const auto first=*sentFrame(router.received,hello().size());QVERIFY(router.send(status));QTRY_VERIFY(channel.sessionId().has_value());
+    auto destination=identity.destination()->wire;destination[0]^=1;auto changed=i2p::makeClientIdentity(destination,i2p::Bytes(256),identity.signingPrivateKey());QVERIFY(changed);
+    const auto refused=channel.reconfigureSession(*changed,{{"keep","new"}},1761739200123);QVERIFY(!refused);QCOMPARE(refused.error().code,i2p::ErrorCode::KeyMismatch);
+    QCOMPARE(channel.state(),Channel::State::SessionCreated);QVERIFY(channel.sessionOptions()==wire::SessionOptions({{"keep","old"}}));
+    QSignalSpy updated(&channel,&Channel::sessionUpdated);QVERIFY(channel.reconfigureSession(identity,{{"keep","new"}},1761739200123));
+    const auto offset=hello().size()+5+static_cast<qsizetype>(first.payload.size());QTRY_VERIFY(sentFrame(router.received,offset).has_value());
+    QVERIFY(router.send(statusFrame(0xabce,wire::SessionState::Updated)));QTRY_COMPARE(channel.state(),Channel::State::Failed);QCOMPARE(channel.failure(),Channel::Failure::InvalidSessionId);
+    QCOMPARE(updated.count(),0);QVERIFY(!channel.sessionId());QVERIFY(channel.sessionOptions().empty());QVERIFY(!channel.socketActive());
+  }
+  void pendingCreateDeadlineClosesWithoutAdmissionOrRetry(){
+    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");auto options=router.options();options.deadlineMilliseconds=1000;
+    QVERIFY(channel.begin(options));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
+    QVERIFY(channel.createSession(identity,{},1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()).has_value());
+    QTRY_COMPARE_WITH_TIMEOUT(channel.state(),Channel::State::Failed,3000);QCOMPARE(channel.failure(),Channel::Failure::Deadline);
+    QVERIFY(!channel.sessionId());QVERIFY(channel.sessionOptions().empty());QVERIFY(!channel.deadlineActive());QVERIFY(!channel.socketActive());QCOMPARE(router.accepted,1);
+  }
+  void invalidSigningInputDoesNotReplaceTheDateOrWriteARequest(){
+    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");i2p::ClientIdentity absent;
+    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
+    QVERIFY(!channel.createSession(absent,{},1761739200123));QVERIFY(!channel.createSession(identity,{},0));
+    QVERIFY(!channel.createSession(identity,{},1761739200123+10ULL*24*60*60*1000));
+    QVERIFY(!channel.createSession(identity,{{"a","1"},{"a","2"}},1761739200123));
+    QVERIFY(!channel.createSession(identity,{{"i2cp.username","synthetic-only"}},1761739200123));
+    const auto password=channel.createSession(identity,{{"i2cp.password",""}},1761739200123);QVERIFY(!password);QCOMPARE(password.error().code,i2p::ErrorCode::Unsupported);
+    QVERIFY(!channel.createSession(identity,{{"i2cp.username",""},{"i2cp.password",""}},1761739200123));
+    QCOMPARE(channel.state(),Channel::State::DateReceived);QVERIFY(!channel.sessionId());QVERIFY(!channel.deadlineActive());
+    QVERIFY(channel.createSession(identity,{{"valid","only"}},1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()).has_value());
+    const auto parsed=wire::decodeSessionMessage(*sentFrame(router.received,hello().size()));QVERIFY(parsed);
+    const auto& accepted=std::get<wire::CreateSession>(*parsed).config;QVERIFY(accepted.options==wire::SessionOptions({{"valid","only"}}));QVERIFY(wire::verifySessionConfigSignature(accepted));
+    QVERIFY(router.send(status));QTRY_VERIFY(channel.sessionId().has_value());QCOMPARE(channel.state(),Channel::State::SessionCreated);
+  }
+  void previouslyReadPartialStatusCannotBecomeANewCreateAcknowledgement(){
+    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");QSignalSpy created(&channel,&Channel::sessionCreated);
+    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
+    // Observe the actual socket readyRead after its earlier-registered private
+    // drain handler. This is an I/O barrier, not a fabricated protocol token.
+    auto* socket=channel.findChild<QTcpSocket*>();QVERIFY(socket);QSignalSpy read(socket,&QTcpSocket::readyRead);
+    QVERIFY(router.send(status.left(4)));QTRY_VERIFY(read.count()>0);
+    QVERIFY(!channel.createSession(identity,{},1761739200123));QCOMPARE(channel.state(),Channel::State::DateReceived);
+    QVERIFY(router.send(status.mid(4)));QTRY_COMPARE(channel.state(),Channel::State::Failed);QCOMPARE(channel.failure(),Channel::Failure::UnexpectedMessage);
+    QCOMPARE(created.count(),0);QVERIFY(!channel.sessionId());QCOMPARE(router.received,hello());
+  }
+  void unsupportedTlsCannotBecomePlaintextRegistration(){
+    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");auto options=router.options();options.tlsRequired=true;
+    QVERIFY(!channel.begin(options));QCOMPARE(channel.failure(),Channel::Failure::UnsupportedTransport);QVERIFY(!channel.socketActive());QVERIFY(!channel.deadlineActive());QCOMPARE(router.accepted,0);
+    options.tlsRequired=false;QVERIFY(channel.begin(options));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
+    const auto refused=channel.createSession(identity,{{"i2cp.SSL","TrUe"}},1761739200123);QVERIFY(!refused);QCOMPARE(refused.error().code,i2p::ErrorCode::Unsupported);
+    QCOMPARE(channel.state(),Channel::State::DateReceived);QVERIFY(!channel.sessionId());
+    QVERIFY(channel.createSession(identity,{{"i2cp.SSL","false"},{"valid","plain-loopback"}},1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()).has_value());
+    const auto frame=wire::decodeSessionMessage(*sentFrame(router.received,hello().size()));QVERIFY(frame);QVERIFY(std::get<wire::CreateSession>(*frame).config.options==wire::SessionOptions({{"valid","plain-loopback"}}));
+    QVERIFY(router.send(status));QTRY_VERIFY(channel.sessionId().has_value());
+  }
+  void cancelBeforeQueuedOldStatusThenNewRegistrationCannotReuseIt(){
+    OwnedRouter first,second;QVERIFY(first.listen());QVERIFY(second.listen());Channel channel;auto identity=signer("ed25519");QSignalSpy created(&channel,&Channel::sessionCreated);
+    QVERIFY(channel.begin(first.options()));QTRY_COMPARE(first.received,hello());QVERIFY(first.send(date));QTRY_VERIFY(channel.routerDate().has_value());
+    QVERIFY(channel.createSession(identity,{},1761739200123));QTRY_VERIFY(sentFrame(first.received,hello().size()).has_value());
+    QVERIFY(first.send(status));if(first.peer->bytesToWrite()>0){QVERIFY(first.peer->flush());}
+    channel.close();QVERIFY(!channel.sessionId());QVERIFY(channel.sessionOptions().empty());QCOMPARE(created.count(),0);
+    QVERIFY(channel.begin(second.options()));QTRY_COMPARE(second.received,hello());QVERIFY(second.send(legacy));QTRY_VERIFY(channel.routerDate().has_value());
+    QCOMPARE(created.count(),0);QVERIFY(channel.createSession(identity,{},0x0102030405060708ULL));QTRY_VERIFY(sentFrame(second.received,hello().size()).has_value());
+    QVERIFY(second.send(statusFrame(0,wire::SessionState::Created)));QTRY_COMPARE(created.count(),1);QVERIFY(channel.sessionId()==std::optional<std::uint16_t>(0));
+    channel.close();QVERIFY(!channel.sessionId());QVERIFY(channel.sessionOptions().empty());QVERIFY(!channel.socketActive());
+  }
+  void nestedRealReconfigureCannotPublishTheSupersededCreatedNotification(){
+    OwnedRouter router;QVERIFY(router.listen());Channel channel;auto identity=signer("ed25519");QSignalSpy created(&channel,&Channel::sessionCreated),updated(&channel,&Channel::sessionUpdated);
+    QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
+    QVERIFY(channel.createSession(identity,{{"keep","old"}},1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()).has_value());
+    const auto first=*sentFrame(router.received,hello().size());const auto offset=hello().size()+5+static_cast<qsizetype>(first.payload.size());
+    bool nested=false,requestAccepted=false,replyValidated=false,replySent=false,finished=false;
+    QObject::connect(&channel,&Channel::stateChanged,&channel,[&](Channel::State next){
+      if(next!=Channel::State::SessionCreated||nested){return;}nested=true;
+      requestAccepted=channel.reconfigureSession(identity,{{"added","new"}},1761739200123).has_value();if(!requestAccepted){return;}
+      QEventLoop loop;QTimer guard;guard.setSingleShot(true);
+      QObject::connect(&guard,&QTimer::timeout,&loop,&QEventLoop::quit);
+      QObject::connect(&channel,&Channel::sessionUpdated,&loop,[&]{finished=true;loop.quit();});
+      auto reply=[&]{
+        if(replySent){return;}const auto frame=sentFrame(router.received,offset);if(!frame){return;}
+        auto message=wire::decodeSessionMessage(*frame);if(!message||!std::holds_alternative<wire::ReconfigureSession>(*message)){loop.quit();return;}
+        const auto& update=std::get<wire::ReconfigureSession>(*message);
+        replyValidated=update.sessionId==0xabcd&&wire::verifySessionConfigSignature(update.config).has_value()&&update.config.options==wire::SessionOptions({{"added","new"}});
+        if(!replyValidated){loop.quit();return;}replySent=router.send(statusFrame(0xabcd,wire::SessionState::Updated));if(!replySent){loop.quit();}
+      };
+      QObject::connect(router.peer,&QTcpSocket::readyRead,&loop,reply);reply();guard.start(2000);loop.exec();
+    });
+    QVERIFY(router.send(status));QTRY_VERIFY(nested);QVERIFY(requestAccepted);QVERIFY(replyValidated);QVERIFY(replySent);QVERIFY(finished);
+    QCOMPARE(created.count(),0);QCOMPARE(updated.count(),1);QCOMPARE(channel.state(),Channel::State::SessionCreated);
+    QVERIFY(channel.sessionOptions()==wire::SessionOptions({{"added","new"},{"keep","old"}}));
+  }
+  void registrationNotificationMayDeleteController_data(){
+    QTest::addColumn<bool>("onUpdate");QTest::newRow("created")<<false;QTest::newRow("updated")<<true;
+  }
+  void registrationNotificationMayDeleteController(){
+    QFETCH(bool,onUpdate);OwnedRouter router;QVERIFY(router.listen());auto identity=signer("ed25519");QPointer<Channel> channel=new Channel(&router.server);
+    QVERIFY(channel->begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel->routerDate().has_value());
+    QVERIFY(channel->createSession(identity,{},1761739200123));QTRY_VERIFY(sentFrame(router.received,hello().size()).has_value());
+    const auto first=*sentFrame(router.received,hello().size());
+    if(!onUpdate){QObject::connect(channel,&Channel::sessionCreated,&router.server,[&]{delete channel.data();});}
+    QVERIFY(router.send(status));
+    if(onUpdate){
+      QTRY_VERIFY(channel->sessionId().has_value());QObject::connect(channel,&Channel::sessionUpdated,&router.server,[&]{delete channel.data();});
+      QVERIFY(channel->reconfigureSession(identity,{{"new","value"}},1761739200123));
+      const auto offset=hello().size()+5+static_cast<qsizetype>(first.payload.size());QTRY_VERIFY(sentFrame(router.received,offset).has_value());
+      QVERIFY(router.send(statusFrame(0xabcd,wire::SessionState::Updated)));
+    }
+    QTRY_VERIFY(channel.isNull());QTRY_COMPARE(router.peer->state(),QAbstractSocket::UnconnectedState);
   }
 };
 QTEST_GUILESS_MAIN(InitialChannelTests)

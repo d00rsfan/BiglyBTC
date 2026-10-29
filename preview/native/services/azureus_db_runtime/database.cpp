@@ -68,7 +68,7 @@ struct Owner::Impl {
   struct Record {mapping::Owner owner;KeyPort port;Record(mapping::Owner value,const Limits& limits):owner(std::move(value)),port(limits.storageStats,limits.diversificationControl){};};
   Limits limits;std::optional<azureus_nodes::Contact> local;const std::thread::id thread=std::this_thread::get_id();
   std::map<std::string,std::unique_ptr<Record>,std::less<>> records;
-  std::int64_t lastScan=0;std::uint64_t stores=0,reads=0,expiredCount=0;bool closed=false,busy=false;
+  std::int64_t lastScan=0;std::uint64_t stores=0,reads=0,expiredCount=0,localPuts=0;bool closed=false,busy=false;
   struct Guard {Impl& owner;explicit Guard(Impl& value):owner(value){owner.busy=true;}~Guard(){owner.busy=false;}};
   std::expected<void,Error> scan(lifecycle::WallClock&,bool);
   std::expected<void,Error> check()const noexcept {
@@ -76,7 +76,7 @@ struct Owner::Impl {
     if(closed){return std::unexpected(Error::Closed);}if(busy){return std::unexpected(Error::Busy);}return {};
   }
   Snapshot snapshot()const {
-    Snapshot result;result.closed=closed;result.keys=records.size();result.stores=stores;result.reads=reads;result.expired=expiredCount;
+    Snapshot result;result.closed=closed;result.keys=records.size();result.stores=stores;result.reads=reads;result.expired=expiredCount;result.localPuts=localPuts;
     for(const auto& [key,record]:records){(void)key;const auto value=record->owner.snapshot();
       result.values+=value.direct.size()+value.forwarded.size();
       result.bytes+=static_cast<std::size_t>(value.directBytes)+static_cast<std::size_t>(value.indirectBytes);
@@ -158,6 +158,33 @@ std::expected<std::int8_t,Error> Owner::store(std::string_view key,const azureus
     }
     if(impl_->stores==UINT64_MAX){return std::unexpected(Error::Capacity);}++impl_->stores;
     return record.owner.snapshot().diversification;
+  }catch(...){return std::unexpected(Error::Memory);}
+}
+std::expected<lifecycle::DbValue,Error> Owner::putLocal(std::string_view key,
+    std::string_view bytes,std::int32_t version,lifecycle::WallClock& clock){
+  if(auto valid=impl_->check();!valid){return std::unexpected(valid.error());}
+  if(!impl_->local||key.size()!=20||bytes.empty()||bytes.size()>512){return std::unexpected(Error::Invalid);}
+  try{
+    Impl::Guard guard(*impl_);if(impl_->localPuts==UINT64_MAX){return std::unexpected(Error::Capacity);}
+    auto found=impl_->records.find(key);
+    if(found==impl_->records.end()){
+      if(impl_->records.size()==impl_->limits.maximumKeys){return std::unexpected(Error::Capacity);}
+      mapping::Limits limits;limits.entries=impl_->limits.maximumEntriesPerKey;limits.contacts=limits.entries*4+16;
+      limits.values=limits.entries*4+16;limits.retainedPayloadBytes=(limits.entries+256)*512;
+      auto made=mapping::Owner::create(limits);auto copied=mapping::Key::copy(key);
+      if(!made||!copied){return std::unexpected(Error::Memory);}
+      auto record=std::make_unique<Impl::Record>(std::move(*made),impl_->limits);KeyPort::Borrow borrowed(record->port,clock);
+      if(!record->owner.open(std::move(*copied),true,record->port)||record->port.failed){return std::unexpected(Error::Mapping);}
+      found=impl_->records.emplace(std::string(key),std::move(record)).first;
+    }
+    auto& record=*found->second;KeyPort::Borrow borrowed(record.port,clock);
+    auto origin=record.owner.contact(*impl_->local);auto payload=lifecycle::Payload::copy(bytes);
+    if(!origin||!payload){return std::unexpected(Error::Memory);}
+    mapping::ValueFields fields{clock.nowMilliseconds(),std::move(*payload),version,*origin,*origin,true,0,0,-1};
+    auto value=record.owner.value(std::move(fields),clock);
+    if(!value||!record.owner.add(value->value,clock,record.port)||record.port.failed){return std::unexpected(Error::Mapping);}
+    auto actual=value->value.snapshot();if(!actual){return std::unexpected(Error::Mapping);}
+    ++impl_->localPuts;return *actual;
   }catch(...){return std::unexpected(Error::Memory);}
 }
 std::expected<std::optional<Read>,Error> Owner::read(std::string_view key,const azureus_nodes::Contact& reader,

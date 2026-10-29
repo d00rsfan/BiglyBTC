@@ -4,6 +4,8 @@
 #include "owned_ddb_fixture.hpp"
 #include <QtTest>
 #include <QDateTime>
+#include "azureus_value_versions.hpp"
+#include <cstdio>
 #include <QDeadlineTimer>
 #include <thread>
 #include <algorithm>
@@ -45,6 +47,14 @@ bool stored(const std::optional<udp::StoreOutcome>& result){return result&&resul
 class AzureusDatabaseRuntimeTests final:public QObject {
  Q_OBJECT
 private slots:
+ void localPutUsesActualBoundContactReservedVersionAndNeverExpiresLikeRemoteData(){
+   auto owner=db::Owner::create();QVERIFY(owner);Clock clock;const std::string key(20,'L'),payload("rating\0binary",13);
+   QVERIFY(!(*owner)->putLocal(key,payload,100,clock));auto actual=contact({QHostAddress::LocalHost,41001});QVERIFY((*owner)->bindLocal(actual));
+   auto put=(*owner)->putLocal(key,payload,100,clock);QVERIFY(put);QVERIFY(put->isLocal());QCOMPARE(put->version(),100);QCOMPARE(put->creationTime(),clock.now);QCOMPARE(*put->payload().view(),std::string_view(payload));QVERIFY(put->originator().get()->id==actual.id);QVERIFY(put->originator().get()->address==actual.address);QVERIFY(put->sender().get()->id==actual.id);QCOMPARE(put->flags(),std::uint8_t{0});QCOMPARE(put->lifeTimeHours(),std::uint8_t{0});QCOMPARE(put->replicationControl(),std::int8_t{-1});
+   clock.now=10LL*24*60*60*1000;QVERIFY((*owner)->expire(clock,true));auto read=(*owner)->read(key,actual,0,0,clock);QVERIFY(read&&*read);QCOMPARE((**read).values.size(),std::size_t{1});QCOMPARE((**read).values[0].version,100);QCOMPARE((**read).values[0].bytes,payload);
+   auto newer=(*owner)->putLocal(key,"new",101,clock);QVERIFY(newer);read=(*owner)->read(key,actual,0,0,clock);QVERIFY(read&&*read);QCOMPARE((**read).values[0].bytes,std::string("new"));QVERIFY(!(*owner)->putLocal(key,"",102,clock));QVERIFY(!(*owner)->putLocal(key,std::string(513,'x'),102,clock));
+   const auto state=(*owner)->snapshot();QVERIFY(state);QCOMPARE(state->localPuts,std::uint64_t{2});QCOMPARE(state->stores,std::uint64_t{0});
+ }
  void qualifiedMappingOwnsVersionsForwardingAndUnknownBinaryBytes(){
    auto owner=db::Owner::create();QVERIFY(owner);Clock clock;
    auto a=contact({QHostAddress::LocalHost,41001}),b=contact({QHostAddress::LocalHost,41002});
@@ -245,5 +255,16 @@ private slots:
    udp::Config mixedConfig;mixedConfig.generatedStoreService.emplace();mixedConfig.generatedStoreService->volatileDatabase.emplace();mixedConfig.findValueReply=std::vector<udp::FindValueSlice>{};udp::OwnedPingTransport mixed(std::move(mixedConfig));QVERIFY(!mixed.start());
  }
 };
-QTEST_GUILESS_MAIN(AzureusDatabaseRuntimeTests)
+int main(int argc,char** argv){
+ QCoreApplication app(argc,argv);
+ if(argc==2&&std::string_view(argv[1])=="--project-original-local-values"){
+   const std::array<std::int64_t,3> inputs{2100000000LL,2147483600LL,(1LL<<32)+2100000000LL};
+   for(std::size_t i=0;i<inputs.size();++i){const auto value=storage::originalAzureusVersionReservation(inputs[i],1000000);std::printf("V\t%zu\t%d\t%d\n",i,value.first,value.next);}
+   auto owner=db::Owner::create();if(!owner){return 2;}services::azureus_nodes::Contact origin;origin.id.fill(42);origin.protocol=55;origin.address.length=4;origin.address.bytes[0]=127;origin.address.bytes[3]=1;origin.address.port=41001;
+   if(!(*owner)->bindLocal(origin)){return 2;}Clock clock;auto value=(*owner)->putLocal(std::string(20,'K'),std::string("a\0b\xff",4),123,clock);if(!value){return 2;}
+   const auto hex=[](std::span<const unsigned char> bytes){std::string out;constexpr char alphabet[]="0123456789abcdef";for(auto b:bytes){out+=alphabet[b>>4];out+=alphabet[b&15];}return out;};const auto bytes=value->payload().view();if(!bytes){return 2;}const auto payloadHex=hex({reinterpret_cast<const unsigned char*>(bytes->data()),bytes->size()}),idHex=hex(value->originator().get()->id);
+   std::printf("L\t%lld\t%d\t%s\t%u\t%u\t%d\t%s\t%s\n",static_cast<long long>(value->creationTime()),value->version(),value->isLocal()?"true":"false",static_cast<unsigned>(value->flags()),static_cast<unsigned>(value->lifeTimeHours()),static_cast<int>(value->replicationControl()),payloadHex.c_str(),idHex.c_str());return 0;
+ }
+ AzureusDatabaseRuntimeTests tests;return QTest::qExec(&tests,argc,argv);
+}
 #include "azureus_database_runtime_tests.moc"

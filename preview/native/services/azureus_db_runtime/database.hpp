@@ -20,7 +20,7 @@ struct Limits {
   // no implicit entropy, suspension deadline, file persistence or activation.
   std::shared_ptr<azureus_storage_stats::DiversificationControl> diversificationControl;
 };
-struct Snapshot {std::size_t keys=0,values=0,bytes=0;std::uint64_t stores=0,reads=0,expired=0;bool closed=false;};
+struct Snapshot {std::size_t keys=0,values=0,bytes=0;std::uint64_t stores=0,reads=0,expired=0,localPuts=0;bool closed=false;};
 struct Read {std::int8_t diversification=1;std::vector<azureus_values::Value> values;};
 // Serialized volatile facade, no network/profile/timer/retained clock/provider.
 // Authorization and routing are supplied by the actual owned transport policy.
@@ -31,6 +31,12 @@ public:
   ~Owner();
   Owner(const Owner&)=delete;Owner& operator=(const Owner&)=delete;
   std::expected<bool,Error> contains(std::string_view)const;
+  // Source local store: actual bound contact, durable externally reserved
+  // version, normal flags/lifetime/replication only. No remote quota bypass is
+  // exposed through store(); explicit owner capacity still bounds local keys.
+  std::expected<lifecycle::DbValue,Error> putLocal(std::string_view key,
+      std::string_view payload,std::int32_t reservedVersion,lifecycle::WallClock&);
+
   // Bind exactly once before records exist; transport supplies actual bound socket/NodeCache contact.
   std::expected<void,Error> bindLocal(const azureus_nodes::Contact&);
   std::expected<std::int8_t,Error> store(std::string_view,const azureus_nodes::Contact& sender,

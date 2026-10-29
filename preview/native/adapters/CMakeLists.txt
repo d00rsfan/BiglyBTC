@@ -115,3 +115,5 @@ if(BIGLYBTC_ORIGINAL_MLDHT_IDENTITY_READER)
 else()
   message(STATUS "Original mlDHT root reader disabled explicitly; original wire identity activation is unavailable")
 endif()
+
+target_sources(biglybtc_profile PRIVATE azureus_value_versions.cpp)

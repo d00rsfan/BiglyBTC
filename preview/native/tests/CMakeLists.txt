@@ -2048,3 +2048,17 @@ if(TARGET biglybtc_i2cp_initial_channel)
   add_test(NAME i2cp-initial-channel COMMAND biglybtc-i2cp-initial-channel-tests)
   set_tests_properties(i2cp-initial-channel PROPERTIES TIMEOUT 60 LABELS "unit;i2p;owned-loopback")
 endif()
+
+# Append to tests/CMakeLists. Existing codec/identity/datagram tests stay intact.
+if(TARGET biglybtc_i2cp_session_config)
+  add_executable(biglybtc-i2cp-session-config-tests i2cp_session_config_tests.cpp)
+  target_link_libraries(biglybtc-i2cp-session-config-tests PRIVATE biglybtc_i2cp_session_config)
+  target_compile_options(biglybtc-i2cp-session-config-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME pure-i2cp-signed-session-config COMMAND biglybtc-i2cp-session-config-tests
+    "${CMAKE_CURRENT_SOURCE_DIR}/fixtures/i2p-datagram")
+  set_tests_properties(pure-i2cp-signed-session-config PROPERTIES TIMEOUT 60 LABELS "unit;i2p;crypto;no-network")
+endif()
+if(TARGET biglybtc-i2cp-initial-channel-tests)
+  target_compile_definitions(biglybtc-i2cp-initial-channel-tests PRIVATE
+    BIGLYBTC_I2P_TEST_KEYS_DIR="${CMAKE_CURRENT_SOURCE_DIR}/fixtures/i2p-datagram")
+endif()

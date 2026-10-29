@@ -1,6 +1,14 @@
 #include "owned_azureus_service.hpp"
+#include "owned_ddb_fixture.hpp"
 #include <QCoreApplication>
 #include <QtTest>
+#include <QTemporaryDir>
+#include <QFile>
+#include <QDir>
+#include <QCryptographicHash>
+#include <QNetworkDatagram>
+#include <limits>
+#include <unistd.h>
 #include <atomic>
 #include <future>
 #include <stdexcept>
@@ -19,6 +27,46 @@ bool hasEvent(const app::AzureusServiceObservation& value,udp::OperationEventKin
 class OwnedAzureusServiceTests final:public QObject {
  Q_OBJECT
 private slots:
+ void originalVersionReservationPreservesSignedJavaWidthsAndChunkBoundary(){
+   using storage::originalAzureusVersionReservation;auto first=originalAzureusVersionReservation({},1000000);QCOMPARE(first.first,1000);QCOMPARE(first.next,1128);
+   auto rollback=originalAzureusVersionReservation(2000,1000000);QCOMPARE(rollback.first,2000);QCOMPARE(rollback.next,2128);
+   auto wide=originalAzureusVersionReservation(0x100000005LL,0);QCOMPARE(wide.first,5);QCOMPARE(wide.next,133);
+   auto wrap=originalAzureusVersionReservation(std::numeric_limits<std::int32_t>::max()-63,0);QCOMPARE(wrap.next,std::numeric_limits<std::int32_t>::min()+64);
+ }
+ void profileVersionsReserveBeforeUsePreserveUnknownsAndRecoverOnlyCanonicalPending(){
+   QTemporaryDir root;QVERIFY(root.isValid());QDir dir(root.path());QVERIFY(dir.mkpath("dht/net4"));
+   const auto path=root.path()+"/dht/net4/version.dat";auto write=[&](const QString& name,const QByteArray& bytes){QFile file(name);return file.open(QIODevice::WriteOnly|QIODevice::Truncate)&&file.write(bytes)==bytes.size()&&file.flush();};
+   QVERIFY(write(path,"d4:nexti2000e6:future3:rawe"));auto held=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(held);auto versions=storage::AzureusValueVersions::open(*held,4);QVERIFY(versions);
+   QCOMPARE((*versions)->next(1000000).value(),2000);QFile saved(path);QVERIFY(saved.open(QIODevice::ReadOnly));const auto firstBytes=saved.readAll();saved.close();auto parsed=core::Document::parse(firstBytes.toStdString());QVERIFY(parsed);QCOMPARE(parsed->find("next")->integer,std::int64_t{2128});QCOMPARE(parsed->find("future")->bytes,std::string_view("raw"));
+   for(int i=1;i<128;++i){auto next=(*versions)->next(0);QVERIFY(next);QCOMPARE(*next,2000+i);}QVERIFY(saved.open(QIODevice::ReadOnly));QCOMPARE(saved.readAll(),firstBytes);saved.close();QCOMPARE((*versions)->next(0).value(),2128);
+   versions->reset();auto restarted=storage::AzureusValueVersions::open(*held,4);QVERIFY(restarted);QCOMPARE((*restarted)->next(0).value(),2256);restarted->reset();
+   QVERIFY(QFile::remove(path));QVERIFY(write(root.path()+"/dht/net4/version.saving","d4:nexti9000e6:future3:rawe"));auto recovered=storage::AzureusValueVersions::open(*held,4);QVERIFY(recovered);QCOMPARE((*recovered)->next(0).value(),9000);QVERIFY(!QFile::exists(root.path()+"/dht/net4/version.saving"));
+   QVERIFY(write(root.path()+"/dht/net4/version.saving","d4:nexti9999ee"));QVERIFY(!(*recovered)->next(0));QVERIFY(!storage::AzureusValueVersions::open(*held,4));QVERIFY(QFile::exists(root.path()+"/dht/net4/version.saving"));
+ }
+ void versionOwnerRetainsCallerLeaseAndRefusesLockOrDirectoryReplacement(){
+   QTemporaryDir root;QVERIFY(root.isValid());auto acquired=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(acquired);std::optional<storage::ProfileLease> held{std::move(*acquired)};auto versions=storage::AzureusValueVersions::open(*held,0);QVERIFY(versions);held.reset();QVERIFY(!storage::ProfileLease::acquire(root.path().toStdString()));QVERIFY((*versions)->next(1000000));
+   QVERIFY(QFile::rename(root.path()+"/.azlock",root.path()+"/.azlock.old"));auto replacementResult=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(replacementResult);std::optional<storage::ProfileLease> replacement{std::move(*replacementResult)};const auto stale=(*versions)->next(1000000);QVERIFY(!stale);QCOMPARE(stale.error().code,storage::ErrorCode::Conflict);versions->reset();replacement.reset();
+   QTemporaryDir another;QVERIFY(another.isValid());auto other=storage::ProfileLease::acquire(another.path().toStdString());QVERIFY(other);auto owned=storage::AzureusValueVersions::open(*other,0);QVERIFY(owned);QVERIFY(QDir(another.path()).rename("dht","dht-old"));QVERIFY(QDir(another.path()).mkdir("dht"));QVERIFY(!(*owned)->next(1000));
+ }
+ void localPublicationUsesActualTokenStoreAndReadbackFromGeneratedReceiver(){
+   QTemporaryDir root;QVERIFY(root.isValid());auto held=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(held);auto versions=storage::AzureusValueVersions::open(*held,4);QVERIFY(versions);
+   auto policy=options();policy.valueVersions=*versions;auto made=app::OwnedAzureusService::create(policy);QVERIFY(made);auto client=std::move(*made);
+   const std::string key="owned-original-rating-key",payload("d1:ci4e1:n4:teste\0",18);const auto digest=QCryptographicHash::hash(QByteArray::fromStdString(key),QCryptographicHash::Sha1);const std::string encodedKey(digest.constData(),static_cast<std::size_t>(digest.size()));
+   udp::Config config;config.generatedStoreService.emplace();config.generatedStoreService->volatileDatabase.emplace();services::azureus_store_policy::Key expected;expected.bytes=encodedKey;expected.closest=true;config.generatedStoreService->keyStates={expected};
+   udp::OwnedPingTransport server(std::move(config));QVERIFY(server.start());QVERIFY(server.allowPeer(client->endpoint()));
+   // The generated receiver's explicit test-only closest fact is not production
+   // routing authority. The real owner must separately admit its endpoint.
+   const auto rejected=client->publishValue(server.endpoint(),key,payload);QVERIFY(rejected);QTRY_VERIFY_WITH_TIMEOUT(finished(*client,*rejected),3000);QCOMPARE(client->observation().publishSnapshot->error,std::optional{app::AzureusServiceError::Invalid});QCOMPARE(server.statistics().received,std::uint64_t{0});
+   const auto allowed=client->allowPeer(server.endpoint());QVERIFY(allowed);QTRY_VERIFY_WITH_TIMEOUT(successful(*client,*allowed),3000);
+   const auto request=client->publishValue(server.endpoint(),key,payload);QVERIFY(request);QTRY_VERIFY_WITH_TIMEOUT(finished(*client,*request),5000);const auto snapshot=client->observation().publishSnapshot;QVERIFY(snapshot);QCOMPARE(snapshot->request,*request);QCOMPARE(snapshot->state,app::AzureusPublishState::Complete);QVERIFY(snapshot->localValue&&snapshot->localValue->isLocal());QCOMPARE(*snapshot->localValue->payload().view(),std::string_view(payload));QVERIFY(!snapshot->readback.empty());QCOMPARE(snapshot->readback[0].bytes,payload);QCOMPARE(snapshot->readback[0].version,snapshot->localValue->version());QVERIFY(snapshot->readback[0].originator.address==test::ddbAddress(client->endpoint()));
+   const auto state=server.databaseState();QVERIFY(state);QCOMPARE(state->stores,std::uint64_t{1});QCOMPARE(state->reads,std::uint64_t{1});QVERIFY(client->close());QVERIFY(client->observation().joined);QCOMPARE(snapshot->state,app::AzureusPublishState::Complete);server.close();
+ }
+ void localPublicationCancellationAndChangedProfileNeverSendStore(){
+   QTemporaryDir root;QVERIFY(root.isValid());auto held=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(held);auto versions=storage::AzureusValueVersions::open(*held,4);QVERIFY(versions);auto policy=options();policy.valueVersions=*versions;auto made=app::OwnedAzureusService::create(policy);QVERIFY(made);auto client=std::move(*made);
+   QUdpSocket sink;QVERIFY(sink.bind(QHostAddress::LocalHost,0,QUdpSocket::DontShareAddress));const udp::Peer peer{sink.localAddress(),sink.localPort()};const auto allowed=client->allowPeer(peer);QVERIFY(allowed);QTRY_VERIFY_WITH_TIMEOUT(successful(*client,*allowed),3000);
+   const auto request=client->publishValue(peer,"owned-cancel","binary");QVERIFY(request);QTRY_VERIFY_WITH_TIMEOUT(sink.hasPendingDatagrams()&&client->observation().snapshot->transport().pending()==1,3000);const auto tokenRequest=sink.receiveDatagram();QVERIFY(tokenRequest.isValid());const auto cancel=client->cancel(*request);QVERIFY(cancel);QTRY_VERIFY_WITH_TIMEOUT(client->observation().outstandingCommands==0,3000);QCOMPARE(client->observation().publishSnapshot->state,app::AzureusPublishState::Cancelled);QCOMPARE(client->observation().snapshot->transport().counters().sent,std::uint64_t{1});
+   QFile changed(root.path()+"/dht/net4/version.dat");QVERIFY(changed.open(QIODevice::WriteOnly|QIODevice::Truncate));QCOMPARE(changed.write("d4:nexti1ee"),qint64{11});changed.close();const auto stale=client->publishValue(peer,"owned-stale","binary");QVERIFY(stale);QTRY_VERIFY_WITH_TIMEOUT(finished(*client,*stale),3000);QCOMPARE(client->observation().publishSnapshot->error,std::optional{app::AzureusServiceError::Profile});QCOMPARE(client->observation().snapshot->transport().counters().sent,std::uint64_t{1});QVERIFY(client->close());QVERIFY(client->observation().joined);
+ }
  void defaultAndInvalidPolicyNeverCreateAnOwner(){
    auto disabled=app::OwnedAzureusService::create();QVERIFY(!disabled);QCOMPARE(disabled.error(),app::AzureusServiceError::Disabled);
    auto invalid=options();invalid.bindAddress=QHostAddress(QStringLiteral("192.0.2.1"));auto result=app::OwnedAzureusService::create(invalid);QVERIFY(!result);QCOMPARE(result.error(),app::AzureusServiceError::Invalid);
