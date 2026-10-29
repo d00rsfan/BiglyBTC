@@ -35,7 +35,8 @@ struct Input {
 inline QByteArray integrity(std::string_view body){
   QCryptographicHash digest(QCryptographicHash::Sha1);QByteArray password;
   for(const char c:std::string_view("changeit")){password+='\0';password+=c;}
-  digest.addData(password);digest.addData(QByteArrayView("Mighty Aphrodite",15));
+  constexpr std::string_view salt="Mighty Aphrodite";
+  digest.addData(password);digest.addData(QByteArrayView(salt.data(),static_cast<qsizetype>(salt.size())));
   digest.addData(QByteArrayView(body.data(),static_cast<qsizetype>(body.size())));return digest.result();
 }
 inline std::expected<QList<QSslCertificate>,storage::Error> decode(std::string_view bytes){

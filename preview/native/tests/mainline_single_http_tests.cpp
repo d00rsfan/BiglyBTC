@@ -357,7 +357,7 @@ private slots:
   void originalJksTrustUsesLastAliasAndFirstKeyCertificateAndChecksIntegrity(){
     Certificate first,second;const auto a=first.certificate.toDer(),b=second.certificate.toDer();
     for(const quint32 version:{1,2}){
-      const auto encoded=jksStore({{"localhost:443",{a},false}},version);auto decoded=detail::http_trust::decode(encoded.toStdString());QVERIFY(decoded);QCOMPARE(decoded->size(),1);QCOMPARE(decoded->front().toDer(),a);
+      const auto encoded=jksStore({{"localhost:443",{a},false}},version);auto decoded=detail::http_trust::decode(encoded.toStdString());QVERIFY2(decoded,decoded?"":decoded.error().message.c_str());QCOMPARE(decoded->size(),1);QCOMPARE(decoded->front().toDer(),a);
       auto duplicate=detail::http_trust::decode(jksStore({{"same",{a},false},{"same",{b},false}},version).toStdString());QVERIFY(duplicate);QCOMPARE(duplicate->size(),1);QCOMPARE(duplicate->front().toDer(),b);
       auto unreachable=detail::http_trust::decode(jksStore({{"UPPER",{a},false}},version).toStdString());QVERIFY(unreachable&&unreachable->isEmpty());
       auto canonical=detail::http_trust::decode(jksStore({{"UPPER",{a},false},{"upper",{b},false}},version).toStdString());QVERIFY(canonical);QCOMPARE(canonical->size(),1);QCOMPARE(canonical->front().toDer(),b);
@@ -375,7 +375,7 @@ private slots:
     QTemporaryDir first,second;QVERIFY(first.isValid()&&second.isValid());auto a=storage::ProfileLease::acquire(first.path().toStdString()),b=storage::ProfileLease::acquire(second.path().toStdString());QVERIFY(a&&b);
     Certificate identity;const auto encoded=jksStore({{"localhost:443",{identity.certificate.toDer()},false}});const auto leaf=first.path()+"/.certs";
     auto http=detail::libraryHttpConfiguration(*a);QVERIFY(http);test::write(leaf,encoded);const SavedBytes saved(leaf);
-    auto trusted=detail::libraryHttpConfiguration(*a,true),absent=detail::libraryHttpConfiguration(*b,true);QVERIFY(trusted&&absent);QVERIFY(trusted->trustAnchors);QCOMPARE(trusted->trustAnchors->size(),1);QVERIFY(!absent->trustAnchors);QVERIFY(trusted->scope!=absent->scope);QVERIFY(saved.unchanged());
+    auto trusted=detail::libraryHttpConfiguration(*a,true),absent=detail::libraryHttpConfiguration(*b,true);QVERIFY2(trusted&&absent,!trusted?trusted.error().message.c_str():(!absent?absent.error().message.c_str():""));QVERIFY(trusted->trustAnchors);QCOMPARE(trusted->trustAnchors->size(),1);QVERIFY(!absent->trustAnchors);QVERIFY(trusted->scope!=absent->scope);QVERIFY(saved.unchanged());
     auto plain=detail::libraryHttpConfiguration(*a);QVERIFY(plain);QCOMPARE(plain->scope,http->scope);QVERIFY(!plain->trustAnchors);
     QVERIFY(QFile::rename(leaf,leaf+".old"));test::write(leaf,encoded);auto replaced=detail::libraryHttpConfiguration(*a,true);QVERIFY(replaced);QVERIFY(replaced->scope!=trusted->scope);QCOMPARE(test::read(leaf+".old"),encoded);
     test::write(leaf,"broken saved store");const SavedBytes bad(leaf);QVERIFY(!detail::libraryHttpConfiguration(*a,true));QVERIFY(detail::libraryHttpConfiguration(*a));QVERIFY(bad.unchanged());
@@ -389,9 +389,9 @@ private slots:
     Certificate identity,other;HttpServer server(&identity);const auto leaf=profile.path()+"/.certs";const auto encoded=jksStore({{"localhost",{identity.certificate.toDer()},false}});
     test::write(leaf,encoded);const auto route=detail::libraryHttpRoute(policy(),server.url());QVERIFY(route);detail::LibraryHttpTracker client;
     const auto global=QSslConfiguration::defaultConfiguration().caCertificates();std::optional<detail::LibraryHttpTracker::Result> result;QString failure;
-    const auto issue=[&](std::uint64_t nonce,const detail::LibraryHttpRoute& r){auto config=detail::libraryHttpConfiguration(*lease,true);if(!config){return false;}auto next=request(nonce);next.configuration=detail::libraryHttpRouteScope(r,config->scope);return client.start(std::move(next),r,millis(),wallMillis(),config->singleOnly,config->trustAnchors).has_value();};
+    const auto issue=[&](std::uint64_t nonce,const detail::LibraryHttpRoute& r){auto config=detail::libraryHttpConfiguration(*lease,true);if(!config){failure=QString::fromStdString(config.error().message);return false;}auto next=request(nonce);next.configuration=detail::libraryHttpRouteScope(r,config->scope);auto started=client.start(std::move(next),r,millis(),wallMillis(),config->singleOnly,config->trustAnchors);if(!started){failure=QString::fromStdString(started.error().message);return false;}return true;};
     const auto pump=[&](const detail::LibraryHttpRoute& r){auto value=client.poll(millis(),wallMillis(),[&](const auto& current){auto fresh=detail::libraryHttpConfiguration(*lease,true);return fresh&&current.configuration==detail::libraryHttpRouteScope(r,fresh->scope);});if(!value){failure=QString::fromStdString(value.error().message);return false;}if(*value){result=std::move(**value);}return true;};
-    QVERIFY(issue(1,*route));QTRY_VERIFY_WITH_TIMEOUT(client.resolvedProposalPending(),10000);QCOMPARE(server.connections,0);
+    QVERIFY2(issue(1,*route),qPrintable(failure));QTRY_VERIFY_WITH_TIMEOUT(client.resolvedProposalPending(),10000);QCOMPARE(server.connections,0);
     QVERIFY(QFile::rename(leaf,leaf+".old"));test::write(leaf,encoded);QVERIFY(pump(*route));QVERIFY(!client.active()&&!result);QCOMPARE(server.connections,0);
     const SavedBytes saved(leaf);QVERIFY(issue(2,*route));QTRY_VERIFY_WITH_TIMEOUT(!pump(*route)||result.has_value(),10000);QVERIFY2(failure.isEmpty(),qPrintable(failure));QVERIFY(result&&result->terminal.comparable);QCOMPARE(server.requests,1);QVERIFY(saved.unchanged());result.reset();
     const auto wrong=detail::libraryHttpRoute(policy(),server.url(true));QVERIFY(wrong);QVERIFY(issue(3,*wrong));QTRY_VERIFY_WITH_TIMEOUT(!pump(*wrong)||result.has_value(),10000);QVERIFY(failure.isEmpty());QVERIFY(result&&result->terminal.definitiveFailure&&!result->terminal.comparable);QCOMPARE(server.requests,1);result.reset();
