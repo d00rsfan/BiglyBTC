@@ -1,0 +1,74 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_PENDING_INDEPENDENT_REVIEW",
+  "native_commit": "f443b0f21975c69fbddf557618f6dd9b43bbc302",
+  "source_paths": {
+    "preview/native/app/azureus_profile_io_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/normal-preflight-backpressure/before/preview/native/app/azureus_profile_io_owner.inc",
+      "before_sha256": "b171c12e6628d031ddf553d3215715254c9eff26aedd8d86d6a5509e80265de8",
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/normal-preflight-backpressure/staging/preview/native/app/azureus_profile_io_owner.inc",
+      "after_sha256": "e08d1cba5f3791485b1499c73527ebd8154948d4e4520497110c60c9205b186f"
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/normal-preflight-backpressure/before/preview/native/app/owned_azureus_service.cpp",
+      "before_sha256": "601af4b92194c1c45338c33944f35f22cf3941176928c247d8a5669d69760771",
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/normal-preflight-backpressure/staging/preview/native/app/owned_azureus_service.cpp",
+      "after_sha256": "a6c8d83a99098397501cab664d55a8ddb1f71f55b893138fdbab622be395f33c"
+    },
+    "preview/native/tests/azureus_maintenance_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/normal-preflight-backpressure/before/preview/native/tests/azureus_maintenance_tests.cpp",
+      "before_sha256": "21d8410cc50abbf9735e0a5871b38e07d54dd5921100460044feba8a8d2df8d1",
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/normal-preflight-backpressure/staging/preview/native/tests/azureus_maintenance_tests.cpp",
+      "after_sha256": "850b0885a24a149aa3a7e4b38403b2b8bf0e8bf570eae48be6a8685371b1c785"
+    },
+    "preview/native/tests/azureus_profile_io_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/normal-preflight-backpressure/before/preview/native/tests/azureus_profile_io_tests.cpp",
+      "before_sha256": "5f6e1c48130db72f3ec73e527e17494700318b4dc998febcea228ecebf5ab523",
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/normal-preflight-backpressure/staging/preview/native/tests/azureus_profile_io_tests.cpp",
+      "after_sha256": "b52eed443602aa3406cdf0c609b6a4e6a31de56ae78c896f655bb578e1c5977b"
+    }
+  },
+  "artifacts_sha256": {
+    "ADOPTION.txt": "ec0a1d1d47752cbfda5db6a1e0630ac78ac408f09b687f37ce9a290cb6f5d44c",
+    "before/preview/native/app/azureus_profile_io_owner.inc": "b171c12e6628d031ddf553d3215715254c9eff26aedd8d86d6a5509e80265de8",
+    "before/preview/native/app/owned_azureus_service.cpp": "601af4b92194c1c45338c33944f35f22cf3941176928c247d8a5669d69760771",
+    "before/preview/native/tests/azureus_maintenance_tests.cpp": "21d8410cc50abbf9735e0a5871b38e07d54dd5921100460044feba8a8d2df8d1",
+    "before/preview/native/tests/azureus_profile_io_tests.cpp": "5f6e1c48130db72f3ec73e527e17494700318b4dc998febcea228ecebf5ab523",
+    "changes.patch": "9a022bde08e21470ec8867b5c32c177b2d40575126d3de809a9ed448bdf199bb",
+    "staging/preview/native/app/azureus_profile_io_owner.inc": "e08d1cba5f3791485b1499c73527ebd8154948d4e4520497110c60c9205b186f",
+    "staging/preview/native/app/owned_azureus_service.cpp": "a6c8d83a99098397501cab664d55a8ddb1f71f55b893138fdbab622be395f33c",
+    "staging/preview/native/tests/azureus_maintenance_tests.cpp": "850b0885a24a149aa3a7e4b38403b2b8bf0e8bf570eae48be6a8685371b1c785",
+    "staging/preview/native/tests/azureus_profile_io_tests.cpp": "b52eed443602aa3406cdf0c609b6a4e6a31de56ae78c896f655bb578e1c5977b"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/runs/clang-r2/tests.xml": "dd2c1fe69aeeb6fab7bdd2c421edb3c042242ac06bd13a140140b85651697d23",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/runs/clang-r2/ctest-full.log": "6202dbc1dc8b8f9f7a7876d30a27b79d0656ffa8c7db10978296f23e006b2946",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/mutable-contact-work/manifest.json": "4cff5dd23d0cd5e59a599d700e910082dd76296f4da7e6439ff1df1ce4460cde"
+  },
+  "static_checks": {
+    "current_and_git_beforeimages": true,
+    "apply_check": "PASS",
+    "retained_profile_io_test_methods": [
+      "release",
+      "heldDiskHandoffDoesNotBlockRealPingDeadlineCancellationOrSocketClose",
+      "currentVersionSourceIsRecheckedAfterTheHeldJobBeforeAnyPacketEffect",
+      "initialRatingIoCanBeCancelledBeforeAnySnapshotOrPacketAndFreshReadStillWorks",
+      "nestedObservedWritersRefuseBeforeEffectsRatherThanCallUnderOuterGate",
+      "permitsAreSingleUseBoundQueuedActiveAndReadyThenReclaimSlots"
+    ]
+  },
+  "tests": {
+    "existing": [
+      "azureus-maintenance",
+      "azureus-profile-io"
+    ],
+    "added_data_rows": [
+      "release-current",
+      "disable-current-source",
+      "close-and-cancel-queued"
+    ],
+    "new_targets": false,
+    "changed_deadlines": false
+  },
+  "execution": false
+}

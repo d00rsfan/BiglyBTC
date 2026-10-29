@@ -1,0 +1,22 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_COMBINED_MAINTENANCE_CONTACTS_ENC4",
+  "artifacts_sha256": {
+    "adopt.py": "92b8a73e54b562a34532b5d46f8293a89dbaa50e062c2671925a72ca5502c4ef",
+    "approved-inputs.json": "ce245bc976bcda885284d249ed739af930af1746953d6ce08fbc2cedf71925af",
+    "jobs.mk": "c2057ba601144150b1fcbc1c337b4601367849fa03ab8e530338b653ac587043",
+    "offline-manifest.json": "eb226bd3ca0195017f3d76cd576e2d5805b846474957daa366f74179abfb16db",
+    "offline.py": "cd34de944465e79bf9526a8dadf9f2073fe02e653e873b9093fc6d473b6fdf88",
+    "private-manifest.json": "885c4aa5521cde8b91a59d973cdae42618889262abfe153f7be36d4734a15cdd",
+    "private.py": "eb6b751f5e84236fc1b27ffa30abc109f30534bf078ebffe41570c57cb258f16",
+    "root-source-review.json": "33be1f01e69ba14a2c90cff993db211ed09c32d8c17ee8b3fc6f5d18a5648279",
+    "router-source.json": "d30a66533a092c5efecf29e8b07d0fa484b2ae5c7bf22c03e5b750a9657784b3",
+    "router.py": "c1cbc16c536f27d8f0446a51157311c9768a6eb0e76a64924d6ecb1b055ccb60",
+    "run.py": "9dab7b5c5405fe2f0faddbbe79636d01e1a605830ada2d698975910ec805939d",
+    "runner-source-review.json": "0de430f132760030dfc1211d19ecc2e03fc164e50cd7f33f3cc077f856716c9a"
+  },
+  "inherited_sources": {
+    "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/run-r3.py": "4c6e88b37330605cf0fbf13504317792a776b2ce84f3da8b6ed74f815c3a16c2",
+    "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/recipe_support_followup.py": "64e0bd2b9ec87b9babf90bdf8d1235746f7dc63c797c82c5e5a138a4c2ea893a"
+  },
+  "runtime_executed": false
+}

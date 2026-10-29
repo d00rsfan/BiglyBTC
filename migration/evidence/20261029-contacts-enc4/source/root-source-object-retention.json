@@ -1,0 +1,112 @@
+{
+  "status": "PASS",
+  "source_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+  "source_jar_sha256": "b169a9cebb58bee8b9ca2e73743418b1e9a634bdea4faa8ca6e2063d1032f23a",
+  "network_used": false,
+  "objects": [
+    {
+      "path": "core/java/src/net/i2p/crypto/KeyGenerator.java",
+      "git_blob": "cb0503eee94d81fa8094e998bd7509f6919bb611",
+      "sha256": "2a821cb6808a5e697c10bbc8f5852d97dd98103622ea2a71f81dfd713bc664b9",
+      "already_retained": true,
+      "retained": true
+    },
+    {
+      "path": "core/java/src/net/i2p/crypto/EncType.java",
+      "git_blob": "f9699d433a41ad224b4ef68c655040a4ed7de9a7",
+      "sha256": "7abbd6dec89dfee9ecf92a68e5f3c341310257dd6ae2a6a46c9708295ff5736d",
+      "already_retained": true,
+      "retained": true
+    },
+    {
+      "path": "core/java/src/com/southernstorm/noise/crypto/x25519/Curve25519.java",
+      "git_blob": "816119432abf5b16b2d450729e8e39e1e13489c7",
+      "sha256": "ba5bd1061115b3cc9142978e2d06b7db8d2ff0b459d00b7c0b68ae2c2659f0e7",
+      "already_retained": true,
+      "retained": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/impl/I2PClientImpl.java",
+      "git_blob": "c9bc25687f162128a3c3a6f0dda17683c998fc82",
+      "sha256": "30ac6a62fbeb2f25fc3c2ce5f934e06dd6beef3c33267ddb825e87002924c2e5",
+      "already_retained": true,
+      "retained": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/impl/RequestLeaseSetMessageHandler.java",
+      "git_blob": "8647e54c0fc544a7cdfbddd67c4c58cf2e71ab28",
+      "sha256": "4cecdb20b23ebec35ddf3260c8822ae2040ef9800393f01aad4501898aef8212",
+      "already_retained": true,
+      "retained": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/impl/I2PSessionImpl.java",
+      "git_blob": "44123f7c26d4218902e1492e975f0a30e3ffc174",
+      "sha256": "369f04aec096509d16f0d56457a6d0fedc4fcd559e317f211d0822bba690a28c",
+      "already_retained": true,
+      "retained": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/LeaseSet2.java",
+      "git_blob": "3b19bf6a5198ab85ccbe971a07b389138f51a1e3",
+      "sha256": "c023cdc228b043bddc83fcde8f04117c23fbe3d2bde66c6b93b3073c13c9c36f",
+      "already_retained": true,
+      "retained": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/i2cp/CreateLeaseSet2Message.java",
+      "git_blob": "e6918974a8ccbbb0c86a9acbd83be890b13d68aa",
+      "sha256": "d9d8daeda8f8881c55074913064f3f99cb609602998f7ef0ed7e81795e7b4b34",
+      "already_retained": true,
+      "retained": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/i2cp/RequestVariableLeaseSetMessage.java",
+      "git_blob": "441fd6958f19ade44a3359a0d2e65cbcf61fac16",
+      "sha256": "d36665dac75cf814fbee0de6b12915e6d0c29cb76ea0e4711b5e54674ba73571",
+      "already_retained": true,
+      "retained": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/PrivateKeyFile.java",
+      "git_blob": "0446445b04a92ec5ca94a202c7b17e173a48943b",
+      "sha256": "9685aaeffcb85f24cb435e59494e7fb7cf872800b0013fdb75dcb2fb902f1ffc",
+      "already_retained": true,
+      "retained": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/PrivateKey.java",
+      "git_blob": "41c544e17207cdf40d1bc0082725daa91ee37991",
+      "sha256": "a00a7ae84f35378084c0678e23604eb01d2ef85ca43bba4abcb1dd10ed9fa204",
+      "already_retained": true,
+      "retained": true
+    },
+    {
+      "path": "core/java/src/net/i2p/data/PublicKey.java",
+      "git_blob": "805ab5999a3b96e87a7784afd7c4c087c69b94fc",
+      "sha256": "fa0aa6e714e9cbd6e59686302aa98a5b425c5e34d11ef0098598cce3001e6fbd",
+      "already_retained": true,
+      "retained": true
+    },
+    {
+      "path": "router/java/src/net/i2p/router/client/ClientMessageEventListener.java",
+      "git_blob": "8960157856bc79df37d39ab6115e48c6fc450802",
+      "sha256": "58df866c1edd70e1220fe9bf92508ede3bb1c230c17bb2b3e01ce6724681a674",
+      "already_retained": true,
+      "retained": true
+    },
+    {
+      "path": "core/java/src/net/i2p/client/impl/RequestVariableLeaseSetMessageHandler.java",
+      "git_blob": "45769ee3f4893c9786a1dc90dbb73783cdde2c63",
+      "sha256": "2cd4ae114d978bee017b6d42f72fdd15e90ad498b05d0595e6a4ffbe9a425909",
+      "already_retained": true,
+      "retained": true
+    }
+  ],
+  "prior_attempt": {
+    "exit": 1,
+    "error": "KeyError('source_jar_entry')",
+    "reason": "Router source is retained as a verified local Git blob rather than a source-JAR entry; the initial loop assumed all entries came from the JAR. Earlier verified JAR entries may already have been inserted. Final receipt validates all14 after handling both exact input forms.",
+    "network_used": false
+  }
+}

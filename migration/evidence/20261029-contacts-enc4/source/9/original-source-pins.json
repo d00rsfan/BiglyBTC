@@ -1,0 +1,14 @@
+{
+  "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java": {
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "git_blob": "a895f11be8bf2e7e00d15a841a8de975e63663d6",
+    "sha256": "952851231979640c1eb5704f55120e19fda91270dbd1c98c9fcc454ccf89daa9",
+    "sections": "497-520: refresh operation bounded at five minutes"
+  },
+  "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java": {
+    "commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+    "git_blob": "b756f15b7863793f320b55957b657c53196b0cba",
+    "sha256": "b1d4e38f2bc9c33bda1bd39092ea87352a6668ca41664dafe1be7011fe163092",
+    "sections": "2590-2691: individual sendFindNode uses independent request_timeout"
+  }
+}

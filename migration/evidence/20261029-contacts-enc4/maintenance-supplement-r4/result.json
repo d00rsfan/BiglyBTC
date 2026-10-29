@@ -1,0 +1,17 @@
+{
+  "status": "FAIL_SUPPLEMENTAL_MAINTENANCE_ONLY",
+  "source_commit": "9a8cf1aa2375797e368434423b8890fce1dbb09b",
+  "images": {
+    "biglybtc-azureus-maintenance-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-azureus-maintenance-tests",
+      "sha256": "d88c1228c9a50e64422ac4b52e150ad25564b4a414b04a84dd3dc24875852231",
+      "bytes": 1602024
+    }
+  },
+  "no_build": true,
+  "no_pass_credit_to_failed_cohort": true,
+  "runner_sha256": "5254a93613015c8aae1e9b243a6ad3febaa981c04aa7e314f5b3f9476705205d",
+  "failed_result_sha256": "9e398586bcf70813600faf5f570b5f87430dbcbb86a88f03e78f27384c862a78",
+  "failure": "AssertionError('new-maintenance-tests')",
+  "commands_sha256": "c3bb39d3b3a14906d8163a9358def8c3532152d280bd12ab57fda6b39fb9aba6"
+}

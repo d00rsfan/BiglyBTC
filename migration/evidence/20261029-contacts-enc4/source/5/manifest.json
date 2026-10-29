@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_PENDING_INDEPENDENT_REVIEW",
+  "native_commit": "f26966a0695dbe15126c3543c33b237d31789c8e",
+  "source_paths": {
+    "preview/native/app/azureus_profile_io.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/running-queue-wake/before/preview/native/app/azureus_profile_io.hpp",
+      "before_sha256": "6c8abb9b8e2c2ede2331f996db76571082fed214582f7b7514fbb66d9644da27",
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/running-queue-wake/staging/preview/native/app/azureus_profile_io.hpp",
+      "after_sha256": "0a6beb911cc212377f245149281d0c1348cf2e91601db83e480e0a8bb01f473d"
+    },
+    "preview/native/tests/azureus_profile_io_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/running-queue-wake/before/preview/native/tests/azureus_profile_io_tests.cpp",
+      "before_sha256": "b52eed443602aa3406cdf0c609b6a4e6a31de56ae78c896f655bb578e1c5977b",
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/running-queue-wake/staging/preview/native/tests/azureus_profile_io_tests.cpp",
+      "after_sha256": "ed12e752f2bd94556fc8ea2a4b8efc70f1a0dbf0f5b097db56932618181a9a47"
+    }
+  },
+  "artifacts_sha256": {
+    "ADOPTION.txt": "6223caa1f6dc05c7985a55169663e1e1d96aadd3d93aa8973aaf402bce6b8bb5",
+    "before/preview/native/app/azureus_profile_io.hpp": "6c8abb9b8e2c2ede2331f996db76571082fed214582f7b7514fbb66d9644da27",
+    "before/preview/native/tests/azureus_profile_io_tests.cpp": "b52eed443602aa3406cdf0c609b6a4e6a31de56ae78c896f655bb578e1c5977b",
+    "changes.patch": "f2e41537c9d0d87f01831e96cf7e48e1370efcca1914e1d691ae27b591dc1c68",
+    "staging/preview/native/app/azureus_profile_io.hpp": "0a6beb911cc212377f245149281d0c1348cf2e91601db83e480e0a8bb01f473d",
+    "staging/preview/native/tests/azureus_profile_io_tests.cpp": "ed12e752f2bd94556fc8ea2a4b8efc70f1a0dbf0f5b097db56932618181a9a47"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/runs/clang-r3/tests.xml": "c52f33ca376c01826ddadafdd42a23365d1074cd03a975c00879b9d5d6ca1475",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/runs/clang-r3/ctest-full.log": "4946afdcdff7b895caa238eb18bc3050d85a2f4b9cffe217cc2b8d697161431e",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/normal-preflight-backpressure/manifest.json": "5d95ea1d5e2b1b9ae2ab4c68fd45d1a26ae998f61fe29da0d38f7e426f6c5c75",
+    "/home/yurii/Java/BiglyBTC/preview/native/core/src/executor.cpp": "b886692587ef8c5efc269ea3735f2b64f3432a255b8a1bd57b357627bc3da77a"
+  },
+  "tests": {
+    "existing": "azureus-profile-io",
+    "target": "biglybtc-azureus-profile-io-tests",
+    "added_method": "runningWorkerWakesQueueBackpressureBeforeHeldSourceCanBecomeReady",
+    "changed_deadlines": false,
+    "changed_capacities": false
+  },
+  "execution": false
+}

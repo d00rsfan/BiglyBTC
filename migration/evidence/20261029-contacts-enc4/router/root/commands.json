@@ -1,0 +1,136 @@
+[
+  {
+    "name": "java-version",
+    "command": [
+      "/usr/bin/java",
+      "-version"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.066,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r2/java-version.log",
+    "log_sha256": "c0e73a8bb10147ba34eb497b8d8eee2e66d5f5965a402237e1bc4d0dd5985234"
+  },
+  {
+    "name": "javac-version",
+    "command": [
+      "/usr/bin/javac",
+      "-version"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.268,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r2/javac-version.log",
+    "log_sha256": "eacfd324370ccb68feeb0ac90f2039a88a3caa16443843585b6687575f117ee3"
+  },
+  {
+    "name": "javac",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/bin/javac",
+      "-J-Xmx128m",
+      "-J-XX:ActiveProcessorCount=1",
+      "-J-XX:+UseSerialGC",
+      "-J-Duser.home=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r2/home",
+      "-J-Djava.io.tmpdir=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r2/tmpdir",
+      "--release",
+      "17",
+      "-cp",
+      "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "-d",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r2/classes",
+      "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/amendments/router-ls2-static-type/staging/RouterTracker.java"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 1.778,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r2/javac.log",
+    "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "name": "configure",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/bin/cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/isolated-router",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r2/probe-build",
+      "-G",
+      "Ninja",
+      "-DCMAKE_BUILD_TYPE=Release",
+      "-DCMAKE_CXX_COMPILER=/usr/bin/g++-16",
+      "-DCMAKE_MAKE_PROGRAM=/usr/bin/ninja",
+      "-DQt6_DIR=/opt/Qt/6.12.0/gcc_64/lib/cmake/Qt6",
+      "-DBIGLYBTC_NATIVE_SOURCE=/home/yurii/Java/BiglyBTC/preview/native",
+      "-DBIGLYBTC_NATIVE_BUILD=/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "-DCMAKE_CXX_FLAGS=",
+      "-DCMAKE_CXX_FLAGS_RELEASE=-O3 -DNDEBUG",
+      "-DCMAKE_EXE_LINKER_FLAGS=",
+      "-DOPENSSL_CRYPTO_LIBRARY=/usr/lib/x86_64-linux-gnu/libcrypto.so",
+      "-DOPENSSL_INCLUDE_DIR=/usr/include",
+      "-DZLIB_LIBRARY_RELEASE=/usr/lib/x86_64-linux-gnu/libz.so",
+      "-DZLIB_INCLUDE_DIR=/usr/include"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.919,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r2/configure.log",
+    "log_sha256": "97e0bfbb054bda5f5e79e630f0c2e41c34d1a69da4e753999933035f744fff5e"
+  },
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/bin/cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r2/probe-build",
+      "--parallel",
+      "1",
+      "--target",
+      "biglybtc-i2cp-enc4-router-probe"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 5.929,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r2/build.log",
+    "log_sha256": "b942686e366553310f66615f2fbf2ce185892b04a621900058ee93965c4ee9ce"
+  },
+  {
+    "name": "router",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/bin/python3",
+      "-B",
+      "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/isolated-router/run.py",
+      "--native-result",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/runs/gcc-r7/result.json",
+      "--source-commit",
+      "0f7e9216253a7881fae11e1a7dae8a849cb333e8",
+      "--probe-build",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r2/probe-build",
+      "--classes",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r2/classes",
+      "--jar",
+      "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "--java",
+      "/usr/bin/java",
+      "--output",
+      "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/isolated-router/runs/r2",
+      "--acknowledge-owned-signed-cache-precondition"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 5.045,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r2/router.log",
+    "log_sha256": "c6122f103858ef8e78590b46c5507016a8d4ce190d8894ad095b66d6dac33890"
+  }
+]

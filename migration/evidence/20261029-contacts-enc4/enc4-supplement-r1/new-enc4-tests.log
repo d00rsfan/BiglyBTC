@@ -1,0 +1,16 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang
+    Start 285: i2cp-initial-channel
+1/2 Test #285: i2cp-initial-channel .............   Passed   13.85 sec
+    Start 287: pure-i2cp-leaseset2
+2/2 Test #287: pure-i2cp-leaseset2 ..............   Passed    0.09 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+crypto            =   0.09 sec*proc (1 test)
+i2p               =  13.94 sec*proc (2 tests)
+no-network        =   0.09 sec*proc (1 test)
+owned-loopback    =  13.85 sec*proc (1 test)
+unit              =  13.94 sec*proc (2 tests)
+
+Total Test time (real) =  13.95 sec

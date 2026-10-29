@@ -1,0 +1,10 @@
+# Real owned10s/six-tick refresh and compatible profile restart. No fast clock.
+if(TARGET biglybtc_owned_azureus_service)
+  add_executable(biglybtc-azureus-maintenance-tests azureus_maintenance_tests.cpp)
+  set_target_properties(biglybtc-azureus-maintenance-tests PROPERTIES AUTOMOC ON)
+  target_link_libraries(biglybtc-azureus-maintenance-tests PRIVATE biglybtc_owned_azureus_service Qt6::Test)
+  target_compile_features(biglybtc-azureus-maintenance-tests PRIVATE cxx_std_23)
+  target_compile_options(biglybtc-azureus-maintenance-tests PRIVATE -Wall -Wextra -Wpedantic -Werror)
+  add_test(NAME azureus-maintenance COMMAND biglybtc-azureus-maintenance-tests)
+  set_tests_properties(azureus-maintenance PROPERTIES TIMEOUT 240 LABELS "unit;loopback;profile;routing" ENVIRONMENT "QT_QPA_PLATFORM=offscreen")
+endif()

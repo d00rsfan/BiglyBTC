@@ -1,0 +1,41 @@
+{
+  "files": {
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/jobs-r7.mk": {
+      "sha256": "42c82158743db2fad456222c7a896298b4b5200c5287ae86cd88643d71530bdf",
+      "bytes": 574
+    },
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/run-r7.py": {
+      "sha256": "87cf179cf0db5b1d7402429da8675116e252f9ea14b9078dfc4878a2b39d4b85",
+      "bytes": 6084
+    },
+    "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/recipe_support_followup.py": {
+      "sha256": "64e0bd2b9ec87b9babf90bdf8d1235746f7dc63c797c82c5e5a138a4c2ea893a",
+      "bytes": 6300
+    },
+    "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/run-r3.py": {
+      "sha256": "4c6e88b37330605cf0fbf13504317792a776b2ce84f3da8b6ed74f815c3a16c2",
+      "bytes": 11282
+    },
+    "/usr/bin/cmake": {
+      "sha256": "6e1dccda39845415d68eabb934c598998949c99ec4668625d571aee1827b05c7",
+      "bytes": 14253272
+    },
+    "/usr/bin/ctest": {
+      "sha256": "2cf8308ae2235efcae86a2eba443444f33ab611193a84092de33ec16836f5f17",
+      "bytes": 15926040
+    },
+    "/usr/bin/make": {
+      "sha256": "27c9f6d806aee15882b01c2c61848f7aa75caa14bc7b6f608ba422f9e46a7d49",
+      "bytes": 295120
+    },
+    "/usr/bin/ninja": {
+      "sha256": "91e9548850cda2799facfdaa7abe33f9e978832f85e98212255708a7bbe437f2",
+      "bytes": 350624
+    },
+    "/usr/lib/llvm-24/bin/clang": {
+      "sha256": "f283b32b557e7598ca569f3097088e7406c1d81377085b06853f5259c5460ed9",
+      "bytes": 134088
+    }
+  },
+  "jobserver_fifo": "/tmp/GMfifo2357323"
+}

@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "status": "SOURCE_PASS_NO_EXECUTION",
+  "manifest": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/refresh-per-rpc-budget/manifest.json",
+  "manifest_sha256": "c53e277f95be30efcb708044b9bd31d730fe9f3c9e7352552d7208badaf73558",
+  "native_basis": "e9f90a8e89b268a6cc9246c3e8c400fc6c07e09a",
+  "verified": {
+    "source_maps": 2,
+    "artifacts": 7,
+    "inputs": 4,
+    "current_and_git_beforeimages": true,
+    "patch_apply_check": true,
+    "retained_original_git_blobs": 2
+  },
+  "findings": [
+    "Original DHTControlImpl509-517 gives the whole refresh a five-minute budget, while DHTTransportUDPImpl sendFindNode2590-2691 uses independent request_timeout for one RPC. Native submit391 rejects any individual request above30s; maintenance had passed the full five-minute remaining round time.",
+    "Exact production change clamps only one NODE RPC to min(actual remaining,30s); shorter integration budgets and original five-minute round deadline remain intact. Existing positive-remaining, owner/current source permit, allowed endpoint/protocol and transaction gates are unchanged. No authority or budget extension.",
+    "Test strengthens the existing actual-timer proof with same operation, no transport failure, Complete and actual Replied node; bounded per-node diagnostics aid any real failure. No deadlines/capacities/old wire assertions relaxed.",
+    "Follow-on source review: Value commands and explicit routing/bootstrap globals already cap30s; received NODE callbacks reacquire fresh normalPreflight before mutation; final completion also preflights. Subsequent actual100ms peer timeout\u2192contactDead\u2192ordinary10s Ping retry remains source-consistent. No further concrete blocker found."
+  ],
+  "limits": "Actual r5 failed; this correction has not compiled or run. It does not resolve the separate AllowPeer Known-ID/normalContacts attachment mismatch; current test uses genuine incoming PINGs to establish both.",
+  "review_blockers": [],
+  "compiler_execution": false,
+  "runtime_execution": false,
+  "native_mutated": false,
+  "original_source_pins_sha256": "8c0100b008265ba72d0e262ff6ec9c75c84c1a82f5c5b1d4da71a7d302e36c61"
+}

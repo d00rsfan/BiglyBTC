@@ -1,0 +1,443 @@
+[
+  {
+    "name": "stage",
+    "command": [
+      "python3",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/preview/migration/tools/stage_preview.py",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc",
+      "--output",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate",
+      "--libtorrent-package",
+      "/home/yurii/Java/BiglyBTC/build/dependencies/packages/libtorrent-rasterbar2.0t64_2.0.12-1_amd64.deb",
+      "--source-libtorrent",
+      "/home/yurii/Java/BiglyBT/build/mainline-dual-identity-provider-20261028/candidate-r2/install/lib/libtorrent-rasterbar.so.2.0.12",
+      "--private-mainline-routing-provider-manifest",
+      "/home/yurii/Java/BiglyBTC/preview/native/engine/runtime-binding/provider-mainline-routing-runtime.json"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 8.082,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/stage.log",
+    "log_sha256": "ff85a06204b0680ec4135a66442d718927854999292f05a4044db87ef6e64155"
+  },
+  {
+    "name": "loader-azureus-routing",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-routing-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.036,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/loader-azureus-routing.log",
+    "log_sha256": "9e81bbeeb9dfc1d0b522dfd4df96454ffe35b0ff66fdf3c8e3a2cc370534d52c"
+  },
+  {
+    "name": "azureus-routing",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-routing-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-routing.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-routing.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 1.475,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-routing.log",
+    "log_sha256": "f19e018a3ca6c7e007ff79116d3597b6320ebcdff56e168a06fe727584358ddb"
+  },
+  {
+    "name": "loader-owned-ddb-control",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-owned-ddb-control-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.008,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/loader-owned-ddb-control.log",
+    "log_sha256": "dcf913ff574a8c371c8571d974a0552abb38fb2b6409ded3ba2e6fba15e64811"
+  },
+  {
+    "name": "owned-ddb-control",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-owned-ddb-control-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.004,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/owned-ddb-control.log",
+    "log_sha256": "5dea14d9d35d0f50537d59807f73768adcc81aafd7555eb007c59066e8ecf3d2"
+  },
+  {
+    "name": "loader-azureus-router-owner",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-router-owner-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/loader-azureus-router-owner.log",
+    "log_sha256": "47ef1f167d28b235cb30d1a494cd243012366b8459a21fac18a110e82c8d48d2"
+  },
+  {
+    "name": "azureus-router-owner",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-router-owner-tests",
+      "/home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/azureus-router/source-cases.tsv"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.008,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-router-owner.log",
+    "log_sha256": "54528a66446efbad5c4d2405e1df77f1669d54a908236e7338980403c1f4a67f"
+  },
+  {
+    "name": "loader-azureus-owned-service",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-owned-service-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/loader-azureus-owned-service.log",
+    "log_sha256": "59d39baa65e91038e509cee40bd2380b125e73b6e3c25321e88993ec328bca2a"
+  },
+  {
+    "name": "azureus-owned-service",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-owned-service-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-owned-service.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-owned-service.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 5.447,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-owned-service.log",
+    "log_sha256": "468cbebc5ed373fa64384143d74a0f93dbe11f4c404578abea9f4dea4fef02d0"
+  },
+  {
+    "name": "loader-azureus-profile-io",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-profile-io-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/loader-azureus-profile-io.log",
+    "log_sha256": "8fd75c363b813961b589fea7cb5cfd5b31daf00eff74bb61ff518138084c4d14"
+  },
+  {
+    "name": "azureus-profile-io",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-profile-io-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-profile-io.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-profile-io.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 4.378,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-profile-io.log",
+    "log_sha256": "40a6c5794dcdd232aeadf78ce05fec8ed9e459c85fd866adcc811de017583b7f"
+  },
+  {
+    "name": "loader-i2cp-initial-channel",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-i2cp-initial-channel-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.018,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/loader-i2cp-initial-channel.log",
+    "log_sha256": "930d904c17e35c8ce118cf09d76590035342a32f3926d2e5cd8abbd4e56b70fb"
+  },
+  {
+    "name": "i2cp-initial-channel",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-i2cp-initial-channel-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/i2cp-initial-channel.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/i2cp-initial-channel.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 13.934,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/i2cp-initial-channel.log",
+    "log_sha256": "ca377ff58dec00076d3db54b9be9863e34842cec1dd5070b838ef31dce922da8"
+  },
+  {
+    "name": "loader-i2cp-lease-backed-datagram-channel",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-i2cp-datagram-channel-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/loader-i2cp-lease-backed-datagram-channel.log",
+    "log_sha256": "b988adb5a4fc404a912754049d17dd2bac57ba61b40d42378a6b6378017d7008"
+  },
+  {
+    "name": "i2cp-lease-backed-datagram-channel",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-i2cp-datagram-channel-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/i2cp-lease-backed-datagram-channel.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/i2cp-lease-backed-datagram-channel.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 7.464,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/i2cp-lease-backed-datagram-channel.log",
+    "log_sha256": "5ab24de67e9db8cecf3c73a7aa62b9cda5e26acc3a0bc51bb46268cb8fb2b7a4"
+  },
+  {
+    "name": "loader-i2cp-bounded-datagram-receiver",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-i2cp-receive-channel-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.019,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/loader-i2cp-bounded-datagram-receiver.log",
+    "log_sha256": "59595640684d6e5ba7a132e9477b36b57b099a18dd5e87094e32784b5587f3db"
+  },
+  {
+    "name": "i2cp-bounded-datagram-receiver",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-i2cp-receive-channel-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/i2cp-bounded-datagram-receiver.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/i2cp-bounded-datagram-receiver.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 11.167,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/i2cp-bounded-datagram-receiver.log",
+    "log_sha256": "b6c1c1391d30945f867ebf27511a3002a36a0fb8e38f9ccb2e0c0c5d5238ec1b"
+  },
+  {
+    "name": "loader-i2cp-explicit-tracker-channel",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-i2cp-tracker-channel-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/loader-i2cp-explicit-tracker-channel.log",
+    "log_sha256": "69a4c4cb672f81207047ca1876a6bedd2c9651fc9ab4f9ff04691e50ad576d38"
+  },
+  {
+    "name": "i2cp-explicit-tracker-channel",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-i2cp-tracker-channel-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/i2cp-explicit-tracker-channel.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/i2cp-explicit-tracker-channel.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 5.384,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/i2cp-explicit-tracker-channel.log",
+    "log_sha256": "377a6b111f177acd39f1a212fcc13f0e27f43494ef0702528b7b7a89d46f7d13"
+  },
+  {
+    "name": "loader-pure-i2p-streaming",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-i2p-streaming-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.008,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/loader-pure-i2p-streaming.log",
+    "log_sha256": "4f881d4130a7d70fb88c3fea3365fbd61407a970ac7337598c69396a26fd1716"
+  },
+  {
+    "name": "pure-i2p-streaming",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-i2p-streaming-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.032,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/pure-i2p-streaming.log",
+    "log_sha256": "4ba8bfb4ce18a32508ddf64654adb5ead3f9e461630577f9b97cb28875828bff"
+  },
+  {
+    "name": "loader-pure-i2cp-leaseset2",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-i2cp-leaseset-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.008,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/loader-pure-i2cp-leaseset2.log",
+    "log_sha256": "8296bce1792b873d4ab79e77d0d6ae4bd624758cdf890063dcef56cc31872d76"
+  },
+  {
+    "name": "pure-i2cp-leaseset2",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-i2cp-leaseset-tests",
+      "/home/yurii/Java/BiglyBTC/preview/native/tests/fixtures/i2p-datagram"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.115,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/pure-i2cp-leaseset2.log",
+    "log_sha256": "084cdf12388e6ecdc606154f7b260590376df6f804d2c87699207b9bb4d6937e"
+  },
+  {
+    "name": "loader-azureus-maintenance",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-maintenance-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/loader-azureus-maintenance.log",
+    "log_sha256": "536598e7dbde9bafa69a60dfd14fe42ffce635eeba8cf2777d334663a507ab52"
+  },
+  {
+    "name": "azureus-maintenance",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-maintenance-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-maintenance.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-maintenance.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 80.81,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-maintenance.log",
+    "log_sha256": "1467e404b63cb9c0b0eda979f95bd6a53cdaddb136d495c8b3378c18075541dc"
+  },
+  {
+    "name": "loader-azureus-database-runtime",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-database-runtime-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/loader-azureus-database-runtime.log",
+    "log_sha256": "d8d15aef3806f36b7b6511fbc2d786e05d3778525707926c56f2711b4cb1fa4c"
+  },
+  {
+    "name": "azureus-database-runtime",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-database-runtime-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-database-runtime.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-database-runtime.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 2.072,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-database-runtime.log",
+    "log_sha256": "9c2662ce624ff29e0a8352992562f9738490887288e49ce23d814cee24f23626"
+  },
+  {
+    "name": "loader-azureus-router-binding",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-router-binding-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/loader-azureus-router-binding.log",
+    "log_sha256": "28ed7de97d64355e20b5485e58e8b005df3a547d1460efb854433e38ac033339"
+  },
+  {
+    "name": "azureus-router-binding",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-router-binding-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-router-binding.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-router-binding.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.819,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/azureus-router-binding.log",
+    "log_sha256": "af653af494a8ffc7fb6055c262b6e98789345643e1f86eaf6910cb9c4917db44"
+  },
+  {
+    "name": "loader-owned-ddb-binding",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-owned-ddb-binding-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/loader-owned-ddb-binding.log",
+    "log_sha256": "cc0727c6b4e5640dc00059daa222642f36dfaa19aca00977bc0dc101d790317c"
+  },
+  {
+    "name": "owned-ddb-binding",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-owned-ddb-binding-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/owned-ddb-binding.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/owned-ddb-binding.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.867,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/owned-ddb-binding.log",
+    "log_sha256": "fb56d9b180814978e2e1c96c3845acd208fb59db92fab50d2b5ae16dc9d19851"
+  },
+  {
+    "name": "loader-owned-lookup-tree-ui",
+    "command": [
+      "ldd",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-owned-lookup-tree-ui-tests"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.016,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/loader-owned-lookup-tree-ui.log",
+    "log_sha256": "1ab1bed8e86f0ef185f47357e75329b73bf0542b909e7616f96535eb929aa219"
+  },
+  {
+    "name": "owned-lookup-tree-ui",
+    "command": [
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-owned-lookup-tree-ui-tests",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/owned-lookup-tree-ui.txt,txt",
+      "-o",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/owned-lookup-tree-ui.xml,junitxml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.566,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/owned-lookup-tree-ui.log",
+    "log_sha256": "4daaa356433d13885b8a6208aba7c547424db1840e6d99e7b68e5499eab4cfc6"
+  }
+]

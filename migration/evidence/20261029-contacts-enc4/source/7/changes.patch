@@ -1,0 +1,11 @@
+--- a/preview/native/tests/azureus_profile_io_tests.cpp
++++ b/preview/native/tests/azureus_profile_io_tests.cpp
+@@ -32,7 +32,7 @@
+   explicit Normal(const char* address,std::int32_t network=4,udp::RoutingScope scope=udp::RoutingScope::ExactPeers){
+     if(!root.isValid()){throw std::runtime_error("Profile fixture");}
+     auto acquired=storage::ProfileLease::acquire(root.path().toStdString());if(!acquired){throw std::runtime_error("Profile lock fixture");}lease.emplace(std::move(*acquired));
+-    auto source=storage::ConfigFile::createMissing(*lease,"biglybt.config",std::string("d6:future1048576:")+std::string(1048576,'x')+"e");if(!source){throw std::runtime_error("Config fixture");}
++    auto source=storage::ConfigFile::createMissing(*lease,"biglybt.config",std::string("d22:Plugin.DHT.dht.enabledi1e6:future1048576:")+std::string(1048576,'x')+"e");if(!source){throw std::runtime_error("Config fixture");}
+     auto opened=storage::AzureusValueVersions::open(*lease,network);if(!opened){throw std::runtime_error("Version fixture");}versions=*opened;
+     app::AzureusServiceOptions options;options.network=network;options.routingScope=scope;options.enabled=true;options.servePings=true;options.serveValues=true;options.valueVersions=versions;options.bindAddress=QHostAddress(QString::fromLatin1(address));
+     auto started=app::OwnedAzureusService::create(options);if(!started){throw std::runtime_error("Normal IO service fixture");}owner=std::move(*started);

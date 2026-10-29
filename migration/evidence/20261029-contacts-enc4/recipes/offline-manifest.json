@@ -1,0 +1,49 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "recipe": {
+    "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/offline.py",
+    "sha256": "cd34de944465e79bf9526a8dadf9f2073fe02e653e873b9093fc6d473b6fdf88"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/offline-r3.py": "7e2ce694d0c7c96b777ce0d679cd55807b43261084da11ebf96a9ace7f4c4226",
+    "/home/yurii/Java/BiglyBT/build/mainline-scrape-20261028/recipe_support_followup.py": "64e0bd2b9ec87b9babf90bdf8d1235746f7dc63c797c82c5e5a138a4c2ea893a",
+    "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/amendments/owned-encryption-test-column/manifest.json": "0f9487d72e2524b9f7a9fb1d58f1ea9abbca561a8a4946b6e090a1e424cdb4cf",
+    "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/OFFLINE-COMMANDS.sh": "f9cd442db1efc333408df01f1fe5ce86a895996ce29540956f5d24e4f10e3509",
+    "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/interop/LeaseSetEnc4Vectors.java": "dd9f0ee5c238620ee3ef9e9bbee4d623b8790956a34f32efa193d76b5f0a4bce"
+  },
+  "command_template": [
+    "python3",
+    "-B",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/offline.py",
+    "--attempt",
+    "r1",
+    "--source-commit",
+    "ACTUAL_FULL_CID",
+    "--gcc-result",
+    "ACTUAL_ABSOLUTE_GCC_RESULT",
+    "--producer",
+    "ACTUAL_ABSOLUTE_PRODUCER",
+    "--adoption",
+    "ACTUAL_ABSOLUTE_ADOPTION"
+  ],
+  "required_future_status": "PASS_ENC4_LEASESET_COHORT",
+  "producer_contract": "Standard source-before/after, native-source-map, images-before/after, compiled_targets/cache, commands/build-receipt, inventory/tests XML/full log and provider_pins() with approved27. Actual inputs and producer/adoption SHA must agree; no future receipt assumed.",
+  "target": "biglybtc-i2cp-leaseset-tests",
+  "cases_per_reference_per_direction": 4,
+  "java_to_native_frames_per_reference": 8,
+  "native_to_java_frames_per_reference": 4,
+  "changed_signature_negative_per_reference": 1,
+  "references": "Pinned official d76b3c4c and modified b0866aa8 JARs remain distinct. No whole-core equivalence claim.",
+  "resource_limits": "Unchanged raw script runs once under timeout180/kill-after5; wrapper outer195. One javac --release8; each JVM heap128MiB/one active CPU/SerialGC; nice5. Controlled execv wrappers, fresh HOME/TMP/XDG and original explicit per-reference base/config.",
+  "validation": [
+    "Actual completed same-source GCC build/image/commands/XML and exact final Enc4 source maps",
+    "All pinned JAR and actual helper class origins plus exact4 positive row lists and changed-signature rejection",
+    "Exact bounded frame shapes/request37/create41, synthetic input identity/key byte hashes",
+    "All source/GCC images/provider/tool/fixture/cache/dist-manifest inputs unchanged",
+    "Hashes of all vector outputs/classes before removing only owned compiled helper classes"
+  ],
+  "outputs": "offline-runs/ATTEMPT/result.json; commands.json/full raw logs; tool-invocations.jsonl; inputs.json; vector bytes and class load logs; outputs-before-class-cleanup.json",
+  "source_checks": "Python AST parsed; raw script SHA remains f9cd442db1efc333408df01f1fe5ce86a895996ce29540956f5d24e4f10e3509. No Java/C++ compiler or subject executed.",
+  "native_mutated": false,
+  "subjects_executed": false
+}

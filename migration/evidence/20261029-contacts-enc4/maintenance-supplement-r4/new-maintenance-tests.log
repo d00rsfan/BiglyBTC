@@ -1,0 +1,33 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang
+    Start 299: azureus-maintenance
+1/1 Test #299: azureus-maintenance ..............***Failed   42.20 sec
+********* Start testing of AzureusMaintenanceTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : AzureusMaintenanceTests::initTestCase()
+PASS   : AzureusMaintenanceTests::rawOriginalEnvelopePrimaryRecoveryAndCompareBeforePublish()
+PASS   : AzureusMaintenanceTests::foreignAndAmbiguousCacheCannotBeRewrittenOrChangeOriginalBytes()
+PASS   : AzureusMaintenanceTests::unsafePendingAndChangedParentNeverPublish()
+PASS   : AzureusMaintenanceTests::originalTenSecondRetrySixTickSelectivePrefixAndFiveMinuteIdleRules()
+PASS   : AzureusMaintenanceTests::originalTreeSetNarrowedComparatorAndWallAliveDurationArePreserved()
+PASS   : AzureusMaintenanceTests::genuineNormalCacheRestartBootstrapsWithoutSuppliedPeerAndThenAcceptsForwardedStore()
+PASS   : AzureusMaintenanceTests::blockedProfileCancelAndCloseProgressWithoutGrantingCachedAuthority()
+FAIL!  : AzureusMaintenanceTests::actualDefaultKSelectiveRefreshAndFailureRetryUseRealNormalOwners() 'success(*root.owner,*round)' returned FALSE. (state=1 commands=0 io=0/0 cmd=9 error=10 transport=14 seeded=0 ticks=3 cache= refreshes=0 pending=0 maintenanceFailure=-1 routeFinished=1 routeFailure=14 buckets=3 peers=0)
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_maintenance_tests.cpp(107)]
+PASS   : AzureusMaintenanceTests::cleanupTestCase()
+Totals: 9 passed, 1 failed, 0 skipped, 0 blacklisted, 42177ms
+********* Finished testing of AzureusMaintenanceTests *********
+
+
+0% tests passed, 1 tests failed out of 1
+
+Label Time Summary:
+loopback    =  42.20 sec*proc (1 test)
+profile     =  42.20 sec*proc (1 test)
+routing     =  42.20 sec*proc (1 test)
+unit        =  42.20 sec*proc (1 test)
+
+Total Test time (real) =  42.22 sec
+
+The following tests FAILED:
+	299 - azureus-maintenance (Failed)                      loopback profile routing unit
+Errors while running CTest

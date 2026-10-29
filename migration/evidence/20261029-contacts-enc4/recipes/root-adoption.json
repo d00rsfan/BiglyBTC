@@ -1,0 +1,162 @@
+{
+  "source_commit": "2fe669f688b4e0b64ba7205a64c4e969ca828281",
+  "parent_commit": "2c79155e6c660426781ef54b4c075451e304a5b8",
+  "source_path_count": 21,
+  "source_paths": {
+    "preview/native/adapters/azureus_contacts.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/adapters/azureus_contacts.cpp",
+      "after_sha256": "9c4707a4cfc956e8268b466fed506ce664609e1f32c199418a86ff0d5591a21f"
+    },
+    "preview/native/adapters/azureus_contacts.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/adapters/azureus_contacts.hpp",
+      "after_sha256": "05528b5d507c30b83d8d2ad5521e76352d2c32ce2e34b617fbf58b7f49d3c82e"
+    },
+    "preview/native/app/azureus_maintenance_owner.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/app/azureus_maintenance_owner.inc",
+      "after_sha256": "cbe135276fa16d984ab1d81ab0fb0952bda9941b5c52e4c78672155ad232191a"
+    },
+    "preview/native/app/azureus_profile_io.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/before/preview/native/app/azureus_profile_io.hpp",
+      "before_sha256": "7357b13f11d46cc06fc2c9bddb52bd9942d942fcce29d5804975076d6494fd30",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/app/azureus_profile_io.hpp",
+      "after_sha256": "6c8abb9b8e2c2ede2331f996db76571082fed214582f7b7514fbb66d9644da27"
+    },
+    "preview/native/app/azureus_profile_io_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/before/preview/native/app/azureus_profile_io_owner.inc",
+      "before_sha256": "71523d23c952b25ac1558677f1f45eb6378627d57ab1e47c7bd0577a55b556b3",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/app/azureus_profile_io_owner.inc",
+      "after_sha256": "9778acd34d43123b41af5bc18f477dacff5cac5d25c75ef5d0a1ee5fffcdd736"
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/before/preview/native/app/owned_azureus_service.cpp",
+      "before_sha256": "846bf2fce529c0ddbb2c49b12512904a45b956772717e358f6c5b9f01c7db5f7",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/app/owned_azureus_service.cpp",
+      "after_sha256": "601af4b92194c1c45338c33944f35f22cf3941176928c247d8a5669d69760771"
+    },
+    "preview/native/app/owned_azureus_service.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/before/preview/native/app/owned_azureus_service.hpp",
+      "before_sha256": "7cc966a3c6e5ef6e807b4aa1fa47ef14d8401dd195843d961b16cd5f58a2d974",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/app/owned_azureus_service.hpp",
+      "after_sha256": "2addade9fed7e2d3681af6dedc76c1852d9276a739545f6cd75f3de619d838ca"
+    },
+    "preview/native/services/azureus_router/router.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/before/preview/native/services/azureus_router/router.cpp",
+      "before_sha256": "704c59b286f53ef0ed430268c2b517a9cf9a309f238f76370a4221ea7bd14c50",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/services/azureus_router/router.cpp",
+      "after_sha256": "766a2e0ac7af86cc205c118df2b8be906a96f5d30e4bb39e0a5726b42b2d4460"
+    },
+    "preview/native/services/azureus_router/router.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/before/preview/native/services/azureus_router/router.hpp",
+      "before_sha256": "6c09dd071e8240a7755ad5fb2c8bd46b63a64ab3f7c195de47c015d0d027f015",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/services/azureus_router/router.hpp",
+      "after_sha256": "9302e410cc5d4dc6f63c031fe6706d31d1d7a5afe68af997df05e66b61d42302"
+    },
+    "preview/native/services/azureus_udp/owned_maintenance.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/services/azureus_udp/owned_maintenance.inc",
+      "after_sha256": "d6b76f425631d83b62542b109c61eb5a3a7c17fd6289f1cefebb6a64ed2cad25"
+    },
+    "preview/native/services/azureus_udp/owned_routing.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/before/preview/native/services/azureus_udp/owned_routing.inc",
+      "before_sha256": "8f0700a534ccd92c0b29aac19c840d78f59110d62c73a4090bd1d1deade4230f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/services/azureus_udp/owned_routing.inc",
+      "after_sha256": "536b69e189d08a467c881c03f328f52b9545e5cca0dc2c962d579288628935dc"
+    },
+    "preview/native/services/azureus_udp/owned_transport.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/before/preview/native/services/azureus_udp/owned_transport.cpp",
+      "before_sha256": "59e008823ab22dbb1f40811eafafcae257b5fbce1869d8184bda4224db3d6dbc",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/services/azureus_udp/owned_transport.cpp",
+      "after_sha256": "690df7af3dc3329cdf4e2eda7d872b35013cad2bf5de653c2c72fab47da4992c"
+    },
+    "preview/native/services/azureus_udp/owned_transport.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/before/preview/native/services/azureus_udp/owned_transport.hpp",
+      "before_sha256": "d10ec131356fdd725371475cc527d0f2f1037fa1513681be1c98585d91bdbe7d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/services/azureus_udp/owned_transport.hpp",
+      "after_sha256": "4472ecd4204da84cc25ab8b5c462ecd059cc4a0a76088d59c2de47fec04863bf"
+    },
+    "preview/native/tests/azureus_maintenance_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/tests/azureus_maintenance_tests.cpp",
+      "after_sha256": "21d8410cc50abbf9735e0a5871b38e07d54dd5921100460044feba8a8d2df8d1"
+    },
+    "preview/native/services/i2cp_channel/channel.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/services/i2cp_channel/channel.cpp",
+      "before_sha256": "5d1cf0f48b8404329e1bc65c73e826269a83ef683f7d1eb656a1f3161cc7144d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/staging/preview/native/services/i2cp_channel/channel.cpp",
+      "after_sha256": "b06f7b3b0456d948c5e90b9c768c73cf0e9d8eab4f832d433eefa5f6a5aaa611"
+    },
+    "preview/native/services/i2cp_leaseset/leaseset.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/services/i2cp_leaseset/leaseset.cpp",
+      "before_sha256": "f4bd1989267d40a306e94a1a76e4e48d4e94d473156170f4cda1bc6cf569489f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/staging/preview/native/services/i2cp_leaseset/leaseset.cpp",
+      "after_sha256": "afeca689f57f1e065f8abf85b1c1709e667edfa00dd73a6950fdbb98e9d06f97"
+    },
+    "preview/native/services/i2cp_leaseset/leaseset.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/services/i2cp_leaseset/leaseset.hpp",
+      "before_sha256": "44bcc356a5335d1049fab6f16780e2778e0e3b86b6afb5f3b448d7be9d2a6678",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/staging/preview/native/services/i2cp_leaseset/leaseset.hpp",
+      "after_sha256": "e3fd1c28de5a29e3b53f04eca3ff177eeb5ac5128809c44714806e4de6838482"
+    },
+    "preview/native/tests/i2cp_initial_channel_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/tests/i2cp_initial_channel_tests.cpp",
+      "before_sha256": "f366232d4ecabc4738c4312105c82bc1b65bc44e5ee8d51ce4ba144a7dd2d8a2",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/amendments/owned-encryption-test-column/staging/preview/native/tests/i2cp_initial_channel_tests.cpp",
+      "after_sha256": "bb6b6b095331271d8ace102fe3d36906e9e7ac3e060ddd64bcfe1c2aaf2848e6"
+    },
+    "preview/native/tests/i2cp_leaseset_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/tests/i2cp_leaseset_tests.cpp",
+      "before_sha256": "f668e4e9befbbad910d5259b444a8588bf01aaed4e86feb93f6bb89bccf27d17",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/staging/preview/native/tests/i2cp_leaseset_tests.cpp",
+      "after_sha256": "9c82441a8d10e2a3bae67405850560c3d73812e11e8f9f78371c0e7ff8df81e0"
+    },
+    "preview/native/adapters/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/before/preview/native/adapters/CMakeLists.txt",
+      "before_sha256": "d4a631d722b1dc10d66cbf15dc9635fc6b9037e186048bdc29caf671f2d4e4f2",
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/composed/preview/native/adapters/CMakeLists.txt",
+      "after_sha256": "946ca6f41b206bb1fbafe45bad3b1a23c29921cc221bb1246f89baac5180f391"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/before/preview/native/tests/CMakeLists.txt",
+      "before_sha256": "2af98c6f55b38dc7c984c66612862958ccd8df5cacc10fdd94de9d88b2ca486f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/composed/preview/native/tests/CMakeLists.txt",
+      "after_sha256": "7286db4f2c70ce3a9a10a23bfabb8ece66009bd54c4e08e389805a1a4c616c2c"
+    }
+  },
+  "source_capsules": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/manifest.json",
+      "sha256": "fa60353cf5a038c2dd541c63108f954646a1e3e89ad4ec5a959398f8c93be048"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/amendments/owned-encryption-test-column/manifest.json",
+      "sha256": "0f9487d72e2524b9f7a9fb1d58f1ea9abbca561a8a4946b6e090a1e424cdb4cf"
+    }
+  ],
+  "source_reviews": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029-review/review.json",
+      "sha256": "b23c58e2915dc182887952c3e1ab4613e29785d58de0a47d5e75fee13c40370f"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029-review/review.json",
+      "sha256": "bcae4ab31be46149c81d9072c1ced8a37626e53faf94c0fa371b0b4b571d322d"
+    }
+  ],
+  "source_history": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/manifest.json",
+      "sha256": "4b1d7276d8cbf1b9ec2d8a5c857bb0d457804a338e5525cf42881af85417f75f"
+    }
+  ],
+  "adopter_sha256": "92b8a73e54b562a34532b5d46f8293a89dbaa50e062c2671925a72ca5502c4ef",
+  "recipe_manifest_sha256": "0002162e762d9b467b7d4f170d72259d439b17db4c47902e766c01190ceceb08",
+  "approved_inputs_sha256": "ce245bc976bcda885284d249ed739af930af1746953d6ce08fbc2cedf71925af"
+}

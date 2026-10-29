@@ -1,0 +1,40 @@
+ninja: Jobserver mode detected:  -j3 --jobserver-auth=fifo:/tmp/GMfifo2338499 -- ATTEMPT=r1
+[1/53] Building CXX object services/CMakeFiles/biglybtc_i2cp_leaseset2.dir/i2cp_leaseset/leaseset.cpp.o
+[2/53] Linking CXX static library services/libbiglybtc_i2cp_leaseset2.a
+[3/53] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/azureus_contacts.cpp.o
+[4/53] Linking CXX static library adapters/libbiglybtc_profile.a
+[5/53] Automatic MOC for target biglybtc_i2cp_initial_channel
+[6/53] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_router/router.cpp.o
+[7/53] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/biglybtc_i2cp_initial_channel_autogen/mocs_compilation.cpp.o
+[8/53] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_udp/owned_transport.cpp.o
+[9/53] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/i2cp_channel/channel.cpp.o
+[10/53] Linking CXX static library services/libbiglybtc_azureus_owned_udp.a
+[11/53] Linking CXX static library services/libbiglybtc_i2cp_initial_channel.a
+[12/53] Automatic MOC for target biglybtc-i2cp-initial-channel-tests
+[13/52] Automatic MOC for target biglybtc-i2cp-datagram-channel-tests
+[14/51] Automatic MOC for target biglybtc-i2cp-receive-channel-tests
+[15/50] Automatic MOC for target biglybtc-i2cp-tracker-channel-tests
+[16/49] Building CXX object tests/CMakeFiles/biglybtc-azureus-router-owner-tests.dir/azureus_router_tests.cpp.o
+[17/49] Building CXX object app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o
+FAILED: [code=1] app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o 
+/usr/bin/clang++-24 -DQT_CORE_LIB -DQT_NETWORK_LIB -DQT_NO_DEBUG -I/home/yurii/Java/BiglyBTC/preview/native/app -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_dht -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_ping -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_positions -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_contacts -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_nodes -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_values -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_packets -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_find_node -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_find_value -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_store -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_error -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_auth -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_store_policy -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_router -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_value -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_mapping -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_runtime -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_control -I/home/yurii/Java/BiglyBTC/preview/native/adapters -I/home/yurii/Java/BiglyBTC/preview/native/core/include -I/home/yurii/Java/BiglyBTC/plugin-sdk/include -I/home/yurii/Java/BiglyBTC/preview/native/plugins/BiglyBTC-plugin-azrating -isystem /opt/Qt/6.12.0/gcc_64/include/QtCore -isystem /opt/Qt/6.12.0/gcc_64/include -isystem /opt/Qt/6.12.0/gcc_64/mkspecs/linux-g++ -isystem /opt/Qt/6.12.0/gcc_64/include/QtNetwork -O3 -DNDEBUG -std=c++23 -Wall -Wextra -Wpedantic -Werror -fPIC -MD -MT app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o -MF app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o.d -o app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o -c /home/yurii/Java/BiglyBTC/preview/native/app/owned_azureus_service.cpp
+In file included from /home/yurii/Java/BiglyBTC/preview/native/app/owned_azureus_service.cpp:180:
+/home/yurii/Java/BiglyBTC/preview/native/app/azureus_profile_io_owner.inc:102:36: error: no matching function for call to object of type 'const typename std::remove_reference<std::move_only_function<std::expected<std::shared_ptr<const biglybtc::storage::AzureusContactsSnapshot>, biglybtc::storage::Error> (std::stop_token)> &>::type' (aka 'const std::move_only_function<std::expected<std::shared_ptr<const biglybtc::storage::AzureusContactsSnapshot>, biglybtc::storage::Error> (std::stop_token)>')
+  102 |         if(contactWork){auto value=contactWork(stop);if(!value){return std::unexpected(value.error());}result.contacts=std::move(*value);}
+      |                                    ^~~~~~~~~~~
+/usr/lib/gcc/x86_64-linux-gnu/16/../../../../include/c++/16/bits/mofunc_impl.h:211:7: note: candidate function not viable: 'this' argument has type 'const typename std::remove_reference<std::move_only_function<std::expected<std::shared_ptr<const biglybtc::storage::AzureusContactsSnapshot>, biglybtc::storage::Error> (std::stop_token)> &>::type' (aka 'const std::move_only_function<std::expected<std::shared_ptr<const biglybtc::storage::AzureusContactsSnapshot>, biglybtc::storage::Error> (std::stop_token)>'), but method is not marked const
+  211 |       operator()(_ArgTypes... __args) _GLIBCXX_MOF_CV_REF noexcept(_Noex)
+      |       ^
+1 error generated.
+[18/49] Building CXX object tests/CMakeFiles/biglybtc-i2cp-leaseset-tests.dir/i2cp_leaseset_tests.cpp.o
+[19/49] Building CXX object tests/CMakeFiles/biglybtc-i2cp-datagram-channel-tests.dir/i2cp_datagram_channel_tests.cpp.o
+[20/49] Building CXX object tests/CMakeFiles/biglybtc-i2cp-receive-channel-tests.dir/i2cp_receive_channel_tests.cpp.o
+[21/49] Linking CXX executable tests/biglybtc-azureus-router-owner-tests
+[22/49] Linking CXX executable tests/biglybtc-i2cp-leaseset-tests
+[23/49] Linking CXX executable tests/biglybtc-i2cp-datagram-channel-tests
+[24/49] Linking CXX executable tests/biglybtc-i2cp-receive-channel-tests
+[25/49] Building CXX object tests/CMakeFiles/biglybtc-i2cp-initial-channel-tests.dir/i2cp_initial_channel_tests.cpp.o
+[26/49] Linking CXX executable tests/biglybtc-i2cp-initial-channel-tests
+[27/49] Building CXX object tests/CMakeFiles/biglybtc-i2cp-tracker-channel-tests.dir/i2cp_tracker_channel_tests.cpp.o
+[28/49] Linking CXX executable tests/biglybtc-i2cp-tracker-channel-tests
+ninja: build stopped: cannot make progress due to previous errors.

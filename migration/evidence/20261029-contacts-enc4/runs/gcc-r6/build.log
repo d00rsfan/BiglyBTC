@@ -1,0 +1,157 @@
+ninja: Jobserver mode detected:  -j3 --jobserver-auth=fifo:/tmp/GMfifo2351863 -- ATTEMPT=r6
+[1/89] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_udp/owned_transport.cpp.o
+[2/89] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_router/router.cpp.o
+[3/89] Building CXX object adapters/CMakeFiles/biglybtc_profile.dir/azureus_contacts.cpp.o
+[4/89] Linking CXX static library services/libbiglybtc_azureus_owned_udp.a
+[5/89] Linking CXX static library adapters/libbiglybtc_profile.a
+[6/89] Automatic MOC for target biglybtc_ui
+[7/89] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[8/89] Building CXX object services/CMakeFiles/biglybtc_i2cp_leaseset2.dir/i2cp_leaseset/leaseset.cpp.o
+[9/89] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/biglybtc_ui_autogen/mocs_compilation.cpp.o
+[10/89] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/library_window.cpp.o
+[11/89] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/statistics_page.cpp.o
+[12/89] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/runtime_metrics_view.cpp.o
+[13/89] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/tracker_statistics_view.cpp.o
+[14/89] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/azureus_statistics_view.cpp.o
+[15/89] Building CXX object ui/CMakeFiles/biglybtc_ui.dir/cache_statistics_view.cpp.o
+[16/89] Building CXX object app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o
+[17/89] Linking CXX static library engine/libbiglybtc_local_engine.a
+[18/89] Linking CXX static library services/libbiglybtc_i2cp_leaseset2.a
+[19/89] Linking CXX static library ui/libbiglybtc_ui.a
+[20/89] Linking CXX static library app/libbiglybtc_owned_azureus_service.a
+[21/89] Automatic MOC for target biglybtc_i2cp_initial_channel
+[22/89] Automatic MOC for target biglybtc_desktop_host
+[23/89] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/biglybtc_i2cp_initial_channel_autogen/mocs_compilation.cpp.o
+[24/89] Building CXX object services/CMakeFiles/biglybtc_i2cp_initial_channel.dir/i2cp_channel/channel.cpp.o
+[25/89] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/biglybtc_desktop_host_autogen/mocs_compilation.cpp.o
+[26/89] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/session_bridge.cpp.o
+[27/89] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/owned_dht_accounting.cpp.o
+[28/89] Linking CXX static library services/libbiglybtc_i2cp_initial_channel.a
+[29/89] Automatic MOC for target biglybtc-azureus-owned-service-tests
+[30/88] Automatic MOC for target biglybtc-azureus-router-binding-tests
+[31/87] Automatic MOC for target biglybtc-owned-ddb-binding-tests
+[32/86] Building CXX object app/CMakeFiles/biglybtc_desktop_host.dir/live_speed_mapper_binding.cpp.o
+[33/86] Linking CXX static library app/libbiglybtc_desktop_host.a
+[34/86] Automatic MOC for target biglybtc-owned-lookup-tree-ui-tests
+[35/85] Automatic MOC for target biglybtc-preview-smoke
+[36/84] Automatic MOC for target biglybtc-azureus-database-runtime-tests
+[37/84] Automatic MOC for target biglybtc-i2cp-initial-channel-tests
+[38/83] Automatic MOC for target biglybtc-i2cp-datagram-channel-tests
+[39/82] Automatic MOC for target biglybtc-i2cp-receive-channel-tests
+[40/81] Automatic MOC for target biglybtc-azureus-profile-io-tests
+[41/80] Automatic MOC for target biglybtc-i2cp-tracker-channel-tests
+[42/79] Automatic MOC for target biglybtc-azureus-routing-tests
+[43/78] Automatic MOC for target biglybtc-azureus-maintenance-tests
+[44/78] Building CXX object app/CMakeFiles/BiglyBTC.dir/main_desktop.cpp.o
+[45/78] Building CXX object tests/CMakeFiles/biglybtc-azureus-router-owner-tests.dir/azureus_router_tests.cpp.o
+[46/78] Building CXX object tests/CMakeFiles/biglybtc-i2cp-leaseset-tests.dir/i2cp_leaseset_tests.cpp.o
+[47/78] Building CXX object CMakeFiles/biglybtc-preview-smoke.dir/packaging/preview_smoke.cpp.o
+[48/78] Building CXX object tests/CMakeFiles/biglybtc-azureus-router-binding-tests.dir/azureus_router_binding_tests.cpp.o
+[49/78] Building CXX object tests/CMakeFiles/biglybtc-azureus-owned-service-tests.dir/owned_azureus_service_tests.cpp.o
+[50/78] Building CXX object tests/CMakeFiles/biglybtc-owned-ddb-binding-tests.dir/owned_ddb_binding_tests.cpp.o
+[51/78] Building CXX object tests/CMakeFiles/biglybtc-azureus-database-runtime-tests.dir/biglybtc-azureus-database-runtime-tests_autogen/mocs_compilation.cpp.o
+[52/78] Building CXX object tests/CMakeFiles/biglybtc-owned-lookup-tree-ui-tests.dir/owned_lookup_tree_ui_tests.cpp.o
+[53/78] Building CXX object tests/CMakeFiles/biglybtc-azureus-database-runtime-tests.dir/azureus_database_runtime_tests.cpp.o
+[54/78] Building CXX object tests/CMakeFiles/biglybtc-i2cp-initial-channel-tests.dir/i2cp_initial_channel_tests.cpp.o
+[55/78] Building CXX object tests/CMakeFiles/biglybtc-i2cp-datagram-channel-tests.dir/i2cp_datagram_channel_tests.cpp.o
+[56/78] Building CXX object tests/CMakeFiles/biglybtc-i2cp-receive-channel-tests.dir/i2cp_receive_channel_tests.cpp.o
+[57/78] Building CXX object tests/CMakeFiles/biglybtc-azureus-profile-io-tests.dir/azureus_profile_io_tests.cpp.o
+[58/78] Building CXX object tests/CMakeFiles/biglybtc-i2cp-tracker-channel-tests.dir/i2cp_tracker_channel_tests.cpp.o
+[59/78] Building CXX object tests/CMakeFiles/biglybtc-azureus-maintenance-tests.dir/biglybtc-azureus-maintenance-tests_autogen/mocs_compilation.cpp.o
+[60/78] Building CXX object tests/CMakeFiles/biglybtc-azureus-routing-tests.dir/azureus_routing_tests.cpp.o
+[61/78] Linking CXX executable biglybtc-preview-smoke
+[62/78] Linking CXX executable app/BiglyBTC-headless
+[63/78] Linking CXX executable app/BiglyBTC
+[64/78] Linking CXX executable tests/biglybtc-azureus-owned-service-tests
+[65/78] Linking CXX executable tests/biglybtc-azureus-router-binding-tests
+[66/78] Linking CXX executable tests/biglybtc-azureus-router-owner-tests
+[67/78] Linking CXX executable tests/biglybtc-owned-ddb-binding-tests
+[68/78] Linking CXX executable tests/biglybtc-owned-lookup-tree-ui-tests
+[69/78] Linking CXX executable tests/biglybtc-azureus-database-runtime-tests
+[70/78] Linking CXX executable tests/biglybtc-i2cp-initial-channel-tests
+[71/78] Linking CXX executable tests/biglybtc-i2cp-leaseset-tests
+[72/78] Linking CXX executable tests/biglybtc-i2cp-datagram-channel-tests
+[73/78] Linking CXX executable tests/biglybtc-i2cp-receive-channel-tests
+[74/78] Linking CXX executable tests/biglybtc-azureus-profile-io-tests
+[75/78] Linking CXX executable tests/biglybtc-i2cp-tracker-channel-tests
+[76/78] Linking CXX executable tests/biglybtc-azureus-routing-tests
+[77/78] Building CXX object tests/CMakeFiles/biglybtc-azureus-maintenance-tests.dir/azureus_maintenance_tests.cpp.o
+FAILED: [code=1] tests/CMakeFiles/biglybtc-azureus-maintenance-tests.dir/azureus_maintenance_tests.cpp.o 
+/usr/bin/g++-16 -DQT_CORE_LIB -DQT_NETWORK_LIB -DQT_NO_DEBUG -DQT_TESTCASE_BUILDDIR=\"/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests\" -DQT_TESTCASE_SOURCEDIR=\"/home/yurii/Java/BiglyBTC/preview/native/tests\" -DQT_TESTLIB_LIB -I/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/tests/biglybtc-azureus-maintenance-tests_autogen/include -I/home/yurii/Java/BiglyBTC/preview/native/app -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_dht -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_ping -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_positions -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_contacts -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_nodes -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_values -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_packets -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_find_node -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_find_value -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_store -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_error -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_auth -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_store_policy -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_router -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_value -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_mapping -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_db_runtime -I/home/yurii/Java/BiglyBTC/preview/native/services/azureus_control -I/home/yurii/Java/BiglyBTC/preview/native/adapters -I/home/yurii/Java/BiglyBTC/preview/native/core/include -I/home/yurii/Java/BiglyBTC/plugin-sdk/include -I/home/yurii/Java/BiglyBTC/preview/native/plugins/BiglyBTC-plugin-azrating -isystem /opt/Qt/6.12.0/gcc_64/include/QtCore -isystem /opt/Qt/6.12.0/gcc_64/include -isystem /opt/Qt/6.12.0/gcc_64/mkspecs/linux-g++ -isystem /opt/Qt/6.12.0/gcc_64/include/QtNetwork -isystem /opt/Qt/6.12.0/gcc_64/include/QtTest -O3 -DNDEBUG -std=c++23 -Wall -Wextra -Wpedantic -Werror -fPIC -MD -MT tests/CMakeFiles/biglybtc-azureus-maintenance-tests.dir/azureus_maintenance_tests.cpp.o -MF tests/CMakeFiles/biglybtc-azureus-maintenance-tests.dir/azureus_maintenance_tests.cpp.o.d -o tests/CMakeFiles/biglybtc-azureus-maintenance-tests.dir/azureus_maintenance_tests.cpp.o -c /home/yurii/Java/BiglyBTC/preview/native/tests/azureus_maintenance_tests.cpp
+In file included from /usr/include/c++/16/mutex:50,
+                 from /home/yurii/Java/BiglyBTC/preview/native/adapters/profile.hpp:10,
+                 from /home/yurii/Java/BiglyBTC/preview/native/adapters/azureus_value_versions.hpp:4,
+                 from /home/yurii/Java/BiglyBTC/preview/native/app/owned_azureus_service.hpp:4,
+                 from /home/yurii/Java/BiglyBTC/preview/native/tests/azureus_maintenance_tests.cpp:2:
+In member function ‘bool std::unique_lock<_Mutex>::owns_lock() const [with _Mutex = std::recursive_mutex]’,
+    inlined from ‘biglybtc::storage::ProfileSourceAccess::~ProfileSourceAccess()’ at /home/yurii/Java/BiglyBTC/preview/native/adapters/profile.hpp:40:44,
+    inlined from ‘constexpr void std::_Optional_payload_base<_Tp>::_M_destroy() [with _Tp = biglybtc::storage::ProfileSourceAccess]’ at /usr/include/c++/16/optional:323:35,
+    inlined from ‘constexpr void std::_Optional_payload_base<_Tp>::_M_reset() [with _Tp = biglybtc::storage::ProfileSourceAccess]’ at /usr/include/c++/16/optional:354:14,
+    inlined from ‘constexpr std::_Optional_payload<_Tp, false, _Copy, _Move>::~_Optional_payload() [with _Tp = biglybtc::storage::ProfileSourceAccess; bool _Copy = false; bool _Move = false]’ at /usr/include/c++/16/optional:477:65,
+    inlined from ‘constexpr std::_Optional_base<biglybtc::storage::ProfileSourceAccess, false, false>::~_Optional_base()’ at /usr/include/c++/16/optional:501:12,
+    inlined from ‘constexpr std::optional<biglybtc::storage::ProfileSourceAccess>::~optional()’ at /usr/include/c++/16/optional:805:11,
+    inlined from ‘void AzureusMaintenanceTests::blockedProfileCancelAndCloseProgressWithoutGrantingCachedAuthority()’ at /home/yurii/Java/BiglyBTC/preview/native/tests/azureus_maintenance_tests.cpp:100:2:
+/usr/include/c++/16/bits/unique_lock.h:227:16: error: ‘((const std::unique_lock<std::recursive_mutex>*)((char*)&blocked + offsetof(std::optional<biglybtc::storage::ProfileSourceAccess>,std::optional<biglybtc::storage::ProfileSourceAccess>::<unnamed>.std::_Optional_base<biglybtc::storage::ProfileSourceAccess, false, false>::_M_payload.std::_Optional_payload<biglybtc::storage::ProfileSourceAccess, false, false, false>::<unnamed>.std::_Optional_payload<biglybtc::storage::ProfileSourceAccess, true, false, false>::<unnamed>.std::_Optional_payload_base<biglybtc::storage::ProfileSourceAccess>::_M_payload)))[1].std::unique_lock<std::recursive_mutex>::_M_owns’ may be used uninitialized [-Werror=maybe-uninitialized]
+  227 |       { return _M_owns; }
+      |                ^~~~~~~
+/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_maintenance_tests.cpp: In function ‘void AzureusMaintenanceTests::blockedProfileCancelAndCloseProgressWithoutGrantingCachedAuthority()’:
+/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_maintenance_tests.cpp:98:143: note: ‘blocked’ declared here
+   98 |   Normal value("127.84.0.1",true);auto acquired=value.lease->sourceAccess(true);QVERIFY(acquired);std::optional<storage::ProfileSourceAccess> blocked;blocked.emplace(std::move(*acquired));auto cancelGuard=qScopeGuard([&]{blocked.reset();});auto request=value.owner->bootstrapSavedContacts(2s);QVERIFY(request);QTRY_VERIFY_WITH_TIMEOUT(value.owner->observation().profileIoRunning>0,3000);auto cancel=value.owner->cancel(*request);QVERIFY(cancel);QTRY_VERIFY_WITH_TIMEOUT(value.owner->observation().outstandingCommands==0,3000);QVERIFY(!value.owner->observation().routingSnapshot||!value.owner->observation().routingSnapshot->seeded);QCOMPARE(value.owner->observation().snapshot->transport().counters().sent,std::uint64_t{0});blocked.reset();QTRY_COMPARE_WITH_TIMEOUT(value.owner->observation().profileIoPending,std::size_t{0},3000);
+      |                                                                                                                                               ^~~~~~~
+In file included from /usr/include/c++/16/bits/shared_ptr.h:53,
+                 from /usr/include/c++/16/memory:82,
+                 from /home/yurii/Java/BiglyBTC/preview/native/services/azureus_auth/authority.hpp:5,
+                 from /home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp/owned_transport.hpp:10,
+                 from /home/yurii/Java/BiglyBTC/preview/native/app/owned_azureus_service.hpp:2:
+In member function ‘std::__shared_ptr<_Tp, _Lp>::element_type* std::__shared_ptr<_Tp, _Lp>::get() const [with _Tp = biglybtc::storage::ProfileSourceState; __gnu_cxx::_Lock_policy _Lp = __gnu_cxx::_S_atomic]’,
+    inlined from ‘std::__shared_ptr_access<_Tp, _Lp, <anonymous>, <anonymous> >::element_type* std::__shared_ptr_access<_Tp, _Lp, <anonymous>, <anonymous> >::_M_get() const [with _Tp = biglybtc::storage::ProfileSourceState; __gnu_cxx::_Lock_policy _Lp = __gnu_cxx::_S_atomic; bool <anonymous> = false; bool <anonymous> = false]’ at /usr/include/c++/16/bits/shared_ptr_base.h:1449:69,
+    inlined from ‘std::__shared_ptr_access<_Tp, _Lp, <anonymous>, <anonymous> >::element_type* std::__shared_ptr_access<_Tp, _Lp, <anonymous>, <anonymous> >::operator->() const [with _Tp = biglybtc::storage::ProfileSourceState; __gnu_cxx::_Lock_policy _Lp = __gnu_cxx::_S_atomic; bool <anonymous> = false; bool <anonymous> = false]’ at /usr/include/c++/16/bits/shared_ptr_base.h:1443:15,
+    inlined from ‘biglybtc::storage::ProfileSourceAccess::~ProfileSourceAccess()’ at /home/yurii/Java/BiglyBTC/preview/native/adapters/profile.hpp:40:56,
+    inlined from ‘constexpr void std::_Optional_payload_base<_Tp>::_M_destroy() [with _Tp = biglybtc::storage::ProfileSourceAccess]’ at /usr/include/c++/16/optional:323:35,
+    inlined from ‘constexpr void std::_Optional_payload_base<_Tp>::_M_reset() [with _Tp = biglybtc::storage::ProfileSourceAccess]’ at /usr/include/c++/16/optional:354:14,
+    inlined from ‘constexpr std::_Optional_payload<_Tp, false, _Copy, _Move>::~_Optional_payload() [with _Tp = biglybtc::storage::ProfileSourceAccess; bool _Copy = false; bool _Move = false]’ at /usr/include/c++/16/optional:477:65,
+    inlined from ‘constexpr std::_Optional_base<biglybtc::storage::ProfileSourceAccess, false, false>::~_Optional_base()’ at /usr/include/c++/16/optional:501:12,
+    inlined from ‘constexpr std::optional<biglybtc::storage::ProfileSourceAccess>::~optional()’ at /usr/include/c++/16/optional:805:11,
+    inlined from ‘void AzureusMaintenanceTests::blockedProfileCancelAndCloseProgressWithoutGrantingCachedAuthority()’ at /home/yurii/Java/BiglyBTC/preview/native/tests/azureus_maintenance_tests.cpp:100:2:
+/usr/include/c++/16/bits/shared_ptr_base.h:1752:16: error: ‘*(const std::__shared_ptr<biglybtc::storage::ProfileSourceState, __gnu_cxx::_S_atomic>*)((char*)&blocked + offsetof(std::optional<biglybtc::storage::ProfileSourceAccess>,std::optional<biglybtc::storage::ProfileSourceAccess>::<unnamed>.std::_Optional_base<biglybtc::storage::ProfileSourceAccess, false, false>::_M_payload.std::_Optional_payload<biglybtc::storage::ProfileSourceAccess, false, false, false>::<unnamed>.std::_Optional_payload<biglybtc::storage::ProfileSourceAccess, true, false, false>::<unnamed>.std::_Optional_payload_base<biglybtc::storage::ProfileSourceAccess>::_M_payload)).std::__shared_ptr<biglybtc::storage::ProfileSourceState, __gnu_cxx::_S_atomic>::_M_ptr’ may be used uninitialized [-Werror=maybe-uninitialized]
+ 1752 |       { return _M_ptr; }
+      |                ^~~~~~
+/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_maintenance_tests.cpp: In function ‘void AzureusMaintenanceTests::blockedProfileCancelAndCloseProgressWithoutGrantingCachedAuthority()’:
+/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_maintenance_tests.cpp:98:143: note: ‘blocked’ declared here
+   98 |   Normal value("127.84.0.1",true);auto acquired=value.lease->sourceAccess(true);QVERIFY(acquired);std::optional<storage::ProfileSourceAccess> blocked;blocked.emplace(std::move(*acquired));auto cancelGuard=qScopeGuard([&]{blocked.reset();});auto request=value.owner->bootstrapSavedContacts(2s);QVERIFY(request);QTRY_VERIFY_WITH_TIMEOUT(value.owner->observation().profileIoRunning>0,3000);auto cancel=value.owner->cancel(*request);QVERIFY(cancel);QTRY_VERIFY_WITH_TIMEOUT(value.owner->observation().outstandingCommands==0,3000);QVERIFY(!value.owner->observation().routingSnapshot||!value.owner->observation().routingSnapshot->seeded);QCOMPARE(value.owner->observation().snapshot->transport().counters().sent,std::uint64_t{0});blocked.reset();QTRY_COMPARE_WITH_TIMEOUT(value.owner->observation().profileIoPending,std::size_t{0},3000);
+      |                                                                                                                                               ^~~~~~~
+In member function ‘void std::unique_lock<_Mutex>::unlock() [with _Mutex = std::recursive_mutex]’,
+    inlined from ‘std::unique_lock<_Mutex>::~unique_lock() [with _Mutex = std::recursive_mutex]’ at /usr/include/c++/16/bits/unique_lock.h:114:10,
+    inlined from ‘biglybtc::storage::ProfileSourceAccess::~ProfileSourceAccess()’ at /home/yurii/Java/BiglyBTC/preview/native/adapters/profile.hpp:40:65,
+    inlined from ‘constexpr void std::_Optional_payload_base<_Tp>::_M_destroy() [with _Tp = biglybtc::storage::ProfileSourceAccess]’ at /usr/include/c++/16/optional:323:35,
+    inlined from ‘constexpr void std::_Optional_payload_base<_Tp>::_M_reset() [with _Tp = biglybtc::storage::ProfileSourceAccess]’ at /usr/include/c++/16/optional:354:14,
+    inlined from ‘constexpr std::_Optional_payload<_Tp, false, _Copy, _Move>::~_Optional_payload() [with _Tp = biglybtc::storage::ProfileSourceAccess; bool _Copy = false; bool _Move = false]’ at /usr/include/c++/16/optional:477:65,
+    inlined from ‘constexpr std::_Optional_base<biglybtc::storage::ProfileSourceAccess, false, false>::~_Optional_base()’ at /usr/include/c++/16/optional:501:12,
+    inlined from ‘constexpr std::optional<biglybtc::storage::ProfileSourceAccess>::~optional()’ at /usr/include/c++/16/optional:805:11,
+    inlined from ‘void AzureusMaintenanceTests::blockedProfileCancelAndCloseProgressWithoutGrantingCachedAuthority()’ at /home/yurii/Java/BiglyBTC/preview/native/tests/azureus_maintenance_tests.cpp:100:2:
+/usr/include/c++/16/bits/unique_lock.h:201:18: error: ‘((std::unique_lock<std::recursive_mutex>*)((char*)&blocked + offsetof(std::optional<biglybtc::storage::ProfileSourceAccess>,std::optional<biglybtc::storage::ProfileSourceAccess>::<unnamed>.std::_Optional_base<biglybtc::storage::ProfileSourceAccess, false, false>::_M_payload.std::_Optional_payload<biglybtc::storage::ProfileSourceAccess, false, false, false>::<unnamed>.std::_Optional_payload<biglybtc::storage::ProfileSourceAccess, true, false, false>::<unnamed>.std::_Optional_payload_base<biglybtc::storage::ProfileSourceAccess>::_M_payload)))[1].std::unique_lock<std::recursive_mutex>::_M_device’ may be used uninitialized [-Werror=maybe-uninitialized]
+  201 |         else if (_M_device)
+      |                  ^~~~~~~~~
+/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_maintenance_tests.cpp: In function ‘void AzureusMaintenanceTests::blockedProfileCancelAndCloseProgressWithoutGrantingCachedAuthority()’:
+/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_maintenance_tests.cpp:98:143: note: ‘blocked’ declared here
+   98 |   Normal value("127.84.0.1",true);auto acquired=value.lease->sourceAccess(true);QVERIFY(acquired);std::optional<storage::ProfileSourceAccess> blocked;blocked.emplace(std::move(*acquired));auto cancelGuard=qScopeGuard([&]{blocked.reset();});auto request=value.owner->bootstrapSavedContacts(2s);QVERIFY(request);QTRY_VERIFY_WITH_TIMEOUT(value.owner->observation().profileIoRunning>0,3000);auto cancel=value.owner->cancel(*request);QVERIFY(cancel);QTRY_VERIFY_WITH_TIMEOUT(value.owner->observation().outstandingCommands==0,3000);QVERIFY(!value.owner->observation().routingSnapshot||!value.owner->observation().routingSnapshot->seeded);QCOMPARE(value.owner->observation().snapshot->transport().counters().sent,std::uint64_t{0});blocked.reset();QTRY_COMPARE_WITH_TIMEOUT(value.owner->observation().profileIoPending,std::size_t{0},3000);
+      |                                                                                                                                               ^~~~~~~
+In destructor ‘std::__shared_count<_Lp>::~__shared_count() [with __gnu_cxx::_Lock_policy _Lp = __gnu_cxx::_S_atomic]’,
+    inlined from ‘std::__shared_ptr<_Tp, _Lp>::~__shared_ptr() [with _Tp = biglybtc::storage::ProfileSourceState; __gnu_cxx::_Lock_policy _Lp = __gnu_cxx::_S_atomic]’ at /usr/include/c++/16/bits/shared_ptr_base.h:1610:7,
+    inlined from ‘std::shared_ptr<biglybtc::storage::ProfileSourceState>::~shared_ptr()’ at /usr/include/c++/16/bits/shared_ptr.h:175:11,
+    inlined from ‘biglybtc::storage::ProfileSourceAccess::~ProfileSourceAccess()’ at /home/yurii/Java/BiglyBTC/preview/native/adapters/profile.hpp:40:65,
+    inlined from ‘constexpr void std::_Optional_payload_base<_Tp>::_M_destroy() [with _Tp = biglybtc::storage::ProfileSourceAccess]’ at /usr/include/c++/16/optional:323:35,
+    inlined from ‘constexpr void std::_Optional_payload_base<_Tp>::_M_reset() [with _Tp = biglybtc::storage::ProfileSourceAccess]’ at /usr/include/c++/16/optional:354:14,
+    inlined from ‘constexpr std::_Optional_payload<_Tp, false, _Copy, _Move>::~_Optional_payload() [with _Tp = biglybtc::storage::ProfileSourceAccess; bool _Copy = false; bool _Move = false]’ at /usr/include/c++/16/optional:477:65,
+    inlined from ‘constexpr std::_Optional_base<biglybtc::storage::ProfileSourceAccess, false, false>::~_Optional_base()’ at /usr/include/c++/16/optional:501:12,
+    inlined from ‘constexpr std::optional<biglybtc::storage::ProfileSourceAccess>::~optional()’ at /usr/include/c++/16/optional:805:11,
+    inlined from ‘void AzureusMaintenanceTests::blockedProfileCancelAndCloseProgressWithoutGrantingCachedAuthority()’ at /home/yurii/Java/BiglyBTC/preview/native/tests/azureus_maintenance_tests.cpp:100:2:
+/usr/include/c++/16/bits/shared_ptr_base.h:1135:13: error: ‘((std::__shared_count<__gnu_cxx::_S_atomic>*)((char*)&blocked + offsetof(std::optional<biglybtc::storage::ProfileSourceAccess>,std::optional<biglybtc::storage::ProfileSourceAccess>::<unnamed>.std::_Optional_base<biglybtc::storage::ProfileSourceAccess, false, false>::_M_payload.std::_Optional_payload<biglybtc::storage::ProfileSourceAccess, false, false, false>::<unnamed>.std::_Optional_payload<biglybtc::storage::ProfileSourceAccess, true, false, false>::<unnamed>.std::_Optional_payload_base<biglybtc::storage::ProfileSourceAccess>::_M_payload)))[1].std::__shared_count<>::_M_pi’ may be used uninitialized [-Werror=maybe-uninitialized]
+ 1135 |         if (_M_pi != nullptr)
+      |             ^~~~~
+/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_maintenance_tests.cpp: In function ‘void AzureusMaintenanceTests::blockedProfileCancelAndCloseProgressWithoutGrantingCachedAuthority()’:
+/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_maintenance_tests.cpp:98:143: note: ‘blocked’ declared here
+   98 |   Normal value("127.84.0.1",true);auto acquired=value.lease->sourceAccess(true);QVERIFY(acquired);std::optional<storage::ProfileSourceAccess> blocked;blocked.emplace(std::move(*acquired));auto cancelGuard=qScopeGuard([&]{blocked.reset();});auto request=value.owner->bootstrapSavedContacts(2s);QVERIFY(request);QTRY_VERIFY_WITH_TIMEOUT(value.owner->observation().profileIoRunning>0,3000);auto cancel=value.owner->cancel(*request);QVERIFY(cancel);QTRY_VERIFY_WITH_TIMEOUT(value.owner->observation().outstandingCommands==0,3000);QVERIFY(!value.owner->observation().routingSnapshot||!value.owner->observation().routingSnapshot->seeded);QCOMPARE(value.owner->observation().snapshot->transport().counters().sent,std::uint64_t{0});blocked.reset();QTRY_COMPARE_WITH_TIMEOUT(value.owner->observation().profileIoPending,std::size_t{0},3000);
+      |                                                                                                                                               ^~~~~~~
+cc1plus: all warnings being treated as errors
+ninja: build stopped: cannot make progress due to previous errors.

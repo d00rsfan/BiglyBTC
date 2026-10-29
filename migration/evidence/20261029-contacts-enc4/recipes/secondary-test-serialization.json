@@ -1,0 +1,9 @@
+{
+  "reason": "Serialize test subjects sharing fixed owned loopback tuples; compiler children keep shared jobserver3. No source/tool/test changes.",
+  "san_lane_pid": 2354038,
+  "paused_epoch": 1793303128.1717644,
+  "resumed_epoch": 1793303608.6307607,
+  "source_commit": "fe6cf7702b9c40f0975348721a8ab39e6df364f8",
+  "resume_reason": "GCC result durable after test child join",
+  "gcc_status": "FAIL"
+}

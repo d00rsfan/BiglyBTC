@@ -7910,7 +7910,14 @@
         "preview/native/services/azureus_control/lookup.cpp",
         "preview/native/services/azureus_control/lookup.hpp",
         "preview/native/services/azureus_udp/owned_routing.inc",
-        "preview/native/tests/azureus_routing_tests.cpp"
+        "preview/native/tests/azureus_routing_tests.cpp",
+        "preview/native/adapters/azureus_contacts.cpp",
+        "preview/native/adapters/azureus_contacts.hpp",
+        "preview/native/app/azureus_maintenance_owner.inc",
+        "preview/native/services/azureus_udp/owned_maintenance.inc",
+        "preview/native/tests/azureus_maintenance_tests.cpp",
+        "preview/native/adapters/CMakeLists.txt",
+        "preview/native/tests/CMakeLists.txt"
       ],
       "source_coverage": [
         {
@@ -7928,7 +7935,12 @@
             "core/src/com/biglybt/pifimpl/local/ddb/DDBaseKeyImpl.java",
             "core/src/com/biglybt/pifimpl/local/ddb/DDBaseHelpers.java",
             "core/src/com/biglybt/core/dht/DHT.java",
-            "core/src/com/biglybt/core/dht/control/DHTControl.java"
+            "core/src/com/biglybt/core/dht/control/DHTControl.java",
+            "core/src/com/biglybt/core/dht/router/impl/DHTRouterNodeImpl.java",
+            "core/src/com/biglybt/core/dht/router/impl/DHTRouterContactImpl.java",
+            "core/src/com/biglybt/core/dht/control/impl/DHTControlStatsImpl.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPUtils.java",
+            "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java"
           ],
           "source_symbols": [
             "DHTDBImpl.store",
@@ -7943,7 +7955,12 @@
             "DDBaseHelpers.encode",
             "DHT.FLAG_ANON",
             "DHTControlImpl.seed",
-            "DHTRouterImpl.seed"
+            "DHTRouterImpl.seed",
+            "DHTRouterImpl",
+            "DHTRouterNodeImpl",
+            "DHTRouterContactImpl",
+            "DHTControlStatsImpl",
+            "DHTPluginStorageManager"
           ],
           "baseline_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
           "first_ported_commit": null,
@@ -8007,6 +8024,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "514a238f0efa749e7a7fb1e68f8123af78e766da",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "0f7e9216253a7881fae11e1a7dae8a849cb333e8",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -8015,7 +8037,8 @@
         "migration/evidence/20261029-normal-dht-leaseset2/REVIEW.md",
         "migration/evidence/20261029-saved-ratings-i2cp-datagrams/REVIEW.md",
         "migration/evidence/20261029-profile-io-i2cp-tracker/REVIEW.md",
-        "migration/evidence/20261029-routing-streaming/REVIEW.md"
+        "migration/evidence/20261029-routing-streaming/REVIEW.md",
+        "migration/evidence/20261029-contacts-enc4/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261028-azureus-volatile-database/verification.json",
@@ -8024,7 +8047,8 @@
         "migration/evidence/20261029-normal-dht-leaseset2/verification.json",
         "migration/evidence/20261029-saved-ratings-i2cp-datagrams/verification.json",
         "migration/evidence/20261029-profile-io-i2cp-tracker/verification.json",
-        "migration/evidence/20261029-routing-streaming/verification.json"
+        "migration/evidence/20261029-routing-streaming/verification.json",
+        "migration/evidence/20261029-contacts-enc4/verification.json"
       ],
       "decision_ref": "migration/decisions/AD-001.md"
     },
@@ -8818,7 +8842,13 @@
             "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerClosing.java",
             "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerClosed.java",
             "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerHardDisconnected.java",
-            "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerDead.java"
+            "apps/streaming/java/src/net/i2p/client/streaming/impl/SchedulerDead.java",
+            "core/java/src/net/i2p/crypto/EncType.java",
+            "core/java/src/com/southernstorm/noise/crypto/x25519/Curve25519.java",
+            "core/java/src/net/i2p/client/impl/I2PClientImpl.java",
+            "core/java/src/net/i2p/data/PrivateKeyFile.java",
+            "core/java/src/net/i2p/data/PrivateKey.java",
+            "core/java/src/net/i2p/data/PublicKey.java"
           ],
           "source_symbols": [
             "I2CPMessageImpl.readMessage/writeMessage",
@@ -8852,7 +8882,11 @@
             "I2PSession.lookupDest",
             "Packet",
             "Connection",
-            "I2PSocketManagerFull"
+            "I2PSocketManagerFull",
+            "LeaseSet2",
+            "CreateLeaseSet2Message",
+            "KeyGenerator.generatePKIKeys",
+            "EncType.ECIES_X25519"
           ],
           "baseline_commit": "9134f808337b401e8e53c73734c81fab04280c9d",
           "first_ported_commit": null,
@@ -8863,12 +8897,17 @@
           "upstream_id": "azneti2phelper",
           "source_paths": [
             "org/parg/azureus/plugins/networks/i2p/router/I2PSMHolder.java",
-            "org/parg/azureus/plugins/networks/i2p/router/I2PHelperSocksProxy.java"
+            "org/parg/azureus/plugins/networks/i2p/router/I2PHelperSocksProxy.java",
+            "org/parg/azureus/plugins/networks/i2p/router/I2PHelperRouter.java",
+            "org/parg/azureus/plugins/networks/i2p/router/I2PHelperRouterDHT.java"
           ],
           "source_symbols": [
             "I2PSMHolder.lookupDest/lookupAddress",
             "I2PHelperSocksProxy.UDPImpl",
-            "I2PHelperSocksProxy.SMHolderWrapper"
+            "I2PHelperSocksProxy.SMHolderWrapper",
+            "I2PHelperRouter",
+            "I2PHelperRouterDHT",
+            "I2PSMHolder"
           ],
           "baseline_commit": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
           "first_ported_commit": null,
@@ -8921,6 +8960,11 @@
           "repository": "https://github.com/d00rsfan/BiglyBTC.git",
           "commit": "514a238f0efa749e7a7fb1e68f8123af78e766da",
           "purpose": "integration"
+        },
+        {
+          "repository": "https://github.com/d00rsfan/BiglyBTC.git",
+          "commit": "0f7e9216253a7881fae11e1a7dae8a849cb333e8",
+          "purpose": "integration"
         }
       ],
       "review_records": [
@@ -8932,7 +8976,8 @@
         "migration/evidence/20261029-i2cp-bounded-receiver/REVIEW.md",
         "migration/evidence/20261029-profile-io-i2cp-tracker/REVIEW.md",
         "migration/evidence/20261029-i2cp-isolated-router/REVIEW.md",
-        "migration/evidence/20261029-routing-streaming/REVIEW.md"
+        "migration/evidence/20261029-routing-streaming/REVIEW.md",
+        "migration/evidence/20261029-contacts-enc4/REVIEW.md"
       ],
       "evidence": [
         "migration/evidence/20261029-mixed-i2cp/verification.json",
@@ -8943,7 +8988,8 @@
         "migration/evidence/20261029-i2cp-bounded-receiver/verification.json",
         "migration/evidence/20261029-profile-io-i2cp-tracker/verification.json",
         "migration/evidence/20261029-i2cp-isolated-router/verification.json",
-        "migration/evidence/20261029-routing-streaming/verification.json"
+        "migration/evidence/20261029-routing-streaming/verification.json",
+        "migration/evidence/20261029-contacts-enc4/verification.json"
       ],
       "decision_ref": "MIGRATION_PLAN.md"
     }

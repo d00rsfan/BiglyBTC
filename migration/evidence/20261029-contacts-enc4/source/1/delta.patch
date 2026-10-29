@@ -1,0 +1,29 @@
+--- a/preview/native/tests/i2cp_initial_channel_tests.cpp
++++ b/preview/native/tests/i2cp_initial_channel_tests.cpp
+@@ -205,13 +205,12 @@
+     QVERIFY(channel.begin(good));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate().has_value());
+   }
+   void actualSignedRegistrationAndMergedReconfigure_data(){
+-    QTest::addColumn<QByteArray>("family");QTest::addColumn<bool>("ipv6");QTest::addColumn<QString>("encryption");
+-    QTest::newRow("DSA0-v4")<<QByteArray("dsa")<<false<<QString();QTest::newRow("Ed7-v4")<<QByteArray("ed25519")<<false<<QString();
+-    QTest::newRow("DSA0-v6")<<QByteArray("dsa")<<true<<QString();QTest::newRow("Ed7-v6")<<QByteArray("ed25519")<<true<<QString();
+-    QTest::newRow("DSA0-Enc4")<<QByteArray("dsa")<<false<<QString("4");QTest::newRow("Ed7-Enc4")<<QByteArray("ed25519")<<false<<QString("ecies_x25519");
++    QTest::addColumn<QByteArray>("family");QTest::addColumn<bool>("ipv6");
++    QTest::newRow("DSA0-v4")<<QByteArray("dsa")<<false;QTest::newRow("Ed7-v4")<<QByteArray("ed25519")<<false;
++    QTest::newRow("DSA0-v6")<<QByteArray("dsa")<<true;QTest::newRow("Ed7-v6")<<QByteArray("ed25519")<<true;
+   }
+   void actualSignedRegistrationAndMergedReconfigure(){
+-    QFETCH(QByteArray,family);QFETCH(bool,ipv6);QFETCH(QString,encryption);OwnedRouter router;QVERIFY(router.listen(ipv6?QHostAddress::LocalHostIPv6:QHostAddress::LocalHost));
++    QFETCH(QByteArray,family);QFETCH(bool,ipv6);OwnedRouter router;QVERIFY(router.listen(ipv6?QHostAddress::LocalHostIPv6:QHostAddress::LocalHost));
+     Channel channel;auto identity=signer(family.constData());const auto expectedDestination=identity.destination()->wire;
+     QSignalSpy created(&channel,&Channel::sessionCreated),updated(&channel,&Channel::sessionUpdated);
+     QVERIFY(!channel.createSession(identity,{},1761739200123)); // No date/TCP authority.
+@@ -369,7 +368,7 @@
+     QTest::newRow("DSA0-Enc4")<<QByteArray("dsa")<<false<<QString("4");QTest::newRow("Ed7-Enc4")<<QByteArray("ed25519")<<false<<QString("ecies_x25519");
+   }
+   void ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests(){
+-    QFETCH(QByteArray,family);QFETCH(bool,ipv6);OwnedRouter router;QVERIFY(router.listen(ipv6?QHostAddress::LocalHostIPv6:QHostAddress::LocalHost));Channel channel;
++    QFETCH(QByteArray,family);QFETCH(bool,ipv6);QFETCH(QString,encryption);OwnedRouter router;QVERIFY(router.listen(ipv6?QHostAddress::LocalHostIPv6:QHostAddress::LocalHost));Channel channel;
+     QSignalSpy submitted(&channel,&Channel::leaseSetSubmitted);auto identity=signer(family.constData());const auto expected=identity.destination()->wire;
+     QVERIFY(channel.begin(router.options()));QTRY_COMPARE(router.received,hello());QVERIFY(router.send(date));QTRY_VERIFY(channel.routerDate());
+     wire::SessionOptions options{{"i2cp.dontPublishLeaseSet","TrUe"}};if(!encryption.isEmpty()){options.emplace_back("i2cp.leaseSetEncType",encryption.toStdString());}auto result=channel.createLeaseSession(std::move(identity),options,1761739200123);QVERIFY2(result.has_value(),result?"":result.error().message.c_str());QVERIFY(!identity.valid());

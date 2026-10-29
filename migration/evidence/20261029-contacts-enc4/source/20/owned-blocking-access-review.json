@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "status": "SOURCE_PASS_NO_EXECUTION",
+  "manifest": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/owned-blocking-access/manifest.json",
+  "manifest_sha256": "4fc728c35615c84b00d97bacfccc673dc88186d2d25d9d753145e92fd42a9f0e",
+  "native_basis": "fe6cf7702b9c40f0975348721a8ab39e6df364f8",
+  "verified": {
+    "source_maps": 1,
+    "artifacts": 4,
+    "inputs": 2,
+    "current_and_git_preimage": true,
+    "patch_apply_check": true
+  },
+  "findings": [
+    "Only the test holder changes optional<ProfileSourceAccess> to unique_ptr at the same two successful acquisition points, with direct memory include. All commands, resets, guards, assertions and deadlines retain their positions.",
+    "Public noexcept move constructor transfers the same shared source state and unique_lock; moved-from guard no longer owns the lock. unique_ptr destruction invokes the same guard destructor, decrementing depth before its unique_lock releases. Allocation happens before moving the acquired guard, preserving RAII if allocation fails.",
+    "Existing cancelGuard releases the held access on early assertion return; existing releaseBeforeJoin remains after the actual close future and destroys before that future joins. No source authority, mutation, production path, warning setting or timeout change."
+  ],
+  "limits": "Source-only response to actual GCC16 maybe-uninitialized; compiler and runtime correction remain pending. Actual Clang PASS and active SAN receipts stay distinct.",
+  "review_blockers": [],
+  "compiler_execution": false,
+  "runtime_execution": false,
+  "native_mutated": false
+}

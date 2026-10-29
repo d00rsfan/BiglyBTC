@@ -1,0 +1,19 @@
+{
+  "status": "SOURCE_ONLY_NOT_EXECUTED",
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/publish.py",
+    "sha256": "a1810ccd2adc65e2fac49605b0d86521109622192184c6e68c1273a9e21973d3"
+  },
+  "child": {
+    "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/publish-current.py",
+    "sha256": "3d2771eff923086886931c75eb7dc1065b1b4bc87498e14d4cd18dae24a194e7"
+  },
+  "patch": {
+    "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/publisher-first-section/changes.patch",
+    "sha256": "7fb8f2021b3225ca0a9144fc46a69690deca2530cd7d78bb3b95ca579e9a1103"
+  },
+  "delta": "Find first newline-## section, or append when absent; insert current milestone before it and retain all old sections verbatim. No actual ACTIVE/docs/native mutation.",
+  "checks": "AST parsed; ordinary-heading/no-heading string cases inspected without executing publisher.",
+  "native_mutated": false,
+  "publication_executed": false
+}

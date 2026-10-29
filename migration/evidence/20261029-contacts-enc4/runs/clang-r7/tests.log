@@ -1,0 +1,45 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang
+Connected to MAKE jobserver
+      Start 178: azureus-owned-service
+ 1/13 Test #178: azureus-owned-service ................   Passed    5.53 sec
+      Start 182: azureus-router-owner
+ 2/13 Test #182: azureus-router-owner .................   Passed    0.01 sec
+      Start 192: owned-ddb-control
+ 3/13 Test #192: owned-ddb-control ....................   Passed    0.00 sec
+      Start 263: azureus-database-runtime
+ 4/13 Test #263: azureus-database-runtime .............   Passed    2.05 sec
+      Start 285: i2cp-initial-channel
+ 5/13 Test #285: i2cp-initial-channel .................   Passed   14.08 sec
+      Start 287: pure-i2cp-leaseset2
+ 6/13 Test #287: pure-i2cp-leaseset2 ..................   Passed    0.07 sec
+      Start 289: i2cp-lease-backed-datagram-channel
+ 7/13 Test #289: i2cp-lease-backed-datagram-channel ...   Passed    7.44 sec
+      Start 291: i2cp-bounded-datagram-receiver
+ 8/13 Test #291: i2cp-bounded-datagram-receiver .......   Passed   11.21 sec
+      Start 292: azureus-profile-io
+ 9/13 Test #292: azureus-profile-io ...................   Passed    4.46 sec
+      Start 294: i2cp-explicit-tracker-channel
+10/13 Test #294: i2cp-explicit-tracker-channel ........   Passed    5.33 sec
+      Start 296: azureus-routing
+11/13 Test #296: azureus-routing ......................   Passed    1.41 sec
+      Start 297: pure-i2p-streaming
+12/13 Test #297: pure-i2p-streaming ...................   Passed    0.03 sec
+      Start 299: azureus-maintenance
+13/13 Test #299: azureus-maintenance ..................   Passed   80.94 sec
+
+100% tests passed, 0 tests failed out of 13
+
+Label Time Summary:
+crypto            =   0.07 sec*proc (1 test)
+database          =   2.05 sec*proc (1 test)
+i2p               =  38.16 sec*proc (6 tests)
+loopback          =  94.39 sec*proc (5 tests)
+no-network        =   0.09 sec*proc (2 tests)
+owned-loopback    =  38.06 sec*proc (4 tests)
+profile           =  86.81 sec*proc (3 tests)
+router            =   0.01 sec*proc (1 test)
+routing           =  82.35 sec*proc (2 tests)
+statistics        =   5.54 sec*proc (3 tests)
+unit              = 132.56 sec*proc (13 tests)
+
+Total Test time (real) = 132.57 sec

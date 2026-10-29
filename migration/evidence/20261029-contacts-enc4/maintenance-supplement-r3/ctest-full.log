@@ -1,0 +1,42 @@
+Start testing: Oct 29 20:52 IST
+----------------------------------------------------------
+299/299 Testing: azureus-maintenance
+299/299 Test: azureus-maintenance
+Command: "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-azureus-maintenance-tests"
+Directory: /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests
+"azureus-maintenance" start time: Oct 29 20:52 IST
+Output:
+----------------------------------------------------------
+********* Start testing of AzureusMaintenanceTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : AzureusMaintenanceTests::initTestCase()
+PASS   : AzureusMaintenanceTests::rawOriginalEnvelopePrimaryRecoveryAndCompareBeforePublish()
+PASS   : AzureusMaintenanceTests::foreignAndAmbiguousCacheCannotBeRewrittenOrChangeOriginalBytes()
+PASS   : AzureusMaintenanceTests::unsafePendingAndChangedParentNeverPublish()
+PASS   : AzureusMaintenanceTests::originalTenSecondRetrySixTickSelectivePrefixAndFiveMinuteIdleRules()
+PASS   : AzureusMaintenanceTests::originalTreeSetNarrowedComparatorAndWallAliveDurationArePreserved()
+PASS   : AzureusMaintenanceTests::genuineNormalCacheRestartBootstrapsWithoutSuppliedPeerAndThenAcceptsForwardedStore()
+PASS   : AzureusMaintenanceTests::blockedProfileCancelAndCloseProgressWithoutGrantingCachedAuthority()
+FAIL!  : AzureusMaintenanceTests::actualDefaultKSelectiveRefreshAndFailureRetryUseRealNormalOwners() 'root.owner->observation().maintenance->routing.refreshes>refreshed' returned FALSE. ()
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_maintenance_tests.cpp(100)]
+PASS   : AzureusMaintenanceTests::cleanupTestCase()
+Totals: 9 passed, 1 failed, 0 skipped, 0 blacklisted, 136829ms
+********* Finished testing of AzureusMaintenanceTests *********
+<end of output>
+Test time = 136.84 sec
+----------------------------------------------------------
+Test Failed.
+"azureus-maintenance" end time: Oct 29 20:55 IST
+"azureus-maintenance" time elapsed: 00:02:16
+----------------------------------------------------------
+
+End testing: Oct 29 20:55 IST
+
+loopback = 136.84 sec*proc
+
+profile = 136.84 sec*proc
+
+routing = 136.84 sec*proc
+
+unit = 136.84 sec*proc
+

@@ -1,0 +1,25 @@
+[
+  {
+    "name": "new-enc4-tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+      "--parallel",
+      "1",
+      "-R",
+      "^(pure\\-i2cp\\-leaseset2|i2cp\\-initial\\-channel)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/enc4-supplement-r1/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 14.009,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/enc4-supplement-r1/new-enc4-tests.log",
+    "log_sha256": "280a581b100c8e706d62ae2f67338a0f8ea933b1915c26d19ab239ee4ea7582a"
+  }
+]

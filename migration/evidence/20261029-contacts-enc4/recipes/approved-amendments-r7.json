@@ -1,0 +1,19 @@
+{
+  "status": "ROOT_SOURCE_REVIEWED_NO_EXECUTION",
+  "amendments": [
+    [
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/owned-blocking-access/manifest.json",
+        "sha256": "4fc728c35615c84b00d97bacfccc673dc88186d2d25d9d753145e92fd42a9f0e"
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/owned-blocking-access-review.json",
+        "sha256": "80a5ca1deb6a90e74046e68ed849f7cddc23a6dcf6e118ccbc5341e9d85bf838"
+      }
+    ]
+  ],
+  "adopter_sha256": "9205a9295addf019e274403c87e97338c0a6afa733c15c96972e172d02b45fb1",
+  "root_read_full_patch": true,
+  "shared_test_fence_syntax_checked": true,
+  "production_assertions_deadlines_warnings_unchanged": true
+}

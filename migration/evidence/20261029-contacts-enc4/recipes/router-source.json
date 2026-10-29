@@ -1,0 +1,60 @@
+{
+  "status": "FROZEN_SOURCE_ONLY_NOT_EXECUTED",
+  "recipe": {
+    "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router.py",
+    "sha256": "c1cbc16c536f27d8f0446a51157311c9768a6eb0e76a64924d6ecb1b055ccb60"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/drafts/router.py": "1a48a4be808c44dc59abc0122ae858bd948a180670b8996477657779bb1de546",
+    "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/amendments/owned-encryption-test-column/manifest.json": "0f9487d72e2524b9f7a9fb1d58f1ea9abbca561a8a4946b6e090a1e424cdb4cf",
+    "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/isolated-router/run.py": "aa3621a2468d9e1ac05ccc40b5bec66cf5fe6c1508c31b6440052afa23ff9062",
+    "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/isolated-router/RouterTracker.java": "88a42f82fc06ded329cc1ec26e3140b42f62350e4bd2069f9aadcf6eb88608c3",
+    "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/isolated-router/probe.cpp": "2e51a03d46971a13cb459363fa6d7dd0aec08fda7bd2c03ee8d95e0d04ed835e",
+    "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/isolated-router/CMakeLists.txt": "7c2d7be3058e7dec69554f80d075c890ee7dc1782a4499e8dc612abdc7da8a04",
+    "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/isolated-router/source-pins.json": "f90f5d6dc55d5f6f6423ae01f561a8bee3a45e55bdccc888b4c7d150d44d92eb"
+  },
+  "command_template": [
+    "python3",
+    "-B",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router.py",
+    "--gcc-result",
+    "ACTUAL_ABSOLUTE_GCC_RESULT",
+    "--source-commit",
+    "ACTUAL_FULL_CID",
+    "--producer",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/run.py",
+    "--adoption",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/root-adoption.json",
+    "--attempt",
+    "r1"
+  ],
+  "required_gcc_status": "PASS_ENC4_LEASESET_COHORT",
+  "raw_subject_recipe_unchanged": true,
+  "linkage": "Archive names/count derived from frozen raw recipe AST, compared with exact CMake declaration and measured link-inputs. Current count9 includes linkage-only Streaming; no actor execution/credit.",
+  "compilation": "After root native cohort completion only: one bounded javac --release17, two helper classes; serial tiny probe --parallel1 imports current archives. No native core/provider rebuild.",
+  "proof": [
+    "Actual GCC source/adoption/command/XML/build/image and provider associations before subjects",
+    "Fresh actual namespace: loopback-only, capabilities0, NoNewPrivs, documentation addresses unreachable before and after",
+    "Exactly3 owned processes exit0; native current tracker counts3/4/5/general receiverfalse; actual signed2 connect/claimed3 scrape/RAW18 replies1/1/2; all clients retire",
+    "Pinned actual Java accepted() checks current signature-verified LS2 type3 with one Enc4/32-byte key for BOTH generated original Destinations before warmed-cache marker; hashes agree across public Destination bytes/native/marker/lease",
+    "Exact public whitelist only; after hashes remove only own generated router/peer-data/home plus tiny probe/classes/tool-home; native.keys absent",
+    "Native source/provider/cache/archive/image/class/JAR/tool/fixture and receipt hashes unchanged"
+  ],
+  "limits": "Warm local signed-cache/zero-hop router only; no discovery, remote ECIES ratchet/multihop, Host/default/public activation or Streaming credit.",
+  "output_contract": "router-acceptance.json statusPASS binds actual sourceCID/GCCresult/adoption/rawresult/inputs and absolute public_artifacts path-to-SHA map; failures preserved per attempt.",
+  "adopter_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/adopt.py",
+    "sha256": "d7f7d5130df69c5cc4ac79ca1967deaf6e2d50f9e727f92a47415f86fa368286",
+    "status": "SOURCE_HELPER_PASS_EXACT_PLAN_PENDING",
+    "findings": [],
+    "checks": [
+      "Exact clean parent HEAD and no prior adoption required",
+      "SHA-pinned recipe/capsule/ancestor/effective-artifact/review inputs; unique native path maps and exact before/after bytes",
+      "CMake appends composed once with measured before/after maps; exact expected union count; staged diff check precedes commit",
+      "Actual resulting commit plus full maps/input/history/adopter pins recorded"
+    ],
+    "limitation": "approved-inputs.json does not yet exist; no actual capsule selection/union/adoption approval or execution credited."
+  },
+  "native_mutated": false,
+  "subjects_executed": false
+}

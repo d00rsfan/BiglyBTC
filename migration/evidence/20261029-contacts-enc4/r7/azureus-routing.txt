@@ -1,0 +1,15 @@
+********* Start testing of AzureusRoutingTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : AzureusRoutingTests::initTestCase()
+PASS   : AzureusRoutingTests::realSelfLookupDiscoversThirdNormalOwnerThenAuthorisesActualCachedForward()
+PASS   : AzureusRoutingTests::exactPeerDefaultStillRejectsUnlistedRequestsAndRoutingActivation()
+PASS   : AzureusRoutingTests::heldNodeReplyCannotSeedAfterCancelClosePermissionOrVersionWithdrawal(cancel)
+PASS   : AzureusRoutingTests::heldNodeReplyCannotSeedAfterCancelClosePermissionOrVersionWithdrawal(close)
+PASS   : AzureusRoutingTests::heldNodeReplyCannotSeedAfterCancelClosePermissionOrVersionWithdrawal(DHT-permission)
+PASS   : AzureusRoutingTests::heldNodeReplyCannotSeedAfterCancelClosePermissionOrVersionWithdrawal(version-source)
+PASS   : AzureusRoutingTests::foreignAndMalformedRepliesDoNotGrantAndOutOfScopeContactsNeverDispatch()
+PASS   : AzureusRoutingTests::actualContactCapacityWithdrawalCannotSetSeededOrDispatchOverflowCandidates()
+PASS   : AzureusRoutingTests::contactOnlyControllerCannotCompleteThroughValueResults()
+PASS   : AzureusRoutingTests::cleanupTestCase()
+Totals: 11 passed, 0 failed, 0 skipped, 0 blacklisted, 1402ms
+********* Finished testing of AzureusRoutingTests *********

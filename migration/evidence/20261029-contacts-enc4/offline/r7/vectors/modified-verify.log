@@ -1,0 +1,11 @@
+PASS EXACT REFERENCE CLASS ORIGINS
+WARNING: A restricted method in java.lang.System has been called
+WARNING: java.lang.System::loadLibrary has been called by freenet.support.CPUInformation.CPUID in an unnamed module (file:/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar)
+WARNING: Use --enable-native-access=ALL-UNNAMED to avoid a warning for callers in this module
+WARNING: Restricted methods will be blocked in a future release unless native access is enabled
+
+PASS JAVA VERIFIED NATIVE dsa-one create
+PASS JAVA VERIFIED NATIVE dsa-sixteen create
+PASS JAVA VERIFIED NATIVE ed25519-one create
+PASS JAVA VERIFIED NATIVE ed25519-sixteen create
+PASS JAVA REFUSED CHANGED LEASESET SIGNATURE

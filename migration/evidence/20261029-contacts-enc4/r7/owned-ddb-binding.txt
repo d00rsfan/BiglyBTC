@@ -1,0 +1,11 @@
+********* Start testing of OwnedDdbBindingTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : OwnedDdbBindingTests::initTestCase()
+PASS   : OwnedDdbBindingTests::explicitThreePeerGetProducesActualParentChildTicketsAndValues()
+PASS   : OwnedDdbBindingTests::discoveryNeverAdmitsAnUnownedPeerAndOldDirectFindValueStillWorks()
+PASS   : OwnedDdbBindingTests::actualChildCancellationThenNewLookupCloseRetainTheirOwnTerminalStates()
+PASS   : OwnedDdbBindingTests::actualStreamingValueSlicesAndDeadlineRemainBoundedWithoutInventedSuccess()
+PASS   : OwnedDdbBindingTests::invalidLookupsAndPassivePullsNeverStartARequest()
+PASS   : OwnedDdbBindingTests::cleanupTestCase()
+Totals: 7 passed, 0 failed, 0 skipped, 0 blacklisted, 820ms
+********* Finished testing of OwnedDdbBindingTests *********

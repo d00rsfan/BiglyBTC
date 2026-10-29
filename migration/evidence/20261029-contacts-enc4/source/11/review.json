@@ -1,0 +1,41 @@
+{
+  "schema": 1,
+  "status": "SOURCE_REVIEW_PASS_NO_EXECUTION",
+  "capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/manifest.json",
+    "sha256": "fa60353cf5a038c2dd541c63108f954646a1e3e89ad4ec5a959398f8c93be048"
+  },
+  "native_basis": "2c79155e6c660426781ef54b4c075451e304a5b8",
+  "native_implementation_basis": "514a238f0efa749e7a7fb1e68f8123af78e766da",
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "verified": {
+    "source_maps": 14,
+    "modified_current_and_git_beforeimages": 9,
+    "new_paths_absent": 5,
+    "artifacts_sha256_and_sizes": 30,
+    "original_git_blobs_and_sha256": 12,
+    "jdk17_zip_entries_and_sha256": 2,
+    "cmake_appends": 2,
+    "patch_apply_check": "PASS",
+    "native_worktree_clean": true
+  },
+  "resolved_findings": [
+    "Explicit routing terminal is retained until captureOwnedRouting settles the command; only a later maintenance permit starts queued refresh work.",
+    "Export preserves bounded JDK17 TreeMap red-black insertion/inorder under the original narrowed signed32 age comparator, equal-age collisions, and signed64 wall-time subtraction.",
+    "Contact flush carries the absolute command deadline into worker save; cancellation/expiry is checked before temporary-file creation and publication.",
+    "Global lookup-start time is separate from leaf-before-query-dispatch time, including existing recursive LookupValue; delayed dispatch does not extend the idle deadline.",
+    "Each actual permitted timer turn is consumed once; the second elapsed-time throttle no longer drops genuine turns because profile-I/O completion jitter shortens their spacing."
+  ],
+  "conclusions": [
+    "Raw contacts.dat envelope, primary-first/saving-only fallback, original import/export priority and current Known-only admission match the pinned source within the declared owned-loopback32-contact scope.",
+    "Retained SAME-OFD authority, descriptor-relative bounded reads/publication CAS, fixed pending recovery and poisoned uncertain writes stay on the existing profile worker; timer/socket/cancel effects remain on the actor under current permits.",
+    "Cache-only restart fixture now requires zero inbound packets before bootstrap; cache bytes do not persist seeded, closest, token or Alive authority.",
+    "New target biglybtc-azureus-maintenance-tests and CTest azureus-maintenance are wired append-only with TIMEOUT240; existing test source leaves are unchanged."
+  ],
+  "material_blockers": [],
+  "qualification_pending": [
+    "Actual eight-method maintenance suite including owned10s retry and six-tick selective refresh",
+    "Affected routing/owner/profile-I/O/router/controller/database regressions and product relinks"
+  ],
+  "limits": "Source review only. Five-minute idle is pure-policy scope, not an observed five-minute runtime. Public/Host/default bootstrap and reseed providers, cache-value republish, full original capacity/performance, and automatic close-time export remain outside this capsule. No build, Java, network subject, profile, native or provider mutation was performed."
+}

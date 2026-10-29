@@ -1,0 +1,65 @@
+Test project /home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang
+Connected to MAKE jobserver
+      Start 178: azureus-owned-service
+ 1/13 Test #178: azureus-owned-service ................   Passed    5.46 sec
+      Start 182: azureus-router-owner
+ 2/13 Test #182: azureus-router-owner .................   Passed    0.01 sec
+      Start 192: owned-ddb-control
+ 3/13 Test #192: owned-ddb-control ....................   Passed    0.00 sec
+      Start 263: azureus-database-runtime
+ 4/13 Test #263: azureus-database-runtime .............   Passed    2.05 sec
+      Start 285: i2cp-initial-channel
+ 5/13 Test #285: i2cp-initial-channel .................   Passed   13.99 sec
+      Start 287: pure-i2cp-leaseset2
+ 6/13 Test #287: pure-i2cp-leaseset2 ..................   Passed    0.10 sec
+      Start 289: i2cp-lease-backed-datagram-channel
+ 7/13 Test #289: i2cp-lease-backed-datagram-channel ...   Passed    7.43 sec
+      Start 291: i2cp-bounded-datagram-receiver
+ 8/13 Test #291: i2cp-bounded-datagram-receiver .......   Passed   11.18 sec
+      Start 292: azureus-profile-io
+ 9/13 Test #292: azureus-profile-io ...................   Passed    2.82 sec
+      Start 294: i2cp-explicit-tracker-channel
+10/13 Test #294: i2cp-explicit-tracker-channel ........   Passed    5.32 sec
+      Start 296: azureus-routing
+11/13 Test #296: azureus-routing ......................   Passed    1.43 sec
+      Start 297: pure-i2p-streaming
+12/13 Test #297: pure-i2p-streaming ...................   Passed    0.06 sec
+      Start 299: azureus-maintenance
+13/13 Test #299: azureus-maintenance ..................***Failed   41.67 sec
+********* Start testing of AzureusMaintenanceTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : AzureusMaintenanceTests::initTestCase()
+PASS   : AzureusMaintenanceTests::rawOriginalEnvelopePrimaryRecoveryAndCompareBeforePublish()
+PASS   : AzureusMaintenanceTests::foreignAndAmbiguousCacheCannotBeRewrittenOrChangeOriginalBytes()
+PASS   : AzureusMaintenanceTests::unsafePendingAndChangedParentNeverPublish()
+PASS   : AzureusMaintenanceTests::originalTenSecondRetrySixTickSelectivePrefixAndFiveMinuteIdleRules()
+PASS   : AzureusMaintenanceTests::originalTreeSetNarrowedComparatorAndWallAliveDurationArePreserved()
+PASS   : AzureusMaintenanceTests::genuineNormalCacheRestartBootstrapsWithoutSuppliedPeerAndThenAcceptsForwardedStore()
+PASS   : AzureusMaintenanceTests::blockedProfileCancelAndCloseProgressWithoutGrantingCachedAuthority()
+FAIL!  : AzureusMaintenanceTests::actualDefaultKSelectiveRefreshAndFailureRetryUseRealNormalOwners() 'success(*root.owner,*round)' returned FALSE. (state=1 commands=0 io=0/0 cmd=9 error=10 transport=3 seeded=1 ticks=3 cache=Profile operation stopped, stale or expired)
+   Loc: [/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_maintenance_tests.cpp(97)]
+PASS   : AzureusMaintenanceTests::cleanupTestCase()
+Totals: 9 passed, 1 failed, 0 skipped, 0 blacklisted, 41645ms
+********* Finished testing of AzureusMaintenanceTests *********
+
+
+92% tests passed, 1 tests failed out of 13
+
+Label Time Summary:
+crypto            =   0.10 sec*proc (1 test)
+database          =   2.05 sec*proc (1 test)
+i2p               =  38.08 sec*proc (6 tests)
+loopback          =  53.43 sec*proc (5 tests)
+no-network        =   0.16 sec*proc (2 tests)
+owned-loopback    =  37.92 sec*proc (4 tests)
+profile           =  45.92 sec*proc (3 tests)
+router            =   0.01 sec*proc (1 test)
+routing           =  43.10 sec*proc (2 tests)
+statistics        =   5.47 sec*proc (3 tests)
+unit              =  91.52 sec*proc (13 tests)
+
+Total Test time (real) =  91.54 sec
+
+The following tests FAILED:
+	299 - azureus-maintenance (Failed)                      loopback profile routing unit
+Errors while running CTest

@@ -1,0 +1,267 @@
+{
+  "source_commit": "9a8cf1aa2375797e368434423b8890fce1dbb09b",
+  "parent_commit": "2c79155e6c660426781ef54b4c075451e304a5b8",
+  "source_path_count": 22,
+  "source_paths": {
+    "preview/native/adapters/azureus_contacts.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/adapters/azureus_contacts.cpp",
+      "after_sha256": "9c4707a4cfc956e8268b466fed506ce664609e1f32c199418a86ff0d5591a21f"
+    },
+    "preview/native/adapters/azureus_contacts.hpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/adapters/azureus_contacts.hpp",
+      "after_sha256": "05528b5d507c30b83d8d2ad5521e76352d2c32ce2e34b617fbf58b7f49d3c82e"
+    },
+    "preview/native/app/azureus_maintenance_owner.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/app/azureus_maintenance_owner.inc",
+      "after_sha256": "cbe135276fa16d984ab1d81ab0fb0952bda9941b5c52e4c78672155ad232191a"
+    },
+    "preview/native/app/azureus_profile_io.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/before/preview/native/app/azureus_profile_io.hpp",
+      "before_sha256": "7357b13f11d46cc06fc2c9bddb52bd9942d942fcce29d5804975076d6494fd30",
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/running-queue-wake/staging/preview/native/app/azureus_profile_io.hpp",
+      "after_sha256": "0a6beb911cc212377f245149281d0c1348cf2e91601db83e480e0a8bb01f473d"
+    },
+    "preview/native/app/azureus_profile_io_owner.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/before/preview/native/app/azureus_profile_io_owner.inc",
+      "before_sha256": "71523d23c952b25ac1558677f1f45eb6378627d57ab1e47c7bd0577a55b556b3",
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/normal-preflight-backpressure/staging/preview/native/app/azureus_profile_io_owner.inc",
+      "after_sha256": "e08d1cba5f3791485b1499c73527ebd8154948d4e4520497110c60c9205b186f"
+    },
+    "preview/native/app/owned_azureus_service.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/before/preview/native/app/owned_azureus_service.cpp",
+      "before_sha256": "846bf2fce529c0ddbb2c49b12512904a45b956772717e358f6c5b9f01c7db5f7",
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/normal-preflight-backpressure/staging/preview/native/app/owned_azureus_service.cpp",
+      "after_sha256": "a6c8d83a99098397501cab664d55a8ddb1f71f55b893138fdbab622be395f33c"
+    },
+    "preview/native/app/owned_azureus_service.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/before/preview/native/app/owned_azureus_service.hpp",
+      "before_sha256": "7cc966a3c6e5ef6e807b4aa1fa47ef14d8401dd195843d961b16cd5f58a2d974",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/app/owned_azureus_service.hpp",
+      "after_sha256": "2addade9fed7e2d3681af6dedc76c1852d9276a739545f6cd75f3de619d838ca"
+    },
+    "preview/native/services/azureus_router/router.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/before/preview/native/services/azureus_router/router.cpp",
+      "before_sha256": "704c59b286f53ef0ed430268c2b517a9cf9a309f238f76370a4221ea7bd14c50",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/services/azureus_router/router.cpp",
+      "after_sha256": "766a2e0ac7af86cc205c118df2b8be906a96f5d30e4bb39e0a5726b42b2d4460"
+    },
+    "preview/native/services/azureus_router/router.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/before/preview/native/services/azureus_router/router.hpp",
+      "before_sha256": "6c09dd071e8240a7755ad5fb2c8bd46b63a64ab3f7c195de47c015d0d027f015",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/services/azureus_router/router.hpp",
+      "after_sha256": "9302e410cc5d4dc6f63c031fe6706d31d1d7a5afe68af997df05e66b61d42302"
+    },
+    "preview/native/services/azureus_udp/owned_maintenance.inc": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/services/azureus_udp/owned_maintenance.inc",
+      "after_sha256": "d6b76f425631d83b62542b109c61eb5a3a7c17fd6289f1cefebb6a64ed2cad25"
+    },
+    "preview/native/services/azureus_udp/owned_routing.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/before/preview/native/services/azureus_udp/owned_routing.inc",
+      "before_sha256": "8f0700a534ccd92c0b29aac19c840d78f59110d62c73a4090bd1d1deade4230f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/services/azureus_udp/owned_routing.inc",
+      "after_sha256": "536b69e189d08a467c881c03f328f52b9545e5cca0dc2c962d579288628935dc"
+    },
+    "preview/native/services/azureus_udp/owned_transport.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/before/preview/native/services/azureus_udp/owned_transport.cpp",
+      "before_sha256": "59e008823ab22dbb1f40811eafafcae257b5fbce1869d8184bda4224db3d6dbc",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/services/azureus_udp/owned_transport.cpp",
+      "after_sha256": "690df7af3dc3329cdf4e2eda7d872b35013cad2bf5de653c2c72fab47da4992c"
+    },
+    "preview/native/services/azureus_udp/owned_transport.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/before/preview/native/services/azureus_udp/owned_transport.hpp",
+      "before_sha256": "d10ec131356fdd725371475cc527d0f2f1037fa1513681be1c98585d91bdbe7d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/staging/preview/native/services/azureus_udp/owned_transport.hpp",
+      "after_sha256": "4472ecd4204da84cc25ab8b5c462ecd059cc4a0a76088d59c2de47fec04863bf"
+    },
+    "preview/native/tests/azureus_maintenance_tests.cpp": {
+      "before_path": null,
+      "before_sha256": null,
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/selective-refresh-known-before-lookup/staging/preview/native/tests/azureus_maintenance_tests.cpp",
+      "after_sha256": "0689bd7aa717eaad666327e954c8fc17e448b98930bf9fb1587f4538e80b7b1e"
+    },
+    "preview/native/services/i2cp_channel/channel.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/services/i2cp_channel/channel.cpp",
+      "before_sha256": "5d1cf0f48b8404329e1bc65c73e826269a83ef683f7d1eb656a1f3161cc7144d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/staging/preview/native/services/i2cp_channel/channel.cpp",
+      "after_sha256": "b06f7b3b0456d948c5e90b9c768c73cf0e9d8eab4f832d433eefa5f6a5aaa611"
+    },
+    "preview/native/services/i2cp_leaseset/leaseset.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/services/i2cp_leaseset/leaseset.cpp",
+      "before_sha256": "f4bd1989267d40a306e94a1a76e4e48d4e94d473156170f4cda1bc6cf569489f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/staging/preview/native/services/i2cp_leaseset/leaseset.cpp",
+      "after_sha256": "afeca689f57f1e065f8abf85b1c1709e667edfa00dd73a6950fdbb98e9d06f97"
+    },
+    "preview/native/services/i2cp_leaseset/leaseset.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/services/i2cp_leaseset/leaseset.hpp",
+      "before_sha256": "44bcc356a5335d1049fab6f16780e2778e0e3b86b6afb5f3b448d7be9d2a6678",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/staging/preview/native/services/i2cp_leaseset/leaseset.hpp",
+      "after_sha256": "e3fd1c28de5a29e3b53f04eca3ff177eeb5ac5128809c44714806e4de6838482"
+    },
+    "preview/native/tests/i2cp_initial_channel_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/tests/i2cp_initial_channel_tests.cpp",
+      "before_sha256": "f366232d4ecabc4738c4312105c82bc1b65bc44e5ee8d51ce4ba144a7dd2d8a2",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/amendments/owned-encryption-test-column/staging/preview/native/tests/i2cp_initial_channel_tests.cpp",
+      "after_sha256": "bb6b6b095331271d8ace102fe3d36906e9e7ac3e060ddd64bcfe1c2aaf2848e6"
+    },
+    "preview/native/tests/i2cp_leaseset_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/tests/i2cp_leaseset_tests.cpp",
+      "before_sha256": "f668e4e9befbbad910d5259b444a8588bf01aaed4e86feb93f6bb89bccf27d17",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/staging/preview/native/tests/i2cp_leaseset_tests.cpp",
+      "after_sha256": "9c82441a8d10e2a3bae67405850560c3d73812e11e8f9f78371c0e7ff8df81e0"
+    },
+    "preview/native/adapters/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/before/preview/native/adapters/CMakeLists.txt",
+      "before_sha256": "d4a631d722b1dc10d66cbf15dc9635fc6b9037e186048bdc29caf671f2d4e4f2",
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/composed/preview/native/adapters/CMakeLists.txt",
+      "after_sha256": "946ca6f41b206bb1fbafe45bad3b1a23c29921cc221bb1246f89baac5180f391"
+    },
+    "preview/native/tests/CMakeLists.txt": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/before/preview/native/tests/CMakeLists.txt",
+      "before_sha256": "2af98c6f55b38dc7c984c66612862958ccd8df5cacc10fdd94de9d88b2ca486f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/composed/preview/native/tests/CMakeLists.txt",
+      "after_sha256": "7286db4f2c70ce3a9a10a23bfabb8ece66009bd54c4e08e389805a1a4c616c2c"
+    },
+    "preview/native/tests/azureus_profile_io_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/normal-preflight-backpressure/before/preview/native/tests/azureus_profile_io_tests.cpp",
+      "before_sha256": "5f6e1c48130db72f3ec73e527e17494700318b4dc998febcea228ecebf5ab523",
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/running-queue-wake/staging/preview/native/tests/azureus_profile_io_tests.cpp",
+      "after_sha256": "ed12e752f2bd94556fc8ea2a4b8efc70f1a0dbf0f5b097db56932618181a9a47"
+    }
+  },
+  "source_capsules": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/manifest.json",
+      "sha256": "fa60353cf5a038c2dd541c63108f954646a1e3e89ad4ec5a959398f8c93be048"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/amendments/owned-encryption-test-column/manifest.json",
+      "sha256": "0f9487d72e2524b9f7a9fb1d58f1ea9abbca561a8a4946b6e090a1e424cdb4cf"
+    }
+  ],
+  "source_reviews": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029-review/review.json",
+      "sha256": "b23c58e2915dc182887952c3e1ab4613e29785d58de0a47d5e75fee13c40370f"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029-review/review.json",
+      "sha256": "bcae4ab31be46149c81d9072c1ced8a37626e53faf94c0fa371b0b4b571d322d"
+    }
+  ],
+  "source_history": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/manifest.json",
+      "sha256": "4b1d7276d8cbf1b9ec2d8a5c857bb0d457804a338e5525cf42881af85417f75f"
+    }
+  ],
+  "adopter_sha256": "92b8a73e54b562a34532b5d46f8293a89dbaa50e062c2671925a72ca5502c4ef",
+  "recipe_manifest_sha256": "0002162e762d9b467b7d4f170d72259d439b17db4c47902e766c01190ceceb08",
+  "approved_inputs_sha256": "ce245bc976bcda885284d249ed739af930af1746953d6ce08fbc2cedf71925af",
+  "previous_adoption": {
+    "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/root-adoption-r3.json",
+    "sha256": "48fe22059a85900daeedc0286fec866d4370a0be782943674d2b46e3dd7a0466"
+  },
+  "correction_capsules": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/mutable-contact-work/manifest.json",
+      "sha256": "4cff5dd23d0cd5e59a599d700e910082dd76296f4da7e6439ff1df1ce4460cde"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/normal-preflight-backpressure/manifest.json",
+      "sha256": "5d95ea1d5e2b1b9ae2ab4c68fd45d1a26ae998f61fe29da0d38f7e426f6c5c75"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/running-queue-wake/manifest.json",
+      "sha256": "abeda237a92d71fc91d998f42edfd7c08758b3ed46a529baf923b7acb313f92d"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/selective-refresh-known-before-lookup/manifest.json",
+      "sha256": "1f6c3a3df33979e82326622ad4198431c1a03c91f954846d0f675a9298fb936e"
+    }
+  ],
+  "correction_reviews": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029-review/mutable-contact-work.json",
+      "sha256": "9f508e0b3f2947f8518aba0feb1aba79193654d94552616c86b49f7b10a1de8e"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029-review/normal-preflight-backpressure.json",
+      "sha256": "3cc39ec16c5b91f4f7057c76ed05cc60d36c314b3c2d1b47f85530f76c7bb0a9"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/running-queue-wake-review.json",
+      "sha256": "2e8cc2893d24ef3e83ee01adab5380bd9257dc1f90a3d506adef3a040f317272"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029-review/selective-refresh-known-before-lookup.json",
+      "sha256": "5be7c49abe8c36298eec8eef24d465789567d382a7d79d55623ba58ab38144ad"
+    }
+  ],
+  "adopter_r2_sha256": "7d5d88052d1a8c39e8554bffdaf669336f16385a4b2db82f86767d0ef7834077",
+  "failed_first_clang_sha256": {
+    "runs/clang-r1/source-before.json": "fdd4f804e8d688f78c0a09e675bea7be8f4ee2754073b7e1f272e93aebdffbba",
+    "runs/clang-r1/tool-inputs.json": "85ecf11c1e91e4bff6ff69e6df4107e5103b70a1bf24bd611d7467ee2b7e280c",
+    "runs/clang-r1/build.log": "b49fdee6ca423c09c77ae7dd6830dac4094b4d7f2a3d6ed988aa31bdab5d737d",
+    "runs/clang-r1/configure.log": "63098198c77bda53d8e03200ddda08704ca916261cc51a32ec0b073bc1a2fa83",
+    "runs/clang-r1/result.json": "73da00ab1bb4d5b8df1f4003a174e0f91c10001d97e63049fc6ddd032751a056",
+    "runs/clang-r1/commands.json": "a39abff6e2262142060525d9fbd5b149ad62082fbd33259118f2c5fd51b68dbd",
+    "runs/clang-r1/native-source-map.json": "ac8aab3d8055b57ed7fc1ef01aa8a239a31cecfbb06958ea8f7499589c9412b1",
+    "enc4-supplement-r1/ctest-full.log": "fb70e83a1d57402d3e083ad884dca6f26728fdbb24b6e9ead5d284ccc4a66abe",
+    "enc4-supplement-r1/tests.xml": "e1fe23c9f88977a3e801e2002819fb084897350fbbbf0afaaf8cd30023d82327",
+    "enc4-supplement-r1/new-enc4-tests.log": "280a581b100c8e706d62ae2f67338a0f8ea933b1915c26d19ab239ee4ea7582a",
+    "enc4-supplement-r1/result.json": "c6bb5097578763b104df6f85301e8bea5f1cbd428c34011a49d0cb48095f3683",
+    "enc4-supplement-r1/commands.json": "c6fb1ce139d4e50d8895f4d77c9a35698e052f10671d9cbcf734cb016cff27fe"
+  },
+  "adopter_r3_sha256": "07a2580f38ad1c7b18fa77bcbadd940ec8d6c2c15c4f2696ca18ef06aef41b9b",
+  "failed_second_clang_sha256": {
+    "runs/clang-r2/inventory.log": "ec666c794107092e70ed861d7ab95012c35053dfb60d329a8523b6fae78418d3",
+    "runs/clang-r2/dependency-commands.json": "b6c6fac74ec362d7494137dd1c961ba12ebe08f6612ef07d13ca054a50cc4ddb",
+    "runs/clang-r2/ctest-full.log": "6202dbc1dc8b8f9f7a7876d30a27b79d0656ffa8c7db10978296f23e006b2946",
+    "runs/clang-r2/tests.log": "0665ad7b06af1375a20c83ad2ab736583167eb38ecc12f52f13776bacacd12fe",
+    "runs/clang-r2/dependencies-before.json": "4a3e6f875c115ff84b37424b55d3dccfbbb8fbbff19d1ed6d5db1eea991b0aef",
+    "runs/clang-r2/source-before.json": "1b25277ef1e45b2781f98e22da3c2a2fde960016105cecfe4f92861a3c45ecb5",
+    "runs/clang-r2/build-receipt.json": "5ee1f653394e97b7b7f1ebc564a31f1133601a8aab24cb57df3b2d5d7f6834de",
+    "runs/clang-r2/tool-inputs.json": "c987edd32a376476c3a3d2012a452d7285de325d276455a93a515d98e53290fc",
+    "runs/clang-r2/tests.xml": "dd2c1fe69aeeb6fab7bdd2c421edb3c042242ac06bd13a140140b85651697d23",
+    "runs/clang-r2/build.log": "f112ebf619254b241bec40b7e85b69c01c587280ef0f7bc6724263249ba94bc7",
+    "runs/clang-r2/configure.log": "7fada1a508a1dd3adbf44ba4194e179d9749379088f7c6343722153265b2f82b",
+    "runs/clang-r2/result.json": "e0bcae293ae85c55129c225d50151bf1acaddedbbe5463addf9ee5295dcde644",
+    "runs/clang-r2/images-before.json": "fe53ff8469b9b1db4fcdf9d45c835a25f618159b1eb76313c7fc3d07962761f5",
+    "runs/clang-r2/commands.json": "15aef87febe072c8a3259a92a20e78d0fd7a8f2ccfc0c3489889c4fc18044f0f",
+    "runs/clang-r2/native-source-map.json": "1a8e519579c1eaacac3d00bd364771c34ffe90a3fa3e440822cec6ebd325b0c3"
+  },
+  "adopter_r4_sha256": "a7304cda752f8d922d5619b057fb98d5d08af94d92eee809444b1e2263a8dffc",
+  "approved_amendments_r4_sha256": "de866ebc7f1b34f76b85b2057b99e8b35ba67ce95ffcb76aaf016d5bf496e82a",
+  "failed_third_clang_sha256": {
+    "runs/clang-r3/inventory.log": "ec666c794107092e70ed861d7ab95012c35053dfb60d329a8523b6fae78418d3",
+    "runs/clang-r3/dependency-commands.json": "a713acc9fa7a9811c580123fc1cac0a18cf92fa35f6d93b593c4fd4786a465c7",
+    "runs/clang-r3/ctest-full.log": "4946afdcdff7b895caa238eb18bc3050d85a2f4b9cffe217cc2b8d697161431e",
+    "runs/clang-r3/tests.log": "efd792e58a7201611650781778b772a12e42fd033c6e89b7268a45022d3cb435",
+    "runs/clang-r3/dependencies-before.json": "4a3e6f875c115ff84b37424b55d3dccfbbb8fbbff19d1ed6d5db1eea991b0aef",
+    "runs/clang-r3/source-before.json": "abbcb34b1116e7a6d1e58e099126d14695f00d0f74a1965025649f2998c5fcea",
+    "runs/clang-r3/build-receipt.json": "ceca024f1f33586f7698d2274764c3a389c93e9ccdd9a3b4e996396174ee9641",
+    "runs/clang-r3/tool-inputs.json": "845d0b9a342db7f20a33778dd0c65194272435fbe33c5af0876eaa2a4d098008",
+    "runs/clang-r3/tests.xml": "c52f33ca376c01826ddadafdd42a23365d1074cd03a975c00879b9d5d6ca1475",
+    "runs/clang-r3/build.log": "cc4a13239f40d305fc840095680609c62c4abd3103dd0ad47f5747680477666f",
+    "runs/clang-r3/configure.log": "1bf0481bb45d77d8eb51d101a9f7b31885785ba787e300df6fb4556b6c0eaeec",
+    "runs/clang-r3/result.json": "08bd5dbef1e6e58bea6e0f806e4b03e1c137c3790174e561180ddece4de0711a",
+    "runs/clang-r3/images-before.json": "1912deeb34c603e1686de6efac4a03239377844d7dd58fbd16820bc297f285b1",
+    "runs/clang-r3/commands.json": "87ca183f404fc58024b877763f801c49c89a199132308a33d5ad2f4818621af7",
+    "runs/clang-r3/native-source-map.json": "af8745322a304026f990ce4a696e9ab84d895b2b327985efd5db08ba11745864"
+  },
+  "failed_maintenance_supplement_sha256": {
+    "maintenance-supplement-r3/ctest-full.log": "9d993bfadf27c517000de26ec78fdea3a6684f56ceb8c2a1886324b1b2466fb8",
+    "maintenance-supplement-r3/tests.xml": "5e0f084b0dc7e7cd7c6c16be22d3f297095131f620c3d219e8fd61a96169d1f6",
+    "maintenance-supplement-r3/new-maintenance-tests.log": "fcbe8fc89d2f2597b026d8e1c258ad26a6ff4199bde60406599f8d283867fa44",
+    "maintenance-supplement-r3/result.json": "8c9b9a4e78575bc3ebd14fcca977185a1badec1d3b63c58137dc0bb05698dbde",
+    "maintenance-supplement-r3/commands.json": "facfe8b02bfeb7a0842ad3e01659080d25af71a00a2bd6092d2af4c925446e78"
+  }
+}

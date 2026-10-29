@@ -1,0 +1,6 @@
+/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/isolated-router/RouterTracker.java:56: error: cannot find symbol
+    require(ls!=null&&ls.getType()==3&&ls.getDestination().equals(d)&&ls.verifySignature()&&ls.getLeaseCount()>0&&ls.getLatestLeaseDate()>ctx.clock().now(),"No actual current accepted signed LS2");require(ls.getEncryptionKeys().size()==1&&ls.getEncryptionKey().getType()==net.i2p.crypto.EncType.ECIES_X25519&&ls.getEncryptionKey().getData().length==32,"Expected actual accepted one-key Enc4 LS2");return ls;
+                                                                                                                                                                                                               ^
+  symbol:   method getEncryptionKeys()
+  location: variable ls of type LeaseSet
+1 error

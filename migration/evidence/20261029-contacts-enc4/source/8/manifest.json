@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_PENDING_INDEPENDENT_REVIEW",
+  "native_commit": "9a8cf1aa2375797e368434423b8890fce1dbb09b",
+  "source_paths": {
+    "preview/native/tests/azureus_maintenance_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/actual-ping-contact-prepopulation/before/preview/native/tests/azureus_maintenance_tests.cpp",
+      "before_sha256": "0689bd7aa717eaad666327e954c8fc17e448b98930bf9fb1587f4538e80b7b1e",
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/actual-ping-contact-prepopulation/staging/preview/native/tests/azureus_maintenance_tests.cpp",
+      "after_sha256": "24af0deb4e66cb2ec88c99f37a2978cd58d5df07bd34cd1a6ccd3d6af0ed9045"
+    }
+  },
+  "artifacts_sha256": {
+    "ADOPTION.txt": "c371f034318a157ae84ff47db9f1704555c644074c228be0d5962dc18c3b64d0",
+    "FOLLOWUP.txt": "dfd82e2da2182e1d4830980713ed20eaad302cbbf813af2b96cc84aa801870e9",
+    "before/preview/native/tests/azureus_maintenance_tests.cpp": "0689bd7aa717eaad666327e954c8fc17e448b98930bf9fb1587f4538e80b7b1e",
+    "changes.patch": "48cc79084568aa027b4877c716480fbe7e6729b589adc8595dad8343e5f35c27",
+    "staging/preview/native/tests/azureus_maintenance_tests.cpp": "24af0deb4e66cb2ec88c99f37a2978cd58d5df07bd34cd1a6ccd3d6af0ed9045"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/maintenance-supplement-r4/tests.xml": "dc94cc9042036a8d50b36fb45661379f43b0a58b30ccd4dc5d86705607961740",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/selective-refresh-known-before-lookup/manifest.json": "1f6c3a3df33979e82326622ad4198431c1a03c91f954846d0f675a9298fb936e",
+    "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029-review/selective-refresh-known-before-lookup.json": "5be7c49abe8c36298eec8eef24d465789567d382a7d79d55623ba58ab38144ad",
+    "/home/yurii/Java/BiglyBTC/preview/native/app/owned_azureus_service.cpp": "a6c8d83a99098397501cab664d55a8ddb1f71f55b893138fdbab622be395f33c",
+    "/home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp/owned_transport.cpp": "690df7af3dc3329cdf4e2eda7d872b35013cad2bf5de653c2c72fab47da4992c",
+    "/home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp/owned_routing.inc": "536b69e189d08a467c881c03f328f52b9545e5cca0dc2c962d579288628935dc"
+  },
+  "production_changed": false,
+  "existing_integration_and_refresh_deadlines_changed": false,
+  "execution": false
+}

@@ -1,0 +1,28 @@
+{
+  "status": "ROOT_SOURCE_REVIEWED_NO_EXECUTION",
+  "amendments": [
+    [
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/running-queue-wake/manifest.json",
+        "sha256": "abeda237a92d71fc91d998f42edfd7c08758b3ed46a529baf923b7acb313f92d"
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/running-queue-wake-review.json",
+        "sha256": "2e8cc2893d24ef3e83ee01adab5380bd9257dc1f90a3d506adef3a040f317272"
+      }
+    ],
+    [
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/selective-refresh-known-before-lookup/manifest.json",
+        "sha256": "1f6c3a3df33979e82326622ad4198431c1a03c91f954846d0f675a9298fb936e"
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029-review/selective-refresh-known-before-lookup.json",
+        "sha256": "5be7c49abe8c36298eec8eef24d465789567d382a7d79d55623ba58ab38144ad"
+      }
+    ]
+  ],
+  "adopter_sha256": "a7304cda752f8d922d5619b057fb98d5d08af94d92eee809444b1e2263a8dffc",
+  "root_read_full_patches": true,
+  "no_caps_or_deadlines_increased": true
+}

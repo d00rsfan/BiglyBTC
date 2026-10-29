@@ -1,0 +1,52 @@
+[
+  {
+    "name": "java-version",
+    "command": [
+      "/usr/bin/java",
+      "-version"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.165,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r1/java-version.log",
+    "log_sha256": "c0e73a8bb10147ba34eb497b8d8eee2e66d5f5965a402237e1bc4d0dd5985234"
+  },
+  {
+    "name": "javac-version",
+    "command": [
+      "/usr/bin/javac",
+      "-version"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.624,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r1/javac-version.log",
+    "log_sha256": "eacfd324370ccb68feeb0ac90f2039a88a3caa16443843585b6687575f117ee3"
+  },
+  {
+    "name": "javac",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "/usr/bin/javac",
+      "-J-Xmx128m",
+      "-J-XX:ActiveProcessorCount=1",
+      "-J-XX:+UseSerialGC",
+      "-J-Duser.home=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r1/home",
+      "-J-Djava.io.tmpdir=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r1/tmpdir",
+      "--release",
+      "17",
+      "-cp",
+      "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+      "-d",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r1/classes",
+      "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/isolated-router/RouterTracker.java"
+    ],
+    "expected_exit": 0,
+    "exit": 1,
+    "seconds": 3.216,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r1/javac.log",
+    "log_sha256": "fffb7163597421918575b3f86ffe8e2872912b33e80b8f9ae8e019e0d3cd9353"
+  }
+]

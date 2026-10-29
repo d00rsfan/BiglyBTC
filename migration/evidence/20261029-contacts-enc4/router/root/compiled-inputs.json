@@ -1,0 +1,33 @@
+{
+  "source_commit": "0f7e9216253a7881fae11e1a7dae8a849cb333e8",
+  "classes": {
+    "RouterTracker$Tracker.class": "1448a47e59e8c07b863287004c9b2a609d7d24605a44d37e4a9e5eaf12a52086",
+    "RouterTracker.class": "a86fc50ba1bb9350866b1937f4afbbce4007e445555ccdfc9b8871ac5458ef3c"
+  },
+  "compiled_java_source": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/amendments/router-ls2-static-type/staging/RouterTracker.java",
+    "sha256": "b44836e86c4a36a45a849b432cc4276b846770fd2de6c1068d08f0c73951d570"
+  },
+  "probe": {
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r2/probe-build/biglybtc-i2cp-enc4-router-probe": {
+      "sha256": "258ceb515afcdf91ef2e0d08273a309f215cb99c46eea0db919dc1b2c253570d",
+      "bytes": 625640
+    }
+  },
+  "link_inputs": {
+    "probe_source_sha256": "2e51a03d46971a13cb459363fa6d7dd0aec08fda7bd2c03ee8d95e0d04ed835e",
+    "cmake_sha256": "7c2d7be3058e7dec69554f80d075c890ee7dc1782a4499e8dc612abdc7da8a04",
+    "archives": {
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/libbiglybtc_i2p_streaming.a": "3b9e632091789cbc454bf78b9ff61d4fcf1a744fde06b3d07488405ad1cfef74",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/libbiglybtc_i2cp_initial_channel.a": "ac333881ca78c72d6b134e44b658f62a9e0cb2398456b0836debb2f8ee17a855",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/libbiglybtc_i2cp_tracker_codec.a": "205978050ae77932218cdcf4d8e06b414d455dd1e5eeb2fb06c777c07b9a3041",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/libbiglybtc_i2cp_leaseset2.a": "d9b2c2dab20f0a14c2d23ae4eedfdc56a899c9097c333d66566743f5cf762ac7",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/libbiglybtc_i2cp_datagram.a": "1245331ebe46e4342da6ed5c4757280892870bad87f783819cf464e1daa94ee9",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/libbiglybtc_i2cp_session_config.a": "15183c4086a01848af51a5693c6b2381cbae9a0fe9fadd862be9c73e0dcb9b0f",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/libbiglybtc_i2p_client_identity.a": "23013dd8a0e1b4a151c9dd1197bf111b314862e0345f96e0b232474e5ce230b1",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/libbiglybtc_i2p_datagram.a": "98c2da5ba57d3fe5c08a77e08308e0b93cee732f6fba62c31ecce72375b4d0b9",
+      "/home/yurii/Java/BiglyBTC/build/persistent-peer-accounting-20261021/bound-gcc/services/libbiglybtc_i2cp_protocol.a": "37d8c87f3523cb882b66642bf5c3fb74245c9744d7280ea19c2c715314f6a463"
+    }
+  },
+  "probe_cache_sha256": "7e06126d64cc5e76da6c37b7345c0a44ab4f979c63ebfc67f7328f0883820ad1"
+}

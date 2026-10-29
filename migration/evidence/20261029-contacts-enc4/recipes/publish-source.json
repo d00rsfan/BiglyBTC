@@ -1,0 +1,17 @@
+{
+  "status": "SOURCE_ONLY_NOT_EXECUTED",
+  "recipe": {
+    "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/publish.py",
+    "sha256": "a1810ccd2adc65e2fac49605b0d86521109622192184c6e68c1273a9e21973d3"
+  },
+  "derived_from": {
+    "path": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/publish.py",
+    "sha256": "45705f96f4ac8083c3dce4e71cab600d67fd4ef113d5b7d72620fc1bfc949f13"
+  },
+  "requires": "Actual PASS_CONTACTS_ENC4 verification/promotion with source-current main HEAD, exact dist bytes, both registry preflights, 20/108/22 counts and matching installed proposed registry. No missing gate earns publication.",
+  "updates": "Existing feature rows, plan/STATE/ACTIVE and2new bounded task notes; actual lane/private counts read dynamically, dual-reference4cases/direction plus Enc4 real router. Components remain in_progress; no whole-feature/performance/default activation claim.",
+  "whitespace_checks": "Exclude raw log/XML/patch/txt, original-source and explicit synthetic vectors/Destinations without changing their bytes. Prose/JSON/source still checked.",
+  "git": "Root only, metadata/evidence main commit and push after gates. No build/test/router execution.",
+  "native_mutated": false,
+  "publication_executed": false
+}

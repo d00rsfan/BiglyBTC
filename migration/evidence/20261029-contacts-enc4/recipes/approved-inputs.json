@@ -1,0 +1,42 @@
+{
+  "status": "APPROVED_SOURCE_ONLY",
+  "parent_commit": "2c79155e6c660426781ef54b4c075451e304a5b8",
+  "source_capsules": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/manifest.json",
+      "sha256": "fa60353cf5a038c2dd541c63108f954646a1e3e89ad4ec5a959398f8c93be048"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/amendments/owned-encryption-test-column/manifest.json",
+      "sha256": "0f9487d72e2524b9f7a9fb1d58f1ea9abbca561a8a4946b6e090a1e424cdb4cf"
+    }
+  ],
+  "source_reviews": [
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029-review/review.json",
+      "sha256": "b23c58e2915dc182887952c3e1ab4613e29785d58de0a47d5e75fee13c40370f"
+    },
+    {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029-review/review.json",
+      "sha256": "bcae4ab31be46149c81d9072c1ced8a37626e53faf94c0fa371b0b4b571d322d"
+    }
+  ],
+  "cmake_append": {
+    "preview/native/adapters/CMakeLists.txt": [
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/cmake/adapters.append.cmake",
+        "sha256": "3ce5b104157b033232f243fbfa9298f4514dbf447ed3275e41f896ed4d2311af",
+        "basis_sha256": "d4a631d722b1dc10d66cbf15dc9635fc6b9037e186048bdc29caf671f2d4e4f2"
+      }
+    ],
+    "preview/native/tests/CMakeLists.txt": [
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/cmake/tests.append.cmake",
+        "sha256": "a65d74c86dfba6ad8ffca76488ae3c39475efefa77c867f46930f983354482a3",
+        "basis_sha256": "2af98c6f55b38dc7c984c66612862958ccd8df5cacc10fdd94de9d88b2ca486f"
+      }
+    ]
+  },
+  "source_path_count": 21,
+  "root_review": "Read Enc4 production diff and maintenance adapter/transport/ADOPTION/CMake. Independent complete source reviews sealed. Known partial scope: OwnedLoopback, nonnegative network only, 5min idle pure policy, blocked-kernel/full public/performance parity remains open. No author runtime credit."
+}

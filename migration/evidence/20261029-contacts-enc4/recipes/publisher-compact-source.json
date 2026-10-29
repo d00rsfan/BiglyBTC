@@ -1,0 +1,8 @@
+{
+  "parent_sha256": "dbc0a92ef10cc34e1b046fa976ca977b01d25803a81ed1ea1af687d77ec6f1ee",
+  "publisher_sha256": "d5e53ecd8325e6ca0a37ca9cc00b45535224651c0551e1cd739dbc36e7df2fae",
+  "archive_sha256": "7fbb63ada94712efdfbbb022c3be46b42b272f90b2e3d0394d183c4907406731",
+  "checks": "AST only; no execution",
+  "before_active_bytes": 35089,
+  "after_active_bytes": 9854
+}

@@ -1,0 +1,12 @@
+--- a/isolated-router/RouterTracker.java
++++ b/isolated-router/RouterTracker.java
+@@ -53,7 +53,8 @@
+   }
+   static LeaseSet accepted(RouterContext ctx,Destination d){
+     var db=ctx.clientNetDb(d.calculateHash());require(db!=null,"Missing actual client subDB");LeaseSet ls=db.lookupLeaseSetLocally(d.calculateHash());
+-    require(ls!=null&&ls.getType()==3&&ls.getDestination().equals(d)&&ls.verifySignature()&&ls.getLeaseCount()>0&&ls.getLatestLeaseDate()>ctx.clock().now(),"No actual current accepted signed LS2");require(ls.getEncryptionKeys().size()==1&&ls.getEncryptionKey().getType()==net.i2p.crypto.EncType.ECIES_X25519&&ls.getEncryptionKey().getData().length==32,"Expected actual accepted one-key Enc4 LS2");return ls;
++    if(!(ls instanceof LeaseSet2 ls2))throw new IllegalStateException("Expected actual accepted LeaseSet2 object");
++    require(ls!=null&&ls.getType()==3&&ls.getDestination().equals(d)&&ls.verifySignature()&&ls.getLeaseCount()>0&&ls.getLatestLeaseDate()>ctx.clock().now(),"No actual current accepted signed LS2");require(ls2.getEncryptionKeys().size()==1&&ls2.getEncryptionKey().getType()==net.i2p.crypto.EncType.ECIES_X25519&&ls2.getEncryptionKey().getData().length==32,"Expected actual accepted one-key Enc4 LS2");return ls;
+   }
+   static void router(int port)throws Exception{
+     Path data=root.resolve("router");Files.createDirectory(data);Files.setPosixFilePermissions(data,PosixFilePermissions.fromString("rwx------"));

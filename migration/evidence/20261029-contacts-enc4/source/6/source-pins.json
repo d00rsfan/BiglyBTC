@@ -1,0 +1,14 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_sources": {
+    "core/src/com/biglybt/core/dht/router/impl/DHTRouterImpl.java": {
+      "sha256": "50b1defa8637bd435960b628c37f7f02f31a2f52c2bb357e1b081eeae637dec4",
+      "git_blob": "90e9b2028c8f3b532848ced0b40c401f15833be2"
+    },
+    "core/src/com/biglybt/core/dht/router/impl/DHTRouterNodeImpl.java": {
+      "sha256": "aa41bc97d091672ceb4ad3b2a5502833b37c9a60141ea61043b452db3b9a9a73",
+      "git_blob": "11af5da461d6f6793567ddecc82baf55fe33237b"
+    }
+  },
+  "sections": "DHTRouterImpl1065-1114 checks parent age before child recursion;recordLookup1154-1160 touches actual leaf. DHTRouterNodeImpl49-73 creates last_lookup_time0,split84-109 preserves old parent field;520-538 computes age."
+}

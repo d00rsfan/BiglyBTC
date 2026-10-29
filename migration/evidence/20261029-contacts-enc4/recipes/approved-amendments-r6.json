@@ -1,0 +1,18 @@
+{
+  "status": "ROOT_SOURCE_REVIEWED_NO_EXECUTION",
+  "amendments": [
+    [
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/refresh-per-rpc-budget/manifest.json",
+        "sha256": "c53e277f95be30efcb708044b9bd31d730fe9f3c9e7352552d7208badaf73558"
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/refresh-per-rpc-budget-review.json",
+        "sha256": "b6bfdc51bb5f8dfd824708bb07f4e735a6f944658666a052cfd6c4cb52d6188b"
+      }
+    ]
+  ],
+  "adopter_sha256": "6f27179ad86db38a5a27118ee724c1d54f664a74ab70f11ef5661c26cd8d375b",
+  "root_read_full_patch": true,
+  "global_deadline_and_authority_unchanged": true
+}

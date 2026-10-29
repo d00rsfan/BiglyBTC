@@ -1,0 +1,157 @@
+diff --git a/preview/native/app/azureus_profile_io_owner.inc b/preview/native/app/azureus_profile_io_owner.inc
+--- a/preview/native/app/azureus_profile_io_owner.inc
++++ b/preview/native/app/azureus_profile_io_owner.inc
+@@ -13,10 +13,22 @@
+       bool consumed=false,expiryNotified=false;
+     };
+     std::array<IoSlot,8> ioSlots_{};
++    struct NormalPending {
++      std::shared_ptr<std::move_only_function<void(bool)>> complete;
++      std::shared_ptr<void> frame;
++      std::chrono::steady_clock::time_point deadline;
++      std::uint64_t order=0;
++    };
++    // These are the SAME held normal frames, not64 extra worker permissions.
++    // Already received replies wait here until one of the eight slots releases.
++    std::array<NormalPending,64> normalPending_{};
++    std::uint64_t normalOrder_=0;
++    bool pumpingNormal_=false;
+     QChronoTimer ioDeadline_;
+     void armProfileDeadline()noexcept{
+       try{
+-        auto earliest=std::chrono::steady_clock::time_point::max();for(const auto& slot:ioSlots_){if(slot.job&&!slot.expiryNotified){earliest=std::min(earliest,slot.deadline);}}
++        auto earliest=std::chrono::steady_clock::time_point::max();for(const auto& slot:ioSlots_){if(slot.job&&!slot.consumed&&!slot.expiryNotified){earliest=std::min(earliest,slot.deadline);}}
++        for(const auto& pending:normalPending_){if(pending.complete){earliest=std::min(earliest,pending.deadline);}}
+         if(earliest==std::chrono::steady_clock::time_point::max()){ioDeadline_.stop();return;}
+         ioDeadline_.setInterval(std::max(std::chrono::nanoseconds{1},std::chrono::duration_cast<std::chrono::nanoseconds>(earliest-std::chrono::steady_clock::now())));ioDeadline_.start();
+       }catch(...){try{ioDeadline_.stop();}catch(...){}publicationMemoryFailure();}
+@@ -37,13 +49,13 @@
+     }
+     void drainProfileIo(){
+       if(drainingIo_||!state_->profileIo){return;}drainingIo_=true;
+-      const auto leave=qScopeGuard([&]()noexcept{drainingIo_=false;armProfileDeadline();});
++      const auto leave=qScopeGuard([&]()noexcept{drainingIo_=false;pumpNormalProfiles();armProfileDeadline();});
+       bool stop=false;{std::lock_guard lock(state_->mutex);stop=state_->stop;}
+       try{for(auto& slot:ioSlots_){if(!slot.job){continue;}
+-        if(!slot.expiryNotified&&std::chrono::steady_clock::now()>=slot.deadline){
++        if(!slot.consumed&&!slot.expiryNotified&&std::chrono::steady_clock::now()>=slot.deadline){
+           slot.expiryNotified=true;ProfileIo::revoke(slot.job);if(slot.expired){slot.expired();}
+         }
+-        if(stop||std::chrono::steady_clock::now()>=slot.deadline||!slot.current()){
++        if(!slot.consumed&&(stop||std::chrono::steady_clock::now()>=slot.deadline||!slot.current())){
+           ProfileIo::revoke(slot.job);slot.error=storage::Error{storage::ErrorCode::Cancelled,"Profile operation stopped, stale or expired"};
+         }
+         if(!slot.consumed){if(auto ready=ProfileIo::take(slot.job)){
+@@ -106,13 +118,31 @@
+       if(!submitted){return false;}
+       slot->job=std::move(*submitted);slot->command=command.id;slot->deadline=allowExpired?std::chrono::steady_clock::time_point::max():deadline;slot->current=std::move(current);slot->commit=std::move(commit);slot->failed=std::move(failed);slot->expired=std::move(expired);slot->cancelled=std::move(cancelled);armProfileDeadline();return true;
+     }
++    void clearNormalProfiles()noexcept{for(auto& pending:normalPending_){pending={};}}
++    void pumpNormalProfiles()noexcept{
++      if(pumpingNormal_||profilePermit_||!state_->profileIo){return;}pumpingNormal_=true;
++      const auto reset=qScopeGuard([&]()noexcept{pumpingNormal_=false;});
++      try{for(;;){
++        NormalPending* pending=nullptr;for(auto& item:normalPending_){if(item.complete&&(!pending||item.order<pending->order)){pending=&item;}}
++        if(!pending){return;}
++        bool stop=false;{std::lock_guard lock(state_->mutex);stop=state_->stop;}
++        if(stop||std::chrono::steady_clock::now()>=pending->deadline){
++          auto complete=std::move(pending->complete);auto held=std::move(pending->frame);*pending={};(*complete)(false);continue;
++        }
++        if(std::ranges::none_of(ioSlots_,[](const auto& slot){return !slot.job;})){return;}
++        const auto complete=pending->complete;const auto held=pending->frame;const auto deadline=pending->deadline;Command command;
++        // If the physical executor's tail has not released yet, keep the same
++        // frame. Its next actual Ready/Released wake retries; no timer spin.
++        if(!deferProfile(command,false,deadline,[this]{std::lock_guard lock(state_->mutex);return !state_->stop;},
++          [complete,held](const auto&){(*complete)(true);},
++          [complete](storage::Error){(*complete)(false);})){return;}
++        *pending={};
++      }}catch(...){publicationMemoryFailure();}
++    }
+     bool normalProfileRequest(std::move_only_function<void(bool)> complete){try{
+-      auto held=holdProfileFrame();if(!held){return false;}
+-      auto completion=std::make_shared<std::move_only_function<void(bool)>>(std::move(complete));
+-      Command command;const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(30);
+-      return deferProfile(command,false,deadline,[this]{std::lock_guard lock(state_->mutex);return !state_->stop;},
+-        [completion,held=std::move(held)](const auto&){(*completion)(true);},
+-        // Rejection is reported after the I/O slot has released its source
+-        // gate. It never resumes the request or creates a protocol success.
+-        [completion](storage::Error){(*completion)(false);});
++      if(!state_->profileIo||normalOrder_==UINT64_MAX){return false;}auto held=holdProfileFrame();if(!held){return false;}
++      NormalPending* pending=nullptr;for(auto& item:normalPending_){if(!item.complete){pending=&item;break;}}if(!pending){return false;}
++      pending->complete=std::make_shared<std::move_only_function<void(bool)>>(std::move(complete));pending->frame=std::move(held);
++      pending->deadline=std::chrono::steady_clock::now()+std::chrono::seconds(30);pending->order=++normalOrder_;
++      pumpNormalProfiles();armProfileDeadline();return true;
+     }catch(...){publicationMemoryFailure();return false;}}
+diff --git a/preview/native/app/owned_azureus_service.cpp b/preview/native/app/owned_azureus_service.cpp
+--- a/preview/native/app/owned_azureus_service.cpp
++++ b/preview/native/app/owned_azureus_service.cpp
+@@ -156,6 +156,7 @@
+     void shutdown()noexcept{
+       ioDeadline_.stop();maintenanceTimer_.stop();
+       bool closed=true;try{actor_.close();}catch(...){closed=false;}
++      clearNormalProfiles();
+       if(state_->profileIo){state_->profileIo->requestStop();}
+       if(closed){
+         if(publishing_&&!publishing_->finished){try{finishPublish(publishing_,AzureusPublishState::Closed,AzureusServiceError::Closed,azureus::Failure::Closed);}catch(...){publicationMemoryFailure();}}
+diff --git a/preview/native/tests/azureus_maintenance_tests.cpp b/preview/native/tests/azureus_maintenance_tests.cpp
+--- a/preview/native/tests/azureus_maintenance_tests.cpp
++++ b/preview/native/tests/azureus_maintenance_tests.cpp
+@@ -76,7 +76,7 @@
+   Normal origin("127.81.0.1"),cache("127.82.0.1"),receiver("127.83.0.1",true);
+   // Actual ordinary10s timer, before first remote contact: also separates
+   // source getTimeAlive values without an artificial timestamp or sleep.
+-  QTRY_VERIFY_WITH_TIMEOUT(receiver.owner->observation().maintenance&&receiver.owner->observation().maintenance->routing.ticks>=1,15000);
++  QTRY_VERIFY_WITH_TIMEOUT(receiver.owner->observation().maintenance&&receiver.owner->observation().maintenance->routing.ticks>=1,15000);QTRY_COMPARE_WITH_TIMEOUT(receiver.owner->observation().profileIoPending,std::size_t{0},3000);QVERIFY(!receiver.owner->observation().maintenance->error);
+   auto admitted=origin.owner->allowPeer(cache.owner->endpoint());QVERIFY(admitted);QTRY_VERIFY(success(*origin.owner,*admitted));auto published=origin.owner->publishValue(cache.owner->endpoint(),"warm-contact-key","normal cached bytes",5s,app::AzureusPublicationFlags::Anonymous);QVERIFY(published);QTRY_VERIFY2_WITH_TIMEOUT(success(*origin.owner,*published),qPrintable(describe(origin)),5000);
+   auto integrated=receiver.owner->integrateRouting(cache.owner->endpoint());QVERIFY(integrated);QTRY_VERIFY2_WITH_TIMEOUT(success(*receiver.owner,*integrated),qPrintable(describe(receiver)),10000);const auto generation=receiver.owner->observation().routingSnapshot->generation;auto flushed=receiver.owner->flushContacts();QVERIFY(flushed);QTRY_VERIFY2_WITH_TIMEOUT(success(*receiver.owner,*flushed),qPrintable(describe(receiver)),5000);const auto raw=bytes(receiver.file("contacts.dat"));const auto records=storage::decodeAzureusContactState(raw.toStdString());QVERIFY(records&&records->size()>1);QVERIFY(!QFile::exists(receiver.file("version.dat")));QVERIFY(!QFile::exists(receiver.file("version.saving")));
+   const auto endpoint=receiver.owner->endpoint();receiver.stop();receiver.start();QVERIFY(receiver.owner->endpoint()==endpoint);QVERIFY(!receiver.owner->observation().routingSnapshot||!receiver.owner->observation().routingSnapshot->seeded);
+@@ -94,7 +94,7 @@
+   Normal root("127.90.0.1",true,31001);const auto local=contact(root.owner->endpoint());std::vector<std::unique_ptr<Normal>> peers;
+   // Pure address selection chooses configuration only. Every admitted peer
+   // below is a genuinely bound/created ordinary owner, never a router fixture.
+-  for(unsigned host=1;host<250&&peers.size()<21;++host){const auto ip=QString("127.90.%1.1").arg(host);const udp::Peer configured{QHostAddress(ip),31000};if((contact(configured).id[0]&0x80)!=(local.id[0]&0x80)){continue;}auto peer=std::make_unique<Normal>(ip,false,31000);QVERIFY(peer->owner->endpoint()==configured);auto round=root.owner->integrateRouting(peer->owner->endpoint());QVERIFY(round);QTRY_VERIFY2_WITH_TIMEOUT(success(*root.owner,*round),qPrintable(describe(root)),10000);peers.push_back(std::move(peer));}
++  for(unsigned host=1;host<250&&peers.size()<21;++host){const auto ip=QString("127.90.%1.1").arg(host);const udp::Peer configured{QHostAddress(ip),31000};if((contact(configured).id[0]&0x80)!=(local.id[0]&0x80)){continue;}auto peer=std::make_unique<Normal>(ip,false,31000);QVERIFY(peer->owner->endpoint()==configured);auto round=root.owner->integrateRouting(peer->owner->endpoint());QVERIFY(round);QTRY_VERIFY2_WITH_TIMEOUT(success(*root.owner,*round),qPrintable(describe(root)+QString(" peers=%1").arg(static_cast<qulonglong>(peers.size()))),10000);peers.push_back(std::move(peer));}
+   QCOMPARE(peers.size(),std::size_t{21});const auto before=root.owner->observation();QVERIFY(before.maintenance);const auto tick=before.maintenance->routing.ticks;const auto refreshed=before.maintenance->routing.refreshes;
+   QTRY_VERIFY_WITH_TIMEOUT(root.owner->observation().maintenance->routing.ticks>=tick+5,65000);QCOMPARE(root.owner->observation().maintenance->routing.refreshes,refreshed);
+   QTRY_VERIFY_WITH_TIMEOUT(root.owner->observation().maintenance->routing.refreshes>refreshed,25000);QTRY_VERIFY_WITH_TIMEOUT(root.owner->observation().routingSnapshot&&root.owner->observation().routingSnapshot->lookup&&root.owner->observation().routingSnapshot->lookup->options.accuracy==10,5000);const auto proof=root.owner->observation().routingSnapshot;QVERIFY(proof->seeded);QCOMPARE(proof->lookup->options.parallelism,std::size_t{5});QVERIFY((proof->lookup->options.target[0]&0x80)!=(local.id[0]&0x80));QTRY_VERIFY_WITH_TIMEOUT(root.owner->observation().routingSnapshot->finished,10000);QVERIFY(std::ranges::any_of(root.owner->observation().routingSnapshot->lookup->nodes,[](const auto& node){return node.state==services::azureus_control::LookupNodeState::Replied;}));
+diff --git a/preview/native/tests/azureus_profile_io_tests.cpp b/preview/native/tests/azureus_profile_io_tests.cpp
+--- a/preview/native/tests/azureus_profile_io_tests.cpp
++++ b/preview/native/tests/azureus_profile_io_tests.cpp
+@@ -29,12 +29,12 @@
+   std::optional<storage::ProfileLease> lease;
+   std::shared_ptr<storage::AzureusValueVersions> versions;
+   std::unique_ptr<app::OwnedAzureusService> owner;
+-  explicit Normal(const char* address,std::int32_t network=4){
++  explicit Normal(const char* address,std::int32_t network=4,udp::RoutingScope scope=udp::RoutingScope::ExactPeers){
+     if(!root.isValid()){throw std::runtime_error("Profile fixture");}
+     auto acquired=storage::ProfileLease::acquire(root.path().toStdString());if(!acquired){throw std::runtime_error("Profile lock fixture");}lease.emplace(std::move(*acquired));
+     auto source=storage::ConfigFile::createMissing(*lease,"biglybt.config",std::string("d6:future1048576:")+std::string(1048576,'x')+"e");if(!source){throw std::runtime_error("Config fixture");}
+     auto opened=storage::AzureusValueVersions::open(*lease,network);if(!opened){throw std::runtime_error("Version fixture");}versions=*opened;
+-    app::AzureusServiceOptions options;options.network=network;options.enabled=true;options.servePings=true;options.serveValues=true;options.valueVersions=versions;options.bindAddress=QHostAddress(QString::fromLatin1(address));
++    app::AzureusServiceOptions options;options.network=network;options.routingScope=scope;options.enabled=true;options.servePings=true;options.serveValues=true;options.valueVersions=versions;options.bindAddress=QHostAddress(QString::fromLatin1(address));
+     auto started=app::OwnedAzureusService::create(options);if(!started){throw std::runtime_error("Normal IO service fixture");}owner=std::move(*started);
+   }
+ };
+@@ -127,6 +127,22 @@
+     }
+     QVERIFY(created->save(*lease,countedObserver));QCOMPARE(observerCalls,3);QVERIFY(read(root.path()+"/owned.config")!=original);
+   }
++  void realNormalRepliesBackpressureWithinEightSlotsAndWithdrawOnSourceOrClose_data(){
++    QTest::addColumn<int>("change");QTest::newRow("release-current")<<0;QTest::newRow("disable-current-source")<<1;QTest::newRow("close-and-cancel-queued")<<2;
++  }
++  void realNormalRepliesBackpressureWithinEightSlotsAndWithdrawOnSourceOrClose(){
++    QFETCH(int,change);Normal a("127.48.0.1"),b("127.49.0.1",4,udp::RoutingScope::OwnedLoopback);const auto aa=a.owner->allowPeer(b.owner->endpoint()),bb=b.owner->allowPeer(a.owner->endpoint());QVERIFY(aa&&bb);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*aa)&&successful(*b.owner,*bb),3000);
++    auto access=b.lease->sourceAccess(true);QVERIFY(access);std::optional<storage::ProfileSourceAccess> blocked;blocked.emplace(std::move(*access));const auto release=qScopeGuard([&]{blocked.reset();});
++    std::vector<std::uint64_t> requests;for(int i=0;i<12;++i){auto sent=a.owner->ping(b.owner->endpoint(),change==1?1s:5s);QVERIFY(sent);requests.push_back(*sent);}
++    QTRY_VERIFY_WITH_TIMEOUT(b.owner->observation().snapshot->transport().counters().requests==12&&b.owner->observation().profileIoPending==8,3000);QCOMPARE(b.owner->observation().profileIoHighWater,std::size_t{8});QCOMPARE(b.owner->observation().snapshot->transport().counters().sent,std::uint64_t{0});QCOMPARE(b.owner->observation().snapshot->transport().counters().serviceCapacityDrops,std::uint64_t{0});
++    if(change==2){const auto endpoint=b.owner->endpoint();auto closed=std::async(std::launch::async,[&]{return b.owner->close();});const auto releaseBeforeJoin=qScopeGuard([&]{blocked.reset();});QTRY_VERIFY_WITH_TIMEOUT(b.owner->observation().state==app::AzureusServiceState::Closed,3000);QVERIFY(!b.owner->observation().joined);QUdpSocket rebound;QVERIFY(rebound.bind(endpoint.address,endpoint.port,QUdpSocket::DontShareAddress));for(auto request:requests){QVERIFY(a.owner->cancel(request));}QTRY_COMPARE_WITH_TIMEOUT(a.owner->observation().outstandingCommands,std::size_t{0},3000);blocked.reset();QTRY_VERIFY_WITH_TIMEOUT(closed.wait_for(0ms)==std::future_status::ready,3000);QVERIFY(closed.get());QCOMPARE(b.owner->observation().snapshot->transport().counters().sent,std::uint64_t{0});QCOMPARE(a.owner->observation().snapshot->transport().counters().replies,std::uint64_t{0});QVERIFY(a.owner->close());return;}
++    if(change==1){auto config=storage::ConfigFile::load(*b.lease,"biglybt.config");QVERIFY(config);QVERIFY(config->document().setInteger("Plugin.DHT.dht.enabled",0));QVERIFY(config->save(*b.lease));}
++    blocked.reset();QTRY_COMPARE_WITH_TIMEOUT(a.owner->observation().outstandingCommands,std::size_t{0},4000);QTRY_COMPARE_WITH_TIMEOUT(b.owner->observation().profileIoPending,std::size_t{0},4000);
++    const auto av=a.owner->observation(),bv=b.owner->observation();QCOMPARE(bv.profileIoHighWater,std::size_t{8});QCOMPARE(bv.snapshot->transport().counters().serviceCapacityDrops,std::uint64_t{0});
++    if(change==0){QCOMPARE(av.snapshot->transport().counters().replies,std::uint64_t{12});QCOMPARE(av.snapshot->transport().counters().timeouts,std::uint64_t{0});QCOMPARE(bv.snapshot->transport().counters().sent,std::uint64_t{12});QVERIFY(av.lastResult&&!av.lastResult->error&&!av.lastResult->transportFailure);}
++    else{QCOMPARE(av.snapshot->transport().counters().replies,std::uint64_t{0});QCOMPARE(av.snapshot->transport().counters().timeouts,std::uint64_t{12});QCOMPARE(bv.snapshot->transport().counters().sent,std::uint64_t{0});QCOMPARE(bv.snapshot->transport().counters().authorityErrors,std::uint64_t{12});}
++    QVERIFY(a.owner->close());QVERIFY(b.owner->close());
++  }
+   void permitsAreSingleUseBoundQueuedActiveAndReadyThenReclaimSlots(){
+     QTemporaryDir root;QVERIFY(root.isValid());auto lease=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(lease);auto versions=storage::AzureusValueVersions::open(*lease,4);QVERIFY(versions);Io io((*versions)->profileOwnership());
+     std::array<Io::Handle,8> jobs;

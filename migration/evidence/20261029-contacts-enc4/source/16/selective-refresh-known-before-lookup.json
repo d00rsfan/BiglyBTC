@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "capsule": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/selective-refresh-known-before-lookup/manifest.json",
+  "capsule_sha256": "1f6c3a3df33979e82326622ad4198431c1a03c91f954846d0f675a9298fb936e",
+  "native_before_commit": "f26966a0695dbe15126c3543c33b237d31789c8e",
+  "source_paths": 1,
+  "artifact_pins_checked": 5,
+  "retained_input_pins_checked": 3,
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "original_blob_pins_checked": 2,
+  "read_only_apply_check": "PASS",
+  "findings": [],
+  "assessment": [
+    "Original DHTRouterImpl.java:1079-1084 checks parent lookup age before child recursion at1102-1114; DHTRouterNodeImpl.java:88-111 split preserves parent lookup age. The recent unsplit-parent suppression is therefore correct production behavior.",
+    "The fixture starts21 genuine bound ordinary owners, acknowledges Known-only allowPeer additions and proves actual22-contact split before first lookup. The same21 actual correlated integrations still establish Alive/seeded state.",
+    "Adds pure parent-age suppression control and bounded status diagnostics. Six-tick/120-second policy and65s/25s live waits, prefix, accuracy10, parallelism5, Replied and actual retry/recovery assertions remain. Production files are unchanged."
+  ],
+  "limits": "Source review only. No compilation, subject execution, native writes or runtime qualification performed."
+}

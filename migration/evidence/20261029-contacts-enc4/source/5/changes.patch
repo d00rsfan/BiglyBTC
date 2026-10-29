@@ -1,0 +1,58 @@
+--- a/preview/native/app/azureus_profile_io.hpp
++++ b/preview/native/app/azureus_profile_io.hpp
+@@ -81,6 +81,10 @@
+       bool entering=false;
+       {std::lock_guard lock(job->mutex);if(job->phase==Phase::Released){return {};}entering=!stop.stop_requested()&&!job->revoked.load();if(entering){job->phase=Phase::Running;}}
+       const auto signal=[&]()noexcept{try{mailbox->signal();}catch(...){std::lock_guard lock(job->mutex);job->revoked=true;job->changed.notify_all();}};
++      // Executor has already popped this job. Wake the owner to retry any
++      // held frame that found its seven-job queue full, before source access
++      // can block. Running is progress only; it grants no source permit.
++      if(entering){signal();}
+       try{if(entering){
+         // The worker retains and releases its own lock, including while the
+         // actor consumes a one-shot permit. It never runs actor callbacks.
+--- a/preview/native/tests/azureus_profile_io_tests.cpp
++++ b/preview/native/tests/azureus_profile_io_tests.cpp
+@@ -57,6 +57,15 @@
+ }
+ int observerCalls=0;
+ void countedObserver(storage::SaveStage){++observerCalls;}
++struct IoWakeCounter final:QObject {
++  explicit IoWakeCounter(Io& value):io(value){}
++  bool event(QEvent* value)override{
++    if(value->type()==Io::wakeEvent()){io.drainWake();++wakes;return true;}
++    return QObject::event(value);
++  }
++  Io& io;
++  int wakes=0;
++};
+ struct HeldIo {
+   Io io;
+   Io::Handle job;
+@@ -134,7 +143,8 @@
+     QFETCH(int,change);Normal a("127.48.0.1"),b("127.49.0.1",4,udp::RoutingScope::OwnedLoopback);const auto aa=a.owner->allowPeer(b.owner->endpoint()),bb=b.owner->allowPeer(a.owner->endpoint());QVERIFY(aa&&bb);QTRY_VERIFY_WITH_TIMEOUT(successful(*a.owner,*aa)&&successful(*b.owner,*bb),3000);
+     auto access=b.lease->sourceAccess(true);QVERIFY(access);std::optional<storage::ProfileSourceAccess> blocked;blocked.emplace(std::move(*access));const auto release=qScopeGuard([&]{blocked.reset();});
+     std::vector<std::uint64_t> requests;for(int i=0;i<12;++i){auto sent=a.owner->ping(b.owner->endpoint(),change==1?1s:5s);QVERIFY(sent);requests.push_back(*sent);}
+-    QTRY_VERIFY_WITH_TIMEOUT(b.owner->observation().snapshot->transport().counters().requests==12&&b.owner->observation().profileIoPending==8,3000);QCOMPARE(b.owner->observation().profileIoHighWater,std::size_t{8});QCOMPARE(b.owner->observation().snapshot->transport().counters().sent,std::uint64_t{0});QCOMPARE(b.owner->observation().snapshot->transport().counters().serviceCapacityDrops,std::uint64_t{0});
++    const auto heldState=[&]{const auto av=a.owner->observation(),bv=b.owner->observation();const auto& ac=av.snapshot->transport().counters();const auto& bc=bv.snapshot->transport().counters();return QString("receiver requests=%1 pending=%2 running=%3 ready=%4 highWater=%5 sent=%6; sender sent=%7 timeouts=%8 outstanding=%9").arg(static_cast<qulonglong>(bc.requests)).arg(static_cast<qulonglong>(bv.profileIoPending)).arg(static_cast<qulonglong>(bv.profileIoRunning)).arg(static_cast<qulonglong>(bv.profileIoReady)).arg(static_cast<qulonglong>(bv.profileIoHighWater)).arg(static_cast<qulonglong>(bc.sent)).arg(static_cast<qulonglong>(ac.sent)).arg(static_cast<qulonglong>(ac.timeouts)).arg(static_cast<qulonglong>(av.outstandingCommands));};
++    QTRY_VERIFY2_WITH_TIMEOUT(b.owner->observation().snapshot->transport().counters().requests==12&&b.owner->observation().profileIoPending==8,qPrintable(heldState()),3000);QCOMPARE(b.owner->observation().profileIoHighWater,std::size_t{8});QCOMPARE(b.owner->observation().snapshot->transport().counters().sent,std::uint64_t{0});QCOMPARE(b.owner->observation().snapshot->transport().counters().serviceCapacityDrops,std::uint64_t{0});
+     if(change==2){const auto endpoint=b.owner->endpoint();auto closed=std::async(std::launch::async,[&]{return b.owner->close();});const auto releaseBeforeJoin=qScopeGuard([&]{blocked.reset();});QTRY_VERIFY_WITH_TIMEOUT(b.owner->observation().state==app::AzureusServiceState::Closed,3000);QVERIFY(!b.owner->observation().joined);QUdpSocket rebound;QVERIFY(rebound.bind(endpoint.address,endpoint.port,QUdpSocket::DontShareAddress));for(auto request:requests){QVERIFY(a.owner->cancel(request));}QTRY_COMPARE_WITH_TIMEOUT(a.owner->observation().outstandingCommands,std::size_t{0},3000);blocked.reset();QTRY_VERIFY_WITH_TIMEOUT(closed.wait_for(0ms)==std::future_status::ready,3000);QVERIFY(closed.get());QCOMPARE(b.owner->observation().snapshot->transport().counters().sent,std::uint64_t{0});QCOMPARE(a.owner->observation().snapshot->transport().counters().replies,std::uint64_t{0});QVERIFY(a.owner->close());return;}
+     if(change==1){auto config=storage::ConfigFile::load(*b.lease,"biglybt.config");QVERIFY(config);QVERIFY(config->document().setInteger("Plugin.DHT.dht.enabled",0));QVERIFY(config->save(*b.lease));}
+     blocked.reset();QTRY_COMPARE_WITH_TIMEOUT(a.owner->observation().outstandingCommands,std::size_t{0},4000);QTRY_COMPARE_WITH_TIMEOUT(b.owner->observation().profileIoPending,std::size_t{0},4000);
+@@ -142,6 +152,16 @@
+     if(change==0){QCOMPARE(av.snapshot->transport().counters().replies,std::uint64_t{12});QCOMPARE(av.snapshot->transport().counters().timeouts,std::uint64_t{0});QCOMPARE(bv.snapshot->transport().counters().sent,std::uint64_t{12});QVERIFY(av.lastResult&&!av.lastResult->error&&!av.lastResult->transportFailure);}
+     else{QCOMPARE(av.snapshot->transport().counters().replies,std::uint64_t{0});QCOMPARE(av.snapshot->transport().counters().timeouts,std::uint64_t{12});QCOMPARE(bv.snapshot->transport().counters().sent,std::uint64_t{0});QCOMPARE(bv.snapshot->transport().counters().authorityErrors,std::uint64_t{12});}
+     QVERIFY(a.owner->close());QVERIFY(b.owner->close());
++  }
++  void runningWorkerWakesQueueBackpressureBeforeHeldSourceCanBecomeReady(){
++    QTemporaryDir root;QVERIFY(root.isValid());auto lease=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(lease);auto versions=storage::AzureusValueVersions::open(*lease,4);QVERIFY(versions);
++    Io io((*versions)->profileOwnership());IoWakeCounter wake(io);io.bind(&wake);const auto unbind=qScopeGuard([&]{io.unbind();});
++    auto access=lease->sourceAccess(true);QVERIFY(access);std::optional<storage::ProfileSourceAccess> blocked;blocked.emplace(std::move(*access));Io::Handle job;
++    const auto release=qScopeGuard([&]{if(job){Io::revoke(job);}blocked.reset();});
++    auto accepted=io.submit([v=*versions](std::stop_token)->Io::Result{auto valid=v->validate();if(!valid){return std::unexpected(valid.error());}return Io::Data{};});QVERIFY(accepted);job=*accepted;
++    QTRY_VERIFY_WITH_TIMEOUT(phase(job,Io::Phase::Running),3000);QTRY_VERIFY_WITH_TIMEOUT(wake.wakes>0,3000);
++    QVERIFY(!Io::take(job));const auto held=io.facts();QCOMPARE(held.pending,std::size_t{1});QCOMPARE(held.running,std::size_t{1});QCOMPARE(held.ready,std::size_t{0});
++    blocked.reset();QTRY_VERIFY_WITH_TIMEOUT(phase(job,Io::Phase::Ready),3000);auto ready=Io::take(job);QVERIFY(ready&&*ready);Io::acknowledge(job);QTRY_VERIFY_WITH_TIMEOUT(Io::released(job),3000);io.release(job);io.requestStop();io.join();
+   }
+   void permitsAreSingleUseBoundQueuedActiveAndReadyThenReclaimSlots(){
+     QTemporaryDir root;QVERIFY(root.isValid());auto lease=storage::ProfileLease::acquire(root.path().toStdString());QVERIFY(lease);auto versions=storage::AzureusValueVersions::open(*lease,4);QVERIFY(versions);Io io((*versions)->profileOwnership());

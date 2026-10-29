@@ -1,0 +1,17 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "capsule": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/owned-enabled-source/manifest.json",
+  "capsule_sha256": "046f36ddb9769f5e6e08c02be0ccb75bf1e99b84d630d1a0e0f883ab0fba47b0",
+  "native_before_commit": "9a8cf1aa2375797e368434423b8890fce1dbb09b",
+  "checks": {
+    "artifact_hashes": 4,
+    "retained_input_hashes": 4,
+    "git_and_current_preimage": true,
+    "read_only_apply_check": "PASS",
+    "exact_single_fixture_prefix_replacement": true
+  },
+  "assessment": "Document::setInteger requires an existing integer field. The generated fixture now explicitly encodes original Plugin.DHT.dht.enabled=1 before the unchanged1MiB unknown future value, so the existing disable-current-source row can set it to0. Production already treats missing setting as enabled. Every test method, predicate, timeout and unknown payload byte remains unchanged.",
+  "findings": [],
+  "execution": "No compilation, subjects or native writes."
+}

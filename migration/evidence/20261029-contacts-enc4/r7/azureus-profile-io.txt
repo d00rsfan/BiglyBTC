@@ -1,0 +1,17 @@
+********* Start testing of AzureusProfileIoTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : AzureusProfileIoTests::initTestCase()
+QINFO  : AzureusProfileIoTests::heldDiskHandoffDoesNotBlockRealPingDeadlineCancellationOrSocketClose() Held post-read/reservation IO: source=1048622B ping=50ms total-through-close=406ms, sockets closed before external IO join
+PASS   : AzureusProfileIoTests::heldDiskHandoffDoesNotBlockRealPingDeadlineCancellationOrSocketClose()
+PASS   : AzureusProfileIoTests::currentVersionSourceIsRecheckedAfterTheHeldJobBeforeAnyPacketEffect()
+PASS   : AzureusProfileIoTests::initialRatingIoCanBeCancelledBeforeAnySnapshotOrPacketAndFreshReadStillWorks()
+PASS   : AzureusProfileIoTests::nestedObservedWritersRefuseBeforeEffectsRatherThanCallUnderOuterGate()
+PASS   : AzureusProfileIoTests::realNormalRepliesBackpressureWithinEightSlotsAndWithdrawOnSourceOrClose(release-current)
+PASS   : AzureusProfileIoTests::realNormalRepliesBackpressureWithinEightSlotsAndWithdrawOnSourceOrClose(disable-current-source)
+PASS   : AzureusProfileIoTests::realNormalRepliesBackpressureWithinEightSlotsAndWithdrawOnSourceOrClose(close-and-cancel-queued)
+PASS   : AzureusProfileIoTests::runningWorkerWakesQueueBackpressureBeforeHeldSourceCanBecomeReady()
+QINFO  : AzureusProfileIoTests::permitsAreSingleUseBoundQueuedActiveAndReadyThenReclaimSlots() Profile IO high-water=8 (queued+active+ready),16 later real validation rounds reclaimed
+PASS   : AzureusProfileIoTests::permitsAreSingleUseBoundQueuedActiveAndReadyThenReclaimSlots()
+PASS   : AzureusProfileIoTests::cleanupTestCase()
+Totals: 11 passed, 0 failed, 0 skipped, 0 blacklisted, 4316ms
+********* Finished testing of AzureusProfileIoTests *********

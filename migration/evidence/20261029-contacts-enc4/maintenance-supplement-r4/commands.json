@@ -1,0 +1,25 @@
+[
+  {
+    "name": "new-maintenance-tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang",
+      "--parallel",
+      "1",
+      "-R",
+      "^(azureus\\-maintenance)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/maintenance-supplement-r4/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 8,
+    "seconds": 42.276,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/maintenance-supplement-r4/new-maintenance-tests.log",
+    "log_sha256": "924467c17597ead25a4ccbd583b8e11fc0a7923646745592e3fde03368a41132"
+  }
+]

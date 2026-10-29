@@ -1,0 +1,56 @@
+{
+  "schema": 1,
+  "status": "INDEPENDENT_SOURCE_REVIEW_PASS",
+  "subject": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/amendments/owned-encryption-test-column/manifest.json",
+    "sha256": "0f9487d72e2524b9f7a9fb1d58f1ea9abbca561a8a4946b6e090a1e424cdb4cf"
+  },
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/manifest.json",
+    "sha256": "4b1d7276d8cbf1b9ec2d8a5c857bb0d457804a338e5525cf42881af85417f75f"
+  },
+  "native_basis": "8849b3cc2d2c13771fde3381d66beadf173fbe48",
+  "current_source_equal_preimages_checked": "514a238f0efa749e7a7fb1e68f8123af78e766da",
+  "verified": {
+    "effective_maps": 5,
+    "parent_artifacts": 22,
+    "child_effective_artifacts": 22,
+    "original_sources_and_tree_blobs": 14,
+    "plugin_sources": 3,
+    "existing_modified_jar_classes": 8,
+    "reused_crypto_headers": 4,
+    "full_patch_apply_check": true,
+    "recipe_shell_syntax_only": true
+  },
+  "finding_history": [
+    {
+      "parent_status": "TEST_CORRECTION_REQUIRED",
+      "finding": "Generic registration added Enc4-labelled data but did not pass its fetched option. Actual owned renewal instead used encryption without fetching that column.",
+      "resolution": "Child restores original generic data/body exactly and fetches the type only in real owned renewal, which passes and checks4/32, rejects rotation before writes and confirms unchanged pair on renewal."
+    }
+  ],
+  "remaining_findings": [],
+  "bounded_conclusions": [
+    "OpenSSL EVP raw X25519 derives public32 from preserved raw scalar32; existing owned arrays are zero initialized and full256 bytes cleansed on clear/move/destruction. Fresh RNG follows original byte31!=0 rule with explicit eight-candidate refusal; imported raw clamp bits remain unchanged.",
+    "LS2 public type/width and Create41 private count/type/width are explicit. Forward readLeaseSet2 verifies signature and returns consumed offset before reading private tail, then exact complete consumption and derived pair equality are required. No reverse-boundary guess, new keys from Destination bytes or optional type fallback.",
+    "Absent policy remains Enc0; explicit4/ASCII alias selects exactly one key. Destination0 and signing0/7 identity/keyfile bytes remain untouched. Initial merged type is sealed before reconfigure writes; later omission retains4 and requested type rotation refuses before effects; renewals reuse the actual pair.",
+    "Old finite lease/frame/time/options/key limits stay explicit. New native tests cover both signers/1or16leases/raw-clamp variants/moves/clear/private-frame erasure/pair/type/width/trailer/signature negatives; original generic registration restored,34of37 old channel void definitions exact, changed renewal/unsupported cases intentional.",
+    "No new dependency/provider/Host/default/router activation. Rebuild internal static-library dependents because key functions and DTOs changed. Same two native targets remain; object and isolated-router recipes are future evidence only."
+  ],
+  "source_pins": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/source-pins.json",
+    "sha256": "4d80be4f74acb2657228fd8a95cee4b9222ad5f613419c282ef4d8ac338614c6"
+  },
+  "limits": [
+    "SOURCE review only; no compiler/native subject/Java/router/network/native write.",
+    "Actual matching-source native tests, separate official+modified4case object references and actual Enc4 isolated-router acceptance remain pending; no old Enc0 runtime credit relabelled.",
+    "No remote ECIES-ratchet/multihop/public/default/plugin completeness claim; Qt internal secret socket buffers remain outside native SecretLeaseFrame erasure ownership."
+  ],
+  "execution": {
+    "compiled": false,
+    "native": false,
+    "java": false,
+    "network": false,
+    "native_mutated": false
+  }
+}

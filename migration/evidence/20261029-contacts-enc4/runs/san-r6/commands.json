@@ -1,0 +1,90 @@
+[
+  {
+    "name": "configure",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "-S",
+      "/home/yurii/Java/BiglyBTC/preview/native",
+      "-B",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 10.027,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/runs/san-r6/configure.log",
+    "log_sha256": "c703b1021e13b802afbdcb3a39cfa53acfc2999ac1fecd10d571dc0caf66ad10"
+  },
+  {
+    "name": "build",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "cmake",
+      "--build",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--target",
+      "biglybtc-azureus-routing-tests",
+      "biglybtc-owned-ddb-control-tests",
+      "biglybtc-azureus-router-owner-tests",
+      "biglybtc-azureus-owned-service-tests",
+      "biglybtc-azureus-profile-io-tests",
+      "biglybtc-i2cp-initial-channel-tests",
+      "biglybtc-i2cp-datagram-channel-tests",
+      "biglybtc-i2cp-receive-channel-tests",
+      "biglybtc-i2cp-tracker-channel-tests",
+      "biglybtc-i2p-streaming-tests",
+      "biglybtc-i2cp-leaseset-tests",
+      "biglybtc-azureus-maintenance-tests",
+      "biglybtc-azureus-database-runtime-tests",
+      "--",
+      "-k",
+      "0"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 595.173,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/runs/san-r6/build.log",
+    "log_sha256": "2177e83bf9be3ed9f4ce7fcd2b644da3bc285ec051a389a4adf0f5bf960a07cb"
+  },
+  {
+    "name": "inventory",
+    "command": [
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--show-only=json-v1"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 0.064,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/runs/san-r6/inventory.log",
+    "log_sha256": "ac42718fd56f33b09b6928dd64c460f882621c83eaea4d0bc2a75fd5d86d9c71"
+  },
+  {
+    "name": "tests",
+    "command": [
+      "nice",
+      "-n",
+      "5",
+      "ctest",
+      "--test-dir",
+      "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/sanitized-desktop",
+      "--parallel",
+      "1",
+      "-R",
+      "^(azureus\\-routing|owned\\-ddb\\-control|azureus\\-router\\-owner|azureus\\-owned\\-service|azureus\\-profile\\-io|i2cp\\-initial\\-channel|i2cp\\-lease\\-backed\\-datagram\\-channel|i2cp\\-bounded\\-datagram\\-receiver|i2cp\\-explicit\\-tracker\\-channel|pure\\-i2p\\-streaming|pure\\-i2cp\\-leaseset2|azureus\\-maintenance|azureus\\-database\\-runtime)$",
+      "--output-on-failure",
+      "--output-junit",
+      "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/runs/san-r6/tests.xml"
+    ],
+    "expected_exit": 0,
+    "exit": 0,
+    "seconds": 133.805,
+    "log": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/runs/san-r6/tests.log",
+    "log_sha256": "92ef71616a18e1e921c92b18d908ca3622ddf6b9b721d37e57d04cc0d5a49931"
+  }
+]

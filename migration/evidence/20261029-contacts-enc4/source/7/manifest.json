@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_PENDING_INDEPENDENT_REVIEW",
+  "native_commit": "9a8cf1aa2375797e368434423b8890fce1dbb09b",
+  "source_paths": {
+    "preview/native/tests/azureus_profile_io_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/owned-enabled-source/before/preview/native/tests/azureus_profile_io_tests.cpp",
+      "before_sha256": "ed12e752f2bd94556fc8ea2a4b8efc70f1a0dbf0f5b097db56932618181a9a47",
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/owned-enabled-source/staging/preview/native/tests/azureus_profile_io_tests.cpp",
+      "after_sha256": "03fd2beaf7fbb3955e22e3018726c808f317b4f321234065074c4374a7453e9c"
+    }
+  },
+  "artifacts_sha256": {
+    "ADOPTION.txt": "10df87b1a90e74e256b1a35f5bcdd97bf6351a6f77248d278a315076b2ef311a",
+    "before/preview/native/tests/azureus_profile_io_tests.cpp": "ed12e752f2bd94556fc8ea2a4b8efc70f1a0dbf0f5b097db56932618181a9a47",
+    "changes.patch": "221e1c0e4a0806668a6f8bd590a590d3a5313829d77d3ef9e8869f0b7c62f88a",
+    "staging/preview/native/tests/azureus_profile_io_tests.cpp": "03fd2beaf7fbb3955e22e3018726c808f317b4f321234065074c4374a7453e9c"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/runs/clang-r4/tests.xml": "c0a3433a5ef7f421833e95fd2c25dac23e41ccb0e228867c9f77069d4152bdfc",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/runs/clang-r4/ctest-full.log": "de529d03db22ea7f6edbb1ec502634e4116e749c8a5da8e0fefa1f7997cde130",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/running-queue-wake/manifest.json": "abeda237a92d71fc91d998f42edfd7c08758b3ed46a529baf923b7acb313f92d",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/running-queue-wake-review.json": "2e8cc2893d24ef3e83ee01adab5380bd9257dc1f90a3d506adef3a040f317272"
+  },
+  "production_changed": false,
+  "test_bodies_changed": false,
+  "execution": false
+}

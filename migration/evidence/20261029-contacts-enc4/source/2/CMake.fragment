@@ -1,0 +1,4 @@
+# No CMake edits needed. Reuse existing biglybtc_i2cp_leaseset2/channel targets,
+# biglybtc-i2cp-leaseset-tests (pure-i2cp-leaseset2), and
+# biglybtc-i2cp-initial-channel-tests (i2cp-initial-channel).
+# The standalone isolated-router project imports already-qualified archives.

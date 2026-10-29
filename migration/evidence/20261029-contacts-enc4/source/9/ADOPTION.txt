@@ -1,0 +1,7 @@
+SOURCE ONLY; no build, runtime, Java or network execution. Apply two-leaf changes.patch against clean native e9f90a8e89b268a6cc9246c3e8c400fc6c07e09a. No CMake changes.
+
+Cause: maintenance starts a five-minute NODE round, but pumpRouting passed that whole remaining budget to each findNode. submit rejects any individual timeout above thirty seconds with Failure::Deadline. The first refresh therefore could finish with all initial nodes failed and no Replied node. Original DHTControlImpl bounds the operation separately from DHTTransportUDPImpl request_timeout.
+
+Fix: each NODE RPC gets min(actual remaining round budget, thirty seconds). Global deadline, source permits, capacities, routing accuracy/parallelism, exact-peer defaults and shorter integration request budgets remain unchanged. The existing real-timer test retains every timing and wire predicate; its refresh completion now explicitly requires the same operation, no transport failure, Complete and an actual Replied node, with bounded per-node diagnostics.
+
+Root qualification: rebuild/run existing biglybtc-azureus-maintenance-tests / azureus-maintenance with the rest of the already planned affected cohort. No new runtime permission or timeout increase. All r1-r5 failures remain historical failures; this source-only amendment claims no runtime success.

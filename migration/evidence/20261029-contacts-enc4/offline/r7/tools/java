@@ -1,0 +1,9 @@
+#!/usr/bin/python3
+import json,os,sys
+tool='/usr/lib/jvm/java-26-openjdk-amd64/bin/java'
+args=['-Xms16m', '-Xmx128m', '-XX:ActiveProcessorCount=1', '-XX:+UseSerialGC', '-Duser.home=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/offline-runs/r7/home', '-Djava.io.tmpdir=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/offline-runs/r7/tmpdir']+sys.argv[1:]
+fd=os.open('/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/offline-runs/r7/tool-invocations.jsonl',os.O_WRONLY|os.O_CREAT|os.O_APPEND|os.O_NOFOLLOW,0o600)
+try:
+ data=(json.dumps({"tool":tool,"arguments":args})+"\n").encode();assert os.write(fd,data)==len(data)
+finally:os.close(fd)
+os.execv(tool,[tool,*args])

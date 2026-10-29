@@ -1,0 +1,121 @@
+   2360830:	find library=libstdc++.so.6 [0]; searching
+   2360830:	 search path=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/test-support/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/test-support/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/test-support:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v2:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/test-support/glibc-hwcaps/x86-64-v3/libstdc++.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/test-support/glibc-hwcaps/x86-64-v2/libstdc++.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/test-support/libstdc++.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v3/libstdc++.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/lib/glibc-hwcaps/x86-64-v2/libstdc++.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/lib/libstdc++.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v3/libstdc++.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/qt/lib/glibc-hwcaps/x86-64-v2/libstdc++.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/qt/lib/libstdc++.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v3/libstdc++.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/glibc-hwcaps/x86-64-v2/libstdc++.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+   2360830:	    (no such file)
+   2360830:	 search path=/opt/Qt/6.12.0/gcc_64/lib/glibc-hwcaps/x86-64-v3:/opt/Qt/6.12.0/gcc_64/lib/glibc-hwcaps/x86-64-v2:/opt/Qt/6.12.0/gcc_64/lib		(RUNPATH from file /home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-router-owner-tests)
+   2360830:	  trying file=/opt/Qt/6.12.0/gcc_64/lib/glibc-hwcaps/x86-64-v3/libstdc++.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/opt/Qt/6.12.0/gcc_64/lib/glibc-hwcaps/x86-64-v2/libstdc++.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/opt/Qt/6.12.0/gcc_64/lib/libstdc++.so.6
+   2360830:	    (no such file)
+   2360830:	 search cache=/etc/ld.so.cache
+   2360830:	  trying file=/usr/lib/x86_64-linux-gnu/libstdc++.so.6
+   2360830:	
+   2360830:	find library=libgcc_s.so.1 [0]; searching
+   2360830:	 search path=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/test-support:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/test-support/libgcc_s.so.1
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/lib/libgcc_s.so.1
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/qt/lib/libgcc_s.so.1
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   2360830:	    (no such file)
+   2360830:	 search path=/opt/Qt/6.12.0/gcc_64/lib		(RUNPATH from file /home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-router-owner-tests)
+   2360830:	  trying file=/opt/Qt/6.12.0/gcc_64/lib/libgcc_s.so.1
+   2360830:	    (no such file)
+   2360830:	 search cache=/etc/ld.so.cache
+   2360830:	  trying file=/usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   2360830:	
+   2360830:	find library=libc.so.6 [0]; searching
+   2360830:	 search path=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/test-support:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/test-support/libc.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/lib/libc.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/qt/lib/libc.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libc.so.6
+   2360830:	    (no such file)
+   2360830:	 search path=/opt/Qt/6.12.0/gcc_64/lib		(RUNPATH from file /home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-router-owner-tests)
+   2360830:	  trying file=/opt/Qt/6.12.0/gcc_64/lib/libc.so.6
+   2360830:	    (no such file)
+   2360830:	 search cache=/etc/ld.so.cache
+   2360830:	  trying file=/usr/lib/x86_64-linux-gnu/libc.so.6
+   2360830:	
+   2360830:	find library=libm.so.6 [0]; searching
+   2360830:	 search path=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/test-support:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/lib:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/qt/lib:/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu		(LD_LIBRARY_PATH)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/test-support/libm.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/lib/libm.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/usr/lib/biglybtc/qt/lib/libm.so.6
+   2360830:	    (no such file)
+   2360830:	  trying file=/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/candidate/dependencies/libtorrent/usr/lib/x86_64-linux-gnu/libm.so.6
+   2360830:	    (no such file)
+   2360830:	 search cache=/etc/ld.so.cache
+   2360830:	  trying file=/usr/lib/x86_64-linux-gnu/libm.so.6
+   2360830:	
+   2360830:	
+   2360830:	calling init: /lib64/ld-linux-x86-64.so.2
+   2360830:	
+   2360830:	
+   2360830:	calling init: /usr/lib/x86_64-linux-gnu/libc.so.6
+   2360830:	
+   2360830:	
+   2360830:	calling init: /usr/lib/x86_64-linux-gnu/libm.so.6
+   2360830:	
+   2360830:	
+   2360830:	calling init: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1
+   2360830:	
+   2360830:	
+   2360830:	calling init: /usr/lib/x86_64-linux-gnu/libstdc++.so.6
+   2360830:	
+   2360830:	
+   2360830:	initialize program: /home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-router-owner-tests
+   2360830:	
+   2360830:	
+   2360830:	transferring control: /home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private-runs/r7/biglybtc-azureus-router-owner-tests
+   2360830:	
+   2360830:	
+   2360830:	calling fini:  [0]
+   2360830:	
+   2360830:	
+   2360830:	calling fini: /usr/lib/x86_64-linux-gnu/libstdc++.so.6 [0]
+   2360830:	
+PASS 13 router policy families; 5181 assertions; source-derived fixtures, no Java runtime equality credit
+   2360830:	
+   2360830:	calling fini: /usr/lib/x86_64-linux-gnu/libgcc_s.so.1 [0]
+   2360830:	
+   2360830:	
+   2360830:	calling fini: /usr/lib/x86_64-linux-gnu/libm.so.6 [0]
+   2360830:	
+   2360830:	
+   2360830:	calling fini: /usr/lib/x86_64-linux-gnu/libc.so.6 [0]
+   2360830:	
+   2360830:	
+   2360830:	calling fini: /lib64/ld-linux-x86-64.so.2 [0]
+   2360830:	

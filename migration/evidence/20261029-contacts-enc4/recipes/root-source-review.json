@@ -1,0 +1,21 @@
+{
+  "status": "SOURCE_ONLY_PASS_PENDING_ACTUAL_GATES",
+  "reviewed_source_union": 21,
+  "capsule_paths": [
+    "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/manifest.json",
+    "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/amendments/owned-encryption-test-column/manifest.json"
+  ],
+  "independent_union_reviewer": "/root/error_oracle",
+  "approved_inputs_sha256": "ce245bc976bcda885284d249ed739af930af1746953d6ce08fbc2cedf71925af",
+  "adopter_sha256": "92b8a73e54b562a34532b5d46f8293a89dbaa50e062c2671925a72ca5502c4ef",
+  "root_recipe_review": "Read run/jobs/adopter, private/offline, router diff against qualified supervisor; no blocker. No source/runtime qualification inferred from reviews.",
+  "common_suites": 13,
+  "gcc_suites": 16,
+  "compiled_products": {
+    "gcc": 19,
+    "clang": 13,
+    "san": 13
+  },
+  "provider_rebuild": false,
+  "old_java_replay": false
+}

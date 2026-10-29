@@ -1,0 +1,23 @@
+{
+  "status": "PASS_SUPPLEMENTAL_NEW_ENC4_ONLY",
+  "source_commit": "2fe669f688b4e0b64ba7205a64c4e969ca828281",
+  "images": {
+    "biglybtc-i2cp-leaseset-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-i2cp-leaseset-tests",
+      "sha256": "77866dcad8386324ddc0b57f754270d7b00c1115a90593dbb9fd0d73d21f1df0",
+      "bytes": 257736
+    },
+    "biglybtc-i2cp-initial-channel-tests": {
+      "path": "/home/yurii/Java/BiglyBTC/build/saved-services-20261018/clang/tests/biglybtc-i2cp-initial-channel-tests",
+      "sha256": "1811ae2ef9aa45353ae7af37ddd3393b80da05fb614889220fe94fe943a1a06b",
+      "bytes": 727096
+    }
+  },
+  "no_build": true,
+  "no_pass_credit_to_failed_cohort": true,
+  "runner_sha256": "2a92346b850e1d162afc2b2e90a4125620f3a5f995f3824a9d582bde2517a02a",
+  "failed_result_sha256": "73da00ab1bb4d5b8df1f4003a174e0f91c10001d97e63049fc6ddd032751a056",
+  "actual_suites": 2,
+  "tests_xml_sha256": "e1fe23c9f88977a3e801e2002819fb084897350fbbbf0afaaf8cd30023d82327",
+  "commands_sha256": "c6fb1ce139d4e50d8895f4d77c9a35698e052f10671d9cbcf734cb016cff27fe"
+}

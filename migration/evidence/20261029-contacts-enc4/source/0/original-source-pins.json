@@ -1,0 +1,77 @@
+{
+  "original_commit": "cb8c6cb9bb97916cbc7e80338a017200ffc3e71f",
+  "sources": {
+    "core/src/com/biglybt/core/dht/router/impl/DHTRouterImpl.java": {
+      "sha256": "50b1defa8637bd435960b628c37f7f02f31a2f52c2bb357e1b081eeae637dec4",
+      "git_blob": "90e9b2028c8f3b532848ced0b40c401f15833be2",
+      "sections": "89-91,142-180 tick;1031-1190 seed/random-prefix/lookup-age;1213-1345 ping queue/random DFS;1414-1438 random refresh;925-972 best-contact ordering"
+    },
+    "core/src/com/biglybt/core/dht/router/impl/DHTRouterNodeImpl.java": {
+      "sha256": "aa41bc97d091672ceb4ad3b2a5502833b37c9a60141ea61043b452db3b9a9a73",
+      "git_blob": "11af5da461d6f6793567ddecc82baf55fe33237b",
+      "sections": "49-73 initial last-lookup0;520-538 lookup time"
+    },
+    "core/src/com/biglybt/core/dht/router/impl/DHTRouterContactImpl.java": {
+      "sha256": "a7bf00ba5d617aad5a5909e366d0f4703c6fa4b78a40bf8ce974ab87bd6d3db3",
+      "git_blob": "13bd895df01f866ef938456fa842bd75ee0dfff4",
+      "sections": "88-106 first alive;133-142 timeAlive;145-167 failure state"
+    },
+    "core/src/com/biglybt/core/dht/control/impl/DHTControlImpl.java": {
+      "sha256": "952851231979640c1eb5704f55120e19fda91270dbd1c98c9fcc454ccf89daa9",
+      "git_blob": "a895f11be8bf2e7e00d15a841a8de975e63663d6",
+      "sections": "69 idle5min;497-535 maintenance NODE5min/accuracyK/2;688-849 raw contacts state/priority/import;851-934 actual seeding;949-1004 idle random;2476 lookup timestamp;2988 recordLookup before actual wire send"
+    },
+    "core/src/com/biglybt/core/dht/control/impl/DHTControlStatsImpl.java": {
+      "sha256": "e000f01c87c4a9ef093cc48e939cbfdc7f7cceda0e160bfca94c439c0001d6f8",
+      "git_blob": "e82aa3cae76830a9c646ace9026987893d8dc05c",
+      "sections": "39-40,60-79 10s stats/poke driver"
+    },
+    "core/src/com/biglybt/core/dht/control/DHTControl.java": {
+      "sha256": "6caf8491793107f98c6b83f30449c38a6702556be477673f920f744b20154c64",
+      "git_blob": "cc1111767811b43c3a3a3e3194cc47c7e2a2dfe6",
+      "sections": "source K/search/cache intervals"
+    },
+    "core/src/com/biglybt/plugin/dht/impl/DHTPluginImpl.java": {
+      "sha256": "5e3912a67bfa09f1998601322a48f6624e9b20963b789ceb536bddd6dc088135",
+      "git_blob": "fcee4bc9d73c31cfd2e42b2bba9c345604eecd5c",
+      "sections": "73 root8h;248-274 import/export2min then10min;485-500 dht/net path;534-715 low-live32 reseed sources;720-749 root throttle/import"
+    },
+    "core/src/com/biglybt/plugin/dht/impl/DHTPluginStorageManager.java": {
+      "sha256": "b1a1f2b73ee650d89be69cc4dc595f7a30e6fe49e70b467a6c380d59888469f4",
+      "git_blob": "29db1ebdd5430071ee82d60f0c8f81145f189e73",
+      "sections": "184-265 contacts primary/saving fallback/export32/fsync/rename"
+    },
+    "core/src/com/biglybt/core/dht/transport/udp/impl/DHTUDPUtils.java": {
+      "sha256": "d852f590ca0df5361061e598be2087787ea588201f23d2fb7f826cfd62d4694b",
+      "git_blob": "f8c0caa152881bd7abd5f330080d87c11f778914",
+      "sections": "53 type1;310-348 numeric address;389-431 regular contact binary"
+    },
+    "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPImpl.java": {
+      "sha256": "b1d4e38f2bc9c33bda1bd39092ea87352a6668ca41664dafe1be7011fe163092",
+      "git_blob": "b756f15b7863793f320b55957b657c53196b0cba",
+      "sections": "1444-1450 original public validity;1501-1568 contact import Known/export"
+    },
+    "core/src/com/biglybt/core/dht/transport/udp/impl/DHTTransportUDPContactImpl.java": {
+      "sha256": "30cd1f70c74274aec6496a2f711b5865ad1b776d028f25503ba6a52ddb3fa6af",
+      "git_blob": "28ad1c52552f254759b82418e1cf2b3678323407",
+      "sections": "222-226 validity;293-304 failure thresholds;503-508 export delegate"
+    },
+    "core/src/com/biglybt/core/dht/db/impl/DHTDBImpl.java": {
+      "sha256": "c3ccf59ce89df24426ff9a8a61ea71c8a4ac055d5aa885593129b459b21b36c3",
+      "git_blob": "b6a0e762e1ee0693637f36b3f7d5ba479f1087a7",
+      "sections": "217-231 cache-republish timer;1007-1020 idle-leaf refresh is republish-driven, not fixed60s"
+    }
+  },
+  "jdk17_source": {
+    "java.base/java/util/TreeMap.java": {
+      "sha256": "1016788a06193415ac5e5e11ce2f5ba1d3888d2296d3518f2a413ad0c6e5eea6",
+      "bytes": 121126,
+      "source": "/usr/lib/jvm/openjdk-17/lib/src.zip::java.base/java/util/TreeMap.java"
+    },
+    "java.base/java/util/TreeSet.java": {
+      "sha256": "bc1fe2ad600bc4ce9cb1a11d65fff3c3c04d353e423dccb7f57ab9f125eefa5c",
+      "bytes": 20988,
+      "source": "/usr/lib/jvm/openjdk-17/lib/src.zip::java.base/java/util/TreeSet.java"
+    }
+  }
+}

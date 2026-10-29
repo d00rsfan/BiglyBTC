@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_PENDING_INDEPENDENT_REVIEW",
+  "native_commit": "e9f90a8e89b268a6cc9246c3e8c400fc6c07e09a",
+  "source_paths": {
+    "preview/native/services/azureus_udp/owned_routing.inc": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/refresh-per-rpc-budget/before/preview/native/services/azureus_udp/owned_routing.inc",
+      "before_sha256": "536b69e189d08a467c881c03f328f52b9545e5cca0dc2c962d579288628935dc",
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/refresh-per-rpc-budget/staging/preview/native/services/azureus_udp/owned_routing.inc",
+      "after_sha256": "c506818df045a515ac2f3e49d94085baab0babe05d191e6ed55fc13a9f4d8a88"
+    },
+    "preview/native/tests/azureus_maintenance_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/refresh-per-rpc-budget/before/preview/native/tests/azureus_maintenance_tests.cpp",
+      "before_sha256": "24af0deb4e66cb2ec88c99f37a2978cd58d5df07bd34cd1a6ccd3d6af0ed9045",
+      "after_path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/refresh-per-rpc-budget/staging/preview/native/tests/azureus_maintenance_tests.cpp",
+      "after_sha256": "d779f10e1b4cb61a1fff53ff0628dbd2fbb5fc1090f48ecc98789520fe57243b"
+    }
+  },
+  "artifacts_sha256": {
+    "ADOPTION.txt": "ff03b16f3d0f326ede8e55b07dd397e5295956782d9db74dcd3535c57c8b712c",
+    "before/preview/native/services/azureus_udp/owned_routing.inc": "536b69e189d08a467c881c03f328f52b9545e5cca0dc2c962d579288628935dc",
+    "before/preview/native/tests/azureus_maintenance_tests.cpp": "24af0deb4e66cb2ec88c99f37a2978cd58d5df07bd34cd1a6ccd3d6af0ed9045",
+    "changes.patch": "b1e12a8d4371f458a2239613b2023a5ce1eec061b9ae4aeed52a0c6bfe11cbcd",
+    "original-source-pins.json": "8c0100b008265ba72d0e262ff6ec9c75c84c1a82f5c5b1d4da71a7d302e36c61",
+    "staging/preview/native/services/azureus_udp/owned_routing.inc": "c506818df045a515ac2f3e49d94085baab0babe05d191e6ed55fc13a9f4d8a88",
+    "staging/preview/native/tests/azureus_maintenance_tests.cpp": "d779f10e1b4cb61a1fff53ff0628dbd2fbb5fc1090f48ecc98789520fe57243b"
+  },
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/runs/clang-r5/tests.xml": "80835e4dba57e5565bf0435112e75d421ed08104f7fcbbb8dda03601336ab120",
+    "/home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp/owned_transport.cpp": "690df7af3dc3329cdf4e2eda7d872b35013cad2bf5de653c2c72fab47da4992c",
+    "/home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp/owned_maintenance.inc": "d6b76f425631d83b62542b109c61eb5a3a7c17fd6289f1cefebb6a64ed2cad25",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/actual-ping-contact-prepopulation/manifest.json": "c0a6eb8d8f29c182cf0b41b3683b6f74a51c1062acc307008e3a947d6c5bcd03"
+  },
+  "overall_deadline_changed": false,
+  "per_rpc_ceiling_seconds": 30,
+  "execution": false
+}

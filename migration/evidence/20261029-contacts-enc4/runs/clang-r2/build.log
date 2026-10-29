@@ -1,0 +1,20 @@
+ninja: Jobserver mode detected:  -j3 --jobserver-auth=fifo:/tmp/GMfifo2339621 -- ATTEMPT=r2
+[1/22] Building CXX object app/CMakeFiles/biglybtc_owned_azureus_service.dir/owned_azureus_service.cpp.o
+[2/22] Linking CXX static library app/libbiglybtc_owned_azureus_service.a
+[3/22] Automatic MOC for target biglybtc-azureus-profile-io-tests
+[4/21] Automatic MOC for target biglybtc-azureus-owned-service-tests
+[5/20] Automatic MOC for target biglybtc-azureus-database-runtime-tests
+[6/20] Automatic MOC for target biglybtc-azureus-routing-tests
+[7/19] Building CXX object tests/CMakeFiles/biglybtc-azureus-database-runtime-tests.dir/biglybtc-azureus-database-runtime-tests_autogen/mocs_compilation.cpp.o
+[8/19] Automatic MOC for target biglybtc-azureus-maintenance-tests
+[9/19] Building CXX object tests/CMakeFiles/biglybtc-azureus-database-runtime-tests.dir/azureus_database_runtime_tests.cpp.o
+[10/19] Building CXX object tests/CMakeFiles/biglybtc-azureus-profile-io-tests.dir/azureus_profile_io_tests.cpp.o
+[11/19] Building CXX object tests/CMakeFiles/biglybtc-azureus-maintenance-tests.dir/biglybtc-azureus-maintenance-tests_autogen/mocs_compilation.cpp.o
+[12/19] Building CXX object tests/CMakeFiles/biglybtc-azureus-owned-service-tests.dir/owned_azureus_service_tests.cpp.o
+[13/19] Linking CXX executable tests/biglybtc-azureus-owned-service-tests
+[14/19] Linking CXX executable tests/biglybtc-azureus-database-runtime-tests
+[15/19] Linking CXX executable tests/biglybtc-azureus-profile-io-tests
+[16/19] Building CXX object tests/CMakeFiles/biglybtc-azureus-routing-tests.dir/azureus_routing_tests.cpp.o
+[17/19] Linking CXX executable tests/biglybtc-azureus-routing-tests
+[18/19] Building CXX object tests/CMakeFiles/biglybtc-azureus-maintenance-tests.dir/azureus_maintenance_tests.cpp.o
+[19/19] Linking CXX executable tests/biglybtc-azureus-maintenance-tests

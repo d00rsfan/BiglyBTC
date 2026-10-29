@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "status": "SOURCE_PASS_NO_EXECUTION",
+  "capsule": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/running-queue-wake/manifest.json",
+  "capsule_sha256": "abeda237a92d71fc91d998f42edfd7c08758b3ed46a529baf923b7acb313f92d",
+  "native_basis": "f26966a0695dbe15126c3543c33b237d31789c8e",
+  "verified": {
+    "source_maps": 2,
+    "artifacts": 6,
+    "inputs": 4
+  },
+  "findings": [
+    "Running wake is emitted after the actual executor pop and Job Running transition, outside executor/job/source locks and before potentially blocked sourceAccess. It grants no permit and does not call the actor inline.",
+    "Existing shared mailbox coalesces posts; unbind serializes with posting before QObject teardown. The worker retains mailbox/job/lease, without raw actor ownership. Cancellation and terminal paths remain unchanged.",
+    "Focused held-gate test observes actual Running and a queued wake while take remains refused and ready is zero, then releases the gate and completes/joins. Scope-guard destruction releases gate and revokes before unbind/QObject teardown.",
+    "Existing12/8 integration gate now reports counters, while deadlines, slot count8, executor queue7 and frame count64 remain unchanged."
+  ],
+  "historical_failure": "Clang r3 actual8 suites passed, azureus-profile-io failed and4 later suites did not run. Missing Running wake is a proven source progress edge; attribution to the uninstrumented prior failure remains a candidate until qualification.",
+  "selective_refresh_diagnosis": {
+    "status": "SOURCE_CORRECT_AGE_GUARD_FIXTURE_INPUT_MISMATCH",
+    "facts": "Original DHTRouterImpl1074-1083 prunes by age before recursion; DHTRouterNodeImpl89-112 preserves parent lookup time on split,520-531 returns its elapsed age. Native matches. Repeated integration records local lookup before split, leaving root younger than120s at six10s ticks.",
+    "recommended_fixture": "Admit21 actual distinct peers through genuine incoming PING exchange first, splitting the root without local lookup; then one genuine integration records only the local leaf and seeds the unchanged timer. Preserve actual refresh/reply/target predicates and all budgets."
+  },
+  "proof_sha256": {
+    "/home/yurii/Java/BiglyBTC/preview/native/core/src/executor.cpp": "b886692587ef8c5efc269ea3735f2b64f3432a255b8a1bd57b357627bc3da77a",
+    "/home/yurii/Java/BiglyBTC/preview/native/app/azureus_profile_io.hpp": "6c8abb9b8e2c2ede2331f996db76571082fed214582f7b7514fbb66d9644da27",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/running-queue-wake/changes.patch": "f2e41537c9d0d87f01831e96cf7e48e1370efcca1914e1d691ae27b591dc1c68",
+    "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/dht/router/impl/DHTRouterImpl.java": "50b1defa8637bd435960b628c37f7f02f31a2f52c2bb357e1b081eeae637dec4",
+    "/home/yurii/Java/BiglyBT/core/src/com/biglybt/core/dht/router/impl/DHTRouterNodeImpl.java": "aa41bc97d091672ceb4ad3b2a5502833b37c9a60141ea61043b452db3b9a9a73",
+    "/home/yurii/Java/BiglyBTC/preview/native/services/azureus_router/router.cpp": "766a2e0ac7af86cc205c118df2b8be906a96f5d30e4bb39e0a5726b42b2d4460",
+    "/home/yurii/Java/BiglyBTC/preview/native/services/azureus_udp/owned_routing.inc": "536b69e189d08a467c881c03f328f52b9545e5cca0dc2c962d579288628935dc",
+    "/home/yurii/Java/BiglyBTC/preview/native/tests/azureus_maintenance_tests.cpp": "850b0885a24a149aa3a7e4b38403b2b8bf0e8bf570eae48be6a8685371b1c785",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/maintenance-supplement-r3/tests.xml": "5e0f084b0dc7e7cd7c6c16be22d3f297095131f620c3d219e8fd61a96169d1f6"
+  },
+  "executed": false,
+  "native_mutated": false,
+  "review_blockers": []
+}

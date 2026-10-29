@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite name="InitialChannelTests" timestamp="2026&#x002D;10&#x002D;29T22:06:40" hostname="ubuntud" tests="55" failures="0" errors="0" skipped="0" time="13.912">
+  <properties>
+    <property name="QTestVersion" value="6.12.0"/>
+    <property name="QtVersion" value="6.12.0"/>
+    <property name="QtBuild" value="Qt 6.12.0 (x86_64&#x002D;little_endian&#x002D;lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0&#x002D;5))"/>
+  </properties>
+  <testcase name="initTestCase" classname="InitialChannelTests" time="0.000"/>
+  <testcase name="actualJavaDateOverOwnedTcp(ipv4)" classname="InitialChannelTests" time="0.102"/>
+  <testcase name="actualJavaDateOverOwnedTcp(ipv6)" classname="InitialChannelTests" time="0.101"/>
+  <testcase name="invalidRepliesWithdrawAllObservation(oversize&#x002D;header)" classname="InitialChannelTests" time="0.102"/>
+  <testcase name="invalidRepliesWithdrawAllObservation(unknown&#x002D;type)" classname="InitialChannelTests" time="0.102"/>
+  <testcase name="invalidRepliesWithdrawAllObservation(maximum&#x002D;bounded&#x002D;opaque&#x002D;frame)" classname="InitialChannelTests" time="0.102"/>
+  <testcase name="invalidRepliesWithdrawAllObservation(unexpected&#x002D;real&#x002D;session&#x002D;status)" classname="InitialChannelTests" time="0.101"/>
+  <testcase name="invalidRepliesWithdrawAllObservation(invalid&#x002D;date&#x002D;length)" classname="InitialChannelTests" time="0.102"/>
+  <testcase name="invalidRepliesWithdrawAllObservation(real&#x002D;Java&#x002D;null&#x002D;date)" classname="InitialChannelTests" time="0.102"/>
+  <testcase name="truncatedFrameAtActualEofRefuses" classname="InitialChannelTests" time="0.102"/>
+  <testcase name="realDisconnectRevokesDateAndRetainsOnlyReason" classname="InitialChannelTests" time="0.151"/>
+  <testcase name="actualRemoteEofWithdrawsDate" classname="InitialChannelTests" time="0.152"/>
+  <testcase name="noDateHitsAbsoluteDeadlineWithoutRetry" classname="InitialChannelTests" time="1.060"/>
+  <testcase name="cancelPartialThenExplicitRestartUsesNewStream" classname="InitialChannelTests" time="0.153"/>
+  <testcase name="activeBeginCannotReplaceCurrentAttempt" classname="InitialChannelTests" time="0.101"/>
+  <testcase name="stateListenerRestartCannotPublishOldDate" classname="InitialChannelTests" time="0.153"/>
+  <testcase name="publicNotificationMayDeleteController(date&#x002D;state&#x002D;listener)" classname="InitialChannelTests" time="0.101"/>
+  <testcase name="publicNotificationMayDeleteController(date&#x002D;final&#x002D;listener)" classname="InitialChannelTests" time="0.101"/>
+  <testcase name="publicNotificationMayDeleteController(failure&#x002D;listener)" classname="InitialChannelTests" time="0.101"/>
+  <testcase name="unsupportedOptionsRefuseBeforeAnyTcp" classname="InitialChannelTests" time="0.101"/>
+  <testcase name="actualSignedRegistrationAndMergedReconfigure(DSA0&#x002D;v4)" classname="InitialChannelTests" time="0.308"/>
+  <testcase name="actualSignedRegistrationAndMergedReconfigure(Ed7&#x002D;v4)" classname="InitialChannelTests" time="0.306"/>
+  <testcase name="actualSignedRegistrationAndMergedReconfigure(DSA0&#x002D;v6)" classname="InitialChannelTests" time="0.307"/>
+  <testcase name="actualSignedRegistrationAndMergedReconfigure(Ed7&#x002D;v6)" classname="InitialChannelTests" time="0.314"/>
+  <testcase name="terminalRegistrationStatusNeverAdmits(refused&#x002D;UNKNOWN)" classname="InitialChannelTests" time="0.204"/>
+  <testcase name="terminalRegistrationStatusNeverAdmits(invalid)" classname="InitialChannelTests" time="0.208"/>
+  <testcase name="terminalRegistrationStatusNeverAdmits(destroyed)" classname="InitialChannelTests" time="0.208"/>
+  <testcase name="terminalRegistrationStatusNeverAdmits(unsolicited&#x002D;updated)" classname="InitialChannelTests" time="0.207"/>
+  <testcase name="terminalRegistrationStatusNeverAdmits(created&#x002D;UNKNOWN)" classname="InitialChannelTests" time="0.208"/>
+  <testcase name="reconfigureCannotChangeIdentityOrAcceptWrongId" classname="InitialChannelTests" time="0.309"/>
+  <testcase name="pendingCreateDeadlineClosesWithoutAdmissionOrRetry" classname="InitialChannelTests" time="1.117"/>
+  <testcase name="invalidSigningInputDoesNotReplaceTheDateOrWriteARequest" classname="InitialChannelTests" time="0.205"/>
+  <testcase name="previouslyReadPartialStatusCannotBecomeANewCreateAcknowledgement" classname="InitialChannelTests" time="0.205"/>
+  <testcase name="unsupportedTlsCannotBecomePlaintextRegistration" classname="InitialChannelTests" time="0.205"/>
+  <testcase name="cancelBeforeQueuedOldStatusThenNewRegistrationCannotReuseIt" classname="InitialChannelTests" time="0.358"/>
+  <testcase name="nestedRealReconfigureCannotPublishTheSupersededCreatedNotification" classname="InitialChannelTests" time="0.208"/>
+  <testcase name="registrationNotificationMayDeleteController(created)" classname="InitialChannelTests" time="0.206"/>
+  <testcase name="registrationNotificationMayDeleteController(updated)" classname="InitialChannelTests" time="0.306"/>
+  <testcase name="ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests(DSA0&#x002D;v4)" classname="InitialChannelTests" time="0.421"/>
+  <testcase name="ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests(Ed7&#x002D;v4)" classname="InitialChannelTests" time="0.420"/>
+  <testcase name="ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests(DSA0&#x002D;v6)" classname="InitialChannelTests" time="0.419"/>
+  <testcase name="ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests(Ed7&#x002D;v6)" classname="InitialChannelTests" time="0.424"/>
+  <testcase name="ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests(DSA0&#x002D;Enc4)" classname="InitialChannelTests" time="0.412"/>
+  <testcase name="ownedCapabilityAnswersAndRenewsActualVariableLeaseRequests(Ed7&#x002D;Enc4)" classname="InitialChannelTests" time="0.417"/>
+  <testcase name="leaseOptInRejectsUnsupportedPolicyAndLegacyBeforeConsumingSigner" classname="InitialChannelTests" time="0.205"/>
+  <testcase name="badLeaseRequestWithdrawsOwnedCapability(wrong&#x002D;session)" classname="InitialChannelTests" time="0.255"/>
+  <testcase name="badLeaseRequestWithdrawsOwnedCapability(zero&#x002D;leases)" classname="InitialChannelTests" time="0.257"/>
+  <testcase name="badLeaseRequestWithdrawsOwnedCapability(seventeen)" classname="InitialChannelTests" time="0.256"/>
+  <testcase name="badLeaseRequestWithdrawsOwnedCapability(expired)" classname="InitialChannelTests" time="0.258"/>
+  <testcase name="badLeaseRequestWithdrawsOwnedCapability(no&#x002D;opt&#x002D;in)" classname="InitialChannelTests" time="0.259"/>
+  <testcase name="badLeaseRequestWithdrawsOwnedCapability(zero&#x002D;tunnel)" classname="InitialChannelTests" time="0.255"/>
+  <testcase name="missingInitialLeaseRequestHasAnAbsoluteBudget" classname="InitialChannelTests" time="0.711"/>
+  <testcase name="closeBeforeFirstLeaseWithdrawsTheConsumedCapability" classname="InitialChannelTests" time="0.205"/>
+  <testcase name="submittedCallbackMayDeleteController" classname="InitialChannelTests" time="0.256"/>
+  <testcase name="cleanupTestCase" classname="InitialChannelTests" time="0.000"/>
+</testsuite>

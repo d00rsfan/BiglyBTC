@@ -1,0 +1,25 @@
+{
+  "schema": 1,
+  "status": "SOURCE_REVIEW_PASS_NO_EXECUTION",
+  "capsule": {
+    "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/normal-preflight-backpressure/manifest.json",
+    "sha256": "5d95ea1d5e2b1b9ae2ab4c68fd45d1a26ae998f61fe29da0d38f7e426f6c5c75"
+  },
+  "native_basis": "f443b0f21975c69fbddf557618f6dd9b43bbc302",
+  "verified": {
+    "source_maps_current_git_before_after": 4,
+    "artifact_hashes": 10,
+    "immutable_input_hashes": 3,
+    "retained_method_bodies": 6,
+    "read_only_patch_apply_check": "PASS"
+  },
+  "conclusions": [
+    "FIFO pending normal callbacks reuse the SAME64 held-frame capacity and unchanged8 profile worker slots. Real initial arrivals and Ready/Released wakes supply progress; no polling, new timer or slot/deadline increase.",
+    "Original30s arrival deadline, precommit current-source/revision/stop checks and per-round generation/deadline fences are retained. Expired queued callbacks receive false outside a source permit; no packet authority is invented.",
+    "A consumed and acknowledged IO slot only awaits actual worker Released; it is not retroactively relabelled stale/expired after successful commit.",
+    "Reentrant callback retirement clears its queue entry before invocation; stop clears queued frames after actual actor close and before external worker join. Queue/executor-tail contention preserves owned work until a real release wake.",
+    "Actual12-PING release/source-disable/close-cancel controls and settled-maintenance assertion are authored; previous deadlines, routing predicates and six named old method bodies remain intact."
+  ],
+  "material_blockers": [],
+  "runtime": "All new runtime assertions remain pending. Original Clang-r2 failure XML/log is preserved and hashed. No compiler, Java, network subject, N or provider mutation by reviewer."
+}

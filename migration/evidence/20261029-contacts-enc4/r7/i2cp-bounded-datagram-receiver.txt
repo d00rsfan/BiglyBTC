@@ -1,0 +1,20 @@
+********* Start testing of ReceiveChannelTests *********
+Config: Using QtTest library 6.12.0, Qt 6.12.0 (x86_64-little_endian-lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0-5)), ubuntu 26.04
+PASS   : ReceiveChannelTests::initTestCase()
+PASS   : ReceiveChannelTests::actualLegacyAndFastWireVerifiesBeforeQueuing(legacy-DSA0-v4)
+PASS   : ReceiveChannelTests::actualLegacyAndFastWireVerifiesBeforeQueuing(fast-Ed7-v6)
+PASS   : ReceiveChannelTests::actualLegacyAndFastWireVerifiesBeforeQueuing(legacy-claimed3-v6)
+PASS   : ReceiveChannelTests::actualLegacyAndFastWireVerifiesBeforeQueuing(fast-claimed3-v4)
+PASS   : ReceiveChannelTests::invalidDatagramDropsPreserveTheActualOutboundSession(crc)
+PASS   : ReceiveChannelTests::invalidDatagramDropsPreserveTheActualOutboundSession(signature)
+PASS   : ReceiveChannelTests::invalidDatagramDropsPreserveTheActualOutboundSession(wrong-recipient)
+PASS   : ReceiveChannelTests::invalidDatagramDropsPreserveTheActualOutboundSession(unsupported-protocol)
+PASS   : ReceiveChannelTests::invalidDatagramDropsPreserveTheActualOutboundSession(malformed-payload31)
+PASS   : ReceiveChannelTests::invalidDatagramDropsPreserveTheActualOutboundSession(wrong-session)
+PASS   : ReceiveChannelTests::fullLegacyQueueReleasesWithoutBeginAndFastQueueStaysWithin160KiB()
+PASS   : ReceiveChannelTests::timedOutAndDisabledLegacyFetchCannotFinishALaterRequest()
+PASS   : ReceiveChannelTests::modeIsInitialAndCallbackCanConsumeDisableOrDelete(legacy-pop-disable)
+PASS   : ReceiveChannelTests::modeIsInitialAndCallbackCanConsumeDisableOrDelete(fast-delete)
+PASS   : ReceiveChannelTests::cleanupTestCase()
+Totals: 16 passed, 0 failed, 0 skipped, 0 blacklisted, 11108ms
+********* Finished testing of ReceiveChannelTests *********

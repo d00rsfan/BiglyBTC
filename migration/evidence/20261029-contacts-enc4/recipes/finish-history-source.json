@@ -1,0 +1,22 @@
+{
+  "status": "SOURCE_ONLY_NOT_EXECUTED",
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/finish.py",
+    "sha256": "dedf833c48d00ba34a9a06081ecd2a177926d27820b82829ccbfbf70d4c32d05"
+  },
+  "child": {
+    "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/finish-history.py",
+    "sha256": "d6ab468689d341b7c749f6631bb521e4a3ae9b214fbf6aa602bb1a3a0546ca4e"
+  },
+  "patch": {
+    "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/finish-failure-history/changes.patch",
+    "sha256": "f10152ff61a4d583c246107ffb1f6674bd3c1fe9fbab957dd32e7e27e9a9d00b"
+  },
+  "retention": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/root-source-object-retention.json",
+    "sha256": "81025f4fa723ac8db8bbf67a8ea9c3a8673e5461ce5d2a07c9e7d49eb95208e0"
+  },
+  "delta": "Validate every adoption failed_*_sha256 dictionary under the owned K directory; retain verified14-object receipt and frozen finisher parent in evidence; expose both history/retention hashes in verification. Parent and capsule histories unchanged.",
+  "native_mutated": false,
+  "subjects_executed": false
+}

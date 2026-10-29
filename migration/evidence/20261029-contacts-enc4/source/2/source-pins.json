@@ -1,0 +1,230 @@
+{
+  "schema": 1,
+  "native_source_basis": "8849b3cc2d2c13771fde3381d66beadf173fbe48",
+  "approved_proposal": {
+    "plan": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-proposal-20261029/PLAN.md",
+    "sha256": "f0d336d8987d140a15a19672bb4e4aa031a1cd39404b565ef3d18399e7d01e37",
+    "source_pins": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-proposal-20261029/source-pins.json",
+    "source_pins_sha256": "4d848557398a94a3ff9f69aa0f3f7b563d3f41be3b0ca262becaa66f61442d83"
+  },
+  "unchanged_original_identity": {
+    "destination": "Existing Enc0 signing0/7 source bytes; no identity codec edits",
+    "key_files": "No profile reader/writer added or changed"
+  },
+  "dependency_reused": {
+    "id": "tor-openssl-host",
+    "version": "3.5.5-1ubuntu3.5",
+    "library": "/usr/lib/x86_64-linux-gnu/libcrypto.so.3",
+    "library_sha256": "7cf7da0a671c553b7140d40ed0ee8f07d12d0fceedff87c930d1918d205b106f",
+    "matches_existing_dependency_artifact": true,
+    "new_dependency": false,
+    "header_sha256": {
+      "/usr/include/openssl/evp.h": "41b42c68adfd98b9d8a80fb2d78bbdaf1094f43dd02be045c7d8605edf36a706",
+      "/usr/include/openssl/rand.h": "cb240ffedfd9516ec7a8cd0796951d46a4707c0460f940371620c83f7bafd037",
+      "/usr/include/openssl/crypto.h": "345267a63492320c5c23550bf10b6b94744c6250bcbb17a87954e324c7a51faf",
+      "/usr/include/openssl/opensslv.h": "7acbe88993a8691183aff3277743d8090c6bbba24b6e218919cf8afdbde42de6"
+    },
+    "runtime_x25519_execution_performed": false
+  },
+  "reference_sources": {
+    "repository": "https://github.com/i2p/i2p.i2p",
+    "commit": "9134f808337b401e8e53c73734c81fab04280c9d",
+    "tree": "b38c70fbf3f7ce6f33ca95bedaa001e1458a4c9b",
+    "retained_repository": "/home/yurii/Java/BiglyBT/build/dependencies/i2p-java-2.13.0",
+    "source_jar": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/amendments/actual-offline-interop/dependencies/i2p-2.13.0-sources.jar",
+    "source_jar_sha256": "b169a9cebb58bee8b9ca2e73743418b1e9a634bdea4faa8ca6e2063d1032f23a",
+    "sources": [
+      {
+        "upstream_path": "core/java/src/net/i2p/crypto/KeyGenerator.java",
+        "git_blob": "cb0503eee94d81fa8094e998bd7509f6919bb611",
+        "source_jar_entry": "net/i2p/crypto/KeyGenerator.java",
+        "sha256": "2a821cb6808a5e697c10bbc8f5852d97dd98103622ea2a71f81dfd713bc664b9",
+        "bytes": 23064,
+        "source_jar_exact_tree_blob": true,
+        "git_blob_retained": true
+      },
+      {
+        "upstream_path": "core/java/src/net/i2p/crypto/EncType.java",
+        "git_blob": "f9699d433a41ad224b4ef68c655040a4ed7de9a7",
+        "source_jar_entry": "net/i2p/crypto/EncType.java",
+        "sha256": "7abbd6dec89dfee9ecf92a68e5f3c341310257dd6ae2a6a46c9708295ff5736d",
+        "bytes": 8340,
+        "source_jar_exact_tree_blob": true,
+        "git_blob_retained": false
+      },
+      {
+        "upstream_path": "core/java/src/com/southernstorm/noise/crypto/x25519/Curve25519.java",
+        "git_blob": "816119432abf5b16b2d450729e8e39e1e13489c7",
+        "source_jar_entry": "com/southernstorm/noise/crypto/x25519/Curve25519.java",
+        "sha256": "ba5bd1061115b3cc9142978e2d06b7db8d2ff0b459d00b7c0b68ae2c2659f0e7",
+        "bytes": 17289,
+        "source_jar_exact_tree_blob": true,
+        "git_blob_retained": false
+      },
+      {
+        "upstream_path": "core/java/src/net/i2p/client/impl/I2PClientImpl.java",
+        "git_blob": "c9bc25687f162128a3c3a6f0dda17683c998fc82",
+        "source_jar_entry": "net/i2p/client/impl/I2PClientImpl.java",
+        "sha256": "30ac6a62fbeb2f25fc3c2ce5f934e06dd6beef3c33267ddb825e87002924c2e5",
+        "bytes": 7930,
+        "source_jar_exact_tree_blob": true,
+        "git_blob_retained": true
+      },
+      {
+        "upstream_path": "core/java/src/net/i2p/client/impl/RequestLeaseSetMessageHandler.java",
+        "git_blob": "8647e54c0fc544a7cdfbddd67c4c58cf2e71ab28",
+        "source_jar_entry": "net/i2p/client/impl/RequestLeaseSetMessageHandler.java",
+        "sha256": "4cecdb20b23ebec35ddf3260c8822ae2040ef9800393f01aad4501898aef8212",
+        "bytes": 28381,
+        "source_jar_exact_tree_blob": true,
+        "git_blob_retained": true
+      },
+      {
+        "upstream_path": "core/java/src/net/i2p/client/impl/I2PSessionImpl.java",
+        "git_blob": "44123f7c26d4218902e1492e975f0a30e3ffc174",
+        "source_jar_entry": "net/i2p/client/impl/I2PSessionImpl.java",
+        "sha256": "369f04aec096509d16f0d56457a6d0fedc4fcd559e317f211d0822bba690a28c",
+        "bytes": 88133,
+        "source_jar_exact_tree_blob": true,
+        "git_blob_retained": true
+      },
+      {
+        "upstream_path": "core/java/src/net/i2p/data/LeaseSet2.java",
+        "git_blob": "3b19bf6a5198ab85ccbe971a07b389138f51a1e3",
+        "source_jar_entry": "net/i2p/data/LeaseSet2.java",
+        "sha256": "c023cdc228b043bddc83fcde8f04117c23fbe3d2bde66c6b93b3073c13c9c36f",
+        "bytes": 29668,
+        "source_jar_exact_tree_blob": true,
+        "git_blob_retained": true
+      },
+      {
+        "upstream_path": "core/java/src/net/i2p/data/i2cp/CreateLeaseSet2Message.java",
+        "git_blob": "e6918974a8ccbbb0c86a9acbd83be890b13d68aa",
+        "source_jar_entry": "net/i2p/data/i2cp/CreateLeaseSet2Message.java",
+        "sha256": "d9d8daeda8f8881c55074913064f3f99cb609602998f7ef0ed7e81795e7b4b34",
+        "bytes": 8672,
+        "source_jar_exact_tree_blob": true,
+        "git_blob_retained": true
+      },
+      {
+        "upstream_path": "core/java/src/net/i2p/data/i2cp/RequestVariableLeaseSetMessage.java",
+        "git_blob": "441fd6958f19ade44a3359a0d2e65cbcf61fac16",
+        "source_jar_entry": "net/i2p/data/i2cp/RequestVariableLeaseSetMessage.java",
+        "sha256": "d36665dac75cf814fbee0de6b12915e6d0c29cb76ea0e4711b5e54674ba73571",
+        "bytes": 4319,
+        "source_jar_exact_tree_blob": true,
+        "git_blob_retained": true
+      },
+      {
+        "upstream_path": "core/java/src/net/i2p/data/PrivateKeyFile.java",
+        "git_blob": "0446445b04a92ec5ca94a202c7b17e173a48943b",
+        "source_jar_entry": "net/i2p/data/PrivateKeyFile.java",
+        "sha256": "9685aaeffcb85f24cb435e59494e7fb7cf872800b0013fdb75dcb2fb902f1ffc",
+        "bytes": 46395,
+        "source_jar_exact_tree_blob": true,
+        "git_blob_retained": true
+      },
+      {
+        "upstream_path": "core/java/src/net/i2p/data/PrivateKey.java",
+        "git_blob": "41c544e17207cdf40d1bc0082725daa91ee37991",
+        "source_jar_entry": "net/i2p/data/PrivateKey.java",
+        "sha256": "a00a7ae84f35378084c0678e23604eb01d2ef85ca43bba4abcb1dd10ed9fa204",
+        "bytes": 4851,
+        "source_jar_exact_tree_blob": true,
+        "git_blob_retained": true
+      },
+      {
+        "upstream_path": "core/java/src/net/i2p/data/PublicKey.java",
+        "git_blob": "805ab5999a3b96e87a7784afd7c4c087c69b94fc",
+        "source_jar_entry": "net/i2p/data/PublicKey.java",
+        "sha256": "fa0aa6e714e9cbd6e59686302aa98a5b425c5e34d11ef0098598cce3001e6fbd",
+        "bytes": 7457,
+        "source_jar_exact_tree_blob": true,
+        "git_blob_retained": false
+      },
+      {
+        "upstream_path": "router/java/src/net/i2p/router/client/ClientMessageEventListener.java",
+        "git_blob": "8960157856bc79df37d39ab6115e48c6fc450802",
+        "local_path": "/home/yurii/Java/BiglyBT/build/i2cp-session-registration-20261029/original-source/router/java/src/net/i2p/router/client/ClientMessageEventListener.java",
+        "sha256": "58df866c1edd70e1220fe9bf92508ede3bb1c230c17bb2b3e01ce6724681a674",
+        "bytes": 40632,
+        "git_blob_retained": true
+      },
+      {
+        "upstream_path": "core/java/src/net/i2p/client/impl/RequestVariableLeaseSetMessageHandler.java",
+        "git_blob": "45769ee3f4893c9786a1dc90dbb73783cdde2c63",
+        "source_jar_entry": "net/i2p/client/impl/RequestVariableLeaseSetMessageHandler.java",
+        "sha256": "2cd4ae114d978bee017b6d42f72fdd15e90ad498b05d0595e6a4ffbe9a425909",
+        "bytes": 4327,
+        "source_jar_exact_tree_blob": true,
+        "git_blob_retained": true
+      }
+    ]
+  },
+  "modified_core": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+    "sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+    "bytes": 4288652,
+    "class_sha256": {
+      "net/i2p/crypto/KeyGenerator.class": "2b38ea10b0247adc21b14ae89f139f3251c81ff34c181b3cfc75ebbd5d189432",
+      "net/i2p/crypto/EncType.class": "19dbbb7b4c124c75f483d5cdf6100e8bfab92efff3ac743ceb1d8d3c307b2452",
+      "com/southernstorm/noise/crypto/x25519/Curve25519.class": "aa9f7bd7f724e3dc69242c87ac52a79a1a1c2ea32e98eb2ba76040cfcba28e1d",
+      "net/i2p/client/impl/RequestLeaseSetMessageHandler.class": "8704d0cf28bd1a5e0d87ea76d52d1b28337517ef6dcb9b0ac0ad445edae37719",
+      "net/i2p/data/LeaseSet2.class": "616f05395f81ed7b3fb1f2e75d540ef15495132d1f2924e5177b028b05bbebd5",
+      "net/i2p/data/i2cp/CreateLeaseSet2Message.class": "ce50ae214470ee3224480dacfab1f71a0ed6c30b63c99d4f5efa763607a72e75",
+      "net/i2p/data/PrivateKeyFile.class": "ceb90af077514aef54ea2f491c25b346626d3bd3961f6b1e59514c2ff729da53",
+      "net/i2p/router/client/ClientMessageEventListener.class": "d321cc8fccaf259376f20841a5d23454b853b98347cbccbf7846b0a73010c606"
+    },
+    "whole_source_equivalence_claimed": false,
+    "keygen_readonly_metadata": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-proposal-20261029/modified-KeyGenerator.javap.txt",
+      "sha256": "9a4268b3e9eab21569eeb6f981f192afff3d6646b59c2e12c6dd64e629a93ff8",
+      "command": [
+        "javap",
+        "-classpath",
+        "/home/yurii/Java/BiglyBT/build/i2p-modified-core-20261029/azi2pcore_2.13.0.1.jar",
+        "-c",
+        "-p",
+        "net.i2p.crypto.KeyGenerator"
+      ],
+      "tool": "/usr/lib/jvm/java-26-openjdk-amd64/bin/javap",
+      "tool_sha256": "55fc885198b2c0a6b0e7226bb66c6e35f8cd80115999fa00948ce7b09faef2c2",
+      "fact": "Actual modified generatePKIKeys bytecode uses32 random bytes, byte31 retry and Curve25519.eval; no method/Router initialized by javap."
+    }
+  },
+  "plugin": {
+    "repository": "https://github.com/BiglySoftware/BiglyBT-plugin-azneti2phelper",
+    "commit": "33d97eca67a9f332e3d4da7e7492ec54f4bec078",
+    "files": [
+      {
+        "path": "org/parg/azureus/plugins/networks/i2p/router/I2PHelperRouter.java",
+        "local_path": "/home/yurii/Java/BiglyBT-plugin-azneti2phelper/org/parg/azureus/plugins/networks/i2p/router/I2PHelperRouter.java",
+        "sha256": "a11205c5a9d343edc1f2634023317ff8c0b6dd638d7f1b4dab75958cf3bdf2f2",
+        "bytes": 46930,
+        "exact_pinned_git": true
+      },
+      {
+        "path": "org/parg/azureus/plugins/networks/i2p/router/I2PHelperRouterDHT.java",
+        "local_path": "/home/yurii/Java/BiglyBT-plugin-azneti2phelper/org/parg/azureus/plugins/networks/i2p/router/I2PHelperRouterDHT.java",
+        "sha256": "2f4cc20a71e1215cf8c519344dbf5551ebdea6b39a0083c997bdd54e3736698a",
+        "bytes": 17703,
+        "exact_pinned_git": true
+      },
+      {
+        "path": "org/parg/azureus/plugins/networks/i2p/router/I2PSMHolder.java",
+        "local_path": "/home/yurii/Java/BiglyBT-plugin-azneti2phelper/org/parg/azureus/plugins/networks/i2p/router/I2PSMHolder.java",
+        "sha256": "94a39ad5ba3290ea5600aa6a9fc4c1f12474224798cb9a7afc3f2bc2c0bdab2f",
+        "bytes": 13290,
+        "exact_pinned_git": true
+      }
+    ]
+  },
+  "actual_parent_router_enc0_credit_only": {
+    "manifest": "/home/yurii/Java/BiglyBT/build/i2cp-isolated-router-20261029/manifest.json",
+    "manifest_sha256": "ea3835eddf67a2a92abe2085723ececd9647fa8a73e42d020505d598c0530cb7",
+    "actual_parent_result": "/home/yurii/Java/BiglyBT/build/i2cp-isolated-router-20261029/runs/r1/result.json",
+    "actual_parent_result_sha256": "d73f06d3abddde3062df7873095277d5d15d0e01cffd76a067bd08dfd6db4571",
+    "credit": "Existing Enc0/warm-local tracker foundation only; no Enc4 or Streaming receipt credited."
+  },
+  "new_execution": false
+}

@@ -1,0 +1,20 @@
+--- a/preview/native/tests/azureus_maintenance_tests.cpp
++++ b/preview/native/tests/azureus_maintenance_tests.cpp
+@@ -99,11 +99,12 @@
+   // before the maintenance owner so no setup time consumes its first turn.
+   for(unsigned host=1;host<250&&peers.size()<21;++host){const auto ip=QString("127.90.%1.1").arg(host);const udp::Peer configured{QHostAddress(ip),31000};if((contact(configured).id[0]&0x80)!=(local.id[0]&0x80)){continue;}auto peer=std::make_unique<Normal>(ip,false,31000);QVERIFY(peer->owner->endpoint()==configured);peers.push_back(std::move(peer));}
+   QCOMPARE(peers.size(),std::size_t{21});Normal root("127.90.0.1",true,31001);QVERIFY(root.owner->endpoint()==configuredRoot);
+-  // Split the real Known table BEFORE any self-lookup can stamp an unsplit
+-  // parent. allowPeer supplies no Alive/seeded fact; the integrations below
+-  // still obtain those only from actual correlated ordinary-owner replies.
+-  for(const auto& peer:peers){auto allowed=root.owner->allowPeer(peer->owner->endpoint());QVERIFY(allowed);QTRY_VERIFY2_WITH_TIMEOUT(success(*root.owner,*allowed),qPrintable(describe(root)),3000);}
+-  const auto known=root.owner->observation();QVERIFY(known.routerSnapshot);QCOMPARE(known.routerSnapshot->counts()[2],std::uint64_t{22});QVERIFY(known.routerSnapshot->buckets().size()>1);QVERIFY(!known.routingSnapshot||!known.routingSnapshot->seeded);
++  // Actual incoming PINGs attach each numeric endpoint and establish Alive
++  // BEFORE any self-lookup can stamp an unsplit parent. Caller allowPeer alone
++  // populates the shared Known table but not the actor's contact attachments.
++  for(std::size_t i=0;i<peers.size();++i){auto ping=peers[i]->owner->ping(root.owner->endpoint());QVERIFY(ping);QTRY_VERIFY2_WITH_TIMEOUT(success(*peers[i]->owner,*ping),qPrintable(describe(root)+QString(" peer=%1").arg(static_cast<qulonglong>(i))),3000);}
++  QTRY_VERIFY2_WITH_TIMEOUT(root.owner->observation().routerSnapshot&&root.owner->observation().routerSnapshot->counts()[4]==22,qPrintable(describe(root)),3000);
++  const auto contacted=root.owner->observation();QVERIFY(contacted.routerSnapshot);QCOMPARE(contacted.routerSnapshot->counts()[2],std::uint64_t{22});QVERIFY(contacted.routerSnapshot->buckets().size()>1);QVERIFY(!contacted.routingSnapshot||!contacted.routingSnapshot->seeded);QCOMPARE(contacted.snapshot->transport().counters().requests,std::uint64_t{21});
+   for(std::size_t i=0;i<peers.size();++i){auto round=root.owner->integrateRouting(peers[i]->owner->endpoint());QVERIFY(round);QTRY_VERIFY2_WITH_TIMEOUT(success(*root.owner,*round),qPrintable(describe(root)+QString(" peers=%1").arg(static_cast<qulonglong>(i))),10000);}
+   const auto before=root.owner->observation();QVERIFY(before.maintenance);const auto tick=before.maintenance->routing.ticks;const auto refreshed=before.maintenance->routing.refreshes;
+   QTRY_VERIFY2_WITH_TIMEOUT(root.owner->observation().maintenance->routing.ticks>=tick+5,qPrintable(describe(root)),65000);QCOMPARE(root.owner->observation().maintenance->routing.refreshes,refreshed);

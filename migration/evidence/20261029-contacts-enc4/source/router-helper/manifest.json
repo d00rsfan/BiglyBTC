@@ -1,0 +1,43 @@
+{
+  "status": "SOURCE_ONLY_NOT_EXECUTED",
+  "scope": "Java helper LeaseSet2 subtype guard; no native changes",
+  "parent_helper": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/isolated-router/RouterTracker.java",
+    "sha256": "88a42f82fc06ded329cc1ec26e3140b42f62350e4bd2069f9aadcf6eb88608c3"
+  },
+  "frozen_raw_recipe": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/isolated-router/run.py",
+    "sha256": "aa3621a2468d9e1ac05ccc40b5bec66cf5fe6c1508c31b6440052afa23ff9062"
+  },
+  "source_reference": {
+    "jar": "/home/yurii/Java/BiglyBT/build/i2p-datagram-codec-20261029/amendments/actual-offline-interop/dependencies/i2p-2.13.0-sources.jar",
+    "sha256": "b169a9cebb58bee8b9ca2e73743418b1e9a634bdea4faa8ca6e2063d1032f23a",
+    "entries_sha256": {
+      "net/i2p/data/LeaseSet.java": "b4c7ea0468a348a27f30e80b110bffc1fea6ebc34804d704187707b07f211769",
+      "net/i2p/data/LeaseSet2.java": "c023cdc228b043bddc83fcde8f04117c23fbe3d2bde66c6b93b3073c13c9c36f"
+    }
+  },
+  "failed_attempt": {
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r1/result.json": "436b99a78f08e577cafbddab34df89d167498d711ee16574a229f08b2512c64e",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r1/commands.json": "7e6cf9df6478de9b21791a944c0d3243bf00650bbe5b8d5644286661ad7889d8",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/router-runs/r1/javac.log": "fffb7163597421918575b3f86ffe8e2872912b33e80b8f9ae8e019e0d3cd9353"
+  },
+  "artifacts": {
+    "IMPLEMENTATION.txt": {
+      "sha256": "4233713ba0886d0f8c81208995191138c6c3f9429903277a8b8785b2bbb77654",
+      "bytes": 604
+    },
+    "before/RouterTracker.java": {
+      "sha256": "88a42f82fc06ded329cc1ec26e3140b42f62350e4bd2069f9aadcf6eb88608c3",
+      "bytes": 16378
+    },
+    "changes.patch": {
+      "sha256": "d49848e8ad993f354a2137e00e51521a95e2fbf447c606bbd3e64319ce645576",
+      "bytes": 1459
+    },
+    "staging/RouterTracker.java": {
+      "sha256": "b44836e86c4a36a45a849b432cc4276b846770fd2de6c1068d08f0c73951d570",
+      "bytes": 16497
+    }
+  }
+}

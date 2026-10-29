@@ -1,0 +1,36 @@
+{
+  "status": "PASS_ACTUAL_ENC4_LEASESET_OBJECTS",
+  "source_commit": "0f7e9216253a7881fae11e1a7dae8a849cb333e8",
+  "gcc_result_sha256": "1db5ac35ec55c9dccc68a55a70b74f35fe0cd4b9b659e20acd5587c8125184a2",
+  "runner_sha256": "cd34de944465e79bf9526a8dadf9f2073fe02e653e873b9093fc6d473b6fdf88",
+  "inputs_sha256": "c453fdf1bba0a68250e8a5b4a570cd7c9484dd8ff0eb598a594daa557f148d47",
+  "provider_rebuilt": false,
+  "old_java_replays": false,
+  "router_or_real_profile_claimed": false,
+  "cases_per_reference_per_direction": 4,
+  "java_to_native_frames_per_reference": 8,
+  "native_to_java_frames_per_reference": 4,
+  "changed_signature_negatives_per_reference": 1,
+  "class_origins": {
+    "official": {
+      "jar_sha256": "d76b3c4c4fa7043c2a3553ab3209954e63151dfd1a90f7c020fbc58b33c89896",
+      "produce_class_log_sha256": "9a886dcecad2dafd51f2ec6c2841742602b2e80af875e30a69ecae60ce7eade2",
+      "verify_class_log_sha256": "06edbcb5fe0c60e8499107e270b340aa9b64289ddaca2b6cfb51a2abdd2a2656"
+    },
+    "modified": {
+      "jar_sha256": "b0866aa843a55d9290755c7a5cc3091cda765374544914afb4d3557ae99994b5",
+      "produce_class_log_sha256": "3b0c9fc5e9441b1f7ad43c979b23186b2c8db958620ebb0d7ac2f4bce174cc21",
+      "verify_class_log_sha256": "55c89df29801ebf8cedc6c4069a09f231052fc5a4e5cb3835e07fca8490815eb"
+    }
+  },
+  "helper_classes": {
+    "LeaseSetEnc4Vectors.class": "39a6f478c480aec94a85cfd3960d833c35331fb5212a9867ac0ffc6427d419ef"
+  },
+  "classes_removed_after_hashing": true,
+  "tool_invocations_sha256": "4cdc95c720d038fb8e021ce49b3234fcb63523120b384582b4ec73277e2ea57f",
+  "outputs_before_cleanup_sha256": "12548a75df501f51ed3dd82b98c3b955553dbd5d01af1deec5db7a6ed28205c4",
+  "source_unchanged": true,
+  "native_images_unchanged": true,
+  "provider_unchanged": true,
+  "commands_sha256": "504ef4b1e80befc38ad25e98341515d20a0322c853ef8d02ae29d367777223d8"
+}

@@ -1,0 +1,35 @@
+{
+  "status": "SOURCE_ONLY_FINISHER_DRAFT_NOT_EXECUTED",
+  "recipe": {
+    "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/finish.py",
+    "sha256": "dedf833c48d00ba34a9a06081ecd2a177926d27820b82829ccbfbf70d4c32d05"
+  },
+  "derived_from": {
+    "path": "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/finish.py",
+    "sha256": "8f129983056c4182a290129d1c734213fff4a497c6ed4ce545eaf17c082cb2b4"
+  },
+  "command_template": [
+    "python3",
+    "-B",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/finish.py",
+    "--attempt",
+    "ACTUAL_LANE_ATTEMPT",
+    "--producer",
+    "ACTUAL_ABSOLUTE_PRODUCER",
+    "--adoption",
+    "ACTUAL_ABSOLUTE_ADOPTION",
+    "--private-recipe",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private.py",
+    "--offline-result",
+    "ACTUAL_ABSOLUTE_OFFLINE_RESULT",
+    "--router-result",
+    "ACTUAL_ABSOLUTE_RAW_ROUTER_RESULT"
+  ],
+  "scope": "Actual current dynamic cohort + private suites, new Enc4 original-object4/ref/direction and real isolated router only; no actor/oldJava/provider replay or historical pass pooling.",
+  "required_files": "Root REVIEW.md and complete actual three lanes/private/offline/router binding results before execution; nothing assumed present or passed.",
+  "evidence": "migration/evidence/20261029-contacts-enc4",
+  "registry_policy": "Both actual proposed-registry validators BEFORE atomic distribution exchange; exact20/108/22 retained. Only existing DB/I2CP component native/target/evidence/review/source lists append; all states/baseline/first/integrated/reviewed-through/dependencies/upstreams remain unchanged.",
+  "history": "All old lane attempt logs/receipts, original failed Clang/supplement2PASS without cohort credit, correction+review and parent capsule recipes retained. Mixed artifact dictionary schemas normalized; actual adoption source map governs final bytes.",
+  "promotion": "One current private-qualified dist; atomicexchange and immediate verified old deletion; remove copied dynamic GCC test count and QtTest support after hashes. Exact old manifest3c38e092d97a3fb4299ba964a720c9a490d43bf7f99c48292f7785945c88caed.",
+  "source_checks": "Python AST only; no registry/native/dist/evidence edits or validator/subjects execution."
+}

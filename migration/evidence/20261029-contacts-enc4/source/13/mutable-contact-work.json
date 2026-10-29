@@ -1,0 +1,11 @@
+{
+  "schema": 1,
+  "status": "SOURCE_REVIEW_PASS_NO_EXECUTION",
+  "manifest": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/mutable-contact-work/manifest.json",
+  "manifest_sha256": "4cff5dd23d0cd5e59a599d700e910082dd76296f4da7e6439ff1df1ce4460cde",
+  "native_commit": "2fe669f688b4e0b64ba7205a64c4e969ca828281",
+  "verified": "All four artifact and two input hashes; current/Git preimage; byte-exact insertion of mutable only; read-only patch apply check.",
+  "finding": "The owned contactWork std::move_only_function has a non-const call operator; mutable gives this worker lambda a non-const call operator without changing captured ownership, source checks, effects, deadlines or callbacks.",
+  "material_blockers": [],
+  "execution": "No compiler, test, Java, native or provider mutation. Initial Clang failure remains an immutable input."
+}

@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "status": "PASS_SOURCE_ONLY",
+  "capsule": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/actual-ping-contact-prepopulation/manifest.json",
+  "capsule_sha256": "c0a6eb8d8f29c182cf0b41b3683b6f74a51c1062acc307008e3a947d6c5bcd03",
+  "native_before_commit": "9a8cf1aa2375797e368434423b8890fce1dbb09b",
+  "checks": {
+    "artifacts": 5,
+    "inputs": 6,
+    "current_and_git_preimage": true,
+    "read_only_patch_check": "PASS"
+  },
+  "assessment": [
+    "Replaces Known-only setup with21 actual peer-to-root PING requests and matching peer command successes. Requires root22 Alive contacts/actual21 incoming requests, split buckets and unseeded status before the same21 actual integration commands.",
+    "OwnedLoopback scope and normal receive source preflight/learnRoutingContact establish real endpoint attachments; this avoids the documented AllowPeer Known-only attachment gap. No fake seeded/contact/closest fact or production change.",
+    "Original integration/refresh/prefix/parallelism/accuracy/Replied/retry/recovery assertions and deadlines remain unchanged. FOLLOWUP records the unfixed explicit Known adapter seam."
+  ],
+  "findings": [],
+  "execution": "No builds, subjects or native writes."
+}

@@ -1,0 +1,44 @@
+{
+  "status": "SOURCE_ONLY_PRIVATE_PROPOSAL_NOT_EXECUTED",
+  "recipe": {
+    "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private.py",
+    "sha256": "eb6b751f5e84236fc1b27ffa30abc109f30534bf078ebffe41570c57cb258f16"
+  },
+  "derived_from": {
+    "path": "/home/yurii/Java/BiglyBT/build/profile-io-i2cp-tracker-followup-20261029/private-r3.py",
+    "sha256": "afff90779aec6f65da5d503da0ff3d0c19949c65d392a4512ce0164b09924bb8"
+  },
+  "source_schema_review": {
+    "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/runner-source-review.json",
+    "sha256": "0de430f132760030dfc1211d19ecc2e03fc164e50cd7f33f3cc077f856716c9a"
+  },
+  "command_template": [
+    "python3",
+    "-B",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/private.py",
+    "--attempt",
+    "r1",
+    "--source-commit",
+    "ACTUAL_FULL_CID",
+    "--producer",
+    "ACTUAL_ABSOLUTE_PRODUCER",
+    "--adoption",
+    "ACTUAL_ABSOLUTE_ADOPTION",
+    "--gcc-result",
+    "ACTUAL_ABSOLUTE_GCC_RESULT",
+    "--clang-result",
+    "ACTUAL_ABSOLUTE_CLANG_RESULT",
+    "--san-result",
+    "ACTUAL_ABSOLUTE_SAN_RESULT"
+  ],
+  "required_status": "PASS_ENC4_LEASESET_COHORT",
+  "counts": "Dynamically derived from suites_for_lane and PRODUCTS; no actor or Java fields.",
+  "timeouts": "Parent180-second private budget, extended only by actual registered TIMEOUT and bounded at240 seconds; maintenance240 is retained.",
+  "checks": [
+    "All3 actual completed receipts, exact source/adoption/producer hashes, source-before/after/images-before/after/build/command/XML/inventory associations",
+    "One new candidate; exact approved27/privateQt/QtTest initialized-image proofs; copied exact GCC test images and original registered arguments/named cases",
+    "Candidate/current dist/source/qualified images/provider unchanged; measured leaf count; no builds/Java/provider replay/promotion"
+  ],
+  "native_mutated": false,
+  "subjects_executed": false
+}

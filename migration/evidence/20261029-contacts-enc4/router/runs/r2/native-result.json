@@ -1,0 +1,14 @@
+{
+    "downloaded": 4,
+    "elapsed_ms": 1221,
+    "general_receiver_enabled": false,
+    "native_destination_sha256": "773b7df32bcba7b0037b6e02271b5d1f46fef70355aef3e2160e45d81032ea7c",
+    "operation": "1",
+    "peers": 5,
+    "reason": "Actual original router carried scoped signed2/claimed3 and RAW18 counts; native TCP closed",
+    "rejected_replies": "0",
+    "scope": "actual-enc4-router-warmed-local-cache-tracker",
+    "seeds": 3,
+    "status": "PASS",
+    "tracker_destination_sha256": "0a8a53b6ec2476fb4bdd4c1ab287b106e9387a4ba0adb3fc0df54362d05c4471"
+}

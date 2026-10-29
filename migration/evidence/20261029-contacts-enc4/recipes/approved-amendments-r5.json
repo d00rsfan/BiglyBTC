@@ -1,0 +1,29 @@
+{
+  "status": "ROOT_SOURCE_REVIEWED_NO_EXECUTION",
+  "amendments": [
+    [
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/owned-enabled-source/manifest.json",
+        "sha256": "046f36ddb9769f5e6e08c02be0ccb75bf1e99b84d630d1a0e0f883ab0fba47b0"
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029-review/owned-enabled-source.json",
+        "sha256": "33437804dd601957996d9039b2b3552225bae8bc5bc6a6a80ccf5cb2d6fc1295"
+      }
+    ],
+    [
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/actual-ping-contact-prepopulation/manifest.json",
+        "sha256": "c0a6eb8d8f29c182cf0b41b3683b6f74a51c1062acc307008e3a947d6c5bcd03"
+      },
+      {
+        "path": "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029-review/actual-ping-contact-prepopulation.json",
+        "sha256": "934723ec70db91307f0f761b6dac0341611920b9f71f8721c47fd814e2d46a89"
+      }
+    ]
+  ],
+  "adopter_sha256": "3e36835bc2c28d99e6cd38de420ee1816bbab9fdaa28c5cf9379f23a1b9c2a07",
+  "root_read_full_patches": true,
+  "no_caps_or_deadlines_increased": true,
+  "collect_all_affected_test_failures": true
+}

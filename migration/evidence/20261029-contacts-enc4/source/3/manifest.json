@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "status": "SOURCE_ONLY_NO_EXECUTION",
+  "native_commit": "2fe669f688b4e0b64ba7205a64c4e969ca828281",
+  "files": [
+    {
+      "path": "preview/native/app/azureus_profile_io_owner.inc",
+      "before_sha256": "9778acd34d43123b41af5bc18f477dacff5cac5d25c75ef5d0a1ee5fffcdd736",
+      "after_sha256": "b171c12e6628d031ddf553d3215715254c9eff26aedd8d86d6a5509e80265de8",
+      "before": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/mutable-contact-work/before/preview/native/app/azureus_profile_io_owner.inc",
+      "after": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/amendments/mutable-contact-work/staging/preview/native/app/azureus_profile_io_owner.inc"
+    }
+  ],
+  "inputs": {
+    "/home/yurii/Java/BiglyBT/build/azureus-maintenance-contacts-20261029/implementation/manifest.json": "fa60353cf5a038c2dd541c63108f954646a1e3e89ad4ec5a959398f8c93be048",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/runs/clang-r1/build.log": "b49fdee6ca423c09c77ae7dd6830dac4094b4d7f2a3d6ed988aa31bdab5d737d"
+  },
+  "artifacts": {
+    "ADOPTION.txt": "2fdadcf866007dfb11aa2db87085c3fd21027e882fffa4603f2c52b1f5ac908a",
+    "before/preview/native/app/azureus_profile_io_owner.inc": "9778acd34d43123b41af5bc18f477dacff5cac5d25c75ef5d0a1ee5fffcdd736",
+    "changes.patch": "13484b3058ff72f80fa861ab9efc9a1cbd04cac02043180432e536369c9f944f",
+    "staging/preview/native/app/azureus_profile_io_owner.inc": "b171c12e6628d031ddf553d3215715254c9eff26aedd8d86d6a5509e80265de8"
+  },
+  "apply_check": "PASS",
+  "execution": false
+}

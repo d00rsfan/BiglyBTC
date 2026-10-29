@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite name="AzureusRouterBindingTests" timestamp="2026&#x002D;10&#x002D;29T22:08:42" hostname="ubuntud" tests="9" failures="0" errors="0" skipped="0" time="0.794">
+  <properties>
+    <property name="QTestVersion" value="6.12.0"/>
+    <property name="QtVersion" value="6.12.0"/>
+    <property name="QtBuild" value="Qt 6.12.0 (x86_64&#x002D;little_endian&#x002D;lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0&#x002D;5))"/>
+  </properties>
+  <testcase name="initTestCase" classname="AzureusRouterBindingTests" time="0.000"/>
+  <testcase name="localRecordUsesTheActualBoundGenerationAndStaysPassive" classname="AzureusRouterBindingTests" time="0.002"/>
+  <testcase name="admittedPeerIsUnknownUntilItsActualCorrelatedReply" classname="AzureusRouterBindingTests" time="0.222"/>
+  <testcase name="actualUnknownPeerTimeoutsUseTheFailureThreshold" classname="AzureusRouterBindingTests" time="0.209"/>
+  <testcase name="cancellationAndJoinedCloseDoNotDeclarePeerDeath" classname="AzureusRouterBindingTests" time="0.155"/>
+  <testcase name="actualFindRepliesMarkOnlyTheExplicitPeerAlive" classname="AzureusRouterBindingTests" time="0.102"/>
+  <testcase name="unownedDatagramsAndRejectedCommandsCannotInventContacts" classname="AzureusRouterBindingTests" time="0.052"/>
+  <testcase name="sourceRestrictedIdCollisionIsNotCountedAsAnotherLiveContact" classname="AzureusRouterBindingTests" time="0.051"/>
+  <testcase name="cleanupTestCase" classname="AzureusRouterBindingTests" time="0.000"/>
+</testsuite>

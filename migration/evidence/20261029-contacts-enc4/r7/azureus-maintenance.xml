@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<testsuite name="AzureusMaintenanceTests" timestamp="2026&#x002D;10&#x002D;29T22:07:18" hostname="ubuntud" tests="10" failures="0" errors="0" skipped="0" time="80.779">
+  <properties>
+    <property name="QTestVersion" value="6.12.0"/>
+    <property name="QtVersion" value="6.12.0"/>
+    <property name="QtBuild" value="Qt 6.12.0 (x86_64&#x002D;little_endian&#x002D;lp64 shared (dynamic) release build; by GCC 11.5.0 20240719 (Red Hat 11.5.0&#x002D;5))"/>
+  </properties>
+  <testcase name="initTestCase" classname="AzureusMaintenanceTests" time="0.000"/>
+  <testcase name="rawOriginalEnvelopePrimaryRecoveryAndCompareBeforePublish" classname="AzureusMaintenanceTests" time="0.001"/>
+  <testcase name="foreignAndAmbiguousCacheCannotBeRewrittenOrChangeOriginalBytes" classname="AzureusMaintenanceTests" time="0.000"/>
+  <testcase name="unsafePendingAndChangedParentNeverPublish" classname="AzureusMaintenanceTests" time="0.000"/>
+  <testcase name="originalTenSecondRetrySixTickSelectivePrefixAndFiveMinuteIdleRules" classname="AzureusMaintenanceTests" time="0.001"/>
+  <testcase name="originalTreeSetNarrowedComparatorAndWallAliveDurationArePreserved" classname="AzureusMaintenanceTests" time="0.001"/>
+  <testcase name="genuineNormalCacheRestartBootstrapsWithoutSuppliedPeerAndThenAcceptsForwardedStore" classname="AzureusMaintenanceTests" time="10.330"/>
+  <testcase name="blockedProfileCancelAndCloseProgressWithoutGrantingCachedAuthority" classname="AzureusMaintenanceTests" time="0.305"/>
+  <testcase name="actualDefaultKSelectiveRefreshAndFailureRetryUseRealNormalOwners" classname="AzureusMaintenanceTests" time="70.139"/>
+  <testcase name="cleanupTestCase" classname="AzureusMaintenanceTests" time="0.000"/>
+</testsuite>

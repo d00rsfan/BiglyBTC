@@ -1,0 +1,23 @@
+{
+  "status": "SOURCE_PASS",
+  "inputs_sha256": {
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/run.py": "9dab7b5c5405fe2f0faddbbe79636d01e1a605830ada2d698975910ec805939d",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/jobs.mk": "c2057ba601144150b1fcbc1c337b4601367849fa03ab8e530338b653ac587043",
+    "/home/yurii/Java/BiglyBT/build/routing-streaming-followup-20261029/run-r3.py": "4c6e88b37330605cf0fbf13504317792a776b2ce84f3da8b6ed74f815c3a16c2",
+    "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/offline.py": "cd34de944465e79bf9526a8dadf9f2073fe02e653e873b9093fc6d473b6fdf88"
+  },
+  "findings_resolved": [
+    "jobs.mk old CLASSES guard and run-r3.py/--classes invocations corrected to three current run.py lane recipes."
+  ],
+  "checks": [
+    "Current producer exports provider_pins/PROVIDER_SHA/suites_for_lane and emits every source/image/cache/command/XML/build-receipt field consumed by offline.py.",
+    "One completed actual GCC build and exact leaseset image map gate Enc4 raw object execution; no actor/Java reference requirements remain.",
+    "Make orders Clang before GCC/SAN; existing FIFO-j3 guard applies to every lane. CTest stop-on-failure cannot earn PASS unless exact full selected names/XML succeed.",
+    "Root added database-runtime regression; private counts are derived from final reviewed suite/product maps rather than fixed draft counts."
+  ],
+  "limitations": [
+    "Maintenance/core suite selection is root/Driver-owned; this source review credits no actual build or test."
+  ],
+  "native_mutated": false,
+  "subjects_executed": false
+}

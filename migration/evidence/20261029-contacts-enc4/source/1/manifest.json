@@ -1,0 +1,158 @@
+{
+  "schema": 1,
+  "status": "FROZEN_SOURCE_ONLY_ENC4_PENDING_NATIVE_OBJECT_AND_ROUTER_QUALIFICATION",
+  "native_source_basis": "8849b3cc2d2c13771fde3381d66beadf173fbe48",
+  "source_path_count": 5,
+  "source_paths": {
+    "preview/native/services/i2cp_channel/channel.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/services/i2cp_channel/channel.cpp",
+      "before_sha256": "5d1cf0f48b8404329e1bc65c73e826269a83ef683f7d1eb656a1f3161cc7144d",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/staging/preview/native/services/i2cp_channel/channel.cpp",
+      "after_sha256": "b06f7b3b0456d948c5e90b9c768c73cf0e9d8eab4f832d433eefa5f6a5aaa611"
+    },
+    "preview/native/services/i2cp_leaseset/leaseset.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/services/i2cp_leaseset/leaseset.cpp",
+      "before_sha256": "f4bd1989267d40a306e94a1a76e4e48d4e94d473156170f4cda1bc6cf569489f",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/staging/preview/native/services/i2cp_leaseset/leaseset.cpp",
+      "after_sha256": "afeca689f57f1e065f8abf85b1c1709e667edfa00dd73a6950fdbb98e9d06f97"
+    },
+    "preview/native/services/i2cp_leaseset/leaseset.hpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/services/i2cp_leaseset/leaseset.hpp",
+      "before_sha256": "44bcc356a5335d1049fab6f16780e2778e0e3b86b6afb5f3b448d7be9d2a6678",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/staging/preview/native/services/i2cp_leaseset/leaseset.hpp",
+      "after_sha256": "e3fd1c28de5a29e3b53f04eca3ff177eeb5ac5128809c44714806e4de6838482"
+    },
+    "preview/native/tests/i2cp_initial_channel_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/tests/i2cp_initial_channel_tests.cpp",
+      "before_sha256": "f366232d4ecabc4738c4312105c82bc1b65bc44e5ee8d51ce4ba144a7dd2d8a2",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/amendments/owned-encryption-test-column/staging/preview/native/tests/i2cp_initial_channel_tests.cpp",
+      "after_sha256": "bb6b6b095331271d8ace102fe3d36906e9e7ac3e060ddd64bcfe1c2aaf2848e6"
+    },
+    "preview/native/tests/i2cp_leaseset_tests.cpp": {
+      "before_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/tests/i2cp_leaseset_tests.cpp",
+      "before_sha256": "f668e4e9befbbad910d5259b444a8588bf01aaed4e86feb93f6bb89bccf27d17",
+      "after_path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/staging/preview/native/tests/i2cp_leaseset_tests.cpp",
+      "after_sha256": "9c82441a8d10e2a3bae67405850560c3d73812e11e8f9f78371c0e7ff8df81e0"
+    }
+  },
+  "test_targets": {
+    "biglybtc-i2cp-leaseset-tests": "pure-i2cp-leaseset2",
+    "biglybtc-i2cp-initial-channel-tests": "i2cp-initial-channel"
+  },
+  "cmake_changes": false,
+  "object_recipe": "OFFLINE-COMMANDS.sh",
+  "object_reference_cases_per_jar": 4,
+  "object_direction": "Both Java\u2192native verification/reencode and native\u2192Java verification/reencode, plus signature negative; official and modified separate",
+  "isolated_router_recipe": "isolated-router/run.py",
+  "planned_future_root_status": "PASS_ENC4_LEASESET_COHORT",
+  "source_checks": [
+    "All5 beforeimages exact8849 Git/working files.",
+    "Shell syntax and Python AST parsed; original hard fence AST identical.",
+    "Pinned already-linked OpenSSL Crypto artifact rehashed; no new dependency.",
+    "Generic registration data/body restored byte-exact; explicit encryption fetch moved to actual owned renewal method."
+  ],
+  "native_mutated": false,
+  "shared_registry_mutated": false,
+  "compiler_execution": false,
+  "runtime_subject_execution": false,
+  "parent": {
+    "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/manifest.json",
+    "sha256": "4b1d7276d8cbf1b9ec2d8a5c857bb0d457804a338e5525cf42881af85417f75f"
+  },
+  "effective_artifacts": {
+    "ADOPTION.md": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/ADOPTION.md",
+      "sha256": "2fad9f25d9d6d5f803fcf53a5762e8d43a609e6baad0fc79a7657e7698e954cb"
+    },
+    "CMake.fragment": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/CMake.fragment",
+      "sha256": "ab7cfd1e576b799d992adf5c66bf7ea988628b6c9c5ba434df068c453076a3a7"
+    },
+    "OFFLINE-COMMANDS.sh": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/OFFLINE-COMMANDS.sh",
+      "sha256": "f9cd442db1efc333408df01f1fe5ce86a895996ce29540956f5d24e4f10e3509"
+    },
+    "before/preview/native/services/i2cp_channel/channel.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/services/i2cp_channel/channel.cpp",
+      "sha256": "5d1cf0f48b8404329e1bc65c73e826269a83ef683f7d1eb656a1f3161cc7144d"
+    },
+    "before/preview/native/services/i2cp_leaseset/leaseset.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/services/i2cp_leaseset/leaseset.cpp",
+      "sha256": "f4bd1989267d40a306e94a1a76e4e48d4e94d473156170f4cda1bc6cf569489f"
+    },
+    "before/preview/native/services/i2cp_leaseset/leaseset.hpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/services/i2cp_leaseset/leaseset.hpp",
+      "sha256": "44bcc356a5335d1049fab6f16780e2778e0e3b86b6afb5f3b448d7be9d2a6678"
+    },
+    "before/preview/native/tests/i2cp_initial_channel_tests.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/tests/i2cp_initial_channel_tests.cpp",
+      "sha256": "f366232d4ecabc4738c4312105c82bc1b65bc44e5ee8d51ce4ba144a7dd2d8a2"
+    },
+    "before/preview/native/tests/i2cp_leaseset_tests.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/before/preview/native/tests/i2cp_leaseset_tests.cpp",
+      "sha256": "f668e4e9befbbad910d5259b444a8588bf01aaed4e86feb93f6bb89bccf27d17"
+    },
+    "changes.patch": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/amendments/owned-encryption-test-column/changes.patch",
+      "sha256": "7006dd5a4d80584b44664969dd09c36569cbe182786001080295cabadf442e27"
+    },
+    "interop/LeaseSetEnc4Vectors.java": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/interop/LeaseSetEnc4Vectors.java",
+      "sha256": "dd9f0ee5c238620ee3ef9e9bbee4d623b8790956a34f32efa193d76b5f0a4bce"
+    },
+    "isolated-router/CMakeLists.txt": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/isolated-router/CMakeLists.txt",
+      "sha256": "7c2d7be3058e7dec69554f80d075c890ee7dc1782a4499e8dc612abdc7da8a04"
+    },
+    "isolated-router/README.md": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/isolated-router/README.md",
+      "sha256": "87d31d282cc65862710b85b142b705a497a8d183b4525650096e8a26d9d0ccf9"
+    },
+    "isolated-router/RouterTracker.java": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/isolated-router/RouterTracker.java",
+      "sha256": "88a42f82fc06ded329cc1ec26e3140b42f62350e4bd2069f9aadcf6eb88608c3"
+    },
+    "isolated-router/probe.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/isolated-router/probe.cpp",
+      "sha256": "2e51a03d46971a13cb459363fa6d7dd0aec08fda7bd2c03ee8d95e0d04ed835e"
+    },
+    "isolated-router/run.py": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/isolated-router/run.py",
+      "sha256": "aa3621a2468d9e1ac05ccc40b5bec66cf5fe6c1508c31b6440052afa23ff9062"
+    },
+    "isolated-router/source-pins.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/isolated-router/source-pins.json",
+      "sha256": "f90f5d6dc55d5f6f6423ae01f561a8bee3a45e55bdccc888b4c7d150d44d92eb"
+    },
+    "source-pins.json": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/source-pins.json",
+      "sha256": "4d80be4f74acb2657228fd8a95cee4b9222ad5f613419c282ef4d8ac338614c6"
+    },
+    "staging/preview/native/services/i2cp_channel/channel.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/staging/preview/native/services/i2cp_channel/channel.cpp",
+      "sha256": "b06f7b3b0456d948c5e90b9c768c73cf0e9d8eab4f832d433eefa5f6a5aaa611"
+    },
+    "staging/preview/native/services/i2cp_leaseset/leaseset.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/staging/preview/native/services/i2cp_leaseset/leaseset.cpp",
+      "sha256": "afeca689f57f1e065f8abf85b1c1709e667edfa00dd73a6950fdbb98e9d06f97"
+    },
+    "staging/preview/native/services/i2cp_leaseset/leaseset.hpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/staging/preview/native/services/i2cp_leaseset/leaseset.hpp",
+      "sha256": "e3fd1c28de5a29e3b53f04eca3ff177eeb5ac5128809c44714806e4de6838482"
+    },
+    "staging/preview/native/tests/i2cp_initial_channel_tests.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/amendments/owned-encryption-test-column/staging/preview/native/tests/i2cp_initial_channel_tests.cpp",
+      "sha256": "bb6b6b095331271d8ace102fe3d36906e9e7ac3e060ddd64bcfe1c2aaf2848e6"
+    },
+    "staging/preview/native/tests/i2cp_leaseset_tests.cpp": {
+      "path": "/home/yurii/Java/BiglyBT/build/i2cp-enc4-20261029/staging/preview/native/tests/i2cp_leaseset_tests.cpp",
+      "sha256": "9c82441a8d10e2a3bae67405850560c3d73812e11e8f9f78371c0e7ff8df81e0"
+    }
+  },
+  "artifacts_sha256": {
+    "delta.patch": "d951daf0014da3ba26c66795fad1da7292217575c639f50e068d085f2c3cb6ff",
+    "ADOPTION.md": "5df66e40ba0a402659892c04a9c9dc22a76de70fad5fe83b3c5e059ed80c378f",
+    "changes.patch": "7006dd5a4d80584b44664969dd09c36569cbe182786001080295cabadf442e27",
+    "staging/preview/native/tests/i2cp_initial_channel_tests.cpp": "bb6b6b095331271d8ace102fe3d36906e9e7ac3e060ddd64bcfe1c2aaf2848e6"
+  }
+}

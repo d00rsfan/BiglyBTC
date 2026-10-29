@@ -1,0 +1,11 @@
+ninja: Jobserver mode detected:  -j3 --jobserver-auth=fifo:/tmp/GMfifo2351863 -- ATTEMPT=r6
+[1/11] Building CXX object services/CMakeFiles/biglybtc_azureus_owned_udp.dir/azureus_udp/owned_transport.cpp.o
+[2/11] Linking CXX static library services/libbiglybtc_azureus_owned_udp.a
+[3/11] Linking CXX executable tests/biglybtc-azureus-owned-service-tests
+[4/11] Linking CXX executable tests/biglybtc-azureus-router-owner-tests
+[5/11] Linking CXX executable tests/biglybtc-azureus-database-runtime-tests
+[6/11] Linking CXX executable tests/biglybtc-azureus-profile-io-tests
+[7/11] Linking CXX executable tests/biglybtc-azureus-routing-tests
+[8/11] Automatic MOC for target biglybtc-azureus-maintenance-tests
+[9/10] Building CXX object tests/CMakeFiles/biglybtc-azureus-maintenance-tests.dir/azureus_maintenance_tests.cpp.o
+[10/10] Linking CXX executable tests/biglybtc-azureus-maintenance-tests

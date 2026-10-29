@@ -1,0 +1,21 @@
+{
+  "status": "FAIL",
+  "source_commit": "0f7e9216253a7881fae11e1a7dae8a849cb333e8",
+  "scope": "actual-isolated-router-enc4-warmed-local-tracker",
+  "gcc_result": {
+    "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/runs/gcc-r7/result.json",
+    "sha256": "1db5ac35ec55c9dccc68a55a70b74f35fe0cd4b9b659e20acd5587c8125184a2"
+  },
+  "source_adoption": {
+    "path": "/home/yurii/Java/BiglyBT/build/contacts-enc4-followup-20261029/root-adoption-r7.json",
+    "sha256": "0d21ffe8ea1febc9ed7672516f101004b8cc97f76cbc542b26598857175d63fe"
+  },
+  "compiler_jobs_maximum": 1,
+  "compile_phases_serial": true,
+  "supervisor_sha256": "c1cbc16c536f27d8f0446a51157311c9768a6eb0e76a64924d6ecb1b055ccb60",
+  "provider_rebuilt": false,
+  "native_core_rebuilt": false,
+  "old_java_or_actor_pass_pooled": false,
+  "failure": "AssertionError('javac')",
+  "commands_sha256": "7e6cf9df6478de9b21791a944c0d3243bf00650bbe5b8d5644286661ad7889d8"
+}

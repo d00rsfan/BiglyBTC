@@ -1,0 +1,10 @@
+ninja: Jobserver mode detected:  -j3 --jobserver-auth=fifo:/tmp/GMfifo2357323 -- ATTEMPT=r7
+[1/12] Automatic MOC for target biglybtc-azureus-database-runtime-tests
+[2/10] Automatic MOC for target biglybtc-azureus-maintenance-tests
+[3/9] Building CXX object engine/CMakeFiles/biglybtc_local_engine.dir/persistent_runtime_guard.cpp.o
+[4/9] Linking CXX static library engine/libbiglybtc_local_engine.a
+[5/9] Linking CXX executable biglybtc-preview-smoke
+[6/9] Linking CXX executable app/BiglyBTC-headless
+[7/9] Linking CXX executable app/BiglyBTC
+[8/9] Building CXX object tests/CMakeFiles/biglybtc-azureus-maintenance-tests.dir/azureus_maintenance_tests.cpp.o
+[9/9] Linking CXX executable tests/biglybtc-azureus-maintenance-tests
