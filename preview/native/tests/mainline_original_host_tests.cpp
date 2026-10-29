@@ -18,11 +18,13 @@ unsigned short transferPort(bool dual){
   if(dual){test::require(v6.listen(QHostAddress::LocalHostIPv6,port)&&u6.bind(QHostAddress::LocalHostIPv6,port,QUdpSocket::DontShareAddress),"Owned dual transfer port");}
   return port;
 }
+#if __has_include(<libtorrent/biglybtc_mainline_identity.hpp>)
 QByteArray cache(bool v6,unsigned short port){
   QByteArray address=v6?QByteArray(15,'\0')+'\1':QByteArray::fromHex("7f000001");address.append(char(port>>8));address.append(char(port&255));
   return dict({{"mainEntries",'l'+dict({{"addr",str(address)},{"id",str(QByteArray(20,'K'))},{"created","i800e"},{"lastSeen","i995e"},{"failedCount","i0e"},{"verified","i1e"}})+'e'},
       {"replacements","le"},{"oldKey",str(QByteArray(20,'Z'))},{"timestamp","i1000e"},{"opaque",str(QByteArray::fromHex("00ff51"))}});
 }
+#endif
 void savedProfile(Source& source,bool dual,unsigned short dhtPort,unsigned short port,bool restore=true,bool enabled=true){
   test::write(source.profile+"/downloads.config","d9:downloadslee");test::write(source.profile+"/tables.config","de");
   test::write(source.profile+"/payload-sentinel","never admitted or opened for Mainline");
@@ -34,6 +36,7 @@ void savedProfile(Source& source,bool dual,unsigned short dhtPort,unsigned short
       {"Plugin.mldht.onlyPeerBootstrap","i1e"},{"Plugin.mldht.alwaysRestoreID",integer(restore?1:0)},
       {"Plugin.DHT.dht.enabled","i0e"},{"Plugin.UPnP.upnp.enable","i0e"},{"Plugin.UPnP.natpmp.enable","i0e"}}));
 }
+#if __has_include(<libtorrent/biglybtc_mainline_identity.hpp>)
 void savedDefaultProfile(Source& source,unsigned short dhtPort,unsigned short peerPort){
   test::write(source.profile+"/downloads.config","d9:downloadslee");test::write(source.profile+"/tables.config","de");
   test::write(source.profile+"/payload-sentinel","never admitted or opened for Mainline");
@@ -49,6 +52,7 @@ engine::NetworkPolicy defaultPolicy(Source& source){
   auto policy=engine::readNetworkPolicy(&file->document(),{.mode=engine::NetworkMode::Normal});
   test::require(policy.has_value(),"Actual original default bind policy");return std::move(*policy);
 }
+#endif
 bool mainlineFailure(const QSignalSpy& messages){for(const auto& message:messages){if(message[0].toString().contains("Mainline discovery is unavailable:")){return true;}}return false;}
 }
 class OriginalMainlineHostTests final:public QObject {

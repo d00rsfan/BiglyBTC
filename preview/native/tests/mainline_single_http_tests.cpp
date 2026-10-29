@@ -479,6 +479,18 @@ private slots:
       QVERIFY2(QSslSocket::activeBackend()=="openssl",qPrintable(QSslSocket::activeBackend()));
     }
   }
+  void actualJdk17KeytoolJksMatchesItsExportedTrustedCertificate() {
+    const auto storePath=QFINDTESTDATA("fixtures/jks/jdk17-owned-truststore.jks");
+    const auto certificatePath=QFINDTESTDATA("fixtures/jks/jdk17-owned-root.der");
+    QVERIFY2(!storePath.isEmpty(),"Actual JDK17 public truststore fixture is missing");
+    QVERIFY2(!certificatePath.isEmpty(),"Actual JDK17 public certificate fixture is missing");
+    const auto store=test::read(storePath),certificate=test::read(certificatePath);
+    auto decoded=detail::http_trust::decode(store.toStdString());
+    QVERIFY2(decoded,decoded?"":decoded.error().message.c_str());
+    QCOMPARE(decoded->size(),qsizetype{1});
+    QCOMPARE(decoded->front().toDer(),certificate);
+  }
+
 };
 }
 int main(int argc,char** argv){
